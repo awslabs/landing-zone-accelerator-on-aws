@@ -1031,6 +1031,856 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
       },
       "Type": "AWS::IAM::Role",
     },
+    "InfraTemplateFullIpamCentralVpc8A8C380B": {
+      "DependsOn": [
+        "DeleteDefaultVpc4DBAE36C",
+      ],
+      "Properties": {
+        "EnableDnsHostnames": true,
+        "EnableDnsSupport": true,
+        "InstanceTenancy": "default",
+        "Ipv4IpamPoolId": {
+          "Ref": "SsmParameterValueacceleratornetworkipampoolshomeregionpoolidC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+        "Ipv4NetmaskLength": 25,
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "Infra-Template-Full-Ipam-Central",
+          },
+        ],
+      },
+      "Type": "AWS::EC2::VPC",
+    },
+    "InfraTemplateFullIpamCentralVpcCloudWatchFlowLog7463C60E": {
+      "DependsOn": [
+        "DeleteDefaultVpc4DBAE36C",
+      ],
+      "Properties": {
+        "DeliverLogsPermissionArn": {
+          "Fn::GetAtt": [
+            "InfraTemplateFullIpamCentralVpcFlowLogsRole72D28AA6",
+            "Arn",
+          ],
+        },
+        "LogDestination": {
+          "Fn::GetAtt": [
+            "InfraTemplateFullIpamCentralVpcFlowLogsGroup39071A60",
+            "Arn",
+          ],
+        },
+        "LogDestinationType": "cloud-watch-logs",
+        "MaxAggregationInterval": 60,
+        "ResourceId": {
+          "Ref": "InfraTemplateFullIpamCentralVpc8A8C380B",
+        },
+        "ResourceType": "VPC",
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "Infra-Template-Full-Ipam-Central",
+          },
+        ],
+        "TrafficType": "ALL",
+      },
+      "Type": "AWS::EC2::FlowLog",
+    },
+    "InfraTemplateFullIpamCentralVpcFlowLogsGroup39071A60": {
+      "DeletionPolicy": "Retain",
+      "DependsOn": [
+        "DeleteDefaultVpc4DBAE36C",
+      ],
+      "Properties": {
+        "RetentionInDays": 3653,
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "Infra-Template-Full-Ipam-Central",
+          },
+        ],
+      },
+      "Type": "AWS::Logs::LogGroup",
+      "UpdateReplacePolicy": "Retain",
+    },
+    "InfraTemplateFullIpamCentralVpcFlowLogsRole72D28AA6": {
+      "DependsOn": [
+        "DeleteDefaultVpc4DBAE36C",
+      ],
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "vpc-flow-logs.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "Infra-Template-Full-Ipam-Central",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "InfraTemplateFullIpamCentralVpcFlowLogsRoleDefaultPolicyAFA85342": {
+      "DependsOn": [
+        "DeleteDefaultVpc4DBAE36C",
+      ],
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": [
+                "logs:CreateLogDelivery",
+                "logs:CreateLogGroup",
+                "logs:CreateLogStream",
+                "logs:DeleteLogDelivery",
+                "logs:DescribeLogGroups",
+                "logs:DescribeLogStreams",
+                "logs:PutLogEvents",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::GetAtt": [
+                  "InfraTemplateFullIpamCentralVpcFlowLogsGroup39071A60",
+                  "Arn",
+                ],
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "InfraTemplateFullIpamCentralVpcFlowLogsRoleDefaultPolicyAFA85342",
+        "Roles": [
+          {
+            "Ref": "InfraTemplateFullIpamCentralVpcFlowLogsRole72D28AA6",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
+    },
+    "InfraTemplateFullIpamCentralVpcS3FlowLog1C84E887": {
+      "DependsOn": [
+        "DeleteDefaultVpc4DBAE36C",
+      ],
+      "Properties": {
+        "LogDestination": {
+          "Fn::Join": [
+            "",
+            [
+              {
+                "Ref": "SsmParameterValueacceleratorvpcflowlogsdestinationbucketarnC96584B6F00A464EAD1953AFF4B05118Parameter",
+              },
+              "/vpc-flow-logs/",
+            ],
+          ],
+        },
+        "LogDestinationType": "s3",
+        "MaxAggregationInterval": 60,
+        "ResourceId": {
+          "Ref": "InfraTemplateFullIpamCentralVpc8A8C380B",
+        },
+        "ResourceType": "VPC",
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "Infra-Template-Full-Ipam-Central",
+          },
+        ],
+        "TrafficType": "ALL",
+      },
+      "Type": "AWS::EC2::FlowLog",
+    },
+    "InfraTemplateFullIpamCentralVpcWorkloadARtRouteTable33861D86": {
+      "Properties": {
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "Workload-A-Rt",
+          },
+        ],
+        "VpcId": {
+          "Ref": "InfraTemplateFullIpamCentralVpc8A8C380B",
+        },
+      },
+      "Type": "AWS::EC2::RouteTable",
+    },
+    "InfraTemplateFullIpamCentralVpcWorkloadASubnet349B5CB9": {
+      "DeletionPolicy": "Delete",
+      "DependsOn": [
+        "CustomIpamSubnetCustomResourceProviderLogGroup3BB67050",
+      ],
+      "Properties": {
+        "ServiceToken": {
+          "Fn::GetAtt": [
+            "CustomIpamSubnetCustomResourceProviderHandlerF7AF0D7A",
+            "Arn",
+          ],
+        },
+        "availabilityZone": "us-east-1a",
+        "basePool": [
+          "10.0.0.0/16",
+          "10.2.0.0/16",
+        ],
+        "ipamAllocation": {
+          "ipamPoolName": "home-region-pool",
+          "netmaskLength": 28,
+        },
+        "name": "Workload-A",
+        "tags": [],
+        "vpcId": {
+          "Ref": "InfraTemplateFullIpamCentralVpc8A8C380B",
+        },
+      },
+      "Type": "Custom::IpamSubnet",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "InfraTemplateFullIpamCentralVpcWorkloadASubnetRouteTableAssociation431C7580": {
+      "Properties": {
+        "RouteTableId": {
+          "Ref": "InfraTemplateFullIpamCentralVpcWorkloadARtRouteTable33861D86",
+        },
+        "SubnetId": {
+          "Ref": "InfraTemplateFullIpamCentralVpcWorkloadASubnet349B5CB9",
+        },
+      },
+      "Type": "AWS::EC2::SubnetRouteTableAssociation",
+    },
+    "InfraTemplateFullStaticCentralVpc2E4383E1": {
+      "DependsOn": [
+        "DeleteDefaultVpc4DBAE36C",
+      ],
+      "Properties": {
+        "CidrBlock": "172.25.0.0/24",
+        "EnableDnsHostnames": true,
+        "EnableDnsSupport": true,
+        "InstanceTenancy": "default",
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "Infra-Template-Full-Static-Central",
+          },
+        ],
+      },
+      "Type": "AWS::EC2::VPC",
+    },
+    "InfraTemplateFullStaticCentralVpcCloudWatchFlowLog616AD246": {
+      "DependsOn": [
+        "DeleteDefaultVpc4DBAE36C",
+      ],
+      "Properties": {
+        "DeliverLogsPermissionArn": {
+          "Fn::GetAtt": [
+            "InfraTemplateFullStaticCentralVpcFlowLogsRole9F40B076",
+            "Arn",
+          ],
+        },
+        "LogDestination": {
+          "Fn::GetAtt": [
+            "InfraTemplateFullStaticCentralVpcFlowLogsGroup3BE04A7A",
+            "Arn",
+          ],
+        },
+        "LogDestinationType": "cloud-watch-logs",
+        "MaxAggregationInterval": 60,
+        "ResourceId": {
+          "Ref": "InfraTemplateFullStaticCentralVpc2E4383E1",
+        },
+        "ResourceType": "VPC",
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "Infra-Template-Full-Static-Central",
+          },
+        ],
+        "TrafficType": "ALL",
+      },
+      "Type": "AWS::EC2::FlowLog",
+    },
+    "InfraTemplateFullStaticCentralVpcFlowLogsGroup3BE04A7A": {
+      "DeletionPolicy": "Retain",
+      "DependsOn": [
+        "DeleteDefaultVpc4DBAE36C",
+      ],
+      "Properties": {
+        "RetentionInDays": 3653,
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "Infra-Template-Full-Static-Central",
+          },
+        ],
+      },
+      "Type": "AWS::Logs::LogGroup",
+      "UpdateReplacePolicy": "Retain",
+    },
+    "InfraTemplateFullStaticCentralVpcFlowLogsRole9F40B076": {
+      "DependsOn": [
+        "DeleteDefaultVpc4DBAE36C",
+      ],
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "vpc-flow-logs.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "Infra-Template-Full-Static-Central",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "InfraTemplateFullStaticCentralVpcFlowLogsRoleDefaultPolicy590511AF": {
+      "DependsOn": [
+        "DeleteDefaultVpc4DBAE36C",
+      ],
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": [
+                "logs:CreateLogDelivery",
+                "logs:CreateLogGroup",
+                "logs:CreateLogStream",
+                "logs:DeleteLogDelivery",
+                "logs:DescribeLogGroups",
+                "logs:DescribeLogStreams",
+                "logs:PutLogEvents",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::GetAtt": [
+                  "InfraTemplateFullStaticCentralVpcFlowLogsGroup3BE04A7A",
+                  "Arn",
+                ],
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "InfraTemplateFullStaticCentralVpcFlowLogsRoleDefaultPolicy590511AF",
+        "Roles": [
+          {
+            "Ref": "InfraTemplateFullStaticCentralVpcFlowLogsRole9F40B076",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
+    },
+    "InfraTemplateFullStaticCentralVpcS3FlowLog4F7818CB": {
+      "DependsOn": [
+        "DeleteDefaultVpc4DBAE36C",
+      ],
+      "Properties": {
+        "LogDestination": {
+          "Fn::Join": [
+            "",
+            [
+              {
+                "Ref": "SsmParameterValueacceleratorvpcflowlogsdestinationbucketarnC96584B6F00A464EAD1953AFF4B05118Parameter",
+              },
+              "/vpc-flow-logs/",
+            ],
+          ],
+        },
+        "LogDestinationType": "s3",
+        "MaxAggregationInterval": 60,
+        "ResourceId": {
+          "Ref": "InfraTemplateFullStaticCentralVpc2E4383E1",
+        },
+        "ResourceType": "VPC",
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "Infra-Template-Full-Static-Central",
+          },
+        ],
+        "TrafficType": "ALL",
+      },
+      "Type": "AWS::EC2::FlowLog",
+    },
+    "InfraTemplateFullStaticCentralVpcWorkloadARtRouteTableAB2D6977": {
+      "Properties": {
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "Workload-A-Rt",
+          },
+        ],
+        "VpcId": {
+          "Ref": "InfraTemplateFullStaticCentralVpc2E4383E1",
+        },
+      },
+      "Type": "AWS::EC2::RouteTable",
+    },
+    "InfraTemplateFullStaticCentralVpcWorkloadASubnet89E810F8": {
+      "Properties": {
+        "AvailabilityZone": "us-east-1a",
+        "CidrBlock": "172.25.0.0/28",
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "Workload-A",
+          },
+        ],
+        "VpcId": {
+          "Ref": "InfraTemplateFullStaticCentralVpc2E4383E1",
+        },
+      },
+      "Type": "AWS::EC2::Subnet",
+    },
+    "InfraTemplateFullStaticCentralVpcWorkloadASubnetRouteTableAssociationBB42F9CC": {
+      "Properties": {
+        "RouteTableId": {
+          "Ref": "InfraTemplateFullStaticCentralVpcWorkloadARtRouteTableAB2D6977",
+        },
+        "SubnetId": {
+          "Ref": "InfraTemplateFullStaticCentralVpcWorkloadASubnet89E810F8",
+        },
+      },
+      "Type": "AWS::EC2::SubnetRouteTableAssociation",
+    },
+    "InfraTemplateHalfIpamCentralVpcAF63FFD8": {
+      "DependsOn": [
+        "DeleteDefaultVpc4DBAE36C",
+      ],
+      "Properties": {
+        "EnableDnsHostnames": true,
+        "EnableDnsSupport": true,
+        "InstanceTenancy": "default",
+        "Ipv4IpamPoolId": {
+          "Ref": "SsmParameterValueacceleratornetworkipampoolshomeregionpoolidC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+        "Ipv4NetmaskLength": 25,
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "Infra-Template-Half-Ipam-Central",
+          },
+        ],
+      },
+      "Type": "AWS::EC2::VPC",
+    },
+    "InfraTemplateHalfIpamCentralVpcCloudWatchFlowLogDDA66E72": {
+      "DependsOn": [
+        "DeleteDefaultVpc4DBAE36C",
+      ],
+      "Properties": {
+        "DeliverLogsPermissionArn": {
+          "Fn::GetAtt": [
+            "InfraTemplateHalfIpamCentralVpcFlowLogsRole505D87F2",
+            "Arn",
+          ],
+        },
+        "LogDestination": {
+          "Fn::GetAtt": [
+            "InfraTemplateHalfIpamCentralVpcFlowLogsGroup4ADD6319",
+            "Arn",
+          ],
+        },
+        "LogDestinationType": "cloud-watch-logs",
+        "MaxAggregationInterval": 60,
+        "ResourceId": {
+          "Ref": "InfraTemplateHalfIpamCentralVpcAF63FFD8",
+        },
+        "ResourceType": "VPC",
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "Infra-Template-Half-Ipam-Central",
+          },
+        ],
+        "TrafficType": "ALL",
+      },
+      "Type": "AWS::EC2::FlowLog",
+    },
+    "InfraTemplateHalfIpamCentralVpcFlowLogsGroup4ADD6319": {
+      "DeletionPolicy": "Retain",
+      "DependsOn": [
+        "DeleteDefaultVpc4DBAE36C",
+      ],
+      "Properties": {
+        "RetentionInDays": 3653,
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "Infra-Template-Half-Ipam-Central",
+          },
+        ],
+      },
+      "Type": "AWS::Logs::LogGroup",
+      "UpdateReplacePolicy": "Retain",
+    },
+    "InfraTemplateHalfIpamCentralVpcFlowLogsRole505D87F2": {
+      "DependsOn": [
+        "DeleteDefaultVpc4DBAE36C",
+      ],
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "vpc-flow-logs.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "Infra-Template-Half-Ipam-Central",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "InfraTemplateHalfIpamCentralVpcFlowLogsRoleDefaultPolicy07E82036": {
+      "DependsOn": [
+        "DeleteDefaultVpc4DBAE36C",
+      ],
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": [
+                "logs:CreateLogDelivery",
+                "logs:CreateLogGroup",
+                "logs:CreateLogStream",
+                "logs:DeleteLogDelivery",
+                "logs:DescribeLogGroups",
+                "logs:DescribeLogStreams",
+                "logs:PutLogEvents",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::GetAtt": [
+                  "InfraTemplateHalfIpamCentralVpcFlowLogsGroup4ADD6319",
+                  "Arn",
+                ],
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "InfraTemplateHalfIpamCentralVpcFlowLogsRoleDefaultPolicy07E82036",
+        "Roles": [
+          {
+            "Ref": "InfraTemplateHalfIpamCentralVpcFlowLogsRole505D87F2",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
+    },
+    "InfraTemplateHalfIpamCentralVpcS3FlowLogB59402F9": {
+      "DependsOn": [
+        "DeleteDefaultVpc4DBAE36C",
+      ],
+      "Properties": {
+        "LogDestination": {
+          "Fn::Join": [
+            "",
+            [
+              {
+                "Ref": "SsmParameterValueacceleratorvpcflowlogsdestinationbucketarnC96584B6F00A464EAD1953AFF4B05118Parameter",
+              },
+              "/vpc-flow-logs/",
+            ],
+          ],
+        },
+        "LogDestinationType": "s3",
+        "MaxAggregationInterval": 60,
+        "ResourceId": {
+          "Ref": "InfraTemplateHalfIpamCentralVpcAF63FFD8",
+        },
+        "ResourceType": "VPC",
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "Infra-Template-Half-Ipam-Central",
+          },
+        ],
+        "TrafficType": "ALL",
+      },
+      "Type": "AWS::EC2::FlowLog",
+    },
+    "InfraTemplateHalfIpamCentralVpcWorkloadARtRouteTableAF0CA499": {
+      "Properties": {
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "Workload-A-Rt",
+          },
+        ],
+        "VpcId": {
+          "Ref": "InfraTemplateHalfIpamCentralVpcAF63FFD8",
+        },
+      },
+      "Type": "AWS::EC2::RouteTable",
+    },
+    "InfraTemplateHalfIpamCentralVpcWorkloadASubnet150CBD97": {
+      "DeletionPolicy": "Delete",
+      "DependsOn": [
+        "CustomIpamSubnetCustomResourceProviderLogGroup3BB67050",
+      ],
+      "Properties": {
+        "ServiceToken": {
+          "Fn::GetAtt": [
+            "CustomIpamSubnetCustomResourceProviderHandlerF7AF0D7A",
+            "Arn",
+          ],
+        },
+        "availabilityZone": "us-east-1a",
+        "basePool": [
+          "10.0.0.0/16",
+          "10.2.0.0/16",
+        ],
+        "ipamAllocation": {
+          "ipamPoolName": "home-region-pool",
+          "netmaskLength": 28,
+        },
+        "name": "Workload-A",
+        "tags": [],
+        "vpcId": {
+          "Ref": "InfraTemplateHalfIpamCentralVpcAF63FFD8",
+        },
+      },
+      "Type": "Custom::IpamSubnet",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "InfraTemplateHalfIpamCentralVpcWorkloadASubnetRouteTableAssociation0C227AD0": {
+      "Properties": {
+        "RouteTableId": {
+          "Ref": "InfraTemplateHalfIpamCentralVpcWorkloadARtRouteTableAF0CA499",
+        },
+        "SubnetId": {
+          "Ref": "InfraTemplateHalfIpamCentralVpcWorkloadASubnet150CBD97",
+        },
+      },
+      "Type": "AWS::EC2::SubnetRouteTableAssociation",
+    },
+    "InfraTemplateHalfStaticCentralVpc8C770679": {
+      "DependsOn": [
+        "DeleteDefaultVpc4DBAE36C",
+      ],
+      "Properties": {
+        "CidrBlock": "172.21.0.0/24",
+        "EnableDnsHostnames": true,
+        "EnableDnsSupport": true,
+        "InstanceTenancy": "default",
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "Infra-Template-Half-Static-Central",
+          },
+        ],
+      },
+      "Type": "AWS::EC2::VPC",
+    },
+    "InfraTemplateHalfStaticCentralVpcCloudWatchFlowLogF1657571": {
+      "DependsOn": [
+        "DeleteDefaultVpc4DBAE36C",
+      ],
+      "Properties": {
+        "DeliverLogsPermissionArn": {
+          "Fn::GetAtt": [
+            "InfraTemplateHalfStaticCentralVpcFlowLogsRole943DF142",
+            "Arn",
+          ],
+        },
+        "LogDestination": {
+          "Fn::GetAtt": [
+            "InfraTemplateHalfStaticCentralVpcFlowLogsGroup8F7C528A",
+            "Arn",
+          ],
+        },
+        "LogDestinationType": "cloud-watch-logs",
+        "MaxAggregationInterval": 60,
+        "ResourceId": {
+          "Ref": "InfraTemplateHalfStaticCentralVpc8C770679",
+        },
+        "ResourceType": "VPC",
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "Infra-Template-Half-Static-Central",
+          },
+        ],
+        "TrafficType": "ALL",
+      },
+      "Type": "AWS::EC2::FlowLog",
+    },
+    "InfraTemplateHalfStaticCentralVpcFlowLogsGroup8F7C528A": {
+      "DeletionPolicy": "Retain",
+      "DependsOn": [
+        "DeleteDefaultVpc4DBAE36C",
+      ],
+      "Properties": {
+        "RetentionInDays": 3653,
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "Infra-Template-Half-Static-Central",
+          },
+        ],
+      },
+      "Type": "AWS::Logs::LogGroup",
+      "UpdateReplacePolicy": "Retain",
+    },
+    "InfraTemplateHalfStaticCentralVpcFlowLogsRole943DF142": {
+      "DependsOn": [
+        "DeleteDefaultVpc4DBAE36C",
+      ],
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "vpc-flow-logs.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "Infra-Template-Half-Static-Central",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "InfraTemplateHalfStaticCentralVpcFlowLogsRoleDefaultPolicy2380BDC4": {
+      "DependsOn": [
+        "DeleteDefaultVpc4DBAE36C",
+      ],
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": [
+                "logs:CreateLogDelivery",
+                "logs:CreateLogGroup",
+                "logs:CreateLogStream",
+                "logs:DeleteLogDelivery",
+                "logs:DescribeLogGroups",
+                "logs:DescribeLogStreams",
+                "logs:PutLogEvents",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::GetAtt": [
+                  "InfraTemplateHalfStaticCentralVpcFlowLogsGroup8F7C528A",
+                  "Arn",
+                ],
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "InfraTemplateHalfStaticCentralVpcFlowLogsRoleDefaultPolicy2380BDC4",
+        "Roles": [
+          {
+            "Ref": "InfraTemplateHalfStaticCentralVpcFlowLogsRole943DF142",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
+    },
+    "InfraTemplateHalfStaticCentralVpcS3FlowLog83B54EC7": {
+      "DependsOn": [
+        "DeleteDefaultVpc4DBAE36C",
+      ],
+      "Properties": {
+        "LogDestination": {
+          "Fn::Join": [
+            "",
+            [
+              {
+                "Ref": "SsmParameterValueacceleratorvpcflowlogsdestinationbucketarnC96584B6F00A464EAD1953AFF4B05118Parameter",
+              },
+              "/vpc-flow-logs/",
+            ],
+          ],
+        },
+        "LogDestinationType": "s3",
+        "MaxAggregationInterval": 60,
+        "ResourceId": {
+          "Ref": "InfraTemplateHalfStaticCentralVpc8C770679",
+        },
+        "ResourceType": "VPC",
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "Infra-Template-Half-Static-Central",
+          },
+        ],
+        "TrafficType": "ALL",
+      },
+      "Type": "AWS::EC2::FlowLog",
+    },
+    "InfraTemplateHalfStaticCentralVpcWorkloadARtRouteTable34229EBD": {
+      "Properties": {
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "Workload-A-Rt",
+          },
+        ],
+        "VpcId": {
+          "Ref": "InfraTemplateHalfStaticCentralVpc8C770679",
+        },
+      },
+      "Type": "AWS::EC2::RouteTable",
+    },
+    "InfraTemplateHalfStaticCentralVpcWorkloadASubnet0013D1FA": {
+      "Properties": {
+        "AvailabilityZone": "us-east-1a",
+        "CidrBlock": "172.21.0.0/28",
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "Workload-A",
+          },
+        ],
+        "VpcId": {
+          "Ref": "InfraTemplateHalfStaticCentralVpc8C770679",
+        },
+      },
+      "Type": "AWS::EC2::Subnet",
+    },
+    "InfraTemplateHalfStaticCentralVpcWorkloadASubnetRouteTableAssociation6175AFD8": {
+      "Properties": {
+        "RouteTableId": {
+          "Ref": "InfraTemplateHalfStaticCentralVpcWorkloadARtRouteTable34229EBD",
+        },
+        "SubnetId": {
+          "Ref": "InfraTemplateHalfStaticCentralVpcWorkloadASubnet0013D1FA",
+        },
+      },
+      "Type": "AWS::EC2::SubnetRouteTableAssociation",
+    },
     "NetworkEndpoints2VpcTransitGatewayAttachment9892C5DB": {
       "Properties": {
         "Options": {
@@ -3071,6 +3921,431 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
       },
       "Type": "AWS::EC2::VPCCidrBlock",
     },
+    "NetworkNonTemplateIpamCentralVpc534B7BC1": {
+      "DependsOn": [
+        "DeleteDefaultVpc4DBAE36C",
+      ],
+      "Properties": {
+        "EnableDnsHostnames": true,
+        "EnableDnsSupport": true,
+        "InstanceTenancy": "default",
+        "Ipv4IpamPoolId": {
+          "Ref": "SsmParameterValueacceleratornetworkipampoolshomeregionpoolidC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+        "Ipv4NetmaskLength": 24,
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "Network-NonTemplate-Ipam-Central",
+          },
+        ],
+      },
+      "Type": "AWS::EC2::VPC",
+    },
+    "NetworkNonTemplateIpamCentralVpcCloudWatchFlowLogDE475BD9": {
+      "DependsOn": [
+        "DeleteDefaultVpc4DBAE36C",
+      ],
+      "Properties": {
+        "DeliverLogsPermissionArn": {
+          "Fn::GetAtt": [
+            "NetworkNonTemplateIpamCentralVpcFlowLogsRole9824CFBA",
+            "Arn",
+          ],
+        },
+        "LogDestination": {
+          "Fn::GetAtt": [
+            "NetworkNonTemplateIpamCentralVpcFlowLogsGroupE2338BBF",
+            "Arn",
+          ],
+        },
+        "LogDestinationType": "cloud-watch-logs",
+        "MaxAggregationInterval": 60,
+        "ResourceId": {
+          "Ref": "NetworkNonTemplateIpamCentralVpc534B7BC1",
+        },
+        "ResourceType": "VPC",
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "Network-NonTemplate-Ipam-Central",
+          },
+        ],
+        "TrafficType": "ALL",
+      },
+      "Type": "AWS::EC2::FlowLog",
+    },
+    "NetworkNonTemplateIpamCentralVpcFlowLogsGroupE2338BBF": {
+      "DeletionPolicy": "Retain",
+      "DependsOn": [
+        "DeleteDefaultVpc4DBAE36C",
+      ],
+      "Properties": {
+        "RetentionInDays": 3653,
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "Network-NonTemplate-Ipam-Central",
+          },
+        ],
+      },
+      "Type": "AWS::Logs::LogGroup",
+      "UpdateReplacePolicy": "Retain",
+    },
+    "NetworkNonTemplateIpamCentralVpcFlowLogsRole9824CFBA": {
+      "DependsOn": [
+        "DeleteDefaultVpc4DBAE36C",
+      ],
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "vpc-flow-logs.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "Network-NonTemplate-Ipam-Central",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "NetworkNonTemplateIpamCentralVpcFlowLogsRoleDefaultPolicy25C435A7": {
+      "DependsOn": [
+        "DeleteDefaultVpc4DBAE36C",
+      ],
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": [
+                "logs:CreateLogDelivery",
+                "logs:CreateLogGroup",
+                "logs:CreateLogStream",
+                "logs:DeleteLogDelivery",
+                "logs:DescribeLogGroups",
+                "logs:DescribeLogStreams",
+                "logs:PutLogEvents",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::GetAtt": [
+                  "NetworkNonTemplateIpamCentralVpcFlowLogsGroupE2338BBF",
+                  "Arn",
+                ],
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "NetworkNonTemplateIpamCentralVpcFlowLogsRoleDefaultPolicy25C435A7",
+        "Roles": [
+          {
+            "Ref": "NetworkNonTemplateIpamCentralVpcFlowLogsRole9824CFBA",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
+    },
+    "NetworkNonTemplateIpamCentralVpcNetworkNonTemplateIpamPublicASubnet8EFA1E26": {
+      "DeletionPolicy": "Delete",
+      "DependsOn": [
+        "CustomIpamSubnetCustomResourceProviderLogGroup3BB67050",
+      ],
+      "Properties": {
+        "ServiceToken": {
+          "Fn::GetAtt": [
+            "CustomIpamSubnetCustomResourceProviderHandlerF7AF0D7A",
+            "Arn",
+          ],
+        },
+        "availabilityZone": "us-east-1a",
+        "basePool": [
+          "10.0.0.0/16",
+          "10.2.0.0/16",
+        ],
+        "ipamAllocation": {
+          "ipamPoolName": "home-region-pool",
+          "netmaskLength": 28,
+        },
+        "name": "Network-NonTemplate-Ipam-Public-A",
+        "tags": [],
+        "vpcId": {
+          "Ref": "NetworkNonTemplateIpamCentralVpc534B7BC1",
+        },
+      },
+      "Type": "Custom::IpamSubnet",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "NetworkNonTemplateIpamCentralVpcNetworkNonTemplateIpamPublicASubnetRouteTableAssociation657A1476": {
+      "Properties": {
+        "RouteTableId": {
+          "Ref": "NetworkNonTemplateIpamCentralVpcNetworkNonTemplateIpamPublicRouteTableA4FD2DC5",
+        },
+        "SubnetId": {
+          "Ref": "NetworkNonTemplateIpamCentralVpcNetworkNonTemplateIpamPublicASubnet8EFA1E26",
+        },
+      },
+      "Type": "AWS::EC2::SubnetRouteTableAssociation",
+    },
+    "NetworkNonTemplateIpamCentralVpcNetworkNonTemplateIpamPublicRouteTableA4FD2DC5": {
+      "Properties": {
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "Network-NonTemplate-Ipam-Public",
+          },
+        ],
+        "VpcId": {
+          "Ref": "NetworkNonTemplateIpamCentralVpc534B7BC1",
+        },
+      },
+      "Type": "AWS::EC2::RouteTable",
+    },
+    "NetworkNonTemplateIpamCentralVpcS3FlowLog04D2DDF9": {
+      "DependsOn": [
+        "DeleteDefaultVpc4DBAE36C",
+      ],
+      "Properties": {
+        "LogDestination": {
+          "Fn::Join": [
+            "",
+            [
+              {
+                "Ref": "SsmParameterValueacceleratorvpcflowlogsdestinationbucketarnC96584B6F00A464EAD1953AFF4B05118Parameter",
+              },
+              "/vpc-flow-logs/",
+            ],
+          ],
+        },
+        "LogDestinationType": "s3",
+        "MaxAggregationInterval": 60,
+        "ResourceId": {
+          "Ref": "NetworkNonTemplateIpamCentralVpc534B7BC1",
+        },
+        "ResourceType": "VPC",
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "Network-NonTemplate-Ipam-Central",
+          },
+        ],
+        "TrafficType": "ALL",
+      },
+      "Type": "AWS::EC2::FlowLog",
+    },
+    "NetworkNonTemplateStaticCentralVpc28FB9AAB": {
+      "DependsOn": [
+        "DeleteDefaultVpc4DBAE36C",
+      ],
+      "Properties": {
+        "CidrBlock": "172.17.0.0/24",
+        "EnableDnsHostnames": true,
+        "EnableDnsSupport": true,
+        "InstanceTenancy": "default",
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "Network-NonTemplate-Static-Central",
+          },
+        ],
+      },
+      "Type": "AWS::EC2::VPC",
+    },
+    "NetworkNonTemplateStaticCentralVpcCloudWatchFlowLog765E05C1": {
+      "DependsOn": [
+        "DeleteDefaultVpc4DBAE36C",
+      ],
+      "Properties": {
+        "DeliverLogsPermissionArn": {
+          "Fn::GetAtt": [
+            "NetworkNonTemplateStaticCentralVpcFlowLogsRoleFED07384",
+            "Arn",
+          ],
+        },
+        "LogDestination": {
+          "Fn::GetAtt": [
+            "NetworkNonTemplateStaticCentralVpcFlowLogsGroup75DC0231",
+            "Arn",
+          ],
+        },
+        "LogDestinationType": "cloud-watch-logs",
+        "MaxAggregationInterval": 60,
+        "ResourceId": {
+          "Ref": "NetworkNonTemplateStaticCentralVpc28FB9AAB",
+        },
+        "ResourceType": "VPC",
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "Network-NonTemplate-Static-Central",
+          },
+        ],
+        "TrafficType": "ALL",
+      },
+      "Type": "AWS::EC2::FlowLog",
+    },
+    "NetworkNonTemplateStaticCentralVpcFlowLogsGroup75DC0231": {
+      "DeletionPolicy": "Retain",
+      "DependsOn": [
+        "DeleteDefaultVpc4DBAE36C",
+      ],
+      "Properties": {
+        "RetentionInDays": 3653,
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "Network-NonTemplate-Static-Central",
+          },
+        ],
+      },
+      "Type": "AWS::Logs::LogGroup",
+      "UpdateReplacePolicy": "Retain",
+    },
+    "NetworkNonTemplateStaticCentralVpcFlowLogsRoleDefaultPolicy8864FB75": {
+      "DependsOn": [
+        "DeleteDefaultVpc4DBAE36C",
+      ],
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": [
+                "logs:CreateLogDelivery",
+                "logs:CreateLogGroup",
+                "logs:CreateLogStream",
+                "logs:DeleteLogDelivery",
+                "logs:DescribeLogGroups",
+                "logs:DescribeLogStreams",
+                "logs:PutLogEvents",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::GetAtt": [
+                  "NetworkNonTemplateStaticCentralVpcFlowLogsGroup75DC0231",
+                  "Arn",
+                ],
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "NetworkNonTemplateStaticCentralVpcFlowLogsRoleDefaultPolicy8864FB75",
+        "Roles": [
+          {
+            "Ref": "NetworkNonTemplateStaticCentralVpcFlowLogsRoleFED07384",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
+    },
+    "NetworkNonTemplateStaticCentralVpcFlowLogsRoleFED07384": {
+      "DependsOn": [
+        "DeleteDefaultVpc4DBAE36C",
+      ],
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "vpc-flow-logs.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "Network-NonTemplate-Static-Central",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "NetworkNonTemplateStaticCentralVpcNetworkNonTemplateStaticPublicRouteTable8F7BD7E5": {
+      "Properties": {
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "Network-NonTemplate-Static-Public",
+          },
+        ],
+        "VpcId": {
+          "Ref": "NetworkNonTemplateStaticCentralVpc28FB9AAB",
+        },
+      },
+      "Type": "AWS::EC2::RouteTable",
+    },
+    "NetworkNonTemplateStaticCentralVpcNetworkPublicASubnet1252F6FB": {
+      "Properties": {
+        "AvailabilityZone": "us-east-1a",
+        "CidrBlock": "172.17.0.0/28",
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "Network-Public-A",
+          },
+        ],
+        "VpcId": {
+          "Ref": "NetworkNonTemplateStaticCentralVpc28FB9AAB",
+        },
+      },
+      "Type": "AWS::EC2::Subnet",
+    },
+    "NetworkNonTemplateStaticCentralVpcNetworkPublicASubnetRouteTableAssociation161B84BB": {
+      "Properties": {
+        "RouteTableId": {
+          "Ref": "NetworkNonTemplateStaticCentralVpcNetworkNonTemplateStaticPublicRouteTable8F7BD7E5",
+        },
+        "SubnetId": {
+          "Ref": "NetworkNonTemplateStaticCentralVpcNetworkPublicASubnet1252F6FB",
+        },
+      },
+      "Type": "AWS::EC2::SubnetRouteTableAssociation",
+    },
+    "NetworkNonTemplateStaticCentralVpcS3FlowLog5D1F0CE1": {
+      "DependsOn": [
+        "DeleteDefaultVpc4DBAE36C",
+      ],
+      "Properties": {
+        "LogDestination": {
+          "Fn::Join": [
+            "",
+            [
+              {
+                "Ref": "SsmParameterValueacceleratorvpcflowlogsdestinationbucketarnC96584B6F00A464EAD1953AFF4B05118Parameter",
+              },
+              "/vpc-flow-logs/",
+            ],
+          ],
+        },
+        "LogDestinationType": "s3",
+        "MaxAggregationInterval": 60,
+        "ResourceId": {
+          "Ref": "NetworkNonTemplateStaticCentralVpc28FB9AAB",
+        },
+        "ResourceType": "VPC",
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "Network-NonTemplate-Static-Central",
+          },
+        ],
+        "TrafficType": "ALL",
+      },
+      "Type": "AWS::EC2::FlowLog",
+    },
     "NetworkSecondaryVpc37FB1791": {
       "DependsOn": [
         "DeleteDefaultVpc4DBAE36C",
@@ -4169,10 +5444,64 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
             },
           },
           {
+            "name": "/accelerator/network/vpc/Network-NonTemplate-Static-Central/cidr/ipv4",
+            "value": {
+              "Fn::GetAtt": [
+                "NetworkNonTemplateStaticCentralVpc28FB9AAB",
+                "CidrBlock",
+              ],
+            },
+          },
+          {
+            "name": "/accelerator/network/vpc/Network-NonTemplate-Ipam-Central/cidr/ipv4",
+            "value": {
+              "Fn::GetAtt": [
+                "NetworkNonTemplateIpamCentralVpc534B7BC1",
+                "CidrBlock",
+              ],
+            },
+          },
+          {
             "name": "/accelerator/network/vpc/Workload-Template/cidr/ipv4",
             "value": {
               "Fn::GetAtt": [
                 "WorkloadTemplateVpc46A4D4C0",
+                "CidrBlock",
+              ],
+            },
+          },
+          {
+            "name": "/accelerator/network/vpc/Infra-Template-Full-Static-Central/cidr/ipv4",
+            "value": {
+              "Fn::GetAtt": [
+                "InfraTemplateFullStaticCentralVpc2E4383E1",
+                "CidrBlock",
+              ],
+            },
+          },
+          {
+            "name": "/accelerator/network/vpc/Infra-Template-Full-Ipam-Central/cidr/ipv4",
+            "value": {
+              "Fn::GetAtt": [
+                "InfraTemplateFullIpamCentralVpc8A8C380B",
+                "CidrBlock",
+              ],
+            },
+          },
+          {
+            "name": "/accelerator/network/vpc/Infra-Template-Half-Static-Central/cidr/ipv4",
+            "value": {
+              "Fn::GetAtt": [
+                "InfraTemplateHalfStaticCentralVpc8C770679",
+                "CidrBlock",
+              ],
+            },
+          },
+          {
+            "name": "/accelerator/network/vpc/Infra-Template-Half-Ipam-Central/cidr/ipv4",
+            "value": {
+              "Fn::GetAtt": [
+                "InfraTemplateHalfIpamCentralVpcAF63FFD8",
                 "CidrBlock",
               ],
             },
@@ -4292,6 +5621,19 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
             "value": "10.3.0.0/24",
           },
           {
+            "name": "/accelerator/network/vpc/Network-NonTemplate-Static-Central/subnet/Network-Public-A/cidr/ipv4",
+            "value": "172.17.0.0/28",
+          },
+          {
+            "name": "/accelerator/network/vpc/Network-NonTemplate-Ipam-Central/subnet/Network-NonTemplate-Ipam-Public-A/cidr/ipv4",
+            "value": {
+              "Fn::GetAtt": [
+                "NetworkNonTemplateIpamCentralVpcNetworkNonTemplateIpamPublicASubnet8EFA1E26",
+                "ipv4CidrBlock",
+              ],
+            },
+          },
+          {
             "name": "/accelerator/network/vpc/Workload-Template/subnet/Workload-A/cidr/ipv4",
             "value": {
               "Fn::GetAtt": [
@@ -4309,6 +5651,32 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
               ],
             },
           },
+          {
+            "name": "/accelerator/network/vpc/Infra-Template-Full-Static-Central/subnet/Workload-A/cidr/ipv4",
+            "value": "172.25.0.0/28",
+          },
+          {
+            "name": "/accelerator/network/vpc/Infra-Template-Full-Ipam-Central/subnet/Workload-A/cidr/ipv4",
+            "value": {
+              "Fn::GetAtt": [
+                "InfraTemplateFullIpamCentralVpcWorkloadASubnet349B5CB9",
+                "ipv4CidrBlock",
+              ],
+            },
+          },
+          {
+            "name": "/accelerator/network/vpc/Infra-Template-Half-Static-Central/subnet/Workload-A/cidr/ipv4",
+            "value": "172.21.0.0/28",
+          },
+          {
+            "name": "/accelerator/network/vpc/Infra-Template-Half-Ipam-Central/subnet/Workload-A/cidr/ipv4",
+            "value": {
+              "Fn::GetAtt": [
+                "InfraTemplateHalfIpamCentralVpcWorkloadASubnet150CBD97",
+                "ipv4CidrBlock",
+              ],
+            },
+          },
         ],
         "region": "us-east-1",
         "roleName": "AWSAccelerator-CrossAccountSsmParameterShare",
@@ -4319,7 +5687,7 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
     },
     "SsmParamAcceleratorGwlbGwlbArn7CF5F889": {
       "DependsOn": [
-        "SsmParamAcceleratorGwlbSecondaryGwlbServiceId3F04FE9A",
+        "SsmParamAcceleratorGwlbGwlbServiceIdF93A23BF",
       ],
       "Properties": {
         "Name": "/accelerator/network/gwlb/Accelerator-GWLB/arn",
@@ -4331,9 +5699,6 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
       "Type": "AWS::SSM::Parameter",
     },
     "SsmParamAcceleratorGwlbGwlbServiceIdF93A23BF": {
-      "DependsOn": [
-        "SsmParamAcceleratorGwlbSecondaryGwlbServiceId3F04FE9A",
-      ],
       "Properties": {
         "Name": "/accelerator/network/gwlb/Accelerator-GWLB/endpointService/id",
         "Type": "String",
@@ -4345,7 +5710,7 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
     },
     "SsmParamAcceleratorGwlbSecondaryGwlbArn364EE96B": {
       "DependsOn": [
-        "SsmParamAcceleratorGwlbSecondaryGwlbServiceId3F04FE9A",
+        "SsmParamNetworkInspectionDataSecurityGroup1FD45226",
       ],
       "Properties": {
         "Name": "/accelerator/network/gwlb/Accelerator-GWLB-secondary/arn",
@@ -4357,6 +5722,9 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
       "Type": "AWS::SSM::Parameter",
     },
     "SsmParamAcceleratorGwlbSecondaryGwlbServiceId3F04FE9A": {
+      "DependsOn": [
+        "SsmParamNetworkInspectionDataSecurityGroup1FD45226",
+      ],
       "Properties": {
         "Name": "/accelerator/network/gwlb/Accelerator-GWLB-secondary/endpointService/id",
         "Type": "String",
@@ -4400,7 +5768,160 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
       },
       "Type": "AWS::SSM::Parameter",
     },
+    "SsmParamInfraTemplateFullIpamCentralVpcId36AFED2E": {
+      "DependsOn": [
+        "SsmParamWorkloadTemplateVpcId8722DBFE",
+      ],
+      "Properties": {
+        "Name": "/accelerator/network/vpc/Infra-Template-Full-Ipam-Central/id",
+        "Type": "String",
+        "Value": {
+          "Ref": "InfraTemplateFullIpamCentralVpc8A8C380B",
+        },
+      },
+      "Type": "AWS::SSM::Parameter",
+    },
+    "SsmParamInfraTemplateFullIpamCentralWorkloadARtRouteTableId761912FB": {
+      "DependsOn": [
+        "SsmParamNetworkNonTemplateIpamCentralNetworkNonTemplateIpamPublicRouteTableId2F3EF67A",
+      ],
+      "Properties": {
+        "Name": "/accelerator/network/vpc/Infra-Template-Full-Ipam-Central/routeTable/Workload-A-Rt/id",
+        "Type": "String",
+        "Value": {
+          "Ref": "InfraTemplateFullIpamCentralVpcWorkloadARtRouteTable33861D86",
+        },
+      },
+      "Type": "AWS::SSM::Parameter",
+    },
+    "SsmParamInfraTemplateFullIpamCentralWorkloadASubnetId5A59595D": {
+      "DependsOn": [
+        "SsmParamNetworkNonTemplateIpamCentralNetworkNonTemplateIpamPublicASubnetId7479495B",
+      ],
+      "Properties": {
+        "Name": "/accelerator/network/vpc/Infra-Template-Full-Ipam-Central/subnet/Workload-A/id",
+        "Type": "String",
+        "Value": {
+          "Ref": "InfraTemplateFullIpamCentralVpcWorkloadASubnet349B5CB9",
+        },
+      },
+      "Type": "AWS::SSM::Parameter",
+    },
+    "SsmParamInfraTemplateFullStaticCentralVpcId9ED5D50B": {
+      "DependsOn": [
+        "SsmParamWorkloadTemplateVpcId8722DBFE",
+      ],
+      "Properties": {
+        "Name": "/accelerator/network/vpc/Infra-Template-Full-Static-Central/id",
+        "Type": "String",
+        "Value": {
+          "Ref": "InfraTemplateFullStaticCentralVpc2E4383E1",
+        },
+      },
+      "Type": "AWS::SSM::Parameter",
+    },
+    "SsmParamInfraTemplateFullStaticCentralWorkloadARtRouteTableIdCB0B0E09": {
+      "DependsOn": [
+        "SsmParamNetworkNonTemplateIpamCentralNetworkNonTemplateIpamPublicRouteTableId2F3EF67A",
+      ],
+      "Properties": {
+        "Name": "/accelerator/network/vpc/Infra-Template-Full-Static-Central/routeTable/Workload-A-Rt/id",
+        "Type": "String",
+        "Value": {
+          "Ref": "InfraTemplateFullStaticCentralVpcWorkloadARtRouteTableAB2D6977",
+        },
+      },
+      "Type": "AWS::SSM::Parameter",
+    },
+    "SsmParamInfraTemplateFullStaticCentralWorkloadASubnetId61AC6A91": {
+      "DependsOn": [
+        "SsmParamNetworkNonTemplateIpamCentralNetworkNonTemplateIpamPublicASubnetId7479495B",
+      ],
+      "Properties": {
+        "Name": "/accelerator/network/vpc/Infra-Template-Full-Static-Central/subnet/Workload-A/id",
+        "Type": "String",
+        "Value": {
+          "Ref": "InfraTemplateFullStaticCentralVpcWorkloadASubnet89E810F8",
+        },
+      },
+      "Type": "AWS::SSM::Parameter",
+    },
+    "SsmParamInfraTemplateHalfIpamCentralVpcIdDCCF360B": {
+      "DependsOn": [
+        "SsmParamWorkloadTemplateVpcId8722DBFE",
+      ],
+      "Properties": {
+        "Name": "/accelerator/network/vpc/Infra-Template-Half-Ipam-Central/id",
+        "Type": "String",
+        "Value": {
+          "Ref": "InfraTemplateHalfIpamCentralVpcAF63FFD8",
+        },
+      },
+      "Type": "AWS::SSM::Parameter",
+    },
+    "SsmParamInfraTemplateHalfIpamCentralWorkloadARtRouteTableId0953204D": {
+      "DependsOn": [
+        "SsmParamInfraTemplateHalfStaticCentralWorkloadARtRouteTableIdC87397B7",
+      ],
+      "Properties": {
+        "Name": "/accelerator/network/vpc/Infra-Template-Half-Ipam-Central/routeTable/Workload-A-Rt/id",
+        "Type": "String",
+        "Value": {
+          "Ref": "InfraTemplateHalfIpamCentralVpcWorkloadARtRouteTableAF0CA499",
+        },
+      },
+      "Type": "AWS::SSM::Parameter",
+    },
+    "SsmParamInfraTemplateHalfIpamCentralWorkloadASubnetIdC011FD85": {
+      "DependsOn": [
+        "SsmParamInfraTemplateHalfStaticCentralWorkloadASubnetId680B2FDD",
+      ],
+      "Properties": {
+        "Name": "/accelerator/network/vpc/Infra-Template-Half-Ipam-Central/subnet/Workload-A/id",
+        "Type": "String",
+        "Value": {
+          "Ref": "InfraTemplateHalfIpamCentralVpcWorkloadASubnet150CBD97",
+        },
+      },
+      "Type": "AWS::SSM::Parameter",
+    },
+    "SsmParamInfraTemplateHalfStaticCentralVpcId623874AD": {
+      "DependsOn": [
+        "SsmParamWorkloadTemplateVpcId8722DBFE",
+      ],
+      "Properties": {
+        "Name": "/accelerator/network/vpc/Infra-Template-Half-Static-Central/id",
+        "Type": "String",
+        "Value": {
+          "Ref": "InfraTemplateHalfStaticCentralVpc8C770679",
+        },
+      },
+      "Type": "AWS::SSM::Parameter",
+    },
+    "SsmParamInfraTemplateHalfStaticCentralWorkloadARtRouteTableIdC87397B7": {
+      "Properties": {
+        "Name": "/accelerator/network/vpc/Infra-Template-Half-Static-Central/routeTable/Workload-A-Rt/id",
+        "Type": "String",
+        "Value": {
+          "Ref": "InfraTemplateHalfStaticCentralVpcWorkloadARtRouteTable34229EBD",
+        },
+      },
+      "Type": "AWS::SSM::Parameter",
+    },
+    "SsmParamInfraTemplateHalfStaticCentralWorkloadASubnetId680B2FDD": {
+      "Properties": {
+        "Name": "/accelerator/network/vpc/Infra-Template-Half-Static-Central/subnet/Workload-A/id",
+        "Type": "String",
+        "Value": {
+          "Ref": "InfraTemplateHalfStaticCentralVpcWorkloadASubnet0013D1FA",
+        },
+      },
+      "Type": "AWS::SSM::Parameter",
+    },
     "SsmParamNetworkEndpointsManagementSecurityGroup157CDC67": {
+      "DependsOn": [
+        "SsmParamNetworkEndpointsNetworkEndpointsTransitGatewayAttachmentId2EBCB846",
+      ],
       "Properties": {
         "Name": "/accelerator/network/vpc/Network-Endpoints/securityGroup/Management/id",
         "Type": "String",
@@ -4412,7 +5933,7 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
     },
     "SsmParamNetworkEndpointsNetworkEndpoints2TransitGatewayAttachmentIdD5FF19F5": {
       "DependsOn": [
-        "SsmParamNetworkInspectionAcceleratorNatGwBNatGatewayId74BA7991",
+        "SsmParamNetworkEndpointsNetworkEndpointsTransitGatewayAttachmentId2EBCB846",
       ],
       "Properties": {
         "Name": "/accelerator/network/vpc/Network-Endpoints/transitGatewayAttachment/Network-Endpoints-2/id",
@@ -4424,6 +5945,9 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
       "Type": "AWS::SSM::Parameter",
     },
     "SsmParamNetworkEndpointsNetworkEndpointsARouteTableIdC55DBCD4": {
+      "DependsOn": [
+        "SsmParamNetworkEndpointsNetworkEndpointsTgwBRouteTableIdC8AB07B7",
+      ],
       "Properties": {
         "Name": "/accelerator/network/vpc/Network-Endpoints/routeTable/Network-Endpoints-A/id",
         "Type": "String",
@@ -4434,9 +5958,6 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
       "Type": "AWS::SSM::Parameter",
     },
     "SsmParamNetworkEndpointsNetworkEndpointsASubnetIdF53EDCC9": {
-      "DependsOn": [
-        "SsmParamNetworkSecondaryNetworkSecondaryOutposts1SubnetIdBFE852EB",
-      ],
       "Properties": {
         "Name": "/accelerator/network/vpc/Network-Endpoints/subnet/Network-Endpoints-A/id",
         "Type": "String",
@@ -4448,7 +5969,7 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
     },
     "SsmParamNetworkEndpointsNetworkEndpointsBRouteTableId03F05790": {
       "DependsOn": [
-        "SsmParamNetworkEndpointsNetworkEndpointsARouteTableIdC55DBCD4",
+        "SsmParamNetworkEndpointsNetworkEndpointsTgwBRouteTableIdC8AB07B7",
       ],
       "Properties": {
         "Name": "/accelerator/network/vpc/Network-Endpoints/routeTable/Network-Endpoints-B/id",
@@ -4461,7 +5982,7 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
     },
     "SsmParamNetworkEndpointsNetworkEndpointsBSubnetId62D810E8": {
       "DependsOn": [
-        "SsmParamNetworkSecondaryNetworkSecondaryOutposts1SubnetIdBFE852EB",
+        "SsmParamNetworkEndpointsNetworkEndpointsASubnetIdF53EDCC9",
       ],
       "Properties": {
         "Name": "/accelerator/network/vpc/Network-Endpoints/subnet/Network-Endpoints-B/id",
@@ -4474,7 +5995,7 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
     },
     "SsmParamNetworkEndpointsNetworkEndpointsCustomEndpointSgSecurityGroupE01E3A88": {
       "DependsOn": [
-        "SsmParamNetworkEndpointsManagementSecurityGroup157CDC67",
+        "SsmParamNetworkEndpointsNetworkEndpointsTransitGatewayAttachmentId2EBCB846",
       ],
       "Properties": {
         "Name": "/accelerator/network/vpc/Network-Endpoints/securityGroup/Network-Endpoints-CustomEndpointSg/id",
@@ -4487,7 +6008,7 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
     },
     "SsmParamNetworkEndpointsNetworkEndpointsTgwARouteTableId2037B6B4": {
       "DependsOn": [
-        "SsmParamNetworkSecondaryNetworkSecondaryBRtRouteTableIdFA654D75",
+        "SsmParamNetworkSecondaryNetworkSecondaryARtRouteTableIdD8813C63",
       ],
       "Properties": {
         "Name": "/accelerator/network/vpc/Network-Endpoints/routeTable/Network-Endpoints-Tgw-A/id",
@@ -4499,6 +6020,9 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
       "Type": "AWS::SSM::Parameter",
     },
     "SsmParamNetworkEndpointsNetworkEndpointsTgwAttachASubnetId72C0AC02": {
+      "DependsOn": [
+        "SsmParamNetworkEndpointsNetworkEndpointsASubnetIdF53EDCC9",
+      ],
       "Properties": {
         "Name": "/accelerator/network/vpc/Network-Endpoints/subnet/Network-EndpointsTgwAttach-A/id",
         "Type": "String",
@@ -4510,7 +6034,7 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
     },
     "SsmParamNetworkEndpointsNetworkEndpointsTgwAttachBSubnetId0B7C06C7": {
       "DependsOn": [
-        "SsmParamNetworkEndpointsNetworkEndpointsTgwAttachASubnetId72C0AC02",
+        "SsmParamNetworkEndpointsNetworkEndpointsASubnetIdF53EDCC9",
       ],
       "Properties": {
         "Name": "/accelerator/network/vpc/Network-Endpoints/subnet/Network-EndpointsTgwAttach-B/id",
@@ -4522,9 +6046,6 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
       "Type": "AWS::SSM::Parameter",
     },
     "SsmParamNetworkEndpointsNetworkEndpointsTgwBRouteTableIdC8AB07B7": {
-      "DependsOn": [
-        "SsmParamNetworkSecondaryNetworkSecondaryBRtRouteTableIdFA654D75",
-      ],
       "Properties": {
         "Name": "/accelerator/network/vpc/Network-Endpoints/routeTable/Network-Endpoints-Tgw-B/id",
         "Type": "String",
@@ -4535,9 +6056,6 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
       "Type": "AWS::SSM::Parameter",
     },
     "SsmParamNetworkEndpointsNetworkEndpointsTransitGatewayAttachmentId2EBCB846": {
-      "DependsOn": [
-        "SsmParamNetworkInspectionAcceleratorNatGwBNatGatewayId74BA7991",
-      ],
       "Properties": {
         "Name": "/accelerator/network/vpc/Network-Endpoints/transitGatewayAttachment/Network-Endpoints/id",
         "Type": "String",
@@ -4549,7 +6067,7 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
     },
     "SsmParamNetworkEndpointsTestNaclNaclED9584AC": {
       "DependsOn": [
-        "SsmParamNetworkEndpointsManagementSecurityGroup157CDC67",
+        "SsmParamNetworkInspectionDataSecurityGroup1FD45226",
       ],
       "Properties": {
         "Name": "/accelerator/network/vpc/Network-Endpoints/networkAcl/TestNACL/id",
@@ -4582,7 +6100,7 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
     },
     "SsmParamNetworkInspectionAcceleratorNatGwANatGatewayId28332EEC": {
       "DependsOn": [
-        "SsmParamNetworkInspectionNetworkInspectionTgwAttachBSubnetId470AEEA9",
+        "SsmParamInfraTemplateHalfStaticCentralWorkloadASubnetId680B2FDD",
       ],
       "Properties": {
         "Name": "/accelerator/network/vpc/Network-Inspection/natGateway/accelerator-nat-gw-a/id",
@@ -4594,6 +6112,9 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
       "Type": "AWS::SSM::Parameter",
     },
     "SsmParamNetworkInspectionAcceleratorNatGwBNatGatewayId74BA7991": {
+      "DependsOn": [
+        "SsmParamInfraTemplateHalfStaticCentralWorkloadASubnetId680B2FDD",
+      ],
       "Properties": {
         "Name": "/accelerator/network/vpc/Network-Inspection/natGateway/accelerator-nat-gw-b/id",
         "Type": "String",
@@ -4605,7 +6126,7 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
     },
     "SsmParamNetworkInspectionAcceleratorNatGwCNatGatewayId498E58EE": {
       "DependsOn": [
-        "SsmParamNetworkInspectionAcceleratorNatGwBNatGatewayId74BA7991",
+        "SsmParamInfraTemplateHalfStaticCentralWorkloadASubnetId680B2FDD",
       ],
       "Properties": {
         "Name": "/accelerator/network/vpc/Network-Inspection/natGateway/accelerator-nat-gw-c/id",
@@ -4617,9 +6138,6 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
       "Type": "AWS::SSM::Parameter",
     },
     "SsmParamNetworkInspectionDataSecurityGroup1FD45226": {
-      "DependsOn": [
-        "SsmParamNetworkEndpointsManagementSecurityGroup157CDC67",
-      ],
       "Properties": {
         "Name": "/accelerator/network/vpc/Network-Inspection/securityGroup/Data/id",
         "Type": "String",
@@ -4631,7 +6149,7 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
     },
     "SsmParamNetworkInspectionNetworkInspectionARouteTableIdAA9E21C5": {
       "DependsOn": [
-        "SsmParamNetworkEndpointsNetworkEndpointsARouteTableIdC55DBCD4",
+        "SsmParamNetworkEndpointsNetworkEndpointsTgwBRouteTableIdC8AB07B7",
       ],
       "Properties": {
         "Name": "/accelerator/network/vpc/Network-Inspection/routeTable/Network-Inspection-A/id",
@@ -4644,7 +6162,7 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
     },
     "SsmParamNetworkInspectionNetworkInspectionASubnetId84BB7982": {
       "DependsOn": [
-        "SsmParamNetworkEndpointsNetworkEndpointsTgwAttachASubnetId72C0AC02",
+        "SsmParamNetworkEndpointsNetworkEndpointsASubnetIdF53EDCC9",
       ],
       "Properties": {
         "Name": "/accelerator/network/vpc/Network-Inspection/subnet/Network-Inspection-A/id",
@@ -4657,7 +6175,7 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
     },
     "SsmParamNetworkInspectionNetworkInspectionBRouteTableIdAC1C6F68": {
       "DependsOn": [
-        "SsmParamNetworkEndpointsNetworkEndpointsARouteTableIdC55DBCD4",
+        "SsmParamNetworkEndpointsNetworkEndpointsTgwBRouteTableIdC8AB07B7",
       ],
       "Properties": {
         "Name": "/accelerator/network/vpc/Network-Inspection/routeTable/Network-Inspection-B/id",
@@ -4669,9 +6187,6 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
       "Type": "AWS::SSM::Parameter",
     },
     "SsmParamNetworkInspectionNetworkInspectionBSubnetId08F48703": {
-      "DependsOn": [
-        "SsmParamNetworkEndpointsNetworkEndpointsTgwAttachASubnetId72C0AC02",
-      ],
       "Properties": {
         "Name": "/accelerator/network/vpc/Network-Inspection/subnet/Network-Inspection-B/id",
         "Type": "String",
@@ -4683,7 +6198,7 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
     },
     "SsmParamNetworkInspectionNetworkInspectionGatewayRouteTableId9C85DF52": {
       "DependsOn": [
-        "SsmParamNetworkInspectionNetworkInspectionTgwBRouteTableId7113F1A4",
+        "SsmParamNetworkInspectionNetworkInspectionTgwARouteTableId838420AE",
       ],
       "Properties": {
         "Name": "/accelerator/network/vpc/Network-Inspection/routeTable/Network-Inspection-Gateway/id",
@@ -4696,7 +6211,7 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
     },
     "SsmParamNetworkInspectionNetworkInspectionLocalASubnetIdB87E6E71": {
       "DependsOn": [
-        "SsmParamNetworkInspectionNetworkInspectionTgwAttachBSubnetId470AEEA9",
+        "SsmParamNetworkInspectionNetworkInspectionBSubnetId08F48703",
       ],
       "Properties": {
         "Name": "/accelerator/network/vpc/Network-Inspection/subnet/Network-Inspection-Local-A/id",
@@ -4709,7 +6224,7 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
     },
     "SsmParamNetworkInspectionNetworkInspectionLocalRtARouteTableIdFC5189D1": {
       "DependsOn": [
-        "SsmParamNetworkInspectionNetworkInspectionTgwBRouteTableId7113F1A4",
+        "SsmParamNetworkInspectionNetworkInspectionTgwARouteTableId838420AE",
       ],
       "Properties": {
         "Name": "/accelerator/network/vpc/Network-Inspection/routeTable/Network-Inspection-Local-Rt-A/id",
@@ -4721,9 +6236,6 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
       "Type": "AWS::SSM::Parameter",
     },
     "SsmParamNetworkInspectionNetworkInspectionTgwARouteTableId838420AE": {
-      "DependsOn": [
-        "SsmParamNetworkEndpointsNetworkEndpointsARouteTableIdC55DBCD4",
-      ],
       "Properties": {
         "Name": "/accelerator/network/vpc/Network-Inspection/routeTable/Network-Inspection-Tgw-A/id",
         "Type": "String",
@@ -4735,7 +6247,7 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
     },
     "SsmParamNetworkInspectionNetworkInspectionTgwAttachASubnetId90B86E86": {
       "DependsOn": [
-        "SsmParamNetworkEndpointsNetworkEndpointsTgwAttachASubnetId72C0AC02",
+        "SsmParamNetworkInspectionNetworkInspectionBSubnetId08F48703",
       ],
       "Properties": {
         "Name": "/accelerator/network/vpc/Network-Inspection/subnet/Network-InspectionTgwAttach-A/id",
@@ -4747,6 +6259,9 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
       "Type": "AWS::SSM::Parameter",
     },
     "SsmParamNetworkInspectionNetworkInspectionTgwAttachBSubnetId470AEEA9": {
+      "DependsOn": [
+        "SsmParamNetworkInspectionNetworkInspectionBSubnetId08F48703",
+      ],
       "Properties": {
         "Name": "/accelerator/network/vpc/Network-Inspection/subnet/Network-InspectionTgwAttach-B/id",
         "Type": "String",
@@ -4757,6 +6272,9 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
       "Type": "AWS::SSM::Parameter",
     },
     "SsmParamNetworkInspectionNetworkInspectionTgwBRouteTableId7113F1A4": {
+      "DependsOn": [
+        "SsmParamNetworkInspectionNetworkInspectionTgwARouteTableId838420AE",
+      ],
       "Properties": {
         "Name": "/accelerator/network/vpc/Network-Inspection/routeTable/Network-Inspection-Tgw-B/id",
         "Type": "String",
@@ -4768,7 +6286,7 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
     },
     "SsmParamNetworkInspectionNetworkInspectionTransitGatewayAttachmentId80B7A8EF": {
       "DependsOn": [
-        "SsmParamNetworkInspectionAcceleratorNatGwBNatGatewayId74BA7991",
+        "SsmParamNetworkEndpointsNetworkEndpointsTransitGatewayAttachmentId2EBCB846",
       ],
       "Properties": {
         "Name": "/accelerator/network/vpc/Network-Inspection/transitGatewayAttachment/Network-Inspection/id",
@@ -4805,10 +6323,79 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
       },
       "Type": "AWS::SSM::Parameter",
     },
-    "SsmParamNetworkSecondaryNetworkSecondaryARtRouteTableIdD8813C63": {
+    "SsmParamNetworkNonTemplateIpamCentralNetworkNonTemplateIpamPublicASubnetId7479495B": {
+      "Properties": {
+        "Name": "/accelerator/network/vpc/Network-NonTemplate-Ipam-Central/subnet/Network-NonTemplate-Ipam-Public-A/id",
+        "Type": "String",
+        "Value": {
+          "Ref": "NetworkNonTemplateIpamCentralVpcNetworkNonTemplateIpamPublicASubnet8EFA1E26",
+        },
+      },
+      "Type": "AWS::SSM::Parameter",
+    },
+    "SsmParamNetworkNonTemplateIpamCentralNetworkNonTemplateIpamPublicRouteTableId2F3EF67A": {
+      "Properties": {
+        "Name": "/accelerator/network/vpc/Network-NonTemplate-Ipam-Central/routeTable/Network-NonTemplate-Ipam-Public/id",
+        "Type": "String",
+        "Value": {
+          "Ref": "NetworkNonTemplateIpamCentralVpcNetworkNonTemplateIpamPublicRouteTableA4FD2DC5",
+        },
+      },
+      "Type": "AWS::SSM::Parameter",
+    },
+    "SsmParamNetworkNonTemplateIpamCentralVpcIdB36FF305": {
       "DependsOn": [
         "SsmParamNetworkEndpointsVpnGatewayId9424DAB4",
       ],
+      "Properties": {
+        "Name": "/accelerator/network/vpc/Network-NonTemplate-Ipam-Central/id",
+        "Type": "String",
+        "Value": {
+          "Ref": "NetworkNonTemplateIpamCentralVpc534B7BC1",
+        },
+      },
+      "Type": "AWS::SSM::Parameter",
+    },
+    "SsmParamNetworkNonTemplateStaticCentralNetworkNonTemplateStaticPublicRouteTableId3A8B5599": {
+      "DependsOn": [
+        "SsmParamNetworkInspectionNetworkInspectionTgwARouteTableId838420AE",
+      ],
+      "Properties": {
+        "Name": "/accelerator/network/vpc/Network-NonTemplate-Static-Central/routeTable/Network-NonTemplate-Static-Public/id",
+        "Type": "String",
+        "Value": {
+          "Ref": "NetworkNonTemplateStaticCentralVpcNetworkNonTemplateStaticPublicRouteTable8F7BD7E5",
+        },
+      },
+      "Type": "AWS::SSM::Parameter",
+    },
+    "SsmParamNetworkNonTemplateStaticCentralNetworkPublicASubnetId6766E0BC": {
+      "DependsOn": [
+        "SsmParamNetworkInspectionNetworkInspectionBSubnetId08F48703",
+      ],
+      "Properties": {
+        "Name": "/accelerator/network/vpc/Network-NonTemplate-Static-Central/subnet/Network-Public-A/id",
+        "Type": "String",
+        "Value": {
+          "Ref": "NetworkNonTemplateStaticCentralVpcNetworkPublicASubnet1252F6FB",
+        },
+      },
+      "Type": "AWS::SSM::Parameter",
+    },
+    "SsmParamNetworkNonTemplateStaticCentralVpcId9DA2C7CD": {
+      "DependsOn": [
+        "SsmParamNetworkEndpointsVpnGatewayId9424DAB4",
+      ],
+      "Properties": {
+        "Name": "/accelerator/network/vpc/Network-NonTemplate-Static-Central/id",
+        "Type": "String",
+        "Value": {
+          "Ref": "NetworkNonTemplateStaticCentralVpc28FB9AAB",
+        },
+      },
+      "Type": "AWS::SSM::Parameter",
+    },
+    "SsmParamNetworkSecondaryNetworkSecondaryARtRouteTableIdD8813C63": {
       "Properties": {
         "Name": "/accelerator/network/vpc/Network-Secondary/routeTable/Network-Secondary-A-Rt/id",
         "Type": "String",
@@ -4819,6 +6406,9 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
       "Type": "AWS::SSM::Parameter",
     },
     "SsmParamNetworkSecondaryNetworkSecondaryASubnetId121C5F23": {
+      "DependsOn": [
+        "SsmParamInfraTemplateHalfStaticCentralWorkloadARtRouteTableIdC87397B7",
+      ],
       "Properties": {
         "Name": "/accelerator/network/vpc/Network-Secondary/subnet/Network-Secondary-A/id",
         "Type": "String",
@@ -4829,6 +6419,9 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
       "Type": "AWS::SSM::Parameter",
     },
     "SsmParamNetworkSecondaryNetworkSecondaryBRtRouteTableIdFA654D75": {
+      "DependsOn": [
+        "SsmParamNetworkSecondaryNetworkSecondaryARtRouteTableIdD8813C63",
+      ],
       "Properties": {
         "Name": "/accelerator/network/vpc/Network-Secondary/routeTable/Network-Secondary-B-Rt/id",
         "Type": "String",
@@ -4840,7 +6433,7 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
     },
     "SsmParamNetworkSecondaryNetworkSecondaryBSubnetIdDF008255": {
       "DependsOn": [
-        "SsmParamNetworkSecondaryNetworkSecondaryASubnetId121C5F23",
+        "SsmParamInfraTemplateHalfStaticCentralWorkloadARtRouteTableIdC87397B7",
       ],
       "Properties": {
         "Name": "/accelerator/network/vpc/Network-Secondary/subnet/Network-Secondary-B/id",
@@ -4853,7 +6446,7 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
     },
     "SsmParamNetworkSecondaryNetworkSecondaryCRtRouteTableId08D87312": {
       "DependsOn": [
-        "SsmParamNetworkSecondaryNetworkSecondaryBRtRouteTableIdFA654D75",
+        "SsmParamNetworkSecondaryNetworkSecondaryARtRouteTableIdD8813C63",
       ],
       "Properties": {
         "Name": "/accelerator/network/vpc/Network-Secondary/routeTable/Network-Secondary-C-Rt/id",
@@ -4866,7 +6459,7 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
     },
     "SsmParamNetworkSecondaryNetworkSecondaryCSubnetId6A8F9E78": {
       "DependsOn": [
-        "SsmParamNetworkSecondaryNetworkSecondaryASubnetId121C5F23",
+        "SsmParamInfraTemplateHalfStaticCentralWorkloadARtRouteTableIdC87397B7",
       ],
       "Properties": {
         "Name": "/accelerator/network/vpc/Network-Secondary/subnet/Network-Secondary-C/id",
@@ -4879,7 +6472,7 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
     },
     "SsmParamNetworkSecondaryNetworkSecondaryDRtRouteTableIdD54D03D4": {
       "DependsOn": [
-        "SsmParamNetworkSecondaryNetworkSecondaryBRtRouteTableIdFA654D75",
+        "SsmParamNetworkSecondaryNetworkSecondaryARtRouteTableIdD8813C63",
       ],
       "Properties": {
         "Name": "/accelerator/network/vpc/Network-Secondary/routeTable/Network-Secondary-D-Rt/id",
@@ -4891,9 +6484,6 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
       "Type": "AWS::SSM::Parameter",
     },
     "SsmParamNetworkSecondaryNetworkSecondaryDSubnetIdEFF1A015": {
-      "DependsOn": [
-        "SsmParamNetworkSecondaryNetworkSecondaryASubnetId121C5F23",
-      ],
       "Properties": {
         "Name": "/accelerator/network/vpc/Network-Secondary/subnet/Network-Secondary-D/id",
         "Type": "String",
@@ -4905,7 +6495,7 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
     },
     "SsmParamNetworkSecondaryNetworkSecondaryDualStackSubnetId7D04B583": {
       "DependsOn": [
-        "SsmParamNetworkSecondaryNetworkSecondaryOutposts1SubnetIdBFE852EB",
+        "SsmParamNetworkSecondaryNetworkSecondaryDSubnetIdEFF1A015",
       ],
       "Properties": {
         "Name": "/accelerator/network/vpc/Network-Secondary/subnet/Network-Secondary-Dual-Stack/id",
@@ -4918,7 +6508,7 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
     },
     "SsmParamNetworkSecondaryNetworkSecondaryIpv6OnlySubnetId8392EF4E": {
       "DependsOn": [
-        "SsmParamNetworkSecondaryNetworkSecondaryOutposts1SubnetIdBFE852EB",
+        "SsmParamNetworkSecondaryNetworkSecondaryDSubnetIdEFF1A015",
       ],
       "Properties": {
         "Name": "/accelerator/network/vpc/Network-Secondary/subnet/Network-Secondary-Ipv6-Only/id",
@@ -4930,6 +6520,9 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
       "Type": "AWS::SSM::Parameter",
     },
     "SsmParamNetworkSecondaryNetworkSecondaryOutposts1SubnetIdBFE852EB": {
+      "DependsOn": [
+        "SsmParamNetworkSecondaryNetworkSecondaryDSubnetIdEFF1A015",
+      ],
       "Properties": {
         "Name": "/accelerator/network/vpc/Network-Secondary/subnet/Network-Secondary-Outposts-1/id",
         "Type": "String",
@@ -4941,7 +6534,7 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
     },
     "SsmParamNetworkSecondaryNetworkSecondaryOutpostsASubnetId8238BEAB": {
       "DependsOn": [
-        "SsmParamNetworkSecondaryNetworkSecondaryASubnetId121C5F23",
+        "SsmParamNetworkSecondaryNetworkSecondaryDSubnetIdEFF1A015",
       ],
       "Properties": {
         "Name": "/accelerator/network/vpc/Network-Secondary/subnet/Network-Secondary-Outposts-A/id",
@@ -4954,7 +6547,7 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
     },
     "SsmParamNetworkSecondaryTestNaclNacl0FC3F602": {
       "DependsOn": [
-        "SsmParamNetworkEndpointsManagementSecurityGroup157CDC67",
+        "SsmParamNetworkInspectionDataSecurityGroup1FD45226",
       ],
       "Properties": {
         "Name": "/accelerator/network/vpc/Network-Secondary/networkAcl/TestNacl/id",
@@ -4986,9 +6579,6 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
       "Type": "AWS::SSM::Parameter",
     },
     "SsmParamWorkloadTemplateVpcId8722DBFE": {
-      "DependsOn": [
-        "SsmParamNetworkEndpointsVpnGatewayId9424DAB4",
-      ],
       "Properties": {
         "Name": "/accelerator/network/vpc/Workload-Template/id",
         "Type": "String",
@@ -5000,7 +6590,7 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
     },
     "SsmParamWorkloadTemplateWorkloadARtRouteTableId8F1E5325": {
       "DependsOn": [
-        "SsmParamNetworkInspectionNetworkInspectionTgwBRouteTableId7113F1A4",
+        "SsmParamNetworkNonTemplateIpamCentralNetworkNonTemplateIpamPublicRouteTableId2F3EF67A",
       ],
       "Properties": {
         "Name": "/accelerator/network/vpc/Workload-Template/routeTable/Workload-A-Rt/id",
@@ -5013,7 +6603,7 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
     },
     "SsmParamWorkloadTemplateWorkloadASubnetIdC0F8B4F7": {
       "DependsOn": [
-        "SsmParamNetworkInspectionNetworkInspectionTgwAttachBSubnetId470AEEA9",
+        "SsmParamNetworkNonTemplateIpamCentralNetworkNonTemplateIpamPublicASubnetId7479495B",
       ],
       "Properties": {
         "Name": "/accelerator/network/vpc/Workload-Template/subnet/Workload-A/id",
@@ -5026,7 +6616,7 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
     },
     "SsmParamWorkloadTemplateWorkloadBRtRouteTableId3D4D6359": {
       "DependsOn": [
-        "SsmParamNetworkInspectionNetworkInspectionTgwBRouteTableId7113F1A4",
+        "SsmParamNetworkNonTemplateIpamCentralNetworkNonTemplateIpamPublicRouteTableId2F3EF67A",
       ],
       "Properties": {
         "Name": "/accelerator/network/vpc/Workload-Template/routeTable/Workload-B-Rt/id",
@@ -5039,7 +6629,7 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
     },
     "SsmParamWorkloadTemplateWorkloadBSubnetIdC690B217": {
       "DependsOn": [
-        "SsmParamNetworkInspectionNetworkInspectionTgwAttachBSubnetId470AEEA9",
+        "SsmParamNetworkNonTemplateIpamCentralNetworkNonTemplateIpamPublicASubnetId7479495B",
       ],
       "Properties": {
         "Name": "/accelerator/network/vpc/Workload-Template/subnet/Workload-B/id",
@@ -5199,6 +6789,108 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
                         "Ref": "AWS::Partition",
                       },
                       ":iam::555555555555:root",
+                    ],
+                  ],
+                },
+              },
+            },
+            {
+              "Action": "sts:AssumeRole",
+              "Condition": {
+                "ArnLike": {
+                  "aws:PrincipalArn": [
+                    {
+                      "Fn::Join": [
+                        "",
+                        [
+                          "arn:",
+                          {
+                            "Ref": "AWS::Partition",
+                          },
+                          ":iam::*:role/AWSAccelerator*",
+                        ],
+                      ],
+                    },
+                    {
+                      "Fn::Join": [
+                        "",
+                        [
+                          "arn:",
+                          {
+                            "Ref": "AWS::Partition",
+                          },
+                          ":iam::*:role/AWSControlTowerExecution",
+                        ],
+                      ],
+                    },
+                  ],
+                },
+                "StringEquals": {
+                  "aws:PrincipalOrgID": "o-asdf123456",
+                },
+              },
+              "Effect": "Allow",
+              "Principal": {
+                "AWS": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":iam::333333333333:root",
+                    ],
+                  ],
+                },
+              },
+            },
+            {
+              "Action": "sts:AssumeRole",
+              "Condition": {
+                "ArnLike": {
+                  "aws:PrincipalArn": [
+                    {
+                      "Fn::Join": [
+                        "",
+                        [
+                          "arn:",
+                          {
+                            "Ref": "AWS::Partition",
+                          },
+                          ":iam::*:role/AWSAccelerator*",
+                        ],
+                      ],
+                    },
+                    {
+                      "Fn::Join": [
+                        "",
+                        [
+                          "arn:",
+                          {
+                            "Ref": "AWS::Partition",
+                          },
+                          ":iam::*:role/AWSControlTowerExecution",
+                        ],
+                      ],
+                    },
+                  ],
+                },
+                "StringEquals": {
+                  "aws:PrincipalOrgID": "o-asdf123456",
+                },
+              },
+              "Effect": "Allow",
+              "Principal": {
+                "AWS": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":iam::222222222222:root",
                     ],
                   ],
                 },
@@ -5658,7 +7350,7 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
     },
     "appAalb01NetworkEndpointsssmF399A7CC": {
       "DependsOn": [
-        "SsmParamAcceleratorGwlbSecondaryGwlbServiceId3F04FE9A",
+        "SsmParamAcceleratorGwlbGwlbServiceIdF93A23BF",
       ],
       "Properties": {
         "Name": "/accelerator/network/vpc/Network-Endpoints/alb/appA-alb-01/id",
@@ -5720,6 +7412,9 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
       "Type": "AWS::ElasticLoadBalancingV2::LoadBalancer",
     },
     "appAnlb01NetworkEndpointsssm0DA0AE1E": {
+      "DependsOn": [
+        "SsmParamAcceleratorGwlbGwlbServiceIdF93A23BF",
+      ],
       "Properties": {
         "Name": "/accelerator/network/vpc/Network-Endpoints/nlb/appA-nlb-01/id",
         "Type": "String",
