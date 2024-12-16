@@ -1751,6 +1751,7 @@ drop http $HOME_NET any -> $EXTERNAL_NET any (http.host; content:"example.com"; 
         "Name": "home-region-pool_IpamPoolShare",
         "Principals": [
           "arn:aws:organizations::111111111111:ou/o-asdf123456/ou-asdf-22222222",
+          "arn:aws:organizations::111111111111:ou/o-asdf123456/ou-asdf-11111111",
         ],
         "ResourceArns": [
           {
@@ -2924,6 +2925,7 @@ drop http $HOME_NET any -> $EXTERNAL_NET any (http.host; content:"example.com"; 
         "Name": "west-region-pool_IpamPoolShare",
         "Principals": [
           "arn:aws:organizations::111111111111:ou/o-asdf123456/ou-asdf-22222222",
+          "arn:aws:organizations::111111111111:ou/o-asdf123456/ou-asdf-11111111",
         ],
         "ResourceArns": [
           {

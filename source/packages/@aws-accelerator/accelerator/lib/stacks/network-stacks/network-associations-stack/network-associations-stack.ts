@@ -145,8 +145,8 @@ export class NetworkAssociationsStack extends NetworkStack {
       //
       this.routeTableMap = this.setRouteTableMap(this.vpcsInScope);
       // Get cross-account prefix list IDs as needed
-      const crossAcctRouteTables = this.setCrossAcctRouteTables();
-      crossAcctRouteTables.forEach((value, key) => this.routeTableMap.set(key, value));
+      const crossAcctCrossRegionRouteTables = this.setCrossEnvironmentRouteTables();
+      crossAcctCrossRegionRouteTables.forEach((value, key) => this.routeTableMap.set(key, value));
 
       //
       // Create transit gateway route table associations, propagations,
@@ -774,7 +774,7 @@ export class NetworkAssociationsStack extends NetworkStack {
             routeTableEntry.type === 'vpcPeering' &&
             routeTableEntry.target === peering.name
           ) {
-            crossAccountRouteFramework = peering.crossAccount;
+            crossAccountRouteFramework = peering.crossAccount || crossAccountRouteFramework;
           }
         }
       }
@@ -895,9 +895,9 @@ export class NetworkAssociationsStack extends NetworkStack {
   }
 
   /**
-   * Get cross-account route tables
+   * Get cross environment route tables
    */
-  private setCrossAcctRouteTables(): Map<string, string> {
+  private setCrossEnvironmentRouteTables(): Map<string, string> {
     const routeTableMap = new Map<string, string>();
     for (const peering of this.peeringList) {
       // Get account IDs
@@ -910,7 +910,7 @@ export class NetworkAssociationsStack extends NetworkStack {
               routeTableEntry.type === 'vpcPeering' &&
               routeTableEntry.target === peering.name &&
               peering.crossAccount &&
-              this.account !== accepterAccountId &&
+              (this.account !== accepterAccountId || peering.requester.region !== peering.accepter.region) &&
               !routeTableMap.has(`${peering.accepter.name}_${accepterAccountId}_${routeTable.name}`)
             ) {
               const routeTableId = new SsmParameterLookup(
@@ -1845,23 +1845,35 @@ export class NetworkAssociationsStack extends NetworkStack {
       for (const accepterAccountId of accepterAccountIds) {
         let accepterVpcId: string;
         let accepterRoleName: string | undefined = undefined;
-        if (peering.crossAccount && accepterAccountId !== this.account) {
-          accepterVpcId = new SsmParameterLookup(this, pascalCase(`SsmParamLookup${peering.name}`), {
-            name: this.getSsmPath(SsmResourceType.VPC, [peering.accepter.name]),
-            accountId: accepterAccountId,
-            parameterRegion: peering.accepter.region,
-            roleName: `${this.props.prefixes.accelerator}-VpcPeeringRole-${peering.accepter.region}`,
-            kmsKey: this.cloudwatchKey,
-            logRetentionInDays: this.logRetention,
-            acceleratorPrefix: this.props.prefixes.accelerator,
-          }).value;
-
-          accepterRoleName = `${this.props.prefixes.accelerator}-VpcPeeringRole-${peering.accepter.region}`;
-        } else {
+        if (
+          (!peering.crossAccount || accepterAccountId === this.account) &&
+          peering.accepter.region === peering.requester.region
+        ) {
+          // Same account same region vpc peering
           accepterVpcId = cdk.aws_ssm.StringParameter.valueForStringParameter(
             this,
             this.getSsmPath(SsmResourceType.VPC, [peering.accepter.name]),
           );
+        } else {
+          // Cross account and/or cross region peering
+          accepterVpcId = new SsmParameterLookup(
+            this,
+            pascalCase(`SsmParamLookup${peering.name}${accepterAccountId}${peering.accepter.region}`),
+            {
+              name: this.getSsmPath(SsmResourceType.VPC, [peering.accepter.name]),
+              accountId: accepterAccountId,
+              parameterRegion: peering.accepter.region,
+              roleName: `${this.props.prefixes.accelerator}-VpcPeeringRole-${peering.accepter.region}`,
+              kmsKey: this.cloudwatchKey,
+              logRetentionInDays: this.logRetention,
+              acceleratorPrefix: this.props.prefixes.accelerator,
+            },
+          ).value;
+
+          if (accepterAccountId !== this.account) {
+            // Peering accepter role needed only for cross account peering
+            accepterRoleName = `${this.props.prefixes.accelerator}-VpcPeeringRole-${peering.accepter.region}`;
+          }
         }
         if (
           // isNetworkType<VpcTemplatesConfig>('IVpcTemplatesConfig', peering.requester) ||
@@ -1907,21 +1919,27 @@ export class NetworkAssociationsStack extends NetworkStack {
 
         // Put cross-account SSM parameter if necessary
         if (peering.crossAccount && accepterAccountId !== this.account) {
-          new PutSsmParameter(this, pascalCase(`CrossAcctSsmParam${pascalCase(peering.name)}VpcPeering`), {
-            accountIds: [accepterAccountId],
-            region: peering.accepter.region,
-            roleName: this.acceleratorResourceNames.roles.crossAccountSsmParameterShare,
-            kmsKey: this.cloudwatchKey,
-            logRetentionInDays: this.logRetention,
-            parameters: [
-              {
-                name: this.getSsmPath(SsmResourceType.VPC_PEERING, [peering.name]),
-                value: vpcPeering.peeringId,
-              },
-            ],
-            invokingAccountId: cdk.Stack.of(this).account,
-            acceleratorPrefix: this.props.prefixes.accelerator,
-          });
+          new PutSsmParameter(
+            this,
+            pascalCase(
+              `CrossAcctSsmParam${pascalCase(peering.name)}${accepterAccountId}${peering.accepter.region}VpcPeering`,
+            ),
+            {
+              accountIds: [accepterAccountId],
+              region: peering.accepter.region,
+              roleName: this.acceleratorResourceNames.roles.crossAccountSsmParameterShare,
+              kmsKey: this.cloudwatchKey,
+              logRetentionInDays: this.logRetention,
+              parameters: [
+                {
+                  name: this.getSsmPath(SsmResourceType.VPC_PEERING, [peering.name]),
+                  value: vpcPeering.peeringId,
+                },
+              ],
+              invokingAccountId: cdk.Stack.of(this).account,
+              acceleratorPrefix: this.props.prefixes.accelerator,
+            },
+          );
         }
 
         // Create peering routes
@@ -3803,7 +3821,7 @@ export class NetworkAssociationsStack extends NetworkStack {
     this.logger.info(
       `Retrieve VPC CIDR for account:${vpcAccountId} vpc:${vpcItem.name} in region:[${cdk.Stack.of(this).region}]`,
     );
-    if (this.account === vpcAccountId) {
+    if (this.account === vpcAccountId && cdk.Stack.of(this).region === vpcItem.region) {
       return cdk.aws_ssm.StringParameter.valueForStringParameter(
         this,
         this.getSsmPath(SsmResourceType.VPC_IPV4_CIDR_BLOCK, [vpcItem.name]),
