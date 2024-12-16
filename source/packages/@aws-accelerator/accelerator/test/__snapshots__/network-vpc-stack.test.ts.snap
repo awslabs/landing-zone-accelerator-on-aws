@@ -6721,6 +6721,18 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
                         ],
                       ],
                     },
+                    {
+                      "Fn::Join": [
+                        "",
+                        [
+                          "arn:",
+                          {
+                            "Ref": "AWS::Partition",
+                          },
+                          ":iam::*:role/cdk-accel-*",
+                        ],
+                      ],
+                    },
                   ],
                 },
                 "StringEquals": {
@@ -6769,6 +6781,18 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
                             "Ref": "AWS::Partition",
                           },
                           ":iam::*:role/AWSControlTowerExecution",
+                        ],
+                      ],
+                    },
+                    {
+                      "Fn::Join": [
+                        "",
+                        [
+                          "arn:",
+                          {
+                            "Ref": "AWS::Partition",
+                          },
+                          ":iam::*:role/cdk-accel-*",
                         ],
                       ],
                     },
@@ -6823,6 +6847,18 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
                         ],
                       ],
                     },
+                    {
+                      "Fn::Join": [
+                        "",
+                        [
+                          "arn:",
+                          {
+                            "Ref": "AWS::Partition",
+                          },
+                          ":iam::*:role/cdk-accel-*",
+                        ],
+                      ],
+                    },
                   ],
                 },
                 "StringEquals": {
@@ -6871,6 +6907,18 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
                             "Ref": "AWS::Partition",
                           },
                           ":iam::*:role/AWSControlTowerExecution",
+                        ],
+                      ],
+                    },
+                    {
+                      "Fn::Join": [
+                        "",
+                        [
+                          "arn:",
+                          {
+                            "Ref": "AWS::Partition",
+                          },
+                          ":iam::*:role/cdk-accel-*",
                         ],
                       ],
                     },

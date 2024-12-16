@@ -293,6 +293,7 @@ export class VpcResources {
       const roleArns = [
         `arn:${cdk.Stack.of(this.stack).partition}:iam::*:role/${this.stack.acceleratorPrefix}*`,
         `arn:${cdk.Stack.of(this.stack).partition}:iam::*:role/${managementAccountAccessRole}`,
+        `arn:${cdk.Stack.of(this.stack).partition}:iam::*:role/cdk-accel-*`,
       ];
       const role = new cdk.aws_iam.Role(this.stack, 'VpcPeeringRole', {
         roleName: `${acceleratorPrefix}-VpcPeeringRole-${cdk.Stack.of(this.stack).region}`,

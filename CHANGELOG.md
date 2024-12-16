@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - fix(networking): fix same account cross region vpc peering route table not found
+- fix(iam): vpc peering role trust policy prevent cdk execution role from assuming it
 
 ### Changed
 
