@@ -310,6 +310,16 @@ limits:
     deploymentTargets:
       accounts:
         - SharedServices
+  - serviceCode: vpc
+    quotaCode: L-F678F1CE
+    desiredValue: 20
+    deploymentTargets:
+      organizationalUnits:
+        - Security
+        - Infrastructure
+    regions:
+      - us-east-1
+      - us-west-2
 reports:
   costAndUsageReport:
     compression: Parquet

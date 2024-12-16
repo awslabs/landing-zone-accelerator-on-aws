@@ -282,6 +282,7 @@ centralNetworkServices:
           shareTargets:
             organizationalUnits:
               - Infrastructure
+              - Security
         - name: home-region-prod-pool
           description: Pool for prod environment
           allocationResourceTags:
@@ -304,6 +305,7 @@ centralNetworkServices:
           shareTargets:
             organizationalUnits:
               - Infrastructure
+              - Security
   gatewayLoadBalancers:
     - name: Accelerator-GWLB
       subnets:
@@ -2022,6 +2024,281 @@ vpcs:
         - pkt-dst-aws-service
         - flow-direction
         - traffic-path
+  - name: Network-NonTemplate-Static-Central
+    region: *HOME_REGION
+    account: Network
+    cidrs:
+      - 172.17.0.0/24
+    internetGateway: false
+    instanceTenancy: default
+    routeTables:
+      - name: Network-NonTemplate-Static-Public
+        routes:
+          - name: PeeringRouteToSharedServicesStatic
+            destination: 172.19.0.0/24
+            type: vpcPeering
+            target: NonTemplate-Static-Same-Region-Cross-Account
+          - name: PeeringRouteToNetworkStaticWest
+            destination: 172.18.0.0/24
+            type: vpcPeering
+            target: NonTemplate-Static-Cross-Region-Same-Account
+    subnets:
+      - name: Network-Public-A
+        availabilityZone: a
+        routeTable: Network-NonTemplate-Static-Public
+        ipv4CidrBlock: 172.17.0.0/28
+  - name: Network-NonTemplate-Ipam-Central
+    region: *HOME_REGION
+    account: Network
+    internetGateway: false
+    enableDnsHostnames: true
+    enableDnsSupport: true
+    instanceTenancy: default
+    ipamAllocations:
+      - ipamPoolName: home-region-pool
+        netmaskLength: 24
+    routeTables:
+      - name: Network-NonTemplate-Ipam-Public
+        routes:
+          - name: PeeringRouteToSharedServicesIpam
+            type: vpcPeering
+            target: NonTemplate-Ipam-Same-Region-Cross-Account
+          - name: PeeringRouteToNetworkIpamWest
+            type: vpcPeering
+            target: NonTemplate-Ipam-Cross-Region-Same-Account
+          - name: PeeringRouteToInfraTemplateFullIpam
+            type: vpcPeering
+            target: Template-Requester-Same-OU-Same-Region-Ipam
+          - name: PeeringRouteToInfraTemplateHalfIpam
+            type: vpcPeering
+            target: Template-Requester-Same-OU-Half-Same-Region-Ipam
+          - name: PeeringRouteToSecurityTemplateFullIpam
+            type: vpcPeering
+            target: Template-Requester-Different-OU-Same-Region-Ipam
+          - name: PeeringRouteToSecurityTemplateFullIpamWest
+            type: vpcPeering
+            target: Template-Requester-Different-OU-Cross-Region-Ipam
+    subnets:
+      - name: Network-NonTemplate-Ipam-Public-A
+        availabilityZone: a
+        routeTable: Network-NonTemplate-Ipam-Public
+        ipamAllocation:
+          ipamPoolName: home-region-pool
+          netmaskLength: 28
+  - name: Network-NonTemplate-Static-West
+    region: us-west-2
+    account: Network
+    cidrs:
+      - 172.18.0.0/24
+    internetGateway: false
+    enableDnsHostnames: true
+    enableDnsSupport: true
+    instanceTenancy: default
+    routeTables:
+      - name: Network-NonTemplate-Static-Public-West
+        routes:
+          - name: PeeringRouteToNetworkStaticCentral
+            destination: 172.17.0.0/24
+            type: vpcPeering
+            target: NonTemplate-Static-Cross-Region-Same-Account
+          - name: PeeringRouteToSharedServicesStatic
+            destination: 172.19.0.0/24
+            type: vpcPeering
+            target: NonTemplate-Static-Cross-Region-Cross-Account
+    subnets:
+      - name: Network-NonTemplate-Static-Public-A
+        availabilityZone: a
+        routeTable: Network-NonTemplate-Static-Public-West
+        ipv4CidrBlock: 172.18.0.0/28
+  - name: Network-NonTemplate-Ipam-West
+    region: us-west-2
+    account: Network
+    ipamAllocations:
+      - ipamPoolName: west-region-pool
+        netmaskLength: 24
+    internetGateway: false
+    enableDnsHostnames: true
+    enableDnsSupport: true
+    instanceTenancy: default
+    routeTables:
+      - name: Network-NonTemplate-Ipam-Public-West
+        routes:
+          - name: PeeringRouteToNetworkIpamCentral
+            type: vpcPeering
+            target: NonTemplate-Ipam-Cross-Region-Same-Account
+          - name: PeeringRouteToSharedServicesIpam
+            type: vpcPeering
+            target: NonTemplate-Ipam-Cross-Region-Cross-Account
+    subnets:
+      - name: Network-NonTemplate-Ipam-Public-A
+        availabilityZone: a
+        routeTable: Network-NonTemplate-Ipam-Public-West
+        ipamAllocation:
+          ipamPoolName: west-region-pool
+          netmaskLength: 28
+  - name: SharedServices-NonTemplate-Static-Central
+    region: *HOME_REGION
+    account: SharedServices
+    cidrs:
+      - 172.19.0.0/24
+    internetGateway: false
+    enableDnsHostnames: true
+    enableDnsSupport: true
+    instanceTenancy: default
+    routeTables:
+      - name: Network-NonTemplate-Static-Public
+        routes:
+          - name: PeeringRouteToNetworkStaticCentral
+            destination: 172.17.0.0/24
+            type: vpcPeering
+            target: NonTemplate-Static-Same-Region-Cross-Account
+          - name: PeeringRouteToNetworkStaticWest
+            destination: 172.18.0.0/24
+            type: vpcPeering
+            target: NonTemplate-Static-Cross-Region-Cross-Account
+          - name: PeeringRouteToSharedServicesStatic2
+            destination: 172.20.0.0/24
+            type: vpcPeering
+            target: NonTemplate-Static-Same-Region-Same-Account
+    subnets:
+      - name: Network-NonTemplate-Static-Public-A
+        availabilityZone: a
+        routeTable: Network-NonTemplate-Static-Public
+        ipv4CidrBlock: 172.19.0.0/28
+  - name: SharedServices-NonTemplate-Ipam-Central
+    region: *HOME_REGION
+    account: SharedServices
+    ipamAllocations:
+      - ipamPoolName: home-region-pool
+        netmaskLength: 24
+    internetGateway: false
+    enableDnsHostnames: true
+    enableDnsSupport: true
+    instanceTenancy: default
+    routeTables:
+      - name: Network-NonTemplate-Ipam-Public
+        routes:
+          - name: PeeringRouteToNetworkIpamCentral
+            type: vpcPeering
+            target: NonTemplate-Ipam-Same-Region-Cross-Account
+          - name: PeeringRouteToNetworkIpamWest
+            type: vpcPeering
+            target: NonTemplate-Ipam-Cross-Region-Cross-Account
+          - name: PeeringRouteToSharedServicesIpam2
+            type: vpcPeering
+            target: NonTemplate-Ipam-Same-Region-Same-Account
+          - name: PeeringRouteToInfraTemplateFullIpam
+            type: vpcPeering
+            target: Template-Accepter-Same-OU-Same-Region-Ipam
+          - name: PeeringRouteToInfraTemplateHalfIpamWest
+            type: vpcPeering
+            target: Template-Accepter-Same-OU-Half-Cross-Region-Ipam
+          - name: PeeringRouteToSecurityTemplateFullIpam
+            type: vpcPeering
+            target: Template-Accepter-Different-OU-Same-Region-Ipam
+          - name: PeeringRouteToSecurityTemplateFullIpamWest
+            type: vpcPeering
+            target: Template-Accepter-Different-OU-Cross-Region-Ipam
+    subnets:
+      - name: Network-NonTemplate-Ipam-Public-A
+        availabilityZone: a
+        routeTable: Network-NonTemplate-Ipam-Public
+        ipamAllocation:
+          ipamPoolName: home-region-pool
+          netmaskLength: 28
+  - name: SharedServices-NonTemplate-Static-Central-2
+    region: *HOME_REGION
+    account: SharedServices
+    cidrs:
+      - 172.20.0.0/24
+    internetGateway: false
+    enableDnsHostnames: true
+    enableDnsSupport: true
+    instanceTenancy: default
+    routeTables:
+      - name: Network-NonTemplate-Static-Public-2
+        routes:
+          - name: PeeringRouteToSharedServicesStatic
+            destination: 172.19.0.0/24
+            type: vpcPeering
+            target: NonTemplate-Static-Same-Region-Same-Account
+    subnets:
+      - name: Network-NonTemplate-Static-2-Public-A
+        availabilityZone: a
+        routeTable: Network-NonTemplate-Static-Public-2
+        ipv4CidrBlock: 172.20.0.0/28
+  - name: SharedServices-NonTemplate-Ipam-Central-2
+    region: *HOME_REGION
+    account: SharedServices
+    ipamAllocations:
+      - ipamPoolName: home-region-pool
+        netmaskLength: 24
+    internetGateway: false
+    enableDnsHostnames: true
+    enableDnsSupport: true
+    instanceTenancy: default
+    routeTables:
+      - name: Network-NonTemplate-Ipam-Public-2
+        routes:
+          - name: PeeringRouteToSharedServicesIpam
+            type: vpcPeering
+            target: NonTemplate-Ipam-Same-Region-Same-Account
+    subnets:
+      - name: Network-NonTemplate-Ipam-Public-2-A
+        availabilityZone: a
+        routeTable: Network-NonTemplate-Ipam-Public-2
+        ipamAllocation:
+          ipamPoolName: home-region-pool
+          netmaskLength: 28
+  - name: SharedServices-NonTemplate-Static-West
+    region: us-west-2
+    account: SharedServices
+    cidrs:
+      - 172.26.0.0/24
+    internetGateway: false
+    enableDnsHostnames: true
+    enableDnsSupport: true
+    instanceTenancy: default
+    routeTables:
+      - name: Network-NonTemplate-Static-Public
+        routes:
+          - name: PeeringRouteToInfraTemplateFullIpamCentral
+            type: vpcPeering
+            target: Template-Accepter-Same-OU-Cross-Region-Ipam
+          - name: PeeringRouteToInfraTemplateHalfIpam
+            type: vpcPeering
+            target: Template-Accepter-Same-OU-Half-Same-Region-Ipam
+    subnets:
+      - name: Network-NonTemplate-Static-Public-A
+        availabilityZone: a
+        routeTable: Network-NonTemplate-Static-Public
+        ipv4CidrBlock: 172.26.0.0/28
+  - name: SharedServices-NonTemplate-Ipam-West
+    region: us-west-2
+    account: SharedServices
+    ipamAllocations:
+      - ipamPoolName: west-region-pool
+        netmaskLength: 24
+    internetGateway: false
+    enableDnsHostnames: true
+    enableDnsSupport: true
+    instanceTenancy: default
+    routeTables:
+      - name: Network-NonTemplate-Ipam
+        routes:
+          - name: PeeringRouteToInfraTemplateHalfIpam
+            type: vpcPeering
+            target: Template-Requester-Same-OU-Cross-Region-Ipam
+          - name: PeeringRouteToInfraTemplateHalfIpam2
+            type: vpcPeering
+            target: Template-Requester-Same-OU-Half-Cross-Region-Ipam
+    subnets:
+      - name: Network-NonTemplate-Ipam-A
+        availabilityZone: a
+        routeTable: Network-NonTemplate-Ipam
+        ipamAllocation:
+          ipamPoolName: west-region-pool
+          netmaskLength: 28
 
 vpcTemplates:
   - name: Workload-Template
@@ -2059,6 +2336,328 @@ vpcTemplates:
         routeTable: Workload-B-Rt
         ipamAllocation:
           ipamPoolName: home-region-pool
+          netmaskLength: 28
+  - name: Infra-Template-Full-Static-Central
+    region: *HOME_REGION
+    deploymentTargets:
+      organizationalUnits:
+        - Infrastructure
+      excludedRegions:
+        - us-west-2
+    cidrs:
+      - 172.25.0.0/24
+    internetGateway: false
+    enableDnsHostnames: true
+    enableDnsSupport: true
+    instanceTenancy: default
+    routeTables:
+      - name: Workload-A-Rt
+        routes:
+          - name: PeeringToNetworkStaticCentral
+            type: vpcPeering
+            target: Template-Requester-Same-OU-Same-Region-Static
+            destination: 172.17.0.0/24
+          - name: PeeringToNetworkStaticWest
+            type: vpcPeering
+            target: Template-Requester-Same-OU-Cross-Region-Static
+            destination: 172.18.0.0/24
+          - name: PeeringToSharedServicesStaticCentral
+            type: vpcPeering
+            target: Template-Accepter-Same-OU-Same-Region-Static
+            destination: 172.19.0.0/24
+          - name: PeeringToSharedServicesStaticWest
+            type: vpcPeering
+            target: Template-Accepter-Same-OU-Cross-Region-Static
+            destination: 172.20.0.0/24
+    subnets:
+      - name: Workload-A
+        availabilityZone: a
+        routeTable: Workload-A-Rt
+        ipv4CidrBlock: 172.25.0.0/28
+  - name: Infra-Template-Full-Ipam-Central
+    region: *HOME_REGION
+    deploymentTargets:
+      organizationalUnits:
+        - Infrastructure
+      excludedRegions:
+        - us-west-2
+    ipamAllocations:
+      - ipamPoolName: home-region-pool
+        netmaskLength: 25
+    internetGateway: false
+    enableDnsHostnames: true
+    enableDnsSupport: true
+    instanceTenancy: default
+    routeTables:
+      - name: Workload-A-Rt
+        routes:
+          - name: PeeringToNetworkIpamCentral
+            type: vpcPeering
+            target: Template-Requester-Same-OU-Same-Region-Ipam
+          - name: PeeringToNetworkIpamWest
+            type: vpcPeering
+            target: Template-Requester-Same-OU-Cross-Region-Ipam
+          - name: PeeringToSharedServicesIpamCentral
+            type: vpcPeering
+            target: Template-Accepter-Same-OU-Same-Region-Ipam
+          - name: PeeringToSharedServicesIpamWest
+            type: vpcPeering
+            target: Template-Accepter-Same-OU-Cross-Region-Ipam
+    subnets:
+      - name: Workload-A
+        availabilityZone: a
+        routeTable: Workload-A-Rt
+        ipamAllocation:
+          ipamPoolName: home-region-pool
+          netmaskLength: 28
+  - name: Infra-Template-Half-Static-Central
+    region: *HOME_REGION
+    deploymentTargets:
+      organizationalUnits:
+        - Infrastructure
+      excludedAccounts:
+        - SharedServices
+      excludedRegions:
+        - us-west-2
+    cidrs:
+      - 172.21.0.0/24
+    internetGateway: false
+    enableDnsHostnames: true
+    enableDnsSupport: true
+    instanceTenancy: default
+    routeTables:
+      - name: Workload-A-Rt
+        routes: 
+          - name: PeeringToNetworkStaticCentral
+            type: vpcPeering
+            target: Template-Requester-Same-OU-Half-Same-Region-Static
+            destination: 172.17.0.0/24
+          - name: PeeringToNetworkStaticWest
+            type: vpcPeering
+            target: Template-Requester-Same-OU-Half-Cross-Region-Static
+            destination: 172.18.0.0/24
+    subnets:
+      - name: Workload-A
+        availabilityZone: a
+        routeTable: Workload-A-Rt
+        ipv4CidrBlock: 172.21.0.0/28
+  - name: Infra-Template-Half-Ipam-Central
+    region: *HOME_REGION
+    deploymentTargets:
+      organizationalUnits:
+        - Infrastructure
+      excludedAccounts:
+        - SharedServices
+      excludedRegions:
+        - us-west-2
+    ipamAllocations:
+      - ipamPoolName: home-region-pool
+        netmaskLength: 25
+    internetGateway: false
+    enableDnsHostnames: true
+    enableDnsSupport: true
+    instanceTenancy: default
+    routeTables:
+      - name: Workload-A-Rt
+        routes: 
+          - name: PeeringToNetworkIpamCentral
+            type: vpcPeering
+            target: Template-Requester-Same-OU-Half-Same-Region-Ipam
+          - name: PeeringToNetworkIpamWest
+            type: vpcPeering
+            target: Template-Requester-Same-OU-Half-Cross-Region-Ipam
+    subnets:
+      - name: Workload-A
+        availabilityZone: a
+        routeTable: Workload-A-Rt
+        ipamAllocation:
+          ipamPoolName: home-region-pool
+          netmaskLength: 28
+
+  - name: Infra-Template-Half-Static-West
+    region: us-west-2
+    deploymentTargets:
+      organizationalUnits:
+        - Infrastructure
+      excludedAccounts:
+        - Network
+      excludedRegions:
+        - *HOME_REGION
+    cidrs:
+      - 172.22.0.0/24
+    internetGateway: false
+    enableDnsHostnames: true
+    enableDnsSupport: true
+    instanceTenancy: default
+    routeTables:
+      - name: Workload-A-Rt
+        routes:
+          - name: PeeringToSharedServicesStaticWest
+            type: vpcPeering
+            target: Template-Accepter-Same-OU-Half-Same-Region-Static
+            destination: 172.19.0.0/24
+          - name: PeeringToSharedServicesStaticCentral
+            type: vpcPeering
+            target: Template-Accepter-Same-OU-Half-Cross-Region-Static
+            destination: 172.18.0.0/24
+    subnets:
+      - name: Workload-A
+        availabilityZone: a
+        routeTable: Workload-A-Rt
+        ipv4CidrBlock: 172.22.0.0/28
+  - name: Infra-Template-Half-Ipam-West
+    region: us-west-2
+    deploymentTargets:
+      organizationalUnits:
+        - Infrastructure
+      excludedAccounts:
+        - Network
+      excludedRegions:
+        - *HOME_REGION
+    ipamAllocations:
+      - ipamPoolName: west-region-pool
+        netmaskLength: 25
+    internetGateway: false
+    enableDnsHostnames: true
+    enableDnsSupport: true
+    instanceTenancy: default
+    routeTables:
+      - name: Workload-A-Rt
+        routes:
+          - name: PeeringToSharedServicesIpamWest
+            type: vpcPeering
+            target: Template-Accepter-Same-OU-Half-Same-Region-Ipam
+            destination: 172.19.0.0/24
+          - name: PeeringToSharedServicesIpamCentral
+            type: vpcPeering
+            target: Template-Accepter-Same-OU-Half-Cross-Region-Ipam
+            destination: 172.18.0.0/24
+    subnets:
+      - name: Workload-A
+        availabilityZone: a
+        routeTable: Workload-A-Rt
+        ipamAllocation:
+          ipamPoolName: west-region-pool
+          netmaskLength: 28
+
+  - name: Security-Template-Full-Static-Central
+    region: *HOME_REGION
+    deploymentTargets:
+      organizationalUnits:
+        - Security
+      excludedRegions:
+        - us-west-2
+    cidrs:
+      - 172.23.0.0/24
+    internetGateway: false
+    enableDnsHostnames: true
+    enableDnsSupport: true
+    instanceTenancy: default
+    routeTables:
+      - name: Workload-A-Rt
+        routes:
+          - name: PeeringToNetworkNonTemplateStaticCentral
+            type: vpcPeering
+            target: Template-Requester-Different-OU-Same-Region-Static
+            destination: 172.17.0.0/24
+          - name: PeeringToSharedServicesNonTemplateStaticCentral
+            type: vpcPeering
+            target: Template-Accepter-Different-OU-Same-Region-Static
+            destination: 172.19.0.0/24
+    subnets:
+      - name: Workload-A
+        availabilityZone: a
+        routeTable: Workload-A-Rt
+        ipv4CidrBlock: 172.23.0.0/28
+  - name: Security-Template-Full-Ipam-Central
+    region: *HOME_REGION
+    deploymentTargets:
+      organizationalUnits:
+        - Security
+      excludedRegions:
+        - us-west-2
+    ipamAllocations:
+      - ipamPoolName: home-region-pool
+        netmaskLength: 25
+    internetGateway: false
+    enableDnsHostnames: true
+    enableDnsSupport: true
+    instanceTenancy: default
+    routeTables:
+      - name: Workload-A-Rt
+        routes:
+          - name: PeeringToNetworkNonTemplateIpamCentral
+            type: vpcPeering
+            target: Template-Requester-Different-OU-Same-Region-Ipam
+          - name: PeeringToSharedServicesNonTemplateIpamCentral
+            type: vpcPeering
+            target: Template-Accepter-Different-OU-Same-Region-Ipam
+    subnets:
+      - name: Workload-A
+        availabilityZone: a
+        routeTable: Workload-A-Rt
+        ipamAllocation:
+          ipamPoolName: home-region-pool
+          netmaskLength: 28
+
+  - name: Security-Template-Full-Static-West
+    region: us-west-2
+    deploymentTargets:
+      organizationalUnits:
+        - Security
+      excludedRegions:
+        - *HOME_REGION
+    cidrs:
+      - 172.24.0.0/24
+    internetGateway: false
+    enableDnsHostnames: true
+    enableDnsSupport: true
+    instanceTenancy: default
+    routeTables:
+      - name: Workload-A-Rt
+        routes: 
+          - name: PeeringToNetworkNonTemplateStaticCentral
+            type: vpcPeering
+            target: Template-Requester-Different-OU-Cross-Region-Static
+            destination: 172.17.0.0/24
+          - name: PeeringToSharedServicesNonTemplateStaticCentral
+            type: vpcPeering
+            target: Template-Accepter-Different-OU-Cross-Region-Static
+            destination: 172.19.0.0/24
+    subnets:
+      - name: Workload-A
+        availabilityZone: a
+        routeTable: Workload-A-Rt
+        ipv4CidrBlock: 172.24.0.0/28
+  - name: Security-Template-Full-Ipam-West
+    region: us-west-2
+    deploymentTargets:
+      organizationalUnits:
+        - Security
+      excludedRegions:
+        - *HOME_REGION
+    ipamAllocations:
+      - ipamPoolName: west-region-pool
+        netmaskLength: 25
+    internetGateway: false
+    enableDnsHostnames: true
+    enableDnsSupport: true
+    instanceTenancy: default
+    routeTables:
+      - name: Workload-A-Rt
+        routes:
+          - name: PeeringToNetworkNonTemplateIpamCentral
+            type: vpcPeering
+            target: Template-Requester-Different-OU-Cross-Region-Ipam
+          - name: PeeringToSharedServicesNonTemplateIpamCentral
+            type: vpcPeering
+            target: Template-Accepter-Different-OU-Cross-Region-Ipam
+    subnets:
+      - name: Workload-A
+        availabilityZone: a
+        routeTable: Workload-A-Rt
+        ipamAllocation:
+          ipamPoolName: west-region-pool
           netmaskLength: 28
 directConnectGateways:
   - name: Network-DXGW
@@ -2100,6 +2699,136 @@ vpcPeering:
     vpcs:
       - Workload-Template
       - Network-Endpoints
+  - name: NonTemplate-Static-Same-Region-Same-Account
+    vpcs:
+      - SharedServices-NonTemplate-Static-Central
+      - SharedServices-NonTemplate-Static-Central-2
+  - name: NonTemplate-Static-Cross-Region-Same-Account
+    vpcs:
+      - Network-NonTemplate-Static-Central
+      - Network-NonTemplate-Static-West
+  - name: NonTemplate-Static-Same-Region-Cross-Account
+    vpcs:
+      - Network-NonTemplate-Static-Central
+      - SharedServices-NonTemplate-Static-Central
+  - name: NonTemplate-Static-Cross-Region-Cross-Account
+    vpcs:
+      - SharedServices-NonTemplate-Static-Central
+      - Network-NonTemplate-Static-West
+  - name: NonTemplate-Ipam-Same-Region-Same-Account
+    vpcs:
+      - SharedServices-NonTemplate-Ipam-Central
+      - SharedServices-NonTemplate-Ipam-Central-2
+  - name: NonTemplate-Ipam-Cross-Region-Same-Account
+    vpcs:
+      - Network-NonTemplate-Ipam-Central
+      - Network-NonTemplate-Ipam-West
+  - name: NonTemplate-Ipam-Same-Region-Cross-Account
+    vpcs:
+      - Network-NonTemplate-Ipam-Central
+      - SharedServices-NonTemplate-Ipam-Central
+  - name: NonTemplate-Ipam-Cross-Region-Cross-Account
+    vpcs:
+      - Network-NonTemplate-Ipam-West
+      - SharedServices-NonTemplate-Ipam-Central
+
+  - name: Template-Requester-Same-OU-Same-Region-Static
+    vpcs:
+      - Infra-Template-Full-Static-Central
+      - Network-NonTemplate-Static-Central
+  - name: Template-Requester-Same-OU-Same-Region-Ipam
+    vpcs:
+      - Infra-Template-Full-Ipam-Central
+      - Network-NonTemplate-Ipam-Central
+  - name: Template-Requester-Same-OU-Cross-Region-Static
+    vpcs:
+      - Infra-Template-Full-Static-Central
+      - Network-NonTemplate-Static-West
+  - name: Template-Requester-Same-OU-Cross-Region-Ipam
+    vpcs:
+      - Infra-Template-Full-Ipam-Central
+      - Network-NonTemplate-Ipam-West
+  - name: Template-Requester-Same-OU-Half-Same-Region-Static
+    vpcs:
+      - Infra-Template-Half-Static-Central
+      - Network-NonTemplate-Static-Central
+  - name: Template-Requester-Same-OU-Half-Same-Region-Ipam
+    vpcs:
+      - Infra-Template-Half-Ipam-Central
+      - Network-NonTemplate-Ipam-Central
+  - name: Template-Requester-Same-OU-Half-Cross-Region-Static
+    vpcs:
+      - Infra-Template-Half-Static-Central
+      - Network-NonTemplate-Static-West
+  - name: Template-Requester-Same-OU-Half-Cross-Region-Ipam
+    vpcs:
+      - Infra-Template-Half-Ipam-Central
+      - Network-NonTemplate-Ipam-West
+  - name: Template-Requester-Different-OU-Same-Region-Static
+    vpcs:
+      - Security-Template-Full-Static-Central
+      - Network-NonTemplate-Static-Central
+  - name: Template-Requester-Different-OU-Same-Region-Ipam
+    vpcs:
+      - Security-Template-Full-Ipam-Central
+      - Network-NonTemplate-Ipam-Central
+  - name: Template-Requester-Different-OU-Cross-Region-Static
+    vpcs:
+      - Security-Template-Full-Static-West
+      - Network-NonTemplate-Static-Central
+  - name: Template-Requester-Different-OU-Cross-Region-Ipam
+    vpcs:
+      - Security-Template-Full-Ipam-West
+      - Network-NonTemplate-Ipam-Central
+
+  - name: Template-Accepter-Same-OU-Same-Region-Static
+    vpcs:
+      - SharedServices-NonTemplate-Static-Central
+      - Infra-Template-Full-Static-Central
+  - name: Template-Accepter-Same-OU-Same-Region-Ipam
+    vpcs:
+      - SharedServices-NonTemplate-Ipam-Central
+      - Infra-Template-Full-Ipam-Central
+  - name: Template-Accepter-Same-OU-Cross-Region-Static
+    vpcs:
+      - SharedServices-NonTemplate-Static-West
+      - Infra-Template-Full-Static-Central
+  - name: Template-Accepter-Same-OU-Cross-Region-Ipam
+    vpcs:
+      - SharedServices-NonTemplate-Ipam-West
+      - Infra-Template-Full-Ipam-Central
+  - name: Template-Accepter-Same-OU-Half-Same-Region-Static
+    vpcs:
+      - SharedServices-NonTemplate-Static-West
+      - Infra-Template-Half-Static-West
+  - name: Template-Accepter-Same-OU-Half-Same-Region-Ipam
+    vpcs:
+      - SharedServices-NonTemplate-Ipam-West
+      - Infra-Template-Half-Ipam-West
+  - name: Template-Accepter-Same-OU-Half-Cross-Region-Static
+    vpcs:
+      - SharedServices-NonTemplate-Static-Central
+      - Infra-Template-Half-Static-West
+  - name: Template-Accepter-Same-OU-Half-Cross-Region-Ipam
+    vpcs:
+      - SharedServices-NonTemplate-Ipam-Central
+      - Infra-Template-Half-Ipam-West
+  - name: Template-Accepter-Different-OU-Same-Region-Static
+    vpcs:
+      - SharedServices-NonTemplate-Static-Central
+      - Security-Template-Full-Static-Central
+  - name: Template-Accepter-Different-OU-Same-Region-Ipam
+    vpcs:
+      - SharedServices-NonTemplate-Ipam-Central
+      - Security-Template-Full-Ipam-Central
+  - name: Template-Accepter-Different-OU-Cross-Region-Static
+    vpcs:
+      - SharedServices-NonTemplate-Static-Central
+      - Security-Template-Full-Static-West
+  - name: Template-Accepter-Different-OU-Cross-Region-Ipam
+    vpcs:
+      - SharedServices-NonTemplate-Ipam-Central
+      - Security-Template-Full-Ipam-West
 
 customerGateways:
   - name: accelerator-cgw
