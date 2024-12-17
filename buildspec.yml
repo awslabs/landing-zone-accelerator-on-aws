@@ -45,3 +45,4 @@ artifacts:
     - .cfnnag_*
     - .viperlightignore
     - codescan-postbuild-custom.sh
+    - solution-manifest.yaml
