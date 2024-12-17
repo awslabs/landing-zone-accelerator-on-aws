@@ -1,0 +1,177 @@
+<!DOCTYPE html><html class="default" lang="en"><head><meta charSet="utf-8"/><meta http-equiv="x-ua-compatible" content="IE=edge"/><title>Landing Zone Accelerator on AWS - v1.6.4</title><meta name="description" content="Documentation for Landing Zone Accelerator on AWS - v1.6.4"/><meta name="viewport" content="width=device-width, initial-scale=1"/><link rel="stylesheet" href="assets/style.css"/><link rel="stylesheet" href="assets/highlight.css"/><script async src="assets/search.js" id="search-script"></script></head><body><script>document.documentElement.dataset.theme = localStorage.getItem("tsd-theme") || "os"</script><header class="tsd-page-toolbar">
+<div class="tsd-toolbar-contents container">
+<div class="table-cell" id="tsd-search" data-base=".">
+<div class="field"><label for="tsd-search-field" class="tsd-widget tsd-toolbar-icon search no-caption"><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M15.7824 13.833L12.6666 10.7177C12.5259 10.5771 12.3353 10.499 12.1353 10.499H11.6259C12.4884 9.39596 13.001 8.00859 13.001 6.49937C13.001 2.90909 10.0914 0 6.50048 0C2.90959 0 0 2.90909 0 6.49937C0 10.0896 2.90959 12.9987 6.50048 12.9987C8.00996 12.9987 9.39756 12.4863 10.5008 11.6239V12.1332C10.5008 12.3332 10.5789 12.5238 10.7195 12.6644L13.8354 15.7797C14.1292 16.0734 14.6042 16.0734 14.8948 15.7797L15.7793 14.8954C16.0731 14.6017 16.0731 14.1267 15.7824 13.833ZM6.50048 10.499C4.29094 10.499 2.50018 8.71165 2.50018 6.49937C2.50018 4.29021 4.28781 2.49976 6.50048 2.49976C8.71001 2.49976 10.5008 4.28708 10.5008 6.49937C10.5008 8.70852 8.71314 10.499 6.50048 10.499Z" fill="var(--color-text)"></path></svg></label><input type="text" id="tsd-search-field" aria-label="Search"/></div>
+<div class="field">
+<div id="tsd-toolbar-links"></div></div>
+<ul class="results">
+<li class="state loading">Preparing search index...</li>
+<li class="state failure">The search index is not available</li></ul><a href="index.html" class="title">Landing Zone Accelerator on AWS - v1.6.4</a></div>
+<div class="table-cell" id="tsd-widgets"><a href="#" class="tsd-widget tsd-toolbar-icon menu no-caption" data-toggle="menu" aria-label="Menu"><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><rect x="1" y="3" width="14" height="2" fill="var(--color-text)"></rect><rect x="1" y="7" width="14" height="2" fill="var(--color-text)"></rect><rect x="1" y="11" width="14" height="2" fill="var(--color-text)"></rect></svg></a></div></div></header>
+<div class="container container-main">
+<div class="col-8 col-content">
+<div class="tsd-page-title">
+<h2>Landing Zone Accelerator on AWS - v1.6.4</h2></div>
+<div class="tsd-panel tsd-typography"><ul>
+<li><a href="#landing-zone-accelerator-on-aws">Landing Zone Accelerator on AWS</a><ul>
+<li><a href="#documentation">Documentation</a></li>
+<li><a href="#package-structure">Package Structure</a><ul>
+<li><a href="#aws-acceleratoraccelerator">@aws-accelerator/accelerator</a></li>
+<li><a href="#aws-acceleratorconfig">@aws-accelerator/config</a></li>
+<li><a href="#aws-acceleratorconstructs">@aws-accelerator/constructs</a></li>
+<li><a href="#aws-acceleratorinstaller">@aws-accelerator/installer</a></li>
+<li><a href="#aws-acceleratorui-future">@aws-accelerator/ui (future)</a></li>
+<li><a href="#aws-acceleratorutils">@aws-accelerator/utils</a></li>
+<li><a href="#aws-cdk-extensionscdk-extensions">@aws-cdk-extensions/cdk-extensions</a></li>
+<li><a href="#aws-cdk-extensionstester">@aws-cdk-extensions/tester</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+<a href="#landing-zone-accelerator-on-aws" id="landing-zone-accelerator-on-aws" style="color: inherit; text-decoration: none;">
+  <h1>Landing Zone Accelerator on AWS</h1>
+</a>
+<p>The Landing Zone Accelerator on AWS (LZA) is architected to align with AWS best practices
+and in conformance with multiple, global compliance frameworks. We recommend customers
+deploy AWS Control Tower as the foundational landing zone and enhance their landing zone
+capabilities with Landing Zone Accelerator. These complementary capabilities provides a
+comprehensive low-code solution across 35+ AWS services to manage and govern a multi-account
+environment built to support customers with highly-regulated workloads and complex compliance
+requirements. AWS Control Tower and Landing Zone Accelerator help you establish platform
+readiness with security, compliance, and operational capabilities.</p>
+<p>Landing Zone Accelerator is provided as an open-source project that is built using the AWS
+Cloud Development Kit (CDK). You install directly into your environment to
+get full access to the infrastructure as code (IaC) solution. Through a
+simplified set of configuration files, you are able to configure additional
+functionality, controls and security services (eg. AWS Managed Config Rules,
+and AWS Security Hub), manage your foundational networking topology (eg. VPCs,
+Transit Gateways, and Network Firewall), and generate additional workload
+accounts using the AWS Control Tower Account Factory.</p>
+<p>There are no additional charges or upfront commitments required to use Landing
+Zone Accelerator on AWS. You pay only for AWS services enabled in order to set
+up your platform and operate your controls. This solution can also support
+non-standard AWS partitions, including AWS GovCloud (US), and the US Secret and
+Top Secret regions.</p>
+<p>For an overview and solution deployment guide, please visit
+<a href="https://aws.amazon.com/solutions/implementations/landing-zone-accelerator-on-aws/">Landing Zone Accelerator on AWS</a></p>
+<hr>
+<p>IMPORTANT: This solution will not, by itself, make you compliant. It provides
+the foundational infrastructure from which additional complementary solutions
+can be integrated. The information contained in this solution implementation
+guide is not exhaustive. You must be review, evaluate, assess, and approve the
+solution in compliance with your organization’s particular security features,
+tools, and configurations. It is the sole responsibility of you and your
+organization to determine which regulatory requirements are applicable and to
+ensure that you comply with all requirements. Although this solution discusses
+both the technical and administrative requirements, this solution does not help
+you comply with the non-technical administrative requirements.</p>
+<hr>
+<p>This solution collects anonymized operational metrics to help AWS improve the
+quality of features of the solution. For more information, including how to
+disable this capability, please see the <a href="https://docs.aws.amazon.com/solutions/latest/landing-zone-accelerator-on-aws/collection-of-operational-metrics.html">implementation guide</a>.</p>
+
+<a href="#documentation" id="documentation" style="color: inherit; text-decoration: none;">
+  <h2>Documentation</h2>
+</a>
+<p>Additional documentation for the solution is hosted on <a href="https://awslabs.github.io/landing-zone-accelerator-on-aws">GitHub Pages</a>. We strongly recommend reviewing this resource as well as the <a href="https://docs.aws.amazon.com/solutions/latest/landing-zone-accelerator-on-aws">Implementation Guide</a> for important details on deployment, customization, and maintenance of the solution and its included sample configuration files. </p>
+<blockquote>
+<p><strong>NOTE:</strong> The installation and configuration reference documentation that was previously hosted in this README has been migrated to the new GitHub Pages location.</p>
+</blockquote>
+
+<a href="#package-structure" id="package-structure" style="color: inherit; text-decoration: none;">
+  <h2>Package Structure</h2>
+</a>
+
+<a href="#aws-acceleratoraccelerator" id="aws-acceleratoraccelerator" style="color: inherit; text-decoration: none;">
+  <h3>@aws-accelerator/accelerator</h3>
+</a>
+<p>A CDK Application. The core of the accelerator solution. Contains all the stack
+definitions and deployment pipeline for the accelerator. This also includes the
+CDK Toolkit orchestration.</p>
+
+<a href="#aws-acceleratorconfig" id="aws-acceleratorconfig" style="color: inherit; text-decoration: none;">
+  <h3>@aws-accelerator/config</h3>
+</a>
+<p>A pure typescript library containing modules to manage the accelerator config
+files.</p>
+
+<a href="#aws-acceleratorconstructs" id="aws-acceleratorconstructs" style="color: inherit; text-decoration: none;">
+  <h3>@aws-accelerator/constructs</h3>
+</a>
+<p>Contains L2/L3 constructs that have been built to support accelerator actions,
+such as creating an AWS Organizational Unit or VPC. These constructs are
+intended to be fully reusable, independent of the accelerator, and do not
+directly access the accelerator configuration files. Example: CentralLogsBucket,
+an S3 bucket that is configured with a CMK with the proper key and bucket
+policies to allow services and accounts in the organization to publish logs to
+the bucket.</p>
+
+<a href="#aws-acceleratorinstaller" id="aws-acceleratorinstaller" style="color: inherit; text-decoration: none;">
+  <h3>@aws-accelerator/installer</h3>
+</a>
+<p>Contains a CDK Application that defines the accelerator Installer stack.</p>
+
+<a href="#aws-acceleratorui-future" id="aws-acceleratorui-future" style="color: inherit; text-decoration: none;">
+  <h3>@aws-accelerator/ui (future)</h3>
+</a>
+<p>A web application that utilizes the aws-ui-components library to present a
+console to configure the accelerator</p>
+
+<a href="#aws-acceleratorutils" id="aws-acceleratorutils" style="color: inherit; text-decoration: none;">
+  <h3>@aws-accelerator/utils</h3>
+</a>
+<p>Contains common utilities and types that are needed by @aws-accelerator/*
+packages. For example, throttling and backoff for AWS SDK calls</p>
+
+<a href="#aws-cdk-extensionscdk-extensions" id="aws-cdk-extensionscdk-extensions" style="color: inherit; text-decoration: none;">
+  <h3>@aws-cdk-extensions/cdk-extensions</h3>
+</a>
+<p>Contains L2 constructs that extend the functionality of the CDK repo. The CDK
+repo is an actively developed project. As the accelerator team identifies
+missing features of the CDK, those features will be initially developed locally
+within this repo and submitted to the CDK project as a pull request.</p>
+
+<a href="#aws-cdk-extensionstester" id="aws-cdk-extensionstester" style="color: inherit; text-decoration: none;">
+  <h3>@aws-cdk-extensions/tester</h3>
+</a>
+<p>Accelerator tester CDK app. This package creates AWS Config custom rules for every test cases defined in test case manifest file.</p>
+<hr>
+<p>Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.</p>
+<p>Licensed under the Apache License Version 2.0 (the &quot;License&quot;). You may not use this file except in compliance with the License. A copy of the License is located at</p>
+<pre><code><span class="hl-0">http</span><span class="hl-1">:</span><span class="hl-2">//www.apache.org/licenses/</span>
+</code></pre>
+<p>or in the &quot;license&quot; file accompanying this file. This file is distributed on an &quot;AS IS&quot; BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, express or implied. See the License for the specific language governing permissions and limitations under the License.</p>
+</div></div>
+<div class="col-4 col-menu menu-sticky-wrap menu-highlight">
+<div class="tsd-navigation settings">
+<details class="tsd-index-accordion"><summary class="tsd-accordion-summary">
+<h3><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M4.93896 8.531L12 15.591L19.061 8.531L16.939 6.409L12 11.349L7.06098 6.409L4.93896 8.531Z" fill="var(--color-text)"></path></svg> Settings</h3></summary>
+<div class="tsd-accordion-details">
+<div class="tsd-filter-visibility">
+<h4 class="uppercase">Member Visibility</h4><form>
+<ul id="tsd-filter-options">
+<li class="tsd-filter-item"><label class="tsd-filter-input"><input type="checkbox" id="tsd-filter-protected" name="protected"/><svg width="32" height="32" viewBox="0 0 32 32" aria-hidden="true"><rect class="tsd-checkbox-background" width="30" height="30" x="1" y="1" rx="6" fill="none"></rect><path class="tsd-checkbox-checkmark" d="M8.35422 16.8214L13.2143 21.75L24.6458 10.25" stroke="none" stroke-width="3.5" stroke-linejoin="round" fill="none"></path></svg><span>Protected</span></label></li>
+<li class="tsd-filter-item"><label class="tsd-filter-input"><input type="checkbox" id="tsd-filter-private" name="private"/><svg width="32" height="32" viewBox="0 0 32 32" aria-hidden="true"><rect class="tsd-checkbox-background" width="30" height="30" x="1" y="1" rx="6" fill="none"></rect><path class="tsd-checkbox-checkmark" d="M8.35422 16.8214L13.2143 21.75L24.6458 10.25" stroke="none" stroke-width="3.5" stroke-linejoin="round" fill="none"></path></svg><span>Private</span></label></li>
+<li class="tsd-filter-item"><label class="tsd-filter-input"><input type="checkbox" id="tsd-filter-inherited" name="inherited" checked/><svg width="32" height="32" viewBox="0 0 32 32" aria-hidden="true"><rect class="tsd-checkbox-background" width="30" height="30" x="1" y="1" rx="6" fill="none"></rect><path class="tsd-checkbox-checkmark" d="M8.35422 16.8214L13.2143 21.75L24.6458 10.25" stroke="none" stroke-width="3.5" stroke-linejoin="round" fill="none"></path></svg><span>Inherited</span></label></li>
+<li class="tsd-filter-item"><label class="tsd-filter-input"><input type="checkbox" id="tsd-filter-external" name="external"/><svg width="32" height="32" viewBox="0 0 32 32" aria-hidden="true"><rect class="tsd-checkbox-background" width="30" height="30" x="1" y="1" rx="6" fill="none"></rect><path class="tsd-checkbox-checkmark" d="M8.35422 16.8214L13.2143 21.75L24.6458 10.25" stroke="none" stroke-width="3.5" stroke-linejoin="round" fill="none"></path></svg><span>External</span></label></li></ul></form></div>
+<div class="tsd-theme-toggle">
+<h4 class="uppercase">Theme</h4><select id="theme"><option value="os">OS</option><option value="light">Light</option><option value="dark">Dark</option></select></div></div></details></div>
+<nav class="tsd-navigation primary">
+<details class="tsd-index-accordion" open><summary class="tsd-accordion-summary">
+<h3><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M4.93896 8.531L12 15.591L19.061 8.531L16.939 6.409L12 11.349L7.06098 6.409L4.93896 8.531Z" fill="var(--color-text)"></path></svg> Modules</h3></summary>
+<div class="tsd-accordion-details">
+<ul>
+<li class="current selected"><a href="modules.html">Landing <wbr/>Zone <wbr/>Accelerator on AWS -<wbr/> v1.6.4</a>
+<ul>
+<li class="tsd-kind-module"><a href="modules/_aws_accelerator_config.html">@aws-<wbr/>accelerator/config -<wbr/> v0.0.0</a></li>
+<li class="tsd-kind-module"><a href="modules/_aws_accelerator_constructs.html">@aws-<wbr/>accelerator/constructs -<wbr/> v0.0.0</a></li>
+<li class="tsd-kind-module"><a href="modules/_aws_accelerator_tester.html">@aws-<wbr/>accelerator/tester -<wbr/> v0.0.0</a></li>
+<li class="tsd-kind-module"><a href="modules/_aws_accelerator_tools.html">@aws-<wbr/>accelerator/tools -<wbr/> v0.0.0</a></li>
+<li class="tsd-kind-module"><a href="modules/_aws_accelerator_utils.html">@aws-<wbr/>accelerator/utils -<wbr/> v0.0.0</a></li>
+<li class="tsd-kind-module"><a href="modules/_aws_cdk_extensions_cdk_extensions.html">@aws-<wbr/>cdk-<wbr/>extensions/cdk-<wbr/>extensions -<wbr/> v0.0.0</a></li>
+<li class="tsd-kind-module"><a href="modules/_aws_cdk_extensions_cdk_plugin_assume_role.html">@aws-<wbr/>cdk-<wbr/>extensions/cdk-<wbr/>plugin-<wbr/>assume-<wbr/>role -<wbr/> v0.0.0</a></li></ul></li></ul></div></details></nav></div></div>
+<div class="container tsd-generator">
+<p>Generated using <a href="https://typedoc.org/" target="_blank">TypeDoc</a></p></div>
+<div class="overlay"></div><script src="assets/main.js"></script></body></html>
