@@ -116,6 +116,7 @@ exports[`PolicyAttachment Construct(PolicyAttachment):  Snapshot Test 1`] = `
                     "organizations:DetachPolicy",
                     "organizations:ListPoliciesForTarget",
                     "organizations:ListTagsForResource",
+                    "organizations:ListPolicies",
                   ],
                   "Effect": "Allow",
                   "Resource": "*",

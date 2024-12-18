@@ -941,6 +941,7 @@ exports[`AccountsStack us-east-1 Construct(AccountsStack):  Snapshot Test 1`] = 
                     "organizations:DetachPolicy",
                     "organizations:ListPoliciesForTarget",
                     "organizations:ListTagsForResource",
+                    "organizations:ListPolicies",
                   ],
                   "Effect": "Allow",
                   "Resource": "*",

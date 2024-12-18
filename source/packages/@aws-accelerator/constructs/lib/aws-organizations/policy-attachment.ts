@@ -74,6 +74,7 @@ export class PolicyAttachment extends Construct {
             'organizations:DetachPolicy',
             'organizations:ListPoliciesForTarget',
             'organizations:ListTagsForResource',
+            'organizations:ListPolicies',
           ],
           Resource: '*',
         },
