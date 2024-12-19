@@ -17,7 +17,7 @@ import {
   ListRootsCommand,
   ListOrganizationalUnitsForParentCommandOutput,
 } from '@aws-sdk/client-organizations';
-import { setRetryStrategy } from './common-functions';
+import { getGlobalRegion, setRetryStrategy } from './common-functions';
 
 type OrgUnit = {
   Id: string;
@@ -47,7 +47,7 @@ export async function loadOrganizationalUnits(
 ): Promise<AcceleratorOu[]> {
   const client = new OrganizationsClient({
     retryStrategy: setRetryStrategy(),
-    region: getRegion(partition),
+    region: getGlobalRegion(partition),
     credentials: managementAccountCredentials,
   });
   const acceleratorOrganizationalUnit: AcceleratorOu[] = [];
@@ -79,22 +79,6 @@ export async function loadOrganizationalUnits(
     });
   });
   return filteredArray;
-}
-
-function getRegion(partition: string): string {
-  let region: string;
-  if (partition === 'aws-us-gov') {
-    region = 'us-gov-west-1';
-  } else if (partition === 'aws-cn') {
-    region = 'cn-northwest-1';
-  } else if (partition === 'aws-iso-f') {
-    region = 'us-isof-south-1';
-  } else if (partition === 'aws-iso-e') {
-    region = 'eu-isoe-west-1';
-  } else {
-    region = 'us-east-1';
-  }
-  return region;
 }
 
 async function parseArray(levelArray: OrgUnits): Promise<AcceleratorOu[]> {
