@@ -295,7 +295,7 @@ export class NetworkFirewallValidator {
   ) {
     const attributes = definition.matchAttributes;
     // Validate CIDRs
-    const cidrs = [...(attributes.sources ?? []), ...(attributes.destinations ?? [])] ?? [];
+    const cidrs = [...(attributes.sources ?? []), ...(attributes.destinations ?? [])];
     cidrs.forEach(cidr => {
       if (!helpers.isValidIpv4Cidr(cidr)) {
         errors.push(
@@ -346,7 +346,7 @@ export class NetworkFirewallValidator {
       );
     }
     // Validate attributes
-    const portRanges = [...(attributes.destinationPorts ?? []), ...(attributes.sourcePorts ?? [])] ?? [];
+    const portRanges = [...(attributes.destinationPorts ?? []), ...(attributes.sourcePorts ?? [])];
     portRanges.forEach(portRange => {
       const isValidPortRange = portRange.fromPort <= portRange.toPort;
       const portRangeString = `fromPort: ${portRange.fromPort}, toPort: ${portRange.toPort}`;

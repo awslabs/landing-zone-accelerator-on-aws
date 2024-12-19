@@ -161,7 +161,7 @@ export class AccountsConfigValidator {
     organizationConfig: OrganizationConfig,
     errors: string[],
   ) {
-    for (const account of [...values.mandatoryAccounts, ...values.workloadAccounts] ?? []) {
+    for (const account of [...values.mandatoryAccounts, ...values.workloadAccounts]) {
       if (account.organizationalUnit) {
         // Check if OU exists
         if (!ouIdNames.includes(account.organizationalUnit)) {

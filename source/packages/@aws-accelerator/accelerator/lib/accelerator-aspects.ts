@@ -15,6 +15,7 @@ import * as cdk from 'aws-cdk-lib';
 import { IConstruct } from 'constructs';
 import { version } from '../../../../package.json';
 import { createLogger } from '@aws-accelerator/utils/lib/logger';
+import { getGlobalRegion } from '@aws-accelerator/utils';
 
 const logger = createLogger(['accelerator-aspects']);
 /**
@@ -324,31 +325,25 @@ export class AcceleratorAspects {
   public readonly globalRegion: string;
 
   constructor(app: cdk.App, partition: string, useExistingRoles: boolean) {
-    let globalRegion = 'us-east-1';
+    const globalRegion = getGlobalRegion(partition);
     // Add partition specific overrides
     switch (partition) {
       case 'aws-us-gov':
-        globalRegion = 'us-gov-west-1';
         cdk.Aspects.of(app).add(new GovCloudOverrides());
         break;
       case 'aws-iso':
-        globalRegion = 'us-iso-east-1';
         cdk.Aspects.of(app).add(new IsoOverrides());
         break;
       case 'aws-iso-b':
-        globalRegion = 'us-isob-east-1';
         cdk.Aspects.of(app).add(new IsobOverrides());
         break;
-      case 'aws-iso-f':
-        globalRegion = 'us-isof-south-1';
-        cdk.Aspects.of(app).add(new IsofOverrides());
-        break;
       case 'aws-iso-e':
-        globalRegion = 'eu-isoe-west-1';
         cdk.Aspects.of(app).add(new IsoeOverrides());
         break;
+      case 'aws-iso-f':
+        cdk.Aspects.of(app).add(new IsofOverrides());
+        break;
       case 'aws-cn':
-        globalRegion = 'cn-northwest-1';
         cdk.Aspects.of(app).add(new CnOverrides());
         break;
     }
