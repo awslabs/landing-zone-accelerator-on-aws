@@ -25,7 +25,9 @@ AWS.config.logger = console;
  */
 export async function handler(event: CloudFormationCustomResourceEvent) {
   console.log(JSON.stringify(event, null, 4));
-  const fmsClient = new AWS.FMS({ region: 'us-east-1' });
+  const partition = event.ResourceProperties['partition'];
+  const globalRegion = getGlobalRegion(partition);
+  const fmsClient = new AWS.FMS({ region: globalRegion });
   const fmsServicePrincipal = 'fms.amazonaws.com';
   const currentFMSAdminAccount = await throttlingBackOff(() => fmsClient.getAdminAccount({}).promise()).catch(err => {
     console.log(err);
@@ -33,11 +35,9 @@ export async function handler(event: CloudFormationCustomResourceEvent) {
   });
   const newFMSAdminAccount = event.ResourceProperties['adminAccountId'];
   const assumeRoleName = event.ResourceProperties['assumeRoleName'];
-  const partition = event.ResourceProperties['partition'];
   const region = event.ResourceProperties['region'];
   const solutionId = process.env['SOLUTION_ID'];
 
-  const globalRegion = getGlobalRegion(partition);
   const organizationsClient = new AWS.Organizations({ customUserAgent: solutionId, region: globalRegion });
 
   console.log(`Current FMS Account: ${currentFMSAdminAccount?.AdminAccount || 'No account found'}`);
@@ -101,7 +101,7 @@ export async function handler(event: CloudFormationCustomResourceEvent) {
       if (adminAccountId) {
         const assumeRoleCredentials = await assumeRole(stsClient, assumeRoleName, adminAccountId, partition);
         console.log('Deregistering Admin Account');
-        const adminFmsClient = new AWS.FMS({ credentials: assumeRoleCredentials, region: 'us-east-1' });
+        const adminFmsClient = new AWS.FMS({ credentials: assumeRoleCredentials, region: globalRegion });
         await throttlingBackOff(() => adminFmsClient.disassociateAdminAccount({}).promise());
         await throttlingBackOff(() =>
           organizationsClient
