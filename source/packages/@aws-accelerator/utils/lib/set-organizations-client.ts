@@ -11,7 +11,7 @@
  *  and limitations under the License.
  */
 
-import { setRetryStrategy } from './common-functions';
+import { getGlobalRegion, setRetryStrategy } from './common-functions';
 import { OrganizationsClient } from '@aws-sdk/client-organizations';
 
 /**
@@ -21,40 +21,9 @@ import { OrganizationsClient } from '@aws-sdk/client-organizations';
  * @returns OrganizationsClient
  */
 export function setOrganizationsClient(partition: string, solutionId?: string): OrganizationsClient {
-  if (partition === 'aws-us-gov') {
-    return new OrganizationsClient({
-      region: 'us-gov-west-1',
-      customUserAgent: solutionId,
-      retryStrategy: setRetryStrategy(),
-    });
-  } else if (partition === 'aws-iso-f') {
-    return new OrganizationsClient({
-      region: 'us-isof-south-1',
-      customUserAgent: solutionId,
-      retryStrategy: setRetryStrategy(),
-    });
-  } else if (partition === 'aws-iso-e') {
-    return new OrganizationsClient({
-      region: 'eu-isoe-west-1',
-      customUserAgent: solutionId,
-      retryStrategy: setRetryStrategy(),
-    });
-  } else if (partition === 'aws-cn') {
-    return new OrganizationsClient({
-      region: 'cn-northwest-1',
-      customUserAgent: solutionId,
-      retryStrategy: setRetryStrategy(),
-    });
-  } else if (partition === 'aws') {
-    return new OrganizationsClient({
-      region: 'us-east-1',
-      customUserAgent: solutionId,
-      retryStrategy: setRetryStrategy(),
-    });
-  } else {
-    return new OrganizationsClient({
-      customUserAgent: solutionId,
-      retryStrategy: setRetryStrategy(),
-    });
-  }
+  return new OrganizationsClient({
+    region: getGlobalRegion(partition),
+    customUserAgent: solutionId,
+    retryStrategy: setRetryStrategy(),
+  });
 }
