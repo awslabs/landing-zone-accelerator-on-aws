@@ -44,7 +44,7 @@ export class KmsKeyResource {
    * CloudWatch key was created in management account region by prepare stack.
    */
   private createOrGetCloudWatchKey(props: AcceleratorStackProps): cdk.aws_kms.IKey | undefined {
-    if (!this.stack.isLambdaCMKEnabled) {
+    if (!this.stack.isCloudWatchLogsGroupCMKEnabled) {
       return undefined;
     }
     if (props.globalConfig.homeRegion == cdk.Stack.of(this.stack).region) {
