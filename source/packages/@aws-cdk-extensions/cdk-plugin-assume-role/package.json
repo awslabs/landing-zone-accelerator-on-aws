@@ -20,6 +20,7 @@
     "watch": "tsc -w"
   },
   "dependencies": {
+    "@aws-sdk/client-sts": "3.588.0",
     "@typescript-eslint/eslint-plugin": "5.53.0",
     "@typescript-eslint/parser": "5.53.0",
     "aws-cdk": "2.158.0",
