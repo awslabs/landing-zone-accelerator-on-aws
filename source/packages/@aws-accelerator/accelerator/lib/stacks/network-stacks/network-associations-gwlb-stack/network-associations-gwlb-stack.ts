@@ -1061,7 +1061,7 @@ export class NetworkAssociationsGwlbStack extends NetworkStack {
         `Creating route targeting ENI of firewall ${routeDetails.firewallName} in VPC ${routeDetails.vpcName}`,
       );
       networkInterfaceId = this.getNetworkInterfaceIdFromFirewall(routeDetails);
-    } else if (routeDetails.firewallName && aseaFirewallOwnedByAccount && routeDetails.eniIndex) {
+    } else if (routeDetails.firewallName && aseaFirewallOwnedByAccount && routeDetails.eniIndex !== undefined) {
       this.logger.info(
         `Creating route targeting ENI of firewall ${routeDetails.firewallName} in VPC ${routeDetails.vpcName}`,
       );

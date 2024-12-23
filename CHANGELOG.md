@@ -16,6 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - fix(organizations): add missing permission to custom resource for policy deletion
 - fix(kms): changed cwl cmk condition
 - fix(auditmanager): fix delegated admin account custom resource
+- fix(networking): fixed lookup failure on eni 0 when adding new routes for FW
 
 ### Changed
 
