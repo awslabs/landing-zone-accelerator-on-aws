@@ -129,6 +129,7 @@ export class IntegrationTest {
       region,
       globalRegion: getGlobalRegion(partition),
       integrationAccountIamRoleArn: `arn:${partition}:iam::${accountId}:role/${AcceleratorIntegrationTestResources.integrationAccountRoleName}`,
+      solutionId: `InteTest-SO0199`,
     };
   }
 
