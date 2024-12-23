@@ -15,6 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - fix(iam): vpc peering role trust policy prevent cdk execution role from assuming it
 - fix(organizations): add missing permission to custom resource for policy deletion
 - fix(kms): changed cwl cmk condition
+- fix(auditmanager): fix delegated admin account custom resource
 
 ### Changed
 

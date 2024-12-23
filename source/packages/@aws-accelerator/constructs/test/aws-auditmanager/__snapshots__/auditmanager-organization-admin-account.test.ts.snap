@@ -24,6 +24,9 @@ exports[`AuditManagerOrganizationAdminAccount Construct(AuditManagerOrganization
             "Arn",
           ],
         },
+        "managementAccountId": {
+          "Ref": "AWS::AccountId",
+        },
         "region": {
           "Ref": "AWS::Region",
         },
@@ -105,19 +108,13 @@ exports[`AuditManagerOrganizationAdminAccount Construct(AuditManagerOrganization
               "Statement": [
                 {
                   "Action": [
-                    "organizations:DeregisterDelegatedAdministrator",
                     "organizations:DescribeOrganization",
                     "organizations:EnableAWSServiceAccess",
                     "organizations:ListAWSServiceAccessForOrganization",
-                    "organizations:ListAccounts",
-                    "organizations:ListDelegatedAdministrators",
                     "organizations:RegisterDelegatedAdministrator",
                   ],
                   "Condition": {
                     "StringLikeIfExists": {
-                      "organizations:DeregisterDelegatedAdministrator": [
-                        "auditmanager.amazonaws.com",
-                      ],
                       "organizations:DescribeOrganization": [
                         "auditmanager.amazonaws.com",
                       ],
@@ -127,12 +124,6 @@ exports[`AuditManagerOrganizationAdminAccount Construct(AuditManagerOrganization
                       "organizations:ListAWSServiceAccessForOrganization": [
                         "auditmanager.amazonaws.com",
                       ],
-                      "organizations:ListAccounts": [
-                        "auditmanager.amazonaws.com",
-                      ],
-                      "organizations:ListDelegatedAdministrators": [
-                        "auditmanager.amazonaws.com",
-                      ],
                       "organizations:RegisterDelegatedAdministrator": [
                         "auditmanager.amazonaws.com",
                       ],
@@ -140,29 +131,38 @@ exports[`AuditManagerOrganizationAdminAccount Construct(AuditManagerOrganization
                   },
                   "Effect": "Allow",
                   "Resource": "*",
-                  "Sid": "AuditManagerEnableOrganizationAdminAccountTaskOrganizationActions",
-                },
-                {
-                  "Action": [
-                    "auditmanager:RegisterAccount",
-                    "auditmanager:DeregisterAccount",
-                    "auditmanager:RegisterOrganizationAdminAccount",
-                    "auditmanager:DeregisterOrganizationAdminAccount",
-                    "auditmanager:getOrganizationAdminAccount",
-                  ],
-                  "Effect": "Allow",
-                  "Resource": "*",
-                  "Sid": "AuditManagerEnableOrganizationAdminAccountTaskDetectiveActions",
+                  "Sid": "OrganizationsPermissions",
                 },
                 {
                   "Action": [
                     "iam:CreateServiceLinkedRole",
                   ],
+                  "Condition": {
+                    "StringLikeIfExists": {
+                      "iam:CreateServiceLinkedRole": [
+                        "auditmanager.amazonaws.com",
+                      ],
+                    },
+                  },
                   "Effect": "Allow",
                   "Resource": [
                     "*",
                   ],
-                  "Sid": "ServiceLinkedRoleDetective",
+                  "Sid": "AuditManagerIamPermission",
+                },
+                {
+                  "Action": [
+                    "auditmanager:DeregisterOrganizationAdminAccount",
+                    "auditmanager:GetAccountStatus",
+                    "auditmanager:GetOrganizationAdminAccount",
+                    "auditmanager:GetSettings",
+                    "auditmanager:RegisterAccount",
+                    "auditmanager:RegisterOrganizationAdminAccount",
+                    "auditmanager:UpdateSettings",
+                  ],
+                  "Effect": "Allow",
+                  "Resource": "*",
+                  "Sid": "AuditManagerPermissions",
                 },
                 {
                   "Action": "kms:CreateGrant",

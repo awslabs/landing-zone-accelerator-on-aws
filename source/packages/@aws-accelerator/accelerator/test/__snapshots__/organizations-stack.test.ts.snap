@@ -181,6 +181,7 @@ exports[`MultiOuOrganizationsStack Construct(OrganizationsStack):  Snapshot Test
         "kmsKeyArn": {
           "Ref": "SsmParameterValueacceleratorkmscloudwatchkeyarnC96584B6F00A464EAD1953AFF4B05118Parameter",
         },
+        "managementAccountId": "111111111111",
         "region": "us-east-1",
       },
       "Type": "Custom::AuditManagerEnableOrganizationAdminAccount",
@@ -280,19 +281,13 @@ exports[`MultiOuOrganizationsStack Construct(OrganizationsStack):  Snapshot Test
               "Statement": [
                 {
                   "Action": [
-                    "organizations:DeregisterDelegatedAdministrator",
                     "organizations:DescribeOrganization",
                     "organizations:EnableAWSServiceAccess",
                     "organizations:ListAWSServiceAccessForOrganization",
-                    "organizations:ListAccounts",
-                    "organizations:ListDelegatedAdministrators",
                     "organizations:RegisterDelegatedAdministrator",
                   ],
                   "Condition": {
                     "StringLikeIfExists": {
-                      "organizations:DeregisterDelegatedAdministrator": [
-                        "auditmanager.amazonaws.com",
-                      ],
                       "organizations:DescribeOrganization": [
                         "auditmanager.amazonaws.com",
                       ],
@@ -302,12 +297,6 @@ exports[`MultiOuOrganizationsStack Construct(OrganizationsStack):  Snapshot Test
                       "organizations:ListAWSServiceAccessForOrganization": [
                         "auditmanager.amazonaws.com",
                       ],
-                      "organizations:ListAccounts": [
-                        "auditmanager.amazonaws.com",
-                      ],
-                      "organizations:ListDelegatedAdministrators": [
-                        "auditmanager.amazonaws.com",
-                      ],
                       "organizations:RegisterDelegatedAdministrator": [
                         "auditmanager.amazonaws.com",
                       ],
@@ -315,29 +304,38 @@ exports[`MultiOuOrganizationsStack Construct(OrganizationsStack):  Snapshot Test
                   },
                   "Effect": "Allow",
                   "Resource": "*",
-                  "Sid": "AuditManagerEnableOrganizationAdminAccountTaskOrganizationActions",
-                },
-                {
-                  "Action": [
-                    "auditmanager:RegisterAccount",
-                    "auditmanager:DeregisterAccount",
-                    "auditmanager:RegisterOrganizationAdminAccount",
-                    "auditmanager:DeregisterOrganizationAdminAccount",
-                    "auditmanager:getOrganizationAdminAccount",
-                  ],
-                  "Effect": "Allow",
-                  "Resource": "*",
-                  "Sid": "AuditManagerEnableOrganizationAdminAccountTaskDetectiveActions",
+                  "Sid": "OrganizationsPermissions",
                 },
                 {
                   "Action": [
                     "iam:CreateServiceLinkedRole",
                   ],
+                  "Condition": {
+                    "StringLikeIfExists": {
+                      "iam:CreateServiceLinkedRole": [
+                        "auditmanager.amazonaws.com",
+                      ],
+                    },
+                  },
                   "Effect": "Allow",
                   "Resource": [
                     "*",
                   ],
-                  "Sid": "ServiceLinkedRoleDetective",
+                  "Sid": "AuditManagerIamPermission",
+                },
+                {
+                  "Action": [
+                    "auditmanager:DeregisterOrganizationAdminAccount",
+                    "auditmanager:GetAccountStatus",
+                    "auditmanager:GetOrganizationAdminAccount",
+                    "auditmanager:GetSettings",
+                    "auditmanager:RegisterAccount",
+                    "auditmanager:RegisterOrganizationAdminAccount",
+                    "auditmanager:UpdateSettings",
+                  ],
+                  "Effect": "Allow",
+                  "Resource": "*",
+                  "Sid": "AuditManagerPermissions",
                 },
                 {
                   "Action": "kms:CreateGrant",
@@ -3517,6 +3515,7 @@ exports[`OrganizationsStack Construct(OrganizationsStack):  Snapshot Test 1`] = 
         "kmsKeyArn": {
           "Ref": "SsmParameterValueacceleratorkmscloudwatchkeyarnC96584B6F00A464EAD1953AFF4B05118Parameter",
         },
+        "managementAccountId": "111111111111",
         "region": "us-east-1",
       },
       "Type": "Custom::AuditManagerEnableOrganizationAdminAccount",
@@ -3705,19 +3704,13 @@ exports[`OrganizationsStack Construct(OrganizationsStack):  Snapshot Test 1`] = 
               "Statement": [
                 {
                   "Action": [
-                    "organizations:DeregisterDelegatedAdministrator",
                     "organizations:DescribeOrganization",
                     "organizations:EnableAWSServiceAccess",
                     "organizations:ListAWSServiceAccessForOrganization",
-                    "organizations:ListAccounts",
-                    "organizations:ListDelegatedAdministrators",
                     "organizations:RegisterDelegatedAdministrator",
                   ],
                   "Condition": {
                     "StringLikeIfExists": {
-                      "organizations:DeregisterDelegatedAdministrator": [
-                        "auditmanager.amazonaws.com",
-                      ],
                       "organizations:DescribeOrganization": [
                         "auditmanager.amazonaws.com",
                       ],
@@ -3727,12 +3720,6 @@ exports[`OrganizationsStack Construct(OrganizationsStack):  Snapshot Test 1`] = 
                       "organizations:ListAWSServiceAccessForOrganization": [
                         "auditmanager.amazonaws.com",
                       ],
-                      "organizations:ListAccounts": [
-                        "auditmanager.amazonaws.com",
-                      ],
-                      "organizations:ListDelegatedAdministrators": [
-                        "auditmanager.amazonaws.com",
-                      ],
                       "organizations:RegisterDelegatedAdministrator": [
                         "auditmanager.amazonaws.com",
                       ],
@@ -3740,29 +3727,38 @@ exports[`OrganizationsStack Construct(OrganizationsStack):  Snapshot Test 1`] = 
                   },
                   "Effect": "Allow",
                   "Resource": "*",
-                  "Sid": "AuditManagerEnableOrganizationAdminAccountTaskOrganizationActions",
-                },
-                {
-                  "Action": [
-                    "auditmanager:RegisterAccount",
-                    "auditmanager:DeregisterAccount",
-                    "auditmanager:RegisterOrganizationAdminAccount",
-                    "auditmanager:DeregisterOrganizationAdminAccount",
-                    "auditmanager:getOrganizationAdminAccount",
-                  ],
-                  "Effect": "Allow",
-                  "Resource": "*",
-                  "Sid": "AuditManagerEnableOrganizationAdminAccountTaskDetectiveActions",
+                  "Sid": "OrganizationsPermissions",
                 },
                 {
                   "Action": [
                     "iam:CreateServiceLinkedRole",
                   ],
+                  "Condition": {
+                    "StringLikeIfExists": {
+                      "iam:CreateServiceLinkedRole": [
+                        "auditmanager.amazonaws.com",
+                      ],
+                    },
+                  },
                   "Effect": "Allow",
                   "Resource": [
                     "*",
                   ],
-                  "Sid": "ServiceLinkedRoleDetective",
+                  "Sid": "AuditManagerIamPermission",
+                },
+                {
+                  "Action": [
+                    "auditmanager:DeregisterOrganizationAdminAccount",
+                    "auditmanager:GetAccountStatus",
+                    "auditmanager:GetOrganizationAdminAccount",
+                    "auditmanager:GetSettings",
+                    "auditmanager:RegisterAccount",
+                    "auditmanager:RegisterOrganizationAdminAccount",
+                    "auditmanager:UpdateSettings",
+                  ],
+                  "Effect": "Allow",
+                  "Resource": "*",
+                  "Sid": "AuditManagerPermissions",
                 },
                 {
                   "Action": "kms:CreateGrant",
@@ -6924,6 +6920,7 @@ exports[`delegatedAdminStack Construct(OrganizationsStack):  Snapshot Test 1`] =
         "kmsKeyArn": {
           "Ref": "SsmParameterValueacceleratorkmscloudwatchkeyarnC96584B6F00A464EAD1953AFF4B05118Parameter",
         },
+        "managementAccountId": "111111111111",
         "region": "us-east-1",
       },
       "Type": "Custom::AuditManagerEnableOrganizationAdminAccount",
@@ -7023,19 +7020,13 @@ exports[`delegatedAdminStack Construct(OrganizationsStack):  Snapshot Test 1`] =
               "Statement": [
                 {
                   "Action": [
-                    "organizations:DeregisterDelegatedAdministrator",
                     "organizations:DescribeOrganization",
                     "organizations:EnableAWSServiceAccess",
                     "organizations:ListAWSServiceAccessForOrganization",
-                    "organizations:ListAccounts",
-                    "organizations:ListDelegatedAdministrators",
                     "organizations:RegisterDelegatedAdministrator",
                   ],
                   "Condition": {
                     "StringLikeIfExists": {
-                      "organizations:DeregisterDelegatedAdministrator": [
-                        "auditmanager.amazonaws.com",
-                      ],
                       "organizations:DescribeOrganization": [
                         "auditmanager.amazonaws.com",
                       ],
@@ -7045,12 +7036,6 @@ exports[`delegatedAdminStack Construct(OrganizationsStack):  Snapshot Test 1`] =
                       "organizations:ListAWSServiceAccessForOrganization": [
                         "auditmanager.amazonaws.com",
                       ],
-                      "organizations:ListAccounts": [
-                        "auditmanager.amazonaws.com",
-                      ],
-                      "organizations:ListDelegatedAdministrators": [
-                        "auditmanager.amazonaws.com",
-                      ],
                       "organizations:RegisterDelegatedAdministrator": [
                         "auditmanager.amazonaws.com",
                       ],
@@ -7058,29 +7043,38 @@ exports[`delegatedAdminStack Construct(OrganizationsStack):  Snapshot Test 1`] =
                   },
                   "Effect": "Allow",
                   "Resource": "*",
-                  "Sid": "AuditManagerEnableOrganizationAdminAccountTaskOrganizationActions",
-                },
-                {
-                  "Action": [
-                    "auditmanager:RegisterAccount",
-                    "auditmanager:DeregisterAccount",
-                    "auditmanager:RegisterOrganizationAdminAccount",
-                    "auditmanager:DeregisterOrganizationAdminAccount",
-                    "auditmanager:getOrganizationAdminAccount",
-                  ],
-                  "Effect": "Allow",
-                  "Resource": "*",
-                  "Sid": "AuditManagerEnableOrganizationAdminAccountTaskDetectiveActions",
+                  "Sid": "OrganizationsPermissions",
                 },
                 {
                   "Action": [
                     "iam:CreateServiceLinkedRole",
                   ],
+                  "Condition": {
+                    "StringLikeIfExists": {
+                      "iam:CreateServiceLinkedRole": [
+                        "auditmanager.amazonaws.com",
+                      ],
+                    },
+                  },
                   "Effect": "Allow",
                   "Resource": [
                     "*",
                   ],
-                  "Sid": "ServiceLinkedRoleDetective",
+                  "Sid": "AuditManagerIamPermission",
+                },
+                {
+                  "Action": [
+                    "auditmanager:DeregisterOrganizationAdminAccount",
+                    "auditmanager:GetAccountStatus",
+                    "auditmanager:GetOrganizationAdminAccount",
+                    "auditmanager:GetSettings",
+                    "auditmanager:RegisterAccount",
+                    "auditmanager:RegisterOrganizationAdminAccount",
+                    "auditmanager:UpdateSettings",
+                  ],
+                  "Effect": "Allow",
+                  "Resource": "*",
+                  "Sid": "AuditManagerPermissions",
                 },
                 {
                   "Action": "kms:CreateGrant",

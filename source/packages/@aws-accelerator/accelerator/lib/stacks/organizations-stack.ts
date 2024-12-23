@@ -599,6 +599,7 @@ export class OrganizationsStack extends AcceleratorStack {
 
         this.logger.debug(`AuditManager Admin Account ID is ${adminAccountId}`);
         new AuditManagerOrganizationAdminAccount(this, 'AuditManagerEnableOrganizationAdminAccount', {
+          managementAccountId: cdk.Stack.of(this).account,
           adminAccountId,
           logRetentionInDays: this.logRetention,
           kmsKey: this.cloudwatchKey,

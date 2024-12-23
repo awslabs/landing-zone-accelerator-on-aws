@@ -180,6 +180,10 @@ export type TestEnvironmentType = {
    * List of AWS Organizations account name and ids for the test environment
    */
   accounts?: ManifestAccountType[];
+  /**
+   * Solution id
+   */
+  solutionId?: string;
 };
 
 //
