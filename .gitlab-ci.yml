@@ -505,7 +505,63 @@ guardduty:aws:us-west-2:
     reports:
       junit:
         - 'source/packages/@aws-accelerator/constructs/lib/aws-guardduty/test-reports/${ENV_NAME}/${AWS_DEFAULT_REGION}/*.xml'
-    expire_in: 1 day    
+    expire_in: 1 day
+audit-manager:aws:us-east-1:
+  stage: pipeline
+  needs: [ "accelerator:build" ]
+  variables:
+    ENV_NAME: sampleConfig
+    ACCOUNT_ID: "${SAMPLE_CONFIG_ENV_MANAGEMENT_ACCOUNT_ID}"
+    PARTITION: aws
+    AWS_DEFAULT_REGION: us-east-1
+    AWS_CREDS_TARGET_ROLE: 'arn:${PARTITION}:iam::${ACCOUNT_ID}:role/${INTEGRATION_TEST_ROLE_NAME}'
+  tags:
+    - arch:amd64
+    - size:large
+  script:
+    - "cd source/packages/@aws-accelerator/constructs/lib/aws-auditmanager/enable-organization-admin-account"
+    - "yarn test:unit"
+    - "yarn test:integration"
+  rules:
+    - if: $EXECUTE_INTEGRATION_TEST == "Yes"
+      when: always
+    - if: $CI_COMMIT_BRANCH == "integ"
+      when: always
+    - when: never
+  artifacts:
+    when: always
+    reports:
+      junit:
+        - 'source/packages/@aws-accelerator/constructs/lib/aws-auditmanager/test-reports/${ENV_NAME}/${AWS_DEFAULT_REGION}/*.*'
+    expire_in: 1 day
+audit-manager:aws:us-west-2:
+  stage: pipeline
+  needs: [ "accelerator:build" ]
+  variables:
+    ENV_NAME: sampleConfig
+    ACCOUNT_ID: "${SAMPLE_CONFIG_ENV_MANAGEMENT_ACCOUNT_ID}"
+    PARTITION: aws
+    AWS_DEFAULT_REGION: us-west-2
+    AWS_CREDS_TARGET_ROLE: 'arn:${PARTITION}:iam::${ACCOUNT_ID}:role/${INTEGRATION_TEST_ROLE_NAME}'
+  tags:
+    - arch:amd64
+    - size:large
+  script:
+    - "cd source/packages/@aws-accelerator/constructs/lib/aws-auditmanager/enable-organization-admin-account"
+    - "yarn test:unit"
+    - "yarn test:integration"
+  rules:
+    - if: $EXECUTE_INTEGRATION_TEST == "Yes"
+      when: always
+    - if: $CI_COMMIT_BRANCH == "integ"
+      when: always
+    - when: never
+  artifacts:
+    when: always
+    reports:
+      junit:
+        - 'source/packages/@aws-accelerator/constructs/lib/aws-auditmanager/test-reports/${ENV_NAME}/${AWS_DEFAULT_REGION}/*.xml'
+    expire_in: 1 day        
 installer:
   stage: pipeline
   needs: [ "accelerator:build" ]
