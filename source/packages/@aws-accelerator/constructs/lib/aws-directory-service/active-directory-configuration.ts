@@ -207,9 +207,9 @@ export class ActiveDirectoryConfiguration extends Construct {
     instance.userData = cdk.Fn.base64(
       `<script>\n cfn-init.exe -v -c config -s ${cdk.Stack.of(this).stackId} -r ${instance.logicalId} --region ${
         cdk.Stack.of(this).region
-      } \n # Signal the status from cfn-init\n cfn-signal -e $? --stack ${cdk.Stack.of(this).stackName} --resource ${
-        instance.logicalId
-      } --region ${cdk.Aws.REGION}\n </script>\n`,
+      } \n echo 'Signal the status from cfn-init'\n cfn-signal -e $LASTEXITCODE --stack ${
+        cdk.Stack.of(this).stackName
+      } --resource ${instance.logicalId} --region ${cdk.Aws.REGION}\n </script>\n`,
     );
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
