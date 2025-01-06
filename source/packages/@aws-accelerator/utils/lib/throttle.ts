@@ -22,7 +22,7 @@ export function throttlingBackOff<T>(
 ): Promise<T> {
   return backOff(request, {
     startingDelay: 150,
-    numOfAttempts: 20,
+    numOfAttempts: 7,
     jitter: 'full',
     retry: isThrottlingError,
     ...options,
