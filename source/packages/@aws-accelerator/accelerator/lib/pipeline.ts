@@ -977,7 +977,7 @@ export class AcceleratorPipeline extends Construct {
             runOrder: 2,
             additionalInformation: `
               Changes for this execution can be found in accelerator pipeline S3 bucket under Diffs/#{codepipeline.PipelineExecutionId}. 
-              Use cli command for download: "aws s3 sync ${this.diffS3Uri}/#{codepipeline.PipelineExecutionId} diffs" or follow the link bellow.`,
+              Use cli command for download: "aws s3 sync ${this.diffS3Uri}/#{codepipeline.PipelineExecutionId} diffs" or follow the link below.`,
             notificationTopic,
             externalEntityLink: reviewLink,
             notifyEmails,
