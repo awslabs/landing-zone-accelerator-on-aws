@@ -530,9 +530,6 @@ exports[`SecurityResourcesStack Construct(SecurityResourcesStack):  Snapshot Tes
       "Properties": {
         "ConfigRuleName": "accelerator-cloudtrail-enabled",
         "InputParameters": {},
-        "Scope": {
-          "ComplianceResourceTypes": [],
-        },
         "Source": {
           "Owner": "AWS",
           "SourceIdentifier": "CLOUD_TRAIL_ENABLED",
@@ -547,9 +544,6 @@ exports[`SecurityResourcesStack Construct(SecurityResourcesStack):  Snapshot Tes
       "Properties": {
         "ConfigRuleName": "accelerator-cloudtrail-s3-dataevents-enabled",
         "InputParameters": {},
-        "Scope": {
-          "ComplianceResourceTypes": [],
-        },
         "Source": {
           "Owner": "AWS",
           "SourceIdentifier": "CLOUDTRAIL_S3_DATAEVENTS_ENABLED",
@@ -564,9 +558,6 @@ exports[`SecurityResourcesStack Construct(SecurityResourcesStack):  Snapshot Tes
       "Properties": {
         "ConfigRuleName": "accelerator-cloudtrail-security-trail-enabled",
         "InputParameters": {},
-        "Scope": {
-          "ComplianceResourceTypes": [],
-        },
         "Source": {
           "Owner": "AWS",
           "SourceIdentifier": "CLOUDTRAIL_SECURITY_TRAIL_ENABLED",
@@ -604,9 +595,6 @@ exports[`SecurityResourcesStack Construct(SecurityResourcesStack):  Snapshot Tes
       "Properties": {
         "ConfigRuleName": "accelerator-cloudwatch-log-group-encrypted",
         "InputParameters": {},
-        "Scope": {
-          "ComplianceResourceTypes": [],
-        },
         "Source": {
           "Owner": "AWS",
           "SourceIdentifier": "CLOUDWATCH_LOG_GROUP_ENCRYPTED",
@@ -621,9 +609,6 @@ exports[`SecurityResourcesStack Construct(SecurityResourcesStack):  Snapshot Tes
       "Properties": {
         "ConfigRuleName": "accelerator-cw-loggroup-retention-period-check",
         "InputParameters": {},
-        "Scope": {
-          "ComplianceResourceTypes": [],
-        },
         "Source": {
           "Owner": "AWS",
           "SourceIdentifier": "CW_LOGGROUP_RETENTION_PERIOD_CHECK",
@@ -638,9 +623,6 @@ exports[`SecurityResourcesStack Construct(SecurityResourcesStack):  Snapshot Tes
       "Properties": {
         "ConfigRuleName": "accelerator-duplicate-s3-rule",
         "InputParameters": {},
-        "Scope": {
-          "ComplianceResourceTypes": [],
-        },
         "Source": {
           "Owner": "AWS",
           "SourceIdentifier": "S3_BUCKET_SERVER_SIDE_ENCRYPTION_ENABLED",
@@ -1180,9 +1162,6 @@ exports[`SecurityResourcesStack Construct(SecurityResourcesStack):  Snapshot Tes
       "Properties": {
         "ConfigRuleName": "accelerator-elasticache-redis-cluster-automatic-backup-check",
         "InputParameters": {},
-        "Scope": {
-          "ComplianceResourceTypes": [],
-        },
         "Source": {
           "Owner": "AWS",
           "SourceIdentifier": "ELASTICACHE_REDIS_CLUSTER_AUTOMATIC_BACKUP_CHECK",
@@ -1197,9 +1176,6 @@ exports[`SecurityResourcesStack Construct(SecurityResourcesStack):  Snapshot Tes
       "Properties": {
         "ConfigRuleName": "accelerator-elasticsearch-in-vpc-only",
         "InputParameters": {},
-        "Scope": {
-          "ComplianceResourceTypes": [],
-        },
         "Source": {
           "Owner": "AWS",
           "SourceIdentifier": "ELASTICSEARCH_IN_VPC_ONLY",
@@ -1456,9 +1432,6 @@ exports[`SecurityResourcesStack Construct(SecurityResourcesStack):  Snapshot Tes
       "Properties": {
         "ConfigRuleName": "accelerator-emr-kerberos-enabled",
         "InputParameters": {},
-        "Scope": {
-          "ComplianceResourceTypes": [],
-        },
         "Source": {
           "Owner": "AWS",
           "SourceIdentifier": "EMR_KERBEROS_ENABLED",
@@ -1476,9 +1449,6 @@ exports[`SecurityResourcesStack Construct(SecurityResourcesStack):  Snapshot Tes
           "daysHighSev": "1",
           "daysLowSev": "30",
           "daysMediumSev": "7",
-        },
-        "Scope": {
-          "ComplianceResourceTypes": [],
         },
         "Source": {
           "Owner": "AWS",
@@ -1553,9 +1523,6 @@ exports[`SecurityResourcesStack Construct(SecurityResourcesStack):  Snapshot Tes
       "Properties": {
         "ConfigRuleName": "accelerator-iam-user-mfa-enabled",
         "InputParameters": {},
-        "Scope": {
-          "ComplianceResourceTypes": [],
-        },
         "Source": {
           "Owner": "AWS",
           "SourceIdentifier": "IAM_USER_MFA_ENABLED",
@@ -1930,9 +1897,6 @@ exports[`SecurityResourcesStack Construct(SecurityResourcesStack):  Snapshot Tes
       "Properties": {
         "ConfigRuleName": "accelerator-sagemaker-endpoint-configuration-kms-key-configured",
         "InputParameters": {},
-        "Scope": {
-          "ComplianceResourceTypes": [],
-        },
         "Source": {
           "Owner": "AWS",
           "SourceIdentifier": "SAGEMAKER_ENDPOINT_CONFIGURATION_KMS_KEY_CONFIGURED",
@@ -1947,9 +1911,6 @@ exports[`SecurityResourcesStack Construct(SecurityResourcesStack):  Snapshot Tes
       "Properties": {
         "ConfigRuleName": "accelerator-sagemaker-notebook-instance-kms-key-configured",
         "InputParameters": {},
-        "Scope": {
-          "ComplianceResourceTypes": [],
-        },
         "Source": {
           "Owner": "AWS",
           "SourceIdentifier": "SAGEMAKER_NOTEBOOK_INSTANCE_KMS_KEY_CONFIGURED",
@@ -1964,9 +1925,6 @@ exports[`SecurityResourcesStack Construct(SecurityResourcesStack):  Snapshot Tes
       "Properties": {
         "ConfigRuleName": "accelerator-securityhub-enabled",
         "InputParameters": {},
-        "Scope": {
-          "ComplianceResourceTypes": [],
-        },
         "Source": {
           "Owner": "AWS",
           "SourceIdentifier": "SECURITYHUB_ENABLED",
@@ -5186,9 +5144,6 @@ exports[`delegatedAdminStack Construct(SecurityResourcesStack):  Snapshot Test 1
       "Properties": {
         "ConfigRuleName": "accelerator-cloudtrail-enabled",
         "InputParameters": {},
-        "Scope": {
-          "ComplianceResourceTypes": [],
-        },
         "Source": {
           "Owner": "AWS",
           "SourceIdentifier": "CLOUD_TRAIL_ENABLED",
@@ -5203,9 +5158,6 @@ exports[`delegatedAdminStack Construct(SecurityResourcesStack):  Snapshot Test 1
       "Properties": {
         "ConfigRuleName": "accelerator-cloudtrail-s3-dataevents-enabled",
         "InputParameters": {},
-        "Scope": {
-          "ComplianceResourceTypes": [],
-        },
         "Source": {
           "Owner": "AWS",
           "SourceIdentifier": "CLOUDTRAIL_S3_DATAEVENTS_ENABLED",
@@ -5220,9 +5172,6 @@ exports[`delegatedAdminStack Construct(SecurityResourcesStack):  Snapshot Test 1
       "Properties": {
         "ConfigRuleName": "accelerator-cloudtrail-security-trail-enabled",
         "InputParameters": {},
-        "Scope": {
-          "ComplianceResourceTypes": [],
-        },
         "Source": {
           "Owner": "AWS",
           "SourceIdentifier": "CLOUDTRAIL_SECURITY_TRAIL_ENABLED",
@@ -5260,9 +5209,6 @@ exports[`delegatedAdminStack Construct(SecurityResourcesStack):  Snapshot Test 1
       "Properties": {
         "ConfigRuleName": "accelerator-cloudwatch-log-group-encrypted",
         "InputParameters": {},
-        "Scope": {
-          "ComplianceResourceTypes": [],
-        },
         "Source": {
           "Owner": "AWS",
           "SourceIdentifier": "CLOUDWATCH_LOG_GROUP_ENCRYPTED",
@@ -5277,9 +5223,6 @@ exports[`delegatedAdminStack Construct(SecurityResourcesStack):  Snapshot Test 1
       "Properties": {
         "ConfigRuleName": "accelerator-cw-loggroup-retention-period-check",
         "InputParameters": {},
-        "Scope": {
-          "ComplianceResourceTypes": [],
-        },
         "Source": {
           "Owner": "AWS",
           "SourceIdentifier": "CW_LOGGROUP_RETENTION_PERIOD_CHECK",
@@ -5709,9 +5652,6 @@ exports[`delegatedAdminStack Construct(SecurityResourcesStack):  Snapshot Test 1
       "Properties": {
         "ConfigRuleName": "accelerator-elasticache-redis-cluster-automatic-backup-check",
         "InputParameters": {},
-        "Scope": {
-          "ComplianceResourceTypes": [],
-        },
         "Source": {
           "Owner": "AWS",
           "SourceIdentifier": "ELASTICACHE_REDIS_CLUSTER_AUTOMATIC_BACKUP_CHECK",
@@ -5726,9 +5666,6 @@ exports[`delegatedAdminStack Construct(SecurityResourcesStack):  Snapshot Test 1
       "Properties": {
         "ConfigRuleName": "accelerator-elasticsearch-in-vpc-only",
         "InputParameters": {},
-        "Scope": {
-          "ComplianceResourceTypes": [],
-        },
         "Source": {
           "Owner": "AWS",
           "SourceIdentifier": "ELASTICSEARCH_IN_VPC_ONLY",
@@ -5985,9 +5922,6 @@ exports[`delegatedAdminStack Construct(SecurityResourcesStack):  Snapshot Test 1
       "Properties": {
         "ConfigRuleName": "accelerator-emr-kerberos-enabled",
         "InputParameters": {},
-        "Scope": {
-          "ComplianceResourceTypes": [],
-        },
         "Source": {
           "Owner": "AWS",
           "SourceIdentifier": "EMR_KERBEROS_ENABLED",
@@ -6005,9 +5939,6 @@ exports[`delegatedAdminStack Construct(SecurityResourcesStack):  Snapshot Test 1
           "daysHighSev": "1",
           "daysLowSev": "30",
           "daysMediumSev": "7",
-        },
-        "Scope": {
-          "ComplianceResourceTypes": [],
         },
         "Source": {
           "Owner": "AWS",
@@ -6082,9 +6013,6 @@ exports[`delegatedAdminStack Construct(SecurityResourcesStack):  Snapshot Test 1
       "Properties": {
         "ConfigRuleName": "accelerator-iam-user-mfa-enabled",
         "InputParameters": {},
-        "Scope": {
-          "ComplianceResourceTypes": [],
-        },
         "Source": {
           "Owner": "AWS",
           "SourceIdentifier": "IAM_USER_MFA_ENABLED",
@@ -6425,9 +6353,6 @@ exports[`delegatedAdminStack Construct(SecurityResourcesStack):  Snapshot Test 1
       "Properties": {
         "ConfigRuleName": "accelerator-sagemaker-endpoint-configuration-kms-key-configured",
         "InputParameters": {},
-        "Scope": {
-          "ComplianceResourceTypes": [],
-        },
         "Source": {
           "Owner": "AWS",
           "SourceIdentifier": "SAGEMAKER_ENDPOINT_CONFIGURATION_KMS_KEY_CONFIGURED",
@@ -6442,9 +6367,6 @@ exports[`delegatedAdminStack Construct(SecurityResourcesStack):  Snapshot Test 1
       "Properties": {
         "ConfigRuleName": "accelerator-sagemaker-notebook-instance-kms-key-configured",
         "InputParameters": {},
-        "Scope": {
-          "ComplianceResourceTypes": [],
-        },
         "Source": {
           "Owner": "AWS",
           "SourceIdentifier": "SAGEMAKER_NOTEBOOK_INSTANCE_KMS_KEY_CONFIGURED",
@@ -6459,9 +6381,6 @@ exports[`delegatedAdminStack Construct(SecurityResourcesStack):  Snapshot Test 1
       "Properties": {
         "ConfigRuleName": "accelerator-securityhub-enabled",
         "InputParameters": {},
-        "Scope": {
-          "ComplianceResourceTypes": [],
-        },
         "Source": {
           "Owner": "AWS",
           "SourceIdentifier": "SECURITYHUB_ENABLED",
