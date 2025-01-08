@@ -682,8 +682,13 @@ export class SecurityResourcesStack extends AcceleratorStack {
    */
   private createManagedConfigRule(rule: ConfigRule): CustomConfigRuleType {
     const resourceTypes: cdk.aws_config.ResourceType[] = [];
+    let ruleScope: cdk.aws_config.RuleScope | undefined = undefined;
     for (const resourceType of rule.complianceResourceTypes ?? []) {
       resourceTypes.push(cdk.aws_config.ResourceType.of(resourceType));
+    }
+
+    if (resourceTypes.length > 0) {
+      ruleScope = { resourceTypes };
     }
 
     const managedConfigRule = new cdk.aws_config.ManagedRule(this, pascalCase(rule.name), {
@@ -691,9 +696,7 @@ export class SecurityResourcesStack extends AcceleratorStack {
       description: rule.description,
       identifier: rule.identifier ?? rule.name,
       inputParameters: this.getRuleParameters(rule.name, rule.inputParameters),
-      ruleScope: {
-        resourceTypes,
-      },
+      ruleScope,
     });
 
     return managedConfigRule;
