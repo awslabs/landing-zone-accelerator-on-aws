@@ -24,6 +24,11 @@ new GuardDutyDetectorConfig(stack, 'GuardDutyDetectorConfig', {
   exportFrequency: 'FIFTEEN_MINUTES',
   enableS3Protection: true,
   enableEksProtection: true,
+  enableEc2MalwareProtection: true,
+  enableEksAgent: true,
+  enableLambdaProtection: true,
+  enableRdsProtection: true,
+  keepMalwareProtectionSnapshosts: true,
   kmsKey: new cdk.aws_kms.Key(stack, 'CustomKey', {}),
   logRetentionInDays: 3653,
 });

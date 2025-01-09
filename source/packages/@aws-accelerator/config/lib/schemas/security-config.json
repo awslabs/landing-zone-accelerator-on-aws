@@ -676,6 +676,10 @@
           "$ref": "#/definitions/IDeploymentTargets",
           "description": "(OPTIONAL) Deployment targets for GuardDuty\n\nWe highly recommend enabling GuardDuty across all accounts and enabled regions within your organization. `deploymentTargets` should only be used when more granular control is required, not as a default configuration Please only specify one of the `deploymentTargets` or `excludeRegions` properties.\n\nNote: The delegated admin account defined in centralSecurityServices will always have GuardDuty enabled"
         },
+        "ec2Protection": {
+          "$ref": "#/definitions/IGuardDutyEc2ProtectionConfig",
+          "description": "(OPTIONAL) AWS GuardDuty EC2 Protection configuration."
+        },
         "eksProtection": {
           "$ref": "#/definitions/IGuardDutyEksProtectionConfig",
           "description": "(OPTIONAL) AWS GuardDuty EKS Protection configuration."
@@ -695,12 +699,20 @@
           "$ref": "#/definitions/IGuardDutyExportFindingsConfig",
           "description": "AWS GuardDuty Export Findings configuration."
         },
+        "lambdaProtection": {
+          "$ref": "#/definitions/IGuardDutyLambdaProtectionConfig",
+          "description": "(OPTIONAL) AWS GuardDuty Lambda Protection configuration."
+        },
         "lifecycleRules": {
           "description": "(OPTIONAL) Declaration of a S3 Lifecycle rule.",
           "items": {
             "$ref": "#/definitions/ILifecycleRule"
           },
           "type": "array"
+        },
+        "rdsProtection": {
+          "$ref": "#/definitions/IGuardDutyRdsProtectionConfig",
+          "description": "(OPTIONAL) AWS GuardDuty RDS Protection configuration."
         },
         "s3Protection": {
           "$ref": "#/definitions/IGuardDutyS3ProtectionConfig",
@@ -711,6 +723,32 @@
         "enable",
         "s3Protection",
         "exportConfiguration"
+      ],
+      "type": "object"
+    },
+    "IGuardDutyEc2ProtectionConfig": {
+      "additionalProperties": false,
+      "description": "AWS GuardDuty EC2 Malware Protection configuration.",
+      "properties": {
+        "enable": {
+          "description": "Indicates whether AWS GuardDuty EC2 Malware Protection is enabled.",
+          "type": "boolean"
+        },
+        "excludeRegions": {
+          "description": "(OPTIONAL) List of AWS Region names to be excluded from configuring Amazon GuardDuty EC2 Malware Protection",
+          "items": {
+            "$ref": "#/definitions/Region"
+          },
+          "type": "array"
+        },
+        "keepSnapshots": {
+          "description": "Indicates whether AWS GuardDuty EC2 Malware Protection should retain snapshots on findings.",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "enable",
+        "keepSnapshots"
       ],
       "type": "object"
     },
@@ -728,6 +766,10 @@
             "$ref": "#/definitions/Region"
           },
           "type": "array"
+        },
+        "manageAgent": {
+          "description": "Indicates whether AWS GuardDuty EKS Agent is managed.",
+          "type": "boolean"
         }
       },
       "required": [
@@ -770,6 +812,48 @@
         "enable",
         "destinationType",
         "exportFrequency"
+      ],
+      "type": "object"
+    },
+    "IGuardDutyLambdaProtectionConfig": {
+      "additionalProperties": false,
+      "description": "AWS GuardDuty Lambda Malware Protection configuration.",
+      "properties": {
+        "enable": {
+          "description": "Indicates whether AWS GuardDuty Lambda Malware Protection is enabled.",
+          "type": "boolean"
+        },
+        "excludeRegions": {
+          "description": "(OPTIONAL) List of AWS Region names to be excluded from configuring Amazon GuardDuty Lambda Malware Protection",
+          "items": {
+            "$ref": "#/definitions/Region"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "enable"
+      ],
+      "type": "object"
+    },
+    "IGuardDutyRdsProtectionConfig": {
+      "additionalProperties": false,
+      "description": "AWS GuardDuty RDS Malware Protection configuration.",
+      "properties": {
+        "enable": {
+          "description": "Indicates whether AWS GuardDuty RDS Malware Protection is enabled.",
+          "type": "boolean"
+        },
+        "excludeRegions": {
+          "description": "(OPTIONAL) List of AWS Region names to be excluded from configuring Amazon GuardDuty RDS Malware Protection",
+          "items": {
+            "$ref": "#/definitions/Region"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "enable"
       ],
       "type": "object"
     },
