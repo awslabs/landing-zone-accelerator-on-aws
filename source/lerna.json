@@ -12,6 +12,7 @@
     "packages/@aws-accelerator/govcloud-account-vending",
     "packages/@aws-accelerator/govcloud-account-vending/lib/lambdas/*",
     "packages/@aws-accelerator/lza-modules",
+    "packages/@aws-accelerator/modules",
     "packages/@aws-accelerator/tester",
     "packages/@aws-accelerator/tester/lambdas",
     "packages/@aws-accelerator/tools",
