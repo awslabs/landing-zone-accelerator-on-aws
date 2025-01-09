@@ -19,36 +19,36 @@ import { pascalCase } from 'pascal-case';
 import * as path from 'path';
 
 import {
-  ResourcePolicyEnforcementConfig,
+  DeploymentTargets,
   GuardDutyConfig,
   Region,
-  DeploymentTargets,
+  ResourcePolicyEnforcementConfig,
   SecurityHubConfig,
 } from '@aws-accelerator/config';
 import {
+  AuditManagerDefaultReportsDestination,
+  AuditManagerDefaultReportsDestinationTypes,
   Bucket,
   BucketEncryptionType,
   BucketReplicationProps,
-  Document,
-  GuardDutyDetectorConfig,
-  AuditManagerDefaultReportsDestination,
-  AuditManagerDefaultReportsDestinationTypes,
-  GuardDutyMembers,
   DetectiveGraphConfig,
   DetectiveMembers,
+  Document,
+  GuardDutyDetectorConfig,
+  GuardDutyMembers,
   MacieMembers,
+  RemediationSsmDocument,
   SecurityHubMembers,
   SecurityHubRegionAggregation,
-  RemediationSsmDocument,
 } from '@aws-accelerator/constructs';
 
+import { SnsEventSource } from 'aws-cdk-lib/aws-lambda-event-sources';
 import {
   AcceleratorKeyType,
   AcceleratorStack,
   AcceleratorStackProps,
   NagSuppressionRuleIds,
 } from './accelerator-stack';
-import { SnsEventSource } from 'aws-cdk-lib/aws-lambda-event-sources';
 
 export class SecurityAuditStack extends AcceleratorStack {
   private readonly s3Key: cdk.aws_kms.IKey | undefined;
@@ -198,11 +198,15 @@ export class SecurityAuditStack extends AcceleratorStack {
           : 'Enabling GuardDuty for all existing accounts',
       );
 
-      // Determine S3 and EKS protection
-      const [s3Protection, eksProtection] = this.processGuardDutyProtectionConfig(guardDutyConfig);
-      // Determine whether to update export frequency
-      const updateExportFrequency =
-        guardDutyConfig.exportConfiguration.enable && guardDutyConfig.exportConfiguration.overrideExisting;
+      const [
+        s3Protection,
+        eksProtection,
+        enableEksAgent,
+        enableEc2MalwareProtection,
+        keepMalwareProtectionSnapshosts,
+        enableRdsProtection,
+        enableLambdaProtection,
+      ] = this.processRegionExclusions(guardDutyConfig);
 
       const guardDutyMembers = new GuardDutyMembers(this, 'GuardDutyMembers', {
         enableS3Protection: s3Protection,
@@ -213,11 +217,29 @@ export class SecurityAuditStack extends AcceleratorStack {
         autoEnableOrgMembers: guardDutyConfig.autoEnableOrgMembers ?? true,
       });
 
-      if (s3Protection || eksProtection || updateExportFrequency) {
+      // Determine whether to update export frequency
+      const updateExportFrequency =
+        guardDutyConfig.exportConfiguration.enable && guardDutyConfig.exportConfiguration.overrideExisting;
+
+      if (
+        s3Protection ||
+        eksProtection ||
+        enableEksAgent ||
+        enableEc2MalwareProtection ||
+        keepMalwareProtectionSnapshosts ||
+        enableRdsProtection ||
+        enableLambdaProtection ||
+        updateExportFrequency
+      ) {
         new GuardDutyDetectorConfig(this, 'GuardDutyDetectorConfig', {
           exportFrequency: updateExportFrequency ? guardDutyConfig.exportConfiguration.exportFrequency : undefined,
           enableS3Protection: s3Protection,
           enableEksProtection: eksProtection,
+          enableEc2MalwareProtection: enableEc2MalwareProtection,
+          keepMalwareProtectionSnapshosts: keepMalwareProtectionSnapshosts,
+          enableEksAgent: enableEksAgent,
+          enableRdsProtection: enableRdsProtection,
+          enableLambdaProtection: enableLambdaProtection,
           kmsKey: this.cloudwatchKey,
           logRetentionInDays: this.props.globalConfig.cloudwatchLogRetentionInDays,
         }).node.addDependency(guardDutyMembers);
@@ -230,26 +252,36 @@ export class SecurityAuditStack extends AcceleratorStack {
    * @param guardDutyConfig GuardDutyConfig
    * @returns boolean[]
    */
-  private processGuardDutyProtectionConfig(guardDutyConfig: GuardDutyConfig): boolean[] {
-    // Set default values if excludeRegions is not configured
+  private processRegionExclusions(guardDutyConfig: GuardDutyConfig): boolean[] {
     let s3Protection = guardDutyConfig.s3Protection.enable;
     let eksProtection = guardDutyConfig.eksProtection?.enable ?? false;
-    // Determine S3 protection exclusion for this region
-    if (guardDutyConfig.s3Protection?.excludeRegions) {
-      s3Protection =
-        guardDutyConfig.s3Protection.excludeRegions.indexOf(cdk.Stack.of(this).region as Region) === -1
-          ? guardDutyConfig.s3Protection.enable
-          : false;
-    }
-    // Determine EKS protection exclusion for this region
-    if (guardDutyConfig.eksProtection?.excludeRegions) {
-      eksProtection =
-        guardDutyConfig.eksProtection.excludeRegions.indexOf(cdk.Stack.of(this).region as Region) === -1
-          ? guardDutyConfig.eksProtection.enable
-          : false;
-    }
+    let enableEksAgent = guardDutyConfig.eksProtection?.manageAgent ?? false;
+    let enableEc2MalwareProtection = guardDutyConfig.ec2Protection?.enable ?? false;
+    let keepMalwareProtectionSnapshosts = guardDutyConfig.ec2Protection?.keepSnapshots ?? false;
+    let enableRdsProtection = guardDutyConfig.rdsProtection?.enable ?? false;
+    let enableLambdaProtection = guardDutyConfig.lambdaProtection?.enable ?? false;
 
-    return [s3Protection, eksProtection];
+    if (this.isRegionExcluded(guardDutyConfig.s3Protection.excludeRegions)) s3Protection = false;
+    if (this.isRegionExcluded(guardDutyConfig.eksProtection?.excludeRegions ?? [])) {
+      eksProtection = false;
+      enableEksAgent = false;
+    }
+    if (this.isRegionExcluded(guardDutyConfig.ec2Protection?.excludeRegions ?? [])) {
+      enableEc2MalwareProtection = false;
+      keepMalwareProtectionSnapshosts = false;
+    }
+    if (this.isRegionExcluded(guardDutyConfig.eksProtection?.excludeRegions ?? [])) enableRdsProtection = false;
+    if (this.isRegionExcluded(guardDutyConfig.eksProtection?.excludeRegions ?? [])) enableLambdaProtection = false;
+
+    return [
+      s3Protection,
+      eksProtection,
+      enableEksAgent,
+      enableEc2MalwareProtection,
+      keepMalwareProtectionSnapshosts,
+      enableRdsProtection,
+      enableLambdaProtection,
+    ];
   }
 
   /**

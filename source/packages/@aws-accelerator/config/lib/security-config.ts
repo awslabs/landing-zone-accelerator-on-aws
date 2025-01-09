@@ -89,12 +89,29 @@ export class MacieConfig implements i.IMacieConfig {
 }
 
 export class GuardDutyS3ProtectionConfig implements i.IGuardDutyS3ProtectionConfig {
-  readonly enable = false;
+  readonly enable: boolean = false;
   readonly excludeRegions: t.Region[] = [];
 }
 
 export class GuardDutyEksProtectionConfig implements i.IGuardDutyEksProtectionConfig {
-  readonly enable = false;
+  readonly enable: boolean = false;
+  readonly manageAgent?: boolean | undefined = false;
+  readonly excludeRegions: t.Region[] = [];
+}
+
+export class GuardDutyEc2ProtectionConfig implements i.IGuardDutyEc2ProtectionConfig {
+  readonly enable: boolean = false;
+  readonly keepSnapshots: boolean = false;
+  readonly excludeRegions: t.Region[] = [];
+}
+
+export class GuardDutyRdsProtectionConfig implements i.IGuardDutyRdsProtectionConfig {
+  readonly enable: boolean = false;
+  readonly excludeRegions: t.Region[] = [];
+}
+
+export class GuardDutyLambdaProtectionConfig implements i.IGuardDutyLambdaProtectionConfig {
+  readonly enable: boolean = false;
   readonly excludeRegions: t.Region[] = [];
 }
 
@@ -107,12 +124,15 @@ export class GuardDutyExportFindingsConfig implements i.IGuardDutyExportFindings
 }
 
 export class GuardDutyConfig implements i.IGuardDutyConfig {
-  readonly enable = false;
+  readonly enable: boolean = false;
   readonly excludeRegions: t.Region[] = [];
   readonly deploymentTargets: t.DeploymentTargets | undefined = undefined;
   readonly autoEnableOrgMembers: boolean | undefined = undefined;
   readonly s3Protection: GuardDutyS3ProtectionConfig = new GuardDutyS3ProtectionConfig();
   readonly eksProtection: GuardDutyEksProtectionConfig | undefined = undefined;
+  readonly ec2Protection: GuardDutyEc2ProtectionConfig | undefined = undefined;
+  readonly rdsProtection: GuardDutyRdsProtectionConfig | undefined = undefined;
+  readonly lambdaProtection: GuardDutyLambdaProtectionConfig | undefined = undefined;
   readonly exportConfiguration: GuardDutyExportFindingsConfig = new GuardDutyExportFindingsConfig();
   readonly lifecycleRules: t.LifeCycleRule[] | undefined = undefined;
 }

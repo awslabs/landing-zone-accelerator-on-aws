@@ -252,7 +252,57 @@ export interface IGuardDutyEksProtectionConfig {
    */
   readonly enable: boolean;
   /**
+   * Indicates whether AWS GuardDuty EKS Agent is managed.
+   */
+  readonly manageAgent?: boolean;
+  /**
    * (OPTIONAL) List of AWS Region names to be excluded from configuring Amazon GuardDuty EKS Protection
+   */
+  readonly excludeRegions?: t.Region[];
+}
+
+/**
+ * AWS GuardDuty EC2 Malware Protection configuration.
+ */
+export interface IGuardDutyEc2ProtectionConfig {
+  /**
+   * Indicates whether AWS GuardDuty EC2 Malware Protection is enabled.
+   */
+  readonly enable: boolean;
+  /**
+   * Indicates whether AWS GuardDuty EC2 Malware Protection should retain snapshots on findings.
+   */
+  readonly keepSnapshots: boolean;
+  /**
+   * (OPTIONAL) List of AWS Region names to be excluded from configuring Amazon GuardDuty EC2 Malware Protection
+   */
+  readonly excludeRegions?: t.Region[];
+}
+
+/**
+ * AWS GuardDuty RDS Malware Protection configuration.
+ */
+export interface IGuardDutyRdsProtectionConfig {
+  /**
+   * Indicates whether AWS GuardDuty RDS Malware Protection is enabled.
+   */
+  readonly enable: boolean;
+  /**
+   * (OPTIONAL) List of AWS Region names to be excluded from configuring Amazon GuardDuty RDS Malware Protection
+   */
+  readonly excludeRegions?: t.Region[];
+}
+
+/**
+ * AWS GuardDuty Lambda Malware Protection configuration.
+ */
+export interface IGuardDutyLambdaProtectionConfig {
+  /**
+   * Indicates whether AWS GuardDuty Lambda Malware Protection is enabled.
+   */
+  readonly enable: boolean;
+  /**
+   * (OPTIONAL) List of AWS Region names to be excluded from configuring Amazon GuardDuty Lambda Malware Protection
    */
   readonly excludeRegions?: t.Region[];
 }
@@ -317,6 +367,16 @@ export interface IGuardDutyExportFindingsConfig {
  *   eksProtection:
  *     enable: true
  *     excludedRegions: []
+ *   ec2Protection:
+ *     enable: true
+ *     keepSnapshot: true
+ *     excludedRegions: []
+ *   rdsProtection:
+ *     enable: true
+ *     excludedRegions: []
+ *   lambdaProtection:
+ *     enable: true
+ *     excludedRegions: []
  *   exportConfiguration:
  *     enable: true
  *     overrideExisting: true
@@ -367,6 +427,22 @@ export interface IGuardDutyConfig {
    * @type object
    */
   readonly eksProtection?: IGuardDutyEksProtectionConfig;
+  /**
+   * (OPTIONAL) AWS GuardDuty EC2 Protection configuration.
+   * @type object
+   */
+  readonly ec2Protection?: IGuardDutyEc2ProtectionConfig;
+  /**
+   * (OPTIONAL) AWS GuardDuty RDS Protection configuration.
+   * @type object
+   */
+  readonly rdsProtection?: IGuardDutyRdsProtectionConfig;
+  /**
+   * (OPTIONAL) AWS GuardDuty Lambda Protection configuration.
+   * @type object
+   */
+  readonly lambdaProtection?: IGuardDutyLambdaProtectionConfig;
+
   /**
    * AWS GuardDuty Export Findings configuration.
    * @type object

@@ -69,6 +69,22 @@ centralSecurityServices:
         - us-west-2
     eksProtection:
       enable: true
+      manageAgent: true
+      excludeRegions:
+        - us-west-2
+    ec2Protection:
+      enable: true
+      keepSnapshots: true
+      excludeRegions:
+        - us-west-2
+    rdsProtection:
+      enable: true
+      excludeRegions:
+        - us-west-2
+    lambdaProtection:
+      enable: true
+      excludeRegions:
+        - us-west-2
     exportConfiguration:
       enable: true
       overrideExisting: true
@@ -339,7 +355,7 @@ awsConfig:
                 type: StringList
               # - name: CustomerManagedPolicies
               #   value: ${ACCEL_LOOKUP::CustomerManagedPolicy:policy-00},${ACCEL_LOOKUP::CustomerManagedPolicy:policy-01}
-              #   type: StringList        
+              #   type: StringList
         - name: accelerator-elb-logging-enabled
           identifier: ELB_LOGGING_ENABLED
           complianceResourceTypes:
@@ -1013,34 +1029,34 @@ resourcePolicyEnforcement:
     maximumAutomaticAttempts: 5
   policySets:
     - resourcePolicies:
-      - resourceType: IAM_ROLE
-        document: resource-policies/iam.json
-      - resourceType: S3_BUCKET
-        document: resource-policies/s3.json
-      - resourceType: KMS_KEY
-        document: resource-policies/kms.json
-      - resourceType: SECRETS_MANAGER_SECRET
-        document: resource-policies/secrets-manager.json
-      - resourceType: ECR_REPOSITORY
-        document: resource-policies/ecr.json
-      - resourceType: OPENSEARCH_DOMAIN
-        document: resource-policies/opensearch.json
-      - resourceType: SNS_TOPIC
-        document: resource-policies/sns.json
-      - resourceType: SQS_QUEUE
-        document: resource-policies/sqs.json
-      - resourceType: APIGATEWAY_REST_API
-        document: resource-policies/apigateway.json
-      - resourceType: LEX_BOT
-        document: resource-policies/lex-bot.json
-      - resourceType: EFS_FILE_SYSTEM
-        document: resource-policies/efs-file-system.json
-      - resourceType: EVENTBRIDGE_EVENTBUS
-        document: resource-policies/eventbridge-eventbus.json
-      - resourceType: BACKUP_VAULT
-        document: resource-policies/backup-vault.json
-      - resourceType: CODEARTIFACT_REPOSITORY
-        document: resource-policies/codeartifact-repository.json
+        - resourceType: IAM_ROLE
+          document: resource-policies/iam.json
+        - resourceType: S3_BUCKET
+          document: resource-policies/s3.json
+        - resourceType: KMS_KEY
+          document: resource-policies/kms.json
+        - resourceType: SECRETS_MANAGER_SECRET
+          document: resource-policies/secrets-manager.json
+        - resourceType: ECR_REPOSITORY
+          document: resource-policies/ecr.json
+        - resourceType: OPENSEARCH_DOMAIN
+          document: resource-policies/opensearch.json
+        - resourceType: SNS_TOPIC
+          document: resource-policies/sns.json
+        - resourceType: SQS_QUEUE
+          document: resource-policies/sqs.json
+        - resourceType: APIGATEWAY_REST_API
+          document: resource-policies/apigateway.json
+        - resourceType: LEX_BOT
+          document: resource-policies/lex-bot.json
+        - resourceType: EFS_FILE_SYSTEM
+          document: resource-policies/efs-file-system.json
+        - resourceType: EVENTBRIDGE_EVENTBUS
+          document: resource-policies/eventbridge-eventbus.json
+        - resourceType: BACKUP_VAULT
+          document: resource-policies/backup-vault.json
+        - resourceType: CODEARTIFACT_REPOSITORY
+          document: resource-policies/codeartifact-repository.json
       inputParameters:
         SourceAccount: '{{ ALLOWED_EXTERNAL_ACCOUNTS }}'
       deploymentTargets:
