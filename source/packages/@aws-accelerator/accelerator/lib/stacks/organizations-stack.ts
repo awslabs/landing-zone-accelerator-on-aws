@@ -11,10 +11,6 @@
  *  and limitations under the License.
  */
 
-import * as cdk from 'aws-cdk-lib';
-import { Construct } from 'constructs';
-import { pascalCase } from 'pascal-case';
-import * as path from 'path';
 import {
   CentralSecurityServicesConfig,
   ControlTowerConfig,
@@ -35,6 +31,7 @@ import {
   EnableSharingWithAwsOrganization,
   FMSOrganizationAdminAccount,
   GuardDutyOrganizationAdminAccount,
+  IdentityCenterOrganizationAdminAccount,
   IpamOrganizationAdminAccount,
   MacieOrganizationAdminAccount,
   Policy,
@@ -44,9 +41,12 @@ import {
   RegisterDelegatedAdministrator,
   ReportDefinition,
   SecurityHubOrganizationAdminAccount,
-  IdentityCenterOrganizationAdminAccount,
 } from '@aws-accelerator/constructs';
 import * as cdk_extensions from '@aws-cdk-extensions/cdk-extensions';
+import * as cdk from 'aws-cdk-lib';
+import { Construct } from 'constructs';
+import { pascalCase } from 'pascal-case';
+import * as path from 'path';
 import {
   AcceleratorKeyType,
   AcceleratorStack,
@@ -169,6 +169,9 @@ export class OrganizationsStack extends AcceleratorStack {
       // Chatbot Policies Config
       //
       this.addChatbotPolicies();
+
+      // Enable GuardDuty Service Access
+      this.enableGuardDutyServiceAccess();
     }
 
     // Macie Configuration
@@ -549,6 +552,20 @@ export class OrganizationsStack extends AcceleratorStack {
           } account`,
         );
       }
+    }
+  }
+
+  /**
+   * Function to enable GuardDuty delegated admin account
+   */
+  private enableGuardDutyServiceAccess() {
+    if (this.centralSecurityServices.guardduty.ec2Protection?.enable) {
+      this.logger.info('Enable GuardDuty Service Access');
+      new EnableAwsServiceAccess(this, 'EnableGuardDutyServiceAccess', {
+        servicePrincipal: 'malware-protection.guardduty.amazonaws.com',
+        kmsKey: this.cloudwatchKey,
+        logRetentionInDays: this.logRetention,
+      });
     }
   }
 

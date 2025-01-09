@@ -36,6 +36,26 @@ export interface GuardDutyDetectorConfigProps {
    */
   readonly enableEksProtection: boolean;
   /**
+   * EKS agent
+   */
+  readonly enableEksAgent: boolean;
+  /**
+   * Malware Protection
+   */
+  readonly enableEc2MalwareProtection: boolean;
+  /**
+   * Malware Protection Snapshots retention
+   */
+  readonly keepMalwareProtectionSnapshosts: boolean;
+  /**
+   * RDS Protection
+   */
+  readonly enableRdsProtection: boolean;
+  /**
+   * Lambda Protection
+   */
+  readonly enableLambdaProtection: boolean;
+  /**
    * Custom resource lambda log group encryption key, when undefined default AWS managed key will be used
    */
   readonly kmsKey?: cdk.aws_kms.IKey;
@@ -63,7 +83,7 @@ export class GuardDutyDetectorConfig extends Construct {
 
     const provider = cdk.CustomResourceProvider.getOrCreateProvider(this, RESOURCE_TYPE, {
       codeDirectory: path.join(__dirname, 'update-detector-config/dist'),
-      runtime: cdk.CustomResourceProviderRuntime.NODEJS_18_X,
+      runtime: cdk.CustomResourceProviderRuntime.NODEJS_20_X,
       memorySize: cdk.Size.mebibytes(512),
       policyStatements: [
         {
@@ -74,6 +94,7 @@ export class GuardDutyDetectorConfig extends Construct {
             'guardduty:ListMembers',
             'guardduty:UpdateDetector',
             'guardduty:UpdateMemberDetectors',
+            'guardduty:UpdateMalwareScanSettings',
           ],
           Resource: '*',
         },
@@ -87,6 +108,10 @@ export class GuardDutyDetectorConfig extends Construct {
         exportFrequency: props.exportFrequency,
         enableS3Protection: props.enableS3Protection,
         enableEksProtection: props.enableEksProtection,
+        enableEksAgent: props.enableEksAgent,
+        enableEc2Protection: props.enableEc2MalwareProtection,
+        enableRdsProtection: props.enableRdsProtection,
+        enableLambdaProtection: props.enableLambdaProtection,
       },
     });
 

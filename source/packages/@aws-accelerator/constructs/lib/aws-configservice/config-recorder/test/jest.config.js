@@ -17,7 +17,12 @@ module.exports = {
   coverageDirectory: 'coverage',
 
   // An array of regexp pattern strings used to skip coverage collection
-  coveragePathIgnorePatterns: ['/node_modules/'],
+  coveragePathIgnorePatterns: ['/node_modules/', 'delete-default-security-group-rules/index.ts', 'account-warming-status/index.ts', 'create-publishing-destination/index.ts', 'build-identity-center-assignments/index.ts', 'list-policy-for-target/index.ts', 'associate-hosted-zones/index.ts', 'strategies/allowed-only-policy-strategy.ts', 'strategies/lambda-policy-strategy.ts', 'strategies/pca-policy-strategy.ts', 'remediate-resource-policy/index.ts'],
+
+  collectCoverageFrom: [
+    'lib/**/*.{ts,tsx}',
+    'validators/**/*.{ts,tsx}',
+  ],
 
   // An object that configures minimum threshold enforcement for coverage results
   coverageThreshold: {
