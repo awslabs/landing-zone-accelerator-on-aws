@@ -1091,9 +1091,9 @@ export interface ICloudWatchLogsExclusionConfig {
  * @example
  * ```
  * logging:
- *  - cloudwatchLogs:
- *  - firehose:
- *     - fileExtension: undefined | 'json.gz'
+ *   cloudwatchLogs:
+ *     firehose:
+ *       fileExtension: undefined | '.json.gz'
  *
  * ```
  */
@@ -1106,7 +1106,7 @@ export interface ICloudWatchFirehoseConfig {
    *
    * @example
    * ```
-   * - fileExtension: 'json.gz'
+   * fileExtension: '.json.gz'
    * ```
    *
    */
@@ -1167,6 +1167,8 @@ export interface ICloudWatchFirehoseConfig {
  *     deploymentTargets:
  *       organizationalUnits:
  *         - Root
+ *   firehose:
+ *     fileExtension: .json.gz
  * ```
  *
  */
@@ -1233,6 +1235,10 @@ export interface ICloudWatchLogsConfig {
    * CloudWatch Log data protection configuration
    */
   readonly dataProtection?: ICloudWatchDataProtectionConfig;
+  /**
+   * CloudWatch Firehose configuration
+   */
+  readonly firehose?: ICloudWatchFirehoseConfig
 }
 
 /**
