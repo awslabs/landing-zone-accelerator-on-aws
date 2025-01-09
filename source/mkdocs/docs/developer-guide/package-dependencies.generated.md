@@ -80,6 +80,15 @@ This tabulated information presents a detailed overview of all packages and thei
               </tr>
 <tr><td class="dependency-cell">@aws-accelerator/utils</td></tr>
 <tr>
+                  <td class="package-cell" rowspan="2">
+                      <div style="display: flex; align-items: center; height: 100%;">
+                          @aws-accelerator/modules
+                      </div>
+                  </td>
+                  <td class="dependency-cell">@aws-accelerator/config</td>
+              </tr>
+<tr><td class="dependency-cell">@aws-accelerator/utils</td></tr>
+<tr>
                   <td class="package-cell" rowspan="1">
                       <div style="display: flex; align-items: center; height: 100%;">
                           @aws-accelerator/tester-lambdas
@@ -117,6 +126,10 @@ This section presents visual dependency mappings for packages that rely on other
 #### @aws-accelerator/lza-modules
 
 ![@aws-accelerator/lza-modules Dependencies](img/dependency-diagrams/aws-acceleratorlza-modules-dependency.generated.svg)
+
+#### @aws-accelerator/modules
+
+![@aws-accelerator/modules Dependencies](img/dependency-diagrams/aws-acceleratormodules-dependency.generated.svg)
 
 #### @aws-accelerator/tester-lambdas
 
