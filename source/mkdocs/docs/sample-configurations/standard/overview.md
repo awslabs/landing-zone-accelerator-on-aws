@@ -63,6 +63,12 @@ The above is not valid JSON without first removing the comment on the fourth lin
 
 The sample [network configuration file](https://github.com/awslabs/landing-zone-accelerator-on-aws/blob/main/reference/sample-configurations/lza-sample-config/network-config.yaml) may make use of [RFC1918](https://tools.ietf.org/html/rfc1918) addresses (e.g. `10.1.0.0/16`) and [RFC6598](https://tools.ietf.org/html/rfc6598) (e.g. `100.96.250.0/23`) for various networks; these will be labeled accordingly. Any specific range or IP shown is purely for illustration purposes only.
 
+### Preventative Controls
+
+This sample configuration leverages Service Control Policies (SCPs), a feature of AWS Organizations, to implement scalable preventative controls across multi-account environments. The current design assumes that AWS Control Tower is deployed without its built-in [region deny capabilities](https://docs.aws.amazon.com/controltower/latest/userguide/region-deny.html). For organizations requiring the ability to restrict operations in governed regions, we recommend creating a custom [region deny policy](https://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_policies_scps_examples_general.html#example-scp-deny-region) and incorporating it into one of the existing Service Control Policies.
+
+This approach offers greater flexibility and granular control over regional access, while maintaining the robust governance framework provided by AWS Organizations. By tailoring the region deny policy to your specific needs, you can effectively manage access across your multi-account structure, ensuring compliance with your organization's security and operational requirements.
+
 ### Customer Naming
 
 This document will make no reference to specific AWS customers. Where naming is required (e.g. in domain names), this document will use a placeholder name as needed; e.g. `example.com`.

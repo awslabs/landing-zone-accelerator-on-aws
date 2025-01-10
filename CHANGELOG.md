@@ -23,6 +23,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- chore(documentation): add mkdocs preventative control section
+
 ### Configuration Changes
 
 ## [1.11.0] - 12-11-2024
