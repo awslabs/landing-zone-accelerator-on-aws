@@ -17,7 +17,6 @@ import {
   DescribeOrganizationCommand,
   ListRootsCommand,
   OrganizationsClient,
-  OrganizationFeatureSet,
   OrganizationalUnit,
   paginateListAccounts,
   EnableAllFeaturesCommand,
@@ -28,10 +27,9 @@ import {
 } from '@aws-sdk/client-organizations';
 import { InstanceMetadata, paginateListInstances, SSOAdminClient } from '@aws-sdk/client-sso-admin';
 
-import { OrganizationRootType } from '../utils/resources';
 import { getOrganizationalUnitsForParent, setRetryStrategy } from '../../../common/functions';
-import { IAssumeRoleCredential } from '../../../common/resources';
 import { createLogger } from '../../../common/logger';
+import { IAssumeRoleCredential, OrganizationRootType } from '../../../common/resources';
 import { throttlingBackOff } from '../../../common/throttle';
 
 /**
@@ -221,14 +219,11 @@ export abstract class Organization {
 
   /**
    * Function to get Organizational units for root
-   *
    * @param client {@link OrganizationsClient}
+   * @returns ous {@link OrganizationalUnit}[]
    */
-  private static async getOrganizationalUnitsForRoot(
-    client: OrganizationsClient,
-    rootId?: string,
-  ): Promise<OrganizationalUnit[]> {
-    const parentId = rootId ?? (await Organization.getOrganizationsRoot(client)).Id;
+  private static async getOrganizationalUnitsForRoot(client: OrganizationsClient): Promise<OrganizationalUnit[]> {
+    const parentId = (await Organization.getOrganizationsRoot(client)).Id;
     return getOrganizationalUnitsForParent(client, parentId);
   }
 
@@ -248,13 +243,7 @@ export abstract class Organization {
    * @param client {@link OrganizationsClient}
    */
   private static async enableAllFeatures(client: OrganizationsClient): Promise<void> {
-    const response = await throttlingBackOff(() => client.send(new DescribeOrganizationCommand({})));
-    if (response.Organization?.FeatureSet !== OrganizationFeatureSet.ALL) {
-      Organization.logger.warn(
-        `The existing AWS Organization ${response.Organization?.Id} does not have all features enabled. The solution will update your organization so that all features are enabled.`,
-      );
-      await throttlingBackOff(() => client.send(new EnableAllFeaturesCommand({})));
-    }
+    await throttlingBackOff(() => client.send(new EnableAllFeaturesCommand({})));
   }
 
   /**

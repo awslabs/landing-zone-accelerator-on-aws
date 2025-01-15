@@ -58,7 +58,7 @@ describe('setupControlTowerLandingZone', () => {
     jest.clearAllMocks();
   });
 
-  it('should successfully setup Control Tower landing zone', async () => {
+  test('should successfully setup Control Tower landing zone', async () => {
     const mockHandler = jest.fn().mockResolvedValue('SUCCESS');
     (AcceleratorControlTowerLandingZoneModule as jest.Mock).mockImplementation(() => ({
       handler: mockHandler,
@@ -71,7 +71,7 @@ describe('setupControlTowerLandingZone', () => {
     expect(mockHandler).toHaveBeenCalledTimes(1);
   });
 
-  it('should throw error when setup fails', async () => {
+  test('should throw error when setup fails', async () => {
     const errorMessage = 'Setup failed';
     const mockHandler = jest.fn().mockRejectedValue(new Error(errorMessage));
     (AcceleratorControlTowerLandingZoneModule as jest.Mock).mockImplementation(() => ({

@@ -22,10 +22,9 @@ import {
   PutKeyPolicyCommand,
 } from '@aws-sdk/client-kms';
 
-import { PolicyDocument } from '../utils/resources';
-import { IAssumeRoleCredential } from '../../../common/resources';
-import { createLogger } from '../../../common/logger';
 import { setRetryStrategy } from '../../../common/functions';
+import { createLogger } from '../../../common/logger';
+import { IAssumeRoleCredential, PolicyDocument } from '../../../common/resources';
 import { throttlingBackOff } from '../../../common/throttle';
 
 /**

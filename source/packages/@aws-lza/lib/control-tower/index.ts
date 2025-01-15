@@ -30,10 +30,10 @@ import { Account } from '@aws-sdk/client-organizations';
 import {
   ControlTowerLandingZoneConfigType,
   ControlTowerLandingZoneDetailsType,
-  landingZoneUpdateOrResetRequired,
   LandingZoneUpdateOrResetRequiredType,
-  makeManifestDocument,
 } from './utils/resources';
+
+import { landingZoneUpdateOrResetRequired, makeManifestDocument } from './utils/functions';
 
 import { IamRole } from './prerequisites/iam-role';
 import { KmsKey } from './prerequisites/kms-key';
@@ -143,18 +143,18 @@ export class AcceleratorControlTowerLandingZoneModule implements IAcceleratorCon
 
     organizationAccountDetailsByEmail.push(...(await Promise.all(promises)));
 
-    const logArchiveAccountId = organizationAccountDetailsByEmail.find(
+    const logArchiveAccount = organizationAccountDetailsByEmail.find(
       item => item.Email === props.configuration.sharedAccounts.logging.email,
     );
 
-    const auditAccountId = organizationAccountDetailsByEmail.find(
+    const auditAccount = organizationAccountDetailsByEmail.find(
       item => item.Email === props.configuration.sharedAccounts.audit.email,
     );
 
     const landingZoneConfiguration = this.getControlTowerLandingZoneConfig(
       defaultProps.globalRegion,
-      logArchiveAccountId!.Id!,
-      auditAccountId!.Id!,
+      logArchiveAccount!.Id!,
+      auditAccount!.Id!,
       props.configuration,
     );
 
@@ -235,19 +235,19 @@ export class AcceleratorControlTowerLandingZoneModule implements IAcceleratorCon
     landingZoneUpdateOrResetStatus?: LandingZoneUpdateOrResetRequiredType,
   ): string {
     const status = `[DRY-RUN]: "${defaultProps.moduleName}" "${props.operation}" operation validated successfully (no actual changes were made)`;
-    if (landingZoneIdentifier) {
-      if (!landingZoneUpdateOrResetStatus?.resetRequired && !landingZoneUpdateOrResetStatus?.updateRequired) {
+    if (landingZoneIdentifier && landingZoneUpdateOrResetStatus) {
+      if (!landingZoneUpdateOrResetStatus.resetRequired && !landingZoneUpdateOrResetStatus.updateRequired) {
         logger.info(`Existing AWS Control Tower landing zone found, no changes required`);
         return status;
       }
-      const operation = landingZoneUpdateOrResetStatus!.resetRequired ? 'reset' : 'update';
+      const operation = landingZoneUpdateOrResetStatus.resetRequired ? 'reset' : 'update';
       logger.info(`Existing AWS Control Tower landing zone found, ${operation} is required for following changes`);
-      logger.info(`${landingZoneUpdateOrResetStatus!.reason}`);
-      return status;
-    } else {
-      logger.info(`No existing AWS Control Tower landing zone found it will be created`);
+      logger.info(`${landingZoneUpdateOrResetStatus.reason}`);
       return status;
     }
+
+    logger.info(`No existing AWS Control Tower landing zone found it will be created`);
+    return status;
   }
 
   /**
@@ -322,7 +322,7 @@ abstract class LandingZoneOperation {
     kmsKeyArn: string,
     defaultProps: DefaultPropsType,
   ): Promise<string> {
-    const manifestDocument = makeManifestDocument(landingZoneConfiguration, 'CREATE', kmsKeyArn);
+    const manifestDocument = makeManifestDocument(landingZoneConfiguration, 'CREATE', 'Security', kmsKeyArn);
     const param: CreateLandingZoneCommandInput = {
       version: landingZoneConfiguration.version,
       manifest: manifestDocument,
@@ -333,12 +333,8 @@ abstract class LandingZoneOperation {
     const operationIdentifier = response.operationIdentifier;
 
     if (!operationIdentifier) {
-      logger.warn(
-        `AWS Control Tower Landing Zone create operation api didn't return operation identifier. API return ${operationIdentifier} for operation identifier`,
-      );
-      throw new Error(
-        `AWS Control Tower Landing Zone create operation api didn't return operation identifier. Solution cannot verify successful completion of AWS Control Tower Landing Zone operation.`,
-      );
+      logger.warn(`Internal error: CreateLandingZoneCommand did not return operationIdentifier`);
+      throw new Error(`Internal error: CreateLandingZoneCommand did not return operationIdentifier`);
     }
 
     logger.info(
@@ -369,12 +365,8 @@ abstract class LandingZoneOperation {
     const operationIdentifier = response.operationIdentifier;
 
     if (!operationIdentifier) {
-      logger.warn(
-        `AWS Control Tower Landing Zone reset operation api didn't return operation identifier. API return ${operationIdentifier} for operation identifier`,
-      );
-      throw new Error(
-        `AWS Control Tower Landing Zone reset operation api didn't return operation identifier. Solution cannot verify successful completion of AWS Control Tower Landing Zone operation.`,
-      );
+      logger.warn(`Internal error: ResetLandingZoneCommand did not return operationIdentifier`);
+      throw new Error(`Internal error: ResetLandingZoneCommand did not return operationIdentifier`);
     }
 
     logger.info(
@@ -406,9 +398,14 @@ abstract class LandingZoneOperation {
     defaultProps: DefaultPropsType,
   ): Promise<string> {
     logger.info(`The Landing Zone update operation will begin, because "${reason}"`);
+    if (!landingZoneDetails.securityOuName) {
+      throw new Error(`Internal error: GetLandingZoneCommand did not return security Ou name`);
+    }
+
     const manifestDocument = makeManifestDocument(
       landingZoneConfiguration,
       'UPDATE',
+      landingZoneDetails.securityOuName,
       landingZoneDetails.kmsKeyArn,
       landingZoneDetails.sandboxOuName,
     );
@@ -426,12 +423,8 @@ abstract class LandingZoneOperation {
     const operationIdentifier = response.operationIdentifier;
 
     if (!operationIdentifier) {
-      logger.warn(
-        `AWS Control Tower Landing Zone update operation api didn't return operation identifier. API return ${operationIdentifier} for operation identifier`,
-      );
-      throw new Error(
-        `AWS Control Tower Landing Zone update operation api didn't return operation identifier. Solution cannot verify successful completion of AWS Control Tower Landing Zone operation.`,
-      );
+      logger.warn(`Internal error: UpdateLandingZoneCommand did not return operationIdentifier`);
+      throw new Error(`Internal error: UpdateLandingZoneCommand did not return operationIdentifier`);
     }
 
     logger.info(
@@ -484,20 +477,16 @@ abstract class LandingZoneOperation {
     const operationStatus = response.operationDetails?.status;
 
     if (!operationStatus) {
-      logger.warn(
-        `AWS Control Tower Landing Zone get landing zone operation api didn't return operation status. API returned ${operationStatus} for operation status.`,
-      );
-      throw new Error(
-        `AWS Control Tower Landing Zone get landing zone operation api didn't return operation status. Solution cannot verify successful completion of Landing Zone operation.`,
-      );
+      logger.warn(`Internal error: GetLandingZoneOperationCommand did not return operationIdentifier`);
+      throw new Error(`Internal error: GetLandingZoneOperationCommand did not return operationIdentifier`);
     }
 
     if (operationStatus === LandingZoneOperationStatus.FAILED) {
       logger.warn(
-        `AWS Control Tower Landing Zone operation with identifier ${operationIdentifier} in ${response.operationDetails?.status} state !!!!. Please investigate CT operation before executing pipeline`,
+        `AWS Control Tower Landing Zone operation with identifier ${operationIdentifier} in ${operationStatus} state !!!!. Please investigate CT operation before executing pipeline`,
       );
       throw new Error(
-        `AWS Control Tower Landing Zone operation with identifier ${operationIdentifier} in ${response.operationDetails?.status} state !!!!. Please investigate CT operation before executing pipeline`,
+        `AWS Control Tower Landing Zone operation with identifier ${operationIdentifier} in ${operationStatus} state !!!!. Please investigate CT operation before executing pipeline`,
       );
     }
 
