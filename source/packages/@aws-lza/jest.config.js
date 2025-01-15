@@ -37,20 +37,15 @@ module.exports = {
   coverageDirectory: 'coverage',
 
   // An array of regexp pattern strings used to skip coverage collection
-  coveragePathIgnorePatterns: [
-    '/node_modules/',
-    './lib/control-tower/utils/resources.ts',
-    './lib/control-tower/index.ts',
-    './common/functions.ts',
-  ],
+  coveragePathIgnorePatterns: ['/node_modules/'],
 
   // An object that configures minimum threshold enforcement for coverage results
   coverageThreshold: {
     global: {
-      branches: 70,
-      functions: 92,
-      lines: 85,
-      statements: 85,
+      branches: 100,
+      functions: 100,
+      lines: 100,
+      statements: 100,
     },
   },
 

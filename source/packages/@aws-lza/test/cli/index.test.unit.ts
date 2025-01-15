@@ -425,5 +425,50 @@ describe('Parser', () => {
       expect(mockConsoleLog).toHaveBeenCalledWith(expect.any(String));
       expect(mockConsoleLog).toHaveBeenCalledWith('lza: error: error message');
     });
+
+    test('should handle fail callback in return statement', () => {
+      // Setup
+      const mockHelpText = 'Mock help text';
+
+      const yargsInstance = {
+        command: jest.fn(),
+        fail: jest.fn(),
+        demandCommand: jest.fn(),
+        help: jest.fn(),
+        alias: jest.fn(),
+      };
+
+      yargsInstance.command.mockReturnValue(yargsInstance);
+      yargsInstance.fail.mockReturnValue(yargsInstance);
+      yargsInstance.demandCommand.mockReturnValue(yargsInstance);
+      yargsInstance.help.mockImplementation(() => yargsInstance);
+      yargsInstance.alias.mockReturnValue(yargsInstance);
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (yargsInstance as any).showHelp = jest.fn().mockReturnValue(mockHelpText);
+
+      const commands: CliCommandDetailsType[] = [
+        {
+          name: 'command1',
+          description: 'Test command 1',
+        },
+      ];
+
+      configureModuleCommands(MOCK_CONSTANTS.moduleName, commands, yargsInstance as unknown as Argv<object>);
+
+      // Execute
+      const returnFailCallback = (yargsInstance.fail as jest.Mock).mock.calls[1][0];
+
+      // Verify
+      expect(() => {
+        returnFailCallback('test error message', null, {
+          ...yargsInstance,
+          help: () => mockHelpText,
+        });
+      }).toThrow('Process.exit called with code: 1');
+
+      expect(mockConsoleLog).toHaveBeenNthCalledWith(1, mockHelpText);
+      expect(mockConsoleLog).toHaveBeenNthCalledWith(2, 'lza: error: test error message');
+    });
   });
 });

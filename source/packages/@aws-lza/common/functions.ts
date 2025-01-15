@@ -16,7 +16,12 @@ import {
   OrganizationsClient,
   paginateListOrganizationalUnitsForParent,
 } from '@aws-sdk/client-organizations';
-import { ControlTowerClient, GetLandingZoneCommand, ListLandingZonesCommand } from '@aws-sdk/client-controltower';
+import {
+  ControlTowerClient,
+  GetLandingZoneCommand,
+  ListLandingZonesCommand,
+  ResourceNotFoundException,
+} from '@aws-sdk/client-controltower';
 import { AssumeRoleCommand, GetCallerIdentityCommand, STSClient } from '@aws-sdk/client-sts';
 import { ConfiguredRetryStrategy } from '@aws-sdk/util-retry';
 
@@ -71,15 +76,20 @@ export async function getOrganizationalUnitsForParent(
 export async function getLandingZoneIdentifier(client: ControlTowerClient): Promise<string | undefined> {
   const response = await throttlingBackOff(() => client.send(new ListLandingZonesCommand({})));
 
-  if (response.landingZones!.length! > 1) {
-    throw new Error(
-      `Multiple AWS Control Tower Landing Zone configuration found, list of Landing Zone arns are - ${response.landingZones?.join(
+  if (!response.landingZones) {
+    throw new Error(`Internal error: ListLandingZonesCommand did not return landingZones object`);
+  }
+
+  if (response.landingZones.length! > 1) {
+    logger.warn(
+      `Internal error: ListLandingZonesCommand returned multiple landing zones, list of Landing Zone arns are - ${response.landingZones.join(
         ',',
       )}`,
     );
+    throw new Error(`Internal error: ListLandingZonesCommand returned multiple landing zones`);
   }
 
-  if (response.landingZones?.length === 1 && response.landingZones[0].arn) {
+  if (response.landingZones.length === 1 && response.landingZones[0].arn) {
     return response.landingZones[0].arn;
   }
 
@@ -142,7 +152,7 @@ export async function getLandingZoneDetails(
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     e: any
   ) {
-    if (e.name === 'ResourceNotFoundException' && landingZoneIdentifier) {
+    if (e instanceof ResourceNotFoundException && landingZoneIdentifier) {
       throw new Error(
         `Existing AWS Control Tower Landing Zone home region differs from the executing environment region ${region}. Existing Landing Zone identifier is ${landingZoneIdentifier}`,
       );
@@ -214,14 +224,18 @@ export async function getCredentials(options: {
 
   //
   // Validate response
-  if (!response.Credentials?.AccessKeyId) {
-    throw new Error(`Access key ID not returned from AssumeRole command`);
+  if (!response.Credentials) {
+    throw new Error(`Internal error: AssumeRoleCommand did not return Credentials`);
+  }
+
+  if (!response.Credentials.AccessKeyId) {
+    throw new Error(`Internal error: AssumeRoleCommand did not return AccessKeyId`);
   }
   if (!response.Credentials.SecretAccessKey) {
-    throw new Error(`Secret access key not returned from AssumeRole command`);
+    throw new Error(`Internal error: AssumeRoleCommand did not return SecretAccessKey`);
   }
   if (!response.Credentials.SessionToken) {
-    throw new Error(`Session token not returned from AssumeRole command`);
+    throw new Error(`Internal error: AssumeRoleCommand did not return SessionToken`);
   }
 
   return {

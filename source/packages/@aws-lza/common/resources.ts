@@ -11,10 +11,6 @@
  *  and limitations under the License.
  */
 
-import path from 'path';
-import { createLogger } from './logger';
-
-export const AcceleratorLogger = (fileName: string) => createLogger([path.parse(path.basename(fileName)).name]);
 /**
  * Accelerator solution supported module names
  */
@@ -181,3 +177,94 @@ export type ControlTowerLandingZoneDetailsType = {
  * When Control Tower Landing Zone gets new version, we need to update this constant.
  */
 export const CONTROL_TOWER_LANDING_ZONE_VERSION = '3.3';
+
+/**
+ * Principal Org id condition for policy
+ */
+export type PrincipalOrgIdConditionType = {
+  [key: string]: string | string[];
+};
+
+/**
+ * IAM policy statement type used in custom resource to update policy of existing resources
+ */
+export type PolicyStatementType = {
+  /**
+   * The Sid (statement ID) is an optional identifier that you provide for the
+   * policy statement. You can assign a Sid value to each statement in a
+   * statement array. In services that let you specify an ID element, such as
+   * SQS and SNS, the Sid value is just a sub-ID of the policy document's ID. In
+   * IAM, the Sid value must be unique within a JSON policy.
+   *
+   * @default - no sid
+   */
+  readonly Sid?: string;
+  /**
+   * List of actions to add to the statement
+   *
+   * @default - no actions
+   */
+  readonly Action: string | string[];
+  /**
+   * List of not actions to add to the statement
+   *
+   * @default - no not-actions
+   */
+  readonly NotActions?: string[];
+  /**
+   * Principal to add to the statement
+   *
+   * @default - no principal
+   */
+  readonly Principal?: PrincipalOrgIdConditionType;
+  /**
+   * Principal to add to the statement
+   *
+   * @default - no not principal
+   */
+  readonly NotPrincipal?: PrincipalOrgIdConditionType;
+  /**
+   * Resource ARNs to add to the statement
+   *
+   * @default - no resource
+   */
+  readonly Resource?: string | string[];
+  /**
+   * NotResource ARNs to add to the statement
+   *
+   * @default - no not-resources
+   */
+  readonly NotResource?: string[];
+  /**
+   * Condition to add to the statement
+   *
+   * @default - no condition
+   */
+  readonly Condition?: {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    [key: string]: any;
+  };
+  /**
+   * Whether to allow or deny the actions in this statement
+   *
+   * @default Effect.ALLOW
+   */
+  readonly Effect?: 'Allow' | 'Deny';
+};
+
+/**
+ * AWS Organization Root config type
+ */
+export type OrganizationRootType = {
+  Name: string;
+  Id: string;
+};
+
+/**
+ * Policy Document
+ */
+export type PolicyDocument = {
+  Version: string;
+  Id?: string;
+  Statement: PolicyStatementType[];
+};

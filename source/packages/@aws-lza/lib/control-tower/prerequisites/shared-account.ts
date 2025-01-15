@@ -20,10 +20,10 @@ import {
   OrganizationsClient,
 } from '@aws-sdk/client-organizations';
 
+import { delay, setRetryStrategy } from '../../../common/functions';
 import { IAssumeRoleCredential, IControlTowerSharedAccountDetails } from '../../../common/resources';
 import { createLogger } from '../../../common/logger';
 import { throttlingBackOff } from '../../../common/throttle';
-import { delay, setRetryStrategy } from '../../../common/functions';
 
 type AccountCreationStatusType = { name: string; status: string; reason: string; id?: string };
 
@@ -56,11 +56,17 @@ export abstract class SharedAccount {
       ),
     );
 
+    if (!response.CreateAccountStatus) {
+      throw new Error(
+        `Internal error: account creation failed, CreateAccountCommand didn't return CreateAccountStatus object for ${accountDetails.name} account`,
+      );
+    }
+
     SharedAccount.logger.info(
-      `Shared account ${accountDetails.name} creation started, request id is ${response.CreateAccountStatus!.Id}.`,
+      `Shared account ${accountDetails.name} creation started, request id is ${response.CreateAccountStatus.Id}.`,
     );
 
-    if (response.CreateAccountStatus?.State === CreateAccountState.FAILED) {
+    if (response.CreateAccountStatus.State === CreateAccountState.FAILED) {
       return {
         name: response.CreateAccountStatus.AccountName!,
         status: response.CreateAccountStatus.State!,
@@ -99,15 +105,21 @@ export abstract class SharedAccount {
           }),
         ),
       );
+      if (!response.CreateAccountStatus) {
+        throw new Error(
+          `Internal error: account creation failed, DescribeCreateAccountStatusCommand didn't return CreateAccountStatus object for ${createAccountStatus.AccountName} account`,
+        );
+      }
+
       createAccountRequestId = createAccountStatus.Id!;
-      createAccountState = response.CreateAccountStatus!.State!;
+      createAccountState = response.CreateAccountStatus.State!;
 
       if (createAccountState === CreateAccountState.FAILED) {
         return {
           name: createAccountStatus.AccountName!,
           status: createAccountState,
-          id: response.CreateAccountStatus!.AccountId!,
-          reason: `${createAccountStatus.AccountName} creation is currently in ${createAccountState} state with ${response.CreateAccountStatus?.FailureReason} error`,
+          id: response.CreateAccountStatus.AccountId!,
+          reason: `${createAccountStatus.AccountName} creation is currently in ${createAccountState} state with ${response.CreateAccountStatus.FailureReason} error`,
         };
       }
     }

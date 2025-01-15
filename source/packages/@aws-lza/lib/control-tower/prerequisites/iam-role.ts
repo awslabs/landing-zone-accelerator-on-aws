@@ -22,10 +22,10 @@ import {
   NoSuchEntityException,
 } from '@aws-sdk/client-iam';
 
-import { IAssumeRoleCredential } from '../../../common/resources';
-import { createLogger } from '../../../common/logger';
-import { throttlingBackOff } from '../../../common/throttle';
 import { setRetryStrategy } from '../../../common/functions';
+import { createLogger } from '../../../common/logger';
+import { IAssumeRoleCredential } from '../../../common/resources';
+import { throttlingBackOff } from '../../../common/throttle';
 
 /**
  * IamRole abstract class to create AWS Control Tower Landing Zone IAM roles.
@@ -69,7 +69,11 @@ export abstract class IamRole {
         ),
       );
 
-      if (response.Role?.RoleName === roleName) {
+      if (!response.Role) {
+        throw new Error(`Internal error: GetRoleCommand didn't return Role object`);
+      }
+
+      if (response.Role.RoleName === roleName) {
         return true;
       }
       return false;

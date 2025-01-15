@@ -42,8 +42,6 @@ export function parseArgs(argv: CliInvokeArgumentType): CliExecutionParameterTyp
   }
 
   for (const [key, value] of Object.entries(argv)) {
-    console.log(`${key} : ${value}`);
-
     if (!Object.keys(cliExecutionParameter).includes(key)) {
       cliExecutionParameter[key] = value;
     }
