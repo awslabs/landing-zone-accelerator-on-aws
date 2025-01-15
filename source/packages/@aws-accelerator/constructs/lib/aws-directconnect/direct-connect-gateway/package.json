@@ -16,11 +16,13 @@
     "cleanup:tsc": "tsc --build ./ --clean",
     "lint": "eslint --fix  --max-warnings 0 -c ../../../../../../.eslintrc.json '**/*.{ts,tsx}' --ignore-pattern \"*.d.ts\" ",
     "precommit": "eslint --max-warnings 0 -c ../../../../../../.eslintrc.json '**/*.{ts,tsx}' --ignore-pattern \"*.d.ts\" ",
-    "test": "jest --coverage --ci --passWithNoTests"
+    "test:unit": "jest --ci --passWithNoTests --coverage --testMatch '**/*.test.unit.ts'",
+    "test:integration": "jest --ci --passWithNoTests --testMatch '**/*test.integration.ts'",
+    "test:clean": "rm -f ./test-reports/*/*/*.xml"
   },
   "dependencies": {
     "@aws-accelerator/utils": "^0.0.0",
-    "aws-sdk": "2.1691.0"
+    "@aws-sdk/client-direct-connect": "3.723.0"
   },
   "devDependencies": {
     "@types/jest": "29.5.12",
