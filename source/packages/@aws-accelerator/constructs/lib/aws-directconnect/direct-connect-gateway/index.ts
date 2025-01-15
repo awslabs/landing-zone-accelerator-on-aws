@@ -11,9 +11,16 @@
  *  and limitations under the License.
  */
 
-import * as AWS from 'aws-sdk';
+import {
+  DirectConnectClient,
+  CreateDirectConnectGatewayCommand,
+  UpdateDirectConnectGatewayCommand,
+  DeleteDirectConnectGatewayCommand,
+} from '@aws-sdk/client-direct-connect';
 
 import { throttlingBackOff } from '@aws-accelerator/utils/lib/throttle';
+import { setRetryStrategy } from '@aws-accelerator/utils/lib/common-functions';
+
 import { CloudFormationCustomResourceEvent } from '@aws-accelerator/utils/lib/common-types';
 
 /**
@@ -34,13 +41,13 @@ export async function handler(event: CloudFormationCustomResourceEvent): Promise
   const amazonSideAsn: number = event.ResourceProperties['asn'];
   const solutionId = process.env['SOLUTION_ID'];
 
-  const dx = new AWS.DirectConnect({ customUserAgent: solutionId });
+  const dx = new DirectConnectClient({ customUserAgent: solutionId, retryStrategy: setRetryStrategy() });
 
   // Event handler
   switch (event.RequestType) {
     case 'Create':
       const response = await throttlingBackOff(() =>
-        dx.createDirectConnectGateway({ directConnectGatewayName, amazonSideAsn }).promise(),
+        dx.send(new CreateDirectConnectGatewayCommand({ directConnectGatewayName, amazonSideAsn })),
       );
 
       if (!response.directConnectGateway?.directConnectGatewayId) {
@@ -64,12 +71,12 @@ export async function handler(event: CloudFormationCustomResourceEvent): Promise
           `Updating Direct Connect Gateway ${event.PhysicalResourceId} name from ${event.OldResourceProperties['gatewayName']} to ${directConnectGatewayName}`,
         );
         await throttlingBackOff(() =>
-          dx
-            .updateDirectConnectGateway({
+          dx.send(
+            new UpdateDirectConnectGatewayCommand({
               directConnectGatewayId: event.PhysicalResourceId,
               newDirectConnectGatewayName: directConnectGatewayName,
-            })
-            .promise(),
+            }),
+          ),
         );
       }
 
@@ -77,10 +84,9 @@ export async function handler(event: CloudFormationCustomResourceEvent): Promise
         PhysicalResourceId: event.PhysicalResourceId,
         Status: 'SUCCESS',
       };
-
     case 'Delete':
       await throttlingBackOff(() =>
-        dx.deleteDirectConnectGateway({ directConnectGatewayId: event.PhysicalResourceId }).promise(),
+        dx.send(new DeleteDirectConnectGatewayCommand({ directConnectGatewayId: event.PhysicalResourceId })),
       );
 
       return {

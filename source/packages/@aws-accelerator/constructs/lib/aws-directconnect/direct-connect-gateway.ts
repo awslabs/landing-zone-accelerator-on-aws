@@ -13,6 +13,7 @@
 import * as cdk from 'aws-cdk-lib';
 import { Construct } from 'constructs';
 import * as path from 'path';
+import { PolicyStatementType } from '@aws-accelerator/utils/lib/common-resources';
 
 export interface IDirectConnectGateway extends cdk.IResource {
   /**
@@ -45,6 +46,19 @@ export interface DirectConnectGatewayProps {
   readonly logRetentionInDays: number;
 }
 
+export const DirectConnectGatewayPolicyStatements: PolicyStatementType[] = [
+  {
+    Sid: 'DirectConnectGatewayCRUD',
+    Effect: 'Allow',
+    Action: [
+      'directconnect:CreateDirectConnectGateway',
+      'directconnect:DeleteDirectConnectGateway',
+      'directconnect:UpdateDirectConnectGateway',
+    ],
+    Resource: '*',
+  },
+];
+
 export class DirectConnectGateway extends cdk.Resource implements IDirectConnectGateway {
   public readonly directConnectGatewayId: string;
   public readonly directConnectGatewayName: string;
@@ -58,18 +72,7 @@ export class DirectConnectGateway extends cdk.Resource implements IDirectConnect
     const provider = cdk.CustomResourceProvider.getOrCreateProvider(this, RESOURCE_TYPE, {
       codeDirectory: path.join(__dirname, 'direct-connect-gateway/dist'),
       runtime: cdk.CustomResourceProviderRuntime.NODEJS_18_X,
-      policyStatements: [
-        {
-          Sid: 'DirectConnectGatewayCRUD',
-          Effect: 'Allow',
-          Action: [
-            'directconnect:CreateDirectConnectGateway',
-            'directconnect:DeleteDirectConnectGateway',
-            'directconnect:UpdateDirectConnectGateway',
-          ],
-          Resource: '*',
-        },
-      ],
+      policyStatements: DirectConnectGatewayPolicyStatements,
     });
 
     const resource = new cdk.CustomResource(this, 'Resource', {
