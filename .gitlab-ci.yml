@@ -392,7 +392,35 @@ unit-test:aws-lza:
       when: never
     - if: $CI_MERGE_REQUEST_IID != null
       when: never
-    - when: always     
+    - when: always
+direct-connect-gateway:aws:us-east-1:
+  stage: pipeline
+  needs: [ "accelerator:build" ]
+  variables:
+    ENV_NAME: sampleConfig
+    ACCOUNT_ID: "${SAMPLE_CONFIG_ENV_NETWORK_ACCOUNT_ID}"
+    PARTITION: aws
+    AWS_DEFAULT_REGION: us-east-1
+    AWS_CREDS_TARGET_ROLE: 'arn:${PARTITION}:iam::${ACCOUNT_ID}:role/${INTEGRATION_TEST_ROLE_NAME}'
+  tags:
+    - arch:amd64
+    - size:large
+  script:
+    - "cd source/packages/@aws-accelerator/constructs/lib/aws-directconnect/direct-connect-gateway"
+    - "yarn test:unit"
+    - "yarn test:integration"
+  rules:
+    - if: $EXECUTE_INTEGRATION_TEST == "Yes"
+      when: always
+    - if: $CI_COMMIT_BRANCH == "integ"
+      when: always
+    - when: never
+  artifacts:
+    when: always
+    reports:
+      junit:
+        - 'source/packages/@aws-accelerator/constructs/lib/aws-directconnect/test-reports/${ENV_NAME}/${AWS_DEFAULT_REGION}/*.*'
+    expire_in: 1 day    
 macie:aws:us-east-1:
   stage: pipeline
   needs: [ "accelerator:build" ]
