@@ -8,6 +8,7 @@ This section contains guidance about installing Landing Zone Accelerator package
     - [Command Line Interface and Package Scripts](./scripts.md)
     - [Architecture and Design Philosophy](./design.md)
     - [Feature Development](./features.md)
+    - [Commit messages](./commits.md)
     - [Documentation Guidelines](./doc-guidelines.md)
     - [Using JSON Schema](./json-schema.md)
     - [Module Development](./module-development/index.md)
