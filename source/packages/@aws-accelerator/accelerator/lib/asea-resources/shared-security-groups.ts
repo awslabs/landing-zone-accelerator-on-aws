@@ -64,12 +64,28 @@ export class SharedSecurityGroups extends AseaResource {
       const nestedStack = this.scope.nestedStacks[stackKey];
       const securityGroups = nestedStackResources.getResourcesByType(RESOURCE_TYPE.SECURITY_GROUP);
       if (!securityGroups) continue;
-      if (vpcName.endsWith('_vpc')) vpcName = vpcName.split('_vpc')[0];
-      if (nestedStack.stack['_stackName'].includes(`SecurityGroups${vpcName}Shared`)) {
+      const nestedStackSearchString = this.createNestedStackSearchString(vpcName);
+      if (nestedStack.stack['_stackName'].includes(nestedStackSearchString)) {
         return { nestedStack, nestedStackResources, stackKey };
       }
     }
+    this.scope.addLogs(LogLevel.WARN, `Could not find nested stack for ${vpcName}`);
     return;
+  }
+
+  private createNestedStackSearchString(vpcName: string): string {
+    if (vpcName.endsWith('_vpc')) vpcName = vpcName.split('_vpc')[0];
+    //remove dashes from region if it is included in vpc name
+    //this is done to match with the stack naming convention
+    const regionRegex = /-[a-z]{2}-[a-z]+-\d/;
+    if (regionRegex.test(vpcName)) {
+      const vpcNameRegion = regionRegex.exec(vpcName);
+      if (vpcNameRegion) {
+        const vpcNameRegionNoDash = vpcNameRegion[0].replaceAll('-', '');
+        vpcName = vpcName.replace(regionRegex, vpcNameRegionNoDash);
+      }
+    }
+    return `SecurityGroups${vpcName}Shared`;
   }
 
   private deleteSharedSecurityGroups(vpcItems: (VpcConfig | VpcTemplatesConfig)[]) {
