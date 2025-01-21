@@ -71,7 +71,7 @@ export abstract class KmsKey {
    * @param region string
    * @returns keyArn string
    * @param solutionId string
-   * @param managementAccountCredentials {@link IAssumeRoleCredential} | undefined
+   * @param credentials {@link IAssumeRoleCredential} | undefined
    * @returns keyArn string
    */
   public static async createControlTowerKey(
@@ -79,14 +79,14 @@ export abstract class KmsKey {
     accountId: string,
     region: string,
     solutionId: string,
-    managementAccountCredentials?: IAssumeRoleCredential,
+    credentials?: IAssumeRoleCredential,
   ): Promise<string> {
     const keyAlias = `alias/aws-controltower/key`;
     const client: KMSClient = new KMSClient({
       region,
       customUserAgent: solutionId,
       retryStrategy: setRetryStrategy(),
-      credentials: managementAccountCredentials,
+      credentials: credentials,
     });
 
     if (await KmsKey.aliasExists(client, keyAlias)) {

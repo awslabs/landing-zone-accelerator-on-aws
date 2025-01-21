@@ -20,9 +20,9 @@ export enum AcceleratorModuleName {
    */
   ORGANIZATIONS = 'organizations',
   /**
-   * ControlTower module
+   * AWS Control Tower Landing zone module
    */
-  CONTROL_TOWER = 'control-tower',
+  CONTROL_TOWER_LANDING_ZONE = 'control-tower-landing-zone',
 }
 
 /**
@@ -77,9 +77,15 @@ export interface IModuleCommonParameter {
    */
   readonly solutionId?: string;
   /**
-   * Management account credentials, required for external deployment
+   * Target account credentials where Module will be executed
+   *
+   * @description
+   * When target AWS Account is same as the module invocation account this property will be undefined.
+   *
+   * @default
+   * undefined
    */
-  managementAccountCredentials?: IAssumeRoleCredential;
+  credentials?: IAssumeRoleCredential;
   /**
    *  Flag indicating if the module should perform a dry run
    *

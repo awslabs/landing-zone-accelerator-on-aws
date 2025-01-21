@@ -83,7 +83,7 @@ export class AcceleratorControlTowerLandingZoneModule implements IAcceleratorCon
     // Set default values
     //
     const defaultProps: DefaultPropsType = {
-      moduleName: props.moduleName ?? AcceleratorModuleName.CONTROL_TOWER,
+      moduleName: props.moduleName ?? AcceleratorModuleName.CONTROL_TOWER_LANDING_ZONE,
       globalRegion: props.globalRegion ?? props.homeRegion,
       solutionId: props.solutionId ?? `AwsSolution/SO0199/${version}`,
       useExistingRole: props.useExistingRole ?? false,
@@ -96,7 +96,7 @@ export class AcceleratorControlTowerLandingZoneModule implements IAcceleratorCon
       region: props.homeRegion,
       customUserAgent: defaultProps.solutionId,
       retryStrategy: setRetryStrategy(),
-      credentials: props.managementAccountCredentials,
+      credentials: props.credentials,
     });
 
     //
@@ -127,7 +127,7 @@ export class AcceleratorControlTowerLandingZoneModule implements IAcceleratorCon
         defaultProps.globalRegion,
         defaultProps.solutionId,
         props.configuration.sharedAccounts.logging.email,
-        props.managementAccountCredentials,
+        props.credentials,
       ),
     );
 
@@ -137,7 +137,7 @@ export class AcceleratorControlTowerLandingZoneModule implements IAcceleratorCon
         defaultProps.globalRegion,
         defaultProps.solutionId,
         props.configuration.sharedAccounts.audit.email,
-        props.managementAccountCredentials,
+        props.credentials,
       ),
     );
 
@@ -234,20 +234,23 @@ export class AcceleratorControlTowerLandingZoneModule implements IAcceleratorCon
     landingZoneIdentifier?: string,
     landingZoneUpdateOrResetStatus?: LandingZoneUpdateOrResetRequiredType,
   ): string {
-    const status = `[DRY-RUN]: "${defaultProps.moduleName}" "${props.operation}" operation validated successfully (no actual changes were made)`;
+    const statusPrefix = `[DRY-RUN]: ${defaultProps.moduleName} ${props.operation} (no actual changes were made)\nValidation: ✓ Successful\nStatus: `;
+
     if (landingZoneIdentifier && landingZoneUpdateOrResetStatus) {
       if (!landingZoneUpdateOrResetStatus.resetRequired && !landingZoneUpdateOrResetStatus.updateRequired) {
-        logger.info(`Existing AWS Control Tower landing zone found, no changes required`);
-        return status;
+        const message = `Existing AWS Control Tower landing zone found, no changes required`;
+        logger.info(message);
+        return `${statusPrefix}${message}`;
       }
       const operation = landingZoneUpdateOrResetStatus.resetRequired ? 'reset' : 'update';
-      logger.info(`Existing AWS Control Tower landing zone found, ${operation} is required for following changes`);
-      logger.info(`${landingZoneUpdateOrResetStatus.reason}`);
-      return status;
+      const message = `Existing AWS Control Tower landing zone found, ${operation} is required for following changes\n ${landingZoneUpdateOrResetStatus.reason}`;
+      logger.info(message);
+      return `${statusPrefix}${message}`;
     }
 
-    logger.info(`No existing AWS Control Tower landing zone found it will be created`);
-    return status;
+    const message = `No existing AWS Control Tower landing zone found it will be created`;
+    logger.info(message);
+    return `${statusPrefix}${message}`;
   }
 
   /**
@@ -538,14 +541,14 @@ abstract class ControlTowerPreRequisites {
           logArchive: props.configuration.sharedAccounts.logging.email,
           audit: props.configuration.sharedAccounts.audit.email,
         },
-        props.managementAccountCredentials,
+        props.credentials,
       );
 
       const organizationManagementAccountDetails = await Organization.getOrganizationAccountDetailsByEmail(
         defaultProps.globalRegion,
         defaultProps.solutionId,
         props.configuration.sharedAccounts.management.email,
-        props.managementAccountCredentials,
+        props.credentials,
       );
 
       const managementAccountId = organizationManagementAccountDetails.Id!;
@@ -555,7 +558,7 @@ abstract class ControlTowerPreRequisites {
           props.partition,
           props.homeRegion,
           defaultProps.solutionId,
-          props.managementAccountCredentials,
+          props.credentials,
         );
         // giving time to complete Role creation completes, otherwise ValidationException - CUSTOMER_ASSUME_ROLE_FAILED error occurs
         logger.info(`Created AWS Control Tower roles, sleeping for 5 minutes for role creations to complete.`);
@@ -571,7 +574,7 @@ abstract class ControlTowerPreRequisites {
           props.configuration.sharedAccounts.audit,
           defaultProps.globalRegion,
           defaultProps.solutionId,
-          props.managementAccountCredentials,
+          props.credentials,
         );
       }
 
@@ -580,7 +583,7 @@ abstract class ControlTowerPreRequisites {
         managementAccountId,
         props.homeRegion,
         defaultProps.solutionId,
-        props.managementAccountCredentials,
+        props.credentials,
       );
       return { kmsKeyArn };
     }
