@@ -21,6 +21,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - fix(kms): changed cwl cmk condition
 - fix(auditmanager): fix delegated admin account custom resource
 - fix(networking): fixed lookup failure on eni 0 when adding new routes for FW
+- fix(asea): failure in network association stack with security groups associated with RAM shared subnets/vpc
 
 ### Changed
 
