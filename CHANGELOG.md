@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - feat (guardduty): added support for malware protection, RDS, lambda and additional EKS options
 - chore(module): configure lza module foundation framework
 - chore(networking): use SDK v3 for direct connect gateway custom resource
+- chore(modules): rename module parameter and dry run response
 
 ### Fixed
 

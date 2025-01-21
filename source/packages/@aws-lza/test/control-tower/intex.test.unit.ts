@@ -253,7 +253,7 @@ describe('Accelerator ControlTower Landing Zone Module', () => {
       });
 
       // Verify
-      expect(response).toMatch(/\[DRY-RUN\]: "mockModuleName" "mockOperation" operation validated successfully/);
+      expect(response).toMatch(/\[DRY-RUN\]: mockModuleName mockOperation \(no actual changes were made\)/);
     });
 
     test('should be successful without rechecking of operation status', async () => {
@@ -280,7 +280,7 @@ describe('Accelerator ControlTower Landing Zone Module', () => {
       });
 
       // Verify
-      expect(response).toMatch(/Module "control-tower" The Landing Zone deployed successfully./);
+      expect(response).toMatch(/Module "control-tower-landing-zone" The Landing Zone deployed successfully./);
       expect(CreateLandingZoneCommand).toHaveBeenCalledTimes(1);
       expect(GetLandingZoneOperationCommand).toHaveBeenCalledTimes(1);
     });
@@ -317,7 +317,7 @@ describe('Accelerator ControlTower Landing Zone Module', () => {
       });
 
       // Verify
-      expect(response).toMatch(/Module "control-tower" The Landing Zone deployed successfully./);
+      expect(response).toMatch(/Module "control-tower-landing-zone" The Landing Zone deployed successfully./);
       expect(CreateLandingZoneCommand).toHaveBeenCalledTimes(1);
       expect(GetLandingZoneOperationCommand).toHaveBeenCalledTimes(2);
     });
@@ -546,7 +546,7 @@ describe('Accelerator ControlTower Landing Zone Module', () => {
       });
 
       // Verify
-      expect(response).toMatch(/\[DRY-RUN\]: "control-tower" "mockOperation" operation validated successfully/);
+      expect(response).toMatch(/\[DRY-RUN\]: control-tower-landing-zone mockOperation \(no actual changes were made\)/);
       expect(UpdateLandingZoneCommand).toHaveBeenCalledTimes(0);
       expect(GetLandingZoneOperationCommand).toHaveBeenCalledTimes(0);
     });
@@ -570,7 +570,7 @@ describe('Accelerator ControlTower Landing Zone Module', () => {
       });
 
       // Verify
-      expect(response).toMatch(/\[DRY-RUN\]: "control-tower" "mockOperation" operation validated successfully/);
+      expect(response).toMatch(/\[DRY-RUN\]: control-tower-landing-zone mockOperation \(no actual changes were made\)/);
       expect(CreateLandingZoneCommand).toHaveBeenCalledTimes(0);
       expect(UpdateLandingZoneCommand).toHaveBeenCalledTimes(0);
       expect(ResetLandingZoneCommand).toHaveBeenCalledTimes(0);
@@ -595,7 +595,9 @@ describe('Accelerator ControlTower Landing Zone Module', () => {
       });
 
       // Verify
-      expect(response).toMatch(/Module "control-tower" completed successfully with status mock reason for update/);
+      expect(response).toMatch(
+        /Module "control-tower-landing-zone" completed successfully with status mock reason for update/,
+      );
       expect(CreateLandingZoneCommand).toHaveBeenCalledTimes(0);
       expect(UpdateLandingZoneCommand).toHaveBeenCalledTimes(0);
       expect(ResetLandingZoneCommand).toHaveBeenCalledTimes(0);
@@ -619,7 +621,7 @@ describe('Accelerator ControlTower Landing Zone Module', () => {
           configuration: MOCK_CONSTANTS.controlTowerLandingZoneConfiguration,
         });
       }).rejects.toThrowError(
-        `Module "control-tower" The Landing Zone update operation failed with error - ConflictException - AWS Control Tower cannot begin landing zone setup while another execution is in progress.`,
+        `Module "control-tower-landing-zone" The Landing Zone update operation failed with error - ConflictException - AWS Control Tower cannot begin landing zone setup while another execution is in progress.`,
       );
 
       expect(UpdateLandingZoneCommand).toHaveBeenCalledTimes(0);
@@ -650,7 +652,9 @@ describe('Accelerator ControlTower Landing Zone Module', () => {
       });
 
       // Verify
-      expect(response).toMatch(/Module "control-tower" The Landing Zone update operation completed successfully./);
+      expect(response).toMatch(
+        /Module "control-tower-landing-zone" The Landing Zone update operation completed successfully./,
+      );
       expect(UpdateLandingZoneCommand).toHaveBeenCalledTimes(1);
       expect(GetLandingZoneOperationCommand).toHaveBeenCalledTimes(1);
     });
@@ -688,7 +692,9 @@ describe('Accelerator ControlTower Landing Zone Module', () => {
       });
 
       // Verify
-      expect(response).toMatch(/Module "control-tower" The Landing Zone update operation completed successfully./);
+      expect(response).toMatch(
+        /Module "control-tower-landing-zone" The Landing Zone update operation completed successfully./,
+      );
       expect(UpdateLandingZoneCommand).toHaveBeenCalledTimes(1);
       expect(GetLandingZoneOperationCommand).toHaveBeenCalledTimes(2);
     });
@@ -918,7 +924,7 @@ describe('Accelerator ControlTower Landing Zone Module', () => {
       });
 
       // Verify
-      expect(response).toMatch(/\[DRY-RUN\]: "control-tower" "mockOperation" operation validated successfully/);
+      expect(response).toMatch(/\[DRY-RUN\]: control-tower-landing-zone mockOperation \(no actual changes were made\)/);
       expect(ResetLandingZoneCommand).toHaveBeenCalledTimes(0);
       expect(GetLandingZoneOperationCommand).toHaveBeenCalledTimes(0);
     });
@@ -941,7 +947,9 @@ describe('Accelerator ControlTower Landing Zone Module', () => {
       });
 
       // Verify
-      expect(response).toMatch(/Module "control-tower" completed successfully with status mock reason for update/);
+      expect(response).toMatch(
+        /Module "control-tower-landing-zone" completed successfully with status mock reason for update/,
+      );
       expect(CreateLandingZoneCommand).toHaveBeenCalledTimes(0);
       expect(UpdateLandingZoneCommand).toHaveBeenCalledTimes(0);
       expect(ResetLandingZoneCommand).toHaveBeenCalledTimes(0);
@@ -965,7 +973,7 @@ describe('Accelerator ControlTower Landing Zone Module', () => {
           configuration: MOCK_CONSTANTS.controlTowerLandingZoneConfiguration,
         });
       }).rejects.toThrowError(
-        `Module "control-tower" The Landing Zone update operation failed with error - ConflictException - AWS Control Tower cannot begin landing zone setup while another execution is in progress.`,
+        `Module "control-tower-landing-zone" The Landing Zone update operation failed with error - ConflictException - AWS Control Tower cannot begin landing zone setup while another execution is in progress.`,
       );
 
       expect(ResetLandingZoneCommand).toHaveBeenCalledTimes(0);
@@ -996,7 +1004,9 @@ describe('Accelerator ControlTower Landing Zone Module', () => {
       });
 
       // Verify
-      expect(response).toMatch(/Module "control-tower" The Landing Zone reset operation completed successfully./);
+      expect(response).toMatch(
+        /Module "control-tower-landing-zone" The Landing Zone reset operation completed successfully./,
+      );
       expect(ResetLandingZoneCommand).toHaveBeenCalledTimes(1);
       expect(GetLandingZoneOperationCommand).toHaveBeenCalledTimes(1);
     });
@@ -1034,7 +1044,9 @@ describe('Accelerator ControlTower Landing Zone Module', () => {
       });
 
       // Verify
-      expect(response).toMatch(/Module "control-tower" The Landing Zone reset operation completed successfully./);
+      expect(response).toMatch(
+        /Module "control-tower-landing-zone" The Landing Zone reset operation completed successfully./,
+      );
       expect(ResetLandingZoneCommand).toHaveBeenCalledTimes(1);
       expect(GetLandingZoneOperationCommand).toHaveBeenCalledTimes(2);
     });

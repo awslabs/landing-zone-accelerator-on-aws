@@ -168,19 +168,19 @@ export abstract class Organization {
    * Function to get list of the AWS IAM Identity Center instances
    * @param region string
    * @param solutionId string
-   * @param managementAccountCredentials {@link IAssumeRoleCredential} | undefined
+   * @param credentials {@link IAssumeRoleCredential} | undefined
    * @returns instances {@link InstanceMetadata}[]
    */
   private static async getIdentityCenterInstances(
     region: string,
     solutionId: string,
-    managementAccountCredentials?: IAssumeRoleCredential,
+    credentials?: IAssumeRoleCredential,
   ): Promise<InstanceMetadata[]> {
     const client = new SSOAdminClient({
       region,
       customUserAgent: solutionId,
       retryStrategy: setRetryStrategy(),
-      credentials: managementAccountCredentials,
+      credentials: credentials,
     });
     const instances: InstanceMetadata[] = [];
 
@@ -197,15 +197,15 @@ export abstract class Organization {
    * Function to check if IAM Identity Center is enabled
    * @param region string
    * @param solutionId string
-   * @param managementAccountCredentials {@link IAssumeRoleCredential} | undefined
+   * @param credentials {@link IAssumeRoleCredential} | undefined
    * @returns status boolean
    */
   private static async identityCenterEnabled(
     region: string,
     solutionId: string,
-    managementAccountCredentials?: IAssumeRoleCredential,
+    credentials?: IAssumeRoleCredential,
   ): Promise<boolean> {
-    const instances = await Organization.getIdentityCenterInstances(region, solutionId, managementAccountCredentials);
+    const instances = await Organization.getIdentityCenterInstances(region, solutionId, credentials);
     if (instances.length > 0) {
       Organization.logger.warn(
         `AWS Organizations have IAM Identity Center enabled "${instances
@@ -267,20 +267,20 @@ export abstract class Organization {
    * @param globalRegion string
    * @parm solutionId string
    * @parm email string
-   * @param managementAccountCredentials {@link IAssumeRoleCredential} | undefined
+   * @param credentials {@link IAssumeRoleCredential} | undefined
    * @returns accountId string
    */
   public static async getOrganizationAccountDetailsByEmail(
     globalRegion: string,
     solutionId: string,
     email: string,
-    managementAccountCredentials?: IAssumeRoleCredential,
+    credentials?: IAssumeRoleCredential,
   ): Promise<Account> {
     const client: OrganizationsClient = new OrganizationsClient({
       region: globalRegion,
       customUserAgent: solutionId,
       retryStrategy: setRetryStrategy(),
-      credentials: managementAccountCredentials,
+      credentials: credentials,
     });
     const accounts = await Organization.getOrganizationAccounts(client);
 
@@ -299,7 +299,7 @@ export abstract class Organization {
    * @param region string
    * @param solutionId string
    * @param sharedAccountEmail
-   * @param managementAccountCredentials {@link IAssumeRoleCredential} | undefined
+   * @param credentials {@link IAssumeRoleCredential} | undefined
    */
   public static async validate(
     globalRegion: string,
@@ -307,18 +307,18 @@ export abstract class Organization {
     solutionId: string,
     partition: string,
     sharedAccountEmail: { logArchive: string; audit: string },
-    managementAccountCredentials?: IAssumeRoleCredential,
+    credentials?: IAssumeRoleCredential,
   ): Promise<void> {
     const client: OrganizationsClient = new OrganizationsClient({
       region: globalRegion,
       customUserAgent: solutionId,
       retryStrategy: setRetryStrategy(),
-      credentials: managementAccountCredentials,
+      credentials: credentials,
     });
 
     const validationErrors: string[] = [];
 
-    if (await Organization.identityCenterEnabled(region, solutionId, managementAccountCredentials)) {
+    if (await Organization.identityCenterEnabled(region, solutionId, credentials)) {
       validationErrors.push(`AWS Control Tower Landing Zone cannot deploy because IAM Identity Center is configured.`);
     }
 

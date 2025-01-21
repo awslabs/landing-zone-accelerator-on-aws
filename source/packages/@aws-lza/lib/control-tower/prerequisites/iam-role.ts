@@ -205,19 +205,19 @@ export abstract class IamRole {
    * @param partition string
    * @param region string
    * @param solutionId string
-   * @param managementAccountCredentials {@link IAssumeRoleCredential} | undefined
+   * @param credentials {@link IAssumeRoleCredential} | undefined
    */
   public static async createControlTowerRoles(
     partition: string,
     region: string,
     solutionId: string,
-    managementAccountCredentials?: IAssumeRoleCredential,
+    credentials?: IAssumeRoleCredential,
   ): Promise<void> {
     const client: IAMClient = new IAMClient({
       region: region,
       customUserAgent: solutionId,
       retryStrategy: setRetryStrategy(),
-      credentials: managementAccountCredentials,
+      credentials: credentials,
     });
 
     const existingRoles = await IamRole.controlTowerRolesExists(client);
