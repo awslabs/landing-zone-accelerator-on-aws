@@ -24,6 +24,7 @@ import {
   OrganizationConfig,
   ReplacementsConfig,
   SecurityConfig,
+  Region,
 } from '@aws-accelerator/config';
 import * as cdk from 'aws-cdk-lib';
 import fs from 'fs';
@@ -962,7 +963,23 @@ export async function writeImportResources(props: {
   if (!mappings || !mappingBucket) {
     return;
   }
-  for (const [, mapping] of Object.entries(mappings)) {
+
+  const lzaAccountIds = props.accountsConfig.getAccountIds();
+  const lzaRegions = props.globalConfig.enabledRegions;
+
+  // Compare the mapping file to accounts and regions in the LZA, and retrieve only mappings that exist in the LZA config file
+  const validLZAMappings = Object.entries(mappings).reduce((acc: ASEAMappings, [key, mapping]) => {
+    if (!lzaAccountIds.includes(mapping.accountId)) {
+      return acc;
+    }
+    if (!lzaRegions.includes(mapping.region as Region)) {
+      return acc;
+    }
+    acc[key] = mapping;
+    return acc;
+  }, {});
+
+  for (const [, mapping] of Object.entries(validLZAMappings)) {
     mappingPromises.push(handleMapping(mapping));
   }
   const updatedMappings = await Promise.all(mappingPromises);
