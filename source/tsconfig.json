@@ -16,7 +16,7 @@
     "forceConsistentCasingInFileNames": true,
     "preserveSymlinks": true,
     "sourceMap": true,
-    "lib": ["ES2019", "ES2020.Promise"],
+    "lib": ["ES2019", "ES2020.Promise", "ES2021"],
     "target": "ES2019",
     "composite": false
   },
