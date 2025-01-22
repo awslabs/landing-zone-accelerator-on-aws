@@ -99,7 +99,8 @@ nav:
           - v1.10.0: typedocs/v1.10.0/index.html
           - v1.10.1: typedocs/v1.10.1/index.html
       - v1.11:
-          - v1.11.0: typedocs/latest/index.html
+          - v1.11.0: typedocs/v1.11.0/index.html
+          - v1.11.1: typedocs/latest/index.html
 
 theme:
   name: material

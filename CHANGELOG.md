@@ -5,6 +5,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.11.1] - 01-24-2025
+
+### Fixed
+
+- fix(asea): use only accounts from accounts config to write mapping
+- fix(asea): error in network association stack security groups associated with RAM shared subnets/vpc
+- fix(config): fixing default behavior for Managed Config Rule scopes
+- fix(constructs): service linked role missing permissions
+- fix(kms): changed cwl cmk condition
+- fix(networking): fixed lookup failure on eni 0 when adding new routes for FW
+- fix(orgs): update partition support
+- fix(throttle): reduced max number of retry attempts to 7
+
 ## [1.11.0] - 12-11-2024
 
 ### Added
