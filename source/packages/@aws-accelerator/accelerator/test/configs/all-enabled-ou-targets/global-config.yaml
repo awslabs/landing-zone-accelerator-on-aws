@@ -4,16 +4,16 @@ enabledRegions:
   - us-west-2
 managementAccountAccessRole: AWSControlTowerExecution
 cloudwatchLogRetentionInDays: 3653
+defaultEventBus:
+  policy: event-bus-policies/eventbus-policy.json
+  deploymentTargets:
+    organizationalUnits:
+      - Root
 acceleratorMetadata:
   enable: true
   account: LogArchive
   readOnlyAccessRoleArns:
     - arn:aws:iam::111111111111:role/test-access-role
-defaultEventBus:
-  applyDefaultEventBusPolicy: true
-  deploymentTargets:
-    accounts:
-      - Management
 snsTopics:
   deploymentTargets:
     organizationalUnits:

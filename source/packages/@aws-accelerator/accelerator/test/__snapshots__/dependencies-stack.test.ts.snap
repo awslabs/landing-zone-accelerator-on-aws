@@ -3,123 +3,110 @@
 exports[`DependenciesStack Construct(DependenciesStack):  Snapshot Test 1`] = `
 {
   "Resources": {
-    "DenyEventModificationPolicy": {
-      "Properties": {
-        "EventBusName": "default",
-        "Statement": {
-          "Action": [
-            "events:PutEvents",
-            "events:PutTargets",
-            "events:RemoveTargets",
-          ],
-          "Condition": {
-            "ArnNotLike": {
-              "aws:PrincipalARN": [
-                {
-                  "Fn::Join": [
-                    "",
-                    [
-                      "arn:",
-                      {
-                        "Ref": "AWS::Partition",
-                      },
-                      ":iam::111111111111:role/AWSControlTowerExecution",
-                    ],
-                  ],
-                },
-                {
-                  "Fn::Join": [
-                    "",
-                    [
-                      "arn:",
-                      {
-                        "Ref": "AWS::Partition",
-                      },
-                      ":iam::111111111111:role/AWSAccelerator*",
-                    ],
-                  ],
-                },
-              ],
-            },
-          },
-          "Effect": "Deny",
-          "Principal": {
-            "AWS": "*",
-          },
-          "Resource": {
-            "Fn::Join": [
-              "",
-              [
-                "arn:",
-                {
-                  "Ref": "AWS::Partition",
-                },
-                ":events:us-east-1:111111111111:event-bus/default",
-              ],
-            ],
-          },
-        },
-        "StatementId": "DenyEventModification",
-      },
-      "Type": "AWS::Events::EventBusPolicy",
-    },
-    "DenyRuleModificationPolicy": {
+    "EventBusPolicy0": {
       "Properties": {
         "EventBusName": "default",
         "Statement": {
           "Action": [
             "events:DisableRule",
             "events:DeleteRule",
-            "events:PutRule",
           ],
           "Condition": {
-            "ArnNotLike": {
-              "aws:PrincipalARN": [
-                {
-                  "Fn::Join": [
-                    "",
-                    [
-                      "arn:",
-                      {
-                        "Ref": "AWS::Partition",
-                      },
-                      ":iam::111111111111:role/AWSControlTowerExecution",
-                    ],
-                  ],
-                },
-                {
-                  "Fn::Join": [
-                    "",
-                    [
-                      "arn:",
-                      {
-                        "Ref": "AWS::Partition",
-                      },
-                      ":iam::111111111111:role/AWSAccelerator*",
-                    ],
-                  ],
-                },
+            "ForAllValues:StringNotLike": {
+              "aws:PrincipalArn": [
+                "arn:aws:iam::*:role/AWSControlTowerExecution",
+                "arn:aws:iam::*:role/AWSAccelerator*",
+                "arn:aws:iam::*:role/cdk-accel-*",
+                "arn:aws:iam::*:role/aws-service-role/*.amazonaws.com/AWSServiceRole*",
               ],
             },
           },
           "Effect": "Deny",
-          "Principal": {
-            "AWS": "*",
-          },
-          "Resource": {
-            "Fn::Join": [
-              "",
-              [
-                "arn:",
-                {
-                  "Ref": "AWS::Partition",
-                },
-                ":events:us-east-1:111111111111:rule/*",
-              ],
-            ],
-          },
+          "Principal": "*",
+          "Resource": [
+            "arn:aws:events:us-east-1:111111111111:rule/*",
+          ],
         },
-        "StatementId": "DenyRuleModification",
+        "StatementId": "DenyDisableRulePolicy",
+      },
+      "Type": "AWS::Events::EventBusPolicy",
+    },
+    "EventBusPolicy1": {
+      "Properties": {
+        "EventBusName": "default",
+        "Statement": {
+          "Action": [
+            "events:PutEvents",
+            "events:PutTargets",
+            "events:PutRule",
+          ],
+          "Condition": {
+            "Bool": {
+              "aws:PrincipalIsAWSService": "true",
+            },
+            "StringEquals": {
+              "aws:PrincipalOrgID": "o-asdf123456",
+            },
+          },
+          "Effect": "Allow",
+          "Principal": "*",
+          "Resource": [
+            "arn:aws:events:us-east-1:111111111111:event-bus/default",
+          ],
+        },
+        "StatementId": "AwsServivePutEventsPolicy",
+      },
+      "Type": "AWS::Events::EventBusPolicy",
+    },
+    "EventBusPolicy2": {
+      "Properties": {
+        "EventBusName": "default",
+        "Statement": {
+          "Action": [
+            "events:DisableRule",
+            "events:DeleteRule",
+          ],
+          "Condition": {
+            "StringEquals": {
+              "aws:PrincipalOrgID": "o-asdf123456",
+            },
+          },
+          "Effect": "Allow",
+          "Principal": "*",
+          "Resource": [
+            "arn:aws:events:us-east-1:111111111111:rule/*",
+          ],
+        },
+        "StatementId": "AllowOrgPolicy",
+      },
+      "Type": "AWS::Events::EventBusPolicy",
+    },
+    "EventBusPolicy3": {
+      "Properties": {
+        "EventBusName": "default",
+        "Statement": {
+          "Action": [
+            "events:PutEvents",
+            "events:PutTargets",
+            "events:PutRule",
+          ],
+          "Condition": {
+            "ForAllValues:StringNotLike": {
+              "aws:PrincipalArn": [
+                "arn:aws:iam::*:role/AWSControlTowerExecution",
+                "arn:aws:iam::*:role/AWSAccelerator*",
+                "arn:aws:iam::*:role/cdk-accel-*",
+                "arn:aws:iam::*:role/aws-service-role/*.amazonaws.com/AWSServiceRole*",
+              ],
+            },
+          },
+          "Effect": "Deny",
+          "Principal": "*",
+          "Resource": [
+            "arn:aws:events:us-east-1:111111111111:event-bus/default",
+          ],
+        },
+        "StatementId": "AllowPutEventsPolicy",
       },
       "Type": "AWS::Events::EventBusPolicy",
     },
