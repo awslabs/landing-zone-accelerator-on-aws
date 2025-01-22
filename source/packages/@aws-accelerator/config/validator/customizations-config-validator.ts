@@ -44,7 +44,7 @@ import { NetworkConfig, VpcConfig, VpcTemplatesConfig } from '../lib/network-con
 import { OrganizationConfig } from '../lib/organization-config';
 import { SecurityConfig } from '../lib/security-config';
 import { CommonValidatorFunctions } from './common/common-validator-functions';
-
+import { isIpV4, isIpV6 } from './common/ip-address-validation';
 /**
  * Customizations Configuration validator.
  * Validates customization configuration
@@ -1038,7 +1038,7 @@ class CustomizationValidator {
   }
 }
 
-class CustomizationHelperMethods {
+export class CustomizationHelperMethods {
   private accountsConfig: AccountsConfig;
   private iamConfig: IamConfig;
   private globalConfig: GlobalConfig;
@@ -1221,7 +1221,7 @@ class CustomizationHelperMethods {
   }
 }
 
-class FirewallValidator {
+export class FirewallValidator {
   constructor(
     values: CustomizationsConfig,
     networkConfig: NetworkConfig,
@@ -1372,25 +1372,37 @@ class FirewallValidator {
     errors: string[],
   ) {
     for (const group of values.firewalls?.targetGroups ?? []) {
-      if (group.type !== 'instance') {
-        errors.push(`[Firewall target group ${group.name}]: target group must be instance type`);
+      if (!['instance', 'ip'].includes(group.type)) {
+        errors.push(`[Firewall target group ${group.name}]: target group must be of type 'instance' or 'ip'`);
+        continue;
       }
-      if (group.type === 'instance' && group.targets) {
-        const instancesExist = this.checkTargetsInConfig(helpers, group.targets, values.firewalls?.instances ?? []);
+
+      if (!group.targets?.length) {
+        // If there are no targets we can skip the validation
+        continue;
+      }
+
+      if (group.type === 'instance') {
+        const instancesExist = this.checkInstanceTargetsInConfig(
+          helpers,
+          group.targets,
+          values.firewalls?.instances ?? [],
+        );
         if (!instancesExist) {
           errors.push(
             `[Firewall target group ${group.name}]: target group references firewall instance that does not exist`,
           );
+        } else {
+          this.validateInstanceVpcs(group, values.firewalls!.instances!, errors);
         }
-
-        if (instancesExist) {
-          this.checkInstanceVpcs(group, values.firewalls!.instances!, errors);
-        }
+      } else if (group.type === 'ip') {
+        // Validate Ip Address
+        this.validateIpTargetsInConfig(group.targets, errors);
       }
     }
   }
 
-  private checkTargetsInConfig(
+  private checkInstanceTargetsInConfig(
     helpers: CustomizationHelperMethods,
     targets: (string | NlbTargetTypeConfig)[],
     config: IEc2FirewallInstanceConfig[],
@@ -1409,7 +1421,28 @@ class FirewallValidator {
     return false;
   }
 
-  private checkInstanceVpcs(group: ITargetGroupItem, config: IEc2FirewallInstanceConfig[], errors: string[]) {
+  private validateIpTargetsInConfig(targets: (string | NlbTargetTypeConfig)[], errors: string[]): void {
+    const results = targets.map(target => ({
+      target,
+      isIpV4: isIpV4(target),
+      isIpV6: isIpV6(target),
+    }));
+
+    const invalidTargets = results.filter(r => !r.isIpV4 && !r.isIpV6).map(r => r.target);
+
+    if (invalidTargets.length) {
+      errors.push(...invalidTargets.map(target => `'${target}' is not a valid ip address.`));
+    } else {
+      const ipV4List = results.filter(result => result.isIpV4);
+      const ipV6List = results.filter(result => result.isIpV6);
+
+      if (!!ipV4List.length && !!ipV6List.length) {
+        errors.push(`Cannot mix IPv4 and IPv6 targets.`);
+      }
+    }
+  }
+
+  private validateInstanceVpcs(group: ITargetGroupItem, config: IEc2FirewallInstanceConfig[], errors: string[]) {
     // Retrieve instance configs
     const instances: IEc2FirewallInstanceConfig[] = [];
     group.targets!.forEach(target => instances.push(config.find(item => item.name === target)!));
