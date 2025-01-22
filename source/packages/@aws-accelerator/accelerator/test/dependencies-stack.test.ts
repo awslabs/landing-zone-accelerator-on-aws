@@ -39,6 +39,6 @@ describe('default event bus policy', () => {
     const template = Template.fromStack(multiOuStack);
 
     template.hasResourceProperties('AWS::Events::EventBusPolicy', { EventBusName: 'default' });
-    template.resourceCountIs('AWS::Events::EventBusPolicy', 2);
+    template.resourceCountIs('AWS::Events::EventBusPolicy', 4);
   });
 });

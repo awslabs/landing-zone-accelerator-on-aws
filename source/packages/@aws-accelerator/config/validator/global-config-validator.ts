@@ -1350,24 +1350,9 @@ export class GlobalConfigValidator {
       return;
     }
 
-    if (values.defaultEventBus.applyDefaultEventBusPolicy && values.defaultEventBus.customPolicyOverride) {
-      errors.push(`customPolicyOverrides can only be specified when applyDefaultEventBusPolicy is set to false`);
-    }
-    if (values.defaultEventBus.customPolicyOverride?.policy) {
-      const errorMessage = 'Please make sure this file is in valid JSON format.';
-      if (!fs.existsSync(path.join(configDir, values.defaultEventBus.customPolicyOverride?.policy))) {
-        errors.push(
-          `Default event bus policy override file ${values.defaultEventBus.customPolicyOverride?.policy} not found !!!`,
-        );
-      }
-      const eventBridgePolicyFile = fs.readFileSync(
-        path.join(configDir, values.defaultEventBus.customPolicyOverride?.policy),
-        'utf-8',
-      );
-      if (JSON.parse(eventBridgePolicyFile)) {
-        this.checkForArray(JSON.parse(eventBridgePolicyFile), errorMessage, errors);
-      } else {
-        errors.push(`Not valid Json for default event bridge resource-based policy. ${errorMessage}`);
+    if (values.defaultEventBus.policy) {
+      if (!fs.existsSync(path.join(configDir, values.defaultEventBus.policy))) {
+        errors.push(`Default event bus policy file ${values.defaultEventBus.policy} not found !!!`);
       }
     }
   }

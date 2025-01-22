@@ -10,10 +10,10 @@ acceleratorMetadata:
   readOnlyAccessRoleArns:
     - arn:aws:iam::111111111111:role/test-access-role
 defaultEventBus:
-  applyDefaultEventBusPolicy: true
+  policy: event-bus-policies/eventbus-policy.json
   deploymentTargets:
-    accounts:
-      - Management
+    organizationalUnits:
+      - Root
 snsTopics:
   deploymentTargets:
     organizationalUnits:

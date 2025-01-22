@@ -523,8 +523,7 @@ export class SsmParametersConfig implements i.ISsmParametersConfig {
 }
 
 export class DefaultEventBusConfig implements i.IDefaultEventBusConfig {
-  readonly applyDefaultEventBusPolicy: boolean | undefined = undefined;
-  readonly customPolicyOverride: t.ICustomEventBusResourcePolicyOverrideConfig | undefined = undefined;
+  readonly policy: string = '';
   readonly deploymentTargets: t.DeploymentTargets = new t.DeploymentTargets();
 }
 

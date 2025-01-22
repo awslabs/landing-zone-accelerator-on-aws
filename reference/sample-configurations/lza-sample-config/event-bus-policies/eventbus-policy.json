@@ -1,0 +1,88 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+      {
+          "Sid": "DenyDisableRulePolicy",
+          "Effect": "Deny",
+          "Principal": {
+              "AWS": "*"
+          },
+          "Action": [
+              "events:DisableRule",
+              "events:DeleteRule"
+          ],
+          "Resource": "arn:${PARTITION}:events:${REGION}:${ACCOUNT_ID}:rule/*",
+          "Condition": {
+              "ForAllValues:StringNotLike": {
+                  "aws:PrincipalArn": [
+                      "arn:${PARTITION}:iam::*:role/AWSControlTowerExecution",
+                      "arn:${PARTITION}:iam::*:role/AWSAccelerator*",
+                      "arn:${PARTITION}:iam::*:role/cdk-accel-*",
+                      "arn:${PARTITION}:iam::*:role/aws-service-role/*.amazonaws.com/AWSServiceRole*"
+                  ]
+              }
+          }
+      },
+      {
+          "Sid": "AwsServivePutEventsPolicy",
+          "Effect": "Allow",
+          "Principal": {
+              "AWS": "*"
+          },
+          "Action": [
+              "events:PutEvents",
+              "events:PutTargets",
+              "events:PutRule"
+          ],
+          "Resource": "arn:${PARTITION}:events:${REGION}:${ACCOUNT_ID}:event-bus/default",
+          "Condition": {
+              "StringEquals": {
+                  "aws:PrincipalOrgID": "${ORG_ID}"
+              },
+              "Bool": {
+                  "aws:PrincipalIsAWSService": "true"
+              }
+          }
+      },
+      {
+          "Sid": "AllowOrgPolicy",
+          "Effect": "Allow",
+          "Principal": {
+              "AWS": "*"
+          },
+          "Action": [
+              "events:DisableRule",
+              "events:DeleteRule"
+          ],
+          "Resource": "arn:${PARTITION}:events:${REGION}:${ACCOUNT_ID}:rule/*",
+          "Condition": {
+              "StringEquals": {
+                  "aws:PrincipalOrgID": "${ORG_ID}"
+              }
+          }
+      },
+      {
+          "Sid": "AllowPutEventsPolicy",
+          "Effect": "Deny",
+          "Principal": {
+              "AWS": "*"
+          },
+          "Action": [
+              "events:PutEvents",
+              "events:PutTargets",
+              "events:PutRule"
+          ],
+          "Resource": "arn:${PARTITION}:events:${REGION}:${ACCOUNT_ID}:event-bus/default",
+          "Condition": {
+              "ForAllValues:StringNotLike": {
+                  "aws:PrincipalArn": [
+                      "arn:${PARTITION}:iam::*:role/AWSControlTowerExecution",
+                      "arn:${PARTITION}:iam::*:role/AWSAccelerator*",
+                      "arn:${PARTITION}:iam::*:role/cdk-accel-*",
+                      "arn:${PARTITION}:iam::*:role/aws-service-role/*.amazonaws.com/AWSServiceRole*"
+                  ]
+              }
+          }
+      }
+  ]
+}
