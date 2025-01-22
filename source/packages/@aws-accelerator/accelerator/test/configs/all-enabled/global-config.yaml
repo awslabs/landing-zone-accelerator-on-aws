@@ -31,6 +31,11 @@ enabledRegions:
   # - ca-west-1
 
 managementAccountAccessRole: AWSControlTowerExecution
+defaultEventBus:
+  policy: event-bus-policies/eventbus-policy.json
+  deploymentTargets:
+    organizationalUnits:
+      - Root
 cloudwatchLogRetentionInDays: 3653
 acceleratorMetadata:
   enable: true

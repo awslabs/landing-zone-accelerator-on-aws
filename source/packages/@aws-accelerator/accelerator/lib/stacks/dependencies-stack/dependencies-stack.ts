@@ -38,8 +38,7 @@ export class DependenciesStack extends AcceleratorStack {
       this.createPutSsmParameterRole(props.prefixes.ssmParamName, props.partition, this.organizationId);
     }
 
-    this.addDefaultEventBusLzaManagedPolicy(props);
-    this.addDefaultEventBusCustomPolicy(props);
+    this.addDefaultEventBusPolicy(props);
 
     //
     // Create Identity Center dependent resources
@@ -110,71 +109,17 @@ export class DependenciesStack extends AcceleratorStack {
   }
 
   /**
-   * Function to provide the LZA provided resource-based policy for the default Event Bus
-   */
-  private addDefaultEventBusLzaManagedPolicy(props: AcceleratorStackProps) {
-    if (
-      props.globalConfig.defaultEventBus?.applyDefaultEventBusPolicy &&
-      this.isIncluded(props.globalConfig.defaultEventBus.deploymentTargets)
-    ) {
-      const defaultEventBus = cdk.aws_events.EventBus.fromEventBusName(this, 'EventBus', 'default');
-      const roleArns = [
-        `arn:${cdk.Stack.of(this).partition}:iam::${cdk.Stack.of(this).account}:role/${
-          this.props.globalConfig.managementAccountAccessRole
-        }`,
-        `arn:${cdk.Stack.of(this).partition}:iam::${cdk.Stack.of(this).account}:role/${props.prefixes.accelerator}*`,
-      ];
-
-      // Rule modification policy
-      new cdk.aws_events.CfnEventBusPolicy(this, 'DenyRuleModificationPolicy', {
-        eventBusName: defaultEventBus.eventBusName,
-        statementId: 'DenyRuleModification',
-        statement: {
-          Effect: 'Deny',
-          Principal: { AWS: '*' },
-          Action: ['events:DisableRule', 'events:DeleteRule', 'events:PutRule'],
-          Resource: `arn:${cdk.Stack.of(this).partition}:events:${cdk.Stack.of(this).region}:${
-            cdk.Stack.of(this).account
-          }:rule/*`,
-          Condition: {
-            ArnNotLike: {
-              'aws:PrincipalARN': roleArns,
-            },
-          },
-        },
-      });
-
-      // Event modification policy
-      new cdk.aws_events.CfnEventBusPolicy(this, 'DenyEventModificationPolicy', {
-        eventBusName: defaultEventBus.eventBusName,
-        statementId: 'DenyEventModification',
-        statement: {
-          Effect: 'Deny',
-          Principal: { AWS: '*' },
-          Action: ['events:PutEvents', 'events:PutTargets', 'events:RemoveTargets'],
-          Resource: defaultEventBus.eventBusArn,
-          Condition: {
-            ArnNotLike: {
-              'aws:PrincipalARN': roleArns,
-            },
-          },
-        },
-      });
-    }
-  }
-
-  /**
    * Function to provide end-user defined resource-based policy.
    */
-  private addDefaultEventBusCustomPolicy(props: AcceleratorStackProps) {
+  private addDefaultEventBusPolicy(props: AcceleratorStackProps) {
     if (
-      props.globalConfig.defaultEventBus?.customPolicyOverride?.policy &&
+      props.globalConfig.defaultEventBus?.policy &&
       this.isIncluded(props.globalConfig.defaultEventBus.deploymentTargets)
     ) {
       const defaultEventBus = cdk.aws_events.EventBus.fromEventBusName(this, 'EventBus', 'default');
       const policyDocument = JSON.parse(
         this.generatePolicyReplacements(
-          path.join(this.props.configDirPath, props.globalConfig.defaultEventBus?.customPolicyOverride.policy),
+          path.join(this.props.configDirPath, props.globalConfig.defaultEventBus.policy),
           false,
           this.organizationId,
         ),

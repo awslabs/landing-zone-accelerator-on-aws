@@ -78,26 +78,6 @@ export class CustomS3ResourcePolicyOverridesConfig implements ICustomS3ResourceP
 }
 
 /**
- * Custom policy overrides configuration for the default Event Bus resource policy
- *
- * @remarks Use this configuration to provide a JSON file defining a resource policy to apply to the default Eventbridge Event Bus."
- */
-export interface ICustomEventBusResourcePolicyOverrideConfig {
-  /**
-   * Event Bus resource policy file
-   *
-   * @remarks
-   * Event Bus resource policy file containing JSON string with policy statements.
-   * Solution will overwrite the event bus resource policy with the context of the file.
-   */
-  policy?: NonEmptyString;
-}
-
-export class CustomEventBusResourcePolicyOverridesConfig implements ICustomEventBusResourcePolicyOverrideConfig {
-  readonly policy: string | undefined = undefined;
-}
-
-/**
  * Imported Bucket configuration with CMK enabled.
  */
 export interface IImportedCustomerManagedEncryptionKeyBucketConfig {

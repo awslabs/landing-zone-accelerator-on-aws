@@ -2,6 +2,11 @@ homeRegion: &HOME_REGION us-east-1
 enabledRegions:
   - *HOME_REGION
 managementAccountAccessRole: AWSControlTowerExecution
+defaultEventBus:
+  policy: event-bus-policies/eventbus-policy.json
+  deploymentTargets:
+    organizationalUnits:
+      - Root
 cloudwatchLogRetentionInDays: 3653
 terminationProtection: true
 cdkOptions:

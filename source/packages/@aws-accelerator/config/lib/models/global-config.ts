@@ -2067,27 +2067,15 @@ export interface ISsmParameterConfig {
  * @example
  * ```
  * defaultEventBus:
- *   applyDefaultEventBusPolicy: true
- *   eventBusResourcePolicyAttachments:
- *     - policy: path-to-my-policy
+ *   policy: path-to-my-policy
  * ```
  *
  */
 export interface IDefaultEventBusConfig {
   /**
-   * Apply the default Event Bus resource-based policy.
+   * Resource-based policy definition json file. This file must be present in config repository
    */
-  readonly applyDefaultEventBusPolicy?: boolean;
-  /**
-   * JSON policy files.
-   *
-   * @remarks
-   * Policy statements from these files will be applied to the default event bus policy. This will overwrite any existing policies in place.
-   *
-   * Note: Please be aware that overly restrictive custom policies may interfere with standard LZA operations.
-   * This property cannot be used in conjunction with the `applyDefaultEventBusPolicy` being set to `true`.
-   */
-  readonly customPolicyOverride?: t.ICustomEventBusResourcePolicyOverrideConfig | undefined;
+  readonly policy: t.NonEmptyString;
 
   /**
    * Default Event Bus Policy deployment targets.
@@ -2454,18 +2442,13 @@ export interface IGlobalConfig {
   /**
    * Configuration for the Default Event Bus
    *
-   * When not providing this configuration, the default event bus policy is not provided by LZA.
-   * If the `applyDefaultEventBusPolicy` is set to `true`, LZA will create a default event bus policy
-   * that prevents publishing events as well as enabling and disabling rules on the default event bridge.
-   * If end-users provide a custom policy, via the `customPolicyOverrides` property, LZA will apply the
-   * custom policy to the default event bus policy, which will overwrite any existing policy.
+   * End-users provide a custom policy, via the `policy` property, LZA will apply the
+   * custom policy to the default event bus policy.
    *
    * @example
    * ```
    * defaultEventBus:
-   *   applyDefaultEventBusPolicy: false
-   *   customPolicyOverrides:
-   *     - policy: path-to-my-policy.json
+   *   policy: path-to-my-policy.json
    *   deploymentTargets:
    *     accounts:
    *       - Management
