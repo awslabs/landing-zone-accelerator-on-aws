@@ -364,6 +364,7 @@ export class AcceleratorTool {
     const installerPipeline = await AcceleratorTool.getPipelineNameFromCloudFormationStack(installerStackName);
     if (!installerPipeline.status) {
       this.debugLog(`${installerPipeline.pipelineName}`, 'info');
+      this.logger.error(`${installerPipeline.pipelineName} doesn't exist, cannot continue`);
       return false;
     }
     const getPipelineNameResponse = await throttlingBackOff(() =>
