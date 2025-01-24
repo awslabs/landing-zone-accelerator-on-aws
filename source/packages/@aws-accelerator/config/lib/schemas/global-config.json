@@ -1432,6 +1432,9 @@
           "type": "array"
         }
       },
+      "required": [
+        "topics"
+      ],
       "type": "object"
     },
     "ISnsTopicConfig": {
