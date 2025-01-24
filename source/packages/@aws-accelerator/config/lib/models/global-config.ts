@@ -167,7 +167,7 @@ export interface IControlTowerControlConfig {
    */
   readonly deploymentTargets: t.IDeploymentTargets;
   /**
-   * (Optional) Region(s) where this service quota increase will be requested. Service Quota increases will be requested in the home region only if this property is not defined.
+   * (Optional) Region(s) where this service quota increase will be requested. Service Quota increases will be requested in the home region only if this property is not defined.  If this property is defined, the regions must also be listed in the enabledRegions section, or it will only increase in the home region.
    */
   readonly regions?: t.Region[];
 }
