@@ -621,7 +621,7 @@
           "description": "Control Tower control identifier, for Strongly Recommended or Elective controls this should start with AWS-GR"
         },
         "regions": {
-          "description": "(Optional) Region(s) where this service quota increase will be requested. Service Quota increases will be requested in the home region only if this property is not defined.",
+          "description": "(Optional) Region(s) where this service quota increase will be requested. Service Quota increases will be requested in the home region only if this property is not defined.  If this property is defined, the regions must also be listed in the enabledRegions section, or it will only increase in the home region.",
           "items": {
             "$ref": "#/definitions/Region"
           },
