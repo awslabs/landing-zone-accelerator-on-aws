@@ -31,6 +31,7 @@ import { AcceleratorResourcePrefixes } from '../../utils/app-utils';
 
 export function createAcceleratorStackProps(
   props: AcceleratorStackProps | undefined = undefined,
+  auditAccountId: string | undefined = undefined,
 ): AcceleratorStackProps {
   const iamConfig: Partial<IamConfig> = {
     userSets: [new UserSetConfig()],
@@ -45,7 +46,7 @@ export function createAcceleratorStackProps(
     getAccountIds: jest.fn(() => ['123456789', '234567890', '345678901', '456789012']),
     getManagementAccountId: jest.fn(() => '234567890'),
     getLogArchiveAccountId: jest.fn(() => '345678901'),
-    getAuditAccountId: jest.fn(() => '456789012'),
+    getAuditAccountId: jest.fn(() => auditAccountId ?? '456789012'),
     mandatoryAccounts: [],
     workloadAccounts: [],
   };
