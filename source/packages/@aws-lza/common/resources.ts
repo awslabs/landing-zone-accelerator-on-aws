@@ -156,6 +156,10 @@ export type ControlTowerLandingZoneDetailsType = {
    */
   sandboxOuName?: string;
   /**
+   * Flag indicating Organization level CloudTrail is enable or not.
+   */
+  enableOrganizationTrail?: boolean;
+  /**
    * Flag indicating weather AWS Control Tower sets up AWS account access with IAM Identity Center or not
    */
   enableIdentityCenterAccess?: boolean;

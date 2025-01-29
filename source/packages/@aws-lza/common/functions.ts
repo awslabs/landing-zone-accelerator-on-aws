@@ -129,6 +129,7 @@ export async function getLandingZoneDetails(
             landingZoneDetails.accessLoggingBucketRetentionDays =
               value['configurations']['accessLoggingBucket']['retentionDays'];
             landingZoneDetails.kmsKeyArn = value['configurations']['kmsKeyArn'];
+            landingZoneDetails.enableOrganizationTrail = value['enabled'];
             break;
         }
       }
