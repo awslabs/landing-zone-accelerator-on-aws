@@ -217,6 +217,10 @@ export type ControlTowerLandingZoneDetailsType = {
    * AWS KMS CMK arn to encrypt AWS Control Tower Landing Zone resources
    */
   kmsKeyArn?: string;
+  /**
+   * Flag indicating Organization level CloudTrail is enable or not.
+   */
+  enableOrganizationTrail?: boolean;
 };
 
 /**
@@ -383,6 +387,11 @@ export function landingZoneUpdateOrResetRequired(
   if (landingZoneDetails.enableIdentityCenterAccess !== landingZoneConfiguration.enableIdentityCenterAccess) {
     reasons.push(
       `Changes made in EnableIdentityCenterAccess from ${landingZoneDetails.enableIdentityCenterAccess} to ${landingZoneConfiguration.enableIdentityCenterAccess}`,
+    );
+  }
+  if (landingZoneDetails.enableOrganizationTrail !== landingZoneConfiguration.enableOrganizationTrail) {
+    reasons.push(
+      `Changes made in EnableOrganizationTrail from ${landingZoneDetails.enableOrganizationTrail} to ${landingZoneConfiguration.enableOrganizationTrail}`,
     );
   }
 
