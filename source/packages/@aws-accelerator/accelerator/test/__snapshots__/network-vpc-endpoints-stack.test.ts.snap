@@ -1359,6 +1359,177 @@ exports[`NetworkVpcEndpointsStack Construct(NetworkVpcEndpointsStack):  Snapshot
       },
       "Type": "AWS::EC2::VPCEndpoint",
     },
+    "NetworkEndpointsVpcSagemakerApiEp821007BB": {
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": "*",
+              "Condition": {
+                "StringEquals": {
+                  "aws:PrincipalOrgID": "o-asdf123456",
+                },
+              },
+              "Effect": "Allow",
+              "Principal": {
+                "AWS": "*",
+              },
+              "Resource": "*",
+              "Sid": "AllowRequestsByOrgsIdentities",
+            },
+            {
+              "Action": "*",
+              "Condition": {
+                "Bool": {
+                  "aws:PrincipalIsAWSService": "true",
+                },
+              },
+              "Effect": "Allow",
+              "Principal": {
+                "AWS": "*",
+              },
+              "Resource": "*",
+              "Sid": "AllowRequestsByAWSServicePrincipals",
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PrivateDnsEnabled": false,
+        "SecurityGroupIds": [
+          {
+            "Ref": "NetworkEndpointsVpchttpsEpSecurityGroup90D555DD",
+          },
+        ],
+        "ServiceName": "com.amazonaws.us-east-1.sagemaker.api",
+        "SubnetIds": [
+          {
+            "Ref": "SsmParameterValueacceleratornetworkvpcNetworkEndpointssubnetNetworkEndpointsAidC96584B6F00A464EAD1953AFF4B05118Parameter",
+          },
+          {
+            "Ref": "SsmParameterValueacceleratornetworkvpcNetworkEndpointssubnetNetworkEndpointsBidC96584B6F00A464EAD1953AFF4B05118Parameter",
+          },
+        ],
+        "VpcEndpointType": "Interface",
+        "VpcId": {
+          "Ref": "SsmParameterValueacceleratornetworkvpcNetworkEndpointsidC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+      },
+      "Type": "AWS::EC2::VPCEndpoint",
+    },
+    "NetworkEndpointsVpcSagemakerFeatureStoreEp473D5B8A": {
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": "*",
+              "Condition": {
+                "StringEquals": {
+                  "aws:PrincipalOrgID": "o-asdf123456",
+                },
+              },
+              "Effect": "Allow",
+              "Principal": {
+                "AWS": "*",
+              },
+              "Resource": "*",
+              "Sid": "AllowRequestsByOrgsIdentities",
+            },
+            {
+              "Action": "*",
+              "Condition": {
+                "Bool": {
+                  "aws:PrincipalIsAWSService": "true",
+                },
+              },
+              "Effect": "Allow",
+              "Principal": {
+                "AWS": "*",
+              },
+              "Resource": "*",
+              "Sid": "AllowRequestsByAWSServicePrincipals",
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PrivateDnsEnabled": false,
+        "SecurityGroupIds": [
+          {
+            "Ref": "NetworkEndpointsVpchttpsEpSecurityGroup90D555DD",
+          },
+        ],
+        "ServiceName": "com.amazonaws.us-east-1.sagemaker.feature-store",
+        "SubnetIds": [
+          {
+            "Ref": "SsmParameterValueacceleratornetworkvpcNetworkEndpointssubnetNetworkEndpointsAidC96584B6F00A464EAD1953AFF4B05118Parameter",
+          },
+          {
+            "Ref": "SsmParameterValueacceleratornetworkvpcNetworkEndpointssubnetNetworkEndpointsBidC96584B6F00A464EAD1953AFF4B05118Parameter",
+          },
+        ],
+        "VpcEndpointType": "Interface",
+        "VpcId": {
+          "Ref": "SsmParameterValueacceleratornetworkvpcNetworkEndpointsidC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+      },
+      "Type": "AWS::EC2::VPCEndpoint",
+    },
+    "NetworkEndpointsVpcSagemakerRuntimeEp6258649A": {
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": "*",
+              "Condition": {
+                "StringEquals": {
+                  "aws:PrincipalOrgID": "o-asdf123456",
+                },
+              },
+              "Effect": "Allow",
+              "Principal": {
+                "AWS": "*",
+              },
+              "Resource": "*",
+              "Sid": "AllowRequestsByOrgsIdentities",
+            },
+            {
+              "Action": "*",
+              "Condition": {
+                "Bool": {
+                  "aws:PrincipalIsAWSService": "true",
+                },
+              },
+              "Effect": "Allow",
+              "Principal": {
+                "AWS": "*",
+              },
+              "Resource": "*",
+              "Sid": "AllowRequestsByAWSServicePrincipals",
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PrivateDnsEnabled": false,
+        "SecurityGroupIds": [
+          {
+            "Ref": "NetworkEndpointsVpchttpsEpSecurityGroup90D555DD",
+          },
+        ],
+        "ServiceName": "com.amazonaws.us-east-1.sagemaker.runtime",
+        "SubnetIds": [
+          {
+            "Ref": "SsmParameterValueacceleratornetworkvpcNetworkEndpointssubnetNetworkEndpointsAidC96584B6F00A464EAD1953AFF4B05118Parameter",
+          },
+          {
+            "Ref": "SsmParameterValueacceleratornetworkvpcNetworkEndpointssubnetNetworkEndpointsBidC96584B6F00A464EAD1953AFF4B05118Parameter",
+          },
+        ],
+        "VpcEndpointType": "Interface",
+        "VpcId": {
+          "Ref": "SsmParameterValueacceleratornetworkvpcNetworkEndpointsidC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+      },
+      "Type": "AWS::EC2::VPCEndpoint",
+    },
     "NetworkEndpointsVpcSecretsmanagerEp1DDBFEFC": {
       "Properties": {
         "PolicyDocument": {
@@ -2229,7 +2400,7 @@ exports[`NetworkVpcEndpointsStack Construct(NetworkVpcEndpointsStack):  Snapshot
     },
     "SsmParamNetworkEndpointsaccessAnalyzerDns80847016": {
       "DependsOn": [
-        "SsmParamNetworkEndpointseksPhz632B4665",
+        "SsmParamNetworkEndpointseksDns35E4FACC",
       ],
       "Properties": {
         "Name": "/accelerator/network/vpc/Network-Endpoints/endpoints/access-analyzer/dns",
@@ -2259,9 +2430,6 @@ exports[`NetworkVpcEndpointsStack Construct(NetworkVpcEndpointsStack):  Snapshot
       "Type": "AWS::SSM::Parameter",
     },
     "SsmParamNetworkEndpointsaccessAnalyzerPhzF41FB5A9": {
-      "DependsOn": [
-        "SsmParamNetworkEndpointseksPhz632B4665",
-      ],
       "Properties": {
         "Name": "/accelerator/network/vpc/Network-Endpoints/endpoints/access-analyzer/hostedZoneId",
         "Type": "String",
@@ -2585,9 +2753,6 @@ exports[`NetworkVpcEndpointsStack Construct(NetworkVpcEndpointsStack):  Snapshot
       "Type": "AWS::SSM::Parameter",
     },
     "SsmParamNetworkEndpointseksDns35E4FACC": {
-      "DependsOn": [
-        "SsmParamNetworkEndpointscodeartifactRepositoriesDnsD49322BB",
-      ],
       "Properties": {
         "Name": "/accelerator/network/vpc/Network-Endpoints/endpoints/eks/dns",
         "Type": "String",
@@ -2616,6 +2781,9 @@ exports[`NetworkVpcEndpointsStack Construct(NetworkVpcEndpointsStack):  Snapshot
       "Type": "AWS::SSM::Parameter",
     },
     "SsmParamNetworkEndpointseksPhz632B4665": {
+      "DependsOn": [
+        "SsmParamNetworkEndpointseksDns35E4FACC",
+      ],
       "Properties": {
         "Name": "/accelerator/network/vpc/Network-Endpoints/endpoints/eks/hostedZoneId",
         "Type": "String",
@@ -2885,9 +3053,192 @@ exports[`NetworkVpcEndpointsStack Construct(NetworkVpcEndpointsStack):  Snapshot
       },
       "Type": "AWS::SSM::Parameter",
     },
+    "SsmParamNetworkEndpointssagemakerApiDns63B7C86E": {
+      "DependsOn": [
+        "SsmParamNetworkEndpointssagemakerRuntimePhzF1A7F98F",
+      ],
+      "Properties": {
+        "Name": "/accelerator/network/vpc/Network-Endpoints/endpoints/sagemaker.api/dns",
+        "Type": "String",
+        "Value": {
+          "Fn::Select": [
+            1,
+            {
+              "Fn::Split": [
+                ":",
+                {
+                  "Fn::Select": [
+                    0,
+                    {
+                      "Fn::GetAtt": [
+                        "NetworkEndpointsVpcSagemakerApiEp821007BB",
+                        "DnsEntries",
+                      ],
+                    },
+                  ],
+                },
+              ],
+            },
+          ],
+        },
+      },
+      "Type": "AWS::SSM::Parameter",
+    },
+    "SsmParamNetworkEndpointssagemakerApiPhzA5FABDD1": {
+      "DependsOn": [
+        "SsmParamNetworkEndpointssagemakerRuntimePhzF1A7F98F",
+      ],
+      "Properties": {
+        "Name": "/accelerator/network/vpc/Network-Endpoints/endpoints/sagemaker.api/hostedZoneId",
+        "Type": "String",
+        "Value": {
+          "Fn::Select": [
+            0,
+            {
+              "Fn::Split": [
+                ":",
+                {
+                  "Fn::Select": [
+                    0,
+                    {
+                      "Fn::GetAtt": [
+                        "NetworkEndpointsVpcSagemakerApiEp821007BB",
+                        "DnsEntries",
+                      ],
+                    },
+                  ],
+                },
+              ],
+            },
+          ],
+        },
+      },
+      "Type": "AWS::SSM::Parameter",
+    },
+    "SsmParamNetworkEndpointssagemakerFeatureStoreDnsA1C1F271": {
+      "DependsOn": [
+        "SsmParamNetworkEndpointssagemakerRuntimePhzF1A7F98F",
+      ],
+      "Properties": {
+        "Name": "/accelerator/network/vpc/Network-Endpoints/endpoints/sagemaker.feature-store/dns",
+        "Type": "String",
+        "Value": {
+          "Fn::Select": [
+            1,
+            {
+              "Fn::Split": [
+                ":",
+                {
+                  "Fn::Select": [
+                    0,
+                    {
+                      "Fn::GetAtt": [
+                        "NetworkEndpointsVpcSagemakerFeatureStoreEp473D5B8A",
+                        "DnsEntries",
+                      ],
+                    },
+                  ],
+                },
+              ],
+            },
+          ],
+        },
+      },
+      "Type": "AWS::SSM::Parameter",
+    },
+    "SsmParamNetworkEndpointssagemakerFeatureStorePhz0514D389": {
+      "DependsOn": [
+        "SsmParamNetworkEndpointssagemakerRuntimePhzF1A7F98F",
+      ],
+      "Properties": {
+        "Name": "/accelerator/network/vpc/Network-Endpoints/endpoints/sagemaker.feature-store/hostedZoneId",
+        "Type": "String",
+        "Value": {
+          "Fn::Select": [
+            0,
+            {
+              "Fn::Split": [
+                ":",
+                {
+                  "Fn::Select": [
+                    0,
+                    {
+                      "Fn::GetAtt": [
+                        "NetworkEndpointsVpcSagemakerFeatureStoreEp473D5B8A",
+                        "DnsEntries",
+                      ],
+                    },
+                  ],
+                },
+              ],
+            },
+          ],
+        },
+      },
+      "Type": "AWS::SSM::Parameter",
+    },
+    "SsmParamNetworkEndpointssagemakerRuntimeDns24E497E5": {
+      "DependsOn": [
+        "SsmParamNetworkEndpointscodeartifactRepositoriesDnsD49322BB",
+      ],
+      "Properties": {
+        "Name": "/accelerator/network/vpc/Network-Endpoints/endpoints/sagemaker.runtime/dns",
+        "Type": "String",
+        "Value": {
+          "Fn::Select": [
+            1,
+            {
+              "Fn::Split": [
+                ":",
+                {
+                  "Fn::Select": [
+                    0,
+                    {
+                      "Fn::GetAtt": [
+                        "NetworkEndpointsVpcSagemakerRuntimeEp6258649A",
+                        "DnsEntries",
+                      ],
+                    },
+                  ],
+                },
+              ],
+            },
+          ],
+        },
+      },
+      "Type": "AWS::SSM::Parameter",
+    },
+    "SsmParamNetworkEndpointssagemakerRuntimePhzF1A7F98F": {
+      "Properties": {
+        "Name": "/accelerator/network/vpc/Network-Endpoints/endpoints/sagemaker.runtime/hostedZoneId",
+        "Type": "String",
+        "Value": {
+          "Fn::Select": [
+            0,
+            {
+              "Fn::Split": [
+                ":",
+                {
+                  "Fn::Select": [
+                    0,
+                    {
+                      "Fn::GetAtt": [
+                        "NetworkEndpointsVpcSagemakerRuntimeEp6258649A",
+                        "DnsEntries",
+                      ],
+                    },
+                  ],
+                },
+              ],
+            },
+          ],
+        },
+      },
+      "Type": "AWS::SSM::Parameter",
+    },
     "SsmParamNetworkEndpointssecretsmanagerDns073EEE73": {
       "DependsOn": [
-        "SsmParamNetworkEndpointseksPhz632B4665",
+        "SsmParamNetworkEndpointseksDns35E4FACC",
       ],
       "Properties": {
         "Name": "/accelerator/network/vpc/Network-Endpoints/endpoints/secretsmanager/dns",
@@ -2918,7 +3269,7 @@ exports[`NetworkVpcEndpointsStack Construct(NetworkVpcEndpointsStack):  Snapshot
     },
     "SsmParamNetworkEndpointssecretsmanagerPhzF52D763D": {
       "DependsOn": [
-        "SsmParamNetworkEndpointseksPhz632B4665",
+        "SsmParamNetworkEndpointseksDns35E4FACC",
       ],
       "Properties": {
         "Name": "/accelerator/network/vpc/Network-Endpoints/endpoints/secretsmanager/hostedZoneId",
@@ -3073,7 +3424,7 @@ exports[`NetworkVpcEndpointsStack Construct(NetworkVpcEndpointsStack):  Snapshot
     },
     "SsmParamNetworkInspectionAcceleratorFirewallFirewallArn40D3C53C": {
       "DependsOn": [
-        "SsmParamacceleratorInboundResolverEndpoint80E88844",
+        "SsmParamNetworkEndpointsaccessAnalyzerPhzF41FB5A9",
       ],
       "Properties": {
         "Name": "/accelerator/network/vpc/Network-Inspection/networkFirewall/accelerator-firewall/arn",
@@ -3105,6 +3456,9 @@ exports[`NetworkVpcEndpointsStack Construct(NetworkVpcEndpointsStack):  Snapshot
       "Type": "AWS::SSM::Parameter",
     },
     "SsmParamacceleratorInboundResolverEndpoint80E88844": {
+      "DependsOn": [
+        "SsmParamNetworkEndpointsaccessAnalyzerPhzF41FB5A9",
+      ],
       "Properties": {
         "Name": "/accelerator/network/route53Resolver/endpoints/accelerator-inbound/id",
         "Type": "String",
@@ -3119,7 +3473,7 @@ exports[`NetworkVpcEndpointsStack Construct(NetworkVpcEndpointsStack):  Snapshot
     },
     "SsmParamacceleratorOutboundResolverEndpoint9F3A81CE": {
       "DependsOn": [
-        "SsmParamacceleratorInboundResolverEndpoint80E88844",
+        "SsmParamNetworkEndpointsaccessAnalyzerPhzF41FB5A9",
       ],
       "Properties": {
         "Name": "/accelerator/network/route53Resolver/endpoints/accelerator-outbound/id",
@@ -3135,7 +3489,7 @@ exports[`NetworkVpcEndpointsStack Construct(NetworkVpcEndpointsStack):  Snapshot
     },
     "SsmParaminboundEndpointLocalResolverEndpoint79EEABA5": {
       "DependsOn": [
-        "SsmParamacceleratorInboundResolverEndpoint80E88844",
+        "SsmParamNetworkEndpointsaccessAnalyzerPhzF41FB5A9",
       ],
       "Properties": {
         "Name": "/accelerator/network/route53Resolver/endpoints/inbound-endpoint-local/id",

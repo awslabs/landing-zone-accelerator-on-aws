@@ -187,6 +187,18 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
       "Default": "/accelerator/network/vpc/Network-Endpoints/route53/hostedZone/s3/id",
       "Type": "AWS::SSM::Parameter::Value<String>",
     },
+    "SsmParameterValueacceleratornetworkvpcNetworkEndpointsroute53hostedZonesagemakerapiidC96584B6F00A464EAD1953AFF4B05118Parameter": {
+      "Default": "/accelerator/network/vpc/Network-Endpoints/route53/hostedZone/sagemaker.api/id",
+      "Type": "AWS::SSM::Parameter::Value<String>",
+    },
+    "SsmParameterValueacceleratornetworkvpcNetworkEndpointsroute53hostedZonesagemakerfeaturestoreidC96584B6F00A464EAD1953AFF4B05118Parameter": {
+      "Default": "/accelerator/network/vpc/Network-Endpoints/route53/hostedZone/sagemaker.feature-store/id",
+      "Type": "AWS::SSM::Parameter::Value<String>",
+    },
+    "SsmParameterValueacceleratornetworkvpcNetworkEndpointsroute53hostedZonesagemakerruntimeidC96584B6F00A464EAD1953AFF4B05118Parameter": {
+      "Default": "/accelerator/network/vpc/Network-Endpoints/route53/hostedZone/sagemaker.runtime/id",
+      "Type": "AWS::SSM::Parameter::Value<String>",
+    },
     "SsmParameterValueacceleratornetworkvpcNetworkEndpointsroute53hostedZonesecretsmanageridC96584B6F00A464EAD1953AFF4B05118Parameter": {
       "Default": "/accelerator/network/vpc/Network-Endpoints/route53/hostedZone/secretsmanager/id",
       "Type": "AWS::SSM::Parameter::Value<String>",
@@ -416,6 +428,15 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
           },
           {
             "Ref": "SsmParameterValueacceleratornetworkvpcNetworkEndpointsroute53hostedZonecodeartifactapiidC96584B6F00A464EAD1953AFF4B05118Parameter",
+          },
+          {
+            "Ref": "SsmParameterValueacceleratornetworkvpcNetworkEndpointsroute53hostedZonesagemakerruntimeidC96584B6F00A464EAD1953AFF4B05118Parameter",
+          },
+          {
+            "Ref": "SsmParameterValueacceleratornetworkvpcNetworkEndpointsroute53hostedZonesagemakerapiidC96584B6F00A464EAD1953AFF4B05118Parameter",
+          },
+          {
+            "Ref": "SsmParameterValueacceleratornetworkvpcNetworkEndpointsroute53hostedZonesagemakerfeaturestoreidC96584B6F00A464EAD1953AFF4B05118Parameter",
           },
           {
             "Ref": "SsmParameterValueacceleratornetworkvpcNetworkEndpointsroute53hostedZoneeksidC96584B6F00A464EAD1953AFF4B05118Parameter",

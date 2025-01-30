@@ -1246,6 +1246,9 @@ vpcs:
         - service: s3-global.accesspoint
         - service: codeartifact.repositories
         - service: codeartifact.api
+        - service: sagemaker.runtime
+        - service: sagemaker.api
+        - service: sagemaker.feature-store
         - service: eks
           applyPolicy: false
         - service: secretsmanager
