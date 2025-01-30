@@ -17,6 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - fix(networking): fixed lookup failure on eni 0 when adding new routes for FW
 - fix(orgs): update partition support
 - fix(throttle): reduced max number of retry attempts to 7
+- fix(networking): fixed hosted zones for sagemaker vpc endpoints
 
 ## [1.11.0] - 12-11-2024
 
