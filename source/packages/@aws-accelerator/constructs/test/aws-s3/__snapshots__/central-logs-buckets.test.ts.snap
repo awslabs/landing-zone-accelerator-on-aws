@@ -645,7 +645,7 @@ exports[`CentralLogsBucket Construct(CentralLogsBucket):  Snapshot Test 1`] = `
                           {
                             "Ref": "AWS::Partition",
                           },
-                          ":iam::*:role/AWSControlTowerExecution-*",
+                          ":iam::*:role/AWSControlTowerExecution",
                         ],
                       ],
                     },
