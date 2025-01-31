@@ -64,7 +64,6 @@ export class HostedZone extends cdk.Resource implements IHostedZone {
 
   static getHostedZoneNameForService(service: string, region: string): string {
     let hostedZoneName = `${service}.${region}.amazonaws.com`;
-
     if (service.indexOf('.') > 0 && !HostedZone.ignoreServiceEndpoint(service)) {
       const tmp = service.split('.').reverse().join('.');
       hostedZoneName = `${tmp}.${region}.amazonaws.com.`;
@@ -112,7 +111,7 @@ export class HostedZone extends cdk.Resource implements IHostedZone {
       case 'sagemaker.runtime':
         hostedZoneName = `runtime.sagemaker.${region}.amazonaws.com`;
         break;
-      case 'sagemaker.feature-store':
+      case 'sagemaker.featurestore-runtime':
         hostedZoneName = `featurestore-runtime.sagemaker.${region}.amazonaws.com`;
         break;
     }
@@ -133,8 +132,6 @@ export class HostedZone extends cdk.Resource implements IHostedZone {
       'studio',
       'codeartifact.api',
       'codeartifact.repositories',
-      'sagemaker.api',
-      'sagemaker.runtime',
     ];
     return ignoreServicesArray.includes(service);
   }

@@ -127,12 +127,12 @@ exports[`NetworkVpcDnsStack Construct(NetworkVpcDnsStack):  Snapshot Test 1`] = 
       "Default": "/accelerator/network/vpc/Network-Endpoints/endpoints/sagemaker.api/hostedZoneId",
       "Type": "AWS::SSM::Parameter::Value<String>",
     },
-    "SsmParameterValueacceleratornetworkvpcNetworkEndpointsendpointssagemakerfeaturestorednsC96584B6F00A464EAD1953AFF4B05118Parameter": {
-      "Default": "/accelerator/network/vpc/Network-Endpoints/endpoints/sagemaker.feature-store/dns",
+    "SsmParameterValueacceleratornetworkvpcNetworkEndpointsendpointssagemakerfeaturestoreruntimednsC96584B6F00A464EAD1953AFF4B05118Parameter": {
+      "Default": "/accelerator/network/vpc/Network-Endpoints/endpoints/sagemaker.featurestore-runtime/dns",
       "Type": "AWS::SSM::Parameter::Value<String>",
     },
-    "SsmParameterValueacceleratornetworkvpcNetworkEndpointsendpointssagemakerfeaturestorehostedZoneIdC96584B6F00A464EAD1953AFF4B05118Parameter": {
-      "Default": "/accelerator/network/vpc/Network-Endpoints/endpoints/sagemaker.feature-store/hostedZoneId",
+    "SsmParameterValueacceleratornetworkvpcNetworkEndpointsendpointssagemakerfeaturestoreruntimehostedZoneIdC96584B6F00A464EAD1953AFF4B05118Parameter": {
+      "Default": "/accelerator/network/vpc/Network-Endpoints/endpoints/sagemaker.featurestore-runtime/hostedZoneId",
       "Type": "AWS::SSM::Parameter::Value<String>",
     },
     "SsmParameterValueacceleratornetworkvpcNetworkEndpointsendpointssagemakerruntimednsC96584B6F00A464EAD1953AFF4B05118Parameter": {
@@ -1069,7 +1069,7 @@ exports[`NetworkVpcDnsStack Construct(NetworkVpcDnsStack):  Snapshot Test 1`] = 
       },
       "Type": "AWS::Route53::RecordSet",
     },
-    "NetworkEndpointsVpcSagemakerFeatureStoreEpHostedZone4A59FE7B": {
+    "NetworkEndpointsVpcSagemakerFeaturestoreRuntimeEpHostedZone414CC894": {
       "Properties": {
         "HostedZoneTags": [
           {
@@ -1089,18 +1089,18 @@ exports[`NetworkVpcDnsStack Construct(NetworkVpcDnsStack):  Snapshot Test 1`] = 
       },
       "Type": "AWS::Route53::HostedZone",
     },
-    "NetworkEndpointsVpcSagemakerFeatureStoreEpRecordSet719B2098": {
+    "NetworkEndpointsVpcSagemakerFeaturestoreRuntimeEpRecordSet6D27AFCA": {
       "Properties": {
         "AliasTarget": {
           "DNSName": {
-            "Ref": "SsmParameterValueacceleratornetworkvpcNetworkEndpointsendpointssagemakerfeaturestorednsC96584B6F00A464EAD1953AFF4B05118Parameter",
+            "Ref": "SsmParameterValueacceleratornetworkvpcNetworkEndpointsendpointssagemakerfeaturestoreruntimednsC96584B6F00A464EAD1953AFF4B05118Parameter",
           },
           "HostedZoneId": {
-            "Ref": "SsmParameterValueacceleratornetworkvpcNetworkEndpointsendpointssagemakerfeaturestorehostedZoneIdC96584B6F00A464EAD1953AFF4B05118Parameter",
+            "Ref": "SsmParameterValueacceleratornetworkvpcNetworkEndpointsendpointssagemakerfeaturestoreruntimehostedZoneIdC96584B6F00A464EAD1953AFF4B05118Parameter",
           },
         },
         "HostedZoneId": {
-          "Ref": "NetworkEndpointsVpcSagemakerFeatureStoreEpHostedZone4A59FE7B",
+          "Ref": "NetworkEndpointsVpcSagemakerFeaturestoreRuntimeEpHostedZone414CC894",
         },
         "Name": "featurestore-runtime.sagemaker.us-east-1.amazonaws.com",
         "Type": "A",
@@ -1434,15 +1434,15 @@ exports[`NetworkVpcDnsStack Construct(NetworkVpcDnsStack):  Snapshot Test 1`] = 
       },
       "Type": "AWS::SSM::Parameter",
     },
-    "SsmParamNetworkEndpointsVpcSagemakerFeatureStoreEpHostedZone20FEE3CE": {
+    "SsmParamNetworkEndpointsVpcSagemakerFeaturestoreRuntimeEpHostedZone074C5CA6": {
       "DependsOn": [
         "SsmParamNetworkEndpointsVpcSagemakerApiEpHostedZone3FFC08C9",
       ],
       "Properties": {
-        "Name": "/accelerator/network/vpc/Network-Endpoints/route53/hostedZone/sagemaker.feature-store/id",
+        "Name": "/accelerator/network/vpc/Network-Endpoints/route53/hostedZone/sagemaker.featurestore-runtime/id",
         "Type": "String",
         "Value": {
-          "Ref": "NetworkEndpointsVpcSagemakerFeatureStoreEpHostedZone4A59FE7B",
+          "Ref": "NetworkEndpointsVpcSagemakerFeaturestoreRuntimeEpHostedZone414CC894",
         },
       },
       "Type": "AWS::SSM::Parameter",
