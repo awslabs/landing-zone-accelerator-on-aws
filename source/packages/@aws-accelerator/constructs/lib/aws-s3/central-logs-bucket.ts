@@ -200,7 +200,7 @@ export class CentralLogsBucket extends Construct {
                 'aws:PrincipalARN': [
                   `arn:${cdk.Stack.of(this).partition}:iam::*:role/${props.acceleratorPrefix}-*`,
                   `arn:${cdk.Stack.of(this).partition}:iam::*:role/cdk-accel-*`,
-                  `arn:${cdk.Stack.of(this).partition}:iam::*:role/${props.managementAccountAccessRole}-*`,
+                  `arn:${cdk.Stack.of(this).partition}:iam::*:role/${props.managementAccountAccessRole}`,
                 ],
               },
             },
@@ -240,7 +240,7 @@ export class CentralLogsBucket extends Construct {
             'aws:PrincipalARN': [
               `arn:${cdk.Stack.of(this).partition}:iam::*:role/${props.acceleratorPrefix}-*`,
               `arn:${cdk.Stack.of(this).partition}:iam::*:role/cdk-accel-*`,
-              `arn:${cdk.Stack.of(this).partition}:iam::*:role/${props.managementAccountAccessRole}-*`,
+              `arn:${cdk.Stack.of(this).partition}:iam::*:role/${props.managementAccountAccessRole}`,
             ],
           },
         },
