@@ -26,6 +26,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - fix(asea): fixed mapping upload logic to use lza enabled regions and accounts
 - fix(networking): fixed hosted zones for sagemaker vpc endpoints
 - fix(service quota): fix region logic that provisioned service limit for home region even if not specified
+- fix(logging): removed wildcard from central log bucket for management access role
 
 ### Changed
 
