@@ -1248,7 +1248,7 @@ vpcs:
         - service: codeartifact.api
         - service: sagemaker.runtime
         - service: sagemaker.api
-        - service: sagemaker.feature-store
+        - service: sagemaker.featurestore-runtime
         - service: eks
           applyPolicy: false
         - service: secretsmanager
