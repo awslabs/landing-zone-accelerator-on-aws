@@ -262,6 +262,7 @@ export class OperationsStack extends AcceleratorStack {
 
     for (const limit of this.props.globalConfig.limits ?? []) {
       if (this.isIncluded(limit.deploymentTargets ?? [])) {
+        // Global Services
         if (globalServices.includes(limit.serviceCode) && this.props.globalRegion === cdk.Stack.of(this).region) {
           this.logger.info(
             `Creating service quota increase for global service ${limit.serviceCode} in ${this.props.globalRegion}`,
@@ -273,8 +274,11 @@ export class OperationsStack extends AcceleratorStack {
             kmsKey: this.cloudwatchKey,
             logRetentionInDays: this.props.globalConfig.cloudwatchLogRetentionInDays,
           });
+          // Specified Regions
         } else if (limit.regions && limit.regions.includes(cdk.Stack.of(this).region as Region)) {
-          this.logger.info(`Regions explicitly defined for service quota increase ${limit.quotaCode}`);
+          this.logger.info(
+            `Creating service quota increase ${limit.quotaCode} in specified region ${cdk.Stack.of(this).region}`,
+          );
           new LimitsDefinition(this, `ServiceQuotaUpdates${limit.quotaCode}` + `${limit.desiredValue}`, {
             serviceCode: limit.serviceCode,
             quotaCode: limit.quotaCode,
@@ -282,7 +286,8 @@ export class OperationsStack extends AcceleratorStack {
             kmsKey: this.cloudwatchKey,
             logRetentionInDays: this.props.globalConfig.cloudwatchLogRetentionInDays,
           });
-        } else if (this.isHomeRegion(this.props.globalConfig.homeRegion)) {
+          // Non-specified Regions apply to home region
+        } else if (!limit.regions && this.isHomeRegion(this.props.globalConfig.homeRegion)) {
           this.logger.info(
             `Regions property not specified, creating service quota increase ${limit.quotaCode} in home region`,
           );

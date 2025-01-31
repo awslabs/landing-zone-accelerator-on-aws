@@ -1111,25 +1111,6 @@ exports[`OperationsStack Construct(OperationsStack):  Snapshot Test 1`] = `
       "Type": "Custom::ServiceQuotaLimits",
       "UpdateReplacePolicy": "Delete",
     },
-    "ServiceQuotaUpdatesLB99A93841000457ABA73": {
-      "DeletionPolicy": "Delete",
-      "DependsOn": [
-        "CustomServiceQuotaLimitsCustomResourceProviderLogGroupBC81BDCC",
-      ],
-      "Properties": {
-        "ServiceToken": {
-          "Fn::GetAtt": [
-            "CustomServiceQuotaLimitsCustomResourceProviderHandler81BAABBF",
-            "Arn",
-          ],
-        },
-        "desiredValue": 1000,
-        "quotaCode": "L-B99A9384",
-        "serviceCode": "lambda",
-      },
-      "Type": "Custom::ServiceQuotaLimits",
-      "UpdateReplacePolicy": "Delete",
-    },
     "SsmParamAcceleratorVersionFF83282D": {
       "Properties": {
         "Name": "/accelerator/AWSAccelerator-OperationsStack-111111111111-us-east-1/version",
