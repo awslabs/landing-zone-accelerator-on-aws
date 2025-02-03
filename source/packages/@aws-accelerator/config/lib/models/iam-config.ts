@@ -314,6 +314,12 @@ export interface IIdentityCenterPermissionSetConfig {
    * @default undefined
    */
   readonly sessionDuration?: number;
+
+  /**
+   * A description string for the Permission Set
+   * @default undefined
+   */
+  readonly description?: t.NonEmptyString;
 }
 
 /**

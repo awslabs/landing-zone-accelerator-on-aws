@@ -183,6 +183,7 @@ export class IdentityCenterPermissionSetConfig implements i.IIdentityCenterPermi
   readonly name: string = '';
   readonly policies: IdentityCenterPoliciesConfig | undefined = undefined;
   readonly sessionDuration: number | undefined = undefined;
+  readonly description: string | undefined = undefined;
 }
 
 export class IdentityCenterAssignmentPrincipalConfig implements i.IIdentityCenterAssignmentPrincipalConfig {

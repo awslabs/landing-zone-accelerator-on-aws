@@ -450,6 +450,11 @@
       "additionalProperties": false,
       "description": "Identity Center Permission Set Configuration",
       "properties": {
+        "description": {
+          "$ref": "#/definitions/NonEmptyString",
+          "default": "undefined",
+          "description": "A description string for the Permission Set"
+        },
         "name": {
           "$ref": "#/definitions/NonEmptyString",
           "description": "A name for the Identity Center Permission Set Configuration"

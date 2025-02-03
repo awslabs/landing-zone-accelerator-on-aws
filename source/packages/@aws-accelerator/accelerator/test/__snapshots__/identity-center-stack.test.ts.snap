@@ -691,6 +691,79 @@ exports[`IdentityCenterStack Construct(IdentityCenterStack):  Snapshot Test 1`] 
       },
       "Type": "AWS::SSO::PermissionSet",
     },
+    "PermissionSet3IdentityCenterPermissionSet": {
+      "DependsOn": [
+        "PermissionSet1IdentityCenterPermissionSet",
+        "PermissionSet2IdentityCenterPermissionSet",
+      ],
+      "Properties": {
+        "CustomerManagedPolicyReferences": [
+          {
+            "Name": "ResourceConfigurationCollectorPolicy",
+          },
+          {
+            "Name": "lzaManagedPolicy01",
+          },
+        ],
+        "Description": "This is a useful permission set description.",
+        "InlinePolicy": {
+          "Statement": [
+            {
+              "Action": [
+                "s3:ListBucket",
+              ],
+              "Effect": "Allow",
+              "Resource": [
+                "*",
+              ],
+              "Sid": "Statement1",
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "InstanceArn": {
+          "Fn::GetAtt": [
+            "IdentityCenterInstanceIdentityCenterGetInstanceIdIdentityCenterGetInstanceIdResourceE2BD9B5B",
+            "instanceArn",
+          ],
+        },
+        "ManagedPolicies": [
+          {
+            "Fn::Join": [
+              "",
+              [
+                "arn:",
+                {
+                  "Ref": "AWS::Partition",
+                },
+                ":iam::aws:policy/PowerUserAccess",
+              ],
+            ],
+          },
+          {
+            "Fn::Join": [
+              "",
+              [
+                "arn:",
+                {
+                  "Ref": "AWS::Partition",
+                },
+                ":iam::aws:policy/ReadOnlyAccess",
+              ],
+            ],
+          },
+        ],
+        "Name": "PermissionSet3",
+        "PermissionsBoundary": {
+          "CustomerManagedPolicyReference": {
+            "Name": "lzaManagedPolicy01",
+            "Path": "/",
+          },
+        },
+        "SessionDuration": "PT1H0M",
+      },
+      "Type": "AWS::SSO::PermissionSet",
+    },
     "SsmParamAcceleratorVersionFF83282D": {
       "Properties": {
         "Name": "/accelerator/AWSAccelerator-IdentityCenterStack-111111111111-us-east-1/version",
