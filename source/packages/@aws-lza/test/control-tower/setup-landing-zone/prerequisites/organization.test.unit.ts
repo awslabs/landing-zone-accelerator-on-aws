@@ -11,7 +11,7 @@
  *  and limitations under the License.
  */
 import { describe, beforeEach, expect, test } from '@jest/globals';
-import { Organization } from '../../../lib/control-tower/prerequisites/organization';
+import { Organization } from '../../../../lib/control-tower/setup-landing-zone/prerequisites/organization';
 import {
   AWSOrganizationsNotInUseException,
   DescribeOrganizationCommand,
@@ -171,10 +171,10 @@ describe('IAM Role Tests', () => {
     const response = await Organization.validate(
       MOCK_CONSTANTS.globalRegion,
       MOCK_CONSTANTS.region,
-      MOCK_CONSTANTS.solutionId,
       MOCK_CONSTANTS.partition,
       MOCK_CONSTANTS.sharedAccountEmail,
       MOCK_CONSTANTS.credentials,
+      MOCK_CONSTANTS.solutionId,
     );
 
     expect(response).toBeUndefined();
@@ -207,10 +207,10 @@ describe('IAM Role Tests', () => {
       await Organization.validate(
         MOCK_CONSTANTS.globalRegion,
         MOCK_CONSTANTS.region,
-        MOCK_CONSTANTS.solutionId,
         MOCK_CONSTANTS.partition,
         MOCK_CONSTANTS.sharedAccountEmail,
         MOCK_CONSTANTS.credentials,
+        MOCK_CONSTANTS.solutionId,
       );
     }).rejects.toThrow(MOCK_CONSTANTS.identityCenterEnabledFailureError);
   });
@@ -242,10 +242,10 @@ describe('IAM Role Tests', () => {
     const response = await Organization.validate(
       MOCK_CONSTANTS.globalRegion,
       MOCK_CONSTANTS.region,
-      MOCK_CONSTANTS.solutionId,
       MOCK_CONSTANTS.partition,
       MOCK_CONSTANTS.sharedAccountEmail,
       MOCK_CONSTANTS.credentials,
+      MOCK_CONSTANTS.solutionId,
     );
 
     expect(response).toBeUndefined();
@@ -267,10 +267,10 @@ describe('IAM Role Tests', () => {
       await Organization.validate(
         MOCK_CONSTANTS.globalRegion,
         MOCK_CONSTANTS.region,
-        MOCK_CONSTANTS.solutionId,
         MOCK_CONSTANTS.partition,
         MOCK_CONSTANTS.sharedAccountEmail,
         MOCK_CONSTANTS.credentials,
+        MOCK_CONSTANTS.solutionId,
       );
     }).rejects.toThrow(MOCK_CONSTANTS.organizationsNotEnabledFailureError);
   });
@@ -291,10 +291,10 @@ describe('IAM Role Tests', () => {
       await Organization.validate(
         MOCK_CONSTANTS.globalRegion,
         MOCK_CONSTANTS.region,
-        MOCK_CONSTANTS.solutionId,
         MOCK_CONSTANTS.partition,
         MOCK_CONSTANTS.sharedAccountEmail,
         MOCK_CONSTANTS.credentials,
+        MOCK_CONSTANTS.solutionId,
       );
     }).rejects.toThrow(MOCK_CONSTANTS.organizationsNotEnabledFailureError);
   });
@@ -313,10 +313,10 @@ describe('IAM Role Tests', () => {
       await Organization.validate(
         MOCK_CONSTANTS.globalRegion,
         MOCK_CONSTANTS.region,
-        MOCK_CONSTANTS.solutionId,
         MOCK_CONSTANTS.partition,
         MOCK_CONSTANTS.sharedAccountEmail,
         MOCK_CONSTANTS.credentials,
+        MOCK_CONSTANTS.solutionId,
       );
     }).rejects.toThrow(MOCK_CONSTANTS.unknownError.message);
   });
@@ -346,10 +346,10 @@ describe('IAM Role Tests', () => {
       await Organization.validate(
         MOCK_CONSTANTS.globalRegion,
         MOCK_CONSTANTS.region,
-        MOCK_CONSTANTS.solutionId,
         MOCK_CONSTANTS.partition,
         MOCK_CONSTANTS.sharedAccountEmail,
         MOCK_CONSTANTS.credentials,
+        MOCK_CONSTANTS.solutionId,
       );
     }).rejects.toThrow(MOCK_CONSTANTS.organizationsServiceEnabledFailureError);
   });
@@ -381,10 +381,10 @@ describe('IAM Role Tests', () => {
     const response = await Organization.validate(
       MOCK_CONSTANTS.globalRegion,
       MOCK_CONSTANTS.region,
-      MOCK_CONSTANTS.solutionId,
       MOCK_CONSTANTS.partition,
       MOCK_CONSTANTS.sharedAccountEmail,
       MOCK_CONSTANTS.credentials,
+      MOCK_CONSTANTS.solutionId,
     );
 
     expect(response).toBeUndefined();
@@ -417,10 +417,10 @@ describe('IAM Role Tests', () => {
       await Organization.validate(
         MOCK_CONSTANTS.globalRegion,
         MOCK_CONSTANTS.region,
-        MOCK_CONSTANTS.solutionId,
         MOCK_CONSTANTS.partition,
         MOCK_CONSTANTS.sharedAccountEmail,
         MOCK_CONSTANTS.credentials,
+        MOCK_CONSTANTS.solutionId,
       );
     }).rejects.toThrow(MOCK_CONSTANTS.organizationsHaveOusFailureError);
   });
@@ -450,10 +450,10 @@ describe('IAM Role Tests', () => {
       await Organization.validate(
         MOCK_CONSTANTS.globalRegion,
         MOCK_CONSTANTS.region,
-        MOCK_CONSTANTS.solutionId,
         MOCK_CONSTANTS.partition,
         MOCK_CONSTANTS.sharedAccountEmail,
         MOCK_CONSTANTS.credentials,
+        MOCK_CONSTANTS.solutionId,
       );
     }).rejects.toThrow(MOCK_CONSTANTS.organizationsHaveAccountsFailureError);
   });
@@ -485,10 +485,10 @@ describe('IAM Role Tests', () => {
     const response = await Organization.validate(
       MOCK_CONSTANTS.globalRegion,
       MOCK_CONSTANTS.region,
-      MOCK_CONSTANTS.solutionId,
       MOCK_CONSTANTS.partition,
       MOCK_CONSTANTS.sharedAccountEmail,
       MOCK_CONSTANTS.credentials,
+      MOCK_CONSTANTS.solutionId,
     );
 
     expect(response).toBeUndefined();
@@ -521,10 +521,10 @@ describe('IAM Role Tests', () => {
       await Organization.validate(
         MOCK_CONSTANTS.globalRegion,
         MOCK_CONSTANTS.region,
-        MOCK_CONSTANTS.solutionId,
         MOCK_CONSTANTS.govCloudPartition,
         MOCK_CONSTANTS.sharedAccountEmail,
         MOCK_CONSTANTS.credentials,
+        MOCK_CONSTANTS.solutionId,
       );
     }).rejects.toThrow(MOCK_CONSTANTS.govCloudOrganizationsHaveAccountsFailureError);
   });
@@ -556,10 +556,10 @@ describe('IAM Role Tests', () => {
     const response = await Organization.validate(
       MOCK_CONSTANTS.globalRegion,
       MOCK_CONSTANTS.region,
-      MOCK_CONSTANTS.solutionId,
       MOCK_CONSTANTS.govCloudPartition,
       MOCK_CONSTANTS.sharedAccountEmail,
       MOCK_CONSTANTS.credentials,
+      MOCK_CONSTANTS.solutionId,
     );
 
     expect(response).toBeUndefined();
@@ -587,10 +587,10 @@ describe('IAM Role Tests', () => {
     const response = await Organization.validate(
       MOCK_CONSTANTS.globalRegion,
       MOCK_CONSTANTS.region,
-      MOCK_CONSTANTS.solutionId,
       MOCK_CONSTANTS.partition,
       MOCK_CONSTANTS.sharedAccountEmail,
       MOCK_CONSTANTS.credentials,
+      MOCK_CONSTANTS.solutionId,
     );
 
     expect(response).toBeUndefined();
@@ -618,10 +618,10 @@ describe('IAM Role Tests', () => {
     const response = await Organization.validate(
       MOCK_CONSTANTS.globalRegion,
       MOCK_CONSTANTS.region,
-      MOCK_CONSTANTS.solutionId,
       MOCK_CONSTANTS.partition,
       MOCK_CONSTANTS.sharedAccountEmail,
       MOCK_CONSTANTS.credentials,
+      MOCK_CONSTANTS.solutionId,
     );
 
     expect(response).toBeUndefined();
@@ -644,9 +644,9 @@ describe('IAM Role Tests', () => {
       // Execute
       const response = await Organization.getOrganizationAccountDetailsByEmail(
         MOCK_CONSTANTS.globalRegion,
-        MOCK_CONSTANTS.solutionId,
         MOCK_CONSTANTS.sharedAccountEmail.audit,
         MOCK_CONSTANTS.credentials,
+        MOCK_CONSTANTS.solutionId,
       );
 
       expect(response).toBeDefined();
@@ -668,9 +668,9 @@ describe('IAM Role Tests', () => {
       await expect(async () => {
         await Organization.getOrganizationAccountDetailsByEmail(
           MOCK_CONSTANTS.globalRegion,
-          MOCK_CONSTANTS.solutionId,
           dummyEmail,
           MOCK_CONSTANTS.credentials,
+          MOCK_CONSTANTS.solutionId,
         );
       }).rejects.toThrow(`Account with email ${dummyEmail} not found`);
     });

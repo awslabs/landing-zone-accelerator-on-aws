@@ -12,8 +12,8 @@
  */
 import { describe, beforeEach, expect, test } from '@jest/globals';
 
-import { AcceleratorControlTowerLandingZoneModule } from '../../lib/control-tower/index';
-import { Organization } from '../../lib/control-tower/prerequisites/organization';
+import { SetupLandingZoneModule } from '../../../lib/control-tower/setup-landing-zone/index';
+import { Organization } from '../../../lib/control-tower/setup-landing-zone/prerequisites/organization';
 
 import {
   ControlTowerClient,
@@ -24,9 +24,9 @@ import {
   ResetLandingZoneCommand,
   UpdateLandingZoneCommand,
 } from '@aws-sdk/client-controltower';
-import { IamRole } from '../../lib/control-tower/prerequisites/iam-role';
-import { KmsKey } from '../../lib/control-tower/prerequisites/kms-key';
-import { SharedAccount } from '../../lib/control-tower/prerequisites/shared-account';
+import { IamRole } from '../../../lib/control-tower/setup-landing-zone/prerequisites/iam-role';
+import { KmsKey } from '../../../lib/control-tower/setup-landing-zone/prerequisites/kms-key';
+import { SharedAccount } from '../../../lib/control-tower/setup-landing-zone/prerequisites/shared-account';
 
 // Mock dependencies
 jest.mock('@aws-sdk/client-controltower', () => {
@@ -51,18 +51,18 @@ jest.mock('@aws-sdk/client-controltower', () => {
   };
 });
 
-jest.mock('../../common/functions', () => ({
-  ...jest.requireActual('../../common/functions'),
+jest.mock('../../../common/functions', () => ({
+  ...jest.requireActual('../../../common/functions'),
   delay: jest.fn().mockResolvedValue(undefined),
 }));
 
-jest.mock('../../lib/control-tower/prerequisites/shared-account', () => ({
-  ...jest.requireActual('../../lib/control-tower/prerequisites/shared-account'),
+jest.mock('../../../lib/control-tower/setup-landing-zone/prerequisites/shared-account', () => ({
+  ...jest.requireActual('../../../lib/control-tower/setup-landing-zone/prerequisites/shared-account'),
   createAccounts: jest.fn(),
 }));
 
-jest.mock('../../lib/control-tower/prerequisites/kms-key', () => ({
-  ...jest.requireActual('../../lib/control-tower/prerequisites/kms-key'),
+jest.mock('../../../lib/control-tower/setup-landing-zone/prerequisites/kms-key', () => ({
+  ...jest.requireActual('../../../lib/control-tower/setup-landing-zone/prerequisites/kms-key'),
   createControlTowerKey: jest.fn(),
 }));
 
@@ -71,7 +71,7 @@ const MOCK_CONSTANTS = {
   moduleCommonParameter: {
     operation: 'mockOperation',
     partition: 'mockPartition',
-    homeRegion: 'mockHomeRegion',
+    region: 'mockHomeRegion',
     credentials: {
       accessKeyId: 'mockAccessKeyId',
       secretAccessKey: 'mockSecretAccessKey',
@@ -196,7 +196,7 @@ describe('Accelerator ControlTower Landing Zone Module', () => {
       send: mockSend,
     }));
 
-    getLandingZoneIdentifierSpy = jest.spyOn(require('../../common/functions'), 'getLandingZoneIdentifier');
+    getLandingZoneIdentifierSpy = jest.spyOn(require('../../../common/functions'), 'getLandingZoneIdentifier');
     organizationValidateSpy = jest.spyOn(Organization, 'validate');
     getOrganizationAccountDetailsByEmailSpy = jest.spyOn(Organization, 'getOrganizationAccountDetailsByEmail');
 
@@ -205,12 +205,15 @@ describe('Accelerator ControlTower Landing Zone Module', () => {
     createControlTowerKeySpy = jest.spyOn(KmsKey, 'createControlTowerKey');
 
     createSharedAccountsSpy = jest.spyOn(SharedAccount, 'createAccounts');
-    makeManifestDocumentSpy = jest.spyOn(require('../../lib/control-tower/utils/functions'), 'makeManifestDocument');
+    makeManifestDocumentSpy = jest.spyOn(
+      require('../../../lib/control-tower/setup-landing-zone/functions'),
+      'makeManifestDocument',
+    );
 
-    getLandingZoneDetailsSpy = jest.spyOn(require('../../common/functions'), 'getLandingZoneDetails');
+    getLandingZoneDetailsSpy = jest.spyOn(require('../../../common/functions'), 'getLandingZoneDetails');
 
     landingZoneUpdateOrResetRequiredSpy = jest.spyOn(
-      require('../../lib/control-tower/utils/functions'),
+      require('../../../lib/control-tower/setup-landing-zone/functions'),
       'landingZoneUpdateOrResetRequired',
     );
   });
@@ -243,7 +246,7 @@ describe('Accelerator ControlTower Landing Zone Module', () => {
 
     test('should be successful of dry run', async () => {
       // Execute
-      const response = await new AcceleratorControlTowerLandingZoneModule().handler({
+      const response = await new SetupLandingZoneModule().handler({
         ...MOCK_CONSTANTS.moduleCommonParameter,
         dryRun: true,
         moduleName: MOCK_CONSTANTS.moduleName,
@@ -273,7 +276,7 @@ describe('Accelerator ControlTower Landing Zone Module', () => {
       });
 
       // Execute
-      const response = await new AcceleratorControlTowerLandingZoneModule().handler({
+      const response = await new SetupLandingZoneModule().handler({
         ...MOCK_CONSTANTS.moduleCommonParameter,
         useExistingRole: false,
         configuration: MOCK_CONSTANTS.controlTowerLandingZoneConfiguration,
@@ -310,7 +313,7 @@ describe('Accelerator ControlTower Landing Zone Module', () => {
       });
 
       // Execute
-      const response = await new AcceleratorControlTowerLandingZoneModule().handler({
+      const response = await new SetupLandingZoneModule().handler({
         ...MOCK_CONSTANTS.moduleCommonParameter,
         useExistingRole: false,
         configuration: MOCK_CONSTANTS.controlTowerLandingZoneConfiguration,
@@ -340,7 +343,7 @@ describe('Accelerator ControlTower Landing Zone Module', () => {
 
       // Execute & Verify
       await expect(async () => {
-        await new AcceleratorControlTowerLandingZoneModule().handler({
+        await new SetupLandingZoneModule().handler({
           ...MOCK_CONSTANTS.moduleCommonParameter,
           useExistingRole: false,
           configuration: MOCK_CONSTANTS.controlTowerLandingZoneConfiguration,
@@ -379,7 +382,7 @@ describe('Accelerator ControlTower Landing Zone Module', () => {
 
       // Execute & Verify
       await expect(async () => {
-        await new AcceleratorControlTowerLandingZoneModule().handler({
+        await new SetupLandingZoneModule().handler({
           ...MOCK_CONSTANTS.moduleCommonParameter,
           useExistingRole: false,
           configuration: MOCK_CONSTANTS.controlTowerLandingZoneConfiguration,
@@ -405,7 +408,7 @@ describe('Accelerator ControlTower Landing Zone Module', () => {
 
       // Execute & Verify
       await expect(async () => {
-        await new AcceleratorControlTowerLandingZoneModule().handler({
+        await new SetupLandingZoneModule().handler({
           ...MOCK_CONSTANTS.moduleCommonParameter,
           useExistingRole: false,
           configuration: MOCK_CONSTANTS.controlTowerLandingZoneConfiguration,
@@ -434,7 +437,7 @@ describe('Accelerator ControlTower Landing Zone Module', () => {
 
       // Execute & Verify
       await expect(async () => {
-        await new AcceleratorControlTowerLandingZoneModule().handler({
+        await new SetupLandingZoneModule().handler({
           ...MOCK_CONSTANTS.moduleCommonParameter,
           useExistingRole: false,
           configuration: MOCK_CONSTANTS.controlTowerLandingZoneConfiguration,
@@ -471,7 +474,7 @@ describe('Accelerator ControlTower Landing Zone Module', () => {
 
       // Execute & Verify
       await expect(async () => {
-        await new AcceleratorControlTowerLandingZoneModule().handler({
+        await new SetupLandingZoneModule().handler({
           ...MOCK_CONSTANTS.moduleCommonParameter,
           useExistingRole: false,
           configuration: MOCK_CONSTANTS.controlTowerLandingZoneConfiguration,
@@ -538,7 +541,7 @@ describe('Accelerator ControlTower Landing Zone Module', () => {
       });
 
       // Execute
-      const response = await new AcceleratorControlTowerLandingZoneModule().handler({
+      const response = await new SetupLandingZoneModule().handler({
         ...MOCK_CONSTANTS.moduleCommonParameter,
         useExistingRole: false,
         dryRun: true,
@@ -562,7 +565,7 @@ describe('Accelerator ControlTower Landing Zone Module', () => {
       });
 
       // Execute
-      const response = await new AcceleratorControlTowerLandingZoneModule().handler({
+      const response = await new SetupLandingZoneModule().handler({
         ...MOCK_CONSTANTS.moduleCommonParameter,
         useExistingRole: false,
         dryRun: true,
@@ -588,7 +591,7 @@ describe('Accelerator ControlTower Landing Zone Module', () => {
       });
 
       // Execute
-      const response = await new AcceleratorControlTowerLandingZoneModule().handler({
+      const response = await new SetupLandingZoneModule().handler({
         ...MOCK_CONSTANTS.moduleCommonParameter,
         useExistingRole: false,
         configuration: MOCK_CONSTANTS.controlTowerLandingZoneConfiguration,
@@ -615,7 +618,7 @@ describe('Accelerator ControlTower Landing Zone Module', () => {
 
       // Execute & Verify
       await expect(async () => {
-        await new AcceleratorControlTowerLandingZoneModule().handler({
+        await new SetupLandingZoneModule().handler({
           ...MOCK_CONSTANTS.moduleCommonParameter,
           useExistingRole: false,
           configuration: MOCK_CONSTANTS.controlTowerLandingZoneConfiguration,
@@ -645,7 +648,7 @@ describe('Accelerator ControlTower Landing Zone Module', () => {
       });
 
       // Execute
-      const response = await new AcceleratorControlTowerLandingZoneModule().handler({
+      const response = await new SetupLandingZoneModule().handler({
         ...MOCK_CONSTANTS.moduleCommonParameter,
         useExistingRole: false,
         configuration: MOCK_CONSTANTS.controlTowerLandingZoneConfiguration,
@@ -685,7 +688,7 @@ describe('Accelerator ControlTower Landing Zone Module', () => {
       });
 
       // Execute
-      const response = await new AcceleratorControlTowerLandingZoneModule().handler({
+      const response = await new SetupLandingZoneModule().handler({
         ...MOCK_CONSTANTS.moduleCommonParameter,
         useExistingRole: false,
         configuration: MOCK_CONSTANTS.controlTowerLandingZoneConfiguration,
@@ -718,7 +721,7 @@ describe('Accelerator ControlTower Landing Zone Module', () => {
 
       // Execute & Verify
       await expect(async () => {
-        await new AcceleratorControlTowerLandingZoneModule().handler({
+        await new SetupLandingZoneModule().handler({
           ...MOCK_CONSTANTS.moduleCommonParameter,
           useExistingRole: false,
           configuration: MOCK_CONSTANTS.controlTowerLandingZoneConfiguration,
@@ -757,7 +760,7 @@ describe('Accelerator ControlTower Landing Zone Module', () => {
 
       // Execute & Verify
       await expect(async () => {
-        await new AcceleratorControlTowerLandingZoneModule().handler({
+        await new SetupLandingZoneModule().handler({
           ...MOCK_CONSTANTS.moduleCommonParameter,
           useExistingRole: false,
           configuration: MOCK_CONSTANTS.controlTowerLandingZoneConfiguration,
@@ -783,7 +786,7 @@ describe('Accelerator ControlTower Landing Zone Module', () => {
 
       // Execute & Verify
       await expect(async () => {
-        await new AcceleratorControlTowerLandingZoneModule().handler({
+        await new SetupLandingZoneModule().handler({
           ...MOCK_CONSTANTS.moduleCommonParameter,
           useExistingRole: false,
           configuration: MOCK_CONSTANTS.controlTowerLandingZoneConfiguration,
@@ -813,7 +816,7 @@ describe('Accelerator ControlTower Landing Zone Module', () => {
 
       // Execute & Verify
       await expect(async () => {
-        await new AcceleratorControlTowerLandingZoneModule().handler({
+        await new SetupLandingZoneModule().handler({
           ...MOCK_CONSTANTS.moduleCommonParameter,
           useExistingRole: false,
           configuration: MOCK_CONSTANTS.controlTowerLandingZoneConfiguration,
@@ -851,7 +854,7 @@ describe('Accelerator ControlTower Landing Zone Module', () => {
 
       // Execute & Verify
       await expect(async () => {
-        await new AcceleratorControlTowerLandingZoneModule().handler({
+        await new SetupLandingZoneModule().handler({
           ...MOCK_CONSTANTS.moduleCommonParameter,
           useExistingRole: false,
           configuration: MOCK_CONSTANTS.controlTowerLandingZoneConfiguration,
@@ -872,7 +875,7 @@ describe('Accelerator ControlTower Landing Zone Module', () => {
 
       // Execute & Verify
       await expect(async () => {
-        await new AcceleratorControlTowerLandingZoneModule().handler({
+        await new SetupLandingZoneModule().handler({
           ...MOCK_CONSTANTS.moduleCommonParameter,
           useExistingRole: false,
           configuration: MOCK_CONSTANTS.controlTowerLandingZoneConfiguration,
@@ -916,7 +919,7 @@ describe('Accelerator ControlTower Landing Zone Module', () => {
 
     test('should be successful of dry run', async () => {
       // Execute
-      const response = await new AcceleratorControlTowerLandingZoneModule().handler({
+      const response = await new SetupLandingZoneModule().handler({
         ...MOCK_CONSTANTS.moduleCommonParameter,
         useExistingRole: false,
         dryRun: true,
@@ -940,7 +943,7 @@ describe('Accelerator ControlTower Landing Zone Module', () => {
       });
 
       // Execute
-      const response = await new AcceleratorControlTowerLandingZoneModule().handler({
+      const response = await new SetupLandingZoneModule().handler({
         ...MOCK_CONSTANTS.moduleCommonParameter,
         useExistingRole: false,
         configuration: MOCK_CONSTANTS.controlTowerLandingZoneConfiguration,
@@ -967,7 +970,7 @@ describe('Accelerator ControlTower Landing Zone Module', () => {
 
       // Execute & Verify
       await expect(async () => {
-        await new AcceleratorControlTowerLandingZoneModule().handler({
+        await new SetupLandingZoneModule().handler({
           ...MOCK_CONSTANTS.moduleCommonParameter,
           useExistingRole: false,
           configuration: MOCK_CONSTANTS.controlTowerLandingZoneConfiguration,
@@ -997,7 +1000,7 @@ describe('Accelerator ControlTower Landing Zone Module', () => {
       });
 
       // Execute
-      const response = await new AcceleratorControlTowerLandingZoneModule().handler({
+      const response = await new SetupLandingZoneModule().handler({
         ...MOCK_CONSTANTS.moduleCommonParameter,
         useExistingRole: false,
         configuration: MOCK_CONSTANTS.controlTowerLandingZoneConfiguration,
@@ -1037,7 +1040,7 @@ describe('Accelerator ControlTower Landing Zone Module', () => {
       });
 
       // Execute
-      const response = await new AcceleratorControlTowerLandingZoneModule().handler({
+      const response = await new SetupLandingZoneModule().handler({
         ...MOCK_CONSTANTS.moduleCommonParameter,
         useExistingRole: false,
         configuration: MOCK_CONSTANTS.controlTowerLandingZoneConfiguration,
@@ -1070,7 +1073,7 @@ describe('Accelerator ControlTower Landing Zone Module', () => {
 
       // Execute & Verify
       await expect(async () => {
-        await new AcceleratorControlTowerLandingZoneModule().handler({
+        await new SetupLandingZoneModule().handler({
           ...MOCK_CONSTANTS.moduleCommonParameter,
           useExistingRole: false,
           configuration: MOCK_CONSTANTS.controlTowerLandingZoneConfiguration,
@@ -1109,7 +1112,7 @@ describe('Accelerator ControlTower Landing Zone Module', () => {
 
       // Execute & Verify
       await expect(async () => {
-        await new AcceleratorControlTowerLandingZoneModule().handler({
+        await new SetupLandingZoneModule().handler({
           ...MOCK_CONSTANTS.moduleCommonParameter,
           useExistingRole: false,
           configuration: MOCK_CONSTANTS.controlTowerLandingZoneConfiguration,
@@ -1135,7 +1138,7 @@ describe('Accelerator ControlTower Landing Zone Module', () => {
 
       // Execute & Verify
       await expect(async () => {
-        await new AcceleratorControlTowerLandingZoneModule().handler({
+        await new SetupLandingZoneModule().handler({
           ...MOCK_CONSTANTS.moduleCommonParameter,
           useExistingRole: false,
           configuration: MOCK_CONSTANTS.controlTowerLandingZoneConfiguration,
@@ -1165,7 +1168,7 @@ describe('Accelerator ControlTower Landing Zone Module', () => {
 
       // Execute & Verify
       await expect(async () => {
-        await new AcceleratorControlTowerLandingZoneModule().handler({
+        await new SetupLandingZoneModule().handler({
           ...MOCK_CONSTANTS.moduleCommonParameter,
           useExistingRole: false,
           configuration: MOCK_CONSTANTS.controlTowerLandingZoneConfiguration,
@@ -1203,7 +1206,7 @@ describe('Accelerator ControlTower Landing Zone Module', () => {
 
       // Execute & Verify
       await expect(async () => {
-        await new AcceleratorControlTowerLandingZoneModule().handler({
+        await new SetupLandingZoneModule().handler({
           ...MOCK_CONSTANTS.moduleCommonParameter,
           useExistingRole: false,
           configuration: MOCK_CONSTANTS.controlTowerLandingZoneConfiguration,

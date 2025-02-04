@@ -11,5 +11,31 @@
  *  and limitations under the License.
  */
 
-export { IControlTowerLandingZoneHandlerParameter } from './interfaces/control-tower';
+//
+// Control Tower Module resources
+//
+export { ISetupLandingZoneHandlerParameter } from './interfaces/control-tower/setup-landing-zone';
 export { setupControlTowerLandingZone } from './executors/accelerator-control-tower';
+
+export { IRegisterOrganizationalUnitHandlerParameter } from './interfaces/control-tower/register-organizational-unit';
+export { registerOrganizationalUnit } from './executors/accelerator-control-tower';
+
+//
+// AWS Organizations Module resources
+//
+export { ICreateOrganizationalUnitHandlerParameter } from './interfaces/aws-organizations/create-organizational-unit';
+export {
+  createOrganizationalUnit,
+  createAndRetrieveOrganizationalUnit,
+} from './executors/accelerator-aws-organizations';
+
+export { IInviteAccountToOrganizationHandlerParameter } from './interfaces/aws-organizations/invite-account-to-organization';
+export { inviteAccountToOrganization } from './executors/accelerator-aws-organizations';
+
+export { IMoveAccountHandlerParameter } from './interfaces/aws-organizations/move-account';
+export { moveAccount } from './executors/accelerator-aws-organizations';
+
+export { getOrganizationId } from './common/functions';
+
+export { IManageEbsDefaultEncryptionHandlerParameter } from './interfaces/amazon-ec2/manage-ebs-default-encryption';
+export { manageEbsDefaultEncryption } from './executors/accelerator-amazon-ec2';

@@ -13,9 +13,9 @@
 
 import { setupControlTowerLandingZone } from '../../executors/accelerator-control-tower';
 import {
-  IControlTowerLandingZoneConfiguration,
-  IControlTowerLandingZoneHandlerParameter,
-} from '../../interfaces/control-tower';
+  ISetupLandingZoneConfiguration,
+  ISetupLandingZoneHandlerParameter,
+} from '../../interfaces/control-tower/setup-landing-zone';
 import { CliExecutionParameterType } from './libraries/root';
 
 /**
@@ -30,11 +30,11 @@ export abstract class CliActivity {
       process.exit(1);
     }
 
-    const moduleConfig = params['configuration'] as IControlTowerLandingZoneConfiguration;
-    const input: IControlTowerLandingZoneHandlerParameter = {
+    const moduleConfig = params['configuration'] as ISetupLandingZoneConfiguration;
+    const input: ISetupLandingZoneHandlerParameter = {
       operation: params.command,
       partition: params['partition'] as string,
-      homeRegion: params['region'] as string,
+      region: params['region'] as string,
       configuration: moduleConfig,
       dryRun: params['dryRun'] as boolean,
     };

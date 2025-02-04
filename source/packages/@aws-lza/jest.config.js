@@ -39,6 +39,12 @@ module.exports = {
   // An array of regexp pattern strings used to skip coverage collection
   coveragePathIgnorePatterns: ['/node_modules/'],
 
+  // Indicates which files should be included for code for coverage,
+  collectCoverageFrom: ['lib/**/*.{js,ts}', '!lib/**/*.test.{js,ts}', '!lib/**/*.d.ts'],
+
+  // Indicates which provider should be used to instrument code for coverage
+  coverageReporters: ['text', 'text-summary', ['lcov', { projectRoot: '../../' }]],
+
   // An object that configures minimum threshold enforcement for coverage results
   coverageThreshold: {
     global: {

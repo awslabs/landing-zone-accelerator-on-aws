@@ -11,7 +11,7 @@
  *  and limitations under the License.
  */
 
-import { IControlTowerLandingZoneConfiguration } from '../../interfaces/control-tower';
+import { ISetupLandingZoneConfiguration } from '../../interfaces/control-tower/setup-landing-zone';
 import { ConfigurationObjectType } from './libraries/root';
 
 /**
@@ -20,12 +20,10 @@ import { ConfigurationObjectType } from './libraries/root';
 export abstract class CliResources {
   /**
    * Validate the configuration for Control Tower
-   * @param input {@link IControlTowerLandingZoneConfiguration}
+   * @param input {@link ISetupLandingZoneConfiguration}
    * @returns boolean
    */
-  public static validControlTowerConfig(
-    input: ConfigurationObjectType,
-  ): input is IControlTowerLandingZoneConfiguration {
+  public static validControlTowerConfig(input: ConfigurationObjectType): input is ISetupLandingZoneConfiguration {
     // Check for required properties
     if (
       typeof input['version'] !== 'string' ||

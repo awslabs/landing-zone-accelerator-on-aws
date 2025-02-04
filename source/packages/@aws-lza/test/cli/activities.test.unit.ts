@@ -23,7 +23,7 @@ const MOCKED_CONSTANTS = {
   moduleName: 'test-module',
   operation: 'deploy',
   partition: 'aws',
-  homeRegion: 'us-east-1',
+  region: 'us-east-1',
   enabledRegions: ['us-east-1', 'us-west-2'],
   version: '1.0',
   logging: {
@@ -81,7 +81,7 @@ describe('CliActivity', () => {
           },
         },
         partition: MOCKED_CONSTANTS.partition,
-        region: MOCKED_CONSTANTS.homeRegion,
+        region: MOCKED_CONSTANTS.region,
         dryRun: MOCKED_CONSTANTS.noDryRun,
       };
 
@@ -93,7 +93,7 @@ describe('CliActivity', () => {
       expect(mockSetupControlTowerLandingZone).toHaveBeenCalledWith({
         operation: MOCKED_CONSTANTS.operation,
         partition: MOCKED_CONSTANTS.partition,
-        homeRegion: MOCKED_CONSTANTS.homeRegion,
+        region: MOCKED_CONSTANTS.region,
         configuration: params['configuration'],
         dryRun: MOCKED_CONSTANTS.noDryRun,
       });
@@ -104,7 +104,7 @@ describe('CliActivity', () => {
         moduleName: MOCKED_CONSTANTS.moduleName,
         command: MOCKED_CONSTANTS.operation,
         configuration: {},
-        region: MOCKED_CONSTANTS.homeRegion,
+        region: MOCKED_CONSTANTS.region,
       };
 
       await expect(CliActivity.executeControlTowerLandingZoneModule(params)).rejects.toThrow('Process exit');

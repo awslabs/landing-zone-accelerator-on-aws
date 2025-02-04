@@ -27,10 +27,10 @@ import {
 } from '@aws-sdk/client-organizations';
 import { InstanceMetadata, paginateListInstances, SSOAdminClient } from '@aws-sdk/client-sso-admin';
 
-import { getOrganizationalUnitsForParent, setRetryStrategy } from '../../../common/functions';
-import { createLogger } from '../../../common/logger';
-import { IAssumeRoleCredential, OrganizationRootType } from '../../../common/resources';
-import { throttlingBackOff } from '../../../common/throttle';
+import { getOrganizationalUnitsForParent, setRetryStrategy } from '../../../../common/functions';
+import { createLogger } from '../../../../common/logger';
+import { IAssumeRoleCredential, OrganizationRootType } from '../../../../common/resources';
+import { throttlingBackOff } from '../../../../common/throttle';
 
 /**
  * Organization abstract class to get AWS Organizations details and create AWS Organizations if not exists
@@ -167,13 +167,13 @@ export abstract class Organization {
   /**
    * Function to get list of the AWS IAM Identity Center instances
    * @param region string
-   * @param solutionId string
+   * @param solutionId string | undefined
    * @param credentials {@link IAssumeRoleCredential} | undefined
    * @returns instances {@link InstanceMetadata}[]
    */
   private static async getIdentityCenterInstances(
     region: string,
-    solutionId: string,
+    solutionId?: string,
     credentials?: IAssumeRoleCredential,
   ): Promise<InstanceMetadata[]> {
     const client = new SSOAdminClient({
@@ -196,13 +196,13 @@ export abstract class Organization {
   /**
    * Function to check if IAM Identity Center is enabled
    * @param region string
-   * @param solutionId string
+   * @param solutionId string | undefined
    * @param credentials {@link IAssumeRoleCredential} | undefined
    * @returns status boolean
    */
   private static async identityCenterEnabled(
     region: string,
-    solutionId: string,
+    solutionId?: string,
     credentials?: IAssumeRoleCredential,
   ): Promise<boolean> {
     const instances = await Organization.getIdentityCenterInstances(region, solutionId, credentials);
@@ -265,16 +265,16 @@ export abstract class Organization {
   /**
    * Function to get account id for the given email
    * @param globalRegion string
-   * @parm solutionId string
    * @parm email string
    * @param credentials {@link IAssumeRoleCredential} | undefined
+   * @parm solutionId string | undefined
    * @returns accountId string
    */
   public static async getOrganizationAccountDetailsByEmail(
     globalRegion: string,
-    solutionId: string,
     email: string,
     credentials?: IAssumeRoleCredential,
+    solutionId?: string,
   ): Promise<Account> {
     const client: OrganizationsClient = new OrganizationsClient({
       region: globalRegion,
@@ -304,10 +304,10 @@ export abstract class Organization {
   public static async validate(
     globalRegion: string,
     region: string,
-    solutionId: string,
     partition: string,
     sharedAccountEmail: { logArchive: string; audit: string },
     credentials?: IAssumeRoleCredential,
+    solutionId?: string,
   ): Promise<void> {
     const client: OrganizationsClient = new OrganizationsClient({
       region: globalRegion,

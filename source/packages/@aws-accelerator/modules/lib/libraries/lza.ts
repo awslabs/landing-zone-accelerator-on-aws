@@ -12,7 +12,7 @@
  */
 
 import { AccountsConfig } from '@aws-accelerator/config/lib/accounts-config';
-import { IControlTowerLandingZoneHandlerParameter, setupControlTowerLandingZone } from '../../../../@aws-lza/index';
+import { ISetupLandingZoneHandlerParameter, setupControlTowerLandingZone } from '../../../../@aws-lza/index';
 import { AcceleratorStage } from '../../../accelerator/lib/accelerator-stage';
 import { CustomizationsConfig } from '@aws-accelerator/config/lib/customizations-config';
 import { GlobalConfig } from '@aws-accelerator/config/lib/global-config';
@@ -29,7 +29,7 @@ import { IAssumeRoleCredential } from '../../../../@aws-lza/common/resources';
 /**
  * Composite type for various accelerator module parameter
  */
-type ModuleParams = IControlTowerLandingZoneHandlerParameter | string;
+type ModuleParams = ISetupLandingZoneHandlerParameter | string;
 
 /**
  * Accelerator logging details type
@@ -147,7 +147,7 @@ export const AcceleratorModuleStageDetails: AcceleratorModuleStageDetailsType[] 
         description: 'Manage AWS Control Tower Landing Zone',
         runOrder: 1,
         handler: async (params: ModuleParams) => {
-          return await setupControlTowerLandingZone(params as IControlTowerLandingZoneHandlerParameter);
+          return await setupControlTowerLandingZone(params as ISetupLandingZoneHandlerParameter);
         },
       },
       {
