@@ -71,7 +71,7 @@
     "jsii": "1.75.0",
     "jsii-pacmak": "1.75.0",
     "minimatch": "9.0.0",
-    "swc": "1.0.11"
+    "@swc/core": "1.10.12"
   },
   "devDependencies": {
     "@aws-cdk/integ-runner": "2.158.0-alpha.0",
