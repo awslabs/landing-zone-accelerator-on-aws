@@ -12,12 +12,12 @@
  */
 import { describe, beforeEach, expect, test } from '@jest/globals';
 
-import { KmsKey } from '../../../lib/control-tower/prerequisites/kms-key';
+import { KmsKey } from '../../../../lib/control-tower/setup-landing-zone/prerequisites/kms-key';
 import { KMSClient, CreateKeyCommand, CreateAliasCommand, PutKeyPolicyCommand } from '@aws-sdk/client-kms';
 
 // Mock dependencies
 jest.mock('@aws-sdk/client-kms');
-jest.mock('../../../common/throttle', () => ({
+jest.mock('../../../../common/throttle', () => ({
   throttlingBackOff: jest.fn(fn => fn()),
 }));
 

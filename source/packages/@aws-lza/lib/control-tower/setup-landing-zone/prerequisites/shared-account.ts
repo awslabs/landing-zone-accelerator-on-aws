@@ -20,10 +20,11 @@ import {
   OrganizationsClient,
 } from '@aws-sdk/client-organizations';
 
-import { delay, setRetryStrategy } from '../../../common/functions';
-import { IAssumeRoleCredential, IControlTowerSharedAccountDetails } from '../../../common/resources';
-import { createLogger } from '../../../common/logger';
-import { throttlingBackOff } from '../../../common/throttle';
+import { delay, setRetryStrategy } from '../../../../common/functions';
+import { IAssumeRoleCredential } from '../../../../common/resources';
+import { createLogger } from '../../../../common/logger';
+import { throttlingBackOff } from '../../../../common/throttle';
+import { ISharedAccountDetails } from '../resources';
 
 type AccountCreationStatusType = { name: string; status: string; reason: string; id?: string };
 
@@ -40,12 +41,12 @@ export abstract class SharedAccount {
   /**
    * Function to create shared account
    * @param client {@link OrganizationsClient}
-   * @param accountDetails {@link IControlTowerSharedAccountDetails}
+   * @param accountDetails {@link ISharedAccountDetails}
    * @returns status {@link AccountCreationStatusType}
    */
   private static async createAccount(
     client: OrganizationsClient,
-    accountDetails: IControlTowerSharedAccountDetails,
+    accountDetails: ISharedAccountDetails,
   ): Promise<AccountCreationStatusType> {
     const response = await throttlingBackOff(() =>
       client.send(
@@ -135,17 +136,17 @@ export abstract class SharedAccount {
 
   /**
    * Function to create AWS Control Tower Landing Zone shared accounts (LogArchive and Audit)
-   * @param logArchiveAccountItem {@link IControlTowerSharedAccountDetails}
-   * @param auditAccountItem {@link IControlTowerSharedAccountDetails}
+   * @param logArchiveAccountItem {@link ISharedAccountDetails}
+   * @param auditAccountItem {@link ISharedAccountDetails}
    * @param globalRegion string
-   * @param solutionId string
+   * @param solutionId string | undefined
    * @param credentials {@link IAssumeRoleCredential} | undefined
    */
   public static async createAccounts(
-    logArchiveAccountItem: IControlTowerSharedAccountDetails,
-    auditAccountItem: IControlTowerSharedAccountDetails,
+    logArchiveAccountItem: ISharedAccountDetails,
+    auditAccountItem: ISharedAccountDetails,
     globalRegion: string,
-    solutionId: string,
+    solutionId?: string,
     credentials?: IAssumeRoleCredential,
   ): Promise<void> {
     const client: OrganizationsClient = new OrganizationsClient({

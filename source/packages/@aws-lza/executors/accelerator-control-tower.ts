@@ -11,8 +11,11 @@
  *  and limitations under the License.
  */
 
-import { IControlTowerLandingZoneHandlerParameter } from '../interfaces/control-tower';
-import { AcceleratorControlTowerLandingZoneModule } from '../lib/control-tower/index';
+import { ISetupLandingZoneHandlerParameter } from '../interfaces/control-tower/setup-landing-zone';
+import { SetupLandingZoneModule } from '../lib/control-tower/setup-landing-zone/index';
+
+import { IRegisterOrganizationalUnitHandlerParameter } from '../interfaces/control-tower/register-organizational-unit';
+import { RegisterOrganizationalUnitModule } from '../lib/control-tower/register-organizational-unit';
 
 process.on('uncaughtException', err => {
   throw err;
@@ -20,7 +23,7 @@ process.on('uncaughtException', err => {
 
 /**
  * Function to setup Accelerator AWS Control Tower landing zone
- * @param input {@link IControlTowerLandingZoneHandlerParameter}
+ * @param input {@link ISetupLandingZoneHandlerParameter}
  *
  *
  * @pre-requisites
@@ -48,7 +51,7 @@ process.on('uncaughtException', err => {
  * ```
  * const param: IControlTowerLandingZoneHandlerParameter = {
  *   partition: 'aws',
- *   homeRegion: 'us-east-1',
+ *   region: 'us-east-1',
  *   configuration: {
  *     enable: true,
  *     version: '3.3',
@@ -69,9 +72,46 @@ process.on('uncaughtException', err => {
  *
  * @returns status string
  */
-export async function setupControlTowerLandingZone(input: IControlTowerLandingZoneHandlerParameter): Promise<string> {
+export async function setupControlTowerLandingZone(input: ISetupLandingZoneHandlerParameter): Promise<string> {
   try {
-    return await new AcceleratorControlTowerLandingZoneModule().handler(input);
+    return await new SetupLandingZoneModule().handler(input);
+  } catch (
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    e: any
+  ) {
+    console.error(e.message);
+    throw new Error(`${e}`);
+  }
+}
+
+/**
+ * Function to register organizational unit with AWS Control Tower
+ * @param input {@link IRegisterOrganizationalUnitHandlerParameter}
+ *
+ * @description
+ * Use this function to register AWS Organizations organizational unit (OU) with AWS Control Tower.
+ *
+ * @example
+ *
+ * ```
+ * const param: IRegisterOrganizationalUnitHandlerParameter = {
+ *   partition: 'aws',
+ *   region: 'us-east-1',
+ *   configuration: {
+ *     ouArn: 'ou1Arn',
+ *   }
+ * }
+ *
+ * const status = await registerOrganizationalUnit(param);
+ *
+ * ```
+ *
+ * @returns status string
+ */ export async function registerOrganizationalUnit(
+  input: IRegisterOrganizationalUnitHandlerParameter,
+): Promise<string> {
+  try {
+    return await new RegisterOrganizationalUnitModule().handler(input);
   } catch (
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     e: any

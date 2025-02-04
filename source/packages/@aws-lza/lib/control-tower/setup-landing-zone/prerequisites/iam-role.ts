@@ -22,10 +22,10 @@ import {
   NoSuchEntityException,
 } from '@aws-sdk/client-iam';
 
-import { setRetryStrategy } from '../../../common/functions';
-import { createLogger } from '../../../common/logger';
-import { IAssumeRoleCredential } from '../../../common/resources';
-import { throttlingBackOff } from '../../../common/throttle';
+import { setRetryStrategy } from '../../../../common/functions';
+import { createLogger } from '../../../../common/logger';
+import { IAssumeRoleCredential } from '../../../../common/resources';
+import { throttlingBackOff } from '../../../../common/throttle';
 
 /**
  * IamRole abstract class to create AWS Control Tower Landing Zone IAM roles.
@@ -204,13 +204,13 @@ export abstract class IamRole {
    * Function to create AWS Control Tower Landing Zone roles
    * @param partition string
    * @param region string
-   * @param solutionId string
+   * @param solutionId string | undefined
    * @param credentials {@link IAssumeRoleCredential} | undefined
    */
   public static async createControlTowerRoles(
     partition: string,
     region: string,
-    solutionId: string,
+    solutionId?: string,
     credentials?: IAssumeRoleCredential,
   ): Promise<void> {
     const client: IAMClient = new IAMClient({

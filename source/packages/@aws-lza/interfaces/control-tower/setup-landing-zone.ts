@@ -11,7 +11,8 @@
  *  and limitations under the License.
  */
 
-import { IControlTowerSharedAccountDetails, IModuleCommonParameter } from '../common/resources';
+import { IModuleCommonParameter } from '../../common/resources';
+import { ISharedAccountDetails } from '../../lib/control-tower/setup-landing-zone/resources';
 
 /**
  * AWS Control Tower Landing Zone configuration
@@ -52,50 +53,50 @@ import { IControlTowerSharedAccountDetails, IModuleCommonParameter } from '../co
  * }
  * ```
  */
-export interface IControlTowerLandingZoneConfiguration {
+export interface ISetupLandingZoneConfiguration {
   /**
    * AWS Control Tower Landing Zone version
    */
-  version: string;
+  readonly version: string;
   /**
    * List of AWS Regions to be governed by the Control Tower
    */
-  enabledRegions: string[];
+  readonly enabledRegions: string[];
   /**
    * Logging configuration
    */
-  logging: {
+  readonly logging: {
     /**
      * Flag indicating weather organization trail should be enabled or not.
      */
-    organizationTrail: boolean;
+    readonly organizationTrail: boolean;
     /**
      * AWS Control Tower buckets retention
      */
-    retention: {
+    readonly retention: {
       /**
        * Logging bucket retention in days
        */
-      loggingBucket: number;
+      readonly loggingBucket: number;
       /**
        * Access logging bucket retention in days
        */
-      accessLoggingBucket: number;
+      readonly accessLoggingBucket: number;
     };
   };
   /**
    * Security configuration
    */
-  security: {
+  readonly security: {
     /**
      * Flag indicating weather IAM Identity Center will be enabled or not
      */
-    enableIdentityCenterAccess: boolean;
+    readonly enableIdentityCenterAccess: boolean;
   };
   /**
    * Shared account details
    */
-  sharedAccounts: {
+  readonly sharedAccounts: {
     /**
      * Management account details
      *
@@ -108,7 +109,7 @@ export interface IControlTowerLandingZoneConfiguration {
      * }
      * ```
      */
-    management: IControlTowerSharedAccountDetails;
+    readonly management: ISharedAccountDetails;
     /**
      * Logging account details
      *
@@ -121,7 +122,7 @@ export interface IControlTowerLandingZoneConfiguration {
      * }
      * ```
      */
-    logging: IControlTowerSharedAccountDetails;
+    readonly logging: ISharedAccountDetails;
     /**
      * Audit account details
      *
@@ -134,14 +135,14 @@ export interface IControlTowerLandingZoneConfiguration {
      * }
      * ```
      */
-    audit: IControlTowerSharedAccountDetails;
+    readonly audit: ISharedAccountDetails;
   };
 }
 
 /**
  * AWS Control Tower module handler parameter
  */
-export interface IControlTowerLandingZoneHandlerParameter extends IModuleCommonParameter {
+export interface ISetupLandingZoneHandlerParameter extends IModuleCommonParameter {
   /**
    * AWS Control Tower Landing Zone configuration
    *
@@ -178,19 +179,19 @@ export interface IControlTowerLandingZoneHandlerParameter extends IModuleCommonP
    * }
    * ```
    */
-  configuration: IControlTowerLandingZoneConfiguration;
+  readonly configuration: ISetupLandingZoneConfiguration;
 }
 
 /**
  * Accelerator Control Tower Landing Zone Module interface
  */
-export interface IAcceleratorControlTowerLandingZoneModule {
+export interface ISetupLandingZoneModule {
   /**
    * Handler function to manage Accelerator Modules
    *
-   * @param props {@link IControlTowerLandingZoneHandlerParameter}
+   * @param props {@link ISetupLandingZoneHandlerParameter}
    * @returns status string
    *
    */
-  handler(props: IControlTowerLandingZoneHandlerParameter): Promise<string>;
+  handler(props: ISetupLandingZoneHandlerParameter): Promise<string>;
 }

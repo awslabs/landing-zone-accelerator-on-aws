@@ -203,12 +203,12 @@ export abstract class ModuleRunner {
 
     const param = {
       moduleName: moduleItem.name,
-      operation: 'create',
+      operation: 'setup-landing-zone',
       partition: runnerParameters.prefix,
-      homeRegion: globalConfig.homeRegion,
+      region: globalConfig.homeRegion,
       useExistingRole: runnerParameters.useExistingRole,
       solutionId: runnerParameters.solutionId,
-      managementAccountCredentials,
+      credentials: managementAccountCredentials,
       dryRun: runnerParameters.dryRun,
       configuration: {
         version: landingZoneConfiguration.version,

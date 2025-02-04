@@ -14,14 +14,14 @@
 import { describe, beforeEach, expect, test } from '@jest/globals';
 
 import { setupControlTowerLandingZone } from '../../executors/accelerator-control-tower';
-import { AcceleratorControlTowerLandingZoneModule } from '../../lib/control-tower/index';
+import { SetupLandingZoneModule } from '../../lib/control-tower/setup-landing-zone/index';
 import { ModuleCommands, Modules } from '../../lib/cli/libraries/modules';
 
 const MOCK_CONSTANTS = {
   input: {
     operation: ModuleCommands[Modules.CONTROL_TOWER.name][0].name,
     partition: 'aws',
-    homeRegion: 'us-east-1',
+    region: 'us-east-1',
     configuration: {
       version: '3.3',
       enabledRegions: ['us-east-1', 'us-west-2'],
@@ -51,7 +51,7 @@ const MOCK_CONSTANTS = {
   },
 };
 
-jest.mock('../../lib/control-tower/index');
+jest.mock('../../lib/control-tower/setup-landing-zone/index');
 
 describe('setupControlTowerLandingZone', () => {
   beforeEach(() => {
@@ -60,7 +60,7 @@ describe('setupControlTowerLandingZone', () => {
 
   test('should successfully setup Control Tower landing zone', async () => {
     const mockHandler = jest.fn().mockResolvedValue('SUCCESS');
-    (AcceleratorControlTowerLandingZoneModule as jest.Mock).mockImplementation(() => ({
+    (SetupLandingZoneModule as jest.Mock).mockImplementation(() => ({
       handler: mockHandler,
     }));
 
@@ -74,7 +74,7 @@ describe('setupControlTowerLandingZone', () => {
   test('should throw error when setup fails', async () => {
     const errorMessage = 'Setup failed';
     const mockHandler = jest.fn().mockRejectedValue(new Error(errorMessage));
-    (AcceleratorControlTowerLandingZoneModule as jest.Mock).mockImplementation(() => ({
+    (SetupLandingZoneModule as jest.Mock).mockImplementation(() => ({
       handler: mockHandler,
     }));
 

@@ -22,10 +22,10 @@ import {
   PutKeyPolicyCommand,
 } from '@aws-sdk/client-kms';
 
-import { setRetryStrategy } from '../../../common/functions';
-import { createLogger } from '../../../common/logger';
-import { IAssumeRoleCredential, PolicyDocument } from '../../../common/resources';
-import { throttlingBackOff } from '../../../common/throttle';
+import { setRetryStrategy } from '../../../../common/functions';
+import { createLogger } from '../../../../common/logger';
+import { IAssumeRoleCredential, PolicyDocument } from '../../../../common/resources';
+import { throttlingBackOff } from '../../../../common/throttle';
 
 /**
  * KmsKey abstract class to create AWS Control Tower Landing Zone AWS KMS CMK to encrypt AWS Control Tower Landing Zone resources.
@@ -70,7 +70,7 @@ export abstract class KmsKey {
    * @param accountId string
    * @param region string
    * @returns keyArn string
-   * @param solutionId string
+   * @param solutionId string | undefined
    * @param credentials {@link IAssumeRoleCredential} | undefined
    * @returns keyArn string
    */
@@ -78,7 +78,7 @@ export abstract class KmsKey {
     partition: string,
     accountId: string,
     region: string,
-    solutionId: string,
+    solutionId?: string,
     credentials?: IAssumeRoleCredential,
   ): Promise<string> {
     const keyAlias = `alias/aws-controltower/key`;

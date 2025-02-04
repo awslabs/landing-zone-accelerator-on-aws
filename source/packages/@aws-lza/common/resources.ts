@@ -18,7 +18,7 @@ export enum AcceleratorModuleName {
   /**
    * AWS Organizations module
    */
-  ORGANIZATIONS = 'organizations',
+  AWS_ORGANIZATIONS = 'aws-organizations',
   /**
    * AWS Control Tower Landing zone module
    */
@@ -59,12 +59,12 @@ export interface IModuleCommonParameter {
    */
   partition: string;
   /**
-   * Accelerator home region
+   * AWS Region
    *
    */
-  homeRegion: string;
+  region: string;
   /**
-   * Accelerator global region, when not present home region is considered as global region
+   * Accelerator global region, when not present executing region is considered as global region
    *
    */
   globalRegion?: string;
@@ -96,17 +96,26 @@ export interface IModuleCommonParameter {
 }
 
 /**
- * AWS Control Tower shared account details
+ * Accelerator module default parameter
+ *
+ * @description
+ * Each LZA module will set these parameters
  */
-export interface IControlTowerSharedAccountDetails {
+export interface IModuleDefaultParameter {
   /**
-   * Name of the account
+   * Name of the accelerator module.
+   *
+   * @see {@link AcceleratorModules}
    */
-  name: string;
+  readonly moduleName: string;
   /**
-   * Account email
+   * Flag indicating existing role
    */
-  email: string;
+  readonly useExistingRole: boolean;
+  /**
+   * Flag indicating if the module should perform a dry run
+   */
+  readonly dryRun: boolean;
 }
 
 /**
@@ -174,15 +183,6 @@ export type ControlTowerLandingZoneDetailsType = {
    */
   kmsKeyArn?: string;
 };
-
-/**
- * AWS Control Tower Landing Zone latest version.
- *
- * @remarks
- * Once Control Tower API support available for landing zone version, this hard coded constant will be removed.
- * When Control Tower Landing Zone gets new version, we need to update this constant.
- */
-export const CONTROL_TOWER_LANDING_ZONE_VERSION = '3.3';
 
 /**
  * Principal Org id condition for policy

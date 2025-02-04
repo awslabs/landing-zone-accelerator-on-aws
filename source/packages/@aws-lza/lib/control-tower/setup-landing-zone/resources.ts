@@ -12,6 +12,20 @@
  */
 
 /**
+ * AWS Control Tower shared account details
+ */
+export interface ISharedAccountDetails {
+  /**
+   * Name of the account
+   */
+  name: string;
+  /**
+   * Account email
+   */
+  email: string;
+}
+
+/**
  * Landing zone update or reset required type
  */
 export type LandingZoneUpdateOrResetRequiredType = {

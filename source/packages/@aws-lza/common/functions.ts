@@ -10,7 +10,6 @@
  *  OR CONDITIONS OF ANY KIND, express or implied. See the License for the specific language governing permissions
  *  and limitations under the License.
  */
-
 import {
   OrganizationalUnit,
   OrganizationsClient,
@@ -27,7 +26,12 @@ import { ConfiguredRetryStrategy } from '@aws-sdk/util-retry';
 
 import path from 'path';
 
-import { IAssumeRoleCredential, ControlTowerLandingZoneDetailsType } from './resources';
+import {
+  IAssumeRoleCredential,
+  ControlTowerLandingZoneDetailsType,
+  IModuleDefaultParameter,
+  IModuleCommonParameter,
+} from './resources';
 import { createLogger } from './logger';
 import { throttlingBackOff } from './throttle';
 
@@ -35,6 +39,33 @@ import { throttlingBackOff } from './throttle';
  * Logger
  */
 const logger = createLogger([path.parse(path.basename(__filename)).name]);
+
+/**
+ * Function to generate dry run response
+ * @param moduleName string
+ * @param operation string
+ * @param message string
+ * @returns string
+ */
+export function generateDryRunResponse(moduleName: string, operation: string, message: string): string {
+  const statusPrefix = `[DRY-RUN]: ${moduleName} ${operation} (no actual changes were made)\nValidation: ✓ Successful\nStatus: `;
+  return `${statusPrefix}${message}`;
+}
+
+/**
+ * Function to get default parameters for module
+ * @param moduleName string
+ * @param props {@link IModuleCommonParameter}
+ * @returns props  {@link IModuleDefaultParameter}
+ */
+export function getModuleDefaultParameters(moduleName: string, props: IModuleCommonParameter): IModuleDefaultParameter {
+  const defaultParameters: IModuleDefaultParameter = {
+    moduleName: props.moduleName ?? moduleName,
+    useExistingRole: props.useExistingRole ?? false,
+    dryRun: props.dryRun ?? false,
+  };
+  return defaultParameters;
+}
 
 export function setRetryStrategy() {
   const numberOfRetries = Number(process.env['ACCELERATOR_SDK_MAX_ATTEMPTS'] ?? 800);
@@ -180,7 +211,7 @@ export async function delay(minutes: number) {
 export async function getCredentials(options: {
   accountId: string;
   region: string;
-  solutionId: string;
+  solutionId?: string;
   partition?: string;
   assumeRoleName?: string;
   assumeRoleArn?: string;

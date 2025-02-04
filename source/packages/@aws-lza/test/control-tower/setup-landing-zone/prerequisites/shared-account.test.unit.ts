@@ -12,7 +12,7 @@
  */
 import { describe, beforeEach, expect, test } from '@jest/globals';
 
-import { SharedAccount } from '../../../lib/control-tower/prerequisites/shared-account';
+import { SharedAccount } from '../../../../lib/control-tower/setup-landing-zone/prerequisites/shared-account';
 import {
   CreateAccountCommand,
   CreateAccountState,
@@ -34,7 +34,7 @@ jest.mock('@aws-sdk/client-organizations', () => {
     },
   };
 });
-jest.mock('../../../common/functions', () => ({
+jest.mock('../../../../common/functions', () => ({
   delay: jest.fn().mockResolvedValue(undefined),
   setRetryStrategy: jest.fn().mockResolvedValue(undefined),
 }));

@@ -11,8 +11,6 @@
  *  and limitations under the License.
  */
 
-import { version } from '../../package.json';
-
 import path from 'path';
 
 import {
@@ -31,9 +29,9 @@ import {
   ControlTowerLandingZoneConfigType,
   ControlTowerLandingZoneDetailsType,
   LandingZoneUpdateOrResetRequiredType,
-} from './utils/resources';
+} from './resources';
 
-import { landingZoneUpdateOrResetRequired, makeManifestDocument } from './utils/functions';
+import { landingZoneUpdateOrResetRequired, makeManifestDocument } from './functions';
 
 import { IamRole } from './prerequisites/iam-role';
 import { KmsKey } from './prerequisites/kms-key';
@@ -41,24 +39,28 @@ import { Organization } from './prerequisites/organization';
 import { SharedAccount } from './prerequisites/shared-account';
 
 import {
-  IAcceleratorControlTowerLandingZoneModule,
-  IControlTowerLandingZoneConfiguration,
-  IControlTowerLandingZoneHandlerParameter,
-} from '../../interfaces/control-tower';
-
-import { delay, getLandingZoneDetails, getLandingZoneIdentifier, setRetryStrategy } from '../../common/functions';
-import { createLogger } from '../../common/logger';
-import { throttlingBackOff } from '../../common/throttle';
-import { AcceleratorModuleName } from '../../common/resources';
-
-type DefaultPropsType = { moduleName: string; globalRegion: string; solutionId: string; useExistingRole: boolean };
+  delay,
+  generateDryRunResponse,
+  getLandingZoneDetails,
+  getLandingZoneIdentifier,
+  getModuleDefaultParameters,
+  setRetryStrategy,
+} from '../../../common/functions';
+import { createLogger } from '../../../common/logger';
+import { throttlingBackOff } from '../../../common/throttle';
+import { AcceleratorModuleName } from '../../../common/resources';
+import {
+  ISetupLandingZoneConfiguration,
+  ISetupLandingZoneHandlerParameter,
+  ISetupLandingZoneModule,
+} from '../../../interfaces/control-tower/setup-landing-zone';
 
 const logger = createLogger([path.parse(path.basename(__filename)).name]);
 
 /**
- * AcceleratorControlTowerLandingZoneModule class to manage AWS Control Tower Landing Zone operation.
+ * SetupLandingZoneModule class to manage AWS Control Tower Landing Zone operation.
  */
-export class AcceleratorControlTowerLandingZoneModule implements IAcceleratorControlTowerLandingZoneModule {
+export class SetupLandingZoneModule implements ISetupLandingZoneModule {
   /**
    * Handler function to manage AWS Control Tower Landing Zone
    *
@@ -66,35 +68,35 @@ export class AcceleratorControlTowerLandingZoneModule implements IAcceleratorCon
    * When AWS Control Tower Landing Zone is not configured this function will perform complete pre-requisites and create then landing zone.
    * When AWS Control Tower Landing Zone is configured, based ```controlTower.landingZone``` configuration in global config file, function will update the landing zone.
    * When existing AWS Control Tower Landing Zone is drifted, function will reset the landing zone.
-   * @param props {@link IControlTowerLandingZoneHandlerParameter}
+   * @param props {@link ISetupLandingZoneHandlerParameter}
    * @returns status string
    */
-  public async handler(props: IControlTowerLandingZoneHandlerParameter): Promise<string> {
+  public async handler(props: ISetupLandingZoneHandlerParameter): Promise<string> {
     return await this.manageModule(props);
   }
 
   /**
    * Module manager function
-   * @param props {@link IControlTowerLandingZoneHandlerParameter}
+   * @param props {@link ISetupLandingZoneHandlerParameter}
    * @returns status string
    */
-  private async manageModule(props: IControlTowerLandingZoneHandlerParameter): Promise<string> {
+  private async manageModule(props: ISetupLandingZoneHandlerParameter): Promise<string> {
     //
     // Set default values
     //
-    const defaultProps: DefaultPropsType = {
-      moduleName: props.moduleName ?? AcceleratorModuleName.CONTROL_TOWER_LANDING_ZONE,
-      globalRegion: props.globalRegion ?? props.homeRegion,
-      solutionId: props.solutionId ?? `AwsSolution/SO0199/${version}`,
-      useExistingRole: props.useExistingRole ?? false,
-    };
+    const defaultProps = getModuleDefaultParameters(AcceleratorModuleName.CONTROL_TOWER_LANDING_ZONE, props);
+
+    //
+    // Set Global Region
+    //
+    const globalRegion = props.globalRegion ?? props.region;
 
     //
     // Initialize AWS Control Tower client
     //
     const client: ControlTowerClient = new ControlTowerClient({
-      region: props.homeRegion,
-      customUserAgent: defaultProps.solutionId,
+      region: props.region,
+      customUserAgent: props.solutionId,
       retryStrategy: setRetryStrategy(),
       credentials: props.credentials,
     });
@@ -106,7 +108,7 @@ export class AcceleratorControlTowerLandingZoneModule implements IAcceleratorCon
 
     // When no existing LZ and dry run was executed
     if (!landingZoneIdentifier && props.dryRun) {
-      return this.getDryRunResponse(props, defaultProps);
+      return this.getDryRunResponse(defaultProps.moduleName, props.operation);
     }
 
     //
@@ -114,7 +116,8 @@ export class AcceleratorControlTowerLandingZoneModule implements IAcceleratorCon
     //
     const preRequisitesResources = await ControlTowerPreRequisites.completePreRequisites(
       props,
-      defaultProps,
+      globalRegion,
+      defaultProps.useExistingRole,
       landingZoneIdentifier,
     );
 
@@ -124,20 +127,20 @@ export class AcceleratorControlTowerLandingZoneModule implements IAcceleratorCon
     // LogArchive Account
     promises.push(
       Organization.getOrganizationAccountDetailsByEmail(
-        defaultProps.globalRegion,
-        defaultProps.solutionId,
+        globalRegion,
         props.configuration.sharedAccounts.logging.email,
         props.credentials,
+        props.solutionId,
       ),
     );
 
     // Audit Account
     promises.push(
       Organization.getOrganizationAccountDetailsByEmail(
-        defaultProps.globalRegion,
-        defaultProps.solutionId,
+        globalRegion,
         props.configuration.sharedAccounts.audit.email,
         props.credentials,
+        props.solutionId,
       ),
     );
 
@@ -152,13 +155,13 @@ export class AcceleratorControlTowerLandingZoneModule implements IAcceleratorCon
     );
 
     const landingZoneConfiguration = this.getControlTowerLandingZoneConfig(
-      defaultProps.globalRegion,
+      globalRegion,
       logArchiveAccount!.Id!,
       auditAccount!.Id!,
       props.configuration,
     );
 
-    const landingZoneDetails = await getLandingZoneDetails(client, props.homeRegion, landingZoneIdentifier);
+    const landingZoneDetails = await getLandingZoneDetails(client, props.region, landingZoneIdentifier);
 
     if (landingZoneDetails?.status === LandingZoneStatus.PROCESSING && !props.dryRun) {
       throw new Error(
@@ -169,7 +172,7 @@ export class AcceleratorControlTowerLandingZoneModule implements IAcceleratorCon
     if (landingZoneDetails) {
       return await this.handleUpdateResetOperation(
         props,
-        defaultProps,
+        defaultProps.moduleName,
         client,
         landingZoneConfiguration,
         landingZoneDetails,
@@ -180,7 +183,7 @@ export class AcceleratorControlTowerLandingZoneModule implements IAcceleratorCon
         client,
         landingZoneConfiguration,
         preRequisitesResources!.kmsKeyArn,
-        defaultProps,
+        defaultProps.moduleName,
       );
     }
   }
@@ -190,14 +193,14 @@ export class AcceleratorControlTowerLandingZoneModule implements IAcceleratorCon
    * @param globalRegion string
    * @param logArchiveAccountId string
    * @param auditAccountId string
-   * @param landingZoneConfig {@link IControlTowerLandingZoneConfiguration}
+   * @param landingZoneConfig {@link ISetupLandingZoneConfiguration}
    * @returns config {@link ControlTowerLandingZoneConfigType}
    */
   private getControlTowerLandingZoneConfig(
     globalRegion: string,
     logArchiveAccountId: string,
     auditAccountId: string,
-    landingZoneConfig: IControlTowerLandingZoneConfiguration,
+    landingZoneConfig: ISetupLandingZoneConfiguration,
   ): ControlTowerLandingZoneConfigType {
     const governedRegions: string[] = landingZoneConfig.enabledRegions;
 
@@ -222,41 +225,39 @@ export class AcceleratorControlTowerLandingZoneModule implements IAcceleratorCon
 
   /**
    * Function to get display for dry run
-   * @param props {@link IControlTowerLandingZoneHandlerParameter}
-   * @param defaultProps {@link DefaultPropsType}
+   * @param moduleName string
+   * @param moduleOperation string
    * @param landingZoneIdentifier string | undefined
    * @param landingZoneUpdateOrResetStatus {@link LandingZoneUpdateOrResetRequiredType} | undefined
    * @returns status string
    */
   private getDryRunResponse(
-    props: IControlTowerLandingZoneHandlerParameter,
-    defaultProps: DefaultPropsType,
+    moduleName: string,
+    moduleOperation: string,
     landingZoneIdentifier?: string,
     landingZoneUpdateOrResetStatus?: LandingZoneUpdateOrResetRequiredType,
   ): string {
-    const statusPrefix = `[DRY-RUN]: ${defaultProps.moduleName} ${props.operation} (no actual changes were made)\nValidation: ✓ Successful\nStatus: `;
-
     if (landingZoneIdentifier && landingZoneUpdateOrResetStatus) {
       if (!landingZoneUpdateOrResetStatus.resetRequired && !landingZoneUpdateOrResetStatus.updateRequired) {
         const message = `Existing AWS Control Tower landing zone found, no changes required`;
         logger.info(message);
-        return `${statusPrefix}${message}`;
+        return generateDryRunResponse(moduleName, moduleOperation, message);
       }
       const operation = landingZoneUpdateOrResetStatus.resetRequired ? 'reset' : 'update';
       const message = `Existing AWS Control Tower landing zone found, ${operation} is required for following changes\n ${landingZoneUpdateOrResetStatus.reason}`;
       logger.info(message);
-      return `${statusPrefix}${message}`;
+      return generateDryRunResponse(moduleName, moduleOperation, message);
     }
 
     const message = `No existing AWS Control Tower landing zone found it will be created`;
     logger.info(message);
-    return `${statusPrefix}${message}`;
+    return generateDryRunResponse(moduleName, moduleOperation, message);
   }
 
   /**
    * Function to handle update and reset operation
-   * @param props {@link IControlTowerLandingZoneHandlerParameter}
-   * @param defaultProps {@link DefaultPropsType}
+   * @param props {@link ISetupLandingZoneHandlerParameter}
+   * @param moduleName string
    * @param client {@link ControlTowerClient}
    * @param landingZoneConfiguration {@link ControlTowerLandingZoneConfigType}
    * @param landingZoneDetails {@link ControlTowerLandingZoneDetailsType}
@@ -264,8 +265,8 @@ export class AcceleratorControlTowerLandingZoneModule implements IAcceleratorCon
    * @returns status string
    */
   private async handleUpdateResetOperation(
-    props: IControlTowerLandingZoneHandlerParameter,
-    defaultProps: DefaultPropsType,
+    props: ISetupLandingZoneHandlerParameter,
+    moduleName: string,
     client: ControlTowerClient,
     landingZoneConfiguration: ControlTowerLandingZoneConfigType,
     landingZoneDetails: ControlTowerLandingZoneDetailsType,
@@ -277,7 +278,7 @@ export class AcceleratorControlTowerLandingZoneModule implements IAcceleratorCon
     );
 
     if (props.dryRun) {
-      return this.getDryRunResponse(props, defaultProps, landingZoneIdentifier, landingZoneUpdateOrResetStatus);
+      return this.getDryRunResponse(moduleName, props.operation, landingZoneIdentifier, landingZoneUpdateOrResetStatus);
     }
 
     if (landingZoneUpdateOrResetStatus.updateRequired) {
@@ -287,7 +288,7 @@ export class AcceleratorControlTowerLandingZoneModule implements IAcceleratorCon
         landingZoneUpdateOrResetStatus.reason,
         landingZoneConfiguration,
         landingZoneDetails,
-        defaultProps,
+        moduleName,
       );
     }
 
@@ -296,12 +297,12 @@ export class AcceleratorControlTowerLandingZoneModule implements IAcceleratorCon
         client,
         landingZoneDetails.landingZoneIdentifier,
         landingZoneUpdateOrResetStatus.reason,
-        defaultProps,
+        moduleName,
       );
     }
 
     // When no changes required
-    return `Module "${defaultProps.moduleName}" completed successfully with status ${landingZoneUpdateOrResetStatus.reason}`;
+    return `Module "${moduleName}" completed successfully with status ${landingZoneUpdateOrResetStatus.reason}`;
   }
 }
 /**
@@ -317,13 +318,14 @@ abstract class LandingZoneOperation {
    * @param client {@link ControlTowerClient}
    * @param landingZoneConfiguration {@link ControlTowerLandingZoneConfigType}
    * @param kmsKeyArn string
+   * @param moduleName string
    * @returns operationIdentifier string
    */
   public static async createLandingZone(
     client: ControlTowerClient,
     landingZoneConfiguration: ControlTowerLandingZoneConfigType,
     kmsKeyArn: string,
-    defaultProps: DefaultPropsType,
+    moduleName: string,
   ): Promise<string> {
     const manifestDocument = makeManifestDocument(landingZoneConfiguration, 'CREATE', 'Security', kmsKeyArn);
     const param: CreateLandingZoneCommandInput = {
@@ -346,7 +348,7 @@ abstract class LandingZoneOperation {
 
     await LandingZoneOperation.waitUntilOperationCompletes(client, operationIdentifier);
 
-    return `Module "${defaultProps.moduleName}" The Landing Zone deployed successfully.`;
+    return `Module "${moduleName}" The Landing Zone deployed successfully.`;
   }
 
   /**
@@ -360,7 +362,7 @@ abstract class LandingZoneOperation {
     client: ControlTowerClient,
     landingZoneIdentifier: string,
     reason: string,
-    defaultProps: DefaultPropsType,
+    moduleName: string,
   ): Promise<string> {
     logger.info(`The Landing Zone reset operation will begin, because "${reason}"`);
     const response = await throttlingBackOff(() => client.send(new ResetLandingZoneCommand({ landingZoneIdentifier })));
@@ -378,7 +380,7 @@ abstract class LandingZoneOperation {
 
     await LandingZoneOperation.waitUntilOperationCompletes(client, operationIdentifier);
 
-    return `Module "${defaultProps.moduleName}" The Landing Zone reset operation completed successfully.`;
+    return `Module "${moduleName}" The Landing Zone reset operation completed successfully.`;
   }
 
   /**
@@ -389,7 +391,7 @@ abstract class LandingZoneOperation {
    * @param reason string
    * @param landingZoneConfiguration {@link ControlTowerLandingZoneConfigType}
    * @param landingZoneDetails {@link ControlTowerLandingZoneDetailsType}
-   * @param defaultProps {@link DefaultPropsType}
+   * @param moduleName string
    * @returns status string
    */
   public static async updateLandingZone(
@@ -398,7 +400,7 @@ abstract class LandingZoneOperation {
     reason: string,
     landingZoneConfiguration: ControlTowerLandingZoneConfigType,
     landingZoneDetails: ControlTowerLandingZoneDetailsType,
-    defaultProps: DefaultPropsType,
+    moduleName: string,
   ): Promise<string> {
     logger.info(`The Landing Zone update operation will begin, because "${reason}"`);
     if (!landingZoneDetails.securityOuName) {
@@ -436,7 +438,7 @@ abstract class LandingZoneOperation {
 
     await this.waitUntilOperationCompletes(client, operationIdentifier);
 
-    return `Module "${defaultProps.moduleName}" The Landing Zone update operation completed successfully.`;
+    return `Module "${moduleName}" The Landing Zone update operation completed successfully.`;
   }
 
   /**
@@ -521,45 +523,42 @@ abstract class ControlTowerPreRequisites {
    * - Create AWS KMS CMK to encrypt AWS Control Tower resources
    * - Create the shared accounts (LogArchive and Audit)
    *
-   * @param props {@link IControlTowerLandingZoneHandlerParameter}
-   * @param defaultProps {@link DefaultPropsType}
+   * @param props {@link ISetupLandingZoneHandlerParameter}
+   * @param globalRegion string
+   * @param useExistingRole boolean
    * @param landingZoneIdentifier string | undefined
    * @returns metadata { kmsKeyArn: string } | undefined
    */
   public static async completePreRequisites(
-    props: IControlTowerLandingZoneHandlerParameter,
-    defaultProps: DefaultPropsType,
+    props: ISetupLandingZoneHandlerParameter,
+    globalRegion: string,
+    useExistingRole: boolean,
     landingZoneIdentifier?: string,
   ): Promise<{ kmsKeyArn: string } | undefined> {
     if (!landingZoneIdentifier) {
       await Organization.validate(
-        defaultProps.globalRegion,
-        props.homeRegion,
-        defaultProps.solutionId,
+        globalRegion,
+        props.region,
         props.partition,
         {
           logArchive: props.configuration.sharedAccounts.logging.email,
           audit: props.configuration.sharedAccounts.audit.email,
         },
         props.credentials,
+        props.solutionId,
       );
 
       const organizationManagementAccountDetails = await Organization.getOrganizationAccountDetailsByEmail(
-        defaultProps.globalRegion,
-        defaultProps.solutionId,
+        globalRegion,
         props.configuration.sharedAccounts.management.email,
         props.credentials,
+        props.solutionId,
       );
 
       const managementAccountId = organizationManagementAccountDetails.Id!;
 
-      if (!props.useExistingRole) {
-        await IamRole.createControlTowerRoles(
-          props.partition,
-          props.homeRegion,
-          defaultProps.solutionId,
-          props.credentials,
-        );
+      if (!useExistingRole) {
+        await IamRole.createControlTowerRoles(props.partition, props.region, props.solutionId, props.credentials);
         // giving time to complete Role creation completes, otherwise ValidationException - CUSTOMER_ASSUME_ROLE_FAILED error occurs
         logger.info(`Created AWS Control Tower roles, sleeping for 5 minutes for role creations to complete.`);
         await delay(5);
@@ -572,8 +571,8 @@ abstract class ControlTowerPreRequisites {
         await SharedAccount.createAccounts(
           props.configuration.sharedAccounts.logging,
           props.configuration.sharedAccounts.audit,
-          defaultProps.globalRegion,
-          defaultProps.solutionId,
+          globalRegion,
+          props.solutionId,
           props.credentials,
         );
       }
@@ -581,8 +580,8 @@ abstract class ControlTowerPreRequisites {
       const kmsKeyArn = await KmsKey.createControlTowerKey(
         props.partition,
         managementAccountId,
-        props.homeRegion,
-        defaultProps.solutionId,
+        props.region,
+        props.solutionId,
         props.credentials,
       );
       return { kmsKeyArn };

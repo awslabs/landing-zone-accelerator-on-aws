@@ -14,13 +14,13 @@ import { describe, expect, test } from '@jest/globals';
 import {
   ControlTowerLandingZoneConfigType,
   ControlTowerLandingZoneDetailsType,
-} from '../../../lib/control-tower/utils/resources';
+} from '../../../lib/control-tower/setup-landing-zone/resources';
 import {
   makeManifestDocument,
   governedRegionsChanged,
   validateLandingZoneVersion,
   landingZoneUpdateOrResetRequired,
-} from '../../../lib/control-tower/utils/functions';
+} from '../../../lib/control-tower/setup-landing-zone/functions';
 
 describe('resources utility functions', () => {
   const mockLandingZoneConfig: ControlTowerLandingZoneConfigType = {

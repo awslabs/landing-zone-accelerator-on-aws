@@ -12,7 +12,7 @@
  */
 import { describe, beforeEach, expect, test } from '@jest/globals';
 
-import { IamRole } from '../../../lib/control-tower/prerequisites/iam-role';
+import { IamRole } from '../../../../lib/control-tower/setup-landing-zone/prerequisites/iam-role';
 
 import {
   IAMClient,
