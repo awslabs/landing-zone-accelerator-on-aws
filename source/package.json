@@ -86,7 +86,7 @@
     "aws-cdk-lib": "2.158.0",
     "cdk-from-cfn": "0.162.0",
     "constructs": "10.0.12",
-    "esbuild": "0.24.0",
+    "esbuild": "0.24.2",
     "eslint": "8.34.0",
     "eslint-config-prettier": "8.6.0",
     "eslint-plugin-jest": "27.2.1",
