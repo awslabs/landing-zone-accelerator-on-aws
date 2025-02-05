@@ -20,8 +20,8 @@ import * as path from 'path';
 import { Bucket, BucketEncryptionType } from '@aws-accelerator/constructs';
 
 import { version } from '../../../../package.json';
-import { SolutionHelper } from './solutions-helper';
 import { ResourceNamePrefixes } from './resource-name-prefixes';
+import { SolutionHelper } from './solutions-helper';
 import { Validate } from './validate';
 
 export enum RepositorySources {
@@ -1095,6 +1095,7 @@ export class InstallerStack extends cdk.Stack {
           branch: this.repositoryBranchName.valueAsString,
           output: acceleratorRepoArtifact,
           trigger: cdk.aws_codepipeline_actions.CodeCommitTrigger.NONE,
+          role: codeCommitPipelineRole,
         }),
       ],
     });
@@ -1124,14 +1125,6 @@ export class InstallerStack extends cdk.Stack {
 
     const cfnCodeCommitPipeline = codeCommitPipeline.node.defaultChild as cdk.aws_codepipeline.CfnPipeline;
     cfnCodeCommitPipeline.cfnOptions.condition = useCodeCommitCondition;
-
-    const cfnCodeCommitPipelineSource = codeCommitPipeline.node
-      .findChild('Source')
-      .node.findChild('Source')
-      .node.findChild('CodePipelineActionRole').node;
-    (cfnCodeCommitPipelineSource.defaultChild as cdk.CfnResource).cfnOptions.condition = useCodeCommitCondition;
-    (cfnCodeCommitPipelineSource.findChild('DefaultPolicy').node.defaultChild as cdk.CfnResource).cfnOptions.condition =
-      useCodeCommitCondition;
 
     /**
      * GitHub Pipeline
