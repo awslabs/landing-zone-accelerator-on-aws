@@ -350,6 +350,7 @@ export class AcceleratorPipeline extends Construct {
         branch: this.props.sourceBranchName,
         output: this.acceleratorRepoArtifact,
         trigger: codepipeline_actions.CodeCommitTrigger.NONE,
+        role: this.pipelineRole,
       });
     } else if (this.props.sourceBucketName && this.props.sourceBucketName.length > 0) {
       // hidden parameter to use S3 for source code via cdk context
@@ -428,6 +429,7 @@ export class AcceleratorPipeline extends Construct {
             output: this.configRepoArtifact,
             trigger: codepipeline_actions.CodeCommitTrigger.NONE,
             variablesNamespace: 'Config-Vars',
+            role: this.pipelineRole,
           }),
         ],
       });
@@ -981,6 +983,7 @@ export class AcceleratorPipeline extends Construct {
             notificationTopic,
             externalEntityLink: reviewLink,
             notifyEmails,
+            role: this.pipelineRole,
           }),
         ],
       });

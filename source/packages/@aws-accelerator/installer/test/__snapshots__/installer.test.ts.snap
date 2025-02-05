@@ -405,7 +405,7 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 1`] = `
                 ],
                 "RoleArn": {
                   "Fn::GetAtt": [
-                    "CodeCommitPipelineSourceCodePipelineActionRoleFB176191",
+                    "CodeCommitPipelineRole5C35E76C",
                     "Arn",
                   ],
                 },
@@ -540,111 +540,7 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 1`] = `
               "Effect": "Allow",
               "Resource": {
                 "Fn::GetAtt": [
-                  "CodeCommitPipelineSourceCodePipelineActionRoleFB176191",
-                  "Arn",
-                ],
-              },
-            },
-            {
-              "Action": "sts:AssumeRole",
-              "Effect": "Allow",
-              "Resource": {
-                "Fn::GetAtt": [
                   "CodeCommitPipelineRole5C35E76C",
-                  "Arn",
-                ],
-              },
-            },
-            {
-              "Action": [
-                "codebuild:BatchGetBuilds",
-                "codebuild:StartBuild",
-                "codebuild:StopBuild",
-              ],
-              "Effect": "Allow",
-              "Resource": {
-                "Fn::GetAtt": [
-                  "InstallerProject879FF821",
-                  "Arn",
-                ],
-              },
-            },
-          ],
-          "Version": "2012-10-17",
-        },
-        "PolicyName": "CodeCommitPipelineRoleDefaultPolicyDE8B332B",
-        "Roles": [
-          {
-            "Ref": "CodeCommitPipelineRole5C35E76C",
-          },
-        ],
-      },
-      "Type": "AWS::IAM::Policy",
-    },
-    "CodeCommitPipelineSourceCodePipelineActionRoleDefaultPolicyF71E0C0D": {
-      "Condition": "UseCodeCommitCondition",
-      "Metadata": {
-        "cdk_nag": {
-          "rules_to_suppress": [
-            {
-              "id": "AwsSolutions-IAM5",
-              "reason": "IAM role requires wildcard permissions.",
-            },
-          ],
-        },
-      },
-      "Properties": {
-        "PolicyDocument": {
-          "Statement": [
-            {
-              "Action": [
-                "s3:GetObject*",
-                "s3:GetBucket*",
-                "s3:List*",
-                "s3:DeleteObject*",
-                "s3:PutObject",
-                "s3:PutObjectLegalHold",
-                "s3:PutObjectRetention",
-                "s3:PutObjectTagging",
-                "s3:PutObjectVersionTagging",
-                "s3:Abort*",
-              ],
-              "Effect": "Allow",
-              "Resource": [
-                {
-                  "Fn::GetAtt": [
-                    "SecureBucket747CD8C0",
-                    "Arn",
-                  ],
-                },
-                {
-                  "Fn::Join": [
-                    "",
-                    [
-                      {
-                        "Fn::GetAtt": [
-                          "SecureBucket747CD8C0",
-                          "Arn",
-                        ],
-                      },
-                      "/*",
-                    ],
-                  ],
-                },
-              ],
-            },
-            {
-              "Action": [
-                "kms:Decrypt",
-                "kms:DescribeKey",
-                "kms:Encrypt",
-                "kms:ReEncrypt*",
-                "kms:GenerateDataKey*",
-              ],
-              "Effect": "Allow",
-              "Resource": {
-                "Fn::GetAtt": [
-                  "InstallerKey2A6A8C6D",
                   "Arn",
                 ],
               },
@@ -682,50 +578,31 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 1`] = `
                 ],
               },
             },
-          ],
-          "Version": "2012-10-17",
-        },
-        "PolicyName": "CodeCommitPipelineSourceCodePipelineActionRoleDefaultPolicyF71E0C0D",
-        "Roles": [
-          {
-            "Ref": "CodeCommitPipelineSourceCodePipelineActionRoleFB176191",
-          },
-        ],
-      },
-      "Type": "AWS::IAM::Policy",
-    },
-    "CodeCommitPipelineSourceCodePipelineActionRoleFB176191": {
-      "Condition": "UseCodeCommitCondition",
-      "Properties": {
-        "AssumeRolePolicyDocument": {
-          "Statement": [
             {
-              "Action": "sts:AssumeRole",
+              "Action": [
+                "codebuild:BatchGetBuilds",
+                "codebuild:StartBuild",
+                "codebuild:StopBuild",
+              ],
               "Effect": "Allow",
-              "Principal": {
-                "AWS": {
-                  "Fn::Join": [
-                    "",
-                    [
-                      "arn:",
-                      {
-                        "Ref": "AWS::Partition",
-                      },
-                      ":iam::",
-                      {
-                        "Ref": "AWS::AccountId",
-                      },
-                      ":root",
-                    ],
-                  ],
-                },
+              "Resource": {
+                "Fn::GetAtt": [
+                  "InstallerProject879FF821",
+                  "Arn",
+                ],
               },
             },
           ],
           "Version": "2012-10-17",
         },
+        "PolicyName": "CodeCommitPipelineRoleDefaultPolicyDE8B332B",
+        "Roles": [
+          {
+            "Ref": "CodeCommitPipelineRole5C35E76C",
+          },
+        ],
       },
-      "Type": "AWS::IAM::Role",
+      "Type": "AWS::IAM::Policy",
     },
     "GitHubPipeline7B79E906": {
       "Condition": "UseGitHubCondition",
@@ -4141,7 +4018,7 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 2`] = `
                 ],
                 "RoleArn": {
                   "Fn::GetAtt": [
-                    "CodeCommitPipelineSourceCodePipelineActionRoleFB176191",
+                    "CodeCommitPipelineRole5C35E76C",
                     "Arn",
                   ],
                 },
@@ -4276,111 +4153,7 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 2`] = `
               "Effect": "Allow",
               "Resource": {
                 "Fn::GetAtt": [
-                  "CodeCommitPipelineSourceCodePipelineActionRoleFB176191",
-                  "Arn",
-                ],
-              },
-            },
-            {
-              "Action": "sts:AssumeRole",
-              "Effect": "Allow",
-              "Resource": {
-                "Fn::GetAtt": [
                   "CodeCommitPipelineRole5C35E76C",
-                  "Arn",
-                ],
-              },
-            },
-            {
-              "Action": [
-                "codebuild:BatchGetBuilds",
-                "codebuild:StartBuild",
-                "codebuild:StopBuild",
-              ],
-              "Effect": "Allow",
-              "Resource": {
-                "Fn::GetAtt": [
-                  "InstallerProject879FF821",
-                  "Arn",
-                ],
-              },
-            },
-          ],
-          "Version": "2012-10-17",
-        },
-        "PolicyName": "CodeCommitPipelineRoleDefaultPolicyDE8B332B",
-        "Roles": [
-          {
-            "Ref": "CodeCommitPipelineRole5C35E76C",
-          },
-        ],
-      },
-      "Type": "AWS::IAM::Policy",
-    },
-    "CodeCommitPipelineSourceCodePipelineActionRoleDefaultPolicyF71E0C0D": {
-      "Condition": "UseCodeCommitCondition",
-      "Metadata": {
-        "cdk_nag": {
-          "rules_to_suppress": [
-            {
-              "id": "AwsSolutions-IAM5",
-              "reason": "IAM role requires wildcard permissions.",
-            },
-          ],
-        },
-      },
-      "Properties": {
-        "PolicyDocument": {
-          "Statement": [
-            {
-              "Action": [
-                "s3:GetObject*",
-                "s3:GetBucket*",
-                "s3:List*",
-                "s3:DeleteObject*",
-                "s3:PutObject",
-                "s3:PutObjectLegalHold",
-                "s3:PutObjectRetention",
-                "s3:PutObjectTagging",
-                "s3:PutObjectVersionTagging",
-                "s3:Abort*",
-              ],
-              "Effect": "Allow",
-              "Resource": [
-                {
-                  "Fn::GetAtt": [
-                    "SecureBucket747CD8C0",
-                    "Arn",
-                  ],
-                },
-                {
-                  "Fn::Join": [
-                    "",
-                    [
-                      {
-                        "Fn::GetAtt": [
-                          "SecureBucket747CD8C0",
-                          "Arn",
-                        ],
-                      },
-                      "/*",
-                    ],
-                  ],
-                },
-              ],
-            },
-            {
-              "Action": [
-                "kms:Decrypt",
-                "kms:DescribeKey",
-                "kms:Encrypt",
-                "kms:ReEncrypt*",
-                "kms:GenerateDataKey*",
-              ],
-              "Effect": "Allow",
-              "Resource": {
-                "Fn::GetAtt": [
-                  "InstallerKey2A6A8C6D",
                   "Arn",
                 ],
               },
@@ -4418,50 +4191,31 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 2`] = `
                 ],
               },
             },
-          ],
-          "Version": "2012-10-17",
-        },
-        "PolicyName": "CodeCommitPipelineSourceCodePipelineActionRoleDefaultPolicyF71E0C0D",
-        "Roles": [
-          {
-            "Ref": "CodeCommitPipelineSourceCodePipelineActionRoleFB176191",
-          },
-        ],
-      },
-      "Type": "AWS::IAM::Policy",
-    },
-    "CodeCommitPipelineSourceCodePipelineActionRoleFB176191": {
-      "Condition": "UseCodeCommitCondition",
-      "Properties": {
-        "AssumeRolePolicyDocument": {
-          "Statement": [
             {
-              "Action": "sts:AssumeRole",
+              "Action": [
+                "codebuild:BatchGetBuilds",
+                "codebuild:StartBuild",
+                "codebuild:StopBuild",
+              ],
               "Effect": "Allow",
-              "Principal": {
-                "AWS": {
-                  "Fn::Join": [
-                    "",
-                    [
-                      "arn:",
-                      {
-                        "Ref": "AWS::Partition",
-                      },
-                      ":iam::",
-                      {
-                        "Ref": "AWS::AccountId",
-                      },
-                      ":root",
-                    ],
-                  ],
-                },
+              "Resource": {
+                "Fn::GetAtt": [
+                  "InstallerProject879FF821",
+                  "Arn",
+                ],
               },
             },
           ],
           "Version": "2012-10-17",
         },
+        "PolicyName": "CodeCommitPipelineRoleDefaultPolicyDE8B332B",
+        "Roles": [
+          {
+            "Ref": "CodeCommitPipelineRole5C35E76C",
+          },
+        ],
       },
-      "Type": "AWS::IAM::Role",
+      "Type": "AWS::IAM::Policy",
     },
     "GitHubPipeline7B79E906": {
       "Condition": "UseGitHubCondition",
@@ -7901,7 +7655,7 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 3`] = `
                 ],
                 "RoleArn": {
                   "Fn::GetAtt": [
-                    "CodeCommitPipelineSourceCodePipelineActionRoleFB176191",
+                    "CodeCommitPipelineRole5C35E76C",
                     "Arn",
                   ],
                 },
@@ -8036,111 +7790,7 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 3`] = `
               "Effect": "Allow",
               "Resource": {
                 "Fn::GetAtt": [
-                  "CodeCommitPipelineSourceCodePipelineActionRoleFB176191",
-                  "Arn",
-                ],
-              },
-            },
-            {
-              "Action": "sts:AssumeRole",
-              "Effect": "Allow",
-              "Resource": {
-                "Fn::GetAtt": [
                   "CodeCommitPipelineRole5C35E76C",
-                  "Arn",
-                ],
-              },
-            },
-            {
-              "Action": [
-                "codebuild:BatchGetBuilds",
-                "codebuild:StartBuild",
-                "codebuild:StopBuild",
-              ],
-              "Effect": "Allow",
-              "Resource": {
-                "Fn::GetAtt": [
-                  "InstallerProject879FF821",
-                  "Arn",
-                ],
-              },
-            },
-          ],
-          "Version": "2012-10-17",
-        },
-        "PolicyName": "CodeCommitPipelineRoleDefaultPolicyDE8B332B",
-        "Roles": [
-          {
-            "Ref": "CodeCommitPipelineRole5C35E76C",
-          },
-        ],
-      },
-      "Type": "AWS::IAM::Policy",
-    },
-    "CodeCommitPipelineSourceCodePipelineActionRoleDefaultPolicyF71E0C0D": {
-      "Condition": "UseCodeCommitCondition",
-      "Metadata": {
-        "cdk_nag": {
-          "rules_to_suppress": [
-            {
-              "id": "AwsSolutions-IAM5",
-              "reason": "IAM role requires wildcard permissions.",
-            },
-          ],
-        },
-      },
-      "Properties": {
-        "PolicyDocument": {
-          "Statement": [
-            {
-              "Action": [
-                "s3:GetObject*",
-                "s3:GetBucket*",
-                "s3:List*",
-                "s3:DeleteObject*",
-                "s3:PutObject",
-                "s3:PutObjectLegalHold",
-                "s3:PutObjectRetention",
-                "s3:PutObjectTagging",
-                "s3:PutObjectVersionTagging",
-                "s3:Abort*",
-              ],
-              "Effect": "Allow",
-              "Resource": [
-                {
-                  "Fn::GetAtt": [
-                    "SecureBucket747CD8C0",
-                    "Arn",
-                  ],
-                },
-                {
-                  "Fn::Join": [
-                    "",
-                    [
-                      {
-                        "Fn::GetAtt": [
-                          "SecureBucket747CD8C0",
-                          "Arn",
-                        ],
-                      },
-                      "/*",
-                    ],
-                  ],
-                },
-              ],
-            },
-            {
-              "Action": [
-                "kms:Decrypt",
-                "kms:DescribeKey",
-                "kms:Encrypt",
-                "kms:ReEncrypt*",
-                "kms:GenerateDataKey*",
-              ],
-              "Effect": "Allow",
-              "Resource": {
-                "Fn::GetAtt": [
-                  "InstallerKey2A6A8C6D",
                   "Arn",
                 ],
               },
@@ -8178,50 +7828,31 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 3`] = `
                 ],
               },
             },
-          ],
-          "Version": "2012-10-17",
-        },
-        "PolicyName": "CodeCommitPipelineSourceCodePipelineActionRoleDefaultPolicyF71E0C0D",
-        "Roles": [
-          {
-            "Ref": "CodeCommitPipelineSourceCodePipelineActionRoleFB176191",
-          },
-        ],
-      },
-      "Type": "AWS::IAM::Policy",
-    },
-    "CodeCommitPipelineSourceCodePipelineActionRoleFB176191": {
-      "Condition": "UseCodeCommitCondition",
-      "Properties": {
-        "AssumeRolePolicyDocument": {
-          "Statement": [
             {
-              "Action": "sts:AssumeRole",
+              "Action": [
+                "codebuild:BatchGetBuilds",
+                "codebuild:StartBuild",
+                "codebuild:StopBuild",
+              ],
               "Effect": "Allow",
-              "Principal": {
-                "AWS": {
-                  "Fn::Join": [
-                    "",
-                    [
-                      "arn:",
-                      {
-                        "Ref": "AWS::Partition",
-                      },
-                      ":iam::",
-                      {
-                        "Ref": "AWS::AccountId",
-                      },
-                      ":root",
-                    ],
-                  ],
-                },
+              "Resource": {
+                "Fn::GetAtt": [
+                  "InstallerProject879FF821",
+                  "Arn",
+                ],
               },
             },
           ],
           "Version": "2012-10-17",
         },
+        "PolicyName": "CodeCommitPipelineRoleDefaultPolicyDE8B332B",
+        "Roles": [
+          {
+            "Ref": "CodeCommitPipelineRole5C35E76C",
+          },
+        ],
       },
-      "Type": "AWS::IAM::Role",
+      "Type": "AWS::IAM::Policy",
     },
     "GitHubPipeline7B79E906": {
       "Condition": "UseGitHubCondition",
@@ -11691,7 +11322,7 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 4`] = `
                 ],
                 "RoleArn": {
                   "Fn::GetAtt": [
-                    "CodeCommitPipelineSourceCodePipelineActionRoleFB176191",
+                    "CodeCommitPipelineRole5C35E76C",
                     "Arn",
                   ],
                 },
@@ -11826,111 +11457,7 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 4`] = `
               "Effect": "Allow",
               "Resource": {
                 "Fn::GetAtt": [
-                  "CodeCommitPipelineSourceCodePipelineActionRoleFB176191",
-                  "Arn",
-                ],
-              },
-            },
-            {
-              "Action": "sts:AssumeRole",
-              "Effect": "Allow",
-              "Resource": {
-                "Fn::GetAtt": [
                   "CodeCommitPipelineRole5C35E76C",
-                  "Arn",
-                ],
-              },
-            },
-            {
-              "Action": [
-                "codebuild:BatchGetBuilds",
-                "codebuild:StartBuild",
-                "codebuild:StopBuild",
-              ],
-              "Effect": "Allow",
-              "Resource": {
-                "Fn::GetAtt": [
-                  "InstallerProject879FF821",
-                  "Arn",
-                ],
-              },
-            },
-          ],
-          "Version": "2012-10-17",
-        },
-        "PolicyName": "CodeCommitPipelineRoleDefaultPolicyDE8B332B",
-        "Roles": [
-          {
-            "Ref": "CodeCommitPipelineRole5C35E76C",
-          },
-        ],
-      },
-      "Type": "AWS::IAM::Policy",
-    },
-    "CodeCommitPipelineSourceCodePipelineActionRoleDefaultPolicyF71E0C0D": {
-      "Condition": "UseCodeCommitCondition",
-      "Metadata": {
-        "cdk_nag": {
-          "rules_to_suppress": [
-            {
-              "id": "AwsSolutions-IAM5",
-              "reason": "IAM role requires wildcard permissions.",
-            },
-          ],
-        },
-      },
-      "Properties": {
-        "PolicyDocument": {
-          "Statement": [
-            {
-              "Action": [
-                "s3:GetObject*",
-                "s3:GetBucket*",
-                "s3:List*",
-                "s3:DeleteObject*",
-                "s3:PutObject",
-                "s3:PutObjectLegalHold",
-                "s3:PutObjectRetention",
-                "s3:PutObjectTagging",
-                "s3:PutObjectVersionTagging",
-                "s3:Abort*",
-              ],
-              "Effect": "Allow",
-              "Resource": [
-                {
-                  "Fn::GetAtt": [
-                    "SecureBucket747CD8C0",
-                    "Arn",
-                  ],
-                },
-                {
-                  "Fn::Join": [
-                    "",
-                    [
-                      {
-                        "Fn::GetAtt": [
-                          "SecureBucket747CD8C0",
-                          "Arn",
-                        ],
-                      },
-                      "/*",
-                    ],
-                  ],
-                },
-              ],
-            },
-            {
-              "Action": [
-                "kms:Decrypt",
-                "kms:DescribeKey",
-                "kms:Encrypt",
-                "kms:ReEncrypt*",
-                "kms:GenerateDataKey*",
-              ],
-              "Effect": "Allow",
-              "Resource": {
-                "Fn::GetAtt": [
-                  "InstallerKey2A6A8C6D",
                   "Arn",
                 ],
               },
@@ -11968,50 +11495,31 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 4`] = `
                 ],
               },
             },
-          ],
-          "Version": "2012-10-17",
-        },
-        "PolicyName": "CodeCommitPipelineSourceCodePipelineActionRoleDefaultPolicyF71E0C0D",
-        "Roles": [
-          {
-            "Ref": "CodeCommitPipelineSourceCodePipelineActionRoleFB176191",
-          },
-        ],
-      },
-      "Type": "AWS::IAM::Policy",
-    },
-    "CodeCommitPipelineSourceCodePipelineActionRoleFB176191": {
-      "Condition": "UseCodeCommitCondition",
-      "Properties": {
-        "AssumeRolePolicyDocument": {
-          "Statement": [
             {
-              "Action": "sts:AssumeRole",
+              "Action": [
+                "codebuild:BatchGetBuilds",
+                "codebuild:StartBuild",
+                "codebuild:StopBuild",
+              ],
               "Effect": "Allow",
-              "Principal": {
-                "AWS": {
-                  "Fn::Join": [
-                    "",
-                    [
-                      "arn:",
-                      {
-                        "Ref": "AWS::Partition",
-                      },
-                      ":iam::",
-                      {
-                        "Ref": "AWS::AccountId",
-                      },
-                      ":root",
-                    ],
-                  ],
-                },
+              "Resource": {
+                "Fn::GetAtt": [
+                  "InstallerProject879FF821",
+                  "Arn",
+                ],
               },
             },
           ],
           "Version": "2012-10-17",
         },
+        "PolicyName": "CodeCommitPipelineRoleDefaultPolicyDE8B332B",
+        "Roles": [
+          {
+            "Ref": "CodeCommitPipelineRole5C35E76C",
+          },
+        ],
       },
-      "Type": "AWS::IAM::Role",
+      "Type": "AWS::IAM::Policy",
     },
     "GitHubPipeline7B79E906": {
       "Condition": "UseGitHubCondition",
@@ -15471,7 +14979,7 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 5`] = `
                 ],
                 "RoleArn": {
                   "Fn::GetAtt": [
-                    "CodeCommitPipelineSourceCodePipelineActionRoleFB176191",
+                    "CodeCommitPipelineRole5C35E76C",
                     "Arn",
                   ],
                 },
@@ -15606,111 +15114,7 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 5`] = `
               "Effect": "Allow",
               "Resource": {
                 "Fn::GetAtt": [
-                  "CodeCommitPipelineSourceCodePipelineActionRoleFB176191",
-                  "Arn",
-                ],
-              },
-            },
-            {
-              "Action": "sts:AssumeRole",
-              "Effect": "Allow",
-              "Resource": {
-                "Fn::GetAtt": [
                   "CodeCommitPipelineRole5C35E76C",
-                  "Arn",
-                ],
-              },
-            },
-            {
-              "Action": [
-                "codebuild:BatchGetBuilds",
-                "codebuild:StartBuild",
-                "codebuild:StopBuild",
-              ],
-              "Effect": "Allow",
-              "Resource": {
-                "Fn::GetAtt": [
-                  "InstallerProject879FF821",
-                  "Arn",
-                ],
-              },
-            },
-          ],
-          "Version": "2012-10-17",
-        },
-        "PolicyName": "CodeCommitPipelineRoleDefaultPolicyDE8B332B",
-        "Roles": [
-          {
-            "Ref": "CodeCommitPipelineRole5C35E76C",
-          },
-        ],
-      },
-      "Type": "AWS::IAM::Policy",
-    },
-    "CodeCommitPipelineSourceCodePipelineActionRoleDefaultPolicyF71E0C0D": {
-      "Condition": "UseCodeCommitCondition",
-      "Metadata": {
-        "cdk_nag": {
-          "rules_to_suppress": [
-            {
-              "id": "AwsSolutions-IAM5",
-              "reason": "IAM role requires wildcard permissions.",
-            },
-          ],
-        },
-      },
-      "Properties": {
-        "PolicyDocument": {
-          "Statement": [
-            {
-              "Action": [
-                "s3:GetObject*",
-                "s3:GetBucket*",
-                "s3:List*",
-                "s3:DeleteObject*",
-                "s3:PutObject",
-                "s3:PutObjectLegalHold",
-                "s3:PutObjectRetention",
-                "s3:PutObjectTagging",
-                "s3:PutObjectVersionTagging",
-                "s3:Abort*",
-              ],
-              "Effect": "Allow",
-              "Resource": [
-                {
-                  "Fn::GetAtt": [
-                    "SecureBucket747CD8C0",
-                    "Arn",
-                  ],
-                },
-                {
-                  "Fn::Join": [
-                    "",
-                    [
-                      {
-                        "Fn::GetAtt": [
-                          "SecureBucket747CD8C0",
-                          "Arn",
-                        ],
-                      },
-                      "/*",
-                    ],
-                  ],
-                },
-              ],
-            },
-            {
-              "Action": [
-                "kms:Decrypt",
-                "kms:DescribeKey",
-                "kms:Encrypt",
-                "kms:ReEncrypt*",
-                "kms:GenerateDataKey*",
-              ],
-              "Effect": "Allow",
-              "Resource": {
-                "Fn::GetAtt": [
-                  "InstallerKey2A6A8C6D",
                   "Arn",
                 ],
               },
@@ -15748,50 +15152,31 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 5`] = `
                 ],
               },
             },
-          ],
-          "Version": "2012-10-17",
-        },
-        "PolicyName": "CodeCommitPipelineSourceCodePipelineActionRoleDefaultPolicyF71E0C0D",
-        "Roles": [
-          {
-            "Ref": "CodeCommitPipelineSourceCodePipelineActionRoleFB176191",
-          },
-        ],
-      },
-      "Type": "AWS::IAM::Policy",
-    },
-    "CodeCommitPipelineSourceCodePipelineActionRoleFB176191": {
-      "Condition": "UseCodeCommitCondition",
-      "Properties": {
-        "AssumeRolePolicyDocument": {
-          "Statement": [
             {
-              "Action": "sts:AssumeRole",
+              "Action": [
+                "codebuild:BatchGetBuilds",
+                "codebuild:StartBuild",
+                "codebuild:StopBuild",
+              ],
               "Effect": "Allow",
-              "Principal": {
-                "AWS": {
-                  "Fn::Join": [
-                    "",
-                    [
-                      "arn:",
-                      {
-                        "Ref": "AWS::Partition",
-                      },
-                      ":iam::",
-                      {
-                        "Ref": "AWS::AccountId",
-                      },
-                      ":root",
-                    ],
-                  ],
-                },
+              "Resource": {
+                "Fn::GetAtt": [
+                  "InstallerProject879FF821",
+                  "Arn",
+                ],
               },
             },
           ],
           "Version": "2012-10-17",
         },
+        "PolicyName": "CodeCommitPipelineRoleDefaultPolicyDE8B332B",
+        "Roles": [
+          {
+            "Ref": "CodeCommitPipelineRole5C35E76C",
+          },
+        ],
       },
-      "Type": "AWS::IAM::Role",
+      "Type": "AWS::IAM::Policy",
     },
     "GitHubPipeline7B79E906": {
       "Condition": "UseGitHubCondition",
@@ -19234,7 +18619,7 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 6`] = `
                 ],
                 "RoleArn": {
                   "Fn::GetAtt": [
-                    "CodeCommitPipelineSourceCodePipelineActionRoleFB176191",
+                    "CodeCommitPipelineRole5C35E76C",
                     "Arn",
                   ],
                 },
@@ -19369,111 +18754,7 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 6`] = `
               "Effect": "Allow",
               "Resource": {
                 "Fn::GetAtt": [
-                  "CodeCommitPipelineSourceCodePipelineActionRoleFB176191",
-                  "Arn",
-                ],
-              },
-            },
-            {
-              "Action": "sts:AssumeRole",
-              "Effect": "Allow",
-              "Resource": {
-                "Fn::GetAtt": [
                   "CodeCommitPipelineRole5C35E76C",
-                  "Arn",
-                ],
-              },
-            },
-            {
-              "Action": [
-                "codebuild:BatchGetBuilds",
-                "codebuild:StartBuild",
-                "codebuild:StopBuild",
-              ],
-              "Effect": "Allow",
-              "Resource": {
-                "Fn::GetAtt": [
-                  "InstallerProject879FF821",
-                  "Arn",
-                ],
-              },
-            },
-          ],
-          "Version": "2012-10-17",
-        },
-        "PolicyName": "CodeCommitPipelineRoleDefaultPolicyDE8B332B",
-        "Roles": [
-          {
-            "Ref": "CodeCommitPipelineRole5C35E76C",
-          },
-        ],
-      },
-      "Type": "AWS::IAM::Policy",
-    },
-    "CodeCommitPipelineSourceCodePipelineActionRoleDefaultPolicyF71E0C0D": {
-      "Condition": "UseCodeCommitCondition",
-      "Metadata": {
-        "cdk_nag": {
-          "rules_to_suppress": [
-            {
-              "id": "AwsSolutions-IAM5",
-              "reason": "IAM role requires wildcard permissions.",
-            },
-          ],
-        },
-      },
-      "Properties": {
-        "PolicyDocument": {
-          "Statement": [
-            {
-              "Action": [
-                "s3:GetObject*",
-                "s3:GetBucket*",
-                "s3:List*",
-                "s3:DeleteObject*",
-                "s3:PutObject",
-                "s3:PutObjectLegalHold",
-                "s3:PutObjectRetention",
-                "s3:PutObjectTagging",
-                "s3:PutObjectVersionTagging",
-                "s3:Abort*",
-              ],
-              "Effect": "Allow",
-              "Resource": [
-                {
-                  "Fn::GetAtt": [
-                    "SecureBucket747CD8C0",
-                    "Arn",
-                  ],
-                },
-                {
-                  "Fn::Join": [
-                    "",
-                    [
-                      {
-                        "Fn::GetAtt": [
-                          "SecureBucket747CD8C0",
-                          "Arn",
-                        ],
-                      },
-                      "/*",
-                    ],
-                  ],
-                },
-              ],
-            },
-            {
-              "Action": [
-                "kms:Decrypt",
-                "kms:DescribeKey",
-                "kms:Encrypt",
-                "kms:ReEncrypt*",
-                "kms:GenerateDataKey*",
-              ],
-              "Effect": "Allow",
-              "Resource": {
-                "Fn::GetAtt": [
-                  "InstallerKey2A6A8C6D",
                   "Arn",
                 ],
               },
@@ -19511,50 +18792,31 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 6`] = `
                 ],
               },
             },
-          ],
-          "Version": "2012-10-17",
-        },
-        "PolicyName": "CodeCommitPipelineSourceCodePipelineActionRoleDefaultPolicyF71E0C0D",
-        "Roles": [
-          {
-            "Ref": "CodeCommitPipelineSourceCodePipelineActionRoleFB176191",
-          },
-        ],
-      },
-      "Type": "AWS::IAM::Policy",
-    },
-    "CodeCommitPipelineSourceCodePipelineActionRoleFB176191": {
-      "Condition": "UseCodeCommitCondition",
-      "Properties": {
-        "AssumeRolePolicyDocument": {
-          "Statement": [
             {
-              "Action": "sts:AssumeRole",
+              "Action": [
+                "codebuild:BatchGetBuilds",
+                "codebuild:StartBuild",
+                "codebuild:StopBuild",
+              ],
               "Effect": "Allow",
-              "Principal": {
-                "AWS": {
-                  "Fn::Join": [
-                    "",
-                    [
-                      "arn:",
-                      {
-                        "Ref": "AWS::Partition",
-                      },
-                      ":iam::",
-                      {
-                        "Ref": "AWS::AccountId",
-                      },
-                      ":root",
-                    ],
-                  ],
-                },
+              "Resource": {
+                "Fn::GetAtt": [
+                  "InstallerProject879FF821",
+                  "Arn",
+                ],
               },
             },
           ],
           "Version": "2012-10-17",
         },
+        "PolicyName": "CodeCommitPipelineRoleDefaultPolicyDE8B332B",
+        "Roles": [
+          {
+            "Ref": "CodeCommitPipelineRole5C35E76C",
+          },
+        ],
       },
-      "Type": "AWS::IAM::Role",
+      "Type": "AWS::IAM::Policy",
     },
     "GitHubPipeline7B79E906": {
       "Condition": "UseGitHubCondition",
@@ -23003,7 +22265,7 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 7`] = `
                 ],
                 "RoleArn": {
                   "Fn::GetAtt": [
-                    "CodeCommitPipelineSourceCodePipelineActionRoleFB176191",
+                    "CodeCommitPipelineRole5C35E76C",
                     "Arn",
                   ],
                 },
@@ -23138,111 +22400,7 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 7`] = `
               "Effect": "Allow",
               "Resource": {
                 "Fn::GetAtt": [
-                  "CodeCommitPipelineSourceCodePipelineActionRoleFB176191",
-                  "Arn",
-                ],
-              },
-            },
-            {
-              "Action": "sts:AssumeRole",
-              "Effect": "Allow",
-              "Resource": {
-                "Fn::GetAtt": [
                   "CodeCommitPipelineRole5C35E76C",
-                  "Arn",
-                ],
-              },
-            },
-            {
-              "Action": [
-                "codebuild:BatchGetBuilds",
-                "codebuild:StartBuild",
-                "codebuild:StopBuild",
-              ],
-              "Effect": "Allow",
-              "Resource": {
-                "Fn::GetAtt": [
-                  "InstallerProject879FF821",
-                  "Arn",
-                ],
-              },
-            },
-          ],
-          "Version": "2012-10-17",
-        },
-        "PolicyName": "CodeCommitPipelineRoleDefaultPolicyDE8B332B",
-        "Roles": [
-          {
-            "Ref": "CodeCommitPipelineRole5C35E76C",
-          },
-        ],
-      },
-      "Type": "AWS::IAM::Policy",
-    },
-    "CodeCommitPipelineSourceCodePipelineActionRoleDefaultPolicyF71E0C0D": {
-      "Condition": "UseCodeCommitCondition",
-      "Metadata": {
-        "cdk_nag": {
-          "rules_to_suppress": [
-            {
-              "id": "AwsSolutions-IAM5",
-              "reason": "IAM role requires wildcard permissions.",
-            },
-          ],
-        },
-      },
-      "Properties": {
-        "PolicyDocument": {
-          "Statement": [
-            {
-              "Action": [
-                "s3:GetObject*",
-                "s3:GetBucket*",
-                "s3:List*",
-                "s3:DeleteObject*",
-                "s3:PutObject",
-                "s3:PutObjectLegalHold",
-                "s3:PutObjectRetention",
-                "s3:PutObjectTagging",
-                "s3:PutObjectVersionTagging",
-                "s3:Abort*",
-              ],
-              "Effect": "Allow",
-              "Resource": [
-                {
-                  "Fn::GetAtt": [
-                    "SecureBucket747CD8C0",
-                    "Arn",
-                  ],
-                },
-                {
-                  "Fn::Join": [
-                    "",
-                    [
-                      {
-                        "Fn::GetAtt": [
-                          "SecureBucket747CD8C0",
-                          "Arn",
-                        ],
-                      },
-                      "/*",
-                    ],
-                  ],
-                },
-              ],
-            },
-            {
-              "Action": [
-                "kms:Decrypt",
-                "kms:DescribeKey",
-                "kms:Encrypt",
-                "kms:ReEncrypt*",
-                "kms:GenerateDataKey*",
-              ],
-              "Effect": "Allow",
-              "Resource": {
-                "Fn::GetAtt": [
-                  "InstallerKey2A6A8C6D",
                   "Arn",
                 ],
               },
@@ -23280,50 +22438,31 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 7`] = `
                 ],
               },
             },
-          ],
-          "Version": "2012-10-17",
-        },
-        "PolicyName": "CodeCommitPipelineSourceCodePipelineActionRoleDefaultPolicyF71E0C0D",
-        "Roles": [
-          {
-            "Ref": "CodeCommitPipelineSourceCodePipelineActionRoleFB176191",
-          },
-        ],
-      },
-      "Type": "AWS::IAM::Policy",
-    },
-    "CodeCommitPipelineSourceCodePipelineActionRoleFB176191": {
-      "Condition": "UseCodeCommitCondition",
-      "Properties": {
-        "AssumeRolePolicyDocument": {
-          "Statement": [
             {
-              "Action": "sts:AssumeRole",
+              "Action": [
+                "codebuild:BatchGetBuilds",
+                "codebuild:StartBuild",
+                "codebuild:StopBuild",
+              ],
               "Effect": "Allow",
-              "Principal": {
-                "AWS": {
-                  "Fn::Join": [
-                    "",
-                    [
-                      "arn:",
-                      {
-                        "Ref": "AWS::Partition",
-                      },
-                      ":iam::",
-                      {
-                        "Ref": "AWS::AccountId",
-                      },
-                      ":root",
-                    ],
-                  ],
-                },
+              "Resource": {
+                "Fn::GetAtt": [
+                  "InstallerProject879FF821",
+                  "Arn",
+                ],
               },
             },
           ],
           "Version": "2012-10-17",
         },
+        "PolicyName": "CodeCommitPipelineRoleDefaultPolicyDE8B332B",
+        "Roles": [
+          {
+            "Ref": "CodeCommitPipelineRole5C35E76C",
+          },
+        ],
       },
-      "Type": "AWS::IAM::Role",
+      "Type": "AWS::IAM::Policy",
     },
     "GitHubPipeline7B79E906": {
       "Condition": "UseGitHubCondition",
@@ -27138,7 +26277,7 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 8`] = `
                 ],
                 "RoleArn": {
                   "Fn::GetAtt": [
-                    "CodeCommitPipelineSourceCodePipelineActionRoleFB176191",
+                    "CodeCommitPipelineRole5C35E76C",
                     "Arn",
                   ],
                 },
@@ -27273,111 +26412,7 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 8`] = `
               "Effect": "Allow",
               "Resource": {
                 "Fn::GetAtt": [
-                  "CodeCommitPipelineSourceCodePipelineActionRoleFB176191",
-                  "Arn",
-                ],
-              },
-            },
-            {
-              "Action": "sts:AssumeRole",
-              "Effect": "Allow",
-              "Resource": {
-                "Fn::GetAtt": [
                   "CodeCommitPipelineRole5C35E76C",
-                  "Arn",
-                ],
-              },
-            },
-            {
-              "Action": [
-                "codebuild:BatchGetBuilds",
-                "codebuild:StartBuild",
-                "codebuild:StopBuild",
-              ],
-              "Effect": "Allow",
-              "Resource": {
-                "Fn::GetAtt": [
-                  "InstallerProject879FF821",
-                  "Arn",
-                ],
-              },
-            },
-          ],
-          "Version": "2012-10-17",
-        },
-        "PolicyName": "CodeCommitPipelineRoleDefaultPolicyDE8B332B",
-        "Roles": [
-          {
-            "Ref": "CodeCommitPipelineRole5C35E76C",
-          },
-        ],
-      },
-      "Type": "AWS::IAM::Policy",
-    },
-    "CodeCommitPipelineSourceCodePipelineActionRoleDefaultPolicyF71E0C0D": {
-      "Condition": "UseCodeCommitCondition",
-      "Metadata": {
-        "cdk_nag": {
-          "rules_to_suppress": [
-            {
-              "id": "AwsSolutions-IAM5",
-              "reason": "IAM role requires wildcard permissions.",
-            },
-          ],
-        },
-      },
-      "Properties": {
-        "PolicyDocument": {
-          "Statement": [
-            {
-              "Action": [
-                "s3:GetObject*",
-                "s3:GetBucket*",
-                "s3:List*",
-                "s3:DeleteObject*",
-                "s3:PutObject",
-                "s3:PutObjectLegalHold",
-                "s3:PutObjectRetention",
-                "s3:PutObjectTagging",
-                "s3:PutObjectVersionTagging",
-                "s3:Abort*",
-              ],
-              "Effect": "Allow",
-              "Resource": [
-                {
-                  "Fn::GetAtt": [
-                    "SecureBucket747CD8C0",
-                    "Arn",
-                  ],
-                },
-                {
-                  "Fn::Join": [
-                    "",
-                    [
-                      {
-                        "Fn::GetAtt": [
-                          "SecureBucket747CD8C0",
-                          "Arn",
-                        ],
-                      },
-                      "/*",
-                    ],
-                  ],
-                },
-              ],
-            },
-            {
-              "Action": [
-                "kms:Decrypt",
-                "kms:DescribeKey",
-                "kms:Encrypt",
-                "kms:ReEncrypt*",
-                "kms:GenerateDataKey*",
-              ],
-              "Effect": "Allow",
-              "Resource": {
-                "Fn::GetAtt": [
-                  "InstallerKey2A6A8C6D",
                   "Arn",
                 ],
               },
@@ -27415,50 +26450,31 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 8`] = `
                 ],
               },
             },
-          ],
-          "Version": "2012-10-17",
-        },
-        "PolicyName": "CodeCommitPipelineSourceCodePipelineActionRoleDefaultPolicyF71E0C0D",
-        "Roles": [
-          {
-            "Ref": "CodeCommitPipelineSourceCodePipelineActionRoleFB176191",
-          },
-        ],
-      },
-      "Type": "AWS::IAM::Policy",
-    },
-    "CodeCommitPipelineSourceCodePipelineActionRoleFB176191": {
-      "Condition": "UseCodeCommitCondition",
-      "Properties": {
-        "AssumeRolePolicyDocument": {
-          "Statement": [
             {
-              "Action": "sts:AssumeRole",
+              "Action": [
+                "codebuild:BatchGetBuilds",
+                "codebuild:StartBuild",
+                "codebuild:StopBuild",
+              ],
               "Effect": "Allow",
-              "Principal": {
-                "AWS": {
-                  "Fn::Join": [
-                    "",
-                    [
-                      "arn:",
-                      {
-                        "Ref": "AWS::Partition",
-                      },
-                      ":iam::",
-                      {
-                        "Ref": "AWS::AccountId",
-                      },
-                      ":root",
-                    ],
-                  ],
-                },
+              "Resource": {
+                "Fn::GetAtt": [
+                  "InstallerProject879FF821",
+                  "Arn",
+                ],
               },
             },
           ],
           "Version": "2012-10-17",
         },
+        "PolicyName": "CodeCommitPipelineRoleDefaultPolicyDE8B332B",
+        "Roles": [
+          {
+            "Ref": "CodeCommitPipelineRole5C35E76C",
+          },
+        ],
       },
-      "Type": "AWS::IAM::Role",
+      "Type": "AWS::IAM::Policy",
     },
     "GitHubPipeline7B79E906": {
       "Condition": "UseGitHubCondition",
