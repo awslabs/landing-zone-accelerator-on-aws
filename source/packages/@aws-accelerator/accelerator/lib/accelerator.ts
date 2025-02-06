@@ -746,7 +746,6 @@ export abstract class Accelerator {
         region: logArchiveAccountDetails.centralizedLoggingRegion,
         ...toolkitProps,
       });
-
       // Execute in all other regions in the LogArchive account
       await this.executeLogArchiveNonCentralRegions(
         toolkitProps,
@@ -805,9 +804,14 @@ export abstract class Accelerator {
     enabledRegions: string[],
     maxStacks: number,
   ) {
-    const nonLogArchiveAccounts = [...accountsConfig.mandatoryAccounts, ...accountsConfig.workloadAccounts].filter(
+    let nonLogArchiveAccounts = [...accountsConfig.mandatoryAccounts, ...accountsConfig.workloadAccounts].filter(
       accountItem => accountItem.name !== logArchiveAccountDetails.name,
     );
+
+    // Avoid changeset collisions by reducing total accounts to 1
+    if (toolkitProps.enableSingleAccountMode) {
+      nonLogArchiveAccounts = [accountsConfig.mandatoryAccounts[0]];
+    }
 
     for (const region of enabledRegions) {
       for (const account of nonLogArchiveAccounts) {
@@ -1022,9 +1026,13 @@ export abstract class Accelerator {
     enabledRegions: string[],
     maxStacks: number,
   ) {
-    const nonManagementAccounts = [...accountsConfig.mandatoryAccounts, ...accountsConfig.workloadAccounts].filter(
+    let nonManagementAccounts = [...accountsConfig.mandatoryAccounts, ...accountsConfig.workloadAccounts].filter(
       accountItem => accountItem.name !== managementAccountName,
     );
+    // Avoid changeset collisions by reducing total accounts to 1
+    if (toolkitProps.enableSingleAccountMode) {
+      nonManagementAccounts = [accountsConfig.mandatoryAccounts[0]];
+    }
 
     for (const region of enabledRegions) {
       for (const account of nonManagementAccounts) {
