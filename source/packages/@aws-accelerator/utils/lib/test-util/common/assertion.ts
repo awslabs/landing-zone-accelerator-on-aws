@@ -1,7 +1,7 @@
 import { createLogger } from '../../logger';
 
 import path from 'path';
-import { pick, isEqual } from 'lodash';
+import { pick, isEqual, isMatch } from 'lodash';
 
 /**
  * Assert API response type
@@ -73,6 +73,32 @@ export class Assertion {
         `[${props.serviceName}:${props.apiName}] actual response ${JSON.stringify(
           props.actualResponse,
         )} does not match with expected response ${JSON.stringify(props.expectedResponse)}, assertion failed`,
+      );
+      return false;
+    }
+  }
+
+  /**
+   * Function to assert api response with partial matching
+   * @param props {@link AssertApiCallPropsType}
+   * @returns
+   */
+  public async assertApiCallPartial(props: AssertApiCallPropsType): Promise<boolean> {
+    const extractedResponse = await this.getApiExpectedResponse(props);
+    // Use lodash's isMatch instead of isEqual for partial matching
+    if (isMatch(extractedResponse, props.expectedResponse)) {
+      this.logger.info(`[${props.serviceName}:${props.apiName}] partial assertion successful`);
+      this.logger.info(
+        `[${props.serviceName}:${props.apiName}] actual response matches expected subset ${JSON.stringify(
+          props.expectedResponse,
+        )}`,
+      );
+      return true;
+    } else {
+      this.logger.error(
+        `[${props.serviceName}:${props.apiName}] actual response does not match expected subset ${JSON.stringify(
+          props.expectedResponse,
+        )}, assertion failed`,
       );
       return false;
     }
