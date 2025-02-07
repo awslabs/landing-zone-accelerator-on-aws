@@ -25,12 +25,16 @@
 #
 # 4. Integration Test Execution Rules
 # -------------------------------
+# Location: '.gitlab/jobs/ci-job-definitions.yml'
+#
 # if: $EXECUTE_INTEGRATION_TEST == "Yes"
 # when: always
 # Meaning: Execute the job when the EXECUTE_INTEGRATION_TEST variable is set to "Yes"
 #
 # 5. Integration Branch Rules
 # -----------------------
+# Location: '.gitlab/jobs/ci-job-definitions.yml'
+#
 # if: $CI_COMMIT_BRANCH == "integ"
 # when: always
 # Meaning: Execute the job when the pipeline runs on the "integ" branch
@@ -73,11 +77,11 @@
 #   - ID of the merge request if pipeline runs in MR context
 #   - null when pipeline runs in other contexts
 #
-# CI_PROJECT_ID: 
+# CI_PROJECT_ID:
 #   - GitLab's internal project identifier
 #   - "11925" represents specific project
 #
-# CI_COMMIT_TAG: 
+# CI_COMMIT_TAG:
 #   - The tag name for which the pipeline is running
 #   - Pattern v(\d.+){2}\d matches semantic versioning
 #
@@ -104,7 +108,6 @@
 #    - $: End of string
 #    - Examples: release-v1.0.0, feature-v2.3.4
 
-
 image: public.ecr.aws/bitnami/node:18
 
 before_script:
@@ -114,6 +117,8 @@ before_script:
   - apt-get install -y zip
   - apt-get install -y jq
 
+include:
+  - '.gitlab/jobs/ci-job-definitions.yml'
 
 stages:
   - pipeline
@@ -129,7 +134,7 @@ accelerator:build:
     - "yarn install"
     - "yarn build"
   artifacts:
-    name:  solution-build
+    name: solution-build
     untracked: true
     when: on_success
     paths:
@@ -140,12 +145,12 @@ accelerator:build:
       when: never
     - if: $CI_COMMIT_BRANCH =~ /.*v(\d.+){2}\d$/
       when: never
-    - if: $CI_MERGE_REQUEST_IID != null  
+    - if: $CI_MERGE_REQUEST_IID != null
       when: never
-    - when: always    
+    - when: always
 accelerator:lint:
   stage: pipeline
-  needs: [ "accelerator:build" ]
+  needs: ["accelerator:build"]
   tags:
     - arch:amd64
     - size:xlarge
@@ -164,7 +169,7 @@ accelerator:lint:
     - "cd ../../../"
     - "yarn git-clean"
     - "yarn run viper-scan"
-    # Check if build  has changed any of the 
+    # Check if build  has changed any of the
     - git add -A
     - |
       if [[ -n $(git status --porcelain | grep -E 'source/packages/@aws-accelerator/config/lib/schemas/') ]]; then
@@ -180,14 +185,14 @@ accelerator:lint:
       when: never
     - if: $CI_COMMIT_BRANCH =~ /.*v(\d.+){2}\d$/
       when: never
-    - if:  $CI_COMMIT_TAG =~ /v(\d.+){2}\d/
+    - if: $CI_COMMIT_TAG =~ /v(\d.+){2}\d/
       when: never
     - if: $CI_MERGE_REQUEST_IID != null
       when: never
-    - when: always 
+    - when: always
 unit-test:accelerator:
   stage: pipeline
-  needs: [ "accelerator:build" ]
+  needs: ["accelerator:build"]
   tags:
     - arch:amd64
     - size:xlarge
@@ -206,14 +211,14 @@ unit-test:accelerator:
       when: never
     - if: $CI_COMMIT_BRANCH =~ /.*v(\d.+){2}\d$/
       when: never
-    - if:  $CI_COMMIT_TAG =~ /v(\d.+){2}\d/
+    - if: $CI_COMMIT_TAG =~ /v(\d.+){2}\d/
       when: never
     - if: $CI_MERGE_REQUEST_IID != null
       when: never
-    - when: always    
+    - when: always
 unit-test:config:
   stage: pipeline
-  needs: [ "accelerator:build" ]
+  needs: ["accelerator:build"]
   tags:
     - arch:amd64
     - size:medium
@@ -232,14 +237,14 @@ unit-test:config:
       when: never
     - if: $CI_COMMIT_BRANCH =~ /.*v(\d.+){2}\d$/
       when: never
-    - if:  $CI_COMMIT_TAG =~ /v(\d.+){2}\d/
+    - if: $CI_COMMIT_TAG =~ /v(\d.+){2}\d/
       when: never
     - if: $CI_MERGE_REQUEST_IID != null
       when: never
-    - when: always   
+    - when: always
 unit-test:constructs:
   stage: pipeline
-  needs: [ "accelerator:build" ]
+  needs: ["accelerator:build"]
   tags:
     - arch:amd64
     - size:xlarge
@@ -258,14 +263,14 @@ unit-test:constructs:
       when: never
     - if: $CI_COMMIT_BRANCH =~ /.*v(\d.+){2}\d$/
       when: never
-    - if:  $CI_COMMIT_TAG =~ /v(\d.+){2}\d/
+    - if: $CI_COMMIT_TAG =~ /v(\d.+){2}\d/
       when: never
     - if: $CI_MERGE_REQUEST_IID != null
       when: never
-    - when: always     
+    - when: always
 unit-test:govcloud-account-vending:
   stage: pipeline
-  needs: [ "accelerator:build" ]
+  needs: ["accelerator:build"]
   tags:
     - arch:amd64
     - size:medium
@@ -284,14 +289,14 @@ unit-test:govcloud-account-vending:
       when: never
     - if: $CI_COMMIT_BRANCH =~ /.*v(\d.+){2}\d$/
       when: never
-    - if:  $CI_COMMIT_TAG =~ /v(\d.+){2}\d/
+    - if: $CI_COMMIT_TAG =~ /v(\d.+){2}\d/
       when: never
     - if: $CI_MERGE_REQUEST_IID != null
       when: never
-    - when: always      
+    - when: always
 unit-test:installer:
   stage: pipeline
-  needs: [ "accelerator:build" ]
+  needs: ["accelerator:build"]
   tags:
     - arch:amd64
     - size:medium
@@ -310,14 +315,14 @@ unit-test:installer:
       when: never
     - if: $CI_COMMIT_BRANCH =~ /.*v(\d.+){2}\d$/
       when: never
-    - if:  $CI_COMMIT_TAG =~ /v(\d.+){2}\d/
+    - if: $CI_COMMIT_TAG =~ /v(\d.+){2}\d/
       when: never
     - if: $CI_MERGE_REQUEST_IID != null
       when: never
-    - when: always     
+    - when: always
 unit-test:modules:
   stage: pipeline
-  needs: [ "accelerator:build" ]
+  needs: ["accelerator:build"]
   tags:
     - arch:amd64
     - size:medium
@@ -336,14 +341,14 @@ unit-test:modules:
       when: never
     - if: $CI_COMMIT_BRANCH =~ /.*v(\d.+){2}\d$/
       when: never
-    - if:  $CI_COMMIT_TAG =~ /v(\d.+){2}\d/
+    - if: $CI_COMMIT_TAG =~ /v(\d.+){2}\d/
       when: never
     - if: $CI_MERGE_REQUEST_IID != null
       when: never
-    - when: always   
+    - when: always
 unit-test:tools:
   stage: pipeline
-  needs: [ "accelerator:build" ]
+  needs: ["accelerator:build"]
   tags:
     - arch:amd64
     - size:medium
@@ -356,20 +361,20 @@ unit-test:tools:
     reports:
       junit:
         - source/packages/@aws-accelerator/tools/test-reports/*.xml
-    expire_in: 1 day 
+    expire_in: 1 day
   rules:
     - if: $CI_COMMIT_BRANCH == "main"
       when: never
     - if: $CI_COMMIT_BRANCH =~ /.*v(\d.+){2}\d$/
       when: never
-    - if:  $CI_COMMIT_TAG =~ /v(\d.+){2}\d/
+    - if: $CI_COMMIT_TAG =~ /v(\d.+){2}\d/
       when: never
     - if: $CI_MERGE_REQUEST_IID != null
       when: never
     - when: always
 unit-test:aws-lza:
   stage: pipeline
-  needs: [ "accelerator:build" ]
+  needs: ["accelerator:build"]
   tags:
     - arch:amd64
     - size:medium
@@ -382,167 +387,25 @@ unit-test:aws-lza:
     reports:
       junit:
         - source/packages/@aws-lza/test-reports/*.xml
-    expire_in: 1 day 
+    expire_in: 1 day
   rules:
     - if: $CI_COMMIT_BRANCH == "main"
       when: never
     - if: $CI_COMMIT_BRANCH =~ /.*v(\d.+){2}\d$/
       when: never
-    - if:  $CI_COMMIT_TAG =~ /v(\d.+){2}\d/
+    - if: $CI_COMMIT_TAG =~ /v(\d.+){2}\d/
       when: never
     - if: $CI_MERGE_REQUEST_IID != null
       when: never
     - when: always
-direct-connect-gateway:aws:us-east-1:
   stage: pipeline
-  needs: [ "accelerator:build" ]
-  variables:
-    ENV_NAME: sampleConfig
-    ACCOUNT_ID: "${SAMPLE_CONFIG_ENV_NETWORK_ACCOUNT_ID}"
-    PARTITION: aws
-    AWS_DEFAULT_REGION: us-east-1
-    AWS_CREDS_TARGET_ROLE: 'arn:${PARTITION}:iam::${ACCOUNT_ID}:role/${INTEGRATION_TEST_ROLE_NAME}'
-  tags:
-    - arch:amd64
-    - size:large
-  script:
-    - "cd source/packages/@aws-accelerator/constructs/lib/aws-directconnect/direct-connect-gateway"
-    - "yarn test:unit"
-    - "yarn test:integration"
-  rules:
-    - if: $EXECUTE_INTEGRATION_TEST == "Yes"
-      when: always
-    - if: $CI_COMMIT_BRANCH == "integ"
-      when: always
-    - when: never
-  artifacts:
-    when: always
-    reports:
-      junit:
-        - 'source/packages/@aws-accelerator/constructs/lib/aws-directconnect/test-reports/${ENV_NAME}/${AWS_DEFAULT_REGION}/*.*'
-    expire_in: 1 day    
-macie:aws:us-east-1:
-  stage: pipeline
-  needs: [ "accelerator:build" ]
-  variables:
-    ENV_NAME: sampleConfig
-    ACCOUNT_ID: "${SAMPLE_CONFIG_ENV_MANAGEMENT_ACCOUNT_ID}"
-    PARTITION: aws
-    AWS_DEFAULT_REGION: us-east-1
-    AWS_CREDS_TARGET_ROLE: 'arn:${PARTITION}:iam::${ACCOUNT_ID}:role/${INTEGRATION_TEST_ROLE_NAME}'
-  tags:
-    - arch:amd64
-    - size:large
-  script:
-    - "env"
-    - "cd source/packages/@aws-accelerator/constructs/lib/aws-macie/enable-organization-admin-account"
-    - "yarn test:unit"
-    - "yarn test:integration"
-  rules:
-    - if: $EXECUTE_INTEGRATION_TEST == "Yes"
-      when: always
-    - if: $CI_COMMIT_BRANCH == "integ"
-      when: always
-    - when: never
-  artifacts:
-    when: always
-    reports:
-      junit:
-        - 'source/packages/@aws-accelerator/constructs/lib/aws-macie/test-reports/${ENV_NAME}/${AWS_DEFAULT_REGION}/*.xml'
-    expire_in: 1 day
-macie:aws:us-west-2:
-  stage: pipeline
-  needs: [ "accelerator:build" ]
+  needs: ["accelerator:build"]
   variables:
     ENV_NAME: sampleConfig
     ACCOUNT_ID: "${SAMPLE_CONFIG_ENV_MANAGEMENT_ACCOUNT_ID}"
     PARTITION: aws
     AWS_DEFAULT_REGION: us-west-2
-    AWS_CREDS_TARGET_ROLE: 'arn:${PARTITION}:iam::${ACCOUNT_ID}:role/${INTEGRATION_TEST_ROLE_NAME}'
-  tags:
-    - arch:amd64
-    - size:large
-  script:
-    - "cd source/packages/@aws-accelerator/constructs/lib/aws-macie/enable-organization-admin-account"
-    - "yarn test:unit"
-    - "yarn test:integration"
-  rules:
-    - if: $EXECUTE_INTEGRATION_TEST == "Yes"
-      when: always
-    - if: $CI_COMMIT_BRANCH == "integ"
-      when: always
-    - when: never
-  artifacts:
-    when: always
-    reports:
-      junit:
-        - 'source/packages/@aws-accelerator/constructs/lib/aws-macie/test-reports/${ENV_NAME}/${AWS_DEFAULT_REGION}/*.*'
-    expire_in: 1 day    
-guardduty:aws:us-east-1:
-  stage: pipeline
-  needs: [ "accelerator:build" ]
-  variables:
-    ENV_NAME: sampleConfig
-    ACCOUNT_ID: "${SAMPLE_CONFIG_ENV_MANAGEMENT_ACCOUNT_ID}"
-    PARTITION: aws
-    AWS_DEFAULT_REGION: us-east-1
-    AWS_CREDS_TARGET_ROLE: 'arn:${PARTITION}:iam::${ACCOUNT_ID}:role/${INTEGRATION_TEST_ROLE_NAME}'
-  tags:
-    - arch:amd64
-    - size:large
-  script:
-    - "cd source/packages/@aws-accelerator/constructs/lib/aws-guardduty/enable-organization-admin-account"
-    - "yarn test:unit"
-    - "yarn test:integration"
-  rules:
-    - if: $EXECUTE_INTEGRATION_TEST == "Yes"
-      when: always
-    - if: $CI_COMMIT_BRANCH == "integ"
-      when: always
-    - when: never
-  artifacts:
-    when: always
-    reports:
-      junit:
-        - 'source/packages/@aws-accelerator/constructs/lib/aws-guardduty/test-reports/${ENV_NAME}/${AWS_DEFAULT_REGION}/*.*'
-    expire_in: 1 day
-guardduty:aws:us-west-2:
-  stage: pipeline
-  needs: [ "accelerator:build" ]
-  variables:
-    ENV_NAME: sampleConfig
-    ACCOUNT_ID: "${SAMPLE_CONFIG_ENV_MANAGEMENT_ACCOUNT_ID}"
-    PARTITION: aws
-    AWS_DEFAULT_REGION: us-west-2
-    AWS_CREDS_TARGET_ROLE: 'arn:${PARTITION}:iam::${ACCOUNT_ID}:role/${INTEGRATION_TEST_ROLE_NAME}'
-  tags:
-    - arch:amd64
-    - size:large
-  script:
-    - "cd source/packages/@aws-accelerator/constructs/lib/aws-guardduty/enable-organization-admin-account"
-    - "yarn test:unit"
-    - "yarn test:integration"
-  rules:
-    - if: $EXECUTE_INTEGRATION_TEST == "Yes"
-      when: always
-    - if: $CI_COMMIT_BRANCH == "integ"
-      when: always
-    - when: never
-  artifacts:
-    when: always
-    reports:
-      junit:
-        - 'source/packages/@aws-accelerator/constructs/lib/aws-guardduty/test-reports/${ENV_NAME}/${AWS_DEFAULT_REGION}/*.xml'
-    expire_in: 1 day
-audit-manager:aws:us-east-1:
-  stage: pipeline
-  needs: [ "accelerator:build" ]
-  variables:
-    ENV_NAME: sampleConfig
-    ACCOUNT_ID: "${SAMPLE_CONFIG_ENV_MANAGEMENT_ACCOUNT_ID}"
-    PARTITION: aws
-    AWS_DEFAULT_REGION: us-east-1
-    AWS_CREDS_TARGET_ROLE: 'arn:${PARTITION}:iam::${ACCOUNT_ID}:role/${INTEGRATION_TEST_ROLE_NAME}'
+    AWS_CREDS_TARGET_ROLE: "arn:${PARTITION}:iam::${ACCOUNT_ID}:role/${INTEGRATION_TEST_ROLE_NAME}"
   tags:
     - arch:amd64
     - size:large
@@ -560,39 +423,11 @@ audit-manager:aws:us-east-1:
     when: always
     reports:
       junit:
-        - 'source/packages/@aws-accelerator/constructs/lib/aws-auditmanager/test-reports/${ENV_NAME}/${AWS_DEFAULT_REGION}/*.*'
+        - "source/packages/@aws-accelerator/constructs/lib/aws-auditmanager/test-reports/${ENV_NAME}/${AWS_DEFAULT_REGION}/*.xml"
     expire_in: 1 day
-audit-manager:aws:us-west-2:
-  stage: pipeline
-  needs: [ "accelerator:build" ]
-  variables:
-    ENV_NAME: sampleConfig
-    ACCOUNT_ID: "${SAMPLE_CONFIG_ENV_MANAGEMENT_ACCOUNT_ID}"
-    PARTITION: aws
-    AWS_DEFAULT_REGION: us-west-2
-    AWS_CREDS_TARGET_ROLE: 'arn:${PARTITION}:iam::${ACCOUNT_ID}:role/${INTEGRATION_TEST_ROLE_NAME}'
-  tags:
-    - arch:amd64
-    - size:large
-  script:
-    - "cd source/packages/@aws-accelerator/constructs/lib/aws-auditmanager/enable-organization-admin-account"
-    - "yarn test:unit"
-    - "yarn test:integration"
-  rules:
-    - if: $EXECUTE_INTEGRATION_TEST == "Yes"
-      when: always
-    - if: $CI_COMMIT_BRANCH == "integ"
-      when: always
-    - when: never
-  artifacts:
-    when: always
-    reports:
-      junit:
-        - 'source/packages/@aws-accelerator/constructs/lib/aws-auditmanager/test-reports/${ENV_NAME}/${AWS_DEFAULT_REGION}/*.xml'
-    expire_in: 1 day        
 installer:
   stage: pipeline
-  needs: [ "accelerator:build" ]
+  needs: ["accelerator:build"]
   tags:
     - arch:amd64
     - size:large
@@ -614,7 +449,7 @@ installer:
     - when: never
 workshop:
   stage: pipeline
-  needs: [ "accelerator:build" ]
+  needs: ["accelerator:build"]
   tags:
     - arch:amd64
     - size:large
@@ -641,7 +476,7 @@ workshop:
     - when: never
 accelerator:pages:
   stage: pipeline
-  needs: [ "accelerator:build" ]
+  needs: ["accelerator:build"]
   tags:
     - arch:amd64
     - size:large
@@ -665,7 +500,7 @@ accelerator:pages:
     - when: never
 accelerator:release-docs:
   stage: pipeline
-  needs: 
+  needs:
     - job: accelerator:build
       artifacts: true
     - job: accelerator:pages
@@ -673,7 +508,7 @@ accelerator:release-docs:
   tags:
     - arch:amd64
     - size:xlarge
-  variables: 
+  variables:
     AWS_DEFAULT_REGION: us-east-1
     AWS_CREDS_TARGET_ROLE: "${GITLAB_S3_ROLE}"
     BUILD_S3_PATH: s3://${BUCKET_NAME}/build-release/typedocs.zip
@@ -726,7 +561,7 @@ release-artifact-al2023-prep:
     - "dnf install -y zip"
     # empty context is needed for build or else everything is copied
     - "mkdir -p $CI_PROJECT_DIR/deployment/build/context_dir"
-  image: 
+  image:
     # name: gcr.io/kaniko-project/executor:v1.20.0-debug
     name: public.ecr.aws/amazonlinux/amazonlinux:latest
     entrypoint:
@@ -734,7 +569,7 @@ release-artifact-al2023-prep:
   script:
     # make the open source distributable code
     - "cd $CI_PROJECT_DIR/deployment && ls -lart . && $CI_PROJECT_DIR/deployment/build-open-source-dist.sh lza"
-    
+
     # Move and unzip code archive in empty context
     - "unzip -q $CI_PROJECT_DIR/deployment/open-source/lza.zip -d $CI_PROJECT_DIR/deployment/build/context_dir/"
     # move build file into empty context
@@ -752,16 +587,16 @@ release-artifact-al2023-prep:
       when: always
     - when: never
 
-# use created context to build 
+# use created context to build
 release-artifact-al2023-build:
   stage: pipeline
-  needs: [ "release-artifact-al2023-prep" ]
+  needs: ["release-artifact-al2023-prep"]
   tags:
     - arch:amd64
     - size:xlarge
   before_script:
     - mkdir -p /kaniko/.docker
-  image: 
+  image:
     name: gcr.io/kaniko-project/executor:v1.23.2-debug
     entrypoint: [""]
   script:
@@ -776,22 +611,21 @@ release-artifact-al2023-build:
       when: always
     - when: never
 
-
 # upload artifact into package for release
 release-artifact-al2023-upload:
   stage: pipeline
-  needs: [ "release-artifact-al2023-build" ]
+  needs: ["release-artifact-al2023-build"]
   tags:
     - arch:amd64
     - size:large
   variables:
-    TOKEN: 
+    TOKEN:
   before_script:
     # ensure file exists before upload
     - ls -lart $CI_PROJECT_DIR/deployment/build/context_dir/lza-$CI_COMMIT_TAG-al2023.tar.gz
   script:
     # uploads can only be to url/project/<project-id>/packages/generic/<package_name>/<version>/<package_file>
-    # in local testing it was found that package_file must match. 
+    # in local testing it was found that package_file must match.
     # For example, if the package file is named "test.tar.gz" then the upload url must be "url/project/<project-id>/packages/generic/<package_name>/<version>/test.tar.gz"
     - |
       curl --header "JOB-TOKEN: ${CI_JOB_TOKEN}" --upload-file $CI_PROJECT_DIR/deployment/build/context_dir/lza-$CI_COMMIT_TAG-al2023.tar.gz "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/generic/lza-container/${CI_COMMIT_TAG}/lza-${CI_COMMIT_TAG}-al2023.tar.gz"
@@ -809,7 +643,7 @@ release-artifact-al2023-upload:
 # release based on commit tag
 release-artifact-al2023-release:
   stage: pipeline
-  needs: [ "release-artifact-al2023-upload" ]
+  needs: ["release-artifact-al2023-upload"]
   tags:
     - arch:amd64
     - size:large
@@ -822,7 +656,7 @@ release-artifact-al2023-release:
       release-cli create --name "$CI_COMMIT_TAG" --tag-name $CI_COMMIT_TAG \
         --assets-link "{\"name\":\"lza-${CI_COMMIT_TAG}-al2023.tar.gz\",\"url\":\"${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/generic/lza-container/${CI_COMMIT_TAG}/lza-${CI_COMMIT_TAG}-al2023.tar.gz\"}" \
         --assets-link "{\"name\":\"lza-${CI_COMMIT_TAG}-al2023.tar.gz.sha1sum\",\"url\":\"${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/generic/lza-container/${CI_COMMIT_TAG}/lza-${CI_COMMIT_TAG}-al2023.tar.gz.sha1sum\"}" \
-        --description "Landing Zone Accelerator on AWS container version $CI_COMMIT_TAG built on AL2023" 
+        --description "Landing Zone Accelerator on AWS container version $CI_COMMIT_TAG built on AL2023"
   rules:
     - if: $CI_PROJECT_ID == "11925" && $CI_COMMIT_TAG =~ /v(\d.+){2}\d/
       when: always
