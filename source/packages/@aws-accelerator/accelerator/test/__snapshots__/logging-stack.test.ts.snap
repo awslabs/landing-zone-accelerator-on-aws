@@ -2698,6 +2698,7 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 1`] = `
                     "logs:AssociateKmsKey",
                     "logs:DescribeLogGroups",
                     "logs:DescribeSubscriptionFilters",
+                    "logs:DescribeAccountPolicies",
                   ],
                   "Effect": "Allow",
                   "Resource": [
@@ -2746,7 +2747,27 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 1`] = `
                         ],
                       ],
                     },
+                    {
+                      "Fn::Join": [
+                        "",
+                        [
+                          "arn:",
+                          {
+                            "Ref": "AWS::Partition",
+                          },
+                          ":logs:us-east-1:333333333333:*:*",
+                        ],
+                      ],
+                    },
                   ],
+                },
+                {
+                  "Action": [
+                    "logs:PutAccountPolicy",
+                    "logs:DeleteAccountPolicy",
+                  ],
+                  "Effect": "Allow",
+                  "Resource": "*",
                 },
               ],
               "Version": "2012-10-17",
@@ -3899,7 +3920,7 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 1`] = `
           "Fn::Join": [
             "",
             [
-              "{"Version":"2012-10-17","Statement":[{"Effect":"Allow","Principal":{"AWS":["*"]},"Action":"logs:PutSubscriptionFilter","Resource":"arn:",
+              "{"Version":"2012-10-17","Statement":[{"Effect":"Allow","Principal":{"AWS":["*"]},"Action":["logs:PutSubscriptionFilter","logs:PutAccountPolicy"],"Resource":"arn:",
               {
                 "Ref": "AWS::Partition",
               },
@@ -4090,7 +4111,10 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 1`] = `
           ],
         },
         "logExclusionOption": "{"account":"333333333333","region":"us-east-1","logGroupNames":["test1/*","/aws/lambda/AWSAccelerator-FirehoseRecordsProcessor"]}",
+        "overrideExisting": true,
         "replaceLogDestinationArn": "arn:aws:logs:us-east-1:111111111111:destination/log-destination",
+        "selectionCriteria": "LogGroupName NOT IN ["/aws/lambda/AWSAccelerator-FirehoseRecordsProcessor", "development", "AppA"]",
+        "subscriptionType": "ACCOUNT",
       },
       "Type": "Custom::UpdateSubscriptionFilter",
       "UpdateReplacePolicy": "Delete",
@@ -4185,6 +4209,7 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 1`] = `
                 "Arn",
               ],
             },
+            "LogSubscriptionType": "ACCOUNT",
           },
         },
         "Handler": "index.handler",
@@ -6505,6 +6530,7 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 2`] = `
                     "logs:AssociateKmsKey",
                     "logs:DescribeLogGroups",
                     "logs:DescribeSubscriptionFilters",
+                    "logs:DescribeAccountPolicies",
                   ],
                   "Effect": "Allow",
                   "Resource": [
@@ -6553,7 +6579,27 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 2`] = `
                         ],
                       ],
                     },
+                    {
+                      "Fn::Join": [
+                        "",
+                        [
+                          "arn:",
+                          {
+                            "Ref": "AWS::Partition",
+                          },
+                          ":logs:us-west-2:333333333333:*:*",
+                        ],
+                      ],
+                    },
                   ],
+                },
+                {
+                  "Action": [
+                    "logs:PutAccountPolicy",
+                    "logs:DeleteAccountPolicy",
+                  ],
+                  "Effect": "Allow",
+                  "Resource": "*",
                 },
               ],
               "Version": "2012-10-17",
@@ -8750,7 +8796,7 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 2`] = `
           "Fn::Join": [
             "",
             [
-              "{"Version":"2012-10-17","Statement":[{"Effect":"Allow","Principal":{"AWS":["*"]},"Action":"logs:PutSubscriptionFilter","Resource":"arn:",
+              "{"Version":"2012-10-17","Statement":[{"Effect":"Allow","Principal":{"AWS":["*"]},"Action":["logs:PutSubscriptionFilter","logs:PutAccountPolicy"],"Resource":"arn:",
               {
                 "Ref": "AWS::Partition",
               },
@@ -8935,7 +8981,10 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 2`] = `
           ],
         },
         "logExclusionOption": "{"account":"333333333333","region":"us-west-2","logGroupNames":["test1/*","/aws/lambda/AWSAccelerator-FirehoseRecordsProcessor"]}",
+        "overrideExisting": true,
         "replaceLogDestinationArn": "arn:aws:logs:us-east-1:111111111111:destination/log-destination",
+        "selectionCriteria": "LogGroupName NOT IN ["/aws/lambda/AWSAccelerator-FirehoseRecordsProcessor", "development", "AppA"]",
+        "subscriptionType": "ACCOUNT",
       },
       "Type": "Custom::UpdateSubscriptionFilter",
       "UpdateReplacePolicy": "Delete",
@@ -9024,6 +9073,7 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 2`] = `
                 "Arn",
               ],
             },
+            "LogSubscriptionType": "ACCOUNT",
           },
         },
         "Handler": "index.handler",
@@ -12278,6 +12328,7 @@ exports[`LoggingStackOuTargets Construct(LoggingStackOuTargets):  Snapshot Test 
                     "logs:AssociateKmsKey",
                     "logs:DescribeLogGroups",
                     "logs:DescribeSubscriptionFilters",
+                    "logs:DescribeAccountPolicies",
                   ],
                   "Effect": "Allow",
                   "Resource": [
@@ -12326,7 +12377,27 @@ exports[`LoggingStackOuTargets Construct(LoggingStackOuTargets):  Snapshot Test 
                         ],
                       ],
                     },
+                    {
+                      "Fn::Join": [
+                        "",
+                        [
+                          "arn:",
+                          {
+                            "Ref": "AWS::Partition",
+                          },
+                          ":logs:us-east-1:333333333333:*:*",
+                        ],
+                      ],
+                    },
                   ],
+                },
+                {
+                  "Action": [
+                    "logs:PutAccountPolicy",
+                    "logs:DeleteAccountPolicy",
+                  ],
+                  "Effect": "Allow",
+                  "Resource": "*",
                 },
               ],
               "Version": "2012-10-17",
@@ -13245,7 +13316,7 @@ exports[`LoggingStackOuTargets Construct(LoggingStackOuTargets):  Snapshot Test 
           "Fn::Join": [
             "",
             [
-              "{"Version":"2012-10-17","Statement":[{"Effect":"Allow","Principal":{"AWS":["*"]},"Action":"logs:PutSubscriptionFilter","Resource":"arn:",
+              "{"Version":"2012-10-17","Statement":[{"Effect":"Allow","Principal":{"AWS":["*"]},"Action":["logs:PutSubscriptionFilter","logs:PutAccountPolicy"],"Resource":"arn:",
               {
                 "Ref": "AWS::Partition",
               },
@@ -13436,6 +13507,7 @@ exports[`LoggingStackOuTargets Construct(LoggingStackOuTargets):  Snapshot Test 
           ],
         },
         "logExclusionOption": "{"account":"333333333333","region":"us-east-1","logGroupNames":["/aws/lambda/AWSAccelerator-FirehoseRecordsProcessor"]}",
+        "subscriptionType": "LOG_GROUP",
       },
       "Type": "Custom::UpdateSubscriptionFilter",
       "UpdateReplacePolicy": "Delete",
@@ -13530,6 +13602,7 @@ exports[`LoggingStackOuTargets Construct(LoggingStackOuTargets):  Snapshot Test 
                 "Arn",
               ],
             },
+            "LogSubscriptionType": "LOG_GROUP",
           },
         },
         "Handler": "index.handler",

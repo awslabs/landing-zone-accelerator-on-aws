@@ -277,6 +277,10 @@ logging:
           - Credentials
     firehose:
       fileExtension: json.gz
+    subscription:
+      type: ACCOUNT
+      selectionCriteria: 'LogGroupName NOT IN ["/aws/lambda/AWSAccelerator-FirehoseRecordsProcessor", "development", "AppA"]'
+      overrideExisting: true
     enable: true
     dynamicPartitioning: dynamic-partitioning/log-filters.json
     replaceLogDestinationArn: replaceLogDestinationArn

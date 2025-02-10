@@ -409,6 +409,12 @@ export class CloudWatchLogsExclusionConfig implements i.ICloudWatchLogsExclusion
 export class CloudWatchFirehoseConfig implements i.ICloudWatchFirehoseConfig {
   readonly fileExtension: string | undefined = undefined;
 }
+export class CloudWatchSubscriptionConfig implements i.ICloudWatchSubscriptionConfig {
+  readonly type: 'ACCOUNT' | 'LOG_GROUP' = 'LOG_GROUP';
+  readonly selectionCriteria: string | undefined = undefined;
+  readonly overrideExisting?: boolean | undefined;
+  readonly filterPattern?: string | undefined;
+}
 
 export class CloudWatchLogsConfig implements i.ICloudWatchLogsConfig {
   readonly dynamicPartitioning: string | undefined = undefined;
@@ -418,6 +424,7 @@ export class CloudWatchLogsConfig implements i.ICloudWatchLogsConfig {
   readonly replaceLogDestinationArn: string | undefined = undefined;
   readonly dataProtection: CloudWatchDataProtectionConfig | undefined = undefined;
   readonly firehose: CloudWatchFirehoseConfig | undefined = undefined;
+  readonly subscription: CloudWatchSubscriptionConfig | undefined = undefined;
 }
 
 export class LoggingConfig implements i.ILoggingConfig {

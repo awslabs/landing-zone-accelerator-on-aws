@@ -66,6 +66,7 @@ exports[`CloudWatchLogsSubscriptionFilter Construct(CloudWatchLogsSubscriptionFi
             ],
           ],
         },
+        "subscriptionType": "LOG_GROUP",
       },
       "Type": "Custom::UpdateSubscriptionFilter",
       "UpdateReplacePolicy": "Delete",
@@ -109,6 +110,7 @@ exports[`CloudWatchLogsSubscriptionFilter Construct(CloudWatchLogsSubscriptionFi
             ],
           ],
         },
+        "subscriptionType": "ACCOUNT",
       },
       "Type": "Custom::UpdateSubscriptionFilter",
       "UpdateReplacePolicy": "Delete",
@@ -291,6 +293,7 @@ exports[`CloudWatchLogsSubscriptionFilter Construct(CloudWatchLogsSubscriptionFi
                     "logs:AssociateKmsKey",
                     "logs:DescribeLogGroups",
                     "logs:DescribeSubscriptionFilters",
+                    "logs:DescribeAccountPolicies",
                   ],
                   "Effect": "Allow",
                   "Resource": [
@@ -359,7 +362,35 @@ exports[`CloudWatchLogsSubscriptionFilter Construct(CloudWatchLogsSubscriptionFi
                         ],
                       ],
                     },
+                    {
+                      "Fn::Join": [
+                        "",
+                        [
+                          "arn:",
+                          {
+                            "Ref": "AWS::Partition",
+                          },
+                          ":logs:",
+                          {
+                            "Ref": "AWS::Region",
+                          },
+                          ":",
+                          {
+                            "Ref": "AWS::AccountId",
+                          },
+                          ":*:*",
+                        ],
+                      ],
+                    },
                   ],
+                },
+                {
+                  "Action": [
+                    "logs:PutAccountPolicy",
+                    "logs:DeleteAccountPolicy",
+                  ],
+                  "Effect": "Allow",
+                  "Resource": "*",
                 },
               ],
               "Version": "2012-10-17",

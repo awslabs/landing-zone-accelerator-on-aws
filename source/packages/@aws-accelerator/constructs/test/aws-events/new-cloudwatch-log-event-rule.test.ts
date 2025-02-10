@@ -30,6 +30,7 @@ new NewCloudWatchLogEvent(stack, 'NewCloudWatchLogEvent', {
   logArchiveAccountId: 'some-account-id',
   acceleratorPrefix: 'AWSAccelerator',
   useExistingRoles: false,
+  subscriptionType: 'LOG_GROUP',
 });
 
 new NewCloudWatchLogEvent(stack, 'NewCloudWatchLogEventExistingIam', {
@@ -41,6 +42,7 @@ new NewCloudWatchLogEvent(stack, 'NewCloudWatchLogEventExistingIam', {
   logArchiveAccountId: 'some-account-id',
   acceleratorPrefix: 'AWSAccelerator',
   useExistingRoles: true,
+  subscriptionType: 'ACCOUNT',
 });
 
 /**

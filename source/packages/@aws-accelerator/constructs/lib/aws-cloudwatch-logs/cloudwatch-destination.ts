@@ -78,7 +78,8 @@ export class CloudWatchDestination extends Construct {
         {
           Effect: 'Allow',
           Principal: accountPrincipals,
-          Action: 'logs:PutSubscriptionFilter',
+          // updated permissions as per doc: https://docs.aws.amazon.com/AmazonCloudWatch/latest/logs/CreateDestination-Account.html
+          Action: ['logs:PutSubscriptionFilter', 'logs:PutAccountPolicy'],
           Resource: `arn:${cdk.Stack.of(this).partition}:logs:${cdk.Stack.of(this).region}:${
             cdk.Stack.of(this).account
           }:destination:${props.acceleratorPrefix}CloudWatchToS3`,

@@ -68,6 +68,23 @@ export interface CloudWatchLogsCreateProps {
    * Use existing IAM roles for deployment.
    */
   readonly useExistingRoles: boolean;
+  /**
+   * Type of Cloudwatch log subscription
+   */
+  readonly subscriptionType: string;
+  /**
+   * Selection criteria for CloudWatch logs in the account policy
+   */
+  readonly selectionCriteria?: string;
+  /**
+   * Override existing account setting
+   */
+  readonly overrideExisting?: boolean;
+  /**
+   * CloudWatch Logs filter pattern. Input should be based on docs for subscription filter
+   * {@link https://docs.aws.amazon.com/AmazonCloudWatchLogs/latest/APIReference/API_PutAccountPolicy.html#API_PutAccountPolicy_RequestSyntax}
+   */
+  readonly filterPattern?: string;
 }
 
 /**
@@ -112,6 +129,7 @@ export class CloudWatchLogsSubscriptionFilter extends Construct {
             'logs:AssociateKmsKey',
             'logs:DescribeLogGroups',
             'logs:DescribeSubscriptionFilters',
+            'logs:DescribeAccountPolicies',
           ],
           Resource: [
             `arn:${cdk.Stack.of(this).partition}:logs:${cdk.Stack.of(this).region}:${
@@ -119,7 +137,6 @@ export class CloudWatchLogsSubscriptionFilter extends Construct {
             }:log-group:*`,
           ],
         },
-
         {
           Effect: 'Allow',
           Action: ['logs:PutSubscriptionFilter', 'logs:DeleteSubscriptionFilter'],
@@ -130,7 +147,14 @@ export class CloudWatchLogsSubscriptionFilter extends Construct {
             `arn:${cdk.Stack.of(this).partition}:logs:${cdk.Stack.of(this).region}:${
               props.logArchiveAccountId
             }:destination:*`,
+            `arn:${cdk.Stack.of(this).partition}:logs:${cdk.Stack.of(this).region}:${cdk.Stack.of(this).account}:*:*`,
           ],
+        },
+        {
+          Effect: 'Allow',
+          Action: ['logs:PutAccountPolicy', 'logs:DeleteAccountPolicy'],
+          // making policies in IAM console shows no option to fix a resource. Applying resource restriction with wildcards causes change to fail with error 'because no identity-based policy allows the logs:PutAccountPolicy action'
+          Resource: '*',
         },
       ],
     });
@@ -146,6 +170,10 @@ export class CloudWatchLogsSubscriptionFilter extends Construct {
           ? JSON.stringify(props.logExclusionOption)
           : props.logExclusionOption,
         replaceLogDestinationArn: props.replaceLogDestinationArn,
+        subscriptionType: props.subscriptionType,
+        selectionCriteria: props.selectionCriteria,
+        overrideExisting: props.overrideExisting,
+        filterPattern: props.filterPattern,
       },
     });
 

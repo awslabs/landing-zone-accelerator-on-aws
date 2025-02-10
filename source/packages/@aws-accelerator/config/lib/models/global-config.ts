@@ -1114,6 +1114,62 @@ export interface ICloudWatchFirehoseConfig {
 }
 
 /**
+ * *{@link IGlobalConfig} / {@link ILoggingConfig} / {@link ICloudWatchLogsConfig}/ {@link ICloudWatchSubscriptionConfig}*
+ *
+ * @description
+ * Accelerator global CloudWatch Logs subscription configuration
+ *
+ * @example
+ * ```
+ *  logging:
+ *    cloudwatchLogs:
+ *      subscription:
+ *        type: ACCOUNT
+ *        selectionCriteria: 'LogGroupName NOT IN [ /aws/lambda/AWSAccelerator-FirehoseRecordsProcessor development AppA]'
+ *        overrideExisting: true
+ * ```
+ */
+export interface ICloudWatchSubscriptionConfig {
+  /**
+   * @remarks
+   * If this property is undefined, Cloudwatch logs subscription filter will be applied for each log group by a Lambda function rather than through a CloudWatch account-level subscription filter.
+   *
+   * @example
+   * ```
+   * type: ACCOUNT
+   * ```
+   * When set to 'ACCOUNT' account wide subscription is applied as per https://docs.aws.amazon.com/AmazonCloudWatch/latest/logs/SubscriptionFilters-AccountLevel.html.
+   * When set to 'LOG_GROUP' it will run a function to apply to each log group using a lambda function.
+   * Defaults to 'LOG_GROUP'.
+   */
+  readonly type: 'ACCOUNT' | 'LOG_GROUP';
+  /**
+   *
+   * Only applicable, when type is set to 'ACCOUNT'. The selection criteria is set to take input as string based on service api listed here: https://docs.aws.amazon.com/AmazonCloudWatchLogs/latest/APIReference/API_PutAccountPolicy.html
+   * @example
+   * ```
+   * selectionCriteria: 'LogGroupName NOT IN ["/aws/lambda/AWSAccelerator-FirehoseRecordsProcessor", "development", "AppA"]'
+   * ```
+   * This means log group name /aws/lambda/AWSAccelerator-FirehoseRecordsProcessor, development, AppA will not have a subscription filter. Please use this to prevent log recursion (https://docs.aws.amazon.com/AmazonCloudWatch/latest/logs/Subscriptions-recursion-prevention.html).
+   *
+   */
+  readonly selectionCriteria?: t.NonEmptyString;
+  /**
+   * (OPTIONAL) Indicates whether existing CloudWatch Log subscription configuration can be overwritten. Any existing policy will be updated and renamed to 'ACCELERATOR_ACCOUNT_SUBSCRIPTION_POLICY'. Upon deleting the solution or disabling logging for cloudwatch in global config, this policy will be removed. If type is set to 'LOG_GROUP' this parameter will not be used.
+   *
+   * @default false
+   */
+  readonly overrideExisting?: boolean;
+  /**
+   * (OPTIONAL) Indicates whether to apply specific filter pattern to the subscription as per https://docs.aws.amazon.com/AmazonCloudWatch/latest/logs/CreateSubscriptionFilter-Account.html
+   * If no value is provided all logs events will match filter criteria
+   *
+   * (This property is only applicable when type is set to 'LOG_GROUP'.
+   */
+  readonly filterPattern?: t.NonEmptyString;
+}
+
+/**
  * *{@link IGlobalConfig} / {@link ILoggingConfig} / {@link ICloudWatchLogsConfig}*
  *
  * @description

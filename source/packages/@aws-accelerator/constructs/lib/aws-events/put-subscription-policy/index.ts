@@ -26,32 +26,63 @@ import {
 } from '@aws-sdk/client-cloudwatch-logs';
 import { setRetryStrategy } from '@aws-accelerator/utils/lib/common-functions';
 
+/**
+ * Type definition for CloudWatch log exclusion settings
+ */
 export type cloudwatchExclusionProcessedItem = {
+  /** AWS account ID */
   account: string;
+  /** AWS region */
   region: string;
+  /** Flag to exclude all log groups */
   excludeAll?: boolean;
+  /** Array of log group names to exclude */
   logGroupNames?: string[];
 };
 
-const acceleratorPrefix = process.env['AcceleratorPrefix'];
-const logSubscriptionRoleArn = process.env['LogSubscriptionRole']!;
-const logDestinationArn = process.env['LogDestination']!;
-const logRetention = process.env['LogRetention']!;
-const logKmsKeyArn = process.env['LogKmsKeyArn'];
-const logExclusionSetting = process.env['LogExclusion']!;
-const solutionId = process.env['SOLUTION_ID'];
-
 const logsClient = new CloudWatchLogsClient({
-  customUserAgent: solutionId,
+  customUserAgent: process.env['SOLUTION_ID']!,
   retryStrategy: setRetryStrategy(),
 });
-let logExclusionParse: cloudwatchExclusionProcessedItem | undefined;
-if (logExclusionSetting) {
-  logExclusionParse = JSON.parse(logExclusionSetting);
-} else {
-  logExclusionParse = undefined;
+
+/**
+ * Retrieves environment variables required for the Lambda function
+ * @returns {Object} Object containing environment variables
+ */
+function getEnvVariables() {
+  return {
+    acceleratorPrefix: process.env['AcceleratorPrefix'],
+    logSubscriptionRoleArn: process.env['LogSubscriptionRole']!,
+    logDestinationArn: process.env['LogDestination']!,
+    logRetention: process.env['LogRetention']!,
+    logKmsKeyArn: process.env['LogKmsKeyArn'],
+    logExclusionSetting: process.env['LogExclusion']!,
+    subscriptionType: process.env['LogSubscriptionType']!,
+  };
 }
+
+/**
+ * Lambda handler to process CloudWatch log group events
+ * Updates log group retention, subscription, and encryption settings
+ * @param event {ScheduledEvent} CloudWatch event trigger
+ */
 export async function handler(event: ScheduledEvent) {
+  const {
+    acceleratorPrefix,
+    logSubscriptionRoleArn,
+    logDestinationArn,
+    logRetention,
+    logKmsKeyArn,
+    logExclusionSetting,
+    subscriptionType,
+  } = getEnvVariables();
+
+  let logExclusionParse: cloudwatchExclusionProcessedItem | undefined;
+  if (logExclusionSetting) {
+    logExclusionParse = JSON.parse(logExclusionSetting);
+  } else {
+    logExclusionParse = undefined;
+  }
   const logGroupName = event.detail.requestParameters.logGroupName as string;
   const username = event.detail.userIdentity.sessionContext.sessionIssuer.userName as string;
 
@@ -64,7 +95,13 @@ export async function handler(event: ScheduledEvent) {
       if (page.logGroups && page.logGroups.every(lg => !!lg)) {
         for (const logGroup of page.logGroups ?? []) {
           await updateRetentionPolicy(logRetention, logGroup);
-          await updateSubscriptionPolicy(logGroup, logExclusionParse);
+          await updateSubscriptionPolicy(
+            subscriptionType,
+            logGroup,
+            logExclusionParse,
+            logSubscriptionRoleArn,
+            logDestinationArn,
+          );
           await updateKmsKey(logGroup, logKmsKeyArn);
         }
       }
@@ -74,6 +111,11 @@ export async function handler(event: ScheduledEvent) {
   }
 }
 
+/**
+ * Updates the retention policy for a CloudWatch log group
+ * @param logRetentionValue {string} Number of days to retain logs
+ * @param logGroupValue {LogGroup} The log group to update
+ */
 export async function updateRetentionPolicy(logRetentionValue: string, logGroupValue: LogGroup) {
   // filter out logGroups that already have retention set
   if (logGroupValue.retentionInDays === parseInt(logRetentionValue)) {
@@ -95,10 +137,25 @@ export async function updateRetentionPolicy(logRetentionValue: string, logGroupV
   }
 }
 
+/**
+ * Updates the subscription policy for a CloudWatch log group
+ * @param subscriptionType {string} Type of subscription (ACCOUNT or LOG_GROUP)
+ * @param logGroup {LogGroup} The log group to update
+ * @param logExclusionSetting {cloudwatchExclusionProcessedItem | undefined} Exclusion settings
+ * @param logDestinationArn {string} ARN of the log destination
+ * @param logSubscriptionRoleArn {string} ARN of the IAM role for subscription
+ */
 export async function updateSubscriptionPolicy(
+  subscriptionType: string,
   logGroup: LogGroup,
   logExclusionSetting: cloudwatchExclusionProcessedItem | undefined,
+  logDestinationArn: string,
+  logSubscriptionRoleArn: string,
 ) {
+  if (subscriptionType === 'ACCOUNT') {
+    console.log(`Account level subscription is set, skipping subscription update.`);
+    return;
+  }
   let isGroupExcluded = false;
   if (logExclusionSetting) {
     isGroupExcluded = await isLogGroupExcluded(logGroup.logGroupName!, logExclusionSetting);
@@ -112,10 +169,16 @@ export async function updateSubscriptionPolicy(
     await deleteSubscription(logGroup.logGroupName!);
   } else if (!isGroupExcluded && !hasAcceleratorFilter) {
     // create the accelerator subscription filter for this logGroup
-    await setupSubscription(logGroup.logGroupName!);
+    await setupSubscription(logGroup.logGroupName!, logDestinationArn, logSubscriptionRoleArn);
   }
 }
 
+/**
+ * Checks if a log group has an accelerator subscription filter
+ * @param filters {SubscriptionFilter[]} Array of subscription filters
+ * @param logGroupName {string} Name of the log group
+ * @returns {Promise<boolean>} True if accelerator filter exists
+ */
 export async function hasAcceleratorSubscriptionFilter(filters: SubscriptionFilter[], logGroupName: string) {
   if (filters.length < 1) {
     return false;
@@ -125,6 +188,11 @@ export async function hasAcceleratorSubscriptionFilter(filters: SubscriptionFilt
   return false;
 }
 
+/**
+ * Retrieves existing subscription filters for a log group
+ * @param logGroupName {string} Name of the log group
+ * @returns {Promise<SubscriptionFilter[]>} Array of subscription filters
+ */
 export async function getExistingSubscriptionFilters(logGroupName: string) {
   const subscriptionFilters = [];
 
@@ -143,6 +211,12 @@ export async function getExistingSubscriptionFilters(logGroupName: string) {
   return subscriptionFilters;
 }
 
+/**
+ * Determines if a log group should be excluded based on exclusion settings
+ * @param logGroupName {string} Name of the log group
+ * @param logExclusionSetting {cloudwatchExclusionProcessedItem} Exclusion settings
+ * @returns {Promise<boolean>} True if log group should be excluded
+ */
 export async function isLogGroupExcluded(logGroupName: string, logExclusionSetting: cloudwatchExclusionProcessedItem) {
   if (logExclusionSetting.excludeAll) {
     return true;
@@ -157,6 +231,10 @@ export async function isLogGroupExcluded(logGroupName: string, logExclusionSetti
   return false;
 }
 
+/**
+ * Deletes a subscription filter from a log group
+ * @param logGroupName {string} Name of the log group
+ */
 export async function deleteSubscription(logGroupName: string) {
   console.log(`Deleting subscription for log group ${logGroupName}`);
   try {
@@ -168,7 +246,17 @@ export async function deleteSubscription(logGroupName: string) {
   }
 }
 
-export async function setupSubscription(logGroupName: string) {
+/**
+ * Sets up a subscription filter for a log group
+ * @param logGroupName {string} Name of the log group
+ * @param logDestinationArn {string} ARN of the log destination
+ * @param logSubscriptionRoleArn {string} ARN of the IAM role for subscription
+ */
+export async function setupSubscription(
+  logGroupName: string,
+  logDestinationArn: string,
+  logSubscriptionRoleArn: string,
+) {
   console.log(`Setting destination ${logDestinationArn} for log group ${logGroupName}`);
   await throttlingBackOff(() =>
     logsClient.send(
@@ -183,6 +271,11 @@ export async function setupSubscription(logGroupName: string) {
   );
 }
 
+/**
+ * Updates the KMS key for a CloudWatch log group
+ * @param logGroupValue {LogGroup} The log group to update
+ * @param logKmsKeyArn {string | undefined} ARN of the KMS key
+ */
 export async function updateKmsKey(logGroupValue: LogGroup, logKmsKeyArn?: string) {
   // check kmsKey on existing logGroup.
   if (logGroupValue.kmsKeyId) {
