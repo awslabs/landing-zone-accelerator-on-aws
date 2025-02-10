@@ -1125,6 +1125,11 @@ export class LoggingStack extends AcceleratorStack {
       replaceLogDestinationArn: this.props.globalConfig.logging.cloudwatchLogs?.replaceLogDestinationArn,
       acceleratorPrefix: this.props.prefixes.accelerator,
       useExistingRoles: this.props.useExistingRoles ?? false,
+      // if no type is specified then assume that subscription filter has to be applied to each log group
+      subscriptionType: this.props.globalConfig.logging.cloudwatchLogs?.subscription?.type ?? 'LOG_GROUP',
+      selectionCriteria: this.props.globalConfig.logging.cloudwatchLogs?.subscription?.selectionCriteria,
+      overrideExisting: this.props.globalConfig.logging.cloudwatchLogs?.subscription?.overrideExisting,
+      filterPattern: this.props.globalConfig.logging.cloudwatchLogs?.subscription?.filterPattern,
     });
 
     //For every new log group that is created, set up subscription, KMS and retention
@@ -1138,6 +1143,8 @@ export class LoggingStack extends AcceleratorStack {
       exclusionSetting: accountRegionExclusion!,
       acceleratorPrefix: this.props.prefixes.accelerator,
       useExistingRoles: this.props.useExistingRoles ?? false,
+      // if no type is specified then assume that subscription filter has to be applied to each log group
+      subscriptionType: this.props.globalConfig.logging.cloudwatchLogs?.subscription?.type ?? 'LOG_GROUP',
     });
 
     // create custom resource before the new log group logic is created.

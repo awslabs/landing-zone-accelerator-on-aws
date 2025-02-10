@@ -13,6 +13,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - chore(module): configure lza module foundation framework
 - chore(networking): use SDK v3 for direct connect gateway custom resource
 - chore(modules): rename module parameter and dry run response
+- feat(module): added Amazon Security Lake set-delegated-admin action
+- feat(logging): cloudwatch logs account setting for subscription filter
 
 ### Fixed
 

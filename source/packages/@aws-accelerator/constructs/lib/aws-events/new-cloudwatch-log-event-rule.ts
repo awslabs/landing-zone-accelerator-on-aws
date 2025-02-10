@@ -68,6 +68,10 @@ export interface NewCloudWatchLogsEventProps {
    * CloudWatch Logs exclusion setting
    */
   exclusionSetting?: cloudwatchExclusionProcessedItem;
+  /**
+   * Cloudwatch log subscription setting
+   */
+  subscriptionType: string;
 }
 
 /**
@@ -107,6 +111,7 @@ export class NewCloudWatchLogEvent extends Construct {
       { LogDestination: props.logDestinationArn },
       { LogSubscriptionRole: LogSubscriptionRole },
       { LogExclusion: JSON.stringify(props.exclusionSetting!) },
+      { LogSubscriptionType: props.subscriptionType },
     ];
 
     if (props.logsKmsKey) {

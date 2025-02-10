@@ -21,6 +21,12 @@ import {
   DescribeSubscriptionFiltersCommandOutput,
   DescribeSubscriptionFiltersCommand,
   DeleteSubscriptionFilterCommand,
+  AccountPolicy,
+  DescribeAccountPoliciesCommand,
+  PolicyType,
+  Scope,
+  PutAccountPolicyCommand,
+  DeleteAccountPolicyCommand,
 } from '@aws-sdk/client-cloudwatch-logs';
 
 import { setRetryStrategy, wildcardMatch } from '@aws-accelerator/utils/lib/common-functions';
@@ -32,13 +38,22 @@ const solutionId = process.env['SOLUTION_ID'] ?? '';
 const retryStrategy = setRetryStrategy();
 
 const logsClient = new CloudWatchLogsClient({ customUserAgent: solutionId, retryStrategy });
+const policyName = 'ACCELERATOR_ACCOUNT_SUBSCRIPTION_POLICY';
 
+/**
+ * Type definition for CloudWatch log exclusion settings
+ */
 export type cloudwatchExclusionProcessedItem = {
+  /** AWS account ID */
   account: string;
+  /** AWS region */
   region: string;
+  /** Flag to exclude all log groups */
   excludeAll?: boolean;
+  /** Array of log group names to exclude */
   logGroupNames?: string[];
 };
+
 /**
  * update-subscription-policy - lambda handler
  *
@@ -59,10 +74,14 @@ export async function handler(event: CloudFormationCustomResourceEvent): Promise
 
   const logExclusionOption: string | undefined = event.ResourceProperties['logExclusionOption'];
   const replaceLogDestinationArn: string | undefined = event.ResourceProperties['replaceLogDestinationArn'];
+  const subscriptionType: string = event.ResourceProperties['subscriptionType'];
+  const selectionCriteria: string | undefined = event.ResourceProperties['selectionCriteria'];
+  const overrideExisting = event.ResourceProperties['overrideExisting'] === 'true' ? true : false;
+  const filterPattern = event.ResourceProperties['filterPattern'] ?? '';
 
   let logExclusionParse: cloudwatchExclusionProcessedItem | undefined;
-  if (logExclusionOption) {
-    logExclusionParse = JSON.parse(logExclusionOption);
+  if (logExclusionOption && isValidLogExclusionOption(logExclusionOption)) {
+    logExclusionParse = JSON.parse(logExclusionOption) as cloudwatchExclusionProcessedItem;
   } else {
     logExclusionParse = undefined;
   }
@@ -70,32 +89,193 @@ export async function handler(event: CloudFormationCustomResourceEvent): Promise
   switch (event.RequestType) {
     case 'Create':
     case 'Update':
-      // get all logGroups in the account
-      const logGroups = await getLogGroups(acceleratorCreatedLogDestinationArn, logExclusionParse);
-
-      // Process retention and encryption setting for ALL log groups
-      for (const allLogGroup of logGroups.allLogGroups) {
-        await updateRetentionPolicy(parseInt(acceleratorLogRetentionInDays), allLogGroup);
-
-        await updateLogGroupEncryption(allLogGroup, acceleratorLogKmsKeyArn);
-      }
-
-      // Process subscription only for included log groups
-      for (const includedLogGroup of logGroups.includedLogGroups) {
-        await manageLogSubscriptions(
-          includedLogGroup.logGroupName!,
-          acceleratorCreatedLogDestinationArn,
+      await manageLogGroups(
+        {
           acceleratorLogSubscriptionRoleArn,
+          acceleratorCreatedLogDestinationArn,
+          subscriptionType,
+          selectionCriteria,
+          logExclusionParse,
           replaceLogDestinationArn,
+          overrideExisting,
+          filterPattern,
+        },
+        {
+          acceleratorLogRetentionInDays,
+        },
+        {
+          acceleratorLogKmsKeyArn,
+        },
+      );
+      if (
+        event.RequestType === 'Update' &&
+        subscriptionType === 'ACCOUNT' &&
+        event.OldResourceProperties['subscriptionType'] === 'LOG_GROUP'
+      ) {
+        console.log(
+          `Subscription type changing from ${event.OldResourceProperties['subscriptionType']} to ${subscriptionType}. Will remove log group subscriptions`,
         );
+        await deleteAllLogGroupSubscriptions(acceleratorCreatedLogDestinationArn);
+      } else if (
+        event.RequestType === 'Update' &&
+        subscriptionType === 'LOG_GROUP' &&
+        event.OldResourceProperties['subscriptionType'] === 'ACCOUNT'
+      ) {
+        console.log(
+          `Subscription type changing from ${event.OldResourceProperties['subscriptionType']} to ${subscriptionType}. Will remove account subscriptions`,
+        );
+        const existingPolicies = await getExistingSubscriptionPolicies(logsClient);
+        if (existingPolicies[0].policyName! === policyName) {
+          await throttlingBackOff(() =>
+            logsClient.send(
+              new DeleteAccountPolicyCommand({
+                policyType: PolicyType.SUBSCRIPTION_FILTER_POLICY,
+                policyName: policyName,
+              }),
+            ),
+          );
+        }
       }
       break;
     case 'Delete':
       // Remove the subscription filter created by solution
-      await deleteAllLogGroupSubscriptions(acceleratorCreatedLogDestinationArn);
+      await deleteSubscriptions(acceleratorCreatedLogDestinationArn, subscriptionType);
       break;
   }
   return { Status: 'SUCCESS' };
+}
+
+/**
+ * Manages log groups configuration including retention, encryption, and subscriptions
+ * @param subscription Configuration object for log subscription settings
+ * @param retention Configuration object for log retention settings
+ * @param encryption Configuration object for log encryption settings
+ */
+async function manageLogGroups(
+  subscription: {
+    acceleratorLogSubscriptionRoleArn: string;
+    acceleratorCreatedLogDestinationArn: string;
+    subscriptionType: string;
+    selectionCriteria?: string;
+    logExclusionParse?: cloudwatchExclusionProcessedItem;
+    replaceLogDestinationArn?: string;
+    overrideExisting: boolean;
+    filterPattern: string;
+  },
+  retention: {
+    acceleratorLogRetentionInDays: string;
+  },
+  encryption: {
+    acceleratorLogKmsKeyArn?: string;
+  },
+) {
+  // get all logGroups in the account
+  const logGroups = await getLogGroups(
+    subscription.acceleratorCreatedLogDestinationArn,
+    subscription.subscriptionType,
+    subscription.logExclusionParse,
+  );
+
+  // Process retention and encryption setting for ALL log groups
+  for (const allLogGroup of logGroups.allLogGroups) {
+    await updateRetentionPolicy(parseInt(retention.acceleratorLogRetentionInDays), allLogGroup);
+
+    await updateLogGroupEncryption(allLogGroup, encryption.acceleratorLogKmsKeyArn);
+  }
+
+  if (subscription.subscriptionType === 'ACCOUNT') {
+    await createAccountSubscription(
+      subscription.acceleratorCreatedLogDestinationArn,
+      subscription.acceleratorLogSubscriptionRoleArn,
+      subscription.overrideExisting,
+      subscription.filterPattern,
+      subscription.replaceLogDestinationArn,
+      subscription.selectionCriteria,
+    );
+  } else if (subscription.subscriptionType === 'LOG_GROUP') {
+    // Process subscription only for included log groups
+    for (const includedLogGroup of logGroups.includedLogGroups) {
+      await manageLogSubscriptions(
+        includedLogGroup.logGroupName!,
+        subscription.acceleratorCreatedLogDestinationArn,
+        subscription.acceleratorLogSubscriptionRoleArn,
+        subscription.replaceLogDestinationArn,
+      );
+    }
+  }
+}
+
+/**
+ * Manages account-level subscription policy for CloudWatch logs
+ * @param acceleratorCreatedLogDestinationArn ARN of the log destination
+ * @param acceleratorLogSubscriptionRoleArn ARN of the IAM role for subscription
+ * @param overrideExisting Flag to determine if existing policy should be overwritten
+ * @param filterPattern Pattern to filter logs
+ * @param replaceLogDestinationArn Optional ARN of destination to replace
+ * @param selectionCriteria Optional criteria for log selection
+ * @returns Object indicating operation success
+ */
+async function createAccountSubscription(
+  acceleratorCreatedLogDestinationArn: string,
+  acceleratorLogSubscriptionRoleArn: string,
+  overrideExisting: boolean,
+  filterPattern: string,
+  replaceLogDestinationArn?: string,
+  selectionCriteria?: string,
+) {
+  const existingPolicies = await getExistingSubscriptionPolicies(logsClient);
+  let isPolicyExists = false;
+
+  if (existingPolicies.length >= 1) {
+    isPolicyExists = true;
+  }
+
+  if (isPolicyExists && !overrideExisting) {
+    console.warn(
+      `Existing policy ${existingPolicies[0]
+        .policyName!} found, and override existing flag is set to false, skip update of policy.`,
+    );
+    return {
+      Status: 'SUCCESS',
+    };
+  }
+
+  if (isPolicyExists) {
+    console.log(
+      `Existing policy ${existingPolicies[0]
+        .policyName!} found, and override existing flag is set to true, policy will be overwritten.`,
+    );
+    await throttlingBackOff(() =>
+      logsClient.send(
+        new DeleteAccountPolicyCommand({
+          policyName: existingPolicies[0].policyName!,
+          policyType: PolicyType.SUBSCRIPTION_FILTER_POLICY,
+        }),
+      ),
+    );
+  } else {
+    console.log(`No existing policy found, policy ${policyName} will be created.`);
+  }
+  const policyDocument = {
+    DestinationArn: replaceLogDestinationArn ?? acceleratorCreatedLogDestinationArn,
+    RoleArn: acceleratorLogSubscriptionRoleArn,
+    FilterPattern: filterPattern,
+  };
+  await throttlingBackOff(() =>
+    logsClient.send(
+      new PutAccountPolicyCommand({
+        policyName: policyName,
+        policyDocument: JSON.stringify(policyDocument),
+        policyType: PolicyType.SUBSCRIPTION_FILTER_POLICY,
+        selectionCriteria: selectionCriteria,
+        scope: Scope.ALL,
+      }),
+    ),
+  );
+
+  return {
+    Status: 'SUCCESS',
+  };
 }
 
 /**
@@ -106,6 +286,7 @@ export async function handler(event: CloudFormationCustomResourceEvent): Promise
  */
 async function getLogGroups(
   acceleratorCreatedLogDestinationArn: string,
+  subscriptionType: string,
   logExclusionSetting?: cloudwatchExclusionProcessedItem,
 ): Promise<{ allLogGroups: LogGroup[]; includedLogGroups: LogGroup[] }> {
   const allLogGroups: LogGroup[] = [];
@@ -118,7 +299,8 @@ async function getLogGroups(
       // control tower log groups are controlled by the service and cannot be modified
       if (!logGroup.logGroupName!.includes('aws-controltower')) {
         allLogGroups.push(logGroup);
-        if (isLogGroupExcluded(logGroup.logGroupName!, logExclusionSetting)) {
+
+        if (subscriptionType === 'LOG_GROUP' && isLogGroupExcluded(logGroup.logGroupName!, logExclusionSetting)) {
           await deleteSubscription(logGroup.logGroupName!, acceleratorCreatedLogDestinationArn);
         } else {
           includedLogGroups.push(logGroup);
@@ -255,7 +437,7 @@ async function updateLogSubscription(
 
   if (numberOfSubscriptions === 2 && !acceleratorCreatedSubscriptFilter) {
     throw new Error(
-      `Cloudwatch log group ${logGroupName} have ${numberOfSubscriptions} subscription destinations, can not add accelerator subscription destination!!!! Remove one of the two existing destination and rerun the pipeline for accelerator to add solution defined log destination ${acceleratorCreatedLogDestinationArn}`,
+      `Cloudwatch log group ${logGroupName} has ${numberOfSubscriptions} subscription destinations, can not add accelerator subscription destination!!!! Remove one of the two existing destination and rerun the pipeline for accelerator to add solution defined log destination ${acceleratorCreatedLogDestinationArn}`,
     );
   }
 }
@@ -364,5 +546,82 @@ async function updateLogGroupEncryption(logGroup: LogGroup, acceleratorLogKmsKey
         }),
       ),
     );
+  }
+}
+
+/**
+ * Validates the log exclusion option JSON string
+ * @param data JSON string containing log exclusion configuration
+ * @returns boolean indicating if the configuration is valid
+ */
+function isValidLogExclusionOption(data: string): boolean {
+  try {
+    // ignore for this line as this is a check to prevent CWE-502, 1321
+    // amazonq-ignore-next-line
+    const parsed = JSON.parse(data);
+    // Add specific validation checks
+    return (
+      typeof parsed === 'object' &&
+      parsed !== null &&
+      typeof parsed.account === 'string' &&
+      typeof parsed.region === 'string'
+    );
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Function to get existing account policy configuration
+ * @param client {@link CloudWatchLogsClient}
+ * @returns policyConfiguration {@link AccountPolicy}[]
+ */
+async function getExistingSubscriptionPolicies(client: CloudWatchLogsClient): Promise<AccountPolicy[]> {
+  const response = await throttlingBackOff(() =>
+    client.send(
+      new DescribeAccountPoliciesCommand({
+        policyType: PolicyType.SUBSCRIPTION_FILTER_POLICY,
+      }),
+    ),
+  );
+
+  if (!response.accountPolicies) {
+    throw new Error(`Undefined accountPolicies property received from DescribeAccountPolicies API.`);
+  }
+
+  return response.accountPolicies;
+}
+
+/**
+ * Deletes subscriptions based on subscription type
+ * @param acceleratorCreatedLogDestinationArn ARN of the log destination
+ * @param subscriptionType Type of subscription (ACCOUNT or LOG_GROUP)
+ * @returns Object indicating operation success
+ * @throws Error if subscription type is invalid
+ */
+async function deleteSubscriptions(acceleratorCreatedLogDestinationArn: string, subscriptionType: string) {
+  //only delete subscription policies created by solution
+  if (subscriptionType === 'ACCOUNT') {
+    const existingPolicies = await getExistingSubscriptionPolicies(logsClient);
+    if (existingPolicies.length > 0 && existingPolicies[0].policyName === policyName) {
+      await throttlingBackOff(() =>
+        logsClient.send(
+          new DeleteAccountPolicyCommand({
+            policyType: PolicyType.SUBSCRIPTION_FILTER_POLICY,
+            policyName: policyName,
+          }),
+        ),
+      );
+    }
+    return {
+      Status: 'SUCCESS',
+    };
+  } else if (subscriptionType === 'LOG_GROUP') {
+    await deleteAllLogGroupSubscriptions(acceleratorCreatedLogDestinationArn);
+    return {
+      Status: 'SUCCESS',
+    };
+  } else {
+    throw new Error(`Invalid subscription type ${subscriptionType} received from request.`);
   }
 }

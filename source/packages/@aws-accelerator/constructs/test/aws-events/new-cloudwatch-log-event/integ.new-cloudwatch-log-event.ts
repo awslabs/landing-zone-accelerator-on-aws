@@ -121,6 +121,7 @@ export class NewCloudWatchLogEventDemoStack extends cdk.Stack {
       exclusionSetting: accountRegionExclusion!,
       acceleratorPrefix: 'AWSAccelerator',
       useExistingRoles: false,
+      subscriptionType: 'LOG_GROUP',
     });
 
     const includedGroup = new cdk.aws_logs.LogGroup(this, 'IncludedGroup', {

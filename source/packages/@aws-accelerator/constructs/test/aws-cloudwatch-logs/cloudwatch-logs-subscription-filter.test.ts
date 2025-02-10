@@ -30,6 +30,7 @@ new CloudWatchLogsSubscriptionFilter(stack, 'CloudWatchLogsSubscriptionFilter', 
   replaceLogDestinationArn: `arn:${stack.partition}:logs:${stack.region}:111111111111:destination:ReplaceDestination`,
   acceleratorPrefix: 'AWSAccelerator',
   useExistingRoles: false,
+  subscriptionType: 'LOG_GROUP',
 });
 new CloudWatchLogsSubscriptionFilter(stack, 'CloudWatchLogsSubscriptionFilterExistingIam', {
   logsKmsKey: new cdk.aws_kms.Key(stack, 'CustomKeyExistingIam', {}),
@@ -39,6 +40,7 @@ new CloudWatchLogsSubscriptionFilter(stack, 'CloudWatchLogsSubscriptionFilterExi
   logArchiveAccountId: 'some-acc-id',
   acceleratorPrefix: 'AWSAccelerator',
   useExistingRoles: true,
+  subscriptionType: 'ACCOUNT',
 });
 
 /**

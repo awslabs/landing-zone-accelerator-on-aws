@@ -32,7 +32,7 @@ exports[`CloudWatchDestination Construct(CloudWatchDestination):  Snapshot Test 
           "Fn::Join": [
             "",
             [
-              "{"Version":"2012-10-17","Statement":[{"Effect":"Allow","Principal":{"AWS":["*"]},"Action":"logs:PutSubscriptionFilter","Resource":"arn:",
+              "{"Version":"2012-10-17","Statement":[{"Effect":"Allow","Principal":{"AWS":["*"]},"Action":["logs:PutSubscriptionFilter","logs:PutAccountPolicy"],"Resource":"arn:",
               {
                 "Ref": "AWS::Partition",
               },
@@ -70,7 +70,7 @@ exports[`CloudWatchDestination Construct(CloudWatchDestination):  Snapshot Test 
           "Fn::Join": [
             "",
             [
-              "{"Version":"2012-10-17","Statement":[{"Effect":"Allow","Principal":{"AWS":["*"]},"Action":"logs:PutSubscriptionFilter","Resource":"arn:",
+              "{"Version":"2012-10-17","Statement":[{"Effect":"Allow","Principal":{"AWS":["*"]},"Action":["logs:PutSubscriptionFilter","logs:PutAccountPolicy"],"Resource":"arn:",
               {
                 "Ref": "AWS::Partition",
               },
@@ -341,7 +341,7 @@ exports[`CloudWatchDestination Construct(CloudWatchDestination):  Snapshot Test 
           "Fn::Join": [
             "",
             [
-              "{"Version":"2012-10-17","Statement":[{"Effect":"Allow","Principal":{"AWS":["111111111111","222222222222"]},"Action":"logs:PutSubscriptionFilter","Resource":"arn:",
+              "{"Version":"2012-10-17","Statement":[{"Effect":"Allow","Principal":{"AWS":["111111111111","222222222222"]},"Action":["logs:PutSubscriptionFilter","logs:PutAccountPolicy"],"Resource":"arn:",
               {
                 "Ref": "AWS::Partition",
               },
