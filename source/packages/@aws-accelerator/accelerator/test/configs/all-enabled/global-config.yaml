@@ -283,7 +283,7 @@ logging:
       overrideExisting: true
     enable: true
     dynamicPartitioning: dynamic-partitioning/log-filters.json
-    replaceLogDestinationArn: replaceLogDestinationArn
+    # replaceLogDestinationArn: replaceLogDestinationArn
 
     exclusions:
       - organizationalUnits:
