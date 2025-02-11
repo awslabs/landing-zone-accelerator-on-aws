@@ -4,6 +4,6 @@
     "outDir": "dist",
     "allowJs": true
   },
-  "include": ["bin/**/*", "lib/**/*", "index.ts"],
+  "include": ["bin/**/*", "lib/**/*", "index.ts", "models"],
   "exclude": [ "test/**/*"]
 }

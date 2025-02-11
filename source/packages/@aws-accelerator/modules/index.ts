@@ -12,22 +12,18 @@
  */
 
 import {
-  AcceleratorModuleDetailsType,
-  AcceleratorModuleNames,
-  GroupedPromisesType,
   RunnerParametersType,
   PromiseItemType,
   AcceleratorModuleRunnerParametersType,
-  AcceleratorModuleStageDetails,
-} from './lib/libraries/lza';
-
-import { AccountsConfig } from '@aws-accelerator/config/lib/accounts-config';
-import { IAssumeRoleCredential } from '../../@aws-lza/common/resources';
-import { ControlTowerLandingZoneConfig, GlobalConfig } from '@aws-accelerator/config/lib/global-config';
+  AcceleratorModuleStageDetailsType,
+  GroupedStagesByRunOrderType,
+  GroupedPromisesByRunOrderType,
+} from './models/types';
 import path from 'path';
 import { createLogger } from '../../@aws-lza/common/logger';
 import { setResourcePrefixes } from '../accelerator/utils/app-utils';
 import { getAcceleratorModuleRunnerParameters, getManagementAccountCredentials } from './lib/functions';
+import { AcceleratorModuleStageDetails } from './models/constants';
 
 /**
  * ModuleRunner abstract class to execute accelerator modules.
@@ -43,24 +39,26 @@ export abstract class ModuleRunner {
    * @returns status string
    */
   public static async execute(params: RunnerParametersType): Promise<string> {
-    const filteredModuleItems = AcceleratorModuleStageDetails.filter(item => item.stage.name === params.stage);
-
-    if (filteredModuleItems.length === 0) {
-      return `No modules found for "${params.stage}" stage`;
+    if (AcceleratorModuleStageDetails.length === 0) {
+      throw new Error(`No modules found in AcceleratorModuleStageDetails`);
     }
 
-    if (filteredModuleItems.length > 1) {
-      throw new Error(
-        `Internal error - duplicate entries found for stage ${params.stage} in AcceleratorModuleStageDetails`,
-      );
+    if (params.stage) {
+      ModuleRunner.logger.info(`Executing stage "${params.stage}" modules`);
+      return await ModuleRunner.executeStageDependentModules(params);
     }
 
-    const sortedModuleItems = [...filteredModuleItems[0].modules].sort((a, b) => a.runOrder - b.runOrder);
+    return await ModuleRunner.executeAllStageModules(params);
+  }
 
-    if (sortedModuleItems.length === 0) {
-      return `No modules found for "${params.stage}" stage`;
-    }
-
+  /**
+   * Function to get module runner parameters
+   * @param params {@link RunnerParametersType}
+   * @returns parameters {@link AcceleratorModuleRunnerParametersType}
+   */
+  private static async getModuleRunnerParameters(
+    params: RunnerParametersType,
+  ): Promise<AcceleratorModuleRunnerParametersType> {
     //
     // Get Resource prefixes
     //
@@ -77,32 +75,107 @@ export abstract class ModuleRunner {
 
     //
     // Get accelerator module runner parameters
-    const acceleratorModuleRunnerParameters = await getAcceleratorModuleRunnerParameters(
+    //
+    return await getAcceleratorModuleRunnerParameters(
       params.configDirPath,
       params.partition,
       resourcePrefixes,
       params.solutionId,
       managementAccountCredentials,
     );
+  }
+
+  /**
+   * Function to execute all stage specific modules handler
+   *
+   * @description
+   * This function will be executed when runner was executed without stage. This will orchestrate execution of all modules according to pipeline execution order.
+   * @param runnerParameters {@link RunnerParametersType}
+   * @returns status string
+   */
+  private static async executeAllStageModules(runnerParameters: RunnerParametersType): Promise<string> {
+    ModuleRunner.logger.info(`Executing all modules since stage is undefined`);
+    const statuses: string[] = [];
+
+    const sortedStageItems = AcceleratorModuleStageDetails.sort((a, b) => a.stage.runOrder - b.stage.runOrder);
+
+    const acceleratorModuleRunnerParameters = await ModuleRunner.getModuleRunnerParameters(runnerParameters);
+
+    const groupedStageItems = ModuleRunner.groupStagesByRunOrder(sortedStageItems);
+
+    for (const groupedStageItem of groupedStageItems) {
+      const promiseItems: PromiseItemType[] = [];
+      for (const stageItem of groupedStageItem.stages) {
+        ModuleRunner.logger.info(`Preparing to execute modules of stage "${stageItem.stage.name}"`);
+        const sortedModuleItems = [...stageItem.modules].sort((a, b) => a.runOrder - b.runOrder);
+        if (sortedModuleItems.length === 0) {
+          ModuleRunner.logger.info(`No modules found for "${stageItem.stage.name}" stage`);
+        }
+
+        for (const sortedModuleItem of sortedModuleItems) {
+          ModuleRunner.logger.info(`Execution started for module "${sortedModuleItem.name}"`);
+          promiseItems.push({
+            runOrder: sortedModuleItem.runOrder,
+            promise: () =>
+              sortedModuleItem.handler({
+                moduleItem: sortedModuleItem,
+                runnerParameters,
+                moduleRunnerParameters: acceleratorModuleRunnerParameters,
+              }),
+          });
+        }
+      }
+
+      statuses.push(...(await ModuleRunner.executePromises(promiseItems)));
+
+      promiseItems.splice(0);
+    }
+
+    return statuses.join('\n');
+  }
+
+  /**
+   * Function to execute stage specific modules handler
+   * @param params {@link RunnerParametersType}
+   * @returns status string
+   */
+  private static async executeStageDependentModules(params: RunnerParametersType): Promise<string> {
+    const stageModuleItems = AcceleratorModuleStageDetails.filter(item => item.stage.name === params.stage);
+
+    if (stageModuleItems.length === 0) {
+      return `No modules found for "${params.stage}" stage`;
+    }
+
+    if (stageModuleItems.length > 1) {
+      throw new Error(
+        `Internal error - duplicate entries found for stage ${params.stage} in AcceleratorModuleStageDetails`,
+      );
+    }
+
+    const sortedModuleItems = [...stageModuleItems[0].modules].sort((a, b) => a.runOrder - b.runOrder);
+
+    if (sortedModuleItems.length === 0) {
+      return `No modules found for "${params.stage}" stage`;
+    }
+
+    const acceleratorModuleRunnerParameters = await ModuleRunner.getModuleRunnerParameters(params);
 
     const statuses: string[] = [];
     const promiseItems: PromiseItemType[] = [];
 
     for (const sortedModuleItem of sortedModuleItems) {
       promiseItems.push({
-        order: sortedModuleItem.runOrder,
-        promise: () => ModuleRunner.executeModule(sortedModuleItem, params, acceleratorModuleRunnerParameters),
+        runOrder: sortedModuleItem.runOrder,
+        promise: () =>
+          sortedModuleItem.handler({
+            moduleItem: sortedModuleItem,
+            runnerParameters: params,
+            moduleRunnerParameters: acceleratorModuleRunnerParameters,
+          }),
       });
     }
 
-    await ModuleRunner.executePromises(promiseItems)
-      .then(results => {
-        statuses.push(...results);
-      })
-      .catch(error => {
-        ModuleRunner.logger.error(error);
-        throw error;
-      });
+    statuses.push(...(await ModuleRunner.executePromises(promiseItems)));
 
     return statuses.join('\n');
   }
@@ -114,9 +187,9 @@ export abstract class ModuleRunner {
    */
   private static async executePromises(promiseItems: PromiseItemType[]): Promise<string[]> {
     const statuses: string[] = [];
-    const groupByPromiseItems = ModuleRunner.groupByPromiseItems(promiseItems);
+    const groupedPromiseItems = ModuleRunner.groupPromisesByRunOrder(promiseItems);
 
-    for (const groupByPromiseItem of groupByPromiseItems) {
+    for (const groupByPromiseItem of groupedPromiseItems) {
       const promises = Array.isArray(groupByPromiseItem.promises)
         ? groupByPromiseItem.promises
         : [groupByPromiseItem.promises];
@@ -127,16 +200,39 @@ export abstract class ModuleRunner {
   }
 
   /**
+   * Function to group stages by order
+   * @param stageItems {@link AcceleratorModuleStageDetailsType}
+   * @returns {@link GroupedStagesByRunOrderType}
+   */
+  private static groupStagesByRunOrder(stageItems: AcceleratorModuleStageDetailsType[]): GroupedStagesByRunOrderType[] {
+    const groupedMap = stageItems.reduce((acc, curr) => {
+      const runOrder = curr.stage.runOrder;
+      if (!acc.has(runOrder)) {
+        acc.set(runOrder, []);
+      }
+      acc.get(runOrder)!.push(curr);
+      return acc;
+    }, new Map<number, AcceleratorModuleStageDetailsType[]>());
+
+    const result: GroupedStagesByRunOrderType[] = Array.from(groupedMap.entries()).map(([runOrder, stages]) => ({
+      order: runOrder,
+      stages: stages,
+    }));
+
+    return result.sort((a, b) => a.order - b.order);
+  }
+
+  /**
    * Function to group promises by order
    * @param promiseItems {@link PromiseItemType}
-   * @returns {@link GroupedPromisesType}
+   * @returns {@link GroupedPromisesByRunOrderType}
    */
-  private static groupByPromiseItems(promiseItems: PromiseItemType[]): GroupedPromisesType[] {
-    const groupedMap = promiseItems.reduce((map, { order, promise }) => {
-      if (!map.has(order)) {
-        map.set(order, []);
+  private static groupPromisesByRunOrder(promiseItems: PromiseItemType[]): GroupedPromisesByRunOrderType[] {
+    const groupedMap = promiseItems.reduce((map, { runOrder, promise }) => {
+      if (!map.has(runOrder)) {
+        map.set(runOrder, []);
       }
-      map.get(order)!.push(promise);
+      map.get(runOrder)!.push(promise);
       return map;
     }, new Map<number, Array<() => Promise<string>>>());
 
@@ -144,100 +240,5 @@ export abstract class ModuleRunner {
       order,
       promises: promises.length === 1 ? promises[0] : promises,
     }));
-  }
-
-  /**
-   * Function to execute module specific handler
-   * @param moduleItem {@link AcceleratorModuleDetailsType}
-   * @param configItem {@link RunnerParametersType}
-   * @param moduleRunnerParameters {@link AcceleratorModuleRunnerParametersType}
-   * @returns status string
-   */
-  private static async executeModule(
-    moduleItem: AcceleratorModuleDetailsType,
-    runnerParameters: RunnerParametersType,
-    moduleRunnerParameters: AcceleratorModuleRunnerParametersType,
-  ): Promise<string> {
-    switch (moduleItem.name) {
-      case AcceleratorModuleNames.CONTROL_TOWER:
-        return await ModuleRunner.executeControlTowerModule(
-          moduleItem,
-          runnerParameters,
-          moduleRunnerParameters.configs.accountsConfig,
-          moduleRunnerParameters.configs.globalConfig,
-          moduleRunnerParameters.configs.globalConfig.controlTower.landingZone,
-          moduleRunnerParameters.managementAccountCredentials,
-        );
-      case AcceleratorModuleNames.AWS_ORGANIZATIONS:
-        return await moduleItem.handler(moduleItem.name);
-      case AcceleratorModuleNames.NETWORK:
-        return await moduleItem.handler(moduleItem.name);
-      case AcceleratorModuleNames.SECURITY:
-        return await moduleItem.handler(moduleItem.name);
-      default:
-        throw new Error(`Unknown Module ${moduleItem.name}`);
-    }
-  }
-
-  /**
-   * Function to execute Control Tower module specific handler
-   * @param moduleRunnerParameters {@link ModuleRunnerParametersType}
-   * @param moduleItem {@link AcceleratorModuleDetailsType}
-   * @param accountsConfig {@link AccountsConfig}
-   * @param globalConfig {@link GlobalConfig}
-   * @param landingZoneConfiguration {@link ControlTowerLandingZoneConfig}
-   * @param managementAccountCredentials {@link IAssumeRoleCredential}
-   * @returns status string
-   */
-  private static async executeControlTowerModule(
-    moduleItem: AcceleratorModuleDetailsType,
-    runnerParameters: RunnerParametersType,
-    accountsConfig: AccountsConfig,
-    globalConfig: GlobalConfig,
-    landingZoneConfiguration?: ControlTowerLandingZoneConfig,
-    managementAccountCredentials?: IAssumeRoleCredential,
-  ): Promise<string> {
-    if (!landingZoneConfiguration) {
-      return `Module ${moduleItem.name} execution skipped, No configuration found for Control Tower Landing zone`;
-    }
-
-    const param = {
-      moduleName: moduleItem.name,
-      operation: 'setup-landing-zone',
-      partition: runnerParameters.prefix,
-      region: globalConfig.homeRegion,
-      useExistingRole: runnerParameters.useExistingRole,
-      solutionId: runnerParameters.solutionId,
-      credentials: managementAccountCredentials,
-      dryRun: runnerParameters.dryRun,
-      configuration: {
-        version: landingZoneConfiguration.version,
-        enabledRegions: globalConfig.enabledRegions,
-        logging: {
-          organizationTrail: landingZoneConfiguration.logging.organizationTrail,
-          retention: {
-            loggingBucket: landingZoneConfiguration.logging.loggingBucketRetentionDays,
-            accessLoggingBucket: landingZoneConfiguration.logging.accessLoggingBucketRetentionDays,
-          },
-        },
-        security: landingZoneConfiguration.security,
-        sharedAccounts: {
-          management: {
-            name: accountsConfig.getManagementAccount().name,
-            email: accountsConfig.getManagementAccount().email,
-          },
-          audit: {
-            name: accountsConfig.getAuditAccount().name,
-            email: accountsConfig.getAuditAccount().email,
-          },
-          logging: {
-            name: accountsConfig.getLogArchiveAccount().name,
-            email: accountsConfig.getLogArchiveAccount().email,
-          },
-        },
-      },
-    };
-
-    return await moduleItem.handler(param);
   }
 }
