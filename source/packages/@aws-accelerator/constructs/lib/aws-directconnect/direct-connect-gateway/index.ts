@@ -31,7 +31,7 @@ export async function handler(event: CloudFormationCustomResourceEvent): Promise
 > {
   // Set variables
   const directConnectGatewayName: string = event.ResourceProperties['gatewayName'];
-  const amazonSideAsn: number = event.ResourceProperties['asn'];
+  const amazonSideAsn = Number(event.ResourceProperties['asn']);
   const solutionId = process.env['SOLUTION_ID'];
 
   const dx = new AWS.DirectConnect({ customUserAgent: solutionId });
