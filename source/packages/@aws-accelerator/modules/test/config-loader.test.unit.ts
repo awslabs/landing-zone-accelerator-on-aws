@@ -24,84 +24,13 @@ import {
   SecurityConfig,
 } from '@aws-accelerator/config';
 import { ParameterNotFound, SSMClient } from '@aws-sdk/client-ssm';
-import { AcceleratorConfigurationsType } from '../lib/libraries/lza';
+import { AcceleratorConfigurationsType } from '../models/types';
 import { ConfigLoader } from '../lib/config-loader';
-
-const MOCK_CONSTANTS = {
-  configDirPath: '/path/to/config',
-  mandatoryConfigFiles: [
-    'accounts-config.yaml',
-    'global-config.yaml',
-    'iam-config.yaml',
-    'network-config.yaml',
-    'organization-config.yaml',
-    'security-config.yaml',
-  ],
-  homeRegion: 'us-west-2',
-  centralizedLoggingRegion: 'us-east-1',
-  enableSingleAccountMode: false,
-  managementAccountCredentials: {
-    accessKeyId: 'mockAccessKeyId',
-    secretAccessKey: 'mockSecretAccessKey',
-    sessionToken: 'mockSessionToken',
-  },
-  orgEnabled: true,
-  partition: 'aws',
-  prefix: 'AWSAccelerator',
-  solutionId: 'mockSolutionId',
-  accountIds: ['111111111111', '222222222222'],
-  accounts: [
-    {
-      Id: '111111111111',
-      Arn: 'arn:aws:organizations::111111111111:account/o-exampleorgid/111111111111',
-      Email: 'account1@example.com',
-      Name: 'Account1',
-      Status: 'ACTIVE',
-      JoinedMethod: 'CREATED',
-      JoinedTimestamp: new Date('2023-01-01'),
-    },
-    {
-      Id: '222222222222',
-      Arn: 'arn:aws:organizations::111111111111:account/o-exampleorgid/222222222222',
-      Email: 'account2@example.com',
-      Name: 'Account2',
-      Status: 'ACTIVE',
-      JoinedMethod: 'INVITED',
-      JoinedTimestamp: new Date('2023-01-02'),
-    },
-  ],
-  centralLogBucketCmkSsmParameter: {
-    Name: 'test-parameter',
-    Type: 'String',
-    Value: 'test-value',
-    Version: 1,
-    LastModifiedDate: new Date(),
-  },
-  cdkOptions: { customDeploymentRole: 'customDeploymentRole' },
-  managementAccountAccessRole: 'managementAccountAccessRole',
-  logArchiveAccountName: 'LogArchive',
-  logArchiveAccountId: '333333333333',
-  importedBucketName: 'importedBucketName',
-  ssmParamNamePrefix: '/accelerator',
-  resourcePrefixes: {
-    accelerator: 'AWSAccelerator',
-    bucketName: 'aws-accelerator',
-    databaseName: 'aws-accelerator',
-    kmsAlias: 'alias/accelerator',
-    repoName: 'aws-accelerator',
-    secretName: '/accelerator',
-    snsTopicName: 'aws-accelerator',
-    ssmParamName: '/accelerator',
-    importResourcesSsmParamName: '/accelerator/imported-resources',
-    trailLogName: 'aws-accelerator',
-    ssmLogName: 'aws-accelerator',
-  },
-};
+import { MOCK_CONSTANTS } from './mocked-resources';
 
 //
 // Mock Dependencies
 //
-// Mock the SSM client
 jest.mock('@aws-sdk/client-ssm', () => ({
   SSMClient: jest.fn().mockImplementation(() => ({
     send: jest.fn().mockResolvedValue({
@@ -215,8 +144,8 @@ describe('ConfigLoader', () => {
 
       // Verify
 
-      expect(() => ConfigLoader.validateConfigDirPath(MOCK_CONSTANTS.configDirPath)).toThrow(
-        `Invalid config directory path !!! "${MOCK_CONSTANTS.configDirPath}" not found`,
+      expect(() => ConfigLoader.validateConfigDirPath(MOCK_CONSTANTS.runnerParameters.configDirPath)).toThrow(
+        `Invalid config directory path !!! "${MOCK_CONSTANTS.runnerParameters.configDirPath}" not found`,
       );
     });
 
@@ -229,8 +158,8 @@ describe('ConfigLoader', () => {
 
       // Verify
 
-      expect(() => ConfigLoader.validateConfigDirPath(MOCK_CONSTANTS.configDirPath)).toThrow(
-        `Missing mandatory configuration files in ${MOCK_CONSTANTS.configDirPath}. \n Missing files are accounts-config.yaml,global-config.yaml,iam-config.yaml,network-config.yaml,organization-config.yaml,security-config.yaml`,
+      expect(() => ConfigLoader.validateConfigDirPath(MOCK_CONSTANTS.runnerParameters.configDirPath)).toThrow(
+        `Missing mandatory configuration files in ${MOCK_CONSTANTS.runnerParameters.configDirPath}. \n Missing files are accounts-config.yaml,global-config.yaml,iam-config.yaml,network-config.yaml,organization-config.yaml,security-config.yaml`,
       );
     });
 
@@ -243,8 +172,8 @@ describe('ConfigLoader', () => {
 
       // Verify
 
-      expect(ConfigLoader.validateConfigDirPath(MOCK_CONSTANTS.configDirPath)).toBeUndefined();
-      expect(() => ConfigLoader.validateConfigDirPath(MOCK_CONSTANTS.configDirPath)).not.toThrow();
+      expect(ConfigLoader.validateConfigDirPath(MOCK_CONSTANTS.runnerParameters.configDirPath)).toBeUndefined();
+      expect(() => ConfigLoader.validateConfigDirPath(MOCK_CONSTANTS.runnerParameters.configDirPath)).not.toThrow();
     });
   });
 
@@ -260,21 +189,21 @@ describe('ConfigLoader', () => {
       // Execute
 
       const result = await ConfigLoader.getAccountsConfigWithAccountIds(
-        MOCK_CONSTANTS.configDirPath,
-        MOCK_CONSTANTS.partition,
+        MOCK_CONSTANTS.runnerParameters.configDirPath,
+        MOCK_CONSTANTS.runnerParameters.partition,
         MOCK_CONSTANTS.orgEnabled,
-        MOCK_CONSTANTS.managementAccountCredentials,
+        MOCK_CONSTANTS.credentials,
       );
 
       // Verify
 
-      expect(AccountsConfig.load).toHaveBeenCalledWith(MOCK_CONSTANTS.configDirPath);
+      expect(AccountsConfig.load).toHaveBeenCalledWith(MOCK_CONSTANTS.runnerParameters.configDirPath);
       expect(mockAccountsConfig.loadAccountIds).toHaveBeenCalledWith(
-        MOCK_CONSTANTS.partition,
+        MOCK_CONSTANTS.runnerParameters.partition,
         MOCK_CONSTANTS.enableSingleAccountMode,
         MOCK_CONSTANTS.orgEnabled,
         mockAccountsConfig,
-        MOCK_CONSTANTS.managementAccountCredentials,
+        MOCK_CONSTANTS.credentials,
       );
       expect(result).toBe(mockAccountsConfig);
       expect(await mockAccountsConfig.loadAccountIds()).toEqual({
@@ -293,15 +222,15 @@ describe('ConfigLoader', () => {
       // Execute
 
       await ConfigLoader.getAccountsConfigWithAccountIds(
-        MOCK_CONSTANTS.configDirPath,
-        MOCK_CONSTANTS.partition,
+        MOCK_CONSTANTS.runnerParameters.configDirPath,
+        MOCK_CONSTANTS.runnerParameters.partition,
         MOCK_CONSTANTS.orgEnabled,
       );
 
       // Verify
 
       expect(mockAccountsConfig.loadAccountIds).toHaveBeenCalledWith(
-        MOCK_CONSTANTS.partition,
+        MOCK_CONSTANTS.runnerParameters.partition,
         MOCK_CONSTANTS.enableSingleAccountMode,
         MOCK_CONSTANTS.orgEnabled,
         mockAccountsConfig,
@@ -378,7 +307,7 @@ describe('ConfigLoader', () => {
       mockAccountsConfigInstance = {
         loadAccountIds: jest.fn().mockResolvedValue({ accountIds: MOCK_CONSTANTS.accountIds }),
         getLogArchiveAccountId: jest.fn().mockReturnValue(MOCK_CONSTANTS.logArchiveAccountId),
-        getLogArchiveAccount: jest.fn().mockReturnValue({ name: MOCK_CONSTANTS.logArchiveAccountName }),
+        getLogArchiveAccount: jest.fn().mockReturnValue({ name: MOCK_CONSTANTS.logArchiveAccount.name }),
       };
       (AccountsConfig.load as jest.Mock).mockReturnValue(mockAccountsConfigInstance);
     });
@@ -400,10 +329,10 @@ describe('ConfigLoader', () => {
       // Execute
 
       const result = await ConfigLoader.getAcceleratorConfigurations(
-        MOCK_CONSTANTS.partition,
-        MOCK_CONSTANTS.configDirPath,
+        MOCK_CONSTANTS.runnerParameters.partition,
+        MOCK_CONSTANTS.runnerParameters.configDirPath,
         MOCK_CONSTANTS.resourcePrefixes,
-        MOCK_CONSTANTS.managementAccountCredentials,
+        MOCK_CONSTANTS.credentials,
       );
 
       // Verify
@@ -440,10 +369,10 @@ describe('ConfigLoader', () => {
       // Execute
 
       const result = await ConfigLoader.getAcceleratorConfigurations(
-        MOCK_CONSTANTS.partition,
-        MOCK_CONSTANTS.configDirPath,
+        MOCK_CONSTANTS.runnerParameters.partition,
+        MOCK_CONSTANTS.runnerParameters.configDirPath,
         MOCK_CONSTANTS.resourcePrefixes,
-        MOCK_CONSTANTS.managementAccountCredentials,
+        MOCK_CONSTANTS.credentials,
       );
 
       // Verify
@@ -495,10 +424,10 @@ describe('ConfigLoader', () => {
       // Execute
 
       const result = await ConfigLoader.getAcceleratorConfigurations(
-        MOCK_CONSTANTS.partition,
-        MOCK_CONSTANTS.configDirPath,
+        MOCK_CONSTANTS.runnerParameters.partition,
+        MOCK_CONSTANTS.runnerParameters.configDirPath,
         MOCK_CONSTANTS.resourcePrefixes,
-        MOCK_CONSTANTS.managementAccountCredentials,
+        MOCK_CONSTANTS.credentials,
       );
 
       // Verify
@@ -542,10 +471,10 @@ describe('ConfigLoader', () => {
         // Execute
 
         await ConfigLoader.getAcceleratorConfigurations(
-          MOCK_CONSTANTS.partition,
-          MOCK_CONSTANTS.configDirPath,
+          MOCK_CONSTANTS.runnerParameters.partition,
+          MOCK_CONSTANTS.runnerParameters.configDirPath,
           MOCK_CONSTANTS.resourcePrefixes,
-          MOCK_CONSTANTS.managementAccountCredentials,
+          MOCK_CONSTANTS.credentials,
         );
 
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -579,10 +508,10 @@ describe('ConfigLoader', () => {
       // Execute
 
       const result = await ConfigLoader.getAcceleratorConfigurations(
-        MOCK_CONSTANTS.partition,
-        MOCK_CONSTANTS.configDirPath,
+        MOCK_CONSTANTS.runnerParameters.partition,
+        MOCK_CONSTANTS.runnerParameters.configDirPath,
         MOCK_CONSTANTS.resourcePrefixes,
-        MOCK_CONSTANTS.managementAccountCredentials,
+        MOCK_CONSTANTS.credentials,
       );
 
       // Verify
@@ -632,10 +561,10 @@ describe('ConfigLoader', () => {
       // Execute
 
       const result = await ConfigLoader.getAcceleratorConfigurations(
-        MOCK_CONSTANTS.partition,
-        MOCK_CONSTANTS.configDirPath,
+        MOCK_CONSTANTS.runnerParameters.partition,
+        MOCK_CONSTANTS.runnerParameters.configDirPath,
         MOCK_CONSTANTS.resourcePrefixes,
-        MOCK_CONSTANTS.managementAccountCredentials,
+        MOCK_CONSTANTS.credentials,
       );
 
       // Verify

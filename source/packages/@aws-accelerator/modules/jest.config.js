@@ -21,7 +21,7 @@ module.exports = {
   resetMocks: true,
 
   // An array of regexp pattern strings used to skip coverage collection
-  coveragePathIgnorePatterns: ['/node_modules/', './lib/libraries/*'],
+  coveragePathIgnorePatterns: ['/node_modules/', './models/*'],
 
   // An object that configures minimum threshold enforcement for coverage results
   coverageThreshold: {
@@ -56,7 +56,7 @@ module.exports = {
   // An array of regexp pattern strings that are matched against all test paths, matched tests are skipped
   testPathIgnorePatterns: ['/node_modules/'],
 
-  coverageReporters: ['text', ['lcov', { projectRoot: '../../' }]],
+  coverageReporters: ['text', 'text-summary', ['lcov', { projectRoot: '../../' }]],
 
   // This option allows the use of a custom results processor.
   testResultsProcessor: 'jest-sonar-reporter',

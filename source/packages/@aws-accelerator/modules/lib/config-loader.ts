@@ -28,7 +28,7 @@ import * as path from 'path';
 import { AcceleratorResourcePrefixes } from '../../accelerator/utils/app-utils';
 
 import { IAssumeRoleCredential } from '../../../@aws-lza/common/resources';
-import { AcceleratorConfigurationsType } from './libraries/lza';
+import { AcceleratorConfigurationsType } from '../models/types';
 
 /**
  * Accelerator ConfigLoader an abstract class to load all configuration for module operation

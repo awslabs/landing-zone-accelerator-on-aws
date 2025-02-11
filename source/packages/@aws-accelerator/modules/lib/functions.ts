@@ -18,7 +18,7 @@ import {
   AcceleratorEnvironmentDetailsType,
   AcceleratorModuleRunnerParametersType,
   RunnerParametersType,
-} from './libraries/lza';
+} from '../models/types';
 import { createLogger } from '../../../@aws-lza/common/logger';
 import { IAssumeRoleCredential } from '../../../@aws-lza/common/resources';
 import { getCredentials, setRetryStrategy } from '../../../@aws-lza/common/functions';
@@ -64,7 +64,7 @@ export function validateAndGetRunnerParameters(): RunnerParametersType {
     })
     .parseSync();
 
-  if (!argv.partition || !argv.region || !argv['config-dir'] || !argv.stage) {
+  if (!argv.partition || !argv.region || !argv['config-dir']) {
     throw new Error(`Missing required parameters for lza module \n ** Script Usage ** ${scriptUsage}`);
   }
 
@@ -278,6 +278,7 @@ export async function getAcceleratorModuleRunnerParameters(
 
   return {
     configs: acceleratorConfigurations,
+    globalRegion,
     resourcePrefixes,
     acceleratorResourceNames,
     logging: {
@@ -373,4 +374,15 @@ export function getCentralLogBucketName(
   return `${
     acceleratorResourceNames.bucketPrefixes.centralLogs
   }-${accountsConfig.getLogArchiveAccountId()}-${centralizedLoggingRegion}`;
+}
+
+/**
+ * Function to get runner target regions by comparing enabled regions and excluded regions
+ * @param enabledRegions string[]
+ * @param excludedRegions string[]
+ * @returns includedRegions string[]
+ */
+export function getRunnerTargetRegions(enabledRegions: string[], excludedRegions: string[]): string[] {
+  const includedRegions = enabledRegions.filter(item => !excludedRegions.includes(item));
+  return includedRegions;
 }

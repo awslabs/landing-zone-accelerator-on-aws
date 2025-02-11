@@ -13,380 +13,35 @@
 
 import { beforeEach, describe, test } from '@jest/globals';
 import { ModuleRunner } from '../index';
-import * as lza from '../lib/libraries/lza';
 import { AcceleratorStage } from '../../accelerator';
-import { AcceleratorModuleNames, AcceleratorModuleRunnerParametersType } from '../lib/libraries/lza';
 import {
-  AccountConfig,
   AccountsConfig,
-  CentralSecurityServicesConfig,
-  CloudWatchLogsConfig,
   ControlTowerConfig,
   CustomizationsConfig,
-  DefaultVpcsConfig,
   GlobalConfig,
   IamConfig,
-  LoggingConfig,
   NetworkConfig,
-  OrganizationalUnitConfig,
   OrganizationConfig,
   ReplacementsConfig,
   SecurityConfig,
 } from '@aws-accelerator/config';
+import { AcceleratorModuleRunnerParametersType, PromiseItemType } from '../models/types';
+import { AcceleratorModules, AcceleratorModuleStages } from '../models/enums';
+import {
+  MOCK_CONSTANTS,
+  mockAccountsConfiguration,
+  mockCustomizationsConfig,
+  mockGlobalConfiguration,
+  mockIamConfig,
+  mockNetworkConfig,
+  mockOrganizationConfig,
+  mockReplacementsConfig,
+  mockSecurityConfig,
+} from './mocked-resources';
 
-const mockGlobalConfiguration = {
-  homeRegion: 'mockHomeRegion',
-  controlTower: {
-    enable: true,
-    landingZone: {
-      version: 'mockCTVersion',
-      logging: {
-        loggingBucketRetentionDays: 365,
-        accessLoggingBucketRetentionDays: 365,
-        organizationTrail: true,
-      },
-      security: {
-        enableIdentityCenterAccess: true,
-      },
-    },
-  },
-  logging: {
-    cloudwatchLogs: {} as CloudWatchLogsConfig,
-    sessionManager: {
-      sendToCloudWatchLogs: false,
-      sendToS3: false,
-    },
-    cloudtrail: {
-      enable: false,
-    },
-  } as LoggingConfig,
-  cdkOptions: {
-    centralizeBuckets: true,
-    useManagementAccessRole: true,
-  },
-} as GlobalConfig;
-
-const mockAccountsConfiguration: Partial<AccountsConfig> = {
-  mandatoryAccounts: [
-    {
-      name: 'Management',
-      description: 'mockManagement',
-      email: 'mockManagement@example.com',
-      organizationalUnit: 'Root',
-    },
-    {
-      name: 'LogArchive',
-      description: 'mockLogArchive',
-      email: 'mockLogArchive@example.com',
-      organizationalUnit: 'Security',
-    },
-    {
-      name: 'Audit',
-      description: 'mockAudit',
-      email: 'mockAudit@example.com',
-      organizationalUnit: 'Security',
-    },
-  ] as AccountConfig[],
-  workloadAccounts: [
-    {
-      name: 'SharedServices',
-      description: 'mockSharedServices',
-      email: 'mockSharedServices@example.com',
-      organizationalUnit: 'Infrastructure',
-    },
-    {
-      name: 'Network',
-      description: 'mockNetwork',
-      email: 'mockNetwork@example.com',
-      organizationalUnit: 'Infrastructure',
-    },
-  ] as AccountConfig[],
-  accountIds: [
-    {
-      email: 'mockAccount1@example.com',
-      accountId: '111111111111',
-      status: 'ACTIVE',
-    },
-    {
-      email: 'mockAccount2@example.com',
-      accountId: '222222222222',
-      status: 'ACTIVE',
-    },
-  ],
-};
-
-const mockCustomizationsConfig: Partial<CustomizationsConfig> = {
-  customizations: { cloudFormationStacks: [], cloudFormationStackSets: [], serviceCatalogPortfolios: [] },
-  applications: [],
-  firewalls: undefined,
-  getCustomStacks: jest.fn().mockReturnValue(undefined),
-  getAppStacks: jest.fn().mockReturnValue(undefined),
-};
-
-const mockIamConfig: Partial<IamConfig> = {
-  providers: [],
-  policySets: [],
-  roleSets: [],
-  groupSets: [],
-  userSets: [],
-};
-
-const mockNetworkConfig: Partial<NetworkConfig> = {
-  defaultVpc: {
-    delete: false,
-  } as DefaultVpcsConfig,
-  transitGateways: [],
-  endpointPolicies: [],
-  vpcs: [],
-};
-
-const mockOrganizationConfig: Partial<OrganizationConfig> = {
-  enable: true,
-  organizationalUnits: [
-    {
-      name: 'Security',
-    } as OrganizationalUnitConfig,
-    {
-      name: 'Infrastructure',
-    } as OrganizationalUnitConfig,
-    {
-      name: 'Suspended',
-      ignore: true,
-    } as OrganizationalUnitConfig,
-  ],
-  serviceControlPolicies: [],
-  taggingPolicies: [],
-  chatbotPolicies: [],
-  backupPolicies: [],
-};
-
-const mockReplacementsConfig: Partial<ReplacementsConfig> = {
-  globalReplacements: [],
-  placeholders: {
-    Management: 'Management',
-    LogArchive: 'LogArchive',
-    Audit: 'Audit',
-    SharedServices: 'SharedServices',
-    Network: 'Network',
-  },
-  validateOnly: false,
-};
-
-const mockSecurityConfig: Partial<SecurityConfig> = {
-  centralSecurityServices: {
-    delegatedAdminAccount: 'Audit',
-  } as CentralSecurityServicesConfig,
-};
-
-const MOCK_CONSTANTS = {
-  invalidStage: 'mockStage',
-  invalidModule: 'mockModule',
-  runnerParams: {
-    partition: 'mockPartition',
-    region: 'mockRegion',
-    prefix: 'mockPrefix',
-    configDirPath: '/path/to/config',
-    useExistingRole: false,
-    solutionId: 'mockSolutionId',
-    dryRun: false,
-  },
-  // getManagementAccountCredentials
-  credentials: {
-    accessKeyId: 'mockAccessKeyId',
-    secretAccessKey: 'mockSecretAccessKey',
-    sessionToken: 'mockSessionToken',
-    expiration: new Date('2024-12-31'),
-  },
-  //setResourcePrefixes
-  resourcePrefixes: {
-    accelerator: 'AWSAccelerator',
-    bucketName: 'aws-accelerator',
-    databaseName: 'aws-accelerator',
-    kmsAlias: 'alias/accelerator',
-    repoName: 'aws-accelerator',
-    secretName: '/accelerator',
-    snsTopicName: 'aws-accelerator',
-    ssmParamName: '/accelerator',
-    importResourcesSsmParamName: '/accelerator/imported-resources',
-    trailLogName: 'aws-accelerator',
-    ssmLogName: 'aws-accelerator',
-  },
-  acceleratorResourceNames: {
-    roles: {
-      crossAccountCmkArnSsmParameterAccess: 'AWSAccelerator-CrossAccount-SsmParameter-Role',
-      ipamSsmParameterAccess: 'AWSAccelerator-Ipam-GetSsmParamRole',
-      ipamSubnetLookup: 'AWSAccelerator-GetIpamCidrRole',
-      crossAccountCentralLogBucketCmkArnSsmParameterAccess:
-        'AWSAccelerator-mockHomeRegion-CentralBucket-KeyArnParam-Role',
-      crossAccountCustomerGatewayRoleName: 'AWSAccelerator-CrossAccount-CustomerGateway-Role',
-      crossAccountLogsRoleName: 'AWSAccelerator-CrossAccount-PutLogs-Role',
-      crossAccountSecretsCmkParameterAccess: 'AWSAccelerator-CrossAccount-SecretsKms-Role',
-      crossAccountTgwRouteRoleName: 'AWSAccelerator-CrossAccount-TgwRoutes-Role',
-      crossAccountVpnRoleName: 'AWSAccelerator-CrossAccount-SiteToSiteVpn-Role',
-      moveAccountConfig: 'AWSAccelerator-MoveAccountConfigRule-Role',
-      tgwPeering: 'AWSAccelerator-TgwPeering-Role',
-      madShareAccept: 'AWSAccelerator-MadAccept-Role',
-      snsTopicCmkArnParameterAccess: 'AWSAccelerator-SnsTopic-KeyArnParam-Role',
-      crossAccountAssetsBucketCmkArnSsmParameterAccess: 'AWSAccelerator-AssetsBucket-KeyArnParam-Role',
-      crossAccountServiceCatalogPropagation: 'AWSAccelerator-CrossAccount-ServiceCatalog-Role',
-      crossAccountSsmParameterShare: 'AWSAccelerator-CrossAccountSsmParameterShare',
-      assetFunctionRoleName: 'AWSAccelerator-AssetsAccessRole',
-      firewallConfigFunctionRoleName: 'AWSAccelerator-FirewallConfigAccessRole',
-      diagnosticsPackAssumeRoleName: 'AWSAccelerator-DiagnosticsPackAccessRole',
-    },
-    parameters: {
-      importedCentralLogBucketCmkArn: '/accelerator/imported-resources/logging/central-bucket/kms/arn',
-      importedAssetBucket: '/accelerator/imported-bucket/assets/s3',
-      centralLogBucketCmkArn: '/accelerator/logging/central-bucket/kms/arn',
-      controlTowerDriftDetection: '/accelerator/controltower/driftDetected',
-      controlTowerLastDriftMessage: '/accelerator/controltower/lastDriftMessage',
-      configTableArn: '/accelerator/prepare-stack/configTable/arn',
-      configTableName: '/accelerator/prepare-stack/configTable/name',
-      cloudTrailBucketName: '/accelerator/organization/security/cloudtrail/log/bucket-name',
-      flowLogsDestinationBucketArn: '/accelerator/vpc/flow-logs/destination/bucket/arn',
-      metadataBucketArn: '/accelerator/metadata/bucket/arn',
-      metadataBucketCmkArn: '/accelerator/kms/metadata/key-arn',
-      acceleratorCmkArn: '/accelerator/kms/key-arn',
-      ebsDefaultCmkArn: '/accelerator/ebs/default-encryption/key-arn',
-      s3CmkArn: '/accelerator/kms/s3/key-arn',
-      secretsManagerCmkArn: '/accelerator/kms/secrets-manager/key-arn',
-      cloudWatchLogCmkArn: '/accelerator/kms/cloudwatch/key-arn',
-      snsTopicCmkArn: '/accelerator/kms/snstopic/key-arn',
-      lambdaCmkArn: '/accelerator/kms/lambda/key-arn',
-      managementCmkArn: '/accelerator/management/kms/key-arn',
-      importedAssetsBucketCmkArn: '/accelerator/imported-resources/imported/assets/kms/key',
-      assetsBucketCmkArn: '/accelerator/assets/kms/key',
-      identityCenterInstanceArn: '/accelerator/organization/security/identity-center/instance-arn',
-      identityStoreId: '/accelerator/organization/security/identity-center/identity-store-id',
-      firehoseRecordsProcessorFunctionName: 'AWSAccelerator-FirehoseRecordsProcessor',
-      resourceTableName: '/accelerator/prepare-stack/resourceTable/name',
-    },
-    customerManagedKeys: {
-      orgTrailLog: {
-        alias: 'alias/accelerator/organizations-cloudtrail/log-group/',
-        description: 'CloudTrail Log Group CMK',
-      },
-      centralLogsBucket: {
-        alias: 'alias/accelerator/central-logs/s3',
-        description: 'AWS Accelerator Central Logs Bucket CMK',
-      },
-      s3: {
-        alias: 'alias/accelerator/kms/s3/key',
-        description: 'AWS Accelerator S3 Kms Key',
-      },
-      cloudWatchLog: {
-        alias: 'alias/accelerator/kms/cloudwatch/key',
-        description: 'AWS Accelerator CloudWatch Kms Key',
-      },
-      cloudWatchLogReplication: {
-        alias: 'alias/accelerator/kms/replication/cloudwatch/logs/key',
-        description: 'AWS Accelerator CloudWatch Logs Replication Kms Key',
-      },
-      awsBackup: {
-        alias: 'alias/accelerator/kms/backup/key',
-        description: 'AWS Accelerator Backup Kms Key',
-      },
-      sns: {
-        alias: 'alias/accelerator/kms/sns/key',
-        description: 'AWS Accelerator SNS Kms Key',
-      },
-      snsTopic: {
-        alias: 'alias/accelerator/kms/snstopic/key',
-        description: 'AWS Accelerator SNS Topic Kms Key',
-      },
-      secretsManager: {
-        alias: 'alias/accelerator/kms/secrets-manager/key',
-        description: 'AWS Accelerator Secrets Manager Kms Key',
-      },
-      lambda: {
-        alias: 'alias/accelerator/kms/lambda/key',
-        description: 'AWS Accelerator Lambda Kms Key',
-      },
-      acceleratorKey: {
-        alias: 'alias/accelerator/kms/key',
-        description: 'AWS Accelerator Kms Key',
-      },
-      managementKey: {
-        alias: 'alias/accelerator/management/kms/key',
-        description: 'AWS Accelerator Management Account Kms Key',
-      },
-      importedAssetsBucketCmkArn: {
-        alias: 'alias/accelerator/imported/assets/kms/key',
-        description: 'Key used to encrypt solution assets',
-      },
-      assetsBucket: {
-        alias: 'alias/accelerator/assets/kms/key',
-        description: 'Key used to encrypt solution assets',
-      },
-      ssmKey: {
-        alias: 'alias/accelerator/sessionmanager-logs/session',
-        description: 'AWS Accelerator Session Manager Session Encryption',
-      },
-      importedCentralLogsBucket: {
-        alias: 'alias/accelerator/imported-bucket/central-logs/s3',
-        description: 'AWS Accelerator Imported Central Logs Bucket CMK',
-      },
-      importedAssetBucket: {
-        alias: 'alias/accelerator/imported-bucket/assets/s3',
-        description: 'AWS Accelerator Imported Asset Bucket CMK',
-      },
-      metadataBucket: {
-        alias: 'alias/accelerator/kms/metadata/key',
-        description: 'The s3 bucket key for accelerator metadata collection',
-      },
-      ebsDefault: {
-        alias: 'alias/accelerator/ebs/default-encryption/key',
-        description: 'AWS Accelerator default EBS Volume Encryption key',
-      },
-    },
-    bucketPrefixes: {
-      assetsAccessLog: 'aws-accelerator-assets-logs',
-      assets: 'aws-accelerator-assets',
-      elbLogs: 'aws-accelerator-elb-access-logs',
-      firewallConfig: 'aws-accelerator-firewall-config',
-      costUsage: 'aws-accelerator-cur',
-      s3AccessLogs: 'aws-accelerator-s3-access-logs',
-      auditManager: 'aws-accelerator-auditmgr',
-      vpcFlowLogs: 'aws-accelerator-vpc',
-      metadata: 'aws-accelerator-metadata',
-      centralLogs: 'aws-accelerator-central-logs',
-    },
-  },
-  logging: {
-    centralizedRegion: 'mockHomeRegion',
-    bucketName: 'mock-existing-central-log-bucket',
-    bucketKeyArn: 'mockBucketKeyArn',
-  },
-  organization: {
-    Id: 'o-1234567890',
-    Arn: 'arn:aws:organizations::123456789012:organization/o-1234567890',
-    FeatureSet: 'ALL',
-    MasterAccountArn: 'arn:aws:organizations::123456789012:account/o-1234567890/123456789012',
-    MasterAccountId: '123456789012',
-    MasterAccountEmail: 'test@example.com',
-  },
-  accounts: [
-    {
-      Id: '111111111111',
-      Arn: 'arn:aws:organizations::111111111111:account/o-exampleorgid/111111111111',
-      Email: 'account1@example.com',
-      Name: 'Account1',
-      Status: 'ACTIVE',
-      JoinedMethod: 'CREATED',
-      JoinedTimestamp: new Date('2023-01-01'),
-    },
-    {
-      Id: '222222222222',
-      Arn: 'arn:aws:organizations::111111111111:account/o-exampleorgid/222222222222',
-      Email: 'account2@example.com',
-      Name: 'Account2',
-      Status: 'ACTIVE',
-      JoinedMethod: 'INVITED',
-      JoinedTimestamp: new Date('2023-01-02'),
-    },
-  ],
-};
-
+//
+// Mock Dependencies
+//
 jest.mock('../lib/functions', () => ({
   getManagementAccountCredentials: jest.fn().mockReturnValue(undefined),
   getAcceleratorModuleRunnerParameters: jest.fn().mockReturnValue(undefined),
@@ -396,7 +51,14 @@ jest.mock('../../accelerator/utils/app-utils', () => ({
   setResourcePrefixes: jest.fn().mockReturnValue(undefined),
 }));
 
+jest.mock('../models/constants', () => ({
+  ...jest.requireActual('../models/constants'),
+  AcceleratorModuleStageDetails: [],
+}));
+
 describe('ModuleRunner', () => {
+  const constants = require('../models/constants');
+
   let mockAccountsConfig: Partial<AccountsConfig>;
   let mockModuleRunnerParameters: AcceleratorModuleRunnerParametersType;
 
@@ -404,12 +66,12 @@ describe('ModuleRunner', () => {
     jest.clearAllMocks();
 
     mockAccountsConfig = {
-      getManagementAccount: jest.fn().mockReturnValue({ name: 'management', email: 'management@example.com' }),
-      getManagementAccountId: jest.fn().mockReturnValue('management'),
-      getAuditAccount: jest.fn().mockReturnValue({ name: 'audit', email: 'audit@example.com' }),
-      getAuditAccountId: jest.fn().mockReturnValue('audit'),
-      getLogArchiveAccount: jest.fn().mockReturnValue({ name: 'mogarchive', email: 'mogarchive@example.com' }),
-      getLogArchiveAccountId: jest.fn().mockReturnValue('mogarchive'),
+      getManagementAccount: jest.fn().mockReturnValue(MOCK_CONSTANTS.managementAccount),
+      getManagementAccountId: jest.fn().mockReturnValue(MOCK_CONSTANTS.managementAccount.name),
+      getAuditAccount: jest.fn().mockReturnValue(MOCK_CONSTANTS.auditAccount),
+      getAuditAccountId: jest.fn().mockReturnValue(MOCK_CONSTANTS.auditAccount.name),
+      getLogArchiveAccount: jest.fn().mockReturnValue(MOCK_CONSTANTS.logArchiveAccount),
+      getLogArchiveAccountId: jest.fn().mockReturnValue(MOCK_CONSTANTS.logArchiveAccount.name),
       ...mockAccountsConfiguration,
     };
 
@@ -424,6 +86,7 @@ describe('ModuleRunner', () => {
         replacementsConfig: mockReplacementsConfig as ReplacementsConfig,
         securityConfig: mockSecurityConfig as SecurityConfig,
       },
+      globalRegion: MOCK_CONSTANTS.globalRegion,
       resourcePrefixes: MOCK_CONSTANTS.resourcePrefixes,
       acceleratorResourceNames: MOCK_CONSTANTS.acceleratorResourceNames,
       logging: MOCK_CONSTANTS.logging,
@@ -442,18 +105,22 @@ describe('ModuleRunner', () => {
       jest.clearAllMocks();
     });
 
+    test('should handle empty promise items', async () => {
+      const emptyPromiseItems: PromiseItemType[] = [];
+      const result = await ModuleRunner['executePromises'](emptyPromiseItems);
+      expect(result).toEqual([]);
+    });
+
     test('should return a message when no modules are found for the given stage', async () => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (lza.AcceleratorModuleStageDetails as any) = [];
+      constants.AcceleratorModuleStageDetails = [];
 
-      const result = await ModuleRunner.execute({ ...MOCK_CONSTANTS.runnerParams, stage: MOCK_CONSTANTS.invalidStage });
-
-      expect(result).toBe(`No modules found for "${MOCK_CONSTANTS.invalidStage}" stage`);
+      await expect(
+        ModuleRunner.execute({ ...MOCK_CONSTANTS.runnerParameters, stage: MOCK_CONSTANTS.invalidStage }),
+      ).rejects.toThrow(`No modules found in AcceleratorModuleStageDetails`);
     });
 
     test('should return a message when no modules array is empty for the given stage', async () => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (lza.AcceleratorModuleStageDetails as any) = [
+      constants.AcceleratorModuleStageDetails = [
         {
           stage: { name: MOCK_CONSTANTS.invalidStage },
           modules: [],
@@ -461,7 +128,7 @@ describe('ModuleRunner', () => {
       ];
 
       const result = await ModuleRunner.execute({
-        ...MOCK_CONSTANTS.runnerParams,
+        ...MOCK_CONSTANTS.runnerParameters,
         stage: MOCK_CONSTANTS.invalidStage,
       });
 
@@ -469,168 +136,129 @@ describe('ModuleRunner', () => {
     });
 
     test('should throw an error when multiple entries are found for a stage', async () => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (lza.AcceleratorModuleStageDetails as any) = [
+      constants.AcceleratorModuleStageDetails = [
         { stage: { name: MOCK_CONSTANTS.invalidStage } },
         { stage: { name: MOCK_CONSTANTS.invalidStage } },
       ];
 
       await expect(
-        ModuleRunner.execute({ ...MOCK_CONSTANTS.runnerParams, stage: MOCK_CONSTANTS.invalidStage }),
+        ModuleRunner.execute({ ...MOCK_CONSTANTS.runnerParameters, stage: MOCK_CONSTANTS.invalidStage }),
       ).rejects.toThrow(
         `Internal error - duplicate entries found for stage ${MOCK_CONSTANTS.invalidStage} in AcceleratorModuleStageDetails`,
       );
     });
 
-    test('should execute PREPARE stage modules and return status', async () => {
+    test('should execute stage less modules and return status', async () => {
       // Setup
+      constants.AcceleratorModuleStageOrders = {
+        [AcceleratorModuleStages.PREPARE]: { name: AcceleratorModuleStages.PREPARE, runOrder: 2 },
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (lza.AcceleratorModuleStageDetails as any) = [
-        {
-          stage: { name: AcceleratorStage.PREPARE },
-          modules: [
-            {
-              name: AcceleratorModuleNames.CONTROL_TOWER,
-              runOrder: 1,
-              handler: jest.fn().mockResolvedValue('Module 1 executed'),
-            },
-            {
-              name: AcceleratorModuleNames.AWS_ORGANIZATIONS,
-              runOrder: 2,
-              handler: jest.fn().mockResolvedValue('Module 2 executed'),
-            },
-          ],
-        },
-      ];
+        [AcceleratorModuleStages.ACCOUNTS]: { name: AcceleratorModuleStages.ACCOUNTS, runOrder: 1 },
 
-      const result = await ModuleRunner.execute({ ...MOCK_CONSTANTS.runnerParams, stage: AcceleratorStage.PREPARE });
-
-      expect(result).toBe('Module 1 executed\nModule 2 executed');
-    });
-
-    test('should execute PREPARE stage modules and return status when CT landing zone is not available in configuration', async () => {
-      //Setup
-
-      mockModuleRunnerParameters = {
-        configs: {
-          accountsConfig: mockAccountsConfig as AccountsConfig,
-          customizationsConfig: mockCustomizationsConfig as CustomizationsConfig,
-          globalConfig: {
-            homeRegion: 'mockHomeRegion',
-            controlTower: {
-              enable: true,
-            } as ControlTowerConfig,
-          } as GlobalConfig,
-          iamConfig: mockIamConfig as IamConfig,
-          networkConfig: mockNetworkConfig as NetworkConfig,
-          organizationConfig: mockOrganizationConfig as OrganizationConfig,
-          replacementsConfig: mockReplacementsConfig as ReplacementsConfig,
-          securityConfig: mockSecurityConfig as SecurityConfig,
-        },
-        resourcePrefixes: MOCK_CONSTANTS.resourcePrefixes,
-        acceleratorResourceNames: MOCK_CONSTANTS.acceleratorResourceNames,
-        logging: MOCK_CONSTANTS.logging,
-        organizationAccounts: [],
-        organizationDetails: undefined,
-        managementAccountCredentials: MOCK_CONSTANTS.credentials,
+        [AcceleratorModuleStages.FINALIZE]: { name: AcceleratorModuleStages.ACCOUNTS, runOrder: 3 },
       };
-
-      jest
-        .spyOn(require('../lib/functions'), 'getAcceleratorModuleRunnerParameters')
-        .mockReturnValue(mockModuleRunnerParameters);
-
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (lza.AcceleratorModuleStageDetails as any) = [
+      constants.AcceleratorModuleStageDetails = [
+        {
+          stage: { name: AcceleratorStage.FINALIZE },
+          modules: [],
+        },
+        {
+          stage: { name: AcceleratorStage.ACCOUNTS },
+          modules: [
+            {
+              name: AcceleratorModules.SETUP_CONTROL_TOWER_LANDING_ZONE,
+              runOrder: 1,
+              handler: jest.fn().mockResolvedValue(`Module 1 of ${AcceleratorStage.ACCOUNTS} stage executed`),
+            },
+            {
+              name: AcceleratorModules.EXAMPLE_MODULE,
+              runOrder: 2,
+              handler: jest.fn().mockResolvedValue(`Module 2 of ${AcceleratorStage.ACCOUNTS} stage executed`),
+            },
+          ],
+        },
         {
           stage: { name: AcceleratorStage.PREPARE },
           modules: [
             {
-              name: AcceleratorModuleNames.CONTROL_TOWER,
+              name: AcceleratorModules.SETUP_CONTROL_TOWER_LANDING_ZONE,
               runOrder: 1,
-              handler: jest.fn().mockResolvedValue('Module 1 executed'),
+              handler: jest.fn().mockResolvedValue(`Module 1 of ${AcceleratorStage.PREPARE} stage executed`),
             },
             {
-              name: AcceleratorModuleNames.AWS_ORGANIZATIONS,
+              name: AcceleratorModules.EXAMPLE_MODULE,
               runOrder: 2,
-              handler: jest.fn().mockResolvedValue('Module 2 executed'),
+              handler: jest.fn().mockResolvedValue(`Module 2 of ${AcceleratorStage.PREPARE} stage executed`),
             },
           ],
         },
       ];
 
-      const result = await ModuleRunner.execute({ ...MOCK_CONSTANTS.runnerParams, stage: AcceleratorStage.PREPARE });
+      const result = await ModuleRunner.execute({ ...MOCK_CONSTANTS.runnerParameters });
 
       expect(result).toBe(
-        `Module ${AcceleratorModuleNames.CONTROL_TOWER} execution skipped, No configuration found for Control Tower Landing zone\nModule 2 executed`,
+        `Module 1 of ${AcceleratorStage.ACCOUNTS} stage executed\nModule 1 of ${AcceleratorStage.PREPARE} stage executed\nModule 2 of ${AcceleratorStage.ACCOUNTS} stage executed\nModule 2 of ${AcceleratorStage.PREPARE} stage executed`,
       );
     });
 
-    test('should execute NETWORK_PREP modules and return status', async () => {
+    test('should execute stage modules and return status when no modules found for the stage', async () => {
       // Setup
-
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (lza.AcceleratorModuleStageDetails as any) = [
+      constants.AcceleratorModuleStageDetails = [
         {
-          stage: { name: AcceleratorStage.NETWORK_PREP },
-          modules: [
-            {
-              name: AcceleratorModuleNames.NETWORK,
-              runOrder: 1,
-              handler: jest.fn().mockResolvedValue('Module 1 executed'),
-            },
-          ],
+          stage: { name: AcceleratorStage.PREPARE },
+          modules: [],
         },
       ];
 
       const result = await ModuleRunner.execute({
-        ...MOCK_CONSTANTS.runnerParams,
-        stage: AcceleratorStage.NETWORK_PREP,
+        ...MOCK_CONSTANTS.runnerParameters,
+        stage: MOCK_CONSTANTS.invalidStage,
       });
 
-      expect(result).toBe('Module 1 executed');
+      expect(result).toBe(`No modules found for "${MOCK_CONSTANTS.invalidStage}" stage`);
     });
 
-    test('should execute SECURITY modules and return status', async () => {
+    test('should execute stage modules and return status', async () => {
       // Setup
-
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (lza.AcceleratorModuleStageDetails as any) = [
+      constants.AcceleratorModuleStageDetails = [
         {
-          stage: { name: AcceleratorStage.SECURITY },
+          stage: { name: AcceleratorStage.PREPARE },
           modules: [
             {
-              name: AcceleratorModuleNames.SECURITY,
+              name: AcceleratorModules.SETUP_CONTROL_TOWER_LANDING_ZONE,
               runOrder: 1,
               handler: jest.fn().mockResolvedValue('Module 1 executed'),
+            },
+            {
+              name: AcceleratorModules.EXAMPLE_MODULE,
+              runOrder: 2,
+              handler: jest.fn().mockResolvedValue('Module 2 executed'),
             },
           ],
         },
       ];
 
       const result = await ModuleRunner.execute({
-        ...MOCK_CONSTANTS.runnerParams,
-        stage: AcceleratorStage.SECURITY,
+        ...MOCK_CONSTANTS.runnerParameters,
+        stage: AcceleratorStage.PREPARE,
       });
 
-      expect(result).toBe('Module 1 executed');
+      expect(result).toBe('Module 1 executed\nModule 2 executed');
     });
 
     test('should execute stage modules with parallel module executions and return status', async () => {
       // Setup
-
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (lza.AcceleratorModuleStageDetails as any) = [
+      constants.AcceleratorModuleStageDetails = [
         {
           stage: { name: AcceleratorStage.SECURITY },
           modules: [
             {
-              name: AcceleratorModuleNames.SECURITY,
+              name: AcceleratorModules.SETUP_CONTROL_TOWER_LANDING_ZONE,
               runOrder: 1,
               handler: jest.fn().mockResolvedValue('Module 1 executed'),
             },
             {
-              name: AcceleratorModuleNames.NETWORK,
+              name: AcceleratorModules.EXAMPLE_MODULE,
               runOrder: 1,
               handler: jest.fn().mockResolvedValue('Module 2 executed'),
             },
@@ -639,31 +267,177 @@ describe('ModuleRunner', () => {
       ];
 
       const result = await ModuleRunner.execute({
-        ...MOCK_CONSTANTS.runnerParams,
+        ...MOCK_CONSTANTS.runnerParameters,
         stage: AcceleratorStage.SECURITY,
       });
 
       expect(result).toBe('Module 1 executed\nModule 2 executed');
     });
 
-    test('should handle and log errors during execution', async () => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (lza.AcceleratorModuleStageDetails as any) = [
+    test('should handle and log when invalid stage provided', async () => {
+      constants.AcceleratorModuleStageDetails = [
         {
           stage: { name: MOCK_CONSTANTS.invalidStage },
           modules: [
             {
               name: MOCK_CONSTANTS.invalidModule,
               runOrder: 1,
-              handler: jest.fn().mockRejectedValue(new Error('Test error')),
+              handler: jest.fn().mockResolvedValue(`No modules found for "${MOCK_CONSTANTS.invalidStage}" stage`),
             },
           ],
         },
       ];
 
-      await expect(
-        ModuleRunner.execute({ ...MOCK_CONSTANTS.runnerParams, stage: MOCK_CONSTANTS.invalidStage }),
-      ).rejects.toThrow(`Unknown Module ${MOCK_CONSTANTS.invalidModule}`);
+      const result = await ModuleRunner.execute({
+        ...MOCK_CONSTANTS.runnerParameters,
+        stage: MOCK_CONSTANTS.invalidStage,
+      });
+
+      expect(result).toBe(`No modules found for "${MOCK_CONSTANTS.invalidStage}" stage`);
+    });
+
+    describe('groupStagesByRunOrder', () => {
+      test('should correctly group and sort stages by run order', async () => {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const groupStagesByRunOrder = (ModuleRunner as any)['groupStagesByRunOrder'];
+
+        const mockStageItems = [
+          {
+            stage: { name: 'Stage1', runOrder: 2 },
+            modules: [],
+          },
+          {
+            stage: { name: 'Stage2', runOrder: 1 },
+            modules: [],
+          },
+          {
+            stage: { name: 'Stage3', runOrder: 2 },
+            modules: [],
+          },
+        ];
+
+        const result = groupStagesByRunOrder(mockStageItems);
+
+        expect(result).toEqual([
+          {
+            order: 1,
+            stages: [
+              {
+                stage: { name: 'Stage2', runOrder: 1 },
+                modules: [],
+              },
+            ],
+          },
+          {
+            order: 2,
+            stages: [
+              {
+                stage: { name: 'Stage1', runOrder: 2 },
+                modules: [],
+              },
+              {
+                stage: { name: 'Stage3', runOrder: 2 },
+                modules: [],
+              },
+            ],
+          },
+        ]);
+      });
+
+      test('should handle empty input array', async () => {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const groupStagesByRunOrder = (ModuleRunner as any)['groupStagesByRunOrder'];
+        const result = groupStagesByRunOrder([]);
+        expect(result).toEqual([]);
+      });
+
+      test('should handle single stage', async () => {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const groupStagesByRunOrder = (ModuleRunner as any)['groupStagesByRunOrder'];
+        const mockStageItems = [
+          {
+            stage: { name: 'Stage1', runOrder: 1 },
+            modules: [],
+          },
+        ];
+
+        const result = groupStagesByRunOrder(mockStageItems);
+        expect(result).toEqual([
+          {
+            order: 1,
+            stages: [
+              {
+                stage: { name: 'Stage1', runOrder: 1 },
+                modules: [],
+              },
+            ],
+          },
+        ]);
+      });
+    });
+
+    describe('control tower landing zone module', () => {
+      beforeEach(() => {
+        jest.clearAllMocks();
+      });
+
+      test('should execute module and return status when CT landing zone is not available in configuration', async () => {
+        //Setup
+        mockModuleRunnerParameters = {
+          configs: {
+            accountsConfig: mockAccountsConfig as AccountsConfig,
+            customizationsConfig: mockCustomizationsConfig as CustomizationsConfig,
+            globalConfig: {
+              homeRegion: 'mockHomeRegion',
+              controlTower: {
+                enable: true,
+              } as ControlTowerConfig,
+            } as GlobalConfig,
+            iamConfig: mockIamConfig as IamConfig,
+            networkConfig: mockNetworkConfig as NetworkConfig,
+            organizationConfig: mockOrganizationConfig as OrganizationConfig,
+            replacementsConfig: mockReplacementsConfig as ReplacementsConfig,
+            securityConfig: mockSecurityConfig as SecurityConfig,
+          },
+          globalRegion: MOCK_CONSTANTS.globalRegion,
+          resourcePrefixes: MOCK_CONSTANTS.resourcePrefixes,
+          acceleratorResourceNames: MOCK_CONSTANTS.acceleratorResourceNames,
+          logging: MOCK_CONSTANTS.logging,
+          organizationAccounts: [],
+          organizationDetails: undefined,
+          managementAccountCredentials: MOCK_CONSTANTS.credentials,
+        };
+
+        jest
+          .spyOn(require('../lib/functions'), 'getAcceleratorModuleRunnerParameters')
+          .mockReturnValue(mockModuleRunnerParameters);
+
+        constants.AcceleratorModuleStageDetails = [
+          {
+            stage: { name: AcceleratorStage.PREPARE },
+            modules: [
+              {
+                name: AcceleratorModules.SETUP_CONTROL_TOWER_LANDING_ZONE,
+                runOrder: 1,
+                handler: jest
+                  .fn()
+                  .mockResolvedValue(
+                    `${AcceleratorModules.SETUP_CONTROL_TOWER_LANDING_ZONE} execution skipped, No configuration found for Control Tower Landing zone`,
+                  ),
+              },
+            ],
+          },
+        ];
+
+        const result = await ModuleRunner.execute({
+          ...MOCK_CONSTANTS.runnerParameters,
+          stage: AcceleratorStage.PREPARE,
+        });
+
+        expect(result).toBe(
+          `${AcceleratorModules.SETUP_CONTROL_TOWER_LANDING_ZONE} execution skipped, No configuration found for Control Tower Landing zone`,
+        );
+      });
     });
   });
 });
