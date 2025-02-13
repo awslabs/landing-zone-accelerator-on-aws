@@ -214,6 +214,10 @@ logging:
     enable: true
     replaceLogDestinationArn: arn:aws:logs:us-east-1:111111111111:destination/log-destination
     dynamicPartitioning: dynamic-partitioning/log-filters.json
+    kinesis: 
+      streamingMode: PROVISIONED
+      shardCount: 4
+      retention: 28
     exclusions:
       - organizationalUnits:
           - Infrastructure

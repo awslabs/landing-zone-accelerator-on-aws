@@ -17,12 +17,13 @@ import fs from 'fs';
 import path from 'path';
 import winston from 'winston';
 import { AccountsConfig } from '../lib/accounts-config';
-import { GlobalConfig } from '../lib/global-config';
+import { GlobalConfig, CloudWatchKinesisConfig } from '../lib/global-config';
 import { IamConfig } from '../lib/iam-config';
 import { SecurityConfig } from '../lib/security-config';
 import { OrganizationConfig } from '../lib/organization-config';
 import { CommonValidatorFunctions } from './common/common-validator-functions';
 import { DeploymentTargets, Region } from '../lib/common';
+import { StreamMode } from '@aws-sdk/client-kinesis';
 
 export class GlobalConfigValidator {
   constructor(
@@ -185,6 +186,11 @@ export class GlobalConfigValidator {
     // Validate event bus policy configuration
     //
     this.validateEventBusPolicyConfiguration(values, configDir, errors);
+
+    //
+    // Validate event bus policy configuration
+    //
+    this.validateKinesisConfiguration(values.logging.cloudwatchLogs?.kinesis, errors);
 
     if (errors.length) {
       throw new Error(`${GlobalConfig.FILENAME} has ${errors.length} issues:\n${errors.join('\n')}`);
@@ -1391,6 +1397,37 @@ export class GlobalConfigValidator {
       if (ouIdNames.indexOf(ou) === -1) {
         errors.push(
           `Deployment target OU ${ou} for default event bus configuration does not exist in organization-config.yaml file.`,
+        );
+      }
+    }
+  }
+  /**
+   * Function to validate existence of default kinesis configuration
+   * @param values
+   */
+  private validateKinesisConfiguration(kinesisConfig: CloudWatchKinesisConfig | undefined, errors: string[]) {
+    // nothing is specified use defaults
+    if (!kinesisConfig) {
+      return;
+    }
+
+    if (kinesisConfig) {
+      // check shard count for stream when streaming mode is provisioned or undefined
+      if (
+        // if no shards are specified then allocate 1 shard
+        (kinesisConfig.shardCount ?? 1) < 1 &&
+        // if no streaming mode is specified then assume its in provisioned mode
+        (kinesisConfig.streamingMode ?? StreamMode.PROVISIONED) === StreamMode.PROVISIONED
+      ) {
+        errors.push(
+          `Specified globalConfig.logging.cloudwatch.kinesis.shardCount less than 1 when streaming mode is provisioned`,
+        );
+      }
+      // check if retention is between 24 and 8760 and is an integer
+      const retention = kinesisConfig.retention ?? 24; // Default to 24 if undefined
+      if (!Number.isInteger(retention) || retention < 24 || retention > 8760) {
+        errors.push(
+          `Retention must be an integer between 24 and 8760 hours. Specified value at globalConfig.logging.cloudwatch.kinesis.retention : ${retention}`,
         );
       }
     }

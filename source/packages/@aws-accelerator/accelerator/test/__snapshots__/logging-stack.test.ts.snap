@@ -4023,8 +4023,8 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 1`] = `
         },
       },
       "Properties": {
-        "RetentionPeriodHours": 24,
-        "ShardCount": 1,
+        "RetentionPeriodHours": 28,
+        "ShardCount": 4,
         "StreamEncryption": {
           "EncryptionType": "KMS",
           "KeyId": {
@@ -4033,6 +4033,9 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 1`] = `
               "Arn",
             ],
           },
+        },
+        "StreamModeDetails": {
+          "StreamMode": "PROVISIONED",
         },
       },
       "Type": "AWS::Kinesis::Stream",
@@ -8899,8 +8902,8 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 2`] = `
         },
       },
       "Properties": {
-        "RetentionPeriodHours": 24,
-        "ShardCount": 1,
+        "RetentionPeriodHours": 28,
+        "ShardCount": 4,
         "StreamEncryption": {
           "EncryptionType": "KMS",
           "KeyId": {
@@ -8909,6 +8912,9 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 2`] = `
               "Arn",
             ],
           },
+        },
+        "StreamModeDetails": {
+          "StreamMode": "PROVISIONED",
         },
       },
       "Type": "AWS::Kinesis::Stream",
@@ -13419,8 +13425,7 @@ exports[`LoggingStackOuTargets Construct(LoggingStackOuTargets):  Snapshot Test 
         },
       },
       "Properties": {
-        "RetentionPeriodHours": 24,
-        "ShardCount": 1,
+        "RetentionPeriodHours": 28,
         "StreamEncryption": {
           "EncryptionType": "KMS",
           "KeyId": {
@@ -13429,6 +13434,9 @@ exports[`LoggingStackOuTargets Construct(LoggingStackOuTargets):  Snapshot Test 
               "Arn",
             ],
           },
+        },
+        "StreamModeDetails": {
+          "StreamMode": "ON_DEMAND",
         },
       },
       "Type": "AWS::Kinesis::Stream",

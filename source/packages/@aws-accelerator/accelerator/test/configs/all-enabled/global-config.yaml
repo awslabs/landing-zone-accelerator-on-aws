@@ -277,6 +277,10 @@ logging:
           - Credentials
     firehose:
       fileExtension: json.gz
+    kinesis: 
+      streamingMode: PROVISIONED
+      shardCount: 4
+      retention: 28
     subscription:
       type: ACCOUNT
       selectionCriteria: 'LogGroupName NOT IN ["/aws/lambda/AWSAccelerator-FirehoseRecordsProcessor", "development", "AppA"]'

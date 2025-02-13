@@ -12,6 +12,7 @@
  */
 
 import * as t from '../common/types';
+import { StreamMode } from '@aws-sdk/client-kinesis';
 /**
  * {@link IGlobalConfig} / {@link IControlTowerConfig} / {@link IControlTowerLandingZoneConfig} / {@link IControlTowerLandingZoneLoggingConfig}
  *
@@ -1167,6 +1168,55 @@ export interface ICloudWatchSubscriptionConfig {
    * (This property is only applicable when type is set to 'LOG_GROUP'.
    */
   readonly filterPattern?: t.NonEmptyString;
+}
+
+/**
+ * *{@link IGlobalConfig} / {@link ILoggingConfig} / {@link ICloudWatchLogsConfig}/ {@link ICloudWatchKinesisConfig}*
+ *
+ * @description
+ * Accelerator global CloudWatch Logs Kinesis stream configuration
+ *
+ * @example
+ * ```
+ *  logging:
+ *    cloudwatchLogs:
+ *      kinesis:
+ *        streamingMode: PROVISIONED
+ *        shardCount: 5
+ *        retention: 240
+ * ```
+ */
+export interface ICloudWatchKinesisConfig {
+  /**
+   * @remarks
+   * Specifies the capacity mode to which you want to set your data stream. Currently, in Kinesis Data Streams, you can choose between an on-demand capacity mode and a provisioned capacity mode for your data streams.
+   * Please note service might limit how many times you can toggle between stream modes as mentioned on [this page](https://docs.aws.amazon.com/streams/latest/dev/how-do-i-size-a-stream.html)
+   * Defaults to PROVISIONED.
+   * Choose any value based on this page: https://docs.aws.amazon.com/AWSJavaScriptSDK/v3/latest/Package/-aws-sdk-client-kinesis/Variable/StreamMode/
+   * @default PROVISIONED
+   */
+  readonly streamingMode: StreamMode;
+  /**
+   * @remarks
+   * The number of shards that the stream uses. For greater provisioned throughput, increase the number of shards. This is only applicable if streamingMode is 'PROVISIONED'.
+   * The value is ignored if streaming mode is 'ON_DEMAND'
+   * Shards cannot be increased more than double. For example, if shard count changes from 1 to 4 then Kinesis service will throw error
+   * `UpdateShardCount cannot scale up over double your current open shard count. Current open shard count: 1 Target shard count: 4 `
+   * Refer to the API for more details and limitations: https://docs.aws.amazon.com/kinesis/latest/APIReference/API_UpdateShardCount.html
+   * Defaults to 1 if unspecified. Should be greater than 0.
+   * @default 1
+   *
+   */
+  readonly shardCount?: number;
+  /**
+   * @remarks
+   * The number of hours for the data records that are stored in shards to remain accessible. The default value is 24. For more information about the stream retention period, see Changing the Data Retention Period in the Amazon Kinesis Developer Guide.
+   * @link https://docs.aws.amazon.com/streams/latest/dev/kinesis-extended-retention.html
+   *
+   * The value should be between 24 and 8760
+   * @default 24
+   */
+  readonly retention?: number;
 }
 
 /**
