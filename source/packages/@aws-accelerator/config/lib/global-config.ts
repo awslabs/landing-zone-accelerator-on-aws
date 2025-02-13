@@ -17,6 +17,7 @@ import * as path from 'path';
 import * as AWS from 'aws-sdk';
 import { AssumeRoleCommandOutput } from '@aws-sdk/client-sts';
 import { SSMClient, GetParametersByPathCommand } from '@aws-sdk/client-ssm';
+import { StreamMode } from '@aws-sdk/client-kinesis';
 
 import { createLogger } from '@aws-accelerator/utils/lib/logger';
 import { throttlingBackOff } from '@aws-accelerator/utils/lib/throttle';
@@ -409,6 +410,12 @@ export class CloudWatchLogsExclusionConfig implements i.ICloudWatchLogsExclusion
 export class CloudWatchFirehoseConfig implements i.ICloudWatchFirehoseConfig {
   readonly fileExtension: string | undefined = undefined;
 }
+
+export class CloudWatchKinesisConfig implements i.ICloudWatchKinesisConfig {
+  readonly streamingMode: StreamMode = StreamMode.PROVISIONED;
+  readonly shardCount: number | undefined = undefined;
+  readonly retention: number | undefined = undefined;
+}
 export class CloudWatchSubscriptionConfig implements i.ICloudWatchSubscriptionConfig {
   readonly type: 'ACCOUNT' | 'LOG_GROUP' = 'LOG_GROUP';
   readonly selectionCriteria: string | undefined = undefined;
@@ -425,6 +432,7 @@ export class CloudWatchLogsConfig implements i.ICloudWatchLogsConfig {
   readonly dataProtection: CloudWatchDataProtectionConfig | undefined = undefined;
   readonly firehose: CloudWatchFirehoseConfig | undefined = undefined;
   readonly subscription: CloudWatchSubscriptionConfig | undefined = undefined;
+  readonly kinesis: CloudWatchKinesisConfig | undefined = undefined;
 }
 
 export class LoggingConfig implements i.ILoggingConfig {

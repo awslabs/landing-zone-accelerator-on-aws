@@ -16,6 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - feat(module): added Amazon Security Lake set-delegated-admin action
 - feat(logging): cloudwatch logs account setting for subscription filter
 - feat(backoff): added escape hatch to configure number of retries and starting backoff
+- feat(kinesis): allow customization of retention, streaming mode and shard count
 
 ### Fixed
 

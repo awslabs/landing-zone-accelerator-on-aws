@@ -39,6 +39,9 @@ logging:
     sendToS3: true
   cloudwatchLogs:
     dynamicPartitioning: dynamic-partitioning/log-filters.json
+    kinesis: 
+      streamingMode: ON_DEMAND
+      retention: 28
     exclusions:
       - organizationalUnits:
           - Infrastructure
