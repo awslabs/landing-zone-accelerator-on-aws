@@ -40,3 +40,15 @@ describe('LoggingStack', () => {
     Create.stackProvider(`LogArchive-us-west-2`, [AcceleratorStage.LOGGING, 'aws', 'us-west-2']),
   );
 });
+
+describe('LoggingStackDelegatedAdmin', () => {
+  snapShotTest(
+    'Construct(LoggingStacKDelegatedAdmin): ',
+    Create.stackProvider(`LogArchive-us-west-2`, [
+      AcceleratorStage.LOGGING,
+      'aws',
+      'us-west-2',
+      'all-enabled-delegated-admin',
+    ]),
+  );
+});

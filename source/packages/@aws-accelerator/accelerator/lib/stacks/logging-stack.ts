@@ -999,6 +999,8 @@ export class LoggingStack extends AcceleratorStack {
 
     // // Create Kinesis Data Stream
     // Kinesis Stream - data stream which will get data from CloudWatch logs
+    const dataStreamMode =
+      this.props.globalConfig.logging.cloudwatchLogs?.kinesis?.streamingMode ?? StreamMode.PROVISIONED;
     const logsKinesisStreamCfn = new cdk.aws_kinesis.CfnStream(this, 'LogsKinesisStreamCfn', {
       retentionPeriodHours: this.props.globalConfig.logging.cloudwatchLogs?.kinesis?.retention ?? 24,
       streamEncryption: {
@@ -1006,9 +1008,9 @@ export class LoggingStack extends AcceleratorStack {
         keyId: logsReplicationKmsKey.keyArn,
       },
       streamModeDetails: {
-        streamMode: this.props.globalConfig.logging.cloudwatchLogs?.kinesis?.streamingMode ?? StreamMode.PROVISIONED,
+        streamMode: dataStreamMode,
       },
-      ...(this.props.globalConfig.logging.cloudwatchLogs?.kinesis?.streamingMode === StreamMode.PROVISIONED && {
+      ...(dataStreamMode === StreamMode.PROVISIONED && {
         shardCount: this.props.globalConfig.logging.cloudwatchLogs?.kinesis?.shardCount ?? 1,
       }),
     });
