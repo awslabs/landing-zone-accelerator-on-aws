@@ -37,6 +37,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - chore(documentation): add mkdocs preventative control section
+- chore(security): upgrade esbuild version to 0.25.0
 
 ### Configuration Changes
 
