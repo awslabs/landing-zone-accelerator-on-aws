@@ -32,6 +32,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - fix(service quota): fix region logic that provisioned service limit for home region even if not specified
 - fix(logging): removed wildcard from central log bucket for management access role
 - fix(workshop): fix single account deployment mode
+- fix(kinesis): retain defaults when no input is provided
 
 ### Changed
 
