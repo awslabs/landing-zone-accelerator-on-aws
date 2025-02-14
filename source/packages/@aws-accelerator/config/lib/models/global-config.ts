@@ -1092,10 +1092,13 @@ export interface ICloudWatchLogsExclusionConfig {
  * @example
  * ```
  * logging:
- *  - cloudwatchLogs:
- *  - firehose:
- *     - fileExtension: undefined | 'json.gz'
- *
+ *  cloudwatchLogs:
+ *    firehose:
+ *      fileExtension: json.gz
+ *      lambdaProcessor:
+ *        retries: 3
+ *        bufferSize: 0.2
+ *        bufferInterval: 60
  * ```
  */
 export interface ICloudWatchFirehoseConfig {
@@ -1112,6 +1115,42 @@ export interface ICloudWatchFirehoseConfig {
    *
    */
   readonly fileExtension?: t.NonEmptyString;
+  /**
+   * Describes hints for the firehose lambda processor when Amazon Data Firehose recieves data. Amazon Data Firehose can invokes Lambda function to take source data and deliver the data to destination specified in dynamic partition.
+   */
+  readonly lambdaProcessor?: ICloudWatchFirehoseLambdaProcessorConfig;
+}
+
+/**
+ * @remarks
+ * Lambda processor parameters for Amazon Kinesis DataFirehose
+ * Ref:  Ref: https://docs.aws.amazon.com/firehose/latest/dev/data-transformation.html
+ *
+ * @example
+ * ```
+ * lambdaProcessor:
+ *   retries: 3
+ *   bufferSize: 0.2
+ *   bufferInterval: 60
+ * ```
+ */
+export interface ICloudWatchFirehoseLambdaProcessorConfig {
+  /**
+   * @remarks
+   * By default, Kinesis Data Firehose retries a Lambda invocation 3 times if the invocation fails.
+   * @default 3
+   */
+  readonly retries?: number;
+  /**
+   * The AWS Lambda function has a 6 MB invocation payload quota. Your data can expand in size after it's processed by the AWS Lambda function. A smaller buffer size allows for more room should the data expand after processing. Range is 0.2 to 3 MB.
+   * @default 0.2
+   */
+  readonly bufferSize?: number;
+  /**
+   * The period of time in seconds during which Amazon Data Firehose buffers incoming data before invoking the AWS Lambda function. The AWS Lambda function is invoked once the value of the buffer size or the buffer interval is reached. Range 60 to 900s.
+   * @default 60
+   */
+  readonly bufferInterval?: number;
 }
 
 /**

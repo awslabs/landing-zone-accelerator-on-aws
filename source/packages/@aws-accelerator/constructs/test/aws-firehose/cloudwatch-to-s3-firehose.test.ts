@@ -39,6 +39,9 @@ describe('CloudWatchToS3Firehose', () => {
     firehoseRecordsProcessorFunctionName: 'test',
     logsKmsKey: new cdk.aws_kms.Key(stack, 'CustomLogsKey', {}),
     logsRetentionInDaysValue: '7',
+    firehoseLambdaProcessorBufferInterval: '60',
+    firehoseLambdaProcessorBufferSize: '0.2',
+    firehoseLambdaProcessorRetries: '3',
   });
   snapShotTest(testNamePrefix, stack);
 });
@@ -58,6 +61,9 @@ describe('CloudWatchToS3FirehoseBucketName', () => {
     firehoseRecordsProcessorFunctionName: 'test',
     logsKmsKey: new cdk.aws_kms.Key(stack, 'CustomLogsKeyBucketName', {}),
     logsRetentionInDaysValue: '7',
+    firehoseLambdaProcessorBufferInterval: '60',
+    firehoseLambdaProcessorBufferSize: '0.2',
+    firehoseLambdaProcessorRetries: '3',
   });
   snapShotTest(testNamePrefix, stack);
 });
@@ -79,6 +85,9 @@ test('should throw an exception for bucket name and bucket are present', () => {
       firehoseRecordsProcessorFunctionName: 'test',
       logsKmsKey: new cdk.aws_kms.Key(stack, 'CustomLogsKeyBucketErrorName', {}),
       logsRetentionInDaysValue: '7',
+      firehoseLambdaProcessorBufferInterval: '60',
+      firehoseLambdaProcessorBufferSize: '0.2',
+      firehoseLambdaProcessorRetries: '3',
     });
   }
 
@@ -102,6 +111,9 @@ describe('CloudWatchToS3FirehoseExistingIam', () => {
     firehoseRecordsProcessorFunctionName: 'test',
     logsKmsKey: new cdk.aws_kms.Key(stack, 'CustomLogsKeyExistingIam', {}),
     logsRetentionInDaysValue: '7',
+    firehoseLambdaProcessorBufferInterval: '60',
+    firehoseLambdaProcessorBufferSize: '0.2',
+    firehoseLambdaProcessorRetries: '3',
   });
   snapShotTest(testNamePrefix, stack);
 });
@@ -124,6 +136,9 @@ describe('File Extension Tests', () => {
       logsKmsKey: new cdk.aws_kms.Key(testStack, 'CustomLogsKeyWithExt', {}),
       logsRetentionInDaysValue: '7',
       firehoseLogExtension: '.json.gz',
+      firehoseLambdaProcessorBufferInterval: '60',
+      firehoseLambdaProcessorBufferSize: '0.2',
+      firehoseLambdaProcessorRetries: '3',
     });
 
     const template = cdk.assertions.Template.fromStack(testStack);
@@ -152,6 +167,9 @@ describe('File Extension Tests', () => {
       firehoseRecordsProcessorFunctionName: 'test',
       logsKmsKey: new cdk.aws_kms.Key(testStack, 'CustomLogsKeyNoExt', {}),
       logsRetentionInDaysValue: '7',
+      firehoseLambdaProcessorBufferInterval: '60',
+      firehoseLambdaProcessorBufferSize: '0.2',
+      firehoseLambdaProcessorRetries: '3',
     });
     const template = cdk.assertions.Template.fromStack(testStack);
 
