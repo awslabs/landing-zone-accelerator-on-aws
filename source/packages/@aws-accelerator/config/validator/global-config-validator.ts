@@ -17,7 +17,7 @@ import fs from 'fs';
 import path from 'path';
 import winston from 'winston';
 import { AccountsConfig } from '../lib/accounts-config';
-import { GlobalConfig, CloudWatchKinesisConfig } from '../lib/global-config';
+import { GlobalConfig, CloudWatchKinesisConfig, CloudWatchFirehoseLamdaProcessorConfig } from '../lib/global-config';
 import { IamConfig } from '../lib/iam-config';
 import { SecurityConfig } from '../lib/security-config';
 import { OrganizationConfig } from '../lib/organization-config';
@@ -188,9 +188,14 @@ export class GlobalConfigValidator {
     this.validateEventBusPolicyConfiguration(values, configDir, errors);
 
     //
-    // Validate event bus policy configuration
+    // Validate Kinesis configuration
     //
     this.validateKinesisConfiguration(values.logging.cloudwatchLogs?.kinesis, errors);
+
+    //
+    // Validate Firehose Lambda processor configuration
+    //
+    this.validateFirehoseLambdaProcessorConfiguration(values.logging.cloudwatchLogs?.firehose?.lambdaProcessor, errors);
 
     if (errors.length) {
       throw new Error(`${GlobalConfig.FILENAME} has ${errors.length} issues:\n${errors.join('\n')}`);
@@ -1428,6 +1433,32 @@ export class GlobalConfigValidator {
       if (!Number.isInteger(retention) || retention < 24 || retention > 8760) {
         errors.push(
           `Retention must be an integer between 24 and 8760 hours. Specified value at globalConfig.logging.cloudwatch.kinesis.retention : ${retention}`,
+        );
+      }
+    }
+  }
+  /**
+   * Function to validate existence of default firehose lambda processor configuration
+   * @param values
+   */
+  private validateFirehoseLambdaProcessorConfiguration(
+    lambdaProcessor: CloudWatchFirehoseLamdaProcessorConfig | undefined,
+    errors: string[],
+  ) {
+    if (lambdaProcessor) {
+      // check buffer size and buffer interval
+      // if no buffer size is provided assume default of 0.2
+      const bufferSize = lambdaProcessor.bufferSize ?? 0.2;
+      // if no buffer interval is provided assume default of 60
+      const bufferInterval = lambdaProcessor.bufferInterval ?? 60;
+      if (bufferSize < 0.2 || bufferSize > 3) {
+        errors.push(
+          `Specified globalConfig.logging.cloudwatch.firehose.lambdaProcessor.bufferSize: ${bufferSize}. It should be between 0.2 and 3.`,
+        );
+      }
+      if (bufferInterval < 60 || bufferInterval > 900) {
+        errors.push(
+          `Specified globalConfig.logging.cloudwatch.firehose.lambdaProcessor.bufferInterval: ${bufferInterval}. It should be between 60 and 900.`,
         );
       }
     }

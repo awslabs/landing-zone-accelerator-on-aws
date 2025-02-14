@@ -91,6 +91,18 @@ export interface CloudWatchToS3FirehoseProps {
    */
   logsRetentionInDaysValue: string;
   /**
+   * Firehose lambda processor retries
+   */
+  firehoseLambdaProcessorRetries: string;
+  /**
+   * Firehose lambda processor buffer size
+   */
+  firehoseLambdaProcessorBufferSize: string;
+  /**
+   * Firehose lambda processor buffer interval
+   */
+  firehoseLambdaProcessorBufferInterval: string;
+  /**
    *
    * Log Extension type for firehose-delivered log files in S3 bucket
    */
@@ -230,21 +242,21 @@ export class CloudWatchToS3Firehose extends Construct {
                 },
                 {
                   parameterName: 'NumberOfRetries',
-                  parameterValue: '3',
+                  parameterValue: props.firehoseLambdaProcessorRetries,
                 },
                 {
                   // The AWS Lambda function has a 6 MB invocation payload quota. Your data can expand in size after it's processed by the AWS Lambda function. A smaller buffer size allows for more room should the data expand after processing.
                   // Minimum: 0.2 MB, maximum: 3 MB.
                   // setting to minimum to allow for large spikes in log traffic to firehose
                   parameterName: 'BufferSizeInMBs',
-                  parameterValue: '0.2',
+                  parameterValue: props.firehoseLambdaProcessorBufferSize,
                 },
                 {
                   // The period of time during which Kinesis Data Firehose buffers incoming data before invoking the AWS Lambda function. The AWS Lambda function is invoked once the value of the buffer size or the buffer interval is reached.
                   // Minimum: 60 seconds, maximum: 900 seconds
                   // setting minimum so that lambda function is invoked frequently
                   parameterName: 'BufferIntervalInSeconds',
-                  parameterValue: '60',
+                  parameterValue: props.firehoseLambdaProcessorBufferInterval,
                 },
               ],
             },

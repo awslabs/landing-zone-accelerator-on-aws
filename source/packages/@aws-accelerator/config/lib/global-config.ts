@@ -407,8 +407,14 @@ export class CloudWatchLogsExclusionConfig implements i.ICloudWatchLogsExclusion
   readonly logGroupNames: string[] | undefined = undefined;
 }
 
+export class CloudWatchFirehoseLamdaProcessorConfig implements i.ICloudWatchFirehoseLambdaProcessorConfig {
+  readonly retries: number | undefined = undefined;
+  readonly bufferInterval: number | undefined = undefined;
+  readonly bufferSize: number | undefined = undefined;
+}
 export class CloudWatchFirehoseConfig implements i.ICloudWatchFirehoseConfig {
   readonly fileExtension: string | undefined = undefined;
+  readonly lambdaProcessor?: CloudWatchFirehoseLamdaProcessorConfig | undefined = undefined;
 }
 
 export class CloudWatchKinesisConfig implements i.ICloudWatchKinesisConfig {
