@@ -13,6 +13,7 @@
 import * as cdk from 'aws-cdk-lib';
 import { Construct } from 'constructs';
 import * as path from 'path';
+import { CUSTOM_RESOURCE_PROVIDER_RUNTIME } from '../../../utils/lib/lambda';
 
 export type cloudwatchExclusionItem = {
   account: string;
@@ -110,7 +111,7 @@ export class CloudWatchLogsSubscriptionFilter extends Construct {
     //
     const provider = cdk.CustomResourceProvider.getOrCreateProvider(this, UPDATE_SUBSCRIPTION_FILTER, {
       codeDirectory: path.join(__dirname, 'update-subscription-filter/dist'),
-      runtime: cdk.CustomResourceProviderRuntime.NODEJS_18_X,
+      runtime: CUSTOM_RESOURCE_PROVIDER_RUNTIME,
       policyStatements: [
         // Required when global-config.yaml::logging::cloudwatchLogs::encryption is configured
         {

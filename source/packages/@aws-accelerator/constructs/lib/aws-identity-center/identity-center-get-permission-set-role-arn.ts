@@ -16,6 +16,7 @@ import { Construct } from 'constructs';
 import { NagSuppressions } from 'cdk-nag';
 import { v4 as uuidv4 } from 'uuid';
 import * as path from 'path';
+import { DEFAULT_LAMBDA_RUNTIME } from '@aws-accelerator/utils/lib/lambda';
 
 /**
  * Initialized GetPermissionSetRoleArn properties
@@ -54,7 +55,7 @@ export class IdentityCenterGetPermissionRoleArnProvider extends Construct {
     const functionId = `${id}ProviderLambda`;
     const providerLambda = new cdk.aws_lambda.Function(this, functionId, {
       code: cdk.aws_lambda.Code.fromAsset(path.join(__dirname, 'get-permission-set-role-arn/dist')),
-      runtime: cdk.aws_lambda.Runtime.NODEJS_18_X,
+      runtime: DEFAULT_LAMBDA_RUNTIME,
       timeout: cdk.Duration.seconds(60),
       initialPolicy: [
         new cdk.aws_iam.PolicyStatement({

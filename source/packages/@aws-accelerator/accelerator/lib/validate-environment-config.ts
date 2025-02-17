@@ -16,6 +16,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { Construct } from 'constructs';
 import path = require('path');
 import { NagSuppressions } from 'cdk-nag';
+import { DEFAULT_LAMBDA_RUNTIME } from '../../utils/lib/lambda';
 
 export interface ValidateEnvironmentConfigProps {
   readonly acceleratorConfigTable: cdk.aws_dynamodb.ITable;
@@ -117,7 +118,7 @@ export class ValidateEnvironmentConfig extends Construct {
     });
 
     const providerLambda = new cdk.aws_lambda.Function(this, 'ValidateEnvironmentFunction', {
-      runtime: cdk.aws_lambda.Runtime.NODEJS_18_X,
+      runtime: DEFAULT_LAMBDA_RUNTIME,
       code: cdk.aws_lambda.Code.fromAsset(path.join(__dirname, './lambdas/validate-environment/dist')),
       handler: 'index.handler',
       timeout: cdk.Duration.minutes(15),

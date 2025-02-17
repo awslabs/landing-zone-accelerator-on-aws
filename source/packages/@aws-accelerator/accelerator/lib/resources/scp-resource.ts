@@ -26,6 +26,7 @@ import { createLogger } from '@aws-accelerator/utils/lib/logger';
 import path from 'path';
 import { ServiceControlPolicyConfig } from '@aws-accelerator/config';
 import { pascalCase } from 'pascal-case';
+import { DEFAULT_LAMBDA_RUNTIME } from '../../../utils/lib/lambda';
 
 /**
  * Scp Item type
@@ -292,7 +293,7 @@ export class ScpResource {
       this.logger.info(`Creating function to attach quarantine scp to accounts`);
       const attachQuarantineFunction = new cdk.aws_lambda.Function(this.stack, 'AttachQuarantineScpFunction', {
         code: cdk.aws_lambda.Code.fromAsset(path.join(__dirname, '../lambdas/attach-quarantine-scp/dist')),
-        runtime: cdk.aws_lambda.Runtime.NODEJS_18_X,
+        runtime: DEFAULT_LAMBDA_RUNTIME,
         handler: 'index.handler',
         description: 'Lambda function to attach quarantine scp to new accounts',
         timeout: cdk.Duration.minutes(5),

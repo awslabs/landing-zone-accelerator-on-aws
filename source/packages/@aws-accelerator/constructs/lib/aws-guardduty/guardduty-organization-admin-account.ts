@@ -12,6 +12,7 @@
  */
 
 import { PolicyStatementType } from '@aws-accelerator/utils/lib/common-resources';
+import { CUSTOM_RESOURCE_PROVIDER_RUNTIME } from '@aws-accelerator/utils/lib/lambda';
 import * as cdk from 'aws-cdk-lib';
 import { Construct } from 'constructs';
 
@@ -90,7 +91,7 @@ export class GuardDutyOrganizationAdminAccount extends Construct {
 
     const provider = cdk.CustomResourceProvider.getOrCreateProvider(this, RESOURCE_TYPE, {
       codeDirectory: path.join(__dirname, 'enable-organization-admin-account/dist'),
-      runtime: cdk.CustomResourceProviderRuntime.NODEJS_18_X,
+      runtime: CUSTOM_RESOURCE_PROVIDER_RUNTIME,
       timeout: cdk.Duration.seconds(180),
       policyStatements: GuardDutyEnableOrganizationAdminAccountPolicyStatements,
     });

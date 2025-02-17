@@ -11,6 +11,7 @@
  *  and limitations under the License.
  */
 
+import { CUSTOM_RESOURCE_PROVIDER_RUNTIME } from '@aws-accelerator/utils/lib/lambda';
 import * as cdk from 'aws-cdk-lib';
 import { Construct } from 'constructs';
 
@@ -43,7 +44,7 @@ export class EnableSharingWithAwsOrganization extends Construct {
     //
     const provider = cdk.CustomResourceProvider.getOrCreateProvider(this, ENABLE_SHARING_WITH_AWS_ORGANIZATION_TYPE, {
       codeDirectory: path.join(__dirname, 'enable-sharing-with-aws-organization/dist'),
-      runtime: cdk.CustomResourceProviderRuntime.NODEJS_18_X,
+      runtime: CUSTOM_RESOURCE_PROVIDER_RUNTIME,
       policyStatements: [
         {
           Effect: 'Allow',

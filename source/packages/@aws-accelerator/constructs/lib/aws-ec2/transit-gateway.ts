@@ -17,6 +17,7 @@ import { v4 as uuidv4 } from 'uuid';
 
 import { TransitGatewayAttachmentOptionsConfig } from '@aws-accelerator/config';
 import { LzaCustomResource } from '../lza-custom-resource';
+import { CUSTOM_RESOURCE_PROVIDER_RUNTIME } from '@aws-accelerator/utils/lib/lambda';
 
 const path = require('path');
 
@@ -232,7 +233,7 @@ export class TransitGatewayAttachment extends TransitGatewayAttachmentBase {
 
         const provider = cdk.CustomResourceProvider.getOrCreateProvider(this, GET_TRANSIT_GATEWAY_ATTACHMENT, {
           codeDirectory: path.join(__dirname, 'get-transit-gateway-attachment/dist'),
-          runtime: cdk.CustomResourceProviderRuntime.NODEJS_18_X,
+          runtime: CUSTOM_RESOURCE_PROVIDER_RUNTIME,
           policyStatements: [
             {
               Effect: 'Allow',

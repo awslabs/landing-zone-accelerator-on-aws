@@ -17,6 +17,7 @@ import * as path from 'path';
 import { v4 as uuidv4 } from 'uuid';
 
 import { IpamAllocationConfig } from '@aws-accelerator/config';
+import { CUSTOM_RESOURCE_PROVIDER_RUNTIME } from '@aws-accelerator/utils/lib/lambda';
 
 export interface IIpamSubnet extends cdk.IResource {
   /**
@@ -112,7 +113,7 @@ export class IpamSubnet extends cdk.Resource implements IIpamSubnet {
 
         const provider = cdk.CustomResourceProvider.getOrCreateProvider(this, GET_IPAM_SUBNET_CIDR, {
           codeDirectory: path.join(__dirname, 'get-ipam-subnet-cidr/dist'),
-          runtime: cdk.CustomResourceProviderRuntime.NODEJS_18_X,
+          runtime: CUSTOM_RESOURCE_PROVIDER_RUNTIME,
           policyStatements: [
             {
               Effect: 'Allow',
@@ -178,7 +179,7 @@ export class IpamSubnet extends cdk.Resource implements IIpamSubnet {
 
     const provider = cdk.CustomResourceProvider.getOrCreateProvider(this, IPAM_SUBNET, {
       codeDirectory: path.join(__dirname, 'ipam-subnet/dist'),
-      runtime: cdk.CustomResourceProviderRuntime.NODEJS_18_X,
+      runtime: CUSTOM_RESOURCE_PROVIDER_RUNTIME,
       policyStatements: [
         {
           Effect: 'Allow',

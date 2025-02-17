@@ -14,6 +14,7 @@ import * as cdk from 'aws-cdk-lib';
 import * as path from 'path';
 import { pascalCase } from 'change-case';
 import { Construct } from 'constructs';
+import { CUSTOM_RESOURCE_PROVIDER_RUNTIME } from '../../../utils/lib/lambda';
 
 /**
  * Construction properties for CloudWatch LogGroups.
@@ -142,7 +143,7 @@ export class CloudWatchLogGroups extends cdk.Resource implements ILogGroup {
       pascalCase(`${this.logGroupName}-${CLOUD_WATCH_LOG_GROUPS}`),
       {
         codeDirectory: path.join(__dirname, 'create-log-groups/dist'),
-        runtime: cdk.CustomResourceProviderRuntime.NODEJS_18_X,
+        runtime: CUSTOM_RESOURCE_PROVIDER_RUNTIME,
         policyStatements,
       },
     );

@@ -11,6 +11,7 @@
  *  and limitations under the License.
  */
 
+import { CUSTOM_RESOURCE_PROVIDER_RUNTIME } from '@aws-accelerator/utils/lib/lambda';
 import * as cdk from 'aws-cdk-lib';
 import { Construct } from 'constructs';
 import * as path from 'path';
@@ -85,7 +86,7 @@ export class TransitGatewayPrefixListReference extends cdk.Resource {
 
     const provider = cdk.CustomResourceProvider.getOrCreateProvider(this, 'Custom::TransitGatewayPrefixListReference', {
       codeDirectory: path.join(__dirname, 'transit-gateway-prefix-list-reference/dist'),
-      runtime: cdk.CustomResourceProviderRuntime.NODEJS_18_X,
+      runtime: CUSTOM_RESOURCE_PROVIDER_RUNTIME,
       policyStatements,
     });
 

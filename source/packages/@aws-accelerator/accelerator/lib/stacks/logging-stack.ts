@@ -17,6 +17,7 @@ import { NagSuppressions } from 'cdk-nag';
 import { Construct } from 'constructs';
 import { pascalCase } from 'pascal-case';
 import path from 'path';
+import { DEFAULT_LAMBDA_RUNTIME } from '../../../utils/lib/lambda';
 
 import {
   SnsTopicConfig,
@@ -2237,7 +2238,7 @@ export class LoggingStack extends AcceleratorStack {
 
     this.snsForwarderFunction = new cdk.aws_lambda.Function(this, 'SnsTopicForwarderFunction', {
       code: cdk.aws_lambda.Code.fromAsset(path.join(__dirname, '../lambdas/sns-topic-forwarder/dist')),
-      runtime: cdk.aws_lambda.Runtime.NODEJS_18_X,
+      runtime: DEFAULT_LAMBDA_RUNTIME,
       handler: 'index.handler',
       description: 'Lambda function to forward Accelerator SNS Topics to log archive account',
       timeout: cdk.Duration.minutes(2),

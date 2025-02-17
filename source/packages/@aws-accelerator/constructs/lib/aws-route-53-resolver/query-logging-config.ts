@@ -11,6 +11,7 @@
  *  and limitations under the License.
  */
 
+import { CUSTOM_RESOURCE_PROVIDER_RUNTIME } from '@aws-accelerator/utils/lib/lambda';
 import * as cdk from 'aws-cdk-lib';
 import { Construct } from 'constructs';
 import * as path from 'path';
@@ -130,7 +131,7 @@ export class QueryLoggingConfig extends cdk.Resource implements IQueryLoggingCon
     // Use custom resource
     const provider = cdk.CustomResourceProvider.getOrCreateProvider(this, 'Custom::LogResourcePolicy', {
       codeDirectory: path.join(__dirname, 'log-resource-policy/dist'),
-      runtime: cdk.CustomResourceProviderRuntime.NODEJS_18_X,
+      runtime: CUSTOM_RESOURCE_PROVIDER_RUNTIME,
       policyStatements: [
         {
           Effect: 'Allow',
@@ -178,7 +179,7 @@ export class QueryLoggingConfig extends cdk.Resource implements IQueryLoggingCon
     // Use custom resource
     const provider = cdk.CustomResourceProvider.getOrCreateProvider(this, 'Custom::QueryLoggingConfig', {
       codeDirectory: path.join(__dirname, 'query-logging-config/dist'),
-      runtime: cdk.CustomResourceProviderRuntime.NODEJS_18_X,
+      runtime: CUSTOM_RESOURCE_PROVIDER_RUNTIME,
       policyStatements: [
         {
           Effect: 'Allow',
@@ -283,7 +284,7 @@ export class QueryLoggingConfigAssociation extends cdk.Resource {
     // Use custom resource
     const provider = cdk.CustomResourceProvider.getOrCreateProvider(this, 'Custom::QueryLoggingConfigAssociation', {
       codeDirectory: path.join(__dirname, 'query-logging-config-association/dist'),
-      runtime: cdk.CustomResourceProviderRuntime.NODEJS_18_X,
+      runtime: CUSTOM_RESOURCE_PROVIDER_RUNTIME,
       policyStatements: [
         {
           Effect: 'Allow',

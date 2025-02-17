@@ -14,6 +14,7 @@ import * as cdk from 'aws-cdk-lib';
 import { Construct } from 'constructs';
 import * as path from 'path';
 import { PolicyStatementType } from '@aws-accelerator/utils/lib/common-resources';
+import { CUSTOM_RESOURCE_PROVIDER_RUNTIME } from '@aws-accelerator/utils/lib/lambda';
 
 export interface IDirectConnectGateway extends cdk.IResource {
   /**
@@ -71,7 +72,7 @@ export class DirectConnectGateway extends cdk.Resource implements IDirectConnect
 
     const provider = cdk.CustomResourceProvider.getOrCreateProvider(this, RESOURCE_TYPE, {
       codeDirectory: path.join(__dirname, 'direct-connect-gateway/dist'),
-      runtime: cdk.CustomResourceProviderRuntime.NODEJS_18_X,
+      runtime: CUSTOM_RESOURCE_PROVIDER_RUNTIME,
       policyStatements: DirectConnectGatewayPolicyStatements,
     });
 

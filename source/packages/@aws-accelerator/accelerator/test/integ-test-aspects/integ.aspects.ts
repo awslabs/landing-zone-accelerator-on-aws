@@ -24,6 +24,8 @@ import { Construct, IConstruct } from 'constructs';
 import { ExpectedResult, IntegTest } from '@aws-cdk/integ-tests-alpha';
 import { AcceleratorAspects } from '../../lib/accelerator-aspects';
 import { version } from '../../../../../package.json';
+import { DEFAULT_LAMBDA_RUNTIME } from '../../../utils/lib/lambda';
+
 /**
  * Aspect for setting all removal policies to DESTROY
  */
@@ -45,14 +47,14 @@ export class AspectIntegTestStack extends cdk.Stack {
     super(scope, id, props);
 
     const function128 = new cdk.aws_lambda.Function(this, 'Function128', {
-      runtime: cdk.aws_lambda.Runtime.NODEJS_18_X,
+      runtime: DEFAULT_LAMBDA_RUNTIME,
       handler: 'index.handler',
       code: cdk.aws_lambda.Code.fromInline('exports.handler = function(event, ctx, cb) { return cb(null, "hi"); }'),
       memorySize: 128,
     });
 
     const function1024 = new cdk.aws_lambda.Function(this, 'Function1024', {
-      runtime: cdk.aws_lambda.Runtime.NODEJS_18_X,
+      runtime: DEFAULT_LAMBDA_RUNTIME,
       handler: 'index.handler',
       code: cdk.aws_lambda.Code.fromInline('exports.handler = function(event, ctx, cb) { return cb(null, "hi"); }'),
       memorySize: 1024,

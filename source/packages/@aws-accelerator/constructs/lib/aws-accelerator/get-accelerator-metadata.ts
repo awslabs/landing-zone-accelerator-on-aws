@@ -16,6 +16,7 @@ import { Construct } from 'constructs';
 import { NagSuppressions } from 'cdk-nag';
 import { pascalCase } from 'change-case';
 const path = require('path');
+import { DEFAULT_LAMBDA_RUNTIME } from '../../../utils/lib/lambda';
 
 /**
  * Initialized AcceleratorMetadataProps properties
@@ -187,7 +188,7 @@ export class AcceleratorMetadata extends Construct {
       functionName,
       role,
       code,
-      runtime: cdk.aws_lambda.Runtime.NODEJS_18_X,
+      runtime: DEFAULT_LAMBDA_RUNTIME,
       timeout: cdk.Duration.minutes(10),
       handler: 'index.handler',
       environment: {

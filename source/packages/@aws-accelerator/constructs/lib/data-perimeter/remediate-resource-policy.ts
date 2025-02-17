@@ -17,6 +17,7 @@ import { Construct } from 'constructs';
 import * as path from 'path';
 
 import { copyPoliciesToDeploymentPackage } from '../common-functions';
+import { DEFAULT_LAMBDA_RUNTIME } from '@aws-accelerator/utils/lib/lambda';
 
 /**
  * Remediate resource policy
@@ -71,7 +72,7 @@ export class RemediateResourcePolicy extends Construct {
 
     this.lambdaFunction = new cdk.aws_lambda.Function(this, 'RemediateResourcePolicyFunction', {
       code: cdk.aws_lambda.Code.fromAsset(path.join(__dirname, 'lambda-handler/dist')),
-      runtime: cdk.aws_lambda.Runtime.NODEJS_18_X,
+      runtime: DEFAULT_LAMBDA_RUNTIME,
       handler: 'remediate-resource-policy.handler',
       description: 'Lambda function to remediate non-compliant resource based policy',
       timeout: cdk.Duration.minutes(LAMBDA_TIMEOUT_IN_MINUTES),

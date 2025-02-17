@@ -11,6 +11,7 @@
  *  and limitations under the License.
  */
 
+import { DEFAULT_LAMBDA_RUNTIME } from '@aws-accelerator/utils/lib/lambda';
 import * as cdk from 'aws-cdk-lib';
 import { Construct } from 'constructs';
 import path = require('path');
@@ -83,7 +84,7 @@ export class OptInRegions extends Construct {
 
     this.onEvent = new cdk.aws_lambda.Function(this, 'OptInRegionsOnEvent', {
       code: cdk.aws_lambda.Code.fromAsset(path.join(__dirname, 'enable-opt-in-regions/dist')),
-      runtime: cdk.aws_lambda.Runtime.NODEJS_18_X,
+      runtime: DEFAULT_LAMBDA_RUNTIME,
       handler: 'index.handler',
       timeout: cdk.Duration.minutes(1),
       description: 'Opt-in Regions onEvent handler',
@@ -100,7 +101,7 @@ export class OptInRegions extends Construct {
 
     this.isComplete = new cdk.aws_lambda.Function(this, 'OptInRegionsIsComplete', {
       code: cdk.aws_lambda.Code.fromAsset(path.join(__dirname, 'enable-opt-in-regions-status/dist')),
-      runtime: cdk.aws_lambda.Runtime.NODEJS_18_X,
+      runtime: DEFAULT_LAMBDA_RUNTIME,
       handler: 'index.handler',
       timeout: cdk.Duration.minutes(5),
       description: 'Opt-in Regions isComplete handler',

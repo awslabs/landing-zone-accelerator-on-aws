@@ -16,6 +16,7 @@ import { Construct } from 'constructs';
 import * as path from 'path';
 import { GovCloudAccountVendingProductStack } from './govcloud-avm-product-stack';
 import * as fs from 'fs';
+import { DEFAULT_LAMBDA_RUNTIME } from '../../utils/lib/lambda';
 import { version } from '../../../../package.json';
 
 export interface GovCloudAccountVendingStackProps extends cdk.StackProps {
@@ -77,7 +78,7 @@ export class GovCloudAccountVendingStack extends cdk.Stack {
     // Lambda function to be used in Custom Resource
     const accountVendingFunction = new cdk.aws_lambda.Function(this, 'GovCloudAccountVendingFunction', {
       code: new cdk.aws_lambda.InlineCode(fileContents.toString()),
-      runtime: cdk.aws_lambda.Runtime.NODEJS_18_X,
+      runtime: DEFAULT_LAMBDA_RUNTIME,
       handler: 'index.handler',
       timeout: cdk.Duration.seconds(900),
       functionName: `${props.acceleratorPrefix}-GovCloudAccountVending`,
