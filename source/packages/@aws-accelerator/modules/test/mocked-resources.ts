@@ -392,6 +392,7 @@ export const MOCK_CONSTANTS = {
       identityStoreId: '/accelerator/organization/security/identity-center/identity-store-id',
       firehoseRecordsProcessorFunctionName: 'AWSAccelerator-FirehoseRecordsProcessor',
       resourceTableName: '/accelerator/prepare-stack/resourceTable/name',
+      sqsCmkArn: '/accelerator/kms/sqs/key-arn',
     },
     customerManagedKeys: {
       orgTrailLog: {
@@ -453,6 +454,10 @@ export const MOCK_CONSTANTS = {
       ssmKey: {
         alias: 'alias/accelerator/sessionmanager-logs/session',
         description: 'AWS Accelerator Session Manager Session Encryption',
+      },
+      sqs: {
+        alias: 'alias/accelerator/kms/sqs/key',
+        description: 'AWS Accelerator SQS Kms Key',
       },
       importedCentralLogsBucket: {
         alias: 'alias/accelerator/imported-bucket/central-logs/s3',

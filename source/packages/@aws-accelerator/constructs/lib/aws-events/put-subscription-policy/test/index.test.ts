@@ -23,7 +23,7 @@ import {
 import { describe, beforeEach, expect, test } from '@jest/globals';
 import {
   handler,
-  updateRetentionPolicy,
+  // updateRetentionPolicy,
   updateSubscriptionPolicy,
   updateKmsKey,
   hasAcceleratorSubscriptionFilter,
@@ -33,7 +33,7 @@ import {
   deleteSubscription,
 } from '../index';
 import { AcceleratorMockClient } from '../../../../test/unit-test/common/resources';
-import { ScheduledEvent } from '@aws-accelerator/utils/lib/common-types';
+// import { SQSEvent } from '@aws-accelerator/utils/lib/common-types';
 
 const logsClient = AcceleratorMockClient(CloudWatchLogsClient);
 const OLD_ENV = process.env;
@@ -56,28 +56,30 @@ describe('CloudWatch Logs Handler', () => {
     process.env = OLD_ENV;
   });
 
-  test('handler should process log group', async () => {
-    const event: ScheduledEvent = {
-      id: 'id',
-      version: 'version',
-      time: 'time',
-      region: 'region',
-      resources: ['resources'],
-      account: 'account',
-      source: 'source',
-      'detail-type': 'Scheduled Event',
-      detail: {
-        requestParameters: {
-          logGroupName: '/aws/lambda/my-function',
-        },
-        userIdentity: {
-          sessionContext: {
-            sessionIssuer: {
-              userName: 'not-cdk-accel-cfn-exec',
+  test('handler should process SQS messages', async () => {
+    const sqsEvent = {
+      Records: [
+        {
+          messageId: '19dd0b57-b21e-4ac1-bd88-01bbb068cb78',
+          receiptHandle: 'MessageReceiptHandle',
+          body: JSON.stringify({
+            requestParameters: {
+              logGroupName: '/aws/lambda/my-function',
             },
+          }),
+          attributes: {
+            ApproximateReceiveCount: '1',
+            SentTimestamp: '1523232000000',
+            SenderId: '123456789012',
+            ApproximateFirstReceiveTimestamp: '1523232000001',
           },
+          messageAttributes: {},
+          md5OfBody: 'md5',
+          eventSource: 'aws:sqs',
+          eventSourceARN: 'arn:aws:sqs:us-east-1:123456789012:MyQueue',
+          awsRegion: 'us-east-1',
         },
-      },
+      ],
     };
 
     logsClient.on(DescribeLogGroupsCommand).resolves({ logGroups: [{ logGroupName: '/aws/lambda/my-function' }] });
@@ -86,107 +88,125 @@ describe('CloudWatch Logs Handler', () => {
     logsClient.on(PutSubscriptionFilterCommand).resolves({});
     logsClient.on(AssociateKmsKeyCommand).resolves({});
 
-    await handler(event);
+    await handler(sqsEvent);
 
     expect(logsClient.commandCalls(PutRetentionPolicyCommand)).toHaveLength(1);
     expect(logsClient.commandCalls(PutSubscriptionFilterCommand)).toHaveLength(1);
   });
 
-  test('updateRetentionPolicy should set retention policy', async () => {
-    const logGroup = { logGroupName: '/aws/lambda/my-function', retentionInDays: 7 };
-    await updateRetentionPolicy('30', logGroup);
-    expect(logsClient.commandCalls(PutRetentionPolicyCommand)).toHaveLength(1);
-  });
-
-  test('updateRetentionPolicy does nothing if retention is already set', async () => {
-    const logGroup = { logGroupName: '/aws/lambda/my-function', retentionInDays: 7 };
-    await expect(updateRetentionPolicy('7', logGroup)).toBeDefined();
-  });
-
-  test('updateRetentionPolicy does nothing if log group belongs to control tower', async () => {
-    const logGroup = { logGroupName: 'aws-controltower', retentionInDays: 365 };
-    await expect(updateRetentionPolicy('7', logGroup)).toBeDefined();
-  });
-
-  test('updateSubscriptionPolicy should set subscription policy', async () => {
-    const logGroup = { logGroupName: '/aws/lambda/my-function' };
-    const logExclusionSetting = {
-      excludeAll: false,
-      logGroupNames: ['excluded-log-group'],
-      account: '123456789012',
-      region: 'us-west-2',
-    };
-
-    logsClient.on(DescribeSubscriptionFiltersCommand).resolves({ subscriptionFilters: [] });
-    logsClient.on(PutSubscriptionFilterCommand).resolves({});
-
-    await updateSubscriptionPolicy(
-      'LOG_GROUP',
-      logGroup,
-      logExclusionSetting,
-      'arn:aws:iam::123456789012:role/LogSubscriptionRole',
-      'arn:aws:logs:us-west-2:123456789012:destination:MyDestination',
-    );
-    expect(logsClient.commandCalls(PutSubscriptionFilterCommand)).toHaveLength(1);
-  });
-
-  test('updateSubscriptionPolicy should delete subscription policy for excluded log group', async () => {
-    const logGroup = { logGroupName: 'excluded-log-groups' };
-    const logExclusionSetting = {
-      excludeAll: true,
-      logGroupNames: ['excluded-log-group'],
-      account: '123456789012',
-      region: 'us-west-2',
+  test('handler should process multiple SQS messages', async () => {
+    const sqsEvent = {
+      Records: [
+        {
+          messageId: '1',
+          receiptHandle: 'handle1',
+          body: JSON.stringify({
+            requestParameters: {
+              logGroupName: '/aws/lambda/function1',
+            },
+          }),
+          attributes: {
+            ApproximateReceiveCount: '1',
+            SentTimestamp: '1523232000000',
+            SenderId: '123456789012',
+            ApproximateFirstReceiveTimestamp: '1523232000001',
+          },
+          messageAttributes: {},
+          md5OfBody: 'md5',
+          eventSource: 'aws:sqs',
+          eventSourceARN: 'arn:aws:sqs:us-east-1:123456789012:MyQueue',
+          awsRegion: 'us-east-1',
+        },
+        {
+          messageId: '2',
+          receiptHandle: 'handle2',
+          body: JSON.stringify({
+            requestParameters: {
+              logGroupName: 'aws-controltower',
+            },
+          }),
+          attributes: {
+            ApproximateReceiveCount: '1',
+            SentTimestamp: '1523232000000',
+            SenderId: '123456789012',
+            ApproximateFirstReceiveTimestamp: '1523232000001',
+          },
+          messageAttributes: {},
+          md5OfBody: 'md5',
+          eventSource: 'aws:sqs',
+          eventSourceARN: 'arn:aws:sqs:us-east-1:123456789012:MyQueue',
+          awsRegion: 'us-east-1',
+        },
+      ],
     };
 
     logsClient
-      .on(DescribeSubscriptionFiltersCommand)
-      .resolves({ subscriptionFilters: [{ filterName: logGroup.logGroupName }] });
-    logsClient.on(DeleteSubscriptionFilterCommand).resolves({});
-
-    await expect(
-      updateSubscriptionPolicy(
-        'LOG_GROUP',
-        logGroup,
-        logExclusionSetting,
-        'arn:aws:iam::123456789012:role/LogSubscriptionRole',
-        'arn:aws:logs:us-west-2:123456789012:destination:MyDestination',
-      ),
-    ).toBeDefined();
-  });
-  test('updateSubscriptionPolicy should do nothing when account level subscription is set', async () => {
-    await expect(
-      updateSubscriptionPolicy(
-        'ACCOUNT',
-        {},
-        undefined,
-        'arn:aws:iam::123456789012:role/LogSubscriptionRole',
-        'arn:aws:logs:us-west-2:123456789012:destination:MyDestination',
-      ),
-    ).toBeDefined();
-  });
-
-  test('updateKmsKey should set KMS key', async () => {
-    const logGroup = { logGroupName: '/aws/lambda/my-function' };
-    const kmsKeyArn = 'arn:aws:kms:us-west-2:123456789012:key/1234abcd-12ab-34cd-56ef-1234567890ab';
-
+      .on(DescribeLogGroupsCommand, { logGroupNamePrefix: '/aws/lambda/function1' })
+      .resolves({ logGroups: [{ logGroupName: '/aws/lambda/function1', retentionInDays: 30 }] })
+      .on(DescribeLogGroupsCommand, { logGroupNamePrefix: 'aws-controltower' })
+      .resolves({ logGroups: [{ logGroupName: 'aws-controltower1', retentionInDays: 365 }] });
+    logsClient.on(PutRetentionPolicyCommand).resolves({});
+    logsClient.on(DescribeSubscriptionFiltersCommand).resolves({ subscriptionFilters: [] });
+    logsClient.on(PutSubscriptionFilterCommand).resolves({});
     logsClient.on(AssociateKmsKeyCommand).resolves({});
 
-    await updateKmsKey(logGroup, kmsKeyArn);
-    expect(logsClient.commandCalls(AssociateKmsKeyCommand)).toHaveLength(1);
+    await expect(handler(sqsEvent)).toBeDefined();
   });
-  test('updateKmsKey should not set KMS key if there is a key already present', async () => {
-    const logGroup = {
-      logGroupName: '/aws/lambda/my-function',
-      kmsKeyId: 'arn:aws:kms:us-west-2:123456789012:key/1234abcd-12ab-34cd-56ef-1234567890ab',
+
+  test('handler should handle SQS message processing errors', async () => {
+    const sqsEvent = {
+      Records: [
+        {
+          messageId: '1',
+          receiptHandle: 'handle1',
+          body: JSON.stringify({
+            requestParameters: {
+              logGroupName: '/aws/lambda/my-function',
+            },
+          }),
+          attributes: {
+            ApproximateReceiveCount: '1',
+            SentTimestamp: '1523232000000',
+            SenderId: '123456789012',
+            ApproximateFirstReceiveTimestamp: '1523232000001',
+          },
+          messageAttributes: {},
+          md5OfBody: 'md5',
+          eventSource: 'aws:sqs',
+          eventSourceARN: 'arn:aws:sqs:us-east-1:123456789012:MyQueue',
+          awsRegion: 'us-east-1',
+        },
+      ],
     };
-    await expect(updateKmsKey(logGroup, undefined)).toBeDefined();
+
+    logsClient.on(DescribeLogGroupsCommand).rejects(new Error('API Error'));
+
+    await expect(handler(sqsEvent)).rejects.toThrow('API Error');
   });
-  test('updateKmsKey not done if no kms is provided', async () => {
-    const logGroup = {
-      logGroupName: '/aws/lambda/my-function',
+
+  test('handler should handle invalid SQS message body', async () => {
+    const sqsEvent = {
+      Records: [
+        {
+          messageId: '1',
+          receiptHandle: 'handle1',
+          body: 'invalid JSON',
+          attributes: {
+            ApproximateReceiveCount: '1',
+            SentTimestamp: '1523232000000',
+            SenderId: '123456789012',
+            ApproximateFirstReceiveTimestamp: '1523232000001',
+          },
+          messageAttributes: {},
+          md5OfBody: 'md5',
+          eventSource: 'aws:sqs',
+          eventSourceARN: 'arn:aws:sqs:us-east-1:123456789012:MyQueue',
+          awsRegion: 'us-east-1',
+        },
+      ],
     };
-    await expect(updateKmsKey(logGroup, undefined)).toBeDefined();
+
+    await expect(handler(sqsEvent)).rejects.toThrow();
   });
 });
 
@@ -467,51 +487,557 @@ describe('deleteSubscription', () => {
   });
 });
 
-describe('CloudWatch Logs Handler for other cases', () => {
+describe('updateSubscriptionPolicy', () => {
   beforeEach(() => {
-    jest.resetModules();
     logsClient.reset();
-    process.env = {
-      ...OLD_ENV,
-      AcceleratorPrefix: 'AWSAccelerator',
-      LogSubscriptionRole: 'arn:aws:iam::123456789012:role/LogSubscriptionRole',
-      LogDestination: 'arn:aws:logs:us-west-2:123456789012:destination:MyDestination',
-      LogRetention: '30',
-      LogKmsKeyArn: 'arn:aws:kms:us-west-2:123456789012:key/1234abcd-12ab-34cd-56ef-1234567890ab',
-      SOLUTION_ID: 'SO0199',
-      LogSubscriptionType: 'LOGGROUP',
-      LogExclusion:
-        '{"excludeAll":false,"logGroupNames":["excluded-log-group"], "account": "account1", "region":"region"}',
-    };
   });
+
+  test('should skip when subscription type is ACCOUNT', async () => {
+    const logGroup = { logGroupName: '/aws/lambda/my-function' };
+    const logExclusionSetting = {
+      excludeAll: false,
+      logGroupNames: [],
+      account: '123456789012',
+      region: 'us-west-2',
+    };
+
+    await updateSubscriptionPolicy(
+      'ACCOUNT',
+      logGroup,
+      logExclusionSetting,
+      'arn:aws:iam::123456789012:role/LogSubscriptionRole',
+      'arn:aws:logs:us-west-2:123456789012:destination:MyDestination',
+    );
+
+    expect(logsClient.commandCalls(DescribeSubscriptionFiltersCommand)).toHaveLength(0);
+    expect(logsClient.commandCalls(PutSubscriptionFilterCommand)).toHaveLength(0);
+    expect(logsClient.commandCalls(DeleteSubscriptionFilterCommand)).toHaveLength(0);
+  });
+
+  test('should create subscription when log group is not excluded and has no existing filter', async () => {
+    const logGroup = { logGroupName: '/aws/lambda/my-function' };
+    const logExclusionSetting = {
+      excludeAll: false,
+      logGroupNames: [],
+      account: '123456789012',
+      region: 'us-west-2',
+    };
+
+    logsClient.on(DescribeSubscriptionFiltersCommand).resolves({ subscriptionFilters: [] });
+    logsClient.on(PutSubscriptionFilterCommand).resolves({});
+
+    await updateSubscriptionPolicy(
+      'LOG_GROUP',
+      logGroup,
+      logExclusionSetting,
+      'arn:aws:iam::123456789012:role/LogSubscriptionRole',
+      'arn:aws:logs:us-west-2:123456789012:destination:MyDestination',
+    );
+
+    expect(logsClient.commandCalls(PutSubscriptionFilterCommand)).toHaveLength(1);
+    expect(logsClient.commandCalls(DeleteSubscriptionFilterCommand)).toHaveLength(0);
+  });
+
+  test('should delete subscription when log group is excluded and has existing filter', async () => {
+    const logGroup = { logGroupName: '/aws/lambda/excluded-function' };
+    const logExclusionSetting = {
+      excludeAll: false,
+      logGroupNames: ['/aws/lambda/excluded-function'],
+      account: '123456789012',
+      region: 'us-west-2',
+    };
+
+    logsClient
+      .on(DescribeSubscriptionFiltersCommand)
+      .resolves({ subscriptionFilters: [{ filterName: '/aws/lambda/excluded-function' }] });
+    logsClient.on(DeleteSubscriptionFilterCommand).resolves({});
+
+    await updateSubscriptionPolicy(
+      'LOG_GROUP',
+      logGroup,
+      logExclusionSetting,
+      'arn:aws:iam::123456789012:role/LogSubscriptionRole',
+      'arn:aws:logs:us-west-2:123456789012:destination:MyDestination',
+    );
+
+    expect(logsClient.commandCalls(DeleteSubscriptionFilterCommand)).toHaveLength(1);
+    expect(logsClient.commandCalls(PutSubscriptionFilterCommand)).toHaveLength(0);
+  });
+
+  test('should do nothing when log group is not excluded and already has filter', async () => {
+    const logGroup = { logGroupName: '/aws/lambda/my-function' };
+    const logExclusionSetting = {
+      excludeAll: false,
+      logGroupNames: [],
+      account: '123456789012',
+      region: 'us-west-2',
+    };
+
+    logsClient
+      .on(DescribeSubscriptionFiltersCommand)
+      .resolves({ subscriptionFilters: [{ filterName: '/aws/lambda/my-function' }] });
+
+    await updateSubscriptionPolicy(
+      'LOG_GROUP',
+      logGroup,
+      logExclusionSetting,
+      'arn:aws:iam::123456789012:role/LogSubscriptionRole',
+      'arn:aws:logs:us-west-2:123456789012:destination:MyDestination',
+    );
+
+    expect(logsClient.commandCalls(PutSubscriptionFilterCommand)).toHaveLength(0);
+    expect(logsClient.commandCalls(DeleteSubscriptionFilterCommand)).toHaveLength(0);
+  });
+
+  test('should do nothing when log group is excluded and has no filter', async () => {
+    const logGroup = { logGroupName: '/aws/lambda/excluded-function' };
+    const logExclusionSetting = {
+      excludeAll: false,
+      logGroupNames: ['/aws/lambda/excluded-function'],
+      account: '123456789012',
+      region: 'us-west-2',
+    };
+
+    logsClient.on(DescribeSubscriptionFiltersCommand).resolves({ subscriptionFilters: [] });
+
+    await updateSubscriptionPolicy(
+      'LOG_GROUP',
+      logGroup,
+      logExclusionSetting,
+      'arn:aws:iam::123456789012:role/LogSubscriptionRole',
+      'arn:aws:logs:us-west-2:123456789012:destination:MyDestination',
+    );
+
+    expect(logsClient.commandCalls(PutSubscriptionFilterCommand)).toHaveLength(0);
+    expect(logsClient.commandCalls(DeleteSubscriptionFilterCommand)).toHaveLength(0);
+  });
+
+  test('should handle when logExclusionSetting is undefined', async () => {
+    const logGroup = { logGroupName: '/aws/lambda/my-function' };
+
+    logsClient.on(DescribeSubscriptionFiltersCommand).resolves({ subscriptionFilters: [] });
+    logsClient.on(PutSubscriptionFilterCommand).resolves({});
+
+    await updateSubscriptionPolicy(
+      'LOG_GROUP',
+      logGroup,
+      undefined,
+      'arn:aws:iam::123456789012:role/LogSubscriptionRole',
+      'arn:aws:logs:us-west-2:123456789012:destination:MyDestination',
+    );
+
+    expect(logsClient.commandCalls(PutSubscriptionFilterCommand)).toHaveLength(1);
+    expect(logsClient.commandCalls(DeleteSubscriptionFilterCommand)).toHaveLength(0);
+  });
+
+  test('should handle API errors in DescribeSubscriptionFilters', async () => {
+    const logGroup = { logGroupName: '/aws/lambda/my-function' };
+    const logExclusionSetting = {
+      excludeAll: false,
+      logGroupNames: [],
+      account: '123456789012',
+      region: 'us-west-2',
+    };
+
+    logsClient.on(DescribeSubscriptionFiltersCommand).rejects(new Error('API Error'));
+
+    await expect(
+      updateSubscriptionPolicy(
+        'LOG_GROUP',
+        logGroup,
+        logExclusionSetting,
+        'arn:aws:iam::123456789012:role/LogSubscriptionRole',
+        'arn:aws:logs:us-west-2:123456789012:destination:MyDestination',
+      ),
+    ).rejects.toThrow('API Error');
+  });
+
+  test('should handle API errors in PutSubscriptionFilter', async () => {
+    const logGroup = { logGroupName: '/aws/lambda/my-function' };
+    const logExclusionSetting = {
+      excludeAll: false,
+      logGroupNames: [],
+      account: '123456789012',
+      region: 'us-west-2',
+    };
+
+    logsClient.on(DescribeSubscriptionFiltersCommand).resolves({ subscriptionFilters: [] });
+    logsClient.on(PutSubscriptionFilterCommand).rejects(new Error('API Error'));
+
+    await expect(
+      updateSubscriptionPolicy(
+        'LOG_GROUP',
+        logGroup,
+        logExclusionSetting,
+        'arn:aws:iam::123456789012:role/LogSubscriptionRole',
+        'arn:aws:logs:us-west-2:123456789012:destination:MyDestination',
+      ),
+    ).rejects.toThrow('API Error');
+  });
+
+  test('should handle excludeAll=true in logExclusionSetting', async () => {
+    const logGroup = { logGroupName: '/aws/lambda/my-function' };
+    const logExclusionSetting = {
+      excludeAll: true,
+      logGroupNames: [],
+      account: '123456789012',
+      region: 'us-west-2',
+    };
+
+    logsClient
+      .on(DescribeSubscriptionFiltersCommand)
+      .resolves({ subscriptionFilters: [{ filterName: '/aws/lambda/my-function' }] });
+    logsClient.on(DeleteSubscriptionFilterCommand).resolves({});
+
+    await updateSubscriptionPolicy(
+      'LOG_GROUP',
+      logGroup,
+      logExclusionSetting,
+      'arn:aws:iam::123456789012:role/LogSubscriptionRole',
+      'arn:aws:logs:us-west-2:123456789012:destination:MyDestination',
+    );
+
+    expect(logsClient.commandCalls(DeleteSubscriptionFilterCommand)).toHaveLength(1);
+    expect(logsClient.commandCalls(PutSubscriptionFilterCommand)).toHaveLength(0);
+  });
+});
+
+describe('updateKmsKey', () => {
+  beforeEach(() => {
+    logsClient.reset();
+  });
+
+  test('should set KMS key when log group has no existing key', async () => {
+    const logGroup = { logGroupName: '/aws/lambda/my-function' };
+    const kmsKeyArn = 'arn:aws:kms:us-west-2:123456789012:key/1234abcd-12ab-34cd-56ef-1234567890ab';
+
+    logsClient.on(AssociateKmsKeyCommand).resolves({});
+
+    await updateKmsKey(logGroup, kmsKeyArn);
+
+    expect(logsClient.commandCalls(AssociateKmsKeyCommand)).toHaveLength(1);
+    expect(logsClient.commandCalls(AssociateKmsKeyCommand)[0].args[0].input).toEqual({
+      logGroupName: logGroup.logGroupName,
+      kmsKeyId: kmsKeyArn,
+    });
+  });
+
+  test('should not set KMS key when log group already has a key', async () => {
+    const logGroup = {
+      logGroupName: '/aws/lambda/my-function',
+      kmsKeyId: 'arn:aws:kms:us-west-2:123456789012:key/existing-key',
+    };
+    const kmsKeyArn = 'arn:aws:kms:us-west-2:123456789012:key/new-key';
+
+    await updateKmsKey(logGroup, kmsKeyArn);
+
+    expect(logsClient.commandCalls(AssociateKmsKeyCommand)).toHaveLength(0);
+  });
+
+  test('should not set KMS key when no kmsKeyArn is provided', async () => {
+    const logGroup = { logGroupName: '/aws/lambda/my-function' };
+
+    await updateKmsKey(logGroup, undefined);
+
+    expect(logsClient.commandCalls(AssociateKmsKeyCommand)).toHaveLength(0);
+  });
+
+  test('should log appropriate message when no KMS key is provided', async () => {
+    const logGroup = { logGroupName: '/aws/lambda/my-function' };
+    const consoleSpy = jest.spyOn(console, 'log');
+
+    await updateKmsKey(logGroup, undefined);
+
+    expect(consoleSpy).toHaveBeenCalledWith(
+      'Accelerator KMK key undefined not provided for Log Group /aws/lambda/my-function, log group encryption not performed',
+    );
+    consoleSpy.mockRestore();
+  });
+
+  test('should log appropriate message when log group already has KMS key', async () => {
+    const logGroup = {
+      logGroupName: '/aws/lambda/my-function',
+      kmsKeyId: 'arn:aws:kms:us-west-2:123456789012:key/existing-key',
+    };
+    const consoleSpy = jest.spyOn(console, 'log');
+
+    await updateKmsKey(logGroup, 'new-key-arn');
+
+    expect(consoleSpy).toHaveBeenCalledWith('Log Group: /aws/lambda/my-function has kms set');
+    consoleSpy.mockRestore();
+  });
+
+  test('should handle API errors when setting KMS key', async () => {
+    const logGroup = { logGroupName: '/aws/lambda/my-function' };
+    const kmsKeyArn = 'arn:aws:kms:us-west-2:123456789012:key/1234abcd-12ab-34cd-56ef-1234567890ab';
+
+    logsClient.on(AssociateKmsKeyCommand).rejects(new Error('Failed to associate KMS key'));
+
+    await expect(updateKmsKey(logGroup, kmsKeyArn)).rejects.toThrow('Failed to associate KMS key');
+  });
+
+  test('should handle empty log group name', async () => {
+    const logGroup = { logGroupName: '' };
+    const kmsKeyArn = 'arn:aws:kms:us-west-2:123456789012:key/1234abcd-12ab-34cd-56ef-1234567890ab';
+
+    logsClient.on(AssociateKmsKeyCommand).resolves({});
+
+    await updateKmsKey(logGroup, kmsKeyArn);
+
+    expect(logsClient.commandCalls(AssociateKmsKeyCommand)).toHaveLength(1);
+    expect(logsClient.commandCalls(AssociateKmsKeyCommand)[0].args[0].input).toEqual({
+      logGroupName: '',
+      kmsKeyId: kmsKeyArn,
+    });
+  });
+
+  test('should log setting KMS key message', async () => {
+    const logGroup = { logGroupName: '/aws/lambda/my-function' };
+    const kmsKeyArn = 'arn:aws:kms:us-west-2:123456789012:key/1234abcd-12ab-34cd-56ef-1234567890ab';
+    const consoleSpy = jest.spyOn(console, 'log');
+
+    logsClient.on(AssociateKmsKeyCommand).resolves({});
+
+    await updateKmsKey(logGroup, kmsKeyArn);
+
+    expect(consoleSpy).toHaveBeenCalledWith('Setting KMS for log group /aws/lambda/my-function');
+    consoleSpy.mockRestore();
+  });
+
+  test('should handle various KMS key ARN formats', async () => {
+    const logGroup = { logGroupName: '/aws/lambda/my-function' };
+    const kmsKeyArns = [
+      'arn:aws:kms:us-west-2:123456789012:key/1234abcd-12ab-34cd-56ef-1234567890ab',
+      'alias/aws/logs',
+      '1234abcd-12ab-34cd-56ef-1234567890ab',
+    ];
+
+    for (const kmsKeyArn of kmsKeyArns) {
+      logsClient.reset();
+      logsClient.on(AssociateKmsKeyCommand).resolves({});
+
+      await updateKmsKey(logGroup, kmsKeyArn);
+
+      expect(logsClient.commandCalls(AssociateKmsKeyCommand)).toHaveLength(1);
+      expect(logsClient.commandCalls(AssociateKmsKeyCommand)[0].args[0].input).toEqual({
+        logGroupName: logGroup.logGroupName,
+        kmsKeyId: kmsKeyArn,
+      });
+    }
+  });
+});
+
+describe('LogExclusion Parsing', () => {
+  beforeEach(() => {
+    logsClient.reset();
+    process.env = { ...OLD_ENV };
+  });
+
   afterEach(() => {
     process.env = OLD_ENV;
   });
-  test('handler should not process log group with solution user', async () => {
-    const event: ScheduledEvent = {
-      id: 'id',
-      version: 'version',
-      time: 'time',
-      region: 'region',
-      resources: ['resources'],
-      account: 'account',
-      source: 'source',
-      'detail-type': 'Scheduled Event',
-      detail: {
-        requestParameters: {
-          logGroupName: '/aws/lambda/my-function',
-        },
-        userIdentity: {
-          sessionContext: {
-            sessionIssuer: {
-              userName: 'cdk-accel-cfn-exec',
-            },
-          },
-        },
-      },
-    };
-    logsClient.on(DescribeLogGroupsCommand).resolves({ logGroups: [{ logGroupName: '/aws/lambda/my-function' }] });
 
-    await expect(handler(event)).toBeDefined();
+  test('should parse valid logExclusionSetting JSON', async () => {
+    const sqsEvent = {
+      Records: [
+        {
+          messageId: '1',
+          receiptHandle: 'handle1',
+          body: JSON.stringify({
+            requestParameters: {
+              logGroupName: '/aws/lambda/my-function',
+            },
+          }),
+          attributes: {
+            ApproximateReceiveCount: '1',
+            SentTimestamp: '1523232000000',
+            SenderId: '123456789012',
+            ApproximateFirstReceiveTimestamp: '1523232000001',
+          },
+          messageAttributes: {},
+          md5OfBody: 'md5',
+          eventSource: 'aws:sqs',
+          eventSourceARN: 'arn:aws:sqs:us-east-1:123456789012:MyQueue',
+          awsRegion: 'us-east-1',
+        },
+      ],
+    };
+
+    process.env['LogExclusion'] = JSON.stringify({
+      account: '123456789012',
+      region: 'us-west-2',
+      excludeAll: false,
+      logGroupNames: ['/aws/lambda/excluded'],
+    });
+
+    logsClient.on(DescribeLogGroupsCommand).resolves({ logGroups: [{ logGroupName: '/aws/lambda/my-function' }] });
+    logsClient.on(PutRetentionPolicyCommand).resolves({});
+    logsClient.on(DescribeSubscriptionFiltersCommand).resolves({ subscriptionFilters: [] });
+    logsClient.on(PutSubscriptionFilterCommand).resolves({});
+
+    await handler(sqsEvent);
+
+    // Verify the exclusion setting was correctly parsed and applied
+    expect(logsClient.commandCalls(PutSubscriptionFilterCommand)).toHaveLength(1);
+  });
+
+  test('should handle undefined logExclusionSetting', async () => {
+    const sqsEvent = {
+      Records: [
+        {
+          messageId: '1',
+          receiptHandle: 'handle1',
+          body: JSON.stringify({
+            requestParameters: {
+              logGroupName: '/aws/lambda/my-function',
+            },
+          }),
+          attributes: {
+            ApproximateReceiveCount: '1',
+            SentTimestamp: '1523232000000',
+            SenderId: '123456789012',
+            ApproximateFirstReceiveTimestamp: '1523232000001',
+          },
+          messageAttributes: {},
+          md5OfBody: 'md5',
+          eventSource: 'aws:sqs',
+          eventSourceARN: 'arn:aws:sqs:us-east-1:123456789012:MyQueue',
+          awsRegion: 'us-east-1',
+        },
+      ],
+    };
+
+    delete process.env['LogExclusion'];
+
+    logsClient.on(DescribeLogGroupsCommand).resolves({ logGroups: [{ logGroupName: '/aws/lambda/my-function' }] });
+    logsClient.on(PutRetentionPolicyCommand).resolves({});
+    logsClient.on(DescribeSubscriptionFiltersCommand).resolves({ subscriptionFilters: [] });
+    logsClient.on(PutSubscriptionFilterCommand).resolves({});
+
+    await handler(sqsEvent);
+
+    // Verify the function still works without exclusion settings
+    expect(logsClient.commandCalls(PutSubscriptionFilterCommand)).toHaveLength(1);
+  });
+
+  test('should handle invalid JSON in logExclusionSetting', async () => {
+    const sqsEvent = {
+      Records: [
+        {
+          messageId: '1',
+          receiptHandle: 'handle1',
+          body: JSON.stringify({
+            requestParameters: {
+              logGroupName: '/aws/lambda/my-function',
+            },
+          }),
+          attributes: {
+            ApproximateReceiveCount: '1',
+            SentTimestamp: '1523232000000',
+            SenderId: '123456789012',
+            ApproximateFirstReceiveTimestamp: '1523232000001',
+          },
+          messageAttributes: {},
+          md5OfBody: 'md5',
+          eventSource: 'aws:sqs',
+          eventSourceARN: 'arn:aws:sqs:us-east-1:123456789012:MyQueue',
+          awsRegion: 'us-east-1',
+        },
+      ],
+    };
+
+    process.env['LogExclusion'] = 'invalid-json';
+
+    await expect(handler(sqsEvent)).rejects.toThrow(SyntaxError);
+  });
+
+  test('should handle partial logExclusionSetting', async () => {
+    const sqsEvent = {
+      Records: [
+        {
+          messageId: '1',
+          receiptHandle: 'handle1',
+          body: JSON.stringify({
+            requestParameters: {
+              logGroupName: '/aws/lambda/my-function',
+            },
+          }),
+          attributes: {
+            ApproximateReceiveCount: '1',
+            SentTimestamp: '1523232000000',
+            SenderId: '123456789012',
+            ApproximateFirstReceiveTimestamp: '1523232000001',
+          },
+          messageAttributes: {},
+          md5OfBody: 'md5',
+          eventSource: 'aws:sqs',
+          eventSourceARN: 'arn:aws:sqs:us-east-1:123456789012:MyQueue',
+          awsRegion: 'us-east-1',
+        },
+      ],
+    };
+
+    // Test with partial settings
+    process.env['LogExclusion'] = JSON.stringify({
+      account: '123456789012',
+      region: 'us-west-2',
+      // Missing excludeAll and logGroupNames
+    });
+
+    logsClient.on(DescribeLogGroupsCommand).resolves({ logGroups: [{ logGroupName: '/aws/lambda/my-function' }] });
+    logsClient.on(PutRetentionPolicyCommand).resolves({});
+    logsClient.on(DescribeSubscriptionFiltersCommand).resolves({ subscriptionFilters: [] });
+    logsClient.on(PutSubscriptionFilterCommand).resolves({});
+
+    await handler(sqsEvent);
+
+    // Verify the function works with partial exclusion settings
+    expect(logsClient.commandCalls(PutSubscriptionFilterCommand)).toHaveLength(1);
+  });
+
+  test('should handle all fields in logExclusionSetting', async () => {
+    const sqsEvent = {
+      Records: [
+        {
+          messageId: '1',
+          receiptHandle: 'handle1',
+          body: JSON.stringify({
+            requestParameters: {
+              logGroupName: '/aws/lambda/my-function',
+            },
+          }),
+          attributes: {
+            ApproximateReceiveCount: '1',
+            SentTimestamp: '1523232000000',
+            SenderId: '123456789012',
+            ApproximateFirstReceiveTimestamp: '1523232000001',
+          },
+          messageAttributes: {},
+          md5OfBody: 'md5',
+          eventSource: 'aws:sqs',
+          eventSourceARN: 'arn:aws:sqs:us-east-1:123456789012:MyQueue',
+          awsRegion: 'us-east-1',
+        },
+      ],
+    };
+
+    // Test with all possible fields
+    // Test with all possible fields
+    process.env['LogExclusion'] = JSON.stringify({
+      account: '123456789012',
+      region: 'us-west-2',
+      excludeAll: true,
+      logGroupNames: ['/aws/lambda/excluded1', '/aws/lambda/excluded2'],
+    });
+
+    logsClient.on(DescribeLogGroupsCommand).resolves({ logGroups: [{ logGroupName: '/aws/lambda/my-function' }] });
+    logsClient.on(PutRetentionPolicyCommand).resolves({});
+    logsClient.on(DescribeSubscriptionFiltersCommand).resolves({ subscriptionFilters: [] });
+    logsClient.on(DeleteSubscriptionFilterCommand).resolves({});
+
+    await handler(sqsEvent);
+
+    // Verify excludeAll:true prevents subscription creation
+    expect(logsClient.commandCalls(PutSubscriptionFilterCommand)).toHaveLength(0);
   });
 });
