@@ -11,6 +11,7 @@
  *  and limitations under the License.
  */
 
+import { DEFAULT_LAMBDA_RUNTIME } from '@aws-accelerator/utils/lib/lambda';
 import * as cdk from 'aws-cdk-lib';
 import { Construct } from 'constructs';
 import * as path from 'path';
@@ -53,7 +54,7 @@ export class CrossAccountRouteFramework extends cdk.Resource {
 
     const onEvent = new cdk.aws_lambda.Function(this, 'CrossAccountRouteFunction', {
       code: cdk.aws_lambda.Code.fromAsset(path.join(__dirname, 'cross-account-route/dist')),
-      runtime: cdk.aws_lambda.Runtime.NODEJS_18_X,
+      runtime: DEFAULT_LAMBDA_RUNTIME,
       handler: 'index.handler',
       timeout: cdk.Duration.seconds(15),
       description: 'Cross account EC2 route OnEvent handler',

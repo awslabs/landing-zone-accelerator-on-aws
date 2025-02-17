@@ -11,6 +11,7 @@
  *  and limitations under the License.
  */
 
+import { DEFAULT_LAMBDA_RUNTIME } from '@aws-accelerator/utils/lib/lambda';
 import * as cdk from 'aws-cdk-lib';
 import { Construct } from 'constructs';
 
@@ -48,7 +49,7 @@ export class VpcIdLookup extends Construct {
 
     const providerLambda = new cdk.aws_lambda.Function(this, 'VpcIdLookupFunction', {
       code: cdk.aws_lambda.Code.fromAsset(path.join(__dirname, 'get-vpc-id/dist')),
-      runtime: cdk.aws_lambda.Runtime.NODEJS_18_X,
+      runtime: DEFAULT_LAMBDA_RUNTIME,
       handler: 'index.handler',
       timeout: cdk.Duration.minutes(15),
       description: 'Lookup vpc id from account',

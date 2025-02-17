@@ -11,6 +11,7 @@
  *  and limitations under the License.
  */
 
+import { DEFAULT_LAMBDA_RUNTIME } from '@aws-accelerator/utils/lib/lambda';
 import * as cdk from 'aws-cdk-lib';
 import { NagSuppressions } from 'cdk-nag';
 import { Construct } from 'constructs';
@@ -145,7 +146,7 @@ export class WarmAccount extends Construct {
 
     this.onEvent = new cdk.aws_lambda.Function(this, 'WarmAccountFunction', {
       code: cdk.aws_lambda.Code.fromAsset(path.join(__dirname, 'account-warming/dist')),
-      runtime: cdk.aws_lambda.Runtime.NODEJS_18_X,
+      runtime: DEFAULT_LAMBDA_RUNTIME,
       handler: 'index.handler',
       timeout: cdk.Duration.minutes(5),
       description: 'Account warming onEvent handler',
@@ -171,7 +172,7 @@ export class WarmAccount extends Construct {
 
     this.isComplete = new cdk.aws_lambda.Function(this, 'WarmAccountStatusFunction', {
       code: cdk.aws_lambda.Code.fromAsset(path.join(__dirname, 'account-warming-status/dist')),
-      runtime: cdk.aws_lambda.Runtime.NODEJS_18_X,
+      runtime: DEFAULT_LAMBDA_RUNTIME,
       handler: 'index.handler',
       timeout: cdk.Duration.minutes(5),
       description: 'Account warming isComplete handler',

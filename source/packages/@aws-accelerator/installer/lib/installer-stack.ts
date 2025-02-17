@@ -23,6 +23,7 @@ import { version } from '../../../../package.json';
 import { ResourceNamePrefixes } from './resource-name-prefixes';
 import { SolutionHelper } from './solutions-helper';
 import { Validate } from './validate';
+import { DEFAULT_LAMBDA_RUNTIME } from '../../utils/lib/lambda';
 
 export enum RepositorySources {
   GITHUB = 'github',
@@ -1231,7 +1232,7 @@ export class InstallerStack extends cdk.Stack {
 
     const updatePipelineGithubTokenFunction = new cdk.aws_lambda.Function(this, 'UpdatePipelineGithubTokenFunction', {
       code: new cdk.aws_lambda.InlineCode(fileContents.toString()),
-      runtime: cdk.aws_lambda.Runtime.NODEJS_18_X,
+      runtime: DEFAULT_LAMBDA_RUNTIME,
       handler: 'index.handler',
       description: 'Lambda function to update CodePipeline OAuth Token',
       timeout: cdk.Duration.minutes(1),

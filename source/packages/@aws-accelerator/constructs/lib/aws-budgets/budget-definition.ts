@@ -15,6 +15,7 @@ import * as cdk from 'aws-cdk-lib';
 import { Construct } from 'constructs';
 import path from 'path';
 import { NotificationConfig } from '@aws-accelerator/config';
+import { CUSTOM_RESOURCE_PROVIDER_RUNTIME } from '../../../utils/lib/lambda';
 
 type TimeUnit = 'DAILY' | 'WEEKLY' | 'MONTHLY' | string;
 
@@ -180,7 +181,7 @@ export class BudgetDefinition extends cdk.Resource {
       // Use custom resource
       const provider = cdk.CustomResourceProvider.getOrCreateProvider(this, 'Custom::CrossRegionBudget', {
         codeDirectory: path.join(__dirname, 'cross-region-budget/dist'),
-        runtime: cdk.CustomResourceProviderRuntime.NODEJS_18_X,
+        runtime: CUSTOM_RESOURCE_PROVIDER_RUNTIME,
         policyStatements: [
           {
             Effect: 'Allow',

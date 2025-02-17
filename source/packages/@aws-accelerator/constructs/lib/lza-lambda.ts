@@ -14,6 +14,7 @@
 import * as cdk from 'aws-cdk-lib';
 import { NagSuppressions } from 'cdk-nag';
 import { Construct } from 'constructs';
+import { DEFAULT_LAMBDA_RUNTIME } from '../../utils/lib/lambda';
 
 /**
  * LzaLambdaProps properties
@@ -104,7 +105,6 @@ export interface LzaLambdaProps {
  * Class to create LZA standard Lambda function used for custom resource
  */
 export class LzaLambda extends Construct {
-  public static readonly DEFAULT_RUNTIME = cdk.aws_lambda.Runtime.NODEJS_18_X;
   public readonly resource: cdk.aws_lambda.IFunction;
   public readonly logGroup: cdk.aws_logs.LogGroup;
 
@@ -115,7 +115,7 @@ export class LzaLambda extends Construct {
       functionName: props.functionName,
       description: props.description ?? `Accelerator deployed lambda function.`,
       code: cdk.aws_lambda.Code.fromAsset(props.assetPath, { assetHash: props.customAssetHash }),
-      runtime: props.lambdaRuntime ?? LzaLambda.DEFAULT_RUNTIME,
+      runtime: props.lambdaRuntime ?? DEFAULT_LAMBDA_RUNTIME,
       memorySize: props.memorySize ?? 512,
       timeout: props.timeOut,
       role: props.role,

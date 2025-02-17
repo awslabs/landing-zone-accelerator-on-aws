@@ -19,6 +19,7 @@ import { createHash } from 'crypto';
 import { readFileSync } from 'fs';
 import { v4 as uuidv4 } from 'uuid';
 import { createLogger } from '@aws-accelerator/utils/lib/logger';
+import { CUSTOM_RESOURCE_PROVIDER_RUNTIME } from '@aws-accelerator/utils/lib/lambda';
 
 const logger = createLogger(['constructs-organization-policy']);
 
@@ -139,7 +140,7 @@ export class Policy extends Construct {
     //
     const provider = cdk.CustomResourceProvider.getOrCreateProvider(this, 'Custom::OrganizationsCreatePolicy', {
       codeDirectory: path.join(__dirname, 'create-policy/dist'),
-      runtime: cdk.CustomResourceProviderRuntime.NODEJS_18_X,
+      runtime: CUSTOM_RESOURCE_PROVIDER_RUNTIME,
       description: 'Organizations create policy',
       policyStatements: [
         {

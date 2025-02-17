@@ -10,6 +10,7 @@
  *  OR CONDITIONS OF ANY KIND, express or implied. See the License for the specific language governing permissions
  *  and limitations under the License.
  */
+import { DEFAULT_LAMBDA_RUNTIME } from '@aws-accelerator/utils/lib/lambda';
 import * as cdk from 'aws-cdk-lib';
 import { Construct } from 'constructs';
 import * as path from 'path';
@@ -133,7 +134,7 @@ export class NewCloudWatchLogEvent extends Construct {
       this,
       'SetLogRetentionSubscriptionFunction',
       {
-        runtime: cdk.aws_lambda.Runtime.NODEJS_18_X,
+        runtime: DEFAULT_LAMBDA_RUNTIME,
         timeout: cdk.Duration.minutes(15),
         handler: 'index.handler',
         code: cdk.aws_lambda.Code.fromAsset(path.join(__dirname, 'put-subscription-policy/dist')),

@@ -11,6 +11,7 @@
  *  and limitations under the License.
  */
 
+import { DEFAULT_LAMBDA_RUNTIME } from '@aws-accelerator/utils/lib/lambda';
 import * as cdk from 'aws-cdk-lib';
 import { Construct } from 'constructs';
 import * as path from 'path';
@@ -61,7 +62,7 @@ export class ServiceLinkedRole extends Construct {
 
     const lambdaFunction = new cdk.aws_lambda.Function(this, 'CreateServiceLinkedRoleFunction', {
       code: cdk.aws_lambda.Code.fromAsset(path.join(__dirname, 'create-service-linked-role/dist')),
-      runtime: cdk.aws_lambda.Runtime.NODEJS_18_X,
+      runtime: DEFAULT_LAMBDA_RUNTIME,
       handler: 'index.handler',
       timeout: cdk.Duration.minutes(15),
       memorySize: 512,

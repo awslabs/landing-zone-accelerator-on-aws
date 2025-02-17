@@ -15,6 +15,7 @@ import * as cdk from 'aws-cdk-lib';
 import { Construct } from 'constructs';
 import * as path from 'path';
 import { getGlobalRegion } from '@aws-accelerator/utils/lib/common-functions';
+import { CUSTOM_RESOURCE_PROVIDER_RUNTIME } from '@aws-accelerator/utils/lib/lambda';
 
 export interface IReportDefinition extends cdk.IResource {
   /**
@@ -161,7 +162,7 @@ export class ReportDefinition extends cdk.Resource implements IReportDefinition 
       // Use custom resource
       const provider = cdk.CustomResourceProvider.getOrCreateProvider(this, 'Custom::CrossRegionReportDefinition', {
         codeDirectory: path.join(__dirname, 'cross-region-report-definition/dist'),
-        runtime: cdk.CustomResourceProviderRuntime.NODEJS_18_X,
+        runtime: CUSTOM_RESOURCE_PROVIDER_RUNTIME,
         policyStatements: [
           {
             Effect: 'Allow',

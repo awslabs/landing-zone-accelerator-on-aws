@@ -15,6 +15,7 @@ import * as cdk from 'aws-cdk-lib';
 import { Construct } from 'constructs';
 import { NagSuppressions } from 'cdk-nag';
 import { NlbTargetTypeConfig } from '@aws-accelerator/config';
+import { DEFAULT_LAMBDA_RUNTIME } from '@aws-accelerator/utils/lib/lambda';
 
 const path = require('path');
 
@@ -60,7 +61,7 @@ export class NLBAddresses extends cdk.Resource implements INLBAddresses {
 
     const providerLambda = new cdk.aws_lambda.Function(this, functionId, {
       code: cdk.aws_lambda.Code.fromAsset(path.join(__dirname, 'nlb-ip-lookup/dist')),
-      runtime: cdk.aws_lambda.Runtime.NODEJS_18_X,
+      runtime: DEFAULT_LAMBDA_RUNTIME,
       timeout: cdk.Duration.seconds(15),
       handler: 'index.handler',
     });

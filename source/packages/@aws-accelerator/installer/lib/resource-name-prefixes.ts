@@ -14,6 +14,7 @@
 import * as cdk from 'aws-cdk-lib';
 import { Construct } from 'constructs';
 import { NagSuppressions } from 'cdk-nag';
+import { DEFAULT_LAMBDA_RUNTIME } from '../../utils/lib/lambda';
 
 export interface ResourceNamePrefixesProps {
   readonly acceleratorPrefix: string;
@@ -35,7 +36,7 @@ export class ResourceNamePrefixes extends Construct {
       : `/accelerator/AWSAccelerator-PipelineStack-${cdk.Stack.of(this).account}-${cdk.Stack.of(this).region}/version`;
 
     const lambdaFunction = new cdk.aws_lambda.Function(this, 'ResourceNamePrefixesFunction', {
-      runtime: cdk.aws_lambda.Runtime.NODEJS_18_X,
+      runtime: DEFAULT_LAMBDA_RUNTIME,
       handler: 'index.handler',
       description:
         'This function converts accelerator prefix parameter to lower case to name s3 buckets in installer stack',

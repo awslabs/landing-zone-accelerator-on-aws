@@ -14,6 +14,7 @@
 import * as cdk from 'aws-cdk-lib';
 import { Construct } from 'constructs';
 import { Tag } from '@aws-sdk/client-config-service';
+import { CUSTOM_RESOURCE_PROVIDER_RUNTIME } from '../../../utils/lib/lambda';
 
 const path = require('path');
 
@@ -48,7 +49,7 @@ export class ConfigServiceTags extends Construct {
     //
     const provider = cdk.CustomResourceProvider.getOrCreateProvider(this, CONFIGSERVICE_TAGS, {
       codeDirectory: path.join(__dirname, 'update-tags/dist'),
-      runtime: cdk.CustomResourceProviderRuntime.NODEJS_18_X,
+      runtime: CUSTOM_RESOURCE_PROVIDER_RUNTIME,
       policyStatements: [
         {
           Effect: 'Allow',

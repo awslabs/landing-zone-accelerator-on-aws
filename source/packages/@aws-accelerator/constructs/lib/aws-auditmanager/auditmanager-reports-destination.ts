@@ -13,6 +13,7 @@
 
 import * as cdk from 'aws-cdk-lib';
 import { Construct } from 'constructs';
+import { CUSTOM_RESOURCE_PROVIDER_RUNTIME } from '../../../utils/lib/lambda';
 
 const path = require('path');
 
@@ -62,7 +63,7 @@ export class AuditManagerDefaultReportsDestination extends Construct {
 
     const provider = cdk.CustomResourceProvider.getOrCreateProvider(this, RESOURCE_TYPE, {
       codeDirectory: path.join(__dirname, 'create-reports-destination/dist'),
-      runtime: cdk.CustomResourceProviderRuntime.NODEJS_18_X,
+      runtime: CUSTOM_RESOURCE_PROVIDER_RUNTIME,
       policyStatements: [
         {
           Sid: 'AuditManagerCreatePublishingDestinationCommandTaskAuditManagerActions',

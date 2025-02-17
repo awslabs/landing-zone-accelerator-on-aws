@@ -14,6 +14,7 @@
 import { describe, expect, test } from '@jest/globals';
 import * as cdk from 'aws-cdk-lib';
 import { LzaLambda, LzaLambdaProps } from '../lib/lza-lambda';
+import { DEFAULT_LAMBDA_RUNTIME } from '@aws-accelerator/utils/lib/lambda';
 
 //Initialize stack for snapshot test and resource configuration test
 const stack = new cdk.Stack();
@@ -33,7 +34,7 @@ describe('lza-lambda construct', () => {
 
   test('runtime defaults to node 18', () => {
     const lambda = construct.resource as cdk.aws_lambda.Function;
-    expect(lambda.runtime).toEqual(LzaLambda.DEFAULT_RUNTIME);
+    expect(lambda.runtime).toEqual(DEFAULT_LAMBDA_RUNTIME);
   });
 
   test('runtime set to node 20', () => {

@@ -16,6 +16,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { Construct } from 'constructs';
 
 import path = require('path');
+import { DEFAULT_LAMBDA_RUNTIME } from '@aws-accelerator/utils/lib/lambda';
 
 /**
  * Control create accounts
@@ -49,7 +50,7 @@ export class CreateControlTowerAccounts extends Construct {
 
     this.onEvent = new cdk.aws_lambda.Function(this, 'CreateControlTowerAccount', {
       code: cdk.aws_lambda.Code.fromAsset(path.join(__dirname, 'create-accounts/dist')),
-      runtime: cdk.aws_lambda.Runtime.NODEJS_18_X,
+      runtime: DEFAULT_LAMBDA_RUNTIME,
       handler: 'index.handler',
       timeout: cdk.Duration.minutes(1),
       description: 'Create Control Tower Account onEvent handler',
@@ -126,7 +127,7 @@ export class CreateControlTowerAccounts extends Construct {
     });
     this.isComplete = new cdk.aws_lambda.Function(this, 'CreateControlTowerAccountStatus', {
       code: cdk.aws_lambda.Code.fromAsset(path.join(__dirname, 'create-accounts-status/dist')),
-      runtime: cdk.aws_lambda.Runtime.NODEJS_18_X,
+      runtime: DEFAULT_LAMBDA_RUNTIME,
       handler: 'index.handler',
       timeout: cdk.Duration.minutes(5),
       description: 'Create Control Tower Account isComplete handler',

@@ -16,6 +16,7 @@ import { pascalCase } from 'change-case';
 import { NagSuppressions } from 'cdk-nag';
 import * as path from 'path';
 import * as fs from 'fs';
+import { DEFAULT_LAMBDA_RUNTIME } from '@aws-accelerator/utils/lib/lambda';
 
 /**
  * Construction properties for CloudWatch to S3 replication for Kinesis Stream.
@@ -134,7 +135,7 @@ export class CloudWatchToS3Firehose extends Construct {
     }
 
     const firehosePrefixProcessingLambda = new cdk.aws_lambda.Function(this, 'FirehosePrefixProcessingLambda', {
-      runtime: cdk.aws_lambda.Runtime.NODEJS_18_X,
+      runtime: DEFAULT_LAMBDA_RUNTIME,
       functionName: props.firehoseRecordsProcessorFunctionName,
       code: cdk.aws_lambda.Code.fromAsset(path.join(__dirname, 'firehose-record-processing/dist')),
       handler: 'index.handler',

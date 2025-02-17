@@ -11,6 +11,7 @@
  *  and limitations under the License.
  */
 
+import { DEFAULT_LAMBDA_RUNTIME } from '@aws-accelerator/utils/lib/lambda';
 import * as cdk from 'aws-cdk-lib';
 import { Construct } from 'constructs';
 import { v4 as uuidv4 } from 'uuid';
@@ -68,7 +69,7 @@ export class MoveAccounts extends Construct {
 
     const providerLambda = new cdk.aws_lambda.Function(this, 'MoveAccountsFunction', {
       code: cdk.aws_lambda.Code.fromAsset(path.join(__dirname, 'move-account/dist')),
-      runtime: cdk.aws_lambda.Runtime.NODEJS_18_X,
+      runtime: DEFAULT_LAMBDA_RUNTIME,
       handler: 'index.handler',
       timeout: cdk.Duration.minutes(15),
       description: 'Moves accounts to conform account config',

@@ -16,6 +16,7 @@ import { Construct } from 'constructs';
 
 import { pascalCase } from 'change-case';
 import path from 'path';
+import { CUSTOM_RESOURCE_PROVIDER_RUNTIME } from '@aws-accelerator/utils/lib/lambda';
 /**
  * Construction properties for an S3 Bucket replication.
  */
@@ -111,7 +112,7 @@ export class BucketReplication extends Construct {
 
     const provider = cdk.CustomResourceProvider.getOrCreateProvider(this, RESOURCE_TYPE, {
       codeDirectory: path.join(__dirname, 'put-bucket-replication/dist'),
-      runtime: cdk.CustomResourceProviderRuntime.NODEJS_18_X,
+      runtime: CUSTOM_RESOURCE_PROVIDER_RUNTIME,
       policyStatements: [
         {
           Sid: 'S3PutReplicationConfigurationTaskActions',

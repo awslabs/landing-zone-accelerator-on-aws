@@ -34,6 +34,11 @@ jest.mock('aws-cdk-lib', () => ({
   CustomResourceProviderRuntime: {
     NODEJS_18_X: 'nodejs18.x',
   },
+  aws_lambda: {
+    Runtime: {
+      NODEJS_18_X: 'nodejs18.x',
+    },
+  },
   Stack: {
     of: () => ({
       region: 'mock-region',

@@ -2,6 +2,7 @@ import * as cdk from 'aws-cdk-lib';
 import { Construct } from 'constructs';
 import { NagSuppressions } from 'cdk-nag';
 import path from 'path';
+import { DEFAULT_LAMBDA_RUNTIME } from '../../../utils/lib/lambda';
 
 export interface DiagnosticsPackStackProps extends cdk.StackProps {
   readonly acceleratorPrefix: string;
@@ -165,7 +166,7 @@ export class DiagnosticsPackStack extends cdk.Stack {
       role: diagnosticsPackLambdaRole,
       description: 'Accelerator diagnostics report lambda function.',
       code: cdk.aws_lambda.Code.fromAsset(path.join(__dirname, '../lambdas/diagnostic-pack/dist')),
-      runtime: cdk.aws_lambda.Runtime.NODEJS_18_X,
+      runtime: DEFAULT_LAMBDA_RUNTIME,
       memorySize: 512,
       timeout: cdk.Duration.minutes(15),
       handler: 'index.handler',

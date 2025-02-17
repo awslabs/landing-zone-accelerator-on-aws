@@ -11,6 +11,7 @@
  *  and limitations under the License.
  */
 
+import { CUSTOM_RESOURCE_PROVIDER_RUNTIME } from '@aws-accelerator/utils/lib/lambda';
 import * as cdk from 'aws-cdk-lib';
 import { Construct } from 'constructs';
 const path = require('path');
@@ -61,7 +62,7 @@ export class Document extends cdk.Resource implements IDocument {
 
       const provider = cdk.CustomResourceProvider.getOrCreateProvider(this, SHARE_SSM_DOCUMENT, {
         codeDirectory: path.join(__dirname, 'share-document/dist'),
-        runtime: cdk.CustomResourceProviderRuntime.NODEJS_18_X,
+        runtime: CUSTOM_RESOURCE_PROVIDER_RUNTIME,
         policyStatements: [
           {
             Sid: 'ShareDocumentActions',

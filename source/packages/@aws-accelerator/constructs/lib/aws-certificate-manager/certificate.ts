@@ -13,6 +13,7 @@
 import * as cdk from 'aws-cdk-lib';
 import { Construct } from 'constructs';
 import * as path from 'path';
+import { DEFAULT_LAMBDA_RUNTIME } from '../../../utils/lib/lambda';
 
 export interface CertificateProps {
   /**
@@ -89,7 +90,7 @@ export class Certificate extends Construct {
     // Function definition for the custom resource
     //
     const providerLambda = new cdk.aws_lambda.Function(this, 'Function', {
-      runtime: cdk.aws_lambda.Runtime.NODEJS_18_X,
+      runtime: DEFAULT_LAMBDA_RUNTIME,
       code: cdk.aws_lambda.Code.fromAsset(path.join(__dirname, 'create-certificates/dist')),
       handler: 'index.handler',
       timeout: cdk.Duration.minutes(15),

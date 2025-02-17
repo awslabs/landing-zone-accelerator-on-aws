@@ -16,6 +16,7 @@ import { Construct } from 'constructs';
 import { pascalCase } from 'change-case';
 import * as path from 'path';
 import { v4 as uuidv4 } from 'uuid';
+import { CUSTOM_RESOURCE_PROVIDER_RUNTIME } from '@aws-accelerator/utils/lib/lambda';
 
 export interface TransitGatewayPeeringProps {
   /**
@@ -128,7 +129,7 @@ export class TransitGatewayPeering extends Construct {
 
     const provider = cdk.CustomResourceProvider.getOrCreateProvider(this, RESOURCE_TYPE, {
       codeDirectory: path.join(__dirname, 'accept-transit-gateway-peering-attachment/dist'),
-      runtime: cdk.CustomResourceProviderRuntime.NODEJS_18_X,
+      runtime: CUSTOM_RESOURCE_PROVIDER_RUNTIME,
       policyStatements: [
         {
           Sid: 'AllowAssumeRole',

@@ -11,6 +11,7 @@
  *  and limitations under the License.
  */
 
+import { CUSTOM_RESOURCE_PROVIDER_RUNTIME } from '@aws-accelerator/utils/lib/lambda';
 import * as cdk from 'aws-cdk-lib';
 import { Size } from 'aws-cdk-lib';
 import { Construct } from 'constructs';
@@ -47,7 +48,7 @@ export class AssociateHostedZones extends cdk.Resource {
 
     const provider = cdk.CustomResourceProvider.getOrCreateProvider(this, RESOURCE_TYPE, {
       codeDirectory: path.join(__dirname, 'associate-hosted-zones/dist'),
-      runtime: cdk.CustomResourceProviderRuntime.NODEJS_18_X,
+      runtime: CUSTOM_RESOURCE_PROVIDER_RUNTIME,
       memorySize: Size.mebibytes(512),
       policyStatements: [
         {

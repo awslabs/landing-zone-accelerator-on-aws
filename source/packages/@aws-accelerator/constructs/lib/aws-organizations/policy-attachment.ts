@@ -17,6 +17,7 @@ import { Construct } from 'constructs';
 import { createHash } from 'crypto';
 import { v4 as uuidv4 } from 'uuid';
 import { createLogger } from '@aws-accelerator/utils/lib/logger';
+import { CUSTOM_RESOURCE_PROVIDER_RUNTIME } from '@aws-accelerator/utils/lib/lambda';
 
 const logger = createLogger(['constructs-organization-policy-attachment']);
 
@@ -65,7 +66,7 @@ export class PolicyAttachment extends Construct {
     //
     const provider = cdk.CustomResourceProvider.getOrCreateProvider(this, 'Custom::OrganizationsAttachPolicy', {
       codeDirectory: path.join(__dirname, 'attach-policy/dist'),
-      runtime: cdk.CustomResourceProviderRuntime.NODEJS_18_X,
+      runtime: CUSTOM_RESOURCE_PROVIDER_RUNTIME,
       policyStatements: [
         {
           Effect: 'Allow',

@@ -11,6 +11,7 @@
  *  and limitations under the License.
  */
 
+import { CUSTOM_RESOURCE_PROVIDER_RUNTIME } from '@aws-accelerator/utils/lib/lambda';
 import * as cdk from 'aws-cdk-lib';
 import { Construct } from 'constructs';
 import * as path from 'path';
@@ -49,7 +50,7 @@ export class IpamOrganizationAdminAccount extends cdk.Resource implements IEnabl
 
     const provider = cdk.CustomResourceProvider.getOrCreateProvider(this, ENABLE_IPAM_ADMIN, {
       codeDirectory: path.join(__dirname, 'enable-ipam-organization-admin/dist'),
-      runtime: cdk.CustomResourceProviderRuntime.NODEJS_18_X,
+      runtime: CUSTOM_RESOURCE_PROVIDER_RUNTIME,
       policyStatements: [
         {
           Effect: 'Allow',

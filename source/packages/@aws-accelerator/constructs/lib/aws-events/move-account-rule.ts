@@ -14,6 +14,7 @@ import * as cdk from 'aws-cdk-lib';
 import { Construct } from 'constructs';
 import * as path from 'path';
 import { SsmParameterLookup } from '../aws-ssm/ssm-parameter-lookup';
+import { DEFAULT_LAMBDA_RUNTIME } from '@aws-accelerator/utils/lib/lambda';
 
 /**
  * MoveAccountRuleProps
@@ -95,7 +96,7 @@ export class MoveAccountRule extends Construct {
     // resources for control tower lifecycle events
     const moveAccountTargetFunction = new cdk.aws_lambda.Function(this, 'MoveAccountTargetFunction', {
       code: cdk.aws_lambda.Code.fromAsset(path.join(__dirname, 'move-account/dist')),
-      runtime: cdk.aws_lambda.Runtime.NODEJS_18_X,
+      runtime: DEFAULT_LAMBDA_RUNTIME,
       handler: 'index.handler',
       description: 'Lambda function to process Organizations MoveAccount event from CloudTrail',
       timeout: cdk.Duration.minutes(5),

@@ -11,6 +11,7 @@
  *  and limitations under the License.
  */
 
+import { CUSTOM_RESOURCE_PROVIDER_RUNTIME } from '@aws-accelerator/utils/lib/lambda';
 import * as cdk from 'aws-cdk-lib';
 import { Construct } from 'constructs';
 import { v4 as uuidv4 } from 'uuid';
@@ -49,7 +50,7 @@ export class OrganizationalUnits extends Construct {
       'Custom::OrganizationsCreateOrganizationalUnits',
       {
         codeDirectory: path.join(__dirname, 'create-organizational-units/dist'),
-        runtime: cdk.CustomResourceProviderRuntime.NODEJS_18_X,
+        runtime: CUSTOM_RESOURCE_PROVIDER_RUNTIME,
         policyStatements: [
           {
             Sid: 'organizations',

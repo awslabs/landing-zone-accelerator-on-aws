@@ -13,6 +13,7 @@
 
 import * as cdk from 'aws-cdk-lib';
 import { Construct } from 'constructs';
+import { DEFAULT_LAMBDA_RUNTIME } from '../../../utils/lib/lambda';
 const path = require('path');
 
 export interface ConfigServiceRecorderProps {
@@ -114,7 +115,7 @@ export class ConfigServiceRecorder extends Construct {
 
     const lambdaFunction = new cdk.aws_lambda.Function(this, 'ConfigServiceRecorderFunction', {
       code: cdk.aws_lambda.Code.fromAsset(path.join(__dirname, 'config-recorder/dist')),
-      runtime: cdk.aws_lambda.Runtime.NODEJS_18_X,
+      runtime: DEFAULT_LAMBDA_RUNTIME,
       handler: 'index.handler',
       timeout: cdk.Duration.minutes(10),
       description: 'Create/Update Config Recorder',

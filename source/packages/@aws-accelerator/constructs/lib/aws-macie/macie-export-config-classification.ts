@@ -11,6 +11,7 @@
  *  and limitations under the License.
  */
 
+import { CUSTOM_RESOURCE_PROVIDER_RUNTIME } from '@aws-accelerator/utils/lib/lambda';
 import * as cdk from 'aws-cdk-lib';
 import { Construct } from 'constructs';
 
@@ -69,7 +70,7 @@ export class MacieExportConfigClassification extends Construct {
 
     const provider = cdk.CustomResourceProvider.getOrCreateProvider(this, RESOURCE_TYPE, {
       codeDirectory: path.join(__dirname, 'put-export-config-classification/dist'),
-      runtime: cdk.CustomResourceProviderRuntime.NODEJS_18_X,
+      runtime: CUSTOM_RESOURCE_PROVIDER_RUNTIME,
       policyStatements: [
         {
           Sid: 'MaciePutClassificationExportConfigurationTaskMacieActions',

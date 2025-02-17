@@ -14,6 +14,7 @@
 import * as cdk from 'aws-cdk-lib';
 import { Construct } from 'constructs';
 import { NagSuppressions } from 'cdk-nag';
+import { DEFAULT_LAMBDA_RUNTIME } from '../../../utils/lib/lambda';
 
 const path = require('path');
 
@@ -52,7 +53,7 @@ export class GetCloudFormationResourceType extends Construct {
 
     const lambdaFunction = new cdk.aws_lambda.Function(this, 'GetCloudFormationResourceTypeFunction', {
       code: cdk.aws_lambda.Code.fromAsset(path.join(__dirname, 'get-resource-type/dist')),
-      runtime: cdk.aws_lambda.Runtime.NODEJS_18_X,
+      runtime: DEFAULT_LAMBDA_RUNTIME,
       handler: 'index.handler',
       timeout: cdk.Duration.minutes(3),
       description: 'Get CloudFormation Resources from Stack by LogicalResourceId',

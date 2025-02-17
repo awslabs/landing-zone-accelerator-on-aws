@@ -22,6 +22,7 @@ import { IpamSubnet } from './ipam-subnet';
 import { IPrefixList } from './prefix-list';
 import { IRouteTable } from './route-table';
 import { VpnConnection } from './vpn-connection';
+import { CUSTOM_RESOURCE_PROVIDER_RUNTIME } from '@aws-accelerator/utils/lib/lambda';
 
 export interface ISubnet extends cdk.IResource {
   /**
@@ -1026,7 +1027,7 @@ export class DeleteDefaultSecurityGroupRules extends Construct {
     //
     const provider = cdk.CustomResourceProvider.getOrCreateProvider(this, DELETE_DEFAULT_SECURITY_GROUP_RULES, {
       codeDirectory: path.join(__dirname, 'delete-default-security-group-rules/dist'),
-      runtime: cdk.CustomResourceProviderRuntime.NODEJS_18_X,
+      runtime: CUSTOM_RESOURCE_PROVIDER_RUNTIME,
       policyStatements: [
         {
           Effect: 'Allow',

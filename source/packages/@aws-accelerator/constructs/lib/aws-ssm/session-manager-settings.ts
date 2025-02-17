@@ -11,6 +11,7 @@
  *  and limitations under the License.
  */
 
+import { CUSTOM_RESOURCE_PROVIDER_RUNTIME } from '@aws-accelerator/utils/lib/lambda';
 import * as cdk from 'aws-cdk-lib';
 import { Construct } from 'constructs';
 const path = require('path');
@@ -90,7 +91,7 @@ export class SsmSessionManagerSettings extends Construct {
     //
     const provider = cdk.CustomResourceProvider.getOrCreateProvider(this, 'Custom::SessionManagerLogging', {
       codeDirectory: path.join(__dirname, 'session-manager-settings/dist'),
-      runtime: cdk.CustomResourceProviderRuntime.NODEJS_18_X,
+      runtime: CUSTOM_RESOURCE_PROVIDER_RUNTIME,
       policyStatements: [
         {
           Effect: 'Allow',

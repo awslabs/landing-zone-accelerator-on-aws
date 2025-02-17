@@ -11,6 +11,7 @@
  *  and limitations under the License.
  */
 
+import { CUSTOM_RESOURCE_PROVIDER_RUNTIME } from '@aws-accelerator/utils/lib/lambda';
 import * as cdk from 'aws-cdk-lib';
 import { Construct } from 'constructs';
 
@@ -59,7 +60,7 @@ export class ShareSubnetTags extends Construct {
     //
     const provider = cdk.CustomResourceProvider.getOrCreateProvider(this, SHARE_SUBNET_TAGS_TYPE, {
       codeDirectory: path.join(__dirname, 'share-subnet-tags/dist'),
-      runtime: cdk.CustomResourceProviderRuntime.NODEJS_18_X,
+      runtime: CUSTOM_RESOURCE_PROVIDER_RUNTIME,
       policyStatements: [
         {
           Effect: 'Allow',

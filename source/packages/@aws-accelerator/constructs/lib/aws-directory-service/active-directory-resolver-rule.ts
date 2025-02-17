@@ -16,6 +16,7 @@ import { Construct } from 'constructs';
 import { v4 as uuidv4 } from 'uuid';
 
 import path = require('path');
+import { DEFAULT_LAMBDA_RUNTIME } from '@aws-accelerator/utils/lib/lambda';
 
 /**
  * Initialized ActiveDirectoryResolverRuleProps properties
@@ -49,7 +50,7 @@ export class ActiveDirectoryResolverRule extends Construct {
 
     const providerLambda = new cdk.aws_lambda.Function(this, 'UpdateResolverRuleFunction', {
       code: cdk.aws_lambda.Code.fromAsset(path.join(__dirname, 'update-resolver-role/dist')),
-      runtime: cdk.aws_lambda.Runtime.NODEJS_18_X,
+      runtime: DEFAULT_LAMBDA_RUNTIME,
       handler: 'index.handler',
       timeout: cdk.Duration.seconds(30),
       description: 'Update resolver group rule target ips',
