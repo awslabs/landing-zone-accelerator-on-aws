@@ -2113,6 +2113,31 @@ export interface ILambdaConfig {
 }
 
 /**
+ * *{@link GlobalConfig} / {@link sqsConfig}*
+ *
+ * @description
+ * SQS Queue configuration settings
+ *
+ * @example
+ * ```
+ *   encryption:
+ *    useCMK: true
+ *    deploymentTargets:
+ *      organizationalUnits:
+ *        - Root
+ * ```
+ */
+export interface ISqsConfig {
+  /**
+   * Encryption setting for AWS Lambda environment variables.
+   *
+   * @remarks
+   *  For more information please refer {@link ServiceEncryptionConfig}
+   */
+  readonly encryption?: IServiceEncryptionConfig;
+}
+
+/**
  * *{@link GlobalConfig} / {@link SsmInventoryConfig}*
  *
  * @description

@@ -12,7 +12,7 @@
  */
 import { throttlingBackOff } from '@aws-accelerator/utils/lib/throttle';
 import { wildcardMatch } from '@aws-accelerator/utils/lib/common-functions';
-import { ScheduledEvent } from '@aws-accelerator/utils/lib/common-types';
+import { SQSEvent } from '@aws-accelerator/utils/lib/common-types';
 import {
   AssociateKmsKeyCommand,
   CloudWatchLogsClient,
@@ -51,7 +51,6 @@ const logsClient = new CloudWatchLogsClient({
  */
 function getEnvVariables() {
   return {
-    acceleratorPrefix: process.env['AcceleratorPrefix'],
     logSubscriptionRoleArn: process.env['LogSubscriptionRole']!,
     logDestinationArn: process.env['LogDestination']!,
     logRetention: process.env['LogRetention']!,
@@ -62,13 +61,12 @@ function getEnvVariables() {
 }
 
 /**
- * Lambda handler to process CloudWatch log group events
+ * Lambda handler to process CloudWatch log group events from SQS
  * Updates log group retention, subscription, and encryption settings
- * @param event {ScheduledEvent} CloudWatch event trigger
+ * @param event {SQSEvent} SQS event containing CloudWatch events
  */
-export async function handler(event: ScheduledEvent) {
+export async function handler(event: SQSEvent) {
   const {
-    acceleratorPrefix,
     logSubscriptionRoleArn,
     logDestinationArn,
     logRetention,
@@ -83,16 +81,19 @@ export async function handler(event: ScheduledEvent) {
   } else {
     logExclusionParse = undefined;
   }
-  const logGroupName = event.detail.requestParameters.logGroupName as string;
-  const username = event.detail.userIdentity.sessionContext.sessionIssuer.userName as string;
+  // Process each message from SQS
+  for (const record of event.Records) {
+    try {
+      // Parse the message body which contains the original CloudWatch event detail
+      const messageBody = JSON.parse(record.body);
+      const logGroupName = messageBody.requestParameters.logGroupName as string;
 
-  if (!username.startsWith('cdk-accel-cfn-exec') && !username.startsWith(acceleratorPrefix!)) {
-    const paginatedLogGroups = paginateDescribeLogGroups(
-      { client: logsClient, pageSize: 50 },
-      { logGroupNamePrefix: logGroupName },
-    );
-    for await (const page of paginatedLogGroups) {
-      if (page.logGroups && page.logGroups.every(lg => !!lg)) {
+      const paginatedLogGroups = paginateDescribeLogGroups(
+        { client: logsClient, pageSize: 50 },
+        { logGroupNamePrefix: logGroupName },
+      );
+
+      for await (const page of paginatedLogGroups) {
         for (const logGroup of page.logGroups ?? []) {
           await updateRetentionPolicy(logRetention, logGroup);
           await updateSubscriptionPolicy(
@@ -105,9 +106,11 @@ export async function handler(event: ScheduledEvent) {
           await updateKmsKey(logGroup, logKmsKeyArn);
         }
       }
+    } catch (error) {
+      console.error('Error processing SQS message:', error);
+      // Throwing the error will cause the message to be sent to DLQ if retry attempts are exhausted
+      throw error;
     }
-  } else {
-    console.log(`Log group created by LZA-managed identity ${username} , skipping update`);
   }
 }
 

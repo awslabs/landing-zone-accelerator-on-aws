@@ -343,6 +343,10 @@ export class LambdaConfig implements i.ILambdaConfig {
   readonly encryption: ServiceEncryptionConfig | undefined = undefined;
 }
 
+export class SqsConfig implements i.ISqsConfig {
+  readonly encryption: ServiceEncryptionConfig | undefined = undefined;
+}
+
 export class CloudTrailConfig implements i.ICloudTrailConfig {
   readonly enable = false;
   readonly organizationTrail = false;
@@ -582,6 +586,7 @@ export class GlobalConfig implements i.IGlobalConfig {
   readonly lambda: LambdaConfig | undefined = undefined;
   readonly s3: S3GlobalConfig | undefined = undefined;
   readonly defaultEventBus: DefaultEventBusConfig | undefined = undefined;
+  readonly sqs: SqsConfig | undefined = undefined;
 
   /**
    * SSM IAM Role Parameters to be loaded for session manager policy attachments

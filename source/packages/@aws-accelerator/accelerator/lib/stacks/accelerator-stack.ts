@@ -81,6 +81,10 @@ export enum AcceleratorKeyType {
    * S3 key
    */
   S3_KEY = 's3-key',
+  /**
+   * SQS Queue key
+   */
+  SQS_KEY = 'sqs-key',
 }
 
 /**
@@ -263,6 +267,11 @@ export abstract class AcceleratorStack extends cdk.Stack {
   public readonly isCloudWatchLogsGroupCMKEnabled: boolean;
 
   /**
+   * Flag indicating if AWS KMS CMK is enabled for AWS SQS Queue encryption
+   */
+  public readonly isSqsQueueCMKEnabled: boolean;
+
+  /**
    * Flag indicating if AWS KMS CMK is enabled for AWS S3 bucket encryption
    */
   public readonly isS3CMKEnabled: boolean;
@@ -333,6 +342,11 @@ export abstract class AcceleratorStack extends cdk.Stack {
     this.isCloudWatchLogsGroupCMKEnabled = this.isCmkEnabledServiceEncryption(
       this.props.globalConfig.logging.cloudwatchLogs?.encryption,
     );
+
+    //
+    // Set if AWS KMS CMK is enabled for AWS SQS Queue encryption
+    //
+    this.isSqsQueueCMKEnabled = this.isCmkEnabledServiceEncryption(this.props.globalConfig.sqs?.encryption);
 
     //
     // Set if AWS KMS CMK is enabled for AWS S3 bucket encryption

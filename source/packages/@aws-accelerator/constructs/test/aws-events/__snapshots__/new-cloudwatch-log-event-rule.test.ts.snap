@@ -143,24 +143,191 @@ exports[`NewCloudWatchLogEvent Construct(NewCloudWatchLogEvent):  Snapshot Test 
       "Type": "AWS::KMS::Key",
       "UpdateReplacePolicy": "Retain",
     },
-    "NewCloudWatchLogEventExistingIamNewLogGroupCreatedRuleAllowEventRuleNewCloudWatchLogEventExistingIamSetLogRetentionSubscriptionFunction19D4F3A241B61069": {
-      "Properties": {
-        "Action": "lambda:InvokeFunction",
-        "FunctionName": {
-          "Fn::GetAtt": [
-            "NewCloudWatchLogEventExistingIamSetLogRetentionSubscriptionFunctionA6186161",
-            "Arn",
-          ],
-        },
-        "Principal": "events.amazonaws.com",
-        "SourceArn": {
-          "Fn::GetAtt": [
-            "NewCloudWatchLogEventExistingIamNewLogGroupCreatedRuleED930315",
-            "Arn",
+    "NewCloudWatchLogEventExistingIamLambdaDlqFD18FDB8": {
+      "DeletionPolicy": "Delete",
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-SQS3",
+              "reason": "The SQS queue does not have a dead-letter queue (DLQ) enabled or have a cdk_nag rule suppression indicating it is a DLQ.",
+            },
           ],
         },
       },
-      "Type": "AWS::Lambda::Permission",
+      "Properties": {
+        "MessageRetentionPeriod": 1209600,
+        "SqsManagedSseEnabled": true,
+      },
+      "Type": "AWS::SQS::Queue",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "NewCloudWatchLogEventExistingIamLambdaDlqPolicyF82E9B8B": {
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sqs:*",
+              "Condition": {
+                "Bool": {
+                  "aws:SecureTransport": "false",
+                },
+              },
+              "Effect": "Deny",
+              "Principal": {
+                "AWS": "*",
+              },
+              "Resource": {
+                "Fn::GetAtt": [
+                  "NewCloudWatchLogEventExistingIamLambdaDlqFD18FDB8",
+                  "Arn",
+                ],
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "Queues": [
+          {
+            "Ref": "NewCloudWatchLogEventExistingIamLambdaDlqFD18FDB8",
+          },
+        ],
+      },
+      "Type": "AWS::SQS::QueuePolicy",
+    },
+    "NewCloudWatchLogEventExistingIamLogEventQueueA8EA07E5": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "ContentBasedDeduplication": true,
+        "DelaySeconds": 600,
+        "FifoQueue": true,
+        "RedrivePolicy": {
+          "deadLetterTargetArn": {
+            "Fn::GetAtt": [
+              "NewCloudWatchLogEventExistingIamLogEventQueueDlqF5C18C54",
+              "Arn",
+            ],
+          },
+          "maxReceiveCount": 3,
+        },
+        "SqsManagedSseEnabled": true,
+        "VisibilityTimeout": 900,
+      },
+      "Type": "AWS::SQS::Queue",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "NewCloudWatchLogEventExistingIamLogEventQueueDlqF5C18C54": {
+      "DeletionPolicy": "Delete",
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-SQS3",
+              "reason": "The SQS queue does not have a dead-letter queue (DLQ) enabled or have a cdk_nag rule suppression indicating it is a DLQ.",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "FifoQueue": true,
+        "MessageRetentionPeriod": 1209600,
+        "SqsManagedSseEnabled": true,
+      },
+      "Type": "AWS::SQS::Queue",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "NewCloudWatchLogEventExistingIamLogEventQueueDlqPolicy3F880AEC": {
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sqs:*",
+              "Condition": {
+                "Bool": {
+                  "aws:SecureTransport": "false",
+                },
+              },
+              "Effect": "Deny",
+              "Principal": {
+                "AWS": "*",
+              },
+              "Resource": {
+                "Fn::GetAtt": [
+                  "NewCloudWatchLogEventExistingIamLogEventQueueDlqF5C18C54",
+                  "Arn",
+                ],
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "Queues": [
+          {
+            "Ref": "NewCloudWatchLogEventExistingIamLogEventQueueDlqF5C18C54",
+          },
+        ],
+      },
+      "Type": "AWS::SQS::QueuePolicy",
+    },
+    "NewCloudWatchLogEventExistingIamLogEventQueuePolicy3EDE9223": {
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sqs:*",
+              "Condition": {
+                "Bool": {
+                  "aws:SecureTransport": "false",
+                },
+              },
+              "Effect": "Deny",
+              "Principal": {
+                "AWS": "*",
+              },
+              "Resource": {
+                "Fn::GetAtt": [
+                  "NewCloudWatchLogEventExistingIamLogEventQueueA8EA07E5",
+                  "Arn",
+                ],
+              },
+            },
+            {
+              "Action": [
+                "sqs:SendMessage",
+                "sqs:GetQueueAttributes",
+                "sqs:GetQueueUrl",
+              ],
+              "Condition": {
+                "ArnEquals": {
+                  "aws:SourceArn": {
+                    "Fn::GetAtt": [
+                      "NewCloudWatchLogEventExistingIamNewLogGroupCreatedRuleED930315",
+                      "Arn",
+                    ],
+                  },
+                },
+              },
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "events.amazonaws.com",
+              },
+              "Resource": {
+                "Fn::GetAtt": [
+                  "NewCloudWatchLogEventExistingIamLogEventQueueA8EA07E5",
+                  "Arn",
+                ],
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "Queues": [
+          {
+            "Ref": "NewCloudWatchLogEventExistingIamLogEventQueueA8EA07E5",
+          },
+        ],
+      },
+      "Type": "AWS::SQS::QueuePolicy",
     },
     "NewCloudWatchLogEventExistingIamNewLogGroupCreatedRuleED930315": {
       "Properties": {
@@ -185,13 +352,17 @@ exports[`NewCloudWatchLogEvent Construct(NewCloudWatchLogEvent):  Snapshot Test 
           {
             "Arn": {
               "Fn::GetAtt": [
-                "NewCloudWatchLogEventExistingIamSetLogRetentionSubscriptionFunctionA6186161",
+                "NewCloudWatchLogEventExistingIamLogEventQueueA8EA07E5",
                 "Arn",
               ],
             },
             "Id": "Target0",
+            "InputPath": "$.detail",
             "RetryPolicy": {
-              "MaximumRetryAttempts": 5,
+              "MaximumRetryAttempts": 3,
+            },
+            "SqsParameters": {
+              "MessageGroupId": "logEvents",
             },
           },
         ],
@@ -210,9 +381,16 @@ exports[`NewCloudWatchLogEvent Construct(NewCloudWatchLogEvent):  Snapshot Test 
           },
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
+        "DeadLetterConfig": {
+          "TargetArn": {
+            "Fn::GetAtt": [
+              "NewCloudWatchLogEventExistingIamLambdaDlqFD18FDB8",
+              "Arn",
+            ],
+          },
+        },
         "Environment": {
           "Variables": {
-            "AcceleratorPrefix": "AWSAccelerator",
             "LogDestination": "LogRetentionArn",
             "LogKmsKeyArn": {
               "Fn::GetAtt": [
@@ -339,6 +517,32 @@ exports[`NewCloudWatchLogEvent Construct(NewCloudWatchLogEvent):  Snapshot Test 
                 },
               ],
             },
+            {
+              "Action": "sqs:SendMessage",
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::GetAtt": [
+                  "NewCloudWatchLogEventExistingIamLambdaDlqFD18FDB8",
+                  "Arn",
+                ],
+              },
+            },
+            {
+              "Action": [
+                "sqs:ReceiveMessage",
+                "sqs:ChangeMessageVisibility",
+                "sqs:GetQueueUrl",
+                "sqs:DeleteMessage",
+                "sqs:GetQueueAttributes",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::GetAtt": [
+                  "NewCloudWatchLogEventExistingIamLogEventQueueA8EA07E5",
+                  "Arn",
+                ],
+              },
+            },
           ],
           "Version": "2012-10-17",
         },
@@ -382,24 +586,206 @@ exports[`NewCloudWatchLogEvent Construct(NewCloudWatchLogEvent):  Snapshot Test 
       },
       "Type": "AWS::IAM::Role",
     },
-    "NewCloudWatchLogEventNewLogGroupCreatedRuleAllowEventRuleNewCloudWatchLogEventSetLogRetentionSubscriptionFunctionDC0DB4146E3585DE": {
+    "NewCloudWatchLogEventExistingIamSetLogRetentionSubscriptionFunctionSqsEventSourceNewCloudWatchLogEventExistingIamLogEventQueue27F6A378D3968B64": {
       "Properties": {
-        "Action": "lambda:InvokeFunction",
-        "FunctionName": {
+        "BatchSize": 1,
+        "EventSourceArn": {
           "Fn::GetAtt": [
-            "NewCloudWatchLogEventSetLogRetentionSubscriptionFunction0F748D41",
+            "NewCloudWatchLogEventExistingIamLogEventQueueA8EA07E5",
             "Arn",
           ],
         },
-        "Principal": "events.amazonaws.com",
-        "SourceArn": {
-          "Fn::GetAtt": [
-            "NewCloudWatchLogEventNewLogGroupCreatedRuleB25856AE",
-            "Arn",
+        "FunctionName": {
+          "Ref": "NewCloudWatchLogEventExistingIamSetLogRetentionSubscriptionFunctionA6186161",
+        },
+      },
+      "Type": "AWS::Lambda::EventSourceMapping",
+    },
+    "NewCloudWatchLogEventLambdaDlq76368638": {
+      "DeletionPolicy": "Delete",
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-SQS3",
+              "reason": "The SQS queue does not have a dead-letter queue (DLQ) enabled or have a cdk_nag rule suppression indicating it is a DLQ.",
+            },
           ],
         },
       },
-      "Type": "AWS::Lambda::Permission",
+      "Properties": {
+        "MessageRetentionPeriod": 1209600,
+        "SqsManagedSseEnabled": true,
+      },
+      "Type": "AWS::SQS::Queue",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "NewCloudWatchLogEventLambdaDlqPolicy59776401": {
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sqs:*",
+              "Condition": {
+                "Bool": {
+                  "aws:SecureTransport": "false",
+                },
+              },
+              "Effect": "Deny",
+              "Principal": {
+                "AWS": "*",
+              },
+              "Resource": {
+                "Fn::GetAtt": [
+                  "NewCloudWatchLogEventLambdaDlq76368638",
+                  "Arn",
+                ],
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "Queues": [
+          {
+            "Ref": "NewCloudWatchLogEventLambdaDlq76368638",
+          },
+        ],
+      },
+      "Type": "AWS::SQS::QueuePolicy",
+    },
+    "NewCloudWatchLogEventLogEventQueueC499B0F2": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "ContentBasedDeduplication": true,
+        "DelaySeconds": 600,
+        "FifoQueue": true,
+        "RedrivePolicy": {
+          "deadLetterTargetArn": {
+            "Fn::GetAtt": [
+              "NewCloudWatchLogEventLogEventQueueDlq5C08DBE2",
+              "Arn",
+            ],
+          },
+          "maxReceiveCount": 3,
+        },
+        "SqsManagedSseEnabled": true,
+        "VisibilityTimeout": 900,
+      },
+      "Type": "AWS::SQS::Queue",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "NewCloudWatchLogEventLogEventQueueDlq5C08DBE2": {
+      "DeletionPolicy": "Delete",
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-SQS3",
+              "reason": "The SQS queue does not have a dead-letter queue (DLQ) enabled or have a cdk_nag rule suppression indicating it is a DLQ.",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "FifoQueue": true,
+        "MessageRetentionPeriod": 1209600,
+        "SqsManagedSseEnabled": true,
+      },
+      "Type": "AWS::SQS::Queue",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "NewCloudWatchLogEventLogEventQueueDlqPolicy5D76AEC7": {
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sqs:*",
+              "Condition": {
+                "Bool": {
+                  "aws:SecureTransport": "false",
+                },
+              },
+              "Effect": "Deny",
+              "Principal": {
+                "AWS": "*",
+              },
+              "Resource": {
+                "Fn::GetAtt": [
+                  "NewCloudWatchLogEventLogEventQueueDlq5C08DBE2",
+                  "Arn",
+                ],
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "Queues": [
+          {
+            "Ref": "NewCloudWatchLogEventLogEventQueueDlq5C08DBE2",
+          },
+        ],
+      },
+      "Type": "AWS::SQS::QueuePolicy",
+    },
+    "NewCloudWatchLogEventLogEventQueuePolicy55C05856": {
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sqs:*",
+              "Condition": {
+                "Bool": {
+                  "aws:SecureTransport": "false",
+                },
+              },
+              "Effect": "Deny",
+              "Principal": {
+                "AWS": "*",
+              },
+              "Resource": {
+                "Fn::GetAtt": [
+                  "NewCloudWatchLogEventLogEventQueueC499B0F2",
+                  "Arn",
+                ],
+              },
+            },
+            {
+              "Action": [
+                "sqs:SendMessage",
+                "sqs:GetQueueAttributes",
+                "sqs:GetQueueUrl",
+              ],
+              "Condition": {
+                "ArnEquals": {
+                  "aws:SourceArn": {
+                    "Fn::GetAtt": [
+                      "NewCloudWatchLogEventNewLogGroupCreatedRuleB25856AE",
+                      "Arn",
+                    ],
+                  },
+                },
+              },
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "events.amazonaws.com",
+              },
+              "Resource": {
+                "Fn::GetAtt": [
+                  "NewCloudWatchLogEventLogEventQueueC499B0F2",
+                  "Arn",
+                ],
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "Queues": [
+          {
+            "Ref": "NewCloudWatchLogEventLogEventQueueC499B0F2",
+          },
+        ],
+      },
+      "Type": "AWS::SQS::QueuePolicy",
     },
     "NewCloudWatchLogEventNewLogGroupCreatedRuleB25856AE": {
       "Properties": {
@@ -424,13 +810,17 @@ exports[`NewCloudWatchLogEvent Construct(NewCloudWatchLogEvent):  Snapshot Test 
           {
             "Arn": {
               "Fn::GetAtt": [
-                "NewCloudWatchLogEventSetLogRetentionSubscriptionFunction0F748D41",
+                "NewCloudWatchLogEventLogEventQueueC499B0F2",
                 "Arn",
               ],
             },
             "Id": "Target0",
+            "InputPath": "$.detail",
             "RetryPolicy": {
-              "MaximumRetryAttempts": 5,
+              "MaximumRetryAttempts": 3,
+            },
+            "SqsParameters": {
+              "MessageGroupId": "logEvents",
             },
           },
         ],
@@ -449,9 +839,16 @@ exports[`NewCloudWatchLogEvent Construct(NewCloudWatchLogEvent):  Snapshot Test 
           },
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
+        "DeadLetterConfig": {
+          "TargetArn": {
+            "Fn::GetAtt": [
+              "NewCloudWatchLogEventLambdaDlq76368638",
+              "Arn",
+            ],
+          },
+        },
         "Environment": {
           "Variables": {
-            "AcceleratorPrefix": "AWSAccelerator",
             "LogDestination": "LogRetentionArn",
             "LogKmsKeyArn": {
               "Fn::GetAtt": [
@@ -591,6 +988,32 @@ exports[`NewCloudWatchLogEvent Construct(NewCloudWatchLogEvent):  Snapshot Test 
                 },
               ],
             },
+            {
+              "Action": "sqs:SendMessage",
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::GetAtt": [
+                  "NewCloudWatchLogEventLambdaDlq76368638",
+                  "Arn",
+                ],
+              },
+            },
+            {
+              "Action": [
+                "sqs:ReceiveMessage",
+                "sqs:ChangeMessageVisibility",
+                "sqs:GetQueueUrl",
+                "sqs:DeleteMessage",
+                "sqs:GetQueueAttributes",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::GetAtt": [
+                  "NewCloudWatchLogEventLogEventQueueC499B0F2",
+                  "Arn",
+                ],
+              },
+            },
           ],
           "Version": "2012-10-17",
         },
@@ -602,6 +1025,21 @@ exports[`NewCloudWatchLogEvent Construct(NewCloudWatchLogEvent):  Snapshot Test 
         ],
       },
       "Type": "AWS::IAM::Policy",
+    },
+    "NewCloudWatchLogEventSetLogRetentionSubscriptionFunctionSqsEventSourceNewCloudWatchLogEventLogEventQueue8D602D3891F72CE0": {
+      "Properties": {
+        "BatchSize": 1,
+        "EventSourceArn": {
+          "Fn::GetAtt": [
+            "NewCloudWatchLogEventLogEventQueueC499B0F2",
+            "Arn",
+          ],
+        },
+        "FunctionName": {
+          "Ref": "NewCloudWatchLogEventSetLogRetentionSubscriptionFunction0F748D41",
+        },
+      },
+      "Type": "AWS::Lambda::EventSourceMapping",
     },
   },
 }

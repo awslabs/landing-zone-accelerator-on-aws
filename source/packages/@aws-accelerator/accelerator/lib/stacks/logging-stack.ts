@@ -97,6 +97,7 @@ export class LoggingStack extends AcceleratorStack {
   private snsForwarderFunction: cdk.aws_lambda.IFunction | undefined;
   private importedCentralLogBucket: cdk.aws_s3.IBucket | undefined;
   private importedCentralLogBucketKey: cdk.aws_kms.IKey | undefined;
+  private sqsKey: cdk.aws_kms.IKey | undefined;
 
   constructor(scope: Construct, id: string, props: AcceleratorStackProps) {
     super(scope, id, props);
@@ -121,6 +122,11 @@ export class LoggingStack extends AcceleratorStack {
     // Create Lambda key
     //
     this.lambdaKey = this.createLambdaKey(props);
+
+    //
+    // Create SQS key
+    //
+    this.sqsKey = this.createSqsKey();
 
     //
     // Create Auto scaling service linked role
@@ -646,6 +652,35 @@ export class LoggingStack extends AcceleratorStack {
       return key;
     }
   }
+  /**
+   * Function to create SQS queue key
+   * @returns cdk.aws_kms.IKey
+   */
+  private createSqsKey(): cdk.aws_kms.IKey | undefined {
+    if (!this.isSqsQueueCMKEnabled) {
+      this.logger.info(
+        `SQS Queue Encryption CMK disable for ${cdk.Stack.of(this).account} account in ${
+          cdk.Stack.of(this).region
+        } region, CMK creation excluded`,
+      );
+      return undefined;
+    }
+
+    const key = new cdk.aws_kms.Key(this, 'AcceleratorSqsKey', {
+      alias: this.acceleratorResourceNames.customerManagedKeys.sqs.alias,
+      description: this.acceleratorResourceNames.customerManagedKeys.sqs.description,
+      enableKeyRotation: true,
+      removalPolicy: cdk.RemovalPolicy.RETAIN,
+    });
+
+    this.ssmParameters.push({
+      logicalId: 'AcceleratorSqsKmsArnParameter',
+      parameterName: this.acceleratorResourceNames.parameters.sqsCmkArn,
+      stringValue: key.keyArn,
+    });
+
+    return key;
+  }
   /***
    * Function to normalize extension for firehose generated logs
    */
@@ -1163,6 +1198,7 @@ export class LoggingStack extends AcceleratorStack {
       useExistingRoles: this.props.useExistingRoles ?? false,
       // if no type is specified then assume that subscription filter has to be applied to each log group
       subscriptionType: this.props.globalConfig.logging.cloudwatchLogs?.subscription?.type ?? 'LOG_GROUP',
+      sqsKey: this.sqsKey,
     });
 
     // create custom resource before the new log group logic is created.

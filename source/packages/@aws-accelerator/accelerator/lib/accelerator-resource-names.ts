@@ -67,6 +67,7 @@ interface ParameterNames {
   identityStoreId: string;
   firehoseRecordsProcessorFunctionName: string;
   resourceTableName: string;
+  sqsCmkArn: string;
 }
 interface CmkDetails {
   orgTrailLog: { alias: string; description: string };
@@ -88,6 +89,7 @@ interface CmkDetails {
   importedAssetsBucketCmkArn: { alias: string; description: string };
   assetsBucket: { alias: string; description: string };
   ssmKey: { alias: string; description: string };
+  sqs: { alias: string; description: string };
 }
 interface BucketPrefixes {
   assetsAccessLog: string;
@@ -149,6 +151,7 @@ export class AcceleratorResourceNames {
     identityStoreId: 'PLACE_HOLDER',
     firehoseRecordsProcessorFunctionName: 'PLACE_HOLDER',
     resourceTableName: 'PLACE_HOLDER',
+    sqsCmkArn: 'PLACE_HOLDER',
   };
   public customerManagedKeys: CmkDetails = {
     orgTrailLog: { alias: 'PLACE_HOLDER', description: 'PLACE_HOLDER' },
@@ -170,6 +173,7 @@ export class AcceleratorResourceNames {
     importedAssetsBucketCmkArn: { alias: 'PLACE_HOLDER', description: 'PLACE_HOLDER' },
     assetsBucket: { alias: 'PLACE_HOLDER', description: 'PLACE_HOLDER' },
     ssmKey: { alias: 'PLACE_HOLDER', description: 'PLACE_HOLDER' },
+    sqs: { alias: 'PLACE_HOLDER', description: 'PLACE_HOLDER' },
   };
   public bucketPrefixes: BucketPrefixes = {
     assetsAccessLog: 'PLACE_HOLDER',
@@ -243,6 +247,7 @@ export class AcceleratorResourceNames {
     this.parameters.identityStoreId =
       props.prefixes.ssmParamName + '/organization/security/identity-center/identity-store-id';
 
+    this.parameters.sqsCmkArn = props.prefixes.ssmParamName + '/kms/sqs/key-arn';
     //
     // CMK details initialization
     this.customerManagedKeys.orgTrailLog = {
@@ -321,6 +326,10 @@ export class AcceleratorResourceNames {
     this.customerManagedKeys.ssmKey = {
       alias: props.prefixes.kmsAlias + '/sessionmanager-logs/session',
       description: 'AWS Accelerator Session Manager Session Encryption',
+    };
+    this.customerManagedKeys.sqs = {
+      alias: props.prefixes.kmsAlias + '/kms/sqs/key',
+      description: 'AWS Accelerator SQS Kms Key',
     };
     //
     // Bucket prefixes initialization
