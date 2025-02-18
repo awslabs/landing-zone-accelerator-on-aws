@@ -5,6 +5,27 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.11.2] - 02-17-2025
+
+### Added
+- feat(backoff): added ability to configure number of retries and starting backoff
+
+### Fixed
+
+- fix(asea): batch s3 mapping writes
+- fix(config): remove deprecated field
+- fix(config): fix sagemaker runtime feature store in all enabled
+- fix(eventbus): add service linked roles to policy condition
+- fix(logging): removed wildcard from central log bucket for management access role
+- fix(networking): fixed hosted zones for sagemaker vpc endpoints
+- fix(networking): fix asn property type in creat dx gateway lambda
+
+
+### Changed
+
+- chore(security): fix CVE-2022-29526 in esbuild
+- chore(security): fix execa GMS-2020-2 vulnerability
+
 ## [1.11.1] - 01-24-2025
 
 ### Fixed

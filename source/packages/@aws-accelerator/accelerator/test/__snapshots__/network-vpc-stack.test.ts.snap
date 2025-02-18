@@ -4396,7 +4396,7 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
       "Properties": {
         "Name": "/accelerator/AWSAccelerator-NetworkVpcStack-555555555555-us-east-1/version",
         "Type": "String",
-        "Value": "1.11.1",
+        "Value": "1.11.2",
       },
       "Type": "AWS::SSM::Parameter",
     },
@@ -5918,7 +5918,7 @@ exports[`NoVpcFlowLogStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
       "Properties": {
         "Name": "/accelerator/AWSAccelerator-NetworkVpcStack-111111111111-us-east-1/version",
         "Type": "String",
-        "Value": "1.11.1",
+        "Value": "1.11.2",
       },
       "Type": "AWS::SSM::Parameter",
     },

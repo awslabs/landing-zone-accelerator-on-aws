@@ -654,7 +654,7 @@ exports[`CustomizationsStack Construct(CustomizationsStack):  Snapshot Test 1`] 
       "Properties": {
         "Name": "/accelerator/AWSAccelerator-CustomizationsStack-111111111111-us-east-1/version",
         "Type": "String",
-        "Value": "1.11.1",
+        "Value": "1.11.2",
       },
       "Type": "AWS::SSM::Parameter",
     },
@@ -1112,7 +1112,7 @@ exports[`CustomizationsStack Construct(CustomizationsStack):  Snapshot Test 2`] 
       "Properties": {
         "Name": "/accelerator/AWSAccelerator-CustomizationsStack-444444444444-us-east-1/version",
         "Type": "String",
-        "Value": "1.11.1",
+        "Value": "1.11.2",
       },
       "Type": "AWS::SSM::Parameter",
     },
@@ -1782,7 +1782,7 @@ exports[`CustomizationsStack Construct(CustomizationsStack):  Snapshot Test 3`] 
       "Properties": {
         "Name": "/accelerator/AWSAccelerator-CustomizationsStack-111111111111-us-east-1/version",
         "Type": "String",
-        "Value": "1.11.1",
+        "Value": "1.11.2",
       },
       "Type": "AWS::SSM::Parameter",
     },
@@ -2027,7 +2027,7 @@ exports[`CustomizationsStack Construct(CustomizationsStack):  Snapshot Test 4`] 
       "Properties": {
         "Name": "/accelerator/AWSAccelerator-CustomizationsStack-444444444444-us-east-1/version",
         "Type": "String",
-        "Value": "1.11.1",
+        "Value": "1.11.2",
       },
       "Type": "AWS::SSM::Parameter",
     },

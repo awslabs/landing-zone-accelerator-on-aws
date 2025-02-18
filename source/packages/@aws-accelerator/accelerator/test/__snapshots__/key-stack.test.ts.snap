@@ -392,7 +392,7 @@ exports[`KeyStack Construct(KeyStack):  Snapshot Test 1`] = `
       "Properties": {
         "Name": "/accelerator/AWSAccelerator-KeyStack-222222222222-us-east-1/version",
         "Type": "String",
-        "Value": "1.11.1",
+        "Value": "1.11.2",
       },
       "Type": "AWS::SSM::Parameter",
     },
