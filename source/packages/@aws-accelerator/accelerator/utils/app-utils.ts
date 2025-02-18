@@ -1007,7 +1007,13 @@ export async function writeImportResources(props: {
         s3Promises.push(...nestedStackPromises);
       }
     }
+    // Batch S3 writes to max socket size
+    if (s3Promises.length > 49) {
+      await Promise.all(s3Promises);
+      s3Promises.length = 0;
+    }
   }
+  await Promise.all(s3Promises);
 }
 
 async function handleMapping(mapping: ASEAMapping) {
