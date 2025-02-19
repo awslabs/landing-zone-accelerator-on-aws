@@ -75,12 +75,9 @@ process.on('uncaughtException', err => {
 export async function setupControlTowerLandingZone(input: ISetupLandingZoneHandlerParameter): Promise<string> {
   try {
     return await new SetupLandingZoneModule().handler(input);
-  } catch (
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    e: any
-  ) {
-    console.error(e.message);
-    throw new Error(`${e}`);
+  } catch (e: unknown) {
+    console.error(e);
+    throw e;
   }
 }
 
@@ -112,11 +109,8 @@ export async function setupControlTowerLandingZone(input: ISetupLandingZoneHandl
 ): Promise<string> {
   try {
     return await new RegisterOrganizationalUnitModule().handler(input);
-  } catch (
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    e: any
-  ) {
-    console.error(e.message);
-    throw new Error(`${e}`);
+  } catch (e: unknown) {
+    console.error(e);
+    throw e;
   }
 }

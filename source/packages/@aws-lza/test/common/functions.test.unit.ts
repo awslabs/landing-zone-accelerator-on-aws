@@ -19,6 +19,8 @@ import {
   ResourceNotFoundException,
 } from '@aws-sdk/client-controltower';
 import {
+  InvalidInputException,
+  ListRootsCommand,
   OrganizationalUnit,
   OrganizationsClient,
   paginateListOrganizationalUnitsForParent,
@@ -27,12 +29,20 @@ import { AssumeRoleCommand, GetCallerIdentityCommand, STSClient } from '@aws-sdk
 
 import {
   delay,
+  generateDryRunResponse,
   getCredentials,
   getLandingZoneDetails,
   getLandingZoneIdentifier,
+  getModuleDefaultParameters,
+  getOrganizationalUnitIdByPath,
   getOrganizationalUnitsForParent,
+  getOrganizationRootId,
+  getParentOuId,
   setRetryStrategy,
 } from '../../common/functions';
+import { MOCK_CONSTANTS } from '../mocked-resources';
+import { MODULE_EXCEPTIONS } from '../../common/enums';
+import { AcceleratorModuleName, IModuleCommonParameter } from '../../common/resources';
 
 jest.mock('@aws-sdk/util-retry');
 jest.mock('@aws-sdk/client-controltower', () => {
@@ -46,6 +56,14 @@ jest.mock('@aws-sdk/client-controltower', () => {
 jest.mock('@aws-sdk/client-organizations', () => ({
   OrganizationsClient: jest.fn(),
   paginateListOrganizationalUnitsForParent: jest.fn(),
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  InvalidInputException: jest.fn().mockImplementation(function (this: any, params) {
+    const error = new Error(params.message);
+    error.name = 'InvalidInputException';
+    Object.setPrototypeOf(error, InvalidInputException.prototype);
+    return error;
+  }),
+  ListRootsCommand: jest.fn(),
 }));
 jest.mock('@aws-sdk/client-sts', () => {
   return {
@@ -338,6 +356,39 @@ describe('functions', () => {
 
       // Verify
       expect(result).toEqual([...mockOUs1, ...mockOUs2]);
+    });
+
+    test('should handle InvalidInputException and throw appropriate error', async () => {
+      // Setup
+      const invalidParentId = 'invalidParentId';
+      const errorMessage = 'Invalid input';
+
+      (paginateListOrganizationalUnitsForParent as jest.Mock).mockImplementation(() => {
+        throw new InvalidInputException({ message: errorMessage, $metadata: {} });
+      });
+
+      // Execute & Verify
+      await expect(async () => {
+        await getOrganizationalUnitsForParent(new OrganizationsClient({}), invalidParentId);
+      }).rejects.toThrowError(`InvalidInputException: Invalid parent id: ${invalidParentId}`);
+      expect(paginateListOrganizationalUnitsForParent).toHaveBeenCalledTimes(1);
+    });
+
+    test('should propagate unknown errors', async () => {
+      // Setup
+      const parentId = 'mockParentId';
+      const errorMessage = 'Unknown error';
+
+      (paginateListOrganizationalUnitsForParent as jest.Mock).mockImplementation(() => {
+        const error = new Error(errorMessage);
+        error.name = 'UnknownError';
+        throw error;
+      });
+
+      // Execute & Verify
+      await expect(async () => {
+        await getOrganizationalUnitsForParent(new OrganizationsClient({}), parentId);
+      }).rejects.toThrowError(errorMessage);
     });
 
     test('should handle undefined OrganizationalUnits in the response', async () => {
@@ -691,6 +742,305 @@ describe('functions', () => {
         RoleArn: `arn:${MOCK_CONSTANTS.partition}:iam::${MOCK_CONSTANTS.mandatoryOptions.accountId}:role/${MOCK_CONSTANTS.assumeRoleName}`,
         RoleSessionName: 'AcceleratorAssumeRole',
       });
+    });
+  });
+
+  describe('getOrganizationRootId', () => {
+    beforeEach(() => {
+      jest.clearAllMocks();
+
+      (OrganizationsClient as jest.Mock).mockImplementation(() => ({
+        send: mockSend,
+      }));
+    });
+
+    test('should return root id when valid response is received', async () => {
+      // Setup
+      mockSend.mockImplementation(command => {
+        if (command instanceof ListRootsCommand) {
+          return Promise.resolve({
+            Roots: [MOCK_CONSTANTS.organizationRoot],
+          });
+        }
+        return Promise.reject(MOCK_CONSTANTS.unknownError);
+      });
+
+      // Execute
+      const result = await getOrganizationRootId(new OrganizationsClient({}));
+
+      // Verify
+      expect(result).toEqual(MOCK_CONSTANTS.organizationRoot.Id);
+      expect(ListRootsCommand).toHaveBeenCalledTimes(1);
+    });
+
+    test('should throw error when Roots is not in response', async () => {
+      // Setup
+      mockSend.mockImplementation(command => {
+        if (command instanceof ListRootsCommand) {
+          return Promise.resolve({ Roots: undefined });
+        }
+        return Promise.reject(MOCK_CONSTANTS.unknownError);
+      });
+
+      // Execute & Verify
+      await expect(async () => {
+        await getOrganizationRootId(new OrganizationsClient({}));
+      }).rejects.toThrow(`${MODULE_EXCEPTIONS.SERVICE_EXCEPTION}: ListRootsCommand api didn't return Roots object.`);
+    });
+
+    test('should throw error when Roots array is empty', async () => {
+      // Setup
+      mockSend.mockImplementation(command => {
+        if (command instanceof ListRootsCommand) {
+          return Promise.resolve({ Roots: [] });
+        }
+        return Promise.reject(MOCK_CONSTANTS.unknownError);
+      });
+
+      // Execute & Verify
+      await expect(async () => {
+        await getOrganizationRootId(new OrganizationsClient({}));
+      }).rejects.toThrow(
+        `${MODULE_EXCEPTIONS.SERVICE_EXCEPTION}: ListRootsCommand api returned multiple Roots or no Roots`,
+      );
+    });
+
+    test('should throw error when root id is not in response', async () => {
+      // Setup
+      mockSend.mockImplementation(command => {
+        if (command instanceof ListRootsCommand) {
+          return Promise.resolve({
+            Roots: [
+              {
+                Name: MOCK_CONSTANTS.organizationRoot.Name,
+                Arn: MOCK_CONSTANTS.organizationRoot.Arn,
+              },
+            ],
+          });
+        }
+        return Promise.reject(MOCK_CONSTANTS.unknownError);
+      });
+
+      // Execute & Verify
+      await expect(async () => {
+        await getOrganizationRootId(new OrganizationsClient({}));
+      }).rejects.toThrow(`${MODULE_EXCEPTIONS.SERVICE_EXCEPTION}: ListRootsCommand api didn't return root id.`);
+    });
+  });
+
+  describe('getOrganizationalUnitIdByPath', () => {
+    beforeEach(() => {
+      jest.clearAllMocks();
+
+      (OrganizationsClient as jest.Mock).mockImplementation(() => ({
+        send: mockSend,
+      }));
+    });
+
+    test('should return OU id for valid path', async () => {
+      // Setup
+      mockSend.mockImplementation(command => {
+        if (command instanceof ListRootsCommand) {
+          return Promise.resolve({
+            Roots: [{ Id: MOCK_CONSTANTS.organizationRoot.Id }],
+          });
+        }
+        return Promise.reject(MOCK_CONSTANTS.unknownError);
+      });
+
+      (paginateListOrganizationalUnitsForParent as jest.Mock)
+        .mockImplementationOnce(() => ({
+          [Symbol.asyncIterator]: async function* () {
+            yield {
+              OrganizationalUnits: [MOCK_CONSTANTS.existingOrganizationalUnits[0]],
+            };
+          },
+        }))
+        .mockImplementationOnce(() => ({
+          [Symbol.asyncIterator]: async function* () {
+            yield {
+              OrganizationalUnits: [MOCK_CONSTANTS.existingOrganizationalUnits[1]],
+            };
+          },
+        }));
+
+      // Execute
+      const result = await getOrganizationalUnitIdByPath(
+        new OrganizationsClient({}),
+        `${MOCK_CONSTANTS.existingOrganizationalUnits[0].Name}/${MOCK_CONSTANTS.existingOrganizationalUnits[1].Name}`,
+      );
+
+      // Verify
+      expect(result).toEqual(MOCK_CONSTANTS.existingOrganizationalUnits[1].Id);
+    });
+
+    test('should return undefined for invalid path', async () => {
+      // Setup
+      mockSend.mockImplementation(command => {
+        if (command instanceof ListRootsCommand) {
+          return Promise.resolve({
+            Roots: [{ Id: MOCK_CONSTANTS.organizationRoot.Id }],
+          });
+        }
+        return Promise.reject(MOCK_CONSTANTS.unknownError);
+      });
+
+      (paginateListOrganizationalUnitsForParent as jest.Mock).mockImplementation(() => ({
+        [Symbol.asyncIterator]: async function* () {
+          yield {
+            OrganizationalUnits: [],
+          };
+        },
+      }));
+
+      // Execute
+      const result = await getOrganizationalUnitIdByPath(new OrganizationsClient({}), MOCK_CONSTANTS.invalidOuPath);
+
+      // Verify
+      expect(result).toBeUndefined();
+    });
+
+    test('should return ou id for root', async () => {
+      // Setup
+      mockSend.mockImplementation(command => {
+        if (command instanceof ListRootsCommand) {
+          return Promise.resolve({
+            Roots: [{ Id: MOCK_CONSTANTS.organizationRoot.Id }],
+          });
+        }
+        return Promise.reject(MOCK_CONSTANTS.unknownError);
+      });
+
+      (paginateListOrganizationalUnitsForParent as jest.Mock).mockImplementation(() => ({
+        [Symbol.asyncIterator]: async function* () {
+          yield {
+            OrganizationalUnits: [],
+          };
+        },
+      }));
+
+      // Execute
+      const result = await getOrganizationalUnitIdByPath(
+        new OrganizationsClient({}),
+        MOCK_CONSTANTS.organizationRoot.Name,
+      );
+
+      // Verify
+      expect(result).toBe(MOCK_CONSTANTS.organizationRoot.Id);
+    });
+
+    test('should handle empty path', async () => {
+      // Execute
+      const result = await getOrganizationalUnitIdByPath(new OrganizationsClient({}), '');
+
+      // Verify
+      expect(result).toBeUndefined();
+    });
+  });
+
+  describe('generateDryRunResponse', () => {
+    test('should generate dry run response', () => {
+      // Execute
+      const response = generateDryRunResponse(
+        AcceleratorModuleName.CONTROL_TOWER_LANDING_ZONE,
+        MOCK_CONSTANTS.runnerParameters.operation,
+        MOCK_CONSTANTS.dryRunStatus,
+      );
+
+      // Verify
+      expect(response).toMatch(
+        MOCK_CONSTANTS.dryRunResponsePattern.setupLandingZoneModule(MOCK_CONSTANTS.dryRunStatus),
+      );
+    });
+  });
+
+  describe('getModuleDefaultParameters', () => {
+    test('returns default parameters with provided values', () => {
+      // Setup
+      const moduleName = 'TestModule';
+      const props: IModuleCommonParameter = {
+        moduleName: AcceleratorModuleName.CONTROL_TOWER_LANDING_ZONE,
+        operation: MOCK_CONSTANTS.runnerParameters.operation,
+        partition: MOCK_CONSTANTS.runnerParameters.partition,
+        globalRegion: MOCK_CONSTANTS.globalRegion,
+        region: MOCK_CONSTANTS.runnerParameters.region,
+        useExistingRole: MOCK_CONSTANTS.runnerParameters.useExistingRole,
+        dryRun: true,
+      };
+
+      // Execute
+      const result = getModuleDefaultParameters(moduleName, props);
+
+      // Verify
+      expect(result).toEqual({
+        moduleName: AcceleratorModuleName.CONTROL_TOWER_LANDING_ZONE,
+        globalRegion: MOCK_CONSTANTS.globalRegion,
+        useExistingRole: MOCK_CONSTANTS.runnerParameters.useExistingRole,
+        dryRun: true,
+      });
+    });
+
+    test('returns default parameters with fallback values when props are undefined', () => {
+      // Setup
+      const moduleName = 'TestModule';
+      const props: IModuleCommonParameter = {
+        // moduleName: AcceleratorModuleName.CONTROL_TOWER_LANDING_ZONE,
+        operation: MOCK_CONSTANTS.runnerParameters.operation,
+        partition: MOCK_CONSTANTS.runnerParameters.partition,
+        region: MOCK_CONSTANTS.runnerParameters.region,
+      };
+
+      // Execute
+      const result = getModuleDefaultParameters(moduleName, props);
+
+      // Verify
+      expect(result).toEqual({
+        moduleName: moduleName,
+        globalRegion: MOCK_CONSTANTS.runnerParameters.region,
+        useExistingRole: false,
+        dryRun: false,
+      });
+    });
+  });
+
+  describe('getParentOuId', () => {
+    test('returns root id', async () => {
+      // Setup
+      mockSend.mockImplementation(command => {
+        if (command instanceof ListRootsCommand) {
+          return Promise.resolve({
+            Roots: [MOCK_CONSTANTS.organizationRoot],
+          });
+        }
+        return Promise.reject(MOCK_CONSTANTS.unknownError);
+      });
+
+      // Execute
+      const result = await getParentOuId(new OrganizationsClient({}), MOCK_CONSTANTS.organizationRoot.Name);
+
+      // // Verify
+      expect(result).toEqual(MOCK_CONSTANTS.organizationRoot.Id);
+    });
+
+    test('returns non root id', async () => {
+      // Setup
+
+      (paginateListOrganizationalUnitsForParent as jest.Mock).mockImplementation(() => ({
+        [Symbol.asyncIterator]: async function* () {
+          yield {
+            OrganizationalUnits: [MOCK_CONSTANTS.existingOrganizationalUnits[0]],
+          };
+        },
+      }));
+
+      // Execute
+      const result = await getParentOuId(
+        new OrganizationsClient({}),
+        MOCK_CONSTANTS.existingOrganizationalUnits[0].Name,
+      );
+
+      // Verify
+      expect(result).toEqual(MOCK_CONSTANTS.existingOrganizationalUnits[0].Id);
     });
   });
 });

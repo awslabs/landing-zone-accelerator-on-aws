@@ -50,7 +50,6 @@ export interface IRegisterOrganizationalUnitHandlerParameter extends IModuleComm
    */
   configuration: IRegisterOrganizationalUnitConfiguration;
 }
-// This module will register OU with AWS Control Tower
 /**
  * AWS Organizations organizational unit (OU) registration Module interface
  *

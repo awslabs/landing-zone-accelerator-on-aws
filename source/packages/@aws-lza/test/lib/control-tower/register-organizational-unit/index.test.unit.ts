@@ -22,8 +22,8 @@ import {
   paginateListEnabledBaselines,
 } from '@aws-sdk/client-controltower';
 
-import { RegisterOrganizationalUnitModule } from '../../../lib/control-tower/register-organizational-unit/index';
-import { MOCK_CONSTANTS } from '../../mocked-resources';
+import { RegisterOrganizationalUnitModule } from '../../../../lib/control-tower/register-organizational-unit/index';
+import { MOCK_CONSTANTS } from '../../../mocked-resources';
 
 // Mock dependencies
 jest.mock('@aws-sdk/client-controltower', () => {
@@ -52,8 +52,8 @@ jest.mock('@aws-sdk/client-controltower', () => {
   };
 });
 
-jest.mock('../../../common/functions', () => ({
-  ...jest.requireActual('../../../common/functions'),
+jest.mock('../../../../common/functions', () => ({
+  ...jest.requireActual('../../../../common/functions'),
   delay: jest.fn().mockResolvedValue(undefined),
 }));
 
@@ -83,8 +83,8 @@ describe('RegisterOrganizationalUnitModule', () => {
       return Promise.reject(MOCK_CONSTANTS.unknownError);
     });
 
-    getLandingZoneIdentifierSpy = jest.spyOn(require('../../../common/functions'), 'getLandingZoneIdentifier');
-    getLandingZoneDetailsSpy = jest.spyOn(require('../../../common/functions'), 'getLandingZoneDetails');
+    getLandingZoneIdentifierSpy = jest.spyOn(require('../../../../common/functions'), 'getLandingZoneIdentifier');
+    getLandingZoneDetailsSpy = jest.spyOn(require('../../../../common/functions'), 'getLandingZoneDetails');
 
     getLandingZoneIdentifierSpy.mockResolvedValue(MOCK_CONSTANTS.existingLandingArn);
     getLandingZoneDetailsSpy.mockResolvedValue({

@@ -16,6 +16,7 @@ const operation = 'mockOperation';
 
 export const MOCK_CONSTANTS = {
   unknownError: new Error('Unknown command'),
+  globalRegion: 'mockGlobalRegion',
   runnerParameters: {
     operation: operation,
     partition: 'mockPartition',
@@ -25,9 +26,38 @@ export const MOCK_CONSTANTS = {
     useExistingRole: false,
     solutionId: 'mockSolutionId',
   },
+  validCreateOuConfiguration: {
+    name: 'mockOuName',
+  },
+  nestedOuNameConfiguration: {
+    name: 'mockOuName1/mockOuName3',
+  },
+  organizationRoot: {
+    Id: 'mockRootId',
+    Name: 'Root',
+    Arn: 'mockRootArn',
+  },
+  newOrganizationalUnit: {
+    Id: 'mockOuId',
+    Arn: 'mockOuArn',
+    Name: 'mockOuName',
+  },
+  existingOrganizationalUnits: [
+    {
+      Id: 'mockOuId1',
+      Arn: 'mockOuArn1',
+      Name: 'mockOuName1',
+    },
+    {
+      Id: 'mockOuId2',
+      Arn: 'mockOuArn2',
+      Name: 'mockOuName2',
+    },
+  ],
   registerOuConfiguration: {
     ouArn: 'mockOuArn',
   },
+  invalidOuPath: 'InvalidOU/NonExistent',
   existingLandingArn: 'mockExistingLandingArn',
   existingLandingZoneIdentifier: 'mockLandingZoneIdentifier',
   baselines: {
@@ -104,10 +134,43 @@ export const MOCK_CONSTANTS = {
       baselineVersion: '4.0',
     },
   },
+  dryRunStatus: 'mock dryrun status',
   dryRunResponsePattern: {
     setupLandingZoneModule: (status: string) =>
       new RegExp(
         `\\[DRY-RUN\\]: ${AcceleratorModuleName.CONTROL_TOWER_LANDING_ZONE} ${operation} \\(no actual changes were made\\)[\\s\\S]*?${status}`,
       ),
+    organizationalUnitModule: (status: string) =>
+      new RegExp(
+        `\\[DRY-RUN\\]: ${AcceleratorModuleName.AWS_ORGANIZATIONS} ${operation} \\(no actual changes were made\\)[\\s\\S]*?${status}`,
+      ),
+  },
+  setupControlTowerLandingZoneConfiguration: {
+    version: 'mockVersion',
+    enabledRegions: ['mockRegion1', 'mockRegion2'],
+    logging: {
+      organizationTrail: true,
+      retention: {
+        loggingBucket: 30,
+        accessLoggingBucket: 30,
+      },
+    },
+    security: {
+      enableIdentityCenterAccess: true,
+    },
+    sharedAccounts: {
+      management: {
+        name: 'Management',
+        email: 'mockManagement@example.com',
+      },
+      logging: {
+        name: 'Logging',
+        email: 'mockLogArchive@example.com',
+      },
+      audit: {
+        name: 'Audit',
+        email: 'mockAudit@example.com',
+      },
+    },
   },
 };
