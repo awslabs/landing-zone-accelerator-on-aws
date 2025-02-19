@@ -30,14 +30,11 @@
 - Example: `accelerator-control-tower.ts` serves as the entry point for Control Tower operations
 
 ```typescript
-export async function setupControlTowerLandingZone(input: IControlTowerLandingZoneHandlerParameter): Promise<string> {
+export async function setupControlTowerLandingZone(input: ISetupLandingZoneHandlerParameter): Promise<string> {
   try {
-    return await new AcceleratorControlTowerLandingZoneModule().handler(input);
-  } catch (
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    e: any
-  ) {
-    console.error(e.message);
+    return await new SetupLandingZoneModule().handler(input);
+  } catch (e: unknown) {
+    console.error(e);
     throw new Error(`${e}`);
   }
 }
@@ -49,65 +46,61 @@ export async function setupControlTowerLandingZone(input: IControlTowerLandingZo
 - Implementation using Jest testing framework
 - 100% line coverage requirement
 - Test files named as `<module-name>.test.unit.ts`
-- Located in `source/packages/@aws-lza/test/<module-name>`
+- Located in `source/packages/@aws-lza/test/lib/<module-name>`
 - Must include interface contract compliance tests
 
 #### Interface Contract Compliance Testing
 Contract testing verifies that a module correctly implements its interface requirements. For example:
 
 ```typescript
-// interfaces/control-tower.ts
-export interface IControlTowerLandingZoneModule {
-  handler(props: IControlTowerLandingZoneHandlerParameter): Promise<string>;
-  validateInput(props: IControlTowerLandingZoneHandlerParameter): Promise<boolean>;
+// interfaces/control-tower/setup-landing-zone.ts
+export interface SetupLandingZoneModule {
+  handler(props: ISetupLandingZoneHandlerParameter): Promise<string>;
 }
 
-// control-tower.test.unit.ts
-describe('Control Tower Module Contract Compliance', () => {
-  let module: AcceleratorControlTowerLandingZoneModule;
-  
+// setup-landing-zone.test.unit.ts
+describe('SetupLandingZoneModule Contract Compliance', () => {
+  const input: ISetupLandingZoneHandlerParameter = {
+    ...MOCK_CONSTANTS.runnerParameters,
+    configuration: MOCK_CONSTANTS.setupControlTowerLandingZoneConfiguration,
+  };
+  let module: SetupLandingZoneModule;
+
   beforeEach(() => {
-    module = new AcceleratorControlTowerLandingZoneModule();
+    module = new SetupLandingZoneModule();
+    // Mock the handler implementation
+    jest.spyOn(module, 'handler').mockImplementation(async () => 'mocked-response');
   });
 
-  it('should implement all interface methods', () => {
-    // Verify all required methods exist
+  test('should implement all interface methods', () => {
     expect(module.handler).toBeDefined();
-    expect(module.validateInput).toBeDefined();
     expect(typeof module.handler).toBe('function');
-    expect(typeof module.validateInput).toBe('function');
   });
 
-  it('should maintain correct method signatures', async () => {
-    const testProps: IControlTowerLandingZoneHandlerParameter = {
-      // test properties
-    };
-
-    // Verify return types
-    const handlerResult = await module.handler(testProps);
-    expect(typeof handlerResult).toBe('string');
-
-    const validationResult = await module.validateInput(testProps);
-    expect(typeof validationResult).toBe('boolean');
+  test('should maintain correct method signatures', async () => {
+    const result = module.handler(input);
+    // Verify that handler returns a Promise
+    expect(result).toBeInstanceOf(Promise);
+    // Verify that the resolved value is a string
+    await expect(result).resolves.toBe('mocked-response');
+    await expect(result).resolves.toEqual(expect.any(String));
   });
 
-  it('should handle invalid inputs according to contract', async () => {
-    const invalidProps = {};
-    
-    // Verify contract-specified error handling
-    await expect(module.handler(invalidProps))
-      .rejects
-      .toThrow('Invalid input parameters');
+  test('should handle invalid inputs according to contract', async () => {
+    // Reset mock to test error handling
+    jest.spyOn(module, 'handler').mockRejectedValue(new Error('Invalid input parameters'));
+
+    await expect(module.handler({} as ISetupLandingZoneHandlerParameter)).rejects.toThrow('Invalid input parameters');
   });
 
-  it('should fulfill interface behavioral requirements', async () => {
-    const testProps = {
-      // valid test properties
-    };
+  test('should fulfill interface behavioral requirements', async () => {
+    const result = await module.handler(input);
+    expect(typeof result).toBe('string');
+    expect(result).toBeTruthy();
+  });
 
-    // Verify the behavior specified in the interface contract
-    const result = await module.handler(testProps);
-    expect(result).toMatch(/expected-pattern/);
+  afterEach(() => {
+    jest.restoreAllMocks();
   });
 });
 ```

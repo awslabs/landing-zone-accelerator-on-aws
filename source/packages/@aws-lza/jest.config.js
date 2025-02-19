@@ -40,7 +40,16 @@ module.exports = {
   coveragePathIgnorePatterns: ['/node_modules/'],
 
   // Indicates which files should be included for code for coverage,
-  collectCoverageFrom: ['lib/**/*.{js,ts}', '!lib/**/*.test.{js,ts}', '!lib/**/*.d.ts'],
+  collectCoverageFrom: [
+    'common/**/*.{js,ts}',
+    'executors/**/*.{js,ts}',
+    'interfaces/**/*.{js,ts}',
+    'lib/**/*.{js,ts}',
+    '!common/**/*.d.ts',
+    '!executors/**/*.d.ts',
+    '!lib/**/*.d.ts',
+    '!test/**/*.{js,ts}',
+  ],
 
   // Indicates which provider should be used to instrument code for coverage
   coverageReporters: ['text', 'text-summary', ['lcov', { projectRoot: '../../' }]],

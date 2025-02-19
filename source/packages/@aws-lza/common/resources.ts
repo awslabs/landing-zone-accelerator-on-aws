@@ -109,6 +109,10 @@ export interface IModuleDefaultParameter {
    */
   readonly moduleName: string;
   /**
+   * Global region
+   */
+  readonly globalRegion: string;
+  /**
    * Flag indicating existing role
    */
   readonly useExistingRole: boolean;

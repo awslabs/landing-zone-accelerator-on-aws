@@ -42,23 +42,23 @@ Each interface must extends `IModuleCommonParameter` interface
 
 Interfaces define the contract that the module must implement
 
-Example for Control Tower interface:
+Example for Setup Control Tower Landing Zone interface:
 ```typescript
-// interfaces/control-tower.ts
-export interface IControlTowerLandingZoneModule {
-  handler(props: IControlTowerLandingZoneHandlerParameter): Promise<string>;
+// interfaces/control-tower/setup-landing-zone.ts
+export interface ISetupLandingZoneModule {
+  handler(props: ISetupLandingZoneHandlerParameter): Promise<string>;
   // Other required methods and types
 }
 ```
 
 Implementation must be in the module's index.ts:
 ```typescript
-// lib/control-tower/index.ts
-export class AcceleratorControlTowerLandingZoneModule 
-  implements IControlTowerLandingZoneModule {
+// lib/control-tower/setup-landing-zone/index.ts
+export class SetupLandingZoneModule
+  implements ISetupLandingZoneModule {
   
   public async handler(
-    props: IControlTowerLandingZoneHandlerParameter
+    props: ISetupLandingZoneHandlerParameter
   ): Promise<string> {
     // Implementation logic
   }

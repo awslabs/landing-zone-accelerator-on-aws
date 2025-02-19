@@ -11,7 +11,7 @@
  *  and limitations under the License.
  */
 import { describe, beforeEach, expect, test } from '@jest/globals';
-import { Organization } from '../../../../lib/control-tower/setup-landing-zone/prerequisites/organization';
+import { Organization } from '../../../../../lib/control-tower/setup-landing-zone/prerequisites/organization';
 import {
   AWSOrganizationsNotInUseException,
   DescribeOrganizationCommand,

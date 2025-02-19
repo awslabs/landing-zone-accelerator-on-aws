@@ -11,11 +11,11 @@ This guide demonstrates how to integrate and utilize LZA modules in LZA accelera
 ```typescript
 import { 
   setupControlTowerLandingZone,
-  IControlTowerLandingZoneHandlerParameter 
+  ISetupLandingZoneHandlerParameter 
 } from '@aws-lza';
 
 async function deployControlTower() {
-  const params: IControlTowerLandingZoneHandlerParameter = {
+  const params: ISetupLandingZoneHandlerParameter = {
     dryRun: false,
     partition: 'aws',
     homeRegion: 'us-east-1',
@@ -91,7 +91,7 @@ async function safeModuleExecution() {
 
 ```typescript
 // config-validator.ts
-function validateConfig(config: IControlTowerLandingZoneHandlerParameter): boolean {
+function validateConfig(config: ISetupLandingZoneHandlerParameter): boolean {
   // Add validation logic
   return true;
 }
@@ -126,8 +126,8 @@ try {
 
 ### Integration Testing Example
 ```typescript
-describe('Control Tower Integration', () => {
-  it('should successfully deploy Control Tower', async () => {
+describe('SetupLandingZoneModule Integration Test', () => {
+  it('should successfully deploy Control Tower Landing Zone', async () => {
     const params = {
       // Test configuration
     };

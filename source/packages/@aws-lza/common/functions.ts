@@ -11,6 +11,8 @@
  *  and limitations under the License.
  */
 import {
+  InvalidInputException,
+  ListRootsCommand,
   OrganizationalUnit,
   OrganizationsClient,
   paginateListOrganizationalUnitsForParent,
@@ -23,7 +25,7 @@ import {
 } from '@aws-sdk/client-controltower';
 import { AssumeRoleCommand, GetCallerIdentityCommand, STSClient } from '@aws-sdk/client-sts';
 import { ConfiguredRetryStrategy } from '@aws-sdk/util-retry';
-
+import { MODULE_EXCEPTIONS } from '../common/enums';
 import path from 'path';
 
 import {
@@ -61,6 +63,7 @@ export function generateDryRunResponse(moduleName: string, operation: string, me
 export function getModuleDefaultParameters(moduleName: string, props: IModuleCommonParameter): IModuleDefaultParameter {
   const defaultParameters: IModuleDefaultParameter = {
     moduleName: props.moduleName ?? moduleName,
+    globalRegion: props.globalRegion ?? props.region,
     useExistingRole: props.useExistingRole ?? false,
     dryRun: props.dryRun ?? false,
   };
@@ -84,13 +87,21 @@ export async function getOrganizationalUnitsForParent(
 ): Promise<OrganizationalUnit[]> {
   const organizationalUnits: OrganizationalUnit[] = [];
 
-  const paginator = paginateListOrganizationalUnitsForParent({ client }, { ParentId: parentId });
-  for await (const page of paginator) {
-    for (const organizationalUnit of page.OrganizationalUnits ?? []) {
-      organizationalUnits.push(organizationalUnit);
+  try {
+    const paginator = paginateListOrganizationalUnitsForParent({ client }, { ParentId: parentId });
+    for await (const page of paginator) {
+      for (const organizationalUnit of page.OrganizationalUnits ?? []) {
+        organizationalUnits.push(organizationalUnit);
+      }
     }
+    return organizationalUnits;
+  } catch (e: unknown) {
+    if (e instanceof InvalidInputException) {
+      logger.warn(`${e.name}: Invalid parent id: ${parentId} - ${e.message}`);
+      throw new Error(`${e.name}: Invalid parent id: ${parentId}`);
+    }
+    throw e;
   }
-  return organizationalUnits;
 }
 
 /**
@@ -111,7 +122,7 @@ export async function getLandingZoneIdentifier(client: ControlTowerClient): Prom
     throw new Error(`Internal error: ListLandingZonesCommand did not return landingZones object`);
   }
 
-  if (response.landingZones.length! > 1) {
+  if (response.landingZones.length > 1) {
     logger.warn(
       `Internal error: ListLandingZonesCommand returned multiple landing zones, list of Landing Zone arns are - ${response.landingZones.join(
         ',',
@@ -275,4 +286,88 @@ export async function getCredentials(options: {
     sessionToken: response.Credentials.SessionToken,
     expiration: response.Credentials.Expiration,
   };
+}
+
+/**
+ * Function to get root id
+ * @param client {@link OrganizationsClient}
+ * @returns string
+ */
+export async function getOrganizationRootId(client: OrganizationsClient): Promise<string> {
+  const response = await throttlingBackOff(() => client.send(new ListRootsCommand({})));
+
+  if (!response.Roots) {
+    throw new Error(`${MODULE_EXCEPTIONS.SERVICE_EXCEPTION}: ListRootsCommand api didn't return Roots object.`);
+  }
+
+  if (response.Roots.length !== 1) {
+    throw new Error(
+      `${MODULE_EXCEPTIONS.SERVICE_EXCEPTION}: ListRootsCommand api returned multiple Roots or no Roots.`,
+    );
+  }
+
+  const rootId = response.Roots[0].Id;
+
+  if (!rootId) {
+    throw new Error(`${MODULE_EXCEPTIONS.SERVICE_EXCEPTION}: ListRootsCommand api didn't return root id.`);
+  }
+
+  return rootId;
+}
+
+/**
+ * Function to get Organizational unit id by path
+ * @param client {@link OrganizationsClient}
+ * @param ouPath string
+ * @returns string
+ */
+export async function getOrganizationalUnitIdByPath(
+  client: OrganizationsClient,
+  ouPath: string,
+): Promise<string | undefined> {
+  if (ouPath.replace(/\/+$/, '').toLowerCase() === 'root') {
+    return await getOrganizationRootId(client);
+  }
+
+  const ouNames = ouPath.replace(/\/+$/, '').split('/');
+
+  let emptyPathId: string | undefined;
+  if (ouPath.length === 0) {
+    emptyPathId = undefined;
+  } else {
+    let currentParentId = await getOrganizationRootId(client);
+
+    for (let i = 0; i < ouNames.length; i++) {
+      const currentOuName = ouNames[i];
+
+      const ous = await getOrganizationalUnitsForParent(client, currentParentId);
+
+      const matchingOu = ous.find(ou => ou.Name === currentOuName);
+
+      if (!matchingOu) {
+        return undefined;
+      }
+
+      if (i === ouNames.length - 1) {
+        return matchingOu.Id;
+      }
+
+      currentParentId = matchingOu.Id!;
+    }
+  }
+
+  return emptyPathId;
+}
+
+/**
+ * Function to get parent OU id
+ * @param client {@link OrganizationsClient}
+ * @param parentOuName string
+ * @returns string | undefined
+ */
+export async function getParentOuId(client: OrganizationsClient, parentOuName: string): Promise<string | undefined> {
+  if (parentOuName === 'Root') {
+    return await getOrganizationRootId(client);
+  }
+  return await getOrganizationalUnitIdByPath(client, parentOuName);
 }
