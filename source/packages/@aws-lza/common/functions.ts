@@ -11,10 +11,12 @@
  *  and limitations under the License.
  */
 import {
+  Account,
   InvalidInputException,
   ListRootsCommand,
   OrganizationalUnit,
   OrganizationsClient,
+  paginateListAccounts,
   paginateListOrganizationalUnitsForParent,
 } from '@aws-sdk/client-organizations';
 import {
@@ -370,4 +372,65 @@ export async function getParentOuId(client: OrganizationsClient, parentOuName: s
     return await getOrganizationRootId(client);
   }
   return await getOrganizationalUnitIdByPath(client, parentOuName);
+}
+
+/**
+ * Function to get AWS Organizations accounts
+ * @param client {@link OrganizationsClient}
+ * @returns accounts {@link Account}[]
+ */
+export async function getOrganizationAccounts(client: OrganizationsClient): Promise<Account[]> {
+  const accounts: Account[] = [];
+  const paginator = paginateListAccounts({ client }, {});
+  for await (const page of paginator) {
+    for (const account of page.Accounts ?? []) {
+      accounts.push(account);
+    }
+  }
+
+  return accounts;
+}
+
+/**
+ * Function to get Account details from AWS Organizations by email
+ * @param client {@link OrganizationsClient}
+ * @param accountEmail string
+ * @returns Account | undefined
+ */
+export async function getAccountDetailsFromOrganizations(
+  client: OrganizationsClient,
+  accountEmail: string,
+): Promise<Account | undefined> {
+  const accounts = await getOrganizationAccounts(client);
+
+  for (const account of accounts) {
+    if (account.Email && account.Email.toLowerCase() === accountEmail.toLowerCase()) {
+      return account;
+    }
+  }
+
+  return undefined;
+}
+
+/**
+ * Function to get account id by email
+ * @param client {@link OrganizationsClient}
+ * @param email string
+ * @returns string
+ */
+export async function getAccountId(client: OrganizationsClient, email: string): Promise<string> {
+  const accountDetailsFromOrganizations = await getAccountDetailsFromOrganizations(client, email);
+  if (!accountDetailsFromOrganizations) {
+    throw new Error(
+      `${MODULE_EXCEPTIONS.INVALID_INPUT}: Account with email "${email}" not found in AWS Organizations.`,
+    );
+  }
+
+  if (!accountDetailsFromOrganizations.Id) {
+    throw new Error(
+      `${MODULE_EXCEPTIONS.SERVICE_EXCEPTION}: ListAccounts api did not return the Account object Id property for the account with email "${email}".`,
+    );
+  }
+
+  return accountDetailsFromOrganizations.Id;
 }

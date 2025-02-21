@@ -26,6 +26,12 @@ export const MOCK_CONSTANTS = {
     useExistingRole: false,
     solutionId: 'mockSolutionId',
   },
+  credentials: {
+    accessKeyId: 'mockAccessKeyId',
+    secretAccessKey: 'mockSecretAccessKey',
+    sessionToken: 'mockSessionToken',
+    expiration: new Date('2024-12-31'),
+  },
   validCreateOuConfiguration: {
     name: 'mockOuName',
   },
@@ -171,6 +177,48 @@ export const MOCK_CONSTANTS = {
         name: 'Audit',
         email: 'mockAudit@example.com',
       },
+    },
+  },
+  InviteAccountToOrganizationModule: {
+    configuration: {
+      email: 'account@examle.com',
+      accountId: 'mockAccountId',
+      accountAccessRoleName: 'mockAccountAccessRoleName',
+      tags: [
+        { Key: 'tag1', Value: 'value1' },
+        { Key: 'tag1', Value: 'value1' },
+      ],
+    },
+    invitingAccount: {
+      Id: 'mockAccountId',
+      Arn: 'mockAccountArn',
+      email: 'account@examle.com',
+      name: 'mockAccountName',
+      Status: 'ACTIVE',
+      JoinedMethod: 'INVITED',
+    },
+    inviteHandshake: {
+      Id: 'mockHandshakeId',
+    },
+  },
+  MoveAccountModule: {
+    configuration: {
+      email: 'account@examcple.com',
+      destinationOu: '/Level1/Level2/Level3',
+    },
+    rootDestinationOu: 'Root',
+    moveAccount: {
+      Id: 'mockAccountId',
+      Arn: 'mockAccountArn',
+      email: 'account@examle.com',
+      name: 'mockAccountName',
+      Status: 'ACTIVE',
+      JoinedMethod: 'INVITED',
+    },
+    destinationParentId: 'mockDestinationParentId',
+    currentParent: {
+      Id: 'mockCurrentParentId',
+      Type: 'ORGANIZATIONAL_UNIT',
     },
   },
 };

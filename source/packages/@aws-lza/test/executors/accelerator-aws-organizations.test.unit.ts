@@ -15,11 +15,18 @@ import { describe, beforeEach, expect, test } from '@jest/globals';
 import {
   createAndRetrieveOrganizationalUnit,
   createOrganizationalUnit,
+  inviteAccountToOrganization,
+  moveAccount,
 } from '../../executors/accelerator-aws-organizations';
 import { CreateOrganizationalUnitModule } from '../../lib/aws-organizations/create-organizational-unit/index';
 import { MOCK_CONSTANTS } from '../mocked-resources';
+import { InviteAccountToOrganizationModule } from '../../lib/aws-organizations/invite-account-to-organization';
+import { MoveAccountModule } from '../../lib/aws-organizations/move-account';
 
+// Mock dependencies
 jest.mock('../../lib/aws-organizations/create-organizational-unit/index');
+jest.mock('../../lib/aws-organizations/invite-account-to-organization/index');
+jest.mock('../../lib/aws-organizations/move-account/index');
 
 describe('AWSOrganizationsExecutor', () => {
   beforeEach(() => {
@@ -123,6 +130,86 @@ describe('AWSOrganizationsExecutor', () => {
         ...MOCK_CONSTANTS.runnerParameters,
         configuration: MOCK_CONSTANTS.validCreateOuConfiguration,
       });
+      expect(mockHandler).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe('inviteAccountToOrganization', () => {
+    const input = {
+      ...MOCK_CONSTANTS.runnerParameters,
+      configuration: MOCK_CONSTANTS.InviteAccountToOrganizationModule.configuration,
+    };
+    test('should successfully invite organizational unit', async () => {
+      // Setup
+      const mockHandler = jest.fn().mockResolvedValue('SUCCESS');
+
+      (InviteAccountToOrganizationModule as unknown as jest.Mock).mockImplementation(() => ({
+        handler: mockHandler,
+      }));
+
+      // Execute
+      const result = await inviteAccountToOrganization(input);
+
+      // Verify
+      expect(result).toBe('SUCCESS');
+      expect(mockHandler).toHaveBeenCalledWith(input);
+      expect(mockHandler).toHaveBeenCalledTimes(1);
+    });
+
+    test('should throw error when invite ou fails', async () => {
+      // Setup
+
+      const errorMessage = 'Creation failed';
+      const mockHandler = jest.fn().mockRejectedValue(new Error(errorMessage));
+
+      (InviteAccountToOrganizationModule as unknown as jest.Mock).mockImplementation(() => ({
+        handler: mockHandler,
+      }));
+
+      // Execute && Verify
+      await expect(inviteAccountToOrganization(input)).rejects.toThrow(errorMessage);
+
+      expect(mockHandler).toHaveBeenCalledWith(input);
+      expect(mockHandler).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe('moveAccount', () => {
+    const input = {
+      ...MOCK_CONSTANTS.runnerParameters,
+      configuration: MOCK_CONSTANTS.MoveAccountModule.configuration,
+    };
+    test('should successfully move organizational unit', async () => {
+      // Setup
+      const mockHandler = jest.fn().mockResolvedValue('SUCCESS');
+
+      (MoveAccountModule as unknown as jest.Mock).mockImplementation(() => ({
+        handler: mockHandler,
+      }));
+
+      // Execute
+      const result = await moveAccount(input);
+
+      // Verify
+      expect(result).toBe('SUCCESS');
+      expect(mockHandler).toHaveBeenCalledWith(input);
+      expect(mockHandler).toHaveBeenCalledTimes(1);
+    });
+
+    test('should throw error when move ou fails', async () => {
+      // Setup
+
+      const errorMessage = 'Creation failed';
+      const mockHandler = jest.fn().mockRejectedValue(new Error(errorMessage));
+
+      (MoveAccountModule as unknown as jest.Mock).mockImplementation(() => ({
+        handler: mockHandler,
+      }));
+
+      // Execute && Verify
+      await expect(moveAccount(input)).rejects.toThrow(errorMessage);
+
+      expect(mockHandler).toHaveBeenCalledWith(input);
       expect(mockHandler).toHaveBeenCalledTimes(1);
     });
   });

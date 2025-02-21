@@ -19,10 +19,12 @@ import {
   ResourceNotFoundException,
 } from '@aws-sdk/client-controltower';
 import {
+  Account,
   InvalidInputException,
   ListRootsCommand,
   OrganizationalUnit,
   OrganizationsClient,
+  paginateListAccounts,
   paginateListOrganizationalUnitsForParent,
 } from '@aws-sdk/client-organizations';
 import { AssumeRoleCommand, GetCallerIdentityCommand, STSClient } from '@aws-sdk/client-sts';
@@ -30,10 +32,13 @@ import { AssumeRoleCommand, GetCallerIdentityCommand, STSClient } from '@aws-sdk
 import {
   delay,
   generateDryRunResponse,
+  getAccountDetailsFromOrganizations,
+  getAccountId,
   getCredentials,
   getLandingZoneDetails,
   getLandingZoneIdentifier,
   getModuleDefaultParameters,
+  getOrganizationAccounts,
   getOrganizationalUnitIdByPath,
   getOrganizationalUnitsForParent,
   getOrganizationRootId,
@@ -56,6 +61,7 @@ jest.mock('@aws-sdk/client-controltower', () => {
 jest.mock('@aws-sdk/client-organizations', () => ({
   OrganizationsClient: jest.fn(),
   paginateListOrganizationalUnitsForParent: jest.fn(),
+  paginateListAccounts: jest.fn(),
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   InvalidInputException: jest.fn().mockImplementation(function (this: any, params) {
     const error = new Error(params.message);
@@ -1041,6 +1047,253 @@ describe('functions', () => {
 
       // Verify
       expect(result).toEqual(MOCK_CONSTANTS.existingOrganizationalUnits[0].Id);
+    });
+  });
+
+  describe('getOrganizationAccounts', () => {
+    beforeEach(() => {
+      jest.clearAllMocks();
+    });
+    test('returns organizations accounts', async () => {
+      // Setup
+      const mockAccounts: Account[] = [
+        { Id: 'mockId1', Name: 'mockName1', Arn: 'mockArn1', Email: 'mockEmail1@example.com' },
+        { Id: 'mockId2', Name: 'mockName2', Arn: 'mockArn2', Email: 'mockEmail2@example.com' },
+      ];
+      (paginateListAccounts as jest.Mock).mockImplementation(() => ({
+        [Symbol.asyncIterator]: async function* () {
+          yield {
+            Accounts: mockAccounts,
+          };
+        },
+      }));
+
+      // Execute
+      const result = await getOrganizationAccounts(new OrganizationsClient({}));
+
+      // Verify
+      expect(result).toEqual(mockAccounts);
+    });
+
+    test('returns organizations accounts when Accounts object undefined', async () => {
+      // Setup
+      (paginateListAccounts as jest.Mock).mockImplementation(() => ({
+        [Symbol.asyncIterator]: async function* () {
+          yield {
+            Accounts: undefined,
+          };
+        },
+      }));
+
+      // Execute
+      const result = await getOrganizationAccounts(new OrganizationsClient({}));
+
+      // Verify
+      expect(result).toEqual([]);
+    });
+  });
+
+  describe('getAccountDetailsFromOrganizations', () => {
+    beforeEach(() => {
+      jest.clearAllMocks();
+    });
+    test('returns undefined when account with email not found accounts', async () => {
+      const mockAccounts: Account[] = [
+        { Id: 'mockId1', Name: 'mockName1', Arn: 'mockArn1', Email: 'mockEmail1@example.com' },
+        { Id: 'mockId2', Name: 'mockName2', Arn: 'mockArn2', Email: 'mockEmail2@example.com' },
+      ];
+      (paginateListAccounts as jest.Mock).mockImplementation(() => ({
+        [Symbol.asyncIterator]: async function* () {
+          yield {
+            Accounts: mockAccounts,
+          };
+        },
+      }));
+      const email = 'mock-email@example.com';
+      (paginateListAccounts as jest.Mock).mockImplementation(() => ({
+        [Symbol.asyncIterator]: async function* () {
+          yield {
+            Accounts: mockAccounts,
+          };
+        },
+      }));
+
+      // Execute
+      const result = await getAccountDetailsFromOrganizations(new OrganizationsClient({}), email);
+
+      // Verify
+      expect(result).toBeUndefined();
+    });
+
+    test('returns undefined when Account object does not have email property', async () => {
+      const mockAccounts: Account[] = [
+        { Id: 'mockId1', Name: 'mockName1', Arn: 'mockArn1' },
+        { Id: 'mockId2', Name: 'mockName2', Arn: 'mockArn2' },
+      ];
+      (paginateListAccounts as jest.Mock).mockImplementation(() => ({
+        [Symbol.asyncIterator]: async function* () {
+          yield {
+            Accounts: mockAccounts,
+          };
+        },
+      }));
+      const email = 'mock-email@example.com';
+      (paginateListAccounts as jest.Mock).mockImplementation(() => ({
+        [Symbol.asyncIterator]: async function* () {
+          yield {
+            Accounts: mockAccounts,
+          };
+        },
+      }));
+
+      // Execute
+      const result = await getAccountDetailsFromOrganizations(new OrganizationsClient({}), email);
+
+      // Verify
+      expect(result).toBeUndefined();
+    });
+
+    test('returns account when account with email of different case found', async () => {
+      const mockAccounts: Account[] = [
+        { Id: 'mockId1', Name: 'mockName1', Arn: 'mockArn1', Email: 'mockEmail1@example.com' },
+        { Id: 'mockId2', Name: 'mockName2', Arn: 'mockArn2', Email: 'mockEmail2@example.com' },
+      ];
+      (paginateListAccounts as jest.Mock).mockImplementation(() => ({
+        [Symbol.asyncIterator]: async function* () {
+          yield {
+            Accounts: mockAccounts,
+          };
+        },
+      }));
+
+      (paginateListAccounts as jest.Mock).mockImplementation(() => ({
+        [Symbol.asyncIterator]: async function* () {
+          yield {
+            Accounts: mockAccounts,
+          };
+        },
+      }));
+
+      // Execute
+      const result = await getAccountDetailsFromOrganizations(new OrganizationsClient({}), 'MOCKEMAIL1@example.COM');
+
+      // Verify
+      expect(result).toBe(mockAccounts[0]);
+    });
+
+    test('returns account when account with email of similar case found', async () => {
+      const mockAccounts: Account[] = [
+        { Id: 'mockId1', Name: 'mockName1', Arn: 'mockArn1', Email: 'mockEmail1@example.com' },
+        { Id: 'mockId2', Name: 'mockName2', Arn: 'mockArn2', Email: 'mockEmail2@example.com' },
+      ];
+      (paginateListAccounts as jest.Mock).mockImplementation(() => ({
+        [Symbol.asyncIterator]: async function* () {
+          yield {
+            Accounts: mockAccounts,
+          };
+        },
+      }));
+
+      (paginateListAccounts as jest.Mock).mockImplementation(() => ({
+        [Symbol.asyncIterator]: async function* () {
+          yield {
+            Accounts: mockAccounts,
+          };
+        },
+      }));
+
+      // Execute
+      const result = await getAccountDetailsFromOrganizations(new OrganizationsClient({}), mockAccounts[1].Email!);
+
+      // Verify
+      expect(result).toBe(mockAccounts[1]);
+    });
+  });
+
+  describe('getAccountId', () => {
+    beforeEach(() => {
+      jest.clearAllMocks();
+    });
+    test('returns error when account not found', async () => {
+      const mockAccounts: Account[] = [
+        { Id: 'mockId1', Name: 'mockName1', Arn: 'mockArn1', Email: 'mockEmail1@example.com' },
+        { Id: 'mockId2', Name: 'mockName2', Arn: 'mockArn2', Email: 'mockEmail2@example.com' },
+      ];
+      (paginateListAccounts as jest.Mock).mockImplementation(() => ({
+        [Symbol.asyncIterator]: async function* () {
+          yield {
+            Accounts: mockAccounts,
+          };
+        },
+      }));
+      const email = 'mock-email@example.com';
+      (paginateListAccounts as jest.Mock).mockImplementation(() => ({
+        [Symbol.asyncIterator]: async function* () {
+          yield {
+            Accounts: mockAccounts,
+          };
+        },
+      }));
+
+      await expect(async () => {
+        await getAccountId(new OrganizationsClient({}), email);
+      }).rejects.toThrowError(
+        `${MODULE_EXCEPTIONS.INVALID_INPUT}: Account with email "${email}" not found in AWS Organizations.`,
+      );
+      expect(paginateListAccounts).toHaveBeenCalledTimes(1);
+    });
+
+    test('returns error when Account object does not have Id property', async () => {
+      const mockAccounts: Account[] = [
+        { Name: 'mockName1', Arn: 'mockArn1', Email: 'mockEmail1@example.com' },
+        { Id: 'mockId2', Name: 'mockName2', Arn: 'mockArn2', Email: 'mockEmail2@example.com' },
+      ];
+      (paginateListAccounts as jest.Mock).mockImplementation(() => ({
+        [Symbol.asyncIterator]: async function* () {
+          yield {
+            Accounts: mockAccounts,
+          };
+        },
+      }));
+      (paginateListAccounts as jest.Mock).mockImplementation(() => ({
+        [Symbol.asyncIterator]: async function* () {
+          yield {
+            Accounts: mockAccounts,
+          };
+        },
+      }));
+
+      await expect(async () => {
+        await getAccountId(new OrganizationsClient({}), mockAccounts[0].Email!);
+      }).rejects.toThrowError(
+        `${MODULE_EXCEPTIONS.SERVICE_EXCEPTION}: ListAccounts api did not return the Account object Id property for the account with email "${mockAccounts[0].Email}".`,
+      );
+      expect(paginateListAccounts).toHaveBeenCalledTimes(1);
+    });
+
+    test('returns account id', async () => {
+      const mockAccounts: Account[] = [
+        { Name: 'mockName1', Arn: 'mockArn1', Email: 'mockEmail1@example.com' },
+        { Id: 'mockId2', Name: 'mockName2', Arn: 'mockArn2', Email: 'mockEmail2@example.com' },
+      ];
+      (paginateListAccounts as jest.Mock).mockImplementation(() => ({
+        [Symbol.asyncIterator]: async function* () {
+          yield {
+            Accounts: mockAccounts,
+          };
+        },
+      }));
+      (paginateListAccounts as jest.Mock).mockImplementation(() => ({
+        [Symbol.asyncIterator]: async function* () {
+          yield {
+            Accounts: mockAccounts,
+          };
+        },
+      }));
+
+      const response = await getAccountId(new OrganizationsClient({}), mockAccounts[1].Email!);
+      expect(response).toBe(mockAccounts[1].Id);
+      expect(paginateListAccounts).toHaveBeenCalledTimes(1);
     });
   });
 });
