@@ -16,6 +16,10 @@ import { OrganizationalUnit } from '@aws-sdk/client-organizations';
 import { ICreateOrganizationalUnitHandlerParameter } from '../interfaces/aws-organizations/create-organizational-unit';
 import { CreateOrganizationalUnitModule } from '../lib/aws-organizations/create-organizational-unit';
 import { createLogger } from '../common/logger';
+import { IMoveAccountHandlerParameter } from '../interfaces/aws-organizations/move-account';
+import { MoveAccountModule } from '../lib/aws-organizations/move-account';
+import { IInviteAccountToOrganizationHandlerParameter } from '../interfaces/aws-organizations/invite-account-to-organization';
+import { InviteAccountToOrganizationModule } from '../lib/aws-organizations/invite-account-to-organization';
 
 process.on('uncaughtException', err => {
   throw err;
@@ -105,6 +109,75 @@ export async function createAndRetrieveOrganizationalUnit(
     const createOrganizationalUnitModule = new CreateOrganizationalUnitModule();
     await createOrganizationalUnitModule.handler(input);
     return createOrganizationalUnitModule.createdOrganizationalUnit;
+  } catch (e: unknown) {
+    logger.error(e);
+    throw e;
+  }
+}
+
+/**
+ * Function to invite account to AWS Organizations
+ * @param input {@link IInviteAccountToOrganizationHandlerParameter}
+ * @returns string
+ *
+ * @example
+ * ```
+ * const input: IInviteAccountToOrganizationHandlerParameter = {
+ *   operation: 'invite-account-to-organization',
+ *   partition: 'aws',
+ *   region: 'us-east-1',
+ *   configuration: {
+ *     email: 'account@example.com',
+ *     accountId: 'XXXXXXXXX',
+ *     tags: [
+ *       {
+ *         Key: 'tag1',
+ *         Value: 'value1',
+ *       },
+ *       {
+ *         Key: 'tag2',
+ *         Value: 'value2',
+ *       },
+ *     ],
+ * };
+ *
+ * const status = await inviteAccountToOrganization(input);
+ * ```
+ */
+export async function inviteAccountToOrganization(
+  input: IInviteAccountToOrganizationHandlerParameter,
+): Promise<string> {
+  try {
+    return await new InviteAccountToOrganizationModule().handler(input);
+  } catch (e: unknown) {
+    logger.error(e);
+    throw e;
+  }
+}
+
+/*
+ * Function to move account to target OU
+ * @param input {@link IMoveAccountHandlerParameter}
+ * @returns string
+ *
+ * @example
+ * ```
+ * const input: IMoveAccountHandlerParameter = {
+ *   operation: 'move-account',
+ *   partition: 'aws',
+ *   region: 'us-east-1',
+ *   configuration: {
+ *     email: 'account@example.com',
+ *     destinationOu: 'OU1/OU2/OU3',
+ *   },
+ * };
+ *
+ * const status = await moveAccount(input);
+ * ```
+ */
+export async function moveAccount(input: IMoveAccountHandlerParameter): Promise<string> {
+  try {
+    return await new MoveAccountModule().handler(input);
   } catch (e: unknown) {
     logger.error(e);
     throw e;

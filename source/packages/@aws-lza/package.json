@@ -33,6 +33,7 @@
     "@aws-sdk/client-organizations": "3.638.0",
     "@aws-sdk/client-sts": "3.637.0",
     "@aws-sdk/util-retry": "3.374.0",
+    "email-validator": "2.0.4",
     "fs-extra": "11.1.0",
     "winston": "3.8.2",
      "exponential-backoff": "3.1.1",
