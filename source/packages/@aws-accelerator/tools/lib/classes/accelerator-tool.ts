@@ -53,7 +53,7 @@ import {
   KMSClient,
   ScheduleKeyDeletionCommand,
 } from '@aws-sdk/client-kms';
-import { ListAccountsCommand, OrganizationsClient } from '@aws-sdk/client-organizations';
+import { AccountStatus, ListAccountsCommand, OrganizationsClient } from '@aws-sdk/client-organizations';
 import {
   DeleteBucketCommand,
   DeleteObjectsCommand,
@@ -710,6 +710,10 @@ export class AcceleratorTool {
         organizationsClient.send(new ListAccountsCommand({ NextToken: nextToken })),
       );
       for (const account of page.Accounts ?? []) {
+        if (account.Status == AccountStatus.SUSPENDED) {
+          this.logger.error(`Account ${account.Name} (${account.Email}) is suspended, will not be cleaned up`);
+          continue;
+        }
         if (account.Id && account.Name) {
           accountIds.push({ accountName: account.Name, accountId: account.Id });
         }
