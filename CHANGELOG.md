@@ -37,6 +37,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - chore(documentation): add mkdocs preventative control section
 - chore(security): upgrade esbuild version to 0.25.0
+- chore(config): add vpc route table route preventative controls in sample config
 
 ### Configuration Changes
 
