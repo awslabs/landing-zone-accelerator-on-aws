@@ -43,7 +43,14 @@ const portfolioInput: PortfolioConfig = {
 };
 
 export abstract class StaticInput {
+  public static readonly permissionSetNameLookup = 'AdminPermissionSet';
   public static readonly permissionSetName = 'AWSReservedSSO_AdminPermissionSet_11111111111111111';
+  public static readonly permissionSetRoleArn =
+    'arn:aws:iam::111111111111:role/AWSReservedSSO_AdminPermissionSet_11111111111111111';
+  public static readonly permissionSetName2 = 'AWSReservedSSO_PowerUserPermissionSet_11111111111111111';
+  public static readonly permissionSet2RoleArn =
+    'arn:aws:iam::111111111111:role/AWSReservedSSO_PowerUserPermissionSet_11111111111111111';
+  public static readonly permissionSet2NameLookup = 'PowerUserPermissionSet';
   public static readonly assumeRoleArn1 = MakeRoleArn('crossAccountRole', Partition, '000000000000');
   public static readonly assumeRoleArn2 = MakeRoleArn('crossAccountRole', Partition, '111111111111');
   public static readonly existingRoleArn = MakeRoleArn('AdminRole', Partition, '000000000000');
