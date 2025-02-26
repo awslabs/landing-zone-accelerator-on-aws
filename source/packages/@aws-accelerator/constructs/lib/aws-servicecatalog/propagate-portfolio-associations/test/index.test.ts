@@ -336,6 +336,33 @@ describe('Update Event', () => {
       StaticInput.permissionSetErrorMessage,
     );
   });
+  test('getPermissionSetRoleArn - good role is returned', async () => {
+    iamClient.on(ListRolesCommand).resolves({
+      Roles: [
+        {
+          RoleId: 'RoleId',
+          Path: 'Path',
+          Arn: StaticInput.permissionSetRoleArn,
+          CreateDate: new Date(),
+          RoleName: StaticInput.permissionSetName,
+        },
+        {
+          RoleId: 'RoleId',
+          Path: 'Path',
+          Arn: StaticInput.permissionSet2RoleArn,
+          CreateDate: new Date(),
+          RoleName: StaticInput.permissionSetName2,
+        },
+      ],
+    });
+    await expect(await getPermissionSetRoleArn(StaticInput.permissionSetNameLookup, 'account', new IAMClient())).toBe(
+      StaticInput.permissionSetRoleArn,
+    );
+
+    await expect(await getPermissionSetRoleArn(StaticInput.permissionSet2NameLookup, 'account', new IAMClient())).toBe(
+      StaticInput.permissionSet2RoleArn,
+    );
+  });
 });
 describe('Delete Event', () => {
   const OLD_ENV = process.env;

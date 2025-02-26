@@ -296,7 +296,7 @@ export async function getPermissionSetRoleArn(
   const foundRole = roles.find(role => {
     const match = regex.test(role.RoleName!);
     console.log(`Test ${JSON.stringify(role)} for pattern ${regex} result: ${match}`);
-    return role;
+    return match;
   });
   const roleArn = foundRole?.Arn ?? undefined;
 
