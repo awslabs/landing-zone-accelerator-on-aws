@@ -18,7 +18,7 @@ import { IRegisterOrganizationalUnitHandlerParameter } from '../../../interfaces
 describe('RegisterOrganizationalUnitModule Contract Compliance', () => {
   const input: IRegisterOrganizationalUnitHandlerParameter = {
     ...MOCK_CONSTANTS.runnerParameters,
-    configuration: MOCK_CONSTANTS.registerOuConfiguration,
+    configuration: MOCK_CONSTANTS.RegisterOrganizationalUnitModule.configuration,
   };
   let module: RegisterOrganizationalUnitModule;
 

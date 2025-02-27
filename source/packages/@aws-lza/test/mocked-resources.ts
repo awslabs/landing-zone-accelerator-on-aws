@@ -32,6 +32,7 @@ export const MOCK_CONSTANTS = {
     sessionToken: 'mockSessionToken',
     expiration: new Date('2024-12-31'),
   },
+  accountId: 'mockAccountId',
   validCreateOuConfiguration: {
     name: 'mockOuName',
   },
@@ -60,86 +61,7 @@ export const MOCK_CONSTANTS = {
       Name: 'mockOuName2',
     },
   ],
-  registerOuConfiguration: {
-    ouArn: 'mockOuArn',
-  },
   invalidOuPath: 'InvalidOU/NonExistent',
-  existingLandingArn: 'mockExistingLandingArn',
-  existingLandingZoneIdentifier: 'mockLandingZoneIdentifier',
-  baselines: {
-    controlTowerBaseline: {
-      arn: 'mockControlTowerBaselineArn',
-      description: 'mock description',
-      name: 'AWSControlTowerBaseline',
-    },
-    identityCenterBaseline: {
-      arn: 'mockIdentityCenterBaselineArn',
-      description: 'mock description',
-      name: 'IdentityCenterBaseline',
-    },
-    auditBaseline: {
-      arn: 'mockAuditBaselineArn',
-      description: 'mock description',
-      name: 'AuditBaseline',
-    },
-  },
-  operationIdentifier: 'mockOperationIdentifier',
-  enabledBaselines: {
-    mockTarget1: {
-      arn: 'mockEnabledBaselineArn1',
-      baselineIdentifier: 'mockBaselineIdentifier1',
-      statusSummary: {
-        status: 'SUCCEEDED',
-      },
-      targetIdentifier: 'mockTargetIdentifier1',
-      baselineVersion: '4.0',
-    },
-    mockTarget2: {
-      arn: 'mockEnabledBaselineArn1',
-      baselineIdentifier: 'mockBaselineIdentifier1',
-      statusSummary: {
-        status: 'SUCCEEDED',
-      },
-      targetIdentifier: 'mockTargetIdentifier1',
-      baselineVersion: '4.0',
-    },
-    mockOu: {
-      arn: 'mockOuArn',
-      baselineIdentifier: 'mockOuBaselineIdentifier1',
-      statusSummary: {
-        status: 'SUCCEEDED',
-      },
-      targetIdentifier: 'mockOuArn',
-      baselineVersion: '4.0',
-    },
-    mockOuFailed: {
-      arn: 'mockOuArn',
-      baselineIdentifier: 'mockOuBaselineIdentifier1',
-      statusSummary: {
-        status: 'FAILED',
-      },
-      targetIdentifier: 'mockOuArn',
-      baselineVersion: '4.0',
-    },
-    mockOuOldBaseLineVersion: {
-      arn: 'mockOuArn',
-      baselineIdentifier: 'mockOuBaselineIdentifier1',
-      statusSummary: {
-        status: 'SUCCEEDED',
-      },
-      targetIdentifier: 'mockOuArn',
-      baselineVersion: '3.0',
-    },
-    mockIdentityCenterBaseline: {
-      arn: 'mockIdentityCenterBaselineArn',
-      baselineIdentifier: 'mockIdentityCenterBaselineArn',
-      statusSummary: {
-        status: 'SUCCEEDED',
-      },
-      targetIdentifier: 'mockIdentityCenterBaselineArn',
-      baselineVersion: '4.0',
-    },
-  },
   dryRunStatus: 'mock dryrun status',
   dryRunResponsePattern: {
     setupLandingZoneModule: (status: string) =>
@@ -219,6 +141,93 @@ export const MOCK_CONSTANTS = {
     currentParent: {
       Id: 'mockCurrentParentId',
       Type: 'ORGANIZATIONAL_UNIT',
+    },
+  },
+  organization: {
+    Id: 'mockOrganizationId',
+  },
+  RegisterOrganizationalUnitModule: {
+    configuration: {
+      name: 'mockOu',
+    },
+    existingLandingZoneIdentifier: 'mockLandingZoneIdentifier',
+    existingLandingArn: 'mockExistingLandingArn',
+    securityOuName: 'Security',
+    landingZoneVersion: '4.0',
+    organizationalUnitId: 'mockOrganizationalUnitId',
+    operationIdentifier: 'mockOperationIdentifier',
+    enabledBaselines: {
+      mockTarget1: {
+        arn: 'mockEnabledBaselineArn1',
+        baselineIdentifier: 'mockBaselineIdentifier1',
+        statusSummary: {
+          status: 'SUCCEEDED',
+        },
+        targetIdentifier: 'mockTargetIdentifier1',
+        baselineVersion: '4.0',
+      },
+      mockTarget2: {
+        arn: 'mockEnabledBaselineArn1',
+        baselineIdentifier: 'mockBaselineIdentifier1',
+        statusSummary: {
+          status: 'SUCCEEDED',
+        },
+        targetIdentifier: 'mockTargetIdentifier1',
+        baselineVersion: '4.0',
+      },
+      mockOu: {
+        arn: 'mockOuArn',
+        baselineIdentifier: 'mockOuBaselineIdentifier1',
+        statusSummary: {
+          status: 'SUCCEEDED',
+        },
+        targetIdentifier: 'mockOuArn',
+        baselineVersion: '4.0',
+      },
+      mockOuFailed: {
+        arn: 'mockOuArn',
+        baselineIdentifier: 'mockOuBaselineIdentifier1',
+        statusSummary: {
+          status: 'FAILED',
+        },
+        targetIdentifier: 'mockOuArn',
+        baselineVersion: '4.0',
+      },
+      mockOuOldBaseLineVersion: {
+        arn: 'mockOuArn',
+        baselineIdentifier: 'mockOuBaselineIdentifier1',
+        statusSummary: {
+          status: 'SUCCEEDED',
+        },
+        targetIdentifier: 'mockOuArn',
+        baselineVersion: '3.0',
+      },
+      mockIdentityCenterBaseline: {
+        arn: 'mockIdentityCenterBaselineArn',
+        baselineIdentifier: 'mockIdentityCenterBaselineArn',
+        statusSummary: {
+          status: 'SUCCEEDED',
+        },
+        targetIdentifier: 'mockIdentityCenterBaselineArn',
+        baselineVersion: '4.0',
+      },
+    },
+    baselines: {
+      controlTowerBaseline: {
+        arn: 'mockControlTowerBaselineArn',
+        description: 'mock description',
+        name: 'AWSControlTowerBaseline',
+      },
+      identityCenterBaseline: {
+        arn: 'mockIdentityCenterBaselineArn',
+        description: 'mock description',
+        name: 'IdentityCenterBaseline',
+      },
+      auditBaseline: {
+        arn: 'mockAuditBaselineArn',
+        description: 'mock description',
+        name: 'AuditBaseline',
+      },
     },
   },
 };

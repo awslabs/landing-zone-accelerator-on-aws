@@ -27,6 +27,7 @@ import {
 import { IamRole } from '../../../../lib/control-tower/setup-landing-zone/prerequisites/iam-role';
 import { KmsKey } from '../../../../lib/control-tower/setup-landing-zone/prerequisites/kms-key';
 import { SharedAccount } from '../../../../lib/control-tower/setup-landing-zone/prerequisites/shared-account';
+import { MODULE_EXCEPTIONS } from '../../../../common/enums';
 
 // Mock dependencies
 jest.mock('@aws-sdk/client-controltower', () => {
@@ -349,7 +350,7 @@ describe('Accelerator ControlTower Landing Zone Module', () => {
           configuration: MOCK_CONSTANTS.controlTowerLandingZoneConfiguration,
         });
       }).rejects.toThrowError(
-        `AWS Control Tower Landing Zone operation with identifier ${MOCK_CONSTANTS.operationIdentifier} in FAILED state !!!!. Please investigate CT operation before executing pipeline`,
+        `${MODULE_EXCEPTIONS.SERVICE_EXCEPTION}: AWS Control Tower Landing Zone operation with identifier "${MOCK_CONSTANTS.operationIdentifier}" in "${LandingZoneOperationStatus.FAILED}" state !!!!. Before continuing, proceed to AWS Control Tower and evaluate the status.`,
       );
 
       expect(CreateLandingZoneCommand).toHaveBeenCalledTimes(1);
@@ -388,7 +389,7 @@ describe('Accelerator ControlTower Landing Zone Module', () => {
           configuration: MOCK_CONSTANTS.controlTowerLandingZoneConfiguration,
         });
       }).rejects.toThrowError(
-        `AWS Control Tower Landing Zone operation with identifier ${MOCK_CONSTANTS.operationIdentifier} in FAILED state !!!!. Please investigate CT operation before executing pipeline`,
+        `${MODULE_EXCEPTIONS.SERVICE_EXCEPTION}: AWS Control Tower Landing Zone operation with identifier "${MOCK_CONSTANTS.operationIdentifier}" in "${LandingZoneOperationStatus.FAILED}" state !!!!. Before continuing, proceed to AWS Control Tower and evaluate the status.`,
       );
 
       expect(CreateLandingZoneCommand).toHaveBeenCalledTimes(1);
@@ -413,7 +414,9 @@ describe('Accelerator ControlTower Landing Zone Module', () => {
           useExistingRole: false,
           configuration: MOCK_CONSTANTS.controlTowerLandingZoneConfiguration,
         });
-      }).rejects.toThrowError(`Internal error: CreateLandingZoneCommand did not return operationIdentifier`);
+      }).rejects.toThrowError(
+        `${MODULE_EXCEPTIONS.SERVICE_EXCEPTION}: CreateLandingZoneCommand did not return operationIdentifier`,
+      );
 
       expect(CreateLandingZoneCommand).toHaveBeenCalledTimes(1);
       expect(GetLandingZoneOperationCommand).toHaveBeenCalledTimes(0);
@@ -442,7 +445,9 @@ describe('Accelerator ControlTower Landing Zone Module', () => {
           useExistingRole: false,
           configuration: MOCK_CONSTANTS.controlTowerLandingZoneConfiguration,
         });
-      }).rejects.toThrowError(`Internal error: GetLandingZoneOperationCommand did not return operationIdentifier`);
+      }).rejects.toThrowError(
+        `${MODULE_EXCEPTIONS.SERVICE_EXCEPTION}: GetLandingZoneOperationCommand did not return operationIdentifier`,
+      );
 
       expect(CreateLandingZoneCommand).toHaveBeenCalledTimes(1);
       expect(GetLandingZoneOperationCommand).toHaveBeenCalledTimes(1);
@@ -479,7 +484,9 @@ describe('Accelerator ControlTower Landing Zone Module', () => {
           useExistingRole: false,
           configuration: MOCK_CONSTANTS.controlTowerLandingZoneConfiguration,
         });
-      }).rejects.toThrowError(`Internal error: GetLandingZoneOperationCommand did not return operationIdentifier`);
+      }).rejects.toThrowError(
+        `${MODULE_EXCEPTIONS.SERVICE_EXCEPTION}: GetLandingZoneOperationCommand did not return operationIdentifier`,
+      );
 
       expect(CreateLandingZoneCommand).toHaveBeenCalledTimes(1);
       expect(GetLandingZoneOperationCommand).toHaveBeenCalledTimes(2);
@@ -580,6 +587,30 @@ describe('Accelerator ControlTower Landing Zone Module', () => {
       expect(GetLandingZoneOperationCommand).toHaveBeenCalledTimes(0);
     });
 
+    test('should be successful of dry run changes required but LZ not in stable state', async () => {
+      // Setup
+      getLandingZoneDetailsSpy.mockResolvedValue({
+        landingZoneIdentifier: MOCK_CONSTANTS.existingLandingZoneIdentifier,
+        status: LandingZoneStatus.PROCESSING,
+        securityOuName: 'Security',
+      });
+
+      // Execute
+      const response = await new SetupLandingZoneModule().handler({
+        ...MOCK_CONSTANTS.moduleCommonParameter,
+        useExistingRole: false,
+        dryRun: true,
+        configuration: MOCK_CONSTANTS.controlTowerLandingZoneConfiguration,
+      });
+
+      // Verify
+      expect(response).toMatch(/\[DRY-RUN\]: control-tower-landing-zone mockOperation \(no actual changes were made\)/);
+      expect(CreateLandingZoneCommand).toHaveBeenCalledTimes(0);
+      expect(UpdateLandingZoneCommand).toHaveBeenCalledTimes(0);
+      expect(ResetLandingZoneCommand).toHaveBeenCalledTimes(0);
+      expect(GetLandingZoneOperationCommand).toHaveBeenCalledTimes(0);
+    });
+
     test('should be successful when no changes required', async () => {
       // Setup
 
@@ -624,7 +655,31 @@ describe('Accelerator ControlTower Landing Zone Module', () => {
           configuration: MOCK_CONSTANTS.controlTowerLandingZoneConfiguration,
         });
       }).rejects.toThrowError(
-        `Module "control-tower-landing-zone" The Landing Zone update operation failed with error - ConflictException - AWS Control Tower cannot begin landing zone setup while another execution is in progress.`,
+        `${MODULE_EXCEPTIONS.SERVICE_EXCEPTION}: AWS Control Tower Landing Zone update operation failed with error - ConflictException - AWS Control Tower cannot begin landing zone setup while another execution is in progress.`,
+      );
+
+      expect(UpdateLandingZoneCommand).toHaveBeenCalledTimes(0);
+      expect(GetLandingZoneOperationCommand).toHaveBeenCalledTimes(0);
+    });
+
+    test('should successfully handle failure when landing zone is in failed status', async () => {
+      // Setup
+
+      getLandingZoneDetailsSpy.mockResolvedValue({
+        landingZoneIdentifier: MOCK_CONSTANTS.existingLandingZoneIdentifier,
+        status: LandingZoneStatus.FAILED,
+        securityOuName: 'Security',
+      });
+
+      // Execute & Verify
+      await expect(async () => {
+        await new SetupLandingZoneModule().handler({
+          ...MOCK_CONSTANTS.moduleCommonParameter,
+          useExistingRole: false,
+          configuration: MOCK_CONSTANTS.controlTowerLandingZoneConfiguration,
+        });
+      }).rejects.toThrowError(
+        `${MODULE_EXCEPTIONS.SERVICE_EXCEPTION}: AWS Control Tower Landing Zone Module has status of "${LandingZoneStatus.FAILED}". Before continuing, proceed to AWS Control Tower and evaluate the status`,
       );
 
       expect(UpdateLandingZoneCommand).toHaveBeenCalledTimes(0);
@@ -727,7 +782,7 @@ describe('Accelerator ControlTower Landing Zone Module', () => {
           configuration: MOCK_CONSTANTS.controlTowerLandingZoneConfiguration,
         });
       }).rejects.toThrowError(
-        `AWS Control Tower Landing Zone operation with identifier mockUpdateOperationIdentifier in FAILED state !!!!. Please investigate CT operation before executing pipeline`,
+        `${MODULE_EXCEPTIONS.SERVICE_EXCEPTION}: AWS Control Tower Landing Zone operation with identifier "${MOCK_CONSTANTS.operationIdentifier}" in "${LandingZoneOperationStatus.FAILED}" state !!!!. Before continuing, proceed to AWS Control Tower and evaluate the status.`,
       );
 
       expect(UpdateLandingZoneCommand).toHaveBeenCalledTimes(1);
@@ -766,7 +821,7 @@ describe('Accelerator ControlTower Landing Zone Module', () => {
           configuration: MOCK_CONSTANTS.controlTowerLandingZoneConfiguration,
         });
       }).rejects.toThrowError(
-        `AWS Control Tower Landing Zone operation with identifier mockUpdateOperationIdentifier in FAILED state !!!!. Please investigate CT operation before executing pipeline`,
+        `${MODULE_EXCEPTIONS.SERVICE_EXCEPTION}: AWS Control Tower Landing Zone operation with identifier "${MOCK_CONSTANTS.operationIdentifier}" in "${LandingZoneOperationStatus.FAILED}" state !!!!. Before continuing, proceed to AWS Control Tower and evaluate the status.`,
       );
 
       expect(UpdateLandingZoneCommand).toHaveBeenCalledTimes(1);
@@ -791,7 +846,9 @@ describe('Accelerator ControlTower Landing Zone Module', () => {
           useExistingRole: false,
           configuration: MOCK_CONSTANTS.controlTowerLandingZoneConfiguration,
         });
-      }).rejects.toThrowError(`Internal error: UpdateLandingZoneCommand did not return operationIdentifier`);
+      }).rejects.toThrowError(
+        `${MODULE_EXCEPTIONS.SERVICE_EXCEPTION}: UpdateLandingZoneCommand did not return operationIdentifier`,
+      );
 
       expect(UpdateLandingZoneCommand).toHaveBeenCalledTimes(1);
       expect(GetLandingZoneOperationCommand).toHaveBeenCalledTimes(0);
@@ -821,7 +878,9 @@ describe('Accelerator ControlTower Landing Zone Module', () => {
           useExistingRole: false,
           configuration: MOCK_CONSTANTS.controlTowerLandingZoneConfiguration,
         });
-      }).rejects.toThrowError(`Internal error: GetLandingZoneOperationCommand did not return operationIdentifier`);
+      }).rejects.toThrowError(
+        `${MODULE_EXCEPTIONS.SERVICE_EXCEPTION}: GetLandingZoneOperationCommand did not return operationIdentifier`,
+      );
 
       expect(UpdateLandingZoneCommand).toHaveBeenCalledTimes(1);
       expect(GetLandingZoneOperationCommand).toHaveBeenCalledTimes(1);
@@ -859,7 +918,9 @@ describe('Accelerator ControlTower Landing Zone Module', () => {
           useExistingRole: false,
           configuration: MOCK_CONSTANTS.controlTowerLandingZoneConfiguration,
         });
-      }).rejects.toThrowError(`Internal error: GetLandingZoneOperationCommand did not return operationIdentifier`);
+      }).rejects.toThrowError(
+        `${MODULE_EXCEPTIONS.SERVICE_EXCEPTION}: GetLandingZoneOperationCommand did not return operationIdentifier`,
+      );
 
       expect(UpdateLandingZoneCommand).toHaveBeenCalledTimes(1);
       expect(GetLandingZoneOperationCommand).toHaveBeenCalledTimes(2);
@@ -880,7 +941,9 @@ describe('Accelerator ControlTower Landing Zone Module', () => {
           useExistingRole: false,
           configuration: MOCK_CONSTANTS.controlTowerLandingZoneConfiguration,
         });
-      }).rejects.toThrowError(`Internal error: GetLandingZoneCommand did not return security Ou name`);
+      }).rejects.toThrowError(
+        `${MODULE_EXCEPTIONS.SERVICE_EXCEPTION}: GetLandingZoneCommand did not return security Ou name`,
+      );
 
       expect(UpdateLandingZoneCommand).toHaveBeenCalledTimes(0);
       expect(GetLandingZoneOperationCommand).toHaveBeenCalledTimes(0);
@@ -959,30 +1022,6 @@ describe('Accelerator ControlTower Landing Zone Module', () => {
       expect(GetLandingZoneOperationCommand).toHaveBeenCalledTimes(0);
     });
 
-    test('should successfully handle failure when landing zone changes are in progress', async () => {
-      // Setup
-
-      getLandingZoneDetailsSpy.mockResolvedValue({
-        landingZoneIdentifier: MOCK_CONSTANTS.existingLandingZoneIdentifier,
-        status: LandingZoneStatus.PROCESSING,
-        securityOuName: 'Security',
-      });
-
-      // Execute & Verify
-      await expect(async () => {
-        await new SetupLandingZoneModule().handler({
-          ...MOCK_CONSTANTS.moduleCommonParameter,
-          useExistingRole: false,
-          configuration: MOCK_CONSTANTS.controlTowerLandingZoneConfiguration,
-        });
-      }).rejects.toThrowError(
-        `Module "control-tower-landing-zone" The Landing Zone update operation failed with error - ConflictException - AWS Control Tower cannot begin landing zone setup while another execution is in progress.`,
-      );
-
-      expect(ResetLandingZoneCommand).toHaveBeenCalledTimes(0);
-      expect(GetLandingZoneOperationCommand).toHaveBeenCalledTimes(0);
-    });
-
     test('should be successful without rechecking of operation status', async () => {
       // Setup
       mockSend.mockImplementation(command => {
@@ -1079,7 +1118,7 @@ describe('Accelerator ControlTower Landing Zone Module', () => {
           configuration: MOCK_CONSTANTS.controlTowerLandingZoneConfiguration,
         });
       }).rejects.toThrowError(
-        `AWS Control Tower Landing Zone operation with identifier ${MOCK_CONSTANTS.operationIdentifier} in FAILED state !!!!. Please investigate CT operation before executing pipeline`,
+        `${MODULE_EXCEPTIONS.SERVICE_EXCEPTION}: AWS Control Tower Landing Zone operation with identifier "${MOCK_CONSTANTS.operationIdentifier}" in "${LandingZoneOperationStatus.FAILED}" state !!!!. Before continuing, proceed to AWS Control Tower and evaluate the status.`,
       );
 
       expect(ResetLandingZoneCommand).toHaveBeenCalledTimes(1);
@@ -1118,7 +1157,7 @@ describe('Accelerator ControlTower Landing Zone Module', () => {
           configuration: MOCK_CONSTANTS.controlTowerLandingZoneConfiguration,
         });
       }).rejects.toThrowError(
-        `AWS Control Tower Landing Zone operation with identifier mockUpdateOperationIdentifier in FAILED state !!!!. Please investigate CT operation before executing pipeline`,
+        `${MODULE_EXCEPTIONS.SERVICE_EXCEPTION}: AWS Control Tower Landing Zone operation with identifier "${MOCK_CONSTANTS.operationIdentifier}" in "${LandingZoneOperationStatus.FAILED}" state !!!!. Before continuing, proceed to AWS Control Tower and evaluate the status.`,
       );
 
       expect(ResetLandingZoneCommand).toHaveBeenCalledTimes(1);
@@ -1143,7 +1182,9 @@ describe('Accelerator ControlTower Landing Zone Module', () => {
           useExistingRole: false,
           configuration: MOCK_CONSTANTS.controlTowerLandingZoneConfiguration,
         });
-      }).rejects.toThrowError(`Internal error: ResetLandingZoneCommand did not return operationIdentifier`);
+      }).rejects.toThrowError(
+        `${MODULE_EXCEPTIONS.SERVICE_EXCEPTION}: ResetLandingZoneCommand did not return operationIdentifier`,
+      );
 
       expect(ResetLandingZoneCommand).toHaveBeenCalledTimes(1);
       expect(GetLandingZoneOperationCommand).toHaveBeenCalledTimes(0);
@@ -1173,7 +1214,9 @@ describe('Accelerator ControlTower Landing Zone Module', () => {
           useExistingRole: false,
           configuration: MOCK_CONSTANTS.controlTowerLandingZoneConfiguration,
         });
-      }).rejects.toThrowError(`Internal error: GetLandingZoneOperationCommand did not return operationIdentifier`);
+      }).rejects.toThrowError(
+        `${MODULE_EXCEPTIONS.SERVICE_EXCEPTION}: GetLandingZoneOperationCommand did not return operationIdentifier`,
+      );
 
       expect(ResetLandingZoneCommand).toHaveBeenCalledTimes(1);
       expect(GetLandingZoneOperationCommand).toHaveBeenCalledTimes(1);
@@ -1211,7 +1254,9 @@ describe('Accelerator ControlTower Landing Zone Module', () => {
           useExistingRole: false,
           configuration: MOCK_CONSTANTS.controlTowerLandingZoneConfiguration,
         });
-      }).rejects.toThrowError(`Internal error: GetLandingZoneOperationCommand did not return operationIdentifier`);
+      }).rejects.toThrowError(
+        `${MODULE_EXCEPTIONS.SERVICE_EXCEPTION}: GetLandingZoneOperationCommand did not return operationIdentifier`,
+      );
 
       expect(ResetLandingZoneCommand).toHaveBeenCalledTimes(1);
       expect(GetLandingZoneOperationCommand).toHaveBeenCalledTimes(2);

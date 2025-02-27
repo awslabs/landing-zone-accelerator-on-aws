@@ -20,6 +20,7 @@ import {
 } from '@aws-sdk/client-controltower';
 import {
   Account,
+  DescribeOrganizationCommand,
   InvalidInputException,
   ListRootsCommand,
   OrganizationalUnit,
@@ -35,12 +36,15 @@ import {
   getAccountDetailsFromOrganizations,
   getAccountId,
   getCredentials,
+  getCurrentAccountId,
   getLandingZoneDetails,
   getLandingZoneIdentifier,
   getModuleDefaultParameters,
   getOrganizationAccounts,
+  getOrganizationalUnitArn,
   getOrganizationalUnitIdByPath,
   getOrganizationalUnitsForParent,
+  getOrganizationId,
   getOrganizationRootId,
   getParentOuId,
   setRetryStrategy,
@@ -59,6 +63,7 @@ jest.mock('@aws-sdk/client-controltower', () => {
   };
 });
 jest.mock('@aws-sdk/client-organizations', () => ({
+  DescribeOrganizationCommand: jest.fn(),
   OrganizationsClient: jest.fn(),
   paginateListOrganizationalUnitsForParent: jest.fn(),
   paginateListAccounts: jest.fn(),
@@ -935,6 +940,35 @@ describe('functions', () => {
       expect(result).toBe(MOCK_CONSTANTS.organizationRoot.Id);
     });
 
+    test('should return ou id for root ou within organization Root', async () => {
+      // Setup
+      mockSend.mockImplementation(command => {
+        if (command instanceof ListRootsCommand) {
+          return Promise.resolve({
+            Roots: [{ Id: MOCK_CONSTANTS.organizationRoot.Id }],
+          });
+        }
+        return Promise.reject(MOCK_CONSTANTS.unknownError);
+      });
+
+      (paginateListOrganizationalUnitsForParent as jest.Mock).mockImplementation(() => ({
+        [Symbol.asyncIterator]: async function* () {
+          yield {
+            OrganizationalUnits: [MOCK_CONSTANTS.organizationRoot],
+          };
+        },
+      }));
+
+      // Execute
+      const result = await getOrganizationalUnitIdByPath(
+        new OrganizationsClient({}),
+        `${MOCK_CONSTANTS.organizationRoot.Name}/${MOCK_CONSTANTS.organizationRoot.Name}`,
+      );
+
+      // Verify
+      expect(result).toBe(MOCK_CONSTANTS.organizationRoot.Id);
+    });
+
     test('should handle empty path', async () => {
       // Execute
       const result = await getOrganizationalUnitIdByPath(new OrganizationsClient({}), '');
@@ -1294,6 +1328,193 @@ describe('functions', () => {
       const response = await getAccountId(new OrganizationsClient({}), mockAccounts[1].Email!);
       expect(response).toBe(mockAccounts[1].Id);
       expect(paginateListAccounts).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe('getOrganizationId', () => {
+    beforeEach(() => {
+      jest.clearAllMocks();
+
+      (OrganizationsClient as jest.Mock).mockImplementation(() => ({
+        send: mockSend,
+      }));
+    });
+
+    test('should return organization id', async () => {
+      // Setup
+      mockSend.mockImplementation(command => {
+        if (command instanceof DescribeOrganizationCommand) {
+          return Promise.resolve({ Organization: MOCK_CONSTANTS.organization });
+        }
+        return Promise.reject(new Error('Unexpected command'));
+      });
+
+      // Execute
+      const response = await getOrganizationId(new OrganizationsClient({}));
+
+      // Verify
+      expect(response).toBe(MOCK_CONSTANTS.organization.Id);
+      expect(DescribeOrganizationCommand).toHaveBeenCalledTimes(1);
+    });
+
+    test('should throw error when DescribeOrganizationCommand api did not return Organization object', async () => {
+      // Setup
+      mockSend.mockImplementation(command => {
+        if (command instanceof DescribeOrganizationCommand) {
+          return Promise.resolve({ Organization: undefined });
+        }
+        return Promise.reject(new Error('Unexpected command'));
+      });
+
+      // Execute && Verify
+      await expect(async () => {
+        await getOrganizationId(new OrganizationsClient({}));
+      }).rejects.toThrowError(
+        `${MODULE_EXCEPTIONS.SERVICE_EXCEPTION}: DescribeOrganizationCommand api did not return Organization object.`,
+      );
+      expect(DescribeOrganizationCommand).toHaveBeenCalledTimes(1);
+    });
+
+    test('should throw error when DescribeOrganizationCommand api did not return Organization object Id property', async () => {
+      // Setup
+      mockSend.mockImplementation(command => {
+        if (command instanceof DescribeOrganizationCommand) {
+          return Promise.resolve({ Organization: { Id: undefined } });
+        }
+        return Promise.reject(new Error('Unexpected command'));
+      });
+
+      // Execute && Verify
+      await expect(async () => {
+        await getOrganizationId(new OrganizationsClient({}));
+      }).rejects.toThrowError(
+        `${MODULE_EXCEPTIONS.SERVICE_EXCEPTION}: DescribeOrganizationCommand api did not return Organization object Id property.`,
+      );
+      expect(DescribeOrganizationCommand).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe('getCurrentAccountId', () => {
+    beforeEach(() => {
+      jest.clearAllMocks();
+
+      (STSClient as jest.Mock).mockImplementation(() => ({
+        send: mockSend,
+      }));
+    });
+
+    test('should return account id', async () => {
+      // Setup
+      mockSend.mockImplementation(command => {
+        if (command instanceof GetCallerIdentityCommand) {
+          return Promise.resolve({ Account: MOCK_CONSTANTS.accountId });
+        }
+        return Promise.reject(new Error('Unexpected command'));
+      });
+
+      // Execute
+      const response = await getCurrentAccountId(new STSClient({}));
+
+      // Verify
+      expect(response).toBe(MOCK_CONSTANTS.accountId);
+      expect(GetCallerIdentityCommand).toHaveBeenCalledTimes(1);
+    });
+
+    test('should throw error when GetCallerIdentityCommand api did not return Account property', async () => {
+      // Setup
+      mockSend.mockImplementation(command => {
+        if (command instanceof GetCallerIdentityCommand) {
+          return Promise.resolve({ Account: undefined });
+        }
+        return Promise.reject(new Error('Unexpected command'));
+      });
+
+      // Execute && Verify
+      await expect(async () => {
+        await getCurrentAccountId(new STSClient({}));
+      }).rejects.toThrowError(
+        `${MODULE_EXCEPTIONS.SERVICE_EXCEPTION}: GetCallerIdentityCommand api did not return Account property.`,
+      );
+      expect(GetCallerIdentityCommand).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe('getOrganizationalUnitArn', () => {
+    const mockOrgSend = jest.fn();
+    const mockStsSend = jest.fn();
+
+    beforeEach(() => {
+      jest.clearAllMocks();
+
+      (OrganizationsClient as jest.Mock).mockImplementation(() => ({
+        send: mockOrgSend,
+      }));
+
+      (STSClient as jest.Mock).mockImplementation(() => ({
+        send: mockStsSend,
+      }));
+    });
+
+    test('should return organizational unit id when organization id provided', async () => {
+      // Setup
+      mockStsSend.mockImplementation(command => {
+        if (command instanceof GetCallerIdentityCommand) {
+          return Promise.resolve({ Account: MOCK_CONSTANTS.accountId });
+        }
+        return Promise.reject(new Error('Unexpected command'));
+      });
+
+      mockOrgSend.mockImplementation(command => {
+        if (command instanceof DescribeOrganizationCommand) {
+          return Promise.resolve({ Organization: MOCK_CONSTANTS.organization });
+        }
+        return Promise.reject(new Error('Unexpected command'));
+      });
+
+      // Execute
+      const response = await getOrganizationalUnitArn(
+        new OrganizationsClient({}),
+        new STSClient({}),
+        MOCK_CONSTANTS.organization.Id,
+        MOCK_CONSTANTS.runnerParameters.partition,
+      );
+
+      // Verify
+      expect(response).toBe(
+        `arn:${MOCK_CONSTANTS.runnerParameters.partition}:organizations::${MOCK_CONSTANTS.accountId}:ou/${
+          MOCK_CONSTANTS.organization.Id
+        }/${MOCK_CONSTANTS.organization.Id.toLowerCase()}`,
+      );
+      expect(GetCallerIdentityCommand).toHaveBeenCalledTimes(1);
+      expect(DescribeOrganizationCommand).toHaveBeenCalledTimes(1);
+    });
+
+    test('should return organizational unit id when organization id not provided', async () => {
+      // Setup
+      mockStsSend.mockImplementation(command => {
+        if (command instanceof GetCallerIdentityCommand) {
+          return Promise.resolve({ Account: MOCK_CONSTANTS.accountId });
+        }
+        return Promise.reject(new Error('Unexpected command'));
+      });
+
+      // Execute
+      const response = await getOrganizationalUnitArn(
+        new OrganizationsClient({}),
+        new STSClient({}),
+        MOCK_CONSTANTS.organization.Id,
+        MOCK_CONSTANTS.runnerParameters.partition,
+        MOCK_CONSTANTS.organization.Id,
+      );
+
+      // Verify
+      expect(response).toBe(
+        `arn:${MOCK_CONSTANTS.runnerParameters.partition}:organizations::${MOCK_CONSTANTS.accountId}:ou/${
+          MOCK_CONSTANTS.organization.Id
+        }/${MOCK_CONSTANTS.organization.Id.toLowerCase()}`,
+      );
+      expect(GetCallerIdentityCommand).toHaveBeenCalledTimes(1);
+      expect(DescribeOrganizationCommand).toHaveBeenCalledTimes(0);
     });
   });
 });

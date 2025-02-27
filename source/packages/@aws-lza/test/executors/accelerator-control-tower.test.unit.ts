@@ -97,7 +97,7 @@ describe('ControlTowerExecutors', () => {
   describe('registerOrganizationalUnit', () => {
     const input = {
       ...COMMON_MOCK_CONSTANTS.runnerParameters,
-      configuration: { ouArn: 'mockOuArn' },
+      configuration: { name: 'mockOu' },
     };
     beforeEach(() => {
       jest.clearAllMocks();

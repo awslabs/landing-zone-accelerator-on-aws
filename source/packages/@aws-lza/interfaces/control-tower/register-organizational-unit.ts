@@ -23,15 +23,29 @@ import { IModuleCommonParameter } from '../../common/resources';
  *
  * ```
  * {
- *   ouArn: 'ou1Arn',
+ *   name: 'OU1/OU2',
  * }
  * ```
  */
 export interface IRegisterOrganizationalUnitConfiguration {
   /**
-   * The ARN of the target OU which will be registered with AWS Control Tower
+   * The friendly name to the OU.
+   *
+   * @description
+   * For nested OU, you need to provide complete path of the target OU.
+   * Example:
+   *  - Level1/Level2-02/Level3-01/Level4-01
+   *  - Level1/Level2-02
+   *  - Level1 (Parent OU is Root)
+   *
+   * If this property is set to `Root`, program will try to register ou `Root/Root`. Organization Root is always registered with Control Tower.
    */
-  readonly ouArn: string;
+  readonly name: string;
+
+  /**
+   * Organization id
+   */
+  readonly organizationalUnitId?: string;
 }
 
 /**
@@ -44,7 +58,8 @@ export interface IRegisterOrganizationalUnitHandlerParameter extends IModuleComm
    * @example
    * ```
    * {
-   *   ouArn: 'ou1Arn',
+   *   name: 'OU1/OU2',
+   *   organizationalUnitId: 'ou-xxxxxxxx-xxxxxxxx',
    * }
    * ```
    */

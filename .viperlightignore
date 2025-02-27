@@ -244,7 +244,7 @@ source/packages/@aws-accelerator/lza-modules/test/config/functions.test.ts:73
 source/packages/@aws-accelerator/lza-modules/test/config/index.test.ts:47
 
 # LzaModules unit test mock constant file
-source/packages/@aws-lza/test/mocked-resources.ts:184
-source/packages/@aws-lza/test/mocked-resources.ts:195
-source/packages/@aws-lza/test/mocked-resources.ts:206
-source/packages/@aws-lza/test/mocked-resources.ts:213
+source/packages/@aws-lza/test/mocked-resources.ts:106
+source/packages/@aws-lza/test/mocked-resources.ts:117
+source/packages/@aws-lza/test/mocked-resources.ts:128
+source/packages/@aws-lza/test/mocked-resources.ts:135
