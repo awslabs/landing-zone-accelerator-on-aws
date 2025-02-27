@@ -95,7 +95,8 @@ export async function setupControlTowerLandingZone(input: ISetupLandingZoneHandl
  *   partition: 'aws',
  *   region: 'us-east-1',
  *   configuration: {
- *     ouArn: 'ou1Arn',
+ *     name: 'OU1/OU2',
+ *     organizationalUnitId: 'ou-xxxxxxxx-xxxxxxxx',
  *   }
  * }
  *

@@ -12,6 +12,7 @@
  */
 import {
   Account,
+  DescribeOrganizationCommand,
   InvalidInputException,
   ListRootsCommand,
   OrganizationalUnit,
@@ -338,13 +339,15 @@ export async function getOrganizationalUnitIdByPath(
     emptyPathId = undefined;
   } else {
     let currentParentId = await getOrganizationRootId(client);
+    const isTopLevelOuNameRoot = ouNames[0].toLowerCase() === 'root';
+    const startIndex = isTopLevelOuNameRoot ? 1 : 0;
 
-    for (let i = 0; i < ouNames.length; i++) {
+    for (let i = startIndex; i < ouNames.length; i++) {
       const currentOuName = ouNames[i];
 
       const ous = await getOrganizationalUnitsForParent(client, currentParentId);
 
-      const matchingOu = ous.find(ou => ou.Name === currentOuName);
+      const matchingOu = ous.find(ou => ou.Name!.toLowerCase() === currentOuName.toLowerCase());
 
       if (!matchingOu) {
         return undefined;
@@ -433,4 +436,66 @@ export async function getAccountId(client: OrganizationsClient, email: string): 
   }
 
   return accountDetailsFromOrganizations.Id;
+}
+
+/**
+ * Function to get organization id
+ * @param client {@link OrganizationsClient}
+ * @returns string
+ */
+export async function getOrganizationId(client: OrganizationsClient): Promise<string> {
+  const response = await throttlingBackOff(() => client.send(new DescribeOrganizationCommand({})));
+
+  if (!response.Organization) {
+    throw new Error(
+      `${MODULE_EXCEPTIONS.SERVICE_EXCEPTION}: DescribeOrganizationCommand api did not return Organization object.`,
+    );
+  }
+
+  if (!response.Organization.Id) {
+    throw new Error(
+      `${MODULE_EXCEPTIONS.SERVICE_EXCEPTION}: DescribeOrganizationCommand api did not return Organization object Id property.`,
+    );
+  }
+
+  return response.Organization.Id;
+}
+
+/**
+ * Function to get current account id
+ * @param client {@link STSClient}
+ * @returns string
+ */
+export async function getCurrentAccountId(client: STSClient): Promise<string> {
+  const response = await throttlingBackOff(() => client.send(new GetCallerIdentityCommand({})));
+
+  if (!response.Account) {
+    throw new Error(
+      `${MODULE_EXCEPTIONS.SERVICE_EXCEPTION}: GetCallerIdentityCommand api did not return Account property.`,
+    );
+  }
+
+  return response.Account;
+}
+
+/**
+ * Function to get organizational unit arn
+ * @param organizationClient {@link OrganizationsClient}
+ * @param stsClient {@link STSClient}
+ * @param ouId string
+ * @param partition string
+ * @param organizationId string | undefined
+ * @returns string
+ */
+export async function getOrganizationalUnitArn(
+  organizationClient: OrganizationsClient,
+  stsClient: STSClient,
+  ouId: string,
+  partition: string,
+  organizationId?: string,
+): Promise<string> {
+  const organizationAccountId = await getCurrentAccountId(stsClient);
+  const orgId = organizationId ?? (await getOrganizationId(organizationClient));
+
+  return `arn:${partition}:organizations::${organizationAccountId}:ou/${orgId}/${ouId.toLowerCase()}`;
 }

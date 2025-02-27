@@ -48,12 +48,13 @@ import {
 } from '../../../common/functions';
 import { createLogger } from '../../../common/logger';
 import { throttlingBackOff } from '../../../common/throttle';
-import { AcceleratorModuleName } from '../../../common/resources';
+import { AcceleratorModuleName, IModuleDefaultParameter } from '../../../common/resources';
 import {
   ISetupLandingZoneConfiguration,
   ISetupLandingZoneHandlerParameter,
   ISetupLandingZoneModule,
 } from '../../../interfaces/control-tower/setup-landing-zone';
+import { MODULE_EXCEPTIONS } from '../../../common/enums';
 
 const logger = createLogger([path.parse(path.basename(__filename)).name]);
 
@@ -87,11 +88,6 @@ export class SetupLandingZoneModule implements ISetupLandingZoneModule {
     const defaultProps = getModuleDefaultParameters(AcceleratorModuleName.CONTROL_TOWER_LANDING_ZONE, props);
 
     //
-    // Set Global Region
-    //
-    const globalRegion = props.globalRegion ?? props.region;
-
-    //
     // Initialize AWS Control Tower client
     //
     const client: ControlTowerClient = new ControlTowerClient({
@@ -107,7 +103,7 @@ export class SetupLandingZoneModule implements ISetupLandingZoneModule {
     const landingZoneIdentifier = await getLandingZoneIdentifier(client);
 
     // When no existing LZ and dry run was executed
-    if (!landingZoneIdentifier && props.dryRun) {
+    if (!landingZoneIdentifier && defaultProps.dryRun) {
       return this.getDryRunResponse(defaultProps.moduleName, props.operation);
     }
 
@@ -116,7 +112,7 @@ export class SetupLandingZoneModule implements ISetupLandingZoneModule {
     //
     const preRequisitesResources = await ControlTowerPreRequisites.completePreRequisites(
       props,
-      globalRegion,
+      defaultProps.globalRegion,
       defaultProps.useExistingRole,
       landingZoneIdentifier,
     );
@@ -127,7 +123,7 @@ export class SetupLandingZoneModule implements ISetupLandingZoneModule {
     // LogArchive Account
     promises.push(
       Organization.getOrganizationAccountDetailsByEmail(
-        globalRegion,
+        defaultProps.globalRegion,
         props.configuration.sharedAccounts.logging.email,
         props.credentials,
         props.solutionId,
@@ -137,7 +133,7 @@ export class SetupLandingZoneModule implements ISetupLandingZoneModule {
     // Audit Account
     promises.push(
       Organization.getOrganizationAccountDetailsByEmail(
-        globalRegion,
+        defaultProps.globalRegion,
         props.configuration.sharedAccounts.audit.email,
         props.credentials,
         props.solutionId,
@@ -155,7 +151,7 @@ export class SetupLandingZoneModule implements ISetupLandingZoneModule {
     );
 
     const landingZoneConfiguration = this.getControlTowerLandingZoneConfig(
-      globalRegion,
+      defaultProps.globalRegion,
       logArchiveAccount!.Id!,
       auditAccount!.Id!,
       props.configuration,
@@ -163,16 +159,10 @@ export class SetupLandingZoneModule implements ISetupLandingZoneModule {
 
     const landingZoneDetails = await getLandingZoneDetails(client, props.region, landingZoneIdentifier);
 
-    if (landingZoneDetails?.status === LandingZoneStatus.PROCESSING && !props.dryRun) {
-      throw new Error(
-        `Module "${defaultProps.moduleName}" The Landing Zone update operation failed with error - ConflictException - AWS Control Tower cannot begin landing zone setup while another execution is in progress.`,
-      );
-    }
-
     if (landingZoneDetails) {
       return await this.handleUpdateResetOperation(
         props,
-        defaultProps.moduleName,
+        defaultProps,
         client,
         landingZoneConfiguration,
         landingZoneDetails,
@@ -236,6 +226,7 @@ export class SetupLandingZoneModule implements ISetupLandingZoneModule {
     moduleOperation: string,
     landingZoneIdentifier?: string,
     landingZoneUpdateOrResetStatus?: LandingZoneUpdateOrResetRequiredType,
+    landingZoneDetails?: ControlTowerLandingZoneDetailsType,
   ): string {
     if (landingZoneIdentifier && landingZoneUpdateOrResetStatus) {
       if (!landingZoneUpdateOrResetStatus.resetRequired && !landingZoneUpdateOrResetStatus.updateRequired) {
@@ -244,7 +235,11 @@ export class SetupLandingZoneModule implements ISetupLandingZoneModule {
         return generateDryRunResponse(moduleName, moduleOperation, message);
       }
       const operation = landingZoneUpdateOrResetStatus.resetRequired ? 'reset' : 'update';
-      const message = `Existing AWS Control Tower landing zone found, ${operation} is required for following changes\n ${landingZoneUpdateOrResetStatus.reason}`;
+      let message = `Existing AWS Control Tower landing zone found, ${operation} is required for following changes\n ${landingZoneUpdateOrResetStatus.reason}`;
+      if (landingZoneDetails && landingZoneDetails.status !== LandingZoneStatus.ACTIVE) {
+        message = `${message}.\n Will experience ${MODULE_EXCEPTIONS.SERVICE_EXCEPTION}. Reason AWS Control Tower not in "${LandingZoneStatus.ACTIVE}" status, current status is "${landingZoneDetails.status}".`;
+      }
+
       logger.info(message);
       return generateDryRunResponse(moduleName, moduleOperation, message);
     }
@@ -257,7 +252,7 @@ export class SetupLandingZoneModule implements ISetupLandingZoneModule {
   /**
    * Function to handle update and reset operation
    * @param props {@link ISetupLandingZoneHandlerParameter}
-   * @param moduleName string
+   * @param defaultProps {@link IModuleDefaultParameter}
    * @param client {@link ControlTowerClient}
    * @param landingZoneConfiguration {@link ControlTowerLandingZoneConfigType}
    * @param landingZoneDetails {@link ControlTowerLandingZoneDetailsType}
@@ -266,7 +261,7 @@ export class SetupLandingZoneModule implements ISetupLandingZoneModule {
    */
   private async handleUpdateResetOperation(
     props: ISetupLandingZoneHandlerParameter,
-    moduleName: string,
+    defaultProps: IModuleDefaultParameter,
     client: ControlTowerClient,
     landingZoneConfiguration: ControlTowerLandingZoneConfigType,
     landingZoneDetails: ControlTowerLandingZoneDetailsType,
@@ -277,8 +272,26 @@ export class SetupLandingZoneModule implements ISetupLandingZoneModule {
       landingZoneDetails,
     );
 
-    if (props.dryRun) {
-      return this.getDryRunResponse(moduleName, props.operation, landingZoneIdentifier, landingZoneUpdateOrResetStatus);
+    if (defaultProps.dryRun) {
+      return this.getDryRunResponse(
+        defaultProps.moduleName,
+        props.operation,
+        landingZoneIdentifier,
+        landingZoneUpdateOrResetStatus,
+        landingZoneDetails,
+      );
+    }
+
+    if (landingZoneDetails.status === LandingZoneStatus.PROCESSING && !defaultProps.dryRun) {
+      throw new Error(
+        `${MODULE_EXCEPTIONS.SERVICE_EXCEPTION}: AWS Control Tower Landing Zone update operation failed with error - ConflictException - AWS Control Tower cannot begin landing zone setup while another execution is in progress.`,
+      );
+    }
+
+    if (landingZoneDetails.status === LandingZoneStatus.FAILED && !defaultProps.dryRun) {
+      throw new Error(
+        `${MODULE_EXCEPTIONS.SERVICE_EXCEPTION}: AWS Control Tower Landing Zone Module has status of "${LandingZoneStatus.FAILED}". Before continuing, proceed to AWS Control Tower and evaluate the status`,
+      );
     }
 
     if (landingZoneUpdateOrResetStatus.updateRequired) {
@@ -288,7 +301,7 @@ export class SetupLandingZoneModule implements ISetupLandingZoneModule {
         landingZoneUpdateOrResetStatus.reason,
         landingZoneConfiguration,
         landingZoneDetails,
-        moduleName,
+        defaultProps.moduleName,
       );
     }
 
@@ -297,12 +310,12 @@ export class SetupLandingZoneModule implements ISetupLandingZoneModule {
         client,
         landingZoneDetails.landingZoneIdentifier,
         landingZoneUpdateOrResetStatus.reason,
-        moduleName,
+        defaultProps.moduleName,
       );
     }
 
     // When no changes required
-    return `Module "${moduleName}" completed successfully with status ${landingZoneUpdateOrResetStatus.reason}`;
+    return `Module "${defaultProps.moduleName}" completed successfully with status ${landingZoneUpdateOrResetStatus.reason}`;
   }
 }
 /**
@@ -338,8 +351,12 @@ abstract class LandingZoneOperation {
     const operationIdentifier = response.operationIdentifier;
 
     if (!operationIdentifier) {
-      logger.warn(`Internal error: CreateLandingZoneCommand did not return operationIdentifier`);
-      throw new Error(`Internal error: CreateLandingZoneCommand did not return operationIdentifier`);
+      logger.warn(
+        `${MODULE_EXCEPTIONS.SERVICE_EXCEPTION}: CreateLandingZoneCommand did not return operationIdentifier`,
+      );
+      throw new Error(
+        `${MODULE_EXCEPTIONS.SERVICE_EXCEPTION}: CreateLandingZoneCommand did not return operationIdentifier`,
+      );
     }
 
     logger.info(
@@ -370,8 +387,10 @@ abstract class LandingZoneOperation {
     const operationIdentifier = response.operationIdentifier;
 
     if (!operationIdentifier) {
-      logger.warn(`Internal error: ResetLandingZoneCommand did not return operationIdentifier`);
-      throw new Error(`Internal error: ResetLandingZoneCommand did not return operationIdentifier`);
+      logger.warn(`${MODULE_EXCEPTIONS.SERVICE_EXCEPTION}: ResetLandingZoneCommand did not return operationIdentifier`);
+      throw new Error(
+        `${MODULE_EXCEPTIONS.SERVICE_EXCEPTION}: ResetLandingZoneCommand did not return operationIdentifier`,
+      );
     }
 
     logger.info(
@@ -404,7 +423,7 @@ abstract class LandingZoneOperation {
   ): Promise<string> {
     logger.info(`The Landing Zone update operation will begin, because "${reason}"`);
     if (!landingZoneDetails.securityOuName) {
-      throw new Error(`Internal error: GetLandingZoneCommand did not return security Ou name`);
+      throw new Error(`${MODULE_EXCEPTIONS.SERVICE_EXCEPTION}: GetLandingZoneCommand did not return security Ou name`);
     }
 
     const manifestDocument = makeManifestDocument(
@@ -428,8 +447,12 @@ abstract class LandingZoneOperation {
     const operationIdentifier = response.operationIdentifier;
 
     if (!operationIdentifier) {
-      logger.warn(`Internal error: UpdateLandingZoneCommand did not return operationIdentifier`);
-      throw new Error(`Internal error: UpdateLandingZoneCommand did not return operationIdentifier`);
+      logger.warn(
+        `${MODULE_EXCEPTIONS.SERVICE_EXCEPTION}: UpdateLandingZoneCommand did not return operationIdentifier`,
+      );
+      throw new Error(
+        `${MODULE_EXCEPTIONS.SERVICE_EXCEPTION}: UpdateLandingZoneCommand did not return operationIdentifier`,
+      );
     }
 
     logger.info(
@@ -482,16 +505,20 @@ abstract class LandingZoneOperation {
     const operationStatus = response.operationDetails?.status;
 
     if (!operationStatus) {
-      logger.warn(`Internal error: GetLandingZoneOperationCommand did not return operationIdentifier`);
-      throw new Error(`Internal error: GetLandingZoneOperationCommand did not return operationIdentifier`);
+      logger.warn(
+        `${MODULE_EXCEPTIONS.SERVICE_EXCEPTION}: GetLandingZoneOperationCommand did not return operationIdentifier`,
+      );
+      throw new Error(
+        `${MODULE_EXCEPTIONS.SERVICE_EXCEPTION}: GetLandingZoneOperationCommand did not return operationIdentifier`,
+      );
     }
 
     if (operationStatus === LandingZoneOperationStatus.FAILED) {
       logger.warn(
-        `AWS Control Tower Landing Zone operation with identifier ${operationIdentifier} in ${operationStatus} state !!!!. Please investigate CT operation before executing pipeline`,
+        `${MODULE_EXCEPTIONS.SERVICE_EXCEPTION}: AWS Control Tower Landing Zone operation with identifier "${operationIdentifier}" in "${operationStatus}" state !!!!. Before continuing, proceed to AWS Control Tower and evaluate the status.`,
       );
       throw new Error(
-        `AWS Control Tower Landing Zone operation with identifier ${operationIdentifier} in ${operationStatus} state !!!!. Please investigate CT operation before executing pipeline`,
+        `${MODULE_EXCEPTIONS.SERVICE_EXCEPTION}: AWS Control Tower Landing Zone operation with identifier "${operationIdentifier}" in "${operationStatus}" state !!!!. Before continuing, proceed to AWS Control Tower and evaluate the status.`,
       );
     }
 

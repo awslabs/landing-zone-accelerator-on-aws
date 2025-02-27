@@ -25,6 +25,8 @@ import {
   getLandingZoneDetails,
   getLandingZoneIdentifier,
   getModuleDefaultParameters,
+  getOrganizationalUnitArn,
+  getOrganizationalUnitIdByPath,
   setRetryStrategy,
 } from '../../../common/functions';
 
@@ -41,9 +43,12 @@ import {
   paginateListEnabledBaselines,
 } from '@aws-sdk/client-controltower';
 import { AcceleratorModuleName } from '../../../common/resources';
+import { OrganizationsClient } from '@aws-sdk/client-organizations';
+import { MODULE_EXCEPTIONS } from '../../../common/enums';
+import { STSClient } from '@aws-sdk/client-sts';
 
 export class RegisterOrganizationalUnitModule implements IRegisterOrganizationalUnitModule {
-  private static logger = createLogger([path.parse(path.basename(__filename)).name]);
+  private readonly logger = createLogger([path.parse(path.basename(__filename)).name]);
 
   /**
    * Handler function to enable baseline for AWS Organizations organizational unit (OU)
@@ -65,7 +70,6 @@ export class RegisterOrganizationalUnitModule implements IRegisterOrganizational
     // Set default values
     //
     const defaultProps = getModuleDefaultParameters(AcceleratorModuleName.CONTROL_TOWER_LANDING_ZONE, props);
-    const ouId = this.getOuId(props.configuration.ouArn);
 
     const client = new ControlTowerClient({
       region: props.region,
@@ -74,33 +78,54 @@ export class RegisterOrganizationalUnitModule implements IRegisterOrganizational
       credentials: props.credentials,
     });
 
+    const ouName =
+      props.configuration.name.toLowerCase() === 'root' ? `Root/${props.configuration.name}` : props.configuration.name;
+
+    const organizationClient = new OrganizationsClient({
+      region: props.region,
+      customUserAgent: props.solutionId,
+      retryStrategy: setRetryStrategy(),
+      credentials: props.credentials,
+    });
+
+    const ouId = await getOrganizationalUnitIdByPath(organizationClient, ouName);
+
     const landingZoneIdentifier = await getLandingZoneIdentifier(client);
+    const landingZoneDetails =
+      landingZoneIdentifier === undefined
+        ? undefined
+        : await getLandingZoneDetails(client, props.region, landingZoneIdentifier);
 
-    if (defaultProps.dryRun && !landingZoneIdentifier) {
-      return this.getDryRunResponse(defaultProps.moduleName, props, ouId, landingZoneIdentifier);
-    }
+    const enabledBaselines: EnabledBaselineSummary[] =
+      landingZoneIdentifier === undefined ? [] : await this.getEnabledBaselines(client);
 
-    if (!landingZoneIdentifier) {
-      throw new Error(`Error: AWS Control Tower Landing Zone not found in the region "${props.region}".`);
-    }
-
-    const landingZoneDetails = await getLandingZoneDetails(client, props.region, landingZoneIdentifier);
-
-    const enabledBaselines: EnabledBaselineSummary[] = await this.getEnabledBaselines(client);
-
-    const ouRegisteredInControlTower = enabledBaselines.find(
-      item => item.targetIdentifier!.toLowerCase() === props.configuration.ouArn.toLowerCase(),
-    );
-
-    const availableControlTowerBaselines = await this.getAvailableControlTowerBaselines(client);
+    const availableControlTowerBaselines: BaselineSummary[] =
+      landingZoneIdentifier === undefined ? [] : await this.getAvailableControlTowerBaselines(client);
 
     const awsControlTowerBaselineIdentifier = availableControlTowerBaselines.find(
       item => item.name!.toLowerCase() === 'AWSControlTowerBaseline'.toLowerCase(),
     )?.arn;
 
-    if (!awsControlTowerBaselineIdentifier) {
-      throw new Error(
-        `Internal Error: AWSControlTowerBaseline identifier not found in available Control Tower baselines returned by ListBaselines api.`,
+    let ouArn: string | undefined;
+    if (ouId) {
+      ouArn = await getOrganizationalUnitArn(
+        organizationClient,
+        new STSClient({
+          region: props.region,
+          customUserAgent: props.solutionId,
+          retryStrategy: setRetryStrategy(),
+          credentials: props.credentials,
+        }),
+        ouId,
+        props.partition,
+        props.configuration.organizationalUnitId,
+      );
+    }
+
+    let ouRegisteredInControlTower: EnabledBaselineSummary | undefined;
+    if (ouArn) {
+      ouRegisteredInControlTower = enabledBaselines.find(
+        item => item.targetIdentifier!.toLowerCase() === (ouArn as string).toLowerCase(),
       );
     }
 
@@ -109,10 +134,76 @@ export class RegisterOrganizationalUnitModule implements IRegisterOrganizational
       enabledBaselines,
     );
 
-    if (landingZoneDetails!.enableIdentityCenterAccess && !identityCenterBaselineIdentifier) {
+    const baselineVersion: string | undefined =
+      landingZoneDetails?.version === undefined ? undefined : this.getBaselineVersion(landingZoneDetails!.version!);
+
+    const currentRegistrationStatus = ouRegisteredInControlTower?.statusSummary?.status;
+    const currentBaselineVersion = ouRegisteredInControlTower?.baselineVersion;
+
+    if (defaultProps.dryRun) {
+      return this.getDryRunResponse({
+        moduleName: defaultProps.moduleName,
+        operation: props.operation,
+        ouName,
+        isRegistered: ouRegisteredInControlTower !== undefined,
+        landingZoneIdentifier,
+        ouId,
+        currentRegistrationStatus,
+        currentBaselineVersion,
+        baselineVersion,
+      });
+    }
+
+    if (!ouId) {
       throw new Error(
-        `Internal Error: AWS Control Tower Landing Zone is configured with IAM Identity Center, but IdentityCenterBaseline not found in enabled baselines returned by ListEnabledBaselines api.`,
+        `${MODULE_EXCEPTIONS.INVALID_INPUT}: AWS Organizations organizational unit (OU) "${ouName}" not found.`,
       );
+    }
+
+    if (!ouArn) {
+      throw new Error(
+        `${MODULE_EXCEPTIONS.INVALID_INPUT}: AWS Organizations organizational unit (OU) "${ouName}" not found to determine ou arn.`,
+      );
+    }
+
+    if (!landingZoneIdentifier) {
+      throw new Error(
+        `${MODULE_EXCEPTIONS.INVALID_INPUT}: AWS Control Tower Landing Zone not found in the region "${props.region}".`,
+      );
+    }
+
+    if (!landingZoneDetails) {
+      throw new Error(`${MODULE_EXCEPTIONS.SERVICE_EXCEPTION}: GetLandingZone API did not return LandingZone details.`);
+    }
+
+    if (!baselineVersion) {
+      throw new Error(
+        `${MODULE_EXCEPTIONS.INVALID_INPUT}: GetLandingZone API did not return LandingZone details to determine the baseline version.`,
+      );
+    }
+
+    if (!awsControlTowerBaselineIdentifier) {
+      throw new Error(
+        `${MODULE_EXCEPTIONS.SERVICE_EXCEPTION}: ListBaselines api did not returned AWSControlTowerBaseline identifier.`,
+      );
+    }
+
+    if (landingZoneDetails.enableIdentityCenterAccess && !identityCenterBaselineIdentifier) {
+      throw new Error(
+        `${MODULE_EXCEPTIONS.SERVICE_EXCEPTION}: AWS Control Tower Landing Zone is configured with IAM Identity Center, but IdentityCenterBaseline not found in enabledBaselines returned by ListEnabledBaselines api.`,
+      );
+    }
+
+    if (currentRegistrationStatus === EnablementStatus.FAILED) {
+      const message = `AWS Organizations organizational unit (OU) "${ouName}" is already registered with AWS Control Tower, registration status is "${currentRegistrationStatus}", accelerator will skip the registration process, review and fix the registration status from console.`;
+      this.logger.warn(message);
+      return message;
+    }
+
+    if (ouRegisteredInControlTower && currentBaselineVersion !== baselineVersion) {
+      const message = `AWS Organizations organizational unit (OU) "${ouName}" is already registered with AWS Control Tower, but the baseline version is "${currentBaselineVersion}" which is different from expected baseline version "${baselineVersion}" and registration status is "${currentRegistrationStatus}", update baseline is required for OU, perform update baseline from console.`;
+      this.logger.warn(message);
+      return message;
     }
 
     const parameters: EnabledBaselineParameter[] = [];
@@ -122,66 +213,28 @@ export class RegisterOrganizationalUnitModule implements IRegisterOrganizational
       value: identityCenterBaselineIdentifier,
     });
 
-    const baselineVersion = this.getBaselineVersion(landingZoneDetails!.version!);
-
-    if (defaultProps.dryRun) {
-      return this.getDryRunResponse(
-        defaultProps.moduleName,
-        props,
-        ouId,
-        landingZoneIdentifier,
-        baselineVersion,
-        ouRegisteredInControlTower,
-      );
-    }
-
     if (!ouRegisteredInControlTower) {
       return await this.registerOuWithControlTower(
         client,
-        props,
-        ouId,
+        ouName,
+        ouArn,
         baselineVersion,
         awsControlTowerBaselineIdentifier,
         parameters,
       );
     }
 
-    const existingRegistrationStatus = ouRegisteredInControlTower.statusSummary!.status!;
-    const existingBaselineVersion = ouRegisteredInControlTower.baselineVersion!;
+    const message = `AWS Organizations organizational unit (OU) "${ouName}" is already registered with AWS Control Tower, registration status is "${currentRegistrationStatus}" and baseline version is "${currentBaselineVersion}", operation skipped.`;
 
-    if (existingRegistrationStatus === EnablementStatus.FAILED) {
-      RegisterOrganizationalUnitModule.logger.warn(
-        `AWS Organizations organizational unit (OU) "${ouId}" is already registered with AWS Control Tower, registration status is ${existingRegistrationStatus}, starting registration process.`,
-      );
-      return await this.registerOuWithControlTower(
-        client,
-        props,
-        ouId,
-        baselineVersion,
-        awsControlTowerBaselineIdentifier,
-        parameters,
-      );
-    }
-
-    if (existingBaselineVersion !== baselineVersion) {
-      const message = `AWS Organizations organizational unit (OU) "${ouId}" is already registered with AWS Control Tower, but the baseline version is ${
-        ouRegisteredInControlTower!.baselineVersion
-      } which is different from expected baseline version ${baselineVersion} and registration status is ${existingRegistrationStatus}, update baseline is required for OU, perform update baseline from console.`;
-      RegisterOrganizationalUnitModule.logger.warn(message);
-      return message;
-    }
-
-    const message = `AWS Organizations organizational unit (OU) "${ouId}" is already registered with AWS Control Tower, registration status is ${existingRegistrationStatus} and baseline version is ${existingBaselineVersion}, operation skipped.`;
-
-    RegisterOrganizationalUnitModule.logger.warn(message);
+    this.logger.warn(message);
     return message;
   }
 
   /**
    * Function to register OU with AWS Control Tower
    * @param client {@link ControlTowerClient}
-   * @param props {@link IRegisterOrganizationalUnitHandlerParameter}
-   * @param ouId string
+   * @param ouName string
+   * @param ouArn string
    * @param baselineVersion string
    * @param awsControlTowerBaselineIdentifier string
    * @param parameters {@link EnabledBaselineParameter}[]
@@ -189,22 +242,20 @@ export class RegisterOrganizationalUnitModule implements IRegisterOrganizational
    */
   private async registerOuWithControlTower(
     client: ControlTowerClient,
-    props: IRegisterOrganizationalUnitHandlerParameter,
-    ouId: string,
+    ouName: string,
+    ouArn: string,
     baselineVersion: string,
     awsControlTowerBaselineIdentifier: string,
     parameters: EnabledBaselineParameter[],
   ): Promise<string> {
-    RegisterOrganizationalUnitModule.logger.info(
-      `Registering AWS Organizations organizational unit (OU) "${ouId}" with AWS Control Tower.`,
-    );
+    this.logger.info(`Registering AWS Organizations organizational unit (OU) "${ouName}" with AWS Control Tower.`);
 
     const response = await throttlingBackOff(() =>
       client.send(
         new EnableBaselineCommand({
           baselineIdentifier: awsControlTowerBaselineIdentifier,
           baselineVersion: baselineVersion,
-          targetIdentifier: props.configuration.ouArn,
+          targetIdentifier: ouArn,
           parameters,
         }),
       ),
@@ -212,54 +263,55 @@ export class RegisterOrganizationalUnitModule implements IRegisterOrganizational
 
     if (!response.operationIdentifier) {
       throw new Error(
-        `Internal error: AWS Organizations organizational unit (OU) "${ouId}" EnableBaseline api didn't return operationIdentifier object.`,
+        `${MODULE_EXCEPTIONS.SERVICE_EXCEPTION}:  EnableBaseline api did not return operationIdentifier property while registering AWS Organizations organizational unit (OU) "${ouName}".`,
       );
     }
-    await this.waitUntilBaselineCompletes(client, ouId, response.operationIdentifier, props);
 
-    const status = `Registration of AWS Organizations organizational unit (OU) "${ouId}" with AWS Control Tower is successful.`;
+    await this.waitUntilBaselineCompletes(client, ouName, ouArn, response.operationIdentifier);
 
-    RegisterOrganizationalUnitModule.logger.info(status);
+    const status = `Registration of AWS Organizations organizational unit (OU) "${ouName}" with AWS Control Tower is successful.`;
+
+    this.logger.info(status);
     return status;
   }
 
   /**
    * Function to check and wait till the AWS Organizations organizational unit registration completion.
    * @param client {@link ControlTowerClient}
+   * @param ouName string
+   * @param ouArn string
    * @param operationIdentifier string
-   * @param props {@link IRegisterOrganizationalUnitHandlerParameter}
    */
   private async waitUntilBaselineCompletes(
     client: ControlTowerClient,
-    ouId: string,
+    ouName: string,
+    ouArn: string,
     operationIdentifier: string,
-    props: IRegisterOrganizationalUnitHandlerParameter,
   ): Promise<void> {
     const queryIntervalInMinutes = 2;
     const timeoutInMinutes = 60;
     let elapsedInMinutes = 0;
 
     await delay(2);
-    let status = await this.getBaselineOperationStatus(client, props.configuration.ouArn, operationIdentifier);
+    let status = await this.getBaselineOperationStatus(client, ouArn, operationIdentifier);
 
     while (status !== BaselineOperationStatus.SUCCEEDED) {
       await delay(queryIntervalInMinutes);
-      status = await this.getBaselineOperationStatus(client, props.configuration.ouArn, operationIdentifier);
+      status = await this.getBaselineOperationStatus(client, ouArn, operationIdentifier);
       elapsedInMinutes = elapsedInMinutes + queryIntervalInMinutes;
       if (elapsedInMinutes >= timeoutInMinutes) {
         throw new Error(
-          `AWS Organizations organizational unit "${ouId}" baseline operation took more than ${timeoutInMinutes} minutes. Pipeline aborted, please review AWS Control Tower console to make sure organization unit registration completes.`,
+          `${MODULE_EXCEPTIONS.SERVICE_EXCEPTION}: AWS Organizations organizational unit "${ouName}" baseline operation took more than ${timeoutInMinutes} minutes. Pipeline aborted, please review AWS Control Tower console to make sure organization unit registration completes.`,
         );
       }
-      RegisterOrganizationalUnitModule.logger.info(
-        `AWS Organizations organizational unit "${ouId}" baseline operation with identifier "${operationIdentifier}" is currently in "${status}" state. After ${queryIntervalInMinutes} minutes delay, the status will be rechecked. Elapsed time ${elapsedInMinutes} minutes.`,
+      this.logger.info(
+        `AWS Organizations organizational unit "${ouName}" baseline operation with identifier "${operationIdentifier}" is currently in "${status}" state. After ${queryIntervalInMinutes} minutes delay, the status will be rechecked. Elapsed time ${elapsedInMinutes} minutes.`,
       );
     }
   }
 
   /**
    * Function to get the AWS Organizations organizational unit baseline operation status
-   *
    * @param client {@link ControlTowerClient}
    * @param ouId string
    * @param operationIdentifier string
@@ -278,13 +330,13 @@ export class RegisterOrganizationalUnitModule implements IRegisterOrganizational
 
     if (!operationStatus) {
       throw new Error(
-        `Internal Error: AWS Control Tower Landing Zone GetBaselineOperation api didn't return operation status.`,
+        `${MODULE_EXCEPTIONS.SERVICE_EXCEPTION}: AWS Control Tower Landing Zone GetBaselineOperation api did not return operationStatus property.`,
       );
     }
 
     if (operationStatus === BaselineOperationStatus.FAILED) {
       throw new Error(
-        `AWS Organizations organizational unit "${ouId}" baseline operation with identifier "${operationIdentifier}" in "${operationStatus}" state. Investigate baseline operation before executing pipeline.`,
+        `${MODULE_EXCEPTIONS.SERVICE_EXCEPTION}: AWS Organizations organizational unit "${ouId}" baseline operation with identifier "${operationIdentifier}" in "${operationStatus}" state. Investigate baseline operation before executing pipeline.`,
       );
     }
 
@@ -329,7 +381,7 @@ export class RegisterOrganizationalUnitModule implements IRegisterOrganizational
    * Function to get IdentityCenterBaselineIdentifier
    * @param baselines {@link BaselineSummary}[]
    * @param enabledBaselines {@link EnabledBaselineSummary}[]
-   * @returns identifier string | undefined
+   * @returns string | undefined
    */
   private async getIdentityCenterBaselineIdentifier(
     baselines: BaselineSummary[],
@@ -350,60 +402,64 @@ export class RegisterOrganizationalUnitModule implements IRegisterOrganizational
 
   /**
    * Function to get dry run response
-   * @param moduleName string
-   * @param props {@link IRegisterOrganizationalUnitHandlerParameter}
-   * @param ouId string
-   * @param landingZoneIdentifier string | undefined
-   * @param baselineVersion string
-   * @param enabledBaselineSummary {@link EnabledBaselineSummary}
-   * @returns status string
+   * @param props
+   * @returns string
    */
-  private getDryRunResponse(
-    moduleName: string,
-    props: IRegisterOrganizationalUnitHandlerParameter,
-    ouId: string,
-    landingZoneIdentifier?: string,
-    baselineVersion?: string,
-    enabledBaselineSummary?: EnabledBaselineSummary,
-  ): string {
-    if (!landingZoneIdentifier) {
+  private getDryRunResponse(props: {
+    moduleName: string;
+    operation: string;
+    ouName: string;
+    isRegistered: boolean;
+    landingZoneIdentifier?: string;
+    ouId?: string;
+    currentRegistrationStatus?: EnablementStatus;
+    currentBaselineVersion?: string;
+    baselineVersion?: string;
+  }): string {
+    if (!props.landingZoneIdentifier) {
       return generateDryRunResponse(
-        moduleName,
+        props.moduleName,
         props.operation,
-        `Will experience error because the environment does not have AWS Control Tower Landing Zone.`,
+        `Will experience ${MODULE_EXCEPTIONS.INVALID_INPUT}. Reason the environment does not have AWS Control Tower Landing Zone configured.`,
       );
     }
 
-    if (!enabledBaselineSummary) {
+    if (!props.ouId) {
       return generateDryRunResponse(
-        moduleName,
+        props.moduleName,
         props.operation,
-        `AWS Organizations organizational unit (OU) "${ouId}" is not registered with AWS Control Tower accelerator will register the OU with AWS Control Tower.`,
-      );
-    }
-    const existingRegistrationStatus = enabledBaselineSummary.statusSummary!.status!;
-    const existingBaselineVersion = enabledBaselineSummary.baselineVersion!;
-
-    if (existingRegistrationStatus === EnablementStatus.FAILED) {
-      return generateDryRunResponse(
-        moduleName,
-        props.operation,
-        `AWS Organizations organizational unit (OU) "${ouId}" is already registered with AWS Control Tower, registration status is ${existingRegistrationStatus}, accelerator will try to re-register the OU.`,
+        `Will experience ${MODULE_EXCEPTIONS.INVALID_INPUT}. Reason organizational unit "${props.ouName}" not found.`,
       );
     }
 
-    if (existingBaselineVersion !== baselineVersion) {
+    if (!props.isRegistered) {
       return generateDryRunResponse(
-        moduleName,
+        props.moduleName,
         props.operation,
-        `AWS Organizations organizational unit (OU) "${ouId}" is already registered with AWS Control Tower, but the baseline version is ${existingBaselineVersion} which is different from expected baseline version ${baselineVersion} and registration status is ${existingRegistrationStatus}, manual baseline update is required. Baseline version compatibility metrics can be found here https://docs.aws.amazon.com/controltower/latest/userguide/table-of-baselines.html`,
+        `AWS Organizations organizational unit (OU) "${props.ouName}" is not registered with AWS Control Tower accelerator will register the OU with AWS Control Tower.`,
+      );
+    }
+
+    if (props.currentRegistrationStatus === EnablementStatus.FAILED) {
+      return generateDryRunResponse(
+        props.moduleName,
+        props.operation,
+        `AWS Organizations organizational unit (OU) "${props.ouName}" is already registered with AWS Control Tower, registration status is "${props.currentRegistrationStatus}", accelerator will skip the registration process, review and fix the registration status from console.`,
+      );
+    }
+
+    if (props.currentBaselineVersion !== props.baselineVersion) {
+      return generateDryRunResponse(
+        props.moduleName,
+        props.operation,
+        `AWS Organizations organizational unit (OU) "${props.ouName}" is already registered with AWS Control Tower, but the baseline version is "${props.currentBaselineVersion}" which is different from expected baseline version "${props.baselineVersion}" and registration status is "${props.currentRegistrationStatus}", baseline update is required, review the upgrade from console. Baseline version compatibility metrics can be found here https://docs.aws.amazon.com/controltower/latest/userguide/table-of-baselines.html`,
       );
     }
 
     return generateDryRunResponse(
-      moduleName,
+      props.moduleName,
       props.operation,
-      `AWS Organizations organizational unit (OU) "${ouId}" is already registered with AWS Control Tower, registration status is ${existingRegistrationStatus}, accelerator will skip the registration process.`,
+      `AWS Organizations organizational unit (OU) "${props.ouName}" is already registered with AWS Control Tower, registration status is "${props.currentRegistrationStatus}", accelerator will skip the registration process.`,
     );
   }
 
@@ -433,14 +489,5 @@ export class RegisterOrganizationalUnitModule implements IRegisterOrganizational
     }
 
     return baselineVersion;
-  }
-
-  /**
-   * Function to get OU id from ouArn
-   * @param ouArn string
-   * @returns string
-   */
-  private getOuId(ouArn: string): string {
-    return ouArn.split('/').pop()!;
   }
 }

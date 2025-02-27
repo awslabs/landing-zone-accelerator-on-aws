@@ -16,6 +16,7 @@ import {
   BaselineOperationStatus,
   ControlTowerClient,
   EnableBaselineCommand,
+  EnablementStatus,
   GetBaselineOperationCommand,
   LandingZoneStatus,
   paginateListBaselines,
@@ -24,6 +25,8 @@ import {
 
 import { RegisterOrganizationalUnitModule } from '../../../../lib/control-tower/register-organizational-unit/index';
 import { MOCK_CONSTANTS } from '../../../mocked-resources';
+import { MODULE_EXCEPTIONS } from '../../../../common/enums';
+import { IRegisterOrganizationalUnitHandlerParameter } from '../../../../interfaces/control-tower/register-organizational-unit';
 
 // Mock dependencies
 jest.mock('@aws-sdk/client-controltower', () => {
@@ -61,6 +64,8 @@ describe('RegisterOrganizationalUnitModule', () => {
   const mockSend = jest.fn();
   let getLandingZoneIdentifierSpy: jest.SpyInstance;
   let getLandingZoneDetailsSpy: jest.SpyInstance;
+  let getOrganizationalUnitArnSpy: jest.SpyInstance;
+  let getOrganizationalUnitIdByPathSpy: jest.SpyInstance;
 
   beforeEach(() => {
     jest.clearAllMocks();
@@ -72,7 +77,7 @@ describe('RegisterOrganizationalUnitModule', () => {
     mockSend.mockImplementation(command => {
       if (command instanceof EnableBaselineCommand) {
         return Promise.resolve({
-          operationIdentifier: MOCK_CONSTANTS.operationIdentifier,
+          operationIdentifier: MOCK_CONSTANTS.RegisterOrganizationalUnitModule.operationIdentifier,
         });
       }
       if (command instanceof GetBaselineOperationCommand) {
@@ -84,22 +89,36 @@ describe('RegisterOrganizationalUnitModule', () => {
     });
 
     getLandingZoneIdentifierSpy = jest.spyOn(require('../../../../common/functions'), 'getLandingZoneIdentifier');
-    getLandingZoneDetailsSpy = jest.spyOn(require('../../../../common/functions'), 'getLandingZoneDetails');
+    getLandingZoneIdentifierSpy.mockResolvedValue(MOCK_CONSTANTS.RegisterOrganizationalUnitModule.existingLandingArn);
 
-    getLandingZoneIdentifierSpy.mockResolvedValue(MOCK_CONSTANTS.existingLandingArn);
+    getLandingZoneDetailsSpy = jest.spyOn(require('../../../../common/functions'), 'getLandingZoneDetails');
     getLandingZoneDetailsSpy.mockResolvedValue({
-      landingZoneIdentifier: MOCK_CONSTANTS.existingLandingZoneIdentifier,
+      landingZoneIdentifier: MOCK_CONSTANTS.RegisterOrganizationalUnitModule.existingLandingZoneIdentifier,
       status: LandingZoneStatus.ACTIVE,
-      securityOuName: 'Security',
+      securityOuName: MOCK_CONSTANTS.RegisterOrganizationalUnitModule.securityOuName,
       enableIdentityCenterAccess: true,
+      version: MOCK_CONSTANTS.RegisterOrganizationalUnitModule.landingZoneVersion,
     });
+
+    getOrganizationalUnitArnSpy = jest.spyOn(require('../../../../common/functions'), 'getOrganizationalUnitArn');
+    getOrganizationalUnitArnSpy.mockResolvedValue(
+      MOCK_CONSTANTS.RegisterOrganizationalUnitModule.enabledBaselines.mockOu.arn,
+    );
+
+    getOrganizationalUnitIdByPathSpy = jest.spyOn(
+      require('../../../../common/functions'),
+      'getOrganizationalUnitIdByPath',
+    );
+    getOrganizationalUnitIdByPathSpy.mockResolvedValue(
+      MOCK_CONSTANTS.RegisterOrganizationalUnitModule.organizationalUnitId,
+    );
 
     (paginateListEnabledBaselines as jest.Mock).mockImplementation(() => [
       {
         enabledBaselines: [
-          MOCK_CONSTANTS.enabledBaselines.mockTarget1,
-          MOCK_CONSTANTS.enabledBaselines.mockTarget2,
-          MOCK_CONSTANTS.enabledBaselines.mockIdentityCenterBaseline,
+          MOCK_CONSTANTS.RegisterOrganizationalUnitModule.enabledBaselines.mockTarget1,
+          MOCK_CONSTANTS.RegisterOrganizationalUnitModule.enabledBaselines.mockTarget2,
+          MOCK_CONSTANTS.RegisterOrganizationalUnitModule.enabledBaselines.mockIdentityCenterBaseline,
         ],
       },
     ]);
@@ -107,15 +126,19 @@ describe('RegisterOrganizationalUnitModule', () => {
     (paginateListBaselines as jest.Mock).mockImplementation(() => [
       {
         baselines: [
-          MOCK_CONSTANTS.baselines.controlTowerBaseline,
-          MOCK_CONSTANTS.baselines.auditBaseline,
-          MOCK_CONSTANTS.baselines.identityCenterBaseline,
+          MOCK_CONSTANTS.RegisterOrganizationalUnitModule.baselines.controlTowerBaseline,
+          MOCK_CONSTANTS.RegisterOrganizationalUnitModule.baselines.auditBaseline,
+          MOCK_CONSTANTS.RegisterOrganizationalUnitModule.baselines.identityCenterBaseline,
         ],
       },
     ]);
   });
 
-  describe('NO DRY-RUN RegisterOrganizationalUnitModule', () => {
+  describe('Live Execution Operations', () => {
+    const input: IRegisterOrganizationalUnitHandlerParameter = {
+      configuration: MOCK_CONSTANTS.RegisterOrganizationalUnitModule.configuration,
+      ...MOCK_CONSTANTS.runnerParameters,
+    };
     beforeEach(() => {
       jest.clearAllMocks();
     });
@@ -126,18 +149,15 @@ describe('RegisterOrganizationalUnitModule', () => {
       (paginateListEnabledBaselines as jest.Mock).mockImplementation(() => [
         {
           enabledBaselines: [
-            MOCK_CONSTANTS.enabledBaselines.mockOu,
-            MOCK_CONSTANTS.enabledBaselines.mockTarget2,
-            MOCK_CONSTANTS.enabledBaselines.mockIdentityCenterBaseline,
+            MOCK_CONSTANTS.RegisterOrganizationalUnitModule.enabledBaselines.mockOu,
+            MOCK_CONSTANTS.RegisterOrganizationalUnitModule.enabledBaselines.mockTarget2,
+            MOCK_CONSTANTS.RegisterOrganizationalUnitModule.enabledBaselines.mockIdentityCenterBaseline,
           ],
         },
       ]);
       // Execute
 
-      const response = await new RegisterOrganizationalUnitModule().handler({
-        configuration: MOCK_CONSTANTS.registerOuConfiguration,
-        ...MOCK_CONSTANTS.runnerParameters,
-      });
+      const response = await new RegisterOrganizationalUnitModule().handler(input);
 
       // Verify
 
@@ -147,17 +167,19 @@ describe('RegisterOrganizationalUnitModule', () => {
       expect(EnableBaselineCommand).toHaveBeenCalledTimes(0);
       expect(GetBaselineOperationCommand).toHaveBeenCalledTimes(0);
       expect(response).toEqual(
-        `AWS Organizations organizational unit (OU) "${MOCK_CONSTANTS.registerOuConfiguration.ouArn}" is already registered with AWS Control Tower, registration status is ${MOCK_CONSTANTS.enabledBaselines.mockOu.statusSummary.status} and baseline version is ${MOCK_CONSTANTS.enabledBaselines.mockOu.baselineVersion}, operation skipped.`,
+        `AWS Organizations organizational unit (OU) "${input.configuration.name}" is already registered with AWS Control Tower, registration status is "${MOCK_CONSTANTS.RegisterOrganizationalUnitModule.enabledBaselines.mockOu.statusSummary.status}" and baseline version is "${MOCK_CONSTANTS.RegisterOrganizationalUnitModule.enabledBaselines.mockOu.baselineVersion}", operation skipped.`,
       );
     });
 
-    test('should be successful with single attempt to get success status', async () => {
+    test('should be successfully register ou', async () => {
+      // Setup
+      getOrganizationalUnitArnSpy.mockResolvedValue(
+        MOCK_CONSTANTS.RegisterOrganizationalUnitModule.enabledBaselines.mockTarget1.arn,
+      );
+
       // Execute
 
-      const response = await new RegisterOrganizationalUnitModule().handler({
-        configuration: MOCK_CONSTANTS.registerOuConfiguration,
-        ...MOCK_CONSTANTS.runnerParameters,
-      });
+      const response = await new RegisterOrganizationalUnitModule().handler(input);
 
       // Verify
 
@@ -167,17 +189,17 @@ describe('RegisterOrganizationalUnitModule', () => {
       expect(EnableBaselineCommand).toHaveBeenCalledTimes(1);
       expect(GetBaselineOperationCommand).toHaveBeenCalledTimes(1);
       expect(response).toEqual(
-        `Registration of AWS Organizations organizational unit (OU) "${MOCK_CONSTANTS.registerOuConfiguration.ouArn}" with AWS Control Tower is successful.`,
+        `Registration of AWS Organizations organizational unit (OU) "${input.configuration.name}" with AWS Control Tower is successful.`,
       );
     });
 
-    test('should be successful when multiple attempts made to get success status', async () => {
+    test('should be successfully register ou with multiple attempts made to get success status', async () => {
       // Setup
       let getBaselineOperationCommandCallCount = 0;
       mockSend.mockImplementation(command => {
         if (command instanceof EnableBaselineCommand) {
           return Promise.resolve({
-            operationIdentifier: MOCK_CONSTANTS.operationIdentifier,
+            operationIdentifier: MOCK_CONSTANTS.RegisterOrganizationalUnitModule.operationIdentifier,
           });
         }
         if (command instanceof GetBaselineOperationCommand) {
@@ -197,10 +219,7 @@ describe('RegisterOrganizationalUnitModule', () => {
 
       // Execute
 
-      const response = await new RegisterOrganizationalUnitModule().handler({
-        configuration: MOCK_CONSTANTS.registerOuConfiguration,
-        ...MOCK_CONSTANTS.runnerParameters,
-      });
+      const response = await new RegisterOrganizationalUnitModule().handler(input);
 
       // Verify
 
@@ -210,61 +229,55 @@ describe('RegisterOrganizationalUnitModule', () => {
       expect(EnableBaselineCommand).toHaveBeenCalledTimes(1);
       expect(GetBaselineOperationCommand).toHaveBeenCalledTimes(2);
       expect(response).toEqual(
-        `Registration of AWS Organizations organizational unit (OU) "${MOCK_CONSTANTS.registerOuConfiguration.ouArn}" with AWS Control Tower is successful.`,
+        `Registration of AWS Organizations organizational unit (OU) "${input.configuration.name}" with AWS Control Tower is successful.`,
       );
     });
 
-    test('should be successful with existing ou registration in failed status', async () => {
+    test('should throw error with existing ou registration in failed status', async () => {
       // Setup
 
       (paginateListEnabledBaselines as jest.Mock).mockImplementation(() => [
         {
           enabledBaselines: [
-            MOCK_CONSTANTS.enabledBaselines.mockOuFailed,
-            MOCK_CONSTANTS.enabledBaselines.mockTarget2,
-            MOCK_CONSTANTS.enabledBaselines.mockIdentityCenterBaseline,
+            MOCK_CONSTANTS.RegisterOrganizationalUnitModule.enabledBaselines.mockOuFailed,
+            MOCK_CONSTANTS.RegisterOrganizationalUnitModule.enabledBaselines.mockTarget2,
+            MOCK_CONSTANTS.RegisterOrganizationalUnitModule.enabledBaselines.mockIdentityCenterBaseline,
           ],
         },
       ]);
 
       // Execute
 
-      const response = await new RegisterOrganizationalUnitModule().handler({
-        configuration: MOCK_CONSTANTS.registerOuConfiguration,
-        ...MOCK_CONSTANTS.runnerParameters,
-      });
+      const response = await new RegisterOrganizationalUnitModule().handler(input);
 
       // Verify
 
+      expect(response).toEqual(
+        `AWS Organizations organizational unit (OU) "${input.configuration.name}" is already registered with AWS Control Tower, registration status is "${EnablementStatus.FAILED}", accelerator will skip the registration process, review and fix the registration status from console.`,
+      );
       expect(ControlTowerClient).toHaveBeenCalledTimes(1);
       expect(paginateListEnabledBaselines).toHaveBeenCalledTimes(1);
       expect(paginateListBaselines).toHaveBeenCalledTimes(1);
-      expect(EnableBaselineCommand).toHaveBeenCalledTimes(1);
-      expect(GetBaselineOperationCommand).toHaveBeenCalledTimes(1);
-      expect(response).toEqual(
-        `Registration of AWS Organizations organizational unit (OU) "${MOCK_CONSTANTS.registerOuConfiguration.ouArn}" with AWS Control Tower is successful.`,
-      );
+      expect(EnableBaselineCommand).toHaveBeenCalledTimes(0);
+      expect(GetBaselineOperationCommand).toHaveBeenCalledTimes(0);
     });
 
-    test('should be successful with existing ou registration has older baseline version status', async () => {
+    test('should be successful when registration ou has older baseline version', async () => {
       // Setup
 
       (paginateListEnabledBaselines as jest.Mock).mockImplementation(() => [
         {
           enabledBaselines: [
-            MOCK_CONSTANTS.enabledBaselines.mockOuOldBaseLineVersion,
-            MOCK_CONSTANTS.enabledBaselines.mockTarget2,
-            MOCK_CONSTANTS.enabledBaselines.mockIdentityCenterBaseline,
+            MOCK_CONSTANTS.RegisterOrganizationalUnitModule.enabledBaselines.mockOuOldBaseLineVersion,
+            MOCK_CONSTANTS.RegisterOrganizationalUnitModule.enabledBaselines.mockTarget2,
+            MOCK_CONSTANTS.RegisterOrganizationalUnitModule.enabledBaselines.mockIdentityCenterBaseline,
           ],
         },
       ]);
 
       // Execute
 
-      const response = await new RegisterOrganizationalUnitModule().handler({
-        configuration: MOCK_CONSTANTS.registerOuConfiguration,
-        ...MOCK_CONSTANTS.runnerParameters,
-      });
+      const response = await new RegisterOrganizationalUnitModule().handler(input);
 
       // Verify
 
@@ -274,7 +287,7 @@ describe('RegisterOrganizationalUnitModule', () => {
       expect(EnableBaselineCommand).toHaveBeenCalledTimes(0);
       expect(GetBaselineOperationCommand).toHaveBeenCalledTimes(0);
       expect(response).toEqual(
-        `AWS Organizations organizational unit (OU) "${MOCK_CONSTANTS.registerOuConfiguration.ouArn}" is already registered with AWS Control Tower, but the baseline version is ${MOCK_CONSTANTS.enabledBaselines.mockOuOldBaseLineVersion.baselineVersion} which is different from expected baseline version ${MOCK_CONSTANTS.enabledBaselines.mockOu.baselineVersion} and registration status is ${MOCK_CONSTANTS.enabledBaselines.mockOuOldBaseLineVersion.statusSummary.status}, update baseline is required for OU, perform update baseline from console.`,
+        `AWS Organizations organizational unit (OU) "${input.configuration.name}" is already registered with AWS Control Tower, but the baseline version is "${MOCK_CONSTANTS.RegisterOrganizationalUnitModule.enabledBaselines.mockOuOldBaseLineVersion.baselineVersion}" which is different from expected baseline version "${MOCK_CONSTANTS.RegisterOrganizationalUnitModule.enabledBaselines.mockOu.baselineVersion}" and registration status is "${MOCK_CONSTANTS.RegisterOrganizationalUnitModule.enabledBaselines.mockOuOldBaseLineVersion.statusSummary.status}", update baseline is required for OU, perform update baseline from console.`,
       );
     });
 
@@ -284,7 +297,7 @@ describe('RegisterOrganizationalUnitModule', () => {
       mockSend.mockImplementation(command => {
         if (command instanceof EnableBaselineCommand) {
           return Promise.resolve({
-            operationIdentifier: MOCK_CONSTANTS.operationIdentifier,
+            operationIdentifier: MOCK_CONSTANTS.RegisterOrganizationalUnitModule.operationIdentifier,
           });
         }
         if (command instanceof GetBaselineOperationCommand) {
@@ -296,13 +309,8 @@ describe('RegisterOrganizationalUnitModule', () => {
       });
 
       // Execute & Verify
-      await expect(
-        new RegisterOrganizationalUnitModule().handler({
-          configuration: MOCK_CONSTANTS.registerOuConfiguration,
-          ...MOCK_CONSTANTS.runnerParameters,
-        }),
-      ).rejects.toThrow(
-        `AWS Organizations organizational unit "${MOCK_CONSTANTS.registerOuConfiguration.ouArn}" baseline operation took more than 60 minutes. Pipeline aborted, please review AWS Control Tower console to make sure organization unit registration completes.`,
+      await expect(new RegisterOrganizationalUnitModule().handler(input)).rejects.toThrow(
+        `AWS Organizations organizational unit "${input.configuration.name}" baseline operation took more than 60 minutes. Pipeline aborted, please review AWS Control Tower console to make sure organization unit registration completes.`,
       );
 
       // Verify
@@ -320,7 +328,7 @@ describe('RegisterOrganizationalUnitModule', () => {
       mockSend.mockImplementation(command => {
         if (command instanceof EnableBaselineCommand) {
           return Promise.resolve({
-            operationIdentifier: MOCK_CONSTANTS.operationIdentifier,
+            operationIdentifier: MOCK_CONSTANTS.RegisterOrganizationalUnitModule.operationIdentifier,
           });
         }
         if (command instanceof GetBaselineOperationCommand) {
@@ -339,13 +347,8 @@ describe('RegisterOrganizationalUnitModule', () => {
       });
 
       // Execute & Verify
-      await expect(
-        new RegisterOrganizationalUnitModule().handler({
-          configuration: MOCK_CONSTANTS.registerOuConfiguration,
-          ...MOCK_CONSTANTS.runnerParameters,
-        }),
-      ).rejects.toThrow(
-        `Internal Error: AWS Control Tower Landing Zone GetBaselineOperation api didn't return operation status.`,
+      await expect(new RegisterOrganizationalUnitModule().handler(input)).rejects.toThrow(
+        `${MODULE_EXCEPTIONS.SERVICE_EXCEPTION}: AWS Control Tower Landing Zone GetBaselineOperation api did not return operationStatus property.`,
       );
 
       // Verify
@@ -363,7 +366,7 @@ describe('RegisterOrganizationalUnitModule', () => {
       mockSend.mockImplementation(command => {
         if (command instanceof EnableBaselineCommand) {
           return Promise.resolve({
-            operationIdentifier: MOCK_CONSTANTS.operationIdentifier,
+            operationIdentifier: MOCK_CONSTANTS.RegisterOrganizationalUnitModule.operationIdentifier,
           });
         }
         if (command instanceof GetBaselineOperationCommand) {
@@ -382,13 +385,8 @@ describe('RegisterOrganizationalUnitModule', () => {
       });
 
       // Execute & Verify
-      await expect(
-        new RegisterOrganizationalUnitModule().handler({
-          configuration: MOCK_CONSTANTS.registerOuConfiguration,
-          ...MOCK_CONSTANTS.runnerParameters,
-        }),
-      ).rejects.toThrow(
-        `AWS Organizations organizational unit "${MOCK_CONSTANTS.registerOuConfiguration.ouArn}" baseline operation with identifier "${MOCK_CONSTANTS.operationIdentifier}" in "${BaselineOperationStatus.FAILED}" state. Investigate baseline operation before executing pipeline.`,
+      await expect(new RegisterOrganizationalUnitModule().handler(input)).rejects.toThrow(
+        `${MODULE_EXCEPTIONS.SERVICE_EXCEPTION}: AWS Organizations organizational unit "${MOCK_CONSTANTS.RegisterOrganizationalUnitModule.enabledBaselines.mockOu.arn}" baseline operation with identifier "${MOCK_CONSTANTS.RegisterOrganizationalUnitModule.operationIdentifier}" in "${BaselineOperationStatus.FAILED}" state. Investigate baseline operation before executing pipeline.`,
       );
 
       // Verify
@@ -406,16 +404,52 @@ describe('RegisterOrganizationalUnitModule', () => {
 
       // Execute & Verify
       await expect(async () => {
-        await new RegisterOrganizationalUnitModule().handler({
-          configuration: MOCK_CONSTANTS.registerOuConfiguration,
-          ...MOCK_CONSTANTS.runnerParameters,
-        });
+        await new RegisterOrganizationalUnitModule().handler(input);
       }).rejects.toThrowError(
-        `Error: AWS Control Tower Landing Zone not found in the region "${MOCK_CONSTANTS.runnerParameters.region}".`,
+        `${MODULE_EXCEPTIONS.INVALID_INPUT}: AWS Control Tower Landing Zone not found in the region "${MOCK_CONSTANTS.runnerParameters.region}".`,
       );
       expect(ControlTowerClient).toHaveBeenCalledTimes(1);
       expect(paginateListEnabledBaselines).toHaveBeenCalledTimes(0);
       expect(paginateListBaselines).toHaveBeenCalledTimes(0);
+      expect(EnableBaselineCommand).toHaveBeenCalledTimes(0);
+      expect(GetBaselineOperationCommand).toHaveBeenCalledTimes(0);
+    });
+
+    test('should throw error when GetLandingZone api did not return LandingZone details', async () => {
+      // Setup
+      getLandingZoneDetailsSpy.mockResolvedValue(undefined);
+
+      // Execute & Verify
+      await expect(async () => {
+        await new RegisterOrganizationalUnitModule().handler(input);
+      }).rejects.toThrowError(
+        `${MODULE_EXCEPTIONS.SERVICE_EXCEPTION}: GetLandingZone API did not return LandingZone details.`,
+      );
+      expect(ControlTowerClient).toHaveBeenCalledTimes(1);
+      expect(paginateListEnabledBaselines).toHaveBeenCalledTimes(1);
+      expect(paginateListBaselines).toHaveBeenCalledTimes(1);
+      expect(EnableBaselineCommand).toHaveBeenCalledTimes(0);
+      expect(GetBaselineOperationCommand).toHaveBeenCalledTimes(0);
+    });
+
+    test('should throw error when GetLandingZone api did not return LandingZone details to determine base line version', async () => {
+      // Setup
+      getLandingZoneDetailsSpy.mockResolvedValue({
+        landingZoneIdentifier: MOCK_CONSTANTS.RegisterOrganizationalUnitModule.existingLandingZoneIdentifier,
+        status: LandingZoneStatus.ACTIVE,
+        securityOuName: MOCK_CONSTANTS.RegisterOrganizationalUnitModule.securityOuName,
+        enableIdentityCenterAccess: true,
+      });
+
+      // Execute & Verify
+      await expect(async () => {
+        await new RegisterOrganizationalUnitModule().handler(input);
+      }).rejects.toThrowError(
+        `${MODULE_EXCEPTIONS.INVALID_INPUT}: GetLandingZone API did not return LandingZone details to determine the baseline version.`,
+      );
+      expect(ControlTowerClient).toHaveBeenCalledTimes(1);
+      expect(paginateListEnabledBaselines).toHaveBeenCalledTimes(1);
+      expect(paginateListBaselines).toHaveBeenCalledTimes(1);
       expect(EnableBaselineCommand).toHaveBeenCalledTimes(0);
       expect(GetBaselineOperationCommand).toHaveBeenCalledTimes(0);
     });
@@ -439,12 +473,9 @@ describe('RegisterOrganizationalUnitModule', () => {
 
       // Execute & Verify
       await expect(async () => {
-        await new RegisterOrganizationalUnitModule().handler({
-          configuration: MOCK_CONSTANTS.registerOuConfiguration,
-          ...MOCK_CONSTANTS.runnerParameters,
-        });
+        await new RegisterOrganizationalUnitModule().handler(input);
       }).rejects.toThrowError(
-        `Internal error: AWS Organizations organizational unit (OU) "${MOCK_CONSTANTS.registerOuConfiguration.ouArn}" EnableBaseline api didn't return operationIdentifier object.`,
+        `${MODULE_EXCEPTIONS.SERVICE_EXCEPTION}:  EnableBaseline api did not return operationIdentifier property while registering AWS Organizations organizational unit (OU) "${input.configuration.name}".`,
       );
 
       expect(ControlTowerClient).toHaveBeenCalledTimes(1);
@@ -452,33 +483,6 @@ describe('RegisterOrganizationalUnitModule', () => {
       expect(paginateListBaselines).toHaveBeenCalledTimes(1);
       expect(EnableBaselineCommand).toHaveBeenCalledTimes(1);
       expect(GetBaselineOperationCommand).toHaveBeenCalledTimes(0);
-    });
-
-    test('should throw error when control tower not found for dry run', async () => {
-      // Setup
-
-      getLandingZoneIdentifierSpy.mockResolvedValue(undefined);
-
-      // Execute
-
-      const response = await new RegisterOrganizationalUnitModule().handler({
-        configuration: MOCK_CONSTANTS.registerOuConfiguration,
-        ...MOCK_CONSTANTS.runnerParameters,
-        dryRun: true,
-      });
-
-      // Verify
-
-      expect(ControlTowerClient).toHaveBeenCalledTimes(1);
-      expect(paginateListEnabledBaselines).toHaveBeenCalledTimes(0);
-      expect(paginateListBaselines).toHaveBeenCalledTimes(0);
-      expect(EnableBaselineCommand).toHaveBeenCalledTimes(0);
-      expect(GetBaselineOperationCommand).toHaveBeenCalledTimes(0);
-      expect(response).toMatch(
-        MOCK_CONSTANTS.dryRunResponsePattern.setupLandingZoneModule(
-          `Will experience error because the environment does not have AWS Control Tower Landing Zone.`,
-        ),
-      );
     });
 
     test('should throw error when AWSControlTowerBaseline identifier not found', async () => {
@@ -492,12 +496,9 @@ describe('RegisterOrganizationalUnitModule', () => {
 
       // Execute & Verify
       await expect(async () => {
-        await new RegisterOrganizationalUnitModule().handler({
-          configuration: MOCK_CONSTANTS.registerOuConfiguration,
-          ...MOCK_CONSTANTS.runnerParameters,
-        });
+        await new RegisterOrganizationalUnitModule().handler(input);
       }).rejects.toThrowError(
-        `Internal Error: AWSControlTowerBaseline identifier not found in available Control Tower baselines returned by ListBaselines api.`,
+        `${MODULE_EXCEPTIONS.SERVICE_EXCEPTION}: ListBaselines api did not returned AWSControlTowerBaseline identifier.`,
       );
       expect(ControlTowerClient).toHaveBeenCalledTimes(1);
       expect(paginateListEnabledBaselines).toHaveBeenCalledTimes(1);
@@ -511,18 +512,18 @@ describe('RegisterOrganizationalUnitModule', () => {
 
       (paginateListBaselines as jest.Mock).mockImplementation(() => [
         {
-          baselines: [MOCK_CONSTANTS.baselines.auditBaseline, MOCK_CONSTANTS.baselines.controlTowerBaseline],
+          baselines: [
+            MOCK_CONSTANTS.RegisterOrganizationalUnitModule.baselines.auditBaseline,
+            MOCK_CONSTANTS.RegisterOrganizationalUnitModule.baselines.controlTowerBaseline,
+          ],
         },
       ]);
 
       // Execute & Verify
       await expect(async () => {
-        await new RegisterOrganizationalUnitModule().handler({
-          configuration: MOCK_CONSTANTS.registerOuConfiguration,
-          ...MOCK_CONSTANTS.runnerParameters,
-        });
+        await new RegisterOrganizationalUnitModule().handler(input);
       }).rejects.toThrowError(
-        `Internal Error: AWS Control Tower Landing Zone is configured with IAM Identity Center, but IdentityCenterBaseline not found in enabled baselines returned by ListEnabledBaselines api.`,
+        `${MODULE_EXCEPTIONS.SERVICE_EXCEPTION}: AWS Control Tower Landing Zone is configured with IAM Identity Center, but IdentityCenterBaseline not found in enabledBaselines returned by ListEnabledBaselines api.`,
       );
       expect(ControlTowerClient).toHaveBeenCalledTimes(1);
       expect(paginateListEnabledBaselines).toHaveBeenCalledTimes(1);
@@ -531,24 +532,35 @@ describe('RegisterOrganizationalUnitModule', () => {
       expect(GetBaselineOperationCommand).toHaveBeenCalledTimes(0);
     });
 
-    test('should throw error when paginateListEnabledBaselines did not return enabledBaselines object', async () => {
+    test('should throw error when ou not found', async () => {
       // Setup
-
-      (paginateListEnabledBaselines as jest.Mock).mockImplementation(() => [
-        {
-          enabledBaselines: undefined,
-        },
-      ]);
+      getOrganizationalUnitIdByPathSpy.mockResolvedValue(undefined);
 
       // Execute & Verify
       await expect(async () => {
-        await new RegisterOrganizationalUnitModule().handler({
-          configuration: MOCK_CONSTANTS.registerOuConfiguration,
-          ...MOCK_CONSTANTS.runnerParameters,
-        });
+        await new RegisterOrganizationalUnitModule().handler(input);
       }).rejects.toThrowError(
-        `Internal Error: AWS Control Tower Landing Zone is configured with IAM Identity Center, but IdentityCenterBaseline not found in enabled baselines returned by ListEnabledBaselines api.`,
+        `${MODULE_EXCEPTIONS.INVALID_INPUT}: AWS Organizations organizational unit (OU) "${input.configuration.name}" not found.`,
       );
+
+      expect(ControlTowerClient).toHaveBeenCalledTimes(1);
+      expect(paginateListEnabledBaselines).toHaveBeenCalledTimes(1);
+      expect(paginateListBaselines).toHaveBeenCalledTimes(1);
+      expect(EnableBaselineCommand).toHaveBeenCalledTimes(0);
+      expect(GetBaselineOperationCommand).toHaveBeenCalledTimes(0);
+    });
+
+    test('should throw error when unable get ou arn', async () => {
+      // Setup
+      getOrganizationalUnitArnSpy.mockResolvedValue(undefined);
+
+      // Execute & Verify
+      await expect(async () => {
+        await new RegisterOrganizationalUnitModule().handler(input);
+      }).rejects.toThrowError(
+        `${MODULE_EXCEPTIONS.INVALID_INPUT}: AWS Organizations organizational unit (OU) "${input.configuration.name}" not found to determine ou arn.`,
+      );
+
       expect(ControlTowerClient).toHaveBeenCalledTimes(1);
       expect(paginateListEnabledBaselines).toHaveBeenCalledTimes(1);
       expect(paginateListBaselines).toHaveBeenCalledTimes(1);
@@ -557,29 +569,25 @@ describe('RegisterOrganizationalUnitModule', () => {
     });
   });
 
-  describe('DRY-RUN - RegisterOrganizationalUnitModule - Dry Run', () => {
+  describe('Dry Run Mode Operations', () => {
+    const input: IRegisterOrganizationalUnitHandlerParameter = {
+      configuration: MOCK_CONSTANTS.RegisterOrganizationalUnitModule.configuration,
+      ...MOCK_CONSTANTS.runnerParameters,
+      dryRun: true,
+    };
     beforeEach(() => {
       jest.clearAllMocks();
     });
 
-    test('should be successful when already registered successfully', async () => {
+    test('should throw error when control tower not found', async () => {
       // Setup
 
-      (paginateListEnabledBaselines as jest.Mock).mockImplementation(() => [
-        {
-          enabledBaselines: [
-            MOCK_CONSTANTS.enabledBaselines.mockOu,
-            MOCK_CONSTANTS.enabledBaselines.mockTarget1,
-            MOCK_CONSTANTS.enabledBaselines.mockTarget2,
-            MOCK_CONSTANTS.enabledBaselines.mockIdentityCenterBaseline,
-          ],
-        },
-      ]);
+      getLandingZoneIdentifierSpy.mockResolvedValue(undefined);
 
       // Execute
 
       const response = await new RegisterOrganizationalUnitModule().handler({
-        configuration: MOCK_CONSTANTS.registerOuConfiguration,
+        configuration: { name: 'root' },
         ...MOCK_CONSTANTS.runnerParameters,
         dryRun: true,
       });
@@ -587,37 +595,22 @@ describe('RegisterOrganizationalUnitModule', () => {
       // Verify
 
       expect(ControlTowerClient).toHaveBeenCalledTimes(1);
-      expect(paginateListEnabledBaselines).toHaveBeenCalledTimes(1);
-      expect(paginateListBaselines).toHaveBeenCalledTimes(1);
+      expect(paginateListEnabledBaselines).toHaveBeenCalledTimes(0);
+      expect(paginateListBaselines).toHaveBeenCalledTimes(0);
       expect(EnableBaselineCommand).toHaveBeenCalledTimes(0);
       expect(GetBaselineOperationCommand).toHaveBeenCalledTimes(0);
       expect(response).toMatch(
-        MOCK_CONSTANTS.dryRunResponsePattern.setupLandingZoneModule(
-          `is already registered with AWS Control Tower, registration status is ${BaselineOperationStatus.SUCCEEDED}, accelerator will skip the registration process.`,
-        ),
+        `Will experience ${MODULE_EXCEPTIONS.INVALID_INPUT}. Reason the environment does not have AWS Control Tower Landing Zone configured.`,
       );
     });
 
-    test('should be successful when not registered', async () => {
+    test('should throw error when ou not found', async () => {
       // Setup
-
-      (paginateListEnabledBaselines as jest.Mock).mockImplementation(() => [
-        {
-          enabledBaselines: [
-            MOCK_CONSTANTS.enabledBaselines.mockTarget1,
-            MOCK_CONSTANTS.enabledBaselines.mockTarget2,
-            MOCK_CONSTANTS.enabledBaselines.mockIdentityCenterBaseline,
-          ],
-        },
-      ]);
+      getOrganizationalUnitIdByPathSpy.mockResolvedValue(undefined);
 
       // Execute
 
-      const response = await new RegisterOrganizationalUnitModule().handler({
-        configuration: MOCK_CONSTANTS.registerOuConfiguration,
-        ...MOCK_CONSTANTS.runnerParameters,
-        dryRun: true,
-      });
+      const response = await new RegisterOrganizationalUnitModule().handler(input);
 
       // Verify
 
@@ -627,32 +620,27 @@ describe('RegisterOrganizationalUnitModule', () => {
       expect(EnableBaselineCommand).toHaveBeenCalledTimes(0);
       expect(GetBaselineOperationCommand).toHaveBeenCalledTimes(0);
       expect(response).toMatch(
-        MOCK_CONSTANTS.dryRunResponsePattern.setupLandingZoneModule(
-          `is not registered with AWS Control Tower accelerator will register the OU with AWS Control Tower.`,
-        ),
+        `Will experience ${MODULE_EXCEPTIONS.INVALID_INPUT}. Reason organizational unit "${input.configuration.name}" not found.`,
       );
     });
 
-    test('should be successful when already registered with failed status', async () => {
+    test('should be successful when ou already registered successfully', async () => {
       // Setup
 
       (paginateListEnabledBaselines as jest.Mock).mockImplementation(() => [
         {
           enabledBaselines: [
-            MOCK_CONSTANTS.enabledBaselines.mockOuFailed,
-            MOCK_CONSTANTS.enabledBaselines.mockTarget2,
-            MOCK_CONSTANTS.enabledBaselines.mockIdentityCenterBaseline,
+            MOCK_CONSTANTS.RegisterOrganizationalUnitModule.enabledBaselines.mockOu,
+            MOCK_CONSTANTS.RegisterOrganizationalUnitModule.enabledBaselines.mockTarget1,
+            MOCK_CONSTANTS.RegisterOrganizationalUnitModule.enabledBaselines.mockTarget2,
+            MOCK_CONSTANTS.RegisterOrganizationalUnitModule.enabledBaselines.mockIdentityCenterBaseline,
           ],
         },
       ]);
 
       // Execute
 
-      const response = await new RegisterOrganizationalUnitModule().handler({
-        configuration: MOCK_CONSTANTS.registerOuConfiguration,
-        ...MOCK_CONSTANTS.runnerParameters,
-        dryRun: true,
-      });
+      const response = await new RegisterOrganizationalUnitModule().handler(input);
 
       // Verify
 
@@ -662,32 +650,22 @@ describe('RegisterOrganizationalUnitModule', () => {
       expect(EnableBaselineCommand).toHaveBeenCalledTimes(0);
       expect(GetBaselineOperationCommand).toHaveBeenCalledTimes(0);
       expect(response).toMatch(
-        MOCK_CONSTANTS.dryRunResponsePattern.setupLandingZoneModule(
-          `is already registered with AWS Control Tower, registration status is ${MOCK_CONSTANTS.enabledBaselines.mockOuFailed.statusSummary.status}, accelerator will try to re-register the OU.`,
-        ),
+        `AWS Organizations organizational unit (OU) "${input.configuration.name}" is already registered with AWS Control Tower, registration status is "${BaselineOperationStatus.SUCCEEDED}", accelerator will skip the registration process.`,
       );
     });
 
-    test('should be successful when already registered with older baseline version', async () => {
+    test('should be successfully register ou', async () => {
       // Setup
 
       (paginateListEnabledBaselines as jest.Mock).mockImplementation(() => [
         {
-          enabledBaselines: [
-            MOCK_CONSTANTS.enabledBaselines.mockOuOldBaseLineVersion,
-            MOCK_CONSTANTS.enabledBaselines.mockTarget2,
-            MOCK_CONSTANTS.enabledBaselines.mockIdentityCenterBaseline,
-          ],
+          enabledBaselines: undefined,
         },
       ]);
 
       // Execute
 
-      const response = await new RegisterOrganizationalUnitModule().handler({
-        configuration: MOCK_CONSTANTS.registerOuConfiguration,
-        ...MOCK_CONSTANTS.runnerParameters,
-        dryRun: true,
-      });
+      const response = await new RegisterOrganizationalUnitModule().handler(input);
 
       // Verify
 
@@ -697,9 +675,65 @@ describe('RegisterOrganizationalUnitModule', () => {
       expect(EnableBaselineCommand).toHaveBeenCalledTimes(0);
       expect(GetBaselineOperationCommand).toHaveBeenCalledTimes(0);
       expect(response).toMatch(
-        MOCK_CONSTANTS.dryRunResponsePattern.setupLandingZoneModule(
-          `is already registered with AWS Control Tower, but the baseline version is ${MOCK_CONSTANTS.enabledBaselines.mockOuOldBaseLineVersion.baselineVersion} which is different from expected baseline version ${MOCK_CONSTANTS.enabledBaselines.mockOu.baselineVersion} and registration status is ${MOCK_CONSTANTS.enabledBaselines.mockOuOldBaseLineVersion.statusSummary.status}, manual baseline update is required. Baseline version compatibility metrics can be found here https://docs.aws.amazon.com/controltower/latest/userguide/table-of-baselines.html`,
-        ),
+        `AWS Organizations organizational unit (OU) "${input.configuration.name}" is not registered with AWS Control Tower accelerator will register the OU with AWS Control Tower.`,
+      );
+    });
+
+    test('should throw error with existing ou registration in failed status', async () => {
+      // Setup
+
+      (paginateListEnabledBaselines as jest.Mock).mockImplementation(() => [
+        {
+          enabledBaselines: [
+            MOCK_CONSTANTS.RegisterOrganizationalUnitModule.enabledBaselines.mockOuFailed,
+            MOCK_CONSTANTS.RegisterOrganizationalUnitModule.enabledBaselines.mockTarget2,
+            MOCK_CONSTANTS.RegisterOrganizationalUnitModule.enabledBaselines.mockIdentityCenterBaseline,
+          ],
+        },
+      ]);
+
+      // Execute
+
+      const response = await new RegisterOrganizationalUnitModule().handler(input);
+
+      // Verify
+
+      expect(ControlTowerClient).toHaveBeenCalledTimes(1);
+      expect(paginateListEnabledBaselines).toHaveBeenCalledTimes(1);
+      expect(paginateListBaselines).toHaveBeenCalledTimes(1);
+      expect(EnableBaselineCommand).toHaveBeenCalledTimes(0);
+      expect(GetBaselineOperationCommand).toHaveBeenCalledTimes(0);
+      expect(response).toMatch(
+        `AWS Organizations organizational unit (OU) "${input.configuration.name}" is already registered with AWS Control Tower, registration status is "${BaselineOperationStatus.FAILED}", accelerator will skip the registration process, review and fix the registration status from console.`,
+      );
+    });
+
+    test('should be successful when registration ou has older baseline version', async () => {
+      // Setup
+
+      (paginateListEnabledBaselines as jest.Mock).mockImplementation(() => [
+        {
+          enabledBaselines: [
+            MOCK_CONSTANTS.RegisterOrganizationalUnitModule.enabledBaselines.mockOuOldBaseLineVersion,
+            MOCK_CONSTANTS.RegisterOrganizationalUnitModule.enabledBaselines.mockTarget2,
+            MOCK_CONSTANTS.RegisterOrganizationalUnitModule.enabledBaselines.mockIdentityCenterBaseline,
+          ],
+        },
+      ]);
+
+      // Execute
+
+      const response = await new RegisterOrganizationalUnitModule().handler(input);
+
+      // Verify
+
+      expect(ControlTowerClient).toHaveBeenCalledTimes(1);
+      expect(paginateListEnabledBaselines).toHaveBeenCalledTimes(1);
+      expect(paginateListBaselines).toHaveBeenCalledTimes(1);
+      expect(EnableBaselineCommand).toHaveBeenCalledTimes(0);
+      expect(GetBaselineOperationCommand).toHaveBeenCalledTimes(0);
+      expect(response).toMatch(
+        `AWS Organizations organizational unit (OU) "${input.configuration.name}" is already registered with AWS Control Tower, but the baseline version is "${MOCK_CONSTANTS.RegisterOrganizationalUnitModule.enabledBaselines.mockOuOldBaseLineVersion.baselineVersion}" which is different from expected baseline version "${MOCK_CONSTANTS.RegisterOrganizationalUnitModule.enabledBaselines.mockOu.baselineVersion}" and registration status is "${MOCK_CONSTANTS.RegisterOrganizationalUnitModule.enabledBaselines.mockOuOldBaseLineVersion.statusSummary.status}", baseline update is required, review the upgrade from console. Baseline version compatibility metrics can be found here https://docs.aws.amazon.com/controltower/latest/userguide/table-of-baselines.html`,
       );
     });
   });
