@@ -33,10 +33,12 @@ jest.mock('aws-cdk-lib', () => ({
   },
   CustomResourceProviderRuntime: {
     NODEJS_18_X: 'nodejs18.x',
+    NODEJS_20_X: 'nodejs20.x',
   },
   aws_lambda: {
     Runtime: {
       NODEJS_18_X: 'nodejs18.x',
+      NODEJS_20_X: 'nodejs20.x',
     },
   },
   Stack: {
@@ -122,7 +124,7 @@ describe('MacieExportConfigClassification', () => {
       'Custom::MaciePutClassificationExportConfiguration',
       {
         codeDirectory: expect.stringContaining('put-export-config-classification/dist'),
-        runtime: 'nodejs18.x',
+        runtime: 'nodejs20.x',
         policyStatements: [
           {
             Sid: 'MaciePutClassificationExportConfigurationTaskMacieActions',

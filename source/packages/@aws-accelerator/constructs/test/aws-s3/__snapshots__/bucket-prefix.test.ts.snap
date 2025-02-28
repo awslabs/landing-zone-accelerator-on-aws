@@ -154,7 +154,7 @@ exports[`BucketPrefix Construct(BucketPrefix):  Snapshot Test 1`] = `
             "Arn",
           ],
         },
-        "Runtime": "nodejs18.x",
+        "Runtime": "nodejs20.x",
         "Timeout": 300,
       },
       "Type": "AWS::Lambda::Function",

@@ -188,7 +188,7 @@ exports[`FirewallConfigReplacements Construct(FirewallConfigReplacements):  Snap
             "Arn",
           ],
         },
-        "Runtime": "nodejs18.x",
+        "Runtime": "nodejs20.x",
         "Timeout": 120,
       },
       "Type": "AWS::Lambda::Function",

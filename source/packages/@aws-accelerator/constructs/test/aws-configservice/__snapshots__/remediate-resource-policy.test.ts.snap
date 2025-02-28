@@ -108,7 +108,7 @@ exports[`RemediateResourcePolicy Construct(RemediateResourcePolicy):  Snapshot T
             "Arn",
           ],
         },
-        "Runtime": "nodejs18.x",
+        "Runtime": "nodejs20.x",
         "Timeout": 60,
       },
       "Type": "AWS::Lambda::Function",

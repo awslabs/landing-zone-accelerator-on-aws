@@ -289,7 +289,7 @@ exports[`BucketEncryption Construct(ValidateBucketKmsEncryption):  Snapshot Test
             "Arn",
           ],
         },
-        "Runtime": "nodejs18.x",
+        "Runtime": "nodejs20.x",
         "Timeout": 300,
       },
       "Type": "AWS::Lambda::Function",
