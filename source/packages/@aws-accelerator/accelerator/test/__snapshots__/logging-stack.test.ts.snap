@@ -2985,6 +2985,7 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 1`] = `
         },
         "Environment": {
           "Variables": {
+            "DynamicS3LogPartitioningByAccountId": "false",
             "DynamicS3LogPartitioningMapping": "REPLACED-JSON-PATH.json",
             "KinesisStreamArn": {
               "Fn::GetAtt": [
@@ -7137,6 +7138,7 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 2`] = `
         },
         "Environment": {
           "Variables": {
+            "DynamicS3LogPartitioningByAccountId": "false",
             "DynamicS3LogPartitioningMapping": "REPLACED-JSON-PATH.json",
             "KinesisStreamArn": {
               "Fn::GetAtt": [
@@ -14131,6 +14133,7 @@ exports[`LoggingStackDelegatedAdmin Construct(LoggingStacKDelegatedAdmin):  Snap
         },
         "Environment": {
           "Variables": {
+            "DynamicS3LogPartitioningByAccountId": "false",
             "DynamicS3LogPartitioningMapping": "REPLACED-JSON-PATH.json",
             "KinesisStreamArn": {
               "Fn::GetAtt": [
@@ -18209,6 +18212,7 @@ exports[`LoggingStackOuTargets Construct(LoggingStackOuTargets):  Snapshot Test 
         },
         "Environment": {
           "Variables": {
+            "DynamicS3LogPartitioningByAccountId": "false",
             "DynamicS3LogPartitioningMapping": "REPLACED-JSON-PATH.json",
             "KinesisStreamArn": {
               "Fn::GetAtt": [

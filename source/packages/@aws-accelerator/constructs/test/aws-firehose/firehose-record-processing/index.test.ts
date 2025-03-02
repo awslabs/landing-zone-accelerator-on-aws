@@ -425,6 +425,135 @@ it('Dynamic partition wildcard match pattern AWSAccelerator*VpcFlowLog*region', 
   expect(response.records[3].metadata?.partitionKeys['dynamicPrefix']).toContain('CloudWatchLogs');
 });
 
+describe('Dynamic partitioning with account ID mapping', () => {
+  it('should include account ID in prefix when DynamicS3LogPartitioningByAccountId is true', async () => {
+    process.env['DynamicS3LogPartitioningByAccountId'] = 'true';
+    process.env['MaxOutputPayload'] = '50000000';
+
+    const input: CloudWatchLogsToFirehoseRecord = {
+      messageType: 'DATA_MESSAGE',
+      owner: '111111111111',
+      logGroup: 'testLogGroup',
+      logStream: 'testLogStream',
+      subscriptionFilters: ['testFilter'],
+      logEvents: [
+        {
+          id: '37255929110829766979968869523131155620888295107628171264',
+          timestamp: 1670613640001,
+          message: 'test0',
+        },
+      ],
+    };
+
+    const response = await handler(makeTestInput(input, 1));
+    expect(response.records[0].metadata?.partitionKeys['dynamicPrefix']).toContain('CloudWatchLogs/111111111111');
+  });
+
+  it('should combine account ID and mapping prefix when both are enabled', async () => {
+    process.env['DynamicS3LogPartitioningByAccountId'] = 'true';
+    process.env['DynamicS3LogPartitioningMapping'] =
+      '../../../test/aws-firehose/firehose-record-processing/dynamicPartition1.json';
+    process.env['MaxOutputPayload'] = '50000000';
+
+    const input: CloudWatchLogsToFirehoseRecord = {
+      messageType: 'DATA_MESSAGE',
+      owner: '111111111111',
+      logGroup: '/AWSAccelerator-SecurityHub',
+      logStream: 'testLogStream',
+      subscriptionFilters: ['AWSAccelerator-SecurityHub'],
+      logEvents: [
+        {
+          id: '37255929110829766979968869523131155620888295107628171264',
+          timestamp: 1670613640001,
+          message: 'test0',
+        },
+      ],
+    };
+
+    const response = await handler(makeTestInput(input, 1));
+    expect(response.records[0].metadata?.partitionKeys['dynamicPrefix']).toContain(
+      'CloudWatchLogs/111111111111/security-hub',
+    );
+  });
+
+  it('should not include account ID in prefix when DynamicS3LogPartitioningByAccountId is false', async () => {
+    process.env['DynamicS3LogPartitioningByAccountId'] = 'false';
+    process.env['MaxOutputPayload'] = '50000000';
+
+    const input: CloudWatchLogsToFirehoseRecord = {
+      messageType: 'DATA_MESSAGE',
+      owner: '111111111111',
+      logGroup: 'testLogGroup',
+      logStream: 'testLogStream',
+      subscriptionFilters: ['testFilter'],
+      logEvents: [
+        {
+          id: '37255929110829766979968869523131155620888295107628171264',
+          timestamp: 1670613640001,
+          message: 'test0',
+        },
+      ],
+    };
+
+    const response = await handler(makeTestInput(input, 1));
+    expect(response.records[0].metadata?.partitionKeys['dynamicPrefix']).not.toContain('111111111111');
+  });
+
+  it('should handle missing DynamicS3LogPartitioningByAccountId environment variable', async () => {
+    delete process.env['DynamicS3LogPartitioningByAccountId'];
+    process.env['MaxOutputPayload'] = '50000000';
+
+    const input: CloudWatchLogsToFirehoseRecord = {
+      messageType: 'DATA_MESSAGE',
+      owner: '111111111111',
+      logGroup: 'testLogGroup',
+      logStream: 'testLogStream',
+      subscriptionFilters: ['testFilter'],
+      logEvents: [
+        {
+          id: '37255929110829766979968869523131155620888295107628171264',
+          timestamp: 1670613640001,
+          message: 'test0',
+        },
+      ],
+    };
+
+    const response = await handler(makeTestInput(input, 1));
+    expect(response.records[0].metadata?.partitionKeys['dynamicPrefix']).not.toContain('111111111111');
+  });
+
+  it('should handle different account IDs correctly', async () => {
+    process.env['DynamicS3LogPartitioningByAccountId'] = 'true';
+    process.env['MaxOutputPayload'] = '50000000';
+
+    const testCases = [
+      { accountId: '111111111111', expectedPrefix: 'CloudWatchLogs/111111111111' },
+      { accountId: '222222222222', expectedPrefix: 'CloudWatchLogs/222222222222' },
+      { accountId: '333333333333', expectedPrefix: 'CloudWatchLogs/333333333333' },
+    ];
+
+    for (const testCase of testCases) {
+      const input: CloudWatchLogsToFirehoseRecord = {
+        messageType: 'DATA_MESSAGE',
+        owner: testCase.accountId,
+        logGroup: 'testLogGroup',
+        logStream: 'testLogStream',
+        subscriptionFilters: ['testFilter'],
+        logEvents: [
+          {
+            id: '37255929110829766979968869523131155620888295107628171264',
+            timestamp: 1670613640001,
+            message: 'test0',
+          },
+        ],
+      };
+
+      const response = await handler(makeTestInput(input, 1));
+      expect(response.records[0].metadata?.partitionKeys['dynamicPrefix']).toContain(testCase.expectedPrefix);
+    }
+  });
+});
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function makeTestInput(inputData: CloudWatchLogsToFirehoseRecord | any, numberOfRecords: number) {
   const jsonStringPayload = JSON.stringify(inputData);

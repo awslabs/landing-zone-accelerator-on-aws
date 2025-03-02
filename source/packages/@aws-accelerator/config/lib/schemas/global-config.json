@@ -503,6 +503,10 @@
           "$ref": "#/definitions/NonEmptyString",
           "description": "Declaration of Dynamic Partition for Kinesis Firehose."
         },
+        "dynamicPartitioningByAccountId": {
+          "description": "Declaration of Dynamic Partitioning for Kinesis Firehose by Account ID.",
+          "type": "boolean"
+        },
         "enable": {
           "description": "Enable or disable CloudWatch replication",
           "type": "boolean"

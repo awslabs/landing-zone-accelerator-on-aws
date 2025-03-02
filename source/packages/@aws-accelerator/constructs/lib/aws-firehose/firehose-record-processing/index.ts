@@ -109,23 +109,28 @@ async function checkDynamicPartition(firehoseRecordDynamicPartition: CloudWatchL
   let mappings: S3LogPartitionType[] | undefined;
 
   const dynamicPartitionMapping = process.env['DynamicS3LogPartitioningMapping']!;
+  const dynamicPartitioningByAccountId = process.env['DynamicS3LogPartitioningByAccountId']!;
 
   // if there is a mapping proceed to create a mapping
   if (dynamicPartitionMapping) {
     mappings = JSON.parse(fs.readFileSync(path.join(__dirname, dynamicPartitionMapping), 'utf-8'));
   }
 
-  let serviceName = null;
+  const serviceName: string[] = [];
+
+  if (dynamicPartitioningByAccountId === 'true') {
+    serviceName.push(firehoseRecordDynamicPartition.owner);
+  }
 
   if (mappings) {
     for (const mapping of mappings) {
       if (wildcardMatch(firehoseRecordDynamicPartition.logGroup, mapping.logGroupPattern)) {
-        serviceName = mapping.s3Prefix;
+        serviceName.push(mapping.s3Prefix);
         break; // Take the first match
       }
     }
   }
-  return serviceName;
+  return serviceName.length > 0 ? serviceName.join('/') : null;
 }
 
 async function getDatePrefix(serviceName: string | null, inputTimestamp: Date) {

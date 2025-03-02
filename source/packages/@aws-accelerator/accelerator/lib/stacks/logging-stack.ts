@@ -1086,6 +1086,8 @@ export class LoggingStack extends AcceleratorStack {
     // so files from particular log group can be placed in their respective S3 prefix
     const cloudWatchToS3Firehose = new CloudWatchToS3Firehose(this, 'FirehoseToS3Setup', {
       dynamicPartitioningValue: this.props.globalConfig.logging.cloudwatchLogs?.dynamicPartitioning ?? undefined,
+      dynamicPartitioningByAccountId:
+        this.props.globalConfig.logging.cloudwatchLogs?.dynamicPartitioningByAccountId ?? false,
       bucketName: centralLogsBucketName,
       kinesisStream: logsKinesisStream,
       firehoseKmsKey: this.centralLogBucketKey!, // for firehose to access s3

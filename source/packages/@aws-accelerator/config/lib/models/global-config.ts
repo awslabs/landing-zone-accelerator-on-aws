@@ -1385,6 +1385,24 @@ export interface ICloudWatchLogsConfig {
    */
   readonly dynamicPartitioning?: t.NonEmptyString;
   /**
+   * Declaration of Dynamic Partitioning for Kinesis Firehose by Account ID.
+   *
+   * @remarks
+   * Kinesis firehose Dynamic Partition by Account ID will add the Account ID that produced the CloudWatch Logs to the partitioning strategy of logs. For example: `s3://<central-logs-bucket>/CloudWatchLogs/<account id>/`
+   *
+   * If dynamicPartitioning is also being used the Account ID partition will come before the supplied s3 prefix. For example a dynamicPartitioning file with the format
+   *  ```
+   * { "logGroupPattern": "LogGroupName", "s3Prefix": "s3-prefix" }
+   * ```
+   * The resulting partitioning strategy would be `s3://<central-logs-bucket>/CloudWatchLogs/<account id>/s3-prefix/`
+   *
+   *  For more information on Kinesis Firehose dynamic partitioning limits please refer to::
+   * https://docs.aws.amazon.com/firehose/latest/dev/limits.html
+   *
+   *
+   */
+  readonly dynamicPartitioningByAccountId?: boolean;
+  /**
    * Enable or disable CloudWatch replication
    */
   readonly enable?: boolean;

@@ -181,3 +181,76 @@ describe('File Extension Tests', () => {
     });
   });
 });
+
+describe('DynamicPartitioningByAccountId Tests', () => {
+  describe('With Account ID Partitioning', () => {
+    const testStack = new cdk.Stack();
+    new CloudWatchToS3Firehose(testStack, 'CloudWatchToS3FirehoseWithAccountId', {
+      firehoseKmsKey: new cdk.aws_kms.Key(testStack, 'CustomKeyWithAccountId', {}),
+      lambdaKey: new cdk.aws_kms.Key(testStack, 'CustomLambdaKeyWithAccountId', {}),
+      kinesisStream: new cdk.aws_kinesis.Stream(testStack, 'CustomStreamWithAccountId', {}),
+      kinesisKmsKey: new cdk.aws_kms.Key(testStack, 'CustomKinesisKeyWithAccountId', {}),
+      bucket: new cdk.aws_s3.Bucket(testStack, 'TestBucketWithAccountId', {}),
+      dynamicPartitioningValue: 'dynamic-partitioning/log-filters.json',
+      dynamicPartitioningByAccountId: true,
+      homeRegion: 'someregion',
+      configDir: `${__dirname}/../../../accelerator/test/configs/snapshot-only`,
+      acceleratorPrefix: 'AWSAccelerator',
+      useExistingRoles: false,
+      firehoseRecordsProcessorFunctionName: 'test',
+      logsKmsKey: new cdk.aws_kms.Key(testStack, 'CustomLogsKeyWithAccountId', {}),
+      logsRetentionInDaysValue: '7',
+      firehoseLambdaProcessorBufferInterval: '60',
+      firehoseLambdaProcessorBufferSize: '0.2',
+      firehoseLambdaProcessorRetries: '3',
+    });
+    snapShotTest(testNamePrefix, testStack);
+  });
+
+  describe('Without Account ID Partitioning', () => {
+    const testStack = new cdk.Stack();
+    new CloudWatchToS3Firehose(testStack, 'CloudWatchToS3FirehoseWithoutAccountId', {
+      firehoseKmsKey: new cdk.aws_kms.Key(testStack, 'CustomKeyWithoutAccountId', {}),
+      lambdaKey: new cdk.aws_kms.Key(testStack, 'CustomLambdaKeyWithoutAccountId', {}),
+      kinesisStream: new cdk.aws_kinesis.Stream(testStack, 'CustomStreamWithoutAccountId', {}),
+      kinesisKmsKey: new cdk.aws_kms.Key(testStack, 'CustomKinesisKeyWithoutAccountId', {}),
+      bucket: new cdk.aws_s3.Bucket(testStack, 'TestBucketWithoutAccountId', {}),
+      dynamicPartitioningValue: 'dynamic-partitioning/log-filters.json',
+      dynamicPartitioningByAccountId: false,
+      homeRegion: 'someregion',
+      configDir: `${__dirname}/../../../accelerator/test/configs/snapshot-only`,
+      acceleratorPrefix: 'AWSAccelerator',
+      useExistingRoles: false,
+      firehoseRecordsProcessorFunctionName: 'test',
+      logsKmsKey: new cdk.aws_kms.Key(testStack, 'CustomLogsKeyWithoutAccountId', {}),
+      logsRetentionInDaysValue: '7',
+      firehoseLambdaProcessorBufferInterval: '60',
+      firehoseLambdaProcessorBufferSize: '0.2',
+      firehoseLambdaProcessorRetries: '3',
+    });
+    snapShotTest(testNamePrefix, testStack);
+  });
+
+  describe('Undefined Account ID Partitioning', () => {
+    const testStack = new cdk.Stack();
+    new CloudWatchToS3Firehose(testStack, 'CloudWatchToS3FirehoseUndefinedAccountId', {
+      firehoseKmsKey: new cdk.aws_kms.Key(testStack, 'CustomKeyUndefinedAccountId', {}),
+      lambdaKey: new cdk.aws_kms.Key(testStack, 'CustomLambdaKeyUndefinedAccountId', {}),
+      kinesisStream: new cdk.aws_kinesis.Stream(testStack, 'CustomStreamUndefinedAccountId', {}),
+      kinesisKmsKey: new cdk.aws_kms.Key(testStack, 'CustomKinesisKeyUndefinedAccountId', {}),
+      bucket: new cdk.aws_s3.Bucket(testStack, 'TestBucketUndefinedAccountId', {}),
+      dynamicPartitioningValue: 'dynamic-partitioning/log-filters.json',
+      homeRegion: 'someregion',
+      configDir: `${__dirname}/../../../accelerator/test/configs/snapshot-only`,
+      acceleratorPrefix: 'AWSAccelerator',
+      useExistingRoles: false,
+      firehoseRecordsProcessorFunctionName: 'test',
+      logsKmsKey: new cdk.aws_kms.Key(testStack, 'CustomLogsKeyUndefinedAccountId', {}),
+      logsRetentionInDaysValue: '7',
+      firehoseLambdaProcessorBufferInterval: '60',
+      firehoseLambdaProcessorBufferSize: '0.2',
+      firehoseLambdaProcessorRetries: '3',
+    });
+    snapShotTest(testNamePrefix, testStack);
+  });
+});
