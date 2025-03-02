@@ -29,6 +29,11 @@ export interface CloudWatchToS3FirehoseProps {
   dynamicPartitioningValue?: string;
   /**
    *
+   * Add account level dynamic partitioning to CloudWatch Log Partitioning
+   */
+  dynamicPartitioningByAccountId?: boolean;
+  /**
+   *
    * Source bucket object is must when source bucket name wasn't provided
    * This bucket will have all the CloudWatch Logs
    */
@@ -144,6 +149,7 @@ export class CloudWatchToS3Firehose extends Construct {
       environmentEncryption: props.lambdaKey,
       environment: {
         DynamicS3LogPartitioningMapping: props.dynamicPartitioningValue!,
+        DynamicS3LogPartitioningByAccountId: props.dynamicPartitioningByAccountId?.toString() ?? 'false',
         KinesisStreamArn: props.kinesisStream.streamArn,
       },
     });

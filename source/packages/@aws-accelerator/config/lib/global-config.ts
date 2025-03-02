@@ -440,6 +440,7 @@ export class CloudWatchSubscriptionConfig implements i.ICloudWatchSubscriptionCo
 
 export class CloudWatchLogsConfig implements i.ICloudWatchLogsConfig {
   readonly dynamicPartitioning: string | undefined = undefined;
+  readonly dynamicPartitioningByAccountId: boolean | undefined = undefined;
   readonly enable: boolean | undefined = undefined;
   readonly encryption: ServiceEncryptionConfig | undefined = undefined;
   readonly exclusions: CloudWatchLogsExclusionConfig[] | undefined = undefined;
