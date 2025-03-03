@@ -100,9 +100,6 @@ const runPropsTemplate = {
     forceBootstrap: undefined,
     skipStaticValidation: undefined,
     useManagementAccessRole: true,
-    stackRefactor: {
-      networkVpcStack: false,
-    },
   },
   centralLogsBucketKmsKeyArn: undefined,
   centralizeCdkBootstrap: undefined,

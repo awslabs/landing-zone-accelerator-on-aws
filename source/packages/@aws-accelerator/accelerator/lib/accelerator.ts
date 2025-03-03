@@ -194,7 +194,7 @@ export abstract class Accelerator {
       logger.info('Loaded ASEA mapping');
     }
 
-    const shouldPerformNetworkRefactor = globalConfig?.cdkOptions.stackRefactor.networkVpcStack ?? false;
+    const shouldPerformNetworkRefactor = globalConfig?.cdkOptions?.stackRefactor?.networkVpcStack ?? false;
 
     if (shouldPerformNetworkRefactor && props.stage !== AcceleratorStage.NETWORK_VPC && props.command !== 'synth') {
       logger.info('Accelerator NetworkVpc Stack Refactor in progress, execution skipped.');
