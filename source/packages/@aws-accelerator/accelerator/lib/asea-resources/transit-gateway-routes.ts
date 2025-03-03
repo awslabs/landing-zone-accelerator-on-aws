@@ -133,13 +133,13 @@ export class TransitGatewayRoutes extends AseaResource {
     const tgwAccepterRouteTables = tgwAccepterResources.getResourcesByType(RESOURCE_TYPE.TGW_ROUTE_TABLE);
     this.allGlobalRouteTables.push(...tgwAccepterRouteTables);
 
-    this.allGlobalRouteTables.map(allGlobalRouteTable => {
+    this.allGlobalRouteTables.forEach(allGlobalRouteTable => {
       const tags = allGlobalRouteTable.resourceMetadata['Properties'].Tags;
       const name = tags.find((tag: { Key: string; Value: string }) => tag.Key === 'Name').Value;
       this.transitGatewayGlobalRouteTables.set(name, allGlobalRouteTable.physicalResourceId!);
     });
 
-    this.allGlobalTgwPeeringAttachments.map(allGlobalTgwPeeringAttachment => {
+    this.allGlobalTgwPeeringAttachments.forEach(allGlobalTgwPeeringAttachment => {
       const tgwAttachmentId = allGlobalTgwPeeringAttachment.physicalResourceId;
       const tgwAttachmentName = allGlobalTgwPeeringAttachment.resourceMetadata['Properties'].tagValue;
       if (tgwAttachmentId) {

@@ -45,11 +45,10 @@ import {
 } from '@aws-accelerator/utils/lib/common-functions';
 
 import { AssumeProfilePlugin } from '@aws-cdk-extensions/cdk-plugin-assume-role';
-import { isBeforeBootstrapStage, writeImportResources } from '../utils/app-utils';
+import { getReplacementsConfig, isBeforeBootstrapStage, writeImportResources } from '../utils/app-utils';
 import { AcceleratorStage } from './accelerator-stage';
 import { AcceleratorToolkit, AcceleratorToolkitProps } from './toolkit';
 import { v4 as uuidv4 } from 'uuid';
-import { getReplacementsConfig } from '../utils/app-utils';
 import * as path from 'path';
 import { Regions } from '@aws-accelerator/utils/lib/regions';
 

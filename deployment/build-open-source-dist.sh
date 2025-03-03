@@ -115,6 +115,9 @@ cp $source_template_dir/../DEVELOPING.md $dist_dir
 echo "cp $source_template_dir/../FAQ.md $dist_dir"
 cp $source_template_dir/../FAQ.md $dist_dir
 
+echo "cp $source_template_dir/../SECURITY.md $dist_dir"
+cp $source_template_dir/../SECURITY.md $dist_dir
+
 echo "cp $source_template_dir/../.viperlightignore $dist_dir"
 cp $source_template_dir/../.viperlightignore $dist_dir
 

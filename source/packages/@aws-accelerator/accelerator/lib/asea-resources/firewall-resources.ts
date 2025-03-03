@@ -43,15 +43,8 @@ export class FirewallResources extends AseaResource {
       );
       return;
     }
-    const firewallConfigInstances = props.customizationsConfig.firewalls?.instances;
-
     for (const existingFirewallInstance of existingFirewallInstances) {
       const firewallInstanceName = this.getAseaFirewallInstanceNameFromTags(existingFirewallInstance);
-
-      const firewallInstanceConfig = firewallConfigInstances?.find(
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        (firewallConfigInstance: { name: any }) => firewallConfigInstance.name === firewallInstanceName,
-      );
 
       const firewallInstance = this.stack.getResource(
         existingFirewallInstance.logicalResourceId,
@@ -65,9 +58,6 @@ export class FirewallResources extends AseaResource {
           stringValue: eni.networkInterfaceId!,
         });
       }
-      //Leaving as temporary placeholder for deletion handler
-      firewallInstanceConfig;
-      firewallInstance;
 
       this.scope.addSsmParameter({
         logicalId: pascalCase(`SsmParam${pascalCase(firewallInstanceName)}`),

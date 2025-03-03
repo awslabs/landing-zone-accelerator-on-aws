@@ -17,7 +17,7 @@ export class Route53ResolverEndpoint extends AseaResource {
   constructor(scope: ImportAseaResourcesStack, route53ResolverEndpointProps: AseaResourceProps) {
     super(scope, route53ResolverEndpointProps);
     this.props = route53ResolverEndpointProps;
-    // this.ssmParameters = [];
+
     if (route53ResolverEndpointProps.stackInfo.phase !== ASEA_PHASE_NUMBER) {
       // Skip Non-Phase 1 resource stacks
       this.scope.addLogs(

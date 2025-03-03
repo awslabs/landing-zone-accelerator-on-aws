@@ -18,7 +18,6 @@ export class Route53ResolverQueryLogging extends AseaResource {
   constructor(scope: ImportAseaResourcesStack, route53ResolverQueryLoggingProps: AseaResourceProps) {
     super(scope, route53ResolverQueryLoggingProps);
     this.props = route53ResolverQueryLoggingProps;
-    this.scope.acceleratorPrefix;
     if (route53ResolverQueryLoggingProps.stackInfo.phase !== ASEA_PHASE_NUMBER) {
       // Skip Non-Phase 1 resource stacks
       this.scope.addLogs(

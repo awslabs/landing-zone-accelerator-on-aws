@@ -11,8 +11,6 @@
  *  and limitations under the License.
  */
 
-//import * as cdk from 'aws-cdk-lib';
-//import { CfnResourceType } from '@aws-accelerator/config';
 import { pascalCase } from 'pascal-case';
 import { ImportAseaResourcesStack, LogLevel } from '../stacks/import-asea-resources-stack';
 import { AseaResource, AseaResourceProps } from './resource';

@@ -1,7 +1,6 @@
 import { ImportAseaResourcesStack, LogLevel } from '../stacks/import-asea-resources-stack';
 import { AseaResource, AseaResourceProps } from './resource';
-import { AseaResourceType } from '@aws-accelerator/config';
-import { CfnResourceType } from '@aws-accelerator/config';
+import { AseaResourceType, CfnResourceType } from '@aws-accelerator/config';
 import * as ssm from 'aws-cdk-lib/aws-ssm';
 import { pascalCase } from 'pascal-case';
 import { SsmResourceType } from '@aws-accelerator/utils/lib/ssm-parameter-path';

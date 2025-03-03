@@ -32,6 +32,7 @@ import {
   NlbTargetTypeConfig,
   RouteTableConfig,
   RouteTableEntryConfig,
+  ShareTargets,
   SubnetConfig,
   Tag,
   TargetGroupItemConfig,
@@ -49,7 +50,6 @@ import {
   VpnConnectionConfig,
   isNetworkType,
 } from '@aws-accelerator/config';
-import { ShareTargets } from '@aws-accelerator/config';
 import {
   ActiveDirectory,
   ActiveDirectoryConfiguration,

@@ -81,7 +81,6 @@ function getProjectDependencies(packageJsonPaths: string[], prefixes: string[]):
       const allDeps = { ...packageJson.dependencies, ...packageJson.devDependencies };
 
       Object.keys(allDeps).forEach(dep => {
-        // if (packageNames.has(dep)) {
         if (isPrefixAvailable) {
           if (prefixes.some(prefix => dep.startsWith(prefix))) {
             dependencies.push({

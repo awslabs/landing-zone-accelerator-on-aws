@@ -42,6 +42,7 @@ artifacts:
     - .github/**/*
     - buildspec.yml
     - CHANGELOG.md
+    - SECURITY.md
     - .cfnnag_*
     - .viperlightignore
     - codescan-postbuild-custom.sh
