@@ -5,45 +5,77 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [1.12.0]
+## [1.12.0] - 2025-04-02
 
 ### Added
 
-- feat (guardduty): added support for malware protection, RDS, lambda and additional EKS options
-- chore(module): configure lza module foundation framework
-- chore(networking): use SDK v3 for direct connect gateway custom resource
-- chore(modules): rename module parameter and dry run response
-- feat(module): added Amazon Security Lake set-delegated-admin action
-- feat(logging): cloudwatch logs account setting for subscription filter
-- feat(backoff): added escape hatch to configure number of retries and starting backoff
+- feat(guardduty): added support for malware protection, RDS, lambda and additional EKS options
 - feat(kinesis): allow customization of retention, streaming mode and shard count
 - feat(logging): allow users to customize lambda processor for firehose
+- feat(logging): cloudwatch logs account setting for subscription filter
+- feat(module): added Amazon Security Lake set-delegated-admin action
 
 ### Fixed
 
-- fix(networking): fix same account cross region vpc peering route table not found
-- fix(iam): vpc peering role trust policy prevent cdk execution role from assuming it
-- fix(organizations): add missing permission to custom resource for policy deletion
-- fix(kms): changed cwl cmk condition
-- fix(auditmanager): fix delegated admin account custom resource
-- fix(networking): fixed lookup failure on eni 0 when adding new routes for FW
-- fix(asea): failure in network association stack with security groups associated with RAM shared subnets/vpc
 - fix(asea): fixed mapping upload logic to use lza enabled regions and accounts
-- fix(networking): fixed hosted zones for sagemaker vpc endpoints
-- fix(service quota): fix region logic that provisioned service limit for home region even if not specified
+- fix(auditmanager): fix delegated admin account custom resource
+- fix(iam): vpc peering role trust policy prevent cdk execution role from assuming it
+- fix(kinesis): retain defaults when no input is provided
+- fix(networking): fix same account cross region vpc peering route table not found
+- fix(organizations): add missing permission to custom resource for policy deletion
 - fix(servicecatalog): fixed permission set role matching logic
+- fix(workshop): fix single account deployment mode
 
 ### Changed
 
 - chore(documentation): add mkdocs preventative control section
+- chore(module): configure lza module foundation framework
+- chore(module): rename module parameter and dry run response
+- chore(networking): use SDK v3 for direct connect gateway custom resource
 - chore(security): upgrade esbuild version to 0.25.0
 - chore(config): add vpc route table route preventative controls in sample config
 - chore(runtime): updated node runtime to node 20
 - chore(securityhub): update sdk v3
 
-### Configuration Changes
+## [1.11.2] - 2025-02-17
 
-## [1.11.0] - 12-11-2024
+### Added
+
+- feat(backoff): added ability to configure number of retries and starting backoff
+
+### Fixed
+
+- fix(asea): batch s3 mapping writes
+- fix(config): remove deprecated field
+- fix(config): fix sagemaker runtime feature store in all enabled
+- fix(eventbus): add service linked roles to policy condition
+- fix(logging): removed wildcard from central log bucket for management access role
+- fix(networking): fixed hosted zones for sagemaker vpc endpoints
+- fix(networking): fix asn property type in create dx gateway lambda
+
+### Changed
+
+- chore(security): fix CVE-2022-29526 in esbuild
+- chore(security): fix execa GMS-2020-2 vulnerability
+
+## [1.11.1] - 2025-01-24
+
+### Fixed
+
+- fix(asea): use only accounts from accounts config to write mapping
+- fix(asea): error in network association stack security groups associated with RAM shared subnets/vpc
+- fix(config): fixing default behavior for Managed Config Rule scopes
+- fix(constructs): service linked role missing permissions
+- fix(kms): changed cwl cmk condition
+- fix(networking): fixed lookup failure on eni 0 when adding new routes for FW
+- fix(orgs): update partition support
+- fix(throttle): reduced max number of retry attempts to 7
+
+### Changed
+
+- chore: added yarn resolution for cross-spawn dependency
+
+## [1.11.0] - 2024-12-11
 
 ### Added
 
@@ -123,7 +155,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - chore(sample-config): add transit gateway and ram share protection in sample config
 - chore(sample-config): externalize healthcare configurations
 
-## [1.10.1] - 11-18-2024
+## [1.10.1] - 2024-11-18
 
 ### Fixed
 
@@ -134,7 +166,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - fix(pipeline): bootstrap stage failed silently
 - fix(organizations): fix enabled controls cfn throttling
 
-## [1.10.0] - 10-16-2024
+## [1.10.0] - 2024-10-16
 
 ### Added
 
@@ -200,7 +232,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - chore(uninstaller): improved performance for deployments with many regions
 - chore(validation): extending validation on ENI lookups to allow for _ character
 
-## [1.9.2] - 08-26-2024
+## [1.9.2] - 2024-08-26
 
 ### Fixed
 
@@ -212,7 +244,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - chore: add security.md file to repo
 
-## [1.9.1] - 08-09-2024
+## [1.9.1] - 2024-08-09
 
 ### Changed
 
@@ -222,7 +254,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - chore(lza-sample-config): enhance SCP statements for invocation of Lambda functions
 
-## [1.9.0] - 07-25-2024
+## [1.9.0] - 2024-07-25
 
 ### Added
 
@@ -252,7 +284,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - chore(documentation): update merge request template to add unit test information
 - chore(test): update all-enabled custom config rule lambda python version
 
-## [1.8.1] - 07-03-2024
+## [1.8.1] - 2024-07-03
 
 ### Fixed
 
@@ -262,7 +294,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - fix(config): update global config cdkoptions and control tower settings
 - fix(security-hub): Fixed SecurityHub error "exceeds maximum number of members can be created in a single request"
 
-## [1.8.0] - 06-28-2024
+## [1.8.0] - 2024-06-28
 
 ### Added
 
@@ -285,7 +317,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - fix(configrule): Update config rule remediation validation when using KMSMasterKey replacement value
 - fix(construct): LZA fails with AWS::Logs::LogGroup already exists
 
-## [1.7.1] - 06-14-2024
+## [1.7.1] - 2024-06-14
 
 ### Added
 
@@ -297,7 +329,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - fix(organizations): Update number of retries when using SDKV3 retry strategy
 - fix(replacements): add check for undefined accountName
 
-## [1.7.0] - 05-31-2024
+## [1.7.0] - 2024-05-31
 
 ### Added
 
@@ -370,7 +402,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - chore(sample-config): remove breakglass user from the sample configurations
 - chore(sample-config): add alerting for breakglass user account usage
 
-## [1.6.4] - 05-23-2024
+## [1.6.4] - 2024-05-23
 
 ### Added
 
@@ -380,14 +412,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - fix(toolkit): move custom stack queue out of toolkit
 
-## [1.6.3] - 05-09-2024
+## [1.6.3] - 2024-05-09
 
 ### Fixed
 
 - fix(organizations): ignore deletion for policies that do not exist
 - fix(organizations): resolve issue where existing policies were not being updated
 
-## [1.6.2] - 03-27-2024
+## [1.6.2] - 2024-03-27
 
 ### Fixed
 
@@ -401,7 +433,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - chore(documentation): improvements to installation.md
 
-## [1.6.1] - 02-21-2024
+## [1.6.1] - 2024-02-21
 
 ### Fixed
 
@@ -415,7 +447,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - chore(diagnostics-pack): cleanup
 
-## [1.6.0] - 01-10-2024
+## [1.6.0] - 2024-01-10
 
 ### Added
 
