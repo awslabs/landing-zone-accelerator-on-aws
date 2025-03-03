@@ -67,7 +67,7 @@ export class cdkOptionsConfig implements i.ICdkOptionsConfig {
    * Determines if the LZA pipeline will skip the static config validation step during the pipeline's Build phase. This can be helpful in cases where the config-validator incorrectly throws errors for a valid configuration.
    */
   readonly skipStaticValidation = undefined;
-  readonly stackRefactor: i.IStackRefactor = new StackRefactor();
+  readonly stackRefactor: StackRefactor | undefined = undefined;
 }
 
 export class CloudTrailSettingsConfig implements i.ICloudTrailSettingsConfig {
