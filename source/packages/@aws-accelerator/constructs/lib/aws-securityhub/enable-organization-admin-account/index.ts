@@ -12,11 +12,24 @@
  */
 
 import { delay, throttlingBackOff } from '@aws-accelerator/utils/lib/throttle';
-import { getGlobalRegion } from '@aws-accelerator/utils/lib/common-functions';
+import { getGlobalRegion, setRetryStrategy } from '@aws-accelerator/utils/lib/common-functions';
 import { CloudFormationCustomResourceEvent } from '@aws-accelerator/utils/lib/common-types';
-import * as AWS from 'aws-sdk';
-AWS.config.logger = console;
+import {
+  AdminAccount,
+  DisableOrganizationAdminAccountCommand,
+  EnableOrganizationAdminAccountCommand,
+  EnableSecurityHubCommand,
+  paginateListOrganizationAdminAccounts,
+  ResourceConflictException,
+  SecurityHubClient,
+} from '@aws-sdk/client-securityhub';
+import {
+  DeregisterDelegatedAdministratorCommand,
+  ListDelegatedAdministratorsCommand,
+  OrganizationsClient,
+} from '@aws-sdk/client-organizations';
 
+type AdminAccountType = { accountId: string | undefined; status: string | undefined };
 /**
  * SecurityHubOrganizationAdminAccount - lambda handler
  *
@@ -30,15 +43,22 @@ export async function handler(event: CloudFormationCustomResourceEvent): Promise
     }
   | undefined
 > {
-  const region = event.ResourceProperties['region'];
-  const partition = event.ResourceProperties['partition'];
-  const adminAccountId = event.ResourceProperties['adminAccountId'];
+  const region: string = event.ResourceProperties['region'];
+  const partition: string = event.ResourceProperties['partition'];
+  const adminAccountId: string = event.ResourceProperties['adminAccountId'];
   const solutionId = process.env['SOLUTION_ID'];
   const globalRegion = getGlobalRegion(partition);
-  const organizationsClient = new AWS.Organizations({ customUserAgent: solutionId, region: globalRegion });
-  const securityHubClient = new AWS.SecurityHub({ region: region, customUserAgent: solutionId });
 
-  const securityHubAdminAccount = await getSecurityHubDelegatedAccount(securityHubClient, adminAccountId);
+  const securityHubClient = new SecurityHubClient({
+    region: region,
+    customUserAgent: solutionId,
+    retryStrategy: setRetryStrategy(),
+  });
+
+  const securityHubAdminAccount: AdminAccountType = await getSecurityHubDelegatedAccount(
+    securityHubClient,
+    adminAccountId,
+  );
 
   switch (event.RequestType) {
     case 'Create':
@@ -65,12 +85,14 @@ export async function handler(event: CloudFormationCustomResourceEvent): Promise
           await delay(retries ** 2 * 1000);
           try {
             await throttlingBackOff(() =>
-              securityHubClient.enableOrganizationAdminAccount({ AdminAccountId: adminAccountId }).promise(),
+              securityHubClient.send(new EnableOrganizationAdminAccountCommand({ AdminAccountId: adminAccountId })),
             );
             break;
-          } catch (error) {
-            console.log(error);
-            retries = retries + 1;
+          } catch (error: unknown) {
+            if (error instanceof Error) {
+              console.warn(error.name + ': ' + error.message);
+              retries = retries + 1;
+            }
           }
         }
       }
@@ -84,25 +106,31 @@ export async function handler(event: CloudFormationCustomResourceEvent): Promise
             `Started disableOrganizationAdminAccount function in ${event.ResourceProperties['region']} region for account ${adminAccountId}`,
           );
           await throttlingBackOff(() =>
-            securityHubClient.disableOrganizationAdminAccount({ AdminAccountId: adminAccountId }).promise(),
-          );
-          const response = await throttlingBackOff(() =>
-            organizationsClient
-              .listDelegatedAdministrators({ ServicePrincipal: 'securityhub.amazonaws.com' })
-              .promise(),
+            securityHubClient.send(new DisableOrganizationAdminAccountCommand({ AdminAccountId: adminAccountId })),
           );
 
+          const organizationsClient = new OrganizationsClient({
+            customUserAgent: solutionId,
+            region: globalRegion,
+            retryStrategy: setRetryStrategy(),
+          });
+
+          const response = await throttlingBackOff(() =>
+            organizationsClient.send(
+              new ListDelegatedAdministratorsCommand({ ServicePrincipal: 'securityhub.amazonaws.com' }),
+            ),
+          );
           if (response.DelegatedAdministrators!.length > 0) {
             console.log(
               `Started deregisterDelegatedAdministrator function in ${event.ResourceProperties['region']} region for account ${adminAccountId}`,
             );
             await throttlingBackOff(() =>
-              organizationsClient
-                .deregisterDelegatedAdministrator({
+              organizationsClient.send(
+                new DeregisterDelegatedAdministratorCommand({
                   AccountId: adminAccountId,
                   ServicePrincipal: 'securityhub.amazonaws.com',
-                })
-                .promise(),
+                }),
+              ),
             );
           } else {
             console.warn(
@@ -121,28 +149,28 @@ export async function handler(event: CloudFormationCustomResourceEvent): Promise
 
 /**
  * Find SecurityHub delegated account Id
- * @param securityHubClient
- * @param adminAccountId
+ * @param client {@link SecurityHubClient}
+ * @param adminAccountId string
+ * @returns adminAccount {@link AdminAccountType}[]
  */
 async function getSecurityHubDelegatedAccount(
-  securityHubClient: AWS.SecurityHub,
+  client: SecurityHubClient,
   adminAccountId: string,
-): Promise<{ accountId: string | undefined; status: string | undefined }> {
-  const adminAccounts: AWS.SecurityHub.AdminAccount[] = [];
-  let nextToken: string | undefined = undefined;
-  do {
-    const page = await throttlingBackOff(() =>
-      securityHubClient.listOrganizationAdminAccounts({ NextToken: nextToken }).promise(),
-    );
-    for (const account of page.AdminAccounts ?? []) {
-      adminAccounts.push(account);
+): Promise<AdminAccountType> {
+  const adminAccounts: AdminAccount[] = [];
+
+  const paginator = paginateListOrganizationAdminAccounts({ client }, {});
+
+  for await (const page of paginator) {
+    if (page.AdminAccounts) {
+      adminAccounts.push(...page.AdminAccounts);
     }
-    nextToken = page.NextToken;
-  } while (nextToken);
+  }
 
   if (adminAccounts.length === 0) {
     return { accountId: undefined, status: undefined };
   }
+
   if (adminAccounts.length > 1) {
     throw new Error('Multiple admin accounts for SecurityHub in organization');
   }
@@ -156,24 +184,16 @@ async function getSecurityHubDelegatedAccount(
 
 /**
  * Enable SecurityHub
- * @param securityHubClient
+ * @param client {@link SecurityHubClient}
  */
-async function enableSecurityHub(securityHubClient: AWS.SecurityHub): Promise<void> {
+async function enableSecurityHub(client: SecurityHubClient): Promise<void> {
   try {
-    await throttlingBackOff(() => securityHubClient.enableSecurityHub({ EnableDefaultStandards: false }).promise());
-  } catch (
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    e: any
-  ) {
-    if (
-      // SDKv2 Error Structure
-      e.code === 'ResourceConflictException' ||
-      // SDKv3 Error Structure
-      e.name === 'ResourceConflictException'
-    ) {
-      console.warn(e.name + ': ' + e.message);
+    await throttlingBackOff(() => client.send(new EnableSecurityHubCommand({})));
+  } catch (error: unknown) {
+    if (error instanceof ResourceConflictException) {
+      console.warn(error.name + ': ' + error.message);
       return;
     }
-    throw new Error(`SecurityHub enable issue error message - ${e}`);
+    throw new Error(`SecurityHub enable issue error message - ${error}`);
   }
 }
