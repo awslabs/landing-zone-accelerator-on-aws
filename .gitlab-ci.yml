@@ -190,6 +190,18 @@ accelerator:lint:
     - if: $CI_MERGE_REQUEST_IID != null
       when: never
     - when: always
+accelerator:attribution-check:
+  stage: pipeline
+  tags:
+    - arch:amd64
+    - size:medium
+  script:
+    - echo "This merge request contains commits from an external author and is incorrectly configured to squash commits, which can erase author attribution. Please set \"Squash commits on merge\" to false and retry the pipeline."
+    - exit 1
+  rules:
+    - if: $CI_PROJECT_ID == "11925" && $CI_COMMIT_AUTHOR !~ /@amazon/ && $CI_MERGE_REQUEST_SQUASH_ON_MERGE == "true"
+      when: always
+    - when: never
 unit-test:accelerator:
   stage: pipeline
   needs: ["accelerator:build"]
