@@ -2,6 +2,29 @@
   "Version": "2012-10-17",
   "Statement": [
     {
+      "Sid": "S3ObjectStatement",
+      "Effect": "Deny",
+      "Action": [
+          "s3:DeleteObject",
+          "s3:GetObject",
+          "s3:PutObject"
+      ],
+      "Resource": "arn:aws:s3:::aws-controltower-logs-${LOGARCHIVE_ACCOUNT_ID}-${HOME_REGION}/*",
+      "Condition": {
+          "StringNotEquals": {
+              "aws:CalledVia": [
+                  "config.amazonaws.com",
+                  "cloudtrail.amazonaws.com"
+                ]
+            },
+            "ArnNotLike": {
+              "aws:PrincipalARN": [
+                  "arn:${PARTITION}:iam::*:role/${MANAGEMENT_ACCOUNT_ACCESS_ROLE}"
+              ]
+          }
+        }
+    },
+    {
       "Sid": "ConfigRulesStatement",
       "Effect": "Deny",
       "Action": [
