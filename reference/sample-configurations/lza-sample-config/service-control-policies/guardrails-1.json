@@ -148,6 +148,11 @@
             "alias/accelerator*"
           ]
         },
+        "Null": {
+          "kms:ResourceAliases": [
+            "false"
+          ]
+        },
         "ArnNotLike": {
           "aws:PrincipalARN": [
             "arn:${PARTITION}:iam::*:role/${ACCELERATOR_PREFIX}-*",
