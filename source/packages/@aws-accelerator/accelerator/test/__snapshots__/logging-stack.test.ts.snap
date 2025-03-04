@@ -2281,18 +2281,20 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 1`] = `
               "Action": "sts:AssumeRole",
               "Condition": {
                 "ArnLike": {
-                  "aws:PrincipalArn": {
-                    "Fn::Join": [
-                      "",
-                      [
-                        "arn:",
-                        {
-                          "Ref": "AWS::Partition",
-                        },
-                        ":iam::*:role/AWSAccelerator*",
+                  "aws:PrincipalArn": [
+                    {
+                      "Fn::Join": [
+                        "",
+                        [
+                          "arn:",
+                          {
+                            "Ref": "AWS::Partition",
+                          },
+                          ":iam::*:role/AWSAccelerator*",
+                        ],
                       ],
-                    ],
-                  },
+                    },
+                  ],
                 },
                 "StringEquals": {
                   "aws:PrincipalOrgID": "o-asdf123456",
@@ -17136,18 +17138,20 @@ exports[`LoggingStackOuTargets Construct(LoggingStackOuTargets):  Snapshot Test 
               "Action": "sts:AssumeRole",
               "Condition": {
                 "ArnLike": {
-                  "aws:PrincipalArn": {
-                    "Fn::Join": [
-                      "",
-                      [
-                        "arn:",
-                        {
-                          "Ref": "AWS::Partition",
-                        },
-                        ":iam::*:role/AWSAccelerator*",
+                  "aws:PrincipalArn": [
+                    {
+                      "Fn::Join": [
+                        "",
+                        [
+                          "arn:",
+                          {
+                            "Ref": "AWS::Partition",
+                          },
+                          ":iam::*:role/AWSAccelerator*",
+                        ],
                       ],
-                    ],
-                  },
+                    },
+                  ],
                 },
                 "StringEquals": {
                   "aws:PrincipalOrgID": "o-asdf123456",

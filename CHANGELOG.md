@@ -12,8 +12,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - feat(guardduty): added support for malware protection, RDS, lambda and additional EKS options
 - feat(kinesis): allow customization of retention, streaming mode and shard count
 - feat(logging): allow users to customize lambda processor for firehose
-- feat(logging): cloudwatch logs account setting for subscription filter
-- feat(module): added Amazon Security Lake set-delegated-admin action
+- bug(centralbucket-keyarnparam-role-open-trust): add principal arn to trust for kms arn role
+
 
 ### Fixed
 
