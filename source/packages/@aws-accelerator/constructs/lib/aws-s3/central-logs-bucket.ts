@@ -302,11 +302,19 @@ export class CentralLogsBucket extends Construct {
         stringValue: this.bucket.getKey().keyArn,
       },
     );
-
+    // const roleArns = [`arn:${cdk.Stack.of(this).partition}:iam::*:role/${props.acceleratorPrefix}*`];
     // SSM parameter access IAM Role for
     new cdk.aws_iam.Role(this, 'CrossAccountCentralBucketKMSArnSsmParamAccessRole', {
       roleName: props.crossAccountAccessRoleName,
       assumedBy: props.orgPrincipals,
+      // assumedBy: new cdk.aws_iam.AnyPrincipal().withConditions({
+      //   StringEquals: {
+      //     ...props.principalOrgIdCondition,
+      //   },
+      //   ArnLike: {
+      //     'aws:PrincipalArn': roleArns,
+      //   },
+      // }),
       inlinePolicies: {
         default: new cdk.aws_iam.PolicyDocument({
           statements: [

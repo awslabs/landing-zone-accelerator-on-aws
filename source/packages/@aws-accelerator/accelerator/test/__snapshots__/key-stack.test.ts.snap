@@ -269,18 +269,20 @@ exports[`KeyStack Construct(KeyStack):  Snapshot Test 1`] = `
               "Action": "sts:AssumeRole",
               "Condition": {
                 "ArnLike": {
-                  "aws:PrincipalArn": {
-                    "Fn::Join": [
-                      "",
-                      [
-                        "arn:",
-                        {
-                          "Ref": "AWS::Partition",
-                        },
-                        ":iam::*:role/AWSAccelerator*",
+                  "aws:PrincipalArn": [
+                    {
+                      "Fn::Join": [
+                        "",
+                        [
+                          "arn:",
+                          {
+                            "Ref": "AWS::Partition",
+                          },
+                          ":iam::*:role/AWSAccelerator*",
+                        ],
                       ],
-                    ],
-                  },
+                    },
+                  ],
                 },
                 "StringEquals": {
                   "aws:PrincipalOrgID": "o-asdf123456",
