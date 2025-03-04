@@ -42,7 +42,8 @@ import {
   VpcEndpointType,
 } from '@aws-accelerator/constructs';
 import { SsmResourceType } from '@aws-accelerator/utils/lib/ssm-parameter-path';
-
+import { SecurityGroupReferences } from '../../../resources/references/security-group-references';
+import { SubnetReferences } from '../../../resources/references/subnet-references';
 import { AcceleratorStackProps } from '../../accelerator-stack';
 import { NetworkStack } from '../network-stack';
 import {
@@ -106,9 +107,9 @@ export class NetworkAssociationsGwlbStack extends NetworkStack {
   private gwlbMap: Map<string, string>;
   private instanceMap: Map<string, FirewallInstance>;
   private routeTableMap: Map<string, string>;
-  private securityGroupMap: Map<string, string>;
+  private securityGroupMap: SecurityGroupReferences;
   // Map to store subnet IDs of owned and shared subnets
-  private subnetMap: Map<string, string>;
+  private subnetMap: SubnetReferences;
   private ipamSubnetArray: string[];
   private targetGroupMap: Map<string, TargetGroup>;
   // Map to store all vpc mapping of owned and shared VPCs
@@ -117,20 +118,22 @@ export class NetworkAssociationsGwlbStack extends NetworkStack {
   private vpcsInScopeMap: Map<string, string>;
   private crossAcctRouteProvider?: cdk.custom_resources.Provider;
   private networkInterfaceRouteArray: networkInterfaceRouteDetails[];
+  private ssmPrefix: string;
 
   constructor(scope: Construct, id: string, props: AcceleratorStackProps) {
     super(scope, id, props);
 
     // Set initial private properties
     // Since VPC names are unique there is only one VPC in the list which is either shared or native to account with name
+    this.ssmPrefix = this.props.prefixes.ssmParamName;
     const vpcs = [...this.vpcsInScope, ...this.sharedVpcs];
     this.vpcMap = this.setVpcMap(vpcs);
     this.vpcsInScopeMap = this.setVpcMap(this.vpcsInScope);
-    const ownedSubnetsMap = this.setSubnetMap(this.vpcsInScope);
-    this.subnetMap = new Map([...ownedSubnetsMap.entries(), ...this.getSharedSubnetsMap().entries()]);
+    this.subnetMap = new SubnetReferences(this, this.ssmPrefix, this.vpcsInScope);
+    this.setSharedSubnets();
     this.ipamSubnetArray = setIpamSubnetRouteTableEntryArray(vpcs);
     this.routeTableMap = this.setRouteTableMap(this.vpcsInScope);
-    this.securityGroupMap = this.setSecurityGroupMap(vpcs);
+    this.securityGroupMap = new SecurityGroupReferences(this, this.ssmPrefix, vpcs);
     this.gwlbMap = this.setInitialMaps(this.vpcsInScope);
 
     // Set firewall config custom resource details
@@ -282,8 +285,7 @@ export class NetworkAssociationsGwlbStack extends NetworkStack {
    * Returns a map of subnet IDs of shared subnets
    * @returns
    */
-  private getSharedSubnetsMap(): Map<string, string> {
-    const subnetMap = new Map<string, string>();
+  private setSharedSubnets() {
     for (const vpcItem of this.sharedVpcs) {
       for (const subnetItem of vpcItem.subnets ?? []) {
         if (
@@ -291,15 +293,10 @@ export class NetworkAssociationsGwlbStack extends NetworkStack {
           (this.isOrganizationalUnitIncluded(subnetItem.shareTargets.organizationalUnits) ||
             this.isAccountIncluded(subnetItem.shareTargets.accounts))
         ) {
-          const subnetId = cdk.aws_ssm.StringParameter.valueForStringParameter(
-            this,
-            this.getSsmPath(SsmResourceType.SUBNET, [vpcItem.name, subnetItem.name]),
-          );
-          subnetMap.set(`${vpcItem.name}_${subnetItem.name}`, subnetId);
+          this.subnetMap.setSubnetReference(vpcItem.name, subnetItem.name);
         }
       }
     }
-    return subnetMap;
   }
 
   /**
@@ -662,7 +659,9 @@ export class NetworkAssociationsGwlbStack extends NetworkStack {
         privateIpAddresses: networkInterface.privateIpAddresses,
         secondaryPrivateIpAddressCount: networkInterface.secondaryPrivateIpAddressCount,
         sourceDestCheck: networkInterface.sourceDestCheck,
-        subnetId: networkInterface.subnetId ? this.subnetMap.get(`${vpc}_${networkInterface.subnetId}`) : undefined,
+        subnetId: networkInterface.subnetId
+          ? this.subnetMap.getCfnSSMParameter(vpc, networkInterface.subnetId)
+          : undefined,
       }),
     );
     return interfaceConfig;
@@ -678,7 +677,7 @@ export class NetworkAssociationsGwlbStack extends NetworkStack {
     const securityGroups: string[] = [];
     if (groups.length > 0) {
       groups.forEach(group => {
-        const securityGroupItem = this.securityGroupMap.get(`${vpc}_${group}`);
+        const securityGroupItem = this.securityGroupMap.getCfnSSMParameter(vpc, group);
         if (!securityGroupItem) {
           this.logger.error(`Unable to retrieve security group ${group} from VPC ${vpc}`);
           throw new Error(`Configuration validation failed at runtime.`);
@@ -721,7 +720,7 @@ export class NetworkAssociationsGwlbStack extends NetworkStack {
     const processedSubnets: string[] = [];
     if (subnets.length > 0) {
       subnets.forEach(subnet => {
-        const subnetItem = this.subnetMap.get(`${vpc}_${subnet}`);
+        const subnetItem = this.subnetMap.getCfnSSMParameter(vpc, subnet);
         if (!subnetItem) {
           this.logger.error(`Unable to retrieve subnet ${subnet} from VPC ${vpc}`);
           throw new Error(`Configuration validation failed at runtime.`);
@@ -883,8 +882,7 @@ export class NetworkAssociationsGwlbStack extends NetworkStack {
     endpointServiceId: string,
     partition: string,
   ): VpcEndpoint {
-    const subnetKey = `${endpointItem.vpc}_${endpointItem.subnet}`;
-    const subnet = this.subnetMap.get(subnetKey);
+    const subnet = this.subnetMap.getCfnSSMParameter(endpointItem.vpc, endpointItem.subnet);
 
     if (!subnet) {
       this.logger.error(
