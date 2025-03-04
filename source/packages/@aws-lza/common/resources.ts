@@ -23,6 +23,10 @@ export enum AcceleratorModuleName {
    * AWS Control Tower Landing zone module
    */
   CONTROL_TOWER_LANDING_ZONE = 'control-tower-landing-zone',
+  /**
+   * Amazon EC2 module
+   */
+  AMAZON_EC2 = 'amazon-ec2',
 }
 
 /**
