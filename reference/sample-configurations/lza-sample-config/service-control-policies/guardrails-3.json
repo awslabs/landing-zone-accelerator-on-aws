@@ -12,14 +12,18 @@
         "ec2:CreateRoute",
         "ec2:CreateTags",
         "ec2:CreateVpc",
+        "ec2:CreateVpcPeeringConnection",
         "ec2:CreateEgressOnlyInternetGateway",
         "ec2:CreateInternetGateway",
         "ec2:CreateNatGateway",
         "ec2:DeleteEgressOnlyInternetGateway",
         "ec2:DeleteInternetGateway",
         "ec2:DeleteNatGateway",
+        "ec2:DeleteNetworkAcl",
+        "ec2:DeleteVpcPeeringConnection",
         "ec2:DeleteRoute",
         "ec2:DeleteRouteTable",
+        "ec2:DeleteSecurityGroup",
         "ec2:DeleteTags",
         "ec2:DeleteTransitGateway",
         "ec2:DeleteTransitGatewayVpcAttachment",
@@ -29,6 +33,7 @@
         "ec2:DisassociateNatGatewayAddress",
         "ec2:DisassociateRouteTable",
         "ec2:DisassociateTransitGatewayRouteTable",
+        "ec2:ModifySecurityGroupRules",
         "ec2:ModifyTransitGateway",
         "ec2:UnassignPrivateNatGatewayAddress"
       ],
@@ -42,6 +47,25 @@
               "arn:${PARTITION}:iam::*:role/${ACCELERATOR_PREFIX}*",
               "arn:${PARTITION}:iam::*:role/${MANAGEMENT_ACCOUNT_ACCESS_ROLE}",
               "arn:${PARTITION}:iam::*:role/cdk-accel-*"
+          ]
+        }
+      }
+    },
+    {
+      "Sid": "DenyNetworkModification",
+      "Effect": "Deny",
+      "Action": [
+          "ec2:DeleteNetworkAclEntry",
+          "ec2:RevokeSecurityGroupIngress",
+          "ec2:RevokeSecurityGroupEgress"
+      ],
+      "Resource": "*",
+      "Condition": {
+          "ArnNotLike": {
+            "aws:PrincipalARN": [
+                "arn:${PARTITION}:iam::*:role/${ACCELERATOR_PREFIX}*",
+                "arn:${PARTITION}:iam::*:role/${MANAGEMENT_ACCOUNT_ACCESS_ROLE}",
+                "arn:${PARTITION}:iam::*:role/cdk-accel-*"
           ]
         }
       }
