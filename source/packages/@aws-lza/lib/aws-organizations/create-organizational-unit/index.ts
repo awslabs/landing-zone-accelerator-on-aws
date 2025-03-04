@@ -56,7 +56,7 @@ export class CreateOrganizationalUnitModule implements ICreateOrganizationalUnit
 
   /**
    * Module manager function
-   * @param props {@link IRegisterOrganizationalUnitHandlerParameter}
+   * @param props {@link ICreateOrganizationalUnitHandlerParameter}
    * @returns status string
    */
   private async manageModule(props: ICreateOrganizationalUnitHandlerParameter): Promise<string> {

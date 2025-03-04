@@ -230,4 +230,11 @@ export const MOCK_CONSTANTS = {
       },
     },
   },
+  ManageEbsDefaultEncryptionModule: {
+    configuration: {
+      enableDefaultEncryption: true,
+      kmsKeyId: 'mockKmsKeyId',
+    },
+    existingEncryptionKeyId: 'mockExistingEncryptionKeyId',
+  },
 };
