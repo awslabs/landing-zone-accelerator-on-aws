@@ -39,6 +39,21 @@ new VirtualInterface(stack, 'TestVif', {
   acceleratorPrefix: 'AWSAccelerator',
 });
 
+// Test virtual interface with Auth Key
+new VirtualInterface(stack, 'TestVifAuthKey', {
+  connectionId: 'test-dx-conn-id',
+  customerAsn: 65001,
+  interfaceName: 'test-vif-auth',
+  region: 'us-east-1',
+  type: 'private',
+  vlan: 124,
+  directConnectGatewayId: 'test-dxgw-id',
+  authKey: 'dx/vif/key',
+  kmsKey: key,
+  logRetentionInDays: 3653,
+  acceleratorPrefix: 'AWSAccelerator',
+});
+
 // Test virtual interface allocation
 new VirtualInterface(stack, 'TestVifAllocation', {
   connectionId: 'test-dx-conn-id',
@@ -48,6 +63,20 @@ new VirtualInterface(stack, 'TestVifAllocation', {
   region: 'us-east-1',
   type: 'transit',
   vlan: 300,
+  kmsKey: key,
+  logRetentionInDays: 3653,
+  acceleratorPrefix: 'AWSAccelerator',
+});
+
+// Test virtual interface allocation
+new VirtualInterface(stack, 'TestVifAuthAllocation', {
+  connectionId: 'test-dx-conn-id',
+  customerAsn: 65000,
+  interfaceName: 'test-vif-auth',
+  ownerAccount: '111111111',
+  region: 'us-east-1',
+  type: 'private',
+  vlan: 124,
   kmsKey: key,
   logRetentionInDays: 3653,
   acceleratorPrefix: 'AWSAccelerator',

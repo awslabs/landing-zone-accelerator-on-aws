@@ -2663,6 +2663,21 @@ vpcTemplates:
           ipamPoolName: west-region-pool
           netmaskLength: 28
 directConnectGateways:
+  - name: Network-DXGW-AuthVif
+    account: Network
+    asn: 65001
+    gatewayName: Network-DXGW
+    virtualInterfaces:
+      - name: Accelrator-VIF
+        connectionId: dxcon-test1234
+        customerAsn: 65003
+        interfaceName: Accelrator-VIF-2
+        ownerAccount: Network
+        region: eu-west-2
+        type: transit
+        authKey: dx/vif/secret
+        vlan: 124
+
   - name: Network-DXGW
     account: Network
     asn: 65000

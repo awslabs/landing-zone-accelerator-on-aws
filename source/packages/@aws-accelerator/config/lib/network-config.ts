@@ -115,6 +115,7 @@ export class DxVirtualInterfaceConfig implements i.IDxVirtualInterfaceConfig {
   readonly type: i.DxVirtualInterfaceType = 'transit';
   readonly vlan: number = 1;
   readonly addressFamily: i.IpVersionType | undefined = undefined;
+  readonly authKey: string | undefined = undefined;
   readonly amazonAddress: string | undefined = undefined;
   readonly customerAddress: string | undefined = undefined;
   readonly enableSiteLink: boolean | undefined = undefined;

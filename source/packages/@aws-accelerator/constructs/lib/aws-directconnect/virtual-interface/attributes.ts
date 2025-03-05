@@ -54,6 +54,10 @@ interface VirtualInterfaceAttributeProps {
    */
   readonly amazonAddress?: string;
   /**
+   * The BGP Authentication Key
+   */
+  readonly authKey?: string;
+  /**
    * The customer side peer IP address
    */
   readonly customerAddress?: string;
@@ -74,11 +78,13 @@ export class VirtualInterfaceAttributes {
   public readonly virtualInterfaceType: 'private' | 'transit';
   public readonly vlan: number;
   public readonly amazonAddress?: string;
+  public readonly authKey?: string;
   public readonly customerAddress?: string;
   public readonly tags?: DirectConnect.TagList;
   constructor(props: VirtualInterfaceAttributeProps) {
     this.addressFamily = props.addressFamily;
     this.amazonAddress = props.amazonAddress;
+    this.authKey = props.authKey;
     this.asn = props.asn;
     this.connectionId = props.connectionId;
     this.customerAddress = props.customerAddress;
