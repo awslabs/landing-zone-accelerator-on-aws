@@ -94,7 +94,7 @@ export class SecurityConfigValidator {
     // Validate delegated admin account
     // Validate deployment targets against organization config file
     // validate deployment target OUs for security services
-    this.validateDelegatedAdminAccount(values, accountNames, errors);
+    this.validateDelegatedAdminAccount(values, accountsConfig, errors);
     this.validateDeploymentTargetOUs(values, ouIdNames, errors);
     this.validateDeploymentTargetAccountNames(values, accountNames, errors);
     this.validateConfigRuleDeploymentTargetsInConfigDeploymentTargets(values, accountsConfig, globalConfig, errors);
@@ -193,10 +193,10 @@ export class SecurityConfigValidator {
    * @param accountNames
    * @param errors
    */
-  private validateDelegatedAdminAccount(values: SecurityConfig, accountNames: string[], errors: string[]) {
-    if (!accountNames.includes(values.centralSecurityServices.delegatedAdminAccount)) {
+  private validateDelegatedAdminAccount(values: SecurityConfig, accountsConfig: AccountsConfig, errors: string[]) {
+    if (values.centralSecurityServices.delegatedAdminAccount !== accountsConfig.getAuditAccount().name) {
       errors.push(
-        `Delegated admin account ${values.centralSecurityServices.delegatedAdminAccount} does not exist in accounts-config.yaml`,
+        `The delegated administrator account specified in security-config.yaml is not valid. The solution requires using the Audit account (exactly as defined in accounts-config.yaml) as the delegated administrator for central security services. Account name is case sensitive.`,
       );
     }
   }

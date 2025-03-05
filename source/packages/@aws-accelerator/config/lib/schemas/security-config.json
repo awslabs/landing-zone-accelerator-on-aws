@@ -250,8 +250,8 @@
         },
         "delegatedAdminAccount": {
           "$ref": "#/definitions/NonEmptyString",
-          "default": "Audit\n\nTo make Audit account as designated administrator account for every security services configured by accelerator, you need to provide below value for this parameter",
-          "description": "Designated administrator account name for accelerator security services. AWS organizations designate a member account as a delegated administrator for the organization users and roles from that account can perform administrative actions for security services like Macie, GuardDuty, Detective and Security Hub. Without designated administrator account administrative tasks for security services are performed only by users or roles in the organization's management account. This helps you to separate management of the organization from management of these security services. Accelerator use Audit account as designated administrator account."
+          "default": "Audit",
+          "description": "Designated administrator account name for accelerator security services. AWS organizations designate a member account as a delegated administrator for the organization users and roles from that account can perform administrative actions for security services like Macie, GuardDuty, Detective and Security Hub. Without designated administrator account administrative tasks for security services are performed only by users or roles in the organization's management account. This helps you to separate management of the organization from management of these security services. Accelerator currently supports using the Audit account **only** as the delegated administrator account."
         },
         "detective": {
           "$ref": "#/definitions/IDetectiveConfig",
