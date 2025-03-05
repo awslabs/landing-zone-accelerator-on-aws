@@ -26,6 +26,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - fix(organizations): add missing permission to custom resource for policy deletion
 - fix(servicecatalog): fixed permission set role matching logic
 - fix(workshop): fix single account deployment mode
+- fix(validation): add central security service delegated admin account name validation
 
 ### Changed
 

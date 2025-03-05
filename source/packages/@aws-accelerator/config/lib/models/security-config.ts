@@ -987,9 +987,12 @@ export interface ICentralSecurityServicesConfig {
    * Macie, GuardDuty, Detective and Security Hub. Without designated administrator account administrative tasks for
    * security services are performed only by users or roles in the organization's management account.
    * This helps you to separate management of the organization from management of these security services.
-   * Accelerator use Audit account as designated administrator account.
+   * Accelerator currently supports using the Audit account **only** as the delegated administrator account.
    * @type string
    * @default Audit
+   *
+   * @important
+   * **The delegated administrator account name must exactly match the Audit account name in the accounts-config.yaml file (including letter case). Any mismatch will result in a validation error.**
    *
    * To make Audit account as designated administrator account for every security services configured by accelerator, you need to provide below value for this parameter
    * @example
