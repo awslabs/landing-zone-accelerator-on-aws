@@ -127,6 +127,7 @@ export class DxResources {
           vlan: vifItem.vlan,
           addressFamily: vifItem.addressFamily,
           amazonAddress: vifItem.amazonAddress,
+          authKey: vifItem.authKey,
           customerAddress: vifItem.customerAddress,
           enableSiteLink: vifItem.enableSiteLink,
           jumboFrames: vifItem.jumboFrames,
@@ -163,6 +164,7 @@ export class DxResources {
           vlan: vifItem.vlan,
           addressFamily: vifItem.addressFamily,
           amazonAddress: vifItem.amazonAddress,
+          authKey: vifItem.authKey,
           customerAddress: vifItem.customerAddress,
           directConnectGatewayId,
           enableSiteLink: vifItem.enableSiteLink,
@@ -201,6 +203,7 @@ export class DxResources {
       );
       throw new Error(`Configuration validation failed at runtime.`);
     }
+
     const virtualInterface = new VirtualInterface(this.stack, vifLogicalId, vifProps);
     this.stack.addSsmParameter({
       logicalId: pascalCase(`SsmParam${dxgwName}${vifName}VirtualInterface`),

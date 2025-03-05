@@ -72,6 +72,10 @@ export interface VirtualInterfaceProps {
    */
   readonly amazonAddress?: string;
   /**
+   * The BGP Authentication Key for this virtual interface
+   */
+  readonly authKey?: string;
+  /**
    * The customer side peer IP address to use for this virtual interface
    */
   readonly customerAddress?: string;
@@ -159,6 +163,12 @@ export class VirtualInterface extends cdk.Resource implements IVirtualInterface 
           Action: ['lambda:InvokeFunction'],
           Resource: `arn:${cdk.Aws.PARTITION}:lambda:${cdk.Aws.REGION}:${cdk.Aws.ACCOUNT_ID}:function:${props.acceleratorPrefix}-NetworkPre-CustomDirectConnect*`,
         },
+        {
+          Sid: 'GetSecret',
+          Effect: 'Allow',
+          Action: ['secretsmanager:GetSecretValue', 'kms:Decrypt'],
+          Resource: '*',
+        },
       ];
     }
 
@@ -182,6 +192,7 @@ export class VirtualInterface extends cdk.Resource implements IVirtualInterface 
         vlan: props.vlan,
         addressFamily: props.addressFamily ?? 'ipv4',
         amazonAddress: props.amazonAddress,
+        authKey: props.authKey,
         customerAddress: props.customerAddress,
         enableSiteLink: props.enableSiteLink ?? false,
         jumboFrames: props.jumboFrames ?? false,
