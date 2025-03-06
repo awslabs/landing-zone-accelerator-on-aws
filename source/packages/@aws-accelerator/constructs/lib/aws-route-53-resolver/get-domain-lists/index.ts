@@ -11,11 +11,9 @@
  *  and limitations under the License.
  */
 
-import * as AWS from 'aws-sdk';
-
-import { throttlingBackOff } from '@aws-accelerator/utils/lib/throttle';
+import { paginateListFirewallDomainLists, Route53ResolverClient } from '@aws-sdk/client-route53resolver';
 import { CloudFormationCustomResourceEvent } from '@aws-accelerator/utils/lib/common-types';
-AWS.config.logger = console;
+import { setRetryStrategy } from '@aws-accelerator/utils/lib/common-functions';
 
 /**
  * Get Route 53 resolver endpoint details - Lambda handler
@@ -33,26 +31,32 @@ export async function handler(event: CloudFormationCustomResourceEvent): Promise
   const region: string = event.ResourceProperties['region'];
   const listName: string = event.ResourceProperties['listName'];
   const solutionId = process.env['SOLUTION_ID'];
-  const resolverClient = new AWS.Route53Resolver({ region: region, customUserAgent: solutionId });
+  const resolverClient = new Route53ResolverClient({
+    customUserAgent: solutionId,
+    region,
+    retryStrategy: setRetryStrategy(),
+  });
 
   switch (event.RequestType) {
     case 'Create':
     case 'Update':
-      let nextToken: string | undefined = undefined;
       let resourceId: string | undefined = undefined;
-      do {
-        const page = await throttlingBackOff(() =>
-          resolverClient.listFirewallDomainLists({ NextToken: nextToken }).promise(),
-        );
 
-        // Loop through IP addresses and push to array
-        for (const item of page.FirewallDomainLists ?? []) {
-          if (item.Name === listName) {
-            resourceId = item.Id;
-          }
+      const domainLists = [];
+      const response = paginateListFirewallDomainLists({ client: resolverClient }, {});
+
+      for await (const item of response) {
+        for (const domainList of item.FirewallDomainLists ?? []) {
+          domainLists.push(domainList);
         }
-        nextToken = page.NextToken;
-      } while (nextToken);
+      }
+
+      for (const firewallItem of domainLists ?? []) {
+        if (firewallItem.Name === listName) {
+          resourceId = firewallItem.Id;
+          break;
+        }
+      }
 
       if (!resourceId) {
         throw new Error(`Managed domain list ${listName} does not exist.`);
