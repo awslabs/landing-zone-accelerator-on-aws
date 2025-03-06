@@ -19,6 +19,10 @@
       "additionalProperties": false,
       "description": "Account configuration",
       "properties": {
+        "accountAlias": {
+          "$ref": "#/definitions/NonEmptyNoSpaceString",
+          "description": "Account alias used for sign-in page URL in place of 12-digit number. This must be unique within the AWS partition and be only digits, lowercase letters, and hyphens. It will be validated againt the Regular Expression ^[a-z0-9]([a-z0-9]|-(?!-)){1,61}[a-z0-9]$"
+        },
         "description": {
           "$ref": "#/definitions/NonEmptyString",
           "description": "The description is to used to provide more information about the account. This value is not used when creating accounts."
@@ -114,6 +118,10 @@
       "additionalProperties": false,
       "description": "GovCloud Account configuration\nUsed instead of the account configuration in the commercial\npartition when creating GovCloud partition linked accounts.",
       "properties": {
+        "accountAlias": {
+          "$ref": "#/definitions/NonEmptyNoSpaceString",
+          "description": "Account alias used for sign-in page URL in place of 12-digit number. This must be unique within the AWS partition and be only digits, lowercase letters, and hyphens. It will be validated againt the Regular Expression ^[a-z0-9]([a-z0-9]|-(?!-)){1,61}[a-z0-9]$"
+        },
         "description": {
           "$ref": "#/definitions/NonEmptyString",
           "description": "The description is to used to provide more information about the account. This value is not used when creating accounts."

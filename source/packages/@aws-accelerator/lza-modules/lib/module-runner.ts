@@ -14,6 +14,7 @@
 import { AcceleratorModuleName, ModuleRunnerParametersType } from '../common/resources';
 import { AWSOrganization } from './aws-organization';
 import { ControlTowerLandingZone } from './control-tower/index';
+import { AccountAlias } from './account-alias';
 
 /**
  * ModuleRunner abstract class to execute accelerator modules.
@@ -30,6 +31,8 @@ export abstract class ModuleRunner {
         return new ControlTowerLandingZone().handler(runnerParams.module, runnerParams.options);
       case AcceleratorModuleName.AWS_ORGANIZATIONS:
         return new AWSOrganization().handler(runnerParams.module, runnerParams.options);
+      case AcceleratorModuleName.ACCOUNT_ALIAS:
+        return new AccountAlias().handler(runnerParams.module, runnerParams.options);
       default:
         throw new Error(`Invalid module name "${runnerParams.module}".`);
     }

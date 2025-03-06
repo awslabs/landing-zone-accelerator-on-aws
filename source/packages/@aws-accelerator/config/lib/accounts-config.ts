@@ -37,6 +37,7 @@ export class AccountConfig implements i.IAccountConfig {
   readonly email: string = '';
   readonly organizationalUnit: string = '';
   readonly warm: boolean | undefined = undefined;
+  readonly accountAlias?: string | undefined = undefined;
 }
 
 export class GovCloudAccountConfig implements i.IGovCloudAccountConfig {
@@ -46,6 +47,7 @@ export class GovCloudAccountConfig implements i.IGovCloudAccountConfig {
   readonly organizationalUnit: string = '';
   readonly warm: boolean | undefined = undefined;
   readonly enableGovCloud: boolean | undefined = undefined;
+  readonly accountAlias?: string | undefined = undefined;
 }
 
 export class AccountsConfig implements i.IAccountsConfig {

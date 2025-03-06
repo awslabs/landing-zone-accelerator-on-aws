@@ -24,6 +24,7 @@ const accountsConfigObject = {
       email: 'some-management-account@example.com',
       organizationalUnit: 'Root',
       warm: false,
+      accountAlias: 'management-alias',
     },
     {
       name: 'LogArchive',
@@ -32,6 +33,7 @@ const accountsConfigObject = {
       email: 'some-logarchive-account@example.com',
       organizationalUnit: 'Security',
       warm: false,
+      accountAlias: 'logarchive-alias',
     },
     {
       name: 'Audit',
@@ -40,6 +42,7 @@ const accountsConfigObject = {
       email: 'some-audit-account@example.com',
       organizationalUnit: 'Security',
       warm: false,
+      accountAlias: 'audit-alias',
     },
   ],
   workloadAccounts: [
@@ -49,6 +52,7 @@ const accountsConfigObject = {
       email: 'shared-services@example.com',
       organizationalUnit: 'Infrastructure',
       warm: false,
+      accountAlias: 'sharedservices-alias',
     },
     {
       name: 'Network',
@@ -56,6 +60,7 @@ const accountsConfigObject = {
       email: 'network@example.com',
       organizationalUnit: 'Infrastructure',
       warm: false,
+      accountAlias: 'network-alias',
     },
   ],
   accountIds: [
@@ -93,6 +98,7 @@ describe('accounts-config', () => {
       expect(accountConfig.description).toEqual('');
       expect(accountConfig.email).toEqual('');
       expect(accountConfig.organizationalUnit).toEqual('');
+      expect(accountConfig.accountAlias).toEqual(undefined);
     });
   });
   describe('GovCloudAccountConfig', () => {
@@ -102,6 +108,7 @@ describe('accounts-config', () => {
       expect(govCloudAccountConfig.email).toEqual('');
       expect(govCloudAccountConfig.organizationalUnit).toEqual('');
       expect(govCloudAccountConfig.enableGovCloud).toBe(undefined);
+      expect(accountConfig.accountAlias).toEqual(undefined);
     });
   });
   describe('AccountsConfig', () => {
@@ -159,6 +166,7 @@ describe('accounts-config', () => {
         name: 'Management',
         organizationalUnit: 'Root',
         warm: false,
+        accountAlias: 'management-alias',
       });
 
       expect(configC.getLogArchiveAccountId()).toBe('333333333333');
@@ -169,6 +177,7 @@ describe('accounts-config', () => {
         email: 'some-logarchive-account@example.com',
         organizationalUnit: 'Security',
         warm: false,
+        accountAlias: 'logarchive-alias',
       });
 
       expect(configC.getAuditAccount()).toStrictEqual({
@@ -178,6 +187,7 @@ describe('accounts-config', () => {
         email: 'some-audit-account@example.com',
         organizationalUnit: 'Security',
         warm: false,
+        accountAlias: 'audit-alias',
       });
       expect(configC.getAuditAccountId()).toBe('222222222222');
     });
@@ -195,6 +205,7 @@ describe('accounts-config', () => {
         email: 'some-audit-account@example.com',
         organizationalUnit: 'Security',
         warm: false,
+        accountAlias: 'audit-alias',
       });
       expect(() => {
         configC.getAccount('notpresent');

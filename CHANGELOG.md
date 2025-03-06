@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - feat(logging): allow users to customize lambda processor for firehose
 - bug(centralbucket-keyarnparam-role-open-trust): add principal arn to trust for kms arn role
 - feat(networking): added bgp auth key property for direct connect virtual interface
+- feat(account): added account alias management
 
 
 ### Fixed

@@ -23,6 +23,10 @@ export enum AcceleratorModuleName {
    * ControlTower module
    */
   CONTROL_TOWER = 'control-tower',
+  /**
+   * Account Alias module
+   */
+  ACCOUNT_ALIAS = 'account-alias',
 }
 
 /**

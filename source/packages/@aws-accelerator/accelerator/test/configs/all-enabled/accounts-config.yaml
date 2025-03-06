@@ -3,6 +3,7 @@ mandatoryAccounts:
     description: The management (primary) account. Do not change the name field for this mandatory account. Note, the account name key does not need to match the AWS account name.
     email: all-enabled-management-account@example.com
     organizationalUnit: Root
+    accountAlias: all-enabled-management-account-alias
   - name: LogArchive
     description: The log archive account. Do not change the name field for this mandatory account. Note, the account name key does not need to match the AWS account name.
     email: all-enabled-logarchive-account@example.com

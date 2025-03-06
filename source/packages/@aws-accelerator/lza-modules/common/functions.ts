@@ -25,7 +25,7 @@ import { AssumeRoleCommand, GetCallerIdentityCommand, STSClient } from '@aws-sdk
 import * as winston from 'winston';
 import path from 'path';
 
-import { OrganizationConfig } from '@aws-accelerator/config';
+import { OrganizationConfig, AccountsConfig } from '@aws-accelerator/config';
 
 import { createLogger } from '@aws-accelerator/utils/lib/logger';
 import { throttlingBackOff } from '@aws-accelerator/utils/lib/throttle';
@@ -42,6 +42,27 @@ import {
  * Logger
  */
 const logger: winston.Logger = createLogger([path.parse(path.basename(__filename)).name]);
+
+/**
+ * Function to get Account Aliases from config
+ *
+ * @param accountsConfig {@link AccountsConfig}
+ * @param enableSingleAccountMode boolean
+ * @returns accountAliases string[]
+ */
+export async function getAccountAliasesFromConfig(
+  accountsConfig: AccountsConfig,
+  enableSingleAccountMode: boolean,
+): Promise<string[]> {
+  const accountAliases: string[] = [];
+  const accountConfigs = accountsConfig.getAccounts(enableSingleAccountMode);
+  for (const account of accountConfigs) {
+    if (account.accountAlias) {
+      accountAliases.push(account.accountAlias);
+    }
+  }
+  return accountAliases;
+}
 
 /**
  * Function to get AWS Organizations Root details
