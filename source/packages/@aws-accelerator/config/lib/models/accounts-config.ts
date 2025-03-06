@@ -56,6 +56,11 @@ export interface IBaseAccountConfig {
    * This Organizational Unit must exist in the organization-config.yaml file.
    */
   organizationalUnit?: t.NonEmptyString;
+  /**
+   * Account alias used for sign-in page URL in place of 12-digit number. This must be unique within the AWS partition and be
+   * only digits, lowercase letters, and hyphens. It will be validated againt the Regular Expression ^[a-z0-9]([a-z0-9]|-(?!-)){1,61}[a-z0-9]$
+   */
+  accountAlias?: t.NonEmptyNoSpaceString;
 }
 
 /**
@@ -71,6 +76,7 @@ export interface IBaseAccountConfig {
  *   email: example-email+workload01@example.com
  *   organizationalUnit: Workloads
  *   warm: true
+ *   accountAlias: workload1
  * ```
  */
 export interface IAccountConfig extends IBaseAccountConfig {

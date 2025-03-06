@@ -18,7 +18,15 @@ describe('NetworkFirewallValidator', () => {
         updateHelperProps: props => ({
           ...props,
           accounts: [
-            { name: 'a1', email: '', description: '', organizationalUnit: 'ou1', enableGovCloud: false, warm: false },
+            {
+              name: 'a1',
+              email: '',
+              description: '',
+              organizationalUnit: 'ou1',
+              enableGovCloud: false,
+              warm: false,
+              accountAlias: '',
+            },
           ],
         }),
         updateNetworkConfig: (config: Writable<INetworkConfig>) => {
@@ -79,7 +87,15 @@ describe('NetworkFirewallValidator', () => {
         updateHelperProps: props => ({
           ...props,
           accounts: [
-            { name: 'a1', email: '', description: '', organizationalUnit: 'ou1', enableGovCloud: false, warm: false },
+            {
+              name: 'a1',
+              email: '',
+              description: '',
+              organizationalUnit: 'ou1',
+              enableGovCloud: false,
+              warm: false,
+              accountAlias: '',
+            },
           ],
         }),
         updateNetworkConfig: (config: Writable<INetworkConfig>) => {

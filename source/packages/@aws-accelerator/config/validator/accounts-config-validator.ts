@@ -13,7 +13,7 @@
 
 import { createLogger } from '@aws-accelerator/utils/lib/logger';
 import * as emailValidator from 'email-validator';
-import { AccountsConfig } from '../lib/accounts-config';
+import { AccountsConfig, AccountConfig } from '../lib/accounts-config';
 import { OrganizationConfig } from '../lib/organization-config';
 
 export class AccountsConfigValidator {
@@ -46,10 +46,57 @@ export class AccountsConfigValidator {
     // Email validation
     //
     this.validateEmails(values, errors);
+    //
+    // Account Alias validation
+    //
+    this.validateAccountAliases(values, errors);
 
     if (errors.length) {
       throw new Error(`${AccountsConfig.FILENAME} has ${errors.length} issues:\n${errors.join('\n')}`);
     }
+  }
+
+  /**
+   * Function to validate account aliases and look for duplicates within the config
+   * @param values
+   */
+  private validateAccountAliases(values: AccountsConfig, errors: string[]) {
+    const aliases = new Set<string>();
+
+    // Helper function to check for duplicate aliases
+    const checkForDuplicateAliases = (accounts: AccountConfig[], accountType = '') => {
+      for (const account of accounts ?? []) {
+        if (account.accountAlias) {
+          if (aliases.has(account.accountAlias)) {
+            errors.push(
+              `${accountType} alias "${account.accountAlias}" is duplicated. Account aliases must be unique across all accounts.`,
+            );
+          } else {
+            aliases.add(account.accountAlias);
+          }
+        }
+      }
+    };
+
+    // Check mandatory and workload accounts for duplicate aliases
+    checkForDuplicateAliases(values.mandatoryAccounts, 'Account');
+    checkForDuplicateAliases(values.workloadAccounts, 'Workload Account');
+
+    // Validate alias format
+    aliases.forEach(alias => {
+      // AWS account alias constraints:
+      // - Must be unique across all AWS accounts
+      // - Must contain only lowercase letters, digits, and dashes
+      // - Must start with a letter or number
+      // - Must be between 3 and 63 characters long
+      const aliasRegex = /^[a-z0-9][a-z0-9-]{1,61}[a-z0-9]$/;
+      if (!aliasRegex.test(alias)) {
+        errors.push(
+          `Account alias "${alias}" is invalid. Aliases must be between 3 and 63 characters long, ` +
+            `contain only lowercase letters, numbers, and hyphens, and must start and end with a letter or number.`,
+        );
+      }
+    });
   }
 
   /**
