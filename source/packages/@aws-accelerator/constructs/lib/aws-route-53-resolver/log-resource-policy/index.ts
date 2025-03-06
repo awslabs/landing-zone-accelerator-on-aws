@@ -11,10 +11,14 @@
  *  and limitations under the License.
  */
 
-import * as AWS from 'aws-sdk';
+import {
+  CloudWatchLogsClient,
+  DeleteResourcePolicyCommand,
+  PutResourcePolicyCommand,
+} from '@aws-sdk/client-cloudwatch-logs';
 import { throttlingBackOff } from '@aws-accelerator/utils/lib/throttle';
 import { CloudFormationCustomResourceEvent } from '@aws-accelerator/utils/lib/common-types';
-AWS.config.logger = console;
+import { setRetryStrategy } from '@aws-accelerator/utils/lib/common-functions';
 
 /**
  * log-resource-policy - Lambda handler
@@ -34,35 +38,33 @@ export async function handler(event: CloudFormationCustomResourceEvent): Promise
     policyStatements: [];
   }
 
+  const solutionId = process.env['SOLUTION_ID'];
   const resourceLogPolicy = event.ResourceProperties as unknown as ResourceLogPolicy;
   const policyName = resourceLogPolicy.policyName;
-  const policyDocument = {
+  const policyDocument = JSON.stringify({
     Version: '2012-10-17',
     Statement: resourceLogPolicy.policyStatements,
-  };
+  });
   console.log(policyDocument);
 
-  const logsClient = new AWS.CloudWatchLogs();
+  const logsClient = new CloudWatchLogsClient({
+    customUserAgent: solutionId,
+    retryStrategy: setRetryStrategy(),
+  });
 
   switch (event.RequestType) {
     case 'Update':
     case 'Create':
       console.log(`Creating CloudWatch log resource policy.`);
-      await throttlingBackOff(() =>
-        logsClient
-          .putResourcePolicy({
-            policyName: policyName,
-            policyDocument: JSON.stringify(policyDocument),
-          })
-          .promise(),
-      );
+      await throttlingBackOff(() => logsClient.send(new PutResourcePolicyCommand({ policyName, policyDocument })));
       return {
         PhysicalResourceId: policyName,
         Status: 'SUCCESS',
       };
     case 'Delete':
       console.log(`Deleting CloudWatch log resource policy.`);
-      await throttlingBackOff(() => logsClient.deleteResourcePolicy({ policyName: policyName }).promise());
+      await throttlingBackOff(() => logsClient.send(new DeleteResourcePolicyCommand({ policyName })));
+
       return {
         PhysicalResourceId: policyName,
         Status: 'SUCCESS',
