@@ -11,13 +11,9 @@
  *  and limitations under the License.
  */
 
-import { throttlingBackOff } from '@aws-accelerator/utils/lib/throttle';
 import { CloudFormationCustomResourceEvent } from '@aws-accelerator/utils/lib/common-types';
-import * as AWS from 'aws-sdk';
-AWS.config.logger = console;
-
-const iamClient = new AWS.IAM({ customUserAgent: process.env['SOLUTION_ID'] });
-const ssoRolePrefix = '/aws-reserved/sso.amazonaws.com/';
+import { IAMClient, paginateListRoles, Role } from '@aws-sdk/client-iam';
+import { setRetryStrategy } from '@aws-accelerator/utils/lib/common-functions';
 
 export interface responseData {
   roleArn: string | undefined;
@@ -39,11 +35,16 @@ export async function handler(event: CloudFormationCustomResourceEvent): Promise
   console.log(JSON.stringify(event, null, 4));
   const permissionSetName = event.ResourceProperties['permissionSetName'];
 
+  const client = new IAMClient({
+    customUserAgent: process.env['SOLUTION_ID'],
+    retryStrategy: setRetryStrategy(),
+  });
+
   switch (event.RequestType) {
     case 'Create':
-    case 'Update':
+    case 'Update': {
       console.log('Getting Role ARN for Permission Set...');
-      const roleArn = await getPermissionSetRoleArn(permissionSetName);
+      const roleArn = await getPermissionSetRoleArn(client, permissionSetName);
 
       if (roleArn) {
         const responseData = { roleArn: roleArn };
@@ -52,45 +53,38 @@ export async function handler(event: CloudFormationCustomResourceEvent): Promise
       } else {
         throw new Error(`No Permission Set with name ${permissionSetName} found`);
       }
-
+    }
     case 'Delete':
       return { Status: 'Success', StatusCode: 200 };
   }
 }
 
-async function getPermissionSetRoleArn(permissionSetName: string) {
-  const iamRoleList = await getIamRoleList();
-  const roleArn = iamRoleList.find(role => {
-    const regex = new RegExp(`AWSReservedSSO_${permissionSetName}_([0-9a-fA-F]{16})`);
-    const match = regex.test(role.RoleName);
-    console.log(`Test ${role} for pattern ${regex} result: ${match}`);
-    return match;
-  })?.Arn;
-
-  if (roleArn) {
-    console.log(`Found provisioned role for permission set ${permissionSetName} with ARN: ${roleArn}`);
-  } else {
-    console.log(`Permission set with name ${permissionSetName} not found`);
+async function getPermissionSetRoleArn(client: IAMClient, permissionSetName: string): Promise<string | undefined> {
+  const iamRoleList = await getIamRoleList(client);
+  const regex = new RegExp(`AWSReservedSSO_${permissionSetName}_([0-9a-fA-F]{16})`);
+  for (const iamRole of iamRoleList) {
+    if (iamRole.RoleName && iamRole.Arn) {
+      const match = regex.test(iamRole.RoleName);
+      if (match) {
+        console.log(`Found provisioned role for permission set ${permissionSetName} with ARN: ${iamRole.Arn}`);
+        return iamRole.Arn;
+      }
+    }
   }
-
-  return roleArn;
+  console.log(`Permission set with name ${permissionSetName} not found`);
+  return undefined;
 }
 
-async function getIamRoleList() {
-  const roleList = [];
-  let hasNext = true;
-  let marker: string | undefined = undefined;
+async function getIamRoleList(client: IAMClient): Promise<Role[]> {
+  const ssoRolePrefix = '/aws-reserved/sso.amazonaws.com/';
+  const roles: Role[] = [];
+  const paginator = paginateListRoles({ client }, { PathPrefix: ssoRolePrefix });
 
-  while (hasNext) {
-    const response = await throttlingBackOff(() =>
-      iamClient.listRoles({ PathPrefix: ssoRolePrefix, Marker: marker }).promise(),
-    );
-
-    // Add roles returned in this paged response
-    roleList.push(...response.Roles);
-
-    marker = response.Marker;
-    hasNext = !!marker;
+  for await (const page of paginator) {
+    if (page.Roles) {
+      roles.push(...page.Roles);
+    }
   }
-  return roleList;
+
+  return roles;
 }
