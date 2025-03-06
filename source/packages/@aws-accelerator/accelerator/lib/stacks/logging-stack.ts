@@ -1596,7 +1596,10 @@ export class LoggingStack extends AcceleratorStack {
       });
 
       for (const region of this.props.globalConfig.enabledRegions) {
-        if (OptInRegions.includes(region)) {
+        if (
+          OptInRegions.includes(region) &&
+          !this.props.securityConfig.centralSecurityServices.macie.excludeRegions?.includes(region)
+        ) {
           awsPrincipalAccesses.push({
             name: `Macie-${region}`,
             principal: `macie.${region}.amazonaws.com`,
