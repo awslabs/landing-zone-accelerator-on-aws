@@ -12,10 +12,9 @@
  */
 
 import { throttlingBackOff } from '@aws-accelerator/utils/lib/throttle';
+import { setRetryStrategy } from '@aws-accelerator/utils/lib/common-functions';
 import { CloudFormationCustomResourceEvent } from '@aws-accelerator/utils/lib/common-types';
-import * as AWS from 'aws-sdk';
-AWS.config.logger = console;
-
+import { ListInstancesCommand, SSOAdminClient } from '@aws-sdk/client-sso-admin';
 /**
  * get-identity-center-instance-id - lambda handler
  *
@@ -30,15 +29,18 @@ export async function handler(event: CloudFormationCustomResourceEvent): Promise
     }
   | undefined
 > {
-  const identityCenterClient = new AWS.SSOAdmin({ customUserAgent: process.env['SOLUTION_ID'] });
+  const identityCenterClient = new SSOAdminClient({
+    customUserAgent: process.env['SOLUTION_ID'],
+    retryStrategy: setRetryStrategy(),
+  });
 
   let data: { identityStoreId: string; instanceArn: string } | undefined;
 
   switch (event.RequestType) {
     case 'Create':
-    case 'Update':
+    case 'Update': {
       console.log('Checking for IdentityCenter Instance Id...');
-      const response = await throttlingBackOff(() => identityCenterClient.listInstances().promise());
+      const response = await throttlingBackOff(() => identityCenterClient.send(new ListInstancesCommand({})));
 
       if (response.Instances && response.Instances.length === 1) {
         console.log(`IdentityCenter Instance Store Arn is -> ${response.Instances[0].InstanceArn!}`);
@@ -56,6 +58,7 @@ export async function handler(event: CloudFormationCustomResourceEvent): Promise
 
       console.log(`IdentityCenter Instance not found, api response is -> ${response}`);
       return { PhysicalResourceId: undefined, Status: 'Failure', Data: undefined };
+    }
 
     case 'Delete':
       return {
