@@ -41,6 +41,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - chore(securityhub): update sdk v3
 - chore(identity-center): update sdk v3
 - chore(route53resolver): update sdk v3
+- chore(s3): update sdk v3
 
 ### Configuration Changes
 - chore(config): add s3 object level and additional network controls

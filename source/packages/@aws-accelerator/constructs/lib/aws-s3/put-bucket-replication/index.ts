@@ -13,9 +13,15 @@
 
 import { throttlingBackOff } from '@aws-accelerator/utils/lib/throttle';
 import { CloudFormationCustomResourceEvent } from '@aws-accelerator/utils/lib/common-types';
-import * as AWS from 'aws-sdk';
-import * as console from 'console';
-AWS.config.logger = console;
+import {
+  DeleteBucketReplicationCommand,
+  EncryptionConfiguration,
+  PutBucketReplicationCommand,
+  ReplicationRule,
+  S3Client,
+  SseKmsEncryptedObjectsStatus,
+} from '@aws-sdk/client-s3';
+import { setRetryStrategy } from '@aws-accelerator/utils/lib/common-functions';
 
 /**
  * put-public-access-block - lambda handler
@@ -33,7 +39,10 @@ export async function handler(event: CloudFormationCustomResourceEvent): Promise
   const sourceBucketName: string = event.ResourceProperties['sourceBucketName'];
   const solutionId = process.env['SOLUTION_ID'];
 
-  const s3Client = new AWS.S3({ customUserAgent: solutionId });
+  const s3Client = new S3Client({
+    customUserAgent: solutionId,
+    retryStrategy: setRetryStrategy(),
+  });
 
   switch (event.RequestType) {
     case 'Create':
@@ -45,17 +54,17 @@ export async function handler(event: CloudFormationCustomResourceEvent): Promise
       const destinationBucketKeyArn: string = event.ResourceProperties['destinationBucketKeyArn'];
       const destinationAccountId: string = event.ResourceProperties['destinationAccountId'];
 
-      let replicateEncryptedObjectsStatus = 'Disabled';
-      let encryptionConfiguration: AWS.S3.EncryptionConfiguration | undefined;
+      let replicateEncryptedObjectsStatus: SseKmsEncryptedObjectsStatus = SseKmsEncryptedObjectsStatus.Disabled;
+      let encryptionConfiguration: EncryptionConfiguration | undefined;
 
       if (destinationBucketKeyArn) {
-        replicateEncryptedObjectsStatus = 'Enabled';
+        replicateEncryptedObjectsStatus = SseKmsEncryptedObjectsStatus.Enabled;
         encryptionConfiguration = {
           ReplicaKmsKeyID: destinationBucketKeyArn,
         };
       }
 
-      const replicationRules: AWS.S3.ReplicationRules = [
+      const replicationRules: ReplicationRule[] = [
         {
           ID: `${sourceBucketName}-replication-rule`,
           Status: 'Enabled',
@@ -78,13 +87,14 @@ export async function handler(event: CloudFormationCustomResourceEvent): Promise
       ];
 
       await throttlingBackOff(() =>
-        s3Client
-          .putBucketReplication({
+        s3Client.send(
+          new PutBucketReplicationCommand({
             Bucket: sourceBucketName,
             ReplicationConfiguration: { Role: replicationRoleArn, Rules: replicationRules },
-          })
-          .promise(),
+          }),
+        ),
       );
+
       return {
         PhysicalResourceId: `s3-replication-${sourceBucketName}`,
         Status: 'SUCCESS',
@@ -93,11 +103,11 @@ export async function handler(event: CloudFormationCustomResourceEvent): Promise
     case 'Delete':
       try {
         await throttlingBackOff(() =>
-          s3Client
-            .deleteBucketReplication({
+          s3Client.send(
+            new DeleteBucketReplicationCommand({
               Bucket: sourceBucketName,
-            })
-            .promise(),
+            }),
+          ),
         );
       } catch (error) {
         console.error(JSON.stringify(error));

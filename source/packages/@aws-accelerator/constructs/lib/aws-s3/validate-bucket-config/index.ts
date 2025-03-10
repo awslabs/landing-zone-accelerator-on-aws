@@ -12,9 +12,9 @@
  */
 
 import { throttlingBackOff } from '@aws-accelerator/utils/lib/throttle';
-import * as AWS from 'aws-sdk';
 import { CloudFormationCustomResourceEvent } from '@aws-accelerator/utils/lib/common-types';
-AWS.config.logger = console;
+import { GetBucketEncryptionCommand, S3Client } from '@aws-sdk/client-s3';
+import { setRetryStrategy } from '@aws-accelerator/utils/lib/common-functions';
 
 /**
  * put-bucket-prefix - lambda handler
@@ -34,11 +34,14 @@ export async function handler(event: CloudFormationCustomResourceEvent): Promise
   const validationCheckList: string[] = event.ResourceProperties['validationCheckList'];
   const encryptionType: 'kms' | 's3' = event.ResourceProperties['encryptionType'];
   const solutionId = process.env['SOLUTION_ID'];
-  const s3Client = new AWS.S3({ customUserAgent: solutionId });
+  const s3Client = new S3Client({
+    customUserAgent: solutionId,
+    retryStrategy: setRetryStrategy(),
+  });
 
   switch (event.RequestType) {
     case 'Create':
-    case 'Update':
+    case 'Update': {
       let validationStatus = true;
       let bucketKmsArn: string | undefined;
       if (validationCheckList.includes('encryption')) {
@@ -60,6 +63,7 @@ export async function handler(event: CloudFormationCustomResourceEvent): Promise
           Data: undefined,
         };
       }
+    }
 
     case 'Delete':
       // Do Nothing
@@ -73,20 +77,20 @@ export async function handler(event: CloudFormationCustomResourceEvent): Promise
 
 /**
  * Function to validate bucket encryption
- * @param s3Client - {@link AWS.S3}
+ * @param s3Client - {@link S3Client}
  * @param bucketName - string
  * @returns
  */
 async function validateEncryption(
-  s3Client: AWS.S3,
+  s3Client: S3Client,
   bucketName: string,
   encryptionType: 'kms' | 's3',
 ): Promise<{ bucketKmsArn: string | undefined; status: boolean }> {
-  const response = await throttlingBackOff(() => s3Client.getBucketEncryption({ Bucket: bucketName }).promise());
+  const response = await throttlingBackOff(() => s3Client.send(new GetBucketEncryptionCommand({ Bucket: bucketName })));
 
   if (encryptionType === 'kms') {
     if (
-      response.ServerSideEncryptionConfiguration?.Rules[0].ApplyServerSideEncryptionByDefault?.SSEAlgorithm ===
+      response.ServerSideEncryptionConfiguration?.Rules![0].ApplyServerSideEncryptionByDefault?.SSEAlgorithm ===
         'aws:kms' &&
       response.ServerSideEncryptionConfiguration?.Rules[0].ApplyServerSideEncryptionByDefault?.KMSMasterKeyID
     ) {
@@ -106,7 +110,8 @@ async function validateEncryption(
     }
   } else {
     if (
-      response.ServerSideEncryptionConfiguration?.Rules[0].ApplyServerSideEncryptionByDefault?.SSEAlgorithm === 'AES256'
+      response.ServerSideEncryptionConfiguration?.Rules![0].ApplyServerSideEncryptionByDefault?.SSEAlgorithm ===
+      'AES256'
     ) {
       return {
         status: true,

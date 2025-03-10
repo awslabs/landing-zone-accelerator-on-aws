@@ -19,9 +19,9 @@ import {
 } from '@aws-accelerator/utils/lib/common-resources';
 import { throttlingBackOff } from '@aws-accelerator/utils/lib/throttle';
 import { CloudFormationCustomResourceEvent } from '@aws-accelerator/utils/lib/common-types';
-import * as AWS from 'aws-sdk';
 import * as path from 'path';
-AWS.config.logger = console;
+import { PutBucketPolicyCommand, S3Client } from '@aws-sdk/client-s3';
+import { setRetryStrategy } from '@aws-accelerator/utils/lib/common-functions';
 
 /**
  * put-bucket-prefix - lambda handler
@@ -53,7 +53,10 @@ export async function handler(event: CloudFormationCustomResourceEvent): Promise
   const firewallRoles: string[] = event.ResourceProperties['firewallRoles'] ?? [];
 
   const solutionId = process.env['SOLUTION_ID'];
-  const s3Client = new AWS.S3({ customUserAgent: solutionId });
+  const s3Client = new S3Client({
+    customUserAgent: solutionId,
+    retryStrategy: setRetryStrategy(),
+  });
 
   switch (event.RequestType) {
     case 'Create':
@@ -78,7 +81,7 @@ export async function handler(event: CloudFormationCustomResourceEvent): Promise
         }
 
         await throttlingBackOff(() =>
-          s3Client.putBucketPolicy({ Bucket: bucketName, Policy: replacedPolicyString }).promise(),
+          s3Client.send(new PutBucketPolicyCommand({ Bucket: bucketName, Policy: replacedPolicyString })),
         );
       }
       return {
