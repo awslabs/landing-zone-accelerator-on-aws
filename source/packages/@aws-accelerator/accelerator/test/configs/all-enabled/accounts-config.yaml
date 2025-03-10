@@ -8,10 +8,12 @@ mandatoryAccounts:
     description: The log archive account. Do not change the name field for this mandatory account. Note, the account name key does not need to match the AWS account name.
     email: all-enabled-logarchive-account@example.com
     organizationalUnit: Security
+    accountAlias: all-enabled-logarchive-account-alias
   - name: Audit
     description: The security audit account (also referred to as the audit account). Do not change the name field for this mandatory account. Note, the account name key does not need to match the AWS account name.
     email: all-enabled-audit-account@example.com
     organizationalUnit: Security
+    accountAlias: all-enabled-audit-account-alias
 workloadAccounts:
   - name: SharedServices
     description: The SharedServices account
@@ -21,6 +23,7 @@ workloadAccounts:
     description: The Network account
     email: all-enabled-network@example.com
     organizationalUnit: Infrastructure
+    accountAlias: all-enabled-network-account-alias
   - name: GovCloudWorkloadAccount01
     description: Sample govCloud workload account
     email: all-enabled-govcloud-workload-account01@example.com

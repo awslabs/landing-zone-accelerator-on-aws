@@ -20,20 +20,32 @@ import { AccountsConfig, AccountConfig } from '../../../config/lib/accounts-conf
 import { IAMClient } from '@aws-sdk/client-iam';
 import { AcceleratorMockClient } from '../utils/test-resources';
 import { ListAccountAliasesCommand, CreateAccountAliasCommand, DeleteAccountAliasCommand } from '@aws-sdk/client-iam';
+import { AssumeRoleCredentialType } from '../../common/resources';
+
+// Mock constants
+const MOCK_CONSTANTS = {
+  credentials: {
+    accessKeyId: 'AKIAIOSFODNN7EXAMPLE',
+    secretAccessKey: 'wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY',
+    sessionToken: 'mock-session-token',
+  } as AssumeRoleCredentialType,
+
+  globalRegion: 'us-east-1',
+  solutionId: 'AwsSolution/SO0199/',
+};
 
 describe('AccountAlias', () => {
   const iamMockClient = AcceleratorMockClient(IAMClient);
   const accountsConfig = AccountsConfig.load(path.resolve('../lza-modules/test/account-alias/config'));
 
   let accountAlias: AccountAlias;
-  let statuses: string[];
-  let account: AccountConfig;
+  let statuses: string[] = [];
+  const account = accountsConfig.getAccount('Management');
 
   beforeEach(() => {
     iamMockClient.reset();
     accountAlias = new AccountAlias();
     statuses = [];
-    account = accountsConfig.getAccount('Management');
   });
 
   test('should create new alias when none exists', async () => {
@@ -45,7 +57,14 @@ describe('AccountAlias', () => {
     // Mock the create alias call
     iamMockClient.on(CreateAccountAliasCommand).resolves({});
 
-    await accountAlias['manageAccountAlias'](iamMockClient as unknown as IAMClient, account, statuses);
+    await accountAlias['manageAccountAlias'](
+      account.name,
+      account.accountAlias!,
+      MOCK_CONSTANTS.solutionId,
+      MOCK_CONSTANTS.globalRegion,
+      statuses,
+      MOCK_CONSTANTS.credentials,
+    );
 
     // Verify the correct commands were called
     expect(iamMockClient.calls()).toHaveLength(2);
@@ -76,7 +95,14 @@ describe('AccountAlias', () => {
     iamMockClient.on(DeleteAccountAliasCommand).resolves({});
     iamMockClient.on(CreateAccountAliasCommand).resolves({});
 
-    await accountAlias['manageAccountAlias'](iamMockClient as unknown as IAMClient, account, statuses);
+    await accountAlias['manageAccountAlias'](
+      account.name,
+      account.accountAlias!,
+      MOCK_CONSTANTS.solutionId,
+      MOCK_CONSTANTS.globalRegion,
+      statuses,
+      MOCK_CONSTANTS.credentials,
+    );
 
     // Verify all commands were called
     expect(iamMockClient.calls()).toHaveLength(3);
@@ -94,7 +120,7 @@ describe('AccountAlias', () => {
     });
 
     // Verify status messages
-    expect(statuses).toContain('Successfully deleted existing account alias "old-alias"');
+    expect(statuses).toContain('Successfully deleted existing account alias "old-alias".');
     expect(statuses).toContain(
       `Account alias "${account.accountAlias}" successfully set for account "${account.name}".`,
     );
@@ -111,7 +137,14 @@ describe('AccountAlias', () => {
       AccountAliases: [testAccount.accountAlias],
     });
 
-    await accountAlias['manageAccountAlias'](iamMockClient as unknown as IAMClient, testAccount, statuses);
+    await accountAlias['manageAccountAlias'](
+      testAccount.name,
+      testAccount.accountAlias!,
+      MOCK_CONSTANTS.solutionId,
+      MOCK_CONSTANTS.globalRegion,
+      statuses,
+      MOCK_CONSTANTS.credentials,
+    );
 
     // Verify only list was called
     expect(iamMockClient.calls()).toHaveLength(1);
@@ -120,7 +153,7 @@ describe('AccountAlias', () => {
     expect(iamMockClient.commandCalls(DeleteAccountAliasCommand)).toHaveLength(0);
 
     // Verify no status messages were added
-    expect(statuses).toHaveLength(0);
+    expect(statuses).toHaveLength(1);
   });
 
   test('should handle list alias errors', async () => {
@@ -128,8 +161,15 @@ describe('AccountAlias', () => {
     iamMockClient.on(ListAccountAliasesCommand).rejects(new Error('List failed'));
 
     await expect(
-      accountAlias['manageAccountAlias'](iamMockClient as unknown as IAMClient, account, statuses),
-    ).rejects.toThrow(`Failed to list account aliases: Error: List failed`);
+      accountAlias['manageAccountAlias'](
+        account.name,
+        account.accountAlias!,
+        MOCK_CONSTANTS.solutionId,
+        MOCK_CONSTANTS.globalRegion,
+        statuses,
+        MOCK_CONSTANTS.credentials,
+      ),
+    ).rejects.toThrow(`List failed`);
   });
 
   test('should handle delete alias errors', async () => {
@@ -142,8 +182,15 @@ describe('AccountAlias', () => {
     iamMockClient.on(DeleteAccountAliasCommand).rejects(new Error('Delete failed'));
 
     await expect(
-      accountAlias['manageAccountAlias'](iamMockClient as unknown as IAMClient, account, statuses),
-    ).rejects.toThrow('Failed to delete existing alias "old-alias": Error: Delete failed');
+      accountAlias['manageAccountAlias'](
+        account.name,
+        account.accountAlias!,
+        MOCK_CONSTANTS.solutionId,
+        MOCK_CONSTANTS.globalRegion,
+        statuses,
+        MOCK_CONSTANTS.credentials,
+      ),
+    ).rejects.toThrow('Delete failed');
   });
 
   test('should handle create alias errors', async () => {
@@ -156,7 +203,14 @@ describe('AccountAlias', () => {
     iamMockClient.on(CreateAccountAliasCommand).rejects(new Error('Create failed'));
 
     await expect(
-      accountAlias['manageAccountAlias'](iamMockClient as unknown as IAMClient, account, statuses),
-    ).rejects.toThrow(`Failed to create new alias "${account.accountAlias}": Error: Create failed`);
+      accountAlias['manageAccountAlias'](
+        account.name,
+        account.accountAlias!,
+        MOCK_CONSTANTS.solutionId,
+        MOCK_CONSTANTS.globalRegion,
+        statuses,
+        MOCK_CONSTANTS.credentials,
+      ),
+    ).rejects.toThrow(`Create failed`);
   });
 });

@@ -12,6 +12,8 @@
  */
 
 import {
+  AccountStatus,
+  DescribeAccountCommand,
   ListOrganizationalUnitsForParentCommand,
   ListRootsCommand,
   OrganizationalUnit,
@@ -25,7 +27,7 @@ import { AssumeRoleCommand, GetCallerIdentityCommand, STSClient } from '@aws-sdk
 import * as winston from 'winston';
 import path from 'path';
 
-import { OrganizationConfig, AccountsConfig } from '@aws-accelerator/config';
+import { OrganizationConfig } from '@aws-accelerator/config';
 
 import { createLogger } from '@aws-accelerator/utils/lib/logger';
 import { throttlingBackOff } from '@aws-accelerator/utils/lib/throttle';
@@ -44,24 +46,17 @@ import {
 const logger: winston.Logger = createLogger([path.parse(path.basename(__filename)).name]);
 
 /**
- * Function to get Account Aliases from config
- *
- * @param accountsConfig {@link AccountsConfig}
- * @param enableSingleAccountMode boolean
- * @returns accountAliases string[]
+ * Function to check if account is suspended.
+ * @param client {@link OrganizationsClient}
+ * @param accountId string
+ * @returns boolean
  */
-export async function getAccountAliasesFromConfig(
-  accountsConfig: AccountsConfig,
-  enableSingleAccountMode: boolean,
-): Promise<string[]> {
-  const accountAliases: string[] = [];
-  const accountConfigs = accountsConfig.getAccounts(enableSingleAccountMode);
-  for (const account of accountConfigs) {
-    if (account.accountAlias) {
-      accountAliases.push(account.accountAlias);
-    }
+export async function isAccountSuspended(client: OrganizationsClient, accountId: string): Promise<boolean> {
+  const response = await throttlingBackOff(() => client.send(new DescribeAccountCommand({ AccountId: accountId })));
+  if (!response.Account) {
+    throw new Error(`DescribeAccount API did not return Account object.`);
   }
-  return accountAliases;
+  return response.Account.Status === AccountStatus.SUSPENDED;
 }
 
 /**
