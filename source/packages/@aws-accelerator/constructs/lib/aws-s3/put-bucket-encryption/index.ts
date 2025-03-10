@@ -13,8 +13,8 @@
 
 import { throttlingBackOff } from '@aws-accelerator/utils/lib/throttle';
 import { CloudFormationCustomResourceEvent } from '@aws-accelerator/utils/lib/common-types';
-import * as AWS from 'aws-sdk';
-AWS.config.logger = console;
+import { PutBucketEncryptionCommand, S3Client } from '@aws-sdk/client-s3';
+import { setRetryStrategy } from '@aws-accelerator/utils/lib/common-functions';
 
 /**
  * put-bucket-prefix - lambda handler
@@ -32,14 +32,17 @@ export async function handler(event: CloudFormationCustomResourceEvent): Promise
   const bucketName: string = event.ResourceProperties['bucketName'];
   const kmsKeyArn: string = event.ResourceProperties['kmsKeyArn'];
   const solutionId = process.env['SOLUTION_ID'];
-  const s3Client = new AWS.S3({ customUserAgent: solutionId });
+  const s3Client = new S3Client({
+    customUserAgent: solutionId,
+    retryStrategy: setRetryStrategy(),
+  });
 
   switch (event.RequestType) {
     case 'Create':
     case 'Update':
       await throttlingBackOff(() =>
-        s3Client
-          .putBucketEncryption({
+        s3Client.send(
+          new PutBucketEncryptionCommand({
             Bucket: bucketName,
             ServerSideEncryptionConfiguration: {
               Rules: [
@@ -52,10 +55,9 @@ export async function handler(event: CloudFormationCustomResourceEvent): Promise
                 },
               ],
             },
-          })
-          .promise(),
+          }),
+        ),
       );
-
       return {
         PhysicalResourceId: bucketName,
         Status: 'SUCCESS',

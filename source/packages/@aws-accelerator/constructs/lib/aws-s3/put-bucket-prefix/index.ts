@@ -13,8 +13,8 @@
 
 import { throttlingBackOff } from '@aws-accelerator/utils/lib/throttle';
 import { CloudFormationCustomResourceEvent } from '@aws-accelerator/utils/lib/common-types';
-import * as AWS from 'aws-sdk';
-AWS.config.logger = console;
+import { ListObjectsV2Command, PutObjectCommand, S3Client } from '@aws-sdk/client-s3';
+import { setRetryStrategy } from '@aws-accelerator/utils/lib/common-functions';
 
 /**
  * put-bucket-prefix - lambda handler
@@ -33,7 +33,10 @@ export async function handler(event: CloudFormationCustomResourceEvent): Promise
   const sourceBucketKeyArn: string = event.ResourceProperties['sourceBucketKeyArn'];
   const bucketPrefixes: string[] = event.ResourceProperties['bucketPrefixes'];
   const solutionId = process.env['SOLUTION_ID'];
-  const s3Client = new AWS.S3({ customUserAgent: solutionId });
+  const s3Client = new S3Client({
+    customUserAgent: solutionId,
+    retryStrategy: setRetryStrategy(),
+  });
 
   switch (event.RequestType) {
     case 'Create':
@@ -41,26 +44,26 @@ export async function handler(event: CloudFormationCustomResourceEvent): Promise
       for (const prefix of bucketPrefixes) {
         console.log(`starting - check bucket prefix for ${prefix}`);
         const listObjectsResponse = await throttlingBackOff(() =>
-          s3Client
-            .listObjectsV2({
+          s3Client.send(
+            new ListObjectsV2Command({
               Bucket: sourceBucketName,
               Prefix: prefix + '/',
               MaxKeys: 1,
               Delimiter: '/',
-            })
-            .promise(),
+            }),
+          ),
         );
         if (!('Contents' in listObjectsResponse) || listObjectsResponse.Contents?.length === 0) {
           console.log(`starting - create bucket prefix for ${prefix}`);
           await throttlingBackOff(() =>
-            s3Client
-              .putObject({
+            s3Client.send(
+              new PutObjectCommand({
                 Bucket: sourceBucketName,
                 Key: prefix + '/',
                 ServerSideEncryption: 'aws:kms',
                 SSEKMSKeyId: sourceBucketKeyArn,
-              })
-              .promise(),
+              }),
+            ),
           );
         }
       }

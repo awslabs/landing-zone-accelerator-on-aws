@@ -13,8 +13,8 @@
 
 import { throttlingBackOff } from '@aws-accelerator/utils/lib/throttle';
 import { CloudFormationCustomResourceEvent } from '@aws-accelerator/utils/lib/common-types';
-import * as AWS from 'aws-sdk';
-AWS.config.logger = console;
+import { PutPublicAccessBlockCommand, S3ControlClient } from '@aws-sdk/client-s3-control';
+import { setRetryStrategy } from '@aws-accelerator/utils/lib/common-functions';
 
 /**
  * put-public-access-block - lambda handler
@@ -36,14 +36,17 @@ export async function handler(event: CloudFormationCustomResourceEvent): Promise
   const restrictPublicBuckets: boolean = event.ResourceProperties['restrictPublicBuckets'] === 'true';
   const solutionId = process.env['SOLUTION_ID'];
 
-  const s3ControlClient = new AWS.S3Control({ customUserAgent: solutionId });
+  const s3ControlClient = new S3ControlClient({
+    customUserAgent: solutionId,
+    retryStrategy: setRetryStrategy(),
+  });
 
   switch (event.RequestType) {
     case 'Create':
     case 'Update':
       await throttlingBackOff(() =>
-        s3ControlClient
-          .putPublicAccessBlock({
+        s3ControlClient.send(
+          new PutPublicAccessBlockCommand({
             AccountId: accountId,
             PublicAccessBlockConfiguration: {
               BlockPublicAcls: blockPublicAcls,
@@ -51,8 +54,8 @@ export async function handler(event: CloudFormationCustomResourceEvent): Promise
               IgnorePublicAcls: ignorePublicAcls,
               RestrictPublicBuckets: restrictPublicBuckets,
             },
-          })
-          .promise(),
+          }),
+        ),
       );
       return {
         PhysicalResourceId: `s3-bpa-${accountId}`,
