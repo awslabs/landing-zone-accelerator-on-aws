@@ -610,6 +610,10 @@ export class AcceleratorPipeline extends Construct {
                 cdk.Aws.PARTITION
               } --use-existing-role ${
                 this.props.useExistingRoles ? 'Yes' : 'No'
+              } --config-dir $CODEBUILD_SRC_DIR_Config; yarn run ts-node ../lza-modules/bin/runner.ts --module account-alias --partition  ${
+                cdk.Aws.PARTITION
+              } --use-existing-role ${
+                this.props.useExistingRoles ? 'Yes' : 'No'
               } --config-dir $CODEBUILD_SRC_DIR_Config; else echo "Module aws-organizations execution skipped by environment settings."; fi ; fi`,
               `if [ "prepare" = "\${ACCELERATOR_STAGE}" ]; then set -e && yarn run ts-node  ./lib/prerequisites.ts --config-dir $CODEBUILD_SRC_DIR_Config --partition ${cdk.Aws.PARTITION} --minimal; fi`,
               'export FULL_SYNTH="true"',
