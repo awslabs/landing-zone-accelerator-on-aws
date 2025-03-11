@@ -12,10 +12,13 @@
  */
 
 import { throttlingBackOff } from '@aws-accelerator/utils/lib/throttle';
-import { getGlobalRegion } from '@aws-accelerator/utils/lib/common-functions';
+import { getGlobalRegion, setRetryStrategy } from '@aws-accelerator/utils/lib/common-functions';
 import { CloudFormationCustomResourceEvent } from '@aws-accelerator/utils/lib/common-types';
-import * as AWS from 'aws-sdk';
-AWS.config.logger = console;
+import {
+  DisableAWSServiceAccessCommand,
+  EnableAWSServiceAccessCommand,
+  OrganizationsClient,
+} from '@aws-sdk/client-organizations';
 
 /**
  * enable-aws-service-access - lambda handler
@@ -34,13 +37,17 @@ export async function handler(event: CloudFormationCustomResourceEvent): Promise
   const servicePrincipal: string = event.ResourceProperties['servicePrincipal'];
   const solutionId = process.env['SOLUTION_ID'];
   const globalRegion = getGlobalRegion(partition);
-  const organizationsClient = new AWS.Organizations({ customUserAgent: solutionId, region: globalRegion });
+  const organizationsClient = new OrganizationsClient({
+    region: globalRegion,
+    customUserAgent: solutionId,
+    retryStrategy: setRetryStrategy(),
+  });
 
   switch (event.RequestType) {
     case 'Create':
     case 'Update':
       await throttlingBackOff(() =>
-        organizationsClient.enableAWSServiceAccess({ ServicePrincipal: servicePrincipal }).promise(),
+        organizationsClient.send(new EnableAWSServiceAccessCommand({ ServicePrincipal: servicePrincipal })),
       );
 
       return {
@@ -50,7 +57,7 @@ export async function handler(event: CloudFormationCustomResourceEvent): Promise
 
     case 'Delete':
       await throttlingBackOff(() =>
-        organizationsClient.disableAWSServiceAccess({ ServicePrincipal: servicePrincipal }).promise(),
+        organizationsClient.send(new DisableAWSServiceAccessCommand({ ServicePrincipal: servicePrincipal })),
       );
       return {
         PhysicalResourceId: event.PhysicalResourceId,
