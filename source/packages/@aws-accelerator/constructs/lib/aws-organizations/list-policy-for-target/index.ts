@@ -12,10 +12,13 @@
  */
 
 import { throttlingBackOff } from '@aws-accelerator/utils/lib/throttle';
-import { getGlobalRegion } from '@aws-accelerator/utils/lib/common-functions';
+import { getGlobalRegion, setRetryStrategy } from '@aws-accelerator/utils/lib/common-functions';
 import { CloudFormationCustomResourceEvent } from '@aws-accelerator/utils/lib/common-types';
-import * as AWS from 'aws-sdk';
-AWS.config.logger = console;
+import {
+  ListPoliciesForTargetCommand,
+  ListPoliciesForTargetResponse,
+  OrganizationsClient,
+} from '@aws-sdk/client-organizations';
 
 /**
  * list-policy-for-target - lambda handler
@@ -50,7 +53,11 @@ export async function handler(event: CloudFormationCustomResourceEvent): Promise
   const accounts: accountItem[] = event.ResourceProperties['accounts'];
   const scps: validateScpItem[] = event.ResourceProperties['scps'];
   const globalRegion = getGlobalRegion(partition);
-  const organizationsClient = new AWS.Organizations({ customUserAgent: solutionId, region: globalRegion });
+  const organizationsClient = new OrganizationsClient({
+    region: globalRegion,
+    customUserAgent: process.env['SOLUTION_ID'],
+    retryStrategy: setRetryStrategy(),
+  });
 
   switch (event.RequestType) {
     case 'Create':
@@ -69,20 +76,20 @@ export async function handler(event: CloudFormationCustomResourceEvent): Promise
 
 async function checkOrganizationUnits(
   organizationUnits: orgItem[],
-  organizationsClient: AWS.Organizations,
+  organizationsClient: OrganizationsClient,
   scps: validateScpItem[],
 ) {
   for (const organizationUnit of organizationUnits) {
     // get all scps attached to this particular OU
     // this cannot be more than 5 so not paginating
-    const attachedScps: AWS.Organizations.ListPoliciesForTargetResponse = await throttlingBackOff(() =>
-      organizationsClient
-        .listPoliciesForTarget({
+    const attachedScps: ListPoliciesForTargetResponse = await throttlingBackOff(() =>
+      organizationsClient.send(
+        new ListPoliciesForTargetCommand({
           Filter: 'SERVICE_CONTROL_POLICY',
           TargetId: organizationUnit.id,
           MaxResults: 10,
-        })
-        .promise(),
+        }),
+      ),
     );
     if (attachedScps.Policies) {
       // Get all scp names attached by solution from the config
@@ -112,18 +119,22 @@ async function checkOrganizationUnits(
   }
 }
 
-async function checkAccounts(accounts: accountItem[], organizationsClient: AWS.Organizations, scps: validateScpItem[]) {
+async function checkAccounts(
+  accounts: accountItem[],
+  organizationsClient: OrganizationsClient,
+  scps: validateScpItem[],
+) {
   for (const account of accounts) {
     // get all scps attached to this particular account
     // this cannot be more than 5 so not paginating
-    const attachedScps: AWS.Organizations.ListPoliciesForTargetResponse = await throttlingBackOff(() =>
-      organizationsClient
-        .listPoliciesForTarget({
+    const attachedScps: ListPoliciesForTargetResponse = await throttlingBackOff(() =>
+      organizationsClient.send(
+        new ListPoliciesForTargetCommand({
           Filter: 'SERVICE_CONTROL_POLICY',
           TargetId: account.accountId,
           MaxResults: 10,
-        })
-        .promise(),
+        }),
+      ),
     );
     if (attachedScps.Policies) {
       // Get all scp names attached by solution from the config

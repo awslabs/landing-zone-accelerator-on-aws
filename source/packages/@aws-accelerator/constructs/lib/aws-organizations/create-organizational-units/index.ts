@@ -13,7 +13,6 @@
 
 import { throttlingBackOff } from '@aws-accelerator/utils/lib/throttle';
 import { setOrganizationsClient } from '@aws-accelerator/utils/lib/set-organizations-client';
-import * as AWS from 'aws-sdk';
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
 import {
   DynamoDBDocumentClient,
@@ -32,7 +31,6 @@ import {
   CreateOrganizationalUnitCommand,
 } from '@aws-sdk/client-organizations';
 import { CloudFormationCustomResourceEvent, Context } from '@aws-accelerator/utils/lib/common-types';
-AWS.config.logger = console;
 let organizationsClient: OrganizationsClient;
 const marshallOptions = {
   convertEmptyValues: false,

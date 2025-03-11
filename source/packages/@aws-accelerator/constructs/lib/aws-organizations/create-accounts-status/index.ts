@@ -17,12 +17,22 @@
  * @returns
  */
 
-import * as AWS from 'aws-sdk';
 import { throttlingBackOff } from '@aws-accelerator/utils/lib/throttle';
 import { CreateAccountResponse } from 'aws-sdk/clients/organizations';
-import { getGlobalRegion } from '@aws-accelerator/utils/lib/common-functions';
+import { getGlobalRegion, setRetryStrategy } from '@aws-accelerator/utils/lib/common-functions';
 import { CloudFormationCustomResourceEvent, Context } from '@aws-accelerator/utils/lib/common-types';
-const documentClient = new AWS.DynamoDB.DocumentClient();
+import {
+  CreateAccountCommand,
+  CreateGovCloudAccountCommand,
+  DescribeCreateAccountStatusCommand,
+  DescribeCreateAccountStatusResponse,
+  ListRootsCommand,
+  MoveAccountCommand,
+  OrganizationsClient,
+} from '@aws-sdk/client-organizations';
+import { AttributeValue, DynamoDBClient, ScanCommand } from '@aws-sdk/client-dynamodb';
+import { DeleteCommand, DynamoDBDocumentClient, PutCommand } from '@aws-sdk/lib-dynamodb';
+
 const newOrgAccountsTableName = process.env['NewOrgAccountsTableName'] ?? '';
 const govCloudAccountMappingTableName = process.env['GovCloudAccountMappingTableName'] ?? '';
 const accountRoleName = process.env['AccountRoleName'];
@@ -38,7 +48,8 @@ interface AccountConfig {
 }
 
 type AccountConfigs = Array<AccountConfig>;
-let organizationsClient: AWS.Organizations;
+let organizationsClient: OrganizationsClient;
+let documentClient: DynamoDBDocumentClient;
 
 export async function handler(
   event: CloudFormationCustomResourceEvent,
@@ -52,7 +63,18 @@ export async function handler(
   console.log(event);
   const partition = context.invokedFunctionArn.split(':')[1];
   const globalRegion = getGlobalRegion(partition);
-  organizationsClient = new AWS.Organizations({ customUserAgent: solutionId, region: globalRegion });
+  organizationsClient = new OrganizationsClient({
+    region: globalRegion,
+    customUserAgent: solutionId,
+    retryStrategy: setRetryStrategy(),
+  });
+  documentClient = DynamoDBDocumentClient.from(
+    new DynamoDBClient({
+      region: globalRegion,
+      customUserAgent: solutionId,
+      retryStrategy: setRetryStrategy(),
+    }),
+  );
 
   // get a single accountConfig from table and attempt to create
   // if no record is returned then all new accounts are provisioned
@@ -160,15 +182,17 @@ async function getSingleAccountConfigFromTable(): Promise<AccountConfigs> {
     TableName: newOrgAccountsTableName,
     Limit: 1,
   };
-
-  const response = await throttlingBackOff(() => documentClient.scan(scanParams).promise());
-
+  const response = await throttlingBackOff(() => documentClient.send(new ScanCommand(scanParams)));
   console.log(`getSingleAccount response ${JSON.stringify(response)}`);
   const itemCount = response.Items?.length ?? 0;
+
   if (itemCount > 0) {
-    const account: AccountConfig = JSON.parse(response.Items![0]['accountConfig']);
-    accountToAdd.push(account);
-    console.log(`Account to add ${JSON.stringify(accountToAdd)}`);
+    const accountConfigAttributeValue: AttributeValue = response.Items![0]['accountConfig'];
+    if (typeof accountConfigAttributeValue === 'string') {
+      const account: AccountConfig = JSON.parse(accountConfigAttributeValue);
+      accountToAdd.push(account);
+      console.log(`Account to add ${JSON.stringify(accountToAdd)}`);
+    }
   }
   return accountToAdd;
 }
@@ -180,8 +204,8 @@ async function deleteSingleAccountConfigFromTable(accountToDeleteEmail: string):
       accountEmail: accountToDeleteEmail,
     },
   };
-  const response = await throttlingBackOff(() => documentClient.delete(deleteParams).promise());
-  if (response.$response.httpResponse.statusCode === 200) {
+  const response = await throttlingBackOff(() => documentClient.send(new DeleteCommand(deleteParams)));
+  if (response.$metadata.httpStatusCode === 200) {
     return true;
   } else {
     console.log(response);
@@ -189,43 +213,35 @@ async function deleteSingleAccountConfigFromTable(accountToDeleteEmail: string):
   }
 }
 
-async function createOrganizationAccount(
-  accountEmail: string,
-  accountName: string,
-): Promise<AWS.Organizations.CreateAccountResponse> {
+async function createOrganizationAccount(accountEmail: string, accountName: string): Promise<CreateAccountResponse> {
   const createAccountsParams = {
     AccountName: accountName,
     Email: accountEmail,
     RoleName: accountRoleName,
   };
   const createAccountResponse = await throttlingBackOff(() =>
-    organizationsClient.createAccount(createAccountsParams).promise(),
+    organizationsClient.send(new CreateAccountCommand(createAccountsParams)),
   );
   console.log(createAccountResponse);
   return createAccountResponse;
 }
 
-async function createGovCloudAccount(
-  accountEmail: string,
-  accountName: string,
-): Promise<AWS.Organizations.CreateAccountResponse> {
+async function createGovCloudAccount(accountEmail: string, accountName: string): Promise<CreateAccountResponse> {
   const createAccountsParams = {
     AccountName: accountName,
     Email: accountEmail,
     RoleName: accountRoleName,
   };
   const createAccountResponse = await throttlingBackOff(() =>
-    organizationsClient.createGovCloudAccount(createAccountsParams).promise(),
+    organizationsClient.send(new CreateGovCloudAccountCommand(createAccountsParams)),
   );
   console.log(createAccountResponse);
   return createAccountResponse;
 }
 
-async function getAccountCreationStatus(
-  requestId: string,
-): Promise<AWS.Organizations.DescribeCreateAccountStatusResponse> {
-  return throttlingBackOff(() =>
-    organizationsClient.describeCreateAccountStatus({ CreateAccountRequestId: requestId }).promise(),
+async function getAccountCreationStatus(requestId: string): Promise<DescribeCreateAccountStatusResponse> {
+  return await throttlingBackOff(() =>
+    organizationsClient.send(new DescribeCreateAccountStatusCommand({ CreateAccountRequestId: requestId })),
   );
 }
 
@@ -237,8 +253,8 @@ async function updateAccountConfig(accountConfig: AccountConfig): Promise<boolea
       accountConfig: JSON.stringify(accountConfig),
     },
   };
-  const response = await throttlingBackOff(() => documentClient.put(params).promise());
-  if (response.$response.httpResponse.statusCode === 200) {
+  const response = await throttlingBackOff(() => documentClient.send(new PutCommand(params)));
+  if (response.$metadata.httpStatusCode === 200) {
     return true;
   } else {
     console.log(response);
@@ -247,23 +263,23 @@ async function updateAccountConfig(accountConfig: AccountConfig): Promise<boolea
 }
 
 async function moveAccountToOrgIdFromRoot(accountId: string, orgId: string): Promise<boolean> {
-  const roots = await throttlingBackOff(() => organizationsClient.listRoots({}).promise());
+  const roots = await throttlingBackOff(() => organizationsClient.send(new ListRootsCommand({})));
   const rootOrg = roots.Roots?.find(item => item.Name === 'Root');
   const response = await throttlingBackOff(() =>
-    organizationsClient
-      .moveAccount({
+    organizationsClient.send(
+      new MoveAccountCommand({
         AccountId: accountId,
         DestinationParentId: orgId,
         SourceParentId: rootOrg!.Id!,
-      })
-      .promise(),
+      }),
+    ),
   );
-  if (response.$response.httpResponse.statusCode === 200) {
+  if (response.$metadata.httpStatusCode === 200) {
     console.log(`Moved account ${accountId} to OU.`);
     return true;
   } else {
     console.log(
-      `Failed to move account ${accountId} to OU. Move request status: ${response.$response.httpResponse.statusMessage}`,
+      `Failed to move account ${accountId} to OU. Move request status code: ${response.$metadata.httpStatusCode}`,
     );
   }
   return false;
@@ -282,8 +298,8 @@ async function saveGovCloudAccountMapping(
       accountName: accountName,
     },
   };
-  const response = await throttlingBackOff(() => documentClient.put(params).promise());
-  if (response.$response.httpResponse.statusCode === 200) {
+  const response = await throttlingBackOff(() => documentClient.send(new PutCommand(params)));
+  if (response.$metadata.httpStatusCode === 200) {
     return true;
   } else {
     console.log(response);
@@ -296,7 +312,7 @@ async function deleteAllRecordsFromTable(paramTableName: string) {
     TableName: paramTableName,
     ProjectionExpression: 'accountEmail',
   };
-  const response = await documentClient.scan(params).promise();
+  const response = await throttlingBackOff(() => documentClient.send(new ScanCommand(params)));
   if (response.Items) {
     for (const item of response.Items) {
       console.log(item['accountEmail']);
@@ -306,7 +322,7 @@ async function deleteAllRecordsFromTable(paramTableName: string) {
           accountEmail: item['accountEmail'],
         },
       };
-      await documentClient.delete(itemParams).promise();
+      await throttlingBackOff(() => documentClient.send(new DeleteCommand(itemParams)));
     }
   }
 }

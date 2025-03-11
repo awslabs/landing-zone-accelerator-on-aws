@@ -12,10 +12,14 @@
  */
 
 import { throttlingBackOff } from '@aws-accelerator/utils/lib/throttle';
-import { getGlobalRegion } from '@aws-accelerator/utils/lib/common-functions';
+import { getGlobalRegion, setRetryStrategy } from '@aws-accelerator/utils/lib/common-functions';
 import { CloudFormationCustomResourceEvent } from '@aws-accelerator/utils/lib/common-types';
-import * as AWS from 'aws-sdk';
-AWS.config.logger = console;
+import {
+  AccountAlreadyRegisteredException,
+  DeregisterDelegatedAdministratorCommand,
+  OrganizationsClient,
+  RegisterDelegatedAdministratorCommand,
+} from '@aws-sdk/client-organizations';
 
 /**
  * register-delegated-administrator - lambda handler
@@ -35,30 +39,27 @@ export async function handler(event: CloudFormationCustomResourceEvent): Promise
   const accountId: string = event.ResourceProperties['accountId'];
   const solutionId = process.env['SOLUTION_ID'];
   const globalRegion = getGlobalRegion(partition);
-  const organizationsClient = new AWS.Organizations({ customUserAgent: solutionId, region: globalRegion });
+  const organizationsClient = new OrganizationsClient({
+    region: globalRegion,
+    customUserAgent: solutionId,
+    retryStrategy: setRetryStrategy(),
+  });
 
   switch (event.RequestType) {
     case 'Create':
     case 'Update':
       try {
         await throttlingBackOff(() =>
-          organizationsClient
-            .registerDelegatedAdministrator({ ServicePrincipal: servicePrincipal, AccountId: accountId })
-            .promise(),
+          organizationsClient.send(
+            new RegisterDelegatedAdministratorCommand({ ServicePrincipal: servicePrincipal, AccountId: accountId }),
+          ),
         );
-      } catch (
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        e: any
-      ) {
-        if (
-          // SDKv2 Error Structure
-          e.code === 'AccountAlreadyRegisteredException' ||
-          // SDKv3 Error Structure
-          e.name === 'AccountAlreadyRegisteredException'
-        ) {
+      } catch (e: unknown) {
+        if (e instanceof AccountAlreadyRegisteredException) {
           console.warn(e.name + ': ' + e.message);
           return;
         }
+        throw e;
       }
 
       return {
@@ -68,9 +69,9 @@ export async function handler(event: CloudFormationCustomResourceEvent): Promise
 
     case 'Delete':
       await throttlingBackOff(() =>
-        organizationsClient
-          .deregisterDelegatedAdministrator({ ServicePrincipal: servicePrincipal, AccountId: accountId })
-          .promise(),
+        organizationsClient.send(
+          new DeregisterDelegatedAdministratorCommand({ ServicePrincipal: servicePrincipal, AccountId: accountId }),
+        ),
       );
 
       return {
