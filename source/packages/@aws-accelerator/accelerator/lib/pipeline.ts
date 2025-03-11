@@ -606,11 +606,11 @@ export class AcceleratorPipeline extends Construct {
                 this.props.useExistingRoles ? 'Yes' : 'No'
               } --config-dir $CODEBUILD_SRC_DIR_Config && if [ -z "\${ACCELERATOR_NO_ORG_MODULE}" ]; then LOG_LEVEL=${
                 BuildLogLevel.INFO
-              } yarn run ts-node ../lza-modules/bin/runner.ts --module aws-organizations --partition  ${
+              } && yarn run ts-node ../lza-modules/bin/runner.ts --module aws-organizations --partition  ${
                 cdk.Aws.PARTITION
               } --use-existing-role ${
                 this.props.useExistingRoles ? 'Yes' : 'No'
-              } --config-dir $CODEBUILD_SRC_DIR_Config; yarn run ts-node ../lza-modules/bin/runner.ts --module account-alias --partition  ${
+              } --config-dir $CODEBUILD_SRC_DIR_Config && yarn run ts-node ../lza-modules/bin/runner.ts --module account-alias --partition  ${
                 cdk.Aws.PARTITION
               } --use-existing-role ${
                 this.props.useExistingRoles ? 'Yes' : 'No'
