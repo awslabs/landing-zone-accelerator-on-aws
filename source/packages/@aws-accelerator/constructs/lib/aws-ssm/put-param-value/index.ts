@@ -155,15 +155,30 @@ async function deleteParametersFromRemovedAccounts(
   // Remove old parameters from removed accounts
   for (const removedAccountId of removedAccountIds) {
     const assumeRoleArn = setRoleArn(stsConfig.partition, removedAccountId, stsConfig.roleName);
-    const ssmClient = await getSsmClient(
-      stsConfig.invokingAccountId,
-      removedAccountId,
-      stsConfig.region,
-      assumeRoleArn,
-      stsConfig.solutionId,
-    );
-    // Remove parameters
-    await deleteParameters(ssmClient, removedAccountId, oldParameterNames);
+    try {
+      const ssmClient = await getSsmClient(
+        stsConfig.invokingAccountId,
+        removedAccountId,
+        stsConfig.region,
+        assumeRoleArn,
+        stsConfig.solutionId,
+      );
+      // Remove parameters
+      await deleteParameters(ssmClient, removedAccountId, oldParameterNames);
+    } catch (error) {
+      if (error instanceof Error) {
+        if (
+          error.message.includes('Could not assume role: AccessDenied') &&
+          error.message.includes('is not authorized to perform: sts:AssumeRole')
+        ) {
+          console.log(
+            `Unable to assume role for role arn: ${assumeRoleArn}. Skipping parameter deletion and continuing. Please validate whether this account is in a Suspended or Deleted state.`,
+          );
+          continue;
+        }
+      }
+      throw error;
+    }
   }
 }
 
@@ -325,7 +340,6 @@ async function processParameterUpdates(
 
   for (const parameterAccountId of existingAccountIds) {
     // Get SSM client for the parameter account
-
     const assumeRoleArn = setRoleArn(stsClient.partition, parameterAccountId, stsClient.roleName);
     const ssmClient = await getSsmClient(
       stsClient.invokingAccountId,

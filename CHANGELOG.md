@@ -28,6 +28,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - fix(servicecatalog): fixed permission set role matching logic
 - fix(workshop): fix single account deployment mode
 - fix(validation): add central security service delegated admin account name validation
+- fix(ssm): fix ssmPutParam for suspended accounts
 
 ### Changed
 
