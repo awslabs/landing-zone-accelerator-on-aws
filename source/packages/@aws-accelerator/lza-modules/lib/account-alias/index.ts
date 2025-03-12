@@ -18,12 +18,11 @@ import {
   DeleteAccountAliasCommand,
   EntityAlreadyExistsException,
 } from '@aws-sdk/client-iam';
-import { getGlobalRegion } from '@aws-accelerator/utils/lib/common-functions';
+import { getGlobalRegion, setRetryStrategy } from '@aws-accelerator/utils/lib/common-functions';
 import { getCredentials, getManagementAccountCredentials, isAccountSuspended } from '../../common/functions';
 
 import { createLogger } from '@aws-accelerator/utils/lib/logger';
 import { throttlingBackOff } from '@aws-accelerator/utils/lib/throttle';
-import { setRetryStrategy } from '@aws-accelerator/utils/lib/common-functions';
 
 import { AcceleratorModule } from '../accelerator-module';
 import { AssumeRoleCredentialType, ModuleOptionsType } from '../../common/resources';
@@ -83,41 +82,77 @@ export class AccountAlias implements AcceleratorModule {
       credentials: managementCredentials,
     });
 
+    const promises: Promise<void>[] = [];
     for (const account of accounts) {
       if (!account.accountAlias) {
         continue;
       }
-      const accountId = accountsConfig.getAccountId(account.name);
-      if (await isAccountSuspended(organizationsClient, accountId)) {
-        this.logger.warn(`Account "${account.name}" suspended`);
-        continue;
-      }
-      let credentials = managementCredentials;
-
-      if (account.name !== AccountsConfig.MANAGEMENT_ACCOUNT) {
-        credentials = await getCredentials({
-          accountId: accountId,
-          region: globalRegion,
-          solutionId: props.solutionId,
-          partition: props.partition,
-          assumeRoleName: globalConfig.managementAccountAccessRole,
-        });
-      }
-
-      await this.manageAccountAlias(
-        account.name,
-        account.accountAlias,
-        props.solutionId,
-        globalRegion,
-        statuses,
-        credentials,
+      promises.push(
+        this.manageAccountsAlias({
+          client: organizationsClient,
+          props,
+          globalRegion,
+          managementAccountAccessRole: globalConfig.managementAccountAccessRole,
+          accountId: accountsConfig.getAccountId(account.name),
+          accountName: account.name,
+          accountAlias: account.accountAlias,
+          statuses,
+          managementCredentials,
+        }),
       );
+    }
+
+    if (promises.length > 0) {
+      await Promise.all(promises);
     }
 
     if (statuses.length === 0) {
       statuses.push(`No account aliases in configuration.`);
     }
     return `Module "${module}" completed with following status.\n${statuses.join('\n')}`;
+  }
+
+  /**
+   * Function to manage accounts alias
+   * @param options
+   * @returns
+   */
+  private async manageAccountsAlias(options: {
+    client: OrganizationsClient;
+    props: ModuleOptionsType;
+    globalRegion: string;
+    managementAccountAccessRole: string;
+    accountId: string;
+    accountName: string;
+    accountAlias: string;
+    statuses: string[];
+    managementCredentials?: AssumeRoleCredentialType;
+  }): Promise<void> {
+    if (await isAccountSuspended(options.client, options.accountId)) {
+      this.logger.warn(`Account "${options.accountName}" suspended`);
+      return;
+    }
+    let credentials = options.managementCredentials;
+
+    if (options.accountName !== AccountsConfig.MANAGEMENT_ACCOUNT) {
+      credentials = await getCredentials({
+        accountId: options.accountId,
+        region: options.globalRegion,
+        solutionId: options.props.solutionId,
+        partition: options.props.partition,
+        assumeRoleName: options.managementAccountAccessRole,
+        credentials: options.managementCredentials,
+      });
+    }
+
+    await this.manageAccountAlias(
+      options.accountName,
+      options.accountAlias,
+      options.props.solutionId,
+      options.globalRegion,
+      options.statuses,
+      credentials,
+    );
   }
 
   /**
