@@ -58,6 +58,15 @@ export class AccountsStack extends AcceleratorStack {
       });
 
       //
+      // Create Config Service Linked Role
+      //
+      this.logger.info('Calling Create Config Service Linked Role');
+      this.createConfigServiceLinkedRole({
+        cloudwatch: this.keyResource.cloudwatchKey,
+        lambda: this.keyResource.lambdaKey,
+      });
+
+      //
       // Create Access GuardDuty Service Linked Role
       //
       this.createGuardDutyServiceLinkedRole({
