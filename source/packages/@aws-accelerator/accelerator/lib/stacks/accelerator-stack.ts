@@ -96,6 +96,10 @@ export enum ServiceLinkedRoleType {
    */
   ACCESS_ANALYZER = 'access-analyzer',
   /**
+   * Config SLR
+   */
+  AWS_CONFIG = 'config',
+  /**
    * GUARDDUTY SLR
    */
   GUARDDUTY = 'guardduty',
@@ -540,6 +544,75 @@ export abstract class AcceleratorStack extends cdk.Stack {
   }
 
   /**
+   * Create Config Service Linked role
+   *
+   * @remarks
+   * Config Service linked role is created when awsConfig flag is ON.
+   */
+  protected createConfigServiceLinkedRole(key: { cloudwatch?: cdk.aws_kms.IKey; lambda?: cdk.aws_kms.IKey }) {
+    const isManagementAccount = cdk.Stack.of(this).account === this.props.accountsConfig.getManagementAccountId();
+    const isControlTowerEnabled = this.props.globalConfig.controlTower;
+    const isConfigRecorderEnabled = this.props.securityConfig.awsConfig.enableConfigurationRecorder;
+    const isPartitionSupported = this.serviceLinkedRoleSupportedPartitionList.includes(this.props.partition);
+    const isDeploymentTarget = this.props.securityConfig.awsConfig.deploymentTargets
+      ? this.isIncluded(this.props.securityConfig.awsConfig.deploymentTargets)
+      : true;
+
+    if (
+      (!isControlTowerEnabled || // If Control Tower is Disabled OR
+        (this.props.globalConfig.controlTower && isManagementAccount)) && // Control Tower is Enabled, and this is the Mgmt Acct
+      isConfigRecorderEnabled &&
+      isPartitionSupported &&
+      isDeploymentTarget
+    ) {
+      this.createServiceLinkedRole(ServiceLinkedRoleType.AWS_CONFIG, {
+        cloudwatch: key.cloudwatch,
+        lambda: key.lambda,
+      });
+
+      this.nagSuppressionInputs.push({
+        id: NagSuppressionRuleIds.IAM4,
+        details: [
+          {
+            path: `${this.stackName}/ConfigServiceLinkedRole/CreateServiceLinkedRoleFunction/ServiceRole/Resource`,
+            reason: 'Custom resource Lambda role policy.',
+          },
+        ],
+      });
+
+      this.nagSuppressionInputs.push({
+        id: NagSuppressionRuleIds.IAM5,
+        details: [
+          {
+            path: `${this.stackName}/ConfigServiceLinkedRole/CreateServiceLinkedRoleFunction/ServiceRole/DefaultPolicy/Resource`,
+            reason: 'Custom resource Lambda role policy.',
+          },
+        ],
+      });
+
+      this.nagSuppressionInputs.push({
+        id: NagSuppressionRuleIds.IAM4,
+        details: [
+          {
+            path: `${this.stackName}/ConfigServiceLinkedRole/CreateServiceLinkedRoleProvider/framework-onEvent/ServiceRole/Resource`,
+            reason: 'Custom resource Lambda role policy.',
+          },
+        ],
+      });
+
+      this.nagSuppressionInputs.push({
+        id: NagSuppressionRuleIds.IAM5,
+        details: [
+          {
+            path: `${this.stackName}/ConfigServiceLinkedRole/CreateServiceLinkedRoleProvider/framework-onEvent/ServiceRole/DefaultPolicy/Resource`,
+            reason: 'Custom resource Lambda role policy.',
+          },
+        ],
+      });
+    }
+  }
+
+  /**
    * Create GuardDuty Service Linked role
    *
    * @remarks
@@ -941,6 +1014,17 @@ export abstract class AcceleratorStack extends cdk.Stack {
           cloudWatchLogKmsKey: key.cloudwatch,
           cloudWatchLogRetentionInDays: this.props.globalConfig.cloudwatchLogRetentionInDays,
           roleName: 'AWSServiceRoleForAccessAnalyzer',
+        });
+
+        break;
+      case ServiceLinkedRoleType.AWS_CONFIG:
+        this.logger.debug('Create ConfigServiceLinkedRole');
+        serviceLinkedRole = new ServiceLinkedRole(this, 'ConfigServiceLinkedRole', {
+          awsServiceName: 'config.amazonaws.com',
+          environmentEncryptionKmsKey: key.lambda,
+          cloudWatchLogKmsKey: key.cloudwatch,
+          cloudWatchLogRetentionInDays: this.props.globalConfig.cloudwatchLogRetentionInDays,
+          roleName: 'AWSServiceRoleForConfig',
         });
 
         break;

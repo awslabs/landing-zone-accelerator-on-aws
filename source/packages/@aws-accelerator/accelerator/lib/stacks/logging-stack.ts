@@ -142,6 +142,14 @@ export class LoggingStack extends AcceleratorStack {
     const cloud9Slr = this.createAwsCloud9ServiceLinkedRole({ cloudwatch: this.cloudwatchKey, lambda: this.lambdaKey });
 
     //
+    // Create Config Service Linked Role
+    //
+    this.createConfigServiceLinkedRole({
+      cloudwatch: this.cloudwatchKey,
+      lambda: this.lambdaKey,
+    });
+
+    //
     // Create KMS keys defined in config
     this.createKeys(autoScalingSlr, cloud9Slr);
 
