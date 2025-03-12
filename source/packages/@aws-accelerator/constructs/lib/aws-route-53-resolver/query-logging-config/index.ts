@@ -11,11 +11,14 @@
  *  and limitations under the License.
  */
 
-import * as AWS from 'aws-sdk';
-
 import { throttlingBackOff } from '@aws-accelerator/utils/lib/throttle';
 import { CloudFormationCustomResourceEvent } from '@aws-accelerator/utils/lib/common-types';
-AWS.config.logger = console;
+import {
+  CreateResolverQueryLogConfigCommand,
+  DeleteResolverQueryLogConfigCommand,
+  Route53ResolverClient,
+} from '@aws-sdk/client-route53resolver';
+import { setRetryStrategy } from '@aws-accelerator/utils/lib/common-functions';
 
 /**
  * query-logging-config - Lambda handler
@@ -47,21 +50,23 @@ export async function handler(event: CloudFormationCustomResourceEvent): Promise
   }
 
   const { Name, DestinationArn, CreatorRequestId, Tags } = resolverQueryLogConfig;
-  const route53ResolverClient = new AWS.Route53Resolver();
+  const resolverClient = new Route53ResolverClient({
+    retryStrategy: setRetryStrategy(),
+  });
 
   switch (event.RequestType) {
     case 'Update':
     case 'Create':
       console.log(`Creating Route53 resolver query log config ${resolverQueryLogConfig.Name}`);
       const data = await throttlingBackOff(() =>
-        route53ResolverClient
-          .createResolverQueryLogConfig({
-            Name: Name,
-            DestinationArn: DestinationArn,
-            CreatorRequestId: CreatorRequestId,
-            Tags: Tags,
-          })
-          .promise(),
+        resolverClient.send(
+          new CreateResolverQueryLogConfigCommand({
+            Name,
+            DestinationArn,
+            CreatorRequestId,
+            Tags,
+          }),
+        ),
       );
       console.log(`Route53 resolver query log config created: ${data.ResolverQueryLogConfig?.Id}`);
       return {
@@ -75,9 +80,11 @@ export async function handler(event: CloudFormationCustomResourceEvent): Promise
     case 'Delete':
       console.log(`Deleting Route53 resolver query log config ${event.PhysicalResourceId}`);
       await throttlingBackOff(() =>
-        route53ResolverClient
-          .deleteResolverQueryLogConfig({ ResolverQueryLogConfigId: event.PhysicalResourceId })
-          .promise(),
+        resolverClient.send(
+          new DeleteResolverQueryLogConfigCommand({
+            ResolverQueryLogConfigId: event.PhysicalResourceId,
+          }),
+        ),
       );
       return {
         PhysicalResourceId: event.PhysicalResourceId,

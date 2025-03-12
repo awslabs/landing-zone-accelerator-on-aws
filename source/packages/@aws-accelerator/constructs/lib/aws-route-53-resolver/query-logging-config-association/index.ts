@@ -11,11 +11,14 @@
  *  and limitations under the License.
  */
 
-import * as AWS from 'aws-sdk';
-
 import { throttlingBackOff } from '@aws-accelerator/utils/lib/throttle';
 import { CloudFormationCustomResourceEvent } from '@aws-accelerator/utils/lib/common-types';
-AWS.config.logger = console;
+import {
+  AssociateResolverQueryLogConfigCommand,
+  DisassociateResolverQueryLogConfigCommand,
+  Route53ResolverClient,
+} from '@aws-sdk/client-route53resolver';
+import { setRetryStrategy } from '@aws-accelerator/utils/lib/common-functions';
 
 /**
  * query-logging-config-association - Lambda handler
@@ -38,20 +41,23 @@ export async function handler(event: CloudFormationCustomResourceEvent): Promise
   const resolverQueryLogConfigAssociation = event.ResourceProperties as unknown as ResolverQueryLogConfigAssociation;
 
   const { ResolverQueryLogConfigId, VpcId } = resolverQueryLogConfigAssociation;
-  const route53ResolverClient = new AWS.Route53Resolver();
+  const resolverClient = new Route53ResolverClient({
+    retryStrategy: setRetryStrategy(),
+  });
 
   switch (event.RequestType) {
     case 'Update':
     case 'Create':
       console.log(`Associating Route53 resolver query log config ${ResolverQueryLogConfigId} to VPC ${VpcId}`);
       const data = await throttlingBackOff(() =>
-        route53ResolverClient
-          .associateResolverQueryLogConfig({
+        resolverClient.send(
+          new AssociateResolverQueryLogConfigCommand({
             ResolverQueryLogConfigId: ResolverQueryLogConfigId,
             ResourceId: VpcId,
-          })
-          .promise(),
+          }),
+        ),
       );
+
       return {
         PhysicalResourceId: data.ResolverQueryLogConfigAssociation?.Id,
         Status: 'SUCCESS',
@@ -59,12 +65,12 @@ export async function handler(event: CloudFormationCustomResourceEvent): Promise
     case 'Delete':
       console.log(`Disassociating Route53 resolver query log config ${ResolverQueryLogConfigId} to VPC ${VpcId}`);
       await throttlingBackOff(() =>
-        route53ResolverClient
-          .disassociateResolverQueryLogConfig({
+        resolverClient.send(
+          new DisassociateResolverQueryLogConfigCommand({
             ResolverQueryLogConfigId: ResolverQueryLogConfigId,
             ResourceId: VpcId,
-          })
-          .promise(),
+          }),
+        ),
       );
       return {
         PhysicalResourceId: event.PhysicalResourceId,
