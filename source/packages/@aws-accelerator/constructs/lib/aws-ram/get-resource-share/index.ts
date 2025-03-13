@@ -11,10 +11,17 @@
  *  and limitations under the License.
  */
 
+import { setRetryStrategy } from '@aws-accelerator/utils/lib/common-functions';
 import { throttlingBackOff } from '@aws-accelerator/utils/lib/throttle';
+import {
+  AcceptResourceShareInvitationCommand,
+  GetResourceShareInvitationsCommand,
+  GetResourceSharesCommand,
+  RAMClient,
+  ResourceOwner,
+  ResourceShareInvitationStatus,
+} from '@aws-sdk/client-ram';
 import { CloudFormationCustomResourceEvent } from '@aws-accelerator/utils/lib/common-types';
-import * as AWS from 'aws-sdk';
-AWS.config.logger = console;
 
 /**
  * get-resource-share - lambda handler
@@ -29,7 +36,10 @@ export async function handler(event: CloudFormationCustomResourceEvent): Promise
     }
   | undefined
 > {
-  const ramClient = new AWS.RAM({ customUserAgent: process.env['SOLUTION_ID'] });
+  const ramClient = new RAMClient({
+    customUserAgent: process.env['SOLUTION_ID'],
+    retryStrategy: setRetryStrategy(),
+  });
 
   switch (event.RequestType) {
     case 'Create':
@@ -40,23 +50,25 @@ export async function handler(event: CloudFormationCustomResourceEvent): Promise
 
       let nextToken: string | undefined = undefined;
       do {
-        const page = await throttlingBackOff(() => ramClient.getResourceShareInvitations({ nextToken }).promise());
+        const page = await throttlingBackOff(() =>
+          ramClient.send(new GetResourceShareInvitationsCommand({ nextToken })),
+        );
         for (const resourceShareInvitation of page.resourceShareInvitations ?? []) {
           if (
-            resourceShareInvitation.status == 'PENDING' &&
+            resourceShareInvitation.status == ResourceShareInvitationStatus.PENDING &&
             resourceShareInvitation.senderAccountId == owningAccountId &&
             resourceShareInvitation.resourceShareName === name
           ) {
             console.log(resourceShareInvitation);
             await throttlingBackOff(() =>
-              ramClient
-                .acceptResourceShareInvitation({
+              ramClient.send(
+                new AcceptResourceShareInvitationCommand({
                   resourceShareInvitationArn: resourceShareInvitation.resourceShareInvitationArn!,
-                })
-                .promise(),
+                }),
+              ),
             );
 
-            const found = await validateResourceShare(ramClient, resourceOwner, owningAccountId, name);
+            const found = await validateResourceShare(ramClient, owningAccountId, name, resourceOwner);
 
             if (found == false) {
               throw new Error(`Resource share ${name} not accepted successfully`); //share not found after multiple attempts
@@ -68,7 +80,7 @@ export async function handler(event: CloudFormationCustomResourceEvent): Promise
       nextToken = undefined;
       do {
         const page = await throttlingBackOff(() =>
-          ramClient.getResourceShares({ resourceOwner, nextToken: nextToken }).promise(),
+          ramClient.send(new GetResourceSharesCommand({ resourceOwner, nextToken: nextToken })),
         );
         for (const resourceShare of page.resourceShares ?? []) {
           if (resourceShare.owningAccountId == owningAccountId && resourceShare.name === name) {
@@ -96,17 +108,17 @@ export async function handler(event: CloudFormationCustomResourceEvent): Promise
 }
 
 async function validateResourceShare(
-  ramClient: AWS.RAM,
-  resourceOwner: string,
+  ramClient: RAMClient,
   owningAccountId: string,
   name: string,
+  resourceOwner?: ResourceOwner,
 ): Promise<boolean | undefined> {
   let found = false;
   let counter = 5;
   do {
     const nextTokenShare: string | undefined = undefined;
     const pageResoureShares = await throttlingBackOff(() =>
-      ramClient.getResourceShares({ resourceOwner, nextToken: nextTokenShare }).promise(),
+      ramClient.send(new GetResourceSharesCommand({ resourceOwner, nextToken: nextTokenShare })),
     );
     if (pageResoureShares.resourceShares === undefined || pageResoureShares.resourceShares.length == 0) {
       await delay(5000); //delay 5 seconds and try again, no shares found

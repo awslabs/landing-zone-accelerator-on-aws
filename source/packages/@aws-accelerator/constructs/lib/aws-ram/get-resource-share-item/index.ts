@@ -11,11 +11,10 @@
  *  and limitations under the License.
  */
 
-import * as AWS from 'aws-sdk';
-
+import { setRetryStrategy } from '@aws-accelerator/utils/lib/common-functions';
 import { throttlingBackOff } from '@aws-accelerator/utils/lib/throttle';
+import { ListResourcesCommand, RAMClient } from '@aws-sdk/client-ram';
 import { CloudFormationCustomResourceEvent } from '@aws-accelerator/utils/lib/common-types';
-AWS.config.logger = console;
 
 /**
  * get-resource-share-item - lambda handler
@@ -37,7 +36,10 @@ export async function handler(event: CloudFormationCustomResourceEvent): Promise
     }
   | undefined
 > {
-  const ramClient = new AWS.RAM({ customUserAgent: process.env['SOLUTION_ID'] });
+  const ramClient = new RAMClient({
+    customUserAgent: process.env['SOLUTION_ID'],
+    retryStrategy: setRetryStrategy(),
+  });
 
   switch (event.RequestType) {
     case 'Create':
@@ -49,9 +51,9 @@ export async function handler(event: CloudFormationCustomResourceEvent): Promise
       let nextToken: string | undefined = undefined;
       do {
         const page = await throttlingBackOff(() =>
-          ramClient
-            .listResources({ resourceShareArns: [resourceShareArn], resourceType, resourceOwner, nextToken })
-            .promise(),
+          ramClient.send(
+            new ListResourcesCommand({ resourceShareArns: [resourceShareArn], resourceType, resourceOwner, nextToken }),
+          ),
         );
         // Return the first item found with the specified filters
         if (page.resources && page.resources.length > 0) {
