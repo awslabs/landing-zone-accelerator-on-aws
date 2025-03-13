@@ -11,9 +11,9 @@
  *  and limitations under the License.
  */
 
+import { setRetryStrategy } from '@aws-accelerator/utils/lib/common-functions';
 import { throttlingBackOff } from '@aws-accelerator/utils/lib/throttle';
-import * as AWS from 'aws-sdk';
-AWS.config.logger = console;
+import { EnableSharingWithAwsOrganizationCommand, RAMClient } from '@aws-sdk/client-ram';
 /**
  * enable-sharing-with-organization - lambda handler
  *
@@ -27,12 +27,15 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
     }
   | undefined
 > {
-  const client = new AWS.RAM({ customUserAgent: process.env['SOLUTION_ID'] });
+  const client = new RAMClient({
+    customUserAgent: process.env['SOLUTION_ID'],
+    retryStrategy: setRetryStrategy(),
+  });
 
   switch (event.RequestType) {
     case 'Create':
     case 'Update':
-      await throttlingBackOff(() => client.enableSharingWithAwsOrganization({}).promise());
+      await throttlingBackOff(() => client.send(new EnableSharingWithAwsOrganizationCommand({})));
       return {
         PhysicalResourceId: `ram-enable-sharing-with-aws-organization`,
         Status: 'SUCCESS',
