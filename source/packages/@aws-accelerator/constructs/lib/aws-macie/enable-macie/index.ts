@@ -13,8 +13,18 @@
 
 import { throttlingBackOff } from '@aws-accelerator/utils/lib/throttle';
 import { CloudFormationCustomResourceEvent } from '@aws-accelerator/utils/lib/common-types';
-import * as AWS from 'aws-sdk';
-AWS.config.logger = console;
+import {
+  AccessDeniedException,
+  ConflictException,
+  DisableMacieCommand,
+  EnableMacieCommand,
+  GetMacieSessionCommand,
+  Macie2Client,
+  MacieStatus,
+  PutFindingsPublicationConfigurationCommand,
+  UpdateMacieSessionCommand,
+} from '@aws-sdk/client-macie2';
+import { setRetryStrategy } from '@aws-accelerator/utils/lib/common-functions';
 
 /**
  * add-macie-members - lambda handler
@@ -34,31 +44,44 @@ export async function handler(event: CloudFormationCustomResourceEvent): Promise
   const isSensitiveSh = event.ResourceProperties['isSensitiveSh'] === 'true';
   const solutionId = process.env['SOLUTION_ID'];
 
-  const macie2Client = new AWS.Macie2({ region: region, customUserAgent: solutionId });
+  const macie2Client = new Macie2Client({
+    region,
+    customUserAgent: solutionId,
+    retryStrategy: setRetryStrategy(),
+  });
 
   switch (event.RequestType) {
     case 'Create':
     case 'Update':
       let macieStatus = await isMacieEnable(macie2Client);
       if (!macieStatus) {
-        console.log('start enable of macie');
-        await throttlingBackOff(() =>
-          macie2Client
-            .enableMacie({
-              findingPublishingFrequency: findingPublishingFrequency,
-              status: 'ENABLED',
-            })
-            .promise(),
-        );
+        try {
+          console.log('start enable of macie');
+          await throttlingBackOff(() =>
+            macie2Client.send(
+              new EnableMacieCommand({
+                findingPublishingFrequency: findingPublishingFrequency,
+                status: MacieStatus.ENABLED,
+              }),
+            ),
+          );
+        } catch (e: unknown) {
+          // This is required when macie is already enabled ConflictException exception issues
+          if (e instanceof ConflictException) {
+            console.warn(`Macie already enabled`);
+            console.warn(e.name + ': ' + e.message);
+          }
+          throw e;
+        }
       }
       console.log('start update of macie');
       await throttlingBackOff(() =>
-        macie2Client
-          .updateMacieSession({
+        macie2Client.send(
+          new UpdateMacieSessionCommand({
             findingPublishingFrequency: findingPublishingFrequency,
             status: 'ENABLED',
-          })
-          .promise(),
+          }),
+        ),
       );
 
       // macie status do not change immediately causing failure to other processes, so wait till macie enabled
@@ -68,61 +91,45 @@ export async function handler(event: CloudFormationCustomResourceEvent): Promise
       }
 
       await throttlingBackOff(() =>
-        macie2Client
-          .putFindingsPublicationConfiguration({
+        macie2Client.send(
+          new PutFindingsPublicationConfigurationCommand({
             securityHubConfiguration: {
               publishClassificationFindings: isSensitiveSh,
               publishPolicyFindings: true,
             },
-          })
-          .promise(),
+          }),
+        ),
       );
 
       return { Status: 'Success', StatusCode: 200 };
 
     case 'Delete':
       if (await isMacieEnable(macie2Client)) {
-        await throttlingBackOff(() =>
-          macie2Client
-            .disableMacie({
-              findingPublishingFrequency: findingPublishingFrequency,
-              status: 'ENABLED',
-            })
-            .promise(),
-        );
+        try {
+          await throttlingBackOff(() => macie2Client.send(new DisableMacieCommand({})));
+        } catch (e: unknown) {
+          // This is required when macie is already disabled ConflictException exception issues
+          if (e instanceof ConflictException) {
+            console.warn(`Macie already disabled`);
+            console.warn(e.name + ': ' + e.message);
+          }
+          throw e;
+        }
       }
       return { Status: 'Success', StatusCode: 200 };
   }
 }
 
-async function isMacieEnable(macie2Client: AWS.Macie2): Promise<boolean> {
+async function isMacieEnable(macie2Client: Macie2Client): Promise<boolean> {
   try {
-    const response = await throttlingBackOff(() => macie2Client.getMacieSession({}).promise());
-    return response.status === 'ENABLED';
-  } catch (
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    e: any
-  ) {
-    if (
-      // SDKv2 Error Structure
-      e.code === 'ResourceConflictException' ||
-      // SDKv3 Error Structure
-      e.name === 'ResourceConflictException'
-    ) {
-      console.warn(e.name + ': ' + e.message);
-      return false;
-    }
-
+    const response = await throttlingBackOff(() => macie2Client.send(new GetMacieSessionCommand({})));
+    return response.status === MacieStatus.ENABLED;
+  } catch (e: unknown) {
     // This is required when macie is not enabled AccessDeniedException exception issues
-    if (
-      // SDKv2 Error Structure
-      e.code === 'AccessDeniedException' ||
-      // SDKv3 Error Structure
-      e.name === 'AccessDeniedException'
-    ) {
+    if (e instanceof AccessDeniedException) {
       console.warn(e.name + ': ' + e.message);
       return false;
     }
-    throw new Error(`Macie enable issue error message - ${e}`);
+    throw e;
   }
 }
