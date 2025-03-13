@@ -37,6 +37,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - fix(networking): fixed hosted zones for sagemaker vpc endpoints
 - fix(service quota): fix region logic that provisioned service limit for home region even if not specified
 - fix(config): create service linked role for config, removed custom created role
+- fix(networking): only create resolver query logs in accounts and regions defined in configuration
 
 ### Changed
 
