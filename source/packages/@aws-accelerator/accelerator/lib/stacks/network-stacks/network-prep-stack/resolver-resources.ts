@@ -256,41 +256,44 @@ export class ResolverResources {
       }
     }
     for (const vpcItem of props.networkConfig.vpcs ?? []) {
-      const queryLogName = vpcItem.vpcRoute53Resolver?.queryLogs?.name;
-      if (vpcItem.vpcRoute53Resolver?.queryLogs) {
-        if (this.stack.isManagedByAsea(AseaResourceType.ROUTE_53_QUERY_LOGGING, queryLogName!)) {
-          this.stack.addLogs(LogLevel.INFO, `DNS Logging for VPC "${vpcItem.name}" is managed externally`);
-          break;
+      const accountId = props.accountsConfig.getAccountId(vpcItem.account);
+      if (cdk.Stack.of(this.stack).region === vpcItem.region && cdk.Stack.of(this.stack).account === accountId) {
+        const queryLogName = vpcItem.vpcRoute53Resolver?.queryLogs?.name;
+        if (vpcItem.vpcRoute53Resolver?.queryLogs) {
+          if (this.stack.isManagedByAsea(AseaResourceType.ROUTE_53_QUERY_LOGGING, queryLogName!)) {
+            this.stack.addLogs(LogLevel.INFO, `DNS Logging for VPC "${vpcItem.name}" is managed externally`);
+            break;
+          }
+          if (vpcItem.vpcRoute53Resolver.queryLogs.destinations.includes('s3')) {
+            this.stack.addLogs(LogLevel.INFO, `Create DNS query log ${queryLogName}-s3 for central S3 destination`);
+            const s3QueryLogConfig = this.createQueryLogItem(
+              vpcItem.vpcRoute53Resolver.queryLogs,
+              centralLogsBucket,
+              props.partition,
+              orgId,
+            );
+            queryLogsMap.set(`${queryLogName}-s3`, s3QueryLogConfig.logId);
+          }
         }
-        if (vpcItem.vpcRoute53Resolver.queryLogs.destinations.includes('s3')) {
-          this.stack.addLogs(LogLevel.INFO, `Create DNS query log ${queryLogName}-s3 for central S3 destination`);
-          const s3QueryLogConfig = this.createQueryLogItem(
-            vpcItem.vpcRoute53Resolver.queryLogs,
-            centralLogsBucket,
+        if (vpcItem.vpcRoute53Resolver?.queryLogs?.destinations.includes('cloud-watch-logs')) {
+          this.stack.addLogs(
+            LogLevel.INFO,
+            `Create DNS query log ${queryLogName}-cwl for central CloudWatch logs destination`,
+          );
+
+          const logGroup = new cdk.aws_logs.LogGroup(this.stack, pascalCase(`${queryLogName}QueryLogsLogGroup`), {
+            encryptionKey: this.stack.cloudwatchKey,
+            retention: this.stack.logRetention,
+          });
+
+          const cwlQueryLogConfig = this.createQueryLogItem(
+            vpcItem.vpcRoute53Resolver?.queryLogs,
+            logGroup,
             props.partition,
             orgId,
           );
-          queryLogsMap.set(`${queryLogName}-s3`, s3QueryLogConfig.logId);
+          queryLogsMap.set(`${queryLogName}-cwl`, cwlQueryLogConfig.logId);
         }
-      }
-      if (vpcItem.vpcRoute53Resolver?.queryLogs?.destinations.includes('cloud-watch-logs')) {
-        this.stack.addLogs(
-          LogLevel.INFO,
-          `Create DNS query log ${queryLogName}-cwl for central CloudWatch logs destination`,
-        );
-
-        const logGroup = new cdk.aws_logs.LogGroup(this.stack, pascalCase(`${queryLogName}QueryLogsLogGroup`), {
-          encryptionKey: this.stack.cloudwatchKey,
-          retention: this.stack.logRetention,
-        });
-
-        const cwlQueryLogConfig = this.createQueryLogItem(
-          vpcItem.vpcRoute53Resolver?.queryLogs,
-          logGroup,
-          props.partition,
-          orgId,
-        );
-        queryLogsMap.set(`${queryLogName}-cwl`, cwlQueryLogConfig.logId);
       }
     }
     return queryLogsMap;
