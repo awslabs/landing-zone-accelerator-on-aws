@@ -57,6 +57,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - chore(s3): update sdk v3
 - chore(organizations): update sdk v3
 - chore(ec2): update sdk v3
+- chore(macie and kms): update sdk v3
 
 ### Configuration Changes
 - chore(config): add s3 object level and additional network controls

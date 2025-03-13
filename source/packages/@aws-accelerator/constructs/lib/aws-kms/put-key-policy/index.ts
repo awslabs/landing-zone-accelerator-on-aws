@@ -14,9 +14,9 @@
 import { PolicyStatementType } from '@aws-accelerator/utils/lib/common-resources';
 import { throttlingBackOff } from '@aws-accelerator/utils/lib/throttle';
 import { CloudFormationCustomResourceEvent } from '@aws-accelerator/utils/lib/common-types';
-import * as AWS from 'aws-sdk';
 import * as path from 'path';
-AWS.config.logger = console;
+import { KMSClient, PutKeyPolicyCommand } from '@aws-sdk/client-kms';
+import { setRetryStrategy } from '@aws-accelerator/utils/lib/common-functions';
 
 /**
  * put-bucket-prefix - lambda handler
@@ -36,7 +36,10 @@ export async function handler(event: CloudFormationCustomResourceEvent): Promise
   const organizationId: string | undefined = event.ResourceProperties['organizationId'];
 
   const solutionId = process.env['SOLUTION_ID'];
-  const kmsClient = new AWS.KMS({ customUserAgent: solutionId });
+  const kmsClient = new KMSClient({
+    customUserAgent: solutionId,
+    retryStrategy: setRetryStrategy(),
+  });
 
   switch (event.RequestType) {
     case 'Create':
@@ -49,7 +52,7 @@ export async function handler(event: CloudFormationCustomResourceEvent): Promise
       }
 
       await throttlingBackOff(() =>
-        kmsClient.putKeyPolicy({ KeyId: kmsArn, PolicyName: 'default', Policy: replacedPolicyString }).promise(),
+        kmsClient.send(new PutKeyPolicyCommand({ KeyId: kmsArn, PolicyName: 'default', Policy: replacedPolicyString })),
       );
 
       return {
