@@ -11,11 +11,14 @@
  *  and limitations under the License.
  */
 
-import * as AWS from 'aws-sdk';
-
 import { throttlingBackOff } from '@aws-accelerator/utils/lib/throttle';
 import { CloudFormationCustomResourceEvent } from '@aws-accelerator/utils/lib/common-types';
-AWS.config.logger = console;
+import {
+  DisableIpamOrganizationAdminAccountCommand,
+  EC2Client,
+  EnableIpamOrganizationAdminAccountCommand,
+} from '@aws-sdk/client-ec2';
+import { setRetryStrategy } from '@aws-accelerator/utils/lib/common-functions';
 
 /**
  * enable-ipam-organization-admin-account - lambda handler
@@ -33,18 +36,22 @@ export async function handler(event: CloudFormationCustomResourceEvent): Promise
   const accountId = event.ResourceProperties['accountId'];
   const region = event.ResourceProperties['region'];
   const solutionId = process.env['SOLUTION_ID'];
-  const ec2Client = new AWS.EC2({ region: region, customUserAgent: solutionId });
+  const ec2Client = new EC2Client({
+    region,
+    customUserAgent: solutionId,
+    retryStrategy: setRetryStrategy(),
+  });
 
   switch (event.RequestType) {
     case 'Create':
     case 'Update':
       console.log(`Enabling IPAM delegated administration for account ${accountId}`);
       await throttlingBackOff(() =>
-        ec2Client
-          .enableIpamOrganizationAdminAccount({
+        ec2Client.send(
+          new EnableIpamOrganizationAdminAccountCommand({
             DelegatedAdminAccountId: accountId,
-          })
-          .promise(),
+          }),
+        ),
       );
 
       return {
@@ -55,11 +62,11 @@ export async function handler(event: CloudFormationCustomResourceEvent): Promise
     case 'Delete':
       console.log(`Removing IPAM delegated administration from account ${event.PhysicalResourceId}`);
       await throttlingBackOff(() =>
-        ec2Client
-          .disableIpamOrganizationAdminAccount({
+        ec2Client.send(
+          new DisableIpamOrganizationAdminAccountCommand({
             DelegatedAdminAccountId: event.PhysicalResourceId,
-          })
-          .promise(),
+          }),
+        ),
       );
 
       return {

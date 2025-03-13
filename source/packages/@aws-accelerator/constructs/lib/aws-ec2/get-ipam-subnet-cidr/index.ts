@@ -13,7 +13,10 @@
 
 import { throttlingBackOff } from '@aws-accelerator/utils/lib/throttle';
 import { CloudFormationCustomResourceEvent } from '@aws-accelerator/utils/lib/common-types';
-import * as AWS from 'aws-sdk';
+import { AssumeRoleCommand, STSClient } from '@aws-sdk/client-sts';
+import { DescribeSubnetsCommand, EC2Client } from '@aws-sdk/client-ec2';
+import { GetParameterCommand, SSMClient } from '@aws-sdk/client-ssm';
+import { setRetryStrategy } from '@aws-accelerator/utils/lib/common-functions';
 
 /**
  * get-ipam-subnet-cidr - lambda handler
@@ -26,43 +29,59 @@ export async function handler(event: CloudFormationCustomResourceEvent) {
   console.log(event);
   const region = event.ResourceProperties['region'];
   const ssmSubnetIdPath = event.ResourceProperties['ssmSubnetIdPath'];
-  //const roleArn = event.ResourceProperties['roleArn'];
   const roleArn: string | undefined = event.ResourceProperties['roleArn'];
+  const solutionId = process.env['SOLUTION_ID'];
 
-  let ec2: AWS.EC2 | undefined;
-  let ssm: AWS.SSM | undefined;
-  const stsClient = new AWS.STS({ region });
+  let ec2: EC2Client;
+  let ssm: SSMClient;
+  const stsClient = new STSClient({
+    region,
+    customUserAgent: solutionId,
+    retryStrategy: setRetryStrategy(),
+  });
   const assumeRoleCredential = await throttlingBackOff(() =>
-    stsClient
-      .assumeRole({
+    stsClient.send(
+      new AssumeRoleCommand({
         RoleArn: event.ResourceProperties['roleArn'],
         RoleSessionName: 'AcceleratorAssumeRoleSession',
-      })
-      .promise(),
+      }),
+    ),
   );
   if (roleArn) {
-    ec2 = new AWS.EC2({
+    ec2 = new EC2Client({
       region,
+      customUserAgent: solutionId,
+      retryStrategy: setRetryStrategy(),
       credentials: {
-        accessKeyId: assumeRoleCredential.Credentials!.AccessKeyId,
-        secretAccessKey: assumeRoleCredential.Credentials!.SecretAccessKey,
+        accessKeyId: assumeRoleCredential.Credentials!.AccessKeyId!,
+        secretAccessKey: assumeRoleCredential.Credentials!.SecretAccessKey!,
         sessionToken: assumeRoleCredential.Credentials!.SessionToken,
-        expireTime: assumeRoleCredential.Credentials!.Expiration,
+        expiration: assumeRoleCredential.Credentials!.Expiration,
       },
     });
 
-    ssm = new AWS.SSM({
+    ssm = new SSMClient({
       region,
+      customUserAgent: solutionId,
+      retryStrategy: setRetryStrategy(),
       credentials: {
-        accessKeyId: assumeRoleCredential.Credentials!.AccessKeyId,
-        secretAccessKey: assumeRoleCredential.Credentials!.SecretAccessKey,
+        accessKeyId: assumeRoleCredential.Credentials!.AccessKeyId!,
+        secretAccessKey: assumeRoleCredential.Credentials!.SecretAccessKey!,
         sessionToken: assumeRoleCredential.Credentials!.SessionToken,
-        expireTime: assumeRoleCredential.Credentials!.Expiration,
+        expiration: assumeRoleCredential.Credentials!.Expiration,
       },
     });
   } else {
-    ec2 = new AWS.EC2({ region });
-    ssm = new AWS.SSM({ region });
+    ec2 = new EC2Client({
+      region,
+      customUserAgent: solutionId,
+      retryStrategy: setRetryStrategy(),
+    });
+    ssm = new SSMClient({
+      region,
+      customUserAgent: solutionId,
+      retryStrategy: setRetryStrategy(),
+    });
   }
 
   switch (event.RequestType) {
@@ -70,12 +89,12 @@ export async function handler(event: CloudFormationCustomResourceEvent) {
     case 'Update':
       console.log(`Starting - Create/Update event for IPAM Nacls ${region}`);
       // Pull VPC ID from SSM return ID
-      const subnetId = await getVpcId(ssm!, ssmSubnetIdPath);
+      const subnetId = await getVpcId(ssm, ssmSubnetIdPath);
       if (!subnetId) {
         throw new Error('Subnet ID not found.');
       }
       // Describe subnet with VPC ID as a filter
-      const subnetCidr = await getCidr(ec2!, subnetId);
+      const subnetCidr = await getCidr(ec2, subnetId);
       if (!subnetCidr) {
         throw new Error(`Not able to pull the Cidr from parameter store ${ssmSubnetIdPath}!`);
       }
@@ -95,23 +114,23 @@ export async function handler(event: CloudFormationCustomResourceEvent) {
   }
 }
 
-async function getVpcId(ssm: AWS.SSM, subnet: string): Promise<string | undefined> {
-  const response = await throttlingBackOff(() => ssm.getParameter({ Name: subnet }).promise());
+async function getVpcId(ssm: SSMClient, subnet: string): Promise<string | undefined> {
+  const response = await throttlingBackOff(() => ssm.send(new GetParameterCommand({ Name: subnet })));
   return response.Parameter?.Value;
 }
 
-async function getCidr(ec2: AWS.EC2, subnet: string): Promise<string | undefined> {
+async function getCidr(ec2: EC2Client, subnet: string): Promise<string | undefined> {
   const response = await throttlingBackOff(() =>
-    ec2
-      .describeSubnets({
+    ec2.send(
+      new DescribeSubnetsCommand({
         Filters: [
           {
             Name: 'subnet-id',
             Values: [subnet],
           },
         ],
-      })
-      .promise(),
+      }),
+    ),
   );
   return response.Subnets?.pop()?.CidrBlock;
 }
