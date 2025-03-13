@@ -12,9 +12,20 @@
  */
 
 import { throttlingBackOff } from '@aws-accelerator/utils/lib/throttle';
-import * as AWS from 'aws-sdk';
-AWS.config.logger = console;
 import { CloudFormationCustomResourceEvent } from '@aws-accelerator/utils/lib/common-types';
+import {
+  AcceptTransitGatewayPeeringAttachmentCommand,
+  AssociateTransitGatewayRouteTableCommand,
+  CreateTagsCommand,
+  DescribeTransitGatewayAttachmentsCommand,
+  DescribeTransitGatewayPeeringAttachmentsCommand,
+  DisassociateTransitGatewayRouteTableCommand,
+  EC2Client,
+  TransitGatewayAttachmentAssociation,
+  TransitGatewayAttachmentState,
+} from '@aws-sdk/client-ec2';
+import { AssumeRoleCommand, STSClient } from '@aws-sdk/client-sts';
+import { setRetryStrategy } from '@aws-accelerator/utils/lib/common-functions';
 /**
  * delete-default-vpc - lambda handler
  *
@@ -46,7 +57,11 @@ export async function handler(event: CloudFormationCustomResourceEvent): Promise
 
   const solutionId = process.env['SOLUTION_ID'];
 
-  const requesterEc2Client = new AWS.EC2({ region: requesterRegion });
+  const requesterEc2Client = new EC2Client({
+    region: requesterRegion,
+    customUserAgent: solutionId,
+    retryStrategy: setRetryStrategy(),
+  });
 
   const accepterEc2Client = await getAccepterEc2Client(
     accepterRegion,
@@ -110,11 +125,12 @@ export async function handler(event: CloudFormationCustomResourceEvent): Promise
           );
 
           const response = await throttlingBackOff(() =>
-            accepterEc2Client
-              .acceptTransitGatewayPeeringAttachment({ TransitGatewayAttachmentId: accepterTransitGatewayAttachmentId })
-              .promise(),
+            accepterEc2Client.send(
+              new AcceptTransitGatewayPeeringAttachmentCommand({
+                TransitGatewayAttachmentId: accepterTransitGatewayAttachmentId,
+              }),
+            ),
           );
-
           console.log(
             `Transit gateway attachment id ${accepterTransitGatewayAttachmentId} acceptTransitGatewayPeeringAttachment operation completed in accepter account ${accepterAccountId}, waiting to be in available state, current state is ${response.TransitGatewayPeeringAttachment?.State}`,
           );
@@ -180,7 +196,7 @@ async function associateTransitGatewayRouteTable(
   account: string,
   transitGatewayAttachmentId: string,
   transitGatewayRouteTableId: string,
-  ec2Client: AWS.EC2,
+  ec2Client: EC2Client,
 ): Promise<void> {
   console.log(
     `In Account ${account}: Start of associateTransitGatewayRouteTable, for transitGateway attachment ${transitGatewayAttachmentId} with route table ${transitGatewayRouteTableId}`,
@@ -201,12 +217,12 @@ async function associateTransitGatewayRouteTable(
       `Start: Association of transitGateway attachment ${transitGatewayAttachmentId} to route table ${transitGatewayRouteTableId}, in account ${account}`,
     );
     const response = await throttlingBackOff(() =>
-      ec2Client
-        .associateTransitGatewayRouteTable({
+      ec2Client.send(
+        new AssociateTransitGatewayRouteTableCommand({
           TransitGatewayAttachmentId: transitGatewayAttachmentId,
           TransitGatewayRouteTableId: transitGatewayRouteTableId,
-        })
-        .promise(),
+        }),
+      ),
     );
     console.log(
       `Completed: Association of transitGateway attachment ${transitGatewayAttachmentId} to route table ${transitGatewayRouteTableId}, in account ${account}, association state is ${response.Association?.State}`,
@@ -225,12 +241,12 @@ async function associateTransitGatewayRouteTable(
       `Start: disassociation of route table ${attachmentAssociation.TransitGatewayRouteTableId} from transit gateway attachment ${transitGatewayAttachmentId} in account ${account}`,
     );
     const disassociationResponse = await throttlingBackOff(() =>
-      ec2Client
-        .disassociateTransitGatewayRouteTable({
+      ec2Client.send(
+        new DisassociateTransitGatewayRouteTableCommand({
           TransitGatewayAttachmentId: transitGatewayAttachmentId,
           TransitGatewayRouteTableId: attachmentAssociation.TransitGatewayRouteTableId!,
-        })
-        .promise(),
+        }),
+      ),
     );
     console.log(
       `Completed: disassociation of route table ${attachmentAssociation.TransitGatewayRouteTableId} from transit gateway attachment ${transitGatewayAttachmentId} in account ${account}, association state is ${disassociationResponse.Association?.State}`,
@@ -265,50 +281,42 @@ async function associateTransitGatewayRouteTable(
 
 /**
  * Function to re-associate route table
- * @param ec2Client
+ * @param ec2Client {@link EC2Client}
  * @param transitGatewayAttachmentId
  * @param transitGatewayRouteTableId
  * @param account
  * @returns
  */
 async function reAssociateRouteTable(
-  ec2Client: AWS.EC2,
+  ec2Client: EC2Client,
   transitGatewayAttachmentId: string,
   transitGatewayRouteTableId: string,
   account: string,
 ): Promise<boolean> {
   try {
     const associateResponse = await throttlingBackOff(() =>
-      ec2Client
-        .associateTransitGatewayRouteTable({
+      ec2Client.send(
+        new AssociateTransitGatewayRouteTableCommand({
           TransitGatewayAttachmentId: transitGatewayAttachmentId,
           TransitGatewayRouteTableId: transitGatewayRouteTableId,
-        })
-        .promise(),
+        }),
+      ),
     );
     console.log(
       `Completed: Re-association of transitGateway attachment ${transitGatewayAttachmentId} to route table ${transitGatewayRouteTableId}, in account ${account}, association state is ${associateResponse.Association?.State}`,
     );
     return true;
-  } catch (
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    e: any
-  ) {
-    if (
-      // SDKv2 Error Structure
-      e.code === 'Resource.AlreadyAssociated' ||
-      // SDKv3 Error Structure
-      e.name === 'Resource.AlreadyAssociated'
-    ) {
+  } catch (e: unknown) {
+    if (e instanceof Error && e.name === 'Resource.AlreadyAssociated') {
       return false;
     }
-    throw new Error(e);
+    throw e;
   }
 }
 
 /**
  * Function to get accepter transit gateway attachment id
- * @param ec2Client
+ * @param ec2Client {@link EC2Client}
  * @param accepterTransitGatewayId
  * @param accepterAccountId
  * @param requesterTransitGatewayId
@@ -316,15 +324,15 @@ async function reAssociateRouteTable(
  * @returns
  */
 async function getAccepterTransitGatewayAttachmentID(
-  ec2Client: AWS.EC2,
+  ec2Client: EC2Client,
   accepterTransitGatewayId: string,
   accepterAccountId: string,
   requesterTransitGatewayId: string,
   requesterTransitGatewayAttachmentId: string,
 ): Promise<string | undefined> {
   const response = await throttlingBackOff(() =>
-    ec2Client
-      .describeTransitGatewayAttachments({
+    ec2Client.send(
+      new DescribeTransitGatewayAttachmentsCommand({
         Filters: [
           { Name: 'resource-type', Values: ['peering'] },
           { Name: 'transit-gateway-id', Values: [accepterTransitGatewayId] },
@@ -334,8 +342,8 @@ async function getAccepterTransitGatewayAttachmentID(
             Values: ['pendingAcceptance', 'pending', 'initiatingRequest', 'initiating', 'modifying', 'available'],
           },
         ],
-      })
-      .promise(),
+      }),
+    ),
   );
   if (response.TransitGatewayAttachments) {
     if (response.TransitGatewayAttachments.length === 1) {
@@ -363,22 +371,21 @@ async function getAccepterTransitGatewayAttachmentID(
 
 /**
  * Function to get attachment status
- * @param transitGatewayAttachmentId
- * @param ec2Client
- * @returns
+ * @param ec2Client {@link EC2Client}
+ * @param transitGatewayAttachmentId string
+ * @returns state {@link TransitGatewayAttachmentState} | undefined
  */
 async function getAttachmentState(
-  ec2Client: AWS.EC2,
+  ec2Client: EC2Client,
   transitGatewayAttachmentId: string,
-): Promise<AWS.EC2.TransitGatewayAttachmentState | undefined> {
+): Promise<TransitGatewayAttachmentState | undefined> {
   const response = await throttlingBackOff(() =>
-    ec2Client
-      .describeTransitGatewayPeeringAttachments({
+    ec2Client.send(
+      new DescribeTransitGatewayPeeringAttachmentsCommand({
         Filters: [{ Name: 'transit-gateway-attachment-id', Values: [transitGatewayAttachmentId] }],
-      })
-      .promise(),
+      }),
+    ),
   );
-
   if (response.TransitGatewayPeeringAttachments?.length === 1) {
     console.log(
       `Transit gateway attachment ${transitGatewayAttachmentId} state is ${response.TransitGatewayPeeringAttachments[0].State}`,
@@ -391,21 +398,20 @@ async function getAttachmentState(
 
 /**
  * Function to check for Invalid attachment state for acceptance
- * @param ec2Client
+ * @param ec2Client {@link EC2Client}
  * @param transitGatewayAttachmentId
  */
 async function checkAttachmentInvalidStateForAcceptance(
-  ec2Client: AWS.EC2,
+  ec2Client: EC2Client,
   transitGatewayAttachmentId: string,
 ): Promise<void> {
   const response = await throttlingBackOff(() =>
-    ec2Client
-      .describeTransitGatewayPeeringAttachments({
+    ec2Client.send(
+      new DescribeTransitGatewayPeeringAttachmentsCommand({
         Filters: [{ Name: 'transit-gateway-attachment-id', Values: [transitGatewayAttachmentId] }],
-      })
-      .promise(),
+      }),
+    ),
   );
-
   if (response.TransitGatewayPeeringAttachments?.length === 1) {
     if (
       response.TransitGatewayPeeringAttachments[0].State === 'failed' ||
@@ -425,27 +431,26 @@ async function checkAttachmentInvalidStateForAcceptance(
 
 /**
  * Function to get transit gateway attachment associated route table id
- * @param ec2Client
+ * @param ec2Client {@link EC2Client}
  * @param transitGatewayAttachmentId
  * @param account
  * @returns
  */
 async function getAttachmentAssociation(
-  ec2Client: AWS.EC2,
+  ec2Client: EC2Client,
   transitGatewayAttachmentId: string,
   account: string,
-): Promise<AWS.EC2.TransitGatewayAttachmentAssociation | undefined> {
+): Promise<TransitGatewayAttachmentAssociation | undefined> {
   const response = await throttlingBackOff(() =>
-    ec2Client
-      .describeTransitGatewayAttachments({
+    ec2Client.send(
+      new DescribeTransitGatewayAttachmentsCommand({
         Filters: [
           { Name: 'resource-type', Values: ['peering'] },
           { Name: 'transit-gateway-attachment-id', Values: [transitGatewayAttachmentId] },
         ],
-      })
-      .promise(),
+      }),
+    ),
   );
-
   if (response.TransitGatewayAttachments) {
     if (response.TransitGatewayAttachments.length === 1) {
       return response.TransitGatewayAttachments[0].Association;
@@ -467,7 +472,7 @@ async function getAttachmentAssociation(
  * @param accepterTransitGatewayAttachmentId
  */
 async function createAccepterAttachmentTags(
-  ec2Client: AWS.EC2,
+  ec2Client: EC2Client,
   accepterTransitGatewayAttachmentId: string,
   peeringTags: { Key: string; Value: string }[] | undefined,
 ): Promise<void> {
@@ -480,12 +485,12 @@ async function createAccepterAttachmentTags(
 
     if (tags.length > 0) {
       await throttlingBackOff(() =>
-        ec2Client
-          .createTags({
+        ec2Client.send(
+          new CreateTagsCommand({
             Resources: [accepterTransitGatewayAttachmentId],
             Tags: tags,
-          })
-          .promise(),
+          }),
+        ),
       );
     }
   }
@@ -501,25 +506,27 @@ async function getAccepterEc2Client(
   accepterRegion: string,
   accepterRoleArn: string,
   solutionId?: string,
-): Promise<AWS.EC2> {
-  const stsClient = new AWS.STS({ customUserAgent: solutionId, region: accepterRegion });
+): Promise<EC2Client> {
+  const stsClient = new STSClient({ customUserAgent: solutionId, region: accepterRegion });
 
   const assumeRoleResponse = await throttlingBackOff(() =>
-    stsClient
-      .assumeRole({
+    stsClient.send(
+      new AssumeRoleCommand({
         RoleArn: accepterRoleArn,
         RoleSessionName: 'AccepterTransitGatewayAttachmentSession',
-      })
-      .promise(),
+      }),
+    ),
   );
 
-  return new AWS.EC2({
+  return new EC2Client({
+    region: accepterRegion,
+    customUserAgent: solutionId,
+    retryStrategy: setRetryStrategy(),
     credentials: {
       accessKeyId: assumeRoleResponse.Credentials?.AccessKeyId ?? '',
       secretAccessKey: assumeRoleResponse.Credentials?.SecretAccessKey ?? '',
       sessionToken: assumeRoleResponse.Credentials?.SessionToken,
     },
-    region: accepterRegion,
   });
 }
 
