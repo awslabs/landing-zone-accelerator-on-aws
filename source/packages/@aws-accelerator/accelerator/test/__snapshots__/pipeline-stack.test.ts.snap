@@ -2677,6 +2677,21 @@ exports[`PipelineStack Construct(PipelineStack):  Snapshot Test 1`] = `
               "Type": "PLAINTEXT",
               "Value": "Yes",
             },
+            {
+              "Name": "USE_EXISTING_CONFIG_REPO",
+              "Type": "PLAINTEXT",
+              "Value": "false",
+            },
+            {
+              "Name": "EXISTING_CONFIG_REPOSITORY_NAME",
+              "Type": "PLAINTEXT",
+              "Value": "aws-accelerator-config",
+            },
+            {
+              "Name": "EXISTING_CONFIG_REPOSITORY_BRANCH_NAME",
+              "Type": "PLAINTEXT",
+              "Value": "main",
+            },
           ],
           "Image": "aws/codebuild/standard:7.0",
           "ImagePullCredentialsType": "CODEBUILD",
@@ -6014,6 +6029,21 @@ exports[`PipelineStack Construct(PipelineStack):  Snapshot Test 2`] = `
               "Name": "ACCELERATOR_ENABLE_APPROVAL_STAGE",
               "Type": "PLAINTEXT",
               "Value": "Yes",
+            },
+            {
+              "Name": "USE_EXISTING_CONFIG_REPO",
+              "Type": "PLAINTEXT",
+              "Value": "false",
+            },
+            {
+              "Name": "EXISTING_CONFIG_REPOSITORY_NAME",
+              "Type": "PLAINTEXT",
+              "Value": "aws-accelerator-config",
+            },
+            {
+              "Name": "EXISTING_CONFIG_REPOSITORY_BRANCH_NAME",
+              "Type": "PLAINTEXT",
+              "Value": "main",
             },
           ],
           "Image": "aws/codebuild/standard:7.0",

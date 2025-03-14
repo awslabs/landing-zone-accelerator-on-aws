@@ -745,6 +745,18 @@ export class AcceleratorPipeline extends Construct {
             type: codebuild.BuildEnvironmentVariableType.PLAINTEXT,
             value: props.enableApprovalStage ? 'Yes' : 'No',
           },
+          USE_EXISTING_CONFIG_REPO: {
+            type: cdk.aws_codebuild.BuildEnvironmentVariableType.PLAINTEXT,
+            value: this.props.useExistingConfigRepo,
+          },
+          EXISTING_CONFIG_REPOSITORY_NAME: {
+            type: cdk.aws_codebuild.BuildEnvironmentVariableType.PLAINTEXT,
+            value: this.props.configRepositoryName,
+          },
+          EXISTING_CONFIG_REPOSITORY_BRANCH_NAME: {
+            type: cdk.aws_codebuild.BuildEnvironmentVariableType.PLAINTEXT,
+            value: this.props.configRepositoryBranchName,
+          },
           ...enableSingleAccountModeEnvVariables,
           ...pipelineAccountEnvVariables,
           ...aseaMigrationModeEnvVariables,
