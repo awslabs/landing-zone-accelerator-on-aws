@@ -2650,6 +2650,7 @@ export class NetworkAssociationsStack extends NetworkStack {
         transitGatewayAttachmentId = this.getTgwPeeringAttachmentId(
           routeItem.attachment.transitGatewayPeeringName,
           tgwItem,
+          routeItem,
         );
       }
     }
@@ -2764,6 +2765,7 @@ export class NetworkAssociationsStack extends NetworkStack {
         transitGatewayAttachmentId = this.getTgwPeeringAttachmentId(
           routeItem.attachment.transitGatewayPeeringName,
           tgwItem,
+          routeItem,
         );
       }
     }
@@ -2859,7 +2861,11 @@ export class NetworkAssociationsStack extends NetworkStack {
    * @param tgwItem
    * @returns
    */
-  private getTgwPeeringAttachmentId(transitGatewayPeeringName: string, tgwItem: TransitGatewayConfig): string {
+  private getTgwPeeringAttachmentId(
+    transitGatewayPeeringName: string,
+    tgwItem: TransitGatewayConfig,
+    routeTableEntryItem: TransitGatewayRouteEntryConfig,
+  ): string {
     const requesterConfig = this.props.networkConfig.getTgwPeeringRequesterAccepterConfig(
       transitGatewayPeeringName,
       'requester',
@@ -2874,8 +2880,15 @@ export class NetworkAssociationsStack extends NetworkStack {
       throw new Error(`Configuration validation failed at runtime.`);
     }
 
+    const isSameAccountRegionAccepter =
+      requesterConfig.account === accepterConfig.account &&
+      requesterConfig.region === accepterConfig.region &&
+      accepterConfig.transitGatewayName === tgwItem.name;
     // Get TGW attachment ID for requester
-    if (this.props.accountsConfig.getAccountId(requesterConfig.account) === cdk.Stack.of(this).account) {
+    if (
+      this.props.accountsConfig.getAccountId(requesterConfig.account) === cdk.Stack.of(this).account &&
+      !isSameAccountRegionAccepter
+    ) {
       return cdk.aws_ssm.StringParameter.valueForStringParameter(
         this,
         this.getSsmPath(SsmResourceType.TGW_PEERING, [tgwItem.name, transitGatewayPeeringName]),
@@ -2890,21 +2903,29 @@ export class NetworkAssociationsStack extends NetworkStack {
         throw new Error(`Configuration validation failed at runtime.`);
       }
 
+      let destinationItem: string;
+      if (routeTableEntryItem.destinationCidrBlock) {
+        destinationItem = routeTableEntryItem.destinationCidrBlock!;
+      } else {
+        destinationItem = routeTableEntryItem.destinationPrefixList!;
+      }
+      const constructId = isSameAccountRegionAccepter
+        ? pascalCase(
+            `${accepterConfig.account}${transitGatewayPeeringName}${destinationItem}TransitGatewayPeeringAttachment`,
+          )
+        : pascalCase(`${accepterConfig.account}${transitGatewayPeeringName}TransitGatewayPeeringAttachment`);
       this.logger.info(
         `Looking up transit gateway peering attachment id of accepter account ${accepterConfig.account}`,
       );
-      return TransitGatewayAttachment.fromLookup(
-        this,
-        pascalCase(`${accepterConfig.account}${transitGatewayPeeringName}TransitGatewayPeeringAttachment`),
-        {
-          name: transitGatewayPeeringName,
-          owningAccountId: cdk.Stack.of(this).account,
-          transitGatewayId,
-          type: TransitGatewayAttachmentType.PEERING,
-          kmsKey: this.cloudwatchKey,
-          logRetentionInDays: this.logRetention,
-        },
-      ).transitGatewayAttachmentId;
+      return TransitGatewayAttachment.fromLookup(this, constructId, {
+        name: transitGatewayPeeringName,
+        owningAccountId: cdk.Stack.of(this).account,
+        transitGatewayId,
+        type: TransitGatewayAttachmentType.PEERING,
+        isSameAccountRegionAccepter,
+        kmsKey: this.cloudwatchKey,
+        logRetentionInDays: this.logRetention,
+      }).transitGatewayAttachmentId;
     }
 
     this.logger.error(`Transit Gateway attachment id not found for ${transitGatewayPeeringName}`);

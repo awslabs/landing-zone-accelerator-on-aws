@@ -175,6 +175,7 @@ export interface TransitGatewayAttachmentLookupOptions {
   readonly transitGatewayId: string;
   readonly type: TransitGatewayAttachmentType;
   readonly roleName?: string;
+  readonly isSameAccountRegionAccepter?: boolean;
   /**
    * Custom resource lambda log group encryption key, when undefined default AWS managed key will be used
    */
@@ -269,6 +270,7 @@ export class TransitGatewayAttachment extends TransitGatewayAttachmentBase {
             name: options.name,
             transitGatewayId: options.transitGatewayId,
             type: options.type,
+            isSameAccountRegionAccepter: options.isSameAccountRegionAccepter,
             roleArn,
             uuid: uuidv4(), // Generates a new UUID to force the resource to update
             crossAccountVpnOptions: options.crossAccountVpnOptions,

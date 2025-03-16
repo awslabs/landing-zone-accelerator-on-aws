@@ -63,6 +63,14 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
       "Default": "/accelerator/network/transitGateways/Network-Main-2/routeTables/Network-Main-2-Standalone/id",
       "Type": "AWS::SSM::Parameter::Value<String>",
     },
+    "SsmParameterValueacceleratornetworktransitGatewaysNetworkMain3idC96584B6F00A464EAD1953AFF4B05118Parameter": {
+      "Default": "/accelerator/network/transitGateways/Network-Main-3/id",
+      "Type": "AWS::SSM::Parameter::Value<String>",
+    },
+    "SsmParameterValueacceleratornetworktransitGatewaysNetworkMain3routeTablesNetworkMain3CoreidC96584B6F00A464EAD1953AFF4B05118Parameter": {
+      "Default": "/accelerator/network/transitGateways/Network-Main-3/routeTables/Network-Main-3-Core/id",
+      "Type": "AWS::SSM::Parameter::Value<String>",
+    },
     "SsmParameterValueacceleratornetworktransitGatewaysNetworkMainidC96584B6F00A464EAD1953AFF4B05118Parameter": {
       "Default": "/accelerator/network/transitGateways/Network-Main/id",
       "Type": "AWS::SSM::Parameter::Value<String>",
@@ -2565,6 +2573,30 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
       "Type": "Custom::TransitGatewayPrefixListReference",
       "UpdateReplacePolicy": "Delete",
     },
+    "NetworkMain3Core101500028NetworkMainAndNetworkMain3PeeringStaticRoute6342D9E1": {
+      "Properties": {
+        "DestinationCidrBlock": "10.150.0.0/28",
+        "TransitGatewayAttachmentId": {
+          "Ref": "NetworkNetworkMainAndNetworkMain3Peering101500028TransitGatewayPeeringAttachment326B9914",
+        },
+        "TransitGatewayRouteTableId": {
+          "Ref": "SsmParameterValueacceleratornetworktransitGatewaysNetworkMain3routeTablesNetworkMain3CoreidC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+      },
+      "Type": "AWS::EC2::TransitGatewayRoute",
+    },
+    "NetworkMain3Core101550028NetworkMainAndNetworkMain3PeeringStaticRoute28B027CF": {
+      "Properties": {
+        "DestinationCidrBlock": "10.155.0.0/28",
+        "TransitGatewayAttachmentId": {
+          "Ref": "NetworkNetworkMainAndNetworkMain3Peering101550028TransitGatewayPeeringAttachment99DC89DB",
+        },
+        "TransitGatewayRouteTableId": {
+          "Ref": "SsmParameterValueacceleratornetworktransitGatewaysNetworkMain3routeTablesNetworkMain3CoreidC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+      },
+      "Type": "AWS::EC2::TransitGatewayRoute",
+    },
     "NetworkMainCore0NetworkEndpointsNetworkStaticRoute554C10A2": {
       "Properties": {
         "DestinationCidrBlock": "::/0",
@@ -2675,6 +2707,54 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
       },
       "Type": "AWS::EC2::TransitGatewayRoute",
     },
+    "NetworkNetworkMainAndNetworkMain3Peering101500028TransitGatewayPeeringAttachment326B9914": {
+      "DeletionPolicy": "Delete",
+      "DependsOn": [
+        "CustomGetTransitGatewayAttachmentCustomResourceProviderLogGroup41699CF3",
+      ],
+      "Properties": {
+        "ServiceToken": {
+          "Fn::GetAtt": [
+            "CustomGetTransitGatewayAttachmentCustomResourceProviderHandler7E079354",
+            "Arn",
+          ],
+        },
+        "isSameAccountRegionAccepter": true,
+        "name": "Network-Main-And-Network-Main3-Peering",
+        "region": "us-east-1",
+        "transitGatewayId": {
+          "Ref": "SsmParameterValueacceleratornetworktransitGatewaysNetworkMain3idC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+        "type": "peering",
+        "uuid": "REPLACED-UUID",
+      },
+      "Type": "Custom::GetTransitGatewayAttachment",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "NetworkNetworkMainAndNetworkMain3Peering101550028TransitGatewayPeeringAttachment99DC89DB": {
+      "DeletionPolicy": "Delete",
+      "DependsOn": [
+        "CustomGetTransitGatewayAttachmentCustomResourceProviderLogGroup41699CF3",
+      ],
+      "Properties": {
+        "ServiceToken": {
+          "Fn::GetAtt": [
+            "CustomGetTransitGatewayAttachmentCustomResourceProviderHandler7E079354",
+            "Arn",
+          ],
+        },
+        "isSameAccountRegionAccepter": true,
+        "name": "Network-Main-And-Network-Main3-Peering",
+        "region": "us-east-1",
+        "transitGatewayId": {
+          "Ref": "SsmParameterValueacceleratornetworktransitGatewaysNetworkMain3idC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+        "type": "peering",
+        "uuid": "REPLACED-UUID",
+      },
+      "Type": "Custom::GetTransitGatewayAttachment",
+      "UpdateReplacePolicy": "Delete",
+    },
     "NetworkNetworkMainAndSharedServicesMainPeeringTransitGatewayPeeringAttachment6A5D4528": {
       "DeletionPolicy": "Delete",
       "DependsOn": [
@@ -2687,6 +2767,7 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
             "Arn",
           ],
         },
+        "isSameAccountRegionAccepter": false,
         "name": "Network-Main-And-SharedServices-Main-Peering",
         "region": "us-east-1",
         "transitGatewayId": {
@@ -20864,6 +20945,7 @@ exports[`NoVpcFlowLogStack Construct(NetworkAssociationsStack):  Snapshot Test 1
             "Arn",
           ],
         },
+        "isSameAccountRegionAccepter": false,
         "name": "Network-Main-And-SharedServices-Main-Peering",
         "region": "us-east-1",
         "transitGatewayId": {

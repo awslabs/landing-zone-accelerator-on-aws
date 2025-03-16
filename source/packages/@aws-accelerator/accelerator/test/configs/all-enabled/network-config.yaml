@@ -114,6 +114,27 @@ transitGateways:
         routes: []
       - name: Network-Main-2-Standalone
         routes: []
+  - name: Network-Main-3
+    account: Network
+    region: *HOME_REGION
+    shareTargets:
+      organizationalUnits:
+        - Infrastructure
+    asn: 65522
+    dnsSupport: enable
+    vpnEcmpSupport: enable
+    defaultRouteTableAssociation: disable
+    defaultRouteTablePropagation: disable
+    autoAcceptSharingAttachments: enable
+    routeTables:
+      - name: Network-Main-3-Core
+        routes:
+          - destinationCidrBlock: 10.150.0.0/28
+            attachment:
+              transitGatewayPeeringName: Network-Main-And-Network-Main3-Peering
+          - destinationCidrBlock: 10.155.0.0/28
+            attachment:
+              transitGatewayPeeringName: Network-Main-And-Network-Main3-Peering
   - name: SharedServices-Main
     account: SharedServices
     region: *HOME_REGION
@@ -189,6 +210,30 @@ transitGateways:
       - name: Network-Main-Standalone
         routes: []
 transitGatewayPeering:
+  - name: Network-Main-And-Network-Main3-Peering
+    requester:
+      transitGatewayName: Network-Main
+      account: Network
+      region: *HOME_REGION
+      routeTableAssociations: Network-Main-Core
+      tags:
+        - key: Name
+          value: Network-Main-And-Network-Main3-Peering
+        - key: CostCenter
+          value: TSD-LZA
+        - key: Company
+          value: AWS
+        - key: Organization
+          value: WWPS
+        - key: Team
+          value: Development
+    accepter:
+      transitGatewayName: Network-Main-3
+      account: Network
+      region: *HOME_REGION
+      routeTableAssociations: Network-Main-3-Core
+      autoAccept: true
+      applyTags: true
   - name: Network-Main-And-SharedServices-Main-Peering
     requester:
       transitGatewayName: SharedServices-Main
