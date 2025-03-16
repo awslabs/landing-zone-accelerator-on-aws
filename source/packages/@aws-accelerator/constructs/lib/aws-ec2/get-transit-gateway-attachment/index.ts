@@ -56,6 +56,11 @@ interface TgwAttachmentOptions {
    */
   readonly vpcLookupRoleArn?: string;
   /**
+   * Determine if this is logic is handling the same account and region for accepter side on
+   * a Transit Gateway Peering Attachment.
+   */
+  readonly isSameAccountRegionAccepter?: boolean;
+  /**
    * Cross-account lookup options
    *
    * @remarks
@@ -124,6 +129,22 @@ export async function handler(event: CloudFormationCustomResourceEvent): Promise
               PhysicalResourceId: attachment.TransitGatewayAttachmentId,
               Status: 'SUCCESS',
             };
+          }
+          // Logic for same region and account for TGW peering attachment as acceptor side attachment
+          // doesn't contain the Accelerator tag.
+          else if (options.isSameAccountRegionAccepter) {
+            if (
+              attachment.TransitGatewayId === options.transitGatewayId &&
+              attachment.State === 'available' &&
+              attachment.ResourceType === 'peering' &&
+              attachment.Tags &&
+              attachment.Tags.find(tag => tag.Key !== 'Accelerator')
+            ) {
+              return {
+                PhysicalResourceId: attachment.TransitGatewayAttachmentId,
+                Status: 'SUCCESS',
+              };
+            }
           }
         }
         nextToken = page.NextToken;

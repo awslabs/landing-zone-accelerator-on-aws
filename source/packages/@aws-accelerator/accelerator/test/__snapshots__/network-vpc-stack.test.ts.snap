@@ -27,6 +27,10 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
       "Default": "/accelerator/network/transitGateways/Network-Main/id",
       "Type": "AWS::SSM::Parameter::Value<String>",
     },
+    "SsmParameterValueacceleratornetworktransitGatewaysNetworkMainrouteTablesNetworkMainCoreidC96584B6F00A464EAD1953AFF4B05118Parameter": {
+      "Default": "/accelerator/network/transitGateways/Network-Main/routeTables/Network-Main-Core/id",
+      "Type": "AWS::SSM::Parameter::Value<String>",
+    },
     "SsmParameterValueacceleratorvpcflowlogsdestinationbucketarnC96584B6F00A464EAD1953AFF4B05118Parameter": {
       "Default": "/accelerator/vpc/flow-logs/destination/bucket/arn",
       "Type": "AWS::SSM::Parameter::Value<String>",
@@ -770,6 +774,112 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
       },
       "Type": "AWS::IAM::Role",
     },
+    "CustomSsmGetParameterValueCustomResourceProviderHandlerAAD0E7EE": {
+      "DependsOn": [
+        "CustomSsmGetParameterValueCustomResourceProviderRoleB3AFDDB2",
+      ],
+      "Properties": {
+        "Code": {
+          "S3Bucket": "cdk-hnb659fds-assets-555555555555-us-east-1",
+          "S3Key": "REPLACED-GENERATED-NAME.zip",
+        },
+        "Handler": "__entrypoint__.handler",
+        "MemorySize": 128,
+        "Role": {
+          "Fn::GetAtt": [
+            "CustomSsmGetParameterValueCustomResourceProviderRoleB3AFDDB2",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs20.x",
+        "Timeout": 900,
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "CustomSsmGetParameterValueCustomResourceProviderLogGroup780D220D": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "LogGroupName": {
+          "Fn::Join": [
+            "",
+            [
+              "/aws/lambda/",
+              {
+                "Ref": "CustomSsmGetParameterValueCustomResourceProviderHandlerAAD0E7EE",
+              },
+            ],
+          ],
+        },
+        "RetentionInDays": 3653,
+      },
+      "Type": "AWS::Logs::LogGroup",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "CustomSsmGetParameterValueCustomResourceProviderRoleB3AFDDB2": {
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": [
+          {
+            "Fn::Sub": "arn:\${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+          },
+        ],
+        "Policies": [
+          {
+            "PolicyDocument": {
+              "Statement": [
+                {
+                  "Action": [
+                    "ssm:GetParameters",
+                    "ssm:GetParameter",
+                    "ssm:DescribeParameters",
+                  ],
+                  "Effect": "Allow",
+                  "Resource": [
+                    "*",
+                  ],
+                  "Sid": "SsmGetParameterActions",
+                },
+                {
+                  "Action": [
+                    "sts:AssumeRole",
+                  ],
+                  "Effect": "Allow",
+                  "Resource": [
+                    {
+                      "Fn::Join": [
+                        "",
+                        [
+                          "arn:",
+                          {
+                            "Ref": "AWS::Partition",
+                          },
+                          ":iam::*:role/AWSAccelerator*",
+                        ],
+                      ],
+                    },
+                  ],
+                  "Sid": "StsAssumeRoleActions",
+                },
+              ],
+              "Version": "2012-10-17",
+            },
+            "PolicyName": "Inline",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
     "CustomSsmPutParameterValueCustomResourceProviderHandler2A0BDE7F": {
       "DependsOn": [
         "CustomSsmPutParameterValueCustomResourceProviderRole9E1F101A",
@@ -866,6 +976,135 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
                     },
                   ],
                   "Sid": "StsAssumeRoleActions",
+                },
+              ],
+              "Version": "2012-10-17",
+            },
+            "PolicyName": "Inline",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "CustomTransitGatewayAcceptPeeringCustomResourceProviderHandler692671C6": {
+      "DependsOn": [
+        "CustomTransitGatewayAcceptPeeringCustomResourceProviderRole0A88B1D1",
+      ],
+      "Properties": {
+        "Code": {
+          "S3Bucket": "cdk-hnb659fds-assets-555555555555-us-east-1",
+          "S3Key": "REPLACED-GENERATED-NAME.zip",
+        },
+        "Handler": "__entrypoint__.handler",
+        "MemorySize": 128,
+        "Role": {
+          "Fn::GetAtt": [
+            "CustomTransitGatewayAcceptPeeringCustomResourceProviderRole0A88B1D1",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs20.x",
+        "Timeout": 900,
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "CustomTransitGatewayAcceptPeeringCustomResourceProviderLogGroupB843F457": {
+      "DeletionPolicy": "Retain",
+      "Properties": {
+        "LogGroupName": {
+          "Fn::Join": [
+            "",
+            [
+              "/aws/lambda/",
+              {
+                "Ref": "CustomTransitGatewayAcceptPeeringCustomResourceProviderHandler692671C6",
+              },
+            ],
+          ],
+        },
+        "RetentionInDays": 3653,
+      },
+      "Type": "AWS::Logs::LogGroup",
+      "UpdateReplacePolicy": "Retain",
+    },
+    "CustomTransitGatewayAcceptPeeringCustomResourceProviderRole0A88B1D1": {
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": [
+          {
+            "Fn::Sub": "arn:\${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+          },
+        ],
+        "Policies": [
+          {
+            "PolicyDocument": {
+              "Statement": [
+                {
+                  "Action": [
+                    "sts:AssumeRole",
+                  ],
+                  "Effect": "Allow",
+                  "Resource": [
+                    {
+                      "Fn::Join": [
+                        "",
+                        [
+                          "arn:",
+                          {
+                            "Ref": "AWS::Partition",
+                          },
+                          ":iam::555555555555:role/AWSAccelerator-TgwPeering-Role",
+                        ],
+                      ],
+                    },
+                    {
+                      "Fn::Join": [
+                        "",
+                        [
+                          "arn:",
+                          {
+                            "Ref": "AWS::Partition",
+                          },
+                          ":iam::555555555555:role/AWSAccelerator-TgwPeering-Role",
+                        ],
+                      ],
+                    },
+                    {
+                      "Fn::Join": [
+                        "",
+                        [
+                          "arn:",
+                          {
+                            "Ref": "AWS::Partition",
+                          },
+                          ":iam::555555555555:role/AWSAccelerator-TgwPeering-Role",
+                        ],
+                      ],
+                    },
+                  ],
+                  "Sid": "AllowAssumeRole",
+                },
+                {
+                  "Action": [
+                    "ec2:AssociateTransitGatewayRouteTable",
+                    "ec2:DisassociateTransitGatewayRouteTable",
+                    "ec2:DescribeTransitGatewayPeeringAttachments",
+                    "ec2:DescribeTransitGatewayAttachments",
+                  ],
+                  "Effect": "Allow",
+                  "Resource": "*",
+                  "Sid": "AllowModifyPeeringReferences",
                 },
               ],
               "Version": "2012-10-17",
@@ -3923,6 +4162,183 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
       },
       "Type": "AWS::EC2::VPCCidrBlock",
     },
+    "NetworkMainNetworkMain3AccepterTransitGatewayIdLookup9812C0E1": {
+      "DeletionPolicy": "Delete",
+      "DependsOn": [
+        "CustomSsmGetParameterValueCustomResourceProviderLogGroup780D220D",
+      ],
+      "Properties": {
+        "ServiceToken": {
+          "Fn::GetAtt": [
+            "CustomSsmGetParameterValueCustomResourceProviderHandlerAAD0E7EE",
+            "Arn",
+          ],
+        },
+        "assumeRoleArn": {
+          "Fn::Join": [
+            "",
+            [
+              "arn:",
+              {
+                "Ref": "AWS::Partition",
+              },
+              ":iam::555555555555:role/AWSAccelerator-TgwPeering-Role",
+            ],
+          ],
+        },
+        "invokingAccountID": "555555555555",
+        "invokingRegion": "us-east-1",
+        "parameterAccountID": "555555555555",
+        "parameterName": "/accelerator/network/transitGateways/Network-Main-3/id",
+        "parameterRegion": "us-east-1",
+        "uuid": "REPLACED-UUID",
+      },
+      "Type": "Custom::SsmGetParameterValue",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "NetworkMainNetworkMain3AccepterTransitGatewayRouteTableIdLookup9EC005E9": {
+      "DeletionPolicy": "Delete",
+      "DependsOn": [
+        "CustomSsmGetParameterValueCustomResourceProviderLogGroup780D220D",
+      ],
+      "Properties": {
+        "ServiceToken": {
+          "Fn::GetAtt": [
+            "CustomSsmGetParameterValueCustomResourceProviderHandlerAAD0E7EE",
+            "Arn",
+          ],
+        },
+        "assumeRoleArn": {
+          "Fn::Join": [
+            "",
+            [
+              "arn:",
+              {
+                "Ref": "AWS::Partition",
+              },
+              ":iam::555555555555:role/AWSAccelerator-TgwPeering-Role",
+            ],
+          ],
+        },
+        "invokingAccountID": "555555555555",
+        "invokingRegion": "us-east-1",
+        "parameterAccountID": "555555555555",
+        "parameterName": "/accelerator/network/transitGateways/Network-Main-3/routeTables/Network-Main-3-Core/id",
+        "parameterRegion": "us-east-1",
+        "uuid": "REPLACED-UUID",
+      },
+      "Type": "Custom::SsmGetParameterValue",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "NetworkMainNetworkMain3PeeringED31802B": {
+      "DeletionPolicy": "Delete",
+      "DependsOn": [
+        "CustomTransitGatewayAcceptPeeringCustomResourceProviderLogGroupB843F457",
+      ],
+      "Properties": {
+        "ServiceToken": {
+          "Fn::GetAtt": [
+            "CustomTransitGatewayAcceptPeeringCustomResourceProviderHandler692671C6",
+            "Arn",
+          ],
+        },
+        "accepterAccountId": "555555555555",
+        "accepterRegion": "us-east-1",
+        "accepterRoleArn": {
+          "Fn::Join": [
+            "",
+            [
+              "arn:",
+              {
+                "Ref": "AWS::Partition",
+              },
+              ":iam::555555555555:role/AWSAccelerator-TgwPeering-Role",
+            ],
+          ],
+        },
+        "accepterTransitGatewayId": {
+          "Ref": "NetworkMainNetworkMain3AccepterTransitGatewayIdLookup9812C0E1",
+        },
+        "accepterTransitGatewayRouteTableId": {
+          "Ref": "NetworkMainNetworkMain3AccepterTransitGatewayRouteTableIdLookup9EC005E9",
+        },
+        "autoAccept": true,
+        "peeringTags": [
+          {
+            "Key": "Name",
+            "Value": "Network-Main-And-Network-Main3-Peering",
+          },
+          {
+            "Key": "CostCenter",
+            "Value": "TSD-LZA",
+          },
+          {
+            "Key": "Company",
+            "Value": "AWS",
+          },
+          {
+            "Key": "Organization",
+            "Value": "WWPS",
+          },
+          {
+            "Key": "Team",
+            "Value": "Development",
+          },
+        ],
+        "requesterAccountId": "555555555555",
+        "requesterRegion": "us-east-1",
+        "requesterTransitGatewayAttachmentId": {
+          "Fn::GetAtt": [
+            "NetworkMainNetworkMain3PeeringNetworkMain3ToNetworkMain286DF881",
+            "TransitGatewayAttachmentId",
+          ],
+        },
+        "requesterTransitGatewayId": {
+          "Ref": "SsmParameterValueacceleratornetworktransitGatewaysNetworkMainidC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+        "requesterTransitGatewayRouteTableId": {
+          "Ref": "SsmParameterValueacceleratornetworktransitGatewaysNetworkMainrouteTablesNetworkMainCoreidC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+        "uuid": "REPLACED-UUID",
+      },
+      "Type": "Custom::TransitGatewayAcceptPeering",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "NetworkMainNetworkMain3PeeringNetworkMain3ToNetworkMain286DF881": {
+      "Properties": {
+        "PeerAccountId": "555555555555",
+        "PeerRegion": "us-east-1",
+        "PeerTransitGatewayId": {
+          "Ref": "NetworkMainNetworkMain3AccepterTransitGatewayIdLookup9812C0E1",
+        },
+        "Tags": [
+          {
+            "Key": "Company",
+            "Value": "AWS",
+          },
+          {
+            "Key": "CostCenter",
+            "Value": "TSD-LZA",
+          },
+          {
+            "Key": "Name",
+            "Value": "Network-Main-And-Network-Main3-Peering",
+          },
+          {
+            "Key": "Organization",
+            "Value": "WWPS",
+          },
+          {
+            "Key": "Team",
+            "Value": "Development",
+          },
+        ],
+        "TransitGatewayId": {
+          "Ref": "SsmParameterValueacceleratornetworktransitGatewaysNetworkMainidC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+      },
+      "Type": "AWS::EC2::TransitGatewayPeeringAttachment",
+    },
     "NetworkNonTemplateIpamCentralVpc534B7BC1": {
       "DependsOn": [
         "DeleteDefaultVpc4DBAE36C",
@@ -5689,7 +6105,7 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
     },
     "SsmParamAcceleratorGwlbGwlbArn7CF5F889": {
       "DependsOn": [
-        "SsmParamAcceleratorGwlbGwlbServiceIdF93A23BF",
+        "SsmParamAcceleratorGwlbSecondaryGwlbServiceId3F04FE9A",
       ],
       "Properties": {
         "Name": "/accelerator/network/gwlb/Accelerator-GWLB/arn",
@@ -5701,6 +6117,9 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
       "Type": "AWS::SSM::Parameter",
     },
     "SsmParamAcceleratorGwlbGwlbServiceIdF93A23BF": {
+      "DependsOn": [
+        "SsmParamAcceleratorGwlbSecondaryGwlbServiceId3F04FE9A",
+      ],
       "Properties": {
         "Name": "/accelerator/network/gwlb/Accelerator-GWLB/endpointService/id",
         "Type": "String",
@@ -5712,7 +6131,7 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
     },
     "SsmParamAcceleratorGwlbSecondaryGwlbArn364EE96B": {
       "DependsOn": [
-        "SsmParamNetworkInspectionDataSecurityGroup1FD45226",
+        "SsmParamAcceleratorGwlbSecondaryGwlbServiceId3F04FE9A",
       ],
       "Properties": {
         "Name": "/accelerator/network/gwlb/Accelerator-GWLB-secondary/arn",
@@ -5724,9 +6143,6 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
       "Type": "AWS::SSM::Parameter",
     },
     "SsmParamAcceleratorGwlbSecondaryGwlbServiceId3F04FE9A": {
-      "DependsOn": [
-        "SsmParamNetworkInspectionDataSecurityGroup1FD45226",
-      ],
       "Properties": {
         "Name": "/accelerator/network/gwlb/Accelerator-GWLB-secondary/endpointService/id",
         "Type": "String",
@@ -5921,9 +6337,6 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
       "Type": "AWS::SSM::Parameter",
     },
     "SsmParamNetworkEndpointsManagementSecurityGroup157CDC67": {
-      "DependsOn": [
-        "SsmParamNetworkEndpointsNetworkEndpointsTransitGatewayAttachmentId2EBCB846",
-      ],
       "Properties": {
         "Name": "/accelerator/network/vpc/Network-Endpoints/securityGroup/Management/id",
         "Type": "String",
@@ -5997,7 +6410,7 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
     },
     "SsmParamNetworkEndpointsNetworkEndpointsCustomEndpointSgSecurityGroupE01E3A88": {
       "DependsOn": [
-        "SsmParamNetworkEndpointsNetworkEndpointsTransitGatewayAttachmentId2EBCB846",
+        "SsmParamNetworkEndpointsManagementSecurityGroup157CDC67",
       ],
       "Properties": {
         "Name": "/accelerator/network/vpc/Network-Endpoints/securityGroup/Network-Endpoints-CustomEndpointSg/id",
@@ -6069,7 +6482,7 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
     },
     "SsmParamNetworkEndpointsTestNaclNaclED9584AC": {
       "DependsOn": [
-        "SsmParamNetworkInspectionDataSecurityGroup1FD45226",
+        "SsmParamNetworkEndpointsManagementSecurityGroup157CDC67",
       ],
       "Properties": {
         "Name": "/accelerator/network/vpc/Network-Endpoints/networkAcl/TestNACL/id",
@@ -6140,6 +6553,9 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
       "Type": "AWS::SSM::Parameter",
     },
     "SsmParamNetworkInspectionDataSecurityGroup1FD45226": {
+      "DependsOn": [
+        "SsmParamNetworkEndpointsManagementSecurityGroup157CDC67",
+      ],
       "Properties": {
         "Name": "/accelerator/network/vpc/Network-Inspection/securityGroup/Data/id",
         "Type": "String",
@@ -6321,6 +6737,38 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
         "Type": "String",
         "Value": {
           "Ref": "NetworkInspectionVpcVirtualPrivateGatewayB665C776",
+        },
+      },
+      "Type": "AWS::SSM::Parameter",
+    },
+    "SsmParamNetworkMain3NetworkMainAndNetworkMain3PeeringPeeringAttachmentIdAC88B433": {
+      "DependsOn": [
+        "SsmParamNetworkEndpointsNetworkEndpointsTransitGatewayAttachmentId2EBCB846",
+      ],
+      "Properties": {
+        "Name": "/accelerator/network/transitGateways/Network-Main-3/peering/Network-Main-And-Network-Main3-Peering/id",
+        "Type": "String",
+        "Value": {
+          "Fn::GetAtt": [
+            "NetworkMainNetworkMain3PeeringNetworkMain3ToNetworkMain286DF881",
+            "TransitGatewayAttachmentId",
+          ],
+        },
+      },
+      "Type": "AWS::SSM::Parameter",
+    },
+    "SsmParamNetworkMainNetworkMainAndNetworkMain3PeeringPeeringAttachmentId695B808B": {
+      "DependsOn": [
+        "SsmParamNetworkEndpointsNetworkEndpointsTransitGatewayAttachmentId2EBCB846",
+      ],
+      "Properties": {
+        "Name": "/accelerator/network/transitGateways/Network-Main/peering/Network-Main-And-Network-Main3-Peering/id",
+        "Type": "String",
+        "Value": {
+          "Fn::GetAtt": [
+            "NetworkMainNetworkMain3PeeringNetworkMain3ToNetworkMain286DF881",
+            "TransitGatewayAttachmentId",
+          ],
         },
       },
       "Type": "AWS::SSM::Parameter",
@@ -6549,7 +6997,7 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
     },
     "SsmParamNetworkSecondaryTestNaclNacl0FC3F602": {
       "DependsOn": [
-        "SsmParamNetworkInspectionDataSecurityGroup1FD45226",
+        "SsmParamNetworkEndpointsManagementSecurityGroup157CDC67",
       ],
       "Properties": {
         "Name": "/accelerator/network/vpc/Network-Secondary/networkAcl/TestNacl/id",
@@ -7400,7 +7848,7 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
     },
     "appAalb01NetworkEndpointsssmF399A7CC": {
       "DependsOn": [
-        "SsmParamAcceleratorGwlbGwlbServiceIdF93A23BF",
+        "SsmParamAcceleratorGwlbSecondaryGwlbServiceId3F04FE9A",
       ],
       "Properties": {
         "Name": "/accelerator/network/vpc/Network-Endpoints/alb/appA-alb-01/id",
@@ -7462,9 +7910,6 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
       "Type": "AWS::ElasticLoadBalancingV2::LoadBalancer",
     },
     "appAnlb01NetworkEndpointsssm0DA0AE1E": {
-      "DependsOn": [
-        "SsmParamAcceleratorGwlbGwlbServiceIdF93A23BF",
-      ],
       "Properties": {
         "Name": "/accelerator/network/vpc/Network-Endpoints/nlb/appA-nlb-01/id",
         "Type": "String",
