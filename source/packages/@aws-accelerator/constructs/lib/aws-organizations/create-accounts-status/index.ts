@@ -70,7 +70,6 @@ export async function handler(
   });
   documentClient = DynamoDBDocumentClient.from(
     new DynamoDBClient({
-      region: globalRegion,
       customUserAgent: solutionId,
       retryStrategy: setRetryStrategy(),
     }),
