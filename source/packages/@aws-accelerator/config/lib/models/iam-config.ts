@@ -712,7 +712,7 @@ export interface IIdentityCenterAssignmentConfig {
  *            name: AcceleratorManagedPolicy
  *            path: /
  *          awsManagedPolicyName: PowerUserAccess
- *       sessionDuration: 60
+ *      sessionDuration: 60
  *  identityCenterAssignments:
  *   - name: Assignment1
  *     permissionSetName: PermissionSet1
