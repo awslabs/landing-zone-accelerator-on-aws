@@ -42,6 +42,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- chore: added yarn resolution for transitive dependencies
 - chore(documentation): add mkdocs preventative control section
 - chore(module): configure lza module foundation framework
 - chore(module): rename module parameter and dry run response

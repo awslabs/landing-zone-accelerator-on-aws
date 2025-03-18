@@ -70,5 +70,9 @@
     "reportPath": "coverage",
     "reportFile": "test-report.xml",
     "indent": 4
+  },
+  "resolutions": {
+    "cross-spawn": ">=7.0.5",
+    "@babel/helpers": ">=7.26.10"
   }
 }
