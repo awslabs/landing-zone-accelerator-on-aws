@@ -758,7 +758,7 @@ export class GlobalConfig implements i.IGlobalConfig {
     this.externalLandingZoneResources.accountsDeployedExternally = uniqueNonSuspendedAccounts;
   }
 
-  // Function to filter out suspended sccounts and non-ASEA created accounts
+  // Function to filter out suspended accounts and non-ASEA created accounts
   private async findUniqueNonSuspendedAccounts(
     accountsConfig: AccountsConfig,
     uniqueAccountsFromMapping: string[],
@@ -766,11 +766,17 @@ export class GlobalConfig implements i.IGlobalConfig {
     let uniqueNonSuspendedAccounts: string[] = [];
     let nonSuspendedAccounts: string[] = [];
     const accountIds = accountsConfig.accountIds;
+    const uniqueAccountsEmails: string[] = [
+      ...accountsConfig.workloadAccounts.map(({ email }) => email.toLowerCase()),
+      ...accountsConfig.mandatoryAccounts.map(({ email }) => email.toLowerCase()),
+    ];
+
     if (accountIds) {
-      // From Accounts Config, only get accounts which are ACTIVE (not suspended)
+      // From Accounts Config, only get accounts which are ACTIVE (not suspended) and defined in accounts-config.yaml
       nonSuspendedAccounts = accountIds
-        .filter(account => account.status === 'ACTIVE')
+        .filter(account => account.status === 'ACTIVE' && uniqueAccountsEmails.includes(account.email.toLowerCase()))
         .map(account => account.accountId);
+
       // Compare and make sure list is both in resource mapping and an active account in Accounts Config
       // This will also filter out accounts created by LZA natively and not ASEA
       uniqueNonSuspendedAccounts = nonSuspendedAccounts.filter(nonSuspendedAccount =>
