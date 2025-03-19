@@ -23,6 +23,7 @@ import {
   PutRetentionPolicyCommand,
   PutSubscriptionFilterCommand,
   SubscriptionFilter,
+  ValidationException,
 } from '@aws-sdk/client-cloudwatch-logs';
 import { setRetryStrategy } from '@aws-accelerator/utils/lib/common-functions';
 
@@ -122,13 +123,13 @@ export async function handler(event: SQSEvent) {
 export async function updateRetentionPolicy(logRetentionValue: string, logGroupValue: LogGroup) {
   // filter out logGroups that already have retention set
   if (logGroupValue.retentionInDays === parseInt(logRetentionValue)) {
-    console.log('Log Group: ' + logGroupValue.logGroupName! + ' has the right retention period');
+    console.info('Log Group: ' + logGroupValue.logGroupName! + ' has the right retention period');
   } else if (logGroupValue.logGroupName!.includes('aws-controltower')) {
-    console.log(
+    console.info(
       `Log Group: ${logGroupValue.logGroupName} retention cannot be changed as its enforced by AWS Control Tower`,
     );
   } else {
-    console.log(`Setting retention of ${logRetentionValue} for log group ${logGroupValue.logGroupName}`);
+    console.info(`Setting retention of ${logRetentionValue} for log group ${logGroupValue.logGroupName}`);
     await throttlingBackOff(() =>
       logsClient.send(
         new PutRetentionPolicyCommand({
@@ -156,7 +157,7 @@ export async function updateSubscriptionPolicy(
   logSubscriptionRoleArn: string,
 ) {
   if (subscriptionType === 'ACCOUNT') {
-    console.log(`Account level subscription is set, skipping subscription update.`);
+    console.info(`Account level subscription is set, skipping subscription update.`);
     return;
   }
   let isGroupExcluded = false;
@@ -239,7 +240,7 @@ export async function isLogGroupExcluded(logGroupName: string, logExclusionSetti
  * @param logGroupName {string} Name of the log group
  */
 export async function deleteSubscription(logGroupName: string) {
-  console.log(`Deleting subscription for log group ${logGroupName}`);
+  console.info(`Deleting subscription for log group ${logGroupName}`);
   try {
     await throttlingBackOff(() =>
       logsClient.send(new DeleteSubscriptionFilterCommand({ logGroupName: logGroupName, filterName: logGroupName })),
@@ -260,18 +261,28 @@ export async function setupSubscription(
   logDestinationArn: string,
   logSubscriptionRoleArn: string,
 ) {
-  console.log(`Setting destination ${logDestinationArn} for log group ${logGroupName}`);
-  await throttlingBackOff(() =>
-    logsClient.send(
-      new PutSubscriptionFilterCommand({
-        destinationArn: logDestinationArn,
-        logGroupName: logGroupName,
-        roleArn: logSubscriptionRoleArn,
-        filterName: logGroupName,
-        filterPattern: '',
-      }),
-    ),
-  );
+  console.info(`Setting destination ${logDestinationArn} for log group ${logGroupName}`);
+  try {
+    await throttlingBackOff(() =>
+      logsClient.send(
+        new PutSubscriptionFilterCommand({
+          destinationArn: logDestinationArn,
+          logGroupName: logGroupName,
+          roleArn: logSubscriptionRoleArn,
+          filterName: logGroupName,
+          filterPattern: '',
+        }),
+      ),
+    );
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  } catch (error: any) {
+    // validation error for log groups that have infrequent access cannot have subscriptions
+    if (error instanceof ValidationException) {
+      console.warn(`Log group ${logGroupName} unable to apply subscription ${error.message}`);
+    } else {
+      throw new Error(error.message);
+    }
+  }
 }
 
 /**
@@ -283,18 +294,18 @@ export async function updateKmsKey(logGroupValue: LogGroup, logKmsKeyArn?: strin
   // check kmsKey on existing logGroup.
   if (logGroupValue.kmsKeyId) {
     // if there is a KMS do nothing
-    console.log('Log Group: ' + logGroupValue.logGroupName! + ' has kms set');
+    console.info('Log Group: ' + logGroupValue.logGroupName! + ' has kms set');
     return;
   }
   if (!logKmsKeyArn) {
     // when no Kms Key arn provided
-    console.log(
+    console.info(
       `Accelerator KMK key ${logKmsKeyArn} not provided for Log Group ${logGroupValue.logGroupName!}, log group encryption not performed`,
     );
     return;
   }
   // there is no KMS set one
-  console.log(`Setting KMS for log group ${logGroupValue.logGroupName}`);
+  console.info(`Setting KMS for log group ${logGroupValue.logGroupName}`);
   await throttlingBackOff(() =>
     logsClient.send(
       new AssociateKmsKeyCommand({

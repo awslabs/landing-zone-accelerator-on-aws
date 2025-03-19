@@ -190,7 +190,7 @@ describe('update-subscription-policy lambda handler', () => {
     cloudWatchLogsMock.on(PutRetentionPolicyCommand).resolves({});
     cloudWatchLogsMock.on(AssociateKmsKeyCommand).resolves({});
 
-    const consoleSpy = jest.spyOn(console, 'log');
+    const consoleSpy = jest.spyOn(console, 'info');
 
     const response = await handler(event);
 
@@ -228,7 +228,7 @@ describe('update-subscription-policy lambda handler', () => {
     cloudWatchLogsMock.on(PutRetentionPolicyCommand).resolves({});
     cloudWatchLogsMock.on(AssociateKmsKeyCommand).resolves({});
 
-    const consoleSpy = jest.spyOn(console, 'log');
+    const consoleSpy = jest.spyOn(console, 'info');
 
     const response = await handler(event);
 
@@ -256,7 +256,7 @@ describe('update-subscription-policy lambda handler', () => {
     });
     cloudWatchLogsMock.on(PutAccountPolicyCommand).resolves({});
 
-    const consoleSpy = jest.spyOn(console, 'log');
+    const consoleSpy = jest.spyOn(console, 'info');
 
     const response = await handler(event);
 
@@ -319,7 +319,7 @@ describe('update-subscription-policy lambda handler', () => {
     cloudWatchLogsMock.on(DeleteAccountPolicyCommand).resolves({});
     cloudWatchLogsMock.on(PutAccountPolicyCommand).resolves({});
 
-    const consoleSpy = jest.spyOn(console, 'log');
+    const consoleSpy = jest.spyOn(console, 'info');
 
     const response = await handler(event);
 
@@ -359,7 +359,7 @@ describe('update-subscription-policy lambda handler', () => {
     cloudWatchLogsMock.on(PutRetentionPolicyCommand).resolves({});
     cloudWatchLogsMock.on(AssociateKmsKeyCommand).resolves({});
 
-    const consoleSpy = jest.spyOn(console, 'log');
+    const consoleSpy = jest.spyOn(console, 'info');
 
     const response = await handler(event);
 
@@ -398,7 +398,7 @@ describe('update-subscription-policy lambda handler', () => {
     cloudWatchLogsMock.on(PutRetentionPolicyCommand).resolves({});
     cloudWatchLogsMock.on(AssociateKmsKeyCommand).resolves({});
 
-    const consoleSpy = jest.spyOn(console, 'log');
+    const consoleSpy = jest.spyOn(console, 'info');
 
     const response = await handler(event);
 

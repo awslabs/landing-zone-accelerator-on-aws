@@ -27,6 +27,8 @@ import {
   Scope,
   PutAccountPolicyCommand,
   DeleteAccountPolicyCommand,
+  LogGroupClass,
+  ValidationException,
 } from '@aws-sdk/client-cloudwatch-logs';
 
 import { setRetryStrategy, wildcardMatch } from '@aws-accelerator/utils/lib/common-functions';
@@ -112,7 +114,7 @@ export async function handler(event: CloudFormationCustomResourceEvent): Promise
         subscriptionType === 'ACCOUNT' &&
         event.OldResourceProperties['subscriptionType'] === 'LOG_GROUP'
       ) {
-        console.log(
+        console.info(
           `Subscription type changing from ${event.OldResourceProperties['subscriptionType']} to ${subscriptionType}. Will remove log group subscriptions`,
         );
         await deleteAllLogGroupSubscriptions(acceleratorCreatedLogDestinationArn);
@@ -121,7 +123,7 @@ export async function handler(event: CloudFormationCustomResourceEvent): Promise
         subscriptionType === 'LOG_GROUP' &&
         event.OldResourceProperties['subscriptionType'] === 'ACCOUNT'
       ) {
-        console.log(
+        console.info(
           `Subscription type changing from ${event.OldResourceProperties['subscriptionType']} to ${subscriptionType}. Will remove account subscriptions`,
         );
         const existingPolicies = await getExistingSubscriptionPolicies(logsClient);
@@ -195,12 +197,14 @@ async function manageLogGroups(
   } else if (subscription.subscriptionType === 'LOG_GROUP') {
     // Process subscription only for included log groups
     for (const includedLogGroup of logGroups.includedLogGroups) {
-      await manageLogSubscriptions(
-        includedLogGroup.logGroupName!,
-        subscription.acceleratorCreatedLogDestinationArn,
-        subscription.acceleratorLogSubscriptionRoleArn,
-        subscription.replaceLogDestinationArn,
-      );
+      if (includedLogGroup.logGroupClass !== LogGroupClass.INFREQUENT_ACCESS) {
+        await manageLogSubscriptions(
+          includedLogGroup.logGroupName!,
+          subscription.acceleratorCreatedLogDestinationArn,
+          subscription.acceleratorLogSubscriptionRoleArn,
+          subscription.replaceLogDestinationArn,
+        );
+      }
     }
   }
 }
@@ -241,7 +245,7 @@ async function createAccountSubscription(
   }
 
   if (isPolicyExists) {
-    console.log(
+    console.info(
       `Existing policy ${existingPolicies[0]
         .policyName!} found, and override existing flag is set to true, policy will be overwritten.`,
     );
@@ -254,7 +258,7 @@ async function createAccountSubscription(
       ),
     );
   } else {
-    console.log(`No existing policy found, policy ${policyName} will be created.`);
+    console.info(`No existing policy found, policy ${policyName} will be created.`);
   }
   const policyDocument = {
     DestinationArn: replaceLogDestinationArn ?? acceleratorCreatedLogDestinationArn,
@@ -301,7 +305,9 @@ async function getLogGroups(
         allLogGroups.push(logGroup);
 
         if (subscriptionType === 'LOG_GROUP' && isLogGroupExcluded(logGroup.logGroupName!, logExclusionSetting)) {
-          await deleteSubscription(logGroup.logGroupName!, acceleratorCreatedLogDestinationArn);
+          if (logGroup.logGroupClass !== LogGroupClass.INFREQUENT_ACCESS) {
+            await deleteSubscription(logGroup.logGroupName!, acceleratorCreatedLogDestinationArn);
+          }
         } else {
           includedLogGroups.push(logGroup);
         }
@@ -328,7 +334,9 @@ async function deleteAllLogGroupSubscriptions(acceleratorCreatedLogDestinationAr
   do {
     const page = await throttlingBackOff(() => logsClient.send(new DescribeLogGroupsCommand({ nextToken })));
     for (const logGroup of page.logGroups ?? []) {
-      await deleteSubscription(logGroup.logGroupName!, acceleratorCreatedLogDestinationArn);
+      if (logGroup.logGroupClass !== LogGroupClass.INFREQUENT_ACCESS) {
+        await deleteSubscription(logGroup.logGroupName!, acceleratorCreatedLogDestinationArn);
+      }
     }
     nextToken = page.nextToken;
   } while (nextToken);
@@ -373,9 +381,18 @@ async function manageLogSubscriptions(
 ): Promise<void> {
   let nextToken: string | undefined = undefined;
   do {
-    const page: DescribeSubscriptionFiltersCommandOutput = await throttlingBackOff(() =>
-      logsClient.send(new DescribeSubscriptionFiltersCommand({ logGroupName: logGroupName, nextToken })),
-    );
+    let page: DescribeSubscriptionFiltersCommandOutput | undefined = undefined;
+    try {
+      page = await throttlingBackOff(() =>
+        logsClient.send(new DescribeSubscriptionFiltersCommand({ logGroupName: logGroupName, nextToken })),
+      );
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (error: any) {
+      if (error instanceof ValidationException) {
+        console.warn(`Error while getting subscription filters for log group ${logGroupName}: ${error.message}`);
+      }
+      throw new Error(error.message);
+    }
 
     if (page.subscriptionFilters) {
       const subscriptionFilters = page.subscriptionFilters;
@@ -422,17 +439,26 @@ async function updateLogSubscription(
   }
 
   if (numberOfSubscriptions <= 1 && !acceleratorCreatedSubscriptFilter) {
-    await throttlingBackOff(() =>
-      logsClient.send(
-        new PutSubscriptionFilterCommand({
-          destinationArn: acceleratorCreatedLogDestinationArn,
-          logGroupName: logGroupName,
-          roleArn: acceleratorLogSubscriptionRoleArn,
-          filterName: logGroupName,
-          filterPattern: '',
-        }),
-      ),
-    );
+    try {
+      await throttlingBackOff(() =>
+        logsClient.send(
+          new PutSubscriptionFilterCommand({
+            destinationArn: acceleratorCreatedLogDestinationArn,
+            logGroupName: logGroupName,
+            roleArn: acceleratorLogSubscriptionRoleArn,
+            filterName: logGroupName,
+            filterPattern: '',
+          }),
+        ),
+      );
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (error: any) {
+      if (error instanceof ValidationException) {
+        console.warn(`Log group ${logGroupName} unable to apply subscription ${error.message}`);
+      } else {
+        throw new Error(error.message);
+      }
+    }
   }
 
   if (numberOfSubscriptions === 2 && !acceleratorCreatedSubscriptFilter) {
@@ -458,7 +484,7 @@ async function removeReplaceDestination(
   );
 
   if (replaceLogDestinationFilter) {
-    console.log(
+    console.info(
       `Removing subscription filter for ${logGroupName} log group, current destination arn is ${replaceLogDestinationFilter.destinationArn}`,
     );
 
@@ -513,7 +539,7 @@ async function deleteSubscription(logGroupName: string, acceleratorCreatedLogDes
         subscriptionFilter.filterName === logGroupName &&
         subscriptionFilter.destinationArn === acceleratorCreatedLogDestinationArn
       ) {
-        console.log(
+        console.info(
           `Removing subscription filter for ${logGroupName} log group, current destination arn is ${subscriptionFilter.destinationArn}`,
         );
 

@@ -449,8 +449,9 @@ describe('isLogGroupExcluded', () => {
   });
 });
 
-// Mock console.warn
+// Mock console.warn console.info
 const consoleWarnMock = jest.spyOn(console, 'warn').mockImplementation();
+const consoleInfoMock = jest.spyOn(console, 'info').mockImplementation();
 
 describe('deleteSubscription', () => {
   beforeEach(() => {
@@ -748,7 +749,7 @@ describe('updateKmsKey', () => {
 
     await updateKmsKey(logGroup, undefined);
 
-    expect(consoleSpy).toHaveBeenCalledWith(
+    expect(consoleInfoMock).toHaveBeenCalledWith(
       'Accelerator KMK key undefined not provided for Log Group /aws/lambda/my-function, log group encryption not performed',
     );
     consoleSpy.mockRestore();
@@ -763,7 +764,7 @@ describe('updateKmsKey', () => {
 
     await updateKmsKey(logGroup, 'new-key-arn');
 
-    expect(consoleSpy).toHaveBeenCalledWith('Log Group: /aws/lambda/my-function has kms set');
+    expect(consoleInfoMock).toHaveBeenCalledWith('Log Group: /aws/lambda/my-function has kms set');
     consoleSpy.mockRestore();
   });
 
@@ -800,7 +801,7 @@ describe('updateKmsKey', () => {
 
     await updateKmsKey(logGroup, kmsKeyArn);
 
-    expect(consoleSpy).toHaveBeenCalledWith('Setting KMS for log group /aws/lambda/my-function');
+    expect(consoleInfoMock).toHaveBeenCalledWith('Setting KMS for log group /aws/lambda/my-function');
     consoleSpy.mockRestore();
   });
 
