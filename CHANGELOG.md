@@ -38,6 +38,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - fix(config): create service linked role for config, removed custom created role
 - fix(networking): only create resolver query logs in accounts and regions defined in configuration
 - fix(accelerator-metadata): fixed environment variables for metadata lambda
+- fix(documentation): removed the versioned typedocs linked in the mkdocs
 - fix(networking): fixed transit gateway peering attachment static route for same account and region
 
 ### Changed
