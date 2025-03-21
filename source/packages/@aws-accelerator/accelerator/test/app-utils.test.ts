@@ -12,7 +12,9 @@
  */
 
 import { AccountsConfig, OrganizationConfig } from '@aws-accelerator/config';
-import AWS from 'aws-sdk';
+import { mockClient } from 'aws-sdk-client-mock';
+import { EC2Client, DescribeVpcsCommand, DescribeVpcEndpointsCommand } from '@aws-sdk/client-ec2';
+import { STSClient, AssumeRoleCommand } from '@aws-sdk/client-sts';
 import {
   AcceleratorResourcePrefixes,
   getContext,
@@ -188,53 +190,50 @@ describe('test setAcceleratorStackProps', () => {
         ) => Promise<void>
       >()
       .mockResolvedValue();
+
     OrganizationConfig.prototype.loadOrganizationalUnitIds = jest
       .fn<(partition: string) => Promise<void>>()
       .mockResolvedValue();
 
-    // mock STS AssumeRole
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const mockAssumeRole = jest.fn<() => { promise: any }>();
-    (AWS.STS.prototype.assumeRole as jest.Mock) = mockAssumeRole.mockReturnValue({
-      promise: jest
-        .fn<() => Promise<{ Credentials: { AccessKeyId: string; SecretAccessKey: string; SessionToken: string } }>>()
-        .mockResolvedValue({
-          Credentials: {
-            AccessKeyId: 'fake-cred',
-            SecretAccessKey: 'fake-cred',
-            SessionToken: 'fake-cred',
-          },
-        }),
-    });
-    // Mock EC2 describeVpcs method
-    const mockDescribeVpcs = jest.fn<() => { promise: unknown }>();
-    (AWS.EC2.prototype.describeVpcs as jest.Mock) = mockDescribeVpcs.mockReturnValue({
-      promise: jest
-        .fn<() => Promise<{ Vpcs: { VpcId: string }[] }>>()
-        .mockResolvedValueOnce({
-          Vpcs: [{ VpcId: 'fake-vpc-id-1' }],
-        })
-        .mockResolvedValueOnce({
-          Vpcs: [{ VpcId: 'fake-vpc-id-2' }],
-        })
-        .mockResolvedValueOnce({
-          Vpcs: [{ VpcId: 'fake-vpc-id-3' }],
-        })
-        .mockResolvedValueOnce({
-          Vpcs: [{ VpcId: 'fake-vpc-id-4' }],
-        }),
+    // Mock STS Client
+    const stsMock = mockClient(STSClient);
+    stsMock.on(AssumeRoleCommand).resolves({
+      Credentials: {
+        AccessKeyId: 'fake-cred',
+        SecretAccessKey: 'fake-cred',
+        SessionToken: 'fake-cred',
+        Expiration: new Date(),
+      },
     });
 
-    // Mock EC2 describeVpcEndpoints method
-    const mockDescribeVpcEndpoints = jest.fn<() => { promise: unknown }>();
-    (AWS.EC2.prototype.describeVpcEndpoints as jest.Mock) = mockDescribeVpcEndpoints.mockReturnValue({
-      promise: jest
-        .fn<() => Promise<{ VpcEndpoints: { VpcEndpointId: string }[] }>>()
-        .mockResolvedValueOnce({
-          VpcEndpoints: [{ VpcEndpointId: 'fake-vpce-id-1' }],
-        })
-        .mockResolvedValueOnce({ VpcEndpoints: [{ VpcEndpointId: 'fake-vpce-id-2' }] }),
-    });
+    // Mock EC2 Client
+    const ec2Mock = mockClient(EC2Client);
+
+    // Mock DescribeVpcs responses
+    ec2Mock
+      .on(DescribeVpcsCommand)
+      .resolvesOnce({
+        Vpcs: [{ VpcId: 'fake-vpc-id-1' }],
+      })
+      .resolvesOnce({
+        Vpcs: [{ VpcId: 'fake-vpc-id-2' }],
+      })
+      .resolvesOnce({
+        Vpcs: [{ VpcId: 'fake-vpc-id-3' }],
+      })
+      .resolvesOnce({
+        Vpcs: [{ VpcId: 'fake-vpc-id-4' }],
+      });
+
+    // Mock DescribeVpcEndpoints responses
+    ec2Mock
+      .on(DescribeVpcEndpointsCommand)
+      .resolvesOnce({
+        VpcEndpoints: [{ VpcEndpointId: 'fake-vpce-id-1' }],
+      })
+      .resolvesOnce({
+        VpcEndpoints: [{ VpcEndpointId: 'fake-vpce-id-2' }],
+      });
 
     const accelerator = require('../lib/accelerator.ts');
     accelerator.getCentralLogBucketKmsKeyArn = jest.fn().mockReturnValue(Promise.resolve('fake-kms-arn'));

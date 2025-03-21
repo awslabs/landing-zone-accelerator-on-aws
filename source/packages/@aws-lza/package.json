@@ -26,9 +26,9 @@
     "lza": "bin/lza"
   },
   "dependencies": {
-    "@aws-sdk/client-controltower":"3.637.0",
+    "@aws-sdk/client-controltower": "3.637.0",
     "@aws-sdk/client-iam": "3.637.0",
-    "@aws-sdk/client-sso-admin":"3.637.0",
+    "@aws-sdk/client-sso-admin": "3.637.0",
     "@aws-sdk/client-kms": "3.637.0",
     "@aws-sdk/client-ssm": "3.637.0",
     "@aws-sdk/client-organizations": "3.638.0",
@@ -42,7 +42,7 @@
      "yargs": "17.7.1"
   },
   "devDependencies": {
-    "aws-sdk-client-mock":"3.0.1",
+    "aws-sdk-client-mock": "3.0.1",
     "@types/fs-extra": "11.0.1",
     "@types/jest": "29.5.12",
     "@types/node": "18.14.0",
