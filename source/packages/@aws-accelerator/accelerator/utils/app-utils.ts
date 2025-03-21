@@ -40,8 +40,9 @@ import {
 } from '@aws-accelerator/utils/lib/policy-replacements';
 import { createLogger } from '@aws-accelerator/utils/lib/logger';
 import { throttlingBackOff } from '@aws-accelerator/utils/lib/throttle';
-import AWS from 'aws-sdk';
 import { PutObjectCommand, S3Client } from '@aws-sdk/client-s3';
+import { DescribeVpcEndpointsCommand, DescribeVpcsCommand, EC2Client } from '@aws-sdk/client-ec2';
+import { AssumeRoleCommand, STSClient } from '@aws-sdk/client-sts';
 const logger = createLogger(['app-utils']);
 export interface AcceleratorContext {
   /**
@@ -673,7 +674,7 @@ async function loadVpcIds(
  * @returns
  */
 async function getVpcIdsByAccount(
-  ec2Clients: AWS.EC2[],
+  ec2Clients: EC2Client[],
   managedVpcOnly?: boolean,
   managedVpcNames?: Set<string>,
 ): Promise<string[]> {
@@ -688,7 +689,7 @@ async function getVpcIdsByAccount(
         params.NextToken = nextToken;
       }
 
-      const response = await throttlingBackOff(() => ec2Client.describeVpcs(params).promise());
+      const response = await throttlingBackOff(() => ec2Client.send(new DescribeVpcsCommand(params)));
       if (response.Vpcs) {
         let vpcList = response.Vpcs.filter(vpc => vpc.VpcId);
         if (managedVpcOnly) {
@@ -711,7 +712,7 @@ async function getVpcIdsByAccount(
  * @param managedVpcNames
  * @returns
  */
-async function getVpcEndpointIdsByAccount(ec2Clients: AWS.EC2[]): Promise<string[]> {
+async function getVpcEndpointIdsByAccount(ec2Clients: EC2Client[]): Promise<string[]> {
   const vpceIds: string[] = [];
 
   for (const ec2Client of ec2Clients) {
@@ -723,7 +724,7 @@ async function getVpcEndpointIdsByAccount(ec2Clients: AWS.EC2[]): Promise<string
         params.NextToken = nextToken;
       }
 
-      const response = await throttlingBackOff(() => ec2Client.describeVpcEndpoints(params).promise());
+      const response = await throttlingBackOff(() => ec2Client.send(new DescribeVpcEndpointsCommand(params)));
       if (response.VpcEndpoints) {
         response.VpcEndpoints.filter(vpce => vpce.VpcEndpointId).forEach(vpce => vpceIds.push(vpce.VpcEndpointId!));
       }
@@ -908,24 +909,23 @@ async function getEc2ClientsByAccountAndRegions(
   regions: string[],
   managementAccountAccessRole: string,
 ) {
-  const stsClient = new AWS.STS({ region: process.env['AWS_REGION'] });
+  const stsClient = new STSClient({ region: process.env['AWS_REGION'] });
   const cred = await throttlingBackOff(() =>
-    stsClient
-      .assumeRole({
+    stsClient.send(
+      new AssumeRoleCommand({
         RoleArn: `arn:${partition}:iam::${accountId}:role/${managementAccountAccessRole}`,
         RoleSessionName: 'cdk-build-time',
-      })
-      .promise(),
+      }),
+    ),
   );
-
-  const ec2Clients: AWS.EC2[] = [];
+  const ec2Clients: EC2Client[] = [];
   regions.forEach(region =>
     ec2Clients.push(
-      new AWS.EC2({
+      new EC2Client({
         region: region,
         credentials: {
-          accessKeyId: cred.Credentials!.AccessKeyId,
-          secretAccessKey: cred.Credentials!.SecretAccessKey,
+          accessKeyId: cred.Credentials!.AccessKeyId!,
+          secretAccessKey: cred.Credentials!.SecretAccessKey!,
           sessionToken: cred.Credentials!.SessionToken,
         },
       }),

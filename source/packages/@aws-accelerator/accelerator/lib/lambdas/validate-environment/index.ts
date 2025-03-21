@@ -11,7 +11,6 @@
  *  and limitations under the License.
  */
 
-import * as AWS from 'aws-sdk';
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
 import {
   DynamoDBDocumentClient,
@@ -24,9 +23,22 @@ import {
 } from '@aws-sdk/lib-dynamodb';
 import { CloudFormationClient, DescribeStacksCommand } from '@aws-sdk/client-cloudformation';
 import { SSMClient, GetParameterCommand } from '@aws-sdk/client-ssm';
+import { SearchProvisionedProductsCommand, ServiceCatalogClient } from '@aws-sdk/client-service-catalog';
+import {
+  Account,
+  ListAccountsForParentCommand,
+  ListChildrenCommand,
+  ListOrganizationalUnitsForParentCommand,
+  ListParentsCommand,
+  ListPoliciesCommand,
+  ListPoliciesForTargetCommand,
+  ListRootsCommand,
+  ListTagsForResourceCommand,
+  OrganizationsClient,
+} from '@aws-sdk/client-organizations';
 import { throttlingBackOff } from '@aws-accelerator/utils/lib/throttle';
 import { CloudFormationCustomResourceEvent } from '@aws-accelerator/utils/lib/common-types';
-import { getGlobalRegion } from '@aws-accelerator/utils/lib/common-functions';
+import { getGlobalRegion, setRetryStrategy } from '@aws-accelerator/utils/lib/common-functions';
 
 type scpTargetType = 'ou' | 'account';
 
@@ -55,10 +67,10 @@ const translateConfig = { marshallOptions, unmarshallOptions };
 let paginationConfig: DynamoDBDocumentPaginationConfiguration;
 let dynamodbClient: DynamoDBClient;
 let documentClient: DynamoDBDocumentClient;
-let serviceCatalogClient: AWS.ServiceCatalog;
+let serviceCatalogClient: ServiceCatalogClient;
 let cloudformationClient: CloudFormationClient;
 let ssmClient: SSMClient;
-let organizationsClient: AWS.Organizations;
+let organizationsClient: OrganizationsClient;
 
 type AccountToAdd = {
   name: string;
@@ -91,7 +103,7 @@ const ctAccountsToAdd: DDBItems = [];
 const orgAccountsToAdd: DDBItems = [];
 let mandatoryAccounts: DDBItems = [];
 let workloadAccounts: DDBItems = [];
-let organizationAccounts: AWS.Organizations.Account[] = [];
+let organizationAccounts: Account[] = [];
 let configAllOuKeys: ConfigOrganizationalUnitKeys[] = [];
 let configActiveOuKeys: ConfigOrganizationalUnitKeys[] = [];
 let configIgnoredOuKeys: ConfigOrganizationalUnitKeys[] = [];
@@ -128,13 +140,17 @@ export async function handler(event: CloudFormationCustomResourceEvent): Promise
   const solutionId = process.env['SOLUTION_ID'];
   dynamodbClient = new DynamoDBClient({ customUserAgent: solutionId });
   documentClient = DynamoDBDocumentClient.from(dynamodbClient, translateConfig);
-  serviceCatalogClient = new AWS.ServiceCatalog({ customUserAgent: solutionId });
+  serviceCatalogClient = new ServiceCatalogClient({
+    customUserAgent: solutionId,
+    retryStrategy: setRetryStrategy(),
+  });
   cloudformationClient = new CloudFormationClient({ customUserAgent: solutionId });
   const globalRegion = getGlobalRegion(partition);
   // Move to setOrganizationsClient method after refactoring to SDK v3
-  organizationsClient = new AWS.Organizations({
-    customUserAgent: solutionId,
+  organizationsClient = new OrganizationsClient({
     region: globalRegion,
+    customUserAgent: solutionId,
+    retryStrategy: setRetryStrategy(),
   });
 
   ssmClient = new SSMClient({});
@@ -333,7 +349,7 @@ export async function handler(event: CloudFormationCustomResourceEvent): Promise
  * @param serviceControlPolicies
  */
 async function validateServiceControlPolicyCount(
-  organizationsClient: AWS.Organizations,
+  organizationsClient: OrganizationsClient,
   serviceControlPolicies: serviceControlPolicyType[],
 
   policyTagKey: string,
@@ -344,15 +360,14 @@ async function validateServiceControlPolicyCount(
       const existingAttachedScps: string[] = [];
       if (processedTargets.indexOf(target.name) === -1) {
         const response = await throttlingBackOff(() =>
-          organizationsClient
-            .listPoliciesForTarget({
+          organizationsClient.send(
+            new ListPoliciesForTargetCommand({
               Filter: 'SERVICE_CONTROL_POLICY',
               TargetId: target.id,
               MaxResults: 10,
-            })
-            .promise(),
+            }),
+          ),
         );
-
         if (response.Policies && response.Policies.length > 0) {
           response.Policies.forEach(item => existingAttachedScps.push(item.Name!));
         }
@@ -426,12 +441,12 @@ async function getTotalScps(
     let nextToken: string | undefined = undefined;
     do {
       const page = await throttlingBackOff(() =>
-        organizationsClient
-          .listPolicies({
+        organizationsClient.send(
+          new ListPoliciesCommand({
             Filter: 'SERVICE_CONTROL_POLICY',
             NextToken: nextToken,
-          })
-          .promise(),
+          }),
+        ),
       );
       for (const policy of page.Policies ?? []) {
         if (policy.Name === existingScp) {
@@ -484,12 +499,12 @@ async function isLzaManagedPolicy(policyId: string, policyTagKey: string): Promi
   let nextToken: string | undefined = undefined;
   do {
     const page = await throttlingBackOff(() =>
-      organizationsClient
-        .listTagsForResource({
+      organizationsClient.send(
+        new ListTagsForResourceCommand({
           ResourceId: policyId,
           NextToken: nextToken,
-        })
-        .promise(),
+        }),
+      ),
     );
     for (const tag of page.Tags ?? []) {
       if (tag.Key === policyTagKey && tag.Value === 'Yes') {
@@ -625,8 +640,8 @@ async function getControlTowerProvisionedProductStatus(
   accountId: string,
 ): Promise<provisionedProductStatus | undefined> {
   const provisionedProduct = await throttlingBackOff(() =>
-    serviceCatalogClient
-      .searchProvisionedProducts({
+    serviceCatalogClient.send(
+      new SearchProvisionedProductsCommand({
         Filters: {
           SearchQuery: [`physicalId: ${accountId}`],
         },
@@ -634,8 +649,8 @@ async function getControlTowerProvisionedProductStatus(
           Key: 'Account',
           Value: 'self',
         },
-      })
-      .promise(),
+      }),
+    ),
   );
 
   if (provisionedProduct === undefined || provisionedProduct.ProvisionedProducts === undefined) {
@@ -651,10 +666,8 @@ async function getControlTowerProvisionedProductStatus(
   return undefined;
 }
 
-async function getOrganizationAccounts(
-  organizationalUnitKeys: ConfigOrganizationalUnitKeys[],
-): Promise<AWS.Organizations.Account[]> {
-  const organizationAccounts: AWS.Organizations.Account[] = [];
+async function getOrganizationAccounts(organizationalUnitKeys: ConfigOrganizationalUnitKeys[]): Promise<Account[]> {
+  const organizationAccounts: Account[] = [];
   for (const ouKey of organizationalUnitKeys) {
     if (!ouKey.awsKey) {
       validationErrors.push(`Organizational Unit "${ouKey.acceleratorKey}" not found.`);
@@ -663,7 +676,7 @@ async function getOrganizationAccounts(
     let nextToken: string | undefined = undefined;
     do {
       const page = await throttlingBackOff(() =>
-        organizationsClient.listAccountsForParent({ ParentId: ouKey.awsKey, NextToken: nextToken }).promise(),
+        organizationsClient.send(new ListAccountsForParentCommand({ ParentId: ouKey.awsKey, NextToken: nextToken })),
       );
       for (const account of page.Accounts ?? []) {
         organizationAccounts.push(account);
@@ -812,7 +825,9 @@ async function validateAccountsInOu(
     }
     do {
       const page = await throttlingBackOff(() =>
-        organizationsClient.listChildren({ ChildType: 'ACCOUNT', ParentId: ou.awsKey, NextToken: nextToken }).promise(),
+        organizationsClient.send(
+          new ListChildrenCommand({ ChildType: 'ACCOUNT', ParentId: ou.awsKey, NextToken: nextToken }),
+        ),
       );
       for (const child of page.Children ?? []) {
         const account = accountKeys.find(item => item.awsKey === child.Id);
@@ -876,7 +891,7 @@ async function getConfigOuKeys(configTableName: string, commitId: string): Promi
 
 async function isGuardRailAttachedToOu(ouId: string): Promise<boolean> {
   const response = await throttlingBackOff(() =>
-    organizationsClient.listPoliciesForTarget({ TargetId: ouId, Filter: 'SERVICE_CONTROL_POLICY' }).promise(),
+    organizationsClient.send(new ListPoliciesForTargetCommand({ TargetId: ouId, Filter: 'SERVICE_CONTROL_POLICY' })),
   );
   for (const policy of response.Policies ?? []) {
     if (policy.Name?.startsWith('aws-guardrails-') && policy.AwsManaged === false) {
@@ -924,7 +939,9 @@ async function validateAllAwsAccountsInConfig(): Promise<string[]> {
       continue;
     }
     //check if ou is ignored
-    const response = await throttlingBackOff(() => organizationsClient.listParents({ ChildId: account.Id! }).promise());
+    const response = await throttlingBackOff(() =>
+      organizationsClient.send(new ListParentsCommand({ ChildId: account.Id! })),
+    );
     if (!configIgnoredOuKeys.find(item => item.awsKey === response.Parents![0].Id)) {
       errors.push(
         `Account with Id ${account.Id} and email ${account.Email} is not in the accounts configuration and is not a member of an ignored OU.`,
@@ -938,7 +955,7 @@ async function getAwsOrganizationalUnitKeys(ouId: string, path: string) {
   let nextToken: string | undefined = undefined;
   do {
     const page = await throttlingBackOff(() =>
-      organizationsClient.listOrganizationalUnitsForParent({ ParentId: ouId, NextToken: nextToken }).promise(),
+      organizationsClient.send(new ListOrganizationalUnitsForParentCommand({ ParentId: ouId, NextToken: nextToken })),
     );
     for (const ou of page.OrganizationalUnits ?? []) {
       awsOuKeys.push({ acceleratorKey: `${path}${ou.Name!}`, awsKey: ou.Id! });
@@ -953,7 +970,9 @@ async function getRootId(): Promise<string> {
   let rootId = '';
   let nextToken: string | undefined = undefined;
   do {
-    const page = await throttlingBackOff(() => organizationsClient.listRoots({ NextToken: nextToken }).promise());
+    const page = await throttlingBackOff(() =>
+      organizationsClient.send(new ListRootsCommand({ NextToken: nextToken })),
+    );
     for (const item of page.Roots ?? []) {
       if (item.Name === 'Root' && item.Id && item.Arn) {
         rootId = item.Id;
