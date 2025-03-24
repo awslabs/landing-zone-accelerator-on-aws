@@ -11,13 +11,22 @@
  *  and limitations under the License.
  */
 
-import * as AWS from 'aws-sdk';
-
 import { throttlingBackOff } from '@aws-accelerator/utils/lib/throttle';
 import { CloudFormationCustomResourceEvent, Context } from '@aws-accelerator/utils/lib/common-types';
-import { getGlobalRegion } from '@aws-accelerator/utils/lib/common-functions';
-
-AWS.config.logger = console;
+import { getGlobalRegion, setRetryStrategy } from '@aws-accelerator/utils/lib/common-functions';
+import {
+  AdditionalArtifact,
+  AWSRegion,
+  CompressionFormat,
+  CostAndUsageReportServiceClient,
+  DeleteReportDefinitionCommand,
+  ModifyReportDefinitionCommand,
+  PutReportDefinitionCommand,
+  ReportFormat,
+  ReportVersioning,
+  SchemaElement,
+  TimeUnit,
+} from '@aws-sdk/client-cost-and-usage-report-service';
 
 /**
  * cross-region-report-definition - lambda handler
@@ -38,16 +47,16 @@ export async function handler(
 > {
   interface ReportDefinition {
     ReportName: string;
-    TimeUnit: string;
-    Format: string;
-    Compression: string;
+    TimeUnit: TimeUnit;
+    Format: ReportFormat;
+    Compression: CompressionFormat;
     S3Bucket: string;
     S3Prefix: string;
-    S3Region: string;
-    AdditionalSchemaElements: string[];
-    AdditionalArtifacts?: string[];
+    S3Region: AWSRegion;
+    AdditionalSchemaElements: SchemaElement[];
+    AdditionalArtifacts?: AdditionalArtifact[];
     RefreshClosedReports?: boolean;
-    ReportVersioning?: string;
+    ReportVersioning?: ReportVersioning;
     BillingViewArn?: string;
   }
 
@@ -57,7 +66,11 @@ export async function handler(
 
   const reportDefinition: ReportDefinition = event.ResourceProperties['reportDefinition'];
   const solutionId = process.env['SOLUTION_ID'];
-  const curClient = new AWS.CUR({ region: globalRegion, customUserAgent: solutionId });
+  const curClient = new CostAndUsageReportServiceClient({
+    region: globalRegion,
+    customUserAgent: solutionId,
+    retryStrategy: setRetryStrategy(),
+  });
 
   // Handle case where boolean is passed as string
   if (reportDefinition.RefreshClosedReports) {
@@ -68,7 +81,9 @@ export async function handler(
     case 'Create':
       // Create new report definition
       console.log(`Creating new report definition ${reportDefinition.ReportName}`);
-      await throttlingBackOff(() => curClient.putReportDefinition({ ReportDefinition: reportDefinition }).promise());
+      await throttlingBackOff(() =>
+        curClient.send(new PutReportDefinitionCommand({ ReportDefinition: reportDefinition })),
+      );
 
       return {
         PhysicalResourceId: reportDefinition.ReportName,
@@ -79,11 +94,13 @@ export async function handler(
       // Modify report definition
       console.log(`Modifying report definition ${reportDefinition.ReportName}`);
       await throttlingBackOff(() =>
-        curClient
-          .modifyReportDefinition({ ReportName: reportDefinition.ReportName, ReportDefinition: reportDefinition })
-          .promise(),
+        curClient.send(
+          new ModifyReportDefinitionCommand({
+            ReportName: reportDefinition.ReportName,
+            ReportDefinition: reportDefinition,
+          }),
+        ),
       );
-
       return {
         PhysicalResourceId: event.PhysicalResourceId,
         Status: 'SUCCESS',
@@ -93,9 +110,8 @@ export async function handler(
       // Delete report definition
       console.log(`Deleting report definition ${event.PhysicalResourceId}`);
       await throttlingBackOff(() =>
-        curClient.deleteReportDefinition({ ReportName: event.PhysicalResourceId }).promise(),
+        curClient.send(new DeleteReportDefinitionCommand({ ReportName: event.PhysicalResourceId })),
       );
-
       return {
         PhysicalResourceId: event.PhysicalResourceId,
         Status: 'SUCCESS',

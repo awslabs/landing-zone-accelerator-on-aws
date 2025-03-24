@@ -11,12 +11,18 @@
  *  and limitations under the License.
  */
 
-import { chunkArray, getGlobalRegion } from '@aws-accelerator/utils/lib/common-functions';
+import { chunkArray, getGlobalRegion, setRetryStrategy } from '@aws-accelerator/utils/lib/common-functions';
 import { throttlingBackOff } from '@aws-accelerator/utils/lib/throttle';
 import { CloudFormationCustomResourceEvent } from '@aws-accelerator/utils/lib/common-types';
-import * as AWS from 'aws-sdk';
-AWS.config.logger = console;
-
+import { ListAccountsCommand, OrganizationsClient } from '@aws-sdk/client-organizations';
+import {
+  Account,
+  CreateMembersCommand,
+  DeleteMembersCommand,
+  DetectiveClient,
+  ListGraphsCommand,
+  ListMembersCommand,
+} from '@aws-sdk/client-detective';
 /**
  * enable-detective - lambda handler
  *
@@ -34,11 +40,17 @@ export async function handler(event: CloudFormationCustomResourceEvent): Promise
   const partition = event.ResourceProperties['partition'];
   const globalRegion = getGlobalRegion(partition);
   const chunkSize = process.env['CHUNK_SIZE'] ? parseInt(process.env['CHUNK_SIZE']) : 50;
-  const organizationsClient = new AWS.Organizations({
+  const solutionId = process.env['SOLUTION_ID'];
+  const organizationsClient = new OrganizationsClient({
     region: globalRegion,
-    customUserAgent: process.env['SOLUTION_ID'],
+    customUserAgent: solutionId,
+    retryStrategy: setRetryStrategy(),
   });
-  const detectiveClient = new AWS.Detective({ region: region, customUserAgent: process.env['SOLUTION_ID'] });
+  const detectiveClient = new DetectiveClient({
+    region,
+    customUserAgent: solutionId,
+    retryStrategy: setRetryStrategy(),
+  });
 
   const graphArn = await getGraphArn(detectiveClient);
 
@@ -48,11 +60,11 @@ export async function handler(event: CloudFormationCustomResourceEvent): Promise
     case 'Create':
     case 'Update':
       console.log('starting - CreateMembersCommand');
-      const allAccounts: AWS.Detective.Account[] = [];
+      const allAccounts: Account[] = [];
 
       do {
         const page = await throttlingBackOff(() =>
-          organizationsClient.listAccounts({ NextToken: nextToken }).promise(),
+          organizationsClient.send(new ListAccountsCommand({ NextToken: nextToken })),
         );
         for (const account of page.Accounts ?? []) {
           allAccounts.push({ AccountId: account.Id!, EmailAddress: account.Email! });
@@ -65,7 +77,7 @@ export async function handler(event: CloudFormationCustomResourceEvent): Promise
       for (const accounts of chunkedAccountsForCreate) {
         console.log(`Initiating createMembers request for ${accounts.length} accounts`);
         await throttlingBackOff(() =>
-          detectiveClient.createMembers({ GraphArn: graphArn!, Accounts: accounts }).promise(),
+          detectiveClient.send(new CreateMembersCommand({ GraphArn: graphArn!, Accounts: accounts })),
         );
       }
 
@@ -76,7 +88,7 @@ export async function handler(event: CloudFormationCustomResourceEvent): Promise
       nextToken = undefined;
       do {
         const page = await throttlingBackOff(() =>
-          detectiveClient.listMembers({ GraphArn: graphArn!, NextToken: nextToken }).promise(),
+          detectiveClient.send(new ListMembersCommand({ GraphArn: graphArn!, NextToken: nextToken })),
         );
         for (const member of page.MemberDetails ?? []) {
           console.log(member);
@@ -91,7 +103,9 @@ export async function handler(event: CloudFormationCustomResourceEvent): Promise
         for (const existingMemberAccountIdBatch of chunkedAccountsForDelete) {
           console.log(`Initiating deleteMembers request for ${existingMemberAccountIdBatch.length} accounts`);
           await throttlingBackOff(() =>
-            detectiveClient.deleteMembers({ AccountIds: existingMemberAccountIdBatch, GraphArn: graphArn! }).promise(),
+            detectiveClient.send(
+              new DeleteMembersCommand({ AccountIds: existingMemberAccountIdBatch, GraphArn: graphArn! }),
+            ),
           );
         }
       }
@@ -100,8 +114,8 @@ export async function handler(event: CloudFormationCustomResourceEvent): Promise
   }
 }
 
-async function getGraphArn(detectiveClient: AWS.Detective): Promise<string | undefined> {
-  const response = await throttlingBackOff(() => detectiveClient.listGraphs({}).promise());
+async function getGraphArn(detectiveClient: DetectiveClient): Promise<string | undefined> {
+  const response = await throttlingBackOff(() => detectiveClient.send(new ListGraphsCommand({})));
   console.log(response);
   if (response.GraphList!.length === 0) {
     throw new Error(

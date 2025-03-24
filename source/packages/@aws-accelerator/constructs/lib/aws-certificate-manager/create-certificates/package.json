@@ -20,7 +20,9 @@
   },
   "dependencies": {
     "@aws-accelerator/utils": "^0.0.0",
-    "aws-sdk": "2.1691.0"
+    "@aws-sdk/client-s3": "3.637.0",
+    "@aws-sdk/client-acm": "3.758.0",
+    "@aws-sdk/client-ssm": "3.637.0"
   },
   "devDependencies": {
     "@types/jest": "29.5.12",
