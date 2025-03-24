@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- feat(customizations): added ability to skip creation of stackset execution roles
 - feat(guardduty): added support for malware protection, RDS, lambda and additional EKS options
 - feat(guardduty): added support for malware protection, RDS, lambda and additional EKS options
 - feat(kinesis): allow customization of retention, streaming mode and shard count
