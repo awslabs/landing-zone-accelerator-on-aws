@@ -10,6 +10,12 @@
  *  OR CONDITIONS OF ANY KIND, express or implied. See the License for the specific language governing permissions
  *  and limitations under the License.
  */
+import {
+  DuplicateAccountException,
+  ListRootsCommand,
+  MoveAccountCommand,
+  OrganizationsClient,
+} from '@aws-sdk/client-organizations';
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
 import {
   DynamoDBDocumentClient,
@@ -19,8 +25,7 @@ import {
   QueryCommand,
 } from '@aws-sdk/lib-dynamodb';
 import { throttlingBackOff } from '@aws-accelerator/utils/lib/throttle';
-import * as AWS from 'aws-sdk';
-AWS.config.logger = console;
+import { setRetryStrategy } from '@aws-accelerator/utils/lib/common-functions';
 
 type ConfigOrganizationalUnitKeys = {
   acceleratorKey: string;
@@ -75,7 +80,11 @@ export async function handler(event: any): Promise<any> {
     const username: string = event.detail.userIdentity.sessionContext.sessionIssuer.userName;
 
     if (!username.includes(`${stackPrefix}-AccountsSt-`) && !username.includes(`${stackPrefix}-PrepareSta-`)) {
-      const organizationsClient = new AWS.Organizations({ region: globalRegion, customUserAgent: solutionId });
+      const organizationsClient = new OrganizationsClient({
+        region: globalRegion,
+        customUserAgent: solutionId,
+        retryStrategy: setRetryStrategy(),
+      });
 
       // Get all Ou details
       const configAllOuKeys = await getConfigOuKeys(organizationsClient, configTableName, commitId);
@@ -112,29 +121,22 @@ export async function handler(event: any): Promise<any> {
         );
         try {
           await throttlingBackOff(() =>
-            organizationsClient
-              .moveAccount({
+            organizationsClient.send(
+              new MoveAccountCommand({
                 AccountId: accountID,
                 DestinationParentId: configTableSourceParent.ouId,
                 SourceParentId: destinationParentId,
-              })
-              .promise(),
+              }),
+            ),
           );
           console.log(
             `End: Account id ${accountID} with email ${configTableSourceParent.email} successfully moved from ${eventDestParent.acceleratorKey} ou to ${configTableSourceParent.ouName} ou`,
           );
-        } catch (
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          e: any
-        ) {
-          if (
-            // SDKv2 Error Structure
-            e.code === 'DuplicateAccountException' ||
-            // SDKv3 Error Structure
-            e.name === 'DuplicateAccountException'
-          ) {
+        } catch (e: unknown) {
+          if (e instanceof DuplicateAccountException) {
             console.warn(e.name + ': ' + e.message);
           }
+          throw e;
         }
       }
     }
@@ -242,7 +244,7 @@ async function getAccountDetails(
 }
 
 async function getConfigOuKeys(
-  organizationsClient: AWS.Organizations,
+  organizationsClient: OrganizationsClient,
   configTableName: string,
   commitId: string,
 ): Promise<ConfigOrganizationalUnitKeys[]> {
@@ -282,12 +284,14 @@ async function getConfigOuKeys(
   return ouKeys;
 }
 
-async function getRootId(organizationsClient: AWS.Organizations): Promise<string> {
+async function getRootId(organizationsClient: OrganizationsClient): Promise<string> {
   // get root ou id
   let rootId = '';
   let nextToken: string | undefined = undefined;
   do {
-    const page = await throttlingBackOff(() => organizationsClient.listRoots({ NextToken: nextToken }).promise());
+    const page = await throttlingBackOff(() =>
+      organizationsClient.send(new ListRootsCommand({ NextToken: nextToken })),
+    );
     for (const item of page.Roots ?? []) {
       if (item.Name === 'Root' && item.Id && item.Arn) {
         rootId = item.Id;
