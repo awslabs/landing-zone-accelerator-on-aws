@@ -13,9 +13,16 @@
 
 import { throttlingBackOff } from '@aws-accelerator/utils/lib/throttle';
 import { CloudFormationCustomResourceEvent } from '@aws-accelerator/utils/lib/common-types';
-import * as AWS from 'aws-sdk';
-AWS.config.logger = console;
-
+import {
+  AcceptSharedDirectoryCommand,
+  DescribeSharedDirectoriesCommand,
+  DirectoryServiceClient,
+  ShareDirectoryCommand,
+  ShareMethod,
+  TargetType,
+  UnshareDirectoryCommand,
+} from '@aws-sdk/client-directory-service';
+import { AssumeRoleCommand, STSClient } from '@aws-sdk/client-sts';
 /**
  * share directory - lambda handler
  *
@@ -39,7 +46,10 @@ export async function handler(event: CloudFormationCustomResourceEvent): Promise
 
   const solutionId = process.env['SOLUTION_ID'];
 
-  const directoryServiceClient = new AWS.DirectoryService({ region: region, customUserAgent: solutionId });
+  const directoryServiceClient = new DirectoryServiceClient({
+    region,
+    customUserAgent: solutionId,
+  });
 
   const existingSharedAccountIds = await getExistingSharedAccountIds(directoryServiceClient, directoryId);
 
@@ -113,7 +123,7 @@ export async function handler(event: CloudFormationCustomResourceEvent): Promise
  * @param solutionId
  */
 async function acceptShare(
-  sourceDirectoryServiceClient: AWS.DirectoryService,
+  sourceDirectoryServiceClient: DirectoryServiceClient,
   region: string,
   partition: string,
   sourceDirectoryId: string,
@@ -127,35 +137,38 @@ async function acceptShare(
   if (shareStatus === 'PendingAcceptance') {
     const roleArn = `arn:${partition}:iam::${accountId}:role/${assumeRoleName}`;
     console.log(`Role arn : ${roleArn}`);
-    const stsClient = new AWS.STS({ region: region, customUserAgent: solutionId });
+    const stsClient = new STSClient({
+      region,
+      customUserAgent: solutionId,
+    });
     console.log(`Assume role in target account ${accountId}, role arn is ${roleArn}`);
     const assumeRoleCredential = await throttlingBackOff(() =>
-      stsClient
-        .assumeRole({
+      stsClient.send(
+        new AssumeRoleCommand({
           RoleArn: roleArn,
           RoleSessionName: 'AcceptMadShareSession',
-        })
-        .promise(),
+        }),
+      ),
     );
 
-    const targetDirectoryServiceClient = new AWS.DirectoryService({
-      region: region,
+    const targetDirectoryServiceClient = new DirectoryServiceClient({
+      region,
       credentials: {
-        accessKeyId: assumeRoleCredential.Credentials!.AccessKeyId,
-        secretAccessKey: assumeRoleCredential.Credentials!.SecretAccessKey,
+        accessKeyId: assumeRoleCredential.Credentials!.AccessKeyId!,
+        secretAccessKey: assumeRoleCredential.Credentials!.SecretAccessKey!,
         sessionToken: assumeRoleCredential.Credentials!.SessionToken,
-        expireTime: assumeRoleCredential.Credentials!.Expiration,
+        expiration: assumeRoleCredential.Credentials!.Expiration,
       },
       customUserAgent: solutionId,
     });
 
     console.log(`Start: Accepting share directory for target account ${accountId}`);
     await throttlingBackOff(() =>
-      targetDirectoryServiceClient
-        .acceptSharedDirectory({
+      targetDirectoryServiceClient.send(
+        new AcceptSharedDirectoryCommand({
           SharedDirectoryId: targetDirectoryId,
-        })
-        .promise(),
+        }),
+      ),
     );
   } else {
     console.warn(`Share account ${accountId} status is ${shareStatus}, skipping acceptance`);
@@ -171,7 +184,7 @@ async function acceptShare(
  * @param accountId
  */
 async function unshareDirectory(
-  directoryServiceClient: AWS.DirectoryService,
+  directoryServiceClient: DirectoryServiceClient,
   directoryId: string,
   accountId: string,
 ): Promise<void> {
@@ -179,12 +192,12 @@ async function unshareDirectory(
 
   if (shareStatus === 'Shared') {
     await throttlingBackOff(() =>
-      directoryServiceClient
-        .unshareDirectory({
+      directoryServiceClient.send(
+        new UnshareDirectoryCommand({
           DirectoryId: directoryId,
-          UnshareTarget: { Id: accountId, Type: 'ACCOUNT' },
-        })
-        .promise(),
+          UnshareTarget: { Id: accountId, Type: TargetType.ACCOUNT },
+        }),
+      ),
     );
   } else {
     throw new Error(`Target account ${accountId} share status is ${shareStatus}, skipped unshare !!!!`);
@@ -199,19 +212,19 @@ async function unshareDirectory(
  * @returns
  */
 async function shareDirectory(
-  directoryServiceClient: AWS.DirectoryService,
+  directoryServiceClient: DirectoryServiceClient,
   directoryId: string,
   accountId: string,
 ): Promise<string> {
   const response = await throttlingBackOff(() =>
-    directoryServiceClient
-      .shareDirectory({
+    directoryServiceClient.send(
+      new ShareDirectoryCommand({
         DirectoryId: directoryId,
         ShareNotes: 'Shared by LZA',
-        ShareMethod: 'HANDSHAKE',
-        ShareTarget: { Id: accountId, Type: 'ACCOUNT' },
-      })
-      .promise(),
+        ShareMethod: ShareMethod.HANDSHAKE,
+        ShareTarget: { Id: accountId, Type: TargetType.ACCOUNT },
+      }),
+    ),
   );
 
   let shareStatus = await getSharedAccountStatus(directoryServiceClient, directoryId, accountId);
@@ -235,19 +248,19 @@ async function shareDirectory(
  * @returns
  */
 async function getSharedAccountStatus(
-  directoryServiceClient: AWS.DirectoryService,
+  directoryServiceClient: DirectoryServiceClient,
   directoryId: string,
   accountId: string,
 ): Promise<string> {
   let nextToken: string | undefined = undefined;
   do {
     const page = await throttlingBackOff(() =>
-      directoryServiceClient
-        .describeSharedDirectories({
+      directoryServiceClient.send(
+        new DescribeSharedDirectoriesCommand({
           OwnerDirectoryId: directoryId,
           NextToken: nextToken,
-        })
-        .promise(),
+        }),
+      ),
     );
 
     for (const sharedDirectory of page.SharedDirectories ?? []) {
@@ -268,21 +281,20 @@ async function getSharedAccountStatus(
  * @returns
  */
 async function getExistingSharedAccountIds(
-  directoryServiceClient: AWS.DirectoryService,
+  directoryServiceClient: DirectoryServiceClient,
   directoryId: string,
 ): Promise<string[]> {
   const sharedAccounts: string[] = [];
   let nextToken: string | undefined = undefined;
   do {
     const page = await throttlingBackOff(() =>
-      directoryServiceClient
-        .describeSharedDirectories({
+      directoryServiceClient.send(
+        new DescribeSharedDirectoriesCommand({
           OwnerDirectoryId: directoryId,
           NextToken: nextToken,
-        })
-        .promise(),
+        }),
+      ),
     );
-
     for (const sharedDirectory of page.SharedDirectories ?? []) {
       sharedAccounts.push(sharedDirectory.SharedAccountId!);
     }
