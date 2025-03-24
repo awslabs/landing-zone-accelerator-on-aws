@@ -855,6 +855,10 @@ export class OperationsStack extends AcceleratorStack {
    * https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/stacksets-prereqs-self-managed.html#prereqs-self-managed-permissions
    */
   private createStackSetRoles() {
+    //skip creation of stackset roles
+    if (this.props.customizationsConfig && this.props.customizationsConfig.createCfnStackSetExecutionRole === false) {
+      return;
+    }
     if (this.props.customizationsConfig?.customizations?.cloudFormationStackSets) {
       const managementAccountId = this.props.accountsConfig.getManagementAccountId();
       if (cdk.Stack.of(this).account == managementAccountId) {

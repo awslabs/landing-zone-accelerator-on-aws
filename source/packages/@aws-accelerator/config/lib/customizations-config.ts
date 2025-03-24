@@ -356,6 +356,7 @@ export class CustomizationConfig implements i.ICustomizationConfig {
 export class CustomizationsConfig implements i.ICustomizationsConfig {
   static readonly FILENAME = 'customizations-config.yaml';
 
+  readonly createCfnStackSetExecutionRole: boolean | undefined = undefined;
   readonly customizations: CustomizationConfig = new CustomizationConfig();
   readonly applications: AppConfigItem[] = [];
   readonly firewalls: Ec2FirewallConfig | undefined = undefined;

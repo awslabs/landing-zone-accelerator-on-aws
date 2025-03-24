@@ -1951,6 +1951,7 @@ export interface IServiceCatalogConfig {
  *
  */
 export interface ICustomizationConfig {
+  readonly createCfnStackSetExecutionRole?: boolean;
   readonly cloudFormationStacks?: ICloudFormationStack[];
   readonly cloudFormationStackSets?: ICloudFormationStackSet[];
   readonly serviceCatalogPortfolios?: IPortfolioConfig[];
@@ -2652,8 +2653,18 @@ export interface IEc2FirewallConfig {
  * @description
  * Defines custom CloudFormation and external web and application tier resources. We recommend creating resources
  * with native LZA features where possible.
+ *
  */
 export interface ICustomizationsConfig {
+  /**
+   * Defines whether or not the StackSetExecution role is created in all workload accounts
+   * and if the StackSetAdmin role is created in the management account.
+   * If you are using stacksets and set the value to false, you will need
+   * to ensure that the roles are created.
+   *
+   * Default value is true.
+   */
+  readonly createCfnStackSetExecutionRole?: boolean;
   readonly customizations?: ICustomizationConfig;
   readonly applications?: IAppConfigItem[];
   readonly firewalls?: IEc2FirewallConfig;

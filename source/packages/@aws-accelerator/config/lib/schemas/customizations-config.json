@@ -556,6 +556,9 @@
           },
           "type": "array"
         },
+        "createCfnStackSetExecutionRole": {
+          "type": "boolean"
+        },
         "serviceCatalogPortfolios": {
           "items": {
             "$ref": "#/definitions/IPortfolioConfig"
@@ -574,6 +577,10 @@
             "$ref": "#/definitions/IAppConfigItem"
           },
           "type": "array"
+        },
+        "createCfnStackSetExecutionRole": {
+          "description": "Defines whether or not the StackSetExecution role is created in all workload accounts and if the StackSetAdmin role is created in the management account. If you are using stacksets and set the value to false, you will need to ensure that the roles are created.\n\nDefault value is true.",
+          "type": "boolean"
         },
         "customizations": {
           "$ref": "#/definitions/ICustomizationConfig"
