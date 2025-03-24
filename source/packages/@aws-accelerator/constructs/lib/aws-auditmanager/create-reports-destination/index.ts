@@ -13,9 +13,8 @@
 
 import { throttlingBackOff } from '@aws-accelerator/utils/lib/throttle';
 import { CloudFormationCustomResourceEvent } from '@aws-accelerator/utils/lib/common-types';
-import * as AWS from 'aws-sdk';
-AWS.config.logger = console;
-
+import { AuditManagerClient, UpdateSettingsCommand } from '@aws-sdk/client-auditmanager';
+import { setRetryStrategy } from '@aws-accelerator/utils/lib/common-functions';
 /**
  * create-auditmanager-default-reports-destination - lambda handler
  *
@@ -35,7 +34,11 @@ export async function handler(event: CloudFormationCustomResourceEvent): Promise
   const kmsKeyArn: string | undefined = event.ResourceProperties['kmsKeyArn'] ?? undefined;
   const solutionId = process.env['SOLUTION_ID'];
 
-  const auditManagerClient = new AWS.AuditManager({ region: region, customUserAgent: solutionId });
+  const auditManagerClient = new AuditManagerClient({
+    region,
+    customUserAgent: solutionId,
+    retryStrategy: setRetryStrategy(),
+  });
 
   switch (event.RequestType) {
     case 'Create':
@@ -43,15 +46,15 @@ export async function handler(event: CloudFormationCustomResourceEvent): Promise
       console.log('starting - CreateDefaultLoggingDestination');
 
       await throttlingBackOff(() =>
-        auditManagerClient
-          .updateSettings({
+        auditManagerClient.send(
+          new UpdateSettingsCommand({
             defaultAssessmentReportsDestination: {
               destination: bucket,
               destinationType: defaultReportsDestinationType,
             },
             kmsKey: kmsKeyArn,
-          })
-          .promise(),
+          }),
+        ),
       );
 
       return { Status: 'Success', StatusCode: 200 };
