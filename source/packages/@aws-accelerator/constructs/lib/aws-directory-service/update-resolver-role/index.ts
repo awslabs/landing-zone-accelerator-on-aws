@@ -13,8 +13,13 @@
 
 import { throttlingBackOff } from '@aws-accelerator/utils/lib/throttle';
 import { CloudFormationCustomResourceEvent } from '@aws-accelerator/utils/lib/common-types';
-import * as AWS from 'aws-sdk';
-AWS.config.logger = console;
+import {
+  ListResolverRulesCommand,
+  Route53ResolverClient,
+  UpdateResolverRuleCommand,
+} from '@aws-sdk/client-route53resolver';
+import { AssumeRoleCommand, STSClient } from '@aws-sdk/client-sts';
+import { setRetryStrategy } from '@aws-accelerator/utils/lib/common-functions';
 
 /**
  * add-macie-members - lambda handler
@@ -37,25 +42,31 @@ export async function handler(event: CloudFormationCustomResourceEvent): Promise
   const region = event.ResourceProperties['region'];
   const solutionId = process.env['SOLUTION_ID'];
 
-  let route53ResolverClient = new AWS.Route53Resolver({ customUserAgent: solutionId });
+  let route53ResolverClient = new Route53ResolverClient({
+    customUserAgent: solutionId,
+    retryStrategy: setRetryStrategy(),
+  });
 
   const ruleOwnerId = await getRuleOwnerId(route53ResolverClient, route53ResolverRuleName);
   if (!ruleOwnerId) {
     throw new Error(`Resolver rule ${route53ResolverRuleName} owner id not found !!!`);
   }
 
-  const stsClient = new AWS.STS({ customUserAgent: solutionId, region: region });
+  const stsClient = new STSClient({
+    region,
+    customUserAgent: solutionId,
+    retryStrategy: setRetryStrategy(),
+  });
   if (ruleOwnerId !== executingAccountId) {
     const assumeRoleResponse = await throttlingBackOff(() =>
-      stsClient
-        .assumeRole({
+      stsClient.send(
+        new AssumeRoleCommand({
           RoleArn: `arn:${partition}:iam::${ruleOwnerId}:role/${roleName}`,
           RoleSessionName: 'UpdateRuleAssumeSession',
-        })
-        .promise(),
+        }),
+      ),
     );
-
-    route53ResolverClient = new AWS.Route53Resolver({
+    route53ResolverClient = new Route53ResolverClient({
       credentials: {
         accessKeyId: assumeRoleResponse.Credentials?.AccessKeyId ?? '',
         secretAccessKey: assumeRoleResponse.Credentials?.SecretAccessKey ?? '',
@@ -87,18 +98,17 @@ export async function handler(event: CloudFormationCustomResourceEvent): Promise
       console.log('start updateResolverRule');
 
       await throttlingBackOff(() =>
-        route53ResolverClient
-          .updateResolverRule({
+        route53ResolverClient.send(
+          new UpdateResolverRuleCommand({
             ResolverRuleId: resolverRuleDetails.ruleId!,
             Config: {
               Name: route53ResolverRuleName,
               ResolverEndpointId: resolverRuleDetails.resolverEndpointId!,
               TargetIps: updatedDnsIps,
             },
-          })
-          .promise(),
+          }),
+        ),
       );
-
       return { Status: 'Success', StatusCode: 200 };
 
     case 'Delete':
@@ -113,19 +123,19 @@ export async function handler(event: CloudFormationCustomResourceEvent): Promise
  * @returns
  */
 async function getRuleOwnerId(
-  route53ResolverClient: AWS.Route53Resolver,
+  route53ResolverClient: Route53ResolverClient,
   route53ResolverRuleName: string,
 ): Promise<string | undefined> {
   console.log('Start - getResolverId');
   let nextToken: string | undefined = undefined;
   do {
     const page = await throttlingBackOff(() =>
-      route53ResolverClient
-        .listResolverRules({
+      route53ResolverClient.send(
+        new ListResolverRulesCommand({
           Filters: [{ Name: 'Name', Values: [route53ResolverRuleName] }],
           NextToken: nextToken,
-        })
-        .promise(),
+        }),
+      ),
     );
 
     if (page.ResolverRules && page.ResolverRules.length === 0) {
@@ -148,21 +158,20 @@ async function getRuleOwnerId(
  * @returns
  */
 async function getResolverRuleDetails(
-  route53ResolverClient: AWS.Route53Resolver,
+  route53ResolverClient: Route53ResolverClient,
   route53ResolverRuleName: string,
 ): Promise<{ resolverEndpointId: string | undefined; ruleId: string | undefined; port: number | undefined }> {
   console.log('Start - getResolverRuleDetails');
   let nextToken: string | undefined = undefined;
   do {
     const page = await throttlingBackOff(() =>
-      route53ResolverClient
-        .listResolverRules({
+      route53ResolverClient.send(
+        new ListResolverRulesCommand({
           Filters: [{ Name: 'Name', Values: [route53ResolverRuleName] }],
           NextToken: nextToken,
-        })
-        .promise(),
+        }),
+      ),
     );
-
     if (page.ResolverRules && page.ResolverRules.length === 0) {
       throw new Error(`Resolver rule ${route53ResolverRuleName} not found !!!`);
     }
