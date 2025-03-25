@@ -11,7 +11,7 @@
  *  and limitations under the License.
  */
 
-import { DirectConnect } from 'aws-sdk';
+import { Tag } from '@aws-sdk/client-direct-connect';
 
 interface VirtualInterfaceAllocationAttributeProps {
   /**
@@ -61,7 +61,7 @@ interface VirtualInterfaceAllocationAttributeProps {
   /**
    * Tags for the virtual interface
    */
-  readonly tags?: DirectConnect.TagList;
+  readonly tags?: Tag[];
 }
 
 export class VirtualInterfaceAllocationAttributes {
@@ -76,7 +76,7 @@ export class VirtualInterfaceAllocationAttributes {
   public readonly vlan: number;
   public readonly amazonAddress?: string;
   public readonly customerAddress?: string;
-  public readonly tags?: DirectConnect.TagList;
+  public readonly tags?: Tag[];
   constructor(props: VirtualInterfaceAllocationAttributeProps) {
     this.addressFamily = props.addressFamily;
     this.amazonAddress = props.amazonAddress;

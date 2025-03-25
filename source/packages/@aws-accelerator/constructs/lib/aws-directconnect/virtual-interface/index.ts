@@ -11,15 +11,29 @@
  *  and limitations under the License.
  */
 
-import * as AWS from 'aws-sdk';
-
 import { throttlingBackOff } from '@aws-accelerator/utils/lib/throttle';
 import {
   CloudFormationCustomResourceEvent,
   CloudFormationCustomResourceUpdateEvent,
 } from '@aws-accelerator/utils/lib/common-types';
+import {
+  AddressFamily,
+  DirectConnectClient,
+  CreatePrivateVirtualInterfaceRequest,
+  CreatePrivateVirtualInterfaceCommand,
+  CreateTransitVirtualInterfaceRequest,
+  CreateTransitVirtualInterfaceCommand,
+  DeleteVirtualInterfaceCommand,
+  DescribeVirtualInterfacesCommand,
+  Tag,
+  TagResourceCommand,
+  UntagResourceCommand,
+  UpdateVirtualInterfaceAttributesCommand,
+} from '@aws-sdk/client-direct-connect';
+import { LambdaClient, InvokeCommand } from '@aws-sdk/client-lambda';
 import { VirtualInterfaceAttributes } from './attributes';
 import { GetSecretValueCommand, SecretsManagerClient } from '@aws-sdk/client-secrets-manager';
+import { setRetryStrategy } from '@aws-accelerator/utils/lib/common-functions';
 
 /**
  * direct-connect-virtual-interface - lambda handler
@@ -42,11 +56,13 @@ export async function handler(event: CloudFormationCustomResourceEvent): Promise
   // Set variables
   const solutionId = process.env['SOLUTION_ID'];
   const vif = vifInit(event);
-  const dx = new AWS.DirectConnect({
-    region: event.ResourceProperties['region'],
+  const dx = new DirectConnectClient({
     customUserAgent: solutionId,
+    region: event.ResourceProperties['region'],
+    retryStrategy: setRetryStrategy(),
   });
-  const lambdaClient = new AWS.Lambda({ customUserAgent: solutionId });
+
+  const lambdaClient = new LambdaClient({ customUserAgent: solutionId, retryStrategy: setRetryStrategy() });
 
   // Event handler
   switch (event.RequestType) {
@@ -55,19 +71,13 @@ export async function handler(event: CloudFormationCustomResourceEvent): Promise
       // Create interfaces if based on interface type
       if (vif.virtualInterfaceType === 'private') {
         const apiProps = await setApiProps(vif, secretsClient);
-        const response = await createPrivateInterface(
-          dx,
-          apiProps as AWS.DirectConnect.CreatePrivateVirtualInterfaceRequest,
-        );
+        const response = await createPrivateInterface(dx, apiProps as CreatePrivateVirtualInterfaceRequest);
         virtualInterfaceId = response.virtualInterfaceId;
       }
 
       if (vif.virtualInterfaceType === 'transit') {
         const apiProps = await setApiProps(vif, secretsClient);
-        const response = await createTransitInterface(
-          dx,
-          apiProps as AWS.DirectConnect.CreateTransitVirtualInterfaceRequest,
-        );
+        const response = await createTransitInterface(dx, apiProps as CreateTransitVirtualInterfaceRequest);
         virtualInterfaceId = response.virtualInterface?.virtualInterfaceId;
       }
 
@@ -103,12 +113,12 @@ export async function handler(event: CloudFormationCustomResourceEvent): Promise
             `Updating virtual interface name from ${oldVif.virtualInterfaceName} to ${vif.virtualInterfaceName}`,
           );
           await throttlingBackOff(() =>
-            dx
-              .updateVirtualInterfaceAttributes({
+            dx.send(
+              new UpdateVirtualInterfaceAttributesCommand({
                 virtualInterfaceId: event.PhysicalResourceId,
                 virtualInterfaceName: vif.virtualInterfaceName,
-              })
-              .promise(),
+              }),
+            ),
           );
         }
         if (vif.mtu !== oldVif.mtu) {
@@ -116,23 +126,23 @@ export async function handler(event: CloudFormationCustomResourceEvent): Promise
             `Updating ${vif.virtualInterfaceName} MTU from ${oldVif.mtu.toString()} to ${vif.mtu.toString()}`,
           );
           await throttlingBackOff(() =>
-            dx
-              .updateVirtualInterfaceAttributes({
+            dx.send(
+              new UpdateVirtualInterfaceAttributesCommand({
                 virtualInterfaceId: event.PhysicalResourceId,
                 mtu: vif.mtu,
-              })
-              .promise(),
+              }),
+            ),
           );
         }
         if (vif.siteLink !== oldVif.siteLink) {
           console.log(`Updating ${vif.virtualInterfaceName} SiteLink from ${oldVif.siteLink} to ${vif.siteLink}`);
           await throttlingBackOff(() =>
-            dx
-              .updateVirtualInterfaceAttributes({
+            dx.send(
+              new UpdateVirtualInterfaceAttributesCommand({
                 virtualInterfaceId: event.PhysicalResourceId,
                 enableSiteLink: vif.siteLink,
-              })
-              .promise(),
+              }),
+            ),
           );
         }
       }
@@ -152,7 +162,11 @@ export async function handler(event: CloudFormationCustomResourceEvent): Promise
     case 'Delete':
       if (!(await inProgress(dx, event.PhysicalResourceId))) {
         await throttlingBackOff(() =>
-          dx.deleteVirtualInterface({ virtualInterfaceId: event.PhysicalResourceId }).promise(),
+          dx.send(
+            new DeleteVirtualInterfaceCommand({
+              virtualInterfaceId: event.PhysicalResourceId,
+            }),
+          ),
         );
       }
 
@@ -179,7 +193,7 @@ function vifInit(event: CloudFormationCustomResourceEvent): VirtualInterfaceAttr
   const addressFamily: string = event.ResourceProperties['addressFamily'];
   const amazonAddress: string | undefined = event.ResourceProperties['amazonAddress'];
   const authKey: string | undefined = event.ResourceProperties['authKey'];
-  const asn: number = event.ResourceProperties['customerAsn'];
+  const asn = Number(event.ResourceProperties['customerAsn']);
   const connectionId: string = event.ResourceProperties['connectionId'];
   const customerAddress: string | undefined = event.ResourceProperties['customerAddress'];
   const directConnectGatewayId: string = event.ResourceProperties['directConnectGatewayId'];
@@ -187,8 +201,8 @@ function vifInit(event: CloudFormationCustomResourceEvent): VirtualInterfaceAttr
   const siteLink: boolean | undefined = returnBoolean(event.ResourceProperties['enableSiteLink']);
   const virtualInterfaceName: string = event.ResourceProperties['interfaceName'];
   const virtualInterfaceType: 'private' | 'transit' = event.ResourceProperties['type'];
-  const vlan: number = event.ResourceProperties['vlan'];
-  const tags: AWS.DirectConnect.TagList = event.ResourceProperties['tags'] ?? [];
+  const vlan = Number(event.ResourceProperties['vlan']);
+  const tags: Tag[] = event.ResourceProperties['tags'] ?? [];
 
   // Add Name tag
   tags.push({ key: 'Name', value: virtualInterfaceName });
@@ -216,18 +230,14 @@ function vifInit(event: CloudFormationCustomResourceEvent): VirtualInterfaceAttr
 async function setApiProps(
   vif: VirtualInterfaceAttributes,
   secretsClient: SecretsManagerClient,
-): Promise<
-  AWS.DirectConnect.CreatePrivateVirtualInterfaceRequest | AWS.DirectConnect.CreateTransitVirtualInterfaceRequest
-> {
+): Promise<CreatePrivateVirtualInterfaceRequest | CreateTransitVirtualInterfaceRequest> {
   // Set API props based on virtual interface type
-  let apiProps:
-    | AWS.DirectConnect.CreatePrivateVirtualInterfaceRequest
-    | AWS.DirectConnect.CreateTransitVirtualInterfaceRequest;
+  let apiProps: CreatePrivateVirtualInterfaceRequest | CreateTransitVirtualInterfaceRequest;
   const attributes = {
     asn: vif.asn,
     virtualInterfaceName: vif.virtualInterfaceName,
     vlan: vif.vlan,
-    addressFamily: vif.addressFamily,
+    addressFamily: vif.addressFamily as AddressFamily,
     amazonAddress: vif.amazonAddress,
     authKey: vif.authKey ? await getSecretValue(secretsClient, vif.authKey) : undefined,
     customerAddress: vif.customerAddress,
@@ -266,7 +276,7 @@ function oldVifInit(event: CloudFormationCustomResourceUpdateEvent) {
   const addressFamily: string = event.OldResourceProperties['addressFamily'];
   const amazonAddress: string | undefined = event.OldResourceProperties['amazonAddress'];
   const authKey: string | undefined = event.OldResourceProperties['authKey'];
-  const asn: number = event.OldResourceProperties['customerAsn'];
+  const asn = Number(event.OldResourceProperties['customerAsn']);
   const connectionId: string = event.OldResourceProperties['connectionId'];
   const customerAddress: string | undefined = event.OldResourceProperties['customerAddress'];
   const directConnectGatewayId: string = event.OldResourceProperties['directConnectGatewayId'];
@@ -274,8 +284,8 @@ function oldVifInit(event: CloudFormationCustomResourceUpdateEvent) {
   const siteLink: boolean | undefined = returnBoolean(event.OldResourceProperties['enableSiteLink']);
   const virtualInterfaceName: string = event.OldResourceProperties['interfaceName'];
   const virtualInterfaceType: 'private' | 'transit' = event.OldResourceProperties['type'];
-  const vlan: number = event.OldResourceProperties['vlan'];
-  const tags: AWS.DirectConnect.TagList = event.OldResourceProperties['tags'] ?? [];
+  const vlan = Number(event.OldResourceProperties['vlan']);
+  const tags: Tag[] = event.OldResourceProperties['tags'] ?? [];
 
   // Add Name tag
   tags.push({ key: 'Name', value: virtualInterfaceName });
@@ -324,11 +334,8 @@ function validateUpdateEvent(vif: VirtualInterfaceAttributes, oldVif: VirtualInt
  * @param apiProps
  * @returns
  */
-async function createPrivateInterface(
-  dx: AWS.DirectConnect,
-  apiProps: AWS.DirectConnect.CreatePrivateVirtualInterfaceRequest,
-) {
-  return throttlingBackOff(() => dx.createPrivateVirtualInterface(apiProps).promise());
+async function createPrivateInterface(dx: DirectConnectClient, apiProps: CreatePrivateVirtualInterfaceRequest) {
+  return throttlingBackOff(() => dx.send(new CreatePrivateVirtualInterfaceCommand(apiProps)));
 }
 
 /**
@@ -337,11 +344,8 @@ async function createPrivateInterface(
  * @param apiProps
  * @returns
  */
-async function createTransitInterface(
-  dx: AWS.DirectConnect,
-  apiProps: AWS.DirectConnect.CreateTransitVirtualInterfaceRequest,
-) {
-  return throttlingBackOff(() => dx.createTransitVirtualInterface(apiProps).promise());
+async function createTransitInterface(dx: DirectConnectClient, apiProps: CreateTransitVirtualInterfaceRequest) {
+  return throttlingBackOff(() => dx.send(new CreateTransitVirtualInterfaceCommand(apiProps)));
 }
 
 /**
@@ -366,30 +370,42 @@ function generateVifArn(event: CloudFormationCustomResourceUpdateEvent): string 
  * @param oldVif
  */
 async function processTagUpdates(
-  dx: AWS.DirectConnect,
+  dx: DirectConnectClient,
   resourceArn: string,
   vif: VirtualInterfaceAttributes,
   oldVif: VirtualInterfaceAttributes,
 ): Promise<void> {
   // Filter tags to remove
-  let removeTagKeys: AWS.DirectConnect.TagKeyList = [];
+  let removeTagKeys: string[] = [];
   if (vif.tags && oldVif.tags) {
-    const updateTagKeys = vif.tags.map(item => {
-      return item.key;
-    });
-    const oldTagKeys = oldVif.tags.map(item => {
-      return item.key;
-    });
+    const updateTagKeys = vif.tags.map(item => item.key).filter((key): key is string => key !== undefined);
+
+    const oldTagKeys = oldVif.tags.map(item => item.key).filter((key): key is string => key !== undefined);
+
     removeTagKeys = oldTagKeys.filter(item => !updateTagKeys.includes(item));
-  }
 
-  // Update tags as necessary
-  if (vif.tags && vif.tags.length > 0) {
-    await throttlingBackOff(() => dx.tagResource({ resourceArn, tags: vif.tags! }).promise());
-  }
+    // Update tags as necessary
+    if (vif.tags && vif.tags.length > 0) {
+      await throttlingBackOff(() =>
+        dx.send(
+          new TagResourceCommand({
+            resourceArn: resourceArn,
+            tags: vif.tags,
+          }),
+        ),
+      );
+    }
 
-  if (removeTagKeys.length > 0) {
-    await throttlingBackOff(() => dx.untagResource({ resourceArn, tagKeys: removeTagKeys }).promise());
+    if (removeTagKeys.length > 0) {
+      await throttlingBackOff(() =>
+        dx.send(
+          new UntagResourceCommand({
+            resourceArn: resourceArn,
+            tagKeys: removeTagKeys,
+          }),
+        ),
+      );
+    }
   }
 }
 
@@ -401,7 +417,7 @@ async function processTagUpdates(
  * @param expectedState
  */
 async function validateState(
-  dx: AWS.DirectConnect,
+  dx: DirectConnectClient,
   virtualInterfaceId: string,
   expectedState: string[],
 ): Promise<boolean> {
@@ -410,7 +426,13 @@ async function validateState(
 
   // Describe gateway association until it is in the expected state
   do {
-    const response = await throttlingBackOff(() => dx.describeVirtualInterfaces({ virtualInterfaceId }).promise());
+    const response = await throttlingBackOff(() =>
+      dx.send(
+        new DescribeVirtualInterfacesCommand({
+          virtualInterfaceId,
+        }),
+      ),
+    );
     if (!response.virtualInterfaces) {
       throw new Error(`Unable to retrieve virtual interface ID ${virtualInterfaceId}`);
     }
@@ -444,9 +466,8 @@ async function validateState(
  * @param virtualInterfaceId
  * @returns
  */
-async function inProgress(dx: AWS.DirectConnect, virtualInterfaceId: string): Promise<boolean> {
-  const response = await throttlingBackOff(() => dx.describeVirtualInterfaces({ virtualInterfaceId }).promise());
-
+async function inProgress(dx: DirectConnectClient, virtualInterfaceId: string): Promise<boolean> {
+  const response = await throttlingBackOff(() => dx.send(new DescribeVirtualInterfacesCommand({ virtualInterfaceId })));
   if (!response.virtualInterfaces) {
     throw new Error(`Unable to retrieve virtual interface ID ${virtualInterfaceId}`);
   }
@@ -464,7 +485,7 @@ async function inProgress(dx: AWS.DirectConnect, virtualInterfaceId: string): Pr
  * @param lambdaClient
  * @param event
  */
-async function retryLambda(lambdaClient: AWS.Lambda, event: CloudFormationCustomResourceEvent): Promise<void> {
+async function retryLambda(lambdaClient: LambdaClient, event: CloudFormationCustomResourceEvent): Promise<void> {
   // Add retry attempt to event
   if (!event.ResourceProperties['retryAttempt']) {
     event.ResourceProperties['retryAttempt'] = 0;
@@ -480,9 +501,13 @@ async function retryLambda(lambdaClient: AWS.Lambda, event: CloudFormationCustom
 
   // Invoke Lambda
   await throttlingBackOff(() =>
-    lambdaClient
-      .invoke({ FunctionName: event.ServiceToken, InvocationType: 'Event', Payload: JSON.stringify(event) })
-      .promise(),
+    lambdaClient.send(
+      new InvokeCommand({
+        FunctionName: event.ServiceToken,
+        InvocationType: 'Event',
+        Payload: JSON.stringify(event),
+      }),
+    ),
   );
 }
 
