@@ -11,14 +11,24 @@
  *  and limitations under the License.
  */
 
-import * as AWS from 'aws-sdk';
-
 import { throttlingBackOff } from '@aws-accelerator/utils/lib/throttle';
 import {
   CloudFormationCustomResourceEvent,
   CloudFormationCustomResourceUpdateEvent,
 } from '@aws-accelerator/utils/lib/common-types';
+import {
+  AddressFamily,
+  AllocatePrivateVirtualInterfaceRequest,
+  AllocateTransitVirtualInterfaceRequest,
+  DirectConnectClient,
+  DeleteVirtualInterfaceCommand,
+  Tag,
+  UpdateVirtualInterfaceAttributesCommand,
+  AllocatePrivateVirtualInterfaceCommand,
+  AllocateTransitVirtualInterfaceCommand,
+} from '@aws-sdk/client-direct-connect';
 import { VirtualInterfaceAllocationAttributes } from './attributes';
+import { setRetryStrategy } from '@aws-accelerator/utils/lib/common-functions';
 
 /**
  * direct-connect-virtual-interface - lambda handler
@@ -36,9 +46,10 @@ export async function handler(event: CloudFormationCustomResourceEvent): Promise
   // Set variables
   const vif = vifInit(event);
   const apiProps = setApiProps(vif);
-  const dx = new AWS.DirectConnect({
+  const dx = new DirectConnectClient({
     region: event.ResourceProperties['region'],
     customUserAgent: process.env['SOLUTION_ID'],
+    retryStrategy: setRetryStrategy(),
   });
 
   // Event handler
@@ -47,18 +58,12 @@ export async function handler(event: CloudFormationCustomResourceEvent): Promise
       let virtualInterfaceId: string | undefined;
       // Create allocations depending on interface type
       if (vif.virtualInterfaceType === 'private') {
-        const response = await createPrivateAllocation(
-          dx,
-          apiProps as AWS.DirectConnect.AllocatePrivateVirtualInterfaceRequest,
-        );
+        const response = await createPrivateAllocation(dx, apiProps as AllocatePrivateVirtualInterfaceRequest);
         virtualInterfaceId = response.virtualInterfaceId;
       }
 
       if (vif.virtualInterfaceType === 'transit') {
-        const response = await createTransitAllocation(
-          dx,
-          apiProps as AWS.DirectConnect.AllocateTransitVirtualInterfaceRequest,
-        );
+        const response = await createTransitAllocation(dx, apiProps as AllocateTransitVirtualInterfaceRequest);
         virtualInterfaceId = response.virtualInterface?.virtualInterfaceId;
       }
 
@@ -80,23 +85,23 @@ export async function handler(event: CloudFormationCustomResourceEvent): Promise
       if (vif.mtu !== oldVif.mtu) {
         console.log(`Updating ${vif.virtualInterfaceName} MTU from ${oldVif.mtu.toString()} to ${vif.mtu.toString()}`);
         await throttlingBackOff(() =>
-          dx
-            .updateVirtualInterfaceAttributes({
+          dx.send(
+            new UpdateVirtualInterfaceAttributesCommand({
               virtualInterfaceId: event.PhysicalResourceId,
               mtu: vif.mtu,
-            })
-            .promise(),
+            }),
+          ),
         );
       }
       if (vif.siteLink !== oldVif.siteLink) {
         console.log(`Updating ${vif.virtualInterfaceName} SiteLink from ${oldVif.siteLink} to ${vif.siteLink}`);
         await throttlingBackOff(() =>
-          dx
-            .updateVirtualInterfaceAttributes({
+          dx.send(
+            new UpdateVirtualInterfaceAttributesCommand({
               virtualInterfaceId: event.PhysicalResourceId,
               enableSiteLink: vif.siteLink,
-            })
-            .promise(),
+            }),
+          ),
         );
       }
 
@@ -107,7 +112,11 @@ export async function handler(event: CloudFormationCustomResourceEvent): Promise
 
     case 'Delete':
       await throttlingBackOff(() =>
-        dx.deleteVirtualInterface({ virtualInterfaceId: event.PhysicalResourceId }).promise(),
+        dx.send(
+          new DeleteVirtualInterfaceCommand({
+            virtualInterfaceId: event.PhysicalResourceId,
+          }),
+        ),
       );
 
       return {
@@ -125,7 +134,7 @@ function vifInit(event: CloudFormationCustomResourceEvent): VirtualInterfaceAllo
   // Set variables from event
   const addressFamily: string = event.ResourceProperties['addressFamily'];
   const amazonAddress: string | undefined = event.ResourceProperties['amazonAddress'];
-  const asn: number = event.ResourceProperties['customerAsn'];
+  const asn = Number(event.ResourceProperties['customerAsn']);
   const connectionId: string = event.ResourceProperties['connectionId'];
   const customerAddress: string | undefined = event.ResourceProperties['customerAddress'];
   const jumboFrames: boolean | undefined = returnBoolean(event.ResourceProperties['jumboFrames']);
@@ -133,8 +142,8 @@ function vifInit(event: CloudFormationCustomResourceEvent): VirtualInterfaceAllo
   const siteLink: boolean | undefined = returnBoolean(event.ResourceProperties['enableSiteLink']);
   const virtualInterfaceName: string = event.ResourceProperties['interfaceName'];
   const virtualInterfaceType: 'private' | 'transit' = event.ResourceProperties['type'];
-  const vlan: number = event.ResourceProperties['vlan'];
-  const tags: AWS.DirectConnect.TagList = event.ResourceProperties['tags'] ?? [];
+  const vlan = Number(event.ResourceProperties['vlan']);
+  const tags: Tag[] = event.ResourceProperties['tags'] ?? [];
 
   // Add Name tag
   tags.push({ key: 'Name', value: virtualInterfaceName });
@@ -161,18 +170,16 @@ function vifInit(event: CloudFormationCustomResourceEvent): VirtualInterfaceAllo
  */
 function setApiProps(
   vif: VirtualInterfaceAllocationAttributes,
-): AWS.DirectConnect.AllocatePrivateVirtualInterfaceRequest | AWS.DirectConnect.AllocateTransitVirtualInterfaceRequest {
+): AllocatePrivateVirtualInterfaceRequest | AllocateTransitVirtualInterfaceRequest {
   // Set API props based on virtual interface type
-  let apiProps:
-    | AWS.DirectConnect.AllocatePrivateVirtualInterfaceRequest
-    | AWS.DirectConnect.AllocateTransitVirtualInterfaceRequest;
+  let apiProps: AllocatePrivateVirtualInterfaceRequest | AllocateTransitVirtualInterfaceRequest;
   switch (vif.virtualInterfaceType) {
     case 'private':
       const newPrivateVirtualInterfaceAllocation = {
         asn: vif.asn,
         virtualInterfaceName: vif.virtualInterfaceName,
         vlan: vif.vlan,
-        addressFamily: vif.addressFamily,
+        addressFamily: vif.addressFamily as AddressFamily,
         amazonAddress: vif.amazonAddress,
         customerAddress: vif.customerAddress,
         mtu: vif.mtu,
@@ -191,7 +198,7 @@ function setApiProps(
         asn: vif.asn,
         virtualInterfaceName: vif.virtualInterfaceName,
         vlan: vif.vlan,
-        addressFamily: vif.addressFamily,
+        addressFamily: vif.addressFamily as AddressFamily,
         amazonAddress: vif.amazonAddress,
         customerAddress: vif.customerAddress,
         mtu: vif.mtu,
@@ -215,7 +222,7 @@ function oldVifInit(event: CloudFormationCustomResourceUpdateEvent): VirtualInte
   // Set variables from event
   const addressFamily: string = event.OldResourceProperties['addressFamily'];
   const amazonAddress: string | undefined = event.OldResourceProperties['amazonAddress'];
-  const asn: number = event.OldResourceProperties['customerAsn'];
+  const asn = Number(event.OldResourceProperties['customerAsn']);
   const connectionId: string = event.OldResourceProperties['connectionId'];
   const customerAddress: string | undefined = event.OldResourceProperties['customerAddress'];
   const jumboFrames: boolean | undefined = returnBoolean(event.OldResourceProperties['jumboFrames']);
@@ -223,8 +230,8 @@ function oldVifInit(event: CloudFormationCustomResourceUpdateEvent): VirtualInte
   const siteLink: boolean | undefined = returnBoolean(event.OldResourceProperties['enableSiteLink']);
   const virtualInterfaceName: string = event.OldResourceProperties['interfaceName'];
   const virtualInterfaceType: 'private' | 'transit' = event.OldResourceProperties['type'];
-  const vlan: number = event.OldResourceProperties['vlan'];
-  const tags: AWS.DirectConnect.TagList = event.OldResourceProperties['tags'] ?? [];
+  const vlan = Number(event.OldResourceProperties['vlan']);
+  const tags: Tag[] = event.OldResourceProperties['tags'] ?? [];
 
   // Add Name tag
   tags.push({ key: 'Name', value: virtualInterfaceName });
@@ -266,18 +273,12 @@ function validateUpdateEvent(vif: VirtualInterfaceAllocationAttributes, oldVif: 
   }
 }
 
-async function createPrivateAllocation(
-  dx: AWS.DirectConnect,
-  apiProps: AWS.DirectConnect.AllocatePrivateVirtualInterfaceRequest,
-) {
-  return throttlingBackOff(() => dx.allocatePrivateVirtualInterface(apiProps).promise());
+async function createPrivateAllocation(dx: DirectConnectClient, apiProps: AllocatePrivateVirtualInterfaceRequest) {
+  return throttlingBackOff(() => dx.send(new AllocatePrivateVirtualInterfaceCommand(apiProps)));
 }
 
-async function createTransitAllocation(
-  dx: AWS.DirectConnect,
-  apiProps: AWS.DirectConnect.AllocateTransitVirtualInterfaceRequest,
-) {
-  return throttlingBackOff(() => dx.allocateTransitVirtualInterface(apiProps).promise());
+async function createTransitAllocation(dx: DirectConnectClient, apiProps: AllocateTransitVirtualInterfaceRequest) {
+  return throttlingBackOff(() => dx.send(new AllocateTransitVirtualInterfaceCommand(apiProps)));
 }
 
 function returnBoolean(input: string): boolean | undefined {

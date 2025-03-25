@@ -10,7 +10,8 @@
  *  OR CONDITIONS OF ANY KIND, express or implied. See the License for the specific language governing permissions
  *  and limitations under the License.
  */
-import { DirectConnect } from 'aws-sdk';
+
+import { Tag } from '@aws-sdk/client-direct-connect';
 
 interface VirtualInterfaceAttributeProps {
   /**
@@ -64,7 +65,7 @@ interface VirtualInterfaceAttributeProps {
   /**
    * Tags for the virtual interface
    */
-  readonly tags?: DirectConnect.TagList;
+  readonly tags?: Tag[];
 }
 
 export class VirtualInterfaceAttributes {
@@ -80,7 +81,7 @@ export class VirtualInterfaceAttributes {
   public readonly amazonAddress?: string;
   public readonly authKey?: string;
   public readonly customerAddress?: string;
-  public readonly tags?: DirectConnect.TagList;
+  public readonly tags?: Tag[];
   constructor(props: VirtualInterfaceAttributeProps) {
     this.addressFamily = props.addressFamily;
     this.amazonAddress = props.amazonAddress;
