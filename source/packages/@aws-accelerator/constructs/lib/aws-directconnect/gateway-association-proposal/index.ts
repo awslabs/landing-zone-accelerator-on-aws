@@ -11,8 +11,12 @@
  *  and limitations under the License.
  */
 
-import * as AWS from 'aws-sdk';
-
+import {
+  DirectConnectClient,
+  CreateDirectConnectGatewayAssociationProposalCommand,
+  DeleteDirectConnectGatewayAssociationProposalCommand,
+} from '@aws-sdk/client-direct-connect';
+import { setRetryStrategy } from '@aws-accelerator/utils/lib/common-functions';
 import { throttlingBackOff } from '@aws-accelerator/utils/lib/throttle';
 import { CloudFormationCustomResourceEvent } from '@aws-accelerator/utils/lib/common-types';
 
@@ -34,7 +38,7 @@ export async function handler(event: CloudFormationCustomResourceEvent): Promise
   const directConnectGatewayId: string = event.ResourceProperties['directConnectGatewayId'];
   const directConnectGatewayOwnerAccount: string = event.ResourceProperties['directConnectGatewayOwnerAccount'];
   const solutionId = process.env['SOLUTION_ID'];
-  const dx = new AWS.DirectConnect({ customUserAgent: solutionId });
+  const dx = new DirectConnectClient({ customUserAgent: solutionId, retryStrategy: setRetryStrategy() });
   const gatewayId: string = event.ResourceProperties['gatewayId'];
 
   switch (event.RequestType) {
@@ -45,14 +49,14 @@ export async function handler(event: CloudFormationCustomResourceEvent): Promise
       });
       // Create gateway association
       const response = await throttlingBackOff(() =>
-        dx
-          .createDirectConnectGatewayAssociationProposal({
+        dx.send(
+          new CreateDirectConnectGatewayAssociationProposalCommand({
             directConnectGatewayId,
             directConnectGatewayOwnerAccount,
             addAllowedPrefixesToDirectConnectGateway: allowedPrefixes,
             gatewayId,
-          })
-          .promise(),
+          }),
+        ),
       );
       const associationId = response.directConnectGatewayAssociationProposal?.proposalId;
 
@@ -70,7 +74,11 @@ export async function handler(event: CloudFormationCustomResourceEvent): Promise
 
     case 'Delete':
       await throttlingBackOff(() =>
-        dx.deleteDirectConnectGatewayAssociationProposal({ proposalId: event.PhysicalResourceId }).promise(),
+        dx.send(
+          new DeleteDirectConnectGatewayAssociationProposalCommand({
+            proposalId: event.PhysicalResourceId,
+          }),
+        ),
       );
 
       return {

@@ -11,7 +11,16 @@
  *  and limitations under the License.
  */
 
-import * as AWS from 'aws-sdk';
+import {
+  DirectConnectClient,
+  CreateDirectConnectGatewayAssociationCommand,
+  DeleteDirectConnectGatewayAssociationCommand,
+  DescribeDirectConnectGatewayAssociationsCommand,
+  UpdateDirectConnectGatewayAssociationCommand,
+} from '@aws-sdk/client-direct-connect';
+import { EC2Client, DescribeTransitGatewayAttachmentsCommand } from '@aws-sdk/client-ec2';
+import { LambdaClient, InvokeCommand } from '@aws-sdk/client-lambda';
+import { setRetryStrategy } from '@aws-accelerator/utils/lib/common-functions';
 
 import { throttlingBackOff } from '@aws-accelerator/utils/lib/throttle';
 import { CloudFormationCustomResourceEvent } from '@aws-accelerator/utils/lib/common-types';
@@ -40,10 +49,10 @@ export async function handler(event: CloudFormationCustomResourceEvent): Promise
   const allowedPrefixesInitial: string[] = event.ResourceProperties['allowedPrefixes'];
   const directConnectGatewayId: string = event.ResourceProperties['directConnectGatewayId'];
   const solutionId = process.env['SOLUTION_ID'];
-  const dx = new AWS.DirectConnect({ customUserAgent: solutionId });
-  const ec2 = new AWS.EC2({ customUserAgent: solutionId });
+  const dx = new DirectConnectClient({ customUserAgent: solutionId, retryStrategy: setRetryStrategy() });
+  const ec2 = new EC2Client({ customUserAgent: solutionId, retryStrategy: setRetryStrategy() });
   const gatewayId: string = event.ResourceProperties['gatewayId'];
-  const lambdaClient = new AWS.Lambda({ customUserAgent: solutionId });
+  const lambdaClient = new LambdaClient({ customUserAgent: solutionId, retryStrategy: setRetryStrategy() });
   let attachmentId: string | undefined = undefined;
 
   switch (event.RequestType) {
@@ -53,13 +62,13 @@ export async function handler(event: CloudFormationCustomResourceEvent): Promise
       });
       // Create gateway association
       const response = await throttlingBackOff(() =>
-        dx
-          .createDirectConnectGatewayAssociation({
+        dx.send(
+          new CreateDirectConnectGatewayAssociationCommand({
             directConnectGatewayId,
             addAllowedPrefixesToDirectConnectGateway: allowedPrefixes,
             gatewayId,
-          })
-          .promise(),
+          }),
+        ),
       );
       const associationId = response.directConnectGatewayAssociation?.associationId;
 
@@ -94,13 +103,13 @@ export async function handler(event: CloudFormationCustomResourceEvent): Promise
         const [addPrefixes, removePrefixes] = getPrefixUpdates(allowedPrefixesInitial, allowedPrefixesPrevious);
 
         await throttlingBackOff(() =>
-          dx
-            .updateDirectConnectGatewayAssociation({
+          dx.send(
+            new UpdateDirectConnectGatewayAssociationCommand({
               associationId: event.PhysicalResourceId,
               addAllowedPrefixesToDirectConnectGateway: addPrefixes,
               removeAllowedPrefixesToDirectConnectGateway: removePrefixes,
-            })
-            .promise(),
+            }),
+          ),
         );
       }
 
@@ -123,7 +132,11 @@ export async function handler(event: CloudFormationCustomResourceEvent): Promise
     case 'Delete':
       if (!(await inProgress(dx, event.PhysicalResourceId))) {
         await throttlingBackOff(() =>
-          dx.deleteDirectConnectGatewayAssociation({ associationId: event.PhysicalResourceId }).promise(),
+          dx.send(
+            new DeleteDirectConnectGatewayAssociationCommand({
+              associationId: event.PhysicalResourceId,
+            }),
+          ),
         );
       }
 
@@ -149,7 +162,7 @@ export async function handler(event: CloudFormationCustomResourceEvent): Promise
  * @param expectedState
  */
 async function validateAssociationState(
-  dx: AWS.DirectConnect,
+  dx: DirectConnectClient,
   associationId: string,
   expectedState: string,
 ): Promise<boolean> {
@@ -159,7 +172,11 @@ async function validateAssociationState(
   // Describe gateway association until it is in the expected state
   do {
     const response = await throttlingBackOff(() =>
-      dx.describeDirectConnectGatewayAssociations({ associationId }).promise(),
+      dx.send(
+        new DescribeDirectConnectGatewayAssociationsCommand({
+          associationId,
+        }),
+      ),
     );
     if (!response.directConnectGatewayAssociations) {
       throw new Error(`Unable to retrieve gateway association ${associationId}`);
@@ -190,22 +207,22 @@ async function validateAssociationState(
  * @param directConnectGatewayId
  * @returns
  */
-async function getDxAttachmentId(ec2: AWS.EC2, directConnectGatewayId: string, gatewayId: string): Promise<string> {
+async function getDxAttachmentId(ec2: EC2Client, directConnectGatewayId: string, gatewayId: string): Promise<string> {
   let nextToken: string | undefined = undefined;
   let attachmentId: string | undefined = undefined;
 
   // Get transit gateway attachment ID
   do {
     const page = await throttlingBackOff(() =>
-      ec2
-        .describeTransitGatewayAttachments({
+      ec2.send(
+        new DescribeTransitGatewayAttachmentsCommand({
           Filters: [
             { Name: 'resource-id', Values: [directConnectGatewayId] },
             { Name: 'transit-gateway-id', Values: [gatewayId] },
           ],
           NextToken: nextToken,
-        })
-        .promise(),
+        }),
+      ),
     );
     // Set attachment ID
     for (const attachment of page.TransitGatewayAttachments ?? []) {
@@ -257,7 +274,7 @@ function getPrefixUpdates(
  * @param lambdaClient
  * @param event
  */
-async function retryLambda(lambdaClient: AWS.Lambda, event: CloudFormationCustomResourceEvent): Promise<void> {
+async function retryLambda(lambdaClient: LambdaClient, event: CloudFormationCustomResourceEvent): Promise<void> {
   // Add retry attempt to event
   if (!event.ResourceProperties['retryAttempt']) {
     event.ResourceProperties['retryAttempt'] = 0;
@@ -273,9 +290,13 @@ async function retryLambda(lambdaClient: AWS.Lambda, event: CloudFormationCustom
 
   // Invoke Lambda
   await throttlingBackOff(() =>
-    lambdaClient
-      .invoke({ FunctionName: event.ServiceToken, InvocationType: 'Event', Payload: JSON.stringify(event) })
-      .promise(),
+    lambdaClient.send(
+      new InvokeCommand({
+        FunctionName: event.ServiceToken,
+        InvocationType: 'Event',
+        Payload: JSON.stringify(event),
+      }),
+    ),
   );
 }
 
@@ -285,9 +306,13 @@ async function retryLambda(lambdaClient: AWS.Lambda, event: CloudFormationCustom
  * @param associationId
  * @returns
  */
-async function inProgress(dx: AWS.DirectConnect, associationId: string): Promise<boolean> {
+async function inProgress(dx: DirectConnectClient, associationId: string): Promise<boolean> {
   const response = await throttlingBackOff(() =>
-    dx.describeDirectConnectGatewayAssociations({ associationId }).promise(),
+    dx.send(
+      new DescribeDirectConnectGatewayAssociationsCommand({
+        associationId,
+      }),
+    ),
   );
 
   if (!response.directConnectGatewayAssociations) {
