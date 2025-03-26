@@ -554,6 +554,7 @@ export abstract class AcceleratorStack extends cdk.Stack {
     const isControlTowerEnabled = this.props.globalConfig.controlTower;
     const isConfigRecorderEnabled = this.props.securityConfig.awsConfig.enableConfigurationRecorder;
     const isPartitionSupported = this.serviceLinkedRoleSupportedPartitionList.includes(this.props.partition);
+    const isServiceLinkedRoleEnabled = this.props.securityConfig.awsConfig.useServiceLinkedRole === true;
     const isDeploymentTarget = this.props.securityConfig.awsConfig.deploymentTargets
       ? this.isIncluded(this.props.securityConfig.awsConfig.deploymentTargets)
       : true;
@@ -563,7 +564,8 @@ export abstract class AcceleratorStack extends cdk.Stack {
         (this.props.globalConfig.controlTower && isManagementAccount)) && // Control Tower is Enabled, and this is the Mgmt Acct
       isConfigRecorderEnabled &&
       isPartitionSupported &&
-      isDeploymentTarget
+      isDeploymentTarget &&
+      isServiceLinkedRoleEnabled
     ) {
       this.createServiceLinkedRole(ServiceLinkedRoleType.AWS_CONFIG, {
         cloudwatch: key.cloudwatch,

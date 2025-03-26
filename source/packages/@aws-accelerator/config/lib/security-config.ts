@@ -306,6 +306,7 @@ export class AwsConfig implements i.IAwsConfig {
   readonly overrideExisting: boolean | undefined;
   readonly aggregation: AwsConfigAggregation | undefined;
   readonly ruleSets: AwsConfigRuleSet[] = [];
+  readonly useServiceLinkedRole: boolean | undefined;
 }
 
 export class MetricConfig implements i.IMetricConfig {

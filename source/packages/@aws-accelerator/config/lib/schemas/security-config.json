@@ -195,6 +195,10 @@
             "$ref": "#/definitions/IAwsConfigRuleSet"
           },
           "type": "array"
+        },
+        "useServiceLinkedRole": {
+          "description": "Indicates whether to create the Configuration Recorder with a service linked role. If not specified, AWS Config will use a custom IAM role created by LZA. For new deployments, it is recommended to set this setting to true. For more information, see https://docs.aws.amazon.com/config/latest/developerguide/using-service-linked-roles.html",
+          "type": "boolean"
         }
       },
       "required": [
