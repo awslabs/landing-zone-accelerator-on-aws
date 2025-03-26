@@ -403,7 +403,15 @@ async function manageLogSubscriptions(
         item => item.destinationArn === acceleratorCreatedLogDestinationArn,
       );
 
-      const numberOfSubscriptions = subscriptionFilters.length;
+      const replacementSubscription = subscriptionFilters.find(
+        item => item.destinationArn === replaceLogDestinationArn,
+      );
+
+      let numberOfSubscriptions = subscriptionFilters.length;
+
+      if (replacementSubscription) {
+        numberOfSubscriptions = numberOfSubscriptions - 1;
+      }
 
       await updateLogSubscription(
         logGroupName,
