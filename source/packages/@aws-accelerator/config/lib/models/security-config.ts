@@ -1784,6 +1784,7 @@ export interface IAwsConfigAggregation {
  *   deploymentTargets:
  *     organizationalUnits:
  *         - Infrastructure
+ *   useServiceLinkedRole: true
  *   aggregation:
  *     enable: true
  *     delegatedAdminAccount: LogArchive
@@ -1857,6 +1858,12 @@ export interface IAwsConfig {
    * AWS Config rule sets
    */
   readonly ruleSets?: IAwsConfigRuleSet[];
+  /**
+   * Indicates whether to create the Configuration Recorder with a service linked role. If not specified, AWS Config will use a custom IAM role created by LZA.
+   * For new deployments, it is recommended to set this setting to true.
+   * For more information, see https://docs.aws.amazon.com/config/latest/developerguide/using-service-linked-roles.html
+   */
+  readonly useServiceLinkedRole?: boolean;
 }
 
 /**

@@ -3323,19 +3323,104 @@ exports[`SecurityResourcesStack Construct(SecurityResourcesStack):  Snapshot Tes
           "IncludeGlobalResourceTypes": true,
         },
         "RoleARN": {
-          "Fn::Join": [
-            "",
-            [
-              "arn:",
-              {
-                "Ref": "AWS::Partition",
-              },
-              ":iam::111111111111:role/aws-service-role/config.amazonaws.com/AWSServiceRoleForConfig",
-            ],
+          "Fn::GetAtt": [
+            "ConfigRecorderRoleC4E33AA3",
+            "Arn",
           ],
         },
       },
       "Type": "AWS::Config::ConfigurationRecorder",
+    },
+    "ConfigRecorderRoleC4E33AA3": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-IAM4",
+              "reason": "ConfigRecorderRole needs managed policy service-role/AWS_ConfigRole to administer config rules",
+            },
+            {
+              "id": "AwsSolutions-IAM5",
+              "reason": "ConfigRecorderRole DefaultPolicy is built by cdk.",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "config.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": [
+          {
+            "Fn::Join": [
+              "",
+              [
+                "arn:",
+                {
+                  "Ref": "AWS::Partition",
+                },
+                ":iam::aws:policy/service-role/AWS_ConfigRole",
+              ],
+            ],
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "ConfigRecorderRoleDefaultPolicyB8261303": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-IAM5",
+              "reason": "Single bucket",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": [
+                "s3:PutObject",
+                "s3:PutObjectAcl",
+              ],
+              "Condition": {
+                "StringLike": {
+                  "s3:x-amz-acl": "bucket-owner-full-control",
+                },
+              },
+              "Effect": "Allow",
+              "Resource": "arn:aws:s3:::aws-accelerator-central-logs-333333333333-us-west-2/*",
+              "Sid": "S3WriteAccess",
+            },
+            {
+              "Action": "s3:GetBucketAcl",
+              "Effect": "Allow",
+              "Resource": "arn:aws:s3:::aws-accelerator-central-logs-333333333333-us-west-2",
+              "Sid": "S3GetAclAccess",
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "ConfigRecorderRoleDefaultPolicyB8261303",
+        "Roles": [
+          {
+            "Ref": "ConfigRecorderRoleC4E33AA3",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
     },
     "ConsoleAuthenticationFailureMetricFilter0F833CC2": {
       "DependsOn": [
@@ -6823,19 +6908,104 @@ exports[`delegatedAdminStack Construct(SecurityResourcesStack):  Snapshot Test 1
           "IncludeGlobalResourceTypes": true,
         },
         "RoleARN": {
-          "Fn::Join": [
-            "",
-            [
-              "arn:",
-              {
-                "Ref": "AWS::Partition",
-              },
-              ":iam::111111111111:role/aws-service-role/config.amazonaws.com/AWSServiceRoleForConfig",
-            ],
+          "Fn::GetAtt": [
+            "ConfigRecorderRoleC4E33AA3",
+            "Arn",
           ],
         },
       },
       "Type": "AWS::Config::ConfigurationRecorder",
+    },
+    "ConfigRecorderRoleC4E33AA3": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-IAM4",
+              "reason": "ConfigRecorderRole needs managed policy service-role/AWS_ConfigRole to administer config rules",
+            },
+            {
+              "id": "AwsSolutions-IAM5",
+              "reason": "ConfigRecorderRole DefaultPolicy is built by cdk.",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "config.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": [
+          {
+            "Fn::Join": [
+              "",
+              [
+                "arn:",
+                {
+                  "Ref": "AWS::Partition",
+                },
+                ":iam::aws:policy/service-role/AWS_ConfigRole",
+              ],
+            ],
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "ConfigRecorderRoleDefaultPolicyB8261303": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-IAM5",
+              "reason": "Single bucket",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": [
+                "s3:PutObject",
+                "s3:PutObjectAcl",
+              ],
+              "Condition": {
+                "StringLike": {
+                  "s3:x-amz-acl": "bucket-owner-full-control",
+                },
+              },
+              "Effect": "Allow",
+              "Resource": "arn:aws:s3:::aws-accelerator-central-logs-333333333333-us-west-2/*",
+              "Sid": "S3WriteAccess",
+            },
+            {
+              "Action": "s3:GetBucketAcl",
+              "Effect": "Allow",
+              "Resource": "arn:aws:s3:::aws-accelerator-central-logs-333333333333-us-west-2",
+              "Sid": "S3GetAclAccess",
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "ConfigRecorderRoleDefaultPolicyB8261303",
+        "Roles": [
+          {
+            "Ref": "ConfigRecorderRoleC4E33AA3",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
     },
     "ConsoleAuthenticationFailureMetricFilter0F833CC2": {
       "Properties": {

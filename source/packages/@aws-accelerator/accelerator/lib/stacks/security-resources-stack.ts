@@ -12,6 +12,7 @@
  */
 
 import * as cdk from 'aws-cdk-lib';
+import { NagSuppressions } from 'cdk-nag';
 import { pascalCase } from 'change-case';
 import { Construct } from 'constructs';
 import path from 'path';
@@ -476,9 +477,7 @@ export class SecurityResourcesStack extends AcceleratorStack {
         : true)
     ) {
       // declaring variable here as this value is called twice and synth can run into duplicate construct name error
-      const configRecorderRoleArn = `arn:${cdk.Stack.of(this).partition}:iam::${
-        cdk.Stack.of(this).account
-      }:role/aws-service-role/config.amazonaws.com/AWSServiceRoleForConfig`;
+      const configRecorderRoleArn = this.createConfigRecorderRole();
       /**
        * These resources are deprecated
        * They eventually will be removed and only
@@ -601,6 +600,83 @@ export class SecurityResourcesStack extends AcceleratorStack {
         ],
       });
     }
+  }
+
+  private createConfigRecorderRole() {
+    if (this.props.useExistingRoles === true) {
+      return `arn:${cdk.Stack.of(this).partition}:iam::${cdk.Stack.of(this).account}:role/${
+        this.props.prefixes.accelerator
+      }ConfigRecorderRole`;
+    } else if (this.props.securityConfig.awsConfig.useServiceLinkedRole === true) {
+      return `arn:${cdk.Stack.of(this).partition}:iam::${
+        cdk.Stack.of(this).account
+      }:role/aws-service-role/config.amazonaws.com/AWSServiceRoleForConfig`;
+    }
+    const configRecorderRole = new cdk.aws_iam.Role(this, 'ConfigRecorderRole', {
+      assumedBy: new cdk.aws_iam.ServicePrincipal('config.amazonaws.com'),
+      managedPolicies: [cdk.aws_iam.ManagedPolicy.fromAwsManagedPolicyName('service-role/AWS_ConfigRole')],
+    });
+
+    // AwsSolutions-IAM4: The IAM user, role, or group uses AWS managed policies
+    // rule suppression with evidence for this permission.
+    NagSuppressions.addResourceSuppressions(
+      configRecorderRole,
+      [
+        {
+          id: 'AwsSolutions-IAM4',
+          reason: 'ConfigRecorderRole needs managed policy service-role/AWS_ConfigRole to administer config rules',
+        },
+        {
+          id: 'AwsSolutions-IAM5',
+          reason: 'ConfigRecorderRole DefaultPolicy is built by cdk.',
+        },
+      ],
+      true,
+    );
+
+    /**
+     * As per the documentation, the config role should have
+     * the s3:PutObject permission to avoid access denied issues
+     * while AWS config tries to check the s3 bucket (in another account) write permissions
+     * https://docs.aws.amazon.com/config/latest/developerguide/s3-bucket-policy.html
+     *
+     */
+    configRecorderRole.addToPrincipalPolicy(
+      new cdk.aws_iam.PolicyStatement({
+        sid: 'S3WriteAccess',
+        actions: ['s3:PutObject', 's3:PutObjectAcl'],
+        resources: [
+          `arn:${this.props.partition}:s3:::${this.acceleratorResourceNames.bucketPrefixes.centralLogs}-${this.logArchiveAccountId}-${this.props.centralizedLoggingRegion}/*`,
+        ],
+        conditions: {
+          StringLike: {
+            's3:x-amz-acl': 'bucket-owner-full-control',
+          },
+        },
+      }),
+    );
+    configRecorderRole.addToPrincipalPolicy(
+      new cdk.aws_iam.PolicyStatement({
+        sid: 'S3GetAclAccess',
+        actions: ['s3:GetBucketAcl'],
+        resources: [
+          `arn:${this.props.partition}:s3:::${this.acceleratorResourceNames.bucketPrefixes.centralLogs}-${this.logArchiveAccountId}-${this.props.centralizedLoggingRegion}`,
+        ],
+      }),
+    );
+
+    // AwsSolutions-IAM5
+    this.nagSuppressionInputs.push({
+      id: NagSuppressionRuleIds.IAM5,
+      details: [
+        {
+          path: `${this.stackName}/ConfigRecorderRole/DefaultPolicy/Resource`,
+          reason: 'Single bucket',
+        },
+      ],
+    });
+
+    return configRecorderRole.roleArn;
   }
 
   /**
