@@ -510,15 +510,14 @@ export class SecurityAuditStack extends AcceleratorStack {
    */
   private configureIamAnalyzer() {
     this.logger.debug(`accessAnalyzer.enable: ${this.props.securityConfig.accessAnalyzer.enable}`);
-    if (
-      this.props.securityConfig.accessAnalyzer.enable &&
-      this.props.globalConfig.homeRegion === cdk.Stack.of(this).region
-    ) {
-      this.logger.info('Adding IAM Access Analyzer ');
-      new cdk.aws_accessanalyzer.CfnAnalyzer(this, 'AccessAnalyzer', {
-        type: 'ORGANIZATION',
-      });
+    if (!this.props.securityConfig.accessAnalyzer.enable) {
+      return;
     }
+
+    this.logger.info(`Adding IAM Access Analyzer for region ${cdk.Stack.of(this).region}`);
+    new cdk.aws_accessanalyzer.CfnAnalyzer(this, 'AccessAnalyzer', {
+      type: 'ORGANIZATION',
+    });
   }
 
   /**
