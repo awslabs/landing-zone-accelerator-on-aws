@@ -11,6 +11,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- fix(access-analyzer): fixed problem with access analyzer not created in additional regions.
+
 ### Changed
 
 - chore(accelerator): update sdk v3
