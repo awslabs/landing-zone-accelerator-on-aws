@@ -739,7 +739,7 @@ export class LoggingStack extends AcceleratorStack {
     if (
       props.globalConfig.snsTopics &&
       cdk.Stack.of(this).account === props.accountsConfig.getLogArchiveAccountId() &&
-      !this.isRegionExcluded(props.globalConfig.snsTopics?.deploymentTargets.excludedRegions ?? [])
+      !this.isRegionExcluded(props.globalConfig.snsTopics?.deploymentTargets?.excludedRegions ?? [])
     ) {
       this.createCentralSnsKey();
 

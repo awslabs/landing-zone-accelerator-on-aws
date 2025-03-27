@@ -171,7 +171,7 @@ export class SecurityResourcesStack extends AcceleratorStack {
     if (
       (this.props.globalConfig.snsTopics &&
         cdk.Stack.of(this).account === this.props.accountsConfig.getLogArchiveAccountId()) ||
-      (this.props.globalConfig.snsTopics && this.isIncluded(this.props.globalConfig.snsTopics.deploymentTargets))
+      (this.props.globalConfig.snsTopics && this.isIncluded(this.props.globalConfig.snsTopics.deploymentTargets ?? []))
     ) {
       this.snsKey = cdk.aws_kms.Key.fromKeyArn(
         this,
