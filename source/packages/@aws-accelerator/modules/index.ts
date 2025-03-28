@@ -20,7 +20,7 @@ import {
   GroupedPromisesByRunOrderType,
 } from './models/types';
 import path from 'path';
-import { createLogger } from '../../@aws-lza/common/logger';
+import { createLogger, MODULE_EXCEPTIONS } from '../../@aws-lza/index';
 import { setResourcePrefixes } from '../accelerator/utils/app-utils';
 import { getAcceleratorModuleRunnerParameters, getManagementAccountCredentials } from './lib/functions';
 import { AcceleratorModuleStageDetails } from './models/constants';
@@ -44,7 +44,6 @@ export abstract class ModuleRunner {
     }
 
     if (params.stage) {
-      ModuleRunner.logger.info(`Executing stage "${params.stage}" modules`);
       return await ModuleRunner.executeStageDependentModules(params);
     }
 
@@ -148,7 +147,7 @@ export abstract class ModuleRunner {
 
     if (stageModuleItems.length > 1) {
       throw new Error(
-        `Internal error - duplicate entries found for stage ${params.stage} in AcceleratorModuleStageDetails`,
+        `${MODULE_EXCEPTIONS.INVALID_INPUT} - duplicate entries found for stage ${params.stage} in AcceleratorModuleStageDetails`,
       );
     }
 
@@ -163,6 +162,7 @@ export abstract class ModuleRunner {
     const statuses: string[] = [];
     const promiseItems: PromiseItemType[] = [];
 
+    ModuleRunner.logger.info(`Executing modules for stage "${params.stage}"`);
     for (const sortedModuleItem of sortedModuleItems) {
       promiseItems.push({
         runOrder: sortedModuleItem.runOrder,

@@ -38,6 +38,7 @@ import {
   mockReplacementsConfig,
   mockSecurityConfig,
 } from './mocked-resources';
+import { MODULE_EXCEPTIONS } from '../../../@aws-lza/index';
 
 //
 // Mock Dependencies
@@ -144,7 +145,7 @@ describe('ModuleRunner', () => {
       await expect(
         ModuleRunner.execute({ ...MOCK_CONSTANTS.runnerParameters, stage: MOCK_CONSTANTS.invalidStage }),
       ).rejects.toThrow(
-        `Internal error - duplicate entries found for stage ${MOCK_CONSTANTS.invalidStage} in AcceleratorModuleStageDetails`,
+        `${MODULE_EXCEPTIONS.INVALID_INPUT} - duplicate entries found for stage ${MOCK_CONSTANTS.invalidStage} in AcceleratorModuleStageDetails`,
       );
     });
 

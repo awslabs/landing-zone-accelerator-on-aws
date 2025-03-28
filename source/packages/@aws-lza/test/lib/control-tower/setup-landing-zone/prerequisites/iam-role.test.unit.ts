@@ -23,6 +23,7 @@ import {
   waitUntilRoleExists,
   NoSuchEntityException,
 } from '@aws-sdk/client-iam';
+import { MODULE_EXCEPTIONS } from '../../../../../common/enums';
 
 // Mock dependencies
 jest.mock('@aws-sdk/client-iam', () => {
@@ -105,7 +106,7 @@ describe('IAM Role Tests', () => {
     expect(AttachRolePolicyCommand).toHaveBeenCalledTimes(0);
   });
 
-  test('should handle internal error for while checking existing roles', async () => {
+  test('should handle service api exception for while checking existing roles', async () => {
     // Setup
     mockSend.mockImplementation(command => {
       if (command instanceof GetRoleCommand) {
@@ -122,7 +123,7 @@ describe('IAM Role Tests', () => {
         MOCK_CONSTANTS.solutionId,
         MOCK_CONSTANTS.credentials,
       );
-    }).rejects.toThrow(`Internal error: GetRoleCommand didn't return Role object`);
+    }).rejects.toThrow(`${MODULE_EXCEPTIONS.SERVICE_EXCEPTION}: GetRoleCommand did not return Role object`);
     expect(GetRoleCommand).toHaveBeenCalledTimes(1);
     expect(CreateRoleCommand).toHaveBeenCalledTimes(0);
     expect(PutRolePolicyCommand).toHaveBeenCalledTimes(0);
