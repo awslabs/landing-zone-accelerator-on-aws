@@ -12,7 +12,6 @@
  */
 
 import { SetupControlTowerLandingZoneModule } from '../lib/actions/setup-control-tower-landing-zone';
-import { ExampleModule } from '../lib/actions/example-module';
 import { AcceleratorModules, AcceleratorModuleStages } from './enums';
 import { AcceleratorModuleStageDetailsType, AcceleratorModuleStageOrdersType, ModuleParams } from './types';
 
@@ -75,15 +74,6 @@ export const AcceleratorModuleStageDetails: AcceleratorModuleStageDetailsType[] 
         runOrder: 1,
         handler: async (params: ModuleParams) => {
           return await SetupControlTowerLandingZoneModule.execute(params);
-        },
-      },
-      {
-        name: AcceleratorModules.EXAMPLE_MODULE,
-        runOrder: 2,
-        description:
-          'An Example module which is executed in PREPARE stage. This module is used to demonstrate the usage of the AWS Security Hub module to configure the service across the organization',
-        handler: async (params: ModuleParams) => {
-          return await ExampleModule.execute(params, AcceleratorModuleStages.PREPARE);
         },
       },
     ],

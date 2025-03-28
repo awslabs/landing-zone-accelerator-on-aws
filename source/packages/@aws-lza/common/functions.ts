@@ -122,16 +122,20 @@ export async function getLandingZoneIdentifier(client: ControlTowerClient): Prom
   const response = await throttlingBackOff(() => client.send(new ListLandingZonesCommand({})));
 
   if (!response.landingZones) {
-    throw new Error(`Internal error: ListLandingZonesCommand did not return landingZones object`);
+    throw new Error(
+      `${MODULE_EXCEPTIONS.SERVICE_EXCEPTION}: ListLandingZonesCommand did not return landingZones object`,
+    );
   }
 
   if (response.landingZones.length > 1) {
     logger.warn(
-      `Internal error: ListLandingZonesCommand returned multiple landing zones, list of Landing Zone arns are - ${response.landingZones.join(
+      `${
+        MODULE_EXCEPTIONS.SERVICE_EXCEPTION
+      }: ListLandingZonesCommand returned multiple landing zones, list of Landing Zone arns are - ${response.landingZones.join(
         ',',
       )}`,
     );
-    throw new Error(`Internal error: ListLandingZonesCommand returned multiple landing zones`);
+    throw new Error(`${MODULE_EXCEPTIONS.SERVICE_EXCEPTION}: ListLandingZonesCommand returned multiple landing zones`);
   }
 
   if (response.landingZones.length === 1 && response.landingZones[0].arn) {
@@ -193,11 +197,8 @@ export async function getLandingZoneDetails(
       landingZoneDetails.latestAvailableVersion = response.landingZone.latestAvailableVersion!;
       landingZoneDetails.driftStatus = response.landingZone.driftStatus!.status!;
     }
-  } catch (
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    e: any
-  ) {
-    if (e instanceof ResourceNotFoundException && landingZoneIdentifier) {
+  } catch (e: unknown) {
+    if (e instanceof ResourceNotFoundException) {
       throw new Error(
         `Existing AWS Control Tower Landing Zone home region differs from the executing environment region ${region}. Existing Landing Zone identifier is ${landingZoneIdentifier}`,
       );
@@ -270,17 +271,17 @@ export async function getCredentials(options: {
   //
   // Validate response
   if (!response.Credentials) {
-    throw new Error(`Internal error: AssumeRoleCommand did not return Credentials`);
+    throw new Error(`${MODULE_EXCEPTIONS.SERVICE_EXCEPTION}: AssumeRoleCommand did not return Credentials`);
   }
 
   if (!response.Credentials.AccessKeyId) {
-    throw new Error(`Internal error: AssumeRoleCommand did not return AccessKeyId`);
+    throw new Error(`${MODULE_EXCEPTIONS.SERVICE_EXCEPTION}: AssumeRoleCommand did not return AccessKeyId`);
   }
   if (!response.Credentials.SecretAccessKey) {
-    throw new Error(`Internal error: AssumeRoleCommand did not return SecretAccessKey`);
+    throw new Error(`${MODULE_EXCEPTIONS.SERVICE_EXCEPTION}: AssumeRoleCommand did not return SecretAccessKey`);
   }
   if (!response.Credentials.SessionToken) {
-    throw new Error(`Internal error: AssumeRoleCommand did not return SessionToken`);
+    throw new Error(`${MODULE_EXCEPTIONS.SERVICE_EXCEPTION}: AssumeRoleCommand did not return SessionToken`);
   }
 
   return {

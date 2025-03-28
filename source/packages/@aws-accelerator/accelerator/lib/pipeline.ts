@@ -598,13 +598,8 @@ export class AcceleratorPipeline extends Construct {
             commands: [
               'env',
               'cd $WORK_DIR',
-              `if [ "prepare" = "\${ACCELERATOR_STAGE}" ]; then set -e && LOG_LEVEL=${
-                BuildLogLevel.INFO
-              } yarn run ts-node ../lza-modules/bin/runner.ts --module control-tower --partition ${
-                cdk.Aws.PARTITION
-              } --use-existing-role ${
-                this.props.useExistingRoles ? 'Yes' : 'No'
-              } --config-dir $CODEBUILD_SRC_DIR_Config; fi`,
+              `useExistingRole=${this.props.useExistingRoles ? 'Yes' : 'No'}`,
+              `set -e && LOG_LEVEL=${BuildLogLevel.INFO} && yarn run ts-node ../modules/bin/runner.ts --partition ${cdk.Aws.PARTITION} --region ${cdk.Aws.REGION} --config-dir $CODEBUILD_SRC_DIR_Config --stage $ACCELERATOR_STAGE --use-existing-role $useExistingRole --dry-run no`,
               `if [ "prepare" = "\${ACCELERATOR_STAGE}" ] && [ -z "\${ACCELERATOR_NO_ORG_MODULE}" ]; then set -e && LOG_LEVEL=info && yarn run ts-node ../lza-modules/bin/runner.ts --module aws-organizations --partition  ${
                 cdk.Aws.PARTITION
               } --use-existing-role ${

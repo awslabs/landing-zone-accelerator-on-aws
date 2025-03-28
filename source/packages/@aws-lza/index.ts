@@ -12,6 +12,12 @@
  */
 
 //
+// Common resources
+//
+export { MODULE_EXCEPTIONS } from './common/enums';
+export { createLogger } from './common/logger';
+
+//
 // Control Tower Module resources
 //
 export { ISetupLandingZoneHandlerParameter } from './interfaces/control-tower/setup-landing-zone';
@@ -36,6 +42,10 @@ export { IMoveAccountHandlerParameter } from './interfaces/aws-organizations/mov
 export { moveAccount } from './executors/accelerator-aws-organizations';
 
 export { getOrganizationId } from './common/functions';
+
+//
+// Amazon EC2 Module resources
+//
 
 export { IManageEbsDefaultEncryptionHandlerParameter } from './interfaces/amazon-ec2/manage-ebs-default-encryption';
 export { manageEbsDefaultEncryption } from './executors/accelerator-amazon-ec2';
