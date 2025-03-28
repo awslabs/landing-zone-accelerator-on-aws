@@ -604,17 +604,17 @@ export class AcceleratorPipeline extends Construct {
                 cdk.Aws.PARTITION
               } --use-existing-role ${
                 this.props.useExistingRoles ? 'Yes' : 'No'
-              } --config-dir $CODEBUILD_SRC_DIR_Config && if [ -z "\${ACCELERATOR_NO_ORG_MODULE}" ]; then LOG_LEVEL=${
-                BuildLogLevel.INFO
-              } && yarn run ts-node ../lza-modules/bin/runner.ts --module aws-organizations --partition  ${
+              } --config-dir $CODEBUILD_SRC_DIR_Config; fi`,
+              `if [ "prepare" = "\${ACCELERATOR_STAGE}" ] && [ -z "\${ACCELERATOR_NO_ORG_MODULE}" ]; then set -e && LOG_LEVEL=info && yarn run ts-node ../lza-modules/bin/runner.ts --module aws-organizations --partition  ${
                 cdk.Aws.PARTITION
               } --use-existing-role ${
                 this.props.useExistingRoles ? 'Yes' : 'No'
-              } --config-dir $CODEBUILD_SRC_DIR_Config && yarn run ts-node ../lza-modules/bin/runner.ts --module account-alias --partition  ${
+              } --config-dir $CODEBUILD_SRC_DIR_Config; else echo "Module aws-organizations execution skipped by environment settings."; fi`,
+              `if [ "prepare" = "\${ACCELERATOR_STAGE}" ]; then set -e && LOG_LEVEL=info && yarn run ts-node ../lza-modules/bin/runner.ts --module account-alias --partition  ${
                 cdk.Aws.PARTITION
               } --use-existing-role ${
                 this.props.useExistingRoles ? 'Yes' : 'No'
-              } --config-dir $CODEBUILD_SRC_DIR_Config; else echo "Module aws-organizations execution skipped by environment settings."; fi ; fi`,
+              } --config-dir $CODEBUILD_SRC_DIR_Config; fi`,
               `if [ "prepare" = "\${ACCELERATOR_STAGE}" ]; then set -e && yarn run ts-node  ./lib/prerequisites.ts --config-dir $CODEBUILD_SRC_DIR_Config --partition ${cdk.Aws.PARTITION} --minimal; fi`,
               'export FULL_SYNTH="true"',
               'if [ $ASEA_MAPPING_BUCKET ]; then aws s3api head-object --bucket $ASEA_MAPPING_BUCKET --key $ASEA_MAPPING_FILE >/dev/null 2>&1 || export FULL_SYNTH="false"; fi;',
