@@ -497,7 +497,9 @@ describe('functions', () => {
       // Execute && Verify
       expect(async () => {
         await getLandingZoneIdentifier(new ControlTowerClient({}));
-      }).rejects.toThrowError(`Internal error: ListLandingZonesCommand returned multiple landing zones`);
+      }).rejects.toThrowError(
+        `${MODULE_EXCEPTIONS.SERVICE_EXCEPTION}: ListLandingZonesCommand returned multiple landing zones`,
+      );
       expect(ListLandingZonesCommand).toHaveBeenCalledTimes(1);
     });
 
@@ -513,7 +515,9 @@ describe('functions', () => {
       // Execute && Verify
       expect(async () => {
         await getLandingZoneIdentifier(new ControlTowerClient({}));
-      }).rejects.toThrowError(`Internal error: ListLandingZonesCommand did not return landingZones object`);
+      }).rejects.toThrowError(
+        `${MODULE_EXCEPTIONS.SERVICE_EXCEPTION}: ListLandingZonesCommand did not return landingZones object`,
+      );
       expect(ListLandingZonesCommand).toHaveBeenCalledTimes(1);
     });
   });
@@ -650,7 +654,7 @@ describe('functions', () => {
           partition: MOCK_CONSTANTS.partition,
           assumeRoleArn: MOCK_CONSTANTS.assumeRoleArn,
         }),
-      ).rejects.toThrow('Internal error: AssumeRoleCommand did not return AccessKeyId');
+      ).rejects.toThrow(`${MODULE_EXCEPTIONS.SERVICE_EXCEPTION}: AssumeRoleCommand did not return AccessKeyId`);
       expect(GetCallerIdentityCommand).toHaveBeenCalledTimes(1);
       expect(AssumeRoleCommand).toHaveBeenCalledTimes(1);
       expect(AssumeRoleCommand).toHaveBeenCalledWith({
@@ -681,7 +685,7 @@ describe('functions', () => {
           assumeRoleArn: MOCK_CONSTANTS.assumeRoleArn,
           sessionName: MOCK_CONSTANTS.sessionName,
         }),
-      ).rejects.toThrow('Internal error: AssumeRoleCommand did not return SecretAccessKey');
+      ).rejects.toThrow(`${MODULE_EXCEPTIONS.SERVICE_EXCEPTION}: AssumeRoleCommand did not return SecretAccessKey`);
       expect(GetCallerIdentityCommand).toHaveBeenCalledTimes(1);
       expect(AssumeRoleCommand).toHaveBeenCalledTimes(1);
       expect(AssumeRoleCommand).toHaveBeenCalledWith({
@@ -716,7 +720,7 @@ describe('functions', () => {
           partition: MOCK_CONSTANTS.partition,
           assumeRoleName: MOCK_CONSTANTS.assumeRoleName,
         }),
-      ).rejects.toThrow('Internal error: AssumeRoleCommand did not return SessionToken');
+      ).rejects.toThrow(`${MODULE_EXCEPTIONS.SERVICE_EXCEPTION}: AssumeRoleCommand did not return SessionToken`);
       expect(GetCallerIdentityCommand).toHaveBeenCalledTimes(1);
       expect(AssumeRoleCommand).toHaveBeenCalledTimes(1);
       expect(AssumeRoleCommand).toHaveBeenCalledWith({
@@ -746,7 +750,7 @@ describe('functions', () => {
           partition: MOCK_CONSTANTS.partition,
           assumeRoleName: MOCK_CONSTANTS.assumeRoleName,
         }),
-      ).rejects.toThrow(`Internal error: AssumeRoleCommand did not return Credentials`);
+      ).rejects.toThrow(`${MODULE_EXCEPTIONS.SERVICE_EXCEPTION}: AssumeRoleCommand did not return Credentials`);
       expect(GetCallerIdentityCommand).toHaveBeenCalledTimes(1);
       expect(AssumeRoleCommand).toHaveBeenCalledTimes(1);
       expect(AssumeRoleCommand).toHaveBeenCalledWith({

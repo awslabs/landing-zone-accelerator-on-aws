@@ -29,6 +29,9 @@ process.on('unhandledRejection', reason => {
  * @returns status string
  */
 async function main(): Promise<string> {
+  if (process.env['USE_LZA_MODULES'] === 'no') {
+    return 'Skipping execution of LZA Modules';
+  }
   //validate and get runner parameters
   const runnerParams = validateAndGetRunnerParameters();
 

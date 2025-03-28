@@ -26,6 +26,7 @@ import { setRetryStrategy } from '../../../../common/functions';
 import { createLogger } from '../../../../common/logger';
 import { IAssumeRoleCredential } from '../../../../common/resources';
 import { throttlingBackOff } from '../../../../common/throttle';
+import { MODULE_EXCEPTIONS } from '../../../../common/enums';
 
 /**
  * IamRole abstract class to create AWS Control Tower Landing Zone IAM roles.
@@ -70,17 +71,14 @@ export abstract class IamRole {
       );
 
       if (!response.Role) {
-        throw new Error(`Internal error: GetRoleCommand didn't return Role object`);
+        throw new Error(`${MODULE_EXCEPTIONS.SERVICE_EXCEPTION}: GetRoleCommand did not return Role object`);
       }
 
       if (response.Role.RoleName === roleName) {
         return true;
       }
       return false;
-    } catch (
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      e: any
-    ) {
+    } catch (e: unknown) {
       if (e instanceof NoSuchEntityException) {
         return false;
       }

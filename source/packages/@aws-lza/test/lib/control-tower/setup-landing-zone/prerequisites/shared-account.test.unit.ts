@@ -19,6 +19,7 @@ import {
   DescribeCreateAccountStatusCommand,
   OrganizationsClient,
 } from '@aws-sdk/client-organizations';
+import { MODULE_EXCEPTIONS } from '../../../../../common/enums';
 
 // Mock dependencies
 jest.mock('@aws-sdk/client-organizations', () => {
@@ -177,7 +178,7 @@ describe('IAM Role Tests', () => {
     expect(DescribeCreateAccountStatusCommand).toHaveBeenCalledTimes(2);
   });
 
-  test('should internal error for create account command', async () => {
+  test('should se error for create account command', async () => {
     // Setup
     mockSend.mockImplementation(command => {
       if (command instanceof CreateAccountCommand) {
@@ -197,14 +198,14 @@ describe('IAM Role Tests', () => {
       );
     }).rejects.toThrowError(
       new RegExp(
-        `Internal error: account creation failed, CreateAccountCommand didn't return CreateAccountStatus object for`,
+        `${MODULE_EXCEPTIONS.SERVICE_EXCEPTION}: account creation failed, CreateAccountCommand didn't return CreateAccountStatus object for`,
       ),
     );
     expect(CreateAccountCommand).toHaveBeenCalledTimes(2);
     expect(DescribeCreateAccountStatusCommand).toHaveBeenCalledTimes(0);
   });
 
-  test('should internal error for describe create account status command', async () => {
+  test('should service api exception for describe create account status command', async () => {
     // Setup
     mockSend.mockImplementation(command => {
       if (command instanceof CreateAccountCommand) {
@@ -227,7 +228,7 @@ describe('IAM Role Tests', () => {
       );
     }).rejects.toThrowError(
       new RegExp(
-        `Internal error: account creation failed, DescribeCreateAccountStatusCommand didn't return CreateAccountStatus object for`,
+        `${MODULE_EXCEPTIONS.SERVICE_EXCEPTION}: account creation failed, DescribeCreateAccountStatusCommand didn't return CreateAccountStatus object for`,
       ),
     );
     expect(CreateAccountCommand).toHaveBeenCalledTimes(2);
