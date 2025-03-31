@@ -338,6 +338,7 @@ export class AcceleratorToolkit {
 
     let bootstrapEnvOptions: BootstrapEnvironmentOptions = {
       toolkitStackName: toolkitStackName,
+      terminationProtection: true,
       parameters: {
         bucketName: configuration.settings.get(['toolkitBucket', 'bucketName']),
         kmsKeyId: configuration.settings.get(['toolkitBucket', 'kmsKeyId']),
