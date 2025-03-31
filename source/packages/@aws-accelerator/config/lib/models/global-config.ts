@@ -2003,7 +2003,7 @@ export interface ISnsConfig {
  *
  * @example
  * ```
- * acceleratorMetadataConfig:
+ * acceleratorMetadata:
  *   enable: true
  *   account: Logging
  *   readOnlyAccessRoleArns:
