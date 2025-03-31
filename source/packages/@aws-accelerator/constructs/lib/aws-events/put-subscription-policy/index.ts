@@ -101,8 +101,8 @@ export async function handler(event: SQSEvent) {
             subscriptionType,
             logGroup,
             logExclusionParse,
-            logSubscriptionRoleArn,
             logDestinationArn,
+            logSubscriptionRoleArn,
           );
           await updateKmsKey(logGroup, logKmsKeyArn);
         }

@@ -41,6 +41,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - fix(accelerator-metadata): fixed environment variables for metadata lambda
 - fix(documentation): removed the versioned typedocs linked in the mkdocs
 - fix(networking): fixed transit gateway peering attachment static route for same account and region
+- fix(logging): log group destination arn is invalid
 
 ### Changed
 
