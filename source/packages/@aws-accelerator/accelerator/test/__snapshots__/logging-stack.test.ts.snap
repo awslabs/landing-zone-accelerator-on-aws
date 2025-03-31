@@ -2748,28 +2748,6 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 1`] = `
               "Statement": [
                 {
                   "Action": [
-                    "kms:Encrypt",
-                    "kms:GenerateDataKey",
-                  ],
-                  "Effect": "Allow",
-                  "Resource": [
-                    {
-                      "Fn::Join": [
-                        "",
-                        [
-                          "arn:",
-                          {
-                            "Ref": "AWS::Partition",
-                          },
-                          ":kms:us-east-1:333333333333:key:*",
-                        ],
-                      ],
-                    },
-                  ],
-                  "Sid": "AllowEncryption",
-                },
-                {
-                  "Action": [
                     "logs:PutRetentionPolicy",
                     "logs:AssociateKmsKey",
                     "logs:DescribeLogGroups",
@@ -2844,6 +2822,22 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 1`] = `
                   ],
                   "Effect": "Allow",
                   "Resource": "*",
+                },
+                {
+                  "Action": [
+                    "kms:Decrypt",
+                    "kms:Encrypt",
+                    "kms:GenerateDataKey",
+                  ],
+                  "Effect": "Allow",
+                  "Resource": [
+                    {
+                      "Fn::GetAtt": [
+                        "AcceleratorCloudWatchKeyF93B6E17",
+                        "Arn",
+                      ],
+                    },
+                  ],
                 },
               ],
               "Version": "2012-10-17",
@@ -6905,28 +6899,6 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 2`] = `
           {
             "PolicyDocument": {
               "Statement": [
-                {
-                  "Action": [
-                    "kms:Encrypt",
-                    "kms:GenerateDataKey",
-                  ],
-                  "Effect": "Allow",
-                  "Resource": [
-                    {
-                      "Fn::Join": [
-                        "",
-                        [
-                          "arn:",
-                          {
-                            "Ref": "AWS::Partition",
-                          },
-                          ":kms:us-west-2:333333333333:key:*",
-                        ],
-                      ],
-                    },
-                  ],
-                  "Sid": "AllowEncryption",
-                },
                 {
                   "Action": [
                     "logs:PutRetentionPolicy",
@@ -13378,28 +13350,6 @@ exports[`LoggingStackDelegatedAdmin Construct(LoggingStacKDelegatedAdmin):  Snap
               "Statement": [
                 {
                   "Action": [
-                    "kms:Encrypt",
-                    "kms:GenerateDataKey",
-                  ],
-                  "Effect": "Allow",
-                  "Resource": [
-                    {
-                      "Fn::Join": [
-                        "",
-                        [
-                          "arn:",
-                          {
-                            "Ref": "AWS::Partition",
-                          },
-                          ":kms:us-west-2:333333333333:key:*",
-                        ],
-                      ],
-                    },
-                  ],
-                  "Sid": "AllowEncryption",
-                },
-                {
-                  "Action": [
                     "logs:PutRetentionPolicy",
                     "logs:AssociateKmsKey",
                     "logs:DescribeLogGroups",
@@ -13474,6 +13424,22 @@ exports[`LoggingStackDelegatedAdmin Construct(LoggingStacKDelegatedAdmin):  Snap
                   ],
                   "Effect": "Allow",
                   "Resource": "*",
+                },
+                {
+                  "Action": [
+                    "kms:Decrypt",
+                    "kms:Encrypt",
+                    "kms:GenerateDataKey",
+                  ],
+                  "Effect": "Allow",
+                  "Resource": [
+                    {
+                      "Fn::GetAtt": [
+                        "AcceleratorCloudWatchKeyF93B6E17",
+                        "Arn",
+                      ],
+                    },
+                  ],
                 },
               ],
               "Version": "2012-10-17",
@@ -17605,28 +17571,6 @@ exports[`LoggingStackOuTargets Construct(LoggingStackOuTargets):  Snapshot Test 
               "Statement": [
                 {
                   "Action": [
-                    "kms:Encrypt",
-                    "kms:GenerateDataKey",
-                  ],
-                  "Effect": "Allow",
-                  "Resource": [
-                    {
-                      "Fn::Join": [
-                        "",
-                        [
-                          "arn:",
-                          {
-                            "Ref": "AWS::Partition",
-                          },
-                          ":kms:us-east-1:333333333333:key:*",
-                        ],
-                      ],
-                    },
-                  ],
-                  "Sid": "AllowEncryption",
-                },
-                {
-                  "Action": [
                     "logs:PutRetentionPolicy",
                     "logs:AssociateKmsKey",
                     "logs:DescribeLogGroups",
@@ -17701,6 +17645,22 @@ exports[`LoggingStackOuTargets Construct(LoggingStackOuTargets):  Snapshot Test 
                   ],
                   "Effect": "Allow",
                   "Resource": "*",
+                },
+                {
+                  "Action": [
+                    "kms:Decrypt",
+                    "kms:Encrypt",
+                    "kms:GenerateDataKey",
+                  ],
+                  "Effect": "Allow",
+                  "Resource": [
+                    {
+                      "Fn::GetAtt": [
+                        "AcceleratorCloudWatchKeyF93B6E17",
+                        "Arn",
+                      ],
+                    },
+                  ],
                 },
               ],
               "Version": "2012-10-17",
