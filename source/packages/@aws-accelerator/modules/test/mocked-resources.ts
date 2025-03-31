@@ -164,6 +164,13 @@ export const mockGlobalConfigurationWithOutLandingZone = {
   },
 } as GlobalConfig;
 
+export const mockGlobalConfigurationWithOutControlTower = {
+  homeRegion: 'mockHomeRegion',
+  controlTower: {
+    enable: false,
+  },
+} as GlobalConfig;
+
 export const mockAccountsConfiguration: Partial<AccountsConfig> = {
   mandatoryAccounts: [
     {
@@ -211,6 +218,43 @@ export const mockAccountsConfiguration: Partial<AccountsConfig> = {
       status: 'ACTIVE',
     },
   ],
+};
+
+export const mockAccountsConfigurationNoAccountIds: Partial<AccountsConfig> = {
+  mandatoryAccounts: [
+    {
+      name: 'Management',
+      description: 'mockManagement',
+      email: 'mockManagement@example.com',
+      organizationalUnit: 'Root',
+    },
+    {
+      name: 'LogArchive',
+      description: 'mockLogArchive',
+      email: 'mockLogArchive@example.com',
+      organizationalUnit: 'Security',
+    },
+    {
+      name: 'Audit',
+      description: 'mockAudit',
+      email: 'mockAudit@example.com',
+      organizationalUnit: 'Security',
+    },
+  ] as AccountConfig[],
+  workloadAccounts: [
+    {
+      name: 'SharedServices',
+      description: 'mockSharedServices',
+      email: 'mockSharedServices@example.com',
+      organizationalUnit: 'Infrastructure',
+    },
+    {
+      name: 'Network',
+      description: 'mockNetwork',
+      email: 'mockNetwork@example.com',
+      organizationalUnit: 'Infrastructure',
+    },
+  ] as AccountConfig[],
 };
 
 export const mockCustomizationsConfig: Partial<CustomizationsConfig> = {

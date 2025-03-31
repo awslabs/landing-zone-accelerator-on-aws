@@ -54,6 +54,22 @@ export enum AcceleratorModules {
    * For more information on WS Service control policies, please refer the [document](https://docs.aws.amazon.com/controltower/latest/userguide/what-is-control-tower.html)
    */
   SETUP_CONTROL_TOWER_LANDING_ZONE = 'control-tower-landing-zone',
+  /**
+   * AWS Organizations Organizational Unit (OU) create module
+   */
+  CREATE_ORGANIZATIONAL_UNIT = 'create-organizational-unit',
+  /**
+   * Register AWS Organizations Organizational Unit (OU) with AWS Control Tower module
+   */
+  REGISTER_ORGANIZATIONAL_UNIT = 'register-organizational-unit',
+  /**
+   * Invite AWS Accounts to AWS Organizations module
+   */
+  INVITE_ACCOUNTS_TO_ORGANIZATIONS = 'invite-accounts-to-organizations',
+  /**
+   * Move AWS Accounts to destination AWS Organizations Organizational Unit (OU) module
+   */
+  MOVE_ACCOUNTS = 'move-accounts',
 
   /**
    * An Example module which is executed in `PREPARE` stage
