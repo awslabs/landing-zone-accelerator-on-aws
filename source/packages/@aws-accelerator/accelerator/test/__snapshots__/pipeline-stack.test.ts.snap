@@ -2740,11 +2740,6 @@ phases:
                   "Ref": "AWS::Region",
                 },
                 " --config-dir $CODEBUILD_SRC_DIR_Config --stage $ACCELERATOR_STAGE --use-existing-role $useExistingRole --dry-run no
-      - if [ "prepare" = "\${ACCELERATOR_STAGE}" ] && [ -z "\${ACCELERATOR_NO_ORG_MODULE}" ]; then set -e && LOG_LEVEL=info && yarn run ts-node ../lza-modules/bin/runner.ts --module aws-organizations --partition  ",
-                {
-                  "Ref": "AWS::Partition",
-                },
-                " --use-existing-role No --config-dir $CODEBUILD_SRC_DIR_Config; else echo "Module aws-organizations execution skipped by environment settings."; fi
       - if [ "prepare" = "\${ACCELERATOR_STAGE}" ]; then set -e && LOG_LEVEL=info && yarn run ts-node ../lza-modules/bin/runner.ts --module account-alias --partition  ",
                 {
                   "Ref": "AWS::Partition",
@@ -6100,11 +6095,6 @@ phases:
                   "Ref": "AWS::Region",
                 },
                 " --config-dir $CODEBUILD_SRC_DIR_Config --stage $ACCELERATOR_STAGE --use-existing-role $useExistingRole --dry-run no
-      - if [ "prepare" = "\${ACCELERATOR_STAGE}" ] && [ -z "\${ACCELERATOR_NO_ORG_MODULE}" ]; then set -e && LOG_LEVEL=info && yarn run ts-node ../lza-modules/bin/runner.ts --module aws-organizations --partition  ",
-                {
-                  "Ref": "AWS::Partition",
-                },
-                " --use-existing-role No --config-dir $CODEBUILD_SRC_DIR_Config; else echo "Module aws-organizations execution skipped by environment settings."; fi
       - if [ "prepare" = "\${ACCELERATOR_STAGE}" ]; then set -e && LOG_LEVEL=info && yarn run ts-node ../lza-modules/bin/runner.ts --module account-alias --partition  ",
                 {
                   "Ref": "AWS::Partition",

@@ -12,28 +12,26 @@
  */
 
 import { beforeEach, describe, test } from '@jest/globals';
-import { SetupControlTowerLandingZoneModule } from '../../lib/actions/setup-control-tower-landing-zone';
-import { AcceleratorModules } from '../../models/enums';
-import { AcceleratorStage } from '../../../accelerator';
-import { ModuleParams } from '../../models/types';
+import { RegisterOrganizationalUnitModule } from '../../../lib/actions/control-tower/register-organizational-unit';
+import { AcceleratorModules } from '../../../models/enums';
+import { AcceleratorStage } from '../../../../accelerator';
+import { ModuleParams } from '../../../models/types';
 import {
   MOCK_CONSTANTS,
   mockAccountsConfiguration,
   mockGlobalConfiguration,
-  mockGlobalConfigurationWithOutLandingZone,
-} from '../mocked-resources';
+  mockGlobalConfigurationWithOutControlTower,
+} from '../../mocked-resources';
 import { AccountsConfig } from '@aws-accelerator/config';
-import * as awsLza from '../../../../@aws-lza/index';
+import * as awsLza from '../../../../../@aws-lza/index';
 
-describe('SetupControlTowerLandingZoneModule', () => {
+describe('RegisterOrganizationalUnitModule', () => {
   let mockAccountsConfig: Partial<AccountsConfig>;
 
   beforeEach(() => {
     jest.clearAllMocks();
 
-    jest
-      .spyOn(awsLza, 'setupControlTowerLandingZone')
-      .mockResolvedValue(`Module ${AcceleratorModules.SETUP_CONTROL_TOWER_LANDING_ZONE} executed successfully`);
+    jest.spyOn(awsLza, 'registerOrganizationalUnit').mockResolvedValue(`Successful`);
 
     mockAccountsConfig = {
       getManagementAccount: jest.fn().mockReturnValue(MOCK_CONSTANTS.managementAccount),
@@ -48,9 +46,14 @@ describe('SetupControlTowerLandingZoneModule', () => {
 
   test('Should execute successfully', async () => {
     // Setup
+    const ouCounts = MOCK_CONSTANTS.configs.organizationConfig.organizationalUnits.length;
+    const expectedOutput: string[] = [];
+    for (let i = 0; i < ouCounts; i++) {
+      expectedOutput.push(`Successful`);
+    }
     const param: ModuleParams = {
       moduleItem: {
-        name: AcceleratorModules.SETUP_CONTROL_TOWER_LANDING_ZONE,
+        name: AcceleratorModules.REGISTER_ORGANIZATIONAL_UNIT,
         description: '',
         runOrder: 1,
         handler: jest.fn().mockResolvedValue(`Module 1 of ${AcceleratorStage.ACCOUNTS} stage executed`),
@@ -73,18 +76,22 @@ describe('SetupControlTowerLandingZoneModule', () => {
     };
 
     // Execute
-    const response = await SetupControlTowerLandingZoneModule.execute(param);
+    const response = await RegisterOrganizationalUnitModule.execute(param);
 
     // Verify
-    expect(awsLza.setupControlTowerLandingZone).toHaveBeenCalled();
-    expect(response).toBe(`Module ${AcceleratorModules.SETUP_CONTROL_TOWER_LANDING_ZONE} executed successfully`);
+    expect(awsLza.registerOrganizationalUnit).toHaveBeenCalledTimes(ouCounts);
+    expect(response).toBe(
+      `Module "${
+        AcceleratorModules.REGISTER_ORGANIZATIONAL_UNIT
+      }" completed successfully with status ${expectedOutput.join('\n')}`,
+    );
   });
 
   test('Should execute successfully when no landing zone configuration found', async () => {
     // Setup
     const param: ModuleParams = {
       moduleItem: {
-        name: AcceleratorModules.SETUP_CONTROL_TOWER_LANDING_ZONE,
+        name: AcceleratorModules.REGISTER_ORGANIZATIONAL_UNIT,
         description: '',
         runOrder: 1,
         handler: jest.fn().mockResolvedValue(`Module 1 of ${AcceleratorStage.ACCOUNTS} stage executed`),
@@ -94,7 +101,7 @@ describe('SetupControlTowerLandingZoneModule', () => {
         configs: {
           ...MOCK_CONSTANTS.configs,
           accountsConfig: mockAccountsConfig as AccountsConfig,
-          globalConfig: mockGlobalConfigurationWithOutLandingZone,
+          globalConfig: mockGlobalConfigurationWithOutControlTower,
         },
         globalRegion: MOCK_CONSTANTS.globalRegion,
         resourcePrefixes: MOCK_CONSTANTS.resourcePrefixes,
@@ -107,11 +114,12 @@ describe('SetupControlTowerLandingZoneModule', () => {
     };
 
     // Execute
-    const response = await SetupControlTowerLandingZoneModule.execute(param);
+    const response = await RegisterOrganizationalUnitModule.execute(param);
 
     // Verify
+    expect(awsLza.registerOrganizationalUnit).toHaveBeenCalledTimes(0);
     expect(response).toBe(
-      `Module ${AcceleratorModules.SETUP_CONTROL_TOWER_LANDING_ZONE} execution skipped, No configuration found for Control Tower Landing zone`,
+      `Module ${AcceleratorModules.REGISTER_ORGANIZATIONAL_UNIT} execution skipped, Control Tower Landing zone is not enabled for the environment.`,
     );
   });
 
