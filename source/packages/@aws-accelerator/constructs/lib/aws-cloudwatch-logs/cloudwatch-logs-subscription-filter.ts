@@ -105,6 +105,50 @@ export class CloudWatchLogsSubscriptionFilter extends Construct {
     }
 
     const UPDATE_SUBSCRIPTION_FILTER = 'Custom::UpdateSubscriptionFilter';
+    const policyStatements = [
+      {
+        Effect: 'Allow',
+        Action: [
+          'logs:PutRetentionPolicy',
+          'logs:AssociateKmsKey',
+          'logs:DescribeLogGroups',
+          'logs:DescribeSubscriptionFilters',
+          'logs:DescribeAccountPolicies',
+        ],
+        Resource: [
+          `arn:${cdk.Stack.of(this).partition}:logs:${cdk.Stack.of(this).region}:${
+            cdk.Stack.of(this).account
+          }:log-group:*`,
+        ],
+      },
+      {
+        Effect: 'Allow',
+        Action: ['logs:PutSubscriptionFilter', 'logs:DeleteSubscriptionFilter'],
+        Resource: [
+          `arn:${cdk.Stack.of(this).partition}:logs:${cdk.Stack.of(this).region}:${
+            cdk.Stack.of(this).account
+          }:log-group:*`,
+          `arn:${cdk.Stack.of(this).partition}:logs:${cdk.Stack.of(this).region}:${
+            props.logArchiveAccountId
+          }:destination:*`,
+          `arn:${cdk.Stack.of(this).partition}:logs:${cdk.Stack.of(this).region}:${cdk.Stack.of(this).account}:*:*`,
+        ],
+      },
+      {
+        Effect: 'Allow',
+        Action: ['logs:PutAccountPolicy', 'logs:DeleteAccountPolicy'],
+        // making policies in IAM console shows no option to fix a resource. Applying resource restriction with wildcards causes change to fail with error 'because no identity-based policy allows the logs:PutAccountPolicy action'
+        Resource: '*',
+      },
+    ];
+
+    if (props.logsKmsKey) {
+      policyStatements.push({
+        Effect: 'Allow',
+        Action: ['kms:Decrypt', 'kms:Encrypt', 'kms:GenerateDataKey'],
+        Resource: [props.logsKmsKey.keyArn],
+      });
+    }
 
     //
     // Function definition for the custom resource
@@ -112,52 +156,7 @@ export class CloudWatchLogsSubscriptionFilter extends Construct {
     const provider = cdk.CustomResourceProvider.getOrCreateProvider(this, UPDATE_SUBSCRIPTION_FILTER, {
       codeDirectory: path.join(__dirname, 'update-subscription-filter/dist'),
       runtime: CUSTOM_RESOURCE_PROVIDER_RUNTIME,
-      policyStatements: [
-        // Required when global-config.yaml::logging::cloudwatchLogs::encryption is configured
-        {
-          Sid: 'AllowEncryption',
-          Effect: 'Allow',
-          Action: ['kms:Encrypt', 'kms:GenerateDataKey'],
-          Resource: [
-            `arn:${cdk.Stack.of(this).partition}:kms:${cdk.Stack.of(this).region}:${cdk.Stack.of(this).account}:key:*`,
-          ],
-        },
-
-        {
-          Effect: 'Allow',
-          Action: [
-            'logs:PutRetentionPolicy',
-            'logs:AssociateKmsKey',
-            'logs:DescribeLogGroups',
-            'logs:DescribeSubscriptionFilters',
-            'logs:DescribeAccountPolicies',
-          ],
-          Resource: [
-            `arn:${cdk.Stack.of(this).partition}:logs:${cdk.Stack.of(this).region}:${
-              cdk.Stack.of(this).account
-            }:log-group:*`,
-          ],
-        },
-        {
-          Effect: 'Allow',
-          Action: ['logs:PutSubscriptionFilter', 'logs:DeleteSubscriptionFilter'],
-          Resource: [
-            `arn:${cdk.Stack.of(this).partition}:logs:${cdk.Stack.of(this).region}:${
-              cdk.Stack.of(this).account
-            }:log-group:*`,
-            `arn:${cdk.Stack.of(this).partition}:logs:${cdk.Stack.of(this).region}:${
-              props.logArchiveAccountId
-            }:destination:*`,
-            `arn:${cdk.Stack.of(this).partition}:logs:${cdk.Stack.of(this).region}:${cdk.Stack.of(this).account}:*:*`,
-          ],
-        },
-        {
-          Effect: 'Allow',
-          Action: ['logs:PutAccountPolicy', 'logs:DeleteAccountPolicy'],
-          // making policies in IAM console shows no option to fix a resource. Applying resource restriction with wildcards causes change to fail with error 'because no identity-based policy allows the logs:PutAccountPolicy action'
-          Resource: '*',
-        },
-      ],
+      policyStatements: policyStatements,
     });
     const resource = new cdk.CustomResource(this, 'Resource', {
       resourceType: UPDATE_SUBSCRIPTION_FILTER,

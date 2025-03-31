@@ -259,36 +259,6 @@ exports[`CloudWatchLogsSubscriptionFilter Construct(CloudWatchLogsSubscriptionFi
               "Statement": [
                 {
                   "Action": [
-                    "kms:Encrypt",
-                    "kms:GenerateDataKey",
-                  ],
-                  "Effect": "Allow",
-                  "Resource": [
-                    {
-                      "Fn::Join": [
-                        "",
-                        [
-                          "arn:",
-                          {
-                            "Ref": "AWS::Partition",
-                          },
-                          ":kms:",
-                          {
-                            "Ref": "AWS::Region",
-                          },
-                          ":",
-                          {
-                            "Ref": "AWS::AccountId",
-                          },
-                          ":key:*",
-                        ],
-                      ],
-                    },
-                  ],
-                  "Sid": "AllowEncryption",
-                },
-                {
-                  "Action": [
                     "logs:PutRetentionPolicy",
                     "logs:AssociateKmsKey",
                     "logs:DescribeLogGroups",
@@ -391,6 +361,22 @@ exports[`CloudWatchLogsSubscriptionFilter Construct(CloudWatchLogsSubscriptionFi
                   ],
                   "Effect": "Allow",
                   "Resource": "*",
+                },
+                {
+                  "Action": [
+                    "kms:Decrypt",
+                    "kms:Encrypt",
+                    "kms:GenerateDataKey",
+                  ],
+                  "Effect": "Allow",
+                  "Resource": [
+                    {
+                      "Fn::GetAtt": [
+                        "CustomKey1E6D0D07",
+                        "Arn",
+                      ],
+                    },
+                  ],
                 },
               ],
               "Version": "2012-10-17",
