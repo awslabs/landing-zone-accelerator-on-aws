@@ -12,9 +12,12 @@
  */
 
 import path from 'path';
-import { createLogger } from '../../../../@aws-lza/common/logger';
-import { ISetupLandingZoneHandlerParameter, setupControlTowerLandingZone } from '../../../../@aws-lza/index';
-import { ModuleParams } from '../../models/types';
+import {
+  createLogger,
+  ISetupLandingZoneHandlerParameter,
+  setupControlTowerLandingZone,
+} from '../../../../../@aws-lza/index';
+import { ModuleParams } from '../../../models/types';
 
 const logger = createLogger([path.parse(path.basename(__filename)).name]);
 
@@ -27,7 +30,7 @@ export abstract class SetupControlTowerLandingZoneModule {
    * @param params {@link ModuleParams}
    * @returns status string
    */
-  public static async execute(params: ModuleParams) {
+  public static async execute(params: ModuleParams): Promise<string> {
     if (!params.moduleRunnerParameters.configs.globalConfig.controlTower.landingZone) {
       return `Module ${params.moduleItem.name} execution skipped, No configuration found for Control Tower Landing zone`;
     }
@@ -71,8 +74,9 @@ export abstract class SetupControlTowerLandingZoneModule {
       },
     };
 
-    logger.info(`Executing ${params.moduleItem.name}`);
-    return await SetupControlTowerLandingZoneModule.setupControlTowerLandingZone(config);
+    logger.info(`Executing ${params.moduleItem.name} module.`);
+    const status = await SetupControlTowerLandingZoneModule.setupControlTowerLandingZone(config);
+    return `Module "${params.moduleItem.name}" completed successfully with status ${status}`;
   }
 
   /**

@@ -173,7 +173,6 @@ export class SetupLandingZoneModule implements ISetupLandingZoneModule {
         client,
         landingZoneConfiguration,
         preRequisitesResources!.kmsKeyArn,
-        defaultProps.moduleName,
       );
     }
   }
@@ -315,7 +314,7 @@ export class SetupLandingZoneModule implements ISetupLandingZoneModule {
     }
 
     // When no changes required
-    return `Module "${defaultProps.moduleName}" completed successfully with status ${landingZoneUpdateOrResetStatus.reason}`;
+    return landingZoneUpdateOrResetStatus.reason;
   }
 }
 /**
@@ -331,14 +330,12 @@ abstract class LandingZoneOperation {
    * @param client {@link ControlTowerClient}
    * @param landingZoneConfiguration {@link ControlTowerLandingZoneConfigType}
    * @param kmsKeyArn string
-   * @param moduleName string
    * @returns operationIdentifier string
    */
   public static async createLandingZone(
     client: ControlTowerClient,
     landingZoneConfiguration: ControlTowerLandingZoneConfigType,
     kmsKeyArn: string,
-    moduleName: string,
   ): Promise<string> {
     const manifestDocument = makeManifestDocument(landingZoneConfiguration, 'CREATE', 'Security', kmsKeyArn);
     const param: CreateLandingZoneCommandInput = {
@@ -365,7 +362,7 @@ abstract class LandingZoneOperation {
 
     await LandingZoneOperation.waitUntilOperationCompletes(client, operationIdentifier);
 
-    return `Module "${moduleName}" The Landing Zone deployed successfully.`;
+    return `AWS Control Tower landing zone deployed successfully.`;
   }
 
   /**

@@ -11,7 +11,11 @@
  *  and limitations under the License.
  */
 
-import { SetupControlTowerLandingZoneModule } from '../lib/actions/setup-control-tower-landing-zone';
+import { CreateOrganizationalUnitModule } from '../lib/actions/aws-organizations/create-organizational-unit';
+import { InviteAccountsToOrganizationsModule } from '../lib/actions/aws-organizations/invite-accounts-to-organizations';
+import { MoveAccountModule } from '../lib/actions/aws-organizations/move-accounts';
+import { RegisterOrganizationalUnitModule } from '../lib/actions/control-tower/register-organizational-unit';
+import { SetupControlTowerLandingZoneModule } from '../lib/actions/control-tower/setup-control-tower-landing-zone';
 import { AcceleratorModules, AcceleratorModuleStages } from './enums';
 import { AcceleratorModuleStageDetailsType, AcceleratorModuleStageOrdersType, ModuleParams } from './types';
 
@@ -74,6 +78,38 @@ export const AcceleratorModuleStageDetails: AcceleratorModuleStageDetailsType[] 
         runOrder: 1,
         handler: async (params: ModuleParams) => {
           return await SetupControlTowerLandingZoneModule.execute(params);
+        },
+      },
+      {
+        name: AcceleratorModules.CREATE_ORGANIZATIONAL_UNIT,
+        description: 'Create AWS Organizations Organizational Unit (OU)',
+        runOrder: 2,
+        handler: async (params: ModuleParams) => {
+          return await CreateOrganizationalUnitModule.execute(params);
+        },
+      },
+      {
+        name: AcceleratorModules.REGISTER_ORGANIZATIONAL_UNIT,
+        description: 'Register AWS Organizations Organizational Unit (OU) with AWS Control Tower',
+        runOrder: 3,
+        handler: async (params: ModuleParams) => {
+          return await RegisterOrganizationalUnitModule.execute(params);
+        },
+      },
+      {
+        name: AcceleratorModules.INVITE_ACCOUNTS_TO_ORGANIZATIONS,
+        description: 'Invite AWS Accounts to AWS Organizations',
+        runOrder: 4,
+        handler: async (params: ModuleParams) => {
+          return await InviteAccountsToOrganizationsModule.execute(params);
+        },
+      },
+      {
+        name: AcceleratorModules.MOVE_ACCOUNTS,
+        description: 'Move AWS Accounts to destination AWS Organizations Organizational Unit (OU)',
+        runOrder: 5,
+        handler: async (params: ModuleParams) => {
+          return await MoveAccountModule.execute(params);
         },
       },
     ],
