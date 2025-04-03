@@ -446,6 +446,7 @@ export class PrepareStack extends AcceleratorStack {
       logRetentionInDays: options.props.globalConfig.cloudwatchLogRetentionInDays,
       driftDetectionParameter: options.driftDetectedParameter,
       driftDetectionMessageParameter: options.driftMessageParameter,
+      prefixes: this.props.prefixes,
       vpcsCidrs,
     });
 
