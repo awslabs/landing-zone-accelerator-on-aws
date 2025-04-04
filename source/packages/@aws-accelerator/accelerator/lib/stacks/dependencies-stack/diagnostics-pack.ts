@@ -41,7 +41,7 @@ export class DiagnosticsPack {
     // Create diagnostic role in every account home region except management account for non external deployment
     if (isDiagnosticsPackEnabled && this.stack.region === props.globalConfig.homeRegion) {
       let diagnosticsPackLambdaRoleNamePrefix = props.prefixes.accelerator;
-      if (props.qualifier && props.qualifier !== 'aws-accelerator') {
+      if (props.qualifier) {
         diagnosticsPackLambdaRoleNamePrefix = props.qualifier;
       }
 
