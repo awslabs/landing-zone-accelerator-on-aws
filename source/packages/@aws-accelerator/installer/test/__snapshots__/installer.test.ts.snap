@@ -1694,7 +1694,7 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 1`] = `
 phases:
   install:
     runtime-versions:
-      nodejs: 18
+      nodejs: 20
   pre_build:
     commands:
       - ENABLE_EXTERNAL_PIPELINE_ACCOUNT="no"
@@ -5297,7 +5297,7 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 2`] = `
 phases:
   install:
     runtime-versions:
-      nodejs: 18
+      nodejs: 20
   pre_build:
     commands:
       - ENABLE_EXTERNAL_PIPELINE_ACCOUNT="no"
@@ -8969,7 +8969,7 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 3`] = `
 phases:
   install:
     runtime-versions:
-      nodejs: 18
+      nodejs: 20
   pre_build:
     commands:
       - ENABLE_EXTERNAL_PIPELINE_ACCOUNT="no"
@@ -12626,7 +12626,7 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 4`] = `
 phases:
   install:
     runtime-versions:
-      nodejs: 18
+      nodejs: 20
   pre_build:
     commands:
       - ENABLE_EXTERNAL_PIPELINE_ACCOUNT="no"
@@ -16288,7 +16288,7 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 5`] = `
 phases:
   install:
     runtime-versions:
-      nodejs: 18
+      nodejs: 20
   pre_build:
     commands:
       - ENABLE_EXTERNAL_PIPELINE_ACCOUNT="no"
@@ -19905,7 +19905,7 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 6`] = `
 phases:
   install:
     runtime-versions:
-      nodejs: 18
+      nodejs: 20
   pre_build:
     commands:
       - ENABLE_EXTERNAL_PIPELINE_ACCOUNT="no"
@@ -23565,7 +23565,7 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 7`] = `
 phases:
   install:
     runtime-versions:
-      nodejs: 18
+      nodejs: 20
   pre_build:
     commands:
       - ENABLE_EXTERNAL_PIPELINE_ACCOUNT="no"
@@ -27584,7 +27584,7 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 8`] = `
 phases:
   install:
     runtime-versions:
-      nodejs: 18
+      nodejs: 20
   pre_build:
     commands:
       - ENABLE_EXTERNAL_PIPELINE_ACCOUNT="no"

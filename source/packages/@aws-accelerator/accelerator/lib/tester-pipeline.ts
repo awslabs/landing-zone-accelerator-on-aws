@@ -197,7 +197,7 @@ export class TesterPipeline extends Construct {
         phases: {
           install: {
             'runtime-versions': {
-              nodejs: 18,
+              nodejs: 20,
             },
           },
           build: {
