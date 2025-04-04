@@ -501,7 +501,7 @@ export class AcceleratorPipeline extends Construct {
         phases: {
           install: {
             'runtime-versions': {
-              nodejs: 18,
+              nodejs: 20,
             },
           },
           pre_build: {
@@ -582,7 +582,7 @@ export class AcceleratorPipeline extends Construct {
         phases: {
           install: {
             'runtime-versions': {
-              nodejs: 18,
+              nodejs: 20,
             },
           },
           pre_build: {
