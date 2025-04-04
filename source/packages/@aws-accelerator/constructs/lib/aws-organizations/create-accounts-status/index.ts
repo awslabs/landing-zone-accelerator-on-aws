@@ -187,8 +187,8 @@ async function getSingleAccountConfigFromTable(): Promise<AccountConfigs> {
 
   if (itemCount > 0) {
     const accountConfigAttributeValue: AttributeValue = response.Items![0]['accountConfig'];
-    if (typeof accountConfigAttributeValue === 'string') {
-      const account: AccountConfig = JSON.parse(accountConfigAttributeValue);
+    if (typeof accountConfigAttributeValue['S'] === 'string') {
+      const account: AccountConfig = JSON.parse(accountConfigAttributeValue['S']);
       accountToAdd.push(account);
       console.log(`Account to add ${JSON.stringify(accountToAdd)}`);
     }
