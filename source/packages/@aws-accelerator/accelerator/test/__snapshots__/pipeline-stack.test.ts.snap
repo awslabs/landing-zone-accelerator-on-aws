@@ -2714,7 +2714,7 @@ exports[`PipelineStack Construct(PipelineStack):  Snapshot Test 1`] = `
 phases:
   install:
     runtime-versions:
-      nodejs: 18
+      nodejs: 20
   pre_build:
     commands:
       - "export WORK_DIR=source/packages/@aws-accelerator/accelerator
@@ -6069,7 +6069,7 @@ exports[`PipelineStack Construct(PipelineStack):  Snapshot Test 2`] = `
 phases:
   install:
     runtime-versions:
-      nodejs: 18
+      nodejs: 20
   pre_build:
     commands:
       - "export WORK_DIR=source/packages/@aws-accelerator/accelerator

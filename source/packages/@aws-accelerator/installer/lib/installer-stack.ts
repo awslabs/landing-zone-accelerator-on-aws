@@ -884,7 +884,7 @@ export class InstallerStack extends cdk.Stack {
         phases: {
           install: {
             'runtime-versions': {
-              nodejs: 18,
+              nodejs: 20,
             },
           },
           pre_build: {

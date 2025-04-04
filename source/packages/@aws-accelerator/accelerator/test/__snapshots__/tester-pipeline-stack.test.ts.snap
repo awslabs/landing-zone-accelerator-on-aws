@@ -1141,7 +1141,7 @@ exports[`TesterPipelineStack Construct(TesterPipelineStack):  Snapshot Test 1`] 
 phases:
   install:
     runtime-versions:
-      nodejs: 18
+      nodejs: 20
   build:
     commands:
       - cd source
