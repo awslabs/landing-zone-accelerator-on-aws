@@ -11,6 +11,8 @@ import { createLogger } from './logger';
 import { glob } from 'glob';
 import { dirname } from 'path';
 import * as fs from 'fs';
+import { config } from '../../../../package.json';
+
 const logger = createLogger(['utils-common-functions']);
 
 export function chunkArray<Type>(array: Type[], chunkSize: number): Type[][] {
@@ -116,7 +118,7 @@ export async function getStsCredentials(
   stsClient: STSClient,
   roleArn: string,
 ): Promise<{ accessKeyId: string; secretAccessKey: string; sessionToken: string }> {
-  console.log(`Assuming role ${roleArn}...`);
+  logger.info(`Assuming role ${roleArn}...`);
   try {
     const response = await throttlingBackOff(() =>
       stsClient.send(new AssumeRoleCommand({ RoleArn: roleArn, RoleSessionName: 'AcceleratorAssumeRole' })),
@@ -152,11 +154,9 @@ export async function getAllFilesInPattern(dir: string, pattern: string, fullPat
   const files = await glob(`${dir}/**/*${pattern}`, {
     ignore: ['**/node_modules/**'],
   });
-  // logger.debug(`Found ${JSON.stringify(files)} files matching pattern ${pattern}`);
   const parsedFiles = files.map(file => {
     return file.replace(dirname(file), '').replace('/', '').replace(pattern, '');
   });
-  // logger.debug(`Parsed files ${JSON.stringify(parsedFiles)}`);
   if (fullPath) {
     return files;
   }
@@ -213,4 +213,31 @@ export async function directoryExists(directory: string): Promise<boolean> {
   } catch (err) {
     return false;
   }
+}
+
+/**
+ * Retrieves the Node.js version to be used in the accelerator.
+ *
+ * This function checks for a Node.js version specified in the 'ACCELERATOR_NODE_VERSION'
+ * environment variable. If not set, it falls back to a default version.
+ * The function also ensures that the version meets the minimum required version.
+ *
+ * @throws {Error} If the Node.js version is invalid (not a number) or below the minimum supported version.
+ *
+ * @returns {number} The Node.js version to be used.
+ */
+export function getNodeVersion(): number {
+  const defaultNodeVersion = config.node.version.default;
+  const minimumNodeVersion = config.node.version.minimum;
+
+  const nodeVersion = process.env['ACCELERATOR_NODE_VERSION']
+    ? Number(process.env['ACCELERATOR_NODE_VERSION'])
+    : defaultNodeVersion;
+
+  if (isNaN(nodeVersion) || nodeVersion < minimumNodeVersion) {
+    throw new Error(
+      `Invalid or unsupported Node.js version: ${nodeVersion}. Minimum supported version is ${minimumNodeVersion}.`,
+    );
+  }
+  return nodeVersion;
 }

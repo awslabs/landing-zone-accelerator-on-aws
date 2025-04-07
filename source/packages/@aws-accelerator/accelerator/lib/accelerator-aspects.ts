@@ -15,7 +15,7 @@ import * as cdk from 'aws-cdk-lib';
 import { IConstruct } from 'constructs';
 import { version } from '../../../../package.json';
 import { createLogger } from '@aws-accelerator/utils/lib/logger';
-import { getGlobalRegion } from '@aws-accelerator/utils';
+import { getGlobalRegion, getNodeVersion } from '@aws-accelerator/utils';
 
 const logger = createLogger(['accelerator-aspects']);
 /**
@@ -156,7 +156,7 @@ class CnOverrides implements cdk.IAspect {
 /**
  * Default memory override for Lambda resources
  */
-class LambdaDefaultMemoryAspect implements cdk.IAspect {
+export class LambdaDefaultMemoryAspect implements cdk.IAspect {
   visit(node: IConstruct): void {
     if (node instanceof cdk.CfnResource) {
       if (node.cfnResourceType === 'AWS::Lambda::Function') {
@@ -195,6 +195,55 @@ class AwsSolutionAspect implements cdk.IAspect {
     if (node instanceof cdk.CfnResource) {
       if (node.cfnResourceType === 'AWS::Lambda::Function') {
         node.addPropertyOverride('Environment.Variables.SOLUTION_ID', `AwsSolution/SO0199/${version}`);
+      }
+    }
+  }
+}
+
+/**
+ * Aspect to override Lambda runtime for CDK resource provider framework functions.
+ *
+ * This aspect checks for Lambda functions created by the CDK resource provider framework
+ * and updates their runtime to a specified Node.js version if the ACCELERATOR_NODE_VERSION
+ * environment variable is set.
+ *
+ * @implements {cdk.IAspect}
+ */
+export class LambdaRuntimeAspect implements cdk.IAspect {
+  /**
+   * Visits a construct and its children, applying the aspect functionality.
+   *
+   * @param {IConstruct} node - The construct being visited.
+   * @returns {void}
+   *
+   * @remarks
+   * This method checks if the construct is a Lambda function resource created by the CDK
+   * resource provider framework. If so, and if the ACCELERATOR_NODE_VERSION environment
+   * variable is set, it updates the runtime to the specified Node.js version.
+   *
+   * The runtime is only updated for functions that:
+   * 1. Are of type 'AWS::Lambda::Function'
+   * 2. Have a runtime that includes 'nodejs'
+   * 3. Have a description that starts with 'AWS CDK resource provider framework'
+   *
+   * @example
+   * ```typescript
+   * const app = new cdk.App();
+   * const stack = new cdk.Stack(app, 'MyStack');
+   * cdk.Aspects.of(stack).add(new LambdaRuntimeAspect());
+   * ```
+   */
+  visit(node: IConstruct): void {
+    if (process.env['ACCELERATOR_NODE_VERSION']) {
+      if (node instanceof cdk.CfnResource) {
+        if (node.cfnResourceType === 'AWS::Lambda::Function') {
+          const cfnProps = (node as cdk.aws_lambda.CfnFunction)['_cfnProperties'];
+          const description = cfnProps['Description']?.toString();
+          const runtime = cfnProps['Runtime']?.toString();
+          if (runtime && runtime.includes('nodejs') && description.startsWith('AWS CDK resource provider framework')) {
+            node.addPropertyOverride('Runtime', `nodejs${getNodeVersion()}.x`);
+          }
+        }
       }
     }
   }
@@ -348,7 +397,6 @@ export class AcceleratorAspects {
         break;
     }
     // Add default aspects
-    cdk.Aspects.of(app).add(new LambdaDefaultMemoryAspect());
     cdk.Aspects.of(app).add(new IamServiceLinkedRoleAspect());
     if (useExistingRoles) {
       cdk.Aspects.of(app).add(new ExistingRoleOverrides());

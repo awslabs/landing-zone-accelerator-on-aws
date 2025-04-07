@@ -37,3 +37,4 @@ export * from './lib/test-util/common/integration-test';
 // Security integration test suite
 //
 export * from './lib/test-util/common/test-suite';
+export * from './lib/lambda';
