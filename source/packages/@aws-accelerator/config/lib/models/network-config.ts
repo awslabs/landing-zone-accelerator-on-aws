@@ -4367,7 +4367,11 @@ export interface IVpcConfig {
    * (OPTIONAL) When set to true, this VPC will be configured to utilize centralized
    * endpoints. This includes having the Route 53 Private Hosted Zone
    * associated with this VPC. Centralized endpoints are configured per
-   * region, and can span to spoke accounts
+   * region, and can span to spoke accounts.
+   *
+   * NOTE: The AWS partition and regions must support the creation of Route 53 private hosted zones and DNS alias records for
+   * AWS VPC Endpoint resource types or the pipeline will fail. Ensure your partition and regions will support useCentralEndpoints
+   * before enabling it.
    *
    * @default false
    *
