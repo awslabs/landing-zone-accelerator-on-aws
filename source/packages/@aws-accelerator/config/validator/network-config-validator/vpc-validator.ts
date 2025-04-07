@@ -96,7 +96,6 @@ export class VpcValidator {
   ): string[] {
     const vpcs = [...values.vpcs, ...(values.vpcTemplates ?? [])];
     const centralVpcs: VpcConfig[] = [];
-    const unsupportedRegions = ['us-gov-west-1', 'us-gov-east-1'];
     // Get VPCs marked as central; do not allow VPC templates
     vpcs.forEach(vpc => {
       if (vpc.interfaceEndpoints?.central && !isNetworkType<VpcConfig>('IVpcConfig', vpc)) {
@@ -113,11 +112,6 @@ export class VpcValidator {
     if (helpers.hasDuplicates(vpcRegions)) {
       errors.push(
         `More than one central endpoint VPC configured in a single region. One central endpoint VPC per region is supported. Central endpoint VPC regions configured: ${vpcRegions}`,
-      );
-    }
-    if (vpcRegions.some(region => unsupportedRegions.includes(region))) {
-      errors.push(
-        `Central endpoints VPC configured in an unsupported region. Central endpoint VPC regions configured: ${vpcRegions}`,
       );
     }
     return vpcRegions;

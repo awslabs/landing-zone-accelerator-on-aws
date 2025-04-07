@@ -1534,13 +1534,12 @@ export abstract class AcceleratorStack extends cdk.Stack {
         item.region === cdk.Stack.of(this).region,
     );
 
-    if (this.props.partition !== 'aws' && this.props.partition !== 'aws-cn' && centralEndpointVpcs.length > 0) {
-      this.logger.error('Central Endpoint VPC is only possible in commercial regions');
-      throw new Error(`Configuration validation failed at runtime.`);
-    }
-
     if (centralEndpointVpcs.length > 1) {
-      this.logger.error(`multiple (${centralEndpointVpcs.length}) central endpoint vpcs detected, should only be one`);
+      this.logger.error(
+        `Multiple (${centralEndpointVpcs.length}) central endpoint VPCs detected in region '${
+          cdk.Stack.of(this).region
+        }', and there should only be one.`,
+      );
       throw new Error(`Configuration validation failed at runtime.`);
     }
     centralEndpointVpc = centralEndpointVpcs[0];
