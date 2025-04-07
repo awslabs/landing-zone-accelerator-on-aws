@@ -9,7 +9,7 @@ Yes. A Gateway Load Balancer (GWLB) must be configured to take advantage of othe
 GWLB endpoints are dependent on **endpoint services**, which are strictly zonal. This means an error will occur if you try to create an endpoint in a zone that that the GWLB was not deployed to. A workaround for this is to deploy your GWLB to all AZs in a region, however this may increase costs associated with data transfer between AZs.
 
 !!!note "See also"
-    * [Gateway Load Balancer configuration reference](../../typedocs/latest/classes/_aws_accelerator_config.GwlbConfig.html)
+    * [Gateway Load Balancer configuration reference](../../typedocs/interfaces/___packages__aws_accelerator_config_dist_config_lib_models_network_config.IGwlbConfig.html)
     * [AWS PrivateLink Developer Guide: More information on zonal dependencies for GWLB endpoints](https://docs.aws.amazon.com/vpc/latest/privatelink/create-gateway-load-balancer-endpoint-service.html)
 
 ## Can I create a target group for my Gateway Load Balancer?

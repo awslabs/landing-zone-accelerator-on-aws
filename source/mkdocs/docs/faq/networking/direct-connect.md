@@ -11,7 +11,7 @@ More information: [https://docs.aws.amazon.com/directconnect/latest/UserGuide/re
 Yes. A Direct Connect Gateway must be configured in order to configure other features such as virtual interfaces and associations with transit gateways. The gateway as well as other features can be configured in the `network-config.yaml` accelerator configuration file. It is recommended that the Direct Connect Gateway is configured in the same account that the transit gateway(s) reside in. This enables the accelerator to manage the full lifecycle of transit gateway associations to the Direct Connect Gateway, as well as manage transit gateway static routes, route table associations, and route table propagations that reference the Direct Connect Gateway.
 
 !!!note "See also"
-    [Direct Connect Gateway configuration reference](../../typedocs/latest/classes/_aws_accelerator_config.DxGatewayConfig.html)
+    [Direct Connect Gateway configuration reference](../../typedocs/interfaces/___packages__aws_accelerator_config_dist_config_lib_models_network_config.IDxGatewayConfig.html)
 
 ## How do I create a Direct Connect virtual interface?
 
@@ -20,7 +20,7 @@ You must first complete the [prerequisites](https://docs.aws.amazon.com/directco
 **Note:** The accelerator can manage the full lifecycle of a virtual interface if the Direct Connect Gateway and physical connection reside in the same account. Due to billing requirements for Direct Connect owners, this is not always possible. For these use cases, the accelerator can also allocate hosted virtual interfaces, but there is a manual billing acceptance step that must be completed by a human after the initial creation.
 
 !!!note "See also"
-    [Direct Connect virtual interface configuration reference](../../typedocs/latest/classes/_aws_accelerator_config.DxVirtualInterfaceConfig.html)
+    [Direct Connect virtual interface configuration reference](../../typedocs/interfaces/___packages__aws_accelerator_config_dist_config_lib_models_network_config.IDxVirtualInterfaceConfig.html)
 
 ## Can I create a hosted virtual interface?
 
@@ -42,7 +42,7 @@ It is required that both the Direct Connect Gateway and Transit Gateway are mana
 - The association process between a Direct Connect Gateway and Transit Gateway can take anywhere from five to twenty minutes on average. The length of time depends on current load of the Direct Connect control plane in the region the association is occurring. Your pipeline progression will be paused until it validates the association has completed.
 
 !!!note "See also"
-    [Direct Connect Gateway Transit Gateway association reference](../../typedocs/latest/classes/_aws_accelerator_config.DxTransitGatewayAssociationConfig.html)
+    [Direct Connect Gateway Transit Gateway association reference](../../typedocs/interfaces/___packages__aws_accelerator_config_dist_config_lib_models_network_config.IDxTransitGatewayAssociationConfig.html)
 
 ## Why is my NetworkAssociations stack in UPDATE_ROLLBACK_COMPLETE status after adding a Transit Gateway Association?
 
