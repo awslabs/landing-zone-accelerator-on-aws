@@ -5,6 +5,23 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.12.1] - 2025-04-08
+
+### Fixed
+
+- fix(accounts): account creation fails for organizations-only environment
+- fix(logging): gracefully handle AWS InvalidParameterException for AWS Reserved
+- fix(networking): cidr block order validation is causing the Prepare stack to fail
+
+### Changed
+
+- chore(build): remove --target argument for esbuild
+- chore(networking): remove partition checks for useCentralEndpoints
+- chore(nodejs): update CodeBuild to use NodeJS 20 and make runtime configurable
+- chore(nodejs): centralize where nodejs version is stored
+- docs(typedocs): fix typos in IGuardDutyConfig documentation
+- docs(user-guide): updated path to typedocs, fixed controlTower
+
 ## [1.12.0] - 2025-04-02
 
 ### Added

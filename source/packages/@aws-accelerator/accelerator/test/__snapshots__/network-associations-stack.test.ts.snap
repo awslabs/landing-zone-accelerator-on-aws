@@ -3470,7 +3470,7 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
       "Properties": {
         "Name": "/accelerator/AWSAccelerator-NetworkAssociationsStack-555555555555-us-east-1/version",
         "Type": "String",
-        "Value": "1.12.0",
+        "Value": "1.12.1",
       },
       "Type": "AWS::SSM::Parameter",
     },
@@ -10116,7 +10116,7 @@ catch {
       "Properties": {
         "Name": "/accelerator/AWSAccelerator-NetworkAssociationsStack-444444444444-us-east-1/version",
         "Type": "String",
-        "Value": "1.12.0",
+        "Value": "1.12.1",
       },
       "Type": "AWS::SSM::Parameter",
     },
@@ -13623,7 +13623,7 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
       "Properties": {
         "Name": "/accelerator/AWSAccelerator-NetworkAssociationsStack-555555555555-us-west-2/version",
         "Type": "String",
-        "Value": "1.12.0",
+        "Value": "1.12.1",
       },
       "Type": "AWS::SSM::Parameter",
     },
@@ -14349,7 +14349,7 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
       "Properties": {
         "Name": "/accelerator/AWSAccelerator-NetworkAssociationsStack-444444444444-us-west-2/version",
         "Type": "String",
-        "Value": "1.12.0",
+        "Value": "1.12.1",
       },
       "Type": "AWS::SSM::Parameter",
     },
@@ -15976,7 +15976,7 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
       "Properties": {
         "Name": "/accelerator/AWSAccelerator-NetworkAssociationsStack-222222222222-us-east-1/version",
         "Type": "String",
-        "Value": "1.12.0",
+        "Value": "1.12.1",
       },
       "Type": "AWS::SSM::Parameter",
     },
@@ -16838,7 +16838,7 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
       "Properties": {
         "Name": "/accelerator/AWSAccelerator-NetworkAssociationsStack-222222222222-us-west-2/version",
         "Type": "String",
-        "Value": "1.12.0",
+        "Value": "1.12.1",
       },
       "Type": "AWS::SSM::Parameter",
     },
@@ -18140,7 +18140,7 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
       "Properties": {
         "Name": "/accelerator/AWSAccelerator-NetworkAssociationsStack-333333333333-us-east-1/version",
         "Type": "String",
-        "Value": "1.12.0",
+        "Value": "1.12.1",
       },
       "Type": "AWS::SSM::Parameter",
     },
@@ -19002,7 +19002,7 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
       "Properties": {
         "Name": "/accelerator/AWSAccelerator-NetworkAssociationsStack-333333333333-us-west-2/version",
         "Type": "String",
-        "Value": "1.12.0",
+        "Value": "1.12.1",
       },
       "Type": "AWS::SSM::Parameter",
     },
@@ -21040,7 +21040,7 @@ exports[`NoVpcFlowLogStack Construct(NetworkAssociationsStack):  Snapshot Test 1
       "Properties": {
         "Name": "/accelerator/AWSAccelerator-NetworkAssociationsStack-555555555555-us-east-1/version",
         "Type": "String",
-        "Value": "1.12.0",
+        "Value": "1.12.1",
       },
       "Type": "AWS::SSM::Parameter",
     },
