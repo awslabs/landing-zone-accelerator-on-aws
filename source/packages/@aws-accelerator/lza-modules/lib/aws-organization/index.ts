@@ -69,7 +69,7 @@ import {
   OrganizationalUnitKeysType,
 } from '../../common/resources';
 import { AcceleratorModule } from '../accelerator-module';
-import { setRetryStrategy } from '@aws-accelerator/utils/dist/lib/common-functions';
+import { setRetryStrategy } from '@aws-accelerator/utils/lib/common-functions';
 
 import { getBaselineVersion } from '@aws-accelerator/utils/lib/control-tower';
 

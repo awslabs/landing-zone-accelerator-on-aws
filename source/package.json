@@ -104,6 +104,14 @@
     "typescript": "4.9.5",
     "yaml": "1.10.2"
   },
+  "config": {
+    "node": {
+      "version": {
+        "default": 20,
+        "minimum": 18
+      }
+    }
+  },
   "resolutions": {
     "cross-spawn": "7.0.6",
     "nx": "20.6.2",
