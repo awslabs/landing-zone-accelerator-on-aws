@@ -179,10 +179,11 @@ async function manageLogGroups(
   );
 
   // Process retention and encryption setting for ALL log groups
-  for (const allLogGroup of logGroups.allLogGroups) {
-    await updateRetentionPolicy(parseInt(retention.acceleratorLogRetentionInDays), allLogGroup);
+  for (const logGroup of logGroups.allLogGroups) {
+    await updateRetentionPolicy(parseInt(retention.acceleratorLogRetentionInDays), logGroup);
 
-    await updateLogGroupEncryption(allLogGroup, encryption.acceleratorLogKmsKeyArn);
+    // Ignore log groups prefixed with 'AWS' as it's a restricted action
+    await updateLogGroupEncryption(logGroup, encryption.acceleratorLogKmsKeyArn);
   }
 
   if (subscription.subscriptionType === 'ACCOUNT') {
@@ -572,14 +573,22 @@ async function deleteSubscription(logGroupName: string, acceleratorCreatedLogDes
  */
 async function updateLogGroupEncryption(logGroup: LogGroup, acceleratorLogKmsKeyArn?: string) {
   if (!logGroup.kmsKeyId && acceleratorLogKmsKeyArn) {
-    await throttlingBackOff(() =>
-      logsClient.send(
-        new AssociateKmsKeyCommand({
-          logGroupName: logGroup.logGroupName!,
-          kmsKeyId: acceleratorLogKmsKeyArn,
-        }),
-      ),
-    );
+    try {
+      await throttlingBackOff(() =>
+        logsClient.send(
+          new AssociateKmsKeyCommand({
+            logGroupName: logGroup.logGroupName!,
+            kmsKeyId: acceleratorLogKmsKeyArn,
+          }),
+        ),
+      );
+    } catch (error: any) {
+      if (error.name === 'InvalidParameterException' && error.message.includes('Log groups starting AWS/ are reserved for AWS')) {
+        console.warn(`Skipping encryption for log group ${logGroup.logGroupName} as it is an AWS managed log group`);
+        return;
+      }
+      throw error;
+    }
   }
 }
 
