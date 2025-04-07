@@ -23,6 +23,7 @@ export interface SolutionHelperProps {
   readonly repositoryOwner: cdk.CfnParameter;
   readonly repositoryBranchName: cdk.CfnParameter;
   readonly repositoryName: cdk.CfnParameter;
+  readonly lambdaRuntime: cdk.aws_lambda.Runtime;
 }
 
 export class SolutionHelper extends Construct {
@@ -41,7 +42,7 @@ export class SolutionHelper extends Construct {
     });
 
     const helperFunction = new lambda.Function(this, 'SolutionHelper', {
-      runtime: lambda.Runtime.NODEJS_18_X,
+      runtime: props.lambdaRuntime,
       handler: 'index.handler',
       description:
         'This function generates UUID for each deployment and sends anonymous data to the AWS Solutions team',

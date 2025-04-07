@@ -23,6 +23,7 @@ import fs from 'fs';
 import * as yaml from 'js-yaml';
 import os from 'os';
 import path from 'path';
+import { getNodeVersion } from '@aws-accelerator/utils/lib/common-functions';
 
 import { Bucket, BucketEncryptionType } from '@aws-accelerator/constructs';
 import * as cdk_extensions from '@aws-cdk-extensions/cdk-extensions';
@@ -77,6 +78,22 @@ export class TesterPipeline extends Construct {
 
   constructor(scope: Construct, id: string, props: TesterPipelineProps) {
     super(scope, id);
+
+    let nodeEnvVariables: { [p: string]: codebuild.BuildEnvironmentVariable } | undefined;
+
+    /**
+     * This environment variable is only present when user decides to have a custom runtime
+     * If this environment variable is not present then runtime is set to whatever the value
+     * is in source/package.json `config.node.version.default`
+     */
+    if (process.env['ACCELERATOR_NODE_VERSION']) {
+      nodeEnvVariables = {
+        ACCELERATOR_NODE_VERSION: {
+          type: codebuild.BuildEnvironmentVariableType.PLAINTEXT,
+          value: getNodeVersion(),
+        },
+      };
+    }
 
     let targetAcceleratorEnvVariables: { [p: string]: codebuild.BuildEnvironmentVariable } | undefined;
 
@@ -197,7 +214,7 @@ export class TesterPipeline extends Construct {
         phases: {
           install: {
             'runtime-versions': {
-              nodejs: 20,
+              nodejs: getNodeVersion(),
             },
           },
           build: {
@@ -250,6 +267,7 @@ export class TesterPipeline extends Construct {
             value: props.prefixes.ssmParamName,
           },
           ...targetAcceleratorEnvVariables,
+          ...nodeEnvVariables,
         },
       },
       cache: codebuild.Cache.local(codebuild.LocalCacheMode.SOURCE),

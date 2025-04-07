@@ -27,6 +27,7 @@ import { AcceleratorToolkitCommand } from './toolkit';
 import { Repository } from '@aws-cdk-extensions/cdk-extensions';
 import { CONTROL_TOWER_LANDING_ZONE_VERSION } from '@aws-accelerator/utils/lib/control-tower';
 import { ControlTowerLandingZoneConfig } from '@aws-accelerator/config';
+import { getNodeVersion } from '@aws-accelerator/utils/lib/common-functions';
 
 export interface AcceleratorPipelineProps {
   readonly toolkitRole: cdk.aws_iam.Role;
@@ -232,6 +233,22 @@ export class AcceleratorPipeline extends Construct {
       pipelineName = `${this.props.qualifier}-pipeline`;
       buildProjectName = `${this.props.qualifier}-build-project`;
       toolkitProjectName = `${this.props.qualifier}-toolkit-project`;
+    }
+
+    let nodeEnvVariables: { [p: string]: codebuild.BuildEnvironmentVariable } | undefined;
+
+    /**
+     * This environment variable is only present when user decides to have a custom runtime
+     * If this environment variable is not present then runtime is set to whatever the value
+     * is in source/package.json `config.node.version.default`
+     */
+    if (process.env['ACCELERATOR_NODE_VERSION']) {
+      nodeEnvVariables = {
+        ACCELERATOR_NODE_VERSION: {
+          type: codebuild.BuildEnvironmentVariableType.PLAINTEXT,
+          value: getNodeVersion(),
+        },
+      };
     }
 
     let pipelineAccountEnvVariables: { [p: string]: codebuild.BuildEnvironmentVariable } | undefined;
@@ -501,7 +518,7 @@ export class AcceleratorPipeline extends Construct {
         phases: {
           install: {
             'runtime-versions': {
-              nodejs: 20,
+              nodejs: getNodeVersion(),
             },
           },
           pre_build: {
@@ -557,6 +574,7 @@ export class AcceleratorPipeline extends Construct {
           },
           ...enableSingleAccountModeEnvVariables,
           ...pipelineAccountEnvVariables,
+          ...nodeEnvVariables,
         },
       },
       cache: codebuild.Cache.local(codebuild.LocalCacheMode.SOURCE),
@@ -582,7 +600,7 @@ export class AcceleratorPipeline extends Construct {
         phases: {
           install: {
             'runtime-versions': {
-              nodejs: 20,
+              nodejs: getNodeVersion(),
             },
           },
           pre_build: {
@@ -750,6 +768,7 @@ export class AcceleratorPipeline extends Construct {
           ...enableSingleAccountModeEnvVariables,
           ...pipelineAccountEnvVariables,
           ...aseaMigrationModeEnvVariables,
+          ...nodeEnvVariables,
         },
       },
       cache: codebuild.Cache.local(codebuild.LocalCacheMode.SOURCE),
