@@ -16,7 +16,7 @@ The `vpcs` block serves as a way to define VPCs that are only meant to be deploy
 
 ## How do I define a centralized interface endpoint VPC?
 
-Landing Zone Accelerator automates the heavy lifting associated with the configuration and management of a centralized interface endpoint VPC. This is facilitated through the `central` property under the `interfaceEndpoints` configuration in a [VpcConfig](../../typedocs/latest/classes/_aws_accelerator_config.VpcConfig.html). Setting `central: true` will automate the provisioning of Route 53 private hosted zones for each endpoint service defined under this `interfaceEndpoints` configuration.
+Landing Zone Accelerator automates the heavy lifting associated with the configuration and management of a centralized interface endpoint VPC. This is facilitated through the `central` property under the `interfaceEndpoints` configuration in a [VpcConfig](../../typedocs/interfaces/___packages__aws_accelerator_config_dist_config_lib_models_network_config.IVpcConfig.html). Setting `central: true` will automate the provisioning of Route 53 private hosted zones for each endpoint service defined under this `interfaceEndpoints` configuration.
 
 Additionally, to utilize these central endpoints from other VPCs and VPC templates, you may define `useCentralEndpoints: true` in their respective configuration blocks in order to automate the necessary private hosted zone associations to those VPCs.
 
