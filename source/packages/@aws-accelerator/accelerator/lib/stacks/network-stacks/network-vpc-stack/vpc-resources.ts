@@ -82,7 +82,6 @@ export class VpcResources {
     this.deleteDefaultVpc = this.deleteDefaultVpcMethod(configData.defaultVpcsConfig);
     // Create central endpoints role
     this.centralEndpointRole = this.createCentralEndpointRole(
-      acceleratorData.partition,
       vpcResources,
       configData.centralEndpointVpc,
       acceleratorData.acceleratorPrefix,
@@ -149,12 +148,11 @@ export class VpcResources {
    * @returns
    */
   private createCentralEndpointRole(
-    partition: string,
     vpcResources: (VpcConfig | VpcTemplatesConfig)[],
     centralEndpointVpc: VpcConfig | undefined,
     acceleratorPrefix: string,
   ): cdk.aws_iam.Role | undefined {
-    if (this.useCentralEndpoints(vpcResources, partition)) {
+    if (this.useCentralEndpoints(vpcResources)) {
       if (!centralEndpointVpc) {
         this.stack.addLogs(LogLevel.ERROR, `useCentralEndpoints set to true, but no central endpoint VPC detected`);
         throw new Error(`Configuration validation failed at runtime.`);
@@ -205,17 +203,9 @@ export class VpcResources {
    * @param vpcResources
    * @param partition
    */
-  private useCentralEndpoints(vpcResources: (VpcConfig | VpcTemplatesConfig)[], partition: string): boolean {
+  private useCentralEndpoints(vpcResources: (VpcConfig | VpcTemplatesConfig)[]): boolean {
     for (const vpcItem of vpcResources) {
       if (vpcItem.useCentralEndpoints) {
-        if (partition !== 'aws' && partition !== 'aws-cn') {
-          this.stack.addLogs(
-            LogLevel.ERROR,
-            'useCentralEndpoints set to true, but AWS Partition is not commercial. Please change it to false.',
-          );
-          throw new Error(`Configuration validation failed at runtime.`);
-        }
-
         return true;
       }
     }
