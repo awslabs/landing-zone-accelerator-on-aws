@@ -583,7 +583,7 @@ async function updateLogGroupEncryption(logGroup: LogGroup, acceleratorLogKmsKey
         ),
       );
     } catch (error: any) {
-      if (error.name === 'InvalidParameterException' && error.message.includes('Log groups starting AWS/ are reserved for AWS')) {
+      if (error.name === 'InvalidParameterException' && error.message.includes('Log groups starting with AWS/ are reserved for AWS')) {
         console.warn(`Skipping encryption for log group ${logGroup.logGroupName} as it is an AWS managed log group`);
         return;
       }
