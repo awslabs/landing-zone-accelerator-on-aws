@@ -366,17 +366,17 @@ export interface IGuardDutyExportFindingsConfig {
  *     excludeRegions: []
  *   eksProtection:
  *     enable: true
- *     excludedRegions: []
+ *     excludeRegions: []
  *   ec2Protection:
  *     enable: true
- *     keepSnapshot: true
- *     excludedRegions: []
+ *     keepSnapshots: true
+ *     excludeRegions: []
  *   rdsProtection:
  *     enable: true
- *     excludedRegions: []
+ *     excludeRegions: []
  *   lambdaProtection:
  *     enable: true
- *     excludedRegions: []
+ *     excludeRegions: []
  *   exportConfiguration:
  *     enable: true
  *     overrideExisting: true
