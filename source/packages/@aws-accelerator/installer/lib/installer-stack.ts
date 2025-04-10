@@ -966,6 +966,11 @@ export class InstallerStack extends cdk.Stack {
                     echo "Failed to assume $MANAGEMENT_ACCOUNT_ROLE_NAME role in management account $MANAGEMENT_ACCOUNT_ID"
                     exit 1
                   fi
+                  # Force bootstrapping is to account for where the LZA framework has previously bootstrapped the account and therefore uses a custom template
+                  # which doesn't have the S3 bucket (as it using the management account bucket)
+                  yarn run cdk bootstrap --toolkitStackName ${acceleratorPrefix}-CDKToolkit aws://${
+                cdk.Aws.ACCOUNT_ID
+              }/${cdk.Aws.REGION} --qualifier accel --force
                   export $(printf "AWS_ACCESS_KEY_ID=%s AWS_SECRET_ACCESS_KEY=%s AWS_SESSION_TOKEN=%s" $MANAGEMENT_ACCOUNT_CREDENTIAL);
                   if ! aws cloudformation describe-stacks --stack-name ${acceleratorPrefix}-CDKToolkit --region ${
                 cdk.Aws.REGION
