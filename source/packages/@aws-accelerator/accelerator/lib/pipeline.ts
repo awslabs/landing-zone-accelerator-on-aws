@@ -1003,7 +1003,9 @@ export class AcceleratorPipeline extends Construct {
        */
       const reviewLink = `https://${cdk.Stack.of(this).region}.console.${this.getConsoleUrlSuffixForPartition(
         this.props.partition,
-      )}/s3/buckets/${this.pipeline.artifactBucket.bucketName}?prefix=AWSAccelerator-Pipel/Diffs/#{codepipeline.PipelineExecutionId}/&region=${
+      )}/s3/buckets/${
+        this.pipeline.artifactBucket.bucketName
+      }?prefix=AWSAccelerator-Pipel/Diffs/#{codepipeline.PipelineExecutionId}/&region=${
         cdk.Stack.of(this).region
       }&bucketType=general`;
 
@@ -1015,7 +1017,7 @@ export class AcceleratorPipeline extends Construct {
             runOrder: 2,
             additionalInformation: `
               Changes for this execution can be found in accelerator pipeline S3 bucket under Diffs/#{codepipeline.PipelineExecutionId}. 
-              Use cli command for download: "aws s3 sync ${this.pipeline.artifactBucket.bucketName}/#{codepipeline.PipelineExecutionId} diffs" or follow the link below.`,
+              Use cli command for download: "aws s3 sync ${this.diffS3Uri}/#{codepipeline.PipelineExecutionId} diffs" or follow the link below.`,
             notificationTopic,
             externalEntityLink: reviewLink,
             notifyEmails,
