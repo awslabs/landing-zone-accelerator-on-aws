@@ -982,7 +982,18 @@ exports[`PipelineStack Construct(PipelineStack):  Snapshot Test 1`] = `
                   "CustomData": "
               Changes for this execution can be found in accelerator pipeline S3 bucket under Diffs/#{codepipeline.PipelineExecutionId}. 
               Use cli command for download: "aws s3 sync s3://aws-accelerator-pipeline-000000000000-us-east-1/AWSAccelerator-Pipel/Diffs/#{codepipeline.PipelineExecutionId} diffs" or follow the link below.",
-                  "ExternalEntityLink": "https://us-east-1.console.aws.amazon.com/s3/buckets/aws-accelerator-pipeline-000000000000-us-east-1?prefix=AWSAccelerator-Pipel/Diffs/#{codepipeline.PipelineExecutionId}/&region=us-east-1&bucketType=general",
+                  "ExternalEntityLink": {
+                    "Fn::Join": [
+                      "",
+                      [
+                        "https://us-east-1.console.aws.amazon.com/s3/buckets/",
+                        {
+                          "Ref": "PipelineSecureBucketB3EEB324",
+                        },
+                        "?prefix=AWSAccelerator-Pipel/Diffs/#{codepipeline.PipelineExecutionId}/&region=us-east-1&bucketType=general",
+                      ],
+                    ],
+                  },
                   "NotificationArn": {
                     "Ref": "PipelineManualApprovalActionTopicB55612D2",
                   },
@@ -3851,7 +3862,18 @@ exports[`PipelineStack Construct(PipelineStack):  Snapshot Test 2`] = `
                   "CustomData": "
               Changes for this execution can be found in accelerator pipeline S3 bucket under Diffs/#{codepipeline.PipelineExecutionId}. 
               Use cli command for download: "aws s3 sync s3://aws-accelerator-pipeline-000000000000-us-east-1/AWSAccelerator-Pipel/Diffs/#{codepipeline.PipelineExecutionId} diffs" or follow the link below.",
-                  "ExternalEntityLink": "https://us-east-1.console.aws.amazon.com/s3/buckets/aws-accelerator-pipeline-000000000000-us-east-1?prefix=AWSAccelerator-Pipel/Diffs/#{codepipeline.PipelineExecutionId}/&region=us-east-1&bucketType=general",
+                  "ExternalEntityLink": {
+                    "Fn::Join": [
+                      "",
+                      [
+                        "https://us-east-1.console.aws.amazon.com/s3/buckets/",
+                        {
+                          "Ref": "PipelineSecureBucketB3EEB324",
+                        },
+                        "?prefix=AWSAccelerator-Pipel/Diffs/#{codepipeline.PipelineExecutionId}/&region=us-east-1&bucketType=general",
+                      ],
+                    ],
+                  },
                   "NotificationArn": {
                     "Ref": "PipelineManualApprovalActionTopicB55612D2",
                   },

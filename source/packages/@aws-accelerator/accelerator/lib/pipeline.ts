@@ -220,6 +220,9 @@ export class AcceleratorPipeline extends Construct {
     let pipelineName = `${props.prefixes.accelerator}-Pipeline`;
     let buildProjectName = `${props.prefixes.accelerator}-BuildProject`;
     let toolkitProjectName = `${props.prefixes.accelerator}-ToolkitProject`;
+    this.diffS3Uri = `s3://${this.props.prefixes.bucketName}-pipeline-${cdk.Stack.of(this).account}-${
+      cdk.Stack.of(this).region
+    }/AWSAccelerator-Pipel/Diffs`;
 
     //
     // Change the fields when qualifier is present
@@ -233,6 +236,9 @@ export class AcceleratorPipeline extends Construct {
       pipelineName = `${this.props.qualifier}-pipeline`;
       buildProjectName = `${this.props.qualifier}-build-project`;
       toolkitProjectName = `${this.props.qualifier}-toolkit-project`;
+      this.diffS3Uri = `s3://${this.props.qualifier}-pipeline-${cdk.Stack.of(this).account}-${
+        cdk.Stack.of(this).region
+      }/AWSAccelerator-Pipel/Diffs`;
     }
 
     let nodeEnvVariables: { [p: string]: codebuild.BuildEnvironmentVariable } | undefined;
@@ -581,14 +587,11 @@ export class AcceleratorPipeline extends Construct {
     });
 
     /**
-     * Toolkit CodeBuild poroject is used to run all Accelerator stages, including diff
+     * Toolkit CodeBuild project is used to run all Accelerator stages, including diff
      * First it executes synth of all Pipeline stages and then diff within the same container.
      * CloudFormation templates are then reused for all further stages
-     * Diff files are uploaded to pipeline S3 bucket
+     * Diff files are uploaded to pipeline S3 bucket - consideration needed if running in external account
      */
-    this.diffS3Uri = `s3://${this.props.prefixes.bucketName}-pipeline-${cdk.Stack.of(this).account}-${
-      cdk.Stack.of(this).region
-    }/AWSAccelerator-Pipel/Diffs`;
 
     this.toolkitProject = new codebuild.PipelineProject(this, 'ToolkitProject', {
       projectName: toolkitProjectName,
@@ -1000,8 +1003,8 @@ export class AcceleratorPipeline extends Construct {
        */
       const reviewLink = `https://${cdk.Stack.of(this).region}.console.${this.getConsoleUrlSuffixForPartition(
         this.props.partition,
-      )}/s3/buckets/${this.props.prefixes.bucketName}-pipeline-${cdk.Stack.of(this).account}-${
-        cdk.Stack.of(this).region
+      )}/s3/buckets/${
+        this.pipeline.artifactBucket.bucketName
       }?prefix=AWSAccelerator-Pipel/Diffs/#{codepipeline.PipelineExecutionId}/&region=${
         cdk.Stack.of(this).region
       }&bucketType=general`;
