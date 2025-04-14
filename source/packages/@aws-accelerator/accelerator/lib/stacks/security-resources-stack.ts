@@ -11,28 +11,28 @@
  *  and limitations under the License.
  */
 
+import {
+  AccountCloudTrailConfig,
+  AseaResourceType,
+  AwsConfigRuleSet,
+  ConfigRule,
+  IsPublicSsmDoc,
+  Region,
+  Tag,
+} from '@aws-accelerator/config';
+import { Tag as ConfigRuleTag } from '@aws-sdk/client-config-service';
 import * as cdk from 'aws-cdk-lib';
 import { NagSuppressions } from 'cdk-nag';
 import { pascalCase } from 'change-case';
 import { Construct } from 'constructs';
 import path from 'path';
-import { Tag as ConfigRuleTag } from '@aws-sdk/client-config-service';
-import {
-  AccountCloudTrailConfig,
-  AwsConfigRuleSet,
-  ConfigRule,
-  Region,
-  Tag,
-  IsPublicSsmDoc,
-  AseaResourceType,
-} from '@aws-accelerator/config';
 
 import {
-  ConfigServiceRecorder,
   CloudWatchLogGroups,
+  ConfigServiceRecorder,
   ConfigServiceTags,
-  SsmSessionManagerSettings,
   SecurityHubEventsLog,
+  SsmSessionManagerSettings,
 } from '@aws-accelerator/constructs';
 import * as cdk_extensions from '@aws-cdk-extensions/cdk-extensions';
 
@@ -713,6 +713,11 @@ export class SecurityResourcesStack extends AcceleratorStack {
    */
   private createCustomConfigRule(rule: ConfigRule): CustomConfigRuleType {
     let ruleScope: cdk.aws_config.RuleScope | undefined;
+
+    if (rule.customRule === undefined) {
+      this.logger.info(`custom rule for Config rule ${rule.name} is undefined`);
+      return;
+    }
 
     if (rule.customRule.triggeringResources.lookupType == 'ResourceTypes') {
       const ruleScopeResources: cdk.aws_config.ResourceType[] = [];

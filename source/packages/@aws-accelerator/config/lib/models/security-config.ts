@@ -1412,6 +1412,23 @@ export interface IIamPasswordPolicyConfig {
   readonly maxPasswordAge: number;
 }
 
+/**
+ * *{@link SecurityConfig} / {@link AwsConfig} / {@link AwsConfigRuleSet} / {@link ConfigRule} / {@link CustomRule} / {@link CustomRuleLambda}*
+ *
+ * @description
+ * AWS CustomRuleLambda type
+ *
+ * @example
+ * lambda:
+ * ```
+ * lambda:
+ *   sourceFilePath: path/to/function.zip
+ *   handler: index.handler
+ *   runtime: nodejsXX.x
+ *   rolePolicyFile: path/to/policy.json
+ *   timeout: 3
+ * ```
+ */
 export interface ICustomRuleLambdaType {
   /**
    * The source code file path of your Lambda function. This is a zip file containing lambda function, this file must be available in config repository.
@@ -1436,6 +1453,22 @@ export interface ICustomRuleLambdaType {
   readonly timeout?: number;
 }
 
+/**
+ * *{@link SecurityConfig} / {@link AwsConfig} / {@link AwsConfigRuleSet} / {@link ConfigRule} / {@link TriggeringResource}*
+ *
+ * @description
+ * AWS TriggeringResource type
+ *
+ * @example
+
+ * Triggering Resource:
+* ```
+ * lookupType: Tag
+ * lookupKey: EnvironmentA
+ * lookupValue:
+ *   - AWS::EC2::Instance
+ * ```
+ */
 export interface ITriggeringResourceType {
   /**
    * An enum to identify triggering resource types.
@@ -1454,6 +1487,31 @@ export interface ITriggeringResourceType {
   readonly lookupValue: t.NonEmptyString[];
 }
 
+/**
+ * *{@link SecurityConfig} / {@link AwsConfig} / {@link AwsConfigRuleSet} / {@link ConfigRule} / {@link CustomRule}*
+ *
+ * @description
+ * AWS CustomRule configuration
+ *
+ * @example
+ * Custom rule:
+ * ```
+ * lambda:
+ *   sourceFilePath: path/to/function.zip
+ *   handler: index.handler
+ *   runtime: nodejsXX.x
+ *   rolePolicyFile: path/to/policy.json
+ *   timeout: 3
+ * periodic: true
+ * maximumExecutionFrequency: Six_Hours
+ * configurationChanges: true
+ * triggeringResources:
+ *   lookupType: Tag
+ *   lookupKey: EnvironmentA
+ *   lookupValue:
+ *     - AWS::EC2::Instance
+ * ```
+ */
 export interface ICustomRuleConfigType {
   /**
    * The Lambda function to run.
@@ -1597,12 +1655,13 @@ export interface IConfigRuleRemediationType {
  *         handler: index.handler
  *         runtime: nodejsXX.x
  *         rolePolicyFile: path/to/policy.json
+ *         timeout: 3
  *       periodic: true
  *       maximumExecutionFrequency: Six_Hours
  *       configurationChanges: true
  *       triggeringResources:
- *         lookupType: ResourceTypes
- *         lookupKey: ResourceTypes
+ *         lookupType: Tag
+ *         lookupKey: EnvironmentA
  *         lookupValue:
  *           - AWS::EC2::Instance
  * ```
@@ -1726,8 +1785,8 @@ export interface IAwsConfigRuleSet {
    *             maximumExecutionFrequency: Six_Hours
    *             configurationChanges: true
    *             triggeringResources:
-   *               lookupType: ResourceTypes
-   *               lookupKey: ResourceTypes
+   *               lookupType: Tag
+   *               lookupKey: EnvironmentA
    *               lookupValue:
    *                 - AWS::EC2::Instance
    *          - name: accelerator-iam-user-group-membership-check
