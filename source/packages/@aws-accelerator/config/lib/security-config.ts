@@ -266,6 +266,28 @@ export class ConfigRuleRemediation implements i.IConfigRuleRemediationType {
   readonly excludeRegions: t.Region[] = [];
 }
 
+export class CustomRuleLambda implements i.ICustomRuleLambdaType {
+  readonly sourceFilePath: t.NonEmptyString = '';
+  readonly handler: t.NonEmptyString = '';
+  readonly runtime: t.NonEmptyString = '';
+  readonly rolePolicyFile: t.NonEmptyString = '';
+  readonly timeout?: number;
+}
+
+export class TriggeringResource implements i.ITriggeringResourceType {
+  readonly lookupType: string = 'ResourceId';
+  readonly lookupKey: t.NonEmptyString = '';
+  readonly lookupValue: t.NonEmptyString[] = [];
+}
+
+export class CustomRuleConfig implements i.ICustomRuleConfigType {
+  readonly lambda: i.ICustomRuleLambdaType = new CustomRuleLambda();
+  readonly periodic?: boolean;
+  readonly maximumExecutionFrequency: string = 'TwentyFour_Hours';
+  readonly configurationChanges?: boolean;
+  readonly triggeringResources: i.ITriggeringResourceType = new TriggeringResource();
+}
+
 export class ConfigRule implements i.IConfigRule {
   readonly name = '';
   readonly description = '';
@@ -274,23 +296,7 @@ export class ConfigRule implements i.IConfigRule {
   readonly complianceResourceTypes: string[] = [];
   readonly type = '';
   readonly tags = [];
-  readonly customRule = {
-    lambda: {
-      sourceFilePath: '',
-      handler: '',
-      runtime: '',
-      rolePolicyFile: '',
-      timeout: 3,
-    },
-    periodic: true,
-    maximumExecutionFrequency: 'TwentyFour_Hours',
-    configurationChanges: true,
-    triggeringResources: {
-      lookupType: '',
-      lookupKey: '',
-      lookupValue: [],
-    },
-  };
+  readonly customRule: CustomRuleConfig | undefined;
   readonly remediation: ConfigRuleRemediation = new ConfigRuleRemediation();
 }
 

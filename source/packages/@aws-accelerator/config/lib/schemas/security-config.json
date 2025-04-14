@@ -461,6 +461,7 @@
     },
     "ICustomRuleConfigType": {
       "additionalProperties": false,
+      "description": "AWS CustomRule configuration",
       "properties": {
         "configurationChanges": {
           "description": "Whether to run the rule on configuration changes.\n\nDefault: false",
@@ -493,6 +494,7 @@
     },
     "ICustomRuleLambdaType": {
       "additionalProperties": false,
+      "description": "AWS CustomRuleLambda type",
       "properties": {
         "handler": {
           "$ref": "#/definitions/NonEmptyString",
@@ -1678,6 +1680,7 @@
     },
     "ITriggeringResourceType": {
       "additionalProperties": false,
+      "description": "AWS TriggeringResource type",
       "properties": {
         "lookupKey": {
           "$ref": "#/definitions/NonEmptyString",
