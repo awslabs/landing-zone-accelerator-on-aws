@@ -468,8 +468,8 @@ export async function setAcceleratorStackProps(
     accountsConfig,
   );
 
-  const replacementsConfig = getReplacementsConfig(context.configDirPath, accountsConfig);
-  await replacementsConfig.loadReplacementValues({ region: homeRegion }, orgsEnabled);
+  const replacementsConfig = ReplacementsConfig.load(context.configDirPath, accountsConfig);
+  await replacementsConfig.loadDynamicReplacements(homeRegion);
   const globalConfig = GlobalConfig.load(context.configDirPath, replacementsConfig);
   const organizationConfig = OrganizationConfig.load(context.configDirPath, replacementsConfig);
   await organizationConfig.loadOrganizationalUnitIds(context.partition);
@@ -608,23 +608,6 @@ export function getCustomizationsConfig(
     customizationsConfig = new CustomizationsConfig();
   }
   return customizationsConfig;
-}
-
-/**
- * Get replacementsConfig object
- * @param configDirPath
- * @returns
- */
-export function getReplacementsConfig(configDirPath: string, accountsConfig: AccountsConfig): ReplacementsConfig {
-  let replacementsConfig: ReplacementsConfig;
-
-  // Create empty replacementsConfig if optional configuration file does not exist
-  if (fs.existsSync(path.join(configDirPath, ReplacementsConfig.FILENAME))) {
-    replacementsConfig = ReplacementsConfig.load(configDirPath, accountsConfig);
-  } else {
-    replacementsConfig = new ReplacementsConfig(undefined, accountsConfig);
-  }
-  return replacementsConfig;
 }
 
 /**

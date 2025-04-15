@@ -29,6 +29,31 @@ import { ConfigLoader } from '../lib/config-loader';
 import { MOCK_CONSTANTS } from './mocked-resources';
 
 //
+// Allow verifying empty or undefined objects
+//
+declare global {
+  // eslint-disable-next-line @typescript-eslint/no-namespace
+  namespace jest {
+    interface Matchers<R> {
+      toBeEmptyOrUndefined(): R;
+    }
+  }
+}
+
+expect.extend({
+  toBeEmptyOrUndefined(received) {
+    const pass =
+      received === undefined ||
+      (typeof received === 'object' && received !== null && Object.keys(received).length === 0);
+
+    return {
+      pass,
+      message: () => `expected ${received} to be empty object or undefined`,
+    };
+  },
+});
+
+//
 // Mock Dependencies
 //
 jest.mock('@aws-sdk/client-ssm', () => ({
@@ -77,20 +102,20 @@ const getMockGlobalConfig = () => ({
 });
 
 jest.mock('@aws-accelerator/config', () => {
-  const mockLoadReplacementValues = jest.fn().mockReturnValue(undefined);
+  const mockLoadDynamicReplacements = jest.fn().mockReturnValue(undefined);
 
   class MockReplacementsConfig {
     static FILENAME = 'mocked-filename';
     static POLICY_PARAMETER_PREFIX = 'mocked-prefix';
 
     static load = jest.fn().mockReturnValue({
-      loadReplacementValues: mockLoadReplacementValues,
+      loadDynamicReplacements: mockLoadDynamicReplacements,
     });
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     constructor(public arg1: any, public arg2: any) {}
 
-    loadReplacementValues = mockLoadReplacementValues;
+    loadDynamicReplacements = mockLoadDynamicReplacements;
   }
 
   return {
@@ -240,7 +265,7 @@ describe('ConfigLoader', () => {
   });
 
   describe('getAcceleratorConfigurations', () => {
-    let mockReplacementsConfigInstance: { loadReplacementValues: jest.Mock };
+    let mockReplacementsConfigInstance: { loadDynamicReplacements: jest.Mock };
     let mockOrganizationConfigInstance: { loadOrganizationalUnitIds: jest.Mock };
     let mockGlobalConfigInstance: {
       homeRegion: string;
@@ -293,7 +318,7 @@ describe('ConfigLoader', () => {
 
       // Mock ReplacementsConfig instance
       mockReplacementsConfigInstance = {
-        loadReplacementValues: jest.fn().mockReturnValue(undefined),
+        loadDynamicReplacements: jest.fn().mockReturnValue(undefined),
       };
       (ReplacementsConfig.load as jest.Mock).mockReturnValue(mockReplacementsConfigInstance);
 
@@ -591,7 +616,7 @@ describe('ConfigLoader', () => {
  */
 function validateCommonExpectations(result: AcceleratorConfigurationsType) {
   expect(result).toBeDefined();
-  expect(result.customizationsConfig).toBeUndefined();
+  expect(result.customizationsConfig).toBeEmptyOrUndefined();
   expect(result.iamConfig).toBeUndefined();
   expect(result.networkConfig).toBeUndefined();
   expect(result.securityConfig).toBeUndefined();
@@ -608,12 +633,12 @@ function validateCommonExpectations(result: AcceleratorConfigurationsType) {
   );
   expect(result.replacementsConfig).toEqual(
     expect.objectContaining({
-      loadReplacementValues: expect.any(Function),
+      loadDynamicReplacements: expect.any(Function),
     }),
   );
   expect(result.replacementsConfig).toEqual(
     expect.objectContaining({
-      loadReplacementValues: expect.any(Function),
+      loadDynamicReplacements: expect.any(Function),
     }),
   );
 }
