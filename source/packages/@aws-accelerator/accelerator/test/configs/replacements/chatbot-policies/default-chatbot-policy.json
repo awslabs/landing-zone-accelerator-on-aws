@@ -1,0 +1,26 @@
+{
+    "chatbot": {
+        "platforms": {
+            "chime": {
+                "client": {
+                    "@@assign": "disabled"
+                }
+            },
+            "slack": {
+                "client": {
+                    "@@assign": "disabled"
+                }
+            },
+            "microsoft_teams": {
+                "client": {
+                    "@@assign": "disabled"
+                }
+            }
+        },
+        "default": {
+            "client": {
+                "@@assign": "disabled"
+            }
+        }
+    }
+}

@@ -143,20 +143,23 @@ export class AWSOrganization implements AcceleratorModule {
 
   public async handler(module: string, props: ModuleOptionsType): Promise<string> {
     const statuses: string[] = [];
-    const globalConfig = GlobalConfig.load(props.configDirPath);
+    const globalConfig = GlobalConfig.loadRawGlobalConfig(props.configDirPath);
+    const homeRegion = globalConfig.homeRegion;
+    const ctEnabled = globalConfig.controlTower.enable;
 
     //
     // Get Management account credentials
     //
     const managementAccountCredentials = await getManagementAccountCredentials(
       props.partition,
-      globalConfig.homeRegion,
+      homeRegion,
       props.solutionId,
     );
 
-    const organizationConfig = OrganizationConfig.load(props.configDirPath);
+    const organizationConfig = OrganizationConfig.loadRawOrganizationsConfig(props.configDirPath);
+    const orgsEnabled = organizationConfig.enable;
 
-    if (!organizationConfig.enable) {
+    if (!orgsEnabled) {
       return `AWS Organizations not enabled in organization config, module "${module}" execution skipped`;
     }
 
@@ -165,7 +168,7 @@ export class AWSOrganization implements AcceleratorModule {
     const globalRegion = getGlobalRegion(props.partition);
 
     const controlTowerClient = new ControlTowerClient({
-      region: globalConfig.homeRegion,
+      region: homeRegion,
       customUserAgent: props.solutionId,
       retryStrategy: setRetryStrategy(),
       credentials: managementAccountCredentials,
@@ -180,11 +183,7 @@ export class AWSOrganization implements AcceleratorModule {
 
     const organizationRoot = await getOrganizationsRoot(organizationsClient);
 
-    const landingZoneDetails = await this.getLandingZoneDetails(
-      controlTowerClient,
-      globalConfig.homeRegion,
-      globalConfig.controlTower.enable,
-    );
+    const landingZoneDetails = await this.getLandingZoneDetails(controlTowerClient, homeRegion, ctEnabled);
 
     const enabledBaselines: EnabledBaselineSummary[] = [];
 
@@ -209,7 +208,7 @@ export class AWSOrganization implements AcceleratorModule {
       await this.manageOuCreation(organizationsClient, ouItem, organizationRoot, statuses);
 
       // OU baseline only when CT is enabled and OU is not ignored
-      if (globalConfig.controlTower.enable && !ouItem.ou.isIgnored) {
+      if (ctEnabled && !ouItem.ou.isIgnored) {
         // If applicable, enable or update baseline for the AWS organizational unit
         await this.manageOuRegistration(controlTowerClient, ouItem, statuses, landingZoneDetails);
       }

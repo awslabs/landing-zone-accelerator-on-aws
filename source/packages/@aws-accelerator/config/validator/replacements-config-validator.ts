@@ -172,8 +172,20 @@ export class ReplacementsConfigValidator {
    */
   private getReplacementKeysInFile(configDir: string, fileName: string): string[] {
     const data = fs.readFileSync(path.join(configDir, fileName), 'utf-8');
-    const replacements = data.match(/{{[\w\s\d]*}}/g) ?? [];
+
+    // Filter out comment lines and empty lines
+    const nonCommentLines = data
+      .split('\n')
+      .filter(line => {
+        const trimmedLine = line.trim();
+        return trimmedLine && !trimmedLine.startsWith('#');
+      })
+      .join('\n');
+
+    // Find replacements in the filtered content
+    const replacements = nonCommentLines.match(/{{[\w\s\d]*}}/g) ?? [];
     const replacementKeys = replacements.map(key => this.trimCurlyBraces(key));
+
     return replacementKeys;
   }
 

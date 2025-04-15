@@ -61,7 +61,6 @@ export class ReplacementsConfig implements i.IReplacementsConfig {
   readonly accountsConfig: AccountsConfig | undefined = undefined;
 
   placeholders: { [key: string]: string | string[] } = {};
-  validateOnly = false;
 
   /**
    *
@@ -70,73 +69,48 @@ export class ReplacementsConfig implements i.IReplacementsConfig {
    * @param configDir
    * @param validateConfig
    */
-  constructor(values?: i.IReplacementsConfig, accountsConfig?: AccountsConfig, validateOnly = false) {
+  constructor(values?: i.IReplacementsConfig, accountsConfig?: AccountsConfig) {
     this.accountsConfig = accountsConfig;
-    this.validateOnly = validateOnly;
 
     if (values) {
       Object.assign(this, values);
     }
+
+    this.loadStaticReplacements();
   }
 
   /**
-   * Load from config file content
+   * Creates ReplacementsConfig object by reading from config file content.
+   * Static replacement values are always loaded.
+   * To use dynamic replacement values from SSM Parameter Store,
+   * call loadDynamicReplacements() method before loading other configurations with the ReplacementsConfig object
    * @param dir
-   * @param validateConfig
+   * @param accountsConfig {@link AccountsConfig} that is already initialized.
+   *      loadAccountIds() should have been called on the instance to lookup account ids replacement from Organization Client
    * @returns
    */
-  static load(dir: string, accountsConfig: AccountsConfig, validateOnly = false): ReplacementsConfig {
-    if (!fs.existsSync(path.join(dir, ReplacementsConfig.FILENAME))) return new ReplacementsConfig();
+  static load(dir: string, accountsConfig: AccountsConfig): ReplacementsConfig {
+    if (!fs.existsSync(path.join(dir, ReplacementsConfig.FILENAME))) {
+      return new ReplacementsConfig(undefined, accountsConfig);
+    }
 
     const buffer = fs.readFileSync(path.join(dir, ReplacementsConfig.FILENAME), 'utf8');
     if (!yaml.load(buffer)) return new ReplacementsConfig();
     const values = t.parseReplacementsConfig(yaml.load(buffer));
-    return new ReplacementsConfig(values, accountsConfig, validateOnly);
+    return new ReplacementsConfig(values, accountsConfig);
   }
 
   /**
-   * Loads replacement values by utilizing the systems manager client
-   * @param props {@link ReplacementsConfigProps}
-   * @param orgsEnabled boolean
-   * @param managementAccountCredentials {@link AWS.Credentials}
+   * Load static replacements from config file content
+   * Dynamic replacements are loaded with a placeholder value
+   * @param dir
+   * @returns
    */
-  public async loadReplacementValues(
-    props: ReplacementsConfigProps,
-    orgsEnabled: boolean,
-    managementAccountCredentials?: AWS.Credentials,
-  ): Promise<void> {
-    const errors: string[] = [];
-
-    if (!this.validateOnly && orgsEnabled) {
-      logger.info('Loading replacements config substitution values');
-      const ssmClient = new AWS.SSM({ region: props.region, credentials: managementAccountCredentials });
-
-      for (const item of this.globalReplacements) {
-        if (item.path || (item as ParameterReplacementConfigV2).type === 'SSM') {
-          try {
-            logger.info(`Loading parameter at path ${item.path}`);
-            const t = await throttlingBackOff(() => ssmClient.getParameter({ Name: item.path! }).promise());
-            const parameterValue = t.Parameter!.Value;
-            if (parameterValue === undefined) {
-              logger.error(`Invalid parameter value for ${item.path}`);
-              errors.push(`Invalid parameter value for ${item.path}`);
-            } else {
-              this.placeholders[item.key] = parameterValue;
-            }
-          } catch (e) {
-            logger.error(`Message [${e}] for path [${item.path}]`);
-            errors.push(`Message [${e}] for path [${item.path}]`);
-          }
-        } else if ((item as ParameterReplacementConfigV2).value) {
-          this.placeholders[item.key] = (item as ParameterReplacementConfigV2).value!;
-        }
-      }
-
-      if (errors.length) {
-        throw new Error(`${ReplacementsConfig.FILENAME} has has ${errors.length} issues: ${errors.join(' ')}`);
-      }
-    } else {
-      for (const item of this.globalReplacements) {
+  private loadStaticReplacements() {
+    for (const item of this.globalReplacements) {
+      if ((item as ParameterReplacementConfigV2).type !== 'SSM' && (item as ParameterReplacementConfigV2).value) {
+        this.placeholders[item.key] = (item as ParameterReplacementConfigV2).value!;
+      } else {
         logger.debug(`Loading replacement for validation purposes => ${item.key} - ${item.path} `);
         this.placeholders[item.key] = item.key;
       }
@@ -150,16 +124,60 @@ export class ReplacementsConfig implements i.IReplacementsConfig {
     }
   }
 
+  /**
+   * Load dynamic replacements from SSM Parameter Store
+   * @returns
+   */
+  public async loadDynamicReplacements(region: string, managementAccountCredentials?: AWS.Credentials): Promise<void> {
+    const errors: string[] = [];
+    const ssmClient = new AWS.SSM({ region: region, credentials: managementAccountCredentials });
+
+    for (const item of this.globalReplacements) {
+      if (item.path || (item as ParameterReplacementConfigV2).type === 'SSM') {
+        try {
+          logger.info(`Loading parameter at path ${item.path}`);
+          const t = await throttlingBackOff(() => ssmClient.getParameter({ Name: item.path! }).promise());
+          const parameterValue = t.Parameter!.Value;
+          if (parameterValue === undefined) {
+            logger.error(`Invalid parameter value for ${item.path}`);
+            errors.push(`Invalid parameter value for ${item.path}`);
+          } else {
+            this.placeholders[item.key] = parameterValue;
+          }
+        } catch (e) {
+          logger.error(`Message [${e}] for path [${item.path}]`);
+          errors.push(`Message [${e}] for path [${item.path}]`);
+        }
+      } else if ((item as ParameterReplacementConfigV2).value) {
+        this.placeholders[item.key] = (item as ParameterReplacementConfigV2).value!;
+      }
+    }
+
+    if (errors.length) {
+      throw new Error(`${ReplacementsConfig.FILENAME} has has ${errors.length} issues: ${errors.join(' ')}`);
+    }
+
+    if (this.accountsConfig) {
+      [...this.accountsConfig.mandatoryAccounts, ...this.accountsConfig.workloadAccounts].forEach(item => {
+        logger.debug(`Adding account ${item.name}`);
+        this.placeholders[item.name] = item.name;
+      });
+    }
+  }
+
   public preProcessBuffer(initialBuffer: string): string {
-    if (!this.validateOnly && this.accountsConfig) {
+    // If account ID are loaded register the 'account' helper function to process account id replacements
+    if (this.accountsConfig && this.accountsConfig.accountIds) {
       // Register the 'account' helper function with Handlebars
-      // only if 'validateOnly' is falsy and 'accountsConfig' is truthy
       Handlebars.registerHelper('account', accountName => {
         logger.debug(`Handlebars looking up account id for ${accountName}`);
         // Get the account ID by calling the 'getAccountId' method on 'accountsConfig'
         // with the provided 'accountName' if 'accountName' is truthy
         // Otherwise, 'accountId' will be falsy (undefined)
         const accountId = accountName && this.accountsConfig?.getAccountId(accountName);
+        if (!accountId) {
+          logger.warn(`Account "${accountName}" wasn't found while processing replacements`);
+        }
         logger.debug(
           `Handlebars ${
             accountId

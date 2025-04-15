@@ -111,12 +111,13 @@ export class OrganizationConfig implements i.IOrganizationConfig {
   }
 
   /**
-   * Load from config file content
+   * Load from config file content by processing replacementsConfig.
+   * Use loadRawOrganizationsConfig to load with placeholder replacements
    * @param dir
-   * @param validateConfig
+   * @param replacementsConfig
    * @returns
    */
-  static load(dir: string, replacementsConfig?: ReplacementsConfig): OrganizationConfig {
+  static load(dir: string, replacementsConfig: ReplacementsConfig): OrganizationConfig {
     const initialBuffer = fs.readFileSync(path.join(dir, OrganizationConfig.FILENAME), 'utf8');
     const buffer = replacementsConfig ? replacementsConfig.preProcessBuffer(initialBuffer) : initialBuffer;
     const values = t.parseOrganizationConfig(yaml.load(buffer));
@@ -128,16 +129,7 @@ export class OrganizationConfig implements i.IOrganizationConfig {
    */
   static loadRawOrganizationsConfig(dir: string): OrganizationConfig {
     const accountsConfig = AccountsConfig.load(dir);
-    const orgConfig = OrganizationConfig.load(dir);
-    let replacementsConfig: ReplacementsConfig;
-
-    if (fs.existsSync(path.join(dir, ReplacementsConfig.FILENAME))) {
-      replacementsConfig = ReplacementsConfig.load(dir, accountsConfig, true);
-    } else {
-      replacementsConfig = new ReplacementsConfig();
-    }
-
-    replacementsConfig.loadReplacementValues({}, orgConfig.enable);
+    const replacementsConfig = ReplacementsConfig.load(dir, accountsConfig);
     return OrganizationConfig.load(dir, replacementsConfig);
   }
 
@@ -159,7 +151,7 @@ export class OrganizationConfig implements i.IOrganizationConfig {
    * @param replacementsConfig
    * @returns
    */
-  static loadBuffer(dir: string, replacementsConfig?: ReplacementsConfig): string {
+  static loadBuffer(dir: string, replacementsConfig: ReplacementsConfig): string {
     const initialBuffer = fs.readFileSync(path.join(dir, OrganizationConfig.FILENAME), 'utf8');
     return replacementsConfig ? replacementsConfig.preProcessBuffer(initialBuffer) : initialBuffer;
   }

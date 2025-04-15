@@ -831,7 +831,7 @@ export class AcceleratorTool {
 
     const tempDirPath = fs.mkdtempSync(path.join(os.tmpdir(), 'accel-config'));
     fs.writeFileSync(path.join(tempDirPath, 'global-config.yaml'), fileContent!, 'utf8');
-    return GlobalConfig.load(tempDirPath);
+    return GlobalConfig.loadRawGlobalConfig(tempDirPath);
   }
 
   /**

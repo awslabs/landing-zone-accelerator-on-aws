@@ -11,7 +11,7 @@ describe('AccountsConfigValidator', () => {
   const accountsNoDuplicateAliases = AccountsConfig.load(
     path.resolve('./test/validation/accounts-config/account-aliases/no-duplicate-config'),
   );
-  const organization = OrganizationConfig.load(
+  const organization = OrganizationConfig.loadRawOrganizationsConfig(
     path.resolve('./test/validation/accounts-config/account-aliases/duplicate-config'),
   );
 

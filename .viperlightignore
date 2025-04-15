@@ -100,15 +100,15 @@ source/packages/@aws-accelerator/utils/lib/regions.ts:107
 
 # Accelerator specific assume role declaration
 
-source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:432
-source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:433
-source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:1329
-source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:1330
+source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:427
+source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:428
+source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:1324
+source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:1325
 
 # Accelerator specific assume role declaration
 
-source/packages/@aws-accelerator/config/lib/global-config.ts:1058
-source/packages/@aws-accelerator/config/lib/global-config.ts:1059
+source/packages/@aws-accelerator/config/lib/global-config.ts:1050
+source/packages/@aws-accelerator/config/lib/global-config.ts:1051
 
 # Accelerator specific assume role declaration
 
@@ -191,6 +191,9 @@ source/packages/@aws-accelerator/constructs/lib/aws-identity-center/build-identi
 
 source/packages/@aws-accelerator/accelerator/test/configs/all-enabled/certificates/certA/privKey.key
 source/packages/@aws-accelerator/accelerator/test/configs/all-enabled/certificates/certA/cert.crt
+
+source/packages/@aws-accelerator/accelerator/test/configs/replacements/certificates/certA/privKey.key
+source/packages/@aws-accelerator/accelerator/test/configs/replacements/certificates/certA/cert.crt
 
 # Ignore password policy construct files
 

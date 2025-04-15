@@ -84,30 +84,26 @@ export class AcceleratorSynthStacks {
       context: { 'config-dir': path.join(__dirname, `configs/${this.configFolderName}`) },
     });
     this.configDirPath = this.app.node.tryGetContext('config-dir');
-
-    const globalConfig = GlobalConfig.load(this.configDirPath);
-
+    const accountsConfig = AccountsConfig.load(this.configDirPath);
+    // Account IDs and dynamic replacements from SSM are not loaded here
+    const replacementsConfig = ReplacementsConfig.load(this.configDirPath, accountsConfig);
+    const globalConfig = GlobalConfig.load(this.configDirPath, replacementsConfig);
     let customizationsConfig: CustomizationsConfig;
     // Create empty customizationsConfig if optional configuration file does not exist
     if (fs.existsSync(path.join(this.configDirPath, 'customizations-config.yaml'))) {
-      customizationsConfig = CustomizationsConfig.load(this.configDirPath);
+      customizationsConfig = CustomizationsConfig.load(this.configDirPath, replacementsConfig);
     } else {
       customizationsConfig = new CustomizationsConfig();
     }
-
-    const accountsConfig = AccountsConfig.load(this.configDirPath);
-    const orgConfig = OrganizationConfig.load(this.configDirPath);
-    const replacementsConfig = ReplacementsConfig.load(this.configDirPath, accountsConfig);
-    replacementsConfig.loadReplacementValues({}, orgConfig.enable);
     this.props = {
       configDirPath: this.configDirPath,
       accountsConfig: accountsConfig,
       customizationsConfig,
-      globalConfig,
-      iamConfig: IamConfig.load(this.configDirPath),
-      networkConfig: NetworkConfig.load(this.configDirPath),
-      organizationConfig: OrganizationConfig.load(this.configDirPath),
-      securityConfig: SecurityConfig.load(this.configDirPath),
+      globalConfig: globalConfig,
+      iamConfig: IamConfig.load(this.configDirPath, replacementsConfig),
+      networkConfig: NetworkConfig.load(this.configDirPath, replacementsConfig),
+      organizationConfig: OrganizationConfig.load(this.configDirPath, replacementsConfig),
+      securityConfig: SecurityConfig.load(this.configDirPath, replacementsConfig),
       replacementsConfig: replacementsConfig,
       partition: this.partition,
       globalRegion: this.globalRegion,

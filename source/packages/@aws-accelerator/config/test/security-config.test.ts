@@ -38,10 +38,16 @@ import {
   LogGroupsConfig,
   IsPublicSsmDoc,
 } from '../lib/security-config';
+import { ReplacementsConfig } from '../lib/replacements-config';
+import { AccountsConfig } from '../lib/accounts-config';
+
+const configDir = path.resolve('../accelerator/test/configs/snapshot-only');
 
 describe('SecurityConfig', () => {
   describe('Test config', () => {
-    const securityConfigFromFile = SecurityConfig.load(path.resolve('../accelerator/test/configs/snapshot-only'));
+    const accountsConfig = AccountsConfig.load(configDir);
+    const replacementsConfig = ReplacementsConfig.load(configDir, accountsConfig);
+    const securityConfigFromFile = SecurityConfig.load(configDir, replacementsConfig);
     it('has loaded successfully', () => {
       expect(securityConfigFromFile.getDelegatedAccountName()).toBe('Audit');
     });
@@ -100,7 +106,9 @@ describe('SecurityConfig', () => {
 
 describe('should throw an exception for wrong config', () => {
   function loadError() {
-    SecurityConfig.loadFromString('some random string');
+    const accountsConfig = AccountsConfig.load(configDir);
+    const replacementsConfig = ReplacementsConfig.load(configDir, accountsConfig);
+    SecurityConfig.loadFromString('some random string', replacementsConfig);
   }
 
   const errMsg = 'could not load configuration';
@@ -108,11 +116,10 @@ describe('should throw an exception for wrong config', () => {
 });
 
 describe('should return right values for correct config', () => {
-  const buffer = fs.readFileSync(
-    path.join(path.resolve('../accelerator/test/configs/snapshot-only'), SecurityConfig.FILENAME),
-    'utf8',
-  );
-  const securityConfigFromString = SecurityConfig.loadFromString(buffer);
+  const accountsConfig = AccountsConfig.load(configDir);
+  const replacementsConfig = ReplacementsConfig.load(configDir, accountsConfig);
+  const buffer = fs.readFileSync(path.join(path.resolve(configDir), SecurityConfig.FILENAME), 'utf8');
+  const securityConfigFromString = SecurityConfig.loadFromString(buffer, replacementsConfig);
   expect(securityConfigFromString?.awsConfig.enableConfigurationRecorder).toBe(true);
 });
 

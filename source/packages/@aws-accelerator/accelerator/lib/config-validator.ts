@@ -33,7 +33,6 @@ import {
 } from '@aws-accelerator/config';
 import { createLogger } from '@aws-accelerator/utils/lib/logger';
 import { Accelerator } from './accelerator';
-import { getReplacementsConfig } from '../utils/app-utils';
 
 const logger = createLogger(['config-validator']);
 const configDirPath = process.argv[2];
@@ -131,9 +130,8 @@ async function validateConfig(props: {
   // Load replacements config
   let replacementsConfig: ReplacementsConfig | undefined = undefined;
   try {
-    replacementsConfig = getReplacementsConfig(configDirPath, accountsConfig!);
-    const isOrgsEnabled = OrganizationConfig.loadRawOrganizationsConfig(configDirPath).enable;
-    await replacementsConfig.loadReplacementValues({ region: homeRegion }, isOrgsEnabled);
+    replacementsConfig = ReplacementsConfig.load(configDirPath, accountsConfig!);
+    await replacementsConfig.loadDynamicReplacements(homeRegion);
   } catch (e) {
     initErrors.push({ file: ReplacementsConfig.FILENAME, message: e });
   }
@@ -141,7 +139,7 @@ async function validateConfig(props: {
   // Load global config
   let globalConfig: GlobalConfig | undefined = undefined;
   try {
-    globalConfig = GlobalConfig.load(configDirPath, replacementsConfig);
+    globalConfig = GlobalConfig.load(configDirPath, replacementsConfig!);
   } catch (e) {
     initErrors.push({ file: GlobalConfig.FILENAME, message: e });
   }
@@ -149,7 +147,7 @@ async function validateConfig(props: {
   // Load IAM config
   let iamConfig: IamConfig | undefined = undefined;
   try {
-    iamConfig = IamConfig.load(configDirPath, replacementsConfig);
+    iamConfig = IamConfig.load(configDirPath, replacementsConfig!);
   } catch (e) {
     initErrors.push({ file: IamConfig.FILENAME, message: e });
   }
@@ -157,7 +155,7 @@ async function validateConfig(props: {
   // Load network config
   let networkConfig: NetworkConfig | undefined = undefined;
   try {
-    networkConfig = NetworkConfig.load(configDirPath, replacementsConfig);
+    networkConfig = NetworkConfig.load(configDirPath, replacementsConfig!);
   } catch (e) {
     initErrors.push({ file: NetworkConfig.FILENAME, message: e });
   }
@@ -165,7 +163,7 @@ async function validateConfig(props: {
   // Load organization config
   let organizationConfig: OrganizationConfig | undefined = undefined;
   try {
-    organizationConfig = OrganizationConfig.load(configDirPath, replacementsConfig);
+    organizationConfig = OrganizationConfig.load(configDirPath, replacementsConfig!);
   } catch (e) {
     initErrors.push({ file: OrganizationConfig.FILENAME, message: e });
   }
@@ -173,7 +171,7 @@ async function validateConfig(props: {
   // Load security config
   let securityConfig: SecurityConfig | undefined = undefined;
   try {
-    securityConfig = SecurityConfig.load(configDirPath, replacementsConfig);
+    securityConfig = SecurityConfig.load(configDirPath, replacementsConfig!);
   } catch (e) {
     initErrors.push({ file: SecurityConfig.FILENAME, message: e });
   }
@@ -182,7 +180,7 @@ async function validateConfig(props: {
   let customizationsConfig: CustomizationsConfig | undefined = undefined;
   if (fs.existsSync(path.join(configDirPath, CustomizationsConfig.FILENAME))) {
     try {
-      customizationsConfig = CustomizationsConfig.load(configDirPath, replacementsConfig);
+      customizationsConfig = CustomizationsConfig.load(configDirPath, replacementsConfig!);
     } catch (e) {
       initErrors.push({ file: CustomizationsConfig.FILENAME, message: e });
     }
