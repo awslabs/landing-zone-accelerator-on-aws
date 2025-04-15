@@ -28,7 +28,6 @@ import * as i from './models/global-config';
 
 import { AccountsConfig } from './accounts-config';
 import { ReplacementsConfig } from './replacements-config';
-import { OrganizationConfig } from './organization-config';
 
 const logger = createLogger(['global-config']);
 
@@ -635,12 +634,13 @@ export class GlobalConfig implements i.IGlobalConfig {
   }
 
   /**
-   * Load from file in given directory
+   * Load from file in given directory by processing replacementsConfig.
+   * Use loadRawGlobalConfig to load with placeholder replacements
    * @param dir
-   * @param validateConfig
+   * @param replacementsConfig
    * @returns
    */
-  static load(dir: string, replacementsConfig?: ReplacementsConfig): GlobalConfig {
+  static load(dir: string, replacementsConfig: ReplacementsConfig): GlobalConfig {
     const initialBuffer = fs.readFileSync(path.join(dir, GlobalConfig.FILENAME), 'utf8');
     const buffer = replacementsConfig ? replacementsConfig.preProcessBuffer(initialBuffer) : initialBuffer;
     const values = t.parseGlobalConfig(yaml.load(buffer));
@@ -668,16 +668,7 @@ export class GlobalConfig implements i.IGlobalConfig {
    */
   static loadRawGlobalConfig(dir: string): GlobalConfig {
     const accountsConfig = AccountsConfig.load(dir);
-    const orgConfig = OrganizationConfig.load(dir);
-    let replacementsConfig: ReplacementsConfig;
-
-    if (fs.existsSync(path.join(dir, ReplacementsConfig.FILENAME))) {
-      replacementsConfig = ReplacementsConfig.load(dir, accountsConfig, true);
-    } else {
-      replacementsConfig = new ReplacementsConfig();
-    }
-
-    replacementsConfig.loadReplacementValues({}, orgConfig.enable);
+    const replacementsConfig = ReplacementsConfig.load(dir, accountsConfig);
     return GlobalConfig.load(dir, replacementsConfig);
   }
 
@@ -685,9 +676,10 @@ export class GlobalConfig implements i.IGlobalConfig {
    * Load from string content
    * @param content
    */
-  static loadFromString(content: string): GlobalConfig | undefined {
+  static loadFromString(content: string, replacementsConfig: ReplacementsConfig): GlobalConfig | undefined {
+    const buffer = replacementsConfig ? replacementsConfig.preProcessBuffer(content) : content;
     try {
-      const values = t.parseGlobalConfig(yaml.load(content));
+      const values = t.parseGlobalConfig(yaml.load(buffer));
       return new GlobalConfig(values);
     } catch (e) {
       logger.error('Error parsing input, global config undefined');

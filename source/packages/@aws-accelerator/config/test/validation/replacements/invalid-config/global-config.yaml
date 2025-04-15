@@ -1,0 +1,20 @@
+homeRegion: "{{AcceleratorHomeRegion}}"
+enabledRegions: [{{AcceleratorHomeRegion}}, {{NonHomeEnabledRegions}}]
+managementAccountAccessRole: OrganizationAccountAccessRole
+cloudwatchLogRetentionInDays: 365
+terminationProtection: false
+controlTower:
+  enable: false
+logging:
+  account: LogArchive
+  cloudtrail:
+    enable: false
+    organizationTrail: false
+  sessionManager:
+    sendToCloudWatchLogs: false
+    sendToS3: false
+tags:
+  - key: ValidTag
+    value: "{{DEFINED_PLACEHOLDER}}"
+  - key: InvalidTag
+    value: "{{UNDEFINED_PLACEHOLDER}}"

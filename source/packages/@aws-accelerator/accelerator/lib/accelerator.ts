@@ -45,7 +45,7 @@ import {
 } from '@aws-accelerator/utils/lib/common-functions';
 
 import { AssumeProfilePlugin } from '@aws-cdk-extensions/cdk-plugin-assume-role';
-import { getReplacementsConfig, isBeforeBootstrapStage, writeImportResources } from '../utils/app-utils';
+import { isBeforeBootstrapStage, writeImportResources } from '../utils/app-utils';
 import { AcceleratorStage } from './accelerator-stage';
 import { AcceleratorToolkit, AcceleratorToolkitProps } from './toolkit';
 import { v4 as uuidv4 } from 'uuid';
@@ -288,16 +288,11 @@ export abstract class Accelerator {
       // if not provided as inputs in accountsConfig
       //
       const accountsConfig = AccountsConfig.load(props.configDirPath);
-      const organizationsConfig = OrganizationConfig.load(props.configDirPath);
+      const orgsEnabled = OrganizationConfig.loadRawOrganizationsConfig(props.configDirPath).enable;
       const homeRegion = GlobalConfig.loadRawGlobalConfig(props.configDirPath).homeRegion;
-      await accountsConfig.loadAccountIds(
-        props.partition,
-        props.enableSingleAccountMode,
-        organizationsConfig.enable,
-        accountsConfig,
-      );
-      const replacementsConfig = getReplacementsConfig(props.configDirPath, accountsConfig);
-      replacementsConfig.loadReplacementValues({ region: homeRegion }, organizationsConfig.enable);
+      await accountsConfig.loadAccountIds(props.partition, props.enableSingleAccountMode, orgsEnabled, accountsConfig);
+      const replacementsConfig = ReplacementsConfig.load(props.configDirPath, accountsConfig);
+      await replacementsConfig.loadDynamicReplacements(homeRegion);
 
       //
       // Set details about mandatory accounts

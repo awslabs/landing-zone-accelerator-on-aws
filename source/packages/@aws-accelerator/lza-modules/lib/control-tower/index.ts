@@ -41,7 +41,7 @@ import { Organization } from './prerequisites/organization';
 import { SharedAccount } from './prerequisites/shared-account';
 import { AssumeRoleCredentialType, ModuleOptionsType } from '../../common/resources';
 import { AcceleratorModule } from '../accelerator-module';
-import { AcceleratorConfigLoader } from '../../common/accelerator-config-loader';
+import { AcceleratorConfigLoader } from '../config/accelerator-config-loader';
 import {
   getLandingZoneDetails,
   getLandingZoneIdentifier,
@@ -151,7 +151,7 @@ export class ControlTowerLandingZone implements AcceleratorModule {
    * @returns status string
    */
   private async manageModule(module: string, props: ModuleOptionsType): Promise<string> {
-    const globalConfig = GlobalConfig.load(props.configDirPath);
+    const globalConfig = GlobalConfig.loadRawGlobalConfig(props.configDirPath);
     const accountsConfig = AccountsConfig.load(props.configDirPath);
     const globalRegion = getGlobalRegion(props.partition);
 

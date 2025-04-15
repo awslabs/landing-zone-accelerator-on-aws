@@ -35,9 +35,13 @@ import {
   CloudWatchLogsExclusionConfig,
   CloudWatchLogsConfig,
 } from '../lib/global-config';
+import { ReplacementsConfig } from '../lib/replacements-config';
 import { describe, it, expect } from '@jest/globals';
 import * as path from 'path';
 import * as fs from 'fs';
+import { AccountsConfig } from '../lib/accounts-config';
+
+const configDir = path.resolve('../accelerator/test/configs/snapshot-only');
 
 describe('GlobalConfig', () => {
   describe('Test config', () => {
@@ -45,7 +49,7 @@ describe('GlobalConfig', () => {
       // const globalConfig = new GlobalConfig({
       //   homeRegion: 'us-east-1',
       // });
-      const globalConfigFromFile = GlobalConfig.load(path.resolve('../accelerator/test/configs/snapshot-only'));
+      const globalConfigFromFile = GlobalConfig.loadRawGlobalConfig(configDir);
 
       expect(globalConfigFromFile.ssmParameters?.length).toBe(1);
       expect(globalConfigFromFile.ssmParameters?.at(0)?.parameters?.at(0)?.name).toBe('parameterTest');
@@ -63,11 +67,10 @@ describe('GlobalConfig', () => {
     });
 
     it('loads from string', () => {
-      const buffer = fs.readFileSync(
-        path.join('../accelerator/test/configs/snapshot-only', GlobalConfig.FILENAME),
-        'utf8',
-      );
-      const globalConfigFromString = GlobalConfig.loadFromString(buffer);
+      const accountsConfig = AccountsConfig.load(configDir);
+      const replacementsConfig = ReplacementsConfig.load(configDir, accountsConfig);
+      const buffer = fs.readFileSync(path.join(configDir, GlobalConfig.FILENAME), 'utf8');
+      const globalConfigFromString = GlobalConfig.loadFromString(buffer, replacementsConfig);
       if (!globalConfigFromString) {
         throw new Error('globalConfigFromString is not defined');
       }

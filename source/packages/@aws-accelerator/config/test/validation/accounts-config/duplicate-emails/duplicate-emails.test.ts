@@ -10,7 +10,7 @@ describe('AccountsConfigValidator', () => {
     const loadedAccounts = AccountsConfig.load(
       path.resolve('./test/validation/accounts-config/duplicate-emails/no-org-config'),
     );
-    const loadedOus = OrganizationConfig.load(
+    const loadedOus = OrganizationConfig.loadRawOrganizationsConfig(
       path.resolve('./test/validation/accounts-config/duplicate-emails/no-org-config'),
     );
     function duplicateEmailError() {

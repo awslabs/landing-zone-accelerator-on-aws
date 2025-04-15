@@ -410,7 +410,7 @@ export class SecurityConfig implements i.ISecurityConfig {
    * @returns
    */
 
-  static load(dir: string, replacementsConfig?: ReplacementsConfig): SecurityConfig {
+  static load(dir: string, replacementsConfig: ReplacementsConfig): SecurityConfig {
     const initialBuffer = fs.readFileSync(path.join(dir, SecurityConfig.FILENAME), 'utf8');
     const buffer = replacementsConfig ? replacementsConfig.preProcessBuffer(initialBuffer) : initialBuffer;
     const values = t.parseSecurityConfig(yaml.load(buffer));
@@ -421,9 +421,10 @@ export class SecurityConfig implements i.ISecurityConfig {
    * Load from string content
    * @param content
    */
-  static loadFromString(content: string): SecurityConfig | undefined {
+  static loadFromString(content: string, replacementsConfig: ReplacementsConfig): SecurityConfig | undefined {
+    const buffer = replacementsConfig ? replacementsConfig.preProcessBuffer(content) : content;
     try {
-      const values = t.parseSecurityConfig(yaml.load(content));
+      const values = t.parseSecurityConfig(yaml.load(buffer));
       return new SecurityConfig(values);
     } catch (e) {
       logger.error('Error parsing input, security config undefined');

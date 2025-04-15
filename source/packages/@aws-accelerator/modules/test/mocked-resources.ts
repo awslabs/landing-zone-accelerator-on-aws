@@ -311,7 +311,6 @@ export const mockReplacementsConfig: Partial<ReplacementsConfig> = {
     SharedServices: 'SharedServices',
     Network: 'Network',
   },
-  validateOnly: false,
 };
 
 export const mockSecurityConfig: Partial<SecurityConfig> = {

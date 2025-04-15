@@ -28,9 +28,13 @@ import {
   IdentityCenterConfig,
   IdentityCenterPermissionSetConfig,
 } from '../lib/iam-config';
+import { ReplacementsConfig } from '../lib/replacements-config';
 import { describe, it, expect } from '@jest/globals';
 import * as path from 'path';
 import * as fs from 'fs';
+import { AccountsConfig } from '../lib/accounts-config';
+
+const configDir = path.resolve('../accelerator/test/configs/snapshot-only');
 
 describe('IamConfig', () => {
   describe('Test config', () => {
@@ -87,8 +91,10 @@ describe('IamConfig', () => {
   });
 
   it('loads from string', () => {
-    const buffer = fs.readFileSync(path.join('../accelerator/test/configs/snapshot-only', IamConfig.FILENAME), 'utf8');
-    const iamConfigFromString = IamConfig.loadFromString(buffer);
+    const accountsConfig = AccountsConfig.load(configDir);
+    const replacementsConfig = ReplacementsConfig.load(configDir, accountsConfig);
+    const buffer = fs.readFileSync(path.join(configDir, IamConfig.FILENAME), 'utf8');
+    const iamConfigFromString = IamConfig.loadFromString(buffer, replacementsConfig);
     if (!iamConfigFromString) {
       throw new Error('iamConfigFromString is not defined');
     }

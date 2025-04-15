@@ -929,7 +929,7 @@ export class NetworkConfig implements i.INetworkConfig {
    * @param dir
    * @returns
    */
-  static load(dir: string, replacementsConfig?: ReplacementsConfig): NetworkConfig {
+  static load(dir: string, replacementsConfig: ReplacementsConfig): NetworkConfig {
     const initialBuffer = fs.readFileSync(path.join(dir, NetworkConfig.FILENAME), 'utf8');
     const buffer = replacementsConfig ? replacementsConfig.preProcessBuffer(initialBuffer) : initialBuffer;
     const values = t.parseNetworkConfig(yaml.load(buffer));
@@ -941,9 +941,10 @@ export class NetworkConfig implements i.INetworkConfig {
    * Load from string content
    * @param content
    */
-  static loadFromString(content: string): NetworkConfig | undefined {
+  static loadFromString(content: string, replacementsConfig: ReplacementsConfig): NetworkConfig | undefined {
+    const buffer = replacementsConfig ? replacementsConfig.preProcessBuffer(content) : content;
     try {
-      const values = t.parseNetworkConfig(yaml.load(content));
+      const values = t.parseNetworkConfig(yaml.load(buffer));
       return new NetworkConfig(values);
     } catch (e) {
       logger.error('Error parsing input, network config undefined');

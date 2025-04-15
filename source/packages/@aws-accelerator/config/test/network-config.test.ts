@@ -47,12 +47,16 @@ import {
   ResolverRuleConfig,
   VpcTemplatesConfig,
 } from '../lib/network-config';
+import { ReplacementsConfig } from '../lib/replacements-config';
 
 import { VpcFlowLogsConfig } from '../lib/common/types';
 
 import { describe, it, expect } from '@jest/globals';
 import * as path from 'path';
 import * as fs from 'fs';
+import { AccountsConfig } from '../lib/accounts-config';
+
+const configDir = path.resolve('../accelerator/test/configs/snapshot-only');
 
 describe('NetworkConfig', () => {
   describe('Test config', () => {
@@ -70,11 +74,10 @@ describe('NetworkConfig', () => {
     });
 
     it('loads from string', () => {
-      const buffer = fs.readFileSync(
-        path.join('../accelerator/test/configs/snapshot-only', NetworkConfig.FILENAME),
-        'utf8',
-      );
-      const networkConfigFromString = NetworkConfig.loadFromString(buffer);
+      const accountsConfig = AccountsConfig.load(configDir);
+      const replacementsConfig = ReplacementsConfig.load(configDir, accountsConfig);
+      const buffer = fs.readFileSync(path.join(configDir, NetworkConfig.FILENAME), 'utf8');
+      const networkConfigFromString = NetworkConfig.loadFromString(buffer, replacementsConfig);
       if (!networkConfigFromString) {
         throw new Error('networkConfigFromString is not defined');
       }

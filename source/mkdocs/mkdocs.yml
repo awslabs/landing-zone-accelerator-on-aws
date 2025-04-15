@@ -13,6 +13,7 @@ nav:
       - Services, Features, and Configuration References: user-guide/config.md
       - Centralized Logging: user-guide/logging.md
       - SecurityHub Findings: user-guide/securityhub-findings.md
+      - Replacement Variables: user-guide/replacement-variables.md
   - Developer Guide:
       - developer-guide/index.md
       - Development Dependencies: developer-guide/dependencies.md
@@ -22,7 +23,7 @@ nav:
       - Feature Development: developer-guide/features.md
       - Documentation Guidelines: developer-guide/doc-guidelines.md
       - JSON Schema: developer-guide/json-schema.md
-      - Module Development: developer-guide/module-development/index.md      
+      - Module Development: developer-guide/module-development/index.md
   - Sample Configurations:
       - sample-configurations/index.md
       - Standard:

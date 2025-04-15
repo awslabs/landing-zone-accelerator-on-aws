@@ -1,0 +1,156 @@
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Effect": "Allow",
+            "Principal": {
+                "AWS": "arn:aws:iam::${ACCOUNT_ID}:root"
+            },
+            "Action": "kms:*",
+            "Resource": "*"
+        },
+        {
+            "Sid": "Enable IAM User Permissions",
+            "Effect": "Allow",
+            "Principal": {
+                "AWS": "arn:aws:iam::457936900343:root"
+            },
+            "Action": "kms:*",
+            "Resource": "*"
+        },
+        {
+            "Sid": "Allow S3 use of the key - From file",
+            "Effect": "Allow",
+            "Principal": {
+                "Service": "s3.amazonaws.com"
+            },
+            "Action": [
+                "kms:Decrypt",
+                "kms:DescribeKey",
+                "kms:Encrypt",
+                "kms:GenerateDataKey",
+                "kms:GenerateDataKeyWithoutPlaintext",
+                "kms:GenerateRandom",
+                "kms:GetKeyPolicy",
+                "kms:GetKeyRotationStatus",
+                "kms:ListAliases",
+                "kms:ListGrants",
+                "kms:ListKeyPolicies",
+                "kms:ListKeys",
+                "kms:ListResourceTags",
+                "kms:ListRetirableGrants",
+                "kms:ReEncryptFrom",
+                "kms:ReEncryptTo"
+            ],
+            "Resource": "*"
+        },
+        {
+            "Sid": "Allow AWS Services to encrypt and describe logs - From file",
+            "Effect": "Allow",
+            "Principal": {
+                "Service": [
+                    "cloudtrail.amazonaws.com",
+                    "config.amazonaws.com",
+                    "delivery.logs.amazonaws.com",
+                    "ssm.amazonaws.com"
+                ]
+            },
+            "Action": [
+                "kms:Decrypt",
+                "kms:DescribeKey",
+                "kms:Encrypt",
+                "kms:GenerateDataKey",
+                "kms:GenerateDataKeyPair",
+                "kms:GenerateDataKeyPairWithoutPlaintext",
+                "kms:GenerateDataKeyWithoutPlaintext",
+                "kms:ReEncryptFrom",
+                "kms:ReEncryptTo"
+            ],
+            "Resource": "*"
+        },
+        {
+            "Sid": "Allow Organization use of the key - From file",
+            "Effect": "Allow",
+            "Principal": {
+                "AWS": "*"
+            },
+            "Action": [
+                "kms:Decrypt",
+                "kms:DescribeKey",
+                "kms:Encrypt",
+                "kms:GenerateDataKey",
+                "kms:GenerateDataKeyPair",
+                "kms:GenerateDataKeyPairWithoutPlaintext",
+                "kms:GenerateDataKeyWithoutPlaintext",
+                "kms:ReEncryptFrom",
+                "kms:ReEncryptTo",
+                "kms:ListAliases"
+            ],
+            "Resource": "*",
+            "Condition": {
+                "StringEquals": {
+                    "aws:PrincipalOrgID": "${ORG_ID}"
+                }
+            }
+        },
+        {
+            "Sid": "Allow Macie service to use the encryption key - From file",
+            "Effect": "Allow",
+            "Principal": {
+                "Service": "macie.amazonaws.com"
+            },
+            "Action": [
+                "kms:Encrypt",
+                "kms:Decrypt",
+                "kms:ReEncrypt*",
+                "kms:GenerateDataKey*",
+                "kms:DescribeKey"
+            ],
+            "Resource": "*"
+        },
+        {
+            "Sid": "Allow Guardduty service to use the encryption key - From file",
+            "Effect": "Allow",
+            "Principal": {
+                "Service": "guardduty.amazonaws.com"
+            },
+            "Action": [
+                "kms:Encrypt",
+                "kms:Decrypt",
+                "kms:ReEncrypt*",
+                "kms:GenerateDataKey*",
+                "kms:DescribeKey"
+            ],
+            "Resource": "*"
+        },
+        {
+            "Sid": "Policy statement 1 from file",
+            "Effect": "Allow",
+            "Principal": {
+                "Service": "macie.amazonaws.com"
+            },
+            "Action": [
+                "kms:Decrypt",
+                "kms:DescribeKey",
+                "kms:Encrypt",
+                "kms:ReEncrypt*",
+                "kms:GenerateDataKey*"
+            ],
+            "Resource": "*"
+        },
+        {
+            "Sid": "Policy statement 2 from file",
+            "Effect": "Allow",
+            "Principal": {
+                "AWS": "*"
+            },
+            "Action": "kms:ListAliases",
+            "Resource": "*",
+            "Condition": {
+                "StringEquals": {
+                    "aws:PrincipalOrgID": "${ORG_ID}"
+                }
+            }
+        }
+    ]
+}
