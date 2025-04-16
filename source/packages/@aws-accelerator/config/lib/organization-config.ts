@@ -41,6 +41,14 @@ export abstract class QuarantineNewAccountsConfig implements i.IQuarantineNewAcc
   readonly scpPolicyName: string = 'QuarantineAccounts';
 }
 
+export abstract class ResourceControlPolicyConfig implements i.IResourceControlPolicyConfig {
+  readonly name: string = '';
+  readonly description: string = '';
+  readonly policy: string = '';
+  readonly strategy = 'deny-list';
+  readonly deploymentTargets: t.DeploymentTargets = new t.DeploymentTargets();
+}
+
 export abstract class ServiceControlPolicyConfig implements i.IServiceControlPolicyConfig {
   readonly name: string = '';
   readonly description: string = '';
@@ -93,6 +101,7 @@ export class OrganizationConfig implements i.IOrganizationConfig {
 
   public organizationalUnitIds: OrganizationalUnitIdConfig[] | undefined = undefined;
   readonly quarantineNewAccounts: QuarantineNewAccountsConfig | undefined = undefined;
+  readonly resourceControlPolicies?: ResourceControlPolicyConfig[] | undefined;
   readonly serviceControlPolicies: ServiceControlPolicyConfig[] = [];
   readonly taggingPolicies: TaggingPolicyConfig[] = [];
   readonly chatbotPolicies?: ChatbotPolicyConfig[] = [];

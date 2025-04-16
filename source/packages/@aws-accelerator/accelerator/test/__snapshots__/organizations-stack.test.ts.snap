@@ -63,6 +63,7 @@ exports[`MultiOuOrganizationsStack Construct(OrganizationsStack):  Snapshot Test
         "configPolicyNames": [
           "AcceleratorGuardrails1",
           "AcceleratorGuardrails2",
+          "BackupPolicy",
         ],
         "partition": {
           "Ref": "AWS::Partition",
@@ -91,7 +92,9 @@ exports[`MultiOuOrganizationsStack Construct(OrganizationsStack):  Snapshot Test
             "Arn",
           ],
         },
-        "configPolicyNames": [],
+        "configPolicyNames": [
+          "BackupPolicy",
+        ],
         "partition": {
           "Ref": "AWS::Partition",
         },
@@ -122,6 +125,7 @@ exports[`MultiOuOrganizationsStack Construct(OrganizationsStack):  Snapshot Test
         "configPolicyNames": [
           "AcceleratorGuardrails1",
           "AcceleratorGuardrails2",
+          "BackupPolicy",
         ],
         "partition": {
           "Ref": "AWS::Partition",
@@ -150,7 +154,9 @@ exports[`MultiOuOrganizationsStack Construct(OrganizationsStack):  Snapshot Test
             "Arn",
           ],
         },
-        "configPolicyNames": [],
+        "configPolicyNames": [
+          "BackupPolicy",
+        ],
         "partition": {
           "Ref": "AWS::Partition",
         },
@@ -3342,7 +3348,10 @@ exports[`OrganizationsStack Construct(OrganizationsStack):  Snapshot Test 1`] = 
             "Arn",
           ],
         },
-        "configPolicyNames": [],
+        "configPolicyNames": [
+          "BackupPolicy",
+          "BackupPolicy01",
+        ],
         "partition": {
           "Ref": "AWS::Partition",
         },
@@ -3370,7 +3379,10 @@ exports[`OrganizationsStack Construct(OrganizationsStack):  Snapshot Test 1`] = 
             "Arn",
           ],
         },
-        "configPolicyNames": [],
+        "configPolicyNames": [
+          "BackupPolicy",
+          "BackupPolicy01",
+        ],
         "partition": {
           "Ref": "AWS::Partition",
         },
@@ -3457,7 +3469,10 @@ exports[`OrganizationsStack Construct(OrganizationsStack):  Snapshot Test 1`] = 
             "Arn",
           ],
         },
-        "configPolicyNames": [],
+        "configPolicyNames": [
+          "BackupPolicy",
+          "BackupPolicy01",
+        ],
         "partition": {
           "Ref": "AWS::Partition",
         },
@@ -3485,7 +3500,10 @@ exports[`OrganizationsStack Construct(OrganizationsStack):  Snapshot Test 1`] = 
             "Arn",
           ],
         },
-        "configPolicyNames": [],
+        "configPolicyNames": [
+          "BackupPolicy",
+          "BackupPolicy01",
+        ],
         "partition": {
           "Ref": "AWS::Partition",
         },
@@ -6887,7 +6905,9 @@ exports[`delegatedAdminStack Construct(OrganizationsStack):  Snapshot Test 1`] =
             "Arn",
           ],
         },
-        "configPolicyNames": [],
+        "configPolicyNames": [
+          "BackupPolicy",
+        ],
         "partition": {
           "Ref": "AWS::Partition",
         },
@@ -6915,7 +6935,9 @@ exports[`delegatedAdminStack Construct(OrganizationsStack):  Snapshot Test 1`] =
             "Arn",
           ],
         },
-        "configPolicyNames": [],
+        "configPolicyNames": [
+          "BackupPolicy",
+        ],
         "partition": {
           "Ref": "AWS::Partition",
         },

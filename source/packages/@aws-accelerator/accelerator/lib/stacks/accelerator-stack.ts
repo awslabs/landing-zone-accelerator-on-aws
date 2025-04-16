@@ -19,7 +19,6 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { v4 as uuidv4 } from 'uuid';
 import * as winston from 'winston';
-
 import { PrincipalOrgIdConditionType } from '@aws-accelerator/utils/lib/common-resources';
 
 import {
@@ -52,7 +51,6 @@ import { KeyLookup, S3LifeCycleRule, ServiceLinkedRole } from '@aws-accelerator/
 import { createLogger } from '@aws-accelerator/utils/lib/logger';
 import { policyReplacements } from '@aws-accelerator/utils/lib/policy-replacements';
 import { SsmParameterPath, SsmResourceType } from '@aws-accelerator/utils/lib/ssm-parameter-path';
-
 import { version } from '../../../../../package.json';
 import { AcceleratorResourcePrefixes } from '../../utils/app-utils';
 import { AcceleratorResourceNames } from '../accelerator-resource-names';
@@ -1680,27 +1678,31 @@ export abstract class AcceleratorStack extends cdk.Stack {
   }
 
   /**
-   * Function to get list of targets by type organization unit or account for given scp
+   * Function to get list of targets by type organization unit or account for given policy
    * @param targetName
    * @param targetType
    * @returns
    */
-  public getScpNamesForTarget(targetName: string, targetType: 'ou' | 'account'): string[] {
-    const scps: string[] = [];
+  public getPolicyNamesForTarget(targetName: string, targetType: 'ou' | 'account'): string[] {
+    const policies: string[] = [];
 
-    for (const serviceControlPolicy of this.props.organizationConfig.serviceControlPolicies) {
-      if (targetType === 'ou' && serviceControlPolicy.deploymentTargets.organizationalUnits) {
-        if (serviceControlPolicy.deploymentTargets.organizationalUnits.indexOf(targetName) !== -1) {
-          scps.push(serviceControlPolicy.name);
+    for (const policy of [
+      ...this.props.organizationConfig.serviceControlPolicies,
+      ...this.props.organizationConfig.backupPolicies,
+      ...(this.props.organizationConfig.resourceControlPolicies ?? []),
+    ]) {
+      if (targetType === 'ou' && policy.deploymentTargets.organizationalUnits) {
+        if (policy.deploymentTargets.organizationalUnits.indexOf(targetName) !== -1) {
+          policies.push(policy.name);
         }
       }
-      if (targetType === 'account' && serviceControlPolicy.deploymentTargets.accounts) {
-        if (serviceControlPolicy.deploymentTargets.accounts.indexOf(targetName) !== -1) {
-          scps.push(serviceControlPolicy.name);
+      if (targetType === 'account' && policy.deploymentTargets.accounts) {
+        if (policy.deploymentTargets.accounts.indexOf(targetName) !== -1) {
+          policies.push(policy.name);
         }
       }
     }
-    return scps;
+    return policies;
   }
 
   /**

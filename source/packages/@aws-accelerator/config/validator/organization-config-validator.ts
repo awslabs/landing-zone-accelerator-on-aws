@@ -28,6 +28,9 @@ export class OrganizationConfigValidator {
     // Validate presence of service control policy file
     this.validateServiceControlPolicyFile(configDir, values, errors);
 
+    // Validate presence of resource control policy file
+    this.validateResourceControlPolicyFile(configDir, values, errors);
+
     // Validate presence of tagging policy file
     this.validateTaggingPolicyFile(configDir, values, errors);
 
@@ -92,6 +95,21 @@ export class OrganizationConfigValidator {
       if (validateOrgEntity.appliedScpName.length > 5) {
         errors.push(
           `${validateOrgEntity.orgEntityType} - ${validateOrgEntity.orgEntity} has ${validateOrgEntity.appliedScpName.length} out of 5 allowed scps`,
+        );
+      }
+    }
+  }
+
+  /**
+   * Function to validate resource control policy file existence
+   * @param configDir
+   * @param values
+   */
+  private validateResourceControlPolicyFile(configDir: string, values: OrganizationConfig, errors: string[]) {
+    for (const resourceControlPolicy of values.resourceControlPolicies ?? []) {
+      if (!fs.existsSync(path.join(configDir, resourceControlPolicy.policy))) {
+        errors.push(
+          `Invalid policy file ${resourceControlPolicy.policy} for resource control policy ${resourceControlPolicy.name} !!!`,
         );
       }
     }
