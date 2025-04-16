@@ -20,17 +20,24 @@ import {
   PolicyTypeEnum,
   RevertScpChanges,
 } from '@aws-accelerator/constructs';
+import { ResourceControlPolicyConfig, ServiceControlPolicyConfig } from '@aws-accelerator/config';
 import winston from 'winston';
-import { SsmResourceType } from '@aws-accelerator/utils/lib/ssm-parameter-path';
 import { createLogger } from '@aws-accelerator/utils/lib/logger';
 import path from 'path';
-import { ServiceControlPolicyConfig } from '@aws-accelerator/config';
 import { pascalCase } from 'pascal-case';
-import { DEFAULT_LAMBDA_RUNTIME } from '../../../utils/lib/lambda';
+import { DEFAULT_LAMBDA_RUNTIME, SsmResourceType } from '@aws-accelerator/utils';
 
-/**
- * Scp Item type
- */
+export type policyItem = {
+  /**
+   * Name of the policy
+   */
+  name: string;
+  /**
+   * policy id
+   */
+  id: string;
+};
+
 export type scpItem = {
   /**
    * Name of the scp
@@ -43,11 +50,11 @@ export type scpItem = {
 };
 
 /**
- * Scp generated file path type
+ * Generated file path type
  */
-export type scpGeneratedFilePath = {
+export type generatedFilePath = {
   /**
-   * Name of the scp
+   * Name of the policy
    */
   name: string;
   /**
@@ -60,14 +67,38 @@ export type scpGeneratedFilePath = {
   tempPath: string;
 };
 
-export class ScpResource {
-  private stack: AcceleratorStack;
+export enum deploymentPolicyType {
+  /**
+   * AWS Organizations Organizational Unit
+   */
+  ORGANIZATIONAL_UNIT = 'ou',
+
+  /**
+   * AWS Account
+   */
+  ACCOUNT = 'account',
+}
+
+interface PolicyResult {
+  scpItems: policyItem[];
+  rcpItems: policyItem[];
+}
+
+interface PolicyConfig {
+  policies: Array<ServiceControlPolicyConfig | ResourceControlPolicyConfig>;
+  type: PolicyType | PolicyTypeEnum;
+  items: policyItem[];
+}
+
+export class PolicyResource {
+  readonly stack: AcceleratorStack;
   protected logger: winston.Logger;
 
   readonly props: AcceleratorStackProps;
   readonly cloudwatchKey: cdk.aws_kms.IKey | undefined;
   readonly lambdaKey: cdk.aws_kms.IKey | undefined;
-  readonly scpGeneratedFilePathList: scpGeneratedFilePath[] = [];
+  readonly generatedFilePathList: generatedFilePath[] = [];
+  private readonly policyTypeMap: Map<PolicyTypeEnum, EnablePolicyType> = new Map();
 
   constructor(
     stack: AcceleratorStack,
@@ -76,78 +107,74 @@ export class ScpResource {
     props: AcceleratorStackProps,
   ) {
     this.stack = stack;
-    this.logger = createLogger(['scp-resource']);
+    this.logger = createLogger(['policy']);
     this.props = props;
     this.cloudwatchKey = cloudwatchKey;
     this.lambdaKey = lambdaKey;
-
-    //
-    // Generate replacements for policy files
-    //
     this.loadPolicyReplacements(props);
   }
 
-  /**
-   * Create and attach SCPs to OU and Accounts.
-   * @param props {@link AccountsStackProps}
-   * @returns
-   */
-  public createAndAttachScps(props: AcceleratorStackProps): scpItem[] {
-    const scpItems: scpItem[] = [];
-    // SCP is not supported in China Region.
-    if (props.organizationConfig.enable && props.partition !== 'aws-cn') {
-      const enablePolicyTypeScp = new EnablePolicyType(this.stack, 'enablePolicyTypeScp', {
-        policyType: PolicyTypeEnum.SERVICE_CONTROL_POLICY,
-        kmsKey: this.cloudwatchKey,
-        logRetentionInDays: this.props.globalConfig.cloudwatchLogRetentionInDays,
-      });
+  public createAndAttachPolicies(props: AcceleratorStackProps): { scpItems: policyItem[]; rcpItems: policyItem[] } {
+    const rcpItems: policyItem[] = [];
+    const scpItems: policyItem[] = [];
 
-      // Deploy SCPs
-      for (const serviceControlPolicy of props.organizationConfig.serviceControlPolicies) {
-        this.logger.info(`Adding service control policy (${serviceControlPolicy.name})`);
+    if (!props.organizationConfig || !props.organizationConfig.enable) {
+      this.logger.info('Organization configuration is not enabled. Skipping policy creation.');
+      this.getEmptyPolicyResult();
+    }
+    const policyConfigs = this.initializePolicyConfigs(props);
 
-        const scp = this.createScp(props, serviceControlPolicy);
+    for (const { policies, type, items } of policyConfigs) {
+      if (policies && policies.length === 0) {
+        this.logger.info(`No policies found for type ${type as PolicyTypeEnum}`);
+        continue;
+      }
 
-        scp.node.addDependency(enablePolicyTypeScp);
+      // Enable policy type if not already enabled
+      this.enablePolicyType(type as PolicyTypeEnum);
+      for (const policy of policies ?? []) {
+        try {
+          const policyResource = this.createPolicy(type as PolicyTypeEnum, policy!);
+          policyResource.node.addDependency(this.policyTypeMap.get(type as PolicyTypeEnum)!);
 
-        //
-        // Attach scp to organization units
-        //
-        this.attachScpToOu(
-          props,
-          scp,
-          serviceControlPolicy.name,
-          serviceControlPolicy.deploymentTargets.organizationalUnits ?? [],
-        );
+          this.attachPolicies(
+            policyResource,
+            policy!.name,
+            policy!.deploymentTargets?.accounts,
+            policy!.deploymentTargets?.organizationalUnits,
+            type as PolicyType,
+          );
 
-        //
-        // Attach scp to accounts
-        //
-        this.attachScpToAccounts(
-          props,
-          scp,
-          serviceControlPolicy.name,
-          serviceControlPolicy.deploymentTargets.accounts ?? [],
-        );
-
-        scpItems.push({ name: serviceControlPolicy.name, id: scp.id });
+          items.push({ name: policy!.name, id: policyResource.id });
+        } catch (error) {
+          this.logger.error(`Error creating policy ${policy!.name}: ${error}`);
+          throw error;
+        }
       }
     }
-
-    return scpItems;
+    return { scpItems, rcpItems };
   }
 
   /**
-   * Function to create SCP
-   * @param props {@link AccountsStackProps}
-   * @param serviceControlPolicy
+   * Create policy based on type
    */
+  private createPolicy(type: PolicyTypeEnum, policy: ServiceControlPolicyConfig | ResourceControlPolicyConfig): Policy {
+    switch (type) {
+      case PolicyTypeEnum.SERVICE_CONTROL_POLICY:
+        return this.createScp(this.props, policy as ServiceControlPolicyConfig);
+      case PolicyTypeEnum.RESOURCE_CONTROL_POLICY:
+        return this.createRcp(this.props, policy as ResourceControlPolicyConfig);
+      default:
+        throw new Error(`Unsupported policy type: ${type}`);
+    }
+  }
+
   public createScp(props: AcceleratorStackProps, serviceControlPolicy: ServiceControlPolicyConfig): Policy {
     const scp = new Policy(this.stack, serviceControlPolicy.name, {
       description: serviceControlPolicy.description,
       name: serviceControlPolicy.name,
       partition: props.partition,
-      path: this.scpGeneratedFilePathList.find(policy => policy.name === serviceControlPolicy.name)!.tempPath,
+      path: this.generatedFilePathList.find(policy => policy.name === serviceControlPolicy.name)!.tempPath,
       type: PolicyType.SERVICE_CONTROL_POLICY,
       strategy: serviceControlPolicy.strategy,
       acceleratorPrefix: props.prefixes.accelerator,
@@ -165,71 +192,119 @@ export class ScpResource {
         stringValue: scp.id,
       });
     }
-
     return scp;
   }
 
+  private createRcp(props: AcceleratorStackProps, resourceControlPolicy: ResourceControlPolicyConfig): Policy {
+    const rcp = new Policy(this.stack, resourceControlPolicy.name, {
+      description: resourceControlPolicy.description,
+      name: resourceControlPolicy.name,
+      partition: props.partition,
+      path: this.generatedFilePathList.find(policy => policy.name === resourceControlPolicy.name)!.tempPath,
+      type: PolicyType.RESOURCE_CONTROL_POLICY,
+      strategy: resourceControlPolicy.strategy,
+      acceleratorPrefix: props.prefixes.accelerator,
+      kmsKey: this.cloudwatchKey,
+      logRetentionInDays: props.globalConfig.cloudwatchLogRetentionInDays,
+    });
+    return rcp;
+  }
+
   /**
-   * Function to attach scp to Organization units
+   * Function to load replacements within the provided RCP policy documents
    * @param props {@link AccountsStackProps}
-   * @param scp
-   * @param policyName
-   * @param organizationalUnits
+   * @returns
    */
-  public attachScpToOu(
-    props: AcceleratorStackProps,
-    scp: Policy,
+  public loadPolicyReplacements(props: AcceleratorStackProps): void {
+    const policyConfigs: Array<{
+      policies: Array<ServiceControlPolicyConfig | ResourceControlPolicyConfig | undefined> | undefined;
+      filePathList: generatedFilePath[];
+      type: string;
+    }> = [
+      {
+        policies: props.organizationConfig.serviceControlPolicies ?? [],
+        filePathList: this.generatedFilePathList,
+        type: 'SCP',
+      },
+      {
+        policies: props.organizationConfig.resourceControlPolicies ?? [],
+        filePathList: this.generatedFilePathList,
+        type: 'RCP',
+      },
+    ];
+
+    for (const { policies, filePathList, type } of policyConfigs) {
+      for (const policy of policies ?? []) {
+        this.logger.info(`Loading ${type} policy replacement for ${policy!.name}`);
+        filePathList.push({
+          name: policy!.name,
+          path: policy!.policy,
+          tempPath: this.stack.generatePolicyReplacements(
+            path.join(props.configDirPath, policy!.policy),
+            true,
+            this.stack.organizationId,
+          ),
+        });
+      }
+    }
+  }
+
+  /**
+   * Attach policies to targets
+   */
+  private attachPolicies(
+    policy: Policy,
     policyName: string,
-    organizationalUnits: string[],
+    accounts: string[] | undefined,
+    organizationalUnits: string[] | undefined,
+    policyType: PolicyType,
   ): void {
-    for (const organizationalUnit of organizationalUnits) {
-      this.logger.info(
-        `Attaching service control policy (${policyName}) to organizational unit (${organizationalUnit})`,
-      );
-
-      const ouPolicyAttachment = new PolicyAttachment(
-        this.stack,
-        pascalCase(`Attach_${scp.name}_${organizationalUnit}`),
-        {
-          policyId: scp.id,
-          targetId: props.organizationConfig.getOrganizationalUnitId(organizationalUnit),
-          type: PolicyType.SERVICE_CONTROL_POLICY,
-          strategy: scp.strategy,
-          configPolicyNames: this.stack.getScpNamesForTarget(organizationalUnit, 'ou'),
-          acceleratorPrefix: props.prefixes.accelerator,
-          kmsKey: this.cloudwatchKey,
-          logRetentionInDays: props.globalConfig.cloudwatchLogRetentionInDays,
-        },
-      );
-      ouPolicyAttachment.node.addDependency(scp);
+    if (organizationalUnits && organizationalUnits.length > 0) {
+      for (const organizationalUnit of organizationalUnits) {
+        this.logger.info(
+          `Attaching ${policy.type} policy (${policyName}) to organizational unit (${organizationalUnit})`,
+        );
+        const ouPolicyAttachment = new PolicyAttachment(
+          this.stack,
+          pascalCase(`Attach_${policyName}_${organizationalUnit}`),
+          {
+            policyId: policy.id,
+            targetId: this.props.organizationConfig.getOrganizationalUnitId(organizationalUnit),
+            type: policyType,
+            strategy: policy.strategy,
+            configPolicyNames: this.stack.getPolicyNamesForTarget(
+              organizationalUnit,
+              deploymentPolicyType.ORGANIZATIONAL_UNIT,
+            ),
+            acceleratorPrefix: this.props.prefixes.accelerator,
+            kmsKey: this.cloudwatchKey,
+            logRetentionInDays: this.props.globalConfig.cloudwatchLogRetentionInDays,
+          },
+        );
+        ouPolicyAttachment.node.addDependency(policy);
+      }
+    }
+    if (accounts && accounts.length > 0) {
+      for (const account of accounts) {
+        this.logger.info(`Attaching resource control policy (${policyName}) to account (${account})`);
+        const accountPolicyAttachment = new PolicyAttachment(
+          this.stack,
+          pascalCase(`Attach_${policy.name}_${account}`),
+          {
+            policyId: policy.id,
+            targetId: this.props.accountsConfig.getAccountId(account),
+            type: policyType,
+            strategy: policy.strategy,
+            configPolicyNames: this.stack.getPolicyNamesForTarget(account, deploymentPolicyType.ACCOUNT),
+            acceleratorPrefix: this.props.prefixes.accelerator,
+            kmsKey: this.cloudwatchKey,
+            logRetentionInDays: this.props.globalConfig.cloudwatchLogRetentionInDays,
+          },
+        );
+        accountPolicyAttachment.node.addDependency(policy);
+      }
     }
   }
-
-  /**
-   * Function to attach scp to accounts
-   * @param props {@link AccountsStackProps}
-   * @param scp
-   * @param policyName
-   * @param accounts
-   */
-  public attachScpToAccounts(props: AcceleratorStackProps, scp: Policy, policyName: string, accounts: string[]) {
-    for (const account of accounts) {
-      this.logger.info(`Attaching service control policy (${policyName}) to account (${account})`);
-
-      const accountPolicyAttachment = new PolicyAttachment(this.stack, pascalCase(`Attach_${scp.name}_${account}`), {
-        policyId: scp.id,
-        targetId: props.accountsConfig.getAccountId(account),
-        type: PolicyType.SERVICE_CONTROL_POLICY,
-        strategy: scp.strategy,
-        configPolicyNames: this.stack.getScpNamesForTarget(account, 'account'),
-        acceleratorPrefix: props.prefixes.accelerator,
-        kmsKey: this.cloudwatchKey,
-        logRetentionInDays: props.globalConfig.cloudwatchLogRetentionInDays,
-      });
-      accountPolicyAttachment.node.addDependency(scp);
-    }
-  }
-
   /**
    * Function to configure EventBridge Rule to revert SCP changes made outside of the solution
    * @param props {@link AccountsStackProps}
@@ -246,7 +321,7 @@ export class ScpResource {
         logRetentionInDays: props.globalConfig.cloudwatchLogRetentionInDays,
         acceleratorTopicNamePrefix: props.prefixes.snsTopicName,
         snsTopicName: props.securityConfig.centralSecurityServices.scpRevertChangesConfig?.snsTopicName,
-        scpFilePaths: this.scpGeneratedFilePathList,
+        scpFilePaths: this.generatedFilePathList,
         singleAccountMode: props.enableSingleAccountMode,
         organizationEnabled: props.organizationConfig.enable,
       });
@@ -377,25 +452,41 @@ export class ScpResource {
       });
     }
   }
+  /**
+   * Function to initialize the policy configs
+   * @param props {@link AccountsStackProps}
+   */
+  private initializePolicyConfigs(props: AcceleratorStackProps): PolicyConfig[] {
+    return [
+      {
+        policies: props.organizationConfig.serviceControlPolicies ?? [],
+        type: PolicyType.SERVICE_CONTROL_POLICY,
+        items: [],
+      },
+      {
+        policies: props.organizationConfig.resourceControlPolicies ?? [],
+        type: PolicyType.RESOURCE_CONTROL_POLICY,
+        items: [],
+      },
+    ].filter(config => config.policies.length > 0);
+  }
 
   /**
-   * Function to load replacements within the provided SCP policy documents
+   * Function that returns empty array
    * @param props {@link AccountsStackProps}
-   * @returns
    */
-  private loadPolicyReplacements(props: AcceleratorStackProps): void {
-    for (const serviceControlPolicy of props.organizationConfig.serviceControlPolicies) {
-      this.logger.info(`Adding service control policy (${serviceControlPolicy.name})`);
+  private getEmptyPolicyResult(): PolicyResult {
+    return { scpItems: [], rcpItems: [] };
+  }
 
-      this.scpGeneratedFilePathList.push({
-        name: serviceControlPolicy.name,
-        path: serviceControlPolicy.policy,
-        tempPath: this.stack.generatePolicyReplacements(
-          path.join(props.configDirPath, serviceControlPolicy.policy),
-          true,
-          this.stack.organizationId,
-        ),
+  private async enablePolicyType(policyType: PolicyTypeEnum): Promise<void> {
+    if (!this.policyTypeMap.has(policyType)) {
+      const enablePolicyType = new EnablePolicyType(this.stack, `enable${policyType}`, {
+        policyType: policyType,
+        kmsKey: this.cloudwatchKey,
+        logRetentionInDays: this.props.globalConfig.cloudwatchLogRetentionInDays,
       });
+      this.policyTypeMap.set(policyType, enablePolicyType);
     }
   }
 }

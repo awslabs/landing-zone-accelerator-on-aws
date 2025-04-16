@@ -29,6 +29,7 @@ export enum PolicyType {
   SERVICE_CONTROL_POLICY = 'SERVICE_CONTROL_POLICY',
   TAG_POLICY = 'TAG_POLICY',
   CHATBOT_POLICY = 'CHATBOT_POLICY',
+  RESOURCE_CONTROL_POLICY = 'RESOURCE_CONTROL_POLICY',
 }
 
 export interface Tag {
@@ -73,7 +74,7 @@ export interface PolicyProps {
    */
   readonly type: PolicyType;
   /**
-   * The SCP strategy - "allow-list" or "deny-list"The type of policy to create
+   * The SCP or RCP strategy - "allow-list" or "deny-list" The type of policy to create
    */
   readonly strategy?: string;
   /**

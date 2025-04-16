@@ -1,0 +1,29 @@
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {            
+            "Sid": "EnforceConfusedDeputyProtection",
+            "Effect": "Deny",
+            "Principal": "*",
+            "Action": [
+                "sqs:*",
+                "kms:*",
+                "secretsmanager:*",
+                "sts:*"
+            ],
+            "Resource": "*",
+            "Condition": {
+                "StringNotEqualsIfExists": {
+                    "aws:SourceOrgID": "${ORG_ID}"
+                },
+                "ArnNotLike": {
+                    "aws:PrincipalARN": [
+                        "arn:${PARTITION}:iam::*:role/${ACCELERATOR_PREFIX}*",
+                        "arn:${PARTITION}:iam::*:role/AWSControlTowerExecution",
+                        "arn:${PARTITION}:iam::*:role/cdk-accel-*"
+                    ]
+                }
+            }
+        }
+    ]
+}

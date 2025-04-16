@@ -105,7 +105,46 @@ export interface IQuarantineNewAccountsConfig {
    */
   readonly scpPolicyName?: t.NonEmptyString;
 }
-
+/**
+ * *{@link OrganizationConfig} / {@link ResourceControlPolicyConfig}*
+ *
+ * @description
+ * Resource control policy configuration
+ *
+ * @example
+ * ```
+ * resourceControlPolicies:
+ *   - name: DataPerimeterControls
+ *     description: Data Perimeter Controls
+ *     policy: path/to/data-perimeter.json
+ *     deploymentTargets:
+ *       organizationalUnits: []
+ * ```
+ */
+export interface IResourceControlPolicyConfig {
+  /**
+   * The friendly name to assign to the policy.
+   * The regex pattern that is used to validate this parameter is a string of any of the characters in the ASCII character range.
+   */
+  readonly name: t.NonEmptyString;
+  /**
+   * A description to assign to the policy.
+   */
+  readonly description: t.NonEmptyString;
+  /**
+   * Resource control policy definition json file. This file must be present in config repository
+   */
+  readonly policy: t.NonEmptyString;
+  /**
+   * Resource control policy deployment targets
+   */
+  readonly strategy?: 'deny-list' | 'allow-list';
+  /**
+   * Resource control policy strategy.
+   * https://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_policies_rcps_evaluation.html
+   */
+  readonly deploymentTargets: t.IDeploymentTargets;
+}
 /**
  * *{@link OrganizationConfig} / {@link ServiceControlPolicyConfig}*
  *
@@ -312,6 +351,29 @@ export interface IOrganizationConfig {
    * @see QuarantineNewAccountsConfig
    */
   readonly quarantineNewAccounts?: IQuarantineNewAccountsConfig;
+  /**
+   * A Record of Resource Control Policy configurations
+   *
+   * @see ResourceControlPolicyConfig
+   *
+   * To create a resource control policy named ResrictHttpsConnection from resource-control-policies/restrict-https-connections.json file in config repository, you need to provide following values for this parameter.
+   *
+   * Restrict access to only HTTPS connections to your resources
+   * @example
+   * ```
+   * resourceControlPolicies:
+   *   - name: ResrictHttpsConnection
+   *     description: >
+   *       This RCP restricts access to only HTTPS connections to your resources.
+   *     policy: resource-control-policies/restrict-https-connections.json
+   *     type: customerManaged
+   *     strategy: deny-list # defines RCP strategy - deny-list or allow-list. See https://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_policies_rcps_evaluation.html#how_rcps_deny
+   *     deploymentTargets:
+   *       organizationalUnits:
+   *         - Security
+   * ```
+   */
+  readonly resourceControlPolicies?: IResourceControlPolicyConfig[];
   /**
    * A Record of Service Control Policy configurations
    *

@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - feat(replacements): added support for StringList replacements and updated loading behavior
+- feat(organizations): add support for resource control policies
 
 ### Fixed
 
