@@ -130,6 +130,13 @@
           "$ref": "#/definitions/IQuarantineNewAccountsConfig",
           "description": "A record of Quarantine New Accounts configuration"
         },
+        "resourceControlPolicies": {
+          "description": "A Record of Resource Control Policy configurations",
+          "items": {
+            "$ref": "#/definitions/IResourceControlPolicyConfig"
+          },
+          "type": "array"
+        },
         "serviceControlPolicies": {
           "description": "A Record of Service Control Policy configurations",
           "items": {
@@ -211,6 +218,43 @@
       },
       "required": [
         "enable"
+      ],
+      "type": "object"
+    },
+    "IResourceControlPolicyConfig": {
+      "additionalProperties": false,
+      "description": "Resource control policy configuration",
+      "properties": {
+        "deploymentTargets": {
+          "$ref": "#/definitions/IDeploymentTargets",
+          "description": "Resource control policy strategy. https://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_policies_rcps_evaluation.html"
+        },
+        "description": {
+          "$ref": "#/definitions/NonEmptyString",
+          "description": "A description to assign to the policy."
+        },
+        "name": {
+          "$ref": "#/definitions/NonEmptyString",
+          "description": "The friendly name to assign to the policy. The regex pattern that is used to validate this parameter is a string of any of the characters in the ASCII character range."
+        },
+        "policy": {
+          "$ref": "#/definitions/NonEmptyString",
+          "description": "Resource control policy definition json file. This file must be present in config repository"
+        },
+        "strategy": {
+          "description": "Resource control policy deployment targets",
+          "enum": [
+            "deny-list",
+            "allow-list"
+          ],
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "description",
+        "policy",
+        "deploymentTargets"
       ],
       "type": "object"
     },
