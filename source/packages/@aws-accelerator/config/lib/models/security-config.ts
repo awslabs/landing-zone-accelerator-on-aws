@@ -574,7 +574,9 @@ export interface ISecurityHubStandardConfig {
    * 'CIS AWS Foundations Benchmark v1.2.0',
    * 'CIS AWS Foundations Benchmark v1.4.0',
    * 'CIS AWS Foundations Benchmark v3.0.0',
-   * 'NIST Special Publication 800-53 Revision 5,
+   * 'NIST Special Publication 800-53 Revision 5',
+   * 'AWS Resource Tagging Standard v1.0.0'
+   * 'PCI DSS v4.0.1',
    * and 'PCI DSS v3.2.1'
    */
   readonly name:
@@ -583,8 +585,11 @@ export interface ISecurityHubStandardConfig {
     | 'CIS AWS Foundations Benchmark v1.4.0'
     | 'CIS AWS Foundations Benchmark v3.0.0'
     | 'NIST Special Publication 800-53 Revision 5'
+    | 'AWS Resource Tagging Standard v1.0.0'
     | 'PCI DSS v3.2.1'
+    | 'PCI DSS v4.0.1'
     | '';
+
   /**
    * (OPTIONAL) Deployment targets for AWS Security Hub standard.
    */
