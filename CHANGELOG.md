@@ -17,6 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - fix(access-analyzer): fixed problem with access analyzer not created in additional regions.
 - fix(documentation): fixed documentation for acceleratorMetadata [#498](https://github.com/awslabs/landing-zone-accelerator-on-aws/issues/498)
+- fix(networking): fix ipam scope lookup on shared pool
 
 ### Changed
 
