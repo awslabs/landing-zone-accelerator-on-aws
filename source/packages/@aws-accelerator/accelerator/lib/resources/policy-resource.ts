@@ -131,11 +131,12 @@ export class PolicyResource {
       }
 
       // Enable policy type if not already enabled
-      this.enablePolicyType(type as PolicyTypeEnum);
+      const enablePolicyType = this.enablePolicyType(type as PolicyTypeEnum);
+
       for (const policy of policies ?? []) {
         try {
-          const policyResource = this.createPolicy(type as PolicyTypeEnum, policy!);
-          policyResource.node.addDependency(this.policyTypeMap.get(type as PolicyTypeEnum)!);
+          const policyResource = this.createPolicy(type as PolicyTypeEnum, policy);
+          policyResource.node.addDependency(enablePolicyType);
 
           this.attachPolicies(
             policyResource,
@@ -143,6 +144,7 @@ export class PolicyResource {
             policy!.deploymentTargets?.accounts,
             policy!.deploymentTargets?.organizationalUnits,
             type as PolicyType,
+            enablePolicyType,
           );
 
           items.push({ name: policy!.name, id: policyResource.id });
@@ -258,6 +260,7 @@ export class PolicyResource {
     accounts: string[] | undefined,
     organizationalUnits: string[] | undefined,
     policyType: PolicyType,
+    enablePolicyType: EnablePolicyType,
   ): void {
     if (organizationalUnits && organizationalUnits.length > 0) {
       for (const organizationalUnit of organizationalUnits) {
@@ -282,6 +285,7 @@ export class PolicyResource {
           },
         );
         ouPolicyAttachment.node.addDependency(policy);
+        ouPolicyAttachment.node.addDependency(enablePolicyType);
       }
     }
     if (accounts && accounts.length > 0) {
@@ -459,7 +463,7 @@ export class PolicyResource {
   private initializePolicyConfigs(props: AcceleratorStackProps): PolicyConfig[] {
     return [
       {
-        policies: props.organizationConfig.serviceControlPolicies ?? [],
+        policies: props.organizationConfig.serviceControlPolicies,
         type: PolicyType.SERVICE_CONTROL_POLICY,
         items: [],
       },
@@ -479,7 +483,7 @@ export class PolicyResource {
     return { scpItems: [], rcpItems: [] };
   }
 
-  private async enablePolicyType(policyType: PolicyTypeEnum): Promise<void> {
+  private enablePolicyType(policyType: PolicyTypeEnum): EnablePolicyType {
     if (!this.policyTypeMap.has(policyType)) {
       const enablePolicyType = new EnablePolicyType(this.stack, `enable${policyType}`, {
         policyType: policyType,
@@ -487,6 +491,8 @@ export class PolicyResource {
         logRetentionInDays: this.props.globalConfig.cloudwatchLogRetentionInDays,
       });
       this.policyTypeMap.set(policyType, enablePolicyType);
+      return enablePolicyType;
     }
+    return this.policyTypeMap.get(policyType)!;
   }
 }

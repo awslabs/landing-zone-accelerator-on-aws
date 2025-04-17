@@ -110,6 +110,7 @@ exports[`FinalizeStack Construct(FinalizeStack):  Snapshot Test 1`] = `
       "DependsOn": [
         "AcceleratorGuardrails10AD44C7D",
         "CustomOrganizationsAttachPolicyCustomResourceProviderLogGroup03FEC039",
+        "enableSERVICECONTROLPOLICY8F20A574",
       ],
       "Properties": {
         "ServiceToken": {
@@ -171,6 +172,7 @@ exports[`FinalizeStack Construct(FinalizeStack):  Snapshot Test 1`] = `
       "DependsOn": [
         "AllowList6FC5040C",
         "CustomOrganizationsAttachPolicyCustomResourceProviderLogGroup03FEC039",
+        "enableSERVICECONTROLPOLICY8F20A574",
       ],
       "Properties": {
         "ServiceToken": {
@@ -203,6 +205,7 @@ exports[`FinalizeStack Construct(FinalizeStack):  Snapshot Test 1`] = `
       "DependsOn": [
         "CustomOrganizationsAttachPolicyCustomResourceProviderLogGroup03FEC039",
         "DataPerimeter67F0B7E1",
+        "enableSERVICECONTROLPOLICY8F20A574",
       ],
       "Properties": {
         "ServiceToken": {
@@ -234,6 +237,7 @@ exports[`FinalizeStack Construct(FinalizeStack):  Snapshot Test 1`] = `
       "DependsOn": [
         "CustomOrganizationsAttachPolicyCustomResourceProviderLogGroup03FEC039",
         "DeputyAttackRcp52CD2596",
+        "enableRESOURCECONTROLPOLICY2452560F",
       ],
       "Properties": {
         "ServiceToken": {
