@@ -45,6 +45,28 @@ jobs:
           mike deploy --push --update-aliases ${{ steps.s3.outputs.commit_tag }} latest
           mike set-default --push latest
 
+  check-links:
+    name: Check links
+    needs: build-mkdocs
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+    - name: Install broken-link-checker
+      run: npm install -g broken-link-checker
+    - name: run-broken-link-checker
+      run: |
+        if blc https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }} -ro --exclude example.com | grep "BROKEN"; then
+          echo "Broken links were found. Please check the output above."
+          exit 1
+        else
+          echo "No broken links found!"
+        fi
+
     
         
         
