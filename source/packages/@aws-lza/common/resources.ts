@@ -27,6 +27,10 @@ export enum AcceleratorModuleName {
    * Amazon EC2 module
    */
   AMAZON_EC2 = 'amazon-ec2',
+  /**
+   * AWS CloudFormation Module
+   */
+  AWS_CLOUDFORMATION = 'aws-cloudformation',
 }
 
 /**

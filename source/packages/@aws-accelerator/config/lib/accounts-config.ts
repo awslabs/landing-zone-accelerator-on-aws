@@ -22,6 +22,7 @@ import { throttlingBackOff } from '@aws-accelerator/utils/lib/throttle';
 import * as i from './models/accounts-config';
 import { DeploymentTargets, parseAccountsConfig } from './common';
 import { getGlobalRegion } from '../../utils/lib/common-functions';
+import { OrganizationalUnitConfig } from './organization-config';
 
 const logger = createLogger(['accounts-config']);
 
@@ -284,6 +285,18 @@ export class AccountsConfig implements i.IAccountsConfig {
     return lzaAccounts.map(account => account.accountId);
   }
 
+  private getActiveAccounts(suspendedOus: OrganizationalUnitConfig[]): (AccountConfig | GovCloudAccountConfig)[] {
+    const accounts = this.getAccounts();
+    const suspendedOuNames = suspendedOus.flatMap(item => item.name);
+    return accounts.filter(account => !suspendedOuNames.includes(account.organizationalUnit));
+  }
+
+  public getActiveAccountIds(suspendedOus: OrganizationalUnitConfig[]) {
+    const activeAccounts = this.getActiveAccounts(suspendedOus);
+    const activeAccountIds = activeAccounts.map(account => this.getAccountId(account.name));
+    const accountIds = this.getAccountIds();
+    return accountIds.filter(accountId => activeAccountIds.includes(accountId));
+  }
   public getAccount(name: string): AccountConfig {
     const value = [...this.mandatoryAccounts, ...this.workloadAccounts].find(item => item.name == name);
     if (value) {
@@ -304,7 +317,7 @@ export class AccountsConfig implements i.IAccountsConfig {
     return false;
   }
 
-  public getAccounts(enableSingleAccountMode: boolean): (AccountConfig | GovCloudAccountConfig)[] {
+  public getAccounts(enableSingleAccountMode?: boolean): (AccountConfig | GovCloudAccountConfig)[] {
     if (enableSingleAccountMode) {
       return [this.getManagementAccount()];
     } else {
