@@ -72,6 +72,11 @@ export enum AcceleratorModules {
   MOVE_ACCOUNTS = 'move-accounts',
 
   /**
+   * Retrieves cross account CloudFormation Templates
+   */
+  GET_CLOUDFORMATION_TEMPLATES = 'get-cloudformation-templates',
+
+  /**
    * An Example module which is executed in `PREPARE` stage
    */
   EXAMPLE_MODULE = 'example-module',

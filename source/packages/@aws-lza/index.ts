@@ -49,3 +49,6 @@ export { getOrganizationId } from './common/functions';
 
 export { IManageEbsDefaultEncryptionHandlerParameter } from './interfaces/amazon-ec2/manage-ebs-default-encryption';
 export { manageEbsDefaultEncryption } from './executors/accelerator-amazon-ec2';
+
+export { IGetCloudFormationTemplatesHandlerParameter } from './interfaces/aws-cloudformation/get-cloudformation-templates';
+export { getCloudFormationTemplates } from './executors/accelerator-aws-cloudformation';

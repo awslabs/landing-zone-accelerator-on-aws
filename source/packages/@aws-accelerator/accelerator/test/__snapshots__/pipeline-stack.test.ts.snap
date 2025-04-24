@@ -2750,7 +2750,7 @@ phases:
                 {
                   "Ref": "AWS::Region",
                 },
-                " --config-dir $CODEBUILD_SRC_DIR_Config --stage $ACCELERATOR_STAGE --use-existing-role $useExistingRole --dry-run no
+                " --config-dir $CODEBUILD_SRC_DIR_Config --stage $ACCELERATOR_STAGE --prefix AWSAccelerator --use-existing-role $useExistingRole --dry-run no
       - if [ "prepare" = "\${ACCELERATOR_STAGE}" ]; then set -e && LOG_LEVEL=info && yarn run ts-node ../lza-modules/bin/runner.ts --module account-alias --partition  ",
                 {
                   "Ref": "AWS::Partition",
@@ -6116,7 +6116,7 @@ phases:
                 {
                   "Ref": "AWS::Region",
                 },
-                " --config-dir $CODEBUILD_SRC_DIR_Config --stage $ACCELERATOR_STAGE --use-existing-role $useExistingRole --dry-run no
+                " --config-dir $CODEBUILD_SRC_DIR_Config --stage $ACCELERATOR_STAGE --prefix AWSAccelerator --use-existing-role $useExistingRole --dry-run no
       - if [ "prepare" = "\${ACCELERATOR_STAGE}" ]; then set -e && LOG_LEVEL=info && yarn run ts-node ../lza-modules/bin/runner.ts --module account-alias --partition  ",
                 {
                   "Ref": "AWS::Partition",

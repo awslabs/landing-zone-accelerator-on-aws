@@ -233,6 +233,13 @@ export class OrganizationConfig implements i.IOrganizationConfig {
     throw new Error('configuration validation failed.');
   }
 
+  public getIgnoredOus(): OrganizationalUnitConfig[] {
+    if (!this.organizationalUnits) {
+      return [];
+    }
+    return this.organizationalUnits?.filter(ouItem => ouItem.ignore);
+  }
+
   public isIgnored(name: string): boolean {
     if (!this.enable) {
       return false;

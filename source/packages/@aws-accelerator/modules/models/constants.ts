@@ -11,6 +11,7 @@
  *  and limitations under the License.
  */
 
+import { GetCloudFormationTemplatesModule } from '../lib/actions/aws-cloudformation/get-cloudformation-templates';
 import { CreateOrganizationalUnitModule } from '../lib/actions/aws-organizations/create-organizational-unit';
 import { InviteAccountsToOrganizationsModule } from '../lib/actions/aws-organizations/invite-accounts-to-organizations';
 import { MoveAccountModule } from '../lib/actions/aws-organizations/move-accounts';
@@ -182,7 +183,16 @@ export const AcceleratorModuleStageDetails: AcceleratorModuleStageDetailsType[] 
       name: AcceleratorModuleStages.NETWORK_VPC,
       runOrder: AcceleratorModuleStageOrders[AcceleratorModuleStages.NETWORK_VPC].runOrder,
     },
-    modules: [],
+    modules: [
+      {
+        name: AcceleratorModules.GET_CLOUDFORMATION_TEMPLATES,
+        description: 'Get Cloudformation Templates Cross Account',
+        runOrder: 1,
+        handler: async (params: ModuleParams) => {
+          return await GetCloudFormationTemplatesModule.execute(params);
+        },
+      },
+    ],
   },
   {
     stage: {
