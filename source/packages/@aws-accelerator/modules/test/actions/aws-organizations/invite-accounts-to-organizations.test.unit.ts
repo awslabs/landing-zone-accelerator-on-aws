@@ -13,7 +13,7 @@
 
 import { beforeEach, describe, test } from '@jest/globals';
 import { InviteAccountsToOrganizationsModule } from '../../../lib/actions/aws-organizations/invite-accounts-to-organizations';
-import { AcceleratorModules } from '../../../models/enums';
+import { AcceleratorModules, ModuleExecutionPhase } from '../../../models/enums';
 import { AcceleratorStage } from '../../../../accelerator';
 import { ModuleParams } from '../../../models/types';
 import {
@@ -59,6 +59,7 @@ describe('InviteAccountsToOrganizationsModule', () => {
         description: '',
         runOrder: 1,
         handler: jest.fn().mockResolvedValue(`Module 1 of ${AcceleratorStage.ACCOUNTS} stage executed`),
+        executionPhase: ModuleExecutionPhase.DEPLOY,
       },
       runnerParameters: MOCK_CONSTANTS.runnerParameters,
       moduleRunnerParameters: {
@@ -107,6 +108,7 @@ describe('InviteAccountsToOrganizationsModule', () => {
         description: '',
         runOrder: 1,
         handler: jest.fn().mockResolvedValue(`Module 1 of ${AcceleratorStage.ACCOUNTS} stage executed`),
+        executionPhase: ModuleExecutionPhase.DEPLOY,
       },
       runnerParameters: MOCK_CONSTANTS.runnerParameters,
       moduleRunnerParameters: {

@@ -12,7 +12,7 @@
  */
 
 import { beforeEach, describe, test } from '@jest/globals';
-import { AcceleratorModules } from '../../models/enums';
+import { AcceleratorModules, ModuleExecutionPhase } from '../../models/enums';
 import { AcceleratorStage } from '../../../accelerator';
 import { ModuleParams } from '../../models/types';
 import {
@@ -100,6 +100,7 @@ describe('ExampleModule', () => {
         description: '',
         runOrder: 1,
         handler: jest.fn().mockResolvedValue(`Module 1 of ${AcceleratorStage.PREPARE} stage executed`),
+        executionPhase: ModuleExecutionPhase.DEPLOY,
       },
       runnerParameters: MOCK_CONSTANTS.runnerParameters,
       moduleRunnerParameters: {
@@ -154,6 +155,7 @@ describe('ExampleModule', () => {
         description: '',
         runOrder: 1,
         handler: jest.fn().mockResolvedValue(`Module 1 of ${AcceleratorStage.ACCOUNTS} stage executed`),
+        executionPhase: ModuleExecutionPhase.DEPLOY,
       },
       runnerParameters: MOCK_CONSTANTS.runnerParameters,
       moduleRunnerParameters: {
@@ -210,6 +212,7 @@ describe('ExampleModule', () => {
         description: '',
         runOrder: 1,
         handler: jest.fn().mockResolvedValue(`Module 1 of ${AcceleratorStage.ACCOUNTS} stage executed`),
+        executionPhase: ModuleExecutionPhase.DEPLOY,
       },
       runnerParameters: MOCK_CONSTANTS.runnerParameters,
       moduleRunnerParameters: {

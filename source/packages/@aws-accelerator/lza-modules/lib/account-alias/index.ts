@@ -54,7 +54,7 @@ export class AccountAlias implements AcceleratorModule {
     const enableSingleAccountMode = process.env['ACCELERATOR_ENABLE_SINGLE_ACCOUNT_MODE']
       ? process.env['ACCELERATOR_ENABLE_SINGLE_ACCOUNT_MODE'] === 'true'
       : false;
-    const globalConfig = GlobalConfig.loadRawGlobalConfig(props.configDirPath)
+    const globalConfig = GlobalConfig.loadRawGlobalConfig(props.configDirPath);
     const globalRegion = getGlobalRegion(props.partition);
 
     const managementCredentials = await getManagementAccountCredentials(
