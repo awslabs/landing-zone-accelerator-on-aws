@@ -26,7 +26,7 @@ import {
   SecurityConfig,
 } from '@aws-accelerator/config';
 import { AcceleratorModuleRunnerParametersType, PromiseItemType } from '../models/types';
-import { AcceleratorModules, AcceleratorModuleStages } from '../models/enums';
+import { AcceleratorModules, AcceleratorModuleStages, ModuleExecutionPhase } from '../models/enums';
 import {
   MOCK_CONSTANTS,
   mockAccountsConfiguration,
@@ -64,6 +64,7 @@ describe('ModuleRunner', () => {
   let mockModuleRunnerParameters: AcceleratorModuleRunnerParametersType;
 
   beforeEach(() => {
+    process.env['CDK_OPTIONS'] = 'synth';
     jest.clearAllMocks();
 
     mockAccountsConfig = {
@@ -219,6 +220,68 @@ describe('ModuleRunner', () => {
       expect(result).toBe(`No modules found for "${MOCK_CONSTANTS.invalidStage}" stage`);
     });
 
+    test('should execute stage modules with synth phase modules', async () => {
+      // Setup
+      process.env['CDK_OPTIONS'] = 'bootstrap';
+      constants.AcceleratorModuleStageDetails = [
+        {
+          stage: { name: AcceleratorStage.PREPARE },
+          modules: [
+            {
+              name: AcceleratorModules.SETUP_CONTROL_TOWER_LANDING_ZONE,
+              runOrder: 1,
+              handler: jest.fn().mockResolvedValue('Module 1 executed'),
+              executionPhase: ModuleExecutionPhase.SYNTH,
+            },
+            {
+              name: AcceleratorModules.EXAMPLE_MODULE,
+              runOrder: 2,
+              handler: jest.fn().mockResolvedValue('Module 2 executed'),
+              executionPhase: ModuleExecutionPhase.SYNTH,
+            },
+          ],
+        },
+      ];
+
+      const result = await ModuleRunner.execute({
+        ...MOCK_CONSTANTS.runnerParameters,
+        stage: AcceleratorStage.PREPARE,
+      });
+
+      expect(result).toBe('Module 1 executed\nModule 2 executed');
+    });
+
+    test('should skip stage modules execution becasue all modules are for synth phase', async () => {
+      // Setup
+      process.env['CDK_OPTIONS'] = 'bootstrap';
+      constants.AcceleratorModuleStageDetails = [
+        {
+          stage: { name: AcceleratorStage.PREPARE },
+          modules: [
+            {
+              name: AcceleratorModules.SETUP_CONTROL_TOWER_LANDING_ZONE,
+              runOrder: 1,
+              handler: jest.fn().mockResolvedValue('Module 1 executed'),
+              executionPhase: ModuleExecutionPhase.DEPLOY,
+            },
+            {
+              name: AcceleratorModules.EXAMPLE_MODULE,
+              runOrder: 2,
+              handler: jest.fn().mockResolvedValue('Module 2 executed'),
+              executionPhase: ModuleExecutionPhase.DEPLOY,
+            },
+          ],
+        },
+      ];
+
+      const result = await ModuleRunner.execute({
+        ...MOCK_CONSTANTS.runnerParameters,
+        stage: AcceleratorStage.PREPARE,
+      });
+
+      expect(result).toBe(`No modules found for "${AcceleratorStage.PREPARE}" stage`);
+    });
+
     test('should execute stage modules and return status', async () => {
       // Setup
       constants.AcceleratorModuleStageDetails = [
@@ -229,11 +292,13 @@ describe('ModuleRunner', () => {
               name: AcceleratorModules.SETUP_CONTROL_TOWER_LANDING_ZONE,
               runOrder: 1,
               handler: jest.fn().mockResolvedValue('Module 1 executed'),
+              executionPhase: ModuleExecutionPhase.DEPLOY,
             },
             {
               name: AcceleratorModules.EXAMPLE_MODULE,
               runOrder: 2,
               handler: jest.fn().mockResolvedValue('Module 2 executed'),
+              executionPhase: ModuleExecutionPhase.DEPLOY,
             },
           ],
         },
@@ -257,11 +322,13 @@ describe('ModuleRunner', () => {
               name: AcceleratorModules.SETUP_CONTROL_TOWER_LANDING_ZONE,
               runOrder: 1,
               handler: jest.fn().mockResolvedValue('Module 1 executed'),
+              executionPhase: ModuleExecutionPhase.DEPLOY,
             },
             {
               name: AcceleratorModules.EXAMPLE_MODULE,
               runOrder: 1,
               handler: jest.fn().mockResolvedValue('Module 2 executed'),
+              executionPhase: ModuleExecutionPhase.DEPLOY,
             },
           ],
         },
@@ -425,6 +492,7 @@ describe('ModuleRunner', () => {
                   .mockResolvedValue(
                     `${AcceleratorModules.SETUP_CONTROL_TOWER_LANDING_ZONE} execution skipped, No configuration found for Control Tower Landing zone`,
                   ),
+                executionPhase: ModuleExecutionPhase.DEPLOY,
               },
             ],
           },

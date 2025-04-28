@@ -13,7 +13,7 @@
 
 import { beforeEach, describe, test } from '@jest/globals';
 import { CreateOrganizationalUnitModule } from '../../../lib/actions/aws-organizations/create-organizational-unit';
-import { AcceleratorModules } from '../../../models/enums';
+import { AcceleratorModules, ModuleExecutionPhase } from '../../../models/enums';
 import { AcceleratorStage } from '../../../../accelerator';
 import { ModuleParams } from '../../../models/types';
 import { MOCK_CONSTANTS, mockAccountsConfiguration, mockGlobalConfiguration } from '../../mocked-resources';
@@ -54,6 +54,7 @@ describe('CreateOrganizationalUnitModule', () => {
         description: '',
         runOrder: 1,
         handler: jest.fn().mockResolvedValue(`Module 1 of ${AcceleratorStage.ACCOUNTS} stage executed`),
+        executionPhase: ModuleExecutionPhase.DEPLOY,
       },
       runnerParameters: MOCK_CONSTANTS.runnerParameters,
       moduleRunnerParameters: {

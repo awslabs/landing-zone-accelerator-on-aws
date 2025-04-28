@@ -17,7 +17,7 @@ import { InviteAccountsToOrganizationsModule } from '../lib/actions/aws-organiza
 import { MoveAccountModule } from '../lib/actions/aws-organizations/move-accounts';
 import { RegisterOrganizationalUnitModule } from '../lib/actions/control-tower/register-organizational-unit';
 import { SetupControlTowerLandingZoneModule } from '../lib/actions/control-tower/setup-control-tower-landing-zone';
-import { AcceleratorModules, AcceleratorModuleStages } from './enums';
+import { AcceleratorModules, AcceleratorModuleStages, ModuleExecutionPhase } from './enums';
 import { AcceleratorModuleStageDetailsType, AcceleratorModuleStageOrdersType, ModuleParams } from './types';
 
 /**
@@ -80,6 +80,7 @@ export const AcceleratorModuleStageDetails: AcceleratorModuleStageDetailsType[] 
         handler: async (params: ModuleParams) => {
           return await SetupControlTowerLandingZoneModule.execute(params);
         },
+        executionPhase: ModuleExecutionPhase.DEPLOY,
       },
       {
         name: AcceleratorModules.CREATE_ORGANIZATIONAL_UNIT,
@@ -88,6 +89,7 @@ export const AcceleratorModuleStageDetails: AcceleratorModuleStageDetailsType[] 
         handler: async (params: ModuleParams) => {
           return await CreateOrganizationalUnitModule.execute(params);
         },
+        executionPhase: ModuleExecutionPhase.DEPLOY,
       },
       {
         name: AcceleratorModules.REGISTER_ORGANIZATIONAL_UNIT,
@@ -96,6 +98,7 @@ export const AcceleratorModuleStageDetails: AcceleratorModuleStageDetailsType[] 
         handler: async (params: ModuleParams) => {
           return await RegisterOrganizationalUnitModule.execute(params);
         },
+        executionPhase: ModuleExecutionPhase.DEPLOY,
       },
       {
         name: AcceleratorModules.INVITE_ACCOUNTS_TO_ORGANIZATIONS,
@@ -104,6 +107,7 @@ export const AcceleratorModuleStageDetails: AcceleratorModuleStageDetailsType[] 
         handler: async (params: ModuleParams) => {
           return await InviteAccountsToOrganizationsModule.execute(params);
         },
+        executionPhase: ModuleExecutionPhase.DEPLOY,
       },
       {
         name: AcceleratorModules.MOVE_ACCOUNTS,
@@ -112,6 +116,7 @@ export const AcceleratorModuleStageDetails: AcceleratorModuleStageDetailsType[] 
         handler: async (params: ModuleParams) => {
           return await MoveAccountModule.execute(params);
         },
+        executionPhase: ModuleExecutionPhase.DEPLOY,
       },
     ],
   },
@@ -191,6 +196,7 @@ export const AcceleratorModuleStageDetails: AcceleratorModuleStageDetailsType[] 
         handler: async (params: ModuleParams) => {
           return await GetCloudFormationTemplatesModule.execute(params);
         },
+        executionPhase: ModuleExecutionPhase.SYNTH,
       },
     ],
   },

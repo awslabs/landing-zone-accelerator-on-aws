@@ -46,7 +46,7 @@ export interface ValidateEnvironmentConfigProps {
    * Custom resource lambda log retention in days
    */
   readonly logRetentionInDays: number;
-  readonly prefixes: AcceleratorResourcePrefixes,
+  readonly prefixes: AcceleratorResourcePrefixes;
   readonly vpcsCidrs: { vpcName: string; logicalId: string; cidrs: string[]; parameterName: string }[];
 }
 
