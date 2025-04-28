@@ -47,6 +47,7 @@ export function createAcceleratorStackProps(
     getManagementAccountId: jest.fn(() => '234567890'),
     getLogArchiveAccountId: jest.fn(() => '345678901'),
     getAuditAccountId: jest.fn(() => auditAccountId ?? '456789012'),
+    getAccountNameById: jest.fn(() => 'accountName'),
     mandatoryAccounts: [],
     workloadAccounts: [],
   };

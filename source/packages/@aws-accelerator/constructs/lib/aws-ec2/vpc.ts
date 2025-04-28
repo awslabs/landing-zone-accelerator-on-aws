@@ -23,6 +23,7 @@ import { IPrefixList } from './prefix-list';
 import { IRouteTable } from './route-table';
 import { VpnConnection } from './vpn-connection';
 import { CUSTOM_RESOURCE_PROVIDER_RUNTIME } from '@aws-accelerator/utils/lib/lambda';
+import { ILZAMetadata, MetadataKeys } from '@aws-accelerator/utils';
 
 export interface ISubnet extends cdk.IResource {
   /**
@@ -634,7 +635,7 @@ export interface IVpc extends cdk.IResource {
    */
   readonly cidrs: { ipv4: cdk.aws_ec2.CfnVPCCidrBlock[]; ipv6: cdk.aws_ec2.CfnVPCCidrBlock[] };
   /**
-   * The EIGW ID assinged to the VPC
+   * The EIGW ID assigned to the VPC
    */
   egressOnlyIgwId?: string;
   /**
@@ -728,7 +729,7 @@ abstract class VpcBase extends cdk.Resource implements IVpc {
         retention: options.logRetentionInDays,
       });
 
-      new cdk.aws_ec2.CfnFlowLog(this, 'CloudWatchFlowLog', {
+      const cfnFlowLog = new cdk.aws_ec2.CfnFlowLog(this, 'CloudWatchFlowLog', {
         deliverLogsPermissionArn: this.createVpcFlowLogsRoleCloudWatchLogs(
           logGroup.logGroupArn,
           options.useExistingRoles,
@@ -742,6 +743,10 @@ abstract class VpcBase extends cdk.Resource implements IVpc {
         maxAggregationInterval,
         logFormat: options.logFormat,
       });
+      cfnFlowLog.addMetadata(MetadataKeys.LZA_LOOKUP, {
+        vpcName: this.name,
+        flowLogDestinationType: 'cloud-watch-logs',
+      });
     }
 
     let s3LogDestination = `${options.bucketArn}/vpc-flow-logs/`;
@@ -752,7 +757,7 @@ abstract class VpcBase extends cdk.Resource implements IVpc {
 
     // Destination: S3
     if (options.destinations.includes('s3')) {
-      new cdk.aws_ec2.CfnFlowLog(this, 'S3FlowLog', {
+      const cfnFlowLog = new cdk.aws_ec2.CfnFlowLog(this, 'S3FlowLog', {
         logDestinationType: 's3',
         logDestination: s3LogDestination,
         resourceId: this.vpcId,
@@ -760,6 +765,11 @@ abstract class VpcBase extends cdk.Resource implements IVpc {
         trafficType: options.trafficType,
         maxAggregationInterval,
         logFormat: options.logFormat,
+      });
+
+      cfnFlowLog.addMetadata(MetadataKeys.LZA_LOOKUP, {
+        vpcName: this.name,
+        flowLogDestinationType: 's3',
       });
     }
   }
@@ -811,10 +821,16 @@ abstract class VpcBase extends cdk.Resource implements IVpc {
         resources: [logGroupArn],
       }),
     );
+
     return role.roleArn;
   }
 
-  public addIpv4Cidr(options: { cidrBlock?: string; ipv4IpamPoolId?: string; ipv4NetmaskLength?: number }) {
+  public addIpv4Cidr(options: {
+    cidrBlock?: string;
+    ipv4IpamPoolId?: string;
+    ipv4NetmaskLength?: number;
+    metadata?: ILZAMetadata;
+  }) {
     // This block is required for backwards compatibility
     // with a previous iteration. It appends a number to the
     // logical ID so more than two VPC CIDRs can be defined.
@@ -824,14 +840,16 @@ abstract class VpcBase extends cdk.Resource implements IVpc {
     }
 
     // Create a secondary VPC CIDR
-    this.cidrs.ipv4.push(
-      new cdk.aws_ec2.CfnVPCCidrBlock(this, logicalId, {
-        cidrBlock: options.cidrBlock,
-        ipv4IpamPoolId: options.ipv4IpamPoolId,
-        ipv4NetmaskLength: options.ipv4NetmaskLength,
-        vpcId: this.vpcId,
-      }),
-    );
+    const cidr = new cdk.aws_ec2.CfnVPCCidrBlock(this, logicalId, {
+      cidrBlock: options.cidrBlock,
+      ipv4IpamPoolId: options.ipv4IpamPoolId,
+      ipv4NetmaskLength: options.ipv4NetmaskLength,
+      vpcId: this.vpcId,
+    });
+    cidr.addMetadata(MetadataKeys.LZA_LOOKUP, {
+      ...options.metadata,
+    });
+    this.cidrs.ipv4.push(cidr);
   }
 
   public addIpv6Cidr(options: {
@@ -840,19 +858,21 @@ abstract class VpcBase extends cdk.Resource implements IVpc {
     ipv6IpamPoolId?: string;
     ipv6NetmaskLength?: number;
     ipv6Pool?: string;
+    metadata?: ILZAMetadata;
   }) {
     const logicalId = `Ipv6CidrBlock${this.cidrs.ipv6.length}`;
-
+    const ipV6Cidr = new cdk.aws_ec2.CfnVPCCidrBlock(this, logicalId, {
+      amazonProvidedIpv6CidrBlock: options.amazonProvidedIpv6CidrBlock,
+      ipv6CidrBlock: options.ipv6CidrBlock,
+      ipv6IpamPoolId: options.ipv6IpamPoolId,
+      ipv6Pool: options.ipv6Pool,
+      vpcId: this.vpcId,
+    });
+    ipV6Cidr.addMetadata(MetadataKeys.LZA_LOOKUP, {
+      ...options.metadata,
+    });
     // Create a secondary VPC CIDR
-    this.cidrs.ipv6.push(
-      new cdk.aws_ec2.CfnVPCCidrBlock(this, logicalId, {
-        amazonProvidedIpv6CidrBlock: options.amazonProvidedIpv6CidrBlock,
-        ipv6CidrBlock: options.ipv6CidrBlock,
-        ipv6IpamPoolId: options.ipv6IpamPoolId,
-        ipv6Pool: options.ipv6Pool,
-        vpcId: this.vpcId,
-      }),
-    );
+    this.cidrs.ipv6.push(ipV6Cidr);
   }
 
   addEgressOnlyIgw() {
@@ -861,6 +881,7 @@ abstract class VpcBase extends cdk.Resource implements IVpc {
     }
     this.egressOnlyIgw = new cdk.aws_ec2.CfnEgressOnlyInternetGateway(this, 'EgressOnlyIgw', { vpcId: this.vpcId });
     this.egressOnlyIgwId = this.egressOnlyIgw.ref;
+    this.egressOnlyIgw.addMetadata(MetadataKeys.LZA_LOOKUP, { vpcName: this.name });
   }
 
   addInternetGateway() {
@@ -873,6 +894,7 @@ abstract class VpcBase extends cdk.Resource implements IVpc {
       vpcId: this.vpcId,
     });
     this.internetGatewayId = this.internetGateway.ref;
+    this.internetGateway.addMetadata(MetadataKeys.LZA_LOOKUP, { vpcName: this.name });
   }
 
   addVirtualPrivateGateway(asn: number) {
@@ -892,13 +914,17 @@ abstract class VpcBase extends cdk.Resource implements IVpc {
       },
     );
     this.virtualPrivateGatewayId = this.virtualPrivateGateway.gatewayId;
+    const cfnVpg = this.virtualPrivateGateway.node.defaultChild as cdk.CfnResource;
+    cfnVpg.addMetadata(MetadataKeys.LZA_LOOKUP, { vpcName: this.name });
   }
 
   setDhcpOptions(dhcpOptions: string) {
-    new cdk.aws_ec2.CfnVPCDHCPOptionsAssociation(this, 'DhcpOptionsAssociation', {
+    const DhcpOptionsAssociation = new cdk.aws_ec2.CfnVPCDHCPOptionsAssociation(this, 'DhcpOptionsAssociation', {
       dhcpOptionsId: dhcpOptions,
       vpcId: this.vpcId,
     });
+
+    DhcpOptionsAssociation.addMetadata(MetadataKeys.LZA_LOOKUP, { vpcName: this.name });
   }
 }
 
@@ -945,12 +971,12 @@ export class Vpc extends VpcBase {
       tags: props.tags,
     });
     cdk.Tags.of(this).add('Name', props.name);
-
     this.cidrBlock = resource.attrCidrBlock;
-
     this.vpcId = resource.ref;
-
     this.cidrs = { ipv4: [], ipv6: [] };
+    resource.addMetadata(MetadataKeys.LZA_LOOKUP, {
+      vpcName: props.name,
+    });
 
     if (props.egressOnlyIgw) {
       this.addEgressOnlyIgw();
@@ -963,6 +989,7 @@ export class Vpc extends VpcBase {
         vpcId: this.vpcId,
       });
       this.internetGatewayId = this.internetGateway.ref;
+      this.internetGateway.addMetadata(MetadataKeys.LZA_LOOKUP, { vpcName: this.name });
     }
 
     if (props.virtualPrivateGateway) {
@@ -978,14 +1005,17 @@ export class Vpc extends VpcBase {
           vpcId: this.vpcId,
         },
       );
+      const cfnVpg = this.virtualPrivateGateway.node.defaultChild as cdk.CfnResource;
+      cfnVpg.addMetadata(MetadataKeys.LZA_LOOKUP, { vpcName: this.name });
       this.virtualPrivateGatewayId = this.virtualPrivateGateway.gatewayId;
     }
 
     if (props.dhcpOptions) {
-      new cdk.aws_ec2.CfnVPCDHCPOptionsAssociation(this, 'DhcpOptionsAssociation', {
+      const dhcpOptionsAssociation = new cdk.aws_ec2.CfnVPCDHCPOptionsAssociation(this, 'DhcpOptionsAssociation', {
         dhcpOptionsId: props.dhcpOptions,
         vpcId: this.vpcId,
       });
+      dhcpOptionsAssociation.addMetadata(MetadataKeys.LZA_LOOKUP, { vpcName: this.name });
     }
   }
 
@@ -1017,6 +1047,8 @@ export interface DeleteDefaultSecurityGroupRulesProps {
  */
 export class DeleteDefaultSecurityGroupRules extends Construct {
   readonly id: string;
+  logGroup: cdk.aws_logs.LogGroup;
+  resource: cdk.CustomResource;
   constructor(scope: Construct, id: string, props: DeleteDefaultSecurityGroupRulesProps) {
     super(scope, id);
 
@@ -1060,7 +1092,8 @@ export class DeleteDefaultSecurityGroupRules extends Construct {
         removalPolicy: cdk.RemovalPolicy.DESTROY,
       });
     resource.node.addDependency(logGroup);
-
+    this.resource = resource;
+    this.logGroup = logGroup;
     this.id = resource.ref;
   }
 }

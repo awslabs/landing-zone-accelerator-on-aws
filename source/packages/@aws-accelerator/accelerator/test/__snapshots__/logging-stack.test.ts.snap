@@ -2,6 +2,12 @@
 
 exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 1`] = `
 {
+  "Metadata": {
+    "lzaLookup": {
+      "accountName": "LogArchive",
+      "region": "us-east-1",
+    },
+  },
   "Resources": {
     "AWSServiceRoleForAWSCloud9CreateServiceLinkedRoleFunction78452922": {
       "DependsOn": [
@@ -5430,6 +5436,12 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 1`] = `
 
 exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 2`] = `
 {
+  "Metadata": {
+    "lzaLookup": {
+      "accountName": "LogArchive",
+      "region": "us-west-2",
+    },
+  },
   "Resources": {
     "AWSServiceRoleForAWSCloud9CreateServiceLinkedRoleFunction78452922": {
       "DependsOn": [
@@ -10856,6 +10868,12 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 2`] = `
 
 exports[`LoggingStackDelegatedAdmin Construct(LoggingStacKDelegatedAdmin):  Snapshot Test 1`] = `
 {
+  "Metadata": {
+    "lzaLookup": {
+      "accountName": "LogArchive",
+      "region": "us-west-2",
+    },
+  },
   "Resources": {
     "AWSServiceRoleForAWSCloud9CreateServiceLinkedRoleFunction78452922": {
       "DependsOn": [
@@ -15418,6 +15436,12 @@ exports[`LoggingStackDelegatedAdmin Construct(LoggingStacKDelegatedAdmin):  Snap
 
 exports[`LoggingStackOuTargets Construct(LoggingStackOuTargets):  Snapshot Test 1`] = `
 {
+  "Metadata": {
+    "lzaLookup": {
+      "accountName": "LogArchive",
+      "region": "us-east-1",
+    },
+  },
   "Resources": {
     "AWSServiceRoleForAWSCloud9CreateServiceLinkedRoleFunction78452922": {
       "DependsOn": [

@@ -2,6 +2,12 @@
 
 exports[`SecurityAuditStack Construct(SecurityAuditStack):  Snapshot Test 1`] = `
 {
+  "Metadata": {
+    "lzaLookup": {
+      "accountName": "Audit",
+      "region": "us-east-1",
+    },
+  },
   "Parameters": {
     "SsmParameterValueacceleratorkmscloudwatchkeyarnC96584B6F00A464EAD1953AFF4B05118Parameter": {
       "Default": "/accelerator/kms/cloudwatch/key-arn",
@@ -2805,6 +2811,12 @@ def script_handler(events, context):
 
 exports[`delegatedAdminStack Construct(SecurityAuditStack):  Snapshot Test 1`] = `
 {
+  "Metadata": {
+    "lzaLookup": {
+      "accountName": "Audit",
+      "region": "us-east-1",
+    },
+  },
   "Parameters": {
     "SsmParameterValueacceleratorkmscloudwatchkeyarnC96584B6F00A464EAD1953AFF4B05118Parameter": {
       "Default": "/accelerator/kms/cloudwatch/key-arn",
