@@ -2,6 +2,12 @@
 
 exports[`PrepareStack Construct(PrepareStack):  Snapshot Test 1`] = `
 {
+  "Metadata": {
+    "lzaLookup": {
+      "accountName": "Management",
+      "region": "us-east-1",
+    },
+  },
   "Resources": {
     "AcceleratorCloudWatchKmsArnParameter9BAD6EA0": {
       "Properties": {

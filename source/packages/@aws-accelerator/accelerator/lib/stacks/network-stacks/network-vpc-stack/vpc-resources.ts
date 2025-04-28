@@ -36,6 +36,7 @@ import { pascalCase } from 'pascal-case';
 import { LogLevel, NetworkStack } from '../network-stack';
 import { getVpc, getVpcConfig } from '../utils/getter-utils';
 import { isIpv4 } from '../utils/validation-utils';
+import { MetadataKeys } from '../../../../../utils/lib/common-types';
 
 type Ipv4VpcCidrBlock = { cidrBlock: string } | { ipv4IpamPoolId: string; ipv4NetmaskLength: number };
 type Ipv6VpcCidrBlock = {
@@ -545,9 +546,6 @@ export class VpcResources {
         vpc.setDhcpOptions(options.vpcItem.dhcpOptions);
       }
     } else {
-      //
-      // Create VPC
-      //
       vpc = new Vpc(this.stack, pascalCase(`${options.vpcItem.name}Vpc`), {
         name: options.vpcItem.name,
         ipv4CidrBlock: options.cidr,
@@ -600,7 +598,7 @@ export class VpcResources {
           continue;
         }
         this.stack.addLogs(LogLevel.INFO, `Adding secondary CIDR ${vpcCidr} to VPC ${vpcItem.name}`);
-        vpc.addIpv4Cidr({ cidrBlock: vpcCidr });
+        vpc.addIpv4Cidr({ cidrBlock: vpcCidr, metadata: { vpcName: vpcItem.name, cidrBlock: vpcCidr } });
         additionalCidrs.push({ cidrBlock: vpcCidr });
       }
     }
@@ -616,7 +614,15 @@ export class VpcResources {
           this.stack.addLogs(LogLevel.ERROR, `${vpcItem.name}: unable to locate IPAM pool ${alloc.ipamPoolName}`);
           throw new Error(`Configuration validation failed at runtime.`);
         }
-        vpc.addIpv4Cidr({ ipv4IpamPoolId: poolId, ipv4NetmaskLength: alloc.netmaskLength });
+        vpc.addIpv4Cidr({
+          ipv4IpamPoolId: poolId,
+          ipv4NetmaskLength: alloc.netmaskLength,
+          metadata: {
+            vpcName: vpcItem.name,
+            netmaskLength: alloc.netmaskLength.toString(),
+            ipamPoolName: alloc.ipamPoolName,
+          },
+        });
         additionalCidrs.push({ ipv4IpamPoolId: poolId, ipv4NetmaskLength: alloc.netmaskLength });
       }
     }
@@ -637,6 +643,12 @@ export class VpcResources {
         amazonProvidedIpv6CidrBlock: vpcCidr.amazonProvided,
         ipv6CidrBlock: vpcCidr.cidrBlock,
         ipv6Pool: vpcCidr.byoipPoolId,
+        metadata: {
+          vpcName: vpcItem.name,
+          amazonProvidedIpv6CidrBlock: vpcCidr.amazonProvided,
+          ipv6CidrBlock: vpcCidr.cidrBlock,
+          ipv6pool: vpcCidr.byoipPoolId,
+        },
       };
       vpc.addIpv6Cidr(cidrProps);
       ipv6Cidrs.push(cidrProps);
@@ -762,11 +774,21 @@ export class VpcResources {
   private deleteDefaultSgRules(vpc: Vpc, vpcItem: VpcConfig | VpcTemplatesConfig): boolean {
     if (vpcItem.defaultSecurityGroupRulesDeletion) {
       this.stack.addLogs(LogLevel.INFO, `Delete default security group ingress and egress rules for ${vpcItem.name}`);
-      new DeleteDefaultSecurityGroupRules(this.stack, pascalCase(`DeleteSecurityGroupRules-${vpcItem.name}`), {
-        vpcId: vpc.vpcId,
-        kmsKey: this.stack.cloudwatchKey,
-        logRetentionInDays: this.stack.logRetention,
+      const deleteDefaultSgCustomResource = new DeleteDefaultSecurityGroupRules(
+        this.stack,
+        pascalCase(`DeleteSecurityGroupRules-${vpcItem.name}`),
+        {
+          vpcId: vpc.vpcId,
+          kmsKey: this.stack.cloudwatchKey,
+          logRetentionInDays: this.stack.logRetention,
+        },
+      );
+
+      const cfnResource = deleteDefaultSgCustomResource.resource.node.defaultChild as cdk.CfnResource;
+      cfnResource.addMetadata(MetadataKeys.LZA_LOOKUP, {
+        vpcName: vpcItem.name,
       });
+
       return true;
     }
     return false;
