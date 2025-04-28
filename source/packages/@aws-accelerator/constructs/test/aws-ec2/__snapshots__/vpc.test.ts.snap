@@ -345,6 +345,12 @@ exports[`Vpc Construct(Vpc):  Snapshot Test 1`] = `
       "UpdateReplacePolicy": "Delete",
     },
     "TestVpcCloudWatchFlowLogD5309822": {
+      "Metadata": {
+        "lzaLookup": {
+          "flowLogDestinationType": "cloud-watch-logs",
+          "vpcName": "Main",
+        },
+      },
       "Properties": {
         "DeliverLogsPermissionArn": {
           "Fn::GetAtt": [
@@ -375,6 +381,11 @@ exports[`Vpc Construct(Vpc):  Snapshot Test 1`] = `
       "Type": "AWS::EC2::FlowLog",
     },
     "TestVpcDhcpOptionsAssociationDB23B751": {
+      "Metadata": {
+        "lzaLookup": {
+          "vpcName": "Main",
+        },
+      },
       "Properties": {
         "DhcpOptionsId": "Test-Options",
         "VpcId": {
@@ -384,6 +395,11 @@ exports[`Vpc Construct(Vpc):  Snapshot Test 1`] = `
       "Type": "AWS::EC2::VPCDHCPOptionsAssociation",
     },
     "TestVpcE77CE678": {
+      "Metadata": {
+        "lzaLookup": {
+          "vpcName": "Main",
+        },
+      },
       "Properties": {
         "CidrBlock": "10.0.0.0/16",
         "EnableDnsHostnames": false,
@@ -403,6 +419,11 @@ exports[`Vpc Construct(Vpc):  Snapshot Test 1`] = `
       "Type": "AWS::EC2::VPC",
     },
     "TestVpcExistingIamB9508C93": {
+      "Metadata": {
+        "lzaLookup": {
+          "vpcName": "Main",
+        },
+      },
       "Properties": {
         "CidrBlock": "10.0.0.0/16",
         "EnableDnsHostnames": false,
@@ -422,6 +443,12 @@ exports[`Vpc Construct(Vpc):  Snapshot Test 1`] = `
       "Type": "AWS::EC2::VPC",
     },
     "TestVpcExistingIamCloudWatchFlowLog976A715F": {
+      "Metadata": {
+        "lzaLookup": {
+          "flowLogDestinationType": "cloud-watch-logs",
+          "vpcName": "Main",
+        },
+      },
       "Properties": {
         "DeliverLogsPermissionArn": {
           "Fn::Join": [
@@ -462,6 +489,11 @@ exports[`Vpc Construct(Vpc):  Snapshot Test 1`] = `
       "Type": "AWS::EC2::FlowLog",
     },
     "TestVpcExistingIamDhcpOptionsAssociation92EB66FD": {
+      "Metadata": {
+        "lzaLookup": {
+          "vpcName": "Main",
+        },
+      },
       "Properties": {
         "DhcpOptionsId": "Test-Options",
         "VpcId": {
@@ -491,6 +523,11 @@ exports[`Vpc Construct(Vpc):  Snapshot Test 1`] = `
       "UpdateReplacePolicy": "Retain",
     },
     "TestVpcExistingIamInternetGateway812AACEB": {
+      "Metadata": {
+        "lzaLookup": {
+          "vpcName": "Main",
+        },
+      },
       "Properties": {
         "Tags": [
           {
@@ -513,6 +550,12 @@ exports[`Vpc Construct(Vpc):  Snapshot Test 1`] = `
       "Type": "AWS::EC2::VPCGatewayAttachment",
     },
     "TestVpcExistingIamS3FlowLog15E7512D": {
+      "Metadata": {
+        "lzaLookup": {
+          "flowLogDestinationType": "s3",
+          "vpcName": "Main",
+        },
+      },
       "Properties": {
         "LogDestination": "arn:aws:s3:::aws-accelerator-test-111111111111-us-east-1/vpc-flow-logs/",
         "LogDestinationType": "s3",
@@ -532,6 +575,11 @@ exports[`Vpc Construct(Vpc):  Snapshot Test 1`] = `
       "Type": "AWS::EC2::FlowLog",
     },
     "TestVpcExistingIamVirtualPrivateGateway4A00A9BC": {
+      "Metadata": {
+        "lzaLookup": {
+          "vpcName": "Main",
+        },
+      },
       "Properties": {
         "AmazonSideAsn": 65000,
         "Tags": [
@@ -633,6 +681,11 @@ exports[`Vpc Construct(Vpc):  Snapshot Test 1`] = `
       "Type": "AWS::IAM::Policy",
     },
     "TestVpcInternetGateway01360C82": {
+      "Metadata": {
+        "lzaLookup": {
+          "vpcName": "Main",
+        },
+      },
       "Properties": {
         "Tags": [
           {
@@ -655,6 +708,9 @@ exports[`Vpc Construct(Vpc):  Snapshot Test 1`] = `
       "Type": "AWS::EC2::VPCGatewayAttachment",
     },
     "TestVpcIpv6CidrBlock02C3E0D0B": {
+      "Metadata": {
+        "lzaLookup": {},
+      },
       "Properties": {
         "AmazonProvidedIpv6CidrBlock": true,
         "VpcId": {
@@ -664,6 +720,9 @@ exports[`Vpc Construct(Vpc):  Snapshot Test 1`] = `
       "Type": "AWS::EC2::VPCCidrBlock",
     },
     "TestVpcIpv6CidrBlock121C0BB97": {
+      "Metadata": {
+        "lzaLookup": {},
+      },
       "Properties": {
         "Ipv6CidrBlock": "::1",
         "Ipv6Pool": "ipv6Pool-ec2-1234",
@@ -674,6 +733,12 @@ exports[`Vpc Construct(Vpc):  Snapshot Test 1`] = `
       "Type": "AWS::EC2::VPCCidrBlock",
     },
     "TestVpcS3FlowLog86FD93A4": {
+      "Metadata": {
+        "lzaLookup": {
+          "flowLogDestinationType": "s3",
+          "vpcName": "Main",
+        },
+      },
       "Properties": {
         "LogDestination": "arn:aws:s3:::aws-accelerator-test-111111111111-us-east-1/vpc-flow-logs/",
         "LogDestinationType": "s3",
@@ -693,6 +758,11 @@ exports[`Vpc Construct(Vpc):  Snapshot Test 1`] = `
       "Type": "AWS::EC2::FlowLog",
     },
     "TestVpcVirtualPrivateGateway56B5C340": {
+      "Metadata": {
+        "lzaLookup": {
+          "vpcName": "Main",
+        },
+      },
       "Properties": {
         "AmazonSideAsn": 65000,
         "Tags": [
@@ -717,6 +787,9 @@ exports[`Vpc Construct(Vpc):  Snapshot Test 1`] = `
       "Type": "AWS::EC2::VPCGatewayAttachment",
     },
     "TestVpcVpcCidrBlock8C35CE6C": {
+      "Metadata": {
+        "lzaLookup": {},
+      },
       "Properties": {
         "CidrBlock": "10.2.0.0/16",
         "VpcId": {

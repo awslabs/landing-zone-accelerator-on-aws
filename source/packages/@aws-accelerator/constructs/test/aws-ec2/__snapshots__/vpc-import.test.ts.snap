@@ -128,6 +128,12 @@ exports[`VpcImport Construct(Vpc):  Snapshot Test 1`] = `
       "UpdateReplacePolicy": "Delete",
     },
     "TestVpcCloudWatchFlowLogD5309822": {
+      "Metadata": {
+        "lzaLookup": {
+          "flowLogDestinationType": "cloud-watch-logs",
+          "vpcName": "Main",
+        },
+      },
       "Properties": {
         "DeliverLogsPermissionArn": {
           "Fn::GetAtt": [
@@ -150,6 +156,11 @@ exports[`VpcImport Construct(Vpc):  Snapshot Test 1`] = `
       "Type": "AWS::EC2::FlowLog",
     },
     "TestVpcDhcpOptionsAssociationDB23B751": {
+      "Metadata": {
+        "lzaLookup": {
+          "vpcName": "Main",
+        },
+      },
       "Properties": {
         "DhcpOptionsId": "test-dhcp-opts",
         "VpcId": "someImportedVpcId",
@@ -222,6 +233,11 @@ exports[`VpcImport Construct(Vpc):  Snapshot Test 1`] = `
       "Type": "AWS::IAM::Policy",
     },
     "TestVpcInternetGateway01360C82": {
+      "Metadata": {
+        "lzaLookup": {
+          "vpcName": "Main",
+        },
+      },
       "Type": "AWS::EC2::InternetGateway",
     },
     "TestVpcInternetGatewayAttachment60E451D5": {
@@ -231,6 +247,12 @@ exports[`VpcImport Construct(Vpc):  Snapshot Test 1`] = `
       "Type": "AWS::EC2::VPCGatewayAttachment",
     },
     "TestVpcS3FlowLog86FD93A4": {
+      "Metadata": {
+        "lzaLookup": {
+          "flowLogDestinationType": "s3",
+          "vpcName": "Main",
+        },
+      },
       "Properties": {
         "LogDestination": "arn:aws:s3:::aws-accelerator-test-111111111111-us-east-1/vpc-flow-logs/",
         "LogDestinationType": "s3",
@@ -242,6 +264,11 @@ exports[`VpcImport Construct(Vpc):  Snapshot Test 1`] = `
       "Type": "AWS::EC2::FlowLog",
     },
     "TestVpcVirtualPrivateGateway56B5C340": {
+      "Metadata": {
+        "lzaLookup": {
+          "vpcName": "Main",
+        },
+      },
       "Properties": {
         "AmazonSideAsn": 65000,
         "Type": "ipsec.1",
@@ -258,6 +285,9 @@ exports[`VpcImport Construct(Vpc):  Snapshot Test 1`] = `
       "Type": "AWS::EC2::VPCGatewayAttachment",
     },
     "TestVpcVpcCidrBlock8C35CE6C": {
+      "Metadata": {
+        "lzaLookup": {},
+      },
       "Properties": {
         "CidrBlock": "10.2.0.0/16",
         "VpcId": "someImportedVpcId",

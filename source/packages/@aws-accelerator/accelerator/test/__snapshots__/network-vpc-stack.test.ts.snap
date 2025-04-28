@@ -2,6 +2,12 @@
 
 exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
 {
+  "Metadata": {
+    "lzaLookup": {
+      "accountName": "Network",
+      "region": "us-east-1",
+    },
+  },
   "Parameters": {
     "SsmParameterValueacceleratorkmslambdakeyarnC96584B6F00A464EAD1953AFF4B05118Parameter": {
       "Default": "/accelerator/kms/lambda/key-arn",
@@ -1136,6 +1142,11 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
       "DependsOn": [
         "CustomDeleteDefaultSecurityGroupRulesCustomResourceProviderLogGroup36ABE46B",
       ],
+      "Metadata": {
+        "lzaLookup": {
+          "vpcName": "Network-Inspection",
+        },
+      },
       "Properties": {
         "ServiceToken": {
           "Fn::GetAtt": [
@@ -1276,6 +1287,11 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
       "DependsOn": [
         "DeleteDefaultVpc4DBAE36C",
       ],
+      "Metadata": {
+        "lzaLookup": {
+          "vpcName": "Infra-Template-Full-Ipam-Central",
+        },
+      },
       "Properties": {
         "EnableDnsHostnames": true,
         "EnableDnsSupport": true,
@@ -1297,6 +1313,12 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
       "DependsOn": [
         "DeleteDefaultVpc4DBAE36C",
       ],
+      "Metadata": {
+        "lzaLookup": {
+          "flowLogDestinationType": "cloud-watch-logs",
+          "vpcName": "Infra-Template-Full-Ipam-Central",
+        },
+      },
       "Properties": {
         "DeliverLogsPermissionArn": {
           "Fn::GetAtt": [
@@ -1410,6 +1432,12 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
       "DependsOn": [
         "DeleteDefaultVpc4DBAE36C",
       ],
+      "Metadata": {
+        "lzaLookup": {
+          "flowLogDestinationType": "s3",
+          "vpcName": "Infra-Template-Full-Ipam-Central",
+        },
+      },
       "Properties": {
         "LogDestination": {
           "Fn::Join": [
@@ -1497,6 +1525,11 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
       "DependsOn": [
         "DeleteDefaultVpc4DBAE36C",
       ],
+      "Metadata": {
+        "lzaLookup": {
+          "vpcName": "Infra-Template-Full-Static-Central",
+        },
+      },
       "Properties": {
         "CidrBlock": "172.25.0.0/24",
         "EnableDnsHostnames": true,
@@ -1515,6 +1548,12 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
       "DependsOn": [
         "DeleteDefaultVpc4DBAE36C",
       ],
+      "Metadata": {
+        "lzaLookup": {
+          "flowLogDestinationType": "cloud-watch-logs",
+          "vpcName": "Infra-Template-Full-Static-Central",
+        },
+      },
       "Properties": {
         "DeliverLogsPermissionArn": {
           "Fn::GetAtt": [
@@ -1628,6 +1667,12 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
       "DependsOn": [
         "DeleteDefaultVpc4DBAE36C",
       ],
+      "Metadata": {
+        "lzaLookup": {
+          "flowLogDestinationType": "s3",
+          "vpcName": "Infra-Template-Full-Static-Central",
+        },
+      },
       "Properties": {
         "LogDestination": {
           "Fn::Join": [
@@ -1701,6 +1746,11 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
       "DependsOn": [
         "DeleteDefaultVpc4DBAE36C",
       ],
+      "Metadata": {
+        "lzaLookup": {
+          "vpcName": "Infra-Template-Half-Ipam-Central",
+        },
+      },
       "Properties": {
         "EnableDnsHostnames": true,
         "EnableDnsSupport": true,
@@ -1722,6 +1772,12 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
       "DependsOn": [
         "DeleteDefaultVpc4DBAE36C",
       ],
+      "Metadata": {
+        "lzaLookup": {
+          "flowLogDestinationType": "cloud-watch-logs",
+          "vpcName": "Infra-Template-Half-Ipam-Central",
+        },
+      },
       "Properties": {
         "DeliverLogsPermissionArn": {
           "Fn::GetAtt": [
@@ -1835,6 +1891,12 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
       "DependsOn": [
         "DeleteDefaultVpc4DBAE36C",
       ],
+      "Metadata": {
+        "lzaLookup": {
+          "flowLogDestinationType": "s3",
+          "vpcName": "Infra-Template-Half-Ipam-Central",
+        },
+      },
       "Properties": {
         "LogDestination": {
           "Fn::Join": [
@@ -1922,6 +1984,11 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
       "DependsOn": [
         "DeleteDefaultVpc4DBAE36C",
       ],
+      "Metadata": {
+        "lzaLookup": {
+          "vpcName": "Infra-Template-Half-Static-Central",
+        },
+      },
       "Properties": {
         "CidrBlock": "172.21.0.0/24",
         "EnableDnsHostnames": true,
@@ -1940,6 +2007,12 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
       "DependsOn": [
         "DeleteDefaultVpc4DBAE36C",
       ],
+      "Metadata": {
+        "lzaLookup": {
+          "flowLogDestinationType": "cloud-watch-logs",
+          "vpcName": "Infra-Template-Half-Static-Central",
+        },
+      },
       "Properties": {
         "DeliverLogsPermissionArn": {
           "Fn::GetAtt": [
@@ -2053,6 +2126,12 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
       "DependsOn": [
         "DeleteDefaultVpc4DBAE36C",
       ],
+      "Metadata": {
+        "lzaLookup": {
+          "flowLogDestinationType": "s3",
+          "vpcName": "Infra-Template-Half-Static-Central",
+        },
+      },
       "Properties": {
         "LogDestination": {
           "Fn::Join": [
@@ -2183,6 +2262,11 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
       "DependsOn": [
         "DeleteDefaultVpc4DBAE36C",
       ],
+      "Metadata": {
+        "lzaLookup": {
+          "vpcName": "Network-Endpoints",
+        },
+      },
       "Properties": {
         "EnableDnsHostnames": true,
         "EnableDnsSupport": true,
@@ -2208,6 +2292,12 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
       "DependsOn": [
         "DeleteDefaultVpc4DBAE36C",
       ],
+      "Metadata": {
+        "lzaLookup": {
+          "flowLogDestinationType": "cloud-watch-logs",
+          "vpcName": "Network-Endpoints",
+        },
+      },
       "Properties": {
         "DeliverLogsPermissionArn": {
           "Fn::GetAtt": [
@@ -2241,6 +2331,11 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
       "DependsOn": [
         "DeleteDefaultVpc4DBAE36C",
       ],
+      "Metadata": {
+        "lzaLookup": {
+          "vpcName": "Network-Endpoints",
+        },
+      },
       "Properties": {
         "DhcpOptionsId": {
           "Ref": "AcceleratorDhcpOptsDhcpOpts09C66A89",
@@ -2335,6 +2430,11 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
       "DependsOn": [
         "DeleteDefaultVpc4DBAE36C",
       ],
+      "Metadata": {
+        "lzaLookup": {
+          "vpcName": "Network-Endpoints",
+        },
+      },
       "Properties": {
         "Tags": [
           {
@@ -3110,6 +3210,12 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
       "DependsOn": [
         "DeleteDefaultVpc4DBAE36C",
       ],
+      "Metadata": {
+        "lzaLookup": {
+          "flowLogDestinationType": "s3",
+          "vpcName": "Network-Endpoints",
+        },
+      },
       "Properties": {
         "LogDestination": {
           "Fn::Join": [
@@ -3371,6 +3477,11 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
       "DependsOn": [
         "DeleteDefaultVpc4DBAE36C",
       ],
+      "Metadata": {
+        "lzaLookup": {
+          "vpcName": "Network-Endpoints",
+        },
+      },
       "Properties": {
         "AmazonSideAsn": 65200,
         "Tags": [
@@ -3401,6 +3512,13 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
       "DependsOn": [
         "DeleteDefaultVpc4DBAE36C",
       ],
+      "Metadata": {
+        "lzaLookup": {
+          "ipamPoolName": "home-region-prod-pool",
+          "netmaskLength": "25",
+          "vpcName": "Network-Endpoints",
+        },
+      },
       "Properties": {
         "Ipv4IpamPoolId": {
           "Ref": "SsmParameterValueacceleratornetworkipampoolshomeregionprodpoolidC96584B6F00A464EAD1953AFF4B05118Parameter",
@@ -3443,6 +3561,11 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
       "DependsOn": [
         "DeleteDefaultVpc4DBAE36C",
       ],
+      "Metadata": {
+        "lzaLookup": {
+          "vpcName": "Network-Inspection",
+        },
+      },
       "Properties": {
         "CidrBlock": "10.2.0.0/22",
         "EnableDnsHostnames": true,
@@ -3548,6 +3671,12 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
       "DependsOn": [
         "DeleteDefaultVpc4DBAE36C",
       ],
+      "Metadata": {
+        "lzaLookup": {
+          "flowLogDestinationType": "cloud-watch-logs",
+          "vpcName": "Network-Inspection",
+        },
+      },
       "Properties": {
         "DeliverLogsPermissionArn": {
           "Fn::GetAtt": [
@@ -3717,6 +3846,11 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
       "DependsOn": [
         "DeleteDefaultVpc4DBAE36C",
       ],
+      "Metadata": {
+        "lzaLookup": {
+          "vpcName": "Network-Inspection",
+        },
+      },
       "Properties": {
         "Tags": [
           {
@@ -4046,6 +4180,12 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
       "DependsOn": [
         "DeleteDefaultVpc4DBAE36C",
       ],
+      "Metadata": {
+        "lzaLookup": {
+          "flowLogDestinationType": "s3",
+          "vpcName": "Network-Inspection",
+        },
+      },
       "Properties": {
         "LogDestination": {
           "Fn::Join": [
@@ -4130,6 +4270,11 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
       "DependsOn": [
         "DeleteDefaultVpc4DBAE36C",
       ],
+      "Metadata": {
+        "lzaLookup": {
+          "vpcName": "Network-Inspection",
+        },
+      },
       "Properties": {
         "AmazonSideAsn": 65000,
         "Tags": [
@@ -4154,6 +4299,12 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
       "DependsOn": [
         "DeleteDefaultVpc4DBAE36C",
       ],
+      "Metadata": {
+        "lzaLookup": {
+          "cidrBlock": "10.3.0.0/16",
+          "vpcName": "Network-Inspection",
+        },
+      },
       "Properties": {
         "CidrBlock": "10.3.0.0/16",
         "VpcId": {
@@ -4343,6 +4494,11 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
       "DependsOn": [
         "DeleteDefaultVpc4DBAE36C",
       ],
+      "Metadata": {
+        "lzaLookup": {
+          "vpcName": "Network-NonTemplate-Ipam-Central",
+        },
+      },
       "Properties": {
         "EnableDnsHostnames": true,
         "EnableDnsSupport": true,
@@ -4364,6 +4520,12 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
       "DependsOn": [
         "DeleteDefaultVpc4DBAE36C",
       ],
+      "Metadata": {
+        "lzaLookup": {
+          "flowLogDestinationType": "cloud-watch-logs",
+          "vpcName": "Network-NonTemplate-Ipam-Central",
+        },
+      },
       "Properties": {
         "DeliverLogsPermissionArn": {
           "Fn::GetAtt": [
@@ -4532,6 +4694,12 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
       "DependsOn": [
         "DeleteDefaultVpc4DBAE36C",
       ],
+      "Metadata": {
+        "lzaLookup": {
+          "flowLogDestinationType": "s3",
+          "vpcName": "Network-NonTemplate-Ipam-Central",
+        },
+      },
       "Properties": {
         "LogDestination": {
           "Fn::Join": [
@@ -4564,6 +4732,11 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
       "DependsOn": [
         "DeleteDefaultVpc4DBAE36C",
       ],
+      "Metadata": {
+        "lzaLookup": {
+          "vpcName": "Network-NonTemplate-Static-Central",
+        },
+      },
       "Properties": {
         "CidrBlock": "172.17.0.0/24",
         "EnableDnsHostnames": true,
@@ -4582,6 +4755,12 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
       "DependsOn": [
         "DeleteDefaultVpc4DBAE36C",
       ],
+      "Metadata": {
+        "lzaLookup": {
+          "flowLogDestinationType": "cloud-watch-logs",
+          "vpcName": "Network-NonTemplate-Static-Central",
+        },
+      },
       "Properties": {
         "DeliverLogsPermissionArn": {
           "Fn::GetAtt": [
@@ -4736,6 +4915,12 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
       "DependsOn": [
         "DeleteDefaultVpc4DBAE36C",
       ],
+      "Metadata": {
+        "lzaLookup": {
+          "flowLogDestinationType": "s3",
+          "vpcName": "Network-NonTemplate-Static-Central",
+        },
+      },
       "Properties": {
         "LogDestination": {
           "Fn::Join": [
@@ -4768,6 +4953,11 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
       "DependsOn": [
         "DeleteDefaultVpc4DBAE36C",
       ],
+      "Metadata": {
+        "lzaLookup": {
+          "vpcName": "Network-Secondary",
+        },
+      },
       "Properties": {
         "EnableDnsHostnames": true,
         "EnableDnsSupport": true,
@@ -4793,6 +4983,12 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
       "DependsOn": [
         "DeleteDefaultVpc4DBAE36C",
       ],
+      "Metadata": {
+        "lzaLookup": {
+          "flowLogDestinationType": "cloud-watch-logs",
+          "vpcName": "Network-Secondary",
+        },
+      },
       "Properties": {
         "DeliverLogsPermissionArn": {
           "Fn::GetAtt": [
@@ -4826,6 +5022,11 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
       "DependsOn": [
         "DeleteDefaultVpc4DBAE36C",
       ],
+      "Metadata": {
+        "lzaLookup": {
+          "vpcName": "Network-Secondary",
+        },
+      },
       "Properties": {
         "VpcId": {
           "Ref": "NetworkSecondaryVpc37FB1791",
@@ -4917,6 +5118,12 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
       "DependsOn": [
         "DeleteDefaultVpc4DBAE36C",
       ],
+      "Metadata": {
+        "lzaLookup": {
+          "amazonProvidedIpv6CidrBlock": true,
+          "vpcName": "Network-Secondary",
+        },
+      },
       "Properties": {
         "AmazonProvidedIpv6CidrBlock": true,
         "VpcId": {
@@ -5367,6 +5574,12 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
       "DependsOn": [
         "DeleteDefaultVpc4DBAE36C",
       ],
+      "Metadata": {
+        "lzaLookup": {
+          "flowLogDestinationType": "s3",
+          "vpcName": "Network-Secondary",
+        },
+      },
       "Properties": {
         "LogDestination": {
           "Fn::Join": [
@@ -7516,6 +7729,11 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
       "DependsOn": [
         "DeleteDefaultVpc4DBAE36C",
       ],
+      "Metadata": {
+        "lzaLookup": {
+          "vpcName": "Workload-Template",
+        },
+      },
       "Properties": {
         "EnableDnsHostnames": true,
         "EnableDnsSupport": true,
@@ -7537,6 +7755,12 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
       "DependsOn": [
         "DeleteDefaultVpc4DBAE36C",
       ],
+      "Metadata": {
+        "lzaLookup": {
+          "flowLogDestinationType": "cloud-watch-logs",
+          "vpcName": "Workload-Template",
+        },
+      },
       "Properties": {
         "DeliverLogsPermissionArn": {
           "Fn::GetAtt": [
@@ -7650,6 +7874,12 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
       "DependsOn": [
         "DeleteDefaultVpc4DBAE36C",
       ],
+      "Metadata": {
+        "lzaLookup": {
+          "flowLogDestinationType": "s3",
+          "vpcName": "Workload-Template",
+        },
+      },
       "Properties": {
         "LogDestination": {
           "Fn::Join": [
@@ -7925,6 +8155,12 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
 
 exports[`NoVpcFlowLogStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
 {
+  "Metadata": {
+    "lzaLookup": {
+      "accountName": "Management",
+      "region": "us-east-1",
+    },
+  },
   "Parameters": {
     "SsmParameterValueacceleratorkmscloudwatchkeyarnC96584B6F00A464EAD1953AFF4B05118Parameter": {
       "Default": "/accelerator/kms/cloudwatch/key-arn",

@@ -71,6 +71,7 @@ describe('TgwResources - Transit Gateway Peering', () => {
     } as unknown as OrganizationConfig;
     const mockAccountsConfig = {
       getAccountId: jest.fn().mockReturnValue(500000),
+      getAccountNameById: jest.fn(() => 'accountName'),
       getAccountIds: jest.fn().mockImplementation(() => [
         {
           Dev: 100000,

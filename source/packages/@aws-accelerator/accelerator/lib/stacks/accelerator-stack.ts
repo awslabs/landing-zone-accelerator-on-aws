@@ -20,6 +20,7 @@ import * as path from 'path';
 import { v4 as uuidv4 } from 'uuid';
 import * as winston from 'winston';
 import { PrincipalOrgIdConditionType } from '@aws-accelerator/utils/lib/common-resources';
+import { MetadataKeys } from '@aws-accelerator/utils/lib/common-types';
 
 import {
   AccountConfig,
@@ -232,7 +233,7 @@ process.on('uncaughtException', err => {
 
 export abstract class AcceleratorStack extends cdk.Stack {
   protected logger: winston.Logger;
-  protected props: AcceleratorStackProps;
+  public props: AcceleratorStackProps;
 
   /**
    * Nag suppression input list
@@ -298,6 +299,11 @@ export abstract class AcceleratorStack extends cdk.Stack {
     this.organizationId = props.organizationConfig.getOrganizationId();
     this.isExternalDeployment =
       props.pipelineAccountId !== props.accountsConfig.getManagementAccountId() ? true : false;
+
+    this.addMetadata(MetadataKeys.LZA_LOOKUP, {
+      accountName: this.props.accountsConfig.getAccountNameById(this.account),
+      region: cdk.Stack.of(this).region,
+    });
     //
     // Initialize resource names
     this.acceleratorResourceNames = new AcceleratorResourceNames({

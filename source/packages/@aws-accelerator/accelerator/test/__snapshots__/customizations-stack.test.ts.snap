@@ -2,6 +2,12 @@
 
 exports[`CustomizationsStack Construct(CustomizationsStack):  Snapshot Test 1`] = `
 {
+  "Metadata": {
+    "lzaLookup": {
+      "accountName": "Management",
+      "region": "us-east-1",
+    },
+  },
   "Parameters": {
     "SsmParameterValueacceleratorkmscloudwatchkeyarnC96584B6F00A464EAD1953AFF4B05118Parameter": {
       "Default": "/accelerator/kms/cloudwatch/key-arn",
@@ -674,6 +680,12 @@ exports[`CustomizationsStack Construct(CustomizationsStack):  Snapshot Test 1`] 
 
 exports[`CustomizationsStack Construct(CustomizationsStack):  Snapshot Test 2`] = `
 {
+  "Metadata": {
+    "lzaLookup": {
+      "accountName": "SharedServices",
+      "region": "us-east-1",
+    },
+  },
   "Resources": {
     "CustomPortfolioAssociationsRoleArnProviderCustomPortfolioAssociationsRoleArnProviderProviderLambda303083B3": {
       "DependsOn": [
@@ -1132,6 +1144,12 @@ exports[`CustomizationsStack Construct(CustomizationsStack):  Snapshot Test 2`] 
 
 exports[`CustomizationsStack Construct(CustomizationsStack):  Snapshot Test 3`] = `
 {
+  "Metadata": {
+    "lzaLookup": {
+      "accountName": "Management",
+      "region": "us-east-1",
+    },
+  },
   "Parameters": {
     "SsmParameterValueacceleratorkmscloudwatchkeyarnC96584B6F00A464EAD1953AFF4B05118Parameter": {
       "Default": "/accelerator/kms/cloudwatch/key-arn",
@@ -1802,6 +1820,12 @@ exports[`CustomizationsStack Construct(CustomizationsStack):  Snapshot Test 3`] 
 
 exports[`CustomizationsStack Construct(CustomizationsStack):  Snapshot Test 4`] = `
 {
+  "Metadata": {
+    "lzaLookup": {
+      "accountName": "SharedServices",
+      "region": "us-east-1",
+    },
+  },
   "Resources": {
     "CustomPortfolioAssociationsRoleArnProviderCustomPortfolioAssociationsRoleArnProviderProviderLambda303083B3": {
       "DependsOn": [
