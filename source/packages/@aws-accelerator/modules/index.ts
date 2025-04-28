@@ -24,6 +24,7 @@ import { createLogger, MODULE_EXCEPTIONS } from '../../@aws-lza/index';
 import { setResourcePrefixes } from '../accelerator/utils/app-utils';
 import { getAcceleratorModuleRunnerParameters, getManagementAccountCredentials } from './lib/functions';
 import { AcceleratorModuleStageDetails } from './models/constants';
+import { ModuleExecutionPhase } from './models/enums';
 
 /**
  * ModuleRunner abstract class to execute accelerator modules.
@@ -139,6 +140,7 @@ export abstract class ModuleRunner {
    * @returns status string
    */
   private static async executeStageDependentModules(params: RunnerParametersType): Promise<string> {
+    const synthPhase = process.env['CDK_OPTIONS'] === 'bootstrap';
     const stageModuleItems = AcceleratorModuleStageDetails.filter(item => item.stage.name === params.stage);
 
     if (stageModuleItems.length === 0) {
@@ -164,8 +166,22 @@ export abstract class ModuleRunner {
 
     ModuleRunner.logger.info(`Executing modules for stage "${params.stage}"`);
     for (const sortedModuleItem of sortedModuleItems) {
+      const isMatchingPhase =
+        (synthPhase && sortedModuleItem.executionPhase === ModuleExecutionPhase.SYNTH) ||
+        (!synthPhase && sortedModuleItem.executionPhase === ModuleExecutionPhase.DEPLOY);
+
+      if (!isMatchingPhase) {
+        ModuleRunner.logger.info(
+          `Skipping module "${sortedModuleItem.name}" as it is not part of ${
+            synthPhase ? ModuleExecutionPhase.SYNTH : ModuleExecutionPhase.DEPLOY
+          } phase`,
+        );
+        continue;
+      }
+
+      ModuleRunner.logger.info(`Module "${sortedModuleItem.name}" added for execution.`);
       promiseItems.push({
-        runOrder: sortedModuleItem.runOrder,
+        runOrder: synthPhase ? 1 : sortedModuleItem.runOrder,
         promise: () =>
           sortedModuleItem.handler({
             moduleItem: sortedModuleItem,
@@ -175,7 +191,13 @@ export abstract class ModuleRunner {
       });
     }
 
+    if (promiseItems.length === 0) {
+      return `No modules found for "${params.stage}" stage`;
+    }
+
+    ModuleRunner.logger.info(`Execution started for modules of stage "${params.stage}"`);
     statuses.push(...(await ModuleRunner.executePromises(promiseItems)));
+    ModuleRunner.logger.info(`Execution completed for modules of stage "${params.stage}"`);
 
     return statuses.join('\n');
   }

@@ -81,3 +81,20 @@ export enum AcceleratorModules {
    */
   EXAMPLE_MODULE = 'example-module',
 }
+
+/**
+ * Module execution phase
+ *
+ * @description
+ * This is the list of module execution phases
+ */
+export enum ModuleExecutionPhase {
+  /**
+   * At the synth phase during bootstrap stage of accelerator pipeline
+   */
+  SYNTH = 'synth',
+  /**
+   * At the deploy phase during of accelerator pipeline stage
+   */
+  DEPLOY = 'deploy',
+}

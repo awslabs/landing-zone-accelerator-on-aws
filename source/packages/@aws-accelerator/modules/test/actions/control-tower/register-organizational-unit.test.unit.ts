@@ -13,7 +13,7 @@
 
 import { beforeEach, describe, test } from '@jest/globals';
 import { RegisterOrganizationalUnitModule } from '../../../lib/actions/control-tower/register-organizational-unit';
-import { AcceleratorModules } from '../../../models/enums';
+import { AcceleratorModules, ModuleExecutionPhase } from '../../../models/enums';
 import { AcceleratorStage } from '../../../../accelerator';
 import { ModuleParams } from '../../../models/types';
 import {
@@ -57,6 +57,7 @@ describe('RegisterOrganizationalUnitModule', () => {
         description: '',
         runOrder: 1,
         handler: jest.fn().mockResolvedValue(`Module 1 of ${AcceleratorStage.ACCOUNTS} stage executed`),
+        executionPhase: ModuleExecutionPhase.DEPLOY,
       },
       runnerParameters: MOCK_CONSTANTS.runnerParameters,
       moduleRunnerParameters: {
@@ -95,6 +96,7 @@ describe('RegisterOrganizationalUnitModule', () => {
         description: '',
         runOrder: 1,
         handler: jest.fn().mockResolvedValue(`Module 1 of ${AcceleratorStage.ACCOUNTS} stage executed`),
+        executionPhase: ModuleExecutionPhase.DEPLOY,
       },
       runnerParameters: MOCK_CONSTANTS.runnerParameters,
       moduleRunnerParameters: {
