@@ -17,6 +17,8 @@ import {
   Ec2FirewallInstanceConfig,
 } from '../../lib/customizations-config';
 import {
+  NetworkAclInboundRuleConfig,
+  NetworkAclOutboundRuleConfig,
   NetworkAclSubnetSelection,
   NetworkConfig,
   NfwFirewallConfig,
@@ -887,7 +889,7 @@ export class VpcValidator {
    * @param values
    */
   private validateVpcConfiguration(values: NetworkConfig, helpers: NetworkValidatorFunctions, errors: string[]) {
-    const vpcs = [...values.vpcs, ...(values.vpcTemplates ?? [])] ?? [];
+    const vpcs = [...values.vpcs, ...(values.vpcTemplates ?? [])];
     vpcs.forEach(vpcItem => {
       //
       // Validate VPC structure
@@ -1345,6 +1347,8 @@ export class VpcValidator {
     this.validateNaclPorts(vpcItem, errors);
     // Validate NACL source/destination
     this.validateNaclSourceDestinationConfig(vpcItem, helpers, errors);
+    // Validate NACL ICMP Rules
+    this.validateNaclRules(vpcItem, errors);
   }
 
   /**
@@ -1455,47 +1459,51 @@ export class VpcValidator {
     vpcItem.networkAcls?.forEach(nacl => {
       // Validate inbound ports
       nacl.inboundRules?.forEach(inbound => {
-        const isAllPorts = inbound.fromPort === -1 && inbound.toPort === -1;
-        const isValidPortRange = inbound.fromPort <= inbound.toPort;
-        const portRangeString = `fromPort: ${inbound.fromPort}, toPort: ${inbound.toPort}`;
-        if (!isValidPortRange) {
-          errors.push(
-            `[VPC ${vpcItem.name} NACL ${nacl.name} inbound rule ${inbound.rule}]: fromPort must be less than or equal to toPort. Defined port range: ${portRangeString}`,
-          );
-        } else {
-          if (!isAllPorts && (inbound.fromPort < 0 || inbound.fromPort > 65535)) {
+        if (inbound.fromPort && inbound.toPort) {
+          const isAllPorts = inbound.fromPort === -1 && inbound.toPort === -1;
+          const isValidPortRange = inbound.fromPort <= inbound.toPort;
+          const portRangeString = `fromPort: ${inbound.fromPort}, toPort: ${inbound.toPort}`;
+          if (!isValidPortRange) {
             errors.push(
-              `[VPC ${vpcItem.name} NACL ${nacl.name} inbound rule ${inbound.rule}]: when not using -1, fromPort value must be between 0 and 65535. Defined port range: ${portRangeString}`,
+              `[VPC ${vpcItem.name} NACL ${nacl.name} inbound rule ${inbound.rule}]: fromPort must be less than or equal to toPort. Defined port range: ${portRangeString}`,
             );
-          }
+          } else {
+            if (!isAllPorts && (inbound.fromPort < 0 || inbound.fromPort > 65535)) {
+              errors.push(
+                `[VPC ${vpcItem.name} NACL ${nacl.name} inbound rule ${inbound.rule}]: when not using -1, fromPort value must be between 0 and 65535. Defined port range: ${portRangeString}`,
+              );
+            }
 
-          if (!isAllPorts && (inbound.toPort < 0 || inbound.toPort > 65535)) {
-            errors.push(
-              `[VPC ${vpcItem.name} NACL ${nacl.name} inbound rule ${inbound.rule}]: when not using -1, toPort value must be between 0 and 65535. Defined port range: ${portRangeString}`,
-            );
+            if (!isAllPorts && (inbound.toPort < 0 || inbound.toPort > 65535)) {
+              errors.push(
+                `[VPC ${vpcItem.name} NACL ${nacl.name} inbound rule ${inbound.rule}]: when not using -1, toPort value must be between 0 and 65535. Defined port range: ${portRangeString}`,
+              );
+            }
           }
         }
       });
       // Validate outbound ports
       nacl.outboundRules?.forEach(outbound => {
-        const isAllPorts = outbound.fromPort === -1 && outbound.toPort === -1;
-        const isValidPortRange = outbound.fromPort <= outbound.toPort;
-        const portRangeString = `fromPort: ${outbound.fromPort}, toPort: ${outbound.toPort}`;
-        if (!isValidPortRange) {
-          errors.push(
-            `[VPC ${vpcItem.name} NACL ${nacl.name} outbound rule ${outbound.rule}]: fromPort must be less than or equal to toPort. Defined port range: ${portRangeString}`,
-          );
-        } else {
-          if (!isAllPorts && (outbound.fromPort < 0 || outbound.fromPort > 65535)) {
+        if (outbound.fromPort && outbound.toPort) {
+          const isAllPorts = outbound.fromPort === -1 && outbound.toPort === -1;
+          const isValidPortRange = outbound.fromPort <= outbound.toPort;
+          const portRangeString = `fromPort: ${outbound.fromPort}, toPort: ${outbound.toPort}`;
+          if (!isValidPortRange) {
             errors.push(
-              `[VPC ${vpcItem.name} NACL ${nacl.name} outbound rule ${outbound.rule}]: when not using -1, fromPort value must be between 0 and 65535. Defined port range: ${portRangeString}`,
+              `[VPC ${vpcItem.name} NACL ${nacl.name} outbound rule ${outbound.rule}]: fromPort must be less than or equal to toPort. Defined port range: ${portRangeString}`,
             );
-          }
+          } else {
+            if (!isAllPorts && (outbound.fromPort < 0 || outbound.fromPort > 65535)) {
+              errors.push(
+                `[VPC ${vpcItem.name} NACL ${nacl.name} outbound rule ${outbound.rule}]: when not using -1, fromPort value must be between 0 and 65535. Defined port range: ${portRangeString}`,
+              );
+            }
 
-          if (!isAllPorts && (outbound.toPort < 0 || outbound.toPort > 65535)) {
-            errors.push(
-              `[VPC ${vpcItem.name} NACL ${nacl.name} outbound rule ${outbound.rule}]: when not using -1, toPort value must be between 0 and 65535. Defined port range: ${portRangeString}`,
-            );
+            if (!isAllPorts && (outbound.toPort < 0 || outbound.toPort > 65535)) {
+              errors.push(
+                `[VPC ${vpcItem.name} NACL ${nacl.name} outbound rule ${outbound.rule}]: when not using -1, toPort value must be between 0 and 65535. Defined port range: ${portRangeString}`,
+              );
+            }
           }
         }
       });
@@ -1519,6 +1527,39 @@ export class VpcValidator {
     this.validateNaclInboundSubnetSelections(vpcItem, helpers, errors);
     // Validate NACL outbound subnet selection
     this.validateNaclOutboundSubnetSelections(vpcItem, helpers, errors);
+  }
+
+  private validateIcmpRules(
+    rules: NetworkAclInboundRuleConfig[] | NetworkAclOutboundRuleConfig[],
+    direction: 'inbound' | 'outbound',
+    naclName: string,
+    vpcName: string,
+  ): string[] {
+    const errors: string[] = [];
+
+    rules.forEach(rule => {
+      if (rule.protocol !== 1 && rule.icmp) {
+        errors.push(
+          `[VPC ${vpcName} NACL ${naclName} ${direction} rule ${rule.rule}]: Protocol must be set to "1" if using ICMP`,
+        );
+      }
+    });
+
+    return errors;
+  }
+
+  /**
+   * Validate NACL ICMP Rules
+   * @param vpcItem
+   * @param errors
+   */
+  private validateNaclRules(vpcItem: VpcConfig | VpcTemplatesConfig, errors: string[]) {
+    vpcItem.networkAcls?.forEach(nacl => {
+      errors.push(
+        ...this.validateIcmpRules(nacl.inboundRules ?? [], 'inbound', nacl.name, vpcItem.name),
+        ...this.validateIcmpRules(nacl.outboundRules ?? [], 'outbound', nacl.name, vpcItem.name),
+      );
+    });
   }
 
   /**

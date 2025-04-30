@@ -370,8 +370,9 @@ export class NetworkAclSubnetSelection implements i.INetworkAclSubnetSelection {
 export class NetworkAclInboundRuleConfig implements i.INetworkAclInboundRuleConfig {
   readonly rule: number = 100;
   readonly protocol: number = -1;
-  readonly fromPort: number = -1;
-  readonly toPort: number = -1;
+  readonly fromPort: number | undefined = undefined;
+  readonly toPort: number | undefined = undefined;
+  readonly icmp: IcmpRuleConfig | undefined = undefined;
   readonly action: t.AllowDeny = 'allow';
   readonly source: string | NetworkAclSubnetSelection = '';
 }
@@ -379,10 +380,16 @@ export class NetworkAclInboundRuleConfig implements i.INetworkAclInboundRuleConf
 export class NetworkAclOutboundRuleConfig implements i.INetworkAclOutboundRuleConfig {
   readonly rule: number = 100;
   readonly protocol: number = -1;
-  readonly fromPort: number = -1;
-  readonly toPort: number = -1;
+  readonly fromPort: number | undefined = undefined;
+  readonly toPort: number | undefined = undefined;
+  readonly icmp: IcmpRuleConfig | undefined = undefined;
   readonly action: t.AllowDeny = 'allow';
   readonly destination: string | NetworkAclSubnetSelection = '';
+}
+
+export class IcmpRuleConfig implements i.IIcmpRuleConfig {
+  readonly type: number = -1;
+  readonly code: number = -1;
 }
 
 export class NetworkAclConfig implements i.INetworkAclConfig {
