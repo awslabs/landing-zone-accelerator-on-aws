@@ -81,6 +81,10 @@ export class GlobalConfigValidator {
     //
     this.validateImportedCentralLogsBucketKmsPolicies(configDir, values, errors);
     //
+    // Validate no duplicate key/value tags in config.
+    //
+    this.validateNoDuplicateTags(values, errors);
+    //
     // lifecycle rule expiration validation
     //
     this.validateLifecycleRuleExpirationForCentralLogBucket(values, errors);
@@ -228,6 +232,24 @@ export class GlobalConfigValidator {
       accountNames.push(accountItem.name);
     }
     return accountNames;
+  }
+
+  /**
+   * Function to validate there are no duplicate tag keys in the configuration
+   * @param values Global configuration values
+   * @param errors Array to store validation error messages
+   */
+  private validateNoDuplicateTags(values: GlobalConfig, errors: string[]) {
+    const tags = values.tags ?? [];
+
+    const duplicateKeys = tags.map(tag => tag.key).filter((key, index, array) => array.indexOf(key) !== index);
+
+    if (duplicateKeys.length > 0) {
+      const uniqueDuplicates = [...new Set(duplicateKeys)];
+      uniqueDuplicates.forEach(key => {
+        errors.push(`Duplicate tag key "${key}" found. Tag keys must be unique.`);
+      });
+    }
   }
 
   /**
