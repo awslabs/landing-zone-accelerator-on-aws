@@ -598,8 +598,8 @@ export class NetworkAcl extends NetworkAclBase {
       };
       ipv6CidrBlock?: string;
       portRange?: {
-        from: number;
-        to: number;
+        from?: number;
+        to?: number;
       };
     },
   ) {

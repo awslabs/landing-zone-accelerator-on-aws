@@ -1038,6 +1038,24 @@ vpcs:
             toPort: -1
             protocol: -1
             destination: ::/0
+          - rule: 109
+            action: allow
+            icmp:
+              type: 10
+              code: 5
+            protocol: 1
+            destination:
+              account: Network
+              vpc: Network-Endpoints
+              subnet: Network-Endpoints-B
+              region: us-east-1
+          - rule: 110
+            action: allow
+            icmp:
+              type: 32
+              code: 5
+            protocol: 1
+            destination: 10.0.0.0/24
         inboundRules:
           - rule: 101
             action: allow
@@ -1111,6 +1129,30 @@ vpcs:
             toPort: -1
             protocol: -1
             source: ::/0
+          - rule: 109
+            action: allow
+            icmp:
+              type: 10
+              code: 5
+            protocol: 1
+            source:
+              account: Network
+              vpc: Network-Endpoints
+              subnet: Network-Endpoints-B
+              region: us-east-1
+          - rule: 110
+            action: allow
+            icmp:
+              type: 32
+              code: 5
+            protocol: 1
+            source: 10.0.0.0/24
+          - rule: 111
+            action: deny
+            fromPort: 3306
+            toPort: 3306
+            protocol: 6
+            source: 0.0.0.0/0
     gatewayEndpoints:
       defaultPolicy: Default
       endpoints:

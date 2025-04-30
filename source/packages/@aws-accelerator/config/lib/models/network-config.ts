@@ -2807,6 +2807,49 @@ export interface INetworkAclSubnetSelection {
 }
 
 /**
+ * *{@link NetworkConfig} / {@link VpcConfig} | {@link VpcTemplatesConfig} / {@link NetworkAclConfig} / {@link IcmpRuleConfig}*
+ *
+ *
+ * @description
+ * Use this configuration to define ICMP rules for your network ACLs.
+ *
+ * The following example allows inbound ICMP traffic for Mobile Host Redirect
+ * @example
+ * ```
+ * - rule: 200
+ *   protocol: 1
+ *   icmp:
+ *     type: 32
+ *     code: 5
+ *   action: allow
+ *   source: 10.0.0.0/16
+ * ```
+ * This example allows all ICMP types and codes
+ * ```
+ * - rule: 201
+ *   protocol: 1
+ *   icmp:
+ *     type: -1
+ *     code: -1
+ *   action: allow
+ *   source: 10.0.50.0/28
+ * ```
+ *
+ * * @remarks
+ * For possible ICMP Code Types reference this {@link https://www.iana.org/assignments/icmp-parameters/icmp-parameters.xhtml | documentation}.
+ */
+export interface IIcmpRuleConfig {
+  /**
+   * The ICMP type number. A value of -1 indicates all types.
+   */
+  readonly type: number;
+  /**
+   * The ICMP code number. A value of -1 indicates all types.
+   */
+  readonly code: number;
+}
+
+/**
  * *{@link NetworkConfig} / {@link VpcConfig} | {@link VpcTemplatesConfig} / {@link NetworkAclConfig} / {@link NetworkAclInboundRuleConfig}*
  *
  * {@link https://docs.aws.amazon.com/vpc/latest/userguide/vpc-network-acls.html#nacl-rules | Network ACL inbound rule} configuration.
@@ -2847,11 +2890,11 @@ export interface INetworkAclInboundRuleConfig {
   /**
    * The port to start from in the network ACL rule.
    */
-  readonly fromPort: number;
+  readonly fromPort?: number;
   /**
    * The port to end with in the network ACL rule.
    */
-  readonly toPort: number;
+  readonly toPort?: number;
   /**
    * The action for the network ACL rule.
    */
@@ -2865,6 +2908,11 @@ export interface INetworkAclInboundRuleConfig {
    * @see {@link NetworkAclSubnetSelection}
    */
   readonly source: t.NonEmptyString | INetworkAclSubnetSelection;
+  /**
+   * (OPTIONAL) The Internet Control Message Protocol (ICMP) code and type. Required if specifying 1 (ICMP) for the protocol parameter.
+   *
+   */
+  readonly icmp?: t.NonEmptyString | IIcmpRuleConfig;
 }
 
 /**
@@ -2908,11 +2956,11 @@ export interface INetworkAclOutboundRuleConfig {
   /**
    * The port to start from in the network ACL rule.
    */
-  readonly fromPort: number;
+  readonly fromPort?: number;
   /**
    * The port to end with in the network ACL rule.
    */
-  readonly toPort: number;
+  readonly toPort?: number;
   /**
    * The action for the network ACL rule.
    */
@@ -2926,6 +2974,11 @@ export interface INetworkAclOutboundRuleConfig {
    * @see {@link NetworkAclSubnetSelection}
    */
   readonly destination: t.NonEmptyString | INetworkAclSubnetSelection;
+  /**
+   * (OPTIONAL) The Internet Control Message Protocol (ICMP) code and type. Required if specifying 1 (ICMP) for the protocol parameter.
+   *
+   */
+  readonly icmp?: t.NonEmptyString | IIcmpRuleConfig;
 }
 
 /**
