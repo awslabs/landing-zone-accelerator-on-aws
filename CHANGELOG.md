@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - feat(replacements): added support for StringList replacements and updated loading behavior
 - feat(organizations): add support for resource control policies
 - feat(securityHub): added PCI DSS v4.0.1 and AWS Resource Tagging Standard v1.0.0 standards [#763](https://github.com/awslabs/landing-zone-accelerator-on-aws/issues/763) and [#744](https://github.com/awslabs/landing-zone-accelerator-on-aws/issues/744)
+- feat(networking): add support for icmp nacl rules
 
 ### Fixed
 

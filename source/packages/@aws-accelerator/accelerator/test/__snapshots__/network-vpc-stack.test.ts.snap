@@ -5809,6 +5809,94 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
       },
       "Type": "AWS::EC2::NetworkAclEntry",
     },
+    "NetworkSecondaryVpcTestNaclNaclNetworkSecondaryVpcTestNaclInbound10917E1D920": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-VPC3",
+              "reason": "NACL added to VPC",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "CidrBlock": {
+          "Fn::GetAtt": [
+            "NetworkEndpointsVpcNetworkEndpointsBSubnet1CF39812",
+            "ipv4CidrBlock",
+          ],
+        },
+        "Egress": false,
+        "Icmp": {
+          "Code": 5,
+          "Type": 10,
+        },
+        "NetworkAclId": {
+          "Ref": "NetworkSecondaryVpcTestNaclNacl63646F9E",
+        },
+        "PortRange": {},
+        "Protocol": 1,
+        "RuleAction": "allow",
+        "RuleNumber": 109,
+      },
+      "Type": "AWS::EC2::NetworkAclEntry",
+    },
+    "NetworkSecondaryVpcTestNaclNaclNetworkSecondaryVpcTestNaclInbound110C6CEBFDA": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-VPC3",
+              "reason": "NACL added to VPC",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "CidrBlock": "10.0.0.0/24",
+        "Egress": false,
+        "Icmp": {
+          "Code": 5,
+          "Type": 32,
+        },
+        "NetworkAclId": {
+          "Ref": "NetworkSecondaryVpcTestNaclNacl63646F9E",
+        },
+        "PortRange": {},
+        "Protocol": 1,
+        "RuleAction": "allow",
+        "RuleNumber": 110,
+      },
+      "Type": "AWS::EC2::NetworkAclEntry",
+    },
+    "NetworkSecondaryVpcTestNaclNaclNetworkSecondaryVpcTestNaclInbound111345949C0": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-VPC3",
+              "reason": "NACL added to VPC",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "CidrBlock": "0.0.0.0/0",
+        "Egress": false,
+        "NetworkAclId": {
+          "Ref": "NetworkSecondaryVpcTestNaclNacl63646F9E",
+        },
+        "PortRange": {
+          "From": 3306,
+          "To": 3306,
+        },
+        "Protocol": 6,
+        "RuleAction": "deny",
+        "RuleNumber": 111,
+      },
+      "Type": "AWS::EC2::NetworkAclEntry",
+    },
     "NetworkSecondaryVpcTestNaclNaclNetworkSecondaryVpcTestNaclNaclAssociateNetworkSecondaryA052E10A4": {
       "Properties": {
         "NetworkAclId": {
@@ -6027,6 +6115,67 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
         "Protocol": -1,
         "RuleAction": "deny",
         "RuleNumber": 108,
+      },
+      "Type": "AWS::EC2::NetworkAclEntry",
+    },
+    "NetworkSecondaryVpcTestNaclNaclNetworkSecondaryVpcTestNaclOutbound109925DDC11": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-VPC3",
+              "reason": "NACL added to VPC",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "CidrBlock": {
+          "Fn::GetAtt": [
+            "NetworkEndpointsVpcNetworkEndpointsBSubnet1CF39812",
+            "ipv4CidrBlock",
+          ],
+        },
+        "Egress": true,
+        "Icmp": {
+          "Code": 5,
+          "Type": 10,
+        },
+        "NetworkAclId": {
+          "Ref": "NetworkSecondaryVpcTestNaclNacl63646F9E",
+        },
+        "PortRange": {},
+        "Protocol": 1,
+        "RuleAction": "allow",
+        "RuleNumber": 109,
+      },
+      "Type": "AWS::EC2::NetworkAclEntry",
+    },
+    "NetworkSecondaryVpcTestNaclNaclNetworkSecondaryVpcTestNaclOutbound1105A923969": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-VPC3",
+              "reason": "NACL added to VPC",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "CidrBlock": "10.0.0.0/24",
+        "Egress": true,
+        "Icmp": {
+          "Code": 5,
+          "Type": 32,
+        },
+        "NetworkAclId": {
+          "Ref": "NetworkSecondaryVpcTestNaclNacl63646F9E",
+        },
+        "PortRange": {},
+        "Protocol": 1,
+        "RuleAction": "allow",
+        "RuleNumber": 110,
       },
       "Type": "AWS::EC2::NetworkAclEntry",
     },

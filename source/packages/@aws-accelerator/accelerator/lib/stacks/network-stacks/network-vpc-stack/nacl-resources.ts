@@ -147,6 +147,7 @@ export class NaclResources {
             protocol: inboundRuleItem.protocol,
             ruleAction: inboundRuleItem.action,
             ruleNumber: inboundRuleItem.rule,
+            icmp: inboundRuleItem.icmp!,
             portRange: {
               from: inboundRuleItem.fromPort,
               to: inboundRuleItem.toPort,
@@ -182,6 +183,7 @@ export class NaclResources {
             protocol: outboundRuleItem.protocol,
             ruleAction: outboundRuleItem.action,
             ruleNumber: outboundRuleItem.rule,
+            icmp: outboundRuleItem.icmp!,
             portRange: {
               from: outboundRuleItem.fromPort,
               to: outboundRuleItem.toPort,

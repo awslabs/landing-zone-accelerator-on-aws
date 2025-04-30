@@ -1104,6 +1104,25 @@
       ],
       "type": "object"
     },
+    "IIcmpRuleConfig": {
+      "additionalProperties": false,
+      "description": "Use this configuration to define ICMP rules for your network ACLs.\n\nThe following example allows inbound ICMP traffic for Mobile Host Redirect",
+      "properties": {
+        "code": {
+          "description": "The ICMP code number. A value of -1 indicates all types.",
+          "type": "number"
+        },
+        "type": {
+          "description": "The ICMP type number. A value of -1 indicates all types.",
+          "type": "number"
+        }
+      },
+      "required": [
+        "type",
+        "code"
+      ],
+      "type": "object"
+    },
     "IInterfaceEndpointConfig": {
       "additionalProperties": false,
       "description": "Use this configuration to define interface endpoints for your VPC.\nInterface endpoints powered by AWS PrivateLink to connect your VPC to AWS services as if they were in your VPC, without the use of an internet gateway.",
@@ -1562,6 +1581,17 @@
           "description": "The port to start from in the network ACL rule.",
           "type": "number"
         },
+        "icmp": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/NonEmptyString"
+            },
+            {
+              "$ref": "#/definitions/IIcmpRuleConfig"
+            }
+          ],
+          "description": "(OPTIONAL) The Internet Control Message Protocol (ICMP) code and type. Required if specifying 1 (ICMP) for the protocol parameter."
+        },
         "protocol": {
           "description": "The  {@link  https://www.iana.org/assignments/protocol-numbers/protocol-numbers.xhtml IANA protocol number }  for the network ACL rule. You may also specify -1 for all protocols.",
           "type": "number"
@@ -1589,8 +1619,6 @@
       "required": [
         "rule",
         "protocol",
-        "fromPort",
-        "toPort",
         "action",
         "source"
       ],
@@ -1619,6 +1647,17 @@
           "description": "The port to start from in the network ACL rule.",
           "type": "number"
         },
+        "icmp": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/NonEmptyString"
+            },
+            {
+              "$ref": "#/definitions/IIcmpRuleConfig"
+            }
+          ],
+          "description": "(OPTIONAL) The Internet Control Message Protocol (ICMP) code and type. Required if specifying 1 (ICMP) for the protocol parameter."
+        },
         "protocol": {
           "description": "The  {@link  https://www.iana.org/assignments/protocol-numbers/protocol-numbers.xhtml IANA protocol number }  for the network ACL rule. You may also specify -1 for all protocols.",
           "type": "number"
@@ -1635,8 +1674,6 @@
       "required": [
         "rule",
         "protocol",
-        "fromPort",
-        "toPort",
         "action",
         "destination"
       ],
