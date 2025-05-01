@@ -188,13 +188,14 @@ function addAcceleratorTags(
     'AWS::Route53Resolver::ResolverRule',
   ];
 
-  const tagsWithPrefix = [
-    ...globalConfig.tags,
-    {
+  const tagsWithPrefix = globalConfig.tags;
+  const acceleratorTag = tagsWithPrefix.find(tag => tag.key === 'Accelerator');
+  if (!acceleratorTag) {
+    tagsWithPrefix.push({
       key: 'Accelerator',
       value: acceleratorPrefix,
-    },
-  ];
+    });
+  }
 
   for (const resource of node.node.findAll()) {
     if (resource instanceof cdk.CfnResource && !excludeResourceTypes.includes(resource.cfnResourceType)) {
