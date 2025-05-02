@@ -240,7 +240,12 @@ export class LambdaRuntimeAspect implements cdk.IAspect {
           const cfnProps = (node as cdk.aws_lambda.CfnFunction)['_cfnProperties'];
           const description = cfnProps['Description']?.toString();
           const runtime = cfnProps['Runtime']?.toString();
-          if (runtime && runtime.includes('nodejs') && description.startsWith('AWS CDK resource provider framework')) {
+          if (
+            runtime &&
+            runtime.includes('nodejs') &&
+            description &&
+            description.startsWith('AWS CDK resource provider framework')
+          ) {
             node.addPropertyOverride('Runtime', `nodejs${getNodeVersion()}.x`);
           }
         }
