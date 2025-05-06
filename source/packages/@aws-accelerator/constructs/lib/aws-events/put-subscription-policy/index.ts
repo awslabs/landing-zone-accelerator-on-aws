@@ -82,12 +82,41 @@ export async function handler(event: SQSEvent) {
   } else {
     logExclusionParse = undefined;
   }
+
   // Process each message from SQS
   for (const record of event.Records) {
     try {
       // Parse the message body which contains the original CloudWatch event detail
-      const messageBody = JSON.parse(record.body);
-      const logGroupName = messageBody.requestParameters.logGroupName as string;
+      let messageBody;
+      try {
+        messageBody = JSON.parse(record.body);
+      } catch (parseError) {
+        console.error(`Error parsing SQS message body: ${parseError}`);
+        const error = parseError as Error;
+        const enhancedError = new Error(`${error.message} - invalid JSON in SQS message body`);
+        enhancedError.stack = error.stack;
+        throw enhancedError;
+      }
+
+      // Check for error code in the message
+      if (messageBody.errorCode || messageBody.errorMessage) {
+        if (messageBody.errorCode) {
+          console.warn(`Error found in record: ${messageBody.errorCode}`);
+        }
+        if (messageBody.errorMessage) {
+          console.warn(`Error found in record: ${messageBody.errorMessage}`);
+        }
+        // Continue processing even with errors, as we still want to apply policies
+      }
+
+      // Extract log group name from the message
+      const logGroupName = messageBody.requestParameters?.logGroupName as string;
+
+      // Skip if no log group name is found
+      if (!logGroupName) {
+        console.warn('No log group name found in message, skipping record');
+        continue;
+      }
 
       const paginatedLogGroups = paginateDescribeLogGroups(
         { client: logsClient, pageSize: 50 },
@@ -109,7 +138,6 @@ export async function handler(event: SQSEvent) {
       }
     } catch (error) {
       console.error('Error processing SQS message:', error);
-      // Throwing the error will cause the message to be sent to DLQ if retry attempts are exhausted
       throw error;
     }
   }
