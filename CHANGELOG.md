@@ -9,17 +9,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- feat(replacements): added support for StringList replacements and updated loading behavior
-- feat(organizations): add support for resource control policies
-- feat(securityHub): added PCI DSS v4.0.1 and AWS Resource Tagging Standard v1.0.0 standards [#763](https://github.com/awslabs/landing-zone-accelerator-on-aws/issues/763) and [#744](https://github.com/awslabs/landing-zone-accelerator-on-aws/issues/744)
-- feat(networking): add support for icmp nacl rules
+- feat(customizations): added ability to skip creation of stackset execution roles
 
 ### Fixed
 
 - fix(access-analyzer): fixed problem with access analyzer not created in additional regions.
-- fix(documentation): fixed documentation for acceleratorMetadata [#498](https://github.com/awslabs/landing-zone-accelerator-on-aws/issues/498)
-- fix(networking): fix ipam scope lookup on shared pool
-- fix(tagging): fix tagging for custom resource providers
+- fix(logging): improve error handling for putSubscriptionPolicy Lambda
 
 ### Changed
 
@@ -35,35 +30,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- feat(account): added account alias management
-- feat(config-service): add flag to create and use service-linked role
-- feat(control-tower): add validation of status for ControlTower
-- feat(customizations): added ability to skip creation of stackset execution roles
 - feat(guardduty): added support for malware protection, RDS, lambda and additional EKS options
 - feat(kinesis): allow customization of retention, streaming mode and shard count
 - feat(logging): add ability to dynamically partition cloudwatch logs by account id
 - feat(logging): allow users to customize lambda processor for firehose
 - feat(logging): cloudwatch logs account setting for subscription filter
-- feat(networking): add bgp auth key to direct connect vif
-- feat(uninstallation): ignore accounts scheduled for closure
 
 ### Fixed
 
+- fix(accelerator-metadata): fixed environment variables for metadata lambda
+- fix(asea): failure in network association stack with security groups associated with RAM shared subnets/vpc
 - fix(accelerator-metadata): fixed environment variables for metadata lambda
 - fix(asea): failure in network association stack with security groups associated with RAM shared subnets/vpc
 - fix(asea): fixed mapping upload logic to use lza enabled regions and accounts
 - fix(auditmanager): fix delegated admin account custom resource
 - fix(config-service): create service linked role for config, removed custom created role
 - fix(documentation): removed the versioned typedocs linked in the mkdocs
+- fix(config-service): create service linked role for config, removed custom created role
+- fix(documentation): removed the versioned typedocs linked in the mkdocs
 - fix(iam): vpc peering role trust policy prevent cdk execution role from assuming it
 - fix(kinesis): retain defaults when no input is provided
 - fix(kms): changed cwl cmk condition
-- fix(logging): log group destination arn is invalid
-- fix(logging): take replacementdestinationarn into account when calculating number of log subscriptions
-- fix(logging): updated putSubscriptionFilters permissions for kms
-- fix(macie): add special macie principal to bucket policy for opt-in regions
 - fix(networking): fix same account cross region vpc peering route table not found
 - fix(networking): fixed hosted zones for sagemaker vpc endpoints
+- fix(networking): fixed lookup failure on eni 0 when adding new routes for FW
 - fix(networking): fixed lookup failure on eni 0 when adding new routes for FW
 - fix(networking): fixed transit gateway peering attachment static route for same account and region
 - fix(networking): only create resolver query logs in accounts and regions defined in configuration
@@ -77,11 +67,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - chore(ec2): update sdk v3
 - chore(identity-center): update sdk v3
 - chore(macie and kms): update sdk v3
+- chore(docs): add mkdocs preventative control section
+- chore(ec2): update sdk v3
+- chore(identity-center): update sdk v3
+- chore(macie and kms): update sdk v3
 - chore(module): configure lza module foundation framework
 - chore(module): rename module parameter and dry run response
 - chore(networking): use SDK v3 for direct connect gateway custom resource
 - chore(organizations): update sdk v3
 - chore(ram): update sdk v3
+- chore(route53): update sdk v3
+- chore(runtime): updated node runtime to node 20
+- chore(sample-config): add s3 object level and additional network controls
+- chore(sample-config): add vpc route table route preventative controls in sample config
+- chore(s3): update sdk v3
+- chore(securityhub): update sdk v3
+- chore(security): upgrade esbuild version to 0.25.0
 - chore(route53): update sdk v3
 - chore(runtime): updated node runtime to node 20
 - chore(sample-config): add s3 object level and additional network controls
