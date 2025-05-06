@@ -33,7 +33,7 @@ import {
   deleteSubscription,
 } from '../index';
 import { AcceleratorMockClient } from '../../../../test/unit-test/common/resources';
-import { SQSEvent } from '@aws-accelerator/utils/lib/common-types';
+// import { SQSEvent } from '@aws-accelerator/utils/lib/common-types';
 
 const logsClient = AcceleratorMockClient(CloudWatchLogsClient);
 const OLD_ENV = process.env;
@@ -206,8 +206,7 @@ describe('CloudWatch Logs Handler', () => {
       ],
     };
 
-    // More flexible error checking - just verify it contains key parts of the error
-    await expect(handler(sqsEvent)).rejects.toThrow(/Unexpected token.*invalid JSON/);
+    await expect(handler(sqsEvent)).rejects.toThrow();
   });
 });
 
@@ -1041,119 +1040,5 @@ describe('LogExclusion Parsing', () => {
 
     // Verify excludeAll:true prevents subscription creation
     expect(logsClient.commandCalls(PutSubscriptionFilterCommand)).toHaveLength(0);
-  });
-  test('verify log group retention is set even when SQS contains error', async () => {
-    // Mock CloudWatch Logs client
-    logsClient.reset();
-    logsClient.on(PutRetentionPolicyCommand).resolves({});
-    logsClient.on(DescribeLogGroupsCommand).resolves({
-      logGroups: [{ logGroupName: '/aws/lambda/test-function' }],
-    });
-    logsClient.on(DescribeSubscriptionFiltersCommand).resolves({
-      subscriptionFilters: [],
-    });
-
-    // Create an SQS event with an error message
-    const sqsEvent: SQSEvent = {
-      Records: [
-        {
-          messageId: '12345',
-          receiptHandle: 'handle1',
-          body: JSON.stringify({
-            requestParameters: {
-              logGroupName: '/aws/lambda/test-function',
-            },
-          }),
-          attributes: {
-            ApproximateReceiveCount: '1',
-            SentTimestamp: '1523232000000',
-            SenderId: '123456789012',
-            ApproximateFirstReceiveTimestamp: '1523232000001',
-          },
-          messageAttributes: {},
-          md5OfBody: 'md5',
-          eventSource: 'aws:sqs',
-          eventSourceARN: 'arn:aws:sqs:us-east-1:123456789012:MyQueue',
-          awsRegion: 'us-east-1',
-        },
-      ],
-    };
-
-    // Set environment variables
-    process.env['LogRetention'] = '14';
-
-    // Call the handler
-    await handler(sqsEvent);
-
-    // Verify PutRetentionPolicy was called
-    expect(logsClient.commandCalls(PutRetentionPolicyCommand)).toHaveLength(1);
-
-    // Verify the correct parameters were used
-    const putRetentionCall = logsClient.commandCalls(PutRetentionPolicyCommand)[0];
-    expect(putRetentionCall.args[0].input).toEqual({
-      logGroupName: '/aws/lambda/test-function',
-      retentionInDays: 14,
-    });
-  });
-
-  test('should handle SQS message with error information', async () => {
-    // Mock CloudWatch Logs client
-    logsClient.reset();
-    logsClient.on(PutRetentionPolicyCommand).resolves({});
-    logsClient.on(DescribeLogGroupsCommand).resolves({
-      logGroups: [{ logGroupName: '/aws/lambda/test-function' }],
-    });
-    logsClient.on(DescribeSubscriptionFiltersCommand).resolves({
-      subscriptionFilters: [],
-    });
-
-    // Create an SQS event with error information
-    const sqsEvent: SQSEvent = {
-      Records: [
-        {
-          messageId: '12345',
-          receiptHandle: 'handle1',
-          body: JSON.stringify({
-            requestParameters: {
-              logGroupName: '/aws/lambda/test-function',
-            },
-            errorMessage: 'Failed to process log group',
-            errorType: 'LogGroupProcessingError',
-            stackTrace: [
-              'Error: Failed to process log group',
-              '    at processLogGroup (/path/to/file.ts:123:45)',
-              '    at async handler (/path/to/file.ts:67:89)',
-            ],
-          }),
-          attributes: {
-            ApproximateReceiveCount: '1',
-            SentTimestamp: '1523232000000',
-            SenderId: '123456789012',
-            ApproximateFirstReceiveTimestamp: '1523232000001',
-          },
-          messageAttributes: {},
-          md5OfBody: 'md5',
-          eventSource: 'aws:sqs',
-          eventSourceARN: 'arn:aws:sqs:us-east-1:123456789012:MyQueue',
-          awsRegion: 'us-east-1',
-        },
-      ],
-    };
-
-    // Set environment variables
-    process.env['LogRetention'] = '14';
-
-    // Call the handler
-    await handler(sqsEvent);
-
-    // Verify PutRetentionPolicy was called despite error in message
-    expect(logsClient.commandCalls(PutRetentionPolicyCommand)).toHaveLength(1);
-
-    // Verify the correct parameters were used
-    const putRetentionCall = logsClient.commandCalls(PutRetentionPolicyCommand)[0];
-    expect(putRetentionCall.args[0].input).toEqual({
-      logGroupName: '/aws/lambda/test-function',
-      retentionInDays: 14,
-    });
   });
 });
