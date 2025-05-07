@@ -1485,9 +1485,7 @@ describe('functions', () => {
 
       // Verify
       expect(response).toBe(
-        `arn:${MOCK_CONSTANTS.runnerParameters.partition}:organizations::${MOCK_CONSTANTS.accountId}:ou/${
-          MOCK_CONSTANTS.organization.Id
-        }/${MOCK_CONSTANTS.organization.Id.toLowerCase()}`,
+        `arn:${MOCK_CONSTANTS.runnerParameters.partition}:organizations::${MOCK_CONSTANTS.accountId}:ou/${MOCK_CONSTANTS.organization.Id}/${MOCK_CONSTANTS.organization.Id}`,
       );
       expect(GetCallerIdentityCommand).toHaveBeenCalledTimes(1);
       expect(DescribeOrganizationCommand).toHaveBeenCalledTimes(1);
@@ -1513,9 +1511,7 @@ describe('functions', () => {
 
       // Verify
       expect(response).toBe(
-        `arn:${MOCK_CONSTANTS.runnerParameters.partition}:organizations::${MOCK_CONSTANTS.accountId}:ou/${
-          MOCK_CONSTANTS.organization.Id
-        }/${MOCK_CONSTANTS.organization.Id.toLowerCase()}`,
+        `arn:${MOCK_CONSTANTS.runnerParameters.partition}:organizations::${MOCK_CONSTANTS.accountId}:ou/${MOCK_CONSTANTS.organization.Id}/${MOCK_CONSTANTS.organization.Id}`,
       );
       expect(GetCallerIdentityCommand).toHaveBeenCalledTimes(1);
       expect(DescribeOrganizationCommand).toHaveBeenCalledTimes(0);
