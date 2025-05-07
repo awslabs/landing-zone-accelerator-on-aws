@@ -35,8 +35,8 @@ import { STSClient } from '@aws-sdk/client-sts';
 const logger = createLogger([path.parse(path.basename(__filename)).name]);
 const testOuItems = {
   newOuName: 'RegisterOuModuleIntegrationTestOu',
-  existingOuName: 'Root',
-  existingNestedOuName: 'Level1/Level2-02/Level3-01/Level4-01/Level5-01',
+  existingOuName: 'Infrastructure',
+  existingNestedOuName: 'Level1/Level2',
   existingOuResponsePattern: new RegExp(
     `AWS Organizations organizational unit \\(OU\\) \\".*?\\" is already registered with AWS Control Tower`,
   ),
@@ -191,6 +191,13 @@ async function prepare(ouName: string): Promise<void> {
   } else {
     logger.info(`Getting organizational unit id for ${formattedOuName}.`);
     testOuId = await getOrganizationalUnitIdByPath(organizationClient, formattedOuName);
+
+    if (!testOuId) {
+      throw new Error(
+        `Existing Organizational unit with name ${formattedOuName} not found in testing account ${integrationTest.environment.accountId}, integration test environment preparation failed.`,
+      );
+    }
+
     logger.info(`Organizational unit id for ${formattedOuName} is ${testOuId}.`);
 
     logger.info(`Getting organizational unit arn for ${formattedOuName}.`);
@@ -209,11 +216,15 @@ async function prepare(ouName: string): Promise<void> {
   }
 
   if (!testOuId) {
-    throw new Error(`Organizational unit with name ${formattedOuName} not found, integration test preparation failed.`);
+    throw new Error(
+      `Existing Organizational unit with name ${formattedOuName} not found in testing account ${integrationTest.environment.accountId}, integration test environment preparation failed.`,
+    );
   }
 
   if (!testOuArn) {
-    throw new Error(`Organizational unit with name ${formattedOuName} not found, integration test preparation failed.`);
+    throw new Error(
+      `Existing Organizational unit with name ${formattedOuName} not found in testing account ${integrationTest.environment.accountId}, integration test environment preparation failed.`,
+    );
   }
 }
 

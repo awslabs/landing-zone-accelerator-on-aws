@@ -118,7 +118,6 @@ export class RegisterOrganizationalUnitModule implements IRegisterOrganizational
         }),
         ouId,
         props.partition,
-        props.configuration.organizationalUnitId,
       );
     }
 
