@@ -18,7 +18,7 @@
     "build": "tsc",
     "watch": "tsc -w",
     "test:unit": "jest --ci --coverage --testMatch '**/*.test.unit.ts'",
-    "test:integration": "jest --ci --testMatch '**/*.test.integration.ts'",
+    "test:integration": "jest --ci --testMatch \"${INIT_CWD}/*.test.integration.ts\"",
     "test:clean": "rm -f ./test-reports/*.xml",
     "lint": "eslint --fix  --max-warnings 0 -c ../../.eslintrc.json 'lib/**/*.{ts,tsx}' 'bin/**/*.{ts,tsx}'",
     "precommit": "eslint --max-warnings 0 -c ../../.eslintrc.json 'lib/**/*.{ts,tsx}' 'bin/**/*.{ts,tsx}'",

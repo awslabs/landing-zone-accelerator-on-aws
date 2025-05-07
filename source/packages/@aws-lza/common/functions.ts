@@ -498,5 +498,5 @@ export async function getOrganizationalUnitArn(
   const organizationAccountId = await getCurrentAccountId(stsClient);
   const orgId = organizationId ?? (await getOrganizationId(organizationClient));
 
-  return `arn:${partition}:organizations::${organizationAccountId}:ou/${orgId}/${ouId.toLowerCase()}`;
+  return `arn:${partition}:organizations::${organizationAccountId}:ou/${orgId}/${ouId}`;
 }
