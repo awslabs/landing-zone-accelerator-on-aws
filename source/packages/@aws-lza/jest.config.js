@@ -1,5 +1,33 @@
 const packageJson = require('./package.json');
 
+const getReportersConfig = () => {
+  // Check if running integration tests
+  const isIntegration = process.argv.some(arg => arg.includes('.test.integration.ts'));
+  console.log(isIntegration);
+
+  // For integration tests, use the current working directory
+  // For unit tests, use the consolidated ./test-reports directory
+  const reporterDirectory = isIntegration ? process.env.INIT_CWD + '/test-reports' : './test-reports';
+
+  return {
+    reporters: [
+      'default',
+      [
+        'jest-junit',
+        {
+          suiteName: packageJson.name,
+          outputDirectory: reporterDirectory,
+          uniqueOutputName: 'true',
+          addFileAttribute: 'true',
+          suiteNameTemplate: '{filename}',
+          classNameTemplate: packageJson.name,
+          titleTemplate: '{title}',
+        },
+      ],
+    ],
+  };
+};
+
 //
 // Suppress maintenance mode message [Ref](https://docs.aws.amazon.com/AWSJavaScriptSDK/latest/)
 //
@@ -64,22 +92,8 @@ module.exports = {
     },
   },
 
-  // Run tests with jest-junit reporters.
-  reporters: [
-    'default',
-    [
-      'jest-junit',
-      {
-        suiteName: packageJson.name,
-        outputDirectory: './test-reports',
-        uniqueOutputName: 'true',
-        addFileAttribute: 'true',
-        suiteNameTemplate: '{filename}',
-        classNameTemplate: packageJson.name,
-        titleTemplate: '{title}',
-      },
-    ],
-  ],
+  // // Run tests with jest-junit reporters.
+  ...getReportersConfig(),
 
   // An array of directory names to be searched recursively up from the requiring module's location
   moduleDirectories: ['node_modules'],
