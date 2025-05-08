@@ -29,6 +29,7 @@ enabledRegions:
   # - ap-east-1
   # - ap-southeast-3
   # - ca-west-1
+  # - mx-central-1
 
 managementAccountAccessRole: AWSControlTowerExecution
 defaultEventBus:
