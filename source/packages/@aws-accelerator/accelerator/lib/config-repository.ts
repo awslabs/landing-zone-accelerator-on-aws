@@ -84,6 +84,7 @@ export class ConfigRepository extends Construct {
           homeRegion: cdk.Stack.of(this).region as Region,
           controlTower: { enable: controlTowerEnabledValue, landingZone: props.controlTowerLandingZoneConfig },
           managementAccountAccessRole: managementAccountAccessRole,
+          useV2Stacks: true,
         }),
       ),
       'utf8',

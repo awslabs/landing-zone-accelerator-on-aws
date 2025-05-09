@@ -237,4 +237,16 @@ export const MOCK_CONSTANTS = {
     },
     existingEncryptionKeyId: 'mockExistingEncryptionKeyId',
   },
+  GetCloudFormationTemplatesModule: {
+    configuration: {
+      centralAccountId: '111122223333',
+      acceleratorEnvironments: [
+        { accountId: '111122223333', region: 'us-east-1' },
+        { accountId: '444455556666', region: 'us-west-2' },
+      ],
+      roleNameToAssume: 'TestRole',
+      stackPrefix: 'TestStack',
+      directory: '/tmp/cfn-templates-test',
+    },
+  },
 };

@@ -322,33 +322,6 @@ export interface ICentralizeCdkBucketsConfig {
 }
 
 /**
- * *{@link GlobalConfig} / {@link cdkOptionsConfig} / {@link stackRefactor}*
- *
- * @experimental
- * This configuration is intended for internal development purposes only.
- * It will not trigger an actual stack refactor when used.
- *
- * @description
- * LZA Stack refactor configuration. This interface allows you to specify which stacks should undergo refactoring.
- * Refactoring helps optimize resource distribution and avoid exceeding the 500-resource limit for CloudFormation stacks.
- *
- * @remarks
- * Stack refactoring is a one-time action. Please change this configuration back to false when stack refactoring is finished.
- *
- * @example
- * ```
- * stackRefactor:
- *   networkVpcStack: true
- * ```
- */
-export interface IStackRefactor {
-  /**
-   * Enables refactoring for the network stacks.
-   */
-  networkVpcStack?: boolean;
-}
-
-/**
  * *{@link GlobalConfig} / {@link cdkOptionsConfig}*
  *
  * @description
@@ -388,15 +361,6 @@ export interface ICdkOptionsConfig {
    * Forces the Accelerator to deploy the bootstrapping stack and circumvent the ssm parameter check. This option is needed when adding or removing a custom deployment role
    */
   readonly forceBootstrap?: boolean;
-  /**
-   * Enables stack refactoring for specific stacks. When enabled, the Accelerator will reorganize the resources defined in the stack to avoid exceeding the
-   * 500-resource limit for CloudFormation stacks.
-   *
-   * @experimental
-   * This configuration is intended for internal development purposes only.
-   * It will not trigger an actual stack refactor when used.
-   */
-  readonly stackRefactor?: IStackRefactor;
 }
 
 /**
@@ -2329,6 +2293,17 @@ export interface IGlobalConfig {
    * ```
    */
   readonly homeRegion: t.NonEmptyString;
+  /**
+   * Enable V2 stacks. When enabled, Accelerator will place newly defined resources into separate CloudFormation
+   * stacks while preserving existing resources in their original stacks. This prevents exceeding the 500-resource
+   * limit per CloudFormation stack.
+   *
+   * @default false
+   *
+   * @experimental
+   * This configuration is intended for internal development purposes only.
+   */
+  readonly useV2Stacks?: boolean;
   /**
    * List of AWS Region names where accelerator will be deployed. Home region must be part of this list.
    *

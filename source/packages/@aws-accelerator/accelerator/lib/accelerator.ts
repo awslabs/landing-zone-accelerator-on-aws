@@ -193,13 +193,6 @@ export abstract class Accelerator {
       logger.info('Loaded ASEA mapping');
     }
 
-    const shouldPerformNetworkRefactor = globalConfig?.cdkOptions?.stackRefactor?.networkVpcStack ?? false;
-
-    if (shouldPerformNetworkRefactor && props.stage !== AcceleratorStage.NETWORK_VPC && props.command !== 'synth') {
-      logger.info('Accelerator NetworkVpc Stack Refactor in progress, execution skipped.');
-      return;
-    }
-
     await checkDiffStage(props);
 
     //
@@ -263,13 +256,6 @@ export abstract class Accelerator {
     //
     if (this.isSingleStackAction(props)) {
       await this.executeSingleStack(props, toolkitProps);
-
-      //
-      // Perform network refactor - diff set
-      //
-      if (shouldPerformNetworkRefactor && props.command === 'synth' && props.stage === AcceleratorStage.NETWORK_VPC) {
-        logger.info('NetworkVpc Stack Refactor diff set will be calculated here.');
-      }
     } else {
       //
       // Initialize array to enumerate promises created for parallel stack creation
@@ -364,13 +350,6 @@ export abstract class Accelerator {
         }
 
         enabledRegions = [props.region as Region];
-      }
-
-      //
-      // Perform network refactor - execute refactor
-      //
-      if (shouldPerformNetworkRefactor && props.command === 'deploy' && props.stage === AcceleratorStage.NETWORK_VPC) {
-        logger.info('NetworkVpc Stack Refactor will be executed here.');
       }
       //
       // Execute all remaining stages
