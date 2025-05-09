@@ -174,6 +174,7 @@ const otherActions: [AcceleratorStage, string][] = [
   [AcceleratorStage.ACCOUNTS, 'Accounts'],
   [AcceleratorStage.IMPORT_ASEA_RESOURCES, 'ImportAseaResources'],
   [AcceleratorStage.POST_IMPORT_ASEA_RESOURCES, 'PostImportAseaResources'],
+  [AcceleratorStage.PRE_APPROVAL, 'Pre-Approval'],
 ];
 
 const actionNames = Object.fromEntries([...coreActions, ...otherActions]);
@@ -621,6 +622,13 @@ export class AcceleratorPipeline extends Construct {
               'cd $WORK_DIR',
               `useExistingRole=${this.props.useExistingRoles ? 'Yes' : 'No'}`,
               `set -e && LOG_LEVEL=${BuildLogLevel.INFO} && yarn run ts-node ../modules/bin/runner.ts --partition ${cdk.Aws.PARTITION} --region ${cdk.Aws.REGION} --config-dir $CODEBUILD_SRC_DIR_Config --stage $ACCELERATOR_STAGE --prefix ${props.prefixes.accelerator} --use-existing-role $useExistingRole --dry-run no`,
+              `if [ "\${ACCELERATOR_STAGE}" = "pre-approval" ]; then
+                mkdir rawDiff;
+                cd rawDiff;
+                aws s3 sync "\${DIFFS_DIR}/\${CODEPIPELINE_EXECUTION_ID}/" .;
+                for file in ./*.tgz; do tar -xf "$file" -C .; done;
+                for file in ./*.diff; do cat "$file"; done;
+              fi`,
               `if [ "prepare" = "\${ACCELERATOR_STAGE}" ]; then set -e && LOG_LEVEL=info && yarn run ts-node ../lza-modules/bin/runner.ts --module account-alias --partition  ${
                 cdk.Aws.PARTITION
               } --use-existing-role ${
@@ -1002,6 +1010,12 @@ export class AcceleratorPipeline extends Construct {
       this.pipeline.addStage({
         stageName: 'Review',
         actions: [
+          this.createToolkitStage({
+            actionName: actionNames[AcceleratorStage.PRE_APPROVAL],
+            command: 'deploy',
+            stage: AcceleratorStage.PRE_APPROVAL,
+            runOrder: 1,
+          }),
           new codepipeline_actions.ManualApprovalAction({
             actionName: 'Approve',
             runOrder: 2,
