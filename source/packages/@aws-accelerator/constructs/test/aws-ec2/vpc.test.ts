@@ -24,16 +24,25 @@ import { RouteTable } from '../../lib/aws-ec2/route-table';
 import { snapShotTest } from '../snapshot-test';
 import { OutpostsConfig } from '@aws-accelerator/config';
 import { describe } from '@jest/globals';
+import { LZAResourceLookup } from '@aws-accelerator/accelerator/utils/lza-resource-lookup';
 
 const testNamePrefix = 'Construct(Vpc): ';
 
 //Initialize stack for snapshot test and resource configuration test
 const stack = new cdk.Stack();
+const lzaLookup = new LZAResourceLookup({
+  accountId: '111111111111',
+  region: 'us-east-1',
+  stackName: stack.stackName,
+  aseaResourceList: [],
+  enableV2Stacks: false,
+  externalLandingZoneResources: false,
+});
 
 const vpc = new Vpc(stack, 'TestVpc', {
   name: 'Main',
   ipv4CidrBlock: '10.0.0.0/16',
-  dhcpOptions: 'Test-Options',
+  dhcpOptions: { name: 'Test-Options', id: 'Test-Options-Ref' },
   internetGateway: true,
   enableDnsHostnames: false,
   enableDnsSupport: true,
@@ -42,6 +51,7 @@ const vpc = new Vpc(stack, 'TestVpc', {
   virtualPrivateGateway: {
     asn: 65000,
   },
+  lzaLookup,
 });
 
 vpc.addFlowLogs({
@@ -58,7 +68,7 @@ vpc.addFlowLogs({
 const vpcExistingIam = new Vpc(stack, 'TestVpcExistingIam', {
   name: 'Main',
   ipv4CidrBlock: '10.0.0.0/16',
-  dhcpOptions: 'Test-Options',
+  dhcpOptions: { name: 'Test-Options', id: 'Test-Options-Ref' },
   internetGateway: true,
   enableDnsHostnames: false,
   enableDnsSupport: true,
@@ -67,6 +77,7 @@ const vpcExistingIam = new Vpc(stack, 'TestVpcExistingIam', {
   virtualPrivateGateway: {
     asn: 65000,
   },
+  lzaLookup,
 });
 
 vpcExistingIam.addFlowLogs({
@@ -80,9 +91,16 @@ vpcExistingIam.addFlowLogs({
   acceleratorPrefix: 'AWSAccelerator',
 });
 
-vpc.addIpv4Cidr({ cidrBlock: '10.2.0.0/16' });
-vpc.addIpv6Cidr({ amazonProvidedIpv6CidrBlock: true });
-vpc.addIpv6Cidr({ ipv6CidrBlock: '::1', ipv6Pool: 'ipv6Pool-ec2-1234' });
+vpc.addIpv4Cidr({ cidrBlock: '10.2.0.0/16', metadata: { vpcName: vpc.name, cidrBlock: '10.2.0.0/16' } });
+vpc.addIpv6Cidr({
+  amazonProvidedIpv6CidrBlock: true,
+  metadata: { vpcName: vpc.name, amazonProvidedIpv6CidrBlock: true },
+});
+vpc.addIpv6Cidr({
+  ipv6CidrBlock: '::1',
+  ipv6Pool: 'ipv6Pool-ec2-1234',
+  metadata: { vpcName: vpc.name, ipv6CidrBlock: '::1', ipv6Pool: 'ipv6Pool-ec2-1234' },
+});
 
 const outpostConfig = new OutpostsConfig();
 const rt = new RouteTable(stack, 'test-rt', { name: 'test-rt', vpc });

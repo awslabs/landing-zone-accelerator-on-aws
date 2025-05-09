@@ -335,8 +335,6 @@ export interface ICentralizeCdkBucketsConfig {
  * cdkOptions:
  *   centralizeBuckets: true
  *   useManagementAccessRole: true
- *   stackRefactor:
- *    networkVpcStack: true
  * ```
  */
 export interface ICdkOptionsConfig {

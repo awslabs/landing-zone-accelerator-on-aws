@@ -383,11 +383,12 @@ exports[`Vpc Construct(Vpc):  Snapshot Test 1`] = `
     "TestVpcDhcpOptionsAssociationDB23B751": {
       "Metadata": {
         "lzaLookup": {
+          "dhcpOptionName": "Test-Options",
           "vpcName": "Main",
         },
       },
       "Properties": {
-        "DhcpOptionsId": "Test-Options",
+        "DhcpOptionsId": "Test-Options-Ref",
         "VpcId": {
           "Ref": "TestVpcE77CE678",
         },
@@ -491,11 +492,12 @@ exports[`Vpc Construct(Vpc):  Snapshot Test 1`] = `
     "TestVpcExistingIamDhcpOptionsAssociation92EB66FD": {
       "Metadata": {
         "lzaLookup": {
+          "dhcpOptionName": "Test-Options",
           "vpcName": "Main",
         },
       },
       "Properties": {
-        "DhcpOptionsId": "Test-Options",
+        "DhcpOptionsId": "Test-Options-Ref",
         "VpcId": {
           "Ref": "TestVpcExistingIamB9508C93",
         },
@@ -709,7 +711,10 @@ exports[`Vpc Construct(Vpc):  Snapshot Test 1`] = `
     },
     "TestVpcIpv6CidrBlock02C3E0D0B": {
       "Metadata": {
-        "lzaLookup": {},
+        "lzaLookup": {
+          "amazonProvidedIpv6CidrBlock": true,
+          "vpcName": "Main",
+        },
       },
       "Properties": {
         "AmazonProvidedIpv6CidrBlock": true,
@@ -721,7 +726,11 @@ exports[`Vpc Construct(Vpc):  Snapshot Test 1`] = `
     },
     "TestVpcIpv6CidrBlock121C0BB97": {
       "Metadata": {
-        "lzaLookup": {},
+        "lzaLookup": {
+          "ipv6CidrBlock": "::1",
+          "ipv6Pool": "ipv6Pool-ec2-1234",
+          "vpcName": "Main",
+        },
       },
       "Properties": {
         "Ipv6CidrBlock": "::1",
@@ -788,7 +797,10 @@ exports[`Vpc Construct(Vpc):  Snapshot Test 1`] = `
     },
     "TestVpcVpcCidrBlock8C35CE6C": {
       "Metadata": {
-        "lzaLookup": {},
+        "lzaLookup": {
+          "cidrBlock": "10.2.0.0/16",
+          "vpcName": "Main",
+        },
       },
       "Properties": {
         "CidrBlock": "10.2.0.0/16",

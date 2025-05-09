@@ -51,6 +51,9 @@ export class NaclResources {
       for (const naclItem of vpcItem.networkAcls ?? []) {
         // Retrieve VPC from map
         const vpc = getVpc(vpcMap, vpcItem.name) as Vpc;
+        if (!vpc) {
+          continue;
+        }
 
         // Create NACL
         this.stack.addLogs(LogLevel.INFO, `Adding Network ACL ${naclItem.name} in VPC ${vpcItem.name}`);

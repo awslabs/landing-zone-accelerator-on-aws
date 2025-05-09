@@ -37,6 +37,7 @@ import { LogLevel, NetworkStack } from '../network-stack';
 import { getVpc, getVpcConfig } from '../utils/getter-utils';
 import { isIpv4 } from '../utils/validation-utils';
 import { MetadataKeys } from '../../../../../utils/lib/common-types';
+import { LZAResourceLookup, LZAResourceLookupType } from '@aws-accelerator/accelerator/utils/lza-resource-lookup';
 
 type Ipv4VpcCidrBlock = { cidrBlock: string } | { ipv4IpamPoolId: string; ipv4NetmaskLength: number };
 type Ipv6VpcCidrBlock = {
@@ -55,6 +56,7 @@ export class VpcResources {
   public readonly centralEndpointRole?: cdk.aws_iam.Role;
 
   private stack: NetworkStack;
+  lzaLookup: LZAResourceLookup;
 
   constructor(
     networkStack: NetworkStack,
@@ -78,7 +80,15 @@ export class VpcResources {
     },
   ) {
     this.stack = networkStack;
-
+    this.lzaLookup = new LZAResourceLookup({
+      accountId: this.stack.account,
+      region: this.stack.region,
+      aseaResourceList: this.stack.props.globalConfig.externalLandingZoneResources?.resourceList ?? [],
+      enableV2Stacks: this.stack.props.globalConfig.useV2Stacks,
+      externalLandingZoneResources:
+        this.stack.props.globalConfig.externalLandingZoneResources?.importExternalLandingZoneResources,
+      stackName: this.stack.stackName,
+    });
     // Delete default VPC
     this.deleteDefaultVpc = this.deleteDefaultVpcMethod(configData.defaultVpcsConfig);
     // Create central endpoints role
@@ -411,6 +421,14 @@ export class VpcResources {
     const vpcMap = new Map<string, Vpc>();
 
     for (const vpcItem of vpcResources) {
+      if (
+        !this.lzaLookup.resourceExists({
+          resourceType: LZAResourceLookupType.VPC,
+          lookupValues: { vpcName: vpcItem.name },
+        })
+      ) {
+        continue;
+      }
       const vpc = this.createVpcItem(
         vpcItem,
         dhcpOptionsIds,
@@ -515,7 +533,12 @@ export class VpcResources {
   }): Vpc {
     let vpc: Vpc;
 
-    if (this.stack.isManagedByAsea(AseaResourceType.EC2_VPC, options.vpcItem.name)) {
+    if (
+      this.lzaLookup.isManagedByAsea({
+        resourceType: AseaResourceType.EC2_VPC,
+        resourceIdentifier: options.vpcItem.name,
+      })
+    ) {
       //
       // Import VPC
       //
@@ -535,6 +558,7 @@ export class VpcResources {
         virtualPrivateGatewayId,
         // ASEA VPC Resources are all cidr specified resources. IPAM is not supported during migration.
         cidrBlock: options.vpcItem.cidrs?.[0] ?? '',
+        lzaLookup: this.lzaLookup,
       });
       if (options.vpcItem.internetGateway && !internetGatewayId) {
         vpc.addInternetGateway();
@@ -542,15 +566,16 @@ export class VpcResources {
       if (options.vpcItem.virtualPrivateGateway && !virtualPrivateGatewayId) {
         vpc.addVirtualPrivateGateway(options.vpcItem.virtualPrivateGateway.asn);
       }
-      if (options.vpcItem.dhcpOptions) {
-        vpc.setDhcpOptions(options.vpcItem.dhcpOptions);
-      }
+      const dhcpOptions = this.setDhcpOptions(options.vpcItem.dhcpOptions, options.dhcpOptionsIds);
+
+      vpc.setDhcpOptions(dhcpOptions);
     } else {
+      const dhcpOptions = this.setDhcpOptions(options.vpcItem.dhcpOptions, options.dhcpOptionsIds);
       vpc = new Vpc(this.stack, pascalCase(`${options.vpcItem.name}Vpc`), {
         name: options.vpcItem.name,
         ipv4CidrBlock: options.cidr,
         internetGateway: options.vpcItem.internetGateway,
-        dhcpOptions: options.dhcpOptionsIds.get(options.vpcItem.dhcpOptions ?? ''),
+        dhcpOptions,
         egressOnlyIgw: options.vpcItem.egressOnlyIgw,
         enableDnsHostnames: options.vpcItem.enableDnsHostnames ?? true,
         enableDnsSupport: options.vpcItem.enableDnsSupport ?? true,
@@ -559,6 +584,7 @@ export class VpcResources {
         ipv4NetmaskLength: options.poolNetmask,
         tags: options.vpcItem.tags,
         virtualPrivateGateway: options.vpcItem.virtualPrivateGateway,
+        lzaLookup: this.lzaLookup,
       });
       this.stack.addSsmParameter({
         logicalId: pascalCase(`SsmParam${pascalCase(options.vpcItem.name)}VpcId`),
@@ -575,6 +601,23 @@ export class VpcResources {
       }
     }
     return vpc;
+  }
+
+  private setDhcpOptions(dhcpOptionsName: string | undefined, dhcpOptionsIds: Map<string, string>) {
+    let dhcpOptions;
+    if (!dhcpOptionsName) {
+      return dhcpOptions;
+    }
+
+    const dhcpOptionsId = dhcpOptionsIds.get(dhcpOptionsName);
+    if (dhcpOptionsId) {
+      dhcpOptions = {
+        name: dhcpOptionsName,
+        id: dhcpOptionsId,
+      };
+    }
+
+    return dhcpOptions;
   }
 
   /**
@@ -832,6 +875,9 @@ export class VpcResources {
             this.stack.getSsmPath(SsmResourceType.CGW, [cgw.name]),
           );
           const vpc = getVpc(vpcMap, vpnItem.vpc) as Vpc;
+          if (!vpc) {
+            continue;
+          }
 
           this.stack.addLogs(
             LogLevel.INFO,
@@ -940,6 +986,9 @@ export class VpcResources {
         // Set VGW ID
         const vpcConfig = getVpcConfig(vpcResources, vpnItem.vpc);
         const vpc = getVpc(vpcMap, vpnItem.vpc) as Vpc;
+        if (!vpc) {
+          continue;
+        }
         ssmParameters.push({
           name: this.stack.getSsmPath(SsmResourceType.CROSS_ACCOUNT_VGW, [cgw.name, vpcConfig.name]),
           value: vpc.virtualPrivateGatewayId ?? '',

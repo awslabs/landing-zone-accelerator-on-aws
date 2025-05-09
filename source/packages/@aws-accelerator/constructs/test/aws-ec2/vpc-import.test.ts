@@ -22,16 +22,26 @@ import {
 } from '../../lib/aws-ec2/vpc';
 import { RouteTable } from '../../lib/aws-ec2/route-table';
 import { snapShotTest } from '../snapshot-test';
+import { LZAResourceLookup } from '@aws-accelerator/accelerator/utils/lza-resource-lookup';
 
 const testNamePrefix = 'Construct(Vpc): ';
 
 //Initialize stack for snapshot test and resource configuration test
 const stack = new cdk.Stack();
+const lzaLookup = new LZAResourceLookup({
+  accountId: '111111111111',
+  region: 'us-east-1',
+  stackName: stack.stackName,
+  aseaResourceList: [],
+  enableV2Stacks: false,
+  externalLandingZoneResources: false,
+});
 
 const vpc = Vpc.fromVpcAttributes(stack, 'TestVpc', {
   name: 'Main',
   vpcId: 'someImportedVpcId',
   cidrBlock: '10.1.0.0/16',
+  lzaLookup,
 });
 
 vpc.addVirtualPrivateGateway(65000);
@@ -48,7 +58,7 @@ vpc.addFlowLogs({
   acceleratorPrefix: 'AWSAccelerator',
 });
 
-vpc.addIpv4Cidr({ cidrBlock: '10.2.0.0/16' });
+vpc.addIpv4Cidr({ cidrBlock: '10.2.0.0/16', metadata: { vpcName: vpc.name, cidrBlock: '10.2.0.0/16' } });
 const rt2 = RouteTable.fromRouteTableAttributes(stack, 'ImportedRouteTable', {
   routeTableId: 'someImportedRouteTableId',
   vpc,
@@ -56,7 +66,7 @@ const rt2 = RouteTable.fromRouteTableAttributes(stack, 'ImportedRouteTable', {
 const rt = new RouteTable(stack, 'test-rt', { name: 'test-rt', vpc });
 const route = rt.addInternetGatewayRoute('IgwRoute', '0.0.0.0/0');
 vpc.addInternetGatewayDependent(route);
-vpc.setDhcpOptions('test-dhcp-opts');
+vpc.setDhcpOptions({ name: 'test-dhcp-opts', id: 'test-dhcp-opts-ref' });
 const subnet1 = Subnet.fromSubnetAttributes(stack, 'ImportedSubnet', {
   subnetId: 'someImportedSubnetId',
   ipv4CidrBlock: '10.2.1.0/24',

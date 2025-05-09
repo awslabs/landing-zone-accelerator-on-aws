@@ -113,7 +113,6 @@ export class GetCloudFormationTemplatesModule implements IGetCloudFormationTempl
         crossAccountRoleName: props.roleNameToAssume,
         managementCredentials: props.assumeRoleCredentials,
       }).then(envCredsResponse => {
-        this.logger.info(`finished lookup ${environment.accountId}-${environment.region}`);
         credentials.push(envCredsResponse);
         credentialPromises.splice(credentialPromises.indexOf(envCreds), 1);
         return envCredsResponse;

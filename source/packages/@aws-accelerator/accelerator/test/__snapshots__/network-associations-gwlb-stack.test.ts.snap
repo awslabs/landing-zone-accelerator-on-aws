@@ -2507,6 +2507,11 @@ exports[`NetworkAssociationsGwlbStack Construct(NetworkAssociationsGwlbStack):  
       "Type": "AWS::EC2::Route",
     },
     "SameAccountFirewallCgwCustomerGatewayC0237E66": {
+      "Metadata": {
+        "lzaLookup": {
+          "cgwName": "same-account-firewall-cgw",
+        },
+      },
       "Properties": {
         "BgpAsn": 65500,
         "IpAddress": {

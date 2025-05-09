@@ -65,6 +65,11 @@ exports[`NetworkPrepStack Construct(NetworkPrepStack):  Snapshot Test 1`] = `
       "Type": "AWS::Route53Resolver::FirewallRuleGroup",
     },
     "AcceleratorCgwCustomerGateway56465E97": {
+      "Metadata": {
+        "lzaLookup": {
+          "cgwName": "accelerator-cgw",
+        },
+      },
       "Properties": {
         "BgpAsn": 65500,
         "IpAddress": "1.1.1.1",

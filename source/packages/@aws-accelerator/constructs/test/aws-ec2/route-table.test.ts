@@ -17,12 +17,22 @@ import { NatGateway, Vpc, Subnet } from '../../lib/aws-ec2/vpc';
 import { snapShotTest } from '../snapshot-test';
 import { describe, it, expect } from '@jest/globals';
 import { TransitGatewayAttachment } from '../../lib/aws-ec2/transit-gateway';
+import { LZAResourceLookup } from '@aws-accelerator/accelerator/utils/lza-resource-lookup';
 
 const testNamePrefix = 'Construct(RouteTable): ';
 
 //Initialize stack for snapshot test and resource configuration test
 const stack = new cdk.Stack();
 const key = new cdk.aws_kms.Key(stack, 'testKey');
+const lzaLookup = new LZAResourceLookup({
+  accountId: '111111111111',
+  region: 'us-east-1',
+  stackName: stack.stackName,
+  aseaResourceList: [],
+  enableV2Stacks: false,
+  externalLandingZoneResources: false,
+});
+
 const vpc = new Vpc(stack, 'TestVpc', {
   name: 'Test',
   ipv4CidrBlock: '10.0.0.0/16',
@@ -33,6 +43,7 @@ const vpc = new Vpc(stack, 'TestVpc', {
   virtualPrivateGateway: {
     asn: 65000,
   },
+  lzaLookup,
 });
 vpc.addEgressOnlyIgw();
 

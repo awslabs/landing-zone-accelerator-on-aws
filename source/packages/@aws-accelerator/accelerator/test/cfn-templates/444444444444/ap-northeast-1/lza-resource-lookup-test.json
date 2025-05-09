@@ -1,0 +1,115 @@
+{
+    "Metadata": {
+        "lzaLookup": {
+            "accountName": "testAccount",
+            "region": "test"
+        }
+    },
+    "Resources": {
+        "TestVPC": {
+            "Type": "AWS::EC2::VPC",
+            "Properties": {
+                "CidrBlock": "10.0.0.0/16",
+                "EnableDnsSupport": true,
+                "EnableDnsHostnames": true
+            },
+            "Metadata": {
+                "lzaLookup": {
+                    "vpcName": "test-vpc"
+                }
+            }
+        },
+        "TestCidr": {
+            "Type": "AWS::EC2::VPCCidrBlock",
+            "Properties": {
+                "VpcId": {
+                    "Ref": "TestVPC"
+                },
+                "CidrBlock": "10.1.0.0/16"
+            },
+            "Metadata": {
+                "lzaLookup": {
+                    "vpcName": "test-vpc",
+                    "cidrBlock": "10.1.0.0/16"
+                }
+            }
+        },
+        "TestIgw": {
+            "Type": "AWS::EC2::InternetGateway",
+            "Properties": {},
+            "Metadata": {
+                "lzaLookup": {
+                    "vpcName": "test-vpc"
+                }
+            }
+        },
+        "TestVPG": {
+            "Type": "AWS::EC2::VPNGateway",
+            "Properties": {
+                "Type": "ipsec.1"
+            },
+            "Metadata": {
+                "lzaLookup": {
+                    "vpcName": "test-vpc"
+                }
+            }
+        },
+        "TestEgressGW": {
+            "Type": "AWS::EC2::EgressOnlyInternetGateway",
+            "Properties": {
+                "VpcId": {
+                    "Ref": "TestVPC"
+                }
+            },
+            "Metadata": {
+                "lzaLookup": {
+                    "vpcName": "test-vpc"
+                }
+            }
+        },
+        "TestDHCPOptionsAssociation": {
+            "Type": "AWS::EC2::VPCDHCPOptionsAssociation",
+            "Properties": {
+                "VpcId": {
+                    "Ref": "TestVPC"
+                },
+                "DhcpOptionsId": "fakeDhcpOptionArn"
+            },
+            "Metadata": {
+                "lzaLookup": {
+                    "vpcName": "test-vpc",
+                    "dhcpOptionName": "test-dhcp-option"
+                }
+            }
+        },
+        "CGW": {
+            "Type": "AWS::EC2::CustomerGateway",
+            "Properties": {
+                "Type": "ipsec.1",
+                "BgpAsn": 65000,
+                "IpAddress": "0000000"
+            },
+            "Metadata": {
+                "lzaLookup": {
+                    "vpcName": "test-vpc"
+                }
+            }
+        },
+        "FlowLog": {
+            "Type": "AWS::EC2::FlowLog",
+            "Properties": {
+                "ResourceId": {
+                    "Ref": "TestVPC"
+                },
+                "ResourceType": "VPC",
+                "TrafficType": "ALL"
+            },
+            "Metadata": {
+                "lzaLookup": {
+                    "vpcName": "test-vpc",
+                    "flowLogDestinationType": "cloud-watch-logs"
+                }
+            }
+        }
+    }
+}
