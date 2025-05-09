@@ -33,7 +33,7 @@ export abstract class GetCloudFormationTemplatesModule {
    */
   public static async execute(params: ModuleParams): Promise<string> {
     logger.info(`Executing module "${params.moduleItem.name}"`);
-    if (!params.moduleRunnerParameters.configs.globalConfig.cdkOptions.stackRefactor?.networkVpcStack) {
+    if (!(params.moduleRunnerParameters.configs.globalConfig.useV2Stacks ?? false)) {
       return `Module "${params.moduleItem.name}" did not execute. Configuration option not set.`;
     }
     const ignoredOus = params.moduleRunnerParameters.configs.organizationConfig.getIgnoredOus();

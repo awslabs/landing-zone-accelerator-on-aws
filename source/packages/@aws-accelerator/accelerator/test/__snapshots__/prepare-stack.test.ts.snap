@@ -5096,8 +5096,15 @@ exports[`PrepareStack Construct(PrepareStack):  Snapshot Test 1`] = `
                   ],
                 },
                 "arn:aws:ssm:us-east-1:111111111111:parameter/accelerator/validation/*/network/vpc/*/deployedCidrs",
+                "arn:aws:ssm:us-east-1:111111111111:parameter/accelerator/network-stacks/useV2Stacks",
               ],
               "Sid": "sms",
+            },
+            {
+              "Action": "ssm:PutParameter",
+              "Effect": "Allow",
+              "Resource": "arn:aws:ssm:us-east-1:111111111111:parameter/accelerator/network-stacks/useV2Stacks",
+              "Sid": "ssmCreate",
             },
           ],
           "Version": "2012-10-17",
@@ -5192,7 +5199,9 @@ exports[`PrepareStack Construct(PrepareStack):  Snapshot Test 1`] = `
         ],
         "skipScpValidation": "no",
         "stackName": "AWSAccelerator-PrepareStack-111111111111-us-east-1",
+        "useV2StacksValue": false,
         "uuid": "REPLACED-UUID",
+        "v2StacksParamName": "/accelerator/network-stacks/useV2Stacks",
         "vpcCidrs": [
           {
             "cidrs": [

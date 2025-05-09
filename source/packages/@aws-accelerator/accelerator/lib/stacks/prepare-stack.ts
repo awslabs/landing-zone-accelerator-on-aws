@@ -448,6 +448,8 @@ export class PrepareStack extends AcceleratorStack {
       driftDetectionMessageParameter: options.driftMessageParameter,
       prefixes: this.props.prefixes,
       vpcsCidrs,
+      useV2StacksValue: this.props.globalConfig.useV2Stacks ?? false,
+      v2StacksParamName: this.getSsmPath(SsmResourceType.USE_V2_STACKS_FLAG, ['network-stacks']),
     });
 
     validation.node.addDependency(options.moveAccounts);

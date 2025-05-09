@@ -113,6 +113,8 @@ export class GetCloudFormationTemplatesModule implements IGetCloudFormationTempl
         crossAccountRoleName: props.roleNameToAssume,
         managementCredentials: props.assumeRoleCredentials,
       }).then(envCredsResponse => {
+        this.logger.info(`finished lookup ${environment.accountId}-${environment.region}`);
+        credentials.push(envCredsResponse);
         credentialPromises.splice(credentialPromises.indexOf(envCreds), 1);
         return envCredsResponse;
       });
@@ -120,14 +122,13 @@ export class GetCloudFormationTemplatesModule implements IGetCloudFormationTempl
       credentialPromises.push(envCreds);
 
       if (credentialPromises.length >= props.batchSize) {
-        const resolvedCredentials = await Promise.race(credentialPromises);
-        credentials.push(resolvedCredentials);
+        await Promise.race(credentialPromises);
       }
     }
 
     const batchCredentials = await Promise.all(credentialPromises);
     credentials.push(...batchCredentials);
-    return credentials;
+    return [...new Set(credentials)];
   }
 
   /**
@@ -177,7 +178,6 @@ export class GetCloudFormationTemplatesModule implements IGetCloudFormationTempl
         `${MODULE_EXCEPTIONS.SERVICE_EXCEPTION}: Could not retrieve credentials for account ${props.accountId} in region ${props.region}, using role ${props.crossAccountRoleName}`,
       );
     }
-
     return {
       environment: {
         accountId: props.accountId,
@@ -217,13 +217,15 @@ export class GetCloudFormationTemplatesModule implements IGetCloudFormationTempl
         stackName: props.stackName,
         basePath: props.basePath,
       }).then(cfnTemplateResponse => {
+        cloudFormationTemplates.push(cfnTemplateResponse);
         cloudFormationTemplatesPromises.splice(cloudFormationTemplatesPromises.indexOf(cfnTemplatePromise), 1);
         return cfnTemplateResponse;
       });
 
+      cloudFormationTemplatesPromises.push(cfnTemplatePromise);
+
       if (cloudFormationTemplatesPromises.length >= props.batchSize) {
-        const resolvedTemplate = await Promise.race(cloudFormationTemplatesPromises);
-        cloudFormationTemplates.push(resolvedTemplate);
+        await Promise.race(cloudFormationTemplatesPromises);
       }
     }
 

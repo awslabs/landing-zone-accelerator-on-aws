@@ -444,6 +444,11 @@ export enum SsmResourceType {
    * `${0}` is replaced with the Directory Friendly Name
    */
   MANAGED_AD_DNS_NAME = '/managed_ad/directory/name/${0}/dnsName',
+  /**
+   *  Use V2 Stacks Flag
+   * `${0}` is replaced with the stacks where v2 stacks are enabled
+   */
+  USE_V2_STACKS_FLAG = '/${0}/useV2Stacks',
 }
 
 export class SsmParameterPath {

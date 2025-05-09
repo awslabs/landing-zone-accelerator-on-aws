@@ -53,10 +53,6 @@ export class centralizeCdkBucketsConfig implements i.ICentralizeCdkBucketsConfig
   readonly enable = true;
 }
 
-export class StackRefactor implements i.IStackRefactor {
-  readonly networkVpcStack: boolean = false;
-}
-
 export class cdkOptionsConfig implements i.ICdkOptionsConfig {
   readonly centralizeBuckets = true;
   readonly useManagementAccessRole = true;
@@ -66,7 +62,6 @@ export class cdkOptionsConfig implements i.ICdkOptionsConfig {
    * Determines if the LZA pipeline will skip the static config validation step during the pipeline's Build phase. This can be helpful in cases where the config-validator incorrectly throws errors for a valid configuration.
    */
   readonly skipStaticValidation = undefined;
-  readonly stackRefactor: StackRefactor | undefined = undefined;
 }
 
 export class CloudTrailSettingsConfig implements i.ICloudTrailSettingsConfig {
@@ -569,6 +564,7 @@ export class GlobalConfig implements i.IGlobalConfig {
    */
   static readonly FILENAME = 'global-config.yaml';
   readonly homeRegion: string = '';
+  readonly useV2Stacks: boolean | undefined = undefined;
   readonly enabledRegions: t.Region[] = [];
   readonly managementAccountAccessRole: string = '';
   readonly cloudwatchLogRetentionInDays = 3653;
@@ -612,6 +608,7 @@ export class GlobalConfig implements i.IGlobalConfig {
       homeRegion: string;
       controlTower: { enable: boolean; landingZone?: ControlTowerLandingZoneConfig };
       managementAccountAccessRole: string;
+      useV2Stacks?: boolean;
     },
     values?: i.IGlobalConfig,
   ) {
@@ -626,6 +623,7 @@ export class GlobalConfig implements i.IGlobalConfig {
         controls: [],
       };
       this.managementAccountAccessRole = props.managementAccountAccessRole;
+      this.useV2Stacks = props.useV2Stacks;
     }
   }
 

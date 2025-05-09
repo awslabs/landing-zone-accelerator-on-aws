@@ -22,7 +22,7 @@ import {
   DynamoDBDocumentPaginationConfiguration,
 } from '@aws-sdk/lib-dynamodb';
 import { CloudFormationClient, DescribeStacksCommand } from '@aws-sdk/client-cloudformation';
-import { SSMClient, GetParameterCommand } from '@aws-sdk/client-ssm';
+import { SSMClient, GetParameterCommand, ParameterNotFound, PutParameterCommand } from '@aws-sdk/client-ssm';
 import { SearchProvisionedProductsCommand, ServiceCatalogClient } from '@aws-sdk/client-service-catalog';
 import {
   Account,
@@ -138,6 +138,8 @@ export async function handler(event: CloudFormationCustomResourceEvent): Promise
   const skipScpValidation = event.ResourceProperties['skipScpValidation'];
   const vpcCidrs = event.ResourceProperties['vpcCidrs'];
   const solutionId = process.env['SOLUTION_ID'];
+  const useV2StacksValue = event.ResourceProperties['useV2StacksValue'];
+  const v2StacksParamName = event.ResourceProperties['v2StacksParamName'];
   dynamodbClient = new DynamoDBClient({ customUserAgent: solutionId });
   documentClient = DynamoDBDocumentClient.from(dynamodbClient, translateConfig);
   serviceCatalogClient = new ServiceCatalogClient({
@@ -199,6 +201,9 @@ export async function handler(event: CloudFormationCustomResourceEvent): Promise
       } else {
         console.log('No vpcCidrs provided', vpcCidrs);
       }
+
+      const useV2StacksErrors = await validateUseV2StacksFlag(useV2StacksValue, v2StacksParamName);
+      validationErrors.push(...useV2StacksErrors);
 
       const allOuInConfigErrors = await validateAllOuInConfig();
       validationErrors.push(...allOuInConfigErrors);
@@ -1079,6 +1084,43 @@ async function getLastDeployedCIDRsFor(config: CIDRConfig): Promise<string[]> {
     console.error('Unabled to load ssm parameter with deployed cidr config', error);
     return [];
   }
+}
+
+/**
+ * Function to validate if v1 stacks are enabled after switched to v2 stacks
+ * @param configValue
+ * @param v2StacksParamName
+ * @returns Promise<string[]>
+ */
+async function validateUseV2StacksFlag(configValue: string, v2StacksParamName: string): Promise<string[]> {
+  try {
+    const response = await throttlingBackOff(() =>
+      ssmClient.send(new GetParameterCommand({ Name: v2StacksParamName })),
+    );
+
+    if (response.Parameter?.Value !== configValue) {
+      console.error('Disabling useV2Stacks after it has been enabled is not supported.');
+      return ['Disabling useV2Stacks after it has been enabled is not supported.'];
+    }
+  } catch (error) {
+    if (error instanceof ParameterNotFound) {
+      if (configValue === 'true') {
+        await throttlingBackOff(() =>
+          ssmClient.send(
+            new PutParameterCommand({
+              Name: v2StacksParamName,
+              Type: 'String',
+              Value: configValue,
+            }),
+          ),
+        );
+      }
+    } else {
+      throw error;
+    }
+  }
+
+  return [];
 }
 
 function areArrayContentsEqual<T>(a1: T[], a2: T[]) {
