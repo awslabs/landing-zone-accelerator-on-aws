@@ -186,6 +186,9 @@ export class TgwResources {
         // Retrieve resources from maps
         const transitGatewayId = getTransitGatewayId(transitGatewayIds, tgwAttachmentItem.transitGateway.name);
         const vpc = getVpc(vpcMap, vpcItem.name) as Vpc;
+        if (!vpc) {
+          continue;
+        }
         const subnetIds = this.getAttachmentSubnetIds(tgwAttachmentItem, vpcItem.name, subnetMap);
 
         this.stack.addLogs(

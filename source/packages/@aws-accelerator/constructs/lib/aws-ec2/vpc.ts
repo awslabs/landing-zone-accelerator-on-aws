@@ -24,6 +24,11 @@ import { IRouteTable } from './route-table';
 import { VpnConnection } from './vpn-connection';
 import { CUSTOM_RESOURCE_PROVIDER_RUNTIME } from '@aws-accelerator/utils/lib/lambda';
 import { ILZAMetadata, MetadataKeys } from '@aws-accelerator/utils';
+import {
+  LookupValues,
+  LZAResourceLookup,
+  LZAResourceLookupType,
+} from '@aws-accelerator/accelerator/utils/lza-resource-lookup';
 
 export interface ISubnet extends cdk.IResource {
   /**
@@ -646,6 +651,10 @@ export interface IVpc extends cdk.IResource {
    * The VirtualPrivateGatewayId assigned to VPC
    */
   virtualPrivateGatewayId?: string;
+  /**
+   * The LZA lookup class to determine if resources should be deployed here or in a V2 stack
+   */
+  lzaLookup: LZAResourceLookup;
 }
 
 /**
@@ -653,7 +662,7 @@ export interface IVpc extends cdk.IResource {
  */
 export interface VpcProps {
   readonly name: string;
-  readonly dhcpOptions?: string;
+  readonly dhcpOptions?: { name: string; id: string };
   readonly enableDnsHostnames?: boolean;
   readonly enableDnsSupport?: boolean;
   readonly egressOnlyIgw?: boolean;
@@ -664,9 +673,11 @@ export interface VpcProps {
   readonly ipv4NetmaskLength?: number;
   readonly tags?: cdk.CfnTag[];
   readonly virtualPrivateGateway?: VirtualPrivateGatewayConfig;
+  readonly lzaLookup: LZAResourceLookup;
 }
 
 export interface ImportedVpcProps {
+  readonly lzaLookup: LZAResourceLookup;
   readonly name: string;
   readonly vpcId: string;
   readonly cidrBlock: string;
@@ -687,6 +698,7 @@ abstract class VpcBase extends cdk.Resource implements IVpc {
   protected internetGatewayAttachment: cdk.aws_ec2.CfnVPCGatewayAttachment | undefined;
   protected virtualPrivateGateway: cdk.aws_ec2.VpnGateway | undefined;
   protected virtualPrivateGatewayAttachment: cdk.aws_ec2.CfnVPCGatewayAttachment | undefined;
+  public lzaLookup!: LZAResourceLookup;
 
   public addInternetGatewayDependent(dependent: Construct) {
     if (this.internetGatewayAttachment) {
@@ -717,9 +729,16 @@ abstract class VpcBase extends cdk.Resource implements IVpc {
     if (maxAggregationInterval != 60 && maxAggregationInterval != 600) {
       throw new Error(`Invalid maxAggregationInterval (${maxAggregationInterval}) - must be 60 or 600 seconds`);
     }
-
+    const cwlDestinationManaged = this.lzaLookup.resourceExists({
+      resourceType: LZAResourceLookupType.FLOW_LOG,
+      lookupValues: { vpcName: this.name, flowLogDestinationType: 'cloud-watch-logs' },
+    });
+    const s3DestinationManaged = this.lzaLookup.resourceExists({
+      resourceType: LZAResourceLookupType.FLOW_LOG,
+      lookupValues: { vpcName: this.name, flowLogDestinationType: 's3' },
+    });
     // Destination: CloudWatch Logs
-    if (options.destinations.includes('cloud-watch-logs')) {
+    if (options.destinations.includes('cloud-watch-logs') && cwlDestinationManaged) {
       if (!options.logRetentionInDays) {
         throw new Error('logRetentionInDays not provided for cwl flow log');
       }
@@ -756,7 +775,7 @@ abstract class VpcBase extends cdk.Resource implements IVpc {
     }
 
     // Destination: S3
-    if (options.destinations.includes('s3')) {
+    if (options.destinations.includes('s3') && s3DestinationManaged) {
       const cfnFlowLog = new cdk.aws_ec2.CfnFlowLog(this, 'S3FlowLog', {
         logDestinationType: 's3',
         logDestination: s3LogDestination,
@@ -829,11 +848,19 @@ abstract class VpcBase extends cdk.Resource implements IVpc {
     cidrBlock?: string;
     ipv4IpamPoolId?: string;
     ipv4NetmaskLength?: number;
-    metadata?: ILZAMetadata;
+    metadata: ILZAMetadata;
   }) {
     // This block is required for backwards compatibility
     // with a previous iteration. It appends a number to the
     // logical ID so more than two VPC CIDRs can be defined.
+    if (
+      !this.lzaLookup.resourceExists({
+        resourceType: LZAResourceLookupType.VPC_CIDR_BLOCK,
+        lookupValues: options.metadata as LookupValues,
+      })
+    ) {
+      return;
+    }
     let logicalId = 'VpcCidrBlock';
     if (this.cidrs.ipv4.length > 0) {
       logicalId = `VpcCidrBlock${this.cidrs.ipv4.length}`;
@@ -860,6 +887,14 @@ abstract class VpcBase extends cdk.Resource implements IVpc {
     ipv6Pool?: string;
     metadata?: ILZAMetadata;
   }) {
+    if (
+      !this.lzaLookup.resourceExists({
+        resourceType: LZAResourceLookupType.VPC_CIDR_BLOCK,
+        lookupValues: options.metadata as LookupValues,
+      })
+    ) {
+      return;
+    }
     const logicalId = `Ipv6CidrBlock${this.cidrs.ipv6.length}`;
     const ipV6Cidr = new cdk.aws_ec2.CfnVPCCidrBlock(this, logicalId, {
       amazonProvidedIpv6CidrBlock: options.amazonProvidedIpv6CidrBlock,
@@ -879,6 +914,14 @@ abstract class VpcBase extends cdk.Resource implements IVpc {
     if (this.egressOnlyIgwId) {
       throw new Error(`Egress-Only Internet Gateway is already configured to VPC ${this.name}`);
     }
+    if (
+      !this.lzaLookup.resourceExists({
+        resourceType: LZAResourceLookupType.EGRESS_ONLY_INTERNET_GATEWAY,
+        lookupValues: { vpcName: this.name },
+      })
+    ) {
+      return;
+    }
     this.egressOnlyIgw = new cdk.aws_ec2.CfnEgressOnlyInternetGateway(this, 'EgressOnlyIgw', { vpcId: this.vpcId });
     this.egressOnlyIgwId = this.egressOnlyIgw.ref;
     this.egressOnlyIgw.addMetadata(MetadataKeys.LZA_LOOKUP, { vpcName: this.name });
@@ -887,6 +930,14 @@ abstract class VpcBase extends cdk.Resource implements IVpc {
   addInternetGateway() {
     if (this.internetGatewayId) {
       throw new Error(`Internet Gateway is already configured to VPC ${this.name}`);
+    }
+    if (
+      !this.lzaLookup.resourceExists({
+        resourceType: LZAResourceLookupType.INTERNET_GATEWAY,
+        lookupValues: { vpcName: this.name },
+      })
+    ) {
+      return;
     }
     this.internetGateway = new cdk.aws_ec2.CfnInternetGateway(this, 'InternetGateway', {});
     this.internetGatewayAttachment = new cdk.aws_ec2.CfnVPCGatewayAttachment(this, 'InternetGatewayAttachment', {
@@ -900,6 +951,14 @@ abstract class VpcBase extends cdk.Resource implements IVpc {
   addVirtualPrivateGateway(asn: number) {
     if (this.virtualPrivateGatewayId) {
       throw new Error(`Virtual Private Gateway is already configured to VPC ${this.name}`);
+    }
+    if (
+      !this.lzaLookup.resourceExists({
+        resourceType: LZAResourceLookupType.VIRTUAL_PRIVATE_GATEWAY,
+        lookupValues: { vpcName: this.name },
+      })
+    ) {
+      return;
     }
     this.virtualPrivateGateway = new cdk.aws_ec2.VpnGateway(this, `VirtualPrivateGateway`, {
       amazonSideAsn: asn,
@@ -918,13 +977,28 @@ abstract class VpcBase extends cdk.Resource implements IVpc {
     cfnVpg.addMetadata(MetadataKeys.LZA_LOOKUP, { vpcName: this.name });
   }
 
-  setDhcpOptions(dhcpOptions: string) {
+  setDhcpOptions(dhcpOptions?: { name: string; id: string }) {
+    if (!dhcpOptions) {
+      return;
+    }
+    if (
+      !this.lzaLookup.resourceExists({
+        resourceType: LZAResourceLookupType.VPC_DHCP_OPTIONS_ASSOCIATION,
+        lookupValues: { vpcName: this.name },
+      })
+    ) {
+      return;
+    }
+
     const DhcpOptionsAssociation = new cdk.aws_ec2.CfnVPCDHCPOptionsAssociation(this, 'DhcpOptionsAssociation', {
-      dhcpOptionsId: dhcpOptions,
+      dhcpOptionsId: dhcpOptions.id,
       vpcId: this.vpcId,
     });
 
-    DhcpOptionsAssociation.addMetadata(MetadataKeys.LZA_LOOKUP, { vpcName: this.name });
+    DhcpOptionsAssociation.addMetadata(MetadataKeys.LZA_LOOKUP, {
+      vpcName: this.name,
+      dhcpOptionName: dhcpOptions.name,
+    });
   }
 }
 
@@ -937,6 +1011,7 @@ export class ImportedVpc extends VpcBase {
   public readonly cidrs: { ipv4: cdk.aws_ec2.CfnVPCCidrBlock[]; ipv6: cdk.aws_ec2.CfnVPCCidrBlock[] };
   public readonly vpnConnections: VpnConnection[] = [];
   public readonly cidrBlock: string;
+  public readonly lzaLookup: LZAResourceLookup;
 
   constructor(scope: Construct, id: string, props: ImportedVpcProps) {
     super(scope, id);
@@ -946,6 +1021,7 @@ export class ImportedVpc extends VpcBase {
     this.cidrs = { ipv4: [], ipv6: [] };
     this.internetGatewayId = props.internetGatewayId;
     this.virtualPrivateGatewayId = props.virtualPrivateGatewayId;
+    this.lzaLookup = props.lzaLookup;
   }
 }
 
@@ -958,9 +1034,11 @@ export class Vpc extends VpcBase {
   public readonly cidrs: { ipv4: cdk.aws_ec2.CfnVPCCidrBlock[]; ipv6: cdk.aws_ec2.CfnVPCCidrBlock[] };
   public readonly vpnConnections: VpnConnection[] = [];
   public readonly cidrBlock: string;
+  public readonly lzaLookup: LZAResourceLookup;
   constructor(scope: Construct, id: string, props: VpcProps) {
     super(scope, id);
     this.name = props.name;
+    this.lzaLookup = props.lzaLookup;
     const resource = new cdk.aws_ec2.CfnVPC(this, 'Resource', {
       cidrBlock: props.ipv4CidrBlock,
       enableDnsHostnames: props.enableDnsHostnames,
@@ -981,8 +1059,19 @@ export class Vpc extends VpcBase {
     if (props.egressOnlyIgw) {
       this.addEgressOnlyIgw();
     }
-
-    if (props.internetGateway) {
+    const igwManagedByV1Stack = this.lzaLookup.resourceExists({
+      resourceType: LZAResourceLookupType.INTERNET_GATEWAY,
+      lookupValues: { vpcName: this.name },
+    });
+    const vpgManagedByV1Stack = this.lzaLookup.resourceExists({
+      resourceType: LZAResourceLookupType.VIRTUAL_PRIVATE_GATEWAY,
+      lookupValues: { vpcName: this.name },
+    });
+    const dhcpManagedByV1Stack = this.lzaLookup.resourceExists({
+      resourceType: LZAResourceLookupType.VPC_DHCP_OPTIONS_ASSOCIATION,
+      lookupValues: { vpcName: this.name },
+    });
+    if (props.internetGateway && igwManagedByV1Stack) {
       this.internetGateway = new cdk.aws_ec2.CfnInternetGateway(this, 'InternetGateway', {});
       this.internetGatewayAttachment = new cdk.aws_ec2.CfnVPCGatewayAttachment(this, 'InternetGatewayAttachment', {
         internetGatewayId: this.internetGateway.ref,
@@ -992,7 +1081,7 @@ export class Vpc extends VpcBase {
       this.internetGateway.addMetadata(MetadataKeys.LZA_LOOKUP, { vpcName: this.name });
     }
 
-    if (props.virtualPrivateGateway) {
+    if (props.virtualPrivateGateway && vpgManagedByV1Stack) {
       this.virtualPrivateGateway = new cdk.aws_ec2.VpnGateway(this, `VirtualPrivateGateway`, {
         amazonSideAsn: props.virtualPrivateGateway.asn,
         type: 'ipsec.1',
@@ -1010,12 +1099,15 @@ export class Vpc extends VpcBase {
       this.virtualPrivateGatewayId = this.virtualPrivateGateway.gatewayId;
     }
 
-    if (props.dhcpOptions) {
+    if (props.dhcpOptions && dhcpManagedByV1Stack) {
       const dhcpOptionsAssociation = new cdk.aws_ec2.CfnVPCDHCPOptionsAssociation(this, 'DhcpOptionsAssociation', {
-        dhcpOptionsId: props.dhcpOptions,
+        dhcpOptionsId: props.dhcpOptions.id,
         vpcId: this.vpcId,
       });
-      dhcpOptionsAssociation.addMetadata(MetadataKeys.LZA_LOOKUP, { vpcName: this.name });
+      dhcpOptionsAssociation.addMetadata(MetadataKeys.LZA_LOOKUP, {
+        vpcName: this.name,
+        dhcpOptionName: props.dhcpOptions.name,
+      });
     }
   }
 

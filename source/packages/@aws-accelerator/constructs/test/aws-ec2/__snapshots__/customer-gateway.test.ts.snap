@@ -128,6 +128,11 @@ exports[`CustomerGateway Construct(CustomerGateway):  Snapshot Test 1`] = `
   },
   "Resources": {
     "TestCgwCustomerGateway795D02C0": {
+      "Metadata": {
+        "lzaLookup": {
+          "cgwName": "Test-CGW",
+        },
+      },
       "Properties": {
         "BgpAsn": 65000,
         "IpAddress": "1.1.1.1",

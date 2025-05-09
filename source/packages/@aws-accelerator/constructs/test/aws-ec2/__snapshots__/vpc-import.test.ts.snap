@@ -158,11 +158,12 @@ exports[`VpcImport Construct(Vpc):  Snapshot Test 1`] = `
     "TestVpcDhcpOptionsAssociationDB23B751": {
       "Metadata": {
         "lzaLookup": {
+          "dhcpOptionName": "test-dhcp-opts",
           "vpcName": "Main",
         },
       },
       "Properties": {
-        "DhcpOptionsId": "test-dhcp-opts",
+        "DhcpOptionsId": "test-dhcp-opts-ref",
         "VpcId": "someImportedVpcId",
       },
       "Type": "AWS::EC2::VPCDHCPOptionsAssociation",
@@ -286,7 +287,10 @@ exports[`VpcImport Construct(Vpc):  Snapshot Test 1`] = `
     },
     "TestVpcVpcCidrBlock8C35CE6C": {
       "Metadata": {
-        "lzaLookup": {},
+        "lzaLookup": {
+          "cidrBlock": "10.2.0.0/16",
+          "vpcName": "Main",
+        },
       },
       "Properties": {
         "CidrBlock": "10.2.0.0/16",

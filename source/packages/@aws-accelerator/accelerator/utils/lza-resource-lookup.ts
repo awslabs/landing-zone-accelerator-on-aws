@@ -1,0 +1,364 @@
+import { AseaResourceType, AseaResourceMapping } from '@aws-accelerator/config';
+import { MetadataKeys, ILZAMetadata } from '../../utils/lib/common-types';
+import path from 'path';
+import fs from 'fs';
+
+export type LookupValueTypes = string | number | boolean | undefined;
+
+export type LookupValues = {
+  [key: string]: LookupValueTypes;
+};
+
+export type LookupProperties = {
+  resourceType: LZAResourceLookupType;
+  lookupValues: LookupValues;
+};
+
+export enum LZAResourceLookupType {
+  VPC = 'AWS::EC2::VPC',
+  FLOW_LOG = 'AWS::EC2::FlowLog',
+  INTERNET_GATEWAY = 'AWS::EC2::InternetGateway',
+  VIRTUAL_PRIVATE_GATEWAY = 'AWS::EC2::VPNGateway',
+  VPC_CIDR_BLOCK = 'AWS::EC2::VPCCidrBlock',
+  EGRESS_ONLY_INTERNET_GATEWAY = 'AWS::EC2::EgressOnlyInternetGateway',
+  VPC_DHCP_OPTIONS_ASSOCIATION = 'AWS::EC2::VPCDHCPOptionsAssociation',
+}
+
+export class LZAResourceLookup {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  cfnTemplate: any;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  cfnResources: any;
+  accountId: string;
+  region: string;
+  stackName: string;
+  aseaResourceList: AseaResourceMapping[];
+  externalLandingZoneResources: boolean | undefined;
+  enableV2Stacks: boolean | undefined;
+  // Setting up types for the CloudFormation template structure is not feasible at this time
+  constructor(props: {
+    accountId: string;
+    region: string;
+    stackName: string;
+    aseaResourceList: AseaResourceMapping[];
+    externalLandingZoneResources: boolean | undefined;
+    enableV2Stacks: boolean | undefined;
+  }) {
+    this.accountId = props.accountId;
+    this.region = props.region;
+    this.stackName = props.stackName;
+    this.enableV2Stacks = props.enableV2Stacks;
+
+    const templatePath = path.join('cfn-templates', this.accountId, this.region, `${this.stackName}.json`);
+    const cfnTemplateString = this.loadCfnTemplate(this.enableV2Stacks, templatePath);
+
+    this.cfnTemplate = JSON.parse(cfnTemplateString);
+    this.cfnResources = this.cfnTemplate['Resources'];
+    this.aseaResourceList = props.aseaResourceList;
+    this.externalLandingZoneResources = props.externalLandingZoneResources;
+  }
+
+  public resourceExists(resourceProperties: LookupProperties): boolean {
+    // Always expect resource to exist if V2 stacks aren't enabled
+    if (!this.enableV2Stacks) {
+      return true;
+    }
+    if (this.resourceManagedByAsea(resourceProperties)) {
+      return true;
+    }
+    // If there is no metadata then it is managed by a v1 stacks.
+    if (!this.cfnStackMetadataExist(this.cfnTemplate)) {
+      return true;
+    }
+
+    if (this.resourceManagedByV1Stack(resourceProperties)) {
+      return true;
+    }
+
+    return false;
+  }
+
+  public resourceManagedByV1Stack(resourceProperties: LookupProperties): boolean {
+    switch (resourceProperties.resourceType) {
+      case LZAResourceLookupType.VPC:
+        return this.vpcExists(resourceProperties);
+      case LZAResourceLookupType.FLOW_LOG:
+        return this.flowLogExists(resourceProperties);
+      case LZAResourceLookupType.INTERNET_GATEWAY:
+        return this.internetGatewayExists(resourceProperties);
+      case LZAResourceLookupType.VIRTUAL_PRIVATE_GATEWAY:
+        return this.virtualPrivateGatewayExists(resourceProperties);
+      case LZAResourceLookupType.VPC_CIDR_BLOCK:
+        return this.vpcCidrBlockExists(resourceProperties);
+      case LZAResourceLookupType.EGRESS_ONLY_INTERNET_GATEWAY:
+        return this.egressOnlyInternetGatewayExists(resourceProperties);
+      case LZAResourceLookupType.VPC_DHCP_OPTIONS_ASSOCIATION:
+        return this.vpcDhcpOptionsAssociationExists(resourceProperties);
+      default:
+        return false;
+    }
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  public templateExists(cfnTemplate: any) {
+    if (JSON.stringify(cfnTemplate) === '{}') {
+      return false;
+    }
+    if (!('Resources' in cfnTemplate)) {
+      return false;
+    }
+    return true;
+  }
+
+  private loadCfnTemplate(enableV2Stacks: boolean | undefined, templatePath: string) {
+    if (!enableV2Stacks) {
+      return '{}';
+    }
+    try {
+      return fs.readFileSync(templatePath).toString();
+    } catch (err) {
+      return '{}';
+    }
+  }
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  public metadataValidation(props: { cfnTemplate: any; account: string; region: string; stackName: string }) {
+    // Don't validate if V2Stacks are not enabled.
+    if (!this.enableV2Stacks) {
+      return;
+    }
+    if (!('Metadata' in props.cfnTemplate)) {
+      throw new Error(
+        `LZA Lookup Metadata does not exist for template ${props.stackName} in account ${this.accountId} and region ${this.region}`,
+      );
+    }
+    if (!(MetadataKeys.LZA_LOOKUP in props.cfnTemplate['Metadata'])) {
+      throw new Error(
+        `LZA Lookup Metadata does not exist for template ${props.stackName} in account ${this.accountId} and region ${this.region}`,
+      );
+    }
+  }
+
+  /**
+   * Helper function to verify if resource managed by ASEA or not by looking in resource mapping
+   * Can be replaced with LZA Configuration check. Not using configuration check to avoid errors/mistakes in configuration by user
+   *
+   * @param resourceType
+   * @param resourceIdentifier
+   * @returns
+   */
+  public isManagedByAsea(props: { resourceType: AseaResourceType; resourceIdentifier: LookupValueTypes }): boolean {
+    if (!this.externalLandingZoneResources) {
+      return false;
+    }
+    if (props.resourceType === AseaResourceType.NOT_MANAGED) {
+      return false;
+    }
+
+    return !!this.aseaResourceList.find(
+      r =>
+        r.accountId === this.accountId &&
+        r.region === this.region &&
+        r.resourceType === props.resourceType &&
+        r.resourceIdentifier === props.resourceIdentifier &&
+        !r.isDeleted,
+    );
+  }
+
+  /**
+   * Helper function to verify if resource managed by ASEA or not by looking in resource mapping
+   * Different than isManagedByAsea() because it does not filter for region or account id.
+   *
+   * @param resourceType
+   * @param resourceIdentifier
+   * @returns
+   */
+  public isManagedByAseaGlobal(props: { resourceType: AseaResourceType; resourceIdentifier: string }): boolean {
+    if (!this.externalLandingZoneResources) {
+      return false;
+    }
+
+    if (props.resourceType === AseaResourceType.NOT_MANAGED) {
+      return false;
+    }
+
+    return !!this.aseaResourceList.find(
+      r => r.resourceType === props.resourceType && r.resourceIdentifier === props.resourceIdentifier && !r.isDeleted,
+    );
+  }
+
+  private getCfnResourceKeysByType(resourceType: LZAResourceLookupType): string[] {
+    if (!this.cfnResources) {
+      return [];
+    }
+    return Object.keys(this.cfnResources).filter(key => this.cfnResources[key]?.['Type'] === resourceType);
+  }
+
+  private findCfnResourceByPartialMatch(props: {
+    lookupValues: LookupValues;
+    cfnResourceMetadata: ILZAMetadata | undefined;
+  }): boolean {
+    const metadataMatch = Object.keys(props.lookupValues).filter(key => {
+      if (!props.cfnResourceMetadata) {
+        return false;
+      }
+      if (key in props.cfnResourceMetadata && props.cfnResourceMetadata[key] === props.lookupValues[key]) {
+        return true;
+      }
+      return false;
+    });
+
+    return metadataMatch.length === Object.keys(props.lookupValues).length;
+  }
+
+  private cfnResourceExists(props: {
+    lookupValues: LookupValues;
+    resourceType: LZAResourceLookupType;
+    resourceTypesKeys: string[];
+  }) {
+    const resourceExists = props.resourceTypesKeys.find(key =>
+      this.findCfnResourceByPartialMatch({
+        lookupValues: props.lookupValues,
+        cfnResourceMetadata: this.cfnResources[key]?.['Metadata']?.[MetadataKeys.LZA_LOOKUP],
+      }),
+    );
+
+    return !!resourceExists;
+  }
+
+  private resourceManagedByAsea(resourceProperties: LookupProperties) {
+    const aseaResourceType = this.getAseaResourceType(resourceProperties.resourceType);
+    let resourceIdentifier;
+    switch (aseaResourceType) {
+      case AseaResourceType.NOT_MANAGED:
+        return false;
+      case AseaResourceType.EC2_VPC:
+        resourceIdentifier = resourceProperties.lookupValues['vpcName'];
+        break;
+      case AseaResourceType.EC2_IGW:
+        resourceIdentifier = resourceProperties.lookupValues['vpcName'];
+        break;
+      default:
+      case AseaResourceType.EC2_VPC_CIDR:
+        resourceIdentifier = `${resourceProperties.lookupValues['vpcName']}-${resourceProperties.lookupValues['cidrBlock']}`;
+        break;
+    }
+
+    return this.isManagedByAsea({ resourceType: aseaResourceType, resourceIdentifier });
+  }
+  private vpcExists(resourceProperties: LookupProperties): boolean {
+    this.validateResourcePropertyKeys({ resourceProperties, resourceKeys: ['vpcName'] });
+    const vpcResourceKeys = this.getCfnResourceKeysByType(resourceProperties.resourceType);
+    return this.cfnResourceExists({
+      lookupValues: resourceProperties.lookupValues,
+      resourceType: resourceProperties.resourceType,
+      resourceTypesKeys: vpcResourceKeys,
+    });
+  }
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  private cfnStackMetadataExist(stack: any): boolean {
+    if ('Metadata' in stack && 'lzaLookup' in stack['Metadata']) {
+      return true;
+    }
+
+    return false;
+  }
+  private flowLogExists(resourceProperties: LookupProperties): boolean {
+    this.validateResourcePropertyKeys({ resourceProperties, resourceKeys: ['vpcName', 'flowLogDestinationType'] });
+    const flowLogKeys = this.getCfnResourceKeysByType(resourceProperties.resourceType);
+    return this.cfnResourceExists({
+      lookupValues: resourceProperties.lookupValues,
+      resourceType: resourceProperties.resourceType,
+      resourceTypesKeys: flowLogKeys,
+    });
+  }
+
+  private internetGatewayExists(resourceProperties: LookupProperties): boolean {
+    this.validateResourcePropertyKeys({ resourceProperties, resourceKeys: ['vpcName'] });
+    const internetGatewayKeys = this.getCfnResourceKeysByType(resourceProperties.resourceType);
+    return this.cfnResourceExists({
+      lookupValues: resourceProperties.lookupValues,
+      resourceType: resourceProperties.resourceType,
+      resourceTypesKeys: internetGatewayKeys,
+    });
+  }
+  private virtualPrivateGatewayExists(resourceProperties: LookupProperties): boolean {
+    this.validateResourcePropertyKeys({ resourceProperties, resourceKeys: ['vpcName'] });
+    const virtualPrivateGatewayKeys = this.getCfnResourceKeysByType(resourceProperties.resourceType);
+    return this.cfnResourceExists({
+      lookupValues: resourceProperties.lookupValues,
+      resourceType: resourceProperties.resourceType,
+      resourceTypesKeys: virtualPrivateGatewayKeys,
+    });
+  }
+  private egressOnlyInternetGatewayExists(resourceProperties: LookupProperties): boolean {
+    this.validateResourcePropertyKeys({ resourceProperties, resourceKeys: ['vpcName'] });
+    const egressOnlyInternetGatewayKeys = this.getCfnResourceKeysByType(resourceProperties.resourceType);
+    return this.cfnResourceExists({
+      lookupValues: resourceProperties.lookupValues,
+      resourceType: resourceProperties.resourceType,
+      resourceTypesKeys: egressOnlyInternetGatewayKeys,
+    });
+  }
+  private vpcDhcpOptionsAssociationExists(resourceProperties: LookupProperties): boolean {
+    this.validateResourcePropertyKeys({ resourceProperties, resourceKeys: ['vpcName', 'dhcpOptionName'] });
+    const dhcpOptionAssociationKeys = this.getCfnResourceKeysByType(resourceProperties.resourceType);
+    return this.cfnResourceExists({
+      lookupValues: resourceProperties.lookupValues,
+      resourceType: resourceProperties.resourceType,
+      resourceTypesKeys: dhcpOptionAssociationKeys,
+    });
+  }
+  private vpcCidrBlockExists(resourceProperties: LookupProperties): boolean {
+    if ('cidrBlock' in resourceProperties.lookupValues) {
+      return this.ipv4CidrBlockExists(resourceProperties);
+    }
+
+    return this.ipv4IpamCidrBlockExists(resourceProperties);
+  }
+
+  private ipv4IpamCidrBlockExists(resourceProperties: LookupProperties): boolean {
+    this.validateResourcePropertyKeys({
+      resourceProperties,
+      resourceKeys: ['vpcName', 'ipamPoolName', 'netMaskLength'],
+    });
+    const vpcCidrBlockKeys = this.getCfnResourceKeysByType(resourceProperties.resourceType);
+    return this.cfnResourceExists({
+      lookupValues: resourceProperties.lookupValues,
+      resourceType: resourceProperties.resourceType,
+      resourceTypesKeys: vpcCidrBlockKeys,
+    });
+  }
+  private ipv4CidrBlockExists(resourceProperties: LookupProperties): boolean {
+    this.validateResourcePropertyKeys({ resourceProperties, resourceKeys: ['vpcName', 'cidrBlock'] });
+    const vpcCidrBlockKeys = this.getCfnResourceKeysByType(resourceProperties.resourceType);
+    return this.cfnResourceExists({
+      lookupValues: resourceProperties.lookupValues,
+      resourceType: resourceProperties.resourceType,
+      resourceTypesKeys: vpcCidrBlockKeys,
+    });
+  }
+
+  private validateResourcePropertyKeys(props: { resourceProperties: LookupProperties; resourceKeys: string[] }) {
+    const missingKeys = props.resourceKeys.filter(key => !(key in props.resourceProperties.lookupValues));
+    if (missingKeys.length > 0) {
+      throw new Error(
+        `Missing required keys: ${missingKeys.join(', ')} for resource ${
+          props.resourceProperties.resourceType
+        } in account ${this.accountId} and region ${this.region}`,
+      );
+    }
+  }
+
+  private getAseaResourceType(lzaResourceLookupType: LZAResourceLookupType) {
+    switch (lzaResourceLookupType) {
+      case LZAResourceLookupType.VPC:
+        return AseaResourceType.EC2_VPC;
+      case LZAResourceLookupType.VPC_CIDR_BLOCK:
+        return AseaResourceType.EC2_VPC_CIDR;
+      case LZAResourceLookupType.INTERNET_GATEWAY:
+        return AseaResourceType.EC2_IGW;
+      default:
+        return AseaResourceType.NOT_MANAGED;
+    }
+  }
+}

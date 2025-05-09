@@ -297,6 +297,9 @@ export class SubnetResources {
       const accountIds: string[] = [];
       const parameters: SsmParameterProps[] = [];
       const vpc = getVpc(vpcMap, vpcItem.name) as Vpc;
+      if (!vpc) {
+        continue;
+      }
       const sharedSubnets = vpcItem.subnets ? vpcItem.subnets.filter(subnet => subnet.shareTargets) : [];
 
       // Add VPC to parameters
