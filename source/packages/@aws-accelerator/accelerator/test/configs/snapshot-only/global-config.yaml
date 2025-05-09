@@ -2,6 +2,7 @@ homeRegion: &HOME_REGION us-east-1
 enabledRegions:
   - *HOME_REGION
   - us-west-2
+useV2Stacks: false
 managementAccountAccessRole: AWSControlTowerExecution
 cloudwatchLogRetentionInDays: 3653
 acceleratorMetadata:

@@ -314,10 +314,6 @@
           "description": "Forces the Accelerator to deploy the bootstrapping stack and circumvent the ssm parameter check. This option is needed when adding or removing a custom deployment role",
           "type": "boolean"
         },
-        "stackRefactor": {
-          "$ref": "#/definitions/IStackRefactor",
-          "description": "Enables stack refactoring for specific stacks. When enabled, the Accelerator will reorganize the resources defined in the stack to avoid exceeding the 500-resource limit for CloudFormation stacks."
-        },
         "useManagementAccessRole": {
           "description": "Indicates whether CDK operations use the IAM role specified in the `managementAccountAccessRole` option in `global-config.yaml` rather than the default roles created by CDK.\n\nThe roles created and leveraged by CDK by default can be found [here](https://docs.aws.amazon.com/cdk/v2/guide/bootstrapping.html#bootstrapping-contract).",
           "type": "boolean"
@@ -1012,6 +1008,11 @@
         "terminationProtection": {
           "description": "Whether to enable termination protection for this stack.",
           "type": "boolean"
+        },
+        "useV2Stacks": {
+          "default": false,
+          "description": "Enable V2 stacks. When enabled, Accelerator will place newly defined resources into separate CloudFormation stacks while preserving existing resources in their original stacks. This prevents exceeding the 500-resource limit per CloudFormation stack.",
+          "type": "boolean"
         }
       },
       "required": [
@@ -1513,17 +1514,6 @@
         "parameters",
         "deploymentTargets"
       ],
-      "type": "object"
-    },
-    "IStackRefactor": {
-      "additionalProperties": false,
-      "description": "LZA Stack refactor configuration. This interface allows you to specify which stacks should undergo refactoring.\nRefactoring helps optimize resource distribution and avoid exceeding the 500-resource limit for CloudFormation stacks.",
-      "properties": {
-        "networkVpcStack": {
-          "description": "Enables refactoring for the network stacks.",
-          "type": "boolean"
-        }
-      },
       "type": "object"
     },
     "ITag": {

@@ -48,6 +48,8 @@ export interface ValidateEnvironmentConfigProps {
   readonly logRetentionInDays: number;
   readonly prefixes: AcceleratorResourcePrefixes;
   readonly vpcsCidrs: { vpcName: string; logicalId: string; cidrs: string[]; parameterName: string }[];
+  readonly useV2StacksValue: boolean;
+  readonly v2StacksParamName: string;
 }
 
 /**
@@ -113,6 +115,15 @@ export class ValidateEnvironmentConfig extends Construct {
         props.driftDetectionParameter.parameterArn,
         props.driftDetectionMessageParameter.parameterArn,
         `arn:${props.partition}:ssm:${props.region}:${props.managementAccountId}:parameter${props.prefixes.ssmParamName}/validation/*/network/vpc/*/deployedCidrs`,
+        `arn:${props.partition}:ssm:${props.region}:${props.managementAccountId}:parameter${props.v2StacksParamName}`,
+      ],
+    });
+    const ssmCreateParamPolicy = new cdk.aws_iam.PolicyStatement({
+      sid: 'ssmCreate',
+      effect: cdk.aws_iam.Effect.ALLOW,
+      actions: ['ssm:PutParameter'],
+      resources: [
+        `arn:${props.partition}:ssm:${props.region}:${props.managementAccountId}:parameter${props.v2StacksParamName}`,
       ],
     });
 
@@ -130,6 +141,7 @@ export class ValidateEnvironmentConfig extends Construct {
     providerLambda.addToRolePolicy(kmsPolicy);
     providerLambda.addToRolePolicy(cloudformationPolicy);
     providerLambda.addToRolePolicy(ssmPolicy);
+    providerLambda.addToRolePolicy(ssmCreateParamPolicy);
 
     // Custom resource lambda log group
     const logGroup = new cdk.aws_logs.LogGroup(this, `${providerLambda.node.id}LogGroup`, {
@@ -161,6 +173,8 @@ export class ValidateEnvironmentConfig extends Construct {
         skipScpValidation: process.env['ACCELERATOR_SKIP_SCP_VALIDATION'] ?? 'no',
         uuid: uuidv4(), // Generates a new UUID to force the resource to update,
         vpcCidrs: props.vpcsCidrs,
+        useV2StacksValue: props.useV2StacksValue,
+        v2StacksParamName: props.v2StacksParamName,
       },
     });
     // Ensure that the LogGroup is created by Cloudformation prior to Lambda execution
