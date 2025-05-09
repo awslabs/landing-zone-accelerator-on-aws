@@ -44,6 +44,9 @@ export class RouteTableResources {
 
     for (const vpcItem of vpcResources) {
       const vpc = getVpc(vpcMap, vpcItem.name) as Vpc;
+      if (!vpc) {
+        continue;
+      }
       //
       // Create outpost route tables
       //

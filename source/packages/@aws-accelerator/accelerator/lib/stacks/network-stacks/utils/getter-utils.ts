@@ -168,14 +168,8 @@ export function getTgwRouteTableId(
  * @param vpcName
  * @returns
  */
-export function getVpc(vpcMap: Map<string, Vpc> | Map<string, string>, vpcName: string): Vpc | string {
+export function getVpc(vpcMap: Map<string, Vpc> | Map<string, string>, vpcName: string): Vpc | string | undefined {
   const vpc = vpcMap.get(vpcName);
-
-  if (!vpc) {
-    logger.error(`VPC ${vpcName} does not exist in map`);
-    throw new Error(`Configuration validation failed at runtime.`);
-  }
-
   return vpc;
 }
 

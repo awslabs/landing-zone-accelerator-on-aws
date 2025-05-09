@@ -2333,6 +2333,7 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
       ],
       "Metadata": {
         "lzaLookup": {
+          "dhcpOptionName": "accelerator-dhcp-opts",
           "vpcName": "Network-Endpoints",
         },
       },

@@ -862,6 +862,9 @@ export abstract class NetworkStack extends AcceleratorStack {
 
         // Get VPC
         const vpc = getVpc(vpcMap, vpcItem.name);
+        if (!vpc) {
+          continue;
+        }
 
         // Create security group
         const securityGroup = this.createSecurityGroupItem(

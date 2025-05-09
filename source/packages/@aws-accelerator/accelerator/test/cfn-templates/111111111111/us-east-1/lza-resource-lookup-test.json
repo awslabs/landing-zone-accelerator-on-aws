@@ -1,0 +1,10 @@
+{
+    "Resources": {
+        "MyTopic": {
+            "Type": "AWS::SNS::Topic",
+            "Properties": {
+                "TopicName": "my-topic"
+            }
+        }
+    }
+}
