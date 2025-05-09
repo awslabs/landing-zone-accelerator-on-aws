@@ -973,6 +973,37 @@ exports[`PipelineStack Construct(PipelineStack):  Snapshot Test 1`] = `
             "Actions": [
               {
                 "ActionTypeId": {
+                  "Category": "Build",
+                  "Owner": "AWS",
+                  "Provider": "CodeBuild",
+                  "Version": "1",
+                },
+                "Configuration": {
+                  "EnvironmentVariables": "[{"name":"CDK_OPTIONS","type":"PLAINTEXT","value":"deploy --stage pre-approval"},{"name":"CONFIG_COMMIT_ID","type":"PLAINTEXT","value":"#{Config-Vars.CommitId}"},{"name":"CODEPIPELINE_EXECUTION_ID","type":"PLAINTEXT","value":"#{codepipeline.PipelineExecutionId}"},{"name":"ACCELERATOR_STAGE","type":"PLAINTEXT","value":"pre-approval"}]",
+                  "PrimarySource": "Build",
+                  "ProjectName": {
+                    "Ref": "PipelineToolkitProjectBCBD6910",
+                  },
+                },
+                "InputArtifacts": [
+                  {
+                    "Name": "Build",
+                  },
+                  {
+                    "Name": "Config",
+                  },
+                ],
+                "Name": "Pre-Approval",
+                "RoleArn": {
+                  "Fn::GetAtt": [
+                    "PipelinePipelineRole6D983AD5",
+                    "Arn",
+                  ],
+                },
+                "RunOrder": 1,
+              },
+              {
+                "ActionTypeId": {
                   "Category": "Approval",
                   "Owner": "AWS",
                   "Provider": "Manual",
@@ -2751,6 +2782,14 @@ phases:
                   "Ref": "AWS::Region",
                 },
                 " --config-dir $CODEBUILD_SRC_DIR_Config --stage $ACCELERATOR_STAGE --prefix AWSAccelerator --use-existing-role $useExistingRole --dry-run no
+      - |-
+        if [ "\${ACCELERATOR_STAGE}" = "pre-approval" ]; then
+                        mkdir rawDiff;
+                        cd rawDiff;
+                        aws s3 sync "\${DIFFS_DIR}/\${CODEPIPELINE_EXECUTION_ID}/" .;
+                        for file in ./*.tgz; do tar -xf "$file" -C .; done;
+                        for file in ./*.diff; do cat "$file"; done;
+                      fi
       - if [ "prepare" = "\${ACCELERATOR_STAGE}" ]; then set -e && LOG_LEVEL=info && yarn run ts-node ../lza-modules/bin/runner.ts --module account-alias --partition  ",
                 {
                   "Ref": "AWS::Partition",
@@ -3851,6 +3890,37 @@ exports[`PipelineStack Construct(PipelineStack):  Snapshot Test 2`] = `
           },
           {
             "Actions": [
+              {
+                "ActionTypeId": {
+                  "Category": "Build",
+                  "Owner": "AWS",
+                  "Provider": "CodeBuild",
+                  "Version": "1",
+                },
+                "Configuration": {
+                  "EnvironmentVariables": "[{"name":"CDK_OPTIONS","type":"PLAINTEXT","value":"deploy --stage pre-approval"},{"name":"CONFIG_COMMIT_ID","type":"PLAINTEXT","value":"#{Config-Vars.CommitId}"},{"name":"CODEPIPELINE_EXECUTION_ID","type":"PLAINTEXT","value":"#{codepipeline.PipelineExecutionId}"},{"name":"ACCELERATOR_STAGE","type":"PLAINTEXT","value":"pre-approval"}]",
+                  "PrimarySource": "Build",
+                  "ProjectName": {
+                    "Ref": "PipelineToolkitProjectBCBD6910",
+                  },
+                },
+                "InputArtifacts": [
+                  {
+                    "Name": "Build",
+                  },
+                  {
+                    "Name": "Config",
+                  },
+                ],
+                "Name": "Pre-Approval",
+                "RoleArn": {
+                  "Fn::GetAtt": [
+                    "PipelinePipelineRole6D983AD5",
+                    "Arn",
+                  ],
+                },
+                "RunOrder": 1,
+              },
               {
                 "ActionTypeId": {
                   "Category": "Approval",
@@ -6117,6 +6187,14 @@ phases:
                   "Ref": "AWS::Region",
                 },
                 " --config-dir $CODEBUILD_SRC_DIR_Config --stage $ACCELERATOR_STAGE --prefix AWSAccelerator --use-existing-role $useExistingRole --dry-run no
+      - |-
+        if [ "\${ACCELERATOR_STAGE}" = "pre-approval" ]; then
+                        mkdir rawDiff;
+                        cd rawDiff;
+                        aws s3 sync "\${DIFFS_DIR}/\${CODEPIPELINE_EXECUTION_ID}/" .;
+                        for file in ./*.tgz; do tar -xf "$file" -C .; done;
+                        for file in ./*.diff; do cat "$file"; done;
+                      fi
       - if [ "prepare" = "\${ACCELERATOR_STAGE}" ]; then set -e && LOG_LEVEL=info && yarn run ts-node ../lza-modules/bin/runner.ts --module account-alias --partition  ",
                 {
                   "Ref": "AWS::Partition",
