@@ -79,7 +79,7 @@ export class IamConfigValidator {
     //
     // Validate IAM roles
     //
-    this.validateRoles(values, errors);
+    this.validateRoles(values, accountsConfig, errors);
 
     // Validate target OU names
     this.validateDeploymentTargetOUs(values, ouIdNames, errors);
@@ -226,11 +226,11 @@ export class IamConfigValidator {
    * @param values
    * @param errors
    */
-  private validateRoles(values: IamConfig, errors: string[]) {
+  private validateRoles(values: IamConfig, accountsConfig: AccountsConfig, errors: string[]) {
     //
     // Validate role names
     //
-    this.validateRoleNames(values, errors);
+    this.validateRoleNames(values, accountsConfig, errors);
   }
 
   /**
@@ -238,19 +238,37 @@ export class IamConfigValidator {
    * @param values
    * @param errors
    */
-  private validateRoleNames(values: IamConfig, errors: string[]) {
-    const roleNames: string[] = [];
+  public validateRoleNames(values: IamConfig, accountsConfig: AccountsConfig, errors: string[]) {
+    // For each account, maintain a set of role names
+    const accountRoleMap = new Map<string, Set<string>>();
 
     values.roleSets?.forEach(roleSet => {
+      // Get all account names for this roleSet's deployment targets
+      const targetAccounts = CommonValidatorFunctions.getAccountNamesFromDeploymentTargets(
+        accountsConfig,
+        roleSet.deploymentTargets,
+      );
+
       roleSet.roles?.forEach(role => {
-        roleNames.push(role.name);
+        const normalizedName = role.name.trim().toUpperCase();
+
+        // Check each target account for this role
+        targetAccounts.forEach(accountName => {
+          if (!accountRoleMap.has(accountName)) {
+            accountRoleMap.set(accountName, new Set());
+          }
+
+          const accountRoles = accountRoleMap.get(accountName)!;
+          if (accountRoles.has(normalizedName)) {
+            errors.push(
+              `Duplicate role names defined. Role names must be unique in each AWS account. Role name: ${role.name}`,
+            );
+          } else {
+            accountRoles.add(normalizedName);
+          }
+        });
       });
     });
-
-    // Check names for duplicates
-    if (hasDuplicates(roleNames)) {
-      errors.push(`Duplicate role names defined. Role names must be unique. Role names defined: ${roleNames}`);
-    }
   }
 
   /**
@@ -992,7 +1010,7 @@ export class IamConfigValidator {
  * Class to validate managed active directory
  */
 class ManagedActiveDirectoryValidator {
-  private readonly validConfigSets: string[] = [
+  static readonly validConfigSets: string[] = [
     'JoinDomain',
     'AWSQuickStart',
     'ADGroupSetup',
@@ -1012,29 +1030,29 @@ class ManagedActiveDirectoryValidator {
     //
     // Validate mandatory user data scripts
     //
-    this.validateMandatoryUserDataScripts(values, errors);
+    ManagedActiveDirectoryValidator.validateMandatoryUserDataScripts(values, errors);
 
     //
     // Validate instance security group source list
     //
-    this.validateSecurityGroupInboundSources(values, errors);
+    ManagedActiveDirectoryValidator.validateSecurityGroupInboundSources(values, errors);
 
     //
     // Validate ad user groups
     //
-    this.validateAdUserGroups(values, errors);
+    ManagedActiveDirectoryValidator.validateAdUserGroups(values, errors);
 
-    this.validateMadVpcSettings(values, vpcSubnetLists, errors);
+    ManagedActiveDirectoryValidator.validateMadVpcSettings(values, vpcSubnetLists, errors);
 
     //
     // Validate MAD sharing configuration
     //
-    this.validateMadSharingConfig(values, ouIdNames, accountNames, errors);
+    ManagedActiveDirectoryValidator.validateMadSharingConfig(values, ouIdNames, accountNames, errors);
 
     //
     // Validate MAD secret configuration
     //
-    this.validateMadSecretConfig(values, errors);
+    ManagedActiveDirectoryValidator.validateMadSecretConfig(values, errors);
   }
 
   /**
@@ -1042,7 +1060,7 @@ class ManagedActiveDirectoryValidator {
    * @param values
    * @param errors
    */
-  private validateSecurityGroupInboundSources(values: IamConfig, errors: string[]) {
+  static validateSecurityGroupInboundSources(values: IamConfig, errors: string[]) {
     for (const managedActiveDirectory of values.managedActiveDirectories ?? []) {
       if (managedActiveDirectory.activeDirectoryConfigurationInstance) {
         if (managedActiveDirectory.activeDirectoryConfigurationInstance.securityGroupInboundSources.length === 0) {
@@ -1059,10 +1077,10 @@ class ManagedActiveDirectoryValidator {
    * @param values
    * @param errors
    */
-  private validateMandatoryUserDataScripts(values: IamConfig, errors: string[]) {
+  static validateMandatoryUserDataScripts(values: IamConfig, errors: string[]) {
     for (const managedActiveDirectory of values.managedActiveDirectories ?? []) {
       if (managedActiveDirectory.activeDirectoryConfigurationInstance) {
-        for (const configSet of this.validConfigSets) {
+        for (const configSet of ManagedActiveDirectoryValidator.validConfigSets) {
           const foundScriptObject = managedActiveDirectory.activeDirectoryConfigurationInstance.userDataScripts.find(
             item => item.scriptName === configSet,
           );
@@ -1092,7 +1110,7 @@ class ManagedActiveDirectoryValidator {
    * @param values
    * @param errors
    */
-  private validateAdUserGroups(values: IamConfig, errors: string[]) {
+  static validateAdUserGroups(values: IamConfig, errors: string[]) {
     for (const managedActiveDirectory of values.managedActiveDirectories ?? []) {
       if (managedActiveDirectory.activeDirectoryConfigurationInstance) {
         const allGroups = managedActiveDirectory.activeDirectoryConfigurationInstance.adGroups;
@@ -1124,7 +1142,7 @@ class ManagedActiveDirectoryValidator {
    * @param vpcSubnetLists
    * @param errors
    */
-  private validateMadVpcSettings(
+  static validateMadVpcSettings(
     values: IIamConfig,
     vpcSubnetLists: { vpcName: string; subnetName: string; subnetAz: string | number }[],
     errors: string[],
@@ -1188,7 +1206,7 @@ class ManagedActiveDirectoryValidator {
    * @param accountNames
    * @param errors
    */
-  private validateMadSharingConfig(values: IIamConfig, ouIdNames: string[], accountNames: string[], errors: string[]) {
+  static validateMadSharingConfig(values: IIamConfig, ouIdNames: string[], accountNames: string[], errors: string[]) {
     for (const managedActiveDirectory of values.managedActiveDirectories ?? []) {
       if (managedActiveDirectory.sharedOrganizationalUnits) {
         if (managedActiveDirectory.sharedOrganizationalUnits.organizationalUnits.length === 0) {
@@ -1227,7 +1245,7 @@ class ManagedActiveDirectoryValidator {
    * @param accountNames
    * @param errors
    */
-  private validateMadSecretConfig(values: IIamConfig, errors: string[]) {
+  static validateMadSecretConfig(values: IIamConfig, errors: string[]) {
     for (const managedActiveDirectory of values.managedActiveDirectories ?? []) {
       if (managedActiveDirectory.account === 'Management') {
         if (
