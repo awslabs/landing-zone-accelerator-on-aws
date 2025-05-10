@@ -23,6 +23,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - fix(tagging): fix tagging for custom resource providers
 - fix(logging): check for error in CreateLogGroup API
 - fix(diff): print output before approval 
+- fix(pre-approval): add wrapper around deployment 
 
 ### Changed
 
