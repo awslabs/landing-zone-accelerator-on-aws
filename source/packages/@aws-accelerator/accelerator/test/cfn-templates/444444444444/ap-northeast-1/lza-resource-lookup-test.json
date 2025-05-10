@@ -78,7 +78,7 @@
             "Metadata": {
                 "lzaLookup": {
                     "vpcName": "test-vpc",
-                    "dhcpOptionName": "test-dhcp-option"
+                    "dhcpOptionsName": "test-dhcp-option"
                 }
             }
         },

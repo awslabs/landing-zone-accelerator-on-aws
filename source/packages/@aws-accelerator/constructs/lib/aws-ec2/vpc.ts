@@ -997,7 +997,7 @@ abstract class VpcBase extends cdk.Resource implements IVpc {
 
     DhcpOptionsAssociation.addMetadata(MetadataKeys.LZA_LOOKUP, {
       vpcName: this.name,
-      dhcpOptionName: dhcpOptions.name,
+      dhcpOptionsName: dhcpOptions.name,
     });
   }
 }
@@ -1106,7 +1106,7 @@ export class Vpc extends VpcBase {
       });
       dhcpOptionsAssociation.addMetadata(MetadataKeys.LZA_LOOKUP, {
         vpcName: this.name,
-        dhcpOptionName: props.dhcpOptions.name,
+        dhcpOptionsName: props.dhcpOptions.name,
       });
     }
   }
