@@ -158,7 +158,7 @@ exports[`VpcImport Construct(Vpc):  Snapshot Test 1`] = `
     "TestVpcDhcpOptionsAssociationDB23B751": {
       "Metadata": {
         "lzaLookup": {
-          "dhcpOptionName": "test-dhcp-opts",
+          "dhcpOptionsName": "test-dhcp-opts",
           "vpcName": "Main",
         },
       },
