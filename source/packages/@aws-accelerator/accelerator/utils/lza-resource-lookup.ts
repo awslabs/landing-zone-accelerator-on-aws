@@ -300,7 +300,7 @@ export class LZAResourceLookup {
     });
   }
   private vpcDhcpOptionsAssociationExists(resourceProperties: LookupProperties): boolean {
-    this.validateResourcePropertyKeys({ resourceProperties, resourceKeys: ['vpcName', 'dhcpOptionName'] });
+    this.validateResourcePropertyKeys({ resourceProperties, resourceKeys: ['vpcName', 'dhcpOptionsName'] });
     const dhcpOptionAssociationKeys = this.getCfnResourceKeysByType(resourceProperties.resourceType);
     return this.cfnResourceExists({
       lookupValues: resourceProperties.lookupValues,

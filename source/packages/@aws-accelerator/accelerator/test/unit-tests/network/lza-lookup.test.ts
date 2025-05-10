@@ -105,7 +105,7 @@ describe('LZAResourceLookup tests', () => {
     expect(
       lzaLookup.resourceExists({
         resourceType: LZAResourceLookupType.VPC_DHCP_OPTIONS_ASSOCIATION,
-        lookupValues: { vpcName: 'test-vpc', dhcpOptionName: 'test-dhcp-option' },
+        lookupValues: { vpcName: 'test-vpc', dhcpOptionsName: 'test-dhcp-option' },
       }),
     ).toBeTruthy();
 
@@ -145,7 +145,7 @@ describe('LZAResourceLookup tests', () => {
     expect(
       lzaLookup.resourceExists({
         resourceType: LZAResourceLookupType.VPC_DHCP_OPTIONS_ASSOCIATION,
-        lookupValues: { vpcName: 'new-vpc', dhcpOptionName: 'test-dhcp-option' },
+        lookupValues: { vpcName: 'new-vpc', dhcpOptionsName: 'test-dhcp-option' },
       }),
     ).toBeFalsy();
   });
