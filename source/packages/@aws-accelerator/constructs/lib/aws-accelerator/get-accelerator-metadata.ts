@@ -78,10 +78,14 @@ export interface AcceleratorMetadataProps {
    * Global Region
    */
   readonly globalRegion: string;
+  /**
+   * Installer Stack Name
+   */
+  readonly installerStackName: string;
 }
 
 /**
- * Class for FMSOrganizationAdminAccount
+ * Class for Accelerator Metadata
  */
 export class AcceleratorMetadata extends Construct {
   lambdaFunction: { lambda: cdk.aws_lambda.Function; logGroup: cdk.aws_logs.LogGroup };
@@ -204,7 +208,7 @@ export class AcceleratorMetadata extends Construct {
         METADATA_BUCKET: props.metadataLogBucketName,
         ACCELERATOR_PREFIX: props.acceleratorPrefix,
         GLOBAL_REGION: props.globalRegion,
-        ACCELERATOR_VERSION_SSM_PATH: `${props.acceleratorSsmParamPrefix}/${props.acceleratorPrefix}-InstallerStack/version`,
+        ACCELERATOR_VERSION_SSM_PATH: `${props.acceleratorSsmParamPrefix}/${props.installerStackName}/version`,
       },
     });
 
