@@ -984,7 +984,7 @@ abstract class VpcBase extends cdk.Resource implements IVpc {
     if (
       !this.lzaLookup.resourceExists({
         resourceType: LZAResourceLookupType.VPC_DHCP_OPTIONS_ASSOCIATION,
-        lookupValues: { vpcName: this.name },
+        lookupValues: { vpcName: this.name, dhcpOptionsName: dhcpOptions.name },
       })
     ) {
       return;
@@ -1069,7 +1069,7 @@ export class Vpc extends VpcBase {
     });
     const dhcpManagedByV1Stack = this.lzaLookup.resourceExists({
       resourceType: LZAResourceLookupType.VPC_DHCP_OPTIONS_ASSOCIATION,
-      lookupValues: { vpcName: this.name },
+      lookupValues: { vpcName: this.name, dhcpOptionsName: props.dhcpOptions?.name },
     });
     if (props.internetGateway && igwManagedByV1Stack) {
       this.internetGateway = new cdk.aws_ec2.CfnInternetGateway(this, 'InternetGateway', {});
