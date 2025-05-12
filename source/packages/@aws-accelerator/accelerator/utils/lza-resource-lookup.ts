@@ -312,14 +312,22 @@ export class LZAResourceLookup {
     if ('cidrBlock' in resourceProperties.lookupValues) {
       return this.ipv4CidrBlockExists(resourceProperties);
     }
-
-    return this.ipv4IpamCidrBlockExists(resourceProperties);
+    if ('ipamPoolName' in resourceProperties.lookupValues) {
+      return this.ipv4IpamCidrBlockExists(resourceProperties);
+    }
+    if (
+      'amazonProvidedIpv6CidrBlock' in resourceProperties.lookupValues ||
+      'ipv6pool' in resourceProperties.lookupValues
+    ) {
+      return this.ipv6CidrExists(resourceProperties);
+    }
+    return false;
   }
 
   private ipv4IpamCidrBlockExists(resourceProperties: LookupProperties): boolean {
     this.validateResourcePropertyKeys({
       resourceProperties,
-      resourceKeys: ['vpcName', 'ipamPoolName', 'netMaskLength'],
+      resourceKeys: ['vpcName', 'ipamPoolName', 'netmaskLength'],
     });
     const vpcCidrBlockKeys = this.getCfnResourceKeysByType(resourceProperties.resourceType);
     return this.cfnResourceExists({
@@ -330,6 +338,51 @@ export class LZAResourceLookup {
   }
   private ipv4CidrBlockExists(resourceProperties: LookupProperties): boolean {
     this.validateResourcePropertyKeys({ resourceProperties, resourceKeys: ['vpcName', 'cidrBlock'] });
+    const vpcCidrBlockKeys = this.getCfnResourceKeysByType(resourceProperties.resourceType);
+    return this.cfnResourceExists({
+      lookupValues: resourceProperties.lookupValues,
+      resourceType: resourceProperties.resourceType,
+      resourceTypesKeys: vpcCidrBlockKeys,
+    });
+  }
+
+  private ipv6CidrExists(resourceProperties: LookupProperties): boolean {
+    const validLookupValues = Object.keys(resourceProperties.lookupValues).reduce((acc: LookupValues, key) => {
+      if (resourceProperties.lookupValues[key] !== undefined) {
+        acc[key] = resourceProperties.lookupValues[key];
+      }
+      return acc;
+    }, {});
+
+    const newResourceProperties = {
+      resourceType: resourceProperties.resourceType,
+      lookupValues: validLookupValues,
+    };
+
+    if ('amazonProvidedIpv6CidrBlock' in validLookupValues) {
+      return this.ipv6CidrAmazonProvidedExists(newResourceProperties);
+    }
+    if ('ipv6pool' in validLookupValues) {
+      return this.ipv6CidrPoolExists(newResourceProperties);
+    }
+    return false;
+  }
+  private ipv6CidrAmazonProvidedExists(resourceProperties: LookupProperties): boolean {
+    this.validateResourcePropertyKeys({
+      resourceProperties,
+      resourceKeys: ['vpcName', 'amazonProvidedIpv6CidrBlock'],
+    });
+
+    const vpcCidrBlockKeys = this.getCfnResourceKeysByType(resourceProperties.resourceType);
+    return this.cfnResourceExists({
+      lookupValues: resourceProperties.lookupValues,
+      resourceType: resourceProperties.resourceType,
+      resourceTypesKeys: vpcCidrBlockKeys,
+    });
+  }
+
+  private ipv6CidrPoolExists(resourceProperties: LookupProperties): boolean {
+    this.validateResourcePropertyKeys({ resourceProperties, resourceKeys: ['vpcName', 'ipv6CidrBlock', 'ipv6pool'] });
     const vpcCidrBlockKeys = this.getCfnResourceKeysByType(resourceProperties.resourceType);
     return this.cfnResourceExists({
       lookupValues: resourceProperties.lookupValues,
