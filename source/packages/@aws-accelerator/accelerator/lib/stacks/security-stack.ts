@@ -473,6 +473,7 @@ export class SecurityStack extends AcceleratorStack {
       metadataLogBucketName: metadataLogBucketName,
       organizationId: this.organizationId ?? '',
       globalRegion: acceleratorProps.globalRegion,
+      installerStackName: acceleratorProps.installerStackName,
     });
   }
 }
