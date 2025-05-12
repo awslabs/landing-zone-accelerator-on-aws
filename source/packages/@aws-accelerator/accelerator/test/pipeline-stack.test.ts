@@ -67,7 +67,7 @@ const getStacks = memoize(() => {
       pipelineAccountId: '000000000000',
       useExistingRoles: false,
       codeconnectionArn: '',
-      // installerStackName: 'InstallerStack',
+      installerStackName: 'AWSAccelerator-InstallerStack',
     }),
     new PipelineStack(app, 'PipelineStackRegionalDeploy', {
       sourceRepository: 'codecommit',
@@ -111,7 +111,7 @@ const getStacks = memoize(() => {
       useExistingRoles: false,
       codeconnectionArn: '',
       regionByRegionDeploymentOrder: 'us-east-1,us-west-1',
-      // installerStackName: 'InstallerStack',
+      installerStackName: 'AWSAccelerator-InstallerStack',
     }),
   ];
   return stacks;

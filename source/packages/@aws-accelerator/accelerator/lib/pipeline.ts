@@ -765,7 +765,7 @@ export class AcceleratorPipeline extends Construct {
           },
           USE_EXISTING_CONFIG_REPO: {
             type: cdk.aws_codebuild.BuildEnvironmentVariableType.PLAINTEXT,
-            value: this.props.useExistingConfigRepo,
+            value: this.props.useExistingConfigRepo ? 'Yes' : 'No',
           },
           EXISTING_CONFIG_REPOSITORY_NAME: {
             type: cdk.aws_codebuild.BuildEnvironmentVariableType.PLAINTEXT,

@@ -133,6 +133,7 @@ export function createAcceleratorStackProps(
     pipelineAccountId: '1234567890',
     enableSingleAccountMode: true,
     useExistingRoles: false,
+    installerStackName: 'AWSAccelerator-InstallerStack',
     stackName: 'test-stack-name',
     env: {
       region: 'us-east-1',

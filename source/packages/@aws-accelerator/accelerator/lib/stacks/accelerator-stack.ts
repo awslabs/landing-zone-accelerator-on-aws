@@ -196,6 +196,7 @@ export interface AcceleratorStackProps extends cdk.StackProps {
   readonly configCommitId?: string;
   readonly globalRegion: string;
   readonly centralizedLoggingRegion: string;
+  readonly installerStackName: string;
   /**
    * Accelerator resource name prefixes
    */

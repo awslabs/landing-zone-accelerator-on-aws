@@ -2680,7 +2680,7 @@ exports[`PipelineStack Construct(PipelineStack):  Snapshot Test 1`] = `
             {
               "Name": "USE_EXISTING_CONFIG_REPO",
               "Type": "PLAINTEXT",
-              "Value": "false",
+              "Value": "No",
             },
             {
               "Name": "EXISTING_CONFIG_REPOSITORY_NAME",
@@ -6035,7 +6035,7 @@ exports[`PipelineStack Construct(PipelineStack):  Snapshot Test 2`] = `
             {
               "Name": "USE_EXISTING_CONFIG_REPO",
               "Type": "PLAINTEXT",
-              "Value": "false",
+              "Value": "No",
             },
             {
               "Name": "EXISTING_CONFIG_REPOSITORY_NAME",
