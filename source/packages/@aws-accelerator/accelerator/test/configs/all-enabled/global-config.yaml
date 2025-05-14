@@ -31,7 +31,7 @@ enabledRegions:
   # - ca-west-1
   # - mx-central-1
 
-useV2Stacks: false
+useV2Stacks: true
 managementAccountAccessRole: AWSControlTowerExecution
 defaultEventBus:
   policy: event-bus-policies/eventbus-policy.json

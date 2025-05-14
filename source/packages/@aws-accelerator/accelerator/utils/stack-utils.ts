@@ -60,6 +60,7 @@ import { setRetryStrategy } from '@aws-accelerator/utils/lib/common-functions';
 import { throttlingBackOff } from '@aws-accelerator/utils/lib/throttle';
 import { ControlTowerClient, ListLandingZonesCommand } from '@aws-sdk/client-controltower';
 import { CfnResource } from 'aws-cdk-lib';
+import { createAndGetV2NetworkVpcDependencyStacks } from '../lib/stacks/v2-network/utils/functions';
 
 const logger = createLogger(['stack-utils']);
 /**
@@ -1142,6 +1143,26 @@ export function createNetworkVpcStacks(
     cdk.Aspects.of(vpcStack).add(new LambdaRuntimeAspect());
     cdk.Aspects.of(vpcStack).add(new LambdaDefaultMemoryAspect());
 
+    // V2 stacks
+    const v2DependencyStacks: cdk.Stack[] = [];
+    if (props.globalConfig.useV2Stacks) {
+      v2DependencyStacks.push(
+        ...getV2NetworkVpcDependencyStacks({
+          dependencyStack: vpcStack,
+          app,
+          props,
+          env,
+          partition: context.partition,
+          accountId,
+          enabledRegion,
+          version,
+          stage: context.stage,
+        }),
+      );
+    } else {
+      v2DependencyStacks.push(vpcStack);
+    }
+
     const endpointsStack = new NetworkVpcEndpointsStack(
       app,
       `${AcceleratorStackNames[AcceleratorStage.NETWORK_VPC_ENDPOINTS]}-${accountId}-${enabledRegion}`,
@@ -1154,7 +1175,11 @@ export function createNetworkVpcStacks(
       },
     );
     addAcceleratorTags(endpointsStack, context.partition, props.globalConfig, props.prefixes.accelerator);
-    endpointsStack.addDependency(vpcStack);
+
+    for (const v2DependencyStack of v2DependencyStacks) {
+      endpointsStack.addDependency(v2DependencyStack);
+    }
+
     cdk.Aspects.of(endpointsStack).add(new AwsSolutionsChecks());
     cdk.Aspects.of(endpointsStack).add(new PermissionsBoundaryAspect(accountId, context.partition));
     cdk.Aspects.of(endpointsStack).add(new LambdaRuntimeAspect());
@@ -1174,6 +1199,48 @@ export function createNetworkVpcStacks(
     cdk.Aspects.of(dnsStack).add(new LambdaDefaultMemoryAspect());
     new AcceleratorAspects(app, context.partition, context.useExistingRoles ?? false);
   }
+}
+
+/**
+ * Function to create V2 network VPC stacks and return the list of v2 stacks for dependency
+ * @param options
+ */
+function getV2NetworkVpcDependencyStacks(options: {
+  dependencyStack: cdk.Stack;
+  app: cdk.App;
+  props: AcceleratorStackProps;
+  env: cdk.Environment;
+  partition: string;
+  accountId: string;
+  enabledRegion: string;
+  version: string;
+  stage?: string;
+}): cdk.Stack[] {
+  const synthesizer = getStackSynthesizer(options.props, options.accountId, options.enabledRegion, options.stage);
+
+  const v2Stacks: cdk.Stack[] = [];
+  const v2NetworkVpcDependencyStacks = createAndGetV2NetworkVpcDependencyStacks({
+    v2Stacks,
+    dependencyStack: options.dependencyStack,
+    app: options.app,
+    props: options.props,
+    env: options.env,
+    partition: options.partition,
+    accountId: options.accountId,
+    enabledRegion: options.enabledRegion,
+    version,
+    synthesizer,
+  });
+
+  for (const v2Stack of v2Stacks) {
+    addAcceleratorTags(v2Stack, options.partition, options.props.globalConfig, options.props.prefixes.accelerator);
+    cdk.Aspects.of(v2Stack).add(new AwsSolutionsChecks());
+    cdk.Aspects.of(v2Stack).add(new PermissionsBoundaryAspect(options.accountId, options.partition));
+    cdk.Aspects.of(v2Stack).add(new LambdaRuntimeAspect());
+    cdk.Aspects.of(v2Stack).add(new LambdaDefaultMemoryAspect());
+  }
+
+  return v2NetworkVpcDependencyStacks;
 }
 
 /**
