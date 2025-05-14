@@ -100,6 +100,19 @@ export const BootstrapVersion = 21;
 const stackPrefix = process.env['ACCELERATOR_PREFIX'] ?? 'AWSAccelerator';
 
 /**
+ * Accelerator V2 stacks
+ */
+export enum AcceleratorV2Stacks {
+  VPC_STACK = 'VpcStack',
+  ROUTE_TABLES_STACK = 'RouteTablesStack',
+  SECURITY_GROUPS_STACK = 'SecurityGroupsStack',
+  SUBNETS_STACK = 'SubnetsStack',
+  SUBNETS_SHARE_STACK = 'SubnetsShareStack',
+  NACLS_STACK = 'NaclsStack',
+  LBS_STACK = 'LoadBalancersStack',
+}
+
+/**
  * constant maintaining cloudformation stack names
  */
 export const AcceleratorStackNames: Record<string, string> = {
@@ -127,6 +140,14 @@ export const AcceleratorStackNames: Record<string, string> = {
   [AcceleratorStage.FINALIZE]: `${stackPrefix}-FinalizeStack`,
   [AcceleratorStage.SECURITY_AUDIT]: `${stackPrefix}-SecurityAuditStack`,
   [AcceleratorStage.CUSTOMIZATIONS]: `${stackPrefix}-CustomizationsStack`,
+
+  [AcceleratorV2Stacks.VPC_STACK]: `${stackPrefix}-VpcStack`,
+  [AcceleratorV2Stacks.ROUTE_TABLES_STACK]: `${stackPrefix}-RouteTablesStack`,
+  [AcceleratorV2Stacks.SECURITY_GROUPS_STACK]: `${stackPrefix}-SecurityGroupsStack`,
+  [AcceleratorV2Stacks.SUBNETS_STACK]: `${stackPrefix}-SubnetsStack`,
+  [AcceleratorV2Stacks.SUBNETS_SHARE_STACK]: `${stackPrefix}-SubnetsShareStack`,
+  [AcceleratorV2Stacks.NACLS_STACK]: `${stackPrefix}-NaclsStack`,
+  [AcceleratorV2Stacks.LBS_STACK]: `${stackPrefix}-LoadBalancersStack`,
 };
 
 /**
