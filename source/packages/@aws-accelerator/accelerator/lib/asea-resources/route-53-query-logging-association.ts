@@ -37,7 +37,15 @@ export class Route53ResolverQueryLoggingAssociation extends AseaResource {
       if (!vpcItem.vpcRoute53Resolver?.queryLogs) {
         continue;
       }
-      const associationLogicalIdWithReplacedVpc = `RqlAssoc${vpcItem.name}`.replace('_vpc', '');
+
+      let vpcName = '';
+      if (vpcItem.name.includes(`_${vpcItem.account}`)) {
+        vpcName = vpcItem.name.split(`_${vpcItem.account}`)[0].replace('_vpc', '');
+      } else {
+        vpcName = vpcItem.name.replace('_vpc', '');
+      }
+
+      const associationLogicalIdWithReplacedVpc = `RqlAssoc${vpcName}`;
       const associationLogicalId = `${associationLogicalIdWithReplacedVpc}`.replace(/-/g, '');
 
       const importResource = this.scope.importStackResources.getResourceByLogicalId(associationLogicalId);
