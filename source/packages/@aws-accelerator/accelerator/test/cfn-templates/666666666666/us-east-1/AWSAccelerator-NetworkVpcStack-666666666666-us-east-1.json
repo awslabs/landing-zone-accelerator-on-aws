@@ -686,7 +686,13 @@
         "CustomIpamSubnetCustomResourceProviderLogGroup3BB67050"
       ],
       "UpdateReplacePolicy": "Delete",
-      "DeletionPolicy": "Delete"
+      "DeletionPolicy": "Delete",
+      "Metadata": {
+        "lzaLookup": {
+          "subnetName": "Network-Endpoints-A",
+          "vpcName": "Network-Endpoints"
+        }
+      }
     },
     "NetworkEndpointsVpcNetworkEndpointsASubnetRouteTableAssociation9EE74497": {
       "Type": "AWS::EC2::SubnetRouteTableAssociation",
@@ -945,7 +951,13 @@
         "NetworkEndpointsVpcNetworkEndpointsASubnetRouteTableAssociation9EE74497"
       ],
       "UpdateReplacePolicy": "Delete",
-      "DeletionPolicy": "Delete"
+      "DeletionPolicy": "Delete",
+      "Metadata": {
+        "lzaLookup": {
+          "subnetName": "Network-Endpoints-B",
+          "vpcName": "Network-Endpoints"
+        }
+      }
     },
     "NetworkEndpointsVpcNetworkEndpointsBSubnetRouteTableAssociation68383153": {
       "Type": "AWS::EC2::SubnetRouteTableAssociation",
@@ -1024,7 +1036,13 @@
         "NetworkEndpointsVpcNetworkEndpointsBSubnetRouteTableAssociation68383153"
       ],
       "UpdateReplacePolicy": "Delete",
-      "DeletionPolicy": "Delete"
+      "DeletionPolicy": "Delete",
+      "Metadata": {
+        "lzaLookup": {
+          "subnetName": "Network-EndpointsTgwAttach-A",
+          "vpcName": "Network-Endpoints"
+        }
+      }
     },
     "NetworkEndpointsVpcNetworkEndpointsTgwAttachASubnetRouteTableAssociation4D925D52": {
       "Type": "AWS::EC2::SubnetRouteTableAssociation",
@@ -1103,7 +1121,13 @@
         "NetworkEndpointsVpcNetworkEndpointsTgwAttachASubnetRouteTableAssociation4D925D52"
       ],
       "UpdateReplacePolicy": "Delete",
-      "DeletionPolicy": "Delete"
+      "DeletionPolicy": "Delete",
+      "Metadata": {
+        "lzaLookup": {
+          "subnetName": "Network-EndpointsTgwAttach-B",
+          "vpcName": "Network-Endpoints"
+        }
+      }
     },
     "NetworkEndpointsVpcNetworkEndpointsTgwAttachBSubnetRouteTableAssociation958ED1AB": {
       "Type": "AWS::EC2::SubnetRouteTableAssociation",

@@ -1526,6 +1526,12 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
       "DependsOn": [
         "CustomIpamSubnetCustomResourceProviderLogGroup3BB67050",
       ],
+      "Metadata": {
+        "lzaLookup": {
+          "subnetName": "Workload-A",
+          "vpcName": "Infra-Template-Full-Ipam-Central",
+        },
+      },
       "Properties": {
         "ServiceToken": {
           "Fn::GetAtt": [
@@ -1552,6 +1558,12 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
       "UpdateReplacePolicy": "Delete",
     },
     "InfraTemplateFullIpamCentralVpcWorkloadASubnetRouteTableAssociation431C7580": {
+      "Metadata": {
+        "lzaLookup": {
+          "routeTableName": "Workload-A-Rt",
+          "subnetName": "Workload-A",
+        },
+      },
       "Properties": {
         "RouteTableId": {
           "Ref": "InfraTemplateFullIpamCentralVpcWorkloadARtRouteTable33861D86",
@@ -1763,6 +1775,12 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
       "Type": "AWS::EC2::RouteTable",
     },
     "InfraTemplateFullStaticCentralVpcWorkloadASubnet89E810F8": {
+      "Metadata": {
+        "lzaLookup": {
+          "subnetName": "Workload-A",
+          "vpcName": "Infra-Template-Full-Static-Central",
+        },
+      },
       "Properties": {
         "AvailabilityZone": "us-east-1a",
         "CidrBlock": "172.25.0.0/28",
@@ -1779,6 +1797,12 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
       "Type": "AWS::EC2::Subnet",
     },
     "InfraTemplateFullStaticCentralVpcWorkloadASubnetRouteTableAssociationBB42F9CC": {
+      "Metadata": {
+        "lzaLookup": {
+          "routeTableName": "Workload-A-Rt",
+          "subnetName": "Workload-A",
+        },
+      },
       "Properties": {
         "RouteTableId": {
           "Ref": "InfraTemplateFullStaticCentralVpcWorkloadARtRouteTableAB2D6977",
@@ -1997,6 +2021,12 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
       "DependsOn": [
         "CustomIpamSubnetCustomResourceProviderLogGroup3BB67050",
       ],
+      "Metadata": {
+        "lzaLookup": {
+          "subnetName": "Workload-A",
+          "vpcName": "Infra-Template-Half-Ipam-Central",
+        },
+      },
       "Properties": {
         "ServiceToken": {
           "Fn::GetAtt": [
@@ -2023,6 +2053,12 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
       "UpdateReplacePolicy": "Delete",
     },
     "InfraTemplateHalfIpamCentralVpcWorkloadASubnetRouteTableAssociation0C227AD0": {
+      "Metadata": {
+        "lzaLookup": {
+          "routeTableName": "Workload-A-Rt",
+          "subnetName": "Workload-A",
+        },
+      },
       "Properties": {
         "RouteTableId": {
           "Ref": "InfraTemplateHalfIpamCentralVpcWorkloadARtRouteTableAF0CA499",
@@ -2234,6 +2270,12 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
       "Type": "AWS::EC2::RouteTable",
     },
     "InfraTemplateHalfStaticCentralVpcWorkloadASubnet0013D1FA": {
+      "Metadata": {
+        "lzaLookup": {
+          "subnetName": "Workload-A",
+          "vpcName": "Infra-Template-Half-Static-Central",
+        },
+      },
       "Properties": {
         "AvailabilityZone": "us-east-1a",
         "CidrBlock": "172.21.0.0/28",
@@ -2250,6 +2292,12 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
       "Type": "AWS::EC2::Subnet",
     },
     "InfraTemplateHalfStaticCentralVpcWorkloadASubnetRouteTableAssociation6175AFD8": {
+      "Metadata": {
+        "lzaLookup": {
+          "routeTableName": "Workload-A-Rt",
+          "subnetName": "Workload-A",
+        },
+      },
       "Properties": {
         "RouteTableId": {
           "Ref": "InfraTemplateHalfStaticCentralVpcWorkloadARtRouteTable34229EBD",
@@ -2261,6 +2309,13 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
       "Type": "AWS::EC2::SubnetRouteTableAssociation",
     },
     "NetworkEndpoints2VpcTransitGatewayAttachment9892C5DB": {
+      "Metadata": {
+        "lzaLookup": {
+          "transitGatewayAttachmentName": "Network-Endpoints-2",
+          "transitGatewayName": "Network-Main-2",
+          "vpcName": "Network-Endpoints",
+        },
+      },
       "Properties": {
         "Options": {
           "ApplianceModeSupport": "disable",
@@ -2291,6 +2346,11 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
       "Type": "AWS::EC2::TransitGatewayVpcAttachment",
     },
     "NetworkEndpointsASubnetShareResourceShare2DF08804": {
+      "Metadata": {
+        "lzaLookup": {
+          "subnetName": "Network-Endpoints-A",
+        },
+      },
       "Properties": {
         "Name": "Network-Endpoints-A_SubnetShare",
         "Principals": [
@@ -2977,6 +3037,12 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
         "NetworkEndpointsVpcVpcCidrBlock138259E6A",
         "NetworkEndpointsVpcVpcCidrBlock2808CB828",
       ],
+      "Metadata": {
+        "lzaLookup": {
+          "subnetName": "Network-Endpoints-A",
+          "vpcName": "Network-Endpoints",
+        },
+      },
       "Properties": {
         "ServiceToken": {
           "Fn::GetAtt": [
@@ -3013,6 +3079,12 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
         "NetworkEndpointsVpcVpcCidrBlock138259E6A",
         "NetworkEndpointsVpcVpcCidrBlock2808CB828",
       ],
+      "Metadata": {
+        "lzaLookup": {
+          "routeTableName": "Network-Endpoints-A",
+          "subnetName": "Network-Endpoints-A",
+        },
+      },
       "Properties": {
         "RouteTableId": {
           "Ref": "NetworkEndpointsVpcNetworkEndpointsARouteTable5B9BF71B",
@@ -3115,6 +3187,12 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
         "NetworkEndpointsVpcNetworkEndpointsASubnet758434F8",
         "NetworkEndpointsVpcNetworkEndpointsASubnetRouteTableAssociation9EE74497",
       ],
+      "Metadata": {
+        "lzaLookup": {
+          "subnetName": "Network-Endpoints-B",
+          "vpcName": "Network-Endpoints",
+        },
+      },
       "Properties": {
         "ServiceToken": {
           "Fn::GetAtt": [
@@ -3148,6 +3226,12 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
         "NetworkEndpointsVpcNetworkEndpointsASubnet758434F8",
         "NetworkEndpointsVpcNetworkEndpointsASubnetRouteTableAssociation9EE74497",
       ],
+      "Metadata": {
+        "lzaLookup": {
+          "routeTableName": "Network-Endpoints-B",
+          "subnetName": "Network-Endpoints-B",
+        },
+      },
       "Properties": {
         "RouteTableId": {
           "Ref": "NetworkEndpointsVpcNetworkEndpointsBRouteTable639AAADB",
@@ -3230,6 +3314,12 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
         "NetworkEndpointsVpcNetworkEndpointsBSubnet1CF39812",
         "NetworkEndpointsVpcNetworkEndpointsBSubnetRouteTableAssociation68383153",
       ],
+      "Metadata": {
+        "lzaLookup": {
+          "subnetName": "Network-EndpointsTgwAttach-A",
+          "vpcName": "Network-Endpoints",
+        },
+      },
       "Properties": {
         "ServiceToken": {
           "Fn::GetAtt": [
@@ -3263,6 +3353,12 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
         "NetworkEndpointsVpcNetworkEndpointsBSubnet1CF39812",
         "NetworkEndpointsVpcNetworkEndpointsBSubnetRouteTableAssociation68383153",
       ],
+      "Metadata": {
+        "lzaLookup": {
+          "routeTableName": "Network-Endpoints-Tgw-A",
+          "subnetName": "Network-EndpointsTgwAttach-A",
+        },
+      },
       "Properties": {
         "RouteTableId": {
           "Ref": "NetworkEndpointsVpcNetworkEndpointsTgwARouteTable9117846C",
@@ -3283,6 +3379,12 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
         "NetworkEndpointsVpcNetworkEndpointsTgwAttachASubnet3580E1C3",
         "NetworkEndpointsVpcNetworkEndpointsTgwAttachASubnetRouteTableAssociation4D925D52",
       ],
+      "Metadata": {
+        "lzaLookup": {
+          "subnetName": "Network-EndpointsTgwAttach-B",
+          "vpcName": "Network-Endpoints",
+        },
+      },
       "Properties": {
         "ServiceToken": {
           "Fn::GetAtt": [
@@ -3316,6 +3418,12 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
         "NetworkEndpointsVpcNetworkEndpointsTgwAttachASubnet3580E1C3",
         "NetworkEndpointsVpcNetworkEndpointsTgwAttachASubnetRouteTableAssociation4D925D52",
       ],
+      "Metadata": {
+        "lzaLookup": {
+          "routeTableName": "Network-Endpoints-Tgw-B",
+          "subnetName": "Network-EndpointsTgwAttach-B",
+        },
+      },
       "Properties": {
         "RouteTableId": {
           "Ref": "NetworkEndpointsVpcNetworkEndpointsTgwBRouteTable7A11C65B",
@@ -3584,6 +3692,13 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
       "Type": "AWS::EC2::NetworkAclEntry",
     },
     "NetworkEndpointsVpcTransitGatewayAttachmentF207787E": {
+      "Metadata": {
+        "lzaLookup": {
+          "transitGatewayAttachmentName": "Network-Endpoints",
+          "transitGatewayName": "Network-Main",
+          "vpcName": "Network-Endpoints",
+        },
+      },
       "Properties": {
         "Options": {
           "ApplianceModeSupport": "disable",
@@ -3783,6 +3898,12 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
       "Type": "AWS::EC2::VPC",
     },
     "NetworkInspectionVpcAcceleratorNatGwANatGateway512AA371": {
+      "Metadata": {
+        "lzaLookup": {
+          "natGatewayName": "accelerator-nat-gw-a",
+          "vpcName": "Network-Inspection",
+        },
+      },
       "Properties": {
         "AllocationId": {
           "Fn::GetAtt": [
@@ -3815,6 +3936,12 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
       "Type": "AWS::EC2::EIP",
     },
     "NetworkInspectionVpcAcceleratorNatGwBNatGateway2164E612": {
+      "Metadata": {
+        "lzaLookup": {
+          "natGatewayName": "accelerator-nat-gw-b",
+          "vpcName": "Network-Inspection",
+        },
+      },
       "Properties": {
         "AllocationId": {
           "Fn::GetAtt": [
@@ -3847,6 +3974,12 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
       "Type": "AWS::EC2::EIP",
     },
     "NetworkInspectionVpcAcceleratorNatGwCNatGateway484831C4": {
+      "Metadata": {
+        "lzaLookup": {
+          "natGatewayName": "accelerator-nat-gw-c",
+          "vpcName": "Network-Inspection",
+        },
+      },
       "Properties": {
         "ConnectivityType": "private",
         "SubnetId": {
@@ -4124,6 +4257,12 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
       "DependsOn": [
         "NetworkInspectionVpcVpcCidrBlock343B2A17",
       ],
+      "Metadata": {
+        "lzaLookup": {
+          "subnetName": "Network-Inspection-A",
+          "vpcName": "Network-Inspection",
+        },
+      },
       "Properties": {
         "AvailabilityZone": "us-east-1a",
         "CidrBlock": "10.2.0.0/24",
@@ -4143,6 +4282,12 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
       "DependsOn": [
         "NetworkInspectionVpcVpcCidrBlock343B2A17",
       ],
+      "Metadata": {
+        "lzaLookup": {
+          "routeTableName": "Network-Inspection-A",
+          "subnetName": "Network-Inspection-A",
+        },
+      },
       "Properties": {
         "RouteTableId": {
           "Ref": "NetworkInspectionVpcNetworkInspectionARouteTableED0E5084",
@@ -4200,6 +4345,12 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
       "DependsOn": [
         "NetworkInspectionVpcVpcCidrBlock343B2A17",
       ],
+      "Metadata": {
+        "lzaLookup": {
+          "subnetName": "Network-Inspection-B",
+          "vpcName": "Network-Inspection",
+        },
+      },
       "Properties": {
         "AvailabilityZone": "us-east-1b",
         "CidrBlock": "10.2.1.0/24",
@@ -4219,6 +4370,12 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
       "DependsOn": [
         "NetworkInspectionVpcVpcCidrBlock343B2A17",
       ],
+      "Metadata": {
+        "lzaLookup": {
+          "routeTableName": "Network-Inspection-B",
+          "subnetName": "Network-Inspection-B",
+        },
+      },
       "Properties": {
         "RouteTableId": {
           "Ref": "NetworkInspectionVpcNetworkInspectionBRouteTable1410DC9F",
@@ -4274,6 +4431,12 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
       "DependsOn": [
         "NetworkInspectionVpcVpcCidrBlock343B2A17",
       ],
+      "Metadata": {
+        "lzaLookup": {
+          "subnetName": "Network-Inspection-Local-A",
+          "vpcName": "Network-Inspection",
+        },
+      },
       "Properties": {
         "AvailabilityZone": "us-east-1-atl-2a",
         "CidrBlock": "10.3.0.0/24",
@@ -4293,6 +4456,12 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
       "DependsOn": [
         "NetworkInspectionVpcVpcCidrBlock343B2A17",
       ],
+      "Metadata": {
+        "lzaLookup": {
+          "routeTableName": "Network-Inspection-Local-Rt-A",
+          "subnetName": "Network-Inspection-Local-A",
+        },
+      },
       "Properties": {
         "RouteTableId": {
           "Ref": "NetworkInspectionVpcNetworkInspectionLocalRtARouteTable442557C6",
@@ -4347,6 +4516,12 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
       "DependsOn": [
         "NetworkInspectionVpcVpcCidrBlock343B2A17",
       ],
+      "Metadata": {
+        "lzaLookup": {
+          "subnetName": "Network-InspectionTgwAttach-A",
+          "vpcName": "Network-Inspection",
+        },
+      },
       "Properties": {
         "AvailabilityZone": "us-east-1a",
         "CidrBlock": "10.2.3.208/28",
@@ -4366,6 +4541,12 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
       "DependsOn": [
         "NetworkInspectionVpcVpcCidrBlock343B2A17",
       ],
+      "Metadata": {
+        "lzaLookup": {
+          "routeTableName": "Network-Inspection-Tgw-A",
+          "subnetName": "Network-InspectionTgwAttach-A",
+        },
+      },
       "Properties": {
         "RouteTableId": {
           "Ref": "NetworkInspectionVpcNetworkInspectionTgwARouteTable1753FE94",
@@ -4380,6 +4561,12 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
       "DependsOn": [
         "NetworkInspectionVpcVpcCidrBlock343B2A17",
       ],
+      "Metadata": {
+        "lzaLookup": {
+          "subnetName": "Network-InspectionTgwAttach-B",
+          "vpcName": "Network-Inspection",
+        },
+      },
       "Properties": {
         "AvailabilityZone": "us-east-1b",
         "CidrBlock": "10.2.3.224/28",
@@ -4399,6 +4586,12 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
       "DependsOn": [
         "NetworkInspectionVpcVpcCidrBlock343B2A17",
       ],
+      "Metadata": {
+        "lzaLookup": {
+          "routeTableName": "Network-Inspection-Tgw-B",
+          "subnetName": "Network-InspectionTgwAttach-B",
+        },
+      },
       "Properties": {
         "RouteTableId": {
           "Ref": "NetworkInspectionVpcNetworkInspectionTgwBRouteTable4D355F69",
@@ -4476,6 +4669,13 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
       "Type": "AWS::EC2::FlowLog",
     },
     "NetworkInspectionVpcTransitGatewayAttachment2E4BA675": {
+      "Metadata": {
+        "lzaLookup": {
+          "transitGatewayAttachmentName": "Network-Inspection",
+          "transitGatewayName": "Network-Main",
+          "vpcName": "Network-Inspection",
+        },
+      },
       "Properties": {
         "Options": {
           "ApplianceModeSupport": "enable",
@@ -4893,6 +5093,12 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
       "DependsOn": [
         "CustomIpamSubnetCustomResourceProviderLogGroup3BB67050",
       ],
+      "Metadata": {
+        "lzaLookup": {
+          "subnetName": "Network-NonTemplate-Ipam-Public-A",
+          "vpcName": "Network-NonTemplate-Ipam-Central",
+        },
+      },
       "Properties": {
         "ServiceToken": {
           "Fn::GetAtt": [
@@ -4919,6 +5125,12 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
       "UpdateReplacePolicy": "Delete",
     },
     "NetworkNonTemplateIpamCentralVpcNetworkNonTemplateIpamPublicASubnetRouteTableAssociation657A1476": {
+      "Metadata": {
+        "lzaLookup": {
+          "routeTableName": "Network-NonTemplate-Ipam-Public",
+          "subnetName": "Network-NonTemplate-Ipam-Public-A",
+        },
+      },
       "Properties": {
         "RouteTableId": {
           "Ref": "NetworkNonTemplateIpamCentralVpcNetworkNonTemplateIpamPublicRouteTableA4FD2DC5",
@@ -5150,6 +5362,12 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
       "Type": "AWS::EC2::RouteTable",
     },
     "NetworkNonTemplateStaticCentralVpcNetworkPublicASubnet1252F6FB": {
+      "Metadata": {
+        "lzaLookup": {
+          "subnetName": "Network-Public-A",
+          "vpcName": "Network-NonTemplate-Static-Central",
+        },
+      },
       "Properties": {
         "AvailabilityZone": "us-east-1a",
         "CidrBlock": "172.17.0.0/28",
@@ -5166,6 +5384,12 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
       "Type": "AWS::EC2::Subnet",
     },
     "NetworkNonTemplateStaticCentralVpcNetworkPublicASubnetRouteTableAssociation161B84BB": {
+      "Metadata": {
+        "lzaLookup": {
+          "routeTableName": "Network-NonTemplate-Static-Public",
+          "subnetName": "Network-Public-A",
+        },
+      },
       "Properties": {
         "RouteTableId": {
           "Ref": "NetworkNonTemplateStaticCentralVpcNetworkNonTemplateStaticPublicRouteTable8F7BD7E5",
@@ -5424,6 +5648,12 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
         "CustomIpamSubnetCustomResourceProviderLogGroup3BB67050",
         "NetworkSecondaryVpcIpv6CidrBlock093FFC4F7",
       ],
+      "Metadata": {
+        "lzaLookup": {
+          "subnetName": "Network-Secondary-A",
+          "vpcName": "Network-Secondary",
+        },
+      },
       "Properties": {
         "ServiceToken": {
           "Fn::GetAtt": [
@@ -5453,6 +5683,12 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
       "DependsOn": [
         "NetworkSecondaryVpcIpv6CidrBlock093FFC4F7",
       ],
+      "Metadata": {
+        "lzaLookup": {
+          "routeTableName": "Network-Secondary-A-Rt",
+          "subnetName": "Network-Secondary-A",
+        },
+      },
       "Properties": {
         "RouteTableId": {
           "Ref": "NetworkSecondaryVpcNetworkSecondaryARtRouteTable649EACD5",
@@ -5529,6 +5765,12 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
         "NetworkSecondaryVpcNetworkSecondaryASubnet791F4607",
         "NetworkSecondaryVpcNetworkSecondaryASubnetRouteTableAssociationBBEA4449",
       ],
+      "Metadata": {
+        "lzaLookup": {
+          "subnetName": "Network-Secondary-B",
+          "vpcName": "Network-Secondary",
+        },
+      },
       "Properties": {
         "ServiceToken": {
           "Fn::GetAtt": [
@@ -5560,6 +5802,12 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
         "NetworkSecondaryVpcNetworkSecondaryASubnet791F4607",
         "NetworkSecondaryVpcNetworkSecondaryASubnetRouteTableAssociationBBEA4449",
       ],
+      "Metadata": {
+        "lzaLookup": {
+          "routeTableName": "Network-Secondary-B-Rt",
+          "subnetName": "Network-Secondary-B",
+        },
+      },
       "Properties": {
         "RouteTableId": {
           "Ref": "NetworkSecondaryVpcNetworkSecondaryBRtRouteTable851997AF",
@@ -5598,6 +5846,12 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
         "NetworkSecondaryVpcNetworkSecondaryBSubnetDD64E26D",
         "NetworkSecondaryVpcNetworkSecondaryBSubnetRouteTableAssociation6EB02D15",
       ],
+      "Metadata": {
+        "lzaLookup": {
+          "subnetName": "Network-Secondary-C",
+          "vpcName": "Network-Secondary",
+        },
+      },
       "Properties": {
         "ServiceToken": {
           "Fn::GetAtt": [
@@ -5629,6 +5883,12 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
         "NetworkSecondaryVpcNetworkSecondaryBSubnetDD64E26D",
         "NetworkSecondaryVpcNetworkSecondaryBSubnetRouteTableAssociation6EB02D15",
       ],
+      "Metadata": {
+        "lzaLookup": {
+          "routeTableName": "Network-Secondary-C-Rt",
+          "subnetName": "Network-Secondary-C",
+        },
+      },
       "Properties": {
         "RouteTableId": {
           "Ref": "NetworkSecondaryVpcNetworkSecondaryCRtRouteTableF66B2FAA",
@@ -5667,6 +5927,12 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
         "NetworkSecondaryVpcNetworkSecondaryCSubnet7C04BEAE",
         "NetworkSecondaryVpcNetworkSecondaryCSubnetRouteTableAssociation0ADC5EBF",
       ],
+      "Metadata": {
+        "lzaLookup": {
+          "subnetName": "Network-Secondary-D",
+          "vpcName": "Network-Secondary",
+        },
+      },
       "Properties": {
         "ServiceToken": {
           "Fn::GetAtt": [
@@ -5698,6 +5964,12 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
         "NetworkSecondaryVpcNetworkSecondaryCSubnet7C04BEAE",
         "NetworkSecondaryVpcNetworkSecondaryCSubnetRouteTableAssociation0ADC5EBF",
       ],
+      "Metadata": {
+        "lzaLookup": {
+          "routeTableName": "Network-Secondary-D-Rt",
+          "subnetName": "Network-Secondary-D",
+        },
+      },
       "Properties": {
         "RouteTableId": {
           "Ref": "NetworkSecondaryVpcNetworkSecondaryDRtRouteTable55050289",
@@ -5712,6 +5984,12 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
       "DependsOn": [
         "NetworkSecondaryVpcIpv6CidrBlock093FFC4F7",
       ],
+      "Metadata": {
+        "lzaLookup": {
+          "subnetName": "Network-Secondary-Dual-Stack",
+          "vpcName": "Network-Secondary",
+        },
+      },
       "Properties": {
         "AvailabilityZone": "us-east-1a",
         "CidrBlock": "10.0.0.192/28",
@@ -5732,6 +6010,12 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
       "DependsOn": [
         "NetworkSecondaryVpcIpv6CidrBlock093FFC4F7",
       ],
+      "Metadata": {
+        "lzaLookup": {
+          "routeTableName": "Network-Secondary-A-Rt",
+          "subnetName": "Network-Secondary-Dual-Stack",
+        },
+      },
       "Properties": {
         "RouteTableId": {
           "Ref": "NetworkSecondaryVpcNetworkSecondaryARtRouteTable649EACD5",
@@ -5746,6 +6030,12 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
       "DependsOn": [
         "NetworkSecondaryVpcIpv6CidrBlock093FFC4F7",
       ],
+      "Metadata": {
+        "lzaLookup": {
+          "subnetName": "Network-Secondary-Ipv6-Only",
+          "vpcName": "Network-Secondary",
+        },
+      },
       "Properties": {
         "AvailabilityZone": "us-east-1b",
         "Ipv6CidrBlock": "fd01::/64",
@@ -5766,6 +6056,12 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
       "DependsOn": [
         "NetworkSecondaryVpcIpv6CidrBlock093FFC4F7",
       ],
+      "Metadata": {
+        "lzaLookup": {
+          "routeTableName": "Network-Secondary-B-Rt",
+          "subnetName": "Network-Secondary-Ipv6-Only",
+        },
+      },
       "Properties": {
         "RouteTableId": {
           "Ref": "NetworkSecondaryVpcNetworkSecondaryBRtRouteTable851997AF",
@@ -5784,6 +6080,12 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
         "NetworkSecondaryVpcNetworkSecondaryOutpostsASubnet94859C6D",
         "NetworkSecondaryVpcNetworkSecondaryOutpostsASubnetRouteTableAssociation9ACEC596",
       ],
+      "Metadata": {
+        "lzaLookup": {
+          "subnetName": "Network-Secondary-Outposts-1",
+          "vpcName": "Network-Secondary",
+        },
+      },
       "Properties": {
         "ServiceToken": {
           "Fn::GetAtt": [
@@ -5816,6 +6118,12 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
         "NetworkSecondaryVpcNetworkSecondaryOutpostsASubnet94859C6D",
         "NetworkSecondaryVpcNetworkSecondaryOutpostsASubnetRouteTableAssociation9ACEC596",
       ],
+      "Metadata": {
+        "lzaLookup": {
+          "routeTableName": "Network-Secondary-B-Rt",
+          "subnetName": "Network-Secondary-Outposts-1",
+        },
+      },
       "Properties": {
         "RouteTableId": {
           "Ref": "NetworkSecondaryVpcNetworkSecondaryBRtRouteTable851997AF",
@@ -5834,6 +6142,12 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
         "NetworkSecondaryVpcNetworkSecondaryDSubnet339A8E74",
         "NetworkSecondaryVpcNetworkSecondaryDSubnetRouteTableAssociation7127663A",
       ],
+      "Metadata": {
+        "lzaLookup": {
+          "subnetName": "Network-Secondary-Outposts-A",
+          "vpcName": "Network-Secondary",
+        },
+      },
       "Properties": {
         "ServiceToken": {
           "Fn::GetAtt": [
@@ -5866,6 +6180,12 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
         "NetworkSecondaryVpcNetworkSecondaryDSubnet339A8E74",
         "NetworkSecondaryVpcNetworkSecondaryDSubnetRouteTableAssociation7127663A",
       ],
+      "Metadata": {
+        "lzaLookup": {
+          "routeTableName": "Network-Secondary-A-Rt",
+          "subnetName": "Network-Secondary-Outposts-A",
+        },
+      },
       "Properties": {
         "RouteTableId": {
           "Ref": "NetworkSecondaryVpcNetworkSecondaryARtRouteTable649EACD5",
@@ -8427,6 +8747,12 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
       "DependsOn": [
         "CustomIpamSubnetCustomResourceProviderLogGroup3BB67050",
       ],
+      "Metadata": {
+        "lzaLookup": {
+          "subnetName": "Workload-A",
+          "vpcName": "Workload-Template",
+        },
+      },
       "Properties": {
         "ServiceToken": {
           "Fn::GetAtt": [
@@ -8453,6 +8779,12 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
       "UpdateReplacePolicy": "Delete",
     },
     "WorkloadTemplateVpcWorkloadASubnetRouteTableAssociation153D1D56": {
+      "Metadata": {
+        "lzaLookup": {
+          "routeTableName": "Workload-A-Rt",
+          "subnetName": "Workload-A",
+        },
+      },
       "Properties": {
         "RouteTableId": {
           "Ref": "WorkloadTemplateVpcWorkloadARtRouteTable42FD1E27",
@@ -8490,6 +8822,12 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
         "WorkloadTemplateVpcWorkloadASubnetA3CC7B46",
         "WorkloadTemplateVpcWorkloadASubnetRouteTableAssociation153D1D56",
       ],
+      "Metadata": {
+        "lzaLookup": {
+          "subnetName": "Workload-B",
+          "vpcName": "Workload-Template",
+        },
+      },
       "Properties": {
         "ServiceToken": {
           "Fn::GetAtt": [
@@ -8520,6 +8858,12 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
         "WorkloadTemplateVpcWorkloadASubnetA3CC7B46",
         "WorkloadTemplateVpcWorkloadASubnetRouteTableAssociation153D1D56",
       ],
+      "Metadata": {
+        "lzaLookup": {
+          "routeTableName": "Workload-B-Rt",
+          "subnetName": "Workload-B",
+        },
+      },
       "Properties": {
         "RouteTableId": {
           "Ref": "WorkloadTemplateVpcWorkloadBRtRouteTable414704DF",

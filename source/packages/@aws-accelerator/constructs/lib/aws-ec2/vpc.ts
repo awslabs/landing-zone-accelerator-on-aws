@@ -117,6 +117,18 @@ abstract class SubnetBase extends cdk.Resource implements ISubnet {
   public readonly availabilityZone?: string;
   public readonly availabilityZoneId?: string;
   public abstract readonly routeTable?: IRouteTable;
+
+  public associateRouteTable(): cdk.aws_ec2.CfnSubnetRouteTableAssociation | undefined {
+    if (this.routeTable) {
+      // Route Table is not imported, Associating Subnet to new RouteTable
+      return new cdk.aws_ec2.CfnSubnetRouteTableAssociation(this, 'RouteTableAssociation', {
+        subnetId: this.subnetId,
+        routeTableId: this.routeTable.routeTableId,
+      });
+    }
+
+    return undefined;
+  }
 }
 
 export class ImportedSubnet extends SubnetBase {
@@ -141,14 +153,6 @@ export class ImportedSubnet extends SubnetBase {
 
     if (props.ipv4CidrBlock) {
       this.ipv4CidrBlock = props.ipv4CidrBlock;
-    }
-
-    if (props.routeTable) {
-      // Route Table is not imported, Associating Subnet to new RouteTable
-      new cdk.aws_ec2.CfnSubnetRouteTableAssociation(this, 'RouteTableAssociation', {
-        subnetId: this.subnetId,
-        routeTableId: props.routeTable.routeTableId,
-      });
     }
   }
 }
@@ -206,6 +210,11 @@ export class Subnet extends SubnetBase {
         tags: props.tags,
       });
 
+      resource.addMetadata(MetadataKeys.LZA_LOOKUP, {
+        vpcName: props.vpc.name,
+        subnetName: props.name,
+      });
+
       cdk.Tags.of(this).add('Name', props.name);
       this.subnetId = resource.ref;
       this.subnetArn = cdk.Stack.of(this).formatArn({
@@ -245,6 +254,11 @@ export class Subnet extends SubnetBase {
         outpostArn: props.outpost?.arn,
       });
 
+      (resource.resource.node.defaultChild as cdk.CfnCustomResource).addMetadata(MetadataKeys.LZA_LOOKUP, {
+        vpcName: props.vpc.name,
+        subnetName: props.name,
+      });
+
       this.ipv4CidrBlock = resource.ipv4CidrBlock;
       this.subnetId = resource.subnetId;
       this.subnetArn = cdk.Stack.of(this).formatArn({
@@ -252,13 +266,6 @@ export class Subnet extends SubnetBase {
         resource: 'subnet',
         arnFormat: cdk.ArnFormat.SLASH_RESOURCE_NAME,
         resourceName: resource.subnetId,
-      });
-    }
-
-    if (props.routeTable) {
-      new cdk.aws_ec2.CfnSubnetRouteTableAssociation(this, 'RouteTableAssociation', {
-        subnetId: this.subnetId,
-        routeTableId: props.routeTable.routeTableId,
       });
     }
   }
