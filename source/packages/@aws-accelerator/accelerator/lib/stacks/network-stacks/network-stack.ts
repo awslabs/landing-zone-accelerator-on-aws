@@ -666,8 +666,9 @@ export abstract class NetworkStack extends AcceleratorStack {
    * @param item
    * @param resourceShareName
    * @param resourceArns
+   * @returns ResourceShare
    */
-  public addResourceShare(item: ResourceShareType, resourceShareName: string, resourceArns: string[]) {
+  public addResourceShare(item: ResourceShareType, resourceShareName: string, resourceArns: string[]): ResourceShare {
     // Build a list of principals to share to
     const principals: string[] = [];
 
@@ -691,7 +692,7 @@ export abstract class NetworkStack extends AcceleratorStack {
     }
 
     // Create the Resource Share
-    new ResourceShare(this, `${pascalCase(resourceShareName)}ResourceShare`, {
+    return new ResourceShare(this, `${pascalCase(resourceShareName)}ResourceShare`, {
       name: resourceShareName,
       principals,
       resourceArns: resourceArns,

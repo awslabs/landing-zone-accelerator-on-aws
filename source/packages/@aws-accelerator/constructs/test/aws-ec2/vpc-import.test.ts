@@ -73,13 +73,15 @@ const subnet1 = Subnet.fromSubnetAttributes(stack, 'ImportedSubnet', {
   name: 'testImportedSubnet',
   routeTable: rt,
 });
+subnet1.associateRouteTable();
 
-Subnet.fromSubnetAttributes(stack, 'ImportedSubnet2', {
+const subnet2 = Subnet.fromSubnetAttributes(stack, 'ImportedSubnet2', {
   subnetId: 'someImportedSubnetId2',
   ipv4CidrBlock: '10.2.2.0/24',
   name: 'testImportedSubnet2',
   routeTable: rt2,
 });
+subnet2.associateRouteTable();
 
 new NatGateway(stack, 'natGw', { name: 'ngw', subnet: subnet1, tags: [{ key: 'test', value: 'test2' }] });
 

@@ -581,6 +581,12 @@ exports[`RouteTable Construct(RouteTable):  Snapshot Test 1`] = `
       "UpdateReplacePolicy": "Retain",
     },
     "testsubnetFBD9E7FF": {
+      "Metadata": {
+        "lzaLookup": {
+          "subnetName": "test-subnet",
+          "vpcName": "Test",
+        },
+      },
       "Properties": {
         "AvailabilityZone": "a",
         "CidrBlock": "10.0.2.0/24",
