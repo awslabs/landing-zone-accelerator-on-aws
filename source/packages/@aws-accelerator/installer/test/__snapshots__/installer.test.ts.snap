@@ -7466,8 +7466,8 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 3`] = `
     },
     "AcceleratorQualifier": {
       "AllowedPattern": "^[a-z]+[a-z0-9-]{1,61}[a-z0-9]+$",
-      "ConstraintDescription": "Qualifier must include lowercase letters and numbers only",
-      "Description": "Accelerator assets arn qualifier",
+      "ConstraintDescription": "Qualifier must include lowercase letters and numbers only and cannot be aws-accelerator",
+      "Description": "Names the resources in the external deployment account. This must be unique for each LZA pipeline created in a single external deployment account, for example "env2" or "app1." Do not use "aws-accelerator" or a similar value that could be confused with the prefix."",
       "Type": "String",
     },
     "ApprovalStageNotifyEmailList": {
@@ -11151,8 +11151,8 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 4`] = `
     },
     "AcceleratorQualifier": {
       "AllowedPattern": "^[a-z]+[a-z0-9-]{1,61}[a-z0-9]+$",
-      "ConstraintDescription": "Qualifier must include lowercase letters and numbers only",
-      "Description": "Accelerator assets arn qualifier",
+      "ConstraintDescription": "Qualifier must include lowercase letters and numbers only and cannot be aws-accelerator",
+      "Description": "Names the resources in the external deployment account. This must be unique for each LZA pipeline created in a single external deployment account, for example "env2" or "app1." Do not use "aws-accelerator" or a similar value that could be confused with the prefix."",
       "Type": "String",
     },
     "ApprovalStageNotifyEmailList": {
@@ -14826,8 +14826,8 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 5`] = `
     },
     "AcceleratorQualifier": {
       "AllowedPattern": "^[a-z]+[a-z0-9-]{1,61}[a-z0-9]+$",
-      "ConstraintDescription": "Qualifier must include lowercase letters and numbers only",
-      "Description": "Accelerator assets arn qualifier",
+      "ConstraintDescription": "Qualifier must include lowercase letters and numbers only and cannot be aws-accelerator",
+      "Description": "Names the resources in the external deployment account. This must be unique for each LZA pipeline created in a single external deployment account, for example "env2" or "app1." Do not use "aws-accelerator" or a similar value that could be confused with the prefix."",
       "Type": "String",
     },
     "ApprovalStageNotifyEmailList": {
