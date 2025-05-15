@@ -472,9 +472,11 @@ export class InstallerStack extends cdk.Stack {
     if (props.useExternalPipelineAccount) {
       this.acceleratorQualifier = new cdk.CfnParameter(this, 'AcceleratorQualifier', {
         type: 'String',
-        description: 'Accelerator assets arn qualifier',
+        description:
+          'Names the resources in the external deployment account. This must be unique for each LZA pipeline created in a single external deployment account, for example "env2" or "app1." Do not use "aws-accelerator" or a similar value that could be confused with the prefix."',
         allowedPattern: '^[a-z]+[a-z0-9-]{1,61}[a-z0-9]+$',
-        constraintDescription: 'Qualifier must include lowercase letters and numbers only',
+        constraintDescription:
+          'Qualifier must include lowercase letters and numbers only and cannot be aws-accelerator',
       });
 
       this.managementAccountId = new cdk.CfnParameter(this, 'ManagementAccountId', {
