@@ -205,7 +205,7 @@ export class NetworkVpcStack extends NetworkStack {
     for (const vpcItem of this.vpcsInScope) {
       for (const subnetItem of vpcItem.subnets ?? []) {
         const subnet = subnetMap.get(`${vpcItem.name}_${subnetItem.name}`)!;
-        if (subnet.ipv4CidrBlock) {
+        if (subnet && subnet.ipv4CidrBlock) {
           parameters.push({
             name: this.getSsmPath(SsmResourceType.SUBNET_IPV4_CIDR_BLOCK, [vpcItem.name, subnetItem.name]),
             value: subnet.ipv4CidrBlock,

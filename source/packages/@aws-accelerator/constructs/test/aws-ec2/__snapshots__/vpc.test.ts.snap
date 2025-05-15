@@ -270,6 +270,12 @@ exports[`Vpc Construct(Vpc):  Snapshot Test 1`] = `
       "Type": "AWS::IAM::Role",
     },
     "DualStackSubnetC42B1019": {
+      "Metadata": {
+        "lzaLookup": {
+          "subnetName": "test-dualstack-subnet",
+          "vpcName": "Main",
+        },
+      },
       "Properties": {
         "AvailabilityZoneId": "1",
         "CidrBlock": "10.0.0.0/24",
@@ -303,6 +309,12 @@ exports[`Vpc Construct(Vpc):  Snapshot Test 1`] = `
       "Type": "AWS::EC2::SubnetRouteTableAssociation",
     },
     "Ipv6OnlySubnet53DACA43": {
+      "Metadata": {
+        "lzaLookup": {
+          "subnetName": "test-ipv6-only-subnet",
+          "vpcName": "Main",
+        },
+      },
       "Properties": {
         "AvailabilityZoneId": "1",
         "EnableDns64": true,
@@ -899,6 +911,12 @@ exports[`Vpc Construct(Vpc):  Snapshot Test 1`] = `
       "Type": "AWS::EC2::EIP",
     },
     "testAF53AC38": {
+      "Metadata": {
+        "lzaLookup": {
+          "subnetName": "testSubnetOutpost",
+          "vpcName": "Main",
+        },
+      },
       "Properties": {
         "AvailabilityZone": "a",
         "CidrBlock": "10.0.1.0/24",
@@ -1106,6 +1124,12 @@ exports[`Vpc Construct(Vpc):  Snapshot Test 1`] = `
       "DependsOn": [
         "CustomIpamSubnetCustomResourceProviderLogGroup3BB67050",
       ],
+      "Metadata": {
+        "lzaLookup": {
+          "subnetName": "testSubnet",
+          "vpcName": "Main",
+        },
+      },
       "Properties": {
         "ServiceToken": {
           "Fn::GetAtt": [
@@ -1135,6 +1159,12 @@ exports[`Vpc Construct(Vpc):  Snapshot Test 1`] = `
       "DependsOn": [
         "CustomIpamSubnetCustomResourceProviderLogGroup3BB67050",
       ],
+      "Metadata": {
+        "lzaLookup": {
+          "subnetName": "testSubnetPhysicalAz1",
+          "vpcName": "Main",
+        },
+      },
       "Properties": {
         "ServiceToken": {
           "Fn::GetAtt": [
@@ -1186,6 +1216,12 @@ exports[`Vpc Construct(Vpc):  Snapshot Test 1`] = `
       "DependsOn": [
         "CustomIpamSubnetCustomResourceProviderLogGroup3BB67050",
       ],
+      "Metadata": {
+        "lzaLookup": {
+          "subnetName": "testSubnetPhysicalAz2",
+          "vpcName": "Main",
+        },
+      },
       "Properties": {
         "ServiceToken": {
           "Fn::GetAtt": [

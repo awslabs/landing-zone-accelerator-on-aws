@@ -18,13 +18,27 @@ import { pascalCase } from 'pascal-case';
 import { LogLevel } from '../network-stack';
 import { getSubnet } from '../utils/getter-utils';
 import { NetworkVpcStack } from './network-vpc-stack';
+import { MetadataKeys } from '@aws-accelerator/utils/lib/common-types';
+import { CfnResource } from 'aws-cdk-lib/core';
+import { LZAResourceLookup, LZAResourceLookupType } from '../../../../utils/lza-resource-lookup';
 
 export class NatGwResources {
   public readonly natGatewayMap: Map<string, INatGateway>;
   private stack: NetworkVpcStack;
+  private lzaLookup: LZAResourceLookup;
 
   constructor(networkVpcStack: NetworkVpcStack, subnetMap: Map<string, Subnet>) {
     this.stack = networkVpcStack;
+
+    this.lzaLookup = new LZAResourceLookup({
+      accountId: this.stack.account,
+      region: this.stack.region,
+      aseaResourceList: this.stack.props.globalConfig.externalLandingZoneResources?.resourceList ?? [],
+      enableV2Stacks: this.stack.props.globalConfig.useV2Stacks,
+      externalLandingZoneResources:
+        this.stack.props.globalConfig.externalLandingZoneResources?.importExternalLandingZoneResources,
+      stackName: this.stack.stackName,
+    });
 
     // Create NAT gateways
     this.natGatewayMap = this.createNatGateways(this.stack.vpcsInScope, subnetMap);
@@ -44,6 +58,14 @@ export class NatGwResources {
 
     for (const vpcItem of vpcResources) {
       for (const natGatewayItem of vpcItem.natGateways ?? []) {
+        if (
+          !this.lzaLookup.resourceExists({
+            resourceType: LZAResourceLookupType.NAT_GATEWAY,
+            lookupValues: { vpcName: vpcItem.name, natGatewayName: natGatewayItem.name },
+          })
+        ) {
+          continue;
+        }
         const subnet = getSubnet(subnetMap, vpcItem.name, natGatewayItem.subnet) as Subnet;
 
         this.stack.addLogs(
@@ -75,6 +97,11 @@ export class NatGwResources {
               tags: natGatewayItem.tags,
             },
           );
+          const resource = natGateway.node.defaultChild as CfnResource;
+          resource.addMetadata(MetadataKeys.LZA_LOOKUP, {
+            vpcName: vpcItem.name,
+            natGatewayName: natGatewayItem.name,
+          });
 
           this.stack.addSsmParameter({
             logicalId: pascalCase(`SsmParam${pascalCase(vpcItem.name) + pascalCase(natGatewayItem.name)}NatGatewayId`),

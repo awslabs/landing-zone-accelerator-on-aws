@@ -19,7 +19,14 @@ import {
   VpcConfig,
   VpcTemplatesConfig,
 } from '@aws-accelerator/config';
-import { PutSsmParameter, RouteTable, SsmParameterProps, Subnet, Vpc } from '@aws-accelerator/constructs';
+import {
+  ImportedSubnet,
+  PutSsmParameter,
+  RouteTable,
+  SsmParameterProps,
+  Subnet,
+  Vpc,
+} from '@aws-accelerator/constructs';
 import { getAvailabilityZoneMap } from '@aws-accelerator/utils/lib/regions';
 import { SsmResourceType } from '@aws-accelerator/utils/lib/ssm-parameter-path';
 import * as cdk from 'aws-cdk-lib';
@@ -27,11 +34,14 @@ import { pascalCase } from 'pascal-case';
 import { LogLevel } from '../network-stack';
 import { getRouteTable, getSubnet, getVpc } from '../utils/getter-utils';
 import { NetworkVpcStack } from './network-vpc-stack';
+import { MetadataKeys } from '@aws-accelerator/utils';
+import { LZAResourceLookup, LZAResourceLookupType } from '../../../../utils/lza-resource-lookup';
 
 export class SubnetResources {
   public readonly sharedParameterMap: Map<string, SsmParameterProps[]>;
   public readonly subnetMap: Map<string, Subnet>;
   private stack: NetworkVpcStack;
+  private lzaLookup: LZAResourceLookup;
 
   constructor(
     networkVpcStack: NetworkVpcStack,
@@ -41,6 +51,16 @@ export class SubnetResources {
     ipamConfig?: IpamConfig[],
   ) {
     this.stack = networkVpcStack;
+
+    this.lzaLookup = new LZAResourceLookup({
+      accountId: this.stack.account,
+      region: this.stack.region,
+      aseaResourceList: this.stack.props.globalConfig.externalLandingZoneResources?.resourceList ?? [],
+      enableV2Stacks: this.stack.props.globalConfig.useV2Stacks,
+      externalLandingZoneResources:
+        this.stack.props.globalConfig.externalLandingZoneResources?.importExternalLandingZoneResources,
+      stackName: this.stack.stackName,
+    });
 
     // Create subnets
     this.subnetMap = this.createSubnets(this.stack.vpcsInScope, vpcMap, routeTableMap, outpostMap, ipamConfig);
@@ -83,6 +103,11 @@ export class SubnetResources {
 
     // Create subnet
     const subnet = this.createSubnetItem(vpcItem, subnetItem, availabilityZone, vpc, routeTable, basePool, outpost);
+
+    if (!subnet) {
+      return index;
+    }
+
     maps.subnets.set(`${vpcItem.name}_${subnetItem.name}`, subnet);
 
     // Need to ensure IPAM subnets are created one at a time to avoid duplicate allocations
@@ -222,11 +247,12 @@ export class SubnetResources {
     routeTable?: RouteTable,
     basePool?: string[],
     outpost?: OutpostsConfig,
-  ): Subnet {
+  ): Subnet | undefined {
     this.stack.addLogs(LogLevel.INFO, `Adding subnet ${subnetItem.name} to VPC ${vpcItem.name}`);
 
     const isAvailabilityZoneId = !availabilityZone.includes(cdk.Stack.of(this.stack).region);
-    let subnet;
+    let subnet: ImportedSubnet | Subnet | undefined = undefined;
+
     if (this.stack.isManagedByAsea(AseaResourceType.EC2_SUBNET, `${vpcItem.name}/${subnetItem.name}`)) {
       const subnetId = this.stack.getExternalResourceParameter(
         this.stack.getSsmPath(SsmResourceType.SUBNET, [vpcItem.name, subnetItem.name]),
@@ -242,40 +268,70 @@ export class SubnetResources {
         },
       );
     } else {
-      subnet = new Subnet(this.stack, pascalCase(`${vpcItem.name}Vpc`) + pascalCase(`${subnetItem.name}Subnet`), {
-        name: subnetItem.name,
-        assignIpv6OnCreation: subnetItem.assignIpv6OnCreation,
-        availabilityZone: isAvailabilityZoneId ? undefined : availabilityZone,
-        availabilityZoneId: isAvailabilityZoneId ? availabilityZone : undefined,
-        basePool,
-        enableDns64: subnetItem.enableDns64,
-        ipamAllocation: subnetItem.ipamAllocation,
-        ipv4CidrBlock: subnetItem.ipv4CidrBlock,
-        ipv6CidrBlock: subnetItem.ipv6CidrBlock,
-        kmsKey: this.stack.cloudwatchKey,
-        logRetentionInDays: this.stack.logRetention,
-        mapPublicIpOnLaunch: subnetItem.mapPublicIpOnLaunch,
-        privateDnsOptions: subnetItem.privateDnsOptions,
-        routeTable,
-        vpc,
-        tags: subnetItem.tags,
-        outpost,
-      });
+      if (this.subnetManagedByV1Stack(subnetItem, vpcItem.name)) {
+        subnet = new Subnet(this.stack, pascalCase(`${vpcItem.name}Vpc`) + pascalCase(`${subnetItem.name}Subnet`), {
+          name: subnetItem.name,
+          assignIpv6OnCreation: subnetItem.assignIpv6OnCreation,
+          availabilityZone: isAvailabilityZoneId ? undefined : availabilityZone,
+          availabilityZoneId: isAvailabilityZoneId ? availabilityZone : undefined,
+          basePool,
+          enableDns64: subnetItem.enableDns64,
+          ipamAllocation: subnetItem.ipamAllocation,
+          ipv4CidrBlock: subnetItem.ipv4CidrBlock,
+          ipv6CidrBlock: subnetItem.ipv6CidrBlock,
+          kmsKey: this.stack.cloudwatchKey,
+          logRetentionInDays: this.stack.logRetention,
+          mapPublicIpOnLaunch: subnetItem.mapPublicIpOnLaunch,
+          privateDnsOptions: subnetItem.privateDnsOptions,
+          routeTable,
+          vpc,
+          tags: subnetItem.tags,
+          outpost,
+        });
 
-      this.stack.addSsmParameter({
-        logicalId: pascalCase(`SsmParam${pascalCase(vpcItem.name) + pascalCase(subnetItem.name)}SubnetId`),
-        parameterName: this.stack.getSsmPath(SsmResourceType.SUBNET, [vpcItem.name, subnetItem.name]),
-        stringValue: subnet.subnetId,
-      });
-      // If the VPC has additional CIDR blocks, depend on those CIDRs to be associated
-      for (const cidr of [...vpc.cidrs.ipv4, ...vpc.cidrs.ipv6]) {
-        subnet.node.addDependency(cidr);
+        this.stack.addSsmParameter({
+          logicalId: pascalCase(`SsmParam${pascalCase(vpcItem.name) + pascalCase(subnetItem.name)}SubnetId`),
+          parameterName: this.stack.getSsmPath(SsmResourceType.SUBNET, [vpcItem.name, subnetItem.name]),
+          stringValue: subnet.subnetId,
+        });
+        // If the VPC has additional CIDR blocks, depend on those CIDRs to be associated
+        for (const cidr of [...vpc.cidrs.ipv4, ...vpc.cidrs.ipv6]) {
+          subnet.node.addDependency(cidr);
+        }
       }
     }
-    if (subnetItem.shareTargets) {
-      this.stack.addLogs(LogLevel.INFO, `Share subnet ${subnetItem.name}`);
-      this.stack.addResourceShare(subnetItem, `${subnetItem.name}_SubnetShare`, [subnet.subnetArn]);
+
+    if (
+      this.lzaLookup.resourceExists({
+        resourceType: LZAResourceLookupType.ROUTE_TABLE_ASSOCIATION,
+        lookupValues: { subnetName: subnetItem.name, routeTableName: subnetItem.routeTable },
+      })
+    ) {
+      const resource = subnet!.associateRouteTable();
+
+      resource?.addMetadata(MetadataKeys.LZA_LOOKUP, {
+        subnetName: subnetItem.name,
+        routeTableName: subnetItem.routeTable,
+      });
     }
+
+    if (
+      subnetItem.shareTargets &&
+      this.lzaLookup.resourceExists({
+        resourceType: LZAResourceLookupType.SUBNET_SHARE,
+        lookupValues: { subnetName: subnetItem.name },
+      })
+    ) {
+      this.stack.addLogs(LogLevel.INFO, `Share subnet ${subnetItem.name}`);
+      const ramShare = this.stack.addResourceShare(subnetItem, `${subnetItem.name}_SubnetShare`, [subnet!.subnetArn]);
+      const resource = ramShare.node.findChild(
+        `${pascalCase(subnetItem.name)}SubnetShareResourceShare`,
+      ) as cdk.CfnResource;
+      resource.addMetadata(MetadataKeys.LZA_LOOKUP, {
+        subnetName: subnetItem.name,
+      });
+    }
+
     return subnet;
   }
 
@@ -345,6 +401,9 @@ export class SubnetResources {
     accountIds: string[],
   ) {
     for (const subnetItem of sharedSubnets) {
+      if (!this.subnetManagedByV1Stack(subnetItem, vpcItem.name)) {
+        continue;
+      }
       // Add subnet to parameters
       const subnet = getSubnet(subnetMap, vpcItem.name, subnetItem.name) as Subnet;
       parameters.push({
@@ -368,5 +427,25 @@ export class SubnetResources {
         }
       });
     }
+  }
+
+  /**
+   * Helper function to determine if a subnet is managed by V1 stacks
+   * @param subnetItem
+   * @param vpcName
+   * @returns bool
+   */
+  private subnetManagedByV1Stack(subnetItem: SubnetConfig, vpcName: string): boolean {
+    const subnetExists = this.lzaLookup.resourceExists({
+      resourceType: LZAResourceLookupType.SUBNET,
+      lookupValues: { subnetName: subnetItem.name, vpcName },
+    });
+
+    const ipamSubnetExists = this.lzaLookup.resourceExists({
+      resourceType: LZAResourceLookupType.IPAM_SUBNET,
+      lookupValues: { subnetName: subnetItem.name, vpcName },
+    });
+
+    return subnetExists || ipamSubnetExists;
   }
 }
