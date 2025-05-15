@@ -579,6 +579,22 @@ centralNetworkServices:
         subnets:
           - Network-Endpoints-A
           - Network-Endpoints-B
+      - name: accelerator-inbound-fips
+        type: INBOUND
+        vpc: Network-Endpoints
+        protocols:
+          - DoH-FIPS
+        subnets:
+          - Network-Endpoints-A
+          - Network-Endpoints-B
+      - name: accelerator-inbound-doh
+        type: INBOUND
+        vpc: Network-Endpoints
+        protocols:
+          - DoH
+        subnets:
+          - Network-Endpoints-A
+          - Network-Endpoints-B
       - name: accelerator-outbound
         type: OUTBOUND
         vpc: Network-Endpoints
