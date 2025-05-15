@@ -15,6 +15,9 @@ exports[`ResolverEndpoint Construct(ResolverEndpoint):  Snapshot Test 1`] = `
           },
         ],
         "Name": "TestEndpoint",
+        "Protocols": [
+          "DoH",
+        ],
         "SecurityGroupIds": [
           "sg-123test",
         ],
@@ -22,6 +25,34 @@ exports[`ResolverEndpoint Construct(ResolverEndpoint):  Snapshot Test 1`] = `
           {
             "Key": "Name",
             "Value": "TestEndpoint",
+          },
+        ],
+      },
+      "Type": "AWS::Route53Resolver::ResolverEndpoint",
+    },
+    "TestInboundEndpoint502261B4": {
+      "Properties": {
+        "Direction": "Inbound",
+        "IpAddresses": [
+          {
+            "SubnetId": "subnet-1",
+          },
+          {
+            "SubnetId": "subnet-2",
+          },
+        ],
+        "Name": "TestInboundEndpoint",
+        "Protocols": [
+          "DoH-FIPS",
+          "Do53",
+        ],
+        "SecurityGroupIds": [
+          "sg-123test",
+        ],
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "TestInboundEndpoint",
           },
         ],
       },

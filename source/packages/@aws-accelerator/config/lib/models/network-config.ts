@@ -5018,6 +5018,7 @@ export interface IResolverRuleConfig {
 }
 
 export type ResolverEndpointType = 'INBOUND' | 'OUTBOUND';
+export type ResolverProtocol = 'DoH-FIPS' | 'DoH' | 'Do53';
 
 /**
  * *{@link NetworkConfig} / {@link CentralNetworkServicesConfig} / {@link ResolverConfig} / {@link ResolverEndpointConfig}*
@@ -5119,6 +5120,38 @@ export interface IResolverEndpointConfig {
    * @see {@link ResolverRuleConfig}
    */
   readonly rules?: IResolverRuleConfig[];
+  /**
+   * (OPTIONAL) An array of DNS Queries over HTTPS (DoH) Protocols to apply to the
+   * Route 53 Resolver Endpoints.
+   *
+   * @remarks
+   * DoH uses TLS encryption and increases privacy and security by preventing eavesdropping and manipulation of DNS
+   * data as it is exchanged between a DoH client and the DoH-based DNS resolver. This helps you implement a
+   * zero-trust architecture where no actor, system, network, or service operating outside or within your security
+   * perimeter is trusted and all network traffic is encrypted.
+   *
+   * For more information, please see: {@link https://datatracker.ietf.org/doc/html/rfc8484}
+   *
+   * Valid configurations are available here: {@link https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-route53resolver-resolverendpoint.html#cfn-route53resolver-resolverendpoint-protocols}
+   *
+   * Note: Not specifying the protocol property for an endpoint, defaults to the `Do53` protocol.
+   *
+   * @example
+   *
+   * To implement an INBOUND resolver endpoint using the DoH protocol.
+   *
+   * ```
+   * - name: accelerator-inbound
+   *   type: INBOUND
+   *   vpc: Network-Endpoints
+   *   protocols:
+   *     - DoH
+   *   subnets:
+   *     - Network-Endpoints-A
+   *     - Network-Endpoints-B
+   * ```
+   */
+  readonly protocols?: ResolverProtocol[];
   /**
    * (OPTIONAL) An array of tags for the resolver endpoint.
    */

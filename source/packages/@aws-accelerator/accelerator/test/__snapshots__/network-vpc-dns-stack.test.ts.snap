@@ -13,6 +13,14 @@ exports[`NetworkVpcDnsStack Construct(NetworkVpcDnsStack):  Snapshot Test 1`] = 
       "Default": "/accelerator/kms/lambda/key-arn",
       "Type": "AWS::SSM::Parameter::Value<String>",
     },
+    "SsmParameterValueacceleratornetworkroute53ResolverendpointsacceleratorinbounddohidC96584B6F00A464EAD1953AFF4B05118Parameter": {
+      "Default": "/accelerator/network/route53Resolver/endpoints/accelerator-inbound-doh/id",
+      "Type": "AWS::SSM::Parameter::Value<String>",
+    },
+    "SsmParameterValueacceleratornetworkroute53ResolverendpointsacceleratorinboundfipsidC96584B6F00A464EAD1953AFF4B05118Parameter": {
+      "Default": "/accelerator/network/route53Resolver/endpoints/accelerator-inbound-fips/id",
+      "Type": "AWS::SSM::Parameter::Value<String>",
+    },
     "SsmParameterValueacceleratornetworkroute53ResolverendpointsacceleratorinboundidC96584B6F00A464EAD1953AFF4B05118Parameter": {
       "Default": "/accelerator/network/route53Resolver/endpoints/accelerator-inbound/id",
       "Type": "AWS::SSM::Parameter::Value<String>",
