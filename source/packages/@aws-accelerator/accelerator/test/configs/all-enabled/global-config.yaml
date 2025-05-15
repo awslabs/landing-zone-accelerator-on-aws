@@ -336,6 +336,12 @@ limits:
     regions:
       - us-east-1
       - us-west-2
+  - serviceCode: route53resolver
+    quotaCode: L-4A669CC0
+    desiredValue: 10
+    deploymentTargets:
+      organizationalUnits:
+        - Infrastructure
 reports:
   costAndUsageReport:
     compression: Parquet
