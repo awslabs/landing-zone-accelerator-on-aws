@@ -583,6 +583,7 @@ export class ResolverEndpointConfig implements i.IResolverEndpointConfig {
   readonly subnets: string[] = [];
   readonly allowedCidrs: string[] | undefined = undefined;
   readonly rules: ResolverRuleConfig[] | undefined = undefined;
+  readonly protocols: i.ResolverProtocol[] | undefined = undefined;
   readonly tags: t.Tag[] | undefined = undefined;
 }
 

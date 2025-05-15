@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - feat(securityHub): added PCI DSS v4.0.1 and AWS Resource Tagging Standard v1.0.0 standards [#763](https://github.com/awslabs/landing-zone-accelerator-on-aws/issues/763) and [#744](https://github.com/awslabs/landing-zone-accelerator-on-aws/issues/744)
 - feat(networking): add support for icmp nacl rules
 - feat(regions): add support for the mx-central-1 Mexico (Central) opt-in region
+- feat(networking): add support for DoH and DoH-FIPS protocols for route53 resolver endpoints
 
 ### Fixed
 

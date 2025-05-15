@@ -2938,6 +2938,13 @@
           "$ref": "#/definitions/NonEmptyString",
           "description": "The friendly name of the resolver endpoint."
         },
+        "protocols": {
+          "description": "(OPTIONAL) An array of DNS Queries over HTTPS (DoH) Protocols to apply to the Route 53 Resolver Endpoints.",
+          "items": {
+            "$ref": "#/definitions/ResolverProtocol"
+          },
+          "type": "array"
+        },
         "rules": {
           "description": "(OPTIONAL) An array of resolver rule configurations for the endpoint.",
           "items": {
@@ -5034,6 +5041,14 @@
       "enum": [
         "INBOUND",
         "OUTBOUND"
+      ],
+      "type": "string"
+    },
+    "ResolverProtocol": {
+      "enum": [
+        "DoH-FIPS",
+        "DoH",
+        "Do53"
       ],
       "type": "string"
     },

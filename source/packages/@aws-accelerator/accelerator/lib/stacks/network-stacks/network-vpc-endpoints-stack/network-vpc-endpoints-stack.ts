@@ -934,6 +934,8 @@ export class NetworkVpcEndpointsStack extends NetworkStack {
       ipAddresses: subnets,
       name: endpointItem.name,
       securityGroupIds: [securityGroup.securityGroupId],
+      // If protocols are undefined, Do53 must be present to maintain default behavior.
+      protocols: endpointItem.protocols ?? ['Do53'],
       tags: endpointItem.tags ?? [],
     });
     this.ssmParameters.push({
