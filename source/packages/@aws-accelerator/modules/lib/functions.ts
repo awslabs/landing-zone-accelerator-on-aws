@@ -38,6 +38,7 @@ import { GlobalConfig } from '@aws-accelerator/config/lib/global-config';
 import { AccountsConfig } from '@aws-accelerator/config/lib/accounts-config';
 import { GetParameterCommand, ParameterNotFound, SSMClient } from '@aws-sdk/client-ssm';
 import { ConfigLoader } from './config-loader';
+import { AcceleratorModuleStageOrders } from '../models/constants';
 
 const logger = createLogger([path.parse(path.basename(__filename)).name]);
 
@@ -194,6 +195,7 @@ export async function getOrganizationDetails(
  * @param partition string
  * @param resourcePrefixes {@link AcceleratorResourcePrefixes}
  * @param solutionId string
+ * @param stageRunOrder number
  * @param managementAccountCredentials {@link IAssumeRoleCredential} | undefined
  * @returns configs {@link AcceleratorModuleRunnerParametersType}
  */
@@ -202,6 +204,7 @@ export async function getAcceleratorModuleRunnerParameters(
   partition: string,
   resourcePrefixes: AcceleratorResourcePrefixes,
   solutionId: string,
+  stageRunOrder: number,
   managementAccountCredentials?: IAssumeRoleCredential,
 ): Promise<AcceleratorModuleRunnerParametersType> {
   const acceleratorConfigurations = await ConfigLoader.getAcceleratorConfigurations(
@@ -244,15 +247,25 @@ export async function getAcceleratorModuleRunnerParameters(
   //
   // Get Central log bucket CMK arn
   //
-  const centralLogsBucketKeyArn = await getCentralLogsBucketKeyArn(
-    partition,
-    solutionId,
-    centralizedLoggingRegion,
-    acceleratorResourceNames,
-    acceleratorConfigurations.globalConfig,
-    acceleratorConfigurations.accountsConfig,
-    managementAccountCredentials,
-  );
+  let centralLogsBucketKeyArn: string | undefined;
+  if (stageRunOrder > AcceleratorModuleStageOrders.logging.runOrder) {
+    logger.info(
+      `Getting Central Log bucket ARN since the stage is executed after ${AcceleratorModuleStageOrders.logging.name} stage`,
+    );
+    centralLogsBucketKeyArn = await getCentralLogsBucketKeyArn(
+      partition,
+      solutionId,
+      centralizedLoggingRegion,
+      acceleratorResourceNames,
+      acceleratorConfigurations.globalConfig,
+      acceleratorConfigurations.accountsConfig,
+      managementAccountCredentials,
+    );
+  } else {
+    logger.info(
+      `Will not get Central Log bucket ARN since the stage is executed before ${AcceleratorModuleStageOrders.logging.name} stage`,
+    );
+  }
 
   //
   // Get Global Region
