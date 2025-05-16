@@ -54,6 +54,7 @@ import {
   mockReplacementsConfig,
   mockSecurityConfig,
 } from './mocked-resources';
+import { AcceleratorModuleStageOrders } from '../models/constants';
 
 const mockYargs = {
   options: jest.fn().mockReturnThis(),
@@ -836,6 +837,7 @@ describe('functions', () => {
         MOCK_CONSTANTS.runnerParameters.partition,
         MOCK_CONSTANTS.resourcePrefixes,
         MOCK_CONSTANTS.runnerParameters.solutionId,
+        AcceleratorModuleStageOrders.finalize.runOrder,
         MOCK_CONSTANTS.credentials,
       );
 
@@ -880,6 +882,7 @@ describe('functions', () => {
         MOCK_CONSTANTS.runnerParameters.partition,
         MOCK_CONSTANTS.resourcePrefixes,
         MOCK_CONSTANTS.runnerParameters.solutionId,
+        AcceleratorModuleStageOrders.finalize.runOrder,
         MOCK_CONSTANTS.credentials,
       );
 
@@ -906,6 +909,7 @@ describe('functions', () => {
           MOCK_CONSTANTS.runnerParameters.partition,
           MOCK_CONSTANTS.resourcePrefixes,
           MOCK_CONSTANTS.runnerParameters.solutionId,
+          AcceleratorModuleStageOrders.prepare.runOrder,
           MOCK_CONSTANTS.credentials,
         ),
       ).rejects.toThrow(new Error(errorMessage));
