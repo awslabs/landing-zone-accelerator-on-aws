@@ -1948,11 +1948,11 @@ export interface ISnsConfig {
    * email subscriptions will be in the Log Archive account
    * All other accounts and regions will forward to the Logging account
    */
-  readonly deploymentTargets?: t.IDeploymentTargets;
+  readonly deploymentTargets: t.IDeploymentTargets;
   /**
    * List of SNS Topics
    */
-  readonly topics?: ISnsTopicConfig[];
+  readonly topics: ISnsTopicConfig[];
 }
 
 /**

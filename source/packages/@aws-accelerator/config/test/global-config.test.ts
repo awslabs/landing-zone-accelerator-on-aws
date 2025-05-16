@@ -46,24 +46,12 @@ const configDir = path.resolve('../accelerator/test/configs/snapshot-only');
 describe('GlobalConfig', () => {
   describe('Test config', () => {
     it('has loaded successfully', () => {
-      // const globalConfig = new GlobalConfig({
-      //   homeRegion: 'us-east-1',
-      // });
       const globalConfigFromFile = GlobalConfig.loadRawGlobalConfig(configDir);
 
       expect(globalConfigFromFile.ssmParameters?.length).toBe(1);
       expect(globalConfigFromFile.ssmParameters?.at(0)?.parameters?.at(0)?.name).toBe('parameterTest');
       expect(globalConfigFromFile.ssmParameters?.at(0)?.parameters?.at(0)?.path).toBe('/my/parameter/structure');
       expect(globalConfigFromFile.ssmParameters?.at(0)?.parameters?.at(0)?.value).toBe('parameterTestValue');
-
-      //   expect(globalConfig.accountNames).toStrictEqual([]);
-      //   expect(globalConfigFromFile.accountNames).toStrictEqual([
-      //     'Management',
-      //     'LogArchive',
-      //     'Audit',
-      //     'SharedServices',
-      //     'Network',
-      //   ]);
     });
 
     it('loads from string', () => {
@@ -74,9 +62,6 @@ describe('GlobalConfig', () => {
       if (!globalConfigFromString) {
         throw new Error('globalConfigFromString is not defined');
       }
-      // expect(globalConfigFromString.accountNames).toStrictEqual([]);
-
-      //expect(GlobalConfig.loadFromString('corrupt str')).toBe(undefined);
     });
 
     it('tests CostAndUsageReportConfig', () => {

@@ -1427,6 +1427,10 @@
           "type": "array"
         }
       },
+      "required": [
+        "deploymentTargets",
+        "topics"
+      ],
       "type": "object"
     },
     "ISnsTopicConfig": {
