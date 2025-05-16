@@ -22,8 +22,12 @@ import {
 import path from 'path';
 import { createLogger, MODULE_EXCEPTIONS } from '../../@aws-lza/index';
 import { setResourcePrefixes } from '../accelerator/utils/app-utils';
-import { getAcceleratorModuleRunnerParameters, getManagementAccountCredentials } from './lib/functions';
-import { AcceleratorModuleStageDetails } from './models/constants';
+import {
+  getAcceleratorModuleRunnerParameters,
+  getCentralLogsBucketKeyArn,
+  getManagementAccountCredentials,
+} from './lib/functions';
+import { AcceleratorModuleStageDetails, AcceleratorModuleStageOrders } from './models/constants';
 import { ModuleExecutionPhase } from './models/enums';
 
 /**
@@ -54,10 +58,12 @@ export abstract class ModuleRunner {
   /**
    * Function to get module runner parameters
    * @param params {@link RunnerParametersType}
+   * @param stageRunOrder number
    * @returns parameters {@link AcceleratorModuleRunnerParametersType}
    */
   private static async getModuleRunnerParameters(
     params: RunnerParametersType,
+    stageRunOrder: number,
   ): Promise<AcceleratorModuleRunnerParametersType> {
     //
     // Get Resource prefixes
@@ -81,6 +87,7 @@ export abstract class ModuleRunner {
       params.partition,
       resourcePrefixes,
       params.solutionId,
+      stageRunOrder,
       managementAccountCredentials,
     );
   }
@@ -96,16 +103,35 @@ export abstract class ModuleRunner {
   private static async executeAllStageModules(runnerParameters: RunnerParametersType): Promise<string> {
     ModuleRunner.logger.info(`Executing all modules since stage is undefined`);
     const statuses: string[] = [];
-
     const sortedStageItems = AcceleratorModuleStageDetails.sort((a, b) => a.stage.runOrder - b.stage.runOrder);
 
-    const acceleratorModuleRunnerParameters = await ModuleRunner.getModuleRunnerParameters(runnerParameters);
+    const acceleratorModuleRunnerParameters = await ModuleRunner.getModuleRunnerParameters(runnerParameters, 0);
 
     const groupedStageItems = ModuleRunner.groupStagesByRunOrder(sortedStageItems);
 
     for (const groupedStageItem of groupedStageItems) {
       const promiseItems: PromiseItemType[] = [];
       for (const stageItem of groupedStageItem.stages) {
+        const stageRunOrder = ModuleRunner.getStageRunOrder(stageItem.stage.name);
+
+        if (
+          stageRunOrder > AcceleratorModuleStageOrders.logging.runOrder &&
+          !acceleratorModuleRunnerParameters.logging.bucketKeyArn
+        ) {
+          this.logger.info(
+            `Getting Central Log bucket ARN since the stage is executed after ${AcceleratorModuleStageOrders.logging.name} stage`,
+          );
+          acceleratorModuleRunnerParameters.logging.bucketKeyArn = await getCentralLogsBucketKeyArn(
+            runnerParameters.partition,
+            runnerParameters.solutionId,
+            acceleratorModuleRunnerParameters.logging.centralizedRegion,
+            acceleratorModuleRunnerParameters.acceleratorResourceNames,
+            acceleratorModuleRunnerParameters.configs.globalConfig,
+            acceleratorModuleRunnerParameters.configs.accountsConfig,
+            acceleratorModuleRunnerParameters.managementAccountCredentials,
+          );
+        }
+
         ModuleRunner.logger.info(`Preparing to execute modules of stage "${stageItem.stage.name}"`);
         const sortedModuleItems = [...stageItem.modules].sort((a, b) => a.runOrder - b.runOrder);
         if (sortedModuleItems.length === 0) {
@@ -159,7 +185,8 @@ export abstract class ModuleRunner {
       return `No modules found for "${params.stage}" stage`;
     }
 
-    const acceleratorModuleRunnerParameters = await ModuleRunner.getModuleRunnerParameters(params);
+    const stageRunOrder = ModuleRunner.getStageRunOrder(params.stage!);
+    const acceleratorModuleRunnerParameters = await ModuleRunner.getModuleRunnerParameters(params, stageRunOrder);
 
     const statuses: string[] = [];
     const promiseItems: PromiseItemType[] = [];
@@ -262,5 +289,27 @@ export abstract class ModuleRunner {
       order,
       promises: promises.length === 1 ? promises[0] : promises,
     }));
+  }
+
+  /**
+   * Function to get stage run order
+   * @param stageName string
+   * @returns
+   */
+  private static getStageRunOrder(stageName: string): number {
+    const stageItem = AcceleratorModuleStageDetails.find(
+      (stage: AcceleratorModuleStageDetailsType) => stage.stage.name === stageName,
+    );
+
+    if (!stageItem) {
+      this.logger.error(
+        `${MODULE_EXCEPTIONS.INVALID_INPUT}: Stage ${stageName} not found in AcceleratorModuleStageDetails.`,
+      );
+      throw new Error(
+        `${MODULE_EXCEPTIONS.INVALID_INPUT}: Stage ${stageName} not found in AcceleratorModuleStageDetails.`,
+      );
+    }
+
+    return stageItem.stage.runOrder;
   }
 }
