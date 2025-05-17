@@ -28,7 +28,13 @@ exports[`AccountWarming Construct(WarmAccount):  Snapshot Test 1`] = `
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
         "Description": "Account warming onEvent handler",
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.0",
+          },
+        },
         "Handler": "index.handler",
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "AccountWarmingWarmAccountFunctionServiceRoleF7AECCB8",
@@ -433,6 +439,7 @@ exports[`AccountWarming Construct(WarmAccount):  Snapshot Test 1`] = `
         "Description": "AWS CDK resource provider framework - isComplete (Stack/AccountWarming/WarmAccountProvider)",
         "Environment": {
           "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.0",
             "USER_IS_COMPLETE_FUNCTION_ARN": {
               "Fn::GetAtt": [
                 "AccountWarmingWarmAccountStatusFunction25E39087",
@@ -448,6 +455,7 @@ exports[`AccountWarming Construct(WarmAccount):  Snapshot Test 1`] = `
           },
         },
         "Handler": "framework.isComplete",
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "AccountWarmingWarmAccountProviderframeworkisCompleteServiceRole9A7E21A7",
@@ -637,6 +645,7 @@ exports[`AccountWarming Construct(WarmAccount):  Snapshot Test 1`] = `
         "Description": "AWS CDK resource provider framework - onEvent (Stack/AccountWarming/WarmAccountProvider)",
         "Environment": {
           "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.0",
             "USER_IS_COMPLETE_FUNCTION_ARN": {
               "Fn::GetAtt": [
                 "AccountWarmingWarmAccountStatusFunction25E39087",
@@ -655,6 +664,7 @@ exports[`AccountWarming Construct(WarmAccount):  Snapshot Test 1`] = `
           },
         },
         "Handler": "framework.onEvent",
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "AccountWarmingWarmAccountProviderframeworkonEventServiceRole29C5E36F",
@@ -851,6 +861,7 @@ exports[`AccountWarming Construct(WarmAccount):  Snapshot Test 1`] = `
         "Description": "AWS CDK resource provider framework - onTimeout (Stack/AccountWarming/WarmAccountProvider)",
         "Environment": {
           "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.0",
             "USER_IS_COMPLETE_FUNCTION_ARN": {
               "Fn::GetAtt": [
                 "AccountWarmingWarmAccountStatusFunction25E39087",
@@ -866,6 +877,7 @@ exports[`AccountWarming Construct(WarmAccount):  Snapshot Test 1`] = `
           },
         },
         "Handler": "framework.onTimeout",
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "AccountWarmingWarmAccountProviderframeworkonTimeoutServiceRole43A89D84",
@@ -1284,7 +1296,13 @@ exports[`AccountWarming Construct(WarmAccount):  Snapshot Test 1`] = `
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
         "Description": "Account warming isComplete handler",
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.0",
+          },
+        },
         "Handler": "index.handler",
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "AccountWarmingWarmAccountStatusFunctionServiceRole6BC3CAD6",

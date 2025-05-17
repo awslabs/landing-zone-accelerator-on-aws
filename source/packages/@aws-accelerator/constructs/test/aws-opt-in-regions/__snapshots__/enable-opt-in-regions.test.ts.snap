@@ -77,6 +77,11 @@ exports[`EnableOptInRegions Construct(EnableOptInRegions):  Snapshot Test 1`] = 
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
         "Description": "Opt-in Regions isComplete handler",
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.0",
+          },
+        },
         "Handler": "index.handler",
         "KmsKeyArn": {
           "Fn::GetAtt": [
@@ -84,6 +89,7 @@ exports[`EnableOptInRegions Construct(EnableOptInRegions):  Snapshot Test 1`] = 
             "Arn",
           ],
         },
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "OptInRegionsOptInRegionsIsCompleteServiceRole88C6992C",
@@ -188,6 +194,11 @@ exports[`EnableOptInRegions Construct(EnableOptInRegions):  Snapshot Test 1`] = 
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
         "Description": "Opt-in Regions onEvent handler",
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.0",
+          },
+        },
         "Handler": "index.handler",
         "KmsKeyArn": {
           "Fn::GetAtt": [
@@ -195,6 +206,7 @@ exports[`EnableOptInRegions Construct(EnableOptInRegions):  Snapshot Test 1`] = 
             "Arn",
           ],
         },
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "OptInRegionsOptInRegionsOnEventServiceRoleD4B35886",
@@ -301,6 +313,7 @@ exports[`EnableOptInRegions Construct(EnableOptInRegions):  Snapshot Test 1`] = 
         "Description": "AWS CDK resource provider framework - isComplete (Stack/OptInRegions/OptInRegionsProvider)",
         "Environment": {
           "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.0",
             "USER_IS_COMPLETE_FUNCTION_ARN": {
               "Fn::GetAtt": [
                 "OptInRegionsOptInRegionsIsComplete20A899A2",
@@ -316,6 +329,7 @@ exports[`EnableOptInRegions Construct(EnableOptInRegions):  Snapshot Test 1`] = 
           },
         },
         "Handler": "framework.isComplete",
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "OptInRegionsOptInRegionsProviderframeworkisCompleteServiceRole3768088A",
@@ -439,6 +453,7 @@ exports[`EnableOptInRegions Construct(EnableOptInRegions):  Snapshot Test 1`] = 
         "Description": "AWS CDK resource provider framework - onEvent (Stack/OptInRegions/OptInRegionsProvider)",
         "Environment": {
           "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.0",
             "USER_IS_COMPLETE_FUNCTION_ARN": {
               "Fn::GetAtt": [
                 "OptInRegionsOptInRegionsIsComplete20A899A2",
@@ -457,6 +472,7 @@ exports[`EnableOptInRegions Construct(EnableOptInRegions):  Snapshot Test 1`] = 
           },
         },
         "Handler": "framework.onEvent",
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "OptInRegionsOptInRegionsProviderframeworkonEventServiceRoleE512B52D",
@@ -587,6 +603,7 @@ exports[`EnableOptInRegions Construct(EnableOptInRegions):  Snapshot Test 1`] = 
         "Description": "AWS CDK resource provider framework - onTimeout (Stack/OptInRegions/OptInRegionsProvider)",
         "Environment": {
           "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.0",
             "USER_IS_COMPLETE_FUNCTION_ARN": {
               "Fn::GetAtt": [
                 "OptInRegionsOptInRegionsIsComplete20A899A2",
@@ -602,6 +619,7 @@ exports[`EnableOptInRegions Construct(EnableOptInRegions):  Snapshot Test 1`] = 
           },
         },
         "Handler": "framework.onTimeout",
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "OptInRegionsOptInRegionsProviderframeworkonTimeoutServiceRoleC3734E22",

@@ -249,6 +249,7 @@ exports[`ResourcePolicyEnforcementStack Construct(ResourcePolicyEnforcementStack
             },
             "HOME_REGION": "us-east-1",
             "ORG_ID": "o-asdf123456",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.0",
             "SourceAccount": "123456789012",
           },
         },
@@ -256,6 +257,7 @@ exports[`ResourcePolicyEnforcementStack Construct(ResourcePolicyEnforcementStack
         "KmsKeyArn": {
           "Ref": "SsmParameterValueacceleratorkmslambdakeyarnC96584B6F00A464EAD1953AFF4B05118Parameter",
         },
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "DetectResourcePolicyDetectResourcePolicyFunctionServiceRoleE9AC0FD8",
@@ -517,6 +519,7 @@ exports[`ResourcePolicyEnforcementStack Construct(ResourcePolicyEnforcementStack
             },
             "HOME_REGION": "us-east-1",
             "ORG_ID": "o-asdf123456",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.0",
             "SourceAccount": "123456789012",
           },
         },
@@ -524,6 +527,7 @@ exports[`ResourcePolicyEnforcementStack Construct(ResourcePolicyEnforcementStack
         "KmsKeyArn": {
           "Ref": "SsmParameterValueacceleratorkmslambdakeyarnC96584B6F00A464EAD1953AFF4B05118Parameter",
         },
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "RemediateResourcePolicyRemediateResourcePolicyFunctionServiceRole83F5E0A5",

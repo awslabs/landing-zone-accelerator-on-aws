@@ -240,6 +240,7 @@ exports[`RevertScpChanges Construct(RevertScpChanges):  Snapshot Test 1`] = `
                 ],
               ],
             },
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.0",
           },
         },
         "Handler": "index.handler",
@@ -249,6 +250,7 @@ exports[`RevertScpChanges Construct(RevertScpChanges):  Snapshot Test 1`] = `
             "Arn",
           ],
         },
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "RevertScpChanges2RevertScpChangesFunctionServiceRoleD920129A",
@@ -497,6 +499,7 @@ exports[`RevertScpChanges Construct(RevertScpChanges):  Snapshot Test 1`] = `
                 ],
               ],
             },
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.0",
           },
         },
         "Handler": "index.handler",
@@ -506,6 +509,7 @@ exports[`RevertScpChanges Construct(RevertScpChanges):  Snapshot Test 1`] = `
             "Arn",
           ],
         },
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "RevertScpChangesRevertScpChangesFunctionServiceRole4F571613",

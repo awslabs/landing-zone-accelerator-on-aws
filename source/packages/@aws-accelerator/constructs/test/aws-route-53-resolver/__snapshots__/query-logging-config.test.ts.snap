@@ -14,8 +14,13 @@ exports[`QueryLoggingConfig Construct(QueryLoggingConfig):  Snapshot Test 1`] = 
           },
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.0",
+          },
+        },
         "Handler": "__entrypoint__.handler",
-        "MemorySize": 128,
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "CustomQueryLoggingConfigAssociationCustomResourceProviderRole0317AB9A",
@@ -243,8 +248,13 @@ exports[`QueryLoggingConfig Construct(QueryLoggingConfig):  Snapshot Test 2`] = 
           },
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.0",
+          },
+        },
         "Handler": "__entrypoint__.handler",
-        "MemorySize": 128,
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "CustomLogResourcePolicyCustomResourceProviderRole83D4C53E",
@@ -332,8 +342,13 @@ exports[`QueryLoggingConfig Construct(QueryLoggingConfig):  Snapshot Test 2`] = 
           },
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.0",
+          },
+        },
         "Handler": "__entrypoint__.handler",
-        "MemorySize": 128,
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "CustomQueryLoggingConfigAssociationCustomResourceProviderRole0317AB9A",
@@ -439,8 +454,13 @@ exports[`QueryLoggingConfig Construct(QueryLoggingConfig):  Snapshot Test 2`] = 
           },
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.0",
+          },
+        },
         "Handler": "__entrypoint__.handler",
-        "MemorySize": 128,
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "CustomQueryLoggingConfigCustomResourceProviderRole70878758",

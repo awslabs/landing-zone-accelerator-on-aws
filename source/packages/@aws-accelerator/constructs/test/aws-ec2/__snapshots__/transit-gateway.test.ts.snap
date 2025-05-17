@@ -138,8 +138,13 @@ exports[`ImportTransitGateway Construct(ImportTransitGateway):  Snapshot Test 1`
           },
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.0",
+          },
+        },
         "Handler": "__entrypoint__.handler",
-        "MemorySize": 128,
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "CustomGetTransitGatewayAttachmentCustomResourceProviderRoleA6A22C3D",
@@ -438,6 +443,7 @@ exports[`ImportTransitGateway Construct(ImportTransitGateway):  Snapshot Test 1`
         "Description": "AWS CDK resource provider framework - onEvent (Default/TransitGatewayRouteTableAssociationCustom/CustomResource/Resource)",
         "Environment": {
           "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.0",
             "USER_ON_EVENT_FUNCTION_ARN": {
               "Fn::Join": [
                 "",
@@ -461,21 +467,14 @@ exports[`ImportTransitGateway Construct(ImportTransitGateway):  Snapshot Test 1`
           },
         },
         "Handler": "framework.onEvent",
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "TransitGatewayRouteTableAssociationCustomCustomResourceframeworkonEventServiceRoleF3DD7C87",
             "Arn",
           ],
         },
-        "Runtime": {
-          "Fn::FindInMap": [
-            "LatestNodeRuntimeMap",
-            {
-              "Ref": "AWS::Region",
-            },
-            "value",
-          ],
-        },
+        "Runtime": "nodejs20.x",
         "Timeout": 900,
       },
       "Type": "AWS::Lambda::Function",
@@ -630,6 +629,7 @@ exports[`ImportTransitGateway Construct(ImportTransitGateway):  Snapshot Test 1`
         "Description": "AWS CDK resource provider framework - onEvent (Default/TransitGatewayRouteTablePropagationCustom/CustomResource/Resource)",
         "Environment": {
           "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.0",
             "USER_ON_EVENT_FUNCTION_ARN": {
               "Fn::Join": [
                 "",
@@ -653,21 +653,14 @@ exports[`ImportTransitGateway Construct(ImportTransitGateway):  Snapshot Test 1`
           },
         },
         "Handler": "framework.onEvent",
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "TransitGatewayRouteTablePropagationCustomCustomResourceframeworkonEventServiceRole483D3ED1",
             "Arn",
           ],
         },
-        "Runtime": {
-          "Fn::FindInMap": [
-            "LatestNodeRuntimeMap",
-            {
-              "Ref": "AWS::Region",
-            },
-            "value",
-          ],
-        },
+        "Runtime": "nodejs20.x",
         "Timeout": 900,
       },
       "Type": "AWS::Lambda::Function",
@@ -927,8 +920,13 @@ exports[`TransitGateway Construct(TransitGateway):  Snapshot Test 1`] = `
           },
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.0",
+          },
+        },
         "Handler": "__entrypoint__.handler",
-        "MemorySize": 128,
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "CustomGetTransitGatewayAttachmentCustomResourceProviderRoleA6A22C3D",
@@ -1227,6 +1225,7 @@ exports[`TransitGateway Construct(TransitGateway):  Snapshot Test 1`] = `
         "Description": "AWS CDK resource provider framework - onEvent (Default/TransitGatewayRouteTableAssociationCustom/CustomResource/Resource)",
         "Environment": {
           "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.0",
             "USER_ON_EVENT_FUNCTION_ARN": {
               "Fn::Join": [
                 "",
@@ -1250,21 +1249,14 @@ exports[`TransitGateway Construct(TransitGateway):  Snapshot Test 1`] = `
           },
         },
         "Handler": "framework.onEvent",
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "TransitGatewayRouteTableAssociationCustomCustomResourceframeworkonEventServiceRoleF3DD7C87",
             "Arn",
           ],
         },
-        "Runtime": {
-          "Fn::FindInMap": [
-            "LatestNodeRuntimeMap",
-            {
-              "Ref": "AWS::Region",
-            },
-            "value",
-          ],
-        },
+        "Runtime": "nodejs20.x",
         "Timeout": 900,
       },
       "Type": "AWS::Lambda::Function",
@@ -1419,6 +1411,7 @@ exports[`TransitGateway Construct(TransitGateway):  Snapshot Test 1`] = `
         "Description": "AWS CDK resource provider framework - onEvent (Default/TransitGatewayRouteTablePropagationCustom/CustomResource/Resource)",
         "Environment": {
           "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.0",
             "USER_ON_EVENT_FUNCTION_ARN": {
               "Fn::Join": [
                 "",
@@ -1442,21 +1435,14 @@ exports[`TransitGateway Construct(TransitGateway):  Snapshot Test 1`] = `
           },
         },
         "Handler": "framework.onEvent",
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "TransitGatewayRouteTablePropagationCustomCustomResourceframeworkonEventServiceRole483D3ED1",
             "Arn",
           ],
         },
-        "Runtime": {
-          "Fn::FindInMap": [
-            "LatestNodeRuntimeMap",
-            {
-              "Ref": "AWS::Region",
-            },
-            "value",
-          ],
-        },
+        "Runtime": "nodejs20.x",
         "Timeout": 900,
       },
       "Type": "AWS::Lambda::Function",
@@ -1716,8 +1702,13 @@ exports[`TransitGatewayAttachment Construct(TransitGatewayAttachment):  Snapshot
           },
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.0",
+          },
+        },
         "Handler": "__entrypoint__.handler",
-        "MemorySize": 128,
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "CustomGetTransitGatewayAttachmentCustomResourceProviderRoleA6A22C3D",
@@ -2016,6 +2007,7 @@ exports[`TransitGatewayAttachment Construct(TransitGatewayAttachment):  Snapshot
         "Description": "AWS CDK resource provider framework - onEvent (Default/TransitGatewayRouteTableAssociationCustom/CustomResource/Resource)",
         "Environment": {
           "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.0",
             "USER_ON_EVENT_FUNCTION_ARN": {
               "Fn::Join": [
                 "",
@@ -2039,21 +2031,14 @@ exports[`TransitGatewayAttachment Construct(TransitGatewayAttachment):  Snapshot
           },
         },
         "Handler": "framework.onEvent",
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "TransitGatewayRouteTableAssociationCustomCustomResourceframeworkonEventServiceRoleF3DD7C87",
             "Arn",
           ],
         },
-        "Runtime": {
-          "Fn::FindInMap": [
-            "LatestNodeRuntimeMap",
-            {
-              "Ref": "AWS::Region",
-            },
-            "value",
-          ],
-        },
+        "Runtime": "nodejs20.x",
         "Timeout": 900,
       },
       "Type": "AWS::Lambda::Function",
@@ -2208,6 +2193,7 @@ exports[`TransitGatewayAttachment Construct(TransitGatewayAttachment):  Snapshot
         "Description": "AWS CDK resource provider framework - onEvent (Default/TransitGatewayRouteTablePropagationCustom/CustomResource/Resource)",
         "Environment": {
           "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.0",
             "USER_ON_EVENT_FUNCTION_ARN": {
               "Fn::Join": [
                 "",
@@ -2231,21 +2217,14 @@ exports[`TransitGatewayAttachment Construct(TransitGatewayAttachment):  Snapshot
           },
         },
         "Handler": "framework.onEvent",
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "TransitGatewayRouteTablePropagationCustomCustomResourceframeworkonEventServiceRole483D3ED1",
             "Arn",
           ],
         },
-        "Runtime": {
-          "Fn::FindInMap": [
-            "LatestNodeRuntimeMap",
-            {
-              "Ref": "AWS::Region",
-            },
-            "value",
-          ],
-        },
+        "Runtime": "nodejs20.x",
         "Timeout": 900,
       },
       "Type": "AWS::Lambda::Function",
@@ -2552,6 +2531,7 @@ exports[`TransitGatewayRouteTableAssociation Construct(TransitGatewayRouteTableA
         "Description": "AWS CDK resource provider framework - onEvent (Default/TransitGatewayRouteTableAssociationCustom/CustomResource/Resource)",
         "Environment": {
           "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.0",
             "USER_ON_EVENT_FUNCTION_ARN": {
               "Fn::Join": [
                 "",
@@ -2575,21 +2555,14 @@ exports[`TransitGatewayRouteTableAssociation Construct(TransitGatewayRouteTableA
           },
         },
         "Handler": "framework.onEvent",
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "TransitGatewayRouteTableAssociationCustomCustomResourceframeworkonEventServiceRoleF3DD7C87",
             "Arn",
           ],
         },
-        "Runtime": {
-          "Fn::FindInMap": [
-            "LatestNodeRuntimeMap",
-            {
-              "Ref": "AWS::Region",
-            },
-            "value",
-          ],
-        },
+        "Runtime": "nodejs20.x",
         "Timeout": 900,
       },
       "Type": "AWS::Lambda::Function",
@@ -2744,6 +2717,7 @@ exports[`TransitGatewayRouteTableAssociation Construct(TransitGatewayRouteTableA
         "Description": "AWS CDK resource provider framework - onEvent (Default/TransitGatewayRouteTablePropagationCustom/CustomResource/Resource)",
         "Environment": {
           "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.0",
             "USER_ON_EVENT_FUNCTION_ARN": {
               "Fn::Join": [
                 "",
@@ -2767,21 +2741,14 @@ exports[`TransitGatewayRouteTableAssociation Construct(TransitGatewayRouteTableA
           },
         },
         "Handler": "framework.onEvent",
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "TransitGatewayRouteTablePropagationCustomCustomResourceframeworkonEventServiceRole483D3ED1",
             "Arn",
           ],
         },
-        "Runtime": {
-          "Fn::FindInMap": [
-            "LatestNodeRuntimeMap",
-            {
-              "Ref": "AWS::Region",
-            },
-            "value",
-          ],
-        },
+        "Runtime": "nodejs20.x",
         "Timeout": 900,
       },
       "Type": "AWS::Lambda::Function",
@@ -3041,8 +3008,13 @@ exports[`TransitGatewayRouteTablePropagation Construct(TransitGatewayRouteTableP
           },
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.0",
+          },
+        },
         "Handler": "__entrypoint__.handler",
-        "MemorySize": 128,
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "CustomGetTransitGatewayAttachmentCustomResourceProviderRoleA6A22C3D",
@@ -3341,6 +3313,7 @@ exports[`TransitGatewayRouteTablePropagation Construct(TransitGatewayRouteTableP
         "Description": "AWS CDK resource provider framework - onEvent (Default/TransitGatewayRouteTableAssociationCustom/CustomResource/Resource)",
         "Environment": {
           "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.0",
             "USER_ON_EVENT_FUNCTION_ARN": {
               "Fn::Join": [
                 "",
@@ -3364,21 +3337,14 @@ exports[`TransitGatewayRouteTablePropagation Construct(TransitGatewayRouteTableP
           },
         },
         "Handler": "framework.onEvent",
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "TransitGatewayRouteTableAssociationCustomCustomResourceframeworkonEventServiceRoleF3DD7C87",
             "Arn",
           ],
         },
-        "Runtime": {
-          "Fn::FindInMap": [
-            "LatestNodeRuntimeMap",
-            {
-              "Ref": "AWS::Region",
-            },
-            "value",
-          ],
-        },
+        "Runtime": "nodejs20.x",
         "Timeout": 900,
       },
       "Type": "AWS::Lambda::Function",
@@ -3533,6 +3499,7 @@ exports[`TransitGatewayRouteTablePropagation Construct(TransitGatewayRouteTableP
         "Description": "AWS CDK resource provider framework - onEvent (Default/TransitGatewayRouteTablePropagationCustom/CustomResource/Resource)",
         "Environment": {
           "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.0",
             "USER_ON_EVENT_FUNCTION_ARN": {
               "Fn::Join": [
                 "",
@@ -3556,21 +3523,14 @@ exports[`TransitGatewayRouteTablePropagation Construct(TransitGatewayRouteTableP
           },
         },
         "Handler": "framework.onEvent",
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "TransitGatewayRouteTablePropagationCustomCustomResourceframeworkonEventServiceRole483D3ED1",
             "Arn",
           ],
         },
-        "Runtime": {
-          "Fn::FindInMap": [
-            "LatestNodeRuntimeMap",
-            {
-              "Ref": "AWS::Region",
-            },
-            "value",
-          ],
-        },
+        "Runtime": "nodejs20.x",
         "Timeout": 900,
       },
       "Type": "AWS::Lambda::Function",

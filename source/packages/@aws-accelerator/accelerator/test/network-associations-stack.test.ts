@@ -16,7 +16,7 @@ import { AcceleratorStage } from '../lib/accelerator-stage';
 import { snapShotTest } from './snapshot-test';
 import { Create } from './accelerator-test-helpers';
 import { NetworkAssociationsStack } from '../lib/stacks/network-stacks/network-associations-stack/network-associations-stack';
-import { Template } from 'aws-cdk-lib/assertions';
+import { Match, Template } from 'aws-cdk-lib/assertions';
 import { AcceleratorSynthStacks } from './accelerator-synth-stacks';
 const testNamePrefix = 'Construct(NetworkAssociationsStack): ';
 
@@ -83,15 +83,14 @@ const testVpcPeeringConfig = (
   const template = Template.fromStack(stack);
   const vpcPeeringConfig = template.findResources('AWS::EC2::VPCPeeringConnection', {
     Properties: {
-      Tags: [
+      Tags: Match.arrayWith([
         {
           Key: 'Name',
           Value: peeringName,
         },
-      ],
+      ]),
     },
   });
-
   expect(vpcPeeringConfig).not.toEqual({});
 
   const peeringProps = Object.values(vpcPeeringConfig)[0]['Properties'];
