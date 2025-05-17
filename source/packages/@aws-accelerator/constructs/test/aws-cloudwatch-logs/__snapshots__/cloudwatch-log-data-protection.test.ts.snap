@@ -168,6 +168,11 @@ exports[`CloudWatchLogDataProtection Construct(CloudWatchLogDataProtection):  Sn
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
         "Description": "Accelerator deployed CloudWatchDataProtection custom resource lambda function.",
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.1",
+          },
+        },
         "Handler": "index.handler",
         "KmsKeyArn": {
           "Fn::GetAtt": [
@@ -327,6 +332,7 @@ exports[`CloudWatchLogDataProtection Construct(CloudWatchLogDataProtection):  Sn
         "Description": "AWS CDK resource provider framework - onEvent (Default/CloudWatchLogDataProtection/CloudWatchDataProtection/Resource)",
         "Environment": {
           "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.1",
             "USER_ON_EVENT_FUNCTION_ARN": {
               "Fn::GetAtt": [
                 "CloudWatchLogDataProtectionCloudWatchDataProtectionFunction45F668F9",
@@ -336,21 +342,14 @@ exports[`CloudWatchLogDataProtection Construct(CloudWatchLogDataProtection):  Sn
           },
         },
         "Handler": "framework.onEvent",
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "CloudWatchLogDataProtectionCloudWatchDataProtectionframeworkonEventServiceRole055954B7",
             "Arn",
           ],
         },
-        "Runtime": {
-          "Fn::FindInMap": [
-            "LatestNodeRuntimeMap",
-            {
-              "Ref": "AWS::Region",
-            },
-            "value",
-          ],
-        },
+        "Runtime": "nodejs20.x",
         "Timeout": 900,
       },
       "Type": "AWS::Lambda::Function",

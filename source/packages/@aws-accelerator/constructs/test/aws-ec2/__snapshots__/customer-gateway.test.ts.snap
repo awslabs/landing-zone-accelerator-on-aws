@@ -184,6 +184,7 @@ exports[`CustomerGateway Construct(CustomerGateway):  Snapshot Test 1`] = `
         "Description": "AWS CDK resource provider framework - onEvent (Default/TestCustomCgw/CustomResource/Resource)",
         "Environment": {
           "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.1",
             "USER_ON_EVENT_FUNCTION_ARN": {
               "Fn::Join": [
                 "",
@@ -207,21 +208,14 @@ exports[`CustomerGateway Construct(CustomerGateway):  Snapshot Test 1`] = `
           },
         },
         "Handler": "framework.onEvent",
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "TestCustomCgwCustomResourceframeworkonEventServiceRole4AB1225B",
             "Arn",
           ],
         },
-        "Runtime": {
-          "Fn::FindInMap": [
-            "LatestNodeRuntimeMap",
-            {
-              "Ref": "AWS::Region",
-            },
-            "value",
-          ],
-        },
+        "Runtime": "nodejs20.x",
         "Timeout": 900,
       },
       "Type": "AWS::Lambda::Function",

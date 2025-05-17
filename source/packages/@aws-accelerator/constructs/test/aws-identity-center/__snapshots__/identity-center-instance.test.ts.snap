@@ -175,6 +175,11 @@ exports[`IdentityCenterInstance Construct(IdentityCenterGetInstanceId):  Snapsho
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
         "Description": "Accelerator deployed IdentityCenterGetInstanceId custom resource lambda function.",
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.1",
+          },
+        },
         "Handler": "index.handler",
         "KmsKeyArn": {
           "Fn::GetAtt": [
@@ -323,6 +328,7 @@ exports[`IdentityCenterInstance Construct(IdentityCenterGetInstanceId):  Snapsho
         "Description": "AWS CDK resource provider framework - onEvent (Default/IdentityCenterInstance/IdentityCenterGetInstanceId/Resource)",
         "Environment": {
           "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.1",
             "USER_ON_EVENT_FUNCTION_ARN": {
               "Fn::GetAtt": [
                 "IdentityCenterInstanceIdentityCenterGetInstanceIdFunctionE59FDB54",
@@ -332,21 +338,14 @@ exports[`IdentityCenterInstance Construct(IdentityCenterGetInstanceId):  Snapsho
           },
         },
         "Handler": "framework.onEvent",
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "IdentityCenterInstanceIdentityCenterGetInstanceIdframeworkonEventServiceRole870C36F8",
             "Arn",
           ],
         },
-        "Runtime": {
-          "Fn::FindInMap": [
-            "LatestNodeRuntimeMap",
-            {
-              "Ref": "AWS::Region",
-            },
-            "value",
-          ],
-        },
+        "Runtime": "nodejs20.x",
         "Timeout": 900,
       },
       "Type": "AWS::Lambda::Function",

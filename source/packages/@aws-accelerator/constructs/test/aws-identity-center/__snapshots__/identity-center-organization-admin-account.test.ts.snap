@@ -139,7 +139,13 @@ exports[`IdentityCenterOrganizationAdminAccount Construct(IdentityCenterOrganiza
           },
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.1",
+          },
+        },
         "Handler": "index.handler",
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "IdentityCenterOrganizationAdminAccountIdentityCenterOrganizationAdminAccountProviderLambdaServiceRole22209E8A",
@@ -253,6 +259,7 @@ exports[`IdentityCenterOrganizationAdminAccount Construct(IdentityCenterOrganiza
         "Description": "AWS CDK resource provider framework - onEvent (Default/IdentityCenterOrganizationAdminAccount/Resource)",
         "Environment": {
           "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.1",
             "USER_ON_EVENT_FUNCTION_ARN": {
               "Fn::GetAtt": [
                 "IdentityCenterOrganizationAdminAccountIdentityCenterOrganizationAdminAccountProviderLambdaB22B900C",
@@ -262,21 +269,14 @@ exports[`IdentityCenterOrganizationAdminAccount Construct(IdentityCenterOrganiza
           },
         },
         "Handler": "framework.onEvent",
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "IdentityCenterOrganizationAdminAccountframeworkonEventServiceRole3C202AD2",
             "Arn",
           ],
         },
-        "Runtime": {
-          "Fn::FindInMap": [
-            "LatestNodeRuntimeMap",
-            {
-              "Ref": "AWS::Region",
-            },
-            "value",
-          ],
-        },
+        "Runtime": "nodejs20.x",
         "Timeout": 900,
       },
       "Type": "AWS::Lambda::Function",

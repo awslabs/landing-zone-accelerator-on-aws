@@ -93,6 +93,7 @@ exports[`RevertScpChanges Construct(DetectResourcePolicy):  Snapshot Test 1`] = 
               "Ref": "AWS::Partition",
             },
             "HOME_REGION": "us-west-2",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.1",
           },
         },
         "Handler": "detect-resource-policy.handler",
@@ -102,6 +103,7 @@ exports[`RevertScpChanges Construct(DetectResourcePolicy):  Snapshot Test 1`] = 
             "Arn",
           ],
         },
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "DetectResourcePolicyDetectResourcePolicyFunctionServiceRoleE9AC0FD8",

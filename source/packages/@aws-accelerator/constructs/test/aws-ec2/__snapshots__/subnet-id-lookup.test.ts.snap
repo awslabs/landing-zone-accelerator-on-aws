@@ -228,6 +228,11 @@ exports[`SubnetIdLookup Construct(SubnetIdLookup):  Snapshot Test 1`] = `
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
         "Description": "Lookup subnet id from account",
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.1",
+          },
+        },
         "Handler": "index.handler",
         "KmsKeyArn": {
           "Fn::GetAtt": [
@@ -235,6 +240,7 @@ exports[`SubnetIdLookup Construct(SubnetIdLookup):  Snapshot Test 1`] = `
             "Arn",
           ],
         },
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "SubnetIdLookupSubnetIdLookupFunctionServiceRoleD56D09B3",
@@ -339,6 +345,7 @@ exports[`SubnetIdLookup Construct(SubnetIdLookup):  Snapshot Test 1`] = `
         "Description": "AWS CDK resource provider framework - onEvent (Default/SubnetIdLookup/SubnetIdLookupProvider)",
         "Environment": {
           "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.1",
             "USER_ON_EVENT_FUNCTION_ARN": {
               "Fn::GetAtt": [
                 "SubnetIdLookupSubnetIdLookupFunction2C56B17D",
@@ -348,21 +355,14 @@ exports[`SubnetIdLookup Construct(SubnetIdLookup):  Snapshot Test 1`] = `
           },
         },
         "Handler": "framework.onEvent",
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "SubnetIdLookupSubnetIdLookupProviderframeworkonEventServiceRoleC2619D79",
             "Arn",
           ],
         },
-        "Runtime": {
-          "Fn::FindInMap": [
-            "LatestNodeRuntimeMap",
-            {
-              "Ref": "AWS::Region",
-            },
-            "value",
-          ],
-        },
+        "Runtime": "nodejs20.x",
         "Timeout": 900,
       },
       "Type": "AWS::Lambda::Function",

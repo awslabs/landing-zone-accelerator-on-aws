@@ -487,7 +487,13 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
         "Description": "Cross account EC2 route OnEvent handler",
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.1",
+          },
+        },
         "Handler": "index.handler",
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "CrossAccountRouteFrameworkCrossAccountRouteFunctionServiceRole0BC7B615",
@@ -624,6 +630,7 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
         "Description": "AWS CDK resource provider framework - onEvent (AWSAccelerator-NetworkAssociationsStack-555555555555-us-east-1/CrossAccountRouteFramework/CrossAccountRouteProvider)",
         "Environment": {
           "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.1",
             "USER_ON_EVENT_FUNCTION_ARN": {
               "Fn::GetAtt": [
                 "CrossAccountRouteFrameworkCrossAccountRouteFunctionAFDC4801",
@@ -633,6 +640,7 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
           },
         },
         "Handler": "framework.onEvent",
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "CrossAccountRouteFrameworkCrossAccountRouteProviderframeworkonEventServiceRoleED507AC0",
@@ -1038,8 +1046,13 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
           "S3Bucket": "cdk-hnb659fds-assets-555555555555-us-east-1",
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.1",
+          },
+        },
         "Handler": "__entrypoint__.handler",
-        "MemorySize": 128,
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "CustomDirectConnectGatewayAssociationCustomResourceProviderRole7D012188",
@@ -1150,8 +1163,13 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
           "S3Bucket": "cdk-hnb659fds-assets-555555555555-us-east-1",
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.1",
+          },
+        },
         "Handler": "__entrypoint__.handler",
-        "MemorySize": 128,
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "CustomGetIpamSubnetCidrCustomResourceProviderRoleADF93CF4",
@@ -1238,8 +1256,13 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
           "S3Bucket": "cdk-hnb659fds-assets-555555555555-us-east-1",
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.1",
+          },
+        },
         "Handler": "__entrypoint__.handler",
-        "MemorySize": 128,
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "CustomGetResourceShareCustomResourceProviderRoleBC3FCEEF",
@@ -1301,8 +1324,13 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
           "S3Bucket": "cdk-hnb659fds-assets-555555555555-us-east-1",
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.1",
+          },
+        },
         "Handler": "__entrypoint__.handler",
-        "MemorySize": 128,
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "CustomGetResourceShareItemCustomResourceProviderRoleA7181EBA",
@@ -1381,8 +1409,13 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
           "S3Bucket": "cdk-hnb659fds-assets-555555555555-us-east-1",
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.1",
+          },
+        },
         "Handler": "__entrypoint__.handler",
-        "MemorySize": 128,
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "CustomGetTransitGatewayAttachmentCustomResourceProviderRoleA6A22C3D",
@@ -1468,6 +1501,11 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
         "Code": {
           "S3Bucket": "cdk-hnb659fds-assets-555555555555-us-east-1",
           "S3Key": "REPLACED-GENERATED-NAME.zip",
+        },
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.1",
+          },
         },
         "Handler": "__entrypoint__.handler",
         "MemorySize": 512,
@@ -1555,8 +1593,13 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
           "S3Bucket": "cdk-hnb659fds-assets-555555555555-us-east-1",
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.1",
+          },
+        },
         "Handler": "__entrypoint__.handler",
-        "MemorySize": 128,
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "CustomShareSubnetTagsCustomResourceProviderRole2582495C",
@@ -1687,8 +1730,13 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
           "S3Bucket": "cdk-hnb659fds-assets-555555555555-us-east-1",
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.1",
+          },
+        },
         "Handler": "__entrypoint__.handler",
-        "MemorySize": 128,
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "CustomSsmGetParameterValueCustomResourceProviderRoleB3AFDDB2",
@@ -1794,8 +1842,13 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
         "Description": "Custom resource provider to put cross-account ssm parameter value",
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.1",
+          },
+        },
         "Handler": "__entrypoint__.handler",
-        "MemorySize": 128,
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "CustomSsmPutParameterValueCustomResourceProviderRole9E1F101A",
@@ -1899,8 +1952,13 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
           "S3Bucket": "cdk-hnb659fds-assets-555555555555-us-east-1",
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.1",
+          },
+        },
         "Handler": "__entrypoint__.handler",
-        "MemorySize": 128,
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "CustomTransitGatewayPrefixListReferenceCustomResourceProviderRoleC5D4C080",
@@ -4680,7 +4738,13 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
           "S3Bucket": "cdk-hnb659fds-assets-555555555555-us-east-1",
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.1",
+          },
+        },
         "Handler": "index.handler",
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "appAnlbtg2ipLookupappAnlbtg2ipLookupProviderLambdaServiceRole92332B48",
@@ -4808,6 +4872,7 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
         "Description": "AWS CDK resource provider framework - onEvent (AWSAccelerator-NetworkAssociationsStack-555555555555-us-east-1/appA-nlb-tg-2-ipLookup/appA-nlb-tg-2-ipLookupProvider)",
         "Environment": {
           "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.1",
             "USER_ON_EVENT_FUNCTION_ARN": {
               "Fn::GetAtt": [
                 "appAnlbtg2ipLookupappAnlbtg2ipLookupProviderLambdaEF941FA2",
@@ -4817,6 +4882,7 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
           },
         },
         "Handler": "framework.onEvent",
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "appAnlbtg2ipLookupappAnlbtg2ipLookupProviderframeworkonEventServiceRoleA31E553B",
@@ -5155,7 +5221,13 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
         "Description": "Manage active directory log subscription handler",
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.1",
+          },
+        },
         "Handler": "index.handler",
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "AcceleratorManagedActiveDirectoryActiveDirectoryAcceleratorManagedActiveDirectoryLogSubscriptionManageActiveDirectoryLogSubscriptionFunctionServiceRoleE5897B15",
@@ -5276,6 +5348,7 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
         "Description": "AWS CDK resource provider framework - onEvent (AWSAccelerator-NetworkAssociationsStack-444444444444-us-east-1/AcceleratorManagedActiveDirectoryActiveDirectory/AcceleratorManagedActiveDirectoryLogSubscription/ManageActiveDirectoryLogSubscriptionProvider)",
         "Environment": {
           "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.1",
             "USER_ON_EVENT_FUNCTION_ARN": {
               "Fn::GetAtt": [
                 "AcceleratorManagedActiveDirectoryActiveDirectoryAcceleratorManagedActiveDirectoryLogSubscriptionManageActiveDirectoryLogSubscriptionFunction7DAC44F8",
@@ -5285,6 +5358,7 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
           },
         },
         "Handler": "framework.onEvent",
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "AcceleratorManagedActiveDirectoryActiveDirectoryAcceleratorManagedActiveDirectoryLogSubscriptionManageActiveDirectoryLogSubscriptionProviderframeworkonEventServiceRole28ADC179",
@@ -6456,7 +6530,13 @@ catch {
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
         "Description": "Update resolver group rule target ips",
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.1",
+          },
+        },
         "Handler": "index.handler",
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "AcceleratorManagedActiveDirectoryResolverRuleUpdateResolverRuleFunctionServiceRole83EF458E",
@@ -6593,6 +6673,7 @@ catch {
         "Description": "AWS CDK resource provider framework - onEvent (AWSAccelerator-NetworkAssociationsStack-444444444444-us-east-1/AcceleratorManagedActiveDirectoryResolverRule/UpdateResolverRuleProvider)",
         "Environment": {
           "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.1",
             "USER_ON_EVENT_FUNCTION_ARN": {
               "Fn::GetAtt": [
                 "AcceleratorManagedActiveDirectoryResolverRuleUpdateResolverRuleFunction177103F8",
@@ -6602,6 +6683,7 @@ catch {
           },
         },
         "Handler": "framework.onEvent",
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "AcceleratorManagedActiveDirectoryResolverRuleUpdateResolverRuleProviderframeworkonEventServiceRoleEBC7B9DF",
@@ -6812,7 +6894,13 @@ catch {
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
         "Description": "Share Manage active directory handler",
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.1",
+          },
+        },
         "Handler": "index.handler",
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "AcceleratorManagedActiveDirectoryShareDirectoryShareManageActiveDirectoryFunctionServiceRole772D6922",
@@ -7000,6 +7088,7 @@ catch {
         "Description": "AWS CDK resource provider framework - onEvent (AWSAccelerator-NetworkAssociationsStack-444444444444-us-east-1/AcceleratorManagedActiveDirectoryShareDirectory/ShareManageActiveDirectoryProvider)",
         "Environment": {
           "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.1",
             "USER_ON_EVENT_FUNCTION_ARN": {
               "Fn::GetAtt": [
                 "AcceleratorManagedActiveDirectoryShareDirectoryShareManageActiveDirectoryFunctionF5252A97",
@@ -7009,6 +7098,7 @@ catch {
           },
         },
         "Handler": "framework.onEvent",
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "AcceleratorManagedActiveDirectoryShareDirectoryShareManageActiveDirectoryProviderframeworkonEventServiceRoleD7FD8283",
@@ -7170,7 +7260,13 @@ catch {
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
         "Description": "Lookup subnet id from account",
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.1",
+          },
+        },
         "Handler": "index.handler",
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "AcceleratorManagedActiveDirectorySharedServicesAppASubnetLookupSubnetIdLookupFunctionServiceRoleEB14A5A3",
@@ -7287,6 +7383,7 @@ catch {
         "Description": "AWS CDK resource provider framework - onEvent (AWSAccelerator-NetworkAssociationsStack-444444444444-us-east-1/AcceleratorManagedActiveDirectorySharedServicesAppASubnetLookup/SubnetIdLookupProvider)",
         "Environment": {
           "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.1",
             "USER_ON_EVENT_FUNCTION_ARN": {
               "Fn::GetAtt": [
                 "AcceleratorManagedActiveDirectorySharedServicesAppASubnetLookupSubnetIdLookupFunctionF062DAE0",
@@ -7296,6 +7393,7 @@ catch {
           },
         },
         "Handler": "framework.onEvent",
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "AcceleratorManagedActiveDirectorySharedServicesAppASubnetLookupSubnetIdLookupProviderframeworkonEventServiceRoleA4FEBDEC",
@@ -7431,7 +7529,13 @@ catch {
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
         "Description": "Lookup subnet id from account",
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.1",
+          },
+        },
         "Handler": "index.handler",
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "AcceleratorManagedActiveDirectorySharedServicesAppBSubnetLookupSubnetIdLookupFunctionServiceRoleDF7E4CD5",
@@ -7548,6 +7652,7 @@ catch {
         "Description": "AWS CDK resource provider framework - onEvent (AWSAccelerator-NetworkAssociationsStack-444444444444-us-east-1/AcceleratorManagedActiveDirectorySharedServicesAppBSubnetLookup/SubnetIdLookupProvider)",
         "Environment": {
           "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.1",
             "USER_ON_EVENT_FUNCTION_ARN": {
               "Fn::GetAtt": [
                 "AcceleratorManagedActiveDirectorySharedServicesAppBSubnetLookupSubnetIdLookupFunction8383C6C9",
@@ -7557,6 +7662,7 @@ catch {
           },
         },
         "Handler": "framework.onEvent",
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "AcceleratorManagedActiveDirectorySharedServicesAppBSubnetLookupSubnetIdLookupProviderframeworkonEventServiceRoleD9B17EC7",
@@ -7689,7 +7795,13 @@ catch {
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
         "Description": "Lookup vpc id from account",
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.1",
+          },
+        },
         "Handler": "index.handler",
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "AcceleratorManagedActiveDirectoryVpcLookupVpcIdLookupFunctionServiceRoleDCBF26B1",
@@ -7806,6 +7918,7 @@ catch {
         "Description": "AWS CDK resource provider framework - onEvent (AWSAccelerator-NetworkAssociationsStack-444444444444-us-east-1/AcceleratorManagedActiveDirectoryVpcLookup/VpcIdLookupProvider)",
         "Environment": {
           "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.1",
             "USER_ON_EVENT_FUNCTION_ARN": {
               "Fn::GetAtt": [
                 "AcceleratorManagedActiveDirectoryVpcLookupVpcIdLookupFunction53EFBF78",
@@ -7815,6 +7928,7 @@ catch {
           },
         },
         "Handler": "framework.onEvent",
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "AcceleratorManagedActiveDirectoryVpcLookupVpcIdLookupProviderframeworkonEventServiceRole2DA585BD",
@@ -7930,7 +8044,13 @@ catch {
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
         "Description": "Cross account EC2 route OnEvent handler",
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.1",
+          },
+        },
         "Handler": "index.handler",
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "CrossAccountRouteFrameworkCrossAccountRouteFunctionServiceRole0BC7B615",
@@ -8067,6 +8187,7 @@ catch {
         "Description": "AWS CDK resource provider framework - onEvent (AWSAccelerator-NetworkAssociationsStack-444444444444-us-east-1/CrossAccountRouteFramework/CrossAccountRouteProvider)",
         "Environment": {
           "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.1",
             "USER_ON_EVENT_FUNCTION_ARN": {
               "Fn::GetAtt": [
                 "CrossAccountRouteFrameworkCrossAccountRouteFunctionAFDC4801",
@@ -8076,6 +8197,7 @@ catch {
           },
         },
         "Handler": "framework.onEvent",
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "CrossAccountRouteFrameworkCrossAccountRouteProviderframeworkonEventServiceRoleED507AC0",
@@ -8685,8 +8807,13 @@ catch {
           "S3Bucket": "cdk-hnb659fds-assets-444444444444-us-east-1",
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.1",
+          },
+        },
         "Handler": "__entrypoint__.handler",
-        "MemorySize": 128,
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "CustomGetIpamSubnetCidrCustomResourceProviderRoleADF93CF4",
@@ -8773,8 +8900,13 @@ catch {
           "S3Bucket": "cdk-hnb659fds-assets-444444444444-us-east-1",
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.1",
+          },
+        },
         "Handler": "__entrypoint__.handler",
-        "MemorySize": 128,
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "CustomGetResourceShareCustomResourceProviderRoleBC3FCEEF",
@@ -8836,8 +8968,13 @@ catch {
           "S3Bucket": "cdk-hnb659fds-assets-444444444444-us-east-1",
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.1",
+          },
+        },
         "Handler": "__entrypoint__.handler",
-        "MemorySize": 128,
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "CustomGetResourceShareItemCustomResourceProviderRoleA7181EBA",
@@ -8916,8 +9053,13 @@ catch {
           "S3Bucket": "cdk-hnb659fds-assets-444444444444-us-east-1",
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.1",
+          },
+        },
         "Handler": "__entrypoint__.handler",
-        "MemorySize": 128,
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "CustomShareSubnetTagsCustomResourceProviderRole2582495C",
@@ -9048,8 +9190,13 @@ catch {
           "S3Bucket": "cdk-hnb659fds-assets-444444444444-us-east-1",
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.1",
+          },
+        },
         "Handler": "__entrypoint__.handler",
-        "MemorySize": 128,
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "CustomSsmGetParameterValueCustomResourceProviderRoleB3AFDDB2",
@@ -9155,8 +9302,13 @@ catch {
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
         "Description": "Custom resource provider to put cross-account ssm parameter value",
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.1",
+          },
+        },
         "Handler": "__entrypoint__.handler",
-        "MemorySize": 128,
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "CustomSsmPutParameterValueCustomResourceProviderRole9E1F101A",
@@ -9260,8 +9412,13 @@ catch {
           "S3Bucket": "cdk-hnb659fds-assets-444444444444-us-east-1",
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.1",
+          },
+        },
         "Handler": "__entrypoint__.handler",
-        "MemorySize": 128,
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "CustomTransitGatewayPrefixListReferenceCustomResourceProviderRoleC5D4C080",
@@ -13055,7 +13212,13 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
         "Description": "Cross account EC2 route OnEvent handler",
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.1",
+          },
+        },
         "Handler": "index.handler",
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "CrossAccountRouteFrameworkCrossAccountRouteFunctionServiceRole0BC7B615",
@@ -13192,6 +13355,7 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
         "Description": "AWS CDK resource provider framework - onEvent (AWSAccelerator-NetworkAssociationsStack-555555555555-us-west-2/CrossAccountRouteFramework/CrossAccountRouteProvider)",
         "Environment": {
           "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.1",
             "USER_ON_EVENT_FUNCTION_ARN": {
               "Fn::GetAtt": [
                 "CrossAccountRouteFrameworkCrossAccountRouteFunctionAFDC4801",
@@ -13201,6 +13365,7 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
           },
         },
         "Handler": "framework.onEvent",
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "CrossAccountRouteFrameworkCrossAccountRouteProviderframeworkonEventServiceRoleED507AC0",
@@ -13345,8 +13510,13 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
           "S3Bucket": "cdk-hnb659fds-assets-555555555555-us-west-2",
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.1",
+          },
+        },
         "Handler": "__entrypoint__.handler",
-        "MemorySize": 128,
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "CustomSsmGetParameterValueCustomResourceProviderRoleB3AFDDB2",
@@ -13452,8 +13622,13 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
         "Description": "Custom resource provider to put cross-account ssm parameter value",
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.1",
+          },
+        },
         "Handler": "__entrypoint__.handler",
-        "MemorySize": 128,
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "CustomSsmPutParameterValueCustomResourceProviderRole9E1F101A",
@@ -13821,7 +13996,13 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
         "Description": "Cross account EC2 route OnEvent handler",
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.1",
+          },
+        },
         "Handler": "index.handler",
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "CrossAccountRouteFrameworkCrossAccountRouteFunctionServiceRole0BC7B615",
@@ -13958,6 +14139,7 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
         "Description": "AWS CDK resource provider framework - onEvent (AWSAccelerator-NetworkAssociationsStack-444444444444-us-west-2/CrossAccountRouteFramework/CrossAccountRouteProvider)",
         "Environment": {
           "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.1",
             "USER_ON_EVENT_FUNCTION_ARN": {
               "Fn::GetAtt": [
                 "CrossAccountRouteFrameworkCrossAccountRouteFunctionAFDC4801",
@@ -13967,6 +14149,7 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
           },
         },
         "Handler": "framework.onEvent",
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "CrossAccountRouteFrameworkCrossAccountRouteProviderframeworkonEventServiceRoleED507AC0",
@@ -14142,8 +14325,13 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
           "S3Bucket": "cdk-hnb659fds-assets-444444444444-us-west-2",
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.1",
+          },
+        },
         "Handler": "__entrypoint__.handler",
-        "MemorySize": 128,
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "CustomSsmGetParameterValueCustomResourceProviderRoleB3AFDDB2",
@@ -14249,8 +14437,13 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
         "Description": "Custom resource provider to put cross-account ssm parameter value",
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.1",
+          },
+        },
         "Handler": "__entrypoint__.handler",
-        "MemorySize": 128,
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "CustomSsmPutParameterValueCustomResourceProviderRole9E1F101A",
@@ -15014,7 +15207,13 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
         "Description": "Cross account EC2 route OnEvent handler",
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.1",
+          },
+        },
         "Handler": "index.handler",
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "CrossAccountRouteFrameworkCrossAccountRouteFunctionServiceRole0BC7B615",
@@ -15154,6 +15353,7 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
         "Description": "AWS CDK resource provider framework - onEvent (AWSAccelerator-NetworkAssociationsStack-222222222222-us-east-1/CrossAccountRouteFramework/CrossAccountRouteProvider)",
         "Environment": {
           "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.1",
             "USER_ON_EVENT_FUNCTION_ARN": {
               "Fn::GetAtt": [
                 "CrossAccountRouteFrameworkCrossAccountRouteFunctionAFDC4801",
@@ -15163,6 +15363,7 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
           },
         },
         "Handler": "framework.onEvent",
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "CrossAccountRouteFrameworkCrossAccountRouteProviderframeworkonEventServiceRoleED507AC0",
@@ -15338,8 +15539,13 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
           "S3Bucket": "cdk-hnb659fds-assets-222222222222-us-east-1",
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.1",
+          },
+        },
         "Handler": "__entrypoint__.handler",
-        "MemorySize": 128,
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "CustomGetResourceShareCustomResourceProviderRoleBC3FCEEF",
@@ -15401,8 +15607,13 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
           "S3Bucket": "cdk-hnb659fds-assets-222222222222-us-east-1",
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.1",
+          },
+        },
         "Handler": "__entrypoint__.handler",
-        "MemorySize": 128,
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "CustomGetResourceShareItemCustomResourceProviderRoleA7181EBA",
@@ -15484,8 +15695,13 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
           "S3Bucket": "cdk-hnb659fds-assets-222222222222-us-east-1",
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.1",
+          },
+        },
         "Handler": "__entrypoint__.handler",
-        "MemorySize": 128,
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "CustomShareSubnetTagsCustomResourceProviderRole2582495C",
@@ -15619,8 +15835,13 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
           "S3Bucket": "cdk-hnb659fds-assets-222222222222-us-east-1",
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.1",
+          },
+        },
         "Handler": "__entrypoint__.handler",
-        "MemorySize": 128,
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "CustomSsmGetParameterValueCustomResourceProviderRoleB3AFDDB2",
@@ -15729,8 +15950,13 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
         "Description": "Custom resource provider to put cross-account ssm parameter value",
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.1",
+          },
+        },
         "Handler": "__entrypoint__.handler",
-        "MemorySize": 128,
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "CustomSsmPutParameterValueCustomResourceProviderRole9E1F101A",
@@ -16310,7 +16536,13 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
         "Description": "Cross account EC2 route OnEvent handler",
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.1",
+          },
+        },
         "Handler": "index.handler",
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "CrossAccountRouteFrameworkCrossAccountRouteFunctionServiceRole0BC7B615",
@@ -16447,6 +16679,7 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
         "Description": "AWS CDK resource provider framework - onEvent (AWSAccelerator-NetworkAssociationsStack-222222222222-us-west-2/CrossAccountRouteFramework/CrossAccountRouteProvider)",
         "Environment": {
           "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.1",
             "USER_ON_EVENT_FUNCTION_ARN": {
               "Fn::GetAtt": [
                 "CrossAccountRouteFrameworkCrossAccountRouteFunctionAFDC4801",
@@ -16456,6 +16689,7 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
           },
         },
         "Handler": "framework.onEvent",
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "CrossAccountRouteFrameworkCrossAccountRouteProviderframeworkonEventServiceRoleED507AC0",
@@ -16631,8 +16865,13 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
           "S3Bucket": "cdk-hnb659fds-assets-222222222222-us-west-2",
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.1",
+          },
+        },
         "Handler": "__entrypoint__.handler",
-        "MemorySize": 128,
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "CustomSsmGetParameterValueCustomResourceProviderRoleB3AFDDB2",
@@ -16738,8 +16977,13 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
         "Description": "Custom resource provider to put cross-account ssm parameter value",
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.1",
+          },
+        },
         "Handler": "__entrypoint__.handler",
-        "MemorySize": 128,
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "CustomSsmPutParameterValueCustomResourceProviderRole9E1F101A",
@@ -17178,7 +17422,13 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
         "Description": "Cross account EC2 route OnEvent handler",
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.1",
+          },
+        },
         "Handler": "index.handler",
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "CrossAccountRouteFrameworkCrossAccountRouteFunctionServiceRole0BC7B615",
@@ -17318,6 +17568,7 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
         "Description": "AWS CDK resource provider framework - onEvent (AWSAccelerator-NetworkAssociationsStack-333333333333-us-east-1/CrossAccountRouteFramework/CrossAccountRouteProvider)",
         "Environment": {
           "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.1",
             "USER_ON_EVENT_FUNCTION_ARN": {
               "Fn::GetAtt": [
                 "CrossAccountRouteFrameworkCrossAccountRouteFunctionAFDC4801",
@@ -17327,6 +17578,7 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
           },
         },
         "Handler": "framework.onEvent",
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "CrossAccountRouteFrameworkCrossAccountRouteProviderframeworkonEventServiceRoleED507AC0",
@@ -17502,8 +17754,13 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
           "S3Bucket": "cdk-hnb659fds-assets-333333333333-us-east-1",
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.1",
+          },
+        },
         "Handler": "__entrypoint__.handler",
-        "MemorySize": 128,
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "CustomGetResourceShareCustomResourceProviderRoleBC3FCEEF",
@@ -17565,8 +17822,13 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
           "S3Bucket": "cdk-hnb659fds-assets-333333333333-us-east-1",
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.1",
+          },
+        },
         "Handler": "__entrypoint__.handler",
-        "MemorySize": 128,
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "CustomGetResourceShareItemCustomResourceProviderRoleA7181EBA",
@@ -17648,8 +17910,13 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
           "S3Bucket": "cdk-hnb659fds-assets-333333333333-us-east-1",
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.1",
+          },
+        },
         "Handler": "__entrypoint__.handler",
-        "MemorySize": 128,
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "CustomShareSubnetTagsCustomResourceProviderRole2582495C",
@@ -17783,8 +18050,13 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
           "S3Bucket": "cdk-hnb659fds-assets-333333333333-us-east-1",
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.1",
+          },
+        },
         "Handler": "__entrypoint__.handler",
-        "MemorySize": 128,
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "CustomSsmGetParameterValueCustomResourceProviderRoleB3AFDDB2",
@@ -17893,8 +18165,13 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
         "Description": "Custom resource provider to put cross-account ssm parameter value",
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.1",
+          },
+        },
         "Handler": "__entrypoint__.handler",
-        "MemorySize": 128,
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "CustomSsmPutParameterValueCustomResourceProviderRole9E1F101A",
@@ -18474,7 +18751,13 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
         "Description": "Cross account EC2 route OnEvent handler",
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.1",
+          },
+        },
         "Handler": "index.handler",
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "CrossAccountRouteFrameworkCrossAccountRouteFunctionServiceRole0BC7B615",
@@ -18611,6 +18894,7 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
         "Description": "AWS CDK resource provider framework - onEvent (AWSAccelerator-NetworkAssociationsStack-333333333333-us-west-2/CrossAccountRouteFramework/CrossAccountRouteProvider)",
         "Environment": {
           "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.1",
             "USER_ON_EVENT_FUNCTION_ARN": {
               "Fn::GetAtt": [
                 "CrossAccountRouteFrameworkCrossAccountRouteFunctionAFDC4801",
@@ -18620,6 +18904,7 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
           },
         },
         "Handler": "framework.onEvent",
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "CrossAccountRouteFrameworkCrossAccountRouteProviderframeworkonEventServiceRoleED507AC0",
@@ -18795,8 +19080,13 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
           "S3Bucket": "cdk-hnb659fds-assets-333333333333-us-west-2",
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.1",
+          },
+        },
         "Handler": "__entrypoint__.handler",
-        "MemorySize": 128,
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "CustomSsmGetParameterValueCustomResourceProviderRoleB3AFDDB2",
@@ -18902,8 +19192,13 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
         "Description": "Custom resource provider to put cross-account ssm parameter value",
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.1",
+          },
+        },
         "Handler": "__entrypoint__.handler",
-        "MemorySize": 128,
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "CustomSsmPutParameterValueCustomResourceProviderRole9E1F101A",
@@ -19548,7 +19843,13 @@ exports[`NoVpcFlowLogStack Construct(NetworkAssociationsStack):  Snapshot Test 1
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
         "Description": "Cross account EC2 route OnEvent handler",
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.1",
+          },
+        },
         "Handler": "index.handler",
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "CrossAccountRouteFrameworkCrossAccountRouteFunctionServiceRole0BC7B615",
@@ -19688,6 +19989,7 @@ exports[`NoVpcFlowLogStack Construct(NetworkAssociationsStack):  Snapshot Test 1
         "Description": "AWS CDK resource provider framework - onEvent (AWSAccelerator-NetworkAssociationsStack-555555555555-us-east-1/CrossAccountRouteFramework/CrossAccountRouteProvider)",
         "Environment": {
           "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.1",
             "USER_ON_EVENT_FUNCTION_ARN": {
               "Fn::GetAtt": [
                 "CrossAccountRouteFrameworkCrossAccountRouteFunctionAFDC4801",
@@ -19697,6 +19999,7 @@ exports[`NoVpcFlowLogStack Construct(NetworkAssociationsStack):  Snapshot Test 1
           },
         },
         "Handler": "framework.onEvent",
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "CrossAccountRouteFrameworkCrossAccountRouteProviderframeworkonEventServiceRoleED507AC0",
@@ -19944,8 +20247,13 @@ exports[`NoVpcFlowLogStack Construct(NetworkAssociationsStack):  Snapshot Test 1
           "S3Bucket": "cdk-hnb659fds-assets-555555555555-us-east-1",
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.1",
+          },
+        },
         "Handler": "__entrypoint__.handler",
-        "MemorySize": 128,
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "CustomDirectConnectGatewayAssociationCustomResourceProviderRole7D012188",
@@ -20059,8 +20367,13 @@ exports[`NoVpcFlowLogStack Construct(NetworkAssociationsStack):  Snapshot Test 1
           "S3Bucket": "cdk-hnb659fds-assets-555555555555-us-east-1",
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.1",
+          },
+        },
         "Handler": "__entrypoint__.handler",
-        "MemorySize": 128,
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "CustomGetTransitGatewayAttachmentCustomResourceProviderRoleA6A22C3D",
@@ -20149,6 +20462,11 @@ exports[`NoVpcFlowLogStack Construct(NetworkAssociationsStack):  Snapshot Test 1
         "Code": {
           "S3Bucket": "cdk-hnb659fds-assets-555555555555-us-east-1",
           "S3Key": "REPLACED-GENERATED-NAME.zip",
+        },
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.1",
+          },
         },
         "Handler": "__entrypoint__.handler",
         "MemorySize": 512,
@@ -20239,8 +20557,13 @@ exports[`NoVpcFlowLogStack Construct(NetworkAssociationsStack):  Snapshot Test 1
           "S3Bucket": "cdk-hnb659fds-assets-555555555555-us-east-1",
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.1",
+          },
+        },
         "Handler": "__entrypoint__.handler",
-        "MemorySize": 128,
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "CustomSsmGetParameterValueCustomResourceProviderRoleB3AFDDB2",
@@ -20349,8 +20672,13 @@ exports[`NoVpcFlowLogStack Construct(NetworkAssociationsStack):  Snapshot Test 1
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
         "Description": "Custom resource provider to put cross-account ssm parameter value",
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.1",
+          },
+        },
         "Handler": "__entrypoint__.handler",
-        "MemorySize": 128,
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "CustomSsmPutParameterValueCustomResourceProviderRole9E1F101A",
@@ -20457,8 +20785,13 @@ exports[`NoVpcFlowLogStack Construct(NetworkAssociationsStack):  Snapshot Test 1
           "S3Bucket": "cdk-hnb659fds-assets-555555555555-us-east-1",
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.1",
+          },
+        },
         "Handler": "__entrypoint__.handler",
-        "MemorySize": 128,
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "CustomTransitGatewayPrefixListReferenceCustomResourceProviderRoleC5D4C080",

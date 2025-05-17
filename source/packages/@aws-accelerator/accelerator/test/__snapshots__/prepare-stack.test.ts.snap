@@ -493,9 +493,11 @@ exports[`PrepareStack Construct(PrepareStack):  Snapshot Test 1`] = `
             "DRIFT_PARAMETER_NAME": {
               "Ref": "AcceleratorControlTowerDriftParameter217B3055",
             },
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.1",
           },
         },
         "Handler": "index.handler",
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "ControlTowerNotificationsFunctionServiceRoleB3D23260",
@@ -642,9 +644,11 @@ exports[`PrepareStack Construct(PrepareStack):  Snapshot Test 1`] = `
             "CONFIG_TABLE_NAME": {
               "Ref": "AcceleratorConfigTable590367C4",
             },
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.1",
           },
         },
         "Handler": "index.handler",
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "ControlTowerOuEventsFunctionServiceRoleBC29C0C5",
@@ -926,6 +930,7 @@ exports[`PrepareStack Construct(PrepareStack):  Snapshot Test 1`] = `
         "Description": "AWS CDK resource provider framework - isComplete (AWSAccelerator-PrepareStack-111111111111-us-east-1/CreateCTAccounts/CreateControlTowerAcccountsProvider)",
         "Environment": {
           "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.1",
             "USER_IS_COMPLETE_FUNCTION_ARN": {
               "Fn::GetAtt": [
                 "CreateCTAccountsCreateControlTowerAccountStatusE993FA04",
@@ -941,6 +946,7 @@ exports[`PrepareStack Construct(PrepareStack):  Snapshot Test 1`] = `
           },
         },
         "Handler": "framework.isComplete",
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "CreateCTAccountsCreateControlTowerAcccountsProviderframeworkisCompleteServiceRoleBB950C19",
@@ -1175,6 +1181,7 @@ exports[`PrepareStack Construct(PrepareStack):  Snapshot Test 1`] = `
         "Description": "AWS CDK resource provider framework - onEvent (AWSAccelerator-PrepareStack-111111111111-us-east-1/CreateCTAccounts/CreateControlTowerAcccountsProvider)",
         "Environment": {
           "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.1",
             "USER_IS_COMPLETE_FUNCTION_ARN": {
               "Fn::GetAtt": [
                 "CreateCTAccountsCreateControlTowerAccountStatusE993FA04",
@@ -1193,6 +1200,7 @@ exports[`PrepareStack Construct(PrepareStack):  Snapshot Test 1`] = `
           },
         },
         "Handler": "framework.onEvent",
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "CreateCTAccountsCreateControlTowerAcccountsProviderframeworkonEventServiceRole773985D8",
@@ -1434,6 +1442,7 @@ exports[`PrepareStack Construct(PrepareStack):  Snapshot Test 1`] = `
         "Description": "AWS CDK resource provider framework - onTimeout (AWSAccelerator-PrepareStack-111111111111-us-east-1/CreateCTAccounts/CreateControlTowerAcccountsProvider)",
         "Environment": {
           "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.1",
             "USER_IS_COMPLETE_FUNCTION_ARN": {
               "Fn::GetAtt": [
                 "CreateCTAccountsCreateControlTowerAccountStatusE993FA04",
@@ -1449,6 +1458,7 @@ exports[`PrepareStack Construct(PrepareStack):  Snapshot Test 1`] = `
           },
         },
         "Handler": "framework.onTimeout",
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "CreateCTAccountsCreateControlTowerAcccountsProviderframeworkonTimeoutServiceRole8A0E95FA",
@@ -1949,6 +1959,11 @@ exports[`PrepareStack Construct(PrepareStack):  Snapshot Test 1`] = `
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
         "Description": "Create Control Tower Account onEvent handler",
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.1",
+          },
+        },
         "Handler": "index.handler",
         "KmsKeyArn": {
           "Fn::GetAtt": [
@@ -1956,6 +1971,7 @@ exports[`PrepareStack Construct(PrepareStack):  Snapshot Test 1`] = `
             "Arn",
           ],
         },
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "CreateCTAccountsCreateControlTowerAccountServiceRoleAEFB3CA3",
@@ -2140,6 +2156,7 @@ exports[`PrepareStack Construct(PrepareStack):  Snapshot Test 1`] = `
             "NewAccountsTableName": {
               "Ref": "NewCTAccountsE326CD07",
             },
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.1",
           },
         },
         "Handler": "index.handler",
@@ -2149,6 +2166,7 @@ exports[`PrepareStack Construct(PrepareStack):  Snapshot Test 1`] = `
             "Arn",
           ],
         },
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "CreateCTAccountsCreateControlTowerAccountStatusServiceRole999B76C4",
@@ -2585,6 +2603,7 @@ exports[`PrepareStack Construct(PrepareStack):  Snapshot Test 1`] = `
             "NewOrgAccountsTableName": {
               "Ref": "NewOrgAccountsE5BA262F",
             },
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.1",
           },
         },
         "Handler": "index.handler",
@@ -2594,6 +2613,7 @@ exports[`PrepareStack Construct(PrepareStack):  Snapshot Test 1`] = `
             "Arn",
           ],
         },
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "CreateOrganizationAccountsCreateOrganizationAccountStatusServiceRole5944FA8B",
@@ -2857,6 +2877,7 @@ exports[`PrepareStack Construct(PrepareStack):  Snapshot Test 1`] = `
         "Description": "AWS CDK resource provider framework - isComplete (AWSAccelerator-PrepareStack-111111111111-us-east-1/CreateOrganizationAccounts/CreateOrganizationAccountsProvider)",
         "Environment": {
           "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.1",
             "USER_IS_COMPLETE_FUNCTION_ARN": {
               "Fn::GetAtt": [
                 "CreateOrganizationAccountsCreateOrganizationAccountStatusBBDEFDFE",
@@ -2872,6 +2893,7 @@ exports[`PrepareStack Construct(PrepareStack):  Snapshot Test 1`] = `
           },
         },
         "Handler": "framework.isComplete",
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "CreateOrganizationAccountsCreateOrganizationAccountsProviderframeworkisCompleteServiceRole19A96F30",
@@ -3043,6 +3065,7 @@ exports[`PrepareStack Construct(PrepareStack):  Snapshot Test 1`] = `
         "Description": "AWS CDK resource provider framework - onEvent (AWSAccelerator-PrepareStack-111111111111-us-east-1/CreateOrganizationAccounts/CreateOrganizationAccountsProvider)",
         "Environment": {
           "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.1",
             "USER_IS_COMPLETE_FUNCTION_ARN": {
               "Fn::GetAtt": [
                 "CreateOrganizationAccountsCreateOrganizationAccountStatusBBDEFDFE",
@@ -3061,6 +3084,7 @@ exports[`PrepareStack Construct(PrepareStack):  Snapshot Test 1`] = `
           },
         },
         "Handler": "framework.onEvent",
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "CreateOrganizationAccountsCreateOrganizationAccountsProviderframeworkonEventServiceRole66CD01EF",
@@ -3239,6 +3263,7 @@ exports[`PrepareStack Construct(PrepareStack):  Snapshot Test 1`] = `
         "Description": "AWS CDK resource provider framework - onTimeout (AWSAccelerator-PrepareStack-111111111111-us-east-1/CreateOrganizationAccounts/CreateOrganizationAccountsProvider)",
         "Environment": {
           "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.1",
             "USER_IS_COMPLETE_FUNCTION_ARN": {
               "Fn::GetAtt": [
                 "CreateOrganizationAccountsCreateOrganizationAccountStatusBBDEFDFE",
@@ -3254,6 +3279,7 @@ exports[`PrepareStack Construct(PrepareStack):  Snapshot Test 1`] = `
           },
         },
         "Handler": "framework.onTimeout",
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "CreateOrganizationAccountsCreateOrganizationAccountsProviderframeworkonTimeoutServiceRoleA8ECA8F4",
@@ -3653,6 +3679,11 @@ exports[`PrepareStack Construct(PrepareStack):  Snapshot Test 1`] = `
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
         "Description": "Create Organization Accounts OnEvent handler",
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.1",
+          },
+        },
         "Handler": "index.handler",
         "KmsKeyArn": {
           "Fn::GetAtt": [
@@ -3660,6 +3691,7 @@ exports[`PrepareStack Construct(PrepareStack):  Snapshot Test 1`] = `
             "Arn",
           ],
         },
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "CreateOrganizationAccountsServiceRole99CB3720",
@@ -3758,8 +3790,13 @@ exports[`PrepareStack Construct(PrepareStack):  Snapshot Test 1`] = `
           "S3Bucket": "cdk-hnb659fds-assets-111111111111-us-east-1",
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.1",
+          },
+        },
         "Handler": "__entrypoint__.handler",
-        "MemorySize": 128,
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "CustomGetPortfolioIdCustomResourceProviderRole698D24D6",
@@ -3845,8 +3882,13 @@ exports[`PrepareStack Construct(PrepareStack):  Snapshot Test 1`] = `
           "S3Bucket": "cdk-hnb659fds-assets-111111111111-us-east-1",
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.1",
+          },
+        },
         "Handler": "__entrypoint__.handler",
-        "MemorySize": 128,
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "CustomInviteAccountsToOrganizationCustomResourceProviderRole88663193",
@@ -3968,6 +4010,11 @@ exports[`PrepareStack Construct(PrepareStack):  Snapshot Test 1`] = `
         "Code": {
           "S3Bucket": "cdk-hnb659fds-assets-111111111111-us-east-1",
           "S3Key": "REPLACED-GENERATED-NAME.zip",
+        },
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.1",
+          },
         },
         "Handler": "__entrypoint__.handler",
         "MemorySize": 1024,
@@ -4131,8 +4178,13 @@ exports[`PrepareStack Construct(PrepareStack):  Snapshot Test 1`] = `
           "S3Bucket": "cdk-hnb659fds-assets-111111111111-us-east-1",
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.1",
+          },
+        },
         "Handler": "__entrypoint__.handler",
-        "MemorySize": 128,
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "CustomOrganizationsCreateOrganizationalUnitsCustomResourceProviderRole4B8B81B0",
@@ -4766,6 +4818,7 @@ exports[`PrepareStack Construct(PrepareStack):  Snapshot Test 1`] = `
         "Description": "AWS CDK resource provider framework - onEvent (AWSAccelerator-PrepareStack-111111111111-us-east-1/ValidateEnvironmentConfig/Custom::ValidateEnvironmentConfiguration)",
         "Environment": {
           "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.1",
             "USER_ON_EVENT_FUNCTION_ARN": {
               "Fn::GetAtt": [
                 "ValidateEnvironmentConfigValidateEnvironmentFunction13F94F77",
@@ -4775,6 +4828,7 @@ exports[`PrepareStack Construct(PrepareStack):  Snapshot Test 1`] = `
           },
         },
         "Handler": "framework.onEvent",
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "ValidateEnvironmentConfigCustomValidateEnvironmentConfigurationframeworkonEventServiceRole675155BD",
@@ -4890,6 +4944,11 @@ exports[`PrepareStack Construct(PrepareStack):  Snapshot Test 1`] = `
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
         "Description": "Validate Environment Configuration",
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.1",
+          },
+        },
         "Handler": "index.handler",
         "MemorySize": 1024,
         "Role": {

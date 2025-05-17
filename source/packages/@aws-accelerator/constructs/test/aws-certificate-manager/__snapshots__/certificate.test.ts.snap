@@ -200,6 +200,7 @@ exports[`Certificate Construct(Certificate):  Snapshot Test 1`] = `
         "Description": "AWS CDK resource provider framework - onEvent (Default/ImportCertificate/Custom::CreateAcmCerts)",
         "Environment": {
           "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.1",
             "USER_ON_EVENT_FUNCTION_ARN": {
               "Fn::GetAtt": [
                 "ImportCertificateFunction55F21D86",
@@ -209,21 +210,14 @@ exports[`Certificate Construct(Certificate):  Snapshot Test 1`] = `
           },
         },
         "Handler": "framework.onEvent",
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "ImportCertificateCustomCreateAcmCertsframeworkonEventServiceRole87CE2981",
             "Arn",
           ],
         },
-        "Runtime": {
-          "Fn::FindInMap": [
-            "LatestNodeRuntimeMap",
-            {
-              "Ref": "AWS::Region",
-            },
-            "value",
-          ],
-        },
+        "Runtime": "nodejs20.x",
         "Timeout": 900,
       },
       "Type": "AWS::Lambda::Function",
@@ -310,7 +304,13 @@ exports[`Certificate Construct(Certificate):  Snapshot Test 1`] = `
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
         "Description": "Create ACM certificates handler",
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.1",
+          },
+        },
         "Handler": "index.handler",
+        "MemorySize": 512,
         "Role": {
           "Fn::Join": [
             "",
@@ -430,6 +430,7 @@ exports[`Certificate Construct(Certificate):  Snapshot Test 1`] = `
         "Description": "AWS CDK resource provider framework - onEvent (Default/RequestCertificate/Custom::CreateAcmCerts)",
         "Environment": {
           "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.1",
             "USER_ON_EVENT_FUNCTION_ARN": {
               "Fn::GetAtt": [
                 "RequestCertificateFunction3B1055B9",
@@ -439,21 +440,14 @@ exports[`Certificate Construct(Certificate):  Snapshot Test 1`] = `
           },
         },
         "Handler": "framework.onEvent",
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "RequestCertificateCustomCreateAcmCertsframeworkonEventServiceRoleFFCDD9BD",
             "Arn",
           ],
         },
-        "Runtime": {
-          "Fn::FindInMap": [
-            "LatestNodeRuntimeMap",
-            {
-              "Ref": "AWS::Region",
-            },
-            "value",
-          ],
-        },
+        "Runtime": "nodejs20.x",
         "Timeout": 900,
       },
       "Type": "AWS::Lambda::Function",
@@ -540,7 +534,13 @@ exports[`Certificate Construct(Certificate):  Snapshot Test 1`] = `
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
         "Description": "Create ACM certificates handler",
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.1",
+          },
+        },
         "Handler": "index.handler",
+        "MemorySize": 512,
         "Role": {
           "Fn::Join": [
             "",
@@ -791,6 +791,7 @@ exports[`ImportCertificate Construct(Certificate):  Snapshot Test 1`] = `
         "Description": "AWS CDK resource provider framework - onEvent (Default/ImportCertificate/Custom::CreateAcmCerts)",
         "Environment": {
           "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.1",
             "USER_ON_EVENT_FUNCTION_ARN": {
               "Fn::GetAtt": [
                 "ImportCertificateFunction55F21D86",
@@ -800,21 +801,14 @@ exports[`ImportCertificate Construct(Certificate):  Snapshot Test 1`] = `
           },
         },
         "Handler": "framework.onEvent",
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "ImportCertificateCustomCreateAcmCertsframeworkonEventServiceRole87CE2981",
             "Arn",
           ],
         },
-        "Runtime": {
-          "Fn::FindInMap": [
-            "LatestNodeRuntimeMap",
-            {
-              "Ref": "AWS::Region",
-            },
-            "value",
-          ],
-        },
+        "Runtime": "nodejs20.x",
         "Timeout": 900,
       },
       "Type": "AWS::Lambda::Function",
@@ -901,7 +895,13 @@ exports[`ImportCertificate Construct(Certificate):  Snapshot Test 1`] = `
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
         "Description": "Create ACM certificates handler",
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.1",
+          },
+        },
         "Handler": "index.handler",
+        "MemorySize": 512,
         "Role": {
           "Fn::Join": [
             "",
@@ -1021,6 +1021,7 @@ exports[`ImportCertificate Construct(Certificate):  Snapshot Test 1`] = `
         "Description": "AWS CDK resource provider framework - onEvent (Default/RequestCertificate/Custom::CreateAcmCerts)",
         "Environment": {
           "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.1",
             "USER_ON_EVENT_FUNCTION_ARN": {
               "Fn::GetAtt": [
                 "RequestCertificateFunction3B1055B9",
@@ -1030,21 +1031,14 @@ exports[`ImportCertificate Construct(Certificate):  Snapshot Test 1`] = `
           },
         },
         "Handler": "framework.onEvent",
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "RequestCertificateCustomCreateAcmCertsframeworkonEventServiceRoleFFCDD9BD",
             "Arn",
           ],
         },
-        "Runtime": {
-          "Fn::FindInMap": [
-            "LatestNodeRuntimeMap",
-            {
-              "Ref": "AWS::Region",
-            },
-            "value",
-          ],
-        },
+        "Runtime": "nodejs20.x",
         "Timeout": 900,
       },
       "Type": "AWS::Lambda::Function",
@@ -1131,7 +1125,13 @@ exports[`ImportCertificate Construct(Certificate):  Snapshot Test 1`] = `
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
         "Description": "Create ACM certificates handler",
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.1",
+          },
+        },
         "Handler": "index.handler",
+        "MemorySize": 512,
         "Role": {
           "Fn::Join": [
             "",

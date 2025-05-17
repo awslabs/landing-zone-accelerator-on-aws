@@ -213,6 +213,7 @@ exports[`VpnConnection Construct(VpnConnection):  Snapshot Test 1`] = `
         "Description": "AWS CDK resource provider framework - onEvent (Default/AdvancedVpn/CustomResource/Resource)",
         "Environment": {
           "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.1",
             "USER_ON_EVENT_FUNCTION_ARN": {
               "Fn::Join": [
                 "",
@@ -236,21 +237,14 @@ exports[`VpnConnection Construct(VpnConnection):  Snapshot Test 1`] = `
           },
         },
         "Handler": "framework.onEvent",
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "AdvancedVpnCustomResourceframeworkonEventServiceRole2EBDA262",
             "Arn",
           ],
         },
-        "Runtime": {
-          "Fn::FindInMap": [
-            "LatestNodeRuntimeMap",
-            {
-              "Ref": "AWS::Region",
-            },
-            "value",
-          ],
-        },
+        "Runtime": "nodejs20.x",
         "Timeout": 900,
       },
       "Type": "AWS::Lambda::Function",

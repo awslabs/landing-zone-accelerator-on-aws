@@ -765,9 +765,11 @@ def script_handler(events, context):
                 ],
               ],
             },
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.1",
           },
         },
         "Handler": "index.handler",
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "ControlTowerNotificationsForwarderFunctionServiceRoleE83D121D",
@@ -894,8 +896,13 @@ def script_handler(events, context):
           "S3Bucket": "cdk-hnb659fds-assets-222222222222-us-east-1",
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.1",
+          },
+        },
         "Handler": "__entrypoint__.handler",
-        "MemorySize": 128,
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "CustomAuditManagerCreateDefaultReportsDestinationCustomResourceProviderRoleAEE72AE5",
@@ -978,8 +985,13 @@ def script_handler(events, context):
           "S3Bucket": "cdk-hnb659fds-assets-222222222222-us-east-1",
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.1",
+          },
+        },
         "Handler": "__entrypoint__.handler",
-        "MemorySize": 128,
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "CustomDetectiveCreateMembersCustomResourceProviderRole90BCDD0D",
@@ -1088,8 +1100,13 @@ def script_handler(events, context):
           "S3Bucket": "cdk-hnb659fds-assets-222222222222-us-east-1",
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.1",
+          },
+        },
         "Handler": "__entrypoint__.handler",
-        "MemorySize": 128,
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "CustomDetectiveUpdateGraphCustomResourceProviderRole54CD7295",
@@ -1221,8 +1238,13 @@ def script_handler(events, context):
           "S3Bucket": "cdk-hnb659fds-assets-222222222222-us-east-1",
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.1",
+          },
+        },
         "Handler": "__entrypoint__.handler",
-        "MemorySize": 128,
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "CustomGuardDutyCreateMembersCustomResourceProviderRole2D82020E",
@@ -1335,6 +1357,11 @@ def script_handler(events, context):
           "S3Bucket": "cdk-hnb659fds-assets-222222222222-us-east-1",
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.1",
+          },
+        },
         "Handler": "__entrypoint__.handler",
         "MemorySize": 512,
         "Role": {
@@ -1423,8 +1450,13 @@ def script_handler(events, context):
           "S3Bucket": "cdk-hnb659fds-assets-222222222222-us-east-1",
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.1",
+          },
+        },
         "Handler": "__entrypoint__.handler",
-        "MemorySize": 128,
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "CustomMacieCreateMemberCustomResourceProviderRole3E8977EE",
@@ -1529,8 +1561,13 @@ def script_handler(events, context):
           "S3Bucket": "cdk-hnb659fds-assets-222222222222-us-east-1",
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.1",
+          },
+        },
         "Handler": "__entrypoint__.handler",
-        "MemorySize": 128,
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "CustomS3PutBucketReplicationCustomResourceProviderRole1C378488",
@@ -1616,8 +1653,13 @@ def script_handler(events, context):
           "S3Bucket": "cdk-hnb659fds-assets-222222222222-us-east-1",
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.1",
+          },
+        },
         "Handler": "__entrypoint__.handler",
-        "MemorySize": 128,
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "CustomSSMShareDocumentCustomResourceProviderRole53A2A3EC",
@@ -1712,8 +1754,13 @@ def script_handler(events, context):
           "S3Bucket": "cdk-hnb659fds-assets-222222222222-us-east-1",
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.1",
+          },
+        },
         "Handler": "__entrypoint__.handler",
-        "MemorySize": 128,
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "CustomSecurityHubCreateMembersCustomResourceProviderRoleFD355CB6",
@@ -1816,8 +1863,13 @@ def script_handler(events, context):
           "S3Bucket": "cdk-hnb659fds-assets-222222222222-us-east-1",
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.1",
+          },
+        },
         "Handler": "__entrypoint__.handler",
-        "MemorySize": 128,
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "CustomSecurityHubRegionAggregationCustomResourceProviderRole15741044",
@@ -1905,8 +1957,13 @@ def script_handler(events, context):
           "S3Bucket": "cdk-hnb659fds-assets-222222222222-us-east-1",
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.1",
+          },
+        },
         "Handler": "__entrypoint__.handler",
-        "MemorySize": 128,
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "CustomSsmGetParameterValueCustomResourceProviderRoleB3AFDDB2",
@@ -3500,9 +3557,11 @@ def script_handler(events, context):
                 ],
               ],
             },
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.1",
           },
         },
         "Handler": "index.handler",
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "ControlTowerNotificationsForwarderFunctionServiceRoleE83D121D",
@@ -3629,8 +3688,13 @@ def script_handler(events, context):
           "S3Bucket": "cdk-hnb659fds-assets-222222222222-us-east-1",
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.1",
+          },
+        },
         "Handler": "__entrypoint__.handler",
-        "MemorySize": 128,
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "CustomAuditManagerCreateDefaultReportsDestinationCustomResourceProviderRoleAEE72AE5",
@@ -3713,8 +3777,13 @@ def script_handler(events, context):
           "S3Bucket": "cdk-hnb659fds-assets-222222222222-us-east-1",
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.1",
+          },
+        },
         "Handler": "__entrypoint__.handler",
-        "MemorySize": 128,
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "CustomDetectiveCreateMembersCustomResourceProviderRole90BCDD0D",
@@ -3823,8 +3892,13 @@ def script_handler(events, context):
           "S3Bucket": "cdk-hnb659fds-assets-222222222222-us-east-1",
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.1",
+          },
+        },
         "Handler": "__entrypoint__.handler",
-        "MemorySize": 128,
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "CustomDetectiveUpdateGraphCustomResourceProviderRole54CD7295",
@@ -3956,8 +4030,13 @@ def script_handler(events, context):
           "S3Bucket": "cdk-hnb659fds-assets-222222222222-us-east-1",
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.1",
+          },
+        },
         "Handler": "__entrypoint__.handler",
-        "MemorySize": 128,
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "CustomGuardDutyCreateMembersCustomResourceProviderRole2D82020E",
@@ -4070,6 +4149,11 @@ def script_handler(events, context):
           "S3Bucket": "cdk-hnb659fds-assets-222222222222-us-east-1",
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.1",
+          },
+        },
         "Handler": "__entrypoint__.handler",
         "MemorySize": 512,
         "Role": {
@@ -4158,8 +4242,13 @@ def script_handler(events, context):
           "S3Bucket": "cdk-hnb659fds-assets-222222222222-us-east-1",
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.1",
+          },
+        },
         "Handler": "__entrypoint__.handler",
-        "MemorySize": 128,
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "CustomMacieCreateMemberCustomResourceProviderRole3E8977EE",
@@ -4264,8 +4353,13 @@ def script_handler(events, context):
           "S3Bucket": "cdk-hnb659fds-assets-222222222222-us-east-1",
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.1",
+          },
+        },
         "Handler": "__entrypoint__.handler",
-        "MemorySize": 128,
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "CustomS3PutBucketReplicationCustomResourceProviderRole1C378488",
@@ -4351,8 +4445,13 @@ def script_handler(events, context):
           "S3Bucket": "cdk-hnb659fds-assets-222222222222-us-east-1",
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.1",
+          },
+        },
         "Handler": "__entrypoint__.handler",
-        "MemorySize": 128,
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "CustomSSMShareDocumentCustomResourceProviderRole53A2A3EC",
@@ -4447,8 +4546,13 @@ def script_handler(events, context):
           "S3Bucket": "cdk-hnb659fds-assets-222222222222-us-east-1",
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.1",
+          },
+        },
         "Handler": "__entrypoint__.handler",
-        "MemorySize": 128,
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "CustomSecurityHubCreateMembersCustomResourceProviderRoleFD355CB6",
@@ -4551,8 +4655,13 @@ def script_handler(events, context):
           "S3Bucket": "cdk-hnb659fds-assets-222222222222-us-east-1",
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.1",
+          },
+        },
         "Handler": "__entrypoint__.handler",
-        "MemorySize": 128,
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "CustomSecurityHubRegionAggregationCustomResourceProviderRole15741044",
@@ -4640,8 +4749,13 @@ def script_handler(events, context):
           "S3Bucket": "cdk-hnb659fds-assets-222222222222-us-east-1",
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.1",
+          },
+        },
         "Handler": "__entrypoint__.handler",
-        "MemorySize": 128,
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "CustomSsmGetParameterValueCustomResourceProviderRoleB3AFDDB2",

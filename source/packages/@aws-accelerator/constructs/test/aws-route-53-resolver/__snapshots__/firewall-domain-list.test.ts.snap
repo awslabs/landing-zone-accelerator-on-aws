@@ -14,8 +14,13 @@ exports[`ResolverFirewallDomainList Construct(ResolverFirewallDomainList):  Snap
           },
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.1",
+          },
+        },
         "Handler": "__entrypoint__.handler",
-        "MemorySize": 128,
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "CustomResolverManagedDomainListCustomResourceProviderRole33DECC65",

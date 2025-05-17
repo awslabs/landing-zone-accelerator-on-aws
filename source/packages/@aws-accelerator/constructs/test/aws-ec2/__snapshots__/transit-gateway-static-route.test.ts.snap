@@ -168,6 +168,7 @@ exports[`TransitGatewayStaticRoute Construct(TransitGatewayStaticRoute):  Snapsh
         "Description": "AWS CDK resource provider framework - onEvent (Default/TransitGatewayStaticRouteCustom/CustomResource/Resource)",
         "Environment": {
           "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.1",
             "USER_ON_EVENT_FUNCTION_ARN": {
               "Fn::Join": [
                 "",
@@ -191,21 +192,14 @@ exports[`TransitGatewayStaticRoute Construct(TransitGatewayStaticRoute):  Snapsh
           },
         },
         "Handler": "framework.onEvent",
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "TransitGatewayStaticRouteCustomCustomResourceframeworkonEventServiceRoleA41D6437",
             "Arn",
           ],
         },
-        "Runtime": {
-          "Fn::FindInMap": [
-            "LatestNodeRuntimeMap",
-            {
-              "Ref": "AWS::Region",
-            },
-            "value",
-          ],
-        },
+        "Runtime": "nodejs20.x",
         "Timeout": 900,
       },
       "Type": "AWS::Lambda::Function",
@@ -354,6 +348,7 @@ exports[`TransitGatewayStaticRoute Construct(TransitGatewayStaticRoute):  Snapsh
         "Description": "AWS CDK resource provider framework - onEvent (Default/TransitGatewayStaticRouteCustomv4Blackhole/CustomResource/Resource)",
         "Environment": {
           "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.1",
             "USER_ON_EVENT_FUNCTION_ARN": {
               "Fn::Join": [
                 "",
@@ -377,21 +372,14 @@ exports[`TransitGatewayStaticRoute Construct(TransitGatewayStaticRoute):  Snapsh
           },
         },
         "Handler": "framework.onEvent",
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "TransitGatewayStaticRouteCustomv4BlackholeCustomResourceframeworkonEventServiceRole6BB17CC7",
             "Arn",
           ],
         },
-        "Runtime": {
-          "Fn::FindInMap": [
-            "LatestNodeRuntimeMap",
-            {
-              "Ref": "AWS::Region",
-            },
-            "value",
-          ],
-        },
+        "Runtime": "nodejs20.x",
         "Timeout": 900,
       },
       "Type": "AWS::Lambda::Function",
@@ -540,6 +528,7 @@ exports[`TransitGatewayStaticRoute Construct(TransitGatewayStaticRoute):  Snapsh
         "Description": "AWS CDK resource provider framework - onEvent (Default/TransitGatewayStaticRouteCustomv6Blackhole/CustomResource/Resource)",
         "Environment": {
           "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.1",
             "USER_ON_EVENT_FUNCTION_ARN": {
               "Fn::Join": [
                 "",
@@ -563,21 +552,14 @@ exports[`TransitGatewayStaticRoute Construct(TransitGatewayStaticRoute):  Snapsh
           },
         },
         "Handler": "framework.onEvent",
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "TransitGatewayStaticRouteCustomv6BlackholeCustomResourceframeworkonEventServiceRole08720388",
             "Arn",
           ],
         },
-        "Runtime": {
-          "Fn::FindInMap": [
-            "LatestNodeRuntimeMap",
-            {
-              "Ref": "AWS::Region",
-            },
-            "value",
-          ],
-        },
+        "Runtime": "nodejs20.x",
         "Timeout": 900,
       },
       "Type": "AWS::Lambda::Function",
@@ -727,6 +709,7 @@ exports[`TransitGatewayStaticRoute Construct(TransitGatewayStaticRoute):  Snapsh
         "Description": "AWS CDK resource provider framework - onEvent (Default/TransitGatewayStaticRouteCustomv6/CustomResource/Resource)",
         "Environment": {
           "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.1",
             "USER_ON_EVENT_FUNCTION_ARN": {
               "Fn::Join": [
                 "",
@@ -750,21 +733,14 @@ exports[`TransitGatewayStaticRoute Construct(TransitGatewayStaticRoute):  Snapsh
           },
         },
         "Handler": "framework.onEvent",
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "TransitGatewayStaticRouteCustomv6CustomResourceframeworkonEventServiceRoleBC865826",
             "Arn",
           ],
         },
-        "Runtime": {
-          "Fn::FindInMap": [
-            "LatestNodeRuntimeMap",
-            {
-              "Ref": "AWS::Region",
-            },
-            "value",
-          ],
-        },
+        "Runtime": "nodejs20.x",
         "Timeout": 900,
       },
       "Type": "AWS::Lambda::Function",

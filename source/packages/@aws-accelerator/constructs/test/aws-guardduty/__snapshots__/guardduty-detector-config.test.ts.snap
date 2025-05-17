@@ -14,6 +14,11 @@ exports[`GuardDutyDetectorConfig Construct(GuardDutyDetectorConfig):  Snapshot T
           },
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.1",
+          },
+        },
         "Handler": "__entrypoint__.handler",
         "MemorySize": 512,
         "Role": {

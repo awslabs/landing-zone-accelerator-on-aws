@@ -111,6 +111,7 @@ exports[`ConfigServiceTags Construct(ConfigServiceTags):  Snapshot Test 1`] = `
         "Description": "AWS CDK resource provider framework - isComplete (Stack/TestCreateCTAccounts/CreateControlTowerAcccountsProvider)",
         "Environment": {
           "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.1",
             "USER_IS_COMPLETE_FUNCTION_ARN": {
               "Fn::GetAtt": [
                 "TestCreateCTAccountsCreateControlTowerAccountStatus08A35AEC",
@@ -126,6 +127,7 @@ exports[`ConfigServiceTags Construct(ConfigServiceTags):  Snapshot Test 1`] = `
           },
         },
         "Handler": "framework.isComplete",
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "TestCreateCTAccountsCreateControlTowerAcccountsProviderframeworkisCompleteServiceRole4FC767AD",
@@ -249,6 +251,7 @@ exports[`ConfigServiceTags Construct(ConfigServiceTags):  Snapshot Test 1`] = `
         "Description": "AWS CDK resource provider framework - onEvent (Stack/TestCreateCTAccounts/CreateControlTowerAcccountsProvider)",
         "Environment": {
           "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.1",
             "USER_IS_COMPLETE_FUNCTION_ARN": {
               "Fn::GetAtt": [
                 "TestCreateCTAccountsCreateControlTowerAccountStatus08A35AEC",
@@ -267,6 +270,7 @@ exports[`ConfigServiceTags Construct(ConfigServiceTags):  Snapshot Test 1`] = `
           },
         },
         "Handler": "framework.onEvent",
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "TestCreateCTAccountsCreateControlTowerAcccountsProviderframeworkonEventServiceRoleF177CF40",
@@ -397,6 +401,7 @@ exports[`ConfigServiceTags Construct(ConfigServiceTags):  Snapshot Test 1`] = `
         "Description": "AWS CDK resource provider framework - onTimeout (Stack/TestCreateCTAccounts/CreateControlTowerAcccountsProvider)",
         "Environment": {
           "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.1",
             "USER_IS_COMPLETE_FUNCTION_ARN": {
               "Fn::GetAtt": [
                 "TestCreateCTAccountsCreateControlTowerAccountStatus08A35AEC",
@@ -412,6 +417,7 @@ exports[`ConfigServiceTags Construct(ConfigServiceTags):  Snapshot Test 1`] = `
           },
         },
         "Handler": "framework.onTimeout",
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "TestCreateCTAccountsCreateControlTowerAcccountsProviderframeworkonTimeoutServiceRole8F9F9F14",
@@ -686,6 +692,11 @@ exports[`ConfigServiceTags Construct(ConfigServiceTags):  Snapshot Test 1`] = `
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
         "Description": "Create Control Tower Account onEvent handler",
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.1",
+          },
+        },
         "Handler": "index.handler",
         "KmsKeyArn": {
           "Fn::GetAtt": [
@@ -693,6 +704,7 @@ exports[`ConfigServiceTags Construct(ConfigServiceTags):  Snapshot Test 1`] = `
             "Arn",
           ],
         },
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "TestCreateCTAccountsCreateControlTowerAccountServiceRoleCCD1613F",
@@ -776,6 +788,7 @@ exports[`ConfigServiceTags Construct(ConfigServiceTags):  Snapshot Test 1`] = `
             "NewAccountsTableName": {
               "Ref": "NewCTAccountsE326CD07",
             },
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.1",
           },
         },
         "Handler": "index.handler",
@@ -785,6 +798,7 @@ exports[`ConfigServiceTags Construct(ConfigServiceTags):  Snapshot Test 1`] = `
             "Arn",
           ],
         },
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "TestCreateCTAccountsCreateControlTowerAccountStatusServiceRole8C15A4DF",

@@ -210,6 +210,11 @@ exports[`ServiceLinkedRole Construct(ServiceLinkedRole):  Snapshot Test 1`] = `
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
         "Description": "Custom resource provider to create service linked role",
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.1",
+          },
+        },
         "Handler": "index.handler",
         "KmsKeyArn": {
           "Fn::GetAtt": [
@@ -325,6 +330,7 @@ exports[`ServiceLinkedRole Construct(ServiceLinkedRole):  Snapshot Test 1`] = `
         "Description": "AWS CDK resource provider framework - onEvent (Default/ServiceLinkedRole/CreateServiceLinkedRoleProvider)",
         "Environment": {
           "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.1",
             "USER_ON_EVENT_FUNCTION_ARN": {
               "Fn::GetAtt": [
                 "ServiceLinkedRoleCreateServiceLinkedRoleFunction76F68A8A",
@@ -334,21 +340,14 @@ exports[`ServiceLinkedRole Construct(ServiceLinkedRole):  Snapshot Test 1`] = `
           },
         },
         "Handler": "framework.onEvent",
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "ServiceLinkedRoleCreateServiceLinkedRoleProviderframeworkonEventServiceRole03414527",
             "Arn",
           ],
         },
-        "Runtime": {
-          "Fn::FindInMap": [
-            "LatestNodeRuntimeMap",
-            {
-              "Ref": "AWS::Region",
-            },
-            "value",
-          ],
-        },
+        "Runtime": "nodejs20.x",
         "Timeout": 900,
       },
       "Type": "AWS::Lambda::Function",

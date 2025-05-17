@@ -48,10 +48,12 @@ exports[`AcceleratorMetadata Construct(AcceleratorMetadata):  Snapshot Test 1`] 
             "PARTITION": {
               "Ref": "AWS::Partition",
             },
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.1",
           },
         },
         "FunctionName": "AWSAccelerator-metadata-collection",
         "Handler": "index.handler",
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "AcceleratorMetadataMetadataLambdaC27FFAF6",

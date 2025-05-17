@@ -30,6 +30,7 @@ import {
 
 import { Stack } from 'aws-cdk-lib';
 import { AcceleratorStackNames } from '../lib/accelerator';
+import { AcceleratorAspects } from '../lib/accelerator-aspects';
 import { AcceleratorStage } from '../lib/accelerator-stage';
 import { AcceleratorStack, AcceleratorStackProps } from '../lib/stacks/accelerator-stack';
 import { AccountsStack } from '../lib/stacks/accounts-stack';
@@ -69,6 +70,7 @@ export class AcceleratorSynthStacks {
   private readonly auditAccount: AccountConfig;
   private readonly stageName: string;
   private readonly globalRegion: string;
+  private readonly globalConfig: GlobalConfig;
 
   public readonly stacks = new Map<string, AcceleratorStack | CustomStack | Stack>();
   constructor(stageName: string, partition: string, globalRegion: string, configFolderName?: string) {
@@ -83,10 +85,8 @@ export class AcceleratorSynthStacks {
     this.app = new cdk.App({
       context: { 'config-dir': path.join(__dirname, `configs/${this.configFolderName}`) },
     });
+    new AcceleratorAspects(this.app, this.partition, false);
     this.configDirPath = this.app.node.tryGetContext('config-dir');
-
-    const globalConfig = GlobalConfig.load(this.configDirPath);
-
     let customizationsConfig: CustomizationsConfig;
     // Create empty customizationsConfig if optional configuration file does not exist
     if (fs.existsSync(path.join(this.configDirPath, 'customizations-config.yaml'))) {
@@ -99,19 +99,20 @@ export class AcceleratorSynthStacks {
     const orgConfig = OrganizationConfig.load(this.configDirPath);
     const replacementsConfig = ReplacementsConfig.load(this.configDirPath, accountsConfig);
     replacementsConfig.loadReplacementValues({}, orgConfig.enable);
+    this.globalConfig = GlobalConfig.load(this.configDirPath, replacementsConfig);
     this.props = {
       configDirPath: this.configDirPath,
       accountsConfig: accountsConfig,
       customizationsConfig,
-      globalConfig,
-      iamConfig: IamConfig.load(this.configDirPath),
-      networkConfig: NetworkConfig.load(this.configDirPath),
-      organizationConfig: OrganizationConfig.load(this.configDirPath),
-      securityConfig: SecurityConfig.load(this.configDirPath),
+      globalConfig: this.globalConfig,
+      iamConfig: IamConfig.load(this.configDirPath, replacementsConfig),
+      networkConfig: NetworkConfig.load(this.configDirPath, replacementsConfig),
+      organizationConfig: OrganizationConfig.load(this.configDirPath, replacementsConfig),
+      securityConfig: SecurityConfig.load(this.configDirPath, replacementsConfig),
       replacementsConfig: replacementsConfig,
       partition: this.partition,
       globalRegion: this.globalRegion,
-      centralizedLoggingRegion: globalConfig.logging.centralizedLoggingRegion ?? globalConfig.homeRegion,
+      centralizedLoggingRegion: this.globalConfig.logging.centralizedLoggingRegion ?? this.globalConfig.homeRegion,
       configRepositoryName: 'aws-accelerator-config',
       configRepositoryLocation: 'codecommit',
       prefixes: {

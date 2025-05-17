@@ -14,8 +14,13 @@ exports[`CloudWatchLogGroups Construct(CloudWatchLogGroups):  Snapshot Test 1`] 
           },
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.1",
+          },
+        },
         "Handler": "__entrypoint__.handler",
-        "MemorySize": 128,
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "AppTest1CustomCreateLogGroupCustomResourceProviderRole40E7A5EC",
@@ -133,8 +138,13 @@ exports[`CloudWatchLogGroups Construct(CloudWatchLogGroups):  Snapshot Test 1`] 
           },
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.1",
+          },
+        },
         "Handler": "__entrypoint__.handler",
-        "MemorySize": 128,
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "AppTest2CustomCreateLogGroupCustomResourceProviderRole24FD6060",

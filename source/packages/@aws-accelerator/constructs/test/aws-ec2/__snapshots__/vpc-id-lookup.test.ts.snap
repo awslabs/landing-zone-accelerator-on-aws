@@ -227,6 +227,11 @@ exports[`VpcIdLookup Construct(VpcIdLookup):  Snapshot Test 1`] = `
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
         "Description": "Lookup vpc id from account",
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.1",
+          },
+        },
         "Handler": "index.handler",
         "KmsKeyArn": {
           "Fn::GetAtt": [
@@ -234,6 +239,7 @@ exports[`VpcIdLookup Construct(VpcIdLookup):  Snapshot Test 1`] = `
             "Arn",
           ],
         },
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "VpcIdLookupVpcIdLookupFunctionServiceRoleB001E74A",
@@ -338,6 +344,7 @@ exports[`VpcIdLookup Construct(VpcIdLookup):  Snapshot Test 1`] = `
         "Description": "AWS CDK resource provider framework - onEvent (Default/VpcIdLookup/VpcIdLookupProvider)",
         "Environment": {
           "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.1",
             "USER_ON_EVENT_FUNCTION_ARN": {
               "Fn::GetAtt": [
                 "VpcIdLookupVpcIdLookupFunctionCE747608",
@@ -347,21 +354,14 @@ exports[`VpcIdLookup Construct(VpcIdLookup):  Snapshot Test 1`] = `
           },
         },
         "Handler": "framework.onEvent",
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "VpcIdLookupVpcIdLookupProviderframeworkonEventServiceRole5452CF47",
             "Arn",
           ],
         },
-        "Runtime": {
-          "Fn::FindInMap": [
-            "LatestNodeRuntimeMap",
-            {
-              "Ref": "AWS::Region",
-            },
-            "value",
-          ],
-        },
+        "Runtime": "nodejs20.x",
         "Timeout": 900,
       },
       "Type": "AWS::Lambda::Function",
