@@ -13,6 +13,7 @@
 import * as cdk from 'aws-cdk-lib';
 import { SynthUtils } from '@aws-cdk/assert';
 import { expect, test } from '@jest/globals';
+import { AcceleratorAspects } from '../../accelerator/lib/accelerator-aspects';
 
 export function snapShotTest(testNamePrefix: string, stack: cdk.Stack) {
   test(`${testNamePrefix} Snapshot Test`, () => {
@@ -46,6 +47,7 @@ export function snapShotTest(testNamePrefix: string, stack: cdk.Stack) {
       print: () => '"REPLACED-MD5"',
     });
 
+    new AcceleratorAspects(stack, 'aws', false);
     expect(SynthUtils.toCloudFormation(stack)).toMatchSnapshot();
   });
 }

@@ -140,7 +140,13 @@ exports[`CrossAccountRoute Construct(CrossAccountRoute):  Snapshot Test 1`] = `
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
         "Description": "Cross account EC2 route OnEvent handler",
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.0",
+          },
+        },
         "Handler": "index.handler",
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "FrameworkCrossAccountRouteFunctionServiceRoleD3FBE736",
@@ -265,6 +271,7 @@ exports[`CrossAccountRoute Construct(CrossAccountRoute):  Snapshot Test 1`] = `
         "Description": "AWS CDK resource provider framework - onEvent (Default/Framework/CrossAccountRouteProvider)",
         "Environment": {
           "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.0",
             "USER_ON_EVENT_FUNCTION_ARN": {
               "Fn::GetAtt": [
                 "FrameworkCrossAccountRouteFunction7BE199E2",
@@ -274,21 +281,14 @@ exports[`CrossAccountRoute Construct(CrossAccountRoute):  Snapshot Test 1`] = `
           },
         },
         "Handler": "framework.onEvent",
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "FrameworkCrossAccountRouteProviderframeworkonEventServiceRole274CC003",
             "Arn",
           ],
         },
-        "Runtime": {
-          "Fn::FindInMap": [
-            "LatestNodeRuntimeMap",
-            {
-              "Ref": "AWS::Region",
-            },
-            "value",
-          ],
-        },
+        "Runtime": "nodejs20.x",
         "Timeout": 900,
       },
       "Type": "AWS::Lambda::Function",

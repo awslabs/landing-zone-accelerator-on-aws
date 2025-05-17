@@ -170,8 +170,13 @@ exports[`ReportDefinition Construct(ReportDefinition):  Snapshot Test 2`] = `
           "S3Bucket": "cdk-hnb659fds-assets-333333333333-us-west-1",
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.0",
+          },
+        },
         "Handler": "__entrypoint__.handler",
-        "MemorySize": 128,
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "CustomCrossRegionReportDefinitionCustomResourceProviderRole845A4C3A",

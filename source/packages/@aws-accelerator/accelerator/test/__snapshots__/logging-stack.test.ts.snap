@@ -20,6 +20,11 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 1`] = `
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
         "Description": "Custom resource provider to create service linked role",
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.0",
+          },
+        },
         "Handler": "index.handler",
         "KmsKeyArn": {
           "Fn::GetAtt": [
@@ -153,6 +158,7 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 1`] = `
         "Description": "AWS CDK resource provider framework - onEvent (AWSAccelerator-LoggingStack-333333333333-us-east-1/AWSServiceRoleForAWSCloud9/CreateServiceLinkedRoleProvider)",
         "Environment": {
           "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.0",
             "USER_ON_EVENT_FUNCTION_ARN": {
               "Fn::GetAtt": [
                 "AWSServiceRoleForAWSCloud9CreateServiceLinkedRoleFunction78452922",
@@ -162,6 +168,7 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 1`] = `
           },
         },
         "Handler": "framework.onEvent",
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "AWSServiceRoleForAWSCloud9CreateServiceLinkedRoleProviderframeworkonEventServiceRole8AB21249",
@@ -423,6 +430,11 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 1`] = `
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
         "Description": "Accelerator deployed CloudWatchDataProtection custom resource lambda function.",
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.0",
+          },
+        },
         "Handler": "index.handler",
         "KmsKeyArn": {
           "Fn::GetAtt": [
@@ -580,6 +592,7 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 1`] = `
         "Description": "AWS CDK resource provider framework - onEvent (AWSAccelerator-LoggingStack-333333333333-us-east-1/AcceleratorCloudWatchDataProtection/CloudWatchDataProtection/Resource)",
         "Environment": {
           "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.0",
             "USER_ON_EVENT_FUNCTION_ARN": {
               "Fn::GetAtt": [
                 "AcceleratorCloudWatchDataProtectionFunctionAB6284FB",
@@ -589,6 +602,7 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 1`] = `
           },
         },
         "Handler": "framework.onEvent",
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "AcceleratorCloudWatchDataProtectionframeworkonEventServiceRole37B79FF9",
@@ -2003,6 +2017,11 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 1`] = `
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
         "Description": "Custom resource provider to create service linked role",
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.0",
+          },
+        },
         "Handler": "index.handler",
         "KmsKeyArn": {
           "Fn::GetAtt": [
@@ -2136,6 +2155,7 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 1`] = `
         "Description": "AWS CDK resource provider framework - onEvent (AWSAccelerator-LoggingStack-333333333333-us-east-1/AutoScalingServiceLinkedRole/CreateServiceLinkedRoleProvider)",
         "Environment": {
           "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.0",
             "USER_ON_EVENT_FUNCTION_ARN": {
               "Fn::GetAtt": [
                 "AutoScalingServiceLinkedRoleCreateServiceLinkedRoleFunction56E83FD3",
@@ -2145,6 +2165,7 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 1`] = `
           },
         },
         "Handler": "framework.onEvent",
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "AutoScalingServiceLinkedRoleCreateServiceLinkedRoleProviderframeworkonEventServiceRoleF8C91A0A",
@@ -2403,8 +2424,13 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 1`] = `
           "S3Bucket": "cdk-hnb659fds-assets-333333333333-us-east-1",
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.0",
+          },
+        },
         "Handler": "__entrypoint__.handler",
-        "MemorySize": 128,
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "CustomS3PutBucketReplicationCustomResourceProviderRole1C378488",
@@ -2493,8 +2519,13 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 1`] = `
           "S3Bucket": "cdk-hnb659fds-assets-333333333333-us-east-1",
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.0",
+          },
+        },
         "Handler": "__entrypoint__.handler",
-        "MemorySize": 128,
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "CustomS3PutPublicAccessBlockCustomResourceProviderRole656EB36E",
@@ -2579,8 +2610,13 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 1`] = `
           "S3Bucket": "cdk-hnb659fds-assets-333333333333-us-east-1",
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.0",
+          },
+        },
         "Handler": "__entrypoint__.handler",
-        "MemorySize": 128,
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "CustomSsmGetParameterValueCustomResourceProviderRoleB3AFDDB2",
@@ -2691,8 +2727,13 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 1`] = `
           "S3Bucket": "cdk-hnb659fds-assets-333333333333-us-east-1",
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.0",
+          },
+        },
         "Handler": "__entrypoint__.handler",
-        "MemorySize": 128,
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "CustomUpdateSubscriptionFilterCustomResourceProviderRole81A1751E",
@@ -2995,6 +3036,7 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 1`] = `
                 "Arn",
               ],
             },
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.0",
           },
         },
         "FunctionName": "AWSAccelerator-FirehoseRecordsProcessor",
@@ -3432,6 +3474,11 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 1`] = `
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
         "Description": "Accelerator deployed BucketPolicy custom resource lambda function.",
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.0",
+          },
+        },
         "Handler": "index.handler",
         "KmsKeyArn": {
           "Fn::GetAtt": [
@@ -3572,6 +3619,7 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 1`] = `
         "Description": "AWS CDK resource provider framework - onEvent (AWSAccelerator-LoggingStack-333333333333-us-east-1/ImportedaccessLogsBucketPolicy/BucketPolicy/Resource)",
         "Environment": {
           "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.0",
             "USER_ON_EVENT_FUNCTION_ARN": {
               "Fn::GetAtt": [
                 "ImportedaccessLogsBucketPolicyFunctionE108A801",
@@ -3581,6 +3629,7 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 1`] = `
           },
         },
         "Handler": "framework.onEvent",
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "ImportedaccessLogsBucketPolicyframeworkonEventServiceRole7593A466",
@@ -3737,6 +3786,11 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 1`] = `
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
         "Description": "Accelerator deployed BucketPolicy custom resource lambda function.",
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.0",
+          },
+        },
         "Handler": "index.handler",
         "KmsKeyArn": {
           "Fn::GetAtt": [
@@ -3877,6 +3931,7 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 1`] = `
         "Description": "AWS CDK resource provider framework - onEvent (AWSAccelerator-LoggingStack-333333333333-us-east-1/ImportedelbLogsBucketPolicy/BucketPolicy/Resource)",
         "Environment": {
           "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.0",
             "USER_ON_EVENT_FUNCTION_ARN": {
               "Fn::GetAtt": [
                 "ImportedelbLogsBucketPolicyFunction0F7A82C4",
@@ -3886,6 +3941,7 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 1`] = `
           },
         },
         "Handler": "framework.onEvent",
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "ImportedelbLogsBucketPolicyframeworkonEventServiceRole18BD877A",
@@ -4488,6 +4544,7 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 1`] = `
               ],
             },
             "LogSubscriptionType": "ACCOUNT",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.0",
           },
         },
         "Handler": "index.handler",
@@ -4497,6 +4554,7 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 1`] = `
             "Arn",
           ],
         },
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "NewCloudWatchLogsCreateEventSetLogRetentionSubscriptionFunctionServiceRoleF408E8D2",
@@ -4869,6 +4927,11 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 1`] = `
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
         "Description": "Accelerator deployed ValidateBucket custom resource lambda function.",
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.0",
+          },
+        },
         "Handler": "index.handler",
         "KmsKeyArn": {
           "Fn::GetAtt": [
@@ -5031,6 +5094,7 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 1`] = `
         "Description": "AWS CDK resource provider framework - onEvent (AWSAccelerator-LoggingStack-333333333333-us-east-1/ValidateImportedaccessLogsBucket/ValidateBucket/Resource)",
         "Environment": {
           "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.0",
             "USER_ON_EVENT_FUNCTION_ARN": {
               "Fn::GetAtt": [
                 "ValidateImportedaccessLogsBucketValidateBucketFunction67AF64AE",
@@ -5040,6 +5104,7 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 1`] = `
           },
         },
         "Handler": "framework.onEvent",
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "ValidateImportedaccessLogsBucketValidateBucketframeworkonEventServiceRole90079A8B",
@@ -5155,6 +5220,11 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 1`] = `
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
         "Description": "Accelerator deployed ValidateBucket custom resource lambda function.",
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.0",
+          },
+        },
         "Handler": "index.handler",
         "KmsKeyArn": {
           "Fn::GetAtt": [
@@ -5317,6 +5387,7 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 1`] = `
         "Description": "AWS CDK resource provider framework - onEvent (AWSAccelerator-LoggingStack-333333333333-us-east-1/ValidateImportedelbLogsBucket/ValidateBucket/Resource)",
         "Environment": {
           "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.0",
             "USER_ON_EVENT_FUNCTION_ARN": {
               "Fn::GetAtt": [
                 "ValidateImportedelbLogsBucketValidateBucketFunction9D3CDC99",
@@ -5326,6 +5397,7 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 1`] = `
           },
         },
         "Handler": "framework.onEvent",
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "ValidateImportedelbLogsBucketValidateBucketframeworkonEventServiceRole3CAD21DD",
@@ -5454,6 +5526,11 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 2`] = `
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
         "Description": "Custom resource provider to create service linked role",
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.0",
+          },
+        },
         "Handler": "index.handler",
         "MemorySize": 512,
         "Role": {
@@ -5575,6 +5652,7 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 2`] = `
         "Description": "AWS CDK resource provider framework - onEvent (AWSAccelerator-LoggingStack-333333333333-us-west-2/AWSServiceRoleForAWSCloud9/CreateServiceLinkedRoleProvider)",
         "Environment": {
           "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.0",
             "USER_ON_EVENT_FUNCTION_ARN": {
               "Fn::GetAtt": [
                 "AWSServiceRoleForAWSCloud9CreateServiceLinkedRoleFunction78452922",
@@ -5584,6 +5662,7 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 2`] = `
           },
         },
         "Handler": "framework.onEvent",
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "AWSServiceRoleForAWSCloud9CreateServiceLinkedRoleProviderframeworkonEventServiceRole8AB21249",
@@ -6403,6 +6482,11 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 2`] = `
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
         "Description": "Custom resource provider to create service linked role",
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.0",
+          },
+        },
         "Handler": "index.handler",
         "MemorySize": 512,
         "Role": {
@@ -6524,6 +6608,7 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 2`] = `
         "Description": "AWS CDK resource provider framework - onEvent (AWSAccelerator-LoggingStack-333333333333-us-west-2/AutoScalingServiceLinkedRole/CreateServiceLinkedRoleProvider)",
         "Environment": {
           "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.0",
             "USER_ON_EVENT_FUNCTION_ARN": {
               "Fn::GetAtt": [
                 "AutoScalingServiceLinkedRoleCreateServiceLinkedRoleFunction56E83FD3",
@@ -6533,6 +6618,7 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 2`] = `
           },
         },
         "Handler": "framework.onEvent",
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "AutoScalingServiceLinkedRoleCreateServiceLinkedRoleProviderframeworkonEventServiceRoleF8C91A0A",
@@ -6666,8 +6752,13 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 2`] = `
           "S3Bucket": "cdk-hnb659fds-assets-333333333333-us-west-2",
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.0",
+          },
+        },
         "Handler": "__entrypoint__.handler",
-        "MemorySize": 128,
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "CustomS3PutBucketReplicationCustomResourceProviderRole1C378488",
@@ -6751,8 +6842,13 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 2`] = `
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
         "Description": "Custom resource provider to put cross-account ssm parameter value",
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.0",
+          },
+        },
         "Handler": "__entrypoint__.handler",
-        "MemorySize": 128,
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "CustomSsmPutParameterValueCustomResourceProviderRole9E1F101A",
@@ -6856,8 +6952,13 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 2`] = `
           "S3Bucket": "cdk-hnb659fds-assets-333333333333-us-west-2",
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.0",
+          },
+        },
         "Handler": "__entrypoint__.handler",
-        "MemorySize": 128,
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "CustomUpdateSubscriptionFilterCustomResourceProviderRole81A1751E",
@@ -7132,6 +7233,7 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 2`] = `
                 "Arn",
               ],
             },
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.0",
           },
         },
         "FunctionName": "AWSAccelerator-FirehoseRecordsProcessor",
@@ -7520,6 +7622,11 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 2`] = `
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
         "Description": "Accelerator deployed S3CreateBucketPrefix custom resource lambda function.",
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.0",
+          },
+        },
         "Handler": "index.handler",
         "MemorySize": 512,
         "Role": {
@@ -7662,6 +7769,7 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 2`] = `
         "Description": "AWS CDK resource provider framework - onEvent (AWSAccelerator-LoggingStack-333333333333-us-west-2/ImportedLogBucketPrefix/S3CreateBucketPrefix/Resource)",
         "Environment": {
           "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.0",
             "USER_ON_EVENT_FUNCTION_ARN": {
               "Fn::GetAtt": [
                 "ImportedLogBucketPrefixS3CreateBucketPrefixFunction72196444",
@@ -7671,6 +7779,7 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 2`] = `
           },
         },
         "Handler": "framework.onEvent",
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "ImportedLogBucketPrefixS3CreateBucketPrefixframeworkonEventServiceRole1C1704DF",
@@ -7822,6 +7931,11 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 2`] = `
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
         "Description": "Accelerator deployed BucketPolicy custom resource lambda function.",
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.0",
+          },
+        },
         "Handler": "index.handler",
         "MemorySize": 512,
         "Role": {
@@ -7950,6 +8064,7 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 2`] = `
         "Description": "AWS CDK resource provider framework - onEvent (AWSAccelerator-LoggingStack-333333333333-us-west-2/ImportedaccessLogsBucketPolicy/BucketPolicy/Resource)",
         "Environment": {
           "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.0",
             "USER_ON_EVENT_FUNCTION_ARN": {
               "Fn::GetAtt": [
                 "ImportedaccessLogsBucketPolicyFunctionE108A801",
@@ -7959,6 +8074,7 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 2`] = `
           },
         },
         "Handler": "framework.onEvent",
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "ImportedaccessLogsBucketPolicyframeworkonEventServiceRole7593A466",
@@ -8097,6 +8213,11 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 2`] = `
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
         "Description": "Accelerator deployed BucketEncryption custom resource lambda function.",
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.0",
+          },
+        },
         "Handler": "index.handler",
         "MemorySize": 512,
         "Role": {
@@ -8225,6 +8346,7 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 2`] = `
         "Description": "AWS CDK resource provider framework - onEvent (AWSAccelerator-LoggingStack-333333333333-us-west-2/ImportedcentralLogsBucketEncryption/BucketEncryption/Resource)",
         "Environment": {
           "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.0",
             "USER_ON_EVENT_FUNCTION_ARN": {
               "Fn::GetAtt": [
                 "ImportedcentralLogsBucketEncryptionFunction1213293C",
@@ -8234,6 +8356,7 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 2`] = `
           },
         },
         "Handler": "framework.onEvent",
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "ImportedcentralLogsBucketEncryptionframeworkonEventServiceRoleBBC0F3CB",
@@ -8643,6 +8766,11 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 2`] = `
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
         "Description": "Accelerator deployed BucketPolicy custom resource lambda function.",
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.0",
+          },
+        },
         "Handler": "index.handler",
         "MemorySize": 512,
         "Role": {
@@ -8771,6 +8899,7 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 2`] = `
         "Description": "AWS CDK resource provider framework - onEvent (AWSAccelerator-LoggingStack-333333333333-us-west-2/ImportedcentralLogsBucketPolicy/BucketPolicy/Resource)",
         "Environment": {
           "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.0",
             "USER_ON_EVENT_FUNCTION_ARN": {
               "Fn::GetAtt": [
                 "ImportedcentralLogsBucketPolicyFunction52BB88BE",
@@ -8780,6 +8909,7 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 2`] = `
           },
         },
         "Handler": "framework.onEvent",
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "ImportedcentralLogsBucketPolicyframeworkonEventServiceRoleA85CAD5F",
@@ -8936,6 +9066,11 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 2`] = `
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
         "Description": "Accelerator deployed BucketPolicy custom resource lambda function.",
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.0",
+          },
+        },
         "Handler": "index.handler",
         "MemorySize": 512,
         "Role": {
@@ -9064,6 +9199,7 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 2`] = `
         "Description": "AWS CDK resource provider framework - onEvent (AWSAccelerator-LoggingStack-333333333333-us-west-2/ImportedelbLogsBucketPolicy/BucketPolicy/Resource)",
         "Environment": {
           "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.0",
             "USER_ON_EVENT_FUNCTION_ARN": {
               "Fn::GetAtt": [
                 "ImportedelbLogsBucketPolicyFunction0F7A82C4",
@@ -9073,6 +9209,7 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 2`] = `
           },
         },
         "Handler": "framework.onEvent",
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "ImportedelbLogsBucketPolicyframeworkonEventServiceRole18BD877A",
@@ -9663,9 +9800,11 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 2`] = `
               ],
             },
             "LogSubscriptionType": "ACCOUNT",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.0",
           },
         },
         "Handler": "index.handler",
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "NewCloudWatchLogsCreateEventSetLogRetentionSubscriptionFunctionServiceRoleF408E8D2",
@@ -10051,6 +10190,11 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 2`] = `
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
         "Description": "Accelerator deployed ValidateBucket custom resource lambda function.",
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.0",
+          },
+        },
         "Handler": "index.handler",
         "MemorySize": 512,
         "Role": {
@@ -10201,6 +10345,7 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 2`] = `
         "Description": "AWS CDK resource provider framework - onEvent (AWSAccelerator-LoggingStack-333333333333-us-west-2/ValidateImportedaccessLogsBucket/ValidateBucket/Resource)",
         "Environment": {
           "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.0",
             "USER_ON_EVENT_FUNCTION_ARN": {
               "Fn::GetAtt": [
                 "ValidateImportedaccessLogsBucketValidateBucketFunction67AF64AE",
@@ -10210,6 +10355,7 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 2`] = `
           },
         },
         "Handler": "framework.onEvent",
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "ValidateImportedaccessLogsBucketValidateBucketframeworkonEventServiceRole90079A8B",
@@ -10325,6 +10471,11 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 2`] = `
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
         "Description": "Accelerator deployed ValidateBucket custom resource lambda function.",
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.0",
+          },
+        },
         "Handler": "index.handler",
         "MemorySize": 512,
         "Role": {
@@ -10475,6 +10626,7 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 2`] = `
         "Description": "AWS CDK resource provider framework - onEvent (AWSAccelerator-LoggingStack-333333333333-us-west-2/ValidateImportedcentralLogsBucket/ValidateBucket/Resource)",
         "Environment": {
           "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.0",
             "USER_ON_EVENT_FUNCTION_ARN": {
               "Fn::GetAtt": [
                 "ValidateImportedcentralLogsBucketValidateBucketFunctionA46C1293",
@@ -10484,6 +10636,7 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 2`] = `
           },
         },
         "Handler": "framework.onEvent",
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "ValidateImportedcentralLogsBucketValidateBucketframeworkonEventServiceRoleDD88BC27",
@@ -10599,6 +10752,11 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 2`] = `
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
         "Description": "Accelerator deployed ValidateBucket custom resource lambda function.",
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.0",
+          },
+        },
         "Handler": "index.handler",
         "MemorySize": 512,
         "Role": {
@@ -10749,6 +10907,7 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 2`] = `
         "Description": "AWS CDK resource provider framework - onEvent (AWSAccelerator-LoggingStack-333333333333-us-west-2/ValidateImportedelbLogsBucket/ValidateBucket/Resource)",
         "Environment": {
           "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.0",
             "USER_ON_EVENT_FUNCTION_ARN": {
               "Fn::GetAtt": [
                 "ValidateImportedelbLogsBucketValidateBucketFunction9D3CDC99",
@@ -10758,6 +10917,7 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 2`] = `
           },
         },
         "Handler": "framework.onEvent",
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "ValidateImportedelbLogsBucketValidateBucketframeworkonEventServiceRole3CAD21DD",
@@ -10886,6 +11046,11 @@ exports[`LoggingStackDelegatedAdmin Construct(LoggingStacKDelegatedAdmin):  Snap
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
         "Description": "Custom resource provider to create service linked role",
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.0",
+          },
+        },
         "Handler": "index.handler",
         "KmsKeyArn": {
           "Fn::GetAtt": [
@@ -11019,6 +11184,7 @@ exports[`LoggingStackDelegatedAdmin Construct(LoggingStacKDelegatedAdmin):  Snap
         "Description": "AWS CDK resource provider framework - onEvent (AWSAccelerator-LoggingStack-333333333333-us-west-2/AWSServiceRoleForAWSCloud9/CreateServiceLinkedRoleProvider)",
         "Environment": {
           "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.0",
             "USER_ON_EVENT_FUNCTION_ARN": {
               "Fn::GetAtt": [
                 "AWSServiceRoleForAWSCloud9CreateServiceLinkedRoleFunction78452922",
@@ -11028,6 +11194,7 @@ exports[`LoggingStackDelegatedAdmin Construct(LoggingStacKDelegatedAdmin):  Snap
           },
         },
         "Handler": "framework.onEvent",
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "AWSServiceRoleForAWSCloud9CreateServiceLinkedRoleProviderframeworkonEventServiceRole8AB21249",
@@ -11815,6 +11982,11 @@ exports[`LoggingStackDelegatedAdmin Construct(LoggingStacKDelegatedAdmin):  Snap
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
         "Description": "Custom resource provider to create service linked role",
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.0",
+          },
+        },
         "Handler": "index.handler",
         "KmsKeyArn": {
           "Fn::GetAtt": [
@@ -11948,6 +12120,7 @@ exports[`LoggingStackDelegatedAdmin Construct(LoggingStacKDelegatedAdmin):  Snap
         "Description": "AWS CDK resource provider framework - onEvent (AWSAccelerator-LoggingStack-333333333333-us-west-2/AutoScalingServiceLinkedRole/CreateServiceLinkedRoleProvider)",
         "Environment": {
           "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.0",
             "USER_ON_EVENT_FUNCTION_ARN": {
               "Fn::GetAtt": [
                 "AutoScalingServiceLinkedRoleCreateServiceLinkedRoleFunction56E83FD3",
@@ -11957,6 +12130,7 @@ exports[`LoggingStackDelegatedAdmin Construct(LoggingStacKDelegatedAdmin):  Snap
           },
         },
         "Handler": "framework.onEvent",
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "AutoScalingServiceLinkedRoleCreateServiceLinkedRoleProviderframeworkonEventServiceRoleF8C91A0A",
@@ -12918,6 +13092,11 @@ exports[`LoggingStackDelegatedAdmin Construct(LoggingStacKDelegatedAdmin):  Snap
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
         "Description": "Accelerator deployed S3CreateBucketPrefix custom resource lambda function.",
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.0",
+          },
+        },
         "Handler": "index.handler",
         "KmsKeyArn": {
           "Fn::GetAtt": [
@@ -13080,6 +13259,7 @@ exports[`LoggingStackDelegatedAdmin Construct(LoggingStacKDelegatedAdmin):  Snap
         "Description": "AWS CDK resource provider framework - onEvent (AWSAccelerator-LoggingStack-333333333333-us-west-2/CentralLogsBucket/Resource/ResourcePrefix/S3CreateBucketPrefix/Resource)",
         "Environment": {
           "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.0",
             "USER_ON_EVENT_FUNCTION_ARN": {
               "Fn::GetAtt": [
                 "CentralLogsBucketResourcePrefixS3CreateBucketPrefixFunction67F48788",
@@ -13089,6 +13269,7 @@ exports[`LoggingStackDelegatedAdmin Construct(LoggingStacKDelegatedAdmin):  Snap
           },
         },
         "Handler": "framework.onEvent",
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "CentralLogsBucketResourcePrefixS3CreateBucketPrefixframeworkonEventServiceRoleD85E2686",
@@ -13215,8 +13396,13 @@ exports[`LoggingStackDelegatedAdmin Construct(LoggingStacKDelegatedAdmin):  Snap
           "S3Bucket": "cdk-hnb659fds-assets-333333333333-us-west-2",
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.0",
+          },
+        },
         "Handler": "__entrypoint__.handler",
-        "MemorySize": 128,
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "CustomS3PutBucketReplicationCustomResourceProviderRole1C378488",
@@ -13305,8 +13491,13 @@ exports[`LoggingStackDelegatedAdmin Construct(LoggingStacKDelegatedAdmin):  Snap
           "S3Bucket": "cdk-hnb659fds-assets-333333333333-us-west-2",
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.0",
+          },
+        },
         "Handler": "__entrypoint__.handler",
-        "MemorySize": 128,
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "CustomUpdateSubscriptionFilterCustomResourceProviderRole81A1751E",
@@ -14127,6 +14318,7 @@ exports[`LoggingStackDelegatedAdmin Construct(LoggingStacKDelegatedAdmin):  Snap
                 "Arn",
               ],
             },
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.0",
           },
         },
         "FunctionName": "AWSAccelerator-FirehoseRecordsProcessor",
@@ -15081,6 +15273,7 @@ exports[`LoggingStackDelegatedAdmin Construct(LoggingStacKDelegatedAdmin):  Snap
               ],
             },
             "LogSubscriptionType": "LOG_GROUP",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.0",
           },
         },
         "Handler": "index.handler",
@@ -15090,6 +15283,7 @@ exports[`LoggingStackDelegatedAdmin Construct(LoggingStacKDelegatedAdmin):  Snap
             "Arn",
           ],
         },
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "NewCloudWatchLogsCreateEventSetLogRetentionSubscriptionFunctionServiceRoleF408E8D2",
@@ -15454,6 +15648,11 @@ exports[`LoggingStackOuTargets Construct(LoggingStackOuTargets):  Snapshot Test 
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
         "Description": "Custom resource provider to create service linked role",
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.0",
+          },
+        },
         "Handler": "index.handler",
         "KmsKeyArn": {
           "Fn::GetAtt": [
@@ -15587,6 +15786,7 @@ exports[`LoggingStackOuTargets Construct(LoggingStackOuTargets):  Snapshot Test 
         "Description": "AWS CDK resource provider framework - onEvent (AWSAccelerator-LoggingStack-333333333333-us-east-1/AWSServiceRoleForAWSCloud9/CreateServiceLinkedRoleProvider)",
         "Environment": {
           "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.0",
             "USER_ON_EVENT_FUNCTION_ARN": {
               "Fn::GetAtt": [
                 "AWSServiceRoleForAWSCloud9CreateServiceLinkedRoleFunction78452922",
@@ -15596,6 +15796,7 @@ exports[`LoggingStackOuTargets Construct(LoggingStackOuTargets):  Snapshot Test 
           },
         },
         "Handler": "framework.onEvent",
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "AWSServiceRoleForAWSCloud9CreateServiceLinkedRoleProviderframeworkonEventServiceRole8AB21249",
@@ -16844,6 +17045,11 @@ exports[`LoggingStackOuTargets Construct(LoggingStackOuTargets):  Snapshot Test 
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
         "Description": "Custom resource provider to create service linked role",
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.0",
+          },
+        },
         "Handler": "index.handler",
         "KmsKeyArn": {
           "Fn::GetAtt": [
@@ -16977,6 +17183,7 @@ exports[`LoggingStackOuTargets Construct(LoggingStackOuTargets):  Snapshot Test 
         "Description": "AWS CDK resource provider framework - onEvent (AWSAccelerator-LoggingStack-333333333333-us-east-1/AutoScalingServiceLinkedRole/CreateServiceLinkedRoleProvider)",
         "Environment": {
           "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.0",
             "USER_ON_EVENT_FUNCTION_ARN": {
               "Fn::GetAtt": [
                 "AutoScalingServiceLinkedRoleCreateServiceLinkedRoleFunction56E83FD3",
@@ -16986,6 +17193,7 @@ exports[`LoggingStackOuTargets Construct(LoggingStackOuTargets):  Snapshot Test 
           },
         },
         "Handler": "framework.onEvent",
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "AutoScalingServiceLinkedRoleCreateServiceLinkedRoleProviderframeworkonEventServiceRoleF8C91A0A",
@@ -17244,8 +17452,13 @@ exports[`LoggingStackOuTargets Construct(LoggingStackOuTargets):  Snapshot Test 
           "S3Bucket": "cdk-hnb659fds-assets-333333333333-us-east-1",
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.0",
+          },
+        },
         "Handler": "__entrypoint__.handler",
-        "MemorySize": 128,
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "CustomS3PutBucketReplicationCustomResourceProviderRole1C378488",
@@ -17334,8 +17547,13 @@ exports[`LoggingStackOuTargets Construct(LoggingStackOuTargets):  Snapshot Test 
           "S3Bucket": "cdk-hnb659fds-assets-333333333333-us-east-1",
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.0",
+          },
+        },
         "Handler": "__entrypoint__.handler",
-        "MemorySize": 128,
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "CustomS3PutPublicAccessBlockCustomResourceProviderRole656EB36E",
@@ -17420,8 +17638,13 @@ exports[`LoggingStackOuTargets Construct(LoggingStackOuTargets):  Snapshot Test 
           "S3Bucket": "cdk-hnb659fds-assets-333333333333-us-east-1",
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.0",
+          },
+        },
         "Handler": "__entrypoint__.handler",
-        "MemorySize": 128,
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "CustomSsmGetParameterValueCustomResourceProviderRoleB3AFDDB2",
@@ -17532,8 +17755,13 @@ exports[`LoggingStackOuTargets Construct(LoggingStackOuTargets):  Snapshot Test 
           "S3Bucket": "cdk-hnb659fds-assets-333333333333-us-east-1",
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.0",
+          },
+        },
         "Handler": "__entrypoint__.handler",
-        "MemorySize": 128,
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "CustomUpdateSubscriptionFilterCustomResourceProviderRole81A1751E",
@@ -18208,6 +18436,7 @@ exports[`LoggingStackOuTargets Construct(LoggingStackOuTargets):  Snapshot Test 
                 "Arn",
               ],
             },
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.0",
           },
         },
         "FunctionName": "AWSAccelerator-FirehoseRecordsProcessor",
@@ -19091,6 +19320,7 @@ exports[`LoggingStackOuTargets Construct(LoggingStackOuTargets):  Snapshot Test 
               ],
             },
             "LogSubscriptionType": "LOG_GROUP",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.0",
           },
         },
         "Handler": "index.handler",
@@ -19100,6 +19330,7 @@ exports[`LoggingStackOuTargets Construct(LoggingStackOuTargets):  Snapshot Test 
             "Arn",
           ],
         },
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "NewCloudWatchLogsCreateEventSetLogRetentionSubscriptionFunctionServiceRoleF408E8D2",

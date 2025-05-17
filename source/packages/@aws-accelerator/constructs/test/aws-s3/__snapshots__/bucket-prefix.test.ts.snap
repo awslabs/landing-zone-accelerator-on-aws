@@ -140,6 +140,11 @@ exports[`BucketPrefix Construct(BucketPrefix):  Snapshot Test 1`] = `
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
         "Description": "Accelerator deployed S3CreateBucketPrefix custom resource lambda function.",
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.0",
+          },
+        },
         "Handler": "index.handler",
         "KmsKeyArn": {
           "Fn::GetAtt": [
@@ -290,6 +295,7 @@ exports[`BucketPrefix Construct(BucketPrefix):  Snapshot Test 1`] = `
         "Description": "AWS CDK resource provider framework - onEvent (Default/BucketPrefix/S3CreateBucketPrefix/Resource)",
         "Environment": {
           "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.0",
             "USER_ON_EVENT_FUNCTION_ARN": {
               "Fn::GetAtt": [
                 "BucketPrefixS3CreateBucketPrefixFunction9F1947D5",
@@ -299,21 +305,14 @@ exports[`BucketPrefix Construct(BucketPrefix):  Snapshot Test 1`] = `
           },
         },
         "Handler": "framework.onEvent",
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "BucketPrefixS3CreateBucketPrefixframeworkonEventServiceRoleD3350EF1",
             "Arn",
           ],
         },
-        "Runtime": {
-          "Fn::FindInMap": [
-            "LatestNodeRuntimeMap",
-            {
-              "Ref": "AWS::Region",
-            },
-            "value",
-          ],
-        },
+        "Runtime": "nodejs20.x",
         "Timeout": 900,
       },
       "Type": "AWS::Lambda::Function",

@@ -256,6 +256,11 @@ exports[`MoveAccounts Construct(MoveAccounts):  Snapshot Test 1`] = `
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
         "Description": "Moves accounts to conform account config",
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.0",
+          },
+        },
         "Handler": "index.handler",
         "KmsKeyArn": {
           "Fn::GetAtt": [
@@ -263,6 +268,7 @@ exports[`MoveAccounts Construct(MoveAccounts):  Snapshot Test 1`] = `
             "Arn",
           ],
         },
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "MoveAccountsMoveAccountsFunctionServiceRoleADDE3D6B",
@@ -408,6 +414,7 @@ exports[`MoveAccounts Construct(MoveAccounts):  Snapshot Test 1`] = `
         "Description": "AWS CDK resource provider framework - onEvent (Default/MoveAccounts/MoveAccountsProvider)",
         "Environment": {
           "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.0",
             "USER_ON_EVENT_FUNCTION_ARN": {
               "Fn::GetAtt": [
                 "MoveAccountsMoveAccountsFunctionD31A3773",
@@ -417,21 +424,14 @@ exports[`MoveAccounts Construct(MoveAccounts):  Snapshot Test 1`] = `
           },
         },
         "Handler": "framework.onEvent",
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "MoveAccountsMoveAccountsProviderframeworkonEventServiceRoleB3998377",
             "Arn",
           ],
         },
-        "Runtime": {
-          "Fn::FindInMap": [
-            "LatestNodeRuntimeMap",
-            {
-              "Ref": "AWS::Region",
-            },
-            "value",
-          ],
-        },
+        "Runtime": "nodejs20.x",
         "Timeout": 900,
       },
       "Type": "AWS::Lambda::Function",

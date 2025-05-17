@@ -419,6 +419,7 @@ exports[`NewCloudWatchLogEvent Construct(NewCloudWatchLogEvent):  Snapshot Test 
               ],
             },
             "LogSubscriptionType": "ACCOUNT",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.0",
           },
         },
         "Handler": "index.handler",
@@ -428,6 +429,7 @@ exports[`NewCloudWatchLogEvent Construct(NewCloudWatchLogEvent):  Snapshot Test 
             "Arn",
           ],
         },
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "NewCloudWatchLogEventExistingIamSetLogRetentionSubscriptionFunctionServiceRoleF75C2E9E",
@@ -859,6 +861,7 @@ exports[`NewCloudWatchLogEvent Construct(NewCloudWatchLogEvent):  Snapshot Test 
             "LogRetention": "731",
             "LogSubscriptionRole": "testString",
             "LogSubscriptionType": "LOG_GROUP",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.0",
           },
         },
         "Handler": "index.handler",
@@ -868,6 +871,7 @@ exports[`NewCloudWatchLogEvent Construct(NewCloudWatchLogEvent):  Snapshot Test 
             "Arn",
           ],
         },
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "NewCloudWatchLogEventSetLogRetentionSubscriptionFunctionServiceRole3A975055",

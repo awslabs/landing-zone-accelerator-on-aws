@@ -172,6 +172,11 @@ exports[`ActiveDirectoryResolverRule Construct(ActiveDirectoryResolverRule):  Sn
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
         "Description": "Update resolver group rule target ips",
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.0",
+          },
+        },
         "Handler": "index.handler",
         "KmsKeyArn": {
           "Fn::GetAtt": [
@@ -179,6 +184,7 @@ exports[`ActiveDirectoryResolverRule Construct(ActiveDirectoryResolverRule):  Sn
             "Arn",
           ],
         },
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "ActiveDirectoryResolverRuleUpdateResolverRuleFunctionServiceRole99253C93",
@@ -303,6 +309,7 @@ exports[`ActiveDirectoryResolverRule Construct(ActiveDirectoryResolverRule):  Sn
         "Description": "AWS CDK resource provider framework - onEvent (Default/ActiveDirectoryResolverRule/UpdateResolverRuleProvider)",
         "Environment": {
           "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.0",
             "USER_ON_EVENT_FUNCTION_ARN": {
               "Fn::GetAtt": [
                 "ActiveDirectoryResolverRuleUpdateResolverRuleFunction94452B23",
@@ -312,21 +319,14 @@ exports[`ActiveDirectoryResolverRule Construct(ActiveDirectoryResolverRule):  Sn
           },
         },
         "Handler": "framework.onEvent",
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "ActiveDirectoryResolverRuleUpdateResolverRuleProviderframeworkonEventServiceRole2EC1A40E",
             "Arn",
           ],
         },
-        "Runtime": {
-          "Fn::FindInMap": [
-            "LatestNodeRuntimeMap",
-            {
-              "Ref": "AWS::Region",
-            },
-            "value",
-          ],
-        },
+        "Runtime": "nodejs20.x",
         "Timeout": 900,
       },
       "Type": "AWS::Lambda::Function",
