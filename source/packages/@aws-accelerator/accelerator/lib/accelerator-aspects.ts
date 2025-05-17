@@ -204,8 +204,7 @@ class AwsSolutionAspect implements cdk.IAspect {
  * Aspect to override Lambda runtime for CDK resource provider framework functions.
  *
  * This aspect checks for Lambda functions created by the CDK resource provider framework
- * and updates their runtime to a specified Node.js version if the ACCELERATOR_NODE_VERSION
- * environment variable is set.
+ * and updates their runtime to a specified Node.js version.
  *
  * @implements {cdk.IAspect}
  */
@@ -218,12 +217,12 @@ export class LambdaRuntimeAspect implements cdk.IAspect {
    *
    * @remarks
    * This method checks if the construct is a Lambda function resource created by the CDK
-   * resource provider framework. If so, and if the ACCELERATOR_NODE_VERSION environment
-   * variable is set, it updates the runtime to the specified Node.js version.
+   * resource provider framework. If so, it updates the runtime to the specified Node.js version.
    *
    * The runtime is only updated for functions that:
    * 1. Are of type 'AWS::Lambda::Function'
-   * 2. Have a runtime that includes 'nodejs'
+   * 2. Have a runtime that includes 'nodejs' or is an unresolved token
+   *    a. Because Fn::FindInMap is used to determine the runtime for custom resource functions, we need to take action on tokenized runtimes.
    * 3. Have a description that starts with 'AWS CDK resource provider framework'
    *
    * @example
@@ -234,20 +233,19 @@ export class LambdaRuntimeAspect implements cdk.IAspect {
    * ```
    */
   visit(node: IConstruct): void {
-    if (process.env['ACCELERATOR_NODE_VERSION']) {
-      if (node instanceof cdk.CfnResource) {
-        if (node.cfnResourceType === 'AWS::Lambda::Function') {
-          const cfnProps = (node as cdk.aws_lambda.CfnFunction)['_cfnProperties'];
-          const description = cfnProps['Description']?.toString();
-          const runtime = cfnProps['Runtime']?.toString();
-          if (
-            runtime &&
-            runtime.includes('nodejs') &&
-            description &&
-            description.startsWith('AWS CDK resource provider framework')
-          ) {
-            node.addPropertyOverride('Runtime', `nodejs${getNodeVersion()}.x`);
-          }
+    if (node instanceof cdk.CfnResource) {
+      if (node.cfnResourceType === 'AWS::Lambda::Function') {
+        const cfnProps = (node as cdk.aws_lambda.CfnFunction)['_cfnProperties'];
+        const description = cfnProps['description']?.toString();
+        const runtime = cfnProps['runtime']?.toString();
+        if (
+          runtime &&
+          // cdk.CustomResource creates a CFN map to lookup runtime based on region. This does not include `nodejs` so we need to take action when the value is a token
+          (runtime.includes('nodejs') || cdk.Token.isUnresolved(runtime)) &&
+          description &&
+          description.startsWith('AWS CDK resource provider framework')
+        ) {
+          node.addPropertyOverride('Runtime', `nodejs${getNodeVersion()}.x`);
         }
       }
     }
@@ -378,7 +376,7 @@ export class AcceleratorAspects {
    */
   public readonly globalRegion: string;
 
-  constructor(app: cdk.App, partition: string, useExistingRoles: boolean) {
+  constructor(app: cdk.App | cdk.Stack, partition: string, useExistingRoles: boolean) {
     const globalRegion = getGlobalRegion(partition);
     // Add partition specific overrides
     switch (partition) {
@@ -403,6 +401,8 @@ export class AcceleratorAspects {
     }
     // Add default aspects
     cdk.Aspects.of(app).add(new IamServiceLinkedRoleAspect());
+    cdk.Aspects.of(app).add(new LambdaRuntimeAspect());
+    cdk.Aspects.of(app).add(new LambdaDefaultMemoryAspect());
     if (useExistingRoles) {
       cdk.Aspects.of(app).add(new ExistingRoleOverrides());
     } else {

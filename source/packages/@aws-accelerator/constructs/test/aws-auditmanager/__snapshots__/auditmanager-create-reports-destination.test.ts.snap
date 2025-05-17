@@ -90,8 +90,13 @@ exports[`AuditManagerDefaultReportsDestination Construct(AuditManagerDefaultRepo
           },
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.0",
+          },
+        },
         "Handler": "__entrypoint__.handler",
-        "MemorySize": 128,
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "CustomAuditManagerCreateDefaultReportsDestinationCustomResourceProviderRoleAEE72AE5",

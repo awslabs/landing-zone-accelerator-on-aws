@@ -194,8 +194,13 @@ exports[`BudgetDefinitionCrossRegion Construct(BudgetDefinition):  Snapshot Test
           "S3Bucket": "cdk-hnb659fds-assets-111111111111-dummyRegion",
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.0",
+          },
+        },
         "Handler": "__entrypoint__.handler",
-        "MemorySize": 128,
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "CustomCrossRegionBudgetCustomResourceProviderRole08C8F7BD",

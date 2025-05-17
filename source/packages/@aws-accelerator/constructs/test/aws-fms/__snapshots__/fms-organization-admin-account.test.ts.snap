@@ -139,7 +139,13 @@ exports[`FMSOrganizationAdminAccount Construct(FMSOrganizationAdminAccount):  Sn
           },
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.0",
+          },
+        },
         "Handler": "index.handler",
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "FMSOrganizationAdminAccountFMSOrganizationAdminAccountProviderLambdaServiceRole28F3C566",
@@ -294,6 +300,7 @@ exports[`FMSOrganizationAdminAccount Construct(FMSOrganizationAdminAccount):  Sn
         "Description": "AWS CDK resource provider framework - onEvent (Default/FMSOrganizationAdminAccount/Resource)",
         "Environment": {
           "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.0",
             "USER_ON_EVENT_FUNCTION_ARN": {
               "Fn::GetAtt": [
                 "FMSOrganizationAdminAccountFMSOrganizationAdminAccountProviderLambda2D69B84E",
@@ -303,21 +310,14 @@ exports[`FMSOrganizationAdminAccount Construct(FMSOrganizationAdminAccount):  Sn
           },
         },
         "Handler": "framework.onEvent",
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "FMSOrganizationAdminAccountframeworkonEventServiceRole6775A101",
             "Arn",
           ],
         },
-        "Runtime": {
-          "Fn::FindInMap": [
-            "LatestNodeRuntimeMap",
-            {
-              "Ref": "AWS::Region",
-            },
-            "value",
-          ],
-        },
+        "Runtime": "nodejs20.x",
         "Timeout": 900,
       },
       "Type": "AWS::Lambda::Function",

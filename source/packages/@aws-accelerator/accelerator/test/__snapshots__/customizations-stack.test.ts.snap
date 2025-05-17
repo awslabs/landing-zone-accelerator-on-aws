@@ -58,7 +58,13 @@ exports[`CustomizationsStack Construct(CustomizationsStack):  Snapshot Test 1`] 
           "S3Bucket": "cdk-hnb659fds-assets-111111111111-us-east-1",
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.0",
+          },
+        },
         "Handler": "index.handler",
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "CustomPortfolioAssociationsRoleArnProviderCustomPortfolioAssociationsRoleArnProviderProviderLambdaServiceRoleB97F1DC3",
@@ -155,6 +161,7 @@ exports[`CustomizationsStack Construct(CustomizationsStack):  Snapshot Test 1`] 
         "Description": "AWS CDK resource provider framework - onEvent (AWSAccelerator-CustomizationsStack-111111111111-us-east-1/Custom::PortfolioAssociationsRoleArnProvider/Resource)",
         "Environment": {
           "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.0",
             "USER_ON_EVENT_FUNCTION_ARN": {
               "Fn::GetAtt": [
                 "CustomPortfolioAssociationsRoleArnProviderCustomPortfolioAssociationsRoleArnProviderProviderLambda303083B3",
@@ -164,6 +171,7 @@ exports[`CustomizationsStack Construct(CustomizationsStack):  Snapshot Test 1`] 
           },
         },
         "Handler": "framework.onEvent",
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "CustomPortfolioAssociationsRoleArnProviderframeworkonEventServiceRoleBEFB90CD",
@@ -277,8 +285,13 @@ exports[`CustomizationsStack Construct(CustomizationsStack):  Snapshot Test 1`] 
           "S3Bucket": "cdk-hnb659fds-assets-111111111111-us-east-1",
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.0",
+          },
+        },
         "Handler": "__entrypoint__.handler",
-        "MemorySize": 128,
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "CustomPropagatePortfolioAssociationsCustomResourceProviderRole4C66847F",
@@ -361,8 +374,13 @@ exports[`CustomizationsStack Construct(CustomizationsStack):  Snapshot Test 1`] 
           "S3Bucket": "cdk-hnb659fds-assets-111111111111-us-east-1",
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.0",
+          },
+        },
         "Handler": "__entrypoint__.handler",
-        "MemorySize": 128,
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "CustomSharePortfolioWithOrgCustomResourceProviderRoleD968FEC7",
@@ -697,7 +715,13 @@ exports[`CustomizationsStack Construct(CustomizationsStack):  Snapshot Test 2`] 
           "S3Bucket": "cdk-hnb659fds-assets-444444444444-us-east-1",
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.0",
+          },
+        },
         "Handler": "index.handler",
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "CustomPortfolioAssociationsRoleArnProviderCustomPortfolioAssociationsRoleArnProviderProviderLambdaServiceRoleB97F1DC3",
@@ -794,6 +818,7 @@ exports[`CustomizationsStack Construct(CustomizationsStack):  Snapshot Test 2`] 
         "Description": "AWS CDK resource provider framework - onEvent (AWSAccelerator-CustomizationsStack-444444444444-us-east-1/Custom::PortfolioAssociationsRoleArnProvider/Resource)",
         "Environment": {
           "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.0",
             "USER_ON_EVENT_FUNCTION_ARN": {
               "Fn::GetAtt": [
                 "CustomPortfolioAssociationsRoleArnProviderCustomPortfolioAssociationsRoleArnProviderProviderLambda303083B3",
@@ -803,6 +828,7 @@ exports[`CustomizationsStack Construct(CustomizationsStack):  Snapshot Test 2`] 
           },
         },
         "Handler": "framework.onEvent",
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "CustomPortfolioAssociationsRoleArnProviderframeworkonEventServiceRoleBEFB90CD",
@@ -916,8 +942,13 @@ exports[`CustomizationsStack Construct(CustomizationsStack):  Snapshot Test 2`] 
           "S3Bucket": "cdk-hnb659fds-assets-444444444444-us-east-1",
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.0",
+          },
+        },
         "Handler": "__entrypoint__.handler",
-        "MemorySize": 128,
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "CustomPropagatePortfolioAssociationsCustomResourceProviderRole4C66847F",
@@ -1198,7 +1229,13 @@ exports[`CustomizationsStack Construct(CustomizationsStack):  Snapshot Test 3`] 
           "S3Bucket": "cdk-hnb659fds-assets-111111111111-us-east-1",
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.0",
+          },
+        },
         "Handler": "index.handler",
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "CustomPortfolioAssociationsRoleArnProviderCustomPortfolioAssociationsRoleArnProviderProviderLambdaServiceRoleB97F1DC3",
@@ -1295,6 +1332,7 @@ exports[`CustomizationsStack Construct(CustomizationsStack):  Snapshot Test 3`] 
         "Description": "AWS CDK resource provider framework - onEvent (AWSAccelerator-CustomizationsStack-111111111111-us-east-1/Custom::PortfolioAssociationsRoleArnProvider/Resource)",
         "Environment": {
           "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.0",
             "USER_ON_EVENT_FUNCTION_ARN": {
               "Fn::GetAtt": [
                 "CustomPortfolioAssociationsRoleArnProviderCustomPortfolioAssociationsRoleArnProviderProviderLambda303083B3",
@@ -1304,6 +1342,7 @@ exports[`CustomizationsStack Construct(CustomizationsStack):  Snapshot Test 3`] 
           },
         },
         "Handler": "framework.onEvent",
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "CustomPortfolioAssociationsRoleArnProviderframeworkonEventServiceRoleBEFB90CD",
@@ -1417,8 +1456,13 @@ exports[`CustomizationsStack Construct(CustomizationsStack):  Snapshot Test 3`] 
           "S3Bucket": "cdk-hnb659fds-assets-111111111111-us-east-1",
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.0",
+          },
+        },
         "Handler": "__entrypoint__.handler",
-        "MemorySize": 128,
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "CustomPropagatePortfolioAssociationsCustomResourceProviderRole4C66847F",
@@ -1501,8 +1545,13 @@ exports[`CustomizationsStack Construct(CustomizationsStack):  Snapshot Test 3`] 
           "S3Bucket": "cdk-hnb659fds-assets-111111111111-us-east-1",
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.0",
+          },
+        },
         "Handler": "__entrypoint__.handler",
-        "MemorySize": 128,
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "CustomSharePortfolioWithOrgCustomResourceProviderRoleD968FEC7",
@@ -1837,7 +1886,13 @@ exports[`CustomizationsStack Construct(CustomizationsStack):  Snapshot Test 4`] 
           "S3Bucket": "cdk-hnb659fds-assets-444444444444-us-east-1",
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.0",
+          },
+        },
         "Handler": "index.handler",
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "CustomPortfolioAssociationsRoleArnProviderCustomPortfolioAssociationsRoleArnProviderProviderLambdaServiceRoleB97F1DC3",
@@ -1934,6 +1989,7 @@ exports[`CustomizationsStack Construct(CustomizationsStack):  Snapshot Test 4`] 
         "Description": "AWS CDK resource provider framework - onEvent (AWSAccelerator-CustomizationsStack-444444444444-us-east-1/Custom::PortfolioAssociationsRoleArnProvider/Resource)",
         "Environment": {
           "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.0",
             "USER_ON_EVENT_FUNCTION_ARN": {
               "Fn::GetAtt": [
                 "CustomPortfolioAssociationsRoleArnProviderCustomPortfolioAssociationsRoleArnProviderProviderLambda303083B3",
@@ -1943,6 +1999,7 @@ exports[`CustomizationsStack Construct(CustomizationsStack):  Snapshot Test 4`] 
           },
         },
         "Handler": "framework.onEvent",
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "CustomPortfolioAssociationsRoleArnProviderframeworkonEventServiceRoleBEFB90CD",

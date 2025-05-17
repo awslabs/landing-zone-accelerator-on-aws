@@ -59,7 +59,13 @@ exports[`GetCloudFormationResourceType Construct(GetCloudFormationResourceType):
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
         "Description": "Get CloudFormation Resources from Stack by LogicalResourceId",
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.0",
+          },
+        },
         "Handler": "index.handler",
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "TestGetCloudFormationResourceTypeGetCloudFormationResourceTypeFunctionServiceRole450819BD",
@@ -204,6 +210,7 @@ exports[`GetCloudFormationResourceType Construct(GetCloudFormationResourceType):
         "Description": "AWS CDK resource provider framework - onEvent (Stack/TestGetCloudFormationResourceType/GetCloudFormationResourceTypeProvider)",
         "Environment": {
           "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.0",
             "USER_ON_EVENT_FUNCTION_ARN": {
               "Fn::GetAtt": [
                 "TestGetCloudFormationResourceTypeGetCloudFormationResourceTypeFunctionA13B89C3",
@@ -213,6 +220,7 @@ exports[`GetCloudFormationResourceType Construct(GetCloudFormationResourceType):
           },
         },
         "Handler": "framework.onEvent",
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "TestGetCloudFormationResourceTypeGetCloudFormationResourceTypeProviderframeworkonEventServiceRoleFB2D11F4",

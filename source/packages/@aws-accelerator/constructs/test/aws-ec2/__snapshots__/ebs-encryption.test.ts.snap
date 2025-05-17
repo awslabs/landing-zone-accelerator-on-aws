@@ -12,8 +12,13 @@ exports[`ReportDefinition Construct(EbsDefaultEncryption):  Snapshot Test 1`] = 
           "S3Bucket": "cdk-hnb659fds-assets-333333333333-us-east-1",
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.0",
+          },
+        },
         "Handler": "__entrypoint__.handler",
-        "MemorySize": 128,
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "CustomEbsDefaultVolumeEncryptionCustomResourceProviderRole7A4FA6A8",

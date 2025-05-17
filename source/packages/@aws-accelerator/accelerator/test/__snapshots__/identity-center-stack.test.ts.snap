@@ -28,8 +28,13 @@ exports[`IdentityCenterStack Construct(IdentityCenterStack):  Snapshot Test 1`] 
           "S3Bucket": "cdk-hnb659fds-assets-111111111111-us-east-1",
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.0",
+          },
+        },
         "Handler": "__entrypoint__.handler",
-        "MemorySize": 128,
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "CustomIdentityCenterAssignmentsCustomResourceProviderRoleAEF569D6",
@@ -293,6 +298,11 @@ exports[`IdentityCenterStack Construct(IdentityCenterStack):  Snapshot Test 1`] 
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
         "Description": "Accelerator deployed IdentityCenterGetInstanceId custom resource lambda function.",
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.0",
+          },
+        },
         "Handler": "index.handler",
         "KmsKeyArn": {
           "Ref": "SsmParameterValueacceleratorkmslambdakeyarnC96584B6F00A464EAD1953AFF4B05118Parameter",
@@ -433,6 +443,7 @@ exports[`IdentityCenterStack Construct(IdentityCenterStack):  Snapshot Test 1`] 
         "Description": "AWS CDK resource provider framework - onEvent (AWSAccelerator-IdentityCenterStack-111111111111-us-east-1/IdentityCenterInstance/IdentityCenterGetInstanceId/Resource)",
         "Environment": {
           "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.0",
             "USER_ON_EVENT_FUNCTION_ARN": {
               "Fn::GetAtt": [
                 "IdentityCenterInstanceIdentityCenterGetInstanceIdFunctionE59FDB54",
@@ -442,6 +453,7 @@ exports[`IdentityCenterStack Construct(IdentityCenterStack):  Snapshot Test 1`] 
           },
         },
         "Handler": "framework.onEvent",
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "IdentityCenterInstanceIdentityCenterGetInstanceIdframeworkonEventServiceRole870C36F8",

@@ -139,7 +139,13 @@ exports[`IdentityCenterGetPermissionRoleArn Construct(IdentityCenterGetPermissio
           },
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.0",
+          },
+        },
         "Handler": "index.handler",
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "IdentityCenterGetPermissionRoleArnProviderIdentityCenterGetPermissionRoleArnProviderProviderLambdaServiceRole603853E2",
@@ -238,6 +244,7 @@ exports[`IdentityCenterGetPermissionRoleArn Construct(IdentityCenterGetPermissio
         "Description": "AWS CDK resource provider framework - onEvent (Default/IdentityCenterGetPermissionRoleArnProvider/Resource)",
         "Environment": {
           "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.0",
             "USER_ON_EVENT_FUNCTION_ARN": {
               "Fn::GetAtt": [
                 "IdentityCenterGetPermissionRoleArnProviderIdentityCenterGetPermissionRoleArnProviderProviderLambda87CD5EC8",
@@ -247,21 +254,14 @@ exports[`IdentityCenterGetPermissionRoleArn Construct(IdentityCenterGetPermissio
           },
         },
         "Handler": "framework.onEvent",
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "IdentityCenterGetPermissionRoleArnProviderframeworkonEventServiceRoleAA6883AA",
             "Arn",
           ],
         },
-        "Runtime": {
-          "Fn::FindInMap": [
-            "LatestNodeRuntimeMap",
-            {
-              "Ref": "AWS::Region",
-            },
-            "value",
-          ],
-        },
+        "Runtime": "nodejs20.x",
         "Timeout": 900,
       },
       "Type": "AWS::Lambda::Function",
