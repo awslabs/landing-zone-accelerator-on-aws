@@ -47,6 +47,7 @@ import { ApplicationLoadBalancerResources } from '../asea-resources/application-
 import path from 'path';
 import { ImportStackResources } from '../../utils/import-stack-resources';
 import { NestedStack } from '@aws-accelerator/config';
+import { TransitGatewayPeeringAttachments } from '../asea-resources/transit-gateway-peering-attachments';
 
 /**
  * Enum for log level
@@ -124,6 +125,7 @@ export class ImportAseaResourcesStack extends NetworkStack {
     new SharedSecurityGroups(this, { ...props });
     new TgwCrossAccountResources(this, props);
     new TransitGatewayRoutes(this, { ...props });
+    new TransitGatewayPeeringAttachments(this, { ...props });
     new VpcEndpoints(this, props);
     new SsmInventory(this, props);
     new ManagedAdResources(this, props);

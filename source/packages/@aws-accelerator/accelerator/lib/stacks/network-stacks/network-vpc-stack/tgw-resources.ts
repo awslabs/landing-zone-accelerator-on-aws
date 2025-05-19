@@ -352,6 +352,18 @@ export class TgwResources {
     const principals = this.createAcceptorList(props);
 
     for (const transitGatewayPeeringItem of props.networkConfig.transitGatewayPeering ?? []) {
+      if (
+        this.stack.isManagedByAsea(
+          AseaResourceType.TRANSIT_GATEWAY_PEERING_REQUESTER,
+          `${transitGatewayPeeringItem.requester.transitGatewayName}/${transitGatewayPeeringItem.name}`,
+        )
+      ) {
+        this.stack.addLogs(
+          LogLevel.INFO,
+          `${transitGatewayPeeringItem.requester.transitGatewayName}/${transitGatewayPeeringItem.name} is managed by ASEA, skipping creation of resources.`,
+        );
+        continue;
+      }
       // Get account IDs
       const requesterAccountId = props.accountsConfig.getAccountId(transitGatewayPeeringItem.requester.account);
       const accepterAccountId = props.accountsConfig.getAccountId(transitGatewayPeeringItem.accepter.account);
