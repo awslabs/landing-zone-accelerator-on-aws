@@ -2,12 +2,6 @@
 
 exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot Test 1`] = `
 {
-  "Metadata": {
-    "lzaLookup": {
-      "accountName": "Network",
-      "region": "us-east-1",
-    },
-  },
   "Parameters": {
     "SsmParameterValueacceleratorkmslambdakeyarnC96584B6F00A464EAD1953AFF4B05118Parameter": {
       "Default": "/accelerator/kms/lambda/key-arn",
@@ -4999,12 +4993,6 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
 
 exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot Test 2`] = `
 {
-  "Metadata": {
-    "lzaLookup": {
-      "accountName": "SharedServices",
-      "region": "us-east-1",
-    },
-  },
   "Parameters": {
     "SsmParameterValueacceleratornetworkprefixListacceleratorprefixlist001idC96584B6F00A464EAD1953AFF4B05118Parameter": {
       "Default": "/accelerator/network/prefixList/accelerator-prefix-list-001/id",
@@ -13174,12 +13162,6 @@ catch {
 
 exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot Test 3`] = `
 {
-  "Metadata": {
-    "lzaLookup": {
-      "accountName": "Network",
-      "region": "us-west-2",
-    },
-  },
   "Parameters": {
     "SsmParameterValueacceleratornetworkprefixListacceleratorprefixlistipv6idC96584B6F00A464EAD1953AFF4B05118Parameter": {
       "Default": "/accelerator/network/prefixList/accelerator-prefix-list-ipv6/id",
@@ -13948,12 +13930,6 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
 
 exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot Test 4`] = `
 {
-  "Metadata": {
-    "lzaLookup": {
-      "accountName": "SharedServices",
-      "region": "us-west-2",
-    },
-  },
   "Parameters": {
     "SsmParameterValueacceleratornetworkprefixListacceleratorprefixlistipv6idC96584B6F00A464EAD1953AFF4B05118Parameter": {
       "Default": "/accelerator/network/prefixList/accelerator-prefix-list-ipv6/id",
@@ -15181,12 +15157,6 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
 
 exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot Test 5`] = `
 {
-  "Metadata": {
-    "lzaLookup": {
-      "accountName": "Audit",
-      "region": "us-east-1",
-    },
-  },
   "Parameters": {
     "SsmParameterValueacceleratorkmscloudwatchkeyarnC96584B6F00A464EAD1953AFF4B05118Parameter": {
       "Default": "/accelerator/kms/cloudwatch/key-arn",
@@ -16532,12 +16502,6 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
 
 exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot Test 6`] = `
 {
-  "Metadata": {
-    "lzaLookup": {
-      "accountName": "Audit",
-      "region": "us-west-2",
-    },
-  },
   "Parameters": {
     "SsmParameterValueacceleratornetworkvpcSecurityTemplateFullIpamWestcidripv4C96584B6F00A464EAD1953AFF4B05118Parameter": {
       "Default": "/accelerator/network/vpc/Security-Template-Full-Ipam-West/cidr/ipv4",
@@ -17408,12 +17372,6 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
 
 exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot Test 7`] = `
 {
-  "Metadata": {
-    "lzaLookup": {
-      "accountName": "LogArchive",
-      "region": "us-east-1",
-    },
-  },
   "Parameters": {
     "SsmParameterValueacceleratorkmscloudwatchkeyarnC96584B6F00A464EAD1953AFF4B05118Parameter": {
       "Default": "/accelerator/kms/cloudwatch/key-arn",
@@ -18759,12 +18717,6 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
 
 exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot Test 8`] = `
 {
-  "Metadata": {
-    "lzaLookup": {
-      "accountName": "LogArchive",
-      "region": "us-west-2",
-    },
-  },
   "Parameters": {
     "SsmParameterValueacceleratornetworkvpcSecurityTemplateFullIpamWestcidripv4C96584B6F00A464EAD1953AFF4B05118Parameter": {
       "Default": "/accelerator/network/vpc/Security-Template-Full-Ipam-West/cidr/ipv4",
@@ -19635,12 +19587,6 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
 
 exports[`NoVpcFlowLogStack Construct(NetworkAssociationsStack):  Snapshot Test 1`] = `
 {
-  "Metadata": {
-    "lzaLookup": {
-      "accountName": "Network",
-      "region": "us-east-1",
-    },
-  },
   "Parameters": {
     "SsmParameterValueacceleratorkmscloudwatchkeyarnC96584B6F00A464EAD1953AFF4B05118Parameter": {
       "Default": "/accelerator/kms/cloudwatch/key-arn",

@@ -2,12 +2,6 @@
 
 exports[`ResourcePolicyEnforcementStack Construct(ResourcePolicyEnforcementStack):  Snapshot Test 1`] = `
 {
-  "Metadata": {
-    "lzaLookup": {
-      "accountName": "Management",
-      "region": "us-east-1",
-    },
-  },
   "Parameters": {
     "SsmParameterValueacceleratorkmscloudwatchkeyarnC96584B6F00A464EAD1953AFF4B05118Parameter": {
       "Default": "/accelerator/kms/cloudwatch/key-arn",

@@ -2,12 +2,6 @@
 
 exports[`NetworkVpcDnsStack Construct(NetworkVpcDnsStack):  Snapshot Test 1`] = `
 {
-  "Metadata": {
-    "lzaLookup": {
-      "accountName": "Network",
-      "region": "us-east-1",
-    },
-  },
   "Parameters": {
     "SsmParameterValueacceleratorkmslambdakeyarnC96584B6F00A464EAD1953AFF4B05118Parameter": {
       "Default": "/accelerator/kms/lambda/key-arn",
