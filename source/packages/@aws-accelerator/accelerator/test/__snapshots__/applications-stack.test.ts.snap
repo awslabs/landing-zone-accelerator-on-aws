@@ -2,12 +2,6 @@
 
 exports[`ApplicationsStack Construct(ApplicationsStack):  Snapshot Test 1`] = `
 {
-  "Metadata": {
-    "lzaLookup": {
-      "accountName": "SharedServices",
-      "region": "us-east-1",
-    },
-  },
   "Resources": {
     "CustomPortfolioAssociationsRoleArnProviderCustomPortfolioAssociationsRoleArnProviderProviderLambda303083B3": {
       "DependsOn": [

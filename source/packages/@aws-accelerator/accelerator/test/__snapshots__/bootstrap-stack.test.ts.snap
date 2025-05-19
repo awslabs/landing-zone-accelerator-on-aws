@@ -2,12 +2,6 @@
 
 exports[`BootstrapStack Construct(BootstrapStack):  Snapshot Test 1`] = `
 {
-  "Metadata": {
-    "lzaLookup": {
-      "accountName": "Management",
-      "region": "us-east-1",
-    },
-  },
   "Outputs": {
     "BootstrapVersionOutput": {
       "Description": "The version of the bootstrap resources that are currently mastered in this stack",

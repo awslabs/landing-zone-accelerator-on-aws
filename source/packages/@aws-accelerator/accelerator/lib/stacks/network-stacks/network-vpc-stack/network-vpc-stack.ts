@@ -12,7 +12,6 @@
  */
 
 import { Construct } from 'constructs';
-
 import { OutpostsConfig, VpcConfig, VpcTemplatesConfig } from '@aws-accelerator/config';
 import {
   INatGateway,
@@ -23,6 +22,7 @@ import {
   ISubnet,
 } from '@aws-accelerator/constructs';
 
+import * as cdk from 'aws-cdk-lib';
 import { AcceleratorStackProps } from '../../accelerator-stack';
 import { NetworkStack } from '../network-stack';
 import { AcmResources } from './acm-resources';
@@ -41,9 +41,16 @@ import { VpcResources } from './vpc-resources';
 import { pascalCase } from 'pascal-case';
 import { SsmResourceType } from '@aws-accelerator/utils';
 import { getVpcConfig } from '../utils/getter-utils';
+import { MetadataKeys } from '@aws-accelerator/utils/lib/common-types';
+
 export class NetworkVpcStack extends NetworkStack {
   constructor(scope: Construct, id: string, props: AcceleratorStackProps) {
     super(scope, id, props);
+
+    this.addMetadata(MetadataKeys.LZA_LOOKUP, {
+      accountName: this.props.accountsConfig.getAccountNameById(this.account),
+      region: cdk.Stack.of(this).region,
+    });
     //
     // Create ACM Certificates
     //
