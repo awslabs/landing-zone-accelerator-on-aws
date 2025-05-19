@@ -28,6 +28,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - fix(pre-approval): add wrapper around deployment 
 - fix(accelerator-metadata): fixed installer stack lookup
 - fix(config): ISnsConfig functionality for snsTopics property [#700](https://github.com/awslabs/landing-zone-accelerator-on-aws/issues/700) 
+- fix(asea): added resource handler for tgw peering attachments
 
 ### Changed
 
