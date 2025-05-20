@@ -32,6 +32,7 @@ import {
   CfnResourceType,
   NetworkAclConfig,
 } from '@aws-accelerator/config';
+import { getAseaConfigVpcName } from '@aws-accelerator/utils';
 import { SsmResourceType } from '@aws-accelerator/utils/lib/ssm-parameter-path';
 import { ImportAseaResourcesStack, LogLevel } from '../stacks/import-asea-resources-stack';
 import { AseaResource, AseaResourceProps } from './resource';
@@ -104,7 +105,7 @@ export class VpcResources extends AseaResource {
 
     for (const vpcInScope of vpcsInScope) {
       // ASEA creates NestedStack for each VPC. All SSM Parameters related to VPC goes to nested stack
-      const vpcResourceInfo = this.getVpcResourceByTag(vpcInScope.name);
+      const vpcResourceInfo = this.getVpcResourceByTag(getAseaConfigVpcName(vpcInScope.name));
       if (!vpcResourceInfo || !vpcResourceInfo.resource.physicalResourceId) {
         this.scope.addLogs(
           LogLevel.INFO,
@@ -287,7 +288,11 @@ export class VpcResources extends AseaResource {
 
     let vpcId: string | undefined;
     for (const [, vpcStackInfo] of Object.entries(vpcStacksInfo)) {
-      const vpcResource = this.findResourceByTypeAndTag(vpcStackInfo.cfnResources ?? [], RESOURCE_TYPE.VPC, vpcName);
+      const vpcResource = this.findResourceByTypeAndTag(
+        vpcStackInfo.cfnResources ?? [],
+        RESOURCE_TYPE.VPC,
+        getAseaConfigVpcName(vpcName),
+      );
       if (vpcResource) {
         vpcId = vpcResource.physicalResourceId;
         break;

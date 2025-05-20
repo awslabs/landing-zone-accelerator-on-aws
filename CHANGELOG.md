@@ -29,6 +29,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - fix(accelerator-metadata): fixed installer stack lookup
 - fix(config): ISnsConfig functionality for snsTopics property [#700](https://github.com/awslabs/landing-zone-accelerator-on-aws/issues/700) 
 - fix(asea): added resource handler for tgw peering attachments
+- fix(asea): handle several asea vpc naming issues
+- fix(asea): don't fail on private hosted zones when multiple vpc endpoints of the same type are present on different vpc's
+- fix(asea): fix route53 query logging stack failures during upgrade
 
 ### Changed
 

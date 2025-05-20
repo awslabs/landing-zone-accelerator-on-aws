@@ -4,6 +4,7 @@ import { pascalCase } from 'pascal-case';
 import { SsmResourceType } from '@aws-accelerator/utils/lib/ssm-parameter-path';
 import { ASEAMappings, AseaResourceType, NestedStack } from '@aws-accelerator/config';
 import { CfnHostedZone } from 'aws-cdk-lib/aws-route53';
+import { getAseaConfigVpcName } from '@aws-accelerator/utils';
 const ASEA_PHASE_NUMBER = '2';
 const enum RESOURCE_TYPE {
   VPC_ENDPOINT_TYPE = 'AWS::EC2::VPCEndpoint',
@@ -230,7 +231,11 @@ export class VpcEndpoints extends AseaResource {
     }
     for (const nestedStack of nestedStackList) {
       nestedStack.cfnResources = this.loadResourcesFromFile(nestedStack);
-      const vpcResource = this.findResourceByTypeAndTag(nestedStack.cfnResources, RESOURCE_TYPE.VPC, vpcName);
+      const vpcResource = this.findResourceByTypeAndTag(
+        nestedStack.cfnResources,
+        RESOURCE_TYPE.VPC,
+        getAseaConfigVpcName(vpcName),
+      );
       if (vpcResource) {
         return vpcResource.physicalResourceId;
       }
