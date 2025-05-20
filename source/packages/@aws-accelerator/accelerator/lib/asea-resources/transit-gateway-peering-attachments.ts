@@ -47,26 +47,41 @@ export class TransitGatewayPeeringAttachments extends AseaResource {
     for (const tgwPeeringConfig of tgwPeeringConfigs) {
       if (this.transitGatewayPeeringAttachments.has(tgwPeeringConfig.name)) {
         const tgwPeeringPhysicalId = this.transitGatewayPeeringAttachments.get(tgwPeeringConfig.name);
-        if (!tgwPeeringPhysicalId || this.scope.region !== tgwPeeringConfig.requester.region) {
-          return;
+        if (!tgwPeeringPhysicalId) return;
+
+        if (this.scope.region === tgwPeeringConfig.requester.region) {
+          this.scope.addAseaResource(
+            AseaResourceType.TRANSIT_GATEWAY_PEERING_REQUESTER,
+            `${tgwPeeringConfig.requester.transitGatewayName}/${tgwPeeringConfig.name}`,
+          );
         }
 
-        this.scope.addAseaResource(
-          AseaResourceType.TRANSIT_GATEWAY_PEERING_REQUESTER,
-          `${tgwPeeringConfig.requester.transitGatewayName}/${tgwPeeringConfig.name}`,
-        );
+        // Create SSM parameter for peering attachment ID in requester and accepter region
+        if (this.scope.region === tgwPeeringConfig.requester.region) {
+          this.scope.addSsmParameter({
+            logicalId: pascalCase(
+              `SsmParam${tgwPeeringConfig.requester.transitGatewayName}${tgwPeeringConfig.name}PeeringAttachmentId`,
+            ),
+            parameterName: this.scope.getSsmPath(SsmResourceType.TGW_PEERING, [
+              tgwPeeringConfig.requester.transitGatewayName,
+              tgwPeeringConfig.name,
+            ]),
+            stringValue: tgwPeeringPhysicalId,
+          });
+        }
 
-        // Create SSM parameter for peering attachment ID in requester region
-        this.scope.addSsmParameter({
-          logicalId: pascalCase(
-            `SsmParam${tgwPeeringConfig.requester.transitGatewayName}${tgwPeeringConfig.name}PeeringAttachmentId`,
-          ),
-          parameterName: this.scope.getSsmPath(SsmResourceType.TGW_PEERING, [
-            tgwPeeringConfig.requester.transitGatewayName,
-            tgwPeeringConfig.name,
-          ]),
-          stringValue: tgwPeeringPhysicalId,
-        });
+        if (this.scope.region === tgwPeeringConfig.accepter.region) {
+          this.scope.addSsmParameter({
+            logicalId: pascalCase(
+              `SsmParam${tgwPeeringConfig.accepter.transitGatewayName}${tgwPeeringConfig.name}PeeringAttachmentId`,
+            ),
+            parameterName: this.scope.getSsmPath(SsmResourceType.TGW_PEERING, [
+              tgwPeeringConfig.accepter.transitGatewayName,
+              tgwPeeringConfig.name,
+            ]),
+            stringValue: tgwPeeringPhysicalId,
+          });
+        }
       }
     }
   }
