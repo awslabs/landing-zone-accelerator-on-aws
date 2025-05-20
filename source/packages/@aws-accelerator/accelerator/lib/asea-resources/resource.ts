@@ -60,6 +60,19 @@ export class AseaResource {
     return cfnResources.find(cfnResource => cfnResource.resourceMetadata['Properties'][propertyName] === propertyValue);
   }
 
+  findResourceByNameAndVpcId(
+    cfnResources: CfnResourceType[],
+    propertyName: string,
+    propertyValue: string,
+    vpcId: string,
+  ) {
+    return cfnResources.find(
+      cfnResource =>
+        cfnResource.resourceMetadata['Properties'][propertyName] === propertyValue &&
+        cfnResource.resourceMetadata['Properties']['VpcId'] === vpcId,
+    );
+  }
+
   filterResourcesByRef(cfnResources: CfnResourceType[], propertyName: string, logicalId: string) {
     return cfnResources.filter(
       cfnResource => cfnResource.resourceMetadata['Properties'][propertyName].Ref === logicalId,
