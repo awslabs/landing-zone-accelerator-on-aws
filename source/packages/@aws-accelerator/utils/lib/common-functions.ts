@@ -241,3 +241,24 @@ export function getNodeVersion(): number {
   }
   return nodeVersion;
 }
+
+/**
+ * Helper function to remove the string that makes a vpc
+ * name unique when upgraded from ASEA. Will return the
+ * original string if the delimeter characters are not
+ * in the string
+ * @param vpcName
+ * @returns string
+ */
+export function getAseaVpcName(vpcName: string): string {
+  return removeAfterSequence(vpcName, '..');
+}
+
+export function getAseaConfigVpcName(vpcName: string): string {
+  return removeAfterSequence(vpcName, '..').replace('_vpc_vpc', '_vpc');
+}
+
+export function removeAfterSequence(text: string, sequence: string): string {
+  const index = text.indexOf(sequence);
+  return index === -1 ? text : text.substring(0, index);
+}

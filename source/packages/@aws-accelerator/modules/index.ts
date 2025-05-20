@@ -72,7 +72,6 @@ export abstract class ModuleRunner {
       params.region,
       params.solutionId,
     );
-
     //
     // Get accelerator module runner parameters
     //
