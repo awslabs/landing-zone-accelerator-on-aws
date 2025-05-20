@@ -111,7 +111,7 @@ exports[`ConfigServiceTags Construct(ConfigServiceTags):  Snapshot Test 1`] = `
         "Description": "AWS CDK resource provider framework - isComplete (Stack/TestCreateCTAccounts/CreateControlTowerAcccountsProvider)",
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.12.1",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.2",
             "USER_IS_COMPLETE_FUNCTION_ARN": {
               "Fn::GetAtt": [
                 "TestCreateCTAccountsCreateControlTowerAccountStatus08A35AEC",
@@ -251,7 +251,7 @@ exports[`ConfigServiceTags Construct(ConfigServiceTags):  Snapshot Test 1`] = `
         "Description": "AWS CDK resource provider framework - onEvent (Stack/TestCreateCTAccounts/CreateControlTowerAcccountsProvider)",
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.12.1",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.2",
             "USER_IS_COMPLETE_FUNCTION_ARN": {
               "Fn::GetAtt": [
                 "TestCreateCTAccountsCreateControlTowerAccountStatus08A35AEC",
@@ -401,7 +401,7 @@ exports[`ConfigServiceTags Construct(ConfigServiceTags):  Snapshot Test 1`] = `
         "Description": "AWS CDK resource provider framework - onTimeout (Stack/TestCreateCTAccounts/CreateControlTowerAcccountsProvider)",
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.12.1",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.2",
             "USER_IS_COMPLETE_FUNCTION_ARN": {
               "Fn::GetAtt": [
                 "TestCreateCTAccountsCreateControlTowerAccountStatus08A35AEC",
@@ -694,7 +694,7 @@ exports[`ConfigServiceTags Construct(ConfigServiceTags):  Snapshot Test 1`] = `
         "Description": "Create Control Tower Account onEvent handler",
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.12.1",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.2",
           },
         },
         "Handler": "index.handler",
@@ -788,7 +788,7 @@ exports[`ConfigServiceTags Construct(ConfigServiceTags):  Snapshot Test 1`] = `
             "NewAccountsTableName": {
               "Ref": "NewCTAccountsE326CD07",
             },
-            "SOLUTION_ID": "AwsSolution/SO0199/1.12.1",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.2",
           },
         },
         "Handler": "index.handler",

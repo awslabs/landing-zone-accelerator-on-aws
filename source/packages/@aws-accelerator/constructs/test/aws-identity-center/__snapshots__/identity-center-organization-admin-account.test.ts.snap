@@ -141,7 +141,7 @@ exports[`IdentityCenterOrganizationAdminAccount Construct(IdentityCenterOrganiza
         },
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.12.1",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.2",
           },
         },
         "Handler": "index.handler",
@@ -259,7 +259,7 @@ exports[`IdentityCenterOrganizationAdminAccount Construct(IdentityCenterOrganiza
         "Description": "AWS CDK resource provider framework - onEvent (Default/IdentityCenterOrganizationAdminAccount/Resource)",
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.12.1",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.2",
             "USER_ON_EVENT_FUNCTION_ARN": {
               "Fn::GetAtt": [
                 "IdentityCenterOrganizationAdminAccountIdentityCenterOrganizationAdminAccountProviderLambdaB22B900C",

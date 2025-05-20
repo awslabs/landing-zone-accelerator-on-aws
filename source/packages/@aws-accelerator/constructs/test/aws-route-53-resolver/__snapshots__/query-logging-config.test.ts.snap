@@ -16,7 +16,7 @@ exports[`QueryLoggingConfig Construct(QueryLoggingConfig):  Snapshot Test 1`] = 
         },
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.12.1",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.2",
           },
         },
         "Handler": "__entrypoint__.handler",
@@ -250,7 +250,7 @@ exports[`QueryLoggingConfig Construct(QueryLoggingConfig):  Snapshot Test 2`] = 
         },
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.12.1",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.2",
           },
         },
         "Handler": "__entrypoint__.handler",
@@ -344,7 +344,7 @@ exports[`QueryLoggingConfig Construct(QueryLoggingConfig):  Snapshot Test 2`] = 
         },
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.12.1",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.2",
           },
         },
         "Handler": "__entrypoint__.handler",
@@ -456,7 +456,7 @@ exports[`QueryLoggingConfig Construct(QueryLoggingConfig):  Snapshot Test 2`] = 
         },
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.12.1",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.2",
           },
         },
         "Handler": "__entrypoint__.handler",

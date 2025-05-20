@@ -176,7 +176,7 @@ exports[`FirewallConfigReplacements Construct(FirewallConfigReplacements):  Snap
         "Description": "Firewall configuration replacement custom resource",
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.12.1",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.2",
           },
         },
         "Handler": "index.handler",
@@ -255,7 +255,7 @@ exports[`FirewallConfigReplacements Construct(FirewallConfigReplacements):  Snap
         "Description": "AWS CDK resource provider framework - onEvent (Default/ConfigReplacements/Resource/Resource)",
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.12.1",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.2",
             "USER_ON_EVENT_FUNCTION_ARN": {
               "Fn::GetAtt": [
                 "ConfigReplacementsFunction3B8BED87",

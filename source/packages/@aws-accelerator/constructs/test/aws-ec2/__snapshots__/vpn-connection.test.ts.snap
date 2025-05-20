@@ -213,7 +213,7 @@ exports[`VpnConnection Construct(VpnConnection):  Snapshot Test 1`] = `
         "Description": "AWS CDK resource provider framework - onEvent (Default/AdvancedVpn/CustomResource/Resource)",
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.12.1",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.2",
             "USER_ON_EVENT_FUNCTION_ARN": {
               "Fn::Join": [
                 "",

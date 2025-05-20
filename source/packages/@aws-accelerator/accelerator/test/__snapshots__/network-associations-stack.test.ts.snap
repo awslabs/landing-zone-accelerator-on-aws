@@ -489,7 +489,7 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
         "Description": "Cross account EC2 route OnEvent handler",
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.12.1",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.2",
           },
         },
         "Handler": "index.handler",
@@ -630,7 +630,7 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
         "Description": "AWS CDK resource provider framework - onEvent (AWSAccelerator-NetworkAssociationsStack-555555555555-us-east-1/CrossAccountRouteFramework/CrossAccountRouteProvider)",
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.12.1",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.2",
             "USER_ON_EVENT_FUNCTION_ARN": {
               "Fn::GetAtt": [
                 "CrossAccountRouteFrameworkCrossAccountRouteFunctionAFDC4801",
@@ -1048,7 +1048,7 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
         },
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.12.1",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.2",
           },
         },
         "Handler": "__entrypoint__.handler",
@@ -1165,7 +1165,7 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
         },
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.12.1",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.2",
           },
         },
         "Handler": "__entrypoint__.handler",
@@ -1258,7 +1258,7 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
         },
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.12.1",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.2",
           },
         },
         "Handler": "__entrypoint__.handler",
@@ -1326,7 +1326,7 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
         },
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.12.1",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.2",
           },
         },
         "Handler": "__entrypoint__.handler",
@@ -1411,7 +1411,7 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
         },
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.12.1",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.2",
           },
         },
         "Handler": "__entrypoint__.handler",
@@ -1504,7 +1504,7 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
         },
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.12.1",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.2",
           },
         },
         "Handler": "__entrypoint__.handler",
@@ -1595,7 +1595,7 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
         },
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.12.1",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.2",
           },
         },
         "Handler": "__entrypoint__.handler",
@@ -1732,7 +1732,7 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
         },
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.12.1",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.2",
           },
         },
         "Handler": "__entrypoint__.handler",
@@ -1844,7 +1844,7 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
         "Description": "Custom resource provider to put cross-account ssm parameter value",
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.12.1",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.2",
           },
         },
         "Handler": "__entrypoint__.handler",
@@ -1954,7 +1954,7 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
         },
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.12.1",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.2",
           },
         },
         "Handler": "__entrypoint__.handler",
@@ -3528,7 +3528,7 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
       "Properties": {
         "Name": "/accelerator/AWSAccelerator-NetworkAssociationsStack-555555555555-us-east-1/version",
         "Type": "String",
-        "Value": "1.12.1",
+        "Value": "1.12.2",
       },
       "Type": "AWS::SSM::Parameter",
     },
@@ -4740,7 +4740,7 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
         },
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.12.1",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.2",
           },
         },
         "Handler": "index.handler",
@@ -4872,7 +4872,7 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
         "Description": "AWS CDK resource provider framework - onEvent (AWSAccelerator-NetworkAssociationsStack-555555555555-us-east-1/appA-nlb-tg-2-ipLookup/appA-nlb-tg-2-ipLookupProvider)",
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.12.1",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.2",
             "USER_ON_EVENT_FUNCTION_ARN": {
               "Fn::GetAtt": [
                 "appAnlbtg2ipLookupappAnlbtg2ipLookupProviderLambdaEF941FA2",
@@ -5223,7 +5223,7 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
         "Description": "Manage active directory log subscription handler",
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.12.1",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.2",
           },
         },
         "Handler": "index.handler",
@@ -5348,7 +5348,7 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
         "Description": "AWS CDK resource provider framework - onEvent (AWSAccelerator-NetworkAssociationsStack-444444444444-us-east-1/AcceleratorManagedActiveDirectoryActiveDirectory/AcceleratorManagedActiveDirectoryLogSubscription/ManageActiveDirectoryLogSubscriptionProvider)",
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.12.1",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.2",
             "USER_ON_EVENT_FUNCTION_ARN": {
               "Fn::GetAtt": [
                 "AcceleratorManagedActiveDirectoryActiveDirectoryAcceleratorManagedActiveDirectoryLogSubscriptionManageActiveDirectoryLogSubscriptionFunction7DAC44F8",
@@ -6532,7 +6532,7 @@ catch {
         "Description": "Update resolver group rule target ips",
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.12.1",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.2",
           },
         },
         "Handler": "index.handler",
@@ -6673,7 +6673,7 @@ catch {
         "Description": "AWS CDK resource provider framework - onEvent (AWSAccelerator-NetworkAssociationsStack-444444444444-us-east-1/AcceleratorManagedActiveDirectoryResolverRule/UpdateResolverRuleProvider)",
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.12.1",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.2",
             "USER_ON_EVENT_FUNCTION_ARN": {
               "Fn::GetAtt": [
                 "AcceleratorManagedActiveDirectoryResolverRuleUpdateResolverRuleFunction177103F8",
@@ -6896,7 +6896,7 @@ catch {
         "Description": "Share Manage active directory handler",
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.12.1",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.2",
           },
         },
         "Handler": "index.handler",
@@ -7088,7 +7088,7 @@ catch {
         "Description": "AWS CDK resource provider framework - onEvent (AWSAccelerator-NetworkAssociationsStack-444444444444-us-east-1/AcceleratorManagedActiveDirectoryShareDirectory/ShareManageActiveDirectoryProvider)",
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.12.1",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.2",
             "USER_ON_EVENT_FUNCTION_ARN": {
               "Fn::GetAtt": [
                 "AcceleratorManagedActiveDirectoryShareDirectoryShareManageActiveDirectoryFunctionF5252A97",
@@ -7262,7 +7262,7 @@ catch {
         "Description": "Lookup subnet id from account",
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.12.1",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.2",
           },
         },
         "Handler": "index.handler",
@@ -7383,7 +7383,7 @@ catch {
         "Description": "AWS CDK resource provider framework - onEvent (AWSAccelerator-NetworkAssociationsStack-444444444444-us-east-1/AcceleratorManagedActiveDirectorySharedServicesAppASubnetLookup/SubnetIdLookupProvider)",
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.12.1",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.2",
             "USER_ON_EVENT_FUNCTION_ARN": {
               "Fn::GetAtt": [
                 "AcceleratorManagedActiveDirectorySharedServicesAppASubnetLookupSubnetIdLookupFunctionF062DAE0",
@@ -7531,7 +7531,7 @@ catch {
         "Description": "Lookup subnet id from account",
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.12.1",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.2",
           },
         },
         "Handler": "index.handler",
@@ -7652,7 +7652,7 @@ catch {
         "Description": "AWS CDK resource provider framework - onEvent (AWSAccelerator-NetworkAssociationsStack-444444444444-us-east-1/AcceleratorManagedActiveDirectorySharedServicesAppBSubnetLookup/SubnetIdLookupProvider)",
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.12.1",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.2",
             "USER_ON_EVENT_FUNCTION_ARN": {
               "Fn::GetAtt": [
                 "AcceleratorManagedActiveDirectorySharedServicesAppBSubnetLookupSubnetIdLookupFunction8383C6C9",
@@ -7797,7 +7797,7 @@ catch {
         "Description": "Lookup vpc id from account",
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.12.1",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.2",
           },
         },
         "Handler": "index.handler",
@@ -7918,7 +7918,7 @@ catch {
         "Description": "AWS CDK resource provider framework - onEvent (AWSAccelerator-NetworkAssociationsStack-444444444444-us-east-1/AcceleratorManagedActiveDirectoryVpcLookup/VpcIdLookupProvider)",
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.12.1",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.2",
             "USER_ON_EVENT_FUNCTION_ARN": {
               "Fn::GetAtt": [
                 "AcceleratorManagedActiveDirectoryVpcLookupVpcIdLookupFunction53EFBF78",
@@ -8046,7 +8046,7 @@ catch {
         "Description": "Cross account EC2 route OnEvent handler",
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.12.1",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.2",
           },
         },
         "Handler": "index.handler",
@@ -8187,7 +8187,7 @@ catch {
         "Description": "AWS CDK resource provider framework - onEvent (AWSAccelerator-NetworkAssociationsStack-444444444444-us-east-1/CrossAccountRouteFramework/CrossAccountRouteProvider)",
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.12.1",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.2",
             "USER_ON_EVENT_FUNCTION_ARN": {
               "Fn::GetAtt": [
                 "CrossAccountRouteFrameworkCrossAccountRouteFunctionAFDC4801",
@@ -8809,7 +8809,7 @@ catch {
         },
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.12.1",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.2",
           },
         },
         "Handler": "__entrypoint__.handler",
@@ -8902,7 +8902,7 @@ catch {
         },
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.12.1",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.2",
           },
         },
         "Handler": "__entrypoint__.handler",
@@ -8970,7 +8970,7 @@ catch {
         },
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.12.1",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.2",
           },
         },
         "Handler": "__entrypoint__.handler",
@@ -9055,7 +9055,7 @@ catch {
         },
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.12.1",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.2",
           },
         },
         "Handler": "__entrypoint__.handler",
@@ -9192,7 +9192,7 @@ catch {
         },
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.12.1",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.2",
           },
         },
         "Handler": "__entrypoint__.handler",
@@ -9304,7 +9304,7 @@ catch {
         "Description": "Custom resource provider to put cross-account ssm parameter value",
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.12.1",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.2",
           },
         },
         "Handler": "__entrypoint__.handler",
@@ -9414,7 +9414,7 @@ catch {
         },
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.12.1",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.2",
           },
         },
         "Handler": "__entrypoint__.handler",
@@ -10273,7 +10273,7 @@ catch {
       "Properties": {
         "Name": "/accelerator/AWSAccelerator-NetworkAssociationsStack-444444444444-us-east-1/version",
         "Type": "String",
-        "Value": "1.12.1",
+        "Value": "1.12.2",
       },
       "Type": "AWS::SSM::Parameter",
     },
@@ -13214,7 +13214,7 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
         "Description": "Cross account EC2 route OnEvent handler",
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.12.1",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.2",
           },
         },
         "Handler": "index.handler",
@@ -13355,7 +13355,7 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
         "Description": "AWS CDK resource provider framework - onEvent (AWSAccelerator-NetworkAssociationsStack-555555555555-us-west-2/CrossAccountRouteFramework/CrossAccountRouteProvider)",
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.12.1",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.2",
             "USER_ON_EVENT_FUNCTION_ARN": {
               "Fn::GetAtt": [
                 "CrossAccountRouteFrameworkCrossAccountRouteFunctionAFDC4801",
@@ -13512,7 +13512,7 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
         },
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.12.1",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.2",
           },
         },
         "Handler": "__entrypoint__.handler",
@@ -13624,7 +13624,7 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
         "Description": "Custom resource provider to put cross-account ssm parameter value",
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.12.1",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.2",
           },
         },
         "Handler": "__entrypoint__.handler",
@@ -13798,7 +13798,7 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
       "Properties": {
         "Name": "/accelerator/AWSAccelerator-NetworkAssociationsStack-555555555555-us-west-2/version",
         "Type": "String",
-        "Value": "1.12.1",
+        "Value": "1.12.2",
       },
       "Type": "AWS::SSM::Parameter",
     },
@@ -13998,7 +13998,7 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
         "Description": "Cross account EC2 route OnEvent handler",
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.12.1",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.2",
           },
         },
         "Handler": "index.handler",
@@ -14139,7 +14139,7 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
         "Description": "AWS CDK resource provider framework - onEvent (AWSAccelerator-NetworkAssociationsStack-444444444444-us-west-2/CrossAccountRouteFramework/CrossAccountRouteProvider)",
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.12.1",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.2",
             "USER_ON_EVENT_FUNCTION_ARN": {
               "Fn::GetAtt": [
                 "CrossAccountRouteFrameworkCrossAccountRouteFunctionAFDC4801",
@@ -14327,7 +14327,7 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
         },
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.12.1",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.2",
           },
         },
         "Handler": "__entrypoint__.handler",
@@ -14439,7 +14439,7 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
         "Description": "Custom resource provider to put cross-account ssm parameter value",
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.12.1",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.2",
           },
         },
         "Handler": "__entrypoint__.handler",
@@ -14542,7 +14542,7 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
       "Properties": {
         "Name": "/accelerator/AWSAccelerator-NetworkAssociationsStack-444444444444-us-west-2/version",
         "Type": "String",
-        "Value": "1.12.1",
+        "Value": "1.12.2",
       },
       "Type": "AWS::SSM::Parameter",
     },
@@ -15209,7 +15209,7 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
         "Description": "Cross account EC2 route OnEvent handler",
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.12.1",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.2",
           },
         },
         "Handler": "index.handler",
@@ -15353,7 +15353,7 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
         "Description": "AWS CDK resource provider framework - onEvent (AWSAccelerator-NetworkAssociationsStack-222222222222-us-east-1/CrossAccountRouteFramework/CrossAccountRouteProvider)",
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.12.1",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.2",
             "USER_ON_EVENT_FUNCTION_ARN": {
               "Fn::GetAtt": [
                 "CrossAccountRouteFrameworkCrossAccountRouteFunctionAFDC4801",
@@ -15541,7 +15541,7 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
         },
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.12.1",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.2",
           },
         },
         "Handler": "__entrypoint__.handler",
@@ -15609,7 +15609,7 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
         },
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.12.1",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.2",
           },
         },
         "Handler": "__entrypoint__.handler",
@@ -15697,7 +15697,7 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
         },
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.12.1",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.2",
           },
         },
         "Handler": "__entrypoint__.handler",
@@ -15837,7 +15837,7 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
         },
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.12.1",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.2",
           },
         },
         "Handler": "__entrypoint__.handler",
@@ -15952,7 +15952,7 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
         "Description": "Custom resource provider to put cross-account ssm parameter value",
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.12.1",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.2",
           },
         },
         "Handler": "__entrypoint__.handler",
@@ -16202,7 +16202,7 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
       "Properties": {
         "Name": "/accelerator/AWSAccelerator-NetworkAssociationsStack-222222222222-us-east-1/version",
         "Type": "String",
-        "Value": "1.12.1",
+        "Value": "1.12.2",
       },
       "Type": "AWS::SSM::Parameter",
     },
@@ -16538,7 +16538,7 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
         "Description": "Cross account EC2 route OnEvent handler",
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.12.1",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.2",
           },
         },
         "Handler": "index.handler",
@@ -16679,7 +16679,7 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
         "Description": "AWS CDK resource provider framework - onEvent (AWSAccelerator-NetworkAssociationsStack-222222222222-us-west-2/CrossAccountRouteFramework/CrossAccountRouteProvider)",
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.12.1",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.2",
             "USER_ON_EVENT_FUNCTION_ARN": {
               "Fn::GetAtt": [
                 "CrossAccountRouteFrameworkCrossAccountRouteFunctionAFDC4801",
@@ -16867,7 +16867,7 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
         },
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.12.1",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.2",
           },
         },
         "Handler": "__entrypoint__.handler",
@@ -16979,7 +16979,7 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
         "Description": "Custom resource provider to put cross-account ssm parameter value",
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.12.1",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.2",
           },
         },
         "Handler": "__entrypoint__.handler",
@@ -17082,7 +17082,7 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
       "Properties": {
         "Name": "/accelerator/AWSAccelerator-NetworkAssociationsStack-222222222222-us-west-2/version",
         "Type": "String",
-        "Value": "1.12.1",
+        "Value": "1.12.2",
       },
       "Type": "AWS::SSM::Parameter",
     },
@@ -17424,7 +17424,7 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
         "Description": "Cross account EC2 route OnEvent handler",
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.12.1",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.2",
           },
         },
         "Handler": "index.handler",
@@ -17568,7 +17568,7 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
         "Description": "AWS CDK resource provider framework - onEvent (AWSAccelerator-NetworkAssociationsStack-333333333333-us-east-1/CrossAccountRouteFramework/CrossAccountRouteProvider)",
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.12.1",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.2",
             "USER_ON_EVENT_FUNCTION_ARN": {
               "Fn::GetAtt": [
                 "CrossAccountRouteFrameworkCrossAccountRouteFunctionAFDC4801",
@@ -17756,7 +17756,7 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
         },
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.12.1",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.2",
           },
         },
         "Handler": "__entrypoint__.handler",
@@ -17824,7 +17824,7 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
         },
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.12.1",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.2",
           },
         },
         "Handler": "__entrypoint__.handler",
@@ -17912,7 +17912,7 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
         },
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.12.1",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.2",
           },
         },
         "Handler": "__entrypoint__.handler",
@@ -18052,7 +18052,7 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
         },
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.12.1",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.2",
           },
         },
         "Handler": "__entrypoint__.handler",
@@ -18167,7 +18167,7 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
         "Description": "Custom resource provider to put cross-account ssm parameter value",
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.12.1",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.2",
           },
         },
         "Handler": "__entrypoint__.handler",
@@ -18417,7 +18417,7 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
       "Properties": {
         "Name": "/accelerator/AWSAccelerator-NetworkAssociationsStack-333333333333-us-east-1/version",
         "Type": "String",
-        "Value": "1.12.1",
+        "Value": "1.12.2",
       },
       "Type": "AWS::SSM::Parameter",
     },
@@ -18753,7 +18753,7 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
         "Description": "Cross account EC2 route OnEvent handler",
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.12.1",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.2",
           },
         },
         "Handler": "index.handler",
@@ -18894,7 +18894,7 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
         "Description": "AWS CDK resource provider framework - onEvent (AWSAccelerator-NetworkAssociationsStack-333333333333-us-west-2/CrossAccountRouteFramework/CrossAccountRouteProvider)",
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.12.1",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.2",
             "USER_ON_EVENT_FUNCTION_ARN": {
               "Fn::GetAtt": [
                 "CrossAccountRouteFrameworkCrossAccountRouteFunctionAFDC4801",
@@ -19082,7 +19082,7 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
         },
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.12.1",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.2",
           },
         },
         "Handler": "__entrypoint__.handler",
@@ -19194,7 +19194,7 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
         "Description": "Custom resource provider to put cross-account ssm parameter value",
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.12.1",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.2",
           },
         },
         "Handler": "__entrypoint__.handler",
@@ -19297,7 +19297,7 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
       "Properties": {
         "Name": "/accelerator/AWSAccelerator-NetworkAssociationsStack-333333333333-us-west-2/version",
         "Type": "String",
-        "Value": "1.12.1",
+        "Value": "1.12.2",
       },
       "Type": "AWS::SSM::Parameter",
     },
@@ -19845,7 +19845,7 @@ exports[`NoVpcFlowLogStack Construct(NetworkAssociationsStack):  Snapshot Test 1
         "Description": "Cross account EC2 route OnEvent handler",
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.12.1",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.2",
           },
         },
         "Handler": "index.handler",
@@ -19989,7 +19989,7 @@ exports[`NoVpcFlowLogStack Construct(NetworkAssociationsStack):  Snapshot Test 1
         "Description": "AWS CDK resource provider framework - onEvent (AWSAccelerator-NetworkAssociationsStack-555555555555-us-east-1/CrossAccountRouteFramework/CrossAccountRouteProvider)",
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.12.1",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.2",
             "USER_ON_EVENT_FUNCTION_ARN": {
               "Fn::GetAtt": [
                 "CrossAccountRouteFrameworkCrossAccountRouteFunctionAFDC4801",
@@ -20249,7 +20249,7 @@ exports[`NoVpcFlowLogStack Construct(NetworkAssociationsStack):  Snapshot Test 1
         },
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.12.1",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.2",
           },
         },
         "Handler": "__entrypoint__.handler",
@@ -20369,7 +20369,7 @@ exports[`NoVpcFlowLogStack Construct(NetworkAssociationsStack):  Snapshot Test 1
         },
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.12.1",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.2",
           },
         },
         "Handler": "__entrypoint__.handler",
@@ -20465,7 +20465,7 @@ exports[`NoVpcFlowLogStack Construct(NetworkAssociationsStack):  Snapshot Test 1
         },
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.12.1",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.2",
           },
         },
         "Handler": "__entrypoint__.handler",
@@ -20559,7 +20559,7 @@ exports[`NoVpcFlowLogStack Construct(NetworkAssociationsStack):  Snapshot Test 1
         },
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.12.1",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.2",
           },
         },
         "Handler": "__entrypoint__.handler",
@@ -20674,7 +20674,7 @@ exports[`NoVpcFlowLogStack Construct(NetworkAssociationsStack):  Snapshot Test 1
         "Description": "Custom resource provider to put cross-account ssm parameter value",
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.12.1",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.2",
           },
         },
         "Handler": "__entrypoint__.handler",
@@ -20787,7 +20787,7 @@ exports[`NoVpcFlowLogStack Construct(NetworkAssociationsStack):  Snapshot Test 1
         },
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.12.1",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.2",
           },
         },
         "Handler": "__entrypoint__.handler",
@@ -21373,7 +21373,7 @@ exports[`NoVpcFlowLogStack Construct(NetworkAssociationsStack):  Snapshot Test 1
       "Properties": {
         "Name": "/accelerator/AWSAccelerator-NetworkAssociationsStack-555555555555-us-east-1/version",
         "Type": "String",
-        "Value": "1.12.1",
+        "Value": "1.12.2",
       },
       "Type": "AWS::SSM::Parameter",
     },

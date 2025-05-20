@@ -141,7 +141,7 @@ exports[`FMSOrganizationAdminAccount Construct(FMSOrganizationAdminAccount):  Sn
         },
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.12.1",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.2",
           },
         },
         "Handler": "index.handler",
@@ -300,7 +300,7 @@ exports[`FMSOrganizationAdminAccount Construct(FMSOrganizationAdminAccount):  Sn
         "Description": "AWS CDK resource provider framework - onEvent (Default/FMSOrganizationAdminAccount/Resource)",
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.12.1",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.2",
             "USER_ON_EVENT_FUNCTION_ARN": {
               "Fn::GetAtt": [
                 "FMSOrganizationAdminAccountFMSOrganizationAdminAccountProviderLambda2D69B84E",

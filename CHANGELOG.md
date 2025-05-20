@@ -5,6 +5,29 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.12.2] - 2025-05-20
+
+### Added
+
+- feat(region): add support for mx-central-1 region 
+- feat(securityhub): added PCI DSS v4.0.1 and AWS Resource Tagging Standard v1.0.0 standards
+
+### Fixed
+
+- fix(accelerator-metadata): fix accelerator metadata installerStackName
+- fix(asea): fix tgw associations
+- fix(asea): add tgw peering attatchment handlers
+- fix(asea): rql association lookup failure for asea upgraded environments
+- fix(asea): updates to the handling of duplicate vpc names
+- fix(aspects): update CDK aspect to use lza default node version for custom resource Lambda functions by default [#761](https://github.com/awslabs/landing-zone-accelerator-on-aws/issues/761)
+- fix(network): networkVpcStack fails on Custom::DeleteDefaultVpc resource after SDK v3 update in v1.12.0
+- fix(pipeline): correct usage for qualifier in diffBucket url for external deployment
+- fix(tagging): fix tagging for custom resource providers
+
+### Changed
+
+- chore(installer): updated qualifier parameter description
+
 ## [1.12.1] - 2025-04-08
 
 ### Fixed

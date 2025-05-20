@@ -12,10 +12,6 @@ describe('AcceleratorAspects', () => {
     stack = new cdk.Stack(app, 'TestStack');
   });
 
-  afterEach(() => {
-    delete process.env['ACCELERATOR_NODE_VERSION'];
-  });
-
   describe('LambdaRuntimeAspect', () => {
     test('should upgrade nodejs14.x to nodejs20.x', () => {
       // GIVEN
@@ -110,6 +106,7 @@ describe('AcceleratorAspects', () => {
       template.hasResourceProperties('AWS::Lambda::Function', {
         Runtime: 'nodejs18.x',
       });
+      delete process.env['ACCELERATOR_NODE_VERSION'];
     });
 
     test('should handle multiple Lambda functions in the same stack', () => {
