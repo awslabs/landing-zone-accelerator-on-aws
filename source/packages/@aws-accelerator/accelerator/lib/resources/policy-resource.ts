@@ -20,7 +20,11 @@ import {
   PolicyTypeEnum,
   RevertScpChanges,
 } from '@aws-accelerator/constructs';
-import { ResourceControlPolicyConfig, ServiceControlPolicyConfig } from '@aws-accelerator/config';
+import {
+  DeclarativePolicyConfig,
+  ResourceControlPolicyConfig,
+  ServiceControlPolicyConfig,
+} from '@aws-accelerator/config';
 import winston from 'winston';
 import { createLogger } from '@aws-accelerator/utils/lib/logger';
 import path from 'path';
@@ -82,10 +86,11 @@ export enum deploymentPolicyType {
 interface PolicyResult {
   scpItems: policyItem[];
   rcpItems: policyItem[];
+  dce2Items: policyItem[];
 }
 
 interface PolicyConfig {
-  policies: Array<ServiceControlPolicyConfig | ResourceControlPolicyConfig>;
+  policies: Array<ServiceControlPolicyConfig | ResourceControlPolicyConfig | DeclarativePolicyConfig>;
   type: PolicyType | PolicyTypeEnum;
   items: policyItem[];
 }
@@ -114,9 +119,14 @@ export class PolicyResource {
     this.loadPolicyReplacements(props);
   }
 
-  public createAndAttachPolicies(props: AcceleratorStackProps): { scpItems: policyItem[]; rcpItems: policyItem[] } {
+  public createAndAttachPolicies(props: AcceleratorStackProps): {
+    scpItems: policyItem[];
+    rcpItems: policyItem[];
+    dce2Items: policyItem[];
+  } {
     const rcpItems: policyItem[] = [];
     const scpItems: policyItem[] = [];
+    const dce2Items: policyItem[] = [];
 
     if (!props.organizationConfig || !props.organizationConfig.enable) {
       this.logger.info('Organization configuration is not enabled. Skipping policy creation.');
@@ -154,18 +164,23 @@ export class PolicyResource {
         }
       }
     }
-    return { scpItems, rcpItems };
+    return { scpItems, rcpItems, dce2Items };
   }
 
   /**
    * Create policy based on type
    */
-  private createPolicy(type: PolicyTypeEnum, policy: ServiceControlPolicyConfig | ResourceControlPolicyConfig): Policy {
+  private createPolicy(
+    type: PolicyTypeEnum,
+    policy: ServiceControlPolicyConfig | ResourceControlPolicyConfig | DeclarativePolicyConfig,
+  ): Policy {
     switch (type) {
       case PolicyTypeEnum.SERVICE_CONTROL_POLICY:
         return this.createScp(this.props, policy as ServiceControlPolicyConfig);
       case PolicyTypeEnum.RESOURCE_CONTROL_POLICY:
         return this.createRcp(this.props, policy as ResourceControlPolicyConfig);
+      case PolicyTypeEnum.DECLARATIVE_POLICY_EC2:
+        return this.createDeclarativePolicy(this.props, policy as DeclarativePolicyConfig);
       default:
         throw new Error(`Unsupported policy type: ${type}`);
     }
@@ -212,6 +227,19 @@ export class PolicyResource {
     return rcp;
   }
 
+  private createDeclarativePolicy(props: AcceleratorStackProps, declarativePolicy: DeclarativePolicyConfig): Policy {
+    return new Policy(this.stack, declarativePolicy.name, {
+      description: declarativePolicy.description,
+      name: declarativePolicy.name,
+      partition: props.partition,
+      path: this.generatedFilePathList.find(policy => policy.name === declarativePolicy.name)!.tempPath,
+      type: PolicyType.DECLARATIVE_POLICY_EC2,
+      acceleratorPrefix: props.prefixes.accelerator,
+      kmsKey: this.cloudwatchKey,
+      logRetentionInDays: props.globalConfig.cloudwatchLogRetentionInDays,
+    });
+  }
+
   /**
    * Function to load replacements within the provided RCP policy documents
    * @param props {@link AccountsStackProps}
@@ -219,7 +247,9 @@ export class PolicyResource {
    */
   public loadPolicyReplacements(props: AcceleratorStackProps): void {
     const policyConfigs: Array<{
-      policies: Array<ServiceControlPolicyConfig | ResourceControlPolicyConfig | undefined> | undefined;
+      policies:
+        | Array<ServiceControlPolicyConfig | ResourceControlPolicyConfig | DeclarativePolicyConfig | undefined>
+        | undefined;
       filePathList: generatedFilePath[];
       type: string;
     }> = [
@@ -232,6 +262,11 @@ export class PolicyResource {
         policies: props.organizationConfig.resourceControlPolicies ?? [],
         filePathList: this.generatedFilePathList,
         type: 'RCP',
+      },
+      {
+        policies: props.organizationConfig.declarativePolicies ?? [],
+        filePathList: this.generatedFilePathList,
+        type: 'DCE2',
       },
     ];
 
@@ -290,7 +325,7 @@ export class PolicyResource {
     }
     if (accounts && accounts.length > 0) {
       for (const account of accounts) {
-        this.logger.info(`Attaching resource control policy (${policyName}) to account (${account})`);
+        this.logger.info(`Attaching (${policyType}) policy (${policyName}) to account (${account})`);
         const accountPolicyAttachment = new PolicyAttachment(
           this.stack,
           pascalCase(`Attach_${policy.name}_${account}`),
@@ -305,6 +340,7 @@ export class PolicyResource {
             logRetentionInDays: this.props.globalConfig.cloudwatchLogRetentionInDays,
           },
         );
+        accountPolicyAttachment.node.addDependency(enablePolicyType);
         accountPolicyAttachment.node.addDependency(policy);
       }
     }
@@ -472,6 +508,11 @@ export class PolicyResource {
         type: PolicyType.RESOURCE_CONTROL_POLICY,
         items: [],
       },
+      {
+        policies: props.organizationConfig.declarativePolicies ?? [],
+        type: PolicyType.DECLARATIVE_POLICY_EC2,
+        items: [],
+      },
     ].filter(config => config.policies.length > 0);
   }
 
@@ -480,17 +521,19 @@ export class PolicyResource {
    * @param props {@link AccountsStackProps}
    */
   private getEmptyPolicyResult(): PolicyResult {
-    return { scpItems: [], rcpItems: [] };
+    return { scpItems: [], rcpItems: [], dce2Items: [] };
   }
 
   private enablePolicyType(policyType: PolicyTypeEnum): EnablePolicyType {
     if (!this.policyTypeMap.has(policyType)) {
+      this.logger.info(`Enabling policy type ${policyType}`);
       const enablePolicyType = new EnablePolicyType(this.stack, `enable${policyType}`, {
         policyType: policyType,
         kmsKey: this.cloudwatchKey,
         logRetentionInDays: this.props.globalConfig.cloudwatchLogRetentionInDays,
       });
       this.policyTypeMap.set(policyType, enablePolicyType);
+
       return enablePolicyType;
     }
     return this.policyTypeMap.get(policyType)!;
