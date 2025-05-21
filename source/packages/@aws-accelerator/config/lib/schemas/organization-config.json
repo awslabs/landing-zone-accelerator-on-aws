@@ -60,6 +60,35 @@
       ],
       "type": "object"
     },
+    "IDeclarativePolicyConfig": {
+      "additionalProperties": false,
+      "description": "Declarative policy configuration",
+      "properties": {
+        "deploymentTargets": {
+          "$ref": "#/definitions/IDeploymentTargets",
+          "description": "Declarative policy deployment targets"
+        },
+        "description": {
+          "$ref": "#/definitions/NonEmptyString",
+          "description": "A description to assign to the policy."
+        },
+        "name": {
+          "$ref": "#/definitions/NonEmptyString",
+          "description": "The friendly name to assign to the policy. The regex pattern that is used to validate this parameter is a string of any of the characters in the ASCII character range."
+        },
+        "policy": {
+          "$ref": "#/definitions/NonEmptyString",
+          "description": "Declarative policy definition json file. This file must be present in config repository"
+        }
+      },
+      "required": [
+        "name",
+        "description",
+        "policy",
+        "deploymentTargets"
+      ],
+      "type": "object"
+    },
     "IDeploymentTargets": {
       "additionalProperties": false,
       "properties": {
@@ -105,6 +134,13 @@
           "description": "A list of Chatbot Policy configurations",
           "items": {
             "$ref": "#/definitions/IChatbotPolicyConfig"
+          },
+          "type": "array"
+        },
+        "declarativePolicies": {
+          "description": "A Record of Declarative Policy configurations",
+          "items": {
+            "$ref": "#/definitions/IDeclarativePolicyConfig"
           },
           "type": "array"
         },
@@ -227,7 +263,7 @@
       "properties": {
         "deploymentTargets": {
           "$ref": "#/definitions/IDeploymentTargets",
-          "description": "Resource control policy strategy. https://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_policies_rcps_evaluation.html"
+          "description": "Resource control policy deployment targets"
         },
         "description": {
           "$ref": "#/definitions/NonEmptyString",
@@ -242,7 +278,7 @@
           "description": "Resource control policy definition json file. This file must be present in config repository"
         },
         "strategy": {
-          "description": "Resource control policy deployment targets",
+          "description": "Resource control policy strategy. https://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_policies_rcps_evaluation.html",
           "enum": [
             "deny-list",
             "allow-list"
