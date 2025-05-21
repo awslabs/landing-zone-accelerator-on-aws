@@ -110,6 +110,271 @@
                     "flowLogDestinationType": "cloud-watch-logs"
                 }
             }
+        },
+        "TestRouteTable": {
+            "Type": "AWS::EC2::RouteTable",
+            "Properties": {
+                "VpcId": { "Ref": "TestVPC" }
+            },
+            "Metadata": {
+                "lzaLookup": {
+                    "vpcName": "test-vpc",
+                    "routeTableName": "test-route-table"
+                }
+            }
+        },
+        "TestLocalGatewayRouteTableVpcAssociation": {
+            "Type": "AWS::EC2::LocalGatewayRouteTableVPCAssociation",
+            "Properties": {
+                "VpcId": { "Ref": "TestVPC" },
+                "LocalGatewayRouteTableId": "fake-lg-rt-id"
+            },
+            "Metadata": {
+                "lzaLookup": {
+                    "routeTableName": "test-route-table",
+                    "vpcName": "test-vpc",
+                    "vpcAccount": "test-account"
+                }
+            }
+        },
+        "TestGatewayRouteTableAssociation": {
+            "Type": "AWS::EC2::GatewayRouteTableAssociation",
+            "Properties": {
+                "RouteTableId": { "Ref": "TestRouteTable" },
+                "GatewayId": { "Ref": "TestIgw" }
+            },
+            "Metadata": {
+                "lzaLookup": {
+                    "vpcName": "test-vpc",
+                    "routeTableName": "test-route-table",
+                    "associationType": "internet-gateway"
+                }
+            }
+        },
+        "TestRoute": {
+            "Type": "AWS::EC2::Route",
+            "Properties": {
+                "RouteTableId": { "Ref": "TestRouteTable" },
+                "DestinationCidrBlock": "0.0.0.0/0",
+                "GatewayId": { "Ref": "TestIgw" }
+            },
+            "Metadata": {
+                "lzaLookup": {
+                    "vpcName": "test-vpc",
+                    "routeTableName": "test-route-table",
+                    "routeTableEntryName": "test-route",
+                    "type": "gateway"
+                }
+            }
+        },
+        "TestPrefixListRoute": {
+            "Type": "Custom::PrefixListRoute",
+            "Properties": {
+                "ServiceToken": "fake-service-token",
+                "RouteTableId": { "Ref": "TestRouteTable" }
+            },
+            "Metadata": {
+                "lzaLookup": {
+                    "vpcName": "test-vpc",
+                    "routeTableName": "test-route-table",
+                    "routeTableEntryName": "test-prefix-route",
+                    "type": "prefix-list"
+                }
+            }
+        },
+        "TestSubnet": {
+            "Type": "AWS::EC2::Subnet",
+            "Properties": {
+                "VpcId": { "Ref": "TestVPC" },
+                "CidrBlock": "10.0.0.0/24"
+            },
+            "Metadata": {
+                "lzaLookup": {
+                    "vpcName": "test-vpc",
+                    "subnetName": "test-subnet"
+                }
+            }
+        },
+        "TestIpamSubnet": {
+            "Type": "Custom::IpamSubnet",
+            "Properties": {
+                "ServiceToken": "fake-service-token",
+                "VpcId": { "Ref": "TestVPC" }
+            },
+            "Metadata": {
+                "lzaLookup": {
+                    "vpcName": "test-vpc",
+                    "subnetName": "test-ipam-subnet"
+                }
+            }
+        },
+        "TestRouteTableAssociation": {
+            "Type": "AWS::EC2::SubnetRouteTableAssociation",
+            "Properties": {
+                "SubnetId": { "Ref": "TestSubnet" },
+                "RouteTableId": { "Ref": "TestRouteTable" }
+            },
+            "Metadata": {
+                "lzaLookup": {
+                    "subnetName": "test-subnet",
+                    "routeTableName": "test-route-table"
+                }
+            }
+        },
+        "TestNatGateway": {
+            "Type": "AWS::EC2::NatGateway",
+            "Properties": {
+                "SubnetId": { "Ref": "TestSubnet" }
+            },
+            "Metadata": {
+                "lzaLookup": {
+                    "vpcName": "test-vpc",
+                    "natGatewayName": "test-nat-gateway"
+                }
+            }
+        },
+        "TestTransitGatewayAttachment": {
+            "Type": "AWS::EC2::TransitGatewayVpcAttachment",
+            "Properties": {
+                "VpcId": { "Ref": "TestVPC" },
+                "TransitGatewayId": "fake-tgw-id"
+            },
+            "Metadata": {
+                "lzaLookup": {
+                    "vpcName": "test-vpc",
+                    "transitGatewayName": "test-tgw",
+                    "transitGatewayAttachmentName": "test-tgw-attachment"
+                }
+            }
+        },
+        "TestTgwAttachmentRole": {
+            "Type": "AWS::IAM::Role",
+            "Properties": {},
+            "Metadata": {
+                "lzaLookup": {
+                    "roleName": "test-tgw-role"
+                }
+            }
+        },
+        "TestSubnetShare": {
+            "Type": "AWS::RAM::ResourceShare",
+            "Properties": {},
+            "Metadata": {
+                "lzaLookup": {
+                    "subnetName": "test-subnet"
+                }
+            }
+        },
+        "TestSecurityGroup": {
+            "Type": "AWS::EC2::SecurityGroup",
+            "Properties": {
+                "VpcId": { "Ref": "TestVPC" }
+            },
+            "Metadata": {
+                "lzaLookup": {
+                    "vpcName": "test-vpc",
+                    "securityGroupName": "test-sg"
+                }
+            }
+        },
+        "TestSecurityGroupIngress": {
+            "Type": "AWS::EC2::SecurityGroupIngress",
+            "Properties": {
+                "GroupId": { "Ref": "TestSecurityGroup" }
+            },
+            "Metadata": {
+                "lzaLookup": {
+                    "securityGroupName": "test-sg",
+                    "ruleIndex": 0
+                }
+            }
+        },
+        "TestSecurityGroupEgress": {
+            "Type": "AWS::EC2::SecurityGroupEgress",
+            "Properties": {
+                "GroupId": { "Ref": "TestSecurityGroup" }
+            },
+            "Metadata": {
+                "lzaLookup": {
+                    "securityGroupName": "test-sg",
+                    "ruleIndex": 0
+                }
+            }
+        },
+        "TestNetworkAcl": {
+            "Type": "AWS::EC2::NetworkAcl",
+            "Properties": {
+                "VpcId": { "Ref": "TestVPC" }
+            },
+            "Metadata": {
+                "lzaLookup": {
+                    "vpcName": "test-vpc",
+                    "naclName": "test-nacl"
+                }
+            }
+        },
+        "TestNetworkAclEntry": {
+            "Type": "AWS::EC2::NetworkAclEntry",
+            "Properties": {
+                "NetworkAclId": { "Ref": "TestNetworkAcl" }
+            },
+            "Metadata": {
+                "lzaLookup": {
+                    "vpcName": "test-vpc",
+                    "naclName": "test-nacl",
+                    "ruleNumber": 100
+                }
+            }
+        },
+        "TestSubnetNetworkAclAssociation": {
+            "Type": "AWS::EC2::SubnetNetworkAclAssociation",
+            "Properties": {
+                "SubnetId": { "Ref": "TestSubnet" },
+                "NetworkAclId": { "Ref": "TestNetworkAcl" }
+            },
+            "Metadata": {
+                "lzaLookup": {
+                    "vpcName": "test-vpc",
+                    "naclName": "test-nacl",
+                    "subnetName": "test-subnet"
+                }
+            }
+        },
+        "TestGwlb": {
+            "Type": "AWS::ElasticLoadBalancingV2::LoadBalancer",
+            "Properties": {
+                "Type": "gateway"
+            },
+            "Metadata": {
+                "lzaLookup": {
+                    "vpcName": "test-vpc",
+                    "gwlbName": "test-gwlb"
+                }
+            }
+        },
+        "TestAlb": {
+            "Type": "AWS::ElasticLoadBalancingV2::LoadBalancer",
+            "Properties": {
+                "Type": "application"
+            },
+            "Metadata": {
+                "lzaLookup": {
+                    "vpcName": "test-vpc",
+                    "albName": "test-alb"
+                }
+            }
+        },
+        "TestNlb": {
+            "Type": "AWS::ElasticLoadBalancingV2::LoadBalancer",
+            "Properties": {
+                "Type": "network"
+            },
+            "Metadata": {
+                "lzaLookup": {
+                    "vpcName": "test-vpc",
+                    "nlbName": "test-nlb"
+                }
+            }
         }
     }
 }

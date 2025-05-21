@@ -148,6 +148,167 @@ describe('LZAResourceLookup tests', () => {
         lookupValues: { vpcName: 'new-vpc', dhcpOptionsName: 'test-dhcp-option' },
       }),
     ).toBeFalsy();
+    expect(
+      lzaLookup.resourceExists({
+        resourceType: LZAResourceLookupType.LOCAL_GATEWAY_ROUTE_TABLE_VPC_ASSOCIATION,
+        lookupValues: { routeTableName: 'test-route-table', vpcName: 'test-vpc', vpcAccount: 'test-account' },
+      }),
+    ).toBeTruthy();
+
+    expect(
+      lzaLookup.resourceExists({
+        resourceType: LZAResourceLookupType.ROUTE_TABLE,
+        lookupValues: { vpcName: 'test-vpc', routeTableName: 'test-route-table' },
+      }),
+    ).toBeTruthy();
+
+    expect(
+      lzaLookup.resourceExists({
+        resourceType: LZAResourceLookupType.GATEWAY_ROUTE_TABLE_ASSOCIATION,
+        lookupValues: { vpcName: 'test-vpc', routeTableName: 'test-route-table', associationType: 'internet-gateway' },
+      }),
+    ).toBeTruthy();
+    expect(
+      lzaLookup.resourceExists({
+        resourceType: LZAResourceLookupType.ROUTE,
+        lookupValues: {
+          vpcName: 'test-vpc',
+          routeTableName: 'test-route-table',
+          routeTableEntryName: 'test-route',
+          type: 'gateway',
+        },
+      }),
+    ).toBeTruthy();
+    expect(
+      lzaLookup.resourceExists({
+        resourceType: LZAResourceLookupType.PREFIX_LIST_ROUTE,
+        lookupValues: {
+          vpcName: 'test-vpc',
+          routeTableName: 'test-route-table',
+          routeTableEntryName: 'test-prefix-route',
+          type: 'prefix-list',
+        },
+      }),
+    ).toBeTruthy();
+    expect(
+      lzaLookup.resourceExists({
+        resourceType: LZAResourceLookupType.SUBNET,
+        lookupValues: { vpcName: 'test-vpc', subnetName: 'test-subnet' },
+      }),
+    ).toBeTruthy();
+    expect(
+      lzaLookup.resourceExists({
+        resourceType: LZAResourceLookupType.IPAM_SUBNET,
+        lookupValues: { vpcName: 'test-vpc', subnetName: 'test-ipam-subnet' },
+      }),
+    ).toBeTruthy();
+    expect(
+      lzaLookup.resourceExists({
+        resourceType: LZAResourceLookupType.ROUTE_TABLE_ASSOCIATION,
+        lookupValues: { subnetName: 'test-subnet', routeTableName: 'test-route-table' },
+      }),
+    ).toBeTruthy();
+    expect(
+      lzaLookup.resourceExists({
+        resourceType: LZAResourceLookupType.NAT_GATEWAY,
+        lookupValues: { vpcName: 'test-vpc', natGatewayName: 'test-nat-gateway' },
+      }),
+    ).toBeTruthy();
+    expect(
+      lzaLookup.resourceExists({
+        resourceType: LZAResourceLookupType.TRANSIT_GATEWAY_VPC_ATTACHMENT,
+        lookupValues: {
+          vpcName: 'test-vpc',
+          transitGatewayName: 'test-tgw',
+          transitGatewayAttachmentName: 'test-tgw-attachment',
+        },
+      }),
+    ).toBeTruthy();
+    expect(
+      lzaLookup.resourceExists({
+        resourceType: LZAResourceLookupType.TRANSIT_GATEWAY_VPC_ATTACHMENT_ROLE,
+        lookupValues: { roleName: 'test-tgw-role' },
+      }),
+    ).toBeTruthy();
+    expect(
+      lzaLookup.resourceExists({
+        resourceType: LZAResourceLookupType.SUBNET_SHARE,
+        lookupValues: { subnetName: 'test-subnet' },
+      }),
+    ).toBeTruthy();
+    expect(
+      lzaLookup.resourceExists({
+        resourceType: LZAResourceLookupType.SECURITY_GROUP,
+        lookupValues: { vpcName: 'test-vpc', securityGroupName: 'test-sg' },
+      }),
+    ).toBeTruthy();
+    expect(
+      lzaLookup.resourceExists({
+        resourceType: LZAResourceLookupType.SECURITY_GROUP_INGRESS,
+        lookupValues: { securityGroupName: 'test-sg', ruleIndex: 0 },
+      }),
+    ).toBeTruthy();
+    expect(
+      lzaLookup.resourceExists({
+        resourceType: LZAResourceLookupType.SECURITY_GROUP_EGRESS,
+        lookupValues: { securityGroupName: 'test-sg', ruleIndex: 0 },
+      }),
+    ).toBeTruthy();
+    expect(
+      lzaLookup.resourceExists({
+        resourceType: LZAResourceLookupType.NETWORK_ACL,
+        lookupValues: { vpcName: 'test-vpc', naclName: 'test-nacl' },
+      }),
+    ).toBeTruthy();
+    expect(
+      lzaLookup.resourceExists({
+        resourceType: LZAResourceLookupType.NETWORK_ACL_ENTRY,
+        lookupValues: { vpcName: 'test-vpc', naclName: 'test-nacl', ruleNumber: 100 },
+      }),
+    ).toBeTruthy();
+    expect(
+      lzaLookup.resourceExists({
+        resourceType: LZAResourceLookupType.SUBNET_NETWORK_ACL_ASSOCIATION,
+        lookupValues: { vpcName: 'test-vpc', naclName: 'test-nacl', subnetName: 'test-subnet' },
+      }),
+    ).toBeTruthy();
+    expect(
+      lzaLookup.resourceExists({
+        resourceType: LZAResourceLookupType.LOAD_BALANCER,
+        lookupValues: { vpcName: 'test-vpc', gwlbName: 'test-gwlb' },
+      }),
+    ).toBeTruthy();
+    expect(
+      lzaLookup.resourceExists({
+        resourceType: LZAResourceLookupType.LOAD_BALANCER,
+        lookupValues: { vpcName: 'test-vpc', albName: 'test-alb' },
+      }),
+    ).toBeTruthy();
+    expect(
+      lzaLookup.resourceExists({
+        resourceType: LZAResourceLookupType.LOAD_BALANCER,
+        lookupValues: { vpcName: 'test-vpc', nlbName: 'test-nlb' },
+      }),
+    ).toBeTruthy();
+
+    expect(
+      lzaLookup.resourceExists({
+        resourceType: LZAResourceLookupType.ROUTE_TABLE,
+        lookupValues: { vpcName: 'non-existent-vpc', routeTableName: 'non-existent-route-table' },
+      }),
+    ).toBeFalsy();
+    expect(
+      lzaLookup.resourceExists({
+        resourceType: LZAResourceLookupType.SUBNET,
+        lookupValues: { vpcName: 'non-existent-vpc', subnetName: 'non-existent-subnet' },
+      }),
+    ).toBeFalsy();
+    expect(
+      lzaLookup.resourceExists({
+        resourceType: LZAResourceLookupType.SECURITY_GROUP,
+        lookupValues: { vpcName: 'non-existent-vpc', securityGroupName: 'non-existent-sg' },
+      }),
+    ).toBeFalsy();
   });
 
   test('constructor with external landing zone resources', () => {
@@ -182,6 +343,48 @@ describe('LZAResourceLookup tests', () => {
         region: 'ap-northeast-1',
         resourceType: 'EC2_VPC_IGW',
         resourceIdentifier: 'Sandbox2_vpc',
+      },
+      {
+        accountId: '444444444444',
+        region: 'ap-northeast-1',
+        resourceType: 'APPLICATION_LOAD_BALANCER',
+        resourceIdentifier: 'asea-test-alb',
+      },
+      {
+        accountId: '444444444444',
+        region: 'ap-northeast-1',
+        resourceType: 'EC2_NACL_SUBNET_ASSOCIATION',
+        resourceIdentifier: 'asea-vpc/asea-subnet',
+      },
+      {
+        accountId: '444444444444',
+        region: 'ap-northeast-1',
+        resourceType: 'NAT_GATEWAY',
+        resourceIdentifier: 'asea-vpc/asea-nat',
+      },
+      {
+        accountId: '444444444444',
+        region: 'ap-northeast-1',
+        resourceType: 'ROUTE_TABLE',
+        resourceIdentifier: 'asea-vpc/asea-rt',
+      },
+      {
+        accountId: '444444444444',
+        region: 'ap-northeast-1',
+        resourceType: 'EC2_SUBNET',
+        resourceIdentifier: 'asea-vpc/asea-subnet',
+      },
+      {
+        accountId: '444444444444',
+        region: 'ap-northeast-1',
+        resourceType: 'TRANSIT_GATEWAY_ATTACHMENT',
+        resourceIdentifier: 'asea-vpc/asea-tgw-attachment',
+      },
+      {
+        accountId: '444444444444',
+        region: 'ap-northeast-1',
+        resourceType: 'EC2_SECURITY_GROUP',
+        resourceIdentifier: 'asea-vpc/asea-sg',
       },
     ] as AseaResourceMapping[];
 
@@ -231,6 +434,55 @@ describe('LZAResourceLookup tests', () => {
         lookupValues: { vpcName: 'NonExistent_vpc' },
       }),
     ).toBeFalsy();
+
+    expect(
+      lzaLookup.resourceExists({
+        resourceType: LZAResourceLookupType.LOAD_BALANCER,
+        lookupValues: { vpcName: 'asea-vpc', albName: 'asea-test-alb' },
+      }),
+    ).toBeTruthy();
+
+    expect(
+      lzaLookup.resourceExists({
+        resourceType: LZAResourceLookupType.SUBNET_NETWORK_ACL_ASSOCIATION,
+        lookupValues: { vpcName: 'asea-vpc', subnetName: 'asea-subnet' },
+      }),
+    ).toBeTruthy();
+
+    expect(
+      lzaLookup.resourceExists({
+        resourceType: LZAResourceLookupType.NAT_GATEWAY,
+        lookupValues: { vpcName: 'asea-vpc', natGatewayName: 'asea-nat' },
+      }),
+    ).toBeTruthy();
+
+    expect(
+      lzaLookup.resourceExists({
+        resourceType: LZAResourceLookupType.ROUTE_TABLE,
+        lookupValues: { vpcName: 'asea-vpc', routeTableName: 'asea-rt' },
+      }),
+    ).toBeTruthy();
+
+    expect(
+      lzaLookup.resourceExists({
+        resourceType: LZAResourceLookupType.SUBNET,
+        lookupValues: { vpcName: 'asea-vpc', subnetName: 'asea-subnet' },
+      }),
+    ).toBeTruthy();
+
+    expect(
+      lzaLookup.resourceExists({
+        resourceType: LZAResourceLookupType.TRANSIT_GATEWAY_VPC_ATTACHMENT,
+        lookupValues: { vpcName: 'asea-vpc', transitGatewayAttachmentName: 'asea-tgw-attachment' },
+      }),
+    ).toBeTruthy();
+
+    expect(
+      lzaLookup.resourceExists({
+        resourceType: LZAResourceLookupType.SECURITY_GROUP,
+        lookupValues: { vpcName: 'asea-vpc', securityGroupName: 'asea-sg' },
+      }),
+    ).toBeTruthy();
   });
 
   test('error handling when template cannot be loaded', () => {
