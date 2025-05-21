@@ -443,6 +443,7 @@ export class CloudWatchLogsConfig implements i.ICloudWatchLogsConfig {
   readonly firehose: CloudWatchFirehoseConfig | undefined = undefined;
   readonly subscription: CloudWatchSubscriptionConfig | undefined = undefined;
   readonly kinesis: CloudWatchKinesisConfig | undefined = undefined;
+  readonly organizationIdConditionSupported: boolean | undefined = undefined;
 }
 
 export class LoggingConfig implements i.ILoggingConfig {

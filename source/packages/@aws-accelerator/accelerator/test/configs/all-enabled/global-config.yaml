@@ -290,6 +290,7 @@ logging:
     enable: true
     dynamicPartitioning: dynamic-partitioning/log-filters.json
     dynamicPartitioningByAccountId: true
+    organizationIdConditionSupported: true
     # replaceLogDestinationArn: replaceLogDestinationArn
 
     exclusions:

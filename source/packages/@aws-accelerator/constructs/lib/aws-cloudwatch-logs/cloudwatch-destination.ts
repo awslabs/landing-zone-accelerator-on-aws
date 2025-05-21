@@ -47,6 +47,11 @@ export interface CloudWatchDestinationProps {
    * Use existing IAM roles for deployment.
    */
   useExistingRoles: boolean;
+  /**
+   * Determines if a list of account ids is used instead of a principal organization condition in the CloudWatch Logs destination access policy.
+   * This is useful in partitions where the principal organization condition is not supported.
+   */
+  organizationIdConditionSupported?: boolean;
 }
 /**
  * Class to configure CloudWatch Destination on logs receiving account
@@ -58,7 +63,7 @@ export class CloudWatchDestination extends Construct {
     let principalOrgIdCondition: object | undefined = undefined;
     let accountPrincipals: object | cdk.aws_iam.IPrincipal;
 
-    if (props.partition === 'aws-cn' || !props.organizationId) {
+    if ((props.organizationIdConditionSupported ?? undefined) === false || !props.organizationId) {
       // Only principal block with list of account id is supported.
       accountPrincipals = {
         AWS: props.accountIds,
