@@ -22,7 +22,57 @@ export enum LZAResourceLookupType {
   VPC_CIDR_BLOCK = 'AWS::EC2::VPCCidrBlock',
   EGRESS_ONLY_INTERNET_GATEWAY = 'AWS::EC2::EgressOnlyInternetGateway',
   VPC_DHCP_OPTIONS_ASSOCIATION = 'AWS::EC2::VPCDHCPOptionsAssociation',
+  ROUTE_TABLE = 'AWS::EC2::RouteTable',
+  GATEWAY_ROUTE_TABLE_ASSOCIATION = 'AWS::EC2::GatewayRouteTableAssociation',
+  LOCAL_GATEWAY_ROUTE_TABLE_VPC_ASSOCIATION = 'AWS::EC2::LocalGatewayRouteTableVPCAssociation',
+  ROUTE = 'AWS::EC2::Route',
+  PREFIX_LIST_ROUTE = 'Custom::PrefixListRoute',
+  SUBNET = 'AWS::EC2::Subnet',
+  IPAM_SUBNET = 'Custom::IpamSubnet',
+  ROUTE_TABLE_ASSOCIATION = 'AWS::EC2::SubnetRouteTableAssociation',
+  NAT_GATEWAY = 'AWS::EC2::NatGateway',
+  TRANSIT_GATEWAY_VPC_ATTACHMENT = 'AWS::EC2::TransitGatewayVpcAttachment',
+  TRANSIT_GATEWAY_VPC_ATTACHMENT_ROLE = 'AWS::IAM::Role',
+  SUBNET_SHARE = 'AWS::RAM::ResourceShare',
+  SECURITY_GROUP = 'AWS::EC2::SecurityGroup',
+  SECURITY_GROUP_INGRESS = 'AWS::EC2::SecurityGroupIngress',
+  SECURITY_GROUP_EGRESS = 'AWS::EC2::SecurityGroupEgress',
+  NETWORK_ACL = 'AWS::EC2::NetworkAcl',
+  NETWORK_ACL_ENTRY = 'AWS::EC2::NetworkAclEntry',
+  SUBNET_NETWORK_ACL_ASSOCIATION = 'AWS::EC2::SubnetNetworkAclAssociation',
+  LOAD_BALANCER = 'AWS::ElasticLoadBalancingV2::LoadBalancer',
 }
+
+const RESOURCE_REQUIRED_KEYS: { [key in LZAResourceLookupType]?: string[] } = {
+  [LZAResourceLookupType.VPC]: ['vpcName'],
+  [LZAResourceLookupType.FLOW_LOG]: ['vpcName', 'flowLogDestinationType'],
+  [LZAResourceLookupType.INTERNET_GATEWAY]: ['vpcName'],
+  [LZAResourceLookupType.VIRTUAL_PRIVATE_GATEWAY]: ['vpcName'],
+  [LZAResourceLookupType.EGRESS_ONLY_INTERNET_GATEWAY]: ['vpcName'],
+  [LZAResourceLookupType.VPC_DHCP_OPTIONS_ASSOCIATION]: ['vpcName', 'dhcpOptionsName'],
+  [LZAResourceLookupType.LOCAL_GATEWAY_ROUTE_TABLE_VPC_ASSOCIATION]: ['routeTableName', 'vpcName', 'vpcAccount'],
+  [LZAResourceLookupType.ROUTE_TABLE]: ['vpcName', 'routeTableName'],
+  [LZAResourceLookupType.GATEWAY_ROUTE_TABLE_ASSOCIATION]: ['vpcName', 'routeTableName', 'associationType'],
+  [LZAResourceLookupType.ROUTE]: ['vpcName', 'routeTableName', 'routeTableEntryName', 'type'],
+  [LZAResourceLookupType.PREFIX_LIST_ROUTE]: ['vpcName', 'routeTableName', 'routeTableEntryName', 'type'],
+  [LZAResourceLookupType.SUBNET]: ['vpcName', 'subnetName'],
+  [LZAResourceLookupType.IPAM_SUBNET]: ['vpcName', 'subnetName'],
+  [LZAResourceLookupType.ROUTE_TABLE_ASSOCIATION]: ['subnetName', 'routeTableName'],
+  [LZAResourceLookupType.NAT_GATEWAY]: ['vpcName', 'natGatewayName'],
+  [LZAResourceLookupType.TRANSIT_GATEWAY_VPC_ATTACHMENT]: [
+    'vpcName',
+    'transitGatewayName',
+    'transitGatewayAttachmentName',
+  ],
+  [LZAResourceLookupType.TRANSIT_GATEWAY_VPC_ATTACHMENT_ROLE]: ['roleName'],
+  [LZAResourceLookupType.SUBNET_SHARE]: ['subnetName'],
+  [LZAResourceLookupType.SECURITY_GROUP]: ['vpcName', 'securityGroupName'],
+  [LZAResourceLookupType.SECURITY_GROUP_INGRESS]: ['securityGroupName', 'ruleIndex'],
+  [LZAResourceLookupType.SECURITY_GROUP_EGRESS]: ['securityGroupName', 'ruleIndex'],
+  [LZAResourceLookupType.NETWORK_ACL]: ['vpcName', 'naclName'],
+  [LZAResourceLookupType.NETWORK_ACL_ENTRY]: ['vpcName', 'naclName', 'ruleNumber'],
+  [LZAResourceLookupType.SUBNET_NETWORK_ACL_ASSOCIATION]: ['vpcName', 'naclName', 'subnetName'],
+};
 
 export class LZAResourceLookup {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -81,22 +131,52 @@ export class LZAResourceLookup {
   public resourceManagedByV1Stack(resourceProperties: LookupProperties): boolean {
     switch (resourceProperties.resourceType) {
       case LZAResourceLookupType.VPC:
-        return this.vpcExists(resourceProperties);
       case LZAResourceLookupType.FLOW_LOG:
-        return this.flowLogExists(resourceProperties);
       case LZAResourceLookupType.INTERNET_GATEWAY:
-        return this.internetGatewayExists(resourceProperties);
       case LZAResourceLookupType.VIRTUAL_PRIVATE_GATEWAY:
-        return this.virtualPrivateGatewayExists(resourceProperties);
+      case LZAResourceLookupType.EGRESS_ONLY_INTERNET_GATEWAY:
+      case LZAResourceLookupType.VPC_DHCP_OPTIONS_ASSOCIATION:
+      case LZAResourceLookupType.LOCAL_GATEWAY_ROUTE_TABLE_VPC_ASSOCIATION:
+      case LZAResourceLookupType.ROUTE_TABLE:
+      case LZAResourceLookupType.GATEWAY_ROUTE_TABLE_ASSOCIATION:
+      case LZAResourceLookupType.ROUTE:
+      case LZAResourceLookupType.PREFIX_LIST_ROUTE:
+      case LZAResourceLookupType.SUBNET:
+      case LZAResourceLookupType.IPAM_SUBNET:
+      case LZAResourceLookupType.ROUTE_TABLE_ASSOCIATION:
+      case LZAResourceLookupType.NAT_GATEWAY:
+      case LZAResourceLookupType.TRANSIT_GATEWAY_VPC_ATTACHMENT:
+      case LZAResourceLookupType.TRANSIT_GATEWAY_VPC_ATTACHMENT_ROLE:
+      case LZAResourceLookupType.SUBNET_SHARE:
+      case LZAResourceLookupType.SECURITY_GROUP:
+      case LZAResourceLookupType.SECURITY_GROUP_INGRESS:
+      case LZAResourceLookupType.SECURITY_GROUP_EGRESS:
+      case LZAResourceLookupType.NETWORK_ACL:
+      case LZAResourceLookupType.NETWORK_ACL_ENTRY:
+      case LZAResourceLookupType.SUBNET_NETWORK_ACL_ASSOCIATION:
+        const requiredKeys = RESOURCE_REQUIRED_KEYS[resourceProperties.resourceType]!;
+        return this.resourceWithMetadataExists(resourceProperties, requiredKeys);
       case LZAResourceLookupType.VPC_CIDR_BLOCK:
         return this.vpcCidrBlockExists(resourceProperties);
-      case LZAResourceLookupType.EGRESS_ONLY_INTERNET_GATEWAY:
-        return this.egressOnlyInternetGatewayExists(resourceProperties);
-      case LZAResourceLookupType.VPC_DHCP_OPTIONS_ASSOCIATION:
-        return this.vpcDhcpOptionsAssociationExists(resourceProperties);
+      case LZAResourceLookupType.LOAD_BALANCER:
+        return this.loadBalancerExists(resourceProperties);
       default:
         return false;
     }
+  }
+
+  private resourceWithMetadataExists(resourceProperties: LookupProperties, requiredKeys: string[]): boolean {
+    this.validateResourcePropertyKeys({
+      resourceProperties,
+      resourceKeys: requiredKeys,
+    });
+
+    const resourceKeys = this.getCfnResourceKeysByType(resourceProperties.resourceType);
+    return this.cfnResourceExists({
+      lookupValues: resourceProperties.lookupValues,
+      resourceType: resourceProperties.resourceType,
+      resourceTypesKeys: resourceKeys,
+    });
   }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -237,6 +317,30 @@ export class LZAResourceLookup {
       case AseaResourceType.EC2_IGW:
         resourceIdentifier = resourceProperties.lookupValues['vpcName'];
         break;
+      case AseaResourceType.APPLICATION_LOAD_BALANCER:
+        if (!('albName' in resourceProperties.lookupValues)) {
+          return false;
+        }
+        resourceIdentifier = resourceProperties.lookupValues['albName'];
+        break;
+      case AseaResourceType.EC2_NACL_SUBNET_ASSOCIATION:
+        resourceIdentifier = `${resourceProperties.lookupValues['vpcName']}/${resourceProperties.lookupValues['subnetName']}`;
+        break;
+      case AseaResourceType.NAT_GATEWAY:
+        resourceIdentifier = `${resourceProperties.lookupValues['vpcName']}/${resourceProperties.lookupValues['natGatewayName']}`;
+        break;
+      case AseaResourceType.ROUTE_TABLE:
+        resourceIdentifier = `${resourceProperties.lookupValues['vpcName']}/${resourceProperties.lookupValues['routeTableName']}`;
+        break;
+      case AseaResourceType.EC2_SUBNET:
+        resourceIdentifier = `${resourceProperties.lookupValues['vpcName']}/${resourceProperties.lookupValues['subnetName']}`;
+        break;
+      case AseaResourceType.TRANSIT_GATEWAY_ATTACHMENT:
+        resourceIdentifier = `${resourceProperties.lookupValues['vpcName']}/${resourceProperties.lookupValues['transitGatewayAttachmentName']}`;
+        break;
+      case AseaResourceType.EC2_SECURITY_GROUP:
+        resourceIdentifier = `${resourceProperties.lookupValues['vpcName']}/${resourceProperties.lookupValues['securityGroupName']}`;
+        break;
       default:
       case AseaResourceType.EC2_VPC_CIDR:
         resourceIdentifier = `${resourceProperties.lookupValues['vpcName']}-${resourceProperties.lookupValues['cidrBlock']}`;
@@ -244,15 +348,6 @@ export class LZAResourceLookup {
     }
 
     return this.isManagedByAsea({ resourceType: aseaResourceType, resourceIdentifier });
-  }
-  private vpcExists(resourceProperties: LookupProperties): boolean {
-    this.validateResourcePropertyKeys({ resourceProperties, resourceKeys: ['vpcName'] });
-    const vpcResourceKeys = this.getCfnResourceKeysByType(resourceProperties.resourceType);
-    return this.cfnResourceExists({
-      lookupValues: resourceProperties.lookupValues,
-      resourceType: resourceProperties.resourceType,
-      resourceTypesKeys: vpcResourceKeys,
-    });
   }
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private cfnStackMetadataExist(stack: any): boolean {
@@ -262,52 +357,7 @@ export class LZAResourceLookup {
 
     return false;
   }
-  private flowLogExists(resourceProperties: LookupProperties): boolean {
-    this.validateResourcePropertyKeys({ resourceProperties, resourceKeys: ['vpcName', 'flowLogDestinationType'] });
-    const flowLogKeys = this.getCfnResourceKeysByType(resourceProperties.resourceType);
-    return this.cfnResourceExists({
-      lookupValues: resourceProperties.lookupValues,
-      resourceType: resourceProperties.resourceType,
-      resourceTypesKeys: flowLogKeys,
-    });
-  }
 
-  private internetGatewayExists(resourceProperties: LookupProperties): boolean {
-    this.validateResourcePropertyKeys({ resourceProperties, resourceKeys: ['vpcName'] });
-    const internetGatewayKeys = this.getCfnResourceKeysByType(resourceProperties.resourceType);
-    return this.cfnResourceExists({
-      lookupValues: resourceProperties.lookupValues,
-      resourceType: resourceProperties.resourceType,
-      resourceTypesKeys: internetGatewayKeys,
-    });
-  }
-  private virtualPrivateGatewayExists(resourceProperties: LookupProperties): boolean {
-    this.validateResourcePropertyKeys({ resourceProperties, resourceKeys: ['vpcName'] });
-    const virtualPrivateGatewayKeys = this.getCfnResourceKeysByType(resourceProperties.resourceType);
-    return this.cfnResourceExists({
-      lookupValues: resourceProperties.lookupValues,
-      resourceType: resourceProperties.resourceType,
-      resourceTypesKeys: virtualPrivateGatewayKeys,
-    });
-  }
-  private egressOnlyInternetGatewayExists(resourceProperties: LookupProperties): boolean {
-    this.validateResourcePropertyKeys({ resourceProperties, resourceKeys: ['vpcName'] });
-    const egressOnlyInternetGatewayKeys = this.getCfnResourceKeysByType(resourceProperties.resourceType);
-    return this.cfnResourceExists({
-      lookupValues: resourceProperties.lookupValues,
-      resourceType: resourceProperties.resourceType,
-      resourceTypesKeys: egressOnlyInternetGatewayKeys,
-    });
-  }
-  private vpcDhcpOptionsAssociationExists(resourceProperties: LookupProperties): boolean {
-    this.validateResourcePropertyKeys({ resourceProperties, resourceKeys: ['vpcName', 'dhcpOptionsName'] });
-    const dhcpOptionAssociationKeys = this.getCfnResourceKeysByType(resourceProperties.resourceType);
-    return this.cfnResourceExists({
-      lookupValues: resourceProperties.lookupValues,
-      resourceType: resourceProperties.resourceType,
-      resourceTypesKeys: dhcpOptionAssociationKeys,
-    });
-  }
   private vpcCidrBlockExists(resourceProperties: LookupProperties): boolean {
     if ('cidrBlock' in resourceProperties.lookupValues) {
       return this.ipv4CidrBlockExists(resourceProperties);
@@ -325,25 +375,11 @@ export class LZAResourceLookup {
   }
 
   private ipv4IpamCidrBlockExists(resourceProperties: LookupProperties): boolean {
-    this.validateResourcePropertyKeys({
-      resourceProperties,
-      resourceKeys: ['vpcName', 'ipamPoolName', 'netmaskLength'],
-    });
-    const vpcCidrBlockKeys = this.getCfnResourceKeysByType(resourceProperties.resourceType);
-    return this.cfnResourceExists({
-      lookupValues: resourceProperties.lookupValues,
-      resourceType: resourceProperties.resourceType,
-      resourceTypesKeys: vpcCidrBlockKeys,
-    });
+    return this.resourceWithMetadataExists(resourceProperties, ['vpcName', 'ipamPoolName', 'netmaskLength']);
   }
+
   private ipv4CidrBlockExists(resourceProperties: LookupProperties): boolean {
-    this.validateResourcePropertyKeys({ resourceProperties, resourceKeys: ['vpcName', 'cidrBlock'] });
-    const vpcCidrBlockKeys = this.getCfnResourceKeysByType(resourceProperties.resourceType);
-    return this.cfnResourceExists({
-      lookupValues: resourceProperties.lookupValues,
-      resourceType: resourceProperties.resourceType,
-      resourceTypesKeys: vpcCidrBlockKeys,
-    });
+    return this.resourceWithMetadataExists(resourceProperties, ['vpcName', 'cidrBlock']);
   }
 
   private ipv6CidrExists(resourceProperties: LookupProperties): boolean {
@@ -367,28 +403,40 @@ export class LZAResourceLookup {
     }
     return false;
   }
-  private ipv6CidrAmazonProvidedExists(resourceProperties: LookupProperties): boolean {
-    this.validateResourcePropertyKeys({
-      resourceProperties,
-      resourceKeys: ['vpcName', 'amazonProvidedIpv6CidrBlock'],
-    });
 
-    const vpcCidrBlockKeys = this.getCfnResourceKeysByType(resourceProperties.resourceType);
-    return this.cfnResourceExists({
-      lookupValues: resourceProperties.lookupValues,
-      resourceType: resourceProperties.resourceType,
-      resourceTypesKeys: vpcCidrBlockKeys,
-    });
+  private ipv6CidrAmazonProvidedExists(resourceProperties: LookupProperties): boolean {
+    return this.resourceWithMetadataExists(resourceProperties, ['vpcName', 'amazonProvidedIpv6CidrBlock']);
   }
 
   private ipv6CidrPoolExists(resourceProperties: LookupProperties): boolean {
-    this.validateResourcePropertyKeys({ resourceProperties, resourceKeys: ['vpcName', 'ipv6CidrBlock', 'ipv6pool'] });
-    const vpcCidrBlockKeys = this.getCfnResourceKeysByType(resourceProperties.resourceType);
-    return this.cfnResourceExists({
-      lookupValues: resourceProperties.lookupValues,
-      resourceType: resourceProperties.resourceType,
-      resourceTypesKeys: vpcCidrBlockKeys,
-    });
+    return this.resourceWithMetadataExists(resourceProperties, ['vpcName', 'ipv6CidrBlock', 'ipv6pool']);
+  }
+
+  private loadBalancerExists(resourceProperties: LookupProperties): boolean {
+    if ('albName' in resourceProperties.lookupValues) {
+      return this.applicationLoadBalancerExists(resourceProperties);
+    }
+    if ('nlbName' in resourceProperties.lookupValues) {
+      return this.networkLoadBalancerExists(resourceProperties);
+    }
+    if ('gwlbName' in resourceProperties.lookupValues) {
+      return this.gatewayLoadBalancerExists(resourceProperties);
+    }
+    throw new Error(
+      'No valid load balancer name provided, one of (albName, nlbName, or gwlbName) must present in lookup key',
+    );
+  }
+
+  private applicationLoadBalancerExists(resourceProperties: LookupProperties): boolean {
+    return this.resourceWithMetadataExists(resourceProperties, ['vpcName', 'albName']);
+  }
+
+  private networkLoadBalancerExists(resourceProperties: LookupProperties): boolean {
+    return this.resourceWithMetadataExists(resourceProperties, ['vpcName', 'nlbName']);
+  }
+
+  private gatewayLoadBalancerExists(resourceProperties: LookupProperties): boolean {
+    return this.resourceWithMetadataExists(resourceProperties, ['vpcName', 'gwlbName']);
   }
 
   private validateResourcePropertyKeys(props: { resourceProperties: LookupProperties; resourceKeys: string[] }) {
@@ -410,6 +458,20 @@ export class LZAResourceLookup {
         return AseaResourceType.EC2_VPC_CIDR;
       case LZAResourceLookupType.INTERNET_GATEWAY:
         return AseaResourceType.EC2_IGW;
+      case LZAResourceLookupType.LOAD_BALANCER:
+        return AseaResourceType.APPLICATION_LOAD_BALANCER;
+      case LZAResourceLookupType.SUBNET_NETWORK_ACL_ASSOCIATION:
+        return AseaResourceType.EC2_NACL_SUBNET_ASSOCIATION;
+      case LZAResourceLookupType.NAT_GATEWAY:
+        return AseaResourceType.NAT_GATEWAY;
+      case LZAResourceLookupType.ROUTE_TABLE:
+        return AseaResourceType.ROUTE_TABLE;
+      case LZAResourceLookupType.SUBNET:
+        return AseaResourceType.EC2_SUBNET;
+      case LZAResourceLookupType.TRANSIT_GATEWAY_VPC_ATTACHMENT:
+        return AseaResourceType.TRANSIT_GATEWAY_ATTACHMENT;
+      case LZAResourceLookupType.SECURITY_GROUP:
+        return AseaResourceType.EC2_SECURITY_GROUP;
       default:
         return AseaResourceType.NOT_MANAGED;
     }
