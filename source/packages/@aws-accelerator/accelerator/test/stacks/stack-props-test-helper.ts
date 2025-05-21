@@ -4,7 +4,6 @@ import {
   AwsConfig,
   AwsConfigAggregation,
   CentralSecurityServicesConfig,
-  CloudWatchLogsConfig,
   ControlTowerConfig,
   CustomizationsConfig,
   DetectiveConfig,
@@ -56,7 +55,9 @@ export function createAcceleratorStackProps(
     homeRegion: 'us-east-1',
     controlTower: new ControlTowerConfig(),
     logging: {
-      cloudwatchLogs: new CloudWatchLogsConfig(),
+      cloudwatchLogs: {
+        enable: false,
+      },
       sessionManager: {
         sendToCloudWatchLogs: false,
         sendToS3: false,

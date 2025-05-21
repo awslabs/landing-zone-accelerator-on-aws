@@ -518,6 +518,10 @@
           },
           "type": "array"
         },
+        "organizationIdConditionSupported": {
+          "description": "Determines if a list of account ids is used instead of a principal organization condition in the CloudWatch Logs destination access policy. This is useful in partitions where the principal organization condition is not supported.",
+          "type": "boolean"
+        },
         "replaceLogDestinationArn": {
           "$ref": "#/definitions/NonEmptyString",
           "default": "undefined",
