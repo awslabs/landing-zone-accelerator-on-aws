@@ -31,6 +31,9 @@ export class OrganizationConfigValidator {
     // Validate presence of resource control policy file
     this.validateResourceControlPolicyFile(configDir, values, errors);
 
+    // Validate presence of declarative policy file
+    this.validateDeclarativePolicyFile(configDir, values, errors);
+
     // Validate presence of tagging policy file
     this.validateTaggingPolicyFile(configDir, values, errors);
 
@@ -110,6 +113,21 @@ export class OrganizationConfigValidator {
       if (!fs.existsSync(path.join(configDir, resourceControlPolicy.policy))) {
         errors.push(
           `Invalid policy file ${resourceControlPolicy.policy} for resource control policy ${resourceControlPolicy.name} !!!`,
+        );
+      }
+    }
+  }
+
+  /**
+   * Function to validate Declarative policy file existence
+   * @param configDir
+   * @param values
+   */
+  private validateDeclarativePolicyFile(configDir: string, values: OrganizationConfig, errors: string[]) {
+    for (const declarativePolicy of values.declarativePolicies ?? []) {
+      if (!fs.existsSync(path.join(configDir, declarativePolicy.policy))) {
+        errors.push(
+          `Invalid policy file ${declarativePolicy.policy} for resource control policy ${declarativePolicy.name} !!!`,
         );
       }
     }

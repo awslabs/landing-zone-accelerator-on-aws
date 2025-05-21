@@ -106,6 +106,41 @@ export interface IQuarantineNewAccountsConfig {
   readonly scpPolicyName?: t.NonEmptyString;
 }
 /**
+ * *{@link OrganizationConfig} / {@link DeclarativePolicyConfig}*
+ *
+ * @description
+ * Declarative policy configuration
+ *
+ * @example
+ * ```
+ * declarativePolicies:
+ *   - name: DeclarativePolicy
+ *     description: Declarative Policy Controls
+ *     policy: path/to/declarative-policy.json
+ *     deploymentTargets:
+ *       organizationalUnits: []
+ * ```
+ */
+export interface IDeclarativePolicyConfig {
+  /**
+   * The friendly name to assign to the policy.
+   * The regex pattern that is used to validate this parameter is a string of any of the characters in the ASCII character range.
+   */
+  readonly name: t.NonEmptyString;
+  /**
+   * A description to assign to the policy.
+   */
+  readonly description: t.NonEmptyString;
+  /**
+   * Declarative policy definition json file. This file must be present in config repository
+   */
+  readonly policy: t.NonEmptyString;
+  /**
+   * Declarative policy deployment targets
+   */
+  readonly deploymentTargets: t.IDeploymentTargets;
+}
+/**
  * *{@link OrganizationConfig} / {@link ResourceControlPolicyConfig}*
  *
  * @description
@@ -136,12 +171,12 @@ export interface IResourceControlPolicyConfig {
    */
   readonly policy: t.NonEmptyString;
   /**
-   * Resource control policy deployment targets
+   * Resource control policy strategy.
+   * https://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_policies_rcps_evaluation.html
    */
   readonly strategy?: 'deny-list' | 'allow-list';
   /**
-   * Resource control policy strategy.
-   * https://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_policies_rcps_evaluation.html
+   * Resource control policy deployment targets
    */
   readonly deploymentTargets: t.IDeploymentTargets;
 }
@@ -315,6 +350,28 @@ export interface IBackupPolicyConfig {
  * Organization configuration
  */
 export interface IOrganizationConfig {
+  /**
+   * A Record of Declarative Policy configurations
+   *
+   * @see DeclarativePolicyConfig
+   *
+   * To create a declarative policy named EC2Settings from declarative-policies/ec2-settings.json file in config repository, you need to provide following values for this parameter.
+   *
+   * Restrict making AMIs public and enable serial console access
+   * @example
+   * ```
+   * declarativePolicies:
+   *   - name: ResrictHttpsConnection
+   *     description: >
+   *       This policy restricts making AMIs public and enable serial console access
+   *     policy: declarative-policies/ec2-settings.json
+   *     type: customerManaged
+   *     deploymentTargets:
+   *       organizationalUnits:
+   *         - Infrastructure
+   * ```
+   */
+  readonly declarativePolicies?: IDeclarativePolicyConfig[];
   /**
    * Indicates whether AWS Organization enabled.
    *
