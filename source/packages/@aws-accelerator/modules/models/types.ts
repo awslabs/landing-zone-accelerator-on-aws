@@ -104,9 +104,9 @@ export type RunnerParametersType = {
    */
   readonly prefix: string;
   /**
-   * Flag indicating existing role
+   * Flag indicating existing roles are used
    */
-  readonly useExistingRole: boolean;
+  readonly useExistingRoles: boolean;
   /**
    * Solution Id
    */

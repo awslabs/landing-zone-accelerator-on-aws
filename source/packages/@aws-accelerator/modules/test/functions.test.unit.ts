@@ -19,6 +19,7 @@ import {
   getOrganizationAccounts,
   getOrganizationDetails,
   getRunnerTargetRegions,
+  isModuleExecutionSkippedByEnvironment,
   scriptUsage,
   validateAndGetRunnerParameters,
 } from '../lib/functions';
@@ -54,7 +55,8 @@ import {
   mockReplacementsConfig,
   mockSecurityConfig,
 } from './mocked-resources';
-import { AcceleratorModuleStageOrders } from '../models/constants';
+import { AcceleratorModuleStageOrders, EXECUTION_CONTROLLABLE_MODULES } from '../models/constants';
+import { pascalCase } from 'pascal-case';
 
 const mockYargs = {
   options: jest.fn().mockReturnThis(),
@@ -154,8 +156,8 @@ describe('functions', () => {
       });
     });
 
-    describe('use-existing-role parameter', () => {
-      test('should set useExistingRole to false when parameter is not provided', () => {
+    describe('useExistingRoles parameter', () => {
+      test('should set useExistingRoles to false when parameter is not provided', () => {
         mockYargs.parseSync.mockReturnValue({
           partition: MOCK_CONSTANTS.runnerParameters.partition,
           region: MOCK_CONSTANTS.runnerParameters.region,
@@ -164,33 +166,32 @@ describe('functions', () => {
         });
 
         const result = validateAndGetRunnerParameters();
-        expect(result.useExistingRole).toBe(false);
+        expect(result.useExistingRoles).toBe(false);
       });
 
-      test('should set useExistingRole to true when parameter is "yes"', () => {
+      test('should set useExistingRoles to true when parameter provided', () => {
         mockYargs.parseSync.mockReturnValue({
           partition: MOCK_CONSTANTS.runnerParameters.partition,
           region: MOCK_CONSTANTS.runnerParameters.region,
           'config-dir': MOCK_CONSTANTS.runnerParameters.configDirPath,
           stage: 'pipeline',
-          'use-existing-role': 'yes',
+          'use-existing-roles': true,
         });
 
         const result = validateAndGetRunnerParameters();
-        expect(result.useExistingRole).toBe(true);
+        expect(result.useExistingRoles).toBe(true);
       });
 
-      test('should set useExistingRole to false when parameter is "no"', () => {
+      test('should set useExistingRoles to false when parameter not provided', () => {
         mockYargs.parseSync.mockReturnValue({
           partition: MOCK_CONSTANTS.runnerParameters.partition,
           region: MOCK_CONSTANTS.runnerParameters.region,
           'config-dir': MOCK_CONSTANTS.runnerParameters.configDirPath,
           stage: 'pipeline',
-          'use-existing-role': 'no',
         });
 
         const result = validateAndGetRunnerParameters();
-        expect(result.useExistingRole).toBe(false);
+        expect(result.useExistingRoles).toBe(false);
       });
     });
 
@@ -207,26 +208,25 @@ describe('functions', () => {
         expect(result.dryRun).toBe(false);
       });
 
-      test('should set dryRun to true when parameter is "yes"', () => {
+      test('should set dryRun to true when parameter is provided', () => {
         mockYargs.parseSync.mockReturnValue({
           partition: MOCK_CONSTANTS.runnerParameters.partition,
           region: MOCK_CONSTANTS.runnerParameters.region,
           'config-dir': MOCK_CONSTANTS.runnerParameters.configDirPath,
           stage: 'pipeline',
-          'dry-run': 'yes',
+          'dry-run': true,
         });
 
         const result = validateAndGetRunnerParameters();
         expect(result.dryRun).toBe(true);
       });
 
-      test('should set dryRun to false when parameter is "no"', () => {
+      test('should set dryRun to false when parameter not provided', () => {
         mockYargs.parseSync.mockReturnValue({
           partition: MOCK_CONSTANTS.runnerParameters.partition,
           region: MOCK_CONSTANTS.runnerParameters.region,
           'config-dir': MOCK_CONSTANTS.runnerParameters.configDirPath,
           stage: 'pipeline',
-          'dry-run': 'no',
         });
 
         const result = validateAndGetRunnerParameters();
@@ -251,7 +251,7 @@ describe('functions', () => {
           configDirPath: MOCK_CONSTANTS.runnerParameters.configDirPath,
           stage: 'pipeline',
           prefix: 'AWSAccelerator',
-          useExistingRole: false,
+          useExistingRoles: false,
           solutionId: `AwsSolution/SO0199/${version}`,
           dryRun: false,
         });
@@ -957,6 +957,67 @@ describe('functions', () => {
 
       // Verify
       expect(result).toEqual(enabledRegions);
+    });
+  });
+
+  describe('isModuleExecutionSkippedByEnvironment', () => {
+    const originalEnv = process.env;
+
+    beforeEach(() => {
+      jest.clearAllMocks();
+      process.env = { ...originalEnv };
+    });
+
+    afterEach(() => {
+      process.env = originalEnv;
+    });
+
+    test('should return false when not controllable module', () => {
+      // Setup
+      const moduleName = 'test-module';
+
+      // Execute
+      const result = isModuleExecutionSkippedByEnvironment(moduleName);
+
+      // Verify
+      expect(result).toBe(false);
+    });
+
+    test('should return true when environment variable is set to true', () => {
+      // Setup
+      const moduleName = EXECUTION_CONTROLLABLE_MODULES[0];
+      const variableName = pascalCase(`skip-${moduleName}`);
+      process.env[variableName] = 'true';
+
+      // Execute
+      const result = isModuleExecutionSkippedByEnvironment(moduleName);
+
+      // Verify
+      expect(result).toBe(true);
+    });
+
+    test('should return false when environment variable is set to false', () => {
+      // Setup
+      const moduleName = EXECUTION_CONTROLLABLE_MODULES[0];
+      const variableName = pascalCase(`skip-${moduleName}`);
+      process.env[variableName] = 'false';
+
+      // Execute
+      const result = isModuleExecutionSkippedByEnvironment(moduleName);
+
+      // Verify
+      expect(result).toBe(false);
+    });
+
+    test('should return false when environment variable is not set', () => {
+      // Setup
+      const moduleName = EXECUTION_CONTROLLABLE_MODULES[0];
+
+      // Execute
+      const result = isModuleExecutionSkippedByEnvironment(moduleName);
+
+      // Verify
+      expect(result).toBe(false);
     });
   });
 });

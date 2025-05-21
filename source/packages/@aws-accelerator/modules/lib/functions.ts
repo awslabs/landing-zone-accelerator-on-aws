@@ -11,6 +11,7 @@
  *  and limitations under the License.
  */
 
+import { pascalCase } from 'pascal-case';
 import path from 'path';
 import yargs from 'yargs';
 import { version } from '../../../../package.json';
@@ -38,7 +39,7 @@ import { GlobalConfig } from '@aws-accelerator/config/lib/global-config';
 import { AccountsConfig } from '@aws-accelerator/config/lib/accounts-config';
 import { GetParameterCommand, ParameterNotFound, SSMClient } from '@aws-sdk/client-ssm';
 import { ConfigLoader } from './config-loader';
-import { AcceleratorModuleStageOrders } from '../models/constants';
+import { AcceleratorModuleStageOrders, EXECUTION_CONTROLLABLE_MODULES } from '../models/constants';
 
 const logger = createLogger([path.parse(path.basename(__filename)).name]);
 
@@ -46,7 +47,7 @@ const logger = createLogger([path.parse(path.basename(__filename)).name]);
  * Module runner command with option to execute the command.
  */
 export const scriptUsage =
-  'Usage: yarn run ts-node packages/@aws-accelerator/modules/bin/runner.ts --partition <PARTITION> --account-id <ACCOUNT_ID> --region <REGION> --config-dir <CONFIG_DIR_PATH> --stage <PIPELINE_STAGE_NAME> [--prefix <ACCELERATOR_PREFIX> --use-existing-role <Yes/No> --dry-run <Yes/No>]';
+  'Usage: yarn run ts-node packages/@aws-accelerator/modules/bin/runner.ts --partition <PARTITION> --account-id <ACCOUNT_ID> --region <REGION> --config-dir <CONFIG_DIR_PATH> --stage <PIPELINE_STAGE_NAME> [--prefix <ACCELERATOR_PREFIX> --use-existing-roles --dry-run]';
 
 /**
  * Function to validate and get runner parameters
@@ -60,8 +61,8 @@ export function validateAndGetRunnerParameters(): RunnerParametersType {
       prefix: { type: 'string', default: undefined },
       'config-dir': { type: 'string', default: undefined },
       stage: { type: 'string', default: undefined },
-      'use-existing-role': { type: 'string', default: undefined },
-      'dry-run': { type: 'string', default: undefined },
+      'use-existing-roles': { type: 'boolean', default: false },
+      'dry-run': { type: 'boolean', default: false },
     })
     .parseSync();
 
@@ -69,16 +70,8 @@ export function validateAndGetRunnerParameters(): RunnerParametersType {
     throw new Error(`Missing required parameters for lza module \n ** Script Usage ** ${scriptUsage}`);
   }
 
-  let useExistingRole = false;
-  let dryRun = false;
-
-  if (argv['use-existing-role']) {
-    useExistingRole = argv['use-existing-role'].toLowerCase() === 'yes';
-  }
-
-  if (argv['dry-run']) {
-    dryRun = argv['dry-run'].toLowerCase() === 'yes';
-  }
+  const useExistingRoles = Boolean(argv['use-existing-roles']);
+  const dryRun = Boolean(argv['dry-run']);
 
   return {
     partition: argv.partition,
@@ -86,7 +79,7 @@ export function validateAndGetRunnerParameters(): RunnerParametersType {
     configDirPath: argv['config-dir'],
     stage: argv.stage,
     prefix: argv.prefix ?? 'AWSAccelerator',
-    useExistingRole,
+    useExistingRoles,
     solutionId: `AwsSolution/SO0199/${version}`,
     dryRun,
   };
@@ -398,4 +391,28 @@ export function getCentralLogBucketName(
 export function getRunnerTargetRegions(enabledRegions: string[], excludedRegions: string[]): string[] {
   const includedRegions = enabledRegions.filter(item => !excludedRegions.includes(item));
   return includedRegions;
+}
+
+/**
+ * Function to check if module execution is skipped by environment
+ * @param moduleName
+ * @returns
+ */
+export function isModuleExecutionSkippedByEnvironment(moduleName: string): boolean {
+  if (!EXECUTION_CONTROLLABLE_MODULES.includes(moduleName)) {
+    return false;
+  }
+
+  const environmentVariableName = pascalCase(`skip-${moduleName}`);
+  const environmentSetting = process.env[pascalCase(environmentVariableName)]?.toLowerCase() === 'true';
+  if (environmentSetting) {
+    logger.warn(
+      `Module ${moduleName} skipped by environment variable settings. To enable the module execution set the environment variable ${environmentVariableName} to true (case insensitive) for AWSAccelerator-ToolkitProject CodeBuild project.`,
+    );
+    return true;
+  }
+  logger.info(
+    `Module ${moduleName} will be executed, module execution can be skipped by setting environment variable ${environmentVariableName} to false (case insensitive) for AWSAccelerator-ToolkitProject CodeBuild project. Removing the variable will enable module execution. Contact AWS Support prior to making changes to the module's default settings.`,
+  );
+  return false;
 }
