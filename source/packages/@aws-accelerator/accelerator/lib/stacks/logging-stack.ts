@@ -253,18 +253,16 @@ export class LoggingStack extends AcceleratorStack {
    */
   private configureCloudWatchLogReplication(props: AcceleratorStackProps): void {
     if (props.globalConfig.logging.cloudwatchLogs?.enable ?? true) {
-      if (props.partition === 'aws' || props.partition === 'aws-us-gov' || props.partition === 'aws-cn') {
-        if (cdk.Stack.of(this).account === props.accountsConfig.getLogArchiveAccountId()) {
-          const receivingLogs = this.cloudwatchLogReceivingAccount(this.centralLogsBucketName, this.lambdaKey);
-          const creatingLogs = this.cloudwatchLogCreatingAccount();
+      if (cdk.Stack.of(this).account === props.accountsConfig.getLogArchiveAccountId()) {
+        const receivingLogs = this.cloudwatchLogReceivingAccount(this.centralLogsBucketName, this.lambdaKey);
+        const creatingLogs = this.cloudwatchLogCreatingAccount();
 
-          // Log receiving setup should be complete before logs creation setup can start or else there will be errors about destination not ready.
-          creatingLogs.node.addDependency(receivingLogs);
-        } else {
-          // Any account in LZA needs to setup log subscriptions for CloudWatch Logs
-          // The destination needs to be present before its setup
-          this.cloudwatchLogCreatingAccount();
-        }
+        // Log receiving setup should be complete before logs creation setup can start or else there will be errors about destination not ready.
+        creatingLogs.node.addDependency(receivingLogs);
+      } else {
+        // Any account in LZA needs to setup log subscriptions for CloudWatch Logs
+        // The destination needs to be present before its setup
+        this.cloudwatchLogCreatingAccount();
       }
     }
   }
@@ -1082,11 +1080,12 @@ export class LoggingStack extends AcceleratorStack {
       organizationId: this.organizationId,
       partition: this.props.partition,
       accountIds:
-        this.props.partition === 'aws-cn' || !this.organizationId
+        (this.props.globalConfig.logging.cloudwatchLogs?.organizationIdConditionSupported ?? undefined) === false || !this.organizationId
           ? this.props.accountsConfig.getAccountIds()
           : undefined,
       acceleratorPrefix: this.props.prefixes.accelerator,
       useExistingRoles: this.props.useExistingRoles ?? false,
+      organizationIdConditionSupported: this.props.globalConfig.logging.cloudwatchLogs?.organizationIdConditionSupported ?? undefined,
     });
 
     // Setup Firehose to take records from Kinesis and place in S3

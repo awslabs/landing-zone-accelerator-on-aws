@@ -1396,6 +1396,11 @@ export interface ICloudWatchLogsConfig {
    * CloudWatch Log data protection configuration
    */
   readonly dataProtection?: ICloudWatchDataProtectionConfig;
+  /**
+   * Determines if a list of account ids is used instead of a principal organization condition in the CloudWatch Logs destination access policy.
+   * This is useful in partitions where the principal organization condition is not supported.
+   */
+  readonly organizationIdConditionSupported?: boolean;
 }
 
 /**
