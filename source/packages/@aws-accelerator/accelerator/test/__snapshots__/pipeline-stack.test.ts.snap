@@ -2772,8 +2772,7 @@ phases:
     commands:
       - env
       - cd $WORK_DIR
-      - useExistingRole=No
-      - set -e && LOG_LEVEL=info && yarn run ts-node ../modules/bin/runner.ts --partition ",
+      - RUNNER_ARGS="--partition ",
                 {
                   "Ref": "AWS::Partition",
                 },
@@ -2781,7 +2780,9 @@ phases:
                 {
                   "Ref": "AWS::Region",
                 },
-                " --config-dir $CODEBUILD_SRC_DIR_Config --stage $ACCELERATOR_STAGE --prefix AWSAccelerator --use-existing-role $useExistingRole --dry-run no
+                " --config-dir $CODEBUILD_SRC_DIR_Config --stage $ACCELERATOR_STAGE --prefix AWSAccelerator"
+      - if false; then RUNNER_ARGS="$RUNNER_ARGS --use-existing-roles"; fi
+      - set -e && LOG_LEVEL=info && yarn run ts-node ../modules/bin/runner.ts $RUNNER_ARGS
       - |-
         if [ "\${ACCELERATOR_STAGE}" = "pre-approval" ]; then
                         mkdir rawDiff;
@@ -6179,8 +6180,7 @@ phases:
     commands:
       - env
       - cd $WORK_DIR
-      - useExistingRole=No
-      - set -e && LOG_LEVEL=info && yarn run ts-node ../modules/bin/runner.ts --partition ",
+      - RUNNER_ARGS="--partition ",
                 {
                   "Ref": "AWS::Partition",
                 },
@@ -6188,7 +6188,9 @@ phases:
                 {
                   "Ref": "AWS::Region",
                 },
-                " --config-dir $CODEBUILD_SRC_DIR_Config --stage $ACCELERATOR_STAGE --prefix AWSAccelerator --use-existing-role $useExistingRole --dry-run no
+                " --config-dir $CODEBUILD_SRC_DIR_Config --stage $ACCELERATOR_STAGE --prefix AWSAccelerator"
+      - if false; then RUNNER_ARGS="$RUNNER_ARGS --use-existing-roles"; fi
+      - set -e && LOG_LEVEL=info && yarn run ts-node ../modules/bin/runner.ts $RUNNER_ARGS
       - |-
         if [ "\${ACCELERATOR_STAGE}" = "pre-approval" ]; then
                         mkdir rawDiff;

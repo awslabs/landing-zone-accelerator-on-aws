@@ -39,7 +39,7 @@ export abstract class InviteAccountsToOrganizationsModule {
         operation: 'create-organizational-unit',
         partition: params.runnerParameters.partition,
         region: params.moduleRunnerParameters.configs.globalConfig.homeRegion,
-        useExistingRole: params.runnerParameters.useExistingRole,
+        useExistingRole: params.runnerParameters.useExistingRoles,
         solutionId: params.runnerParameters.solutionId,
         credentials: params.moduleRunnerParameters.managementAccountCredentials,
         dryRun: params.runnerParameters.dryRun,

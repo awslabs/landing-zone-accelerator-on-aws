@@ -361,7 +361,7 @@ export const MOCK_CONSTANTS = {
     region: 'mockRegion',
     prefix: 'mockPrefix',
     configDirPath: '/path/to/config',
-    useExistingRole: false,
+    useExistingRoles: false,
     solutionId: 'mockSolutionId',
     dryRun: false,
   },
