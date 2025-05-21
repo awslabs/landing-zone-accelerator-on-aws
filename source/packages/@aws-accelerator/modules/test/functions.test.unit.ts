@@ -57,6 +57,7 @@ import {
 } from './mocked-resources';
 import { AcceleratorModuleStageOrders, EXECUTION_CONTROLLABLE_MODULES } from '../models/constants';
 import { pascalCase } from 'pascal-case';
+import { AcceleratorModules, AcceleratorModuleStages, ModuleExecutionPhase } from '../models/enums';
 
 const mockYargs = {
   options: jest.fn().mockReturnThis(),
@@ -615,7 +616,7 @@ describe('functions', () => {
       };
     });
 
-    test('should return CMK ARN when parameter exists', async () => {
+    test('should return CMK ARN', async () => {
       // Setup
       jest
         .spyOn(require('../../../@aws-lza/common/functions'), 'getCredentials')
@@ -633,6 +634,14 @@ describe('functions', () => {
         MOCK_CONSTANTS.acceleratorResourceNames,
         mockLzaLoggingBucketGlobalConfig as GlobalConfig,
         mockAccountsConfig as AccountsConfig,
+        {
+          name: AcceleratorModuleStages.PREPARE,
+          runOrder: AcceleratorModuleStageOrders.logging.runOrder + 1,
+          module: {
+            name: AcceleratorModules.SETUP_CONTROL_TOWER_LANDING_ZONE,
+            executionPhase: ModuleExecutionPhase.DEPLOY,
+          },
+        },
         MOCK_CONSTANTS.credentials,
       );
 
@@ -647,39 +656,7 @@ describe('functions', () => {
       );
     });
 
-    test('should use imported bucket parameter name when createAcceleratorManagedKey is true', async () => {
-      // Setup
-      jest
-        .spyOn(require('../../../@aws-lza/common/functions'), 'getCredentials')
-        .mockResolvedValue(MOCK_CONSTANTS.credentials);
-
-      (ssmMockClient.send as jest.Mock).mockReturnValue({
-        Parameter: MOCK_CONSTANTS.centralLogBucketCmkSsmParameter,
-      });
-
-      // Execute
-      const result = await getCentralLogsBucketKeyArn(
-        MOCK_CONSTANTS.runnerParameters.partition,
-        MOCK_CONSTANTS.runnerParameters.solutionId,
-        MOCK_CONSTANTS.centralizedLoggingRegion,
-        MOCK_CONSTANTS.acceleratorResourceNames,
-        mockImportedLoggingBucketGlobalConfig as GlobalConfig,
-        mockAccountsConfig as AccountsConfig,
-        MOCK_CONSTANTS.credentials,
-      );
-
-      // Verify
-      expect(result).toBe(MOCK_CONSTANTS.centralLogBucketCmkSsmParameter.Value);
-      expect(SSMClient).toHaveBeenCalledWith(
-        expect.objectContaining({
-          region: MOCK_CONSTANTS.runnerParameters.region,
-          customUserAgent: MOCK_CONSTANTS.runnerParameters.solutionId,
-          credentials: MOCK_CONSTANTS.credentials,
-        }),
-      );
-    });
-
-    test('should return undefined when parameter is not found', async () => {
+    test('should return undefined when parameter not found', async () => {
       // Setup
       jest
         .spyOn(require('../../../@aws-lza/common/functions'), 'getCredentials')
@@ -700,6 +677,14 @@ describe('functions', () => {
         MOCK_CONSTANTS.acceleratorResourceNames,
         mockImportedLoggingBucketGlobalConfig as GlobalConfig,
         mockAccountsConfig as AccountsConfig,
+        {
+          name: AcceleratorModuleStages.PREPARE,
+          runOrder: AcceleratorModuleStageOrders.logging.runOrder + 1,
+          module: {
+            name: AcceleratorModules.SETUP_CONTROL_TOWER_LANDING_ZONE,
+            executionPhase: ModuleExecutionPhase.DEPLOY,
+          },
+        },
         MOCK_CONSTANTS.credentials,
       );
 
@@ -725,9 +710,75 @@ describe('functions', () => {
           MOCK_CONSTANTS.acceleratorResourceNames,
           mockImportedLoggingBucketGlobalConfig as GlobalConfig,
           mockAccountsConfig as AccountsConfig,
+          {
+            name: AcceleratorModuleStages.PREPARE,
+            runOrder: AcceleratorModuleStageOrders.logging.runOrder + 1,
+            module: {
+              name: AcceleratorModules.SETUP_CONTROL_TOWER_LANDING_ZONE,
+              executionPhase: ModuleExecutionPhase.DEPLOY,
+            },
+          },
           MOCK_CONSTANTS.credentials,
         ),
       ).rejects.toThrow(mockError);
+    });
+
+    test('should return undefined when stage execution order is prior to logging stage', async () => {
+      // Setup
+      jest
+        .spyOn(require('../../../@aws-lza/common/functions'), 'getCredentials')
+        .mockResolvedValue(MOCK_CONSTANTS.credentials);
+
+      // Execute
+      const result = await getCentralLogsBucketKeyArn(
+        MOCK_CONSTANTS.runnerParameters.partition,
+        MOCK_CONSTANTS.runnerParameters.solutionId,
+        MOCK_CONSTANTS.centralizedLoggingRegion,
+        MOCK_CONSTANTS.acceleratorResourceNames,
+        mockImportedLoggingBucketGlobalConfig as GlobalConfig,
+        mockAccountsConfig as AccountsConfig,
+        {
+          name: AcceleratorModuleStages.PREPARE,
+          runOrder: AcceleratorModuleStageOrders.logging.runOrder - 1,
+          module: {
+            name: AcceleratorModules.SETUP_CONTROL_TOWER_LANDING_ZONE,
+            executionPhase: ModuleExecutionPhase.SYNTH,
+          },
+        },
+        MOCK_CONSTANTS.credentials,
+      );
+
+      // Verify
+      expect(result).toBeUndefined();
+    });
+
+    test('should return undefined when module execution phase is synth', async () => {
+      // Setup
+      jest
+        .spyOn(require('../../../@aws-lza/common/functions'), 'getCredentials')
+        .mockResolvedValue(MOCK_CONSTANTS.credentials);
+
+      // Execute
+      const result = await getCentralLogsBucketKeyArn(
+        MOCK_CONSTANTS.runnerParameters.partition,
+        MOCK_CONSTANTS.runnerParameters.solutionId,
+        MOCK_CONSTANTS.centralizedLoggingRegion,
+        MOCK_CONSTANTS.acceleratorResourceNames,
+        mockImportedLoggingBucketGlobalConfig as GlobalConfig,
+        mockAccountsConfig as AccountsConfig,
+        {
+          name: AcceleratorModuleStages.PREPARE,
+          runOrder: AcceleratorModuleStageOrders.logging.runOrder + 1,
+          module: {
+            name: AcceleratorModules.SETUP_CONTROL_TOWER_LANDING_ZONE,
+            executionPhase: ModuleExecutionPhase.SYNTH,
+          },
+        },
+        MOCK_CONSTANTS.credentials,
+      );
+
+      // Verify
+      expect(result).toBeUndefined();
     });
   });
 
@@ -837,7 +888,6 @@ describe('functions', () => {
         MOCK_CONSTANTS.runnerParameters.partition,
         MOCK_CONSTANTS.resourcePrefixes,
         MOCK_CONSTANTS.runnerParameters.solutionId,
-        AcceleratorModuleStageOrders.finalize.runOrder,
         MOCK_CONSTANTS.credentials,
       );
 
@@ -847,7 +897,10 @@ describe('functions', () => {
         globalRegion: MOCK_CONSTANTS.globalRegion,
         resourcePrefixes: MOCK_CONSTANTS.resourcePrefixes,
         acceleratorResourceNames: MOCK_CONSTANTS.acceleratorResourceNames,
-        logging: MOCK_CONSTANTS.logging,
+        logging: {
+          centralizedRegion: MOCK_CONSTANTS.logging.centralizedRegion,
+          bucketName: MOCK_CONSTANTS.logging.bucketName,
+        },
         organizationAccounts: MOCK_CONSTANTS.organizationAccounts,
         organizationDetails: MOCK_CONSTANTS.organizationDetails,
         managementAccountCredentials: MOCK_CONSTANTS.credentials,
@@ -882,7 +935,6 @@ describe('functions', () => {
         MOCK_CONSTANTS.runnerParameters.partition,
         MOCK_CONSTANTS.resourcePrefixes,
         MOCK_CONSTANTS.runnerParameters.solutionId,
-        AcceleratorModuleStageOrders.finalize.runOrder,
         MOCK_CONSTANTS.credentials,
       );
 
@@ -909,7 +961,6 @@ describe('functions', () => {
           MOCK_CONSTANTS.runnerParameters.partition,
           MOCK_CONSTANTS.resourcePrefixes,
           MOCK_CONSTANTS.runnerParameters.solutionId,
-          AcceleratorModuleStageOrders.prepare.runOrder,
           MOCK_CONSTANTS.credentials,
         ),
       ).rejects.toThrow(new Error(errorMessage));

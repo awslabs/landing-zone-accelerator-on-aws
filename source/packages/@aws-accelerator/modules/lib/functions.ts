@@ -40,6 +40,7 @@ import { AccountsConfig } from '@aws-accelerator/config/lib/accounts-config';
 import { GetParameterCommand, ParameterNotFound, SSMClient } from '@aws-sdk/client-ssm';
 import { ConfigLoader } from './config-loader';
 import { AcceleratorModuleStageOrders, EXECUTION_CONTROLLABLE_MODULES } from '../models/constants';
+import { ModuleExecutionPhase } from '../models/enums';
 
 const logger = createLogger([path.parse(path.basename(__filename)).name]);
 
@@ -188,7 +189,6 @@ export async function getOrganizationDetails(
  * @param partition string
  * @param resourcePrefixes {@link AcceleratorResourcePrefixes}
  * @param solutionId string
- * @param stageRunOrder number
  * @param managementAccountCredentials {@link IAssumeRoleCredential} | undefined
  * @returns configs {@link AcceleratorModuleRunnerParametersType}
  */
@@ -197,7 +197,6 @@ export async function getAcceleratorModuleRunnerParameters(
   partition: string,
   resourcePrefixes: AcceleratorResourcePrefixes,
   solutionId: string,
-  stageRunOrder: number,
   managementAccountCredentials?: IAssumeRoleCredential,
 ): Promise<AcceleratorModuleRunnerParametersType> {
   const acceleratorConfigurations = await ConfigLoader.getAcceleratorConfigurations(
@@ -238,29 +237,6 @@ export async function getAcceleratorModuleRunnerParameters(
   );
 
   //
-  // Get Central log bucket CMK arn
-  //
-  let centralLogsBucketKeyArn: string | undefined;
-  if (stageRunOrder > AcceleratorModuleStageOrders.logging.runOrder) {
-    logger.info(
-      `Getting Central Log bucket ARN since the stage is executed after ${AcceleratorModuleStageOrders.logging.name} stage`,
-    );
-    centralLogsBucketKeyArn = await getCentralLogsBucketKeyArn(
-      partition,
-      solutionId,
-      centralizedLoggingRegion,
-      acceleratorResourceNames,
-      acceleratorConfigurations.globalConfig,
-      acceleratorConfigurations.accountsConfig,
-      managementAccountCredentials,
-    );
-  } else {
-    logger.info(
-      `Will not get Central Log bucket ARN since the stage is executed before ${AcceleratorModuleStageOrders.logging.name} stage`,
-    );
-  }
-
-  //
   // Get Global Region
   //
   const globalRegion = getGlobalRegion(partition);
@@ -290,7 +266,7 @@ export async function getAcceleratorModuleRunnerParameters(
     logging: {
       centralizedRegion: centralizedLoggingRegion,
       bucketName: centralLogBucketName,
-      bucketKeyArn: centralLogsBucketKeyArn,
+      bucketKeyArn: undefined,
     },
     organizationAccounts,
     organizationDetails,
@@ -303,10 +279,11 @@ export async function getAcceleratorModuleRunnerParameters(
  * @param partition string
  * @param solutionId string
  * @param centralizedLoggingRegion string
- * @param acceleratorResourceNames {@link AcceleratorResourceNames}
- * @param globalConfig {@link GlobalConfig}
+ * @param acceleratorResourceNames {@link AcceleratorResourceNames }
+ * @param globalConfig {@link GlobalConfig }
  * @param accountsConfig {@link AccountsConfig}
- * @param managementAccountCredentials {@link IAssumeRoleCredential}
+ * @param stage
+ * @param managementAccountCredentials {@link IAssumeRoleCredential} | undefined
  * @returns
  */
 export async function getCentralLogsBucketKeyArn(
@@ -316,8 +293,32 @@ export async function getCentralLogsBucketKeyArn(
   acceleratorResourceNames: AcceleratorResourceNames,
   globalConfig: GlobalConfig,
   accountsConfig: AccountsConfig,
+  stage: {
+    name: string;
+    runOrder: number;
+    module: {
+      name: string;
+      executionPhase: ModuleExecutionPhase;
+    };
+  },
   managementAccountCredentials?: IAssumeRoleCredential,
 ): Promise<string | undefined> {
+  if (stage.runOrder <= AcceleratorModuleStageOrders.logging.runOrder) {
+    logger.info(
+      `Central Logs bucket key arn is not required to be fetched for ${stage.module.name} module of ${stage.name} stage.`,
+    );
+    return undefined;
+  }
+
+  if (stage.module.executionPhase === ModuleExecutionPhase.SYNTH) {
+    logger.info(
+      `Central Logs bucket key arn is not required to be fetched for ${stage.module.name} module of ${stage.name} stage, becasue module execution phase is ${stage.module.executionPhase}`,
+    );
+
+    return undefined;
+  }
+
+  logger.info(`Fetching Central Logs bucket key arn for ${stage.module.name} module of ${stage.name} stage.`);
   let ssmParamName = acceleratorResourceNames.parameters.centralLogBucketCmkArn;
   if (globalConfig.logging.centralLogBucket?.importedBucket?.createAcceleratorManagedKey) {
     ssmParamName = acceleratorResourceNames.parameters.importedCentralLogBucketCmkArn;

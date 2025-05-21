@@ -93,7 +93,10 @@ describe('ModuleRunner', () => {
       globalRegion: MOCK_CONSTANTS.globalRegion,
       resourcePrefixes: MOCK_CONSTANTS.resourcePrefixes,
       acceleratorResourceNames: MOCK_CONSTANTS.acceleratorResourceNames,
-      logging: MOCK_CONSTANTS.logging,
+      logging: {
+        centralizedRegion: MOCK_CONSTANTS.logging.centralizedRegion,
+        bucketName: MOCK_CONSTANTS.logging.bucketName,
+      },
       organizationAccounts: [],
       organizationDetails: undefined,
       managementAccountCredentials: MOCK_CONSTANTS.credentials,
