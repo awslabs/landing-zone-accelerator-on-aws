@@ -47,6 +47,7 @@ jest.mock('../lib/functions', () => ({
   getManagementAccountCredentials: jest.fn().mockReturnValue(undefined),
   getAcceleratorModuleRunnerParameters: jest.fn().mockReturnValue(undefined),
   getCentralLogsBucketKeyArn: jest.fn(),
+  isModuleExecutionSkippedByEnvironment: jest.fn().mockReturnValue(true),
 }));
 
 jest.mock('../../accelerator/utils/app-utils', () => ({

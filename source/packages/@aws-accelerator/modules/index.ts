@@ -26,6 +26,7 @@ import {
   getAcceleratorModuleRunnerParameters,
   getCentralLogsBucketKeyArn,
   getManagementAccountCredentials,
+  isModuleExecutionSkippedByEnvironment,
 } from './lib/functions';
 import { AcceleratorModuleStageDetails, AcceleratorModuleStageOrders } from './models/constants';
 import { ModuleExecutionPhase } from './models/enums';
@@ -205,16 +206,18 @@ export abstract class ModuleRunner {
         continue;
       }
 
-      ModuleRunner.logger.info(`Module "${sortedModuleItem.name}" added for execution.`);
-      promiseItems.push({
-        runOrder: synthPhase ? 1 : sortedModuleItem.runOrder,
-        promise: () =>
-          sortedModuleItem.handler({
-            moduleItem: sortedModuleItem,
-            runnerParameters: params,
-            moduleRunnerParameters: acceleratorModuleRunnerParameters,
-          }),
-      });
+      if (!isModuleExecutionSkippedByEnvironment(sortedModuleItem.name)) {
+        ModuleRunner.logger.info(`Module "${sortedModuleItem.name}" added for execution.`);
+        promiseItems.push({
+          runOrder: synthPhase ? 1 : sortedModuleItem.runOrder,
+          promise: () =>
+            sortedModuleItem.handler({
+              moduleItem: sortedModuleItem,
+              runnerParameters: params,
+              moduleRunnerParameters: acceleratorModuleRunnerParameters,
+            }),
+        });
+      }
     }
 
     if (promiseItems.length === 0) {

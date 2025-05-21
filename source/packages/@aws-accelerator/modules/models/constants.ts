@@ -243,3 +243,15 @@ export const AcceleratorModuleStageDetails: AcceleratorModuleStageDetailsType[] 
     modules: [],
   },
 ];
+
+/**
+ * List of module name which execution can be controlled by environment variable settings
+ *
+ */
+export const EXECUTION_CONTROLLABLE_MODULES: string[] = [
+  AcceleratorModules.CREATE_ORGANIZATIONAL_UNIT,
+  AcceleratorModules.REGISTER_ORGANIZATIONAL_UNIT,
+  AcceleratorModules.INVITE_ACCOUNTS_TO_ORGANIZATIONS,
+  AcceleratorModules.MOVE_ACCOUNTS,
+  AcceleratorModules.SETUP_CONTROL_TOWER_LANDING_ZONE,
+];
