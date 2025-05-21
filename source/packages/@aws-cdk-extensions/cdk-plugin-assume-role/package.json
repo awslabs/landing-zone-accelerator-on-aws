@@ -23,7 +23,7 @@
     "@typescript-eslint/eslint-plugin": "5.53.0",
     "@typescript-eslint/parser": "5.53.0",
     "aws-cdk": "2.158.0",
-    "aws-cdk-lib": "2.158.0",
+    "aws-cdk-lib": "2.189.1",
     "aws-sdk": "2.1691.0",
     "colors": "1.4.0",
     "exponential-backoff": "3.1.1"
