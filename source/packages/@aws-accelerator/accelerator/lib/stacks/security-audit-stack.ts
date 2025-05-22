@@ -612,7 +612,7 @@ export class SecurityAuditStack extends AcceleratorStack {
       const mgmtAccountSnsTopicArn = `arn:${cdk.Stack.of(this).partition}:sns:${
         cdk.Stack.of(this).region
       }:${this.props.accountsConfig.getManagementAccountId()}:${
-        this.props.prefixes.snsTopicName
+        this.props.prefixes.accelerator
       }-ControlTowerNotification`;
       const controlTowerNotificationsForwarderFunction = new cdk.aws_lambda.Function(
         this,
