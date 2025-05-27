@@ -47,7 +47,7 @@ export class Route53ResolverQueryLoggingAssociation extends AseaResource {
       }
 
       const associationLogicalIdWithReplacedVpc = `RqlAssoc${vpcName}`;
-      const associationLogicalId = `${associationLogicalIdWithReplacedVpc}`.replace(/-/g, '');
+      const associationLogicalId = `${associationLogicalIdWithReplacedVpc}`.replace(/-|_/g, '');
 
       const importResource = this.scope.importStackResources.getResourceByLogicalId(associationLogicalId);
       const cfnResolverQueryLoggingAssociation = this.scope.getResource(
