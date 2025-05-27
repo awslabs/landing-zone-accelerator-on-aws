@@ -85,6 +85,19 @@ export class MacieExportConfigClassification extends Construct {
           ],
           Resource: '*',
         },
+        {
+          Sid: 'MacieCreateSlr',
+          Effect: 'Allow',
+          Action: ['iam:CreateServiceLinkedRole'],
+          Resource: `arn:${
+            cdk.Stack.of(this).partition
+          }:iam::*:role/aws-service-role/macie.amazonaws.com/AWSServiceRoleForAmazonMacie`,
+          Condition: {
+            StringLike: {
+              'iam:AWSServiceName': 'macie.amazonaws.com',
+            },
+          },
+        },
       ],
     });
 

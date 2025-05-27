@@ -70,10 +70,12 @@ export class MacieSession extends Construct {
           Sid: 'MacieEnableMacieTaskIamAction',
           Effect: 'Allow',
           Action: ['iam:CreateServiceLinkedRole'],
-          Resource: '*',
+          Resource: `arn:${
+            cdk.Stack.of(this).partition
+          }:iam::*:role/aws-service-role/macie.amazonaws.com/AWSServiceRoleForAmazonMacie`,
           Condition: {
-            StringLikeIfExists: {
-              'iam:CreateServiceLinkedRole': ['macie.amazonaws.com'],
+            StringLike: {
+              'iam:AWSServiceName': 'macie.amazonaws.com',
             },
           },
         },

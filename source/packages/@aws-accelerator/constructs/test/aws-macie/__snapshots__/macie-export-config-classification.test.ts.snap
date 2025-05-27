@@ -158,6 +158,30 @@ exports[`MacieExportConfigClassification Construct(MacieExportConfigClassificati
                   "Resource": "*",
                   "Sid": "MaciePutClassificationExportConfigurationTaskMacieActions",
                 },
+                {
+                  "Action": [
+                    "iam:CreateServiceLinkedRole",
+                  ],
+                  "Condition": {
+                    "StringLike": {
+                      "iam:AWSServiceName": "macie.amazonaws.com",
+                    },
+                  },
+                  "Effect": "Allow",
+                  "Resource": {
+                    "Fn::Join": [
+                      "",
+                      [
+                        "arn:",
+                        {
+                          "Ref": "AWS::Partition",
+                        },
+                        ":iam::*:role/aws-service-role/macie.amazonaws.com/AWSServiceRoleForAmazonMacie",
+                      ],
+                    ],
+                  },
+                  "Sid": "MacieCreateSlr",
+                },
               ],
               "Version": "2012-10-17",
             },

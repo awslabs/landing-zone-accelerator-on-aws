@@ -35,6 +35,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - fix(asea): don't fail on private hosted zones when multiple vpc endpoints of the same type are present on different vpc's
 - fix(asea): fix route53 query logging stack failures during upgrade
 - fix(security-audit): sns topic for controltower notifications
+- fix(macie): update macie custom resource policy statement to correct error preventing creation of service linked roler
 
 ### Changed
 
