@@ -329,9 +329,18 @@ exports[`MultiOuOrganizationsStack Construct(OrganizationsStack):  Snapshot Test
                     },
                   },
                   "Effect": "Allow",
-                  "Resource": [
-                    "*",
-                  ],
+                  "Resource": {
+                    "Fn::Join": [
+                      "",
+                      [
+                        "arn:",
+                        {
+                          "Ref": "AWS::Partition",
+                        },
+                        ":iam::*:role/aws-service-role/auditmanager.amazonaws.com/AWSServiceRoleForAuditManager",
+                      ],
+                    ],
+                  },
                   "Sid": "AuditManagerIamPermission",
                 },
                 {
@@ -1129,7 +1138,18 @@ exports[`MultiOuOrganizationsStack Construct(OrganizationsStack):  Snapshot Test
                     },
                   },
                   "Effect": "Allow",
-                  "Resource": "*",
+                  "Resource": {
+                    "Fn::Join": [
+                      "",
+                      [
+                        "arn:aws:",
+                        {
+                          "Ref": "AWS::Partition",
+                        },
+                        "::*:role/aws-service-role/macie.amazonaws.com/AWSServiceRoleForAmazonMacie",
+                      ],
+                    ],
+                  },
                   "Sid": "MacieEnableMacieTaskIamAction",
                 },
               ],
@@ -3858,9 +3878,18 @@ exports[`OrganizationsStack Construct(OrganizationsStack):  Snapshot Test 1`] = 
                     },
                   },
                   "Effect": "Allow",
-                  "Resource": [
-                    "*",
-                  ],
+                  "Resource": {
+                    "Fn::Join": [
+                      "",
+                      [
+                        "arn:",
+                        {
+                          "Ref": "AWS::Partition",
+                        },
+                        ":iam::*:role/aws-service-role/auditmanager.amazonaws.com/AWSServiceRoleForAuditManager",
+                      ],
+                    ],
+                  },
                   "Sid": "AuditManagerIamPermission",
                 },
                 {
@@ -4658,7 +4687,18 @@ exports[`OrganizationsStack Construct(OrganizationsStack):  Snapshot Test 1`] = 
                     },
                   },
                   "Effect": "Allow",
-                  "Resource": "*",
+                  "Resource": {
+                    "Fn::Join": [
+                      "",
+                      [
+                        "arn:aws:",
+                        {
+                          "Ref": "AWS::Partition",
+                        },
+                        "::*:role/aws-service-role/macie.amazonaws.com/AWSServiceRoleForAmazonMacie",
+                      ],
+                    ],
+                  },
                   "Sid": "MacieEnableMacieTaskIamAction",
                 },
               ],
@@ -7296,9 +7336,18 @@ exports[`delegatedAdminStack Construct(OrganizationsStack):  Snapshot Test 1`] =
                     },
                   },
                   "Effect": "Allow",
-                  "Resource": [
-                    "*",
-                  ],
+                  "Resource": {
+                    "Fn::Join": [
+                      "",
+                      [
+                        "arn:",
+                        {
+                          "Ref": "AWS::Partition",
+                        },
+                        ":iam::*:role/aws-service-role/auditmanager.amazonaws.com/AWSServiceRoleForAuditManager",
+                      ],
+                    ],
+                  },
                   "Sid": "AuditManagerIamPermission",
                 },
                 {
@@ -8096,7 +8145,18 @@ exports[`delegatedAdminStack Construct(OrganizationsStack):  Snapshot Test 1`] =
                     },
                   },
                   "Effect": "Allow",
-                  "Resource": "*",
+                  "Resource": {
+                    "Fn::Join": [
+                      "",
+                      [
+                        "arn:aws:",
+                        {
+                          "Ref": "AWS::Partition",
+                        },
+                        "::*:role/aws-service-role/macie.amazonaws.com/AWSServiceRoleForAmazonMacie",
+                      ],
+                    ],
+                  },
                   "Sid": "MacieEnableMacieTaskIamAction",
                 },
               ],

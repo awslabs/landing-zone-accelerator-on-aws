@@ -97,14 +97,23 @@ exports[`MacieSession Construct(MacieSession):  Snapshot Test 1`] = `
                     "iam:CreateServiceLinkedRole",
                   ],
                   "Condition": {
-                    "StringLikeIfExists": {
-                      "iam:CreateServiceLinkedRole": [
-                        "macie.amazonaws.com",
-                      ],
+                    "StringLike": {
+                      "iam:AWSServiceName": "macie.amazonaws.com",
                     },
                   },
                   "Effect": "Allow",
-                  "Resource": "*",
+                  "Resource": {
+                    "Fn::Join": [
+                      "",
+                      [
+                        "arn:",
+                        {
+                          "Ref": "AWS::Partition",
+                        },
+                        ":iam::*:role/aws-service-role/macie.amazonaws.com/AWSServiceRoleForAmazonMacie",
+                      ],
+                    ],
+                  },
                   "Sid": "MacieEnableMacieTaskIamAction",
                 },
               ],
