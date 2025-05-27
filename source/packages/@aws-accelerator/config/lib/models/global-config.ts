@@ -2281,6 +2281,30 @@ export interface IDefaultEventBusConfig {
 }
 
 /**
+ * *{@link SecurityConfig} / {@link StackPolicyConfig}*
+ *
+ * @description
+ * AWS Stack Policy configuration
+ * PLEASE NOTE THIS IS WORK IN PROGRESS AND NOT FINISHED. DO NOT USE!
+ *
+ * @example
+ * ```
+ * stackPolicy:
+ *   enable: true
+ *   protectedTypes: ['AWS::EC2::InternetGateway']
+ * ```
+ */
+export interface IStackPolicyConfig {
+  /**
+   * Indicates whether Stack policies are enabled in your organization.
+   * Resource types will be protected for Update:Replace and Update:Delete.
+   * Protected types need to be AWS:: resource types e.g. AWS::EC2::InternetGateway.
+   */
+  readonly enable: boolean;
+  readonly protectedTypes: string[];
+}
+
+/**
  * Accelerator global configuration
  */
 export interface IGlobalConfig {
@@ -2660,4 +2684,17 @@ export interface IGlobalConfig {
    * ```
    */
   readonly defaultEventBus?: IDefaultEventBusConfig;
+
+  /**
+   * Configuration for stack policies.
+   * Resource types will be protected for Update:Replace and Update:Delete.
+   * Protected types need to be AWS:: resource types e.g. AWS::EC2::InternetGateway.
+   * @example
+   * ```
+   * stackPolicy:
+   *   enable: true
+   *   protectedTypes: ['AWS::EC2::InternetGateway']
+   * ```
+   */
+  readonly stackPolicy?: IStackPolicyConfig;
 }

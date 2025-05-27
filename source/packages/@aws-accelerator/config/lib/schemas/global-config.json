@@ -1002,6 +1002,10 @@
           },
           "type": "array"
         },
+        "stackPolicy": {
+          "$ref": "#/definitions/IStackPolicyConfig",
+          "description": "Configuration for stack policies. Resource types will be protected for Update:Replace and Update:Delete. Protected types need to be AWS:: resource types e.g. AWS::EC2::InternetGateway."
+        },
         "tags": {
           "description": "Custom Tags for all resources created by Landing Zone Accelerator that can be tagged.",
           "items": {
@@ -1521,6 +1525,27 @@
       "required": [
         "parameters",
         "deploymentTargets"
+      ],
+      "type": "object"
+    },
+    "IStackPolicyConfig": {
+      "additionalProperties": false,
+      "description": "AWS Stack Policy configuration\nPLEASE NOTE THIS IS WORK IN PROGRESS AND NOT FINISHED. DO NOT USE!",
+      "properties": {
+        "enable": {
+          "description": "Indicates whether Stack policies are enabled in your organization. Resource types will be protected for Update:Replace and Update:Delete. Protected types need to be AWS:: resource types e.g. AWS::EC2::InternetGateway.",
+          "type": "boolean"
+        },
+        "protectedTypes": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "enable",
+        "protectedTypes"
       ],
       "type": "object"
     },
