@@ -201,9 +201,35 @@ export class GlobalConfigValidator {
     //
     this.validateFirehoseLambdaProcessorConfiguration(values.logging.cloudwatchLogs?.firehose?.lambdaProcessor, errors);
 
+    this.validateStackPolicy(values, errors);
+
     if (errors.length) {
       throw new Error(`${GlobalConfig.FILENAME} has ${errors.length} issues:\n${errors.join('\n')}`);
     }
+  }
+
+  public validateStackPolicy(globalConfig: GlobalConfig, errors: string[]): boolean {
+    const stackPolicy = globalConfig.stackPolicy;
+    if (!stackPolicy?.enable) {
+      return true;
+    }
+
+    if (!Array.isArray(stackPolicy?.protectedTypes) || stackPolicy?.protectedTypes?.length < 1) {
+      errors.push(`Stack policy is enabled but protectedTypes are not defined or empty`);
+      return false;
+    }
+
+    // prepare regex validation
+    const expression = '^(aws::)([a-z0-9]+)::([a-z0-9]+)$';
+    const regex = new RegExp(expression);
+
+    for (const resourceType of stackPolicy.protectedTypes) {
+      if (!regex.test(resourceType?.toLowerCase())) {
+        errors.push(`Stack policy protected resource type ${resourceType} is not valid. Must match ${expression}`);
+      }
+    }
+
+    return errors.length === 0;
   }
 
   /**
