@@ -559,6 +559,11 @@ export class SsmParameterConfig implements i.ISsmParameterConfig {
   readonly value = '';
 }
 
+export class StackPolicyConfig implements i.IStackPolicyConfig {
+  readonly enable: boolean = false;
+  readonly protectedTypes: string[] = [];
+}
+
 export class GlobalConfig implements i.IGlobalConfig {
   /**
    * Global configuration file name, this file must be present in accelerator config repository
@@ -589,6 +594,7 @@ export class GlobalConfig implements i.IGlobalConfig {
   readonly s3: S3GlobalConfig | undefined = undefined;
   readonly defaultEventBus: DefaultEventBusConfig | undefined = undefined;
   readonly sqs: SqsConfig | undefined = undefined;
+  readonly stackPolicy: StackPolicyConfig | undefined;
 
   /**
    * SSM IAM Role Parameters to be loaded for session manager policy attachments
