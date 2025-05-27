@@ -55,6 +55,7 @@ export class AuditManagerOrganizationAdminAccount extends Construct {
       codeDirectory: path.join(__dirname, 'enable-organization-admin-account/dist'),
       runtime: CUSTOM_RESOURCE_PROVIDER_RUNTIME,
       policyStatements: AuditManagerOrganizationAdminAccount.getCustomResourceRolePolicyStatements(
+        cdk.Stack.of(this).partition,
         props.kmsKey?.keyArn,
       ),
     });
@@ -93,7 +94,7 @@ export class AuditManagerOrganizationAdminAccount extends Construct {
    * @param keyArn string | undefined
    * @returns statements {@link PolicyStatementType}[]
    */
-  public static getCustomResourceRolePolicyStatements(keyArn?: string): PolicyStatementType[] {
+  public static getCustomResourceRolePolicyStatements(partition: string, keyArn?: string): PolicyStatementType[] {
     const serviceName = 'auditmanager.amazonaws.com';
     const statements: PolicyStatementType[] = [
       {
@@ -119,7 +120,7 @@ export class AuditManagerOrganizationAdminAccount extends Construct {
         Sid: 'AuditManagerIamPermission',
         Effect: 'Allow',
         Action: ['iam:CreateServiceLinkedRole'],
-        Resource: ['*'],
+        Resource: `arn:${partition}:iam::*:role/aws-service-role/${serviceName}/AWSServiceRoleForAuditManager`,
         Condition: {
           StringLikeIfExists: {
             'iam:CreateServiceLinkedRole': [serviceName],

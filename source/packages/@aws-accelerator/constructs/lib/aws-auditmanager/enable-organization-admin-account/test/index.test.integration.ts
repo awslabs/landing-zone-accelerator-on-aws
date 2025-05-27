@@ -34,7 +34,10 @@ jest.setTimeout(2 * minute);
 const kmsKeyArn = process.env['KMS_KEY_ARN'] ?? undefined;
 
 const integrationTest = new IntegrationTest({
-  executorRolePolicyStatements: AuditManagerOrganizationAdminAccount.getCustomResourceRolePolicyStatements(kmsKeyArn),
+  executorRolePolicyStatements: AuditManagerOrganizationAdminAccount.getCustomResourceRolePolicyStatements(
+    'aws',
+    kmsKeyArn,
+  ),
 });
 
 RegionalTestSuite['sampleConfig:us-east-1']!.suite(RegionalTestSuite['sampleConfig:us-east-1']!.suiteName, () => {

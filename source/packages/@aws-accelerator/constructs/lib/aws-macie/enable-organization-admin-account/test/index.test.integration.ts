@@ -21,7 +21,7 @@ import { CreateEvent, DeleteEvent, UpdateEvent } from '@aws-accelerator/utils/li
 import { AssertPropsType } from '@aws-accelerator/utils/lib/test-util/common/assertion';
 import { RegionalTestSuite } from '@aws-accelerator/utils/lib/test-util/common/test-suite';
 
-import { MacieEnableOrganizationAdminAccountPolicyStatements } from '../../macie-organization-admin-account';
+import { MacieOrganizationAdminAccount } from '../../macie-organization-admin-account';
 
 import { handler } from '../index';
 
@@ -37,7 +37,7 @@ jest.setTimeout(2 * minute);
 // Initialize integration test class
 //
 const integrationTest = new IntegrationTest({
-  executorRolePolicyStatements: MacieEnableOrganizationAdminAccountPolicyStatements,
+  executorRolePolicyStatements: MacieOrganizationAdminAccount.getCustomResourceRolePolicyStatements('aws'),
 });
 
 RegionalTestSuite['sampleConfig:us-east-1']!.suite(RegionalTestSuite['sampleConfig:us-east-1']!.suiteName, () => {

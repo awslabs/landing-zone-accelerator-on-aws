@@ -151,7 +151,18 @@ exports[`MacieOrganizationAdminAccount Construct(MacieOrganizationAdminAccount):
                     },
                   },
                   "Effect": "Allow",
-                  "Resource": "*",
+                  "Resource": {
+                    "Fn::Join": [
+                      "",
+                      [
+                        "arn:aws:",
+                        {
+                          "Ref": "AWS::Partition",
+                        },
+                        "::*:role/aws-service-role/macie.amazonaws.com/AWSServiceRoleForAmazonMacie",
+                      ],
+                    ],
+                  },
                   "Sid": "MacieEnableMacieTaskIamAction",
                 },
               ],

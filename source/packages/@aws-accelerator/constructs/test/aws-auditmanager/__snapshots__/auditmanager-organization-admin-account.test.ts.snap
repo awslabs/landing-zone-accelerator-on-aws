@@ -150,9 +150,18 @@ exports[`AuditManagerOrganizationAdminAccount Construct(AuditManagerOrganization
                     },
                   },
                   "Effect": "Allow",
-                  "Resource": [
-                    "*",
-                  ],
+                  "Resource": {
+                    "Fn::Join": [
+                      "",
+                      [
+                        "arn:",
+                        {
+                          "Ref": "AWS::Partition",
+                        },
+                        ":iam::*:role/aws-service-role/auditmanager.amazonaws.com/AWSServiceRoleForAuditManager",
+                      ],
+                    ],
+                  },
                   "Sid": "AuditManagerIamPermission",
                 },
                 {
