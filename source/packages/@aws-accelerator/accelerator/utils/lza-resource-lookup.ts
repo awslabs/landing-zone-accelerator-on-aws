@@ -76,6 +76,7 @@ const RESOURCE_REQUIRED_KEYS: { [key in LZAResourceLookupType]?: string[] } = {
   [LZAResourceLookupType.NETWORK_ACL_ENTRY]: ['vpcName', 'naclName', 'ruleNumber'],
   [LZAResourceLookupType.SUBNET_NETWORK_ACL_ASSOCIATION]: ['vpcName', 'naclName', 'subnetName'],
   [LZAResourceLookupType.VPN_CONNECTION]: ['vpnName', 'vpcName'],
+  [LZAResourceLookupType.DELETE_VPC_DEFAULT_SECURITY_GROUP_RULES]: ['vpcName'],
 };
 
 export class LZAResourceLookup {
