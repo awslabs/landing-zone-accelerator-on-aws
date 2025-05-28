@@ -2920,6 +2920,8 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
       "DependsOn": [
         "CustomIpamSubnetCustomResourceProviderLogGroup3BB67050",
         "NetworkEndpointsVpcVpcCidrBlockC483B99B",
+        "NetworkEndpointsVpcVpcCidrBlock138259E6A",
+        "NetworkEndpointsVpcVpcCidrBlock2808CB828",
       ],
       "Properties": {
         "ServiceToken": {
@@ -2954,6 +2956,8 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
     "NetworkEndpointsVpcNetworkEndpointsASubnetRouteTableAssociation9EE74497": {
       "DependsOn": [
         "NetworkEndpointsVpcVpcCidrBlockC483B99B",
+        "NetworkEndpointsVpcVpcCidrBlock138259E6A",
+        "NetworkEndpointsVpcVpcCidrBlock2808CB828",
       ],
       "Properties": {
         "RouteTableId": {
@@ -3030,6 +3034,8 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
       "DependsOn": [
         "CustomIpamSubnetCustomResourceProviderLogGroup3BB67050",
         "NetworkEndpointsVpcVpcCidrBlockC483B99B",
+        "NetworkEndpointsVpcVpcCidrBlock138259E6A",
+        "NetworkEndpointsVpcVpcCidrBlock2808CB828",
         "NetworkEndpointsVpcNetworkEndpointsASubnet758434F8",
         "NetworkEndpointsVpcNetworkEndpointsASubnetRouteTableAssociation9EE74497",
       ],
@@ -3061,6 +3067,8 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
     "NetworkEndpointsVpcNetworkEndpointsBSubnetRouteTableAssociation68383153": {
       "DependsOn": [
         "NetworkEndpointsVpcVpcCidrBlockC483B99B",
+        "NetworkEndpointsVpcVpcCidrBlock138259E6A",
+        "NetworkEndpointsVpcVpcCidrBlock2808CB828",
         "NetworkEndpointsVpcNetworkEndpointsASubnet758434F8",
         "NetworkEndpointsVpcNetworkEndpointsASubnetRouteTableAssociation9EE74497",
       ],
@@ -3135,6 +3143,8 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
       "DependsOn": [
         "CustomIpamSubnetCustomResourceProviderLogGroup3BB67050",
         "NetworkEndpointsVpcVpcCidrBlockC483B99B",
+        "NetworkEndpointsVpcVpcCidrBlock138259E6A",
+        "NetworkEndpointsVpcVpcCidrBlock2808CB828",
         "NetworkEndpointsVpcNetworkEndpointsBSubnet1CF39812",
         "NetworkEndpointsVpcNetworkEndpointsBSubnetRouteTableAssociation68383153",
       ],
@@ -3166,6 +3176,8 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
     "NetworkEndpointsVpcNetworkEndpointsTgwAttachASubnetRouteTableAssociation4D925D52": {
       "DependsOn": [
         "NetworkEndpointsVpcVpcCidrBlockC483B99B",
+        "NetworkEndpointsVpcVpcCidrBlock138259E6A",
+        "NetworkEndpointsVpcVpcCidrBlock2808CB828",
         "NetworkEndpointsVpcNetworkEndpointsBSubnet1CF39812",
         "NetworkEndpointsVpcNetworkEndpointsBSubnetRouteTableAssociation68383153",
       ],
@@ -3184,6 +3196,8 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
       "DependsOn": [
         "CustomIpamSubnetCustomResourceProviderLogGroup3BB67050",
         "NetworkEndpointsVpcVpcCidrBlockC483B99B",
+        "NetworkEndpointsVpcVpcCidrBlock138259E6A",
+        "NetworkEndpointsVpcVpcCidrBlock2808CB828",
         "NetworkEndpointsVpcNetworkEndpointsTgwAttachASubnet3580E1C3",
         "NetworkEndpointsVpcNetworkEndpointsTgwAttachASubnetRouteTableAssociation4D925D52",
       ],
@@ -3215,6 +3229,8 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
     "NetworkEndpointsVpcNetworkEndpointsTgwAttachBSubnetRouteTableAssociation958ED1AB": {
       "DependsOn": [
         "NetworkEndpointsVpcVpcCidrBlockC483B99B",
+        "NetworkEndpointsVpcVpcCidrBlock138259E6A",
+        "NetworkEndpointsVpcVpcCidrBlock2808CB828",
         "NetworkEndpointsVpcNetworkEndpointsTgwAttachASubnet3580E1C3",
         "NetworkEndpointsVpcNetworkEndpointsTgwAttachASubnetRouteTableAssociation4D925D52",
       ],
@@ -3544,12 +3560,59 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
       },
       "Type": "AWS::EC2::VPCGatewayAttachment",
     },
+    "NetworkEndpointsVpcVpcCidrBlock138259E6A": {
+      "DependsOn": [
+        "DeleteDefaultVpc4DBAE36C",
+      ],
+      "Metadata": {
+        "lzaLookup": {
+          "ipamCidrIndex": 1,
+          "ipamPoolName": "home-region-prod-pool",
+          "netmaskLength": "25",
+          "vpcName": "Network-Endpoints",
+        },
+      },
+      "Properties": {
+        "Ipv4IpamPoolId": {
+          "Ref": "SsmParameterValueacceleratornetworkipampoolshomeregionprodpoolidC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+        "Ipv4NetmaskLength": 25,
+        "VpcId": {
+          "Ref": "NetworkEndpointsVpc619A1F01",
+        },
+      },
+      "Type": "AWS::EC2::VPCCidrBlock",
+    },
+    "NetworkEndpointsVpcVpcCidrBlock2808CB828": {
+      "DependsOn": [
+        "DeleteDefaultVpc4DBAE36C",
+      ],
+      "Metadata": {
+        "lzaLookup": {
+          "ipamCidrIndex": 2,
+          "ipamPoolName": "home-region-prod-pool",
+          "netmaskLength": "25",
+          "vpcName": "Network-Endpoints",
+        },
+      },
+      "Properties": {
+        "Ipv4IpamPoolId": {
+          "Ref": "SsmParameterValueacceleratornetworkipampoolshomeregionprodpoolidC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+        "Ipv4NetmaskLength": 25,
+        "VpcId": {
+          "Ref": "NetworkEndpointsVpc619A1F01",
+        },
+      },
+      "Type": "AWS::EC2::VPCCidrBlock",
+    },
     "NetworkEndpointsVpcVpcCidrBlockC483B99B": {
       "DependsOn": [
         "DeleteDefaultVpc4DBAE36C",
       ],
       "Metadata": {
         "lzaLookup": {
+          "ipamCidrIndex": 0,
           "ipamPoolName": "home-region-prod-pool",
           "netmaskLength": "25",
           "vpcName": "Network-Endpoints",
@@ -3567,6 +3630,12 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
       "Type": "AWS::EC2::VPCCidrBlock",
     },
     "NetworkInspectionVgwVpnConnectionCC9DB36D": {
+      "Metadata": {
+        "lzaLookup": {
+          "vpcName": "Network-Inspection",
+          "vpnName": "VpcInspectionVpnConnection",
+        },
+      },
       "Properties": {
         "CustomerGatewayId": {
           "Ref": "SsmParameterValueacceleratornetworkcustomerGatewaysacceleratorcgwidC96584B6F00A464EAD1953AFF4B05118Parameter",
@@ -5156,6 +5225,7 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
       ],
       "Metadata": {
         "lzaLookup": {
+          "amazonProvidedCidrIndex": 0,
           "amazonProvidedIpv6CidrBlock": true,
           "vpcName": "Network-Secondary",
         },
