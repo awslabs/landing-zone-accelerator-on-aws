@@ -1196,6 +1196,7 @@ export abstract class NetworkStack extends AcceleratorStack {
     owningRegion?: string;
     transitGatewayId?: string;
     virtualPrivateGateway?: string;
+    metadata?: { [key: string]: string | number | boolean | undefined };
   }): VpnConnectionProps {
     const hasCrossAccountOptions = options.owningAccountId || options.owningRegion ? true : false;
 
@@ -1220,6 +1221,7 @@ export abstract class NetworkStack extends AcceleratorStack {
         options.owningAccountId,
         options.owningRegion,
       ),
+      metadata: options.metadata,
     };
   }
 

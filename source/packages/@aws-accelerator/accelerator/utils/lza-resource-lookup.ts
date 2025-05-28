@@ -22,6 +22,9 @@ export enum LZAResourceLookupType {
   VPC_CIDR_BLOCK = 'AWS::EC2::VPCCidrBlock',
   EGRESS_ONLY_INTERNET_GATEWAY = 'AWS::EC2::EgressOnlyInternetGateway',
   VPC_DHCP_OPTIONS_ASSOCIATION = 'AWS::EC2::VPCDHCPOptionsAssociation',
+  DELETE_VPC_DEFAULT_SECURITY_GROUP_RULES = 'Custom::DeleteDefaultSecurityGroupRules',
+  VPN_CONNECTION = 'AWS::EC2::VPNConnection',
+  CUSTOM_VPN_CONNECTION = 'AWS::CloudFormation::CustomResource',
   ROUTE_TABLE = 'AWS::EC2::RouteTable',
   GATEWAY_ROUTE_TABLE_ASSOCIATION = 'AWS::EC2::GatewayRouteTableAssociation',
   LOCAL_GATEWAY_ROUTE_TABLE_VPC_ASSOCIATION = 'AWS::EC2::LocalGatewayRouteTableVPCAssociation',
@@ -72,6 +75,7 @@ const RESOURCE_REQUIRED_KEYS: { [key in LZAResourceLookupType]?: string[] } = {
   [LZAResourceLookupType.NETWORK_ACL]: ['vpcName', 'naclName'],
   [LZAResourceLookupType.NETWORK_ACL_ENTRY]: ['vpcName', 'naclName', 'ruleNumber'],
   [LZAResourceLookupType.SUBNET_NETWORK_ACL_ASSOCIATION]: ['vpcName', 'naclName', 'subnetName'],
+  [LZAResourceLookupType.VPN_CONNECTION]: ['vpnName', 'vpcName'],
 };
 
 export class LZAResourceLookup {
@@ -137,6 +141,7 @@ export class LZAResourceLookup {
       case LZAResourceLookupType.EGRESS_ONLY_INTERNET_GATEWAY:
       case LZAResourceLookupType.VPC_DHCP_OPTIONS_ASSOCIATION:
       case LZAResourceLookupType.LOCAL_GATEWAY_ROUTE_TABLE_VPC_ASSOCIATION:
+      case LZAResourceLookupType.DELETE_VPC_DEFAULT_SECURITY_GROUP_RULES:
       case LZAResourceLookupType.ROUTE_TABLE:
       case LZAResourceLookupType.GATEWAY_ROUTE_TABLE_ASSOCIATION:
       case LZAResourceLookupType.ROUTE:
@@ -154,18 +159,28 @@ export class LZAResourceLookup {
       case LZAResourceLookupType.NETWORK_ACL:
       case LZAResourceLookupType.NETWORK_ACL_ENTRY:
       case LZAResourceLookupType.SUBNET_NETWORK_ACL_ASSOCIATION:
-        const requiredKeys = RESOURCE_REQUIRED_KEYS[resourceProperties.resourceType]!;
+        const requiredKeys = RESOURCE_REQUIRED_KEYS[resourceProperties.resourceType];
         return this.resourceWithMetadataExists(resourceProperties, requiredKeys);
       case LZAResourceLookupType.VPC_CIDR_BLOCK:
         return this.vpcCidrBlockExists(resourceProperties);
       case LZAResourceLookupType.LOAD_BALANCER:
         return this.loadBalancerExists(resourceProperties);
+
+      case LZAResourceLookupType.VPN_CONNECTION:
+        return this.vpnConnectionExists(resourceProperties);
+
       default:
         return false;
     }
   }
 
-  private resourceWithMetadataExists(resourceProperties: LookupProperties, requiredKeys: string[]): boolean {
+  private resourceWithMetadataExists(
+    resourceProperties: LookupProperties,
+    requiredKeys: string[] | undefined,
+  ): boolean {
+    if (!requiredKeys) {
+      throw new Error(`Resource type ${resourceProperties.resourceType} is not supported`);
+    }
     this.validateResourcePropertyKeys({
       resourceProperties,
       resourceKeys: requiredKeys,
@@ -341,10 +356,11 @@ export class LZAResourceLookup {
       case AseaResourceType.EC2_SECURITY_GROUP:
         resourceIdentifier = `${resourceProperties.lookupValues['vpcName']}/${resourceProperties.lookupValues['securityGroupName']}`;
         break;
-      default:
       case AseaResourceType.EC2_VPC_CIDR:
         resourceIdentifier = `${resourceProperties.lookupValues['vpcName']}-${resourceProperties.lookupValues['cidrBlock']}`;
         break;
+      default:
+        return false;
     }
 
     return this.isManagedByAsea({ resourceType: aseaResourceType, resourceIdentifier });
@@ -357,7 +373,6 @@ export class LZAResourceLookup {
 
     return false;
   }
-
   private vpcCidrBlockExists(resourceProperties: LookupProperties): boolean {
     if ('cidrBlock' in resourceProperties.lookupValues) {
       return this.ipv4CidrBlockExists(resourceProperties);
@@ -365,51 +380,58 @@ export class LZAResourceLookup {
     if ('ipamPoolName' in resourceProperties.lookupValues) {
       return this.ipv4IpamCidrBlockExists(resourceProperties);
     }
-    if (
-      'amazonProvidedIpv6CidrBlock' in resourceProperties.lookupValues ||
-      'ipv6pool' in resourceProperties.lookupValues
-    ) {
-      return this.ipv6CidrExists(resourceProperties);
+    if ('amazonProvidedIpv6CidrBlock' in resourceProperties.lookupValues) {
+      return this.ipv6AmazonCidrBlockExists(resourceProperties);
+    }
+    if ('ipv6pool' in resourceProperties.lookupValues) {
+      return this.ipv6CidrPoolExists(resourceProperties);
     }
     return false;
   }
 
   private ipv4IpamCidrBlockExists(resourceProperties: LookupProperties): boolean {
-    return this.resourceWithMetadataExists(resourceProperties, ['vpcName', 'ipamPoolName', 'netmaskLength']);
+    return this.resourceWithMetadataExists(resourceProperties, [
+      'vpcName',
+      'ipamPoolName',
+      'netmaskLength',
+      'ipamCidrIndex',
+    ]);
   }
-
   private ipv4CidrBlockExists(resourceProperties: LookupProperties): boolean {
     return this.resourceWithMetadataExists(resourceProperties, ['vpcName', 'cidrBlock']);
   }
 
-  private ipv6CidrExists(resourceProperties: LookupProperties): boolean {
-    const validLookupValues = Object.keys(resourceProperties.lookupValues).reduce((acc: LookupValues, key) => {
-      if (resourceProperties.lookupValues[key] !== undefined) {
-        acc[key] = resourceProperties.lookupValues[key];
-      }
-      return acc;
-    }, {});
-
-    const newResourceProperties = {
-      resourceType: resourceProperties.resourceType,
-      lookupValues: validLookupValues,
-    };
-
-    if ('amazonProvidedIpv6CidrBlock' in validLookupValues) {
-      return this.ipv6CidrAmazonProvidedExists(newResourceProperties);
-    }
-    if ('ipv6pool' in validLookupValues) {
-      return this.ipv6CidrPoolExists(newResourceProperties);
-    }
-    return false;
-  }
-
-  private ipv6CidrAmazonProvidedExists(resourceProperties: LookupProperties): boolean {
-    return this.resourceWithMetadataExists(resourceProperties, ['vpcName', 'amazonProvidedIpv6CidrBlock']);
+  private ipv6AmazonCidrBlockExists(resourceProperties: LookupProperties): boolean {
+    return this.resourceWithMetadataExists(resourceProperties, [
+      'vpcName',
+      'amazonProvidedIpv6CidrBlock',
+      'amazonProvidedCidrIndex',
+    ]);
   }
 
   private ipv6CidrPoolExists(resourceProperties: LookupProperties): boolean {
-    return this.resourceWithMetadataExists(resourceProperties, ['vpcName', 'ipv6CidrBlock', 'ipv6pool']);
+    return this.resourceWithMetadataExists(resourceProperties, [
+      'vpcName',
+      'ipv6CidrBlock',
+      'ipv6pool',
+      'ipamCidrIndex',
+    ]);
+  }
+
+  private vpnConnectionExists(resourceProperties: LookupProperties): boolean {
+    const cfnResourceExists = this.resourceWithMetadataExists(
+      resourceProperties,
+      RESOURCE_REQUIRED_KEYS[LZAResourceLookupType.VPN_CONNECTION],
+    );
+    const customResourceExists = this.resourceWithMetadataExists(
+      {
+        resourceType: LZAResourceLookupType.CUSTOM_VPN_CONNECTION,
+        lookupValues: resourceProperties.lookupValues,
+      },
+      RESOURCE_REQUIRED_KEYS[LZAResourceLookupType.VPN_CONNECTION],
+    );
+
+    return cfnResourceExists || customResourceExists;
   }
 
   private loadBalancerExists(resourceProperties: LookupProperties): boolean {
@@ -439,7 +461,13 @@ export class LZAResourceLookup {
     return this.resourceWithMetadataExists(resourceProperties, ['vpcName', 'gwlbName']);
   }
 
-  private validateResourcePropertyKeys(props: { resourceProperties: LookupProperties; resourceKeys: string[] }) {
+  private validateResourcePropertyKeys(props: {
+    resourceProperties: LookupProperties;
+    resourceKeys: string[] | undefined;
+  }) {
+    if (!props.resourceKeys) {
+      throw new Error(`Resource keys are not defined for resource type ${props.resourceProperties.resourceType}`);
+    }
     const missingKeys = props.resourceKeys.filter(key => !(key in props.resourceProperties.lookupValues));
     if (missingKeys.length > 0) {
       throw new Error(

@@ -14,6 +14,7 @@
 import * as cdk from 'aws-cdk-lib';
 import { Construct } from 'constructs';
 import { LzaCustomResource } from '../lza-custom-resource';
+import { MetadataKeys } from '@aws-accelerator/utils';
 
 export interface VpnConnectionProps {
   /**
@@ -73,6 +74,12 @@ export interface VpnConnectionProps {
    * The array of tag values to add onto the VPN Connection.
    */
   readonly tags?: cdk.CfnTag[];
+
+  /**
+   * additional metadata that can be added to the construct
+   */
+
+  readonly metadata?: { [key: string]: string | number | boolean | undefined };
 }
 
 export interface VpnTunnelOptionsSpecifications {
@@ -177,6 +184,7 @@ export class VpnConnection extends cdk.Resource implements IVpnConnection {
         vpnGatewayId: props.virtualPrivateGateway,
         vpnTunnelOptionsSpecifications: props.vpnTunnelOptionsSpecifications,
       });
+      resource.addMetadata(MetadataKeys.LZA_LOOKUP, props.metadata);
       cdk.Tags.of(this).add('Name', props.name);
     } else {
       // Convert tags to EC2 API format
@@ -187,6 +195,7 @@ export class VpnConnection extends cdk.Resource implements IVpnConnection {
       tags.push({ Key: 'Name', Value: props.name });
 
       resource = new LzaCustomResource(this, 'CustomResource', {
+        metadata: props.metadata,
         resource: {
           name: 'CustomResource',
           parentId: id,
