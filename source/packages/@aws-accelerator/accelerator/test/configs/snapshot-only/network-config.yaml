@@ -1136,11 +1136,14 @@ vpcs:
     tags:
       - key: env
         value: prod
-
   - name: Network-Endpoints
     account: Network
     region: *HOME_REGION
     ipamAllocations:
+      - ipamPoolName: home-region-prod-pool
+        netmaskLength: 25
+      - ipamPoolName: home-region-prod-pool
+        netmaskLength: 25
       - ipamPoolName: home-region-prod-pool
         netmaskLength: 25
       - ipamPoolName: home-region-prod-pool

@@ -620,6 +620,79 @@ export class VpcResources {
     return dhcpOptions;
   }
 
+  private createAdditionalStaticIpv4Cidrs(props: {
+    vpc: Vpc;
+    vpcItem: VpcConfig | VpcTemplatesConfig;
+  }): Ipv4VpcCidrBlock[] {
+    const additionalCidrs: Ipv4VpcCidrBlock[] = [];
+    // If vpc cidrs are undefined, or there is only 1 vpc cidr defined, return an empty array
+    if (!props.vpcItem.cidrs) {
+      return [];
+    }
+    if (props.vpcItem.cidrs.length < 2) {
+      return [];
+    }
+
+    // Removes the first cidr from the list that is used by the creation of the vpc
+    const newCidrs = props.vpcItem.cidrs.slice(1);
+    for (const vpcCidr of newCidrs) {
+      if (this.stack.isManagedByAsea(AseaResourceType.EC2_VPC_CIDR, `${props.vpcItem.name}-${vpcCidr}`)) {
+        // CIDR is created by external source. Skipping creation
+        continue;
+      }
+      this.stack.addLogs(LogLevel.INFO, `Adding secondary CIDR ${vpcCidr} to VPC ${props.vpcItem.name}`);
+      props.vpc.addIpv4Cidr({ cidrBlock: vpcCidr, metadata: { vpcName: props.vpcItem.name, cidrBlock: vpcCidr } });
+      additionalCidrs.push({ cidrBlock: vpcCidr });
+    }
+    return additionalCidrs;
+  }
+
+  private createAdditionalIpamIpv4Cidrs(props: {
+    vpc: Vpc;
+    vpcItem: VpcConfig | VpcTemplatesConfig;
+    ipamPoolMap: Map<string, string>;
+  }): Ipv4VpcCidrBlock[] {
+    const additionalCidrs: Ipv4VpcCidrBlock[] = [];
+    // If vpc ipam allocations are undefined, or there is only 1 vpc ipam allocation defined, return an empty array
+    if (!props.vpcItem.ipamAllocations) {
+      return [];
+    }
+    if (props.vpcItem.ipamAllocations.length < 2) {
+      return [];
+    }
+    const newIpamVpcCidrs = props.vpcItem.ipamAllocations.slice(1);
+    const ipamCidrsMap: { [key: string]: number } = {};
+    for (const alloc of newIpamVpcCidrs) {
+      const ipamCidrKey = `${alloc.ipamPoolName}-${alloc.netmaskLength}`;
+      if (!(ipamCidrKey in ipamCidrsMap)) {
+        ipamCidrsMap[ipamCidrKey] = 0;
+      } else {
+        ipamCidrsMap[ipamCidrKey]++;
+      }
+      this.stack.addLogs(
+        LogLevel.INFO,
+        `Adding secondary IPAM allocation with netmask ${alloc.netmaskLength} to VPC ${props.vpcItem.name}`,
+      );
+      const poolId = props.ipamPoolMap.get(alloc.ipamPoolName);
+      if (!poolId) {
+        this.stack.addLogs(LogLevel.ERROR, `${props.vpcItem.name}: unable to locate IPAM pool ${alloc.ipamPoolName}`);
+        throw new Error(`Configuration validation failed at runtime.`);
+      }
+      props.vpc.addIpv4Cidr({
+        ipv4IpamPoolId: poolId,
+        ipv4NetmaskLength: alloc.netmaskLength,
+        metadata: {
+          vpcName: props.vpcItem.name,
+          netmaskLength: alloc.netmaskLength.toString(),
+          ipamPoolName: alloc.ipamPoolName,
+          ipamCidrIndex: ipamCidrsMap[ipamCidrKey],
+        },
+      });
+      additionalCidrs.push({ ipv4IpamPoolId: poolId, ipv4NetmaskLength: alloc.netmaskLength });
+    }
+    return additionalCidrs;
+  }
+
   /**
    * Create additional IPv4 CIDR blocks for a given VPC
    * @param vpc
@@ -633,45 +706,71 @@ export class VpcResources {
     ipamPoolMap: Map<string, string>,
   ): Ipv4VpcCidrBlock[] {
     const additionalCidrs: Ipv4VpcCidrBlock[] = [];
-
-    if (vpcItem.cidrs && vpcItem.cidrs.length > 1) {
-      for (const vpcCidr of vpcItem.cidrs.slice(1)) {
-        if (this.stack.isManagedByAsea(AseaResourceType.EC2_VPC_CIDR, `${vpcItem.name}-${vpcCidr}`)) {
-          // CIDR is created by external source. Skipping creation
-          continue;
-        }
-        this.stack.addLogs(LogLevel.INFO, `Adding secondary CIDR ${vpcCidr} to VPC ${vpcItem.name}`);
-        vpc.addIpv4Cidr({ cidrBlock: vpcCidr, metadata: { vpcName: vpcItem.name, cidrBlock: vpcCidr } });
-        additionalCidrs.push({ cidrBlock: vpcCidr });
-      }
-    }
-
-    if (vpcItem.ipamAllocations && vpcItem.ipamAllocations.length > 1) {
-      for (const alloc of vpcItem.ipamAllocations.slice(1)) {
-        this.stack.addLogs(
-          LogLevel.INFO,
-          `Adding secondary IPAM allocation with netmask ${alloc.netmaskLength} to VPC ${vpcItem.name}`,
-        );
-        const poolId = ipamPoolMap.get(alloc.ipamPoolName);
-        if (!poolId) {
-          this.stack.addLogs(LogLevel.ERROR, `${vpcItem.name}: unable to locate IPAM pool ${alloc.ipamPoolName}`);
-          throw new Error(`Configuration validation failed at runtime.`);
-        }
-        vpc.addIpv4Cidr({
-          ipv4IpamPoolId: poolId,
-          ipv4NetmaskLength: alloc.netmaskLength,
-          metadata: {
-            vpcName: vpcItem.name,
-            netmaskLength: alloc.netmaskLength.toString(),
-            ipamPoolName: alloc.ipamPoolName,
-          },
-        });
-        additionalCidrs.push({ ipv4IpamPoolId: poolId, ipv4NetmaskLength: alloc.netmaskLength });
-      }
-    }
+    const additionalStaticCidrs = this.createAdditionalStaticIpv4Cidrs({ vpc, vpcItem });
+    const additionalIpamIpv4Cidrs = this.createAdditionalIpamIpv4Cidrs({ vpc, vpcItem, ipamPoolMap });
+    additionalCidrs.push(...additionalStaticCidrs, ...additionalIpamIpv4Cidrs);
     return additionalCidrs;
   }
 
+  /**
+   * Create BYOIP IPv6 CIDRs for a given VPC
+   * @param vpc Vpc
+   * @param vpcItem VpcConfig | VpcTemplatesConfig
+   * @returns Ipv6VpcCidrBlock[]
+   */
+  private createIpv6IpamCidrs(vpc: Vpc, vpcItem: VpcConfig | VpcTemplatesConfig): Ipv6VpcCidrBlock[] {
+    if (!vpcItem.ipv6Cidrs) {
+      return [];
+    }
+    const cidrIndex: { [key: string]: number } = {};
+    const ipamPoolIdCidrs = vpcItem.ipv6Cidrs.filter(cidrItem => cidrItem.byoipPoolId && cidrItem.cidrBlock);
+    const additionalCidrs = ipamPoolIdCidrs.map(cidrItem => {
+      const cidrKey = `${cidrItem.byoipPoolId}-${cidrItem.cidrBlock}`;
+      if (!(cidrKey in cidrIndex)) {
+        cidrIndex[cidrKey] = 0;
+      } else {
+        cidrIndex[cidrKey]++;
+      }
+      const cidrInfo = {
+        ipv6CidrBlock: cidrItem.cidrBlock,
+        ipv6Pool: cidrItem.byoipPoolId,
+        metadata: {
+          vpcName: vpcItem.name,
+          ipv6CidrBlock: cidrItem.cidrBlock,
+          ipv6pool: cidrItem.byoipPoolId,
+          ipamCidrIndex: cidrIndex[cidrKey],
+        },
+      };
+      vpc.addIpv6Cidr(cidrInfo);
+      return cidrInfo;
+    });
+    return additionalCidrs;
+  }
+  /**
+   * Create Amazon Provided IPv6 CIDRs for a given VPC
+   * @param vpc Vpc
+   * @param vpcItem VpcConfig | VpcTemplatesConfig
+   * @returns Ipv6VpcCidrBlock[]
+   */
+  private createIpv6CidrsAmazonProvided(vpc: Vpc, vpcItem: VpcConfig | VpcTemplatesConfig): Ipv6VpcCidrBlock[] {
+    if (!vpcItem.ipv6Cidrs) {
+      return [];
+    }
+    const amazonProvidedCidrs = vpcItem.ipv6Cidrs.filter(cidrItem => cidrItem.amazonProvided);
+    const additionalCidrs = amazonProvidedCidrs.map((cidrItem, index) => {
+      const cidrInfo = {
+        amazonProvidedIpv6CidrBlock: cidrItem.amazonProvided,
+        metadata: {
+          vpcName: vpcItem.name,
+          amazonProvidedIpv6CidrBlock: cidrItem.amazonProvided,
+          amazonProvidedCidrIndex: index,
+        },
+      };
+      vpc.addIpv6Cidr(cidrInfo);
+      return cidrInfo;
+    });
+    return additionalCidrs;
+  }
   /**
    * Create IPv6 CIDRs for a given VPC
    * @param vpc Vpc
@@ -679,24 +778,12 @@ export class VpcResources {
    * @returns Ipv6VpcCidrBlock[]
    */
   private createIpv6Cidrs(vpc: Vpc, vpcItem: VpcConfig | VpcTemplatesConfig): Ipv6VpcCidrBlock[] {
-    const ipv6Cidrs: Ipv6VpcCidrBlock[] = [];
-
-    for (const vpcCidr of vpcItem.ipv6Cidrs ?? []) {
-      const cidrProps = {
-        amazonProvidedIpv6CidrBlock: vpcCidr.amazonProvided,
-        ipv6CidrBlock: vpcCidr.cidrBlock,
-        ipv6Pool: vpcCidr.byoipPoolId,
-        metadata: {
-          vpcName: vpcItem.name,
-          amazonProvidedIpv6CidrBlock: vpcCidr.amazonProvided,
-          ipv6CidrBlock: vpcCidr.cidrBlock,
-          ipv6pool: vpcCidr.byoipPoolId,
-        },
-      };
-      vpc.addIpv6Cidr(cidrProps);
-      ipv6Cidrs.push(cidrProps);
+    if (!vpcItem.ipv6Cidrs) {
+      return [];
     }
-    return ipv6Cidrs;
+    const byoIpCidrs = this.createIpv6IpamCidrs(vpc, vpcItem);
+    const amazonProvidedCidrs = this.createIpv6CidrsAmazonProvided(vpc, vpcItem);
+    return [...byoIpCidrs, ...amazonProvidedCidrs];
   }
 
   /**
@@ -815,6 +902,17 @@ export class VpcResources {
    * @returns
    */
   private deleteDefaultSgRules(vpc: Vpc, vpcItem: VpcConfig | VpcTemplatesConfig): boolean {
+    if (
+      !this.lzaLookup.resourceExists({
+        resourceType: LZAResourceLookupType.DELETE_VPC_DEFAULT_SECURITY_GROUP_RULES,
+        lookupValues: {
+          vpcName: vpcItem.name,
+        },
+      })
+    ) {
+      return true;
+    }
+
     if (vpcItem.defaultSecurityGroupRulesDeletion) {
       this.stack.addLogs(LogLevel.INFO, `Delete default security group ingress and egress rules for ${vpcItem.name}`);
       const deleteDefaultSgCustomResource = new DeleteDefaultSecurityGroupRules(
@@ -868,6 +966,21 @@ export class VpcResources {
     for (const cgw of ipv4Cgws ?? []) {
       for (const vpnItem of cgw.vpnConnections ?? []) {
         if (vpnItem.vpc && vpcMap.has(vpnItem.vpc)) {
+          if (
+            !this.lzaLookup.resourceExists({
+              resourceType: LZAResourceLookupType.VPN_CONNECTION,
+              lookupValues: {
+                vpcName: vpnItem.vpc,
+                vpnName: vpnItem.name,
+              },
+            })
+          ) {
+            continue;
+          }
+          const metadata = {
+            vpnName: vpnItem.name,
+            vpcName: vpnItem.vpc,
+          };
           //
           // Get CGW ID and VPC
           const customerGatewayId = cdk.aws_ssm.StringParameter.valueForStringParameter(
@@ -878,7 +991,6 @@ export class VpcResources {
           if (!vpc) {
             continue;
           }
-
           this.stack.addLogs(
             LogLevel.INFO,
             `Creating Vpn Connection with Customer Gateway ${cgw.name} to the VPC ${vpnItem.vpc}`,
@@ -891,8 +1003,10 @@ export class VpcResources {
               customerGatewayId,
               customResourceHandler,
               virtualPrivateGateway: vpc.virtualPrivateGatewayId,
+              metadata,
             }),
           );
+
           vpnMap.set(`${vpc.name}_${vpnItem.name}`, vpn.vpnConnectionId);
           vpc.vpnConnections.push(vpn);
         }
