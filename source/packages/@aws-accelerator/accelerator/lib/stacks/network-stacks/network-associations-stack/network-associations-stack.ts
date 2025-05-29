@@ -1512,6 +1512,10 @@ export class NetworkAssociationsStack extends NetworkStack {
   private createHostedZoneIdList(centralEndpointVpc: VpcConfig): string[] {
     const hostedZoneIds: string[] = [];
     for (const endpointItem of centralEndpointVpc.interfaceEndpoints?.endpoints ?? []) {
+      if (endpointItem.service === 'iam') {
+        this.logger.info(`Skipping hosted zone association for the for IAM service.`);
+        continue;
+      }
       const hostedZoneId = cdk.aws_ssm.StringParameter.valueForStringParameter(
         this,
         this.getSsmPath(SsmResourceType.PHZ_ID, [centralEndpointVpc.name, endpointItem.service]),

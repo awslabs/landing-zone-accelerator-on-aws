@@ -508,8 +508,12 @@ export abstract class NetworkStack extends AcceleratorStack {
 
     for (const vpcItem of vpcResources) {
       if (vpcItem.interfaceEndpoints?.central) {
-        // Set interface endpoint DNS names
+        // Skip IAM for centralized DNS
         for (const endpointItem of vpcItem.interfaceEndpoints?.endpoints ?? []) {
+          if (endpointItem.service === 'iam') {
+            this.logger.info(`Skipping DNS retrieval for IAM endpoint as centralized endpoint is not supported here`);
+            continue;
+          }
           const endpointDns = cdk.aws_ssm.StringParameter.valueForStringParameter(
             this,
             this.getSsmPath(SsmResourceType.ENDPOINT_DNS, [vpcItem.name, endpointItem.service]),
