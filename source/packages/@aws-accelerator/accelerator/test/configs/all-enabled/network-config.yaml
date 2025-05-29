@@ -1352,6 +1352,7 @@ vpcs:
         - service: sagemaker.runtime
         - service: sagemaker.api
         - service: sagemaker.featurestore-runtime
+        - service: iam
         - service: eks
           applyPolicy: false
         - service: secretsmanager
@@ -1794,6 +1795,14 @@ vpcs:
         - service: s3
         - service: dynamodb
     useCentralEndpoints: true
+    interfaceEndpoints:
+      defaultPolicy: Default
+      subnets:
+        - Network-Inspection-A
+        - Network-Inspection-B
+      endpoints:
+        - service: iam
+
   - name: SharedServices-Main
     account: SharedServices
     region: *HOME_REGION

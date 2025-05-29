@@ -2357,6 +2357,11 @@ export interface IInterfaceEndpointConfig {
    * @remarks
    * This is the logical `name` property of the VPC subnet as defined in network-config.yaml.
    *
+   * For global services like `iam`, the centralized endpoint architecture is not supported. You will have to define an
+   * interface endpoint for each VPC where you require private communication to the service control plane. Some endpoints that are global
+   * can only be created in the Region where the control plane is located.
+   *
+   *
    * @see {@link SubnetConfig}
    */
   readonly subnets: t.NonEmptyString[];

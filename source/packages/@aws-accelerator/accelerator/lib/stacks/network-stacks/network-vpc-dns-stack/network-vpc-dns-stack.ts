@@ -139,6 +139,11 @@ export class NetworkVpcDnsStack extends NetworkStack {
     zoneMap: Map<string, string>,
   ): void {
     for (const endpointItem of vpcItem.interfaceEndpoints?.endpoints ?? []) {
+      // Skip creating hosted zone if service is 'iam'
+      if (endpointItem.service === 'iam') {
+        this.logger.info(`Skipping hosted zone creation for IAM service in VPC:${vpcItem.name}`);
+        continue;
+      }
       if (this.isManagedByAsea(AseaResourceType.ROUTE_53_PHZ_ID, `${vpcItem.name}/${endpointItem.service}`)) {
         this.logger.info(
           `PHZ for Interface Endpoint "${endpointItem.service}", VPC "${vpcItem.name}" is managed externally`,
