@@ -375,16 +375,19 @@ export class LZAResourceLookup {
     return false;
   }
   private vpcCidrBlockExists(resourceProperties: LookupProperties): boolean {
-    if ('cidrBlock' in resourceProperties.lookupValues) {
+    if ('cidrBlock' in resourceProperties.lookupValues && resourceProperties.lookupValues['cidrBlock']) {
       return this.ipv4CidrBlockExists(resourceProperties);
     }
-    if ('ipamPoolName' in resourceProperties.lookupValues) {
+    if ('ipamPoolName' in resourceProperties.lookupValues && resourceProperties.lookupValues['ipamPoolName']) {
       return this.ipv4IpamCidrBlockExists(resourceProperties);
     }
-    if ('amazonProvidedIpv6CidrBlock' in resourceProperties.lookupValues) {
+    if (
+      'amazonProvidedIpv6CidrBlock' in resourceProperties.lookupValues &&
+      resourceProperties.lookupValues['amazonProvidedIpv6CidrBlock']
+    ) {
       return this.ipv6AmazonCidrBlockExists(resourceProperties);
     }
-    if ('ipv6pool' in resourceProperties.lookupValues) {
+    if ('ipv6pool' in resourceProperties.lookupValues && resourceProperties.lookupValues['ipv6pool']) {
       return this.ipv6CidrPoolExists(resourceProperties);
     }
     return false;
@@ -474,7 +477,9 @@ export class LZAResourceLookup {
       throw new Error(
         `Missing required keys: ${missingKeys.join(', ')} for resource ${
           props.resourceProperties.resourceType
-        } in account ${this.accountId} and region ${this.region}`,
+        } in account ${this.accountId} and region ${this.region} with lookup values \n ${
+          props.resourceProperties.lookupValues
+        }`,
       );
     }
   }
