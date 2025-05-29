@@ -17,7 +17,12 @@ import { createLogger } from '../../../../../../@aws-lza/index';
 import path from 'path';
 import { OrganizationConfig } from '@aws-accelerator/config/lib/organization-config';
 import { AccountsConfig } from '@aws-accelerator/config/lib/accounts-config';
-import { NetworkConfig, VpcConfig, VpcTemplatesConfig } from '@aws-accelerator/config/lib/network-config';
+import {
+  NetworkConfig,
+  VpcConfig,
+  VpcTemplatesConfig,
+  VpcIpv6Config,
+} from '@aws-accelerator/config/lib/network-config';
 import { isNetworkType } from '@aws-accelerator/config/lib/common/parse';
 import { Region } from '@aws-accelerator/config/lib/common/types';
 import { AcceleratorStackProps } from '../../accelerator-stack';
@@ -255,7 +260,12 @@ function getV2Ipv6CidrResources(
   lzaLookup: LZAResourceLookup,
   v2Components: V2NetworkResourceListType[],
 ): void {
+  const cidrLookupMap = setCidrIndexMap(vpcItem);
   for (const vpcCidr of vpcItem.ipv6Cidrs ?? []) {
+    const cidrKey = getIpv6CidrKey(vpcItem, vpcCidr);
+    const cidrValue = cidrLookupMap.get(cidrKey);
+    const lookupIndex = cidrValue;
+    cidrLookupMap.set(cidrKey, cidrValue! - 1);
     if (
       !lzaLookup.resourceExists({
         resourceType: LZAResourceLookupType.VPC_CIDR_BLOCK,
@@ -264,6 +274,8 @@ function getV2Ipv6CidrResources(
           amazonProvidedIpv6CidrBlock: vpcCidr.amazonProvided,
           ipv6CidrBlock: vpcCidr.cidrBlock,
           ipv6pool: vpcCidr.byoipPoolId,
+          amazonProvidedCidrIndex: lookupIndex,
+          byoipPoolIndex: lookupIndex,
         } as LookupValues,
       })
     ) {
@@ -277,6 +289,55 @@ function getV2Ipv6CidrResources(
       });
     }
   }
+}
+
+/**
+ * Creates a map that tracks IPv6 CIDR indices for a VPC
+ *
+ * @param vpcItem - The VPC configuration item
+ * @returns A Map containing CIDR keys and their corresponding index counts
+ *
+ * @remarks
+ * This function handles two types of IPv6 CIDRs:
+ * - Amazon-provided CIDRs: Tracked with a single key using VPC name and "amazonProvided" suffix
+ * - BYOIP pool CIDRs: Tracked individually with keys generated from VPC name, pool ID, and CIDR block
+ *
+ * The returned map is used to track the index of each CIDR type for resource lookups.
+ */
+function setCidrIndexMap(vpcItem: VpcConfig | VpcTemplatesConfig): Map<string, number> {
+  const cidrIndexMap = new Map<string, number>();
+  const amazonProvidedCidrs = vpcItem.ipv6Cidrs?.filter(cidr => cidr.amazonProvided);
+  const byoipPoolCidrs = vpcItem.ipv6Cidrs?.filter(cidr => cidr.byoipPoolId) ?? [];
+  if (amazonProvidedCidrs && amazonProvidedCidrs.length > 0) {
+    cidrIndexMap.set(`${vpcItem.name}-amazonProvided`, amazonProvidedCidrs.length);
+  }
+  for (const cidr of byoipPoolCidrs) {
+    if (!cidr.byoipPoolId && !cidr.cidrBlock) {
+      continue;
+    }
+    const cidrKey = getIpv6CidrKey(vpcItem, cidr);
+    const cidrValue = cidrIndexMap.get(cidrKey);
+    if (!cidrValue) {
+      cidrIndexMap.set(cidrKey, 0);
+    } else {
+      cidrIndexMap.set(cidrKey, cidrValue + 1);
+    }
+  }
+  return cidrIndexMap;
+}
+
+/**
+ * Generates a unique key for IPv6 CIDR lookup based on VPC and CIDR configuration
+ *
+ * @param vpcItem - The VPC configuration item
+ * @param cidr - The IPv6 CIDR configuration
+ * @returns A string key used to identify the IPv6 CIDR in lookup maps
+ */
+function getIpv6CidrKey(vpcItem: VpcConfig | VpcTemplatesConfig, cidr: VpcIpv6Config): string {
+  if (cidr.amazonProvided) {
+    return `${vpcItem.name}-amazonProvided`;
+  }
+  return `${vpcItem.name}-${cidr.byoipPoolId}-${cidr.cidrBlock}`;
 }
 
 /**
