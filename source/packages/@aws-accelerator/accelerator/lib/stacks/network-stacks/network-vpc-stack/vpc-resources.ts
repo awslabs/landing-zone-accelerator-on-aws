@@ -980,6 +980,7 @@ export class VpcResources {
           const metadata = {
             vpnName: vpnItem.name,
             vpcName: vpnItem.vpc,
+            cgwName: cgw.name,
           };
           //
           // Get CGW ID and VPC
