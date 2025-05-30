@@ -3632,6 +3632,7 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
     "NetworkInspectionVgwVpnConnectionCC9DB36D": {
       "Metadata": {
         "lzaLookup": {
+          "cgwName": "accelerator-cgw",
           "vpcName": "Network-Inspection",
           "vpnName": "VpcInspectionVpnConnection",
         },
