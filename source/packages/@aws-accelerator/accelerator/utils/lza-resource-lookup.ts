@@ -477,9 +477,11 @@ export class LZAResourceLookup {
       throw new Error(
         `Missing required keys: ${missingKeys.join(', ')} for resource ${
           props.resourceProperties.resourceType
-        } in account ${this.accountId} and region ${this.region} with lookup values \n ${
-          props.resourceProperties.lookupValues
-        }`,
+        } in account ${this.accountId} and region ${this.region} with lookup values \n ${JSON.stringify(
+          props.resourceProperties.lookupValues,
+          null,
+          2,
+        )}`,
       );
     }
   }

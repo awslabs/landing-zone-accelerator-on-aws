@@ -972,6 +972,7 @@ export class VpcResources {
               lookupValues: {
                 vpcName: vpnItem.vpc,
                 vpnName: vpnItem.name,
+                cgwName: cgw.name,
               },
             })
           ) {
