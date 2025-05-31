@@ -627,6 +627,7 @@ export class VpcResources extends AseaResource {
           ),
         );
       } else {
+        if (ruleType === 'UDP' || ruleType === 'TCP') continue;
         const defaultRuleProps = {
           protocol: cdk.aws_ec2.Protocol.TCP,
           type: ruleType,
@@ -653,7 +654,26 @@ export class VpcResources extends AseaResource {
   ) => {
     const securityGroupRules: SecurityGroupRuleInfo[] = [];
     let defaultRuleProps: { protocol: cdk.aws_ec2.Protocol; from?: number; to?: number };
-    if (securityGroupRuleItem.fromPort && securityGroupRuleItem.toPort) {
+    if (securityGroupRuleItem.udpPorts) {
+      for (const udpPort of securityGroupRuleItem.udpPorts ?? []) {
+        const defaultRuleProps = {
+          protocol: cdk.aws_ec2.Protocol.UDP,
+          from: udpPort,
+          to: udpPort,
+        };
+        securityGroupRules.push(
+          ...this.processSecurityGroupSources(
+            securityGroupRuleItem,
+            defaultRuleProps,
+            securityGroupsMap,
+            securityGroupVpc,
+          ),
+        );
+      }
+      return securityGroupRules;
+    }
+    for (const ruleType of securityGroupRuleItem.types ?? []) {
+      if (ruleType !== 'UDP') continue;
       defaultRuleProps = {
         protocol: cdk.aws_ec2.Protocol.UDP,
         from: securityGroupRuleItem.fromPort,
@@ -667,10 +687,21 @@ export class VpcResources extends AseaResource {
           securityGroupVpc,
         ),
       );
-    } else {
-      for (const tcpPort of securityGroupRuleItem.udpPorts ?? []) {
+    }
+    return securityGroupRules;
+  };
+
+  private processTcpSources = (
+    securityGroupRuleItem: SecurityGroupRuleConfig,
+    securityGroupsMap: Map<string, string>,
+    securityGroupVpc: string,
+  ) => {
+    const securityGroupRules: SecurityGroupRuleInfo[] = [];
+    let defaultRuleProps: { protocol: cdk.aws_ec2.Protocol; from?: number; to?: number };
+    if (securityGroupRuleItem.tcpPorts) {
+      for (const tcpPort of securityGroupRuleItem.tcpPorts ?? []) {
         const defaultRuleProps = {
-          protocol: cdk.aws_ec2.Protocol.UDP,
+          protocol: cdk.aws_ec2.Protocol.TCP,
           from: tcpPort,
           to: tcpPort,
         };
@@ -683,21 +714,14 @@ export class VpcResources extends AseaResource {
           ),
         );
       }
+      return securityGroupRules;
     }
-    return securityGroupRules;
-  };
-
-  private processTcpSources = (
-    securityGroupRuleItem: SecurityGroupRuleConfig,
-    securityGroupsMap: Map<string, string>,
-    securityGroupVpc: string,
-  ) => {
-    const securityGroupRules: SecurityGroupRuleInfo[] = [];
-    for (const tcpPort of securityGroupRuleItem.tcpPorts ?? []) {
-      const defaultRuleProps = {
+    for (const ruleType of securityGroupRuleItem.types ?? []) {
+      if (ruleType !== 'TCP') continue;
+      defaultRuleProps = {
         protocol: cdk.aws_ec2.Protocol.TCP,
-        from: tcpPort,
-        to: tcpPort,
+        from: securityGroupRuleItem.fromPort,
+        to: securityGroupRuleItem.toPort,
       };
       securityGroupRules.push(
         ...this.processSecurityGroupSources(
