@@ -58,6 +58,7 @@ export class cdkOptionsConfig implements i.ICdkOptionsConfig {
   readonly useManagementAccessRole = true;
   readonly customDeploymentRole = undefined;
   readonly forceBootstrap = undefined;
+  readonly deploymentMethod?: 'change-set' | 'direct' | undefined = undefined;
   /**
    * Determines if the LZA pipeline will skip the static config validation step during the pipeline's Build phase. This can be helpful in cases where the config-validator incorrectly throws errors for a valid configuration.
    */

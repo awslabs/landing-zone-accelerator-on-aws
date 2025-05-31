@@ -335,6 +335,7 @@ export interface ICentralizeCdkBucketsConfig {
  * cdkOptions:
  *   centralizeBuckets: true
  *   useManagementAccessRole: true
+ *   deploymentMethod: 'direct'
  * ```
  */
 export interface ICdkOptionsConfig {
@@ -359,6 +360,10 @@ export interface ICdkOptionsConfig {
    * Forces the Accelerator to deploy the bootstrapping stack and circumvent the ssm parameter check. This option is needed when adding or removing a custom deployment role
    */
   readonly forceBootstrap?: boolean;
+  /**
+   * Sets the cdk deployment method for the LZA. Defaults to direct. Setting to change-set will display additional progress information but can increase deployment time.
+   */
+  readonly deploymentMethod?: 'change-set' | 'direct';
 }
 
 /**
