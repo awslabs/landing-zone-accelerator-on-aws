@@ -652,11 +652,12 @@ export class VpcResources extends AseaResource {
     securityGroupVpc: string,
   ) => {
     const securityGroupRules: SecurityGroupRuleInfo[] = [];
-    for (const tcpPort of securityGroupRuleItem.udpPorts ?? []) {
-      const defaultRuleProps = {
+    let defaultRuleProps: { protocol: cdk.aws_ec2.Protocol; from?: number; to?: number };
+    if (securityGroupRuleItem.fromPort && securityGroupRuleItem.toPort) {
+      defaultRuleProps = {
         protocol: cdk.aws_ec2.Protocol.UDP,
-        from: tcpPort,
-        to: tcpPort,
+        from: securityGroupRuleItem.fromPort,
+        to: securityGroupRuleItem.toPort,
       };
       securityGroupRules.push(
         ...this.processSecurityGroupSources(
@@ -666,6 +667,22 @@ export class VpcResources extends AseaResource {
           securityGroupVpc,
         ),
       );
+    } else {
+      for (const tcpPort of securityGroupRuleItem.udpPorts ?? []) {
+        const defaultRuleProps = {
+          protocol: cdk.aws_ec2.Protocol.UDP,
+          from: tcpPort,
+          to: tcpPort,
+        };
+        securityGroupRules.push(
+          ...this.processSecurityGroupSources(
+            securityGroupRuleItem,
+            defaultRuleProps,
+            securityGroupsMap,
+            securityGroupVpc,
+          ),
+        );
+      }
     }
     return securityGroupRules;
   };
