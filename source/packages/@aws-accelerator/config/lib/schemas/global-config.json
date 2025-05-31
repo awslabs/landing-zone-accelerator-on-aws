@@ -310,6 +310,14 @@
           "description": "Creates a deployment role in all accounts in the home region with the name specified in the parameter. This role is used by the LZA for all CDK deployment tasks.",
           "type": "string"
         },
+        "deploymentMethod": {
+          "description": "Sets the cdk deployment method for the LZA. Defaults to direct. Setting to change-set will display additional progress information but can increase deployment time.",
+          "enum": [
+            "change-set",
+            "direct"
+          ],
+          "type": "string"
+        },
         "forceBootstrap": {
           "description": "Forces the Accelerator to deploy the bootstrapping stack and circumvent the ssm parameter check. This option is needed when adding or removing a custom deployment role",
           "type": "boolean"

@@ -35,6 +35,7 @@ import { isBeforeBootstrapStage } from '../utils/app-utils';
 
 import { AcceleratorStackNames } from './accelerator';
 import { AcceleratorStage } from './accelerator-stage';
+import { DeploymentMethod } from 'aws-cdk/lib/api';
 
 const logger = createLogger(['toolkit']);
 process.on('unhandledRejection', err => {
@@ -599,6 +600,7 @@ export class AcceleratorToolkit {
     roleArn: string | undefined,
   ) {
     const cli = await AcceleratorToolkit.getCdkToolKit(context, options, stack);
+    const deploymentMethod: DeploymentMethod = getDeploymentMethod(stack, options?.cdkOptions?.deploymentMethod);
     const selector: StackSelector = {
       patterns: [stack],
     };
@@ -607,10 +609,7 @@ export class AcceleratorToolkit {
         selector,
         toolkitStackName,
         requireApproval: options.requireApproval,
-        deploymentMethod: {
-          method: 'change-set',
-          changeSetName: `${stack}-change-set`,
-        },
+        deploymentMethod,
         hotswap: HotswapMode.FULL_DEPLOYMENT,
         tags: options.tags,
         roleArn: roleArn,
@@ -703,4 +702,17 @@ function getDeploymentRoleArn(props: {
     roleArn = `arn:${props.partition}:iam::${props.account}:role/${props.cdkOptions.customDeploymentRole}`;
   }
   return roleArn;
+}
+
+function getDeploymentMethod(stack: string, deploymentType: string | undefined): DeploymentMethod {
+  if (deploymentType === 'change-set') {
+    return {
+      method: 'change-set',
+      changeSetName: `${stack}-change-set`,
+    };
+  }
+
+  return {
+    method: 'direct',
+  };
 }
