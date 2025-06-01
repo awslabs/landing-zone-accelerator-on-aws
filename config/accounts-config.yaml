@@ -1,0 +1,26 @@
+mandatoryAccounts:
+  - name: Management
+    description: The management (primary) account. Do not change the name field for this mandatory account.
+    email: renatosbarretto+lza-management@gmail.com
+    organizationalUnit: Root
+
+  - name: LogArchive
+    description: The log archive account. Do not change the name field for this mandatory account.
+    email: renatosbarretto+lza-logarchive@gmail.com
+    organizationalUnit: Security
+
+  - name: Audit
+    description: The security audit account. Do not change the name field for this mandatory account.
+    email: renatosbarretto+lza-audit@gmail.com
+    organizationalUnit: Security
+
+workloadAccounts:
+  - name: SharedServices
+    description: The SharedServices account
+    email: renatosbarretto+lza-sharedservices@gmail.com
+    organizationalUnit: Infrastructure
+
+  - name: Network
+    description: The Network account
+    email: renatosbarretto+lza-network@gmail.com
+    organizationalUnit: Infrastructure

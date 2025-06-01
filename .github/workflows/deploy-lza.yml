@@ -1,0 +1,48 @@
+name: Deploy Landing Zone Accelerator
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'config/**'
+      - '.github/workflows/deploy-lza.yml'
+  workflow_dispatch:
+
+env:
+  AWS_REGION: us-east-1
+  CDK_DEPLOY_ACCOUNT: ${{ secrets.AWS_ACCOUNT_ID }}
+  CDK_DEPLOY_REGION: us-east-1
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+
+      - name: Install dependencies
+        run: |
+          npm install -g aws-cdk
+          npm install
+
+      - name: Deploy Landing Zone Accelerator
+        run: |
+          cdk deploy --require-approval never
+        env:
+          CDK_DEPLOY_ACCOUNT: ${{ secrets.AWS_ACCOUNT_ID }}
+          CDK_DEPLOY_REGION: ${{ env.AWS_REGION }} 

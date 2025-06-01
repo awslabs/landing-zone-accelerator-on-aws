@@ -1,0 +1,18 @@
+{
+    "Version": "2012-10-17",
+    "Statement": [
+      {
+        "Sid": "AllowEventsFromOrganization",
+        "Effect": "Allow",
+        "Principal": "*",
+        "Action": "events:PutEvents",
+        "Resource": "*",
+        "Condition": {
+          "StringEquals": {
+            "aws:PrincipalOrgID": "${AcceleratorOrgId}"
+          }
+        }
+      }
+    ]
+  }
+  

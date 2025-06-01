@@ -1,0 +1,21 @@
+{
+    "Version": "2012-10-17",
+    "Statement": [
+      {
+        "Sid": "AllowOrganizationWrite",
+        "Effect": "Allow",
+        "Principal": "*",
+        "Action": [
+          "s3:PutObject",
+          "s3:PutObjectAcl"
+        ],
+        "Resource": "arn:aws:s3:::${CentralLogBucket}/*",
+        "Condition": {
+          "StringEquals": {
+            "aws:PrincipalOrgID": "${AcceleratorOrgId}"
+          }
+        }
+      }
+    ]
+  }
+  

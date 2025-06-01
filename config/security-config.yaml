@@ -1,0 +1,141 @@
+##################################################################################################################
+# For additional configurable services, features, and property descriptions,                                     #
+# please review our network configuration reference in our README.md:                                            #
+# https://awslabs.github.io/landing-zone-accelerator-on-aws/classes/_aws_accelerator_config.SecurityConfig.html  #
+##################################################################################################################
+
+homeRegion: &HOME_REGION us-east-1
+
+# Central Security Services Configuration
+centralSecurityServices:
+  delegatedAdminAccount: Security
+  ebsDefaultVolumeEncryption:
+    enable: true
+    kmsKey: alias/aws/ebs
+  s3PublicAccessBlock:
+    enable: true
+  ssmAutomation:
+    documents:
+      - name: Accelerator
+        shareTargets:
+          organizationalUnits:
+            - Root
+  macie:
+    enable: true
+    delegatedAdminAccount: Security
+  guardduty:
+    enable: true
+    delegatedAdminAccount: Security
+  securityHub:
+    enable: true
+    delegatedAdminAccount: Security
+
+# AWS Config configuration
+awsConfig:
+  enableConfigurationRecorder: true
+  enableDeliveryChannel: true
+  ruleSets:
+    - deploymentTargets:
+        organizationalUnits:
+          - Root
+      rules:
+        - name: accelerator-iam-user-mfa
+          complianceResourceTypes:
+            - AWS::IAM::User
+        - name: accelerator-iam-password-policy
+          complianceResourceTypes:
+            - AWS::IAM::AccountPasswordPolicy
+        - name: accelerator-iam-user-no-policies
+          complianceResourceTypes:
+            - AWS::IAM::User
+        - name: accelerator-iam-user-unused-credentials
+          complianceResourceTypes:
+            - AWS::IAM::User
+        - name: accelerator-iam-user-group-membership
+          complianceResourceTypes:
+            - AWS::IAM::User
+        - name: accelerator-iam-user-no-access-keys
+          complianceResourceTypes:
+            - AWS::IAM::User
+        - name: accelerator-iam-role-managed-policy-check
+          complianceResourceTypes:
+            - AWS::IAM::Role
+        - name: accelerator-iam-user-permissions-boundary-check
+          complianceResourceTypes:
+            - AWS::IAM::User
+        - name: accelerator-iam-role-permissions-boundary-check
+          complianceResourceTypes:
+            - AWS::IAM::Role
+        - name: accelerator-iam-user-access-keys-rotated
+          complianceResourceTypes:
+            - AWS::IAM::User
+        - name: accelerator-iam-user-mfa-enabled
+          complianceResourceTypes:
+            - AWS::IAM::User
+
+# IAM Password Policy
+iamPasswordPolicy:
+  allowUsersToChangePassword: true
+  hardExpiry: false
+  requireUppercaseCharacters: true
+  requireLowercaseCharacters: true
+  requireSymbols: true
+  requireNumbers: true
+  minimumPasswordLength: 14
+  passwordReusePrevention: 24
+  maxPasswordAge: 90
+
+# Access Analyzer
+accessAnalyzer:
+  enable: true
+
+# CloudWatch configuration
+cloudWatch:
+  metricSets:
+    - regions:
+        - *HOME_REGION
+      deploymentTargets:
+        accounts:
+          - Management
+      metrics:
+        - filterName: RootAccountUsageMetricFilter
+          logGroupName: aws-controltower/CloudTrailLogs
+          filterPattern: '{$.userIdentity.type="Root" && $.userIdentity.invokedBy NOT EXISTS && $.eventType !="AwsServiceEvent"}'
+          metricNamespace: LogMetrics
+          metricName: RootAccountUsage
+          metricValue: "1"
+        - filterName: IAMPolicyChangesMetricFilter
+          logGroupName: aws-controltower/CloudTrailLogs
+          filterPattern: "{($.eventName=DeleteGroupPolicy) || ($.eventName=DeleteRolePolicy) || ($.eventName=DeleteUserPolicy) || ($.eventName=PutGroupPolicy) || ($.eventName=PutRolePolicy) || ($.eventName=PutUserPolicy) || ($.eventName=CreatePolicy) || ($.eventName=DeletePolicy) || ($.eventName=CreatePolicyVersion) || ($.eventName=DeletePolicyVersion) || ($.eventName=AttachRolePolicy) || ($.eventName=DetachRolePolicy) || ($.eventName=AttachUserPolicy) || ($.eventName=DetachUserPolicy) || ($.eventName=AttachGroupPolicy) || ($.eventName=DetachGroupPolicy)}"
+          metricNamespace: LogMetrics
+          metricName: IAMPolicyChanges
+          metricValue: "1"
+  alarmSets:
+    - regions:
+        - *HOME_REGION
+      deploymentTargets:
+        accounts:
+          - Management
+      alarms:
+        - alarmName: CIS-1.7-RootAccountUsage
+          alarmDescription: Alarm for usage of "root" account
+          snsTopicName: Security
+          metricName: RootAccountUsage
+          namespace: LogMetrics
+          comparisonOperator: GreaterThanOrEqualToThreshold
+          evaluationPeriods: 1
+          period: 300
+          statistic: Sum
+          threshold: 1
+          treatMissingData: notBreaching
+        - alarmName: CIS-4.4-IAMPolicyChanges
+          alarmDescription: Alarm for IAM policy changes
+          snsTopicName: Security
+          metricName: IAMPolicyChanges
+          namespace: LogMetrics
+          comparisonOperator: GreaterThanOrEqualToThreshold
+          evaluationPeriods: 1
+          period: 300
+          statistic: Average
+          threshold: 1
+          treatMissingData: notBreaching
