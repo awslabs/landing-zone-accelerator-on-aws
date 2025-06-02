@@ -24,7 +24,7 @@ import {
   SecurityConfig,
 } from '@aws-accelerator/config';
 import { createLogger } from '@aws-accelerator/utils/lib/logger';
-import { Accelerator } from './accelerator';
+import { Accelerator, shouldLookupDynamoDb } from './accelerator';
 
 const logger = createLogger(['config-replacement']);
 const configDirPath = process.argv[2];
@@ -48,6 +48,8 @@ const props = {
   region: process.env['AWS_REGION'],
   account: process.env['ACCOUNT_ID'],
   enableSingleAccountMode: enableSingleAccountMode,
+  // stage is needed to find if dynamoDB lookup is needed. ACCELERATOR_STAGE is set in codePipeline environments
+  stage: process.env['ACCELERATOR_STAGE'],
 };
 
 if (configDirPath) {
@@ -63,15 +65,24 @@ async function processReplacements(props: {
   region: string | undefined;
   enableSingleAccountMode: boolean;
   account: string | undefined;
+  stage: string | undefined;
 }) {
   await Accelerator.getManagementAccountCredentials(props.partition);
   const orgsEnabled = OrganizationConfig.loadRawOrganizationsConfig(configDirPath).enable;
+  const loadFromDynamoDbTable = shouldLookupDynamoDb(props.stage);
 
   // Load accounts config
   let accountsConfig: AccountsConfig | undefined = undefined;
   try {
     accountsConfig = AccountsConfig.load(configDirPath);
-    await accountsConfig.loadAccountIds(props.partition, props.enableSingleAccountMode, orgsEnabled, accountsConfig);
+    await accountsConfig.loadAccountIds(
+      props.partition,
+      props.enableSingleAccountMode,
+      orgsEnabled,
+      accountsConfig,
+      undefined,
+      loadFromDynamoDbTable,
+    );
   } catch (e) {
     logger.error(`Error loading accounts config: ${e}`);
     process.exit(1);

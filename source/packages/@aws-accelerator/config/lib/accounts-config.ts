@@ -23,6 +23,8 @@ import * as i from './models/accounts-config';
 import { DeploymentTargets, parseAccountsConfig } from './common';
 import { getGlobalRegion } from '../../utils/lib/common-functions';
 import { OrganizationalUnitConfig } from './organization-config';
+import { getSSMParameterValue } from '../../utils/lib/get-value-from-ssm';
+import { getColumnFromConfigTable } from '../../utils/lib/get-column-from-config-table';
 
 const logger = createLogger(['accounts-config']);
 
@@ -192,6 +194,7 @@ export class AccountsConfig implements i.IAccountsConfig {
      * Management account credential when deployed from external account, otherwise this should remain undefined
      */
     managementAccountCredentials?: AWS.Credentials,
+    loadFromDynamoDbTable?: boolean,
   ): Promise<void> {
     if (this.accountIds === undefined) {
       this.accountIds = [];
@@ -204,8 +207,35 @@ export class AccountsConfig implements i.IAccountsConfig {
         this.mandatoryAccounts.forEach(item => {
           this.accountIds?.push({ email: item.email.toLocaleLowerCase(), accountId: currentAccountId });
         });
-        // orgs are enabled
-      } else if (isOrgsEnabled) {
+        // orgs is enabled and loadFromDynamoDBTable is true
+      } else if (isOrgsEnabled && loadFromDynamoDbTable) {
+        logger.debug(`Orgs is enabled, solution will query from dynamoDB table instead of AWS Organizations API`);
+        if (!process.env['ACCELERATOR_SSM_PARAM_NAME_PREFIX']) {
+          logger.warn(
+            'ACCELERATOR_SSM_PARAM_NAME_PREFIX environment variable is not defined, continuing with default value of /accelerator',
+          );
+        }
+        const ssmConfigTableNameParameter = `${
+          process.env['ACCELERATOR_SSM_PARAM_NAME_PREFIX'] ?? '/accelerator'
+        }/prepare-stack/configTable/name`;
+
+        const configTableName = await getSSMParameterValue(ssmConfigTableNameParameter, managementAccountCredentials);
+
+        const mandatoryAccountPromises = accountsConfig.mandatoryAccounts.map(account =>
+          this.getAccountInfo(configTableName, 'mandatoryAccount', account.email),
+        );
+
+        const workloadAccountPromises = accountsConfig.workloadAccounts.map(account =>
+          this.getAccountInfo(configTableName, 'workloadAccount', account.email),
+        );
+
+        const accountsResults = await Promise.all([...mandatoryAccountPromises, ...workloadAccountPromises]);
+
+        this.accountIds.push(...accountsResults);
+
+        // orgs are enabled but load from dynamoDB is false
+      } else if (isOrgsEnabled && !loadFromDynamoDbTable) {
+        logger.debug(`Orgs is enabled, solution will query from AWS Organizations API`);
         const organizationsClient = new AWS.Organizations({
           region: getGlobalRegion(partition),
           credentials: managementAccountCredentials,
@@ -387,5 +417,17 @@ export class AccountsConfig implements i.IAccountsConfig {
 
   public getAuditAccountId(): string {
     return this.getAccountId(AccountsConfig.AUDIT_ACCOUNT);
+  }
+
+  private async getAccountInfo(
+    configTableName: string,
+    accountType: 'workloadAccount' | 'mandatoryAccount',
+    accountEmail: string,
+  ) {
+    const accountInfo = await getColumnFromConfigTable(configTableName, accountType, accountEmail, 'awsKey');
+    return {
+      email: accountEmail.toLowerCase(),
+      accountId: accountInfo,
+    };
   }
 }

@@ -143,6 +143,7 @@ async function putOrganizationConfigInTable(
   configTableName: string,
   awsKey: string,
   commitId: string,
+  orgInfo: { name: string; id: string; arn: string },
 ): Promise<void> {
   if (awsKey != '') {
     const params: UpdateCommandInput = {
@@ -151,16 +152,19 @@ async function putOrganizationConfigInTable(
         dataType: 'organization',
         acceleratorKey: configData.name,
       },
-      UpdateExpression: 'set #awsKey = :v_awsKey, #dataBag = :v_dataBag, #commitId = :v_commitId',
+      UpdateExpression:
+        'set #awsKey = :v_awsKey, #dataBag = :v_dataBag, #commitId = :v_commitId, #orgInfo = :v_orgInfo',
       ExpressionAttributeNames: {
         '#awsKey': 'awsKey',
         '#dataBag': 'dataBag',
         '#commitId': 'commitId',
+        '#orgInfo': 'orgInfo',
       },
       ExpressionAttributeValues: {
         ':v_awsKey': awsKey,
         ':v_dataBag': JSON.stringify(configData),
         ':v_commitId': commitId,
+        ':v_orgInfo': JSON.stringify(orgInfo),
       },
     };
     await throttlingBackOff(() => documentClient.send(new UpdateCommand(params)));
@@ -171,14 +175,16 @@ async function putOrganizationConfigInTable(
         dataType: 'organization',
         acceleratorKey: configData.name,
       },
-      UpdateExpression: 'set #dataBag = :v_dataBag, #commitId = :v_commitId',
+      UpdateExpression: 'set #dataBag = :v_dataBag, #commitId = :v_commitId, #orgInfo = :v_orgInfo',
       ExpressionAttributeNames: {
         '#dataBag': 'dataBag',
         '#commitId': 'commitId',
+        '#orgInfo': 'orgInfo',
       },
       ExpressionAttributeValues: {
         ':v_dataBag': JSON.stringify(configData),
         ':v_commitId': commitId,
+        ':v_orgInfo': JSON.stringify(orgInfo),
       },
     };
     await throttlingBackOff(() => documentClient.send(new UpdateCommand(params)));
@@ -295,6 +301,16 @@ async function onCreateUpdateFunction(
 
   await putAllOrganizationConfigInTable(organizationConfig, configTableName, commitId);
 
+  const rootId = organizationConfig.organizationalUnitIds!.find(ou => ou.name === 'Root')!.id;
+  const rootOrgInfo = organizationConfig.organizationalUnitIds!.find(ou => ou.name === 'Root')!;
+  await putOrganizationConfigInTable(
+    { name: 'Root', ignore: undefined },
+    configTableName,
+    rootId,
+    commitId,
+    rootOrgInfo,
+  );
+
   // Boolean to set single account deployment mode
   const enableSingleAccountMode = process.env['ACCELERATOR_ENABLE_SINGLE_ACCOUNT_MODE']
     ? process.env['ACCELERATOR_ENABLE_SINGLE_ACCOUNT_MODE'] === 'true'
@@ -381,6 +397,7 @@ async function putAllOrganizationConfigInTable(
       if (message.startsWith('configuration validation failed')) awsKey = '';
       else throw error;
     }
-    await putOrganizationConfigInTable(organizationalUnit, configTableName, awsKey, commitId);
+    const orgIdInfo = organizationConfig.organizationalUnitIds!.find(ou => ou.name === organizationalUnit.name)!;
+    await putOrganizationConfigInTable(organizationalUnit, configTableName, awsKey, commitId, orgIdInfo);
   }
 }

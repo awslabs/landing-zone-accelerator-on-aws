@@ -31,7 +31,7 @@ import fs from 'fs';
 import path from 'path';
 import { AcceleratorStage } from '../lib/accelerator-stage';
 import { AcceleratorStackProps } from '../lib/stacks/accelerator-stack';
-import { getCentralLogBucketKmsKeyArn } from '../lib/accelerator';
+import { getCentralLogBucketKmsKeyArn, shouldLookupDynamoDb } from '../lib/accelerator';
 import { AcceleratorResourceNames } from '../lib/accelerator-resource-names';
 import {
   POLICY_LOOKUP_TYPE,
@@ -460,19 +460,23 @@ export async function setAcceleratorStackProps(
   const homeRegion = GlobalConfig.loadRawGlobalConfig(context.configDirPath).homeRegion;
   const orgsEnabled = OrganizationConfig.loadRawOrganizationsConfig(context.configDirPath).enable;
 
+  // Check to see if lookups for organization entities should be done in DynamoDB or native AWS Organizations API calls
+  const loadFromDynamoDbTable = shouldLookupDynamoDb(context.stage);
   const accountsConfig = AccountsConfig.load(context.configDirPath);
   await accountsConfig.loadAccountIds(
     context.partition,
     acceleratorEnv.enableSingleAccountMode,
     orgsEnabled,
     accountsConfig,
+    undefined,
+    loadFromDynamoDbTable,
   );
 
   const replacementsConfig = ReplacementsConfig.load(context.configDirPath, accountsConfig);
   await replacementsConfig.loadDynamicReplacements(homeRegion);
   const globalConfig = GlobalConfig.load(context.configDirPath, replacementsConfig);
   const organizationConfig = OrganizationConfig.load(context.configDirPath, replacementsConfig);
-  await organizationConfig.loadOrganizationalUnitIds(context.partition);
+  await organizationConfig.loadOrganizationalUnitIds(context.partition, undefined, loadFromDynamoDbTable);
 
   if (globalConfig.externalLandingZoneResources?.importExternalLandingZoneResources) {
     await globalConfig.loadExternalMapping(accountsConfig);
