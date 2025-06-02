@@ -98,6 +98,12 @@ export enum SsmResourceType {
    */
   PREFIX_LIST = '/network/prefixList/${0}/id',
   /**
+   * DHCP Option ID
+   *
+   * `${0}` is  replaced with the DHCP name
+   */
+  DHCP_OPTION_ID = '/network/dhcp/${0}/id',
+  /**
    * VPC Resources
    */
   /**
@@ -106,6 +112,12 @@ export enum SsmResourceType {
    * `${0}` is  replaced with the VPC name
    */
   VPC = '/network/vpc/${0}/id',
+  /**
+   * VPC ID
+   *
+   * `${0}` is  replaced with the VPC name
+   */
+  VPC_EGRESS_ONLY_IGW = '/network/vpc/${0}/egress-only-igw/id',
   /**
    * VPC IPV4 CIDR Block
    *

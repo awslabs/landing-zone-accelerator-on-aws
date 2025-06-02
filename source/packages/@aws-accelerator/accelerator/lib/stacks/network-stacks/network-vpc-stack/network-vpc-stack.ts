@@ -159,6 +159,10 @@ export class NetworkVpcStack extends NetworkStack {
     //
     this.createStackResourceParameters(vpcResources.vpcMap, subnetResources.subnetMap);
     //
+    // Add DHCP SSM Parameters
+    //
+    this.addDhcpOptionsParameter(dhcpResources);
+    //
     // Create SSM Parameters
     //
     this.createSsmParameters();
@@ -168,6 +172,21 @@ export class NetworkVpcStack extends NetworkStack {
     this.addResourceSuppressionsByPath();
 
     this.logger.info('Completed stack synthesis');
+  }
+
+  /**
+   * Adds DHCP SSM Parameters
+   *
+   * @param dhcpResources {@link DhcpResources}
+   */
+  private addDhcpOptionsParameter(dhcpResources: DhcpResources) {
+    for (const [key, value] of dhcpResources.dhcpOptionsIds.entries()) {
+      this.addSsmParameter({
+        logicalId: pascalCase(`SsmParam${pascalCase(key)}DhcpOptionsId`),
+        parameterName: this.getSsmPath(SsmResourceType.DHCP_OPTION_ID, [key]),
+        stringValue: value,
+      });
+    }
   }
 
   /**

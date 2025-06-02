@@ -39,6 +39,10 @@ export interface V2NetworkStacksBaseProps extends AcceleratorStackProps {
    * Flag indicates weather current stack is V2 VPC stack
    */
   readonly vpcStack: boolean;
+  /**
+   * List of V2 VPC resources
+   */
+  readonly v2NetworkResources: V2NetworkResourceListType[];
 }
 
 /**
@@ -80,13 +84,11 @@ export type ipamPoolIdType = {
 };
 
 /**
- * V2 stack type
- */
-export type V2StackType = {
-  [key: string]: cdk.Stack;
-};
-
-/**
  * V2 Network resource list type
  */
 export type V2NetworkResourceListType = { vpcName: string; resourceType: string; resourceName?: string };
+
+/**
+ * Ipam Cidrs Map type
+ */
+export type IpamCidrsMapType = { [key: string]: number };

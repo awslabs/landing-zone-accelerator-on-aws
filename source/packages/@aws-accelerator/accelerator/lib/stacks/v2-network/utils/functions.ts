@@ -12,7 +12,7 @@
  */
 import * as cdk from 'aws-cdk-lib';
 
-import { ResourceShareType, V2NetworkResourceListType, V2StackType } from './types';
+import { IpamCidrsMapType, ResourceShareType, V2NetworkResourceListType } from './types';
 import { createLogger } from '../../../../../../@aws-lza/index';
 import path from 'path';
 import { OrganizationConfig } from '@aws-accelerator/config/lib/organization-config';
@@ -41,6 +41,7 @@ import {
 } from '@aws-accelerator/accelerator/utils/lza-resource-lookup';
 import { GlobalConfig } from '@aws-accelerator/config/lib/global-config';
 import { V2StackComponentsList } from './enums';
+import { isIpv4 } from '../../network-stacks/utils/validation-utils';
 
 const logger = createLogger([path.parse(path.basename(__filename)).name]);
 
@@ -148,6 +149,10 @@ function getV2NetworkResources(
     getV2VirtualPrivateGatewayResource(vpcItem, lzaLookup, v2Components);
 
     getV2DhcpOptionsAssociationResource(vpcItem, lzaLookup, v2Components);
+
+    getV2DeleteDefaultSecurityGroupRulesResource(vpcItem, lzaLookup, v2Components);
+
+    getV2VpnConnectionsResource(networkConfig, vpcItem, lzaLookup, v2Components);
   }
 
   return v2Components;
@@ -247,6 +252,42 @@ function getV2AdditionalIpv4CidrResources(
       }
     }
   }
+
+  // IPAM Cidrs
+  if (vpcItem.ipamAllocations && vpcItem.ipamAllocations.length > 1) {
+    const ipamCidrsMap: IpamCidrsMapType = {};
+    for (const ipamAllocation of vpcItem.ipamAllocations.slice(1)) {
+      const ipamCidrKey = `${ipamAllocation.ipamPoolName}-${ipamAllocation.netmaskLength}`;
+      if (!(ipamCidrKey in ipamCidrsMap)) {
+        ipamCidrsMap[ipamCidrKey] = 0;
+      } else {
+        ipamCidrsMap[ipamCidrKey]++;
+      }
+
+      const ipamCidrIndex = ipamCidrsMap[ipamCidrKey];
+
+      if (
+        !lzaLookup.resourceExists({
+          resourceType: LZAResourceLookupType.VPC_CIDR_BLOCK,
+          lookupValues: {
+            vpcName: vpcItem.name,
+            netmaskLength: ipamAllocation.netmaskLength.toString(),
+            ipamPoolName: ipamAllocation.ipamPoolName,
+            ipamCidrIndex,
+          } as LookupValues,
+        })
+      ) {
+        logger.info(
+          `VPC ${vpcItem.name} additional IPAM CIDR ${ipamAllocation.ipamPoolName} for ${ipamAllocation.netmaskLength} netmask with ${ipamCidrIndex} index is not present in the existing stack, resource will be deployed through V2 stacks`,
+        );
+        v2Components.push({
+          vpcName: vpcItem.name,
+          resourceType: V2StackComponentsList.ADDITIONAL_IPAM_ALLOCATION,
+          resourceName: `${ipamAllocation.ipamPoolName}|${ipamAllocation.netmaskLength}|${ipamCidrIndex}`,
+        });
+      }
+    }
+  }
 }
 
 /**
@@ -260,34 +301,78 @@ function getV2Ipv6CidrResources(
   lzaLookup: LZAResourceLookup,
   v2Components: V2NetworkResourceListType[],
 ): void {
-  const cidrLookupMap = setCidrIndexMap(vpcItem);
-  for (const vpcCidr of vpcItem.ipv6Cidrs ?? []) {
-    const cidrKey = getIpv6CidrKey(vpcItem, vpcCidr);
-    const cidrValue = cidrLookupMap.get(cidrKey);
-    const lookupIndex = cidrValue;
-    cidrLookupMap.set(cidrKey, cidrValue! - 1);
-    if (
-      !lzaLookup.resourceExists({
-        resourceType: LZAResourceLookupType.VPC_CIDR_BLOCK,
-        lookupValues: {
+  if (vpcItem.ipv6Cidrs && vpcItem.ipv6Cidrs.length > 0) {
+    // amazonProvided
+    const amazonProvidedCidrs = vpcItem.ipv6Cidrs.filter(cidrItem => cidrItem.amazonProvided);
+    amazonProvidedCidrs.map((cidrItem, index) => {
+      const cidrInfo = {
+        amazonProvidedIpv6CidrBlock: cidrItem.amazonProvided,
+        metadata: {
           vpcName: vpcItem.name,
-          amazonProvidedIpv6CidrBlock: vpcCidr.amazonProvided,
-          ipv6CidrBlock: vpcCidr.cidrBlock,
-          ipv6pool: vpcCidr.byoipPoolId,
-          amazonProvidedCidrIndex: lookupIndex,
-          byoipPoolIndex: lookupIndex,
-        } as LookupValues,
-      })
-    ) {
-      logger.info(
-        `VPC ${vpcItem.name} IPV6 CIDR ${vpcCidr.cidrBlock} is not present in the existing stack, resource will be deployed through V2 stacks`,
-      );
-      v2Components.push({
-        vpcName: vpcItem.name,
-        resourceType: V2StackComponentsList.ADDITIONAL_CIDR_BLOCK,
-        resourceName: vpcCidr.cidrBlock,
-      });
-    }
+          amazonProvidedIpv6CidrBlock: cidrItem.amazonProvided,
+          amazonProvidedCidrIndex: index,
+        },
+      };
+      if (
+        !lzaLookup.resourceExists({
+          resourceType: LZAResourceLookupType.VPC_CIDR_BLOCK,
+          lookupValues: {
+            ...cidrInfo.metadata,
+          } as LookupValues,
+        })
+      ) {
+        logger.info(
+          `VPC ${vpcItem.name} IPV6 CIDR for amazonProvided is not present in the existing stack, resource will be deployed through V2 stacks`,
+        );
+        v2Components.push({
+          vpcName: vpcItem.name,
+          resourceType: V2StackComponentsList.ADDITIONAL_CIDR_BLOCK,
+          resourceName: `amazonProvided|${index}`,
+        });
+      }
+    });
+
+    // BYO Pool
+
+    const byoipPoolCidrs = vpcItem.ipv6Cidrs.filter(cidrItem => cidrItem.byoipPoolId && cidrItem.cidrBlock);
+    const cidrIndex: { [key: string]: number } = {};
+    byoipPoolCidrs.map((cidrItem, index) => {
+      const cidrKey = `${cidrItem.byoipPoolId}-${cidrItem.cidrBlock}`;
+      if (!(cidrKey in cidrIndex)) {
+        cidrIndex[cidrKey] = 0;
+      } else {
+        cidrIndex[cidrKey]++;
+      }
+
+      const cidrInfo = {
+        ipv6CidrBlock: cidrItem.cidrBlock,
+        ipv6Pool: cidrItem.byoipPoolId,
+        metadata: {
+          vpcName: vpcItem.name,
+          ipv6CidrBlock: cidrItem.cidrBlock,
+          ipv6pool: cidrItem.byoipPoolId,
+          ipamCidrIndex: cidrIndex[cidrKey],
+        },
+      };
+
+      if (
+        !lzaLookup.resourceExists({
+          resourceType: LZAResourceLookupType.VPC_CIDR_BLOCK,
+          lookupValues: {
+            ...cidrInfo.metadata,
+          } as LookupValues,
+        })
+      ) {
+        logger.info(
+          `VPC ${vpcItem.name} IPV6 CIDR ${cidrItem.cidrBlock} from BYP id ${cidrItem.byoipPoolId} is not present in the existing stack, resource will be deployed through V2 stacks`,
+        );
+        v2Components.push({
+          vpcName: vpcItem.name,
+          resourceType: V2StackComponentsList.ADDITIONAL_CIDR_BLOCK,
+          resourceName: `${cidrItem.byoipPoolId}|${cidrItem.cidrBlock}|${index}`,
+        });
+      }
+    });
   }
 }
 
@@ -304,7 +389,7 @@ function getV2Ipv6CidrResources(
  *
  * The returned map is used to track the index of each CIDR type for resource lookups.
  */
-function setCidrIndexMap(vpcItem: VpcConfig | VpcTemplatesConfig): Map<string, number> {
+export function setCidrIndexMap(vpcItem: VpcConfig | VpcTemplatesConfig): Map<string, number> {
   const cidrIndexMap = new Map<string, number>();
   const amazonProvidedCidrs = vpcItem.ipv6Cidrs?.filter(cidr => cidr.amazonProvided);
   const byoipPoolCidrs = vpcItem.ipv6Cidrs?.filter(cidr => cidr.byoipPoolId) ?? [];
@@ -454,6 +539,73 @@ function getV2DhcpOptionsAssociationResource(
 }
 
 /**
+ * Function to get V2 stack eligible VPC delete default security group resource
+ * @param vpcItem {@link VpcConfig} | {@link VpcTemplatesConfig}
+ * @param lzaLookup {@link LZAResourceLookup}
+ * @param v2Components {@link V2NetworkResourceListType}[]
+ */
+function getV2DeleteDefaultSecurityGroupRulesResource(
+  vpcItem: VpcConfig | VpcTemplatesConfig,
+  lzaLookup: LZAResourceLookup,
+  v2Components: V2NetworkResourceListType[],
+): void {
+  if (
+    !lzaLookup.resourceExists({
+      resourceType: LZAResourceLookupType.DELETE_VPC_DEFAULT_SECURITY_GROUP_RULES,
+      lookupValues: { vpcName: vpcItem.name },
+    }) &&
+    vpcItem.defaultSecurityGroupRulesDeletion
+  ) {
+    logger.info(
+      `VPC ${vpcItem.name} delete default security group rules is not present in the existing stack, resource will be deployed through V2 stacks`,
+    );
+    v2Components.push({
+      vpcName: vpcItem.name,
+      resourceType: V2StackComponentsList.DELETE_DEFAULT_SECURITY_GROUP_RULES,
+    });
+  }
+}
+
+/**
+ * Function to get V2 stack eligible Vpn Connections resources
+ * @param vpcItem {@link VpcConfig} | {@link VpcTemplatesConfig}
+ * @param lzaLookup {@link LZAResourceLookup}
+ * @param v2Components {@link V2NetworkResourceListType}[]
+ */
+function getV2VpnConnectionsResource(
+  networkConfig: NetworkConfig,
+  vpcItem: VpcConfig | VpcTemplatesConfig,
+  lzaLookup: LZAResourceLookup,
+  v2Components: V2NetworkResourceListType[],
+): void {
+  const ipv4Cgws = networkConfig.customerGateways?.filter(cgw => isIpv4(cgw.ipAddress));
+  for (const cgw of ipv4Cgws ?? []) {
+    for (const vpnItem of cgw.vpnConnections ?? []) {
+      if (
+        !lzaLookup.resourceExists({
+          resourceType: LZAResourceLookupType.VPN_CONNECTION,
+          lookupValues: {
+            vpcName: vpnItem.vpc,
+            vpnName: vpnItem.name,
+            cgwName: cgw.name,
+          },
+        }) &&
+        vpnItem.vpc === vpcItem.name
+      ) {
+        logger.info(
+          `VPC ${vpcItem.name} vpn connection ${vpnItem.name} is not present in the existing stack, resource will be deployed through V2 stacks`,
+        );
+        v2Components.push({
+          vpcName: vpcItem.name,
+          resourceType: V2StackComponentsList.VPN_CONNECTION,
+          resourceName: `${cgw.name}|${vpnItem.name}`,
+        });
+      }
+    }
+  }
+}
+
+/**
  * Function to create and get V2 Network VPC stacks
  * @param options
  * @returns
@@ -497,11 +649,6 @@ export function createAndGetV2NetworkVpcDependencyStacks(options: {
     );
   }
 
-  if (v2NetworkResources.length === 0) {
-    v2NetworkVpcDependencyStacks.push(options.dependencyStack);
-    return v2NetworkVpcDependencyStacks;
-  }
-
   for (const vpcItem of vpcsInScope) {
     const parentStackForVpcStack: cdk.Stack = options.dependencyStack;
     const vpcStack = createVpcStack({
@@ -519,12 +666,10 @@ export function createAndGetV2NetworkVpcDependencyStacks(options: {
       synthesizer: options.synthesizer,
     });
 
-    const parentStackForRouteTablesStack: cdk.Stack = vpcStack?.[vpcItem.name] ?? parentStackForVpcStack;
-
     const vpcRouteTablesStack = createVpcRouteTablesStack({
       v2NetworkResources,
       v2Stacks: options.v2Stacks,
-      dependencyStack: parentStackForRouteTablesStack,
+      dependencyStack: vpcStack,
       app: options.app,
       vpcItem,
       props: options.props,
@@ -535,13 +680,11 @@ export function createAndGetV2NetworkVpcDependencyStacks(options: {
       version: options.version,
       synthesizer: options.synthesizer,
     });
-
-    const parentStackForSecurityGroupsStack: cdk.Stack = vpcStack?.[vpcItem.name] ?? parentStackForVpcStack;
 
     const vpcSecurityGroupsStack = createVpcSecurityGroupsStack({
       v2NetworkResources,
       v2Stacks: options.v2Stacks,
-      dependencyStack: parentStackForSecurityGroupsStack,
+      dependencyStack: vpcRouteTablesStack,
       app: options.app,
       vpcItem,
       props: options.props,
@@ -553,19 +696,7 @@ export function createAndGetV2NetworkVpcDependencyStacks(options: {
       synthesizer: options.synthesizer,
     });
 
-    const parentStacksForSubnetsStack: cdk.Stack[] = [];
-
-    if (vpcRouteTablesStack?.[vpcItem.name]) {
-      parentStacksForSubnetsStack.push(vpcRouteTablesStack?.[vpcItem.name]);
-    }
-
-    if (vpcSecurityGroupsStack?.[vpcItem.name]) {
-      parentStacksForSubnetsStack.push(vpcSecurityGroupsStack?.[vpcItem.name]);
-    }
-
-    if (parentStacksForSubnetsStack.length === 0) {
-      parentStacksForSubnetsStack.push(vpcStack?.[vpcItem.name] ?? parentStackForVpcStack);
-    }
+    const parentStacksForSubnetsStack: cdk.Stack[] = [vpcRouteTablesStack, vpcSecurityGroupsStack];
 
     const vpcSubnetsStack = createVpcSubnetsStack({
       v2NetworkResources,
@@ -582,14 +713,10 @@ export function createAndGetV2NetworkVpcDependencyStacks(options: {
       synthesizer: options.synthesizer,
     });
 
-    const parentStacksForSubnetsShareStack: cdk.Stack[] = [
-      ...new Set(vpcSubnetsStack?.[vpcItem.name] ? [vpcSubnetsStack?.[vpcItem.name]] : parentStacksForSubnetsStack),
-    ];
-
     const vpcSubnetsShareStack = createVpcSubnetsShareStack({
       v2NetworkResources,
       v2Stacks: options.v2Stacks,
-      dependencyStacks: parentStacksForSubnetsShareStack,
+      dependencyStack: vpcSubnetsStack,
       app: options.app,
       vpcItem,
       props: options.props,
@@ -600,17 +727,11 @@ export function createAndGetV2NetworkVpcDependencyStacks(options: {
       version: options.version,
       synthesizer: options.synthesizer,
     });
-
-    const parentStacksForNaclsStack: cdk.Stack[] = [
-      ...new Set(
-        vpcSubnetsShareStack?.[vpcItem.name] ? [vpcSubnetsShareStack?.[vpcItem.name]] : parentStacksForSubnetsStack,
-      ),
-    ];
 
     const vpcNaclsStack = createVpcNaclsStack({
       v2NetworkResources,
       v2Stacks: options.v2Stacks,
-      dependencyStacks: parentStacksForNaclsStack,
+      dependencyStack: vpcSubnetsShareStack,
       app: options.app,
       vpcItem,
       props: options.props,
@@ -621,15 +742,11 @@ export function createAndGetV2NetworkVpcDependencyStacks(options: {
       version: options.version,
       synthesizer: options.synthesizer,
     });
-
-    const parentStacksForLoadBalancersStack: cdk.Stack[] = [
-      ...new Set(vpcNaclsStack?.[vpcItem.name] ? [vpcNaclsStack?.[vpcItem.name]] : parentStacksForNaclsStack),
-    ];
 
     const vpcLoadBalancersStack = createVpcLoadBalancersStack({
       v2NetworkResources,
       v2Stacks: options.v2Stacks,
-      dependencyStacks: parentStacksForLoadBalancersStack,
+      dependencyStack: vpcNaclsStack,
       app: options.app,
       vpcItem,
       props: options.props,
@@ -641,19 +758,7 @@ export function createAndGetV2NetworkVpcDependencyStacks(options: {
       synthesizer: options.synthesizer,
     });
 
-    const finalStackList: cdk.Stack[] = [
-      ...new Set(
-        vpcLoadBalancersStack?.[vpcItem.name]
-          ? [vpcLoadBalancersStack?.[vpcItem.name]]
-          : parentStacksForLoadBalancersStack,
-      ),
-    ];
-
-    for (const finalStack of finalStackList) {
-      if (!v2NetworkVpcDependencyStacks.includes(finalStack)) {
-        v2NetworkVpcDependencyStacks.push(finalStack);
-      }
-    }
+    v2NetworkVpcDependencyStacks.push(vpcLoadBalancersStack);
   }
 
   return v2NetworkVpcDependencyStacks;
@@ -677,34 +782,32 @@ function createVpcStack(options: {
   enabledRegion: string;
   version: string;
   synthesizer?: cdk.IStackSynthesizer;
-}): V2StackType | undefined {
-  if (options.v2NetworkResources.find(item => item.vpcName === options.vpcItem.name)) {
-    const stack: V2StackType = {};
-    logger.info(`Creating VPC Stack for VPC ${options.vpcItem.name} in ${options.enabledRegion}`);
-    stack[options.vpcItem.name] = new VpcBaseStack(
-      options.app,
-      `${AcceleratorStackNames[AcceleratorV2Stacks.VPC_STACK]}-${options.vpcItem.name}-${options.accountId}-${
-        options.enabledRegion
-      }`,
-      {
-        env: options.env,
-        description: `(SO0199-vpc) Landing Zone Accelerator on AWS. Version ${options.version}.`,
+}): cdk.Stack {
+  // if (options.v2NetworkResources.find(item => item.vpcName === options.vpcItem.name)) {
+  logger.info(`Creating VPC Stack for VPC ${options.vpcItem.name} in ${options.enabledRegion}`);
+  const stack: cdk.Stack = new VpcBaseStack(
+    options.app,
+    `${AcceleratorStackNames[AcceleratorV2Stacks.VPC_STACK]}-${options.vpcItem.name}-${options.accountId}-${
+      options.enabledRegion
+    }`,
+    {
+      env: options.env,
+      description: `(SO0199-vpc) Landing Zone Accelerator on AWS. Version ${options.version}.`,
 
-        synthesizer: options.synthesizer,
-        terminationProtection: options.props.globalConfig.terminationProtection ?? true,
-        ...options.props,
-        vpcConfig: options.vpcItem,
-        vpcStack: true,
-      },
-    );
+      synthesizer: options.synthesizer,
+      terminationProtection: options.props.globalConfig.terminationProtection ?? true,
+      ...options.props,
+      vpcConfig: options.vpcItem,
+      vpcStack: true,
+      v2NetworkResources: options.v2NetworkResources,
+    },
+  );
 
-    stack[options.vpcItem.name].node.addDependency(options.dependencyStack);
+  stack.addDependency(options.dependencyStack);
 
-    options.v2Stacks.push(stack[options.vpcItem.name]);
+  options.v2Stacks.push(stack);
 
-    return stack;
-  }
-  return undefined;
+  return stack;
 }
 
 /**
@@ -725,40 +828,31 @@ function createVpcRouteTablesStack(options: {
   enabledRegion: string;
   version: string;
   synthesizer?: cdk.IStackSynthesizer;
-}): V2StackType | undefined {
-  if (
-    options.v2NetworkResources.find(
-      item =>
-        (item.vpcName === options.vpcItem.name && item.resourceType === V2StackComponentsList.ROUTE_TABLE) ||
-        (item.vpcName === options.vpcItem.name && item.resourceType === V2StackComponentsList.RT_ENTRY),
-    )
-  ) {
-    const stacks: V2StackType = {};
-    logger.info(`Creating VPC Route Table Stack for VPC ${options.vpcItem.name} in ${options.enabledRegion}`);
-    stacks[options.vpcItem.name] = new VpcRouteTablesBaseStack(
-      options.app,
-      `${AcceleratorStackNames[AcceleratorV2Stacks.ROUTE_TABLES_STACK]}-${options.vpcItem.name}-${options.accountId}-${
-        options.enabledRegion
-      }`,
-      {
-        env: options.env,
-        description: `(SO0199-vpc-route-tables) Landing Zone Accelerator on AWS. Version ${options.version}.`,
+}): cdk.Stack {
+  logger.info(`Creating VPC Route Table Stack for VPC ${options.vpcItem.name} in ${options.enabledRegion}`);
+  const stack: cdk.Stack = new VpcRouteTablesBaseStack(
+    options.app,
+    `${AcceleratorStackNames[AcceleratorV2Stacks.ROUTE_TABLES_STACK]}-${options.vpcItem.name}-${options.accountId}-${
+      options.enabledRegion
+    }`,
+    {
+      env: options.env,
+      description: `(SO0199-vpc-route-tables) Landing Zone Accelerator on AWS. Version ${options.version}.`,
 
-        synthesizer: options.synthesizer,
-        terminationProtection: options.props.globalConfig.terminationProtection ?? true,
-        ...options.props,
-        vpcConfig: options.vpcItem,
-        vpcStack: false,
-      },
-    );
+      synthesizer: options.synthesizer,
+      terminationProtection: options.props.globalConfig.terminationProtection ?? true,
+      ...options.props,
+      vpcConfig: options.vpcItem,
+      vpcStack: false,
+      v2NetworkResources: options.v2NetworkResources,
+    },
+  );
 
-    stacks[options.vpcItem.name].node.addDependency(options.dependencyStack);
+  stack.addDependency(options.dependencyStack);
 
-    options.v2Stacks.push(stacks[options.vpcItem.name]);
+  options.v2Stacks.push(stack);
 
-    return stacks;
-  }
-  return undefined;
+  return stack;
 }
 
 /**
@@ -779,37 +873,30 @@ function createVpcSecurityGroupsStack(options: {
   enabledRegion: string;
   version: string;
   synthesizer?: cdk.IStackSynthesizer;
-}): V2StackType | undefined {
-  if (
-    options.v2NetworkResources.find(
-      item => item.vpcName === options.vpcItem.name && item.resourceType === V2StackComponentsList.SECURITY_GROUP,
-    )
-  ) {
-    const stacks: V2StackType = {};
-    logger.info(`Creating VPC SecurityGroups Stack for VPC ${options.vpcItem.name} in ${options.enabledRegion}`);
-    stacks[options.vpcItem.name] = new VpcSecurityGroupsBaseStack(
-      options.app,
-      `${AcceleratorStackNames[AcceleratorV2Stacks.SECURITY_GROUPS_STACK]}-${options.vpcItem.name}-${
-        options.accountId
-      }-${options.enabledRegion}`,
-      {
-        env: options.env,
-        description: `(SO0199-vpc-security-groups) Landing Zone Accelerator on AWS. Version ${options.version}.`,
-        synthesizer: options.synthesizer,
-        terminationProtection: options.props.globalConfig.terminationProtection ?? true,
-        ...options.props,
-        vpcConfig: options.vpcItem,
-        vpcStack: false,
-      },
-    );
+}): cdk.Stack {
+  logger.info(`Creating VPC SecurityGroups Stack for VPC ${options.vpcItem.name} in ${options.enabledRegion}`);
+  const stack: cdk.Stack = new VpcSecurityGroupsBaseStack(
+    options.app,
+    `${AcceleratorStackNames[AcceleratorV2Stacks.SECURITY_GROUPS_STACK]}-${options.vpcItem.name}-${options.accountId}-${
+      options.enabledRegion
+    }`,
+    {
+      env: options.env,
+      description: `(SO0199-vpc-security-groups) Landing Zone Accelerator on AWS. Version ${options.version}.`,
+      synthesizer: options.synthesizer,
+      terminationProtection: options.props.globalConfig.terminationProtection ?? true,
+      ...options.props,
+      vpcConfig: options.vpcItem,
+      vpcStack: false,
+      v2NetworkResources: options.v2NetworkResources,
+    },
+  );
 
-    stacks[options.vpcItem.name].addDependency(options.dependencyStack);
+  stack.addDependency(options.dependencyStack);
 
-    options.v2Stacks.push(stacks[options.vpcItem.name]);
+  options.v2Stacks.push(stack);
 
-    return stacks;
-  }
-  return undefined;
+  return stack;
 }
 
 /**
@@ -830,39 +917,32 @@ function createVpcSubnetsStack(options: {
   enabledRegion: string;
   version: string;
   synthesizer?: cdk.IStackSynthesizer;
-}): V2StackType | undefined {
-  if (
-    options.v2NetworkResources.find(
-      item => item.vpcName === options.vpcItem.name && item.resourceType === V2StackComponentsList.SUBNET,
-    )
-  ) {
-    const stacks: V2StackType = {};
-    logger.info(`Creating VPC Subnets Stack for VPC ${options.vpcItem.name} in ${options.enabledRegion}`);
-    stacks[options.vpcItem.name] = new VpcSubnetsBaseStack(
-      options.app,
-      `${AcceleratorStackNames[AcceleratorV2Stacks.SUBNETS_STACK]}-${options.vpcItem.name}-${options.accountId}-${
-        options.enabledRegion
-      }`,
-      {
-        env: options.env,
-        description: `(SO0199-vpc-subnets) Landing Zone Accelerator on AWS. Version ${options.version}.`,
-        synthesizer: options.synthesizer,
-        terminationProtection: options.props.globalConfig.terminationProtection ?? true,
-        ...options.props,
-        vpcConfig: options.vpcItem,
-        vpcStack: false,
-      },
-    );
+}): cdk.Stack {
+  logger.info(`Creating VPC Subnets Stack for VPC ${options.vpcItem.name} in ${options.enabledRegion}`);
+  const stack: cdk.Stack = new VpcSubnetsBaseStack(
+    options.app,
+    `${AcceleratorStackNames[AcceleratorV2Stacks.SUBNETS_STACK]}-${options.vpcItem.name}-${options.accountId}-${
+      options.enabledRegion
+    }`,
+    {
+      env: options.env,
+      description: `(SO0199-vpc-subnets) Landing Zone Accelerator on AWS. Version ${options.version}.`,
+      synthesizer: options.synthesizer,
+      terminationProtection: options.props.globalConfig.terminationProtection ?? true,
+      ...options.props,
+      vpcConfig: options.vpcItem,
+      vpcStack: false,
+      v2NetworkResources: options.v2NetworkResources,
+    },
+  );
 
-    for (const dependencyStack of options.dependencyStacks) {
-      stacks[options.vpcItem.name].node.addDependency(dependencyStack);
-    }
-
-    options.v2Stacks.push(stacks[options.vpcItem.name]);
-
-    return stacks;
+  for (const dependencyStack of options.dependencyStacks) {
+    stack.addDependency(dependencyStack);
   }
-  return undefined;
+
+  options.v2Stacks.push(stack);
+
+  return stack;
 }
 
 /**
@@ -873,7 +953,7 @@ function createVpcSubnetsStack(options: {
 function createVpcSubnetsShareStack(options: {
   v2NetworkResources: V2NetworkResourceListType[];
   v2Stacks: cdk.Stack[];
-  dependencyStacks: cdk.Stack[];
+  dependencyStack: cdk.Stack;
   app: cdk.App;
   vpcItem: VpcConfig | VpcTemplatesConfig;
   props: AcceleratorStackProps;
@@ -883,39 +963,30 @@ function createVpcSubnetsShareStack(options: {
   enabledRegion: string;
   version: string;
   synthesizer?: cdk.IStackSynthesizer;
-}): V2StackType | undefined {
-  if (
-    options.v2NetworkResources.find(
-      item => item.vpcName === options.vpcItem.name && item.resourceType === V2StackComponentsList.SUBNET_SHARE,
-    )
-  ) {
-    const stacks: V2StackType = {};
-    logger.info(`Creating VPC Subnets Stack for VPC ${options.vpcItem.name} in ${options.enabledRegion}`);
-    stacks[options.vpcItem.name] = new VpcSubnetsShareBaseStack(
-      options.app,
-      `${AcceleratorStackNames[AcceleratorV2Stacks.SUBNETS_SHARE_STACK]}-${options.vpcItem.name}-${options.accountId}-${
-        options.enabledRegion
-      }`,
-      {
-        env: options.env,
-        description: `(SO0199-vpc-subnets-share) Landing Zone Accelerator on AWS. Version ${options.version}.`,
-        synthesizer: options.synthesizer,
-        terminationProtection: options.props.globalConfig.terminationProtection ?? true,
-        ...options.props,
-        vpcConfig: options.vpcItem,
-        vpcStack: false,
-      },
-    );
+}): cdk.Stack {
+  logger.info(`Creating VPC Subnets Stack for VPC ${options.vpcItem.name} in ${options.enabledRegion}`);
+  const stack: cdk.Stack = new VpcSubnetsShareBaseStack(
+    options.app,
+    `${AcceleratorStackNames[AcceleratorV2Stacks.SUBNETS_SHARE_STACK]}-${options.vpcItem.name}-${options.accountId}-${
+      options.enabledRegion
+    }`,
+    {
+      env: options.env,
+      description: `(SO0199-vpc-subnets-share) Landing Zone Accelerator on AWS. Version ${options.version}.`,
+      synthesizer: options.synthesizer,
+      terminationProtection: options.props.globalConfig.terminationProtection ?? true,
+      ...options.props,
+      vpcConfig: options.vpcItem,
+      vpcStack: false,
+      v2NetworkResources: options.v2NetworkResources,
+    },
+  );
 
-    for (const dependencyStack of options.dependencyStacks) {
-      stacks[options.vpcItem.name].node.addDependency(dependencyStack);
-    }
+  stack.addDependency(options.dependencyStack);
 
-    options.v2Stacks.push(stacks[options.vpcItem.name]);
+  options.v2Stacks.push(stack);
 
-    return stacks;
-  }
-  return undefined;
+  return stack;
 }
 
 /**
@@ -926,7 +997,7 @@ function createVpcSubnetsShareStack(options: {
 function createVpcNaclsStack(options: {
   v2NetworkResources: V2NetworkResourceListType[];
   v2Stacks: cdk.Stack[];
-  dependencyStacks: cdk.Stack[];
+  dependencyStack: cdk.Stack;
   app: cdk.App;
   vpcItem: VpcConfig | VpcTemplatesConfig;
   props: AcceleratorStackProps;
@@ -936,39 +1007,30 @@ function createVpcNaclsStack(options: {
   enabledRegion: string;
   version: string;
   synthesizer?: cdk.IStackSynthesizer;
-}): V2StackType | undefined {
-  if (
-    options.v2NetworkResources.find(
-      item => item.vpcName === options.vpcItem.name && item.resourceType === V2StackComponentsList.NACL,
-    )
-  ) {
-    const stacks: V2StackType = {};
-    logger.info(`Creating VPC NACLs Stack for VPC ${options.vpcItem.name} in ${options.enabledRegion}`);
-    stacks[options.vpcItem.name] = new VpcNaclsBaseStack(
-      options.app,
-      `${AcceleratorStackNames[AcceleratorV2Stacks.NACLS_STACK]}-${options.vpcItem.name}-${options.accountId}-${
-        options.enabledRegion
-      }`,
-      {
-        env: options.env,
-        description: `(SO0199-vpc-nacls) Landing Zone Accelerator on AWS. Version ${options.version}.`,
-        synthesizer: options.synthesizer,
-        terminationProtection: options.props.globalConfig.terminationProtection ?? true,
-        ...options.props,
-        vpcConfig: options.vpcItem,
-        vpcStack: false,
-      },
-    );
+}): cdk.Stack {
+  logger.info(`Creating VPC NACLs Stack for VPC ${options.vpcItem.name} in ${options.enabledRegion}`);
+  const stack: cdk.Stack = new VpcNaclsBaseStack(
+    options.app,
+    `${AcceleratorStackNames[AcceleratorV2Stacks.NACLS_STACK]}-${options.vpcItem.name}-${options.accountId}-${
+      options.enabledRegion
+    }`,
+    {
+      env: options.env,
+      description: `(SO0199-vpc-nacls) Landing Zone Accelerator on AWS. Version ${options.version}.`,
+      synthesizer: options.synthesizer,
+      terminationProtection: options.props.globalConfig.terminationProtection ?? true,
+      ...options.props,
+      vpcConfig: options.vpcItem,
+      vpcStack: false,
+      v2NetworkResources: options.v2NetworkResources,
+    },
+  );
 
-    for (const dependencyStack of options.dependencyStacks) {
-      stacks[options.vpcItem.name].addDependency(dependencyStack);
-    }
+  stack.addDependency(options.dependencyStack);
 
-    options.v2Stacks.push(stacks[options.vpcItem.name]);
+  options.v2Stacks.push(stack);
 
-    return stacks;
-  }
-  return undefined;
+  return stack;
 }
 
 /**
@@ -979,7 +1041,7 @@ function createVpcNaclsStack(options: {
 function createVpcLoadBalancersStack(options: {
   v2NetworkResources: V2NetworkResourceListType[];
   v2Stacks: cdk.Stack[];
-  dependencyStacks: cdk.Stack[];
+  dependencyStack: cdk.Stack;
   app: cdk.App;
   vpcItem: VpcConfig | VpcTemplatesConfig;
   props: AcceleratorStackProps;
@@ -989,39 +1051,30 @@ function createVpcLoadBalancersStack(options: {
   enabledRegion: string;
   version: string;
   synthesizer?: cdk.IStackSynthesizer;
-}): V2StackType | undefined {
-  if (
-    options.v2NetworkResources.find(
-      item => item.vpcName === options.vpcItem.name && item.resourceType === V2StackComponentsList.LOAD_BALANCER,
-    )
-  ) {
-    const stacks: V2StackType = {};
-    logger.info(`Creating VPC LoadBalancers Stack for VPC ${options.vpcItem.name} in ${options.enabledRegion}`);
-    stacks[options.vpcItem.name] = new VpcLoadBalancersBaseStack(
-      options.app,
-      `${AcceleratorStackNames[AcceleratorV2Stacks.LBS_STACK]}-${options.vpcItem.name}-${options.accountId}-${
-        options.enabledRegion
-      }`,
-      {
-        env: options.env,
-        description: `(SO0199-vpc-load-balancers) Landing Zone Accelerator on AWS. Version ${options.version}.`,
-        synthesizer: options.synthesizer,
-        terminationProtection: options.props.globalConfig.terminationProtection ?? true,
-        ...options.props,
-        vpcConfig: options.vpcItem,
-        vpcStack: false,
-      },
-    );
+}): cdk.Stack {
+  logger.info(`Creating VPC LoadBalancers Stack for VPC ${options.vpcItem.name} in ${options.enabledRegion}`);
+  const stack: cdk.Stack = new VpcLoadBalancersBaseStack(
+    options.app,
+    `${AcceleratorStackNames[AcceleratorV2Stacks.LBS_STACK]}-${options.vpcItem.name}-${options.accountId}-${
+      options.enabledRegion
+    }`,
+    {
+      env: options.env,
+      description: `(SO0199-vpc-load-balancers) Landing Zone Accelerator on AWS. Version ${options.version}.`,
+      synthesizer: options.synthesizer,
+      terminationProtection: options.props.globalConfig.terminationProtection ?? true,
+      ...options.props,
+      vpcConfig: options.vpcItem,
+      vpcStack: false,
+      v2NetworkResources: options.v2NetworkResources,
+    },
+  );
 
-    for (const dependencyStack of options.dependencyStacks) {
-      stacks[options.vpcItem.name].addDependency(dependencyStack);
-    }
+  stack.addDependency(options.dependencyStack);
 
-    options.v2Stacks.push(stacks[options.vpcItem.name]);
+  options.v2Stacks.push(stack);
 
-    return stacks;
-  }
-  return undefined;
+  return stack;
 }
 
 /**
@@ -1036,4 +1089,15 @@ function getVpcAccountIds(vpcItem: VpcConfig | VpcTemplatesConfig, accountsConfi
   } else {
     return accountsConfig.getAccountIdsFromDeploymentTarget(vpcItem.deploymentTargets);
   }
+}
+
+export function isV2Resource(
+  v2NetworkResources: V2NetworkResourceListType[],
+  vpcName: string,
+  resourceType: string,
+  resourceName?: string,
+): V2NetworkResourceListType | undefined {
+  return v2NetworkResources.find(
+    item => item.vpcName === vpcName && item.resourceType === resourceType && item.resourceName === resourceName,
+  );
 }

@@ -592,11 +592,19 @@ export class VpcResources {
         stringValue: vpc.vpcId,
       });
 
+      if (vpc.egressOnlyIgwId) {
+        this.stack.addSsmParameter({
+          logicalId: pascalCase(`SsmParam${pascalCase(options.vpcItem.name)}EgressOnlyIgwId`),
+          parameterName: this.stack.getSsmPath(SsmResourceType.VPC_EGRESS_ONLY_IGW, [options.vpcItem.name]),
+          stringValue: vpc.egressOnlyIgwId,
+        });
+      }
+
       if (vpc.virtualPrivateGatewayId) {
         this.stack.addSsmParameter({
           logicalId: pascalCase(`SsmParam${pascalCase(options.vpcItem.name)}VpnGatewayId`),
           parameterName: this.stack.getSsmPath(SsmResourceType.VPN_GW, [options.vpcItem.name]),
-          stringValue: vpc.virtualPrivateGatewayId!,
+          stringValue: vpc.virtualPrivateGatewayId,
         });
       }
     }
