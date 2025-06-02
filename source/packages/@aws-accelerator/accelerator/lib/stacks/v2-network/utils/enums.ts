@@ -19,10 +19,13 @@ export enum V2StackComponentsList {
   S3_FLOW_LOGS = 's3-flow-logs',
   CWL_FLOW_LOGS = 'cwl-flow-logs',
   ADDITIONAL_CIDR_BLOCK = 'additional-cidr-block',
+  ADDITIONAL_IPAM_ALLOCATION = 'additional-ipam-allocation',
   EGRESS_ONLY_IGW = 'egress-only-igw',
   INTERNET_GATEWAY = 'internet-gateway',
   VIRTUAL_PRIVATE_GATEWAY = 'virtual-private-gateway',
   VPC_DHCP_OPTIONS_ASSOCIATION = 'vpc-dhcp-options-association',
+  DELETE_DEFAULT_SECURITY_GROUP_RULES = 'delete-default-security-groups-rules',
+  VPN_CONNECTION = 'vpn-connection',
 
   ROUTE_TABLE = 'route-table',
   RT_ENTRY = 'route-tables',
