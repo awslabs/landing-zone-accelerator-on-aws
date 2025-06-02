@@ -71,7 +71,6 @@ export class VpcBaseStack extends AcceleratorStack {
     this.cloudwatchKey = this.getAcceleratorKey(AcceleratorKeyType.CLOUDWATCH_KEY);
     this.lambdaKey = this.getAcceleratorKey(AcceleratorKeyType.LAMBDA_KEY);
     this.vpcDetails = new VpcDetails(this, 'VpcDetails', props);
-    this.ipamPoolIds = this.getIpamPoolIds();
 
     //
     // Create VPC
@@ -170,6 +169,7 @@ export class VpcBaseStack extends AcceleratorStack {
       let ipv4NetmaskLength: number | undefined;
 
       if (this.vpcDetails.ipamAllocations.length > 0) {
+        this.ipamPoolIds = this.getIpamPoolIds();
         const vpcIpamPoolDetails = this.getVpcIpamPoolDetails(this.vpcDetails.ipamAllocations);
         ipv4IpamPoolId = vpcIpamPoolDetails.id;
         ipv4NetmaskLength = vpcIpamPoolDetails.netmaskLength;
@@ -630,24 +630,36 @@ export class VpcBaseStack extends AcceleratorStack {
     );
 
     for (const crossAcctCgw of crossAcctFirewallReferenceCgws) {
-      const firewallVpcConfig = this.getFirewallVpcConfig(crossAcctCgw);
-      const accountIds = this.getVpcAccountIds(firewallVpcConfig);
-      const parameters = this.setCrossAccountSsmParameters(crossAcctCgw);
+      if (
+        isV2Resource(
+          this.v2StackProps.v2NetworkResources,
+          this.vpcDetails.name,
+          V2StackComponentsList.VPN_CONNECTION,
+          `${crossAcctCgw.name}|${this.vpcDetails.name}`,
+        )
+      ) {
+        this.logger.info(
+          `Adding shared SSM parameter for customer gateway ${crossAcctCgw.name} in stack ${this.stackName}`,
+        );
+        const firewallVpcConfig = this.getFirewallVpcConfig(crossAcctCgw);
+        const accountIds = this.getVpcAccountIds(firewallVpcConfig);
+        const parameters = this.setCrossAccountSsmParameters(crossAcctCgw);
 
-      if (parameters.length > 0) {
-        this.logger.info(`Putting cross-account/cross-region SSM parameters for VPC ${firewallVpcConfig.name}`);
+        if (parameters.length > 0) {
+          this.logger.info(`Putting cross-account/cross-region SSM parameters for VPC ${firewallVpcConfig.name}`);
 
-        // Put SSM parameters
-        new PutSsmParameter(this, pascalCase(`${crossAcctCgw.name}VgwVpnSharedParameters`), {
-          accountIds,
-          region: firewallVpcConfig.region,
-          roleName: this.acceleratorResourceNames.roles.crossAccountSsmParameterShare,
-          kmsKey: this.cloudwatchKey,
-          logRetentionInDays: this.logRetentionInDays,
-          parameters,
-          invokingAccountId: cdk.Stack.of(this).account,
-          acceleratorPrefix: this.props.prefixes.accelerator,
-        });
+          // Put SSM parameters
+          new PutSsmParameter(this, pascalCase(`${crossAcctCgw.name}VgwVpnSharedParameters`), {
+            accountIds,
+            region: firewallVpcConfig.region,
+            roleName: this.acceleratorResourceNames.roles.crossAccountSsmParameterShare,
+            kmsKey: this.cloudwatchKey,
+            logRetentionInDays: this.logRetentionInDays,
+            parameters,
+            invokingAccountId: cdk.Stack.of(this).account,
+            acceleratorPrefix: this.props.prefixes.accelerator,
+          });
+        }
       }
     }
   }
@@ -1103,8 +1115,10 @@ export class VpcBaseStack extends AcceleratorStack {
 
       const ipamPoolNames: string[] = ipamPoolConfig.pools.map(item => item.name);
 
-      for (const ipamPoolName of ipamPoolNames) {
-        if (ipamPoolIds.find(item => item.name === ipamPoolName)) {
+      const vpcIpamPoolNames = ipamPoolNames.filter(item => item === ipamAllocation.ipamPoolName);
+
+      for (const vpcIpamPoolName of vpcIpamPoolNames) {
+        if (ipamPoolIds.find(item => item.name === vpcIpamPoolName)) {
           continue;
         }
 
@@ -1113,22 +1127,22 @@ export class VpcBaseStack extends AcceleratorStack {
           ipamPoolConfig.region === cdk.Stack.of(this).region
         ) {
           ipamPoolIds.push({
-            name: ipamPoolName,
+            name: vpcIpamPoolName,
             id: cdk.aws_ssm.StringParameter.valueForStringParameter(
               this,
-              this.getSsmPath(SsmResourceType.IPAM_POOL, [ipamPoolName]),
+              this.getSsmPath(SsmResourceType.IPAM_POOL, [vpcIpamPoolName]),
             ),
           });
         } else if (ipamPoolConfig.region !== cdk.Stack.of(this).region) {
           ipamPoolIds.push({
-            name: ipamPoolName,
-            id: this.getCrossRegionPoolId(delegatedAdminAccountId, ipamPoolName, ipamPoolConfig.region),
+            name: vpcIpamPoolName,
+            id: this.getCrossRegionPoolId(delegatedAdminAccountId, vpcIpamPoolName, ipamPoolConfig.region),
           });
         } else {
           ipamPoolIds.push({
-            name: ipamPoolName,
+            name: vpcIpamPoolName,
             id: this.getResourceShare(
-              `${ipamPoolName}_IpamPoolShare`,
+              `${vpcIpamPoolName}_IpamPoolShare`,
               'ec2:IpamPool',
               delegatedAdminAccountId,
               this.cloudwatchKey,
