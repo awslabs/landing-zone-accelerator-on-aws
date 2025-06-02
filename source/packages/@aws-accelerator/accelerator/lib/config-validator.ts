@@ -65,6 +65,8 @@ const props = {
   enableSingleAccountMode: enableSingleAccountMode,
   replacementsPresent: areReplacementsPresent(),
   regionByRegionDeployOrder,
+  // stage is needed to find if dynamoDB lookup is needed. ACCELERATOR_STAGE is set in codePipeline environments
+  stage: process.env['ACCELERATOR_STAGE'],
 };
 
 if (configDirPath) {
@@ -114,6 +116,7 @@ async function validateConfig(props: {
   account: string | undefined;
   replacementsPresent: boolean;
   regionByRegionDeployOrder: string | undefined;
+  stage: string | undefined;
 }) {
   await Accelerator.getManagementAccountCredentials(props.partition);
   const orgsEnabled = OrganizationConfig.loadRawOrganizationsConfig(configDirPath).enable;
