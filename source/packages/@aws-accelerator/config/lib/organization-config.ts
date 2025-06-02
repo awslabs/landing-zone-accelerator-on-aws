@@ -211,6 +211,8 @@ export class OrganizationConfig implements i.IOrganizationConfig {
       const organizationUnitsPromises = this.organizationalUnits.map(ou =>
         getColumnFromConfigTable(configTableName, 'organization', ou.name, 'orgInfo'),
       );
+      // get root information
+      const rootInfo = JSON.parse(await getColumnFromConfigTable(configTableName, 'organization', 'Root', 'orgInfo'));
 
       // Wait for all promises to resolve
       const organizationObjects = await Promise.all(organizationUnitsPromises);
@@ -219,7 +221,7 @@ export class OrganizationConfig implements i.IOrganizationConfig {
       const organizationParsedObjects = organizationObjects.map(orgInfo => JSON.parse(orgInfo));
 
       // Assign
-      this.organizationalUnitIds = [...organizationParsedObjects];
+      this.organizationalUnitIds = [...organizationParsedObjects, rootInfo];
     }
   }
 
