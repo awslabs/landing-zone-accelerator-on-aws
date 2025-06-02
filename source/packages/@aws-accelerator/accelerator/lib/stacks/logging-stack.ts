@@ -1080,12 +1080,14 @@ export class LoggingStack extends AcceleratorStack {
       organizationId: this.organizationId,
       partition: this.props.partition,
       accountIds:
-        (this.props.globalConfig.logging.cloudwatchLogs?.organizationIdConditionSupported ?? undefined) === false || !this.organizationId
+        (this.props.globalConfig.logging.cloudwatchLogs?.organizationIdConditionSupported ?? undefined) === false ||
+        !this.organizationId
           ? this.props.accountsConfig.getAccountIds()
           : undefined,
       acceleratorPrefix: this.props.prefixes.accelerator,
       useExistingRoles: this.props.useExistingRoles ?? false,
-      organizationIdConditionSupported: this.props.globalConfig.logging.cloudwatchLogs?.organizationIdConditionSupported ?? undefined,
+      organizationIdConditionSupported:
+        this.props.globalConfig.logging.cloudwatchLogs?.organizationIdConditionSupported ?? undefined,
     });
 
     // Setup Firehose to take records from Kinesis and place in S3
