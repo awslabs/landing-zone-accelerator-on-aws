@@ -23,6 +23,7 @@ import {
 } from '../../lib/network-config';
 import { NetworkValidatorFunctions } from './network-validator-functions';
 import { isNetworkType } from '../../lib/common';
+import { hasDuplicates } from '../utils/common-validator-functions';
 
 /**
  * Class to validate Customer Gateways
@@ -186,6 +187,10 @@ export class CustomerGatewaysValidator {
     helpers: NetworkValidatorFunctions,
     errors: string[],
   ) {
+    if (hasDuplicates(cgw.vpnConnections?.map(vpn => vpn.name) ?? [])) {
+      errors.push(`[Customer Gateway ${cgw.name}]: Vpn Connection names contain duplication.`);
+    }
+
     cgw.vpnConnections?.forEach(vpn => {
       // Validate if VPC termination and Transit Gateway is provided in the same VPN Config
       if (vpn.vpc && vpn.transitGateway) {
