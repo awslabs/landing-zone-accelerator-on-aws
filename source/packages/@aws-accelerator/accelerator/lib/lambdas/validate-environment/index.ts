@@ -870,6 +870,10 @@ async function getConfigOuKeys(configTableName: string, commitId: string): Promi
   const ouKeys: ConfigOrganizationalUnitKeys[] = [];
   if (organizationResponse.Items) {
     for (const item of organizationResponse.Items) {
+      // Skip items where acceleratorKey is "Root"
+      if (item['acceleratorKey'] === 'Root') {
+        continue;
+      }
       const ouConfig = JSON.parse(item['dataBag']);
       const ignored = ouConfig['ignore'] ?? false;
       if (ignored) {

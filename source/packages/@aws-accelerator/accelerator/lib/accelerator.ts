@@ -196,6 +196,9 @@ export abstract class Accelerator {
     // Set global region
     //
     const globalRegion = getGlobalRegion(props.partition);
+
+    // Check to see if lookups for organization entities should be done in DynamoDB or native AWS Organizations API calls
+    const loadFromDynamoDbTable = shouldLookupDynamoDb(props.stage);
     //
     // If not pipeline stage, load global config, management account credentials,
     // and assume role plugin
@@ -208,7 +211,14 @@ export abstract class Accelerator {
     if (globalConfig?.externalLandingZoneResources?.importExternalLandingZoneResources) {
       const orgsEnabled = OrganizationConfig.loadRawOrganizationsConfig(props.configDirPath).enable;
       const accountsConfig = AccountsConfig.load(props.configDirPath);
-      await accountsConfig.loadAccountIds(props.partition, props.enableSingleAccountMode, orgsEnabled, accountsConfig);
+      await accountsConfig.loadAccountIds(
+        props.partition,
+        props.enableSingleAccountMode,
+        orgsEnabled,
+        accountsConfig,
+        undefined,
+        loadFromDynamoDbTable,
+      );
       logger.info('Loading ASEA mapping for stacks list');
       await globalConfig.loadExternalMapping(accountsConfig);
       logger.info('Loaded ASEA mapping');
@@ -238,6 +248,8 @@ export abstract class Accelerator {
         props.enableSingleAccountMode,
         orgsConfig.enable,
         accountsConfig,
+        undefined,
+        loadFromDynamoDbTable,
       );
 
       if (props.account !== accountsConfig.getManagementAccountId()) {
@@ -297,7 +309,14 @@ export abstract class Accelerator {
       const accountsConfig = AccountsConfig.load(props.configDirPath);
       const orgsEnabled = OrganizationConfig.loadRawOrganizationsConfig(props.configDirPath).enable;
       const homeRegion = GlobalConfig.loadRawGlobalConfig(props.configDirPath).homeRegion;
-      await accountsConfig.loadAccountIds(props.partition, props.enableSingleAccountMode, orgsEnabled, accountsConfig);
+      await accountsConfig.loadAccountIds(
+        props.partition,
+        props.enableSingleAccountMode,
+        orgsEnabled,
+        accountsConfig,
+        undefined,
+        loadFromDynamoDbTable,
+      );
       const replacementsConfig = ReplacementsConfig.load(props.configDirPath, accountsConfig);
       await replacementsConfig.loadDynamicReplacements(homeRegion);
 
@@ -1512,4 +1531,32 @@ export function getRegionsFromDeploymentTarget(
     }),
   );
   return regions;
+}
+
+/**
+ * Determines if DynamoDB lookup should be performed for the given stage.
+ * Returns true if the stage is NOT in the excluded list of stages AND the environment
+ * variable ACCELERATOR_SKIP_DYNAMODB_LOOKUP is not set to 'true'.
+ *
+ * @param stage - The deployment stage to check
+ * @returns boolean - True if DynamoDB lookup should be performed, false otherwise
+ */
+export function shouldLookupDynamoDb(stage?: string): boolean {
+  const stages = [
+    AcceleratorStage.PREPARE,
+    AcceleratorStage.ACCOUNTS,
+    AcceleratorStage.PIPELINE,
+    AcceleratorStage.TESTER_PIPELINE,
+    AcceleratorStage.DIAGNOSTICS_PACK,
+  ] as string[];
+
+  const lookup = process.env['ACCELERATOR_SKIP_DYNAMODB_LOOKUP']
+    ? process.env['ACCELERATOR_SKIP_DYNAMODB_LOOKUP'] === 'true'
+    : false;
+
+  if (!stage || lookup) {
+    return false;
+  }
+
+  return !stages.includes(stage);
 }

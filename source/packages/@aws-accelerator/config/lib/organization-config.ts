@@ -22,6 +22,8 @@ import * as t from './common';
 import * as i from './models/organization-config';
 import { ReplacementsConfig } from './replacements-config';
 import { AccountsConfig } from './accounts-config';
+import { getSSMParameterValue } from '../../utils/lib/get-value-from-ssm';
+import { getColumnFromConfigTable } from '../../utils/lib/get-column-from-config-table';
 
 const logger = createLogger(['organization-config']);
 
@@ -182,6 +184,7 @@ export class OrganizationConfig implements i.IOrganizationConfig {
   public async loadOrganizationalUnitIds(
     partition: string,
     managementAccountCredentials?: AWS.Credentials,
+    loadFromDynamoDbTable?: boolean,
   ): Promise<void> {
     if (!this.enable) {
       // do nothing
@@ -189,12 +192,34 @@ export class OrganizationConfig implements i.IOrganizationConfig {
     } else {
       this.organizationalUnitIds = [];
     }
-    if (this.organizationalUnitIds?.length == 0) {
+    if (this.organizationalUnitIds?.length === 0 && !loadFromDynamoDbTable) {
       this.organizationalUnitIds = await loadOrganizationalUnits(
         partition,
         this.organizationalUnits,
         managementAccountCredentials,
       );
+    } else if (this.organizationalUnitIds?.length === 0 && loadFromDynamoDbTable) {
+      logger.debug(`Orgs is enabled, solution will query from dynamoDB table instead of AWS Organizations API`);
+      if (!process.env['ACCELERATOR_SSM_PARAM_NAME_PREFIX']) {
+        logger.error('ACCELERATOR_SSM_PARAM_NAME_PREFIX environment variable not set using /accelerator');
+      }
+      const ssmConfigTableNameParameter = `${
+        process.env['ACCELERATOR_SSM_PARAM_NAME_PREFIX'] ?? '/accelerator'
+      }/prepare-stack/configTable/name`;
+      const configTableName = await getSSMParameterValue(ssmConfigTableNameParameter, managementAccountCredentials);
+      // make all calls in parallel
+      const organizationUnitsPromises = this.organizationalUnits.map(ou =>
+        getColumnFromConfigTable(configTableName, 'organization', ou.name, 'orgInfo'),
+      );
+
+      // Wait for all promises to resolve
+      const organizationObjects = await Promise.all(organizationUnitsPromises);
+
+      // Parse all JSON strings into objects
+      const organizationParsedObjects = organizationObjects.map(orgInfo => JSON.parse(orgInfo));
+
+      // Assign
+      this.organizationalUnitIds = [...organizationParsedObjects];
     }
   }
 

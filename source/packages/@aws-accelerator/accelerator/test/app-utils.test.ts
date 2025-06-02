@@ -192,7 +192,13 @@ describe('test setAcceleratorStackProps', () => {
       .mockResolvedValue();
 
     OrganizationConfig.prototype.loadOrganizationalUnitIds = jest
-      .fn<(partition: string) => Promise<void>>()
+      .fn<
+        (
+          partition: string,
+          managementAccountCredentials?: AWS.Credentials,
+          loadFromDynamoDbTable?: boolean,
+        ) => Promise<void>
+      >()
       .mockResolvedValue();
 
     // Mock STS Client
