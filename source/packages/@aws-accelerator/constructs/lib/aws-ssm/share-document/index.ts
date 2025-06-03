@@ -89,17 +89,19 @@ export async function handler(event: CloudFormationCustomResourceEvent): Promise
         const itemsToRemove = accountIdsToRemove.slice(counter, counter + 20);
 
         console.log('ModifyDocumentPermissionCommand:');
-        const response = await throttlingBackOff(() =>
-          ssmClient.send(
-            new ModifyDocumentPermissionCommand({
-              Name: name,
-              PermissionType: 'Share',
-              AccountIdsToAdd: itemsToAdd,
-              AccountIdsToRemove: itemsToRemove,
-            }),
-          ),
-        );
-        console.log(JSON.stringify(response));
+        if (itemsToAdd.length > 0 || itemsToRemove.length > 0) {
+          const response = await throttlingBackOff(() =>
+            ssmClient.send(
+              new ModifyDocumentPermissionCommand({
+                Name: name,
+                PermissionType: 'Share',
+                AccountIdsToAdd: itemsToAdd,
+                AccountIdsToRemove: itemsToRemove,
+              }),
+            ),
+          );
+          console.log(JSON.stringify(response));
+        }
         counter = counter + 20;
       }
 
