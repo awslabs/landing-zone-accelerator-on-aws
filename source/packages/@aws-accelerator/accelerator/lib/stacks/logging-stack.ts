@@ -1177,6 +1177,9 @@ export class LoggingStack extends AcceleratorStack {
         });
       }
     }
+    const skipBulkUpdate = this.props.globalConfig.logging.cloudwatchLogs?.skipBulkUpdate?.enable;
+    const skipBulkUpdateTargets = this.props.globalConfig.logging.cloudwatchLogs?.skipBulkUpdate?.skipBulkUpdateTargets;
+    const noOp = skipBulkUpdate && this.isIncluded(skipBulkUpdateTargets!);
     // Run a custom resource to update subscription, KMS and retention for all existing log groups
     const customResourceExistingLogs = new CloudWatchLogsSubscriptionFilter(this, 'LogsSubscriptionFilter', {
       logDestinationArn: logsDestinationArnValue,
@@ -1193,6 +1196,7 @@ export class LoggingStack extends AcceleratorStack {
       selectionCriteria: this.props.globalConfig.logging.cloudwatchLogs?.subscription?.selectionCriteria,
       overrideExisting: this.props.globalConfig.logging.cloudwatchLogs?.subscription?.overrideExisting,
       filterPattern: this.props.globalConfig.logging.cloudwatchLogs?.subscription?.filterPattern,
+      noOp,
     });
 
     //For every new log group that is created, set up subscription, KMS and retention

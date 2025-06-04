@@ -491,6 +491,22 @@
       ],
       "type": "object"
     },
+    "ICloudWatchLogSkipBulkUpdateConfig": {
+      "additionalProperties": false,
+      "description": "Accelerator global CloudWatch Logs skip bulk update configuration.\nWARNING: This configuration option could cause CloudWatch log group configurations to become out of sync\nwith the global configuration. Only enable this option if you fully understand the implications.",
+      "properties": {
+        "enable": {
+          "type": "boolean"
+        },
+        "skipBulkUpdateTargets": {
+          "$ref": "#/definitions/IDeploymentTargets"
+        }
+      },
+      "required": [
+        "enable"
+      ],
+      "type": "object"
+    },
     "ICloudWatchLogsConfig": {
       "additionalProperties": false,
       "description": "Accelerator global CloudWatch Logs logging configuration",
@@ -526,6 +542,11 @@
           "$ref": "#/definitions/NonEmptyString",
           "default": "undefined",
           "description": "Customer defined log subscription filter destination arn, that is associated with with the existing log group. Accelerator solution needs to disassociate this destination before configuring solution defined subscription filter destination."
+        },
+        "skipBulkUpdate": {
+          "$ref": "#/definitions/ICloudWatchLogSkipBulkUpdateConfig",
+          "default": "undefined",
+          "description": "Used to skip the bulk update of CloudWatch logs settings in the LZA pipeline"
         }
       },
       "type": "object"
