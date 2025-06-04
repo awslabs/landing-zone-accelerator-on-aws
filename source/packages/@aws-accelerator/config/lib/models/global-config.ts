@@ -1089,6 +1089,38 @@ export interface ICloudWatchLogsExclusionConfig {
 }
 
 /**
+ * *{@link GlobalConfig} / {@link LoggingConfig} / {@link CloudWatchLogsConfig}/ {@link CloudWatchLogSkipBulkUpdateConfig}*
+ *
+ * @description
+ * Accelerator global CloudWatch Logs skip bulk update configuration.
+ * WARNING: This configuration option could cause CloudWatch log group configurations to become out of sync
+ * with the global configuration. Only enable this option if you fully understand the implications.
+ *
+ * @example
+ * ```
+ * skipBulkUpdateTargets:
+ *   organizationalUnits:
+ *    - Sandbox
+ *   regions:
+ *    - us-west-1
+ *    - us-west-2
+ *   accounts:
+ *    - WorkloadAccount1
+ *
+ * ```
+ */
+
+export interface ICloudWatchLogSkipBulkUpdateConfig {
+  /*
+   * Flag to enable skip bulk updates
+   */
+  readonly enable: boolean;
+  /*
+   * Accounts, regions, and OUs to target skipping bulk updates of CloudFormation Log Group subscription filters
+   */
+  readonly skipBulkUpdateTargets: t.IDeploymentTargets | undefined;
+}
+/**
  * *{@link GlobalConfig} / {@link LoggingConfig} / {@link CloudWatchLogsConfig}/ {@link CloudWatchFirehoseConfig}*
  *
  * @description
@@ -1406,6 +1438,17 @@ export interface ICloudWatchLogsConfig {
    * This is useful in partitions where the principal organization condition is not supported.
    */
   readonly organizationIdConditionSupported?: boolean;
+
+  /**
+   * Used to skip the bulk update of CloudWatch logs settings in the LZA pipeline
+   * @default undefined
+   *
+   * @remarks
+   * This option is used to skip bulk update of cloudwatch log groups in the LZA pipeline
+   * WARNING: This configuration option could cause CloudWatch log group configurations to become out of sync
+   * with the global configuration. Only enable this option if you fully understand the implications.
+   */
+  readonly skipBulkUpdate?: ICloudWatchLogSkipBulkUpdateConfig;
 }
 
 /**

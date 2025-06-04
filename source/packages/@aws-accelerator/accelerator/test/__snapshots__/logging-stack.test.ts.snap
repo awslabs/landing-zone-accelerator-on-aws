@@ -2723,6 +2723,8 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 1`] = `
         },
         "Environment": {
           "Variables": {
+            "AWS_STS_REGIONAL_ENDPOINTS": "regional",
+            "NO_OP": "false",
             "SOLUTION_ID": "AwsSolution/SO0199/1.12.0",
           },
         },
@@ -6960,6 +6962,8 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 2`] = `
         },
         "Environment": {
           "Variables": {
+            "AWS_STS_REGIONAL_ENDPOINTS": "regional",
+            "NO_OP": "false",
             "SOLUTION_ID": "AwsSolution/SO0199/1.12.0",
           },
         },
@@ -13511,6 +13515,8 @@ exports[`LoggingStackDelegatedAdmin Construct(LoggingStacKDelegatedAdmin):  Snap
         },
         "Environment": {
           "Variables": {
+            "AWS_STS_REGIONAL_ENDPOINTS": "regional",
+            "NO_OP": "false",
             "SOLUTION_ID": "AwsSolution/SO0199/1.12.0",
           },
         },
@@ -17787,6 +17793,8 @@ exports[`LoggingStackOuTargets Construct(LoggingStackOuTargets):  Snapshot Test 
         },
         "Environment": {
           "Variables": {
+            "AWS_STS_REGIONAL_ENDPOINTS": "regional",
+            "NO_OP": "false",
             "SOLUTION_ID": "AwsSolution/SO0199/1.12.0",
           },
         },

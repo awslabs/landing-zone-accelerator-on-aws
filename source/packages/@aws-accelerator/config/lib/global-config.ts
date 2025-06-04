@@ -403,6 +403,11 @@ export class ElbLogBucketConfig implements i.IElbLogBucketConfig {
   readonly customPolicyOverrides: t.CustomS3ResourcePolicyOverridesConfig | undefined = undefined;
 }
 
+export class CloudWatchLogSkipBulkUpdateConfig implements i.ICloudWatchLogSkipBulkUpdateConfig {
+  readonly enable: boolean = false;
+  readonly skipBulkUpdateTargets: t.DeploymentTargets | undefined = undefined;
+}
+
 export class CloudWatchLogsExclusionConfig implements i.ICloudWatchLogsExclusionConfig {
   readonly organizationalUnits: string[] | undefined = undefined;
   readonly regions: t.Region[] | undefined = undefined;
@@ -438,6 +443,7 @@ export class CloudWatchLogsConfig implements i.ICloudWatchLogsConfig {
   readonly dynamicPartitioningByAccountId: boolean | undefined = undefined;
   readonly enable: boolean | undefined = undefined;
   readonly encryption: ServiceEncryptionConfig | undefined = undefined;
+  readonly skipBulkUpdate: CloudWatchLogSkipBulkUpdateConfig | undefined = undefined;
   readonly exclusions: CloudWatchLogsExclusionConfig[] | undefined = undefined;
   readonly replaceLogDestinationArn: string | undefined = undefined;
   readonly dataProtection: CloudWatchDataProtectionConfig | undefined = undefined;
