@@ -37,6 +37,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - fix(security-audit): sns topic for controltower notifications
 - fix(macie): update macie custom resource policy statement to correct error preventing creation of service linked roler
 - fix(networking): allow the creation of iam vpc interface endpoints
+- fix(validation): allow the replacements that start with the string 'resolve'
 
 ### Changed
 
