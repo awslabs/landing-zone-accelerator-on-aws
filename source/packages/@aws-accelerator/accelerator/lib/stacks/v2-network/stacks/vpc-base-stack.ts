@@ -604,10 +604,7 @@ export class VpcBaseStack extends AcceleratorStack {
               vpnItem,
               customerGatewayId,
               customResourceHandler,
-              virtualPrivateGateway: cdk.aws_ssm.StringParameter.valueForStringParameter(
-                this,
-                this.getSsmPath(SsmResourceType.VPN_GW, [vpnItem.vpc]),
-              ),
+              virtualPrivateGateway: this.virtualPrivateGatewayId,
             }),
           );
         }

@@ -650,8 +650,11 @@ export function createAndGetV2NetworkVpcDependencyStacks(options: {
   }
 
   for (const vpcItem of vpcsInScope) {
+    // Sanitize VPC name by replacing invalid characters for valid StackName
+    const sanitizedVpcName = vpcItem.name.replace(/[^A-Za-z0-9-]/g, '-');
     const parentStackForVpcStack: cdk.Stack = options.dependencyStack;
     const vpcStack = createVpcStack({
+      sanitizedVpcName,
       v2NetworkResources,
       v2Stacks: options.v2Stacks,
       dependencyStack: parentStackForVpcStack,
@@ -667,6 +670,7 @@ export function createAndGetV2NetworkVpcDependencyStacks(options: {
     });
 
     const vpcRouteTablesStack = createVpcRouteTablesStack({
+      sanitizedVpcName,
       v2NetworkResources,
       v2Stacks: options.v2Stacks,
       dependencyStack: vpcStack,
@@ -682,6 +686,7 @@ export function createAndGetV2NetworkVpcDependencyStacks(options: {
     });
 
     const vpcSecurityGroupsStack = createVpcSecurityGroupsStack({
+      sanitizedVpcName,
       v2NetworkResources,
       v2Stacks: options.v2Stacks,
       dependencyStack: vpcRouteTablesStack,
@@ -699,6 +704,7 @@ export function createAndGetV2NetworkVpcDependencyStacks(options: {
     const parentStacksForSubnetsStack: cdk.Stack[] = [vpcRouteTablesStack, vpcSecurityGroupsStack];
 
     const vpcSubnetsStack = createVpcSubnetsStack({
+      sanitizedVpcName,
       v2NetworkResources,
       v2Stacks: options.v2Stacks,
       dependencyStacks: parentStacksForSubnetsStack,
@@ -714,6 +720,7 @@ export function createAndGetV2NetworkVpcDependencyStacks(options: {
     });
 
     const vpcSubnetsShareStack = createVpcSubnetsShareStack({
+      sanitizedVpcName,
       v2NetworkResources,
       v2Stacks: options.v2Stacks,
       dependencyStack: vpcSubnetsStack,
@@ -729,6 +736,7 @@ export function createAndGetV2NetworkVpcDependencyStacks(options: {
     });
 
     const vpcNaclsStack = createVpcNaclsStack({
+      sanitizedVpcName,
       v2NetworkResources,
       v2Stacks: options.v2Stacks,
       dependencyStack: vpcSubnetsShareStack,
@@ -744,6 +752,7 @@ export function createAndGetV2NetworkVpcDependencyStacks(options: {
     });
 
     const vpcLoadBalancersStack = createVpcLoadBalancersStack({
+      sanitizedVpcName,
       v2NetworkResources,
       v2Stacks: options.v2Stacks,
       dependencyStack: vpcNaclsStack,
@@ -770,6 +779,7 @@ export function createAndGetV2NetworkVpcDependencyStacks(options: {
  * @returns
  */
 function createVpcStack(options: {
+  sanitizedVpcName: string;
   v2NetworkResources: V2NetworkResourceListType[];
   v2Stacks: cdk.Stack[];
   dependencyStack: cdk.Stack;
@@ -783,11 +793,10 @@ function createVpcStack(options: {
   version: string;
   synthesizer?: cdk.IStackSynthesizer;
 }): cdk.Stack {
-  // if (options.v2NetworkResources.find(item => item.vpcName === options.vpcItem.name)) {
   logger.info(`Creating VPC Stack for VPC ${options.vpcItem.name} in ${options.enabledRegion}`);
   const stack: cdk.Stack = new VpcBaseStack(
     options.app,
-    `${AcceleratorStackNames[AcceleratorV2Stacks.VPC_STACK]}-${options.vpcItem.name}-${options.accountId}-${
+    `${AcceleratorStackNames[AcceleratorV2Stacks.VPC_STACK]}-${options.sanitizedVpcName}-${options.accountId}-${
       options.enabledRegion
     }`,
     {
@@ -816,6 +825,7 @@ function createVpcStack(options: {
  * @returns
  */
 function createVpcRouteTablesStack(options: {
+  sanitizedVpcName: string;
   v2NetworkResources: V2NetworkResourceListType[];
   v2Stacks: cdk.Stack[];
   dependencyStack: cdk.Stack;
@@ -832,9 +842,9 @@ function createVpcRouteTablesStack(options: {
   logger.info(`Creating VPC Route Table Stack for VPC ${options.vpcItem.name} in ${options.enabledRegion}`);
   const stack: cdk.Stack = new VpcRouteTablesBaseStack(
     options.app,
-    `${AcceleratorStackNames[AcceleratorV2Stacks.ROUTE_TABLES_STACK]}-${options.vpcItem.name}-${options.accountId}-${
-      options.enabledRegion
-    }`,
+    `${AcceleratorStackNames[AcceleratorV2Stacks.ROUTE_TABLES_STACK]}-${options.sanitizedVpcName}-${
+      options.accountId
+    }-${options.enabledRegion}`,
     {
       env: options.env,
       description: `(SO0199-vpc-route-tables) Landing Zone Accelerator on AWS. Version ${options.version}.`,
@@ -861,6 +871,7 @@ function createVpcRouteTablesStack(options: {
  * @returns
  */
 function createVpcSecurityGroupsStack(options: {
+  sanitizedVpcName: string;
   v2NetworkResources: V2NetworkResourceListType[];
   v2Stacks: cdk.Stack[];
   dependencyStack: cdk.Stack;
@@ -877,9 +888,9 @@ function createVpcSecurityGroupsStack(options: {
   logger.info(`Creating VPC SecurityGroups Stack for VPC ${options.vpcItem.name} in ${options.enabledRegion}`);
   const stack: cdk.Stack = new VpcSecurityGroupsBaseStack(
     options.app,
-    `${AcceleratorStackNames[AcceleratorV2Stacks.SECURITY_GROUPS_STACK]}-${options.vpcItem.name}-${options.accountId}-${
-      options.enabledRegion
-    }`,
+    `${AcceleratorStackNames[AcceleratorV2Stacks.SECURITY_GROUPS_STACK]}-${options.sanitizedVpcName}-${
+      options.accountId
+    }-${options.enabledRegion}`,
     {
       env: options.env,
       description: `(SO0199-vpc-security-groups) Landing Zone Accelerator on AWS. Version ${options.version}.`,
@@ -905,6 +916,7 @@ function createVpcSecurityGroupsStack(options: {
  * @returns
  */
 function createVpcSubnetsStack(options: {
+  sanitizedVpcName: string;
   v2NetworkResources: V2NetworkResourceListType[];
   v2Stacks: cdk.Stack[];
   dependencyStacks: cdk.Stack[];
@@ -921,7 +933,7 @@ function createVpcSubnetsStack(options: {
   logger.info(`Creating VPC Subnets Stack for VPC ${options.vpcItem.name} in ${options.enabledRegion}`);
   const stack: cdk.Stack = new VpcSubnetsBaseStack(
     options.app,
-    `${AcceleratorStackNames[AcceleratorV2Stacks.SUBNETS_STACK]}-${options.vpcItem.name}-${options.accountId}-${
+    `${AcceleratorStackNames[AcceleratorV2Stacks.SUBNETS_STACK]}-${options.sanitizedVpcName}-${options.accountId}-${
       options.enabledRegion
     }`,
     {
@@ -951,6 +963,7 @@ function createVpcSubnetsStack(options: {
  * @returns
  */
 function createVpcSubnetsShareStack(options: {
+  sanitizedVpcName: string;
   v2NetworkResources: V2NetworkResourceListType[];
   v2Stacks: cdk.Stack[];
   dependencyStack: cdk.Stack;
@@ -967,9 +980,9 @@ function createVpcSubnetsShareStack(options: {
   logger.info(`Creating VPC Subnets Stack for VPC ${options.vpcItem.name} in ${options.enabledRegion}`);
   const stack: cdk.Stack = new VpcSubnetsShareBaseStack(
     options.app,
-    `${AcceleratorStackNames[AcceleratorV2Stacks.SUBNETS_SHARE_STACK]}-${options.vpcItem.name}-${options.accountId}-${
-      options.enabledRegion
-    }`,
+    `${AcceleratorStackNames[AcceleratorV2Stacks.SUBNETS_SHARE_STACK]}-${options.sanitizedVpcName}-${
+      options.accountId
+    }-${options.enabledRegion}`,
     {
       env: options.env,
       description: `(SO0199-vpc-subnets-share) Landing Zone Accelerator on AWS. Version ${options.version}.`,
@@ -995,6 +1008,7 @@ function createVpcSubnetsShareStack(options: {
  * @returns
  */
 function createVpcNaclsStack(options: {
+  sanitizedVpcName: string;
   v2NetworkResources: V2NetworkResourceListType[];
   v2Stacks: cdk.Stack[];
   dependencyStack: cdk.Stack;
@@ -1011,7 +1025,7 @@ function createVpcNaclsStack(options: {
   logger.info(`Creating VPC NACLs Stack for VPC ${options.vpcItem.name} in ${options.enabledRegion}`);
   const stack: cdk.Stack = new VpcNaclsBaseStack(
     options.app,
-    `${AcceleratorStackNames[AcceleratorV2Stacks.NACLS_STACK]}-${options.vpcItem.name}-${options.accountId}-${
+    `${AcceleratorStackNames[AcceleratorV2Stacks.NACLS_STACK]}-${options.sanitizedVpcName}-${options.accountId}-${
       options.enabledRegion
     }`,
     {
@@ -1039,6 +1053,7 @@ function createVpcNaclsStack(options: {
  * @returns
  */
 function createVpcLoadBalancersStack(options: {
+  sanitizedVpcName: string;
   v2NetworkResources: V2NetworkResourceListType[];
   v2Stacks: cdk.Stack[];
   dependencyStack: cdk.Stack;
@@ -1055,7 +1070,7 @@ function createVpcLoadBalancersStack(options: {
   logger.info(`Creating VPC LoadBalancers Stack for VPC ${options.vpcItem.name} in ${options.enabledRegion}`);
   const stack: cdk.Stack = new VpcLoadBalancersBaseStack(
     options.app,
-    `${AcceleratorStackNames[AcceleratorV2Stacks.LBS_STACK]}-${options.vpcItem.name}-${options.accountId}-${
+    `${AcceleratorStackNames[AcceleratorV2Stacks.LBS_STACK]}-${options.sanitizedVpcName}-${options.accountId}-${
       options.enabledRegion
     }`,
     {
