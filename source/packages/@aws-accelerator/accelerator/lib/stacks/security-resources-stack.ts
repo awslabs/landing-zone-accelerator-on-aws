@@ -1445,7 +1445,7 @@ export class SecurityResourcesStack extends AcceleratorStack {
           notificationLevel: securityHubConfig.notificationLevel,
           lambdaKey: this.lambdaKey,
           cloudWatchLogRetentionInDays: this.props.globalConfig.cloudwatchLogRetentionInDays,
-          logLevel: securityHubConfig.logging?.cloudWatch?.logLevel,
+          logLevel: securityHubConfig.logging?.cloudWatch?.logLevel ?? 'HIGH',
           logGroupName: securityHubConfig.logging?.cloudWatch?.logGroupName,
         });
       }

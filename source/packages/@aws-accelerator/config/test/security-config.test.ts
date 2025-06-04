@@ -74,9 +74,12 @@ describe('SecurityConfig', () => {
 
     expect(new SecurityHubStandardConfig().enable).toBe(true);
 
-    expect(new SecurityHubLoggingCloudwatchConfig().enable).toBe(true);
+    const securityHubLoggingCloudwatchConfig = new SecurityHubLoggingCloudwatchConfig();
+    expect(securityHubLoggingCloudwatchConfig.enable).toEqual(true);
+    expect(securityHubLoggingCloudwatchConfig.logGroupName).toBe(undefined);
+    expect(securityHubLoggingCloudwatchConfig.logLevel).toEqual('HIGH');
 
-    expect(new SecurityHubLoggingConfig().cloudWatch).toBe(undefined);
+    expect(new SecurityHubLoggingConfig().cloudWatch).toBeDefined();
 
     expect(new SnsSubscriptionConfig().email).toBe('');
 
