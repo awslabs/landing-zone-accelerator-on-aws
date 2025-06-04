@@ -15,9 +15,9 @@
       "Condition": {
         "ArnNotLike": {
           "aws:PrincipalARN": [
-            "arn:${PARTITION}:iam::*:role/${ACCELERATOR_PREFIX}-*",
+            "arn:${PARTITION}:iam::*:role/${ACCELERATOR_PREFIX}*",
             "arn:${PARTITION}:iam::*:role/${MANAGEMENT_ACCOUNT_ACCESS_ROLE}",
-            "arn:${PARTITION}:iam::*:role/cdk-accel-*"
+            "arn:${PARTITION}:iam::*:role/cdk-accel*"
           ]
         }
       }
@@ -27,15 +27,15 @@
       "Effect": "Deny",
       "Action": ["iam:*"],
       "Resource": [
-        "arn:${PARTITION}:iam::*:role/${ACCELERATOR_PREFIX}-*",
-        "arn:${PARTITION}:iam::*:role/cdk-accel-*",
+        "arn:${PARTITION}:iam::*:role/${ACCELERATOR_PREFIX}*",
+        "arn:${PARTITION}:iam::*:role/cdk-accel*",
         "arn:${PARTITION}:iam::*:role/${MANAGEMENT_ACCOUNT_ACCESS_ROLE}"
       ],
       "Condition": {
         "ArnNotLike": {
           "aws:PrincipalARN": [
-            "arn:${PARTITION}:iam::*:role/${ACCELERATOR_PREFIX}-*",
-            "arn:${PARTITION}:iam::*:role/cdk-accel-*",
+            "arn:${PARTITION}:iam::*:role/${ACCELERATOR_PREFIX}*",
+            "arn:${PARTITION}:iam::*:role/cdk-accel*",
             "arn:${PARTITION}:iam::*:role/${MANAGEMENT_ACCOUNT_ACCESS_ROLE}",
             "arn:${PARTITION}:iam::*:role/AWSServiceRoleForConfig"
           ]
@@ -61,9 +61,9 @@
       "Condition": {
         "ArnNotLike": {
           "aws:PrincipalARN": [
-            "arn:${PARTITION}:iam::*:role/${ACCELERATOR_PREFIX}-*",
+            "arn:${PARTITION}:iam::*:role/${ACCELERATOR_PREFIX}*",
             "arn:${PARTITION}:iam::*:role/${MANAGEMENT_ACCOUNT_ACCESS_ROLE}",
-            "arn:${PARTITION}:iam::*:role/cdk-accel-*"
+            "arn:${PARTITION}:iam::*:role/cdk-accel*"
           ]
         }
       }
@@ -90,9 +90,9 @@
       "Condition": {
         "ArnNotLike": {
           "aws:PrincipalARN": [
-            "arn:${PARTITION}:iam::*:role/${ACCELERATOR_PREFIX}-*",
+            "arn:${PARTITION}:iam::*:role/${ACCELERATOR_PREFIX}*",
             "arn:${PARTITION}:iam::*:role/${MANAGEMENT_ACCOUNT_ACCESS_ROLE}",
-            "arn:${PARTITION}:iam::*:role/cdk-accel-*"
+            "arn:${PARTITION}:iam::*:role/cdk-accel*"
           ]
         }
       }
@@ -101,13 +101,13 @@
       "Sid": "CloudFormationStatement",
       "Effect": "Deny",
       "Action": ["cloudformation:Delete*"],
-      "Resource": "arn:${PARTITION}:cloudformation:*:*:stack/${ACCELERATOR_PREFIX}-*",
+      "Resource": "arn:${PARTITION}:cloudformation:*:*:stack/${ACCELERATOR_PREFIX}*",
       "Condition": {
         "ArnNotLike": {
           "aws:PrincipalARN": [
-            "arn:${PARTITION}:iam::*:role/${ACCELERATOR_PREFIX}-*",
+            "arn:${PARTITION}:iam::*:role/${ACCELERATOR_PREFIX}*",
             "arn:${PARTITION}:iam::*:role/${MANAGEMENT_ACCOUNT_ACCESS_ROLE}",
-            "arn:${PARTITION}:iam::*:role/cdk-accel-*"
+            "arn:${PARTITION}:iam::*:role/cdk-accel*"
           ]
         }
       }
@@ -120,9 +120,9 @@
       "Condition": {
         "ArnNotLike": {
           "aws:PrincipalARN": [
-            "arn:${PARTITION}:iam::*:role/${ACCELERATOR_PREFIX}-*",
+            "arn:${PARTITION}:iam::*:role/${ACCELERATOR_PREFIX}*",
             "arn:${PARTITION}:iam::*:role/${MANAGEMENT_ACCOUNT_ACCESS_ROLE}",
-            "arn:${PARTITION}:iam::*:role/cdk-accel-*"
+            "arn:${PARTITION}:iam::*:role/cdk-accel*"
           ]
         }
       }
@@ -138,13 +138,13 @@
         "cloudtrail:UpdateTrail",
         "cloudtrail:CreateTrail"
       ],
-      "Resource": "arn:${PARTITION}:cloudtrail:*:*:trail/${ACCELERATOR_PREFIX}-*",
+      "Resource": "arn:${PARTITION}:cloudtrail:*:*:trail/${ACCELERATOR_PREFIX}*",
       "Condition": {
         "ArnNotLike": {
           "aws:PrincipalARN": [
-            "arn:${PARTITION}:iam::*:role/${ACCELERATOR_PREFIX}-*",
+            "arn:${PARTITION}:iam::*:role/${ACCELERATOR_PREFIX}*",
             "arn:${PARTITION}:iam::*:role/${MANAGEMENT_ACCOUNT_ACCESS_ROLE}",
-            "arn:${PARTITION}:iam::*:role/cdk-accel-*"
+            "arn:${PARTITION}:iam::*:role/cdk-accel*"
           ]
         }
       }
@@ -156,13 +156,13 @@
         "s3:PutEncryptionConfiguration",
         "s3:PutBucketVersioning"
       ],
-      "Resource": "arn:aws:s3:::aws-accelerator-*",
+      "Resource": "arn:aws:s3:::aws-accelerator*",
       "Condition": {
         "ArnNotLike": {
           "aws:PrincipalARN": [
-            "arn:${PARTITION}:iam::*:role/${ACCELERATOR_PREFIX}-*",
+            "arn:${PARTITION}:iam::*:role/${ACCELERATOR_PREFIX}*",
             "arn:${PARTITION}:iam::*:role/${MANAGEMENT_ACCOUNT_ACCESS_ROLE}",
-            "arn:${PARTITION}:iam::*:role/cdk-accel-*"
+            "arn:${PARTITION}:iam::*:role/cdk-accel*"
           ]
         }
       }

@@ -16,7 +16,7 @@ exports[`DependenciesStack Construct(DependenciesStack):  Snapshot Test 1`] = `
               "aws:PrincipalArn": [
                 "arn:aws:iam::*:role/AWSControlTowerExecution",
                 "arn:aws:iam::*:role/AWSAccelerator*",
-                "arn:aws:iam::*:role/cdk-accel-*",
+                "arn:aws:iam::*:role/cdk-accel*",
                 "arn:aws:iam::*:role/aws-service-role/*.amazonaws.com/AWSServiceRole*",
               ],
             },
@@ -95,7 +95,7 @@ exports[`DependenciesStack Construct(DependenciesStack):  Snapshot Test 1`] = `
               "aws:PrincipalArn": [
                 "arn:aws:iam::*:role/AWSControlTowerExecution",
                 "arn:aws:iam::*:role/AWSAccelerator*",
-                "arn:aws:iam::*:role/cdk-accel-*",
+                "arn:aws:iam::*:role/cdk-accel*",
                 "arn:aws:iam::*:role/aws-service-role/*.amazonaws.com/AWSServiceRole*",
               ],
             },
