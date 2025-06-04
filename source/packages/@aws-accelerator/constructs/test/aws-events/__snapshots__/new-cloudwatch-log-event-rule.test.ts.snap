@@ -149,6 +149,10 @@ exports[`NewCloudWatchLogEvent Construct(NewCloudWatchLogEvent):  Snapshot Test 
         "cdk_nag": {
           "rules_to_suppress": [
             {
+              "id": "AwsSolutions-SQS2",
+              "reason": "The SQS queue uses server side encryption if user makes the choice to do so",
+            },
+            {
               "id": "AwsSolutions-SQS3",
               "reason": "The SQS queue does not have a dead-letter queue (DLQ) enabled or have a cdk_nag rule suppression indicating it is a DLQ.",
             },
@@ -197,6 +201,16 @@ exports[`NewCloudWatchLogEvent Construct(NewCloudWatchLogEvent):  Snapshot Test 
     },
     "NewCloudWatchLogEventExistingIamLogEventQueueA8EA07E5": {
       "DeletionPolicy": "Delete",
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-SQS2",
+              "reason": "The SQS queue uses server side encryption if user makes the choice to do so",
+            },
+          ],
+        },
+      },
       "Properties": {
         "ContentBasedDeduplication": true,
         "DelaySeconds": 600,
@@ -221,6 +235,10 @@ exports[`NewCloudWatchLogEvent Construct(NewCloudWatchLogEvent):  Snapshot Test 
       "Metadata": {
         "cdk_nag": {
           "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-SQS2",
+              "reason": "The SQS queue uses server side encryption if user makes the choice to do so",
+            },
             {
               "id": "AwsSolutions-SQS3",
               "reason": "The SQS queue does not have a dead-letter queue (DLQ) enabled or have a cdk_nag rule suppression indicating it is a DLQ.",
@@ -609,6 +627,10 @@ exports[`NewCloudWatchLogEvent Construct(NewCloudWatchLogEvent):  Snapshot Test 
         "cdk_nag": {
           "rules_to_suppress": [
             {
+              "id": "AwsSolutions-SQS2",
+              "reason": "The SQS queue uses server side encryption if user makes the choice to do so",
+            },
+            {
               "id": "AwsSolutions-SQS3",
               "reason": "The SQS queue does not have a dead-letter queue (DLQ) enabled or have a cdk_nag rule suppression indicating it is a DLQ.",
             },
@@ -657,6 +679,16 @@ exports[`NewCloudWatchLogEvent Construct(NewCloudWatchLogEvent):  Snapshot Test 
     },
     "NewCloudWatchLogEventLogEventQueueC499B0F2": {
       "DeletionPolicy": "Delete",
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-SQS2",
+              "reason": "The SQS queue uses server side encryption if user makes the choice to do so",
+            },
+          ],
+        },
+      },
       "Properties": {
         "ContentBasedDeduplication": true,
         "DelaySeconds": 600,
@@ -681,6 +713,10 @@ exports[`NewCloudWatchLogEvent Construct(NewCloudWatchLogEvent):  Snapshot Test 
       "Metadata": {
         "cdk_nag": {
           "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-SQS2",
+              "reason": "The SQS queue uses server side encryption if user makes the choice to do so",
+            },
             {
               "id": "AwsSolutions-SQS3",
               "reason": "The SQS queue does not have a dead-letter queue (DLQ) enabled or have a cdk_nag rule suppression indicating it is a DLQ.",
