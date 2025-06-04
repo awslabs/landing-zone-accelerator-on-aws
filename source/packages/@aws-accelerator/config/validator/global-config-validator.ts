@@ -150,10 +150,19 @@ export class GlobalConfigValidator {
     this.validateMaxConcurrency(values, errors);
 
     //
-    // Validate deployment targets
+    // Validate Lambda encryption config
     //
-    this.validateDeploymentTargetAccountNames(values, accountNames, errors);
-    this.validateDeploymentTargetOUs(values, ouIdNames, errors);
+    this.validateLambdaEncryptionConfig({ values, ouIdNames, accountNames, errors });
+
+    //
+    // Validate CloudWatch Logs encryption config
+    //
+    this.validateCloudWatchLogsEncryptionConfig({ values, ouIdNames, accountNames, errors });
+
+    //
+    // Validate Default Event Bus config
+    //
+    this.validateEventBusConfig({ values, ouIdNames, accountNames, errors, configDir });
 
     //
     // bucket policy validation
@@ -185,11 +194,6 @@ export class GlobalConfigValidator {
     // Validate region by region deploy order doesn't conflict with enabledRegions
     //
     this.validateRegionByRegionDeployOrderMatchesEnabledRegionsConfiguration(values, regionByRegionDeployOrder, errors);
-
-    //
-    // Validate event bus policy configuration
-    //
-    this.validateEventBusPolicyConfiguration(values, configDir, errors);
 
     //
     // Validate Kinesis configuration
@@ -788,6 +792,9 @@ export class GlobalConfigValidator {
         //
         this.validateCloudWatchExclusions(values, ouIdNames, accountNames, errors);
       }
+      if (values.logging.cloudwatchLogs?.skipBulkUpdate?.enable) {
+        this.validateCloudWatchSkipBulkUpdates(values, ouIdNames, accountNames, errors);
+      }
     }
   }
 
@@ -834,6 +841,30 @@ export class GlobalConfigValidator {
         errors.push(`CloudWatch exclusion either specify excludeAll or logGroupNames.`);
       }
     }
+  }
+
+  private validateCloudWatchSkipBulkUpdates(
+    values: GlobalConfig,
+    ouIdNames: string[],
+    accountNames: string[],
+    errors: string[],
+  ) {
+    const skipBulkUpdateTargets = values.logging.cloudwatchLogs?.skipBulkUpdate?.skipBulkUpdateTargets;
+    if (!skipBulkUpdateTargets) {
+      errors.push(
+        'skipBulkUpdateTargets targets must be defined for cloudwatchLogs/skipBulkUpdate if skipBulkUpdate/enable: true',
+      );
+      return;
+    }
+
+    // check if users input array of accounts is valid
+    this.validateDeploymentTargets({
+      deploymentTargets: skipBulkUpdateTargets,
+      accountNames,
+      ous: ouIdNames,
+      errors,
+      configItemDescription: 'cloudwatchLogs/skipBulkUpdate',
+    });
   }
 
   private validateCloudWatchExclusionsTargets(inputList: string[], globalList: string[], errors: string[]) {
@@ -1241,113 +1272,72 @@ export class GlobalConfigValidator {
     }
   }
 
-  /**
-   * Function to validate Deployment targets account name for security services
-   * @param values
-   */
-  private validateDeploymentTargetAccountNames(values: GlobalConfig, accountNames: string[], errors: string[]) {
-    this.validateLambdaEncryptionConfigDeploymentTargetAccounts(values, accountNames, errors);
-    this.validateCloudWatchLogsEncryptionConfigDeploymentTargetAccounts(values, accountNames, errors);
-    this.validateDefaultEventBusDeploymentTargetAccounts(values, accountNames, errors);
+  private validateLambdaEncryptionConfig(props: {
+    values: GlobalConfig;
+    accountNames: string[];
+    ouIdNames: string[];
+    errors: string[];
+  }) {
+    if (!props.values.lambda?.encryption) {
+      return;
+    }
+    const deploymentTargets = props.values.lambda.encryption.deploymentTargets;
+    if (!deploymentTargets) {
+      return;
+    }
+    this.validateDeploymentTargets({
+      deploymentTargets,
+      accountNames: props.accountNames,
+      ous: props.ouIdNames,
+      errors: props.errors,
+      configItemDescription: 'lambda/encryption',
+    });
   }
 
-  /**
-   * Function to validate Deployment targets OU name for security services
-   * @param values
-   */
-  private validateDeploymentTargetOUs(values: GlobalConfig, ouIdNames: string[], errors: string[]) {
-    this.validateLambdaEncryptionConfigDeploymentTargetOUs(values, ouIdNames, errors);
-    this.validateCloudWatchLogsEncryptionDeploymentTargetOUs(values, ouIdNames, errors);
-    this.validateDefaultEventBusDeploymentTargetOUs(values, ouIdNames, errors);
-  }
-
-  /**
-   * Function to validate existence of Lambda encryption configuration deployment target OUs
-   * Make sure deployment target OUs are part of Organization config file
-   * @param values
-   */
-  private validateLambdaEncryptionConfigDeploymentTargetOUs(
-    values: GlobalConfig,
-    ouIdNames: string[],
-    errors: string[],
-  ) {
-    if (!values.lambda?.encryption) {
+  private validateEventBusConfig(props: {
+    values: GlobalConfig;
+    accountNames: string[];
+    ouIdNames: string[];
+    errors: string[];
+    configDir: string;
+  }) {
+    if (!props.values.defaultEventBus) {
       return;
     }
 
-    for (const ou of values.lambda.encryption.deploymentTargets?.organizationalUnits ?? []) {
-      if (ouIdNames.indexOf(ou) === -1) {
-        errors.push(
-          `Deployment target OU ${ou} for lambda encryption configuration does not exists in organization-config.yaml file.`,
-        );
-      }
-    }
+    this.validateEventBusPolicyConfiguration(props.values, props.configDir, props.errors);
+
+    const deploymentTargets = props.values.defaultEventBus.deploymentTargets;
+    this.validateDeploymentTargets({
+      deploymentTargets,
+      accountNames: props.accountNames,
+      ous: props.ouIdNames,
+      configItemDescription: 'defaultEventBus',
+      errors: props.errors,
+    });
   }
 
-  /**
-   * Function to validate existence of Lambda encryption configuration deployment target Accounts
-   * Make sure deployment target Accounts are part of account config file
-   * @param values
-   */
-  private validateLambdaEncryptionConfigDeploymentTargetAccounts(
-    values: GlobalConfig,
-    accountNames: string[],
-    errors: string[],
-  ) {
-    if (!values.lambda?.encryption) {
+  private validateCloudWatchLogsEncryptionConfig(props: {
+    values: GlobalConfig;
+    accountNames: string[];
+    ouIdNames: string[];
+    errors: string[];
+  }) {
+    if (!props.values.logging.cloudwatchLogs?.encryption) {
       return;
     }
-    for (const account of values.lambda.encryption?.deploymentTargets?.accounts ?? []) {
-      if (accountNames.indexOf(account) === -1) {
-        errors.push(
-          `Deployment target account ${account} for Lambda encryption configuration does not exists in accounts-config.yaml file.`,
-        );
-      }
-    }
-  }
+    const deploymentTargets = props.values.logging.cloudwatchLogs?.encryption.deploymentTargets;
 
-  /**
-   * Function to validate existence of CloudWatch log group encryption configuration deployment target Accounts
-   * Make sure deployment target Accounts are part of account config file
-   * @param values
-   */
-  private validateCloudWatchLogsEncryptionConfigDeploymentTargetAccounts(
-    values: GlobalConfig,
-    accountNames: string[],
-    errors: string[],
-  ) {
-    if (!values.logging.cloudwatchLogs?.encryption) {
+    if (!deploymentTargets) {
       return;
     }
-    for (const account of values.logging.cloudwatchLogs.encryption.deploymentTargets?.accounts ?? []) {
-      if (accountNames.indexOf(account) === -1) {
-        errors.push(
-          `Deployment target account ${account} for CloudWatch logs encryption configuration does not exists in accounts-config.yaml file.`,
-        );
-      }
-    }
-  }
-
-  /**
-   * Function to validate existence of CloudWatch encryption deployment target OUs
-   * Make sure deployment target OUs are part of Organization config file
-   * @param values
-   */
-  private validateCloudWatchLogsEncryptionDeploymentTargetOUs(
-    values: GlobalConfig,
-    ouIdNames: string[],
-    errors: string[],
-  ) {
-    if (!values.logging.cloudwatchLogs?.encryption) {
-      return;
-    }
-    for (const ou of values.logging.cloudwatchLogs.encryption.deploymentTargets?.organizationalUnits ?? []) {
-      if (ouIdNames.indexOf(ou) === -1) {
-        errors.push(
-          `Deployment target OU ${ou} for CloudWatch logs encryption does not exist in organization-config.yaml file.`,
-        );
-      }
-    }
+    this.validateDeploymentTargets({
+      deploymentTargets,
+      accountNames: props.accountNames,
+      ous: props.ouIdNames,
+      errors: props.errors,
+      configItemDescription: 'cloudwatchLogs/encryption',
+    });
   }
 
   /**
@@ -1408,45 +1398,7 @@ export class GlobalConfigValidator {
       }
     }
   }
-  /**
-   * Function to validate existence of default event bus deployment target Accounts
-   * Make sure deployment target Accounts are part of account config file
-   * @param values
-   */
-  private validateDefaultEventBusDeploymentTargetAccounts(
-    values: GlobalConfig,
-    accountNames: string[],
-    errors: string[],
-  ) {
-    if (!values.defaultEventBus) {
-      return;
-    }
-    for (const account of values.defaultEventBus.deploymentTargets?.accounts ?? []) {
-      if (accountNames.indexOf(account) === -1) {
-        errors.push(
-          `Deployment target account ${account} for default event bus configuration does not exists in accounts-config.yaml file.`,
-        );
-      }
-    }
-  }
 
-  /**
-   * Function to validate existence of default event bus deployment target OUs
-   * Make sure deployment target OUs are part of Organization config file
-   * @param values
-   */
-  private validateDefaultEventBusDeploymentTargetOUs(values: GlobalConfig, ouIdNames: string[], errors: string[]) {
-    if (!values.defaultEventBus) {
-      return;
-    }
-    for (const ou of values.defaultEventBus.deploymentTargets?.organizationalUnits ?? []) {
-      if (ouIdNames.indexOf(ou) === -1) {
-        errors.push(
-          `Deployment target OU ${ou} for default event bus configuration does not exist in organization-config.yaml file.`,
-        );
-      }
-    }
-  }
   /**
    * Function to validate existence of default kinesis configuration
    * @param values
@@ -1502,6 +1454,71 @@ export class GlobalConfigValidator {
           `Specified globalConfig.logging.cloudwatch.firehose.lambdaProcessor.bufferInterval: ${bufferInterval}. It should be between 60 and 900.`,
         );
       }
+    }
+  }
+
+  private validateDeploymentTargetAccountNames(
+    deploymentTargetAccounts: string[] | undefined,
+    accountNames: string[],
+    errors: string[],
+    configItemDescription: string,
+  ) {
+    if (!deploymentTargetAccounts) {
+      return;
+    }
+    for (const account of deploymentTargetAccounts ?? []) {
+      if (accountNames.indexOf(account) === -1) {
+        errors.push(
+          `Deployment target account ${account} for ${configItemDescription} does not exists in accounts-config.yaml file.`,
+        );
+      }
+    }
+  }
+
+  private validateDeploymentTargetOUs(
+    deploymentTargetOus: string[] | undefined,
+    ous: string[],
+    errors: string[],
+    configItemDescription: string,
+  ) {
+    if (!deploymentTargetOus) {
+      return;
+    }
+    for (const ou of deploymentTargetOus) {
+      if (ous.indexOf(ou) === -1) {
+        errors.push(
+          `Deployment target ou ${ou} for ${configItemDescription} does not exists in accounts-config.yaml file.`,
+        );
+      }
+    }
+  }
+
+  private validateDeploymentTargets(props: {
+    deploymentTargets: DeploymentTargets | undefined;
+    accountNames: string[] | undefined;
+    ous: string[];
+    configItemDescription: string;
+    errors: string[];
+  }) {
+    if (!props.deploymentTargets) {
+      return;
+    }
+    if (props.accountNames) {
+      this.validateDeploymentTargetAccountNames(
+        props.deploymentTargets.accounts,
+        props.accountNames,
+        props.errors,
+        props.configItemDescription,
+      );
+    }
+
+    if (props.ous) {
+      this.validateDeploymentTargetOUs(
+        props.deploymentTargets.organizationalUnits,
+        props.ous,
+        props.errors,
+        props.configItemDescription,
+      );
     }
   }
 }

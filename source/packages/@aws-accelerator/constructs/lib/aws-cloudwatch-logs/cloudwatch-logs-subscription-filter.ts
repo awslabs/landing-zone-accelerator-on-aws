@@ -86,6 +86,10 @@ export interface CloudWatchLogsCreateProps {
    * {@link https://docs.aws.amazon.com/AmazonCloudWatchLogs/latest/APIReference/API_PutAccountPolicy.html#API_PutAccountPolicy_RequestSyntax}
    */
   readonly filterPattern?: string;
+  /**
+   * Skips bulk update of CloudWatchLogs
+   */
+  readonly noOp?: boolean;
 }
 
 /**
@@ -96,6 +100,10 @@ export class CloudWatchLogsSubscriptionFilter extends Construct {
   constructor(scope: Construct, id: string, props: CloudWatchLogsCreateProps) {
     super(scope, id);
     let acceleratorLogSubscriptionRoleArn: string;
+    let noOp = 'false';
+    if (props.noOp) {
+      noOp = 'true';
+    }
     if (props.useExistingRoles) {
       acceleratorLogSubscriptionRoleArn = `arn:${cdk.Stack.of(this).partition}:iam::${
         cdk.Stack.of(this).account
@@ -157,6 +165,9 @@ export class CloudWatchLogsSubscriptionFilter extends Construct {
       codeDirectory: path.join(__dirname, 'update-subscription-filter/dist'),
       runtime: CUSTOM_RESOURCE_PROVIDER_RUNTIME,
       policyStatements: policyStatements,
+      environment: {
+        NO_OP: noOp,
+      },
     });
     const resource = new cdk.CustomResource(this, 'Resource', {
       resourceType: UPDATE_SUBSCRIPTION_FILTER,
