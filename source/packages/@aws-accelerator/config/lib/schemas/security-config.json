@@ -1461,7 +1461,7 @@
     },
     "ISecurityHubConfig": {
       "additionalProperties": false,
-      "description": "Use this configuration to enable Amazon Security Hub for an AWS Organization along with it's auditing configuration.",
+      "description": "Use this configuration to enable Amazon Security Hub for an AWS Organization along with it's auditing configuration.\nNote the default value for logLevel is HIGH if it is not provided in the configuration",
       "properties": {
         "autoEnableOrgMembers": {
           "default": true,
@@ -1515,7 +1515,7 @@
     },
     "ISecurityHubLoggingCloudwatchConfig": {
       "additionalProperties": false,
-      "description": "Security Hub Logging CloudWatch Config",
+      "description": "Security Hub Logging CloudWatch Config\nThe default value for logLevel is HIGH if it is not provided in the configuration",
       "properties": {
         "enable": {
           "description": "Security hub to cloudwatch logging is enabled by default.",

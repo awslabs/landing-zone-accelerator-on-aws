@@ -609,11 +609,12 @@ export interface ISecurityHubStandardConfig {
  *
  * @description
  * Security Hub Logging CloudWatch Config
+ * The default value for logLevel is HIGH if it is not provided in the configuration
  *
  * @example
  * ```
  * enable: true
- * logLevel: MEDIUM
+ * logLevel: HIGH
  * ```
  */
 export interface ISecurityHubLoggingCloudwatchConfig {
@@ -671,6 +672,7 @@ export interface ISecurityHubLoggingConfig {
  *
  * @description
  * Use this configuration to enable Amazon Security Hub for an AWS Organization along with it's auditing configuration.
+ * Note the default value for logLevel is HIGH if it is not provided in the configuration
  *
  * @example
  * ```
@@ -692,7 +694,7 @@ export interface ISecurityHubLoggingConfig {
  *   logging:
  *     cloudWatch:
  *       enable: true
- *       logLevel: MEDIUM
+ *       logLevel: HIGH
  * ```
  */
 export interface ISecurityHubConfig {
