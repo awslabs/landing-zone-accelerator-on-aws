@@ -4258,6 +4258,10 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 1`] = `
         "cdk_nag": {
           "rules_to_suppress": [
             {
+              "id": "AwsSolutions-SQS2",
+              "reason": "The SQS queue uses server side encryption if user makes the choice to do so",
+            },
+            {
               "id": "AwsSolutions-SQS3",
               "reason": "The SQS queue does not have a dead-letter queue (DLQ) enabled or have a cdk_nag rule suppression indicating it is a DLQ.",
             },
@@ -4321,6 +4325,10 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 1`] = `
         "cdk_nag": {
           "rules_to_suppress": [
             {
+              "id": "AwsSolutions-SQS2",
+              "reason": "The SQS queue uses server side encryption if user makes the choice to do so",
+            },
+            {
               "id": "AwsSolutions-SQS3",
               "reason": "The SQS queue does not have a dead-letter queue (DLQ) enabled or have a cdk_nag rule suppression indicating it is a DLQ.",
             },
@@ -4381,6 +4389,16 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 1`] = `
       "DependsOn": [
         "LogsSubscriptionFilter58C57C6B",
       ],
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-SQS2",
+              "reason": "The SQS queue uses server side encryption if user makes the choice to do so",
+            },
+          ],
+        },
+      },
       "Properties": {
         "ContentBasedDeduplication": true,
         "DelaySeconds": 600,
@@ -9514,6 +9532,10 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 2`] = `
         "cdk_nag": {
           "rules_to_suppress": [
             {
+              "id": "AwsSolutions-SQS2",
+              "reason": "The SQS queue uses server side encryption if user makes the choice to do so",
+            },
+            {
               "id": "AwsSolutions-SQS3",
               "reason": "The SQS queue does not have a dead-letter queue (DLQ) enabled or have a cdk_nag rule suppression indicating it is a DLQ.",
             },
@@ -9577,6 +9599,10 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 2`] = `
         "cdk_nag": {
           "rules_to_suppress": [
             {
+              "id": "AwsSolutions-SQS2",
+              "reason": "The SQS queue uses server side encryption if user makes the choice to do so",
+            },
+            {
               "id": "AwsSolutions-SQS3",
               "reason": "The SQS queue does not have a dead-letter queue (DLQ) enabled or have a cdk_nag rule suppression indicating it is a DLQ.",
             },
@@ -9637,6 +9663,16 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 2`] = `
       "DependsOn": [
         "LogsSubscriptionFilter58C57C6B",
       ],
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-SQS2",
+              "reason": "The SQS queue uses server side encryption if user makes the choice to do so",
+            },
+          ],
+        },
+      },
       "Properties": {
         "ContentBasedDeduplication": true,
         "DelaySeconds": 600,
@@ -14975,6 +15011,10 @@ exports[`LoggingStackDelegatedAdmin Construct(LoggingStacKDelegatedAdmin):  Snap
         "cdk_nag": {
           "rules_to_suppress": [
             {
+              "id": "AwsSolutions-SQS2",
+              "reason": "The SQS queue uses server side encryption if user makes the choice to do so",
+            },
+            {
               "id": "AwsSolutions-SQS3",
               "reason": "The SQS queue does not have a dead-letter queue (DLQ) enabled or have a cdk_nag rule suppression indicating it is a DLQ.",
             },
@@ -15038,6 +15078,10 @@ exports[`LoggingStackDelegatedAdmin Construct(LoggingStacKDelegatedAdmin):  Snap
         "cdk_nag": {
           "rules_to_suppress": [
             {
+              "id": "AwsSolutions-SQS2",
+              "reason": "The SQS queue uses server side encryption if user makes the choice to do so",
+            },
+            {
               "id": "AwsSolutions-SQS3",
               "reason": "The SQS queue does not have a dead-letter queue (DLQ) enabled or have a cdk_nag rule suppression indicating it is a DLQ.",
             },
@@ -15098,6 +15142,16 @@ exports[`LoggingStackDelegatedAdmin Construct(LoggingStacKDelegatedAdmin):  Snap
       "DependsOn": [
         "LogsSubscriptionFilter58C57C6B",
       ],
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-SQS2",
+              "reason": "The SQS queue uses server side encryption if user makes the choice to do so",
+            },
+          ],
+        },
+      },
       "Properties": {
         "ContentBasedDeduplication": true,
         "DelaySeconds": 600,
@@ -19016,6 +19070,10 @@ exports[`LoggingStackOuTargets Construct(LoggingStackOuTargets):  Snapshot Test 
         "cdk_nag": {
           "rules_to_suppress": [
             {
+              "id": "AwsSolutions-SQS2",
+              "reason": "The SQS queue uses server side encryption if user makes the choice to do so",
+            },
+            {
               "id": "AwsSolutions-SQS3",
               "reason": "The SQS queue does not have a dead-letter queue (DLQ) enabled or have a cdk_nag rule suppression indicating it is a DLQ.",
             },
@@ -19079,6 +19137,10 @@ exports[`LoggingStackOuTargets Construct(LoggingStackOuTargets):  Snapshot Test 
         "cdk_nag": {
           "rules_to_suppress": [
             {
+              "id": "AwsSolutions-SQS2",
+              "reason": "The SQS queue uses server side encryption if user makes the choice to do so",
+            },
+            {
               "id": "AwsSolutions-SQS3",
               "reason": "The SQS queue does not have a dead-letter queue (DLQ) enabled or have a cdk_nag rule suppression indicating it is a DLQ.",
             },
@@ -19139,6 +19201,16 @@ exports[`LoggingStackOuTargets Construct(LoggingStackOuTargets):  Snapshot Test 
       "DependsOn": [
         "LogsSubscriptionFilter58C57C6B",
       ],
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-SQS2",
+              "reason": "The SQS queue uses server side encryption if user makes the choice to do so",
+            },
+          ],
+        },
+      },
       "Properties": {
         "ContentBasedDeduplication": true,
         "DelaySeconds": 600,
