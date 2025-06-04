@@ -13,6 +13,8 @@
 import { SSMClient, GetParameterCommand, GetParameterCommandInput, SSMServiceException } from '@aws-sdk/client-ssm';
 import { Credentials } from '@aws-sdk/types';
 import { createLogger } from './logger';
+import { setRetryStrategy } from './common-functions';
+import { throttlingBackOff } from './throttle';
 import * as path from 'path';
 
 // Create a logger instance for this module
@@ -42,7 +44,9 @@ export class SSMOperationError extends Error {
  */
 export async function getSSMParameterValue(parameterName: string, credentials?: Credentials): Promise<string> {
   // Initialize SSM client with optional credentials
-  const clientOptions = credentials ? { credentials } : {};
+  const clientOptions = credentials
+    ? { credentials, retryStratergy: setRetryStrategy() }
+    : { retryStratergy: setRetryStrategy() };
 
   const client = new SSMClient(clientOptions);
 
@@ -55,7 +59,7 @@ export async function getSSMParameterValue(parameterName: string, credentials?: 
     logger.debug(`Retrieving SSM parameter: ${parameterName}`);
     // Execute the GetParameterCommand
     const command = new GetParameterCommand(params);
-    const response = await client.send(command);
+    const response = await throttlingBackOff(() => client.send(command));
 
     // Check if parameter exists and has value
     if (response.Parameter && response.Parameter.Value) {
