@@ -230,6 +230,27 @@ export class NewCloudWatchLogEvent extends Construct {
     );
     const stack = cdk.Stack.of(scope);
 
+    // AwsSolutions-SQS2: The SQS queue does not have a dead-letter queue (DLQ) enabled or have a cdk_nag rule suppression indicating it is a DLQ.
+    NagSuppressions.addResourceSuppressionsByPath(stack, `${stack.stackName}/${id}/${queue.node.id}/Resource`, [
+      {
+        id: 'AwsSolutions-SQS2',
+        reason: 'The SQS queue uses server side encryption if user makes the choice to do so',
+      },
+    ]);
+    // AwsSolutions-SQS2: The SQS queue does not have a dead-letter queue (DLQ) enabled or have a cdk_nag rule suppression indicating it is a DLQ.
+    NagSuppressions.addResourceSuppressionsByPath(stack, `${stack.stackName}/${id}/${lambdaDlq.node.id}/Resource`, [
+      {
+        id: 'AwsSolutions-SQS2',
+        reason: 'The SQS queue uses server side encryption if user makes the choice to do so',
+      },
+    ]);
+    // AwsSolutions-SQS2: The SQS queue does not have a dead-letter queue (DLQ) enabled or have a cdk_nag rule suppression indicating it is a DLQ.
+    NagSuppressions.addResourceSuppressionsByPath(stack, `${stack.stackName}/${id}/${queueDlq.node.id}/Resource`, [
+      {
+        id: 'AwsSolutions-SQS2',
+        reason: 'The SQS queue uses server side encryption if user makes the choice to do so',
+      },
+    ]);
     // AwsSolutions-SQS3: The SQS queue does not have a dead-letter queue (DLQ) enabled or have a cdk_nag rule suppression indicating it is a DLQ.
     NagSuppressions.addResourceSuppressionsByPath(stack, `${stack.stackName}/${id}/${lambdaDlq.node.id}/Resource`, [
       {
