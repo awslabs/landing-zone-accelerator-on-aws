@@ -80,6 +80,12 @@ export async function handler(event: CloudFormationCustomResourceEvent): Promise
   const selectionCriteria: string | undefined = event.ResourceProperties['selectionCriteria'];
   const overrideExisting = event.ResourceProperties['overrideExisting'] === 'true' ? true : false;
   const filterPattern = event.ResourceProperties['filterPattern'] ?? '';
+  const NO_OP = process.env['NO_OP'];
+
+  if (NO_OP === 'true') {
+    console.info('NO_OP is true, will not make any changes');
+    return { Status: 'SUCCESS' };
+  }
 
   let logExclusionParse: cloudwatchExclusionProcessedItem | undefined;
   if (logExclusionOption && isValidLogExclusionOption(logExclusionOption)) {
