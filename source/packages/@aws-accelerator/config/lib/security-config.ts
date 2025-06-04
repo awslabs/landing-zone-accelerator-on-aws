@@ -165,11 +165,11 @@ export class SecurityHubStandardConfig implements i.ISecurityHubStandardConfig {
 export class SecurityHubLoggingCloudwatchConfig implements i.ISecurityHubLoggingCloudwatchConfig {
   readonly enable = true;
   readonly logGroupName? = undefined;
-  readonly logLevel? = undefined;
+  readonly logLevel = 'HIGH';
 }
 
 export class SecurityHubLoggingConfig implements i.ISecurityHubLoggingConfig {
-  readonly cloudWatch: SecurityHubLoggingCloudwatchConfig | undefined = undefined;
+  readonly cloudWatch: SecurityHubLoggingCloudwatchConfig = new SecurityHubLoggingCloudwatchConfig();
 }
 
 export class SecurityHubConfig implements i.ISecurityHubConfig {
@@ -181,7 +181,7 @@ export class SecurityHubConfig implements i.ISecurityHubConfig {
   readonly deploymentTargets: t.DeploymentTargets | undefined = undefined;
   readonly autoEnableOrgMembers: boolean | undefined = undefined;
   readonly standards: SecurityHubStandardConfig[] = [];
-  readonly logging: SecurityHubLoggingConfig | undefined = undefined;
+  readonly logging: SecurityHubLoggingConfig = new SecurityHubLoggingConfig();
 }
 
 export class SnsSubscriptionConfig implements i.ISnsSubscriptionConfig {

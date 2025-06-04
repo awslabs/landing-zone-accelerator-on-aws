@@ -7762,6 +7762,16 @@ exports[`delegatedAdminStack Construct(SecurityResourcesStack):  Snapshot Test 1
       "Properties": {
         "Description": "Sends Security Hub Findings above threshold to CloudWatch Logs",
         "EventPattern": {
+          "detail": {
+            "findings": {
+              "Severity": {
+                "Label": [
+                  "CRITICAL",
+                  "HIGH",
+                ],
+              },
+            },
+          },
           "detail-type": [
             "Security Hub Findings - Imported",
           ],
