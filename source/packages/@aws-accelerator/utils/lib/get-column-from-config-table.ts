@@ -14,6 +14,8 @@ import { DynamoDBClient, DynamoDBServiceException } from '@aws-sdk/client-dynamo
 import { DynamoDBDocumentClient, GetCommand, GetCommandInput, GetCommandOutput } from '@aws-sdk/lib-dynamodb';
 import { Credentials } from '@aws-sdk/types';
 import { createLogger } from './logger';
+import { setRetryStrategy } from './common-functions';
+import { throttlingBackOff } from './throttle';
 import * as path from 'path';
 
 const logger = createLogger([path.parse(path.basename(__filename)).name]);
@@ -54,7 +56,9 @@ export async function getColumnFromConfigTable(
   credentials?: Credentials,
 ): Promise<string> {
   // Initialize DynamoDB client with optional credentials
-  const clientOptions = credentials ? { credentials } : {};
+  const clientOptions = credentials
+    ? { credentials, retryStratergy: setRetryStrategy() }
+    : { retryStratergy: setRetryStrategy() };
 
   const client = new DynamoDBClient(clientOptions);
 
@@ -80,7 +84,7 @@ export async function getColumnFromConfigTable(
 
     // Execute the GetCommand
     const command = new GetCommand(params);
-    const response: GetCommandOutput = await documentClient.send(command);
+    const response: GetCommandOutput = await throttlingBackOff(() => documentClient.send(command));
 
     // Check if item exists and has awsKey
     if (response.Item && response.Item[columnName]) {
