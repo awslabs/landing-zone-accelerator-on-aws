@@ -113,9 +113,9 @@ export class ReplacementsConfigValidator {
   }
 
   private validateReplacementForKeywords(replacement: ParameterReplacementConfig, errors: string[]) {
-    if (replacement.key.toLowerCase().startsWith('resolve')) {
+    if (replacement.key.toLowerCase().startsWith('resolve:')) {
       errors.push(
-        `Invalid replacement ${replacement.key} , replacement key cannot start with keyword "resolve". The keyword "resolve" is reserved for CloudFormation dynamic references.`,
+        `Invalid replacement ${replacement.key} , replacement key cannot start with keyword "resolve:". The keyword "resolve:" is reserved for CloudFormation dynamic references.`,
       );
     }
   }
