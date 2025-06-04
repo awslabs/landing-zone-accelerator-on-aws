@@ -41,6 +41,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - fix(validation): allow wildcard tld in config validator for nfw rules
 - fix(securityhub): by default only send HIGH and CRITICAL SecurityHub events to CloudWatch. If other events are needed in CloudWatch update configuration
 - fix(pipeline): update iam policy for github token change lambda to allow pipeline update
+- fix(sample-config): extend preventative measures to roles
+
 
 ### Changed
 
