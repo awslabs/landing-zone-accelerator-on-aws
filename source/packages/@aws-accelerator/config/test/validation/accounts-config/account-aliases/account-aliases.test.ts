@@ -76,14 +76,17 @@ describe('AccountsConfigValidator', () => {
             name: 'Management',
             email: 'alias+root@example.com',
             accountAlias: 'valid-alias',
+            organizationalUnit: 'Root',
           },
           {
             name: 'LogArchive',
             email: 'alias+log@example.com',
+            organizationalUnit: 'Root',
           },
           {
             name: 'Audit',
             email: 'alias+audit@example.com',
+            organizationalUnit: 'Root',
           },
         ],
         workloadAccounts: [],

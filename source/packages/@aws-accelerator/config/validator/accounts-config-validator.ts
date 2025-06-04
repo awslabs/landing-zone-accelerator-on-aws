@@ -226,6 +226,8 @@ export class AccountsConfigValidator {
             );
           }
         }
+      } else {
+        errors.push(`Organizational Unit not defined for account ${account.name}.`);
       }
     }
   }
