@@ -12,7 +12,7 @@
             "arn:${PARTITION}:iam::*:role/${MANAGEMENT_ACCOUNT_ACCESS_ROLE}",
             "arn:${PARTITION}:iam::*:role/aws*",
             "arn:${PARTITION}:iam::*:role/${ACCELERATOR_PREFIX}*",
-            "arn:${PARTITION}:iam::*:role/cdk-accel-*"
+            "arn:${PARTITION}:iam::*:role/cdk-accel*"
           ]
         }
       }

@@ -15,9 +15,9 @@
             "Condition": {
                 "ForAllValues:StringNotLike": {
                     "aws:PrincipalArn": [
-                        "arn:${PARTITION}:iam::*:role/AWSControlTowerExecution",
+                        "arn:${PARTITION}:iam::*:role/${MANAGEMENT_ACCOUNT_ACCESS_ROLE}",
                         "arn:${PARTITION}:iam::*:role/AWSAccelerator*",
-                        "arn:${PARTITION}:iam::*:role/cdk-accel-*",
+                        "arn:${PARTITION}:iam::*:role/cdk-accel*",
                         "arn:${PARTITION}:iam::*:role/aws-service-role/*.amazonaws.com/AWSServiceRole*"
                     ]
                 }
@@ -76,9 +76,9 @@
             "Condition": {
                 "ForAllValues:StringNotLike": {
                     "aws:PrincipalArn": [
-                        "arn:${PARTITION}:iam::*:role/AWSControlTowerExecution",
+                        "arn:${PARTITION}:iam::*:role/${MANAGEMENT_ACCOUNT_ACCESS_ROLE}",
                         "arn:${PARTITION}:iam::*:role/AWSAccelerator*",
-                        "arn:${PARTITION}:iam::*:role/cdk-accel-*",
+                        "arn:${PARTITION}:iam::*:role/cdk-accel*",
                         "arn:${PARTITION}:iam::*:role/aws-service-role/*.amazonaws.com/AWSServiceRole*"
                     ]
                 }
