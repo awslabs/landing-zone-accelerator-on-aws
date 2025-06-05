@@ -1277,6 +1277,14 @@ export class InstallerStack extends cdk.Stack {
           actions: ['iam:PassRole'],
           resources: [acceleratorPrincipalArn, gitHubPipelineRole.roleArn],
         }),
+        new cdk.aws_iam.PolicyStatement({
+          actions: ['codestar-connections:PassConnection', 'codestar-connections:UseConnection'],
+          resources: [
+            `arn:${cdk.Stack.of(this).partition}:codeconnections:${cdk.Stack.of(this).region}:${
+              cdk.Stack.of(this).account
+            }:connection/*`,
+          ],
+        }),
       ],
     });
 
