@@ -178,8 +178,8 @@ describe('IAM Role Tests', () => {
     );
 
     expect(response).toBeUndefined();
-    expect(DescribeOrganizationCommand).toHaveBeenCalledTimes(1);
-    expect(EnableAllFeaturesCommand).toHaveBeenCalledTimes(1);
+    expect(DescribeOrganizationCommand).toHaveBeenCalledTimes(2);
+    expect(EnableAllFeaturesCommand).toHaveBeenCalledTimes(0);
   });
 
   test('organizations validation failed becasue IdentityCenter already enabled', async () => {
@@ -249,8 +249,8 @@ describe('IAM Role Tests', () => {
     );
 
     expect(response).toBeUndefined();
-    expect(DescribeOrganizationCommand).toHaveBeenCalledTimes(1);
-    expect(EnableAllFeaturesCommand).toHaveBeenCalledTimes(1);
+    expect(DescribeOrganizationCommand).toHaveBeenCalledTimes(2);
+    expect(EnableAllFeaturesCommand).toHaveBeenCalledTimes(0);
   });
 
   test('organizations validation failed becasue describe organization did not return organization details', async () => {
@@ -388,8 +388,8 @@ describe('IAM Role Tests', () => {
     );
 
     expect(response).toBeUndefined();
-    expect(DescribeOrganizationCommand).toHaveBeenCalledTimes(1);
-    expect(EnableAllFeaturesCommand).toHaveBeenCalledTimes(1);
+    expect(DescribeOrganizationCommand).toHaveBeenCalledTimes(2);
+    expect(EnableAllFeaturesCommand).toHaveBeenCalledTimes(0);
   });
 
   test('organizations validation failed becasue Organizations have other OUs', async () => {
@@ -492,8 +492,8 @@ describe('IAM Role Tests', () => {
     );
 
     expect(response).toBeUndefined();
-    expect(DescribeOrganizationCommand).toHaveBeenCalledTimes(1);
-    expect(EnableAllFeaturesCommand).toHaveBeenCalledTimes(1);
+    expect(DescribeOrganizationCommand).toHaveBeenCalledTimes(2);
+    expect(EnableAllFeaturesCommand).toHaveBeenCalledTimes(0);
   });
 
   test('organizations validation failed becasue Organizations have other accounts for gov cloud partition', async () => {
@@ -563,8 +563,8 @@ describe('IAM Role Tests', () => {
     );
 
     expect(response).toBeUndefined();
-    expect(DescribeOrganizationCommand).toHaveBeenCalledTimes(1);
-    expect(EnableAllFeaturesCommand).toHaveBeenCalledTimes(1);
+    expect(DescribeOrganizationCommand).toHaveBeenCalledTimes(2);
+    expect(EnableAllFeaturesCommand).toHaveBeenCalledTimes(0);
   });
 
   test('should enable all features in organizations', async () => {
@@ -594,7 +594,7 @@ describe('IAM Role Tests', () => {
     );
 
     expect(response).toBeUndefined();
-    expect(DescribeOrganizationCommand).toHaveBeenCalledTimes(1);
+    expect(DescribeOrganizationCommand).toHaveBeenCalledTimes(2);
     expect(EnableAllFeaturesCommand).toHaveBeenCalledTimes(1);
   });
 
@@ -625,8 +625,8 @@ describe('IAM Role Tests', () => {
     );
 
     expect(response).toBeUndefined();
-    expect(DescribeOrganizationCommand).toHaveBeenCalledTimes(1);
-    expect(EnableAllFeaturesCommand).toHaveBeenCalledTimes(1);
+    expect(DescribeOrganizationCommand).toHaveBeenCalledTimes(2);
+    expect(EnableAllFeaturesCommand).toHaveBeenCalledTimes(0);
   });
 
   describe('getOrganizationAccountDetailsByEmail Tests', () => {
