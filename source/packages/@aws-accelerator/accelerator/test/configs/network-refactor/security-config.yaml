@@ -1,0 +1,55 @@
+centralSecurityServices:
+  delegatedAdminAccount: Audit
+  ebsDefaultVolumeEncryption:
+    enable: false
+    excludeRegions: []
+  s3PublicAccessBlock:
+    enable: false
+    excludeAccounts: []
+  scpRevertChangesConfig:
+    enable: false
+  snsSubscriptions: []
+  macie:
+    enable: false
+    excludeRegions: []
+    policyFindingsPublishingFrequency: FIFTEEN_MINUTES
+    publishSensitiveDataFindings: false
+  guardduty:
+    enable: false
+    excludeRegions: []
+    s3Protection:
+      enable: false
+      excludeRegions: []
+    exportConfiguration:
+      enable: false
+      overrideExisting: false
+      destinationType: S3
+      exportFrequency: FIFTEEN_MINUTES
+  securityHub:
+    enable: false
+    regionAggregation: false
+    excludeRegions: []
+    standards: []
+  ssmAutomation:
+    excludeRegions: []
+    documentSets: []
+accessAnalyzer:
+  enable: false
+iamPasswordPolicy:
+  allowUsersToChangePassword: true
+  hardExpiry: false
+  requireUppercaseCharacters: true
+  requireLowercaseCharacters: true
+  requireSymbols: true
+  requireNumbers: true
+  minimumPasswordLength: 14
+  passwordReusePrevention: 24
+  maxPasswordAge: 90
+awsConfig:
+  enableConfigurationRecorder: false
+  ruleSets: []
+cloudWatch:
+  metricSets: []
+  alarmSets: []
+keyManagementService:
+  keySets: []
