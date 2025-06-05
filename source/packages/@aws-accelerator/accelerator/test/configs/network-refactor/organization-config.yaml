@@ -1,0 +1,18 @@
+enable: true
+organizationalUnits:
+  - name: Security
+  - name: Infrastructure
+serviceControlPolicies: []
+taggingPolicies: []
+chatbotPolicies: []
+backupPolicies: []
+organizationalUnitIds:
+  - name: Root
+    id: r-asdf
+    arn: arn:aws:organizations::111111111111:root/o-asdf123456/r-asdf
+  - name: Security
+    id: ou-asdf-11111111
+    arn: arn:aws:organizations::111111111111:ou/o-asdf123456/ou-asdf-11111111
+  - name: Infrastructure
+    id: ou-asdf-22222222
+    arn: arn:aws:organizations::111111111111:ou/o-asdf123456/ou-asdf-22222222

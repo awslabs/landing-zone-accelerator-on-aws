@@ -31,9 +31,12 @@ import { pascalCase } from 'pascal-case';
 import { LogLevel } from '../network-stack';
 import { getPrefixList, getRouteTable, getSubnet, getTransitGatewayId } from '../utils/getter-utils';
 import { NetworkVpcStack } from './network-vpc-stack';
+import { MetadataKeys } from '@aws-accelerator/utils/lib/common-types';
+import { LZAResourceLookup, LZAResourceLookupType } from '../../../../utils/lza-resource-lookup';
 
 export class RouteEntryResources {
   public readonly routeTableEntryMap: Map<string, cdk.aws_ec2.CfnRoute | PrefixListRoute>;
+  private lzaLookup: LZAResourceLookup;
   private stack: NetworkVpcStack;
 
   constructor(
@@ -47,6 +50,16 @@ export class RouteEntryResources {
     outpostMap: Map<string, OutpostsConfig>,
   ) {
     this.stack = networkVpcStack;
+
+    this.lzaLookup = new LZAResourceLookup({
+      accountId: this.stack.account,
+      region: this.stack.region,
+      aseaResourceList: this.stack.props.globalConfig.externalLandingZoneResources?.resourceList ?? [],
+      enableV2Stacks: this.stack.props.globalConfig.useV2Stacks,
+      externalLandingZoneResources:
+        this.stack.props.globalConfig.externalLandingZoneResources?.importExternalLandingZoneResources,
+      stackName: this.stack.stackName,
+    });
 
     // Create route table entries
     this.routeTableEntryMap = this.createRouteEntries(
@@ -86,6 +99,18 @@ export class RouteEntryResources {
 
     for (const vpcItem of vpcResources) {
       for (const routeTableItem of vpcItem.routeTables ?? []) {
+        if (
+          !this.lzaLookup.resourceExists({
+            resourceType: LZAResourceLookupType.ROUTE_TABLE,
+            lookupValues: {
+              routeTableName: routeTableItem.name,
+              vpcName: vpcItem.name,
+            },
+          })
+        ) {
+          continue;
+        }
+
         const routeTable = getRouteTable(routeTableMap, vpcItem.name, routeTableItem.name) as RouteTable;
         const routeTableItemEntryMap = this.createRouteTableItemEntries(vpcItem, routeTableItem, routeTable, {
           transitGatewayIds: transitGatewayIds,
@@ -144,6 +169,13 @@ export class RouteEntryResources {
 
       // Check if using a prefix list or CIDR as the destination
       if (routeTableEntryItem.type && entryTypes.includes(routeTableEntryItem.type)) {
+        const metadata = {
+          vpcName: vpcItem.name,
+          routeTableName: routeTableItem.name,
+          routeTableEntryName: routeTableEntryItem.name,
+          type: routeTableEntryItem.type,
+        };
+
         // Set destination type
         const [destination, destinationPrefixListId, ipv6Destination] = this.setRouteEntryDestination(
           routeTableEntryItem,
@@ -151,6 +183,10 @@ export class RouteEntryResources {
           maps.subnets,
           vpcItem.name,
         );
+
+        if (!this.routeEntryManagedByV1Stacks(metadata, destinationPrefixListId)) {
+          continue;
+        }
 
         switch (routeTableEntryItem.type) {
           // Route: Transit Gateway
@@ -174,6 +210,7 @@ export class RouteEntryResources {
               this.stack.cloudwatchKey,
               this.stack.logRetention,
             );
+            this.addMetadata(tgwRoute, metadata);
             routeTableItemEntryMap.set(`${vpcItem.name}_${routeTableItem.name}_${routeTableEntryItem.name}`, tgwRoute);
             break;
           case 'natGateway':
@@ -191,6 +228,7 @@ export class RouteEntryResources {
               this.stack.cloudwatchKey,
               this.stack.logRetention,
             );
+            this.addMetadata(natRoute, metadata);
             routeTableItemEntryMap.set(`${vpcItem.name}_${routeTableItem.name}_${routeTableEntryItem.name}`, natRoute);
             break;
           // Route: Internet Gateway
@@ -204,6 +242,7 @@ export class RouteEntryResources {
               this.stack.cloudwatchKey,
               this.stack.logRetention,
             );
+            this.addMetadata(igwRoute, metadata);
             routeTableItemEntryMap.set(`${vpcItem.name}_${routeTableItem.name}_${routeTableEntryItem.name}`, igwRoute);
             break;
           case 'egressOnlyIgw':
@@ -219,6 +258,7 @@ export class RouteEntryResources {
               this.stack.cloudwatchKey,
               this.stack.logRetention,
             );
+            this.addMetadata(eigwRoute, metadata);
             routeTableItemEntryMap.set(`${vpcItem.name}_${routeTableItem.name}_${routeTableEntryItem.name}`, eigwRoute);
             break;
           case 'virtualPrivateGateway':
@@ -234,6 +274,7 @@ export class RouteEntryResources {
               this.stack.cloudwatchKey,
               this.stack.logRetention,
             );
+            this.addMetadata(vgwRoute, metadata);
             routeTableItemEntryMap.set(`${vpcItem.name}_${routeTableItem.name}_${routeTableEntryItem.name}`, vgwRoute);
             break;
           case 'localGateway':
@@ -254,6 +295,7 @@ export class RouteEntryResources {
               this.stack.cloudwatchKey,
               this.stack.logRetention,
             );
+            this.addMetadata(lgwRoute, metadata);
             routeTableItemEntryMap.set(`${vpcItem.name}_${routeTableItem.name}_${routeTableEntryItem.name}`, lgwRoute);
             break;
         }
@@ -320,5 +362,53 @@ export class RouteEntryResources {
       destination = subnet.ipv4CidrBlock;
     }
     return [destination, ipv6Destination];
+  }
+
+  /**
+   * Helper function for adding metadata to route entry
+   * @param route
+   * @param metadata
+   * @returns
+   */
+  private addMetadata(
+    route: cdk.aws_ec2.CfnRoute | PrefixListRoute,
+    metadata: {
+      vpcName: string;
+      routeTableName: string;
+      routeTableEntryName: string;
+      type: string;
+    },
+  ) {
+    const resource =
+      route instanceof cdk.aws_ec2.CfnRoute ? route : (route.resource.node.defaultChild as cdk.CfnCustomResource);
+    resource.addMetadata(MetadataKeys.LZA_LOOKUP, metadata);
+  }
+
+  /**
+   * Helper function to determine fi the resource is managed by v1 stacks
+   * @param destinationPrefixListId
+   * @param metadata
+   * @returns boolean
+   */
+  private routeEntryManagedByV1Stacks(
+    metadata: {
+      vpcName: string;
+      routeTableName: string;
+      routeTableEntryName: string;
+      type: string;
+    },
+    destinationPrefixListId?: string,
+  ): boolean {
+    if (destinationPrefixListId) {
+      return this.lzaLookup.resourceExists({
+        resourceType: LZAResourceLookupType.ROUTE,
+        lookupValues: metadata,
+      });
+    } else {
+      return this.lzaLookup.resourceExists({
+        resourceType: LZAResourceLookupType.PREFIX_LIST_ROUTE,
+        lookupValues: metadata,
+      });
+    }
   }
 }

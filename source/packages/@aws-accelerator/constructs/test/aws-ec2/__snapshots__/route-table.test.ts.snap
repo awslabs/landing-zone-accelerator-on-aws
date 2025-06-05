@@ -99,6 +99,12 @@ exports[`RouteTable Construct(RouteTable):  Snapshot Test 1`] = `
       "Type": "AWS::IAM::Role",
     },
     "RouteTable82FB8FA6": {
+      "Metadata": {
+        "lzaLookup": {
+          "routeTableName": "TestRouteTable",
+          "vpcName": "Test",
+        },
+      },
       "Properties": {
         "Tags": [
           {
@@ -120,6 +126,13 @@ exports[`RouteTable Construct(RouteTable):  Snapshot Test 1`] = `
       "DependsOn": [
         "TestVpcInternetGatewayAttachment60E451D5",
       ],
+      "Metadata": {
+        "lzaLookup": {
+          "associationType": "internetGateway",
+          "routeTableName": "Test",
+          "vpcName": "Test",
+        },
+      },
       "Properties": {
         "GatewayId": {
           "Ref": "TestVpcInternetGateway01360C82",
@@ -134,6 +147,13 @@ exports[`RouteTable Construct(RouteTable):  Snapshot Test 1`] = `
       "DependsOn": [
         "TestVpcVirtualPrivateGatewayAttachment5D655F8D",
       ],
+      "Metadata": {
+        "lzaLookup": {
+          "associationType": "virtualPrivateGateway",
+          "routeTableName": "Test",
+          "vpcName": "Test",
+        },
+      },
       "Properties": {
         "GatewayId": {
           "Ref": "TestVpcVirtualPrivateGateway56B5C340",

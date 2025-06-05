@@ -1,0 +1,1021 @@
+homeRegion: &HOME_REGION us-east-1
+defaultVpc:
+  delete: true
+  excludeAccounts: []
+prefixLists:
+  - name: accelerator-prefix-list
+    accounts:
+      - Network
+      - SharedServices
+    regions:
+      - *HOME_REGION
+    addressFamily: 'IPv4'
+    maxEntries: 1
+    entries:
+      - 10.1.0.1/32
+dhcpOptions:
+  - name: accelerator-dhcp-opts
+    accounts:
+      - Network
+    regions:
+      - *HOME_REGION
+    domainName: example.com
+    domainNameServers:
+      - 1.1.1.1
+      - 2.2.2.2
+    netbiosNameServers:
+      - 1.1.1.1
+      - 2.2.2.2
+    netbiosNodeType: 2
+    ntpServers:
+      - 1.1.1.1
+      - 2.2.2.2
+  - name: test-ipv6
+    accounts:
+      - Network
+    regions:
+      - us-east-1
+    domainName: example.com
+    domainNameServers:
+      - 192.168.1.2
+      - 192.168.2.2
+      - 10.0.0.2
+      - 10.0.1.2
+      - ::1
+      - ::2
+      - ::3
+      - ::4
+    ntpServers:
+      - 192.168.1.2
+      - 192.168.2.2
+      - 10.0.0.2
+      - 10.0.1.2
+      - ::1
+      - ::2
+      - ::3
+      - ::4
+    netbiosNameServers:
+      - 192.168.1.2
+      - 192.168.2.2
+      - 10.0.0.2
+      - 10.0.1.2
+transitGateways: []
+endpointPolicies:
+  - name: Default
+    document: vpc-endpoint-policies/default.json
+centralNetworkServices:
+  delegatedAdminAccount: Network
+  ipams:
+    - name: accelerator-ipam
+      region: *HOME_REGION
+      description: Accelerator IPAM
+      operatingRegions:
+        - *HOME_REGION
+        - us-west-2
+      pools:
+        - name: &BASE_POOL base-pool
+          description: accelerator-base
+          provisionedCidrs:
+            - 10.0.0.0/8
+            - 172.16.0.0/12
+            - 192.168.0.0/16
+        - name: home-region-pool
+          description: Pool for us-east-1
+          locale: *HOME_REGION
+          provisionedCidrs:
+            - 10.0.0.0/16
+            - 10.2.0.0/16
+          sourceIpamPool: *BASE_POOL
+          shareTargets:
+            organizationalUnits:
+              - Infrastructure
+              - Security
+        - name: home-region-prod-pool
+          description: Pool for prod environment
+          allocationResourceTags:
+            - key: env
+              value: prod
+          locale: *HOME_REGION
+          provisionedCidrs:
+            - 10.0.0.0/24
+            - 10.2.0.0/24
+          shareTargets:
+            organizationalUnits:
+              - Infrastructure
+          sourceIpamPool: home-region-pool
+        - name: west-region-pool
+          description: Pool for us-west-2
+          locale: us-west-2
+          provisionedCidrs:
+            - 10.1.0.0/16
+          sourceIpamPool: *BASE_POOL
+          shareTargets:
+            organizationalUnits:
+              - Infrastructure
+              - Security
+  gatewayLoadBalancers: []
+    # - name: Accelerator-GWLB
+    #   subnets:
+    #     - Network-Endpoints-A
+    #     - Network-Endpoints-B
+    #   vpc: Network-Endpoints
+    #   deletionProtection: true
+    #   endpoints:
+    #     - name: Shared-Endpoint-A
+    #       account: SharedServices
+    #       subnet: SharedServices-App-A
+    #       vpc: SharedServices-Main
+    #     - name: Shared-Endpoint-B
+    #       account: SharedServices
+    #       subnet: SharedServices-App-B
+    #       vpc: SharedServices-Main
+  networkFirewall:
+    firewalls:
+      - name: accelerator-firewall
+        firewallPolicy: accelerator-policy
+        subnets:
+          - Network-Endpoints-A
+          - Network-Endpoints-B
+        vpc: Network-Endpoints
+        loggingConfiguration:
+          - destination: s3
+            type: ALERT
+          - destination: cloud-watch-logs
+            type: FLOW
+    policies:
+      - name: accelerator-policy
+        regions:
+          - *HOME_REGION
+        firewallPolicy:
+          statelessDefaultActions: ['aws:forward_to_sfe']
+          statelessFragmentDefaultActions: ['aws:forward_to_sfe']
+          statefulRuleGroups:
+            - name: accelerator-rule-group
+            - name: domain-list-group
+        shareTargets:
+          organizationalUnits:
+            - Infrastructure
+      - name: accelerator-strict-policy
+        regions:
+          - *HOME_REGION
+        firewallPolicy:
+          statelessDefaultActions: ['aws:forward_to_sfe']
+          statelessFragmentDefaultActions: ['aws:forward_to_sfe']
+          statefulEngineOptions: STRICT_ORDER
+          statefulRuleGroups:
+            - name: accelerator-strict-rule-group
+              priority: 100
+        shareTargets:
+          organizationalUnits:
+            - Infrastructure
+    rules:
+      - name: accelerator-suricata-rule-group
+        regions:
+          - *HOME_REGION
+        capacity: 100
+        type: STATEFUL
+        ruleGroup:
+          rulesSource:
+            rulesFile: firewall-rules/rules.txt
+          ruleVariables:
+            ipSets:
+              name: HOME_NET
+              definition:
+                - 10.0.0.0/16
+                - 10.1.0.0/16
+            portSets:
+              name: HOME_NET
+              definition:
+                - '80'
+                - '443'
+      - name: accelerator-strict-rule-group
+        regions:
+          - *HOME_REGION
+        capacity: 100
+        type: STATEFUL
+        ruleGroup:
+          statefulRuleOptions: STRICT_ORDER
+          rulesSource:
+            rulesFile: firewall-rules/rules.txt
+          ruleVariables:
+            ipSets:
+              - name: HOME_NET
+                definition:
+                  - 10.0.0.0/16
+                  - 10.1.0.0/16
+            portSets:
+              - name: HOME_NET
+                definition:
+                  - '80'
+                  - '443'
+      - name: accelerator-rule-group
+        regions:
+          - *HOME_REGION
+        capacity: 100
+        type: STATEFUL
+        ruleGroup:
+          rulesSource:
+            statefulRules:
+              - action: PASS
+                header:
+                  destination: 10.0.0.0/16
+                  destinationPort: ANY
+                  direction: FORWARD
+                  protocol: IP
+                  source: 10.1.0.0/16
+                  sourcePort: ANY
+                ruleOptions:
+                  - keyword: sid
+                    settings: ['100']
+              - action: DROP
+                header:
+                  destination: ANY
+                  destinationPort: ANY
+                  direction: ANY
+                  protocol: IP
+                  source: ANY
+                  sourcePort: ANY
+                ruleOptions:
+                  - keyword: sid
+                    settings: ['101']
+              - action: ALERT
+                header:
+                  destination: 1.1.1.1/32
+                  destinationPort: '80'
+                  direction: FORWARD
+                  protocol: TCP
+                  source: ANY
+                  sourcePort: ANY
+                ruleOptions:
+                  - keyword: msg
+                    settings: ['"example message"']
+                  - keyword: sid
+                    settings: ['102']
+      - name: domain-list-group
+        regions:
+          - *HOME_REGION
+        capacity: 10
+        type: STATEFUL
+        ruleGroup:
+          rulesSource:
+            rulesSourceList:
+              generatedRulesType: DENYLIST
+              targets: ['.example.com']
+              targetTypes: ['TLS_SNI', 'HTTP_HOST']
+          ruleVariables:
+            ipSets:
+              name: HOME_NET
+              definition:
+                - 10.0.0.0/16
+                - 10.1.0.0/16
+            portSets:
+              name: HOME_NET
+              definition:
+                - '80'
+                - '443'
+  route53Resolver:
+    endpoints:
+      - name: accelerator-inbound
+        type: INBOUND
+        vpc: Network-Endpoints
+        subnets:
+          - Network-Endpoints-A
+          - Network-Endpoints-B
+      - name: accelerator-outbound
+        type: OUTBOUND
+        vpc: Network-Endpoints
+        subnets:
+          - Network-Endpoints-A
+          - Network-Endpoints-B
+        rules:
+          - name: example-rule
+            domainName: example.com
+            targetIps:
+              - ip: 1.1.1.1
+                port: '5353' # only include if targeting a non-standard DNS port
+              - ip: 2.2.2.2
+            shareTargets:
+              organizationalUnits:
+                - Infrastructure
+          - name: inbound-target-rule
+            domainName: aws.internal.domain
+            inboundEndpointTarget: accelerator-inbound # This endpoint must be listed in the configuration before the outbound endpoint
+    queryLogs:
+      name: accelerator-query-logs
+      destinations:
+        - s3
+        - cloud-watch-logs
+      shareTargets:
+        organizationalUnits:
+          - Infrastructure
+    firewallRuleGroups:
+      - name: accelerator-block-group
+        regions:
+          - *HOME_REGION
+        rules:
+          - name: nxdomain-block-rule
+            action: BLOCK
+            customDomainList: dns-firewall-domain-lists/domain-list-1.txt
+            priority: 100
+            blockResponse: NXDOMAIN
+          - name: managed-rule
+            action: BLOCK
+            managedDomainList: AWSManagedDomainsBotnetCommandandControl
+            priority: 300
+            blockResponse: NODATA
+        shareTargets:
+          organizationalUnits:
+            - Infrastructure
+
+vpcPeering:
+  - name: CrossAccount
+    vpcs:
+      - Network-Endpoints
+      - SharedServices-Main
+
+vpcs:
+  - name: Network-Endpoints
+    account: Network
+    region: *HOME_REGION
+    ipamAllocations:
+      - ipamPoolName: home-region-pool
+        netmaskLength: 19
+      # Add this in after V2
+      # - ipamPoolName: home-region-pool
+      #   netmaskLength: 19
+    internetGateway: true
+    dhcpOptions: accelerator-dhcp-opts
+    enableDnsHostnames: true
+    enableDnsSupport: true
+    instanceTenancy: default
+    dnsFirewallRuleGroups:
+      - name: accelerator-block-group
+        priority: 101
+    queryLogs:
+      - accelerator-query-logs
+    resolverRules:
+      - example-rule
+    routeTables:
+      - name: Network-Endpoints-Tgw-A
+        routes: []
+      - name: Network-Endpoints-Tgw-B
+        routes: []
+      # Add in after v2
+      - name: Network-Endpoints-Not-Used-V2
+        routes: []
+      - name: Network-Endpoints-A
+        routes:
+          - name: S3Gateway
+            type: gatewayEndpoint
+            target: s3
+          - name: DynamoDBGateway
+            type: gatewayEndpoint
+            target: dynamodb
+          - name: PlRoute
+            destinationPrefixList: accelerator-prefix-list
+            type: vpcPeering
+            target: CrossAccount
+          - name: VpcPeerv6
+            ipv6Destination: fd00::/8
+            type: vpcPeering
+            target: CrossAccount
+      - name: Network-Endpoints-B
+        routes:
+          - name: S3Gateway
+            type: gatewayEndpoint
+            target: s3
+          - name: DynamoDBGateway
+            type: gatewayEndpoint
+            target: dynamodb
+          - name: PlRoute
+            destinationPrefixList: accelerator-prefix-list
+            type: vpcPeering
+            target: CrossAccount
+          - name: VpcPeer
+            destination: 10.4.0.0/16
+            type: vpcPeering
+            target: CrossAccount
+          - name: VpcPeerv6
+            ipv6Destination: fd00::/8
+            type: vpcPeering
+            target: CrossAccount
+      #########################
+      # V2 Route Tables
+      #########################
+      - name: Network-Endpoints-A-V2
+        routes:
+          - name: S3Gateway
+            type: gatewayEndpoint
+            target: s3
+          - name: DynamoDBGateway
+            type: gatewayEndpoint
+            target: dynamodb
+          - name: PlRoute
+            destinationPrefixList: accelerator-prefix-list
+            type: vpcPeering
+            target: CrossAccount
+          - name: VpcPeer
+            destination: 10.4.0.0/16
+            type: vpcPeering
+            target: CrossAccount
+          - name: VpcPeerv6
+            ipv6Destination: fd00::/8
+            type: vpcPeering
+            target: CrossAccount
+      - name: Network-Endpoints-B-V2
+        routes:
+          - name: S3Gateway
+            type: gatewayEndpoint
+            target: s3
+          - name: DynamoDBGateway
+            type: gatewayEndpoint
+            target: dynamodb
+          - name: PlRoute
+            destinationPrefixList: accelerator-prefix-list
+            type: vpcPeering
+            target: CrossAccount
+          - name: VpcPeer
+            destination: 10.4.0.0/16
+            type: vpcPeering
+            target: CrossAccount
+          - name: VpcPeerv6
+            ipv6Destination: fd00::/8
+            type: vpcPeering
+            target: CrossAccount
+
+    subnets:
+      - name: Network-Endpoints-A
+        availabilityZone: a
+        routeTable: Network-Endpoints-A
+        ipamAllocation:
+          ipamPoolName: home-region-pool
+          netmaskLength: 27
+        shareTargets:
+          organizationalUnits:
+            - Infrastructure
+        tags:
+          - key: exampleKey
+            value: exampleValue
+      - name: Network-Endpoints-B
+        availabilityZone: b
+        routeTable: Network-Endpoints-B
+        ipamAllocation:
+          ipamPoolName: home-region-pool
+          netmaskLength: 27
+        shareTargets:
+          organizationalUnits:
+            - Infrastructure
+      - name: Network-EndpointsTgwAttach-A
+        availabilityZone: a
+        routeTable: Network-Endpoints-Tgw-A
+        ipamAllocation:
+          ipamPoolName: home-region-pool
+          netmaskLength: 28
+        shareTargets:
+          organizationalUnits:
+            - Infrastructure
+      - name: Network-EndpointsTgwAttach-B
+        availabilityZone: b
+        routeTable: Network-Endpoints-Tgw-B
+        ipamAllocation:
+          ipamPoolName: home-region-pool
+          netmaskLength: 28
+        shareTargets:
+          organizationalUnits:
+            - Infrastructure
+      ######################
+      # V2 Subnets
+      ######################
+      # - name: Network-Endpoints-A-V2
+      #   availabilityZone: 1
+      #   routeTable: Network-Endpoints-A-V2
+      #   ipamAllocation:
+      #     ipamPoolName: home-region-pool
+      #     netmaskLength: 27
+      #   shareTargets:
+      #     organizationalUnits:
+      #       - Infrastructure
+      # - name: Network-Endpoints-B-V2
+      #   availabilityZone: 2
+      #   routeTable: Network-Endpoints-B-V2
+      #   ipamAllocation:
+      #     ipamPoolName: home-region-pool
+      #     netmaskLength: 27
+      #   shareTargets:
+      #     organizationalUnits:
+      #       - Infrastructure
+    virtualPrivateGateway:
+      asn: 65200
+    gatewayEndpoints:
+      defaultPolicy: Default
+      endpoints:
+        - service: s3
+        - service: dynamodb
+    interfaceEndpoints:
+      central: true
+      tags:
+        - key: Environment
+          value: CentralVpc
+      defaultPolicy: Default
+      subnets:
+        - Network-Endpoints-A
+        - Network-Endpoints-B
+      endpoints:
+        - service: ec2
+        - service: ec2messages
+        - service: ssm
+        - service: ssmmessages
+        - service: kms
+        - service: logs
+        - service: s3
+        - service: ecr.dkr
+        - service: s3-global.accesspoint
+        - service: codeartifact.repositories
+        - service: codeartifact.api
+        - service: sagemaker.runtime
+        - service: sagemaker.api
+        - service: sagemaker.featurestore-runtime
+        - service: eks
+          applyPolicy: false
+        - service: secretsmanager
+          # securityGroup: Network-Endpoints-CustomEndpointSg
+        - service: access-analyzer
+          # securityGroup: Network-Endpoints-CustomEndpointSg
+    securityGroups:
+      - name: 'Management'
+        description: 'Management Security Group'
+        inboundRules:
+          - description: 'Management RDP Traffic Inbound'
+            types:
+              - RDP
+            sources:
+              - '10.0.0.0/8'
+              - '100.96.252.0/23'
+              - '100.96.250.0/23'
+              - fd00::/8
+              - account: 'Network'
+                vpc: 'Network-Endpoints'
+                subnets:
+                  - 'Network-EndpointsTgwAttach-A'
+                  - 'Network-EndpointsTgwAttach-B'
+              - securityGroups:
+                  - Management
+              - prefixLists:
+                  - accelerator-prefix-list
+          - description: 'Management SSH Traffic Inbound'
+            tcpPorts:
+              - 22
+            udpPorts:
+              - 22
+            sources:
+              - 10.0.0.0/8
+              - 100.96.252.0/23
+              - 100.96.250.0/23
+              - account: Network
+                vpc: Network-Endpoints
+                subnets:
+                  - Network-EndpointsTgwAttach-A
+                  - Network-EndpointsTgwAttach-B
+              - securityGroups:
+                  - Management
+              - prefixLists:
+                  - accelerator-prefix-list
+          # Add in after V2
+          # - description: 'IP Protocol Rule'
+          #   ipProtocols:
+          #     - ESP
+          #     - IDRP
+          #     - ST
+          #   sources:
+          #     - 100.96.252.0/23
+        outboundRules:
+          - description: 'All Outbound'
+            types:
+              - ALL
+            sources:
+              - 10.0.0.0/8
+              - 100.96.252.0/23
+              - 100.96.250.0/23
+              - account: Network
+                vpc: Network-Endpoints
+                subnets:
+                  - Network-EndpointsTgwAttach-A
+                  - Network-EndpointsTgwAttach-B
+              - securityGroups:
+                  - Management
+              - prefixLists:
+                  - accelerator-prefix-list
+          - description: 'Limited Outbound'
+            tcpPorts:
+              - 22
+            udpPorts:
+              - 22
+            sources:
+              - 10.0.0.0/8
+          # Add in after V2
+          # - description: 'IP Protocol Rule'
+          #   ipProtocols:
+          #     - ESP
+          #     - IDRP
+          #     - ST
+          #   sources:
+          #     - 10.0.0.0/8
+      # - name: Network-Endpoints-CustomEndpointSg-V2
+      #   description: Accelerator security group for custom endpoint
+      #   inboundRules:
+      #     - description: Allow access to 443
+      #       types:
+      #         - HTTPS
+      #       sources:
+      #         - 0.0.0.0/0
+
+      #   outboundRules:
+      #     - description: Allow all outbound
+      #       types:
+      #         - ALL
+      #       sources:
+      #         - 0.0.0.0/0
+    networkAcls:
+      - name: TestNACL
+        subnetAssociations:
+          - Network-Endpoints-A
+        inboundRules:
+          - action: allow
+            rule: 10
+            fromPort: -1
+            toPort: -1
+            protocol: -1
+            source: 10.0.0.0/8
+          - action: allow
+            rule: 20
+            fromPort: -1
+            toPort: -1
+            protocol: -1
+            source:
+              account: Network
+              vpc: Network-Endpoints
+              subnet: Network-Endpoints-A
+          - rule: 30
+            action: allow
+            icmp:
+              type: 32
+              code: 5
+            protocol: 1
+            source: 10.0.0.0/24
+        outboundRules:
+          - action: allow
+            rule: 10
+            fromPort: -1
+            toPort: -1
+            protocol: -1
+            destination: 0.0.0.0/0
+          - action: allow
+            rule: 20
+            fromPort: -1
+            toPort: -1
+            protocol: -1
+            destination:
+              account: Network
+              vpc: Network-Endpoints
+              subnet: Network-Endpoints-A
+          # Add after v2
+          # - rule: 30
+          #   action: allow
+          #   icmp:
+          #     type: 32
+          #     code: 5
+          #   protocol: 1
+          #   destination: 10.0.0.0/24
+      #################
+      # NACL V2
+      ##################
+      # - name: TestNACL-V2
+      #   subnetAssociations:
+      #     - Network-Endpoints-A-V2
+      #     - Network-Endpoints-B-V2
+      #   inboundRules:
+      #     - action: allow
+      #       rule: 10
+      #       fromPort: -1
+      #       toPort: -1
+      #       protocol: -1
+      #       source: 10.0.0.0/8
+      #     - action: allow
+      #       rule: 20
+      #       fromPort: -1
+      #       toPort: -1
+      #       protocol: -1
+      #       source:
+      #         account: Network
+      #         vpc: Network-Endpoints
+      #         subnet: Network-Endpoints-A
+      #     - rule: 30
+      #       action: allow
+      #       icmp:
+      #         type: 32
+      #         code: 5
+      #       protocol: 1
+      #       source: 10.0.0.0/24
+      #   outboundRules:
+      #     - action: allow
+      #       rule: 10
+      #       fromPort: -1
+      #       toPort: -1
+      #       protocol: -1
+      #       destination: 0.0.0.0/0
+      #     - action: allow
+      #       rule: 20
+      #       fromPort: -1
+      #       toPort: -1
+      #       protocol: -1
+      #       destination:
+      #         account: Network
+      #         vpc: Network-Endpoints
+      #         subnet: Network-Endpoints-A
+      #     - rule: 30
+      #       action: allow
+      #       icmp:
+      #         type: 32
+      #         code: 5
+      #       protocol: 1
+      #       source: 10.0.0.0/24
+
+  #####################
+  # Shared Services VPC
+  #####################
+  - name: SharedServices-Main
+    account: SharedServices
+    region: *HOME_REGION
+    cidrs:
+      - 10.4.0.0/16
+    internetGateway: true
+    routeTables:
+      - name: SharedServices-Main-Default
+        routes:
+          - name: IgwRoute
+            destination: 0.0.0.0/0
+            type: internetGateway
+            target: IGW
+      - name: SharedServices-Tgw-A
+        routes: []
+      - name: SharedServices-Tgw-B
+        routes: []
+      - name: SharedServices-App-A
+        routes:
+          # - name: IgwRoute
+          #   destination: 0.0.0.0/0
+          #   type: internetGateway
+          #   target: IGW
+          - name: S3Gateway
+            type: gatewayEndpoint
+            target: s3
+          - name: DynamoDBGateway
+            type: gatewayEndpoint
+            target: dynamodb
+          # Add in VPC Peering routes 
+          # - name: VpcPeer
+          #   destination: 10.0.0.0/24
+          #   type: vpcPeering
+          #   target: CrossAccount
+          # - name: VpcPeerv6
+          #   ipv6Destination: fd00::/8
+          #   type: vpcPeering
+          #   target: CrossAccount
+          # - name: GwlbRoute
+          #   destination: 10.1.0.0/24
+          #   type: gatewayLoadBalancerEndpoint
+          #   target: Shared-Endpoint-A
+      - name: SharedServices-App-B
+        routes:
+          # - name: IgwRoute
+          #   destination: 0.0.0.0/0
+          #   type: internetGateway
+          #   target: IGW
+          - name: S3Gateway
+            type: gatewayEndpoint
+            target: s3
+          - name: DynamoDBGateway
+            type: gatewayEndpoint
+            target: dynamodb
+          # - name: VpcPeer
+          #   destination: 10.0.0.0/24
+          #   type: vpcPeering
+          #   target: CrossAccount
+          # - name: VpcPeerv6
+          #   ipv6Destination: fd00::/8
+          #   type: vpcPeering
+          #   target: CrossAccount
+          # - name: GwlbRoute
+          #   destination: 10.1.0.0/24
+          #   type: gatewayLoadBalancerEndpoint
+          #   target: Shared-Endpoint-B
+      - name: SharedServices-App-C
+        routes:
+          # - name: IgwRoute
+          #   destination: 0.0.0.0/0
+          #   type: internetGateway
+          #   target: IGW
+          - name: S3Gateway
+            type: gatewayEndpoint
+            target: s3
+          - name: DynamoDBGateway
+            type: gatewayEndpoint
+            target: dynamodb
+          # - name: VpcPeer
+          #   destination: 10.0.0.0/24
+          #   type: vpcPeering
+          #   target: CrossAccount
+
+        #########################
+        # V2 Route Tables
+        #########################
+      # - name: SharedServices-App-A-V2
+      #   routes:
+      #     - name: IgwRoute
+      #       destination: 0.0.0.0/0
+      #       type: internetGateway
+      #       target: IGW
+      #     - name: S3Gateway
+      #       type: gatewayEndpoint
+      #       target: s3
+      #     - name: DynamoDBGateway
+      #       type: gatewayEndpoint
+      #       target: dynamodb
+      #     - name: VpcPeer
+      #       destination: 10.0.0.0/24
+      #       type: vpcPeering
+      #       target: CrossAccount
+      #     - name: VpcPeerv6
+      #       ipv6Destination: fd00::/8
+      #       type: vpcPeering
+      #       target: CrossAccount
+      #     - name: GwlbRoute
+      #       destination: 10.1.0.0/24
+      #       type: gatewayLoadBalancerEndpoint
+      #       target: Shared-Endpoint-A
+      # - name: SharedServices-App-B-V2
+      #   routes:
+      #     - name: IgwRoute
+      #       destination: 0.0.0.0/0
+      #       type: internetGateway
+      #       target: IGW
+      #     - name: S3Gateway
+      #       type: gatewayEndpoint
+      #       target: s3
+      #     - name: DynamoDBGateway
+      #       type: gatewayEndpoint
+      #       target: dynamodb
+      #     - name: VpcPeer
+      #       destination: 10.0.0.0/24
+      #       type: vpcPeering
+      #       target: CrossAccount
+      #     - name: VpcPeerv6
+      #       ipv6Destination: fd00::/8
+      #       type: vpcPeering
+      #       target: CrossAccount
+      #     - name: GwlbRoute
+      #       destination: 10.1.0.0/24
+      #       type: gatewayLoadBalancerEndpoint
+      #       target: Shared-Endpoint-B
+      # - name: SharedServices-App-C-V2
+      #   routes:
+      #     - name: IgwRoute
+      #       destination: 0.0.0.0/0
+      #       type: internetGateway
+      #       target: IGW
+      #     - name: S3Gateway
+      #       type: gatewayEndpoint
+      #       target: s3
+      #     - name: DynamoDBGateway
+      #       type: gatewayEndpoint
+      #       target: dynamodb
+      #     - name: VpcPeer
+      #       destination: 10.0.0.0/24
+      #       type: vpcPeering
+      #       target: CrossAccount
+    subnets:
+      - name: SharedServices-App-A
+        availabilityZone: a
+        routeTable: SharedServices-Main-Default
+        ipv4CidrBlock: 10.4.0.0/24
+        shareTargets:
+          organizationalUnits:
+            - Infrastructure
+      - name: SharedServices-App-B
+        availabilityZone: b
+        routeTable: SharedServices-App-B
+        ipv4CidrBlock: 10.4.1.0/24
+        shareTargets:
+          organizationalUnits:
+            - Infrastructure
+      - name: SharedServices-App-C
+        availabilityZone: c
+        routeTable: SharedServices-App-C
+        ipv4CidrBlock: 10.4.2.0/24
+        shareTargets:
+          organizationalUnits:
+            - Infrastructure
+      #######################
+      # V2 Subnets
+      #######################
+      # - name: SharedServices-App-A-V2
+      #   availabilityZone: a
+      #   routeTable: SharedServices-App-A-V2
+      #   ipv4CidrBlock: 10.4.3.0/24
+      #   shareTargets:
+      #     organizationalUnits:
+      #       - Infrastructure
+      # - name: SharedServices-App-B-V2
+      #   availabilityZone: b
+      #   routeTable: SharedServices-App-B-V2
+      #   ipv4CidrBlock: 10.4.4.0/24
+      #   shareTargets:
+      #     organizationalUnits:
+      #       - Infrastructure
+      # - name: SharedServices-App-C-V2
+      #   availabilityZone: c
+      #   routeTable: SharedServices-App-C-V2
+      #   ipv4CidrBlock: 10.4.5.0/24
+      #   shareTargets:
+      #     organizationalUnits:
+      #       - Infrastructure
+    gatewayEndpoints:
+      defaultPolicy: Default
+      endpoints:
+        - service: s3
+        - service: dynamodb
+    virtualPrivateGateway:
+      asn: 65002
+    # useCentralEndpoints: true
+    securityGroups:
+      - name: SharedServices-Main-Rsyslog-sg
+        description: Security Group for AWS Accelerator rsyslog
+        inboundRules:
+          - description: allow inbound traffic
+            udpPorts:
+              - 514
+            tcpPorts:
+              - 514
+            sources:
+              - 10.0.0.0/8
+        outboundRules:
+          - description: All Outbound
+            types:
+              - ALL
+            sources:
+              - 0.0.0.0/0
+      # - name: InternalHTTP-SG-V2
+      #   description: Accelerator Security Group
+      #   inboundRules:
+      #     - description: HTTP access security group rule
+      #       types:
+      #         - HTTP
+      #       sources:
+      #         - 10.0.0.0/16
+      #   outboundRules:
+      #     - description: Allow all outbound
+      #       types:
+      #         - ALL
+      #       sources:
+      #         - 0.0.0.0/0
+
+vpcFlowLogs:
+  trafficType: ALL
+  maxAggregationInterval: 60
+  destinations:
+    - s3
+    - cloud-watch-logs
+  destinationsConfig:
+    s3:
+      lifecycleRules: []
+    cloudWatchLogs:
+      retentionInDays: 3653
+  defaultFormat: true
+  customFields:
+    - version
+    - account-id
+    - interface-id
+    - srcaddr
+    - dstaddr
+    - srcport
+    - dstport
+    - protocol
+    - packets
+    - bytes
+    - start
+    - end
+    - action
+    - log-status
+    - vpc-id
+    - subnet-id
+    - instance-id
+    - tcp-flags
+    - type
+    - pkt-srcaddr
+    - pkt-dstaddr
+    - region
+    - az-id
+    - pkt-src-aws-service
+    - pkt-dst-aws-service
+    - flow-direction
+    - traffic-path
