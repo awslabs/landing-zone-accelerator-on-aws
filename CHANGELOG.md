@@ -38,6 +38,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - fix(macie): update macie custom resource policy statement to correct error preventing creation of service linked roler
 - fix(networking): allow the creation of iam vpc interface endpoints
 - fix(validation): allow the replacements that start with the string 'resolve'
+- fix(validation): allow wildcard tld in config validator for nfw rules
+- fix(securityhub): by default only send HIGH and CRITICAL SecurityHub events to CloudWatch. If other events are needed in CloudWatch update configuration
 
 ### Changed
 
