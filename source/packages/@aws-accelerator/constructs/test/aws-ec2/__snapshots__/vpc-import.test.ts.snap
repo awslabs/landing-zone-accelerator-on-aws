@@ -468,6 +468,12 @@ exports[`VpcImport Construct(Vpc):  Snapshot Test 1`] = `
       "UpdateReplacePolicy": "Retain",
     },
     "testrtEA36A15F": {
+      "Metadata": {
+        "lzaLookup": {
+          "routeTableName": "test-rt",
+          "vpcName": "Main",
+        },
+      },
       "Properties": {
         "Tags": [
           {

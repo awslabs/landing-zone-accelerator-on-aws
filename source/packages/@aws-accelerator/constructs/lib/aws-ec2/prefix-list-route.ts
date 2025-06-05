@@ -90,6 +90,7 @@ export interface PrefixListRouteProps {
 
 export class PrefixListRoute extends cdk.Resource {
   public readonly id: string;
+  public readonly resource: cdk.CustomResource;
 
   constructor(scope: Construct, id: string, props: PrefixListRouteProps) {
     super(scope, id);
@@ -107,7 +108,7 @@ export class PrefixListRoute extends cdk.Resource {
       ],
     });
 
-    const resource = new cdk.CustomResource(this, 'Resource', {
+    this.resource = new cdk.CustomResource(this, 'Resource', {
       resourceType: 'Custom::PrefixListRoute',
       serviceToken: provider.serviceToken,
       properties: {
@@ -141,8 +142,8 @@ export class PrefixListRoute extends cdk.Resource {
         encryptionKey: props.logGroupKmsKey,
         removalPolicy: cdk.RemovalPolicy.DESTROY,
       });
-    resource.node.addDependency(logGroup);
+    this.resource.node.addDependency(logGroup);
 
-    this.id = resource.ref;
+    this.id = this.resource.ref;
   }
 }
