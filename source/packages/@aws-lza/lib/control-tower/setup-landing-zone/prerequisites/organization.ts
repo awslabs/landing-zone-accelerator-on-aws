@@ -24,6 +24,7 @@ import {
   AWSOrganizationsNotInUseException,
   paginateListAWSServiceAccessForOrganization,
   EnabledServicePrincipal,
+  OrganizationFeatureSet,
 } from '@aws-sdk/client-organizations';
 import { InstanceMetadata, paginateListInstances, SSOAdminClient } from '@aws-sdk/client-sso-admin';
 
@@ -243,7 +244,15 @@ export abstract class Organization {
    * @param client {@link OrganizationsClient}
    */
   private static async enableAllFeatures(client: OrganizationsClient): Promise<void> {
-    await throttlingBackOff(() => client.send(new EnableAllFeaturesCommand({})));
+    const response = await throttlingBackOff(() => client.send(new DescribeOrganizationCommand({})));
+    if (response.Organization!.FeatureSet !== OrganizationFeatureSet.ALL) {
+      Organization.logger.warn(
+        `The existing AWS Organization ${
+          response.Organization!.Id
+        } does not have all features enabled. The solution will update your organization so that all features are enabled.`,
+      );
+      await throttlingBackOff(() => client.send(new EnableAllFeaturesCommand({})));
+    }
   }
 
   /**
