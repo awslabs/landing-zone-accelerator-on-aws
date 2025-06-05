@@ -3220,6 +3220,33 @@ async function updatePipelineDetailsForBothPipelines(secretValue) {
                 },
               ],
             },
+            {
+              "Action": [
+                "codestar-connections:PassConnection",
+                "codestar-connections:UseConnection",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:",
+                    {
+                      "Ref": "AWS::Partition",
+                    },
+                    ":codeconnections:",
+                    {
+                      "Ref": "AWS::Region",
+                    },
+                    ":",
+                    {
+                      "Ref": "AWS::AccountId",
+                    },
+                    ":connection/*",
+                  ],
+                ],
+              },
+            },
           ],
           "Version": "2012-10-17",
         },
@@ -6840,6 +6867,33 @@ async function updatePipelineDetailsForBothPipelines(secretValue) {
                   ],
                 },
               ],
+            },
+            {
+              "Action": [
+                "codestar-connections:PassConnection",
+                "codestar-connections:UseConnection",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:",
+                    {
+                      "Ref": "AWS::Partition",
+                    },
+                    ":codeconnections:",
+                    {
+                      "Ref": "AWS::Region",
+                    },
+                    ":",
+                    {
+                      "Ref": "AWS::AccountId",
+                    },
+                    ":connection/*",
+                  ],
+                ],
+              },
             },
           ],
           "Version": "2012-10-17",
@@ -10532,6 +10586,33 @@ async function updatePipelineDetailsForBothPipelines(secretValue) {
                 },
               ],
             },
+            {
+              "Action": [
+                "codestar-connections:PassConnection",
+                "codestar-connections:UseConnection",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:",
+                    {
+                      "Ref": "AWS::Partition",
+                    },
+                    ":codeconnections:",
+                    {
+                      "Ref": "AWS::Region",
+                    },
+                    ":",
+                    {
+                      "Ref": "AWS::AccountId",
+                    },
+                    ":connection/*",
+                  ],
+                ],
+              },
+            },
           ],
           "Version": "2012-10-17",
         },
@@ -14206,6 +14287,33 @@ async function updatePipelineDetailsForBothPipelines(secretValue) {
                   ],
                 },
               ],
+            },
+            {
+              "Action": [
+                "codestar-connections:PassConnection",
+                "codestar-connections:UseConnection",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:",
+                    {
+                      "Ref": "AWS::Partition",
+                    },
+                    ":codeconnections:",
+                    {
+                      "Ref": "AWS::Region",
+                    },
+                    ":",
+                    {
+                      "Ref": "AWS::AccountId",
+                    },
+                    ":connection/*",
+                  ],
+                ],
+              },
             },
           ],
           "Version": "2012-10-17",
@@ -17887,6 +17995,33 @@ async function updatePipelineDetailsForBothPipelines(secretValue) {
                 },
               ],
             },
+            {
+              "Action": [
+                "codestar-connections:PassConnection",
+                "codestar-connections:UseConnection",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:",
+                    {
+                      "Ref": "AWS::Partition",
+                    },
+                    ":codeconnections:",
+                    {
+                      "Ref": "AWS::Region",
+                    },
+                    ":",
+                    {
+                      "Ref": "AWS::AccountId",
+                    },
+                    ":connection/*",
+                  ],
+                ],
+              },
+            },
           ],
           "Version": "2012-10-17",
         },
@@ -21520,6 +21655,33 @@ async function updatePipelineDetailsForBothPipelines(secretValue) {
                   ],
                 },
               ],
+            },
+            {
+              "Action": [
+                "codestar-connections:PassConnection",
+                "codestar-connections:UseConnection",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:",
+                    {
+                      "Ref": "AWS::Partition",
+                    },
+                    ":codeconnections:",
+                    {
+                      "Ref": "AWS::Region",
+                    },
+                    ":",
+                    {
+                      "Ref": "AWS::AccountId",
+                    },
+                    ":connection/*",
+                  ],
+                ],
+              },
             },
           ],
           "Version": "2012-10-17",
@@ -25535,6 +25697,33 @@ async function updatePipelineDetailsForBothPipelines(secretValue) {
                   ],
                 },
               ],
+            },
+            {
+              "Action": [
+                "codestar-connections:PassConnection",
+                "codestar-connections:UseConnection",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:",
+                    {
+                      "Ref": "AWS::Partition",
+                    },
+                    ":codeconnections:",
+                    {
+                      "Ref": "AWS::Region",
+                    },
+                    ":",
+                    {
+                      "Ref": "AWS::AccountId",
+                    },
+                    ":connection/*",
+                  ],
+                ],
+              },
             },
           ],
           "Version": "2012-10-17",
@@ -29572,6 +29761,33 @@ async function updatePipelineDetailsForBothPipelines(secretValue) {
                   ],
                 },
               ],
+            },
+            {
+              "Action": [
+                "codestar-connections:PassConnection",
+                "codestar-connections:UseConnection",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:",
+                    {
+                      "Ref": "AWS::Partition",
+                    },
+                    ":codeconnections:",
+                    {
+                      "Ref": "AWS::Region",
+                    },
+                    ":",
+                    {
+                      "Ref": "AWS::AccountId",
+                    },
+                    ":connection/*",
+                  ],
+                ],
+              },
             },
           ],
           "Version": "2012-10-17",
@@ -33670,6 +33886,33 @@ async function updatePipelineDetailsForBothPipelines(secretValue) {
                   ],
                 },
               ],
+            },
+            {
+              "Action": [
+                "codestar-connections:PassConnection",
+                "codestar-connections:UseConnection",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:",
+                    {
+                      "Ref": "AWS::Partition",
+                    },
+                    ":codeconnections:",
+                    {
+                      "Ref": "AWS::Region",
+                    },
+                    ":",
+                    {
+                      "Ref": "AWS::AccountId",
+                    },
+                    ":connection/*",
+                  ],
+                ],
+              },
             },
           ],
           "Version": "2012-10-17",
