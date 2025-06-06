@@ -184,7 +184,7 @@ export class RouteEntryResources {
           vpcItem.name,
         );
 
-        if (!this.routeEntryManagedByV1Stacks(metadata, destinationPrefixListId)) {
+        if (!this.routeEntryManagedByV1Stacks(metadata)) {
           continue;
         }
 
@@ -390,25 +390,22 @@ export class RouteEntryResources {
    * @param metadata
    * @returns boolean
    */
-  private routeEntryManagedByV1Stacks(
-    metadata: {
-      vpcName: string;
-      routeTableName: string;
-      routeTableEntryName: string;
-      type: string;
-    },
-    destinationPrefixListId?: string,
-  ): boolean {
-    if (destinationPrefixListId) {
-      return this.lzaLookup.resourceExists({
-        resourceType: LZAResourceLookupType.ROUTE,
-        lookupValues: metadata,
-      });
-    } else {
-      return this.lzaLookup.resourceExists({
-        resourceType: LZAResourceLookupType.PREFIX_LIST_ROUTE,
-        lookupValues: metadata,
-      });
-    }
+  private routeEntryManagedByV1Stacks(metadata: {
+    vpcName: string;
+    routeTableName: string;
+    routeTableEntryName: string;
+    type: string;
+  }): boolean {
+    const routeExists = this.lzaLookup.resourceExists({
+      resourceType: LZAResourceLookupType.ROUTE,
+      lookupValues: metadata,
+    });
+
+    const prefixListRouteExists = this.lzaLookup.resourceExists({
+      resourceType: LZAResourceLookupType.PREFIX_LIST_ROUTE,
+      lookupValues: metadata,
+    });
+
+    return routeExists || prefixListRouteExists;
   }
 }
