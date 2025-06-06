@@ -25,12 +25,14 @@ import { getGlobalRegion } from '../../utils/lib/common-functions';
 import { OrganizationalUnitConfig } from './organization-config';
 import { getSSMParameterValue } from '../../utils/lib/get-value-from-ssm';
 import { getColumnFromConfigTable } from '../../utils/lib/get-column-from-config-table';
+import { Account } from '@aws-sdk/client-organizations';
 
 const logger = createLogger(['accounts-config']);
 
 export class AccountIdConfig implements i.IAccountIdConfig {
   readonly email: string = '';
   readonly accountId: string = '';
+  readonly orgsApiResponse: Account = {};
   readonly status?: string = '';
 }
 
@@ -48,6 +50,7 @@ export class GovCloudAccountConfig implements i.IGovCloudAccountConfig {
   readonly description: string = '';
   readonly email: string = '';
   readonly organizationalUnit: string = '';
+  readonly orgsApiResponse: Account = {};
   readonly warm: boolean | undefined = undefined;
   readonly enableGovCloud: boolean | undefined = undefined;
   readonly accountAlias?: string | undefined = undefined;
@@ -205,7 +208,12 @@ export class AccountsConfig implements i.IAccountsConfig {
         const stsCallerIdentity = await throttlingBackOff(() => stsClient.getCallerIdentity({}).promise());
         const currentAccountId = stsCallerIdentity.Account!;
         this.mandatoryAccounts.forEach(item => {
-          this.accountIds?.push({ email: item.email.toLocaleLowerCase(), accountId: currentAccountId });
+          this.accountIds?.push({
+            email: item.email.toLocaleLowerCase(),
+            accountId: currentAccountId,
+            // in single account mode AWS Orgs may be disabled so orgs response will be empty
+            orgsApiResponse: {},
+          });
         });
         // orgs is enabled and loadFromDynamoDBTable is true
       } else if (isOrgsEnabled && loadFromDynamoDbTable) {
@@ -250,7 +258,12 @@ export class AccountsConfig implements i.IAccountsConfig {
 
           page.Accounts?.forEach(item => {
             if (item.Email && item.Id) {
-              this.accountIds?.push({ email: item.Email.toLocaleLowerCase(), accountId: item.Id, status: item.Status });
+              this.accountIds?.push({
+                email: item.Email.toLocaleLowerCase(),
+                accountId: item.Id,
+                status: item.Status,
+                orgsApiResponse: item as Account,
+              });
             }
           });
           nextToken = page.NextToken;
@@ -260,7 +273,11 @@ export class AccountsConfig implements i.IAccountsConfig {
         //There should be 3 or more accounts in accounts config.
       } else if (!isOrgsEnabled && (accountsConfig.accountIds ?? []).length > 2) {
         for (const account of accountsConfig.accountIds ?? []) {
-          this.accountIds?.push({ email: account.email.toLowerCase(), accountId: account.accountId });
+          this.accountIds?.push({
+            email: account.email.toLowerCase(),
+            accountId: account.accountId,
+            orgsApiResponse: {},
+          });
         }
         // if orgs is disabled, the accountId is read from accounts config.
         //But less than 3 account Ids are provided then throw an error
@@ -424,10 +441,9 @@ export class AccountsConfig implements i.IAccountsConfig {
     accountType: 'workloadAccount' | 'mandatoryAccount',
     accountEmail: string,
   ) {
-    const accountInfo = await getColumnFromConfigTable(configTableName, accountType, accountEmail, 'awsKey');
-    return {
-      email: accountEmail.toLowerCase(),
-      accountId: accountInfo,
-    };
+    const accountInfo: AccountIdConfig = JSON.parse(
+      await getColumnFromConfigTable(configTableName, accountType, accountEmail, 'orgInfo'),
+    );
+    return accountInfo;
   }
 }

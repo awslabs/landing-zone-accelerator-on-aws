@@ -51,9 +51,9 @@ const fakeAccountsConfig = new AccountsConfig({
 });
 
 fakeAccountsConfig.accountIds = [
-  { email: 'mangement@example.com', accountId: '11111111' },
-  { email: 'log@example.com', accountId: '22222222' },
-  { email: 'audit@example.com', accountId: '33333333' },
+  { email: 'mangement@example.com', accountId: '11111111', orgsApiResponse: {} },
+  { email: 'log@example.com', accountId: '22222222', orgsApiResponse: {} },
+  { email: 'audit@example.com', accountId: '33333333', orgsApiResponse: {} },
 ];
 
 const fakeAssumeRolePlugin = new AssumeProfilePlugin({

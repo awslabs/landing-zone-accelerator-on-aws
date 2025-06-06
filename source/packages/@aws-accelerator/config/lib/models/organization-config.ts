@@ -12,6 +12,7 @@
  */
 
 import * as t from '../common/types';
+import { OrganizationalUnit, Root } from '@aws-sdk/client-organizations';
 
 /**
  * *{@link OrganizationConfig} / {@link OrganizationalUnitConfig}*
@@ -76,6 +77,10 @@ export interface IOrganizationalUnitIdConfig {
    * OU arn
    */
   readonly arn: t.NonEmptyString;
+  /**
+   * Orgs API response
+   */
+  readonly orgsApiResponse: OrganizationalUnit | Root;
 }
 
 /**
