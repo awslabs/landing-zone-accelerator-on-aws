@@ -20,7 +20,9 @@ import * as yaml from 'js-yaml';
 import {
   AccountConfig,
   AccountsConfig,
+  AccountIdConfig,
   OrganizationalUnitConfig,
+  OrganizationalUnitIdConfig,
   OrganizationConfig,
   parseAccountsConfig,
   parseReplacementsConfig,
@@ -143,7 +145,7 @@ async function putOrganizationConfigInTable(
   configTableName: string,
   awsKey: string,
   commitId: string,
-  orgInfo: { name: string; id: string; arn: string },
+  orgInfo: OrganizationalUnitIdConfig,
 ): Promise<void> {
   if (awsKey != '') {
     const params: UpdateCommandInput = {
@@ -198,6 +200,7 @@ async function putAccountConfigInTable(
   awsKey: string,
   commitId: string,
   ouName: string,
+  accountIdData: AccountIdConfig,
 ): Promise<void> {
   if (awsKey !== '') {
     const params: UpdateCommandInput = {
@@ -206,18 +209,21 @@ async function putAccountConfigInTable(
         dataType: accountType + 'Account',
         acceleratorKey: configData.email,
       },
-      UpdateExpression: 'set #awsKey = :v_awsKey, #dataBag = :v_dataBag, #commitId = :v_commitId, #ouName = :v_ouName',
+      UpdateExpression:
+        'set #awsKey = :v_awsKey, #dataBag = :v_dataBag, #commitId = :v_commitId, #ouName = :v_ouName, #orgInfo = :v_orgInfo',
       ExpressionAttributeNames: {
         '#awsKey': 'awsKey',
         '#dataBag': 'dataBag',
         '#commitId': 'commitId',
         '#ouName': 'ouName',
+        '#orgInfo': 'orgInfo',
       },
       ExpressionAttributeValues: {
         ':v_awsKey': awsKey,
         ':v_dataBag': JSON.stringify(configData),
         ':v_commitId': commitId,
         ':v_ouName': ouName,
+        ':v_orgInfo': JSON.stringify(accountIdData),
       },
     };
     await throttlingBackOff(() => documentClient.send(new UpdateCommand(params)));
@@ -228,16 +234,19 @@ async function putAccountConfigInTable(
         dataType: accountType + 'Account',
         acceleratorKey: configData.email,
       },
-      UpdateExpression: 'set #dataBag = :v_dataBag, #commitId = :v_commitId, #ouName = :v_ouName',
+      UpdateExpression:
+        'set #dataBag = :v_dataBag, #commitId = :v_commitId, #ouName = :v_ouName, #orgInfo = :v_orgInfo',
       ExpressionAttributeNames: {
         '#dataBag': 'dataBag',
         '#commitId': 'commitId',
         '#ouName': 'ouName',
+        '#orgInfo': 'orgInfo',
       },
       ExpressionAttributeValues: {
         ':v_dataBag': JSON.stringify(configData),
         ':v_commitId': commitId,
         ':v_ouName': ouName,
+        ':v_orgInfo': JSON.stringify(accountIdData),
       },
     };
     await throttlingBackOff(() => documentClient.send(new UpdateCommand(params)));
@@ -329,6 +338,7 @@ async function onCreateUpdateFunction(
           managmentId,
           commitId,
           account.organizationalUnit,
+          getAccountIdConfigForAccount(accountsConfig, managmentId),
         );
         break;
       case 'LogArchive':
@@ -340,6 +350,7 @@ async function onCreateUpdateFunction(
           logArchiveId,
           commitId,
           account.organizationalUnit,
+          getAccountIdConfigForAccount(accountsConfig, logArchiveId),
         );
         break;
       case 'Audit':
@@ -351,11 +362,20 @@ async function onCreateUpdateFunction(
           auditId,
           commitId,
           account.organizationalUnit,
+          getAccountIdConfigForAccount(accountsConfig, auditId),
         );
         break;
     }
     const awsKey = accountsConfig.getAccountId(account.name) || '';
-    await putAccountConfigInTable('mandatory', account, configTableName, awsKey, commitId, account.organizationalUnit);
+    await putAccountConfigInTable(
+      'mandatory',
+      account,
+      configTableName,
+      awsKey,
+      commitId,
+      account.organizationalUnit,
+      getAccountIdConfigForAccount(accountsConfig, awsKey),
+    );
   }
   for (const account of accountsConfig.workloadAccounts) {
     let accountId: string;
@@ -371,6 +391,7 @@ async function onCreateUpdateFunction(
       accountId,
       commitId,
       account.organizationalUnit,
+      getAccountIdConfigForAccount(accountsConfig, accountId),
     );
   }
   return {
@@ -400,4 +421,12 @@ async function putAllOrganizationConfigInTable(
     const orgIdInfo = organizationConfig.organizationalUnitIds!.find(ou => ou.name === organizationalUnit.name)!;
     await putOrganizationConfigInTable(organizationalUnit, configTableName, awsKey, commitId, orgIdInfo);
   }
+}
+
+function getAccountIdConfigForAccount(accountsConfig: AccountsConfig, accountId: string): AccountIdConfig {
+  const account = accountsConfig.accountIds?.find(obj => obj.accountId === accountId);
+  if (!account) {
+    throw new Error(`No account found for accountId: ${accountId}`);
+  }
+  return account;
 }

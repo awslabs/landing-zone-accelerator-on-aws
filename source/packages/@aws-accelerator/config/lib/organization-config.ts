@@ -17,6 +17,7 @@ import * as path from 'path';
 
 import { createLogger } from '@aws-accelerator/utils/lib/logger';
 import { loadOrganizationalUnits } from '@aws-accelerator/utils/lib/load-organization-config';
+import { OrganizationalUnit, Root } from '@aws-sdk/client-organizations';
 
 import * as t from './common';
 import * as i from './models/organization-config';
@@ -36,6 +37,7 @@ export abstract class OrganizationalUnitIdConfig implements i.IOrganizationalUni
   readonly name: string = '';
   readonly id: string = '';
   readonly arn: string = '';
+  readonly orgsApiResponse: OrganizationalUnit | Root = {};
 }
 
 export abstract class QuarantineNewAccountsConfig implements i.IQuarantineNewAccountsConfig {

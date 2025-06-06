@@ -115,12 +115,16 @@ organizationalUnitIds:
   - name: Root
     id: r-asdf
     arn: arn:aws:organizations::111111111111:root/o-asdf123456/r-asdf
+    orgsApiResponse: {}
   - name: Security
     id: ou-asdf-11111111
     arn: arn:aws:organizations::111111111111:ou/o-asdf123456/ou-asdf-11111111
+    orgsApiResponse: {}
   - name: Infrastructure
     id: ou-asdf-22222222
     arn: arn:aws:organizations::111111111111:ou/o-asdf123456/ou-asdf-22222222
+    orgsApiResponse: {}
   - name: SecureWorkloads
     id: ou-asdf-33333333
     arn: arn:aws:organizations::111111111111:ou/o-asdf123456/ou-asdf-33333333
+    orgsApiResponse: {}
