@@ -46,7 +46,7 @@ import { MODULE_EXCEPTIONS } from '../../../@aws-lza/index';
 jest.mock('../lib/functions', () => ({
   getManagementAccountCredentials: jest.fn().mockReturnValue(undefined),
   getAcceleratorModuleRunnerParameters: jest.fn().mockReturnValue(undefined),
-  getCentralLogsBucketKeyArn: jest.fn(),
+  getCentralLoggingResources: jest.fn(),
   isModuleExecutionSkippedByEnvironment: jest.fn().mockReturnValue(true),
 }));
 
@@ -225,9 +225,10 @@ describe('ModuleRunner', () => {
         .spyOn(require('../lib/functions'), 'getAcceleratorModuleRunnerParameters')
         .mockReturnValue(mockModuleRunnerParameters);
 
-      jest
-        .spyOn(require('../lib/functions'), 'getCentralLogsBucketKeyArn')
-        .mockReturnValue(MOCK_CONSTANTS.logging.bucketKeyArn);
+      jest.spyOn(require('../lib/functions'), 'getCentralLoggingResources').mockReturnValue({
+        bucketName: MOCK_CONSTANTS.logging.bucketName,
+        keyArn: MOCK_CONSTANTS.logging.bucketKeyArn,
+      });
 
       constants.AcceleratorModuleStageOrders = {
         [AcceleratorModuleStages.PREPARE]: { name: AcceleratorModuleStages.PREPARE, runOrder: 2 },
@@ -373,9 +374,31 @@ describe('ModuleRunner', () => {
 
     test('should execute stage modules and return status', async () => {
       // Setup
+      jest.spyOn(require('../lib/functions'), 'getCentralLoggingResources').mockReturnValue({
+        bucketName: MOCK_CONSTANTS.logging.bucketName,
+        keyArn: MOCK_CONSTANTS.logging.bucketKeyArn,
+      });
+
       constants.AcceleratorModuleStageDetails = [
         {
           stage: { name: AcceleratorStage.PREPARE },
+          modules: [
+            {
+              name: AcceleratorModules.SETUP_CONTROL_TOWER_LANDING_ZONE,
+              runOrder: 1,
+              handler: jest.fn().mockResolvedValue('Module 1 executed'),
+              executionPhase: ModuleExecutionPhase.DEPLOY,
+            },
+            {
+              name: AcceleratorModules.EXAMPLE_MODULE,
+              runOrder: 2,
+              handler: jest.fn().mockResolvedValue('Module 2 executed'),
+              executionPhase: ModuleExecutionPhase.DEPLOY,
+            },
+          ],
+        },
+        {
+          stage: { name: AcceleratorStage.FINALIZE },
           modules: [
             {
               name: AcceleratorModules.SETUP_CONTROL_TOWER_LANDING_ZONE,

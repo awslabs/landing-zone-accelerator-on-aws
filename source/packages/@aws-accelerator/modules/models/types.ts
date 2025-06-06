@@ -36,7 +36,7 @@ type AcceleratorLoggingType = {
   /**
    * Central Log bucket name
    */
-  readonly bucketName?: string;
+  bucketName?: string;
   /**
    *  Central log bucket key arn
    */
