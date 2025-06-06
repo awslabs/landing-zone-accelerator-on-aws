@@ -14,7 +14,7 @@ import { beforeEach, describe, expect, test } from '@jest/globals';
 import {
   getAcceleratorModuleRunnerParameters,
   getCentralLogBucketName,
-  getCentralLogsBucketKeyArn,
+  getCentralLoggingResources,
   getManagementAccountCredentials,
   getOrganizationAccounts,
   getOrganizationDetails,
@@ -598,7 +598,7 @@ describe('functions', () => {
     });
   });
 
-  describe('getCentralLogsBucketKeyArn', () => {
+  describe('getCentralLoggingResources', () => {
     const mockSend = jest.fn();
     let ssmMockClient: SSMClient;
     let mockAccountsConfig: Partial<AccountsConfig>;
@@ -627,7 +627,7 @@ describe('functions', () => {
       });
 
       // Execute
-      const result = await getCentralLogsBucketKeyArn(
+      const result = await getCentralLoggingResources(
         MOCK_CONSTANTS.runnerParameters.partition,
         MOCK_CONSTANTS.runnerParameters.solutionId,
         MOCK_CONSTANTS.centralizedLoggingRegion,
@@ -646,7 +646,11 @@ describe('functions', () => {
       );
 
       // Verify
-      expect(result).toBe(MOCK_CONSTANTS.centralLogBucketCmkSsmParameter.Value);
+      expect(result).toBeDefined();
+      expect(result?.bucketName).toBe(
+        `aws-accelerator-central-logs-${MOCK_CONSTANTS.logArchiveAccountId}-${MOCK_CONSTANTS.runnerParameters.region}`,
+      );
+      expect(result?.keyArn).toBe(MOCK_CONSTANTS.centralLogBucketCmkSsmParameter.Value);
       expect(SSMClient).toHaveBeenCalledWith(
         expect.objectContaining({
           region: MOCK_CONSTANTS.runnerParameters.region,
@@ -670,7 +674,7 @@ describe('functions', () => {
       );
 
       // Execute
-      const result = await getCentralLogsBucketKeyArn(
+      const result = await getCentralLoggingResources(
         MOCK_CONSTANTS.runnerParameters.partition,
         MOCK_CONSTANTS.runnerParameters.solutionId,
         MOCK_CONSTANTS.centralizedLoggingRegion,
@@ -703,7 +707,7 @@ describe('functions', () => {
 
       // Execute & Verify
       await expect(
-        getCentralLogsBucketKeyArn(
+        getCentralLoggingResources(
           MOCK_CONSTANTS.runnerParameters.partition,
           MOCK_CONSTANTS.runnerParameters.solutionId,
           MOCK_CONSTANTS.centralizedLoggingRegion,
@@ -730,7 +734,7 @@ describe('functions', () => {
         .mockResolvedValue(MOCK_CONSTANTS.credentials);
 
       // Execute
-      const result = await getCentralLogsBucketKeyArn(
+      const result = await getCentralLoggingResources(
         MOCK_CONSTANTS.runnerParameters.partition,
         MOCK_CONSTANTS.runnerParameters.solutionId,
         MOCK_CONSTANTS.centralizedLoggingRegion,
@@ -759,7 +763,7 @@ describe('functions', () => {
         .mockResolvedValue(MOCK_CONSTANTS.credentials);
 
       // Execute
-      const result = await getCentralLogsBucketKeyArn(
+      const result = await getCentralLoggingResources(
         MOCK_CONSTANTS.runnerParameters.partition,
         MOCK_CONSTANTS.runnerParameters.solutionId,
         MOCK_CONSTANTS.centralizedLoggingRegion,
@@ -899,7 +903,6 @@ describe('functions', () => {
         acceleratorResourceNames: MOCK_CONSTANTS.acceleratorResourceNames,
         logging: {
           centralizedRegion: MOCK_CONSTANTS.logging.centralizedRegion,
-          bucketName: MOCK_CONSTANTS.logging.bucketName,
         },
         organizationAccounts: MOCK_CONSTANTS.organizationAccounts,
         organizationDetails: MOCK_CONSTANTS.organizationDetails,

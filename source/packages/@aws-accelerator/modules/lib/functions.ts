@@ -222,21 +222,6 @@ export async function getAcceleratorModuleRunnerParameters(
   });
 
   //
-  // Get Central log bucket name
-  //
-  const centralLogBucketName = getCentralLogBucketName(
-    centralizedLoggingRegion,
-    acceleratorResourceNames,
-    {
-      accountId: acceleratorConfigurations.accountsConfig.getLogArchiveAccountId(),
-      accountName: acceleratorConfigurations.accountsConfig.getLogArchiveAccount().name,
-      region: centralizedLoggingRegion,
-    },
-    acceleratorConfigurations.globalConfig,
-    acceleratorConfigurations.accountsConfig,
-  );
-
-  //
   // Get Global Region
   //
   const globalRegion = getGlobalRegion(partition);
@@ -265,7 +250,7 @@ export async function getAcceleratorModuleRunnerParameters(
     acceleratorResourceNames,
     logging: {
       centralizedRegion: centralizedLoggingRegion,
-      bucketName: centralLogBucketName,
+      bucketName: undefined,
       bucketKeyArn: undefined,
     },
     organizationAccounts,
@@ -275,7 +260,7 @@ export async function getAcceleratorModuleRunnerParameters(
 }
 
 /**
- * Function to get Central Logs bucket key arn
+ * Function to get Central Logging resources like Central log bucket name and bucket key arn
  * @param partition string
  * @param solutionId string
  * @param centralizedLoggingRegion string
@@ -286,7 +271,7 @@ export async function getAcceleratorModuleRunnerParameters(
  * @param managementAccountCredentials {@link IAssumeRoleCredential} | undefined
  * @returns
  */
-export async function getCentralLogsBucketKeyArn(
+export async function getCentralLoggingResources(
   partition: string,
   solutionId: string,
   centralizedLoggingRegion: string,
@@ -302,23 +287,39 @@ export async function getCentralLogsBucketKeyArn(
     };
   },
   managementAccountCredentials?: IAssumeRoleCredential,
-): Promise<string | undefined> {
+): Promise<{ bucketName: string; keyArn: string } | undefined> {
   if (stage.runOrder <= AcceleratorModuleStageOrders.logging.runOrder) {
     logger.info(
-      `Central Logs bucket key arn is not required to be fetched for ${stage.module.name} module of ${stage.name} stage.`,
+      `Central Logging resources are not required to be fetched for ${stage.module.name} module of ${stage.name} stage.`,
     );
     return undefined;
   }
 
   if (stage.module.executionPhase === ModuleExecutionPhase.SYNTH) {
     logger.info(
-      `Central Logs bucket key arn is not required to be fetched for ${stage.module.name} module of ${stage.name} stage, becasue module execution phase is ${stage.module.executionPhase}`,
+      `Central Logging resources are not required to be fetched for ${stage.module.name} module of ${stage.name} stage, becasue module execution phase is ${stage.module.executionPhase}`,
     );
 
     return undefined;
   }
 
-  logger.info(`Fetching Central Logs bucket key arn for ${stage.module.name} module of ${stage.name} stage.`);
+  logger.info(`Fetching Central Logging resources for ${stage.module.name} module of ${stage.name} stage.`);
+
+  //
+  // Get Central log bucket name
+  //
+  const centralLogBucketName = getCentralLogBucketName(
+    centralizedLoggingRegion,
+    acceleratorResourceNames,
+    {
+      accountId: accountsConfig.getLogArchiveAccountId(),
+      accountName: accountsConfig.getLogArchiveAccount().name,
+      region: centralizedLoggingRegion,
+    },
+    globalConfig,
+    accountsConfig,
+  );
+
   let ssmParamName = acceleratorResourceNames.parameters.centralLogBucketCmkArn;
   if (globalConfig.logging.centralLogBucket?.importedBucket?.createAcceleratorManagedKey) {
     ssmParamName = acceleratorResourceNames.parameters.importedCentralLogBucketCmkArn;
@@ -342,8 +343,7 @@ export async function getCentralLogsBucketKeyArn(
 
   try {
     const response = await throttlingBackOff(() => client.send(new GetParameterCommand({ Name: ssmParamName })));
-
-    return response.Parameter!.Value!;
+    return { bucketName: centralLogBucketName, keyArn: response.Parameter!.Value! };
   } catch (
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     e: any

@@ -24,7 +24,7 @@ import { createLogger, MODULE_EXCEPTIONS } from '../../@aws-lza/index';
 import { setResourcePrefixes } from '../accelerator/utils/app-utils';
 import {
   getAcceleratorModuleRunnerParameters,
-  getCentralLogsBucketKeyArn,
+  getCentralLoggingResources,
   getManagementAccountCredentials,
   isModuleExecutionSkippedByEnvironment,
 } from './lib/functions';
@@ -117,8 +117,11 @@ export abstract class ModuleRunner {
 
         for (const sortedModuleItem of sortedModuleItems) {
           ModuleRunner.logger.info(`Execution started for module "${sortedModuleItem.name}"`);
-          if (!acceleratorModuleRunnerParameters.logging.bucketKeyArn) {
-            acceleratorModuleRunnerParameters.logging.bucketKeyArn = await getCentralLogsBucketKeyArn(
+          if (
+            !acceleratorModuleRunnerParameters.logging.bucketKeyArn ||
+            !acceleratorModuleRunnerParameters.logging.bucketName
+          ) {
+            const centralLoggingResources = await getCentralLoggingResources(
               runnerParameters.partition,
               runnerParameters.solutionId,
               acceleratorModuleRunnerParameters.logging.centralizedRegion,
@@ -132,6 +135,11 @@ export abstract class ModuleRunner {
               },
               acceleratorModuleRunnerParameters.managementAccountCredentials,
             );
+
+            if (centralLoggingResources) {
+              acceleratorModuleRunnerParameters.logging.bucketName = centralLoggingResources.bucketName;
+              acceleratorModuleRunnerParameters.logging.bucketKeyArn = centralLoggingResources.keyArn;
+            }
           }
           promiseItems.push({
             runOrder: sortedModuleItem.runOrder,
@@ -201,8 +209,11 @@ export abstract class ModuleRunner {
       if (!isModuleExecutionSkippedByEnvironment(sortedModuleItem.name)) {
         ModuleRunner.logger.info(`Module "${sortedModuleItem.name}" added for execution.`);
         const stageName = params.stage!;
-        if (!acceleratorModuleRunnerParameters.logging.bucketKeyArn) {
-          acceleratorModuleRunnerParameters.logging.bucketKeyArn = await getCentralLogsBucketKeyArn(
+        if (
+          !acceleratorModuleRunnerParameters.logging.bucketKeyArn ||
+          !acceleratorModuleRunnerParameters.logging.bucketName
+        ) {
+          const centralLoggingResources = await getCentralLoggingResources(
             params.partition,
             params.solutionId,
             acceleratorModuleRunnerParameters.logging.centralizedRegion,
@@ -216,6 +227,11 @@ export abstract class ModuleRunner {
             },
             acceleratorModuleRunnerParameters.managementAccountCredentials,
           );
+
+          if (centralLoggingResources) {
+            acceleratorModuleRunnerParameters.logging.bucketName = centralLoggingResources.bucketName;
+            acceleratorModuleRunnerParameters.logging.bucketKeyArn = centralLoggingResources.keyArn;
+          }
         }
         promiseItems.push({
           runOrder: synthPhase ? 1 : sortedModuleItem.runOrder,
