@@ -58,11 +58,13 @@ describe('AccountsValidator', () => {
           email: 'mockAccount1@example.com',
           accountId: '111111111111',
           status: 'ACTIVE',
+          orgsApiResponse: {},
         },
         {
           email: 'mockAccount2@example.com',
           accountId: '222222222222',
           status: 'ACTIVE',
+          orgsApiResponse: {},
         },
       ],
     };
