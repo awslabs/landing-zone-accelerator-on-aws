@@ -221,7 +221,12 @@ export class RouteTableResources {
           },
         })
       ) {
-        routeTable.addGatewayAssociation(routeTableItem.gatewayAssociation);
+        const metadata = {
+          vpcName: vpcItem.name,
+          routeTableName: routeTableItem.name,
+          associationType: routeTableItem.gatewayAssociation,
+        };
+        routeTable.addGatewayAssociation(routeTableItem.gatewayAssociation, metadata);
       }
       routeTableMap.set(`${vpcItem.name}_${routeTableItem.name}`, routeTable);
     }

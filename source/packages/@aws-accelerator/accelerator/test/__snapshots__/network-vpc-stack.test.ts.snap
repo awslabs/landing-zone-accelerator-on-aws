@@ -4413,7 +4413,7 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
       "Metadata": {
         "lzaLookup": {
           "associationType": "internetGateway",
-          "routeTableName": "Network-Inspection",
+          "routeTableName": "Network-Inspection-Gateway",
           "vpcName": "Network-Inspection",
         },
       },

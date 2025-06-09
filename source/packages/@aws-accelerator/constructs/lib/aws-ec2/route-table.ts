@@ -297,17 +297,13 @@ export abstract class RouteTableBase extends cdk.Resource implements IRouteTable
     return route;
   }
 
-  public addGatewayAssociation(type: string): void {
+  public addGatewayAssociation(type: string, metadata: { [key: string]: string }): void {
     if (type === 'internetGateway') {
       const association = new cdk.aws_ec2.CfnGatewayRouteTableAssociation(this, 'GatewayAssociation', {
         routeTableId: this.routeTableId,
         gatewayId: this.vpc.internetGatewayId!,
       });
-      association.addMetadata(MetadataKeys.LZA_LOOKUP, {
-        routeTableName: this.vpc.name,
-        vpcName: this.vpc.name,
-        associationType: type,
-      });
+      association.addMetadata(MetadataKeys.LZA_LOOKUP, metadata);
       this.vpc.addInternetGatewayDependent(association);
     }
 
@@ -316,11 +312,7 @@ export abstract class RouteTableBase extends cdk.Resource implements IRouteTable
         routeTableId: this.routeTableId,
         gatewayId: this.vpc.virtualPrivateGatewayId!,
       });
-      association.addMetadata(MetadataKeys.LZA_LOOKUP, {
-        routeTableName: this.vpc.name,
-        vpcName: this.vpc.name,
-        associationType: type,
-      });
+      association.addMetadata(MetadataKeys.LZA_LOOKUP, metadata);
       this.vpc.addVirtualPrivateGatewayDependent(association);
     }
   }
