@@ -128,9 +128,7 @@ exports[`RouteTable Construct(RouteTable):  Snapshot Test 1`] = `
       ],
       "Metadata": {
         "lzaLookup": {
-          "associationType": "internetGateway",
-          "routeTableName": "Test",
-          "vpcName": "Test",
+          "test": "123",
         },
       },
       "Properties": {
@@ -149,9 +147,7 @@ exports[`RouteTable Construct(RouteTable):  Snapshot Test 1`] = `
       ],
       "Metadata": {
         "lzaLookup": {
-          "associationType": "virtualPrivateGateway",
-          "routeTableName": "Test",
-          "vpcName": "Test",
+          "test": "234",
         },
       },
       "Properties": {
