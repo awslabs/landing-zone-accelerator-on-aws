@@ -679,7 +679,18 @@ export class GlobalConfig implements i.IGlobalConfig {
    * loading is not accidentally used to partially load config files.
    */
   static loadRawGlobalConfig(dir: string): GlobalConfig {
-    const accountsConfig = AccountsConfig.load(dir);
+    const accountFilePath = path.join(dir, AccountsConfig.FILENAME);
+    let accountsConfig: AccountsConfig;
+    if (fs.existsSync(accountFilePath)) {
+      accountsConfig = AccountsConfig.load(dir);
+    } else {
+      // If the accounts-config.yaml file does not exist next to the global-config.yaml, we use dummy values in order to load the global config successfully.
+      accountsConfig = new AccountsConfig({
+        managementAccountEmail: 'mangement@example.com',
+        logArchiveAccountEmail: 'log@example.com',
+        auditAccountEmail: 'audit@example.com',
+      });
+    }
     const replacementsConfig = ReplacementsConfig.load(dir, accountsConfig);
     return GlobalConfig.load(dir, replacementsConfig);
   }

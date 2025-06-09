@@ -54,6 +54,18 @@ describe('GlobalConfig', () => {
       expect(globalConfigFromFile.ssmParameters?.at(0)?.parameters?.at(0)?.value).toBe('parameterTestValue');
     });
 
+    it('can load raw config without accounts-config file present', () => {
+      const accountConfigPath = path.join(configDir, AccountsConfig.FILENAME);
+      fs.renameSync(accountConfigPath, `${accountConfigPath}.bak`);
+      const globalConfigFromFile = GlobalConfig.loadRawGlobalConfig(configDir);
+
+      expect(globalConfigFromFile.ssmParameters?.length).toBe(1);
+      expect(globalConfigFromFile.ssmParameters?.at(0)?.parameters?.at(0)?.name).toBe('parameterTest');
+      expect(globalConfigFromFile.ssmParameters?.at(0)?.parameters?.at(0)?.path).toBe('/my/parameter/structure');
+      expect(globalConfigFromFile.ssmParameters?.at(0)?.parameters?.at(0)?.value).toBe('parameterTestValue');
+      fs.renameSync(`${accountConfigPath}.bak`, accountConfigPath);
+    });
+
     it('loads from string', () => {
       const accountsConfig = AccountsConfig.load(configDir);
       const replacementsConfig = ReplacementsConfig.load(configDir, accountsConfig);
