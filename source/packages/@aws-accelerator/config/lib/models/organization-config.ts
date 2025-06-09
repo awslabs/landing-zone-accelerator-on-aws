@@ -80,7 +80,7 @@ export interface IOrganizationalUnitIdConfig {
   /**
    * Orgs API response
    */
-  readonly orgsApiResponse: OrganizationalUnit | Root;
+  readonly orgsApiResponse?: OrganizationalUnit | Root;
 }
 
 /**

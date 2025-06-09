@@ -32,7 +32,7 @@ const logger = createLogger(['accounts-config']);
 export class AccountIdConfig implements i.IAccountIdConfig {
   readonly email: string = '';
   readonly accountId: string = '';
-  readonly orgsApiResponse: Account = {};
+  readonly orgsApiResponse?: Account = undefined;
   readonly status?: string = '';
 }
 
@@ -50,7 +50,7 @@ export class GovCloudAccountConfig implements i.IGovCloudAccountConfig {
   readonly description: string = '';
   readonly email: string = '';
   readonly organizationalUnit: string = '';
-  readonly orgsApiResponse: Account = {};
+  readonly orgsApiResponse: Account | undefined = undefined;
   readonly warm: boolean | undefined = undefined;
   readonly enableGovCloud: boolean | undefined = undefined;
   readonly accountAlias?: string | undefined = undefined;
@@ -211,8 +211,6 @@ export class AccountsConfig implements i.IAccountsConfig {
           this.accountIds?.push({
             email: item.email.toLocaleLowerCase(),
             accountId: currentAccountId,
-            // in single account mode AWS Orgs may be disabled so orgs response will be empty
-            orgsApiResponse: {},
           });
         });
         // orgs is enabled and loadFromDynamoDBTable is true
@@ -276,7 +274,6 @@ export class AccountsConfig implements i.IAccountsConfig {
           this.accountIds?.push({
             email: account.email.toLowerCase(),
             accountId: account.accountId,
-            orgsApiResponse: {},
           });
         }
         // if orgs is disabled, the accountId is read from accounts config.

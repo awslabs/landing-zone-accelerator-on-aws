@@ -246,8 +246,7 @@
       "required": [
         "name",
         "id",
-        "arn",
-        "orgsApiResponse"
+        "arn"
       ],
       "type": "object"
     },
