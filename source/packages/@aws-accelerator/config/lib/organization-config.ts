@@ -37,7 +37,7 @@ export abstract class OrganizationalUnitIdConfig implements i.IOrganizationalUni
   readonly name: string = '';
   readonly id: string = '';
   readonly arn: string = '';
-  readonly orgsApiResponse: OrganizationalUnit | Root = {};
+  readonly orgsApiResponse: OrganizationalUnit | Root | undefined = undefined;
 }
 
 export abstract class QuarantineNewAccountsConfig implements i.IQuarantineNewAccountsConfig {
