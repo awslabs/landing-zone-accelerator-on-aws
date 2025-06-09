@@ -533,7 +533,7 @@ export class AcceleratorTool {
    * @private
    */
   private async initPipeline(acceleratorPrefix: string, pipelineName: string): Promise<void> {
-    this.logger.info('Pipeline name:', pipelineName);
+    this.logger.info(`Pipeline name: ${pipelineName}`);
     try {
       const response = await throttlingBackOff(() =>
         new CodePipelineClient({}).send(new GetPipelineCommand({ name: pipelineName })),
@@ -792,7 +792,7 @@ export class AcceleratorTool {
    * @private
    */
   private async getGlobalConfig(): Promise<GlobalConfig> {
-    this.logger.info('Config Repository Name: ', this.pipelineConfigSourceRepo?.repositoryName);
+    this.logger.info(`Config Repository Name:  ${this.pipelineConfigSourceRepo?.repositoryName}`);
     let fileContent: string;
     if (this.pipelineConfigSourceRepo?.provider.toLocaleLowerCase() === 'codecommit') {
       const codeCommitClient = new CodeCommitClient({});
