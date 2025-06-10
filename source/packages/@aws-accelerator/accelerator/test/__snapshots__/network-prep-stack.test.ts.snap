@@ -966,7 +966,7 @@ drop http $HOME_NET any -> $EXTERNAL_NET any (http.host; content:"example.com"; 
         },
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.12.2",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.3",
           },
         },
         "Handler": "__entrypoint__.handler",
@@ -1054,7 +1054,7 @@ drop http $HOME_NET any -> $EXTERNAL_NET any (http.host; content:"example.com"; 
         },
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.12.2",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.3",
           },
         },
         "Handler": "__entrypoint__.handler",
@@ -1182,7 +1182,7 @@ drop http $HOME_NET any -> $EXTERNAL_NET any (http.host; content:"example.com"; 
         },
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.12.2",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.3",
           },
         },
         "Handler": "__entrypoint__.handler",
@@ -1268,7 +1268,7 @@ drop http $HOME_NET any -> $EXTERNAL_NET any (http.host; content:"example.com"; 
         "Description": "Custom resource provider to put cross-account ssm parameter value",
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.12.2",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.3",
           },
         },
         "Handler": "__entrypoint__.handler",
@@ -1590,7 +1590,7 @@ drop http $HOME_NET any -> $EXTERNAL_NET any (http.host; content:"example.com"; 
         "Description": "AWS CDK resource provider framework - onEvent (AWSAccelerator-NetworkPrepStack-555555555555-us-east-1/EnhancedVpnVpnConnection/CustomResource/Resource)",
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.12.2",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.3",
             "USER_ON_EVENT_FUNCTION_ARN": {
               "Fn::GetAtt": [
                 "VpnOnEventHandler05011160",
@@ -2408,7 +2408,7 @@ drop http $HOME_NET any -> $EXTERNAL_NET any (http.host; content:"example.com"; 
       "Properties": {
         "Name": "/accelerator/AWSAccelerator-NetworkPrepStack-555555555555-us-east-1/version",
         "Type": "String",
-        "Value": "1.12.2",
+        "Value": "1.12.3",
       },
       "Type": "AWS::SSM::Parameter",
     },
@@ -2970,7 +2970,7 @@ drop http $HOME_NET any -> $EXTERNAL_NET any (http.host; content:"example.com"; 
         "Description": "Custom resource onEvent handler for site-to-site VPN",
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.12.2",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.3",
           },
         },
         "Handler": "index.handler",

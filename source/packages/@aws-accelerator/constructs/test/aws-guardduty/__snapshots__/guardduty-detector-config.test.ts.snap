@@ -16,7 +16,7 @@ exports[`GuardDutyDetectorConfig Construct(GuardDutyDetectorConfig):  Snapshot T
         },
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.12.2",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.3",
           },
         },
         "Handler": "__entrypoint__.handler",

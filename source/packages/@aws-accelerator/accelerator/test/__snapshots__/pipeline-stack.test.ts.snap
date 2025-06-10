@@ -2862,7 +2862,7 @@ artifacts:
       "Properties": {
         "Name": "/accelerator/PipelineStack/version",
         "Type": "String",
-        "Value": "1.12.2",
+        "Value": "1.12.3",
       },
       "Type": "AWS::SSM::Parameter",
     },
@@ -6228,7 +6228,7 @@ artifacts:
       "Properties": {
         "Name": "/accelerator/PipelineStackRegionalDeploy/version",
         "Type": "String",
-        "Value": "1.12.2",
+        "Value": "1.12.3",
       },
       "Type": "AWS::SSM::Parameter",
     },

@@ -17,7 +17,7 @@ exports[`SsmParameter Construct(SsmParameter):  Snapshot Test 1`] = `
         "Description": "Custom resource provider to put cross-account ssm parameter value",
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.12.2",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.3",
           },
         },
         "Handler": "__entrypoint__.handler",

@@ -355,7 +355,7 @@ exports[`NetworkVpcDnsStack Construct(NetworkVpcDnsStack):  Snapshot Test 1`] = 
         },
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.12.2",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.3",
           },
         },
         "Handler": "__entrypoint__.handler",
@@ -1268,7 +1268,7 @@ exports[`NetworkVpcDnsStack Construct(NetworkVpcDnsStack):  Snapshot Test 1`] = 
       "Properties": {
         "Name": "/accelerator/AWSAccelerator-NetworkVpcDnsStack-555555555555-us-east-1/version",
         "Type": "String",
-        "Value": "1.12.2",
+        "Value": "1.12.3",
       },
       "Type": "AWS::SSM::Parameter",
     },
