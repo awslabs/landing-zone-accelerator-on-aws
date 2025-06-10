@@ -137,6 +137,9 @@ export class TgwResources {
           },
         }),
       });
+      (role.node.defaultChild as cdk.aws_iam.CfnRole).addMetadata(MetadataKeys.LZA_LOOKUP, {
+        roleName,
+      });
       // AwsSolutions-IAM5: The IAM entity contains wildcard permissions and does not have a cdk_nag rule suppression with evidence for those permission.
       // rule suppression with evidence for this permission.
       NagSuppressions.addResourceSuppressionsByPath(
@@ -150,9 +153,7 @@ export class TgwResources {
           },
         ],
       );
-      role.node.addMetadata(MetadataKeys.LZA_LOOKUP, {
-        roleName: role.roleName,
-      });
+
       return role;
     }
     return undefined;
