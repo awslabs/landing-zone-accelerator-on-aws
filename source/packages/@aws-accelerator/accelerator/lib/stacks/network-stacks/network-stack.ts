@@ -75,6 +75,8 @@ import {
 } from './utils/security-group-utils';
 import { hasAdvancedVpnOptions, isIpv4 } from './utils/validation-utils';
 import { isArn } from '@aws-accelerator/utils/lib/is-arn';
+import { MetadataKeys } from '@aws-accelerator/utils/lib/common-types';
+import { LZAResourceLookup, LZAResourceLookupType } from '../../../utils/lza-resource-lookup';
 
 /**
  * Resource share type for RAM resource shares
@@ -147,6 +149,8 @@ export abstract class NetworkStack extends AcceleratorStack {
    */
   public readonly vpcResources: (VpcConfig | VpcTemplatesConfig)[];
 
+  private readonly lzaLookup: LZAResourceLookup;
+
   protected constructor(scope: Construct, id: string, props: AcceleratorStackProps) {
     super(scope, id, props);
 
@@ -162,6 +166,16 @@ export abstract class NetworkStack extends AcceleratorStack {
 
     this.cloudwatchKey = this.getAcceleratorKey(AcceleratorKeyType.CLOUDWATCH_KEY);
     this.lambdaKey = this.getAcceleratorKey(AcceleratorKeyType.LAMBDA_KEY);
+
+    this.lzaLookup = new LZAResourceLookup({
+      accountId: this.account,
+      region: this.region,
+      aseaResourceList: this.props.globalConfig.externalLandingZoneResources?.resourceList ?? [],
+      enableV2Stacks: this.props.globalConfig.useV2Stacks,
+      externalLandingZoneResources:
+        this.props.globalConfig.externalLandingZoneResources?.importExternalLandingZoneResources,
+      stackName: this.stackName,
+    });
   }
 
   /**
@@ -880,7 +894,10 @@ export abstract class NetworkStack extends AcceleratorStack {
           processedEgressRules,
           allIngressRule,
         );
-        securityGroupMap.set(`${vpcItem.name}_${securityGroupItem.name}`, securityGroup);
+
+        if (securityGroup) {
+          securityGroupMap.set(`${vpcItem.name}_${securityGroupItem.name}`, securityGroup);
+        }
       }
       // Create security group rules that reference other security groups
       this.createSecurityGroupSgSources(vpcItem, subnetMap, prefixListMap, securityGroupMap);
@@ -908,6 +925,14 @@ export abstract class NetworkStack extends AcceleratorStack {
         this.logger.info(`Skipping security group ${securityGroupItem.name} in VPC ${vpcItem.name}`);
         continue;
       }
+      if (
+        !this.lzaLookup.resourceExists({
+          resourceType: LZAResourceLookupType.SECURITY_GROUP,
+          lookupValues: { vpcName: vpcItem.name, securityGroupName: securityGroupItem.name },
+        })
+      ) {
+        continue;
+      }
       const securityGroup = getSecurityGroup(securityGroupMap, vpcItem.name, securityGroupItem.name) as SecurityGroup;
       const ingressRules = processSecurityGroupSgIngressSources(
         this.vpcResources,
@@ -927,19 +952,41 @@ export abstract class NetworkStack extends AcceleratorStack {
       );
 
       // Create ingress rules
-      ingressRules.forEach(ingressRule => {
-        securityGroup.addIngressRule(ingressRule.logicalId, {
-          sourceSecurityGroup: ingressRule.rule.targetSecurityGroup,
-          ...ingressRule.rule,
-        });
+      ingressRules.forEach((ingressRule, index) => {
+        if (
+          this.lzaLookup.resourceExists({
+            resourceType: LZAResourceLookupType.SECURITY_GROUP_INGRESS,
+            lookupValues: { securityGroupName: securityGroupItem.name, ruleIndex: index },
+          })
+        ) {
+          const rule = securityGroup.addIngressRule(ingressRule.logicalId, {
+            sourceSecurityGroup: ingressRule.rule.targetSecurityGroup,
+            ...ingressRule.rule,
+          });
+          rule.addMetadata(MetadataKeys.LZA_LOOKUP, {
+            securityGroupName: securityGroupItem.name,
+            ruleIndex: index,
+          });
+        }
       });
 
       // Create egress rules
-      egressRules.forEach(egressRule => {
-        securityGroup.addEgressRule(egressRule.logicalId, {
-          destinationSecurityGroup: egressRule.rule.targetSecurityGroup,
-          ...egressRule.rule,
-        });
+      egressRules.forEach((egressRule, index) => {
+        if (
+          this.lzaLookup.resourceExists({
+            resourceType: LZAResourceLookupType.SECURITY_GROUP_EGRESS,
+            lookupValues: { securityGroupName: securityGroupItem.name, ruleIndex: index },
+          })
+        ) {
+          const rule = securityGroup.addEgressRule(egressRule.logicalId, {
+            destinationSecurityGroup: egressRule.rule.targetSecurityGroup,
+            ...egressRule.rule,
+          });
+          rule.addMetadata(MetadataKeys.LZA_LOOKUP, {
+            securityGroupName: securityGroupItem.name,
+            ruleIndex: index,
+          });
+        }
       });
     }
   }
@@ -961,7 +1008,7 @@ export abstract class NetworkStack extends AcceleratorStack {
     processedIngressRules: SecurityGroupIngressRuleProps[],
     processedEgressRules: SecurityGroupEgressRuleProps[],
     allIngressRule: boolean,
-  ): SecurityGroup {
+  ): SecurityGroup | undefined {
     this.logger.info(`Adding Security Group ${securityGroupItem.name} in VPC ${vpcItem.name}`);
     let securityGroup;
     if (this.isManagedByAsea(AseaResourceType.EC2_SECURITY_GROUP, `${vpcItem.name}/${securityGroupItem.name}`)) {
@@ -977,7 +1024,16 @@ export abstract class NetworkStack extends AcceleratorStack {
         );
       }
     }
-    if (!securityGroup) {
+    if (
+      !securityGroup &&
+      this.lzaLookup.resourceExists({
+        resourceType: LZAResourceLookupType.SECURITY_GROUP,
+        lookupValues: {
+          vpcName: vpcItem.name,
+          securityGroupName: securityGroupItem.name,
+        },
+      })
+    ) {
       securityGroup = new SecurityGroup(
         this,
         pascalCase(`${vpcItem.name}Vpc`) + pascalCase(`${securityGroupItem.name}Sg`),
@@ -991,6 +1047,11 @@ export abstract class NetworkStack extends AcceleratorStack {
           tags: securityGroupItem.tags,
         },
       );
+      const resource = securityGroup.node.findChild('Resource') as cdk.CfnResource;
+      resource.addMetadata(MetadataKeys.LZA_LOOKUP, {
+        vpcName: vpcItem.name,
+        securityGroupName: securityGroupItem.name,
+      });
       this.addSsmParameter({
         logicalId: pascalCase(`SsmParam${pascalCase(vpcItem.name) + pascalCase(securityGroupItem.name)}SecurityGroup`),
         parameterName: this.getSsmPath(SsmResourceType.SECURITY_GROUP, [vpcItem.name, securityGroupItem.name]),
@@ -999,7 +1060,7 @@ export abstract class NetworkStack extends AcceleratorStack {
     }
 
     // AwsSolutions-EC23: The Security Group allows for 0.0.0.0/0 or ::/0 inbound access.
-    if (allIngressRule) {
+    if (securityGroup && allIngressRule) {
       NagSuppressions.addResourceSuppressions(securityGroup, [
         { id: 'AwsSolutions-EC23', reason: 'User defined an all ingress rule in configuration.' },
       ]);

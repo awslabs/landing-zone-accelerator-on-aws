@@ -1,2265 +1,2368 @@
 {
-  "Description": "(SO0199-networkvpc) Landing Zone Accelerator on AWS. Version 1.12.0.",
-  "Metadata": {
-    "lzaLookup": {
-      "accountName": "Network",
-      "region": "us-east-1"
-    }
-  },
-  "Resources": {
-    "SsmParamStackId521A78D3": {
-      "Type": "AWS::SSM::Parameter",
-      "Properties": {
-        "Name": "/accelerator/AWSAccelerator-NetworkVpcStack-666666666666-us-east-1/stack-id",
-        "Tags": {
-          "Accelerator": "AWSAccelerator"
-        },
-        "Type": "String",
-        "Value": {
-          "Ref": "AWS::StackId"
-        }
-      }
-    },
-    "SsmParamAcceleratorVersionFF83282D": {
-      "Type": "AWS::SSM::Parameter",
-      "Properties": {
-        "Name": "/accelerator/AWSAccelerator-NetworkVpcStack-666666666666-us-east-1/version",
-        "Tags": {
-          "Accelerator": "AWSAccelerator"
-        },
-        "Type": "String",
-        "Value": "1.12.0"
-      }
-    },
-    "AcceleratorDhcpOptsDhcpOpts09C66A89": {
-      "Type": "AWS::EC2::DHCPOptions",
-      "Properties": {
-        "DomainName": "example.com",
-        "DomainNameServers": [
-          "1.1.1.1",
-          "2.2.2.2"
-        ],
-        "NetbiosNameServers": [
-          "1.1.1.1",
-          "2.2.2.2"
-        ],
-        "NetbiosNodeType": 2,
-        "NtpServers": [
-          "1.1.1.1",
-          "2.2.2.2"
-        ],
-        "Tags": [
-          {
-            "Key": "Accelerator",
-            "Value": "AWSAccelerator"
-          },
-          {
-            "Key": "Name",
-            "Value": "accelerator-dhcp-opts"
-          }
-        ]
-      }
-    },
-    "TestIpv6DhcpOpts2920A043": {
-      "Type": "AWS::EC2::DHCPOptions",
-      "Properties": {
-        "DomainName": "example.com",
-        "DomainNameServers": [
-          "192.168.1.2",
-          "192.168.2.2",
-          "10.0.0.2",
-          "10.0.1.2",
-          "::1",
-          "::2",
-          "::3",
-          "::4"
-        ],
-        "NetbiosNameServers": [
-          "192.168.1.2",
-          "192.168.2.2",
-          "10.0.0.2",
-          "10.0.1.2"
-        ],
-        "NtpServers": [
-          "192.168.1.2",
-          "192.168.2.2",
-          "10.0.0.2",
-          "10.0.1.2",
-          "::1",
-          "::2",
-          "::3",
-          "::4"
-        ],
-        "Tags": [
-          {
-            "Key": "Accelerator",
-            "Value": "AWSAccelerator"
-          },
-          {
-            "Key": "Name",
-            "Value": "test-ipv6"
-          }
-        ]
-      }
-    },
-    "AcceleratorPrefixListPrefixList8ACB36CF": {
-      "Type": "AWS::EC2::PrefixList",
-      "Properties": {
-        "AddressFamily": "IPv4",
-        "Entries": [
-          {
-            "Cidr": "10.1.0.1/32"
-          }
-        ],
-        "MaxEntries": 1,
-        "PrefixListName": "accelerator-prefix-list",
-        "Tags": [
-          {
-            "Key": "Accelerator",
-            "Value": "AWSAccelerator"
-          }
-        ]
-      }
-    },
-    "DeleteDefaultVpc4DBAE36C": {
-      "Type": "Custom::DeleteDefaultVpc",
-      "Properties": {
-        "ServiceToken": {
-          "Fn::GetAtt": [
-            "CustomDeleteDefaultVpcCustomResourceProviderHandler87E89F35",
-            "Arn"
-          ]
-        }
-      },
-      "DependsOn": [
-        "CustomDeleteDefaultVpcCustomResourceProviderLogGroup4113DA48"
-      ],
-      "UpdateReplacePolicy": "Delete",
-      "DeletionPolicy": "Delete"
-    },
-    "CustomDeleteDefaultVpcCustomResourceProviderRole80963EEF": {
-      "Type": "AWS::IAM::Role",
-      "Properties": {
-        "AssumeRolePolicyDocument": {
-          "Version": "2012-10-17",
-          "Statement": [
-            {
-              "Action": "sts:AssumeRole",
-              "Effect": "Allow",
-              "Principal": {
-                "Service": "lambda.amazonaws.com"
-              }
-            }
-          ]
-        },
-        "ManagedPolicyArns": [
-          {
-            "Fn::Sub": "arn:${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
-          }
-        ],
-        "Policies": [
-          {
-            "PolicyName": "Inline",
-            "PolicyDocument": {
-              "Version": "2012-10-17",
-              "Statement": [
-                {
-                  "Effect": "Allow",
-                  "Action": [
-                    "ec2:DeleteInternetGateway",
-                    "ec2:DetachInternetGateway",
-                    "ec2:DeleteNetworkAcl",
-                    "ec2:DeleteRoute",
-                    "ec2:DeleteSecurityGroup",
-                    "ec2:DeleteSubnet",
-                    "ec2:DeleteVpc",
-                    "ec2:DescribeInternetGateways",
-                    "ec2:DescribeNetworkAcls",
-                    "ec2:DescribeRouteTables",
-                    "ec2:DescribeSecurityGroups",
-                    "ec2:DescribeSubnets",
-                    "ec2:DescribeVpcs"
-                  ],
-                  "Resource": "*"
-                }
-              ]
-            }
-          }
-        ],
-        "Tags": [
-          {
-            "Key": "Accelerator",
-            "Value": "AWSAccelerator"
-          }
-        ]
-      }
-    },
-    "CustomDeleteDefaultVpcCustomResourceProviderHandler87E89F35": {
-      "Type": "AWS::Lambda::Function",
-      "Properties": {
-        "Code": {
-          "S3Bucket": "cdk-accel-assets-576394207599-us-east-1",
-          "S3Key": "666666666666/9e9925ebdf6998229de345016aa6b073ee765d0cdba02d5eea66a84f4fa3ada3.zip"
-        },
-        "Timeout": 900,
-        "MemorySize": 512,
-        "Handler": "__entrypoint__.handler",
-        "Role": {
-          "Fn::GetAtt": [
-            "CustomDeleteDefaultVpcCustomResourceProviderRole80963EEF",
-            "Arn"
-          ]
-        },
-        "Runtime": "nodejs20.x",
-        "Tags": [
-          {
-            "Key": "Accelerator",
-            "Value": "AWSAccelerator"
-          }
-        ],
-        "Environment": {
-          "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.12.0"
-          }
-        }
-      },
-      "DependsOn": [
-        "CustomDeleteDefaultVpcCustomResourceProviderRole80963EEF"
-      ]
-    },
-    "CustomDeleteDefaultVpcCustomResourceProviderLogGroup4113DA48": {
-      "Type": "AWS::Logs::LogGroup",
-      "Properties": {
-        "KmsKeyId": {
-          "Ref": "SsmParameterValueacceleratorkmscloudwatchkeyarnC96584B6F00A464EAD1953AFF4B05118Parameter"
-        },
-        "LogGroupName": {
-          "Fn::Join": [
-            "",
-            [
-              "/aws/lambda/",
-              {
-                "Ref": "CustomDeleteDefaultVpcCustomResourceProviderHandler87E89F35"
-              }
-            ]
-          ]
-        },
-        "RetentionInDays": 3653,
-        "Tags": [
-          {
-            "Key": "Accelerator",
-            "Value": "AWSAccelerator"
-          }
-        ]
-      },
-      "UpdateReplacePolicy": "Delete",
-      "DeletionPolicy": "Delete"
-    },
-    "NetworkEndpointsVpc619A1F01": {
-      "Type": "AWS::EC2::VPC",
-      "Properties": {
-        "EnableDnsHostnames": true,
-        "EnableDnsSupport": true,
-        "InstanceTenancy": "default",
-        "Ipv4IpamPoolId": {
-          "Ref": "SsmParameterValueacceleratornetworkipampoolshomeregionpoolidC96584B6F00A464EAD1953AFF4B05118Parameter"
-        },
-        "Ipv4NetmaskLength": 19,
-        "Tags": [
-          {
-            "Key": "Accelerator",
-            "Value": "AWSAccelerator"
-          },
-          {
-            "Key": "Name",
-            "Value": "Network-Endpoints"
-          }
-        ]
-      },
-      "DependsOn": [
-        "DeleteDefaultVpc4DBAE36C"
-      ],
-      "Metadata": {
-        "lzaLookup": {
-          "vpcName": "Network-Endpoints"
-        }
-      }
-    },
-    "NetworkEndpointsVpcInternetGateway6505072B": {
-      "Type": "AWS::EC2::InternetGateway",
-      "Properties": {
-        "Tags": [
-          {
-            "Key": "Accelerator",
-            "Value": "AWSAccelerator"
-          },
-          {
-            "Key": "Name",
-            "Value": "Network-Endpoints"
-          }
-        ]
-      },
-      "DependsOn": [
-        "DeleteDefaultVpc4DBAE36C"
-      ],
-      "Metadata": {
-        "lzaLookup": {
-          "vpcName": "Network-Endpoints"
-        }
-      }
-    },
-    "NetworkEndpointsVpcInternetGatewayAttachment8B5DCF4D": {
-      "Type": "AWS::EC2::VPCGatewayAttachment",
-      "Properties": {
-        "InternetGatewayId": {
-          "Ref": "NetworkEndpointsVpcInternetGateway6505072B"
-        },
-        "VpcId": {
-          "Ref": "NetworkEndpointsVpc619A1F01"
-        }
-      },
-      "DependsOn": [
-        "DeleteDefaultVpc4DBAE36C"
-      ]
-    },
-    "NetworkEndpointsVpcVirtualPrivateGateway2CE2FFC3": {
-      "Type": "AWS::EC2::VPNGateway",
-      "Properties": {
-        "AmazonSideAsn": 65200,
-        "Tags": [
-          {
-            "Key": "Accelerator",
-            "Value": "AWSAccelerator"
-          },
-          {
-            "Key": "Name",
-            "Value": "Network-Endpoints"
-          }
-        ],
-        "Type": "ipsec.1"
-      },
-      "DependsOn": [
-        "DeleteDefaultVpc4DBAE36C"
-      ],
-      "Metadata": {
-        "lzaLookup": {
-          "vpcName": "Network-Endpoints"
-        }
-      }
-    },
-    "NetworkEndpointsVpcVirtualPrivateGatewayAttachment01185FBA": {
-      "Type": "AWS::EC2::VPCGatewayAttachment",
-      "Properties": {
-        "VpcId": {
-          "Ref": "NetworkEndpointsVpc619A1F01"
-        },
-        "VpnGatewayId": {
-          "Ref": "NetworkEndpointsVpcVirtualPrivateGateway2CE2FFC3"
-        }
-      },
-      "DependsOn": [
-        "DeleteDefaultVpc4DBAE36C"
-      ]
-    },
-    "NetworkEndpointsVpcDhcpOptionsAssociationC9A5CF5F": {
-      "Type": "AWS::EC2::VPCDHCPOptionsAssociation",
-      "Properties": {
-        "DhcpOptionsId": {
-          "Ref": "AcceleratorDhcpOptsDhcpOpts09C66A89"
-        },
-        "VpcId": {
-          "Ref": "NetworkEndpointsVpc619A1F01"
-        }
-      },
-      "DependsOn": [
-        "DeleteDefaultVpc4DBAE36C"
-      ],
-      "Metadata": {
-        "lzaLookup": {
-          "vpcName": "Network-Endpoints",
-          "dhcpOptionsName": "accelerator-dhcp-opts"
-        }
-      }
-    },
-    "NetworkEndpointsVpcFlowLogsGroupB21A3331": {
-      "Type": "AWS::Logs::LogGroup",
-      "Properties": {
-        "KmsKeyId": {
-          "Ref": "SsmParameterValueacceleratorkmscloudwatchkeyarnC96584B6F00A464EAD1953AFF4B05118Parameter"
-        },
-        "RetentionInDays": 3653,
-        "Tags": [
-          {
-            "Key": "Accelerator",
-            "Value": "AWSAccelerator"
-          },
-          {
-            "Key": "Name",
-            "Value": "Network-Endpoints"
-          }
-        ]
-      },
-      "DependsOn": [
-        "DeleteDefaultVpc4DBAE36C"
-      ],
-      "UpdateReplacePolicy": "Retain",
-      "DeletionPolicy": "Retain"
-    },
-    "NetworkEndpointsVpcFlowLogsRole2614AF13": {
-      "Type": "AWS::IAM::Role",
-      "Properties": {
-        "AssumeRolePolicyDocument": {
-          "Statement": [
-            {
-              "Action": "sts:AssumeRole",
-              "Effect": "Allow",
-              "Principal": {
-                "Service": "vpc-flow-logs.amazonaws.com"
-              }
-            }
-          ],
-          "Version": "2012-10-17"
-        },
-        "Tags": [
-          {
-            "Key": "Accelerator",
-            "Value": "AWSAccelerator"
-          },
-          {
-            "Key": "Name",
-            "Value": "Network-Endpoints"
-          }
-        ]
-      },
-      "DependsOn": [
-        "DeleteDefaultVpc4DBAE36C"
-      ]
-    },
-    "NetworkEndpointsVpcFlowLogsRoleDefaultPolicyA9F3924A": {
-      "Type": "AWS::IAM::Policy",
-      "Properties": {
-        "PolicyDocument": {
-          "Statement": [
-            {
-              "Action": [
-                "logs:CreateLogDelivery",
-                "logs:CreateLogGroup",
-                "logs:CreateLogStream",
-                "logs:DeleteLogDelivery",
-                "logs:DescribeLogGroups",
-                "logs:DescribeLogStreams",
-                "logs:PutLogEvents"
-              ],
-              "Effect": "Allow",
-              "Resource": {
-                "Fn::GetAtt": [
-                  "NetworkEndpointsVpcFlowLogsGroupB21A3331",
-                  "Arn"
-                ]
-              }
-            }
-          ],
-          "Version": "2012-10-17"
-        },
-        "PolicyName": "NetworkEndpointsVpcFlowLogsRoleDefaultPolicyA9F3924A",
-        "Roles": [
-          {
-            "Ref": "NetworkEndpointsVpcFlowLogsRole2614AF13"
-          }
-        ]
-      },
-      "DependsOn": [
-        "DeleteDefaultVpc4DBAE36C"
-      ]
-    },
-    "NetworkEndpointsVpcCloudWatchFlowLogEB41E61E": {
-      "Type": "AWS::EC2::FlowLog",
-      "Properties": {
-        "DeliverLogsPermissionArn": {
-          "Fn::GetAtt": [
-            "NetworkEndpointsVpcFlowLogsRole2614AF13",
-            "Arn"
-          ]
-        },
-        "LogDestination": {
-          "Fn::GetAtt": [
-            "NetworkEndpointsVpcFlowLogsGroupB21A3331",
-            "Arn"
-          ]
-        },
-        "LogDestinationType": "cloud-watch-logs",
-        "MaxAggregationInterval": 60,
-        "ResourceId": {
-          "Ref": "NetworkEndpointsVpc619A1F01"
-        },
-        "ResourceType": "VPC",
-        "Tags": [
-          {
-            "Key": "Accelerator",
-            "Value": "AWSAccelerator"
-          },
-          {
-            "Key": "Name",
-            "Value": "Network-Endpoints"
-          }
-        ],
-        "TrafficType": "ALL"
-      },
-      "DependsOn": [
-        "DeleteDefaultVpc4DBAE36C"
-      ],
-      "Metadata": {
-        "lzaLookup": {
-          "vpcName": "Network-Endpoints",
-          "flowLogDestinationType": "cloud-watch-logs"
-        }
-      }
-    },
-    "NetworkEndpointsVpcS3FlowLog1207DE15": {
-      "Type": "AWS::EC2::FlowLog",
-      "Properties": {
-        "LogDestination": {
-          "Fn::Join": [
-            "",
-            [
-              {
-                "Ref": "SsmParameterValueacceleratorvpcflowlogsdestinationbucketarnC96584B6F00A464EAD1953AFF4B05118Parameter"
-              },
-              "/vpc-flow-logs/"
-            ]
-          ]
-        },
-        "LogDestinationType": "s3",
-        "MaxAggregationInterval": 60,
-        "ResourceId": {
-          "Ref": "NetworkEndpointsVpc619A1F01"
-        },
-        "ResourceType": "VPC",
-        "Tags": [
-          {
-            "Key": "Accelerator",
-            "Value": "AWSAccelerator"
-          },
-          {
-            "Key": "Name",
-            "Value": "Network-Endpoints"
-          }
-        ],
-        "TrafficType": "ALL"
-      },
-      "DependsOn": [
-        "DeleteDefaultVpc4DBAE36C"
-      ],
-      "Metadata": {
-        "lzaLookup": {
-          "vpcName": "Network-Endpoints",
-          "flowLogDestinationType": "s3"
-        }
-      }
-    },
-    "NetworkEndpointsVpcNetworkEndpointsTgwARouteTable9117846C": {
-      "Type": "AWS::EC2::RouteTable",
-      "Properties": {
-        "Tags": [
-          {
-            "Key": "Accelerator",
-            "Value": "AWSAccelerator"
-          },
-          {
-            "Key": "Name",
-            "Value": "Network-Endpoints-Tgw-A"
-          }
-        ],
-        "VpcId": {
-          "Ref": "NetworkEndpointsVpc619A1F01"
-        }
-      },
-      "Metadata": {
-        "lzaLookup": {
-          "routeTableName": "Network-Endpoints-Tgw-A",
-          "vpcName": "Network-Endpoints"
-        }
-      }
-    },
-    "NetworkEndpointsVpcNetworkEndpointsTgwBRouteTable7A11C65B": {
-      "Type": "AWS::EC2::RouteTable",
-      "Properties": {
-        "Tags": [
-          {
-            "Key": "Accelerator",
-            "Value": "AWSAccelerator"
-          },
-          {
-            "Key": "Name",
-            "Value": "Network-Endpoints-Tgw-B"
-          }
-        ],
-        "VpcId": {
-          "Ref": "NetworkEndpointsVpc619A1F01"
-        }
-      },
-      "Metadata": {
-        "lzaLookup": {
-          "routeTableName": "Network-Endpoints-Tgw-B",
-          "vpcName": "Network-Endpoints"
-        }
-      }
-    },
-    "NetworkEndpointsVpcNetworkEndpointsARouteTable5B9BF71B": {
-      "Type": "AWS::EC2::RouteTable",
-      "Properties": {
-        "Tags": [
-          {
-            "Key": "Accelerator",
-            "Value": "AWSAccelerator"
-          },
-          {
-            "Key": "Name",
-            "Value": "Network-Endpoints-A"
-          }
-        ],
-        "VpcId": {
-          "Ref": "NetworkEndpointsVpc619A1F01"
-        }
-      },
-      "Metadata": {
-        "lzaLookup": {
-          "routeTableName": "Network-Endpoints-A",
-          "vpcName": "Network-Endpoints"
-        }
-      }
-    },
-    "NetworkEndpointsVpcNetworkEndpointsBRouteTable639AAADB": {
-      "Type": "AWS::EC2::RouteTable",
-      "Properties": {
-        "Tags": [
-          {
-            "Key": "Accelerator",
-            "Value": "AWSAccelerator"
-          },
-          {
-            "Key": "Name",
-            "Value": "Network-Endpoints-B"
-          }
-        ],
-        "VpcId": {
-          "Ref": "NetworkEndpointsVpc619A1F01"
-        }
-      },
-      "Metadata": {
-        "lzaLookup": {
-          "routeTableName": "Network-Endpoints-B",
-          "vpcName": "Network-Endpoints"
-        }
-      }
-    },
-    "NetworkEndpointsVpcNetworkEndpointsASubnet758434F8": {
-      "Type": "Custom::IpamSubnet",
-      "Properties": {
-        "ServiceToken": {
-          "Fn::GetAtt": [
-            "CustomIpamSubnetCustomResourceProviderHandlerF7AF0D7A",
-            "Arn"
-          ]
-        },
-        "name": "Network-Endpoints-A",
-        "availabilityZone": "us-east-1a",
-        "basePool": [
-          "10.0.0.0/16",
-          "10.2.0.0/16"
-        ],
-        "ipamAllocation": {
-          "ipamPoolName": "home-region-pool",
-          "netmaskLength": 27
-        },
-        "vpcId": {
-          "Ref": "NetworkEndpointsVpc619A1F01"
-        },
-        "tags": [
-          {
-            "Key": "exampleKey",
-            "Value": "exampleValue"
-          }
-        ]
-      },
-      "DependsOn": [
-        "CustomIpamSubnetCustomResourceProviderLogGroup3BB67050"
-      ],
-      "UpdateReplacePolicy": "Delete",
-      "DeletionPolicy": "Delete",
-      "Metadata": {
-        "lzaLookup": {
-          "subnetName": "Network-Endpoints-A",
-          "vpcName": "Network-Endpoints"
-        }
-      }
-    },
-    "NetworkEndpointsVpcNetworkEndpointsASubnetRouteTableAssociation9EE74497": {
-      "Type": "AWS::EC2::SubnetRouteTableAssociation",
-      "Properties": {
-        "RouteTableId": {
-          "Ref": "NetworkEndpointsVpcNetworkEndpointsARouteTable5B9BF71B"
-        },
-        "SubnetId": {
-          "Ref": "NetworkEndpointsVpcNetworkEndpointsASubnet758434F8"
-        }
-      }
-    },
-    "CustomIpamSubnetCustomResourceProviderRoleA2FF4E6D": {
-      "Type": "AWS::IAM::Role",
-      "Properties": {
-        "AssumeRolePolicyDocument": {
-          "Version": "2012-10-17",
-          "Statement": [
-            {
-              "Action": "sts:AssumeRole",
-              "Effect": "Allow",
-              "Principal": {
-                "Service": "lambda.amazonaws.com"
-              }
-            }
-          ]
-        },
-        "ManagedPolicyArns": [
-          {
-            "Fn::Sub": "arn:${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
-          }
-        ],
-        "Policies": [
-          {
-            "PolicyName": "Inline",
-            "PolicyDocument": {
-              "Version": "2012-10-17",
-              "Statement": [
-                {
-                  "Effect": "Allow",
-                  "Action": [
-                    "ec2:CreateTags",
-                    "ec2:DeleteSubnet",
-                    "ec2:DeleteTags",
-                    "ec2:ModifySubnetAttribute"
-                  ],
-                  "Resource": {
-                    "Fn::Join": [
-                      "",
-                      [
-                        "arn:",
-                        {
-                          "Ref": "AWS::Partition"
-                        },
-                        ":ec2:",
-                        {
-                          "Ref": "AWS::Region"
-                        },
-                        ":",
-                        {
-                          "Ref": "AWS::AccountId"
-                        },
-                        ":subnet/*"
-                      ]
-                    ]
-                  }
-                },
-                {
-                  "Effect": "Allow",
-                  "Action": [
-                    "ec2:CreateSubnet"
-                  ],
-                  "Resource": [
-                    {
-                      "Fn::Join": [
-                        "",
-                        [
-                          "arn:",
-                          {
-                            "Ref": "AWS::Partition"
-                          },
-                          ":ec2:",
-                          {
-                            "Ref": "AWS::Region"
-                          },
-                          ":",
-                          {
-                            "Ref": "AWS::AccountId"
-                          },
-                          ":subnet/*"
-                        ]
-                      ]
-                    },
-                    {
-                      "Fn::Join": [
-                        "",
-                        [
-                          "arn:",
-                          {
-                            "Ref": "AWS::Partition"
-                          },
-                          ":ec2:",
-                          {
-                            "Ref": "AWS::Region"
-                          },
-                          ":",
-                          {
-                            "Ref": "AWS::AccountId"
-                          },
-                          ":vpc/*"
-                        ]
-                      ]
-                    }
-                  ]
-                },
-                {
-                  "Effect": "Allow",
-                  "Action": [
-                    "ec2:DescribeVpcs",
-                    "ec2:DescribeSubnets"
-                  ],
-                  "Resource": "*"
-                }
-              ]
-            }
-          }
-        ],
-        "Tags": [
-          {
-            "Key": "Accelerator",
-            "Value": "AWSAccelerator"
-          }
-        ]
-      }
-    },
-    "CustomIpamSubnetCustomResourceProviderHandlerF7AF0D7A": {
-      "Type": "AWS::Lambda::Function",
-      "Properties": {
-        "Code": {
-          "S3Bucket": "cdk-accel-assets-576394207599-us-east-1",
-          "S3Key": "666666666666/672352cc9fe274a504572d6d53ab651a17adbe438975c0661cae36b080055ce4.zip"
-        },
-        "Timeout": 900,
-        "MemorySize": 512,
-        "Handler": "__entrypoint__.handler",
-        "Role": {
-          "Fn::GetAtt": [
-            "CustomIpamSubnetCustomResourceProviderRoleA2FF4E6D",
-            "Arn"
-          ]
-        },
-        "Runtime": "nodejs20.x",
-        "Tags": [
-          {
-            "Key": "Accelerator",
-            "Value": "AWSAccelerator"
-          }
-        ],
-        "Environment": {
-          "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.12.0"
-          }
-        }
-      },
-      "DependsOn": [
-        "CustomIpamSubnetCustomResourceProviderRoleA2FF4E6D"
-      ]
-    },
-    "CustomIpamSubnetCustomResourceProviderLogGroup3BB67050": {
-      "Type": "AWS::Logs::LogGroup",
-      "Properties": {
-        "KmsKeyId": {
-          "Ref": "SsmParameterValueacceleratorkmscloudwatchkeyarnC96584B6F00A464EAD1953AFF4B05118Parameter"
-        },
-        "LogGroupName": {
-          "Fn::Join": [
-            "",
-            [
-              "/aws/lambda/",
-              {
-                "Ref": "CustomIpamSubnetCustomResourceProviderHandlerF7AF0D7A"
-              }
-            ]
-          ]
-        },
-        "RetentionInDays": 3653,
-        "Tags": [
-          {
-            "Key": "Accelerator",
-            "Value": "AWSAccelerator"
-          }
-        ]
-      },
-      "UpdateReplacePolicy": "Delete",
-      "DeletionPolicy": "Delete"
-    },
-    "NetworkEndpointsASubnetShareResourceShare2DF08804": {
-      "Type": "AWS::RAM::ResourceShare",
-      "Properties": {
-        "Name": "Network-Endpoints-A_SubnetShare",
-        "Principals": [
-          "arn:aws:organizations::576394207599:ou/o-6likhbzvrr/ou-vwk8-uxjab2xg"
-        ],
-        "ResourceArns": [
-          {
-            "Fn::Join": [
-              "",
-              [
-                "arn:",
-                {
-                  "Ref": "AWS::Partition"
-                },
-                ":ec2:us-east-1:666666666666:subnet/",
-                {
-                  "Ref": "NetworkEndpointsVpcNetworkEndpointsASubnet758434F8"
-                }
-              ]
-            ]
-          }
-        ],
-        "Tags": [
-          {
-            "Key": "Accelerator",
-            "Value": "AWSAccelerator"
-          }
-        ]
-      }
-    },
-    "NetworkEndpointsVpcNetworkEndpointsBSubnet1CF39812": {
-      "Type": "Custom::IpamSubnet",
-      "Properties": {
-        "ServiceToken": {
-          "Fn::GetAtt": [
-            "CustomIpamSubnetCustomResourceProviderHandlerF7AF0D7A",
-            "Arn"
-          ]
-        },
-        "name": "Network-Endpoints-B",
-        "availabilityZone": "us-east-1b",
-        "basePool": [
-          "10.0.0.0/16",
-          "10.2.0.0/16"
-        ],
-        "ipamAllocation": {
-          "ipamPoolName": "home-region-pool",
-          "netmaskLength": 27
-        },
-        "vpcId": {
-          "Ref": "NetworkEndpointsVpc619A1F01"
-        },
-        "tags": []
-      },
-      "DependsOn": [
-        "CustomIpamSubnetCustomResourceProviderLogGroup3BB67050",
-        "NetworkEndpointsVpcNetworkEndpointsASubnet758434F8",
-        "NetworkEndpointsVpcNetworkEndpointsASubnetRouteTableAssociation9EE74497"
-      ],
-      "UpdateReplacePolicy": "Delete",
-      "DeletionPolicy": "Delete",
-      "Metadata": {
-        "lzaLookup": {
-          "subnetName": "Network-Endpoints-B",
-          "vpcName": "Network-Endpoints"
-        }
-      }
-    },
-    "NetworkEndpointsVpcNetworkEndpointsBSubnetRouteTableAssociation68383153": {
-      "Type": "AWS::EC2::SubnetRouteTableAssociation",
-      "Properties": {
-        "RouteTableId": {
-          "Ref": "NetworkEndpointsVpcNetworkEndpointsBRouteTable639AAADB"
-        },
-        "SubnetId": {
-          "Ref": "NetworkEndpointsVpcNetworkEndpointsBSubnet1CF39812"
-        }
-      },
-      "DependsOn": [
-        "NetworkEndpointsVpcNetworkEndpointsASubnet758434F8",
-        "NetworkEndpointsVpcNetworkEndpointsASubnetRouteTableAssociation9EE74497"
-      ]
-    },
-    "NetworkEndpointsBSubnetShareResourceShareAC87E0E4": {
-      "Type": "AWS::RAM::ResourceShare",
-      "Properties": {
-        "Name": "Network-Endpoints-B_SubnetShare",
-        "Principals": [
-          "arn:aws:organizations::576394207599:ou/o-6likhbzvrr/ou-vwk8-uxjab2xg"
-        ],
-        "ResourceArns": [
-          {
-            "Fn::Join": [
-              "",
-              [
-                "arn:",
-                {
-                  "Ref": "AWS::Partition"
-                },
-                ":ec2:us-east-1:666666666666:subnet/",
-                {
-                  "Ref": "NetworkEndpointsVpcNetworkEndpointsBSubnet1CF39812"
-                }
-              ]
-            ]
-          }
-        ],
-        "Tags": [
-          {
-            "Key": "Accelerator",
-            "Value": "AWSAccelerator"
-          }
-        ]
-      }
-    },
-    "NetworkEndpointsVpcNetworkEndpointsTgwAttachASubnet3580E1C3": {
-      "Type": "Custom::IpamSubnet",
-      "Properties": {
-        "ServiceToken": {
-          "Fn::GetAtt": [
-            "CustomIpamSubnetCustomResourceProviderHandlerF7AF0D7A",
-            "Arn"
-          ]
-        },
-        "name": "Network-EndpointsTgwAttach-A",
-        "availabilityZone": "us-east-1a",
-        "basePool": [
-          "10.0.0.0/16",
-          "10.2.0.0/16"
-        ],
-        "ipamAllocation": {
-          "ipamPoolName": "home-region-pool",
-          "netmaskLength": 28
-        },
-        "vpcId": {
-          "Ref": "NetworkEndpointsVpc619A1F01"
-        },
-        "tags": []
-      },
-      "DependsOn": [
-        "CustomIpamSubnetCustomResourceProviderLogGroup3BB67050",
-        "NetworkEndpointsVpcNetworkEndpointsBSubnet1CF39812",
-        "NetworkEndpointsVpcNetworkEndpointsBSubnetRouteTableAssociation68383153"
-      ],
-      "UpdateReplacePolicy": "Delete",
-      "DeletionPolicy": "Delete",
-      "Metadata": {
-        "lzaLookup": {
-          "subnetName": "Network-EndpointsTgwAttach-A",
-          "vpcName": "Network-Endpoints"
-        }
-      }
-    },
-    "NetworkEndpointsVpcNetworkEndpointsTgwAttachASubnetRouteTableAssociation4D925D52": {
-      "Type": "AWS::EC2::SubnetRouteTableAssociation",
-      "Properties": {
-        "RouteTableId": {
-          "Ref": "NetworkEndpointsVpcNetworkEndpointsTgwARouteTable9117846C"
-        },
-        "SubnetId": {
-          "Ref": "NetworkEndpointsVpcNetworkEndpointsTgwAttachASubnet3580E1C3"
-        }
-      },
-      "DependsOn": [
-        "NetworkEndpointsVpcNetworkEndpointsBSubnet1CF39812",
-        "NetworkEndpointsVpcNetworkEndpointsBSubnetRouteTableAssociation68383153"
-      ]
-    },
-    "NetworkEndpointsTgwAttachASubnetShareResourceShare8BC8C37B": {
-      "Type": "AWS::RAM::ResourceShare",
-      "Properties": {
-        "Name": "Network-EndpointsTgwAttach-A_SubnetShare",
-        "Principals": [
-          "arn:aws:organizations::576394207599:ou/o-6likhbzvrr/ou-vwk8-uxjab2xg"
-        ],
-        "ResourceArns": [
-          {
-            "Fn::Join": [
-              "",
-              [
-                "arn:",
-                {
-                  "Ref": "AWS::Partition"
-                },
-                ":ec2:us-east-1:666666666666:subnet/",
-                {
-                  "Ref": "NetworkEndpointsVpcNetworkEndpointsTgwAttachASubnet3580E1C3"
-                }
-              ]
-            ]
-          }
-        ],
-        "Tags": [
-          {
-            "Key": "Accelerator",
-            "Value": "AWSAccelerator"
-          }
-        ]
-      }
-    },
-    "NetworkEndpointsVpcNetworkEndpointsTgwAttachBSubnet7F2CD5B5": {
-      "Type": "Custom::IpamSubnet",
-      "Properties": {
-        "ServiceToken": {
-          "Fn::GetAtt": [
-            "CustomIpamSubnetCustomResourceProviderHandlerF7AF0D7A",
-            "Arn"
-          ]
-        },
-        "name": "Network-EndpointsTgwAttach-B",
-        "availabilityZone": "us-east-1b",
-        "basePool": [
-          "10.0.0.0/16",
-          "10.2.0.0/16"
-        ],
-        "ipamAllocation": {
-          "ipamPoolName": "home-region-pool",
-          "netmaskLength": 28
-        },
-        "vpcId": {
-          "Ref": "NetworkEndpointsVpc619A1F01"
-        },
-        "tags": []
-      },
-      "DependsOn": [
-        "CustomIpamSubnetCustomResourceProviderLogGroup3BB67050",
-        "NetworkEndpointsVpcNetworkEndpointsTgwAttachASubnet3580E1C3",
-        "NetworkEndpointsVpcNetworkEndpointsTgwAttachASubnetRouteTableAssociation4D925D52"
-      ],
-      "UpdateReplacePolicy": "Delete",
-      "DeletionPolicy": "Delete",
-      "Metadata": {
-        "lzaLookup": {
-          "subnetName": "Network-EndpointsTgwAttach-B",
-          "vpcName": "Network-Endpoints"
-        }
-      }
-    },
-    "NetworkEndpointsVpcNetworkEndpointsTgwAttachBSubnetRouteTableAssociation958ED1AB": {
-      "Type": "AWS::EC2::SubnetRouteTableAssociation",
-      "Properties": {
-        "RouteTableId": {
-          "Ref": "NetworkEndpointsVpcNetworkEndpointsTgwBRouteTable7A11C65B"
-        },
-        "SubnetId": {
-          "Ref": "NetworkEndpointsVpcNetworkEndpointsTgwAttachBSubnet7F2CD5B5"
-        }
-      },
-      "DependsOn": [
-        "NetworkEndpointsVpcNetworkEndpointsTgwAttachASubnet3580E1C3",
-        "NetworkEndpointsVpcNetworkEndpointsTgwAttachASubnetRouteTableAssociation4D925D52"
-      ]
-    },
-    "NetworkEndpointsTgwAttachBSubnetShareResourceShareB966D727": {
-      "Type": "AWS::RAM::ResourceShare",
-      "Properties": {
-        "Name": "Network-EndpointsTgwAttach-B_SubnetShare",
-        "Principals": [
-          "arn:aws:organizations::576394207599:ou/o-6likhbzvrr/ou-vwk8-uxjab2xg"
-        ],
-        "ResourceArns": [
-          {
-            "Fn::Join": [
-              "",
-              [
-                "arn:",
-                {
-                  "Ref": "AWS::Partition"
-                },
-                ":ec2:us-east-1:666666666666:subnet/",
-                {
-                  "Ref": "NetworkEndpointsVpcNetworkEndpointsTgwAttachBSubnet7F2CD5B5"
-                }
-              ]
-            ]
-          }
-        ],
-        "Tags": [
-          {
-            "Key": "Accelerator",
-            "Value": "AWSAccelerator"
-          }
-        ]
-      }
-    },
-    "NetworkEndpointsVpcSharedParameters07793E5F": {
-      "Type": "Custom::SsmPutParameterValue",
-      "Properties": {
-        "ServiceToken": {
-          "Fn::GetAtt": [
-            "CustomSsmPutParameterValueCustomResourceProviderHandler2A0BDE7F",
-            "Arn"
-          ]
-        },
-        "region": "us-east-1",
-        "parameterAccountIds": [
-          "877044078718"
-        ],
-        "parameters": [
-          {
-            "name": "/accelerator/network/vpc/Network-Endpoints/id",
-            "value": {
-              "Ref": "NetworkEndpointsVpc619A1F01"
-            }
-          },
-          {
-            "name": "/accelerator/network/vpc/Network-Endpoints/subnet/Network-Endpoints-A/id",
-            "value": {
-              "Ref": "NetworkEndpointsVpcNetworkEndpointsASubnet758434F8"
-            }
-          },
-          {
-            "name": "/accelerator/network/vpc/Network-Endpoints/subnet/Network-Endpoints-A/cidr/ipv4",
-            "value": {
-              "Fn::GetAtt": [
-                "NetworkEndpointsVpcNetworkEndpointsASubnet758434F8",
-                "ipv4CidrBlock"
-              ]
-            }
-          },
-          {
-            "name": "/accelerator/network/vpc/Network-Endpoints/subnet/Network-Endpoints-B/id",
-            "value": {
-              "Ref": "NetworkEndpointsVpcNetworkEndpointsBSubnet1CF39812"
-            }
-          },
-          {
-            "name": "/accelerator/network/vpc/Network-Endpoints/subnet/Network-Endpoints-B/cidr/ipv4",
-            "value": {
-              "Fn::GetAtt": [
-                "NetworkEndpointsVpcNetworkEndpointsBSubnet1CF39812",
-                "ipv4CidrBlock"
-              ]
-            }
-          },
-          {
-            "name": "/accelerator/network/vpc/Network-Endpoints/subnet/Network-EndpointsTgwAttach-A/id",
-            "value": {
-              "Ref": "NetworkEndpointsVpcNetworkEndpointsTgwAttachASubnet3580E1C3"
-            }
-          },
-          {
-            "name": "/accelerator/network/vpc/Network-Endpoints/subnet/Network-EndpointsTgwAttach-A/cidr/ipv4",
-            "value": {
-              "Fn::GetAtt": [
-                "NetworkEndpointsVpcNetworkEndpointsTgwAttachASubnet3580E1C3",
-                "ipv4CidrBlock"
-              ]
-            }
-          },
-          {
-            "name": "/accelerator/network/vpc/Network-Endpoints/subnet/Network-EndpointsTgwAttach-B/id",
-            "value": {
-              "Ref": "NetworkEndpointsVpcNetworkEndpointsTgwAttachBSubnet7F2CD5B5"
-            }
-          },
-          {
-            "name": "/accelerator/network/vpc/Network-Endpoints/subnet/Network-EndpointsTgwAttach-B/cidr/ipv4",
-            "value": {
-              "Fn::GetAtt": [
-                "NetworkEndpointsVpcNetworkEndpointsTgwAttachBSubnet7F2CD5B5",
-                "ipv4CidrBlock"
-              ]
-            }
-          }
-        ],
-        "roleName": "AWSAccelerator-CrossAccountSsmParameterShare",
-        "invokingAccountId": "666666666666",
-        "uuid": "10fcd27a-187f-4a73-a014-598a3a1b2c76"
-      },
-      "DependsOn": [
-        "CustomSsmPutParameterValueCustomResourceProviderLogGroupB0109C68"
-      ],
-      "UpdateReplacePolicy": "Delete",
-      "DeletionPolicy": "Delete"
-    },
-    "CustomSsmPutParameterValueCustomResourceProviderRole9E1F101A": {
-      "Type": "AWS::IAM::Role",
-      "Properties": {
-        "AssumeRolePolicyDocument": {
-          "Version": "2012-10-17",
-          "Statement": [
-            {
-              "Action": "sts:AssumeRole",
-              "Effect": "Allow",
-              "Principal": {
-                "Service": "lambda.amazonaws.com"
-              }
-            }
-          ]
-        },
-        "ManagedPolicyArns": [
-          {
-            "Fn::Sub": "arn:${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
-          }
-        ],
-        "Policies": [
-          {
-            "PolicyName": "Inline",
-            "PolicyDocument": {
-              "Version": "2012-10-17",
-              "Statement": [
-                {
-                  "Sid": "SsmPutParameterActions",
-                  "Effect": "Allow",
-                  "Action": [
-                    "ssm:DeleteParameter",
-                    "ssm:PutParameter"
-                  ],
-                  "Resource": [
-                    "*"
-                  ]
-                },
-                {
-                  "Sid": "StsAssumeRoleActions",
-                  "Effect": "Allow",
-                  "Action": [
-                    "sts:AssumeRole"
-                  ],
-                  "Resource": [
-                    {
-                      "Fn::Join": [
-                        "",
-                        [
-                          "arn:",
-                          {
-                            "Ref": "AWS::Partition"
-                          },
-                          ":iam::*:role/AWSAccelerator*"
-                        ]
-                      ]
-                    }
-                  ]
-                }
-              ]
-            }
-          }
-        ],
-        "Tags": [
-          {
-            "Key": "Accelerator",
-            "Value": "AWSAccelerator"
-          }
-        ]
-      }
-    },
-    "CustomSsmPutParameterValueCustomResourceProviderHandler2A0BDE7F": {
-      "Type": "AWS::Lambda::Function",
-      "Properties": {
-        "Code": {
-          "S3Bucket": "cdk-accel-assets-576394207599-us-east-1",
-          "S3Key": "666666666666/762b5641285808a2a8e953ad6a759785ae3ad5efb10c1c49afce0c7035f6c444.zip"
-        },
-        "Timeout": 900,
-        "MemorySize": 512,
-        "Handler": "__entrypoint__.handler",
-        "Role": {
-          "Fn::GetAtt": [
-            "CustomSsmPutParameterValueCustomResourceProviderRole9E1F101A",
-            "Arn"
-          ]
-        },
-        "Runtime": "nodejs20.x",
-        "Description": "Custom resource provider to put cross-account ssm parameter value",
-        "Tags": [
-          {
-            "Key": "Accelerator",
-            "Value": "AWSAccelerator"
-          }
-        ],
-        "Environment": {
-          "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.12.0"
-          }
-        }
-      },
-      "DependsOn": [
-        "CustomSsmPutParameterValueCustomResourceProviderRole9E1F101A"
-      ]
-    },
-    "CustomSsmPutParameterValueCustomResourceProviderLogGroupB0109C68": {
-      "Type": "AWS::Logs::LogGroup",
-      "Properties": {
-        "KmsKeyId": {
-          "Ref": "SsmParameterValueacceleratorkmscloudwatchkeyarnC96584B6F00A464EAD1953AFF4B05118Parameter"
-        },
-        "LogGroupName": {
-          "Fn::Join": [
-            "",
-            [
-              "/aws/lambda/",
-              {
-                "Ref": "CustomSsmPutParameterValueCustomResourceProviderHandler2A0BDE7F"
-              }
-            ]
-          ]
-        },
-        "RetentionInDays": 3653,
-        "Tags": [
-          {
-            "Key": "Accelerator",
-            "Value": "AWSAccelerator"
-          }
-        ]
-      },
-      "UpdateReplacePolicy": "Delete",
-      "DeletionPolicy": "Delete"
-    },
-    "NetworkEndpointsVpcManagementSg2B8F9418": {
-      "Type": "AWS::EC2::SecurityGroup",
-      "Properties": {
-        "GroupDescription": "Management Security Group",
-        "GroupName": "Management",
-        "SecurityGroupEgress": [
-          {
-            "CidrIp": "10.0.0.0/8",
-            "Description": "All Outbound",
-            "IpProtocol": "-1"
-          },
-          {
-            "CidrIp": "100.96.252.0/23",
-            "Description": "All Outbound",
-            "IpProtocol": "-1"
-          },
-          {
-            "CidrIp": "100.96.250.0/23",
-            "Description": "All Outbound",
-            "IpProtocol": "-1"
-          },
-          {
-            "CidrIp": {
-              "Fn::GetAtt": [
-                "NetworkEndpointsVpcNetworkEndpointsTgwAttachASubnet3580E1C3",
-                "ipv4CidrBlock"
-              ]
-            },
-            "Description": "All Outbound",
-            "IpProtocol": "-1"
-          },
-          {
-            "CidrIp": {
-              "Fn::GetAtt": [
-                "NetworkEndpointsVpcNetworkEndpointsTgwAttachBSubnet7F2CD5B5",
-                "ipv4CidrBlock"
-              ]
-            },
-            "Description": "All Outbound",
-            "IpProtocol": "-1"
-          },
-          {
-            "Description": "All Outbound",
-            "DestinationPrefixListId": {
-              "Fn::GetAtt": [
-                "AcceleratorPrefixListPrefixList8ACB36CF",
-                "PrefixListId"
-              ]
-            },
-            "IpProtocol": "-1"
-          },
-          {
-            "CidrIp": "10.0.0.0/8",
-            "Description": "Limited Outbound",
-            "FromPort": 22,
-            "IpProtocol": "tcp",
-            "ToPort": 22
-          },
-          {
-            "CidrIp": "10.0.0.0/8",
-            "Description": "Limited Outbound",
-            "FromPort": 22,
-            "IpProtocol": "udp",
-            "ToPort": 22
-          }
-        ],
-        "SecurityGroupIngress": [
-          {
-            "CidrIp": "10.0.0.0/8",
-            "Description": "Management RDP Traffic Inbound",
-            "FromPort": 3389,
-            "IpProtocol": "tcp",
-            "ToPort": 3389
-          },
-          {
-            "CidrIp": "100.96.252.0/23",
-            "Description": "Management RDP Traffic Inbound",
-            "FromPort": 3389,
-            "IpProtocol": "tcp",
-            "ToPort": 3389
-          },
-          {
-            "CidrIp": "100.96.250.0/23",
-            "Description": "Management RDP Traffic Inbound",
-            "FromPort": 3389,
-            "IpProtocol": "tcp",
-            "ToPort": 3389
-          },
-          {
-            "CidrIpv6": "fd00::/8",
-            "Description": "Management RDP Traffic Inbound",
-            "FromPort": 3389,
-            "IpProtocol": "tcp",
-            "ToPort": 3389
-          },
-          {
-            "CidrIp": {
-              "Fn::GetAtt": [
-                "NetworkEndpointsVpcNetworkEndpointsTgwAttachASubnet3580E1C3",
-                "ipv4CidrBlock"
-              ]
-            },
-            "Description": "Management RDP Traffic Inbound",
-            "FromPort": 3389,
-            "IpProtocol": "tcp",
-            "ToPort": 3389
-          },
-          {
-            "CidrIp": {
-              "Fn::GetAtt": [
-                "NetworkEndpointsVpcNetworkEndpointsTgwAttachBSubnet7F2CD5B5",
-                "ipv4CidrBlock"
-              ]
-            },
-            "Description": "Management RDP Traffic Inbound",
-            "FromPort": 3389,
-            "IpProtocol": "tcp",
-            "ToPort": 3389
-          },
-          {
-            "Description": "Management RDP Traffic Inbound",
-            "FromPort": 3389,
-            "IpProtocol": "tcp",
-            "SourcePrefixListId": {
-              "Fn::GetAtt": [
-                "AcceleratorPrefixListPrefixList8ACB36CF",
-                "PrefixListId"
-              ]
-            },
-            "ToPort": 3389
-          },
-          {
-            "CidrIp": "10.0.0.0/8",
-            "Description": "Management SSH Traffic Inbound",
-            "FromPort": 22,
-            "IpProtocol": "tcp",
-            "ToPort": 22
-          },
-          {
-            "CidrIp": "100.96.252.0/23",
-            "Description": "Management SSH Traffic Inbound",
-            "FromPort": 22,
-            "IpProtocol": "tcp",
-            "ToPort": 22
-          },
-          {
-            "CidrIp": "100.96.250.0/23",
-            "Description": "Management SSH Traffic Inbound",
-            "FromPort": 22,
-            "IpProtocol": "tcp",
-            "ToPort": 22
-          },
-          {
-            "CidrIp": {
-              "Fn::GetAtt": [
-                "NetworkEndpointsVpcNetworkEndpointsTgwAttachASubnet3580E1C3",
-                "ipv4CidrBlock"
-              ]
-            },
-            "Description": "Management SSH Traffic Inbound",
-            "FromPort": 22,
-            "IpProtocol": "tcp",
-            "ToPort": 22
-          },
-          {
-            "CidrIp": {
-              "Fn::GetAtt": [
-                "NetworkEndpointsVpcNetworkEndpointsTgwAttachBSubnet7F2CD5B5",
-                "ipv4CidrBlock"
-              ]
-            },
-            "Description": "Management SSH Traffic Inbound",
-            "FromPort": 22,
-            "IpProtocol": "tcp",
-            "ToPort": 22
-          },
-          {
-            "Description": "Management SSH Traffic Inbound",
-            "FromPort": 22,
-            "IpProtocol": "tcp",
-            "SourcePrefixListId": {
-              "Fn::GetAtt": [
-                "AcceleratorPrefixListPrefixList8ACB36CF",
-                "PrefixListId"
-              ]
-            },
-            "ToPort": 22
-          },
-          {
-            "CidrIp": "10.0.0.0/8",
-            "Description": "Management SSH Traffic Inbound",
-            "FromPort": 22,
-            "IpProtocol": "udp",
-            "ToPort": 22
-          },
-          {
-            "CidrIp": "100.96.252.0/23",
-            "Description": "Management SSH Traffic Inbound",
-            "FromPort": 22,
-            "IpProtocol": "udp",
-            "ToPort": 22
-          },
-          {
-            "CidrIp": "100.96.250.0/23",
-            "Description": "Management SSH Traffic Inbound",
-            "FromPort": 22,
-            "IpProtocol": "udp",
-            "ToPort": 22
-          },
-          {
-            "CidrIp": {
-              "Fn::GetAtt": [
-                "NetworkEndpointsVpcNetworkEndpointsTgwAttachASubnet3580E1C3",
-                "ipv4CidrBlock"
-              ]
-            },
-            "Description": "Management SSH Traffic Inbound",
-            "FromPort": 22,
-            "IpProtocol": "udp",
-            "ToPort": 22
-          },
-          {
-            "CidrIp": {
-              "Fn::GetAtt": [
-                "NetworkEndpointsVpcNetworkEndpointsTgwAttachBSubnet7F2CD5B5",
-                "ipv4CidrBlock"
-              ]
-            },
-            "Description": "Management SSH Traffic Inbound",
-            "FromPort": 22,
-            "IpProtocol": "udp",
-            "ToPort": 22
-          },
-          {
-            "Description": "Management SSH Traffic Inbound",
-            "FromPort": 22,
-            "IpProtocol": "udp",
-            "SourcePrefixListId": {
-              "Fn::GetAtt": [
-                "AcceleratorPrefixListPrefixList8ACB36CF",
-                "PrefixListId"
-              ]
-            },
-            "ToPort": 22
-          }
-        ],
-        "Tags": [
-          {
-            "Key": "Accel-P",
-            "Value": "AWSAccelerator"
-          },
-          {
-            "Key": "Accelerator",
-            "Value": "AWSAccelerator"
-          },
-          {
-            "Key": "Name",
-            "Value": "Management"
-          }
-        ],
-        "VpcId": {
-          "Ref": "NetworkEndpointsVpc619A1F01"
-        }
-      }
-    },
-    "NetworkEndpointsVpcManagementSgManagementIngress008FD972B5": {
-      "Type": "AWS::EC2::SecurityGroupIngress",
-      "Properties": {
-        "Description": "Management RDP Traffic Inbound",
-        "FromPort": 3389,
-        "GroupId": {
-          "Ref": "NetworkEndpointsVpcManagementSg2B8F9418"
-        },
-        "IpProtocol": "tcp",
-        "SourceSecurityGroupId": {
-          "Ref": "NetworkEndpointsVpcManagementSg2B8F9418"
-        },
-        "ToPort": 3389
-      }
-    },
-    "NetworkEndpointsVpcManagementSgManagementIngress105119E927": {
-      "Type": "AWS::EC2::SecurityGroupIngress",
-      "Properties": {
-        "Description": "Management SSH Traffic Inbound",
-        "FromPort": 22,
-        "GroupId": {
-          "Ref": "NetworkEndpointsVpcManagementSg2B8F9418"
-        },
-        "IpProtocol": "tcp",
-        "SourceSecurityGroupId": {
-          "Ref": "NetworkEndpointsVpcManagementSg2B8F9418"
-        },
-        "ToPort": 22
-      }
-    },
-    "NetworkEndpointsVpcManagementSgManagementIngress1135D6C2DD": {
-      "Type": "AWS::EC2::SecurityGroupIngress",
-      "Properties": {
-        "Description": "Management SSH Traffic Inbound",
-        "FromPort": 22,
-        "GroupId": {
-          "Ref": "NetworkEndpointsVpcManagementSg2B8F9418"
-        },
-        "IpProtocol": "udp",
-        "SourceSecurityGroupId": {
-          "Ref": "NetworkEndpointsVpcManagementSg2B8F9418"
-        },
-        "ToPort": 22
-      }
-    },
-    "NetworkEndpointsVpcManagementSgManagementEgress00D58058BF": {
-      "Type": "AWS::EC2::SecurityGroupEgress",
-      "Properties": {
-        "Description": "All Outbound",
-        "DestinationSecurityGroupId": {
-          "Ref": "NetworkEndpointsVpcManagementSg2B8F9418"
-        },
-        "GroupId": {
-          "Ref": "NetworkEndpointsVpcManagementSg2B8F9418"
-        },
-        "IpProtocol": "-1"
-      }
-    },
-    "NetworkEndpointsVpcTestNaclNaclD97515C3": {
-      "Type": "AWS::EC2::NetworkAcl",
-      "Properties": {
-        "Tags": [
-          {
-            "Key": "Accelerator",
-            "Value": "AWSAccelerator"
-          },
-          {
-            "Key": "Name",
-            "Value": "TestNACL"
-          }
-        ],
-        "VpcId": {
-          "Ref": "NetworkEndpointsVpc619A1F01"
-        }
-      },
-      "Metadata": {
-        "cdk_nag": {
-          "rules_to_suppress": [
-            {
-              "id": "AwsSolutions-VPC3",
-              "reason": "NACL added to VPC"
-            }
-          ]
-        }
-      }
-    },
-    "NetworkEndpointsVpcTestNaclNaclNetworkEndpointsVpcTestNaclNaclAssociateNetworkEndpointsA4115E6F7": {
-      "Type": "AWS::EC2::SubnetNetworkAclAssociation",
-      "Properties": {
-        "NetworkAclId": {
-          "Ref": "NetworkEndpointsVpcTestNaclNaclD97515C3"
-        },
-        "SubnetId": {
-          "Ref": "NetworkEndpointsVpcNetworkEndpointsASubnet758434F8"
-        }
-      }
-    },
-    "NetworkEndpointsVpcTestNaclNaclNetworkEndpointsVpcTestNaclInbound10285077E8": {
-      "Type": "AWS::EC2::NetworkAclEntry",
-      "Properties": {
-        "CidrBlock": "10.0.0.0/8",
-        "Egress": false,
-        "NetworkAclId": {
-          "Ref": "NetworkEndpointsVpcTestNaclNaclD97515C3"
-        },
-        "PortRange": {
-          "From": -1,
-          "To": -1
-        },
-        "Protocol": -1,
-        "RuleAction": "allow",
-        "RuleNumber": 10
-      },
-      "Metadata": {
-        "cdk_nag": {
-          "rules_to_suppress": [
-            {
-              "id": "AwsSolutions-VPC3",
-              "reason": "NACL added to VPC"
-            }
-          ]
-        }
-      }
-    },
-    "NetworkEndpointsVpcTestNaclNaclNetworkEndpointsVpcTestNaclInbound204B9A2831": {
-      "Type": "AWS::EC2::NetworkAclEntry",
-      "Properties": {
-        "CidrBlock": {
-          "Fn::GetAtt": [
-            "NetworkEndpointsVpcNetworkEndpointsASubnet758434F8",
-            "ipv4CidrBlock"
-          ]
-        },
-        "Egress": false,
-        "NetworkAclId": {
-          "Ref": "NetworkEndpointsVpcTestNaclNaclD97515C3"
-        },
-        "PortRange": {
-          "From": -1,
-          "To": -1
-        },
-        "Protocol": -1,
-        "RuleAction": "allow",
-        "RuleNumber": 20
-      },
-      "Metadata": {
-        "cdk_nag": {
-          "rules_to_suppress": [
-            {
-              "id": "AwsSolutions-VPC3",
-              "reason": "NACL added to VPC"
-            }
-          ]
-        }
-      }
-    },
-    "NetworkEndpointsVpcTestNaclNaclNetworkEndpointsVpcTestNaclInbound30C3889AA1": {
-      "Type": "AWS::EC2::NetworkAclEntry",
-      "Properties": {
-        "CidrBlock": "10.0.0.0/24",
-        "Egress": false,
-        "Icmp": {
-          "Code": 5,
-          "Type": 32
-        },
-        "NetworkAclId": {
-          "Ref": "NetworkEndpointsVpcTestNaclNaclD97515C3"
-        },
-        "PortRange": {},
-        "Protocol": 1,
-        "RuleAction": "allow",
-        "RuleNumber": 30
-      },
-      "Metadata": {
-        "cdk_nag": {
-          "rules_to_suppress": [
-            {
-              "id": "AwsSolutions-VPC3",
-              "reason": "NACL added to VPC"
-            }
-          ]
-        }
-      }
-    },
-    "NetworkEndpointsVpcTestNaclNaclNetworkEndpointsVpcTestNaclOutbound1089A97466": {
-      "Type": "AWS::EC2::NetworkAclEntry",
-      "Properties": {
-        "CidrBlock": "0.0.0.0/0",
-        "Egress": true,
-        "NetworkAclId": {
-          "Ref": "NetworkEndpointsVpcTestNaclNaclD97515C3"
-        },
-        "PortRange": {
-          "From": -1,
-          "To": -1
-        },
-        "Protocol": -1,
-        "RuleAction": "allow",
-        "RuleNumber": 10
-      },
-      "Metadata": {
-        "cdk_nag": {
-          "rules_to_suppress": [
-            {
-              "id": "AwsSolutions-VPC3",
-              "reason": "NACL added to VPC"
-            }
-          ]
-        }
-      }
-    },
-    "NetworkEndpointsVpcTestNaclNaclNetworkEndpointsVpcTestNaclOutbound20634A981E": {
-      "Type": "AWS::EC2::NetworkAclEntry",
-      "Properties": {
-        "CidrBlock": {
-          "Fn::GetAtt": [
-            "NetworkEndpointsVpcNetworkEndpointsASubnet758434F8",
-            "ipv4CidrBlock"
-          ]
-        },
-        "Egress": true,
-        "NetworkAclId": {
-          "Ref": "NetworkEndpointsVpcTestNaclNaclD97515C3"
-        },
-        "PortRange": {
-          "From": -1,
-          "To": -1
-        },
-        "Protocol": -1,
-        "RuleAction": "allow",
-        "RuleNumber": 20
-      },
-      "Metadata": {
-        "cdk_nag": {
-          "rules_to_suppress": [
-            {
-              "id": "AwsSolutions-VPC3",
-              "reason": "NACL added to VPC"
-            }
-          ]
-        }
-      }
-    },
-    "GetIpamCidrRole2DCCA945": {
-      "Type": "AWS::IAM::Role",
-      "Properties": {
-        "AssumeRolePolicyDocument": {
-          "Statement": [
-            {
-              "Action": "sts:AssumeRole",
-              "Condition": {
-                "StringEquals": {
-                  "aws:PrincipalOrgID": "o-6likhbzvrr"
-                },
-                "ArnLike": {
-                  "aws:PrincipalArn": [
-                    {
-                      "Fn::Join": [
-                        "",
-                        [
-                          "arn:",
-                          {
-                            "Ref": "AWS::Partition"
-                          },
-                          ":iam::*:role/AWSAccelerator*"
-                        ]
-                      ]
-                    }
-                  ]
-                }
-              },
-              "Effect": "Allow",
-              "Principal": {
-                "AWS": "*"
-              }
-            }
-          ],
-          "Version": "2012-10-17"
-        },
-        "Policies": [
-          {
-            "PolicyDocument": {
-              "Statement": [
-                {
-                  "Action": [
-                    "ec2:DescribeSubnets",
-                    "ssm:GetParameter"
-                  ],
-                  "Effect": "Allow",
-                  "Resource": "*"
-                }
-              ],
-              "Version": "2012-10-17"
-            },
-            "PolicyName": "default"
-          }
-        ],
-        "RoleName": "AWSAccelerator-GetIpamCidrRole",
-        "Tags": [
-          {
-            "Key": "Accelerator",
-            "Value": "AWSAccelerator"
-          }
-        ]
-      },
-      "Metadata": {
-        "cdk_nag": {
-          "rules_to_suppress": [
-            {
-              "id": "AwsSolutions-IAM5",
-              "reason": "Allow read role to get CIDRs from dynamic IPAM resources."
-            }
-          ]
-        }
-      }
-    },
-    "PutNetworkVpcStackResourceParameters94AB00D4": {
-      "Type": "Custom::SsmPutParameterValue",
-      "Properties": {
-        "ServiceToken": {
-          "Fn::GetAtt": [
-            "CustomSsmPutParameterValueCustomResourceProviderHandler2A0BDE7F",
-            "Arn"
-          ]
-        },
-        "region": "us-east-1",
-        "parameterAccountIds": [
-          "666666666666"
-        ],
-        "parameters": [
-          {
-            "name": "/accelerator/network/vpc/Network-Endpoints/cidr/ipv4",
-            "value": {
-              "Fn::GetAtt": [
-                "NetworkEndpointsVpc619A1F01",
-                "CidrBlock"
-              ]
-            }
-          },
-          {
-            "name": "/accelerator/network/vpc/Network-Endpoints/subnet/Network-Endpoints-A/cidr/ipv4",
-            "value": {
-              "Fn::GetAtt": [
-                "NetworkEndpointsVpcNetworkEndpointsASubnet758434F8",
-                "ipv4CidrBlock"
-              ]
-            }
-          },
-          {
-            "name": "/accelerator/network/vpc/Network-Endpoints/subnet/Network-Endpoints-B/cidr/ipv4",
-            "value": {
-              "Fn::GetAtt": [
-                "NetworkEndpointsVpcNetworkEndpointsBSubnet1CF39812",
-                "ipv4CidrBlock"
-              ]
-            }
-          },
-          {
-            "name": "/accelerator/network/vpc/Network-Endpoints/subnet/Network-EndpointsTgwAttach-A/cidr/ipv4",
-            "value": {
-              "Fn::GetAtt": [
-                "NetworkEndpointsVpcNetworkEndpointsTgwAttachASubnet3580E1C3",
-                "ipv4CidrBlock"
-              ]
-            }
-          },
-          {
-            "name": "/accelerator/network/vpc/Network-Endpoints/subnet/Network-EndpointsTgwAttach-B/cidr/ipv4",
-            "value": {
-              "Fn::GetAtt": [
-                "NetworkEndpointsVpcNetworkEndpointsTgwAttachBSubnet7F2CD5B5",
-                "ipv4CidrBlock"
-              ]
-            }
-          }
-        ],
-        "roleName": "AWSAccelerator-CrossAccountSsmParameterShare",
-        "invokingAccountId": "666666666666",
-        "uuid": "9adb1c30-6dcf-4e6e-8624-af667d9386db"
-      },
-      "DependsOn": [
-        "CustomSsmPutParameterValueCustomResourceProviderLogGroupB0109C68"
-      ],
-      "UpdateReplacePolicy": "Delete",
-      "DeletionPolicy": "Delete"
-    },
-    "SsmParamAcceleratorPrefixListPrefixListEBB07221": {
-      "Type": "AWS::SSM::Parameter",
-      "Properties": {
-        "Name": "/accelerator/network/prefixList/accelerator-prefix-list/id",
-        "Tags": {
-          "Accelerator": "AWSAccelerator"
-        },
-        "Type": "String",
-        "Value": {
-          "Fn::GetAtt": [
-            "AcceleratorPrefixListPrefixList8ACB36CF",
-            "PrefixListId"
-          ]
-        }
-      }
-    },
-    "SsmParamNetworkEndpointsVpcIdD8AF7DB9": {
-      "Type": "AWS::SSM::Parameter",
-      "Properties": {
-        "Name": "/accelerator/network/vpc/Network-Endpoints/id",
-        "Tags": {
-          "Accelerator": "AWSAccelerator"
-        },
-        "Type": "String",
-        "Value": {
-          "Ref": "NetworkEndpointsVpc619A1F01"
-        }
-      }
-    },
-    "SsmParamNetworkEndpointsVpnGatewayId9424DAB4": {
-      "Type": "AWS::SSM::Parameter",
-      "Properties": {
-        "Name": "/accelerator/network/vpc/Network-Endpoints/virtualPrivateGateway/id",
-        "Tags": {
-          "Accelerator": "AWSAccelerator"
-        },
-        "Type": "String",
-        "Value": {
-          "Ref": "NetworkEndpointsVpcVirtualPrivateGateway2CE2FFC3"
-        }
-      }
-    },
-    "SsmParamNetworkEndpointsNetworkEndpointsTgwARouteTableId2037B6B4": {
-      "Type": "AWS::SSM::Parameter",
-      "Properties": {
-        "Name": "/accelerator/network/vpc/Network-Endpoints/routeTable/Network-Endpoints-Tgw-A/id",
-        "Tags": {
-          "Accelerator": "AWSAccelerator"
-        },
-        "Type": "String",
-        "Value": {
-          "Ref": "NetworkEndpointsVpcNetworkEndpointsTgwARouteTable9117846C"
-        }
-      }
-    },
-    "SsmParamNetworkEndpointsNetworkEndpointsTgwBRouteTableIdC8AB07B7": {
-      "Type": "AWS::SSM::Parameter",
-      "Properties": {
-        "Name": "/accelerator/network/vpc/Network-Endpoints/routeTable/Network-Endpoints-Tgw-B/id",
-        "Tags": {
-          "Accelerator": "AWSAccelerator"
-        },
-        "Type": "String",
-        "Value": {
-          "Ref": "NetworkEndpointsVpcNetworkEndpointsTgwBRouteTable7A11C65B"
-        }
-      }
-    },
-    "SsmParamNetworkEndpointsNetworkEndpointsARouteTableIdC55DBCD4": {
-      "Type": "AWS::SSM::Parameter",
-      "Properties": {
-        "Name": "/accelerator/network/vpc/Network-Endpoints/routeTable/Network-Endpoints-A/id",
-        "Tags": {
-          "Accelerator": "AWSAccelerator"
-        },
-        "Type": "String",
-        "Value": {
-          "Ref": "NetworkEndpointsVpcNetworkEndpointsARouteTable5B9BF71B"
-        }
-      },
-      "DependsOn": [
-        "SsmParamNetworkEndpointsNetworkEndpointsTgwBRouteTableIdC8AB07B7"
-      ]
-    },
-    "SsmParamNetworkEndpointsNetworkEndpointsBRouteTableId03F05790": {
-      "Type": "AWS::SSM::Parameter",
-      "Properties": {
-        "Name": "/accelerator/network/vpc/Network-Endpoints/routeTable/Network-Endpoints-B/id",
-        "Tags": {
-          "Accelerator": "AWSAccelerator"
-        },
-        "Type": "String",
-        "Value": {
-          "Ref": "NetworkEndpointsVpcNetworkEndpointsBRouteTable639AAADB"
-        }
-      },
-      "DependsOn": [
-        "SsmParamNetworkEndpointsNetworkEndpointsTgwBRouteTableIdC8AB07B7"
-      ]
-    },
-    "SsmParamNetworkEndpointsNetworkEndpointsASubnetIdF53EDCC9": {
-      "Type": "AWS::SSM::Parameter",
-      "Properties": {
-        "Name": "/accelerator/network/vpc/Network-Endpoints/subnet/Network-Endpoints-A/id",
-        "Tags": {
-          "Accelerator": "AWSAccelerator"
-        },
-        "Type": "String",
-        "Value": {
-          "Ref": "NetworkEndpointsVpcNetworkEndpointsASubnet758434F8"
-        }
-      },
-      "DependsOn": [
-        "SsmParamNetworkEndpointsNetworkEndpointsTgwBRouteTableIdC8AB07B7"
-      ]
-    },
-    "SsmParamNetworkEndpointsNetworkEndpointsBSubnetId62D810E8": {
-      "Type": "AWS::SSM::Parameter",
-      "Properties": {
-        "Name": "/accelerator/network/vpc/Network-Endpoints/subnet/Network-Endpoints-B/id",
-        "Tags": {
-          "Accelerator": "AWSAccelerator"
-        },
-        "Type": "String",
-        "Value": {
-          "Ref": "NetworkEndpointsVpcNetworkEndpointsBSubnet1CF39812"
-        }
-      },
-      "DependsOn": [
-        "SsmParamNetworkEndpointsNetworkEndpointsTgwBRouteTableIdC8AB07B7"
-      ]
-    },
-    "SsmParamNetworkEndpointsNetworkEndpointsTgwAttachASubnetId72C0AC02": {
-      "Type": "AWS::SSM::Parameter",
-      "Properties": {
-        "Name": "/accelerator/network/vpc/Network-Endpoints/subnet/Network-EndpointsTgwAttach-A/id",
-        "Tags": {
-          "Accelerator": "AWSAccelerator"
-        },
-        "Type": "String",
-        "Value": {
-          "Ref": "NetworkEndpointsVpcNetworkEndpointsTgwAttachASubnet3580E1C3"
-        }
-      }
-    },
-    "SsmParamNetworkEndpointsNetworkEndpointsTgwAttachBSubnetId0B7C06C7": {
-      "Type": "AWS::SSM::Parameter",
-      "Properties": {
-        "Name": "/accelerator/network/vpc/Network-Endpoints/subnet/Network-EndpointsTgwAttach-B/id",
-        "Tags": {
-          "Accelerator": "AWSAccelerator"
-        },
-        "Type": "String",
-        "Value": {
-          "Ref": "NetworkEndpointsVpcNetworkEndpointsTgwAttachBSubnet7F2CD5B5"
-        }
-      },
-      "DependsOn": [
-        "SsmParamNetworkEndpointsNetworkEndpointsTgwAttachASubnetId72C0AC02"
-      ]
-    },
-    "SsmParamNetworkEndpointsManagementSecurityGroup157CDC67": {
-      "Type": "AWS::SSM::Parameter",
-      "Properties": {
-        "Name": "/accelerator/network/vpc/Network-Endpoints/securityGroup/Management/id",
-        "Tags": {
-          "Accelerator": "AWSAccelerator"
-        },
-        "Type": "String",
-        "Value": {
-          "Ref": "NetworkEndpointsVpcManagementSg2B8F9418"
-        }
-      },
-      "DependsOn": [
-        "SsmParamNetworkEndpointsNetworkEndpointsTgwAttachASubnetId72C0AC02"
-      ]
-    },
-    "SsmParamNetworkEndpointsTestNaclNaclED9584AC": {
-      "Type": "AWS::SSM::Parameter",
-      "Properties": {
-        "Name": "/accelerator/network/vpc/Network-Endpoints/networkAcl/TestNACL/id",
-        "Tags": {
-          "Accelerator": "AWSAccelerator"
-        },
-        "Type": "String",
-        "Value": {
-          "Ref": "NetworkEndpointsVpcTestNaclNaclD97515C3"
-        }
-      },
-      "DependsOn": [
-        "SsmParamNetworkEndpointsNetworkEndpointsTgwAttachASubnetId72C0AC02"
-      ]
-    }
-  },
-  "Parameters": {
-    "SsmParameterValueacceleratorkmscloudwatchkeyarnC96584B6F00A464EAD1953AFF4B05118Parameter": {
-      "Type": "AWS::SSM::Parameter::Value<String>",
-      "Default": "/accelerator/kms/cloudwatch/key-arn"
-    },
-    "SsmParameterValueacceleratorkmslambdakeyarnC96584B6F00A464EAD1953AFF4B05118Parameter": {
-      "Type": "AWS::SSM::Parameter::Value<String>",
-      "Default": "/accelerator/kms/lambda/key-arn"
-    },
-    "SsmParameterValueacceleratornetworkipampoolshomeregionpoolidC96584B6F00A464EAD1953AFF4B05118Parameter": {
-      "Type": "AWS::SSM::Parameter::Value<String>",
-      "Default": "/accelerator/network/ipam/pools/home-region-pool/id"
-    },
-    "SsmParameterValueacceleratorvpcflowlogsdestinationbucketarnC96584B6F00A464EAD1953AFF4B05118Parameter": {
-      "Type": "AWS::SSM::Parameter::Value<String>",
-      "Default": "/accelerator/vpc/flow-logs/destination/bucket/arn"
-    }
+ "Description": "(SO0199-networkvpc) Landing Zone Accelerator on AWS. Version 1.12.0.",
+ "Metadata": {
+  "lzaLookup": {
+   "accountName": "Network",
+   "region": "us-east-1"
   }
+ },
+ "Resources": {
+  "SsmParamStackId521A78D3": {
+   "Type": "AWS::SSM::Parameter",
+   "Properties": {
+    "Name": "/accelerator/AWSAccelerator-NetworkVpcStack-666666666666-us-east-1/stack-id",
+    "Tags": {
+     "Accelerator": "AWSAccelerator"
+    },
+    "Type": "String",
+    "Value": {
+     "Ref": "AWS::StackId"
+    }
+   }
+  },
+  "SsmParamAcceleratorVersionFF83282D": {
+   "Type": "AWS::SSM::Parameter",
+   "Properties": {
+    "Name": "/accelerator/AWSAccelerator-NetworkVpcStack-666666666666-us-east-1/version",
+    "Tags": {
+     "Accelerator": "AWSAccelerator"
+    },
+    "Type": "String",
+    "Value": "1.12.0"
+   }
+  },
+  "AcceleratorDhcpOptsDhcpOpts09C66A89": {
+   "Type": "AWS::EC2::DHCPOptions",
+   "Properties": {
+    "DomainName": "example.com",
+    "DomainNameServers": [
+     "1.1.1.1",
+     "2.2.2.2"
+    ],
+    "NetbiosNameServers": [
+     "1.1.1.1",
+     "2.2.2.2"
+    ],
+    "NetbiosNodeType": 2,
+    "NtpServers": [
+     "1.1.1.1",
+     "2.2.2.2"
+    ],
+    "Tags": [
+     {
+      "Key": "Accelerator",
+      "Value": "AWSAccelerator"
+     },
+     {
+      "Key": "Name",
+      "Value": "accelerator-dhcp-opts"
+     }
+    ]
+   }
+  },
+  "TestIpv6DhcpOpts2920A043": {
+   "Type": "AWS::EC2::DHCPOptions",
+   "Properties": {
+    "DomainName": "example.com",
+    "DomainNameServers": [
+     "192.168.1.2",
+     "192.168.2.2",
+     "10.0.0.2",
+     "10.0.1.2",
+     "::1",
+     "::2",
+     "::3",
+     "::4"
+    ],
+    "NetbiosNameServers": [
+     "192.168.1.2",
+     "192.168.2.2",
+     "10.0.0.2",
+     "10.0.1.2"
+    ],
+    "NtpServers": [
+     "192.168.1.2",
+     "192.168.2.2",
+     "10.0.0.2",
+     "10.0.1.2",
+     "::1",
+     "::2",
+     "::3",
+     "::4"
+    ],
+    "Tags": [
+     {
+      "Key": "Accelerator",
+      "Value": "AWSAccelerator"
+     },
+     {
+      "Key": "Name",
+      "Value": "test-ipv6"
+     }
+    ]
+   }
+  },
+  "AcceleratorPrefixListPrefixList8ACB36CF": {
+   "Type": "AWS::EC2::PrefixList",
+   "Properties": {
+    "AddressFamily": "IPv4",
+    "Entries": [
+     {
+      "Cidr": "10.1.0.1/32"
+     }
+    ],
+    "MaxEntries": 1,
+    "PrefixListName": "accelerator-prefix-list",
+    "Tags": [
+     {
+      "Key": "Accelerator",
+      "Value": "AWSAccelerator"
+     }
+    ]
+   }
+  },
+  "DeleteDefaultVpc4DBAE36C": {
+   "Type": "Custom::DeleteDefaultVpc",
+   "Properties": {
+    "ServiceToken": {
+     "Fn::GetAtt": [
+      "CustomDeleteDefaultVpcCustomResourceProviderHandler87E89F35",
+      "Arn"
+     ]
+    }
+   },
+   "DependsOn": [
+    "CustomDeleteDefaultVpcCustomResourceProviderLogGroup4113DA48"
+   ],
+   "UpdateReplacePolicy": "Delete",
+   "DeletionPolicy": "Delete"
+  },
+  "CustomDeleteDefaultVpcCustomResourceProviderRole80963EEF": {
+   "Type": "AWS::IAM::Role",
+   "Properties": {
+    "AssumeRolePolicyDocument": {
+     "Version": "2012-10-17",
+     "Statement": [
+      {
+       "Action": "sts:AssumeRole",
+       "Effect": "Allow",
+       "Principal": {
+        "Service": "lambda.amazonaws.com"
+       }
+      }
+     ]
+    },
+    "ManagedPolicyArns": [
+     {
+      "Fn::Sub": "arn:${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+     }
+    ],
+    "Policies": [
+     {
+      "PolicyName": "Inline",
+      "PolicyDocument": {
+       "Version": "2012-10-17",
+       "Statement": [
+        {
+         "Effect": "Allow",
+         "Action": [
+          "ec2:DeleteInternetGateway",
+          "ec2:DetachInternetGateway",
+          "ec2:DeleteNetworkAcl",
+          "ec2:DeleteRoute",
+          "ec2:DeleteSecurityGroup",
+          "ec2:DeleteSubnet",
+          "ec2:DeleteVpc",
+          "ec2:DescribeInternetGateways",
+          "ec2:DescribeNetworkAcls",
+          "ec2:DescribeRouteTables",
+          "ec2:DescribeSecurityGroups",
+          "ec2:DescribeSubnets",
+          "ec2:DescribeVpcs"
+         ],
+         "Resource": "*"
+        }
+       ]
+      }
+     }
+    ],
+    "Tags": [
+     {
+      "Key": "Accelerator",
+      "Value": "AWSAccelerator"
+     }
+    ]
+   }
+  },
+  "CustomDeleteDefaultVpcCustomResourceProviderHandler87E89F35": {
+   "Type": "AWS::Lambda::Function",
+   "Properties": {
+    "Code": {
+     "S3Bucket": "cdk-accel-assets-576394207599-us-east-1",
+     "S3Key": "666666666666/9e9925ebdf6998229de345016aa6b073ee765d0cdba02d5eea66a84f4fa3ada3.zip"
+    },
+    "Timeout": 900,
+    "MemorySize": 512,
+    "Handler": "__entrypoint__.handler",
+    "Role": {
+     "Fn::GetAtt": [
+      "CustomDeleteDefaultVpcCustomResourceProviderRole80963EEF",
+      "Arn"
+     ]
+    },
+    "Runtime": "nodejs20.x",
+    "Tags": [
+     {
+      "Key": "Accelerator",
+      "Value": "AWSAccelerator"
+     }
+    ],
+    "Environment": {
+     "Variables": {
+      "SOLUTION_ID": "AwsSolution/SO0199/1.12.0"
+     }
+    }
+   },
+   "DependsOn": [
+    "CustomDeleteDefaultVpcCustomResourceProviderRole80963EEF"
+   ]
+  },
+  "CustomDeleteDefaultVpcCustomResourceProviderLogGroup4113DA48": {
+   "Type": "AWS::Logs::LogGroup",
+   "Properties": {
+    "KmsKeyId": {
+     "Ref": "SsmParameterValueacceleratorkmscloudwatchkeyarnC96584B6F00A464EAD1953AFF4B05118Parameter"
+    },
+    "LogGroupName": {
+     "Fn::Join": [
+      "",
+      [
+       "/aws/lambda/",
+       {
+        "Ref": "CustomDeleteDefaultVpcCustomResourceProviderHandler87E89F35"
+       }
+      ]
+     ]
+    },
+    "RetentionInDays": 3653,
+    "Tags": [
+     {
+      "Key": "Accelerator",
+      "Value": "AWSAccelerator"
+     }
+    ]
+   },
+   "UpdateReplacePolicy": "Delete",
+   "DeletionPolicy": "Delete"
+  },
+  "NetworkEndpointsVpc619A1F01": {
+   "Type": "AWS::EC2::VPC",
+   "Properties": {
+    "EnableDnsHostnames": true,
+    "EnableDnsSupport": true,
+    "InstanceTenancy": "default",
+    "Ipv4IpamPoolId": {
+     "Ref": "SsmParameterValueacceleratornetworkipampoolshomeregionpoolidC96584B6F00A464EAD1953AFF4B05118Parameter"
+    },
+    "Ipv4NetmaskLength": 19,
+    "Tags": [
+     {
+      "Key": "Accelerator",
+      "Value": "AWSAccelerator"
+     },
+     {
+      "Key": "Name",
+      "Value": "Network-Endpoints"
+     }
+    ]
+   },
+   "DependsOn": [
+    "DeleteDefaultVpc4DBAE36C"
+   ],
+   "Metadata": {
+    "lzaLookup": {
+     "vpcName": "Network-Endpoints"
+    }
+   }
+  },
+  "NetworkEndpointsVpcInternetGateway6505072B": {
+   "Type": "AWS::EC2::InternetGateway",
+   "Properties": {
+    "Tags": [
+     {
+      "Key": "Accelerator",
+      "Value": "AWSAccelerator"
+     },
+     {
+      "Key": "Name",
+      "Value": "Network-Endpoints"
+     }
+    ]
+   },
+   "DependsOn": [
+    "DeleteDefaultVpc4DBAE36C"
+   ],
+   "Metadata": {
+    "lzaLookup": {
+     "vpcName": "Network-Endpoints"
+    }
+   }
+  },
+  "NetworkEndpointsVpcInternetGatewayAttachment8B5DCF4D": {
+   "Type": "AWS::EC2::VPCGatewayAttachment",
+   "Properties": {
+    "InternetGatewayId": {
+     "Ref": "NetworkEndpointsVpcInternetGateway6505072B"
+    },
+    "VpcId": {
+     "Ref": "NetworkEndpointsVpc619A1F01"
+    }
+   },
+   "DependsOn": [
+    "DeleteDefaultVpc4DBAE36C"
+   ]
+  },
+  "NetworkEndpointsVpcVirtualPrivateGateway2CE2FFC3": {
+   "Type": "AWS::EC2::VPNGateway",
+   "Properties": {
+    "AmazonSideAsn": 65200,
+    "Tags": [
+     {
+      "Key": "Accelerator",
+      "Value": "AWSAccelerator"
+     },
+     {
+      "Key": "Name",
+      "Value": "Network-Endpoints"
+     }
+    ],
+    "Type": "ipsec.1"
+   },
+   "DependsOn": [
+    "DeleteDefaultVpc4DBAE36C"
+   ],
+   "Metadata": {
+    "lzaLookup": {
+     "vpcName": "Network-Endpoints"
+    }
+   }
+  },
+  "NetworkEndpointsVpcVirtualPrivateGatewayAttachment01185FBA": {
+   "Type": "AWS::EC2::VPCGatewayAttachment",
+   "Properties": {
+    "VpcId": {
+     "Ref": "NetworkEndpointsVpc619A1F01"
+    },
+    "VpnGatewayId": {
+     "Ref": "NetworkEndpointsVpcVirtualPrivateGateway2CE2FFC3"
+    }
+   },
+   "DependsOn": [
+    "DeleteDefaultVpc4DBAE36C"
+   ]
+  },
+  "NetworkEndpointsVpcDhcpOptionsAssociationC9A5CF5F": {
+   "Type": "AWS::EC2::VPCDHCPOptionsAssociation",
+   "Properties": {
+    "DhcpOptionsId": {
+     "Ref": "AcceleratorDhcpOptsDhcpOpts09C66A89"
+    },
+    "VpcId": {
+     "Ref": "NetworkEndpointsVpc619A1F01"
+    }
+   },
+   "DependsOn": [
+    "DeleteDefaultVpc4DBAE36C"
+   ],
+   "Metadata": {
+    "lzaLookup": {
+     "vpcName": "Network-Endpoints",
+     "dhcpOptionsName": "accelerator-dhcp-opts"
+    }
+   }
+  },
+  "NetworkEndpointsVpcFlowLogsGroupB21A3331": {
+   "Type": "AWS::Logs::LogGroup",
+   "Properties": {
+    "KmsKeyId": {
+     "Ref": "SsmParameterValueacceleratorkmscloudwatchkeyarnC96584B6F00A464EAD1953AFF4B05118Parameter"
+    },
+    "RetentionInDays": 3653,
+    "Tags": [
+     {
+      "Key": "Accelerator",
+      "Value": "AWSAccelerator"
+     },
+     {
+      "Key": "Name",
+      "Value": "Network-Endpoints"
+     }
+    ]
+   },
+   "DependsOn": [
+    "DeleteDefaultVpc4DBAE36C"
+   ],
+   "UpdateReplacePolicy": "Retain",
+   "DeletionPolicy": "Retain"
+  },
+  "NetworkEndpointsVpcFlowLogsRole2614AF13": {
+   "Type": "AWS::IAM::Role",
+   "Properties": {
+    "AssumeRolePolicyDocument": {
+     "Statement": [
+      {
+       "Action": "sts:AssumeRole",
+       "Effect": "Allow",
+       "Principal": {
+        "Service": "vpc-flow-logs.amazonaws.com"
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "Tags": [
+     {
+      "Key": "Accelerator",
+      "Value": "AWSAccelerator"
+     },
+     {
+      "Key": "Name",
+      "Value": "Network-Endpoints"
+     }
+    ]
+   },
+   "DependsOn": [
+    "DeleteDefaultVpc4DBAE36C"
+   ]
+  },
+  "NetworkEndpointsVpcFlowLogsRoleDefaultPolicyA9F3924A": {
+   "Type": "AWS::IAM::Policy",
+   "Properties": {
+    "PolicyDocument": {
+     "Statement": [
+      {
+       "Action": [
+        "logs:CreateLogDelivery",
+        "logs:CreateLogGroup",
+        "logs:CreateLogStream",
+        "logs:DeleteLogDelivery",
+        "logs:DescribeLogGroups",
+        "logs:DescribeLogStreams",
+        "logs:PutLogEvents"
+       ],
+       "Effect": "Allow",
+       "Resource": {
+        "Fn::GetAtt": [
+         "NetworkEndpointsVpcFlowLogsGroupB21A3331",
+         "Arn"
+        ]
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "PolicyName": "NetworkEndpointsVpcFlowLogsRoleDefaultPolicyA9F3924A",
+    "Roles": [
+     {
+      "Ref": "NetworkEndpointsVpcFlowLogsRole2614AF13"
+     }
+    ]
+   },
+   "DependsOn": [
+    "DeleteDefaultVpc4DBAE36C"
+   ]
+  },
+  "NetworkEndpointsVpcCloudWatchFlowLogEB41E61E": {
+   "Type": "AWS::EC2::FlowLog",
+   "Properties": {
+    "DeliverLogsPermissionArn": {
+     "Fn::GetAtt": [
+      "NetworkEndpointsVpcFlowLogsRole2614AF13",
+      "Arn"
+     ]
+    },
+    "LogDestination": {
+     "Fn::GetAtt": [
+      "NetworkEndpointsVpcFlowLogsGroupB21A3331",
+      "Arn"
+     ]
+    },
+    "LogDestinationType": "cloud-watch-logs",
+    "MaxAggregationInterval": 60,
+    "ResourceId": {
+     "Ref": "NetworkEndpointsVpc619A1F01"
+    },
+    "ResourceType": "VPC",
+    "Tags": [
+     {
+      "Key": "Accelerator",
+      "Value": "AWSAccelerator"
+     },
+     {
+      "Key": "Name",
+      "Value": "Network-Endpoints"
+     }
+    ],
+    "TrafficType": "ALL"
+   },
+   "DependsOn": [
+    "DeleteDefaultVpc4DBAE36C"
+   ],
+   "Metadata": {
+    "lzaLookup": {
+     "vpcName": "Network-Endpoints",
+     "flowLogDestinationType": "cloud-watch-logs"
+    }
+   }
+  },
+  "NetworkEndpointsVpcS3FlowLog1207DE15": {
+   "Type": "AWS::EC2::FlowLog",
+   "Properties": {
+    "LogDestination": {
+     "Fn::Join": [
+      "",
+      [
+       {
+        "Ref": "SsmParameterValueacceleratorvpcflowlogsdestinationbucketarnC96584B6F00A464EAD1953AFF4B05118Parameter"
+       },
+       "/vpc-flow-logs/"
+      ]
+     ]
+    },
+    "LogDestinationType": "s3",
+    "MaxAggregationInterval": 60,
+    "ResourceId": {
+     "Ref": "NetworkEndpointsVpc619A1F01"
+    },
+    "ResourceType": "VPC",
+    "Tags": [
+     {
+      "Key": "Accelerator",
+      "Value": "AWSAccelerator"
+     },
+     {
+      "Key": "Name",
+      "Value": "Network-Endpoints"
+     }
+    ],
+    "TrafficType": "ALL"
+   },
+   "DependsOn": [
+    "DeleteDefaultVpc4DBAE36C"
+   ],
+   "Metadata": {
+    "lzaLookup": {
+     "vpcName": "Network-Endpoints",
+     "flowLogDestinationType": "s3"
+    }
+   }
+  },
+  "NetworkEndpointsVpcNetworkEndpointsTgwARouteTable9117846C": {
+   "Type": "AWS::EC2::RouteTable",
+   "Properties": {
+    "Tags": [
+     {
+      "Key": "Accelerator",
+      "Value": "AWSAccelerator"
+     },
+     {
+      "Key": "Name",
+      "Value": "Network-Endpoints-Tgw-A"
+     }
+    ],
+    "VpcId": {
+     "Ref": "NetworkEndpointsVpc619A1F01"
+    }
+   },
+   "Metadata": {
+    "lzaLookup": {
+     "routeTableName": "Network-Endpoints-Tgw-A",
+     "vpcName": "Network-Endpoints"
+    }
+   }
+  },
+  "NetworkEndpointsVpcNetworkEndpointsTgwBRouteTable7A11C65B": {
+   "Type": "AWS::EC2::RouteTable",
+   "Properties": {
+    "Tags": [
+     {
+      "Key": "Accelerator",
+      "Value": "AWSAccelerator"
+     },
+     {
+      "Key": "Name",
+      "Value": "Network-Endpoints-Tgw-B"
+     }
+    ],
+    "VpcId": {
+     "Ref": "NetworkEndpointsVpc619A1F01"
+    }
+   },
+   "Metadata": {
+    "lzaLookup": {
+     "routeTableName": "Network-Endpoints-Tgw-B",
+     "vpcName": "Network-Endpoints"
+    }
+   }
+  },
+  "NetworkEndpointsVpcNetworkEndpointsARouteTable5B9BF71B": {
+   "Type": "AWS::EC2::RouteTable",
+   "Properties": {
+    "Tags": [
+     {
+      "Key": "Accelerator",
+      "Value": "AWSAccelerator"
+     },
+     {
+      "Key": "Name",
+      "Value": "Network-Endpoints-A"
+     }
+    ],
+    "VpcId": {
+     "Ref": "NetworkEndpointsVpc619A1F01"
+    }
+   },
+   "Metadata": {
+    "lzaLookup": {
+     "routeTableName": "Network-Endpoints-A",
+     "vpcName": "Network-Endpoints"
+    }
+   }
+  },
+  "NetworkEndpointsVpcNetworkEndpointsBRouteTable639AAADB": {
+   "Type": "AWS::EC2::RouteTable",
+   "Properties": {
+    "Tags": [
+     {
+      "Key": "Accelerator",
+      "Value": "AWSAccelerator"
+     },
+     {
+      "Key": "Name",
+      "Value": "Network-Endpoints-B"
+     }
+    ],
+    "VpcId": {
+     "Ref": "NetworkEndpointsVpc619A1F01"
+    }
+   },
+   "Metadata": {
+    "lzaLookup": {
+     "routeTableName": "Network-Endpoints-B",
+     "vpcName": "Network-Endpoints"
+    }
+   }
+  },
+  "NetworkEndpointsVpcNetworkEndpointsASubnet758434F8": {
+   "Type": "Custom::IpamSubnet",
+   "Properties": {
+    "ServiceToken": {
+     "Fn::GetAtt": [
+      "CustomIpamSubnetCustomResourceProviderHandlerF7AF0D7A",
+      "Arn"
+     ]
+    },
+    "name": "Network-Endpoints-A",
+    "availabilityZone": "us-east-1a",
+    "basePool": [
+     "10.0.0.0/16",
+     "10.2.0.0/16"
+    ],
+    "ipamAllocation": {
+     "ipamPoolName": "home-region-pool",
+     "netmaskLength": 27
+    },
+    "vpcId": {
+     "Ref": "NetworkEndpointsVpc619A1F01"
+    },
+    "tags": [
+     {
+      "Key": "exampleKey",
+      "Value": "exampleValue"
+     }
+    ]
+   },
+   "DependsOn": [
+    "CustomIpamSubnetCustomResourceProviderLogGroup3BB67050"
+   ],
+   "UpdateReplacePolicy": "Delete",
+   "DeletionPolicy": "Delete",
+   "Metadata": {
+    "lzaLookup": {
+     "vpcName": "Network-Endpoints",
+     "subnetName": "Network-Endpoints-A"
+    }
+   }
+  },
+  "NetworkEndpointsVpcNetworkEndpointsASubnetRouteTableAssociation9EE74497": {
+   "Type": "AWS::EC2::SubnetRouteTableAssociation",
+   "Properties": {
+    "RouteTableId": {
+     "Ref": "NetworkEndpointsVpcNetworkEndpointsARouteTable5B9BF71B"
+    },
+    "SubnetId": {
+     "Ref": "NetworkEndpointsVpcNetworkEndpointsASubnet758434F8"
+    }
+   },
+   "Metadata": {
+    "lzaLookup": {
+     "subnetName": "Network-Endpoints-A",
+     "routeTableName": "Network-Endpoints-A"
+    }
+   }
+  },
+  "CustomIpamSubnetCustomResourceProviderRoleA2FF4E6D": {
+   "Type": "AWS::IAM::Role",
+   "Properties": {
+    "AssumeRolePolicyDocument": {
+     "Version": "2012-10-17",
+     "Statement": [
+      {
+       "Action": "sts:AssumeRole",
+       "Effect": "Allow",
+       "Principal": {
+        "Service": "lambda.amazonaws.com"
+       }
+      }
+     ]
+    },
+    "ManagedPolicyArns": [
+     {
+      "Fn::Sub": "arn:${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+     }
+    ],
+    "Policies": [
+     {
+      "PolicyName": "Inline",
+      "PolicyDocument": {
+       "Version": "2012-10-17",
+       "Statement": [
+        {
+         "Effect": "Allow",
+         "Action": [
+          "ec2:CreateTags",
+          "ec2:DeleteSubnet",
+          "ec2:DeleteTags",
+          "ec2:ModifySubnetAttribute"
+         ],
+         "Resource": {
+          "Fn::Join": [
+           "",
+           [
+            "arn:",
+            {
+             "Ref": "AWS::Partition"
+            },
+            ":ec2:",
+            {
+             "Ref": "AWS::Region"
+            },
+            ":",
+            {
+             "Ref": "AWS::AccountId"
+            },
+            ":subnet/*"
+           ]
+          ]
+         }
+        },
+        {
+         "Effect": "Allow",
+         "Action": [
+          "ec2:CreateSubnet"
+         ],
+         "Resource": [
+          {
+           "Fn::Join": [
+            "",
+            [
+             "arn:",
+             {
+              "Ref": "AWS::Partition"
+             },
+             ":ec2:",
+             {
+              "Ref": "AWS::Region"
+             },
+             ":",
+             {
+              "Ref": "AWS::AccountId"
+             },
+             ":subnet/*"
+            ]
+           ]
+          },
+          {
+           "Fn::Join": [
+            "",
+            [
+             "arn:",
+             {
+              "Ref": "AWS::Partition"
+             },
+             ":ec2:",
+             {
+              "Ref": "AWS::Region"
+             },
+             ":",
+             {
+              "Ref": "AWS::AccountId"
+             },
+             ":vpc/*"
+            ]
+           ]
+          }
+         ]
+        },
+        {
+         "Effect": "Allow",
+         "Action": [
+          "ec2:DescribeVpcs",
+          "ec2:DescribeSubnets"
+         ],
+         "Resource": "*"
+        }
+       ]
+      }
+     }
+    ],
+    "Tags": [
+     {
+      "Key": "Accelerator",
+      "Value": "AWSAccelerator"
+     }
+    ]
+   }
+  },
+  "CustomIpamSubnetCustomResourceProviderHandlerF7AF0D7A": {
+   "Type": "AWS::Lambda::Function",
+   "Properties": {
+    "Code": {
+     "S3Bucket": "cdk-accel-assets-576394207599-us-east-1",
+     "S3Key": "666666666666/672352cc9fe274a504572d6d53ab651a17adbe438975c0661cae36b080055ce4.zip"
+    },
+    "Timeout": 900,
+    "MemorySize": 512,
+    "Handler": "__entrypoint__.handler",
+    "Role": {
+     "Fn::GetAtt": [
+      "CustomIpamSubnetCustomResourceProviderRoleA2FF4E6D",
+      "Arn"
+     ]
+    },
+    "Runtime": "nodejs20.x",
+    "Tags": [
+     {
+      "Key": "Accelerator",
+      "Value": "AWSAccelerator"
+     }
+    ],
+    "Environment": {
+     "Variables": {
+      "SOLUTION_ID": "AwsSolution/SO0199/1.12.0"
+     }
+    }
+   },
+   "DependsOn": [
+    "CustomIpamSubnetCustomResourceProviderRoleA2FF4E6D"
+   ]
+  },
+  "CustomIpamSubnetCustomResourceProviderLogGroup3BB67050": {
+   "Type": "AWS::Logs::LogGroup",
+   "Properties": {
+    "KmsKeyId": {
+     "Ref": "SsmParameterValueacceleratorkmscloudwatchkeyarnC96584B6F00A464EAD1953AFF4B05118Parameter"
+    },
+    "LogGroupName": {
+     "Fn::Join": [
+      "",
+      [
+       "/aws/lambda/",
+       {
+        "Ref": "CustomIpamSubnetCustomResourceProviderHandlerF7AF0D7A"
+       }
+      ]
+     ]
+    },
+    "RetentionInDays": 3653,
+    "Tags": [
+     {
+      "Key": "Accelerator",
+      "Value": "AWSAccelerator"
+     }
+    ]
+   },
+   "UpdateReplacePolicy": "Delete",
+   "DeletionPolicy": "Delete"
+  },
+  "NetworkEndpointsASubnetShareResourceShare2DF08804": {
+   "Type": "AWS::RAM::ResourceShare",
+   "Properties": {
+    "Name": "Network-Endpoints-A_SubnetShare",
+    "Principals": [
+     "arn:aws:organizations::576394207599:ou/o-6likhbzvrr/ou-vwk8-uxjab2xg"
+    ],
+    "ResourceArns": [
+     {
+      "Fn::Join": [
+       "",
+       [
+        "arn:",
+        {
+         "Ref": "AWS::Partition"
+        },
+        ":ec2:us-east-1:666666666666:subnet/",
+        {
+         "Ref": "NetworkEndpointsVpcNetworkEndpointsASubnet758434F8"
+        }
+       ]
+      ]
+     }
+    ],
+    "Tags": [
+     {
+      "Key": "Accelerator",
+      "Value": "AWSAccelerator"
+     }
+    ]
+   },
+   "Metadata": {
+    "lzaLookup": {
+     "subnetName": "Network-Endpoints-A"
+    }
+   }
+  },
+  "NetworkEndpointsVpcNetworkEndpointsBSubnet1CF39812": {
+   "Type": "Custom::IpamSubnet",
+   "Properties": {
+    "ServiceToken": {
+     "Fn::GetAtt": [
+      "CustomIpamSubnetCustomResourceProviderHandlerF7AF0D7A",
+      "Arn"
+     ]
+    },
+    "name": "Network-Endpoints-B",
+    "availabilityZone": "us-east-1b",
+    "basePool": [
+     "10.0.0.0/16",
+     "10.2.0.0/16"
+    ],
+    "ipamAllocation": {
+     "ipamPoolName": "home-region-pool",
+     "netmaskLength": 27
+    },
+    "vpcId": {
+     "Ref": "NetworkEndpointsVpc619A1F01"
+    },
+    "tags": []
+   },
+   "DependsOn": [
+    "CustomIpamSubnetCustomResourceProviderLogGroup3BB67050",
+    "NetworkEndpointsVpcNetworkEndpointsASubnet758434F8",
+    "NetworkEndpointsVpcNetworkEndpointsASubnetRouteTableAssociation9EE74497"
+   ],
+   "UpdateReplacePolicy": "Delete",
+   "DeletionPolicy": "Delete",
+   "Metadata": {
+    "lzaLookup": {
+     "vpcName": "Network-Endpoints",
+     "subnetName": "Network-Endpoints-B"
+    }
+   }
+  },
+  "NetworkEndpointsVpcNetworkEndpointsBSubnetRouteTableAssociation68383153": {
+   "Type": "AWS::EC2::SubnetRouteTableAssociation",
+   "Properties": {
+    "RouteTableId": {
+     "Ref": "NetworkEndpointsVpcNetworkEndpointsBRouteTable639AAADB"
+    },
+    "SubnetId": {
+     "Ref": "NetworkEndpointsVpcNetworkEndpointsBSubnet1CF39812"
+    }
+   },
+   "DependsOn": [
+    "NetworkEndpointsVpcNetworkEndpointsASubnet758434F8",
+    "NetworkEndpointsVpcNetworkEndpointsASubnetRouteTableAssociation9EE74497"
+   ],
+   "Metadata": {
+    "lzaLookup": {
+     "subnetName": "Network-Endpoints-B",
+     "routeTableName": "Network-Endpoints-B"
+    }
+   }
+  },
+  "NetworkEndpointsBSubnetShareResourceShareAC87E0E4": {
+   "Type": "AWS::RAM::ResourceShare",
+   "Properties": {
+    "Name": "Network-Endpoints-B_SubnetShare",
+    "Principals": [
+     "arn:aws:organizations::576394207599:ou/o-6likhbzvrr/ou-vwk8-uxjab2xg"
+    ],
+    "ResourceArns": [
+     {
+      "Fn::Join": [
+       "",
+       [
+        "arn:",
+        {
+         "Ref": "AWS::Partition"
+        },
+        ":ec2:us-east-1:666666666666:subnet/",
+        {
+         "Ref": "NetworkEndpointsVpcNetworkEndpointsBSubnet1CF39812"
+        }
+       ]
+      ]
+     }
+    ],
+    "Tags": [
+     {
+      "Key": "Accelerator",
+      "Value": "AWSAccelerator"
+     }
+    ]
+   },
+   "Metadata": {
+    "lzaLookup": {
+     "subnetName": "Network-Endpoints-B"
+    }
+   }
+  },
+  "NetworkEndpointsVpcNetworkEndpointsTgwAttachASubnet3580E1C3": {
+   "Type": "Custom::IpamSubnet",
+   "Properties": {
+    "ServiceToken": {
+     "Fn::GetAtt": [
+      "CustomIpamSubnetCustomResourceProviderHandlerF7AF0D7A",
+      "Arn"
+     ]
+    },
+    "name": "Network-EndpointsTgwAttach-A",
+    "availabilityZone": "us-east-1a",
+    "basePool": [
+     "10.0.0.0/16",
+     "10.2.0.0/16"
+    ],
+    "ipamAllocation": {
+     "ipamPoolName": "home-region-pool",
+     "netmaskLength": 28
+    },
+    "vpcId": {
+     "Ref": "NetworkEndpointsVpc619A1F01"
+    },
+    "tags": []
+   },
+   "DependsOn": [
+    "CustomIpamSubnetCustomResourceProviderLogGroup3BB67050",
+    "NetworkEndpointsVpcNetworkEndpointsBSubnet1CF39812",
+    "NetworkEndpointsVpcNetworkEndpointsBSubnetRouteTableAssociation68383153"
+   ],
+   "UpdateReplacePolicy": "Delete",
+   "DeletionPolicy": "Delete",
+   "Metadata": {
+    "lzaLookup": {
+     "vpcName": "Network-Endpoints",
+     "subnetName": "Network-EndpointsTgwAttach-A"
+    }
+   }
+  },
+  "NetworkEndpointsVpcNetworkEndpointsTgwAttachASubnetRouteTableAssociation4D925D52": {
+   "Type": "AWS::EC2::SubnetRouteTableAssociation",
+   "Properties": {
+    "RouteTableId": {
+     "Ref": "NetworkEndpointsVpcNetworkEndpointsTgwARouteTable9117846C"
+    },
+    "SubnetId": {
+     "Ref": "NetworkEndpointsVpcNetworkEndpointsTgwAttachASubnet3580E1C3"
+    }
+   },
+   "DependsOn": [
+    "NetworkEndpointsVpcNetworkEndpointsBSubnet1CF39812",
+    "NetworkEndpointsVpcNetworkEndpointsBSubnetRouteTableAssociation68383153"
+   ],
+   "Metadata": {
+    "lzaLookup": {
+     "subnetName": "Network-EndpointsTgwAttach-A",
+     "routeTableName": "Network-Endpoints-Tgw-A"
+    }
+   }
+  },
+  "NetworkEndpointsTgwAttachASubnetShareResourceShare8BC8C37B": {
+   "Type": "AWS::RAM::ResourceShare",
+   "Properties": {
+    "Name": "Network-EndpointsTgwAttach-A_SubnetShare",
+    "Principals": [
+     "arn:aws:organizations::576394207599:ou/o-6likhbzvrr/ou-vwk8-uxjab2xg"
+    ],
+    "ResourceArns": [
+     {
+      "Fn::Join": [
+       "",
+       [
+        "arn:",
+        {
+         "Ref": "AWS::Partition"
+        },
+        ":ec2:us-east-1:666666666666:subnet/",
+        {
+         "Ref": "NetworkEndpointsVpcNetworkEndpointsTgwAttachASubnet3580E1C3"
+        }
+       ]
+      ]
+     }
+    ],
+    "Tags": [
+     {
+      "Key": "Accelerator",
+      "Value": "AWSAccelerator"
+     }
+    ]
+   },
+   "Metadata": {
+    "lzaLookup": {
+     "subnetName": "Network-EndpointsTgwAttach-A"
+    }
+   }
+  },
+  "NetworkEndpointsVpcNetworkEndpointsTgwAttachBSubnet7F2CD5B5": {
+   "Type": "Custom::IpamSubnet",
+   "Properties": {
+    "ServiceToken": {
+     "Fn::GetAtt": [
+      "CustomIpamSubnetCustomResourceProviderHandlerF7AF0D7A",
+      "Arn"
+     ]
+    },
+    "name": "Network-EndpointsTgwAttach-B",
+    "availabilityZone": "us-east-1b",
+    "basePool": [
+     "10.0.0.0/16",
+     "10.2.0.0/16"
+    ],
+    "ipamAllocation": {
+     "ipamPoolName": "home-region-pool",
+     "netmaskLength": 28
+    },
+    "vpcId": {
+     "Ref": "NetworkEndpointsVpc619A1F01"
+    },
+    "tags": []
+   },
+   "DependsOn": [
+    "CustomIpamSubnetCustomResourceProviderLogGroup3BB67050",
+    "NetworkEndpointsVpcNetworkEndpointsTgwAttachASubnet3580E1C3",
+    "NetworkEndpointsVpcNetworkEndpointsTgwAttachASubnetRouteTableAssociation4D925D52"
+   ],
+   "UpdateReplacePolicy": "Delete",
+   "DeletionPolicy": "Delete",
+   "Metadata": {
+    "lzaLookup": {
+     "vpcName": "Network-Endpoints",
+     "subnetName": "Network-EndpointsTgwAttach-B"
+    }
+   }
+  },
+  "NetworkEndpointsVpcNetworkEndpointsTgwAttachBSubnetRouteTableAssociation958ED1AB": {
+   "Type": "AWS::EC2::SubnetRouteTableAssociation",
+   "Properties": {
+    "RouteTableId": {
+     "Ref": "NetworkEndpointsVpcNetworkEndpointsTgwBRouteTable7A11C65B"
+    },
+    "SubnetId": {
+     "Ref": "NetworkEndpointsVpcNetworkEndpointsTgwAttachBSubnet7F2CD5B5"
+    }
+   },
+   "DependsOn": [
+    "NetworkEndpointsVpcNetworkEndpointsTgwAttachASubnet3580E1C3",
+    "NetworkEndpointsVpcNetworkEndpointsTgwAttachASubnetRouteTableAssociation4D925D52"
+   ],
+   "Metadata": {
+    "lzaLookup": {
+     "subnetName": "Network-EndpointsTgwAttach-B",
+     "routeTableName": "Network-Endpoints-Tgw-B"
+    }
+   }
+  },
+  "NetworkEndpointsTgwAttachBSubnetShareResourceShareB966D727": {
+   "Type": "AWS::RAM::ResourceShare",
+   "Properties": {
+    "Name": "Network-EndpointsTgwAttach-B_SubnetShare",
+    "Principals": [
+     "arn:aws:organizations::576394207599:ou/o-6likhbzvrr/ou-vwk8-uxjab2xg"
+    ],
+    "ResourceArns": [
+     {
+      "Fn::Join": [
+       "",
+       [
+        "arn:",
+        {
+         "Ref": "AWS::Partition"
+        },
+        ":ec2:us-east-1:666666666666:subnet/",
+        {
+         "Ref": "NetworkEndpointsVpcNetworkEndpointsTgwAttachBSubnet7F2CD5B5"
+        }
+       ]
+      ]
+     }
+    ],
+    "Tags": [
+     {
+      "Key": "Accelerator",
+      "Value": "AWSAccelerator"
+     }
+    ]
+   },
+   "Metadata": {
+    "lzaLookup": {
+     "subnetName": "Network-EndpointsTgwAttach-B"
+    }
+   }
+  },
+  "NetworkEndpointsVpcSharedParameters07793E5F": {
+   "Type": "Custom::SsmPutParameterValue",
+   "Properties": {
+    "ServiceToken": {
+     "Fn::GetAtt": [
+      "CustomSsmPutParameterValueCustomResourceProviderHandler2A0BDE7F",
+      "Arn"
+     ]
+    },
+    "region": "us-east-1",
+    "parameterAccountIds": [
+     "877044078718"
+    ],
+    "parameters": [
+     {
+      "name": "/accelerator/network/vpc/Network-Endpoints/id",
+      "value": {
+       "Ref": "NetworkEndpointsVpc619A1F01"
+      }
+     },
+     {
+      "name": "/accelerator/network/vpc/Network-Endpoints/subnet/Network-Endpoints-A/id",
+      "value": {
+       "Ref": "NetworkEndpointsVpcNetworkEndpointsASubnet758434F8"
+      }
+     },
+     {
+      "name": "/accelerator/network/vpc/Network-Endpoints/subnet/Network-Endpoints-A/cidr/ipv4",
+      "value": {
+       "Fn::GetAtt": [
+        "NetworkEndpointsVpcNetworkEndpointsASubnet758434F8",
+        "ipv4CidrBlock"
+       ]
+      }
+     },
+     {
+      "name": "/accelerator/network/vpc/Network-Endpoints/subnet/Network-Endpoints-B/id",
+      "value": {
+       "Ref": "NetworkEndpointsVpcNetworkEndpointsBSubnet1CF39812"
+      }
+     },
+     {
+      "name": "/accelerator/network/vpc/Network-Endpoints/subnet/Network-Endpoints-B/cidr/ipv4",
+      "value": {
+       "Fn::GetAtt": [
+        "NetworkEndpointsVpcNetworkEndpointsBSubnet1CF39812",
+        "ipv4CidrBlock"
+       ]
+      }
+     },
+     {
+      "name": "/accelerator/network/vpc/Network-Endpoints/subnet/Network-EndpointsTgwAttach-A/id",
+      "value": {
+       "Ref": "NetworkEndpointsVpcNetworkEndpointsTgwAttachASubnet3580E1C3"
+      }
+     },
+     {
+      "name": "/accelerator/network/vpc/Network-Endpoints/subnet/Network-EndpointsTgwAttach-A/cidr/ipv4",
+      "value": {
+       "Fn::GetAtt": [
+        "NetworkEndpointsVpcNetworkEndpointsTgwAttachASubnet3580E1C3",
+        "ipv4CidrBlock"
+       ]
+      }
+     },
+     {
+      "name": "/accelerator/network/vpc/Network-Endpoints/subnet/Network-EndpointsTgwAttach-B/id",
+      "value": {
+       "Ref": "NetworkEndpointsVpcNetworkEndpointsTgwAttachBSubnet7F2CD5B5"
+      }
+     },
+     {
+      "name": "/accelerator/network/vpc/Network-Endpoints/subnet/Network-EndpointsTgwAttach-B/cidr/ipv4",
+      "value": {
+       "Fn::GetAtt": [
+        "NetworkEndpointsVpcNetworkEndpointsTgwAttachBSubnet7F2CD5B5",
+        "ipv4CidrBlock"
+       ]
+      }
+     }
+    ],
+    "roleName": "AWSAccelerator-CrossAccountSsmParameterShare",
+    "invokingAccountId": "666666666666",
+    "uuid": "7665cfbd-d802-4975-8ac9-267df7e311ff"
+   },
+   "DependsOn": [
+    "CustomSsmPutParameterValueCustomResourceProviderLogGroupB0109C68"
+   ],
+   "UpdateReplacePolicy": "Delete",
+   "DeletionPolicy": "Delete"
+  },
+  "CustomSsmPutParameterValueCustomResourceProviderRole9E1F101A": {
+   "Type": "AWS::IAM::Role",
+   "Properties": {
+    "AssumeRolePolicyDocument": {
+     "Version": "2012-10-17",
+     "Statement": [
+      {
+       "Action": "sts:AssumeRole",
+       "Effect": "Allow",
+       "Principal": {
+        "Service": "lambda.amazonaws.com"
+       }
+      }
+     ]
+    },
+    "ManagedPolicyArns": [
+     {
+      "Fn::Sub": "arn:${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+     }
+    ],
+    "Policies": [
+     {
+      "PolicyName": "Inline",
+      "PolicyDocument": {
+       "Version": "2012-10-17",
+       "Statement": [
+        {
+         "Sid": "SsmPutParameterActions",
+         "Effect": "Allow",
+         "Action": [
+          "ssm:DeleteParameter",
+          "ssm:PutParameter"
+         ],
+         "Resource": [
+          "*"
+         ]
+        },
+        {
+         "Sid": "StsAssumeRoleActions",
+         "Effect": "Allow",
+         "Action": [
+          "sts:AssumeRole"
+         ],
+         "Resource": [
+          {
+           "Fn::Join": [
+            "",
+            [
+             "arn:",
+             {
+              "Ref": "AWS::Partition"
+             },
+             ":iam::*:role/AWSAccelerator*"
+            ]
+           ]
+          }
+         ]
+        }
+       ]
+      }
+     }
+    ],
+    "Tags": [
+     {
+      "Key": "Accelerator",
+      "Value": "AWSAccelerator"
+     }
+    ]
+   }
+  },
+  "CustomSsmPutParameterValueCustomResourceProviderHandler2A0BDE7F": {
+   "Type": "AWS::Lambda::Function",
+   "Properties": {
+    "Code": {
+     "S3Bucket": "cdk-accel-assets-576394207599-us-east-1",
+     "S3Key": "666666666666/762b5641285808a2a8e953ad6a759785ae3ad5efb10c1c49afce0c7035f6c444.zip"
+    },
+    "Timeout": 900,
+    "MemorySize": 512,
+    "Handler": "__entrypoint__.handler",
+    "Role": {
+     "Fn::GetAtt": [
+      "CustomSsmPutParameterValueCustomResourceProviderRole9E1F101A",
+      "Arn"
+     ]
+    },
+    "Runtime": "nodejs20.x",
+    "Description": "Custom resource provider to put cross-account ssm parameter value",
+    "Tags": [
+     {
+      "Key": "Accelerator",
+      "Value": "AWSAccelerator"
+     }
+    ],
+    "Environment": {
+     "Variables": {
+      "SOLUTION_ID": "AwsSolution/SO0199/1.12.0"
+     }
+    }
+   },
+   "DependsOn": [
+    "CustomSsmPutParameterValueCustomResourceProviderRole9E1F101A"
+   ]
+  },
+  "CustomSsmPutParameterValueCustomResourceProviderLogGroupB0109C68": {
+   "Type": "AWS::Logs::LogGroup",
+   "Properties": {
+    "KmsKeyId": {
+     "Ref": "SsmParameterValueacceleratorkmscloudwatchkeyarnC96584B6F00A464EAD1953AFF4B05118Parameter"
+    },
+    "LogGroupName": {
+     "Fn::Join": [
+      "",
+      [
+       "/aws/lambda/",
+       {
+        "Ref": "CustomSsmPutParameterValueCustomResourceProviderHandler2A0BDE7F"
+       }
+      ]
+     ]
+    },
+    "RetentionInDays": 3653,
+    "Tags": [
+     {
+      "Key": "Accelerator",
+      "Value": "AWSAccelerator"
+     }
+    ]
+   },
+   "UpdateReplacePolicy": "Delete",
+   "DeletionPolicy": "Delete"
+  },
+  "NetworkEndpointsVpcManagementSg2B8F9418": {
+   "Type": "AWS::EC2::SecurityGroup",
+   "Properties": {
+    "GroupDescription": "Management Security Group",
+    "GroupName": "Management",
+    "SecurityGroupEgress": [
+     {
+      "CidrIp": "10.0.0.0/8",
+      "Description": "All Outbound",
+      "IpProtocol": "-1"
+     },
+     {
+      "CidrIp": "100.96.252.0/23",
+      "Description": "All Outbound",
+      "IpProtocol": "-1"
+     },
+     {
+      "CidrIp": "100.96.250.0/23",
+      "Description": "All Outbound",
+      "IpProtocol": "-1"
+     },
+     {
+      "CidrIp": {
+       "Fn::GetAtt": [
+        "NetworkEndpointsVpcNetworkEndpointsTgwAttachASubnet3580E1C3",
+        "ipv4CidrBlock"
+       ]
+      },
+      "Description": "All Outbound",
+      "IpProtocol": "-1"
+     },
+     {
+      "CidrIp": {
+       "Fn::GetAtt": [
+        "NetworkEndpointsVpcNetworkEndpointsTgwAttachBSubnet7F2CD5B5",
+        "ipv4CidrBlock"
+       ]
+      },
+      "Description": "All Outbound",
+      "IpProtocol": "-1"
+     },
+     {
+      "Description": "All Outbound",
+      "DestinationPrefixListId": {
+       "Fn::GetAtt": [
+        "AcceleratorPrefixListPrefixList8ACB36CF",
+        "PrefixListId"
+       ]
+      },
+      "IpProtocol": "-1"
+     },
+     {
+      "CidrIp": "10.0.0.0/8",
+      "Description": "Limited Outbound",
+      "FromPort": 22,
+      "IpProtocol": "tcp",
+      "ToPort": 22
+     },
+     {
+      "CidrIp": "10.0.0.0/8",
+      "Description": "Limited Outbound",
+      "FromPort": 22,
+      "IpProtocol": "udp",
+      "ToPort": 22
+     }
+    ],
+    "SecurityGroupIngress": [
+     {
+      "CidrIp": "10.0.0.0/8",
+      "Description": "Management RDP Traffic Inbound",
+      "FromPort": 3389,
+      "IpProtocol": "tcp",
+      "ToPort": 3389
+     },
+     {
+      "CidrIp": "100.96.252.0/23",
+      "Description": "Management RDP Traffic Inbound",
+      "FromPort": 3389,
+      "IpProtocol": "tcp",
+      "ToPort": 3389
+     },
+     {
+      "CidrIp": "100.96.250.0/23",
+      "Description": "Management RDP Traffic Inbound",
+      "FromPort": 3389,
+      "IpProtocol": "tcp",
+      "ToPort": 3389
+     },
+     {
+      "CidrIpv6": "fd00::/8",
+      "Description": "Management RDP Traffic Inbound",
+      "FromPort": 3389,
+      "IpProtocol": "tcp",
+      "ToPort": 3389
+     },
+     {
+      "CidrIp": {
+       "Fn::GetAtt": [
+        "NetworkEndpointsVpcNetworkEndpointsTgwAttachASubnet3580E1C3",
+        "ipv4CidrBlock"
+       ]
+      },
+      "Description": "Management RDP Traffic Inbound",
+      "FromPort": 3389,
+      "IpProtocol": "tcp",
+      "ToPort": 3389
+     },
+     {
+      "CidrIp": {
+       "Fn::GetAtt": [
+        "NetworkEndpointsVpcNetworkEndpointsTgwAttachBSubnet7F2CD5B5",
+        "ipv4CidrBlock"
+       ]
+      },
+      "Description": "Management RDP Traffic Inbound",
+      "FromPort": 3389,
+      "IpProtocol": "tcp",
+      "ToPort": 3389
+     },
+     {
+      "Description": "Management RDP Traffic Inbound",
+      "FromPort": 3389,
+      "IpProtocol": "tcp",
+      "SourcePrefixListId": {
+       "Fn::GetAtt": [
+        "AcceleratorPrefixListPrefixList8ACB36CF",
+        "PrefixListId"
+       ]
+      },
+      "ToPort": 3389
+     },
+     {
+      "CidrIp": "10.0.0.0/8",
+      "Description": "Management SSH Traffic Inbound",
+      "FromPort": 22,
+      "IpProtocol": "tcp",
+      "ToPort": 22
+     },
+     {
+      "CidrIp": "100.96.252.0/23",
+      "Description": "Management SSH Traffic Inbound",
+      "FromPort": 22,
+      "IpProtocol": "tcp",
+      "ToPort": 22
+     },
+     {
+      "CidrIp": "100.96.250.0/23",
+      "Description": "Management SSH Traffic Inbound",
+      "FromPort": 22,
+      "IpProtocol": "tcp",
+      "ToPort": 22
+     },
+     {
+      "CidrIp": {
+       "Fn::GetAtt": [
+        "NetworkEndpointsVpcNetworkEndpointsTgwAttachASubnet3580E1C3",
+        "ipv4CidrBlock"
+       ]
+      },
+      "Description": "Management SSH Traffic Inbound",
+      "FromPort": 22,
+      "IpProtocol": "tcp",
+      "ToPort": 22
+     },
+     {
+      "CidrIp": {
+       "Fn::GetAtt": [
+        "NetworkEndpointsVpcNetworkEndpointsTgwAttachBSubnet7F2CD5B5",
+        "ipv4CidrBlock"
+       ]
+      },
+      "Description": "Management SSH Traffic Inbound",
+      "FromPort": 22,
+      "IpProtocol": "tcp",
+      "ToPort": 22
+     },
+     {
+      "Description": "Management SSH Traffic Inbound",
+      "FromPort": 22,
+      "IpProtocol": "tcp",
+      "SourcePrefixListId": {
+       "Fn::GetAtt": [
+        "AcceleratorPrefixListPrefixList8ACB36CF",
+        "PrefixListId"
+       ]
+      },
+      "ToPort": 22
+     },
+     {
+      "CidrIp": "10.0.0.0/8",
+      "Description": "Management SSH Traffic Inbound",
+      "FromPort": 22,
+      "IpProtocol": "udp",
+      "ToPort": 22
+     },
+     {
+      "CidrIp": "100.96.252.0/23",
+      "Description": "Management SSH Traffic Inbound",
+      "FromPort": 22,
+      "IpProtocol": "udp",
+      "ToPort": 22
+     },
+     {
+      "CidrIp": "100.96.250.0/23",
+      "Description": "Management SSH Traffic Inbound",
+      "FromPort": 22,
+      "IpProtocol": "udp",
+      "ToPort": 22
+     },
+     {
+      "CidrIp": {
+       "Fn::GetAtt": [
+        "NetworkEndpointsVpcNetworkEndpointsTgwAttachASubnet3580E1C3",
+        "ipv4CidrBlock"
+       ]
+      },
+      "Description": "Management SSH Traffic Inbound",
+      "FromPort": 22,
+      "IpProtocol": "udp",
+      "ToPort": 22
+     },
+     {
+      "CidrIp": {
+       "Fn::GetAtt": [
+        "NetworkEndpointsVpcNetworkEndpointsTgwAttachBSubnet7F2CD5B5",
+        "ipv4CidrBlock"
+       ]
+      },
+      "Description": "Management SSH Traffic Inbound",
+      "FromPort": 22,
+      "IpProtocol": "udp",
+      "ToPort": 22
+     },
+     {
+      "Description": "Management SSH Traffic Inbound",
+      "FromPort": 22,
+      "IpProtocol": "udp",
+      "SourcePrefixListId": {
+       "Fn::GetAtt": [
+        "AcceleratorPrefixListPrefixList8ACB36CF",
+        "PrefixListId"
+       ]
+      },
+      "ToPort": 22
+     }
+    ],
+    "Tags": [
+     {
+      "Key": "Accel-P",
+      "Value": "AWSAccelerator"
+     },
+     {
+      "Key": "Accelerator",
+      "Value": "AWSAccelerator"
+     },
+     {
+      "Key": "Name",
+      "Value": "Management"
+     }
+    ],
+    "VpcId": {
+     "Ref": "NetworkEndpointsVpc619A1F01"
+    }
+   },
+   "Metadata": {
+    "lzaLookup": {
+     "vpcName": "Network-Endpoints",
+     "securityGroupName": "Management"
+    }
+   }
+  },
+  "NetworkEndpointsVpcManagementSgManagementIngress008FD972B5": {
+   "Type": "AWS::EC2::SecurityGroupIngress",
+   "Properties": {
+    "Description": "Management RDP Traffic Inbound",
+    "FromPort": 3389,
+    "GroupId": {
+     "Ref": "NetworkEndpointsVpcManagementSg2B8F9418"
+    },
+    "IpProtocol": "tcp",
+    "SourceSecurityGroupId": {
+     "Ref": "NetworkEndpointsVpcManagementSg2B8F9418"
+    },
+    "ToPort": 3389
+   },
+   "Metadata": {
+    "lzaLookup": {
+     "securityGroupName": "Management",
+     "ruleIndex": 0
+    }
+   }
+  },
+  "NetworkEndpointsVpcManagementSgManagementIngress105119E927": {
+   "Type": "AWS::EC2::SecurityGroupIngress",
+   "Properties": {
+    "Description": "Management SSH Traffic Inbound",
+    "FromPort": 22,
+    "GroupId": {
+     "Ref": "NetworkEndpointsVpcManagementSg2B8F9418"
+    },
+    "IpProtocol": "tcp",
+    "SourceSecurityGroupId": {
+     "Ref": "NetworkEndpointsVpcManagementSg2B8F9418"
+    },
+    "ToPort": 22
+   },
+   "Metadata": {
+    "lzaLookup": {
+     "securityGroupName": "Management",
+     "ruleIndex": 1
+    }
+   }
+  },
+  "NetworkEndpointsVpcManagementSgManagementIngress1135D6C2DD": {
+   "Type": "AWS::EC2::SecurityGroupIngress",
+   "Properties": {
+    "Description": "Management SSH Traffic Inbound",
+    "FromPort": 22,
+    "GroupId": {
+     "Ref": "NetworkEndpointsVpcManagementSg2B8F9418"
+    },
+    "IpProtocol": "udp",
+    "SourceSecurityGroupId": {
+     "Ref": "NetworkEndpointsVpcManagementSg2B8F9418"
+    },
+    "ToPort": 22
+   },
+   "Metadata": {
+    "lzaLookup": {
+     "securityGroupName": "Management",
+     "ruleIndex": 2
+    }
+   }
+  },
+  "NetworkEndpointsVpcManagementSgManagementEgress00D58058BF": {
+   "Type": "AWS::EC2::SecurityGroupEgress",
+   "Properties": {
+    "Description": "All Outbound",
+    "DestinationSecurityGroupId": {
+     "Ref": "NetworkEndpointsVpcManagementSg2B8F9418"
+    },
+    "GroupId": {
+     "Ref": "NetworkEndpointsVpcManagementSg2B8F9418"
+    },
+    "IpProtocol": "-1"
+   },
+   "Metadata": {
+    "lzaLookup": {
+     "securityGroupName": "Management",
+     "ruleIndex": 0
+    }
+   }
+  },
+  "NetworkEndpointsVpcTestNaclNaclD97515C3": {
+   "Type": "AWS::EC2::NetworkAcl",
+   "Properties": {
+    "Tags": [
+     {
+      "Key": "Accelerator",
+      "Value": "AWSAccelerator"
+     },
+     {
+      "Key": "Name",
+      "Value": "TestNACL"
+     }
+    ],
+    "VpcId": {
+     "Ref": "NetworkEndpointsVpc619A1F01"
+    }
+   },
+   "Metadata": {
+    "cdk_nag": {
+     "rules_to_suppress": [
+      {
+       "id": "AwsSolutions-VPC3",
+       "reason": "NACL added to VPC"
+      }
+     ]
+    }
+   }
+  },
+  "NetworkEndpointsVpcTestNaclNaclNetworkEndpointsVpcTestNaclNaclAssociateNetworkEndpointsA4115E6F7": {
+   "Type": "AWS::EC2::SubnetNetworkAclAssociation",
+   "Properties": {
+    "NetworkAclId": {
+     "Ref": "NetworkEndpointsVpcTestNaclNaclD97515C3"
+    },
+    "SubnetId": {
+     "Ref": "NetworkEndpointsVpcNetworkEndpointsASubnet758434F8"
+    }
+   }
+  },
+  "NetworkEndpointsVpcTestNaclNaclNetworkEndpointsVpcTestNaclInbound10285077E8": {
+   "Type": "AWS::EC2::NetworkAclEntry",
+   "Properties": {
+    "CidrBlock": "10.0.0.0/8",
+    "Egress": false,
+    "NetworkAclId": {
+     "Ref": "NetworkEndpointsVpcTestNaclNaclD97515C3"
+    },
+    "PortRange": {
+     "From": -1,
+     "To": -1
+    },
+    "Protocol": -1,
+    "RuleAction": "allow",
+    "RuleNumber": 10
+   },
+   "Metadata": {
+    "cdk_nag": {
+     "rules_to_suppress": [
+      {
+       "id": "AwsSolutions-VPC3",
+       "reason": "NACL added to VPC"
+      }
+     ]
+    }
+   }
+  },
+  "NetworkEndpointsVpcTestNaclNaclNetworkEndpointsVpcTestNaclInbound204B9A2831": {
+   "Type": "AWS::EC2::NetworkAclEntry",
+   "Properties": {
+    "CidrBlock": {
+     "Fn::GetAtt": [
+      "NetworkEndpointsVpcNetworkEndpointsASubnet758434F8",
+      "ipv4CidrBlock"
+     ]
+    },
+    "Egress": false,
+    "NetworkAclId": {
+     "Ref": "NetworkEndpointsVpcTestNaclNaclD97515C3"
+    },
+    "PortRange": {
+     "From": -1,
+     "To": -1
+    },
+    "Protocol": -1,
+    "RuleAction": "allow",
+    "RuleNumber": 20
+   },
+   "Metadata": {
+    "cdk_nag": {
+     "rules_to_suppress": [
+      {
+       "id": "AwsSolutions-VPC3",
+       "reason": "NACL added to VPC"
+      }
+     ]
+    }
+   }
+  },
+  "NetworkEndpointsVpcTestNaclNaclNetworkEndpointsVpcTestNaclInbound30C3889AA1": {
+   "Type": "AWS::EC2::NetworkAclEntry",
+   "Properties": {
+    "CidrBlock": "10.0.0.0/24",
+    "Egress": false,
+    "Icmp": {
+     "Code": 5,
+     "Type": 32
+    },
+    "NetworkAclId": {
+     "Ref": "NetworkEndpointsVpcTestNaclNaclD97515C3"
+    },
+    "PortRange": {},
+    "Protocol": 1,
+    "RuleAction": "allow",
+    "RuleNumber": 30
+   },
+   "Metadata": {
+    "cdk_nag": {
+     "rules_to_suppress": [
+      {
+       "id": "AwsSolutions-VPC3",
+       "reason": "NACL added to VPC"
+      }
+     ]
+    }
+   }
+  },
+  "NetworkEndpointsVpcTestNaclNaclNetworkEndpointsVpcTestNaclOutbound1089A97466": {
+   "Type": "AWS::EC2::NetworkAclEntry",
+   "Properties": {
+    "CidrBlock": "0.0.0.0/0",
+    "Egress": true,
+    "NetworkAclId": {
+     "Ref": "NetworkEndpointsVpcTestNaclNaclD97515C3"
+    },
+    "PortRange": {
+     "From": -1,
+     "To": -1
+    },
+    "Protocol": -1,
+    "RuleAction": "allow",
+    "RuleNumber": 10
+   },
+   "Metadata": {
+    "cdk_nag": {
+     "rules_to_suppress": [
+      {
+       "id": "AwsSolutions-VPC3",
+       "reason": "NACL added to VPC"
+      }
+     ]
+    }
+   }
+  },
+  "NetworkEndpointsVpcTestNaclNaclNetworkEndpointsVpcTestNaclOutbound20634A981E": {
+   "Type": "AWS::EC2::NetworkAclEntry",
+   "Properties": {
+    "CidrBlock": {
+     "Fn::GetAtt": [
+      "NetworkEndpointsVpcNetworkEndpointsASubnet758434F8",
+      "ipv4CidrBlock"
+     ]
+    },
+    "Egress": true,
+    "NetworkAclId": {
+     "Ref": "NetworkEndpointsVpcTestNaclNaclD97515C3"
+    },
+    "PortRange": {
+     "From": -1,
+     "To": -1
+    },
+    "Protocol": -1,
+    "RuleAction": "allow",
+    "RuleNumber": 20
+   },
+   "Metadata": {
+    "cdk_nag": {
+     "rules_to_suppress": [
+      {
+       "id": "AwsSolutions-VPC3",
+       "reason": "NACL added to VPC"
+      }
+     ]
+    }
+   }
+  },
+  "GetIpamCidrRole2DCCA945": {
+   "Type": "AWS::IAM::Role",
+   "Properties": {
+    "AssumeRolePolicyDocument": {
+     "Statement": [
+      {
+       "Action": "sts:AssumeRole",
+       "Condition": {
+        "StringEquals": {
+         "aws:PrincipalOrgID": "o-6likhbzvrr"
+        },
+        "ArnLike": {
+         "aws:PrincipalArn": [
+          {
+           "Fn::Join": [
+            "",
+            [
+             "arn:",
+             {
+              "Ref": "AWS::Partition"
+             },
+             ":iam::*:role/AWSAccelerator*"
+            ]
+           ]
+          }
+         ]
+        }
+       },
+       "Effect": "Allow",
+       "Principal": {
+        "AWS": "*"
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "Policies": [
+     {
+      "PolicyDocument": {
+       "Statement": [
+        {
+         "Action": [
+          "ec2:DescribeSubnets",
+          "ssm:GetParameter"
+         ],
+         "Effect": "Allow",
+         "Resource": "*"
+        }
+       ],
+       "Version": "2012-10-17"
+      },
+      "PolicyName": "default"
+     }
+    ],
+    "RoleName": "AWSAccelerator-GetIpamCidrRole",
+    "Tags": [
+     {
+      "Key": "Accelerator",
+      "Value": "AWSAccelerator"
+     }
+    ]
+   },
+   "Metadata": {
+    "cdk_nag": {
+     "rules_to_suppress": [
+      {
+       "id": "AwsSolutions-IAM5",
+       "reason": "Allow read role to get CIDRs from dynamic IPAM resources."
+      }
+     ]
+    }
+   }
+  },
+  "PutNetworkVpcStackResourceParameters94AB00D4": {
+   "Type": "Custom::SsmPutParameterValue",
+   "Properties": {
+    "ServiceToken": {
+     "Fn::GetAtt": [
+      "CustomSsmPutParameterValueCustomResourceProviderHandler2A0BDE7F",
+      "Arn"
+     ]
+    },
+    "region": "us-east-1",
+    "parameterAccountIds": [
+     "666666666666"
+    ],
+    "parameters": [
+     {
+      "name": "/accelerator/network/vpc/Network-Endpoints/cidr/ipv4",
+      "value": {
+       "Fn::GetAtt": [
+        "NetworkEndpointsVpc619A1F01",
+        "CidrBlock"
+       ]
+      }
+     },
+     {
+      "name": "/accelerator/network/vpc/Network-Endpoints/subnet/Network-Endpoints-A/cidr/ipv4",
+      "value": {
+       "Fn::GetAtt": [
+        "NetworkEndpointsVpcNetworkEndpointsASubnet758434F8",
+        "ipv4CidrBlock"
+       ]
+      }
+     },
+     {
+      "name": "/accelerator/network/vpc/Network-Endpoints/subnet/Network-Endpoints-B/cidr/ipv4",
+      "value": {
+       "Fn::GetAtt": [
+        "NetworkEndpointsVpcNetworkEndpointsBSubnet1CF39812",
+        "ipv4CidrBlock"
+       ]
+      }
+     },
+     {
+      "name": "/accelerator/network/vpc/Network-Endpoints/subnet/Network-EndpointsTgwAttach-A/cidr/ipv4",
+      "value": {
+       "Fn::GetAtt": [
+        "NetworkEndpointsVpcNetworkEndpointsTgwAttachASubnet3580E1C3",
+        "ipv4CidrBlock"
+       ]
+      }
+     },
+     {
+      "name": "/accelerator/network/vpc/Network-Endpoints/subnet/Network-EndpointsTgwAttach-B/cidr/ipv4",
+      "value": {
+       "Fn::GetAtt": [
+        "NetworkEndpointsVpcNetworkEndpointsTgwAttachBSubnet7F2CD5B5",
+        "ipv4CidrBlock"
+       ]
+      }
+     }
+    ],
+    "roleName": "AWSAccelerator-CrossAccountSsmParameterShare",
+    "invokingAccountId": "666666666666",
+    "uuid": "e557b4a9-ad33-44b6-9e06-29eb02d3aa18"
+   },
+   "DependsOn": [
+    "CustomSsmPutParameterValueCustomResourceProviderLogGroupB0109C68"
+   ],
+   "UpdateReplacePolicy": "Delete",
+   "DeletionPolicy": "Delete"
+  },
+  "SsmParamAcceleratorPrefixListPrefixListEBB07221": {
+   "Type": "AWS::SSM::Parameter",
+   "Properties": {
+    "Name": "/accelerator/network/prefixList/accelerator-prefix-list/id",
+    "Tags": {
+     "Accelerator": "AWSAccelerator"
+    },
+    "Type": "String",
+    "Value": {
+     "Fn::GetAtt": [
+      "AcceleratorPrefixListPrefixList8ACB36CF",
+      "PrefixListId"
+     ]
+    }
+   }
+  },
+  "SsmParamNetworkEndpointsVpcIdD8AF7DB9": {
+   "Type": "AWS::SSM::Parameter",
+   "Properties": {
+    "Name": "/accelerator/network/vpc/Network-Endpoints/id",
+    "Tags": {
+     "Accelerator": "AWSAccelerator"
+    },
+    "Type": "String",
+    "Value": {
+     "Ref": "NetworkEndpointsVpc619A1F01"
+    }
+   }
+  },
+  "SsmParamNetworkEndpointsVpnGatewayId9424DAB4": {
+   "Type": "AWS::SSM::Parameter",
+   "Properties": {
+    "Name": "/accelerator/network/vpc/Network-Endpoints/virtualPrivateGateway/id",
+    "Tags": {
+     "Accelerator": "AWSAccelerator"
+    },
+    "Type": "String",
+    "Value": {
+     "Ref": "NetworkEndpointsVpcVirtualPrivateGateway2CE2FFC3"
+    }
+   }
+  },
+  "SsmParamNetworkEndpointsNetworkEndpointsTgwARouteTableId2037B6B4": {
+   "Type": "AWS::SSM::Parameter",
+   "Properties": {
+    "Name": "/accelerator/network/vpc/Network-Endpoints/routeTable/Network-Endpoints-Tgw-A/id",
+    "Tags": {
+     "Accelerator": "AWSAccelerator"
+    },
+    "Type": "String",
+    "Value": {
+     "Ref": "NetworkEndpointsVpcNetworkEndpointsTgwARouteTable9117846C"
+    }
+   }
+  },
+  "SsmParamNetworkEndpointsNetworkEndpointsTgwBRouteTableIdC8AB07B7": {
+   "Type": "AWS::SSM::Parameter",
+   "Properties": {
+    "Name": "/accelerator/network/vpc/Network-Endpoints/routeTable/Network-Endpoints-Tgw-B/id",
+    "Tags": {
+     "Accelerator": "AWSAccelerator"
+    },
+    "Type": "String",
+    "Value": {
+     "Ref": "NetworkEndpointsVpcNetworkEndpointsTgwBRouteTable7A11C65B"
+    }
+   }
+  },
+  "SsmParamNetworkEndpointsNetworkEndpointsARouteTableIdC55DBCD4": {
+   "Type": "AWS::SSM::Parameter",
+   "Properties": {
+    "Name": "/accelerator/network/vpc/Network-Endpoints/routeTable/Network-Endpoints-A/id",
+    "Tags": {
+     "Accelerator": "AWSAccelerator"
+    },
+    "Type": "String",
+    "Value": {
+     "Ref": "NetworkEndpointsVpcNetworkEndpointsARouteTable5B9BF71B"
+    }
+   },
+   "DependsOn": [
+    "SsmParamNetworkEndpointsNetworkEndpointsTgwBRouteTableIdC8AB07B7"
+   ]
+  },
+  "SsmParamNetworkEndpointsNetworkEndpointsBRouteTableId03F05790": {
+   "Type": "AWS::SSM::Parameter",
+   "Properties": {
+    "Name": "/accelerator/network/vpc/Network-Endpoints/routeTable/Network-Endpoints-B/id",
+    "Tags": {
+     "Accelerator": "AWSAccelerator"
+    },
+    "Type": "String",
+    "Value": {
+     "Ref": "NetworkEndpointsVpcNetworkEndpointsBRouteTable639AAADB"
+    }
+   },
+   "DependsOn": [
+    "SsmParamNetworkEndpointsNetworkEndpointsTgwBRouteTableIdC8AB07B7"
+   ]
+  },
+  "SsmParamNetworkEndpointsNetworkEndpointsASubnetIdF53EDCC9": {
+   "Type": "AWS::SSM::Parameter",
+   "Properties": {
+    "Name": "/accelerator/network/vpc/Network-Endpoints/subnet/Network-Endpoints-A/id",
+    "Tags": {
+     "Accelerator": "AWSAccelerator"
+    },
+    "Type": "String",
+    "Value": {
+     "Ref": "NetworkEndpointsVpcNetworkEndpointsASubnet758434F8"
+    }
+   },
+   "DependsOn": [
+    "SsmParamNetworkEndpointsNetworkEndpointsTgwBRouteTableIdC8AB07B7"
+   ]
+  },
+  "SsmParamNetworkEndpointsNetworkEndpointsBSubnetId62D810E8": {
+   "Type": "AWS::SSM::Parameter",
+   "Properties": {
+    "Name": "/accelerator/network/vpc/Network-Endpoints/subnet/Network-Endpoints-B/id",
+    "Tags": {
+     "Accelerator": "AWSAccelerator"
+    },
+    "Type": "String",
+    "Value": {
+     "Ref": "NetworkEndpointsVpcNetworkEndpointsBSubnet1CF39812"
+    }
+   },
+   "DependsOn": [
+    "SsmParamNetworkEndpointsNetworkEndpointsTgwBRouteTableIdC8AB07B7"
+   ]
+  },
+  "SsmParamNetworkEndpointsNetworkEndpointsTgwAttachASubnetId72C0AC02": {
+   "Type": "AWS::SSM::Parameter",
+   "Properties": {
+    "Name": "/accelerator/network/vpc/Network-Endpoints/subnet/Network-EndpointsTgwAttach-A/id",
+    "Tags": {
+     "Accelerator": "AWSAccelerator"
+    },
+    "Type": "String",
+    "Value": {
+     "Ref": "NetworkEndpointsVpcNetworkEndpointsTgwAttachASubnet3580E1C3"
+    }
+   }
+  },
+  "SsmParamNetworkEndpointsNetworkEndpointsTgwAttachBSubnetId0B7C06C7": {
+   "Type": "AWS::SSM::Parameter",
+   "Properties": {
+    "Name": "/accelerator/network/vpc/Network-Endpoints/subnet/Network-EndpointsTgwAttach-B/id",
+    "Tags": {
+     "Accelerator": "AWSAccelerator"
+    },
+    "Type": "String",
+    "Value": {
+     "Ref": "NetworkEndpointsVpcNetworkEndpointsTgwAttachBSubnet7F2CD5B5"
+    }
+   },
+   "DependsOn": [
+    "SsmParamNetworkEndpointsNetworkEndpointsTgwAttachASubnetId72C0AC02"
+   ]
+  },
+  "SsmParamNetworkEndpointsManagementSecurityGroup157CDC67": {
+   "Type": "AWS::SSM::Parameter",
+   "Properties": {
+    "Name": "/accelerator/network/vpc/Network-Endpoints/securityGroup/Management/id",
+    "Tags": {
+     "Accelerator": "AWSAccelerator"
+    },
+    "Type": "String",
+    "Value": {
+     "Ref": "NetworkEndpointsVpcManagementSg2B8F9418"
+    }
+   },
+   "DependsOn": [
+    "SsmParamNetworkEndpointsNetworkEndpointsTgwAttachASubnetId72C0AC02"
+   ]
+  },
+  "SsmParamNetworkEndpointsTestNaclNaclED9584AC": {
+   "Type": "AWS::SSM::Parameter",
+   "Properties": {
+    "Name": "/accelerator/network/vpc/Network-Endpoints/networkAcl/TestNACL/id",
+    "Tags": {
+     "Accelerator": "AWSAccelerator"
+    },
+    "Type": "String",
+    "Value": {
+     "Ref": "NetworkEndpointsVpcTestNaclNaclD97515C3"
+    }
+   },
+   "DependsOn": [
+    "SsmParamNetworkEndpointsNetworkEndpointsTgwAttachASubnetId72C0AC02"
+   ]
+  },
+  "SsmParamAcceleratorDhcpOptsDhcpOptionsId5EAF4874": {
+   "Type": "AWS::SSM::Parameter",
+   "Properties": {
+    "Name": "/accelerator/network/dhcp/accelerator-dhcp-opts/id",
+    "Tags": {
+     "Accelerator": "AWSAccelerator"
+    },
+    "Type": "String",
+    "Value": {
+     "Ref": "AcceleratorDhcpOptsDhcpOpts09C66A89"
+    }
+   },
+   "DependsOn": [
+    "SsmParamNetworkEndpointsNetworkEndpointsTgwAttachASubnetId72C0AC02"
+   ]
+  },
+  "SsmParamTestIpv6DhcpOptionsId18062B81": {
+   "Type": "AWS::SSM::Parameter",
+   "Properties": {
+    "Name": "/accelerator/network/dhcp/test-ipv6/id",
+    "Tags": {
+     "Accelerator": "AWSAccelerator"
+    },
+    "Type": "String",
+    "Value": {
+     "Ref": "TestIpv6DhcpOpts2920A043"
+    }
+   }
+  }
+ },
+ "Parameters": {
+  "SsmParameterValueacceleratorkmscloudwatchkeyarnC96584B6F00A464EAD1953AFF4B05118Parameter": {
+   "Type": "AWS::SSM::Parameter::Value<String>",
+   "Default": "/accelerator/kms/cloudwatch/key-arn"
+  },
+  "SsmParameterValueacceleratorkmslambdakeyarnC96584B6F00A464EAD1953AFF4B05118Parameter": {
+   "Type": "AWS::SSM::Parameter::Value<String>",
+   "Default": "/accelerator/kms/lambda/key-arn"
+  },
+  "SsmParameterValueacceleratornetworkipampoolshomeregionpoolidC96584B6F00A464EAD1953AFF4B05118Parameter": {
+   "Type": "AWS::SSM::Parameter::Value<String>",
+   "Default": "/accelerator/network/ipam/pools/home-region-pool/id"
+  },
+  "SsmParameterValueacceleratorvpcflowlogsdestinationbucketarnC96584B6F00A464EAD1953AFF4B05118Parameter": {
+   "Type": "AWS::SSM::Parameter::Value<String>",
+   "Default": "/accelerator/vpc/flow-logs/destination/bucket/arn"
+  }
+ }
 }
