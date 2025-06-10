@@ -255,3 +255,11 @@ export const EXECUTION_CONTROLLABLE_MODULES: string[] = [
   AcceleratorModules.MOVE_ACCOUNTS,
   AcceleratorModules.SETUP_CONTROL_TOWER_LANDING_ZONE,
 ];
+
+/**
+ * Maximum number of parallel module execution
+ *
+ * @description
+ * This is the maximum number of parallel module execution. This is used to limit the number of parallel module execution.
+ */
+export const MaxConcurrentModuleExecutionLimit = 50;

@@ -14,8 +14,8 @@
 import path from 'path';
 import {
   createLogger,
-  IInviteAccountToOrganizationHandlerParameter,
-  inviteAccountToOrganization,
+  IInviteAccountsBatchToOrganizationHandlerParameter,
+  inviteAccountsBatchToOrganization,
 } from '../../../../../@aws-lza/index';
 import { ModuleParams } from '../../../models/types';
 
@@ -31,37 +31,51 @@ export abstract class InviteAccountsToOrganizationsModule {
    * @returns status string
    */
   public static async execute(params: ModuleParams): Promise<string> {
-    const statuses: string[] = [];
-    const promises: Promise<string>[] = [];
-    for (const accountItem of params.moduleRunnerParameters.configs.accountsConfig.accountIds ?? []) {
-      const param: IInviteAccountToOrganizationHandlerParameter = {
-        moduleName: params.moduleItem.name,
-        operation: 'create-organizational-unit',
-        partition: params.runnerParameters.partition,
-        region: params.moduleRunnerParameters.configs.globalConfig.homeRegion,
-        useExistingRole: params.runnerParameters.useExistingRoles,
-        solutionId: params.runnerParameters.solutionId,
-        credentials: params.moduleRunnerParameters.managementAccountCredentials,
-        dryRun: params.runnerParameters.dryRun,
-        configuration: {
-          accountId: accountItem.accountId,
-          email: accountItem.email,
-          accountAccessRoleName: params.moduleRunnerParameters.configs.globalConfig.managementAccountAccessRole,
-          tags: [
-            {
-              Key: 'Source',
-              Value: 'AcceleratorInvitedAccount',
-            },
-          ],
-        },
-      };
-      promises.push(inviteAccountToOrganization(param));
+    const accountIdsToInvite = params.moduleRunnerParameters.configs.accountsConfig.accountIds ?? [];
+
+    const allAccountItems = [
+      ...params.moduleRunnerParameters.configs.accountsConfig.mandatoryAccounts,
+      ...params.moduleRunnerParameters.configs.accountsConfig.workloadAccounts,
+    ];
+
+    const accountItemsToInvite = accountIdsToInvite.filter(item =>
+      allAccountItems.some(account => account.email === item.email),
+    );
+
+    if (accountItemsToInvite.length === 0) {
+      return `Skipping "${params.moduleItem.name}" because all accounts found in configuration file are already members of the AWS Organization.`;
     }
 
-    if (promises.length > 0) {
-      logger.info(`Executing ${params.moduleItem.name} module.`);
-      statuses.push(...(await Promise.all(promises)));
-    }
-    return `Module "${params.moduleItem.name}" completed successfully with status ${statuses.join('\n')}`;
+    const param: IInviteAccountsBatchToOrganizationHandlerParameter = {
+      moduleName: params.moduleItem.name,
+      operation: 'create-organizational-unit',
+      partition: params.runnerParameters.partition,
+      region: params.moduleRunnerParameters.configs.globalConfig.homeRegion,
+      useExistingRole: params.runnerParameters.useExistingRoles,
+      solutionId: params.runnerParameters.solutionId,
+      credentials: params.moduleRunnerParameters.managementAccountCredentials,
+      dryRun: params.runnerParameters.dryRun,
+      maxConcurrentExecution: params.runnerParameters.maxConcurrentExecution,
+      configuration: {
+        accounts: accountItemsToInvite.map(accountItem => {
+          return {
+            accountId: accountItem.accountId,
+            email: accountItem.email,
+            accountAccessRoleName: params.moduleRunnerParameters.configs.globalConfig.managementAccountAccessRole,
+            tags: [
+              {
+                Key: 'Source',
+                Value: 'AcceleratorInvitedAccount',
+              },
+            ],
+          };
+        }),
+      },
+    };
+
+    logger.info(`Executing ${params.moduleItem.name} module.`);
+    const status = await inviteAccountsBatchToOrganization(param);
+
+    return `Module "${params.moduleItem.name}" completed successfully with status ${status}`;
   }
 }

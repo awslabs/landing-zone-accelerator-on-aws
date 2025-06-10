@@ -48,7 +48,7 @@ describe('RegisterOrganizationalUnitModule', () => {
     // Setup
     const ouCounts = MOCK_CONSTANTS.configs.organizationConfig.organizationalUnits.length;
     const expectedOutput: string[] = [];
-    for (let i = 0; i < ouCounts; i++) {
+    for (let i = 0; i < ouCounts - 1; i++) {
       expectedOutput.push(`Successful`);
     }
     const param: ModuleParams = {
@@ -80,7 +80,7 @@ describe('RegisterOrganizationalUnitModule', () => {
     const response = await RegisterOrganizationalUnitModule.execute(param);
 
     // Verify
-    expect(awsLza.registerOrganizationalUnit).toHaveBeenCalledTimes(ouCounts);
+    expect(awsLza.registerOrganizationalUnit).toHaveBeenCalledTimes(ouCounts - 1);
     expect(response).toBe(
       `Module "${
         AcceleratorModules.REGISTER_ORGANIZATIONAL_UNIT

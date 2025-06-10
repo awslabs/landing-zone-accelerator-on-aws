@@ -223,10 +223,7 @@ export class RegisterOrganizationalUnitModule implements IRegisterOrganizational
       );
     }
 
-    const message = `AWS Organizations organizational unit (OU) "${ouName}" is already registered with AWS Control Tower, registration status is "${currentRegistrationStatus}" and baseline version is "${currentBaselineVersion}", operation skipped.`;
-
-    this.logger.warn(message);
-    return message;
+    return `AWS Organizations organizational unit (OU) "${ouName}" is already registered with AWS Control Tower, registration status is "${currentRegistrationStatus}" and baseline version is "${currentBaselineVersion}", operation skipped.`;
   }
 
   /**

@@ -33,7 +33,7 @@ import { AssumeRoleCommand, GetCallerIdentityCommand, STSClient } from '@aws-sdk
 import {
   delay,
   generateDryRunResponse,
-  getAccountDetailsFromOrganizations,
+  getAccountDetailsFromOrganizationsByEmail,
   getAccountId,
   getCredentials,
   getCurrentAccountId,
@@ -47,6 +47,7 @@ import {
   getOrganizationId,
   getOrganizationRootId,
   getParentOuId,
+  processModulePromises,
   setRetryStrategy,
 } from '../../common/functions';
 import { MOCK_CONSTANTS } from '../mocked-resources';
@@ -852,6 +853,35 @@ describe('functions', () => {
       }));
     });
 
+    test('should return OU id for valid path with root id provided', async () => {
+      // Setup
+      (paginateListOrganizationalUnitsForParent as jest.Mock)
+        .mockImplementationOnce(() => ({
+          [Symbol.asyncIterator]: async function* () {
+            yield {
+              OrganizationalUnits: [MOCK_CONSTANTS.existingOrganizationalUnits[0]],
+            };
+          },
+        }))
+        .mockImplementationOnce(() => ({
+          [Symbol.asyncIterator]: async function* () {
+            yield {
+              OrganizationalUnits: [MOCK_CONSTANTS.existingOrganizationalUnits[1]],
+            };
+          },
+        }));
+
+      // Execute
+      const result = await getOrganizationalUnitIdByPath(
+        new OrganizationsClient({}),
+        `${MOCK_CONSTANTS.existingOrganizationalUnits[0].Name}/${MOCK_CONSTANTS.existingOrganizationalUnits[1].Name}`,
+        MOCK_CONSTANTS.organizationRoot.Id,
+      );
+
+      // Verify
+      expect(result).toEqual(MOCK_CONSTANTS.existingOrganizationalUnits[1].Id);
+    });
+
     test('should return OU id for valid path', async () => {
       // Setup
       mockSend.mockImplementation(command => {
@@ -1131,7 +1161,7 @@ describe('functions', () => {
     });
   });
 
-  describe('getAccountDetailsFromOrganizations', () => {
+  describe('getAccountDetailsFromOrganizationsByEmail', () => {
     beforeEach(() => {
       jest.clearAllMocks();
     });
@@ -1157,7 +1187,21 @@ describe('functions', () => {
       }));
 
       // Execute
-      const result = await getAccountDetailsFromOrganizations(new OrganizationsClient({}), email);
+      const result = await getAccountDetailsFromOrganizationsByEmail(new OrganizationsClient({}), email);
+
+      // Verify
+      expect(result).toBeUndefined();
+    });
+
+    test('returns undefined when Account object does not have email property with organizationAccounts provided', async () => {
+      const mockAccounts: Account[] = [
+        { Id: 'mockId1', Name: 'mockName1', Arn: 'mockArn1' },
+        { Id: 'mockId2', Name: 'mockName2', Arn: 'mockArn2' },
+      ];
+      const email = 'mock-email@example.com';
+
+      // Execute
+      const result = await getAccountDetailsFromOrganizationsByEmail(new OrganizationsClient({}), email, mockAccounts);
 
       // Verify
       expect(result).toBeUndefined();
@@ -1185,7 +1229,7 @@ describe('functions', () => {
       }));
 
       // Execute
-      const result = await getAccountDetailsFromOrganizations(new OrganizationsClient({}), email);
+      const result = await getAccountDetailsFromOrganizationsByEmail(new OrganizationsClient({}), email, mockAccounts);
 
       // Verify
       expect(result).toBeUndefined();
@@ -1213,7 +1257,10 @@ describe('functions', () => {
       }));
 
       // Execute
-      const result = await getAccountDetailsFromOrganizations(new OrganizationsClient({}), 'MOCKEMAIL1@example.COM');
+      const result = await getAccountDetailsFromOrganizationsByEmail(
+        new OrganizationsClient({}),
+        'MOCKEMAIL1@example.COM',
+      );
 
       // Verify
       expect(result).toBe(mockAccounts[0]);
@@ -1241,7 +1288,10 @@ describe('functions', () => {
       }));
 
       // Execute
-      const result = await getAccountDetailsFromOrganizations(new OrganizationsClient({}), mockAccounts[1].Email!);
+      const result = await getAccountDetailsFromOrganizationsByEmail(
+        new OrganizationsClient({}),
+        mockAccounts[1].Email!,
+      );
 
       // Verify
       expect(result).toBe(mockAccounts[1]);
@@ -1515,6 +1565,78 @@ describe('functions', () => {
       );
       expect(GetCallerIdentityCommand).toHaveBeenCalledTimes(1);
       expect(DescribeOrganizationCommand).toHaveBeenCalledTimes(0);
+    });
+  });
+
+  describe('processModulePromises', () => {
+    const originalEnv = process.env;
+
+    beforeEach(() => {
+      jest.clearAllMocks();
+      process.env = { ...originalEnv };
+    });
+
+    afterEach(() => {
+      process.env = originalEnv;
+    });
+
+    test('should process promises in batches with default batch size', async () => {
+      // Setup
+      const promises = [
+        Promise.resolve('result1'),
+        Promise.resolve('result2'),
+        Promise.resolve('result3'),
+        Promise.resolve('result4'),
+        Promise.resolve('result5'),
+      ];
+      const statuses: string[] = [];
+
+      // Execute
+      await processModulePromises(MOCK_CONSTANTS.testModuleName, promises, statuses);
+
+      // Verify
+      expect(statuses).toEqual(['result1', 'result2', 'result3', 'result4', 'result5']);
+    });
+
+    test('should process promises in multiple batches when batch size is smaller than promises length', async () => {
+      // Setup
+      process.env['MAX_CONCURRENT_MODULES'] = '2';
+      const promises = [
+        Promise.resolve('result1'),
+        Promise.resolve('result2'),
+        Promise.resolve('result3'),
+        Promise.resolve('result4'),
+        Promise.resolve('result5'),
+      ];
+      const statuses: string[] = [];
+
+      // Execute
+      await processModulePromises(MOCK_CONSTANTS.testModuleName, promises, statuses);
+
+      // Verify
+      expect(statuses).toEqual(['result1', 'result2', 'result3', 'result4', 'result5']);
+    });
+
+    test('should handle empty promises array', async () => {
+      // Setup
+      const promises: Promise<string>[] = [];
+      const statuses: string[] = [];
+
+      // Execute
+      await processModulePromises(MOCK_CONSTANTS.testModuleName, promises, statuses);
+
+      // Verify
+      expect(statuses).toEqual([]);
+    });
+
+    test('should handle rejected promises', async () => {
+      // Setup
+      const error = new Error('Test error');
+      const promises = [Promise.resolve('result1'), Promise.reject(error), Promise.resolve('result3')];
+      const statuses: string[] = [];
+
+      // Execute & Verify
+      await expect(processModulePromises(MOCK_CONSTANTS.testModuleName, promises, statuses, 10)).rejects.toThrow(error);
     });
   });
 });

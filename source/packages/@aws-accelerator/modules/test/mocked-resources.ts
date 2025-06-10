@@ -208,14 +208,26 @@ export const mockAccountsConfiguration: Partial<AccountsConfig> = {
   ] as AccountConfig[],
   accountIds: [
     {
-      email: 'mockAccount1@example.com',
+      email: 'mockManagement@example.com',
       accountId: '111111111111',
       status: 'ACTIVE',
     },
     {
-      email: 'mockAccount2@example.com',
+      email: 'mockLogArchive@example.com',
       accountId: '222222222222',
       status: 'ACTIVE',
+    },
+    {
+      email: 'mockAccount1@example.com',
+      accountId: '888888888888',
+      status: 'ACTIVE',
+      orgsApiResponse: {},
+    },
+    {
+      email: 'mockAccount2@example.com',
+      accountId: '999999999999',
+      status: 'ACTIVE',
+      orgsApiResponse: {},
     },
   ],
 };
@@ -295,6 +307,18 @@ export const mockOrganizationConfig: Partial<OrganizationConfig> = {
       name: 'Suspended',
       ignore: true,
     } as OrganizationalUnitConfig,
+    {
+      name: 'Level1',
+    } as OrganizationalUnitConfig,
+    {
+      name: 'Level1/Level2',
+    } as OrganizationalUnitConfig,
+    {
+      name: 'Level1/Level2/Level2-1',
+    } as OrganizationalUnitConfig,
+    {
+      name: 'Level1/Level2/Level2-2',
+    } as OrganizationalUnitConfig,
   ],
   serviceControlPolicies: [],
   taggingPolicies: [],
@@ -364,6 +388,7 @@ export const MOCK_CONSTANTS = {
     useExistingRoles: false,
     solutionId: 'mockSolutionId',
     dryRun: false,
+    maxConcurrentExecution: 10,
   },
   configs: {
     customizationsConfig: mockCustomizationsConfig as CustomizationsConfig,
