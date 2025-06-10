@@ -622,7 +622,7 @@ export class AcceleratorPipeline extends Construct {
               'cd $WORK_DIR',
               `RUNNER_ARGS="--partition ${cdk.Aws.PARTITION} --region ${cdk.Aws.REGION} --config-dir $CODEBUILD_SRC_DIR_Config --stage $ACCELERATOR_STAGE --prefix ${props.prefixes.accelerator}"`,
               `if ${this.props.useExistingRoles}; then RUNNER_ARGS="$RUNNER_ARGS --use-existing-roles"; fi`,
-              `set -e && LOG_LEVEL=${BuildLogLevel.INFO} && yarn run ts-node ../modules/bin/runner.ts $RUNNER_ARGS`,
+              `set -e && yarn run ts-node ../modules/bin/runner.ts $RUNNER_ARGS`,
               `if [ "\${ACCELERATOR_STAGE}" = "pre-approval" ]; then
                 mkdir rawDiff;
                 cd rawDiff;

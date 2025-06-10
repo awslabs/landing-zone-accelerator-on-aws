@@ -13,9 +13,13 @@
 import { describe, beforeEach, expect, test } from '@jest/globals';
 import { InviteAccountToOrganizationModule } from '../../../lib/aws-organizations/invite-account-to-organization';
 import { MOCK_CONSTANTS } from '../../mocked-resources';
-import { IInviteAccountToOrganizationHandlerParameter } from '../../../interfaces/aws-organizations/invite-account-to-organization';
+import {
+  IInviteAccountsBatchToOrganizationHandlerParameter,
+  IInviteAccountToOrganizationHandlerParameter,
+} from '../../../interfaces/aws-organizations/invite-account-to-organization';
+import { InviteAccountsBatchToOrganizationModule } from '../../../lib/aws-organizations/invite-accounts-batch-to-organization';
 
-describe('CreateOrganizationalUnitModule Contract Compliance', () => {
+describe('InviteAccountToOrganizationModule Contract Compliance', () => {
   const input: IInviteAccountToOrganizationHandlerParameter = {
     ...MOCK_CONSTANTS.runnerParameters,
     configuration: MOCK_CONSTANTS.InviteAccountToOrganizationModule.configuration,
@@ -47,6 +51,53 @@ describe('CreateOrganizationalUnitModule Contract Compliance', () => {
     jest.spyOn(module, 'handler').mockRejectedValue(new Error('Invalid input parameters'));
 
     await expect(module.handler({} as IInviteAccountToOrganizationHandlerParameter)).rejects.toThrow(
+      'Invalid input parameters',
+    );
+  });
+
+  test('should fulfill interface behavioral requirements', async () => {
+    const result = await module.handler(input);
+    expect(typeof result).toBe('string');
+    expect(result).toBeTruthy();
+  });
+
+  afterEach(() => {
+    jest.restoreAllMocks();
+  });
+});
+
+describe('InviteAccountsBatchToOrganizationModule Contract Compliance', () => {
+  const input: IInviteAccountsBatchToOrganizationHandlerParameter = {
+    ...MOCK_CONSTANTS.runnerParameters,
+    configuration: { accounts: MOCK_CONSTANTS.InviteAccountsBatchToOrganizationModule.configuration },
+  };
+  let module: InviteAccountsBatchToOrganizationModule;
+
+  beforeEach(() => {
+    module = new InviteAccountsBatchToOrganizationModule();
+    // Mock the handler implementation
+    jest.spyOn(module, 'handler').mockImplementation(async () => 'mocked-response');
+  });
+
+  test('should implement all interface methods', () => {
+    expect(module.handler).toBeDefined();
+    expect(typeof module.handler).toBe('function');
+  });
+
+  test('should maintain correct method signatures', async () => {
+    const result = module.handler(input);
+    // Verify that handler returns a Promise
+    expect(result).toBeInstanceOf(Promise);
+    // Verify that the resolved value is a string
+    await expect(result).resolves.toBe('mocked-response');
+    await expect(result).resolves.toEqual(expect.any(String));
+  });
+
+  test('should handle invalid inputs according to contract', async () => {
+    // Reset mock to test error handling
+    jest.spyOn(module, 'handler').mockRejectedValue(new Error('Invalid input parameters'));
+
+    await expect(module.handler({} as IInviteAccountsBatchToOrganizationHandlerParameter)).rejects.toThrow(
       'Invalid input parameters',
     );
   });

@@ -17,6 +17,7 @@ const operation = 'mockOperation';
 export const MOCK_CONSTANTS = {
   unknownError: new Error('Unknown command'),
   globalRegion: 'mockGlobalRegion',
+  testModuleName: 'mockTestModule',
   runnerParameters: {
     operation: operation,
     partition: 'mockPartition',
@@ -101,9 +102,111 @@ export const MOCK_CONSTANTS = {
       },
     },
   },
+  InviteAccountsBatchToOrganizationModule: {
+    existingAccounts: [
+      {
+        Id: 'mockExistingAccountId1',
+        Arn: 'mockExistingAccountArn1',
+        Email: 'mockExistingAccount1@example.com',
+        Name: 'Mock Existing Account-1',
+        Status: 'ACTIVE',
+        JoinedMethod: 'INVITED',
+        JoinedTimestamp: new Date(),
+      },
+      {
+        Id: 'mockExistingAccountId2',
+        Arn: 'mockExistingAccountArn2',
+        Email: 'mockExistingAccount2@example.com',
+        Name: 'Mock Existing Account-2',
+        Status: 'ACTIVE',
+        JoinedMethod: 'INVITED',
+        JoinedTimestamp: new Date(),
+      },
+    ],
+    overlapExistingAccounts: [
+      {
+        Id: 'mockExistingAccountId1',
+        Arn: 'mockExistingAccountArn1',
+        Email: 'mockExistingAccount1@example.com',
+        Name: 'Mock Existing Account-1',
+        Status: 'ACTIVE',
+        JoinedMethod: 'INVITED',
+        JoinedTimestamp: new Date(),
+      },
+      {
+        Id: 'mockAccountId1',
+        Arn: 'mockAccountArn1',
+        Email: 'account1@example.com',
+        Name: 'Mock Existing Account-1',
+        Status: 'ACTIVE',
+        JoinedMethod: 'INVITED',
+        JoinedTimestamp: new Date(),
+      },
+    ],
+    allOverlapExistingAccounts: [
+      {
+        Id: 'mockAccountId1',
+        Arn: 'mockAccountArn1',
+        Email: 'account1@example.com',
+        Name: 'Mock Existing Account-1',
+        Status: 'ACTIVE',
+        JoinedMethod: 'INVITED',
+        JoinedTimestamp: new Date(),
+      },
+      {
+        Id: 'mockAccountId2',
+        Arn: 'mockAccountArn2',
+        Email: 'account2@example.com',
+        Name: 'Mock Existing Account-2',
+        Status: 'ACTIVE',
+        JoinedMethod: 'INVITED',
+        JoinedTimestamp: new Date(),
+      },
+    ],
+    configuration: [
+      {
+        email: 'account1@example.com',
+        accountId: 'mockAccountId1',
+        accountAccessRoleName: 'mockAccountAccessRoleName',
+        tags: [
+          { Key: 'tag1', Value: 'value1' },
+          { Key: 'tag1', Value: 'value1' },
+        ],
+      },
+      {
+        email: 'account2@example.com',
+        accountId: 'mockAccountId2',
+        accountAccessRoleName: 'mockAccountAccessRoleName',
+        tags: [
+          { Key: 'tag2', Value: 'value2' },
+          { Key: 'tag2', Value: 'value2' },
+        ],
+      },
+    ],
+    inValidConfiguration: [
+      {
+        email: 'account1Example.com',
+        accountId: 'mockAccountId1',
+        accountAccessRoleName: 'mockAccountAccessRoleName',
+        tags: [
+          { Key: 'tag1', Value: 'value1' },
+          { Key: 'tag1', Value: 'value1' },
+        ],
+      },
+      {
+        email: 'account2Example.com',
+        accountId: 'mockAccountId2',
+        accountAccessRoleName: 'mockAccountAccessRoleName',
+        tags: [
+          { Key: 'tag2', Value: 'value2' },
+          { Key: 'tag2', Value: 'value2' },
+        ],
+      },
+    ],
+  },
   InviteAccountToOrganizationModule: {
     configuration: {
-      email: 'account@examle.com',
+      email: 'account@example.com',
       accountId: 'mockAccountId',
       accountAccessRoleName: 'mockAccountAccessRoleName',
       tags: [
@@ -114,7 +217,7 @@ export const MOCK_CONSTANTS = {
     invitingAccount: {
       Id: 'mockAccountId',
       Arn: 'mockAccountArn',
-      email: 'account@examle.com',
+      email: 'account@example.com',
       name: 'mockAccountName',
       Status: 'ACTIVE',
       JoinedMethod: 'INVITED',
@@ -122,6 +225,46 @@ export const MOCK_CONSTANTS = {
     inviteHandshake: {
       Id: 'mockHandshakeId',
     },
+  },
+  MoveAccountsBatchModule: {
+    configuration: [
+      {
+        email: 'account1@example.com',
+        destinationOu: '/Level1/Level2/Level3',
+      },
+      {
+        email: 'account2@example.com',
+        destinationOu: '/Level1/Level2/Level3/Level4',
+      },
+    ],
+    invalidConfiguration: [
+      {
+        email: 'account1example.com',
+        destinationOu: '/Level1/Level2/Level3',
+      },
+      {
+        email: 'account2example.com',
+        destinationOu: '/Level1/Level2/Level3/Level4',
+      },
+    ],
+    moveAccounts: [
+      {
+        Id: 'mockAccountId1',
+        Arn: 'mockAccountArn1',
+        Email: 'account1@example.com',
+        Name: 'mockAccountName1',
+        Status: 'ACTIVE',
+        JoinedMethod: 'INVITED',
+      },
+      {
+        Id: 'mockAccountId2',
+        Arn: 'mockAccountArn2',
+        Email: 'account2@example.com',
+        Name: 'mockAccountName2',
+        Status: 'ACTIVE',
+        JoinedMethod: 'INVITED',
+      },
+    ],
   },
   MoveAccountModule: {
     configuration: {
@@ -132,8 +275,8 @@ export const MOCK_CONSTANTS = {
     moveAccount: {
       Id: 'mockAccountId',
       Arn: 'mockAccountArn',
-      email: 'account@examle.com',
-      name: 'mockAccountName',
+      Email: 'account@example.com',
+      Name: 'mockAccountName',
       Status: 'ACTIVE',
       JoinedMethod: 'INVITED',
     },
@@ -250,3 +393,27 @@ export const MOCK_CONSTANTS = {
     },
   },
 };
+
+export function countOverlappingAccounts(): {
+  totalInputAccounts: number;
+  existingAccountsCount: number;
+  newAccountsCount: number;
+} {
+  const { overlapExistingAccounts, configuration } = MOCK_CONSTANTS.InviteAccountsBatchToOrganizationModule;
+
+  // Extract emails from overlapExistingAccounts
+  const overlapEmails = overlapExistingAccounts.map(account => account.Email?.toLowerCase());
+
+  // Extract emails from configuration
+  const configEmails = configuration.map(account => account.email?.toLowerCase());
+
+  // Find common emails
+  const commonEmails = overlapEmails.filter(email => configEmails.includes(email));
+
+  // Count of accounts in overlapExistingAccounts that match configuration accounts
+  return {
+    totalInputAccounts: configEmails.length,
+    existingAccountsCount: commonEmails.length,
+    newAccountsCount: configEmails.length - commonEmails.length,
+  };
+}

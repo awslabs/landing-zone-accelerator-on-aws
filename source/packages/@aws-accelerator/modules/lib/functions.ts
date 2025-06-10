@@ -39,7 +39,11 @@ import { GlobalConfig } from '@aws-accelerator/config/lib/global-config';
 import { AccountsConfig } from '@aws-accelerator/config/lib/accounts-config';
 import { GetParameterCommand, ParameterNotFound, SSMClient } from '@aws-sdk/client-ssm';
 import { ConfigLoader } from './config-loader';
-import { AcceleratorModuleStageOrders, EXECUTION_CONTROLLABLE_MODULES } from '../models/constants';
+import {
+  AcceleratorModuleStageOrders,
+  EXECUTION_CONTROLLABLE_MODULES,
+  MaxConcurrentModuleExecutionLimit,
+} from '../models/constants';
 import { ModuleExecutionPhase } from '../models/enums';
 
 const logger = createLogger([path.parse(path.basename(__filename)).name]);
@@ -83,6 +87,7 @@ export function validateAndGetRunnerParameters(): RunnerParametersType {
     useExistingRoles,
     solutionId: `AwsSolution/SO0199/${version}`,
     dryRun,
+    maxConcurrentExecution: Number(process.env['MAX_CONCURRENT_MODULE_EXECUTION'] ?? MaxConcurrentModuleExecutionLimit),
   };
 }
 

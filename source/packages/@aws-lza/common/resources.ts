@@ -101,6 +101,11 @@ export interface IModuleCommonParameter {
    * false
    */
   dryRun?: boolean;
+  /**
+   * Maximum concurrent execution
+   *
+   */
+  readonly maxConcurrentExecution?: number;
 }
 
 /**

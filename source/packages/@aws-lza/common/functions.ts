@@ -39,6 +39,7 @@ import {
 } from './resources';
 import { createLogger } from './logger';
 import { throttlingBackOff } from './throttle';
+import { MaxConcurrentModuleExecutionLimit } from './constants';
 
 /**
  * Logger
@@ -323,14 +324,17 @@ export async function getOrganizationRootId(client: OrganizationsClient): Promis
  * Function to get Organizational unit id by path
  * @param client {@link OrganizationsClient}
  * @param ouPath string
+ * @param rootId string | undefined
  * @returns string
  */
 export async function getOrganizationalUnitIdByPath(
   client: OrganizationsClient,
   ouPath: string,
+  rootId?: string,
 ): Promise<string | undefined> {
+  const organizationRootId = rootId ?? (await getOrganizationRootId(client));
   if (ouPath.replace(/\/+$/, '').toLowerCase() === 'root') {
-    return await getOrganizationRootId(client);
+    return organizationRootId;
   }
 
   const ouNames = ouPath.replace(/\/+$/, '').split('/');
@@ -339,7 +343,7 @@ export async function getOrganizationalUnitIdByPath(
   if (ouPath.length === 0) {
     emptyPathId = undefined;
   } else {
-    let currentParentId = await getOrganizationRootId(client);
+    let currentParentId = organizationRootId;
     const isTopLevelOuNameRoot = ouNames[0].toLowerCase() === 'root';
     const startIndex = isTopLevelOuNameRoot ? 1 : 0;
 
@@ -399,13 +403,15 @@ export async function getOrganizationAccounts(client: OrganizationsClient): Prom
  * Function to get Account details from AWS Organizations by email
  * @param client {@link OrganizationsClient}
  * @param accountEmail string
+ * @param organizationAccounts {@link Account}[] | undefined
  * @returns Account | undefined
  */
-export async function getAccountDetailsFromOrganizations(
+export async function getAccountDetailsFromOrganizationsByEmail(
   client: OrganizationsClient,
   accountEmail: string,
+  organizationAccounts?: Account[],
 ): Promise<Account | undefined> {
-  const accounts = await getOrganizationAccounts(client);
+  const accounts = organizationAccounts ?? (await getOrganizationAccounts(client));
 
   for (const account of accounts) {
     if (account.Email && account.Email.toLowerCase() === accountEmail.toLowerCase()) {
@@ -423,7 +429,7 @@ export async function getAccountDetailsFromOrganizations(
  * @returns string
  */
 export async function getAccountId(client: OrganizationsClient, email: string): Promise<string> {
-  const accountDetailsFromOrganizations = await getAccountDetailsFromOrganizations(client, email);
+  const accountDetailsFromOrganizations = await getAccountDetailsFromOrganizationsByEmail(client, email);
   if (!accountDetailsFromOrganizations) {
     throw new Error(
       `${MODULE_EXCEPTIONS.INVALID_INPUT}: Account with email "${email}" not found in AWS Organizations.`,
@@ -499,4 +505,28 @@ export async function getOrganizationalUnitArn(
   const orgId = organizationId ?? (await getOrganizationId(organizationClient));
 
   return `arn:${partition}:organizations::${organizationAccountId}:ou/${orgId}/${ouId}`;
+}
+
+/**
+ * Function to process module promises by batches
+ * @param moduleName
+ * @param promises
+ * @param statuses
+ */
+export async function processModulePromises(
+  moduleName: string,
+  promises: Promise<string>[],
+  statuses: string[],
+  maxConcurrentExecution?: number,
+) {
+  const batchSize = maxConcurrentExecution ?? MaxConcurrentModuleExecutionLimit;
+  let batchNumber = 1;
+  for (let i = 0; i < promises.length; i += batchSize) {
+    const batchedPromises = promises.slice(i, i + batchSize);
+    logger.info(
+      `Executing batch number ${batchNumber} of ${moduleName} module. Batch contains ${batchedPromises.length} executions.`,
+    );
+    statuses.push(...(await Promise.all(batchedPromises)));
+    batchNumber++;
+  }
 }
