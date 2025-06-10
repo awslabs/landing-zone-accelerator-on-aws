@@ -528,6 +528,130 @@ exports[`NetworkVpcStack tests Construct(NetworkVpcStack):  Snapshot Test 1`] = 
       },
       "Type": "AWS::IAM::Role",
     },
+    "NetworkEndpointsASubnetShareResourceShare2DF08804": {
+      "Metadata": {
+        "lzaLookup": {
+          "subnetName": "Network-Endpoints-A",
+        },
+      },
+      "Properties": {
+        "Name": "Network-Endpoints-A_SubnetShare",
+        "Principals": [
+          "arn:aws:organizations::111111111111:ou/o-asdf123456/ou-asdf-22222222",
+        ],
+        "ResourceArns": [
+          {
+            "Fn::Join": [
+              "",
+              [
+                "arn:",
+                {
+                  "Ref": "AWS::Partition",
+                },
+                ":ec2:us-east-1:666666666666:subnet/",
+                {
+                  "Ref": "NetworkEndpointsVpcNetworkEndpointsASubnet758434F8",
+                },
+              ],
+            ],
+          },
+        ],
+      },
+      "Type": "AWS::RAM::ResourceShare",
+    },
+    "NetworkEndpointsBSubnetShareResourceShareAC87E0E4": {
+      "Metadata": {
+        "lzaLookup": {
+          "subnetName": "Network-Endpoints-B",
+        },
+      },
+      "Properties": {
+        "Name": "Network-Endpoints-B_SubnetShare",
+        "Principals": [
+          "arn:aws:organizations::111111111111:ou/o-asdf123456/ou-asdf-22222222",
+        ],
+        "ResourceArns": [
+          {
+            "Fn::Join": [
+              "",
+              [
+                "arn:",
+                {
+                  "Ref": "AWS::Partition",
+                },
+                ":ec2:us-east-1:666666666666:subnet/",
+                {
+                  "Ref": "NetworkEndpointsVpcNetworkEndpointsBSubnet1CF39812",
+                },
+              ],
+            ],
+          },
+        ],
+      },
+      "Type": "AWS::RAM::ResourceShare",
+    },
+    "NetworkEndpointsTgwAttachASubnetShareResourceShare8BC8C37B": {
+      "Metadata": {
+        "lzaLookup": {
+          "subnetName": "Network-EndpointsTgwAttach-A",
+        },
+      },
+      "Properties": {
+        "Name": "Network-EndpointsTgwAttach-A_SubnetShare",
+        "Principals": [
+          "arn:aws:organizations::111111111111:ou/o-asdf123456/ou-asdf-22222222",
+        ],
+        "ResourceArns": [
+          {
+            "Fn::Join": [
+              "",
+              [
+                "arn:",
+                {
+                  "Ref": "AWS::Partition",
+                },
+                ":ec2:us-east-1:666666666666:subnet/",
+                {
+                  "Ref": "NetworkEndpointsVpcNetworkEndpointsTgwAttachASubnet3580E1C3",
+                },
+              ],
+            ],
+          },
+        ],
+      },
+      "Type": "AWS::RAM::ResourceShare",
+    },
+    "NetworkEndpointsTgwAttachBSubnetShareResourceShareB966D727": {
+      "Metadata": {
+        "lzaLookup": {
+          "subnetName": "Network-EndpointsTgwAttach-B",
+        },
+      },
+      "Properties": {
+        "Name": "Network-EndpointsTgwAttach-B_SubnetShare",
+        "Principals": [
+          "arn:aws:organizations::111111111111:ou/o-asdf123456/ou-asdf-22222222",
+        ],
+        "ResourceArns": [
+          {
+            "Fn::Join": [
+              "",
+              [
+                "arn:",
+                {
+                  "Ref": "AWS::Partition",
+                },
+                ":ec2:us-east-1:666666666666:subnet/",
+                {
+                  "Ref": "NetworkEndpointsVpcNetworkEndpointsTgwAttachBSubnet7F2CD5B5",
+                },
+              ],
+            ],
+          },
+        ],
+      },
+      "Type": "AWS::RAM::ResourceShare",
+    },
     "NetworkEndpointsVpc619A1F01": {
       "DependsOn": [
         "DeleteDefaultVpc4DBAE36C",
@@ -730,6 +854,12 @@ exports[`NetworkVpcStack tests Construct(NetworkVpcStack):  Snapshot Test 1`] = 
       "Type": "AWS::EC2::VPCGatewayAttachment",
     },
     "NetworkEndpointsVpcManagementSg2B8F9418": {
+      "Metadata": {
+        "lzaLookup": {
+          "securityGroupName": "Management",
+          "vpcName": "Network-Endpoints",
+        },
+      },
       "Properties": {
         "GroupDescription": "Management Security Group",
         "GroupName": "Management",
@@ -987,6 +1117,12 @@ exports[`NetworkVpcStack tests Construct(NetworkVpcStack):  Snapshot Test 1`] = 
       "Type": "AWS::EC2::SecurityGroup",
     },
     "NetworkEndpointsVpcManagementSgManagementEgress00D58058BF": {
+      "Metadata": {
+        "lzaLookup": {
+          "ruleIndex": 0,
+          "securityGroupName": "Management",
+        },
+      },
       "Properties": {
         "Description": "All Outbound",
         "DestinationSecurityGroupId": {
@@ -1000,6 +1136,12 @@ exports[`NetworkVpcStack tests Construct(NetworkVpcStack):  Snapshot Test 1`] = 
       "Type": "AWS::EC2::SecurityGroupEgress",
     },
     "NetworkEndpointsVpcManagementSgManagementIngress008FD972B5": {
+      "Metadata": {
+        "lzaLookup": {
+          "ruleIndex": 0,
+          "securityGroupName": "Management",
+        },
+      },
       "Properties": {
         "Description": "Management RDP Traffic Inbound",
         "FromPort": 3389,
@@ -1015,6 +1157,12 @@ exports[`NetworkVpcStack tests Construct(NetworkVpcStack):  Snapshot Test 1`] = 
       "Type": "AWS::EC2::SecurityGroupIngress",
     },
     "NetworkEndpointsVpcManagementSgManagementIngress105119E927": {
+      "Metadata": {
+        "lzaLookup": {
+          "ruleIndex": 1,
+          "securityGroupName": "Management",
+        },
+      },
       "Properties": {
         "Description": "Management SSH Traffic Inbound",
         "FromPort": 22,
@@ -1030,6 +1178,12 @@ exports[`NetworkVpcStack tests Construct(NetworkVpcStack):  Snapshot Test 1`] = 
       "Type": "AWS::EC2::SecurityGroupIngress",
     },
     "NetworkEndpointsVpcManagementSgManagementIngress1135D6C2DD": {
+      "Metadata": {
+        "lzaLookup": {
+          "ruleIndex": 2,
+          "securityGroupName": "Management",
+        },
+      },
       "Properties": {
         "Description": "Management SSH Traffic Inbound",
         "FromPort": 22,
@@ -1105,6 +1259,23 @@ exports[`NetworkVpcStack tests Construct(NetworkVpcStack):  Snapshot Test 1`] = 
       "Type": "Custom::IpamSubnet",
       "UpdateReplacePolicy": "Delete",
     },
+    "NetworkEndpointsVpcNetworkEndpointsASubnetRouteTableAssociation9EE74497": {
+      "Metadata": {
+        "lzaLookup": {
+          "routeTableName": "Network-Endpoints-A",
+          "subnetName": "Network-Endpoints-A",
+        },
+      },
+      "Properties": {
+        "RouteTableId": {
+          "Ref": "NetworkEndpointsVpcNetworkEndpointsARouteTable5B9BF71B",
+        },
+        "SubnetId": {
+          "Ref": "NetworkEndpointsVpcNetworkEndpointsASubnet758434F8",
+        },
+      },
+      "Type": "AWS::EC2::SubnetRouteTableAssociation",
+    },
     "NetworkEndpointsVpcNetworkEndpointsBRouteTable639AAADB": {
       "Metadata": {
         "lzaLookup": {
@@ -1130,6 +1301,7 @@ exports[`NetworkVpcStack tests Construct(NetworkVpcStack):  Snapshot Test 1`] = 
       "DependsOn": [
         "CustomIpamSubnetCustomResourceProviderLogGroup3BB67050",
         "NetworkEndpointsVpcNetworkEndpointsASubnet758434F8",
+        "NetworkEndpointsVpcNetworkEndpointsASubnetRouteTableAssociation9EE74497",
       ],
       "Metadata": {
         "lzaLookup": {
@@ -1162,6 +1334,27 @@ exports[`NetworkVpcStack tests Construct(NetworkVpcStack):  Snapshot Test 1`] = 
       "Type": "Custom::IpamSubnet",
       "UpdateReplacePolicy": "Delete",
     },
+    "NetworkEndpointsVpcNetworkEndpointsBSubnetRouteTableAssociation68383153": {
+      "DependsOn": [
+        "NetworkEndpointsVpcNetworkEndpointsASubnet758434F8",
+        "NetworkEndpointsVpcNetworkEndpointsASubnetRouteTableAssociation9EE74497",
+      ],
+      "Metadata": {
+        "lzaLookup": {
+          "routeTableName": "Network-Endpoints-B",
+          "subnetName": "Network-Endpoints-B",
+        },
+      },
+      "Properties": {
+        "RouteTableId": {
+          "Ref": "NetworkEndpointsVpcNetworkEndpointsBRouteTable639AAADB",
+        },
+        "SubnetId": {
+          "Ref": "NetworkEndpointsVpcNetworkEndpointsBSubnet1CF39812",
+        },
+      },
+      "Type": "AWS::EC2::SubnetRouteTableAssociation",
+    },
     "NetworkEndpointsVpcNetworkEndpointsTgwARouteTable9117846C": {
       "Metadata": {
         "lzaLookup": {
@@ -1187,6 +1380,7 @@ exports[`NetworkVpcStack tests Construct(NetworkVpcStack):  Snapshot Test 1`] = 
       "DependsOn": [
         "CustomIpamSubnetCustomResourceProviderLogGroup3BB67050",
         "NetworkEndpointsVpcNetworkEndpointsBSubnet1CF39812",
+        "NetworkEndpointsVpcNetworkEndpointsBSubnetRouteTableAssociation68383153",
       ],
       "Metadata": {
         "lzaLookup": {
@@ -1219,11 +1413,33 @@ exports[`NetworkVpcStack tests Construct(NetworkVpcStack):  Snapshot Test 1`] = 
       "Type": "Custom::IpamSubnet",
       "UpdateReplacePolicy": "Delete",
     },
+    "NetworkEndpointsVpcNetworkEndpointsTgwAttachASubnetRouteTableAssociation4D925D52": {
+      "DependsOn": [
+        "NetworkEndpointsVpcNetworkEndpointsBSubnet1CF39812",
+        "NetworkEndpointsVpcNetworkEndpointsBSubnetRouteTableAssociation68383153",
+      ],
+      "Metadata": {
+        "lzaLookup": {
+          "routeTableName": "Network-Endpoints-Tgw-A",
+          "subnetName": "Network-EndpointsTgwAttach-A",
+        },
+      },
+      "Properties": {
+        "RouteTableId": {
+          "Ref": "NetworkEndpointsVpcNetworkEndpointsTgwARouteTable9117846C",
+        },
+        "SubnetId": {
+          "Ref": "NetworkEndpointsVpcNetworkEndpointsTgwAttachASubnet3580E1C3",
+        },
+      },
+      "Type": "AWS::EC2::SubnetRouteTableAssociation",
+    },
     "NetworkEndpointsVpcNetworkEndpointsTgwAttachBSubnet7F2CD5B5": {
       "DeletionPolicy": "Delete",
       "DependsOn": [
         "CustomIpamSubnetCustomResourceProviderLogGroup3BB67050",
         "NetworkEndpointsVpcNetworkEndpointsTgwAttachASubnet3580E1C3",
+        "NetworkEndpointsVpcNetworkEndpointsTgwAttachASubnetRouteTableAssociation4D925D52",
       ],
       "Metadata": {
         "lzaLookup": {
@@ -1255,6 +1471,27 @@ exports[`NetworkVpcStack tests Construct(NetworkVpcStack):  Snapshot Test 1`] = 
       },
       "Type": "Custom::IpamSubnet",
       "UpdateReplacePolicy": "Delete",
+    },
+    "NetworkEndpointsVpcNetworkEndpointsTgwAttachBSubnetRouteTableAssociation958ED1AB": {
+      "DependsOn": [
+        "NetworkEndpointsVpcNetworkEndpointsTgwAttachASubnet3580E1C3",
+        "NetworkEndpointsVpcNetworkEndpointsTgwAttachASubnetRouteTableAssociation4D925D52",
+      ],
+      "Metadata": {
+        "lzaLookup": {
+          "routeTableName": "Network-Endpoints-Tgw-B",
+          "subnetName": "Network-EndpointsTgwAttach-B",
+        },
+      },
+      "Properties": {
+        "RouteTableId": {
+          "Ref": "NetworkEndpointsVpcNetworkEndpointsTgwBRouteTable7A11C65B",
+        },
+        "SubnetId": {
+          "Ref": "NetworkEndpointsVpcNetworkEndpointsTgwAttachBSubnet7F2CD5B5",
+        },
+      },
+      "Type": "AWS::EC2::SubnetRouteTableAssociation",
     },
     "NetworkEndpointsVpcNetworkEndpointsTgwBRouteTable7A11C65B": {
       "Metadata": {

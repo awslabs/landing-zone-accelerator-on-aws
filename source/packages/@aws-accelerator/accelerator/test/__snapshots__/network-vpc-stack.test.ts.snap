@@ -2580,6 +2580,12 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
       "Type": "AWS::EC2::VPCGatewayAttachment",
     },
     "NetworkEndpointsVpcManagementSg2B8F9418": {
+      "Metadata": {
+        "lzaLookup": {
+          "securityGroupName": "Management",
+          "vpcName": "Network-Endpoints",
+        },
+      },
       "Properties": {
         "GroupDescription": "Management Security Group",
         "GroupName": "Management",
@@ -2867,6 +2873,12 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
       "Type": "AWS::EC2::SecurityGroup",
     },
     "NetworkEndpointsVpcManagementSgManagementEgress00D58058BF": {
+      "Metadata": {
+        "lzaLookup": {
+          "ruleIndex": 0,
+          "securityGroupName": "Management",
+        },
+      },
       "Properties": {
         "Description": "All Outbound",
         "DestinationSecurityGroupId": {
@@ -2880,6 +2892,12 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
       "Type": "AWS::EC2::SecurityGroupEgress",
     },
     "NetworkEndpointsVpcManagementSgManagementIngress008FD972B5": {
+      "Metadata": {
+        "lzaLookup": {
+          "ruleIndex": 0,
+          "securityGroupName": "Management",
+        },
+      },
       "Properties": {
         "Description": "Management RDP Traffic Inbound",
         "FromPort": 3389,
@@ -2895,6 +2913,12 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
       "Type": "AWS::EC2::SecurityGroupIngress",
     },
     "NetworkEndpointsVpcManagementSgManagementIngress105119E927": {
+      "Metadata": {
+        "lzaLookup": {
+          "ruleIndex": 1,
+          "securityGroupName": "Management",
+        },
+      },
       "Properties": {
         "Description": "Management SSH Traffic Inbound",
         "FromPort": 22,
@@ -2910,6 +2934,12 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
       "Type": "AWS::EC2::SecurityGroupIngress",
     },
     "NetworkEndpointsVpcManagementSgManagementIngress1135D6C2DD": {
+      "Metadata": {
+        "lzaLookup": {
+          "ruleIndex": 2,
+          "securityGroupName": "Management",
+        },
+      },
       "Properties": {
         "Description": "Management SSH Traffic Inbound",
         "FromPort": 22,
@@ -3251,6 +3281,10 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
               "reason": "User defined an all ingress rule in configuration.",
             },
           ],
+        },
+        "lzaLookup": {
+          "securityGroupName": "Network-Endpoints-CustomEndpointSg",
+          "vpcName": "Network-Endpoints",
         },
       },
       "Properties": {
@@ -4042,6 +4076,12 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
       "Type": "AWS::EC2::FlowLog",
     },
     "NetworkInspectionVpcDataSg936B8E8C": {
+      "Metadata": {
+        "lzaLookup": {
+          "securityGroupName": "Data",
+          "vpcName": "Network-Inspection",
+        },
+      },
       "Properties": {
         "GroupDescription": "Firewall data",
         "GroupName": "Data",

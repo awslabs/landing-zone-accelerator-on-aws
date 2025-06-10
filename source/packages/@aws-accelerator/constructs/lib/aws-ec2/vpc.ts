@@ -431,8 +431,8 @@ export interface SecurityGroupEgressRuleProps {
 abstract class SecurityGroupBase extends cdk.Resource implements ISecurityGroup {
   public abstract readonly securityGroupId: string;
 
-  public addIngressRule(id: string, props: SecurityGroupIngressRuleProps) {
-    new cdk.aws_ec2.CfnSecurityGroupIngress(this, id, {
+  public addIngressRule(id: string, props: SecurityGroupIngressRuleProps): cdk.aws_ec2.CfnSecurityGroupIngress {
+    return new cdk.aws_ec2.CfnSecurityGroupIngress(this, id, {
       groupId: this.securityGroupId,
       ipProtocol: props.ipProtocol,
       description: props.description,
@@ -445,8 +445,8 @@ abstract class SecurityGroupBase extends cdk.Resource implements ISecurityGroup 
     });
   }
 
-  public addEgressRule(id: string, props: SecurityGroupEgressRuleProps) {
-    new cdk.aws_ec2.CfnSecurityGroupEgress(this, id, {
+  public addEgressRule(id: string, props: SecurityGroupEgressRuleProps): cdk.aws_ec2.CfnSecurityGroupEgress {
+    return new cdk.aws_ec2.CfnSecurityGroupEgress(this, id, {
       groupId: this.securityGroupId,
       ipProtocol: props.ipProtocol,
       description: props.description,
