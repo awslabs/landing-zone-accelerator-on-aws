@@ -90,6 +90,10 @@ export class SubnetResources {
     index: number,
     ipamConfig?: IpamConfig[],
   ): number {
+    if (!this.subnetManagedByV1Stack(subnetItem, vpcItem.name)) {
+      return index;
+    }
+
     // Retrieve items required to create subnet
     const vpc = getVpc(maps.vpcs, vpcItem.name) as Vpc;
     const routeTable = subnetItem.routeTable
@@ -103,10 +107,6 @@ export class SubnetResources {
 
     // Create subnet
     const subnet = this.createSubnetItem(vpcItem, subnetItem, availabilityZone, vpc, routeTable, basePool, outpost);
-
-    if (!subnet) {
-      return index;
-    }
 
     maps.subnets.set(`${vpcItem.name}_${subnetItem.name}`, subnet);
 
@@ -247,7 +247,7 @@ export class SubnetResources {
     routeTable?: RouteTable,
     basePool?: string[],
     outpost?: OutpostsConfig,
-  ): Subnet | undefined {
+  ): Subnet {
     this.stack.addLogs(LogLevel.INFO, `Adding subnet ${subnetItem.name} to VPC ${vpcItem.name}`);
 
     const isAvailabilityZoneId = !availabilityZone.includes(cdk.Stack.of(this.stack).region);
@@ -268,36 +268,34 @@ export class SubnetResources {
         },
       );
     } else {
-      if (this.subnetManagedByV1Stack(subnetItem, vpcItem.name)) {
-        subnet = new Subnet(this.stack, pascalCase(`${vpcItem.name}Vpc`) + pascalCase(`${subnetItem.name}Subnet`), {
-          name: subnetItem.name,
-          assignIpv6OnCreation: subnetItem.assignIpv6OnCreation,
-          availabilityZone: isAvailabilityZoneId ? undefined : availabilityZone,
-          availabilityZoneId: isAvailabilityZoneId ? availabilityZone : undefined,
-          basePool,
-          enableDns64: subnetItem.enableDns64,
-          ipamAllocation: subnetItem.ipamAllocation,
-          ipv4CidrBlock: subnetItem.ipv4CidrBlock,
-          ipv6CidrBlock: subnetItem.ipv6CidrBlock,
-          kmsKey: this.stack.cloudwatchKey,
-          logRetentionInDays: this.stack.logRetention,
-          mapPublicIpOnLaunch: subnetItem.mapPublicIpOnLaunch,
-          privateDnsOptions: subnetItem.privateDnsOptions,
-          routeTable,
-          vpc,
-          tags: subnetItem.tags,
-          outpost,
-        });
+      subnet = new Subnet(this.stack, pascalCase(`${vpcItem.name}Vpc`) + pascalCase(`${subnetItem.name}Subnet`), {
+        name: subnetItem.name,
+        assignIpv6OnCreation: subnetItem.assignIpv6OnCreation,
+        availabilityZone: isAvailabilityZoneId ? undefined : availabilityZone,
+        availabilityZoneId: isAvailabilityZoneId ? availabilityZone : undefined,
+        basePool,
+        enableDns64: subnetItem.enableDns64,
+        ipamAllocation: subnetItem.ipamAllocation,
+        ipv4CidrBlock: subnetItem.ipv4CidrBlock,
+        ipv6CidrBlock: subnetItem.ipv6CidrBlock,
+        kmsKey: this.stack.cloudwatchKey,
+        logRetentionInDays: this.stack.logRetention,
+        mapPublicIpOnLaunch: subnetItem.mapPublicIpOnLaunch,
+        privateDnsOptions: subnetItem.privateDnsOptions,
+        routeTable,
+        vpc,
+        tags: subnetItem.tags,
+        outpost,
+      });
 
-        this.stack.addSsmParameter({
-          logicalId: pascalCase(`SsmParam${pascalCase(vpcItem.name) + pascalCase(subnetItem.name)}SubnetId`),
-          parameterName: this.stack.getSsmPath(SsmResourceType.SUBNET, [vpcItem.name, subnetItem.name]),
-          stringValue: subnet.subnetId,
-        });
-        // If the VPC has additional CIDR blocks, depend on those CIDRs to be associated
-        for (const cidr of [...vpc.cidrs.ipv4, ...vpc.cidrs.ipv6]) {
-          subnet.node.addDependency(cidr);
-        }
+      this.stack.addSsmParameter({
+        logicalId: pascalCase(`SsmParam${pascalCase(vpcItem.name) + pascalCase(subnetItem.name)}SubnetId`),
+        parameterName: this.stack.getSsmPath(SsmResourceType.SUBNET, [vpcItem.name, subnetItem.name]),
+        stringValue: subnet.subnetId,
+      });
+      // If the VPC has additional CIDR blocks, depend on those CIDRs to be associated
+      for (const cidr of [...vpc.cidrs.ipv4, ...vpc.cidrs.ipv6]) {
+        subnet.node.addDependency(cidr);
       }
     }
 
