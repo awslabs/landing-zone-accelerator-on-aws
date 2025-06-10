@@ -54,14 +54,11 @@ describe('NetworkVpcStack tests', () => {
       const newTemplateCount = Object.keys(newTemplate.findResources(type)).length;
       expect(oldTemplateCount).toEqual(newTemplateCount);
     });
-    it.each(['AWS::EC2::Subnet', 'Custom::IpamSubnet'])(
-      'Should contains same amount of %s',
-      (type: string) => {
-        const oldTemplateCount = Object.keys(existingTemplate.findResources(type)).length;
-        const newTemplateCount = Object.keys(newTemplate.findResources(type)).length;
-        expect(oldTemplateCount).toEqual(newTemplateCount);
-      },
-    );
+    it.each(['AWS::EC2::Subnet', 'Custom::IpamSubnet'])('Should contains same amount of %s', (type: string) => {
+      const oldTemplateCount = Object.keys(existingTemplate.findResources(type)).length;
+      const newTemplateCount = Object.keys(newTemplate.findResources(type)).length;
+      expect(oldTemplateCount).toEqual(newTemplateCount);
+    });
     // it.each(['AWS::EC2::Subnet', 'Custom::IpamSubnet', 'AWS::EC2::SubnetRouteTableAssociation'])(
     //   'Should contains same amount of %s',
     //   (type: string) => {
@@ -70,5 +67,13 @@ describe('NetworkVpcStack tests', () => {
     //     expect(oldTemplateCount).toEqual(newTemplateCount);
     //   },
     // );
+    it.each(['AWS::EC2::SecurityGroup', 'AWS::EC2::SecurityGroupIngress', 'AWS::EC2::SecurityGroupEgress'])(
+      'Should contains same amount of %s',
+      (type: string) => {
+        const oldTemplateCount = Object.keys(existingTemplate.findResources(type)).length;
+        const newTemplateCount = Object.keys(newTemplate.findResources(type)).length;
+        expect(oldTemplateCount).toEqual(newTemplateCount);
+      },
+    );
   });
 });

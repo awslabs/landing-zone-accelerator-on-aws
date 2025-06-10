@@ -361,8 +361,8 @@ vpcs:
       - name: Network-Endpoints-Tgw-B
         routes: []
       # Add in after v2
-      - name: Network-Endpoints-Not-Used-V2
-        routes: []
+      # - name: Network-Endpoints-Not-Used-V2
+      #   routes: []
       - name: Network-Endpoints-A
         routes:
           - name: S3Gateway
@@ -402,46 +402,46 @@ vpcs:
       #########################
       # V2 Route Tables
       #########################
-      - name: Network-Endpoints-A-V2
-        routes:
-          - name: S3Gateway
-            type: gatewayEndpoint
-            target: s3
-          - name: DynamoDBGateway
-            type: gatewayEndpoint
-            target: dynamodb
-          - name: PlRoute
-            destinationPrefixList: accelerator-prefix-list
-            type: vpcPeering
-            target: CrossAccount
-          - name: VpcPeer
-            destination: 10.4.0.0/16
-            type: vpcPeering
-            target: CrossAccount
-          - name: VpcPeerv6
-            ipv6Destination: fd00::/8
-            type: vpcPeering
-            target: CrossAccount
-      - name: Network-Endpoints-B-V2
-        routes:
-          - name: S3Gateway
-            type: gatewayEndpoint
-            target: s3
-          - name: DynamoDBGateway
-            type: gatewayEndpoint
-            target: dynamodb
-          - name: PlRoute
-            destinationPrefixList: accelerator-prefix-list
-            type: vpcPeering
-            target: CrossAccount
-          - name: VpcPeer
-            destination: 10.4.0.0/16
-            type: vpcPeering
-            target: CrossAccount
-          - name: VpcPeerv6
-            ipv6Destination: fd00::/8
-            type: vpcPeering
-            target: CrossAccount
+      # - name: Network-Endpoints-A-V2
+      #   routes:
+      #     - name: S3Gateway
+      #       type: gatewayEndpoint
+      #       target: s3
+      #     - name: DynamoDBGateway
+      #       type: gatewayEndpoint
+      #       target: dynamodb
+      #     - name: PlRoute
+      #       destinationPrefixList: accelerator-prefix-list
+      #       type: vpcPeering
+      #       target: CrossAccount
+      #     - name: VpcPeer
+      #       destination: 10.4.0.0/16
+      #       type: vpcPeering
+      #       target: CrossAccount
+      #     - name: VpcPeerv6
+      #       ipv6Destination: fd00::/8
+      #       type: vpcPeering
+      #       target: CrossAccount
+      # - name: Network-Endpoints-B-V2
+      #   routes:
+      #     - name: S3Gateway
+      #       type: gatewayEndpoint
+      #       target: s3
+      #     - name: DynamoDBGateway
+      #       type: gatewayEndpoint
+      #       target: dynamodb
+      #     - name: PlRoute
+      #       destinationPrefixList: accelerator-prefix-list
+      #       type: vpcPeering
+      #       target: CrossAccount
+      #     - name: VpcPeer
+      #       destination: 10.4.0.0/16
+      #       type: vpcPeering
+      #       target: CrossAccount
+      #     - name: VpcPeerv6
+      #       ipv6Destination: fd00::/8
+      #       type: vpcPeering
+      #       target: CrossAccount
 
     subnets:
       - name: Network-Endpoints-A
@@ -538,9 +538,9 @@ vpcs:
         - service: eks
           applyPolicy: false
         - service: secretsmanager
-          # securityGroup: Network-Endpoints-CustomEndpointSg
+          securityGroup: Network-Endpoints-CustomEndpointSg
         - service: access-analyzer
-          # securityGroup: Network-Endpoints-CustomEndpointSg
+          securityGroup: Network-Endpoints-CustomEndpointSg
     securityGroups:
       - name: 'Management'
         description: 'Management Security Group'
@@ -620,21 +620,21 @@ vpcs:
           #     - ST
           #   sources:
           #     - 10.0.0.0/8
-      # - name: Network-Endpoints-CustomEndpointSg-V2
-      #   description: Accelerator security group for custom endpoint
-      #   inboundRules:
-      #     - description: Allow access to 443
-      #       types:
-      #         - HTTPS
-      #       sources:
-      #         - 0.0.0.0/0
+      - name: Network-Endpoints-CustomEndpointSg-V2
+        description: Accelerator security group for custom endpoint
+        inboundRules:
+          - description: Allow access to 443
+            types:
+              - HTTPS
+            sources:
+              - 0.0.0.0/0
 
-      #   outboundRules:
-      #     - description: Allow all outbound
-      #       types:
-      #         - ALL
-      #       sources:
-      #         - 0.0.0.0/0
+        outboundRules:
+          - description: Allow all outbound
+            types:
+              - ALL
+            sources:
+              - 0.0.0.0/0
     networkAcls:
       - name: TestNACL
         subnetAssociations:
@@ -964,20 +964,20 @@ vpcs:
               - ALL
             sources:
               - 0.0.0.0/0
-      # - name: InternalHTTP-SG-V2
-      #   description: Accelerator Security Group
-      #   inboundRules:
-      #     - description: HTTP access security group rule
-      #       types:
-      #         - HTTP
-      #       sources:
-      #         - 10.0.0.0/16
-      #   outboundRules:
-      #     - description: Allow all outbound
-      #       types:
-      #         - ALL
-      #       sources:
-      #         - 0.0.0.0/0
+      - name: InternalHTTP-SG-V2
+        description: Accelerator Security Group
+        inboundRules:
+          - description: HTTP access security group rule
+            types:
+              - HTTP
+            sources:
+              - 10.0.0.0/16
+        outboundRules:
+          - description: Allow all outbound
+            types:
+              - ALL
+            sources:
+              - 0.0.0.0/0
 
 vpcFlowLogs:
   trafficType: ALL
