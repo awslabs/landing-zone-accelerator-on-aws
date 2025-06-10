@@ -24,7 +24,7 @@ import * as emailValidator from 'email-validator';
 import {
   delay,
   generateDryRunResponse,
-  getAccountDetailsFromOrganizations,
+  getAccountDetailsFromOrganizationsByEmail,
   getCredentials,
   getModuleDefaultParameters,
   setRetryStrategy,
@@ -89,7 +89,10 @@ export class InviteAccountToOrganizationModule implements IInviteAccountToOrgani
       credentials: props.credentials,
     });
 
-    const accountDetailsFromOrganizations = await getAccountDetailsFromOrganizations(client, props.configuration.email);
+    const accountDetailsFromOrganizations = await getAccountDetailsFromOrganizationsByEmail(
+      client,
+      props.configuration.email,
+    );
 
     if (defaultProps.dryRun) {
       return this.getDryRunResponse(

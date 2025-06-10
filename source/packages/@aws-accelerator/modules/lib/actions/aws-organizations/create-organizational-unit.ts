@@ -32,8 +32,22 @@ export abstract class CreateOrganizationalUnitModule {
    */
   public static async execute(params: ModuleParams): Promise<string> {
     const statuses: string[] = [];
-    const promises: Promise<string>[] = [];
-    for (const organizationalUnit of params.moduleRunnerParameters.configs.organizationConfig.organizationalUnits) {
+
+    // Sort organizational units by hierarchy depth
+    const sortedOrganizationalUnits = [...params.moduleRunnerParameters.configs.organizationConfig.organizationalUnits]
+      .filter(ou => !ou.ignore)
+      .sort((a, b) => {
+        const depthA = a.name.split('/').length;
+        const depthB = b.name.split('/').length;
+
+        if (depthA === depthB) {
+          return a.name.localeCompare(b.name);
+        }
+
+        return depthA - depthB;
+      });
+
+    for (const organizationalUnit of sortedOrganizationalUnits) {
       const param: ICreateOrganizationalUnitHandlerParameter = {
         moduleName: params.moduleItem.name,
         operation: 'create-organizational-unit',
@@ -47,13 +61,11 @@ export abstract class CreateOrganizationalUnitModule {
           name: organizationalUnit.name,
         },
       };
-      promises.push(createOrganizationalUnit(param));
+
+      logger.info(`Executing ${params.moduleItem.name} module for ${organizationalUnit.name} OU.`);
+      statuses.push(await createOrganizationalUnit(param));
     }
 
-    if (promises.length > 0) {
-      logger.info(`Executing ${params.moduleItem.name} module.`);
-      statuses.push(...(await Promise.all(promises)));
-    }
     return `Module "${params.moduleItem.name}" completed successfully with status ${statuses.join('\n')}`;
   }
 }

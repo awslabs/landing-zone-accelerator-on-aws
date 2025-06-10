@@ -35,11 +35,20 @@ export {
   createAndRetrieveOrganizationalUnit,
 } from './executors/accelerator-aws-organizations';
 
-export { IInviteAccountToOrganizationHandlerParameter } from './interfaces/aws-organizations/invite-account-to-organization';
-export { inviteAccountToOrganization } from './executors/accelerator-aws-organizations';
+export {
+  IInviteAccountToOrganizationHandlerParameter,
+  IInviteAccountsBatchToOrganizationHandlerParameter,
+} from './interfaces/aws-organizations/invite-account-to-organization';
+export {
+  inviteAccountToOrganization,
+  inviteAccountsBatchToOrganization,
+} from './executors/accelerator-aws-organizations';
 
-export { IMoveAccountHandlerParameter } from './interfaces/aws-organizations/move-account';
-export { moveAccount } from './executors/accelerator-aws-organizations';
+export {
+  IMoveAccountHandlerParameter,
+  IMoveAccountsBatchHandlerParameter,
+} from './interfaces/aws-organizations/move-account';
+export { moveAccount, moveAccountsBatch } from './executors/accelerator-aws-organizations';
 
 export { getOrganizationId } from './common/functions';
 

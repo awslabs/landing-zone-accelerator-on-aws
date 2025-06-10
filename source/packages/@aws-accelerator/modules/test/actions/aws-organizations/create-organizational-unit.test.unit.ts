@@ -26,9 +26,7 @@ describe('CreateOrganizationalUnitModule', () => {
   beforeEach(() => {
     jest.clearAllMocks();
 
-    jest
-      .spyOn(awsLza, 'createOrganizationalUnit')
-      .mockResolvedValue(`Module ${AcceleratorModules.CREATE_ORGANIZATIONAL_UNIT} executed successfully`);
+    jest.spyOn(awsLza, 'createOrganizationalUnit').mockResolvedValue(`Successful`);
 
     mockAccountsConfig = {
       getManagementAccount: jest.fn().mockReturnValue(MOCK_CONSTANTS.managementAccount),
@@ -45,9 +43,10 @@ describe('CreateOrganizationalUnitModule', () => {
     // Setup
     const ouCounts = MOCK_CONSTANTS.configs.organizationConfig.organizationalUnits.length;
     const expectedOutput: string[] = [];
-    for (let i = 0; i < ouCounts; i++) {
-      expectedOutput.push(`Module ${AcceleratorModules.CREATE_ORGANIZATIONAL_UNIT} executed successfully`);
+    for (let i = 0; i < ouCounts - 1; i++) {
+      expectedOutput.push(`Successful`);
     }
+
     const param: ModuleParams = {
       moduleItem: {
         name: AcceleratorModules.CREATE_ORGANIZATIONAL_UNIT,
@@ -77,7 +76,8 @@ describe('CreateOrganizationalUnitModule', () => {
     const response = await CreateOrganizationalUnitModule.execute(param);
 
     // Verify
-    expect(awsLza.createOrganizationalUnit).toHaveBeenCalledTimes(ouCounts);
+    expect(awsLza.createOrganizationalUnit).toHaveBeenCalledTimes(ouCounts - 1);
+
     expect(response).toBe(
       `Module "${
         AcceleratorModules.CREATE_ORGANIZATIONAL_UNIT

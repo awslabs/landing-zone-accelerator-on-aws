@@ -12,7 +12,7 @@
  */
 
 import path from 'path';
-import { createLogger, IMoveAccountHandlerParameter, moveAccount } from '../../../../../@aws-lza/index';
+import { createLogger, IMoveAccountsBatchHandlerParameter, moveAccountsBatch } from '../../../../../@aws-lza/index';
 import { ModuleParams } from '../../../models/types';
 
 const logger = createLogger([path.parse(path.basename(__filename)).name]);
@@ -27,35 +27,44 @@ export abstract class MoveAccountModule {
    * @returns status string
    */
   public static async execute(params: ModuleParams): Promise<string> {
-    const statuses: string[] = [];
-    const promises: Promise<string>[] = [];
-    const accountItems = [
+    const accountIdsToMove = params.moduleRunnerParameters.configs.accountsConfig.accountIds ?? [];
+
+    const allAccountItems = [
       ...params.moduleRunnerParameters.configs.accountsConfig.mandatoryAccounts,
       ...params.moduleRunnerParameters.configs.accountsConfig.workloadAccounts,
     ];
 
-    for (const accountItem of accountItems) {
-      const param: IMoveAccountHandlerParameter = {
-        moduleName: params.moduleItem.name,
-        operation: 'move-account',
-        partition: params.runnerParameters.partition,
-        region: params.moduleRunnerParameters.configs.globalConfig.homeRegion,
-        useExistingRole: params.runnerParameters.useExistingRoles,
-        solutionId: params.runnerParameters.solutionId,
-        credentials: params.moduleRunnerParameters.managementAccountCredentials,
-        dryRun: params.runnerParameters.dryRun,
-        configuration: {
-          email: accountItem.email,
-          destinationOu: accountItem.organizationalUnit,
-        },
-      };
-      promises.push(moveAccount(param));
+    const accountItemsToMove = allAccountItems.filter(item =>
+      accountIdsToMove.some(account => account.email === item.email),
+    );
+
+    if (accountItemsToMove.length === 0) {
+      return `Skipping module "${params.moduleItem.name}" because all accounts already reside in their respective Organizational Units as defined in the configuration`;
     }
 
-    if (promises.length > 0) {
-      logger.info(`Executing ${params.moduleItem.name} module.`);
-      statuses.push(...(await Promise.all(promises)));
-    }
-    return `Module "${params.moduleItem.name}" completed successfully with status ${statuses.join('\n')}`;
+    const param: IMoveAccountsBatchHandlerParameter = {
+      moduleName: params.moduleItem.name,
+      operation: 'move-account',
+      partition: params.runnerParameters.partition,
+      region: params.moduleRunnerParameters.configs.globalConfig.homeRegion,
+      useExistingRole: params.runnerParameters.useExistingRoles,
+      solutionId: params.runnerParameters.solutionId,
+      credentials: params.moduleRunnerParameters.managementAccountCredentials,
+      dryRun: params.runnerParameters.dryRun,
+      maxConcurrentExecution: params.runnerParameters.maxConcurrentExecution,
+      configuration: {
+        accounts: accountItemsToMove.map(accountItem => {
+          return {
+            email: accountItem.email,
+            destinationOu: accountItem.organizationalUnit,
+          };
+        }),
+      },
+    };
+
+    logger.info(`Executing ${params.moduleItem.name} module.`);
+    const status = await moveAccountsBatch(param);
+
+    return `Module "${params.moduleItem.name}" completed successfully with status ${status}`;
   }
 }

@@ -119,6 +119,13 @@ export type RunnerParametersType = {
    * Accelerator pipeline stage name
    */
   readonly stage?: string;
+  /**
+   * Maximum concurrent execution
+   *
+   * @default
+   * 50
+   */
+  readonly maxConcurrentExecution: number;
 };
 
 /**

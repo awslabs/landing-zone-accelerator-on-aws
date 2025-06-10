@@ -255,10 +255,12 @@ describe('functions', () => {
           useExistingRoles: false,
           solutionId: `AwsSolution/SO0199/${version}`,
           dryRun: false,
+          maxConcurrentExecution: 50,
         });
       });
 
       test('should use provided prefix when available', () => {
+        process.env['MAX_CONCURRENT_MODULE_EXECUTION'] = '10';
         mockYargs.parseSync.mockReturnValue({
           partition: MOCK_CONSTANTS.runnerParameters.partition,
           region: MOCK_CONSTANTS.runnerParameters.region,
@@ -269,6 +271,7 @@ describe('functions', () => {
 
         const result = validateAndGetRunnerParameters();
         expect(result.prefix).toBe('CustomPrefix');
+        expect(result.maxConcurrentExecution).toBe(10);
       });
     });
   });

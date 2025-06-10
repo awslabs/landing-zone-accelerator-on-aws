@@ -26,14 +26,13 @@ import { AccountsConfig } from '@aws-accelerator/config';
 import * as awsLza from '../../../../../@aws-lza/index';
 
 describe('InviteAccountsToOrganizationsModule', () => {
+  const status = 'mock status';
   let mockAccountsConfig: Partial<AccountsConfig>;
 
   beforeEach(() => {
     jest.clearAllMocks();
 
-    jest
-      .spyOn(awsLza, 'inviteAccountToOrganization')
-      .mockResolvedValue(`Module ${AcceleratorModules.INVITE_ACCOUNTS_TO_ORGANIZATIONS} executed successfully`);
+    jest.spyOn(awsLza, 'inviteAccountsBatchToOrganization').mockResolvedValue(status);
 
     mockAccountsConfig = {
       getManagementAccount: jest.fn().mockReturnValue(MOCK_CONSTANTS.managementAccount),
@@ -48,11 +47,6 @@ describe('InviteAccountsToOrganizationsModule', () => {
 
   test('Should execute successfully', async () => {
     // Setup
-    const accountIdCounts = mockAccountsConfiguration.accountIds!.length;
-    const expectedOutput: string[] = [];
-    for (let i = 0; i < accountIdCounts; i++) {
-      expectedOutput.push(`Module ${AcceleratorModules.INVITE_ACCOUNTS_TO_ORGANIZATIONS} executed successfully`);
-    }
     const param: ModuleParams = {
       moduleItem: {
         name: AcceleratorModules.INVITE_ACCOUNTS_TO_ORGANIZATIONS,
@@ -82,11 +76,9 @@ describe('InviteAccountsToOrganizationsModule', () => {
     const response = await InviteAccountsToOrganizationsModule.execute(param);
 
     // Verify
-    expect(awsLza.inviteAccountToOrganization).toHaveBeenCalledTimes(accountIdCounts);
+    expect(awsLza.inviteAccountsBatchToOrganization).toHaveBeenCalledTimes(1);
     expect(response).toBe(
-      `Module "${
-        AcceleratorModules.INVITE_ACCOUNTS_TO_ORGANIZATIONS
-      }" completed successfully with status ${expectedOutput.join('\n')}`,
+      `Module "${AcceleratorModules.INVITE_ACCOUNTS_TO_ORGANIZATIONS}" completed successfully with status ${status}`,
     );
   });
 
@@ -131,9 +123,9 @@ describe('InviteAccountsToOrganizationsModule', () => {
     const response = await InviteAccountsToOrganizationsModule.execute(param);
 
     // Verify
-    expect(awsLza.inviteAccountToOrganization).toHaveBeenCalledTimes(0);
+    expect(awsLza.inviteAccountsBatchToOrganization).toHaveBeenCalledTimes(0);
     expect(response).toBe(
-      `Module "${AcceleratorModules.INVITE_ACCOUNTS_TO_ORGANIZATIONS}" completed successfully with status `,
+      `Skipping "${AcceleratorModules.INVITE_ACCOUNTS_TO_ORGANIZATIONS}" because all accounts found in configuration file are already members of the AWS Organization.`,
     );
   });
 

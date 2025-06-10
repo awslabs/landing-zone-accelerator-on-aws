@@ -251,6 +251,7 @@ source/packages/@aws-lza/test/mocked-resources.ts:106
 source/packages/@aws-lza/test/mocked-resources.ts:117
 source/packages/@aws-lza/test/mocked-resources.ts:128
 source/packages/@aws-lza/test/mocked-resources.ts:135
+source/packages/@aws-lza/test/mocked-resources.ts:271
 
 # SDK Client settings
 source/packages/@aws-accelerator/constructs/lib/aws-fms/enable-organization-admin-account/index.ts:141
