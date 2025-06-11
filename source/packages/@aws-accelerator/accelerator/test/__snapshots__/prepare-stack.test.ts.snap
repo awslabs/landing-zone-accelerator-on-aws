@@ -2597,6 +2597,9 @@ exports[`PrepareStack Construct(PrepareStack):  Snapshot Test 1`] = `
         "Environment": {
           "Variables": {
             "AccountRoleName": "AWSControlTowerExecution",
+            "ConfigTableName": {
+              "Ref": "AcceleratorConfigTable590367C4",
+            },
             "GovCloudAccountMappingTableName": {
               "Ref": "govCloudAccountMapping0E3D2AD8",
             },
@@ -2774,10 +2777,25 @@ exports[`PrepareStack Construct(PrepareStack):  Snapshot Test 1`] = `
                 "organizations:DescribeCreateAccountStatus",
                 "organizations:ListRoots",
                 "organizations:MoveAccount",
+                "organizations:DescribeAccount",
               ],
               "Effect": "Allow",
               "Resource": "*",
               "Sid": "Organizations",
+            },
+            {
+              "Action": [
+                "dynamodb:GetItem",
+                "dynamodb:UpdateItem",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::GetAtt": [
+                  "AcceleratorConfigTable590367C4",
+                  "Arn",
+                ],
+              },
+              "Sid": "DynamoDbConfig",
             },
             {
               "Action": [

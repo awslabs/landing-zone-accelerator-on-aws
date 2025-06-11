@@ -24,6 +24,7 @@ import { CloudFormationCustomResourceEvent, Context } from '@aws-accelerator/uti
 import {
   CreateAccountCommand,
   CreateGovCloudAccountCommand,
+  DescribeAccountCommand,
   DescribeCreateAccountStatusCommand,
   DescribeCreateAccountStatusResponse,
   ListRootsCommand,
@@ -31,12 +32,13 @@ import {
   OrganizationsClient,
 } from '@aws-sdk/client-organizations';
 import { AttributeValue, DynamoDBClient, ScanCommand } from '@aws-sdk/client-dynamodb';
-import { DeleteCommand, DynamoDBDocumentClient, PutCommand } from '@aws-sdk/lib-dynamodb';
+import { DeleteCommand, DynamoDBDocumentClient, GetCommand, PutCommand, UpdateCommand } from '@aws-sdk/lib-dynamodb';
 
 const newOrgAccountsTableName = process.env['NewOrgAccountsTableName'] ?? '';
 const govCloudAccountMappingTableName = process.env['GovCloudAccountMappingTableName'] ?? '';
 const accountRoleName = process.env['AccountRoleName'];
 const solutionId = process.env['SOLUTION_ID'] ?? '';
+const configTableName = process.env['ConfigTableName'] ?? '';
 
 interface AccountConfig {
   name: string;
@@ -109,24 +111,13 @@ export async function handler(
             };
           }
         case 'SUCCEEDED':
-          if (createAccountResponse.CreateAccountStatus.GovCloudAccountId) {
-            console.log(
-              `GovCloud account created with id ${createAccountResponse.CreateAccountStatus.GovCloudAccountId}`,
-            );
-            await saveGovCloudAccountMapping(
-              createAccountResponse.CreateAccountStatus.AccountId!,
-              createAccountResponse.CreateAccountStatus.GovCloudAccountId,
-              createAccountResponse.CreateAccountStatus.AccountName!,
-            );
-          }
-          console.log(
-            `Account with id ${createAccountResponse.CreateAccountStatus.AccountId} was created for email ${singleAccountToAdd.email}`,
-          );
-          await moveAccountToOrgIdFromRoot(
+          await handleSucceededAccountCreation(
             createAccountResponse.CreateAccountStatus.AccountId!,
+            createAccountResponse.CreateAccountStatus.GovCloudAccountId,
+            createAccountResponse.CreateAccountStatus.AccountName!,
+            singleAccountToAdd.email,
             singleAccountToAdd.organizationalUnitId,
           );
-          await deleteSingleAccountConfigFromTable(singleAccountToAdd.email);
           break;
         default:
           throw new Error(
@@ -144,19 +135,13 @@ export async function handler(
           };
         case 'SUCCEEDED':
           console.log(`Account with id ${createAccountStatusResponse.CreateAccountStatus?.AccountId} is complete`);
-          if (createAccountStatusResponse.CreateAccountStatus.GovCloudAccountId) {
-            console.log(createAccountStatusResponse.CreateAccountStatus.GovCloudAccountId);
-            await saveGovCloudAccountMapping(
-              createAccountStatusResponse.CreateAccountStatus.AccountId!,
-              createAccountStatusResponse.CreateAccountStatus.GovCloudAccountId,
-              singleAccountToAdd.name,
-            );
-          }
-          await moveAccountToOrgIdFromRoot(
+          await handleSucceededAccountCreation(
             createAccountStatusResponse.CreateAccountStatus.AccountId!,
+            createAccountStatusResponse.CreateAccountStatus.GovCloudAccountId,
+            singleAccountToAdd.name,
+            singleAccountToAdd.email,
             singleAccountToAdd.organizationalUnitId,
           );
-          await deleteSingleAccountConfigFromTable(singleAccountToAdd.email);
           break;
         default:
           throw new Error(
@@ -324,4 +309,81 @@ async function deleteAllRecordsFromTable(paramTableName: string) {
       await throttlingBackOff(() => documentClient.send(new DeleteCommand(itemParams)));
     }
   }
+}
+
+async function updateConfigTableWithAccountInfo(accountId: string, email: string): Promise<void> {
+  try {
+    // First, find the account in the config table
+    const getParams = {
+      TableName: configTableName,
+      Key: {
+        dataType: 'workloadAccount',
+        acceleratorKey: email,
+      },
+    };
+
+    // Try with workloadAccount first
+    let response = await throttlingBackOff(() => documentClient.send(new GetCommand(getParams)));
+    let dataType = 'workloadAccount';
+
+    // If not found, try with mandatoryAccount
+    if (!response.Item) {
+      getParams.Key.dataType = 'mandatoryAccount';
+      dataType = 'mandatoryAccount';
+      response = await throttlingBackOff(() => documentClient.send(new GetCommand(getParams)));
+
+      // If still not found, throw error
+      if (!response.Item) {
+        throw new Error(`Account with email ${email} not found in config table`);
+      }
+    }
+
+    // Get account details from Organizations API
+    const describeAccountResponse = await throttlingBackOff(() =>
+      organizationsClient.send(new DescribeAccountCommand({ AccountId: accountId })),
+    );
+
+    const orgsApiResponse = describeAccountResponse.Account;
+
+    // Update the config table with account info using UpdateCommand
+    const updateParams = {
+      TableName: configTableName,
+      Key: {
+        dataType: dataType,
+        acceleratorKey: email,
+      },
+      UpdateExpression: 'SET awsKey = :awsKey, orgInfo = :orgInfo',
+      ExpressionAttributeValues: {
+        ':awsKey': accountId,
+        ':orgInfo': JSON.stringify({
+          email,
+          accountId,
+          status: orgsApiResponse?.Status,
+          orgsApiResponse,
+        }),
+      },
+    };
+
+    await throttlingBackOff(() => documentClient.send(new UpdateCommand(updateParams)));
+    console.log(`Updated config table for account ${accountId}`);
+  } catch (error) {
+    console.error(`Error updating config table: ${error}`);
+    throw error;
+  }
+}
+async function handleSucceededAccountCreation(
+  accountId: string,
+  govCloudAccountId: string | undefined,
+  accountName: string,
+  email: string,
+  organizationalUnitId: string,
+): Promise<void> {
+  if (govCloudAccountId) {
+    console.log(`GovCloud account created with id ${govCloudAccountId}`);
+    await saveGovCloudAccountMapping(accountId, govCloudAccountId, accountName);
+  }
+  console.log(`Account with id ${accountId} was created for email ${email}`);
+  await moveAccountToOrgIdFromRoot(accountId, organizationalUnitId);
+  await updateConfigTableWithAccountInfo(accountId, email);
+  await deleteSingleAccountConfigFromTable(email);
 }

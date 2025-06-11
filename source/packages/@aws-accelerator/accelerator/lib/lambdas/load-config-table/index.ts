@@ -338,7 +338,7 @@ async function onCreateUpdateFunction(
           managmentId,
           commitId,
           account.organizationalUnit,
-          getAccountIdConfigForAccount(accountsConfig, managmentId),
+          getAccountIdConfigForAccount(accountsConfig, managmentId, account.email),
         );
         break;
       case 'LogArchive':
@@ -350,7 +350,7 @@ async function onCreateUpdateFunction(
           logArchiveId,
           commitId,
           account.organizationalUnit,
-          getAccountIdConfigForAccount(accountsConfig, logArchiveId),
+          getAccountIdConfigForAccount(accountsConfig, logArchiveId, account.email),
         );
         break;
       case 'Audit':
@@ -362,7 +362,7 @@ async function onCreateUpdateFunction(
           auditId,
           commitId,
           account.organizationalUnit,
-          getAccountIdConfigForAccount(accountsConfig, auditId),
+          getAccountIdConfigForAccount(accountsConfig, auditId, account.email),
         );
         break;
     }
@@ -374,7 +374,7 @@ async function onCreateUpdateFunction(
       awsKey,
       commitId,
       account.organizationalUnit,
-      getAccountIdConfigForAccount(accountsConfig, awsKey),
+      getAccountIdConfigForAccount(accountsConfig, awsKey, account.email),
     );
   }
   for (const account of accountsConfig.workloadAccounts) {
@@ -391,7 +391,7 @@ async function onCreateUpdateFunction(
       accountId,
       commitId,
       account.organizationalUnit,
-      getAccountIdConfigForAccount(accountsConfig, accountId),
+      getAccountIdConfigForAccount(accountsConfig, accountId, account.email),
     );
   }
   return {
@@ -423,7 +423,14 @@ async function putAllOrganizationConfigInTable(
   }
 }
 
-function getAccountIdConfigForAccount(accountsConfig: AccountsConfig, accountId: string): AccountIdConfig {
+function getAccountIdConfigForAccount(
+  accountsConfig: AccountsConfig,
+  accountId: string,
+  email: string,
+): AccountIdConfig {
+  if (accountId === '') {
+    return { accountId, email };
+  }
   const account = accountsConfig.accountIds?.find(obj => obj.accountId === accountId);
   if (!account) {
     throw new Error(`No account found for accountId: ${accountId}`);

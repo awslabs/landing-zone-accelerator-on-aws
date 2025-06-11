@@ -469,6 +469,7 @@ export class PrepareStack extends AcceleratorStack {
       accountRoleName: options.props.globalConfig.managementAccountAccessRole,
       kmsKey: options.cloudwatchKey,
       logRetentionInDays: options.props.globalConfig.cloudwatchLogRetentionInDays,
+      configTable: options.configTable,
     });
     options.organizationAccounts.node.addDependency(validation);
 
