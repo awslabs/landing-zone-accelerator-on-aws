@@ -28,13 +28,27 @@ import { LogLevel } from '../network-stack';
 import { getSubnet, getSubnetConfig, getVpc, getVpcConfig } from '../utils/getter-utils';
 import { isIpv6Cidr } from '../utils/validation-utils';
 import { NetworkVpcStack } from './network-vpc-stack';
+import * as cdk from 'aws-cdk-lib';
+import { MetadataKeys } from '@aws-accelerator/utils/lib/common-types';
+import { LZAResourceLookup, LZAResourceLookupType } from '../../../../utils/lza-resource-lookup';
 
 export class NaclResources {
   public readonly naclMap: Map<string, NetworkAcl>;
   private stack: NetworkVpcStack;
+  private lzaLookup: LZAResourceLookup;
 
   constructor(networkVpcStack: NetworkVpcStack, vpcMap: Map<string, Vpc>, subnetMap: Map<string, Subnet>) {
     this.stack = networkVpcStack;
+
+    this.lzaLookup = new LZAResourceLookup({
+      accountId: this.stack.account,
+      region: this.stack.region,
+      aseaResourceList: this.stack.props.globalConfig.externalLandingZoneResources?.resourceList ?? [],
+      enableV2Stacks: this.stack.props.globalConfig.useV2Stacks,
+      externalLandingZoneResources:
+        this.stack.props.globalConfig.externalLandingZoneResources?.importExternalLandingZoneResources,
+      stackName: this.stack.stackName,
+    });
 
     // Create NACLs
     this.naclMap = this.createNacls(this.stack.vpcsInScope, vpcMap, subnetMap);
@@ -51,7 +65,13 @@ export class NaclResources {
       for (const naclItem of vpcItem.networkAcls ?? []) {
         // Retrieve VPC from map
         const vpc = getVpc(vpcMap, vpcItem.name) as Vpc;
-        if (!vpc) {
+        if (
+          !vpc ||
+          !this.lzaLookup.resourceExists({
+            resourceType: LZAResourceLookupType.NETWORK_ACL,
+            lookupValues: { vpcName: vpcItem.name, naclName: naclItem.name },
+          })
+        ) {
           continue;
         }
 
@@ -67,6 +87,11 @@ export class NaclResources {
             tags: naclItem.tags,
           },
         );
+        const resource = networkAcl.node.defaultChild as cdk.CfnResource;
+        resource.addMetadata(MetadataKeys.LZA_LOOKUP, {
+          vpcName: vpcItem.name,
+          naclName: naclItem.name,
+        });
         naclMap.set(`${vpcItem.name}_${naclItem.name}`, networkAcl);
 
         // Suppression for AwsSolutions-VPC3: A Network ACL or Network ACL entry has been implemented.
@@ -110,14 +135,28 @@ export class NaclResources {
         this.stack.addLogs(LogLevel.INFO, `Nacl Subnet Association ${naclSubnetAssociation} is managed by ASEA`);
         continue;
       }
+      if (
+        !this.lzaLookup.resourceExists({
+          resourceType: LZAResourceLookupType.SUBNET_NETWORK_ACL_ASSOCIATION,
+          lookupValues: { vpcName: vpcItem.name, naclName: naclItem.name, subnetName: subnetItem },
+        })
+      ) {
+        continue;
+      }
+
       this.stack.addLogs(LogLevel.INFO, `Associate ${naclItem.name} to subnet ${subnetItem}`);
       const subnet = getSubnet(subnetMap, vpcItem.name, subnetItem) as Subnet;
-      networkAcl.associateSubnet(
+      const resource = networkAcl.associateSubnet(
         `${pascalCase(vpcItem.name)}Vpc${pascalCase(naclItem.name)}NaclAssociate${pascalCase(subnetItem)}`,
         {
           subnet,
         },
       );
+      resource.addMetadata(MetadataKeys.LZA_LOOKUP, {
+        vpcName: vpcItem.name,
+        naclName: naclItem.name,
+        subnetName: subnetItem,
+      });
     }
   }
 
@@ -134,6 +173,20 @@ export class NaclResources {
     subnetMap: Map<string, Subnet>,
   ) {
     for (const inboundRuleItem of naclItem.inboundRules ?? []) {
+      if (
+        !this.lzaLookup.resourceExists({
+          resourceType: LZAResourceLookupType.NETWORK_ACL_ENTRY,
+          lookupValues: {
+            vpcName: vpcItem.name,
+            naclName: naclItem.name,
+            ruleNumber: inboundRuleItem.rule,
+            type: 'ingress',
+          },
+        })
+      ) {
+        continue;
+      }
+
       // If logic to determine if the VPC is not IPAM-based
       if (!this.stack.isIpamCrossAccountNaclSource(inboundRuleItem.source)) {
         this.stack.addLogs(LogLevel.INFO, `Adding inbound rule ${inboundRuleItem.rule} to ${naclItem.name}`);
@@ -143,7 +196,7 @@ export class NaclResources {
           subnetMap,
         );
 
-        networkAcl.addEntry(
+        const entry = networkAcl.addEntry(
           `${pascalCase(vpcItem.name)}Vpc${pascalCase(naclItem.name)}-Inbound-${inboundRuleItem.rule}`,
           {
             egress: false,
@@ -158,6 +211,12 @@ export class NaclResources {
             ...inboundAclTargetProps,
           },
         );
+        entry.addMetadata(MetadataKeys.LZA_LOOKUP, {
+          vpcName: vpcItem.name,
+          naclName: naclItem.name,
+          ruleNumber: inboundRuleItem.rule,
+          type: 'ingress',
+        });
 
         // Suppression for AwsSolutions-VPC3: A Network ACL or Network ACL entry has been implemented.
         NagSuppressions.addResourceSuppressionsByPath(
@@ -171,6 +230,20 @@ export class NaclResources {
     }
 
     for (const outboundRuleItem of naclItem.outboundRules ?? []) {
+      if (
+        !this.lzaLookup.resourceExists({
+          resourceType: LZAResourceLookupType.NETWORK_ACL_ENTRY,
+          lookupValues: {
+            vpcName: vpcItem.name,
+            naclName: naclItem.name,
+            ruleNumber: outboundRuleItem.rule,
+            type: 'egress',
+          },
+        })
+      ) {
+        continue;
+      }
+
       if (!this.stack.isIpamCrossAccountNaclSource(outboundRuleItem.destination)) {
         this.stack.addLogs(LogLevel.INFO, `Adding outbound rule ${outboundRuleItem.rule} to ${naclItem.name}`);
 
@@ -179,7 +252,7 @@ export class NaclResources {
           subnetMap,
         );
 
-        networkAcl.addEntry(
+        const entry = networkAcl.addEntry(
           `${pascalCase(vpcItem.name)}Vpc${pascalCase(naclItem.name)}-Outbound-${outboundRuleItem.rule}`,
           {
             egress: true,
@@ -194,6 +267,12 @@ export class NaclResources {
             ...outboundAclTargetProps,
           },
         );
+        entry.addMetadata(MetadataKeys.LZA_LOOKUP, {
+          vpcName: vpcItem.name,
+          naclName: naclItem.name,
+          ruleNumber: outboundRuleItem.rule,
+          type: 'egress',
+        });
       }
       // Suppression for AwsSolutions-VPC3: A Network ACL or Network ACL entry has been implemented.
       NagSuppressions.addResourceSuppressionsByPath(

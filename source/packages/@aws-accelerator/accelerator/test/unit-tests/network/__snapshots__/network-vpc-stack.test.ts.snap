@@ -923,6 +923,21 @@ exports[`NetworkVpcStack tests Construct(NetworkVpcStack):  Snapshot Test 1`] = 
             "IpProtocol": "udp",
             "ToPort": 22,
           },
+          {
+            "CidrIp": "10.0.0.0/8",
+            "Description": "IP Protocol Rule",
+            "IpProtocol": "50",
+          },
+          {
+            "CidrIp": "10.0.0.0/8",
+            "Description": "IP Protocol Rule",
+            "IpProtocol": "45",
+          },
+          {
+            "CidrIp": "10.0.0.0/8",
+            "Description": "IP Protocol Rule",
+            "IpProtocol": "5",
+          },
         ],
         "SecurityGroupIngress": [
           {
@@ -1102,6 +1117,21 @@ exports[`NetworkVpcStack tests Construct(NetworkVpcStack):  Snapshot Test 1`] = 
               ],
             },
             "ToPort": 22,
+          },
+          {
+            "CidrIp": "100.96.252.0/23",
+            "Description": "IP Protocol Rule",
+            "IpProtocol": "50",
+          },
+          {
+            "CidrIp": "100.96.252.0/23",
+            "Description": "IP Protocol Rule",
+            "IpProtocol": "45",
+          },
+          {
+            "CidrIp": "100.96.252.0/23",
+            "Description": "IP Protocol Rule",
+            "IpProtocol": "5",
           },
         ],
         "Tags": [
@@ -1652,6 +1682,10 @@ exports[`NetworkVpcStack tests Construct(NetworkVpcStack):  Snapshot Test 1`] = 
             },
           ],
         },
+        "lzaLookup": {
+          "naclName": "TestNACL",
+          "vpcName": "Network-Endpoints",
+        },
       },
       "Properties": {
         "Tags": [
@@ -1675,6 +1709,12 @@ exports[`NetworkVpcStack tests Construct(NetworkVpcStack):  Snapshot Test 1`] = 
               "reason": "NACL added to VPC",
             },
           ],
+        },
+        "lzaLookup": {
+          "naclName": "TestNACL",
+          "ruleNumber": 10,
+          "type": "ingress",
+          "vpcName": "Network-Endpoints",
         },
       },
       "Properties": {
@@ -1702,6 +1742,12 @@ exports[`NetworkVpcStack tests Construct(NetworkVpcStack):  Snapshot Test 1`] = 
               "reason": "NACL added to VPC",
             },
           ],
+        },
+        "lzaLookup": {
+          "naclName": "TestNACL",
+          "ruleNumber": 20,
+          "type": "ingress",
+          "vpcName": "Network-Endpoints",
         },
       },
       "Properties": {
@@ -1735,6 +1781,12 @@ exports[`NetworkVpcStack tests Construct(NetworkVpcStack):  Snapshot Test 1`] = 
             },
           ],
         },
+        "lzaLookup": {
+          "naclName": "TestNACL",
+          "ruleNumber": 30,
+          "type": "ingress",
+          "vpcName": "Network-Endpoints",
+        },
       },
       "Properties": {
         "CidrBlock": "10.0.0.0/24",
@@ -1754,6 +1806,13 @@ exports[`NetworkVpcStack tests Construct(NetworkVpcStack):  Snapshot Test 1`] = 
       "Type": "AWS::EC2::NetworkAclEntry",
     },
     "NetworkEndpointsVpcTestNaclNaclNetworkEndpointsVpcTestNaclNaclAssociateNetworkEndpointsA4115E6F7": {
+      "Metadata": {
+        "lzaLookup": {
+          "naclName": "TestNACL",
+          "subnetName": "Network-Endpoints-A",
+          "vpcName": "Network-Endpoints",
+        },
+      },
       "Properties": {
         "NetworkAclId": {
           "Ref": "NetworkEndpointsVpcTestNaclNaclD97515C3",
@@ -1773,6 +1832,12 @@ exports[`NetworkVpcStack tests Construct(NetworkVpcStack):  Snapshot Test 1`] = 
               "reason": "NACL added to VPC",
             },
           ],
+        },
+        "lzaLookup": {
+          "naclName": "TestNACL",
+          "ruleNumber": 10,
+          "type": "egress",
+          "vpcName": "Network-Endpoints",
         },
       },
       "Properties": {
@@ -1800,6 +1865,12 @@ exports[`NetworkVpcStack tests Construct(NetworkVpcStack):  Snapshot Test 1`] = 
               "reason": "NACL added to VPC",
             },
           ],
+        },
+        "lzaLookup": {
+          "naclName": "TestNACL",
+          "ruleNumber": 20,
+          "type": "egress",
+          "vpcName": "Network-Endpoints",
         },
       },
       "Properties": {
