@@ -263,8 +263,9 @@ export async function handler(event: CloudFormationCustomResourceEvent): Promise
       }
 
       // put accounts to create in DynamoDb
-      console.log(`Org Accounts to add: ${JSON.stringify(orgAccountsToAdd)}`);
-      for (const account of orgAccountsToAdd) {
+      const allAccountsToAdd: DDBItems = [...ctAccountsToAdd, ...orgAccountsToAdd];
+      console.log(`Org Accounts to add: ${JSON.stringify(allAccountsToAdd)}`);
+      for (const account of allAccountsToAdd) {
         const accountOu = configActiveOuKeys.find(item => item.acceleratorKey === account['ouName']);
         const parsedDataBag = JSON.parse(account['dataBag']);
         let accountConfig: AccountToAdd;
