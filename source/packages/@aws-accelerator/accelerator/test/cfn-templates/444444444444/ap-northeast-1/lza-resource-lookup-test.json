@@ -313,7 +313,7 @@
                 }
             }
         },
-        "TestNetworkAclEntry": {
+        "TestNetworkAclIngressEntry": {
             "Type": "AWS::EC2::NetworkAclEntry",
             "Properties": {
                 "NetworkAclId": { "Ref": "TestNetworkAcl" }
@@ -322,7 +322,22 @@
                 "lzaLookup": {
                     "vpcName": "test-vpc",
                     "naclName": "test-nacl",
-                    "ruleNumber": 100
+                    "ruleNumber": 100,
+                    "type": "ingress"
+                }
+            }
+        },
+        "TestNetworkAclEgressEntry": {
+            "Type": "AWS::EC2::NetworkAclEntry",
+            "Properties": {
+                "NetworkAclId": { "Ref": "TestNetworkAcl" }
+            },
+            "Metadata": {
+                "lzaLookup": {
+                    "vpcName": "test-vpc",
+                    "naclName": "test-nacl",
+                    "ruleNumber": 100,
+                    "type": "egress"
                 }
             }
         },

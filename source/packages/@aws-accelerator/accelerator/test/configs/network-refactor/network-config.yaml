@@ -361,8 +361,8 @@ vpcs:
       - name: Network-Endpoints-Tgw-B
         routes: []
       # Add in after v2
-      # - name: Network-Endpoints-Not-Used-V2
-      #   routes: []
+      - name: Network-Endpoints-Not-Used-V2
+        routes: []
       - name: Network-Endpoints-A
         routes:
           - name: S3Gateway
@@ -402,46 +402,46 @@ vpcs:
       #########################
       # V2 Route Tables
       #########################
-      # - name: Network-Endpoints-A-V2
-      #   routes:
-      #     - name: S3Gateway
-      #       type: gatewayEndpoint
-      #       target: s3
-      #     - name: DynamoDBGateway
-      #       type: gatewayEndpoint
-      #       target: dynamodb
-      #     - name: PlRoute
-      #       destinationPrefixList: accelerator-prefix-list
-      #       type: vpcPeering
-      #       target: CrossAccount
-      #     - name: VpcPeer
-      #       destination: 10.4.0.0/16
-      #       type: vpcPeering
-      #       target: CrossAccount
-      #     - name: VpcPeerv6
-      #       ipv6Destination: fd00::/8
-      #       type: vpcPeering
-      #       target: CrossAccount
-      # - name: Network-Endpoints-B-V2
-      #   routes:
-      #     - name: S3Gateway
-      #       type: gatewayEndpoint
-      #       target: s3
-      #     - name: DynamoDBGateway
-      #       type: gatewayEndpoint
-      #       target: dynamodb
-      #     - name: PlRoute
-      #       destinationPrefixList: accelerator-prefix-list
-      #       type: vpcPeering
-      #       target: CrossAccount
-      #     - name: VpcPeer
-      #       destination: 10.4.0.0/16
-      #       type: vpcPeering
-      #       target: CrossAccount
-      #     - name: VpcPeerv6
-      #       ipv6Destination: fd00::/8
-      #       type: vpcPeering
-      #       target: CrossAccount
+      - name: Network-Endpoints-A-V2
+        routes:
+          - name: S3Gateway
+            type: gatewayEndpoint
+            target: s3
+          - name: DynamoDBGateway
+            type: gatewayEndpoint
+            target: dynamodb
+          - name: PlRoute
+            destinationPrefixList: accelerator-prefix-list
+            type: vpcPeering
+            target: CrossAccount
+          - name: VpcPeer
+            destination: 10.4.0.0/16
+            type: vpcPeering
+            target: CrossAccount
+          - name: VpcPeerv6
+            ipv6Destination: fd00::/8
+            type: vpcPeering
+            target: CrossAccount
+      - name: Network-Endpoints-B-V2
+        routes:
+          - name: S3Gateway
+            type: gatewayEndpoint
+            target: s3
+          - name: DynamoDBGateway
+            type: gatewayEndpoint
+            target: dynamodb
+          - name: PlRoute
+            destinationPrefixList: accelerator-prefix-list
+            type: vpcPeering
+            target: CrossAccount
+          - name: VpcPeer
+            destination: 10.4.0.0/16
+            type: vpcPeering
+            target: CrossAccount
+          - name: VpcPeerv6
+            ipv6Destination: fd00::/8
+            type: vpcPeering
+            target: CrossAccount
 
     subnets:
       - name: Network-Endpoints-A
@@ -486,24 +486,24 @@ vpcs:
       ######################
       # V2 Subnets
       ######################
-      # - name: Network-Endpoints-A-V2
-      #   availabilityZone: 1
-      #   routeTable: Network-Endpoints-A-V2
-      #   ipamAllocation:
-      #     ipamPoolName: home-region-pool
-      #     netmaskLength: 27
-      #   shareTargets:
-      #     organizationalUnits:
-      #       - Infrastructure
-      # - name: Network-Endpoints-B-V2
-      #   availabilityZone: 2
-      #   routeTable: Network-Endpoints-B-V2
-      #   ipamAllocation:
-      #     ipamPoolName: home-region-pool
-      #     netmaskLength: 27
-      #   shareTargets:
-      #     organizationalUnits:
-      #       - Infrastructure
+      - name: Network-Endpoints-A-V2
+        availabilityZone: 1
+        routeTable: Network-Endpoints-A-V2
+        ipamAllocation:
+          ipamPoolName: home-region-pool
+          netmaskLength: 27
+        shareTargets:
+          organizationalUnits:
+            - Infrastructure
+      - name: Network-Endpoints-B-V2
+        availabilityZone: 2
+        routeTable: Network-Endpoints-B-V2
+        ipamAllocation:
+          ipamPoolName: home-region-pool
+          netmaskLength: 27
+        shareTargets:
+          organizationalUnits:
+            - Infrastructure
     virtualPrivateGateway:
       asn: 65200
     gatewayEndpoints:
@@ -581,13 +581,13 @@ vpcs:
               - prefixLists:
                   - accelerator-prefix-list
           # Add in after V2
-          # - description: 'IP Protocol Rule'
-          #   ipProtocols:
-          #     - ESP
-          #     - IDRP
-          #     - ST
-          #   sources:
-          #     - 100.96.252.0/23
+          - description: 'IP Protocol Rule'
+            ipProtocols:
+              - ESP
+              - IDRP
+              - ST
+            sources:
+              - 100.96.252.0/23
         outboundRules:
           - description: 'All Outbound'
             types:
@@ -613,13 +613,13 @@ vpcs:
             sources:
               - 10.0.0.0/8
           # Add in after V2
-          # - description: 'IP Protocol Rule'
-          #   ipProtocols:
-          #     - ESP
-          #     - IDRP
-          #     - ST
-          #   sources:
-          #     - 10.0.0.0/8
+          - description: 'IP Protocol Rule'
+            ipProtocols:
+              - ESP
+              - IDRP
+              - ST
+            sources:
+              - 10.0.0.0/8
       - name: Network-Endpoints-CustomEndpointSg-V2
         description: Accelerator security group for custom endpoint
         inboundRules:
@@ -679,66 +679,66 @@ vpcs:
               vpc: Network-Endpoints
               subnet: Network-Endpoints-A
           # Add after v2
-          # - rule: 30
-          #   action: allow
-          #   icmp:
-          #     type: 32
-          #     code: 5
-          #   protocol: 1
-          #   destination: 10.0.0.0/24
+          - rule: 30
+            action: allow
+            icmp:
+              type: 32
+              code: 5
+            protocol: 1
+            destination: 10.0.0.0/24
       #################
       # NACL V2
       ##################
-      # - name: TestNACL-V2
-      #   subnetAssociations:
-      #     - Network-Endpoints-A-V2
-      #     - Network-Endpoints-B-V2
-      #   inboundRules:
-      #     - action: allow
-      #       rule: 10
-      #       fromPort: -1
-      #       toPort: -1
-      #       protocol: -1
-      #       source: 10.0.0.0/8
-      #     - action: allow
-      #       rule: 20
-      #       fromPort: -1
-      #       toPort: -1
-      #       protocol: -1
-      #       source:
-      #         account: Network
-      #         vpc: Network-Endpoints
-      #         subnet: Network-Endpoints-A
-      #     - rule: 30
-      #       action: allow
-      #       icmp:
-      #         type: 32
-      #         code: 5
-      #       protocol: 1
-      #       source: 10.0.0.0/24
-      #   outboundRules:
-      #     - action: allow
-      #       rule: 10
-      #       fromPort: -1
-      #       toPort: -1
-      #       protocol: -1
-      #       destination: 0.0.0.0/0
-      #     - action: allow
-      #       rule: 20
-      #       fromPort: -1
-      #       toPort: -1
-      #       protocol: -1
-      #       destination:
-      #         account: Network
-      #         vpc: Network-Endpoints
-      #         subnet: Network-Endpoints-A
-      #     - rule: 30
-      #       action: allow
-      #       icmp:
-      #         type: 32
-      #         code: 5
-      #       protocol: 1
-      #       source: 10.0.0.0/24
+      - name: TestNACL-V2
+        subnetAssociations:
+          - Network-Endpoints-A-V2
+          - Network-Endpoints-B-V2
+        inboundRules:
+          - action: allow
+            rule: 10
+            fromPort: -1
+            toPort: -1
+            protocol: -1
+            source: 10.0.0.0/8
+          - action: allow
+            rule: 20
+            fromPort: -1
+            toPort: -1
+            protocol: -1
+            source:
+              account: Network
+              vpc: Network-Endpoints
+              subnet: Network-Endpoints-A
+          - rule: 30
+            action: allow
+            icmp:
+              type: 32
+              code: 5
+            protocol: 1
+            source: 10.0.0.0/24
+        outboundRules:
+          - action: allow
+            rule: 10
+            fromPort: -1
+            toPort: -1
+            protocol: -1
+            destination: 0.0.0.0/0
+          - action: allow
+            rule: 20
+            fromPort: -1
+            toPort: -1
+            protocol: -1
+            destination:
+              account: Network
+              vpc: Network-Endpoints
+              subnet: Network-Endpoints-A
+          - rule: 30
+            action: allow
+            icmp:
+              type: 32
+              code: 5
+            protocol: 1
+            destination: 10.0.0.0/24
 
   #####################
   # Shared Services VPC
@@ -964,20 +964,20 @@ vpcs:
               - ALL
             sources:
               - 0.0.0.0/0
-      - name: InternalHTTP-SG-V2
-        description: Accelerator Security Group
-        inboundRules:
-          - description: HTTP access security group rule
-            types:
-              - HTTP
-            sources:
-              - 10.0.0.0/16
-        outboundRules:
-          - description: Allow all outbound
-            types:
-              - ALL
-            sources:
-              - 0.0.0.0/0
+      # - name: InternalHTTP-SG-V2
+      #   description: Accelerator Security Group
+      #   inboundRules:
+      #     - description: HTTP access security group rule
+      #       types:
+      #         - HTTP
+      #       sources:
+      #         - 10.0.0.0/16
+      #   outboundRules:
+      #     - description: Allow all outbound
+      #       types:
+      #         - ALL
+      #       sources:
+      #         - 0.0.0.0/0
 
 vpcFlowLogs:
   trafficType: ALL
