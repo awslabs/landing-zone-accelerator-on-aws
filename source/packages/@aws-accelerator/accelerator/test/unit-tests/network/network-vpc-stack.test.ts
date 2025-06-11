@@ -54,6 +54,7 @@ describe('NetworkVpcStack tests', () => {
       const newTemplateCount = Object.keys(newTemplate.findResources(type)).length;
       expect(oldTemplateCount).toEqual(newTemplateCount);
     });
+
     it.each(['AWS::EC2::Subnet', 'Custom::IpamSubnet'])('Should contains same amount of %s', (type: string) => {
       const oldTemplateCount = Object.keys(existingTemplate.findResources(type)).length;
       const newTemplateCount = Object.keys(newTemplate.findResources(type)).length;
@@ -79,5 +80,13 @@ describe('NetworkVpcStack tests', () => {
         expect(oldTemplateCount).toEqual(newTemplateCount);
       },
     );
+  });
+
+  describe('Load Balancer Resources', () => {
+    it.each(['AWS::ElasticLoadBalancingV2::LoadBalancer'])('Should contains same amount of %s', (type: string) => {
+      const oldTemplateCount = Object.keys(existingTemplate.findResources(type)).length;
+      const newTemplateCount = Object.keys(newTemplate.findResources(type)).length;
+      expect(oldTemplateCount).toEqual(newTemplateCount);
+    });
   });
 });
