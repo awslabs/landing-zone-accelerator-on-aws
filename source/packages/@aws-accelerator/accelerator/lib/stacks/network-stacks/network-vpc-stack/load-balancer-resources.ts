@@ -35,12 +35,15 @@ import { AcceleratorStackProps } from '../../accelerator-stack';
 import { LogLevel } from '../network-stack';
 import { getSubnet } from '../utils/getter-utils';
 import { NetworkVpcStack } from './network-vpc-stack';
+import { MetadataKeys } from '@aws-accelerator/utils/lib/common-types';
+import { LZAResourceLookup, LZAResourceLookupType } from '../../../../utils/lza-resource-lookup';
 
 export class LoadBalancerResources {
   public readonly albMap: Map<string, ApplicationLoadBalancer>;
   public readonly gwlbMap: Map<string, GatewayLoadBalancer>;
   public readonly nlbMap: Map<string, NetworkLoadBalancer>;
   private stack: NetworkVpcStack;
+  private lzaLookup: LZAResourceLookup;
 
   constructor(
     networkVpcStack: NetworkVpcStack,
@@ -49,6 +52,16 @@ export class LoadBalancerResources {
     props: AcceleratorStackProps,
   ) {
     this.stack = networkVpcStack;
+
+    this.lzaLookup = new LZAResourceLookup({
+      accountId: this.stack.account,
+      region: this.stack.region,
+      aseaResourceList: this.stack.props.globalConfig.externalLandingZoneResources?.resourceList ?? [],
+      enableV2Stacks: this.stack.props.globalConfig.useV2Stacks,
+      externalLandingZoneResources:
+        this.stack.props.globalConfig.externalLandingZoneResources?.importExternalLandingZoneResources,
+      stackName: this.stack.stackName,
+    });
 
     // Create GWLB resources
     this.gwlbMap = this.createGwlbs(this.stack.vpcsInScope, subnetMap, props);
@@ -96,6 +109,15 @@ export class LoadBalancerResources {
     for (const vpcItem of vpcResources) {
       for (const loadBalancerItem of props.networkConfig.centralNetworkServices?.gatewayLoadBalancers ?? []) {
         if (vpcItem.name === loadBalancerItem.vpc) {
+          if (
+            !this.lzaLookup.resourceExists({
+              resourceType: LZAResourceLookupType.LOAD_BALANCER,
+              lookupValues: { vpcName: vpcItem.name, gwlbName: loadBalancerItem.name },
+            })
+          ) {
+            continue;
+          }
+
           const allowedPrincipals = this.setGwlbAllowedPrincipals(loadBalancerItem, props);
           const gwlb = this.createGwlb(vpcItem, loadBalancerItem, subnetMap, allowedPrincipals);
           gwlbMap.set(loadBalancerItem.name, gwlb);
@@ -147,6 +169,8 @@ export class LoadBalancerResources {
         tags: loadBalancerItem.tags,
       },
     );
+
+    this.addLzaLookupMetadata(loadBalancer, vpcItem.name, loadBalancerItem.name);
 
     // Add SSM parameters
     this.stack.addSsmParameter({
@@ -257,6 +281,8 @@ export class LoadBalancerResources {
       accessLogsBucket: options.accessLogsBucketName,
       attributes: options.albItem.attributes ?? undefined,
     });
+
+    this.addLzaLookupMetadata(alb, options.vpcName, options.albItem.name);
     options.albMap.set(`${options.vpcName}_${options.albItem.name}`, alb);
 
     for (const subnet of options.albItem.subnets || []) {
@@ -307,6 +333,14 @@ export class LoadBalancerResources {
         if (this.stack.isManagedByAsea(AseaResourceType.APPLICATION_LOAD_BALANCER, `${albItem.name}`)) {
           continue;
         }
+        if (
+          !this.lzaLookup.resourceExists({
+            resourceType: LZAResourceLookupType.LOAD_BALANCER,
+            lookupValues: { vpcName: vpcItem.name, albName: albItem.name },
+          })
+        ) {
+          continue;
+        }
         // Logic to only create Application Load Balancers that don't include the shareTargets property
         if (!albItem.shareTargets) {
           const subnetLookups = albItem.subnets.map(subnetName => subnetMap.get(`${vpcItem.name}_${subnetName}`));
@@ -355,6 +389,15 @@ export class LoadBalancerResources {
     props: AcceleratorStackProps,
   ) {
     for (const nlbItem of vpcItem.loadBalancers?.networkLoadBalancers || []) {
+      if (
+        !this.lzaLookup.resourceExists({
+          resourceType: LZAResourceLookupType.LOAD_BALANCER,
+          lookupValues: { vpcName: vpcItem.name, albName: nlbItem.name },
+        })
+      ) {
+        continue;
+      }
+
       const subnetLookups = nlbItem.subnets.map(subnetName => subnetMap.get(`${vpcItem.name}_${subnetName}`));
       const nonNullsubnets = subnetLookups.filter(subnet => subnet) as Subnet[];
       const subnetIds = nonNullsubnets.map(subnet => subnet.subnetId);
@@ -373,6 +416,7 @@ export class LoadBalancerResources {
         crossZoneLoadBalancing: nlbItem.crossZoneLoadBalancing,
         accessLogsBucket: accessLogsBucketName,
       });
+      this.addLzaLookupMetadata(nlb, vpcItem.name, nlbItem.name);
       nlbMap.set(`${vpcItem.name}_${nlbItem.name}`, nlb);
 
       for (const subnet of nlbItem.subnets || []) {
@@ -474,5 +518,20 @@ export class LoadBalancerResources {
     const principalIds = [...new Set(principalAccountIds)];
 
     return principalIds.map(accountId => new cdk.aws_iam.AccountPrincipal(accountId)) ?? undefined;
+  }
+
+  /**
+   * Add LZA Lookup metadata to a given resource
+   * @param node
+   * @param vpcName
+   * @param loadBalancerName
+   * @returns
+   */
+  private addLzaLookupMetadata(node: cdk.Resource, vpcName: string, loadBalancerName: string) {
+    const resource = node.node.findChild('Resource') as cdk.CfnResource;
+    resource.addMetadata(MetadataKeys.LZA_LOOKUP, {
+      vpcName: vpcName,
+      gwlbName: loadBalancerName,
+    });
   }
 }

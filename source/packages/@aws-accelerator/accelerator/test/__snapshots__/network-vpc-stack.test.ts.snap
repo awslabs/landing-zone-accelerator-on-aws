@@ -78,6 +78,10 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
             },
           ],
         },
+        "lzaLookup": {
+          "gwlbName": "Accelerator-GWLB",
+          "vpcName": "Network-Inspection",
+        },
       },
       "Properties": {
         "LoadBalancerAttributes": [
@@ -150,6 +154,10 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
               "reason": "Gateway Load Balancers do not support access logging.",
             },
           ],
+        },
+        "lzaLookup": {
+          "gwlbName": "Accelerator-GWLB-secondary",
+          "vpcName": "Network-Secondary",
         },
       },
       "Properties": {
@@ -9095,6 +9103,12 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
         "NetworkEndpointsVpcNetworkEndpointsTgwAttachBSubnet7F2CD5B5",
         "NetworkEndpointsVpcNetworkEndpointsTgwAttachBSubnetRouteTableAssociation958ED1AB",
       ],
+      "Metadata": {
+        "lzaLookup": {
+          "gwlbName": "appA-alb-01",
+          "vpcName": "Network-Endpoints",
+        },
+      },
       "Properties": {
         "LoadBalancerAttributes": [
           {
@@ -9152,6 +9166,12 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
         "NetworkEndpointsVpcNetworkEndpointsTgwAttachBSubnet7F2CD5B5",
         "NetworkEndpointsVpcNetworkEndpointsTgwAttachBSubnetRouteTableAssociation958ED1AB",
       ],
+      "Metadata": {
+        "lzaLookup": {
+          "gwlbName": "appA-nlb-01",
+          "vpcName": "Network-Endpoints",
+        },
+      },
       "Properties": {
         "LoadBalancerAttributes": [
           {
