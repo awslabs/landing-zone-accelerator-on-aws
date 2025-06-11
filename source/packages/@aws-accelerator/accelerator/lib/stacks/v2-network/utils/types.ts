@@ -59,14 +59,14 @@ export type ResourceShareType =
   | TransitGatewayConfig;
 
 export type RouteTableDetailsType = {
-  cfnRouteTable: cdk.aws_ec2.CfnRouteTable;
+  cfnRouteTable?: cdk.aws_ec2.CfnRouteTable;
   name: string;
   id: string;
   routes: RouteTableEntryConfig[];
 };
 
 export type RouteEntryPropertiesType = {
-  cfnRouteTable: cdk.aws_ec2.CfnRouteTable;
+  cfnRouteTable?: cdk.aws_ec2.CfnRouteTable;
   routeTableName: string;
   routeEntryResourceName: string;
   routeTableId: string;

@@ -28,7 +28,9 @@ export enum V2StackComponentsList {
   VPN_CONNECTION = 'vpn-connection',
 
   ROUTE_TABLE = 'route-table',
-  RT_ENTRY = 'route-tables',
+  ROUTE_ENTRY = 'route-entry',
+  ROUTE_TABLE_GATEWAY_ASSOCIATION = 'route-table-gateway-association',
+  LOCAL_GATEWAY_ROUTE_TABLE_VPC_ASSOCIATION = 'local-gateway-route-table-vpc-association',
 
   SECURITY_GROUP = 'security-groups',
 
