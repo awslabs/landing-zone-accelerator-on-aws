@@ -1303,7 +1303,7 @@
     ],
     "roleName": "AWSAccelerator-CrossAccountSsmParameterShare",
     "invokingAccountId": "666666666666",
-    "uuid": "7665cfbd-d802-4975-8ac9-267df7e311ff"
+    "uuid": "c49c5c8f-4cbc-44a5-8a63-aed7a4480972"
    },
    "DependsOn": [
     "CustomSsmPutParameterValueCustomResourceProviderLogGroupB0109C68"
@@ -1814,6 +1814,10 @@
     }
    },
    "Metadata": {
+    "lzaLookup": {
+     "vpcName": "Network-Endpoints",
+     "naclName": "TestNACL"
+    },
     "cdk_nag": {
      "rules_to_suppress": [
       {
@@ -1832,6 +1836,13 @@
     },
     "SubnetId": {
      "Ref": "NetworkEndpointsVpcNetworkEndpointsASubnet758434F8"
+    }
+   },
+   "Metadata": {
+    "lzaLookup": {
+     "vpcName": "Network-Endpoints",
+     "naclName": "TestNACL",
+     "subnetName": "Network-Endpoints-A"
     }
    }
   },
@@ -1852,6 +1863,12 @@
     "RuleNumber": 10
    },
    "Metadata": {
+    "lzaLookup": {
+     "vpcName": "Network-Endpoints",
+     "naclName": "TestNACL",
+     "ruleNumber": 10,
+     "type": "ingress"
+    },
     "cdk_nag": {
      "rules_to_suppress": [
       {
@@ -1884,6 +1901,12 @@
     "RuleNumber": 20
    },
    "Metadata": {
+    "lzaLookup": {
+     "vpcName": "Network-Endpoints",
+     "naclName": "TestNACL",
+     "ruleNumber": 20,
+     "type": "ingress"
+    },
     "cdk_nag": {
      "rules_to_suppress": [
       {
@@ -1912,6 +1935,12 @@
     "RuleNumber": 30
    },
    "Metadata": {
+    "lzaLookup": {
+     "vpcName": "Network-Endpoints",
+     "naclName": "TestNACL",
+     "ruleNumber": 30,
+     "type": "ingress"
+    },
     "cdk_nag": {
      "rules_to_suppress": [
       {
@@ -1939,6 +1968,12 @@
     "RuleNumber": 10
    },
    "Metadata": {
+    "lzaLookup": {
+     "vpcName": "Network-Endpoints",
+     "naclName": "TestNACL",
+     "ruleNumber": 10,
+     "type": "egress"
+    },
     "cdk_nag": {
      "rules_to_suppress": [
       {
@@ -1971,6 +2006,12 @@
     "RuleNumber": 20
    },
    "Metadata": {
+    "lzaLookup": {
+     "vpcName": "Network-Endpoints",
+     "naclName": "TestNACL",
+     "ruleNumber": 20,
+     "type": "egress"
+    },
     "cdk_nag": {
      "rules_to_suppress": [
       {
@@ -2116,7 +2157,7 @@
     ],
     "roleName": "AWSAccelerator-CrossAccountSsmParameterShare",
     "invokingAccountId": "666666666666",
-    "uuid": "e557b4a9-ad33-44b6-9e06-29eb02d3aa18"
+    "uuid": "b8df5dfc-716d-454b-a3eb-9b8851359225"
    },
    "DependsOn": [
     "CustomSsmPutParameterValueCustomResourceProviderLogGroupB0109C68"

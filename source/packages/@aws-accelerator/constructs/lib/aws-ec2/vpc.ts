@@ -589,8 +589,8 @@ export class NetworkAcl extends NetworkAclBase {
     this.networkAclVpcId = resource.vpcId;
   }
 
-  public associateSubnet(id: string, props: { subnet: ISubnet }) {
-    new cdk.aws_ec2.CfnSubnetNetworkAclAssociation(this, id, {
+  public associateSubnet(id: string, props: { subnet: ISubnet }): cdk.aws_ec2.CfnSubnetNetworkAclAssociation {
+    return new cdk.aws_ec2.CfnSubnetNetworkAclAssociation(this, id, {
       networkAclId: this.networkAclId,
       subnetId: props.subnet.subnetId,
     });
@@ -614,8 +614,8 @@ export class NetworkAcl extends NetworkAclBase {
         to?: number;
       };
     },
-  ) {
-    new cdk.aws_ec2.CfnNetworkAclEntry(this, id, {
+  ): cdk.aws_ec2.CfnNetworkAclEntry {
+    return new cdk.aws_ec2.CfnNetworkAclEntry(this, id, {
       networkAclId: this.networkAclId,
       ...props,
     });

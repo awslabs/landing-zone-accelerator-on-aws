@@ -3582,6 +3582,10 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
             },
           ],
         },
+        "lzaLookup": {
+          "naclName": "TestNACL",
+          "vpcName": "Network-Endpoints",
+        },
       },
       "Properties": {
         "Tags": [
@@ -3605,6 +3609,12 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
               "reason": "NACL added to VPC",
             },
           ],
+        },
+        "lzaLookup": {
+          "naclName": "TestNACL",
+          "ruleNumber": 10,
+          "type": "ingress",
+          "vpcName": "Network-Endpoints",
         },
       },
       "Properties": {
@@ -3633,6 +3643,12 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
             },
           ],
         },
+        "lzaLookup": {
+          "naclName": "TestNACL",
+          "ruleNumber": 20,
+          "type": "ingress",
+          "vpcName": "Network-Endpoints",
+        },
       },
       "Properties": {
         "CidrBlock": {
@@ -3656,6 +3672,13 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
       "Type": "AWS::EC2::NetworkAclEntry",
     },
     "NetworkEndpointsVpcTestNaclNaclNetworkEndpointsVpcTestNaclNaclAssociateNetworkEndpointsA4115E6F7": {
+      "Metadata": {
+        "lzaLookup": {
+          "naclName": "TestNACL",
+          "subnetName": "Network-Endpoints-A",
+          "vpcName": "Network-Endpoints",
+        },
+      },
       "Properties": {
         "NetworkAclId": {
           "Ref": "NetworkEndpointsVpcTestNaclNaclD97515C3",
@@ -3675,6 +3698,12 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
               "reason": "NACL added to VPC",
             },
           ],
+        },
+        "lzaLookup": {
+          "naclName": "TestNACL",
+          "ruleNumber": 10,
+          "type": "egress",
+          "vpcName": "Network-Endpoints",
         },
       },
       "Properties": {
@@ -3702,6 +3731,12 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
               "reason": "NACL added to VPC",
             },
           ],
+        },
+        "lzaLookup": {
+          "naclName": "TestNACL",
+          "ruleNumber": 20,
+          "type": "egress",
+          "vpcName": "Network-Endpoints",
         },
       },
       "Properties": {
@@ -6284,6 +6319,10 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
             },
           ],
         },
+        "lzaLookup": {
+          "naclName": "TestNacl",
+          "vpcName": "Network-Secondary",
+        },
       },
       "Properties": {
         "Tags": [
@@ -6307,6 +6346,12 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
               "reason": "NACL added to VPC",
             },
           ],
+        },
+        "lzaLookup": {
+          "naclName": "TestNacl",
+          "ruleNumber": 101,
+          "type": "ingress",
+          "vpcName": "Network-Secondary",
         },
       },
       "Properties": {
@@ -6334,6 +6379,12 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
               "reason": "NACL added to VPC",
             },
           ],
+        },
+        "lzaLookup": {
+          "naclName": "TestNacl",
+          "ruleNumber": 102,
+          "type": "ingress",
+          "vpcName": "Network-Secondary",
         },
       },
       "Properties": {
@@ -6367,6 +6418,12 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
             },
           ],
         },
+        "lzaLookup": {
+          "naclName": "TestNacl",
+          "ruleNumber": 103,
+          "type": "ingress",
+          "vpcName": "Network-Secondary",
+        },
       },
       "Properties": {
         "CidrBlock": {
@@ -6398,6 +6455,12 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
               "reason": "NACL added to VPC",
             },
           ],
+        },
+        "lzaLookup": {
+          "naclName": "TestNacl",
+          "ruleNumber": 104,
+          "type": "ingress",
+          "vpcName": "Network-Secondary",
         },
       },
       "Properties": {
@@ -6431,6 +6494,12 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
             },
           ],
         },
+        "lzaLookup": {
+          "naclName": "TestNacl",
+          "ruleNumber": 107,
+          "type": "ingress",
+          "vpcName": "Network-Secondary",
+        },
       },
       "Properties": {
         "CidrBlock": "10.4.0.0/24",
@@ -6458,6 +6527,12 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
             },
           ],
         },
+        "lzaLookup": {
+          "naclName": "TestNacl",
+          "ruleNumber": 108,
+          "type": "ingress",
+          "vpcName": "Network-Secondary",
+        },
       },
       "Properties": {
         "Egress": false,
@@ -6484,6 +6559,12 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
               "reason": "NACL added to VPC",
             },
           ],
+        },
+        "lzaLookup": {
+          "naclName": "TestNacl",
+          "ruleNumber": 109,
+          "type": "ingress",
+          "vpcName": "Network-Secondary",
         },
       },
       "Properties": {
@@ -6518,6 +6599,12 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
             },
           ],
         },
+        "lzaLookup": {
+          "naclName": "TestNacl",
+          "ruleNumber": 110,
+          "type": "ingress",
+          "vpcName": "Network-Secondary",
+        },
       },
       "Properties": {
         "CidrBlock": "10.0.0.0/24",
@@ -6546,6 +6633,12 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
             },
           ],
         },
+        "lzaLookup": {
+          "naclName": "TestNacl",
+          "ruleNumber": 111,
+          "type": "ingress",
+          "vpcName": "Network-Secondary",
+        },
       },
       "Properties": {
         "CidrBlock": "0.0.0.0/0",
@@ -6564,6 +6657,13 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
       "Type": "AWS::EC2::NetworkAclEntry",
     },
     "NetworkSecondaryVpcTestNaclNaclNetworkSecondaryVpcTestNaclNaclAssociateNetworkSecondaryA052E10A4": {
+      "Metadata": {
+        "lzaLookup": {
+          "naclName": "TestNacl",
+          "subnetName": "Network-Secondary-A",
+          "vpcName": "Network-Secondary",
+        },
+      },
       "Properties": {
         "NetworkAclId": {
           "Ref": "NetworkSecondaryVpcTestNaclNacl63646F9E",
@@ -6575,6 +6675,13 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
       "Type": "AWS::EC2::SubnetNetworkAclAssociation",
     },
     "NetworkSecondaryVpcTestNaclNaclNetworkSecondaryVpcTestNaclNaclAssociateNetworkSecondaryBD9BA3321": {
+      "Metadata": {
+        "lzaLookup": {
+          "naclName": "TestNacl",
+          "subnetName": "Network-Secondary-B",
+          "vpcName": "Network-Secondary",
+        },
+      },
       "Properties": {
         "NetworkAclId": {
           "Ref": "NetworkSecondaryVpcTestNaclNacl63646F9E",
@@ -6586,6 +6693,13 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
       "Type": "AWS::EC2::SubnetNetworkAclAssociation",
     },
     "NetworkSecondaryVpcTestNaclNaclNetworkSecondaryVpcTestNaclNaclAssociateNetworkSecondaryC73E9D9B0": {
+      "Metadata": {
+        "lzaLookup": {
+          "naclName": "TestNacl",
+          "subnetName": "Network-Secondary-C",
+          "vpcName": "Network-Secondary",
+        },
+      },
       "Properties": {
         "NetworkAclId": {
           "Ref": "NetworkSecondaryVpcTestNaclNacl63646F9E",
@@ -6597,6 +6711,13 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
       "Type": "AWS::EC2::SubnetNetworkAclAssociation",
     },
     "NetworkSecondaryVpcTestNaclNaclNetworkSecondaryVpcTestNaclNaclAssociateNetworkSecondaryD02015E20": {
+      "Metadata": {
+        "lzaLookup": {
+          "naclName": "TestNacl",
+          "subnetName": "Network-Secondary-D",
+          "vpcName": "Network-Secondary",
+        },
+      },
       "Properties": {
         "NetworkAclId": {
           "Ref": "NetworkSecondaryVpcTestNaclNacl63646F9E",
@@ -6616,6 +6737,12 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
               "reason": "NACL added to VPC",
             },
           ],
+        },
+        "lzaLookup": {
+          "naclName": "TestNacl",
+          "ruleNumber": 101,
+          "type": "egress",
+          "vpcName": "Network-Secondary",
         },
       },
       "Properties": {
@@ -6643,6 +6770,12 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
               "reason": "NACL added to VPC",
             },
           ],
+        },
+        "lzaLookup": {
+          "naclName": "TestNacl",
+          "ruleNumber": 102,
+          "type": "egress",
+          "vpcName": "Network-Secondary",
         },
       },
       "Properties": {
@@ -6676,6 +6809,12 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
             },
           ],
         },
+        "lzaLookup": {
+          "naclName": "TestNacl",
+          "ruleNumber": 103,
+          "type": "egress",
+          "vpcName": "Network-Secondary",
+        },
       },
       "Properties": {
         "CidrBlock": {
@@ -6707,6 +6846,12 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
               "reason": "NACL added to VPC",
             },
           ],
+        },
+        "lzaLookup": {
+          "naclName": "TestNacl",
+          "ruleNumber": 104,
+          "type": "egress",
+          "vpcName": "Network-Secondary",
         },
       },
       "Properties": {
@@ -6740,6 +6885,12 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
             },
           ],
         },
+        "lzaLookup": {
+          "naclName": "TestNacl",
+          "ruleNumber": 107,
+          "type": "egress",
+          "vpcName": "Network-Secondary",
+        },
       },
       "Properties": {
         "CidrBlock": "10.4.0.0/24",
@@ -6767,6 +6918,12 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
             },
           ],
         },
+        "lzaLookup": {
+          "naclName": "TestNacl",
+          "ruleNumber": 108,
+          "type": "egress",
+          "vpcName": "Network-Secondary",
+        },
       },
       "Properties": {
         "Egress": true,
@@ -6793,6 +6950,12 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
               "reason": "NACL added to VPC",
             },
           ],
+        },
+        "lzaLookup": {
+          "naclName": "TestNacl",
+          "ruleNumber": 109,
+          "type": "egress",
+          "vpcName": "Network-Secondary",
         },
       },
       "Properties": {
@@ -6826,6 +6989,12 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
               "reason": "NACL added to VPC",
             },
           ],
+        },
+        "lzaLookup": {
+          "naclName": "TestNacl",
+          "ruleNumber": 110,
+          "type": "egress",
+          "vpcName": "Network-Secondary",
         },
       },
       "Properties": {
