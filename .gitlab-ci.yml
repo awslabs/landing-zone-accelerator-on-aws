@@ -485,7 +485,7 @@ workshop:
     - if: $CI_COMMIT_TAG =~ /v(\d.+){2}\d/
       when: always
     - when: never
-accelerator:build-typedocs:
+release:build-typedocs:
   stage: pipeline
   needs: 
     - job: accelerator:build
@@ -530,8 +530,30 @@ accelerator:build-typedocs:
       when: always
     - when: never
 
+release:run-tests:
+  stage: pipeline
+  needs: 
+    - job: accelerator:build
+      artifacts: true
+  tags:
+    - arch:amd64
+    - size:xlarge
+  before_script:
+    # Install dependencies
+    - "rm -rf /var/lib/apt/lists/*"
+    - "apt-get update"
+    - "apt-cache gencaches"
+  script:
+    # Run tests in the same way as the AWS Solutions pipeline
+    - "cd source"
+    - "chmod +x ./run-all-tests.sh && ./run-all-tests.sh"
+  rules:
+    - if: $CI_PROJECT_ID == "11925" && $CI_COMMIT_TAG =~ /v(\d.+){2}\d/
+      when: always
+    - when: never
+
 # make a zip file upon commit tag
-release-artifact-al2023-prep:
+release:artifact-al2023-prep:
   stage: pipeline
   tags:
     - arch:amd64
@@ -568,9 +590,9 @@ release-artifact-al2023-prep:
     - when: never
 
 # use created context to build
-release-artifact-al2023-build:
+release:artifact-al2023-build:
   stage: pipeline
-  needs: ["release-artifact-al2023-prep"]
+  needs: ["release:artifact-al2023-prep"]
   tags:
     - arch:amd64
     - size:xlarge
@@ -592,9 +614,9 @@ release-artifact-al2023-build:
     - when: never
 
 # upload artifact into package for release
-release-artifact-al2023-upload:
+release:artifact-al2023-upload:
   stage: pipeline
-  needs: ["release-artifact-al2023-build"]
+  needs: ["release:artifact-al2023-build"]
   tags:
     - arch:amd64
     - size:large
@@ -621,9 +643,9 @@ release-artifact-al2023-upload:
     - when: never
 
 # release based on commit tag
-release-artifact-al2023-release:
+release:artifact-al2023-release:
   stage: pipeline
-  needs: ["release-artifact-al2023-upload"]
+  needs: ["release:artifact-al2023-upload"]
   tags:
     - arch:amd64
     - size:large
