@@ -42,6 +42,7 @@ import {
 import { GlobalConfig } from '@aws-accelerator/config/lib/global-config';
 import { V2StackComponentsList } from './enums';
 import { isIpv4 } from '../../network-stacks/utils/validation-utils';
+import { NetworkVpcStackRouteEntryTypes } from './constants';
 
 const logger = createLogger([path.parse(path.basename(__filename)).name]);
 
@@ -153,6 +154,14 @@ function getV2NetworkResources(
     getV2DeleteDefaultSecurityGroupRulesResource(vpcItem, lzaLookup, v2Components);
 
     getV2VpnConnectionsResource(networkConfig, vpcItem, lzaLookup, v2Components);
+
+    getV2RouteTableResource(vpcItem, lzaLookup, v2Components);
+
+    getV2RouteTableEntryResource(vpcItem, lzaLookup, v2Components);
+
+    getV2RouteTableGatewayAssociationResources(vpcItem, lzaLookup, v2Components);
+
+    getV2LocalGatewayRouteTableVPCAssociationResources(vpcItem, lzaLookup, v2Components);
   }
 
   return v2Components;
@@ -600,6 +609,161 @@ function getV2VpnConnectionsResource(
           resourceType: V2StackComponentsList.VPN_CONNECTION,
           resourceName: `${cgw.name}|${vpnItem.name}`,
         });
+      }
+    }
+  }
+}
+
+/**
+ * Function to get V2 route table resources
+ * @param vpcItem {@link VpcConfig} | {@link VpcTemplatesConfig}
+ * @param lzaLookup {@link LZAResourceLookup}
+ * @param v2Components {@link V2NetworkResourceListType}[]
+ */
+function getV2RouteTableResource(
+  vpcItem: VpcConfig | VpcTemplatesConfig,
+  lzaLookup: LZAResourceLookup,
+  v2Components: V2NetworkResourceListType[],
+): void {
+  for (const routeTableItem of vpcItem.routeTables ?? []) {
+    if (
+      !lzaLookup.resourceExists({
+        resourceType: LZAResourceLookupType.ROUTE_TABLE,
+        lookupValues: {
+          vpcName: vpcItem.name,
+          routeTableName: routeTableItem.name,
+        },
+      })
+    ) {
+      logger.info(
+        `VPC ${vpcItem.name} route table ${routeTableItem.name} is not present in the existing stack, resource will be deployed through V2 stacks`,
+      );
+      v2Components.push({
+        vpcName: vpcItem.name,
+        resourceType: V2StackComponentsList.ROUTE_TABLE,
+        resourceName: routeTableItem.name,
+      });
+    }
+  }
+}
+
+/**
+ * Function to get V2 Local GateWay Route Table Entry resources
+ * @param vpcItem {@link VpcConfig} | {@link VpcTemplatesConfig}
+ * @param lzaLookup {@link LZAResourceLookup}
+ * @param v2Components {@link V2NetworkResourceListType}[]
+ */
+function getV2RouteTableEntryResource(
+  vpcItem: VpcConfig | VpcTemplatesConfig,
+  lzaLookup: LZAResourceLookup,
+  v2Components: V2NetworkResourceListType[],
+): void {
+  for (const routeTableItem of vpcItem.routeTables ?? []) {
+    for (const routeTableEntryItem of routeTableItem.routes ?? []) {
+      const metadata = {
+        vpcName: vpcItem.name,
+        routeTableName: routeTableItem.name,
+        routeTableEntryName: routeTableEntryItem.name,
+        type: routeTableEntryItem.type,
+      };
+      const routeExists = lzaLookup.resourceExists({
+        resourceType: LZAResourceLookupType.ROUTE,
+        lookupValues: metadata,
+      });
+
+      const prefixListRouteExists = lzaLookup.resourceExists({
+        resourceType: LZAResourceLookupType.PREFIX_LIST_ROUTE,
+        lookupValues: metadata,
+      });
+
+      if (
+        !routeExists &&
+        !prefixListRouteExists &&
+        NetworkVpcStackRouteEntryTypes.includes(routeTableEntryItem.type ?? '')
+      ) {
+        logger.info(
+          `VPC ${vpcItem.name} route table ${routeTableItem.name} route table entry ${routeTableEntryItem.name} is not present in the existing stack, resource will be deployed through V2 stacks`,
+        );
+        v2Components.push({
+          vpcName: vpcItem.name,
+          resourceType: V2StackComponentsList.ROUTE_ENTRY,
+          resourceName: `${routeTableItem.name}|${routeTableEntryItem.name}|${routeTableEntryItem.type}|${
+            routeTableEntryItem.destination ?? routeTableEntryItem.destinationPrefixList
+          }|${routeTableEntryItem.target}`,
+        });
+      }
+    }
+  }
+}
+
+/**
+ * Function to get V2 route table GateWay Association resources
+ * @param vpcItem {@link VpcConfig} | {@link VpcTemplatesConfig}
+ * @param lzaLookup {@link LZAResourceLookup}
+ * @param v2Components {@link V2NetworkResourceListType}[]
+ */
+function getV2RouteTableGatewayAssociationResources(
+  vpcItem: VpcConfig | VpcTemplatesConfig,
+  lzaLookup: LZAResourceLookup,
+  v2Components: V2NetworkResourceListType[],
+): void {
+  for (const routeTableItem of vpcItem.routeTables ?? []) {
+    if (
+      routeTableItem.gatewayAssociation &&
+      !lzaLookup.resourceExists({
+        resourceType: LZAResourceLookupType.GATEWAY_ROUTE_TABLE_ASSOCIATION,
+        lookupValues: {
+          vpcName: vpcItem.name,
+          routeTableName: routeTableItem.name,
+          associationType: routeTableItem.gatewayAssociation,
+        },
+      })
+    ) {
+      logger.info(
+        `VPC ${vpcItem.name} route table ${routeTableItem.name} gateway association ${routeTableItem.gatewayAssociation} is not present in the existing stack, resource will be deployed through V2 stacks`,
+      );
+      v2Components.push({
+        vpcName: vpcItem.name,
+        resourceType: V2StackComponentsList.ROUTE_TABLE_GATEWAY_ASSOCIATION,
+        resourceName: `${routeTableItem.name}|${routeTableItem.gatewayAssociation}`,
+      });
+    }
+  }
+}
+
+/**
+ * Function to get V2 Local GateWay Route Table Association resources
+ * @param vpcItem {@link VpcConfig} | {@link VpcTemplatesConfig}
+ * @param lzaLookup {@link LZAResourceLookup}
+ * @param v2Components {@link V2NetworkResourceListType}[]
+ */
+function getV2LocalGatewayRouteTableVPCAssociationResources(
+  vpcItem: VpcConfig | VpcTemplatesConfig,
+  lzaLookup: LZAResourceLookup,
+  v2Components: V2NetworkResourceListType[],
+): void {
+  if (isNetworkType<VpcConfig>('IVpcConfig', vpcItem)) {
+    for (const outpost of vpcItem.outposts ?? []) {
+      for (const routeTableItem of outpost.localGateway?.routeTables ?? []) {
+        if (
+          !lzaLookup.resourceExists({
+            resourceType: LZAResourceLookupType.LOCAL_GATEWAY_ROUTE_TABLE_VPC_ASSOCIATION,
+            lookupValues: {
+              routeTableName: routeTableItem.name,
+              vpcName: vpcItem.name,
+              vpcAccount: vpcItem.account,
+            },
+          })
+        ) {
+          logger.info(
+            `VPC ${vpcItem.name} local gateway route table vpc association ${routeTableItem.name} is not present in the existing stack, resource will be deployed through V2 stacks`,
+          );
+          v2Components.push({
+            vpcName: vpcItem.name,
+            resourceType: V2StackComponentsList.LOCAL_GATEWAY_ROUTE_TABLE_VPC_ASSOCIATION,
+            resourceName: `${vpcItem.account}|${routeTableItem.name}|${routeTableItem.id}`,
+          });
+        }
       }
     }
   }
