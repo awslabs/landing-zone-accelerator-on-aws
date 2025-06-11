@@ -162,6 +162,9 @@ exports[`ReportDefinition Construct(ConfigServiceTags):  Snapshot Test 1`] = `
         "Environment": {
           "Variables": {
             "AccountRoleName": "managementAccountAccessRole",
+            "ConfigTableName": {
+              "Ref": "NewOrgAccountsE5BA262F",
+            },
             "GovCloudAccountMappingTableName": {
               "Ref": "govCloudAccountMapping0E3D2AD8",
             },
@@ -289,10 +292,25 @@ exports[`ReportDefinition Construct(ConfigServiceTags):  Snapshot Test 1`] = `
                 "organizations:DescribeCreateAccountStatus",
                 "organizations:ListRoots",
                 "organizations:MoveAccount",
+                "organizations:DescribeAccount",
               ],
               "Effect": "Allow",
               "Resource": "*",
               "Sid": "Organizations",
+            },
+            {
+              "Action": [
+                "dynamodb:GetItem",
+                "dynamodb:UpdateItem",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::GetAtt": [
+                  "NewOrgAccountsE5BA262F",
+                  "Arn",
+                ],
+              },
+              "Sid": "DynamoDbConfig",
             },
             {
               "Action": [
