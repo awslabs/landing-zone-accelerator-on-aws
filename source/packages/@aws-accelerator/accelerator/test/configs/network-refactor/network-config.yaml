@@ -113,22 +113,22 @@ centralNetworkServices:
             organizationalUnits:
               - Infrastructure
               - Security
-  gatewayLoadBalancers: []
-    # - name: Accelerator-GWLB
-    #   subnets:
-    #     - Network-Endpoints-A
-    #     - Network-Endpoints-B
-    #   vpc: Network-Endpoints
-    #   deletionProtection: true
-    #   endpoints:
-    #     - name: Shared-Endpoint-A
-    #       account: SharedServices
-    #       subnet: SharedServices-App-A
-    #       vpc: SharedServices-Main
-    #     - name: Shared-Endpoint-B
-    #       account: SharedServices
-    #       subnet: SharedServices-App-B
-    #       vpc: SharedServices-Main
+  gatewayLoadBalancers:
+    - name: Accelerator-GWLB
+      subnets:
+        - Network-Endpoints-A
+        - Network-Endpoints-B
+      vpc: Network-Endpoints
+      deletionProtection: true
+      endpoints:
+        - name: Shared-Endpoint-A
+          account: SharedServices
+          subnet: SharedServices-App-A
+          vpc: SharedServices-Main
+        - name: Shared-Endpoint-B
+          account: SharedServices
+          subnet: SharedServices-App-B
+          vpc: SharedServices-Main
   networkFirewall:
     firewalls:
       - name: accelerator-firewall
