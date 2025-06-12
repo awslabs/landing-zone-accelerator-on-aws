@@ -15,6 +15,8 @@ import path from 'path';
 import { createLogger } from '../common/logger';
 import { IGetCloudFormationTemplatesHandlerParameter } from '../interfaces/aws-cloudformation/get-cloudformation-templates';
 import { GetCloudFormationTemplatesModule } from '../lib/aws-cloudformation/get-cloudformation-templates';
+import { IStackPolicyHandlerParameter } from '../interfaces/aws-cloudformation/create-stack-policy';
+import { StackPolicyModule } from '../lib/aws-cloudformation/create-stack-policy';
 
 process.on('uncaughtException', err => {
   throw err;
@@ -51,6 +53,36 @@ const logger = createLogger([path.parse(path.basename(__filename)).name]);
 export async function getCloudFormationTemplates(input: IGetCloudFormationTemplatesHandlerParameter): Promise<string> {
   try {
     return await new GetCloudFormationTemplatesModule().handler(input);
+  } catch (e: unknown) {
+    logger.error(e);
+    throw e;
+  }
+}
+
+/**
+ * Function to create Cloudformation stack policies.
+ * @param input {@link IStackPolicyHandlerParameter}
+ * @returns string
+ *
+ * @example
+ * {
+ *   acceleratorPrefix: 'AWSAccelerator',
+ *   accountIds: ['111111111111', '222222222222'],
+ *   enabled: true,
+ *   enabledRegions: ['us-east-1', 'us-west-2'],
+ *   managementAccountAccessRole: 'AWSControlTowerExecution',
+ *   managementAccountId: '111111111111',
+ *   protectedTypes: ['AWS::EC2::Route', 'AWS::S3::Bucket'],
+ *   globalRegion: 'us-east-1',
+ *   partition: 'aws',
+ *   dryRun: false,
+ *   operation: 'create-stack-policy',
+ *   solutionId: 'XXXXXX',
+ * }
+ */
+export async function createStackPolicy(input: IStackPolicyHandlerParameter): Promise<string> {
+  try {
+    return await new StackPolicyModule().handler(input);
   } catch (e: unknown) {
     logger.error(e);
     throw e;

@@ -256,3 +256,11 @@ source/packages/@aws-lza/test/mocked-resources.ts:271
 # SDK Client settings
 source/packages/@aws-accelerator/constructs/lib/aws-fms/enable-organization-admin-account/index.ts:141
 source/packages/@aws-accelerator/constructs/lib/aws-fms/enable-organization-admin-account/index.ts:142
+
+# Stack Policy Unit tests and wrong credential warnings
+source/packages/@aws-lza/lib/aws-cloudformation/create-stack-policy/index.ts:107
+source/packages/@aws-lza/lib/aws-cloudformation/create-stack-policy/index.ts:108
+source/packages/@aws-lza/test/lib/aws-cloudformation/create-stack-policy/index.test.unit.ts:111
+source/packages/@aws-lza/test/lib/aws-cloudformation/create-stack-policy/index.test.unit.ts:136
+source/packages/@aws-lza/test/lib/aws-cloudformation/create-stack-policy/index.test.unit.ts:400
+source/packages/@aws-lza/test/lib/aws-cloudformation/create-stack-policy/index.test.unit.ts:405
