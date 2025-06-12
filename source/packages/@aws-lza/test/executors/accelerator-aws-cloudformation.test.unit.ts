@@ -15,10 +15,13 @@ import { describe, beforeEach, expect, test } from '@jest/globals';
 import { GetCloudFormationTemplatesModule } from '../../lib/aws-cloudformation/get-cloudformation-templates';
 import { MOCK_CONSTANTS } from '../mocked-resources';
 import { IGetCloudFormationTemplatesHandlerParameter } from '../../../@aws-accelerator/modules/dist/packages/@aws-lza/interfaces/aws-cloudformation/get-cloudformation-templates';
-import { getCloudFormationTemplates } from '../../executors/accelerator-aws-cloudformation';
+import { createStackPolicy, getCloudFormationTemplates } from '../../executors/accelerator-aws-cloudformation';
+import { StackPolicyModule } from '../../lib/aws-cloudformation/create-stack-policy';
+import { IStackPolicyHandlerParameter } from '../../interfaces/aws-cloudformation/create-stack-policy';
 
 // Mock dependencies
 jest.mock('../../lib/aws-cloudformation/get-cloudformation-templates');
+jest.mock('../../lib/aws-cloudformation/create-stack-policy');
 
 describe('getCloudFormationTemplates', () => {
   beforeEach(() => {
@@ -104,5 +107,41 @@ describe('getCloudFormationTemplates', () => {
         processOnCallback(testError, origin);
       }).toThrow(testError);
     });
+  });
+});
+
+describe('createStackPolicy', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  test('error rethrows exception', async () => {
+    const errorMessage = 'Create Stack Policy test error';
+    const mockHandler = jest.fn().mockRejectedValue(new Error(errorMessage));
+
+    (StackPolicyModule as unknown as jest.Mock).mockImplementation(() => ({
+      handler: mockHandler,
+    }));
+    const input = {} as IStackPolicyHandlerParameter;
+
+    await expect(createStackPolicy(input)).rejects.toThrow(errorMessage);
+  });
+
+  test('success returns value', async () => {
+    const resultMessage = 'Module success message';
+    const mockHandler = jest.fn().mockReturnValue(resultMessage);
+
+    (StackPolicyModule as unknown as jest.Mock).mockImplementation(() => ({
+      handler: mockHandler,
+    }));
+    const input = {} as IStackPolicyHandlerParameter;
+
+    // Execute
+    const result = await createStackPolicy(input);
+
+    // Verify
+    expect(result).toBe(resultMessage);
+    expect(mockHandler).toHaveBeenCalledWith(input);
+    expect(mockHandler).toHaveBeenCalledTimes(1);
   });
 });
