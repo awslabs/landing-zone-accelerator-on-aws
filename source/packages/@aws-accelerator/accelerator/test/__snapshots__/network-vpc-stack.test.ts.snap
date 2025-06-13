@@ -2357,6 +2357,7 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
       "Metadata": {
         "lzaLookup": {
           "subnetName": "Network-Endpoints-A",
+          "vpcName": "Network-Endpoints",
         },
       },
       "Properties": {

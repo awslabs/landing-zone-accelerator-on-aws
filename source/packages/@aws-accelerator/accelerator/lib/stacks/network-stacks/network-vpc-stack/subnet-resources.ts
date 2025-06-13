@@ -317,7 +317,7 @@ export class SubnetResources {
       subnetItem.shareTargets &&
       this.lzaLookup.resourceExists({
         resourceType: LZAResourceLookupType.SUBNET_SHARE,
-        lookupValues: { subnetName: subnetItem.name },
+        lookupValues: { vpcName: vpcItem.name, subnetName: subnetItem.name },
       })
     ) {
       this.stack.addLogs(LogLevel.INFO, `Share subnet ${subnetItem.name}`);
@@ -326,6 +326,7 @@ export class SubnetResources {
         `${pascalCase(subnetItem.name)}SubnetShareResourceShare`,
       ) as cdk.CfnResource;
       resource.addMetadata(MetadataKeys.LZA_LOOKUP, {
+        vpcName: vpcItem.name,
         subnetName: subnetItem.name,
       });
     }

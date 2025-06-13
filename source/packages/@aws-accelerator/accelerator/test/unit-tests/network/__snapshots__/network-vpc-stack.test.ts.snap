@@ -532,6 +532,7 @@ exports[`NetworkVpcStack tests Construct(NetworkVpcStack):  Snapshot Test 1`] = 
       "Metadata": {
         "lzaLookup": {
           "subnetName": "Network-Endpoints-A",
+          "vpcName": "Network-Endpoints",
         },
       },
       "Properties": {
@@ -563,6 +564,7 @@ exports[`NetworkVpcStack tests Construct(NetworkVpcStack):  Snapshot Test 1`] = 
       "Metadata": {
         "lzaLookup": {
           "subnetName": "Network-Endpoints-B",
+          "vpcName": "Network-Endpoints",
         },
       },
       "Properties": {
@@ -594,6 +596,7 @@ exports[`NetworkVpcStack tests Construct(NetworkVpcStack):  Snapshot Test 1`] = 
       "Metadata": {
         "lzaLookup": {
           "subnetName": "Network-EndpointsTgwAttach-A",
+          "vpcName": "Network-Endpoints",
         },
       },
       "Properties": {
@@ -625,6 +628,7 @@ exports[`NetworkVpcStack tests Construct(NetworkVpcStack):  Snapshot Test 1`] = 
       "Metadata": {
         "lzaLookup": {
           "subnetName": "Network-EndpointsTgwAttach-B",
+          "vpcName": "Network-Endpoints",
         },
       },
       "Properties": {
