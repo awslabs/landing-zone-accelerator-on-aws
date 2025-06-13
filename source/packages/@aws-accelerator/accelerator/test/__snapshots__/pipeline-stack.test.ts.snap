@@ -2791,11 +2791,6 @@ phases:
                         for file in ./*.tgz; do tar -xf "$file" -C .; done;
                         for file in ./*.diff; do cat "$file"; done;
                       fi
-      - if [ "prepare" = "\${ACCELERATOR_STAGE}" ]; then set -e && LOG_LEVEL=info && yarn run ts-node ../lza-modules/bin/runner.ts --module account-alias --partition  ",
-                {
-                  "Ref": "AWS::Partition",
-                },
-                " --use-existing-role No --config-dir $CODEBUILD_SRC_DIR_Config; fi
       - if [ "prepare" = "\${ACCELERATOR_STAGE}" ]; then set -e && yarn run ts-node  ./lib/prerequisites.ts --config-dir $CODEBUILD_SRC_DIR_Config --partition ",
                 {
                   "Ref": "AWS::Partition",
@@ -2859,11 +2854,20 @@ phases:
                 " --app cdk.out;
                         fi
                        fi
-      - if [ "prepare" = "\${ACCELERATOR_STAGE}" ]; then set -e && yarn run ts-node  ./lib/prerequisites.ts --config-dir $CODEBUILD_SRC_DIR_Config --partition ",
+      - |-
+        if [ "prepare" = "\${ACCELERATOR_STAGE}" ]; then 
+                        set -e
+                        yarn run ts-node ./lib/prerequisites.ts --config-dir $CODEBUILD_SRC_DIR_Config --partition ",
                 {
                   "Ref": "AWS::Partition",
                 },
-                "; fi;
+                "
+                        yarn run ts-node ../lza-modules/bin/runner.ts --module account-alias --partition ",
+                {
+                  "Ref": "AWS::Partition",
+                },
+                " --use-existing-role No --config-dir $CODEBUILD_SRC_DIR_Config
+                      fi
 artifacts:
   base-directory: $WORK_DIR
   files:
@@ -6199,11 +6203,6 @@ phases:
                         for file in ./*.tgz; do tar -xf "$file" -C .; done;
                         for file in ./*.diff; do cat "$file"; done;
                       fi
-      - if [ "prepare" = "\${ACCELERATOR_STAGE}" ]; then set -e && LOG_LEVEL=info && yarn run ts-node ../lza-modules/bin/runner.ts --module account-alias --partition  ",
-                {
-                  "Ref": "AWS::Partition",
-                },
-                " --use-existing-role No --config-dir $CODEBUILD_SRC_DIR_Config; fi
       - if [ "prepare" = "\${ACCELERATOR_STAGE}" ]; then set -e && yarn run ts-node  ./lib/prerequisites.ts --config-dir $CODEBUILD_SRC_DIR_Config --partition ",
                 {
                   "Ref": "AWS::Partition",
@@ -6267,11 +6266,20 @@ phases:
                 " --app cdk.out;
                         fi
                        fi
-      - if [ "prepare" = "\${ACCELERATOR_STAGE}" ]; then set -e && yarn run ts-node  ./lib/prerequisites.ts --config-dir $CODEBUILD_SRC_DIR_Config --partition ",
+      - |-
+        if [ "prepare" = "\${ACCELERATOR_STAGE}" ]; then 
+                        set -e
+                        yarn run ts-node ./lib/prerequisites.ts --config-dir $CODEBUILD_SRC_DIR_Config --partition ",
                 {
                   "Ref": "AWS::Partition",
                 },
-                "; fi;
+                "
+                        yarn run ts-node ../lza-modules/bin/runner.ts --module account-alias --partition ",
+                {
+                  "Ref": "AWS::Partition",
+                },
+                " --use-existing-role No --config-dir $CODEBUILD_SRC_DIR_Config
+                      fi
 artifacts:
   base-directory: $WORK_DIR
   files:
