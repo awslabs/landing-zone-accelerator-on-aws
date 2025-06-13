@@ -92,3 +92,8 @@ export type V2NetworkResourceListType = { vpcName: string; resourceType: string;
  * Ipam Cidrs Map type
  */
 export type IpamCidrsMapType = { [key: string]: number };
+
+/**
+ * V2 Network resource environment type
+ */
+export type V2NetworkResourceEnvironmentType = { accountId: string; region: string; stackName: string };
