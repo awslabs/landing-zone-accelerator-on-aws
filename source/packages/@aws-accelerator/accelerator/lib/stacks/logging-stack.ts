@@ -676,7 +676,7 @@ export class LoggingStack extends AcceleratorStack {
       alias: this.acceleratorResourceNames.customerManagedKeys.sqs.alias,
       description: this.acceleratorResourceNames.customerManagedKeys.sqs.description,
       enableKeyRotation: true,
-      removalPolicy: cdk.RemovalPolicy.RETAIN,
+      removalPolicy: cdk.RemovalPolicy.DESTROY,
     });
 
     this.ssmParameters.push({
