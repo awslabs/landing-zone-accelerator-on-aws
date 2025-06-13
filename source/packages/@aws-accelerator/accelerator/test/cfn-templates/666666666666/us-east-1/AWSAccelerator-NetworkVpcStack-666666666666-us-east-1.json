@@ -928,6 +928,7 @@
    },
    "Metadata": {
     "lzaLookup": {
+     "vpcName":"Network-Endpoints",
      "subnetName": "Network-Endpoints-A"
     }
    }
@@ -1024,6 +1025,7 @@
    },
    "Metadata": {
     "lzaLookup": {
+     "vpcName":"Network-Endpoints",
      "subnetName": "Network-Endpoints-B"
     }
    }
@@ -1120,6 +1122,7 @@
    },
    "Metadata": {
     "lzaLookup": {
+     "vpcName":"Network-Endpoints",
      "subnetName": "Network-EndpointsTgwAttach-A"
     }
    }
@@ -1216,6 +1219,7 @@
    },
    "Metadata": {
     "lzaLookup": {
+     "vpcName": "Network-Endpoints",
      "subnetName": "Network-EndpointsTgwAttach-B"
     }
    }

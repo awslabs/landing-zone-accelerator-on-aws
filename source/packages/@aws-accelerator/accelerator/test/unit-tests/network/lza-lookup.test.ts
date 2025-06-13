@@ -233,7 +233,7 @@ describe('LZAResourceLookup tests', () => {
     expect(
       lzaLookup.resourceExists({
         resourceType: LZAResourceLookupType.SUBNET_SHARE,
-        lookupValues: { subnetName: 'test-subnet' },
+        lookupValues: { vpcName: 'test-vpc', subnetName: 'test-subnet' },
       }),
     ).toBeTruthy();
     expect(
