@@ -34,9 +34,12 @@ export enum V2StackComponentsList {
 
   SECURITY_GROUP = 'security-groups',
 
-  SUBNET = 'subnets',
+  SUBNET = 'subnet',
+  NAT_GATEWAY = 'nat-gateway',
+  TGW_VPC_ATTACHMENT_ROLE = 'tgw-vpc-attachment-role',
+  TGW_VPC_ATTACHMENT = 'tgw-vpc-attachment',
 
-  SUBNET_SHARE = 'subnets-share',
+  SUBNET_SHARE = 'subnet-share',
 
   NACL = 'nacl',
 

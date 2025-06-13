@@ -12,7 +12,12 @@
  */
 import * as cdk from 'aws-cdk-lib';
 
-import { IpamCidrsMapType, ResourceShareType, V2NetworkResourceListType } from './types';
+import {
+  IpamCidrsMapType,
+  ResourceShareType,
+  V2NetworkResourceEnvironmentType,
+  V2NetworkResourceListType,
+} from './types';
 import { createLogger } from '../../../../../../@aws-lza/index';
 import path from 'path';
 import { OrganizationConfig } from '@aws-accelerator/config/lib/organization-config';
@@ -115,14 +120,18 @@ export function getResourceSharePrincipals(
  * Function to get resource list deployable by V2 stacks
  * @param vpcsInScope {@link VpcConfig} | {@link VpcTemplatesConfig}
  * @param globalConfig {@link GlobalConfig}
- * @param env
+ * @param networkConfig {@link NetworkConfig}
+ * @param acceleratorPrefix string
+ * @param env {@link V2NetworkResourceEnvironmentType}
  * @returns
  */
 function getV2NetworkResources(
   vpcsInScope: (VpcConfig | VpcTemplatesConfig)[],
   globalConfig: GlobalConfig,
+  accountsConfig: AccountsConfig,
   networkConfig: NetworkConfig,
-  env: { accountId: string; region: string; stackName: string },
+  acceleratorPrefix: string,
+  env: V2NetworkResourceEnvironmentType,
 ): V2NetworkResourceListType[] {
   const v2Components: V2NetworkResourceListType[] = [];
   const lzaLookup: LZAResourceLookup = new LZAResourceLookup({
@@ -162,6 +171,16 @@ function getV2NetworkResources(
     getV2RouteTableGatewayAssociationResources(vpcItem, lzaLookup, v2Components);
 
     getV2LocalGatewayRouteTableVPCAssociationResources(vpcItem, lzaLookup, v2Components);
+
+    getV2SubnetResources(vpcItem, lzaLookup, v2Components);
+
+    getV2ShareSubnetResources(vpcItem, lzaLookup, v2Components);
+
+    getV2NetGateWayResources(vpcItem, lzaLookup, v2Components);
+
+    getV2TgwVpcAttachmentRoleResources(accountsConfig, vpcItem, acceleratorPrefix, env, lzaLookup, v2Components);
+
+    getV2TgwVpcAttachmentResources(accountsConfig, vpcItem, lzaLookup, v2Components);
   }
 
   return v2Components;
@@ -770,6 +789,183 @@ function getV2LocalGatewayRouteTableVPCAssociationResources(
 }
 
 /**
+ * Function to get V2 Subnet resources
+ * @param vpcItem {@link VpcConfig} | {@link VpcTemplatesConfig}
+ * @param lzaLookup {@link LZAResourceLookup}
+ * @param v2Components {@link V2NetworkResourceListType}[]
+ */
+function getV2SubnetResources(
+  vpcItem: VpcConfig | VpcTemplatesConfig,
+  lzaLookup: LZAResourceLookup,
+  v2Components: V2NetworkResourceListType[],
+): void {
+  for (const subnetItem of vpcItem.subnets ?? []) {
+    const subnetExists = lzaLookup.resourceExists({
+      resourceType: LZAResourceLookupType.SUBNET,
+      lookupValues: { vpcName: vpcItem.name, subnetName: subnetItem.name },
+    });
+
+    const ipamSubnetExists = lzaLookup.resourceExists({
+      resourceType: LZAResourceLookupType.IPAM_SUBNET,
+      lookupValues: { vpcName: vpcItem.name, subnetName: subnetItem.name },
+    });
+
+    if (!subnetExists && !ipamSubnetExists) {
+      logger.info(
+        `VPC ${vpcItem.name} subnet ${subnetItem.name} is not present in the existing stack, resource will be deployed through V2 stacks`,
+      );
+      v2Components.push({
+        vpcName: vpcItem.name,
+        resourceType: V2StackComponentsList.SUBNET,
+        resourceName: subnetItem.name,
+      });
+    }
+  }
+}
+
+/**
+ * Function to get V2 Share Subnet resources
+ * @param vpcItem {@link VpcConfig} | {@link VpcTemplatesConfig}
+ * @param lzaLookup {@link LZAResourceLookup}
+ * @param v2Components {@link V2NetworkResourceListType}[]
+ */
+function getV2ShareSubnetResources(
+  vpcItem: VpcConfig | VpcTemplatesConfig,
+  lzaLookup: LZAResourceLookup,
+  v2Components: V2NetworkResourceListType[],
+): void {
+  for (const subnetItem of vpcItem.subnets ?? []) {
+    if (
+      subnetItem.shareTargets &&
+      !lzaLookup.resourceExists({
+        resourceType: LZAResourceLookupType.SUBNET_SHARE,
+        lookupValues: { vpcName: vpcItem.name, subnetName: subnetItem.name },
+      })
+    ) {
+      logger.info(
+        `VPC ${vpcItem.name} subnet ${subnetItem.name} share targets is not present in the existing stack, resource will be deployed through V2 stacks`,
+      );
+      v2Components.push({
+        vpcName: vpcItem.name,
+        resourceType: V2StackComponentsList.SUBNET_SHARE,
+        resourceName: subnetItem.name,
+      });
+    }
+  }
+}
+
+/**
+ * Function to get V2 Net GateWay resources
+ * @param vpcItem {@link VpcConfig} | {@link VpcTemplatesConfig}
+ * @param lzaLookup {@link LZAResourceLookup}
+ * @param v2Components {@link V2NetworkResourceListType}[]
+ */
+function getV2NetGateWayResources(
+  vpcItem: VpcConfig | VpcTemplatesConfig,
+  lzaLookup: LZAResourceLookup,
+  v2Components: V2NetworkResourceListType[],
+): void {
+  for (const natGatewayItem of vpcItem.natGateways ?? []) {
+    if (
+      !lzaLookup.resourceExists({
+        resourceType: LZAResourceLookupType.NAT_GATEWAY,
+        lookupValues: {
+          vpcName: vpcItem.name,
+          natGatewayName: natGatewayItem.name,
+        },
+      })
+    ) {
+      logger.info(
+        `VPC ${vpcItem.name} network firewall net gateway ${natGatewayItem.name} is not present in the existing stack, resource will be deployed through V2 stacks`,
+      );
+      v2Components.push({
+        vpcName: vpcItem.name,
+        resourceType: V2StackComponentsList.NAT_GATEWAY,
+        resourceName: `${natGatewayItem.name}|${natGatewayItem.subnet}`,
+      });
+    }
+  }
+}
+
+/**
+ * Function to get V2 TGW VPC Attachment Role resources
+ * @param accountsConfig {@link AccountsConfig}
+ * @param vpcItem {@link VpcConfig} | {@link VpcTemplatesConfig}
+ * @param env {@link V2NetworkResourceEnvironmentType}
+ * @param lzaLookup {@link LZAResourceLookup}
+ * @param v2Components {@link V2NetworkResourceListType}[]
+ */
+function getV2TgwVpcAttachmentRoleResources(
+  accountsConfig: AccountsConfig,
+  vpcItem: VpcConfig | VpcTemplatesConfig,
+  acceleratorPrefix: string,
+  env: V2NetworkResourceEnvironmentType,
+  lzaLookup: LZAResourceLookup,
+  v2Components: V2NetworkResourceListType[],
+): void {
+  const roleName = `${acceleratorPrefix}-DescribeTgwAttachRole-${env.region}`;
+  const tgwOwningAccountIds = getTgwOwningAccountIds(vpcItem, accountsConfig, env);
+
+  for (const tgwAttachmentItem of vpcItem.transitGatewayAttachments ?? []) {
+    if (
+      tgwOwningAccountIds.length > 0 &&
+      !lzaLookup.resourceExists({
+        resourceType: LZAResourceLookupType.TRANSIT_GATEWAY_VPC_ATTACHMENT_ROLE,
+        lookupValues: {
+          roleName,
+        },
+      })
+    ) {
+      logger.info(
+        `VPC ${vpcItem.name} transit gateway vpc attachment role ${tgwAttachmentItem.name} is not present in the existing stack, resource will be deployed through V2 stacks`,
+      );
+      v2Components.push({
+        vpcName: vpcItem.name,
+        resourceType: V2StackComponentsList.TGW_VPC_ATTACHMENT_ROLE,
+        resourceName: `${roleName}|${env.accountId}`,
+      });
+    }
+  }
+}
+
+/**
+ * Function to get V2 TGW VPC Attachment Role resources
+ * @param accountsConfig {@link AccountsConfig}
+ * @param vpcItem {@link VpcConfig} | {@link VpcTemplatesConfig}
+ * @param lzaLookup {@link LZAResourceLookup}
+ * @param v2Components {@link V2NetworkResourceListType}[]
+ */
+function getV2TgwVpcAttachmentResources(
+  accountsConfig: AccountsConfig,
+  vpcItem: VpcConfig | VpcTemplatesConfig,
+  lzaLookup: LZAResourceLookup,
+  v2Components: V2NetworkResourceListType[],
+): void {
+  for (const tgwAttachmentItem of vpcItem.transitGatewayAttachments ?? []) {
+    if (
+      !lzaLookup.resourceExists({
+        resourceType: LZAResourceLookupType.TRANSIT_GATEWAY_VPC_ATTACHMENT,
+        lookupValues: {
+          vpcName: vpcItem.name,
+          transitGatewayName: tgwAttachmentItem.transitGateway.name,
+          transitGatewayAttachmentName: tgwAttachmentItem.name,
+        },
+      })
+    ) {
+      logger.info(
+        `VPC ${vpcItem.name} transit gateway vpc attachment ${tgwAttachmentItem.name} is not present in the existing stack, resource will be deployed through V2 stacks`,
+      );
+      const tgwAccountId = accountsConfig.getAccountId(tgwAttachmentItem.transitGateway.account);
+      v2Components.push({
+        vpcName: vpcItem.name,
+        resourceType: V2StackComponentsList.TGW_VPC_ATTACHMENT,
+        resourceName: `${tgwAttachmentItem.name}|${tgwAttachmentItem.transitGateway.name}|${tgwAccountId}`,
+      });
+    }
+  }
+}
+
+/**
  * Function to create and get V2 Network VPC stacks
  * @param options
  * @returns
@@ -796,7 +992,9 @@ export function createAndGetV2NetworkVpcDependencyStacks(options: {
   const v2NetworkResources = getV2NetworkResources(
     vpcsInScope,
     options.props.globalConfig,
+    options.props.accountsConfig,
     options.props.networkConfig,
+    options.props.prefixes.accelerator,
     {
       accountId: options.accountId,
       region: options.enabledRegion,
@@ -1257,6 +1455,25 @@ function createVpcLoadBalancersStack(options: {
 }
 
 /**
+ * Function to check if the resource is V2 eligible
+ * @param v2NetworkResources {@link V2NetworkResourceListType}[]
+ * @param vpcName
+ * @param resourceType
+ * @param resourceName
+ * @returns
+ */
+export function isV2Resource(
+  v2NetworkResources: V2NetworkResourceListType[],
+  vpcName: string,
+  resourceType: string,
+  resourceName?: string,
+): V2NetworkResourceListType | undefined {
+  return v2NetworkResources.find(
+    item => item.vpcName === vpcName && item.resourceType === resourceType && item.resourceName === resourceName,
+  );
+}
+
+/**
  * Function to get VPC accounts Ids
  * @param vpcItem {@link VpcConfig} | {@link VpcTemplatesConfig}
  * @param accountsConfig {@link AccountsConfig}
@@ -1270,13 +1487,27 @@ function getVpcAccountIds(vpcItem: VpcConfig | VpcTemplatesConfig, accountsConfi
   }
 }
 
-export function isV2Resource(
-  v2NetworkResources: V2NetworkResourceListType[],
-  vpcName: string,
-  resourceType: string,
-  resourceName?: string,
-): V2NetworkResourceListType | undefined {
-  return v2NetworkResources.find(
-    item => item.vpcName === vpcName && item.resourceType === resourceType && item.resourceName === resourceName,
-  );
+/**
+ * Function to get TGW owning account IDs
+ * @param vpcItem {@link VpcConfig} | {@link VpcTemplatesConfig}
+ * @param accountsConfig {@link AccountsConfig}
+ * @param env {@link V2NetworkResourceEnvironmentType}
+ * @returns
+ */
+function getTgwOwningAccountIds(
+  vpcItem: VpcConfig | VpcTemplatesConfig,
+  accountsConfig: AccountsConfig,
+  env: V2NetworkResourceEnvironmentType,
+): string[] {
+  const transitGatewayAccountIds: string[] = [];
+
+  for (const attachment of vpcItem.transitGatewayAttachments ?? []) {
+    const owningAccountId = accountsConfig.getAccountId(attachment.transitGateway.account);
+
+    if (owningAccountId !== env.accountId && !transitGatewayAccountIds.includes(owningAccountId)) {
+      transitGatewayAccountIds.push(owningAccountId);
+    }
+  }
+
+  return transitGatewayAccountIds;
 }

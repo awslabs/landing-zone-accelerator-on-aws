@@ -105,7 +105,7 @@ export class VpcRouteTablesBaseStack extends AcceleratorStack {
    */
   private createRouteTables(): void {
     for (const routeTableItem of this.vpcDetails.routeTables ?? []) {
-      const routeTableDetails = this.createOrGetRouteTable(
+      const routeTableDetails = this.getRouteTableDetails(
         routeTableItem.name,
         this.vpcDetails.name,
         this.vpcId,
@@ -115,14 +115,16 @@ export class VpcRouteTablesBaseStack extends AcceleratorStack {
         ? routeTableDetails.cfnRouteTable.ref
         : routeTableDetails.routeTableId!;
 
-      // Add Route table ID SSM parameter
-      this.addSsmParameter({
-        logicalId: pascalCase(
-          `SsmParam${pascalCase(this.vpcDetails.name)}${pascalCase(routeTableItem.name)}RouteTableId`,
-        ),
-        parameterName: this.getSsmPath(SsmResourceType.ROUTE_TABLE, [this.vpcDetails.name, routeTableItem.name]),
-        stringValue: routeTableId,
-      });
+      if (routeTableDetails.cfnRouteTable) {
+        // Add Route table ID SSM parameter
+        this.addSsmParameter({
+          logicalId: pascalCase(
+            `SsmParam${pascalCase(this.vpcDetails.name)}${pascalCase(routeTableItem.name)}RouteTableId`,
+          ),
+          parameterName: this.getSsmPath(SsmResourceType.ROUTE_TABLE, [this.vpcDetails.name, routeTableItem.name]),
+          stringValue: routeTableId,
+        });
+      }
 
       this.manageGateWayAssociation(routeTableItem, routeTableId, routeTableDetails);
 
@@ -139,14 +141,14 @@ export class VpcRouteTablesBaseStack extends AcceleratorStack {
   }
 
   /**
-   * Function to create or get route table and return the route table id
+   * Function to get route table details
    * @param routeTableName string
    * @param vpcName string
    * @param vpcId string
    * @param vpcTags {@link cdk.CfnTag}[] | undefined
    * @returns routeId {@link cdk.aws_ec2.CfnRouteTable}
    */
-  private createOrGetRouteTable(
+  private getRouteTableDetails(
     routeTableName: string,
     vpcName: string,
     vpcId: string,
@@ -160,18 +162,9 @@ export class VpcRouteTablesBaseStack extends AcceleratorStack {
         routeTableName,
       )
     ) {
-      this.logger.info(`Creating route table for route ${routeTableName} for vpc ${vpcName}`);
-      const routeTable = new cdk.aws_ec2.CfnRouteTable(
-        this,
-        pascalCase(`${vpcName}Vpc`) + pascalCase(`${routeTableName}RouteTable`),
-        {
-          vpcId,
-          tags: [{ key: 'Name', value: routeTableName }, ...(vpcTags ?? [])],
-        },
-      );
-
-      return { cfnRouteTable: routeTable };
+      return this.createRouteTable(routeTableName, vpcName, vpcId, vpcTags);
     }
+
     this.logger.info(`Using existing route table for route ${routeTableName} for vpc ${vpcName}`);
     return {
       routeTableId: cdk.aws_ssm.StringParameter.valueForStringParameter(
@@ -181,6 +174,40 @@ export class VpcRouteTablesBaseStack extends AcceleratorStack {
     };
   }
 
+  /**
+   * Function to create route table and return the route table id
+   * @param routeTableName string
+   * @param vpcName string
+   * @param vpcId string
+   * @param vpcTags {@link cdk.CfnTag}[] | undefined
+   * @returns routeId {@link cdk.aws_ec2.CfnRouteTable}
+   */
+  private createRouteTable(
+    routeTableName: string,
+    vpcName: string,
+    vpcId: string,
+    vpcTags?: cdk.CfnTag[],
+  ): V2RouteTableDetailsType {
+    this.logger.info(`Creating route table for route ${routeTableName} for vpc ${vpcName}`);
+    const routeTable = new cdk.aws_ec2.CfnRouteTable(
+      this,
+      pascalCase(`${vpcName}Vpc`) + pascalCase(`${routeTableName}RouteTable`),
+      {
+        vpcId,
+        tags: [{ key: 'Name', value: routeTableName }, ...(vpcTags ?? [])],
+      },
+    );
+
+    return { cfnRouteTable: routeTable };
+  }
+
+  /**
+   * Function to manage gateway association
+   * @param routeTableItem {@link RouteTableConfig}
+   * @param routeTableId string
+   * @param routeTableDetails {@link V2RouteTableDetailsType}
+   * @returns
+   */
   private manageGateWayAssociation(
     routeTableItem: RouteTableConfig,
     routeTableId: string,
