@@ -1625,7 +1625,7 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 1`] = `
       "Type": "AWS::KMS::Alias",
     },
     "AcceleratorSqsKeyB0193AC3": {
-      "DeletionPolicy": "Retain",
+      "DeletionPolicy": "Delete",
       "Properties": {
         "Description": "AWS Accelerator SQS Kms Key",
         "EnableKeyRotation": true,
@@ -1668,7 +1668,7 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 1`] = `
         },
       },
       "Type": "AWS::KMS::Key",
-      "UpdateReplacePolicy": "Retain",
+      "UpdateReplacePolicy": "Delete",
     },
     "AcceleratorSqsKmsArnParameter3DE59258": {
       "Properties": {
@@ -6117,7 +6117,7 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 2`] = `
       "Type": "AWS::KMS::Alias",
     },
     "AcceleratorSqsKeyB0193AC3": {
-      "DeletionPolicy": "Retain",
+      "DeletionPolicy": "Delete",
       "Properties": {
         "Description": "AWS Accelerator SQS Kms Key",
         "EnableKeyRotation": true,
@@ -6160,7 +6160,7 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 2`] = `
         },
       },
       "Type": "AWS::KMS::Key",
-      "UpdateReplacePolicy": "Retain",
+      "UpdateReplacePolicy": "Delete",
     },
     "AcceleratorSqsKmsArnParameter3DE59258": {
       "Properties": {
@@ -11816,7 +11816,7 @@ exports[`LoggingStackDelegatedAdmin Construct(LoggingStacKDelegatedAdmin):  Snap
       "Type": "AWS::KMS::Alias",
     },
     "AcceleratorSqsKeyB0193AC3": {
-      "DeletionPolicy": "Retain",
+      "DeletionPolicy": "Delete",
       "Properties": {
         "Description": "AWS Accelerator SQS Kms Key",
         "EnableKeyRotation": true,
@@ -11859,7 +11859,7 @@ exports[`LoggingStackDelegatedAdmin Construct(LoggingStacKDelegatedAdmin):  Snap
         },
       },
       "Type": "AWS::KMS::Key",
-      "UpdateReplacePolicy": "Retain",
+      "UpdateReplacePolicy": "Delete",
     },
     "AcceleratorSqsKmsArnParameter3DE59258": {
       "Properties": {
@@ -16893,7 +16893,7 @@ exports[`LoggingStackOuTargets Construct(LoggingStackOuTargets):  Snapshot Test 
       "Type": "AWS::KMS::Alias",
     },
     "AcceleratorSqsKeyB0193AC3": {
-      "DeletionPolicy": "Retain",
+      "DeletionPolicy": "Delete",
       "Properties": {
         "Description": "AWS Accelerator SQS Kms Key",
         "EnableKeyRotation": true,
@@ -16936,7 +16936,7 @@ exports[`LoggingStackOuTargets Construct(LoggingStackOuTargets):  Snapshot Test 
         },
       },
       "Type": "AWS::KMS::Key",
-      "UpdateReplacePolicy": "Retain",
+      "UpdateReplacePolicy": "Delete",
     },
     "AcceleratorSqsKmsArnParameter3DE59258": {
       "Properties": {
