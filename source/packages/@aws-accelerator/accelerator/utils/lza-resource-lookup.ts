@@ -68,7 +68,7 @@ const RESOURCE_REQUIRED_KEYS: { [key in LZAResourceLookupType]?: string[] } = {
     'transitGatewayAttachmentName',
   ],
   [LZAResourceLookupType.TRANSIT_GATEWAY_VPC_ATTACHMENT_ROLE]: ['roleName'],
-  [LZAResourceLookupType.SUBNET_SHARE]: ['subnetName'],
+  [LZAResourceLookupType.SUBNET_SHARE]: ['vpcName', 'subnetName'],
   [LZAResourceLookupType.SECURITY_GROUP]: ['vpcName', 'securityGroupName'],
   [LZAResourceLookupType.SECURITY_GROUP_INGRESS]: ['securityGroupName', 'ruleIndex'],
   [LZAResourceLookupType.SECURITY_GROUP_EGRESS]: ['securityGroupName', 'ruleIndex'],

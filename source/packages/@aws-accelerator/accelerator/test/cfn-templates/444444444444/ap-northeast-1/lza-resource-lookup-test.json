@@ -261,6 +261,7 @@
             "Properties": {},
             "Metadata": {
                 "lzaLookup": {
+                    "vpcName": "test-vpc",
                     "subnetName": "test-subnet"
                 }
             }
