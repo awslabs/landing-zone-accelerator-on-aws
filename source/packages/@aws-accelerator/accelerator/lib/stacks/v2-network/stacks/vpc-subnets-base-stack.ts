@@ -11,17 +11,518 @@
  *  and limitations under the License.
  */
 
+import { pascalCase } from 'pascal-case';
+import * as cdk from 'aws-cdk-lib';
+import { NagSuppressions } from 'cdk-nag';
 import { Construct } from 'constructs';
-import { AcceleratorStack } from '../../accelerator-stack';
+import { AcceleratorKeyType, AcceleratorStack } from '../../accelerator-stack';
 import { V2NetworkStacksBaseProps } from '../utils/types';
+import { VpcDetails } from '../constructs/vpc-details';
+import {
+  IpamConfig,
+  NatGatewayConfig,
+  OutpostsConfig,
+  SubnetConfig,
+  TransitGatewayAttachmentConfig,
+} from '@aws-accelerator/config/lib/network-config';
+import { SsmResourceType } from '@aws-accelerator/utils/lib/ssm-parameter-path';
+import { IpamSubnet } from '@aws-accelerator/constructs/lib/aws-ec2/ipam-subnet';
+import { getAvailabilityZoneMap } from '@aws-accelerator/utils/lib/regions';
+import { TransitGatewayAttachment } from '@aws-accelerator/constructs/lib/aws-ec2/transit-gateway';
+import { isV2Resource } from '../utils/functions';
+import { V2StackComponentsList } from '../utils/enums';
+
+type CreatedSubnetType = { name: string; id: string };
 
 export class VpcSubnetsBaseStack extends AcceleratorStack {
+  private v2StackProps: V2NetworkStacksBaseProps;
+  private vpcDetails: VpcDetails;
+  private vpcId: string;
+
+  private lastCreatedIpamSubnet: IpamSubnet | undefined;
+  private cloudwatchKey: cdk.aws_kms.IKey | undefined;
+  private createdSubnetDetails: CreatedSubnetType[] = [];
+
   constructor(scope: Construct, id: string, props: V2NetworkStacksBaseProps) {
     super(scope, id, props);
+
+    this.v2StackProps = props;
+    this.vpcDetails = new VpcDetails(this, 'VpcDetails', this.v2StackProps);
+    this.vpcId = this.vpcDetails.id!;
+
+    this.cloudwatchKey = this.getAcceleratorKey(AcceleratorKeyType.CLOUDWATCH_KEY);
+
+    //
+    // Create subnets
+    //
+    this.createSubnets();
+
+    //
+    // Create NAT gateways
+    //
+    this.createNatGateways();
+
+    //
+    // Create cross-account access role for TGW attachments, if applicable
+    //
+    this.createTgwAttachmentRole();
+
+    //
+    // Create TGW attachments
+    //
+    this.createTgwAttachments();
 
     //
     // Create SSM Parameters
     //
     this.createSsmParameters();
+  }
+
+  private createSubnets(): void {
+    for (const subnetConfig of this.vpcDetails.subnets ?? []) {
+      if (
+        isV2Resource(
+          this.v2StackProps.v2NetworkResources,
+          this.vpcDetails.name,
+          V2StackComponentsList.SUBNET,
+          subnetConfig.name,
+        )
+      ) {
+        this.createdSubnetDetails.push(this.createSubnet(subnetConfig));
+      }
+    }
+  }
+
+  private createSubnet(subnetConfig: SubnetConfig): CreatedSubnetType {
+    const subnetOutpostConfig = this.getSubnetOutpostConfig(subnetConfig);
+    const subnetAvailabilityZone = this.getSubnetAvailabilityZone(subnetConfig, subnetOutpostConfig);
+    const isAvailabilityZoneId = !subnetAvailabilityZone.includes(cdk.Stack.of(this).region);
+
+    const availabilityZone = isAvailabilityZoneId ? undefined : subnetAvailabilityZone;
+    const availabilityZoneId = isAvailabilityZoneId ? subnetAvailabilityZone : undefined;
+    const outpostArn = subnetOutpostConfig?.arn;
+
+    let subnetId: string | undefined;
+    if (subnetConfig.ipv4CidrBlock || subnetConfig.ipv6CidrBlock) {
+      const subnet = this.createNonIpamSubnet(subnetConfig, availabilityZone, availabilityZoneId, outpostArn);
+      subnetId = subnet.ref;
+    } else {
+      const subnet = this.createIpamSubnet(subnetConfig, availabilityZone, availabilityZoneId, outpostArn);
+
+      if (this.lastCreatedIpamSubnet) {
+        subnet.node.addDependency(this.lastCreatedIpamSubnet);
+      }
+      this.lastCreatedIpamSubnet = subnet;
+      subnetId = subnet.subnetId;
+    }
+
+    if (!subnetId) {
+      this.logger.error(`Error creating subnet ${subnetConfig.name}, could not determine subnet id.`);
+      throw new Error(`Error creating subnet ${subnetConfig.name}, could not determine subnet id.`);
+    }
+
+    this.createRouteTableAssociation(subnetConfig, subnetId);
+
+    this.addSsmParameter({
+      logicalId: pascalCase(`SsmParam${pascalCase(this.vpcDetails.name) + pascalCase(subnetConfig.name)}SubnetId`),
+      parameterName: this.getSsmPath(SsmResourceType.SUBNET, [this.vpcDetails.name, subnetConfig.name]),
+      stringValue: subnetId,
+    });
+
+    if (subnetConfig.ipv4CidrBlock) {
+      this.addSsmParameter({
+        logicalId: pascalCase(
+          `SsmParam${pascalCase(this.vpcDetails.name) + pascalCase(subnetConfig.name)}SubnetIpv4CidrBlock`,
+        ),
+        parameterName: this.getSsmPath(SsmResourceType.SUBNET_IPV4_CIDR_BLOCK, [
+          this.vpcDetails.name,
+          subnetConfig.name,
+        ]),
+        stringValue: subnetConfig.ipv4CidrBlock,
+      });
+    }
+
+    return { name: subnetConfig.name, id: subnetId };
+  }
+
+  private createNonIpamSubnet(
+    subnetConfig: SubnetConfig,
+    availabilityZone?: string,
+    availabilityZoneId?: string,
+    outpostArn?: string,
+  ): cdk.aws_ec2.CfnSubnet {
+    const ipv6Native = subnetConfig.ipv6CidrBlock !== undefined && !subnetConfig.ipv4CidrBlock ? true : undefined;
+    const privateDnsNameOptionsOnLaunch = subnetConfig.privateDnsOptions
+      ? {
+          EnableResourceNameDnsAAAARecord: subnetConfig.privateDnsOptions?.enableDnsAAAARecord,
+          EnableResourceNameDnsARecord: subnetConfig.privateDnsOptions?.enableDnsARecord,
+          HostnameType: subnetConfig.privateDnsOptions?.hostnameType,
+        }
+      : undefined;
+
+    const cfnSubnet = new cdk.aws_ec2.CfnSubnet(
+      this,
+      `${pascalCase(this.vpcDetails.name) + pascalCase(subnetConfig.name)}NonIpamSubnet`,
+      {
+        vpcId: this.vpcId,
+        assignIpv6AddressOnCreation: subnetConfig.assignIpv6OnCreation,
+        availabilityZone,
+        availabilityZoneId,
+        cidrBlock: subnetConfig.ipv4CidrBlock,
+        enableDns64: subnetConfig.enableDns64,
+        ipv6CidrBlock: subnetConfig.ipv6CidrBlock,
+        ipv6Native,
+        mapPublicIpOnLaunch: subnetConfig.mapPublicIpOnLaunch,
+        outpostArn,
+        privateDnsNameOptionsOnLaunch,
+        tags: [{ key: 'Name', value: subnetConfig.name }, ...(subnetConfig.tags ?? [])],
+      },
+    );
+
+    return cfnSubnet;
+  }
+
+  private createIpamSubnet(
+    subnetConfig: SubnetConfig,
+    availabilityZone?: string,
+    availabilityZoneId?: string,
+    outpostArn?: string,
+  ): IpamSubnet {
+    const basePool = subnetConfig.ipamAllocation
+      ? this.getIpamBasePool(subnetConfig, this.vpcDetails.ipamConfigs)
+      : undefined;
+
+    if (!basePool) {
+      this.logger.error(
+        `Error creating subnet ${subnetConfig.name} for vpc ${this.vpcDetails.name}: must specify basePool property when using ipamAllocation`,
+      );
+      throw new Error(
+        `Error creating subnet ${subnetConfig.name} for vpc ${this.vpcDetails.name}: must specify basePool property when using ipamAllocation`,
+      );
+    }
+
+    if (!subnetConfig.ipamAllocation) {
+      this.logger.error(
+        `Error creating subnet ${subnetConfig.name} for vpc ${this.vpcDetails.name}: ipamAllocation property must be defined if not specifying ipv4CidrBlock`,
+      );
+      throw new Error(
+        `Error creating subnet ${subnetConfig.name} for vpc ${this.vpcDetails.name}: ipamAllocation property must be defined if not specifying ipv4CidrBlock`,
+      );
+    }
+
+    const ipamSubnet = new IpamSubnet(
+      this,
+      `${pascalCase(this.vpcDetails.name) + pascalCase(subnetConfig.name)}IpamSubnet`,
+      {
+        name: subnetConfig.name,
+        availabilityZone,
+        availabilityZoneId,
+        basePool,
+        ipamAllocation: subnetConfig.ipamAllocation,
+        vpcId: this.vpcId,
+        mapPublicIpOnLaunch: subnetConfig.mapPublicIpOnLaunch,
+        kmsKey: this.cloudwatchKey,
+        logRetentionInDays: this.props.globalConfig.cloudwatchLogRetentionInDays,
+        tags: subnetConfig.tags,
+        outpostArn,
+      },
+    );
+
+    this.addSsmParameter({
+      logicalId: pascalCase(
+        `SsmParam${pascalCase(this.vpcDetails.name) + pascalCase(subnetConfig.name)}IpamSubnetIpv4CidrBlock`,
+      ),
+      parameterName: this.getSsmPath(SsmResourceType.SUBNET_IPV4_CIDR_BLOCK, [this.vpcDetails.name, subnetConfig.name]),
+      stringValue: ipamSubnet.ipv4CidrBlock,
+    });
+
+    return ipamSubnet;
+  }
+
+  private createRouteTableAssociation(subnetConfig: SubnetConfig, subnetId: string): void {
+    const subnetRouteTableId = this.getSubnetRouteTableId(subnetConfig);
+
+    if (subnetRouteTableId) {
+      this.logger.info(`Adding route table association for subnet ${subnetConfig.name}`);
+      new cdk.aws_ec2.CfnSubnetRouteTableAssociation(this, `${pascalCase(subnetConfig.name)}RouteTableAssociation`, {
+        subnetId,
+        routeTableId: subnetRouteTableId,
+      });
+    }
+  }
+
+  private getSubnetOutpostConfig(subnetConfig: SubnetConfig): OutpostsConfig | undefined {
+    if (!subnetConfig.outpost) {
+      return undefined;
+    }
+    const outpostArn = this.vpcDetails.outposts.find(item => item.name === subnetConfig.outpost);
+
+    if (!outpostArn) {
+      this.logger.error(
+        `Outpost ${subnetConfig.outpost} for subnet ${subnetConfig.name} not found in vpc ${this.vpcDetails.name}.`,
+      );
+      throw new Error(
+        `Outpost ${subnetConfig.outpost} for subnet ${subnetConfig.name} not found in vpc ${this.vpcDetails.name}.`,
+      );
+    }
+    return outpostArn;
+  }
+
+  private getSubnetAvailabilityZone(subnetItem: SubnetConfig, outpost?: OutpostsConfig): string {
+    const availabilityZone = outpost?.availabilityZone ? outpost.availabilityZone : subnetItem.availabilityZone;
+
+    if (!availabilityZone && !subnetItem.localZone) {
+      this.logger.error(
+        `Could not determine availability zone for subnet ${subnetItem.name}: Neither Local Zone or Availability Zone are defined.`,
+      );
+      throw new Error(
+        `Configuration validation failed at runtime. Could not determine availability zone for subnet ${subnetItem.name}: Neither Local Zone or Availability Zone are defined.`,
+      );
+    }
+
+    if (subnetItem.localZone) {
+      return `${cdk.Stack.of(this).region}-${subnetItem.localZone}`;
+    }
+
+    return typeof availabilityZone === 'string'
+      ? `${cdk.Stack.of(this).region}${availabilityZone}`
+      : `${getAvailabilityZoneMap(cdk.Stack.of(this).region)}${availabilityZone}`;
+  }
+
+  private getIpamBasePool(subnetItem: SubnetConfig, ipamConfig?: IpamConfig[]): string[] {
+    let basePool: string[] | undefined;
+
+    for (const ipam of ipamConfig ?? []) {
+      const pool = ipam.pools?.find(item => item.name === subnetItem.ipamAllocation!.ipamPoolName);
+      basePool = pool?.provisionedCidrs;
+    }
+
+    if (!basePool) {
+      this.logger.error(
+        `Error determining IPAM base pool for subnet ${subnetItem.name}: IPAM pool ${
+          subnetItem.ipamAllocation!.ipamPoolName
+        } not defined in network config.`,
+      );
+      throw new Error(
+        `Error determining IPAM base pool for subnet ${subnetItem.name}: IPAM pool ${
+          subnetItem.ipamAllocation!.ipamPoolName
+        } not defined in network config.`,
+      );
+    }
+    return basePool;
+  }
+
+  private getSubnetRouteTableId(subnetConfig: SubnetConfig): string | undefined {
+    if (!subnetConfig.routeTable) {
+      return undefined;
+    }
+
+    const vpcRouteTable = this.vpcDetails.routeTables.find(item => item.name === subnetConfig.routeTable);
+    if (!vpcRouteTable) {
+      this.logger.error(
+        `Could not determine subnet ${subnetConfig.name} route table ${subnetConfig.routeTable} not found in vpc ${this.vpcDetails.name}.`,
+      );
+      throw new Error(
+        `Configuration validation failed at runtime. Could not determine subnet ${subnetConfig.name} route table ${subnetConfig.routeTable} not found in vpc ${this.vpcDetails.name}.`,
+      );
+    }
+
+    return cdk.aws_ssm.StringParameter.valueForStringParameter(
+      this,
+      this.getSsmPath(SsmResourceType.ROUTE_TABLE, [this.vpcDetails.name, vpcRouteTable.name]),
+    );
+  }
+
+  private createNatGateways(): void {
+    for (const natGatewayItem of this.vpcDetails.natGateways) {
+      if (
+        !isV2Resource(
+          this.v2StackProps.v2NetworkResources,
+          this.vpcDetails.name,
+          V2StackComponentsList.NAT_GATEWAY,
+          `${natGatewayItem.name}|${natGatewayItem.subnet}`,
+        )
+      ) {
+        this.logger.info(
+          `Skipping creation of NAT Gateway ${natGatewayItem.name} for subnet ${natGatewayItem.subnet} in VPC ${this.vpcDetails.name}`,
+        );
+        continue;
+      }
+
+      this.logger.info(
+        `Adding NAT Gateway ${natGatewayItem.name} to VPC ${this.vpcDetails.name} subnet ${natGatewayItem.subnet}`,
+      );
+      const createdSubnetId = this.createdSubnetDetails.find(item => item.name === natGatewayItem.subnet)?.id;
+
+      const resource = new cdk.aws_ec2.CfnNatGateway(
+        this,
+        `${pascalCase(this.vpcDetails.name)}Vpc${natGatewayItem.name}NatGateway`,
+        {
+          subnetId:
+            createdSubnetId ??
+            cdk.aws_ssm.StringParameter.valueForStringParameter(
+              this,
+              this.getSsmPath(SsmResourceType.SUBNET, [this.vpcDetails.name, natGatewayItem.subnet]),
+            ),
+          allocationId: natGatewayItem.private ? undefined : this.getNetGatewayAllocationId(natGatewayItem),
+          connectivityType: natGatewayItem.private ? 'private' : undefined,
+          tags: natGatewayItem.tags,
+        },
+      );
+      cdk.Tags.of(resource).add('Name', natGatewayItem.name);
+
+      this.addSsmParameter({
+        logicalId: pascalCase(
+          `SsmParam${pascalCase(this.vpcDetails.name) + pascalCase(natGatewayItem.name)}NatGatewayId`,
+        ),
+        parameterName: this.getSsmPath(SsmResourceType.NAT_GW, [this.vpcDetails.name, natGatewayItem.name]),
+        stringValue: resource.ref,
+      });
+    }
+  }
+
+  private getNetGatewayAllocationId(natGatewayItem: NatGatewayConfig): string {
+    return (
+      natGatewayItem.allocationId ??
+      new cdk.aws_ec2.CfnEIP(this, `${pascalCase(this.vpcDetails.name)}Vpc${natGatewayItem.name}NatGatewayEip`, {
+        domain: 'vpc',
+      }).attrAllocationId
+    );
+  }
+
+  private getTgwOwningAccountIds(): string[] {
+    const transitGatewayAccountIds: string[] = [];
+
+    for (const attachment of this.vpcDetails.transitGatewayAttachments) {
+      const owningAccountId = this.props.accountsConfig.getAccountId(attachment.transitGateway.account);
+
+      if (owningAccountId !== cdk.Stack.of(this).account && !transitGatewayAccountIds.includes(owningAccountId)) {
+        transitGatewayAccountIds.push(owningAccountId);
+      }
+    }
+
+    return transitGatewayAccountIds;
+  }
+
+  private createTgwAttachmentRole(): void {
+    // Get account IDs of external accounts hosting TGWs
+    const transitGatewayAccountIds = this.getTgwOwningAccountIds();
+    const roleName = `${this.props.prefixes.accelerator}-DescribeTgwAttachRole-${cdk.Stack.of(this).region}`;
+    // Create cross account access role to read transit gateway attachments if
+    // there are other accounts in the list
+    if (
+      transitGatewayAccountIds.length > 0 &&
+      isV2Resource(
+        this.v2StackProps.v2NetworkResources,
+        this.vpcDetails.name,
+        V2StackComponentsList.TGW_VPC_ATTACHMENT_ROLE,
+        `${roleName}|${cdk.Stack.of(this).account}`,
+      )
+    ) {
+      this.logger.info(`Creating IAM role to access transit gateway attachments for VPC ${this.vpcDetails.name}`);
+
+      const principals: cdk.aws_iam.PrincipalBase[] = [];
+      transitGatewayAccountIds.forEach(accountId => {
+        principals.push(new cdk.aws_iam.AccountPrincipal(accountId));
+      });
+      const roleArns = [
+        `arn:${cdk.Stack.of(this).partition}:iam::*:role/${this.props.prefixes.accelerator}-*-CustomGetTransitGateway*`,
+      ];
+      new cdk.aws_iam.Role(this, 'DescribeTgwAttachRole', {
+        roleName,
+        inlinePolicies: {
+          default: new cdk.aws_iam.PolicyDocument({
+            statements: [
+              new cdk.aws_iam.PolicyStatement({
+                effect: cdk.aws_iam.Effect.ALLOW,
+                actions: ['ec2:DescribeTransitGatewayAttachments'],
+                resources: ['*'],
+              }),
+            ],
+          }),
+        },
+        assumedBy: new cdk.aws_iam.PrincipalWithConditions(new cdk.aws_iam.CompositePrincipal(...principals), {
+          ArnLike: {
+            'aws:PrincipalArn': roleArns,
+          },
+          StringEquals: {
+            'aws:PrincipalOrgID': this.organizationId,
+          },
+        }),
+      });
+      // AwsSolutions-IAM5: The IAM entity contains wildcard permissions and does not have a cdk_nag rule suppression with evidence for those permission.
+      // rule suppression with evidence for this permission.
+      NagSuppressions.addResourceSuppressionsByPath(this, `${this.stackName}/DescribeTgwAttachRole/Resource`, [
+        {
+          id: 'AwsSolutions-IAM5',
+          reason: 'DescribeTgwAttachRole needs access to every describe each transit gateway attachment in the account',
+        },
+      ]);
+    }
+  }
+
+  private getTgwAttachmentSubnetIds(tgwAttachmentItem: TransitGatewayAttachmentConfig) {
+    const subnetIds: string[] = [];
+    for (const subnet of tgwAttachmentItem.subnets) {
+      const createdSubnetId = this.createdSubnetDetails.find(item => item.name === subnet)?.id;
+      subnetIds.push(
+        createdSubnetId ??
+          cdk.aws_ssm.StringParameter.valueForStringParameter(
+            this,
+            this.getSsmPath(SsmResourceType.SUBNET, [this.vpcDetails.name, subnet]),
+          ),
+      );
+    }
+    return subnetIds;
+  }
+
+  private createTgwAttachments(): void {
+    for (const tgwAttachmentItem of this.vpcDetails.transitGatewayAttachments) {
+      const tgwAccountId = this.props.accountsConfig.getAccountId(tgwAttachmentItem.transitGateway.account);
+      if (
+        !isV2Resource(
+          this.v2StackProps.v2NetworkResources,
+          this.vpcDetails.name,
+          V2StackComponentsList.TGW_VPC_ATTACHMENT,
+          `${tgwAttachmentItem.name}|${tgwAttachmentItem.transitGateway.name}|${tgwAccountId}`,
+        )
+      ) {
+        this.logger.info(
+          `Skipping creation of transit gateway attachment ${tgwAttachmentItem.name} for VPC ${this.vpcDetails.name}`,
+        );
+        continue;
+      }
+
+      this.logger.info(`Adding transit gateway attachment ${tgwAttachmentItem.name} to VPC ${this.vpcDetails.name}`);
+      const transitGatewayId = cdk.aws_ssm.StringParameter.valueForStringParameter(
+        this,
+        this.getSsmPath(SsmResourceType.CROSS_ACCOUNT_TGW, [tgwAttachmentItem.transitGateway.name]),
+      );
+
+      const subnetIds = this.getTgwAttachmentSubnetIds(tgwAttachmentItem);
+
+      const transitGatewayAttachment = new TransitGatewayAttachment(
+        this,
+        pascalCase(`${tgwAttachmentItem.name}Vpc${tgwAttachmentItem.transitGateway.name}TransitGatewayAttachment`),
+        {
+          name: tgwAttachmentItem.name,
+          partition: this.props.partition,
+          transitGatewayId,
+          subnetIds,
+          vpcId: this.vpcId,
+          options: tgwAttachmentItem.options,
+          tags: tgwAttachmentItem.tags,
+        },
+      );
+      cdk.Tags.of(transitGatewayAttachment).add('Name', tgwAttachmentItem.name);
+
+      this.addSsmParameter({
+        logicalId: pascalCase(
+          `SsmParam${pascalCase(this.vpcDetails.name) + pascalCase(tgwAttachmentItem.name)}TransitGatewayAttachmentId`,
+        ),
+        parameterName: this.getSsmPath(SsmResourceType.TGW_ATTACHMENT, [this.vpcDetails.name, tgwAttachmentItem.name]),
+        stringValue: transitGatewayAttachment.transitGatewayAttachmentId,
+      });
+    }
   }
 }
