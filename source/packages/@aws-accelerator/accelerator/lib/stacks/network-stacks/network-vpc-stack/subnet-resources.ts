@@ -355,7 +355,16 @@ export class SubnetResources {
       if (!vpc) {
         continue;
       }
-      const sharedSubnets = vpcItem.subnets ? vpcItem.subnets.filter(subnet => subnet.shareTargets) : [];
+      const sharedSubnets = vpcItem.subnets
+        ? vpcItem.subnets.filter(
+            subnet =>
+              subnet.shareTargets &&
+              this.lzaLookup.resourceExists({
+                resourceType: LZAResourceLookupType.SUBNET_SHARE,
+                lookupValues: { vpcName: vpcItem.name, subnetName: subnet.name },
+              }),
+          )
+        : [];
 
       // Add VPC to parameters
       if (sharedSubnets.length > 0) {
