@@ -458,9 +458,13 @@ export class LoadBalancerResources {
       if (
         cdk.Stack.of(this.stack).region === props.globalConfig.homeRegion &&
         vpcItem.loadBalancers?.networkLoadBalancers &&
-        vpcItem.loadBalancers?.networkLoadBalancers.length > 0
+        vpcItem.loadBalancers?.networkLoadBalancers.length > 0 &&
+        this.lzaLookup.resourceExists({
+          resourceType: LZAResourceLookupType.ROLE,
+          lookupValues: { roleName: `${props.prefixes.accelerator}-GetNLBIPAddressLookup` },
+        })
       ) {
-        new cdk.aws_iam.Role(this.stack, `GetNLBIPAddressLookup`, {
+        const role = new cdk.aws_iam.Role(this.stack, `GetNLBIPAddressLookup`, {
           roleName: `${props.prefixes.accelerator}-GetNLBIPAddressLookup`,
           assumedBy: new cdk.aws_iam.CompositePrincipal(...principals!),
           inlinePolicies: {
@@ -474,6 +478,10 @@ export class LoadBalancerResources {
               ],
             }),
           },
+        });
+
+        (role.node.defaultChild as cdk.aws_iam.CfnRole).addMetadata(MetadataKeys.LZA_LOOKUP, {
+          roleName: `${props.prefixes.accelerator}-GetNLBIPAddressLookup`,
         });
 
         NagSuppressions.addResourceSuppressionsByPath(this.stack, `/${this.stack.stackName}/GetNLBIPAddressLookup`, [

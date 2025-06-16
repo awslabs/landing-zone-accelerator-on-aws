@@ -100,7 +100,7 @@ export class TgwResources {
     if (
       transitGatewayAccountIds.length > 0 &&
       this.lzaLookup.resourceExists({
-        resourceType: LZAResourceLookupType.TRANSIT_GATEWAY_VPC_ATTACHMENT_ROLE,
+        resourceType: LZAResourceLookupType.ROLE,
         lookupValues: { roleName: roleName },
       })
     ) {

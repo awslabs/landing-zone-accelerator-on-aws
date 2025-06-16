@@ -226,7 +226,7 @@ describe('LZAResourceLookup tests', () => {
     ).toBeTruthy();
     expect(
       lzaLookup.resourceExists({
-        resourceType: LZAResourceLookupType.TRANSIT_GATEWAY_VPC_ATTACHMENT_ROLE,
+        resourceType: LZAResourceLookupType.ROLE,
         lookupValues: { roleName: 'test-tgw-role' },
       }),
     ).toBeTruthy();
