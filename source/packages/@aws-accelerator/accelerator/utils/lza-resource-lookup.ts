@@ -35,7 +35,7 @@ export enum LZAResourceLookupType {
   ROUTE_TABLE_ASSOCIATION = 'AWS::EC2::SubnetRouteTableAssociation',
   NAT_GATEWAY = 'AWS::EC2::NatGateway',
   TRANSIT_GATEWAY_VPC_ATTACHMENT = 'AWS::EC2::TransitGatewayVpcAttachment',
-  TRANSIT_GATEWAY_VPC_ATTACHMENT_ROLE = 'AWS::IAM::Role',
+  ROLE = 'AWS::IAM::Role',
   SUBNET_SHARE = 'AWS::RAM::ResourceShare',
   SECURITY_GROUP = 'AWS::EC2::SecurityGroup',
   SECURITY_GROUP_INGRESS = 'AWS::EC2::SecurityGroupIngress',
@@ -67,7 +67,7 @@ const RESOURCE_REQUIRED_KEYS: { [key in LZAResourceLookupType]?: string[] } = {
     'transitGatewayName',
     'transitGatewayAttachmentName',
   ],
-  [LZAResourceLookupType.TRANSIT_GATEWAY_VPC_ATTACHMENT_ROLE]: ['roleName'],
+  [LZAResourceLookupType.ROLE]: ['roleName'],
   [LZAResourceLookupType.SUBNET_SHARE]: ['vpcName', 'subnetName'],
   [LZAResourceLookupType.SECURITY_GROUP]: ['vpcName', 'securityGroupName'],
   [LZAResourceLookupType.SECURITY_GROUP_INGRESS]: ['securityGroupName', 'ruleIndex'],
@@ -152,7 +152,7 @@ export class LZAResourceLookup {
       case LZAResourceLookupType.ROUTE_TABLE_ASSOCIATION:
       case LZAResourceLookupType.NAT_GATEWAY:
       case LZAResourceLookupType.TRANSIT_GATEWAY_VPC_ATTACHMENT:
-      case LZAResourceLookupType.TRANSIT_GATEWAY_VPC_ATTACHMENT_ROLE:
+      case LZAResourceLookupType.ROLE:
       case LZAResourceLookupType.SUBNET_SHARE:
       case LZAResourceLookupType.SECURITY_GROUP:
       case LZAResourceLookupType.SECURITY_GROUP_INGRESS:

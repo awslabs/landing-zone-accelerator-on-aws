@@ -1282,6 +1282,9 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
             },
           ],
         },
+        "lzaLookup": {
+          "roleName": "AWSAccelerator-GetNLBIPAddressLookup",
+        },
       },
       "Properties": {
         "AssumeRolePolicyDocument": {
