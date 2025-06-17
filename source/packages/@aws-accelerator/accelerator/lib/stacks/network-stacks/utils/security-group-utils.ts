@@ -52,7 +52,7 @@ export interface SecurityGroupRuleProps {
 /**
  * Security group application TCP port mapping
  */
-const TCP_PROTOCOLS_PORT: { [key: string]: number } = {
+export const TCP_PROTOCOLS_PORT: { [key: string]: number } = {
   RDP: 3389,
   SSH: 22,
   HTTP: 80,

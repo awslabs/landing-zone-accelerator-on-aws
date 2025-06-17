@@ -33,6 +33,8 @@ export enum V2StackComponentsList {
   LOCAL_GATEWAY_ROUTE_TABLE_VPC_ASSOCIATION = 'local-gateway-route-table-vpc-association',
 
   SECURITY_GROUP = 'security-groups',
+  SECURITY_GROUP_INBOUND_RULE = 'security-group-inbound-rule',
+  SECURITY_GROUP_OUTBOUND_RULE = 'security-group-outbound-rule',
 
   SUBNET = 'subnet',
   NAT_GATEWAY = 'nat-gateway',
@@ -50,4 +52,12 @@ export enum V2StackComponentsList {
   APPLICATION_LOAD_BALANCER = 'application-load-balancer',
   NETWORK_LOAD_BALANCER = 'network-load-balancer',
   NETWORK_LOAD_BALANCER_ROLE = 'network-load-balancer-role',
+}
+
+/**
+ * Security group rule type
+ */
+export enum SecurityGroupRules {
+  INGRESS = 'Ingress',
+  EGRESS = 'Egress',
 }
