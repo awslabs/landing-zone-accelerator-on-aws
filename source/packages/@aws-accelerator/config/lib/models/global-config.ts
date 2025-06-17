@@ -1098,14 +1098,16 @@ export interface ICloudWatchLogsExclusionConfig {
  *
  * @example
  * ```
- * skipBulkUpdateTargets:
- *   organizationalUnits:
- *    - Sandbox
- *   regions:
- *    - us-west-1
- *    - us-west-2
- *   accounts:
- *    - WorkloadAccount1
+ * skipBulkUpdate:
+ *   enable: true
+ *   skipBulkUpdateTargets:
+ *     organizationalUnits:
+ *      - Sandbox
+ *     regions:
+ *      - us-west-1
+ *      - us-west-2
+ *     accounts:
+ *      - WorkloadAccount1
  *
  * ```
  */
@@ -1153,7 +1155,7 @@ export interface ICloudWatchFirehoseConfig {
    */
   readonly fileExtension?: t.NonEmptyString;
   /**
-   * Describes hints for the firehose lambda processor when Amazon Data Firehose recieves data. Amazon Data Firehose can invokes Lambda function to take source data and deliver the data to destination specified in dynamic partition.
+   * Describes hints for the firehose lambda processor when Amazon Data Firehose receives data. Amazon Data Firehose can invokes Lambda function to take source data and deliver the data to destination specified in dynamic partition.
    */
   readonly lambdaProcessor?: ICloudWatchFirehoseLambdaProcessorConfig;
 }
@@ -2322,7 +2324,7 @@ export interface IDefaultEventBusConfig {
    * Default Event Bus Policy deployment targets.
    *
    * @remarks
-   * With this configuration, LZA will deploy the LZA Managed or cust policy provided via the `customPolicyOverride` property to the
+   * With this configuration, LZA will deploy the LZA Managed or customer policy provided via the `customPolicyOverride` property to the
    * default event bus resource-based policy for the respective account(s).
    */
   readonly deploymentTargets: t.IDeploymentTargets;
