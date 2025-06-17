@@ -27,6 +27,8 @@ import {
   VpcConfig,
   VpcTemplatesConfig,
   VpcIpv6Config,
+  NetworkAclConfig,
+  NetworkAclSubnetSelection,
 } from '@aws-accelerator/config/lib/network-config';
 import { isNetworkType } from '@aws-accelerator/config/lib/common/parse';
 import { Region } from '@aws-accelerator/config/lib/common/types';
@@ -181,6 +183,18 @@ function getV2NetworkResources(
     getV2TgwVpcAttachmentRoleResources(accountsConfig, vpcItem, acceleratorPrefix, env, lzaLookup, v2Components);
 
     getV2TgwVpcAttachmentResources(accountsConfig, vpcItem, lzaLookup, v2Components);
+
+    getV2LoadBalancersResources(
+      networkConfig,
+      vpcItem,
+      globalConfig.homeRegion,
+      env,
+      acceleratorPrefix,
+      lzaLookup,
+      v2Components,
+    );
+
+    getV2NetworkAclResources(vpcItem, lzaLookup, accountsConfig, networkConfig, env, v2Components);
   }
 
   return v2Components;
@@ -962,6 +976,363 @@ function getV2TgwVpcAttachmentResources(
         resourceName: `${tgwAttachmentItem.name}|${tgwAttachmentItem.transitGateway.name}|${tgwAccountId}`,
       });
     }
+  }
+}
+
+/**
+ * Function to get V2 Load balancers resources
+ * @param accountsConfig {@link AccountsConfig}
+ * @param vpcItem {@link VpcConfig} | {@link VpcTemplatesConfig}
+ * @param homeRegion string
+ * @param env {@link V2NetworkResourceEnvironmentType}
+ * @param acceleratorPrefix string
+ * @param lzaLookup {@link LZAResourceLookup}
+ * @param v2Components {@link V2NetworkResourceListType}[]
+ */
+function getV2LoadBalancersResources(
+  networkConfig: NetworkConfig,
+  vpcItem: VpcConfig | VpcTemplatesConfig,
+  homeRegion: string,
+  env: V2NetworkResourceEnvironmentType,
+  acceleratorPrefix: string,
+  lzaLookup: LZAResourceLookup,
+  v2Components: V2NetworkResourceListType[],
+) {
+  getV2GateWayLoadBalancersResources(networkConfig, vpcItem, lzaLookup, v2Components);
+
+  getV2ApplicationLoadBalancersResources(vpcItem, lzaLookup, v2Components);
+
+  getV2NetworkLoadBalancersResources(vpcItem, lzaLookup, v2Components);
+
+  getV2NetworkLoadBalancerRoleResources(vpcItem, homeRegion, env, acceleratorPrefix, lzaLookup, v2Components);
+}
+
+/**
+ * Function to get V2 Gateway Load balancers resources
+ * @param networkConfig {@link NetworkConfig}
+ * @param vpcItem {@link VpcConfig} | {@link VpcTemplatesConfig}
+ * @param lzaLookup {@link LZAResourceLookup}
+ * @param v2Components {@link V2NetworkResourceListType}[]
+ */
+function getV2GateWayLoadBalancersResources(
+  networkConfig: NetworkConfig,
+  vpcItem: VpcConfig | VpcTemplatesConfig,
+  lzaLookup: LZAResourceLookup,
+  v2Components: V2NetworkResourceListType[],
+): void {
+  for (const gatewayLoadBalancer of networkConfig.centralNetworkServices?.gatewayLoadBalancers ?? []) {
+    if (
+      vpcItem.name === gatewayLoadBalancer.vpc &&
+      !lzaLookup.resourceExists({
+        resourceType: LZAResourceLookupType.LOAD_BALANCER,
+        lookupValues: { vpcName: vpcItem.name, gwlbName: gatewayLoadBalancer.name },
+      })
+    ) {
+      logger.info(
+        `VPC ${vpcItem.name} gateway load balancer ${gatewayLoadBalancer.name} is not present in the existing stack, resource will be deployed through V2 stacks`,
+      );
+      v2Components.push({
+        vpcName: vpcItem.name,
+        resourceType: V2StackComponentsList.GATEWAY_LOAD_BALANCER,
+        resourceName: gatewayLoadBalancer.name,
+      });
+    }
+  }
+}
+
+/**
+ * Function to get V2 Application Load balancers resources
+ * @param vpcItem {@link VpcConfig} | {@link VpcTemplatesConfig}
+ * @param lzaLookup {@link LZAResourceLookup}
+ * @param v2Components {@link V2NetworkResourceListType}[]
+ */
+function getV2ApplicationLoadBalancersResources(
+  vpcItem: VpcConfig | VpcTemplatesConfig,
+  lzaLookup: LZAResourceLookup,
+  v2Components: V2NetworkResourceListType[],
+): void {
+  for (const applicationLoadBalancer of vpcItem.loadBalancers?.applicationLoadBalancers ?? []) {
+    if (
+      !applicationLoadBalancer.shareTargets &&
+      !lzaLookup.resourceExists({
+        resourceType: LZAResourceLookupType.LOAD_BALANCER,
+        lookupValues: { vpcName: vpcItem.name, albName: applicationLoadBalancer.name },
+      })
+    ) {
+      logger.info(
+        `VPC ${vpcItem.name} application load balancer ${applicationLoadBalancer.name} is not present in the existing stack, resource will be deployed through V2 stacks`,
+      );
+      v2Components.push({
+        vpcName: vpcItem.name,
+        resourceType: V2StackComponentsList.APPLICATION_LOAD_BALANCER,
+        resourceName: applicationLoadBalancer.name,
+      });
+    }
+  }
+}
+
+/**
+ * Function to get V2 Network Load balancers resources
+ * @param vpcItem {@link VpcConfig} | {@link VpcTemplatesConfig}
+ * @param lzaLookup {@link LZAResourceLookup}
+ * @param v2Components {@link V2NetworkResourceListType}[]
+ */
+function getV2NetworkLoadBalancersResources(
+  vpcItem: VpcConfig | VpcTemplatesConfig,
+  lzaLookup: LZAResourceLookup,
+  v2Components: V2NetworkResourceListType[],
+): void {
+  for (const networkLoadBalancer of vpcItem.loadBalancers?.networkLoadBalancers ?? []) {
+    if (
+      !lzaLookup.resourceExists({
+        resourceType: LZAResourceLookupType.LOAD_BALANCER,
+        lookupValues: { vpcName: vpcItem.name, albName: networkLoadBalancer.name },
+      })
+    ) {
+      logger.info(
+        `VPC ${vpcItem.name} network load balancer ${networkLoadBalancer.name} is not present in the existing stack, resource will be deployed through V2 stacks`,
+      );
+      v2Components.push({
+        vpcName: vpcItem.name,
+        resourceType: V2StackComponentsList.NETWORK_LOAD_BALANCER,
+        resourceName: networkLoadBalancer.name,
+      });
+    }
+  }
+}
+
+/**
+ * Function to get V2 Network Load balancer Role resources
+ * @param vpcItem {@link VpcConfig} | {@link VpcTemplatesConfig}
+ * @param homeRegion string
+ * @param env {@link V2NetworkResourceEnvironmentType}
+ * @param acceleratorPrefix string
+ * @param lzaLookup {@link LZAResourceLookup}
+ * @param v2Components {@link V2NetworkResourceListType}[]
+ */
+function getV2NetworkLoadBalancerRoleResources(
+  vpcItem: VpcConfig | VpcTemplatesConfig,
+  homeRegion: string,
+  env: V2NetworkResourceEnvironmentType,
+  acceleratorPrefix: string,
+  lzaLookup: LZAResourceLookup,
+  v2Components: V2NetworkResourceListType[],
+): void {
+  if (
+    env.region === homeRegion &&
+    vpcItem.loadBalancers?.networkLoadBalancers &&
+    vpcItem.loadBalancers?.networkLoadBalancers.length > 0 &&
+    !lzaLookup.resourceExists({
+      resourceType: LZAResourceLookupType.ROLE,
+      lookupValues: { roleName: `${acceleratorPrefix}-GetNLBIPAddressLookup` },
+    })
+  ) {
+    logger.info(
+      `VPC ${vpcItem.name} network load balancer role is not present in the existing stack, resource will be deployed through V2 stacks`,
+    );
+
+    v2Components.push({
+      vpcName: vpcItem.name,
+      resourceType: V2StackComponentsList.NETWORK_LOAD_BALANCER_ROLE,
+      resourceName: `${acceleratorPrefix}-GetNLBIPAddressLookup|${env.accountId}`,
+    });
+  }
+}
+
+/**
+ * Function to get V2 NACL resources
+ * @param vpcItem {@link VpcConfig} | {@link VpcTemplatesConfig}
+ * @param lzaLookup {@link LZAResourceLookup}
+ * @param accountsConfig {@link AccountsConfig}
+ * @param networkConfig {@link NetworkConfig}
+ * @param env {@link AcceleratorEnvironment}
+ * @param v2Components {@link V2NetworkResourceListType}[]
+ */
+function getV2NetworkAclResources(
+  vpcItem: VpcConfig | VpcTemplatesConfig,
+  lzaLookup: LZAResourceLookup,
+  accountsConfig: AccountsConfig,
+  networkConfig: NetworkConfig,
+  env: V2NetworkResourceEnvironmentType,
+  v2Components: V2NetworkResourceListType[],
+) {
+  for (const naclItem of vpcItem.networkAcls ?? []) {
+    if (
+      !lzaLookup.resourceExists({
+        resourceType: LZAResourceLookupType.NETWORK_ACL,
+        lookupValues: { vpcName: vpcItem.name, naclName: naclItem.name },
+      })
+    ) {
+      logger.info(
+        `VPC ${vpcItem.name} network acl ${naclItem.name} is not present in the existing stack, resource will be deployed through V2 stacks`,
+      );
+      v2Components.push({
+        vpcName: vpcItem.name,
+        resourceType: V2StackComponentsList.NETWORK_ACL,
+        resourceName: naclItem.name,
+      });
+    }
+
+    getV2NetworkAclSubnetAssociationResources(naclItem, vpcItem, lzaLookup, v2Components);
+
+    getV2NetworkAclEntryResources(naclItem, vpcItem, lzaLookup, accountsConfig, networkConfig, env, v2Components);
+  }
+}
+
+/**
+ * Function to get V2 NACL Subnet Association resources
+ * @param naclItem {@link NetworkAclConfig}
+ * @param vpcItem {@link VpcConfig} | {@link VpcTemplatesConfig}
+ * @param lzaLookup {@link LZAResourceLookup}
+ * @param v2Components {@link V2NetworkResourceListType}[]
+ */
+function getV2NetworkAclSubnetAssociationResources(
+  naclItem: NetworkAclConfig,
+  vpcItem: VpcConfig | VpcTemplatesConfig,
+  lzaLookup: LZAResourceLookup,
+  v2Components: V2NetworkResourceListType[],
+) {
+  for (const subnetName of naclItem.subnetAssociations) {
+    if (
+      !lzaLookup.resourceExists({
+        resourceType: LZAResourceLookupType.SUBNET_NETWORK_ACL_ASSOCIATION,
+        lookupValues: { vpcName: vpcItem.name, naclName: naclItem.name, subnetName },
+      })
+    ) {
+      logger.info(
+        `VPC ${vpcItem.name} network acl ${naclItem.name} subnet association ${subnetName} is not present in the existing stack, resource will be deployed through V2 stacks`,
+      );
+      v2Components.push({
+        vpcName: vpcItem.name,
+        resourceType: V2StackComponentsList.NETWORK_ACL_SUBNET_ASSOCIATION,
+        resourceName: `${naclItem.name}|${vpcItem.name}|${subnetName}`,
+      });
+    }
+  }
+}
+
+/**
+ * Function to get V2 NACL Entry resources
+ * @param networkAclItem {@link NetworkAclConfig}
+ * @param vpcItem {@link VpcConfig} | {@link VpcTemplatesConfig}
+ * @param lzaLookup {@link LZAResourceLookup}
+ * @param accountsConfig {@link AccountsConfig}
+ * @param networkConfig {@link NetworkConfig}
+ * @param env {@link AcceleratorEnvironment}
+ * @param v2Components {@link V2NetworkResourceListType}[]
+ */
+function getV2NetworkAclEntryResources(
+  networkAclItem: NetworkAclConfig,
+  vpcItem: VpcConfig | VpcTemplatesConfig,
+  lzaLookup: LZAResourceLookup,
+  accountsConfig: AccountsConfig,
+  networkConfig: NetworkConfig,
+  env: V2NetworkResourceEnvironmentType,
+  v2Components: V2NetworkResourceListType[],
+) {
+  for (const inboundRuleItem of networkAclItem.inboundRules ?? []) {
+    if (
+      !iNetworkAclSourceCrossAccount(inboundRuleItem.source, accountsConfig, networkConfig, env) &&
+      !lzaLookup.resourceExists({
+        resourceType: LZAResourceLookupType.NETWORK_ACL_ENTRY,
+        lookupValues: {
+          vpcName: vpcItem.name,
+          naclName: networkAclItem.name,
+          ruleNumber: inboundRuleItem.rule,
+          type: 'ingress',
+        },
+      })
+    ) {
+      logger.info(
+        `VPC ${vpcItem.name} network acl ${networkAclItem.name} inbound rule ${inboundRuleItem.rule} is not present in the existing stack, resource will be deployed through V2 stacks`,
+      );
+      v2Components.push({
+        vpcName: vpcItem.name,
+        resourceType: V2StackComponentsList.NETWORK_ACL_INBOUND_ENTRY,
+        resourceName: `${networkAclItem.name}|${vpcItem.name}|${inboundRuleItem.rule}|ingressRule`,
+      });
+    }
+  }
+
+  for (const outboundRuleItem of networkAclItem.outboundRules ?? []) {
+    if (
+      !iNetworkAclSourceCrossAccount(outboundRuleItem.destination, accountsConfig, networkConfig, env) &&
+      !lzaLookup.resourceExists({
+        resourceType: LZAResourceLookupType.NETWORK_ACL_ENTRY,
+        lookupValues: {
+          vpcName: vpcItem.name,
+          naclName: networkAclItem.name,
+          ruleNumber: outboundRuleItem.rule,
+          type: 'egress',
+        },
+      })
+    ) {
+      logger.info(
+        `VPC ${vpcItem.name} network acl ${networkAclItem.name} outbound rule ${outboundRuleItem.rule} is not present in the existing stack, resource will be deployed through V2 stacks`,
+      );
+      v2Components.push({
+        vpcName: vpcItem.name,
+        resourceType: V2StackComponentsList.NETWORK_ACL_OUTBOUND_ENTRY,
+        resourceName: `${networkAclItem.name}|${vpcItem.name}|${outboundRuleItem.rule}|egressRule`,
+      });
+    }
+  }
+}
+
+/**
+ * Function to check Network ACL entry source or destination has cross account reference
+ * @param networkAclSubnetSelectionItem {@link NetworkAclSubnetSelection}
+ * @param accountsConfig {@link AccountsConfig}
+ * @param networkConfig {@link NetworkConfig}
+ * @param env {@link AcceleratorEnvironment}
+ * @returns
+ */
+function iNetworkAclSourceCrossAccount(
+  networkAclSubnetSelectionItem: string | NetworkAclSubnetSelection,
+  accountsConfig: AccountsConfig,
+  networkConfig: NetworkConfig,
+  env: V2NetworkResourceEnvironmentType,
+): boolean {
+  if (typeof networkAclSubnetSelectionItem === 'string') {
+    return false;
+  }
+
+  const naclAccount = networkAclSubnetSelectionItem.account
+    ? accountsConfig.getAccountId(networkAclSubnetSelectionItem.account)
+    : env.accountId;
+  const naclRegion = networkAclSubnetSelectionItem.region;
+
+  const crossAccountCondition = naclRegion
+    ? env.accountId !== naclAccount || env.region !== naclRegion
+    : env.accountId !== naclAccount;
+
+  if (crossAccountCondition) {
+    const targetVpcConfig = networkConfig.vpcs.find(vpcItem => vpcItem.name === networkAclSubnetSelectionItem.vpc);
+
+    if (!targetVpcConfig) {
+      logger.error(`Specified VPC ${networkAclSubnetSelectionItem.vpc} not defined in network config.`);
+      throw new Error(
+        `Configuration validation failed at runtime. Specified VPC ${networkAclSubnetSelectionItem.vpc} not defined in network config`,
+      );
+    }
+
+    const subnetItem = targetVpcConfig.subnets?.find(item => item.name === networkAclSubnetSelectionItem.subnet);
+    if (!subnetItem) {
+      logger.error(
+        `Specified subnet ${networkAclSubnetSelectionItem.subnet} not defined for vpc ${targetVpcConfig.name} in network config.`,
+      );
+      throw new Error(
+        `Configuration validation failed at runtime. Specified subnet ${networkAclSubnetSelectionItem.subnet} not defined for vpc ${targetVpcConfig.name} in network config.`,
+      );
+    }
+
+    if (subnetItem.ipamAllocation) {
+      return true;
+    } else {
+      return false;
+    }
+  } else {
+    return false;
   }
 }
 

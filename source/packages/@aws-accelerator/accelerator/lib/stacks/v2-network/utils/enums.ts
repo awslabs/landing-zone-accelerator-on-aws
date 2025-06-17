@@ -41,7 +41,13 @@ export enum V2StackComponentsList {
 
   SUBNET_SHARE = 'subnet-share',
 
-  NACL = 'nacl',
+  NETWORK_ACL = 'network-acl',
+  NETWORK_ACL_SUBNET_ASSOCIATION = 'network-acl-subnet-association',
+  NETWORK_ACL_INBOUND_ENTRY = 'network-acl-inbound-entry',
+  NETWORK_ACL_OUTBOUND_ENTRY = 'network-acl-outbound-entry',
 
-  LOAD_BALANCER = 'load-balancers',
+  GATEWAY_LOAD_BALANCER = 'gateway-load-balancer',
+  APPLICATION_LOAD_BALANCER = 'application-load-balancer',
+  NETWORK_LOAD_BALANCER = 'network-load-balancer',
+  NETWORK_LOAD_BALANCER_ROLE = 'network-load-balancer-role',
 }
