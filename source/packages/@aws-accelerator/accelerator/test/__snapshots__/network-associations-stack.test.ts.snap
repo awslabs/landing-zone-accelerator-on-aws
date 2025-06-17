@@ -9895,7 +9895,11 @@ catch {
       "Metadata": {
         "lzaLookup": {
           "ipProtocol": "-1",
-          "securityGroupName": "Management",
+          "sourceSecurityGroupName": "Management",
+          "targetSecurityGroupName": "Management",
+          "vpcAccount": "444444444444",
+          "vpcName": "Network-Endpoints",
+          "vpcRegion": "us-east-1",
         },
       },
       "Properties": {
@@ -9915,8 +9919,12 @@ catch {
         "lzaLookup": {
           "fromPort": 3389,
           "ipProtocol": "tcp",
-          "securityGroupName": "Management",
+          "sourceSecurityGroupName": "Management",
+          "targetSecurityGroupName": "Management",
           "toPort": 3389,
+          "vpcAccount": "444444444444",
+          "vpcName": "Network-Endpoints",
+          "vpcRegion": "us-east-1",
         },
       },
       "Properties": {
@@ -9938,8 +9946,12 @@ catch {
         "lzaLookup": {
           "fromPort": 22,
           "ipProtocol": "tcp",
-          "securityGroupName": "Management",
+          "sourceSecurityGroupName": "Management",
+          "targetSecurityGroupName": "Management",
           "toPort": 22,
+          "vpcAccount": "444444444444",
+          "vpcName": "Network-Endpoints",
+          "vpcRegion": "us-east-1",
         },
       },
       "Properties": {
@@ -9961,8 +9973,12 @@ catch {
         "lzaLookup": {
           "fromPort": 22,
           "ipProtocol": "udp",
-          "securityGroupName": "Management",
+          "sourceSecurityGroupName": "Management",
+          "targetSecurityGroupName": "Management",
           "toPort": 22,
+          "vpcAccount": "444444444444",
+          "vpcName": "Network-Endpoints",
+          "vpcRegion": "us-east-1",
         },
       },
       "Properties": {

@@ -245,13 +245,29 @@ describe('LZAResourceLookup tests', () => {
     expect(
       lzaLookup.resourceExists({
         resourceType: LZAResourceLookupType.SECURITY_GROUP_INGRESS,
-        lookupValues: { securityGroupName: 'test-sg', ipProtocol: '-1' },
+        lookupValues: {
+          targetSecurityGroupName: 'test-sg',
+          sourceSecurityGroupName: 'test-sg',
+          vpcName: 'test-vpc',
+          vpcAccount: 'test-account',
+          vpcRegion: 'test-region',
+          ipProtocol: '-1',
+        },
       }),
     ).toBeTruthy();
     expect(
       lzaLookup.resourceExists({
         resourceType: LZAResourceLookupType.SECURITY_GROUP_EGRESS,
-        lookupValues: { securityGroupName: 'test-sg', ipProtocol: 'tcp', fromPort: 3389, toPort: 3389 },
+        lookupValues: {
+          targetSecurityGroupName: 'test-sg',
+          sourceSecurityGroupName: 'test-sg',
+          vpcName: 'test-vpc',
+          vpcAccount: 'test-account',
+          vpcRegion: 'test-region',
+          ipProtocol: 'tcp',
+          fromPort: 3389,
+          toPort: 3389,
+        },
       }),
     ).toBeTruthy();
     expect(

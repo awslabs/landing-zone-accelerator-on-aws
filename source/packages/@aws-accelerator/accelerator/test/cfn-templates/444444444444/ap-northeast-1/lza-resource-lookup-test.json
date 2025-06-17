@@ -285,7 +285,11 @@
             },
             "Metadata": {
                 "lzaLookup": {
-                    "securityGroupName": "test-sg",
+                    "sourceSecurityGroupName": "test-sg",
+                    "targetSecurityGroupName": "test-sg",
+                    "vpcName": "test-vpc",
+                    "vpcAccount": "test-account",
+                    "vpcRegion": "test-region",
                     "ipProtocol": "-1"
                 }
             }
@@ -297,7 +301,11 @@
             },
             "Metadata": {
                 "lzaLookup": {
-                    "securityGroupName": "test-sg",
+                    "sourceSecurityGroupName": "test-sg",
+                    "targetSecurityGroupName": "test-sg",
+                    "vpcName": "test-vpc",
+                    "vpcAccount": "test-account",
+                    "vpcRegion": "test-region",
                     "ipProtocol": "tcp",
                     "fromPort": 3389,
                     "toPort": 3389
