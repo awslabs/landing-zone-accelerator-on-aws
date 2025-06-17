@@ -286,7 +286,7 @@
             "Metadata": {
                 "lzaLookup": {
                     "securityGroupName": "test-sg",
-                    "ruleIndex": 0
+                    "ipProtocol": "-1"
                 }
             }
         },
@@ -298,7 +298,9 @@
             "Metadata": {
                 "lzaLookup": {
                     "securityGroupName": "test-sg",
-                    "ruleIndex": 0
+                    "ipProtocol": "tcp",
+                    "fromPort": 3389,
+                    "toPort": 3389
                 }
             }
         },

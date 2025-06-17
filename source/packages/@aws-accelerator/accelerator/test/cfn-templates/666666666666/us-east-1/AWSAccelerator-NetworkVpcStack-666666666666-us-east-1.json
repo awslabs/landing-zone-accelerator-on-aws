@@ -1735,7 +1735,9 @@
    "Metadata": {
     "lzaLookup": {
      "securityGroupName": "Management",
-     "ruleIndex": 0
+     "ipProtocol": "tcp",
+     "fromPort": 3389,
+     "toPort": 3389
     }
    }
   },
@@ -1756,7 +1758,9 @@
    "Metadata": {
     "lzaLookup": {
      "securityGroupName": "Management",
-     "ruleIndex": 1
+     "ipProtocol": "tcp",
+     "fromPort": 22,
+     "toPort": 22
     }
    }
   },
@@ -1777,7 +1781,9 @@
    "Metadata": {
     "lzaLookup": {
      "securityGroupName": "Management",
-     "ruleIndex": 2
+     "ipProtocol": "udp",
+     "fromPort": 22,
+     "toPort": 22
     }
    }
   },
@@ -1796,7 +1802,7 @@
    "Metadata": {
     "lzaLookup": {
      "securityGroupName": "Management",
-     "ruleIndex": 0
+     "ipProtocol": "-1"
     }
    }
   },
