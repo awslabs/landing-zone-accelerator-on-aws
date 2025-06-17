@@ -2888,7 +2888,11 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
       "Metadata": {
         "lzaLookup": {
           "ipProtocol": "-1",
-          "securityGroupName": "Management",
+          "sourceSecurityGroupName": "Management",
+          "targetSecurityGroupName": "Management",
+          "vpcAccount": "555555555555",
+          "vpcName": "Network-Endpoints",
+          "vpcRegion": "us-east-1",
         },
       },
       "Properties": {
@@ -2908,8 +2912,12 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
         "lzaLookup": {
           "fromPort": 3389,
           "ipProtocol": "tcp",
-          "securityGroupName": "Management",
+          "sourceSecurityGroupName": "Management",
+          "targetSecurityGroupName": "Management",
           "toPort": 3389,
+          "vpcAccount": "555555555555",
+          "vpcName": "Network-Endpoints",
+          "vpcRegion": "us-east-1",
         },
       },
       "Properties": {
@@ -2931,8 +2939,12 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
         "lzaLookup": {
           "fromPort": 22,
           "ipProtocol": "tcp",
-          "securityGroupName": "Management",
+          "sourceSecurityGroupName": "Management",
+          "targetSecurityGroupName": "Management",
           "toPort": 22,
+          "vpcAccount": "555555555555",
+          "vpcName": "Network-Endpoints",
+          "vpcRegion": "us-east-1",
         },
       },
       "Properties": {
@@ -2954,8 +2966,12 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
         "lzaLookup": {
           "fromPort": 22,
           "ipProtocol": "udp",
-          "securityGroupName": "Management",
+          "sourceSecurityGroupName": "Management",
+          "targetSecurityGroupName": "Management",
           "toPort": 22,
+          "vpcAccount": "555555555555",
+          "vpcName": "Network-Endpoints",
+          "vpcRegion": "us-east-1",
         },
       },
       "Properties": {

@@ -442,16 +442,19 @@ export class LZAResourceLookup {
   }
 
   private securityGroupRulesExists(resourceProperties: LookupProperties): boolean {
-    if (resourceProperties.lookupValues['ipProtocol'] === '-1') {
-      return this.resourceWithMetadataExists(resourceProperties, ['securityGroupName', 'ipProtocol']);
+    const requiredKeys = [
+      'targetSecurityGroupName',
+      'sourceSecurityGroupName',
+      'vpcName',
+      'vpcAccount',
+      'vpcRegion',
+      'ipProtocol',
+    ];
+    if (resourceProperties.lookupValues['ipProtocol'] !== '-1') {
+      requiredKeys.push('fromPort', 'toPort');
     }
 
-    return this.resourceWithMetadataExists(resourceProperties, [
-      'securityGroupName',
-      'ipProtocol',
-      'fromPort',
-      'toPort',
-    ]);
+    return this.resourceWithMetadataExists(resourceProperties, requiredKeys);
   }
 
   private loadBalancerExists(resourceProperties: LookupProperties): boolean {

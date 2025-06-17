@@ -952,47 +952,90 @@ export abstract class NetworkStack extends AcceleratorStack {
         securityGroupMap,
       );
 
+      const baseMetadata = {
+        vpcName: vpcItem.name,
+        sourceSecurityGroupName: securityGroupItem.name,
+        account: this.account,
+        region: this.region,
+      };
+
       // Create ingress rules
       ingressRules
-        .filter(rule => this.securityGroupRuleResourceExists(LZAResourceLookupType.SECURITY_GROUP_INGRESS, rule.rule))
+        .filter(rule =>
+          this.securityGroupRuleResourceExists(LZAResourceLookupType.SECURITY_GROUP_INGRESS, {
+            rule: rule.rule,
+            ...baseMetadata,
+          }),
+        )
         .forEach(ingressRule => {
           const rule = securityGroup.addIngressRule(ingressRule.logicalId, {
             sourceSecurityGroup: ingressRule.rule.targetSecurityGroup,
             ...ingressRule.rule,
           });
-          this.addMetadataToSecurityGroupRule(rule, ingressRule.rule);
+          this.addMetadataToSecurityGroupRule(rule, { rule: ingressRule.rule, ...baseMetadata });
         });
 
       // Create egress rules
       egressRules
-        .filter(rule => this.securityGroupRuleResourceExists(LZAResourceLookupType.SECURITY_GROUP_EGRESS, rule.rule))
+        .filter(rule =>
+          this.securityGroupRuleResourceExists(LZAResourceLookupType.SECURITY_GROUP_EGRESS, {
+            rule: rule.rule,
+            ...baseMetadata,
+          }),
+        )
         .forEach(egressRule => {
           const rule = securityGroup.addEgressRule(egressRule.logicalId, {
             destinationSecurityGroup: egressRule.rule.targetSecurityGroup,
             ...egressRule.rule,
           });
-          this.addMetadataToSecurityGroupRule(rule, egressRule.rule);
+          this.addMetadataToSecurityGroupRule(rule, { rule: egressRule.rule, ...baseMetadata });
         });
     }
   }
 
-  private addMetadataToSecurityGroupRule(resource: cdk.CfnResource, props: SecurityGroupRuleProps) {
+  private addMetadataToSecurityGroupRule(
+    resource: cdk.CfnResource,
+    props: {
+      rule: SecurityGroupRuleProps;
+      vpcName: string;
+      sourceSecurityGroupName: string;
+      account: string;
+      region: string;
+    },
+  ) {
     resource.addMetadata(MetadataKeys.LZA_LOOKUP, {
-      securityGroupName: props.targetSecurityGroup?.securityGroupName,
-      ipProtocol: props.ipProtocol,
-      fromPort: props.fromPort,
-      toPort: props.toPort,
+      targetSecurityGroupName: props.rule.targetSecurityGroup?.securityGroupName,
+      sourceSecurityGroupName: props.sourceSecurityGroupName,
+      vpcName: props.vpcName,
+      vpcAccount: props.account,
+      vpcRegion: props.region,
+      ipProtocol: props.rule.ipProtocol,
+      fromPort: props.rule.fromPort,
+      toPort: props.rule.toPort,
     });
   }
 
-  private securityGroupRuleResourceExists(type: LZAResourceLookupType, props: SecurityGroupRuleProps): boolean {
+  private securityGroupRuleResourceExists(
+    type: LZAResourceLookupType,
+    props: {
+      rule: SecurityGroupRuleProps;
+      vpcName: string;
+      sourceSecurityGroupName: string;
+      account: string;
+      region: string;
+    },
+  ): boolean {
     return this.lzaLookup.resourceExists({
       resourceType: type,
       lookupValues: {
-        securityGroupName: props.targetSecurityGroup?.securityGroupName,
-        ipProtocol: props.ipProtocol,
-        fromPort: props.fromPort,
-        toPort: props.toPort,
+        targetSecurityGroupName: props.rule.targetSecurityGroup?.securityGroupName,
+        sourceSecurityGroupName: props.sourceSecurityGroupName,
+        vpcName: props.vpcName,
+        vpcAccount: props.account,
+        vpcRegion: props.region,
+        ipProtocol: props.rule.ipProtocol,
+        fromPort: props.rule.fromPort,
+        toPort: props.rule.toPort,
       },
     });
   }
