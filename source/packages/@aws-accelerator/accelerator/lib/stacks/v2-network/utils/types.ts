@@ -26,6 +26,10 @@ import {
   VpcTemplatesConfig,
 } from '@aws-accelerator/config/lib/network-config';
 import { AcceleratorStackProps } from '../../accelerator-stack';
+import {
+  SecurityGroupEgressRuleProps,
+  SecurityGroupIngressRuleProps,
+} from '@aws-accelerator/constructs/lib/aws-ec2/vpc';
 
 /**
  * V2 network stack properties
@@ -97,3 +101,30 @@ export type IpamCidrsMapType = { [key: string]: number };
  * V2 Network resource environment type
  */
 export type V2NetworkResourceEnvironmentType = { accountId: string; region: string; stackName: string };
+
+/**
+ * Security Group Source Details Type
+ */
+export type SecurityGroupSourceDetailsType = {
+  cidrIp?: string;
+  cidrIpv6?: string;
+  sourcePrefixListId?: string;
+  sourceSecurityGroupId?: string;
+  destinationPrefixListId?: string;
+  destinationSecurityGroupName?: string;
+  destinationSecurityGroupId?: string;
+};
+
+/**
+ * V2 Security group Ingress rule props
+ */
+export interface V2SecurityGroupIngressRuleProps extends SecurityGroupIngressRuleProps {
+  destinationSecurityGroupName?: string;
+}
+
+/**
+ * V2 Security group Egress rule props
+ */
+export interface V2SecurityGroupEgressRuleProps extends SecurityGroupEgressRuleProps {
+  destinationSecurityGroupName?: string;
+}

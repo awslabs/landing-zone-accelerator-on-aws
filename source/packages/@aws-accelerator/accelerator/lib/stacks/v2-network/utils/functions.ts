@@ -29,6 +29,9 @@ import {
   VpcIpv6Config,
   NetworkAclConfig,
   NetworkAclSubnetSelection,
+  SecurityGroupSourceConfig,
+  SecurityGroupRuleConfig,
+  SecurityGroupConfig,
 } from '@aws-accelerator/config/lib/network-config';
 import { isNetworkType } from '@aws-accelerator/config/lib/common/parse';
 import { Region } from '@aws-accelerator/config/lib/common/types';
@@ -47,9 +50,11 @@ import {
   LZAResourceLookupType,
 } from '@aws-accelerator/accelerator/utils/lza-resource-lookup';
 import { GlobalConfig } from '@aws-accelerator/config/lib/global-config';
-import { V2StackComponentsList } from './enums';
+import { SecurityGroupRules, V2StackComponentsList } from './enums';
 import { isIpv4 } from '../../network-stacks/utils/validation-utils';
 import { NetworkVpcStackRouteEntryTypes } from './constants';
+import { TCP_PROTOCOLS_PORT } from '../../network-stacks/utils/security-group-utils';
+import { SecurityGroupRuleType } from '@aws-accelerator/config/lib/models/network-config';
 
 const logger = createLogger([path.parse(path.basename(__filename)).name]);
 
@@ -194,7 +199,9 @@ function getV2NetworkResources(
       v2Components,
     );
 
-    getV2NetworkAclResources(vpcItem, lzaLookup, accountsConfig, networkConfig, env, v2Components);
+    getV2NetworkAclResources(vpcItem, env, accountsConfig, networkConfig, lzaLookup, v2Components);
+
+    getV2SecurityGroupResources(vpcItem, env, lzaLookup, v2Components);
   }
 
   return v2Components;
@@ -1142,18 +1149,18 @@ function getV2NetworkLoadBalancerRoleResources(
 /**
  * Function to get V2 NACL resources
  * @param vpcItem {@link VpcConfig} | {@link VpcTemplatesConfig}
- * @param lzaLookup {@link LZAResourceLookup}
+ * @param env {@link AcceleratorEnvironment}
  * @param accountsConfig {@link AccountsConfig}
  * @param networkConfig {@link NetworkConfig}
- * @param env {@link AcceleratorEnvironment}
+ * @param lzaLookup {@link LZAResourceLookup}
  * @param v2Components {@link V2NetworkResourceListType}[]
  */
 function getV2NetworkAclResources(
   vpcItem: VpcConfig | VpcTemplatesConfig,
-  lzaLookup: LZAResourceLookup,
+  env: V2NetworkResourceEnvironmentType,
   accountsConfig: AccountsConfig,
   networkConfig: NetworkConfig,
-  env: V2NetworkResourceEnvironmentType,
+  lzaLookup: LZAResourceLookup,
   v2Components: V2NetworkResourceListType[],
 ) {
   for (const naclItem of vpcItem.networkAcls ?? []) {
@@ -1277,6 +1284,155 @@ function getV2NetworkAclEntryResources(
       });
     }
   }
+}
+
+/**
+ * Function to get V2 Security Group resources
+ * @param vpcItem {@link VpcConfig} | {@link VpcTemplatesConfig}
+ * @param env {@link AcceleratorEnvironment}
+ * @param lzaLookup {@link LZAResourceLookup}
+ * @param v2Components {@link V2NetworkResourceListType}[]
+ */
+function getV2SecurityGroupResources(
+  vpcItem: VpcConfig | VpcTemplatesConfig,
+  env: V2NetworkResourceEnvironmentType,
+  lzaLookup: LZAResourceLookup,
+  v2Components: V2NetworkResourceListType[],
+) {
+  for (const securityGroupItem of vpcItem.securityGroups ?? []) {
+    if (
+      !lzaLookup.resourceExists({
+        resourceType: LZAResourceLookupType.SECURITY_GROUP,
+        lookupValues: { vpcName: vpcItem.name, securityGroupName: securityGroupItem.name },
+      })
+    ) {
+      logger.info(
+        `VPC ${vpcItem.name} security group ${securityGroupItem.name} is not present in the existing stack, resource will be deployed through V2 stacks`,
+      );
+      v2Components.push({
+        vpcName: vpcItem.name,
+        resourceType: V2StackComponentsList.SECURITY_GROUP,
+        resourceName: securityGroupItem.name,
+      });
+    }
+
+    for (const inboundRuleItem of securityGroupItem.inboundRules ?? []) {
+      getV2SecurityGroupRuleResources(
+        vpcItem,
+        securityGroupItem,
+        inboundRuleItem,
+        env,
+        SecurityGroupRules.INGRESS,
+        lzaLookup,
+        v2Components,
+      );
+    }
+
+    for (const outboundRuleItem of securityGroupItem.outboundRules ?? []) {
+      getV2SecurityGroupRuleResources(
+        vpcItem,
+        securityGroupItem,
+        outboundRuleItem,
+        env,
+        SecurityGroupRules.EGRESS,
+        lzaLookup,
+        v2Components,
+      );
+    }
+  }
+}
+
+/**
+ * Function to get V2 Security Group Inbound and Outbound Rule resources
+ * @param vpcItem {@link VpcConfig} | {@link VpcTemplatesConfig}
+ * @param securityGroupItem {@link SecurityGroupConfig}
+ * @param ruleConfigItem {@link SecurityGroupRuleConfig}
+ * @param env {@link AcceleratorEnvironment}
+ * @param lzaLookup {@link LZAResourceLookup}
+ * @param v2Components {@link V2NetworkResourceListType}[]
+ */
+function getV2SecurityGroupRuleResources(
+  vpcItem: VpcConfig | VpcTemplatesConfig,
+  securityGroupItem: SecurityGroupConfig,
+  ruleConfigItem: SecurityGroupRuleConfig,
+  env: V2NetworkResourceEnvironmentType,
+  ruleType: SecurityGroupRules,
+  lzaLookup: LZAResourceLookup,
+  v2Components: V2NetworkResourceListType[],
+) {
+  for (const source of ruleConfigItem.sources ?? []) {
+    if (isNetworkType<SecurityGroupSourceConfig>('ISecurityGroupSourceConfig', source)) {
+      const securityGroupSourceLookupValues = getSecurityGroupSourceLookupValues(
+        vpcItem,
+        securityGroupItem,
+        source,
+        ruleConfigItem.types ?? [],
+        env,
+      );
+
+      for (const securityGroupSourceLookupValue of securityGroupSourceLookupValues) {
+        if (
+          !lzaLookup.resourceExists({
+            resourceType:
+              ruleType === SecurityGroupRules.INGRESS
+                ? LZAResourceLookupType.SECURITY_GROUP_INGRESS
+                : LZAResourceLookupType.SECURITY_GROUP_EGRESS,
+            lookupValues: securityGroupSourceLookupValue,
+          })
+        ) {
+          logger.info(
+            `VPC ${vpcItem.name} security group ${securityGroupItem.name} inbound rule with target security group ${securityGroupSourceLookupValue['targetSecurityGroupName']} is not present in the existing stack, resource will be deployed through V2 stacks`,
+          );
+          v2Components.push({
+            vpcName: vpcItem.name,
+            resourceType:
+              ruleType === SecurityGroupRules.INGRESS
+                ? V2StackComponentsList.SECURITY_GROUP_INBOUND_RULE
+                : V2StackComponentsList.SECURITY_GROUP_OUTBOUND_RULE,
+            resourceName: `${env.accountId}|${env.region}|${vpcItem.name}|${securityGroupItem.name}|${securityGroupSourceLookupValue['targetSecurityGroupName']}|${securityGroupSourceLookupValue['ipProtocol']}|${securityGroupSourceLookupValue['fromPort']}|${securityGroupSourceLookupValue['toPort']}`,
+          });
+        }
+      }
+    }
+  }
+}
+
+/**
+ * Function to get Security Group Source Lookup Values
+ * @param vpcItem {@link VpcConfig} | {@link VpcTemplatesConfig}
+ * @param securityGroupItem {@link SecurityGroupConfig}
+ * @param source {@link SecurityGroupSourceConfig}
+ * @param types {@link SecurityGroupRuleType}[]
+ * @param env {@link AcceleratorEnvironment}
+ * @returns
+ */
+function getSecurityGroupSourceLookupValues(
+  vpcItem: VpcConfig | VpcTemplatesConfig,
+  securityGroupItem: SecurityGroupConfig,
+  source: SecurityGroupSourceConfig,
+  types: SecurityGroupRuleType[],
+  env: V2NetworkResourceEnvironmentType,
+): LookupValues[] {
+  const lookupValues: LookupValues[] = [];
+  for (const targetSecurityGroup of source.securityGroups) {
+    for (const type of types) {
+      let ipProtocol = cdk.aws_ec2.Protocol.TCP;
+      if (type === 'ALL') {
+        ipProtocol = cdk.aws_ec2.Protocol.ALL;
+      }
+      lookupValues.push({
+        vpcName: vpcItem.name,
+        vpcAccount: env.accountId,
+        vpcRegion: env.region,
+        sourceSecurityGroupName: securityGroupItem.name,
+        targetSecurityGroupName: targetSecurityGroup,
+        ipProtocol: ipProtocol,
+        fromPort: TCP_PROTOCOLS_PORT[type],
+        toPort: TCP_PROTOCOLS_PORT[type],
+      });
+    }
+  }
+  return lookupValues;
 }
 
 /**
