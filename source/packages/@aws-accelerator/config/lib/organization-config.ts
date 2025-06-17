@@ -203,7 +203,7 @@ export class OrganizationConfig implements i.IOrganizationConfig {
     } else if (this.organizationalUnitIds?.length === 0 && loadFromDynamoDbTable) {
       logger.debug(`Orgs is enabled, solution will query from dynamoDB table instead of AWS Organizations API`);
       if (!process.env['ACCELERATOR_SSM_PARAM_NAME_PREFIX']) {
-        logger.error('ACCELERATOR_SSM_PARAM_NAME_PREFIX environment variable not set using /accelerator');
+        logger.warn('ACCELERATOR_SSM_PARAM_NAME_PREFIX environment variable not set using /accelerator');
       }
       const ssmConfigTableNameParameter = `${
         process.env['ACCELERATOR_SSM_PARAM_NAME_PREFIX'] ?? '/accelerator'
