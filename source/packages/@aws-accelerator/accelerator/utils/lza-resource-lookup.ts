@@ -70,8 +70,6 @@ const RESOURCE_REQUIRED_KEYS: { [key in LZAResourceLookupType]?: string[] } = {
   [LZAResourceLookupType.ROLE]: ['roleName'],
   [LZAResourceLookupType.SUBNET_SHARE]: ['vpcName', 'subnetName'],
   [LZAResourceLookupType.SECURITY_GROUP]: ['vpcName', 'securityGroupName'],
-  [LZAResourceLookupType.SECURITY_GROUP_INGRESS]: ['securityGroupName', 'ruleIndex'],
-  [LZAResourceLookupType.SECURITY_GROUP_EGRESS]: ['securityGroupName', 'ruleIndex'],
   [LZAResourceLookupType.NETWORK_ACL]: ['vpcName', 'naclName'],
   [LZAResourceLookupType.NETWORK_ACL_ENTRY]: ['vpcName', 'naclName', 'ruleNumber', 'type'],
   [LZAResourceLookupType.SUBNET_NETWORK_ACL_ASSOCIATION]: ['vpcName', 'naclName', 'subnetName'],
@@ -155,8 +153,6 @@ export class LZAResourceLookup {
       case LZAResourceLookupType.ROLE:
       case LZAResourceLookupType.SUBNET_SHARE:
       case LZAResourceLookupType.SECURITY_GROUP:
-      case LZAResourceLookupType.SECURITY_GROUP_INGRESS:
-      case LZAResourceLookupType.SECURITY_GROUP_EGRESS:
       case LZAResourceLookupType.NETWORK_ACL:
       case LZAResourceLookupType.NETWORK_ACL_ENTRY:
       case LZAResourceLookupType.SUBNET_NETWORK_ACL_ASSOCIATION:
@@ -169,6 +165,13 @@ export class LZAResourceLookup {
 
       case LZAResourceLookupType.VPN_CONNECTION:
         return this.vpnConnectionExists(resourceProperties);
+
+      case LZAResourceLookupType.SECURITY_GROUP_INGRESS:
+      case LZAResourceLookupType.SECURITY_GROUP_EGRESS:
+        resourceProperties.lookupValues = Object.fromEntries(
+          Object.entries(resourceProperties.lookupValues).filter(([, v]) => v !== undefined),
+        );
+        return this.securityGroupRulesExists(resourceProperties);
 
       default:
         return false;
@@ -436,6 +439,19 @@ export class LZAResourceLookup {
     );
 
     return cfnResourceExists || customResourceExists;
+  }
+
+  private securityGroupRulesExists(resourceProperties: LookupProperties): boolean {
+    if (resourceProperties.lookupValues['ipProtocol'] === '-1') {
+      return this.resourceWithMetadataExists(resourceProperties, ['securityGroupName', 'ipProtocol']);
+    }
+
+    return this.resourceWithMetadataExists(resourceProperties, [
+      'securityGroupName',
+      'ipProtocol',
+      'fromPort',
+      'toPort',
+    ]);
   }
 
   private loadBalancerExists(resourceProperties: LookupProperties): boolean {
