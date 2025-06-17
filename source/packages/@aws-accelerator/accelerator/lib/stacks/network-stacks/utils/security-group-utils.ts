@@ -38,7 +38,7 @@ import { isIpv6Cidr } from './validation-utils';
 /**
  * Security group rule properties
  */
-interface SecurityGroupRuleProps {
+export interface SecurityGroupRuleProps {
   ipProtocol: string;
   cidrIp?: string;
   cidrIpv6?: string;

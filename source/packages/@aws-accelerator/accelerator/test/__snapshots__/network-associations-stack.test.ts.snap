@@ -9894,7 +9894,7 @@ catch {
     "NetworkEndpointsVpcManagementSgManagementEgress00D58058BF": {
       "Metadata": {
         "lzaLookup": {
-          "ruleIndex": 0,
+          "ipProtocol": "-1",
           "securityGroupName": "Management",
         },
       },
@@ -9913,8 +9913,10 @@ catch {
     "NetworkEndpointsVpcManagementSgManagementIngress008FD972B5": {
       "Metadata": {
         "lzaLookup": {
-          "ruleIndex": 0,
+          "fromPort": 3389,
+          "ipProtocol": "tcp",
           "securityGroupName": "Management",
+          "toPort": 3389,
         },
       },
       "Properties": {
@@ -9934,8 +9936,10 @@ catch {
     "NetworkEndpointsVpcManagementSgManagementIngress105119E927": {
       "Metadata": {
         "lzaLookup": {
-          "ruleIndex": 1,
+          "fromPort": 22,
+          "ipProtocol": "tcp",
           "securityGroupName": "Management",
+          "toPort": 22,
         },
       },
       "Properties": {
@@ -9955,8 +9959,10 @@ catch {
     "NetworkEndpointsVpcManagementSgManagementIngress1135D6C2DD": {
       "Metadata": {
         "lzaLookup": {
-          "ruleIndex": 2,
+          "fromPort": 22,
+          "ipProtocol": "udp",
           "securityGroupName": "Management",
+          "toPort": 22,
         },
       },
       "Properties": {

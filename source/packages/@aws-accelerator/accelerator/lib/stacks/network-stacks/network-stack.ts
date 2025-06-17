@@ -72,6 +72,7 @@ import {
   processSecurityGroupIngressRules,
   processSecurityGroupSgEgressSources,
   processSecurityGroupSgIngressSources,
+  SecurityGroupRuleProps,
 } from './utils/security-group-utils';
 import { hasAdvancedVpnOptions, isIpv4 } from './utils/validation-utils';
 import { isArn } from '@aws-accelerator/utils/lib/is-arn';
@@ -952,43 +953,48 @@ export abstract class NetworkStack extends AcceleratorStack {
       );
 
       // Create ingress rules
-      ingressRules.forEach((ingressRule, index) => {
-        if (
-          this.lzaLookup.resourceExists({
-            resourceType: LZAResourceLookupType.SECURITY_GROUP_INGRESS,
-            lookupValues: { securityGroupName: securityGroupItem.name, ruleIndex: index },
-          })
-        ) {
+      ingressRules
+        .filter(rule => this.securityGroupRuleResourceExists(LZAResourceLookupType.SECURITY_GROUP_INGRESS, rule.rule))
+        .forEach(ingressRule => {
           const rule = securityGroup.addIngressRule(ingressRule.logicalId, {
             sourceSecurityGroup: ingressRule.rule.targetSecurityGroup,
             ...ingressRule.rule,
           });
-          rule.addMetadata(MetadataKeys.LZA_LOOKUP, {
-            securityGroupName: securityGroupItem.name,
-            ruleIndex: index,
-          });
-        }
-      });
+          this.addMetadataToSecurityGroupRule(rule, ingressRule.rule);
+        });
 
       // Create egress rules
-      egressRules.forEach((egressRule, index) => {
-        if (
-          this.lzaLookup.resourceExists({
-            resourceType: LZAResourceLookupType.SECURITY_GROUP_EGRESS,
-            lookupValues: { securityGroupName: securityGroupItem.name, ruleIndex: index },
-          })
-        ) {
+      egressRules
+        .filter(rule => this.securityGroupRuleResourceExists(LZAResourceLookupType.SECURITY_GROUP_EGRESS, rule.rule))
+        .forEach(egressRule => {
           const rule = securityGroup.addEgressRule(egressRule.logicalId, {
             destinationSecurityGroup: egressRule.rule.targetSecurityGroup,
             ...egressRule.rule,
           });
-          rule.addMetadata(MetadataKeys.LZA_LOOKUP, {
-            securityGroupName: securityGroupItem.name,
-            ruleIndex: index,
-          });
-        }
-      });
+          this.addMetadataToSecurityGroupRule(rule, egressRule.rule);
+        });
     }
+  }
+
+  private addMetadataToSecurityGroupRule(resource: cdk.CfnResource, props: SecurityGroupRuleProps) {
+    resource.addMetadata(MetadataKeys.LZA_LOOKUP, {
+      securityGroupName: props.targetSecurityGroup?.securityGroupName,
+      ipProtocol: props.ipProtocol,
+      fromPort: props.fromPort,
+      toPort: props.toPort,
+    });
+  }
+
+  private securityGroupRuleResourceExists(type: LZAResourceLookupType, props: SecurityGroupRuleProps): boolean {
+    return this.lzaLookup.resourceExists({
+      resourceType: type,
+      lookupValues: {
+        securityGroupName: props.targetSecurityGroup?.securityGroupName,
+        ipProtocol: props.ipProtocol,
+        fromPort: props.fromPort,
+        toPort: props.toPort,
+      },
+    });
   }
 
   /**

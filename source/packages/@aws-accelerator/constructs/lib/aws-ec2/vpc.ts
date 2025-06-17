@@ -470,6 +470,7 @@ export class ImportedSecurityGroup extends SecurityGroupBase {
 
 export class SecurityGroup extends SecurityGroupBase {
   public readonly securityGroupId: string;
+  public readonly securityGroupName?: string | undefined;
 
   constructor(scope: Construct, id: string, props: SecurityGroupProps) {
     super(scope, id);
@@ -488,6 +489,7 @@ export class SecurityGroup extends SecurityGroupBase {
     });
 
     if (props.securityGroupName) {
+      this.securityGroupName = props.securityGroupName;
       cdk.Tags.of(securityGroup).add('Name', props.securityGroupName);
     }
 
