@@ -12,8 +12,9 @@
 ### Co-authors
 <!--Please add the names of any engineers that co-authored this MR (eg. pair programmers) N/A if the MR has no co-authors. -->
 
-### Do any IAM policies include wildcards? If yes, why is this required?
-<!-- Ensure all identity policies, resource policies, and trust policies are as strict as possible. -->
+### Does this change impact the security posture of the environment? If yes, please explain the implications of the change.
+<!-- Please add the `SecurityAppSec` label to the merge request if so to ensure changes are vetted by AppSec. -->
+<!-- For more information, please see this page: https://w.amazon.com/bin/view/AWS_IT_Security/Security_Reviews/Security_Review_Criteria#HChangestoanExistingService -->
 
 ### Are there any new / changed configuration objects? If yes, please include examples, pathing and a description (PE Review needed)
 <!-- Include examples, pathing, and a description to any new configuration objects. Example found [here](https://awslabs.github.io/landing-zone-accelerator-on-aws/latest/typedocs/latest/interfaces/___packages__aws_accelerator_config_lib_models_network_config.IGwlbConfig.html) -->
