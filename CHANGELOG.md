@@ -53,6 +53,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - chore(constructs): directconnect constructs update sdk v3
 - chore(bootstrap): added termination protection for CDKToolkit stack
 - chore(docs): adding securityhub findings info for kinesis.3
+- chore(docs): update cloudwatch log group retention setting documentation
 
 ## [1.12.0] - 2025-04-02
 
