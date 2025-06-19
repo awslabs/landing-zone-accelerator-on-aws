@@ -2413,6 +2413,17 @@ export interface IGlobalConfig {
    * Additionally, this retention setting will be applied to any CloudWatch log groups that already exist
    * in the target environment if the log group's retention setting is LOWER than this configured value.
    *
+   * Scenario 1: If you have a `cloudwatchLogRetentionInDays` setting of 365 days, and create a new CloudWatch Log Group with a 545-day retention setting,
+   * the LZA solution will update the CloudWatch Log Group to 365 days.
+   *
+   * Scenario 2: The global `cloudwatchLogRetentionInDays` is set to 365 days and has an existing CloudWatch Log Group that has a retention of 545 days. When
+   * the LZA solution runs, the CloudWatch Log Group in question will be evaluated and skipped given that the retention setting (545 days in this example) is
+   * higher than the global `cloudwatchLogRetentionInDays` setting.
+   *
+   * Scenario 3: The global `cloudwatchLogRetentionInDays` is set to 365 days and has an existing CloudWatch Log Group that has a retention of 30 days. When
+   * the LZA solution runs, the CloudWatch Log Group in question will be evaluated and updated given that the retention setting (30 days in this example) is
+   * lower than the global `cloudwatchLogRetentionInDays` setting.
+   *
    */
   readonly cloudwatchLogRetentionInDays: number;
   /**
