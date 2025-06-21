@@ -109,7 +109,7 @@ export enum AcceleratorV2Stacks {
   SUBNETS_STACK = 'SubnetsStack',
   SUBNETS_SHARE_STACK = 'SubnetsShareStack',
   NACLS_STACK = 'NaclsStack',
-  LBS_STACK = 'LoadBalancersStack',
+  LB_STACK = 'LoadBalancersStack',
 }
 
 /**
@@ -147,7 +147,7 @@ export const AcceleratorStackNames: Record<string, string> = {
   [AcceleratorV2Stacks.SUBNETS_STACK]: `${stackPrefix}-SubnetsStack`,
   [AcceleratorV2Stacks.SUBNETS_SHARE_STACK]: `${stackPrefix}-SubnetsShareStack`,
   [AcceleratorV2Stacks.NACLS_STACK]: `${stackPrefix}-NaclsStack`,
-  [AcceleratorV2Stacks.LBS_STACK]: `${stackPrefix}-LoadBalancersStack`,
+  [AcceleratorV2Stacks.LB_STACK]: `${stackPrefix}-LoadBalancersStack`,
 };
 
 /**

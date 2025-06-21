@@ -1,0 +1,2780 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`NetworkVpcV2Stacks Construct(LbStack-Network-us-east-1-Network-Secondary):  Snapshot Test 1`] = `
+{
+  "Parameters": {
+    "SsmParameterValueacceleratornetworkvpcNetworkSecondaryidC96584B6F00A464EAD1953AFF4B05118Parameter": {
+      "Default": "/accelerator/network/vpc/Network-Secondary/id",
+      "Type": "AWS::SSM::Parameter::Value<String>",
+    },
+  },
+  "Resources": {
+    "SsmParamAcceleratorVersionFF83282D": {
+      "Properties": {
+        "Name": "/accelerator/AWSAccelerator-LoadBalancersStack-Network-Secondary-555555555555-us-east-1/version",
+        "Type": "String",
+        "Value": "1.12.0",
+      },
+      "Type": "AWS::SSM::Parameter",
+    },
+    "SsmParamStackId521A78D3": {
+      "Properties": {
+        "Name": "/accelerator/AWSAccelerator-LoadBalancersStack-Network-Secondary-555555555555-us-east-1/stack-id",
+        "Type": "String",
+        "Value": {
+          "Ref": "AWS::StackId",
+        },
+      },
+      "Type": "AWS::SSM::Parameter",
+    },
+  },
+}
+`;
+
+exports[`NetworkVpcV2Stacks Construct(LbStack-Network-us-east-1-Network-Secondary-V2):  Snapshot Test 1`] = `
+{
+  "Parameters": {
+    "SsmParameterValueacceleratornetworkvpcNetworkSecondaryV2idC96584B6F00A464EAD1953AFF4B05118Parameter": {
+      "Default": "/accelerator/network/vpc/Network-Secondary-V2/id",
+      "Type": "AWS::SSM::Parameter::Value<String>",
+    },
+  },
+  "Resources": {
+    "SsmParamAcceleratorVersionFF83282D": {
+      "Properties": {
+        "Name": "/accelerator/AWSAccelerator-LoadBalancersStack-Network-Secondary-V2-555555555555-us-east-1/version",
+        "Type": "String",
+        "Value": "1.12.0",
+      },
+      "Type": "AWS::SSM::Parameter",
+    },
+    "SsmParamStackId521A78D3": {
+      "Properties": {
+        "Name": "/accelerator/AWSAccelerator-LoadBalancersStack-Network-Secondary-V2-555555555555-us-east-1/stack-id",
+        "Type": "String",
+        "Value": {
+          "Ref": "AWS::StackId",
+        },
+      },
+      "Type": "AWS::SSM::Parameter",
+    },
+  },
+}
+`;
+
+exports[`NetworkVpcV2Stacks Construct(NackStack-Network-us-east-1-Network-Secondary):  Snapshot Test 1`] = `
+{
+  "Parameters": {
+    "SsmParameterValueacceleratornetworkvpcNetworkSecondaryidC96584B6F00A464EAD1953AFF4B05118Parameter": {
+      "Default": "/accelerator/network/vpc/Network-Secondary/id",
+      "Type": "AWS::SSM::Parameter::Value<String>",
+    },
+    "SsmParameterValueacceleratornetworkvpcNetworkSecondarynetworkAclTestNaclidC96584B6F00A464EAD1953AFF4B05118Parameter": {
+      "Default": "/accelerator/network/vpc/Network-Secondary/networkAcl/TestNacl/id",
+      "Type": "AWS::SSM::Parameter::Value<String>",
+    },
+    "SsmParameterValueacceleratornetworkvpcNetworkSecondarysubnetNetworkSecondaryAidC96584B6F00A464EAD1953AFF4B05118Parameter": {
+      "Default": "/accelerator/network/vpc/Network-Secondary/subnet/Network-Secondary-A/id",
+      "Type": "AWS::SSM::Parameter::Value<String>",
+    },
+    "SsmParameterValueacceleratornetworkvpcNetworkSecondarysubnetNetworkSecondaryBidC96584B6F00A464EAD1953AFF4B05118Parameter": {
+      "Default": "/accelerator/network/vpc/Network-Secondary/subnet/Network-Secondary-B/id",
+      "Type": "AWS::SSM::Parameter::Value<String>",
+    },
+    "SsmParameterValueacceleratornetworkvpcNetworkSecondarysubnetNetworkSecondaryCidC96584B6F00A464EAD1953AFF4B05118Parameter": {
+      "Default": "/accelerator/network/vpc/Network-Secondary/subnet/Network-Secondary-C/id",
+      "Type": "AWS::SSM::Parameter::Value<String>",
+    },
+    "SsmParameterValueacceleratornetworkvpcNetworkSecondarysubnetNetworkSecondaryDidC96584B6F00A464EAD1953AFF4B05118Parameter": {
+      "Default": "/accelerator/network/vpc/Network-Secondary/subnet/Network-Secondary-D/id",
+      "Type": "AWS::SSM::Parameter::Value<String>",
+    },
+  },
+  "Resources": {
+    "NetworkSecondaryVpcTestNaclV2Inbound101": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-VPC3",
+              "reason": "NACL entry added to VPC",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "CidrBlock": "10.0.0.0/24",
+        "Egress": false,
+        "NetworkAclId": {
+          "Ref": "NetworkSecondaryVpcTestNaclV2Nacl",
+        },
+        "PortRange": {
+          "From": 22,
+          "To": 22,
+        },
+        "Protocol": 22,
+        "RuleAction": "allow",
+        "RuleNumber": 101,
+      },
+      "Type": "AWS::EC2::NetworkAclEntry",
+    },
+    "NetworkSecondaryVpcTestNaclV2Nacl": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-VPC3",
+              "reason": "NACL added to VPC",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "TestNacl-V2",
+          },
+        ],
+        "VpcId": {
+          "Ref": "SsmParameterValueacceleratornetworkvpcNetworkSecondaryidC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+      },
+      "Type": "AWS::EC2::NetworkAcl",
+    },
+    "NetworkSecondaryVpcTestNaclV2NaclAssociateNetworkSecondaryA": {
+      "Properties": {
+        "NetworkAclId": {
+          "Ref": "NetworkSecondaryVpcTestNaclV2Nacl",
+        },
+        "SubnetId": {
+          "Ref": "SsmParameterValueacceleratornetworkvpcNetworkSecondarysubnetNetworkSecondaryAidC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+      },
+      "Type": "AWS::EC2::SubnetNetworkAclAssociation",
+    },
+    "NetworkSecondaryVpcTestNaclV2NaclAssociateNetworkSecondaryB": {
+      "Properties": {
+        "NetworkAclId": {
+          "Ref": "NetworkSecondaryVpcTestNaclV2Nacl",
+        },
+        "SubnetId": {
+          "Ref": "SsmParameterValueacceleratornetworkvpcNetworkSecondarysubnetNetworkSecondaryBidC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+      },
+      "Type": "AWS::EC2::SubnetNetworkAclAssociation",
+    },
+    "NetworkSecondaryVpcTestNaclV2NaclAssociateNetworkSecondaryC": {
+      "Properties": {
+        "NetworkAclId": {
+          "Ref": "NetworkSecondaryVpcTestNaclV2Nacl",
+        },
+        "SubnetId": {
+          "Ref": "SsmParameterValueacceleratornetworkvpcNetworkSecondarysubnetNetworkSecondaryCidC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+      },
+      "Type": "AWS::EC2::SubnetNetworkAclAssociation",
+    },
+    "NetworkSecondaryVpcTestNaclV2NaclAssociateNetworkSecondaryD": {
+      "Properties": {
+        "NetworkAclId": {
+          "Ref": "NetworkSecondaryVpcTestNaclV2Nacl",
+        },
+        "SubnetId": {
+          "Ref": "SsmParameterValueacceleratornetworkvpcNetworkSecondarysubnetNetworkSecondaryDidC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+      },
+      "Type": "AWS::EC2::SubnetNetworkAclAssociation",
+    },
+    "SsmParamAcceleratorVersionFF83282D": {
+      "Properties": {
+        "Name": "/accelerator/AWSAccelerator-NaclsStack-Network-Secondary-555555555555-us-east-1/version",
+        "Type": "String",
+        "Value": "1.12.0",
+      },
+      "Type": "AWS::SSM::Parameter",
+    },
+    "SsmParamNetworkSecondaryTestNaclV2Nacl95D6CC45": {
+      "Properties": {
+        "Name": "/accelerator/network/vpc/Network-Secondary/networkAcl/TestNacl-V2/id",
+        "Type": "String",
+        "Value": {
+          "Ref": "NetworkSecondaryVpcTestNaclV2Nacl",
+        },
+      },
+      "Type": "AWS::SSM::Parameter",
+    },
+    "SsmParamStackId521A78D3": {
+      "Properties": {
+        "Name": "/accelerator/AWSAccelerator-NaclsStack-Network-Secondary-555555555555-us-east-1/stack-id",
+        "Type": "String",
+        "Value": {
+          "Ref": "AWS::StackId",
+        },
+      },
+      "Type": "AWS::SSM::Parameter",
+    },
+  },
+}
+`;
+
+exports[`NetworkVpcV2Stacks Construct(NackStack-Network-us-east-1-Network-Secondary-V2):  Snapshot Test 1`] = `
+{
+  "Parameters": {
+    "SsmParameterValueacceleratornetworkvpcNetworkSecondaryV2idC96584B6F00A464EAD1953AFF4B05118Parameter": {
+      "Default": "/accelerator/network/vpc/Network-Secondary-V2/id",
+      "Type": "AWS::SSM::Parameter::Value<String>",
+    },
+    "SsmParameterValueacceleratornetworkvpcNetworkSecondaryV2subnetNetworkSecondaryAidC96584B6F00A464EAD1953AFF4B05118Parameter": {
+      "Default": "/accelerator/network/vpc/Network-Secondary-V2/subnet/Network-Secondary-A/id",
+      "Type": "AWS::SSM::Parameter::Value<String>",
+    },
+    "SsmParameterValueacceleratornetworkvpcNetworkSecondaryV2subnetNetworkSecondaryBidC96584B6F00A464EAD1953AFF4B05118Parameter": {
+      "Default": "/accelerator/network/vpc/Network-Secondary-V2/subnet/Network-Secondary-B/id",
+      "Type": "AWS::SSM::Parameter::Value<String>",
+    },
+    "SsmParameterValueacceleratornetworkvpcNetworkSecondaryV2subnetNetworkSecondaryCidC96584B6F00A464EAD1953AFF4B05118Parameter": {
+      "Default": "/accelerator/network/vpc/Network-Secondary-V2/subnet/Network-Secondary-C/id",
+      "Type": "AWS::SSM::Parameter::Value<String>",
+    },
+    "SsmParameterValueacceleratornetworkvpcNetworkSecondaryV2subnetNetworkSecondaryDidC96584B6F00A464EAD1953AFF4B05118Parameter": {
+      "Default": "/accelerator/network/vpc/Network-Secondary-V2/subnet/Network-Secondary-D/id",
+      "Type": "AWS::SSM::Parameter::Value<String>",
+    },
+  },
+  "Resources": {
+    "NetworkSecondaryV2VpcTestNaclInbound101": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-VPC3",
+              "reason": "NACL entry added to VPC",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "CidrBlock": "10.0.0.0/24",
+        "Egress": false,
+        "NetworkAclId": {
+          "Ref": "NetworkSecondaryV2VpcTestNaclNacl",
+        },
+        "PortRange": {
+          "From": 22,
+          "To": 22,
+        },
+        "Protocol": 22,
+        "RuleAction": "allow",
+        "RuleNumber": 101,
+      },
+      "Type": "AWS::EC2::NetworkAclEntry",
+    },
+    "NetworkSecondaryV2VpcTestNaclInbound102": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-VPC3",
+              "reason": "NACL entry added to VPC",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "Egress": false,
+        "NetworkAclId": {
+          "Ref": "NetworkSecondaryV2VpcTestNaclNacl",
+        },
+        "PortRange": {
+          "From": 443,
+          "To": 443,
+        },
+        "Protocol": -1,
+        "RuleAction": "deny",
+        "RuleNumber": 102,
+      },
+      "Type": "AWS::EC2::NetworkAclEntry",
+    },
+    "NetworkSecondaryV2VpcTestNaclInbound103": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-VPC3",
+              "reason": "NACL entry added to VPC",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "Egress": false,
+        "NetworkAclId": {
+          "Ref": "NetworkSecondaryV2VpcTestNaclNacl",
+        },
+        "PortRange": {
+          "From": 80,
+          "To": 80,
+        },
+        "Protocol": -1,
+        "RuleAction": "allow",
+        "RuleNumber": 103,
+      },
+      "Type": "AWS::EC2::NetworkAclEntry",
+    },
+    "NetworkSecondaryV2VpcTestNaclInbound104": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-VPC3",
+              "reason": "NACL entry added to VPC",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "Egress": false,
+        "NetworkAclId": {
+          "Ref": "NetworkSecondaryV2VpcTestNaclNacl",
+        },
+        "PortRange": {
+          "From": -1,
+          "To": -1,
+        },
+        "Protocol": -1,
+        "RuleAction": "allow",
+        "RuleNumber": 104,
+      },
+      "Type": "AWS::EC2::NetworkAclEntry",
+    },
+    "NetworkSecondaryV2VpcTestNaclInbound107": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-VPC3",
+              "reason": "NACL entry added to VPC",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "CidrBlock": "10.4.0.0/24",
+        "Egress": false,
+        "NetworkAclId": {
+          "Ref": "NetworkSecondaryV2VpcTestNaclNacl",
+        },
+        "PortRange": {
+          "From": -1,
+          "To": -1,
+        },
+        "Protocol": -1,
+        "RuleAction": "deny",
+        "RuleNumber": 107,
+      },
+      "Type": "AWS::EC2::NetworkAclEntry",
+    },
+    "NetworkSecondaryV2VpcTestNaclInbound108": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-VPC3",
+              "reason": "NACL entry added to VPC",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "Egress": false,
+        "Ipv6CidrBlock": "::/0",
+        "NetworkAclId": {
+          "Ref": "NetworkSecondaryV2VpcTestNaclNacl",
+        },
+        "PortRange": {
+          "From": -1,
+          "To": -1,
+        },
+        "Protocol": -1,
+        "RuleAction": "deny",
+        "RuleNumber": 108,
+      },
+      "Type": "AWS::EC2::NetworkAclEntry",
+    },
+    "NetworkSecondaryV2VpcTestNaclInbound109": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-VPC3",
+              "reason": "NACL entry added to VPC",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "Egress": false,
+        "Icmp": {
+          "Code": 5,
+          "Type": 10,
+        },
+        "NetworkAclId": {
+          "Ref": "NetworkSecondaryV2VpcTestNaclNacl",
+        },
+        "PortRange": {},
+        "Protocol": 1,
+        "RuleAction": "allow",
+        "RuleNumber": 109,
+      },
+      "Type": "AWS::EC2::NetworkAclEntry",
+    },
+    "NetworkSecondaryV2VpcTestNaclInbound110": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-VPC3",
+              "reason": "NACL entry added to VPC",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "CidrBlock": "10.0.0.0/24",
+        "Egress": false,
+        "Icmp": {
+          "Code": 5,
+          "Type": 32,
+        },
+        "NetworkAclId": {
+          "Ref": "NetworkSecondaryV2VpcTestNaclNacl",
+        },
+        "PortRange": {},
+        "Protocol": 1,
+        "RuleAction": "allow",
+        "RuleNumber": 110,
+      },
+      "Type": "AWS::EC2::NetworkAclEntry",
+    },
+    "NetworkSecondaryV2VpcTestNaclInbound111": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-VPC3",
+              "reason": "NACL entry added to VPC",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "CidrBlock": "0.0.0.0/0",
+        "Egress": false,
+        "NetworkAclId": {
+          "Ref": "NetworkSecondaryV2VpcTestNaclNacl",
+        },
+        "PortRange": {
+          "From": 3306,
+          "To": 3306,
+        },
+        "Protocol": 6,
+        "RuleAction": "deny",
+        "RuleNumber": 111,
+      },
+      "Type": "AWS::EC2::NetworkAclEntry",
+    },
+    "NetworkSecondaryV2VpcTestNaclNacl": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-VPC3",
+              "reason": "NACL added to VPC",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "TestNacl",
+          },
+        ],
+        "VpcId": {
+          "Ref": "SsmParameterValueacceleratornetworkvpcNetworkSecondaryV2idC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+      },
+      "Type": "AWS::EC2::NetworkAcl",
+    },
+    "NetworkSecondaryV2VpcTestNaclNaclAssociateNetworkSecondaryA": {
+      "Properties": {
+        "NetworkAclId": {
+          "Ref": "NetworkSecondaryV2VpcTestNaclNacl",
+        },
+        "SubnetId": {
+          "Ref": "SsmParameterValueacceleratornetworkvpcNetworkSecondaryV2subnetNetworkSecondaryAidC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+      },
+      "Type": "AWS::EC2::SubnetNetworkAclAssociation",
+    },
+    "NetworkSecondaryV2VpcTestNaclNaclAssociateNetworkSecondaryB": {
+      "Properties": {
+        "NetworkAclId": {
+          "Ref": "NetworkSecondaryV2VpcTestNaclNacl",
+        },
+        "SubnetId": {
+          "Ref": "SsmParameterValueacceleratornetworkvpcNetworkSecondaryV2subnetNetworkSecondaryBidC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+      },
+      "Type": "AWS::EC2::SubnetNetworkAclAssociation",
+    },
+    "NetworkSecondaryV2VpcTestNaclNaclAssociateNetworkSecondaryC": {
+      "Properties": {
+        "NetworkAclId": {
+          "Ref": "NetworkSecondaryV2VpcTestNaclNacl",
+        },
+        "SubnetId": {
+          "Ref": "SsmParameterValueacceleratornetworkvpcNetworkSecondaryV2subnetNetworkSecondaryCidC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+      },
+      "Type": "AWS::EC2::SubnetNetworkAclAssociation",
+    },
+    "NetworkSecondaryV2VpcTestNaclNaclAssociateNetworkSecondaryD": {
+      "Properties": {
+        "NetworkAclId": {
+          "Ref": "NetworkSecondaryV2VpcTestNaclNacl",
+        },
+        "SubnetId": {
+          "Ref": "SsmParameterValueacceleratornetworkvpcNetworkSecondaryV2subnetNetworkSecondaryDidC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+      },
+      "Type": "AWS::EC2::SubnetNetworkAclAssociation",
+    },
+    "NetworkSecondaryV2VpcTestNaclOutbound101": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-VPC3",
+              "reason": "NACL entry added to VPC",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "CidrBlock": "172.16.0.0/12",
+        "Egress": true,
+        "NetworkAclId": {
+          "Ref": "NetworkSecondaryV2VpcTestNaclNacl",
+        },
+        "PortRange": {
+          "From": 80,
+          "To": 80,
+        },
+        "Protocol": -1,
+        "RuleAction": "allow",
+        "RuleNumber": 101,
+      },
+      "Type": "AWS::EC2::NetworkAclEntry",
+    },
+    "NetworkSecondaryV2VpcTestNaclOutbound102": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-VPC3",
+              "reason": "NACL entry added to VPC",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "Egress": true,
+        "NetworkAclId": {
+          "Ref": "NetworkSecondaryV2VpcTestNaclNacl",
+        },
+        "PortRange": {
+          "From": 443,
+          "To": 443,
+        },
+        "Protocol": -1,
+        "RuleAction": "allow",
+        "RuleNumber": 102,
+      },
+      "Type": "AWS::EC2::NetworkAclEntry",
+    },
+    "NetworkSecondaryV2VpcTestNaclOutbound103": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-VPC3",
+              "reason": "NACL entry added to VPC",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "Egress": true,
+        "NetworkAclId": {
+          "Ref": "NetworkSecondaryV2VpcTestNaclNacl",
+        },
+        "PortRange": {
+          "From": 80,
+          "To": 80,
+        },
+        "Protocol": -1,
+        "RuleAction": "allow",
+        "RuleNumber": 103,
+      },
+      "Type": "AWS::EC2::NetworkAclEntry",
+    },
+    "NetworkSecondaryV2VpcTestNaclOutbound104": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-VPC3",
+              "reason": "NACL entry added to VPC",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "Egress": true,
+        "NetworkAclId": {
+          "Ref": "NetworkSecondaryV2VpcTestNaclNacl",
+        },
+        "PortRange": {
+          "From": -1,
+          "To": -1,
+        },
+        "Protocol": -1,
+        "RuleAction": "allow",
+        "RuleNumber": 104,
+      },
+      "Type": "AWS::EC2::NetworkAclEntry",
+    },
+    "NetworkSecondaryV2VpcTestNaclOutbound107": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-VPC3",
+              "reason": "NACL entry added to VPC",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "CidrBlock": "10.4.0.0/24",
+        "Egress": true,
+        "NetworkAclId": {
+          "Ref": "NetworkSecondaryV2VpcTestNaclNacl",
+        },
+        "PortRange": {
+          "From": -1,
+          "To": -1,
+        },
+        "Protocol": -1,
+        "RuleAction": "deny",
+        "RuleNumber": 107,
+      },
+      "Type": "AWS::EC2::NetworkAclEntry",
+    },
+    "NetworkSecondaryV2VpcTestNaclOutbound108": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-VPC3",
+              "reason": "NACL entry added to VPC",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "Egress": true,
+        "Ipv6CidrBlock": "::/0",
+        "NetworkAclId": {
+          "Ref": "NetworkSecondaryV2VpcTestNaclNacl",
+        },
+        "PortRange": {
+          "From": -1,
+          "To": -1,
+        },
+        "Protocol": -1,
+        "RuleAction": "deny",
+        "RuleNumber": 108,
+      },
+      "Type": "AWS::EC2::NetworkAclEntry",
+    },
+    "NetworkSecondaryV2VpcTestNaclOutbound109": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-VPC3",
+              "reason": "NACL entry added to VPC",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "Egress": true,
+        "Icmp": {
+          "Code": 5,
+          "Type": 10,
+        },
+        "NetworkAclId": {
+          "Ref": "NetworkSecondaryV2VpcTestNaclNacl",
+        },
+        "PortRange": {},
+        "Protocol": 1,
+        "RuleAction": "allow",
+        "RuleNumber": 109,
+      },
+      "Type": "AWS::EC2::NetworkAclEntry",
+    },
+    "NetworkSecondaryV2VpcTestNaclOutbound110": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-VPC3",
+              "reason": "NACL entry added to VPC",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "CidrBlock": "10.0.0.0/24",
+        "Egress": true,
+        "Icmp": {
+          "Code": 5,
+          "Type": 32,
+        },
+        "NetworkAclId": {
+          "Ref": "NetworkSecondaryV2VpcTestNaclNacl",
+        },
+        "PortRange": {},
+        "Protocol": 1,
+        "RuleAction": "allow",
+        "RuleNumber": 110,
+      },
+      "Type": "AWS::EC2::NetworkAclEntry",
+    },
+    "SsmParamAcceleratorVersionFF83282D": {
+      "Properties": {
+        "Name": "/accelerator/AWSAccelerator-NaclsStack-Network-Secondary-V2-555555555555-us-east-1/version",
+        "Type": "String",
+        "Value": "1.12.0",
+      },
+      "Type": "AWS::SSM::Parameter",
+    },
+    "SsmParamNetworkSecondaryV2TestNaclNacl1C911205": {
+      "Properties": {
+        "Name": "/accelerator/network/vpc/Network-Secondary-V2/networkAcl/TestNacl/id",
+        "Type": "String",
+        "Value": {
+          "Ref": "NetworkSecondaryV2VpcTestNaclNacl",
+        },
+      },
+      "Type": "AWS::SSM::Parameter",
+    },
+    "SsmParamStackId521A78D3": {
+      "Properties": {
+        "Name": "/accelerator/AWSAccelerator-NaclsStack-Network-Secondary-V2-555555555555-us-east-1/stack-id",
+        "Type": "String",
+        "Value": {
+          "Ref": "AWS::StackId",
+        },
+      },
+      "Type": "AWS::SSM::Parameter",
+    },
+  },
+}
+`;
+
+exports[`NetworkVpcV2Stacks Construct(RouteTableStack-Network-us-east-1-Network-Secondary):  Snapshot Test 1`] = `
+{
+  "Parameters": {
+    "SsmParameterValueacceleratornetworkvpcNetworkSecondaryidC96584B6F00A464EAD1953AFF4B05118Parameter": {
+      "Default": "/accelerator/network/vpc/Network-Secondary/id",
+      "Type": "AWS::SSM::Parameter::Value<String>",
+    },
+    "SsmParameterValueacceleratornetworkvpcNetworkSecondaryrouteTableNetworkSecondaryARtidC96584B6F00A464EAD1953AFF4B05118Parameter": {
+      "Default": "/accelerator/network/vpc/Network-Secondary/routeTable/Network-Secondary-A-Rt/id",
+      "Type": "AWS::SSM::Parameter::Value<String>",
+    },
+    "SsmParameterValueacceleratornetworkvpcNetworkSecondaryrouteTableNetworkSecondaryBRtidC96584B6F00A464EAD1953AFF4B05118Parameter": {
+      "Default": "/accelerator/network/vpc/Network-Secondary/routeTable/Network-Secondary-B-Rt/id",
+      "Type": "AWS::SSM::Parameter::Value<String>",
+    },
+    "SsmParameterValueacceleratornetworkvpcNetworkSecondaryrouteTableNetworkSecondaryCRtidC96584B6F00A464EAD1953AFF4B05118Parameter": {
+      "Default": "/accelerator/network/vpc/Network-Secondary/routeTable/Network-Secondary-C-Rt/id",
+      "Type": "AWS::SSM::Parameter::Value<String>",
+    },
+    "SsmParameterValueacceleratornetworkvpcNetworkSecondaryrouteTableNetworkSecondaryDRtidC96584B6F00A464EAD1953AFF4B05118Parameter": {
+      "Default": "/accelerator/network/vpc/Network-Secondary/routeTable/Network-Secondary-D-Rt/id",
+      "Type": "AWS::SSM::Parameter::Value<String>",
+    },
+  },
+  "Resources": {
+    "NetworkSecondaryVpcNetworkSecondaryARtV2RouteTable": {
+      "Properties": {
+        "Tags": [
+          {
+            "Key": "env",
+            "Value": "prod",
+          },
+          {
+            "Key": "Name",
+            "Value": "Network-Secondary-A-Rt-V2",
+          },
+        ],
+        "VpcId": {
+          "Ref": "SsmParameterValueacceleratornetworkvpcNetworkSecondaryidC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+      },
+      "Type": "AWS::EC2::RouteTable",
+    },
+    "SsmParamAcceleratorVersionFF83282D": {
+      "Properties": {
+        "Name": "/accelerator/AWSAccelerator-RouteTablesStack-Network-Secondary-555555555555-us-east-1/version",
+        "Type": "String",
+        "Value": "1.12.0",
+      },
+      "Type": "AWS::SSM::Parameter",
+    },
+    "SsmParamNetworkSecondaryNetworkSecondaryARtV2RouteTableId1A3BEB0E": {
+      "Properties": {
+        "Name": "/accelerator/network/vpc/Network-Secondary/routeTable/Network-Secondary-A-Rt-V2/id",
+        "Type": "String",
+        "Value": {
+          "Ref": "NetworkSecondaryVpcNetworkSecondaryARtV2RouteTable",
+        },
+      },
+      "Type": "AWS::SSM::Parameter",
+    },
+    "SsmParamStackId521A78D3": {
+      "Properties": {
+        "Name": "/accelerator/AWSAccelerator-RouteTablesStack-Network-Secondary-555555555555-us-east-1/stack-id",
+        "Type": "String",
+        "Value": {
+          "Ref": "AWS::StackId",
+        },
+      },
+      "Type": "AWS::SSM::Parameter",
+    },
+  },
+}
+`;
+
+exports[`NetworkVpcV2Stacks Construct(RouteTableStack-Network-us-east-1-Network-Secondary-V2):  Snapshot Test 1`] = `
+{
+  "Parameters": {
+    "SsmParameterValueacceleratornetworkvpcNetworkSecondaryV2egressonlyigwidC96584B6F00A464EAD1953AFF4B05118Parameter": {
+      "Default": "/accelerator/network/vpc/Network-Secondary-V2/egress-only-igw/id",
+      "Type": "AWS::SSM::Parameter::Value<String>",
+    },
+    "SsmParameterValueacceleratornetworkvpcNetworkSecondaryV2idC96584B6F00A464EAD1953AFF4B05118Parameter": {
+      "Default": "/accelerator/network/vpc/Network-Secondary-V2/id",
+      "Type": "AWS::SSM::Parameter::Value<String>",
+    },
+  },
+  "Resources": {
+    "NetworkSecondaryV2VpcNetworkSecondaryARtRouteTable": {
+      "Properties": {
+        "Tags": [
+          {
+            "Key": "env",
+            "Value": "prod",
+          },
+          {
+            "Key": "Name",
+            "Value": "Network-Secondary-A-Rt",
+          },
+        ],
+        "VpcId": {
+          "Ref": "SsmParameterValueacceleratornetworkvpcNetworkSecondaryV2idC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+      },
+      "Type": "AWS::EC2::RouteTable",
+    },
+    "NetworkSecondaryV2VpcNetworkSecondaryBRtRouteTable": {
+      "Properties": {
+        "Tags": [
+          {
+            "Key": "env",
+            "Value": "prod",
+          },
+          {
+            "Key": "Name",
+            "Value": "Network-Secondary-B-Rt",
+          },
+        ],
+        "VpcId": {
+          "Ref": "SsmParameterValueacceleratornetworkvpcNetworkSecondaryV2idC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+      },
+      "Type": "AWS::EC2::RouteTable",
+    },
+    "NetworkSecondaryV2VpcNetworkSecondaryBRtRouteTableEigwRoute": {
+      "DependsOn": [
+        "NetworkSecondaryV2VpcNetworkSecondaryBRtRouteTable",
+      ],
+      "Properties": {
+        "DestinationIpv6CidrBlock": "::/0",
+        "EgressOnlyInternetGatewayId": {
+          "Ref": "SsmParameterValueacceleratornetworkvpcNetworkSecondaryV2egressonlyigwidC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+        "RouteTableId": {
+          "Ref": "NetworkSecondaryV2VpcNetworkSecondaryBRtRouteTable",
+        },
+      },
+      "Type": "AWS::EC2::Route",
+    },
+    "NetworkSecondaryV2VpcNetworkSecondaryBRtRouteTableLgwRoute": {
+      "DependsOn": [
+        "NetworkSecondaryV2VpcNetworkSecondaryBRtRouteTable",
+      ],
+      "Properties": {
+        "DestinationCidrBlock": "0.0.0.0/0",
+        "LocalGatewayId": "lgw-abcxyz",
+        "RouteTableId": {
+          "Ref": "NetworkSecondaryV2VpcNetworkSecondaryBRtRouteTable",
+        },
+      },
+      "Type": "AWS::EC2::Route",
+    },
+    "NetworkSecondaryV2VpcNetworkSecondaryCRtRouteTable": {
+      "Properties": {
+        "Tags": [
+          {
+            "Key": "env",
+            "Value": "prod",
+          },
+          {
+            "Key": "Name",
+            "Value": "Network-Secondary-C-Rt",
+          },
+        ],
+        "VpcId": {
+          "Ref": "SsmParameterValueacceleratornetworkvpcNetworkSecondaryV2idC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+      },
+      "Type": "AWS::EC2::RouteTable",
+    },
+    "NetworkSecondaryV2VpcNetworkSecondaryDRtRouteTable": {
+      "Properties": {
+        "Tags": [
+          {
+            "Key": "env",
+            "Value": "prod",
+          },
+          {
+            "Key": "Name",
+            "Value": "Network-Secondary-D-Rt",
+          },
+        ],
+        "VpcId": {
+          "Ref": "SsmParameterValueacceleratornetworkvpcNetworkSecondaryV2idC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+      },
+      "Type": "AWS::EC2::RouteTable",
+    },
+    "SsmParamAcceleratorVersionFF83282D": {
+      "Properties": {
+        "Name": "/accelerator/AWSAccelerator-RouteTablesStack-Network-Secondary-V2-555555555555-us-east-1/version",
+        "Type": "String",
+        "Value": "1.12.0",
+      },
+      "Type": "AWS::SSM::Parameter",
+    },
+    "SsmParamNetworkSecondaryV2NetworkSecondaryARtRouteTableId00CF571A": {
+      "Properties": {
+        "Name": "/accelerator/network/vpc/Network-Secondary-V2/routeTable/Network-Secondary-A-Rt/id",
+        "Type": "String",
+        "Value": {
+          "Ref": "NetworkSecondaryV2VpcNetworkSecondaryARtRouteTable",
+        },
+      },
+      "Type": "AWS::SSM::Parameter",
+    },
+    "SsmParamNetworkSecondaryV2NetworkSecondaryBRtRouteTableId4C48E92E": {
+      "Properties": {
+        "Name": "/accelerator/network/vpc/Network-Secondary-V2/routeTable/Network-Secondary-B-Rt/id",
+        "Type": "String",
+        "Value": {
+          "Ref": "NetworkSecondaryV2VpcNetworkSecondaryBRtRouteTable",
+        },
+      },
+      "Type": "AWS::SSM::Parameter",
+    },
+    "SsmParamNetworkSecondaryV2NetworkSecondaryCRtRouteTableIdD3E1C1F9": {
+      "Properties": {
+        "Name": "/accelerator/network/vpc/Network-Secondary-V2/routeTable/Network-Secondary-C-Rt/id",
+        "Type": "String",
+        "Value": {
+          "Ref": "NetworkSecondaryV2VpcNetworkSecondaryCRtRouteTable",
+        },
+      },
+      "Type": "AWS::SSM::Parameter",
+    },
+    "SsmParamNetworkSecondaryV2NetworkSecondaryDRtRouteTableId562F602E": {
+      "Properties": {
+        "Name": "/accelerator/network/vpc/Network-Secondary-V2/routeTable/Network-Secondary-D-Rt/id",
+        "Type": "String",
+        "Value": {
+          "Ref": "NetworkSecondaryV2VpcNetworkSecondaryDRtRouteTable",
+        },
+      },
+      "Type": "AWS::SSM::Parameter",
+    },
+    "SsmParamStackId521A78D3": {
+      "Properties": {
+        "Name": "/accelerator/AWSAccelerator-RouteTablesStack-Network-Secondary-V2-555555555555-us-east-1/stack-id",
+        "Type": "String",
+        "Value": {
+          "Ref": "AWS::StackId",
+        },
+      },
+      "Type": "AWS::SSM::Parameter",
+    },
+  },
+}
+`;
+
+exports[`NetworkVpcV2Stacks Construct(SecurityGroupStack-Network-us-east-1-Network-Secondary):  Snapshot Test 1`] = `
+{
+  "Parameters": {
+    "SsmParameterValueacceleratornetworkvpcNetworkSecondaryidC96584B6F00A464EAD1953AFF4B05118Parameter": {
+      "Default": "/accelerator/network/vpc/Network-Secondary/id",
+      "Type": "AWS::SSM::Parameter::Value<String>",
+    },
+  },
+  "Resources": {
+    "SsmParamAcceleratorVersionFF83282D": {
+      "Properties": {
+        "Name": "/accelerator/AWSAccelerator-SecurityGroupsStack-Network-Secondary-555555555555-us-east-1/version",
+        "Type": "String",
+        "Value": "1.12.0",
+      },
+      "Type": "AWS::SSM::Parameter",
+    },
+    "SsmParamStackId521A78D3": {
+      "Properties": {
+        "Name": "/accelerator/AWSAccelerator-SecurityGroupsStack-Network-Secondary-555555555555-us-east-1/stack-id",
+        "Type": "String",
+        "Value": {
+          "Ref": "AWS::StackId",
+        },
+      },
+      "Type": "AWS::SSM::Parameter",
+    },
+  },
+}
+`;
+
+exports[`NetworkVpcV2Stacks Construct(SecurityGroupStack-Network-us-east-1-Network-Secondary-V2):  Snapshot Test 1`] = `
+{
+  "Parameters": {
+    "SsmParameterValueacceleratornetworkvpcNetworkSecondaryV2idC96584B6F00A464EAD1953AFF4B05118Parameter": {
+      "Default": "/accelerator/network/vpc/Network-Secondary-V2/id",
+      "Type": "AWS::SSM::Parameter::Value<String>",
+    },
+  },
+  "Resources": {
+    "SsmParamAcceleratorVersionFF83282D": {
+      "Properties": {
+        "Name": "/accelerator/AWSAccelerator-SecurityGroupsStack-Network-Secondary-V2-555555555555-us-east-1/version",
+        "Type": "String",
+        "Value": "1.12.0",
+      },
+      "Type": "AWS::SSM::Parameter",
+    },
+    "SsmParamStackId521A78D3": {
+      "Properties": {
+        "Name": "/accelerator/AWSAccelerator-SecurityGroupsStack-Network-Secondary-V2-555555555555-us-east-1/stack-id",
+        "Type": "String",
+        "Value": {
+          "Ref": "AWS::StackId",
+        },
+      },
+      "Type": "AWS::SSM::Parameter",
+    },
+  },
+}
+`;
+
+exports[`NetworkVpcV2Stacks Construct(SubnetShareStack-Network-us-east-1-Network-Secondary):  Snapshot Test 1`] = `
+{
+  "Parameters": {
+    "SsmParameterValueacceleratornetworkvpcNetworkSecondaryidC96584B6F00A464EAD1953AFF4B05118Parameter": {
+      "Default": "/accelerator/network/vpc/Network-Secondary/id",
+      "Type": "AWS::SSM::Parameter::Value<String>",
+    },
+  },
+  "Resources": {
+    "SsmParamAcceleratorVersionFF83282D": {
+      "Properties": {
+        "Name": "/accelerator/AWSAccelerator-SubnetsShareStack-Network-Secondary-555555555555-us-east-1/version",
+        "Type": "String",
+        "Value": "1.12.0",
+      },
+      "Type": "AWS::SSM::Parameter",
+    },
+    "SsmParamStackId521A78D3": {
+      "Properties": {
+        "Name": "/accelerator/AWSAccelerator-SubnetsShareStack-Network-Secondary-555555555555-us-east-1/stack-id",
+        "Type": "String",
+        "Value": {
+          "Ref": "AWS::StackId",
+        },
+      },
+      "Type": "AWS::SSM::Parameter",
+    },
+  },
+}
+`;
+
+exports[`NetworkVpcV2Stacks Construct(SubnetShareStack-Network-us-east-1-Network-Secondary-V2):  Snapshot Test 1`] = `
+{
+  "Parameters": {
+    "SsmParameterValueacceleratornetworkvpcNetworkSecondaryV2idC96584B6F00A464EAD1953AFF4B05118Parameter": {
+      "Default": "/accelerator/network/vpc/Network-Secondary-V2/id",
+      "Type": "AWS::SSM::Parameter::Value<String>",
+    },
+    "SsmParameterValueacceleratornetworkvpcNetworkSecondaryV2subnetNetworkSecondaryShareidC96584B6F00A464EAD1953AFF4B05118Parameter": {
+      "Default": "/accelerator/network/vpc/Network-Secondary-V2/subnet/Network-Secondary-Share/id",
+      "Type": "AWS::SSM::Parameter::Value<String>",
+    },
+  },
+  "Resources": {
+    "CustomSsmPutParameterValueCustomResourceProviderHandler2A0BDE7F": {
+      "DependsOn": [
+        "CustomSsmPutParameterValueCustomResourceProviderRole9E1F101A",
+      ],
+      "Properties": {
+        "Code": {
+          "S3Bucket": "cdk-hnb659fds-assets-555555555555-us-east-1",
+          "S3Key": "REPLACED-GENERATED-NAME.zip",
+        },
+        "Description": "Custom resource provider to put cross-account ssm parameter value",
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.0",
+          },
+        },
+        "Handler": "__entrypoint__.handler",
+        "MemorySize": 512,
+        "Role": {
+          "Fn::GetAtt": [
+            "CustomSsmPutParameterValueCustomResourceProviderRole9E1F101A",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs20.x",
+        "Timeout": 900,
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "CustomSsmPutParameterValueCustomResourceProviderLogGroupB0109C68": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "LogGroupName": {
+          "Fn::Join": [
+            "",
+            [
+              "/aws/lambda/",
+              {
+                "Ref": "CustomSsmPutParameterValueCustomResourceProviderHandler2A0BDE7F",
+              },
+            ],
+          ],
+        },
+        "RetentionInDays": 3653,
+      },
+      "Type": "AWS::Logs::LogGroup",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "CustomSsmPutParameterValueCustomResourceProviderRole9E1F101A": {
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": [
+          {
+            "Fn::Sub": "arn:\${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+          },
+        ],
+        "Policies": [
+          {
+            "PolicyDocument": {
+              "Statement": [
+                {
+                  "Action": [
+                    "ssm:DeleteParameter",
+                    "ssm:PutParameter",
+                  ],
+                  "Effect": "Allow",
+                  "Resource": [
+                    "*",
+                  ],
+                  "Sid": "SsmPutParameterActions",
+                },
+                {
+                  "Action": [
+                    "sts:AssumeRole",
+                  ],
+                  "Effect": "Allow",
+                  "Resource": [
+                    {
+                      "Fn::Join": [
+                        "",
+                        [
+                          "arn:",
+                          {
+                            "Ref": "AWS::Partition",
+                          },
+                          ":iam::*:role/AWSAccelerator*",
+                        ],
+                      ],
+                    },
+                  ],
+                  "Sid": "StsAssumeRoleActions",
+                },
+              ],
+              "Version": "2012-10-17",
+            },
+            "PolicyName": "Inline",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "NetworkSecondaryShareSubnetShareResourceShare7960C54A": {
+      "Properties": {
+        "Name": "Network-Secondary-Share_SubnetShare",
+        "Principals": [
+          "arn:aws:organizations::111111111111:ou/o-asdf123456/ou-asdf-22222222",
+          "444444444444",
+        ],
+        "ResourceArns": [
+          {
+            "Fn::Join": [
+              "",
+              [
+                "arn:",
+                {
+                  "Ref": "AWS::Partition",
+                },
+                ":ec2:us-east-1:555555555555:subnet/",
+                {
+                  "Ref": "SsmParameterValueacceleratornetworkvpcNetworkSecondaryV2subnetNetworkSecondaryShareidC96584B6F00A464EAD1953AFF4B05118Parameter",
+                },
+              ],
+            ],
+          },
+        ],
+      },
+      "Type": "AWS::RAM::ResourceShare",
+    },
+    "NetworkSecondaryV2NetworkSecondaryShareVpcSharedSubnetParameters0AE0C402": {
+      "DeletionPolicy": "Delete",
+      "DependsOn": [
+        "CustomSsmPutParameterValueCustomResourceProviderLogGroupB0109C68",
+        "NetworkSecondaryShareSubnetShareResourceShare7960C54A",
+      ],
+      "Properties": {
+        "ServiceToken": {
+          "Fn::GetAtt": [
+            "CustomSsmPutParameterValueCustomResourceProviderHandler2A0BDE7F",
+            "Arn",
+          ],
+        },
+        "invokingAccountId": "555555555555",
+        "parameterAccountIds": [
+          "444444444444",
+        ],
+        "parameters": [
+          {
+            "name": "/accelerator/network/vpc/Network-Secondary-V2/id",
+            "value": {
+              "Ref": "SsmParameterValueacceleratornetworkvpcNetworkSecondaryV2idC96584B6F00A464EAD1953AFF4B05118Parameter",
+            },
+          },
+          {
+            "name": "/accelerator/network/vpc/Network-Secondary-V2/subnet/Network-Secondary-Share/id",
+            "value": {
+              "Ref": "SsmParameterValueacceleratornetworkvpcNetworkSecondaryV2subnetNetworkSecondaryShareidC96584B6F00A464EAD1953AFF4B05118Parameter",
+            },
+          },
+        ],
+        "region": "us-east-1",
+        "roleName": "AWSAccelerator-CrossAccountSsmParameterShare",
+        "uuid": "REPLACED-UUID",
+      },
+      "Type": "Custom::SsmPutParameterValue",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "SsmParamAcceleratorVersionFF83282D": {
+      "Properties": {
+        "Name": "/accelerator/AWSAccelerator-SubnetsShareStack-Network-Secondary-V2-555555555555-us-east-1/version",
+        "Type": "String",
+        "Value": "1.12.0",
+      },
+      "Type": "AWS::SSM::Parameter",
+    },
+    "SsmParamStackId521A78D3": {
+      "Properties": {
+        "Name": "/accelerator/AWSAccelerator-SubnetsShareStack-Network-Secondary-V2-555555555555-us-east-1/stack-id",
+        "Type": "String",
+        "Value": {
+          "Ref": "AWS::StackId",
+        },
+      },
+      "Type": "AWS::SSM::Parameter",
+    },
+  },
+}
+`;
+
+exports[`NetworkVpcV2Stacks Construct(SubnetStack-Network-us-east-1-Network-Secondary):  Snapshot Test 1`] = `
+{
+  "Parameters": {
+    "SsmParameterValueacceleratornetworkvpcNetworkSecondaryidC96584B6F00A464EAD1953AFF4B05118Parameter": {
+      "Default": "/accelerator/network/vpc/Network-Secondary/id",
+      "Type": "AWS::SSM::Parameter::Value<String>",
+    },
+    "SsmParameterValueacceleratornetworkvpcNetworkSecondaryrouteTableNetworkSecondaryARtidC96584B6F00A464EAD1953AFF4B05118Parameter": {
+      "Default": "/accelerator/network/vpc/Network-Secondary/routeTable/Network-Secondary-A-Rt/id",
+      "Type": "AWS::SSM::Parameter::Value<String>",
+    },
+  },
+  "Resources": {
+    "CustomIpamSubnetCustomResourceProviderHandlerF7AF0D7A": {
+      "DependsOn": [
+        "CustomIpamSubnetCustomResourceProviderRoleA2FF4E6D",
+      ],
+      "Properties": {
+        "Code": {
+          "S3Bucket": "cdk-hnb659fds-assets-555555555555-us-east-1",
+          "S3Key": "REPLACED-GENERATED-NAME.zip",
+        },
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.0",
+          },
+        },
+        "Handler": "__entrypoint__.handler",
+        "MemorySize": 512,
+        "Role": {
+          "Fn::GetAtt": [
+            "CustomIpamSubnetCustomResourceProviderRoleA2FF4E6D",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs20.x",
+        "Timeout": 900,
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "CustomIpamSubnetCustomResourceProviderLogGroup3BB67050": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "LogGroupName": {
+          "Fn::Join": [
+            "",
+            [
+              "/aws/lambda/",
+              {
+                "Ref": "CustomIpamSubnetCustomResourceProviderHandlerF7AF0D7A",
+              },
+            ],
+          ],
+        },
+        "RetentionInDays": 3653,
+      },
+      "Type": "AWS::Logs::LogGroup",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "CustomIpamSubnetCustomResourceProviderRoleA2FF4E6D": {
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": [
+          {
+            "Fn::Sub": "arn:\${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+          },
+        ],
+        "Policies": [
+          {
+            "PolicyDocument": {
+              "Statement": [
+                {
+                  "Action": [
+                    "ec2:CreateTags",
+                    "ec2:DeleteSubnet",
+                    "ec2:DeleteTags",
+                    "ec2:ModifySubnetAttribute",
+                  ],
+                  "Effect": "Allow",
+                  "Resource": {
+                    "Fn::Join": [
+                      "",
+                      [
+                        "arn:",
+                        {
+                          "Ref": "AWS::Partition",
+                        },
+                        ":ec2:",
+                        {
+                          "Ref": "AWS::Region",
+                        },
+                        ":",
+                        {
+                          "Ref": "AWS::AccountId",
+                        },
+                        ":subnet/*",
+                      ],
+                    ],
+                  },
+                },
+                {
+                  "Action": [
+                    "ec2:CreateSubnet",
+                  ],
+                  "Effect": "Allow",
+                  "Resource": [
+                    {
+                      "Fn::Join": [
+                        "",
+                        [
+                          "arn:",
+                          {
+                            "Ref": "AWS::Partition",
+                          },
+                          ":ec2:",
+                          {
+                            "Ref": "AWS::Region",
+                          },
+                          ":",
+                          {
+                            "Ref": "AWS::AccountId",
+                          },
+                          ":subnet/*",
+                        ],
+                      ],
+                    },
+                    {
+                      "Fn::Join": [
+                        "",
+                        [
+                          "arn:",
+                          {
+                            "Ref": "AWS::Partition",
+                          },
+                          ":ec2:",
+                          {
+                            "Ref": "AWS::Region",
+                          },
+                          ":",
+                          {
+                            "Ref": "AWS::AccountId",
+                          },
+                          ":vpc/*",
+                        ],
+                      ],
+                    },
+                  ],
+                },
+                {
+                  "Action": [
+                    "ec2:DescribeVpcs",
+                    "ec2:DescribeSubnets",
+                  ],
+                  "Effect": "Allow",
+                  "Resource": "*",
+                },
+              ],
+              "Version": "2012-10-17",
+            },
+            "PolicyName": "Inline",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "NetworkSecondaryAV2RouteTableAssociation": {
+      "Properties": {
+        "RouteTableId": {
+          "Ref": "SsmParameterValueacceleratornetworkvpcNetworkSecondaryrouteTableNetworkSecondaryARtidC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+        "SubnetId": {
+          "Ref": "NetworkSecondaryNetworkSecondaryAV2IpamSubnetA7DF6713",
+        },
+      },
+      "Type": "AWS::EC2::SubnetRouteTableAssociation",
+    },
+    "NetworkSecondaryNetworkSecondaryAV2IpamSubnetA7DF6713": {
+      "DeletionPolicy": "Delete",
+      "DependsOn": [
+        "CustomIpamSubnetCustomResourceProviderLogGroup3BB67050",
+      ],
+      "Properties": {
+        "ServiceToken": {
+          "Fn::GetAtt": [
+            "CustomIpamSubnetCustomResourceProviderHandlerF7AF0D7A",
+            "Arn",
+          ],
+        },
+        "availabilityZone": "us-east-1a",
+        "basePool": [
+          "10.0.0.0/24",
+          "10.2.0.0/24",
+        ],
+        "ipamAllocation": {
+          "ipamPoolName": "home-region-prod-pool",
+          "netmaskLength": 28,
+        },
+        "name": "Network-Secondary-A-V2",
+        "tags": [],
+        "vpcId": {
+          "Ref": "SsmParameterValueacceleratornetworkvpcNetworkSecondaryidC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+      },
+      "Type": "Custom::IpamSubnet",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "NetworkSecondaryNetworkSecondaryOutpostsAV2IpamSubnet4BA83B7D": {
+      "DeletionPolicy": "Delete",
+      "DependsOn": [
+        "CustomIpamSubnetCustomResourceProviderLogGroup3BB67050",
+        "NetworkSecondaryNetworkSecondaryAV2IpamSubnetA7DF6713",
+      ],
+      "Properties": {
+        "ServiceToken": {
+          "Fn::GetAtt": [
+            "CustomIpamSubnetCustomResourceProviderHandlerF7AF0D7A",
+            "Arn",
+          ],
+        },
+        "availabilityZone": "us-east-1a",
+        "basePool": [
+          "10.0.0.0/24",
+          "10.2.0.0/24",
+        ],
+        "ipamAllocation": {
+          "ipamPoolName": "home-region-prod-pool",
+          "netmaskLength": 28,
+        },
+        "name": "Network-Secondary-Outposts-A-V2",
+        "outpostArn": "test-arn",
+        "tags": [],
+        "vpcId": {
+          "Ref": "SsmParameterValueacceleratornetworkvpcNetworkSecondaryidC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+      },
+      "Type": "Custom::IpamSubnet",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "NetworkSecondaryOutpostsAV2RouteTableAssociation": {
+      "Properties": {
+        "RouteTableId": {
+          "Ref": "SsmParameterValueacceleratornetworkvpcNetworkSecondaryrouteTableNetworkSecondaryARtidC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+        "SubnetId": {
+          "Ref": "NetworkSecondaryNetworkSecondaryOutpostsAV2IpamSubnet4BA83B7D",
+        },
+      },
+      "Type": "AWS::EC2::SubnetRouteTableAssociation",
+    },
+    "SsmParamAcceleratorVersionFF83282D": {
+      "Properties": {
+        "Name": "/accelerator/AWSAccelerator-SubnetsStack-Network-Secondary-555555555555-us-east-1/version",
+        "Type": "String",
+        "Value": "1.12.0",
+      },
+      "Type": "AWS::SSM::Parameter",
+    },
+    "SsmParamNetworkSecondaryNetworkSecondaryAv2IpamSubnetIpv4CidrBlockF75691D8": {
+      "Properties": {
+        "Name": "/accelerator/network/vpc/Network-Secondary/subnet/Network-Secondary-A-V2/cidr/ipv4",
+        "Type": "String",
+        "Value": {
+          "Fn::GetAtt": [
+            "NetworkSecondaryNetworkSecondaryAV2IpamSubnetA7DF6713",
+            "ipv4CidrBlock",
+          ],
+        },
+      },
+      "Type": "AWS::SSM::Parameter",
+    },
+    "SsmParamNetworkSecondaryNetworkSecondaryAv2SubnetIdB0BDB5DB": {
+      "Properties": {
+        "Name": "/accelerator/network/vpc/Network-Secondary/subnet/Network-Secondary-A-V2/id",
+        "Type": "String",
+        "Value": {
+          "Ref": "NetworkSecondaryNetworkSecondaryAV2IpamSubnetA7DF6713",
+        },
+      },
+      "Type": "AWS::SSM::Parameter",
+    },
+    "SsmParamNetworkSecondaryNetworkSecondaryOutpostsAv2IpamSubnetIpv4CidrBlockE3E1A520": {
+      "Properties": {
+        "Name": "/accelerator/network/vpc/Network-Secondary/subnet/Network-Secondary-Outposts-A-V2/cidr/ipv4",
+        "Type": "String",
+        "Value": {
+          "Fn::GetAtt": [
+            "NetworkSecondaryNetworkSecondaryOutpostsAV2IpamSubnet4BA83B7D",
+            "ipv4CidrBlock",
+          ],
+        },
+      },
+      "Type": "AWS::SSM::Parameter",
+    },
+    "SsmParamNetworkSecondaryNetworkSecondaryOutpostsAv2SubnetIdA3EC3F86": {
+      "Properties": {
+        "Name": "/accelerator/network/vpc/Network-Secondary/subnet/Network-Secondary-Outposts-A-V2/id",
+        "Type": "String",
+        "Value": {
+          "Ref": "NetworkSecondaryNetworkSecondaryOutpostsAV2IpamSubnet4BA83B7D",
+        },
+      },
+      "Type": "AWS::SSM::Parameter",
+    },
+    "SsmParamStackId521A78D3": {
+      "Properties": {
+        "Name": "/accelerator/AWSAccelerator-SubnetsStack-Network-Secondary-555555555555-us-east-1/stack-id",
+        "Type": "String",
+        "Value": {
+          "Ref": "AWS::StackId",
+        },
+      },
+      "Type": "AWS::SSM::Parameter",
+    },
+  },
+}
+`;
+
+exports[`NetworkVpcV2Stacks Construct(SubnetStack-Network-us-east-1-Network-Secondary-V2):  Snapshot Test 1`] = `
+{
+  "Parameters": {
+    "SsmParameterValueacceleratornetworkvpcNetworkSecondaryV2idC96584B6F00A464EAD1953AFF4B05118Parameter": {
+      "Default": "/accelerator/network/vpc/Network-Secondary-V2/id",
+      "Type": "AWS::SSM::Parameter::Value<String>",
+    },
+    "SsmParameterValueacceleratornetworkvpcNetworkSecondaryV2routeTableNetworkSecondaryARtidC96584B6F00A464EAD1953AFF4B05118Parameter": {
+      "Default": "/accelerator/network/vpc/Network-Secondary-V2/routeTable/Network-Secondary-A-Rt/id",
+      "Type": "AWS::SSM::Parameter::Value<String>",
+    },
+    "SsmParameterValueacceleratornetworkvpcNetworkSecondaryV2routeTableNetworkSecondaryBRtidC96584B6F00A464EAD1953AFF4B05118Parameter": {
+      "Default": "/accelerator/network/vpc/Network-Secondary-V2/routeTable/Network-Secondary-B-Rt/id",
+      "Type": "AWS::SSM::Parameter::Value<String>",
+    },
+    "SsmParameterValueacceleratornetworkvpcNetworkSecondaryV2routeTableNetworkSecondaryCRtidC96584B6F00A464EAD1953AFF4B05118Parameter": {
+      "Default": "/accelerator/network/vpc/Network-Secondary-V2/routeTable/Network-Secondary-C-Rt/id",
+      "Type": "AWS::SSM::Parameter::Value<String>",
+    },
+    "SsmParameterValueacceleratornetworkvpcNetworkSecondaryV2routeTableNetworkSecondaryDRtidC96584B6F00A464EAD1953AFF4B05118Parameter": {
+      "Default": "/accelerator/network/vpc/Network-Secondary-V2/routeTable/Network-Secondary-D-Rt/id",
+      "Type": "AWS::SSM::Parameter::Value<String>",
+    },
+  },
+  "Resources": {
+    "CustomIpamSubnetCustomResourceProviderHandlerF7AF0D7A": {
+      "DependsOn": [
+        "CustomIpamSubnetCustomResourceProviderRoleA2FF4E6D",
+      ],
+      "Properties": {
+        "Code": {
+          "S3Bucket": "cdk-hnb659fds-assets-555555555555-us-east-1",
+          "S3Key": "REPLACED-GENERATED-NAME.zip",
+        },
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.0",
+          },
+        },
+        "Handler": "__entrypoint__.handler",
+        "MemorySize": 512,
+        "Role": {
+          "Fn::GetAtt": [
+            "CustomIpamSubnetCustomResourceProviderRoleA2FF4E6D",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs20.x",
+        "Timeout": 900,
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "CustomIpamSubnetCustomResourceProviderLogGroup3BB67050": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "LogGroupName": {
+          "Fn::Join": [
+            "",
+            [
+              "/aws/lambda/",
+              {
+                "Ref": "CustomIpamSubnetCustomResourceProviderHandlerF7AF0D7A",
+              },
+            ],
+          ],
+        },
+        "RetentionInDays": 3653,
+      },
+      "Type": "AWS::Logs::LogGroup",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "CustomIpamSubnetCustomResourceProviderRoleA2FF4E6D": {
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": [
+          {
+            "Fn::Sub": "arn:\${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+          },
+        ],
+        "Policies": [
+          {
+            "PolicyDocument": {
+              "Statement": [
+                {
+                  "Action": [
+                    "ec2:CreateTags",
+                    "ec2:DeleteSubnet",
+                    "ec2:DeleteTags",
+                    "ec2:ModifySubnetAttribute",
+                  ],
+                  "Effect": "Allow",
+                  "Resource": {
+                    "Fn::Join": [
+                      "",
+                      [
+                        "arn:",
+                        {
+                          "Ref": "AWS::Partition",
+                        },
+                        ":ec2:",
+                        {
+                          "Ref": "AWS::Region",
+                        },
+                        ":",
+                        {
+                          "Ref": "AWS::AccountId",
+                        },
+                        ":subnet/*",
+                      ],
+                    ],
+                  },
+                },
+                {
+                  "Action": [
+                    "ec2:CreateSubnet",
+                  ],
+                  "Effect": "Allow",
+                  "Resource": [
+                    {
+                      "Fn::Join": [
+                        "",
+                        [
+                          "arn:",
+                          {
+                            "Ref": "AWS::Partition",
+                          },
+                          ":ec2:",
+                          {
+                            "Ref": "AWS::Region",
+                          },
+                          ":",
+                          {
+                            "Ref": "AWS::AccountId",
+                          },
+                          ":subnet/*",
+                        ],
+                      ],
+                    },
+                    {
+                      "Fn::Join": [
+                        "",
+                        [
+                          "arn:",
+                          {
+                            "Ref": "AWS::Partition",
+                          },
+                          ":ec2:",
+                          {
+                            "Ref": "AWS::Region",
+                          },
+                          ":",
+                          {
+                            "Ref": "AWS::AccountId",
+                          },
+                          ":vpc/*",
+                        ],
+                      ],
+                    },
+                  ],
+                },
+                {
+                  "Action": [
+                    "ec2:DescribeVpcs",
+                    "ec2:DescribeSubnets",
+                  ],
+                  "Effect": "Allow",
+                  "Resource": "*",
+                },
+              ],
+              "Version": "2012-10-17",
+            },
+            "PolicyName": "Inline",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "NetworkSecondaryARouteTableAssociation": {
+      "Properties": {
+        "RouteTableId": {
+          "Ref": "SsmParameterValueacceleratornetworkvpcNetworkSecondaryV2routeTableNetworkSecondaryARtidC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+        "SubnetId": {
+          "Ref": "NetworkSecondaryV2NetworkSecondaryAIpamSubnet01112797",
+        },
+      },
+      "Type": "AWS::EC2::SubnetRouteTableAssociation",
+    },
+    "NetworkSecondaryBRouteTableAssociation": {
+      "Properties": {
+        "RouteTableId": {
+          "Ref": "SsmParameterValueacceleratornetworkvpcNetworkSecondaryV2routeTableNetworkSecondaryBRtidC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+        "SubnetId": {
+          "Ref": "NetworkSecondaryV2NetworkSecondaryBIpamSubnet924032F0",
+        },
+      },
+      "Type": "AWS::EC2::SubnetRouteTableAssociation",
+    },
+    "NetworkSecondaryCRouteTableAssociation": {
+      "Properties": {
+        "RouteTableId": {
+          "Ref": "SsmParameterValueacceleratornetworkvpcNetworkSecondaryV2routeTableNetworkSecondaryCRtidC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+        "SubnetId": {
+          "Ref": "NetworkSecondaryV2NetworkSecondaryCIpamSubnet0B560587",
+        },
+      },
+      "Type": "AWS::EC2::SubnetRouteTableAssociation",
+    },
+    "NetworkSecondaryDRouteTableAssociation": {
+      "Properties": {
+        "RouteTableId": {
+          "Ref": "SsmParameterValueacceleratornetworkvpcNetworkSecondaryV2routeTableNetworkSecondaryDRtidC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+        "SubnetId": {
+          "Ref": "NetworkSecondaryV2NetworkSecondaryDIpamSubnet23F9DCDA",
+        },
+      },
+      "Type": "AWS::EC2::SubnetRouteTableAssociation",
+    },
+    "NetworkSecondaryDualStackRouteTableAssociation": {
+      "Properties": {
+        "RouteTableId": {
+          "Ref": "SsmParameterValueacceleratornetworkvpcNetworkSecondaryV2routeTableNetworkSecondaryARtidC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+        "SubnetId": {
+          "Ref": "NetworkSecondaryV2NetworkSecondaryDualStackNonIpamSubnet",
+        },
+      },
+      "Type": "AWS::EC2::SubnetRouteTableAssociation",
+    },
+    "NetworkSecondaryIpv6OnlyRouteTableAssociation": {
+      "Properties": {
+        "RouteTableId": {
+          "Ref": "SsmParameterValueacceleratornetworkvpcNetworkSecondaryV2routeTableNetworkSecondaryBRtidC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+        "SubnetId": {
+          "Ref": "NetworkSecondaryV2NetworkSecondaryIpv6OnlyNonIpamSubnet",
+        },
+      },
+      "Type": "AWS::EC2::SubnetRouteTableAssociation",
+    },
+    "NetworkSecondaryOutposts1RouteTableAssociation": {
+      "Properties": {
+        "RouteTableId": {
+          "Ref": "SsmParameterValueacceleratornetworkvpcNetworkSecondaryV2routeTableNetworkSecondaryBRtidC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+        "SubnetId": {
+          "Ref": "NetworkSecondaryV2NetworkSecondaryOutposts1IpamSubnet1F6CF913",
+        },
+      },
+      "Type": "AWS::EC2::SubnetRouteTableAssociation",
+    },
+    "NetworkSecondaryOutpostsARouteTableAssociation": {
+      "Properties": {
+        "RouteTableId": {
+          "Ref": "SsmParameterValueacceleratornetworkvpcNetworkSecondaryV2routeTableNetworkSecondaryARtidC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+        "SubnetId": {
+          "Ref": "NetworkSecondaryV2NetworkSecondaryOutpostsAIpamSubnetB190932A",
+        },
+      },
+      "Type": "AWS::EC2::SubnetRouteTableAssociation",
+    },
+    "NetworkSecondaryShareRouteTableAssociation": {
+      "Properties": {
+        "RouteTableId": {
+          "Ref": "SsmParameterValueacceleratornetworkvpcNetworkSecondaryV2routeTableNetworkSecondaryARtidC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+        "SubnetId": {
+          "Ref": "NetworkSecondaryV2NetworkSecondaryShareIpamSubnetB975DA08",
+        },
+      },
+      "Type": "AWS::EC2::SubnetRouteTableAssociation",
+    },
+    "NetworkSecondaryV2NetworkSecondaryAIpamSubnet01112797": {
+      "DeletionPolicy": "Delete",
+      "DependsOn": [
+        "CustomIpamSubnetCustomResourceProviderLogGroup3BB67050",
+      ],
+      "Properties": {
+        "ServiceToken": {
+          "Fn::GetAtt": [
+            "CustomIpamSubnetCustomResourceProviderHandlerF7AF0D7A",
+            "Arn",
+          ],
+        },
+        "availabilityZone": "us-east-1a",
+        "basePool": [
+          "10.0.0.0/24",
+          "10.2.0.0/24",
+        ],
+        "ipamAllocation": {
+          "ipamPoolName": "home-region-prod-pool",
+          "netmaskLength": 28,
+        },
+        "name": "Network-Secondary-A",
+        "tags": [],
+        "vpcId": {
+          "Ref": "SsmParameterValueacceleratornetworkvpcNetworkSecondaryV2idC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+      },
+      "Type": "Custom::IpamSubnet",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "NetworkSecondaryV2NetworkSecondaryBIpamSubnet924032F0": {
+      "DeletionPolicy": "Delete",
+      "DependsOn": [
+        "CustomIpamSubnetCustomResourceProviderLogGroup3BB67050",
+        "NetworkSecondaryV2NetworkSecondaryAIpamSubnet01112797",
+      ],
+      "Properties": {
+        "ServiceToken": {
+          "Fn::GetAtt": [
+            "CustomIpamSubnetCustomResourceProviderHandlerF7AF0D7A",
+            "Arn",
+          ],
+        },
+        "availabilityZone": "us-east-1b",
+        "basePool": [
+          "10.0.0.0/24",
+          "10.2.0.0/24",
+        ],
+        "ipamAllocation": {
+          "ipamPoolName": "home-region-prod-pool",
+          "netmaskLength": 28,
+        },
+        "name": "Network-Secondary-B",
+        "tags": [],
+        "vpcId": {
+          "Ref": "SsmParameterValueacceleratornetworkvpcNetworkSecondaryV2idC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+      },
+      "Type": "Custom::IpamSubnet",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "NetworkSecondaryV2NetworkSecondaryCIpamSubnet0B560587": {
+      "DeletionPolicy": "Delete",
+      "DependsOn": [
+        "CustomIpamSubnetCustomResourceProviderLogGroup3BB67050",
+        "NetworkSecondaryV2NetworkSecondaryBIpamSubnet924032F0",
+      ],
+      "Properties": {
+        "ServiceToken": {
+          "Fn::GetAtt": [
+            "CustomIpamSubnetCustomResourceProviderHandlerF7AF0D7A",
+            "Arn",
+          ],
+        },
+        "availabilityZoneId": "use1-az1",
+        "basePool": [
+          "10.0.0.0/24",
+          "10.2.0.0/24",
+        ],
+        "ipamAllocation": {
+          "ipamPoolName": "home-region-prod-pool",
+          "netmaskLength": 28,
+        },
+        "name": "Network-Secondary-C",
+        "tags": [],
+        "vpcId": {
+          "Ref": "SsmParameterValueacceleratornetworkvpcNetworkSecondaryV2idC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+      },
+      "Type": "Custom::IpamSubnet",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "NetworkSecondaryV2NetworkSecondaryDIpamSubnet23F9DCDA": {
+      "DeletionPolicy": "Delete",
+      "DependsOn": [
+        "CustomIpamSubnetCustomResourceProviderLogGroup3BB67050",
+        "NetworkSecondaryV2NetworkSecondaryCIpamSubnet0B560587",
+      ],
+      "Properties": {
+        "ServiceToken": {
+          "Fn::GetAtt": [
+            "CustomIpamSubnetCustomResourceProviderHandlerF7AF0D7A",
+            "Arn",
+          ],
+        },
+        "availabilityZoneId": "use1-az2",
+        "basePool": [
+          "10.0.0.0/24",
+          "10.2.0.0/24",
+        ],
+        "ipamAllocation": {
+          "ipamPoolName": "home-region-prod-pool",
+          "netmaskLength": 28,
+        },
+        "name": "Network-Secondary-D",
+        "tags": [],
+        "vpcId": {
+          "Ref": "SsmParameterValueacceleratornetworkvpcNetworkSecondaryV2idC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+      },
+      "Type": "Custom::IpamSubnet",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "NetworkSecondaryV2NetworkSecondaryDualStackNonIpamSubnet": {
+      "Properties": {
+        "AvailabilityZone": "us-east-1a",
+        "CidrBlock": "10.0.0.192/28",
+        "Ipv6CidrBlock": "fd00::/64",
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "Network-Secondary-Dual-Stack",
+          },
+        ],
+        "VpcId": {
+          "Ref": "SsmParameterValueacceleratornetworkvpcNetworkSecondaryV2idC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+      },
+      "Type": "AWS::EC2::Subnet",
+    },
+    "NetworkSecondaryV2NetworkSecondaryIpv6OnlyNonIpamSubnet": {
+      "Properties": {
+        "AvailabilityZone": "us-east-1b",
+        "Ipv6CidrBlock": "fd01::/64",
+        "Ipv6Native": true,
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "Network-Secondary-Ipv6-Only",
+          },
+        ],
+        "VpcId": {
+          "Ref": "SsmParameterValueacceleratornetworkvpcNetworkSecondaryV2idC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+      },
+      "Type": "AWS::EC2::Subnet",
+    },
+    "NetworkSecondaryV2NetworkSecondaryOutposts1IpamSubnet1F6CF913": {
+      "DeletionPolicy": "Delete",
+      "DependsOn": [
+        "CustomIpamSubnetCustomResourceProviderLogGroup3BB67050",
+        "NetworkSecondaryV2NetworkSecondaryOutpostsAIpamSubnetB190932A",
+      ],
+      "Properties": {
+        "ServiceToken": {
+          "Fn::GetAtt": [
+            "CustomIpamSubnetCustomResourceProviderHandlerF7AF0D7A",
+            "Arn",
+          ],
+        },
+        "availabilityZoneId": "use1-az1",
+        "basePool": [
+          "10.0.0.0/24",
+          "10.2.0.0/24",
+        ],
+        "ipamAllocation": {
+          "ipamPoolName": "home-region-prod-pool",
+          "netmaskLength": 28,
+        },
+        "name": "Network-Secondary-Outposts-1",
+        "outpostArn": "test-arn-2",
+        "tags": [],
+        "vpcId": {
+          "Ref": "SsmParameterValueacceleratornetworkvpcNetworkSecondaryV2idC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+      },
+      "Type": "Custom::IpamSubnet",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "NetworkSecondaryV2NetworkSecondaryOutpostsAIpamSubnetB190932A": {
+      "DeletionPolicy": "Delete",
+      "DependsOn": [
+        "CustomIpamSubnetCustomResourceProviderLogGroup3BB67050",
+        "NetworkSecondaryV2NetworkSecondaryDIpamSubnet23F9DCDA",
+      ],
+      "Properties": {
+        "ServiceToken": {
+          "Fn::GetAtt": [
+            "CustomIpamSubnetCustomResourceProviderHandlerF7AF0D7A",
+            "Arn",
+          ],
+        },
+        "availabilityZone": "us-east-1a",
+        "basePool": [
+          "10.0.0.0/24",
+          "10.2.0.0/24",
+        ],
+        "ipamAllocation": {
+          "ipamPoolName": "home-region-prod-pool",
+          "netmaskLength": 28,
+        },
+        "name": "Network-Secondary-Outposts-A",
+        "outpostArn": "test-arn",
+        "tags": [],
+        "vpcId": {
+          "Ref": "SsmParameterValueacceleratornetworkvpcNetworkSecondaryV2idC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+      },
+      "Type": "Custom::IpamSubnet",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "NetworkSecondaryV2NetworkSecondaryShareIpamSubnetB975DA08": {
+      "DeletionPolicy": "Delete",
+      "DependsOn": [
+        "CustomIpamSubnetCustomResourceProviderLogGroup3BB67050",
+        "NetworkSecondaryV2NetworkSecondaryOutposts1IpamSubnet1F6CF913",
+      ],
+      "Properties": {
+        "ServiceToken": {
+          "Fn::GetAtt": [
+            "CustomIpamSubnetCustomResourceProviderHandlerF7AF0D7A",
+            "Arn",
+          ],
+        },
+        "availabilityZone": "us-east-1a",
+        "basePool": [
+          "10.0.0.0/24",
+          "10.2.0.0/24",
+        ],
+        "ipamAllocation": {
+          "ipamPoolName": "home-region-prod-pool",
+          "netmaskLength": 27,
+        },
+        "name": "Network-Secondary-Share",
+        "tags": [],
+        "vpcId": {
+          "Ref": "SsmParameterValueacceleratornetworkvpcNetworkSecondaryV2idC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+      },
+      "Type": "Custom::IpamSubnet",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "SsmParamAcceleratorVersionFF83282D": {
+      "Properties": {
+        "Name": "/accelerator/AWSAccelerator-SubnetsStack-Network-Secondary-V2-555555555555-us-east-1/version",
+        "Type": "String",
+        "Value": "1.12.0",
+      },
+      "Type": "AWS::SSM::Parameter",
+    },
+    "SsmParamNetworkSecondaryV2NetworkSecondaryAIpamSubnetIpv4CidrBlock42DE0E5C": {
+      "Properties": {
+        "Name": "/accelerator/network/vpc/Network-Secondary-V2/subnet/Network-Secondary-A/cidr/ipv4",
+        "Type": "String",
+        "Value": {
+          "Fn::GetAtt": [
+            "NetworkSecondaryV2NetworkSecondaryAIpamSubnet01112797",
+            "ipv4CidrBlock",
+          ],
+        },
+      },
+      "Type": "AWS::SSM::Parameter",
+    },
+    "SsmParamNetworkSecondaryV2NetworkSecondaryASubnetIdED326A8A": {
+      "Properties": {
+        "Name": "/accelerator/network/vpc/Network-Secondary-V2/subnet/Network-Secondary-A/id",
+        "Type": "String",
+        "Value": {
+          "Ref": "NetworkSecondaryV2NetworkSecondaryAIpamSubnet01112797",
+        },
+      },
+      "Type": "AWS::SSM::Parameter",
+    },
+    "SsmParamNetworkSecondaryV2NetworkSecondaryBIpamSubnetIpv4CidrBlock09D0D3AD": {
+      "Properties": {
+        "Name": "/accelerator/network/vpc/Network-Secondary-V2/subnet/Network-Secondary-B/cidr/ipv4",
+        "Type": "String",
+        "Value": {
+          "Fn::GetAtt": [
+            "NetworkSecondaryV2NetworkSecondaryBIpamSubnet924032F0",
+            "ipv4CidrBlock",
+          ],
+        },
+      },
+      "Type": "AWS::SSM::Parameter",
+    },
+    "SsmParamNetworkSecondaryV2NetworkSecondaryBSubnetIdD2755323": {
+      "Properties": {
+        "Name": "/accelerator/network/vpc/Network-Secondary-V2/subnet/Network-Secondary-B/id",
+        "Type": "String",
+        "Value": {
+          "Ref": "NetworkSecondaryV2NetworkSecondaryBIpamSubnet924032F0",
+        },
+      },
+      "Type": "AWS::SSM::Parameter",
+    },
+    "SsmParamNetworkSecondaryV2NetworkSecondaryCIpamSubnetIpv4CidrBlock603C1B67": {
+      "Properties": {
+        "Name": "/accelerator/network/vpc/Network-Secondary-V2/subnet/Network-Secondary-C/cidr/ipv4",
+        "Type": "String",
+        "Value": {
+          "Fn::GetAtt": [
+            "NetworkSecondaryV2NetworkSecondaryCIpamSubnet0B560587",
+            "ipv4CidrBlock",
+          ],
+        },
+      },
+      "Type": "AWS::SSM::Parameter",
+    },
+    "SsmParamNetworkSecondaryV2NetworkSecondaryCSubnetId4116A9EF": {
+      "DependsOn": [
+        "SsmParamNetworkSecondaryV2NetworkSecondaryCIpamSubnetIpv4CidrBlock603C1B67",
+      ],
+      "Properties": {
+        "Name": "/accelerator/network/vpc/Network-Secondary-V2/subnet/Network-Secondary-C/id",
+        "Type": "String",
+        "Value": {
+          "Ref": "NetworkSecondaryV2NetworkSecondaryCIpamSubnet0B560587",
+        },
+      },
+      "Type": "AWS::SSM::Parameter",
+    },
+    "SsmParamNetworkSecondaryV2NetworkSecondaryDIpamSubnetIpv4CidrBlockB00550BE": {
+      "DependsOn": [
+        "SsmParamNetworkSecondaryV2NetworkSecondaryCIpamSubnetIpv4CidrBlock603C1B67",
+      ],
+      "Properties": {
+        "Name": "/accelerator/network/vpc/Network-Secondary-V2/subnet/Network-Secondary-D/cidr/ipv4",
+        "Type": "String",
+        "Value": {
+          "Fn::GetAtt": [
+            "NetworkSecondaryV2NetworkSecondaryDIpamSubnet23F9DCDA",
+            "ipv4CidrBlock",
+          ],
+        },
+      },
+      "Type": "AWS::SSM::Parameter",
+    },
+    "SsmParamNetworkSecondaryV2NetworkSecondaryDSubnetIdE72F58C8": {
+      "DependsOn": [
+        "SsmParamNetworkSecondaryV2NetworkSecondaryCIpamSubnetIpv4CidrBlock603C1B67",
+      ],
+      "Properties": {
+        "Name": "/accelerator/network/vpc/Network-Secondary-V2/subnet/Network-Secondary-D/id",
+        "Type": "String",
+        "Value": {
+          "Ref": "NetworkSecondaryV2NetworkSecondaryDIpamSubnet23F9DCDA",
+        },
+      },
+      "Type": "AWS::SSM::Parameter",
+    },
+    "SsmParamNetworkSecondaryV2NetworkSecondaryDualStackSubnetId4987B968": {
+      "DependsOn": [
+        "SsmParamNetworkSecondaryV2NetworkSecondaryOutpostsASubnetId45AB0F66",
+      ],
+      "Properties": {
+        "Name": "/accelerator/network/vpc/Network-Secondary-V2/subnet/Network-Secondary-Dual-Stack/id",
+        "Type": "String",
+        "Value": {
+          "Ref": "NetworkSecondaryV2NetworkSecondaryDualStackNonIpamSubnet",
+        },
+      },
+      "Type": "AWS::SSM::Parameter",
+    },
+    "SsmParamNetworkSecondaryV2NetworkSecondaryDualStackSubnetIpv4CidrBlock714BB160": {
+      "DependsOn": [
+        "SsmParamNetworkSecondaryV2NetworkSecondaryOutpostsASubnetId45AB0F66",
+      ],
+      "Properties": {
+        "Name": "/accelerator/network/vpc/Network-Secondary-V2/subnet/Network-Secondary-Dual-Stack/cidr/ipv4",
+        "Type": "String",
+        "Value": "10.0.0.192/28",
+      },
+      "Type": "AWS::SSM::Parameter",
+    },
+    "SsmParamNetworkSecondaryV2NetworkSecondaryIpv6OnlySubnetId45B43564": {
+      "Properties": {
+        "Name": "/accelerator/network/vpc/Network-Secondary-V2/subnet/Network-Secondary-Ipv6-Only/id",
+        "Type": "String",
+        "Value": {
+          "Ref": "NetworkSecondaryV2NetworkSecondaryIpv6OnlyNonIpamSubnet",
+        },
+      },
+      "Type": "AWS::SSM::Parameter",
+    },
+    "SsmParamNetworkSecondaryV2NetworkSecondaryOutposts1IpamSubnetIpv4CidrBlockEBEBCA66": {
+      "DependsOn": [
+        "SsmParamNetworkSecondaryV2NetworkSecondaryOutpostsASubnetId45AB0F66",
+      ],
+      "Properties": {
+        "Name": "/accelerator/network/vpc/Network-Secondary-V2/subnet/Network-Secondary-Outposts-1/cidr/ipv4",
+        "Type": "String",
+        "Value": {
+          "Fn::GetAtt": [
+            "NetworkSecondaryV2NetworkSecondaryOutposts1IpamSubnet1F6CF913",
+            "ipv4CidrBlock",
+          ],
+        },
+      },
+      "Type": "AWS::SSM::Parameter",
+    },
+    "SsmParamNetworkSecondaryV2NetworkSecondaryOutposts1SubnetIdF545A16F": {
+      "DependsOn": [
+        "SsmParamNetworkSecondaryV2NetworkSecondaryOutpostsASubnetId45AB0F66",
+      ],
+      "Properties": {
+        "Name": "/accelerator/network/vpc/Network-Secondary-V2/subnet/Network-Secondary-Outposts-1/id",
+        "Type": "String",
+        "Value": {
+          "Ref": "NetworkSecondaryV2NetworkSecondaryOutposts1IpamSubnet1F6CF913",
+        },
+      },
+      "Type": "AWS::SSM::Parameter",
+    },
+    "SsmParamNetworkSecondaryV2NetworkSecondaryOutpostsAIpamSubnetIpv4CidrBlock5EBEFC32": {
+      "DependsOn": [
+        "SsmParamNetworkSecondaryV2NetworkSecondaryCIpamSubnetIpv4CidrBlock603C1B67",
+      ],
+      "Properties": {
+        "Name": "/accelerator/network/vpc/Network-Secondary-V2/subnet/Network-Secondary-Outposts-A/cidr/ipv4",
+        "Type": "String",
+        "Value": {
+          "Fn::GetAtt": [
+            "NetworkSecondaryV2NetworkSecondaryOutpostsAIpamSubnetB190932A",
+            "ipv4CidrBlock",
+          ],
+        },
+      },
+      "Type": "AWS::SSM::Parameter",
+    },
+    "SsmParamNetworkSecondaryV2NetworkSecondaryOutpostsASubnetId45AB0F66": {
+      "Properties": {
+        "Name": "/accelerator/network/vpc/Network-Secondary-V2/subnet/Network-Secondary-Outposts-A/id",
+        "Type": "String",
+        "Value": {
+          "Ref": "NetworkSecondaryV2NetworkSecondaryOutpostsAIpamSubnetB190932A",
+        },
+      },
+      "Type": "AWS::SSM::Parameter",
+    },
+    "SsmParamNetworkSecondaryV2NetworkSecondaryShareIpamSubnetIpv4CidrBlockC29524EF": {
+      "DependsOn": [
+        "SsmParamNetworkSecondaryV2NetworkSecondaryIpv6OnlySubnetId45B43564",
+      ],
+      "Properties": {
+        "Name": "/accelerator/network/vpc/Network-Secondary-V2/subnet/Network-Secondary-Share/cidr/ipv4",
+        "Type": "String",
+        "Value": {
+          "Fn::GetAtt": [
+            "NetworkSecondaryV2NetworkSecondaryShareIpamSubnetB975DA08",
+            "ipv4CidrBlock",
+          ],
+        },
+      },
+      "Type": "AWS::SSM::Parameter",
+    },
+    "SsmParamNetworkSecondaryV2NetworkSecondaryShareSubnetIdAF004A72": {
+      "DependsOn": [
+        "SsmParamNetworkSecondaryV2NetworkSecondaryIpv6OnlySubnetId45B43564",
+      ],
+      "Properties": {
+        "Name": "/accelerator/network/vpc/Network-Secondary-V2/subnet/Network-Secondary-Share/id",
+        "Type": "String",
+        "Value": {
+          "Ref": "NetworkSecondaryV2NetworkSecondaryShareIpamSubnetB975DA08",
+        },
+      },
+      "Type": "AWS::SSM::Parameter",
+    },
+    "SsmParamStackId521A78D3": {
+      "Properties": {
+        "Name": "/accelerator/AWSAccelerator-SubnetsStack-Network-Secondary-V2-555555555555-us-east-1/stack-id",
+        "Type": "String",
+        "Value": {
+          "Ref": "AWS::StackId",
+        },
+      },
+      "Type": "AWS::SSM::Parameter",
+    },
+  },
+}
+`;
+
+exports[`NetworkVpcV2Stacks Construct(VpcStack-Network-us-east-1-Network-Secondary):  Snapshot Test 1`] = `
+{
+  "Parameters": {
+    "SsmParameterValueacceleratorkmslambdakeyarnC96584B6F00A464EAD1953AFF4B05118Parameter": {
+      "Default": "/accelerator/kms/lambda/key-arn",
+      "Type": "AWS::SSM::Parameter::Value<String>",
+    },
+    "SsmParameterValueacceleratornetworkvpcNetworkSecondaryidC96584B6F00A464EAD1953AFF4B05118Parameter": {
+      "Default": "/accelerator/network/vpc/Network-Secondary/id",
+      "Type": "AWS::SSM::Parameter::Value<String>",
+    },
+  },
+  "Resources": {
+    "NetworkSecondaryVpcInternetGateway": {
+      "Properties": {
+        "Tags": [
+          {
+            "Key": "env",
+            "Value": "prod",
+          },
+          {
+            "Key": "Name",
+            "Value": "Network-Secondary",
+          },
+        ],
+      },
+      "Type": "AWS::EC2::InternetGateway",
+    },
+    "NetworkSecondaryVpcInternetGatewayAttachment": {
+      "Properties": {
+        "InternetGatewayId": {
+          "Ref": "NetworkSecondaryVpcInternetGateway",
+        },
+        "VpcId": {
+          "Ref": "SsmParameterValueacceleratornetworkvpcNetworkSecondaryidC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+      },
+      "Type": "AWS::EC2::VPCGatewayAttachment",
+    },
+    "SsmParamAcceleratorVersionFF83282D": {
+      "Properties": {
+        "Name": "/accelerator/AWSAccelerator-VpcStack-Network-Secondary-555555555555-us-east-1/version",
+        "Type": "String",
+        "Value": "1.12.0",
+      },
+      "Type": "AWS::SSM::Parameter",
+    },
+    "SsmParamNetworkSecondaryInternetGatewayIdF681E289": {
+      "Properties": {
+        "Name": "/accelerator/network/vpc/Network-Secondary/internetGateway/id",
+        "Type": "String",
+        "Value": {
+          "Ref": "NetworkSecondaryVpcInternetGateway",
+        },
+      },
+      "Type": "AWS::SSM::Parameter",
+    },
+    "SsmParamStackId521A78D3": {
+      "Properties": {
+        "Name": "/accelerator/AWSAccelerator-VpcStack-Network-Secondary-555555555555-us-east-1/stack-id",
+        "Type": "String",
+        "Value": {
+          "Ref": "AWS::StackId",
+        },
+      },
+      "Type": "AWS::SSM::Parameter",
+    },
+  },
+}
+`;
+
+exports[`NetworkVpcV2Stacks Construct(VpcStack-Network-us-east-1-Network-Secondary-V2):  Snapshot Test 1`] = `
+{
+  "Parameters": {
+    "SsmParameterValueacceleratorkmslambdakeyarnC96584B6F00A464EAD1953AFF4B05118Parameter": {
+      "Default": "/accelerator/kms/lambda/key-arn",
+      "Type": "AWS::SSM::Parameter::Value<String>",
+    },
+    "SsmParameterValueacceleratornetworkipampoolshomeregionprodpoolidC96584B6F00A464EAD1953AFF4B05118Parameter": {
+      "Default": "/accelerator/network/ipam/pools/home-region-prod-pool/id",
+      "Type": "AWS::SSM::Parameter::Value<String>",
+    },
+    "SsmParameterValueacceleratorvpcflowlogsdestinationbucketarnC96584B6F00A464EAD1953AFF4B05118Parameter": {
+      "Default": "/accelerator/vpc/flow-logs/destination/bucket/arn",
+      "Type": "AWS::SSM::Parameter::Value<String>",
+    },
+  },
+  "Resources": {
+    "CloudWatchFlowLog": {
+      "Properties": {
+        "DeliverLogsPermissionArn": {
+          "Fn::GetAtt": [
+            "FlowLogsRoleA00E6A39",
+            "Arn",
+          ],
+        },
+        "LogDestination": {
+          "Fn::GetAtt": [
+            "FlowLogsGroup9B5A57FD",
+            "Arn",
+          ],
+        },
+        "LogDestinationType": "cloud-watch-logs",
+        "MaxAggregationInterval": 60,
+        "ResourceId": {
+          "Ref": "NetworkSecondaryV2Vpc",
+        },
+        "ResourceType": "VPC",
+        "TrafficType": "ALL",
+      },
+      "Type": "AWS::EC2::FlowLog",
+    },
+    "FlowLogsGroup9B5A57FD": {
+      "DeletionPolicy": "Retain",
+      "Properties": {
+        "RetentionInDays": 3653,
+      },
+      "Type": "AWS::Logs::LogGroup",
+      "UpdateReplacePolicy": "Retain",
+    },
+    "FlowLogsRoleA00E6A39": {
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "vpc-flow-logs.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "FlowLogsRoleDefaultPolicy4A66171F": {
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": [
+                "logs:CreateLogDelivery",
+                "logs:CreateLogGroup",
+                "logs:CreateLogStream",
+                "logs:DeleteLogDelivery",
+                "logs:DescribeLogGroups",
+                "logs:DescribeLogStreams",
+                "logs:PutLogEvents",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::GetAtt": [
+                  "FlowLogsGroup9B5A57FD",
+                  "Arn",
+                ],
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "FlowLogsRoleDefaultPolicy4A66171F",
+        "Roles": [
+          {
+            "Ref": "FlowLogsRoleA00E6A39",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
+    },
+    "NetworkSecondaryV2Vpc": {
+      "Properties": {
+        "EnableDnsHostnames": true,
+        "EnableDnsSupport": true,
+        "InstanceTenancy": "default",
+        "Ipv4IpamPoolId": {
+          "Ref": "SsmParameterValueacceleratornetworkipampoolshomeregionprodpoolidC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+        "Ipv4NetmaskLength": 25,
+        "Tags": [
+          {
+            "Key": "accelerator:central-endpoints-account-id",
+            "Value": "555555555555",
+          },
+          {
+            "Key": "accelerator:use-central-endpoints",
+            "Value": "true",
+          },
+          {
+            "Key": "env",
+            "Value": "prod",
+          },
+          {
+            "Key": "Name",
+            "Value": "Network-Secondary-V2",
+          },
+        ],
+      },
+      "Type": "AWS::EC2::VPC",
+    },
+    "NetworkSecondaryV2VpcAmazonProvidedIpv6CidrBlock0": {
+      "Properties": {
+        "AmazonProvidedIpv6CidrBlock": true,
+        "VpcId": {
+          "Ref": "NetworkSecondaryV2Vpc",
+        },
+      },
+      "Type": "AWS::EC2::VPCCidrBlock",
+    },
+    "NetworkSecondaryV2VpcEgressOnlyIgw": {
+      "Properties": {
+        "VpcId": {
+          "Ref": "NetworkSecondaryV2Vpc",
+        },
+      },
+      "Type": "AWS::EC2::EgressOnlyInternetGateway",
+    },
+    "NetworkSecondaryV2VpcInternetGateway": {
+      "Properties": {
+        "Tags": [
+          {
+            "Key": "env",
+            "Value": "prod",
+          },
+          {
+            "Key": "Name",
+            "Value": "Network-Secondary-V2",
+          },
+        ],
+      },
+      "Type": "AWS::EC2::InternetGateway",
+    },
+    "NetworkSecondaryV2VpcInternetGatewayAttachment": {
+      "Properties": {
+        "InternetGatewayId": {
+          "Ref": "NetworkSecondaryV2VpcInternetGateway",
+        },
+        "VpcId": {
+          "Ref": "NetworkSecondaryV2Vpc",
+        },
+      },
+      "Type": "AWS::EC2::VPCGatewayAttachment",
+    },
+    "S3FlowLog": {
+      "Properties": {
+        "LogDestination": {
+          "Fn::Join": [
+            "",
+            [
+              {
+                "Ref": "SsmParameterValueacceleratorvpcflowlogsdestinationbucketarnC96584B6F00A464EAD1953AFF4B05118Parameter",
+              },
+              "/override",
+            ],
+          ],
+        },
+        "LogDestinationType": "s3",
+        "MaxAggregationInterval": 60,
+        "ResourceId": {
+          "Ref": "NetworkSecondaryV2Vpc",
+        },
+        "ResourceType": "VPC",
+        "TrafficType": "ALL",
+      },
+      "Type": "AWS::EC2::FlowLog",
+    },
+    "SsmParamAcceleratorVersionFF83282D": {
+      "Properties": {
+        "Name": "/accelerator/AWSAccelerator-VpcStack-Network-Secondary-V2-555555555555-us-east-1/version",
+        "Type": "String",
+        "Value": "1.12.0",
+      },
+      "Type": "AWS::SSM::Parameter",
+    },
+    "SsmParamNetworkSecondaryV2EgressOnlyIgwIdB594F235": {
+      "Properties": {
+        "Name": "/accelerator/network/vpc/Network-Secondary-V2/egress-only-igw/id",
+        "Type": "String",
+        "Value": {
+          "Ref": "NetworkSecondaryV2VpcEgressOnlyIgw",
+        },
+      },
+      "Type": "AWS::SSM::Parameter",
+    },
+    "SsmParamNetworkSecondaryV2InternetGatewayId3D3AE923": {
+      "Properties": {
+        "Name": "/accelerator/network/vpc/Network-Secondary-V2/internetGateway/id",
+        "Type": "String",
+        "Value": {
+          "Ref": "NetworkSecondaryV2VpcInternetGateway",
+        },
+      },
+      "Type": "AWS::SSM::Parameter",
+    },
+    "SsmParamNetworkSecondaryV2VpcId494A8454": {
+      "Properties": {
+        "Name": "/accelerator/network/vpc/Network-Secondary-V2/id",
+        "Type": "String",
+        "Value": {
+          "Ref": "NetworkSecondaryV2Vpc",
+        },
+      },
+      "Type": "AWS::SSM::Parameter",
+    },
+    "SsmParamStackId521A78D3": {
+      "Properties": {
+        "Name": "/accelerator/AWSAccelerator-VpcStack-Network-Secondary-V2-555555555555-us-east-1/stack-id",
+        "Type": "String",
+        "Value": {
+          "Ref": "AWS::StackId",
+        },
+      },
+      "Type": "AWS::SSM::Parameter",
+    },
+  },
+}
+`;
