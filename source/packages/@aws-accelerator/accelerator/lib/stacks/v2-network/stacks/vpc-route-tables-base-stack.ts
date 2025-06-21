@@ -420,7 +420,7 @@ export class VpcRouteTablesBaseStack extends AcceleratorStack {
 
               const localGatewayIdFromVpcOutpost = this.getLocalGatewayIdFromVpcOutpost(
                 this.vpcDetails.outposts,
-                routeTableEntryItem.destination!,
+                routeTableEntryItem,
               );
 
               if (!localGatewayIdFromVpcOutpost) {
@@ -531,13 +531,16 @@ export class VpcRouteTablesBaseStack extends AcceleratorStack {
   /**
    * Function to get outpost locate gateway id
    * @param outposts {@link OutpostsConfig}[]
-   * @param localGatewayName string
+   * @param localGatewayName {@link RouteTableEntryConfig}
    * @returns string
    */
-  private getLocalGatewayIdFromVpcOutpost(outposts: OutpostsConfig[], localGatewayName: string): string | undefined {
+  private getLocalGatewayIdFromVpcOutpost(
+    outposts: OutpostsConfig[],
+    routeTableEntryItem: RouteTableEntryConfig,
+  ): string | undefined {
     let localGatewayId: string | undefined;
     for (const outpost of outposts) {
-      if (outpost.localGateway && outpost.localGateway.name === localGatewayName) {
+      if (outpost.localGateway && outpost.localGateway.name === routeTableEntryItem.target) {
         localGatewayId = outpost.localGateway.id;
       }
     }
