@@ -132,7 +132,7 @@ export function getResourceSharePrincipals(
  * @param env {@link V2NetworkResourceEnvironmentType}
  * @returns
  */
-function getV2NetworkResources(
+export function getV2NetworkResources(
   vpcsInScope: (VpcConfig | VpcTemplatesConfig)[],
   globalConfig: GlobalConfig,
   accountsConfig: AccountsConfig,
@@ -1959,7 +1959,7 @@ function createVpcLoadBalancersStack(options: {
   logger.info(`Creating VPC LoadBalancers Stack for VPC ${options.vpcItem.name} in ${options.enabledRegion}`);
   const stack: cdk.Stack = new VpcLoadBalancersBaseStack(
     options.app,
-    `${AcceleratorStackNames[AcceleratorV2Stacks.LBS_STACK]}-${options.sanitizedVpcName}-${options.accountId}-${
+    `${AcceleratorStackNames[AcceleratorV2Stacks.LB_STACK]}-${options.sanitizedVpcName}-${options.accountId}-${
       options.enabledRegion
     }`,
     {
