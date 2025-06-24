@@ -108,8 +108,10 @@ export class InstallerStack extends cdk.Stack {
   });
 
   private readonly approvalStageNotifyEmailList = new cdk.CfnParameter(this, 'ApprovalStageNotifyEmailList', {
-    type: 'CommaDelimitedList',
+    type: 'String',
     description: 'Provide comma(,) separated list of email ids to receive manual approval stage notification email',
+    allowedPattern: '^$|^[^\\s@]+@[^\\s@]+\\.[^\\s@]+(\\s*,\\s*[^\\s@]+@[^\\s@]+\\.[^\\s@]+)*$',
+    constraintDescription: 'Must be a valid list of one or more email addresses separated by commas',
   });
 
   private readonly managementAccountEmail = new cdk.CfnParameter(this, 'ManagementAccountEmail', {
@@ -414,6 +416,15 @@ export class InstallerStack extends cdk.Stack {
     }
 
     const lambdaRuntime = LzaLambdaRuntime.getLambdaRuntime(nodeVersion);
+
+    const approvalNotifyEmailSetting = new cdk.CfnRule(this, 'RequireApprovalNotificationEmail', {
+      ruleCondition: cdk.Fn.conditionEquals(this.enableApprovalStage.valueAsString, 'Yes'),
+    });
+
+    approvalNotifyEmailSetting.addAssertion(
+      cdk.Fn.conditionNot(cdk.Fn.conditionEquals(this.approvalStageNotifyEmailList.valueAsString, '')),
+      'Approval Stage notification email list is required when approval is enabled',
+    );
 
     if (props.enableRegionByRegionDeployment) {
       this.regionByRegionDeployOrder = new cdk.CfnParameter(this, 'RegionByRegionDeployOrder', {
@@ -1074,7 +1085,7 @@ export class InstallerStack extends cdk.Stack {
           },
           APPROVAL_STAGE_NOTIFY_EMAIL_LIST: {
             type: cdk.aws_codebuild.BuildEnvironmentVariableType.PLAINTEXT,
-            value: cdk.Fn.join(',', this.approvalStageNotifyEmailList.valueAsList),
+            value: this.approvalStageNotifyEmailList.valueAsString,
           },
           MANAGEMENT_ACCOUNT_EMAIL: {
             type: cdk.aws_codebuild.BuildEnvironmentVariableType.PLAINTEXT,

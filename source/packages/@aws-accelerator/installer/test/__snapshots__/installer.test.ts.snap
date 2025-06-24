@@ -194,8 +194,10 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 1`] = `
       "Type": "String",
     },
     "ApprovalStageNotifyEmailList": {
+      "AllowedPattern": "^$|^[^\\s@]+@[^\\s@]+\\.[^\\s@]+(\\s*,\\s*[^\\s@]+@[^\\s@]+\\.[^\\s@]+)*$",
+      "ConstraintDescription": "Must be a valid list of one or more email addresses separated by commas",
       "Description": "Provide comma(,) separated list of email ids to receive manual approval stage notification email",
-      "Type": "CommaDelimitedList",
+      "Type": "String",
     },
     "AuditAccountEmail": {
       "AllowedPattern": "[^\\s@]+@[^\\s@]+\\.[^\\s@]+",
@@ -1584,12 +1586,7 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 1`] = `
               "Name": "APPROVAL_STAGE_NOTIFY_EMAIL_LIST",
               "Type": "PLAINTEXT",
               "Value": {
-                "Fn::Join": [
-                  ",",
-                  {
-                    "Ref": "ApprovalStageNotifyEmailList",
-                  },
-                ],
+                "Ref": "ApprovalStageNotifyEmailList",
               },
             },
             {
@@ -3512,6 +3509,33 @@ exports.handler = async function (event, context) {
     },
   },
   "Rules": {
+    "RequireApprovalNotificationEmail": {
+      "Assertions": [
+        {
+          "Assert": {
+            "Fn::Not": [
+              {
+                "Fn::Equals": [
+                  {
+                    "Ref": "ApprovalStageNotifyEmailList",
+                  },
+                  "",
+                ],
+              },
+            ],
+          },
+          "AssertDescription": "Approval Stage notification email list is required when approval is enabled",
+        },
+      ],
+      "RuleCondition": {
+        "Fn::Equals": [
+          {
+            "Ref": "EnableApprovalStage",
+          },
+          "Yes",
+        ],
+      },
+    },
     "RequiredParametersForCodeConnection": {
       "Assertions": [
         {
@@ -3852,8 +3876,10 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 2`] = `
       "Type": "String",
     },
     "ApprovalStageNotifyEmailList": {
+      "AllowedPattern": "^$|^[^\\s@]+@[^\\s@]+\\.[^\\s@]+(\\s*,\\s*[^\\s@]+@[^\\s@]+\\.[^\\s@]+)*$",
+      "ConstraintDescription": "Must be a valid list of one or more email addresses separated by commas",
       "Description": "Provide comma(,) separated list of email ids to receive manual approval stage notification email",
-      "Type": "CommaDelimitedList",
+      "Type": "String",
     },
     "AuditAccountEmail": {
       "AllowedPattern": "[^\\s@]+@[^\\s@]+\\.[^\\s@]+",
@@ -5242,12 +5268,7 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 2`] = `
               "Name": "APPROVAL_STAGE_NOTIFY_EMAIL_LIST",
               "Type": "PLAINTEXT",
               "Value": {
-                "Fn::Join": [
-                  ",",
-                  {
-                    "Ref": "ApprovalStageNotifyEmailList",
-                  },
-                ],
+                "Ref": "ApprovalStageNotifyEmailList",
               },
             },
             {
@@ -7160,6 +7181,33 @@ exports.handler = async function (event, context) {
     },
   },
   "Rules": {
+    "RequireApprovalNotificationEmail": {
+      "Assertions": [
+        {
+          "Assert": {
+            "Fn::Not": [
+              {
+                "Fn::Equals": [
+                  {
+                    "Ref": "ApprovalStageNotifyEmailList",
+                  },
+                  "",
+                ],
+              },
+            ],
+          },
+          "AssertDescription": "Approval Stage notification email list is required when approval is enabled",
+        },
+      ],
+      "RuleCondition": {
+        "Fn::Equals": [
+          {
+            "Ref": "EnableApprovalStage",
+          },
+          "Yes",
+        ],
+      },
+    },
     "RequiredParametersForCodeConnection": {
       "Assertions": [
         {
@@ -7525,8 +7573,10 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 3`] = `
       "Type": "String",
     },
     "ApprovalStageNotifyEmailList": {
+      "AllowedPattern": "^$|^[^\\s@]+@[^\\s@]+\\.[^\\s@]+(\\s*,\\s*[^\\s@]+@[^\\s@]+\\.[^\\s@]+)*$",
+      "ConstraintDescription": "Must be a valid list of one or more email addresses separated by commas",
       "Description": "Provide comma(,) separated list of email ids to receive manual approval stage notification email",
-      "Type": "CommaDelimitedList",
+      "Type": "String",
     },
     "AuditAccountEmail": {
       "AllowedPattern": "[^\\s@]+@[^\\s@]+\\.[^\\s@]+",
@@ -8931,12 +8981,7 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 3`] = `
               "Name": "APPROVAL_STAGE_NOTIFY_EMAIL_LIST",
               "Type": "PLAINTEXT",
               "Value": {
-                "Fn::Join": [
-                  ",",
-                  {
-                    "Ref": "ApprovalStageNotifyEmailList",
-                  },
-                ],
+                "Ref": "ApprovalStageNotifyEmailList",
               },
             },
             {
@@ -10872,6 +10917,33 @@ exports.handler = async function (event, context) {
     },
   },
   "Rules": {
+    "RequireApprovalNotificationEmail": {
+      "Assertions": [
+        {
+          "Assert": {
+            "Fn::Not": [
+              {
+                "Fn::Equals": [
+                  {
+                    "Ref": "ApprovalStageNotifyEmailList",
+                  },
+                  "",
+                ],
+              },
+            ],
+          },
+          "AssertDescription": "Approval Stage notification email list is required when approval is enabled",
+        },
+      ],
+      "RuleCondition": {
+        "Fn::Equals": [
+          {
+            "Ref": "EnableApprovalStage",
+          },
+          "Yes",
+        ],
+      },
+    },
     "RequiredParametersForCodeConnection": {
       "Assertions": [
         {
@@ -11237,8 +11309,10 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 4`] = `
       "Type": "String",
     },
     "ApprovalStageNotifyEmailList": {
+      "AllowedPattern": "^$|^[^\\s@]+@[^\\s@]+\\.[^\\s@]+(\\s*,\\s*[^\\s@]+@[^\\s@]+\\.[^\\s@]+)*$",
+      "ConstraintDescription": "Must be a valid list of one or more email addresses separated by commas",
       "Description": "Provide comma(,) separated list of email ids to receive manual approval stage notification email",
-      "Type": "CommaDelimitedList",
+      "Type": "String",
     },
     "AuditAccountEmail": {
       "AllowedPattern": "[^\\s@]+@[^\\s@]+\\.[^\\s@]+",
@@ -12643,12 +12717,7 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 4`] = `
               "Name": "APPROVAL_STAGE_NOTIFY_EMAIL_LIST",
               "Type": "PLAINTEXT",
               "Value": {
-                "Fn::Join": [
-                  ",",
-                  {
-                    "Ref": "ApprovalStageNotifyEmailList",
-                  },
-                ],
+                "Ref": "ApprovalStageNotifyEmailList",
               },
             },
             {
@@ -14574,6 +14643,33 @@ exports.handler = async function (event, context) {
     },
   },
   "Rules": {
+    "RequireApprovalNotificationEmail": {
+      "Assertions": [
+        {
+          "Assert": {
+            "Fn::Not": [
+              {
+                "Fn::Equals": [
+                  {
+                    "Ref": "ApprovalStageNotifyEmailList",
+                  },
+                  "",
+                ],
+              },
+            ],
+          },
+          "AssertDescription": "Approval Stage notification email list is required when approval is enabled",
+        },
+      ],
+      "RuleCondition": {
+        "Fn::Equals": [
+          {
+            "Ref": "EnableApprovalStage",
+          },
+          "Yes",
+        ],
+      },
+    },
     "RequiredParametersForCodeConnection": {
       "Assertions": [
         {
@@ -14939,8 +15035,10 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 5`] = `
       "Type": "String",
     },
     "ApprovalStageNotifyEmailList": {
+      "AllowedPattern": "^$|^[^\\s@]+@[^\\s@]+\\.[^\\s@]+(\\s*,\\s*[^\\s@]+@[^\\s@]+\\.[^\\s@]+)*$",
+      "ConstraintDescription": "Must be a valid list of one or more email addresses separated by commas",
       "Description": "Provide comma(,) separated list of email ids to receive manual approval stage notification email",
-      "Type": "CommaDelimitedList",
+      "Type": "String",
     },
     "AuditAccountEmail": {
       "AllowedPattern": "[^\\s@]+@[^\\s@]+\\.[^\\s@]+",
@@ -16345,12 +16443,7 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 5`] = `
               "Name": "APPROVAL_STAGE_NOTIFY_EMAIL_LIST",
               "Type": "PLAINTEXT",
               "Value": {
-                "Fn::Join": [
-                  ",",
-                  {
-                    "Ref": "ApprovalStageNotifyEmailList",
-                  },
-                ],
+                "Ref": "ApprovalStageNotifyEmailList",
               },
             },
             {
@@ -18281,6 +18374,33 @@ exports.handler = async function (event, context) {
     },
   },
   "Rules": {
+    "RequireApprovalNotificationEmail": {
+      "Assertions": [
+        {
+          "Assert": {
+            "Fn::Not": [
+              {
+                "Fn::Equals": [
+                  {
+                    "Ref": "ApprovalStageNotifyEmailList",
+                  },
+                  "",
+                ],
+              },
+            ],
+          },
+          "AssertDescription": "Approval Stage notification email list is required when approval is enabled",
+        },
+      ],
+      "RuleCondition": {
+        "Fn::Equals": [
+          {
+            "Ref": "EnableApprovalStage",
+          },
+          "Yes",
+        ],
+      },
+    },
     "RequiredParametersForCodeConnection": {
       "Assertions": [
         {
@@ -18629,8 +18749,10 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 6`] = `
       "Type": "String",
     },
     "ApprovalStageNotifyEmailList": {
+      "AllowedPattern": "^$|^[^\\s@]+@[^\\s@]+\\.[^\\s@]+(\\s*,\\s*[^\\s@]+@[^\\s@]+\\.[^\\s@]+)*$",
+      "ConstraintDescription": "Must be a valid list of one or more email addresses separated by commas",
       "Description": "Provide comma(,) separated list of email ids to receive manual approval stage notification email",
-      "Type": "CommaDelimitedList",
+      "Type": "String",
     },
     "AuditAccountEmail": {
       "AllowedPattern": "[^\\s@]+@[^\\s@]+\\.[^\\s@]+",
@@ -20023,12 +20145,7 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 6`] = `
               "Name": "APPROVAL_STAGE_NOTIFY_EMAIL_LIST",
               "Type": "PLAINTEXT",
               "Value": {
-                "Fn::Join": [
-                  ",",
-                  {
-                    "Ref": "ApprovalStageNotifyEmailList",
-                  },
-                ],
+                "Ref": "ApprovalStageNotifyEmailList",
               },
             },
             {
@@ -21948,6 +22065,33 @@ exports.handler = async function (event, context) {
     },
   },
   "Rules": {
+    "RequireApprovalNotificationEmail": {
+      "Assertions": [
+        {
+          "Assert": {
+            "Fn::Not": [
+              {
+                "Fn::Equals": [
+                  {
+                    "Ref": "ApprovalStageNotifyEmailList",
+                  },
+                  "",
+                ],
+              },
+            ],
+          },
+          "AssertDescription": "Approval Stage notification email list is required when approval is enabled",
+        },
+      ],
+      "RuleCondition": {
+        "Fn::Equals": [
+          {
+            "Ref": "EnableApprovalStage",
+          },
+          "Yes",
+        ],
+      },
+    },
     "RequiredParametersForCodeConnection": {
       "Assertions": [
         {
@@ -22309,8 +22453,10 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 7`] = `
       "Type": "String",
     },
     "ApprovalStageNotifyEmailList": {
+      "AllowedPattern": "^$|^[^\\s@]+@[^\\s@]+\\.[^\\s@]+(\\s*,\\s*[^\\s@]+@[^\\s@]+\\.[^\\s@]+)*$",
+      "ConstraintDescription": "Must be a valid list of one or more email addresses separated by commas",
       "Description": "Provide comma(,) separated list of email ids to receive manual approval stage notification email",
-      "Type": "CommaDelimitedList",
+      "Type": "String",
     },
     "AuditAccountEmail": {
       "AllowedPattern": "[^\\s@]+@[^\\s@]+\\.[^\\s@]+",
@@ -23714,12 +23860,7 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 7`] = `
               "Name": "APPROVAL_STAGE_NOTIFY_EMAIL_LIST",
               "Type": "PLAINTEXT",
               "Value": {
-                "Fn::Join": [
-                  ",",
-                  {
-                    "Ref": "ApprovalStageNotifyEmailList",
-                  },
-                ],
+                "Ref": "ApprovalStageNotifyEmailList",
               },
             },
             {
@@ -25990,6 +26131,33 @@ exports.handler = async function (event, context) {
     },
   },
   "Rules": {
+    "RequireApprovalNotificationEmail": {
+      "Assertions": [
+        {
+          "Assert": {
+            "Fn::Not": [
+              {
+                "Fn::Equals": [
+                  {
+                    "Ref": "ApprovalStageNotifyEmailList",
+                  },
+                  "",
+                ],
+              },
+            ],
+          },
+          "AssertDescription": "Approval Stage notification email list is required when approval is enabled",
+        },
+      ],
+      "RuleCondition": {
+        "Fn::Equals": [
+          {
+            "Ref": "EnableApprovalStage",
+          },
+          "Yes",
+        ],
+      },
+    },
     "RequiredParametersForCodeConnection": {
       "Assertions": [
         {
@@ -26362,8 +26530,10 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 8`] = `
       "Type": "String",
     },
     "ApprovalStageNotifyEmailList": {
+      "AllowedPattern": "^$|^[^\\s@]+@[^\\s@]+\\.[^\\s@]+(\\s*,\\s*[^\\s@]+@[^\\s@]+\\.[^\\s@]+)*$",
+      "ConstraintDescription": "Must be a valid list of one or more email addresses separated by commas",
       "Description": "Provide comma(,) separated list of email ids to receive manual approval stage notification email",
-      "Type": "CommaDelimitedList",
+      "Type": "String",
     },
     "AuditAccountEmail": {
       "AllowedPattern": "[^\\s@]+@[^\\s@]+\\.[^\\s@]+",
@@ -27771,12 +27941,7 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 8`] = `
               "Name": "APPROVAL_STAGE_NOTIFY_EMAIL_LIST",
               "Type": "PLAINTEXT",
               "Value": {
-                "Fn::Join": [
-                  ",",
-                  {
-                    "Ref": "ApprovalStageNotifyEmailList",
-                  },
-                ],
+                "Ref": "ApprovalStageNotifyEmailList",
               },
             },
             {
@@ -30054,6 +30219,33 @@ exports.handler = async function (event, context) {
     },
   },
   "Rules": {
+    "RequireApprovalNotificationEmail": {
+      "Assertions": [
+        {
+          "Assert": {
+            "Fn::Not": [
+              {
+                "Fn::Equals": [
+                  {
+                    "Ref": "ApprovalStageNotifyEmailList",
+                  },
+                  "",
+                ],
+              },
+            ],
+          },
+          "AssertDescription": "Approval Stage notification email list is required when approval is enabled",
+        },
+      ],
+      "RuleCondition": {
+        "Fn::Equals": [
+          {
+            "Ref": "EnableApprovalStage",
+          },
+          "Yes",
+        ],
+      },
+    },
     "RequiredEmailNotification": {
       "Assertions": [
         {
@@ -30454,8 +30646,10 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 9`] = `
       "Type": "String",
     },
     "ApprovalStageNotifyEmailList": {
+      "AllowedPattern": "^$|^[^\\s@]+@[^\\s@]+\\.[^\\s@]+(\\s*,\\s*[^\\s@]+@[^\\s@]+\\.[^\\s@]+)*$",
+      "ConstraintDescription": "Must be a valid list of one or more email addresses separated by commas",
       "Description": "Provide comma(,) separated list of email ids to receive manual approval stage notification email",
-      "Type": "CommaDelimitedList",
+      "Type": "String",
     },
     "AuditAccountEmail": {
       "AllowedPattern": "[^\\s@]+@[^\\s@]+\\.[^\\s@]+",
@@ -31859,12 +32053,7 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 9`] = `
               "Name": "APPROVAL_STAGE_NOTIFY_EMAIL_LIST",
               "Type": "PLAINTEXT",
               "Value": {
-                "Fn::Join": [
-                  ",",
-                  {
-                    "Ref": "ApprovalStageNotifyEmailList",
-                  },
-                ],
+                "Ref": "ApprovalStageNotifyEmailList",
               },
             },
             {
@@ -34190,6 +34379,33 @@ exports.handler = async function (event, context) {
     },
   },
   "Rules": {
+    "RequireApprovalNotificationEmail": {
+      "Assertions": [
+        {
+          "Assert": {
+            "Fn::Not": [
+              {
+                "Fn::Equals": [
+                  {
+                    "Ref": "ApprovalStageNotifyEmailList",
+                  },
+                  "",
+                ],
+              },
+            ],
+          },
+          "AssertDescription": "Approval Stage notification email list is required when approval is enabled",
+        },
+      ],
+      "RuleCondition": {
+        "Fn::Equals": [
+          {
+            "Ref": "EnableApprovalStage",
+          },
+          "Yes",
+        ],
+      },
+    },
     "RequiredParametersForCodeConnection": {
       "Assertions": [
         {
