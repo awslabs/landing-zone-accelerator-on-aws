@@ -11,7 +11,18 @@
  *  and limitations under the License.
  */
 
-import { GuardDutyClient, ListOrganizationAdminAccountsCommand } from '@aws-sdk/client-guardduty';
+import {
+  EnableOrganizationAdminAccountCommand,
+  GuardDutyClient,
+  ListOrganizationAdminAccountsCommand,
+} from '@aws-sdk/client-guardduty';
+
+import {
+  OrganizationsClient,
+  ListDelegatedAdministratorsCommand,
+  DeregisterDelegatedAdministratorCommand,
+  RegisterDelegatedAdministratorCommand,
+} from '@aws-sdk/client-organizations';
 
 import { beforeAll, expect, test } from '@jest/globals';
 
@@ -53,6 +64,36 @@ RegionalTestSuite['sampleConfig:us-east-1']!.suite(RegionalTestSuite['sampleConf
     // Cleanup of environment
     //
     await cleanup();
+  });
+
+  test('[CREATE event]: Should fail when a different delegated admin account is already set', async () => {
+    const auditAccountId = integrationTest.getAccountId('Audit');
+    const logArchiveAccountId = integrationTest.getAccountId('Log Archive');
+    const event = CreateEvent;
+    event.ResourceProperties['region'] = integrationTest.environment.region;
+    event.ResourceProperties['adminAccountId'] = auditAccountId;
+
+    await setGuardDutyOrgAdmin(logArchiveAccountId);
+
+    await expect(async () => handler(event)).rejects.toThrow('GuardDuty delegated admin is already set');
+
+    await unsetGuardDutyOrgAdmin();
+  });
+
+  test('[CREATE event]: Should fail when a different organizations delegated admin account is already set', async () => {
+    const auditAccountId = integrationTest.getAccountId('Audit');
+    const logArchiveAccountId = integrationTest.getAccountId('Log Archive');
+    const event = CreateEvent;
+    event.ResourceProperties['region'] = integrationTest.environment.region;
+    event.ResourceProperties['adminAccountId'] = auditAccountId;
+
+    await setOrganizationsGuardDutyAdmin(logArchiveAccountId);
+
+    await expect(async () => handler(event)).rejects.toThrow(
+      'Another account is already enabled as GuardDuty delegated administrator for the organization',
+    );
+
+    await unsetGuardDutyOrgAdmin();
   });
 
   test('[CREATE event]: Should pass when adding Management account as delegated admin account', async () => {
@@ -122,6 +163,36 @@ RegionalTestSuite['sampleConfig:us-west-2']!.suite(RegionalTestSuite['sampleConf
     // Cleanup of environment
     //
     await cleanup();
+  });
+
+  test('[CREATE event]: Should fail when a different delegated admin account is already set', async () => {
+    const auditAccountId = integrationTest.getAccountId('Audit');
+    const logArchiveAccountId = integrationTest.getAccountId('Log Archive');
+    const event = CreateEvent;
+    event.ResourceProperties['region'] = integrationTest.environment.region;
+    event.ResourceProperties['adminAccountId'] = auditAccountId;
+
+    await setGuardDutyOrgAdmin(logArchiveAccountId);
+
+    await expect(async () => handler(event)).rejects.toThrow('GuardDuty delegated admin is already set');
+
+    await unsetGuardDutyOrgAdmin();
+  });
+
+  test('[CREATE event]: Should fail when a different organizations delegated admin account is already set', async () => {
+    const auditAccountId = integrationTest.getAccountId('Audit');
+    const logArchiveAccountId = integrationTest.getAccountId('Log Archive');
+    const event = CreateEvent;
+    event.ResourceProperties['region'] = integrationTest.environment.region;
+    event.ResourceProperties['adminAccountId'] = auditAccountId;
+
+    await setOrganizationsGuardDutyAdmin(logArchiveAccountId);
+
+    await expect(async () => handler(event)).rejects.toThrow(
+      'Another account is already enabled as GuardDuty delegated administrator for the organization',
+    );
+
+    await unsetGuardDutyOrgAdmin();
   });
 
   test('[CREATE event]: Should pass when adding Audit account as delegated admin account', async () => {
@@ -207,4 +278,86 @@ async function getAssertProperties(delayInMinutes?: number): Promise<AssertProps
     apiName: 'ListOrganizationAdminAccounts',
     actualResponse: await throttlingBackOff(() => client.send(new ListOrganizationAdminAccountsCommand({}))),
   };
+}
+
+/**
+ * Function to deregister any existing GuardDuty delegated administrators.
+ *
+ * @description
+ * This function checks if any GuardDuty delegated administrators exist using the Organizations API,
+ * and deregisters them.
+ */
+async function unsetGuardDutyOrgAdmin() {
+  const organizationsClient = new OrganizationsClient({
+    credentials: integrationTest.environment.integrationAccountStsCredentials,
+  });
+
+  const listDelegatedAdminsResponse = await organizationsClient.send(
+    new ListDelegatedAdministratorsCommand({ ServicePrincipal: 'guardduty.amazonaws.com' }),
+  );
+
+  // If delegated admins exist, deregister them
+  if (
+    listDelegatedAdminsResponse.DelegatedAdministrators &&
+    listDelegatedAdminsResponse.DelegatedAdministrators.length > 0
+  ) {
+    for (const delegatedAdmin of listDelegatedAdminsResponse.DelegatedAdministrators) {
+      if (delegatedAdmin.Id) {
+        console.log(`Deregistering existing delegated admin account: ${delegatedAdmin.Id}`);
+        await organizationsClient.send(
+          new DeregisterDelegatedAdministratorCommand({
+            AccountId: delegatedAdmin.Id,
+            ServicePrincipal: 'guardduty.amazonaws.com',
+          }),
+        );
+      }
+    }
+  }
+}
+
+/**
+ * Function to set GuardDuty organization admin account.
+ *
+ * @description
+ * This function first deregisters any existing GuardDuty delegated administrators,
+ * and then sets the specified account as the GuardDuty delegated admin.
+ *
+ * @param region - The AWS region
+ * @param adminAccountId - The account ID to set as GuardDuty admin
+ */
+async function setGuardDutyOrgAdmin(adminAccountId: string) {
+  await unsetGuardDutyOrgAdmin();
+
+  const guardDutyClient = new GuardDutyClient({
+    credentials: integrationTest.environment.integrationAccountStsCredentials,
+  });
+
+  // Set the new GuardDuty delegated admin
+  await guardDutyClient.send(new EnableOrganizationAdminAccountCommand({ AdminAccountId: adminAccountId }));
+}
+
+/**
+ * Function to set Organizations GuardDuty delegated administrator.
+ *
+ * @description
+ * This function first deregisters any existing GuardDuty delegated administrators,
+ * and then registers the specified account as the GuardDuty delegated administrator
+ * using the Organizations API.
+ *
+ * @param adminAccountId - The account ID to set as GuardDuty delegated administrator
+ */
+async function setOrganizationsGuardDutyAdmin(adminAccountId: string) {
+  await unsetGuardDutyOrgAdmin();
+
+  const organizationsClient = new OrganizationsClient({
+    credentials: integrationTest.environment.integrationAccountStsCredentials,
+  });
+
+  // Set the new GuardDuty delegated admin
+  await organizationsClient.send(
+    new RegisterDelegatedAdministratorCommand({
+      AccountId: adminAccountId,
+      ServicePrincipal: 'guardduty.amazonaws.com',
+    }),
+  );
 }

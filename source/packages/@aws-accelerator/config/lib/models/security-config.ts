@@ -388,6 +388,10 @@ export interface IGuardDutyExportFindingsConfig {
 export interface IGuardDutyConfig {
   /**
    * Indicates whether AWS GuardDuty enabled.
+   *
+   * @remarks
+   * Accelerator will try to set the organization admin account to the Audit account, but it cannot overwrite the existing
+   * organization admin account if one is already set. If your pipeline fails, remove the existing delegated admin and rerun the pipeline.
    */
   readonly enable: boolean;
   /**
