@@ -15,6 +15,7 @@ import { delay, throttlingBackOff } from '@aws-accelerator/utils/lib/throttle';
 import { CloudFormationCustomResourceEvent } from '@aws-accelerator/utils/lib/common-types';
 import {
   AdminAccount,
+  BadRequestException,
   DisableOrganizationAdminAccountCommand,
   EnableOrganizationAdminAccountCommand,
   GuardDutyClient,
@@ -56,9 +57,9 @@ export async function handler(event: CloudFormationCustomResourceEvent): Promise
           );
           return { Status: 'Success', StatusCode: 200 };
         } else {
-          console.warn(
-            `GuardDuty delegated admin is already set to ${guardDutyAdminAccount.accountId} account can not assign another delegated account`,
-          );
+          const message = `GuardDuty delegated admin is already set to ${guardDutyAdminAccount.accountId} account, cannot assign another delegated account ${adminAccountId}. Please remove ${guardDutyAdminAccount.accountId} as a delegated administrator and rerun the pipeline.`;
+          console.warn(message);
+          throw new Error(message);
         }
       } else {
         console.log(
@@ -76,6 +77,15 @@ export async function handler(event: CloudFormationCustomResourceEvent): Promise
             console.log('command run');
             break;
           } catch (error) {
+            if (
+              error instanceof BadRequestException &&
+              error.message ===
+                'The request failed because another account is already enabled as GuardDuty delegated administrator for the organization.'
+            ) {
+              throw new Error(
+                `Another account is already enabled as GuardDuty delegated administrator for the organization, can not assign another delegated account ${adminAccountId}. Please remove the existing delegated administrator in organization setting and rerun the pipeline.`,
+              );
+            }
             console.log(error);
             retries = retries + 1;
           }
