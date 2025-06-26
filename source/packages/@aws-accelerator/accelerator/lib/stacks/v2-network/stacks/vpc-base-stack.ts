@@ -1076,7 +1076,7 @@ export class VpcBaseStack extends AcceleratorStack {
         this,
         this.acceleratorResourceNames.parameters.flowLogsDestinationBucketArn,
       );
-      const overrideS3LogPath = vpcFlowLogsConfig.destinationsConfig?.s3.overrideS3LogPath;
+      const overrideS3LogPath = vpcFlowLogsConfig.destinationsConfig?.s3?.overrideS3LogPath;
 
       let s3LogDestination = `${destinationBucketArn}/vpc-flow-logs/`;
       if (overrideS3LogPath) {
