@@ -27,7 +27,7 @@ describe('TgwResources - Transit Gateway Peering', () => {
   let subnetMap: Map<string, Subnet>;
   let tgwResources: TgwResources;
   let mockGlobalProps: AcceleratorStackProps;
-  let cloudWatchKey: IKey;
+  const cloudWatchKey: IKey = {} as IKey;
 
   beforeEach(() => {
     jest.spyOn(NetworkVpcStack.prototype, 'getSsmPath').mockReturnValue('/test/ssm-path/');
