@@ -27,8 +27,9 @@ import { PrefixListRoute, PrefixListRouteProps } from '@aws-accelerator/construc
 import { SsmResourceType } from '@aws-accelerator/utils/lib/ssm-parameter-path';
 import { GatewayRouteTableType } from '@aws-accelerator/config/lib/models/network-config';
 import { isV2Resource } from '../utils/functions';
-import { V2StackComponentsList } from '../utils/enums';
+import { NetworkStackGeneration, V2StackComponentsList } from '../utils/enums';
 import { NetworkVpcStackRouteEntryTypes } from '../utils/constants';
+import { MetadataKeys } from '@aws-accelerator/utils/lib/common-types';
 
 type V2RouteTableDetailsType = { cfnRouteTable?: cdk.aws_ec2.CfnRouteTable; routeTableId?: string };
 export class VpcRouteTablesBaseStack extends AcceleratorStack {
@@ -37,6 +38,15 @@ export class VpcRouteTablesBaseStack extends AcceleratorStack {
   private vpcId: string;
   constructor(scope: Construct, id: string, props: V2NetworkStacksBaseProps) {
     super(scope, id, props);
+
+    //
+    // Add Stack metadata
+    //
+    this.addMetadata(MetadataKeys.LZA_LOOKUP, {
+      accountName: this.props.accountsConfig.getAccountNameById(this.account),
+      region: cdk.Stack.of(this).region,
+      stackGeneration: NetworkStackGeneration.V2,
+    });
 
     this.v2StackProps = props;
     this.vpcDetails = new VpcDetails(this, 'VpcDetails', props);
@@ -87,7 +97,7 @@ export class VpcRouteTablesBaseStack extends AcceleratorStack {
             `${vpcAccount}|${routeTableItem.name}|${routeTableItem.id}`,
           )
         ) {
-          new cdk.aws_ec2.CfnLocalGatewayRouteTableVPCAssociation(
+          const cfnLocalGatewayRouteTableVPCAssociation = new cdk.aws_ec2.CfnLocalGatewayRouteTableVPCAssociation(
             this,
             `${routeTableItem.name}-${vpcName}-${vpcAccount}`,
             {
@@ -95,6 +105,12 @@ export class VpcRouteTablesBaseStack extends AcceleratorStack {
               localGatewayRouteTableId: routeTableItem.id,
             },
           );
+
+          cfnLocalGatewayRouteTableVPCAssociation.addMetadata(MetadataKeys.LZA_LOOKUP, {
+            resourceType: V2StackComponentsList.LOCAL_GATEWAY_ROUTE_TABLE_VPC_ASSOCIATION,
+            vpcName: this.vpcDetails.name,
+            localGatewayRouteTableName: routeTableItem.name,
+          });
         }
       }
     }
@@ -198,6 +214,12 @@ export class VpcRouteTablesBaseStack extends AcceleratorStack {
       },
     );
 
+    routeTable.addMetadata(MetadataKeys.LZA_LOOKUP, {
+      resourceType: V2StackComponentsList.ROUTE_TABLE,
+      vpcName,
+      routeTableName,
+    });
+
     return { cfnRouteTable: routeTable };
   }
 
@@ -297,6 +319,12 @@ export class VpcRouteTablesBaseStack extends AcceleratorStack {
     if (v2RouteTableDetails.cfnRouteTable) {
       cfnGatewayRouteTableAssociation.node.addDependency(v2RouteTableDetails.cfnRouteTable);
     }
+
+    cfnGatewayRouteTableAssociation.addMetadata(MetadataKeys.LZA_LOOKUP, {
+      resourceType: V2StackComponentsList.ROUTE_TABLE_GATEWAY_ASSOCIATION,
+      vpcName,
+      routeTableName,
+    });
   }
 
   private createRouteTableEntries(routeTable: RouteTableDetailsType): void {
@@ -343,6 +371,16 @@ export class VpcRouteTablesBaseStack extends AcceleratorStack {
 
           const routeEntryTarget = routeTableEntryItem.target!;
 
+          const metadata: { [key: string]: string } = {
+            resourceType: V2StackComponentsList.ROUTE_ENTRY,
+            vpcName: this.vpcDetails.name,
+            routeTableName: routeTable.name,
+            entryName: routeTableEntryItem.name,
+            entryType: routeTableEntryItem.type,
+            entryDestinationPrefixList: routeTableEntryItem.destinationPrefixList ?? 'N/A',
+            entryTarget: routeEntryTarget,
+          };
+
           switch (routeTableEntryItem.type) {
             case 'transitGateway':
               this.logger.info(
@@ -353,7 +391,7 @@ export class VpcRouteTablesBaseStack extends AcceleratorStack {
                 this.getSsmPath(SsmResourceType.TGW, [routeEntryTarget]),
               );
 
-              this.addTransitGatewayRoute(routeProps);
+              this.addTransitGatewayRoute(routeProps, metadata);
               break;
             case 'natGateway':
               this.logger.info(
@@ -364,7 +402,7 @@ export class VpcRouteTablesBaseStack extends AcceleratorStack {
                 this.getSsmPath(SsmResourceType.NAT_GW, [this.vpcDetails.name, routeEntryTarget]),
               );
 
-              this.addNatGatewayRoute(routeProps);
+              this.addNatGatewayRoute(routeProps, metadata);
               break;
             case 'internetGateway':
               this.logger.info(
@@ -381,7 +419,7 @@ export class VpcRouteTablesBaseStack extends AcceleratorStack {
                 this.getSsmPath(SsmResourceType.IGW, [this.vpcDetails.name]),
               );
 
-              this.addInternetGatewayRoute(routeProps);
+              this.addInternetGatewayRoute(routeProps, metadata);
               break;
             case 'egressOnlyIgw':
               this.logger.info(
@@ -399,7 +437,7 @@ export class VpcRouteTablesBaseStack extends AcceleratorStack {
                 this.getSsmPath(SsmResourceType.VPC_EGRESS_ONLY_IGW, [this.vpcDetails.name]),
               );
 
-              this.addEgressOnlyIgwRoute(routeProps);
+              this.addEgressOnlyIgwRoute(routeProps, metadata);
               break;
             case 'virtualPrivateGateway':
               this.logger.info(
@@ -411,7 +449,7 @@ export class VpcRouteTablesBaseStack extends AcceleratorStack {
                 this.getSsmPath(SsmResourceType.VPN_GW, [this.vpcDetails.name]),
               );
 
-              this.addVirtualPrivateGatewayRoute(routeProps);
+              this.addVirtualPrivateGatewayRoute(routeProps, metadata);
               break;
             case 'localGateway':
               this.logger.info(
@@ -430,7 +468,7 @@ export class VpcRouteTablesBaseStack extends AcceleratorStack {
               }
               routeProps.targetId = localGatewayIdFromVpcOutpost;
 
-              this.addLocalGatewayRoute(routeProps);
+              this.addLocalGatewayRoute(routeProps, metadata);
               break;
           }
         }
@@ -549,14 +587,17 @@ export class VpcRouteTablesBaseStack extends AcceleratorStack {
 
   /**
    * Function to create non prefix list route entry
+   * @param routeTableName string
    * @param resourceName string
-   * @param cfnRouteTable {@link cdk.aws_ec2.CfnRouteTable}
    * @param props {@link cdk.aws_ec2.CfnRouteProps}
+   * @param metadata
+   * @param cfnRouteTable {@link cdk.aws_ec2.CfnRouteTable} | undefined
    */
   private createNonPrefixListRoute(
     routeTableName: string,
     resourceName: string,
     props: cdk.aws_ec2.CfnRouteProps,
+    metadata: { [key: string]: string },
     cfnRouteTable?: cdk.aws_ec2.CfnRouteTable,
   ): void {
     this.validateCidrRouteDestination(routeTableName, props.destinationCidrBlock, props.destinationIpv6CidrBlock);
@@ -565,28 +606,38 @@ export class VpcRouteTablesBaseStack extends AcceleratorStack {
     if (cfnRouteTable) {
       cfnRoute.node.addDependency(cfnRouteTable);
     }
+
+    cfnRoute.addMetadata(MetadataKeys.LZA_LOOKUP, metadata);
   }
 
   /**
    * Function to create prefix list route
+   * @param resourceName string
    * @param props {@link PrefixListRouteProps}
+   * @param metadata
+   * @param cfnRouteTable {@link cdk.aws_ec2.CfnRouteTable} | undefined
    */
   private createPrefixListRoute(
     resourceName: string,
     props: PrefixListRouteProps,
+    metadata: { [key: string]: string },
     cfnRouteTable?: cdk.aws_ec2.CfnRouteTable,
   ): void {
     const prefixListRoute = new PrefixListRoute(this, resourceName, props);
     if (cfnRouteTable) {
       prefixListRoute.node.addDependency(cfnRouteTable);
     }
+
+    const cfnResource = prefixListRoute.resource.node.defaultChild as cdk.CfnResource;
+
+    cfnResource.addMetadata(MetadataKeys.LZA_LOOKUP, metadata);
   }
 
   /**
    * Function to add TGW route
    * @param props {@link RouteEntryPropertiesType}
    */
-  private addTransitGatewayRoute(props: RouteEntryPropertiesType): void {
+  private addTransitGatewayRoute(props: RouteEntryPropertiesType, metadata: { [key: string]: string }): void {
     if (props.destinationPrefixListId) {
       this.createPrefixListRoute(
         props.routeEntryResourceName,
@@ -597,6 +648,7 @@ export class VpcRouteTablesBaseStack extends AcceleratorStack {
           logRetentionInDays: props.logRetentionInDays,
           transitGatewayId: props.targetId,
         },
+        metadata,
         props.cfnRouteTable,
       );
     } else {
@@ -609,6 +661,7 @@ export class VpcRouteTablesBaseStack extends AcceleratorStack {
           destinationIpv6CidrBlock: props.ipv6Destination,
           transitGatewayId: props.targetId,
         },
+        metadata,
         props.cfnRouteTable,
       );
     }
@@ -617,8 +670,9 @@ export class VpcRouteTablesBaseStack extends AcceleratorStack {
   /**
    * Function to add NAT Gateway route
    * @param props {@link RouteEntryPropertiesType}
+   * @param metadata
    */
-  private addNatGatewayRoute(props: RouteEntryPropertiesType): void {
+  private addNatGatewayRoute(props: RouteEntryPropertiesType, metadata: { [key: string]: string }): void {
     if (props.destinationPrefixListId) {
       this.createPrefixListRoute(
         props.routeEntryResourceName,
@@ -629,6 +683,7 @@ export class VpcRouteTablesBaseStack extends AcceleratorStack {
           logRetentionInDays: props.logRetentionInDays,
           natGatewayId: props.targetId,
         },
+        metadata,
         props.cfnRouteTable,
       );
     } else {
@@ -641,6 +696,7 @@ export class VpcRouteTablesBaseStack extends AcceleratorStack {
           destinationIpv6CidrBlock: props.ipv6Destination,
           natGatewayId: props.targetId,
         },
+        metadata,
         props.cfnRouteTable,
       );
     }
@@ -649,8 +705,9 @@ export class VpcRouteTablesBaseStack extends AcceleratorStack {
   /**
    * Function to add Internet Gateway route
    * @param props {@link RouteEntryPropertiesType}
+   * @param metadata
    */
-  private addInternetGatewayRoute(props: RouteEntryPropertiesType): void {
+  private addInternetGatewayRoute(props: RouteEntryPropertiesType, metadata: { [key: string]: string }): void {
     if (props.destinationPrefixListId) {
       this.createPrefixListRoute(
         props.routeEntryResourceName,
@@ -661,6 +718,7 @@ export class VpcRouteTablesBaseStack extends AcceleratorStack {
           logRetentionInDays: props.logRetentionInDays,
           gatewayId: props.targetId,
         },
+        metadata,
         props.cfnRouteTable,
       );
     } else {
@@ -673,6 +731,7 @@ export class VpcRouteTablesBaseStack extends AcceleratorStack {
           destinationIpv6CidrBlock: props.ipv6Destination,
           gatewayId: props.targetId,
         },
+        metadata,
         props.cfnRouteTable,
       );
     }
@@ -681,8 +740,9 @@ export class VpcRouteTablesBaseStack extends AcceleratorStack {
   /**
    * Function to add Egress Only IGW route
    * @param props {@link RouteEntryPropertiesType}
+   * @param metadata
    */
-  private addEgressOnlyIgwRoute(props: RouteEntryPropertiesType): void {
+  private addEgressOnlyIgwRoute(props: RouteEntryPropertiesType, metadata: { [key: string]: string }): void {
     if (props.destinationPrefixListId) {
       this.createPrefixListRoute(
         props.routeEntryResourceName,
@@ -693,6 +753,7 @@ export class VpcRouteTablesBaseStack extends AcceleratorStack {
           logRetentionInDays: props.logRetentionInDays,
           egressOnlyInternetGatewayId: props.targetId,
         },
+        metadata,
         props.cfnRouteTable,
       );
     } else {
@@ -705,6 +766,7 @@ export class VpcRouteTablesBaseStack extends AcceleratorStack {
           destinationIpv6CidrBlock: props.ipv6Destination,
           egressOnlyInternetGatewayId: props.targetId,
         },
+        metadata,
         props.cfnRouteTable,
       );
     }
@@ -713,8 +775,9 @@ export class VpcRouteTablesBaseStack extends AcceleratorStack {
   /**
    * Function to add Virtual Private Gateway route
    * @param props {@link RouteEntryPropertiesType}
+   * @param metadata
    */
-  private addVirtualPrivateGatewayRoute(props: RouteEntryPropertiesType): void {
+  private addVirtualPrivateGatewayRoute(props: RouteEntryPropertiesType, metadata: { [key: string]: string }): void {
     if (props.destinationPrefixListId) {
       this.createPrefixListRoute(
         props.routeEntryResourceName,
@@ -725,6 +788,7 @@ export class VpcRouteTablesBaseStack extends AcceleratorStack {
           logRetentionInDays: props.logRetentionInDays,
           gatewayId: props.targetId,
         },
+        metadata,
         props.cfnRouteTable,
       );
     } else {
@@ -737,6 +801,7 @@ export class VpcRouteTablesBaseStack extends AcceleratorStack {
           destinationIpv6CidrBlock: props.ipv6Destination,
           gatewayId: props.targetId,
         },
+        metadata,
         props.cfnRouteTable,
       );
     }
@@ -745,8 +810,9 @@ export class VpcRouteTablesBaseStack extends AcceleratorStack {
   /**
    * Function to add Local Gateway route
    * @param props {@link RouteEntryPropertiesType}
+   * @param metadata
    */
-  private addLocalGatewayRoute(props: RouteEntryPropertiesType): void {
+  private addLocalGatewayRoute(props: RouteEntryPropertiesType, metadata: { [key: string]: string }): void {
     if (props.destinationPrefixListId) {
       this.createPrefixListRoute(
         props.routeEntryResourceName,
@@ -757,6 +823,7 @@ export class VpcRouteTablesBaseStack extends AcceleratorStack {
           logRetentionInDays: props.logRetentionInDays,
           localGatewayId: props.targetId,
         },
+        metadata,
         props.cfnRouteTable,
       );
     } else {
@@ -769,6 +836,7 @@ export class VpcRouteTablesBaseStack extends AcceleratorStack {
           destinationIpv6CidrBlock: props.ipv6Destination,
           localGatewayId: props.targetId,
         },
+        metadata,
         props.cfnRouteTable,
       );
     }

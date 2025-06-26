@@ -22,7 +22,8 @@ import { getResourceSharePrincipals, isV2Resource } from '../utils/functions';
 import { SsmResourceType } from '@aws-accelerator/utils/lib/ssm-parameter-path';
 import { PutSsmParameter, SsmParameterProps } from '@aws-accelerator/constructs/lib/aws-ssm/put-ssm-parameter';
 import { ResourceShare } from '@aws-accelerator/constructs/lib/aws-ram/resource-share';
-import { V2StackComponentsList } from '../utils/enums';
+import { NetworkStackGeneration, V2StackComponentsList } from '../utils/enums';
+import { MetadataKeys } from '@aws-accelerator/utils/lib/common-types';
 
 export class VpcSubnetsShareBaseStack extends AcceleratorStack {
   private v2StackProps: V2NetworkStacksBaseProps;
@@ -33,6 +34,15 @@ export class VpcSubnetsShareBaseStack extends AcceleratorStack {
 
   constructor(scope: Construct, id: string, props: V2NetworkStacksBaseProps) {
     super(scope, id, props);
+
+    //
+    // Add Stack metadata
+    //
+    this.addMetadata(MetadataKeys.LZA_LOOKUP, {
+      accountName: this.props.accountsConfig.getAccountNameById(this.account),
+      region: cdk.Stack.of(this).region,
+      stackGeneration: NetworkStackGeneration.V2,
+    });
 
     this.v2StackProps = props;
     this.vpcDetails = new VpcDetails(this, 'VpcDetails', this.v2StackProps);
@@ -95,10 +105,19 @@ export class VpcSubnetsShareBaseStack extends AcceleratorStack {
         resourceName: subnetId,
       });
       // Create the Resource Share
-      const resourceShare = new ResourceShare(this, `${pascalCase(resourceShareName)}ResourceShare`, {
+      const resourceShareLogicalId = `${pascalCase(resourceShareName)}ResourceShare`;
+      const resourceShare = new ResourceShare(this, resourceShareLogicalId, {
         name: resourceShareName,
         principals,
         resourceArns: [subnetArn],
+      });
+
+      const cfnResource = resourceShare.node.findChild(resourceShareLogicalId) as cdk.CfnResource;
+
+      cfnResource.addMetadata(MetadataKeys.LZA_LOOKUP, {
+        resourceType: V2StackComponentsList.SUBNET_SHARE,
+        vpcName: this.vpcDetails.name,
+        subnetName: subnetConfig.name,
       });
 
       const shareTargetAccountIds = this.getAccountIdsFromShareTarget(subnetConfig.shareTargets).filter(

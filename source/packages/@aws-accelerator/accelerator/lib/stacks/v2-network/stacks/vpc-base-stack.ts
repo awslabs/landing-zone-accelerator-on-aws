@@ -48,8 +48,9 @@ import {
 import { CloudWatchLogGroups } from '@aws-accelerator/constructs/lib/aws-cloudwatch-logs/cloudwatch-log-group';
 import { getFirewallInstanceConfig } from '../../network-stacks/utils/getter-utils';
 import { PutSsmParameter, SsmParameterProps } from '@aws-accelerator/constructs/lib/aws-ssm/put-ssm-parameter';
-import { V2StackComponentsList } from '../utils/enums';
+import { NetworkStackGeneration, V2StackComponentsList } from '../utils/enums';
 import { isV2Resource } from '../utils/functions';
+import { MetadataKeys } from '@aws-accelerator/utils/lib/common-types';
 
 export class VpcBaseStack extends AcceleratorStack {
   private v2StackProps: V2NetworkStacksBaseProps;
@@ -71,6 +72,15 @@ export class VpcBaseStack extends AcceleratorStack {
     this.cloudwatchKey = this.getAcceleratorKey(AcceleratorKeyType.CLOUDWATCH_KEY);
     this.lambdaKey = this.getAcceleratorKey(AcceleratorKeyType.LAMBDA_KEY);
     this.vpcDetails = new VpcDetails(this, 'VpcDetails', props);
+
+    //
+    // Add Stack metadata
+    //
+    this.addMetadata(MetadataKeys.LZA_LOOKUP, {
+      accountName: this.props.accountsConfig.getAccountNameById(this.account),
+      region: cdk.Stack.of(this).region,
+      stackGeneration: NetworkStackGeneration.V2,
+    });
 
     //
     // Create VPC
@@ -185,6 +195,11 @@ export class VpcBaseStack extends AcceleratorStack {
         tags: [{ key: 'Name', value: this.vpcDetails.name }, ...(this.vpcDetails.tags ?? [])],
       });
 
+      cfnVPC.addMetadata(MetadataKeys.LZA_LOOKUP, {
+        resourceType: V2StackComponentsList.VPC,
+        vpcName: this.vpcDetails.name,
+      });
+
       this.addSsmParameter({
         logicalId: pascalCase(`SsmParam${pascalCase(this.vpcDetails.name)}VpcId`),
         parameterName: this.getSsmPath(SsmResourceType.VPC, [this.vpcDetails.name]),
@@ -235,6 +250,11 @@ export class VpcBaseStack extends AcceleratorStack {
         parameterName: this.getSsmPath(SsmResourceType.VPC_EGRESS_ONLY_IGW, [this.vpcDetails.name]),
         stringValue: egressOnlyIgw.ref,
       });
+
+      egressOnlyIgw.addMetadata(MetadataKeys.LZA_LOOKUP, {
+        resourceType: V2StackComponentsList.EGRESS_ONLY_IGW,
+        vpcName: this.vpcDetails.name,
+      });
     }
   }
 
@@ -252,15 +272,24 @@ export class VpcBaseStack extends AcceleratorStack {
 
       const internetGatewayId = cfnInternetGateway.ref;
 
-      new cdk.aws_ec2.CfnVPCGatewayAttachment(this, `${this.vpcDetails.name}VpcInternetGatewayAttachment`, {
-        vpcId: this.vpcId,
-        internetGatewayId: internetGatewayId,
-      });
+      const cfnVPCGatewayAttachment = new cdk.aws_ec2.CfnVPCGatewayAttachment(
+        this,
+        `${this.vpcDetails.name}VpcInternetGatewayAttachment`,
+        {
+          vpcId: this.vpcId,
+          internetGatewayId: internetGatewayId,
+        },
+      );
 
       this.addSsmParameter({
         logicalId: pascalCase(`SsmParam${this.vpcDetails.name}InternetGatewayId`),
         parameterName: this.getSsmPath(SsmResourceType.IGW, [this.vpcDetails.name]),
         stringValue: internetGatewayId,
+      });
+
+      cfnVPCGatewayAttachment.addMetadata(MetadataKeys.LZA_LOOKUP, {
+        resourceType: V2StackComponentsList.INTERNET_GATEWAY_ATTACHMENT,
+        vpcName: this.vpcDetails.name,
       });
     }
   }
@@ -285,15 +314,26 @@ export class VpcBaseStack extends AcceleratorStack {
 
       this.virtualPrivateGatewayId = vpnGateway.gatewayId;
 
-      new cdk.aws_ec2.CfnVPCGatewayAttachment(this, `${this.vpcDetails.name}VpcVirtualPrivateGatewayAttachment`, {
-        vpcId: this.vpcId,
-        vpnGatewayId: this.virtualPrivateGatewayId,
-      });
+      const cfnVPCGatewayAttachment = new cdk.aws_ec2.CfnVPCGatewayAttachment(
+        this,
+        `${this.vpcDetails.name}VpcVirtualPrivateGatewayAttachment`,
+        {
+          vpcId: this.vpcId,
+          vpnGatewayId: this.virtualPrivateGatewayId,
+        },
+      );
 
       this.addSsmParameter({
         logicalId: pascalCase(`SsmParam${this.vpcDetails.name}VpcVirtualPrivateGatewayId`),
         parameterName: this.getSsmPath(SsmResourceType.VPN_GW, [this.vpcDetails.name]),
         stringValue: this.virtualPrivateGatewayId,
+      });
+
+      cfnVPCGatewayAttachment.addMetadata(MetadataKeys.LZA_LOOKUP, {
+        resourceType: V2StackComponentsList.VIRTUAL_PRIVATE_GATEWAY_ATTACHMENT,
+        vpcName: this.vpcDetails.name,
+        virtualPrivateGatewayId: this.virtualPrivateGatewayId,
+        asn,
       });
     }
   }
@@ -314,12 +354,24 @@ export class VpcBaseStack extends AcceleratorStack {
       this.logger.info(
         `Associating DHCP option ${dhcpOptionName} to VPC ${this.vpcDetails.name} in stack ${this.stackName}`,
       );
-      new cdk.aws_ec2.CfnVPCDHCPOptionsAssociation(this, `${this.vpcDetails.name}VpcDhcpOptionsAssociation`, {
-        dhcpOptionsId: cdk.aws_ssm.StringParameter.valueForStringParameter(
-          this,
-          this.getSsmPath(SsmResourceType.DHCP_OPTION_ID, [dhcpOptionName]),
-        ),
-        vpcId: this.vpcId,
+      const dhcpOptionsId = cdk.aws_ssm.StringParameter.valueForStringParameter(
+        this,
+        this.getSsmPath(SsmResourceType.DHCP_OPTION_ID, [dhcpOptionName]),
+      );
+
+      const cfnVPCDHCPOptionsAssociation = new cdk.aws_ec2.CfnVPCDHCPOptionsAssociation(
+        this,
+        `${this.vpcDetails.name}VpcDhcpOptionsAssociation`,
+        {
+          dhcpOptionsId,
+          vpcId: this.vpcId,
+        },
+      );
+
+      cfnVPCDHCPOptionsAssociation.addMetadata(MetadataKeys.LZA_LOOKUP, {
+        resourceType: V2StackComponentsList.VPC_DHCP_OPTIONS_ASSOCIATION,
+        vpcName: this.vpcDetails.name,
+        dhcpOptionsId,
       });
     }
   }
@@ -457,10 +509,21 @@ export class VpcBaseStack extends AcceleratorStack {
       this.logger.info(
         `Delete default security group ingress and egress rules for ${this.vpcDetails.name} in stack ${this.stackName}`,
       );
-      new DeleteDefaultSecurityGroupRules(this, pascalCase(`DeleteSecurityGroupRules-${this.vpcDetails.name}`), {
-        vpcId: this.vpcId,
-        kmsKey: this.cloudwatchKey,
-        logRetentionInDays: this.logRetentionInDays,
+      const deleteDefaultSecurityGroupRules = new DeleteDefaultSecurityGroupRules(
+        this,
+        pascalCase(`DeleteSecurityGroupRules-${this.vpcDetails.name}`),
+        {
+          vpcId: this.vpcId,
+          kmsKey: this.cloudwatchKey,
+          logRetentionInDays: this.logRetentionInDays,
+        },
+      );
+
+      const cfnResource = deleteDefaultSecurityGroupRules.resource.node.defaultChild as cdk.CfnResource;
+
+      cfnResource.addMetadata(MetadataKeys.LZA_LOOKUP, {
+        resourceType: V2StackComponentsList.DELETE_DEFAULT_SECURITY_GROUP_RULES,
+        vpcName: this.vpcDetails.name,
       });
     }
   }
@@ -597,6 +660,16 @@ export class VpcBaseStack extends AcceleratorStack {
           this.logger.info(
             `Creating Vpn Connection with Customer Gateway ${cgw.name} to the VPC ${vpnItem.vpc} vpn connection name is ${vpnItem.name}.`,
           );
+
+          const metadata = {
+            vpcName: vpnItem.vpc,
+            vpcId: this.vpcId,
+            vpnName: vpnItem.name,
+            cgwName: cgw.name,
+            customerGatewayId,
+            virtualPrivateGateway: this.virtualPrivateGatewayId,
+          };
+
           new VpnConnection(
             this,
             logicalId,
@@ -605,6 +678,7 @@ export class VpcBaseStack extends AcceleratorStack {
               customerGatewayId,
               customResourceHandler,
               virtualPrivateGateway: this.virtualPrivateGatewayId,
+              metadata,
             }),
           );
         }
@@ -618,7 +692,7 @@ export class VpcBaseStack extends AcceleratorStack {
   private createSharedParameters(): void {
     const vgwVpnCustomerGateways = this.props.networkConfig.customerGateways
       ? this.props.networkConfig.customerGateways.filter(cgw =>
-          cgw.vpnConnections?.filter(vpn => vpn.name === this.vpcDetails.name),
+          cgw.vpnConnections?.filter(vpn => vpn.vpc === this.vpcDetails.name),
         )
       : [];
 
@@ -646,7 +720,7 @@ export class VpcBaseStack extends AcceleratorStack {
           this.logger.info(`Putting cross-account/cross-region SSM parameters for VPC ${firewallVpcConfig.name}`);
 
           // Put SSM parameters
-          new PutSsmParameter(this, pascalCase(`${crossAcctCgw.name}VgwVpnSharedParameters`), {
+          const putSsmParameter = new PutSsmParameter(this, pascalCase(`${crossAcctCgw.name}VgwVpnSharedParameters`), {
             accountIds,
             region: firewallVpcConfig.region,
             roleName: this.acceleratorResourceNames.roles.crossAccountSsmParameterShare,
@@ -655,6 +729,14 @@ export class VpcBaseStack extends AcceleratorStack {
             parameters,
             invokingAccountId: cdk.Stack.of(this).account,
             acceleratorPrefix: this.props.prefixes.accelerator,
+          });
+
+          const cfnResource = putSsmParameter.node.defaultChild as cdk.CfnResource;
+
+          cfnResource.addMetadata(MetadataKeys.LZA_LOOKUP, {
+            resourceType: V2StackComponentsList.CROSS_ACCOUNT_VPN_CONNECTION_PARAMETERS,
+            vpcName: this.vpcDetails.name,
+            crossAccountCgwName: crossAcctCgw.name,
           });
         }
       }
@@ -728,6 +810,7 @@ export class VpcBaseStack extends AcceleratorStack {
     owningRegion?: string;
     transitGatewayId?: string;
     virtualPrivateGateway?: string;
+    metadata?: { [key: string]: string | number | boolean | undefined };
   }): VpnConnectionProps {
     const hasCrossAccountOptions = options.owningAccountId || options.owningRegion ? true : false;
 
@@ -752,6 +835,7 @@ export class VpcBaseStack extends AcceleratorStack {
         options.owningAccountId,
         options.owningRegion,
       ),
+      metadata: options.metadata,
     };
   }
 
@@ -958,7 +1042,7 @@ export class VpcBaseStack extends AcceleratorStack {
     });
 
     this.logger.info(`Creating CWL destination flow-logs for VPC ${this.vpcDetails.name}`);
-    new cdk.aws_ec2.CfnFlowLog(this, 'CloudWatchFlowLog', {
+    const cfnFlowLog = new cdk.aws_ec2.CfnFlowLog(this, 'CloudWatchFlowLog', {
       deliverLogsPermissionArn: this.createVpcFlowLogsRoleCloudWatchLogs(
         logGroup.logGroupArn,
         this.props.useExistingRoles,
@@ -971,6 +1055,13 @@ export class VpcBaseStack extends AcceleratorStack {
       trafficType: vpcFlowLogsConfig.trafficType,
       maxAggregationInterval: vpcFlowLogsConfig.maxAggregationInterval,
       logFormat,
+    });
+
+    cfnFlowLog.addMetadata(MetadataKeys.LZA_LOOKUP, {
+      resourceType: V2StackComponentsList.CWL_FLOW_LOGS,
+      vpcName: this.vpcDetails.name,
+      trafficType: vpcFlowLogsConfig.trafficType,
+      maxAggregationInterval: vpcFlowLogsConfig.maxAggregationInterval,
     });
   }
 
@@ -999,7 +1090,7 @@ export class VpcBaseStack extends AcceleratorStack {
 
       // Destination: S3
       this.logger.info(`Creating S3 destination flow-logs for VPC ${this.vpcDetails.name}`);
-      new cdk.aws_ec2.CfnFlowLog(this, 'S3FlowLog', {
+      const cfnFlowLog = new cdk.aws_ec2.CfnFlowLog(this, 'S3FlowLog', {
         logDestinationType: 's3',
         logDestination: s3LogDestination,
         resourceId: this.vpcId,
@@ -1007,6 +1098,13 @@ export class VpcBaseStack extends AcceleratorStack {
         trafficType: vpcFlowLogsConfig.trafficType,
         maxAggregationInterval: vpcFlowLogsConfig.maxAggregationInterval,
         logFormat,
+      });
+
+      cfnFlowLog.addMetadata(MetadataKeys.LZA_LOOKUP, {
+        resourceType: V2StackComponentsList.S3_FLOW_LOGS,
+        vpcName: this.vpcDetails.name,
+        trafficType: vpcFlowLogsConfig.trafficType,
+        maxAggregationInterval: vpcFlowLogsConfig.maxAggregationInterval,
       });
     }
   }
@@ -1037,11 +1135,19 @@ export class VpcBaseStack extends AcceleratorStack {
     ipv4IpamPoolId?: string;
     ipv4NetmaskLength?: number;
   }): void {
-    new cdk.aws_ec2.CfnVPCCidrBlock(this, options.logicalId, {
+    const cfnVPCCidrBlock = new cdk.aws_ec2.CfnVPCCidrBlock(this, options.logicalId, {
       cidrBlock: options.cidrBlock,
       ipv4IpamPoolId: options.ipv4IpamPoolId,
       ipv4NetmaskLength: options.ipv4NetmaskLength,
       vpcId: this.vpcId,
+    });
+
+    cfnVPCCidrBlock.addMetadata(MetadataKeys.LZA_LOOKUP, {
+      resourceType: V2StackComponentsList.ADDITIONAL_CIDR_BLOCK,
+      vpcName: this.vpcDetails.name,
+      cidrBlock: options.cidrBlock,
+      ipv4IpamPoolId: options.ipv4IpamPoolId,
+      ipv4NetmaskLength: options.ipv4NetmaskLength,
     });
   }
 
@@ -1056,12 +1162,25 @@ export class VpcBaseStack extends AcceleratorStack {
     if (!ipv6CidrConfig.amazonProvided) {
       ipType = 'Byoip';
     }
-    new cdk.aws_ec2.CfnVPCCidrBlock(this, pascalCase(`${this.vpcDetails.name}Vpc${ipType}Ipv6CidrBlock${index}`), {
+    const cfnVPCCidrBlock = new cdk.aws_ec2.CfnVPCCidrBlock(
+      this,
+      pascalCase(`${this.vpcDetails.name}Vpc${ipType}Ipv6CidrBlock${index}`),
+      {
+        amazonProvidedIpv6CidrBlock: ipv6CidrConfig.amazonProvided,
+        ipv6CidrBlock: ipv6CidrConfig.cidrBlock,
+        ipv6IpamPoolId,
+        ipv6Pool: ipv6CidrConfig.byoipPoolId,
+        vpcId: this.vpcId,
+      },
+    );
+
+    cfnVPCCidrBlock.addMetadata(MetadataKeys.LZA_LOOKUP, {
+      resourceType: V2StackComponentsList.ADDITIONAL_CIDR_BLOCK,
+      vpcName: this.vpcDetails.name,
       amazonProvidedIpv6CidrBlock: ipv6CidrConfig.amazonProvided,
       ipv6CidrBlock: ipv6CidrConfig.cidrBlock,
       ipv6IpamPoolId,
       ipv6Pool: ipv6CidrConfig.byoipPoolId,
-      vpcId: this.vpcId,
     });
   }
 
