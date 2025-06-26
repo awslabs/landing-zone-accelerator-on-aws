@@ -2,6 +2,13 @@
 
 exports[`NetworkVpcV2Stacks Construct(LbStack-Network-us-east-1-Network-Secondary):  Snapshot Test 1`] = `
 {
+  "Metadata": {
+    "lzaLookup": {
+      "accountName": "Network",
+      "region": "us-east-1",
+      "stackGeneration": "v2",
+    },
+  },
   "Parameters": {
     "SsmParameterValueacceleratornetworkvpcNetworkSecondaryidC96584B6F00A464EAD1953AFF4B05118Parameter": {
       "Default": "/accelerator/network/vpc/Network-Secondary/id",
@@ -33,6 +40,13 @@ exports[`NetworkVpcV2Stacks Construct(LbStack-Network-us-east-1-Network-Secondar
 
 exports[`NetworkVpcV2Stacks Construct(LbStack-Network-us-east-1-Network-Secondary-V2):  Snapshot Test 1`] = `
 {
+  "Metadata": {
+    "lzaLookup": {
+      "accountName": "Network",
+      "region": "us-east-1",
+      "stackGeneration": "v2",
+    },
+  },
   "Parameters": {
     "SsmParameterValueacceleratornetworkvpcNetworkSecondaryV2idC96584B6F00A464EAD1953AFF4B05118Parameter": {
       "Default": "/accelerator/network/vpc/Network-Secondary-V2/id",
@@ -64,6 +78,13 @@ exports[`NetworkVpcV2Stacks Construct(LbStack-Network-us-east-1-Network-Secondar
 
 exports[`NetworkVpcV2Stacks Construct(NackStack-Network-us-east-1-Network-Secondary):  Snapshot Test 1`] = `
 {
+  "Metadata": {
+    "lzaLookup": {
+      "accountName": "Network",
+      "region": "us-east-1",
+      "stackGeneration": "v2",
+    },
+  },
   "Parameters": {
     "SsmParameterValueacceleratornetworkvpcNetworkSecondaryidC96584B6F00A464EAD1953AFF4B05118Parameter": {
       "Default": "/accelerator/network/vpc/Network-Secondary/id",
@@ -101,6 +122,15 @@ exports[`NetworkVpcV2Stacks Construct(NackStack-Network-us-east-1-Network-Second
             },
           ],
         },
+        "lzaLookup": {
+          "naclName": "TestNacl-V2",
+          "protocol": 22,
+          "resourceType": "network-acl-entry",
+          "ruleAction": "allow",
+          "ruleNumber": 101,
+          "type": "Inbound",
+          "vpcName": "Network-Secondary",
+        },
       },
       "Properties": {
         "CidrBlock": "10.0.0.0/24",
@@ -128,6 +158,11 @@ exports[`NetworkVpcV2Stacks Construct(NackStack-Network-us-east-1-Network-Second
             },
           ],
         },
+        "lzaLookup": {
+          "naclName": "TestNacl-V2",
+          "resourceType": "network-acl",
+          "vpcName": "Network-Secondary",
+        },
       },
       "Properties": {
         "Tags": [
@@ -143,6 +178,14 @@ exports[`NetworkVpcV2Stacks Construct(NackStack-Network-us-east-1-Network-Second
       "Type": "AWS::EC2::NetworkAcl",
     },
     "NetworkSecondaryVpcTestNaclV2NaclAssociateNetworkSecondaryA": {
+      "Metadata": {
+        "lzaLookup": {
+          "naclName": "TestNacl-V2",
+          "resourceType": "network-acl-subnet-association",
+          "subnetName": "Network-Secondary-A",
+          "vpcName": "Network-Secondary",
+        },
+      },
       "Properties": {
         "NetworkAclId": {
           "Ref": "NetworkSecondaryVpcTestNaclV2Nacl",
@@ -154,6 +197,14 @@ exports[`NetworkVpcV2Stacks Construct(NackStack-Network-us-east-1-Network-Second
       "Type": "AWS::EC2::SubnetNetworkAclAssociation",
     },
     "NetworkSecondaryVpcTestNaclV2NaclAssociateNetworkSecondaryB": {
+      "Metadata": {
+        "lzaLookup": {
+          "naclName": "TestNacl-V2",
+          "resourceType": "network-acl-subnet-association",
+          "subnetName": "Network-Secondary-B",
+          "vpcName": "Network-Secondary",
+        },
+      },
       "Properties": {
         "NetworkAclId": {
           "Ref": "NetworkSecondaryVpcTestNaclV2Nacl",
@@ -165,6 +216,14 @@ exports[`NetworkVpcV2Stacks Construct(NackStack-Network-us-east-1-Network-Second
       "Type": "AWS::EC2::SubnetNetworkAclAssociation",
     },
     "NetworkSecondaryVpcTestNaclV2NaclAssociateNetworkSecondaryC": {
+      "Metadata": {
+        "lzaLookup": {
+          "naclName": "TestNacl-V2",
+          "resourceType": "network-acl-subnet-association",
+          "subnetName": "Network-Secondary-C",
+          "vpcName": "Network-Secondary",
+        },
+      },
       "Properties": {
         "NetworkAclId": {
           "Ref": "NetworkSecondaryVpcTestNaclV2Nacl",
@@ -176,6 +235,14 @@ exports[`NetworkVpcV2Stacks Construct(NackStack-Network-us-east-1-Network-Second
       "Type": "AWS::EC2::SubnetNetworkAclAssociation",
     },
     "NetworkSecondaryVpcTestNaclV2NaclAssociateNetworkSecondaryD": {
+      "Metadata": {
+        "lzaLookup": {
+          "naclName": "TestNacl-V2",
+          "resourceType": "network-acl-subnet-association",
+          "subnetName": "Network-Secondary-D",
+          "vpcName": "Network-Secondary",
+        },
+      },
       "Properties": {
         "NetworkAclId": {
           "Ref": "NetworkSecondaryVpcTestNaclV2Nacl",
@@ -220,6 +287,13 @@ exports[`NetworkVpcV2Stacks Construct(NackStack-Network-us-east-1-Network-Second
 
 exports[`NetworkVpcV2Stacks Construct(NackStack-Network-us-east-1-Network-Secondary-V2):  Snapshot Test 1`] = `
 {
+  "Metadata": {
+    "lzaLookup": {
+      "accountName": "Network",
+      "region": "us-east-1",
+      "stackGeneration": "v2",
+    },
+  },
   "Parameters": {
     "SsmParameterValueacceleratornetworkvpcNetworkSecondaryV2idC96584B6F00A464EAD1953AFF4B05118Parameter": {
       "Default": "/accelerator/network/vpc/Network-Secondary-V2/id",
@@ -253,6 +327,15 @@ exports[`NetworkVpcV2Stacks Construct(NackStack-Network-us-east-1-Network-Second
             },
           ],
         },
+        "lzaLookup": {
+          "naclName": "TestNacl",
+          "protocol": 22,
+          "resourceType": "network-acl-entry",
+          "ruleAction": "allow",
+          "ruleNumber": 101,
+          "type": "Inbound",
+          "vpcName": "Network-Secondary-V2",
+        },
       },
       "Properties": {
         "CidrBlock": "10.0.0.0/24",
@@ -280,6 +363,15 @@ exports[`NetworkVpcV2Stacks Construct(NackStack-Network-us-east-1-Network-Second
             },
           ],
         },
+        "lzaLookup": {
+          "naclName": "TestNacl",
+          "protocol": -1,
+          "resourceType": "network-acl-entry",
+          "ruleAction": "deny",
+          "ruleNumber": 102,
+          "type": "Inbound",
+          "vpcName": "Network-Secondary-V2",
+        },
       },
       "Properties": {
         "Egress": false,
@@ -305,6 +397,15 @@ exports[`NetworkVpcV2Stacks Construct(NackStack-Network-us-east-1-Network-Second
               "reason": "NACL entry added to VPC",
             },
           ],
+        },
+        "lzaLookup": {
+          "naclName": "TestNacl",
+          "protocol": -1,
+          "resourceType": "network-acl-entry",
+          "ruleAction": "allow",
+          "ruleNumber": 103,
+          "type": "Inbound",
+          "vpcName": "Network-Secondary-V2",
         },
       },
       "Properties": {
@@ -332,6 +433,15 @@ exports[`NetworkVpcV2Stacks Construct(NackStack-Network-us-east-1-Network-Second
             },
           ],
         },
+        "lzaLookup": {
+          "naclName": "TestNacl",
+          "protocol": -1,
+          "resourceType": "network-acl-entry",
+          "ruleAction": "allow",
+          "ruleNumber": 104,
+          "type": "Inbound",
+          "vpcName": "Network-Secondary-V2",
+        },
       },
       "Properties": {
         "Egress": false,
@@ -357,6 +467,15 @@ exports[`NetworkVpcV2Stacks Construct(NackStack-Network-us-east-1-Network-Second
               "reason": "NACL entry added to VPC",
             },
           ],
+        },
+        "lzaLookup": {
+          "naclName": "TestNacl",
+          "protocol": -1,
+          "resourceType": "network-acl-entry",
+          "ruleAction": "deny",
+          "ruleNumber": 107,
+          "type": "Inbound",
+          "vpcName": "Network-Secondary-V2",
         },
       },
       "Properties": {
@@ -385,6 +504,15 @@ exports[`NetworkVpcV2Stacks Construct(NackStack-Network-us-east-1-Network-Second
             },
           ],
         },
+        "lzaLookup": {
+          "naclName": "TestNacl",
+          "protocol": -1,
+          "resourceType": "network-acl-entry",
+          "ruleAction": "deny",
+          "ruleNumber": 108,
+          "type": "Inbound",
+          "vpcName": "Network-Secondary-V2",
+        },
       },
       "Properties": {
         "Egress": false,
@@ -412,6 +540,15 @@ exports[`NetworkVpcV2Stacks Construct(NackStack-Network-us-east-1-Network-Second
             },
           ],
         },
+        "lzaLookup": {
+          "naclName": "TestNacl",
+          "protocol": 1,
+          "resourceType": "network-acl-entry",
+          "ruleAction": "allow",
+          "ruleNumber": 109,
+          "type": "Inbound",
+          "vpcName": "Network-Secondary-V2",
+        },
       },
       "Properties": {
         "Egress": false,
@@ -438,6 +575,15 @@ exports[`NetworkVpcV2Stacks Construct(NackStack-Network-us-east-1-Network-Second
               "reason": "NACL entry added to VPC",
             },
           ],
+        },
+        "lzaLookup": {
+          "naclName": "TestNacl",
+          "protocol": 1,
+          "resourceType": "network-acl-entry",
+          "ruleAction": "allow",
+          "ruleNumber": 110,
+          "type": "Inbound",
+          "vpcName": "Network-Secondary-V2",
         },
       },
       "Properties": {
@@ -467,6 +613,15 @@ exports[`NetworkVpcV2Stacks Construct(NackStack-Network-us-east-1-Network-Second
             },
           ],
         },
+        "lzaLookup": {
+          "naclName": "TestNacl",
+          "protocol": 6,
+          "resourceType": "network-acl-entry",
+          "ruleAction": "deny",
+          "ruleNumber": 111,
+          "type": "Inbound",
+          "vpcName": "Network-Secondary-V2",
+        },
       },
       "Properties": {
         "CidrBlock": "0.0.0.0/0",
@@ -494,6 +649,11 @@ exports[`NetworkVpcV2Stacks Construct(NackStack-Network-us-east-1-Network-Second
             },
           ],
         },
+        "lzaLookup": {
+          "naclName": "TestNacl",
+          "resourceType": "network-acl",
+          "vpcName": "Network-Secondary-V2",
+        },
       },
       "Properties": {
         "Tags": [
@@ -509,6 +669,14 @@ exports[`NetworkVpcV2Stacks Construct(NackStack-Network-us-east-1-Network-Second
       "Type": "AWS::EC2::NetworkAcl",
     },
     "NetworkSecondaryV2VpcTestNaclNaclAssociateNetworkSecondaryA": {
+      "Metadata": {
+        "lzaLookup": {
+          "naclName": "TestNacl",
+          "resourceType": "network-acl-subnet-association",
+          "subnetName": "Network-Secondary-A",
+          "vpcName": "Network-Secondary-V2",
+        },
+      },
       "Properties": {
         "NetworkAclId": {
           "Ref": "NetworkSecondaryV2VpcTestNaclNacl",
@@ -520,6 +688,14 @@ exports[`NetworkVpcV2Stacks Construct(NackStack-Network-us-east-1-Network-Second
       "Type": "AWS::EC2::SubnetNetworkAclAssociation",
     },
     "NetworkSecondaryV2VpcTestNaclNaclAssociateNetworkSecondaryB": {
+      "Metadata": {
+        "lzaLookup": {
+          "naclName": "TestNacl",
+          "resourceType": "network-acl-subnet-association",
+          "subnetName": "Network-Secondary-B",
+          "vpcName": "Network-Secondary-V2",
+        },
+      },
       "Properties": {
         "NetworkAclId": {
           "Ref": "NetworkSecondaryV2VpcTestNaclNacl",
@@ -531,6 +707,14 @@ exports[`NetworkVpcV2Stacks Construct(NackStack-Network-us-east-1-Network-Second
       "Type": "AWS::EC2::SubnetNetworkAclAssociation",
     },
     "NetworkSecondaryV2VpcTestNaclNaclAssociateNetworkSecondaryC": {
+      "Metadata": {
+        "lzaLookup": {
+          "naclName": "TestNacl",
+          "resourceType": "network-acl-subnet-association",
+          "subnetName": "Network-Secondary-C",
+          "vpcName": "Network-Secondary-V2",
+        },
+      },
       "Properties": {
         "NetworkAclId": {
           "Ref": "NetworkSecondaryV2VpcTestNaclNacl",
@@ -542,6 +726,14 @@ exports[`NetworkVpcV2Stacks Construct(NackStack-Network-us-east-1-Network-Second
       "Type": "AWS::EC2::SubnetNetworkAclAssociation",
     },
     "NetworkSecondaryV2VpcTestNaclNaclAssociateNetworkSecondaryD": {
+      "Metadata": {
+        "lzaLookup": {
+          "naclName": "TestNacl",
+          "resourceType": "network-acl-subnet-association",
+          "subnetName": "Network-Secondary-D",
+          "vpcName": "Network-Secondary-V2",
+        },
+      },
       "Properties": {
         "NetworkAclId": {
           "Ref": "NetworkSecondaryV2VpcTestNaclNacl",
@@ -561,6 +753,15 @@ exports[`NetworkVpcV2Stacks Construct(NackStack-Network-us-east-1-Network-Second
               "reason": "NACL entry added to VPC",
             },
           ],
+        },
+        "lzaLookup": {
+          "naclName": "TestNacl",
+          "protocol": -1,
+          "resourceType": "network-acl-entry",
+          "ruleAction": "allow",
+          "ruleNumber": 101,
+          "type": "Outbound",
+          "vpcName": "Network-Secondary-V2",
         },
       },
       "Properties": {
@@ -589,6 +790,15 @@ exports[`NetworkVpcV2Stacks Construct(NackStack-Network-us-east-1-Network-Second
             },
           ],
         },
+        "lzaLookup": {
+          "naclName": "TestNacl",
+          "protocol": -1,
+          "resourceType": "network-acl-entry",
+          "ruleAction": "allow",
+          "ruleNumber": 102,
+          "type": "Outbound",
+          "vpcName": "Network-Secondary-V2",
+        },
       },
       "Properties": {
         "Egress": true,
@@ -614,6 +824,15 @@ exports[`NetworkVpcV2Stacks Construct(NackStack-Network-us-east-1-Network-Second
               "reason": "NACL entry added to VPC",
             },
           ],
+        },
+        "lzaLookup": {
+          "naclName": "TestNacl",
+          "protocol": -1,
+          "resourceType": "network-acl-entry",
+          "ruleAction": "allow",
+          "ruleNumber": 103,
+          "type": "Outbound",
+          "vpcName": "Network-Secondary-V2",
         },
       },
       "Properties": {
@@ -641,6 +860,15 @@ exports[`NetworkVpcV2Stacks Construct(NackStack-Network-us-east-1-Network-Second
             },
           ],
         },
+        "lzaLookup": {
+          "naclName": "TestNacl",
+          "protocol": -1,
+          "resourceType": "network-acl-entry",
+          "ruleAction": "allow",
+          "ruleNumber": 104,
+          "type": "Outbound",
+          "vpcName": "Network-Secondary-V2",
+        },
       },
       "Properties": {
         "Egress": true,
@@ -666,6 +894,15 @@ exports[`NetworkVpcV2Stacks Construct(NackStack-Network-us-east-1-Network-Second
               "reason": "NACL entry added to VPC",
             },
           ],
+        },
+        "lzaLookup": {
+          "naclName": "TestNacl",
+          "protocol": -1,
+          "resourceType": "network-acl-entry",
+          "ruleAction": "deny",
+          "ruleNumber": 107,
+          "type": "Outbound",
+          "vpcName": "Network-Secondary-V2",
         },
       },
       "Properties": {
@@ -694,6 +931,15 @@ exports[`NetworkVpcV2Stacks Construct(NackStack-Network-us-east-1-Network-Second
             },
           ],
         },
+        "lzaLookup": {
+          "naclName": "TestNacl",
+          "protocol": -1,
+          "resourceType": "network-acl-entry",
+          "ruleAction": "deny",
+          "ruleNumber": 108,
+          "type": "Outbound",
+          "vpcName": "Network-Secondary-V2",
+        },
       },
       "Properties": {
         "Egress": true,
@@ -721,6 +967,15 @@ exports[`NetworkVpcV2Stacks Construct(NackStack-Network-us-east-1-Network-Second
             },
           ],
         },
+        "lzaLookup": {
+          "naclName": "TestNacl",
+          "protocol": 1,
+          "resourceType": "network-acl-entry",
+          "ruleAction": "allow",
+          "ruleNumber": 109,
+          "type": "Outbound",
+          "vpcName": "Network-Secondary-V2",
+        },
       },
       "Properties": {
         "Egress": true,
@@ -747,6 +1002,15 @@ exports[`NetworkVpcV2Stacks Construct(NackStack-Network-us-east-1-Network-Second
               "reason": "NACL entry added to VPC",
             },
           ],
+        },
+        "lzaLookup": {
+          "naclName": "TestNacl",
+          "protocol": 1,
+          "resourceType": "network-acl-entry",
+          "ruleAction": "allow",
+          "ruleNumber": 110,
+          "type": "Outbound",
+          "vpcName": "Network-Secondary-V2",
         },
       },
       "Properties": {
@@ -800,6 +1064,13 @@ exports[`NetworkVpcV2Stacks Construct(NackStack-Network-us-east-1-Network-Second
 
 exports[`NetworkVpcV2Stacks Construct(RouteTableStack-Network-us-east-1-Network-Secondary):  Snapshot Test 1`] = `
 {
+  "Metadata": {
+    "lzaLookup": {
+      "accountName": "Network",
+      "region": "us-east-1",
+      "stackGeneration": "v2",
+    },
+  },
   "Parameters": {
     "SsmParameterValueacceleratornetworkvpcNetworkSecondaryidC96584B6F00A464EAD1953AFF4B05118Parameter": {
       "Default": "/accelerator/network/vpc/Network-Secondary/id",
@@ -824,6 +1095,13 @@ exports[`NetworkVpcV2Stacks Construct(RouteTableStack-Network-us-east-1-Network-
   },
   "Resources": {
     "NetworkSecondaryVpcNetworkSecondaryARtV2RouteTable": {
+      "Metadata": {
+        "lzaLookup": {
+          "resourceType": "route-table",
+          "routeTableName": "Network-Secondary-A-Rt-V2",
+          "vpcName": "Network-Secondary",
+        },
+      },
       "Properties": {
         "Tags": [
           {
@@ -875,6 +1153,13 @@ exports[`NetworkVpcV2Stacks Construct(RouteTableStack-Network-us-east-1-Network-
 
 exports[`NetworkVpcV2Stacks Construct(RouteTableStack-Network-us-east-1-Network-Secondary-V2):  Snapshot Test 1`] = `
 {
+  "Metadata": {
+    "lzaLookup": {
+      "accountName": "Network",
+      "region": "us-east-1",
+      "stackGeneration": "v2",
+    },
+  },
   "Parameters": {
     "SsmParameterValueacceleratornetworkvpcNetworkSecondaryV2egressonlyigwidC96584B6F00A464EAD1953AFF4B05118Parameter": {
       "Default": "/accelerator/network/vpc/Network-Secondary-V2/egress-only-igw/id",
@@ -887,6 +1172,13 @@ exports[`NetworkVpcV2Stacks Construct(RouteTableStack-Network-us-east-1-Network-
   },
   "Resources": {
     "NetworkSecondaryV2VpcNetworkSecondaryARtRouteTable": {
+      "Metadata": {
+        "lzaLookup": {
+          "resourceType": "route-table",
+          "routeTableName": "Network-Secondary-A-Rt",
+          "vpcName": "Network-Secondary-V2",
+        },
+      },
       "Properties": {
         "Tags": [
           {
@@ -905,6 +1197,13 @@ exports[`NetworkVpcV2Stacks Construct(RouteTableStack-Network-us-east-1-Network-
       "Type": "AWS::EC2::RouteTable",
     },
     "NetworkSecondaryV2VpcNetworkSecondaryBRtRouteTable": {
+      "Metadata": {
+        "lzaLookup": {
+          "resourceType": "route-table",
+          "routeTableName": "Network-Secondary-B-Rt",
+          "vpcName": "Network-Secondary-V2",
+        },
+      },
       "Properties": {
         "Tags": [
           {
@@ -926,6 +1225,16 @@ exports[`NetworkVpcV2Stacks Construct(RouteTableStack-Network-us-east-1-Network-
       "DependsOn": [
         "NetworkSecondaryV2VpcNetworkSecondaryBRtRouteTable",
       ],
+      "Metadata": {
+        "lzaLookup": {
+          "entryDestinationPrefixList": "N/A",
+          "entryName": "eigwRoute",
+          "entryType": "egressOnlyIgw",
+          "resourceType": "route-entry",
+          "routeTableName": "Network-Secondary-B-Rt",
+          "vpcName": "Network-Secondary-V2",
+        },
+      },
       "Properties": {
         "DestinationIpv6CidrBlock": "::/0",
         "EgressOnlyInternetGatewayId": {
@@ -941,6 +1250,17 @@ exports[`NetworkVpcV2Stacks Construct(RouteTableStack-Network-us-east-1-Network-
       "DependsOn": [
         "NetworkSecondaryV2VpcNetworkSecondaryBRtRouteTable",
       ],
+      "Metadata": {
+        "lzaLookup": {
+          "entryDestinationPrefixList": "N/A",
+          "entryName": "LgwRoute",
+          "entryTarget": "accelerator-lgw-1",
+          "entryType": "localGateway",
+          "resourceType": "route-entry",
+          "routeTableName": "Network-Secondary-B-Rt",
+          "vpcName": "Network-Secondary-V2",
+        },
+      },
       "Properties": {
         "DestinationCidrBlock": "0.0.0.0/0",
         "LocalGatewayId": "lgw-abcxyz",
@@ -951,6 +1271,13 @@ exports[`NetworkVpcV2Stacks Construct(RouteTableStack-Network-us-east-1-Network-
       "Type": "AWS::EC2::Route",
     },
     "NetworkSecondaryV2VpcNetworkSecondaryCRtRouteTable": {
+      "Metadata": {
+        "lzaLookup": {
+          "resourceType": "route-table",
+          "routeTableName": "Network-Secondary-C-Rt",
+          "vpcName": "Network-Secondary-V2",
+        },
+      },
       "Properties": {
         "Tags": [
           {
@@ -969,6 +1296,13 @@ exports[`NetworkVpcV2Stacks Construct(RouteTableStack-Network-us-east-1-Network-
       "Type": "AWS::EC2::RouteTable",
     },
     "NetworkSecondaryV2VpcNetworkSecondaryDRtRouteTable": {
+      "Metadata": {
+        "lzaLookup": {
+          "resourceType": "route-table",
+          "routeTableName": "Network-Secondary-D-Rt",
+          "vpcName": "Network-Secondary-V2",
+        },
+      },
       "Properties": {
         "Tags": [
           {
@@ -1050,6 +1384,13 @@ exports[`NetworkVpcV2Stacks Construct(RouteTableStack-Network-us-east-1-Network-
 
 exports[`NetworkVpcV2Stacks Construct(SecurityGroupStack-Network-us-east-1-Network-Secondary):  Snapshot Test 1`] = `
 {
+  "Metadata": {
+    "lzaLookup": {
+      "accountName": "Network",
+      "region": "us-east-1",
+      "stackGeneration": "v2",
+    },
+  },
   "Parameters": {
     "SsmParameterValueacceleratornetworkvpcNetworkSecondaryidC96584B6F00A464EAD1953AFF4B05118Parameter": {
       "Default": "/accelerator/network/vpc/Network-Secondary/id",
@@ -1081,6 +1422,13 @@ exports[`NetworkVpcV2Stacks Construct(SecurityGroupStack-Network-us-east-1-Netwo
 
 exports[`NetworkVpcV2Stacks Construct(SecurityGroupStack-Network-us-east-1-Network-Secondary-V2):  Snapshot Test 1`] = `
 {
+  "Metadata": {
+    "lzaLookup": {
+      "accountName": "Network",
+      "region": "us-east-1",
+      "stackGeneration": "v2",
+    },
+  },
   "Parameters": {
     "SsmParameterValueacceleratornetworkvpcNetworkSecondaryV2idC96584B6F00A464EAD1953AFF4B05118Parameter": {
       "Default": "/accelerator/network/vpc/Network-Secondary-V2/id",
@@ -1112,6 +1460,13 @@ exports[`NetworkVpcV2Stacks Construct(SecurityGroupStack-Network-us-east-1-Netwo
 
 exports[`NetworkVpcV2Stacks Construct(SubnetShareStack-Network-us-east-1-Network-Secondary):  Snapshot Test 1`] = `
 {
+  "Metadata": {
+    "lzaLookup": {
+      "accountName": "Network",
+      "region": "us-east-1",
+      "stackGeneration": "v2",
+    },
+  },
   "Parameters": {
     "SsmParameterValueacceleratornetworkvpcNetworkSecondaryidC96584B6F00A464EAD1953AFF4B05118Parameter": {
       "Default": "/accelerator/network/vpc/Network-Secondary/id",
@@ -1143,6 +1498,13 @@ exports[`NetworkVpcV2Stacks Construct(SubnetShareStack-Network-us-east-1-Network
 
 exports[`NetworkVpcV2Stacks Construct(SubnetShareStack-Network-us-east-1-Network-Secondary-V2):  Snapshot Test 1`] = `
 {
+  "Metadata": {
+    "lzaLookup": {
+      "accountName": "Network",
+      "region": "us-east-1",
+      "stackGeneration": "v2",
+    },
+  },
   "Parameters": {
     "SsmParameterValueacceleratornetworkvpcNetworkSecondaryV2idC96584B6F00A464EAD1953AFF4B05118Parameter": {
       "Default": "/accelerator/network/vpc/Network-Secondary-V2/id",
@@ -1266,6 +1628,13 @@ exports[`NetworkVpcV2Stacks Construct(SubnetShareStack-Network-us-east-1-Network
       "Type": "AWS::IAM::Role",
     },
     "NetworkSecondaryShareSubnetShareResourceShare7960C54A": {
+      "Metadata": {
+        "lzaLookup": {
+          "resourceType": "subnet-share",
+          "subnetName": "Network-Secondary-Share",
+          "vpcName": "Network-Secondary-V2",
+        },
+      },
       "Properties": {
         "Name": "Network-Secondary-Share_SubnetShare",
         "Principals": [
@@ -1354,6 +1723,13 @@ exports[`NetworkVpcV2Stacks Construct(SubnetShareStack-Network-us-east-1-Network
 
 exports[`NetworkVpcV2Stacks Construct(SubnetStack-Network-us-east-1-Network-Secondary):  Snapshot Test 1`] = `
 {
+  "Metadata": {
+    "lzaLookup": {
+      "accountName": "Network",
+      "region": "us-east-1",
+      "stackGeneration": "v2",
+    },
+  },
   "Parameters": {
     "SsmParameterValueacceleratornetworkvpcNetworkSecondaryidC96584B6F00A464EAD1953AFF4B05118Parameter": {
       "Default": "/accelerator/network/vpc/Network-Secondary/id",
@@ -1529,6 +1905,14 @@ exports[`NetworkVpcV2Stacks Construct(SubnetStack-Network-us-east-1-Network-Seco
       "Type": "AWS::IAM::Role",
     },
     "NetworkSecondaryAV2RouteTableAssociation": {
+      "Metadata": {
+        "lzaLookup": {
+          "resourceType": "subnet-route-table-association",
+          "routeTableName": "Network-Secondary-A-Rt",
+          "subnetName": "Network-Secondary-A-V2",
+          "vpcName": "Network-Secondary",
+        },
+      },
       "Properties": {
         "RouteTableId": {
           "Ref": "SsmParameterValueacceleratornetworkvpcNetworkSecondaryrouteTableNetworkSecondaryARtidC96584B6F00A464EAD1953AFF4B05118Parameter",
@@ -1544,6 +1928,15 @@ exports[`NetworkVpcV2Stacks Construct(SubnetStack-Network-us-east-1-Network-Seco
       "DependsOn": [
         "CustomIpamSubnetCustomResourceProviderLogGroup3BB67050",
       ],
+      "Metadata": {
+        "lzaLookup": {
+          "ipamAllocationNetmaskLength": 28,
+          "ipamAllocationPoolName": "home-region-prod-pool",
+          "resourceType": "subnet",
+          "subnetName": "Network-Secondary-A-V2",
+          "vpcName": "Network-Secondary",
+        },
+      },
       "Properties": {
         "ServiceToken": {
           "Fn::GetAtt": [
@@ -1575,6 +1968,15 @@ exports[`NetworkVpcV2Stacks Construct(SubnetStack-Network-us-east-1-Network-Seco
         "CustomIpamSubnetCustomResourceProviderLogGroup3BB67050",
         "NetworkSecondaryNetworkSecondaryAV2IpamSubnetA7DF6713",
       ],
+      "Metadata": {
+        "lzaLookup": {
+          "ipamAllocationNetmaskLength": 28,
+          "ipamAllocationPoolName": "home-region-prod-pool",
+          "resourceType": "subnet",
+          "subnetName": "Network-Secondary-Outposts-A-V2",
+          "vpcName": "Network-Secondary",
+        },
+      },
       "Properties": {
         "ServiceToken": {
           "Fn::GetAtt": [
@@ -1602,6 +2004,14 @@ exports[`NetworkVpcV2Stacks Construct(SubnetStack-Network-us-east-1-Network-Seco
       "UpdateReplacePolicy": "Delete",
     },
     "NetworkSecondaryOutpostsAV2RouteTableAssociation": {
+      "Metadata": {
+        "lzaLookup": {
+          "resourceType": "subnet-route-table-association",
+          "routeTableName": "Network-Secondary-A-Rt",
+          "subnetName": "Network-Secondary-Outposts-A-V2",
+          "vpcName": "Network-Secondary",
+        },
+      },
       "Properties": {
         "RouteTableId": {
           "Ref": "SsmParameterValueacceleratornetworkvpcNetworkSecondaryrouteTableNetworkSecondaryARtidC96584B6F00A464EAD1953AFF4B05118Parameter",
@@ -1682,6 +2092,13 @@ exports[`NetworkVpcV2Stacks Construct(SubnetStack-Network-us-east-1-Network-Seco
 
 exports[`NetworkVpcV2Stacks Construct(SubnetStack-Network-us-east-1-Network-Secondary-V2):  Snapshot Test 1`] = `
 {
+  "Metadata": {
+    "lzaLookup": {
+      "accountName": "Network",
+      "region": "us-east-1",
+      "stackGeneration": "v2",
+    },
+  },
   "Parameters": {
     "SsmParameterValueacceleratornetworkvpcNetworkSecondaryV2idC96584B6F00A464EAD1953AFF4B05118Parameter": {
       "Default": "/accelerator/network/vpc/Network-Secondary-V2/id",
@@ -1869,6 +2286,14 @@ exports[`NetworkVpcV2Stacks Construct(SubnetStack-Network-us-east-1-Network-Seco
       "Type": "AWS::IAM::Role",
     },
     "NetworkSecondaryARouteTableAssociation": {
+      "Metadata": {
+        "lzaLookup": {
+          "resourceType": "subnet-route-table-association",
+          "routeTableName": "Network-Secondary-A-Rt",
+          "subnetName": "Network-Secondary-A",
+          "vpcName": "Network-Secondary-V2",
+        },
+      },
       "Properties": {
         "RouteTableId": {
           "Ref": "SsmParameterValueacceleratornetworkvpcNetworkSecondaryV2routeTableNetworkSecondaryARtidC96584B6F00A464EAD1953AFF4B05118Parameter",
@@ -1880,6 +2305,14 @@ exports[`NetworkVpcV2Stacks Construct(SubnetStack-Network-us-east-1-Network-Seco
       "Type": "AWS::EC2::SubnetRouteTableAssociation",
     },
     "NetworkSecondaryBRouteTableAssociation": {
+      "Metadata": {
+        "lzaLookup": {
+          "resourceType": "subnet-route-table-association",
+          "routeTableName": "Network-Secondary-B-Rt",
+          "subnetName": "Network-Secondary-B",
+          "vpcName": "Network-Secondary-V2",
+        },
+      },
       "Properties": {
         "RouteTableId": {
           "Ref": "SsmParameterValueacceleratornetworkvpcNetworkSecondaryV2routeTableNetworkSecondaryBRtidC96584B6F00A464EAD1953AFF4B05118Parameter",
@@ -1891,6 +2324,14 @@ exports[`NetworkVpcV2Stacks Construct(SubnetStack-Network-us-east-1-Network-Seco
       "Type": "AWS::EC2::SubnetRouteTableAssociation",
     },
     "NetworkSecondaryCRouteTableAssociation": {
+      "Metadata": {
+        "lzaLookup": {
+          "resourceType": "subnet-route-table-association",
+          "routeTableName": "Network-Secondary-C-Rt",
+          "subnetName": "Network-Secondary-C",
+          "vpcName": "Network-Secondary-V2",
+        },
+      },
       "Properties": {
         "RouteTableId": {
           "Ref": "SsmParameterValueacceleratornetworkvpcNetworkSecondaryV2routeTableNetworkSecondaryCRtidC96584B6F00A464EAD1953AFF4B05118Parameter",
@@ -1902,6 +2343,14 @@ exports[`NetworkVpcV2Stacks Construct(SubnetStack-Network-us-east-1-Network-Seco
       "Type": "AWS::EC2::SubnetRouteTableAssociation",
     },
     "NetworkSecondaryDRouteTableAssociation": {
+      "Metadata": {
+        "lzaLookup": {
+          "resourceType": "subnet-route-table-association",
+          "routeTableName": "Network-Secondary-D-Rt",
+          "subnetName": "Network-Secondary-D",
+          "vpcName": "Network-Secondary-V2",
+        },
+      },
       "Properties": {
         "RouteTableId": {
           "Ref": "SsmParameterValueacceleratornetworkvpcNetworkSecondaryV2routeTableNetworkSecondaryDRtidC96584B6F00A464EAD1953AFF4B05118Parameter",
@@ -1913,6 +2362,14 @@ exports[`NetworkVpcV2Stacks Construct(SubnetStack-Network-us-east-1-Network-Seco
       "Type": "AWS::EC2::SubnetRouteTableAssociation",
     },
     "NetworkSecondaryDualStackRouteTableAssociation": {
+      "Metadata": {
+        "lzaLookup": {
+          "resourceType": "subnet-route-table-association",
+          "routeTableName": "Network-Secondary-A-Rt",
+          "subnetName": "Network-Secondary-Dual-Stack",
+          "vpcName": "Network-Secondary-V2",
+        },
+      },
       "Properties": {
         "RouteTableId": {
           "Ref": "SsmParameterValueacceleratornetworkvpcNetworkSecondaryV2routeTableNetworkSecondaryARtidC96584B6F00A464EAD1953AFF4B05118Parameter",
@@ -1924,6 +2381,14 @@ exports[`NetworkVpcV2Stacks Construct(SubnetStack-Network-us-east-1-Network-Seco
       "Type": "AWS::EC2::SubnetRouteTableAssociation",
     },
     "NetworkSecondaryIpv6OnlyRouteTableAssociation": {
+      "Metadata": {
+        "lzaLookup": {
+          "resourceType": "subnet-route-table-association",
+          "routeTableName": "Network-Secondary-B-Rt",
+          "subnetName": "Network-Secondary-Ipv6-Only",
+          "vpcName": "Network-Secondary-V2",
+        },
+      },
       "Properties": {
         "RouteTableId": {
           "Ref": "SsmParameterValueacceleratornetworkvpcNetworkSecondaryV2routeTableNetworkSecondaryBRtidC96584B6F00A464EAD1953AFF4B05118Parameter",
@@ -1935,6 +2400,14 @@ exports[`NetworkVpcV2Stacks Construct(SubnetStack-Network-us-east-1-Network-Seco
       "Type": "AWS::EC2::SubnetRouteTableAssociation",
     },
     "NetworkSecondaryOutposts1RouteTableAssociation": {
+      "Metadata": {
+        "lzaLookup": {
+          "resourceType": "subnet-route-table-association",
+          "routeTableName": "Network-Secondary-B-Rt",
+          "subnetName": "Network-Secondary-Outposts-1",
+          "vpcName": "Network-Secondary-V2",
+        },
+      },
       "Properties": {
         "RouteTableId": {
           "Ref": "SsmParameterValueacceleratornetworkvpcNetworkSecondaryV2routeTableNetworkSecondaryBRtidC96584B6F00A464EAD1953AFF4B05118Parameter",
@@ -1946,6 +2419,14 @@ exports[`NetworkVpcV2Stacks Construct(SubnetStack-Network-us-east-1-Network-Seco
       "Type": "AWS::EC2::SubnetRouteTableAssociation",
     },
     "NetworkSecondaryOutpostsARouteTableAssociation": {
+      "Metadata": {
+        "lzaLookup": {
+          "resourceType": "subnet-route-table-association",
+          "routeTableName": "Network-Secondary-A-Rt",
+          "subnetName": "Network-Secondary-Outposts-A",
+          "vpcName": "Network-Secondary-V2",
+        },
+      },
       "Properties": {
         "RouteTableId": {
           "Ref": "SsmParameterValueacceleratornetworkvpcNetworkSecondaryV2routeTableNetworkSecondaryARtidC96584B6F00A464EAD1953AFF4B05118Parameter",
@@ -1957,6 +2438,14 @@ exports[`NetworkVpcV2Stacks Construct(SubnetStack-Network-us-east-1-Network-Seco
       "Type": "AWS::EC2::SubnetRouteTableAssociation",
     },
     "NetworkSecondaryShareRouteTableAssociation": {
+      "Metadata": {
+        "lzaLookup": {
+          "resourceType": "subnet-route-table-association",
+          "routeTableName": "Network-Secondary-A-Rt",
+          "subnetName": "Network-Secondary-Share",
+          "vpcName": "Network-Secondary-V2",
+        },
+      },
       "Properties": {
         "RouteTableId": {
           "Ref": "SsmParameterValueacceleratornetworkvpcNetworkSecondaryV2routeTableNetworkSecondaryARtidC96584B6F00A464EAD1953AFF4B05118Parameter",
@@ -1972,6 +2461,15 @@ exports[`NetworkVpcV2Stacks Construct(SubnetStack-Network-us-east-1-Network-Seco
       "DependsOn": [
         "CustomIpamSubnetCustomResourceProviderLogGroup3BB67050",
       ],
+      "Metadata": {
+        "lzaLookup": {
+          "ipamAllocationNetmaskLength": 28,
+          "ipamAllocationPoolName": "home-region-prod-pool",
+          "resourceType": "subnet",
+          "subnetName": "Network-Secondary-A",
+          "vpcName": "Network-Secondary-V2",
+        },
+      },
       "Properties": {
         "ServiceToken": {
           "Fn::GetAtt": [
@@ -2003,6 +2501,15 @@ exports[`NetworkVpcV2Stacks Construct(SubnetStack-Network-us-east-1-Network-Seco
         "CustomIpamSubnetCustomResourceProviderLogGroup3BB67050",
         "NetworkSecondaryV2NetworkSecondaryAIpamSubnet01112797",
       ],
+      "Metadata": {
+        "lzaLookup": {
+          "ipamAllocationNetmaskLength": 28,
+          "ipamAllocationPoolName": "home-region-prod-pool",
+          "resourceType": "subnet",
+          "subnetName": "Network-Secondary-B",
+          "vpcName": "Network-Secondary-V2",
+        },
+      },
       "Properties": {
         "ServiceToken": {
           "Fn::GetAtt": [
@@ -2034,6 +2541,15 @@ exports[`NetworkVpcV2Stacks Construct(SubnetStack-Network-us-east-1-Network-Seco
         "CustomIpamSubnetCustomResourceProviderLogGroup3BB67050",
         "NetworkSecondaryV2NetworkSecondaryBIpamSubnet924032F0",
       ],
+      "Metadata": {
+        "lzaLookup": {
+          "ipamAllocationNetmaskLength": 28,
+          "ipamAllocationPoolName": "home-region-prod-pool",
+          "resourceType": "subnet",
+          "subnetName": "Network-Secondary-C",
+          "vpcName": "Network-Secondary-V2",
+        },
+      },
       "Properties": {
         "ServiceToken": {
           "Fn::GetAtt": [
@@ -2065,6 +2581,15 @@ exports[`NetworkVpcV2Stacks Construct(SubnetStack-Network-us-east-1-Network-Seco
         "CustomIpamSubnetCustomResourceProviderLogGroup3BB67050",
         "NetworkSecondaryV2NetworkSecondaryCIpamSubnet0B560587",
       ],
+      "Metadata": {
+        "lzaLookup": {
+          "ipamAllocationNetmaskLength": 28,
+          "ipamAllocationPoolName": "home-region-prod-pool",
+          "resourceType": "subnet",
+          "subnetName": "Network-Secondary-D",
+          "vpcName": "Network-Secondary-V2",
+        },
+      },
       "Properties": {
         "ServiceToken": {
           "Fn::GetAtt": [
@@ -2091,6 +2616,15 @@ exports[`NetworkVpcV2Stacks Construct(SubnetStack-Network-us-east-1-Network-Seco
       "UpdateReplacePolicy": "Delete",
     },
     "NetworkSecondaryV2NetworkSecondaryDualStackNonIpamSubnet": {
+      "Metadata": {
+        "lzaLookup": {
+          "cidrBlock": "10.0.0.192/28",
+          "ipv6CidrBlock": "fd00::/64",
+          "resourceType": "subnet",
+          "subnetName": "Network-Secondary-Dual-Stack",
+          "vpcName": "Network-Secondary-V2",
+        },
+      },
       "Properties": {
         "AvailabilityZone": "us-east-1a",
         "CidrBlock": "10.0.0.192/28",
@@ -2108,6 +2642,14 @@ exports[`NetworkVpcV2Stacks Construct(SubnetStack-Network-us-east-1-Network-Seco
       "Type": "AWS::EC2::Subnet",
     },
     "NetworkSecondaryV2NetworkSecondaryIpv6OnlyNonIpamSubnet": {
+      "Metadata": {
+        "lzaLookup": {
+          "ipv6CidrBlock": "fd01::/64",
+          "resourceType": "subnet",
+          "subnetName": "Network-Secondary-Ipv6-Only",
+          "vpcName": "Network-Secondary-V2",
+        },
+      },
       "Properties": {
         "AvailabilityZone": "us-east-1b",
         "Ipv6CidrBlock": "fd01::/64",
@@ -2130,6 +2672,15 @@ exports[`NetworkVpcV2Stacks Construct(SubnetStack-Network-us-east-1-Network-Seco
         "CustomIpamSubnetCustomResourceProviderLogGroup3BB67050",
         "NetworkSecondaryV2NetworkSecondaryOutpostsAIpamSubnetB190932A",
       ],
+      "Metadata": {
+        "lzaLookup": {
+          "ipamAllocationNetmaskLength": 28,
+          "ipamAllocationPoolName": "home-region-prod-pool",
+          "resourceType": "subnet",
+          "subnetName": "Network-Secondary-Outposts-1",
+          "vpcName": "Network-Secondary-V2",
+        },
+      },
       "Properties": {
         "ServiceToken": {
           "Fn::GetAtt": [
@@ -2162,6 +2713,15 @@ exports[`NetworkVpcV2Stacks Construct(SubnetStack-Network-us-east-1-Network-Seco
         "CustomIpamSubnetCustomResourceProviderLogGroup3BB67050",
         "NetworkSecondaryV2NetworkSecondaryDIpamSubnet23F9DCDA",
       ],
+      "Metadata": {
+        "lzaLookup": {
+          "ipamAllocationNetmaskLength": 28,
+          "ipamAllocationPoolName": "home-region-prod-pool",
+          "resourceType": "subnet",
+          "subnetName": "Network-Secondary-Outposts-A",
+          "vpcName": "Network-Secondary-V2",
+        },
+      },
       "Properties": {
         "ServiceToken": {
           "Fn::GetAtt": [
@@ -2194,6 +2754,15 @@ exports[`NetworkVpcV2Stacks Construct(SubnetStack-Network-us-east-1-Network-Seco
         "CustomIpamSubnetCustomResourceProviderLogGroup3BB67050",
         "NetworkSecondaryV2NetworkSecondaryOutposts1IpamSubnet1F6CF913",
       ],
+      "Metadata": {
+        "lzaLookup": {
+          "ipamAllocationNetmaskLength": 27,
+          "ipamAllocationPoolName": "home-region-prod-pool",
+          "resourceType": "subnet",
+          "subnetName": "Network-Secondary-Share",
+          "vpcName": "Network-Secondary-V2",
+        },
+      },
       "Properties": {
         "ServiceToken": {
           "Fn::GetAtt": [
@@ -2462,6 +3031,13 @@ exports[`NetworkVpcV2Stacks Construct(SubnetStack-Network-us-east-1-Network-Seco
 
 exports[`NetworkVpcV2Stacks Construct(VpcStack-Network-us-east-1-Network-Secondary):  Snapshot Test 1`] = `
 {
+  "Metadata": {
+    "lzaLookup": {
+      "accountName": "Network",
+      "region": "us-east-1",
+      "stackGeneration": "v2",
+    },
+  },
   "Parameters": {
     "SsmParameterValueacceleratorkmslambdakeyarnC96584B6F00A464EAD1953AFF4B05118Parameter": {
       "Default": "/accelerator/kms/lambda/key-arn",
@@ -2489,6 +3065,12 @@ exports[`NetworkVpcV2Stacks Construct(VpcStack-Network-us-east-1-Network-Seconda
       "Type": "AWS::EC2::InternetGateway",
     },
     "NetworkSecondaryVpcInternetGatewayAttachment": {
+      "Metadata": {
+        "lzaLookup": {
+          "resourceType": "internet-gateway-attachment",
+          "vpcName": "Network-Secondary",
+        },
+      },
       "Properties": {
         "InternetGatewayId": {
           "Ref": "NetworkSecondaryVpcInternetGateway",
@@ -2533,6 +3115,13 @@ exports[`NetworkVpcV2Stacks Construct(VpcStack-Network-us-east-1-Network-Seconda
 
 exports[`NetworkVpcV2Stacks Construct(VpcStack-Network-us-east-1-Network-Secondary-V2):  Snapshot Test 1`] = `
 {
+  "Metadata": {
+    "lzaLookup": {
+      "accountName": "Network",
+      "region": "us-east-1",
+      "stackGeneration": "v2",
+    },
+  },
   "Parameters": {
     "SsmParameterValueacceleratorkmslambdakeyarnC96584B6F00A464EAD1953AFF4B05118Parameter": {
       "Default": "/accelerator/kms/lambda/key-arn",
@@ -2549,6 +3138,14 @@ exports[`NetworkVpcV2Stacks Construct(VpcStack-Network-us-east-1-Network-Seconda
   },
   "Resources": {
     "CloudWatchFlowLog": {
+      "Metadata": {
+        "lzaLookup": {
+          "maxAggregationInterval": 60,
+          "resourceType": "cwl-flow-logs",
+          "trafficType": "ALL",
+          "vpcName": "Network-Secondary-V2",
+        },
+      },
       "Properties": {
         "DeliverLogsPermissionArn": {
           "Fn::GetAtt": [
@@ -2632,6 +3229,12 @@ exports[`NetworkVpcV2Stacks Construct(VpcStack-Network-us-east-1-Network-Seconda
       "Type": "AWS::IAM::Policy",
     },
     "NetworkSecondaryV2Vpc": {
+      "Metadata": {
+        "lzaLookup": {
+          "resourceType": "vpc",
+          "vpcName": "Network-Secondary-V2",
+        },
+      },
       "Properties": {
         "EnableDnsHostnames": true,
         "EnableDnsSupport": true,
@@ -2662,6 +3265,13 @@ exports[`NetworkVpcV2Stacks Construct(VpcStack-Network-us-east-1-Network-Seconda
       "Type": "AWS::EC2::VPC",
     },
     "NetworkSecondaryV2VpcAmazonProvidedIpv6CidrBlock0": {
+      "Metadata": {
+        "lzaLookup": {
+          "amazonProvidedIpv6CidrBlock": true,
+          "resourceType": "additional-cidr-block",
+          "vpcName": "Network-Secondary-V2",
+        },
+      },
       "Properties": {
         "AmazonProvidedIpv6CidrBlock": true,
         "VpcId": {
@@ -2671,6 +3281,12 @@ exports[`NetworkVpcV2Stacks Construct(VpcStack-Network-us-east-1-Network-Seconda
       "Type": "AWS::EC2::VPCCidrBlock",
     },
     "NetworkSecondaryV2VpcEgressOnlyIgw": {
+      "Metadata": {
+        "lzaLookup": {
+          "resourceType": "egress-only-igw",
+          "vpcName": "Network-Secondary-V2",
+        },
+      },
       "Properties": {
         "VpcId": {
           "Ref": "NetworkSecondaryV2Vpc",
@@ -2694,6 +3310,12 @@ exports[`NetworkVpcV2Stacks Construct(VpcStack-Network-us-east-1-Network-Seconda
       "Type": "AWS::EC2::InternetGateway",
     },
     "NetworkSecondaryV2VpcInternetGatewayAttachment": {
+      "Metadata": {
+        "lzaLookup": {
+          "resourceType": "internet-gateway-attachment",
+          "vpcName": "Network-Secondary-V2",
+        },
+      },
       "Properties": {
         "InternetGatewayId": {
           "Ref": "NetworkSecondaryV2VpcInternetGateway",
@@ -2705,6 +3327,14 @@ exports[`NetworkVpcV2Stacks Construct(VpcStack-Network-us-east-1-Network-Seconda
       "Type": "AWS::EC2::VPCGatewayAttachment",
     },
     "S3FlowLog": {
+      "Metadata": {
+        "lzaLookup": {
+          "maxAggregationInterval": 60,
+          "resourceType": "s3-flow-logs",
+          "trafficType": "ALL",
+          "vpcName": "Network-Secondary-V2",
+        },
+      },
       "Properties": {
         "LogDestination": {
           "Fn::Join": [

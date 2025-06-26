@@ -32,7 +32,7 @@ import {
   SubnetSourceConfig,
 } from '@aws-accelerator/config/lib/network-config';
 import { SsmResourceType } from '@aws-accelerator/utils/lib/ssm-parameter-path';
-import { SecurityGroupRules, V2StackComponentsList } from '../utils/enums';
+import { NetworkStackGeneration, SecurityGroupRules, V2StackComponentsList } from '../utils/enums';
 import { isNetworkType } from '@aws-accelerator/config/lib/common/parse';
 import { NonEmptyString } from '@aws-accelerator/config/lib/common/types';
 import { isIpv6Cidr } from '../../network-stacks/utils/validation-utils';
@@ -42,6 +42,7 @@ import {
 } from '@aws-accelerator/constructs/lib/aws-ec2/vpc';
 import { TCP_PROTOCOLS_PORT } from '../../network-stacks/utils/security-group-utils';
 import { isV2Resource } from '../utils/functions';
+import { MetadataKeys } from '@aws-accelerator/utils/lib/common-types';
 
 export class VpcSecurityGroupsBaseStack extends AcceleratorStack {
   private v2StackProps: V2NetworkStacksBaseProps;
@@ -49,6 +50,15 @@ export class VpcSecurityGroupsBaseStack extends AcceleratorStack {
   private vpcId: string;
   constructor(scope: Construct, id: string, props: V2NetworkStacksBaseProps) {
     super(scope, id, props);
+
+    //
+    // Add Stack metadata
+    //
+    this.addMetadata(MetadataKeys.LZA_LOOKUP, {
+      accountName: this.props.accountsConfig.getAccountNameById(this.account),
+      region: cdk.Stack.of(this).region,
+      stackGeneration: NetworkStackGeneration.V2,
+    });
 
     this.v2StackProps = props;
     this.vpcDetails = new VpcDetails(this, 'VpcDetails', props);
@@ -156,6 +166,12 @@ export class VpcSecurityGroupsBaseStack extends AcceleratorStack {
         { id: 'AwsSolutions-EC23', reason: `User defined an all ${SecurityGroupRules.INGRESS} rule in configuration.` },
       ]);
     }
+
+    cfnSecurityGroup.addMetadata(MetadataKeys.LZA_LOOKUP, {
+      resourceType: V2StackComponentsList.SECURITY_GROUP,
+      vpcName: this.vpcDetails.name,
+      securityGroupName: securityGroupItem.name,
+    });
 
     return securityGroupId;
   }
@@ -751,7 +767,19 @@ export class VpcSecurityGroupsBaseStack extends AcceleratorStack {
         fromPort: rule.fromPort,
         toPort: rule.toPort,
       };
-      new cdk.aws_ec2.CfnSecurityGroupIngress(this, logicalId, props);
+
+      const cfnSecurityGroupIngress = new cdk.aws_ec2.CfnSecurityGroupIngress(this, logicalId, props);
+      cfnSecurityGroupIngress.addMetadata(MetadataKeys.LZA_LOOKUP, {
+        resourceType: V2StackComponentsList.SECURITY_GROUP_INBOUND_RULE,
+        vpcName: this.vpcDetails.name,
+        vpcId: this.vpcId,
+        securityGroupName,
+        protocol: rule.ipProtocol,
+        fromPort: rule.fromPort,
+        toPort: rule.toPort,
+        destinationSecurityGroupName: rule.destinationSecurityGroupName,
+        ruleNumber: ruleIndex,
+      });
     }
   }
 
@@ -795,7 +823,19 @@ export class VpcSecurityGroupsBaseStack extends AcceleratorStack {
         fromPort: rule.fromPort,
         toPort: rule.toPort,
       };
-      new cdk.aws_ec2.CfnSecurityGroupEgress(this, logicalId, props);
+      const cfnSecurityGroupEgress = new cdk.aws_ec2.CfnSecurityGroupEgress(this, logicalId, props);
+
+      cfnSecurityGroupEgress.addMetadata(MetadataKeys.LZA_LOOKUP, {
+        resourceType: V2StackComponentsList.SECURITY_GROUP_OUTBOUND_RULE,
+        vpcName: this.vpcDetails.name,
+        vpcId: this.vpcId,
+        securityGroupName,
+        protocol: rule.ipProtocol,
+        fromPort: rule.fromPort,
+        toPort: rule.toPort,
+        destinationSecurityGroupName: rule.destinationSecurityGroupName,
+        ruleNumber: ruleIndex,
+      });
     }
   }
 

@@ -30,7 +30,8 @@ import { IpamSubnet } from '@aws-accelerator/constructs/lib/aws-ec2/ipam-subnet'
 import { getAvailabilityZoneMap } from '@aws-accelerator/utils/lib/regions';
 import { TransitGatewayAttachment } from '@aws-accelerator/constructs/lib/aws-ec2/transit-gateway';
 import { isV2Resource } from '../utils/functions';
-import { V2StackComponentsList } from '../utils/enums';
+import { NetworkStackGeneration, V2StackComponentsList } from '../utils/enums';
+import { MetadataKeys } from '@aws-accelerator/utils/lib/common-types';
 
 type CreatedSubnetType = { name: string; id: string };
 
@@ -45,6 +46,15 @@ export class VpcSubnetsBaseStack extends AcceleratorStack {
 
   constructor(scope: Construct, id: string, props: V2NetworkStacksBaseProps) {
     super(scope, id, props);
+
+    //
+    // Add Stack metadata
+    //
+    this.addMetadata(MetadataKeys.LZA_LOOKUP, {
+      accountName: this.props.accountsConfig.getAccountNameById(this.account),
+      region: cdk.Stack.of(this).region,
+      stackGeneration: NetworkStackGeneration.V2,
+    });
 
     this.v2StackProps = props;
     this.vpcDetails = new VpcDetails(this, 'VpcDetails', this.v2StackProps);
@@ -179,6 +189,18 @@ export class VpcSubnetsBaseStack extends AcceleratorStack {
       },
     );
 
+    cfnSubnet.addMetadata(MetadataKeys.LZA_LOOKUP, {
+      resourceType: V2StackComponentsList.SUBNET,
+      vpcName: this.vpcDetails.name,
+      subnetName: subnetConfig.name,
+      ipamAllocationPoolName: subnetConfig.ipamAllocation?.ipamPoolName,
+      ipamAllocationNetmaskLength: subnetConfig.ipamAllocation?.netmaskLength,
+      cidrBlock: subnetConfig.ipv4CidrBlock,
+      enableDns64: subnetConfig.enableDns64,
+      ipv6CidrBlock: subnetConfig.ipv6CidrBlock,
+      mapPublicIpOnLaunch: subnetConfig.mapPublicIpOnLaunch,
+    });
+
     return cfnSubnet;
   }
 
@@ -236,6 +258,20 @@ export class VpcSubnetsBaseStack extends AcceleratorStack {
       stringValue: ipamSubnet.ipv4CidrBlock,
     });
 
+    const cfnResource = ipamSubnet.resource.node.defaultChild as cdk.CfnResource;
+
+    cfnResource.addMetadata(MetadataKeys.LZA_LOOKUP, {
+      resourceType: V2StackComponentsList.SUBNET,
+      vpcName: this.vpcDetails.name,
+      subnetName: subnetConfig.name,
+      ipamAllocationPoolName: subnetConfig.ipamAllocation?.ipamPoolName,
+      ipamAllocationNetmaskLength: subnetConfig.ipamAllocation?.netmaskLength,
+      cidrBlock: subnetConfig.ipv4CidrBlock,
+      enableDns64: subnetConfig.enableDns64,
+      ipv6CidrBlock: subnetConfig.ipv6CidrBlock,
+      mapPublicIpOnLaunch: subnetConfig.mapPublicIpOnLaunch,
+    });
+
     return ipamSubnet;
   }
 
@@ -244,9 +280,20 @@ export class VpcSubnetsBaseStack extends AcceleratorStack {
 
     if (subnetRouteTableId) {
       this.logger.info(`Adding route table association for subnet ${subnetConfig.name}`);
-      new cdk.aws_ec2.CfnSubnetRouteTableAssociation(this, `${pascalCase(subnetConfig.name)}RouteTableAssociation`, {
-        subnetId,
-        routeTableId: subnetRouteTableId,
+      const cfnSubnetRouteTableAssociation = new cdk.aws_ec2.CfnSubnetRouteTableAssociation(
+        this,
+        `${pascalCase(subnetConfig.name)}RouteTableAssociation`,
+        {
+          subnetId,
+          routeTableId: subnetRouteTableId,
+        },
+      );
+
+      cfnSubnetRouteTableAssociation.addMetadata(MetadataKeys.LZA_LOOKUP, {
+        resourceType: V2StackComponentsList.SUBNET_ROUTE_TABLE_ASSOCIATION,
+        vpcName: this.vpcDetails.name,
+        subnetName: subnetConfig.name,
+        routeTableName: subnetConfig.routeTable,
       });
     }
   }
@@ -378,6 +425,13 @@ export class VpcSubnetsBaseStack extends AcceleratorStack {
         parameterName: this.getSsmPath(SsmResourceType.NAT_GW, [this.vpcDetails.name, natGatewayItem.name]),
         stringValue: resource.ref,
       });
+
+      resource.addMetadata(MetadataKeys.LZA_LOOKUP, {
+        resourceType: V2StackComponentsList.NAT_GATEWAY,
+        vpcName: this.vpcDetails.name,
+        natGatewayName: natGatewayItem.name,
+        subnetName: natGatewayItem.subnet,
+      });
     }
   }
 
@@ -428,7 +482,7 @@ export class VpcSubnetsBaseStack extends AcceleratorStack {
       const roleArns = [
         `arn:${cdk.Stack.of(this).partition}:iam::*:role/${this.props.prefixes.accelerator}-*-CustomGetTransitGateway*`,
       ];
-      new cdk.aws_iam.Role(this, 'DescribeTgwAttachRole', {
+      const role = new cdk.aws_iam.Role(this, 'DescribeTgwAttachRole', {
         roleName,
         inlinePolicies: {
           default: new cdk.aws_iam.PolicyDocument({
@@ -458,6 +512,11 @@ export class VpcSubnetsBaseStack extends AcceleratorStack {
           reason: 'DescribeTgwAttachRole needs access to every describe each transit gateway attachment in the account',
         },
       ]);
+
+      (role.node.defaultChild as cdk.aws_iam.CfnRole).addMetadata(MetadataKeys.LZA_LOOKUP, {
+        resourceType: V2StackComponentsList.TGW_VPC_ATTACHMENT_ROLE,
+        roleName,
+      });
     }
   }
 
@@ -522,6 +581,15 @@ export class VpcSubnetsBaseStack extends AcceleratorStack {
         ),
         parameterName: this.getSsmPath(SsmResourceType.TGW_ATTACHMENT, [this.vpcDetails.name, tgwAttachmentItem.name]),
         stringValue: transitGatewayAttachment.transitGatewayAttachmentId,
+      });
+
+      const cfnResource = transitGatewayAttachment.node.defaultChild as cdk.CfnResource;
+
+      cfnResource.addMetadata(MetadataKeys.LZA_LOOKUP, {
+        resourceType: V2StackComponentsList.TGW_VPC_ATTACHMENT,
+        vpcName: this.vpcDetails.name,
+        transitGatewayAttachmentName: tgwAttachmentItem.name,
+        transitGatewayName: tgwAttachmentItem.transitGateway.name,
       });
     }
   }
