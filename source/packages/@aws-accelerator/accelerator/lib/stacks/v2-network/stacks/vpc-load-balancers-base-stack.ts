@@ -29,7 +29,8 @@ import { PutSsmParameter, SsmParameterProps } from '@aws-accelerator/constructs/
 import { GatewayLoadBalancer } from '@aws-accelerator/constructs/lib/aws-elasticloadbalancingv2/gateway-load-balancer';
 import { GwlbConfig } from '@aws-accelerator/config/lib/network-config';
 import { isV2Resource } from '../utils/functions';
-import { V2StackComponentsList } from '../utils/enums';
+import { NetworkStackGeneration, V2StackComponentsList } from '../utils/enums';
+import { MetadataKeys } from '@aws-accelerator/utils/lib/common-types';
 
 export class VpcLoadBalancersBaseStack extends AcceleratorStack {
   private v2StackProps: V2NetworkStacksBaseProps;
@@ -39,6 +40,15 @@ export class VpcLoadBalancersBaseStack extends AcceleratorStack {
 
   constructor(scope: Construct, id: string, props: V2NetworkStacksBaseProps) {
     super(scope, id, props);
+
+    //
+    // Add Stack metadata
+    //
+    this.addMetadata(MetadataKeys.LZA_LOOKUP, {
+      accountName: this.props.accountsConfig.getAccountNameById(this.account),
+      region: cdk.Stack.of(this).region,
+      stackGeneration: NetworkStackGeneration.V2,
+    });
 
     this.v2StackProps = props;
     this.vpcDetails = new VpcDetails(this, 'VpcDetails', this.v2StackProps);
@@ -139,6 +149,14 @@ export class VpcLoadBalancersBaseStack extends AcceleratorStack {
     NagSuppressions.addResourceSuppressions(loadBalancer, [
       { id: 'AwsSolutions-ELB2', reason: 'Gateway Load Balancers do not support access logging.' },
     ]);
+
+    const cfnResource = loadBalancer.node.defaultChild as cdk.CfnResource;
+
+    cfnResource.addMetadata(MetadataKeys.LZA_LOOKUP, {
+      resourceType: V2StackComponentsList.GATEWAY_LOAD_BALANCER,
+      vpcName: this.vpcDetails.name,
+      loadBalancerName: loadBalancerItem.name,
+    });
 
     return loadBalancer;
   }
@@ -309,6 +327,14 @@ export class VpcLoadBalancersBaseStack extends AcceleratorStack {
       parameterName: this.getSsmPath(SsmResourceType.ALB, [this.vpcDetails.name, albItem.name]),
       stringValue: alb.applicationLoadBalancerArn,
     });
+
+    const cfnResource = alb.node.defaultChild as cdk.CfnResource;
+
+    cfnResource.addMetadata(MetadataKeys.LZA_LOOKUP, {
+      resourceType: V2StackComponentsList.APPLICATION_LOAD_BALANCER,
+      vpcName: this.vpcDetails.name,
+      loadBalancerName: albItem.name,
+    });
   }
 
   /**
@@ -387,7 +413,7 @@ export class VpcLoadBalancersBaseStack extends AcceleratorStack {
       )
     ) {
       const principals = this.setNetworkLoadBalancerPrincipalIds();
-      new cdk.aws_iam.Role(this, `GetNLBIPAddressLookup`, {
+      const role = new cdk.aws_iam.Role(this, `GetNLBIPAddressLookup`, {
         roleName,
         assumedBy: new cdk.aws_iam.CompositePrincipal(...principals!),
         inlinePolicies: {
@@ -409,6 +435,12 @@ export class VpcLoadBalancersBaseStack extends AcceleratorStack {
           reason: 'Allows only specific role arns.',
         },
       ]);
+
+      (role.node.defaultChild as cdk.aws_iam.CfnRole).addMetadata(MetadataKeys.LZA_LOOKUP, {
+        resourceType: V2StackComponentsList.NETWORK_LOAD_BALANCER_ROLE,
+        roleDescription: 'GetNLBIPAddressLookup',
+        roleName,
+      });
     }
   }
 
@@ -440,6 +472,14 @@ export class VpcLoadBalancersBaseStack extends AcceleratorStack {
       logicalId: `${nlbItem.name}-${this.vpcDetails.name}-ssm`,
       parameterName: this.getSsmPath(SsmResourceType.NLB, [this.vpcDetails.name, nlbItem.name]),
       stringValue: nlb.networkLoadBalancerArn,
+    });
+
+    const cfnResource = nlb.node.defaultChild as cdk.CfnResource;
+    cfnResource.addMetadata(MetadataKeys.LZA_LOOKUP, {
+      resourceType: V2StackComponentsList.NETWORK_LOAD_BALANCER,
+      vpcName: this.vpcDetails.name,
+      loadBalancerName: nlbItem.name,
+      loadBalancerType: 'network',
     });
   }
 }

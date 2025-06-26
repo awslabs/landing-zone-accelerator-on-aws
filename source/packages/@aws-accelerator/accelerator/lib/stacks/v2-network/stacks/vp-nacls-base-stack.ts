@@ -24,7 +24,8 @@ import { NonEmptyString } from '@aws-accelerator/config/lib/common/types';
 import { isIpv6Cidr } from '../../network-stacks/utils/validation-utils';
 import { SsmResourceType } from '@aws-accelerator/utils/lib/ssm-parameter-path';
 import { isV2Resource } from '../utils/functions';
-import { V2StackComponentsList } from '../utils/enums';
+import { NetworkStackGeneration, V2StackComponentsList } from '../utils/enums';
+import { MetadataKeys } from '@aws-accelerator/utils/lib/common-types';
 
 export class VpcNaclsBaseStack extends AcceleratorStack {
   private v2StackProps: V2NetworkStacksBaseProps;
@@ -32,6 +33,15 @@ export class VpcNaclsBaseStack extends AcceleratorStack {
   private vpcId: string;
   constructor(scope: Construct, id: string, props: V2NetworkStacksBaseProps) {
     super(scope, id, props);
+
+    //
+    // Add Stack metadata
+    //
+    this.addMetadata(MetadataKeys.LZA_LOOKUP, {
+      accountName: this.props.accountsConfig.getAccountNameById(this.account),
+      region: cdk.Stack.of(this).region,
+      stackGeneration: NetworkStackGeneration.V2,
+    });
 
     this.v2StackProps = props;
     this.vpcDetails = new VpcDetails(this, 'VpcDetails', this.v2StackProps);
@@ -114,6 +124,12 @@ export class VpcNaclsBaseStack extends AcceleratorStack {
       stringValue: networkAclId,
     });
 
+    cfnNetworkAcl.addMetadata(MetadataKeys.LZA_LOOKUP, {
+      resourceType: V2StackComponentsList.NETWORK_ACL,
+      vpcName: this.vpcDetails.name,
+      naclName: networkAclItem.name,
+    });
+
     return networkAclId;
   }
 
@@ -135,19 +151,28 @@ export class VpcNaclsBaseStack extends AcceleratorStack {
         continue;
       }
 
-      new cdk.aws_ec2.CfnSubnetNetworkAclAssociation(
+      const subnetId = cdk.aws_ssm.StringParameter.valueForStringParameter(
+        this,
+        this.getSsmPath(SsmResourceType.SUBNET, [this.vpcDetails.name, subnetName]),
+      );
+
+      const cfnSubnetNetworkAclAssociation = new cdk.aws_ec2.CfnSubnetNetworkAclAssociation(
         this,
         `${pascalCase(this.vpcDetails.name)}Vpc${pascalCase(networkAclItem.name)}NaclAssociate${pascalCase(
           subnetName,
         )}`,
         {
           networkAclId,
-          subnetId: cdk.aws_ssm.StringParameter.valueForStringParameter(
-            this,
-            this.getSsmPath(SsmResourceType.SUBNET, [this.vpcDetails.name, subnetName]),
-          ),
+          subnetId,
         },
       );
+
+      cfnSubnetNetworkAclAssociation.addMetadata(MetadataKeys.LZA_LOOKUP, {
+        resourceType: V2StackComponentsList.NETWORK_ACL_SUBNET_ASSOCIATION,
+        vpcName: this.vpcDetails.name,
+        naclName: networkAclItem.name,
+        subnetName,
+      });
     }
   }
 
@@ -251,6 +276,16 @@ export class VpcNaclsBaseStack extends AcceleratorStack {
         [{ id: 'AwsSolutions-VPC3', reason: 'NACL entry added to VPC' }],
         true,
       );
+
+      cfnNetworkAclEntry.addMetadata(MetadataKeys.LZA_LOOKUP, {
+        resourceType: V2StackComponentsList.NETWORK_ACL_ENTRY,
+        vpcName: this.vpcDetails.name,
+        naclName: networkAclItem.name,
+        type,
+        protocol: props.protocol,
+        ruleAction: props.ruleAction,
+        ruleNumber: props.ruleNumber,
+      });
     }
   }
 
