@@ -1792,7 +1792,7 @@ export abstract class AcceleratorStack extends cdk.Stack {
     returnTempPath: boolean,
     organizationId?: string,
     tempFileName?: string,
-    parameters?: { [key: string]: string | string[] },
+    parameters?: { [key: string]: string | string[] | number },
   ): string {
     // Transform policy document
     let policyContent: string = fs.readFileSync(policyPath, 'utf8');
@@ -1820,13 +1820,20 @@ export abstract class AcceleratorStack extends cdk.Stack {
       additionalReplacements['\\${ORG_ID}'] = organizationId;
     }
 
-    const policyParams: { [key: string]: string | string[] } = {
+    const policyParams: { [key: string]: string | string[] | number } = {
       ...this.props.replacementsConfig.placeholders,
-      ...parameters,
+      ...Object.fromEntries(
+        Object.entries(parameters || {}).map(([key, value]) => [
+          key,
+          typeof value === 'number' ? value.toString() : value,
+        ]),
+      ),
     };
 
     for (const key of Object.keys(policyParams)) {
-      additionalReplacements[`\\\${${ReplacementsConfig.POLICY_PARAMETER_PREFIX}:${key}}`] = policyParams[key];
+      const value = policyParams[key];
+      additionalReplacements[`\\\${${ReplacementsConfig.POLICY_PARAMETER_PREFIX}:${key}}`] =
+        typeof value === 'number' ? value.toString() : value;
     }
 
     policyContent = policyReplacements({
