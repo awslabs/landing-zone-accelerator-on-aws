@@ -12,10 +12,14 @@
  */
 
 import path from 'path';
-import { createLogger, IMoveAccountsBatchHandlerParameter, moveAccountsBatch } from '../../../../../@aws-lza/index';
+import {
+  createStatusLogger,
+  IMoveAccountsBatchHandlerParameter,
+  moveAccountsBatch,
+} from '../../../../../@aws-lza/index';
 import { ModuleParams } from '../../../models/types';
 
-const logger = createLogger([path.parse(path.basename(__filename)).name]);
+const statusLogger = createStatusLogger([path.parse(path.basename(__filename)).name]);
 
 /**
  * An abstract class to manage move AWS Accounts to destination AWS Organizations Organizational Unit (OU) module
@@ -62,7 +66,7 @@ export abstract class MoveAccountModule {
       },
     };
 
-    logger.info(`Executing ${params.moduleItem.name} module.`);
+    statusLogger.info(`Executing ${params.moduleItem.name} module.`);
     const status = await moveAccountsBatch(param);
 
     return `Module "${params.moduleItem.name}" completed successfully with status ${status}`;

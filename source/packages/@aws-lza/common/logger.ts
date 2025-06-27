@@ -33,3 +33,33 @@ export const createLogger = (logInfo: string[]) => {
   const logInfoString = logInfo.join(' | ');
   return Logger.child({ childLabel: logInfoString });
 };
+
+const StatusLogger = winston.createLogger({
+  level: 'info',
+  format: winston.format.combine(
+    winston.format.colorize(),
+    winston.format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss.SSS' }),
+    winston.format.printf(({ message, timestamp, childLabel }) => {
+      return `${timestamp} | status | ${childLabel} | ${message}`;
+    }),
+    winston.format.align(),
+  ),
+  transports: [new winston.transports.Console()],
+});
+
+winston.add(StatusLogger);
+
+/**
+ * Use this logger to log status messages to the console, since this is not dependent on LOG_LEVEL variable this should be used only for summary status.
+ *
+ * Do not use this logger to log detailed messages, use createLogger instead.
+ * @param logInfo string[]
+ * @returns
+ */
+export const createStatusLogger = (logInfo: string[]) => {
+  if (!logInfo || logInfo.length === 0) {
+    throw new Error('createStatusLogger requires at least one log info item');
+  }
+  const logInfoString = logInfo.join(' | ');
+  return StatusLogger.child({ childLabel: logInfoString });
+};

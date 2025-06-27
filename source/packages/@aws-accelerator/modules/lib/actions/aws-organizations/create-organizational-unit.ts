@@ -13,13 +13,13 @@
 
 import path from 'path';
 import {
-  createLogger,
+  createStatusLogger,
   createOrganizationalUnit,
   ICreateOrganizationalUnitHandlerParameter,
 } from '../../../../../@aws-lza/index';
 import { ModuleParams } from '../../../models/types';
 
-const logger = createLogger([path.parse(path.basename(__filename)).name]);
+const statusLogger = createStatusLogger([path.parse(path.basename(__filename)).name]);
 
 /**
  * An abstract class to manage create AWS Organizations Organizational unit (OU) module
@@ -62,7 +62,7 @@ export abstract class CreateOrganizationalUnitModule {
         },
       };
 
-      logger.info(`Executing ${params.moduleItem.name} module for ${organizationalUnit.name} OU.`);
+      statusLogger.info(`Executing ${params.moduleItem.name} module for ${organizationalUnit.name} OU.`);
       statuses.push(await createOrganizationalUnit(param));
     }
 

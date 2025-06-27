@@ -13,13 +13,13 @@
 
 import path from 'path';
 import {
-  createLogger,
+  createStatusLogger,
   ISetupLandingZoneHandlerParameter,
   setupControlTowerLandingZone,
 } from '../../../../../@aws-lza/index';
 import { ModuleParams } from '../../../models/types';
 
-const logger = createLogger([path.parse(path.basename(__filename)).name]);
+const statusLogger = createStatusLogger([path.parse(path.basename(__filename)).name]);
 
 /**
  * An abstract class to manage execution of AWS Control Tower Landing Zone module
@@ -74,7 +74,7 @@ export abstract class SetupControlTowerLandingZoneModule {
       },
     };
 
-    logger.info(`Executing ${params.moduleItem.name} module.`);
+    statusLogger.info(`Executing ${params.moduleItem.name} module.`);
     const status = await SetupControlTowerLandingZoneModule.setupControlTowerLandingZone(config);
     return `Module "${params.moduleItem.name}" completed successfully with status ${status}`;
   }
