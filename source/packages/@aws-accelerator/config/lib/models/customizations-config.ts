@@ -1951,7 +1951,6 @@ export interface IServiceCatalogConfig {
  *
  */
 export interface ICustomizationConfig {
-  readonly createCfnStackSetExecutionRole?: boolean;
   readonly cloudFormationStacks?: ICloudFormationStack[];
   readonly cloudFormationStackSets?: ICloudFormationStackSet[];
   readonly serviceCatalogPortfolios?: IPortfolioConfig[];

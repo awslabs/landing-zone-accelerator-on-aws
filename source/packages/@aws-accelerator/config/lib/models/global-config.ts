@@ -364,6 +364,11 @@ export interface ICdkOptionsConfig {
    * Sets the cdk deployment method for the LZA. Defaults to direct. Setting to change-set will display additional progress information but can increase deployment time.
    */
   readonly deploymentMethod?: 'change-set' | 'direct';
+  /**
+   * Determines if the LZA pipeline will skip the static config validation step during the pipeline's Build phase.
+   * This can be helpful in cases where the config-validator incorrectly throws errors for a valid configuration.
+   */
+  readonly skipStaticValidation?: boolean | undefined;
 }
 
 /**
@@ -1451,6 +1456,25 @@ export interface ICloudWatchLogsConfig {
    * with the global configuration. Only enable this option if you fully understand the implications.
    */
   readonly skipBulkUpdate?: ICloudWatchLogSkipBulkUpdateConfig;
+
+  /**
+   * CloudWatch Logs subscription configuration.
+   */
+  readonly subscription?: ICloudWatchSubscriptionConfig;
+
+  /**
+   * CloudWatch Logs Firehose configuration.
+   *
+   * @see {@link ICloudWatchFirehoseConfig} for more information.
+   */
+  readonly firehose?: ICloudWatchFirehoseConfig;
+
+  /**
+   * CloudWatch Logs Kinesis configuration.
+   *
+   * @see {@link ICloudWatchKinesisConfig} for more information.
+   */
+  readonly kinesis?: ICloudWatchKinesisConfig;
 }
 
 /**
@@ -2758,4 +2782,11 @@ export interface IGlobalConfig {
    * ```
    */
   readonly stackPolicy?: IStackPolicyConfig;
+
+  /**
+   * SQS Queue configuration settings.
+   *
+   * @see {@link ISqsConfig} for more information.
+   */
+  readonly sqs?: ISqsConfig;
 }

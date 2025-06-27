@@ -115,6 +115,16 @@ export interface IGovCloudAccountConfig extends IBaseAccountConfig {
    * should be created.
    */
   enableGovCloud?: boolean;
+  /**
+   * 'Warm' the account by creating an EC2 instance
+   * that runs for 15 minutes
+   * Use for new accounts that will need to have
+   * ec2 instance provisioned as part of the solution
+   * The 'warming' will take place in the operations stack
+   * This property may be removed after the account has
+   * been provisioned
+   */
+  warm?: boolean;
 }
 
 export interface IAccountIdConfig {

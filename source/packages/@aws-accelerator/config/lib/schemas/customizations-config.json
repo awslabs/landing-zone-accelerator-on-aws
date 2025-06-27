@@ -556,9 +556,6 @@
           },
           "type": "array"
         },
-        "createCfnStackSetExecutionRole": {
-          "type": "boolean"
-        },
         "serviceCatalogPortfolios": {
           "items": {
             "$ref": "#/definitions/IPortfolioConfig"
