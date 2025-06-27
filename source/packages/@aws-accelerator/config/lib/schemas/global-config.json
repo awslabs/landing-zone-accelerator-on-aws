@@ -322,6 +322,10 @@
           "description": "Forces the Accelerator to deploy the bootstrapping stack and circumvent the ssm parameter check. This option is needed when adding or removing a custom deployment role",
           "type": "boolean"
         },
+        "skipStaticValidation": {
+          "description": "Determines if the LZA pipeline will skip the static config validation step during the pipeline's Build phase. This can be helpful in cases where the config-validator incorrectly throws errors for a valid configuration.",
+          "type": "boolean"
+        },
         "useManagementAccessRole": {
           "description": "Indicates whether CDK operations use the IAM role specified in the `managementAccountAccessRole` option in `global-config.yaml` rather than the default roles created by CDK.\n\nThe roles created and leveraged by CDK by default can be found [here](https://docs.aws.amazon.com/cdk/v2/guide/bootstrapping.html#bootstrapping-contract).",
           "type": "boolean"
@@ -495,6 +499,63 @@
       ],
       "type": "object"
     },
+    "ICloudWatchFirehoseConfig": {
+      "additionalProperties": false,
+      "description": "Accelerator global CloudWatch Logs firehose configuration",
+      "properties": {
+        "fileExtension": {
+          "$ref": "#/definitions/NonEmptyString",
+          "description": "Configuration that will be applicable for firehose delivery of logs in LogArchive"
+        },
+        "lambdaProcessor": {
+          "$ref": "#/definitions/ICloudWatchFirehoseLambdaProcessorConfig",
+          "description": "Describes hints for the firehose lambda processor when Amazon Data Firehose receives data. Amazon Data Firehose can invokes Lambda function to take source data and deliver the data to destination specified in dynamic partition."
+        }
+      },
+      "type": "object"
+    },
+    "ICloudWatchFirehoseLambdaProcessorConfig": {
+      "additionalProperties": false,
+      "properties": {
+        "bufferInterval": {
+          "default": 60,
+          "description": "The period of time in seconds during which Amazon Data Firehose buffers incoming data before invoking the AWS Lambda function. The AWS Lambda function is invoked once the value of the buffer size or the buffer interval is reached. Range 60 to 900s.",
+          "type": "number"
+        },
+        "bufferSize": {
+          "default": 0.2,
+          "description": "The AWS Lambda function has a 6 MB invocation payload quota. Your data can expand in size after it's processed by the AWS Lambda function. A smaller buffer size allows for more room should the data expand after processing. Range is 0.2 to 3 MB.",
+          "type": "number"
+        },
+        "retries": {
+          "default": 3,
+          "type": "number"
+        }
+      },
+      "type": "object"
+    },
+    "ICloudWatchKinesisConfig": {
+      "additionalProperties": false,
+      "description": "Accelerator global CloudWatch Logs Kinesis stream configuration",
+      "properties": {
+        "retention": {
+          "default": 24,
+          "type": "number"
+        },
+        "shardCount": {
+          "default": 1,
+          "type": "number"
+        },
+        "streamingMode": {
+          "$ref": "#/definitions/StreamMode",
+          "default": "PROVISIONED"
+        }
+      },
+      "required": [
+        "streamingMode"
+      ],
+      "type": "object"
+    },
     "ICloudWatchLogSkipBulkUpdateConfig": {
       "additionalProperties": false,
       "description": "Accelerator global CloudWatch Logs skip bulk update configuration.\nWARNING: This configuration option could cause CloudWatch log group configurations to become out of sync\nwith the global configuration. Only enable this option if you fully understand the implications.",
@@ -542,6 +603,14 @@
           },
           "type": "array"
         },
+        "firehose": {
+          "$ref": "#/definitions/ICloudWatchFirehoseConfig",
+          "description": "CloudWatch Logs Firehose configuration."
+        },
+        "kinesis": {
+          "$ref": "#/definitions/ICloudWatchKinesisConfig",
+          "description": "CloudWatch Logs Kinesis configuration."
+        },
         "organizationIdConditionSupported": {
           "description": "Determines if a list of account ids is used instead of a principal organization condition in the CloudWatch Logs destination access policy. This is useful in partitions where the principal organization condition is not supported.",
           "type": "boolean"
@@ -555,6 +624,10 @@
           "$ref": "#/definitions/ICloudWatchLogSkipBulkUpdateConfig",
           "default": "undefined",
           "description": "Used to skip the bulk update of CloudWatch logs settings in the LZA pipeline"
+        },
+        "subscription": {
+          "$ref": "#/definitions/ICloudWatchSubscriptionConfig",
+          "description": "CloudWatch Logs subscription configuration."
         }
       },
       "type": "object"
@@ -613,6 +686,36 @@
       },
       "required": [
         "categories"
+      ],
+      "type": "object"
+    },
+    "ICloudWatchSubscriptionConfig": {
+      "additionalProperties": false,
+      "description": "Accelerator global CloudWatch Logs subscription configuration",
+      "properties": {
+        "filterPattern": {
+          "$ref": "#/definitions/NonEmptyString",
+          "description": "(OPTIONAL) Indicates whether to apply specific filter pattern to the subscription as per https://docs.aws.amazon.com/AmazonCloudWatch/latest/logs/CreateSubscriptionFilter-Account.html If no value is provided all logs events will match filter criteria\n\n(This property is only applicable when type is set to 'LOG_GROUP'."
+        },
+        "overrideExisting": {
+          "default": false,
+          "description": "(OPTIONAL) Indicates whether existing CloudWatch Log subscription configuration can be overwritten. Any existing policy will be updated and renamed to 'ACCELERATOR_ACCOUNT_SUBSCRIPTION_POLICY'. Upon deleting the solution or disabling logging for cloudwatch in global config, this policy will be removed. If type is set to 'LOG_GROUP' this parameter will not be used.",
+          "type": "boolean"
+        },
+        "selectionCriteria": {
+          "$ref": "#/definitions/NonEmptyString",
+          "description": "Only applicable, when type is set to 'ACCOUNT'. The selection criteria is set to take input as string based on service api listed here: https://docs.aws.amazon.com/AmazonCloudWatchLogs/latest/APIReference/API_PutAccountPolicy.html"
+        },
+        "type": {
+          "enum": [
+            "ACCOUNT",
+            "LOG_GROUP"
+          ],
+          "type": "string"
+        }
+      },
+      "required": [
+        "type"
       ],
       "type": "object"
     },
@@ -1019,6 +1122,10 @@
         "snsTopics": {
           "$ref": "#/definitions/ISnsConfig",
           "description": "SNS Topics Configuration\n\nTo send CloudWatch Alarms and SecurityHub notifications you will need to configure at least one SNS Topic For SecurityHub notification you will need to set the deployment target to Root in order to receive notifications from all accounts"
+        },
+        "sqs": {
+          "$ref": "#/definitions/ISqsConfig",
+          "description": "SQS Queue configuration settings."
         },
         "ssmInventory": {
           "$ref": "#/definitions/ISsmInventoryConfig",
@@ -1492,6 +1599,17 @@
       ],
       "type": "object"
     },
+    "ISqsConfig": {
+      "additionalProperties": false,
+      "description": "SQS Queue configuration settings",
+      "properties": {
+        "encryption": {
+          "$ref": "#/definitions/IServiceEncryptionConfig",
+          "description": "Encryption setting for AWS Lambda environment variables."
+        }
+      },
+      "type": "object"
+    },
     "ISsmInventoryConfig": {
       "additionalProperties": false,
       "description": "SSM Inventory Configuration",
@@ -1700,6 +1818,13 @@
         "STANDARD_IA",
         "INTELLIGENT_TIERING",
         "ONEZONE_IA"
+      ],
+      "type": "string"
+    },
+    "StreamMode": {
+      "enum": [
+        "ON_DEMAND",
+        "PROVISIONED"
       ],
       "type": "string"
     },
