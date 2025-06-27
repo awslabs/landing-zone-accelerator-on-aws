@@ -36,7 +36,7 @@ export abstract class ParameterReplacementConfigV2 implements i.IParameterReplac
   readonly key: string = '';
   readonly path: string = '';
   readonly type: t.ParameterReplacementType = 'SSM';
-  readonly value: string | string[] | undefined = undefined;
+  readonly value: string | string[] | number | undefined = undefined;
 }
 
 export interface ReplacementsConfigProps {
@@ -60,7 +60,7 @@ export class ReplacementsConfig implements i.IReplacementsConfig {
 
   readonly accountsConfig: AccountsConfig | undefined = undefined;
 
-  placeholders: { [key: string]: string | string[] } = {};
+  placeholders: { [key: string]: string | string[] | number } = {};
 
   /**
    *
