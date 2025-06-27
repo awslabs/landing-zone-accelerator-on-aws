@@ -13,13 +13,13 @@
 
 import path from 'path';
 import {
-  createLogger,
+  createStatusLogger,
   IInviteAccountsBatchToOrganizationHandlerParameter,
   inviteAccountsBatchToOrganization,
 } from '../../../../../@aws-lza/index';
 import { ModuleParams } from '../../../models/types';
 
-const logger = createLogger([path.parse(path.basename(__filename)).name]);
+const statusLogger = createStatusLogger([path.parse(path.basename(__filename)).name]);
 
 /**
  * An abstract class to manage invite AWS Accounts to AWS Organizations module
@@ -73,7 +73,7 @@ export abstract class InviteAccountsToOrganizationsModule {
       },
     };
 
-    logger.info(`Executing ${params.moduleItem.name} module.`);
+    statusLogger.info(`Executing ${params.moduleItem.name} module.`);
     const status = await inviteAccountsBatchToOrganization(param);
 
     return `Module "${params.moduleItem.name}" completed successfully with status ${status}`;

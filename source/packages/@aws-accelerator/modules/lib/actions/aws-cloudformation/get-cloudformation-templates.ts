@@ -13,14 +13,14 @@
 
 import path from 'path';
 import {
-  createLogger,
+  createStatusLogger,
   getCloudFormationTemplates,
   IGetCloudFormationTemplatesHandlerParameter,
 } from '../../../../../@aws-lza/index';
 import { ModuleParams } from '../../../models/types';
 import { AcceleratorEnvironment } from '../../../../../@aws-lza/common/types';
 
-const logger = createLogger([path.parse(path.basename(__filename)).name]);
+const statusLogger = createStatusLogger([path.parse(path.basename(__filename)).name]);
 
 /**
  * An abstract class to download cross account CloudFormation templates module
@@ -32,7 +32,7 @@ export abstract class GetCloudFormationTemplatesModule {
    * @returns status string
    */
   public static async execute(params: ModuleParams): Promise<string> {
-    logger.info(`Executing module "${params.moduleItem.name}"`);
+    statusLogger.info(`Executing module "${params.moduleItem.name}"`);
     if (!(params.moduleRunnerParameters.configs.globalConfig.useV2Stacks ?? false)) {
       return `Module "${params.moduleItem.name}" did not execute. Configuration option not set.`;
     }
