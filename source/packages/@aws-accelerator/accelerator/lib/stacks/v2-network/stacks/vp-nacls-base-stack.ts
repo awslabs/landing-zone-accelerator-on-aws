@@ -410,7 +410,15 @@ export class VpcNaclsBaseStack extends AcceleratorStack {
       }
 
       if (targetSubnetConfig.ipamAllocation) {
-        return { cidrBlock: targetSubnetConfig.ipv4CidrBlock };
+        this.logger.info(
+          `Network ACL item ${networkAclItem.name} rule ${rule} target subnet ${target.subnet} is IPAM allocated, CIDR will be retrieved from SSM parameter.`,
+        );
+        return {
+          cidrBlock: cdk.aws_ssm.StringParameter.valueForStringParameter(
+            this,
+            this.getSsmPath(SsmResourceType.SUBNET_IPV4_CIDR_BLOCK, [target.vpc, targetSubnetConfig.name]),
+          ),
+        };
       } else {
         return target.ipv6
           ? { ipv6CidrBlock: targetSubnetConfig.ipv6CidrBlock }

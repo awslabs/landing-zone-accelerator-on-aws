@@ -295,6 +295,14 @@ exports[`NetworkVpcV2Stacks Construct(NackStack-Network-us-east-1-Network-Second
     },
   },
   "Parameters": {
+    "SsmParameterValueacceleratornetworkvpcNetworkEndpointssubnetNetworkEndpointsAcidripv4C96584B6F00A464EAD1953AFF4B05118Parameter": {
+      "Default": "/accelerator/network/vpc/Network-Endpoints/subnet/Network-Endpoints-A/cidr/ipv4",
+      "Type": "AWS::SSM::Parameter::Value<String>",
+    },
+    "SsmParameterValueacceleratornetworkvpcNetworkEndpointssubnetNetworkEndpointsBcidripv4C96584B6F00A464EAD1953AFF4B05118Parameter": {
+      "Default": "/accelerator/network/vpc/Network-Endpoints/subnet/Network-Endpoints-B/cidr/ipv4",
+      "Type": "AWS::SSM::Parameter::Value<String>",
+    },
     "SsmParameterValueacceleratornetworkvpcNetworkSecondaryV2idC96584B6F00A464EAD1953AFF4B05118Parameter": {
       "Default": "/accelerator/network/vpc/Network-Secondary-V2/id",
       "Type": "AWS::SSM::Parameter::Value<String>",
@@ -374,6 +382,9 @@ exports[`NetworkVpcV2Stacks Construct(NackStack-Network-us-east-1-Network-Second
         },
       },
       "Properties": {
+        "CidrBlock": {
+          "Ref": "SsmParameterValueacceleratornetworkvpcNetworkEndpointssubnetNetworkEndpointsBcidripv4C96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
         "Egress": false,
         "NetworkAclId": {
           "Ref": "NetworkSecondaryV2VpcTestNaclNacl",
@@ -409,6 +420,9 @@ exports[`NetworkVpcV2Stacks Construct(NackStack-Network-us-east-1-Network-Second
         },
       },
       "Properties": {
+        "CidrBlock": {
+          "Ref": "SsmParameterValueacceleratornetworkvpcNetworkEndpointssubnetNetworkEndpointsAcidripv4C96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
         "Egress": false,
         "NetworkAclId": {
           "Ref": "NetworkSecondaryV2VpcTestNaclNacl",
@@ -444,6 +458,9 @@ exports[`NetworkVpcV2Stacks Construct(NackStack-Network-us-east-1-Network-Second
         },
       },
       "Properties": {
+        "CidrBlock": {
+          "Ref": "SsmParameterValueacceleratornetworkvpcNetworkEndpointssubnetNetworkEndpointsBcidripv4C96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
         "Egress": false,
         "NetworkAclId": {
           "Ref": "NetworkSecondaryV2VpcTestNaclNacl",
@@ -551,6 +568,9 @@ exports[`NetworkVpcV2Stacks Construct(NackStack-Network-us-east-1-Network-Second
         },
       },
       "Properties": {
+        "CidrBlock": {
+          "Ref": "SsmParameterValueacceleratornetworkvpcNetworkEndpointssubnetNetworkEndpointsBcidripv4C96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
         "Egress": false,
         "Icmp": {
           "Code": 5,
@@ -801,6 +821,9 @@ exports[`NetworkVpcV2Stacks Construct(NackStack-Network-us-east-1-Network-Second
         },
       },
       "Properties": {
+        "CidrBlock": {
+          "Ref": "SsmParameterValueacceleratornetworkvpcNetworkEndpointssubnetNetworkEndpointsAcidripv4C96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
         "Egress": true,
         "NetworkAclId": {
           "Ref": "NetworkSecondaryV2VpcTestNaclNacl",
@@ -836,6 +859,9 @@ exports[`NetworkVpcV2Stacks Construct(NackStack-Network-us-east-1-Network-Second
         },
       },
       "Properties": {
+        "CidrBlock": {
+          "Ref": "SsmParameterValueacceleratornetworkvpcNetworkEndpointssubnetNetworkEndpointsBcidripv4C96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
         "Egress": true,
         "NetworkAclId": {
           "Ref": "NetworkSecondaryV2VpcTestNaclNacl",
@@ -871,6 +897,9 @@ exports[`NetworkVpcV2Stacks Construct(NackStack-Network-us-east-1-Network-Second
         },
       },
       "Properties": {
+        "CidrBlock": {
+          "Ref": "SsmParameterValueacceleratornetworkvpcNetworkEndpointssubnetNetworkEndpointsBcidripv4C96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
         "Egress": true,
         "NetworkAclId": {
           "Ref": "NetworkSecondaryV2VpcTestNaclNacl",
@@ -978,6 +1007,9 @@ exports[`NetworkVpcV2Stacks Construct(NackStack-Network-us-east-1-Network-Second
         },
       },
       "Properties": {
+        "CidrBlock": {
+          "Ref": "SsmParameterValueacceleratornetworkvpcNetworkEndpointssubnetNetworkEndpointsBcidripv4C96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
         "Egress": true,
         "Icmp": {
           "Code": 5,
