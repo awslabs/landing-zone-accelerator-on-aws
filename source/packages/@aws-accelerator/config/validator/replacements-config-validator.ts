@@ -101,12 +101,24 @@ export class ReplacementsConfigValidator {
       } else if (typeof replacementV2.value !== 'string') {
         errors.push(`Invalid replacement - value type is correct for String replacement: ${replacementV2.key}.`);
       }
+    } else if (replacementV2.type === 'Number') {
+      if (replacementV2.path) {
+        errors.push(`Invalid replacement - path is not allowed for Number replacement: ${replacementV2.key}.`);
+      } else if (!replacementV2.value) {
+        errors.push(`Invalid replacement - no Number value specified for Number replacement: ${replacementV2.key}.`);
+      } else if (typeof replacementV2.value !== 'number') {
+        errors.push(`Invalid replacement - value type is incorrect for Number replacement: ${replacementV2.key}.`);
+      }
     } else if (replacementV2.type === 'StringList') {
       if (replacementV2.path) {
         errors.push(`Invalid replacement - path is not allowed for StringList replacement: ${replacementV2.key}.`);
-      } else if (!replacementV2.value || replacementV2.value.length === 0) {
+      } else if (!replacementV2.value || !Array.isArray(replacementV2.value) || replacementV2.value.length === 0) {
         errors.push(
           `Invalid replacement - no StringList value specified for StringList replacement: ${replacementV2.key}.`,
+        );
+      } else if (!replacementV2.value.every(item => typeof item === 'string')) {
+        errors.push(
+          `Invalid replacement - all StringList values must be strings for replacement: ${replacementV2.key}.`,
         );
       }
     }

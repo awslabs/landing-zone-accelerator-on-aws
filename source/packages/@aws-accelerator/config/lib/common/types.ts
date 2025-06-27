@@ -804,7 +804,7 @@ export enum AseaResourceTypePaths {
 
 export type AssumedByType = 'service' | 'account' | 'principalArn' | 'provider';
 export type PrincipalType = 'USER' | 'GROUP';
-export type ParameterReplacementType = 'SSM' | 'String' | 'StringList';
+export type ParameterReplacementType = 'SSM' | 'String' | 'StringList' | 'Number';
 
 /**
  * AWS VPC ID
