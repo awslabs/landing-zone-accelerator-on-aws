@@ -105,6 +105,11 @@ jest.mock('../../../@aws-lza/common/logger', () => ({
     warn: jest.fn().mockReturnValue(undefined),
     error: jest.fn().mockReturnValue(undefined),
   }),
+  createStatusLogger: jest.fn().mockReturnValue({
+    info: jest.fn().mockReturnValue(undefined),
+    warn: jest.fn().mockReturnValue(undefined),
+    error: jest.fn().mockReturnValue(undefined),
+  }),
 }));
 
 jest.mock('../../utils/lib/common-functions', () => ({

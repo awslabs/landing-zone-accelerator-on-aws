@@ -15,7 +15,7 @@
 // Common resources
 //
 export { MODULE_EXCEPTIONS } from './common/enums';
-export { createLogger } from './common/logger';
+export { createLogger, createStatusLogger } from './common/logger';
 
 //
 // Control Tower Module resources

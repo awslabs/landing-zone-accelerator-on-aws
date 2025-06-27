@@ -12,11 +12,11 @@
  */
 
 import path from 'path';
-import { createLogger } from '../../../@aws-lza/common/logger';
+import { createStatusLogger } from '../../../@aws-lza/common/logger';
 import { validateAndGetRunnerParameters } from '../lib/functions';
 import { ModuleRunner } from '../index';
 
-const logger = createLogger([path.parse(path.basename(__filename)).name]);
+const statusLogger = createStatusLogger([path.parse(path.basename(__filename)).name]);
 
 process.on('unhandledRejection', reason => {
   console.error(reason);
@@ -44,9 +44,9 @@ async function main(): Promise<string> {
 (async () => {
   try {
     const status = await main();
-    logger.info(status);
+    statusLogger.info(status);
   } catch (err) {
-    logger.error(err);
+    statusLogger.error(err);
     throw err;
   }
 })();

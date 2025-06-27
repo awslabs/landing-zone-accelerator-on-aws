@@ -13,13 +13,13 @@
 
 import path from 'path';
 import {
-  createLogger,
+  createStatusLogger,
   IRegisterOrganizationalUnitHandlerParameter,
   registerOrganizationalUnit,
 } from '../../../../../@aws-lza/index';
 import { ModuleParams } from '../../../models/types';
 
-const logger = createLogger([path.parse(path.basename(__filename)).name]);
+const statusLogger = createStatusLogger([path.parse(path.basename(__filename)).name]);
 
 /**
  * An abstract class to manage register AWS Organizations Organizational Unit (OU) with AWS Control Tower module
@@ -67,7 +67,7 @@ export abstract class RegisterOrganizationalUnitModule {
             name: organizationalUnit.name,
           },
         };
-        logger.info(`Executing ${params.moduleItem.name} module for ${organizationalUnit.name} OU.`);
+        statusLogger.info(`Executing ${params.moduleItem.name} module for ${organizationalUnit.name} OU.`);
         statuses.push(await registerOrganizationalUnit(param));
       }
     }
