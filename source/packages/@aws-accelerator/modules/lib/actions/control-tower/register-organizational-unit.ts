@@ -14,6 +14,7 @@
 import path from 'path';
 import {
   createStatusLogger,
+  getOrganizationalUnitsDetail,
   IRegisterOrganizationalUnitHandlerParameter,
   registerOrganizationalUnit,
 } from '../../../../../@aws-lza/index';
@@ -32,13 +33,35 @@ export abstract class RegisterOrganizationalUnitModule {
    */
   public static async execute(params: ModuleParams): Promise<string> {
     if (!params.moduleRunnerParameters.configs.globalConfig.controlTower.enable) {
-      return `Module ${params.moduleItem.name} execution skipped, Control Tower Landing zone is not enabled for the environment.`;
+      return `Module "${params.moduleItem.name}" execution skipped, Control Tower Landing zone is not enabled for the environment.`;
     }
+
+    statusLogger.info(`Executing "${params.moduleItem.name}" module.`);
     const securityOuName =
       params.moduleRunnerParameters.configs.accountsConfig.getLogArchiveAccount().organizationalUnit;
 
+    const organizationalUnitsDetail = await getOrganizationalUnitsDetail({
+      moduleName: params.moduleItem.name,
+      operation: 'get-organizational-units-detail',
+      partition: params.runnerParameters.partition,
+      region: params.moduleRunnerParameters.configs.globalConfig.homeRegion,
+      useExistingRole: params.runnerParameters.useExistingRoles,
+      solutionId: params.runnerParameters.solutionId,
+      credentials: params.moduleRunnerParameters.managementAccountCredentials,
+      dryRun: params.runnerParameters.dryRun,
+    });
+
+    const unregisteredOrganizationalUnits =
+      params.moduleRunnerParameters.configs.organizationConfig.organizationalUnits.filter(
+        item =>
+          item.name !== securityOuName &&
+          organizationalUnitsDetail.some(
+            ouDetail => ouDetail.completePath === item.name && !ouDetail.registeredwithControlTower,
+          ),
+      );
+
     // Sort organizational units by hierarchy depth
-    const sortedOrganizationalUnits = [...params.moduleRunnerParameters.configs.organizationConfig.organizationalUnits]
+    const sortedOrganizationalUnits = [...unregisteredOrganizationalUnits]
       .filter(ou => !ou.ignore)
       .sort((a, b) => {
         const depthA = a.name.split('/').length;
@@ -51,25 +74,27 @@ export abstract class RegisterOrganizationalUnitModule {
         return depthA - depthB;
       });
 
+    if (sortedOrganizationalUnits.length === 0) {
+      return `Skipping "${params.moduleItem.name}" because all organizational units found in configuration file are already registered with AWS ControlTower.`;
+    }
+
     const statuses: string[] = [];
     for (const organizationalUnit of sortedOrganizationalUnits) {
-      if (organizationalUnit.name !== securityOuName) {
-        const param: IRegisterOrganizationalUnitHandlerParameter = {
-          moduleName: params.moduleItem.name,
-          operation: 'register-organizational-unit',
-          partition: params.runnerParameters.partition,
-          region: params.moduleRunnerParameters.configs.globalConfig.homeRegion,
-          useExistingRole: params.runnerParameters.useExistingRoles,
-          solutionId: params.runnerParameters.solutionId,
-          credentials: params.moduleRunnerParameters.managementAccountCredentials,
-          dryRun: params.runnerParameters.dryRun,
-          configuration: {
-            name: organizationalUnit.name,
-          },
-        };
-        statusLogger.info(`Executing ${params.moduleItem.name} module for ${organizationalUnit.name} OU.`);
-        statuses.push(await registerOrganizationalUnit(param));
-      }
+      const param: IRegisterOrganizationalUnitHandlerParameter = {
+        moduleName: params.moduleItem.name,
+        operation: 'register-organizational-unit',
+        partition: params.runnerParameters.partition,
+        region: params.moduleRunnerParameters.configs.globalConfig.homeRegion,
+        useExistingRole: params.runnerParameters.useExistingRoles,
+        solutionId: params.runnerParameters.solutionId,
+        credentials: params.moduleRunnerParameters.managementAccountCredentials,
+        dryRun: params.runnerParameters.dryRun,
+        configuration: {
+          name: organizationalUnit.name,
+        },
+      };
+      statusLogger.info(`Executing "${params.moduleItem.name}" module for ${organizationalUnit.name} OU.`);
+      statuses.push(await registerOrganizationalUnit(param));
     }
 
     return `Module "${params.moduleItem.name}" completed successfully with status ${statuses.join('\n')}`;
