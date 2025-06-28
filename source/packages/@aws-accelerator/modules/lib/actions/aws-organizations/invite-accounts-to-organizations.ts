@@ -73,7 +73,7 @@ export abstract class InviteAccountsToOrganizationsModule {
       },
     };
 
-    statusLogger.info(`Executing ${params.moduleItem.name} module.`);
+    statusLogger.info(`Executing "${params.moduleItem.name}" module.`);
     const status = await inviteAccountsBatchToOrganization(param);
 
     return `Module "${params.moduleItem.name}" completed successfully with status ${status}`;

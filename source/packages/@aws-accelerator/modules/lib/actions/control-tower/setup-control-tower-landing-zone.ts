@@ -74,7 +74,7 @@ export abstract class SetupControlTowerLandingZoneModule {
       },
     };
 
-    statusLogger.info(`Executing ${params.moduleItem.name} module.`);
+    statusLogger.info(`Executing "${params.moduleItem.name}" module.`);
     const status = await SetupControlTowerLandingZoneModule.setupControlTowerLandingZone(config);
     return `Module "${params.moduleItem.name}" completed successfully with status ${status}`;
   }

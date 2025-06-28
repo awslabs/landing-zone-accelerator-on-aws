@@ -12,6 +12,7 @@
  */
 import {
   Account,
+  AWSOrganizationsNotInUseException,
   DescribeOrganizationCommand,
   InvalidInputException,
   ListRootsCommand,
@@ -22,8 +23,10 @@ import {
 } from '@aws-sdk/client-organizations';
 import {
   ControlTowerClient,
+  EnabledBaselineSummary,
   GetLandingZoneCommand,
   ListLandingZonesCommand,
+  paginateListEnabledBaselines,
   ResourceNotFoundException,
 } from '@aws-sdk/client-controltower';
 import { AssumeRoleCommand, GetCallerIdentityCommand, STSClient } from '@aws-sdk/client-sts';
@@ -446,6 +449,31 @@ export async function getAccountId(client: OrganizationsClient, email: string): 
 }
 
 /**
+ * Function to check if AWS Organizations is configured
+ * @param client {@link OrganizationsClient}
+ * @returns
+ */
+export async function isOrganizationsConfigured(client: OrganizationsClient): Promise<boolean> {
+  try {
+    const response = await throttlingBackOff(() => client.send(new DescribeOrganizationCommand({})));
+
+    if (response.Organization?.Id) {
+      logger.info(`AWS Organizations already configured`);
+      return true;
+    }
+    return false;
+  } catch (
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    e: any
+  ) {
+    if (e instanceof AWSOrganizationsNotInUseException) {
+      return false;
+    }
+    throw e;
+  }
+}
+
+/**
  * Function to get organization id
  * @param client {@link OrganizationsClient}
  * @returns string
@@ -529,4 +557,21 @@ export async function processModulePromises(
     statuses.push(...(await Promise.all(batchedPromises)));
     batchNumber++;
   }
+}
+
+/**
+ * Function to get enabled baselines
+ * @param client {@link ControlTowerClient}
+ * @returns enabledBaselines {@link EnabledBaselineSummary}[]
+ */
+export async function getEnabledBaselines(client: ControlTowerClient): Promise<EnabledBaselineSummary[]> {
+  const enabledBaselines: EnabledBaselineSummary[] = [];
+  const paginator = paginateListEnabledBaselines({ client }, {});
+  for await (const page of paginator) {
+    for (const enabledBaseline of page.enabledBaselines ?? []) {
+      enabledBaselines.push(enabledBaseline);
+    }
+  }
+
+  return enabledBaselines;
 }

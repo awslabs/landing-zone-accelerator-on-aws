@@ -16,10 +16,12 @@ import {
   ControlTowerClient,
   GetLandingZoneCommand,
   ListLandingZonesCommand,
+  paginateListEnabledBaselines,
   ResourceNotFoundException,
 } from '@aws-sdk/client-controltower';
 import {
   Account,
+  AWSOrganizationsNotInUseException,
   DescribeOrganizationCommand,
   InvalidInputException,
   ListRootsCommand,
@@ -37,6 +39,7 @@ import {
   getAccountId,
   getCredentials,
   getCurrentAccountId,
+  getEnabledBaselines,
   getLandingZoneDetails,
   getLandingZoneIdentifier,
   getModuleDefaultParameters,
@@ -47,6 +50,7 @@ import {
   getOrganizationId,
   getOrganizationRootId,
   getParentOuId,
+  isOrganizationsConfigured,
   processModulePromises,
   setRetryStrategy,
 } from '../../common/functions';
@@ -61,6 +65,7 @@ jest.mock('@aws-sdk/client-controltower', () => {
     GetLandingZoneCommand: jest.fn(),
     ResourceNotFoundException: jest.fn(),
     ListLandingZonesCommand: jest.fn(),
+    paginateListEnabledBaselines: jest.fn(),
   };
 });
 jest.mock('@aws-sdk/client-organizations', () => ({
@@ -76,6 +81,7 @@ jest.mock('@aws-sdk/client-organizations', () => ({
     return error;
   }),
   ListRootsCommand: jest.fn(),
+  AWSOrganizationsNotInUseException: jest.fn(),
 }));
 jest.mock('@aws-sdk/client-sts', () => {
   return {
@@ -1637,6 +1643,134 @@ describe('functions', () => {
 
       // Execute & Verify
       await expect(processModulePromises(MOCK_CONSTANTS.testModuleName, promises, statuses, 10)).rejects.toThrow(error);
+    });
+  });
+
+  describe('isOrganizationsConfigured', () => {
+    const mockSend = jest.fn();
+
+    beforeEach(() => {
+      jest.clearAllMocks();
+
+      (OrganizationsClient as jest.Mock).mockImplementation(() => ({
+        send: mockSend,
+      }));
+    });
+
+    test('should return true when organization configured', async () => {
+      // Setup
+      mockSend.mockImplementation(command => {
+        if (command instanceof DescribeOrganizationCommand) {
+          return Promise.resolve({ Organization: MOCK_CONSTANTS.organization });
+        }
+        return Promise.reject(new Error('Unexpected command'));
+      });
+
+      // Execute
+      const response = await isOrganizationsConfigured(new OrganizationsClient({}));
+
+      // Verify
+      expect(response).toBeTruthy();
+      expect(DescribeOrganizationCommand).toHaveBeenCalledTimes(1);
+    });
+
+    test('should return false when organization not configured', async () => {
+      // Setup
+      mockSend.mockImplementation(command => {
+        if (command instanceof DescribeOrganizationCommand) {
+          return Promise.resolve({ Organization: undefined });
+        }
+        return Promise.reject(new Error('Unexpected command'));
+      });
+
+      // Execute
+      const response = await isOrganizationsConfigured(new OrganizationsClient({}));
+
+      // Verify
+      expect(response).toBeFalsy();
+      expect(DescribeOrganizationCommand).toHaveBeenCalledTimes(1);
+    });
+
+    test('should return false when DescribeOrganizationCommand api did return AWSOrganizationsNotInUseException error', async () => {
+      // Setup
+      mockSend.mockImplementation(command => {
+        if (command instanceof DescribeOrganizationCommand) {
+          return Promise.reject(
+            new AWSOrganizationsNotInUseException({ message: 'Organization not in use', $metadata: {} }),
+          );
+        }
+        return Promise.reject(new Error('Unexpected command'));
+      });
+
+      // Execute
+      const response = await isOrganizationsConfigured(new OrganizationsClient({}));
+
+      // Verify
+      expect(response).toBeFalsy();
+      expect(DescribeOrganizationCommand).toHaveBeenCalledTimes(1);
+    });
+
+    test('should handle unknown error for DescribeOrganizationCommand api', async () => {
+      // Setup
+      mockSend.mockImplementation(command => {
+        if (command instanceof DescribeOrganizationCommand) {
+          return Promise.reject(MOCK_CONSTANTS.unknownError);
+        }
+        return Promise.reject(new Error('Unexpected command'));
+      });
+
+      // Execute && verify
+      await expect(async () => {
+        await isOrganizationsConfigured(new OrganizationsClient({}));
+      }).rejects.toThrowError(MOCK_CONSTANTS.unknownError);
+      expect(DescribeOrganizationCommand).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe('getEnabledBaselines', () => {
+    const mockSend = jest.fn();
+
+    beforeEach(() => {
+      jest.clearAllMocks();
+
+      (ControlTowerClient as jest.Mock).mockImplementation(() => ({
+        send: mockSend,
+      }));
+    });
+
+    test('should return list of enabled baselines', async () => {
+      // Setup
+      (paginateListEnabledBaselines as jest.Mock).mockImplementation(() => ({
+        [Symbol.asyncIterator]: async function* () {
+          yield {
+            enabledBaselines: MOCK_CONSTANTS.controlTowerEnabledBaselines,
+          };
+        },
+      }));
+
+      // Execute
+      const response = await getEnabledBaselines(new ControlTowerClient({}));
+
+      // Verify
+      expect(response.length).toEqual(MOCK_CONSTANTS.controlTowerEnabledBaselines.length);
+      expect(response).toEqual(MOCK_CONSTANTS.controlTowerEnabledBaselines);
+    });
+
+    test('should return empty list of enabled baselines when enabledBaselines object is undefined', async () => {
+      // Setup
+      (paginateListEnabledBaselines as jest.Mock).mockImplementation(() => ({
+        [Symbol.asyncIterator]: async function* () {
+          yield {
+            enabledBaselines: undefined,
+          };
+        },
+      }));
+
+      // Execute
+      const response = await getEnabledBaselines(new ControlTowerClient({}));
+
+      // Verify
+      expect(response.length).toEqual(0);
     });
   });
 });

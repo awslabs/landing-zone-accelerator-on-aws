@@ -83,7 +83,7 @@ export class CreateOrganizationalUnitModule implements ICreateOrganizationalUnit
       return this.getDryRunResponse(
         defaultProps.moduleName,
         props.operation,
-        ouName,
+        props.configuration.name,
         parentOuName,
         ouExist,
         parentOuId,
@@ -98,7 +98,14 @@ export class CreateOrganizationalUnitModule implements ICreateOrganizationalUnit
       return `AWS Organizations organizational unit "${ouName}" for parent "${parentOuName}" exist, ou creation operation skipped.`;
     }
 
-    return await this.createOrganizationalUnit(client, ouName, parentOuName, parentOuId, props.configuration.tags);
+    return await this.createOrganizationalUnit(
+      client,
+      ouName,
+      props.configuration.name,
+      parentOuName,
+      parentOuId,
+      props.configuration.tags,
+    );
   }
 
   /**
@@ -119,6 +126,7 @@ export class CreateOrganizationalUnitModule implements ICreateOrganizationalUnit
    * Function to create OU
    * @param client {@link OrganizationsClient}
    * @param ouName string
+   * @param ouCompletePath string
    * @param parentOuName string
    * @param parentOuId string
    * @param tags {@link Tag}[] | undefined
@@ -127,11 +135,12 @@ export class CreateOrganizationalUnitModule implements ICreateOrganizationalUnit
   private async createOrganizationalUnit(
     client: OrganizationsClient,
     ouName: string,
+    ouCompletePath: string,
     parentOuName: string,
     parentOuId: string,
     tags?: Tag[],
   ): Promise<string> {
-    this.logger.info(`Creating Organizational unit ${ouName} for parent "${parentOuName}".`);
+    this.logger.info(`Creating Organizational unit ${ouCompletePath} for parent "${parentOuName}".`);
     const response = await throttlingBackOff(() =>
       client.send(
         new CreateOrganizationalUnitCommand({
@@ -144,13 +153,13 @@ export class CreateOrganizationalUnitModule implements ICreateOrganizationalUnit
 
     if (!response.OrganizationalUnit) {
       throw new Error(
-        `${MODULE_EXCEPTIONS.SERVICE_EXCEPTION}: Organization unit "${ouName}" create organization unit api did not return OrganizationalUnit object.`,
+        `${MODULE_EXCEPTIONS.SERVICE_EXCEPTION}: Organization unit "${ouCompletePath}" create organization unit api did not return OrganizationalUnit object.`,
       );
     }
 
     this.createdOrganizationalUnit = response.OrganizationalUnit;
 
-    return `AWS Organizations organizational unit "${ouName}" created successfully. New OU id is "${response.OrganizationalUnit.Id}".`;
+    return `AWS Organizations organizational unit "${ouCompletePath}" created successfully.`;
   }
 
   /**
@@ -176,7 +185,7 @@ export class CreateOrganizationalUnitModule implements ICreateOrganizationalUnit
    * Function to get dry run response
    * @param moduleName string
    * @param operation string
-   * @param ouName string
+   * @param ouCompletePath string
    * @param parentOuName string
    * @param ouExist boolean
    * @param parentOuId string | undefined
@@ -185,7 +194,7 @@ export class CreateOrganizationalUnitModule implements ICreateOrganizationalUnit
   private getDryRunResponse(
     moduleName: string,
     operation: string,
-    ouName: string,
+    ouCompletePath: string,
     parentOuName: string,
     ouExist: boolean,
     parentOuId?: string,
@@ -194,7 +203,7 @@ export class CreateOrganizationalUnitModule implements ICreateOrganizationalUnit
       return generateDryRunResponse(
         moduleName,
         operation,
-        `Will experience ${MODULE_EXCEPTIONS.INVALID_INPUT}. Reason parent ou "${parentOuName}" of new ou "${ouName}" not found in AWS Organizations.`,
+        `Will experience ${MODULE_EXCEPTIONS.INVALID_INPUT}. Reason parent ou "${parentOuName}" of new ou "${ouCompletePath}" not found in AWS Organizations.`,
       );
     }
 
@@ -202,14 +211,14 @@ export class CreateOrganizationalUnitModule implements ICreateOrganizationalUnit
       return generateDryRunResponse(
         moduleName,
         operation,
-        `AWS Organizations organizational unit (OU) "${ouName}" for parent "${parentOuName}" exists, accelerator will skip the OU creation process.`,
+        `AWS Organizations organizational unit (OU) "${ouCompletePath}" for parent "${parentOuName}" exists, accelerator will skip the OU creation process.`,
       );
     }
 
     return generateDryRunResponse(
       moduleName,
       operation,
-      `AWS Organizations organizational unit (OU) "${ouName}" for parent "${parentOuName}" does not exists, accelerator will create the new OU.`,
+      `AWS Organizations organizational unit (OU) "${ouCompletePath}" for parent "${parentOuName}" does not exists, accelerator will create the new OU.`,
     );
   }
 }

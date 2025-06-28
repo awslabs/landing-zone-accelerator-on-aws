@@ -392,6 +392,36 @@ export const MOCK_CONSTANTS = {
       directory: '/tmp/cfn-templates-test',
     },
   },
+
+  controlTowerEnabledBaselines: [
+    {
+      arn: 'mockEnabledBaselineArn1',
+      baselineIdentifier: 'mockBaselineIdentifier1',
+      statusSummary: {
+        status: 'SUCCEEDED',
+      },
+      targetIdentifier: 'mockTargetIdentifier1',
+      baselineVersion: '4.0',
+    },
+    {
+      arn: 'mockEnabledBaselineArn2',
+      baselineIdentifier: 'mockBaselineIdentifier2',
+      statusSummary: {
+        status: 'SUCCEEDED',
+      },
+      targetIdentifier: 'mockTargetIdentifier2',
+      baselineVersion: '4.0',
+    },
+    {
+      arn: 'mockEnabledBaselineArn3',
+      baselineIdentifier: 'mockBaselineIdentifier3',
+      statusSummary: {
+        status: 'SUCCEEDED',
+      },
+      targetIdentifier: 'mockTargetIdentifier3',
+      baselineVersion: '4.0',
+    },
+  ],
 };
 
 export function countOverlappingAccounts(): {
