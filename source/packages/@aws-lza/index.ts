@@ -50,6 +50,12 @@ export {
 } from './interfaces/aws-organizations/move-account';
 export { moveAccount, moveAccountsBatch } from './executors/accelerator-aws-organizations';
 
+export {
+  IGetOrganizationalUnitsDetailHandlerParameter,
+  IOrganizationalUnitDetailsType,
+} from './interfaces/aws-organizations/get-organizational-units-detail';
+export { getOrganizationalUnitsDetail } from './executors/accelerator-aws-organizations';
+
 export { getOrganizationId } from './common/functions';
 
 //

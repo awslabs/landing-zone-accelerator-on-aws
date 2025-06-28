@@ -69,7 +69,7 @@ describe('CreateOrganizationalUnitModule', () => {
 
       // Verify
       expect(response).toMatch(
-        `AWS Organizations organizational unit "${MOCK_CONSTANTS.validCreateOuConfiguration.name}" created successfully. New OU id is "${MOCK_CONSTANTS.newOrganizationalUnit.Id}".`,
+        `AWS Organizations organizational unit "${MOCK_CONSTANTS.validCreateOuConfiguration.name}" created successfully.`,
       );
       expect(getOrganizationalUnitsForParentSpy).toHaveBeenCalled();
       expect(mockSend).toHaveBeenCalledTimes(1);
@@ -128,9 +128,7 @@ describe('CreateOrganizationalUnitModule', () => {
 
       // Verify
       expect(response).toMatch(
-        `AWS Organizations organizational unit "${MOCK_CONSTANTS.nestedOuNameConfiguration.name.substring(
-          MOCK_CONSTANTS.nestedOuNameConfiguration.name.lastIndexOf('/') + 1,
-        )}" created successfully. New OU id is "${MOCK_CONSTANTS.newOrganizationalUnit.Id}".`,
+        `AWS Organizations organizational unit "${MOCK_CONSTANTS.nestedOuNameConfiguration.name}" created successfully.`,
       );
       expect(getOrganizationalUnitsForParentSpy).toHaveBeenCalled();
       expect(mockSend).toHaveBeenCalledTimes(1);

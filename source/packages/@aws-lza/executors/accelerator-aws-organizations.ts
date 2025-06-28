@@ -28,6 +28,11 @@ import {
 import { InviteAccountToOrganizationModule } from '../lib/aws-organizations/invite-account-to-organization';
 import { InviteAccountsBatchToOrganizationModule } from '../lib/aws-organizations/invite-accounts-batch-to-organization';
 import { MoveAccountsBatchModule } from '../lib/aws-organizations/move-accounts-batch';
+import {
+  IGetOrganizationalUnitsDetailHandlerParameter,
+  IOrganizationalUnitDetailsType,
+} from '../interfaces/aws-organizations/get-organizational-units-detail';
+import { GetOrganizationalUnitsDetailModule } from '../lib/aws-organizations/get-organizational-units-detail';
 
 process.on('uncaughtException', err => {
   throw err;
@@ -282,6 +287,33 @@ export async function inviteAccountsBatchToOrganization(
 export async function moveAccountsBatch(input: IMoveAccountsBatchHandlerParameter): Promise<string> {
   try {
     return await new MoveAccountsBatchModule().handler(input);
+  } catch (e: unknown) {
+    logger.error(e);
+    throw e;
+  }
+}
+
+/**
+ * Function to get AWS Organizations Organizational Units detail
+ * @param input {@link IGetOrganizationalUnitsDetailHandlerParameter}
+ * @returns
+ *
+ * @example
+ * ```
+ * const input: IGetOrganizationalUnitsDetailHandlerParameter = {
+ *   operation: 'get-organizational-units-detail',
+ *   partition: 'aws',
+ *   region: 'us-east-1',
+ * };
+ *
+ * const response: IOrganizationalUnitDetailsType[] = await getOrganizationalUnitsDetail(input);
+ * ```
+ */
+export async function getOrganizationalUnitsDetail(
+  input: IGetOrganizationalUnitsDetailHandlerParameter,
+): Promise<IOrganizationalUnitDetailsType[]> {
+  try {
+    return await new GetOrganizationalUnitsDetailModule().handler(input);
   } catch (e: unknown) {
     logger.error(e);
     throw e;
