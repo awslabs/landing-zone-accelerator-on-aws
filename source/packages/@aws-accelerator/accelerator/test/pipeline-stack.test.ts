@@ -68,6 +68,7 @@ const getStacks = memoize(() => {
       useExistingRoles: false,
       codeconnectionArn: '',
       installerStackName: 'AWSAccelerator-InstallerStack',
+      secureBucketName: 'test-bucket',
     }),
     new PipelineStack(app, 'PipelineStackRegionalDeploy', {
       sourceRepository: 'codecommit',
@@ -112,6 +113,51 @@ const getStacks = memoize(() => {
       codeconnectionArn: '',
       regionByRegionDeploymentOrder: 'us-east-1,us-west-1',
       installerStackName: 'AWSAccelerator-InstallerStack',
+      secureBucketName: 'test-bucket',
+    }),
+    new PipelineStack(app, 'PipelineStackCustomS3Path', {
+      sourceRepository: 'codecommit',
+      sourceRepositoryOwner: 'awslabs',
+      sourceRepositoryName: 'accelerator-source',
+      sourceBranchName: 'main',
+      sourceBucketName: 'my-accelerator-source-bucket',
+      sourceBucketObject: 'release/v9.8.7.zip',
+      sourceBucketKmsKeyArn: 'arn:aws:kms:us-east-1:000000000000:key/aaaaaaaa-1111-bbbb-2222-cccccc333333',
+      enableApprovalStage: true,
+      qualifier: 'aws-accelerator',
+      managementAccountId: app.account,
+      managementAccountRoleName: 'AcceleratorAccountAccessRole',
+      managementAccountEmail: 'accelerator-root@example.com',
+      logArchiveAccountEmail: 'accelerator-log-archive@example.com',
+      auditAccountEmail: 'accelerator-audit@example.com',
+      controlTowerEnabled: 'Yes',
+      partition: 'aws',
+      env: {
+        account: '000000000000',
+        region: 'us-east-1',
+      },
+      useExistingConfigRepo: false,
+      configRepositoryLocation: 'codecommit',
+      configRepositoryName: 'aws-accelerator-config',
+      configRepositoryBranchName: 'main',
+      configRepositoryOwner: '',
+      prefixes: {
+        accelerator: 'AWSAccelerator',
+        kmsAlias: 'alias/accelerator',
+        bucketName: 'aws-accelerator',
+        ssmParamName: '/accelerator',
+        snsTopicName: 'accelerator',
+        repoName: 'aws-accelerator',
+        secretName: '/accelerator',
+        trailLogName: 'aws-accelerator',
+        databaseName: 'aws-accelerator',
+      },
+      enableSingleAccountMode: false,
+      pipelineAccountId: '000000000000',
+      useExistingRoles: false,
+      codeconnectionArn: '',
+      installerStackName: 'AWSAccelerator-InstallerStack',
+      secureBucketName: 'test-bucket',
     }),
   ];
   return stacks;
@@ -120,4 +166,17 @@ const getStacks = memoize(() => {
 describe('PipelineStack', () => {
   snapShotTest(testNamePrefix, () => getStacks()[0]);
   snapShotTest(testNamePrefix, () => getStacks()[1]);
+});
+describe('PipelineStack customS3Path', () => {
+  const originalEnv = process.env['ACCELERATOR_CUSTOM_SOURCE_KEY'];
+  process.env['ACCELERATOR_CUSTOM_SOURCE_KEY'] = 'custom/path/source.zip';
+
+  snapShotTest(testNamePrefix, () => getStacks()[2]);
+
+  // Restore original environment
+  if (originalEnv) {
+    process.env['ACCELERATOR_CUSTOM_SOURCE_KEY'] = originalEnv;
+  } else {
+    delete process.env['ACCELERATOR_CUSTOM_SOURCE_KEY'];
+  }
 });

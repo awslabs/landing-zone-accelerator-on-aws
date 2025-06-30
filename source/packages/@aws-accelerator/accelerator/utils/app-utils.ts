@@ -255,6 +255,10 @@ export interface AcceleratorEnvironment {
    * All the regions set here need to be in the enabled regions in config file.
    */
   regionByRegionDeploymentOrder?: string;
+  /**
+   * Source Bucket name
+   */
+  secureBucketName: string;
 }
 
 /**
@@ -407,6 +411,7 @@ export function setAcceleratorEnvironment(
     qualifier: env['ACCELERATOR_QUALIFIER'],
     acceleratorPermissionBoundary: env['ACCELERATOR_PERMISSION_BOUNDARY'],
     regionByRegionDeploymentOrder: env['REGION_BY_REGION_DEPLOYMENT_ORDER'],
+    secureBucketName: env['SECURE_BUCKET_NAME'] ?? '',
   };
 }
 

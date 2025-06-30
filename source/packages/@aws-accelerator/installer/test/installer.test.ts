@@ -157,4 +157,29 @@ describe('InstallerStack', () => {
   test(`${testNamePrefix} Snapshot Test`, () => {
     stacks.forEach(item => expect(SynthUtils.toCloudFormation(item)).toMatchSnapshot());
   });
+
+  test(`${testNamePrefix} customS3Path uses environment variable when set`, () => {
+    const originalEnv = process.env['ACCELERATOR_CUSTOM_SOURCE_KEY'];
+    process.env['ACCELERATOR_CUSTOM_SOURCE_KEY'] = 'custom/path/source.zip';
+
+    const stack = new InstallerStack(new cdk.App(), 'TestStack', {
+      useExternalPipelineAccount: false,
+      enableTester: false,
+      useS3Source: false,
+      enableSingleAccountMode: false,
+      usePermissionBoundary: false,
+      enableRegionByRegionDeployment: false,
+      setNodeVersion: false,
+    });
+
+    const template = SynthUtils.toCloudFormation(stack);
+    expect(JSON.stringify(template)).toContain('custom/path/source.zip');
+
+    // Restore original environment
+    if (originalEnv) {
+      process.env['ACCELERATOR_CUSTOM_SOURCE_KEY'] = originalEnv;
+    } else {
+      delete process.env['ACCELERATOR_CUSTOM_SOURCE_KEY'];
+    }
+  });
 });
