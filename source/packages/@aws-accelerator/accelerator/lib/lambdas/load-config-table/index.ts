@@ -12,7 +12,14 @@
  */
 
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
-import { DynamoDBDocumentClient, UpdateCommand, UpdateCommandInput } from '@aws-sdk/lib-dynamodb';
+import {
+  DynamoDBDocumentClient,
+  UpdateCommand,
+  UpdateCommandInput,
+  ScanCommand,
+  DeleteCommand,
+  NativeAttributeValue,
+} from '@aws-sdk/lib-dynamodb';
 import { CloudFormationClient, DescribeStacksCommand } from '@aws-sdk/client-cloudformation';
 import { S3Client, GetObjectCommand } from '@aws-sdk/client-s3';
 import { throttlingBackOff } from '@aws-accelerator/utils/lib/throttle';
@@ -394,10 +401,100 @@ async function onCreateUpdateFunction(
       getAccountIdConfigForAccount(accountsConfig, accountId, account.email),
     );
   }
+
+  // Delete accounts that are not in the config
+  await cleanupNotInUseAccounts(configTableName, accountsConfig);
+
   return {
     PhysicalResourceId: commitId,
     Status: 'Success',
   };
+}
+
+/**
+ * Deletes account entries from the DynamoDB table that are not present in the config
+ *
+ * @param configTableName The name of the DynamoDB table
+ * @param accountsConfig The AccountsConfig object containing all valid accounts
+ */
+async function cleanupNotInUseAccounts(configTableName: string, accountsConfig: AccountsConfig): Promise<void> {
+  console.log('Checking for accounts to remove from the DynamoDB table that are not in the config..');
+
+  const configAccountEmails = new Set<string>();
+
+  for (const account of accountsConfig.mandatoryAccounts) {
+    configAccountEmails.add(account.email);
+  }
+
+  for (const account of accountsConfig.workloadAccounts) {
+    configAccountEmails.add(account.email);
+  }
+
+  const accountTypes = ['mandatoryAccount', 'workloadAccount'];
+  const accountsToDelete: Array<{ dataType: string; acceleratorKey: string }> = [];
+
+  for (const accountType of accountTypes) {
+    let lastEvaluatedKey: Record<string, NativeAttributeValue> | undefined = undefined;
+
+    do {
+      const scanParams: {
+        TableName: string;
+        FilterExpression: string;
+        ExpressionAttributeValues: Record<string, string>;
+        ExclusiveStartKey?: Record<string, NativeAttributeValue>;
+      } = {
+        TableName: configTableName,
+        FilterExpression: 'dataType = :dataType',
+        ExpressionAttributeValues: {
+          ':dataType': accountType,
+        },
+        ExclusiveStartKey: lastEvaluatedKey,
+      };
+
+      const response = await throttlingBackOff(() => documentClient.send(new ScanCommand(scanParams)));
+
+      if (response.Items) {
+        for (const item of response.Items) {
+          const dataType = item['dataType'] as string;
+          const acceleratorKey = item['acceleratorKey'] as string;
+
+          if (!configAccountEmails.has(acceleratorKey)) {
+            accountsToDelete.push({
+              dataType,
+              acceleratorKey,
+            });
+          }
+        }
+      }
+
+      lastEvaluatedKey = response.LastEvaluatedKey;
+    } while (lastEvaluatedKey);
+  }
+
+  if (accountsToDelete.length > 0) {
+    console.log(
+      `Found ${accountsToDelete.length} accounts to delete from DynamoDB that are not in the accounts-config.yaml file`,
+    );
+
+    await Promise.all(
+      accountsToDelete.map(async key => {
+        const deleteParams = {
+          TableName: configTableName,
+          Key: {
+            dataType: key.dataType,
+            acceleratorKey: key.acceleratorKey,
+          },
+        };
+
+        console.log(`Removing account: ${key.acceleratorKey} (${key.dataType}) from DynamoDB table`);
+        await throttlingBackOff(() => documentClient.send(new DeleteCommand(deleteParams)));
+      }),
+    );
+
+    console.log('Successfully removed accounts from the DynamoDB table that are not in the accounts-config.yaml file');
+  } else {
+    console.log('No accounts to remove from DynamoDB, all accounts in the table are in the accounts-config.yaml file');
+  }
 }
 
 async function putAllOrganizationConfigInTable(
