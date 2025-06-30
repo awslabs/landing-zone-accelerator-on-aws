@@ -36,6 +36,7 @@ export class VpcRouteTablesBaseStack extends AcceleratorStack {
   private v2StackProps: V2NetworkStacksBaseProps;
   private vpcDetails: VpcDetails;
   private vpcId: string;
+  private cloudwatchKey: cdk.aws_kms.IKey | undefined;
   constructor(scope: Construct, id: string, props: V2NetworkStacksBaseProps) {
     super(scope, id, props);
 
@@ -51,6 +52,7 @@ export class VpcRouteTablesBaseStack extends AcceleratorStack {
     this.v2StackProps = props;
     this.vpcDetails = new VpcDetails(this, 'VpcDetails', props);
     this.vpcId = this.vpcDetails.id!;
+    this.cloudwatchKey = this.getAcceleratorKey(AcceleratorKeyType.CLOUDWATCH_KEY);
 
     // If configured Associate outpost route tables for vpc config
     if (!this.vpcDetails.fromTemplate) {
@@ -354,7 +356,6 @@ export class VpcRouteTablesBaseStack extends AcceleratorStack {
             routeTableEntryItem,
             this.vpcDetails.subnets,
           );
-          const cloudwatchKey = this.getAcceleratorKey(AcceleratorKeyType.CLOUDWATCH_KEY);
 
           const routeProps: RouteEntryPropertiesType = {
             cfnRouteTable: routeTable.cfnRouteTable,
@@ -363,7 +364,7 @@ export class VpcRouteTablesBaseStack extends AcceleratorStack {
             routeTableId: routeTable.id,
             targetId: '', // Default value will be set in the switch statement
             logRetentionInDays: this.props.globalConfig.cloudwatchLogRetentionInDays,
-            logGroupKmsKey: cloudwatchKey,
+            logGroupKmsKey: this.cloudwatchKey,
             destination,
             destinationPrefixListId,
             ipv6Destination,
