@@ -102,6 +102,10 @@ export interface PipelineStackProps extends cdk.StackProps {
    * Accelerator region by region deploy order
    */
   readonly regionByRegionDeploymentOrder?: string;
+  /**
+   * Source Bucket name
+   */
+  secureBucketName: string;
 }
 
 export class PipelineStack extends cdk.Stack {

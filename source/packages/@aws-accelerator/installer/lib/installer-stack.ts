@@ -17,7 +17,7 @@ import { Construct } from 'constructs';
 import * as fs from 'fs';
 import * as path from 'path';
 
-import { Bucket, BucketEncryptionType } from '@aws-accelerator/constructs';
+import { Bucket, BucketEncryptionType, S3LifeCycleRule } from '@aws-accelerator/constructs';
 
 import { version, config } from '../../../../package.json';
 import { ResourceNamePrefixes } from './resource-name-prefixes';
@@ -911,12 +911,55 @@ export class InstallerStack extends cdk.Stack {
       stringValue: installerServerAccessLogsBucket.getS3Bucket().bucketName,
       simpleName: false,
     });
+    const secureBucketLifecycleRule: S3LifeCycleRule[] = [
+      // Default lifecycle rule for all objects except lza/ prefix
+      {
+        abortIncompleteMultipartUploadAfter: 1,
+        enabled: true,
+        expiration: 1825,
+        expiredObjectDeleteMarker: false,
+        id: `LifecycleRule${secureBucketName}`,
+        noncurrentVersionExpiration: 1825,
+        noncurrentVersionTransitions: [
+          {
+            storageClass: 'DEEP_ARCHIVE',
+            transitionAfter: 366,
+          },
+        ],
+        transitions: [
+          {
+            storageClass: 'DEEP_ARCHIVE',
+            transitionAfter: 366,
+          },
+        ],
+        prefix: '',
+      },
+
+      // Special rule for lza/ prefix - move noncurrent versions to IA
+      {
+        abortIncompleteMultipartUploadAfter: 1,
+        enabled: true,
+        expiredObjectDeleteMarker: false,
+        id: `LifecycleRuleLza${secureBucketName}`,
+        prefix: 'lza/',
+        noncurrentVersionExpiration: 1825,
+        // current version is needed for pipeline run and will never be transitioned
+        transitions: [],
+        noncurrentVersionTransitions: [
+          {
+            storageClass: 'ONEZONE_IA',
+            transitionAfter: 30,
+          },
+        ],
+      },
+    ];
 
     const bucket = new Bucket(this, 'SecureBucket', {
       encryptionType: BucketEncryptionType.SSE_KMS,
       s3BucketName: secureBucketName,
       kmsKey: installerKey,
       serverAccessLogsBucket: installerServerAccessLogsBucket.getS3Bucket(),
+      s3LifeCycleRules: secureBucketLifecycleRule,
     });
 
     let roleName: string | undefined = undefined;
@@ -932,6 +975,9 @@ export class InstallerStack extends cdk.Stack {
     });
 
     const globalRegion = globalRegionMap.findInMap(cdk.Aws.PARTITION, 'regionName');
+
+    // S3 path for the accelerator source code - uses custom path from environment variable or defaults to versioned LZA path
+    const customS3Path = process.env['ACCELERATOR_CUSTOM_SOURCE_KEY'] ?? `lza/v${version}.zip`;
 
     const installerProject = new cdk.aws_codebuild.PipelineProject(this, 'InstallerProject', {
       projectName: installerProjectName,
@@ -1012,6 +1058,7 @@ export class InstallerStack extends cdk.Stack {
               fi`,
               `set -e && yarn run ts-node --transpile-only cdk.ts deploy --require-approval never --stage pipeline --account ${cdk.Aws.ACCOUNT_ID} --region ${cdk.Aws.REGION} --partition ${cdk.Aws.PARTITION}`,
               `set -e && if [ "$ENABLE_TESTER" = "true" ]; then yarn run ts-node --transpile-only cdk.ts deploy --require-approval never --stage tester-pipeline --account ${cdk.Aws.ACCOUNT_ID} --region ${cdk.Aws.REGION}; fi`,
+              `set -e && cd ../../../../ && zip -rqy /tmp/lza.zip . && aws s3 cp /tmp/lza.zip s3://${secureBucketName}/${customS3Path} --region ${cdk.Aws.REGION} --no-progress && rm -fr /tmp/lza.zip;`,
             ],
           },
           post_build: {
@@ -1118,6 +1165,10 @@ export class InstallerStack extends cdk.Stack {
           PIPELINE_ACCOUNT_ID: {
             type: cdk.aws_codebuild.BuildEnvironmentVariableType.PLAINTEXT,
             value: cdk.Stack.of(this).account,
+          },
+          SECURE_BUCKET_NAME: {
+            type: cdk.aws_codebuild.BuildEnvironmentVariableType.PLAINTEXT,
+            value: secureBucketName,
           },
           ...targetAcceleratorEnvVariables,
           ...targetAcceleratorTestEnvVariables,
