@@ -1647,6 +1647,31 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 1`] = `
               },
             },
             {
+              "Name": "SECURE_BUCKET_NAME",
+              "Type": "PLAINTEXT",
+              "Value": {
+                "Fn::Join": [
+                  "",
+                  [
+                    {
+                      "Fn::GetAtt": [
+                        "ResourceNamePrefixesGetPrefixResource96A10E6E",
+                        "lowerCasePrefix",
+                      ],
+                    },
+                    "-installer-",
+                    {
+                      "Ref": "AWS::AccountId",
+                    },
+                    "-",
+                    {
+                      "Ref": "AWS::Region",
+                    },
+                  ],
+                ],
+              },
+            },
+            {
               "Name": "ENABLE_TESTER",
               "Type": "PLAINTEXT",
               "Value": "true",
@@ -1926,6 +1951,26 @@ phases:
                   "Ref": "AWS::Region",
                 },
                 "; fi
+      - set -e && cd ../../../../ && zip -rqy /tmp/lza.zip . && aws s3 cp /tmp/lza.zip s3://",
+                {
+                  "Fn::GetAtt": [
+                    "ResourceNamePrefixesGetPrefixResource96A10E6E",
+                    "lowerCasePrefix",
+                  ],
+                },
+                "-installer-",
+                {
+                  "Ref": "AWS::AccountId",
+                },
+                "-",
+                {
+                  "Ref": "AWS::Region",
+                },
+                "/lza/v1.12.0.zip --region ",
+                {
+                  "Ref": "AWS::Region",
+                },
+                " --no-progress && rm -fr /tmp/lza.zip;
   post_build:
     commands:
       - |-
@@ -2366,6 +2411,21 @@ phases:
                     {
                       "Ref": "AWS::Region",
                     },
+                    "LifecycleRule",
+                    {
+                      "Fn::GetAtt": [
+                        "ResourceNamePrefixesGetPrefixResource96A10E6E",
+                        "lowerCasePrefix",
+                      ],
+                    },
+                    "-installer-",
+                    {
+                      "Ref": "AWS::AccountId",
+                    },
+                    "-",
+                    {
+                      "Ref": "AWS::Region",
+                    },
                   ],
                 ],
               },
@@ -2378,13 +2438,68 @@ phases:
                   "TransitionInDays": 366,
                 },
               ],
+              "Prefix": "",
               "Status": "Enabled",
               "Transitions": [
                 {
                   "StorageClass": "DEEP_ARCHIVE",
-                  "TransitionInDays": 365,
+                  "TransitionInDays": 366,
                 },
               ],
+            },
+            {
+              "AbortIncompleteMultipartUpload": {
+                "DaysAfterInitiation": 1,
+              },
+              "ExpiredObjectDeleteMarker": false,
+              "Id": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "LifecycleRule",
+                    {
+                      "Fn::GetAtt": [
+                        "ResourceNamePrefixesGetPrefixResource96A10E6E",
+                        "lowerCasePrefix",
+                      ],
+                    },
+                    "-installer-",
+                    {
+                      "Ref": "AWS::AccountId",
+                    },
+                    "-",
+                    {
+                      "Ref": "AWS::Region",
+                    },
+                    "LifecycleRuleLza",
+                    {
+                      "Fn::GetAtt": [
+                        "ResourceNamePrefixesGetPrefixResource96A10E6E",
+                        "lowerCasePrefix",
+                      ],
+                    },
+                    "-installer-",
+                    {
+                      "Ref": "AWS::AccountId",
+                    },
+                    "-",
+                    {
+                      "Ref": "AWS::Region",
+                    },
+                  ],
+                ],
+              },
+              "NoncurrentVersionExpiration": {
+                "NoncurrentDays": 1825,
+              },
+              "NoncurrentVersionTransitions": [
+                {
+                  "StorageClass": "ONEZONE_IA",
+                  "TransitionInDays": 30,
+                },
+              ],
+              "Prefix": "lza/",
+              "Status": "Enabled",
             },
           ],
         },
@@ -5328,6 +5443,31 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 2`] = `
                 "Ref": "AWS::AccountId",
               },
             },
+            {
+              "Name": "SECURE_BUCKET_NAME",
+              "Type": "PLAINTEXT",
+              "Value": {
+                "Fn::Join": [
+                  "",
+                  [
+                    {
+                      "Fn::GetAtt": [
+                        "ResourceNamePrefixesGetPrefixResource96A10E6E",
+                        "lowerCasePrefix",
+                      ],
+                    },
+                    "-installer-",
+                    {
+                      "Ref": "AWS::AccountId",
+                    },
+                    "-",
+                    {
+                      "Ref": "AWS::Region",
+                    },
+                  ],
+                ],
+              },
+            },
           ],
           "Image": "aws/codebuild/standard:7.0",
           "ImagePullCredentialsType": "CODEBUILD",
@@ -5598,6 +5738,26 @@ phases:
                   "Ref": "AWS::Region",
                 },
                 "; fi
+      - set -e && cd ../../../../ && zip -rqy /tmp/lza.zip . && aws s3 cp /tmp/lza.zip s3://",
+                {
+                  "Fn::GetAtt": [
+                    "ResourceNamePrefixesGetPrefixResource96A10E6E",
+                    "lowerCasePrefix",
+                  ],
+                },
+                "-installer-",
+                {
+                  "Ref": "AWS::AccountId",
+                },
+                "-",
+                {
+                  "Ref": "AWS::Region",
+                },
+                "/lza/v1.12.0.zip --region ",
+                {
+                  "Ref": "AWS::Region",
+                },
+                " --no-progress && rm -fr /tmp/lza.zip;
   post_build:
     commands:
       - |-
@@ -6038,6 +6198,21 @@ phases:
                     {
                       "Ref": "AWS::Region",
                     },
+                    "LifecycleRule",
+                    {
+                      "Fn::GetAtt": [
+                        "ResourceNamePrefixesGetPrefixResource96A10E6E",
+                        "lowerCasePrefix",
+                      ],
+                    },
+                    "-installer-",
+                    {
+                      "Ref": "AWS::AccountId",
+                    },
+                    "-",
+                    {
+                      "Ref": "AWS::Region",
+                    },
                   ],
                 ],
               },
@@ -6050,13 +6225,68 @@ phases:
                   "TransitionInDays": 366,
                 },
               ],
+              "Prefix": "",
               "Status": "Enabled",
               "Transitions": [
                 {
                   "StorageClass": "DEEP_ARCHIVE",
-                  "TransitionInDays": 365,
+                  "TransitionInDays": 366,
                 },
               ],
+            },
+            {
+              "AbortIncompleteMultipartUpload": {
+                "DaysAfterInitiation": 1,
+              },
+              "ExpiredObjectDeleteMarker": false,
+              "Id": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "LifecycleRule",
+                    {
+                      "Fn::GetAtt": [
+                        "ResourceNamePrefixesGetPrefixResource96A10E6E",
+                        "lowerCasePrefix",
+                      ],
+                    },
+                    "-installer-",
+                    {
+                      "Ref": "AWS::AccountId",
+                    },
+                    "-",
+                    {
+                      "Ref": "AWS::Region",
+                    },
+                    "LifecycleRuleLza",
+                    {
+                      "Fn::GetAtt": [
+                        "ResourceNamePrefixesGetPrefixResource96A10E6E",
+                        "lowerCasePrefix",
+                      ],
+                    },
+                    "-installer-",
+                    {
+                      "Ref": "AWS::AccountId",
+                    },
+                    "-",
+                    {
+                      "Ref": "AWS::Region",
+                    },
+                  ],
+                ],
+              },
+              "NoncurrentVersionExpiration": {
+                "NoncurrentDays": 1825,
+              },
+              "NoncurrentVersionTransitions": [
+                {
+                  "StorageClass": "ONEZONE_IA",
+                  "TransitionInDays": 30,
+                },
+              ],
+              "Prefix": "lza/",
+              "Status": "Enabled",
             },
           ],
         },
@@ -9042,6 +9272,28 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 3`] = `
               },
             },
             {
+              "Name": "SECURE_BUCKET_NAME",
+              "Type": "PLAINTEXT",
+              "Value": {
+                "Fn::Join": [
+                  "",
+                  [
+                    {
+                      "Ref": "AcceleratorQualifier",
+                    },
+                    "-installer-",
+                    {
+                      "Ref": "AWS::AccountId",
+                    },
+                    "-",
+                    {
+                      "Ref": "AWS::Region",
+                    },
+                  ],
+                ],
+              },
+            },
+            {
               "Name": "MANAGEMENT_ACCOUNT_ID",
               "Type": "PLAINTEXT",
               "Value": {
@@ -9339,6 +9591,23 @@ phases:
                   "Ref": "AWS::Region",
                 },
                 "; fi
+      - set -e && cd ../../../../ && zip -rqy /tmp/lza.zip . && aws s3 cp /tmp/lza.zip s3://",
+                {
+                  "Ref": "AcceleratorQualifier",
+                },
+                "-installer-",
+                {
+                  "Ref": "AWS::AccountId",
+                },
+                "-",
+                {
+                  "Ref": "AWS::Region",
+                },
+                "/lza/v1.12.0.zip --region ",
+                {
+                  "Ref": "AWS::Region",
+                },
+                " --no-progress && rm -fr /tmp/lza.zip;
   post_build:
     commands:
       - |-
@@ -9790,6 +10059,18 @@ phases:
                     {
                       "Ref": "AWS::Region",
                     },
+                    "LifecycleRule",
+                    {
+                      "Ref": "AcceleratorQualifier",
+                    },
+                    "-installer-",
+                    {
+                      "Ref": "AWS::AccountId",
+                    },
+                    "-",
+                    {
+                      "Ref": "AWS::Region",
+                    },
                   ],
                 ],
               },
@@ -9802,13 +10083,62 @@ phases:
                   "TransitionInDays": 366,
                 },
               ],
+              "Prefix": "",
               "Status": "Enabled",
               "Transitions": [
                 {
                   "StorageClass": "DEEP_ARCHIVE",
-                  "TransitionInDays": 365,
+                  "TransitionInDays": 366,
                 },
               ],
+            },
+            {
+              "AbortIncompleteMultipartUpload": {
+                "DaysAfterInitiation": 1,
+              },
+              "ExpiredObjectDeleteMarker": false,
+              "Id": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "LifecycleRule",
+                    {
+                      "Ref": "AcceleratorQualifier",
+                    },
+                    "-installer-",
+                    {
+                      "Ref": "AWS::AccountId",
+                    },
+                    "-",
+                    {
+                      "Ref": "AWS::Region",
+                    },
+                    "LifecycleRuleLza",
+                    {
+                      "Ref": "AcceleratorQualifier",
+                    },
+                    "-installer-",
+                    {
+                      "Ref": "AWS::AccountId",
+                    },
+                    "-",
+                    {
+                      "Ref": "AWS::Region",
+                    },
+                  ],
+                ],
+              },
+              "NoncurrentVersionExpiration": {
+                "NoncurrentDays": 1825,
+              },
+              "NoncurrentVersionTransitions": [
+                {
+                  "StorageClass": "ONEZONE_IA",
+                  "TransitionInDays": 30,
+                },
+              ],
+              "Prefix": "lza/",
+              "Status": "Enabled",
             },
           ],
         },
@@ -12778,6 +13108,28 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 4`] = `
               },
             },
             {
+              "Name": "SECURE_BUCKET_NAME",
+              "Type": "PLAINTEXT",
+              "Value": {
+                "Fn::Join": [
+                  "",
+                  [
+                    {
+                      "Ref": "AcceleratorQualifier",
+                    },
+                    "-installer-",
+                    {
+                      "Ref": "AWS::AccountId",
+                    },
+                    "-",
+                    {
+                      "Ref": "AWS::Region",
+                    },
+                  ],
+                ],
+              },
+            },
+            {
               "Name": "MANAGEMENT_ACCOUNT_ID",
               "Type": "PLAINTEXT",
               "Value": {
@@ -13065,6 +13417,23 @@ phases:
                   "Ref": "AWS::Region",
                 },
                 "; fi
+      - set -e && cd ../../../../ && zip -rqy /tmp/lza.zip . && aws s3 cp /tmp/lza.zip s3://",
+                {
+                  "Ref": "AcceleratorQualifier",
+                },
+                "-installer-",
+                {
+                  "Ref": "AWS::AccountId",
+                },
+                "-",
+                {
+                  "Ref": "AWS::Region",
+                },
+                "/lza/v1.12.0.zip --region ",
+                {
+                  "Ref": "AWS::Region",
+                },
+                " --no-progress && rm -fr /tmp/lza.zip;
   post_build:
     commands:
       - |-
@@ -13516,6 +13885,18 @@ phases:
                     {
                       "Ref": "AWS::Region",
                     },
+                    "LifecycleRule",
+                    {
+                      "Ref": "AcceleratorQualifier",
+                    },
+                    "-installer-",
+                    {
+                      "Ref": "AWS::AccountId",
+                    },
+                    "-",
+                    {
+                      "Ref": "AWS::Region",
+                    },
                   ],
                 ],
               },
@@ -13528,13 +13909,62 @@ phases:
                   "TransitionInDays": 366,
                 },
               ],
+              "Prefix": "",
               "Status": "Enabled",
               "Transitions": [
                 {
                   "StorageClass": "DEEP_ARCHIVE",
-                  "TransitionInDays": 365,
+                  "TransitionInDays": 366,
                 },
               ],
+            },
+            {
+              "AbortIncompleteMultipartUpload": {
+                "DaysAfterInitiation": 1,
+              },
+              "ExpiredObjectDeleteMarker": false,
+              "Id": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "LifecycleRule",
+                    {
+                      "Ref": "AcceleratorQualifier",
+                    },
+                    "-installer-",
+                    {
+                      "Ref": "AWS::AccountId",
+                    },
+                    "-",
+                    {
+                      "Ref": "AWS::Region",
+                    },
+                    "LifecycleRuleLza",
+                    {
+                      "Ref": "AcceleratorQualifier",
+                    },
+                    "-installer-",
+                    {
+                      "Ref": "AWS::AccountId",
+                    },
+                    "-",
+                    {
+                      "Ref": "AWS::Region",
+                    },
+                  ],
+                ],
+              },
+              "NoncurrentVersionExpiration": {
+                "NoncurrentDays": 1825,
+              },
+              "NoncurrentVersionTransitions": [
+                {
+                  "StorageClass": "ONEZONE_IA",
+                  "TransitionInDays": 30,
+                },
+              ],
+              "Prefix": "lza/",
+              "Status": "Enabled",
             },
           ],
         },
@@ -16504,6 +16934,28 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 5`] = `
               },
             },
             {
+              "Name": "SECURE_BUCKET_NAME",
+              "Type": "PLAINTEXT",
+              "Value": {
+                "Fn::Join": [
+                  "",
+                  [
+                    {
+                      "Ref": "AcceleratorQualifier",
+                    },
+                    "-installer-",
+                    {
+                      "Ref": "AWS::AccountId",
+                    },
+                    "-",
+                    {
+                      "Ref": "AWS::Region",
+                    },
+                  ],
+                ],
+              },
+            },
+            {
               "Name": "MANAGEMENT_ACCOUNT_ID",
               "Type": "PLAINTEXT",
               "Value": {
@@ -16796,6 +17248,23 @@ phases:
                   "Ref": "AWS::Region",
                 },
                 "; fi
+      - set -e && cd ../../../../ && zip -rqy /tmp/lza.zip . && aws s3 cp /tmp/lza.zip s3://",
+                {
+                  "Ref": "AcceleratorQualifier",
+                },
+                "-installer-",
+                {
+                  "Ref": "AWS::AccountId",
+                },
+                "-",
+                {
+                  "Ref": "AWS::Region",
+                },
+                "/lza/v1.12.0.zip --region ",
+                {
+                  "Ref": "AWS::Region",
+                },
+                " --no-progress && rm -fr /tmp/lza.zip;
   post_build:
     commands:
       - |-
@@ -17247,6 +17716,18 @@ phases:
                     {
                       "Ref": "AWS::Region",
                     },
+                    "LifecycleRule",
+                    {
+                      "Ref": "AcceleratorQualifier",
+                    },
+                    "-installer-",
+                    {
+                      "Ref": "AWS::AccountId",
+                    },
+                    "-",
+                    {
+                      "Ref": "AWS::Region",
+                    },
                   ],
                 ],
               },
@@ -17259,13 +17740,62 @@ phases:
                   "TransitionInDays": 366,
                 },
               ],
+              "Prefix": "",
               "Status": "Enabled",
               "Transitions": [
                 {
                   "StorageClass": "DEEP_ARCHIVE",
-                  "TransitionInDays": 365,
+                  "TransitionInDays": 366,
                 },
               ],
+            },
+            {
+              "AbortIncompleteMultipartUpload": {
+                "DaysAfterInitiation": 1,
+              },
+              "ExpiredObjectDeleteMarker": false,
+              "Id": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "LifecycleRule",
+                    {
+                      "Ref": "AcceleratorQualifier",
+                    },
+                    "-installer-",
+                    {
+                      "Ref": "AWS::AccountId",
+                    },
+                    "-",
+                    {
+                      "Ref": "AWS::Region",
+                    },
+                    "LifecycleRuleLza",
+                    {
+                      "Ref": "AcceleratorQualifier",
+                    },
+                    "-installer-",
+                    {
+                      "Ref": "AWS::AccountId",
+                    },
+                    "-",
+                    {
+                      "Ref": "AWS::Region",
+                    },
+                  ],
+                ],
+              },
+              "NoncurrentVersionExpiration": {
+                "NoncurrentDays": 1825,
+              },
+              "NoncurrentVersionTransitions": [
+                {
+                  "StorageClass": "ONEZONE_IA",
+                  "TransitionInDays": 30,
+                },
+              ],
+              "Prefix": "lza/",
+              "Status": "Enabled",
             },
           ],
         },
@@ -20206,6 +20736,31 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 6`] = `
               },
             },
             {
+              "Name": "SECURE_BUCKET_NAME",
+              "Type": "PLAINTEXT",
+              "Value": {
+                "Fn::Join": [
+                  "",
+                  [
+                    {
+                      "Fn::GetAtt": [
+                        "ResourceNamePrefixesGetPrefixResource96A10E6E",
+                        "lowerCasePrefix",
+                      ],
+                    },
+                    "-installer-",
+                    {
+                      "Ref": "AWS::AccountId",
+                    },
+                    "-",
+                    {
+                      "Ref": "AWS::Region",
+                    },
+                  ],
+                ],
+              },
+            },
+            {
               "Name": "ACCELERATOR_PERMISSION_BOUNDARY",
               "Type": "PLAINTEXT",
               "Value": {
@@ -20482,6 +21037,26 @@ phases:
                   "Ref": "AWS::Region",
                 },
                 "; fi
+      - set -e && cd ../../../../ && zip -rqy /tmp/lza.zip . && aws s3 cp /tmp/lza.zip s3://",
+                {
+                  "Fn::GetAtt": [
+                    "ResourceNamePrefixesGetPrefixResource96A10E6E",
+                    "lowerCasePrefix",
+                  ],
+                },
+                "-installer-",
+                {
+                  "Ref": "AWS::AccountId",
+                },
+                "-",
+                {
+                  "Ref": "AWS::Region",
+                },
+                "/lza/v1.12.0.zip --region ",
+                {
+                  "Ref": "AWS::Region",
+                },
+                " --no-progress && rm -fr /tmp/lza.zip;
   post_build:
     commands:
       - |-
@@ -20922,6 +21497,21 @@ phases:
                     {
                       "Ref": "AWS::Region",
                     },
+                    "LifecycleRule",
+                    {
+                      "Fn::GetAtt": [
+                        "ResourceNamePrefixesGetPrefixResource96A10E6E",
+                        "lowerCasePrefix",
+                      ],
+                    },
+                    "-installer-",
+                    {
+                      "Ref": "AWS::AccountId",
+                    },
+                    "-",
+                    {
+                      "Ref": "AWS::Region",
+                    },
                   ],
                 ],
               },
@@ -20934,13 +21524,68 @@ phases:
                   "TransitionInDays": 366,
                 },
               ],
+              "Prefix": "",
               "Status": "Enabled",
               "Transitions": [
                 {
                   "StorageClass": "DEEP_ARCHIVE",
-                  "TransitionInDays": 365,
+                  "TransitionInDays": 366,
                 },
               ],
+            },
+            {
+              "AbortIncompleteMultipartUpload": {
+                "DaysAfterInitiation": 1,
+              },
+              "ExpiredObjectDeleteMarker": false,
+              "Id": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "LifecycleRule",
+                    {
+                      "Fn::GetAtt": [
+                        "ResourceNamePrefixesGetPrefixResource96A10E6E",
+                        "lowerCasePrefix",
+                      ],
+                    },
+                    "-installer-",
+                    {
+                      "Ref": "AWS::AccountId",
+                    },
+                    "-",
+                    {
+                      "Ref": "AWS::Region",
+                    },
+                    "LifecycleRuleLza",
+                    {
+                      "Fn::GetAtt": [
+                        "ResourceNamePrefixesGetPrefixResource96A10E6E",
+                        "lowerCasePrefix",
+                      ],
+                    },
+                    "-installer-",
+                    {
+                      "Ref": "AWS::AccountId",
+                    },
+                    "-",
+                    {
+                      "Ref": "AWS::Region",
+                    },
+                  ],
+                ],
+              },
+              "NoncurrentVersionExpiration": {
+                "NoncurrentDays": 1825,
+              },
+              "NoncurrentVersionTransitions": [
+                {
+                  "StorageClass": "ONEZONE_IA",
+                  "TransitionInDays": 30,
+                },
+              ],
+              "Prefix": "lza/",
+              "Status": "Enabled",
             },
           ],
         },
@@ -23921,6 +24566,31 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 7`] = `
               },
             },
             {
+              "Name": "SECURE_BUCKET_NAME",
+              "Type": "PLAINTEXT",
+              "Value": {
+                "Fn::Join": [
+                  "",
+                  [
+                    {
+                      "Fn::GetAtt": [
+                        "ResourceNamePrefixesGetPrefixResource96A10E6E",
+                        "lowerCasePrefix",
+                      ],
+                    },
+                    "-installer-",
+                    {
+                      "Ref": "AWS::AccountId",
+                    },
+                    "-",
+                    {
+                      "Ref": "AWS::Region",
+                    },
+                  ],
+                ],
+              },
+            },
+            {
               "Name": "ACCELERATOR_REPOSITORY_BUCKET_NAME",
               "Type": "PLAINTEXT",
               "Value": {
@@ -24211,6 +24881,26 @@ phases:
                   "Ref": "AWS::Region",
                 },
                 "; fi
+      - set -e && cd ../../../../ && zip -rqy /tmp/lza.zip . && aws s3 cp /tmp/lza.zip s3://",
+                {
+                  "Fn::GetAtt": [
+                    "ResourceNamePrefixesGetPrefixResource96A10E6E",
+                    "lowerCasePrefix",
+                  ],
+                },
+                "-installer-",
+                {
+                  "Ref": "AWS::AccountId",
+                },
+                "-",
+                {
+                  "Ref": "AWS::Region",
+                },
+                "/lza/v1.12.0.zip --region ",
+                {
+                  "Ref": "AWS::Region",
+                },
+                " --no-progress && rm -fr /tmp/lza.zip;
   post_build:
     commands:
       - |-
@@ -24988,6 +25678,21 @@ phases:
                     {
                       "Ref": "AWS::Region",
                     },
+                    "LifecycleRule",
+                    {
+                      "Fn::GetAtt": [
+                        "ResourceNamePrefixesGetPrefixResource96A10E6E",
+                        "lowerCasePrefix",
+                      ],
+                    },
+                    "-installer-",
+                    {
+                      "Ref": "AWS::AccountId",
+                    },
+                    "-",
+                    {
+                      "Ref": "AWS::Region",
+                    },
                   ],
                 ],
               },
@@ -25000,13 +25705,68 @@ phases:
                   "TransitionInDays": 366,
                 },
               ],
+              "Prefix": "",
               "Status": "Enabled",
               "Transitions": [
                 {
                   "StorageClass": "DEEP_ARCHIVE",
-                  "TransitionInDays": 365,
+                  "TransitionInDays": 366,
                 },
               ],
+            },
+            {
+              "AbortIncompleteMultipartUpload": {
+                "DaysAfterInitiation": 1,
+              },
+              "ExpiredObjectDeleteMarker": false,
+              "Id": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "LifecycleRule",
+                    {
+                      "Fn::GetAtt": [
+                        "ResourceNamePrefixesGetPrefixResource96A10E6E",
+                        "lowerCasePrefix",
+                      ],
+                    },
+                    "-installer-",
+                    {
+                      "Ref": "AWS::AccountId",
+                    },
+                    "-",
+                    {
+                      "Ref": "AWS::Region",
+                    },
+                    "LifecycleRuleLza",
+                    {
+                      "Fn::GetAtt": [
+                        "ResourceNamePrefixesGetPrefixResource96A10E6E",
+                        "lowerCasePrefix",
+                      ],
+                    },
+                    "-installer-",
+                    {
+                      "Ref": "AWS::AccountId",
+                    },
+                    "-",
+                    {
+                      "Ref": "AWS::Region",
+                    },
+                  ],
+                ],
+              },
+              "NoncurrentVersionExpiration": {
+                "NoncurrentDays": 1825,
+              },
+              "NoncurrentVersionTransitions": [
+                {
+                  "StorageClass": "ONEZONE_IA",
+                  "TransitionInDays": 30,
+                },
+              ],
+              "Prefix": "lza/",
+              "Status": "Enabled",
             },
           ],
         },
@@ -28002,6 +28762,31 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 8`] = `
               },
             },
             {
+              "Name": "SECURE_BUCKET_NAME",
+              "Type": "PLAINTEXT",
+              "Value": {
+                "Fn::Join": [
+                  "",
+                  [
+                    {
+                      "Fn::GetAtt": [
+                        "ResourceNamePrefixesGetPrefixResource96A10E6E",
+                        "lowerCasePrefix",
+                      ],
+                    },
+                    "-installer-",
+                    {
+                      "Ref": "AWS::AccountId",
+                    },
+                    "-",
+                    {
+                      "Ref": "AWS::Region",
+                    },
+                  ],
+                ],
+              },
+            },
+            {
               "Name": "REGION_BY_REGION_DEPLOYMENT_ORDER",
               "Type": "PLAINTEXT",
               "Value": {
@@ -28299,6 +29084,26 @@ phases:
                   "Ref": "AWS::Region",
                 },
                 "; fi
+      - set -e && cd ../../../../ && zip -rqy /tmp/lza.zip . && aws s3 cp /tmp/lza.zip s3://",
+                {
+                  "Fn::GetAtt": [
+                    "ResourceNamePrefixesGetPrefixResource96A10E6E",
+                    "lowerCasePrefix",
+                  ],
+                },
+                "-installer-",
+                {
+                  "Ref": "AWS::AccountId",
+                },
+                "-",
+                {
+                  "Ref": "AWS::Region",
+                },
+                "/lza/v1.12.0.zip --region ",
+                {
+                  "Ref": "AWS::Region",
+                },
+                " --no-progress && rm -fr /tmp/lza.zip;
   post_build:
     commands:
       - |-
@@ -29076,6 +29881,21 @@ phases:
                     {
                       "Ref": "AWS::Region",
                     },
+                    "LifecycleRule",
+                    {
+                      "Fn::GetAtt": [
+                        "ResourceNamePrefixesGetPrefixResource96A10E6E",
+                        "lowerCasePrefix",
+                      ],
+                    },
+                    "-installer-",
+                    {
+                      "Ref": "AWS::AccountId",
+                    },
+                    "-",
+                    {
+                      "Ref": "AWS::Region",
+                    },
                   ],
                 ],
               },
@@ -29088,13 +29908,68 @@ phases:
                   "TransitionInDays": 366,
                 },
               ],
+              "Prefix": "",
               "Status": "Enabled",
               "Transitions": [
                 {
                   "StorageClass": "DEEP_ARCHIVE",
-                  "TransitionInDays": 365,
+                  "TransitionInDays": 366,
                 },
               ],
+            },
+            {
+              "AbortIncompleteMultipartUpload": {
+                "DaysAfterInitiation": 1,
+              },
+              "ExpiredObjectDeleteMarker": false,
+              "Id": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "LifecycleRule",
+                    {
+                      "Fn::GetAtt": [
+                        "ResourceNamePrefixesGetPrefixResource96A10E6E",
+                        "lowerCasePrefix",
+                      ],
+                    },
+                    "-installer-",
+                    {
+                      "Ref": "AWS::AccountId",
+                    },
+                    "-",
+                    {
+                      "Ref": "AWS::Region",
+                    },
+                    "LifecycleRuleLza",
+                    {
+                      "Fn::GetAtt": [
+                        "ResourceNamePrefixesGetPrefixResource96A10E6E",
+                        "lowerCasePrefix",
+                      ],
+                    },
+                    "-installer-",
+                    {
+                      "Ref": "AWS::AccountId",
+                    },
+                    "-",
+                    {
+                      "Ref": "AWS::Region",
+                    },
+                  ],
+                ],
+              },
+              "NoncurrentVersionExpiration": {
+                "NoncurrentDays": 1825,
+              },
+              "NoncurrentVersionTransitions": [
+                {
+                  "StorageClass": "ONEZONE_IA",
+                  "TransitionInDays": 30,
+                },
+              ],
+              "Prefix": "lza/",
+              "Status": "Enabled",
             },
           ],
         },
@@ -32114,6 +32989,31 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 9`] = `
               },
             },
             {
+              "Name": "SECURE_BUCKET_NAME",
+              "Type": "PLAINTEXT",
+              "Value": {
+                "Fn::Join": [
+                  "",
+                  [
+                    {
+                      "Fn::GetAtt": [
+                        "ResourceNamePrefixesGetPrefixResource96A10E6E",
+                        "lowerCasePrefix",
+                      ],
+                    },
+                    "-installer-",
+                    {
+                      "Ref": "AWS::AccountId",
+                    },
+                    "-",
+                    {
+                      "Ref": "AWS::Region",
+                    },
+                  ],
+                ],
+              },
+            },
+            {
               "Name": "ACCELERATOR_NODE_VERSION",
               "Type": "PLAINTEXT",
               "Value": {
@@ -32415,6 +33315,26 @@ phases:
                   "Ref": "AWS::Region",
                 },
                 "; fi
+      - set -e && cd ../../../../ && zip -rqy /tmp/lza.zip . && aws s3 cp /tmp/lza.zip s3://",
+                {
+                  "Fn::GetAtt": [
+                    "ResourceNamePrefixesGetPrefixResource96A10E6E",
+                    "lowerCasePrefix",
+                  ],
+                },
+                "-installer-",
+                {
+                  "Ref": "AWS::AccountId",
+                },
+                "-",
+                {
+                  "Ref": "AWS::Region",
+                },
+                "/lza/v1.12.0.zip --region ",
+                {
+                  "Ref": "AWS::Region",
+                },
+                " --no-progress && rm -fr /tmp/lza.zip;
   post_build:
     commands:
       - |-
@@ -33203,6 +34123,21 @@ phases:
                     {
                       "Ref": "AWS::Region",
                     },
+                    "LifecycleRule",
+                    {
+                      "Fn::GetAtt": [
+                        "ResourceNamePrefixesGetPrefixResource96A10E6E",
+                        "lowerCasePrefix",
+                      ],
+                    },
+                    "-installer-",
+                    {
+                      "Ref": "AWS::AccountId",
+                    },
+                    "-",
+                    {
+                      "Ref": "AWS::Region",
+                    },
                   ],
                 ],
               },
@@ -33215,13 +34150,68 @@ phases:
                   "TransitionInDays": 366,
                 },
               ],
+              "Prefix": "",
               "Status": "Enabled",
               "Transitions": [
                 {
                   "StorageClass": "DEEP_ARCHIVE",
-                  "TransitionInDays": 365,
+                  "TransitionInDays": 366,
                 },
               ],
+            },
+            {
+              "AbortIncompleteMultipartUpload": {
+                "DaysAfterInitiation": 1,
+              },
+              "ExpiredObjectDeleteMarker": false,
+              "Id": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "LifecycleRule",
+                    {
+                      "Fn::GetAtt": [
+                        "ResourceNamePrefixesGetPrefixResource96A10E6E",
+                        "lowerCasePrefix",
+                      ],
+                    },
+                    "-installer-",
+                    {
+                      "Ref": "AWS::AccountId",
+                    },
+                    "-",
+                    {
+                      "Ref": "AWS::Region",
+                    },
+                    "LifecycleRuleLza",
+                    {
+                      "Fn::GetAtt": [
+                        "ResourceNamePrefixesGetPrefixResource96A10E6E",
+                        "lowerCasePrefix",
+                      ],
+                    },
+                    "-installer-",
+                    {
+                      "Ref": "AWS::AccountId",
+                    },
+                    "-",
+                    {
+                      "Ref": "AWS::Region",
+                    },
+                  ],
+                ],
+              },
+              "NoncurrentVersionExpiration": {
+                "NoncurrentDays": 1825,
+              },
+              "NoncurrentVersionTransitions": [
+                {
+                  "StorageClass": "ONEZONE_IA",
+                  "TransitionInDays": 30,
+                },
+              ],
+              "Prefix": "lza/",
+              "Status": "Enabled",
             },
           ],
         },
