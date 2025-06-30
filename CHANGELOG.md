@@ -17,6 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - feat(regions): add support for the mx-central-1 Mexico (Central) opt-in region
 - feat(networking): add support for DoH and DoH-FIPS protocols for route53 resolver endpoints
 - feat(logging): add aggregation of cloudwatch logs in additional partitions
+- feat(regions): add support for ap-east-2 region Taipei and ap-southeast-7 Thailand
 
 ### Fixed
 

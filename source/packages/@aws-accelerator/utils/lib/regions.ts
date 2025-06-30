@@ -24,6 +24,7 @@ type RegionInfo = {
 export enum RegionName {
   'af-south-1',
   'ap-east-1',
+  'ap-east-2',
   'ap-northeast-1',
   'ap-northeast-2',
   'ap-northeast-3',
@@ -34,6 +35,7 @@ export enum RegionName {
   'ap-southeast-3',
   'ap-southeast-4',
   'ap-southeast-5',
+  'ap-southeast-7',
   'ca-central-1',
   'ca-west-1',
   'cn-north-1',
@@ -68,6 +70,7 @@ export enum RegionName {
 const regionsInfo: Record<keyof typeof RegionName, RegionInfo> = {
   'af-south-1': { azId: 'afs1-az', elbAccount: '098369216593', optIn: true },
   'ap-east-1': { azId: 'ape1-az', elbAccount: '754344448648', optIn: true },
+  'ap-east-2': { azId: 'ape2-az', elbAccount: undefined, optIn: true },
   'ap-northeast-1': { azId: 'apne1-az', elbAccount: '582318560864', optIn: false },
   'ap-northeast-2': { azId: 'apne2-az', elbAccount: '600734575887', optIn: false },
   'ap-northeast-3': { azId: 'apne3-az', elbAccount: '383597477331', optIn: false },
@@ -78,6 +81,7 @@ const regionsInfo: Record<keyof typeof RegionName, RegionInfo> = {
   'ap-southeast-3': { azId: 'apse3-az', elbAccount: '589379963580', optIn: true },
   'ap-southeast-4': { azId: 'apse4-az', elbAccount: undefined, optIn: true },
   'ap-southeast-5': { azId: 'apse5-az', elbAccount: undefined, optIn: true },
+  'ap-southeast-7': { azId: 'apse7-az', elbAccount: undefined, optIn: true },
   'ca-central-1': { azId: 'cac1-az', elbAccount: '985666609251', optIn: false },
   'ca-west-1': { azId: 'caw1-az', elbAccount: undefined, optIn: true },
   'cn-north-1': { azId: undefined, elbAccount: '638102146993', optIn: false },
