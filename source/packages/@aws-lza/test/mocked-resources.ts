@@ -16,6 +16,7 @@ const operation = 'mockOperation';
 
 export const MOCK_CONSTANTS = {
   unknownError: new Error('Unknown command'),
+  serviceError: new Error('Arbitrary service error'),
   globalRegion: 'mockGlobalRegion',
   testModuleName: 'mockTestModule',
   runnerParameters: {
@@ -268,7 +269,7 @@ export const MOCK_CONSTANTS = {
   },
   MoveAccountModule: {
     configuration: {
-      email: 'account@examcple.com',
+      email: 'account@example.com',
       destinationOu: '/Level1/Level2/Level3',
     },
     rootDestinationOu: 'Root',
@@ -392,7 +393,10 @@ export const MOCK_CONSTANTS = {
       directory: '/tmp/cfn-templates-test',
     },
   },
-
+  ManageOrganizationAdminModule: {
+    adminId: 'newAdminId',
+    oldAdminId: 'oldAdminId',
+  },
   controlTowerEnabledBaselines: [
     {
       arn: 'mockEnabledBaselineArn1',
