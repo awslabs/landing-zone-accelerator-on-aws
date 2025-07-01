@@ -31,6 +31,10 @@ export enum AcceleratorModuleName {
    * AWS CloudFormation Module
    */
   AWS_CLOUDFORMATION = 'aws-cloudformation',
+  /**
+   * AWS Macie Module
+   */
+  AWS_MACIE = 'aws-macie',
 }
 
 /**
