@@ -64,6 +64,7 @@ import { VpcSubnetsBaseStack } from '../lib/stacks/v2-network/stacks/vpc-subnets
 import { VpcSubnetsShareBaseStack } from '../lib/stacks/v2-network/stacks/vpc-subnets-share-base-stack';
 import { VpcNaclsBaseStack } from '../lib/stacks/v2-network/stacks/vp-nacls-base-stack';
 import { VpcLoadBalancersBaseStack } from '../lib/stacks/v2-network/stacks/vpc-load-balancers-base-stack';
+import { VpcRouteEntriesBaseStack } from '../lib/stacks/v2-network/stacks/vpc-route-entries-base-stack';
 
 export class AcceleratorSynthStacks {
   private readonly configFolderName: string;
@@ -720,6 +721,26 @@ export class AcceleratorSynthStacks {
               v2App,
               `${
                 AcceleratorStackNames[AcceleratorV2Stacks.SUBNETS_SHARE_STACK]
+              }-${sanitizedVpcName}-${accountId}-${enabledRegion}`,
+              {
+                env: {
+                  account: accountId,
+                  region: enabledRegion,
+                },
+                ...this.props,
+                vpcConfig: vpcItem,
+                vpcStack: false,
+                v2NetworkResources,
+              },
+            ),
+          );
+
+          this.stacks.set(
+            `RouteEntriesStack-${account.name}-${enabledRegion}-${sanitizedVpcName}`,
+            new VpcRouteEntriesBaseStack(
+              v2App,
+              `${
+                AcceleratorStackNames[AcceleratorV2Stacks.ROUTE_ENTRIES_STACK]
               }-${sanitizedVpcName}-${accountId}-${enabledRegion}`,
               {
                 env: {
