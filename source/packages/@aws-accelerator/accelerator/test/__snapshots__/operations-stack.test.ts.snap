@@ -1381,18 +1381,33 @@ exports[`OperationsStack Construct(OperationsStack):  Snapshot Test 1`] = `
                 },
               },
               "Effect": "Allow",
-              "Resource": {
-                "Fn::Join": [
-                  "",
-                  [
-                    "arn:",
-                    {
-                      "Ref": "AWS::Partition",
-                    },
-                    ":kms:us-east-1:111111111111:key/*",
+              "Resource": [
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":kms:us-east-1:111111111111:key/*",
+                    ],
                   ],
-                ],
-              },
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":kms:us-west-2:111111111111:key/*",
+                    ],
+                  ],
+                },
+              ],
+              "Sid": "SessionManagerSessionKey",
             },
           ],
           "Version": "2012-10-17",
@@ -1433,141 +1448,6 @@ exports[`OperationsStack Construct(OperationsStack):  Snapshot Test 1`] = `
         "RoleName": "AWSAccelerator-SessionManagerEC2Role",
       },
       "Type": "AWS::IAM::Role",
-    },
-    "SsmSessionManagerSettingsSessionManagerPolicy2E1F5C10": {
-      "Metadata": {
-        "cdk_nag": {
-          "rules_to_suppress": [
-            {
-              "id": "AwsSolutions-IAM5",
-              "reason": "Allows only specific log group",
-            },
-          ],
-        },
-      },
-      "Properties": {
-        "Description": "",
-        "Path": "/",
-        "PolicyDocument": {
-          "Statement": [
-            {
-              "Action": [
-                "ssmmessages:CreateControlChannel",
-                "ssmmessages:CreateDataChannel",
-                "ssmmessages:OpenControlChannel",
-                "ssmmessages:OpenDataChannel",
-                "ssm:UpdateInstanceInformation",
-              ],
-              "Effect": "Allow",
-              "Resource": "*",
-            },
-            {
-              "Action": [
-                "s3:PutObject",
-                "s3:PutObjectAcl",
-              ],
-              "Effect": "Allow",
-              "Resource": [
-                {
-                  "Fn::Join": [
-                    "",
-                    [
-                      "arn:",
-                      {
-                        "Ref": "AWS::Partition",
-                      },
-                      ":s3:::existing-central-log-bucket/session/111111111111/us-east-1/*",
-                    ],
-                  ],
-                },
-                {
-                  "Fn::Join": [
-                    "",
-                    [
-                      "arn:",
-                      {
-                        "Ref": "AWS::Partition",
-                      },
-                      ":s3:::existing-central-log-bucket/session/111111111111/us-west-2/*",
-                    ],
-                  ],
-                },
-              ],
-              "Sid": "S3CentralLogs",
-            },
-            {
-              "Action": "s3:GetEncryptionConfiguration",
-              "Effect": "Allow",
-              "Resource": {
-                "Fn::Join": [
-                  "",
-                  [
-                    "arn:",
-                    {
-                      "Ref": "AWS::Partition",
-                    },
-                    ":s3:::existing-central-log-bucket",
-                  ],
-                ],
-              },
-              "Sid": "S3CentralLogsEncryptionConfig",
-            },
-            {
-              "Action": [
-                "kms:Decrypt",
-                "kms:GenerateDataKey",
-              ],
-              "Effect": "Allow",
-              "Resource": {
-                "Ref": "AcceleratorImportedCentralLogBucketKeyLookupCDD7B719",
-              },
-              "Sid": "S3CentralLogsEncryption",
-            },
-            {
-              "Action": "kms:Decrypt",
-              "Condition": {
-                "ForAllValues:StringLike": {
-                  "kms:ResourceAliases": [
-                    "alias/accelerator/sessionmanager-logs/session",
-                  ],
-                },
-                "Null": {
-                  "kms:ResourceAliases": "false",
-                },
-              },
-              "Effect": "Allow",
-              "Resource": [
-                {
-                  "Fn::Join": [
-                    "",
-                    [
-                      "arn:",
-                      {
-                        "Ref": "AWS::Partition",
-                      },
-                      ":kms:us-east-1:111111111111:key/*",
-                    ],
-                  ],
-                },
-                {
-                  "Fn::Join": [
-                    "",
-                    [
-                      "arn:",
-                      {
-                        "Ref": "AWS::Partition",
-                      },
-                      ":kms:us-west-2:111111111111:key/*",
-                    ],
-                  ],
-                },
-              ],
-            },
-          ],
-          "Version": "2012-10-17",
-        },
-      },
-      "Type": "AWS::IAM::ManagedPolicy",
     },
     "StackSetAdminRole10A324D2": {
       "Metadata": {

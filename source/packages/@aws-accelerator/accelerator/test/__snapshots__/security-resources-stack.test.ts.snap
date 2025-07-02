@@ -4700,32 +4700,6 @@ exports[`SecurityResourcesStack Construct(SecurityResourcesStack):  Snapshot Tes
       },
       "Type": "AWS::KMS::Alias",
     },
-    "SsmSessionManagerSettingsSessionManagerUserKMSPolicyFB96BB42": {
-      "Properties": {
-        "Description": "",
-        "ManagedPolicyName": "AWSAccelerator-SessionManagerUserKMS-us-east-1",
-        "Path": "/",
-        "PolicyDocument": {
-          "Statement": [
-            {
-              "Action": [
-                "kms:Decrypt",
-                "kms:GenerateDataKey",
-              ],
-              "Effect": "Allow",
-              "Resource": {
-                "Fn::GetAtt": [
-                  "SsmSessionManagerSettingsSessionManagerSessionKey23B7175C",
-                  "Arn",
-                ],
-              },
-            },
-          ],
-          "Version": "2012-10-17",
-        },
-      },
-      "Type": "AWS::IAM::ManagedPolicy",
-    },
     "UnauthorizedApiCallsMetricFilter95DF459D": {
       "DependsOn": [
         "CloudTrailLogGroupAWSAcceleratorAccountCloudTrail9F5C56EA",
@@ -7937,32 +7911,6 @@ exports[`delegatedAdminStack Construct(SecurityResourcesStack):  Snapshot Test 1
         },
       },
       "Type": "AWS::KMS::Alias",
-    },
-    "SsmSessionManagerSettingsSessionManagerUserKMSPolicyFB96BB42": {
-      "Properties": {
-        "Description": "",
-        "ManagedPolicyName": "AWSAccelerator-SessionManagerUserKMS-us-east-1",
-        "Path": "/",
-        "PolicyDocument": {
-          "Statement": [
-            {
-              "Action": [
-                "kms:Decrypt",
-                "kms:GenerateDataKey",
-              ],
-              "Effect": "Allow",
-              "Resource": {
-                "Fn::GetAtt": [
-                  "SsmSessionManagerSettingsSessionManagerSessionKey23B7175C",
-                  "Arn",
-                ],
-              },
-            },
-          ],
-          "Version": "2012-10-17",
-        },
-      },
-      "Type": "AWS::IAM::ManagedPolicy",
     },
     "UnauthorizedApiCallsMetricFilter95DF459D": {
       "Properties": {
