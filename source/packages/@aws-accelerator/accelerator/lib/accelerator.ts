@@ -105,6 +105,7 @@ const stackPrefix = process.env['ACCELERATOR_PREFIX'] ?? 'AWSAccelerator';
 export enum AcceleratorV2Stacks {
   VPC_STACK = 'VpcStack',
   ROUTE_TABLES_STACK = 'RouteTablesStack',
+  ROUTE_ENTRIES_STACK = 'RouteEntriesStack',
   SECURITY_GROUPS_STACK = 'SecurityGroupsStack',
   SUBNETS_STACK = 'SubnetsStack',
   SUBNETS_SHARE_STACK = 'SubnetsShareStack',

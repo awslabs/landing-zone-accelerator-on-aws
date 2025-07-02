@@ -38,6 +38,7 @@ import { Region } from '@aws-accelerator/config/lib/common/types';
 import { AcceleratorStackProps } from '../../accelerator-stack';
 import { VpcSubnetsBaseStack } from '../stacks/vpc-subnets-base-stack';
 import { VpcRouteTablesBaseStack } from '../stacks/vpc-route-tables-base-stack';
+import { VpcRouteEntriesBaseStack } from '../stacks/vpc-route-entries-base-stack';
 import { VpcBaseStack } from '../stacks/vpc-base-stack';
 import { VpcSecurityGroupsBaseStack } from '../stacks/vpc-security-groups-base-stack';
 import { VpcNaclsBaseStack } from '../stacks/vp-nacls-base-stack';
@@ -1624,11 +1625,27 @@ export function createAndGetV2NetworkVpcDependencyStacks(options: {
       synthesizer: options.synthesizer,
     });
 
-    const vpcNaclsStack = createVpcNaclsStack({
+    const vpcRouteEntriesStack = createVpcRouteEntriesStack({
       sanitizedVpcName,
       v2NetworkResources,
       v2Stacks: options.v2Stacks,
       dependencyStack: vpcSubnetsShareStack,
+      app: options.app,
+      vpcItem,
+      props: options.props,
+      env: options.env,
+      partition: options.partition,
+      accountId: options.accountId,
+      enabledRegion: options.enabledRegion,
+      version: options.version,
+      synthesizer: options.synthesizer,
+    });
+
+    const vpcNaclsStack = createVpcNaclsStack({
+      sanitizedVpcName,
+      v2NetworkResources,
+      v2Stacks: options.v2Stacks,
+      dependencyStack: vpcRouteEntriesStack,
       app: options.app,
       vpcItem,
       props: options.props,
@@ -1840,6 +1857,52 @@ function createVpcSubnetsStack(options: {
   for (const dependencyStack of options.dependencyStacks) {
     stack.addDependency(dependencyStack);
   }
+
+  options.v2Stacks.push(stack);
+
+  return stack;
+}
+
+/**
+ * Function to get V2 VPC Route Entries stack
+ * @param options
+ * @returns
+ */
+function createVpcRouteEntriesStack(options: {
+  sanitizedVpcName: string;
+  v2NetworkResources: V2NetworkResourceListType[];
+  v2Stacks: cdk.Stack[];
+  dependencyStack: cdk.Stack;
+  app: cdk.App;
+  vpcItem: VpcConfig | VpcTemplatesConfig;
+  props: AcceleratorStackProps;
+  env: cdk.Environment;
+  partition: string;
+  accountId: string;
+  enabledRegion: string;
+  version: string;
+  synthesizer?: cdk.IStackSynthesizer;
+}): cdk.Stack {
+  logger.info(`Creating VPC Route Entry Stack for VPC ${options.vpcItem.name} in ${options.enabledRegion}`);
+  const stack: cdk.Stack = new VpcRouteEntriesBaseStack(
+    options.app,
+    `${AcceleratorStackNames[AcceleratorV2Stacks.ROUTE_ENTRIES_STACK]}-${options.sanitizedVpcName}-${
+      options.accountId
+    }-${options.enabledRegion}`,
+    {
+      env: options.env,
+      description: `(SO0199-vpc-route-entries) Landing Zone Accelerator on AWS. Version ${options.version}.`,
+
+      synthesizer: options.synthesizer,
+      terminationProtection: options.props.globalConfig.terminationProtection ?? true,
+      ...options.props,
+      vpcConfig: options.vpcItem,
+      vpcStack: false,
+      v2NetworkResources: options.v2NetworkResources,
+    },
+  );
+
+  stack.addDependency(options.dependencyStack);
 
   options.v2Stacks.push(stack);
 

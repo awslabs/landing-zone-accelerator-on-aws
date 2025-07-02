@@ -1094,6 +1094,137 @@ exports[`NetworkVpcV2Stacks Construct(NackStack-Network-us-east-1-Network-Second
 }
 `;
 
+exports[`NetworkVpcV2Stacks Construct(RouteEntriesStack-Network-us-east-1-Network-Secondary):  Snapshot Test 1`] = `
+{
+  "Metadata": {
+    "lzaLookup": {
+      "accountName": "Network",
+      "region": "us-east-1",
+      "stackGeneration": "v2",
+    },
+  },
+  "Parameters": {
+    "SsmParameterValueacceleratornetworkvpcNetworkSecondaryidC96584B6F00A464EAD1953AFF4B05118Parameter": {
+      "Default": "/accelerator/network/vpc/Network-Secondary/id",
+      "Type": "AWS::SSM::Parameter::Value<String>",
+    },
+  },
+  "Resources": {
+    "SsmParamAcceleratorVersionFF83282D": {
+      "Properties": {
+        "Name": "/accelerator/undefined-Network-Secondary-555555555555-us-east-1/version",
+        "Type": "String",
+        "Value": "1.12.0",
+      },
+      "Type": "AWS::SSM::Parameter",
+    },
+    "SsmParamStackId521A78D3": {
+      "Properties": {
+        "Name": "/accelerator/undefined-Network-Secondary-555555555555-us-east-1/stack-id",
+        "Type": "String",
+        "Value": {
+          "Ref": "AWS::StackId",
+        },
+      },
+      "Type": "AWS::SSM::Parameter",
+    },
+  },
+}
+`;
+
+exports[`NetworkVpcV2Stacks Construct(RouteEntriesStack-Network-us-east-1-Network-Secondary-V2):  Snapshot Test 1`] = `
+{
+  "Metadata": {
+    "lzaLookup": {
+      "accountName": "Network",
+      "region": "us-east-1",
+      "stackGeneration": "v2",
+    },
+  },
+  "Parameters": {
+    "SsmParameterValueacceleratornetworkvpcNetworkSecondaryV2egressonlyigwidC96584B6F00A464EAD1953AFF4B05118Parameter": {
+      "Default": "/accelerator/network/vpc/Network-Secondary-V2/egress-only-igw/id",
+      "Type": "AWS::SSM::Parameter::Value<String>",
+    },
+    "SsmParameterValueacceleratornetworkvpcNetworkSecondaryV2idC96584B6F00A464EAD1953AFF4B05118Parameter": {
+      "Default": "/accelerator/network/vpc/Network-Secondary-V2/id",
+      "Type": "AWS::SSM::Parameter::Value<String>",
+    },
+    "SsmParameterValueacceleratornetworkvpcNetworkSecondaryV2routeTableLgwRouteidC96584B6F00A464EAD1953AFF4B05118Parameter": {
+      "Default": "/accelerator/network/vpc/Network-Secondary-V2/routeTable/LgwRoute/id",
+      "Type": "AWS::SSM::Parameter::Value<String>",
+    },
+    "SsmParameterValueacceleratornetworkvpcNetworkSecondaryV2routeTableeigwRouteidC96584B6F00A464EAD1953AFF4B05118Parameter": {
+      "Default": "/accelerator/network/vpc/Network-Secondary-V2/routeTable/eigwRoute/id",
+      "Type": "AWS::SSM::Parameter::Value<String>",
+    },
+  },
+  "Resources": {
+    "NetworkSecondaryV2VpcNetworkSecondaryBRtRouteTableEigwRoute": {
+      "Metadata": {
+        "lzaLookup": {
+          "entryDestinationPrefixList": "N/A",
+          "entryName": "eigwRoute",
+          "entryType": "egressOnlyIgw",
+          "resourceType": "route-entry",
+          "routeTableName": "eigwRoute",
+          "vpcName": "Network-Secondary-V2",
+        },
+      },
+      "Properties": {
+        "DestinationIpv6CidrBlock": "::/0",
+        "EgressOnlyInternetGatewayId": {
+          "Ref": "SsmParameterValueacceleratornetworkvpcNetworkSecondaryV2egressonlyigwidC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+        "RouteTableId": {
+          "Ref": "SsmParameterValueacceleratornetworkvpcNetworkSecondaryV2routeTableeigwRouteidC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+      },
+      "Type": "AWS::EC2::Route",
+    },
+    "NetworkSecondaryV2VpcNetworkSecondaryBRtRouteTableLgwRoute": {
+      "Metadata": {
+        "lzaLookup": {
+          "entryDestinationPrefixList": "N/A",
+          "entryName": "LgwRoute",
+          "entryTarget": "accelerator-lgw-1",
+          "entryType": "localGateway",
+          "resourceType": "route-entry",
+          "routeTableName": "LgwRoute",
+          "vpcName": "Network-Secondary-V2",
+        },
+      },
+      "Properties": {
+        "DestinationCidrBlock": "0.0.0.0/0",
+        "LocalGatewayId": "lgw-abcxyz",
+        "RouteTableId": {
+          "Ref": "SsmParameterValueacceleratornetworkvpcNetworkSecondaryV2routeTableLgwRouteidC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+      },
+      "Type": "AWS::EC2::Route",
+    },
+    "SsmParamAcceleratorVersionFF83282D": {
+      "Properties": {
+        "Name": "/accelerator/undefined-Network-Secondary-V2-555555555555-us-east-1/version",
+        "Type": "String",
+        "Value": "1.12.0",
+      },
+      "Type": "AWS::SSM::Parameter",
+    },
+    "SsmParamStackId521A78D3": {
+      "Properties": {
+        "Name": "/accelerator/undefined-Network-Secondary-V2-555555555555-us-east-1/stack-id",
+        "Type": "String",
+        "Value": {
+          "Ref": "AWS::StackId",
+        },
+      },
+      "Type": "AWS::SSM::Parameter",
+    },
+  },
+}
+`;
+
 exports[`NetworkVpcV2Stacks Construct(RouteTableStack-Network-us-east-1-Network-Secondary):  Snapshot Test 1`] = `
 {
   "Metadata": {
@@ -1193,10 +1324,6 @@ exports[`NetworkVpcV2Stacks Construct(RouteTableStack-Network-us-east-1-Network-
     },
   },
   "Parameters": {
-    "SsmParameterValueacceleratornetworkvpcNetworkSecondaryV2egressonlyigwidC96584B6F00A464EAD1953AFF4B05118Parameter": {
-      "Default": "/accelerator/network/vpc/Network-Secondary-V2/egress-only-igw/id",
-      "Type": "AWS::SSM::Parameter::Value<String>",
-    },
     "SsmParameterValueacceleratornetworkvpcNetworkSecondaryV2idC96584B6F00A464EAD1953AFF4B05118Parameter": {
       "Default": "/accelerator/network/vpc/Network-Secondary-V2/id",
       "Type": "AWS::SSM::Parameter::Value<String>",
@@ -1252,55 +1379,6 @@ exports[`NetworkVpcV2Stacks Construct(RouteTableStack-Network-us-east-1-Network-
         },
       },
       "Type": "AWS::EC2::RouteTable",
-    },
-    "NetworkSecondaryV2VpcNetworkSecondaryBRtRouteTableEigwRoute": {
-      "DependsOn": [
-        "NetworkSecondaryV2VpcNetworkSecondaryBRtRouteTable",
-      ],
-      "Metadata": {
-        "lzaLookup": {
-          "entryDestinationPrefixList": "N/A",
-          "entryName": "eigwRoute",
-          "entryType": "egressOnlyIgw",
-          "resourceType": "route-entry",
-          "routeTableName": "Network-Secondary-B-Rt",
-          "vpcName": "Network-Secondary-V2",
-        },
-      },
-      "Properties": {
-        "DestinationIpv6CidrBlock": "::/0",
-        "EgressOnlyInternetGatewayId": {
-          "Ref": "SsmParameterValueacceleratornetworkvpcNetworkSecondaryV2egressonlyigwidC96584B6F00A464EAD1953AFF4B05118Parameter",
-        },
-        "RouteTableId": {
-          "Ref": "NetworkSecondaryV2VpcNetworkSecondaryBRtRouteTable",
-        },
-      },
-      "Type": "AWS::EC2::Route",
-    },
-    "NetworkSecondaryV2VpcNetworkSecondaryBRtRouteTableLgwRoute": {
-      "DependsOn": [
-        "NetworkSecondaryV2VpcNetworkSecondaryBRtRouteTable",
-      ],
-      "Metadata": {
-        "lzaLookup": {
-          "entryDestinationPrefixList": "N/A",
-          "entryName": "LgwRoute",
-          "entryTarget": "accelerator-lgw-1",
-          "entryType": "localGateway",
-          "resourceType": "route-entry",
-          "routeTableName": "Network-Secondary-B-Rt",
-          "vpcName": "Network-Secondary-V2",
-        },
-      },
-      "Properties": {
-        "DestinationCidrBlock": "0.0.0.0/0",
-        "LocalGatewayId": "lgw-abcxyz",
-        "RouteTableId": {
-          "Ref": "NetworkSecondaryV2VpcNetworkSecondaryBRtRouteTable",
-        },
-      },
-      "Type": "AWS::EC2::Route",
     },
     "NetworkSecondaryV2VpcNetworkSecondaryCRtRouteTable": {
       "Metadata": {
@@ -3050,6 +3128,636 @@ exports[`NetworkVpcV2Stacks Construct(SubnetStack-Network-us-east-1-Network-Seco
     "SsmParamStackId521A78D3": {
       "Properties": {
         "Name": "/accelerator/AWSAccelerator-SubnetsStack-Network-Secondary-V2-555555555555-us-east-1/stack-id",
+        "Type": "String",
+        "Value": {
+          "Ref": "AWS::StackId",
+        },
+      },
+      "Type": "AWS::SSM::Parameter",
+    },
+  },
+}
+`;
+
+exports[`NetworkVpcV2Stacks Construct(SubnetStack-SharedServices-us-east-1-SharedServices-Main-V2):  Snapshot Test 1`] = `
+{
+  "Metadata": {
+    "lzaLookup": {
+      "accountName": "SharedServices",
+      "region": "us-east-1",
+      "stackGeneration": "v2",
+    },
+  },
+  "Parameters": {
+    "SsmParameterValueacceleratornetworkvpcSharedServicesMainV2idC96584B6F00A464EAD1953AFF4B05118Parameter": {
+      "Default": "/accelerator/network/vpc/SharedServices-Main-V2/id",
+      "Type": "AWS::SSM::Parameter::Value<String>",
+    },
+    "SsmParameterValueacceleratornetworkvpcSharedServicesMainV2routeTableSharedServicesAppBidC96584B6F00A464EAD1953AFF4B05118Parameter": {
+      "Default": "/accelerator/network/vpc/SharedServices-Main-V2/routeTable/SharedServices-App-B/id",
+      "Type": "AWS::SSM::Parameter::Value<String>",
+    },
+    "SsmParameterValueacceleratornetworkvpcSharedServicesMainV2routeTableSharedServicesAppCidC96584B6F00A464EAD1953AFF4B05118Parameter": {
+      "Default": "/accelerator/network/vpc/SharedServices-Main-V2/routeTable/SharedServices-App-C/id",
+      "Type": "AWS::SSM::Parameter::Value<String>",
+    },
+    "SsmParameterValueacceleratornetworkvpcSharedServicesMainV2routeTableSharedServicesMainDefaultidC96584B6F00A464EAD1953AFF4B05118Parameter": {
+      "Default": "/accelerator/network/vpc/SharedServices-Main-V2/routeTable/SharedServices-Main-Default/id",
+      "Type": "AWS::SSM::Parameter::Value<String>",
+    },
+    "SsmParameterValueacceleratornetworkvpcSharedServicesMainV2routeTableSharedServicesTgwAidC96584B6F00A464EAD1953AFF4B05118Parameter": {
+      "Default": "/accelerator/network/vpc/SharedServices-Main-V2/routeTable/SharedServices-Tgw-A/id",
+      "Type": "AWS::SSM::Parameter::Value<String>",
+    },
+    "SsmParameterValueacceleratornetworkvpcSharedServicesMainV2routeTableSharedServicesTgwBidC96584B6F00A464EAD1953AFF4B05118Parameter": {
+      "Default": "/accelerator/network/vpc/SharedServices-Main-V2/routeTable/SharedServices-Tgw-B/id",
+      "Type": "AWS::SSM::Parameter::Value<String>",
+    },
+  },
+  "Resources": {
+    "CustomGetResourceShareCustomResourceProviderHandler5DB0EF7A": {
+      "DependsOn": [
+        "CustomGetResourceShareCustomResourceProviderRoleBC3FCEEF",
+      ],
+      "Properties": {
+        "Code": {
+          "S3Bucket": "cdk-hnb659fds-assets-444444444444-us-east-1",
+          "S3Key": "REPLACED-GENERATED-NAME.zip",
+        },
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.0",
+          },
+        },
+        "Handler": "__entrypoint__.handler",
+        "MemorySize": 512,
+        "Role": {
+          "Fn::GetAtt": [
+            "CustomGetResourceShareCustomResourceProviderRoleBC3FCEEF",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs20.x",
+        "Timeout": 900,
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "CustomGetResourceShareCustomResourceProviderRoleBC3FCEEF": {
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": [
+          {
+            "Fn::Sub": "arn:\${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+          },
+        ],
+        "Policies": [
+          {
+            "PolicyDocument": {
+              "Statement": [
+                {
+                  "Action": [
+                    "ram:AcceptResourceShareInvitation",
+                    "ram:GetResourceShareInvitations",
+                    "ram:GetResourceShares",
+                  ],
+                  "Effect": "Allow",
+                  "Resource": "*",
+                },
+              ],
+              "Version": "2012-10-17",
+            },
+            "PolicyName": "Inline",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "CustomGetResourceShareItemCustomResourceProviderHandlerE72D791B": {
+      "DependsOn": [
+        "CustomGetResourceShareItemCustomResourceProviderRoleA7181EBA",
+      ],
+      "Properties": {
+        "Code": {
+          "S3Bucket": "cdk-hnb659fds-assets-444444444444-us-east-1",
+          "S3Key": "REPLACED-GENERATED-NAME.zip",
+        },
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.0",
+          },
+        },
+        "Handler": "__entrypoint__.handler",
+        "MemorySize": 512,
+        "Role": {
+          "Fn::GetAtt": [
+            "CustomGetResourceShareItemCustomResourceProviderRoleA7181EBA",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs20.x",
+        "Timeout": 900,
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "CustomGetResourceShareItemCustomResourceProviderLogGroup6DB08FC0": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "LogGroupName": {
+          "Fn::Join": [
+            "",
+            [
+              "/aws/lambda/",
+              {
+                "Ref": "CustomGetResourceShareItemCustomResourceProviderHandlerE72D791B",
+              },
+            ],
+          ],
+        },
+        "RetentionInDays": 3653,
+      },
+      "Type": "AWS::Logs::LogGroup",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "CustomGetResourceShareItemCustomResourceProviderRoleA7181EBA": {
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": [
+          {
+            "Fn::Sub": "arn:\${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+          },
+        ],
+        "Policies": [
+          {
+            "PolicyDocument": {
+              "Statement": [
+                {
+                  "Action": [
+                    "ram:ListResources",
+                  ],
+                  "Effect": "Allow",
+                  "Resource": "*",
+                },
+              ],
+              "Version": "2012-10-17",
+            },
+            "PolicyName": "Inline",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "SharedServicesAppARouteTableAssociation": {
+      "Metadata": {
+        "lzaLookup": {
+          "resourceType": "subnet-route-table-association",
+          "routeTableName": "SharedServices-Main-Default",
+          "subnetName": "SharedServices-App-A",
+          "vpcName": "SharedServices-Main-V2",
+        },
+      },
+      "Properties": {
+        "RouteTableId": {
+          "Ref": "SsmParameterValueacceleratornetworkvpcSharedServicesMainV2routeTableSharedServicesMainDefaultidC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+        "SubnetId": {
+          "Ref": "SharedServicesMainV2SharedServicesAppANonIpamSubnet",
+        },
+      },
+      "Type": "AWS::EC2::SubnetRouteTableAssociation",
+    },
+    "SharedServicesAppBRouteTableAssociation": {
+      "Metadata": {
+        "lzaLookup": {
+          "resourceType": "subnet-route-table-association",
+          "routeTableName": "SharedServices-App-B",
+          "subnetName": "SharedServices-App-B",
+          "vpcName": "SharedServices-Main-V2",
+        },
+      },
+      "Properties": {
+        "RouteTableId": {
+          "Ref": "SsmParameterValueacceleratornetworkvpcSharedServicesMainV2routeTableSharedServicesAppBidC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+        "SubnetId": {
+          "Ref": "SharedServicesMainV2SharedServicesAppBNonIpamSubnet",
+        },
+      },
+      "Type": "AWS::EC2::SubnetRouteTableAssociation",
+    },
+    "SharedServicesAppCRouteTableAssociation": {
+      "Metadata": {
+        "lzaLookup": {
+          "resourceType": "subnet-route-table-association",
+          "routeTableName": "SharedServices-App-C",
+          "subnetName": "SharedServices-App-C",
+          "vpcName": "SharedServices-Main-V2",
+        },
+      },
+      "Properties": {
+        "RouteTableId": {
+          "Ref": "SsmParameterValueacceleratornetworkvpcSharedServicesMainV2routeTableSharedServicesAppCidC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+        "SubnetId": {
+          "Ref": "SharedServicesMainV2SharedServicesAppCNonIpamSubnet",
+        },
+      },
+      "Type": "AWS::EC2::SubnetRouteTableAssociation",
+    },
+    "SharedServicesMainTgwAttachARouteTableAssociation": {
+      "Metadata": {
+        "lzaLookup": {
+          "resourceType": "subnet-route-table-association",
+          "routeTableName": "SharedServices-Tgw-A",
+          "subnetName": "SharedServices-MainTgwAttach-A",
+          "vpcName": "SharedServices-Main-V2",
+        },
+      },
+      "Properties": {
+        "RouteTableId": {
+          "Ref": "SsmParameterValueacceleratornetworkvpcSharedServicesMainV2routeTableSharedServicesTgwAidC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+        "SubnetId": {
+          "Ref": "SharedServicesMainV2SharedServicesMainTgwAttachANonIpamSubnet",
+        },
+      },
+      "Type": "AWS::EC2::SubnetRouteTableAssociation",
+    },
+    "SharedServicesMainTgwAttachBRouteTableAssociation": {
+      "Metadata": {
+        "lzaLookup": {
+          "resourceType": "subnet-route-table-association",
+          "routeTableName": "SharedServices-Tgw-B",
+          "subnetName": "SharedServices-MainTgwAttach-B",
+          "vpcName": "SharedServices-Main-V2",
+        },
+      },
+      "Properties": {
+        "RouteTableId": {
+          "Ref": "SsmParameterValueacceleratornetworkvpcSharedServicesMainV2routeTableSharedServicesTgwBidC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+        "SubnetId": {
+          "Ref": "SharedServicesMainV2SharedServicesMainTgwAttachBNonIpamSubnet",
+        },
+      },
+      "Type": "AWS::EC2::SubnetRouteTableAssociation",
+    },
+    "SharedServicesMainTgwAttachmentNetworkAccountNetworkMainTgwResourceShare256DAAD3": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "ServiceToken": {
+          "Fn::GetAtt": [
+            "CustomGetResourceShareCustomResourceProviderHandler5DB0EF7A",
+            "Arn",
+          ],
+        },
+        "name": "Network-Main_TransitGatewayShare",
+        "owningAccountId": "555555555555",
+        "resourceOwner": "OTHER-ACCOUNTS",
+        "uuid": "REPLACED-UUID",
+      },
+      "Type": "Custom::GetResourceShare",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "SharedServicesMainTgwAttachmentNetworkAccountNetworkMainTgwResourceShareItemFD10BDEA": {
+      "DeletionPolicy": "Delete",
+      "DependsOn": [
+        "CustomGetResourceShareItemCustomResourceProviderLogGroup6DB08FC0",
+      ],
+      "Properties": {
+        "ServiceToken": {
+          "Fn::GetAtt": [
+            "CustomGetResourceShareItemCustomResourceProviderHandlerE72D791B",
+            "Arn",
+          ],
+        },
+        "resourceOwner": "OTHER-ACCOUNTS",
+        "resourceShareArn": {
+          "Fn::Join": [
+            "",
+            [
+              "arn:",
+              {
+                "Ref": "AWS::Partition",
+              },
+              ":ram:us-east-1:555555555555:resource-share/",
+              {
+                "Ref": "SharedServicesMainTgwAttachmentNetworkAccountNetworkMainTgwResourceShare256DAAD3",
+              },
+            ],
+          ],
+        },
+        "resourceType": "ec2:TransitGateway",
+        "uuid": "REPLACED-UUID",
+      },
+      "Type": "Custom::GetResourceShareItem",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "SharedServicesMainV2SharedServicesAppANonIpamSubnet": {
+      "Metadata": {
+        "lzaLookup": {
+          "cidrBlock": "10.4.0.0/24",
+          "resourceType": "subnet",
+          "subnetName": "SharedServices-App-A",
+          "vpcName": "SharedServices-Main-V2",
+        },
+      },
+      "Properties": {
+        "AvailabilityZone": "us-east-1a",
+        "CidrBlock": "10.4.0.0/24",
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "SharedServices-App-A",
+          },
+        ],
+        "VpcId": {
+          "Ref": "SsmParameterValueacceleratornetworkvpcSharedServicesMainV2idC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+      },
+      "Type": "AWS::EC2::Subnet",
+    },
+    "SharedServicesMainV2SharedServicesAppBNonIpamSubnet": {
+      "Metadata": {
+        "lzaLookup": {
+          "cidrBlock": "10.4.1.0/24",
+          "resourceType": "subnet",
+          "subnetName": "SharedServices-App-B",
+          "vpcName": "SharedServices-Main-V2",
+        },
+      },
+      "Properties": {
+        "AvailabilityZone": "us-east-1b",
+        "CidrBlock": "10.4.1.0/24",
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "SharedServices-App-B",
+          },
+        ],
+        "VpcId": {
+          "Ref": "SsmParameterValueacceleratornetworkvpcSharedServicesMainV2idC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+      },
+      "Type": "AWS::EC2::Subnet",
+    },
+    "SharedServicesMainV2SharedServicesAppCNonIpamSubnet": {
+      "Metadata": {
+        "lzaLookup": {
+          "cidrBlock": "10.4.2.0/24",
+          "resourceType": "subnet",
+          "subnetName": "SharedServices-App-C",
+          "vpcName": "SharedServices-Main-V2",
+        },
+      },
+      "Properties": {
+        "AvailabilityZone": "us-east-1c",
+        "CidrBlock": "10.4.2.0/24",
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "SharedServices-App-C",
+          },
+        ],
+        "VpcId": {
+          "Ref": "SsmParameterValueacceleratornetworkvpcSharedServicesMainV2idC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+      },
+      "Type": "AWS::EC2::Subnet",
+    },
+    "SharedServicesMainV2SharedServicesMainTgwAttachANonIpamSubnet": {
+      "Metadata": {
+        "lzaLookup": {
+          "cidrBlock": "10.4.255.208/28",
+          "resourceType": "subnet",
+          "subnetName": "SharedServices-MainTgwAttach-A",
+          "vpcName": "SharedServices-Main-V2",
+        },
+      },
+      "Properties": {
+        "AvailabilityZone": "us-east-1a",
+        "CidrBlock": "10.4.255.208/28",
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "SharedServices-MainTgwAttach-A",
+          },
+        ],
+        "VpcId": {
+          "Ref": "SsmParameterValueacceleratornetworkvpcSharedServicesMainV2idC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+      },
+      "Type": "AWS::EC2::Subnet",
+    },
+    "SharedServicesMainV2SharedServicesMainTgwAttachBNonIpamSubnet": {
+      "Metadata": {
+        "lzaLookup": {
+          "cidrBlock": "10.4.255.224/28",
+          "resourceType": "subnet",
+          "subnetName": "SharedServices-MainTgwAttach-B",
+          "vpcName": "SharedServices-Main-V2",
+        },
+      },
+      "Properties": {
+        "AvailabilityZone": "us-east-1b",
+        "CidrBlock": "10.4.255.224/28",
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "SharedServices-MainTgwAttach-B",
+          },
+        ],
+        "VpcId": {
+          "Ref": "SsmParameterValueacceleratornetworkvpcSharedServicesMainV2idC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+      },
+      "Type": "AWS::EC2::Subnet",
+    },
+    "SharedServicesMainVpcNetworkMainTransitGatewayAttachment259775EC": {
+      "Metadata": {
+        "lzaLookup": {
+          "resourceType": "tgw-vpc-attachment",
+          "transitGatewayAttachmentName": "SharedServices-Main",
+          "transitGatewayName": "Network-Main",
+          "vpcName": "SharedServices-Main-V2",
+        },
+      },
+      "Properties": {
+        "Options": {
+          "ApplianceModeSupport": "disable",
+          "DnsSupport": "enable",
+          "Ipv6Support": "disable",
+        },
+        "SubnetIds": [
+          {
+            "Ref": "SharedServicesMainV2SharedServicesMainTgwAttachANonIpamSubnet",
+          },
+          {
+            "Ref": "SharedServicesMainV2SharedServicesMainTgwAttachBNonIpamSubnet",
+          },
+        ],
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "SharedServices-Main",
+          },
+        ],
+        "TransitGatewayId": {
+          "Ref": "SharedServicesMainTgwAttachmentNetworkAccountNetworkMainTgwResourceShareItemFD10BDEA",
+        },
+        "VpcId": {
+          "Ref": "SsmParameterValueacceleratornetworkvpcSharedServicesMainV2idC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+      },
+      "Type": "AWS::EC2::TransitGatewayVpcAttachment",
+    },
+    "SsmParamAcceleratorVersionFF83282D": {
+      "Properties": {
+        "Name": "/accelerator/AWSAccelerator-SubnetsStack-SharedServices-Main-V2-444444444444-us-east-1/version",
+        "Type": "String",
+        "Value": "1.12.0",
+      },
+      "Type": "AWS::SSM::Parameter",
+    },
+    "SsmParamSharedServicesMainV2SharedServicesAppASubnetIdB29B2611": {
+      "Properties": {
+        "Name": "/accelerator/network/vpc/SharedServices-Main-V2/subnet/SharedServices-App-A/id",
+        "Type": "String",
+        "Value": {
+          "Ref": "SharedServicesMainV2SharedServicesAppANonIpamSubnet",
+        },
+      },
+      "Type": "AWS::SSM::Parameter",
+    },
+    "SsmParamSharedServicesMainV2SharedServicesAppASubnetIpv4CidrBlockB6539C5E": {
+      "Properties": {
+        "Name": "/accelerator/network/vpc/SharedServices-Main-V2/subnet/SharedServices-App-A/cidr/ipv4",
+        "Type": "String",
+        "Value": "10.4.0.0/24",
+      },
+      "Type": "AWS::SSM::Parameter",
+    },
+    "SsmParamSharedServicesMainV2SharedServicesAppBSubnetIdEB8783C7": {
+      "Properties": {
+        "Name": "/accelerator/network/vpc/SharedServices-Main-V2/subnet/SharedServices-App-B/id",
+        "Type": "String",
+        "Value": {
+          "Ref": "SharedServicesMainV2SharedServicesAppBNonIpamSubnet",
+        },
+      },
+      "Type": "AWS::SSM::Parameter",
+    },
+    "SsmParamSharedServicesMainV2SharedServicesAppBSubnetIpv4CidrBlock118105EB": {
+      "Properties": {
+        "Name": "/accelerator/network/vpc/SharedServices-Main-V2/subnet/SharedServices-App-B/cidr/ipv4",
+        "Type": "String",
+        "Value": "10.4.1.0/24",
+      },
+      "Type": "AWS::SSM::Parameter",
+    },
+    "SsmParamSharedServicesMainV2SharedServicesAppCSubnetId3865EDA4": {
+      "Properties": {
+        "Name": "/accelerator/network/vpc/SharedServices-Main-V2/subnet/SharedServices-App-C/id",
+        "Type": "String",
+        "Value": {
+          "Ref": "SharedServicesMainV2SharedServicesAppCNonIpamSubnet",
+        },
+      },
+      "Type": "AWS::SSM::Parameter",
+    },
+    "SsmParamSharedServicesMainV2SharedServicesAppCSubnetIpv4CidrBlockC26E5B79": {
+      "DependsOn": [
+        "SsmParamSharedServicesMainV2SharedServicesAppCSubnetId3865EDA4",
+      ],
+      "Properties": {
+        "Name": "/accelerator/network/vpc/SharedServices-Main-V2/subnet/SharedServices-App-C/cidr/ipv4",
+        "Type": "String",
+        "Value": "10.4.2.0/24",
+      },
+      "Type": "AWS::SSM::Parameter",
+    },
+    "SsmParamSharedServicesMainV2SharedServicesMainTgwAttachASubnetId3064BAC8": {
+      "DependsOn": [
+        "SsmParamSharedServicesMainV2SharedServicesAppCSubnetId3865EDA4",
+      ],
+      "Properties": {
+        "Name": "/accelerator/network/vpc/SharedServices-Main-V2/subnet/SharedServices-MainTgwAttach-A/id",
+        "Type": "String",
+        "Value": {
+          "Ref": "SharedServicesMainV2SharedServicesMainTgwAttachANonIpamSubnet",
+        },
+      },
+      "Type": "AWS::SSM::Parameter",
+    },
+    "SsmParamSharedServicesMainV2SharedServicesMainTgwAttachASubnetIpv4CidrBlockEBB20301": {
+      "DependsOn": [
+        "SsmParamSharedServicesMainV2SharedServicesAppCSubnetId3865EDA4",
+      ],
+      "Properties": {
+        "Name": "/accelerator/network/vpc/SharedServices-Main-V2/subnet/SharedServices-MainTgwAttach-A/cidr/ipv4",
+        "Type": "String",
+        "Value": "10.4.255.208/28",
+      },
+      "Type": "AWS::SSM::Parameter",
+    },
+    "SsmParamSharedServicesMainV2SharedServicesMainTgwAttachBSubnetIdCD4767EB": {
+      "DependsOn": [
+        "SsmParamSharedServicesMainV2SharedServicesAppCSubnetId3865EDA4",
+      ],
+      "Properties": {
+        "Name": "/accelerator/network/vpc/SharedServices-Main-V2/subnet/SharedServices-MainTgwAttach-B/id",
+        "Type": "String",
+        "Value": {
+          "Ref": "SharedServicesMainV2SharedServicesMainTgwAttachBNonIpamSubnet",
+        },
+      },
+      "Type": "AWS::SSM::Parameter",
+    },
+    "SsmParamSharedServicesMainV2SharedServicesMainTgwAttachBSubnetIpv4CidrBlock68D217F0": {
+      "Properties": {
+        "Name": "/accelerator/network/vpc/SharedServices-Main-V2/subnet/SharedServices-MainTgwAttach-B/cidr/ipv4",
+        "Type": "String",
+        "Value": "10.4.255.224/28",
+      },
+      "Type": "AWS::SSM::Parameter",
+    },
+    "SsmParamSharedServicesMainV2SharedServicesMainTransitGatewayAttachmentIdB2647A83": {
+      "DependsOn": [
+        "SsmParamSharedServicesMainV2SharedServicesMainTgwAttachBSubnetIpv4CidrBlock68D217F0",
+      ],
+      "Properties": {
+        "Name": "/accelerator/network/vpc/SharedServices-Main-V2/transitGatewayAttachment/SharedServices-Main/id",
+        "Type": "String",
+        "Value": {
+          "Ref": "SharedServicesMainVpcNetworkMainTransitGatewayAttachment259775EC",
+        },
+      },
+      "Type": "AWS::SSM::Parameter",
+    },
+    "SsmParamStackId521A78D3": {
+      "Properties": {
+        "Name": "/accelerator/AWSAccelerator-SubnetsStack-SharedServices-Main-V2-444444444444-us-east-1/stack-id",
         "Type": "String",
         "Value": {
           "Ref": "AWS::StackId",

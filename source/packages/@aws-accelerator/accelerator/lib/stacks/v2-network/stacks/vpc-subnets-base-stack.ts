@@ -32,6 +32,11 @@ import { TransitGatewayAttachment } from '@aws-accelerator/constructs/lib/aws-ec
 import { isV2Resource } from '../utils/functions';
 import { NetworkStackGeneration, V2StackComponentsList } from '../utils/enums';
 import { MetadataKeys } from '@aws-accelerator/utils/lib/common-types';
+import {
+  ResourceShare,
+  ResourceShareItem,
+  ResourceShareOwner,
+} from '@aws-accelerator/constructs/lib/aws-ram/resource-share';
 
 type CreatedSubnetType = { name: string; id: string };
 
@@ -553,10 +558,44 @@ export class VpcSubnetsBaseStack extends AcceleratorStack {
       }
 
       this.logger.info(`Adding transit gateway attachment ${tgwAttachmentItem.name} to VPC ${this.vpcDetails.name}`);
-      const transitGatewayId = cdk.aws_ssm.StringParameter.valueForStringParameter(
-        this,
-        this.getSsmPath(SsmResourceType.CROSS_ACCOUNT_TGW, [tgwAttachmentItem.transitGateway.name]),
-      );
+      let transitGatewayId: string | undefined;
+      if (tgwAccountId === cdk.Stack.of(this).account) {
+        this.logger.info(`Transit Gateway ${tgwAttachmentItem.transitGateway.name} is in the same account`);
+        transitGatewayId = cdk.aws_ssm.StringParameter.valueForStringParameter(
+          this,
+          this.getSsmPath(SsmResourceType.TGW, [tgwAttachmentItem.transitGateway.name]),
+        );
+      } else {
+        this.logger.info(
+          `Transit Gateway ${tgwAttachmentItem.transitGateway.name} is in a remote account ${tgwAttachmentItem.transitGateway.account}, will use resource share to get id.`,
+        );
+        const logicalId = pascalCase(
+          `${tgwAttachmentItem.name}TgwAttachment${tgwAttachmentItem.transitGateway.account}Account${tgwAttachmentItem.transitGateway.name}Tgw`,
+        );
+        const resourceShareName = `${tgwAttachmentItem.transitGateway.name}_TransitGatewayShare`;
+        const resourceShare = ResourceShare.fromLookup(this, pascalCase(`${logicalId}ResourceShare`), {
+          resourceShareOwner: ResourceShareOwner.OTHER_ACCOUNTS,
+          resourceShareName: resourceShareName,
+          owningAccountId: tgwAccountId,
+        });
+
+        // Represents the item shared by RAM
+        const resourceShareItem = ResourceShareItem.fromLookup(this, pascalCase(`${logicalId}ResourceShareItem`), {
+          resourceShare,
+          resourceShareItemType: 'ec2:TransitGateway',
+          kmsKey: this.cloudwatchKey,
+          logRetentionInDays: this.v2StackProps.globalConfig.cloudwatchLogRetentionInDays,
+        });
+
+        transitGatewayId = resourceShareItem.resourceShareItemId;
+      }
+
+      if (!transitGatewayId) {
+        this.logger.error(`Transit Gateway ID not found for ${tgwAttachmentItem.transitGateway.name}`);
+        throw new Error(
+          `Configuration validation failed at runtime. Transit Gateway ID not found for ${tgwAttachmentItem.transitGateway.name}`,
+        );
+      }
 
       const subnetIds = this.getTgwAttachmentSubnetIds(tgwAttachmentItem);
 
