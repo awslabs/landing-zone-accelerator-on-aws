@@ -70,22 +70,6 @@ export class SsmSessionManagerSettings extends Construct {
       alias: props.ssmKeyDetails.alias,
     });
 
-    const sessionManagerUserPolicyDocument = new cdk.aws_iam.PolicyDocument({
-      statements: [
-        new cdk.aws_iam.PolicyStatement({
-          effect: cdk.aws_iam.Effect.ALLOW,
-          actions: ['kms:Decrypt', 'kms:GenerateDataKey'],
-          resources: [sessionManagerSessionCmk.keyArn],
-        }),
-      ],
-    });
-
-    // Create an IAM Policy for users to be able to use Session Manager with KMS encryption
-    new cdk.aws_iam.ManagedPolicy(this, 'SessionManagerUserKMSPolicy', {
-      document: sessionManagerUserPolicyDocument,
-      managedPolicyName: `${props.prefixes.accelerator}-SessionManagerUserKMS-${props.region}`,
-    });
-
     //
     // Function definition for the custom resource
     //

@@ -242,16 +242,6 @@ export class OperationsStack extends AcceleratorStack {
         },
       ],
     });
-
-    this.nagSuppressionInputs.push({
-      id: NagSuppressionRuleIds.IAM5,
-      details: [
-        {
-          path: `/${this.stackName}/SsmSessionManagerSettings/SessionManagerPolicy/Resource`,
-          reason: 'Allows only specific log group',
-        },
-      ],
-    });
   }
 
   /* Enable AWS Service Quota Limits
