@@ -108,7 +108,7 @@
 #    - $: End of string
 #    - Examples: release-v1.0.0, feature-v2.3.4
 
-image: public.ecr.aws/bitnami/node:18
+image: public.ecr.aws/bitnami/node:20
 
 before_script:
   - rm -rf /var/lib/apt/lists/*
