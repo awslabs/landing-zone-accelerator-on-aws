@@ -142,13 +142,14 @@ export const AcceleratorStackNames: Record<string, string> = {
   [AcceleratorStage.SECURITY_AUDIT]: `${stackPrefix}-SecurityAuditStack`,
   [AcceleratorStage.CUSTOMIZATIONS]: `${stackPrefix}-CustomizationsStack`,
 
-  [AcceleratorV2Stacks.VPC_STACK]: `${stackPrefix}-VpcStack`,
-  [AcceleratorV2Stacks.ROUTE_TABLES_STACK]: `${stackPrefix}-RouteTablesStack`,
-  [AcceleratorV2Stacks.SECURITY_GROUPS_STACK]: `${stackPrefix}-SecurityGroupsStack`,
-  [AcceleratorV2Stacks.SUBNETS_STACK]: `${stackPrefix}-SubnetsStack`,
-  [AcceleratorV2Stacks.SUBNETS_SHARE_STACK]: `${stackPrefix}-SubnetsShareStack`,
-  [AcceleratorV2Stacks.NACLS_STACK]: `${stackPrefix}-NaclsStack`,
-  [AcceleratorV2Stacks.LB_STACK]: `${stackPrefix}-LoadBalancersStack`,
+  [AcceleratorV2Stacks.VPC_STACK]: `${stackPrefix}-${AcceleratorV2Stacks.VPC_STACK}`,
+  [AcceleratorV2Stacks.ROUTE_TABLES_STACK]: `${stackPrefix}-${AcceleratorV2Stacks.ROUTE_TABLES_STACK}`,
+  [AcceleratorV2Stacks.ROUTE_ENTRIES_STACK]: `${stackPrefix}-${AcceleratorV2Stacks.ROUTE_ENTRIES_STACK}`,
+  [AcceleratorV2Stacks.SECURITY_GROUPS_STACK]: `${stackPrefix}-${AcceleratorV2Stacks.SECURITY_GROUPS_STACK}`,
+  [AcceleratorV2Stacks.SUBNETS_STACK]: `${stackPrefix}-${AcceleratorV2Stacks.SUBNETS_STACK}`,
+  [AcceleratorV2Stacks.SUBNETS_SHARE_STACK]: `${stackPrefix}-${AcceleratorV2Stacks.SUBNETS_SHARE_STACK}`,
+  [AcceleratorV2Stacks.NACLS_STACK]: `${stackPrefix}-${AcceleratorV2Stacks.NACLS_STACK}`,
+  [AcceleratorV2Stacks.LB_STACK]: `${stackPrefix}-${AcceleratorV2Stacks.LB_STACK}`,
 };
 
 /**
