@@ -50,12 +50,24 @@ const v2TestNamePatterns: { testName: string; stackKey: string }[] = [
     stackKey: 'SubnetStack-Network-us-east-1-Network-Secondary',
   },
   {
+    testName: 'Construct(SubnetStack-SharedServices-us-east-1-SharedServices-Main-V2): ',
+    stackKey: 'SubnetStack-SharedServices-us-east-1-SharedServices-Main-V2',
+  },
+  {
     testName: 'Construct(SubnetShareStack-Network-us-east-1-Network-Secondary-V2): ',
     stackKey: 'SubnetShareStack-Network-us-east-1-Network-Secondary-V2',
   },
   {
     testName: 'Construct(SubnetShareStack-Network-us-east-1-Network-Secondary): ',
     stackKey: 'SubnetShareStack-Network-us-east-1-Network-Secondary',
+  },
+  {
+    testName: 'Construct(RouteEntriesStack-Network-us-east-1-Network-Secondary-V2): ',
+    stackKey: 'RouteEntriesStack-Network-us-east-1-Network-Secondary-V2',
+  },
+  {
+    testName: 'Construct(RouteEntriesStack-Network-us-east-1-Network-Secondary): ',
+    stackKey: 'RouteEntriesStack-Network-us-east-1-Network-Secondary',
   },
   {
     testName: 'Construct(NackStack-Network-us-east-1-Network-Secondary-V2): ',
