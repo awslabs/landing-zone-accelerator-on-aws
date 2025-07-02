@@ -1112,7 +1112,7 @@ exports[`NetworkVpcV2Stacks Construct(RouteEntriesStack-Network-us-east-1-Networ
   "Resources": {
     "SsmParamAcceleratorVersionFF83282D": {
       "Properties": {
-        "Name": "/accelerator/undefined-Network-Secondary-555555555555-us-east-1/version",
+        "Name": "/accelerator/AWSAccelerator-RouteEntriesStack-Network-Secondary-555555555555-us-east-1/version",
         "Type": "String",
         "Value": "1.12.0",
       },
@@ -1120,7 +1120,7 @@ exports[`NetworkVpcV2Stacks Construct(RouteEntriesStack-Network-us-east-1-Networ
     },
     "SsmParamStackId521A78D3": {
       "Properties": {
-        "Name": "/accelerator/undefined-Network-Secondary-555555555555-us-east-1/stack-id",
+        "Name": "/accelerator/AWSAccelerator-RouteEntriesStack-Network-Secondary-555555555555-us-east-1/stack-id",
         "Type": "String",
         "Value": {
           "Ref": "AWS::StackId",
@@ -1205,7 +1205,7 @@ exports[`NetworkVpcV2Stacks Construct(RouteEntriesStack-Network-us-east-1-Networ
     },
     "SsmParamAcceleratorVersionFF83282D": {
       "Properties": {
-        "Name": "/accelerator/undefined-Network-Secondary-V2-555555555555-us-east-1/version",
+        "Name": "/accelerator/AWSAccelerator-RouteEntriesStack-Network-Secondary-V2-555555555555-us-east-1/version",
         "Type": "String",
         "Value": "1.12.0",
       },
@@ -1213,7 +1213,7 @@ exports[`NetworkVpcV2Stacks Construct(RouteEntriesStack-Network-us-east-1-Networ
     },
     "SsmParamStackId521A78D3": {
       "Properties": {
-        "Name": "/accelerator/undefined-Network-Secondary-V2-555555555555-us-east-1/stack-id",
+        "Name": "/accelerator/AWSAccelerator-RouteEntriesStack-Network-Secondary-V2-555555555555-us-east-1/stack-id",
         "Type": "String",
         "Value": {
           "Ref": "AWS::StackId",
