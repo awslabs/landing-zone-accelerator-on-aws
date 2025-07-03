@@ -29,6 +29,11 @@ import { isV2Resource } from '../utils/functions';
 import { NetworkStackGeneration, V2StackComponentsList } from '../utils/enums';
 import { NetworkVpcStackRouteEntryTypes } from '../utils/constants';
 import { MetadataKeys } from '@aws-accelerator/utils/lib/common-types';
+import {
+  ResourceShare,
+  ResourceShareItem,
+  ResourceShareOwner,
+} from '@aws-accelerator/constructs/lib/aws-ram/resource-share';
 
 export class VpcRouteEntriesBaseStack extends AcceleratorStack {
   private v2StackProps: V2NetworkStacksBaseProps;
@@ -89,12 +94,13 @@ export class VpcRouteEntriesBaseStack extends AcceleratorStack {
         // Check if using a prefix list or CIDR as the destination
         if (routeTableEntryItem.type && NetworkVpcStackRouteEntryTypes.includes(routeTableEntryItem.type)) {
           this.logger.info(
-            `Creating route table entry ${routeTableEntryItem.name} for route table ${routeTableItem.name} for vpc ${this.vpcDetails.name}`,
+            `Creating route entry ${routeTableEntryItem.name} for route table ${routeTableItem.name} for vpc ${this.vpcDetails.name}`,
           );
           const routeEntryResourceName =
             pascalCase(`${this.vpcDetails.name}Vpc`) +
             pascalCase(`${routeTableItem.name}RouteTable`) +
-            pascalCase(routeTableEntryItem.name);
+            pascalCase(routeTableEntryItem.name) +
+            'RouteEntry';
 
           // Set destination type
           const [destination, destinationPrefixListId, ipv6Destination] = this.setRouteEntryDestination(
@@ -103,15 +109,15 @@ export class VpcRouteEntriesBaseStack extends AcceleratorStack {
           );
 
           this.logger.info(
-            `Using existing route table for route ${routeTableEntryItem.name} for vpc ${this.vpcDetails.name}`,
+            `Using existing route table ${routeTableItem.name} for route entry ${routeTableEntryItem.name} for vpc ${this.vpcDetails.name}.`,
           );
           const routeTableId = cdk.aws_ssm.StringParameter.valueForStringParameter(
             this,
-            this.getSsmPath(SsmResourceType.ROUTE_TABLE, [this.vpcDetails.name, routeTableEntryItem.name]),
+            this.getSsmPath(SsmResourceType.ROUTE_TABLE, [this.vpcDetails.name, routeTableItem.name]),
           );
 
           const routeProps: RouteEntryPropertiesType = {
-            routeTableName: routeTableEntryItem.name,
+            routeTableName: routeTableItem.name,
             routeEntryResourceName,
             routeTableId,
             targetId: '', // Default value will be set in the switch statement
@@ -127,7 +133,7 @@ export class VpcRouteEntriesBaseStack extends AcceleratorStack {
           const metadata: { [key: string]: string } = {
             resourceType: V2StackComponentsList.ROUTE_ENTRY,
             vpcName: this.vpcDetails.name,
-            routeTableName: routeTableEntryItem.name,
+            routeTableName: routeTableItem.name,
             entryName: routeTableEntryItem.name,
             entryType: routeTableEntryItem.type,
             entryDestinationPrefixList: routeTableEntryItem.destinationPrefixList ?? 'N/A',
@@ -137,18 +143,27 @@ export class VpcRouteEntriesBaseStack extends AcceleratorStack {
           switch (routeTableEntryItem.type) {
             case 'transitGateway':
               this.logger.info(
-                `Creating transit gateway route table entry for route table ${routeTableEntryItem.name} for vpc ${this.vpcDetails.name}`,
+                `Creating transit gateway route entry ${routeTableEntryItem.name} for route table ${routeTableItem.name} for vpc ${this.vpcDetails.name}`,
               );
-              routeProps.targetId = cdk.aws_ssm.StringParameter.valueForStringParameter(
-                this,
-                this.getSsmPath(SsmResourceType.TGW, [routeEntryTarget]),
+              const transitGatewayId = this.getTransitGatewayId(
+                routeTableItem.name,
+                routeTableEntryItem.name,
+                routeEntryTarget,
               );
+
+              if (!transitGatewayId) {
+                throw new Error(
+                  `Cannot create transit gateway route entry ${routeTableEntryItem.name} for route table ${routeTableItem.name} in VPC ${this.vpcDetails.name} because unable to fetch transit gateway id for ${routeEntryTarget} transit gateway.`,
+                );
+              }
+
+              routeProps.targetId = transitGatewayId;
 
               this.addTransitGatewayRoute(routeProps, metadata);
               break;
             case 'natGateway':
               this.logger.info(
-                `Creating NAT gateway route table entry for route table ${routeTableEntryItem.name} for vpc ${this.vpcDetails.name}`,
+                `Creating NAT gateway route entry ${routeTableEntryItem.name} for route table ${routeTableItem.name} for vpc ${this.vpcDetails.name}`,
               );
               routeProps.targetId = cdk.aws_ssm.StringParameter.valueForStringParameter(
                 this,
@@ -159,11 +174,11 @@ export class VpcRouteEntriesBaseStack extends AcceleratorStack {
               break;
             case 'internetGateway':
               this.logger.info(
-                `Creating internet gateway route table entry for route table ${routeTableEntryItem.name} for vpc ${this.vpcDetails.name}`,
+                `Creating internet gateway route entry ${routeTableEntryItem.name} for route table ${routeTableItem.name} for vpc ${this.vpcDetails.name}`,
               );
               if (!this.vpcDetails.internetGateway) {
                 throw new Error(
-                  `Cannot create internet gateway route for route table ${routeTableEntryItem.name} for VPC ${this.vpcDetails.name} because internetGateway is not enabled`,
+                  `Cannot create internet gateway route entry ${routeTableEntryItem.name} for route table ${routeTableItem.name} in VPC ${this.vpcDetails.name} because internetGateway is not enabled`,
                 );
               }
 
@@ -176,12 +191,12 @@ export class VpcRouteEntriesBaseStack extends AcceleratorStack {
               break;
             case 'egressOnlyIgw':
               this.logger.info(
-                `Creating egress only internet gateway route table entry for route table ${routeTableEntryItem.name} for vpc ${this.vpcDetails.name}`,
+                `Creating egress only internet gateway route entry ${routeTableEntryItem.name} for route table ${routeTableItem.name} for vpc ${this.vpcDetails.name}`,
               );
 
               if (!this.vpcDetails.egressOnlyIgw) {
                 throw new Error(
-                  `Cannot create egress only internet gateway route for route table ${routeTableEntryItem.name} for VPC ${this.vpcDetails.name} because egressOnlyIgw is not enabled`,
+                  `Cannot create egress only internet gateway route entry ${routeTableEntryItem.name} for route table ${routeTableItem.name} in VPC ${this.vpcDetails.name} because egressOnlyIgw is not enabled`,
                 );
               }
 
@@ -194,7 +209,7 @@ export class VpcRouteEntriesBaseStack extends AcceleratorStack {
               break;
             case 'virtualPrivateGateway':
               this.logger.info(
-                `Creating virtual private gateway route table entry for route table ${routeTableEntryItem.name} for vpc ${this.vpcDetails.name}`,
+                `Creating virtual private gateway route entry ${routeTableEntryItem.name} for route table ${routeTableItem.name} for vpc ${this.vpcDetails.name}`,
               );
 
               routeProps.targetId = cdk.aws_ssm.StringParameter.valueForStringParameter(
@@ -206,7 +221,7 @@ export class VpcRouteEntriesBaseStack extends AcceleratorStack {
               break;
             case 'localGateway':
               this.logger.info(
-                `Creating local gateway route table entry for route table ${routeTableEntryItem.name} for vpc ${this.vpcDetails.name}`,
+                `Creating local gateway route entry ${routeTableEntryItem.name} for route table ${routeTableItem.name} for vpc ${this.vpcDetails.name}`,
               );
 
               const localGatewayIdFromVpcOutpost = this.getLocalGatewayIdFromVpcOutpost(
@@ -216,20 +231,77 @@ export class VpcRouteEntriesBaseStack extends AcceleratorStack {
 
               if (!localGatewayIdFromVpcOutpost) {
                 throw new Error(
-                  `Cannot create local gateway route for route table ${routeTableEntryItem.name} for VPC ${this.vpcDetails.name} because local gateway id is not found`,
+                  `Cannot create local gateway route entry ${routeTableEntryItem.name} for route table ${routeTableItem.name} in VPC ${this.vpcDetails.name} because local gateway id is not found`,
                 );
               }
               routeProps.targetId = localGatewayIdFromVpcOutpost;
 
               this.addLocalGatewayRoute(routeProps, metadata);
               break;
+            default:
+              this.logger.info(
+                `Route type '${routeTableEntryItem.type}' for route entry ${routeTableEntryItem.name} in route table ${routeTableItem.name} for VPC ${this.vpcDetails.name} will be handled by another stack`,
+              );
+              break;
           }
         }
       } else {
         this.logger.info(
-          `Route entry ${routeTableEntryItem.name} for route table ${routeTableEntryItem.name} in vpc ${this.vpcDetails.name} exists in v2 stack skipping creation in v2 stack.`,
+          `Route entry ${routeTableEntryItem.name} for route table ${routeTableItem.name} in vpc ${this.vpcDetails.name} exists in v2 stack skipping creation in v2 stack.`,
         );
       }
+    }
+  }
+
+  /**
+   * Function to get Transit gateway id
+   * @param routeTableName string
+   * @param routeTableEntryName string
+   * @param transitGatewayName string
+   * @returns transitGatewayId string
+   */
+  private getTransitGatewayId(
+    routeTableName: string,
+    routeTableEntryName: string,
+    transitGatewayName: string,
+  ): string | undefined {
+    const transitGatewayItem = this.v2StackProps.networkConfig.transitGateways.find(
+      item => item.name === transitGatewayName,
+    );
+
+    if (!transitGatewayItem) {
+      return undefined;
+    }
+
+    const tgwAccountId = this.props.accountsConfig.getAccountId(transitGatewayItem.account);
+    if (tgwAccountId === cdk.Stack.of(this).account) {
+      this.logger.info(`Transit gateway ${transitGatewayName} is in the same account.`);
+      return cdk.aws_ssm.StringParameter.valueForStringParameter(
+        this,
+        this.getSsmPath(SsmResourceType.TGW, [transitGatewayName]),
+      );
+    } else {
+      this.logger.info(`Transit gateway ${transitGatewayName} is in a different account.`);
+      const logicalId = pascalCase(
+        `${routeTableName}RouteTable${routeTableEntryName}RouteEntry${transitGatewayName}Tgw`,
+      );
+      const resourceShareName = `${transitGatewayName}_TransitGatewayShare`;
+
+      const resourceShare = ResourceShare.fromLookup(this, pascalCase(`${logicalId}ResourceShare`), {
+        resourceShareOwner: ResourceShareOwner.OTHER_ACCOUNTS,
+        resourceShareName: resourceShareName,
+        owningAccountId: tgwAccountId,
+      });
+
+      // Represents the item shared by RAM
+      const resourceShareItem = ResourceShareItem.fromLookup(this, pascalCase(`${logicalId}ResourceShareItem`), {
+        resourceShare,
+        resourceShareItemType: 'ec2:TransitGateway',
+        kmsKey: this.cloudwatchKey,
+        logRetentionInDays: this.v2StackProps.globalConfig.cloudwatchLogRetentionInDays,
+      });
+
+      return resourceShareItem.resourceShareItemId;
     }
   }
 
@@ -237,7 +309,6 @@ export class VpcRouteEntriesBaseStack extends AcceleratorStack {
    * Determine whether to set prefix list, CIDR, or subnet reference for route destination
    * @param routeTableEntryItem {@link RouteTableEntryConfig}
    * @param subnets {@link SubnetConfig}[]
-   * @param routeTableEntryItem
    * @returns
    */
   private setRouteEntryDestination(
@@ -320,9 +391,9 @@ export class VpcRouteEntriesBaseStack extends AcceleratorStack {
   }
 
   /**
-   * Function to get outpost locate gateway id
+   * Function to get outpost local gateway id
    * @param outposts {@link OutpostsConfig}[]
-   * @param localGatewayName {@link RouteTableEntryConfig}
+   * @param routeTableEntryItem {@link RouteTableEntryConfig}
    * @returns string
    */
   private getLocalGatewayIdFromVpcOutpost(

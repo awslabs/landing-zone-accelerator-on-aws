@@ -1094,6 +1094,329 @@ exports[`NetworkVpcV2Stacks Construct(NackStack-Network-us-east-1-Network-Second
 }
 `;
 
+exports[`NetworkVpcV2Stacks Construct(RouteEntriesStack-Network-us-east-1-Network-Inspection-V2):  Snapshot Test 1`] = `
+{
+  "Metadata": {
+    "lzaLookup": {
+      "accountName": "Network",
+      "region": "us-east-1",
+      "stackGeneration": "v2",
+    },
+  },
+  "Parameters": {
+    "SsmParameterValueacceleratornetworktransitGatewaysNetworkMainidC96584B6F00A464EAD1953AFF4B05118Parameter": {
+      "Default": "/accelerator/network/transitGateways/Network-Main/id",
+      "Type": "AWS::SSM::Parameter::Value<String>",
+    },
+    "SsmParameterValueacceleratornetworkvpcNetworkInspectionV2idC96584B6F00A464EAD1953AFF4B05118Parameter": {
+      "Default": "/accelerator/network/vpc/Network-Inspection-V2/id",
+      "Type": "AWS::SSM::Parameter::Value<String>",
+    },
+    "SsmParameterValueacceleratornetworkvpcNetworkInspectionV2routeTableNetworkInspectionAidC96584B6F00A464EAD1953AFF4B05118Parameter": {
+      "Default": "/accelerator/network/vpc/Network-Inspection-V2/routeTable/Network-Inspection-A/id",
+      "Type": "AWS::SSM::Parameter::Value<String>",
+    },
+    "SsmParameterValueacceleratornetworkvpcNetworkInspectionV2routeTableNetworkInspectionBidC96584B6F00A464EAD1953AFF4B05118Parameter": {
+      "Default": "/accelerator/network/vpc/Network-Inspection-V2/routeTable/Network-Inspection-B/id",
+      "Type": "AWS::SSM::Parameter::Value<String>",
+    },
+  },
+  "Resources": {
+    "CustomGetResourceShareCustomResourceProviderHandler5DB0EF7A": {
+      "DependsOn": [
+        "CustomGetResourceShareCustomResourceProviderRoleBC3FCEEF",
+      ],
+      "Properties": {
+        "Code": {
+          "S3Bucket": "cdk-hnb659fds-assets-555555555555-us-east-1",
+          "S3Key": "REPLACED-GENERATED-NAME.zip",
+        },
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.0",
+          },
+        },
+        "Handler": "__entrypoint__.handler",
+        "MemorySize": 512,
+        "Role": {
+          "Fn::GetAtt": [
+            "CustomGetResourceShareCustomResourceProviderRoleBC3FCEEF",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs20.x",
+        "Timeout": 900,
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "CustomGetResourceShareCustomResourceProviderRoleBC3FCEEF": {
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": [
+          {
+            "Fn::Sub": "arn:\${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+          },
+        ],
+        "Policies": [
+          {
+            "PolicyDocument": {
+              "Statement": [
+                {
+                  "Action": [
+                    "ram:AcceptResourceShareInvitation",
+                    "ram:GetResourceShareInvitations",
+                    "ram:GetResourceShares",
+                  ],
+                  "Effect": "Allow",
+                  "Resource": "*",
+                },
+              ],
+              "Version": "2012-10-17",
+            },
+            "PolicyName": "Inline",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "CustomGetResourceShareItemCustomResourceProviderHandlerE72D791B": {
+      "DependsOn": [
+        "CustomGetResourceShareItemCustomResourceProviderRoleA7181EBA",
+      ],
+      "Properties": {
+        "Code": {
+          "S3Bucket": "cdk-hnb659fds-assets-555555555555-us-east-1",
+          "S3Key": "REPLACED-GENERATED-NAME.zip",
+        },
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.0",
+          },
+        },
+        "Handler": "__entrypoint__.handler",
+        "MemorySize": 512,
+        "Role": {
+          "Fn::GetAtt": [
+            "CustomGetResourceShareItemCustomResourceProviderRoleA7181EBA",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs20.x",
+        "Timeout": 900,
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "CustomGetResourceShareItemCustomResourceProviderLogGroup6DB08FC0": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "LogGroupName": {
+          "Fn::Join": [
+            "",
+            [
+              "/aws/lambda/",
+              {
+                "Ref": "CustomGetResourceShareItemCustomResourceProviderHandlerE72D791B",
+              },
+            ],
+          ],
+        },
+        "RetentionInDays": 3653,
+      },
+      "Type": "AWS::Logs::LogGroup",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "CustomGetResourceShareItemCustomResourceProviderRoleA7181EBA": {
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": [
+          {
+            "Fn::Sub": "arn:\${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+          },
+        ],
+        "Policies": [
+          {
+            "PolicyDocument": {
+              "Statement": [
+                {
+                  "Action": [
+                    "ram:ListResources",
+                  ],
+                  "Effect": "Allow",
+                  "Resource": "*",
+                },
+              ],
+              "Version": "2012-10-17",
+            },
+            "PolicyName": "Inline",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "NetworkInspectionARouteTableSharedTgwRouteRouteEntrySharedServicesMainTgwResourceShare6A306D4C": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "ServiceToken": {
+          "Fn::GetAtt": [
+            "CustomGetResourceShareCustomResourceProviderHandler5DB0EF7A",
+            "Arn",
+          ],
+        },
+        "name": "SharedServices-Main_TransitGatewayShare",
+        "owningAccountId": "444444444444",
+        "resourceOwner": "OTHER-ACCOUNTS",
+        "uuid": "REPLACED-UUID",
+      },
+      "Type": "Custom::GetResourceShare",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "NetworkInspectionARouteTableSharedTgwRouteRouteEntrySharedServicesMainTgwResourceShareItem3C8FABC3": {
+      "DeletionPolicy": "Delete",
+      "DependsOn": [
+        "CustomGetResourceShareItemCustomResourceProviderLogGroup6DB08FC0",
+      ],
+      "Properties": {
+        "ServiceToken": {
+          "Fn::GetAtt": [
+            "CustomGetResourceShareItemCustomResourceProviderHandlerE72D791B",
+            "Arn",
+          ],
+        },
+        "resourceOwner": "OTHER-ACCOUNTS",
+        "resourceShareArn": {
+          "Fn::Join": [
+            "",
+            [
+              "arn:",
+              {
+                "Ref": "AWS::Partition",
+              },
+              ":ram:us-east-1:444444444444:resource-share/",
+              {
+                "Ref": "NetworkInspectionARouteTableSharedTgwRouteRouteEntrySharedServicesMainTgwResourceShare6A306D4C",
+              },
+            ],
+          ],
+        },
+        "resourceType": "ec2:TransitGateway",
+        "uuid": "REPLACED-UUID",
+      },
+      "Type": "Custom::GetResourceShareItem",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "NetworkInspectionV2VpcNetworkInspectionARouteTableSharedTgwRouteRouteEntry": {
+      "Metadata": {
+        "lzaLookup": {
+          "entryDestinationPrefixList": "N/A",
+          "entryName": "SharedTgwRoute",
+          "entryTarget": "SharedServices-Main",
+          "entryType": "transitGateway",
+          "resourceType": "route-entry",
+          "routeTableName": "Network-Inspection-A",
+          "vpcName": "Network-Inspection-V2",
+        },
+      },
+      "Properties": {
+        "DestinationCidrBlock": "0.0.0.0/0",
+        "RouteTableId": {
+          "Ref": "SsmParameterValueacceleratornetworkvpcNetworkInspectionV2routeTableNetworkInspectionAidC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+        "TransitGatewayId": {
+          "Ref": "NetworkInspectionARouteTableSharedTgwRouteRouteEntrySharedServicesMainTgwResourceShareItem3C8FABC3",
+        },
+      },
+      "Type": "AWS::EC2::Route",
+    },
+    "NetworkInspectionV2VpcNetworkInspectionARouteTableTgwRouteRouteEntry": {
+      "Metadata": {
+        "lzaLookup": {
+          "entryDestinationPrefixList": "N/A",
+          "entryName": "TgwRoute",
+          "entryTarget": "Network-Main",
+          "entryType": "transitGateway",
+          "resourceType": "route-entry",
+          "routeTableName": "Network-Inspection-A",
+          "vpcName": "Network-Inspection-V2",
+        },
+      },
+      "Properties": {
+        "DestinationCidrBlock": "0.0.0.0/0",
+        "RouteTableId": {
+          "Ref": "SsmParameterValueacceleratornetworkvpcNetworkInspectionV2routeTableNetworkInspectionAidC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+        "TransitGatewayId": {
+          "Ref": "SsmParameterValueacceleratornetworktransitGatewaysNetworkMainidC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+      },
+      "Type": "AWS::EC2::Route",
+    },
+    "NetworkInspectionV2VpcNetworkInspectionBRouteTableTgwRouteRouteEntry": {
+      "Metadata": {
+        "lzaLookup": {
+          "entryDestinationPrefixList": "N/A",
+          "entryName": "TgwRoute",
+          "entryTarget": "Network-Main",
+          "entryType": "transitGateway",
+          "resourceType": "route-entry",
+          "routeTableName": "Network-Inspection-B",
+          "vpcName": "Network-Inspection-V2",
+        },
+      },
+      "Properties": {
+        "DestinationCidrBlock": "0.0.0.0/0",
+        "RouteTableId": {
+          "Ref": "SsmParameterValueacceleratornetworkvpcNetworkInspectionV2routeTableNetworkInspectionBidC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+        "TransitGatewayId": {
+          "Ref": "SsmParameterValueacceleratornetworktransitGatewaysNetworkMainidC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+      },
+      "Type": "AWS::EC2::Route",
+    },
+    "SsmParamAcceleratorVersionFF83282D": {
+      "Properties": {
+        "Name": "/accelerator/AWSAccelerator-RouteEntriesStack-Network-Inspection-V2-555555555555-us-east-1/version",
+        "Type": "String",
+        "Value": "1.12.0",
+      },
+      "Type": "AWS::SSM::Parameter",
+    },
+    "SsmParamStackId521A78D3": {
+      "Properties": {
+        "Name": "/accelerator/AWSAccelerator-RouteEntriesStack-Network-Inspection-V2-555555555555-us-east-1/stack-id",
+        "Type": "String",
+        "Value": {
+          "Ref": "AWS::StackId",
+        },
+      },
+      "Type": "AWS::SSM::Parameter",
+    },
+  },
+}
+`;
+
 exports[`NetworkVpcV2Stacks Construct(RouteEntriesStack-Network-us-east-1-Network-Secondary):  Snapshot Test 1`] = `
 {
   "Metadata": {
@@ -1150,24 +1473,20 @@ exports[`NetworkVpcV2Stacks Construct(RouteEntriesStack-Network-us-east-1-Networ
       "Default": "/accelerator/network/vpc/Network-Secondary-V2/id",
       "Type": "AWS::SSM::Parameter::Value<String>",
     },
-    "SsmParameterValueacceleratornetworkvpcNetworkSecondaryV2routeTableLgwRouteidC96584B6F00A464EAD1953AFF4B05118Parameter": {
-      "Default": "/accelerator/network/vpc/Network-Secondary-V2/routeTable/LgwRoute/id",
-      "Type": "AWS::SSM::Parameter::Value<String>",
-    },
-    "SsmParameterValueacceleratornetworkvpcNetworkSecondaryV2routeTableeigwRouteidC96584B6F00A464EAD1953AFF4B05118Parameter": {
-      "Default": "/accelerator/network/vpc/Network-Secondary-V2/routeTable/eigwRoute/id",
+    "SsmParameterValueacceleratornetworkvpcNetworkSecondaryV2routeTableNetworkSecondaryBRtidC96584B6F00A464EAD1953AFF4B05118Parameter": {
+      "Default": "/accelerator/network/vpc/Network-Secondary-V2/routeTable/Network-Secondary-B-Rt/id",
       "Type": "AWS::SSM::Parameter::Value<String>",
     },
   },
   "Resources": {
-    "NetworkSecondaryV2VpcNetworkSecondaryBRtRouteTableEigwRoute": {
+    "NetworkSecondaryV2VpcNetworkSecondaryBRtRouteTableEigwRouteRouteEntry": {
       "Metadata": {
         "lzaLookup": {
           "entryDestinationPrefixList": "N/A",
           "entryName": "eigwRoute",
           "entryType": "egressOnlyIgw",
           "resourceType": "route-entry",
-          "routeTableName": "eigwRoute",
+          "routeTableName": "Network-Secondary-B-Rt",
           "vpcName": "Network-Secondary-V2",
         },
       },
@@ -1177,12 +1496,12 @@ exports[`NetworkVpcV2Stacks Construct(RouteEntriesStack-Network-us-east-1-Networ
           "Ref": "SsmParameterValueacceleratornetworkvpcNetworkSecondaryV2egressonlyigwidC96584B6F00A464EAD1953AFF4B05118Parameter",
         },
         "RouteTableId": {
-          "Ref": "SsmParameterValueacceleratornetworkvpcNetworkSecondaryV2routeTableeigwRouteidC96584B6F00A464EAD1953AFF4B05118Parameter",
+          "Ref": "SsmParameterValueacceleratornetworkvpcNetworkSecondaryV2routeTableNetworkSecondaryBRtidC96584B6F00A464EAD1953AFF4B05118Parameter",
         },
       },
       "Type": "AWS::EC2::Route",
     },
-    "NetworkSecondaryV2VpcNetworkSecondaryBRtRouteTableLgwRoute": {
+    "NetworkSecondaryV2VpcNetworkSecondaryBRtRouteTableLgwRouteRouteEntry": {
       "Metadata": {
         "lzaLookup": {
           "entryDestinationPrefixList": "N/A",
@@ -1190,7 +1509,7 @@ exports[`NetworkVpcV2Stacks Construct(RouteEntriesStack-Network-us-east-1-Networ
           "entryTarget": "accelerator-lgw-1",
           "entryType": "localGateway",
           "resourceType": "route-entry",
-          "routeTableName": "LgwRoute",
+          "routeTableName": "Network-Secondary-B-Rt",
           "vpcName": "Network-Secondary-V2",
         },
       },
@@ -1198,7 +1517,7 @@ exports[`NetworkVpcV2Stacks Construct(RouteEntriesStack-Network-us-east-1-Networ
         "DestinationCidrBlock": "0.0.0.0/0",
         "LocalGatewayId": "lgw-abcxyz",
         "RouteTableId": {
-          "Ref": "SsmParameterValueacceleratornetworkvpcNetworkSecondaryV2routeTableLgwRouteidC96584B6F00A464EAD1953AFF4B05118Parameter",
+          "Ref": "SsmParameterValueacceleratornetworkvpcNetworkSecondaryV2routeTableNetworkSecondaryBRtidC96584B6F00A464EAD1953AFF4B05118Parameter",
         },
       },
       "Type": "AWS::EC2::Route",
