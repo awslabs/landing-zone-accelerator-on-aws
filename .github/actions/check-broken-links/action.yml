@@ -1,0 +1,29 @@
+name: 'Check Broken Links'
+description: 'Checks for broken links for given input URLs, currently used for doc links.'
+inputs:
+  url:
+    description: 'URL to check for broken links'
+    required: true
+  exclude:
+    description: 'Domain to exclude from checking'
+    required: false
+    default: ''
+runs:
+  using: "composite"
+  steps:
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+    - name: Install broken-link-checker
+      shell: bash
+      run: npm install -g broken-link-checker
+    - name: Run broken-link-checker
+      shell: bash
+      run: |
+        if blc ${{ inputs.url }} -ro ${inputs.exclude:+--exclude ${{ inputs.exclude }}} | grep "BROKEN"; then
+          echo "Broken links were found. Please check the output above."
+          exit 1
+        else
+          echo "No broken links found!"
+        fi
