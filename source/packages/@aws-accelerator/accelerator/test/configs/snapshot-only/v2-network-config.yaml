@@ -2880,6 +2880,10 @@ vpcs:
             destination: 0.0.0.0/0
             type: transitGateway
             target: Network-Main
+          - name: SharedTgwRoute
+            destination: 0.0.0.0/0
+            type: transitGateway
+            target: SharedServices-Main            
           - name: S3Gateway
             type: gatewayEndpoint
             target: s3

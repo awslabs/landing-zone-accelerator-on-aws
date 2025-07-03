@@ -70,6 +70,10 @@ const v2TestNamePatterns: { testName: string; stackKey: string }[] = [
     stackKey: 'RouteEntriesStack-Network-us-east-1-Network-Secondary',
   },
   {
+    testName: 'Construct(RouteEntriesStack-Network-us-east-1-Network-Inspection-V2): ',
+    stackKey: 'RouteEntriesStack-Network-us-east-1-Network-Inspection-V2',
+  },
+  {
     testName: 'Construct(NackStack-Network-us-east-1-Network-Secondary-V2): ',
     stackKey: 'NackStack-Network-us-east-1-Network-Secondary-V2',
   },
