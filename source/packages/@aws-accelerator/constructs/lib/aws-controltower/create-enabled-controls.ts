@@ -75,16 +75,29 @@ export class CreateControlTowerEnabledControls extends Construct {
 
   private enableControlTowerControls(controls: EnabledControlProps[]) {
     return controls.map(control => {
-      const enabledControlArn = `arn:${cdk.Stack.of(this).partition}:controltower:${
-        cdk.Stack.of(this).region
-      }::control/${control.enabledControlIdentifier}`;
+      let arnComponents = {
+        resource: 'control',
+        service: 'controlcatalog',
+        resourceName: control.enabledControlIdentifier,
+        partition: cdk.Stack.of(this).partition,
+        account: '',
+        region: '',
+      };
+
+      if (control.enabledControlIdentifier.startsWith('AWS-GR')) {
+        arnComponents = {
+          ...arnComponents,
+          service: 'controltower',
+          region: cdk.Stack.of(this).region,
+        };
+      }
 
       return new cdk.aws_controltower.CfnEnabledControl(
         // Scope is set to the parent stack to maintain logical IDs of already deployed resources. Do not change this value!
         cdk.Stack.of(this),
         pascalCase(`${control.enabledControlIdentifier}-${control.ouName}`),
         {
-          controlIdentifier: enabledControlArn,
+          controlIdentifier: cdk.Arn.format(arnComponents),
           targetIdentifier: control.ouArn,
         },
       );
