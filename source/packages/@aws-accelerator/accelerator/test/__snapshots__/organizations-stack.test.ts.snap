@@ -3414,6 +3414,27 @@ exports[`OrganizationsStack Construct(OrganizationsStack):  Snapshot Test 1`] = 
     },
   },
   "Resources": {
+    "6s095tcdtgab75dd0229m5x6nSecureWorkloads": {
+      "DependsOn": [
+        "AwsGrRestrictRootUserAccessKeysSecureWorkloads",
+      ],
+      "Properties": {
+        "ControlIdentifier": {
+          "Fn::Join": [
+            "",
+            [
+              "arn:",
+              {
+                "Ref": "AWS::Partition",
+              },
+              ":controlcatalog:::control/6s095tcdtgab75dd0229m5x6n",
+            ],
+          ],
+        },
+        "TargetIdentifier": "arn:aws:organizations::111111111111:ou/o-asdf123456/ou-asdf-33333333",
+      },
+      "Type": "AWS::ControlTower::EnabledControl",
+    },
     "AcceleratorImportedCentralLogBucketKeyLookupCDD7B719": {
       "DeletionPolicy": "Delete",
       "DependsOn": [

@@ -67,6 +67,11 @@ controlTower:
       deploymentTargets:
         organizationalUnits:
           - SecureWorkloads
+    - identifier: 6s095tcdtgab75dd0229m5x6n
+      enable: true
+      deploymentTargets:
+        organizationalUnits:
+          - SecureWorkloads
 cdkOptions:
   centralizeBuckets: true
   useManagementAccessRole: true
