@@ -184,7 +184,6 @@ export class OperationsStack extends AcceleratorStack {
    * Create Session Manager IAM Policy and Attach to IAM Role(s)
    */
   private createSessionManagerPolicy() {
-    const cloudWatchLogGroupList: string[] = this.getCloudWatchLogGroupList();
     const sessionManagerCloudWatchLogGroupList: string[] = this.getSessionManagerCloudWatchLogGroupList();
     const s3BucketList: string[] = this.getS3BucketList();
 
@@ -199,7 +198,6 @@ export class OperationsStack extends AcceleratorStack {
       attachPolicyToIamRoles: this.props.globalConfig.logging.sessionManager.attachPolicyToIamRoles,
       region: cdk.Stack.of(this).region,
       enabledRegions: this.props.globalConfig.enabledRegions,
-      cloudWatchLogGroupList: cloudWatchLogGroupList ?? undefined,
       sessionManagerCloudWatchLogGroupList: sessionManagerCloudWatchLogGroupList ?? undefined,
       s3BucketList: s3BucketList ?? undefined,
       prefixes: {
@@ -1382,36 +1380,6 @@ export class OperationsStack extends AcceleratorStack {
         index += 1;
       }
     }
-  }
-
-  /**
-   * Function returns a list of CloudWatch Log Group ARNs
-   */
-  private getCloudWatchLogGroupList(): string[] {
-    const cloudWatchLogGroupListResources: string[] = [];
-    for (const regionItem of this.props.globalConfig.enabledRegions ?? []) {
-      const logGroupItem = `arn:${cdk.Stack.of(this).partition}:logs:${regionItem}:${
-        cdk.Stack.of(this).account
-      }:log-group:*`;
-
-      // Already in the list, skip
-      if (cloudWatchLogGroupListResources.includes(logGroupItem)) {
-        continue;
-      }
-
-      // Exclude regions is not used
-      if (this.props.globalConfig.logging.sessionManager.excludeRegions) {
-        // If exclude regions is defined, ensure not excluded
-        if (!this.props.globalConfig.logging.sessionManager.excludeRegions.includes(regionItem)) {
-          cloudWatchLogGroupListResources.push(logGroupItem);
-        }
-      }
-      // Exclude regions is not being used, add logGroupItem
-      else {
-        cloudWatchLogGroupListResources.push(logGroupItem);
-      }
-    }
-    return cloudWatchLogGroupListResources;
   }
 
   /**
