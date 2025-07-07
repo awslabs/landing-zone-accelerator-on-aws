@@ -89,36 +89,10 @@ exports[`GuardDutyOrganizationAdminAccount Construct(GuardDutyOrganizationAdminA
                     "organizations:ListAccounts",
                     "organizations:ListDelegatedAdministrators",
                     "organizations:RegisterDelegatedAdministrator",
-                    "organizations:ServicePrincipal",
-                    "organizations:UpdateOrganizationConfiguration",
                   ],
                   "Condition": {
                     "StringLikeIfExists": {
-                      "organizations:DeregisterDelegatedAdministrator": [
-                        "guardduty.amazonaws.com",
-                      ],
-                      "organizations:DescribeOrganization": [
-                        "guardduty.amazonaws.com",
-                      ],
-                      "organizations:EnableAWSServiceAccess": [
-                        "guardduty.amazonaws.com",
-                      ],
-                      "organizations:ListAWSServiceAccessForOrganization": [
-                        "guardduty.amazonaws.com",
-                      ],
-                      "organizations:ListAccounts": [
-                        "guardduty.amazonaws.com",
-                      ],
-                      "organizations:ListDelegatedAdministrators": [
-                        "guardduty.amazonaws.com",
-                      ],
-                      "organizations:RegisterDelegatedAdministrator": [
-                        "guardduty.amazonaws.com",
-                      ],
                       "organizations:ServicePrincipal": [
-                        "guardduty.amazonaws.com",
-                      ],
-                      "organizations:UpdateOrganizationConfiguration": [
                         "guardduty.amazonaws.com",
                       ],
                     },
