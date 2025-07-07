@@ -146,7 +146,6 @@ controlTower:
           - SecureWorkloads
           - Devops
           - Infrastructure
-          - Security
           - Level1
 cdkOptions:
   centralizeBuckets: true
