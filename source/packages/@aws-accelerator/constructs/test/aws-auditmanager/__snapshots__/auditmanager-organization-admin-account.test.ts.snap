@@ -120,16 +120,7 @@ exports[`AuditManagerOrganizationAdminAccount Construct(AuditManagerOrganization
                   ],
                   "Condition": {
                     "StringLikeIfExists": {
-                      "organizations:DescribeOrganization": [
-                        "auditmanager.amazonaws.com",
-                      ],
-                      "organizations:EnableAWSServiceAccess": [
-                        "auditmanager.amazonaws.com",
-                      ],
-                      "organizations:ListAWSServiceAccessForOrganization": [
-                        "auditmanager.amazonaws.com",
-                      ],
-                      "organizations:RegisterDelegatedAdministrator": [
+                      "organizations:ServicePrincipal": [
                         "auditmanager.amazonaws.com",
                       ],
                     },
@@ -144,7 +135,7 @@ exports[`AuditManagerOrganizationAdminAccount Construct(AuditManagerOrganization
                   ],
                   "Condition": {
                     "StringLikeIfExists": {
-                      "iam:CreateServiceLinkedRole": [
+                      "iam:AWSServiceName": [
                         "auditmanager.amazonaws.com",
                       ],
                     },

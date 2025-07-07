@@ -299,16 +299,7 @@ exports[`MultiOuOrganizationsStack Construct(OrganizationsStack):  Snapshot Test
                   ],
                   "Condition": {
                     "StringLikeIfExists": {
-                      "organizations:DescribeOrganization": [
-                        "auditmanager.amazonaws.com",
-                      ],
-                      "organizations:EnableAWSServiceAccess": [
-                        "auditmanager.amazonaws.com",
-                      ],
-                      "organizations:ListAWSServiceAccessForOrganization": [
-                        "auditmanager.amazonaws.com",
-                      ],
-                      "organizations:RegisterDelegatedAdministrator": [
+                      "organizations:ServicePrincipal": [
                         "auditmanager.amazonaws.com",
                       ],
                     },
@@ -323,7 +314,7 @@ exports[`MultiOuOrganizationsStack Construct(OrganizationsStack):  Snapshot Test
                   ],
                   "Condition": {
                     "StringLikeIfExists": {
-                      "iam:CreateServiceLinkedRole": [
+                      "iam:AWSServiceName": [
                         "auditmanager.amazonaws.com",
                       ],
                     },
@@ -938,36 +929,10 @@ exports[`MultiOuOrganizationsStack Construct(OrganizationsStack):  Snapshot Test
                     "organizations:ListAccounts",
                     "organizations:ListDelegatedAdministrators",
                     "organizations:RegisterDelegatedAdministrator",
-                    "organizations:ServicePrincipal",
-                    "organizations:UpdateOrganizationConfiguration",
                   ],
                   "Condition": {
                     "StringLikeIfExists": {
-                      "organizations:DeregisterDelegatedAdministrator": [
-                        "guardduty.amazonaws.com",
-                      ],
-                      "organizations:DescribeOrganization": [
-                        "guardduty.amazonaws.com",
-                      ],
-                      "organizations:EnableAWSServiceAccess": [
-                        "guardduty.amazonaws.com",
-                      ],
-                      "organizations:ListAWSServiceAccessForOrganization": [
-                        "guardduty.amazonaws.com",
-                      ],
-                      "organizations:ListAccounts": [
-                        "guardduty.amazonaws.com",
-                      ],
-                      "organizations:ListDelegatedAdministrators": [
-                        "guardduty.amazonaws.com",
-                      ],
-                      "organizations:RegisterDelegatedAdministrator": [
-                        "guardduty.amazonaws.com",
-                      ],
                       "organizations:ServicePrincipal": [
-                        "guardduty.amazonaws.com",
-                      ],
-                      "organizations:UpdateOrganizationConfiguration": [
                         "guardduty.amazonaws.com",
                       ],
                     },
@@ -1073,39 +1038,12 @@ exports[`MultiOuOrganizationsStack Construct(OrganizationsStack):  Snapshot Test
                     "organizations:DescribeOrganization",
                     "organizations:EnableAWSServiceAccess",
                     "organizations:ListAWSServiceAccessForOrganization",
-                    "organizations:ListAccounts",
                     "organizations:ListDelegatedAdministrators",
                     "organizations:RegisterDelegatedAdministrator",
-                    "organizations:ServicePrincipal",
-                    "organizations:UpdateOrganizationConfiguration",
                   ],
                   "Condition": {
                     "StringLikeIfExists": {
-                      "organizations:DeregisterDelegatedAdministrator": [
-                        "macie.amazonaws.com",
-                      ],
-                      "organizations:DescribeOrganization": [
-                        "macie.amazonaws.com",
-                      ],
-                      "organizations:EnableAWSServiceAccess": [
-                        "macie.amazonaws.com",
-                      ],
-                      "organizations:ListAWSServiceAccessForOrganization": [
-                        "macie.amazonaws.com",
-                      ],
-                      "organizations:ListAccounts": [
-                        "macie.amazonaws.com",
-                      ],
-                      "organizations:ListDelegatedAdministrators": [
-                        "macie.amazonaws.com",
-                      ],
-                      "organizations:RegisterDelegatedAdministrator": [
-                        "macie.amazonaws.com",
-                      ],
                       "organizations:ServicePrincipal": [
-                        "macie.amazonaws.com",
-                      ],
-                      "organizations:UpdateOrganizationConfiguration": [
                         "macie.amazonaws.com",
                       ],
                     },
@@ -1132,7 +1070,7 @@ exports[`MultiOuOrganizationsStack Construct(OrganizationsStack):  Snapshot Test
                   ],
                   "Condition": {
                     "StringLikeIfExists": {
-                      "iam:CreateServiceLinkedRole": [
+                      "iam:AWSServiceName": [
                         "macie.amazonaws.com",
                       ],
                     },
@@ -3869,16 +3807,7 @@ exports[`OrganizationsStack Construct(OrganizationsStack):  Snapshot Test 1`] = 
                   ],
                   "Condition": {
                     "StringLikeIfExists": {
-                      "organizations:DescribeOrganization": [
-                        "auditmanager.amazonaws.com",
-                      ],
-                      "organizations:EnableAWSServiceAccess": [
-                        "auditmanager.amazonaws.com",
-                      ],
-                      "organizations:ListAWSServiceAccessForOrganization": [
-                        "auditmanager.amazonaws.com",
-                      ],
-                      "organizations:RegisterDelegatedAdministrator": [
+                      "organizations:ServicePrincipal": [
                         "auditmanager.amazonaws.com",
                       ],
                     },
@@ -3893,7 +3822,7 @@ exports[`OrganizationsStack Construct(OrganizationsStack):  Snapshot Test 1`] = 
                   ],
                   "Condition": {
                     "StringLikeIfExists": {
-                      "iam:CreateServiceLinkedRole": [
+                      "iam:AWSServiceName": [
                         "auditmanager.amazonaws.com",
                       ],
                     },
@@ -4508,36 +4437,10 @@ exports[`OrganizationsStack Construct(OrganizationsStack):  Snapshot Test 1`] = 
                     "organizations:ListAccounts",
                     "organizations:ListDelegatedAdministrators",
                     "organizations:RegisterDelegatedAdministrator",
-                    "organizations:ServicePrincipal",
-                    "organizations:UpdateOrganizationConfiguration",
                   ],
                   "Condition": {
                     "StringLikeIfExists": {
-                      "organizations:DeregisterDelegatedAdministrator": [
-                        "guardduty.amazonaws.com",
-                      ],
-                      "organizations:DescribeOrganization": [
-                        "guardduty.amazonaws.com",
-                      ],
-                      "organizations:EnableAWSServiceAccess": [
-                        "guardduty.amazonaws.com",
-                      ],
-                      "organizations:ListAWSServiceAccessForOrganization": [
-                        "guardduty.amazonaws.com",
-                      ],
-                      "organizations:ListAccounts": [
-                        "guardduty.amazonaws.com",
-                      ],
-                      "organizations:ListDelegatedAdministrators": [
-                        "guardduty.amazonaws.com",
-                      ],
-                      "organizations:RegisterDelegatedAdministrator": [
-                        "guardduty.amazonaws.com",
-                      ],
                       "organizations:ServicePrincipal": [
-                        "guardduty.amazonaws.com",
-                      ],
-                      "organizations:UpdateOrganizationConfiguration": [
                         "guardduty.amazonaws.com",
                       ],
                     },
@@ -4643,39 +4546,12 @@ exports[`OrganizationsStack Construct(OrganizationsStack):  Snapshot Test 1`] = 
                     "organizations:DescribeOrganization",
                     "organizations:EnableAWSServiceAccess",
                     "organizations:ListAWSServiceAccessForOrganization",
-                    "organizations:ListAccounts",
                     "organizations:ListDelegatedAdministrators",
                     "organizations:RegisterDelegatedAdministrator",
-                    "organizations:ServicePrincipal",
-                    "organizations:UpdateOrganizationConfiguration",
                   ],
                   "Condition": {
                     "StringLikeIfExists": {
-                      "organizations:DeregisterDelegatedAdministrator": [
-                        "macie.amazonaws.com",
-                      ],
-                      "organizations:DescribeOrganization": [
-                        "macie.amazonaws.com",
-                      ],
-                      "organizations:EnableAWSServiceAccess": [
-                        "macie.amazonaws.com",
-                      ],
-                      "organizations:ListAWSServiceAccessForOrganization": [
-                        "macie.amazonaws.com",
-                      ],
-                      "organizations:ListAccounts": [
-                        "macie.amazonaws.com",
-                      ],
-                      "organizations:ListDelegatedAdministrators": [
-                        "macie.amazonaws.com",
-                      ],
-                      "organizations:RegisterDelegatedAdministrator": [
-                        "macie.amazonaws.com",
-                      ],
                       "organizations:ServicePrincipal": [
-                        "macie.amazonaws.com",
-                      ],
-                      "organizations:UpdateOrganizationConfiguration": [
                         "macie.amazonaws.com",
                       ],
                     },
@@ -4702,7 +4578,7 @@ exports[`OrganizationsStack Construct(OrganizationsStack):  Snapshot Test 1`] = 
                   ],
                   "Condition": {
                     "StringLikeIfExists": {
-                      "iam:CreateServiceLinkedRole": [
+                      "iam:AWSServiceName": [
                         "macie.amazonaws.com",
                       ],
                     },
@@ -7327,16 +7203,7 @@ exports[`delegatedAdminStack Construct(OrganizationsStack):  Snapshot Test 1`] =
                   ],
                   "Condition": {
                     "StringLikeIfExists": {
-                      "organizations:DescribeOrganization": [
-                        "auditmanager.amazonaws.com",
-                      ],
-                      "organizations:EnableAWSServiceAccess": [
-                        "auditmanager.amazonaws.com",
-                      ],
-                      "organizations:ListAWSServiceAccessForOrganization": [
-                        "auditmanager.amazonaws.com",
-                      ],
-                      "organizations:RegisterDelegatedAdministrator": [
+                      "organizations:ServicePrincipal": [
                         "auditmanager.amazonaws.com",
                       ],
                     },
@@ -7351,7 +7218,7 @@ exports[`delegatedAdminStack Construct(OrganizationsStack):  Snapshot Test 1`] =
                   ],
                   "Condition": {
                     "StringLikeIfExists": {
-                      "iam:CreateServiceLinkedRole": [
+                      "iam:AWSServiceName": [
                         "auditmanager.amazonaws.com",
                       ],
                     },
@@ -7966,36 +7833,10 @@ exports[`delegatedAdminStack Construct(OrganizationsStack):  Snapshot Test 1`] =
                     "organizations:ListAccounts",
                     "organizations:ListDelegatedAdministrators",
                     "organizations:RegisterDelegatedAdministrator",
-                    "organizations:ServicePrincipal",
-                    "organizations:UpdateOrganizationConfiguration",
                   ],
                   "Condition": {
                     "StringLikeIfExists": {
-                      "organizations:DeregisterDelegatedAdministrator": [
-                        "guardduty.amazonaws.com",
-                      ],
-                      "organizations:DescribeOrganization": [
-                        "guardduty.amazonaws.com",
-                      ],
-                      "organizations:EnableAWSServiceAccess": [
-                        "guardduty.amazonaws.com",
-                      ],
-                      "organizations:ListAWSServiceAccessForOrganization": [
-                        "guardduty.amazonaws.com",
-                      ],
-                      "organizations:ListAccounts": [
-                        "guardduty.amazonaws.com",
-                      ],
-                      "organizations:ListDelegatedAdministrators": [
-                        "guardduty.amazonaws.com",
-                      ],
-                      "organizations:RegisterDelegatedAdministrator": [
-                        "guardduty.amazonaws.com",
-                      ],
                       "organizations:ServicePrincipal": [
-                        "guardduty.amazonaws.com",
-                      ],
-                      "organizations:UpdateOrganizationConfiguration": [
                         "guardduty.amazonaws.com",
                       ],
                     },
@@ -8101,39 +7942,12 @@ exports[`delegatedAdminStack Construct(OrganizationsStack):  Snapshot Test 1`] =
                     "organizations:DescribeOrganization",
                     "organizations:EnableAWSServiceAccess",
                     "organizations:ListAWSServiceAccessForOrganization",
-                    "organizations:ListAccounts",
                     "organizations:ListDelegatedAdministrators",
                     "organizations:RegisterDelegatedAdministrator",
-                    "organizations:ServicePrincipal",
-                    "organizations:UpdateOrganizationConfiguration",
                   ],
                   "Condition": {
                     "StringLikeIfExists": {
-                      "organizations:DeregisterDelegatedAdministrator": [
-                        "macie.amazonaws.com",
-                      ],
-                      "organizations:DescribeOrganization": [
-                        "macie.amazonaws.com",
-                      ],
-                      "organizations:EnableAWSServiceAccess": [
-                        "macie.amazonaws.com",
-                      ],
-                      "organizations:ListAWSServiceAccessForOrganization": [
-                        "macie.amazonaws.com",
-                      ],
-                      "organizations:ListAccounts": [
-                        "macie.amazonaws.com",
-                      ],
-                      "organizations:ListDelegatedAdministrators": [
-                        "macie.amazonaws.com",
-                      ],
-                      "organizations:RegisterDelegatedAdministrator": [
-                        "macie.amazonaws.com",
-                      ],
                       "organizations:ServicePrincipal": [
-                        "macie.amazonaws.com",
-                      ],
-                      "organizations:UpdateOrganizationConfiguration": [
                         "macie.amazonaws.com",
                       ],
                     },
@@ -8160,7 +7974,7 @@ exports[`delegatedAdminStack Construct(OrganizationsStack):  Snapshot Test 1`] =
                   ],
                   "Condition": {
                     "StringLikeIfExists": {
-                      "iam:CreateServiceLinkedRole": [
+                      "iam:AWSServiceName": [
                         "macie.amazonaws.com",
                       ],
                     },

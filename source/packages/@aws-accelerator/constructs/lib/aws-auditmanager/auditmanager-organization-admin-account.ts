@@ -109,10 +109,7 @@ export class AuditManagerOrganizationAdminAccount extends Construct {
         Resource: '*',
         Condition: {
           StringLikeIfExists: {
-            'organizations:DescribeOrganization': [serviceName],
-            'organizations:EnableAWSServiceAccess': [serviceName],
-            'organizations:ListAWSServiceAccessForOrganization': [serviceName],
-            'organizations:RegisterDelegatedAdministrator': [serviceName],
+            'organizations:ServicePrincipal': [serviceName],
           },
         },
       },
@@ -123,7 +120,7 @@ export class AuditManagerOrganizationAdminAccount extends Construct {
         Resource: `arn:${partition}:iam::*:role/aws-service-role/${serviceName}/AWSServiceRoleForAuditManager`,
         Condition: {
           StringLikeIfExists: {
-            'iam:CreateServiceLinkedRole': [serviceName],
+            'iam:AWSServiceName': [serviceName],
           },
         },
       },
