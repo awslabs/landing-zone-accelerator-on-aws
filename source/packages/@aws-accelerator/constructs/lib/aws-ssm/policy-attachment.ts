@@ -29,7 +29,6 @@ export interface SsmSessionManagerPolicyProps {
   readonly attachPolicyToIamRoles?: string[];
   readonly region: string;
   readonly enabledRegions: string[];
-  readonly cloudWatchLogGroupList: string[] | undefined;
   readonly sessionManagerCloudWatchLogGroupList: string[] | undefined;
   readonly s3BucketList: string[] | undefined;
   readonly prefixes: { accelerator: string; ssmLog: string };
@@ -79,16 +78,10 @@ export class SsmSessionManagerPolicy extends Construct {
     if (props.sendToCloudWatchLogs) {
       sessionManagerEC2PolicyDocument.addStatements(
         new cdk.aws_iam.PolicyStatement({
-          sid: 'CloudWatchDescribe',
-          effect: cdk.aws_iam.Effect.ALLOW,
-          actions: ['logs:DescribeLogGroups'],
-          resources: props.sessionManagerCloudWatchLogGroupList,
-        }),
-        new cdk.aws_iam.PolicyStatement({
           sid: 'CloudWatchLogs',
           effect: cdk.aws_iam.Effect.ALLOW,
           actions: ['logs:CreateLogStream', 'logs:PutLogEvents', 'logs:DescribeLogStreams', 'logs:DescribeLogGroups'],
-          resources: props.cloudWatchLogGroupList,
+          resources: props.sessionManagerCloudWatchLogGroupList,
         }),
       );
     }
