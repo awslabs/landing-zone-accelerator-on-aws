@@ -33,15 +33,6 @@ exports[`SsmSessionManagerPolicy Construct(SsmSessionManagerPolicy):  Snapshot T
               "Resource": "*",
             },
             {
-              "Action": "logs:DescribeLogGroups",
-              "Effect": "Allow",
-              "Resource": [
-                "arn:aws:logs:us-east-1:111111111111:log-group:aws-accelerator-sessionmanager-logs:*",
-                "arn:aws:logs:us-west-2:111111111111:log-group:aws-accelerator-sessionmanager-logs:*",
-              ],
-              "Sid": "CloudWatchDescribe",
-            },
-            {
               "Action": [
                 "logs:CreateLogStream",
                 "logs:PutLogEvents",
@@ -50,8 +41,8 @@ exports[`SsmSessionManagerPolicy Construct(SsmSessionManagerPolicy):  Snapshot T
               ],
               "Effect": "Allow",
               "Resource": [
-                "arn:aws:logs:us-east-1:111111111111:log-group:*",
-                "arn:aws:logs:us-west-2:111111111111:log-group:*",
+                "arn:aws:logs:us-east-1:111111111111:log-group:aws-accelerator-sessionmanager-logs:*",
+                "arn:aws:logs:us-west-2:111111111111:log-group:aws-accelerator-sessionmanager-logs:*",
               ],
               "Sid": "CloudWatchLogs",
             },
