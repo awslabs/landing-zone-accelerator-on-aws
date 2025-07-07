@@ -92,24 +92,13 @@ export class MacieOrganizationAdminAccount extends Construct {
           'organizations:DescribeOrganization',
           'organizations:EnableAWSServiceAccess',
           'organizations:ListAWSServiceAccessForOrganization',
-          'organizations:ListAccounts',
           'organizations:ListDelegatedAdministrators',
           'organizations:RegisterDelegatedAdministrator',
-          'organizations:ServicePrincipal',
-          'organizations:UpdateOrganizationConfiguration',
         ],
         Resource: '*',
         Condition: {
           StringLikeIfExists: {
-            'organizations:DeregisterDelegatedAdministrator': ['macie.amazonaws.com'],
-            'organizations:DescribeOrganization': ['macie.amazonaws.com'],
-            'organizations:EnableAWSServiceAccess': ['macie.amazonaws.com'],
-            'organizations:ListAWSServiceAccessForOrganization': ['macie.amazonaws.com'],
-            'organizations:ListAccounts': ['macie.amazonaws.com'],
-            'organizations:ListDelegatedAdministrators': ['macie.amazonaws.com'],
-            'organizations:RegisterDelegatedAdministrator': ['macie.amazonaws.com'],
             'organizations:ServicePrincipal': ['macie.amazonaws.com'],
-            'organizations:UpdateOrganizationConfiguration': ['macie.amazonaws.com'],
           },
         },
       },
@@ -132,7 +121,7 @@ export class MacieOrganizationAdminAccount extends Construct {
         Resource: `arn:aws:${partition}::*:role/aws-service-role/macie.amazonaws.com/AWSServiceRoleForAmazonMacie`,
         Condition: {
           StringLikeIfExists: {
-            'iam:CreateServiceLinkedRole': ['macie.amazonaws.com'],
+            'iam:AWSServiceName': ['macie.amazonaws.com'],
           },
         },
       },
