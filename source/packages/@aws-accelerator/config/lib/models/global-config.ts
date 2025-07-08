@@ -143,8 +143,11 @@ export interface IControlTowerLandingZoneConfig {
  * This allows you to enable Strongly Recommended or Elective Controls
  * https://docs.aws.amazon.com/controltower/latest/userguide/optional-controls.html
  *
- * @remarks AWS Control Tower is limited to 10 concurrent operations, where enabling a control for one Organizational Unit constitutes a single operation.
+ * @remarks
+ * AWS Control Tower is limited to 10 concurrent operations, where enabling a control for one Organizational Unit constitutes a single operation.
  * To avoid throttling, please enable controls in batches of 10 or fewer each pipeline run. Keep in mind other Control Tower operations may use up some of the available quota.
+ *
+ * Not all controls can be deployed to Security OU. Please see this page for more information: https://docs.aws.amazon.com/controltower/latest/controlreference/exception-to-controls-security-ou.html.
  *
  * @example
  * controlTowerControls:
@@ -153,10 +156,16 @@ export interface IControlTowerLandingZoneConfig {
  *     deploymentTargets:
  *       organizationalUnits:
  *         - Workloads
+ *   - identifier: m7a5gbdf08wg2o0en010mkng
+ *     enable: true
+ *     deploymentTargets:
+ *       organizationalUnits:
+ *         - Infrastructure
  */
 export interface IControlTowerControlConfig {
   /**
-   * Control Tower control identifier, for Strongly Recommended or Elective controls this should start with AWS-GR
+   * Control Tower control identifier. For Strongly Recommended or Elective controls this should start with AWS-GR. For Global Control Tower Controls, this should be the CONTROL_TOWER_OPAQUE_ID,
+   * please see this page for more information: https://docs.aws.amazon.com/controltower/latest/controlreference/all-global-identifiers.html.
    */
   readonly identifier: t.NonEmptyString;
   /**
