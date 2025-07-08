@@ -19,6 +19,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - feat(logging): add aggregation of cloudwatch logs in additional partitions
 - feat(regions): add support for ap-east-2 region Taipei and ap-southeast-7 Thailand
 - feat(stack-policy): add support for stack policy to safeguard infrastructure deployed by LZA
+- feat(accelerator-metadata): add support for using codeconnection source with accelerator metadata
 
 ### Fixed
 
