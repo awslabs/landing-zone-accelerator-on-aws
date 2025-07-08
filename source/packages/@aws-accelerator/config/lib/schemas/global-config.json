@@ -1677,7 +1677,7 @@
     },
     "IStackPolicyConfig": {
       "additionalProperties": false,
-      "description": "AWS Stack Policy configuration\nPLEASE NOTE THIS IS WORK IN PROGRESS AND NOT FINISHED. DO NOT USE!",
+      "description": "Cloudformation Stack Policy configuration\nThe Cloudformation Stack Policy configuration determines how stack resources can be updated or modified during stack operations.\nWhen this value is not specified, any existing stack policies will remain in effect and unchanged.\nThis behavior is intentionally different from the typical LZA default handling, where unset values are commonly treated as false.\nThis design choice allows organizations to manage and maintain stack policies independently through other mechanisms outside of LZA if preferred.",
       "properties": {
         "enable": {
           "description": "Indicates whether Stack policies are enabled in your organization. Resource types will be protected for Update:Replace and Update:Delete. Protected types need to be AWS:: resource types e.g. AWS::EC2::InternetGateway.",

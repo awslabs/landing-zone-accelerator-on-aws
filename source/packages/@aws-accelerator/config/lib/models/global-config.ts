@@ -2358,14 +2358,37 @@ export interface IDefaultEventBusConfig {
  * *{@link SecurityConfig} / {@link StackPolicyConfig}*
  *
  * @description
- * AWS Stack Policy configuration
- * PLEASE NOTE THIS IS WORK IN PROGRESS AND NOT FINISHED. DO NOT USE!
+ * Cloudformation Stack Policy configuration
+ * The Cloudformation Stack Policy configuration determines how stack resources can be updated or modified during stack operations.
+ * When this value is not specified, any existing stack policies will remain in effect and unchanged.
+ * This behavior is intentionally different from the typical LZA default handling, where unset values are commonly treated as false.
+ * This design choice allows organizations to manage and maintain stack policies independently through other mechanisms outside of LZA if preferred.
  *
  * @example
  * ```
  * stackPolicy:
  *   enable: true
- *   protectedTypes: ['AWS::EC2::InternetGateway']
+ *   protectedTypes:
+ *     - "AWS::EC2::InternetGateway"
+ *     - "AWS::EC2::NatGateway"
+ *     - "AWS::EC2::PrefixList"
+ *     - "AWS::EC2::Route"
+ *     - "AWS::EC2::RouteTable"
+ *     - "AWS::EC2::SubnetRouteTableAssociation"
+ *     - "AWS::EC2::TransitGateway"
+ *     - "AWS::EC2::TransitGatewayPeeringAttachment"
+ *     - "AWS::EC2::TransitGatewayRoute"
+ *     - "AWS::EC2::TransitGatewayRouteTable"
+ *     - "AWS::EC2::TransitGatewayRouteTableAssociation"
+ *     - "AWS::EC2::TransitGatewayRouteTablePropagation"
+ *     - "AWS::EC2::TransitGatewayVpcAttachment"
+ *     - "AWS::EC2::VPC"
+ *     - "AWS::EC2::VPCCidrBlock"
+ *     - "AWS::EC2::VPCEndpoint"
+ *     - "AWS::EC2::VPCGatewayAttachment"
+ *     - "AWS::NetworkFirewall::Firewall"
+ *     - "AWS::NetworkFirewall::LoggingConfiguration"
+ *     - "AWS::RAM::ResourceShare"
  * ```
  */
 export interface IStackPolicyConfig {
