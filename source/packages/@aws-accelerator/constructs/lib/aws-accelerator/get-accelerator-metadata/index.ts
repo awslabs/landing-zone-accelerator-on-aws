@@ -27,6 +27,7 @@ import {
   ListPipelineExecutionsCommandOutput,
   PipelineExecutionSummary,
   paginateListPipelineExecutions,
+  ListActionExecutionsCommand,
 } from '@aws-sdk/client-codepipeline';
 import {
   ListObjectsV2Command,
@@ -112,6 +113,31 @@ export async function handler(_event: CloudFormationCustomResourceEvent): Promis
   if (!lastSuccessfulExecution) {
     throw new Error('No successful Accelerator CodePipeline executions found. Exiting...');
   }
+
+  // This should returna list of all pipeline actions from the last successful pipeline run.
+  const actionExecutions = await getLatestPipelineActionExecutions(
+    codePipelineClient,
+    pipelineName,
+    lastSuccessfulExecution.pipelineExecutionId!,
+  );
+
+  // From the list of action executions we can get the artifact bucket and key
+  const inputArtifacts = actionExecutions![0].input?.inputArtifacts;
+
+  // Find the Config artifact
+  const configArtifact = inputArtifacts?.find(artifact => artifact.name === 'Config');
+
+  if (!configArtifact) {
+    throw new Error('Config artifact not found in the pipeline action executions.');
+  }
+
+  if (!configArtifact.s3location) {
+    throw new Error('S3 Location not found in the pipeline config artifacts.');
+  }
+
+  const artifactBucketName = configArtifact.s3location.bucket;
+  const artifactObjectKey = configArtifact.s3location.key;
+
   const pipelineExecutionInfo = await throttlingBackOff(() =>
     codePipelineClient.send(
       new GetPipelineExecutionCommand({
@@ -137,6 +163,8 @@ export async function handler(_event: CloudFormationCustomResourceEvent): Promis
     s3Client,
     s3ConfigObjectKey,
     configBucketName,
+    artifactBucketName,
+    artifactObjectKey,
   });
   const version = await getSsmParameterValue(ssmClient, ssmAcceleratorVersionPath);
   const ous = await getAllOusWithPaths(organizationsClient);
@@ -271,37 +299,79 @@ async function getAllConfigFiles(props: {
   s3Client: S3Client;
   s3ConfigObjectKey: string;
   configBucketName: string;
+  artifactBucketName?: string;
+  artifactObjectKey?: string;
 }) {
   if (props.configRepositoryLocation === 'codecommit') {
     return await getAllCodeCommitFiles(props);
   } else if (props.configRepositoryLocation === 's3') {
     return await getAllS3Files(props);
+  } else if (props.configRepositoryLocation === 'codeconnection') {
+    return await getAllCodeConnectionFiles(props);
   } else {
     throw new Error(`Invalid config repository location ${props.configRepositoryLocation}, exiting`);
   }
 }
 
+async function getAllCodeConnectionFiles(props: {
+  s3Client: S3Client;
+  artifactBucketName?: string;
+  commitId: string;
+  artifactObjectKey?: string;
+}) {
+  const files: { fileContents: string; filePath: string }[] = [];
+  const tempFilePath = await getFileFromS3(props);
+
+  const admZipInstance = new AdmZip(tempFilePath);
+  const zipEntries = admZipInstance.getEntries();
+
+  zipEntries.forEach(zipEntry => {
+    if (!zipEntry.isDirectory) {
+      const fileContent = admZipInstance.readAsText(zipEntry);
+      console.log(`Reading file: ${zipEntry.entryName}`);
+      files.push({
+        filePath: zipEntry.entryName,
+        fileContents: fileContent,
+      });
+    }
+  });
+  fs.unlinkSync(tempFilePath);
+
+  return files;
+}
+
 async function getFileFromS3(props: {
   s3Client: S3Client;
-  configBucketName: string;
+  configBucketName?: string;
+  artifactBucketName?: string;
   commitId: string;
-  s3ConfigObjectKey: string;
+  s3ConfigObjectKey?: string;
+  artifactObjectKey?: string;
 }) {
-  const response = await throttlingBackOff(() =>
-    props.s3Client.send(
-      new GetObjectCommand({
-        Bucket: props.configBucketName,
-        Key: props.s3ConfigObjectKey,
-        VersionId: props.commitId,
-      }),
-    ),
-  );
+  // Create the base command parameters
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const commandParams: any = {
+    Bucket: props.artifactBucketName ?? props.configBucketName,
+    Key: props.artifactObjectKey ?? props.s3ConfigObjectKey,
+  };
+
+  // Only add VersionId if we're not dealing with codeconnection (i.e., if artifactObjectKey is not present)
+  if (!props.artifactObjectKey) {
+    commandParams.VersionId = props.commitId;
+  }
+
+  const response = await throttlingBackOff(() => props.s3Client.send(new GetObjectCommand(commandParams)));
+
   const zipFile = response.Body;
 
   if (!zipFile) {
     throw new Error('Failed to download the configuration file from S3.');
   }
-  const tempFilePath = `/tmp/${props.s3ConfigObjectKey.split('/').pop()}`;
+
+  const tempFilePath = props.artifactObjectKey
+    ? `/tmp/${props.artifactObjectKey.split('/').pop()}`
+    : `/tmp/${props.s3ConfigObjectKey?.split('/').pop()}`;
+
   await fs.promises.writeFile(tempFilePath, await zipFile.transformToByteArray());
 
   return tempFilePath;
@@ -599,6 +669,25 @@ async function assumeRole(
     SessionToken: assumeRole.Credentials!.SessionToken,
     Expiration: assumeRole.Credentials!.Expiration,
   };
+}
+
+async function getLatestPipelineActionExecutions(
+  codePipelineClient: CodePipelineClient,
+  pipelineName: string,
+  pipelineExecutionId: string,
+) {
+  const actionExecutions = await throttlingBackOff(() =>
+    codePipelineClient.send(
+      new ListActionExecutionsCommand({
+        pipelineName,
+        filter: {
+          pipelineExecutionId: pipelineExecutionId,
+        },
+      }),
+    ),
+  );
+
+  return actionExecutions.actionExecutionDetails;
 }
 
 async function listBucketObjects(s3Client: S3Client, bucket: string) {
