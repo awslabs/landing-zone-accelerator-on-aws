@@ -77,6 +77,11 @@ export enum AcceleratorModules {
   GET_CLOUDFORMATION_TEMPLATES = 'get-cloudformation-templates',
 
   /**
+   * Set stack policy for accounts.
+   */
+  CREATE_STACK_POLICY = 'create-stack-policy',
+
+  /**
    * An Example module which is executed in `PREPARE` stage
    */
   EXAMPLE_MODULE = 'example-module',

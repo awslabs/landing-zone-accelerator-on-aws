@@ -11,6 +11,7 @@
  *  and limitations under the License.
  */
 
+import { CreateStackPolicyModule } from '../lib/actions/aws-cloudformation/create-stack-policy-module';
 import { GetCloudFormationTemplatesModule } from '../lib/actions/aws-cloudformation/get-cloudformation-templates';
 import { CreateOrganizationalUnitModule } from '../lib/actions/aws-organizations/create-organizational-unit';
 import { InviteAccountsToOrganizationsModule } from '../lib/actions/aws-organizations/invite-accounts-to-organizations';
@@ -79,6 +80,15 @@ export const AcceleratorModuleStageDetails: AcceleratorModuleStageDetailsType[] 
         runOrder: 1,
         handler: async (params: ModuleParams) => {
           return await SetupControlTowerLandingZoneModule.execute(params);
+        },
+        executionPhase: ModuleExecutionPhase.DEPLOY,
+      },
+      {
+        name: AcceleratorModules.CREATE_STACK_POLICY,
+        description: 'Setup Stack Policy in accounts',
+        runOrder: 1,
+        handler: async (params: ModuleParams) => {
+          return await CreateStackPolicyModule.execute(params);
         },
         executionPhase: ModuleExecutionPhase.DEPLOY,
       },
@@ -233,7 +243,17 @@ export const AcceleratorModuleStageDetails: AcceleratorModuleStageDetailsType[] 
       name: AcceleratorModuleStages.FINALIZE,
       runOrder: AcceleratorModuleStageOrders[AcceleratorModuleStages.FINALIZE].runOrder,
     },
-    modules: [],
+    modules: [
+      {
+        name: AcceleratorModules.CREATE_STACK_POLICY,
+        description: 'Setup Stack Policy in accounts',
+        runOrder: 1,
+        handler: async (params: ModuleParams) => {
+          return await CreateStackPolicyModule.execute(params);
+        },
+        executionPhase: ModuleExecutionPhase.DEPLOY,
+      },
+    ],
   },
   {
     stage: {
