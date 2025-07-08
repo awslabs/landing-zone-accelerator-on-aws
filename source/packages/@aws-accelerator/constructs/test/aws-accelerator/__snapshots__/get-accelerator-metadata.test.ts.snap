@@ -226,6 +226,7 @@ exports[`AcceleratorMetadata Construct(AcceleratorMetadata):  Snapshot Test 1`] 
                 "s3:PutObjectRetention",
                 "s3:PutObjectTagging",
                 "s3:PutObjectVersionTagging",
+                "s3:ListBucketVersions",
                 "s3:Abort*",
               ],
               "Effect": "Allow",

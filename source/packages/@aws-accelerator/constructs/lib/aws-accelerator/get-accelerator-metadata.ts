@@ -123,7 +123,6 @@ export class AcceleratorMetadata extends Construct {
       assumedBy: new cdk.aws_iam.ServicePrincipal('lambda.amazonaws.com'),
       roleName: `${acceleratorPrefix}-${account}-${region}-metadata-lambda-role`,
     });
-    console.log(lambdaRole.node.tryGetContext('suffix'));
     lambdaRole.addToPolicy(
       new cdk.aws_iam.PolicyStatement({
         effect: cdk.aws_iam.Effect.ALLOW,
@@ -168,6 +167,7 @@ export class AcceleratorMetadata extends Construct {
           's3:PutObjectRetention',
           's3:PutObjectTagging',
           's3:PutObjectVersionTagging',
+          's3:ListBucketVersions',
           's3:Abort*',
         ],
         resources: [
