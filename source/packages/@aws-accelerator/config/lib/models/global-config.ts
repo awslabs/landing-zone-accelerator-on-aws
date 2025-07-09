@@ -13,6 +13,7 @@
 
 import * as t from '../common/types';
 import { StreamMode } from '@aws-sdk/client-kinesis';
+
 /**
  * {@link IGlobalConfig} / {@link IControlTowerConfig} / {@link IControlTowerLandingZoneConfig} / {@link IControlTowerLandingZoneLoggingConfig}
  *
@@ -2411,6 +2412,48 @@ export interface IStackPolicyConfig {
 }
 
 /**
+ * *{@link GlobalConfig} / {@link CentralRootUserManagementConfig} / {@link RootUserManagementCapabiltiesConfig}*
+ *
+ * @description
+ * IAM Root User Management
+ * Documentation [page](https://docs.aws.amazon.com/IAM/latest/UserGuide/id_root-user.html)
+ *
+ * @example
+ * ```
+ *   capabilities:
+ *    rootCredentialsManagement: true
+ *    allowRootSessions: true
+ * ```
+ *
+ */
+export interface IRootUserManagementCapabiltiesConfig {
+  readonly rootCredentialsManagement: boolean;
+  readonly allowRootSessions: boolean;
+}
+
+/**
+ * *{@link GlobalConfig} / {@link CentralRootUserManagementConfig}*
+ *
+ * @description
+ * IAM Root User Management
+ * Documentation [page](https://docs.aws.amazon.com/IAM/latest/UserGuide/id_root-user.html)
+ *
+ * @example
+ * ```
+ * centralRootUserManagement:
+ *   enable: true
+ *   capabilities:
+ *    rootCredentialsManagement: true
+ *    allowRootSessions: true
+ * ```
+ *
+ */
+export interface ICentralRootUserManagementConfig {
+  readonly enable: boolean;
+  readonly capabilities: IRootUserManagementCapabiltiesConfig;
+}
+
+/**
  * Accelerator global configuration
  */
 export interface IGlobalConfig {
@@ -2803,6 +2846,19 @@ export interface IGlobalConfig {
   readonly defaultEventBus?: IDefaultEventBusConfig;
 
   /**
+   * Configuration for centralized root user management.
+   * @example
+   * ```
+   * centralRootUserManagement:
+   *   enable: true
+   *   capabilities:
+   *     rootCredentialsManagement: true
+   *     allowRootSessions: true
+   * ```
+   */
+  readonly centralRootUserManagement?: ICentralRootUserManagementConfig;
+
+  /**
    * Configuration for stack policies.
    * Resource types will be protected for Update:Replace and Update:Delete.
    * Protected types need to be AWS:: resource types e.g. AWS::EC2::InternetGateway.
@@ -2813,6 +2869,7 @@ export interface IGlobalConfig {
    *   protectedTypes: ['AWS::EC2::InternetGateway']
    * ```
    */
+
   readonly stackPolicy?: IStackPolicyConfig;
 
   /**

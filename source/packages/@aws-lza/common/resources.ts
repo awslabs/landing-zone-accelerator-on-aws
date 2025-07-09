@@ -35,6 +35,10 @@ export enum AcceleratorModuleName {
    * AWS Macie Module
    */
   AWS_MACIE = 'aws-macie',
+  /**
+   * AWS IAM Module
+   */
+  AWS_IAM = 'aws-iam',
 }
 
 /**
