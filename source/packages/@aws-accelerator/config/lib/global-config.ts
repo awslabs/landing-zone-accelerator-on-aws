@@ -571,6 +571,16 @@ export class StackPolicyConfig implements i.IStackPolicyConfig {
   readonly protectedTypes: string[] = [];
 }
 
+export class RootUserManagementCapabiltiesConfig implements i.IRootUserManagementCapabiltiesConfig {
+  readonly rootCredentialsManagement: boolean = false;
+  readonly allowRootSessions: boolean = false;
+}
+
+export class CentralRootUserManagementConfig implements i.ICentralRootUserManagementConfig {
+  readonly enable: boolean = false;
+  readonly capabilities: RootUserManagementCapabiltiesConfig = new RootUserManagementCapabiltiesConfig();
+}
+
 export class GlobalConfig implements i.IGlobalConfig {
   /**
    * Global configuration file name, this file must be present in accelerator config repository
@@ -602,6 +612,7 @@ export class GlobalConfig implements i.IGlobalConfig {
   readonly defaultEventBus: DefaultEventBusConfig | undefined = undefined;
   readonly sqs: SqsConfig | undefined = undefined;
   readonly stackPolicy: StackPolicyConfig | undefined;
+  readonly centralRootUserManagement?: CentralRootUserManagementConfig | undefined = undefined;
 
   /**
    * SSM IAM Role Parameters to be loaded for session manager policy attachments

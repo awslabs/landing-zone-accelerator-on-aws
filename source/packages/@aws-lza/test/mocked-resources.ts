@@ -426,6 +426,11 @@ export const MOCK_CONSTANTS = {
       baselineVersion: '4.0',
     },
   ],
+  ConfigureRootUserManagmentModule: {
+    enabled: true,
+    credentials: true,
+    session: true,
+  },
 };
 
 export function countOverlappingAccounts(): {
