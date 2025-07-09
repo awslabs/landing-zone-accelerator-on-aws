@@ -207,6 +207,8 @@ export class GlobalConfigValidator {
 
     this.validateStackPolicy(values, errors);
 
+    this.validateRootUserManagement(values, errors);
+
     if (errors.length) {
       throw new Error(`${GlobalConfig.FILENAME} has ${errors.length} issues:\n${errors.join('\n')}`);
     }
@@ -1518,6 +1520,19 @@ export class GlobalConfigValidator {
         props.ous,
         props.errors,
         props.configItemDescription,
+      );
+    }
+  }
+
+  private validateRootUserManagement(values: GlobalConfig, errors: string[]) {
+    if (!values.centralRootUserManagement) return;
+
+    if (
+      values.centralRootUserManagement.capabilities.allowRootSessions &&
+      !values.centralRootUserManagement.capabilities.rootCredentialsManagement
+    ) {
+      errors.push(
+        `allowRootSessions is enabled without rootCredentialsManagement being enabled. rootCredentialsManagement must be enabled as well`,
       );
     }
   }

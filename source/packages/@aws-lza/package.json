@@ -27,7 +27,7 @@
   },
   "dependencies": {
     "@aws-sdk/client-controltower": "3.637.0",
-    "@aws-sdk/client-iam": "3.637.0",
+    "@aws-sdk/client-iam": "3.835.0",
     "@aws-sdk/client-sso-admin": "3.637.0",
     "@aws-sdk/client-kms": "3.637.0",
     "@aws-sdk/client-ssm": "3.637.0",

@@ -14,6 +14,8 @@ import {
   Account,
   AWSOrganizationsNotInUseException,
   DescribeOrganizationCommand,
+  DisableAWSServiceAccessCommand,
+  EnableAWSServiceAccessCommand,
   InvalidInputException,
   ListRootsCommand,
   OrganizationalUnit,
@@ -574,4 +576,44 @@ export async function getEnabledBaselines(client: ControlTowerClient): Promise<E
   }
 
   return enabledBaselines;
+}
+
+export async function enableServiceAccess(client: OrganizationsClient, servicePrincipal: string): Promise<boolean> {
+  try {
+    const result = await throttlingBackOff(() =>
+      client.send(
+        new EnableAWSServiceAccessCommand({
+          ServicePrincipal: servicePrincipal,
+        }),
+      ),
+    );
+    logger.debug(result);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  } catch (e: any) {
+    logger.error(e.message);
+    throw new Error(
+      `${MODULE_EXCEPTIONS.SERVICE_EXCEPTION}: Unable to enable access for service principal ${servicePrincipal}.`,
+    );
+  }
+  return true;
+}
+
+export async function disableServiceAccess(client: OrganizationsClient, servicePrincipal: string): Promise<boolean> {
+  try {
+    const result = await throttlingBackOff(() =>
+      client.send(
+        new DisableAWSServiceAccessCommand({
+          ServicePrincipal: servicePrincipal,
+        }),
+      ),
+    );
+    logger.debug(result);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  } catch (e: any) {
+    logger.error(e.message);
+    throw new Error(
+      `${MODULE_EXCEPTIONS.SERVICE_EXCEPTION}: Unable to disable access for service principal ${servicePrincipal}.`,
+    );
+  }
+  return true;
 }
