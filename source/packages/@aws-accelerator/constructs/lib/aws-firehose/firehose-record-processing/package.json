@@ -39,6 +39,6 @@
   },
   "dependencies": {
     "@aws-accelerator/utils": "^0.0.0",
-    "@aws-sdk/client-kinesis": "3.637.0"
+    "@aws-sdk/client-kinesis": "3.835.0"
   }
 }

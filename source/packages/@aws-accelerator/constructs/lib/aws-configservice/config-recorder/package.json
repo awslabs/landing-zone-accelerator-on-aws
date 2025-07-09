@@ -20,7 +20,7 @@
   },
   "dependencies": {
     "@aws-accelerator/utils": "^0.0.0",
-    "@aws-sdk/client-config-service": "3.637.0"
+    "@aws-sdk/client-config-service": "3.835.0"
   },
   "devDependencies": {
     "@aws-sdk/types": "3.609.0",

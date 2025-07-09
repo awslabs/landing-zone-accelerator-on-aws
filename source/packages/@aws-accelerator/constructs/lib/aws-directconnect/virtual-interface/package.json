@@ -20,7 +20,7 @@
   },
   "dependencies": {
     "@aws-accelerator/utils": "^0.0.0",
-    "@aws-sdk/client-direct-connect": "3.758.0"
+    "@aws-sdk/client-direct-connect": "3.835.0"
   },
   "devDependencies": {
     "@types/jest": "29.5.12",
