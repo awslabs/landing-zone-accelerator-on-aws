@@ -22,10 +22,10 @@
   "dependencies": {
     "@aws-accelerator/config": "^0.0.0",
     "@aws-accelerator/utils": "^0.0.0",
-    "@aws-sdk/client-cloudformation": "3.637.0",
-    "@aws-sdk/client-dynamodb": "3.637.0",
-    "@aws-sdk/client-s3": "3.637.0",
-    "@aws-sdk/lib-dynamodb": "3.637.0",
+    "@aws-sdk/client-cloudformation": "3.835.0",
+    "@aws-sdk/client-dynamodb": "3.835.0",
+    "@aws-sdk/client-s3": "3.835.0",
+    "@aws-sdk/lib-dynamodb": "3.835.0",
     "@aws-sdk/types": "3.609.0",
     "js-yaml": "4.1.0"
   },

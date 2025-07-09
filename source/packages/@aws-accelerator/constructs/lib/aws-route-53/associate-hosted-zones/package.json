@@ -39,8 +39,8 @@
   },
   "dependencies": {
     "@aws-accelerator/utils": "^0.0.0",
-    "@aws-sdk/client-sts": "3.637.0",
-    "@aws-sdk/client-ec2": "3.641.0",
-    "@aws-sdk/client-route-53": "3.637.0"
+    "@aws-sdk/client-sts": "3.835.0",
+    "@aws-sdk/client-ec2": "3.835.0",
+    "@aws-sdk/client-route-53": "3.835.0"
   }
 }

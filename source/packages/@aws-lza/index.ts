@@ -70,3 +70,7 @@ export { getCloudFormationTemplates } from './executors/accelerator-aws-cloudfor
 
 export { IStackPolicyHandlerParameter } from './interfaces/aws-cloudformation/create-stack-policy';
 export { createStackPolicy } from './executors/accelerator-aws-cloudformation';
+
+// AWS IAM Module resources
+export { IRootUserManagementHandlerParameter } from './interfaces/aws-iam/root-user-management';
+export { configureRootUserManagment } from './executors/accelerator-aws-iam';

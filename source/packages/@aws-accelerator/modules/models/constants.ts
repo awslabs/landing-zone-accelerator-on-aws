@@ -18,6 +18,7 @@ import { InviteAccountsToOrganizationsModule } from '../lib/actions/aws-organiza
 import { MoveAccountModule } from '../lib/actions/aws-organizations/move-accounts';
 import { RegisterOrganizationalUnitModule } from '../lib/actions/control-tower/register-organizational-unit';
 import { SetupControlTowerLandingZoneModule } from '../lib/actions/control-tower/setup-control-tower-landing-zone';
+import { ConfigureRootUserManagementModule } from '../lib/actions/aws-iam/root-user-management';
 import { AcceleratorModules, AcceleratorModuleStages, ModuleExecutionPhase } from './enums';
 import { AcceleratorModuleStageDetailsType, AcceleratorModuleStageOrdersType, ModuleParams } from './types';
 
@@ -125,6 +126,15 @@ export const AcceleratorModuleStageDetails: AcceleratorModuleStageDetailsType[] 
         runOrder: 5,
         handler: async (params: ModuleParams) => {
           return await MoveAccountModule.execute(params);
+        },
+        executionPhase: ModuleExecutionPhase.DEPLOY,
+      },
+      {
+        name: AcceleratorModules.ROOT_USER_MANAGEMENT,
+        description: 'Configure IAM Root User Management',
+        runOrder: 6,
+        handler: async (params: ModuleParams) => {
+          return await ConfigureRootUserManagementModule.execute(params);
         },
         executionPhase: ModuleExecutionPhase.DEPLOY,
       },

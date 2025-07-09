@@ -82,6 +82,12 @@ export enum AcceleratorModules {
   CREATE_STACK_POLICY = 'create-stack-policy',
 
   /**
+   * Configure IAM Root User Management
+   */
+
+  ROOT_USER_MANAGEMENT = 'root-user-management',
+
+  /**
    * An Example module which is executed in `PREPARE` stage
    */
   EXAMPLE_MODULE = 'example-module',

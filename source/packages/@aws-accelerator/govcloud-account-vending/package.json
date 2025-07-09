@@ -24,7 +24,7 @@
     "watch": "tsc -w"
   },
   "dependencies": {
-    "@aws-sdk/client-config-service": "3.637.0",
+    "@aws-sdk/client-config-service": "3.835.0",
     "@types/js-yaml": "4.0.5",
     "aws-cdk": "2.158.0",
     "aws-cdk-lib": "2.158.0",
