@@ -21,7 +21,7 @@
   },
   "dependencies": {
     "@aws-accelerator/utils": "^0.0.0",
-    "@aws-sdk/client-s3": "3.637.0"
+    "@aws-sdk/client-s3": "3.835.0"
   },
   "devDependencies": {
     "@types/jest": "29.5.12",

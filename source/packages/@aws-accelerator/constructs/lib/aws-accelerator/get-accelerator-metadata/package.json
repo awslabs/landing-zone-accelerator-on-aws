@@ -19,13 +19,13 @@
     "test": "jest --coverage --ci --passWithNoTests"
   },
   "dependencies": {
-    "@aws-sdk/client-codecommit": "3.637.0",
-    "@aws-sdk/client-codepipeline": "3.637.0",
-    "@aws-sdk/client-s3": "3.637.0",
-    "@aws-sdk/client-sts": "3.637.0",
-    "@aws-sdk/client-kms": "3.637.0",
-    "@aws-sdk/client-ssm": "3.637.0",
-    "@aws-sdk/client-organizations": "3.638.0"
+    "@aws-sdk/client-codecommit": "3.835.0",
+    "@aws-sdk/client-codepipeline": "3.835.0",
+    "@aws-sdk/client-s3": "3.835.0",
+    "@aws-sdk/client-sts": "3.835.0",
+    "@aws-sdk/client-kms": "3.835.0",
+    "@aws-sdk/client-ssm": "3.835.0",
+    "@aws-sdk/client-organizations": "3.835.0"
   },
   "devDependencies": {
     "@types/jest": "29.5.12",

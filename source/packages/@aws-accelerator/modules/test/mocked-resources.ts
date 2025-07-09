@@ -141,6 +141,45 @@ export const mockGlobalConfiguration = {
     centralizeBuckets: true,
     useManagementAccessRole: true,
   },
+  centralRootUserManagement: {
+    enable: true,
+    capabilities: {
+      rootCredentialsManagement: true,
+      allowRootSessions: true,
+    },
+  },
+} as GlobalConfig;
+
+export const mockGlobalConfigurationWithoutCentralRootUserManagment = {
+  homeRegion: 'mockHomeRegion',
+  controlTower: {
+    enable: true,
+    landingZone: {
+      version: 'mockCTVersion',
+      logging: {
+        loggingBucketRetentionDays: 365,
+        accessLoggingBucketRetentionDays: 365,
+        organizationTrail: true,
+      },
+      security: {
+        enableIdentityCenterAccess: true,
+      },
+    },
+  },
+  logging: {
+    cloudwatchLogs: {} as CloudWatchLogsConfig,
+    sessionManager: {
+      sendToCloudWatchLogs: false,
+      sendToS3: false,
+    },
+    cloudtrail: {
+      enable: false,
+    },
+  } as LoggingConfig,
+  cdkOptions: {
+    centralizeBuckets: true,
+    useManagementAccessRole: true,
+  },
 } as GlobalConfig;
 
 export const mockGlobalConfigurationWithOutLandingZone = {
