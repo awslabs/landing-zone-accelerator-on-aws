@@ -15,6 +15,7 @@ import {
 import { AseaResource, AseaResourceProps } from './resource';
 import { ImportAseaResourcesStack, LogLevel } from '../stacks/import-asea-resources-stack';
 import { ImportStackResources } from '../../utils/import-stack-resources';
+import { getAseaVpcName } from '@aws-accelerator/utils';
 
 enum RESOURCE_TYPE {
   TGW_ROUTE = 'AWS::EC2::TransitGatewayRoute',
@@ -253,9 +254,11 @@ export class TransitGatewayRoutes extends AseaResource {
           LogLevel.INFO,
           `Adding route ${routeItem.destinationCidrBlock} to TGW route table ${routeTableItem.name} for TGW ${tgwItem.name} in account: ${tgwItem.account}`,
         );
-        routeId = `${routeTableItem.name}-${routeItem.destinationCidrBlock}-${routeItem.attachment.vpcName}-${routeItem.attachment.account}`;
+        const routeItemVpcName = getAseaVpcName(routeItem.attachment.vpcName);
+
+        routeId = `${routeTableItem.name}-${routeItem.destinationCidrBlock}-${routeItemVpcName}-${routeItem.attachment.account}`;
         transitGatewayAttachmentId = this.getTgwAttachmentId(
-          routeItem.attachment.vpcName,
+          routeItemVpcName,
           routeItem.attachment.account,
           tgwItem.region,
           mappings,
@@ -266,7 +269,7 @@ export class TransitGatewayRoutes extends AseaResource {
             `TGW attachment not found in account ${routeItem.attachment.account}, looking in ${tgwItem.account}`,
           );
           transitGatewayAttachmentId = this.getTgwAttachmentId(
-            routeItem.attachment.vpcName,
+            routeItemVpcName,
             tgwItem.account,
             tgwItem.region,
             mappings,
