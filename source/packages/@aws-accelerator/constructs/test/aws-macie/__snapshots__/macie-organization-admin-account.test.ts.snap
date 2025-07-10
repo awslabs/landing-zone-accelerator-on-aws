@@ -16,7 +16,7 @@ exports[`MacieOrganizationAdminAccount Construct(MacieOrganizationAdminAccount):
         },
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.12.0",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
           },
         },
         "Handler": "__entrypoint__.handler",
