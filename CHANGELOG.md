@@ -5,59 +5,115 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [1.13.0]
+## [1.13.0] - 2025-08-29
 
 ### Added
 
-- feat(replacements): added support for StringList replacements and updated loading behavior
-- feat(organizations): add support for resource control policies
-- feat(organizations): add support for declarative policies
-- feat(securityHub): added PCI DSS v4.0.1 and AWS Resource Tagging Standard v1.0.0 standards [#763](https://github.com/awslabs/landing-zone-accelerator-on-aws/issues/763) and [#744](https://github.com/awslabs/landing-zone-accelerator-on-aws/issues/744)
-- feat(networking): add support for icmp nacl rules
-- feat(regions): add support for the mx-central-1 Mexico (Central) opt-in region
-- feat(networking): add support for DoH and DoH-FIPS protocols for route53 resolver endpoints
-- feat(logging): add aggregation of cloudwatch logs in additional partitions
-- feat(regions): add support for ap-east-2 region Taipei and ap-southeast-7 Thailand
-- feat(stack-policy): add support for stack policy to safeguard infrastructure deployed by LZA
-- feat(accelerator-metadata): add support for using codeconnection source with accelerator metadata
+- feat(accelerator-metadata): add support for using codeconnection source with accelerator metadata [#756](https://github.com/awslabs/landing-zone-accelerator-on-aws/issues/756)
+- feat(accounts): add account cleanup for config ddb table [#202](https://github.com/awslabs/landing-zone-accelerator-on-aws/issues/202)
 - feat(iam): add support for aws root user credentials and session management
+- feat(logging): add aggregation of cloudwatch logs in additional partitions
+- feat(networking): add support for DoH and DoH-FIPS protocols for route53 resolver endpoints
+- feat(networking): add support for icmp nacl rules
+- feat(organizations): add support for declarative policies [#664](https://github.com/awslabs/landing-zone-accelerator-on-aws/issues/664)
+- feat(organizations): add support for resource control policies [#642](https://github.com/awslabs/landing-zone-accelerator-on-aws/issues/642)
+- feat(regions): add support for ap-east-2 region Taipei and ap-southeast-7 Thailand
+- feat(regions): add support for the mx-central-1 Mexico (Central) opt-in region
+- feat(replacements): added support for StringList replacements and updated loading behavior [#607](https://github.com/awslabs/landing-zone-accelerator-on-aws/issues/607) and [#683](https://github.com/awslabs/landing-zone-accelerator-on-aws/issues/683)
+- feat(securityHub): added PCI DSS v4.0.1 and AWS Resource Tagging Standard v1.0.0 standards [#763](https://github.com/awslabs/landing-zone-accelerator-on-aws/issues/763) and [#744](https://github.com/awslabs/landing-zone-accelerator-on-aws/issues/744)
+- feat(stack-policy): add support for stack policy to safeguard infrastructure deployed by LZA
 
 ### Fixed
 
-- fix(access-analyzer): fixed problem with access analyzer not created in additional regions.
-- fix(aspects): update CDK aspect to use lza default node version for custom resource Lambda functions by default [#761](https://github.com/awslabs/landing-zone-accelerator-on-aws/issues/761)
-- fix(documentation): fixed documentation for acceleratorMetadata [#498](https://github.com/awslabs/landing-zone-accelerator-on-aws/issues/498)
-- fix(networking): fix ipam scope lookup on shared pool
-- fix(tagging): fix tagging for custom resource providers
-- fix(logging): check for error in CreateLogGroup API
-- fix(diff): print output before approval 
-- fix(pre-approval): add wrapper around deployment 
+- fix(access-analyzer): create access analyzer in all enabled regions
 - fix(accelerator-metadata): fixed installer stack lookup
-- fix(config): ISnsConfig functionality for snsTopics property [#700](https://github.com/awslabs/landing-zone-accelerator-on-aws/issues/700) 
 - fix(asea): added resource handler for tgw peering attachments
-- fix(asea): handle several asea vpc naming issues
 - fix(asea): don't fail on private hosted zones when multiple vpc endpoints of the same type are present on different vpc's
 - fix(asea): fix route53 query logging stack failures during upgrade
-- fix(security-audit): sns topic for controltower notifications
-- fix(macie): update macie custom resource policy statement to correct error preventing creation of service linked roler
-- fix(networking): allow the creation of iam vpc interface endpoints
-- fix(validation): allow the replacements that start with the string 'resolve'
-- fix(validation): allow wildcard tld in config validator for nfw rules
-- fix(securityhub): by default only send HIGH and CRITICAL SecurityHub events to CloudWatch. If other events are needed in CloudWatch update configuration
-- fix(pipeline): update iam policy for github token change lambda to allow pipeline update
-- fix(sample-config): extend preventative measures to roles
+- fix(asea): handle several asea vpc naming issues
 - fix(asea): lookup tgw attachments using asea vpc names
+- fix(aspects): update CDK aspect to use lza default node version for custom resource Lambda functions by default [#761](https://github.com/awslabs/landing-zone-accelerator-on-aws/issues/761)
+- fix(config): ISnsConfig functionality for snsTopics property [#700](https://github.com/awslabs/landing-zone-accelerator-on-aws/issues/700) 
+- fix(diff): print output before approval [#723](https://github.com/awslabs/landing-zone-accelerator-on-aws/issues/723)
+- fix(documentation): fixed documentation for acceleratorMetadata [#498](https://github.com/awslabs/landing-zone-accelerator-on-aws/issues/498)
+- fix(logging): check for error in CreateLogGroup API
+- fix(macie): update macie custom resource policy statement to correct error preventing creation of service linked role
+- fix(networking): allow the creation of iam vpc interface endpoints
+- fix(networking): fix ipam scope lookup on shared pool
+- fix(pipeline): move account alias module run after account creation [#782](https://github.com/awslabs/landing-zone-accelerator-on-aws/issues/782)
+- fix(pipeline): update iam policy for github token change lambda to allow pipeline update [#739](https://github.com/awslabs/landing-zone-accelerator-on-aws/issues/739)
+- fix(pre-approval): add wrapper around deployment 
+- fix(sample-config): extend preventative measures to roles
+- fix(security-audit): sns topic for controltower notifications
+- fix(securityhub): by default only send HIGH and CRITICAL SecurityHub events to CloudWatch. If other events are needed in CloudWatch update configuration
+- fix(tagging): fix tagging for custom resource providers
+- fix(validation): allow the replacements that start with the string 'resolve' [#781](https://github.com/awslabs/landing-zone-accelerator-on-aws/issues/781)
+- fix(validation): allow wildcard tld in config validator for nfw rules
 
 ### Changed
 
 - chore(accelerator): update sdk v3
+- chore(acm): update sdk v3
 - chore(active-directory): update sdk v3
 - chore(audit-manager): update sdk v3
-- chore(acm): update sdk v3
-- chore(constructs): directconnect constructs update sdk v3
 - chore(bootstrap): added termination protection for CDKToolkit stack
+- chore(constructs): directconnect constructs update sdk v3
 - chore(docs): adding securityhub findings info for kinesis.3
 - chore(docs): update cloudwatch log group retention setting documentation
+
+## [1.12.3] - 2025-06-11
+
+### Added
+
+- feat(control-tower): allow expanded set of ct control identifiers [#387](https://github.com/awslabs/landing-zone-accelerator-on-aws/issues/387)
+
+### Fixed
+
+- fix(asea): udp security group ingress rule using incorrect port definition
+- fix(cloudwatch): added skip bulk updates for custom resource
+- fix(sample-config): removed dash to extend preventative measures to roles
+- fix(sqs): add cfn nag rules
+- fix(ssm): analyze account input in share document
+
+## [1.12.2] - 2025-05-20
+
+### Added
+
+- feat(region): add support for mx-central-1 region 
+- feat(securityhub): added PCI DSS v4.0.1 and AWS Resource Tagging Standard v1.0.0 standards
+
+### Fixed
+
+- fix(accelerator-metadata): fix accelerator metadata installerStackName
+- fix(asea): fix tgw associations
+- fix(asea): add tgw peering attachment handlers
+- fix(asea): rql association lookup failure for asea upgraded environments
+- fix(asea): updates to the handling of duplicate vpc names
+- fix(aspects): update CDK aspect to use lza default node version for custom resource Lambda functions by default [#761](https://github.com/awslabs/landing-zone-accelerator-on-aws/issues/761)
+- fix(network): networkVpcStack fails on Custom::DeleteDefaultVpc resource after SDK v3 update in v1.12.0
+- fix(pipeline): correct usage for qualifier in diffBucket url for external deployment
+- fix(tagging): fix tagging for custom resource providers
+
+### Changed
+
+- chore(installer): updated qualifier parameter description
+
+## [1.12.1] - 2025-04-08
+
+### Fixed
+
+- fix(accounts): account creation fails for organizations-only environment
+- fix(logging): gracefully handle AWS InvalidParameterException for AWS Reserved
+- fix(networking): cidr block order validation is causing the Prepare stack to fail
+
+### Changed
+
+- chore(build): remove --target argument for esbuild
+- chore(networking): remove partition checks for useCentralEndpoints
+- chore(nodejs): update CodeBuild to use NodeJS 20 and make runtime configurable
+- chore(nodejs): centralize where nodejs version is stored
+- docs(typedocs): fix typos in IGuardDutyConfig documentation
+- docs(user-guide): updated path to typedocs, fixed controlTower
 
 ## [1.12.0] - 2025-04-02
 
