@@ -93,7 +93,7 @@ exports[`RevertScpChanges Construct(DetectResourcePolicy):  Snapshot Test 1`] = 
               "Ref": "AWS::Partition",
             },
             "HOME_REGION": "us-west-2",
-            "SOLUTION_ID": "AwsSolution/SO0199/1.12.0",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
           },
         },
         "Handler": "detect-resource-policy.handler",

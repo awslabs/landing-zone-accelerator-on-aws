@@ -200,7 +200,7 @@ exports[`Certificate Construct(Certificate):  Snapshot Test 1`] = `
         "Description": "AWS CDK resource provider framework - onEvent (Default/ImportCertificate/Custom::CreateAcmCerts)",
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.12.0",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
             "USER_ON_EVENT_FUNCTION_ARN": {
               "Fn::GetAtt": [
                 "ImportCertificateFunction55F21D86",
@@ -306,7 +306,7 @@ exports[`Certificate Construct(Certificate):  Snapshot Test 1`] = `
         "Description": "Create ACM certificates handler",
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.12.0",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
           },
         },
         "Handler": "index.handler",
@@ -430,7 +430,7 @@ exports[`Certificate Construct(Certificate):  Snapshot Test 1`] = `
         "Description": "AWS CDK resource provider framework - onEvent (Default/RequestCertificate/Custom::CreateAcmCerts)",
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.12.0",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
             "USER_ON_EVENT_FUNCTION_ARN": {
               "Fn::GetAtt": [
                 "RequestCertificateFunction3B1055B9",
@@ -536,7 +536,7 @@ exports[`Certificate Construct(Certificate):  Snapshot Test 1`] = `
         "Description": "Create ACM certificates handler",
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.12.0",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
           },
         },
         "Handler": "index.handler",
@@ -791,7 +791,7 @@ exports[`ImportCertificate Construct(Certificate):  Snapshot Test 1`] = `
         "Description": "AWS CDK resource provider framework - onEvent (Default/ImportCertificate/Custom::CreateAcmCerts)",
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.12.0",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
             "USER_ON_EVENT_FUNCTION_ARN": {
               "Fn::GetAtt": [
                 "ImportCertificateFunction55F21D86",
@@ -897,7 +897,7 @@ exports[`ImportCertificate Construct(Certificate):  Snapshot Test 1`] = `
         "Description": "Create ACM certificates handler",
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.12.0",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
           },
         },
         "Handler": "index.handler",
@@ -1021,7 +1021,7 @@ exports[`ImportCertificate Construct(Certificate):  Snapshot Test 1`] = `
         "Description": "AWS CDK resource provider framework - onEvent (Default/RequestCertificate/Custom::CreateAcmCerts)",
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.12.0",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
             "USER_ON_EVENT_FUNCTION_ARN": {
               "Fn::GetAtt": [
                 "RequestCertificateFunction3B1055B9",
@@ -1127,7 +1127,7 @@ exports[`ImportCertificate Construct(Certificate):  Snapshot Test 1`] = `
         "Description": "Create ACM certificates handler",
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.12.0",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
           },
         },
         "Handler": "index.handler",
