@@ -640,7 +640,7 @@ export class AcceleratorToolkit {
         roleName,
       );
       const stream = fs.createWriteStream(path.join(savePath, `${eachStack}.diff`), { flags: 'w' });
-      await stream.write(`\nStack: ${stack} \n`);
+      await stream.write(`\nStack: ${eachStack} \n`);
       await printStackDiff(
         path.join(savePath, `${eachStack}.json`),
         path.join(savePath, `${eachStack}.template.json`),
