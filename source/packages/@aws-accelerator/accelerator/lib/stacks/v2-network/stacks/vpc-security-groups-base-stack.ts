@@ -44,10 +44,17 @@ import { TCP_PROTOCOLS_PORT } from '../../network-stacks/utils/security-group-ut
 import { isV2Resource } from '../utils/functions';
 import { MetadataKeys } from '@aws-accelerator/utils/lib/common-types';
 
+interface SecurityGroupCache {
+  vpcName: string;
+  securityGroupName: string;
+  securityGroupId: string;
+}
+
 export class VpcSecurityGroupsBaseStack extends AcceleratorStack {
   private v2StackProps: V2NetworkStacksBaseProps;
   private vpcDetails: VpcDetails;
   private vpcId: string;
+  private securityGroupCache: SecurityGroupCache[] = [];
   constructor(scope: Construct, id: string, props: V2NetworkStacksBaseProps) {
     super(scope, id, props);
 
@@ -114,24 +121,33 @@ export class VpcSecurityGroupsBaseStack extends AcceleratorStack {
         securityGroupItem.name,
       )
     ) {
-      return this.createSecurityGroupId(securityGroupItem, ingressRules, egressRules);
+      return this.createSecurityGroup(securityGroupItem, ingressRules, egressRules);
     }
 
     this.logger.info(`Using existing security group for ${securityGroupItem.name}`);
-    return cdk.aws_ssm.StringParameter.valueForStringParameter(
+    const securityGroupId = cdk.aws_ssm.StringParameter.valueForStringParameter(
       this,
       this.getSsmPath(SsmResourceType.SECURITY_GROUP, [this.vpcDetails.name, securityGroupItem.name]),
     );
+
+    // Add to cache
+    this.securityGroupCache.push({
+      vpcName: this.vpcDetails.name,
+      securityGroupName: securityGroupItem.name,
+      securityGroupId,
+    });
+
+    return securityGroupId;
   }
 
   /**
-   * Function to create Security group id
+   * Function to create Security group
    * @param securityGroupItem {@link SecurityGroupConfig}
    * @param ingressRules {@link SecurityGroupIngressRuleProps}[]
    * @param egressRules {@link SecurityGroupEgressRuleProps}[]
-   * @returns
+   * @returns securityGroupId string
    */
-  private createSecurityGroupId(
+  private createSecurityGroup(
     securityGroupItem: SecurityGroupConfig,
     ingressRules: SecurityGroupIngressRuleProps[],
     egressRules: SecurityGroupEgressRuleProps[],
@@ -151,6 +167,13 @@ export class VpcSecurityGroupsBaseStack extends AcceleratorStack {
     );
 
     const securityGroupId = cfnSecurityGroup.ref;
+
+    // Add to cache
+    this.securityGroupCache.push({
+      vpcName: this.vpcDetails.name,
+      securityGroupName: securityGroupItem.name,
+      securityGroupId,
+    });
 
     this.addSsmParameter({
       logicalId: pascalCase(
@@ -651,15 +674,34 @@ export class VpcSecurityGroupsBaseStack extends AcceleratorStack {
     const sourceDetails: SecurityGroupSourceDetailsType[] = [];
     this.logger.info(`Evaluate Security Group Source securityGroups:[${source.securityGroups}]`);
     for (const securityGroup of source.securityGroups) {
+      const sourceSecurityGroupId = this.getSourceSecurityGroupId(this.vpcDetails.name, securityGroup);
       sourceDetails.push({
         destinationSecurityGroupName: securityGroup,
-        sourceSecurityGroupId: cdk.aws_ssm.StringParameter.valueForStringParameter(
-          this,
-          this.getSsmPath(SsmResourceType.SECURITY_GROUP, [this.vpcDetails.name, securityGroup]),
-        ),
+        sourceSecurityGroupId,
       });
     }
     return sourceDetails;
+  }
+
+  /**
+   * Function to get security group id from cache or SSM parameter
+   * @param vpcName string
+   * @param securityGroupName string
+   * @returns securityGroupId string
+   */
+  private getSourceSecurityGroupId(vpcName: string, securityGroupName: string): string {
+    // Try cache first, then SSM
+    const cachedSecurityGroupId = this.securityGroupCache.find(
+      item => item.vpcName === vpcName && item.securityGroupName === securityGroupName,
+    )?.securityGroupId;
+
+    return (
+      cachedSecurityGroupId ??
+      cdk.aws_ssm.StringParameter.valueForStringParameter(
+        this,
+        this.getSsmPath(SsmResourceType.SECURITY_GROUP, [this.vpcDetails.name, securityGroupName]),
+      )
+    );
   }
 
   /**
@@ -705,7 +747,7 @@ export class VpcSecurityGroupsBaseStack extends AcceleratorStack {
     const rules: V2SecurityGroupEgressRuleProps[] = [];
     this.logger.info(`Processing rules for ${securityGroupItem.name} in VPC ${this.vpcDetails.name}`);
     for (const [ruleId, egressRuleItem] of securityGroupItem.outboundRules.entries() ?? []) {
-      this.logger.info(`Adding ${SecurityGroupRules.INGRESS} rule ${ruleId} to ${securityGroupItem.name}`);
+      this.logger.info(`Adding ${SecurityGroupRules.EGRESS} rule ${ruleId} to ${securityGroupItem.name}`);
 
       const sourceDetails: SecurityGroupSourceDetailsType[] = [];
       for (const source of egressRuleItem.sources ?? []) {
