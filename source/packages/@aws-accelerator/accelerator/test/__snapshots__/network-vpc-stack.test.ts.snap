@@ -7335,6 +7335,9 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
       "UpdateReplacePolicy": "Delete",
     },
     "SsmParamAcceleratorDhcpOptsDhcpOptionsId5EAF4874": {
+      "DependsOn": [
+        "SsmParamAcceleratorGwlbGwlbServiceIdF93A23BF",
+      ],
       "Properties": {
         "Name": "/accelerator/network/dhcp/accelerator-dhcp-opts/id",
         "Type": "String",
@@ -7346,7 +7349,7 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
     },
     "SsmParamAcceleratorGwlbGwlbArn7CF5F889": {
       "DependsOn": [
-        "SsmParamNetworkEndpointsTestNaclNaclED9584AC",
+        "SsmParamAcceleratorGwlbGwlbServiceIdF93A23BF",
       ],
       "Properties": {
         "Name": "/accelerator/network/gwlb/Accelerator-GWLB/arn",
@@ -7358,9 +7361,6 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
       "Type": "AWS::SSM::Parameter",
     },
     "SsmParamAcceleratorGwlbGwlbServiceIdF93A23BF": {
-      "DependsOn": [
-        "SsmParamNetworkEndpointsTestNaclNaclED9584AC",
-      ],
       "Properties": {
         "Name": "/accelerator/network/gwlb/Accelerator-GWLB/endpointService/id",
         "Type": "String",
@@ -7372,7 +7372,7 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
     },
     "SsmParamAcceleratorGwlbSecondaryGwlbArn364EE96B": {
       "DependsOn": [
-        "SsmParamNetworkEndpointsTestNaclNaclED9584AC",
+        "SsmParamNetworkInspectionDataSecurityGroup1FD45226",
       ],
       "Properties": {
         "Name": "/accelerator/network/gwlb/Accelerator-GWLB-secondary/arn",
@@ -7385,7 +7385,7 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
     },
     "SsmParamAcceleratorGwlbSecondaryGwlbServiceId3F04FE9A": {
       "DependsOn": [
-        "SsmParamNetworkEndpointsTestNaclNaclED9584AC",
+        "SsmParamNetworkInspectionDataSecurityGroup1FD45226",
       ],
       "Properties": {
         "Name": "/accelerator/network/gwlb/Accelerator-GWLB-secondary/endpointService/id",
@@ -7431,9 +7431,6 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
       "Type": "AWS::SSM::Parameter",
     },
     "SsmParamInfraTemplateFullIpamCentralVpcId36AFED2E": {
-      "DependsOn": [
-        "SsmParamNetworkNonTemplateIpamCentralVpcIdB36FF305",
-      ],
       "Properties": {
         "Name": "/accelerator/network/vpc/Infra-Template-Full-Ipam-Central/id",
         "Type": "String",
@@ -7444,6 +7441,9 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
       "Type": "AWS::SSM::Parameter",
     },
     "SsmParamInfraTemplateFullIpamCentralWorkloadARtRouteTableId761912FB": {
+      "DependsOn": [
+        "SsmParamWorkloadTemplateWorkloadBRtRouteTableId3D4D6359",
+      ],
       "Properties": {
         "Name": "/accelerator/network/vpc/Infra-Template-Full-Ipam-Central/routeTable/Workload-A-Rt/id",
         "Type": "String",
@@ -7454,6 +7454,9 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
       "Type": "AWS::SSM::Parameter",
     },
     "SsmParamInfraTemplateFullIpamCentralWorkloadASubnetId5A59595D": {
+      "DependsOn": [
+        "SsmParamWorkloadTemplateWorkloadBSubnetIdC690B217",
+      ],
       "Properties": {
         "Name": "/accelerator/network/vpc/Infra-Template-Full-Ipam-Central/subnet/Workload-A/id",
         "Type": "String",
@@ -7465,7 +7468,7 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
     },
     "SsmParamInfraTemplateFullStaticCentralVpcId9ED5D50B": {
       "DependsOn": [
-        "SsmParamNetworkNonTemplateIpamCentralVpcIdB36FF305",
+        "SsmParamNetworkInspectionVpnGatewayId5E4193A7",
       ],
       "Properties": {
         "Name": "/accelerator/network/vpc/Infra-Template-Full-Static-Central/id",
@@ -7478,7 +7481,7 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
     },
     "SsmParamInfraTemplateFullStaticCentralWorkloadARtRouteTableIdCB0B0E09": {
       "DependsOn": [
-        "SsmParamNetworkNonTemplateStaticCentralNetworkNonTemplateStaticPublicRouteTableId3A8B5599",
+        "SsmParamWorkloadTemplateWorkloadBRtRouteTableId3D4D6359",
       ],
       "Properties": {
         "Name": "/accelerator/network/vpc/Infra-Template-Full-Static-Central/routeTable/Workload-A-Rt/id",
@@ -7491,7 +7494,7 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
     },
     "SsmParamInfraTemplateFullStaticCentralWorkloadASubnetId61AC6A91": {
       "DependsOn": [
-        "SsmParamNetworkNonTemplateStaticCentralNetworkPublicASubnetId6766E0BC",
+        "SsmParamWorkloadTemplateWorkloadBSubnetIdC690B217",
       ],
       "Properties": {
         "Name": "/accelerator/network/vpc/Infra-Template-Full-Static-Central/subnet/Workload-A/id",
@@ -7503,6 +7506,9 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
       "Type": "AWS::SSM::Parameter",
     },
     "SsmParamInfraTemplateHalfIpamCentralVpcIdDCCF360B": {
+      "DependsOn": [
+        "SsmParamInfraTemplateFullIpamCentralVpcId36AFED2E",
+      ],
       "Properties": {
         "Name": "/accelerator/network/vpc/Infra-Template-Half-Ipam-Central/id",
         "Type": "String",
@@ -7514,7 +7520,7 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
     },
     "SsmParamInfraTemplateHalfIpamCentralWorkloadARtRouteTableId0953204D": {
       "DependsOn": [
-        "SsmParamInfraTemplateFullIpamCentralWorkloadARtRouteTableId761912FB",
+        "SsmParamWorkloadTemplateWorkloadBRtRouteTableId3D4D6359",
       ],
       "Properties": {
         "Name": "/accelerator/network/vpc/Infra-Template-Half-Ipam-Central/routeTable/Workload-A-Rt/id",
@@ -7527,7 +7533,7 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
     },
     "SsmParamInfraTemplateHalfIpamCentralWorkloadASubnetIdC011FD85": {
       "DependsOn": [
-        "SsmParamInfraTemplateFullIpamCentralWorkloadASubnetId5A59595D",
+        "SsmParamWorkloadTemplateWorkloadBSubnetIdC690B217",
       ],
       "Properties": {
         "Name": "/accelerator/network/vpc/Infra-Template-Half-Ipam-Central/subnet/Workload-A/id",
@@ -7540,7 +7546,7 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
     },
     "SsmParamInfraTemplateHalfStaticCentralVpcId623874AD": {
       "DependsOn": [
-        "SsmParamNetworkNonTemplateIpamCentralVpcIdB36FF305",
+        "SsmParamInfraTemplateFullIpamCentralVpcId36AFED2E",
       ],
       "Properties": {
         "Name": "/accelerator/network/vpc/Infra-Template-Half-Static-Central/id",
@@ -7553,7 +7559,7 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
     },
     "SsmParamInfraTemplateHalfStaticCentralWorkloadARtRouteTableIdC87397B7": {
       "DependsOn": [
-        "SsmParamInfraTemplateFullIpamCentralWorkloadARtRouteTableId761912FB",
+        "SsmParamWorkloadTemplateWorkloadBRtRouteTableId3D4D6359",
       ],
       "Properties": {
         "Name": "/accelerator/network/vpc/Infra-Template-Half-Static-Central/routeTable/Workload-A-Rt/id",
@@ -7566,7 +7572,7 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
     },
     "SsmParamInfraTemplateHalfStaticCentralWorkloadASubnetId680B2FDD": {
       "DependsOn": [
-        "SsmParamInfraTemplateFullIpamCentralWorkloadASubnetId5A59595D",
+        "SsmParamWorkloadTemplateWorkloadBSubnetIdC690B217",
       ],
       "Properties": {
         "Name": "/accelerator/network/vpc/Infra-Template-Half-Static-Central/subnet/Workload-A/id",
@@ -7577,9 +7583,22 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
       },
       "Type": "AWS::SSM::Parameter",
     },
+    "SsmParamNetworkEndpointsIgwId786D2B67": {
+      "DependsOn": [
+        "SsmParamNetworkEndpointsVpcIdD8AF7DB9",
+      ],
+      "Properties": {
+        "Name": "/accelerator/network/vpc/Network-Endpoints/internetGateway/id",
+        "Type": "String",
+        "Value": {
+          "Ref": "NetworkEndpointsVpcInternetGateway6505072B",
+        },
+      },
+      "Type": "AWS::SSM::Parameter",
+    },
     "SsmParamNetworkEndpointsManagementSecurityGroup157CDC67": {
       "DependsOn": [
-        "SsmParamNetworkMain3NetworkMainAndNetworkMain3PeeringPeeringAttachmentIdAC88B433",
+        "SsmParamNetworkInspectionNetworkInspectionTransitGatewayAttachmentId80B7A8EF",
       ],
       "Properties": {
         "Name": "/accelerator/network/vpc/Network-Endpoints/securityGroup/Management/id",
@@ -7592,7 +7611,7 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
     },
     "SsmParamNetworkEndpointsNetworkEndpoints2TransitGatewayAttachmentIdD5FF19F5": {
       "DependsOn": [
-        "SsmParamNetworkInspectionAcceleratorNatGwCNatGatewayId498E58EE",
+        "SsmParamNetworkInspectionAcceleratorNatGwANatGatewayId28332EEC",
       ],
       "Properties": {
         "Name": "/accelerator/network/vpc/Network-Endpoints/transitGatewayAttachment/Network-Endpoints-2/id",
@@ -7605,7 +7624,7 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
     },
     "SsmParamNetworkEndpointsNetworkEndpointsARouteTableIdC55DBCD4": {
       "DependsOn": [
-        "SsmParamNetworkEndpointsNetworkEndpointsTgwARouteTableId2037B6B4",
+        "SsmParamNetworkSecondaryNetworkSecondaryCRtRouteTableId08D87312",
       ],
       "Properties": {
         "Name": "/accelerator/network/vpc/Network-Endpoints/routeTable/Network-Endpoints-A/id",
@@ -7618,7 +7637,7 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
     },
     "SsmParamNetworkEndpointsNetworkEndpointsASubnetIdF53EDCC9": {
       "DependsOn": [
-        "SsmParamNetworkSecondaryNetworkSecondaryIpv6OnlySubnetId8392EF4E",
+        "SsmParamNetworkSecondaryNetworkSecondaryOutposts1SubnetIdBFE852EB",
       ],
       "Properties": {
         "Name": "/accelerator/network/vpc/Network-Endpoints/subnet/Network-Endpoints-A/id",
@@ -7630,9 +7649,6 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
       "Type": "AWS::SSM::Parameter",
     },
     "SsmParamNetworkEndpointsNetworkEndpointsBRouteTableId03F05790": {
-      "DependsOn": [
-        "SsmParamNetworkEndpointsNetworkEndpointsTgwARouteTableId2037B6B4",
-      ],
       "Properties": {
         "Name": "/accelerator/network/vpc/Network-Endpoints/routeTable/Network-Endpoints-B/id",
         "Type": "String",
@@ -7644,7 +7660,7 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
     },
     "SsmParamNetworkEndpointsNetworkEndpointsBSubnetId62D810E8": {
       "DependsOn": [
-        "SsmParamNetworkSecondaryNetworkSecondaryIpv6OnlySubnetId8392EF4E",
+        "SsmParamNetworkSecondaryNetworkSecondaryOutposts1SubnetIdBFE852EB",
       ],
       "Properties": {
         "Name": "/accelerator/network/vpc/Network-Endpoints/subnet/Network-Endpoints-B/id",
@@ -7657,7 +7673,7 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
     },
     "SsmParamNetworkEndpointsNetworkEndpointsCustomEndpointSgSecurityGroupE01E3A88": {
       "DependsOn": [
-        "SsmParamNetworkMain3NetworkMainAndNetworkMain3PeeringPeeringAttachmentIdAC88B433",
+        "SsmParamNetworkInspectionNetworkInspectionTransitGatewayAttachmentId80B7A8EF",
       ],
       "Properties": {
         "Name": "/accelerator/network/vpc/Network-Endpoints/securityGroup/Network-Endpoints-CustomEndpointSg/id",
@@ -7669,6 +7685,9 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
       "Type": "AWS::SSM::Parameter",
     },
     "SsmParamNetworkEndpointsNetworkEndpointsTgwARouteTableId2037B6B4": {
+      "DependsOn": [
+        "SsmParamNetworkSecondaryNetworkSecondaryCRtRouteTableId08D87312",
+      ],
       "Properties": {
         "Name": "/accelerator/network/vpc/Network-Endpoints/routeTable/Network-Endpoints-Tgw-A/id",
         "Type": "String",
@@ -7679,9 +7698,6 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
       "Type": "AWS::SSM::Parameter",
     },
     "SsmParamNetworkEndpointsNetworkEndpointsTgwAttachASubnetId72C0AC02": {
-      "DependsOn": [
-        "SsmParamNetworkSecondaryNetworkSecondaryIpv6OnlySubnetId8392EF4E",
-      ],
       "Properties": {
         "Name": "/accelerator/network/vpc/Network-Endpoints/subnet/Network-EndpointsTgwAttach-A/id",
         "Type": "String",
@@ -7693,7 +7709,7 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
     },
     "SsmParamNetworkEndpointsNetworkEndpointsTgwAttachBSubnetId0B7C06C7": {
       "DependsOn": [
-        "SsmParamNetworkSecondaryNetworkSecondaryIpv6OnlySubnetId8392EF4E",
+        "SsmParamNetworkEndpointsNetworkEndpointsTgwAttachASubnetId72C0AC02",
       ],
       "Properties": {
         "Name": "/accelerator/network/vpc/Network-Endpoints/subnet/Network-EndpointsTgwAttach-B/id",
@@ -7706,7 +7722,7 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
     },
     "SsmParamNetworkEndpointsNetworkEndpointsTgwBRouteTableIdC8AB07B7": {
       "DependsOn": [
-        "SsmParamNetworkEndpointsNetworkEndpointsTgwARouteTableId2037B6B4",
+        "SsmParamNetworkSecondaryNetworkSecondaryCRtRouteTableId08D87312",
       ],
       "Properties": {
         "Name": "/accelerator/network/vpc/Network-Endpoints/routeTable/Network-Endpoints-Tgw-B/id",
@@ -7719,7 +7735,7 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
     },
     "SsmParamNetworkEndpointsNetworkEndpointsTransitGatewayAttachmentId2EBCB846": {
       "DependsOn": [
-        "SsmParamNetworkInspectionAcceleratorNatGwCNatGatewayId498E58EE",
+        "SsmParamNetworkInspectionAcceleratorNatGwANatGatewayId28332EEC",
       ],
       "Properties": {
         "Name": "/accelerator/network/vpc/Network-Endpoints/transitGatewayAttachment/Network-Endpoints/id",
@@ -7731,6 +7747,9 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
       "Type": "AWS::SSM::Parameter",
     },
     "SsmParamNetworkEndpointsTestNaclNaclED9584AC": {
+      "DependsOn": [
+        "SsmParamNetworkInspectionDataSecurityGroup1FD45226",
+      ],
       "Properties": {
         "Name": "/accelerator/network/vpc/Network-Endpoints/networkAcl/TestNACL/id",
         "Type": "String",
@@ -7764,9 +7783,6 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
       "Type": "AWS::SSM::Parameter",
     },
     "SsmParamNetworkInspectionAcceleratorNatGwANatGatewayId28332EEC": {
-      "DependsOn": [
-        "SsmParamInfraTemplateFullIpamCentralWorkloadASubnetId5A59595D",
-      ],
       "Properties": {
         "Name": "/accelerator/network/vpc/Network-Inspection/natGateway/accelerator-nat-gw-a/id",
         "Type": "String",
@@ -7778,7 +7794,7 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
     },
     "SsmParamNetworkInspectionAcceleratorNatGwBNatGatewayId74BA7991": {
       "DependsOn": [
-        "SsmParamInfraTemplateFullIpamCentralWorkloadASubnetId5A59595D",
+        "SsmParamNetworkInspectionAcceleratorNatGwANatGatewayId28332EEC",
       ],
       "Properties": {
         "Name": "/accelerator/network/vpc/Network-Inspection/natGateway/accelerator-nat-gw-b/id",
@@ -7790,6 +7806,9 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
       "Type": "AWS::SSM::Parameter",
     },
     "SsmParamNetworkInspectionAcceleratorNatGwCNatGatewayId498E58EE": {
+      "DependsOn": [
+        "SsmParamNetworkInspectionAcceleratorNatGwANatGatewayId28332EEC",
+      ],
       "Properties": {
         "Name": "/accelerator/network/vpc/Network-Inspection/natGateway/accelerator-nat-gw-c/id",
         "Type": "String",
@@ -7800,9 +7819,6 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
       "Type": "AWS::SSM::Parameter",
     },
     "SsmParamNetworkInspectionDataSecurityGroup1FD45226": {
-      "DependsOn": [
-        "SsmParamNetworkMain3NetworkMainAndNetworkMain3PeeringPeeringAttachmentIdAC88B433",
-      ],
       "Properties": {
         "Name": "/accelerator/network/vpc/Network-Inspection/securityGroup/Data/id",
         "Type": "String",
@@ -7812,9 +7828,22 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
       },
       "Type": "AWS::SSM::Parameter",
     },
+    "SsmParamNetworkInspectionIgwId32C92782": {
+      "DependsOn": [
+        "SsmParamNetworkEndpointsVpcIdD8AF7DB9",
+      ],
+      "Properties": {
+        "Name": "/accelerator/network/vpc/Network-Inspection/internetGateway/id",
+        "Type": "String",
+        "Value": {
+          "Ref": "NetworkInspectionVpcInternetGateway6D8C30C4",
+        },
+      },
+      "Type": "AWS::SSM::Parameter",
+    },
     "SsmParamNetworkInspectionNetworkInspectionARouteTableIdAA9E21C5": {
       "DependsOn": [
-        "SsmParamNetworkEndpointsNetworkEndpointsTgwARouteTableId2037B6B4",
+        "SsmParamNetworkEndpointsNetworkEndpointsBRouteTableId03F05790",
       ],
       "Properties": {
         "Name": "/accelerator/network/vpc/Network-Inspection/routeTable/Network-Inspection-A/id",
@@ -7826,6 +7855,9 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
       "Type": "AWS::SSM::Parameter",
     },
     "SsmParamNetworkInspectionNetworkInspectionASubnetId84BB7982": {
+      "DependsOn": [
+        "SsmParamNetworkEndpointsNetworkEndpointsTgwAttachASubnetId72C0AC02",
+      ],
       "Properties": {
         "Name": "/accelerator/network/vpc/Network-Inspection/subnet/Network-Inspection-A/id",
         "Type": "String",
@@ -7836,6 +7868,9 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
       "Type": "AWS::SSM::Parameter",
     },
     "SsmParamNetworkInspectionNetworkInspectionBRouteTableIdAC1C6F68": {
+      "DependsOn": [
+        "SsmParamNetworkEndpointsNetworkEndpointsBRouteTableId03F05790",
+      ],
       "Properties": {
         "Name": "/accelerator/network/vpc/Network-Inspection/routeTable/Network-Inspection-B/id",
         "Type": "String",
@@ -7847,7 +7882,7 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
     },
     "SsmParamNetworkInspectionNetworkInspectionBSubnetId08F48703": {
       "DependsOn": [
-        "SsmParamNetworkInspectionNetworkInspectionASubnetId84BB7982",
+        "SsmParamNetworkEndpointsNetworkEndpointsTgwAttachASubnetId72C0AC02",
       ],
       "Properties": {
         "Name": "/accelerator/network/vpc/Network-Inspection/subnet/Network-Inspection-B/id",
@@ -7859,9 +7894,6 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
       "Type": "AWS::SSM::Parameter",
     },
     "SsmParamNetworkInspectionNetworkInspectionGatewayRouteTableId9C85DF52": {
-      "DependsOn": [
-        "SsmParamNetworkInspectionNetworkInspectionBRouteTableIdAC1C6F68",
-      ],
       "Properties": {
         "Name": "/accelerator/network/vpc/Network-Inspection/routeTable/Network-Inspection-Gateway/id",
         "Type": "String",
@@ -7873,7 +7905,7 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
     },
     "SsmParamNetworkInspectionNetworkInspectionLocalASubnetIdB87E6E71": {
       "DependsOn": [
-        "SsmParamNetworkInspectionNetworkInspectionASubnetId84BB7982",
+        "SsmParamNetworkInspectionNetworkInspectionTgwAttachBSubnetId470AEEA9",
       ],
       "Properties": {
         "Name": "/accelerator/network/vpc/Network-Inspection/subnet/Network-Inspection-Local-A/id",
@@ -7886,7 +7918,7 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
     },
     "SsmParamNetworkInspectionNetworkInspectionLocalRtARouteTableIdFC5189D1": {
       "DependsOn": [
-        "SsmParamNetworkInspectionNetworkInspectionBRouteTableIdAC1C6F68",
+        "SsmParamNetworkInspectionNetworkInspectionGatewayRouteTableId9C85DF52",
       ],
       "Properties": {
         "Name": "/accelerator/network/vpc/Network-Inspection/routeTable/Network-Inspection-Local-Rt-A/id",
@@ -7899,7 +7931,7 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
     },
     "SsmParamNetworkInspectionNetworkInspectionTgwARouteTableId838420AE": {
       "DependsOn": [
-        "SsmParamNetworkInspectionNetworkInspectionBRouteTableIdAC1C6F68",
+        "SsmParamNetworkEndpointsNetworkEndpointsBRouteTableId03F05790",
       ],
       "Properties": {
         "Name": "/accelerator/network/vpc/Network-Inspection/routeTable/Network-Inspection-Tgw-A/id",
@@ -7912,7 +7944,7 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
     },
     "SsmParamNetworkInspectionNetworkInspectionTgwAttachASubnetId90B86E86": {
       "DependsOn": [
-        "SsmParamNetworkInspectionNetworkInspectionASubnetId84BB7982",
+        "SsmParamNetworkEndpointsNetworkEndpointsTgwAttachASubnetId72C0AC02",
       ],
       "Properties": {
         "Name": "/accelerator/network/vpc/Network-Inspection/subnet/Network-InspectionTgwAttach-A/id",
@@ -7924,9 +7956,6 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
       "Type": "AWS::SSM::Parameter",
     },
     "SsmParamNetworkInspectionNetworkInspectionTgwAttachBSubnetId470AEEA9": {
-      "DependsOn": [
-        "SsmParamNetworkInspectionNetworkInspectionASubnetId84BB7982",
-      ],
       "Properties": {
         "Name": "/accelerator/network/vpc/Network-Inspection/subnet/Network-InspectionTgwAttach-B/id",
         "Type": "String",
@@ -7938,7 +7967,7 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
     },
     "SsmParamNetworkInspectionNetworkInspectionTgwBRouteTableId7113F1A4": {
       "DependsOn": [
-        "SsmParamNetworkInspectionNetworkInspectionBRouteTableIdAC1C6F68",
+        "SsmParamNetworkEndpointsNetworkEndpointsBRouteTableId03F05790",
       ],
       "Properties": {
         "Name": "/accelerator/network/vpc/Network-Inspection/routeTable/Network-Inspection-Tgw-B/id",
@@ -7950,9 +7979,6 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
       "Type": "AWS::SSM::Parameter",
     },
     "SsmParamNetworkInspectionNetworkInspectionTransitGatewayAttachmentId80B7A8EF": {
-      "DependsOn": [
-        "SsmParamNetworkInspectionAcceleratorNatGwCNatGatewayId498E58EE",
-      ],
       "Properties": {
         "Name": "/accelerator/network/vpc/Network-Inspection/transitGatewayAttachment/Network-Inspection/id",
         "Type": "String",
@@ -7976,9 +8002,6 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
       "Type": "AWS::SSM::Parameter",
     },
     "SsmParamNetworkInspectionVpnGatewayId5E4193A7": {
-      "DependsOn": [
-        "SsmParamNetworkEndpointsVpcIdD8AF7DB9",
-      ],
       "Properties": {
         "Name": "/accelerator/network/vpc/Network-Inspection/virtualPrivateGateway/id",
         "Type": "String",
@@ -7989,6 +8012,9 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
       "Type": "AWS::SSM::Parameter",
     },
     "SsmParamNetworkMain3NetworkMainAndNetworkMain3PeeringPeeringAttachmentIdAC88B433": {
+      "DependsOn": [
+        "SsmParamNetworkInspectionNetworkInspectionTransitGatewayAttachmentId80B7A8EF",
+      ],
       "Properties": {
         "Name": "/accelerator/network/transitGateways/Network-Main-3/peering/Network-Main-And-Network-Main3-Peering/id",
         "Type": "String",
@@ -8003,7 +8029,7 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
     },
     "SsmParamNetworkMainNetworkMainAndNetworkMain3PeeringPeeringAttachmentId695B808B": {
       "DependsOn": [
-        "SsmParamNetworkInspectionAcceleratorNatGwCNatGatewayId498E58EE",
+        "SsmParamNetworkInspectionNetworkInspectionTransitGatewayAttachmentId80B7A8EF",
       ],
       "Properties": {
         "Name": "/accelerator/network/transitGateways/Network-Main/peering/Network-Main-And-Network-Main3-Peering/id",
@@ -8019,7 +8045,7 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
     },
     "SsmParamNetworkNonTemplateIpamCentralNetworkNonTemplateIpamPublicASubnetId7479495B": {
       "DependsOn": [
-        "SsmParamNetworkNonTemplateStaticCentralNetworkPublicASubnetId6766E0BC",
+        "SsmParamNetworkInspectionNetworkInspectionTgwAttachBSubnetId470AEEA9",
       ],
       "Properties": {
         "Name": "/accelerator/network/vpc/Network-NonTemplate-Ipam-Central/subnet/Network-NonTemplate-Ipam-Public-A/id",
@@ -8032,7 +8058,7 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
     },
     "SsmParamNetworkNonTemplateIpamCentralNetworkNonTemplateIpamPublicRouteTableId2F3EF67A": {
       "DependsOn": [
-        "SsmParamNetworkNonTemplateStaticCentralNetworkNonTemplateStaticPublicRouteTableId3A8B5599",
+        "SsmParamNetworkInspectionNetworkInspectionGatewayRouteTableId9C85DF52",
       ],
       "Properties": {
         "Name": "/accelerator/network/vpc/Network-NonTemplate-Ipam-Central/routeTable/Network-NonTemplate-Ipam-Public/id",
@@ -8044,6 +8070,9 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
       "Type": "AWS::SSM::Parameter",
     },
     "SsmParamNetworkNonTemplateIpamCentralVpcIdB36FF305": {
+      "DependsOn": [
+        "SsmParamNetworkInspectionVpnGatewayId5E4193A7",
+      ],
       "Properties": {
         "Name": "/accelerator/network/vpc/Network-NonTemplate-Ipam-Central/id",
         "Type": "String",
@@ -8054,6 +8083,9 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
       "Type": "AWS::SSM::Parameter",
     },
     "SsmParamNetworkNonTemplateStaticCentralNetworkNonTemplateStaticPublicRouteTableId3A8B5599": {
+      "DependsOn": [
+        "SsmParamNetworkInspectionNetworkInspectionGatewayRouteTableId9C85DF52",
+      ],
       "Properties": {
         "Name": "/accelerator/network/vpc/Network-NonTemplate-Static-Central/routeTable/Network-NonTemplate-Static-Public/id",
         "Type": "String",
@@ -8064,6 +8096,9 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
       "Type": "AWS::SSM::Parameter",
     },
     "SsmParamNetworkNonTemplateStaticCentralNetworkPublicASubnetId6766E0BC": {
+      "DependsOn": [
+        "SsmParamNetworkInspectionNetworkInspectionTgwAttachBSubnetId470AEEA9",
+      ],
       "Properties": {
         "Name": "/accelerator/network/vpc/Network-NonTemplate-Static-Central/subnet/Network-Public-A/id",
         "Type": "String",
@@ -8075,7 +8110,7 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
     },
     "SsmParamNetworkNonTemplateStaticCentralVpcId9DA2C7CD": {
       "DependsOn": [
-        "SsmParamNetworkEndpointsVpcIdD8AF7DB9",
+        "SsmParamNetworkInspectionVpnGatewayId5E4193A7",
       ],
       "Properties": {
         "Name": "/accelerator/network/vpc/Network-NonTemplate-Static-Central/id",
@@ -8098,7 +8133,7 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
     },
     "SsmParamNetworkSecondaryNetworkSecondaryARtRouteTableIdD8813C63": {
       "DependsOn": [
-        "SsmParamInfraTemplateHalfIpamCentralVpcIdDCCF360B",
+        "SsmParamInfraTemplateFullIpamCentralVpcId36AFED2E",
       ],
       "Properties": {
         "Name": "/accelerator/network/vpc/Network-Secondary/routeTable/Network-Secondary-A-Rt/id",
@@ -8110,9 +8145,6 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
       "Type": "AWS::SSM::Parameter",
     },
     "SsmParamNetworkSecondaryNetworkSecondaryASubnetId121C5F23": {
-      "DependsOn": [
-        "SsmParamInfraTemplateFullIpamCentralWorkloadARtRouteTableId761912FB",
-      ],
       "Properties": {
         "Name": "/accelerator/network/vpc/Network-Secondary/subnet/Network-Secondary-A/id",
         "Type": "String",
@@ -8124,7 +8156,7 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
     },
     "SsmParamNetworkSecondaryNetworkSecondaryBRtRouteTableIdFA654D75": {
       "DependsOn": [
-        "SsmParamInfraTemplateHalfIpamCentralVpcIdDCCF360B",
+        "SsmParamInfraTemplateFullIpamCentralVpcId36AFED2E",
       ],
       "Properties": {
         "Name": "/accelerator/network/vpc/Network-Secondary/routeTable/Network-Secondary-B-Rt/id",
@@ -8137,7 +8169,7 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
     },
     "SsmParamNetworkSecondaryNetworkSecondaryBSubnetIdDF008255": {
       "DependsOn": [
-        "SsmParamInfraTemplateFullIpamCentralWorkloadARtRouteTableId761912FB",
+        "SsmParamNetworkSecondaryNetworkSecondaryASubnetId121C5F23",
       ],
       "Properties": {
         "Name": "/accelerator/network/vpc/Network-Secondary/subnet/Network-Secondary-B/id",
@@ -8149,9 +8181,6 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
       "Type": "AWS::SSM::Parameter",
     },
     "SsmParamNetworkSecondaryNetworkSecondaryCRtRouteTableId08D87312": {
-      "DependsOn": [
-        "SsmParamInfraTemplateHalfIpamCentralVpcIdDCCF360B",
-      ],
       "Properties": {
         "Name": "/accelerator/network/vpc/Network-Secondary/routeTable/Network-Secondary-C-Rt/id",
         "Type": "String",
@@ -8162,6 +8191,9 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
       "Type": "AWS::SSM::Parameter",
     },
     "SsmParamNetworkSecondaryNetworkSecondaryCSubnetId6A8F9E78": {
+      "DependsOn": [
+        "SsmParamNetworkSecondaryNetworkSecondaryASubnetId121C5F23",
+      ],
       "Properties": {
         "Name": "/accelerator/network/vpc/Network-Secondary/subnet/Network-Secondary-C/id",
         "Type": "String",
@@ -8173,7 +8205,7 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
     },
     "SsmParamNetworkSecondaryNetworkSecondaryDRtRouteTableIdD54D03D4": {
       "DependsOn": [
-        "SsmParamInfraTemplateHalfIpamCentralVpcIdDCCF360B",
+        "SsmParamNetworkSecondaryNetworkSecondaryCRtRouteTableId08D87312",
       ],
       "Properties": {
         "Name": "/accelerator/network/vpc/Network-Secondary/routeTable/Network-Secondary-D-Rt/id",
@@ -8186,7 +8218,7 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
     },
     "SsmParamNetworkSecondaryNetworkSecondaryDSubnetIdEFF1A015": {
       "DependsOn": [
-        "SsmParamNetworkSecondaryNetworkSecondaryCSubnetId6A8F9E78",
+        "SsmParamNetworkSecondaryNetworkSecondaryASubnetId121C5F23",
       ],
       "Properties": {
         "Name": "/accelerator/network/vpc/Network-Secondary/subnet/Network-Secondary-D/id",
@@ -8199,7 +8231,7 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
     },
     "SsmParamNetworkSecondaryNetworkSecondaryDualStackSubnetId7D04B583": {
       "DependsOn": [
-        "SsmParamNetworkSecondaryNetworkSecondaryCSubnetId6A8F9E78",
+        "SsmParamNetworkSecondaryNetworkSecondaryOutposts1SubnetIdBFE852EB",
       ],
       "Properties": {
         "Name": "/accelerator/network/vpc/Network-Secondary/subnet/Network-Secondary-Dual-Stack/id",
@@ -8211,6 +8243,9 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
       "Type": "AWS::SSM::Parameter",
     },
     "SsmParamNetworkSecondaryNetworkSecondaryIpv6OnlySubnetId8392EF4E": {
+      "DependsOn": [
+        "SsmParamNetworkSecondaryNetworkSecondaryOutposts1SubnetIdBFE852EB",
+      ],
       "Properties": {
         "Name": "/accelerator/network/vpc/Network-Secondary/subnet/Network-Secondary-Ipv6-Only/id",
         "Type": "String",
@@ -8221,9 +8256,6 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
       "Type": "AWS::SSM::Parameter",
     },
     "SsmParamNetworkSecondaryNetworkSecondaryOutposts1SubnetIdBFE852EB": {
-      "DependsOn": [
-        "SsmParamNetworkSecondaryNetworkSecondaryCSubnetId6A8F9E78",
-      ],
       "Properties": {
         "Name": "/accelerator/network/vpc/Network-Secondary/subnet/Network-Secondary-Outposts-1/id",
         "Type": "String",
@@ -8235,7 +8267,7 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
     },
     "SsmParamNetworkSecondaryNetworkSecondaryOutpostsASubnetId8238BEAB": {
       "DependsOn": [
-        "SsmParamNetworkSecondaryNetworkSecondaryCSubnetId6A8F9E78",
+        "SsmParamNetworkSecondaryNetworkSecondaryASubnetId121C5F23",
       ],
       "Properties": {
         "Name": "/accelerator/network/vpc/Network-Secondary/subnet/Network-Secondary-Outposts-A/id",
@@ -8248,7 +8280,7 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
     },
     "SsmParamNetworkSecondaryTestNaclNacl0FC3F602": {
       "DependsOn": [
-        "SsmParamNetworkMain3NetworkMainAndNetworkMain3PeeringPeeringAttachmentIdAC88B433",
+        "SsmParamNetworkInspectionDataSecurityGroup1FD45226",
       ],
       "Properties": {
         "Name": "/accelerator/network/vpc/Network-Secondary/networkAcl/TestNacl/id",
@@ -8281,7 +8313,7 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
     },
     "SsmParamTestIpv6DhcpOptionsId18062B81": {
       "DependsOn": [
-        "SsmParamAcceleratorDhcpOptsDhcpOptionsId5EAF4874",
+        "SsmParamAcceleratorGwlbGwlbServiceIdF93A23BF",
       ],
       "Properties": {
         "Name": "/accelerator/network/dhcp/test-ipv6/id",
@@ -8294,7 +8326,7 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
     },
     "SsmParamWorkloadTemplateVpcId8722DBFE": {
       "DependsOn": [
-        "SsmParamNetworkNonTemplateIpamCentralVpcIdB36FF305",
+        "SsmParamNetworkInspectionVpnGatewayId5E4193A7",
       ],
       "Properties": {
         "Name": "/accelerator/network/vpc/Workload-Template/id",
@@ -8307,7 +8339,7 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
     },
     "SsmParamWorkloadTemplateWorkloadARtRouteTableId8F1E5325": {
       "DependsOn": [
-        "SsmParamNetworkNonTemplateStaticCentralNetworkNonTemplateStaticPublicRouteTableId3A8B5599",
+        "SsmParamNetworkInspectionNetworkInspectionGatewayRouteTableId9C85DF52",
       ],
       "Properties": {
         "Name": "/accelerator/network/vpc/Workload-Template/routeTable/Workload-A-Rt/id",
@@ -8320,7 +8352,7 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
     },
     "SsmParamWorkloadTemplateWorkloadASubnetIdC0F8B4F7": {
       "DependsOn": [
-        "SsmParamNetworkNonTemplateStaticCentralNetworkPublicASubnetId6766E0BC",
+        "SsmParamNetworkInspectionNetworkInspectionTgwAttachBSubnetId470AEEA9",
       ],
       "Properties": {
         "Name": "/accelerator/network/vpc/Workload-Template/subnet/Workload-A/id",
@@ -8332,9 +8364,6 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
       "Type": "AWS::SSM::Parameter",
     },
     "SsmParamWorkloadTemplateWorkloadBRtRouteTableId3D4D6359": {
-      "DependsOn": [
-        "SsmParamNetworkNonTemplateStaticCentralNetworkNonTemplateStaticPublicRouteTableId3A8B5599",
-      ],
       "Properties": {
         "Name": "/accelerator/network/vpc/Workload-Template/routeTable/Workload-B-Rt/id",
         "Type": "String",
@@ -8345,9 +8374,6 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
       "Type": "AWS::SSM::Parameter",
     },
     "SsmParamWorkloadTemplateWorkloadBSubnetIdC690B217": {
-      "DependsOn": [
-        "SsmParamNetworkNonTemplateStaticCentralNetworkPublicASubnetId6766E0BC",
-      ],
       "Properties": {
         "Name": "/accelerator/network/vpc/Workload-Template/subnet/Workload-B/id",
         "Type": "String",

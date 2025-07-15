@@ -592,6 +592,14 @@ export class VpcResources {
         stringValue: vpc.vpcId,
       });
 
+      if (vpc.internetGatewayId) {
+        this.stack.addSsmParameter({
+          logicalId: pascalCase(`SsmParam${pascalCase(options.vpcItem.name)}IgwId`),
+          parameterName: this.stack.getSsmPath(SsmResourceType.IGW, [options.vpcItem.name]),
+          stringValue: vpc.internetGatewayId,
+        });
+      }
+
       if (vpc.egressOnlyIgwId) {
         this.stack.addSsmParameter({
           logicalId: pascalCase(`SsmParam${pascalCase(options.vpcItem.name)}EgressOnlyIgwId`),
