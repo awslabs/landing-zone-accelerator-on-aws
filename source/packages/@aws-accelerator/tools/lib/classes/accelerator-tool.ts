@@ -73,10 +73,11 @@ import {
 import { ConfigServiceClient, DescribeConfigRulesCommand } from '@aws-sdk/client-config-service';
 import AdmZip, { IZipEntry } from 'adm-zip';
 
+import { AcceleratorV2Stacks } from '../../../accelerator/lib/accelerator';
 /**
  * Type for pipeline stage action information with order and action name
  */
-type stageActionType = { order: number; name: string; stackPrefix: string };
+type stageActionType = { order: number; name: string; stackPrefix: string; hasV2Stacks?: boolean };
 
 /**
  * Pipeline Stack Type
@@ -85,6 +86,7 @@ type pipelineStackType = {
   stageOrder: number;
   order: number;
   stackName: string;
+  hasV2Stacks?: boolean;
 };
 
 type deleteStacksType = {
@@ -99,6 +101,7 @@ type deleteStacksType = {
   stackName: string;
   accountID: string;
   region: string;
+  hasV2Stacks?: boolean;
 };
 
 /**
@@ -223,7 +226,7 @@ export class AcceleratorTool {
         { order: 2, name: 'Identity_Center', stackPrefix: '-IdentityCenterStack' },
         { order: 4, name: 'Network_VPCs', stackPrefix: '-NetworkVpcDnsStack' },
         { order: 3, name: 'Network_VPCs', stackPrefix: '-NetworkVpcEndpointsStack' },
-        { order: 2, name: 'Network_VPCs', stackPrefix: '-NetworkVpcStack' },
+        { order: 2, name: 'Network_VPCs', stackPrefix: '-NetworkVpcStack', hasV2Stacks: true },
         { order: 1, name: 'Operations', stackPrefix: '-OperationsStack' },
         { order: 1, name: 'Security', stackPrefix: '-SecurityStack' },
         { order: 1, name: 'Network_Prepare', stackPrefix: '-NetworkPrepStack' },
@@ -524,7 +527,7 @@ export class AcceleratorTool {
     await this.queryAccountStacks(acceleratorPrefix);
 
     for (const stack of this.acceleratorCloudFormationStacks) {
-      await this.deleteStacks(acceleratorPrefix, stack.stackName);
+      await this.deleteStacks(acceleratorPrefix, stack.stackName, stack.hasV2Stacks);
     }
   }
 
@@ -736,6 +739,7 @@ export class AcceleratorTool {
           stageOrder: stage.order,
           order: action.order,
           stackName: `${acceleratorPrefix}${action.stackPrefix}`,
+          hasV2Stacks: action.hasV2Stacks,
         });
       }
     }
@@ -1333,7 +1337,7 @@ Once it is resolved rerun uninstaller. Additional error details:\n\n\n\n\n\n`,
   }
 
   /**
-   * Function to parallelise querying account stacks so we only process stacks that exist.
+   * Function to parallelize querying account stacks so we only process stacks that exist.
    */
   private async queryAccountStacks(acceleratorPrefix: string): Promise<void> {
     const assumeRoleName = this.globalConfig?.managementAccountAccessRole || 'AWSControlTowerExecution';
@@ -1422,14 +1426,16 @@ Once it is resolved rerun uninstaller. Additional error details:\n\n\n\n\n\n`,
    * @param stackName
    * @private
    */
-  private async deleteStacks(acceleratorPrefix: string, stackName: string): Promise<void> {
+  private async deleteStacks(acceleratorPrefix: string, stackName: string, hasV2Stacks?: boolean): Promise<void> {
     const assumeRoleName = this.globalConfig?.managementAccountAccessRole || 'AWSControlTowerExecution';
     const cleanupRegions: string[] = this.getCleanupRegions();
 
     const regionPromises: Promise<void>[] = [];
 
     for (const region of cleanupRegions) {
-      regionPromises.push(this.processRegionsForStackDeletion(region, acceleratorPrefix, stackName, assumeRoleName));
+      regionPromises.push(
+        this.processRegionsForStackDeletion(region, acceleratorPrefix, stackName, assumeRoleName, hasV2Stacks),
+      );
     }
 
     await Promise.all(regionPromises);
@@ -1441,13 +1447,21 @@ Once it is resolved rerun uninstaller. Additional error details:\n\n\n\n\n\n`,
     acceleratorPrefix: string,
     stackName: string,
     assumeRoleName: string,
+    hasV2Stacks?: boolean,
   ): Promise<void> {
     const accountPromises: Promise<void>[] = [];
 
     for (const account of this.organizationAccounts) {
       if (this.accountStacks.includes(`${stackName}-${account.accountId}-${region}`)) {
         accountPromises.push(
-          this.processAccountDeleteStacks(region, account.accountId, acceleratorPrefix, stackName, assumeRoleName),
+          this.processAccountDeleteStacks(
+            region,
+            account.accountId,
+            acceleratorPrefix,
+            stackName,
+            assumeRoleName,
+            hasV2Stacks,
+          ),
         );
       }
     }
@@ -1464,6 +1478,7 @@ Once it is resolved rerun uninstaller. Additional error details:\n\n\n\n\n\n`,
     acceleratorPrefix: string,
     stackName: string,
     assumeRoleName: string,
+    hasV2Stacks?: boolean,
   ): Promise<void> {
     let cloudFormationClient: CloudFormationClient;
     let s3Client: S3Client;
@@ -1571,6 +1586,7 @@ Once it is resolved rerun uninstaller. Additional error details:\n\n\n\n\n\n`,
         stackName: stackName,
         accountID: account,
         region: region,
+        hasV2Stacks,
       });
     }
   }
@@ -1986,6 +2002,72 @@ Once it is resolved rerun uninstaller. Additional error details:\n\n\n\n\n\n`,
     return cloudFormationStack;
   }
 
+  private async completeV2NetworkVPcStacksDeletion(acceleratorPrefix: string, item: deleteStacksType): Promise<void> {
+    // Maintain the stack order in the array for deletion order
+    const v2NetworkVpcStackNamePrefixes = [
+      `${acceleratorPrefix}-${AcceleratorV2Stacks.NACLS_STACK}`,
+      `${acceleratorPrefix}-${AcceleratorV2Stacks.LB_STACK}`,
+      `${acceleratorPrefix}-${AcceleratorV2Stacks.ROUTE_ENTRIES_STACK}`,
+      `${acceleratorPrefix}-${AcceleratorV2Stacks.SUBNETS_SHARE_STACK}`,
+      `${acceleratorPrefix}-${AcceleratorV2Stacks.SUBNETS_STACK}`,
+      `${acceleratorPrefix}-${AcceleratorV2Stacks.SECURITY_GROUPS_STACK}`,
+      `${acceleratorPrefix}-${AcceleratorV2Stacks.ROUTE_TABLES_STACK}`,
+      `${acceleratorPrefix}-${AcceleratorV2Stacks.VPC_STACK}`,
+    ];
+
+    for (const v2NetworkVpcStackNamePrefix of v2NetworkVpcStackNamePrefixes) {
+      this.logger.info(
+        `Checking stacks with prefix ${v2NetworkVpcStackNamePrefix} is present in ${item.accountID} for ${item.region} region.`,
+      );
+      for (const accountStack of this.accountStacks) {
+        if (accountStack.includes(v2NetworkVpcStackNamePrefix)) {
+          const stackExists = await this.validateStackExistence(
+            item.clients.cloudFormation,
+            accountStack,
+            item.accountID,
+            item.region,
+          );
+
+          if (stackExists) {
+            this.logger.info(
+              `Found v2 stack ${accountStack}, started deletion in ${item.accountID} for ${item.region} region.`,
+            );
+            await this.disableStackTermination(item.clients.cloudFormation, accountStack, item.accountID, item.region);
+
+            // Prepare list of resources to be deleted before and after stack deletion
+            await this.prepareStackResourcesForDelete(
+              accountStack,
+              item.clients.cloudFormation,
+              item.clients.cloudWatchLogs,
+              item.clients.s3,
+              item.clients.backup,
+              item.clients.kms,
+              item.clients.iam,
+            );
+
+            await this.cleanupStack(item.clients.cloudFormation, accountStack);
+          }
+        }
+      }
+      this.logger.info(
+        `Not found stacks with prefix ${v2NetworkVpcStackNamePrefix} in ${item.accountID} for ${item.region} region.`,
+      );
+    }
+  }
+
+  private async completeV2StacksDeletion(
+    stackName: string,
+    acceleratorPrefix: string,
+    item: deleteStacksType,
+  ): Promise<void> {
+    if (stackName.includes('NetworkVpcStack')) {
+      this.logger.info(
+        `Started deletion of v2 stacks in ${item.accountID} for ${item.region} region for ${stackName} stack.`,
+      );
+      await this.completeV2NetworkVPcStacksDeletion(acceleratorPrefix, item);
+    }
+  }
+
   private async completeStacksDeletion(acceleratorPrefix: string) {
     const promises: Promise<void>[] = [];
     let stackName = '';
@@ -1995,6 +2077,13 @@ Once it is resolved rerun uninstaller. Additional error details:\n\n\n\n\n\n`,
         item.stackName === `${acceleratorPrefix}-CDKToolkit`
           ? `${acceleratorPrefix}-CDKToolkit`
           : `${item.stackName}-${item.accountID}-${item.region}`;
+
+      if (item.hasV2Stacks) {
+        this.logger.info(
+          `V2 stack flag is ON for stack ${stackName} in ${item.accountID} account for ${item.region} region.`,
+        );
+        await this.completeV2StacksDeletion(stackName, acceleratorPrefix, item);
+      }
 
       const stackExists = await this.validateStackExistence(
         item.clients.cloudFormation,
