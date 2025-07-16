@@ -1128,11 +1128,11 @@ export interface ICloudWatchLogsExclusionConfig {
  */
 
 export interface ICloudWatchLogSkipBulkUpdateConfig {
-  /*
+  /**
    * Flag to enable skip bulk updates
    */
   readonly enable: boolean;
-  /*
+  /**
    * Accounts, regions, and OUs to target skipping bulk updates of CloudFormation Log Group subscription filters
    */
   readonly skipBulkUpdateTargets: t.IDeploymentTargets | undefined;
@@ -2158,7 +2158,7 @@ export interface ICloudWatchManagedDataProtectionIdentifierConfig {
  * *{@link IGlobalConfig} / {@link ILoggingConfig} / {@link ICloudWatchLogsConfig}/ {@link ICloudWatchDataProtectionConfig}*
  *
  * @description
- * AWS CloudWatch Log data protection configuration, you can find more information [here](https://awslabs.github.io/landing-zone-accelerator-on-aws/latest/faq/Logging/cwl/)
+ * AWS CloudWatch Log data protection configuration, you can find more information [here](https://awslabs.github.io/landing-zone-accelerator-on-aws/latest/faq/logging/cwl/)
  *
  * @example
  * ```

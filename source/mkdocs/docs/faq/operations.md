@@ -18,6 +18,10 @@ For more information on enrolling new accounts in Landing Zone Accelerator, plea
 
 Please refer to [Adding an existing account](https://docs.aws.amazon.com/solutions/latest/landing-zone-accelerator-on-aws/performing-administrator-tasks.html#adding-an-existing-account) in the solution implementation guide for guidance on adding an existing account to your Landing Zone Accelerator environment.
 
+## How do I remove an existing AWS Account?
+
+The account removal process requires several important steps to ensure a clean transition, please see [closing-an-account](https://docs.aws.amazon.com/solutions/latest/landing-zone-accelerator-on-aws/performing-administrator-tasks.html#closing-an-account) in the solution implementation guide for guidance on closing an account from your Landing Zone Accelerator environment
+
 ## How do I manage my SCPs when using CT and Landing Zone Accelerator?
 
 You can use Landing Zone Accelerator to deploy custom SCPs into your environment in addition to the SCPs that are deployed and managed by CT. Landing Zone Accelerator will only manage SCPs that are part of the accelerator configuration, and will not manage any SCPs that are deployed by CT. Note, Organizations sets a limit of 5 SCPs per OU and CT will consume up to 3 SCPs which will leave 2 additional SCPs that you can add. For finer grained SCPs, Landing Zone Accelerator also allows you to deploy custom SCPs to specific accounts.
@@ -63,7 +67,7 @@ The Landing Zone Accelerator solution cannot deploy AWS Control Tower Landing Zo
 The Landing Zone Accelerator solution cannot update or reset AWS Control Tower Landing Zone when there is already an execution in progress. The current AWS Control Tower change operation must be completed before you can proceed.
 
  `AWS Control Tower Landing Zone's most recent version is <LATEST_VERSION>, which is different from the version <CONFIG_VERSION> specified in global-config.yaml file.` 
-  
+
 Landing Zone Accelerator cannot update or reset AWS Control Tower Landing Zone if the Landing Zone version does not match the latest version of the AWS Control Tower Landing Zone. In order to resolve this issue, it is recommended that you review the [AWS Control Tower release notes](https://docs.aws.amazon.com/controltower/latest/userguide/release-notes.html), and update the version property of `landingZone` [ControlTowerLandingZoneConfig](../typedocs/classes/___packages__aws_accelerator_config_dist_config_lib_global_config.ControlTowerLandingZoneConfig.html) configuration. Alternatively, you may rollback [ControlTowerLandingZoneConfig](../typedocs/classes/___packages__aws_accelerator_config_dist_config_lib_global_config.ControlTowerLandingZoneConfig.html) configuration changes so that the solution does not attempt to update the AWS Control Tower Landing Zone. In the event the current AWS Control Tower Landing Zone drifts, the solution will attempt to reset the landing zone, which will require the latest version to be specified in the configuration.
 
 `AWS Control Tower operation with identifier <OPERATION_IDENTIFIER> in FAILED state !!!!. Please investigate CT operation before executing pipeline`

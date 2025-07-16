@@ -134,7 +134,7 @@ export interface IUserSetConfig {
    */
   readonly deploymentTargets: t.IDeploymentTargets;
   /**
-   * List os user objects
+   * List of user objects
    */
   readonly users: IUserConfig[];
 }
@@ -828,14 +828,41 @@ export interface IActiveDirectoryUserConfig {
  * Managed active directory user password policy configuration
  */
 export interface IActiveDirectoryPasswordPolicyConfig {
+  /**
+   * Number of previous passwords to remember
+   */
   readonly history: number;
+  /**
+   * Maximum password age in days
+   */
   readonly maximumAge: number;
+  /**
+   * Minimum password age in days
+   */
   readonly minimumAge: number;
+  /**
+   * Minimum password length in characters
+   */
   readonly minimumLength: number;
+  /**
+   * Whether password complexity requirements are enforced
+   */
   readonly complexity: boolean;
+  /**
+   * Whether passwords can be stored using reversible encryption
+   */
   readonly reversible: boolean;
+  /**
+   * Number of failed login attempts before account lockout
+   */
   readonly failedAttempts: number;
+  /**
+   * Account lockout duration in minutes
+   */
   readonly lockoutDuration: number;
+  /**
+   * Time in minutes after which failed login attempt counter is reset
+   */
   readonly lockoutAttemptsReset: number;
 }
 
@@ -885,7 +912,7 @@ export interface IActiveDirectoryConfigurationInstanceUserDataConfig {
  *
  * @description
  * Active directory configuration instance configuration. The machine will be used to configure and manage active directory configuration.
- * Accelerator can create user, groups when following configuration provided
+ * Accelerator can create users and groups when the following configuration is provided
  *
  * @example
  *
