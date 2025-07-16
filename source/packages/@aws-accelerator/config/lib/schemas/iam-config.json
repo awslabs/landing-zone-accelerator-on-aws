@@ -13,7 +13,7 @@
     },
     "IActiveDirectoryConfigurationInstanceConfig": {
       "additionalProperties": false,
-      "description": "Active directory configuration instance configuration. The machine will be used to configure and manage active directory configuration.\nAccelerator can create user, groups when following configuration provided",
+      "description": "Active directory configuration instance configuration. The machine will be used to configure and manage active directory configuration.\nAccelerator can create users and groups when the following configuration is provided",
       "properties": {
         "adConnectorGroup": {
           "$ref": "#/definitions/NonEmptyString",
@@ -124,30 +124,39 @@
       "description": "Managed active directory user password policy configuration",
       "properties": {
         "complexity": {
+          "description": "Whether password complexity requirements are enforced",
           "type": "boolean"
         },
         "failedAttempts": {
+          "description": "Number of failed login attempts before account lockout",
           "type": "number"
         },
         "history": {
+          "description": "Number of previous passwords to remember",
           "type": "number"
         },
         "lockoutAttemptsReset": {
+          "description": "Time in minutes after which failed login attempt counter is reset",
           "type": "number"
         },
         "lockoutDuration": {
+          "description": "Account lockout duration in minutes",
           "type": "number"
         },
         "maximumAge": {
+          "description": "Maximum password age in days",
           "type": "number"
         },
         "minimumAge": {
+          "description": "Minimum password age in days",
           "type": "number"
         },
         "minimumLength": {
+          "description": "Minimum password length in characters",
           "type": "number"
         },
         "reversible": {
+          "description": "Whether passwords can be stored using reversible encryption",
           "type": "boolean"
         }
       },
@@ -875,7 +884,7 @@
           "description": "User set's deployment target"
         },
         "users": {
-          "description": "List os user objects",
+          "description": "List of user objects",
           "items": {
             "$ref": "#/definitions/IUserConfig"
           },

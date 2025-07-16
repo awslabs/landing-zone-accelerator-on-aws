@@ -837,6 +837,7 @@
       "description": "Configure a launch template for the application.",
       "properties": {
         "blockDeviceMappings": {
+          "description": "The block device mapping.",
           "items": {
             "$ref": "#/definitions/IBlockDeviceMappingItem"
           },
@@ -863,7 +864,8 @@
           "description": "The name of the key pair. LZA does not create keypair. This should exist in the account/region or else deployment will fail."
         },
         "name": {
-          "$ref": "#/definitions/NonEmptyString"
+          "$ref": "#/definitions/NonEmptyString",
+          "description": "Name of Launch Template"
         },
         "networkInterfaces": {
           "description": "One or more network interfaces. If you specify a network interface, you must specify any security groups and subnets as part of the network interface.",

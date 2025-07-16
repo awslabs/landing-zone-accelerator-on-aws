@@ -494,7 +494,7 @@
     },
     "ICloudWatchDataProtectionConfig": {
       "additionalProperties": false,
-      "description": "AWS CloudWatch Log data protection configuration, you can find more information [here](https://awslabs.github.io/landing-zone-accelerator-on-aws/latest/faq/Logging/cwl/)",
+      "description": "AWS CloudWatch Log data protection configuration, you can find more information [here](https://awslabs.github.io/landing-zone-accelerator-on-aws/latest/faq/logging/cwl/)",
       "properties": {
         "deploymentTargets": {
           "$ref": "#/definitions/IDeploymentTargets",
@@ -578,10 +578,12 @@
       "description": "Accelerator global CloudWatch Logs skip bulk update configuration.\nWARNING: This configuration option could cause CloudWatch log group configurations to become out of sync\nwith the global configuration. Only enable this option if you fully understand the implications.",
       "properties": {
         "enable": {
+          "description": "Flag to enable skip bulk updates",
           "type": "boolean"
         },
         "skipBulkUpdateTargets": {
-          "$ref": "#/definitions/IDeploymentTargets"
+          "$ref": "#/definitions/IDeploymentTargets",
+          "description": "Accounts, regions, and OUs to target skipping bulk updates of CloudFormation Log Group subscription filters"
         }
       },
       "required": [
