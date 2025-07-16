@@ -48,6 +48,9 @@ export abstract class CreateOrganizationalUnitModule {
       solutionId: params.runnerParameters.solutionId,
       credentials: params.moduleRunnerParameters.managementAccountCredentials,
       dryRun: params.runnerParameters.dryRun,
+      configuration: {
+        enableControlTower: params.moduleRunnerParameters.configs.globalConfig.controlTower.enable,
+      },
     });
 
     const newOrganizationalUnits = params.moduleRunnerParameters.configs.organizationConfig.organizationalUnits.filter(

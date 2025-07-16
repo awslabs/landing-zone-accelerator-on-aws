@@ -19,6 +19,7 @@ import { MOCK_CONSTANTS } from '../../../mocked-resources';
 // import { MODULE_EXCEPTIONS } from '../../../../common/enums';
 import { GetOrganizationalUnitsDetailModule } from '../../../../lib/aws-organizations/get-organizational-units-detail';
 import { MODULE_EXCEPTIONS } from '../../../../common/enums';
+import { IGetOrganizationalUnitsDetailHandlerParameter } from '../../../../interfaces/aws-organizations/get-organizational-units-detail';
 
 // Mock dependencies
 jest.mock('@aws-sdk/client-controltower', () => ({
@@ -39,6 +40,13 @@ describe('GetOrganizationalUnitsDetailModule', () => {
   let getOrganizationIdSpy: jest.SpyInstance;
   let getOrganizationRootIdSpy: jest.SpyInstance;
   let getOrganizationalUnitsForParentSpy: jest.SpyInstance;
+
+  const parameter: IGetOrganizationalUnitsDetailHandlerParameter = {
+    ...MOCK_CONSTANTS.runnerParameters,
+    configuration: {
+      enableControlTower: true,
+    },
+  };
 
   beforeEach(() => {
     jest.clearAllMocks();
@@ -72,9 +80,7 @@ describe('GetOrganizationalUnitsDetailModule', () => {
       isOrganizationsConfiguredSpy.mockResolvedValue(false);
 
       // Execute
-      const response = await new GetOrganizationalUnitsDetailModule().handler({
-        ...MOCK_CONSTANTS.runnerParameters,
-      });
+      const response = await new GetOrganizationalUnitsDetailModule().handler(parameter);
 
       // Verify
       expect(response).toEqual([]);
@@ -85,7 +91,6 @@ describe('GetOrganizationalUnitsDetailModule', () => {
     test('should return organizational units when organizations configured without control tower', async () => {
       // Setup
       isOrganizationsConfiguredSpy.mockResolvedValue(true);
-      getLandingZoneIdentifierSpy.mockResolvedValue(undefined);
       getOrganizationIdSpy.mockResolvedValue(MOCK_CONSTANTS.organization.Id);
       getOrganizationRootIdSpy.mockResolvedValue(MOCK_CONSTANTS.organizationRoot.Id);
       getOrganizationalUnitsForParentSpy
@@ -95,7 +100,43 @@ describe('GetOrganizationalUnitsDetailModule', () => {
       // Execute
       const response = await new GetOrganizationalUnitsDetailModule().handler({
         ...MOCK_CONSTANTS.runnerParameters,
+        configuration: {
+          enableControlTower: false,
+        },
       });
+
+      // Verify
+      expect(response).toHaveLength(1);
+      expect(response[0]).toEqual({
+        organizationId: MOCK_CONSTANTS.organization.Id,
+        rootId: MOCK_CONSTANTS.organizationRoot.Id,
+        name: MOCK_CONSTANTS.newOrganizationalUnit.Name,
+        id: MOCK_CONSTANTS.newOrganizationalUnit.Id,
+        arn: MOCK_CONSTANTS.newOrganizationalUnit.Arn,
+        ouLevel: 1,
+        parentId: MOCK_CONSTANTS.organizationRoot.Id,
+        parentName: 'Root',
+        completePath: MOCK_CONSTANTS.newOrganizationalUnit.Name,
+        parentCompletePath: '',
+        registeredwithControlTower: false,
+      });
+      expect(isOrganizationsConfiguredSpy).toHaveBeenCalledTimes(1);
+      expect(getLandingZoneIdentifierSpy).toHaveBeenCalledTimes(0);
+      expect(getEnabledBaselinesSpy).toHaveBeenCalledTimes(0);
+    });
+
+    test('should return organizational units when organizations configured without control tower identifier not found', async () => {
+      // Setup
+      isOrganizationsConfiguredSpy.mockResolvedValue(true);
+      getLandingZoneIdentifierSpy.mockResolvedValue(undefined);
+      getOrganizationIdSpy.mockResolvedValue(MOCK_CONSTANTS.organization.Id);
+      getOrganizationRootIdSpy.mockResolvedValue(MOCK_CONSTANTS.organizationRoot.Id);
+      getOrganizationalUnitsForParentSpy
+        .mockResolvedValueOnce([MOCK_CONSTANTS.newOrganizationalUnit]) // First call returns the OU
+        .mockResolvedValue([]); // Subsequent calls return empty array
+
+      // Execute
+      const response = await new GetOrganizationalUnitsDetailModule().handler(parameter);
 
       // Verify
       expect(response).toHaveLength(1);
@@ -135,9 +176,7 @@ describe('GetOrganizationalUnitsDetailModule', () => {
         .mockResolvedValue([]); // Subsequent calls return empty array
 
       // Execute
-      const response = await new GetOrganizationalUnitsDetailModule().handler({
-        ...MOCK_CONSTANTS.runnerParameters,
-      });
+      const response = await new GetOrganizationalUnitsDetailModule().handler(parameter);
 
       // Verify
       expect(response).toHaveLength(1);
@@ -162,9 +201,7 @@ describe('GetOrganizationalUnitsDetailModule', () => {
         .mockResolvedValueOnce([mockChildOU]);
 
       // Execute
-      const response = await new GetOrganizationalUnitsDetailModule().handler({
-        ...MOCK_CONSTANTS.runnerParameters,
-      });
+      const response = await new GetOrganizationalUnitsDetailModule().handler(parameter);
 
       // Verify
       expect(response).toHaveLength(2);
@@ -201,11 +238,7 @@ describe('GetOrganizationalUnitsDetailModule', () => {
       getOrganizationalUnitsForParentSpy.mockResolvedValue([mockOUWithMissingFields]);
 
       // Execute & Verify
-      await expect(
-        new GetOrganizationalUnitsDetailModule().handler({
-          ...MOCK_CONSTANTS.runnerParameters,
-        }),
-      ).rejects.toThrow(
+      await expect(new GetOrganizationalUnitsDetailModule().handler(parameter)).rejects.toThrow(
         new RegExp(
           `${MODULE_EXCEPTIONS.SERVICE_EXCEPTION}: ListOrganizationalUnitsForParent did not return valid ou details, ou name, id or arn is missing for parent OU ${MOCK_CONSTANTS.organizationRoot.Id}`,
         ),
@@ -231,9 +264,7 @@ describe('GetOrganizationalUnitsDetailModule', () => {
         .mockResolvedValue([]); // Subsequent calls return empty array
 
       // Execute
-      const response = await new GetOrganizationalUnitsDetailModule().handler({
-        ...MOCK_CONSTANTS.runnerParameters,
-      });
+      const response = await new GetOrganizationalUnitsDetailModule().handler(parameter);
 
       // Verify
       expect(response).toHaveLength(1);
