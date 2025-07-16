@@ -804,7 +804,8 @@ export class VpcSecurityGroupsBaseStack extends AcceleratorStack {
       const props: cdk.aws_ec2.CfnSecurityGroupIngressProps = {
         groupId: securityGroupId,
         ipProtocol: rule.ipProtocol,
-        sourceSecurityGroupId: rule.sourceSecurityGroup?.securityGroupId,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        sourceSecurityGroupId: (rule as any).sourceSecurityGroupId,
         description: rule.description,
         fromPort: rule.fromPort,
         toPort: rule.toPort,
@@ -860,7 +861,8 @@ export class VpcSecurityGroupsBaseStack extends AcceleratorStack {
       const props: cdk.aws_ec2.CfnSecurityGroupEgressProps = {
         groupId: securityGroupId,
         ipProtocol: rule.ipProtocol,
-        destinationSecurityGroupId: rule.destinationSecurityGroup?.securityGroupId,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        destinationSecurityGroupId: (rule as any).sourceSecurityGroupId,
         description: rule.description,
         fromPort: rule.fromPort,
         toPort: rule.toPort,
