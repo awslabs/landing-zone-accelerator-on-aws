@@ -56,13 +56,6 @@ export class GetOrganizationalUnitsDetailModule implements IGetOrganizationalUni
   private async manageModule(
     props: IGetOrganizationalUnitsDetailHandlerParameter,
   ): Promise<IOrganizationalUnitDetailsType[]> {
-    const controlTowerClient = new ControlTowerClient({
-      region: props.region,
-      customUserAgent: props.solutionId,
-      retryStrategy: setRetryStrategy(),
-      credentials: props.credentials,
-    });
-
     const organizationClient = new OrganizationsClient({
       region: props.region,
       customUserAgent: props.solutionId,
@@ -79,13 +72,33 @@ export class GetOrganizationalUnitsDetailModule implements IGetOrganizationalUni
       return [];
     }
 
+    this.setControlTowerResources(props);
+
+    return await this.getAllOrganizationalUnits(organizationClient);
+  }
+
+  /**
+   * Function to set Control Tower resources when Control Tower is enabled
+   * @param props {@link IGetOrganizationalUnitsDetailHandlerParameter}
+   * @returns
+   */
+  private async setControlTowerResources(props: IGetOrganizationalUnitsDetailHandlerParameter): Promise<void> {
+    if (!props.configuration.enableControlTower) {
+      return;
+    }
+
+    const controlTowerClient = new ControlTowerClient({
+      region: props.region,
+      customUserAgent: props.solutionId,
+      retryStrategy: setRetryStrategy(),
+      credentials: props.credentials,
+    });
+
     this.landingZoneIdentifier = await getLandingZoneIdentifier(controlTowerClient);
 
     if (this.landingZoneIdentifier) {
       this.enabledBaselines = await getEnabledBaselines(controlTowerClient);
     }
-
-    return await this.getAllOrganizationalUnits(organizationClient);
   }
 
   /**

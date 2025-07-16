@@ -49,6 +49,9 @@ export abstract class RegisterOrganizationalUnitModule {
       solutionId: params.runnerParameters.solutionId,
       credentials: params.moduleRunnerParameters.managementAccountCredentials,
       dryRun: params.runnerParameters.dryRun,
+      configuration: {
+        enableControlTower: params.moduleRunnerParameters.configs.globalConfig.controlTower.enable,
+      },
     });
 
     const unregisteredOrganizationalUnits =

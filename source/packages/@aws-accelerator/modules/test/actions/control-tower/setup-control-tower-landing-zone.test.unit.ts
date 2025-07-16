@@ -20,6 +20,7 @@ import {
   MOCK_CONSTANTS,
   mockAccountsConfiguration,
   mockGlobalConfiguration,
+  mockGlobalConfigurationWithOutControlTower,
   mockGlobalConfigurationWithOutLandingZone,
 } from '../../mocked-resources';
 import { AccountsConfig } from '@aws-accelerator/config';
@@ -78,6 +79,43 @@ describe('SetupControlTowerLandingZoneModule', () => {
     expect(awsLza.setupControlTowerLandingZone).toHaveBeenCalledTimes(1);
     expect(response).toBe(
       `Module "${AcceleratorModules.SETUP_CONTROL_TOWER_LANDING_ZONE}" completed successfully with status Successful`,
+    );
+  });
+
+  test('Should execute successfully when control tower is not enabled in configuration', async () => {
+    // Setup
+    const param: ModuleParams = {
+      moduleItem: {
+        name: AcceleratorModules.SETUP_CONTROL_TOWER_LANDING_ZONE,
+        description: '',
+        runOrder: 1,
+        handler: jest.fn().mockResolvedValue(`Module 1 of ${AcceleratorStage.ACCOUNTS} stage executed`),
+        executionPhase: ModuleExecutionPhase.DEPLOY,
+      },
+      runnerParameters: MOCK_CONSTANTS.runnerParameters,
+      moduleRunnerParameters: {
+        configs: {
+          ...MOCK_CONSTANTS.configs,
+          accountsConfig: mockAccountsConfig as AccountsConfig,
+          globalConfig: mockGlobalConfigurationWithOutControlTower,
+        },
+        globalRegion: MOCK_CONSTANTS.globalRegion,
+        resourcePrefixes: MOCK_CONSTANTS.resourcePrefixes,
+        acceleratorResourceNames: MOCK_CONSTANTS.acceleratorResourceNames,
+        logging: MOCK_CONSTANTS.logging,
+        organizationDetails: MOCK_CONSTANTS.organizationDetails,
+        organizationAccounts: MOCK_CONSTANTS.organizationAccounts,
+        managementAccountCredentials: MOCK_CONSTANTS.credentials,
+      },
+    };
+
+    // Execute
+    const response = await SetupControlTowerLandingZoneModule.execute(param);
+
+    // Verify
+    expect(awsLza.setupControlTowerLandingZone).toHaveBeenCalledTimes(0);
+    expect(response).toBe(
+      `Module ${AcceleratorModules.SETUP_CONTROL_TOWER_LANDING_ZONE} execution skipped, Control Tower not enabled in configuration`,
     );
   });
 

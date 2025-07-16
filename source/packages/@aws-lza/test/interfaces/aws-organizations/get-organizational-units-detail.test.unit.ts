@@ -46,6 +46,13 @@ describe('GetOrganizationalUnitsDetailModule Contract Compliance', () => {
   ];
   let module: GetOrganizationalUnitsDetailModule;
 
+  const parameter: IGetOrganizationalUnitsDetailHandlerParameter = {
+    ...MOCK_CONSTANTS.runnerParameters,
+    configuration: {
+      enableControlTower: true,
+    },
+  };
+
   beforeEach(() => {
     module = new GetOrganizationalUnitsDetailModule();
     // Mock the handler implementation
@@ -58,7 +65,7 @@ describe('GetOrganizationalUnitsDetailModule Contract Compliance', () => {
   });
 
   test('should maintain correct method signatures', async () => {
-    const result = module.handler(MOCK_CONSTANTS.runnerParameters);
+    const result = module.handler(parameter);
     // Verify that handler returns a Promise
     expect(result).toBeInstanceOf(Promise);
     // Verify that the resolved value is a string
@@ -76,7 +83,7 @@ describe('GetOrganizationalUnitsDetailModule Contract Compliance', () => {
   });
 
   test('should fulfill interface behavioral requirements', async () => {
-    const result = await module.handler(MOCK_CONSTANTS.runnerParameters);
+    const result = await module.handler(parameter);
 
     expect(typeof result).toBe('object');
     expect(result.length).toEqual(mockResponse.length);
