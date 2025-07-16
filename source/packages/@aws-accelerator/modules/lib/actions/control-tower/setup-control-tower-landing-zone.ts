@@ -31,6 +31,10 @@ export abstract class SetupControlTowerLandingZoneModule {
    * @returns status string
    */
   public static async execute(params: ModuleParams): Promise<string> {
+    if (!params.moduleRunnerParameters.configs.globalConfig.controlTower.enable) {
+      return `Module ${params.moduleItem.name} execution skipped, Control Tower not enabled in configuration`;
+    }
+
     if (!params.moduleRunnerParameters.configs.globalConfig.controlTower.landingZone) {
       return `Module ${params.moduleItem.name} execution skipped, No configuration found for Control Tower Landing zone`;
     }

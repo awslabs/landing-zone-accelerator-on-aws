@@ -306,6 +306,9 @@ describe('AWSOrganizationsExecutor', () => {
   describe('getOrganizationalUnitsDetail', () => {
     const input = {
       ...MOCK_CONSTANTS.runnerParameters,
+      configuration: {
+        enableControlTower: true,
+      },
     };
     test('should successfully execute the module', async () => {
       // Setup

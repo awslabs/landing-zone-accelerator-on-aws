@@ -61,9 +61,41 @@ export interface IOrganizationalUnitDetailsType {
 }
 
 /**
- * AWS Organizations organizational unit (OU) registration handler parameter
+ * Get AWS Organizations organizational unit (OU) configuration
+ *
+ * @description
+ * This is the essential inputs for API operation by this module
+ *
+ * @example
+ * ```
+ * {
+ *   enableControlTower: true,
+ * }
+ * ```
  */
-export type IGetOrganizationalUnitsDetailHandlerParameter = IModuleCommonParameter;
+export interface IGetOrganizationalUnitsDetailConfiguration {
+  /**
+   * Flag indicating if Control Tower is enabled
+   */
+  enableControlTower: boolean;
+}
+
+/**
+ * Get AWS Organizations organizational unit (OU) details handler parameter
+ */
+export interface IGetOrganizationalUnitsDetailHandlerParameter extends IModuleCommonParameter {
+  /**
+   * Get AWS Organizations organizational unit (OU) configuration
+   *
+   * @example
+   * ```
+   * {
+   *   enableControlTower: true,
+   * }
+   * ```
+   */
+  configuration: IGetOrganizationalUnitsDetailConfiguration;
+}
 
 /**
  * AWS Organizations organizational unit (OU) details Module interface
