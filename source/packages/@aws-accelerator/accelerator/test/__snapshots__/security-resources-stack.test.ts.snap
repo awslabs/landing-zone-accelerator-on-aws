@@ -2836,7 +2836,7 @@ exports[`SecurityResourcesStack Construct(SecurityResourcesStack):  Snapshot Tes
                   "Action": [
                     "kms:Encrypt",
                     "kms:Decrypt",
-                    "kms.GenerateDataKey",
+                    "kms:GenerateDataKey",
                   ],
                   "Effect": "Allow",
                   "Resource": "arn:aws:kms:us-east-1:111111111111:key/121ac3b6-8d53-4d8a-a05c-1234567789",
