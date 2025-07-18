@@ -16,10 +16,14 @@ import { SetupLandingZoneModule } from '../lib/control-tower/setup-landing-zone/
 
 import { IRegisterOrganizationalUnitHandlerParameter } from '../interfaces/control-tower/register-organizational-unit';
 import { RegisterOrganizationalUnitModule } from '../lib/control-tower/register-organizational-unit';
+import { createLogger } from '../common/logger';
+import path from 'path';
 
 process.on('uncaughtException', err => {
   throw err;
 });
+
+const logger = createLogger([path.parse(path.basename(__filename)).name]);
 
 /**
  * Function to setup Accelerator AWS Control Tower landing zone
@@ -76,7 +80,7 @@ export async function setupControlTowerLandingZone(input: ISetupLandingZoneHandl
   try {
     return await new SetupLandingZoneModule().handler(input);
   } catch (e: unknown) {
-    console.error(e);
+    logger.error(e);
     throw e;
   }
 }
