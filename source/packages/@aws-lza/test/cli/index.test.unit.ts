@@ -14,12 +14,13 @@
 import { describe, beforeEach, expect, test } from '@jest/globals';
 import fs from 'fs';
 
-import { CliInvokeArgumentType, CliExecutionParameterType, CliCommandDetailsType } from '../../lib/cli/libraries/root';
-import { configureModuleCommands, main, parseArgs, validModuleConfiguration } from '../../lib/cli';
-import { CliResources } from '../../lib/cli/resources';
-import { CliActivity } from '../../lib/cli/activities';
-import { ModuleCommands, Modules } from '../../lib/cli/libraries/modules';
+import { CliInvokeArgumentType, CliCommandDetailsType } from '../../lib/cli/libraries/root';
+import { configureModuleCommands, main } from '../../lib/cli';
+import { Modules } from '../../lib/cli/modules';
 import { Argv } from 'yargs';
+import { ControlTowerCommand } from '../../lib/cli/libraries/control-tower';
+import * as OrganizationsLibrary from '../../lib/cli/libraries/organizations';
+// import * as MacieLibrary from '../../lib/cli/libraries/macie';
 
 const MOCK_CONSTANTS = {
   moduleName: 'test-module',
@@ -44,23 +45,6 @@ jest.mock('fs', () => ({
   readFileSync: jest.fn().mockReturnValue('{"key": "value"}'),
   existsSync: jest.fn().mockReturnValue(true),
 }));
-
-jest.mock('../../lib/cli/resources', () => {
-  class MockCliActivity {
-    static executeControlTowerLandingZoneModule = jest.fn();
-    static executeOrganizationsModule = jest.fn();
-  }
-
-  class MockCliResources {
-    static validControlTowerConfig = jest.fn();
-    static validateOrganizationsConfiguration = jest.fn().mockReturnValue(true);
-  }
-
-  return {
-    CliActivity: MockCliActivity,
-    CliResources: MockCliResources,
-  };
-});
 
 // Store original console methods
 const originalConsoleError = console.error;
@@ -109,36 +93,37 @@ describe('Parser', () => {
 
   describe('parseArgs', () => {
     test('should parse valid arguments with inline JSON configuration', () => {
-      const argv: CliInvokeArgumentType = {
-        _: [Modules.CONTROL_TOWER.name, ModuleCommands[Modules.CONTROL_TOWER.name][0].name],
+      const moduleName = Modules.CONTROL_TOWER.name;
+      const commandName = Object.keys(Modules.CONTROL_TOWER.commands)[0];
+      const args: CliInvokeArgumentType = {
+        _: [moduleName, commandName],
         configuration: MOCK_CONSTANTS.configurationJsonString,
         partition: MOCK_CONSTANTS.partition,
         region: MOCK_CONSTANTS.region,
         account: MOCK_CONSTANTS.account,
+        dryRun: MOCK_CONSTANTS.noDryRun,
         verbose: MOCK_CONSTANTS.verbose,
         $0: MOCK_CONSTANTS.scriptArg,
       };
 
-      jest.spyOn(CliResources, 'validControlTowerConfig').mockReturnValue(true);
+      jest.spyOn(ControlTowerCommand, 'validConfig').mockReturnValue(true);
 
-      const result = parseArgs(argv);
+      const result = ControlTowerCommand.getParams({ moduleName, commandName, args });
 
-      expect(result).toEqual(
-        expect.objectContaining({
-          moduleName: Modules.CONTROL_TOWER.name,
-          command: ModuleCommands[Modules.CONTROL_TOWER.name][0].name,
-          configuration: MOCK_CONSTANTS.configurationJson,
-          partition: MOCK_CONSTANTS.partition,
-          region: MOCK_CONSTANTS.region,
-          account: MOCK_CONSTANTS.account,
-          verbose: MOCK_CONSTANTS.verbose,
-        }),
-      );
+      expect(result).toEqual({
+        operation: commandName,
+        partition: MOCK_CONSTANTS.partition,
+        region: MOCK_CONSTANTS.region,
+        dryRun: MOCK_CONSTANTS.noDryRun,
+        configuration: MOCK_CONSTANTS.configurationJson,
+      });
     });
 
     test('should parse valid arguments with JSON file configuration', () => {
-      const argv = {
-        _: [Modules.CONTROL_TOWER.name, ModuleCommands[Modules.CONTROL_TOWER.name][0].name],
+      const moduleName = Modules.CONTROL_TOWER.name;
+      const commandName = Object.keys(Modules.CONTROL_TOWER.commands)[0];
+      const args = {
+        _: [moduleName, commandName],
         configuration: MOCK_CONSTANTS.configurationFileName,
         partition: MOCK_CONSTANTS.partition,
         region: MOCK_CONSTANTS.region,
@@ -148,29 +133,29 @@ describe('Parser', () => {
         $0: MOCK_CONSTANTS.scriptArg,
       };
 
-      jest.spyOn(CliResources, 'validControlTowerConfig').mockReturnValue(true);
+      jest.spyOn(ControlTowerCommand, 'validConfig').mockReturnValue(true);
 
-      const result = parseArgs(argv);
+      const result = ControlTowerCommand.getParams({ moduleName, commandName, args });
 
       expect(fs.readFileSync).toHaveBeenCalledWith('test-file.json', 'utf8');
+      expect(ControlTowerCommand.validConfig).toHaveBeenCalledWith(MOCK_CONSTANTS.configurationJson);
 
-      expect(result).toEqual(
-        expect.objectContaining({
-          moduleName: Modules.CONTROL_TOWER.name,
-          command: ModuleCommands[Modules.CONTROL_TOWER.name][0].name,
-          configuration: MOCK_CONSTANTS.configurationJson,
-          partition: MOCK_CONSTANTS.partition,
-          region: MOCK_CONSTANTS.region,
-          account: MOCK_CONSTANTS.account,
-          verbose: MOCK_CONSTANTS.verbose,
-          dryRun: MOCK_CONSTANTS.noDryRun,
-        }),
-      );
+      expect(result).toEqual({
+        operation: commandName,
+        partition: MOCK_CONSTANTS.partition,
+        region: MOCK_CONSTANTS.region,
+        dryRun: MOCK_CONSTANTS.noDryRun,
+        configuration: MOCK_CONSTANTS.configurationJson,
+      });
     });
 
     test('should throw error when configuration JSON file does not exists', () => {
-      const argv = {
-        _: [MOCK_CONSTANTS.invalidModuleName, MOCK_CONSTANTS.invalidCommand],
+      const moduleName = MOCK_CONSTANTS.invalidModuleName;
+      const commandName = MOCK_CONSTANTS.invalidCommand;
+      const args = {
+        _: [moduleName, commandName],
+        partition: MOCK_CONSTANTS.partition,
+        region: MOCK_CONSTANTS.region,
         configuration: MOCK_CONSTANTS.configurationFileName,
         $0: MOCK_CONSTANTS.scriptArg,
       };
@@ -178,52 +163,36 @@ describe('Parser', () => {
       jest.spyOn(fs, 'existsSync').mockReturnValue(false);
 
       expect(() => {
-        parseArgs(argv);
+        ControlTowerCommand.getParams({ moduleName, commandName, args });
       }).toThrow('Process.exit called with code: 1');
       expect(mockConsoleError).toHaveBeenCalled();
     });
 
     test('should throw error for invalid JSON configuration', () => {
-      const argv = {
-        _: [Modules.CONTROL_TOWER.name, ModuleCommands[Modules.CONTROL_TOWER.name][0].name],
+      const moduleName = Modules.CONTROL_TOWER.name;
+      const commandName = Object.keys(Modules.CONTROL_TOWER.commands)[0];
+      const args: CliInvokeArgumentType = {
+        _: [moduleName, commandName],
         configuration: MOCK_CONSTANTS.configurationJsonString,
         $0: MOCK_CONSTANTS.scriptArg,
       };
 
-      jest.spyOn(CliResources, 'validControlTowerConfig').mockReturnValue(false);
+      jest.spyOn(ControlTowerCommand, 'validConfig').mockReturnValue(false);
 
       expect(() => {
-        parseArgs(argv);
+        ControlTowerCommand.getParams({ moduleName, commandName, args });
       }).toThrow('Process.exit called with code: 1');
       expect(mockConsoleError).toHaveBeenCalled();
     });
   });
 
-  describe('validModuleConfiguration', () => {
-    test('should validate control-tower configuration', () => {
-      jest.spyOn(CliResources, 'validControlTowerConfig').mockReturnValue(true);
-
-      const result = validModuleConfiguration(Modules.CONTROL_TOWER.name, MOCK_CONSTANTS.configurationJson);
-      expect(result).toBeTruthy();
-    });
-
-    test('should validate organizations configuration', () => {
-      const result = validModuleConfiguration(Modules.ORGANIZATIONS.name, MOCK_CONSTANTS.configurationJson);
-      expect(result).toBeTruthy();
-    });
-
-    test('should throw error for invalid module', () => {
-      expect(() => validModuleConfiguration('invalid-module', MOCK_CONSTANTS.configurationJson)).toThrow();
-      expect(mockExit).toHaveBeenCalledWith(1);
-    });
-  });
-
   describe('main function', () => {
     test('should execute control-tower module', async () => {
+      const moduleName = Modules.CONTROL_TOWER.name;
+      const commandName = Object.keys(Modules.CONTROL_TOWER.commands)[0];
       const params = {
-        moduleName: Modules.CONTROL_TOWER.name,
-        command: ModuleCommands[Modules.CONTROL_TOWER.name][0].name,
-        configuration: MOCK_CONSTANTS.configurationJson,
+        _: [moduleName, commandName],
+        configuration: MOCK_CONSTANTS.configurationJsonString,
         partition: MOCK_CONSTANTS.partition,
         region: MOCK_CONSTANTS.region,
         account: MOCK_CONSTANTS.account,
@@ -231,19 +200,18 @@ describe('Parser', () => {
         dryRun: MOCK_CONSTANTS.noDryRun,
       };
 
-      jest
-        .spyOn(CliActivity, 'executeControlTowerLandingZoneModule')
-        .mockImplementation(() => Promise.resolve('Successful'));
+      jest.spyOn(ControlTowerCommand, 'executeCommand').mockImplementation(async () => Promise.resolve('Successful'));
 
       const result = await main(params);
       expect(result).toBeDefined();
     });
 
     test('should handle organizations module', async () => {
+      const moduleName = Modules.ORGANIZATIONS.name;
+      const commandName = 'create-scp';
       const params = {
-        moduleName: Modules.ORGANIZATIONS.name,
-        command: ModuleCommands[Modules.ORGANIZATIONS.name][0].name,
-        configuration: MOCK_CONSTANTS.configurationJson,
+        _: [moduleName, commandName],
+        configuration: MOCK_CONSTANTS.configurationJsonString,
         partition: MOCK_CONSTANTS.partition,
         region: MOCK_CONSTANTS.region,
         account: MOCK_CONSTANTS.account,
@@ -251,23 +219,31 @@ describe('Parser', () => {
         dryRun: MOCK_CONSTANTS.noDryRun,
       };
 
+      jest.spyOn(OrganizationsLibrary, 'createScp').mockImplementation(() => Promise.resolve('Successful'));
+
       const result = await main(params);
       expect(result).toBe('Module yet to develop');
     });
 
     test('should handle invalid module name', async () => {
-      const invalidParams: CliExecutionParameterType = {
-        moduleName: MOCK_CONSTANTS.invalidModuleName,
-        command: MOCK_CONSTANTS.invalidCommand,
-        configuration: MOCK_CONSTANTS.configurationJson,
-      };
-
-      ModuleCommands[MOCK_CONSTANTS.invalidModuleName] = [
-        { name: MOCK_CONSTANTS.invalidCommand, description: MOCK_CONSTANTS.invalidDescription },
-      ];
+      const moduleName = MOCK_CONSTANTS.invalidModuleName;
+      const commandName = MOCK_CONSTANTS.invalidCommand;
+      const invalidParams: CliInvokeArgumentType = { _: [moduleName, commandName] };
 
       const result = await main(invalidParams);
-      expect(result).toBe(`Invalid Module ${MOCK_CONSTANTS.invalidModuleName}`);
+      expect(result).toBe(`Invalid module "${MOCK_CONSTANTS.invalidModuleName}"`);
+      expect(mockExit).not.toHaveBeenCalled();
+    });
+
+    test('should handle invalid command name', async () => {
+      const moduleName = Modules.CONTROL_TOWER.name;
+      const commandName = MOCK_CONSTANTS.invalidCommand;
+      const invalidParams: CliInvokeArgumentType = { _: [moduleName, commandName] };
+
+      const result = await main(invalidParams);
+      expect(result).toBe(
+        `Invalid command "${MOCK_CONSTANTS.invalidCommand}" for module "${Modules.CONTROL_TOWER.name}"`,
+      );
       expect(mockExit).not.toHaveBeenCalled();
     });
   });
@@ -311,15 +287,19 @@ describe('Parser', () => {
       mockExit.mockRestore();
     });
 
+    async function commandExecute(): Promise<string> {
+      return '';
+    }
+
     test('should execute command handler', async () => {
       // Setup
 
-      const commands: CliCommandDetailsType[] = [
-        {
-          name: 'command1',
+      const commands: Record<string, CliCommandDetailsType> = {
+        command1: {
           description: 'Test command 1',
+          execute: commandExecute,
         },
-      ];
+      };
 
       configureModuleCommands(MOCK_CONSTANTS.moduleName, commands, mockYargs);
 
@@ -337,18 +317,18 @@ describe('Parser', () => {
     test('should configure commands correctly', () => {
       // Setup
 
-      const commands: CliCommandDetailsType[] = [
-        {
-          name: 'command1',
+      const commands: Record<string, CliCommandDetailsType> = {
+        command1: {
           description: 'Test command 1',
           options: [{ option1: { type: 'string', description: 'Option 1' } }],
+          execute: commandExecute,
         },
-        {
-          name: 'command2',
+        command2: {
           description: 'Test command 2',
           options: [{ option2: { type: 'boolean', description: 'Option 2' } }],
+          execute: commandExecute,
         },
-      ];
+      };
 
       // Execute
 
@@ -380,12 +360,12 @@ describe('Parser', () => {
 
     test('should configure commands without options', () => {
       // Setup
-      const commands: CliCommandDetailsType[] = [
-        {
-          name: 'command1',
+      const commands: Record<string, CliCommandDetailsType> = {
+        command1: {
           description: 'Test command 1',
+          execute: commandExecute,
         },
-      ];
+      };
 
       // Execute
 
@@ -405,12 +385,12 @@ describe('Parser', () => {
     test('should handle fail callback', () => {
       // Setup
 
-      const commands: CliCommandDetailsType[] = [
-        {
-          name: 'command1',
+      const commands: Record<string, CliCommandDetailsType> = {
+        command1: {
           description: 'Test command 1',
+          execute: commandExecute,
         },
-      ];
+      };
 
       // Execute
 
@@ -447,12 +427,12 @@ describe('Parser', () => {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (yargsInstance as any).showHelp = jest.fn().mockReturnValue(mockHelpText);
 
-      const commands: CliCommandDetailsType[] = [
-        {
-          name: 'command1',
+      const commands: Record<string, CliCommandDetailsType> = {
+        command1: {
           description: 'Test command 1',
+          execute: commandExecute,
         },
-      ];
+      };
 
       configureModuleCommands(MOCK_CONSTANTS.moduleName, commands, yargsInstance as unknown as Argv<object>);
 

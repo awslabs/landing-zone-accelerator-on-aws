@@ -14,9 +14,10 @@
 import yargs from 'yargs/yargs';
 import { hideBin } from 'yargs/helpers';
 import { version } from '../package.json';
-import { configureModuleCommands, main, parseArgs } from '../lib/cli';
+import { configureModuleCommands, main } from '../lib/cli';
 import { CliInvokeArgumentType } from '../lib/cli/libraries/root';
-import { ModuleCommands, Modules } from '../lib/cli/libraries/modules';
+import { Modules } from '../lib/cli/modules';
+import { exit } from 'process';
 
 (async () => {
   try {
@@ -35,7 +36,7 @@ import { ModuleCommands, Modules } from '../lib/cli/libraries/modules';
 
     Object.values(Modules).forEach(module => {
       cli = cli.command(module.name, module.description, yargs => {
-        configureModuleCommands(module.name, ModuleCommands[module.name], yargs);
+        configureModuleCommands(module.name, module.commands, yargs);
       });
     });
 
@@ -53,10 +54,14 @@ import { ModuleCommands, Modules } from '../lib/cli/libraries/modules';
       .example('$0 organizations create-scp', 'Create Service Control Policy');
 
     const argv: CliInvokeArgumentType = await cli.parseAsync();
-    const status = await main(parseArgs(argv));
+    const status = await main(argv);
     console.log(status);
   } catch (err) {
-    console.error(err);
-    throw err;
+    if (err instanceof Error) {
+      console.error(err.message);
+    } else {
+      console.error(err);
+    }
+    exit(1);
   }
 })();
