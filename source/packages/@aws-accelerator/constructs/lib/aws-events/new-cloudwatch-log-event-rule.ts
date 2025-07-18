@@ -210,6 +210,16 @@ export class NewCloudWatchLogEvent extends Construct {
       },
     );
 
+    if (props.logsKmsKey) {
+      const kmsPolicy = new cdk.aws_iam.PolicyStatement({
+        effect: cdk.aws_iam.Effect.ALLOW,
+        sid: 'Kms',
+        actions: ['kms:Encrypt', 'kms:Decrypt', 'kms:GenerateDataKey'],
+        resources: [props.logsKmsKey.keyArn],
+      });
+      setLogRetentionSubscriptionFunction.addToRolePolicy(kmsPolicy);
+    }
+
     // Grant Lambda permissions to read from SQS
     queue.grantConsumeMessages(setLogRetentionSubscriptionFunction);
 
