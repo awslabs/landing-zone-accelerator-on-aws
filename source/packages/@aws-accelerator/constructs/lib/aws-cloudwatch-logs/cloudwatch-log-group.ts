@@ -141,7 +141,7 @@ export class CloudWatchLogGroups extends cdk.Resource implements ILogGroup {
     if (props.keyArn && !props.owningAccountId) {
       policyStatements.push({
         Effect: 'Allow',
-        Action: ['kms:Encrypt', 'kms:Decrypt', 'kms.GenerateDataKey'],
+        Action: ['kms:Encrypt', 'kms:Decrypt', 'kms:GenerateDataKey'],
         Resource: `${props.keyArn}`,
       });
     }
