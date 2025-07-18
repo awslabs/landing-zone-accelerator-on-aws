@@ -252,6 +252,17 @@ export class VpnResources {
             `arn:${this.stack.partition}:logs:*:${this.stack.account}:log-group:${this.stack.acceleratorPrefix}*`,
           ],
         }),
+        new cdk.aws_iam.PolicyStatement({
+          sid: 'KMS',
+          effect: cdk.aws_iam.Effect.ALLOW,
+          actions: ['kms:Encrypt', 'kms:Decrypt', 'kms:GenerateDataKey'],
+          resources: [`arn:${this.stack.partition}:kms:*:${this.stack.account}:key:/*`],
+          conditions: {
+            StringEquals: {
+              'kms:RequestAlias': this.stack.acceleratorResourceNames.customerManagedKeys.cloudWatchLog,
+            },
+          },
+        }),
       ],
     });
     // AwsSolutions-IAM5: The IAM entity contains wildcard permissions and does not have a cdk_nag rule suppression with evidence for those permission

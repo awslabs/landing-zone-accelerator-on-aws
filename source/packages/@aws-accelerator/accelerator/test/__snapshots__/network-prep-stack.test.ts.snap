@@ -685,6 +685,35 @@ drop http $HOME_NET any -> $EXTERNAL_NET any (http.host; content:"example.com"; 
               },
               "Sid": "LogsCRUD",
             },
+            {
+              "Action": [
+                "kms:Encrypt",
+                "kms:Decrypt",
+                "kms:GenerateDataKey",
+              ],
+              "Condition": {
+                "StringEquals": {
+                  "kms:RequestAlias": {
+                    "alias": "alias/accelerator/kms/cloudwatch/key",
+                    "description": "AWS Accelerator CloudWatch Kms Key",
+                  },
+                },
+              },
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:",
+                    {
+                      "Ref": "AWS::Partition",
+                    },
+                    ":kms:*:555555555555:key:/*",
+                  ],
+                ],
+              },
+              "Sid": "KMS",
+            },
           ],
           "Version": "2012-10-17",
         },

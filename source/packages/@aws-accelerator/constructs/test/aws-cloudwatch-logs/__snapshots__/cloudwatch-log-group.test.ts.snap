@@ -118,6 +118,15 @@ exports[`CloudWatchLogGroups Construct(CloudWatchLogGroups):  Snapshot Test 1`] 
                   "Effect": "Allow",
                   "Resource": "*",
                 },
+                {
+                  "Action": [
+                    "kms:Encrypt",
+                    "kms:Decrypt",
+                    "kms.GenerateDataKey",
+                  ],
+                  "Effect": "Allow",
+                  "Resource": "REPLACED-UUID",
+                },
               ],
               "Version": "2012-10-17",
             },
