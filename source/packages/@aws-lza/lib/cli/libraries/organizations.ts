@@ -14,14 +14,6 @@
 import { CliCommandDetailsType, CommandOptionsType, ModuleDetailsType } from './root';
 
 /**
- * organizations module details
- */
-export const LZA_ORGANIZATIONS_MODULE: ModuleDetailsType = {
-  name: 'organizations',
-  description: 'Manage AWS Organizations operations',
-};
-
-/**
  * Common options for each organizations module commands
  */
 const OrganizationsCommonOptions: CommandOptionsType[] = [
@@ -46,9 +38,8 @@ const OrganizationsCommonOptions: CommandOptionsType[] = [
 /**
  * List of organizations module commands that are supported by the LZA CLI
  */
-export const OrganizationsCommands: CliCommandDetailsType[] = [
-  {
-    name: 'create-scp',
+const OrganizationsCommands: Record<string, CliCommandDetailsType> = {
+  'create-scp': {
     description: 'Create Service Control Policy',
     options: [
       ...OrganizationsCommonOptions,
@@ -69,9 +60,9 @@ export const OrganizationsCommands: CliCommandDetailsType[] = [
         },
       },
     ],
+    execute: createScp,
   },
-  {
-    name: 'create-ou',
+  'create-ou': {
     description: 'Create Organizational Unit',
     options: [
       ...OrganizationsCommonOptions,
@@ -91,5 +82,23 @@ export const OrganizationsCommands: CliCommandDetailsType[] = [
         },
       },
     ],
+    execute: createOu,
   },
-];
+};
+
+/**
+ * organizations module details
+ */
+export const LZA_ORGANIZATIONS_MODULE: ModuleDetailsType = {
+  name: 'organizations',
+  description: 'Manage AWS Organizations operations',
+  commands: OrganizationsCommands,
+};
+
+export async function createScp(): Promise<string> {
+  return 'Module yet to develop';
+}
+
+export async function createOu(): Promise<string> {
+  return 'Module yet to develop';
+}

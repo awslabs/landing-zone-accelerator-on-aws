@@ -11,9 +11,9 @@
  *  and limitations under the License.
  */
 
-import { ControlTowerCommands, LZA_CONTROL_TOWER_MODULE } from './control-tower';
-import { LZA_ORGANIZATIONS_MODULE, OrganizationsCommands } from './organizations';
-import { CliCommandDetailsType } from './root';
+import { LZA_CONTROL_TOWER_MODULE } from './libraries/control-tower';
+import { LZA_MACIE_MODULE } from './libraries/macie';
+import { LZA_ORGANIZATIONS_MODULE } from './libraries/organizations';
 
 /**
  * List of modules that are supported by the LZA CLI
@@ -27,12 +27,8 @@ export const Modules = {
    * AWS Organizations module to manage organizational activities
    */
   ORGANIZATIONS: LZA_ORGANIZATIONS_MODULE,
-};
-
-/**
- * List of module commands that are supported by the LZA CLI
- */
-export const ModuleCommands: Record<string, CliCommandDetailsType[]> = {
-  [Modules.CONTROL_TOWER.name]: ControlTowerCommands,
-  [Modules.ORGANIZATIONS.name]: OrganizationsCommands,
+  /**
+   * AWS Macie module to manage data privacy
+   */
+  MACIE: LZA_MACIE_MODULE,
 };

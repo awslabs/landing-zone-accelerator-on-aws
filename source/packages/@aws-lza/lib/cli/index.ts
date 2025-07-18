@@ -10,105 +10,51 @@
  *  OR CONDITIONS OF ANY KIND, express or implied. See the License for the specific language governing permissions
  *  and limitations under the License.
  */
-import fs from 'fs';
-import { CliResources } from './resources';
-import {
-  CliInvokeArgumentType,
-  CliExecutionParameterType,
-  ConfigurationObjectType,
-  CliCommandDetailsType,
-} from './libraries/root';
-import { CliActivity } from './activities';
-import { Modules } from './libraries/modules';
+import { CliInvokeArgumentType, CliCommandDetailsType } from './libraries/root';
+import { Modules } from './modules';
 import { Argv } from 'yargs';
 
 /**
- * Function to parse arguments
- * @returns params {@link CliExecutionParameterType}
- */
-export function parseArgs(argv: CliInvokeArgumentType): CliExecutionParameterType {
-  const moduleName = argv._[0].toString();
-  const command = argv._[1].toString();
-  const configArg = argv['configuration'] as string;
-  let configuration: ConfigurationObjectType | undefined;
-
-  const cliExecutionParameter: CliExecutionParameterType = { moduleName, command };
-
-  //
-  // Validate configuration
-  //
-  if (configArg) {
-    validateConfigParameter(configArg, command, moduleName, cliExecutionParameter, configuration);
-  }
-
-  for (const [key, value] of Object.entries(argv)) {
-    if (!Object.keys(cliExecutionParameter).includes(key)) {
-      cliExecutionParameter[key] = value;
-    }
-  }
-
-  return cliExecutionParameter;
-}
-
-/**
- * Function to validate module configuration
- * @param moduleName string
- * @param config Record<string, any>
- */
-export function validModuleConfiguration(moduleName: string, config: ConfigurationObjectType): boolean {
-  switch (moduleName) {
-    case Modules.CONTROL_TOWER.name:
-      return CliResources.validControlTowerConfig(config);
-    case Modules.ORGANIZATIONS.name:
-      return true;
-    default:
-      printInvalidModuleNameStatus();
-      process.exit(1);
-  }
-}
-
-/**
- * Function to print invalid module name status
- */
-export function printInvalidModuleNameStatus() {
-  console.error(`lza: error: argument module: Invalid choice, valid choices are:`);
-  for (const moduleName of Object.keys(Modules)) {
-    const position = Object.keys(Modules).indexOf(moduleName) + 1;
-    console.log(`${position}. ${moduleName}\n`);
-  }
-}
-
-/**
  * main function to invoke aws-lza execution
- * @param params {@link CliExecutionParameterType}
+ * @param argv {@link CliInvokeArgumentType}
  */
-export async function main(params: CliExecutionParameterType): Promise<string> {
-  switch (params.moduleName) {
-    case Modules.CONTROL_TOWER.name:
-      return await CliActivity.executeControlTowerLandingZoneModule(params);
-    case Modules.ORGANIZATIONS.name:
-      return 'Module yet to develop';
+export async function main(argv: CliInvokeArgumentType): Promise<string> {
+  const moduleName = argv._[0].toString();
+  const commandName = argv._[1].toString();
+
+  const module = Object.values(Modules).find(module => module.name === moduleName);
+  if (module === undefined) {
+    return `Invalid module "${moduleName}"`;
   }
 
-  return `Invalid Module ${params.moduleName}`;
+  const command = module.commands[commandName];
+  if (command === undefined) {
+    return `Invalid command "${commandName}" for module "${moduleName}"`;
+  }
+
+  return command.execute({
+    moduleName,
+    commandName,
+    args: argv,
+  });
 }
 
 /**
  * Function to configure module commands
  * @param moduleName string
- * @param commands {@link CliCommandDetailsType}[]
+ * @param commands Record<string, {@link CliCommandDetailsType}>
  * @param yargs {@link Argv<object>}
  * @returns yargs {@link Argv<object>}
  */
 export function configureModuleCommands(
   moduleName: string,
-  commands: CliCommandDetailsType[],
+  commands: Record<string, CliCommandDetailsType>,
   yargs: Argv<object>,
 ): Argv<object> {
-  commands.forEach(command => {
+  Object.entries(commands).map(([name, command]) => {
     yargs
       .command({
-        command: command.name,
+        command: name,
         describe: command.description,
         builder:
           command.options?.reduce((previousValue, currentValue) => {
@@ -137,49 +83,4 @@ export function configureModuleCommands(
     })
     .help()
     .alias('help', 'h');
-}
-
-/**
- * Function to validate config parameter
- * @param configArg string
- * @param command string
- * @param moduleName string
- * @param cliExecutionParameter {@link CliExecutionParameterType}
- * @param configuration {@link ConfigurationObjectType}
- */
-function validateConfigParameter(
-  configArg: string,
-  command: string,
-  moduleName: string,
-  cliExecutionParameter: CliExecutionParameterType,
-  configuration?: ConfigurationObjectType,
-) {
-  try {
-    if (configArg.startsWith('file://')) {
-      const filePath = configArg.slice(7);
-      if (!fs.existsSync(filePath)) {
-        console.error(
-          `lza: error: An error occurred (MissingConfigurationFile) when calling the ${command} for ${moduleName} module: The configuration file ${filePath} does not exists.`,
-        );
-        process.exit(1);
-      }
-      configuration = JSON.parse(fs.readFileSync(filePath, 'utf8'));
-    } else {
-      configuration = JSON.parse(configArg);
-    }
-
-    if (!validModuleConfiguration(moduleName, configuration!)) {
-      console.error(
-        `lza: error: An error occurred (InvalidConfiguration) when calling the ${command} for ${moduleName} module: Missing required properties in configuration JSON.`,
-      );
-      process.exit(1);
-    }
-
-    cliExecutionParameter['configuration'] = configuration;
-  } catch (error) {
-    console.error(
-      `lza: error: An error occurred (MalformedConfiguration) when calling the ${command} for ${moduleName} module: The configuration contains invalid Json. Error: \n ${error}`,
-    );
-    process.exit(1);
-  }
 }
