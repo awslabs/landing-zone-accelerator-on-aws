@@ -138,6 +138,13 @@ export class CloudWatchLogGroups extends cdk.Resource implements ILogGroup {
           },
         ];
 
+    if (props.keyArn && !props.owningAccountId) {
+      policyStatements.push({
+        Effect: 'Allow',
+        Action: ['kms:Encrypt', 'kms:Decrypt', 'kms.GenerateDataKey'],
+        Resource: `${props.keyArn}`,
+      });
+    }
     const provider = cdk.CustomResourceProvider.getOrCreateProvider(
       this,
       pascalCase(`${this.logGroupName}-${CLOUD_WATCH_LOG_GROUPS}`),

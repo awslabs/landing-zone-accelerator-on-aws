@@ -4663,6 +4663,21 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 1`] = `
             },
             {
               "Action": [
+                "kms:Encrypt",
+                "kms:Decrypt",
+                "kms:GenerateDataKey",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::GetAtt": [
+                  "AcceleratorCloudWatchKeyF93B6E17",
+                  "Arn",
+                ],
+              },
+              "Sid": "Kms",
+            },
+            {
+              "Action": [
                 "sqs:ReceiveMessage",
                 "sqs:ChangeMessageVisibility",
                 "sqs:GetQueueUrl",
@@ -15420,6 +15435,21 @@ exports[`LoggingStackDelegatedAdmin Construct(LoggingStacKDelegatedAdmin):  Snap
             },
             {
               "Action": [
+                "kms:Encrypt",
+                "kms:Decrypt",
+                "kms:GenerateDataKey",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::GetAtt": [
+                  "AcceleratorCloudWatchKeyF93B6E17",
+                  "Arn",
+                ],
+              },
+              "Sid": "Kms",
+            },
+            {
+              "Action": [
                 "sqs:ReceiveMessage",
                 "sqs:ChangeMessageVisibility",
                 "sqs:GetQueueUrl",
@@ -19478,6 +19508,21 @@ exports[`LoggingStackOuTargets Construct(LoggingStackOuTargets):  Snapshot Test 
                   "Arn",
                 ],
               },
+            },
+            {
+              "Action": [
+                "kms:Encrypt",
+                "kms:Decrypt",
+                "kms:GenerateDataKey",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::GetAtt": [
+                  "AcceleratorCloudWatchKeyF93B6E17",
+                  "Arn",
+                ],
+              },
+              "Sid": "Kms",
             },
             {
               "Action": [
