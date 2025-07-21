@@ -876,6 +876,9 @@ vpcs:
         - service: dynamodb
 
   - name: Network-Secondary
+    tags:
+      - key: env
+        value: prod
     account: Network
     region: *HOME_REGION
     ipamAllocations:
@@ -965,15 +968,16 @@ vpcs:
         ipamAllocation:
           ipamPoolName: home-region-prod-pool
           netmaskLength: 28
-      - name: Network-Secondary-Dual-Stack
-        availabilityZone: a
-        routeTable: Network-Secondary-A-Rt
-        ipv4CidrBlock: 10.0.0.192/28
-        ipv6CidrBlock: 2600:1f18:1305:b700::/64
-      - name: Network-Secondary-Ipv6-Only
-        availabilityZone: b
-        routeTable: Network-Secondary-B-Rt
-        ipv6CidrBlock: 2600:1f18:1305:b701::/64
+      # - name: Network-Secondary-Dual-Stack
+      #   availabilityZone: a
+      #   routeTable: Network-Secondary-A-Rt
+      #   ipv4CidrBlock: 10.0.0.192/28
+      #   ipv6CidrBlock: 2600:1f18:1305:b700::/64
+      # - name: Network-Secondary-Ipv6-Only
+      #   availabilityZone: b
+      #   routeTable: Network-Secondary-B-Rt
+      #   ipv6CidrBlock: 2600:1f18:1305:b701::/64
+                         
     networkAcls:
       - name: TestNacl
         subnetAssociations:
