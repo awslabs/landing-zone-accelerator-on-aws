@@ -14,6 +14,7 @@ nav:
       - Centralized Logging: user-guide/logging.md
       - SecurityHub Findings: user-guide/securityhub-findings.md
       - Replacement Variables: user-guide/replacement-variables.md
+      - CloudFormation Stack Policy Protection: user-guide/stack-policy.md
   - Developer Guide:
       - developer-guide/index.md
       - Development Dependencies: developer-guide/dependencies.md
