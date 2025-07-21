@@ -30,7 +30,7 @@ exports[`AccountWarming Construct(WarmAccount):  Snapshot Test 1`] = `
         "Description": "Account warming onEvent handler",
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.12.3",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.4",
           },
         },
         "Handler": "index.handler",
@@ -439,7 +439,7 @@ exports[`AccountWarming Construct(WarmAccount):  Snapshot Test 1`] = `
         "Description": "AWS CDK resource provider framework - isComplete (Stack/AccountWarming/WarmAccountProvider)",
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.12.3",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.4",
             "USER_IS_COMPLETE_FUNCTION_ARN": {
               "Fn::GetAtt": [
                 "AccountWarmingWarmAccountStatusFunction25E39087",
@@ -645,7 +645,7 @@ exports[`AccountWarming Construct(WarmAccount):  Snapshot Test 1`] = `
         "Description": "AWS CDK resource provider framework - onEvent (Stack/AccountWarming/WarmAccountProvider)",
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.12.3",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.4",
             "USER_IS_COMPLETE_FUNCTION_ARN": {
               "Fn::GetAtt": [
                 "AccountWarmingWarmAccountStatusFunction25E39087",
@@ -861,7 +861,7 @@ exports[`AccountWarming Construct(WarmAccount):  Snapshot Test 1`] = `
         "Description": "AWS CDK resource provider framework - onTimeout (Stack/AccountWarming/WarmAccountProvider)",
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.12.3",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.4",
             "USER_IS_COMPLETE_FUNCTION_ARN": {
               "Fn::GetAtt": [
                 "AccountWarmingWarmAccountStatusFunction25E39087",
@@ -1298,7 +1298,7 @@ exports[`AccountWarming Construct(WarmAccount):  Snapshot Test 1`] = `
         "Description": "Account warming isComplete handler",
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.12.3",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.4",
           },
         },
         "Handler": "index.handler",

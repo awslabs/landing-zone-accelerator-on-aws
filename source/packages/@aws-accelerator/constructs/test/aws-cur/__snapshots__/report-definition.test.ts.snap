@@ -172,7 +172,7 @@ exports[`ReportDefinition Construct(ReportDefinition):  Snapshot Test 2`] = `
         },
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.12.3",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.4",
           },
         },
         "Handler": "__entrypoint__.handler",

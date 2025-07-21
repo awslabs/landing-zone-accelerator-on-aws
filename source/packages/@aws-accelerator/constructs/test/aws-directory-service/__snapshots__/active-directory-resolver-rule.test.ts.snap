@@ -174,7 +174,7 @@ exports[`ActiveDirectoryResolverRule Construct(ActiveDirectoryResolverRule):  Sn
         "Description": "Update resolver group rule target ips",
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.12.3",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.4",
           },
         },
         "Handler": "index.handler",
@@ -309,7 +309,7 @@ exports[`ActiveDirectoryResolverRule Construct(ActiveDirectoryResolverRule):  Sn
         "Description": "AWS CDK resource provider framework - onEvent (Default/ActiveDirectoryResolverRule/UpdateResolverRuleProvider)",
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.12.3",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.4",
             "USER_ON_EVENT_FUNCTION_ARN": {
               "Fn::GetAtt": [
                 "ActiveDirectoryResolverRuleUpdateResolverRuleFunction94452B23",

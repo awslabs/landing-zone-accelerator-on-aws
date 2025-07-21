@@ -184,7 +184,7 @@ exports[`CustomerGateway Construct(CustomerGateway):  Snapshot Test 1`] = `
         "Description": "AWS CDK resource provider framework - onEvent (Default/TestCustomCgw/CustomResource/Resource)",
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.12.3",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.4",
             "USER_ON_EVENT_FUNCTION_ARN": {
               "Fn::Join": [
                 "",

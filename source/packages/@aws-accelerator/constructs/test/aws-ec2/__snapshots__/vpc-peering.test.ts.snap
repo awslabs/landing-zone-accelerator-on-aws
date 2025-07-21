@@ -140,7 +140,7 @@ exports[`VpcPeering Construct(VpcPeering):  Snapshot Test 1`] = `
         },
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.12.3",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.4",
           },
         },
         "Handler": "__entrypoint__.handler",
@@ -579,7 +579,7 @@ exports[`VpcPeering Construct(VpcPeering):  Snapshot Test 1`] = `
         "Description": "AWS CDK resource provider framework - onEvent (Default/myProvider)",
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.12.3",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.4",
             "USER_ON_EVENT_FUNCTION_ARN": {
               "Fn::GetAtt": [
                 "testAF53AC38",
@@ -684,7 +684,7 @@ exports[`VpcPeering Construct(VpcPeering):  Snapshot Test 1`] = `
         },
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.12.3",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.4",
           },
         },
         "Handler": "handler",

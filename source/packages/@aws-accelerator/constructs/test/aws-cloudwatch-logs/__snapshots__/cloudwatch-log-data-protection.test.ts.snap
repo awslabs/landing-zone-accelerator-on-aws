@@ -170,7 +170,7 @@ exports[`CloudWatchLogDataProtection Construct(CloudWatchLogDataProtection):  Sn
         "Description": "Accelerator deployed CloudWatchDataProtection custom resource lambda function.",
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.12.3",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.4",
           },
         },
         "Handler": "index.handler",
@@ -332,7 +332,7 @@ exports[`CloudWatchLogDataProtection Construct(CloudWatchLogDataProtection):  Sn
         "Description": "AWS CDK resource provider framework - onEvent (Default/CloudWatchLogDataProtection/CloudWatchDataProtection/Resource)",
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.12.3",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.4",
             "USER_ON_EVENT_FUNCTION_ARN": {
               "Fn::GetAtt": [
                 "CloudWatchLogDataProtectionCloudWatchDataProtectionFunction45F668F9",
