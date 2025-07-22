@@ -506,6 +506,15 @@ vpcs:
             - Infrastructure
     virtualPrivateGateway:
       asn: 65200
+    loadBalancers:
+      applicationLoadBalancers:
+        - name: test-alb
+          subnets:
+            - Network-Endpoints-A
+            - Network-Endpoints-B
+          securityGroups:
+            - Network-Endpoints-CustomEndpointSg-V2
+          scheme: internet-facing
     gatewayEndpoints:
       defaultPolicy: Default
       endpoints:
