@@ -4102,6 +4102,10 @@ exports[`NetworkVpcV2Stacks Construct(VpcStack-Network-us-east-1-Network-Seconda
       "Default": "/accelerator/kms/lambda/key-arn",
       "Type": "AWS::SSM::Parameter::Value<String>",
     },
+    "SsmParameterValueacceleratornetworkipampoolshomeregionprodpoolidC96584B6F00A464EAD1953AFF4B05118Parameter": {
+      "Default": "/accelerator/network/ipam/pools/home-region-prod-pool/id",
+      "Type": "AWS::SSM::Parameter::Value<String>",
+    },
     "SsmParameterValueacceleratornetworkvpcNetworkSecondaryidC96584B6F00A464EAD1953AFF4B05118Parameter": {
       "Default": "/accelerator/network/vpc/Network-Secondary/id",
       "Type": "AWS::SSM::Parameter::Value<String>",
