@@ -113,7 +113,7 @@ const subnet1 = new Subnet(stack, 'test', {
   ipv4CidrBlock: '10.0.1.0/24',
   availabilityZoneId: undefined,
 });
-subnet1.associateRouteTable();
+subnet1.associateRouteTable(rt);
 
 const subnet2 = new Subnet(stack, 'testSubnetIpam', {
   availabilityZone: 'b',
@@ -129,7 +129,7 @@ const subnet2 = new Subnet(stack, 'testSubnetIpam', {
   logRetentionInDays: 10,
   kmsKey: new cdk.aws_kms.Key(stack, 'testKms'),
 });
-subnet2.associateRouteTable();
+subnet2.associateRouteTable(rt);
 
 const subnet3 = new Subnet(stack, 'testSubnetIpamPhysicalAz1', {
   availabilityZone: undefined,
@@ -145,7 +145,7 @@ const subnet3 = new Subnet(stack, 'testSubnetIpamPhysicalAz1', {
   logRetentionInDays: 10,
   kmsKey: new cdk.aws_kms.Key(stack, 'testKms1'),
 });
-subnet3.associateRouteTable();
+subnet3.associateRouteTable(rt);
 
 const subnet4 = new Subnet(stack, 'testSubnetPhysicalAz2', {
   availabilityZone: undefined,
@@ -161,7 +161,7 @@ const subnet4 = new Subnet(stack, 'testSubnetPhysicalAz2', {
   logRetentionInDays: 10,
   kmsKey: new cdk.aws_kms.Key(stack, 'testKms2'),
 });
-subnet4.associateRouteTable();
+subnet4.associateRouteTable(rt);
 
 const subnet5 = new Subnet(stack, 'Ipv6OnlySubnet', {
   availabilityZoneId: '1',
@@ -176,7 +176,7 @@ const subnet5 = new Subnet(stack, 'Ipv6OnlySubnet', {
     hostnameType: 'resource-name',
   },
 });
-subnet5.associateRouteTable();
+subnet5.associateRouteTable(rt);
 
 const subnet6 = new Subnet(stack, 'DualStackSubnet', {
   availabilityZoneId: '1',
@@ -191,7 +191,7 @@ const subnet6 = new Subnet(stack, 'DualStackSubnet', {
     enableDnsARecord: true,
   },
 });
-subnet6.associateRouteTable();
+subnet6.associateRouteTable(rt);
 
 new NatGateway(stack, 'natGw', { name: 'ngw', subnet: subnet1, tags: [{ key: 'test', value: 'test2' }] });
 

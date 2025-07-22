@@ -216,6 +216,7 @@
             },
             "Metadata": {
                 "lzaLookup": {
+                    "vpcName":"test-vpc",
                     "subnetName": "test-subnet",
                     "routeTableName": "test-route-table"
                 }
