@@ -72,6 +72,7 @@ export class VpcBaseStack extends AcceleratorStack {
     this.cloudwatchKey = this.getAcceleratorKey(AcceleratorKeyType.CLOUDWATCH_KEY);
     this.lambdaKey = this.getAcceleratorKey(AcceleratorKeyType.LAMBDA_KEY);
     this.vpcDetails = new VpcDetails(this, 'VpcDetails', props);
+    this.ipamPoolIds = this.getIpamPoolIds();
 
     //
     // Add Stack metadata
@@ -179,7 +180,6 @@ export class VpcBaseStack extends AcceleratorStack {
       let ipv4NetmaskLength: number | undefined;
 
       if (this.vpcDetails.ipamAllocations.length > 0) {
-        this.ipamPoolIds = this.getIpamPoolIds();
         const vpcIpamPoolDetails = this.getVpcIpamPoolDetails(this.vpcDetails.ipamAllocations);
         ipv4IpamPoolId = vpcIpamPoolDetails.id;
         ipv4NetmaskLength = vpcIpamPoolDetails.netmaskLength;
