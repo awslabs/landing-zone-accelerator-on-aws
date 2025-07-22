@@ -95,6 +95,7 @@ export class VpcSubnetsBaseStack extends AcceleratorStack {
 
   private createSubnets(): void {
     for (const subnetConfig of this.vpcDetails.subnets ?? []) {
+      let createdSubnet: CreatedSubnetType | undefined;
       if (
         isV2Resource(
           this.v2StackProps.v2NetworkResources,
@@ -103,7 +104,19 @@ export class VpcSubnetsBaseStack extends AcceleratorStack {
           subnetConfig.name,
         )
       ) {
-        this.createdSubnetDetails.push(this.createSubnet(subnetConfig));
+        createdSubnet = this.createSubnet(subnetConfig);
+        this.createdSubnetDetails.push(createdSubnet);
+      }
+
+      if (
+        isV2Resource(
+          this.v2StackProps.v2NetworkResources,
+          this.vpcDetails.name,
+          V2StackComponentsList.SUBNET_ROUTE_TABLE_ASSOCIATION,
+          `${subnetConfig.name}-${subnetConfig.routeTable}`,
+        )
+      ) {
+        this.createRouteTableAssociation(subnetConfig, createdSubnet);
       }
     }
   }
@@ -135,8 +148,6 @@ export class VpcSubnetsBaseStack extends AcceleratorStack {
       this.logger.error(`Error creating subnet ${subnetConfig.name}, could not determine subnet id.`);
       throw new Error(`Error creating subnet ${subnetConfig.name}, could not determine subnet id.`);
     }
-
-    this.createRouteTableAssociation(subnetConfig, subnetId);
 
     this.addSsmParameter({
       logicalId: pascalCase(`SsmParam${pascalCase(this.vpcDetails.name) + pascalCase(subnetConfig.name)}SubnetId`),
@@ -280,8 +291,10 @@ export class VpcSubnetsBaseStack extends AcceleratorStack {
     return ipamSubnet;
   }
 
-  private createRouteTableAssociation(subnetConfig: SubnetConfig, subnetId: string): void {
+  private createRouteTableAssociation(subnetConfig: SubnetConfig, createdSubnet?: CreatedSubnetType): void {
     const subnetRouteTableId = this.getSubnetRouteTableId(subnetConfig);
+
+    const subnetId = this.getSubnetId(subnetConfig, createdSubnet);
 
     if (subnetRouteTableId) {
       this.logger.info(`Adding route table association for subnet ${subnetConfig.name}`);
@@ -289,7 +302,7 @@ export class VpcSubnetsBaseStack extends AcceleratorStack {
         this,
         `${pascalCase(subnetConfig.name)}RouteTableAssociation`,
         {
-          subnetId,
+          subnetId: subnetId,
           routeTableId: subnetRouteTableId,
         },
       );
@@ -362,6 +375,17 @@ export class VpcSubnetsBaseStack extends AcceleratorStack {
       );
     }
     return basePool;
+  }
+
+  private getSubnetId(subnetConfig: SubnetConfig, createdSubnet?: CreatedSubnetType): string {
+    if (createdSubnet?.id) {
+      return createdSubnet?.id;
+    }
+
+    return cdk.aws_ssm.StringParameter.valueForStringParameter(
+      this,
+      this.getSsmPath(SsmResourceType.SUBNET, [this.vpcDetails.name, subnetConfig.name]),
+    );
   }
 
   private getSubnetRouteTableId(subnetConfig: SubnetConfig): string | undefined {

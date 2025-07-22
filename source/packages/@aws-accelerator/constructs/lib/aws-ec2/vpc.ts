@@ -116,17 +116,15 @@ abstract class SubnetBase extends cdk.Resource implements ISubnet {
   public abstract readonly subnetArn: string;
   public readonly availabilityZone?: string;
   public readonly availabilityZoneId?: string;
-  public abstract readonly routeTable?: IRouteTable;
 
-  public associateRouteTable(): cdk.aws_ec2.CfnSubnetRouteTableAssociation | undefined {
-    if (this.routeTable) {
+  public associateRouteTable(routeTable?: IRouteTable): cdk.aws_ec2.CfnSubnetRouteTableAssociation | undefined {
+    if (routeTable) {
       // Route Table is not imported, Associating Subnet to new RouteTable
       return new cdk.aws_ec2.CfnSubnetRouteTableAssociation(this, 'RouteTableAssociation', {
         subnetId: this.subnetId,
-        routeTableId: this.routeTable.routeTableId,
+        routeTableId: routeTable.routeTableId,
       });
     }
-
     return undefined;
   }
 }
@@ -165,7 +163,6 @@ export class Subnet extends SubnetBase {
   public readonly ipv4CidrBlock?: string;
   public readonly ipv6CidrBlock?: string;
   public readonly mapPublicIpOnLaunch?: boolean;
-  public readonly routeTable?: IRouteTable;
 
   public readonly outpostArn?: string;
 
@@ -176,7 +173,6 @@ export class Subnet extends SubnetBase {
     this.availabilityZone = props.availabilityZone;
     this.availabilityZoneId = props.availabilityZoneId;
     this.mapPublicIpOnLaunch = props.mapPublicIpOnLaunch;
-    this.routeTable = props.routeTable;
     this.outpostArn = props.outpost?.arn;
 
     // Determine if IPAM subnet or native
