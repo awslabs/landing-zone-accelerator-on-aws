@@ -16,7 +16,7 @@ exports[`DetectiveGraphConfig Construct(DetectiveGraphConfig):  Snapshot Test 1`
         },
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.12.4",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.5",
           },
         },
         "Handler": "__entrypoint__.handler",

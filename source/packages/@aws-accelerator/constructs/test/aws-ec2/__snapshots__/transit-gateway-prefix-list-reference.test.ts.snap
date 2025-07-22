@@ -16,7 +16,7 @@ exports[`TransitGatewayPrefixListReference Construct(TransitGatewayPrefixListRef
         },
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.12.4",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.5",
           },
         },
         "Handler": "__entrypoint__.handler",

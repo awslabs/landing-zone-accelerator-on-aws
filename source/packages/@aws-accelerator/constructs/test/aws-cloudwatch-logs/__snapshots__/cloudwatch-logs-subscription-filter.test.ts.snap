@@ -200,7 +200,7 @@ exports[`CloudWatchLogsSubscriptionFilter Construct(CloudWatchLogsSubscriptionFi
           "Variables": {
             "AWS_STS_REGIONAL_ENDPOINTS": "regional",
             "NO_OP": "false",
-            "SOLUTION_ID": "AwsSolution/SO0199/1.12.4",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.5",
           },
         },
         "Handler": "__entrypoint__.handler",

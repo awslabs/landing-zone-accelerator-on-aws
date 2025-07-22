@@ -277,7 +277,7 @@ exports[`BucketEncryption Construct(ValidateBucketKmsEncryption):  Snapshot Test
         "Description": "Accelerator deployed BucketEncryption custom resource lambda function.",
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.12.4",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.5",
           },
         },
         "Handler": "index.handler",
@@ -416,7 +416,7 @@ exports[`BucketEncryption Construct(ValidateBucketKmsEncryption):  Snapshot Test
         "Description": "AWS CDK resource provider framework - onEvent (Default/ValidateBucketKmsEncryption/BucketEncryption/Resource)",
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.12.4",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.5",
             "USER_ON_EVENT_FUNCTION_ARN": {
               "Fn::GetAtt": [
                 "ValidateBucketKmsEncryptionBucketEncryptionFunction89C152CA",

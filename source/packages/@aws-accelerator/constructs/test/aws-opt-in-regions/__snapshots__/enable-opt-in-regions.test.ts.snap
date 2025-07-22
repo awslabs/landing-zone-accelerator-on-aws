@@ -79,7 +79,7 @@ exports[`EnableOptInRegions Construct(EnableOptInRegions):  Snapshot Test 1`] = 
         "Description": "Opt-in Regions isComplete handler",
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.12.4",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.5",
           },
         },
         "Handler": "index.handler",
@@ -196,7 +196,7 @@ exports[`EnableOptInRegions Construct(EnableOptInRegions):  Snapshot Test 1`] = 
         "Description": "Opt-in Regions onEvent handler",
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.12.4",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.5",
           },
         },
         "Handler": "index.handler",
@@ -313,7 +313,7 @@ exports[`EnableOptInRegions Construct(EnableOptInRegions):  Snapshot Test 1`] = 
         "Description": "AWS CDK resource provider framework - isComplete (Stack/OptInRegions/OptInRegionsProvider)",
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.12.4",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.5",
             "USER_IS_COMPLETE_FUNCTION_ARN": {
               "Fn::GetAtt": [
                 "OptInRegionsOptInRegionsIsComplete20A899A2",
@@ -453,7 +453,7 @@ exports[`EnableOptInRegions Construct(EnableOptInRegions):  Snapshot Test 1`] = 
         "Description": "AWS CDK resource provider framework - onEvent (Stack/OptInRegions/OptInRegionsProvider)",
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.12.4",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.5",
             "USER_IS_COMPLETE_FUNCTION_ARN": {
               "Fn::GetAtt": [
                 "OptInRegionsOptInRegionsIsComplete20A899A2",
@@ -603,7 +603,7 @@ exports[`EnableOptInRegions Construct(EnableOptInRegions):  Snapshot Test 1`] = 
         "Description": "AWS CDK resource provider framework - onTimeout (Stack/OptInRegions/OptInRegionsProvider)",
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.12.4",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.5",
             "USER_IS_COMPLETE_FUNCTION_ARN": {
               "Fn::GetAtt": [
                 "OptInRegionsOptInRegionsIsComplete20A899A2",

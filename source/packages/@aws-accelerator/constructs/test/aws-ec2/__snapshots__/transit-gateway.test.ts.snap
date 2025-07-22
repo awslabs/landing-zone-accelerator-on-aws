@@ -140,7 +140,7 @@ exports[`ImportTransitGateway Construct(ImportTransitGateway):  Snapshot Test 1`
         },
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.12.4",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.5",
           },
         },
         "Handler": "__entrypoint__.handler",
@@ -443,7 +443,7 @@ exports[`ImportTransitGateway Construct(ImportTransitGateway):  Snapshot Test 1`
         "Description": "AWS CDK resource provider framework - onEvent (Default/TransitGatewayRouteTableAssociationCustom/CustomResource/Resource)",
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.12.4",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.5",
             "USER_ON_EVENT_FUNCTION_ARN": {
               "Fn::Join": [
                 "",
@@ -629,7 +629,7 @@ exports[`ImportTransitGateway Construct(ImportTransitGateway):  Snapshot Test 1`
         "Description": "AWS CDK resource provider framework - onEvent (Default/TransitGatewayRouteTablePropagationCustom/CustomResource/Resource)",
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.12.4",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.5",
             "USER_ON_EVENT_FUNCTION_ARN": {
               "Fn::Join": [
                 "",
@@ -922,7 +922,7 @@ exports[`TransitGateway Construct(TransitGateway):  Snapshot Test 1`] = `
         },
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.12.4",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.5",
           },
         },
         "Handler": "__entrypoint__.handler",
@@ -1225,7 +1225,7 @@ exports[`TransitGateway Construct(TransitGateway):  Snapshot Test 1`] = `
         "Description": "AWS CDK resource provider framework - onEvent (Default/TransitGatewayRouteTableAssociationCustom/CustomResource/Resource)",
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.12.4",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.5",
             "USER_ON_EVENT_FUNCTION_ARN": {
               "Fn::Join": [
                 "",
@@ -1411,7 +1411,7 @@ exports[`TransitGateway Construct(TransitGateway):  Snapshot Test 1`] = `
         "Description": "AWS CDK resource provider framework - onEvent (Default/TransitGatewayRouteTablePropagationCustom/CustomResource/Resource)",
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.12.4",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.5",
             "USER_ON_EVENT_FUNCTION_ARN": {
               "Fn::Join": [
                 "",
@@ -1704,7 +1704,7 @@ exports[`TransitGatewayAttachment Construct(TransitGatewayAttachment):  Snapshot
         },
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.12.4",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.5",
           },
         },
         "Handler": "__entrypoint__.handler",
@@ -2007,7 +2007,7 @@ exports[`TransitGatewayAttachment Construct(TransitGatewayAttachment):  Snapshot
         "Description": "AWS CDK resource provider framework - onEvent (Default/TransitGatewayRouteTableAssociationCustom/CustomResource/Resource)",
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.12.4",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.5",
             "USER_ON_EVENT_FUNCTION_ARN": {
               "Fn::Join": [
                 "",
@@ -2193,7 +2193,7 @@ exports[`TransitGatewayAttachment Construct(TransitGatewayAttachment):  Snapshot
         "Description": "AWS CDK resource provider framework - onEvent (Default/TransitGatewayRouteTablePropagationCustom/CustomResource/Resource)",
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.12.4",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.5",
             "USER_ON_EVENT_FUNCTION_ARN": {
               "Fn::Join": [
                 "",
@@ -2531,7 +2531,7 @@ exports[`TransitGatewayRouteTableAssociation Construct(TransitGatewayRouteTableA
         "Description": "AWS CDK resource provider framework - onEvent (Default/TransitGatewayRouteTableAssociationCustom/CustomResource/Resource)",
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.12.4",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.5",
             "USER_ON_EVENT_FUNCTION_ARN": {
               "Fn::Join": [
                 "",
@@ -2717,7 +2717,7 @@ exports[`TransitGatewayRouteTableAssociation Construct(TransitGatewayRouteTableA
         "Description": "AWS CDK resource provider framework - onEvent (Default/TransitGatewayRouteTablePropagationCustom/CustomResource/Resource)",
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.12.4",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.5",
             "USER_ON_EVENT_FUNCTION_ARN": {
               "Fn::Join": [
                 "",
@@ -3010,7 +3010,7 @@ exports[`TransitGatewayRouteTablePropagation Construct(TransitGatewayRouteTableP
         },
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.12.4",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.5",
           },
         },
         "Handler": "__entrypoint__.handler",
@@ -3313,7 +3313,7 @@ exports[`TransitGatewayRouteTablePropagation Construct(TransitGatewayRouteTableP
         "Description": "AWS CDK resource provider framework - onEvent (Default/TransitGatewayRouteTableAssociationCustom/CustomResource/Resource)",
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.12.4",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.5",
             "USER_ON_EVENT_FUNCTION_ARN": {
               "Fn::Join": [
                 "",
@@ -3499,7 +3499,7 @@ exports[`TransitGatewayRouteTablePropagation Construct(TransitGatewayRouteTableP
         "Description": "AWS CDK resource provider framework - onEvent (Default/TransitGatewayRouteTablePropagationCustom/CustomResource/Resource)",
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.12.4",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.5",
             "USER_ON_EVENT_FUNCTION_ARN": {
               "Fn::Join": [
                 "",
