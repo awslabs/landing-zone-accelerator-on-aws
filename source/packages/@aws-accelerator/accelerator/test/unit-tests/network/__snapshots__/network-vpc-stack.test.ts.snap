@@ -2030,6 +2030,9 @@ exports[`NetworkVpcStack tests Construct(NetworkVpcStack):  Snapshot Test 1`] = 
       "UpdateReplacePolicy": "Delete",
     },
     "SsmParamAcceleratorDhcpOptsDhcpOptionsId5EAF4874": {
+      "DependsOn": [
+        "testalbNetworkEndpointsssmF77D3626",
+      ],
       "Properties": {
         "Name": "/accelerator/network/dhcp/accelerator-dhcp-opts/id",
         "Type": "String",
@@ -2226,7 +2229,7 @@ exports[`NetworkVpcStack tests Construct(NetworkVpcStack):  Snapshot Test 1`] = 
     },
     "SsmParamTestIpv6DhcpOptionsId18062B81": {
       "DependsOn": [
-        "SsmParamAcceleratorDhcpOptsDhcpOptionsId5EAF4874",
+        "testalbNetworkEndpointsssmF77D3626",
       ],
       "Properties": {
         "Name": "/accelerator/network/dhcp/test-ipv6/id",
@@ -2274,6 +2277,65 @@ exports[`NetworkVpcStack tests Construct(NetworkVpcStack):  Snapshot Test 1`] = 
         ],
       },
       "Type": "AWS::EC2::DHCPOptions",
+    },
+    "testalbNetworkEndpointsA3BF3100": {
+      "DependsOn": [
+        "NetworkEndpointsVpcNetworkEndpointsASubnet758434F8",
+        "NetworkEndpointsVpcNetworkEndpointsASubnetRouteTableAssociation9EE74497",
+        "NetworkEndpointsVpcNetworkEndpointsBSubnet1CF39812",
+        "NetworkEndpointsVpcNetworkEndpointsBSubnetRouteTableAssociation68383153",
+      ],
+      "Metadata": {
+        "lzaLookup": {
+          "albName": "test-alb",
+          "vpcName": "Network-Endpoints",
+        },
+      },
+      "Properties": {
+        "LoadBalancerAttributes": [
+          {
+            "Key": "access_logs.s3.enabled",
+            "Value": "true",
+          },
+          {
+            "Key": "access_logs.s3.bucket",
+            "Value": "aws-accelerator-elb-access-logs-222222222222-us-east-1",
+          },
+          {
+            "Key": "access_logs.s3.prefix",
+            "Value": "666666666666/us-east-1/test-alb",
+          },
+        ],
+        "Name": "test-alb",
+        "Scheme": "internet-facing",
+        "SecurityGroups": [],
+        "Subnets": [
+          {
+            "Ref": "NetworkEndpointsVpcNetworkEndpointsASubnet758434F8",
+          },
+          {
+            "Ref": "NetworkEndpointsVpcNetworkEndpointsBSubnet1CF39812",
+          },
+        ],
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "test-alb",
+          },
+        ],
+        "Type": "application",
+      },
+      "Type": "AWS::ElasticLoadBalancingV2::LoadBalancer",
+    },
+    "testalbNetworkEndpointsssmF77D3626": {
+      "Properties": {
+        "Name": "/accelerator/network/vpc/Network-Endpoints/alb/test-alb/id",
+        "Type": "String",
+        "Value": {
+          "Ref": "testalbNetworkEndpointsA3BF3100",
+        },
+      },
+      "Type": "AWS::SSM::Parameter",
     },
   },
 }
