@@ -259,7 +259,7 @@ export class VpnResources {
           resources: [`arn:${this.stack.partition}:kms:*:${this.stack.account}:key:/*`],
           conditions: {
             StringEquals: {
-              'kms:RequestAlias': this.stack.acceleratorResourceNames.customerManagedKeys.cloudWatchLog,
+              'kms:RequestAlias': this.stack.acceleratorResourceNames.customerManagedKeys.cloudWatchLog.alias,
             },
           },
         }),
