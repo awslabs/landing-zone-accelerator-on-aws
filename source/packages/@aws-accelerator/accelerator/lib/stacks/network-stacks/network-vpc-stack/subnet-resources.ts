@@ -96,9 +96,6 @@ export class SubnetResources {
 
     // Retrieve items required to create subnet
     const vpc = getVpc(maps.vpcs, vpcItem.name) as Vpc;
-    const routeTable = subnetItem.routeTable
-      ? (getRouteTable(maps.routeTables, vpcItem.name, subnetItem.routeTable) as RouteTable)
-      : undefined;
     const basePool = subnetItem.ipamAllocation ? this.getBasePool(subnetItem, ipamConfig) : undefined;
     const outpost = subnetItem.outpost
       ? this.stack.getOutpost(maps.outposts, vpcItem.name, subnetItem.outpost)
@@ -106,7 +103,15 @@ export class SubnetResources {
     const availabilityZone = this.setAvailabilityZone(subnetItem, outpost);
 
     // Create subnet
-    const subnet = this.createSubnetItem(vpcItem, subnetItem, availabilityZone, vpc, routeTable, basePool, outpost);
+    const subnet = this.createSubnetItem(
+      vpcItem,
+      subnetItem,
+      availabilityZone,
+      vpc,
+      maps.routeTables,
+      basePool,
+      outpost,
+    );
 
     maps.subnets.set(`${vpcItem.name}_${subnetItem.name}`, subnet);
 
@@ -231,7 +236,7 @@ export class SubnetResources {
    * @param vpcItem
    * @param subnetItem
    * @param availabilityZone
-   * @param routeTable
+   * @param routeTableMap
    * @param vpc
    * @param ipamSubnetMap
    * @param index
@@ -244,7 +249,7 @@ export class SubnetResources {
     subnetItem: SubnetConfig,
     availabilityZone: string,
     vpc: Vpc,
-    routeTable?: RouteTable,
+    routeTableMap: Map<string, RouteTable>,
     basePool?: string[],
     outpost?: OutpostsConfig,
   ): Subnet {
@@ -257,6 +262,9 @@ export class SubnetResources {
       const subnetId = this.stack.getExternalResourceParameter(
         this.stack.getSsmPath(SsmResourceType.SUBNET, [vpcItem.name, subnetItem.name]),
       );
+      const routeTable = subnetItem.routeTable
+        ? (getRouteTable(routeTableMap, vpcItem.name, subnetItem.routeTable) as RouteTable)
+        : undefined;
       subnet = Subnet.fromSubnetAttributes(
         this.stack,
         pascalCase(`${vpcItem.name}Vpc`) + pascalCase(`${subnetItem.name}Subnet`),
@@ -282,7 +290,6 @@ export class SubnetResources {
         logRetentionInDays: this.stack.logRetention,
         mapPublicIpOnLaunch: subnetItem.mapPublicIpOnLaunch,
         privateDnsOptions: subnetItem.privateDnsOptions,
-        routeTable,
         vpc,
         tags: subnetItem.tags,
         outpost,
@@ -302,12 +309,17 @@ export class SubnetResources {
     if (
       this.lzaLookup.resourceExists({
         resourceType: LZAResourceLookupType.ROUTE_TABLE_ASSOCIATION,
-        lookupValues: { subnetName: subnetItem.name, routeTableName: subnetItem.routeTable },
+        lookupValues: { vpcName: vpcItem.name, subnetName: subnetItem.name, routeTableName: subnetItem.routeTable },
       })
     ) {
-      const resource = subnet!.associateRouteTable();
+      const routeTable = subnetItem.routeTable
+        ? (getRouteTable(routeTableMap, vpcItem.name, subnetItem.routeTable) as RouteTable)
+        : undefined;
+
+      const resource = subnet!.associateRouteTable(routeTable);
 
       resource?.addMetadata(MetadataKeys.LZA_LOOKUP, {
+        vpcName: vpcItem.name,
         subnetName: subnetItem.name,
         routeTableName: subnetItem.routeTable,
       });

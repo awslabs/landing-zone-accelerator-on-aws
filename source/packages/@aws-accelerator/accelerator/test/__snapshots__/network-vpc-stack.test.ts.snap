@@ -1573,6 +1573,7 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
         "lzaLookup": {
           "routeTableName": "Workload-A-Rt",
           "subnetName": "Workload-A",
+          "vpcName": "Infra-Template-Full-Ipam-Central",
         },
       },
       "Properties": {
@@ -1812,6 +1813,7 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
         "lzaLookup": {
           "routeTableName": "Workload-A-Rt",
           "subnetName": "Workload-A",
+          "vpcName": "Infra-Template-Full-Static-Central",
         },
       },
       "Properties": {
@@ -2068,6 +2070,7 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
         "lzaLookup": {
           "routeTableName": "Workload-A-Rt",
           "subnetName": "Workload-A",
+          "vpcName": "Infra-Template-Half-Ipam-Central",
         },
       },
       "Properties": {
@@ -2307,6 +2310,7 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
         "lzaLookup": {
           "routeTableName": "Workload-A-Rt",
           "subnetName": "Workload-A",
+          "vpcName": "Infra-Template-Half-Static-Central",
         },
       },
       "Properties": {
@@ -3147,6 +3151,7 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
         "lzaLookup": {
           "routeTableName": "Network-Endpoints-A",
           "subnetName": "Network-Endpoints-A",
+          "vpcName": "Network-Endpoints",
         },
       },
       "Properties": {
@@ -3294,6 +3299,7 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
         "lzaLookup": {
           "routeTableName": "Network-Endpoints-B",
           "subnetName": "Network-Endpoints-B",
+          "vpcName": "Network-Endpoints",
         },
       },
       "Properties": {
@@ -3425,6 +3431,7 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
         "lzaLookup": {
           "routeTableName": "Network-Endpoints-Tgw-A",
           "subnetName": "Network-EndpointsTgwAttach-A",
+          "vpcName": "Network-Endpoints",
         },
       },
       "Properties": {
@@ -3490,6 +3497,7 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
         "lzaLookup": {
           "routeTableName": "Network-Endpoints-Tgw-B",
           "subnetName": "Network-EndpointsTgwAttach-B",
+          "vpcName": "Network-Endpoints",
         },
       },
       "Properties": {
@@ -4395,6 +4403,7 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
         "lzaLookup": {
           "routeTableName": "Network-Inspection-A",
           "subnetName": "Network-Inspection-A",
+          "vpcName": "Network-Inspection",
         },
       },
       "Properties": {
@@ -4483,6 +4492,7 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
         "lzaLookup": {
           "routeTableName": "Network-Inspection-B",
           "subnetName": "Network-Inspection-B",
+          "vpcName": "Network-Inspection",
         },
       },
       "Properties": {
@@ -4569,6 +4579,7 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
         "lzaLookup": {
           "routeTableName": "Network-Inspection-Local-Rt-A",
           "subnetName": "Network-Inspection-Local-A",
+          "vpcName": "Network-Inspection",
         },
       },
       "Properties": {
@@ -4654,6 +4665,7 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
         "lzaLookup": {
           "routeTableName": "Network-Inspection-Tgw-A",
           "subnetName": "Network-InspectionTgwAttach-A",
+          "vpcName": "Network-Inspection",
         },
       },
       "Properties": {
@@ -4699,6 +4711,7 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
         "lzaLookup": {
           "routeTableName": "Network-Inspection-Tgw-B",
           "subnetName": "Network-InspectionTgwAttach-B",
+          "vpcName": "Network-Inspection",
         },
       },
       "Properties": {
@@ -5238,6 +5251,7 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
         "lzaLookup": {
           "routeTableName": "Network-NonTemplate-Ipam-Public",
           "subnetName": "Network-NonTemplate-Ipam-Public-A",
+          "vpcName": "Network-NonTemplate-Ipam-Central",
         },
       },
       "Properties": {
@@ -5497,6 +5511,7 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
         "lzaLookup": {
           "routeTableName": "Network-NonTemplate-Static-Public",
           "subnetName": "Network-Public-A",
+          "vpcName": "Network-NonTemplate-Static-Central",
         },
       },
       "Properties": {
@@ -5796,6 +5811,7 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
         "lzaLookup": {
           "routeTableName": "Network-Secondary-A-Rt",
           "subnetName": "Network-Secondary-A",
+          "vpcName": "Network-Secondary",
         },
       },
       "Properties": {
@@ -5915,6 +5931,7 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
         "lzaLookup": {
           "routeTableName": "Network-Secondary-B-Rt",
           "subnetName": "Network-Secondary-B",
+          "vpcName": "Network-Secondary",
         },
       },
       "Properties": {
@@ -5996,6 +6013,7 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
         "lzaLookup": {
           "routeTableName": "Network-Secondary-C-Rt",
           "subnetName": "Network-Secondary-C",
+          "vpcName": "Network-Secondary",
         },
       },
       "Properties": {
@@ -6077,6 +6095,7 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
         "lzaLookup": {
           "routeTableName": "Network-Secondary-D-Rt",
           "subnetName": "Network-Secondary-D",
+          "vpcName": "Network-Secondary",
         },
       },
       "Properties": {
@@ -6123,6 +6142,7 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
         "lzaLookup": {
           "routeTableName": "Network-Secondary-A-Rt",
           "subnetName": "Network-Secondary-Dual-Stack",
+          "vpcName": "Network-Secondary",
         },
       },
       "Properties": {
@@ -6169,6 +6189,7 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
         "lzaLookup": {
           "routeTableName": "Network-Secondary-B-Rt",
           "subnetName": "Network-Secondary-Ipv6-Only",
+          "vpcName": "Network-Secondary",
         },
       },
       "Properties": {
@@ -6231,6 +6252,7 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
         "lzaLookup": {
           "routeTableName": "Network-Secondary-B-Rt",
           "subnetName": "Network-Secondary-Outposts-1",
+          "vpcName": "Network-Secondary",
         },
       },
       "Properties": {
@@ -6293,6 +6315,7 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
         "lzaLookup": {
           "routeTableName": "Network-Secondary-A-Rt",
           "subnetName": "Network-Secondary-Outposts-A",
+          "vpcName": "Network-Secondary",
         },
       },
       "Properties": {
@@ -9049,6 +9072,7 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
         "lzaLookup": {
           "routeTableName": "Workload-A-Rt",
           "subnetName": "Workload-A",
+          "vpcName": "Workload-Template",
         },
       },
       "Properties": {
@@ -9128,6 +9152,7 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
         "lzaLookup": {
           "routeTableName": "Workload-B-Rt",
           "subnetName": "Workload-B",
+          "vpcName": "Workload-Template",
         },
       },
       "Properties": {

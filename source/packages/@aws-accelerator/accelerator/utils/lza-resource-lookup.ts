@@ -60,7 +60,7 @@ const RESOURCE_REQUIRED_KEYS: { [key in LZAResourceLookupType]?: string[] } = {
   [LZAResourceLookupType.PREFIX_LIST_ROUTE]: ['vpcName', 'routeTableName', 'routeTableEntryName', 'type'],
   [LZAResourceLookupType.SUBNET]: ['vpcName', 'subnetName'],
   [LZAResourceLookupType.IPAM_SUBNET]: ['vpcName', 'subnetName'],
-  [LZAResourceLookupType.ROUTE_TABLE_ASSOCIATION]: ['subnetName', 'routeTableName'],
+  [LZAResourceLookupType.ROUTE_TABLE_ASSOCIATION]: ['vpcName', 'subnetName', 'routeTableName'],
   [LZAResourceLookupType.NAT_GATEWAY]: ['vpcName', 'natGatewayName'],
   [LZAResourceLookupType.TRANSIT_GATEWAY_VPC_ATTACHMENT]: [
     'vpcName',

@@ -182,6 +182,8 @@ export function getV2NetworkResources(
 
     getV2SubnetResources(vpcItem, lzaLookup, v2Components);
 
+    getV2SubnetRouteTableAssociationResources(vpcItem, lzaLookup, v2Components);
+
     getV2ShareSubnetResources(vpcItem, lzaLookup, v2Components);
 
     getV2NetGateWayResources(vpcItem, lzaLookup, v2Components);
@@ -840,6 +842,36 @@ function getV2SubnetResources(
         vpcName: vpcItem.name,
         resourceType: V2StackComponentsList.SUBNET,
         resourceName: subnetItem.name,
+      });
+    }
+  }
+}
+
+/**
+ * Function to get V2 Subnet Route Table Association resources
+ * @param vpcItem {@link VpcConfig} | {@link VpcTemplatesConfig}
+ * @param lzaLookup {@link LZAResourceLookup}
+ * @param v2Components {@link V2NetworkResourceListType}[]
+ */
+function getV2SubnetRouteTableAssociationResources(
+  vpcItem: VpcConfig | VpcTemplatesConfig,
+  lzaLookup: LZAResourceLookup,
+  v2Components: V2NetworkResourceListType[],
+): void {
+  for (const subnetItem of vpcItem.subnets ?? []) {
+    const associationExists = lzaLookup.resourceExists({
+      resourceType: LZAResourceLookupType.ROUTE_TABLE_ASSOCIATION,
+      lookupValues: { vpcName: vpcItem.name, subnetName: subnetItem.name, routeTableName: subnetItem.routeTable },
+    });
+
+    if (!associationExists && subnetItem.routeTable) {
+      logger.info(
+        `VPC ${vpcItem.name} subnet ${subnetItem.name} Route Table Association with RT ${subnetItem.routeTable} is not present in the existing stack, resource will be deployed through V2 stacks`,
+      );
+      v2Components.push({
+        vpcName: vpcItem.name,
+        resourceType: V2StackComponentsList.SUBNET_ROUTE_TABLE_ASSOCIATION,
+        resourceName: `${subnetItem.name}-${subnetItem.routeTable}`,
       });
     }
   }

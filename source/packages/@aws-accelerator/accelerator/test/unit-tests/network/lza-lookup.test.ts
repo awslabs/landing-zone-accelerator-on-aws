@@ -205,7 +205,7 @@ describe('LZAResourceLookup tests', () => {
     expect(
       lzaLookup.resourceExists({
         resourceType: LZAResourceLookupType.ROUTE_TABLE_ASSOCIATION,
-        lookupValues: { subnetName: 'test-subnet', routeTableName: 'test-route-table' },
+        lookupValues: { vpcName: 'test-vpc', subnetName: 'test-subnet', routeTableName: 'test-route-table' },
       }),
     ).toBeTruthy();
     expect(

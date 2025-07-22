@@ -61,7 +61,7 @@ const subnet = new Subnet(stack, 'test-subnet', {
   availabilityZoneId: undefined,
   ipv4CidrBlock: '10.0.2.0/24',
 });
-subnet.associateRouteTable();
+subnet.associateRouteTable(rt);
 
 const ngw = new NatGateway(stack, 'ngw', { name: 'ngw', subnet });
 
