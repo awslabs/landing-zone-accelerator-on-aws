@@ -38,6 +38,12 @@ import { NetworkVpcStack } from './network-vpc-stack';
 import { MetadataKeys } from '@aws-accelerator/utils/lib/common-types';
 import { LZAResourceLookup, LZAResourceLookupType } from '../../../../utils/lza-resource-lookup';
 
+enum LoadBalancerType {
+  ALB = 'alb',
+  GWLB = 'gwlb',
+  NLB = 'nlb',
+}
+
 export class LoadBalancerResources {
   public readonly albMap: Map<string, ApplicationLoadBalancer>;
   public readonly gwlbMap: Map<string, GatewayLoadBalancer>;
@@ -170,7 +176,7 @@ export class LoadBalancerResources {
       },
     );
 
-    this.addLzaLookupMetadata(loadBalancer, vpcItem.name, loadBalancerItem.name);
+    this.addLzaLookupMetadata(loadBalancer, vpcItem.name, loadBalancerItem.name, LoadBalancerType.GWLB);
 
     // Add SSM parameters
     this.stack.addSsmParameter({
@@ -282,7 +288,7 @@ export class LoadBalancerResources {
       attributes: options.albItem.attributes ?? undefined,
     });
 
-    this.addLzaLookupMetadata(alb, options.vpcName, options.albItem.name);
+    this.addLzaLookupMetadata(alb, options.vpcName, options.albItem.name, LoadBalancerType.ALB);
     options.albMap.set(`${options.vpcName}_${options.albItem.name}`, alb);
 
     for (const subnet of options.albItem.subnets || []) {
@@ -416,7 +422,7 @@ export class LoadBalancerResources {
         crossZoneLoadBalancing: nlbItem.crossZoneLoadBalancing,
         accessLogsBucket: accessLogsBucketName,
       });
-      this.addLzaLookupMetadata(nlb, vpcItem.name, nlbItem.name);
+      this.addLzaLookupMetadata(nlb, vpcItem.name, nlbItem.name, LoadBalancerType.NLB);
       nlbMap.set(`${vpcItem.name}_${nlbItem.name}`, nlb);
 
       for (const subnet of nlbItem.subnets || []) {
@@ -535,11 +541,11 @@ export class LoadBalancerResources {
    * @param loadBalancerName
    * @returns
    */
-  private addLzaLookupMetadata(node: cdk.Resource, vpcName: string, loadBalancerName: string) {
+  private addLzaLookupMetadata(node: cdk.Resource, vpcName: string, loadBalancerName: string, type: LoadBalancerType) {
     const resource = node.node.findChild('Resource') as cdk.CfnResource;
     resource.addMetadata(MetadataKeys.LZA_LOOKUP, {
       vpcName: vpcName,
-      gwlbName: loadBalancerName,
+      [`${type}Name`]: loadBalancerName,
     });
   }
 }
