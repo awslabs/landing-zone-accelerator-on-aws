@@ -35,17 +35,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - fix(aspects): update CDK aspect to use lza default node version for custom resource Lambda functions by default [#761](https://github.com/awslabs/landing-zone-accelerator-on-aws/issues/761)
 - fix(config): ISnsConfig functionality for snsTopics property [#700](https://github.com/awslabs/landing-zone-accelerator-on-aws/issues/700) 
 - fix(diff): print output before approval [#723](https://github.com/awslabs/landing-zone-accelerator-on-aws/issues/723)
+- fix(diff): add stack name to diff output 
 - fix(documentation): fixed documentation for acceleratorMetadata [#498](https://github.com/awslabs/landing-zone-accelerator-on-aws/issues/498)
+- fix(logging): add permissions to cloudwatch log creation for kms association 
 - fix(logging): check for error in CreateLogGroup API
 - fix(macie): update macie custom resource policy statement to correct error preventing creation of service linked role
 - fix(networking): allow the creation of iam vpc interface endpoints
 - fix(networking): fix ipam scope lookup on shared pool
+- fix(networking): remove duplicates for gateway loadbalancer endpoints 
 - fix(pipeline): move account alias module run after account creation [#782](https://github.com/awslabs/landing-zone-accelerator-on-aws/issues/782)
 - fix(pipeline): update iam policy for github token change lambda to allow pipeline update [#739](https://github.com/awslabs/landing-zone-accelerator-on-aws/issues/739)
 - fix(pre-approval): add wrapper around deployment 
 - fix(sample-config): extend preventative measures to roles
 - fix(security-audit): sns topic for controltower notifications
 - fix(securityhub): by default only send HIGH and CRITICAL SecurityHub events to CloudWatch. If other events are needed in CloudWatch update configuration
+- fix(synth): no error for newly added accounts in prepare stage
 - fix(tagging): fix tagging for custom resource providers
 - fix(validation): allow the replacements that start with the string 'resolve' [#781](https://github.com/awslabs/landing-zone-accelerator-on-aws/issues/781)
 - fix(validation): allow wildcard tld in config validator for nfw rules
@@ -60,6 +64,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - chore(constructs): directconnect constructs update sdk v3
 - chore(docs): adding securityhub findings info for kinesis.3
 - chore(docs): update cloudwatch log group retention setting documentation
+- chore(docs): update documentation with remove account steps 
+- chore(docs): updated typos in documentation 
+
+## [1.12.5] - 2025-07-22
+
+### Fixed
+
+- fix(kms): fix policy condition error
+
+### Changed
+
+- chore: fixed CVE-2025-7783 via yarn resolution for form-data
+
+## [1.12.4] - 2025-07-21
+
+### Fixed
+
+- fix(asea): lookup tgw attachments using asea vpc names
+- fix(logging): add permissions to cloudwatch log creation for kms association
+- fix(networking): remove duplicates for gateway loadbalancer endpoints
 
 ## [1.12.3] - 2025-06-11
 

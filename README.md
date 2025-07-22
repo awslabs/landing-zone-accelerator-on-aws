@@ -1,3 +1,19 @@
+# Important Notice: Experimental Release v1.13.0
+
+We are pleased to announce an experimental release of the Landing Zone Accelerator on AWS, providing early access to upcoming features and improvements.
+
+## Intended Usage and Environment Considerations
+
+This experimental release is specifically designed for evaluation and testing purposes in development environments only. Given the nature of pre-release software and ongoing refinements, we strongly advise against deploying these features in production environments at this time. Organizations should continue to rely on our latest official release for production workloads to ensure maximum stability and support coverage.
+
+## Support and Issue Reporting Guidelines
+
+Any issues encountered while using this experimental release should be reported directly through our GitHub issues, rather than through AWS Support directly. This approach allows our development team to rapidly address feedback and incorporate improvements into the upcoming official release. When submitting GitHub issues, please clearly indicate that it relates to the experimental release (experimental/v1.13.0) to help us properly track and address your input.
+
+## Path to Official Release
+
+Features and improvements introduced in this experimental release will undergo thorough testing and refinement before being incorporated into an official release. We encourage users to subscribe to our repository notifications to stay informed about updates and the timeline for official release availability.
+
 - [Landing Zone Accelerator on AWS](#landing-zone-accelerator-on-aws)
   - [Documentation](#documentation)
   - [Package Structure](#package-structure)
