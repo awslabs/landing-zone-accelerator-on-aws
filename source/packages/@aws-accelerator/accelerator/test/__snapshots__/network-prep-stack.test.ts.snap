@@ -693,10 +693,7 @@ drop http $HOME_NET any -> $EXTERNAL_NET any (http.host; content:"example.com"; 
               ],
               "Condition": {
                 "StringEquals": {
-                  "kms:RequestAlias": {
-                    "alias": "alias/accelerator/kms/cloudwatch/key",
-                    "description": "AWS Accelerator CloudWatch Kms Key",
-                  },
+                  "kms:RequestAlias": "alias/accelerator/kms/cloudwatch/key",
                 },
               },
               "Effect": "Allow",
