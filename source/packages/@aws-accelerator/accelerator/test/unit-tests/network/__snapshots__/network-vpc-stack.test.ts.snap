@@ -1173,7 +1173,7 @@ exports[`NetworkVpcStack tests Construct(NetworkVpcStack):  Snapshot Test 1`] = 
       },
       "Type": "AWS::EC2::SecurityGroupEgress",
     },
-    "NetworkEndpointsVpcManagementSgManagementIngress008FD972B5": {
+    "NetworkEndpointsVpcManagementSgManagementIngress105119E927": {
       "Metadata": {
         "lzaLookup": {
           "fromPort": 3389,
@@ -1200,7 +1200,7 @@ exports[`NetworkVpcStack tests Construct(NetworkVpcStack):  Snapshot Test 1`] = 
       },
       "Type": "AWS::EC2::SecurityGroupIngress",
     },
-    "NetworkEndpointsVpcManagementSgManagementIngress105119E927": {
+    "NetworkEndpointsVpcManagementSgManagementIngress20A95C4EBB": {
       "Metadata": {
         "lzaLookup": {
           "fromPort": 22,
@@ -1227,7 +1227,7 @@ exports[`NetworkVpcStack tests Construct(NetworkVpcStack):  Snapshot Test 1`] = 
       },
       "Type": "AWS::EC2::SecurityGroupIngress",
     },
-    "NetworkEndpointsVpcManagementSgManagementIngress1135D6C2DD": {
+    "NetworkEndpointsVpcManagementSgManagementIngress21225D10D2": {
       "Metadata": {
         "lzaLookup": {
           "fromPort": 22,

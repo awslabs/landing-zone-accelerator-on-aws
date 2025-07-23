@@ -542,9 +542,19 @@ vpcs:
         - service: access-analyzer
           securityGroup: Network-Endpoints-CustomEndpointSg
     securityGroups:
+      - name: NewSG
+        description: LZA Test SG
+        inboundRules: []
+        outboundRules: []
       - name: 'Management'
         description: 'Management Security Group'
         inboundRules:
+          - description: 'Test Reference New SG'
+            types:
+              - ALL
+            sources:
+              - securityGroups:
+                  - NewSG
           - description: 'Management RDP Traffic Inbound'
             types:
               - RDP
