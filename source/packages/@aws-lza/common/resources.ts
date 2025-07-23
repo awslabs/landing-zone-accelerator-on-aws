@@ -39,6 +39,10 @@ export enum AcceleratorModuleName {
    * AWS IAM Module
    */
   AWS_IAM = 'aws-iam',
+  /**
+   * AWS Detective Module
+   */
+  AWS_DETECTIVE = 'aws-detective',
 }
 
 /**
