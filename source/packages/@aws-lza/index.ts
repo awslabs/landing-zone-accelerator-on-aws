@@ -74,3 +74,8 @@ export { createStackPolicy } from './executors/accelerator-aws-cloudformation';
 // AWS IAM Module resources
 export { IRootUserManagementHandlerParameter } from './interfaces/aws-iam/root-user-management';
 export { configureRootUserManagment } from './executors/accelerator-aws-iam';
+
+// AWS Macie Module resource
+
+export { IMacieManageOrganizationAdminParameter } from './interfaces/macie/manage-organization-admin';
+export { manageOrganizationAdmin } from './executors/accelerator-macie';
