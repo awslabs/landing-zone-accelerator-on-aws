@@ -75,6 +75,11 @@ export { createStackPolicy } from './executors/accelerator-aws-cloudformation';
 export { IRootUserManagementHandlerParameter } from './interfaces/aws-iam/root-user-management';
 export { configureRootUserManagment } from './executors/accelerator-aws-iam';
 
+//
+// Amazon Detective Module resources
+//
+export { IDetectiveManageOrganizationAdminParameter } from './interfaces/detective/manage-organization-admin';
+export { manageDetectiveOrganizationAdminAccount } from './executors/accelerator-detective';
 // AWS Macie Module resource
 
 export { IMacieManageOrganizationAdminParameter } from './interfaces/macie/manage-organization-admin';

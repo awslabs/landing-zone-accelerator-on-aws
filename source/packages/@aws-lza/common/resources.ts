@@ -43,6 +43,10 @@ export enum AcceleratorModuleName {
    * AWS SSM Module
    */
   AWS_SSM = 'aws-ssm',
+  /**
+   * AWS Detective Module
+   */
+  AWS_DETECTIVE = 'aws-detective',
 }
 
 /**
