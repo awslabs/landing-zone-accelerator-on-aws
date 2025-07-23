@@ -290,10 +290,10 @@ export class AccountsConfig implements i.IAccountsConfig {
     if (accountId) {
       return accountId;
     }
-    logger.error(
-      `Account ID not found for ${name}. Validate that the emails in the parameter ManagementAccountEmail of the AWSAccelerator-InstallerStack and account configs (accounts-config.yaml) match the correct account emails shown in AWS Organizations.`,
+
+    throw new Error(
+      `Account Name not found for ${accountId}. Validate that the emails in the parameter ManagementAccountEmail of the AWSAccelerator-InstallerStack and account configs (accounts-config.yaml) match the correct account emails shown in AWS Organizations. Configuration validation failed.`,
     );
-    throw new Error('configuration validation failed.');
   }
 
   public getAccountNameById(accountId: string): string | undefined {
@@ -304,10 +304,10 @@ export class AccountsConfig implements i.IAccountsConfig {
     if (accountName) {
       return accountName;
     }
-    logger.error(
-      `Account Name not found for ${accountId}. Validate that the emails in the parameter ManagementAccountEmail of the AWSAccelerator-InstallerStack and account configs (accounts-config.yaml) match the correct account emails shown in AWS Organizations.`,
+
+    throw new Error(
+      `Account Name not found for ${accountId}. Validate that the emails in the parameter ManagementAccountEmail of the AWSAccelerator-InstallerStack and account configs (accounts-config.yaml) match the correct account emails shown in AWS Organizations. Configuration validation failed.`,
     );
-    throw new Error('configuration validation failed.');
   }
 
   public getAccountIds(): string[] {
