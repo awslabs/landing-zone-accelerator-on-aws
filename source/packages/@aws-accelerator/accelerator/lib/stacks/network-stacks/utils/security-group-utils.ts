@@ -22,6 +22,7 @@ import {
   isNetworkType,
   NonEmptyString,
 } from '@aws-accelerator/config';
+import { LZAResourceLookup, LZAResourceLookupType } from '../../../../utils/lza-resource-lookup';
 import {
   IIpamSubnet,
   PrefixList,
@@ -285,6 +286,7 @@ function includesSecurityGroupSource(rule: SecurityGroupRuleConfig): boolean {
  * @param subnetMap
  * @param prefixListMap
  * @param securityGroupMap
+ * @param lzaLookup
  */
 export function processSecurityGroupSgIngressSources(
   vpcResources: (VpcConfig | VpcTemplatesConfig)[],
@@ -293,6 +295,7 @@ export function processSecurityGroupSgIngressSources(
   subnetMap: Map<string, Subnet> | Map<string, IIpamSubnet>,
   prefixListMap: Map<string, PrefixList> | Map<string, string>,
   securityGroupMap: Map<string, SecurityGroup>,
+  lzaLookup?: LZAResourceLookup,
 ): { logicalId: string; rule: SecurityGroupRuleProps }[] {
   const securityGroupSources: { logicalId: string; rule: SecurityGroupRuleProps }[] = [];
   for (const [ruleId, ingressRuleItem] of securityGroupItem.inboundRules.entries() ?? []) {
@@ -305,6 +308,7 @@ export function processSecurityGroupSgIngressSources(
         prefixListMap,
         securityGroupMap,
         vpcItem.name,
+        lzaLookup,
       );
       securityGroupSources.push(...setSecurityGroupSgIngressSources(securityGroupItem, ingressRules, ruleId));
     }
@@ -343,6 +347,7 @@ function setSecurityGroupSgIngressSources(
  * @param subnetMap
  * @param prefixListMap
  * @param securityGroupMap
+ * @param lzaLookup
  */
 export function processSecurityGroupSgEgressSources(
   vpcResources: (VpcConfig | VpcTemplatesConfig)[],
@@ -351,6 +356,7 @@ export function processSecurityGroupSgEgressSources(
   subnetMap: Map<string, Subnet> | Map<string, IIpamSubnet>,
   prefixListMap: Map<string, PrefixList> | Map<string, string>,
   securityGroupMap: Map<string, SecurityGroup>,
+  lzaLookup?: LZAResourceLookup,
 ): { logicalId: string; rule: SecurityGroupRuleProps }[] {
   const securityGroupSources: { logicalId: string; rule: SecurityGroupRuleProps }[] = [];
 
@@ -364,6 +370,7 @@ export function processSecurityGroupSgEgressSources(
         prefixListMap,
         securityGroupMap,
         vpcItem.name,
+        lzaLookup,
       );
       securityGroupSources.push(...setSecurityGroupSgEgressSources(securityGroupItem, egressRules, ruleId));
     }
@@ -412,17 +419,20 @@ function processSecurityGroupRules(
   prefixListMap: Map<string, PrefixList> | Map<string, string>,
   securityGroupMap?: Map<string, SecurityGroup>,
   vpcName?: string,
+  lzaLookup?: LZAResourceLookup,
 ): SecurityGroupRuleProps[] {
   const rules: SecurityGroupRuleProps[] = [];
 
   if (!item.types) {
     rules.push(
-      ...processTcpSources(vpcResources, item, subnetMap, prefixListMap, securityGroupMap, vpcName),
-      ...processUdpSources(vpcResources, item, subnetMap, prefixListMap, securityGroupMap, vpcName),
-      ...processIpProtocols(vpcResources, item, subnetMap, prefixListMap, securityGroupMap, vpcName),
+      ...processTcpSources(vpcResources, item, subnetMap, prefixListMap, securityGroupMap, vpcName, lzaLookup),
+      ...processUdpSources(vpcResources, item, subnetMap, prefixListMap, securityGroupMap, vpcName, lzaLookup),
+      ...processIpProtocols(vpcResources, item, subnetMap, prefixListMap, securityGroupMap, vpcName, lzaLookup),
     );
   } else {
-    rules.push(...processTypeSources(vpcResources, item, subnetMap, prefixListMap, securityGroupMap, vpcName));
+    rules.push(
+      ...processTypeSources(vpcResources, item, subnetMap, prefixListMap, securityGroupMap, vpcName, lzaLookup),
+    );
   }
 
   return rules;
@@ -445,6 +455,7 @@ function processIpProtocols(
   prefixListMap: Map<string, PrefixList> | Map<string, string>,
   securityGroupMap?: Map<string, SecurityGroup>,
   vpcName?: string,
+  lzaLookup?: LZAResourceLookup,
 ): SecurityGroupRuleProps[] {
   const ipProtocolRules: SecurityGroupRuleProps[] = [];
   for (const protocolItem of securityGroupRuleItem.ipProtocols ?? []) {
@@ -460,6 +471,7 @@ function processIpProtocols(
         },
         securityGroupMap,
         vpcName,
+        lzaLookup,
       ),
     );
   }
@@ -483,6 +495,7 @@ function processTcpSources(
   prefixListMap: Map<string, PrefixList> | Map<string, string>,
   securityGroupMap?: Map<string, SecurityGroup>,
   vpcName?: string,
+  lzaLookup?: LZAResourceLookup,
 ): SecurityGroupRuleProps[] {
   const tcpRules: SecurityGroupRuleProps[] = [];
 
@@ -502,6 +515,7 @@ function processTcpSources(
         },
         securityGroupMap,
         vpcName,
+        lzaLookup,
       ),
     );
   }
@@ -525,6 +539,7 @@ function processUdpSources(
   prefixListMap: Map<string, PrefixList> | Map<string, string>,
   securityGroupMap?: Map<string, SecurityGroup>,
   vpcName?: string,
+  lzaLookup?: LZAResourceLookup,
 ): SecurityGroupRuleProps[] {
   const udpRules: SecurityGroupRuleProps[] = [];
 
@@ -544,6 +559,7 @@ function processUdpSources(
         },
         securityGroupMap,
         vpcName,
+        lzaLookup,
       ),
     );
   }
@@ -567,6 +583,7 @@ function processTypeSources(
   prefixListMap: Map<string, PrefixList> | Map<string, string>,
   securityGroupMap?: Map<string, SecurityGroup>,
   vpcName?: string,
+  lzaLookup?: LZAResourceLookup,
 ): SecurityGroupRuleProps[] {
   const typeRules: SecurityGroupRuleProps[] = [];
 
@@ -585,6 +602,7 @@ function processTypeSources(
           },
           securityGroupMap,
           vpcName,
+          lzaLookup,
         ),
       );
     } else if (Object.keys(TCP_PROTOCOLS_PORT).includes(type)) {
@@ -602,6 +620,7 @@ function processTypeSources(
           },
           securityGroupMap,
           vpcName,
+          lzaLookup,
         ),
       );
     } else {
@@ -619,6 +638,7 @@ function processTypeSources(
           },
           securityGroupMap,
           vpcName,
+          lzaLookup,
         ),
       );
     }
@@ -652,8 +672,8 @@ function prepareSecurityGroupRuleProps(
     subnets: Map<string, Subnet> | Map<string, IIpamSubnet>;
     securityGroups?: Map<string, SecurityGroup>;
   },
-
   vpcName?: string,
+  lzaLookup?: LZAResourceLookup,
 ) {
   // Conditional to only process non-security group sources
   if (!maps.securityGroups) {
@@ -679,8 +699,8 @@ function prepareSecurityGroupRuleProps(
     //
     // Security Group Source
     //
-    if (isNetworkType<SecurityGroupSourceConfig>('ISecurityGroupSourceConfig', source) && vpcName) {
-      rules.push(...processSecurityGroupSource(maps.securityGroups, vpcName, source, props));
+    if (isNetworkType<SecurityGroupSourceConfig>('ISecurityGroupSourceConfig', source) && vpcName && lzaLookup) {
+      rules.push(...processSecurityGroupSource(maps.securityGroups, vpcName, source, props, lzaLookup));
     }
   }
 }
@@ -708,6 +728,7 @@ function processSecurityGroupRuleSources(
   },
   securityGroupMap?: Map<string, SecurityGroup>,
   vpcName?: string,
+  lzaLookup?: LZAResourceLookup,
 ): SecurityGroupRuleProps[] {
   const rules: SecurityGroupRuleProps[] = [];
 
@@ -719,6 +740,7 @@ function processSecurityGroupRuleSources(
       props,
       { prefixLists: prefixListMap, subnets: subnetMap, securityGroups: securityGroupMap },
       vpcName,
+      lzaLookup,
     );
   }
   return rules;
@@ -820,6 +842,7 @@ function processPrefixListSource(
  * @param securityGroupMap
  * @param source
  * @param props
+ * @param lzaLookup LZAResourceLookup to check if security group is in v1 stack
  */
 function processSecurityGroupSource(
   securityGroupMap: Map<string, SecurityGroup>,
@@ -831,11 +854,25 @@ function processSecurityGroupSource(
     toPort?: number;
     description?: string;
   },
+  lzaLookup: LZAResourceLookup,
 ): SecurityGroupRuleProps[] {
   const sgRules: SecurityGroupRuleProps[] = [];
   logger.info(`Evaluate Security Group Source securityGroups:[${source.securityGroups}]`);
 
   for (const securityGroup of source.securityGroups ?? []) {
+    if (
+      !lzaLookup.resourceExists({
+        resourceType: LZAResourceLookupType.SECURITY_GROUP,
+        lookupValues: {
+          vpcName: vpcName,
+          securityGroupName: securityGroup,
+        },
+      })
+    ) {
+      logger.info(`Target Security Group ${securityGroup} not in v1 stack, skipping`);
+      continue;
+    }
+
     const targetSecurityGroup = getSecurityGroup(securityGroupMap, vpcName, securityGroup) as SecurityGroup;
     sgRules.push({
       targetSecurityGroup,
