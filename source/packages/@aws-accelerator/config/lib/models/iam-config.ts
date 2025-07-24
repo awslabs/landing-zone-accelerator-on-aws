@@ -1079,7 +1079,7 @@ export interface IManagedActiveDirectoryVpcSettingsConfig {
 }
 
 /**
- * *{@link IamConfig} / {@link ManagedActiveDirectoryConfig}*
+ * *{@link IamConfig} / {@link ManagedActiveDirectoryConfig} / {@link ManagedActiveDirectoryLogConfig}*
  *
  * @description
  * Active directory logs configuration
@@ -1275,6 +1275,9 @@ export interface IManagedActiveDirectoryConfig {
 }
 
 /**
+ * *{@link IamConfig}*
+ *
+ * @description
  * IAM configuration
  */
 export interface IIamConfig {
