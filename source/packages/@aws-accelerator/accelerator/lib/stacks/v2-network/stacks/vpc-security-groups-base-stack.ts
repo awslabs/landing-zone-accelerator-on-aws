@@ -77,6 +77,11 @@ export class VpcSecurityGroupsBaseStack extends AcceleratorStack {
     this.createSecurityGroups();
 
     //
+    // Create Security group rules
+    //
+    this.createSecurityGroupRules();
+
+    //
     // Create SSM Parameters
     //
     this.createSsmParameters();
@@ -87,7 +92,13 @@ export class VpcSecurityGroupsBaseStack extends AcceleratorStack {
       const ingressRules = this.getIngressRules(securityGroupItem);
       const egressRules = this.getEgressRules(securityGroupItem);
 
-      const securityGroupId = this.getSecurityGroupId(securityGroupItem, ingressRules, egressRules);
+      this.getSecurityGroupId(securityGroupItem, ingressRules, egressRules);
+    }
+  }
+
+  private createSecurityGroupRules(): void {
+    for (const securityGroupItem of this.vpcDetails.securityGroups) {
+      const securityGroupId = this.getSourceSecurityGroupId(this.vpcDetails.name, securityGroupItem.name);
 
       const securityGroupSourcesIngressRules = this.getSecurityGroupSourcesIngressRules(securityGroupItem);
       const securityGroupSourcesEgressRules = this.getSecurityGroupSourcesEgressRules(securityGroupItem);
