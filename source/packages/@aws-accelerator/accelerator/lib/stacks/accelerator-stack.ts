@@ -1801,7 +1801,7 @@ export abstract class AcceleratorStack extends cdk.Stack {
       ? acceleratorPrefix.slice(0, -1)
       : acceleratorPrefix;
 
-    const additionalReplacements: { [key: string]: string | string[] } = {
+    const additionalReplacements: { [key: string]: string | string[] | number } = {
       '\\${ACCELERATOR_DEFAULT_PREFIX_SHORTHAND}': acceleratorPrefix.substring(0, 4).toUpperCase(),
       '\\${ACCELERATOR_PREFIX_ND}': acceleratorPrefixNoDash,
       '\\${ACCELERATOR_PREFIX_LND}': acceleratorPrefixNoDash.toLowerCase(),
@@ -1822,18 +1822,12 @@ export abstract class AcceleratorStack extends cdk.Stack {
 
     const policyParams: { [key: string]: string | string[] | number } = {
       ...this.props.replacementsConfig.placeholders,
-      ...Object.fromEntries(
-        Object.entries(parameters || {}).map(([key, value]) => [
-          key,
-          typeof value === 'number' ? value.toString() : value,
-        ]),
-      ),
+      ...Object.fromEntries(Object.entries(parameters || {}).map(([key, value]) => [key, value])),
     };
 
     for (const key of Object.keys(policyParams)) {
       const value = policyParams[key];
-      additionalReplacements[`\\\${${ReplacementsConfig.POLICY_PARAMETER_PREFIX}:${key}}`] =
-        typeof value === 'number' ? value.toString() : value;
+      additionalReplacements[`\\\${${ReplacementsConfig.POLICY_PARAMETER_PREFIX}:${key}}`] = value;
     }
 
     policyContent = policyReplacements({
