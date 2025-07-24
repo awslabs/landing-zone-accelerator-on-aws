@@ -35,7 +35,7 @@ export function policyReplacements(props: {
   acceleratorPrefix: string;
   managementAccountAccessRole: string;
   partition: string;
-  additionalReplacements: { [key: string]: string | string[] };
+  additionalReplacements: { [key: string]: string | string[] | number };
   acceleratorName: string;
   networkConfig?: NetworkConfig;
   accountsConfig?: AccountsConfig;
@@ -278,7 +278,7 @@ function getScopeVpcEndpointIds(
  * @param value
  * @returns
  */
-function normalize(value: string | string[]) {
+function normalize(value: string | string[] | number) {
   if (typeof value === 'string') return value;
   if (Array.isArray(value) && value.length === 1) return `"${value[0]}"`;
   return value;
