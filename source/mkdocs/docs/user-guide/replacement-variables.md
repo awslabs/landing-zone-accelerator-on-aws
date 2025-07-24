@@ -5,7 +5,7 @@ The solution supports the definition of customer defined replacement variables i
 !!! note "See also"
     - [Implementation Guide - Working with solution-specific variables](https://docs.aws.amazon.com/solutions/latest/landing-zone-accelerator-on-aws/working-with-solution-specific-variables.html)
 
-The solution support statically defined variables in the file as well as dynamic lookups from the Parameter Store. This feature primarily meets two customer needs:
+The solution supports statically defined variables in the file as well as dynamic lookups from the Parameter Store. This feature primarily meets two customer needs:
 
 - Customers wishing to reuse a single generic Landing Zone Accelerator on AWS configuration across multiple Landing Zone Accelerator on AWS deployments
 - Customers wishing to simplify their configuration files and decrease the number of manual configuration edits
@@ -47,18 +47,18 @@ globalReplacements:
 In the above example, we have a single replacement defined:
 
 - The configuration files use the key in SnsEmail to indicate which value to replace.
-- The path of `/accelerator/replacements/SnsEmailHigh` describes the Parameter Store path where the corresponding replacement value exists.
+- The path of `/accelerator/replacements/SnsEmailAddress` describes the Parameter Store path where the corresponding replacement value exists.
 
 !!! Note
     Parameter Store parameters used for replacements must exist in the homeRegion of the management account.
 
-You must explicitly create the Systems Manager parameter `/accelerator/replacements/SnsEmailHigh`. Create this Systems Manager parameter with an appropriate replacement value through Landing Zone Accelerator on AWS or by following this guide.
+You must explicitly create the Systems Manager parameter `/accelerator/replacements/SnsEmailAddress`. Create this Systems Manager parameter with an appropriate replacement value through Landing Zone Accelerator on AWS or by following this guide.
 
 ```bash
- aws ssm put-parameter \
-     --name "/accelerator/replacements/SnsEmailAddress" \
-     --value "example_email@example.com" \
-     --type String \
+aws ssm put-parameter \
+    --name "/accelerator/replacements/SnsEmailAddress" \
+    --value "example_email@example.com" \
+    --type String
 ```
 
 After you create the Systems Manager parameter, you can reference the value from within the configuration files with the same syntax as static values.
@@ -111,9 +111,9 @@ This can be used for any configuration items that expect a list of string values
 This feature also includes functionality to look up account IDs based on the account name without the use of Systems Manager parameters:
 
 ```yaml
-  parameters:
-   - name: TrustedAccounts
-     value: {{account Management}}
+parameters:
+  - name: TrustedAccounts
+    value: {{account Management}}
 ```
 
 ### Other considerations
@@ -153,7 +153,7 @@ yarn config-replacement /path/to/aws-accelerator-config/
 
 Global replacement variables defined in `replacements-config.yaml` can also be referenced from policy files using the `${ACCEL_LOOKUP::CUSTOM:VARIABLE_NAME}` syntax.
 
-For example, given the following content in `replacements-config`:
+For example, given the following content in `replacements-config.yaml`:
 
 ```yaml
 globalReplacements:
@@ -209,4 +209,4 @@ This will deploy the following policy once replacements are processed:
 
 
 !!! note "See also"
-    See the  [Policy replacements variables](https://docs.aws.amazon.com/solutions/latest/landing-zone-accelerator-on-aws/working-with-solution-specific-variables.html#policy-replacement-variables) section in the Implementation Guide for more accelerator provided replacements variables that can be used in policy files.
+    See the [Policy replacements variables](https://docs.aws.amazon.com/solutions/latest/landing-zone-accelerator-on-aws/working-with-solution-specific-variables.html#policy-replacement-variables) section in the Implementation Guide for more accelerator provided replacements variables that can be used in policy files.
