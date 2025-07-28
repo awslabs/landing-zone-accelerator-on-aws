@@ -28,7 +28,7 @@ jobs:
       - name: Copy TypeDocs from S3
         id: s3
         run: |
-          commit_tag=$(echo ${GITHUB_REF} | tr -d 'refs/tags/')
+          commit_tag=${GITHUB_REF#refs/tags/}
           aws s3 cp s3://${{ secrets.BUCKET_NAME }}/${commit_tag}/typedocs.zip .
           echo "commit_tag=$commit_tag" >> $GITHUB_OUTPUT
       - name: Unzip TypeDocs
