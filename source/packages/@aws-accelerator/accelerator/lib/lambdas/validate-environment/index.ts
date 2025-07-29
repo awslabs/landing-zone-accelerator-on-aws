@@ -35,6 +35,7 @@ import {
   ListRootsCommand,
   ListTagsForResourceCommand,
   OrganizationsClient,
+  paginateListPoliciesForTarget,
 } from '@aws-sdk/client-organizations';
 import { throttlingBackOff } from '@aws-accelerator/utils/lib/throttle';
 import { CloudFormationCustomResourceEvent } from '@aws-accelerator/utils/lib/common-types';
@@ -136,6 +137,8 @@ export async function handler(event: CloudFormationCustomResourceEvent): Promise
   driftDetectionParameterName = event.ResourceProperties['driftDetectionParameterName'];
   driftDetectionMessageParameterName = event.ResourceProperties['driftDetectionMessageParameterName'];
   const skipScpValidation = event.ResourceProperties['skipScpValidation'];
+  const maxOuAttachedScps = event.ResourceProperties['maxOuAttachedScps'] ?? 5;
+  const maxAccountAttachedScps = event.ResourceProperties['maxAccountAttachedScps'] ?? 5;
   const vpcCidrs = event.ResourceProperties['vpcCidrs'];
   const solutionId = process.env['SOLUTION_ID'];
   const useV2StacksValue = event.ResourceProperties['useV2StacksValue'];
@@ -326,7 +329,13 @@ export async function handler(event: CloudFormationCustomResourceEvent): Promise
       // Validate SCP count
       //
       if (skipScpValidation.toLowerCase() === 'no') {
-        await validateServiceControlPolicyCount(organizationsClient, serviceControlPolicies, policyTagKey);
+        await validateServiceControlPolicyCount(
+          organizationsClient,
+          serviceControlPolicies,
+          policyTagKey,
+          maxOuAttachedScps,
+          maxAccountAttachedScps,
+        );
       } else {
         console.log('Skipping SCP count validation');
       }
@@ -350,6 +359,21 @@ export async function handler(event: CloudFormationCustomResourceEvent): Promise
 }
 
 /**
+ * Helper function to check if SCP count exceeds the maximum allowed limit
+ */
+function exceedsMaxScpLimit(
+  targetType: string,
+  totalScpCount: number,
+  maxOuAttachedScps: number,
+  maxAccountAttachedScps: number,
+): boolean {
+  return (
+    (targetType === 'ou' && totalScpCount > maxOuAttachedScps) ||
+    (targetType === 'account' && totalScpCount > maxAccountAttachedScps)
+  );
+}
+
+/**
  * Function to validate number of SCPs attached to ou and account is not more than 5
  * @param organizationsClient
  * @param serviceControlPolicies
@@ -357,25 +381,26 @@ export async function handler(event: CloudFormationCustomResourceEvent): Promise
 async function validateServiceControlPolicyCount(
   organizationsClient: OrganizationsClient,
   serviceControlPolicies: serviceControlPolicyType[],
-
   policyTagKey: string,
+  maxOuAttachedScps: number,
+  maxAccountAttachedScps: number,
 ) {
   const processedTargets: string[] = [];
   for (const scpItem of serviceControlPolicies) {
     for (const target of scpItem.targets ?? []) {
       const existingAttachedScps: string[] = [];
       if (processedTargets.indexOf(target.name) === -1) {
-        const response = await throttlingBackOff(() =>
-          organizationsClient.send(
-            new ListPoliciesForTargetCommand({
-              Filter: 'SERVICE_CONTROL_POLICY',
-              TargetId: target.id,
-              MaxResults: 10,
-            }),
-          ),
+        const paginator = paginateListPoliciesForTarget(
+          { client: organizationsClient },
+          {
+            Filter: 'SERVICE_CONTROL_POLICY',
+            TargetId: target.id,
+          },
         );
-        if (response.Policies && response.Policies.length > 0) {
-          response.Policies.forEach(item => existingAttachedScps.push(item.Name!));
+        for await (const page of paginator) {
+          if (page.Policies && page.Policies.length > 0) {
+            page.Policies.forEach(item => existingAttachedScps.push(item.Name!));
+          }
         }
 
         const [totalScps, allowListStrategyAndFullAWSAccessPolicyFlag] = await getTotalScps(
@@ -401,12 +426,18 @@ async function validateServiceControlPolicyCount(
           console.log(`${target.name} ${scpItem.targetType} new total scp count is ${totalScpCount}`);
         }
 
-        if (totalScpCount > 5) {
+        if (exceedsMaxScpLimit(scpItem.targetType, totalScpCount, maxOuAttachedScps, maxAccountAttachedScps)) {
           console.log(
             `${target.name} ${scpItem.targetType} scp count validation failed, total scp count is ${totalScpCount}`,
           );
+          let maxScps: number;
+          if (scpItem.targetType === 'ou') {
+            maxScps = maxOuAttachedScps;
+          } else {
+            maxScps = maxAccountAttachedScps;
+          }
           validationErrors.push(
-            `Max Allowed SCPs for ${scpItem.targetType} "${target.name}" is 5, found total ${totalScps.length} scps in updated list to attach. Updated list of scps for attachment is ${totalScps}`,
+            `Max Allowed SCPs for ${scpItem.targetType} "${target.name}" is ${maxScps}, found total ${totalScps.length} scps in updated list to attach. Updated list of scps for attachment is ${totalScps}`,
           );
         } else {
           console.log(

@@ -160,6 +160,8 @@ exports[`ValidateScpCount Construct(ValidateScpCount):  Snapshot Test 1`] = `
             "name": "Admin",
           },
         ],
+        "maxAccountAttachedScps": null,
+        "maxOuAttachedScps": null,
         "organizationUnits": [
           {
             "id": "o-1234567",
