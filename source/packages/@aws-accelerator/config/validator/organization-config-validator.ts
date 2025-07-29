@@ -18,6 +18,9 @@ import { ReplacementsConfig } from '../lib/replacements-config';
 import { CommonValidatorFunctions } from './common/common-validator-functions';
 
 export class OrganizationConfigValidator {
+  private readonly ouScpLimit = Number(process.env['ORGANIZATIONAL_UNIT_SCP_LIMIT']) ?? 5;
+  private readonly accountScpLimit = Number(process.env['ACCOUNT_SCP_LIMIT']) ?? 5;
+
   constructor(values: OrganizationConfig, replacementsConfig: ReplacementsConfig | undefined, configDir: string) {
     const errors: string[] = [];
 
@@ -95,11 +98,19 @@ export class OrganizationConfigValidator {
         }
       }
     }
-    const validateScpCountForEntities = validateScpCountForOrg.concat(validateScpCountForAcc);
-    for (const validateOrgEntity of validateScpCountForEntities) {
-      if (validateOrgEntity.appliedScpName.length > 5) {
+
+    for (const validateOrgEntity of validateScpCountForOrg) {
+      if (validateOrgEntity.appliedScpName.length > this.ouScpLimit) {
         errors.push(
-          `${validateOrgEntity.orgEntityType} - ${validateOrgEntity.orgEntity} has ${validateOrgEntity.appliedScpName.length} out of 5 allowed scps`,
+          `${validateOrgEntity.orgEntityType} - ${validateOrgEntity.orgEntity} has ${validateOrgEntity.appliedScpName.length} out of ${this.ouScpLimit} allowed scps. To validate a against a higher limit add the environment variable ACCELERATOR_MAX_OU_ATTACHED_SCPS to the toolkit build project`,
+        );
+      }
+    }
+
+    for (const validateAccEntity of validateScpCountForAcc) {
+      if (validateAccEntity.appliedScpName.length > this.accountScpLimit) {
+        errors.push(
+          `${validateAccEntity.orgEntityType} - ${validateAccEntity.orgEntity} has ${validateAccEntity.appliedScpName.length} out of ${this.accountScpLimit} allowed scps.  To validate a against a higher limit add the environment variable ACCELERATOR_MAX_ACCOUNT_ATTACHED_SCPS to the toolkit build project`,
         );
       }
     }
@@ -114,7 +125,7 @@ export class OrganizationConfigValidator {
     for (const resourceControlPolicy of values.resourceControlPolicies ?? []) {
       if (!fs.existsSync(path.join(configDir, resourceControlPolicy.policy))) {
         errors.push(
-          `Invalid policy file ${resourceControlPolicy.policy} for resource control policy ${resourceControlPolicy.name} !!!`,
+          `Invalid policy file ${resourceControlPolicy.policy} for resource control policy ${resourceControlPolicy.name}!`,
         );
       }
     }
@@ -129,7 +140,7 @@ export class OrganizationConfigValidator {
     for (const declarativePolicy of values.declarativePolicies ?? []) {
       if (!fs.existsSync(path.join(configDir, declarativePolicy.policy))) {
         errors.push(
-          `Invalid policy file ${declarativePolicy.policy} for resource control policy ${declarativePolicy.name} !!!`,
+          `Invalid policy file ${declarativePolicy.policy} for resource control policy ${declarativePolicy.name}!`,
         );
       }
     }
@@ -143,7 +154,7 @@ export class OrganizationConfigValidator {
   private validateTaggingPolicyFile(configDir: string, values: OrganizationConfig, errors: string[]) {
     for (const taggingPolicy of values.taggingPolicies ?? []) {
       if (!fs.existsSync(path.join(configDir, taggingPolicy.policy))) {
-        errors.push(`Invalid policy file ${taggingPolicy.policy} for tagging policy ${taggingPolicy.name} !!!`);
+        errors.push(`Invalid policy file ${taggingPolicy.policy} for tagging policy ${taggingPolicy.name}!`);
       }
     }
   }
@@ -157,7 +168,7 @@ export class OrganizationConfigValidator {
     // Validate presence of backup policy file
     for (const backupPolicy of values.backupPolicies ?? []) {
       if (!fs.existsSync(path.join(configDir, backupPolicy.policy))) {
-        errors.push(`Invalid policy file ${backupPolicy.policy} for backup policy ${backupPolicy.name} !!!`);
+        errors.push(`Invalid policy file ${backupPolicy.policy} for backup policy ${backupPolicy.name}!`);
       }
     }
   }
