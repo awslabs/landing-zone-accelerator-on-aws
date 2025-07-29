@@ -70,7 +70,7 @@ describe('Organization config validation', () => {
     }).toThrow('TrustedEntity has 6 out of 5 allowed scps');
   });
 
-  it('fails validation if an Account has more than 5 attachments', () => {
+  it('fails validation if an Account has more than 6 attachments', () => {
     const orgConfig: IOrganizationConfig = {
       enable: true,
       taggingPolicies: [],
@@ -95,12 +95,15 @@ describe('Organization config validation', () => {
         getScpWithDeploymentTargets('SomePolicy6', {
           accounts: ['TrustedEntity'],
         }),
+        getScpWithDeploymentTargets('SomePolicy6', {
+          accounts: ['TrustedEntity'],
+        }),
       ],
     };
 
     expect(() => {
       new OrganizationConfigValidator(new OrganizationConfig(orgConfig), undefined, './');
-    }).toThrow('TrustedEntity has 6 out of 5 allowed scps');
+    }).toThrow('TrustedEntity has 7 out of 6 allowed scps');
   });
 });
 

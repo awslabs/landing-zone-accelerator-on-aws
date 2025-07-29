@@ -5216,6 +5216,8 @@ exports[`PrepareStack Construct(PrepareStack):  Snapshot Test 1`] = `
         "driftDetectionParameterName": {
           "Ref": "AcceleratorControlTowerDriftParameter217B3055",
         },
+        "maxAccountAttachedScps": 5,
+        "maxOuAttachedScps": 5,
         "newCTAccountsTableName": {
           "Ref": "NewCTAccountsE326CD07",
         },
@@ -5224,6 +5226,7 @@ exports[`PrepareStack Construct(PrepareStack):  Snapshot Test 1`] = `
         },
         "organizationsEnabled": true,
         "partition": "aws",
+        "policyTagKey": "AWSAcceleratorManaged",
         "serviceControlPolicies": [
           {
             "name": "AcceleratorGuardrails1",

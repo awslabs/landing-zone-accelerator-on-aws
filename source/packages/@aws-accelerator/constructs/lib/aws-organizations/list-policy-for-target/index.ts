@@ -52,6 +52,8 @@ export async function handler(event: CloudFormationCustomResourceEvent): Promise
   const organizationUnits: orgItem[] = event.ResourceProperties['organizationUnits'];
   const accounts: accountItem[] = event.ResourceProperties['accounts'];
   const scps: validateScpItem[] = event.ResourceProperties['scps'];
+  const maxOuAttachedScps = event.ResourceProperties['maxOuAttachedScps'] ?? 5;
+  const maxAccountAttachedScps = event.ResourceProperties['maxAccountAttachedScps'] ?? 5;
   const globalRegion = getGlobalRegion(partition);
   const organizationsClient = new OrganizationsClient({
     region: globalRegion,
@@ -62,8 +64,8 @@ export async function handler(event: CloudFormationCustomResourceEvent): Promise
   switch (event.RequestType) {
     case 'Create':
     case 'Update':
-      await checkOrganizationUnits(organizationUnits, organizationsClient, scps);
-      await checkAccounts(accounts, organizationsClient, scps);
+      await checkOrganizationUnits(organizationUnits, organizationsClient, scps, maxOuAttachedScps);
+      await checkAccounts(accounts, organizationsClient, scps, maxAccountAttachedScps);
       if (errors.length > 0) {
         throw new Error(`Error: ${errors}`);
       }
@@ -78,19 +80,25 @@ async function checkOrganizationUnits(
   organizationUnits: orgItem[],
   organizationsClient: OrganizationsClient,
   scps: validateScpItem[],
+  maxOuAttachedScps: number,
 ) {
   for (const organizationUnit of organizationUnits) {
     // get all scps attached to this particular OU
-    // this cannot be more than 5 so not paginating
-    const attachedScps: ListPoliciesForTargetResponse = await throttlingBackOff(() =>
-      organizationsClient.send(
-        new ListPoliciesForTargetCommand({
-          Filter: 'SERVICE_CONTROL_POLICY',
-          TargetId: organizationUnit.id,
-          MaxResults: 10,
-        }),
-      ),
-    );
+    const attachedScps: ListPoliciesForTargetResponse = { Policies: [] };
+    let nextToken: string | undefined;
+    do {
+      const response = await throttlingBackOff(() =>
+        organizationsClient.send(
+          new ListPoliciesForTargetCommand({
+            Filter: 'SERVICE_CONTROL_POLICY',
+            TargetId: organizationUnit.id,
+            NextToken: nextToken,
+          }),
+        ),
+      );
+      attachedScps.Policies!.push(...(response.Policies || []));
+      nextToken = response.NextToken;
+    } while (nextToken);
     if (attachedScps.Policies) {
       // Get all scp names attached by solution from the config
       // for this particular organization unit
@@ -110,9 +118,9 @@ async function checkOrganizationUnits(
           nonAccelScps.push(policy.Name);
         }
       }
-      if (nonAccelScps.length + accelOuScps.length > 5) {
+      if (nonAccelScps.length + accelOuScps.length > maxOuAttachedScps) {
         errors.push(
-          `Max Allowed SCPs for OU "${organizationUnit.name}" is 5, found already attached scps count ${nonAccelScps.length} and Accelerator OU scps ${accelOuScps.length} => ${accelOuScps}`,
+          `Max Allowed SCPs for OU "${organizationUnit.name}" is ${maxOuAttachedScps}, found already attached scps count ${nonAccelScps.length} and Accelerator OU scps ${accelOuScps.length} => ${accelOuScps}`,
         );
       }
     }
@@ -123,19 +131,26 @@ async function checkAccounts(
   accounts: accountItem[],
   organizationsClient: OrganizationsClient,
   scps: validateScpItem[],
+  maxAccountAttachedScps: number,
 ) {
   for (const account of accounts) {
+    const attachedScps: ListPoliciesForTargetResponse = { Policies: [] };
+    let nextToken: string | undefined;
     // get all scps attached to this particular account
-    // this cannot be more than 5 so not paginating
-    const attachedScps: ListPoliciesForTargetResponse = await throttlingBackOff(() =>
-      organizationsClient.send(
-        new ListPoliciesForTargetCommand({
-          Filter: 'SERVICE_CONTROL_POLICY',
-          TargetId: account.accountId,
-          MaxResults: 10,
-        }),
-      ),
-    );
+    do {
+      const response = await throttlingBackOff(() =>
+        organizationsClient.send(
+          new ListPoliciesForTargetCommand({
+            Filter: 'SERVICE_CONTROL_POLICY',
+            TargetId: account.accountId,
+            NextToken: nextToken,
+          }),
+        ),
+      );
+      attachedScps.Policies!.push(...(response.Policies || []));
+      nextToken = response.NextToken;
+    } while (nextToken);
+
     if (attachedScps.Policies) {
       // Get all scp names attached by solution from the config
       // for this particular account
@@ -155,9 +170,9 @@ async function checkAccounts(
           nonAccelScps.push(policy.Name);
         }
       }
-      if (nonAccelScps.length + accelOuScps.length > 5) {
+      if (nonAccelScps.length + accelOuScps.length > maxAccountAttachedScps) {
         errors.push(
-          `Max Allowed SCPs for Account "${account.name}" is 5, found already attached scps count ${nonAccelScps.length} and Accelerator OU scps ${accelOuScps.length} => ${accelOuScps}`,
+          `Max Allowed SCPs for Account "${account.name}" is ${maxAccountAttachedScps}, found already attached scps count ${nonAccelScps.length} and Accelerator OU scps ${accelOuScps.length} => ${accelOuScps}`,
         );
       }
     }
