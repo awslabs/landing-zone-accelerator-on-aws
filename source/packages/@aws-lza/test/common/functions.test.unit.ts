@@ -53,6 +53,7 @@ import {
   isOrganizationsConfigured,
   processModulePromises,
   setRetryStrategy,
+  waitUntil,
 } from '../../common/functions';
 import { MOCK_CONSTANTS } from '../mocked-resources';
 import { MODULE_EXCEPTIONS } from '../../common/enums';
@@ -1771,6 +1772,103 @@ describe('functions', () => {
 
       // Verify
       expect(response.length).toEqual(0);
+    });
+  });
+
+  describe('waitUntil function', () => {
+    beforeEach(() => {
+      jest.clearAllMocks();
+    });
+
+    test('should succeed when predicate returns true on first try', async () => {
+      // Mock predicate that returns true immediately
+      const mockPredicate = jest.fn().mockResolvedValue(true);
+      const errorMessage = 'Test error message';
+
+      // Execute - this should succeed immediately without any delays
+      await expect(waitUntil(mockPredicate, errorMessage)).resolves.toBeUndefined();
+
+      // Verify predicate was called only once
+      expect(mockPredicate).toHaveBeenCalledTimes(1);
+    });
+
+    test('should handle predicate that throws an error', async () => {
+      // Mock predicate that throws an error
+      const mockError = new Error('Predicate error');
+      const mockPredicate = jest.fn().mockRejectedValue(mockError);
+      const errorMessage = 'Test error message';
+
+      // Execute & Verify - should propagate the predicate error
+      await expect(waitUntil(mockPredicate, errorMessage)).rejects.toThrow(mockError);
+
+      // Verify predicate was called once
+      expect(mockPredicate).toHaveBeenCalledTimes(1);
+    });
+
+    test('should use default retry limit and interval parameters', async () => {
+      // Mock predicate that returns true immediately
+      const mockPredicate = jest.fn().mockResolvedValue(true);
+      const errorMessage = 'Test error message';
+
+      // Execute with no custom parameters
+      await waitUntil(mockPredicate, errorMessage);
+
+      // Verify predicate was called
+      expect(mockPredicate).toHaveBeenCalledTimes(1);
+    });
+
+    test('should accept custom retry limit and interval parameters', async () => {
+      // Mock predicate that returns true immediately
+      const mockPredicate = jest.fn().mockResolvedValue(true);
+      const errorMessage = 'Test error message';
+      const customRetryLimit = 10;
+      const customInterval = 5;
+
+      // Execute with custom parameters
+      await waitUntil(mockPredicate, errorMessage, customRetryLimit, customInterval);
+
+      // Verify predicate was called
+      expect(mockPredicate).toHaveBeenCalledTimes(1);
+    });
+
+    test('should call predicate function with no arguments', async () => {
+      // Mock predicate that returns true immediately
+      const mockPredicate = jest.fn().mockResolvedValue(true);
+      const errorMessage = 'Test error message';
+
+      // Execute
+      await waitUntil(mockPredicate, errorMessage);
+
+      // Verify predicate was called with no arguments
+      expect(mockPredicate).toHaveBeenCalledWith();
+    });
+
+    test('should handle async predicate functions', async () => {
+      // Mock async predicate that returns true after a promise resolution
+      const mockPredicate = jest.fn().mockImplementation(async () => {
+        await Promise.resolve();
+        return true;
+      });
+      const errorMessage = 'Test error message';
+
+      // Execute
+      await expect(waitUntil(mockPredicate, errorMessage)).resolves.toBeUndefined();
+
+      // Verify predicate was called
+      expect(mockPredicate).toHaveBeenCalledTimes(1);
+    });
+    test('should throw error when retry limit is exceeded', async () => {
+      const mockDelay = jest.fn().mockResolvedValue(undefined);
+      const mockPredicate = jest.fn().mockResolvedValue(false);
+      const errorMessage = 'Test error message';
+
+      await expect(waitUntil(mockPredicate, errorMessage, 5, 1, mockDelay)).rejects.toThrow(
+        `${MODULE_EXCEPTIONS.SERVICE_EXCEPTION}: ${errorMessage}`,
+      );
+
+      expect(mockPredicate).toHaveBeenCalledTimes(6);
+      expect(mockDelay).toHaveBeenCalledTimes(5);
+      expect(mockDelay).toHaveBeenCalledWith(1);
     });
   });
 });

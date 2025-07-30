@@ -43,6 +43,10 @@ export enum AcceleratorModuleName {
    * AWS Detective Module
    */
   AWS_DETECTIVE = 'aws-detective',
+  /**
+   * AWS GuardDuty Module
+   */
+  AWS_GUARDDUTY = 'aws-guardduty',
 }
 
 /**
