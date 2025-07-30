@@ -279,13 +279,25 @@ describe('LZAResourceLookup tests', () => {
     expect(
       lzaLookup.resourceExists({
         resourceType: LZAResourceLookupType.NETWORK_ACL_ENTRY,
-        lookupValues: { vpcName: 'test-vpc', naclName: 'test-nacl', ruleNumber: 100, type: 'ingress' },
+        lookupValues: {
+          vpcName: 'test-vpc',
+          naclName: 'test-nacl',
+          ruleNumber: 100,
+          type: 'ingress',
+          cidr: '0.0.0.0/0',
+        },
       }),
     ).toBeTruthy();
     expect(
       lzaLookup.resourceExists({
         resourceType: LZAResourceLookupType.NETWORK_ACL_ENTRY,
-        lookupValues: { vpcName: 'test-vpc', naclName: 'test-nacl', ruleNumber: 100, type: 'egress' },
+        lookupValues: {
+          vpcName: 'test-vpc',
+          naclName: 'test-nacl',
+          ruleNumber: 100,
+          type: 'egress',
+          cidr: '0.0.0.0/0',
+        },
       }),
     ).toBeTruthy();
     expect(

@@ -1271,6 +1271,8 @@ function getV2NetworkAclEntryResources(
   v2Components: V2NetworkResourceListType[],
 ) {
   for (const inboundRuleItem of networkAclItem.inboundRules ?? []) {
+    const source =
+      typeof inboundRuleItem.source === 'string' ? { cidr: inboundRuleItem.source } : inboundRuleItem.source;
     if (
       !iNetworkAclSourceCrossAccount(inboundRuleItem.source, accountsConfig, networkConfig, env) &&
       !lzaLookup.resourceExists({
@@ -1280,6 +1282,7 @@ function getV2NetworkAclEntryResources(
           naclName: networkAclItem.name,
           ruleNumber: inboundRuleItem.rule,
           type: 'ingress',
+          ...source,
         },
       })
     ) {
@@ -1295,6 +1298,10 @@ function getV2NetworkAclEntryResources(
   }
 
   for (const outboundRuleItem of networkAclItem.outboundRules ?? []) {
+    const destination =
+      typeof outboundRuleItem.destination === 'string'
+        ? { cidr: outboundRuleItem.destination }
+        : outboundRuleItem.destination;
     if (
       !iNetworkAclSourceCrossAccount(outboundRuleItem.destination, accountsConfig, networkConfig, env) &&
       !lzaLookup.resourceExists({
@@ -1304,6 +1311,7 @@ function getV2NetworkAclEntryResources(
           naclName: networkAclItem.name,
           ruleNumber: outboundRuleItem.rule,
           type: 'egress',
+          ...destination,
         },
       })
     ) {

@@ -1741,6 +1741,7 @@ exports[`NetworkVpcStack tests Construct(NetworkVpcStack):  Snapshot Test 1`] = 
           ],
         },
         "lzaLookup": {
+          "cidr": "10.0.0.0/8",
           "naclName": "TestNACL",
           "ruleNumber": 10,
           "type": "ingress",
@@ -1774,9 +1775,12 @@ exports[`NetworkVpcStack tests Construct(NetworkVpcStack):  Snapshot Test 1`] = 
           ],
         },
         "lzaLookup": {
+          "account": "Network",
           "naclName": "TestNACL",
           "ruleNumber": 20,
+          "subnet": "Network-Endpoints-A",
           "type": "ingress",
+          "vpc": "Network-Endpoints",
           "vpcName": "Network-Endpoints",
         },
       },
@@ -1812,6 +1816,7 @@ exports[`NetworkVpcStack tests Construct(NetworkVpcStack):  Snapshot Test 1`] = 
           ],
         },
         "lzaLookup": {
+          "cidr": "10.0.0.0/24",
           "naclName": "TestNACL",
           "ruleNumber": 30,
           "type": "ingress",
@@ -1864,6 +1869,7 @@ exports[`NetworkVpcStack tests Construct(NetworkVpcStack):  Snapshot Test 1`] = 
           ],
         },
         "lzaLookup": {
+          "cidr": "0.0.0.0/0",
           "naclName": "TestNACL",
           "ruleNumber": 10,
           "type": "egress",
@@ -1897,9 +1903,12 @@ exports[`NetworkVpcStack tests Construct(NetworkVpcStack):  Snapshot Test 1`] = 
           ],
         },
         "lzaLookup": {
+          "account": "Network",
           "naclName": "TestNACL",
           "ruleNumber": 20,
+          "subnet": "Network-Endpoints-A",
           "type": "egress",
+          "vpc": "Network-Endpoints",
           "vpcName": "Network-Endpoints",
         },
       },

@@ -154,10 +154,11 @@ export class LZAResourceLookup {
       case LZAResourceLookupType.SUBNET_SHARE:
       case LZAResourceLookupType.SECURITY_GROUP:
       case LZAResourceLookupType.NETWORK_ACL:
-      case LZAResourceLookupType.NETWORK_ACL_ENTRY:
       case LZAResourceLookupType.SUBNET_NETWORK_ACL_ASSOCIATION:
         const requiredKeys = RESOURCE_REQUIRED_KEYS[resourceProperties.resourceType];
         return this.resourceWithMetadataExists(resourceProperties, requiredKeys);
+      case LZAResourceLookupType.NETWORK_ACL_ENTRY:
+        return this.naclEntryExists(resourceProperties);
       case LZAResourceLookupType.VPC_CIDR_BLOCK:
         return this.vpcCidrBlockExists(resourceProperties);
       case LZAResourceLookupType.LOAD_BALANCER:
@@ -394,6 +395,19 @@ export class LZAResourceLookup {
       return this.ipv6CidrPoolExists(resourceProperties);
     }
     return false;
+  }
+
+  private naclEntryExists(resourceProperties: LookupProperties): boolean {
+    this.validateResourcePropertyKeys({
+      resourceProperties,
+      resourceKeys: RESOURCE_REQUIRED_KEYS[resourceProperties.resourceType],
+    });
+    const resourceKeys = this.getCfnResourceKeysByType(resourceProperties.resourceType);
+    return this.cfnResourceExists({
+      lookupValues: resourceProperties.lookupValues,
+      resourceType: resourceProperties.resourceType,
+      resourceTypesKeys: resourceKeys,
+    });
   }
 
   private ipv4IpamCidrBlockExists(resourceProperties: LookupProperties): boolean {

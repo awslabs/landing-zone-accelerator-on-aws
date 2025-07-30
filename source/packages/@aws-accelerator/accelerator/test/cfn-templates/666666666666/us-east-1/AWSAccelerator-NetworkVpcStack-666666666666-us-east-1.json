@@ -1897,7 +1897,8 @@
      "vpcName": "Network-Endpoints",
      "naclName": "TestNACL",
      "ruleNumber": 10,
-     "type": "ingress"
+     "type": "ingress",
+     "cidr": "10.0.0.0/8"
     },
     "cdk_nag": {
      "rules_to_suppress": [
@@ -1935,7 +1936,10 @@
      "vpcName": "Network-Endpoints",
      "naclName": "TestNACL",
      "ruleNumber": 20,
-     "type": "ingress"
+     "type": "ingress",
+     "account": "Network",
+     "vpc": "Network-Endpoints",
+     "subnet": "Network-Endpoints-A"
     },
     "cdk_nag": {
      "rules_to_suppress": [
@@ -1969,7 +1973,8 @@
      "vpcName": "Network-Endpoints",
      "naclName": "TestNACL",
      "ruleNumber": 30,
-     "type": "ingress"
+     "type": "ingress",
+     "cidr": "10.0.0.0/24"
     },
     "cdk_nag": {
      "rules_to_suppress": [
@@ -2002,7 +2007,8 @@
      "vpcName": "Network-Endpoints",
      "naclName": "TestNACL",
      "ruleNumber": 10,
-     "type": "egress"
+     "type": "egress",
+     "cidr": "0.0.0.0/0"
     },
     "cdk_nag": {
      "rules_to_suppress": [
@@ -2040,7 +2046,10 @@
      "vpcName": "Network-Endpoints",
      "naclName": "TestNACL",
      "ruleNumber": 20,
-     "type": "egress"
+     "type": "egress",
+     "account": "Network",
+     "vpc": "Network-Endpoints",
+     "subnet": "Network-Endpoints-A"
     },
     "cdk_nag": {
      "rules_to_suppress": [

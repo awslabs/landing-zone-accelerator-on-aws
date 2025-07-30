@@ -19,6 +19,8 @@ import {
   VpcConfig,
   VpcTemplatesConfig,
   AseaResourceType,
+  NetworkAclOutboundRuleConfig,
+  NetworkAclInboundRuleConfig,
 } from '@aws-accelerator/config';
 import { NetworkAcl, Subnet, Vpc } from '@aws-accelerator/constructs';
 import { SsmResourceType } from '@aws-accelerator/utils/lib/ssm-parameter-path';
@@ -173,15 +175,11 @@ export class NaclResources {
     subnetMap: Map<string, Subnet>,
   ) {
     for (const inboundRuleItem of naclItem.inboundRules ?? []) {
+      const metadata = this.getMetadata(vpcItem.name, naclItem.name, inboundRuleItem);
       if (
         !this.lzaLookup.resourceExists({
           resourceType: LZAResourceLookupType.NETWORK_ACL_ENTRY,
-          lookupValues: {
-            vpcName: vpcItem.name,
-            naclName: naclItem.name,
-            ruleNumber: inboundRuleItem.rule,
-            type: 'ingress',
-          },
+          lookupValues: metadata,
         })
       ) {
         continue;
@@ -211,12 +209,7 @@ export class NaclResources {
             ...inboundAclTargetProps,
           },
         );
-        entry.addMetadata(MetadataKeys.LZA_LOOKUP, {
-          vpcName: vpcItem.name,
-          naclName: naclItem.name,
-          ruleNumber: inboundRuleItem.rule,
-          type: 'ingress',
-        });
+        entry.addMetadata(MetadataKeys.LZA_LOOKUP, metadata);
 
         // Suppression for AwsSolutions-VPC3: A Network ACL or Network ACL entry has been implemented.
         NagSuppressions.addResourceSuppressionsByPath(
@@ -230,15 +223,11 @@ export class NaclResources {
     }
 
     for (const outboundRuleItem of naclItem.outboundRules ?? []) {
+      const metadata = this.getMetadata(vpcItem.name, naclItem.name, outboundRuleItem);
       if (
         !this.lzaLookup.resourceExists({
           resourceType: LZAResourceLookupType.NETWORK_ACL_ENTRY,
-          lookupValues: {
-            vpcName: vpcItem.name,
-            naclName: naclItem.name,
-            ruleNumber: outboundRuleItem.rule,
-            type: 'egress',
-          },
+          lookupValues: metadata,
         })
       ) {
         continue;
@@ -267,12 +256,7 @@ export class NaclResources {
             ...outboundAclTargetProps,
           },
         );
-        entry.addMetadata(MetadataKeys.LZA_LOOKUP, {
-          vpcName: vpcItem.name,
-          naclName: naclItem.name,
-          ruleNumber: outboundRuleItem.rule,
-          type: 'egress',
-        });
+        entry.addMetadata(MetadataKeys.LZA_LOOKUP, metadata);
       }
       // Suppression for AwsSolutions-VPC3: A Network ACL or Network ACL entry has been implemented.
       NagSuppressions.addResourceSuppressionsByPath(
@@ -335,5 +319,42 @@ export class NaclResources {
 
     this.stack.addLogs(LogLevel.ERROR, `Invalid input to processNetworkAclTargets`);
     throw new Error(`Configuration validation failed at runtime.`);
+  }
+
+  private getMetadata(
+    vpcName: string,
+    naclName: string,
+    rule: NetworkAclInboundRuleConfig | NetworkAclOutboundRuleConfig,
+  ) {
+    let type: string;
+    let config: string | NetworkAclSubnetSelection;
+    if (isNetworkType('INetworkAclInboundRuleConfig', rule)) {
+      type = 'ingress';
+      config = (rule as NetworkAclInboundRuleConfig).source;
+    } else {
+      type = 'egress';
+      config = (rule as NetworkAclOutboundRuleConfig).destination;
+    }
+
+    // Base metadata with default values for all possible properties
+    const metadata = {
+      vpcName,
+      naclName,
+      ruleNumber: rule.rule,
+      type,
+    };
+
+    // Add appropriate properties based on config type
+    if (typeof config === 'string') {
+      return {
+        ...metadata,
+        cidr: config,
+      };
+    } else {
+      return {
+        ...metadata,
+        ...config,
+      };
+    }
   }
 }
