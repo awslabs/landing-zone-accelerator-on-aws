@@ -33,7 +33,7 @@ import { NagSuppressions } from 'cdk-nag';
 import { pascalCase } from 'pascal-case';
 import { AcceleratorStackProps } from '../../accelerator-stack';
 import { LogLevel } from '../network-stack';
-import { getSubnet } from '../utils/getter-utils';
+import { getSubnet, getSecurityGroup } from '../utils/getter-utils';
 import { NetworkVpcStack } from './network-vpc-stack';
 import { MetadataKeys } from '@aws-accelerator/utils/lib/common-types';
 import { LZAResourceLookup, LZAResourceLookupType } from '../../../../utils/lza-resource-lookup';
@@ -151,7 +151,13 @@ export class LoadBalancerResources {
     // Set subnets
     const subnets: string[] = [];
     for (const subnetItem of loadBalancerItem.subnets) {
-      const subnet = getSubnet(subnetMap, vpcItem.name, subnetItem) as Subnet;
+      const subnet = getSubnet(
+        subnetMap,
+        vpcItem.name,
+        subnetItem,
+        undefined,
+        this.stack.props.globalConfig.useV2Stacks,
+      ) as Subnet;
 
       if (!subnets.includes(subnet.subnetId)) {
         subnets.push(subnet.subnetId);
@@ -349,11 +355,26 @@ export class LoadBalancerResources {
         }
         // Logic to only create Application Load Balancers that don't include the shareTargets property
         if (!albItem.shareTargets) {
-          const subnetLookups = albItem.subnets.map(subnetName => subnetMap.get(`${vpcItem.name}_${subnetName}`));
+          const subnetLookups = albItem.subnets.map(
+            subnetName =>
+              getSubnet(
+                subnetMap,
+                vpcItem.name,
+                subnetName,
+                undefined,
+                this.stack.props.globalConfig.useV2Stacks,
+              ) as Subnet,
+          );
           const nonNullsubnets = subnetLookups.filter(subnet => subnet) as Subnet[];
           const subnetIds = nonNullsubnets.map(subnet => subnet.subnetId);
-          const securityGroupLookups = albItem.securityGroups.map(securityGroupName =>
-            securityGroupMap.get(`${vpcItem.name}_${securityGroupName}`),
+          const securityGroupLookups = albItem.securityGroups.map(
+            securityGroupName =>
+              getSecurityGroup(
+                securityGroupMap,
+                vpcItem.name,
+                securityGroupName,
+                this.stack.props.globalConfig.useV2Stacks,
+              ) as SecurityGroup,
           );
           const nonNullSecurityGroups = securityGroupLookups.filter(group => group) as SecurityGroup[];
           const securityGroupIds = nonNullSecurityGroups.map(securityGroup => securityGroup.securityGroupId);
