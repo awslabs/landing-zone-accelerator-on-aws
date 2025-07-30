@@ -617,3 +617,33 @@ export async function disableServiceAccess(client: OrganizationsClient, serviceP
   }
   return true;
 }
+
+/**
+ * Utility function to wait until a predicate condition is met with retry logic
+ * @param predicate - Async function that returns true when the desired condition is met
+ * @param error - Error message to throw if retry limit is exceeded
+ * @param retryLimit - Maximum number of retries (default: 5)
+ * @param queryIntervalMinutes - Delay between retries in minutes (default: 1)
+ * @throws Error with SERVICE_EXCEPTION if retry limit is exceeded
+ */
+export async function waitUntil(
+  predicate: () => Promise<boolean>,
+  error: string,
+  retryLimit = 5,
+  queryIntervalMinutes = 1,
+  delayFn: (minutes: number) => Promise<unknown> = delay, // Use Promise<any> for flexibility
+): Promise<void> {
+  let retryCount = 0;
+  while (retryCount <= retryLimit) {
+    if (await predicate()) {
+      return;
+    }
+    if (retryCount < retryLimit) {
+      await delayFn(queryIntervalMinutes);
+    }
+    retryCount += 1;
+    if (retryCount > retryLimit) {
+      throw new Error(`${MODULE_EXCEPTIONS.SERVICE_EXCEPTION}: ${error}`);
+    }
+  }
+}
