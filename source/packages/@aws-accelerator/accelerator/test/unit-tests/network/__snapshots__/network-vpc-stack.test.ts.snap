@@ -2289,6 +2289,11 @@ exports[`NetworkVpcStack tests Construct(NetworkVpcStack):  Snapshot Test 1`] = 
     },
     "testalbNetworkEndpointsA3BF3100": {
       "DependsOn": [
+        "NetworkEndpointsVpcManagementSgManagementEgress00D58058BF",
+        "NetworkEndpointsVpcManagementSgManagementIngress105119E927",
+        "NetworkEndpointsVpcManagementSgManagementIngress20A95C4EBB",
+        "NetworkEndpointsVpcManagementSgManagementIngress21225D10D2",
+        "NetworkEndpointsVpcManagementSg2B8F9418",
         "NetworkEndpointsVpcNetworkEndpointsASubnet758434F8",
         "NetworkEndpointsVpcNetworkEndpointsASubnetRouteTableAssociation9EE74497",
         "NetworkEndpointsVpcNetworkEndpointsBSubnet1CF39812",
@@ -2317,7 +2322,11 @@ exports[`NetworkVpcStack tests Construct(NetworkVpcStack):  Snapshot Test 1`] = 
         ],
         "Name": "test-alb",
         "Scheme": "internet-facing",
-        "SecurityGroups": [],
+        "SecurityGroups": [
+          {
+            "Ref": "NetworkEndpointsVpcManagementSg2B8F9418",
+          },
+        ],
         "Subnets": [
           {
             "Ref": "NetworkEndpointsVpcNetworkEndpointsASubnet758434F8",

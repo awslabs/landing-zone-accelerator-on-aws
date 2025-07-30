@@ -80,18 +80,23 @@ export function getRouteTable(
  * @param securityGroupMap
  * @param vpcName
  * @param securityGroupName
+ * @param v2StackEnabled
  * @returns
  */
 export function getSecurityGroup(
   securityGroupMap: Map<string, SecurityGroup> | Map<string, string>,
   vpcName: string,
   securityGroupName: string,
+  v2StackEnabled = false,
 ): SecurityGroup | string {
   const key = `${vpcName}_${securityGroupName}`;
   const securityGroup = securityGroupMap.get(key);
 
   if (!securityGroup) {
-    logger.error(`VPC ${vpcName} security group ${securityGroupName} does not exist in map`);
+    const errorMessage = v2StackEnabled
+      ? `VPC ${vpcName} security group ${securityGroupName} does not exist in map. This is likely because you are referencing a security group in the v2 stack. Please either recreate the resource to move it to the v2 stack or remove any references to v2 resources.`
+      : `VPC ${vpcName} security group ${securityGroupName} does not exist in map`;
+    logger.error(errorMessage);
     throw new Error(`Configuration validation failed at runtime.`);
   }
 
@@ -103,6 +108,7 @@ export function getSecurityGroup(
  * @param subnetMap
  * @param vpcName
  * @param subnetName
+ * @param v2StackEnabled
  * @returns
  */
 export function getSubnet(
@@ -110,12 +116,17 @@ export function getSubnet(
   vpcName: string,
   subnetName: string,
   accountName?: string,
+  v2StackEnabled = false,
 ): Subnet | IIpamSubnet {
   const key = accountName ? `${vpcName}_${accountName}_${subnetName}` : `${vpcName}_${subnetName}`;
   const subnet = subnetMap.get(key);
 
   if (!subnet) {
-    logger.error(`VPC ${vpcName} subnet ${subnetName} does not exist in map`);
+    const errorMessage = v2StackEnabled
+      ? `VPC ${vpcName} subnet ${subnetName} does not exist in map. This is likely because you are referencing a security group in the v2 stack. Please either recreate the resource to move it to the v2 stack or remove any references to v2 resources.`
+      : `VPC ${vpcName} subnet ${subnetName} does not exist in map`;
+
+    logger.error(errorMessage);
     throw new Error(`Configuration validation failed at runtime.`);
   }
 
