@@ -513,7 +513,7 @@ vpcs:
             - Network-Endpoints-A
             - Network-Endpoints-B
           securityGroups:
-            - Network-Endpoints-CustomEndpointSg-V2
+            - Management
           scheme: internet-facing
     gatewayEndpoints:
       defaultPolicy: Default
