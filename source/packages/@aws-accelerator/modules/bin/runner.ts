@@ -43,7 +43,8 @@ async function main(): Promise<string> {
  */
 (async () => {
   try {
-    await main();
+    const status = await main();
+    statusLogger.info(status);
   } catch (err) {
     statusLogger.error(err);
     throw err;
