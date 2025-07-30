@@ -130,6 +130,7 @@ export class StackPolicyModule implements IStackPolicyModule {
       partition: props.partition,
       assumeRoleName: props.managementAccountAccessRole,
       sessionName: 'AcceleratorCreateStackPolicy',
+      credentials: props.credentials,
     });
   }
 
