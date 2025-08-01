@@ -46,7 +46,7 @@ describe('CreateOrganizationalUnitModule', () => {
   test('Should execute successfully', async () => {
     // Setup
     const expectedOutput: string[] = [];
-    for (let i = 0; i < newOrganizationalUnits.length - 1; i++) {
+    for (let i = 0; i < newOrganizationalUnits.length; i++) {
       expectedOutput.push(`Successful`);
     }
 
@@ -79,7 +79,7 @@ describe('CreateOrganizationalUnitModule', () => {
     const response = await CreateOrganizationalUnitModule.execute(param);
 
     // Verify
-    expect(awsLza.createOrganizationalUnit).toHaveBeenCalledTimes(newOrganizationalUnits.length - 1);
+    expect(awsLza.createOrganizationalUnit).toHaveBeenCalledTimes(newOrganizationalUnits.length);
 
     expect(response).toBe(
       `Module "${
