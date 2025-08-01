@@ -58,18 +58,16 @@ export abstract class CreateOrganizationalUnitModule {
     );
 
     // Sort organizational units by hierarchy depth
-    const sortedOrganizationalUnits = [...newOrganizationalUnits]
-      .filter(ou => !ou.ignore)
-      .sort((a, b) => {
-        const depthA = a.name.split('/').length;
-        const depthB = b.name.split('/').length;
+    const sortedOrganizationalUnits = [...newOrganizationalUnits].sort((a, b) => {
+      const depthA = a.name.split('/').length;
+      const depthB = b.name.split('/').length;
 
-        if (depthA === depthB) {
-          return a.name.localeCompare(b.name);
-        }
+      if (depthA === depthB) {
+        return a.name.localeCompare(b.name);
+      }
 
-        return depthA - depthB;
-      });
+      return depthA - depthB;
+    });
 
     if (sortedOrganizationalUnits.length === 0) {
       return `Skipping "${params.moduleItem.name}" because all organizational units found in configuration file are already part of the AWS Organization.`;
