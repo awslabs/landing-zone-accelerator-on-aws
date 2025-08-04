@@ -1714,6 +1714,20 @@ export class VpcValidator {
     helpers: NetworkValidatorFunctions,
     errors: string[],
   ) {
+    if (vpcItem.queryLogs && vpcItem.queryLogs.length > 0) {
+      const hasCentralResolver = !!values.centralNetworkServices?.route53Resolver?.endpoints?.some(
+        endpoint => endpoint.vpc === vpcItem.name,
+      );
+      const hasVpcResolver = 'vpcRoute53Resolver' in vpcItem ? vpcItem.vpcRoute53Resolver : undefined;
+
+      if (!hasCentralResolver && !hasVpcResolver) {
+        errors.push(
+          `[VPC ${vpcItem.name}]: queryLogs specified but no Route53 resolver endpoints found in this VPC. Please configure either centralNetworkServices.route53Resolver endpoints in this VPC or vpcRoute53Resolver`,
+        );
+        return;
+      }
+    }
+
     // Validate query log name
     const queryLogs = values.centralNetworkServices?.route53Resolver?.queryLogs;
     vpcItem.queryLogs?.forEach(name => {
