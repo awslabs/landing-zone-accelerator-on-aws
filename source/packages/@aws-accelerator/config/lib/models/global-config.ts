@@ -728,7 +728,7 @@ export interface IAssetBucketConfig {
  * *{@link GlobalConfig} / {@link LoggingConfig} / {@link AccessLogBucketConfig}*
  *
  * @description
- * Accelerator global S3 access logging configuration
+ * Accelerator S3 access logs configuration. S3 access logs is implemented in LZA using the native S3 feature offered by the service as per: https://docs.aws.amazon.com/AmazonS3/latest/userguide/ServerLogs.html
  *
  * @example
  * ```
@@ -766,7 +766,7 @@ export interface IAssetBucketConfig {
  *           transitionAfter: 365
  *       prefix: PREFIX
  *   importedBucket:
- *     name: existing-access-log-bucket
+ *     name: existing-access-log-bucket-${ACCOUNT_ID}-${REGION}
  *     applyAcceleratorManagedBucketPolicy: true
  * ```
  */
@@ -803,15 +803,25 @@ export interface IAccessLogBucketConfig {
   /**
    * Imported bucket configuration.
    *
-   * @remarks
-   * Use this configuration when accelerator will import existing AccessLogs bucket.
    *
-   * Use the following configuration to imported AccessLogs bucket, manage bucket resource policy through solution.
+   * @remarks
+   * Use this configuration to import an existing AccessLogs bucket and manage its resource policy through the solution.
+   *
+   * **Important:** Per AWS S3 documentation, both source and destination buckets must be in the same AWS Region and owned by the same account.
+   * Reference: https://docs.aws.amazon.com/AmazonS3/latest/userguide/ServerLogs.html
+   *
+   * The bucket must be pre-created in each target account and region using a repeatable naming pattern so the LZA can locate the bucket across accounts and regions. Include the ${ACCOUNT_ID} and ${REGION} parameters in your naming pattern, which will be automatically populated by the LZA to ensure uniqueness.
+   * 
+   * For more information on solution-specific variables, see: https://docs.aws.amazon.com/solutions/latest/landing-zone-accelerator-on-aws/working-with-solution-specific-variables.html
+ 
+   *
+   * @example
    * ```
    * importedBucket:
-   *    name: existing-access-log-bucket
-   *    applyAcceleratorManagedBucketPolicy: true
+   *   name: existing-access-log-bucket-${ACCOUNT_ID}-${REGION}
+   *   applyAcceleratorManagedBucketPolicy: true
    * ```
+   *
    *
    * @default
    * undefined
