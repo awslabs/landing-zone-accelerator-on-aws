@@ -70,7 +70,7 @@
     },
     "IAccessLogBucketConfig": {
       "additionalProperties": false,
-      "description": "Accelerator global S3 access logging configuration",
+      "description": "Accelerator S3 access logs configuration. S3 access logs is implemented in LZA using the native S3 feature offered by the service as per: https://docs.aws.amazon.com/AmazonS3/latest/userguide/ServerLogs.html",
       "properties": {
         "customPolicyOverrides": {
           "$ref": "#/definitions/ICustomS3ResourcePolicyOverridesConfig",
