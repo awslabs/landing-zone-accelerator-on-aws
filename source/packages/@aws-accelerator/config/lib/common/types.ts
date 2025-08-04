@@ -47,7 +47,7 @@ export interface IImportedS3ManagedEncryptionKeyBucketConfig {
    * When external policy files are provided through s3ResourcePolicyAttachments policy files,
    * solution will add policies from the files to the imported bucket resource policy.
    * If no external policy files are provided and value for this parameter is left to false, solution will not make changes to bucket resource policy.
-   * When value is set to true, accelerator solution will replace bucket resource policy with accelerator managed policies along with policies from external policy files if provided.
+   * WARNING: When value is set to true, accelerator solution will REPLACE existing bucket resource policy with accelerator managed policies along with policies from external policy files if provided. This will REMOVE any existing S3 policies on the bucket.
    *
    */
   applyAcceleratorManagedBucketPolicy?: boolean;
