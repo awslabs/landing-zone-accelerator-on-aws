@@ -2475,9 +2475,6 @@ export interface IGlobalConfig {
    * limit per CloudFormation stack.
    *
    * @default false
-   *
-   * @experimental
-   * This configuration is intended for internal development purposes only.
    */
   readonly useV2Stacks?: boolean;
   /**
