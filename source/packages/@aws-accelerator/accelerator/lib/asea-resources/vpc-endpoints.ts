@@ -44,8 +44,18 @@ export class VpcEndpoints extends AseaResource {
     }
 
     for (const vpcItem of this.scope.vpcResources) {
+      if (vpcItem.region != this.props.stackInfo.region) {
+        this.scope.addLogs(
+          LogLevel.INFO,
+          `VPC ${vpcItem.name} is not in the current region ${this.props.stackInfo.region}. Skipping processing.`,
+        );
+        continue;
+      }
+
+      const vpcName = getAseaConfigVpcName(vpcItem.name);
+
       // Set interface endpoint DNS names
-      const vpcId = this.getVPCId(vpcItem.name, this.props.globalConfig.externalLandingZoneResources.templateMap);
+      const vpcId = this.getVPCId(vpcName, this.props.globalConfig.externalLandingZoneResources.templateMap);
       if (!this.findResourceByName(existingVpcEndpointResources, 'VpcId', vpcId!)) {
         continue;
       }
@@ -102,7 +112,12 @@ export class VpcEndpoints extends AseaResource {
           }
           const hostedZoneCfnName = this.getCfnHostedZoneName(hostedZoneName);
 
-          const hostedZoneCfn = this.findResourceByName(existingHostedZoneResources, 'Name', hostedZoneCfnName);
+          const hostedZoneCfn = this.findResourceByNameAndDependency(
+            existingHostedZoneResources,
+            'Name',
+            hostedZoneCfnName,
+            endpoint.logicalResourceId,
+          );
           if (!hostedZoneCfn) {
             continue;
           }
@@ -123,7 +138,12 @@ export class VpcEndpoints extends AseaResource {
 
           // route53 recordset
           const recordSetName = this.getRecordSetName(hostedZoneName);
-          const recordSetCfn = this.findResourceByName(existingRecordSetResources, 'Name', recordSetName);
+          const recordSetCfn = this.findResourceByNameAndDependency(
+            existingRecordSetResources,
+            'Name',
+            recordSetName,
+            hostedZoneCfn.logicalResourceId,
+          );
           if (recordSetCfn) {
             this.scope.addDeleteFlagForAseaResource({
               type: RESOURCE_TYPE.RECORD_SET,
@@ -152,11 +172,13 @@ export class VpcEndpoints extends AseaResource {
 
       // updating existing configured endpoints
       for (const endpointItem of vpcItem.interfaceEndpoints?.endpoints ?? []) {
-        const endpointCfn = this.findResourceByName(
+        const endpointCfn = this.findResourceByNameAndVpcId(
           existingVpcEndpointResources,
           'ServiceName',
           this.interfaceVpcEndpointForRegionAndEndpointName(endpointItem.service),
+          vpcId!,
         );
+
         if (!endpointCfn || !endpointCfn.physicalResourceId) {
           continue;
         }
@@ -173,7 +195,12 @@ export class VpcEndpoints extends AseaResource {
 
         const hostedZoneCfnName = this.getCfnHostedZoneName(hostedZoneName);
 
-        const hostedZoneCfn = this.findResourceByName(existingHostedZoneResources, 'Name', hostedZoneCfnName);
+        const hostedZoneCfn = this.findResourceByNameAndDependency(
+          existingHostedZoneResources,
+          'Name',
+          hostedZoneCfnName,
+          endpointCfn.logicalResourceId,
+        );
         if (!hostedZoneCfn) {
           continue;
         }
@@ -185,7 +212,13 @@ export class VpcEndpoints extends AseaResource {
         });
         this.scope.addAseaResource(AseaResourceType.ROUTE_53_PHZ_ID, `${vpcItem.name}/${endpointItem.service}`);
         const recordSetName = this.getRecordSetName(hostedZoneName);
-        const recordSetCfn = this.findResourceByName(existingRecordSetResources, 'Name', recordSetName);
+
+        const recordSetCfn = this.findResourceByNameAndDependency(
+          existingRecordSetResources,
+          'Name',
+          recordSetName,
+          hostedZoneCfn.logicalResourceId,
+        );
         if (!recordSetCfn) {
           this.scope.addLogs(
             LogLevel.WARN,
@@ -231,11 +264,7 @@ export class VpcEndpoints extends AseaResource {
     }
     for (const nestedStack of nestedStackList) {
       nestedStack.cfnResources = this.loadResourcesFromFile(nestedStack);
-      const vpcResource = this.findResourceByTypeAndTag(
-        nestedStack.cfnResources,
-        RESOURCE_TYPE.VPC,
-        getAseaConfigVpcName(vpcName),
-      );
+      const vpcResource = this.findResourceByTypeAndTag(nestedStack.cfnResources, RESOURCE_TYPE.VPC, vpcName);
       if (vpcResource) {
         return vpcResource.physicalResourceId;
       }
