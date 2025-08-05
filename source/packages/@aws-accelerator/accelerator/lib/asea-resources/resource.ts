@@ -73,6 +73,20 @@ export class AseaResource {
     );
   }
 
+  findResourceByNameAndDependency(
+    cfnResources: CfnResourceType[],
+    propertyName: string,
+    propertyValue: string,
+    dependsOnLogicalId: string,
+  ) {
+    return cfnResources.find(
+      cfnResource =>
+        cfnResource.resourceMetadata['Properties'][propertyName] === propertyValue &&
+        cfnResource.resourceMetadata['DependsOn'] &&
+        cfnResource.resourceMetadata['DependsOn'].includes(dependsOnLogicalId),
+    );
+  }
+
   filterResourcesByRef(cfnResources: CfnResourceType[], propertyName: string, logicalId: string) {
     return cfnResources.filter(
       cfnResource => cfnResource.resourceMetadata['Properties'][propertyName].Ref === logicalId,
