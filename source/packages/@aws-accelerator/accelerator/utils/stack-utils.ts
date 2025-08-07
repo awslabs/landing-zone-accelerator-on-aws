@@ -46,7 +46,7 @@ import { SecurityStack } from '../lib/stacks/security-stack';
 import { TesterPipelineStack } from '../lib/stacks/tester-pipeline-stack';
 import { AcceleratorContext, AcceleratorEnvironment, AcceleratorResourcePrefixes } from './app-utils';
 import { ImportAseaResourcesStack } from '../lib/stacks/import-asea-resources-stack';
-import { AcceleratorAspects, PermissionsBoundaryAspect } from '../lib/accelerator-aspects';
+import { AcceleratorAspects, AseaLambdaRuntimeAspect, PermissionsBoundaryAspect } from '../lib/accelerator-aspects';
 import { ResourcePolicyEnforcementStack } from '../lib/stacks/resource-policy-enforcement-stack';
 import { DiagnosticsPackStack } from '../lib/stacks/diagnostics-pack-stack';
 import { AcceleratorToolkit } from '../lib/toolkit';
@@ -1430,6 +1430,7 @@ export async function importAseaResourceStack(
     }
     const resourceMappings = await Promise.all(importStackPromises);
     const saveResourceMappingPromises = [];
+    cdk.Aspects.of(app).add(new AseaLambdaRuntimeAspect());
     for (const mapping of resourceMappings) {
       saveResourceMappingPromises.push(mapping.saveLocalResourceFile());
       resourceMapping.push(...mapping.resourceMapping);

@@ -256,6 +256,53 @@ export class LambdaRuntimeAspect implements cdk.IAspect {
 }
 
 /**
+ * Aspect to override Lambda runtimes for all Node Versions in ASEA stacks.
+ *
+ * This aspect checks for Lambda functions created by the CDK
+ * and updates their runtime to a specified Node.js version.
+ *
+ * @implements {cdk.IAspect}
+ */
+export class AseaLambdaRuntimeAspect implements cdk.IAspect {
+  /**
+   * Visits a construct and its children, applying the aspect functionality.
+   *
+   * @param {IConstruct} node - The construct being visited.
+   * @returns {void}
+   *
+   * @remarks
+   * This method checks if the construct is a Lambda function resource created by the CDK. If so, it updates the runtime to the specified Node.js version.
+   *
+   * The runtime is only updated for functions that:
+   * 1. Are of type 'AWS::Lambda::Function'
+   * 2. Have a runtime that includes 'nodejs' or is an unresolved token
+   *    a. Because Fn::FindInMap is used to determine the runtime for custom resource functions, we need to take action on tokenized runtimes.
+   *
+   * @example
+   * ```typescript
+   * const app = new cdk.App();
+   * const stack = new cdk.Stack(app, 'MyStack');
+   * cdk.Aspects.of(stack).add(new LambdaRuntimeAspect());
+   * ```
+   */
+  visit(node: IConstruct): void {
+    if (node instanceof cdk.CfnResource) {
+      if (node.cfnResourceType === 'AWS::Lambda::Function') {
+        const cfnProps = (node as cdk.aws_lambda.CfnFunction)['_cfnProperties'];
+        const runtime = cfnProps['runtime']?.toString();
+        if (
+          runtime &&
+          // cdk.CustomResource creates a CFN map to lookup runtime based on region. This does not include `nodejs` so we need to take action when the value is a token
+          (runtime.includes('nodejs') || cdk.Token.isUnresolved(runtime))
+        ) {
+          node.addPropertyOverride('Runtime', `nodejs${getNodeVersion()}.x`);
+        }
+      }
+    }
+  }
+}
+
+/**
  * Existing Role Overrides
  */
 class ExistingRoleOverrides implements cdk.IAspect {

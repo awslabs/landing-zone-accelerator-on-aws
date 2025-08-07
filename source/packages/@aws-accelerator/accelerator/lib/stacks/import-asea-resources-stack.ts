@@ -37,6 +37,7 @@ import { TgwCrossAccountResources } from '../asea-resources/tgw-cross-account-re
 import { TransitGatewayRoutes } from '../asea-resources/transit-gateway-routes';
 import { VpcEndpoints } from '../asea-resources/vpc-endpoints';
 import { SsmInventory } from '../asea-resources/ssm-inventory';
+import { Lambda } from '../asea-resources/lambda';
 import { createLogger } from '@aws-accelerator/utils/lib/logger';
 import { FirewallResources } from '../asea-resources/firewall-resources';
 import { Route53ResolverQueryLogging } from '../asea-resources/route-53-query-logging';
@@ -134,7 +135,7 @@ export class ImportAseaResourcesStack extends NetworkStack {
     new Route53ResolverQueryLoggingAssociation(this, props);
     new Route53ResolverEndpoint(this, props);
     new ApplicationLoadBalancerResources(this, props);
-
+    new Lambda(this, props);
     this.addSsmParameter({
       logicalId: `SSMParamLZAUpgrade`,
       parameterName: `/${this.acceleratorPrefix}/LZAUpgrade/${cdk.Stack.of(this).stackName}`,
