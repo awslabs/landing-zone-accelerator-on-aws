@@ -7,6 +7,10 @@ exports[`SecurityStack Construct(SecurityStack):  Snapshot Test 1`] = `
       "Default": "/accelerator/kms/cloudwatch/key-arn",
       "Type": "AWS::SSM::Parameter::Value<String>",
     },
+    "SsmParameterValueacceleratorpreparestackconfigTablearnC96584B6F00A464EAD1953AFF4B05118Parameter": {
+      "Default": "/accelerator/prepare-stack/configTable/arn",
+      "Type": "AWS::SSM::Parameter::Value<String>",
+    },
   },
   "Resources": {
     "AWSAcceleratormetadatacollectionLogGroup76F89C67": {
@@ -75,6 +79,7 @@ exports[`SecurityStack Construct(SecurityStack):  Snapshot Test 1`] = `
             "CONFIG_REPOSITORY_LOCATION": "codecommit",
             "CONFIG_REPOSITORY_NAME": "aws-accelerator-config",
             "CROSS_ACCOUNT_ROLE": "AWSControlTowerExecution",
+            "DDB_CONFIG_TABLE_SSM_PARAMETER_PATH": "/accelerator/prepare-stack/configTable/name",
             "ELB_LOGGING_BUCKET": "existing-elb-logs-bucket-111111111111-us-east-1",
             "GLOBAL_REGION": "us-east-1",
             "LOG_ACCOUNT_ID": "333333333333",
@@ -206,6 +211,7 @@ exports[`SecurityStack Construct(SecurityStack):  Snapshot Test 1`] = `
               "Action": [
                 "codepipeline:GetPipelineExecution",
                 "codepipeline:ListPipelineExecutions",
+                "codepipeline:ListActionExecutions",
                 "codecommit:GetFolder",
                 "codecommit:GetFile",
                 "kms:DescribeKey",
@@ -217,13 +223,6 @@ exports[`SecurityStack Construct(SecurityStack):  Snapshot Test 1`] = `
                 "logs:CreateLogGroup",
                 "logs:CreateLogStream",
                 "logs:PutLogEvents",
-                "organizations:DescribeOrganizationalUnit",
-                "organizations:DescribeAccount",
-                "organizations:ListAccounts",
-                "organizations:ListChildren",
-                "organizations:ListOrganizationalUnitsForParent",
-                "organizations:ListParents",
-                "organizations:ListRoots",
                 "ssm:GetParameter",
                 "sts:AssumeRole",
               ],
@@ -296,6 +295,13 @@ exports[`SecurityStack Construct(SecurityStack):  Snapshot Test 1`] = `
                   ],
                 },
               ],
+            },
+            {
+              "Action": "dynamodb:Scan",
+              "Effect": "Allow",
+              "Resource": {
+                "Ref": "SsmParameterValueacceleratorpreparestackconfigTablearnC96584B6F00A464EAD1953AFF4B05118Parameter",
+              },
             },
           ],
           "Version": "2012-10-17",
@@ -1365,6 +1371,10 @@ exports[`delegatedAdminStack Construct(SecurityStack):  Snapshot Test 1`] = `
       "Default": "/accelerator/kms/key1/key-arn",
       "Type": "AWS::SSM::Parameter::Value<String>",
     },
+    "SsmParameterValueacceleratorpreparestackconfigTablearnC96584B6F00A464EAD1953AFF4B05118Parameter": {
+      "Default": "/accelerator/prepare-stack/configTable/arn",
+      "Type": "AWS::SSM::Parameter::Value<String>",
+    },
   },
   "Resources": {
     "AWSAcceleratormetadatacollectionLogGroup76F89C67": {
@@ -1433,6 +1443,7 @@ exports[`delegatedAdminStack Construct(SecurityStack):  Snapshot Test 1`] = `
             "CONFIG_REPOSITORY_LOCATION": "codecommit",
             "CONFIG_REPOSITORY_NAME": "aws-accelerator-config",
             "CROSS_ACCOUNT_ROLE": "AWSControlTowerExecution",
+            "DDB_CONFIG_TABLE_SSM_PARAMETER_PATH": "/accelerator/prepare-stack/configTable/name",
             "ELB_LOGGING_BUCKET": "aws-accelerator-elb-access-logs-333333333333-us-east-1",
             "GLOBAL_REGION": "us-east-1",
             "LOG_ACCOUNT_ID": "333333333333",
@@ -1564,6 +1575,7 @@ exports[`delegatedAdminStack Construct(SecurityStack):  Snapshot Test 1`] = `
               "Action": [
                 "codepipeline:GetPipelineExecution",
                 "codepipeline:ListPipelineExecutions",
+                "codepipeline:ListActionExecutions",
                 "codecommit:GetFolder",
                 "codecommit:GetFile",
                 "kms:DescribeKey",
@@ -1575,13 +1587,6 @@ exports[`delegatedAdminStack Construct(SecurityStack):  Snapshot Test 1`] = `
                 "logs:CreateLogGroup",
                 "logs:CreateLogStream",
                 "logs:PutLogEvents",
-                "organizations:DescribeOrganizationalUnit",
-                "organizations:DescribeAccount",
-                "organizations:ListAccounts",
-                "organizations:ListChildren",
-                "organizations:ListOrganizationalUnitsForParent",
-                "organizations:ListParents",
-                "organizations:ListRoots",
                 "ssm:GetParameter",
                 "sts:AssumeRole",
               ],
@@ -1654,6 +1659,13 @@ exports[`delegatedAdminStack Construct(SecurityStack):  Snapshot Test 1`] = `
                   ],
                 },
               ],
+            },
+            {
+              "Action": "dynamodb:Scan",
+              "Effect": "Allow",
+              "Resource": {
+                "Ref": "SsmParameterValueacceleratorpreparestackconfigTablearnC96584B6F00A464EAD1953AFF4B05118Parameter",
+              },
             },
           ],
           "Version": "2012-10-17",

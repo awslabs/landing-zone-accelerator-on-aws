@@ -14,6 +14,8 @@
 import { throttlingBackOff } from '@aws-accelerator/utils/lib/throttle';
 import { CloudFormationCustomResourceEvent } from '@aws-accelerator/utils/lib/common-types';
 import { setRetryStrategy } from '@aws-accelerator/utils/lib/common-functions';
+import { DynamoDBClient, ScanCommand, ScanCommandOutput } from '@aws-sdk/client-dynamodb';
+import { unmarshall } from '@aws-sdk/util-dynamodb';
 import {
   CodeCommitClient,
   File,
@@ -41,15 +43,41 @@ import {
 import { AssumeRoleCommand, Credentials, STSClient } from '@aws-sdk/client-sts';
 import { KMSClient, DescribeKeyCommand, ListAliasesCommand } from '@aws-sdk/client-kms';
 import { SSMClient, GetParameterCommand } from '@aws-sdk/client-ssm';
-import {
-  DescribeAccountCommand,
-  OrganizationsClient,
-  ListChildrenCommand,
-  ListRootsCommand,
-  DescribeOrganizationalUnitCommand,
-} from '@aws-sdk/client-organizations';
 import AdmZip from 'adm-zip';
 import * as fs from 'fs';
+
+type LZADDBConfigItemUnmarshaled = {
+  [key: string]: string;
+};
+
+type LZADDBConfigItem = {
+  dataType: string;
+  acceleratorKey: string;
+  awsKey: string;
+  commitId: string;
+  ouName?: string;
+  dataBag: {
+    name?: string;
+    description?: string;
+    email?: string;
+    organizationalUnit?: string;
+  };
+
+  orgInfo: {
+    email: string;
+    accountId: string;
+    status: string;
+    orgsApiResponse: {
+      Id: string;
+      Arn: string;
+      Email: string;
+      Name: string;
+      Status?: string;
+      JoinedMethod?: string;
+      JoinedTimestamp?: string;
+    };
+  };
+};
 
 /**
  * get-accelerator-metadata - lambda handler
@@ -66,7 +94,6 @@ export async function handler(_event: CloudFormationCustomResourceEvent): Promis
     }
   | undefined
 > {
-  const globalRegion = process.env['GLOBAL_REGION'];
   const solutionId = process.env['SOLUTION_ID'];
   const acceleratorPrefix = process.env['ACCELERATOR_PREFIX']!;
   const crossAccountRole = process.env['CROSS_ACCOUNT_ROLE']!;
@@ -74,6 +101,7 @@ export async function handler(_event: CloudFormationCustomResourceEvent): Promis
   const partition = process.env['PARTITION']!;
   const repositoryName = process.env['CONFIG_REPOSITORY_NAME']!;
   const ssmAcceleratorVersionPath = process.env['ACCELERATOR_VERSION_SSM_PATH']!;
+  const acceleratorConfigTable = process.env['DDB_CONFIG_TABLE_SSM_PARAMETER_PATH']!;
   const organizationId = process.env['ORGANIZATION_ID']!;
   const centralLoggingBucket = process.env['CENTRAL_LOG_BUCKET']!;
   const elbLogBucket = process.env['ELB_LOGGING_BUCKET']!;
@@ -85,12 +113,8 @@ export async function handler(_event: CloudFormationCustomResourceEvent): Promis
 
   const codeCommitClient = new CodeCommitClient({ customUserAgent: solutionId, retryStrategy: setRetryStrategy() });
   const s3Client = new S3Client({ customUserAgent: solutionId, retryStrategy: setRetryStrategy() });
+  const ddbClient = new DynamoDBClient({ customUserAgent: solutionId, retryStrategy: setRetryStrategy() });
   const ssmClient = new SSMClient({ customUserAgent: solutionId, retryStrategy: setRetryStrategy() });
-  const organizationsClient = new OrganizationsClient({
-    customUserAgent: solutionId,
-    region: globalRegion,
-    retryStrategy: setRetryStrategy(),
-  });
   const codePipelineClient = new CodePipelineClient({ customUserAgent: solutionId, retryStrategy: setRetryStrategy() });
   const stsClient = new STSClient({ customUserAgent: solutionId, retryStrategy: setRetryStrategy() });
   const assumeRoleCredentials = await assumeRole(stsClient, crossAccountRole, logAccountId, partition);
@@ -114,7 +138,7 @@ export async function handler(_event: CloudFormationCustomResourceEvent): Promis
     throw new Error('No successful Accelerator CodePipeline executions found. Exiting...');
   }
 
-  // This should returna list of all pipeline actions from the last successful pipeline run.
+  // This should return a list of all pipeline actions from the last successful pipeline run.
   const actionExecutions = await getLatestPipelineActionExecutions(
     codePipelineClient,
     pipelineName,
@@ -167,8 +191,15 @@ export async function handler(_event: CloudFormationCustomResourceEvent): Promis
     artifactObjectKey,
   });
   const version = await getSsmParameterValue(ssmClient, ssmAcceleratorVersionPath);
-  const ous = await getAllOusWithPaths(organizationsClient);
-  const accounts = await getAllOrgAccountsWithPaths(organizationsClient, ous);
+  const ddbConfigTable = await getSsmParameterValue(ssmClient, acceleratorConfigTable);
+  const ddbItems = await scanDDBTable(ddbClient, ddbConfigTable!);
+  const ddbOus = ddbItems.filter(item => item.dataType === 'organization');
+  const ddbAccounts = ddbItems.filter(
+    item => item.dataType === 'mandatoryAccount' || item.dataType === 'workloadAccount',
+  );
+  // const ous = await getAllOusWithPaths(organizationsClient);
+  const ous = getAllOusWithPathsFromDDB(ddbOus);
+  const accounts = getAllAccountsWithPathsFromDDB(ddbAccounts, ddbOus);
   const logBucket = await getBucketInfo(
     s3ClientLoggingAccount,
     kmsClientLoggingAccount,
@@ -185,19 +216,20 @@ export async function handler(_event: CloudFormationCustomResourceEvent): Promis
       logBucket,
       aesLogBucket,
       organizationId,
-      accounts,
       ous,
+      accounts,
     },
     null,
     4,
   );
-
+  console.log(`Removing old metadata information`);
   const bucketItems = await listBucketObjects(s3ClientLoggingAccount, metadataBucket);
 
   for (const item of bucketItems) {
     await s3ClientLoggingAccount.send(new DeleteObjectCommand({ Bucket: metadataBucket, Key: item.Key! }));
   }
-
+  console.log(`Removed old metadata information`);
+  console.log(`Writing new metadata information`);
   await s3Client.send(
     new PutObjectCommand({
       Bucket: metadataBucket,
@@ -217,7 +249,7 @@ export async function handler(_event: CloudFormationCustomResourceEvent): Promis
       }),
     );
   }
-
+  console.log(`Wrote new metadata information`);
   return;
 }
 
@@ -302,6 +334,7 @@ async function getAllConfigFiles(props: {
   artifactBucketName?: string;
   artifactObjectKey?: string;
 }) {
+  console.log(`Retrieving configuration files from ${props.configRepositoryLocation}`);
   if (props.configRepositoryLocation === 'codecommit') {
     return await getAllCodeCommitFiles(props);
   } else if (props.configRepositoryLocation === 's3') {
@@ -400,7 +433,7 @@ async function getAllS3Files(props: {
     }
   });
   fs.unlinkSync(tempFilePath);
-
+  console.log(`Retrieved configuration files from ${props.configBucketName}/${props.s3ConfigObjectKey}`);
   return files;
 }
 
@@ -427,147 +460,17 @@ async function getAllCodeCommitFiles(props: {
       files.push(file);
     }
   }
-
+  console.log(`Retrieved configuration files from ${props.repositoryName}`);
   return files;
 }
 
 async function getSsmParameterValue(ssmClient: SSMClient, parameterPath: string) {
+  console.log(`Retrieving parameter ${parameterPath}`);
   const getParamResponse = await throttlingBackOff(() =>
     ssmClient.send(new GetParameterCommand({ Name: parameterPath })),
   );
+  console.log(`Retrieved parameter ${parameterPath}`);
   return getParamResponse.Parameter?.Value;
-}
-
-async function listAllOuChildren(
-  organizationsClient: OrganizationsClient,
-  parentId: string,
-  childType: 'ORGANIZATIONAL_UNIT' | 'ACCOUNT',
-) {
-  const children = [];
-  let nextToken;
-  do {
-    const childrenResponse = await throttlingBackOff(() =>
-      organizationsClient.send(new ListChildrenCommand({ ChildType: childType, ParentId: parentId })),
-    );
-    nextToken = childrenResponse.NextToken;
-    if (childrenResponse.Children && childrenResponse.Children.length > 0) {
-      children.push(...childrenResponse.Children);
-    }
-  } while (nextToken);
-  return children.map(child => {
-    return {
-      id: child.Id!,
-      parentId: parentId,
-    };
-  });
-}
-
-function getOrgPath(
-  ous: {
-    id: string;
-    parentId: string;
-    arn: string;
-    name: string;
-  }[],
-  id: string,
-  path = '',
-): string {
-  const filteredOus = ous.filter(ou => {
-    return id === ou.id;
-  });
-
-  if (id.startsWith('r-')) {
-    return path.slice(0, -1);
-  } else {
-    path = `${filteredOus[0]!.name}/${path}`;
-  }
-
-  return getOrgPath(ous, filteredOus[0].parentId, path);
-}
-async function getAllOusWithPaths(organizationsClient: OrganizationsClient) {
-  const rootResponse = await throttlingBackOff(() => organizationsClient.send(new ListRootsCommand({})));
-  const ouIdLookups: { id: string; parentId: string }[] = [];
-  const ouIds: string[] = [];
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const ous: any[] = [];
-  if (rootResponse.Roots && rootResponse.Roots.length > 0) {
-    ouIds.push(rootResponse.Roots[0].Id!);
-    ouIdLookups.push({ id: rootResponse.Roots[0].Id!, parentId: '' });
-    ous.push({
-      id: rootResponse.Roots[0].Id!,
-      parentId: '',
-      arn: rootResponse.Roots[0].Arn!,
-      name: rootResponse.Roots[0].Name!,
-    });
-  }
-
-  while (ouIds.length > 0) {
-    const ouId = ouIds.pop()!;
-    const children = await listAllOuChildren(organizationsClient, ouId, 'ORGANIZATIONAL_UNIT');
-    const ids = children.map(child => child.id);
-    ouIds.push(...ids);
-    ouIdLookups.push(...children);
-  }
-
-  for (const ou of ouIdLookups) {
-    if (!ou.id.startsWith('r-')) {
-      const ouInfo = await throttlingBackOff(() =>
-        organizationsClient.send(new DescribeOrganizationalUnitCommand({ OrganizationalUnitId: ou.id })),
-      );
-      ous.push({
-        id: ou.id,
-        parentId: ou.parentId,
-        arn: ouInfo.OrganizationalUnit?.Arn,
-        name: ouInfo.OrganizationalUnit?.Name,
-      });
-    }
-  }
-  for (const ou of ous) {
-    if (ou.id.startsWith('r-')) {
-      ou['path'] = '/';
-    } else {
-      const path = getOrgPath(ous, ou.id);
-      ou['path'] = path;
-    }
-  }
-  return ous;
-}
-
-async function getAllOrgAccountsWithPaths(
-  organizationsClient: OrganizationsClient,
-  ous: {
-    id: string;
-    parentId: string;
-    arn: string;
-    name: string;
-    path: string;
-  }[],
-) {
-  const accounts = [];
-  const orgAccounts: { id: string; arn: string; name: string; parentId: string; path?: string }[] = [];
-  for (const ou of ous) {
-    const childAccounts = await listAllOuChildren(organizationsClient, ou.id, 'ACCOUNT');
-    accounts.push(...childAccounts);
-  }
-
-  for (const account of accounts) {
-    const accountInfo = await throttlingBackOff(() =>
-      organizationsClient.send(new DescribeAccountCommand({ AccountId: account.id })),
-    );
-    orgAccounts.push({
-      id: accountInfo.Account!.Id!,
-      arn: accountInfo.Account!.Arn!,
-      name: accountInfo.Account!.Name!,
-      parentId: account.parentId,
-    });
-  }
-
-  for (const account of orgAccounts) {
-    const path = getOrgPath([...ous, ...orgAccounts], account.id);
-    account['path'] = path;
-  }
-
-  return orgAccounts;
 }
 
 function findSuccessfulPipelineExecution(
@@ -583,13 +486,14 @@ function findSuccessfulPipelineExecution(
 }
 
 async function getLastSuccessfulPipelineExecution(codePipelineClient: CodePipelineClient, pipelineName: string) {
+  console.log(`Retrieving last successful pipeline execution for ${pipelineName}`);
   let lastSuccessfulExecution: PipelineExecutionSummary | undefined;
   const paginator = paginateListPipelineExecutions({ client: codePipelineClient }, { pipelineName });
 
   for await (const page of paginator) {
     lastSuccessfulExecution = findSuccessfulPipelineExecution(page) ?? lastSuccessfulExecution;
   }
-
+  console.log(`Retrieved last successful pipeline execution for ${pipelineName}`);
   return lastSuccessfulExecution;
 }
 
@@ -599,6 +503,7 @@ async function getBucketInfo(
   bucketName: string,
   type: 'LogBucket' | 'AesBucket',
 ) {
+  console.log(`Retrieving bucket info for ${bucketName}`);
   const bucketRegion = await throttlingBackOff(() =>
     s3client.send(new GetBucketLocationCommand({ Bucket: bucketName })),
   );
@@ -620,8 +525,6 @@ async function getBucketInfo(
     if (aliasResponse.Aliases && aliasResponse.Aliases.length > 0) {
       alias = aliasResponse.Aliases.pop()?.AliasName;
     }
-    console.log(keyInfo.KeyMetadata);
-    console.log(alias);
   }
   const logBucket: {
     type: 'LogBucket' | 'AesBucket';
@@ -650,7 +553,7 @@ async function getBucketInfo(
   if (alias) {
     logBucket.value['encryptionKeyName'] = alias;
   }
-
+  console.log(`Retrieved bucket info for ${bucketName}`);
   return logBucket;
 }
 async function assumeRole(
@@ -703,4 +606,73 @@ async function listBucketObjects(s3Client: S3Client, bucket: string) {
     }
   } while (nextToken);
   return bucketObjects;
+}
+
+async function scanDDBTable(ddbClient: DynamoDBClient, tableName: string) {
+  let lastEvaluatedKey;
+  const tableItems = [];
+  console.log(`Retrieving items from configuration table ${tableName}`);
+  do {
+    const scanResponse: ScanCommandOutput = await ddbClient.send(
+      new ScanCommand({
+        TableName: tableName,
+        ExclusiveStartKey: lastEvaluatedKey,
+      }),
+    );
+    if (scanResponse.Items) {
+      tableItems.push(...scanResponse.Items);
+    }
+    lastEvaluatedKey = scanResponse.LastEvaluatedKey;
+  } while (lastEvaluatedKey);
+  const unmarshaledItems: LZADDBConfigItemUnmarshaled[] = tableItems.map(item => {
+    return unmarshall(item);
+  });
+  console.log(`Retrieved items from configuration table ${tableName}`);
+  return createJSONObjectFromDDBConfigItems(unmarshaledItems);
+}
+
+function createJSONObjectFromDDBConfigItems(items: LZADDBConfigItemUnmarshaled[]) {
+  return items.map(item => {
+    const parsedItem: LZADDBConfigItem = {
+      acceleratorKey: item['acceleratorKey'],
+      ouName: item['ouName'],
+      dataBag: JSON.parse(item['dataBag'] ?? '{}'),
+      orgInfo: JSON.parse(item['orgInfo'] ?? '{}'),
+      dataType: item['dataType'],
+      awsKey: item['awsKey'],
+      commitId: item['commitId'],
+    };
+    return parsedItem;
+  });
+}
+
+function getAllOusWithPathsFromDDB(ddbOus: LZADDBConfigItem[]) {
+  return ddbOus.map(ddbOu => {
+    let path = ddbOu.acceleratorKey;
+    if (path === 'Root') {
+      path = '/';
+    }
+    return {
+      id: ddbOu.awsKey,
+      arn: ddbOu.orgInfo.orgsApiResponse.Arn,
+      name: ddbOu.orgInfo.orgsApiResponse.Name,
+      path: ddbOu.acceleratorKey,
+    };
+  });
+}
+
+function getAllAccountsWithPathsFromDDB(ddbAccounts: LZADDBConfigItem[], ddbOus: LZADDBConfigItem[]) {
+  console.log(ddbOus);
+  return ddbAccounts.map(ddbAccount => {
+    return {
+      id: ddbAccount.awsKey,
+      arn: ddbAccount.orgInfo.orgsApiResponse.Arn,
+      email: ddbAccount.orgInfo.orgsApiResponse.Email,
+      name: ddbAccount.orgInfo.orgsApiResponse.Name,
+      status: ddbAccount.orgInfo.orgsApiResponse.Status,
+      joinedMethod: ddbAccount.orgInfo.orgsApiResponse.JoinedMethod,
+      joinedTimestamp: ddbAccount.orgInfo.orgsApiResponse.JoinedTimestamp,
+      path: ddbAccount.ouName,
+    };
+  });
 }
