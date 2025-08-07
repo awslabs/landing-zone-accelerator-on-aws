@@ -18,6 +18,7 @@ import {
   CloudWatchLogsClient,
   DeleteSubscriptionFilterCommand,
   DescribeSubscriptionFiltersCommand,
+  Distribution,
   LogGroup,
   paginateDescribeLogGroups,
   PutRetentionPolicyCommand,
@@ -299,6 +300,7 @@ export async function setupSubscription(
           roleArn: logSubscriptionRoleArn,
           filterName: logGroupName,
           filterPattern: '',
+          distribution: Distribution.Random,
         }),
       ),
     );
