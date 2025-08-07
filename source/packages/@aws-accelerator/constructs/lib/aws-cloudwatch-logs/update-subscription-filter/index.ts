@@ -29,6 +29,7 @@ import {
   DeleteAccountPolicyCommand,
   LogGroupClass,
   ValidationException,
+  Distribution,
 } from '@aws-sdk/client-cloudwatch-logs';
 
 import { setRetryStrategy, wildcardMatch } from '@aws-accelerator/utils/lib/common-functions';
@@ -463,6 +464,7 @@ async function updateLogSubscription(
             roleArn: acceleratorLogSubscriptionRoleArn,
             filterName: logGroupName,
             filterPattern: '',
+            distribution: Distribution.Random,
           }),
         ),
       );
