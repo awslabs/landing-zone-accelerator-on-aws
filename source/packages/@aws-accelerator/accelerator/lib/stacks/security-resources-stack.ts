@@ -363,6 +363,7 @@ export class SecurityResourcesStack extends AcceleratorStack {
           metricName: metricItem.metricName,
           filterPattern: cdk.aws_logs.FilterPattern.literal(metricItem.filterPattern),
           metricValue: metricItem.metricValue,
+          defaultValue: metricItem.defaultValue,
         });
 
         if (this.accountTrailCloudWatchLogGroups.get(metricItem.logGroupName)) {
