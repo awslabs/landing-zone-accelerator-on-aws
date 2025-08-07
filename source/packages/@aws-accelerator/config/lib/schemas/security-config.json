@@ -1148,6 +1148,10 @@
       "additionalProperties": false,
       "description": "AWS CloudWatch Metric configuration",
       "properties": {
+        "defaultValue": {
+          "description": "The value to emit when a filter pattern does not match a log event.",
+          "type": "number"
+        },
         "filterName": {
           "$ref": "#/definitions/NonEmptyString",
           "description": "Metric filter name"

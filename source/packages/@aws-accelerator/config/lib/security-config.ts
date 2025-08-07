@@ -323,6 +323,7 @@ export class MetricConfig implements i.IMetricConfig {
   readonly metricName: string = '';
   readonly metricValue: string = '';
   readonly treatMissingData: string | undefined = undefined;
+  readonly defaultValue?: number | undefined = undefined;
 }
 
 export class MetricSetConfig implements i.IMetricSetConfig {
