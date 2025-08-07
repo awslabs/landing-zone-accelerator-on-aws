@@ -1988,6 +1988,10 @@ export interface IMetricConfig {
    * Sets how this alarm is to handle missing data points.
    */
   readonly treatMissingData?: t.NonEmptyString;
+  /**
+   * The value to emit when a filter pattern does not match a log event.
+   */
+  readonly defaultValue?: number;
 }
 
 /**
