@@ -474,6 +474,8 @@ export class SecurityStack extends AcceleratorStack {
       organizationId: this.organizationId ?? '',
       globalRegion: acceleratorProps.globalRegion,
       installerStackName: acceleratorProps.installerStackName,
+      accountOuConfigTableParameterPath: this.acceleratorResourceNames.parameters.configTableName,
+      accountOuConfigTableArnParameterPath: this.acceleratorResourceNames.parameters.configTableArn,
     });
   }
 }
