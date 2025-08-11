@@ -57,8 +57,8 @@ export async function getColumnFromConfigTable(
 ): Promise<string> {
   // Initialize DynamoDB client with optional credentials
   const clientOptions = credentials
-    ? { credentials, retryStratergy: setRetryStrategy() }
-    : { retryStratergy: setRetryStrategy() };
+    ? { credentials, retryStrategy: setRetryStrategy() }
+    : { retryStrategy: setRetryStrategy() };
 
   const client = new DynamoDBClient(clientOptions);
 
