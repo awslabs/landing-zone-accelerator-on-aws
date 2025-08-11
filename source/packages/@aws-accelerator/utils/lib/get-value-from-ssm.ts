@@ -45,8 +45,8 @@ export class SSMOperationError extends Error {
 export async function getSSMParameterValue(parameterName: string, credentials?: Credentials): Promise<string> {
   // Initialize SSM client with optional credentials
   const clientOptions = credentials
-    ? { credentials, retryStratergy: setRetryStrategy() }
-    : { retryStratergy: setRetryStrategy() };
+    ? { credentials, retryStrategy: setRetryStrategy() }
+    : { retryStrategy: setRetryStrategy() };
 
   const client = new SSMClient(clientOptions);
 
