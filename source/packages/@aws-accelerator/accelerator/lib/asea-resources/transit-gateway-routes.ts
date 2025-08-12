@@ -256,7 +256,7 @@ export class TransitGatewayRoutes extends AseaResource {
         );
         const routeItemVpcName = getAseaVpcName(routeItem.attachment.vpcName);
 
-        routeId = `${routeTableItem.name}-${routeItem.destinationCidrBlock}-${routeItemVpcName}-${routeItem.attachment.account}`;
+        routeId = `${routeTableItem.name}-${routeItem.destinationCidrBlock}-${routeItem.attachment.vpcName}-${routeItem.attachment.account}`;
         transitGatewayAttachmentId = this.getTgwAttachmentId(
           routeItemVpcName,
           routeItem.attachment.account,
