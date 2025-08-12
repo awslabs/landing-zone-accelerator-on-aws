@@ -1137,13 +1137,11 @@ export class NetworkAssociationsStack extends NetworkStack {
       throw new Error(`Configuration validation failed at runtime.`);
     }
     for (const routeTableItem of tgwAttachmentItem.routeTableAssociations ?? []) {
-      if (
-        this.isManagedByAsea(
-          AseaResourceType.TRANSIT_GATEWAY_ASSOCIATION,
-          `${owningAccount}/${tgwAttachmentItem.transitGateway.name}/${tgwAttachmentItem.name}/${routeTableItem}`,
-        )
-      )
+      const tgwAssociationLookupId = `${owningAccount}/${tgwAttachmentItem.transitGateway.name}/${tgwAttachmentItem.name}/${routeTableItem}`;
+      if (this.isManagedByAsea(AseaResourceType.TRANSIT_GATEWAY_ASSOCIATION, tgwAssociationLookupId)) {
+        this.logger.info(`TGW Association "${tgwAssociationLookupId}" is managed externally.`);
         continue;
+      }
       const associationsKey = `${tgwAttachmentItem.transitGateway.name}_${routeTableItem}`;
       let associationId: string;
       if (isNetworkType<VpcConfig>('IVpcConfig', vpcItem)) {
@@ -1237,13 +1235,11 @@ export class NetworkAssociationsStack extends NetworkStack {
       throw new Error(`Configuration validation failed at runtime.`);
     }
     for (const routeTableItem of tgwAttachmentItem.routeTablePropagations ?? []) {
-      if (
-        this.isManagedByAsea(
-          AseaResourceType.TRANSIT_GATEWAY_PROPAGATION,
-          `${owningAccount}/${tgwAttachmentItem.transitGateway.name}/${tgwAttachmentItem.name}/${routeTableItem}`,
-        )
-      )
+      const propagationLookupId = `${owningAccount}/${tgwAttachmentItem.transitGateway.name}/${tgwAttachmentItem.name}/${routeTableItem}`;
+      if (this.isManagedByAsea(AseaResourceType.TRANSIT_GATEWAY_PROPAGATION, propagationLookupId)) {
+        this.logger.info(`TGW Propagation "${propagationLookupId}" is managed externally.`);
         continue;
+      }
       const propagationsKey = `${tgwAttachmentItem.transitGateway.name}_${routeTableItem}`;
       let propagationId: string;
       if (isNetworkType('IVpcConfig', vpcItem)) {
@@ -2808,6 +2804,7 @@ export class NetworkAssociationsStack extends NetworkStack {
       }
 
       if (this.isManagedByAsea(AseaResourceType.TRANSIT_GATEWAY_ROUTE, routeId)) {
+        this.logger.info(`TGW Route Table ${routeId} already exists and is managed externally`);
         return;
       }
 
@@ -2840,6 +2837,7 @@ export class NetworkAssociationsStack extends NetworkStack {
       const transitGatewayAttachmentId = prefixListReferenceConfig.transitGatewayAttachmentId;
 
       if (this.isManagedByAsea(AseaResourceType.TRANSIT_GATEWAY_ROUTE, plRouteId)) {
+        this.logger.info(`TGW Route ${plRouteId} already exists and is managed externally`);
         return;
       }
 

@@ -49,7 +49,7 @@ export class TgwCrossAccountResources extends AseaResource {
     accountNames: string[],
     mapping: ASEAMappings,
   ) {
-    if (this.propagationResources.length === 0) return;
+    if (this.propagationResources.length === 0 && this.associationResources.length === 0) return;
     if (vpcItem.transitGatewayAttachments?.length === 0) {
       this.scope.addLogs(LogLevel.WARN, `TGW Attachment is removed from VPC "${vpcItem.name}" configuration`);
       return;
