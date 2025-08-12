@@ -247,7 +247,7 @@ export class VpcRouteEntriesBaseStack extends AcceleratorStack {
         }
       } else {
         this.logger.info(
-          `Route entry ${routeTableEntryItem.name} for route table ${routeTableItem.name} in vpc ${this.vpcDetails.name} exists in v2 stack skipping creation in v2 stack.`,
+          `Route entry ${routeTableEntryItem.name} for route table ${routeTableItem.name} in vpc ${this.vpcDetails.name} exists in v1 stack skipping creation in v2 stack.`,
         );
       }
     }
