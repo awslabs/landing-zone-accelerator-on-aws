@@ -862,6 +862,17 @@ export abstract class NetworkStack extends AcceleratorStack {
 
     for (const vpcItem of vpcResources) {
       for (const securityGroupItem of vpcItem.securityGroups ?? []) {
+        if (
+          !this.lzaLookup.resourceExists({
+            resourceType: LZAResourceLookupType.SECURITY_GROUP,
+            lookupValues: {
+              vpcName: vpcItem.name,
+              securityGroupName: securityGroupItem.name,
+            },
+          })
+        ) {
+          continue;
+        }
         this.logger.info(`Processing rules for ${securityGroupItem.name} in VPC ${vpcItem.name}`);
 
         // Process configured rules
@@ -1075,16 +1086,7 @@ export abstract class NetworkStack extends AcceleratorStack {
         );
       }
     }
-    if (
-      !securityGroup &&
-      this.lzaLookup.resourceExists({
-        resourceType: LZAResourceLookupType.SECURITY_GROUP,
-        lookupValues: {
-          vpcName: vpcItem.name,
-          securityGroupName: securityGroupItem.name,
-        },
-      })
-    ) {
+    if (!securityGroup) {
       securityGroup = new SecurityGroup(
         this,
         pascalCase(`${vpcItem.name}Vpc`) + pascalCase(`${securityGroupItem.name}Sg`),

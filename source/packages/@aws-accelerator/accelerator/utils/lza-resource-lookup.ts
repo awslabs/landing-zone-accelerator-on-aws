@@ -116,6 +116,9 @@ export class LZAResourceLookup {
     if (!this.enableV2Stacks) {
       return true;
     }
+    if (!this.templateExists(this.cfnTemplate)) {
+      return false;
+    }
     if (this.resourceManagedByAsea(resourceProperties)) {
       return true;
     }
