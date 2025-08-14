@@ -292,7 +292,7 @@ function runValidators(
   // IAM config validator
   if (accountsConfig && globalConfig && iamConfig && networkConfig && organizationConfig && securityConfig) {
     try {
-      new IamConfigValidator(
+      const configValidator = new IamConfigValidator(
         iamConfig,
         accountsConfig,
         networkConfig,
@@ -300,6 +300,7 @@ function runValidators(
         securityConfig,
         configDirPath,
       );
+      configValidator.validate();
     } catch (e) {
       configErrors.push(e);
     }
