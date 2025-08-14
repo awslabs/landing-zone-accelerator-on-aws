@@ -23,29 +23,14 @@ import { SecurityConfig } from '../../../lib/security-config';
 const configDir = './test/validation/global-config/regional-deploy/config';
 const accountsConfig = AccountsConfig.load(configDir);
 const replacementsConfig = ReplacementsConfig.load(configDir, accountsConfig);
-const iamConfig = IamConfig.load(configDir, replacementsConfig);
 const organizationConfig = OrganizationConfig.load(configDir, replacementsConfig);
 const securityConfig = SecurityConfig.load(configDir, replacementsConfig);
 const networkConfig = NetworkConfig.load(configDir, replacementsConfig);
-const validator = new IamConfigValidator(
-  iamConfig,
-  accountsConfig,
-  networkConfig,
-  organizationConfig,
-  securityConfig,
-  configDir,
-);
 
 describe('validateRoleNames', () => {
-  let errors: string[];
-
-  beforeEach(() => {
-    errors = [];
-  });
-
   // Test case 1: No duplicate role names
   test('should not add errors when there are no duplicate role names', () => {
-    const values: IamConfig = {
+    const iamConfig: IamConfig = {
       roleSets: [
         {
           roles: [
@@ -110,14 +95,22 @@ describe('validateRoleNames', () => {
     const accountsConfig: AccountsConfig = {
       accountNames: ['account1', 'account2'],
     } as unknown as AccountsConfig;
+    const validator = new IamConfigValidator(
+      iamConfig,
+      accountsConfig,
+      networkConfig,
+      organizationConfig,
+      securityConfig,
+      configDir,
+    );
 
-    validator['validateRoleNames'](values, accountsConfig, errors);
+    const errors = validator['validateRoleNames']();
     expect(errors).toHaveLength(0);
   });
 
   // Test case 2: Duplicate role names in different accounts (valid case)
   test('should not add errors when duplicate role names are in different accounts', () => {
-    const values: IamConfig = {
+    const iamConfig: IamConfig = {
       roleSets: [
         {
           roles: [
@@ -182,14 +175,22 @@ describe('validateRoleNames', () => {
     const accountsConfig: AccountsConfig = {
       accountNames: ['account1', 'account2'],
     } as unknown as AccountsConfig;
+    const validator = new IamConfigValidator(
+      iamConfig,
+      accountsConfig,
+      networkConfig,
+      organizationConfig,
+      securityConfig,
+      configDir,
+    );
 
-    validator['validateRoleNames'](values, accountsConfig, errors);
+    const errors = validator['validateRoleNames']();
     expect(errors).toHaveLength(0);
   });
 
   // Test case 3: Duplicate role names in same account (invalid case)
   test('should add error when duplicate role names exist in the same account', () => {
-    const values: IamConfig = {
+    const iamConfig: IamConfig = {
       roleSets: [
         {
           roles: [
@@ -255,7 +256,16 @@ describe('validateRoleNames', () => {
       accountNames: ['account1'],
     } as unknown as AccountsConfig;
 
-    validator['validateRoleNames'](values, accountsConfig, errors);
+    const validator = new IamConfigValidator(
+      iamConfig,
+      accountsConfig,
+      networkConfig,
+      organizationConfig,
+      securityConfig,
+      configDir,
+    );
+
+    const errors = validator['validateRoleNames']();
     expect(errors).toHaveLength(1);
     expect(errors[0]).toBe(
       'Duplicate role names defined. Role names must be unique in each AWS account. Role name: AdminRole',
@@ -264,7 +274,7 @@ describe('validateRoleNames', () => {
 
   // Test case 4: Empty roleSets
   test('should handle empty roleSets without errors', () => {
-    const values: IamConfig = {
+    const iamConfig: IamConfig = {
       roleSets: [],
       providers: [],
       policySets: [],
@@ -293,13 +303,22 @@ describe('validateRoleNames', () => {
       accountNames: ['account1'],
     } as unknown as AccountsConfig;
 
-    validator['validateRoleNames'](values, accountsConfig, errors);
+    const validator = new IamConfigValidator(
+      iamConfig,
+      accountsConfig,
+      networkConfig,
+      organizationConfig,
+      securityConfig,
+      configDir,
+    );
+
+    const errors = validator['validateRoleNames']();
     expect(errors).toHaveLength(0);
   });
 
   // Test case 5: Multiple roles in roleSet
   test('should handle multiple roles in roleSet correctly', () => {
-    const values: IamConfig = {
+    const iamConfig: IamConfig = {
       roleSets: [
         {
           roles: [
@@ -379,7 +398,16 @@ describe('validateRoleNames', () => {
       accountNames: ['account1'],
     } as unknown as AccountsConfig;
 
-    validator['validateRoleNames'](values, accountsConfig, errors);
+    const validator = new IamConfigValidator(
+      iamConfig,
+      accountsConfig,
+      networkConfig,
+      organizationConfig,
+      securityConfig,
+      configDir,
+    );
+
+    const errors = validator['validateRoleNames']();
     expect(errors).toHaveLength(1);
     expect(errors[0]).toContain('Role2');
   });

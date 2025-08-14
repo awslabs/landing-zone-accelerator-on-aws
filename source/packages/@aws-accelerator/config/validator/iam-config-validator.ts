@@ -36,6 +36,14 @@ type VpcSubnetListsType = {
  * Validates iam configuration
  */
 export class IamConfigValidator {
+  private readonly iamConfig: IamConfig;
+  private readonly accountsConfig: AccountsConfig;
+  private readonly networkConfig: NetworkConfig;
+  private readonly organizationConfig: OrganizationConfig;
+  private readonly securityConfig: SecurityConfig;
+  private readonly configDir: string;
+  private readonly logger = createLogger(['iam-config-validator']);
+
   constructor(
     values: IamConfig,
     accountsConfig: AccountsConfig,
@@ -44,30 +52,41 @@ export class IamConfigValidator {
     securityConfig: SecurityConfig,
     configDir: string,
   ) {
+    this.iamConfig = values;
+    this.accountsConfig = accountsConfig;
+    this.networkConfig = networkConfig;
+    this.organizationConfig = organizationConfig;
+    this.securityConfig = securityConfig;
+    this.configDir = configDir;
+  }
+
+  /**
+   * Main validation function that orchestrates all IAM configuration validations
+   */
+  public validate(): void {
     const ouIdNames: string[] = ['Root'];
     const keyNames: string[] = [];
 
     const errors: string[] = [];
-    const logger = createLogger(['iam-config-validator']);
 
-    logger.info(`${IamConfig.FILENAME} file validation started`);
+    this.logger.info(`${IamConfig.FILENAME} file validation started`);
 
     //
     // Get list of OU ID names from organization config file
-    ouIdNames.push(...this.getOuIdNames(organizationConfig));
+    ouIdNames.push(...this.getOuIdNames(this.organizationConfig));
 
     //
     // Get list of Account names from account config file
-    const accountNames = this.getAccountNames(accountsConfig);
+    const accountNames = this.getAccountNames(this.accountsConfig);
 
     //
     // Get list of Kms key names from security config file
-    this.getKmsKeyNames(keyNames, securityConfig);
+    this.getKmsKeyNames(keyNames, this.securityConfig);
 
     //
     // Get Vpc and subnet lists
     //
-    const vpcSubnetLists = this.getVpcSubnetLists(networkConfig);
+    const vpcSubnetLists = this.getVpcSubnetLists(this.networkConfig);
 
     //
     // Start Validation
@@ -75,28 +94,30 @@ export class IamConfigValidator {
     //
     // Validate IAM policies
     //
-    this.validatePolicies(configDir, values, errors);
+    errors.push(...this.validatePolicies());
     //
     // Validate IAM roles
     //
-    this.validateRoles(values, accountsConfig, errors);
+    errors.push(...this.validateRoles());
 
     // Validate target OU names
-    this.validateDeploymentTargetOUs(values, ouIdNames, errors);
+    errors.push(...this.validateDeploymentTargetOUs(ouIdNames));
 
     // Validate target account names
-    this.validateDeploymentTargetAccountNames(values, accountNames, errors);
+    errors.push(...this.validateDeploymentTargetAccountNames(accountNames));
 
     // Validate Identity Center Object
-    this.validateIdentityCenter(values, accountsConfig, errors);
+    errors.push(...this.validateIdentityCenter());
 
     //
     // Validate IAM principal assignments for roles
     //
-    this.validateIamPolicyTargets(values, accountsConfig, errors);
+    errors.push(...this.validateIamPolicyTargets());
 
     // Validate Managed active directory
-    new ManagedActiveDirectoryValidator(values, vpcSubnetLists, ouIdNames, accountNames, errors);
+    const madErrors: string[] = [];
+    new ManagedActiveDirectoryValidator(this.iamConfig, vpcSubnetLists, ouIdNames, accountNames, madErrors);
+    errors.push(...madErrors);
 
     if (errors.length) {
       throw new Error(`${IamConfig.FILENAME} has ${errors.length} issues:\n${errors.join('\n')}`);
@@ -105,8 +126,8 @@ export class IamConfigValidator {
 
   /**
    * Prepare list of OU ids from organization config file
-   * @param organizationConfig
-   * @returns
+   * @param organizationConfig - Organization configuration
+   * @returns Array of organizational unit names
    */
   private getOuIdNames(organizationConfig: OrganizationConfig): string[] {
     const ouIdNames: string[] = [];
@@ -118,8 +139,8 @@ export class IamConfigValidator {
 
   /**
    * Prepare list of Account names from account config file
-   * @param accountsConfig
-   * @returns
+   * @param accountsConfig - Accounts configuration
+   * @returns Array of account names
    */
   private getAccountNames(accountsConfig: AccountsConfig): string[] {
     const accountNames: string[] = [];
@@ -131,7 +152,8 @@ export class IamConfigValidator {
 
   /**
    * Prepare list of kms key names from security config file
-   * @param configDir
+   * @param keyNames - Array to populate with key names
+   * @param securityConfig - Security configuration
    */
   private getKmsKeyNames(keyNames: string[], securityConfig: SecurityConfig) {
     const keySets = securityConfig.keyManagementService?.keySets;
@@ -145,8 +167,8 @@ export class IamConfigValidator {
 
   /**
    * Function to create vpc and subnet lists
-   * @param networkConfig
-   * @returns
+   * @param networkConfig - Network configuration
+   * @returns Array of VPC subnet information
    */
   private getVpcSubnetLists(networkConfig: NetworkConfig): VpcSubnetListsType[] {
     const vpcSubnetLists: VpcSubnetListsType[] = [];
@@ -165,51 +187,51 @@ export class IamConfigValidator {
 
   /**
    * Validate IAM policies
-   * @param configDir
-   * @param values
-   * @param errors
+   * @returns Array of validation errors
    */
-  private validatePolicies(configDir: string, values: IamConfig, errors: string[]) {
+  private validatePolicies(): string[] {
+    const errors: string[] = [];
     //
     // Validate policy file existence
     //
-    this.validatePolicyFileExists(configDir, values, errors);
+    errors.push(...this.validatePolicyFileExists());
     //
     // Validate policy names
     //
-    this.validatePolicyNames(values, errors);
+    errors.push(...this.validatePolicyNames());
+    return errors;
   }
 
   /**
    * Validate policy file existence
-   * @param configDir
-   * @param values
-   * @returns
+   * @returns Array of validation errors
    */
-  private validatePolicyFileExists(configDir: string, values: IIamConfig, errors: string[]) {
+  private validatePolicyFileExists(): string[] {
+    const errors: string[] = [];
     const policies: { name: string; policyFile: string }[] = [];
-    for (const policySet of values.policySets ?? []) {
+    for (const policySet of this.iamConfig.policySets ?? []) {
       for (const policy of policySet.policies) {
         policies.push({ name: policy.name, policyFile: policy.policy });
       }
     }
 
     for (const policy of policies) {
-      if (!fs.existsSync(path.join(configDir, policy.policyFile))) {
+      if (!fs.existsSync(path.join(this.configDir, policy.policyFile))) {
         errors.push(`Policy definition file ${policy.policyFile} not found, for ${policy.name} !!!`);
       }
     }
+    return errors;
   }
 
   /**
    * Checks policy names for duplicate values
-   * @param values
-   * @param errors
+   * @returns Array of validation errors
    */
-  private validatePolicyNames(values: IamConfig, errors: string[]) {
+  private validatePolicyNames(): string[] {
+    const errors: string[] = [];
     const policyNames: string[] = [];
 
-    values.policySets?.forEach(policySet => {
+    this.iamConfig.policySets?.forEach(policySet => {
       policySet.policies?.forEach(policy => {
         policyNames.push(policy.name);
       });
@@ -219,33 +241,33 @@ export class IamConfigValidator {
     if (hasDuplicates(policyNames)) {
       errors.push(`Duplicate policy names defined. Policy names must be unique. Policy names defined: ${policyNames}`);
     }
+    return errors;
   }
 
   /**
    * Validate IAM roles
-   * @param values
-   * @param errors
+   * @returns Array of validation errors
    */
-  private validateRoles(values: IamConfig, accountsConfig: AccountsConfig, errors: string[]) {
+  private validateRoles(): string[] {
     //
     // Validate role names
     //
-    this.validateRoleNames(values, accountsConfig, errors);
+    return this.validateRoleNames();
   }
 
   /**
    * Checks role names for duplicate values
-   * @param values
-   * @param errors
+   * @returns Array of validation errors
    */
-  public validateRoleNames(values: IamConfig, accountsConfig: AccountsConfig, errors: string[]) {
+  public validateRoleNames(): string[] {
+    const errors: string[] = [];
     // For each account, maintain a set of role names
     const accountRoleMap = new Map<string, Set<string>>();
 
-    values.roleSets?.forEach(roleSet => {
+    this.iamConfig.roleSets?.forEach(roleSet => {
       // Get all account names for this roleSet's deployment targets
       const targetAccounts = CommonValidatorFunctions.getAccountNamesFromDeploymentTargets(
-        accountsConfig,
+        this.accountsConfig,
         roleSet.deploymentTargets,
       );
 
@@ -269,52 +291,47 @@ export class IamConfigValidator {
         });
       });
     });
+    return errors;
   }
 
   /**
    * Function to validate managed policy availability for IAM resources
-   * @param values
-   * @param accountsConfig
-   * @param errors
+   * @returns Array of validation errors
    */
-  private validateIamPolicyTargets(values: IIamConfig, accountsConfig: AccountsConfig, errors: string[]) {
-    for (const policyItem of values.policySets ?? []) {
+  private validateIamPolicyTargets(): string[] {
+    const errors: string[] = [];
+    for (const policyItem of this.iamConfig.policySets ?? []) {
       // Validate IAM Users
-      this.validateIamUserTarget(values, accountsConfig, policyItem as PolicySetConfig, errors);
+      errors.push(...this.validateIamUserTarget(policyItem as PolicySetConfig));
 
       // Validate IAM Roles
-      this.validateIamRoleTarget(values, accountsConfig, policyItem as PolicySetConfig, errors);
+      errors.push(...this.validateIamRoleTarget(policyItem as PolicySetConfig));
 
       // Validate IAM Groups
-      this.validateIamGroupTarget(values, accountsConfig, policyItem as PolicySetConfig, errors);
+      errors.push(...this.validateIamGroupTarget(policyItem as PolicySetConfig));
     }
+    return errors;
   }
 
   /**
    * Function to validate managed policy availability for IAM users
-   * @param values
-   * @param accountsConfig
-   * @param policyItem PolicySetConfig
-   * @param errors
+   * @param policyItem - Policy set configuration
+   * @returns Array of validation errors
    */
-  private validateIamUserTarget(
-    values: IIamConfig,
-    accountsConfig: AccountsConfig,
-    policyItem: PolicySetConfig,
-    errors: string[],
-  ) {
+  private validateIamUserTarget(policyItem: PolicySetConfig): string[] {
+    const errors: string[] = [];
     const invalidIamUserTargets: string[] = [];
-    for (const iamItem of values.userSets ?? []) {
+    for (const iamItem of this.iamConfig.userSets ?? []) {
       for (const userItem of iamItem.users) {
         if (userItem.boundaryPolicy) {
           policyItem.policies.find(item => {
             if (userItem.boundaryPolicy === item.name) {
               const userDeploymentTargetSets = CommonValidatorFunctions.getAccountNamesFromDeploymentTargets(
-                accountsConfig,
+                this.accountsConfig,
                 iamItem.deploymentTargets as DeploymentTargets,
               );
               const policyTargets = CommonValidatorFunctions.getAccountNamesFromDeploymentTargets(
-                accountsConfig,
+                this.accountsConfig,
                 policyItem.deploymentTargets as DeploymentTargets,
               );
               // Check the policies and validate that they're deployment is available for respective user boundary-policy configuration.
@@ -337,33 +354,28 @@ export class IamConfigValidator {
         )} reference policies that are not available in the target accounts.`,
       );
     }
+    return errors;
   }
 
   /**
    * Function to validate managed policy availability for IAM Roles
-   * @param values
-   * @param accountsConfig
-   * @param policyItem PolicySetConfig
-   * @param errors
+   * @param policyItem - Policy set configuration
+   * @returns Array of validation errors
    */
-  private validateIamRoleTarget(
-    values: IIamConfig,
-    accountsConfig: AccountsConfig,
-    policyItem: PolicySetConfig,
-    errors: string[],
-  ) {
+  private validateIamRoleTarget(policyItem: PolicySetConfig): string[] {
+    const errors: string[] = [];
     const invalidIamRoleTargets: string[] = [];
-    for (const iamItem of values.roleSets ?? []) {
+    for (const iamItem of this.iamConfig.roleSets ?? []) {
       for (const roleItem of iamItem.roles) {
         if (roleItem.boundaryPolicy) {
           policyItem.policies.find(item => {
             if (roleItem.boundaryPolicy === item.name) {
               const userDeploymentTargetSets = CommonValidatorFunctions.getAccountNamesFromDeploymentTargets(
-                accountsConfig,
+                this.accountsConfig,
                 iamItem.deploymentTargets as DeploymentTargets,
               );
               const policyTargets = CommonValidatorFunctions.getAccountNamesFromDeploymentTargets(
-                accountsConfig,
+                this.accountsConfig,
                 policyItem.deploymentTargets as DeploymentTargets,
               );
               // Check the boundary policy and validate that it's deployment is available for respective role boundary-policy configuration.
@@ -382,11 +394,11 @@ export class IamConfigValidator {
           policyItem.policies.find(item => {
             if (customerPolicy === item.name) {
               const userDeploymentTargetSets = CommonValidatorFunctions.getAccountNamesFromDeploymentTargets(
-                accountsConfig,
+                this.accountsConfig,
                 iamItem.deploymentTargets as DeploymentTargets,
               );
               const policyTargets = CommonValidatorFunctions.getAccountNamesFromDeploymentTargets(
-                accountsConfig,
+                this.accountsConfig,
                 policyItem.deploymentTargets as DeploymentTargets,
               );
               // Check the policies and validate that they're deployment is available for respective user boundary-policy configuration.
@@ -409,34 +421,29 @@ export class IamConfigValidator {
         )} reference policies that are not available in the target accounts.`,
       );
     }
+    return errors;
   }
 
   /**
    * Function to validate managed policy availability for IAM Groups
-   * @param values
-   * @param accountsConfig
-   * @param policyItem PolicySetConfig
-   * @param errors
+   * @param policyItem - Policy set configuration
+   * @returns Array of validation errors
    */
-  private validateIamGroupTarget(
-    values: IIamConfig,
-    accountsConfig: AccountsConfig,
-    policyItem: PolicySetConfig,
-    errors: string[],
-  ) {
+  private validateIamGroupTarget(policyItem: PolicySetConfig): string[] {
+    const errors: string[] = [];
     const invalidIamGroupTargets: string[] = [];
-    for (const iamItem of values.groupSets ?? []) {
+    for (const iamItem of this.iamConfig.groupSets ?? []) {
       for (const groupItem of iamItem.groups) {
         // Check the customer managed policies and validate that it's deployment is available for configurations..
         for (const customerPolicy of groupItem.policies?.customerManaged ?? []) {
           policyItem.policies.find(item => {
             if (customerPolicy === item.name) {
               const userDeploymentTargetSets = CommonValidatorFunctions.getAccountNamesFromDeploymentTargets(
-                accountsConfig,
+                this.accountsConfig,
                 iamItem.deploymentTargets as DeploymentTargets,
               );
               const policyTargets = CommonValidatorFunctions.getAccountNamesFromDeploymentTargets(
-                accountsConfig,
+                this.accountsConfig,
                 policyItem.deploymentTargets as DeploymentTargets,
               );
               // Check the policies and validate that they're deployment is available for respective group policy configuration.
@@ -459,46 +466,55 @@ export class IamConfigValidator {
         )} reference policies that are not available in the target accounts.`,
       );
     }
+    return errors;
   }
 
   /**
    * Function to validate Identity Center object
-   * @param values
-   * @param errors
+   * @returns Array of validation errors
    */
-  private validateIdentityCenter(iamConfig: IIamConfig, accountsConfig: AccountsConfig, errors: string[]) {
+  private validateIdentityCenter(): string[] {
+    const errors: string[] = [];
     //
     //Function to validate PermissionSet and Assignment names are unique
     //
-    this.validateIdentityCenterPermissionSetNameForUniqueness(iamConfig, errors);
+    errors.push(...this.validateIdentityCenterPermissionSetNameForUniqueness());
 
     //
     // Validate Identity Center PermissionSet policies
     //
-    this.validateIdentityCenterPermissionSetPolicies(iamConfig, accountsConfig, errors);
+    errors.push(...this.validateIdentityCenterPermissionSetPolicies());
 
     //
     // Validate Identity Center PermissionSet names
     //
-    this.validateIdentityCenterPermissionSetInAssignments(iamConfig, errors);
+    errors.push(...this.validateIdentityCenterPermissionSetInAssignments());
 
     //
     // Validate PermissionSet permissions boundary
     //
-    this.validateIdentityCenterPermissionSetPermissionsBoundary(iamConfig, errors);
+    errors.push(...this.validateIdentityCenterPermissionSetPermissionsBoundary());
 
     //
     // Validate PermissionSet descriptions
     //
-    this.validateIdentityCenterPermissionSetPermissionsDescriptions(iamConfig, errors);
+    errors.push(...this.validateIdentityCenterPermissionSetPermissionsDescriptions());
+
+    //
+    // validate PermissionSet name length
+    //
+    errors.push(...this.validateIdentityCenterPermissionSetName());
+
+    return errors;
   }
 
   /**
    * Function to validate PermissionSet and Assignment names are unique
-   * @param values
+   * @returns Array of validation errors
    */
-  private validateIdentityCenterPermissionSetNameForUniqueness(iamConfig: IIamConfig, errors: string[]) {
-    const identityCenter = iamConfig.identityCenter;
+  private validateIdentityCenterPermissionSetNameForUniqueness(): string[] {
+    const errors: string[] = [];
+    const identityCenter = this.iamConfig.identityCenter;
     const assignmentNames = [...(identityCenter?.identityCenterAssignments ?? [])].map(item => item.name);
     const permissionSetNames = [...(identityCenter?.identityCenterPermissionSets ?? [])].map(item => item.name);
 
@@ -509,24 +525,37 @@ export class IamConfigValidator {
     if (hasDuplicates(permissionSetNames)) {
       errors.push(`Duplicate Identity Center Permission Set names defined [${permissionSetNames}].`);
     }
+
+    return errors;
+  }
+
+  private validateIdentityCenterPermissionSetName(): string[] {
+    const errors: string[] = [];
+    for (const permissionSet of this.iamConfig?.identityCenter?.identityCenterPermissionSets ?? []) {
+      if (permissionSet.name.length > 32) {
+        errors.push(`Identity Center Permission Set name exceeds limit of 32 characters [${permissionSet.name}].`);
+      }
+    }
+
+    return errors;
   }
 
   /**
    * Function to validate Identity Center Permission set names in assignment
-   * @param iamConfig
-   * @param errors
+   * @returns Array of validation errors
    */
-  private validateIdentityCenterPermissionSetInAssignments(iamConfig: IIamConfig, errors: string[]) {
-    if (iamConfig.identityCenter) {
-      const permissionSetNames = [...(iamConfig.identityCenter?.identityCenterPermissionSets ?? [])].map(
+  private validateIdentityCenterPermissionSetInAssignments(): string[] {
+    const errors: string[] = [];
+    if (this.iamConfig.identityCenter) {
+      const permissionSetNames = [...(this.iamConfig.identityCenter?.identityCenterPermissionSets ?? [])].map(
         item => item.name,
       );
 
-      const identityCenterAssignments = iamConfig.identityCenter.identityCenterAssignments ?? [];
+      const identityCenterAssignments = this.iamConfig.identityCenter.identityCenterAssignments ?? [];
       for (const identityCenterAssignment of identityCenterAssignments) {
         if (!permissionSetNames.includes(identityCenterAssignment.permissionSetName)) {
           errors.push(
-            `Identity center ${iamConfig.identityCenter.name} assignments ${
+            `Identity center ${this.iamConfig.identityCenter.name} assignments ${
               identityCenterAssignment.name
             } uses permission set ${
               identityCenterAssignment.permissionSetName
@@ -552,7 +581,7 @@ export class IamConfigValidator {
         if (hasDuplicates(groups)) {
           errors.push(
             `Duplicate groups in principals [${groups.join(',')}] defined in IdentityCenter ${
-              iamConfig.identityCenter.name
+              this.iamConfig.identityCenter.name
             } for assignment ${identityCenterAssignment.name} `,
           );
         }
@@ -561,49 +590,51 @@ export class IamConfigValidator {
         if (hasDuplicates(users)) {
           errors.push(
             `Duplicate users in principals [${users.join(',')}] defined in IdentityCenter ${
-              iamConfig.identityCenter.name
+              this.iamConfig.identityCenter.name
             } for assignment ${identityCenterAssignment.name} `,
           );
         }
       }
     }
+    return errors;
   }
 
   /**
    * Function to validate Identity Center Permission set permissionsBoundary
-   * @param iamConfig
-   * @param errors
+   * @returns Array of validation errors
    */
-  private validateIdentityCenterPermissionSetPermissionsBoundary(iamConfig: IIamConfig, errors: string[]) {
-    if (iamConfig.identityCenter) {
-      for (const identityCenterPermissionSet of iamConfig.identityCenter.identityCenterPermissionSets ?? []) {
+  private validateIdentityCenterPermissionSetPermissionsBoundary(): string[] {
+    const errors: string[] = [];
+    if (this.iamConfig.identityCenter) {
+      for (const identityCenterPermissionSet of this.iamConfig.identityCenter.identityCenterPermissionSets ?? []) {
         if (identityCenterPermissionSet.policies?.permissionsBoundary) {
           if (
             identityCenterPermissionSet.policies.permissionsBoundary.customerManagedPolicy &&
             identityCenterPermissionSet.policies.permissionsBoundary.awsManagedPolicyName
           ) {
             errors.push(
-              `Identity center ${iamConfig.identityCenter.name} permission set ${identityCenterPermissionSet.name} permissions boundary can either have customerManagedPolicy or managedPolicy, both the properties can't be defined.`,
+              `Identity center ${this.iamConfig.identityCenter.name} permission set ${identityCenterPermissionSet.name} permissions boundary can either have customerManagedPolicy or managedPolicy, both the properties can't be defined.`,
             );
           }
         }
       }
     }
+    return errors;
   }
 
   /**
-   * Function to validate Identity Center Permission set permissionsBoundary
-   * @param iamConfig
-   * @param errors
+   * Function to validate Identity Center Permission set descriptions
+   * @returns Array of validation errors
    */
-  private validateIdentityCenterPermissionSetPermissionsDescriptions(iamConfig: IIamConfig, errors: string[]) {
-    if (iamConfig.identityCenter) {
-      const identityCenter = iamConfig.identityCenter;
+  private validateIdentityCenterPermissionSetPermissionsDescriptions(): string[] {
+    const errors: string[] = [];
+    if (this.iamConfig.identityCenter) {
+      const identityCenter = this.iamConfig.identityCenter;
       for (const identityCenterPermissionSet of identityCenter.identityCenterPermissionSets ?? []) {
         if (identityCenterPermissionSet.description) {
           if (identityCenterPermissionSet.description.length > 700) {
             errors.push(
-              `Identity center ${iamConfig.identityCenter.name} permission set ${identityCenterPermissionSet.name} description is too long.`,
+              `Identity center ${this.iamConfig.identityCenter.name} permission set ${identityCenterPermissionSet.name} description is too long.`,
             );
           }
           /* eslint-disable no-control-regex */
@@ -614,34 +645,36 @@ export class IamConfigValidator {
           /* eslint-enable no-control-regex */
           if (!descriptionRegex.test(identityCenterPermissionSet.description)) {
             errors.push(
-              `Identity center ${iamConfig.identityCenter.name} permission set ${identityCenterPermissionSet.name} description has invalid characters.`,
+              `Identity center ${this.iamConfig.identityCenter.name} permission set ${identityCenterPermissionSet.name} description has invalid characters.`,
             );
           }
         }
       }
     }
+    return errors;
   }
 
-  private validateIdentityCenterPermissionSetPolicies(
-    iamConfig: IIamConfig,
-    accountsConfig: AccountsConfig,
-    errors: string[],
-  ) {
-    if (iamConfig.identityCenter) {
+  /**
+   * Function to validate Identity Center Permission set policies
+   * @returns Array of validation errors
+   */
+  private validateIdentityCenterPermissionSetPolicies(): string[] {
+    const errors: string[] = [];
+    if (this.iamConfig.identityCenter) {
       const policies: { name: string; accountNames: string[] }[] = [];
-      for (const policySet of iamConfig.policySets ?? []) {
+      for (const policySet of this.iamConfig.policySets ?? []) {
         for (const policyItem of policySet.policies) {
           policies.push({
             name: policyItem.name,
             accountNames: CommonValidatorFunctions.getAccountNamesFromDeploymentTargets(
-              accountsConfig,
+              this.accountsConfig,
               policySet.deploymentTargets as DeploymentTargets,
             ),
           });
         }
       }
 
-      const identityCenter = iamConfig.identityCenter;
+      const identityCenter = this.iamConfig.identityCenter;
       for (const identityCenterPermissionSet of identityCenter.identityCenterPermissionSets ?? []) {
         // check duplicates for awsManaged polices
         const awsManagedPolicies = identityCenterPermissionSet.policies?.awsManaged ?? [];
@@ -674,19 +707,18 @@ export class IamConfigValidator {
           const filteredPolicyItem = policies.find(item => item.name === lzaManagedPolicy);
           if (!filteredPolicyItem) {
             errors.push(
-              `Identity Center ${iamConfig.identityCenter.name}, permission set ${identityCenterPermissionSet.name}, lza managed policy  ${lzaManagedPolicy} not found in policySets of iam-config.yaml file !!!`,
+              `Identity Center ${this.iamConfig.identityCenter.name}, permission set ${identityCenterPermissionSet.name}, lza managed policy  ${lzaManagedPolicy} not found in policySets of iam-config.yaml file !!!`,
             );
           } else {
             // Validate LZA managed policy deploy target match assignment deploy target accounts
             const assignmentAccountNames = this.getIdentityCenterAssignmentDeployAccountNames(
               identityCenter,
-              accountsConfig,
               identityCenterPermissionSet.name,
             );
 
             if (!assignmentAccountNames.every(item => filteredPolicyItem.accountNames.includes(item))) {
               errors.push(
-                `Identity Center ${iamConfig.identityCenter.name}, permission set ${
+                `Identity Center ${this.iamConfig.identityCenter.name}, permission set ${
                   identityCenterPermissionSet.name
                 } assignments target deploy accounts [${assignmentAccountNames.join(
                   ',',
@@ -699,18 +731,17 @@ export class IamConfigValidator {
         }
       }
     }
+    return errors;
   }
 
   /**
    * Function to get Identity Center Assignment deploy target account names
-   * @param identityCenter
-   * @param accountsConfig
-   * @param identityCenterPermissionSetName
-   * @returns
+   * @param identityCenter - Identity Center configuration
+   * @param identityCenterPermissionSetName - Permission set name
+   * @returns Array of account names
    */
   private getIdentityCenterAssignmentDeployAccountNames(
     identityCenter: IIdentityCenterConfig,
-    accountsConfig: AccountsConfig,
     identityCenterPermissionSetName: string,
   ): string[] {
     const accountNames: string[] = [];
@@ -718,7 +749,7 @@ export class IamConfigValidator {
       if (identityCenterAssignmentItem.permissionSetName === identityCenterPermissionSetName) {
         accountNames.push(
           ...CommonValidatorFunctions.getAccountNamesFromDeploymentTargets(
-            accountsConfig,
+            this.accountsConfig,
             identityCenterAssignmentItem.deploymentTargets as DeploymentTargets,
           ),
         );
@@ -731,10 +762,12 @@ export class IamConfigValidator {
   /**
    * Function to validate existence of Assignment target account names
    * Make sure deployment target accounts are part of account config file
-   * @param values
+   * @param accountNames - Array of valid account names
+   * @returns Array of validation errors
    */
-  private validateAssignmentAccountNames(values: IIamConfig, accountNames: string[], errors: string[]) {
-    const identityCenter = values.identityCenter;
+  private validateAssignmentAccountNames(accountNames: string[]): string[] {
+    const errors: string[] = [];
+    const identityCenter = this.iamConfig.identityCenter;
     for (const assignment of identityCenter?.identityCenterAssignments ?? []) {
       for (const account of assignment.deploymentTargets.accounts ?? []) {
         if (accountNames.indexOf(account) === -1) {
@@ -744,15 +777,18 @@ export class IamConfigValidator {
         }
       }
     }
+    return errors;
   }
 
   /**
    * Function to validate existence of Assignment target account names exist for IAM policies or that arn or account ids match correct format
    * Make sure deployment target accounts are part of account config file
-   * @param values
+   * @param accountNames - Array of valid account names
+   * @returns Array of validation errors
    */
-  private validateAssignmentPrincipalsForIamRoles(values: IIamConfig, accountNames: string[], errors: string[]) {
-    for (const roleSetItem of values.roleSets!) {
+  private validateAssignmentPrincipalsForIamRoles(accountNames: string[]): string[] {
+    const errors: string[] = [];
+    for (const roleSetItem of this.iamConfig.roleSets!) {
       for (const roleItem of roleSetItem.roles) {
         for (const assumedByItem of roleItem.assumedBy) {
           if (assumedByItem.type === 'account') {
@@ -793,15 +829,18 @@ export class IamConfigValidator {
         }
       }
     }
+    return errors;
   }
 
   /**
    * Function to validate existence of Assignment deployment target OUs
    * Make sure deployment target OUs are part of Organization config file
-   * @param values
+   * @param ouIdNames - Array of valid OU names
+   * @returns Array of validation errors
    */
-  private validateAssignmentDeploymentTargetOUs(values: IIamConfig, ouIdNames: string[], errors: string[]) {
-    const identityCenter = values.identityCenter;
+  private validateAssignmentDeploymentTargetOUs(ouIdNames: string[]): string[] {
+    const errors: string[] = [];
+    const identityCenter = this.iamConfig.identityCenter;
     for (const assignment of identityCenter?.identityCenterAssignments ?? []) {
       for (const ou of assignment.deploymentTargets.organizationalUnits ?? []) {
         if (ouIdNames.indexOf(ou) === -1) {
@@ -809,15 +848,18 @@ export class IamConfigValidator {
         }
       }
     }
+    return errors;
   }
 
   /**
    * Function to validate existence of policy sets target account names
    * Make sure deployment target accounts are part of account config file
-   * @param values
+   * @param accountNames - Array of valid account names
+   * @returns Array of validation errors
    */
-  private validatePolicySetsAccountNames(values: IIamConfig, accountNames: string[], errors: string[]) {
-    for (const policySet of values.policySets ?? []) {
+  private validatePolicySetsAccountNames(accountNames: string[]): string[] {
+    const errors: string[] = [];
+    for (const policySet of this.iamConfig.policySets ?? []) {
       for (const account of policySet.deploymentTargets.accounts ?? []) {
         if (accountNames.indexOf(account) === -1) {
           errors.push(
@@ -826,15 +868,18 @@ export class IamConfigValidator {
         }
       }
     }
+    return errors;
   }
 
   /**
    * Function to validate existence of role sets target account names
    * Make sure deployment target accounts are part of account config file
-   * @param values
+   * @param accountNames - Array of valid account names
+   * @returns Array of validation errors
    */
-  private validateRoleSetsAccountNames(values: IIamConfig, accountNames: string[], errors: string[]) {
-    for (const roleSet of values.roleSets ?? []) {
+  private validateRoleSetsAccountNames(accountNames: string[]): string[] {
+    const errors: string[] = [];
+    for (const roleSet of this.iamConfig.roleSets ?? []) {
       for (const account of roleSet.deploymentTargets.accounts ?? []) {
         if (accountNames.indexOf(account) === -1) {
           errors.push(
@@ -843,15 +888,18 @@ export class IamConfigValidator {
         }
       }
     }
+    return errors;
   }
 
   /**
    * Function to validate existence of group sets target account names
    * Make sure deployment target accounts are part of account config file
-   * @param values
+   * @param accountNames - Array of valid account names
+   * @returns Array of validation errors
    */
-  private validateGroupSetsAccountNames(values: IIamConfig, accountNames: string[], errors: string[]) {
-    for (const groupSet of values.groupSets ?? []) {
+  private validateGroupSetsAccountNames(accountNames: string[]): string[] {
+    const errors: string[] = [];
+    for (const groupSet of this.iamConfig.groupSets ?? []) {
       for (const account of groupSet.deploymentTargets.accounts ?? []) {
         if (accountNames.indexOf(account) === -1) {
           errors.push(
@@ -860,15 +908,18 @@ export class IamConfigValidator {
         }
       }
     }
+    return errors;
   }
 
   /**
    * Function to validate existence of user sets target account names
    * Make sure deployment target accounts are part of account config file
-   * @param values
+   * @param accountNames - Array of valid account names
+   * @returns Array of validation errors
    */
-  private validateUserSetsAccountNames(values: IIamConfig, accountNames: string[], errors: string[]) {
-    for (const userSet of values.userSets ?? []) {
+  private validateUserSetsAccountNames(accountNames: string[]): string[] {
+    const errors: string[] = [];
+    for (const userSet of this.iamConfig.userSets ?? []) {
       for (const account of userSet.deploymentTargets.accounts ?? []) {
         if (accountNames.indexOf(account) === -1) {
           errors.push(
@@ -877,132 +928,149 @@ export class IamConfigValidator {
         }
       }
     }
+    return errors;
   }
 
   /**
-   * Function to validate Deployment targets OU name for IAM services
-   * @param values
+   * Function to validate Deployment targets account names for IAM services
+   * @param accountNames - Array of valid account names
+   * @returns Array of validation errors
    */
-  private validateDeploymentTargetAccountNames(values: IIamConfig, accountNames: string[], errors: string[]) {
+  private validateDeploymentTargetAccountNames(accountNames: string[]): string[] {
+    const errors: string[] = [];
     //
     // Validate policy sets account name
     //
-    this.validatePolicySetsAccountNames(values, accountNames, errors);
+    errors.push(...this.validatePolicySetsAccountNames(accountNames));
 
     //
     // Validate role sets account name
     //
-    this.validateRoleSetsAccountNames(values, accountNames, errors);
+    errors.push(...this.validateRoleSetsAccountNames(accountNames));
 
     //
     // Validate group sets account name
     //
-    this.validateGroupSetsAccountNames(values, accountNames, errors);
+    errors.push(...this.validateGroupSetsAccountNames(accountNames));
 
     //
     // Validate user sets account name
     //
-    this.validateUserSetsAccountNames(values, accountNames, errors);
+    errors.push(...this.validateUserSetsAccountNames(accountNames));
 
     //
     // Validate Identity Center assignments account name
     //
-    this.validateAssignmentAccountNames(values, accountNames, errors);
+    errors.push(...this.validateAssignmentAccountNames(accountNames));
 
     //
     // Validate IAM principal assignments for roles
     //
-    this.validateAssignmentPrincipalsForIamRoles(values, accountNames, errors);
+    errors.push(...this.validateAssignmentPrincipalsForIamRoles(accountNames));
+    return errors;
   }
 
   /**
    * Function to validate existence of policy sets deployment target OUs
    * Make sure deployment target OUs are part of Organization config file
-   * @param values
+   * @param ouIdNames - Array of valid OU names
+   * @returns Array of validation errors
    */
-  private validatePolicySetsDeploymentTargetOUs(values: IIamConfig, ouIdNames: string[], errors: string[]) {
-    for (const policySet of values.policySets ?? []) {
+  private validatePolicySetsDeploymentTargetOUs(ouIdNames: string[]): string[] {
+    const errors: string[] = [];
+    for (const policySet of this.iamConfig.policySets ?? []) {
       for (const ou of policySet.deploymentTargets.organizationalUnits ?? []) {
         if (ouIdNames.indexOf(ou) === -1) {
           errors.push(`Deployment target OU ${ou} for policy set does not exists in organization-config.yaml file.`);
         }
       }
     }
+    return errors;
   }
 
   /**
    * Function to validate existence of role sets deployment target OUs
    * Make sure deployment target OUs are part of Organization config file
-   * @param values
+   * @param ouIdNames - Array of valid OU names
+   * @returns Array of validation errors
    */
-  private validateRoleSetsDeploymentTargetOUs(values: IIamConfig, ouIdNames: string[], errors: string[]) {
-    for (const roleSet of values.roleSets ?? []) {
+  private validateRoleSetsDeploymentTargetOUs(ouIdNames: string[]): string[] {
+    const errors: string[] = [];
+    for (const roleSet of this.iamConfig.roleSets ?? []) {
       for (const ou of roleSet.deploymentTargets.organizationalUnits ?? []) {
         if (ouIdNames.indexOf(ou) === -1) {
           errors.push(`Deployment target OU ${ou} for role set does not exists in organization-config.yaml file.`);
         }
       }
     }
+    return errors;
   }
 
   /**
    * Function to validate existence of group sets deployment target OUs
    * Make sure deployment target OUs are part of Organization config file
-   * @param values
+   * @param ouIdNames - Array of valid OU names
+   * @returns Array of validation errors
    */
-  private validateGroupSetsDeploymentTargetOUs(values: IIamConfig, ouIdNames: string[], errors: string[]) {
-    for (const groupSet of values.groupSets ?? []) {
+  private validateGroupSetsDeploymentTargetOUs(ouIdNames: string[]): string[] {
+    const errors: string[] = [];
+    for (const groupSet of this.iamConfig.groupSets ?? []) {
       for (const ou of groupSet.deploymentTargets.organizationalUnits ?? []) {
         if (ouIdNames.indexOf(ou) === -1) {
           errors.push(`Deployment target OU ${ou} for group set does not exists in organization-config.yaml file.`);
         }
       }
     }
+    return errors;
   }
 
   /**
    * Function to validate existence of user sets deployment target OUs
    * Make sure deployment target OUs are part of Organization config file
-   * @param values
+   * @param ouIdNames - Array of valid OU names
+   * @returns Array of validation errors
    */
-  private validateUserSetsDeploymentTargetOUs(values: IIamConfig, ouIdNames: string[], errors: string[]) {
-    for (const userSet of values.userSets ?? []) {
+  private validateUserSetsDeploymentTargetOUs(ouIdNames: string[]): string[] {
+    const errors: string[] = [];
+    for (const userSet of this.iamConfig.userSets ?? []) {
       for (const ou of userSet.deploymentTargets.organizationalUnits ?? []) {
         if (ouIdNames.indexOf(ou) === -1) {
           errors.push(`Deployment target OU ${ou} for user set does not exists in organization-config.yaml file.`);
         }
       }
     }
+    return errors;
   }
 
   /**
-   * Function to validate Deployment targets OU name for IAM services
-   * @param values
-   * @param ouIdNames
-   * @param errors
+   * Function to validate Deployment targets OU names for IAM services
+   * @param ouIdNames - Array of valid OU names
+   * @returns Array of validation errors
    */
-  private validateDeploymentTargetOUs(values: IIamConfig, ouIdNames: string[], errors: string[]) {
+  private validateDeploymentTargetOUs(ouIdNames: string[]): string[] {
+    const errors: string[] = [];
     //
     // Validate policy sets OU name
     //
-    this.validatePolicySetsDeploymentTargetOUs(values, ouIdNames, errors);
+    errors.push(...this.validatePolicySetsDeploymentTargetOUs(ouIdNames));
 
     //
     // Validate role sets OU name
     //
-    this.validateRoleSetsDeploymentTargetOUs(values, ouIdNames, errors);
+    errors.push(...this.validateRoleSetsDeploymentTargetOUs(ouIdNames));
 
     //
     // Validate group sets OU name
     //
-    this.validateGroupSetsDeploymentTargetOUs(values, ouIdNames, errors);
+    errors.push(...this.validateGroupSetsDeploymentTargetOUs(ouIdNames));
 
     //
     // Validate user sets OU name
     //
-    this.validateUserSetsDeploymentTargetOUs(values, ouIdNames, errors);
+    errors.push(...this.validateUserSetsDeploymentTargetOUs(ouIdNames));
 
-    this.validateAssignmentDeploymentTargetOUs(values, ouIdNames, errors);
+    errors.push(...this.validateAssignmentDeploymentTargetOUs(ouIdNames));
+    return errors;
   }
 }
 

@@ -111,7 +111,14 @@ describe('Iam Config', () => {
   it('should be valid', async () => {
     const { iamConfig, accountsConfig, networkConfig, organizationConfig, securityConfig } = await loadConfigs();
     expect(() => {
-      new IamConfigValidator(iamConfig, accountsConfig, networkConfig, organizationConfig, securityConfig, configDir);
+      new IamConfigValidator(
+        iamConfig,
+        accountsConfig,
+        networkConfig,
+        organizationConfig,
+        securityConfig,
+        configDir,
+      ).validate();
     }).not.toThrow();
   });
 });
