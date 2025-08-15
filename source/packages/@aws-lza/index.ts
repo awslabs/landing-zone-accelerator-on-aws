@@ -90,3 +90,17 @@ export { manageDetectiveOrganizationAdminAccount } from './executors/accelerator
 
 export { IMacieManageOrganizationAdminParameter } from './interfaces/macie/manage-organization-admin';
 export { manageOrganizationAdmin } from './executors/accelerator-macie';
+
+//
+// AWS Lambda Module Resources
+//
+
+export { ICheckLambdaConcurrencyParameter } from './interfaces/aws-lambda/check-lambda-concurrency';
+export { checkLambdaConcurrency } from './executors/accelerator-aws-lambda';
+
+//
+// Service Quotas Module Resources
+//
+
+export { ICheckServiceQuotaParameter } from './interfaces/service-quotas/check-service-quota';
+export { checkServiceQuota } from './executors/accelerator-service-quotas';
