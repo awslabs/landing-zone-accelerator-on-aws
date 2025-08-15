@@ -69,6 +69,8 @@ const partition = 'aws';
 const acceleratorName = 'AWS-Accelerator';
 const additionalReplacements = {
   '\\${ADDITIONAL_REPLACEMENT}': 'replaced-value',
+  '\\${ACCEL_LOOKUP::CUSTOM:EnabledRegions}': ['us-east-1'],
+  '\\${ACCEL_LOOKUP::CUSTOM:ALLOWED_CORPORATE_CIDRS}': ['10.0.1.0/24', '10.0.2.0/24'],
 };
 
 const accountsConfig = new AccountsConfig(
@@ -151,5 +153,33 @@ describe('ACCOUNT_ID lookup test ', () => {
     });
     expect(result).toBe(`"555555555555"
 "555555555555"`);
+  });
+
+  it('should load arrays of length 1 while maintaining type array', () => {
+    const content = '${ACCEL_LOOKUP::CUSTOM:EnabledRegions}';
+    const result = policyReplacements({
+      content,
+      acceleratorPrefix,
+      managementAccountAccessRole,
+      partition,
+      additionalReplacements,
+      acceleratorName,
+      accountsConfig,
+    });
+    expect(result).toBe('["us-east-1"]');
+  });
+
+  it('should load arrays of length > 1 while maintaining type array', () => {
+    const content = '${ACCEL_LOOKUP::CUSTOM:ALLOWED_CORPORATE_CIDRS}';
+    const result = policyReplacements({
+      content,
+      acceleratorPrefix,
+      managementAccountAccessRole,
+      partition,
+      additionalReplacements,
+      acceleratorName,
+      accountsConfig,
+    });
+    expect(result).toBe('["10.0.1.0/24","10.0.2.0/24"]');
   });
 });
