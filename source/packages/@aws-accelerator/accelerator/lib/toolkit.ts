@@ -622,8 +622,11 @@ export class AcceleratorToolkit {
   private static async runDiffStackCli(options: AcceleratorToolkitProps, stack: string) {
     const saveDirectory = await AcceleratorToolkit.setOutputDirectory(options, stack);
     const savePath = path.join(__dirname, '..', saveDirectory!);
-    const stacksInFolder = await getAllFilesInPattern(savePath, '.template.json');
-
+    let stacksInFolder = await getAllFilesInPattern(savePath, '.template.json');
+    // Customizations evaluates on a per stack basis, so this ensures that only one stack will be processed instead of all stacks in the directory
+    if (options.stage === AcceleratorStage.CUSTOMIZATIONS) {
+      stacksInFolder = stacksInFolder.filter(stackInFolder => stackInFolder.includes(stack));
+    }
     const roleName = GlobalConfig.loadRawGlobalConfig(options.configDirPath!).managementAccountAccessRole;
 
     for (const eachStack of stacksInFolder) {
@@ -652,7 +655,10 @@ export class AcceleratorToolkit {
       );
       await stream.close();
     }
-    await checkDiffFiles(savePath, '.template.json', '.diff');
+    // Customizations stack will evaluate on a per stack basis, so no need to check the diff files on this stage.
+    if (options.stage !== AcceleratorStage.CUSTOMIZATIONS) {
+      await checkDiffFiles(savePath, '.template.json', '.diff');
+    }
   }
 
   private static async setOutputDirectory(
