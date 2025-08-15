@@ -51,6 +51,14 @@ export enum AcceleratorModuleName {
    * AWS GuardDuty Module
    */
   AWS_GUARDDUTY = 'aws-guardduty',
+  /**
+   * AWS Service Quotas Module
+   */
+  AWS_SERVICE_QUOTAS = 'aws-service-quotas',
+  /**
+   * AWS Lambda Module
+   */
+  AWS_LAMBDA = 'aws-lambda',
 }
 
 /**

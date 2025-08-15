@@ -61,7 +61,6 @@ export { getOrganizationId } from './common/functions';
 //
 // Amazon EC2 Module resources
 //
-
 export { IManageEbsDefaultEncryptionHandlerParameter } from './interfaces/amazon-ec2/manage-ebs-default-encryption';
 export { manageEbsDefaultEncryption } from './executors/accelerator-amazon-ec2';
 
@@ -86,8 +85,10 @@ export { configureRootUserManagment } from './executors/accelerator-aws-iam';
 //
 export { IDetectiveManageOrganizationAdminParameter } from './interfaces/detective/manage-organization-admin';
 export { manageDetectiveOrganizationAdminAccount } from './executors/accelerator-detective';
-// AWS Macie Module resource
 
+//
+// AWS Macie Module resource
+//
 export { IMacieManageOrganizationAdminParameter } from './interfaces/macie/manage-organization-admin';
 export { manageOrganizationAdmin } from './executors/accelerator-macie';
 
@@ -96,3 +97,15 @@ export { manageOrganizationAdmin } from './executors/accelerator-macie';
 //
 export { IBlockPublicDocumentSharingHandlerParameter } from './interfaces/aws-ssm/manage-document-public-access-block';
 export { manageBlockPublicDocumentSharing } from './executors/accelerator-aws-ssm';
+
+//
+// AWS Lambda Module Resources
+//
+export { ICheckLambdaConcurrencyParameter } from './interfaces/aws-lambda/check-lambda-concurrency';
+export { checkLambdaConcurrency } from './executors/accelerator-aws-lambda';
+
+//
+// Service Quotas Module Resources
+//
+export { ICheckServiceQuotaParameter } from './interfaces/service-quotas/check-service-quota';
+export { checkServiceQuota } from './executors/accelerator-service-quotas';
