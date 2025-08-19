@@ -79,3 +79,9 @@ export { configureRootUserManagment } from './executors/accelerator-aws-iam';
 
 export { IMacieManageOrganizationAdminParameter } from './interfaces/macie/manage-organization-admin';
 export { manageOrganizationAdmin } from './executors/accelerator-macie';
+
+//
+// AWS SSM Module resources
+//
+export { IBlockPublicDocumentSharingHandlerParameter } from './interfaces/aws-ssm/manage-document-public-access-block';
+export { manageBlockPublicDocumentSharing } from './executors/accelerator-aws-ssm';
