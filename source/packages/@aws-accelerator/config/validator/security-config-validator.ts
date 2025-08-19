@@ -35,6 +35,7 @@ import {
   ConfigRule,
   GuardDutyConfig,
   SecurityHubConfig,
+  BlockPublicDocumentSharingConfig,
 } from '../lib/security-config';
 import { CommonValidatorFunctions } from './common/common-validator-functions';
 
@@ -90,6 +91,13 @@ export class SecurityConfigValidator {
     this.validateGuardDutyConfiguration(securityConfig.centralSecurityServices.guardduty, errors);
     // Validate SecurityHub configuration
     this.validateSecurityHubConfiguration(securityConfig.centralSecurityServices.securityHub, errors);
+
+    // Validate SSM Block Public Document Sharing configuration
+    this.validateSsmBlockPublicDocumentSharing(
+      securityConfig.centralSecurityServices.ssmSettings?.blockPublicDocumentSharing,
+      accountNames,
+      errors,
+    );
 
     // Validate delegated admin account
     // Validate deployment targets against organization config file
@@ -366,6 +374,39 @@ export class SecurityConfigValidator {
       errors.push(
         `"autoEnableOrgMembers" should be set to "false" when using "deploymentTargets" property in securityHub configuration`,
       );
+    }
+  }
+
+  /**
+   * Validate SSM Block Public Document Sharing configuration
+   * @param blockPublicDocumentSharingConfig BlockPublicDocumentSharingConfig | undefined
+   * @param accountNames string[]
+   * @param errors string[]
+   */
+  private validateSsmBlockPublicDocumentSharing(
+    blockPublicDocumentSharingConfig: BlockPublicDocumentSharingConfig | undefined,
+    accountNames: string[],
+    errors: string[],
+  ) {
+    // Only validate if the configuration is present
+    if (blockPublicDocumentSharingConfig) {
+      // Validate that enable property is a boolean
+      if (typeof blockPublicDocumentSharingConfig.enable !== 'boolean') {
+        errors.push(
+          `SSM Block Public Document Sharing configuration "enable" property must be a boolean value. This setting controls whether SSM documents are blocked from public sharing across all enabled regions.`,
+        );
+      }
+
+      // Validate that excludeAccounts contains valid account names
+      if (blockPublicDocumentSharingConfig.excludeAccounts) {
+        for (const account of blockPublicDocumentSharingConfig.excludeAccounts) {
+          if (accountNames.indexOf(account) === -1) {
+            errors.push(
+              `Excluded account "${account}" for SSM Block Public Document Sharing does not exist in accounts-config.yaml file. Account names must match those defined in the accounts configuration.`,
+            );
+          }
+        }
+      }
     }
   }
 
@@ -805,6 +846,30 @@ export class SecurityConfigValidator {
   }
 
   /**
+   * Validate deployment target accounts for SSM Block Public Document Sharing
+   * @param values SecurityConfig
+   * @param accountNames string[]
+   * @param errors string[]
+   */
+  private validateSsmBlockPublicDocumentSharingDeploymentTargetAccounts(
+    values: ISecurityConfig,
+    accountNames: string[],
+    errors: string[],
+  ) {
+    // Only validate if the configuration is present
+    if (values.centralSecurityServices.ssmSettings?.blockPublicDocumentSharing) {
+      for (const account of values.centralSecurityServices.ssmSettings.blockPublicDocumentSharing.excludeAccounts ??
+        []) {
+        if (accountNames.indexOf(account) === -1) {
+          errors.push(
+            `Excluded account "${account}" for SSM Block Public Document Sharing does not exist in accounts-config.yaml file. Account names must match those defined in the accounts configuration.`,
+          );
+        }
+      }
+    }
+  }
+
+  /**
    * Validate deployment target accounts for GuardDuty
    * @param values SecurityConfig
    * @param accountNames string[]
@@ -851,6 +916,7 @@ export class SecurityConfigValidator {
     this.validateCloudWatchLogGroupsDeploymentTargetAccounts(values, accountNames, errors);
     this.validateKmsKeyConfigDeploymentTargetAccounts(values, accountNames, errors);
     this.validateEbsEncryptionDeploymentTargetAccounts(values, accountNames, errors);
+    this.validateSsmBlockPublicDocumentSharingDeploymentTargetAccounts(values, accountNames, errors);
     this.validateGuardDutyDeploymentTargetAccounts(values, accountNames, errors);
     this.validateSecurityHubDeploymentTargetAccounts(values, accountNames, errors);
   }

@@ -88,6 +88,14 @@ export enum AcceleratorModules {
   ROOT_USER_MANAGEMENT = 'root-user-management',
 
   /**
+   * SSM Block Public Document Sharing module
+   *
+   * @description
+   * For more information on SSM Block Public Document Sharing, please refer the [document](https://docs.aws.amazon.com/systems-manager/latest/userguide/document-public-access-block.html)
+   */
+  SSM_BLOCK_PUBLIC_DOCUMENT_SHARING = 'ssm-block-public-document-sharing',
+
+  /**
    * An Example module which is executed in `PREPARE` stage
    */
   EXAMPLE_MODULE = 'example-module',

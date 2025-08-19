@@ -244,6 +244,27 @@
       ],
       "type": "object"
     },
+    "IBlockPublicDocumentSharingConfig": {
+      "additionalProperties": false,
+      "description": "This interface defines the SSM Block Public Document Sharing configuration for organization accounts.\nSSM Block Public Document Sharing prevents AWS Systems Manager documents from being shared publicly,\nproviding an additional layer of security for organizations. The feature operates on a per-region basis\nand is applied across all enabled regions for comprehensive protection.",
+      "properties": {
+        "enable": {
+          "description": "Indicates whether SSM Block Public Document Sharing is enabled across the organization. When true, blocks public document sharing on all accounts except those in excludeAccounts. When false, allows public document sharing on all accounts. This setting is applied in all enabled regions for comprehensive security coverage.",
+          "type": "boolean"
+        },
+        "excludeAccounts": {
+          "description": "List of AWS Account names to be excluded from SSM Block Public Document Sharing configuration. Accounts in this list will have public document sharing allowed regardless of the enable setting. Account names must match those defined in the accounts configuration. Exclusions are applied across all enabled regions.",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "enable"
+      ],
+      "type": "object"
+    },
     "ICentralSecurityServicesConfig": {
       "additionalProperties": false,
       "description": "AWS Accelerator central security services configuration",
@@ -295,6 +316,10 @@
         "ssmAutomation": {
           "$ref": "#/definitions/ISsmAutomationConfig",
           "description": "AWS Systems Manager Document configuration\n\nAccelerator use this parameter to define AWS Systems Manager documents configuration. SSM documents are created in designated administrator account for security services, i.e. Audit account.\n\nTo create a SSM document named as \"SSM-ELB-Enable-Logging\" in every region accelerator implemented and share this document with Root organizational unit(OU), you need to provide below value for this parameter. To share document to specific account uncomment accounts list. A valid SSM document template file ssm-documents/ssm-elb-enable-logging.yaml must be present in Accelerator config repository. Accelerator will use this template file to create the document."
+        },
+        "ssmSettings": {
+          "$ref": "#/definitions/ISsmSettingsConfig",
+          "description": "(OPTIONAL) AWS Systems Manager settings configuration\n\nAccelerator use this parameter to configure SSM-related security settings\n\nTo enable SSM Block Public Document Sharing in every region accelerator implemented, you need to provide below value for this parameter. If not specified, SSM Block Public Document Sharing will be disabled by default."
         }
       },
       "required": [
@@ -1650,6 +1675,17 @@
       "required": [
         "documentSets"
       ],
+      "type": "object"
+    },
+    "ISsmSettingsConfig": {
+      "additionalProperties": false,
+      "description": "AWS Systems Manager settings configuration wrapper interface.\nThis interface wraps SSM-related security configurations and provides a structured\napproach to managing SSM security features across the organization.",
+      "properties": {
+        "blockPublicDocumentSharing": {
+          "$ref": "#/definitions/IBlockPublicDocumentSharingConfig",
+          "description": "Configuration for managing SSM Block Public Document Sharing across organization accounts.\nWhen not specified, the SSM Block Public Document Sharing feature is disabled by default.\nThis provides flexibility for organizations to opt-in to this security control as needed."
+        }
+      },
       "type": "object"
     },
     "ITag": {

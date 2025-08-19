@@ -19,6 +19,7 @@ import { MoveAccountModule } from '../lib/actions/aws-organizations/move-account
 import { RegisterOrganizationalUnitModule } from '../lib/actions/control-tower/register-organizational-unit';
 import { SetupControlTowerLandingZoneModule } from '../lib/actions/control-tower/setup-control-tower-landing-zone';
 import { ConfigureRootUserManagementModule } from '../lib/actions/aws-iam/root-user-management';
+import { SsmBlockPublicDocumentSharingModule } from '../lib/actions/aws-ssm/ssm-block-public-document-sharing';
 import { AcceleratorModules, AcceleratorModuleStages, ModuleExecutionPhase } from './enums';
 import { AcceleratorModuleStageDetailsType, AcceleratorModuleStageOrdersType, ModuleParams } from './types';
 
@@ -194,7 +195,17 @@ export const AcceleratorModuleStageDetails: AcceleratorModuleStageDetailsType[] 
       name: AcceleratorModuleStages.SECURITY,
       runOrder: AcceleratorModuleStageOrders[AcceleratorModuleStages.SECURITY].runOrder,
     },
-    modules: [],
+    modules: [
+      {
+        name: AcceleratorModules.SSM_BLOCK_PUBLIC_DOCUMENT_SHARING,
+        description: 'Manage SSM Block Public Document Sharing across organization accounts',
+        runOrder: 1,
+        handler: async (params: ModuleParams) => {
+          return await SsmBlockPublicDocumentSharingModule.execute(params);
+        },
+        executionPhase: ModuleExecutionPhase.DEPLOY,
+      },
+    ],
   },
   {
     stage: {

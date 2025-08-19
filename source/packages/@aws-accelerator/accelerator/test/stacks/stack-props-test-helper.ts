@@ -22,6 +22,7 @@ import {
   SecurityConfig,
   SecurityHubConfig,
   SsmAutomationConfig,
+  SsmSettingsConfig,
   UserSetConfig,
 } from '@aws-accelerator/config';
 import { jest } from '@jest/globals';
@@ -93,6 +94,7 @@ export function createAcceleratorStackProps(
     scpRevertChangesConfig: new ScpRevertChangesConfig(),
     snsSubscriptions: [],
     ssmAutomation: new SsmAutomationConfig(),
+    ssmSettings: new SsmSettingsConfig(),
   };
 
   const aggregation = {

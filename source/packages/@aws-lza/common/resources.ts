@@ -39,6 +39,10 @@ export enum AcceleratorModuleName {
    * AWS IAM Module
    */
   AWS_IAM = 'aws-iam',
+  /**
+   * AWS SSM Module
+   */
+  AWS_SSM = 'aws-ssm',
 }
 
 /**
