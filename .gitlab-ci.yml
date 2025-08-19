@@ -165,7 +165,7 @@ accelerator:lint:
     - "yarn validate-config packages/@aws-accelerator/accelerator/test/configs/all-enabled/" # Validate all enabled config files
     - "yarn validate-config packages/@aws-accelerator/accelerator/test/configs/no-org-config/" # Validate no-org config files"
     - "cd packages/@aws-accelerator/accelerator"
-    - "yarn run ts-node --transpile-only cdk.ts synth --require-approval never --config-dir test/configs/no-org-config --partition aws-us-gov" # ensure no-org config can synth without AWS credentials
+    - "yarn run ts-node --transpile-only cdk.ts synth --stage operations --require-approval never --config-dir test/configs/no-org-config --partition aws-us-gov" # ensure no-org config can synth without AWS credentials
     - "cd ../../../"
     - "yarn git-clean"
     - "yarn run viper-scan"
