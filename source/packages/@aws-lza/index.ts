@@ -104,3 +104,9 @@ export { checkLambdaConcurrency } from './executors/accelerator-aws-lambda';
 
 export { ICheckServiceQuotaParameter } from './interfaces/service-quotas/check-service-quota';
 export { checkServiceQuota } from './executors/accelerator-service-quotas';
+
+//
+// AWS SSM Module resources
+//
+export { IBlockPublicDocumentSharingHandlerParameter } from './interfaces/aws-ssm/manage-document-public-access-block';
+export { manageBlockPublicDocumentSharing } from './executors/accelerator-aws-ssm';

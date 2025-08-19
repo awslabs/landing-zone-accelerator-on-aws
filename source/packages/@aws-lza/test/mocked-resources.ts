@@ -431,6 +431,11 @@ export const MOCK_CONSTANTS = {
     credentials: true,
     session: true,
   },
+  BlockPublicDocumentSharingModule: {
+    configuration: {
+      enable: true,
+    },
+  },
 };
 
 export function countOverlappingAccounts(): {

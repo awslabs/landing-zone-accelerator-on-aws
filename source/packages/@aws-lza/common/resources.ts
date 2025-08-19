@@ -55,6 +55,10 @@ export enum AcceleratorModuleName {
    * AWS Lambda Module
    */
   AWS_LAMBDA = 'aws-lambda',
+  /**
+   * AWS SSM Module
+   */
+  AWS_SSM = 'aws-ssm',
 }
 
 /**

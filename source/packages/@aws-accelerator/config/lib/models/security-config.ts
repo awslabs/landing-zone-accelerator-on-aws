@@ -74,6 +74,69 @@ export interface IS3PublicAccessBlockConfig {
 }
 
 /**
+ * *{@link SecurityConfig} / {@link CentralSecurityServicesConfig} / {@link SsmSettingsConfig} / {@link BlockPublicDocumentSharingConfig}*
+ *
+ * {@link https://docs.aws.amazon.com/systems-manager/latest/userguide/ssm-before-you-share.html} | AWS SSM Block Public Document Sharing configuration.
+ *
+ * @description
+ * This interface defines the SSM Block Public Document Sharing configuration for organization accounts.
+ * SSM Block Public Document Sharing prevents AWS Systems Manager documents from being shared publicly,
+ * providing an additional layer of security for organizations. The feature operates on a per-region basis
+ * and is applied across all enabled regions for comprehensive protection.
+ *
+ * @example
+ * ```
+ * blockPublicDocumentSharing:
+ *     enable: true
+ *     excludeAccounts: []
+ * ```
+ */
+export interface IBlockPublicDocumentSharingConfig {
+  /**
+   * Indicates whether SSM Block Public Document Sharing is enabled across the organization.
+   * When true, blocks public document sharing on all accounts except those in excludeAccounts.
+   * When false, allows public document sharing on all accounts.
+   * This setting is applied in all enabled regions for comprehensive security coverage.
+   */
+  readonly enable: boolean;
+  /**
+   * List of AWS Account names to be excluded from SSM Block Public Document Sharing configuration.
+   * Accounts in this list will have public document sharing allowed regardless of the enable setting.
+   * Account names must match those defined in the accounts configuration.
+   * Exclusions are applied across all enabled regions.
+   */
+  readonly excludeAccounts?: string[];
+}
+
+/**
+ * *{@link SecurityConfig} / {@link CentralSecurityServicesConfig} / {@link SsmSettingsConfig}*
+ *
+ * @description
+ * AWS Systems Manager settings configuration wrapper interface.
+ * This interface wraps SSM-related security configurations and provides a structured
+ * approach to managing SSM security features across the organization.
+ *
+ * @example
+ * ```
+ * ssmSettings:
+ *   blockPublicDocumentSharing:
+ *     enable: true
+ *     excludeAccounts: []
+ * ```
+ */
+export interface ISsmSettingsConfig {
+  /**
+   * (OPTIONAL) AWS SSM Block Public Document Sharing configuration
+   *
+   * @description
+   * Configuration for managing SSM Block Public Document Sharing across organization accounts.
+   * When not specified, the SSM Block Public Document Sharing feature is disabled by default.
+   * This provides flexibility for organizations to opt-in to this security control as needed.
+   */
+  readonly blockPublicDocumentSharing?: IBlockPublicDocumentSharingConfig;
+}
+
+/**
  * *{@link SecurityConfig} / {@link CentralSecurityServicesConfig} / {@link ScpRevertChangesConfig}*
  *
  * @description
@@ -1043,6 +1106,23 @@ export interface ICentralSecurityServicesConfig {
    * ```
    */
   readonly s3PublicAccessBlock: IS3PublicAccessBlockConfig;
+  /**
+   * (OPTIONAL) AWS Systems Manager settings configuration
+   *
+   * Accelerator use this parameter to configure SSM-related security settings
+   *
+   * To enable SSM Block Public Document Sharing in every region accelerator implemented, you need to provide below value for this parameter.
+   * If not specified, SSM Block Public Document Sharing will be disabled by default.
+   *
+   * @example
+   * ```
+   * ssmSettings:
+   *   blockPublicDocumentSharing:
+   *     enable: true
+   *     excludeAccounts: []
+   * ```
+   */
+  readonly ssmSettings?: ISsmSettingsConfig;
   /**
    * (OPTIONAL) AWS Service Control Policies Revert Manual Changes configuration
    *

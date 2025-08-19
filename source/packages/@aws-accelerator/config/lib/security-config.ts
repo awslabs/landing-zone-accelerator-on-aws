@@ -28,6 +28,15 @@ export class S3PublicAccessBlockConfig implements i.IS3PublicAccessBlockConfig {
   readonly excludeAccounts: string[] = [];
 }
 
+export class BlockPublicDocumentSharingConfig implements i.IBlockPublicDocumentSharingConfig {
+  readonly enable = false;
+  readonly excludeAccounts: string[] = [];
+}
+
+export class SsmSettingsConfig implements i.ISsmSettingsConfig {
+  readonly blockPublicDocumentSharing: BlockPublicDocumentSharingConfig | undefined = undefined;
+}
+
 export class ScpRevertChangesConfig implements i.IScpRevertChangesConfig {
   readonly enable = false;
   readonly snsTopicName = undefined;
@@ -216,6 +225,7 @@ export class CentralSecurityServicesConfig implements i.ICentralSecurityServices
   readonly delegatedAdminAccount = 'Audit';
   readonly ebsDefaultVolumeEncryption: EbsDefaultVolumeEncryptionConfig = new EbsDefaultVolumeEncryptionConfig();
   readonly s3PublicAccessBlock: S3PublicAccessBlockConfig = new S3PublicAccessBlockConfig();
+  readonly ssmSettings: SsmSettingsConfig | undefined = undefined;
   readonly scpRevertChangesConfig: ScpRevertChangesConfig = new ScpRevertChangesConfig();
   readonly snsSubscriptions: SnsSubscriptionConfig[] = [];
   readonly macie: MacieConfig = new MacieConfig();
