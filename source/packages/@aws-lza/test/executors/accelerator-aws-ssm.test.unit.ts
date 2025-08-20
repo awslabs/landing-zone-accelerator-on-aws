@@ -12,12 +12,14 @@
  */
 
 import { describe, beforeEach, expect, test, afterEach } from '@jest/globals';
-import { manageBlockPublicDocumentSharing } from '../../executors/accelerator-aws-ssm';
+import { manageBlockPublicDocumentSharing, getSsmParametersValue } from '../../executors/accelerator-aws-ssm';
 import { BlockPublicDocumentSharingModule } from '../../lib/aws-ssm/manage-document-public-access-block';
+import { GetSsmParametersValueModule } from '../../lib/aws-ssm/get-parameters';
 import { MOCK_CONSTANTS } from '../mocked-resources';
 
 // Mock dependencies
 jest.mock('../../lib/aws-ssm/manage-document-public-access-block');
+jest.mock('../../lib/aws-ssm/get-parameters/index');
 
 describe('AwsSsmExecutor', () => {
   beforeEach(() => {
@@ -81,6 +83,108 @@ describe('AwsSsmExecutor', () => {
         credentials: input.credentials,
         solutionId: input.solutionId,
       });
+      expect(mockHandler).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe('getSsmParameters', () => {
+    test('should successfully retrieve parameters', async () => {
+      const mockHandler = jest.fn().mockResolvedValue(MOCK_CONSTANTS.GetSsmParametersValueModule.response);
+      (GetSsmParametersValueModule as jest.Mock).mockImplementation(() => ({
+        handler: mockHandler,
+      }));
+
+      const result = await getSsmParametersValue(MOCK_CONSTANTS.GetSsmParametersValueModule.input);
+
+      expect(result).toEqual(MOCK_CONSTANTS.GetSsmParametersValueModule.response);
+      expect(mockHandler).toHaveBeenCalledWith(MOCK_CONSTANTS.GetSsmParametersValueModule.input);
+      expect(mockHandler).toHaveBeenCalledTimes(1);
+    });
+
+    test('should handle parameters not found', async () => {
+      const notFoundResponse = [
+        {
+          parameterName: '/test/param1',
+          parameterValue: '',
+          parameterFound: false,
+        },
+      ];
+
+      const mockHandler = jest.fn().mockResolvedValue(notFoundResponse);
+      (GetSsmParametersValueModule as jest.Mock).mockImplementation(() => ({
+        handler: mockHandler,
+      }));
+
+      const result = await getSsmParametersValue(MOCK_CONSTANTS.GetSsmParametersValueModule.input);
+
+      expect(result).toEqual(notFoundResponse);
+      expect(mockHandler).toHaveBeenCalledWith(MOCK_CONSTANTS.GetSsmParametersValueModule.input);
+      expect(mockHandler).toHaveBeenCalledTimes(1);
+    });
+
+    test('should throw error when parameter retrieval fails', async () => {
+      const errorMessage = 'failed to get SSM parameters';
+      const mockHandler = jest.fn().mockRejectedValue(new Error(errorMessage));
+      (GetSsmParametersValueModule as jest.Mock).mockImplementation(() => ({
+        handler: mockHandler,
+      }));
+
+      await expect(getSsmParametersValue(MOCK_CONSTANTS.GetSsmParametersValueModule.input)).rejects.toThrow(
+        errorMessage,
+      );
+
+      expect(mockHandler).toHaveBeenCalledWith(MOCK_CONSTANTS.GetSsmParametersValueModule.input);
+      expect(mockHandler).toHaveBeenCalledTimes(1);
+    });
+
+    test('should throw error when handler throws unknown error', async () => {
+      const errorMessage = 'unknown error occurred';
+      const mockHandler = jest.fn().mockRejectedValue(new Error(errorMessage));
+      (GetSsmParametersValueModule as jest.Mock).mockImplementation(() => ({
+        handler: mockHandler,
+      }));
+
+      await expect(getSsmParametersValue(MOCK_CONSTANTS.GetSsmParametersValueModule.input)).rejects.toThrow(
+        errorMessage,
+      );
+
+      expect(mockHandler).toHaveBeenCalledWith(MOCK_CONSTANTS.GetSsmParametersValueModule.input);
+      expect(mockHandler).toBeCalledTimes(1);
+    });
+
+    test('should handle different partition', async () => {
+      const mockHandler = jest.fn().mockResolvedValue(MOCK_CONSTANTS.GetSsmParametersValueModule.response);
+      (GetSsmParametersValueModule as jest.Mock).mockImplementation(() => ({
+        handler: mockHandler,
+      }));
+
+      const inputWithGovCloud = {
+        ...MOCK_CONSTANTS.GetSsmParametersValueModule.input,
+        partition: 'aws-us-gov',
+      };
+
+      const result = await getSsmParametersValue(inputWithGovCloud);
+
+      expect(result).toEqual(MOCK_CONSTANTS.GetSsmParametersValueModule.response);
+      expect(mockHandler).toHaveBeenCalledWith(inputWithGovCloud);
+      expect(mockHandler).toHaveBeenCalledTimes(1);
+    });
+
+    test('should handle different region', async () => {
+      const mockHandler = jest.fn().mockResolvedValue(MOCK_CONSTANTS.GetSsmParametersValueModule.response);
+      (GetSsmParametersValueModule as jest.Mock).mockImplementation(() => ({
+        handler: mockHandler,
+      }));
+
+      const inputWithDifferentRegion = {
+        ...MOCK_CONSTANTS.GetSsmParametersValueModule.input,
+        region: 'us-west-2',
+      };
+
+      const result = await getSsmParametersValue(inputWithDifferentRegion);
+
+      expect(result).toEqual(MOCK_CONSTANTS.GetSsmParametersValueModule.response);
+      expect(mockHandler).toHaveBeenCalledWith(inputWithDifferentRegion);
       expect(mockHandler).toHaveBeenCalledTimes(1);
     });
   });

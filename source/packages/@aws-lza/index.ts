@@ -110,3 +110,9 @@ export { checkServiceQuota } from './executors/accelerator-service-quotas';
 //
 export { IBlockPublicDocumentSharingHandlerParameter } from './interfaces/aws-ssm/manage-document-public-access-block';
 export { manageBlockPublicDocumentSharing } from './executors/accelerator-aws-ssm';
+export {
+  IGetSsmParametersValueHandlerParameter,
+  IGetSsmParametersValueConfiguration,
+  ISsmParameterValue,
+} from './interfaces/aws-ssm/get-parameters';
+export { getSsmParametersValue } from './executors/accelerator-aws-ssm';

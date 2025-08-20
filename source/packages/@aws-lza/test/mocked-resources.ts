@@ -35,6 +35,7 @@ export const MOCK_CONSTANTS = {
     expiration: new Date('2024-12-31'),
   },
   accountId: 'mockAccountId',
+  roleArn: 'mockRoleArn',
   validCreateOuConfiguration: {
     name: 'mockOuName',
   },
@@ -435,6 +436,36 @@ export const MOCK_CONSTANTS = {
     configuration: {
       enable: true,
     },
+  },
+  GetSsmParametersValueModule: {
+    input: {
+      operation: 'get-parameters',
+      partition: 'aws',
+      region: 'us-east-1',
+      solutionId: 'test-solution',
+      configuration: [
+        {
+          name: '/test/param1',
+        },
+        {
+          name: '/test/param2',
+          accountId: '222222222222',
+          assumeRoleArn: 'arn:aws:iam::222222222222:role/CrossAccountRole',
+        },
+      ],
+    },
+    response: [
+      {
+        name: '/test/param1',
+        value: 'value1',
+        exists: true,
+      },
+      {
+        name: '/test/param2',
+        value: 'value2',
+        exists: true,
+      },
+    ],
   },
 };
 

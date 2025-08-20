@@ -38,6 +38,7 @@ import {
   getAccountDetailsFromOrganizationsByEmail,
   getAccountId,
   getCredentials,
+  getCurrentAccountDetails,
   getCurrentAccountId,
   getEnabledBaselines,
   getLandingZoneDetails,
@@ -1869,6 +1870,69 @@ describe('functions', () => {
       expect(mockPredicate).toHaveBeenCalledTimes(6);
       expect(mockDelay).toHaveBeenCalledTimes(5);
       expect(mockDelay).toHaveBeenCalledWith(1);
+    });
+  });
+
+  describe('getCurrentAccountDetails', () => {
+    beforeEach(() => {
+      jest.clearAllMocks();
+
+      (STSClient as jest.Mock).mockImplementation(() => ({
+        send: mockSend,
+      }));
+    });
+
+    test('should return account details', async () => {
+      // Setup
+      mockSend.mockImplementation(command => {
+        if (command instanceof GetCallerIdentityCommand) {
+          return Promise.resolve({ Account: MOCK_CONSTANTS.accountId, Arn: MOCK_CONSTANTS.roleArn });
+        }
+        return Promise.reject(new Error('Unexpected command'));
+      });
+
+      // Execute
+      const response = await getCurrentAccountDetails(new STSClient({}));
+
+      // Verify
+      expect(response).toStrictEqual({ accountId: MOCK_CONSTANTS.accountId, roleArn: MOCK_CONSTANTS.roleArn });
+      expect(GetCallerIdentityCommand).toHaveBeenCalledTimes(1);
+    });
+
+    test('should throw error when GetCallerIdentityCommand api did not return Arn property', async () => {
+      // Setup
+      mockSend.mockImplementation(command => {
+        if (command instanceof GetCallerIdentityCommand) {
+          return Promise.resolve({ Account: MOCK_CONSTANTS.accountId, Arn: undefined });
+        }
+        return Promise.reject(new Error('Unexpected command'));
+      });
+
+      // Execute && Verify
+      await expect(async () => {
+        await getCurrentAccountDetails(new STSClient({}));
+      }).rejects.toThrowError(
+        `${MODULE_EXCEPTIONS.SERVICE_EXCEPTION}: GetCallerIdentityCommand api did not return Arn property.`,
+      );
+      expect(GetCallerIdentityCommand).toHaveBeenCalledTimes(1);
+    });
+
+    test('should throw error when GetCallerIdentityCommand api did not return Account property', async () => {
+      // Setup
+      mockSend.mockImplementation(command => {
+        if (command instanceof GetCallerIdentityCommand) {
+          return Promise.resolve({ Account: undefined, Arn: MOCK_CONSTANTS.roleArn });
+        }
+        return Promise.reject(new Error('Unexpected command'));
+      });
+
+      // Execute && Verify
+      await expect(async () => {
+        await getCurrentAccountDetails(new STSClient({}));
+      }).rejects.toThrowError(
+        `${MODULE_EXCEPTIONS.SERVICE_EXCEPTION}: GetCallerIdentityCommand api did not return Account property.`,
+      );
+      expect(GetCallerIdentityCommand).toHaveBeenCalledTimes(1);
     });
   });
 });
