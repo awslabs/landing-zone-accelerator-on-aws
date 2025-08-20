@@ -156,16 +156,21 @@ export class CustomS3ResourceAndKmsPolicyOverridesConfig implements ICustomS3Res
 
 /**
  * Deployment targets configuration.
- * Deployment targets is an accelerator-specific
- * configuration object that can be used for
- * resources provisioned by the accelerator.
- * Deployment targets allow you to specify
- * multiple accounts and/or organizational units (OUs)
- * as targets for resource deployment.
  *
- * The following example would deploy a resource
- * to all accounts in the organization except the
- * Management account:
+ * Deployment targets define where AWS resources should be created within your organization.
+ * This configuration allows you to specify which AWS accounts and organizational units (OUs)
+ * should receive the resources being deployed by the Landing Zone Accelerator.
+ *
+ * Think of deployment targets as a way to say "deploy this resource to these specific
+ * locations in my AWS organization" rather than deploying everywhere.
+ *
+ * @remarks
+ * An AWS organization is a hierarchical structure of AWS accounts managed centrally.
+ * Organizational Units (OUs) are containers that group accounts together for easier management.
+ * Learn more about [AWS Organizations](https://docs.aws.amazon.com/organizations/latest/userguide/orgs_introduction.html).
+ *
+ * The following example deploys a resource to all accounts in the organization
+ * except the Management account (the central account that manages the organization):
  * @example
  * ```
  * deploymentTargets:
@@ -177,30 +182,100 @@ export class CustomS3ResourceAndKmsPolicyOverridesConfig implements ICustomS3Res
  */
 export class DeploymentTargets implements IDeploymentTargets {
   /**
-   * Use this property to define one or more organizational units (OUs)
-   * as a deployment target. Resources are provisioned in each account
-   * contained within the OU.
+   * List of organizational units (OUs) where resources should be deployed.
+   *
+   * When you specify an OU, the resource will be created in every AWS account
+   * that belongs to that OU. This is useful for deploying resources across
+   * multiple accounts at once.
    *
    * @remarks
-   * Any nested OUs that you would like to deploy resources to must be explicitly
-   * defined in this property. Deployment targets will not automatically deploy to
-   * nested OUs.
+   * Organizational Units are like folders that contain AWS accounts. For example,
+   * you might have a "Production" OU containing all your production accounts,
+   * and a "Development" OU containing all your development accounts.
+   *
+   * **Important**: If an OU contains other OUs (nested structure), you must
+   * explicitly list each nested OU if you want resources deployed there.
+   *
+   * Learn more about [Organizational Units](https://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_ous.html).
+   *
+   * @example
+   * ```
+   * organizationalUnits:
+   *   - Production
+   *   - Development
+   *   - Sandbox
+   *   - Sandbox/AppA
+   * ```
    */
   readonly organizationalUnits: string[] = [];
   /**
-   * Use this property to define one or more accounts as a deployment target.
+   * List of specific AWS account names where resources should be deployed.
+   *
+   * Use this when you want to target specific accounts rather than entire
+   * organizational units. Account names should match the names defined in
+   * your accelerator configuration.
+   *
+   * @remarks
+   * Each AWS account has a unique name that you define when setting up the
+   * Landing Zone Accelerator. Use those exact names here.
+   *
+   * @example
+   * ```
+   * accounts:
+   *   - Production-Account-1
+   *   - Development-Account-2
+   *   - Security-Tooling
+   * ```
    */
   readonly accounts: string[] = [];
   /**
-   * Use this property to explicitly define one or more regions to exclude from deployment.
+   * List of AWS regions where resources should NOT be deployed.
+   *
+   * By default, resources are deployed to all regions you've enabled in your
+   * Landing Zone Accelerator configuration. Use this property to skip specific
+   * regions for this particular resource.
    *
    * @remarks
-   * By default, all regions defined in the `enabledRegions` property of {@link GlobalConfig} are
-   * included in `deploymentTargets`.
+   * AWS regions are geographic locations where AWS has data centers. Examples
+   * include us-east-1 (N. Virginia), eu-west-1 (Ireland), ap-southeast-1 (Singapore).
+   *
+   * This is useful when certain resources aren't available in all regions, or when
+   * you have compliance requirements that restrict where data can be stored.
+   *
+   * See {@link GlobalConfig} for the complete list of enabled regions.
+   * Learn more about [AWS Regions](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/using-regions-availability-zones.html).
+   *
+   * @example
+   * ```
+   * excludedRegions:
+   *   - us-west-1
+   *   - ap-south-1
+   * ```
    */
   readonly excludedRegions: Region[] = [];
   /**
-   * Use this property to explicitly define one or more accounts to exclude from deployment.
+   * List of AWS account names that should be excluded from deployment.
+   *
+   * This is useful when you want to deploy to an entire organizational unit
+   * but skip specific accounts within that OU. For example, you might want
+   * to deploy to all production accounts except one that's being decommissioned.
+   *
+   * @remarks
+   * Account names should match exactly with the names defined in your accelerator
+   * configuration. These are the same names you would use in the `accounts` property.
+   *
+   * This exclusion takes precedence over inclusions - if an account is listed here,
+   * it will be excluded even if it's part of an OU or explicitly listed in `accounts`.
+   *
+   * See {@link IAccountConfig} or {@link IGovCloudAccountConfig} for account configuration details.
+   *
+   * @example
+   * ```
+   * excludedAccounts:
+   *   - Management
+   *   - Legacy-Account
+   *   - Decommissioned-Prod
+   * ```
    */
   readonly excludedAccounts: string[] = [];
 }
