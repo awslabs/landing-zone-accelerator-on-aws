@@ -385,7 +385,10 @@ export class CustomizationsConfig implements i.ICustomizationsConfig {
   static load(dir: string, replacementsConfig: ReplacementsConfig): CustomizationsConfig {
     const initialBuffer = fs.readFileSync(path.join(dir, CustomizationsConfig.FILENAME), 'utf8');
     const buffer = replacementsConfig ? replacementsConfig.preProcessBuffer(initialBuffer) : initialBuffer;
-    const values = t.parseCustomizationsConfig(yaml.load(buffer));
+    // Create schema with custom !include tag
+    const schema = t.createSchema(dir);
+    // Load YAML with custom schema
+    const values = t.parseCustomizationsConfig(yaml.load(buffer, { schema }));
     return new CustomizationsConfig(values);
   }
 }

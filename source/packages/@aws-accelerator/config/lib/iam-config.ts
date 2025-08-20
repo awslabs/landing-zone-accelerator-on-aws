@@ -246,7 +246,10 @@ export class IamConfig implements i.IIamConfig {
   static load(dir: string, replacementsConfig: ReplacementsConfig): IamConfig {
     const initialBuffer = fs.readFileSync(path.join(dir, IamConfig.FILENAME), 'utf8');
     const buffer = replacementsConfig ? replacementsConfig.preProcessBuffer(initialBuffer) : initialBuffer;
-    const values = t.parseIamConfig(yaml.load(buffer));
+    // Create schema with custom !include tag
+    const schema = t.createSchema(dir);
+    // Load YAML with custom schema
+    const values = t.parseIamConfig(yaml.load(buffer, { schema }));
     return new IamConfig(values);
   }
 

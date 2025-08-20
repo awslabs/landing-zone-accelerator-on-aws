@@ -13,35 +13,36 @@
 
 import { describe, expect, it } from '@jest/globals';
 import * as fs from 'fs';
+import * as yaml from 'js-yaml';
 import * as path from 'path';
+import { AccountsConfig } from '../lib/accounts-config';
+import { ReplacementsConfig } from '../lib/replacements-config';
 import {
-  SecurityConfig,
-  KeyConfig,
-  GuardDutyEksProtectionConfig,
-  AuditManagerDefaultReportsDestinationConfig,
-  AuditManagerConfig,
-  DetectiveConfig,
-  SecurityHubStandardConfig,
-  SecurityHubLoggingCloudwatchConfig,
-  SecurityHubLoggingConfig,
-  SnsSubscriptionConfig,
-  DocumentConfig,
-  DocumentSetConfig,
-  AwsConfigAggregation,
-  ConfigRule,
-  AwsConfigRuleSet,
-  MetricConfig,
-  MetricSetConfig,
   AlarmConfig,
   AlarmSetConfig,
+  AuditManagerConfig,
+  AuditManagerDefaultReportsDestinationConfig,
+  AwsConfigAggregation,
+  AwsConfigRuleSet,
+  ConfigRule,
+  DetectiveConfig,
+  DocumentConfig,
+  DocumentSetConfig,
   EncryptionConfig,
-  LogGroupsConfig,
+  GuardDutyEksProtectionConfig,
   IsPublicSsmDoc,
+  KeyConfig,
+  LogGroupsConfig,
+  MetricConfig,
+  MetricSetConfig,
+  SecurityConfig,
+  SecurityHubLoggingCloudwatchConfig,
+  SecurityHubLoggingConfig,
+  SecurityHubStandardConfig,
+  SnsSubscriptionConfig,
   BlockPublicDocumentSharingConfig,
   SsmSettingsConfig,
 } from '../lib/security-config';
-import { ReplacementsConfig } from '../lib/replacements-config';
-import { AccountsConfig } from '../lib/accounts-config';
 
 const configDir = path.resolve('../accelerator/test/configs/snapshot-only');
 
@@ -560,5 +561,242 @@ keyManagementService:
       expect(securityConfig!.centralSecurityServices.delegatedAdminAccount).toBe('Audit');
       expect(securityConfig!.centralSecurityServices.s3PublicAccessBlock.enable).toBe(false);
     });
+  });
+});
+describe('YAML include functionality', () => {
+  const testConfigDir = path.join(__dirname, 'test-configs');
+
+  beforeAll(() => {
+    fs.mkdirSync(testConfigDir, { recursive: true });
+
+    fs.writeFileSync(
+      path.join(testConfigDir, 'key-policy.json'),
+      `{
+"Version": "2012-10-17",
+"Statement": [{
+  "Sid": "Enable IAM User Permissions",
+  "Effect": "Allow",
+  "Principal": { "AWS": "*" },
+  "Action": "kms:*",
+  "Resource": "*"
+}]
+}`,
+    );
+
+    fs.writeFileSync(
+      path.join(testConfigDir, 'ssm-document.yaml'),
+      `schemaVersion: '2.2'
+description: 'Test SSM document'
+parameters:
+  Parameter1:
+    type: String
+    description: Test parameter
+mainSteps:
+- action: aws:runShellScript
+  name: TestStep
+  inputs:
+    runCommand:
+      - echo "Hello World"`,
+    );
+
+    const securityConfig = {
+      accessAnalyzer: { enable: false },
+      awsConfig: {
+        enableConfigurationRecorder: false,
+        ruleSets: [],
+      },
+      centralSecurityServices: {
+        delegatedAdminAccount: 'Audit',
+        ebsDefaultVolumeEncryption: {
+          enable: false,
+          excludeAccounts: [],
+          excludeRegions: [],
+        },
+        macie: {
+          enable: false,
+          publishSensitiveDataFindings: false,
+          excludeRegions: [],
+        },
+        guardduty: {
+          enable: false,
+          s3Protection: { enable: false },
+          exportConfiguration: {
+            enable: false,
+            destinationType: 'S3',
+            exportFrequency: 'FIFTEEN_MINUTES',
+          },
+          excludeRegions: [],
+        },
+        securityHub: {
+          enable: false,
+          standards: [],
+          excludeRegions: [],
+        },
+        ssmAutomation: {
+          documentSets: [
+            {
+              shareTargets: {
+                organizationalUnits: ['Root'],
+              },
+              documents: [
+                {
+                  name: 'TestDocument',
+                  template: fs.readFileSync(path.join(testConfigDir, 'ssm-document.yaml'), 'utf8'),
+                },
+              ],
+            },
+          ],
+        },
+        s3PublicAccessBlock: {
+          enable: false,
+          excludeAccounts: [],
+        },
+        scpRevertChangesConfig: {
+          enable: false,
+        },
+        snsSubscriptions: [],
+      },
+      cloudWatch: {
+        metricSets: [],
+        alarmSets: [],
+      },
+      iamPasswordPolicy: {
+        allowUsersToChangePassword: true,
+        hardExpiry: false,
+        requireUppercaseCharacters: true,
+        requireLowercaseCharacters: true,
+        requireSymbols: true,
+        requireNumbers: true,
+        minimumPasswordLength: 14,
+        passwordReusePrevention: 24,
+        maxPasswordAge: 90,
+      },
+      keyManagementService: {
+        keySets: [
+          {
+            name: 'TestKey',
+            alias: 'alias/test-key',
+            policy: fs.readFileSync(path.join(testConfigDir, 'key-policy.json'), 'utf8'),
+            description: 'Test KMS key',
+            enableKeyRotation: true,
+            enabled: true,
+            deploymentTargets: {
+              organizationalUnits: ['Root'],
+            },
+          },
+        ],
+      },
+    };
+
+    fs.writeFileSync(path.join(testConfigDir, SecurityConfig.FILENAME), yaml.dump(securityConfig, { noRefs: true }));
+
+    const accountsConfig = {
+      mandatoryAccounts: [
+        {
+          name: 'Management',
+          email: 'management@example.com',
+          organizationalUnit: 'Root',
+        },
+        {
+          name: 'Audit',
+          email: 'audit@example.com',
+          organizationalUnit: 'Security',
+        },
+      ],
+      workloadAccounts: [],
+    };
+
+    fs.writeFileSync(path.join(testConfigDir, 'accounts-config.yaml'), yaml.dump(accountsConfig));
+    fs.writeFileSync(path.join(testConfigDir, 'replacements-config.yaml'), 'definitions: []');
+  });
+
+  afterAll(() => {
+    fs.rmSync(testConfigDir, { recursive: true });
+  });
+
+  it('loads configuration with included KMS key policy', () => {
+    const accountsConfig = AccountsConfig.load(testConfigDir);
+    const replacementsConfig = ReplacementsConfig.load(testConfigDir, accountsConfig);
+    const config = SecurityConfig.load(testConfigDir, replacementsConfig);
+    const keySet = config.keyManagementService.keySets[0];
+
+    expect(config.keyManagementService.keySets).toHaveLength(1);
+    expect(keySet.name).toBe('TestKey');
+    expect(keySet.policy).toContain('Enable IAM User Permissions');
+    expect(keySet.policy).toContain('kms:*');
+  });
+
+  it('loads configuration with included SSM document', () => {
+    const accountsConfig = AccountsConfig.load(testConfigDir);
+    const replacementsConfig = ReplacementsConfig.load(testConfigDir, accountsConfig);
+    const config = SecurityConfig.load(testConfigDir, replacementsConfig);
+    const documentSet = config.centralSecurityServices.ssmAutomation.documentSets[0];
+    const document = documentSet.documents[0];
+
+    expect(documentSet.documents).toHaveLength(1);
+    expect(document.name).toBe('TestDocument');
+    expect(document.template).toContain("schemaVersion: '2.2'");
+    expect(document.template).toContain('Hello World');
+  });
+
+  it('handles missing included files', () => {
+    const brokenConfig = yaml.dump({
+      centralSecurityServices: {
+        delegatedAdminAccount: 'Audit',
+        ebsDefaultVolumeEncryption: {
+          enable: false,
+          excludeAccounts: [],
+          excludeRegions: [],
+        },
+        macie: {
+          enable: false,
+          publishSensitiveDataFindings: false,
+          excludeRegions: [],
+        },
+        guardduty: {
+          enable: false,
+          s3Protection: { enable: false },
+          exportConfiguration: { enable: false },
+          excludeRegions: [],
+        },
+        securityHub: {
+          enable: false,
+          standards: [],
+          excludeRegions: [],
+        },
+        ssmAutomation: {
+          documentSets: [
+            {
+              documents: [
+                {
+                  name: 'MissingDoc',
+                  template: '!include missing-file.yaml',
+                },
+              ],
+              shareTargets: {
+                organizationalUnits: ['Root'],
+              },
+            },
+          ],
+        },
+        s3PublicAccessBlock: {
+          enable: false,
+          excludeAccounts: [],
+        },
+        scpRevertChangesConfig: {
+          enable: false,
+        },
+        snsSubscriptions: [],
+      },
+    });
+
+    fs.writeFileSync(path.join(testConfigDir, SecurityConfig.FILENAME), brokenConfig);
+
+    const accountsConfig = AccountsConfig.load(testConfigDir);
+    const replacementsConfig = ReplacementsConfig.load(testConfigDir, accountsConfig);
+
+    expect(() => {
+      SecurityConfig.load(testConfigDir, replacementsConfig);
+    }).toThrow();
   });
 });

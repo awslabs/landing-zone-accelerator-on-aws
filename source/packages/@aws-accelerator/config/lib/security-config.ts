@@ -424,7 +424,10 @@ export class SecurityConfig implements i.ISecurityConfig {
   static load(dir: string, replacementsConfig: ReplacementsConfig): SecurityConfig {
     const initialBuffer = fs.readFileSync(path.join(dir, SecurityConfig.FILENAME), 'utf8');
     const buffer = replacementsConfig ? replacementsConfig.preProcessBuffer(initialBuffer) : initialBuffer;
-    const values = t.parseSecurityConfig(yaml.load(buffer));
+    // Create schema with custom !include tag
+    const schema = t.createSchema(dir);
+    // Load YAML with custom schema
+    const values = t.parseSecurityConfig(yaml.load(buffer, { schema }));
     return new SecurityConfig(values);
   }
 

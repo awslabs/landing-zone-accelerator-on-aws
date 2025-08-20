@@ -9,6 +9,7 @@ This section contains architectural details and configuration references for the
     - [Replacement Variables](./replacement-variables.md)
     - [CloudFormation Stack Policy Protection](./stack-policy.md)
     - [V2 Network Stack Usage](./v2-stacks.md)
+    - [Configuration File Includes](configuration-include.md)
 
 !!! note "See also"
     - [Implementation Guide - Architecture Details](https://docs.aws.amazon.com/solutions/latest/landing-zone-accelerator-on-aws/architecture-details.html)
