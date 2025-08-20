@@ -1,44 +1,5 @@
 customizations:
-  cloudFormationStacks:
-    - deploymentTargets:
-        accounts:
-          - Management
-      description: Sample stack description
-      name: Custom-S3-Stack
-      regions:
-        - us-east-1
-      runOrder: 1
-      template: cloudformation-templates/custom-s3-bucket.yaml
-      terminationProtection: false
-      parameters:
-        - name: pStringParameter
-          value: "test"
-        - name: pDynamicParameter
-          value: "{{resolve:ssm:/accelerator/lza-prefix}}"
-    - deploymentTargets:
-        organizationalUnits:
-          - Security
-      description: Second sample stack description
-      name: Custom-S3-Stack-2
-      regions:
-        - us-east-1
-        - us-west-2
-      runOrder: 2
-      template: cloudformation-templates/custom-s3-bucket.yaml
-      terminationProtection: true
-    - deploymentTargets:
-        accounts:
-          - Management
-        organizationalUnits:
-          - Infrastructure
-      description: Third sample stack description
-      name: Custom-S3-Stack-3
-      regions:
-        - us-east-1
-        - us-west-2
-      runOrder: 2
-      template: cloudformation-templates/custom-s3-bucket.yaml
-      terminationProtection: true
+  cloudFormationStacks: !include include/customization-config-targets.yaml
   cloudFormationStackSets:
     - capabilities: [CAPABILITY_IAM, CAPABILITY_NAMED_IAM, CAPABILITY_AUTO_EXPAND]
       deploymentTargets:

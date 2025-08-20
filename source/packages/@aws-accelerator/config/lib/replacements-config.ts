@@ -96,7 +96,10 @@ export class ReplacementsConfig implements i.IReplacementsConfig {
 
     const buffer = fs.readFileSync(path.join(dir, ReplacementsConfig.FILENAME), 'utf8');
     if (!yaml.load(buffer)) return new ReplacementsConfig();
-    const values = t.parseReplacementsConfig(yaml.load(buffer));
+    // Create schema with custom !include tag
+    const schema = t.createSchema(dir);
+    // Load YAML with custom schema
+    const values = t.parseReplacementsConfig(yaml.load(buffer, { schema }));
     return new ReplacementsConfig(values, accountsConfig);
   }
 

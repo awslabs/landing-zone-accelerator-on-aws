@@ -11,17 +11,17 @@
  *  and limitations under the License.
  */
 
+import { StreamMode } from '@aws-sdk/client-kinesis';
+import { GetParametersByPathCommand, SSMClient } from '@aws-sdk/client-ssm';
+import { AssumeRoleCommandOutput } from '@aws-sdk/client-sts';
+import * as AWS from 'aws-sdk';
 import * as fs from 'fs';
 import * as yaml from 'js-yaml';
 import * as path from 'path';
-import * as AWS from 'aws-sdk';
-import { AssumeRoleCommandOutput } from '@aws-sdk/client-sts';
-import { SSMClient, GetParametersByPathCommand } from '@aws-sdk/client-ssm';
-import { StreamMode } from '@aws-sdk/client-kinesis';
 
+import { directoryExists, fileExists, getCrossAccountCredentials } from '@aws-accelerator/utils/lib/common-functions';
 import { createLogger } from '@aws-accelerator/utils/lib/logger';
 import { throttlingBackOff } from '@aws-accelerator/utils/lib/throttle';
-import { directoryExists, fileExists, getCrossAccountCredentials } from '@aws-accelerator/utils/lib/common-functions';
 
 import * as t from './common';
 import * as i from './models/global-config';
@@ -666,7 +666,10 @@ export class GlobalConfig implements i.IGlobalConfig {
   static load(dir: string, replacementsConfig: ReplacementsConfig): GlobalConfig {
     const initialBuffer = fs.readFileSync(path.join(dir, GlobalConfig.FILENAME), 'utf8');
     const buffer = replacementsConfig ? replacementsConfig.preProcessBuffer(initialBuffer) : initialBuffer;
-    const values = t.parseGlobalConfig(yaml.load(buffer));
+    // Create schema with custom !include tag
+    const schema = t.createSchema(dir);
+    // Load YAML with custom schema
+    const values = t.parseGlobalConfig(yaml.load(buffer, { schema }));
 
     const homeRegion = values.homeRegion;
     const controlTower = values.controlTower;

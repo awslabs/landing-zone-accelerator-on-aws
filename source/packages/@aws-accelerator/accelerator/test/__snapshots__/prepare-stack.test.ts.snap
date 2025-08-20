@@ -4370,7 +4370,7 @@ exports[`PrepareStack Construct(PrepareStack):  Snapshot Test 1`] = `
             "Arn",
           ],
         },
-        "accountConfigS3Key": "63719fee842b919b4c18317c680c63ac7aee966fbc80ad273eeade6349c40186.yaml",
+        "accountConfigS3Key": "03884f31cf99c3af1b57657ec50d81f8fd0b4bbec60a6b238546b4c0a6bd3dc6.yaml",
         "auditAccountEmail": "all-enabled-audit-account@example.com",
         "commitId": "",
         "configRepositoryName": "aws-accelerator-config",

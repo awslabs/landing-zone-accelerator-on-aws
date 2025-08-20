@@ -15,14 +15,14 @@ import * as fs from 'fs';
 import * as yaml from 'js-yaml';
 import * as path from 'path';
 
-import { createLogger } from '@aws-accelerator/utils/lib/logger';
 import { loadOrganizationalUnits } from '@aws-accelerator/utils/lib/load-organization-config';
 import { OrganizationalUnit, Root } from '@aws-sdk/client-organizations';
+import { createLogger } from '@aws-accelerator/utils/lib/logger';
 
+import { AccountsConfig } from './accounts-config';
 import * as t from './common';
 import * as i from './models/organization-config';
 import { ReplacementsConfig } from './replacements-config';
-import { AccountsConfig } from './accounts-config';
 import { getSSMParameterValue } from '../../utils/lib/get-value-from-ssm';
 import { getColumnFromConfigTable } from '../../utils/lib/get-column-from-config-table';
 
@@ -141,7 +141,10 @@ export class OrganizationConfig implements i.IOrganizationConfig {
   static load(dir: string, replacementsConfig: ReplacementsConfig): OrganizationConfig {
     const initialBuffer = fs.readFileSync(path.join(dir, OrganizationConfig.FILENAME), 'utf8');
     const buffer = replacementsConfig ? replacementsConfig.preProcessBuffer(initialBuffer) : initialBuffer;
-    const values = t.parseOrganizationConfig(yaml.load(buffer));
+    // Create schema with custom !include tag
+    const schema = t.createSchema(dir);
+    // Load YAML with custom schema
+    const values = t.parseOrganizationConfig(yaml.load(buffer, { schema }));
     return new OrganizationConfig(values);
   }
 

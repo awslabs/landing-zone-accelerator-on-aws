@@ -10,25 +10,31 @@
  *  OR CONDITIONS OF ANY KIND, express or implied. See the License for the specific language governing permissions
  *  and limitations under the License.
  */
+import { createLogger } from '@aws-accelerator/utils/lib/logger';
 import Ajv from 'ajv';
+import * as fs from 'fs';
+import * as yaml from 'js-yaml';
+import * as path from 'path';
 import { IAccountsConfig } from '../models/accounts-config';
+import { ICustomizationsConfig } from '../models/customizations-config';
 import { IGlobalConfig } from '../models/global-config';
 import { IIamConfig } from '../models/iam-config';
-import { IOrganizationConfig } from '../models/organization-config';
-import { ISecurityConfig } from '../models/security-config';
-import { IReplacementsConfig } from '../models/replacements-config';
-import { ICustomizationsConfig } from '../models/customizations-config';
 import { INetworkConfig } from '../models/network-config';
+import { IOrganizationConfig } from '../models/organization-config';
+import { IReplacementsConfig } from '../models/replacements-config';
+import { ISecurityConfig } from '../models/security-config';
 import * as accountsSchema from '../schemas/accounts-config.json';
+import * as customizationsSchema from '../schemas/customizations-config.json';
 import * as globalSchema from '../schemas/global-config.json';
 import * as iamSchema from '../schemas/iam-config.json';
-import * as organizationSchema from '../schemas/organization-config.json';
-import * as securitySchema from '../schemas/security-config.json';
-import * as replacementsSchema from '../schemas/replacements-config.json';
-import * as customizationsSchema from '../schemas/customizations-config.json';
 import * as networkSchema from '../schemas/network-config.json';
+import * as organizationSchema from '../schemas/organization-config.json';
+import * as replacementsSchema from '../schemas/replacements-config.json';
+import * as securitySchema from '../schemas/security-config.json';
 
 const ajv = new Ajv({ allErrors: true, verbose: true });
+
+const logger = createLogger(['parse']);
 
 interface JsonSchema {
   $ref: string;
@@ -232,4 +238,29 @@ export function isNetworkType<T>(
   content: unknown,
 ): content is T {
   return is(networkSchema, interfaceName, content);
+}
+
+function createIncludeTag(baseDir: string, includeStack: string[] = []): yaml.Type {
+  return new yaml.Type('!include', {
+    kind: 'scalar',
+    construct: (filePath: string) => {
+      if (includeStack.includes(filePath)) {
+        throw new Error(`Circular include detected: ${includeStack.join(' -> ')} -> ${filePath}`);
+      }
+      const fullPath = path.resolve(baseDir, filePath);
+      try {
+        const content = fs.readFileSync(fullPath, 'utf8');
+        return yaml.load(content, {
+          schema: createSchema(path.dirname(fullPath), [...includeStack, filePath]),
+        });
+      } catch (e) {
+        logger.error(`${e}`);
+        throw new Error(`Failed to include file ${fullPath}: ${e}`);
+      }
+    },
+  });
+}
+
+export function createSchema(baseDir: string, includeStack: string[] = []): yaml.Schema {
+  return yaml.DEFAULT_SCHEMA.extend([createIncludeTag(baseDir, includeStack)]);
 }

@@ -7,6 +7,7 @@ This section contains architectural details and configuration references for the
     - [Centralized Logging](./logging.md)
     - [Security Hub Findings](./securityhub-findings.md)
     - [Replacement Variables](./replacement-variables.md)
+    - [Configuration File Includes](configuration-include.md)
 
 !!! note "See also"
     - [Implementation Guide - Architecture Details](https://docs.aws.amazon.com/solutions/latest/landing-zone-accelerator-on-aws/architecture-details.html)

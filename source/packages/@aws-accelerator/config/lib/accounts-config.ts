@@ -19,9 +19,9 @@ import * as path from 'path';
 import { createLogger } from '@aws-accelerator/utils/lib/logger';
 import { throttlingBackOff } from '@aws-accelerator/utils/lib/throttle';
 
-import * as i from './models/accounts-config';
-import { DeploymentTargets, parseAccountsConfig } from './common';
 import { getGlobalRegion } from '../../utils/lib/common-functions';
+import { createSchema, DeploymentTargets, parseAccountsConfig } from './common';
+import * as i from './models/accounts-config';
 import { OrganizationalUnitConfig } from './organization-config';
 import { getSSMParameterValue } from '../../utils/lib/get-value-from-ssm';
 import { getColumnFromConfigTable } from '../../utils/lib/get-column-from-config-table';
@@ -160,7 +160,10 @@ export class AccountsConfig implements i.IAccountsConfig {
     }
 
     const buffer = fs.readFileSync(path.join(dir, AccountsConfig.FILENAME), 'utf8');
-    const values = parseAccountsConfig(yaml.load(buffer));
+    // Create schema with custom !include tag
+    const schema = createSchema(dir);
+    // Load YAML with custom schema
+    const values = parseAccountsConfig(yaml.load(buffer, { schema }));
     const managementAccountEmail =
       (values.mandatoryAccounts as unknown as i.IBaseAccountConfig[])
         .find(value => value.name == AccountsConfig.MANAGEMENT_ACCOUNT)

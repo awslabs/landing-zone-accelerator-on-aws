@@ -18,8 +18,8 @@ import * as path from 'path';
 import { createLogger } from '@aws-accelerator/utils/lib/logger';
 
 import * as t from './common';
-import * as i from './models/network-config';
 import * as CustomizationsConfig from './customizations-config';
+import * as i from './models/network-config';
 import { ReplacementsConfig } from './replacements-config';
 
 const logger = createLogger(['network-config']);
@@ -944,8 +944,10 @@ export class NetworkConfig implements i.INetworkConfig {
   static load(dir: string, replacementsConfig: ReplacementsConfig): NetworkConfig {
     const initialBuffer = fs.readFileSync(path.join(dir, NetworkConfig.FILENAME), 'utf8');
     const buffer = replacementsConfig ? replacementsConfig.preProcessBuffer(initialBuffer) : initialBuffer;
-    const values = t.parseNetworkConfig(yaml.load(buffer));
-
+    // Create schema with custom !include tag
+    const schema = t.createSchema(dir);
+    // Load YAML with custom schema
+    const values = t.parseNetworkConfig(yaml.load(buffer, { schema }));
     return new NetworkConfig(values);
   }
 
