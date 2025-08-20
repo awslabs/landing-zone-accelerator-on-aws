@@ -647,3 +647,27 @@ export async function waitUntil(
     }
   }
 }
+/**
+ * Function to get current account ID and role ARN
+ * @param client {@link STSClient}
+ * @returns Promise containing accountId and roleArn
+ */
+export async function getCurrentAccountDetails(client: STSClient): Promise<{ accountId: string; roleArn: string }> {
+  const response = await throttlingBackOff(() => client.send(new GetCallerIdentityCommand({})));
+
+  if (!response.Account) {
+    throw new Error(
+      `${MODULE_EXCEPTIONS.SERVICE_EXCEPTION}: GetCallerIdentityCommand api did not return Account property.`,
+    );
+  }
+
+  if (!response.Arn) {
+    throw new Error(
+      `${MODULE_EXCEPTIONS.SERVICE_EXCEPTION}: GetCallerIdentityCommand api did not return Arn property.`,
+    );
+  }
+  return {
+    accountId: response.Account,
+    roleArn: response.Arn,
+  };
+}

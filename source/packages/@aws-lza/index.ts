@@ -97,6 +97,12 @@ export { manageOrganizationAdmin } from './executors/accelerator-macie';
 //
 export { IBlockPublicDocumentSharingHandlerParameter } from './interfaces/aws-ssm/manage-document-public-access-block';
 export { manageBlockPublicDocumentSharing } from './executors/accelerator-aws-ssm';
+export {
+  IGetSsmParametersValueHandlerParameter,
+  IGetSsmParametersValueConfiguration,
+  ISsmParameterValue,
+} from './interfaces/aws-ssm/get-parameters';
+export { getSsmParametersValue } from './executors/accelerator-aws-ssm';
 
 //
 // AWS Lambda Module Resources
@@ -109,3 +115,4 @@ export { checkLambdaConcurrency } from './executors/accelerator-aws-lambda';
 //
 export { ICheckServiceQuotaParameter } from './interfaces/service-quotas/check-service-quota';
 export { checkServiceQuota } from './executors/accelerator-service-quotas';
+
