@@ -278,7 +278,17 @@ async function deleteParameters(
   // Remove parameters
   for (const deleteParameterName of deleteParameterNames) {
     console.log(`Delete SSM parameter ${deleteParameterName} from account ${parameterAccountId}`);
-    await throttlingBackOff(() => ssmClient.send(new DeleteParameterCommand({ Name: deleteParameterName })));
+    try {
+      await throttlingBackOff(() =>
+        ssmClient.send(new DeleteParameterCommand({ Name: deleteParameterName })),
+      );
+    } catch (err: any) {
+      if (err.name === "ParameterNotFound" || err.Code === "ParameterNotFound") {
+        console.log(`Parameter ${deleteParameterName} not found in account ${parameterAccountId}, skipping.`);
+      } else {
+        throw err; // rethrow unexpected errors
+      }
+    }
   }
 }
 
