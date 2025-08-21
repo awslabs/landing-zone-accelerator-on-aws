@@ -1113,6 +1113,9 @@ export class GlobalConfigValidator {
         }
       }
     }
+    if (!values.logging.elbLogBucket?.importedBucket && values.logging.elbLogBucket?.customPolicyOverrides) {
+      errors.push(`A custom policy can only be added to an imported elb access log bucket.`);
+    }
   }
 
   // Check if input is valid array and proceed to check schema
