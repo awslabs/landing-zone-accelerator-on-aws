@@ -59,6 +59,10 @@ export enum AcceleratorModuleName {
    * AWS Lambda Module
    */
   AWS_LAMBDA = 'aws-lambda',
+  /**
+   * AWS Security Hub
+   */
+  AWS_SECURITY_HUB = 'aws-security-hub',
 }
 
 /**

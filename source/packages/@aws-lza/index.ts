@@ -116,3 +116,7 @@ export { checkLambdaConcurrency } from './executors/accelerator-aws-lambda';
 export { ICheckServiceQuotaParameter } from './interfaces/service-quotas/check-service-quota';
 export { checkServiceQuota } from './executors/accelerator-service-quotas';
 
+// AWS Security Hub Module resources
+//
+export { ISecurityHubManageOrganizationAdminParameter } from './interfaces/security-hub/manage-organization-admin';
+export { manageSecurityHubOrganizationAdminAccount } from './executors/accelerator-security-hub';
