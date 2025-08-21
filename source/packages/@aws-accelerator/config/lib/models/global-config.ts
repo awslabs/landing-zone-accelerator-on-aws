@@ -1048,6 +1048,7 @@ export interface IElbLogBucketConfig {
    * When customPolicyOverrides.s3Policy defined importedBucket.applyAcceleratorManagedBucketPolicy can not be set to true also s3ResourcePolicyAttachments property can not be defined.
    *
    * Use the following configuration to apply custom bucket resource policy overrides through policy JSON file.
+   * customPolicyOverrides can ONLY be applied to imported buckets.
    * ```
    * customPolicyOverrides:
    *   s3Policy: path/to/policy.json
