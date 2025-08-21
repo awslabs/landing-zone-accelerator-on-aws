@@ -59,6 +59,10 @@ export enum AcceleratorModuleName {
    * AWS SSM Module
    */
   AWS_SSM = 'aws-ssm',
+  /**
+   * AWS Security Hub
+   */
+  AWS_SECURITY_HUB = 'aws-security-hub',
 }
 
 /**

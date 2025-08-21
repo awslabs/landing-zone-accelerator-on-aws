@@ -116,3 +116,9 @@ export {
   ISsmParameterValue,
 } from './interfaces/aws-ssm/get-parameters';
 export { getSsmParametersValue } from './executors/accelerator-aws-ssm';
+
+//
+// AWS Security Hub Module resources
+//
+export { ISecurityHubManageOrganizationAdminParameter } from './interfaces/security-hub/manage-organization-admin';
+export { manageSecurityHubOrganizationAdminAccount } from './executors/accelerator-security-hub';
