@@ -155,6 +155,7 @@ exports[`SsmSessionManagerSettings Construct(SsmSessionManagerSettings):  Snapsh
         "s3BucketName": "bucketName",
         "s3EncryptionEnabled": true,
         "s3KeyPrefix": "prefix",
+        "sendToS3": true,
       },
       "Type": "Custom::SsmSessionManagerSettings",
       "UpdateReplacePolicy": "Delete",

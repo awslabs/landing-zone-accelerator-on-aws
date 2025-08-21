@@ -89,6 +89,7 @@ export class SsmSessionManagerSettings extends Construct {
       resourceType: 'Custom::SsmSessionManagerSettings',
       serviceToken: provider.serviceToken,
       properties: {
+        sendToS3: props.sendToS3,
         s3BucketName: props.s3BucketName,
         s3KeyPrefix: props.s3KeyPrefix,
         s3EncryptionEnabled: props.sendToS3, //set to true if sending to S3

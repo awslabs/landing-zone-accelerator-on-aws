@@ -34,9 +34,10 @@ export async function handler(event: CloudFormationCustomResourceEvent): Promise
     }
   | undefined
 > {
-  const s3BucketName: string = event.ResourceProperties['s3BucketName'];
-  const s3KeyPrefix: string = event.ResourceProperties['s3KeyPrefix'];
-  const s3EncryptionEnabled: boolean = event.ResourceProperties['s3EncryptionEnabled'] === 'true';
+  const sendToS3: boolean = event.ResourceProperties['sendToS3'] === 'true';
+  let s3BucketName: string = event.ResourceProperties['s3BucketName'];
+  let s3KeyPrefix: string = event.ResourceProperties['s3KeyPrefix'];
+  let s3EncryptionEnabled: boolean = event.ResourceProperties['s3EncryptionEnabled'] === 'true';
   const cloudWatchLogGroupName: string = event.ResourceProperties['cloudWatchLogGroupName'];
   const cloudWatchEncryptionEnabled: boolean = event.ResourceProperties['cloudWatchEncryptionEnabled'] === 'true';
   const kmsKeyId: string = event.ResourceProperties['kmsKeyId'];
@@ -48,6 +49,11 @@ export async function handler(event: CloudFormationCustomResourceEvent): Promise
     case 'Create':
     case 'Update':
       // Based on doc: https://docs.aws.amazon.com/systems-manager/latest/userguide/getting-started-configure-preferences-cli.html
+      if (!sendToS3) {
+        s3BucketName = '';
+        s3EncryptionEnabled = false;
+        s3KeyPrefix = '';
+      }
       const settings = {
         schemaVersion: '1.0',
         description: 'Document to hold regional settings for Session Manager',
