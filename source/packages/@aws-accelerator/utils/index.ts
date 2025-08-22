@@ -26,6 +26,7 @@ export * from './lib/set-token-preferences';
 export * from './lib/evaluate-limits';
 export * from './lib/common-types';
 export * from './lib/control-tower';
+export * from './lib/query-config-table';
 
 //
 // Common integration test utilities
