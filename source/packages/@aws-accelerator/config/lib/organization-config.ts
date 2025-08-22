@@ -215,6 +215,7 @@ export class OrganizationConfig implements i.IOrganizationConfig {
         'organization',
         'orgInfo',
         managementAccountCredentials,
+        process.env['CONFIG_COMMIT_ID'],
       );
 
       const configOuNames = [...this.organizationalUnits.map(ou => ou.name), 'Root'];

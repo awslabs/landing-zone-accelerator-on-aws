@@ -34,6 +34,7 @@ export async function queryConfigTable(
   dataType: string,
   projectionExpression?: string,
   credentials?: Credentials,
+  commitId?: string,
 ): Promise<Record<string, unknown>[]> {
   const clientOptions = credentials
     ? { credentials, retryStrategy: setRetryStrategy() }
@@ -50,6 +51,10 @@ export async function queryConfigTable(
 
   if (projectionExpression) {
     params.ProjectionExpression = projectionExpression;
+  }
+  if (commitId) {
+    params.FilterExpression = 'contains (commitId, :commitId)';
+    params.ExpressionAttributeValues = { ...params.ExpressionAttributeValues, ':commitId': commitId };
   }
 
   try {
