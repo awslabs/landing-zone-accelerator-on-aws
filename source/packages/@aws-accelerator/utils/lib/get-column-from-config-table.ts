@@ -15,29 +15,11 @@ import { DynamoDBDocumentClient, GetCommand, GetCommandInput, GetCommandOutput }
 import { Credentials } from '@aws-sdk/types';
 import { createLogger } from './logger';
 import { setRetryStrategy } from './common-functions';
+import { DynamoDBOperationError } from './common-resources';
 import { throttlingBackOff } from './throttle';
 import * as path from 'path';
 
 const logger = createLogger([path.parse(path.basename(__filename)).name]);
-
-/**
- * Custom error class for DynamoDB operations
- */
-export class DynamoDBOperationError extends Error {
-  readonly originalError: unknown;
-  readonly tableName: string;
-  readonly dataType: string;
-  readonly acceleratorKey: string;
-
-  constructor(message: string, originalError: unknown, tableName: string, dataType: string, acceleratorKey: string) {
-    super(message);
-    this.name = 'DynamoDBOperationError';
-    this.originalError = originalError;
-    this.tableName = tableName;
-    this.dataType = dataType;
-    this.acceleratorKey = acceleratorKey;
-  }
-}
 
 /**
  * Get AWS account key from DynamoDB table using dataType as partition key and acceleratorKey as sort key
@@ -106,9 +88,9 @@ export async function getColumnFromConfigTable(
       throw error;
     } else if (error instanceof DynamoDBServiceException) {
       // AWS DynamoDB Service exception
-      logger.error(`DynamoDB Service Error: ${error.name} - ${error.message}`);
+      logger.error(`DynamoDB Service Error: ${error.name} - ${error.message} with params ${JSON.stringify(params)}`);
       throw new DynamoDBOperationError(
-        `DynamoDB service error: ${error.name} - ${error.message}`,
+        `DynamoDB service error: ${error.name} - ${error.message} with params ${JSON.stringify(params)}`,
         error,
         tableName,
         dataType,
@@ -116,7 +98,7 @@ export async function getColumnFromConfigTable(
       );
     } else {
       // Unknown error type
-      logger.error('Unknown error retrieving data from DynamoDB:', error);
+      logger.error(`Unknown error retrieving data from DynamoDB: ${error} with params ${JSON.stringify(params)}`);
       throw new DynamoDBOperationError(
         `Unknown error retrieving data from DynamoDB: ${error instanceof Error ? error.message : String(error)}`,
         error,

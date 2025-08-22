@@ -24,8 +24,8 @@ import { createSchema, DeploymentTargets, parseAccountsConfig } from './common';
 import * as i from './models/accounts-config';
 import { OrganizationalUnitConfig } from './organization-config';
 import { getSSMParameterValue } from '../../utils/lib/get-value-from-ssm';
-import { getColumnFromConfigTable } from '../../utils/lib/get-column-from-config-table';
 import { Account } from '@aws-sdk/client-organizations';
+import { queryConfigTable } from '@aws-accelerator/utils/lib/query-config-table';
 
 const logger = createLogger(['accounts-config']);
 
@@ -229,18 +229,28 @@ export class AccountsConfig implements i.IAccountsConfig {
         }/prepare-stack/configTable/name`;
 
         const configTableName = await getSSMParameterValue(ssmConfigTableNameParameter, managementAccountCredentials);
+        const [mandatoryAccountItems, workloadAccountItems] = await Promise.all([
+          queryConfigTable(configTableName, 'mandatoryAccount', 'orgInfo', managementAccountCredentials),
+          queryConfigTable(configTableName, 'workloadAccount', 'orgInfo', managementAccountCredentials),
+        ]);
 
-        const mandatoryAccountPromises = accountsConfig.mandatoryAccounts.map(account =>
-          this.getAccountInfo(configTableName, 'mandatoryAccount', account.email),
+        const configAccountEmails = [
+          ...accountsConfig.mandatoryAccounts.map(account => account.email.toLowerCase()),
+          ...accountsConfig.workloadAccounts.map(account => account.email.toLowerCase()),
+        ];
+
+        const allAccounts = [
+          ...mandatoryAccountItems.map(item => JSON.parse(item['orgInfo'] as string) as AccountIdConfig),
+          ...workloadAccountItems.map(item => JSON.parse(item['orgInfo'] as string) as AccountIdConfig),
+        ];
+
+        const filteredAccounts = allAccounts.filter(account =>
+          configAccountEmails.includes(account.email.toLowerCase()),
         );
 
-        const workloadAccountPromises = accountsConfig.workloadAccounts.map(account =>
-          this.getAccountInfo(configTableName, 'workloadAccount', account.email),
-        );
+        logger.debug(`Successfully retrieved accounts data from DynamoDB`);
 
-        const accountsResults = await Promise.all([...mandatoryAccountPromises, ...workloadAccountPromises]);
-
-        this.accountIds.push(...accountsResults);
+        this.accountIds.push(...filteredAccounts);
 
         // orgs are enabled but load from dynamoDB is false
       } else if (isOrgsEnabled && !loadFromDynamoDbTable) {
@@ -434,16 +444,5 @@ export class AccountsConfig implements i.IAccountsConfig {
 
   public getAuditAccountId(): string {
     return this.getAccountId(AccountsConfig.AUDIT_ACCOUNT);
-  }
-
-  private async getAccountInfo(
-    configTableName: string,
-    accountType: 'workloadAccount' | 'mandatoryAccount',
-    accountEmail: string,
-  ) {
-    const accountInfo: AccountIdConfig = JSON.parse(
-      await getColumnFromConfigTable(configTableName, accountType, accountEmail, 'orgInfo'),
-    );
-    return accountInfo;
   }
 }

@@ -24,7 +24,7 @@ import * as t from './common';
 import * as i from './models/organization-config';
 import { ReplacementsConfig } from './replacements-config';
 import { getSSMParameterValue } from '../../utils/lib/get-value-from-ssm';
-import { getColumnFromConfigTable } from '../../utils/lib/get-column-from-config-table';
+import { queryConfigTable } from '@aws-accelerator/utils/lib/query-config-table';
 
 const logger = createLogger(['organization-config']);
 
@@ -212,21 +212,21 @@ export class OrganizationConfig implements i.IOrganizationConfig {
         process.env['ACCELERATOR_SSM_PARAM_NAME_PREFIX'] ?? '/accelerator'
       }/prepare-stack/configTable/name`;
       const configTableName = await getSSMParameterValue(ssmConfigTableNameParameter, managementAccountCredentials);
-      // make all calls in parallel
-      const organizationUnitsPromises = this.organizationalUnits.map(ou =>
-        getColumnFromConfigTable(configTableName, 'organization', ou.name, 'orgInfo'),
+
+      const organizationItems = await queryConfigTable(
+        configTableName,
+        'organization',
+        'orgInfo',
+        managementAccountCredentials,
       );
-      // get root information
-      const rootInfo = JSON.parse(await getColumnFromConfigTable(configTableName, 'organization', 'Root', 'orgInfo'));
 
-      // Wait for all promises to resolve
-      const organizationObjects = await Promise.all(organizationUnitsPromises);
+      const configOuNames = [...this.organizationalUnits.map(ou => ou.name), 'Root'];
+      const allOrganizations = organizationItems.map(
+        item => JSON.parse(item['orgInfo'] as string) as OrganizationalUnitIdConfig,
+      );
+      const filteredOrganizations = allOrganizations.filter(org => configOuNames.includes(org.name));
 
-      // Parse all JSON strings into objects
-      const organizationParsedObjects = organizationObjects.map(orgInfo => JSON.parse(orgInfo));
-
-      // Assign
-      this.organizationalUnitIds = [...organizationParsedObjects, rootInfo];
+      this.organizationalUnitIds = filteredOrganizations;
     }
   }
 
