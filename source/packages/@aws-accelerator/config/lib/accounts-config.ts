@@ -230,8 +230,20 @@ export class AccountsConfig implements i.IAccountsConfig {
 
         const configTableName = await getSSMParameterValue(ssmConfigTableNameParameter, managementAccountCredentials);
         const [mandatoryAccountItems, workloadAccountItems] = await Promise.all([
-          queryConfigTable(configTableName, 'mandatoryAccount', 'orgInfo', managementAccountCredentials),
-          queryConfigTable(configTableName, 'workloadAccount', 'orgInfo', managementAccountCredentials),
+          queryConfigTable(
+            configTableName,
+            'mandatoryAccount',
+            'orgInfo',
+            managementAccountCredentials,
+            process.env['CONFIG_COMMIT_ID'],
+          ),
+          queryConfigTable(
+            configTableName,
+            'workloadAccount',
+            'orgInfo',
+            managementAccountCredentials,
+            process.env['CONFIG_COMMIT_ID'],
+          ),
         ]);
 
         const configAccountEmails = [

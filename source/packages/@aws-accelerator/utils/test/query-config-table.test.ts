@@ -126,4 +126,19 @@ describe('queryConfigTable', () => {
     // Then
     expect(result).toEqual(expectedItems);
   });
+  it('should filter by commitId when provided', async () => {
+    // Given
+    const commitId = 'abc123';
+    const expectedItems = [{ dataType: 'mandatoryAccount', acceleratorKey: 'test1@example.com', commitId: 'abc123' }];
+
+    ddbMock.resolves({
+      Items: expectedItems,
+    });
+
+    // When
+    const result = await queryConfigTable(tableName, dataType, undefined, undefined, commitId);
+
+    // Then
+    expect(result).toEqual(expectedItems);
+  });
 });
