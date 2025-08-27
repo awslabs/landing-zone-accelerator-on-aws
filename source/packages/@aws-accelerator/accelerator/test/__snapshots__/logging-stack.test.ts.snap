@@ -16,7 +16,7 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 1`] = `
         "Description": "Custom resource provider to create service linked role",
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.12.5",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.6",
           },
         },
         "Handler": "index.handler",
@@ -152,7 +152,7 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 1`] = `
         "Description": "AWS CDK resource provider framework - onEvent (AWSAccelerator-LoggingStack-333333333333-us-east-1/AWSServiceRoleForAWSCloud9/CreateServiceLinkedRoleProvider)",
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.12.5",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.6",
             "USER_ON_EVENT_FUNCTION_ARN": {
               "Fn::GetAtt": [
                 "AWSServiceRoleForAWSCloud9CreateServiceLinkedRoleFunction78452922",
@@ -426,7 +426,7 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 1`] = `
         "Description": "Accelerator deployed CloudWatchDataProtection custom resource lambda function.",
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.12.5",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.6",
           },
         },
         "Handler": "index.handler",
@@ -586,7 +586,7 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 1`] = `
         "Description": "AWS CDK resource provider framework - onEvent (AWSAccelerator-LoggingStack-333333333333-us-east-1/AcceleratorCloudWatchDataProtection/CloudWatchDataProtection/Resource)",
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.12.5",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.6",
             "USER_ON_EVENT_FUNCTION_ARN": {
               "Fn::GetAtt": [
                 "AcceleratorCloudWatchDataProtectionFunctionAB6284FB",
@@ -2013,7 +2013,7 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 1`] = `
         "Description": "Custom resource provider to create service linked role",
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.12.5",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.6",
           },
         },
         "Handler": "index.handler",
@@ -2149,7 +2149,7 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 1`] = `
         "Description": "AWS CDK resource provider framework - onEvent (AWSAccelerator-LoggingStack-333333333333-us-east-1/AutoScalingServiceLinkedRole/CreateServiceLinkedRoleProvider)",
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.12.5",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.6",
             "USER_ON_EVENT_FUNCTION_ARN": {
               "Fn::GetAtt": [
                 "AutoScalingServiceLinkedRoleCreateServiceLinkedRoleFunction56E83FD3",
@@ -2420,7 +2420,7 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 1`] = `
         },
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.12.5",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.6",
           },
         },
         "Handler": "__entrypoint__.handler",
@@ -2515,7 +2515,7 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 1`] = `
         },
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.12.5",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.6",
           },
         },
         "Handler": "__entrypoint__.handler",
@@ -2606,7 +2606,7 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 1`] = `
         },
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.12.5",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.6",
           },
         },
         "Handler": "__entrypoint__.handler",
@@ -2725,7 +2725,7 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 1`] = `
           "Variables": {
             "AWS_STS_REGIONAL_ENDPOINTS": "regional",
             "NO_OP": "false",
-            "SOLUTION_ID": "AwsSolution/SO0199/1.12.5",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.6",
           },
         },
         "Handler": "__entrypoint__.handler",
@@ -3032,7 +3032,7 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 1`] = `
                 "Arn",
               ],
             },
-            "SOLUTION_ID": "AwsSolution/SO0199/1.12.5",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.6",
           },
         },
         "FunctionName": "AWSAccelerator-FirehoseRecordsProcessor",
@@ -3472,7 +3472,7 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 1`] = `
         "Description": "Accelerator deployed BucketPolicy custom resource lambda function.",
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.12.5",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.6",
           },
         },
         "Handler": "index.handler",
@@ -3615,7 +3615,7 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 1`] = `
         "Description": "AWS CDK resource provider framework - onEvent (AWSAccelerator-LoggingStack-333333333333-us-east-1/ImportedaccessLogsBucketPolicy/BucketPolicy/Resource)",
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.12.5",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.6",
             "USER_ON_EVENT_FUNCTION_ARN": {
               "Fn::GetAtt": [
                 "ImportedaccessLogsBucketPolicyFunctionE108A801",
@@ -3784,7 +3784,7 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 1`] = `
         "Description": "Accelerator deployed BucketPolicy custom resource lambda function.",
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.12.5",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.6",
           },
         },
         "Handler": "index.handler",
@@ -3927,7 +3927,7 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 1`] = `
         "Description": "AWS CDK resource provider framework - onEvent (AWSAccelerator-LoggingStack-333333333333-us-east-1/ImportedelbLogsBucketPolicy/BucketPolicy/Resource)",
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.12.5",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.6",
             "USER_ON_EVENT_FUNCTION_ARN": {
               "Fn::GetAtt": [
                 "ImportedelbLogsBucketPolicyFunction0F7A82C4",
@@ -4558,7 +4558,7 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 1`] = `
               ],
             },
             "LogSubscriptionType": "ACCOUNT",
-            "SOLUTION_ID": "AwsSolution/SO0199/1.12.5",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.6",
           },
         },
         "Handler": "index.handler",
@@ -4888,7 +4888,7 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 1`] = `
       "Properties": {
         "Name": "/accelerator/AWSAccelerator-LoggingStack-333333333333-us-east-1/version",
         "Type": "String",
-        "Value": "1.12.5",
+        "Value": "1.12.6",
       },
       "Type": "AWS::SSM::Parameter",
     },
@@ -4958,7 +4958,7 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 1`] = `
         "Description": "Accelerator deployed ValidateBucket custom resource lambda function.",
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.12.5",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.6",
           },
         },
         "Handler": "index.handler",
@@ -5123,7 +5123,7 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 1`] = `
         "Description": "AWS CDK resource provider framework - onEvent (AWSAccelerator-LoggingStack-333333333333-us-east-1/ValidateImportedaccessLogsBucket/ValidateBucket/Resource)",
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.12.5",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.6",
             "USER_ON_EVENT_FUNCTION_ARN": {
               "Fn::GetAtt": [
                 "ValidateImportedaccessLogsBucketValidateBucketFunction67AF64AE",
@@ -5251,7 +5251,7 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 1`] = `
         "Description": "Accelerator deployed ValidateBucket custom resource lambda function.",
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.12.5",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.6",
           },
         },
         "Handler": "index.handler",
@@ -5416,7 +5416,7 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 1`] = `
         "Description": "AWS CDK resource provider framework - onEvent (AWSAccelerator-LoggingStack-333333333333-us-east-1/ValidateImportedelbLogsBucket/ValidateBucket/Resource)",
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.12.5",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.6",
             "USER_ON_EVENT_FUNCTION_ARN": {
               "Fn::GetAtt": [
                 "ValidateImportedelbLogsBucketValidateBucketFunction9D3CDC99",
@@ -5551,7 +5551,7 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 2`] = `
         "Description": "Custom resource provider to create service linked role",
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.12.5",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.6",
           },
         },
         "Handler": "index.handler",
@@ -5675,7 +5675,7 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 2`] = `
         "Description": "AWS CDK resource provider framework - onEvent (AWSAccelerator-LoggingStack-333333333333-us-west-2/AWSServiceRoleForAWSCloud9/CreateServiceLinkedRoleProvider)",
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.12.5",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.6",
             "USER_ON_EVENT_FUNCTION_ARN": {
               "Fn::GetAtt": [
                 "AWSServiceRoleForAWSCloud9CreateServiceLinkedRoleFunction78452922",
@@ -6507,7 +6507,7 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 2`] = `
         "Description": "Custom resource provider to create service linked role",
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.12.5",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.6",
           },
         },
         "Handler": "index.handler",
@@ -6631,7 +6631,7 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 2`] = `
         "Description": "AWS CDK resource provider framework - onEvent (AWSAccelerator-LoggingStack-333333333333-us-west-2/AutoScalingServiceLinkedRole/CreateServiceLinkedRoleProvider)",
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.12.5",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.6",
             "USER_ON_EVENT_FUNCTION_ARN": {
               "Fn::GetAtt": [
                 "AutoScalingServiceLinkedRoleCreateServiceLinkedRoleFunction56E83FD3",
@@ -6777,7 +6777,7 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 2`] = `
         },
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.12.5",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.6",
           },
         },
         "Handler": "__entrypoint__.handler",
@@ -6867,7 +6867,7 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 2`] = `
         "Description": "Custom resource provider to put cross-account ssm parameter value",
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.12.5",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.6",
           },
         },
         "Handler": "__entrypoint__.handler",
@@ -6979,7 +6979,7 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 2`] = `
           "Variables": {
             "AWS_STS_REGIONAL_ENDPOINTS": "regional",
             "NO_OP": "false",
-            "SOLUTION_ID": "AwsSolution/SO0199/1.12.5",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.6",
           },
         },
         "Handler": "__entrypoint__.handler",
@@ -7258,7 +7258,7 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 2`] = `
                 "Arn",
               ],
             },
-            "SOLUTION_ID": "AwsSolution/SO0199/1.12.5",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.6",
           },
         },
         "FunctionName": "AWSAccelerator-FirehoseRecordsProcessor",
@@ -7649,7 +7649,7 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 2`] = `
         "Description": "Accelerator deployed S3CreateBucketPrefix custom resource lambda function.",
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.12.5",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.6",
           },
         },
         "Handler": "index.handler",
@@ -7794,7 +7794,7 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 2`] = `
         "Description": "AWS CDK resource provider framework - onEvent (AWSAccelerator-LoggingStack-333333333333-us-west-2/ImportedLogBucketPrefix/S3CreateBucketPrefix/Resource)",
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.12.5",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.6",
             "USER_ON_EVENT_FUNCTION_ARN": {
               "Fn::GetAtt": [
                 "ImportedLogBucketPrefixS3CreateBucketPrefixFunction72196444",
@@ -7958,7 +7958,7 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 2`] = `
         "Description": "Accelerator deployed BucketPolicy custom resource lambda function.",
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.12.5",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.6",
           },
         },
         "Handler": "index.handler",
@@ -8089,7 +8089,7 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 2`] = `
         "Description": "AWS CDK resource provider framework - onEvent (AWSAccelerator-LoggingStack-333333333333-us-west-2/ImportedaccessLogsBucketPolicy/BucketPolicy/Resource)",
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.12.5",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.6",
             "USER_ON_EVENT_FUNCTION_ARN": {
               "Fn::GetAtt": [
                 "ImportedaccessLogsBucketPolicyFunctionE108A801",
@@ -8240,7 +8240,7 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 2`] = `
         "Description": "Accelerator deployed BucketEncryption custom resource lambda function.",
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.12.5",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.6",
           },
         },
         "Handler": "index.handler",
@@ -8371,7 +8371,7 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 2`] = `
         "Description": "AWS CDK resource provider framework - onEvent (AWSAccelerator-LoggingStack-333333333333-us-west-2/ImportedcentralLogsBucketEncryption/BucketEncryption/Resource)",
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.12.5",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.6",
             "USER_ON_EVENT_FUNCTION_ARN": {
               "Fn::GetAtt": [
                 "ImportedcentralLogsBucketEncryptionFunction1213293C",
@@ -8793,7 +8793,7 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 2`] = `
         "Description": "Accelerator deployed BucketPolicy custom resource lambda function.",
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.12.5",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.6",
           },
         },
         "Handler": "index.handler",
@@ -8924,7 +8924,7 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 2`] = `
         "Description": "AWS CDK resource provider framework - onEvent (AWSAccelerator-LoggingStack-333333333333-us-west-2/ImportedcentralLogsBucketPolicy/BucketPolicy/Resource)",
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.12.5",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.6",
             "USER_ON_EVENT_FUNCTION_ARN": {
               "Fn::GetAtt": [
                 "ImportedcentralLogsBucketPolicyFunction52BB88BE",
@@ -9093,7 +9093,7 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 2`] = `
         "Description": "Accelerator deployed BucketPolicy custom resource lambda function.",
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.12.5",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.6",
           },
         },
         "Handler": "index.handler",
@@ -9224,7 +9224,7 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 2`] = `
         "Description": "AWS CDK resource provider framework - onEvent (AWSAccelerator-LoggingStack-333333333333-us-west-2/ImportedelbLogsBucketPolicy/BucketPolicy/Resource)",
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.12.5",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.6",
             "USER_ON_EVENT_FUNCTION_ARN": {
               "Fn::GetAtt": [
                 "ImportedelbLogsBucketPolicyFunction0F7A82C4",
@@ -9843,7 +9843,7 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 2`] = `
               ],
             },
             "LogSubscriptionType": "ACCOUNT",
-            "SOLUTION_ID": "AwsSolution/SO0199/1.12.5",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.6",
           },
         },
         "Handler": "index.handler",
@@ -10165,7 +10165,7 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 2`] = `
       "Properties": {
         "Name": "/accelerator/AWSAccelerator-LoggingStack-333333333333-us-west-2/version",
         "Type": "String",
-        "Value": "1.12.5",
+        "Value": "1.12.6",
       },
       "Type": "AWS::SSM::Parameter",
     },
@@ -10235,7 +10235,7 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 2`] = `
         "Description": "Accelerator deployed ValidateBucket custom resource lambda function.",
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.12.5",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.6",
           },
         },
         "Handler": "index.handler",
@@ -10388,7 +10388,7 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 2`] = `
         "Description": "AWS CDK resource provider framework - onEvent (AWSAccelerator-LoggingStack-333333333333-us-west-2/ValidateImportedaccessLogsBucket/ValidateBucket/Resource)",
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.12.5",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.6",
             "USER_ON_EVENT_FUNCTION_ARN": {
               "Fn::GetAtt": [
                 "ValidateImportedaccessLogsBucketValidateBucketFunction67AF64AE",
@@ -10516,7 +10516,7 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 2`] = `
         "Description": "Accelerator deployed ValidateBucket custom resource lambda function.",
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.12.5",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.6",
           },
         },
         "Handler": "index.handler",
@@ -10669,7 +10669,7 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 2`] = `
         "Description": "AWS CDK resource provider framework - onEvent (AWSAccelerator-LoggingStack-333333333333-us-west-2/ValidateImportedcentralLogsBucket/ValidateBucket/Resource)",
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.12.5",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.6",
             "USER_ON_EVENT_FUNCTION_ARN": {
               "Fn::GetAtt": [
                 "ValidateImportedcentralLogsBucketValidateBucketFunctionA46C1293",
@@ -10797,7 +10797,7 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 2`] = `
         "Description": "Accelerator deployed ValidateBucket custom resource lambda function.",
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.12.5",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.6",
           },
         },
         "Handler": "index.handler",
@@ -10950,7 +10950,7 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 2`] = `
         "Description": "AWS CDK resource provider framework - onEvent (AWSAccelerator-LoggingStack-333333333333-us-west-2/ValidateImportedelbLogsBucket/ValidateBucket/Resource)",
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.12.5",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.6",
             "USER_ON_EVENT_FUNCTION_ARN": {
               "Fn::GetAtt": [
                 "ValidateImportedelbLogsBucketValidateBucketFunction9D3CDC99",
@@ -11085,7 +11085,7 @@ exports[`LoggingStackDelegatedAdmin Construct(LoggingStacKDelegatedAdmin):  Snap
         "Description": "Custom resource provider to create service linked role",
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.12.5",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.6",
           },
         },
         "Handler": "index.handler",
@@ -11221,7 +11221,7 @@ exports[`LoggingStackDelegatedAdmin Construct(LoggingStacKDelegatedAdmin):  Snap
         "Description": "AWS CDK resource provider framework - onEvent (AWSAccelerator-LoggingStack-333333333333-us-west-2/AWSServiceRoleForAWSCloud9/CreateServiceLinkedRoleProvider)",
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.12.5",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.6",
             "USER_ON_EVENT_FUNCTION_ARN": {
               "Fn::GetAtt": [
                 "AWSServiceRoleForAWSCloud9CreateServiceLinkedRoleFunction78452922",
@@ -12021,7 +12021,7 @@ exports[`LoggingStackDelegatedAdmin Construct(LoggingStacKDelegatedAdmin):  Snap
         "Description": "Custom resource provider to create service linked role",
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.12.5",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.6",
           },
         },
         "Handler": "index.handler",
@@ -12157,7 +12157,7 @@ exports[`LoggingStackDelegatedAdmin Construct(LoggingStacKDelegatedAdmin):  Snap
         "Description": "AWS CDK resource provider framework - onEvent (AWSAccelerator-LoggingStack-333333333333-us-west-2/AutoScalingServiceLinkedRole/CreateServiceLinkedRoleProvider)",
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.12.5",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.6",
             "USER_ON_EVENT_FUNCTION_ARN": {
               "Fn::GetAtt": [
                 "AutoScalingServiceLinkedRoleCreateServiceLinkedRoleFunction56E83FD3",
@@ -13131,7 +13131,7 @@ exports[`LoggingStackDelegatedAdmin Construct(LoggingStacKDelegatedAdmin):  Snap
         "Description": "Accelerator deployed S3CreateBucketPrefix custom resource lambda function.",
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.12.5",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.6",
           },
         },
         "Handler": "index.handler",
@@ -13296,7 +13296,7 @@ exports[`LoggingStackDelegatedAdmin Construct(LoggingStacKDelegatedAdmin):  Snap
         "Description": "AWS CDK resource provider framework - onEvent (AWSAccelerator-LoggingStack-333333333333-us-west-2/CentralLogsBucket/Resource/ResourcePrefix/S3CreateBucketPrefix/Resource)",
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.12.5",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.6",
             "USER_ON_EVENT_FUNCTION_ARN": {
               "Fn::GetAtt": [
                 "CentralLogsBucketResourcePrefixS3CreateBucketPrefixFunction67F48788",
@@ -13435,7 +13435,7 @@ exports[`LoggingStackDelegatedAdmin Construct(LoggingStacKDelegatedAdmin):  Snap
         },
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.12.5",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.6",
           },
         },
         "Handler": "__entrypoint__.handler",
@@ -13532,7 +13532,7 @@ exports[`LoggingStackDelegatedAdmin Construct(LoggingStacKDelegatedAdmin):  Snap
           "Variables": {
             "AWS_STS_REGIONAL_ENDPOINTS": "regional",
             "NO_OP": "false",
-            "SOLUTION_ID": "AwsSolution/SO0199/1.12.5",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.6",
           },
         },
         "Handler": "__entrypoint__.handler",
@@ -14357,7 +14357,7 @@ exports[`LoggingStackDelegatedAdmin Construct(LoggingStacKDelegatedAdmin):  Snap
                 "Arn",
               ],
             },
-            "SOLUTION_ID": "AwsSolution/SO0199/1.12.5",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.6",
           },
         },
         "FunctionName": "AWSAccelerator-FirehoseRecordsProcessor",
@@ -15330,7 +15330,7 @@ exports[`LoggingStackDelegatedAdmin Construct(LoggingStacKDelegatedAdmin):  Snap
               ],
             },
             "LogSubscriptionType": "LOG_GROUP",
-            "SOLUTION_ID": "AwsSolution/SO0199/1.12.5",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.6",
           },
         },
         "Handler": "index.handler",
@@ -15639,7 +15639,7 @@ exports[`LoggingStackDelegatedAdmin Construct(LoggingStacKDelegatedAdmin):  Snap
       "Properties": {
         "Name": "/accelerator/AWSAccelerator-LoggingStack-333333333333-us-west-2/version",
         "Type": "String",
-        "Value": "1.12.5",
+        "Value": "1.12.6",
       },
       "Type": "AWS::SSM::Parameter",
     },
@@ -15716,7 +15716,7 @@ exports[`LoggingStackOuTargets Construct(LoggingStackOuTargets):  Snapshot Test 
         "Description": "Custom resource provider to create service linked role",
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.12.5",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.6",
           },
         },
         "Handler": "index.handler",
@@ -15852,7 +15852,7 @@ exports[`LoggingStackOuTargets Construct(LoggingStackOuTargets):  Snapshot Test 
         "Description": "AWS CDK resource provider framework - onEvent (AWSAccelerator-LoggingStack-333333333333-us-east-1/AWSServiceRoleForAWSCloud9/CreateServiceLinkedRoleProvider)",
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.12.5",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.6",
             "USER_ON_EVENT_FUNCTION_ARN": {
               "Fn::GetAtt": [
                 "AWSServiceRoleForAWSCloud9CreateServiceLinkedRoleFunction78452922",
@@ -17113,7 +17113,7 @@ exports[`LoggingStackOuTargets Construct(LoggingStackOuTargets):  Snapshot Test 
         "Description": "Custom resource provider to create service linked role",
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.12.5",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.6",
           },
         },
         "Handler": "index.handler",
@@ -17249,7 +17249,7 @@ exports[`LoggingStackOuTargets Construct(LoggingStackOuTargets):  Snapshot Test 
         "Description": "AWS CDK resource provider framework - onEvent (AWSAccelerator-LoggingStack-333333333333-us-east-1/AutoScalingServiceLinkedRole/CreateServiceLinkedRoleProvider)",
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.12.5",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.6",
             "USER_ON_EVENT_FUNCTION_ARN": {
               "Fn::GetAtt": [
                 "AutoScalingServiceLinkedRoleCreateServiceLinkedRoleFunction56E83FD3",
@@ -17520,7 +17520,7 @@ exports[`LoggingStackOuTargets Construct(LoggingStackOuTargets):  Snapshot Test 
         },
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.12.5",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.6",
           },
         },
         "Handler": "__entrypoint__.handler",
@@ -17615,7 +17615,7 @@ exports[`LoggingStackOuTargets Construct(LoggingStackOuTargets):  Snapshot Test 
         },
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.12.5",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.6",
           },
         },
         "Handler": "__entrypoint__.handler",
@@ -17706,7 +17706,7 @@ exports[`LoggingStackOuTargets Construct(LoggingStackOuTargets):  Snapshot Test 
         },
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.12.5",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.6",
           },
         },
         "Handler": "__entrypoint__.handler",
@@ -17825,7 +17825,7 @@ exports[`LoggingStackOuTargets Construct(LoggingStackOuTargets):  Snapshot Test 
           "Variables": {
             "AWS_STS_REGIONAL_ENDPOINTS": "regional",
             "NO_OP": "false",
-            "SOLUTION_ID": "AwsSolution/SO0199/1.12.5",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.6",
           },
         },
         "Handler": "__entrypoint__.handler",
@@ -18504,7 +18504,7 @@ exports[`LoggingStackOuTargets Construct(LoggingStackOuTargets):  Snapshot Test 
                 "Arn",
               ],
             },
-            "SOLUTION_ID": "AwsSolution/SO0199/1.12.5",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.6",
           },
         },
         "FunctionName": "AWSAccelerator-FirehoseRecordsProcessor",
@@ -19406,7 +19406,7 @@ exports[`LoggingStackOuTargets Construct(LoggingStackOuTargets):  Snapshot Test 
               ],
             },
             "LogSubscriptionType": "LOG_GROUP",
-            "SOLUTION_ID": "AwsSolution/SO0199/1.12.5",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.6",
           },
         },
         "Handler": "index.handler",
@@ -19736,7 +19736,7 @@ exports[`LoggingStackOuTargets Construct(LoggingStackOuTargets):  Snapshot Test 
       "Properties": {
         "Name": "/accelerator/AWSAccelerator-LoggingStack-333333333333-us-east-1/version",
         "Type": "String",
-        "Value": "1.12.5",
+        "Value": "1.12.6",
       },
       "Type": "AWS::SSM::Parameter",
     },

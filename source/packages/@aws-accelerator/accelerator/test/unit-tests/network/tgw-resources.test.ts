@@ -30,6 +30,7 @@ describe('TgwResources - Transit Gateway Peering', () => {
   let cloudWatchKey: IKey;
 
   beforeEach(() => {
+    cloudWatchKey = {} as IKey;
     jest.spyOn(NetworkVpcStack.prototype, 'getSsmPath').mockReturnValue('/test/ssm-path/');
     jest.spyOn(NetworkVpcStack.prototype, 'getAcceleratorKey').mockImplementation(() => cloudWatchKey as IKey);
 

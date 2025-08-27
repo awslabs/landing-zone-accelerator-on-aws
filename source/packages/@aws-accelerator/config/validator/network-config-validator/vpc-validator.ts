@@ -887,7 +887,7 @@ export class VpcValidator {
    * @param values
    */
   private validateVpcConfiguration(values: NetworkConfig, helpers: NetworkValidatorFunctions, errors: string[]) {
-    const vpcs = [...values.vpcs, ...(values.vpcTemplates ?? [])] ?? [];
+    const vpcs = [...values.vpcs, ...(values.vpcTemplates ?? [])];
     vpcs.forEach(vpcItem => {
       //
       // Validate VPC structure

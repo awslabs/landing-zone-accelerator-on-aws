@@ -16,7 +16,7 @@ exports[`DetectiveOrganizationAdminAccount Construct(DetectiveOrganizationAdminA
         },
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.12.5",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.6",
           },
         },
         "Handler": "__entrypoint__.handler",

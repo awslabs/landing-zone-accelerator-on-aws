@@ -409,7 +409,7 @@ exports[`NetworkVpcEndpointsStack Construct(NetworkVpcEndpointsStack):  Snapshot
         },
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.12.5",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.6",
           },
         },
         "Handler": "__entrypoint__.handler",
@@ -502,7 +502,7 @@ exports[`NetworkVpcEndpointsStack Construct(NetworkVpcEndpointsStack):  Snapshot
         },
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.12.5",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.6",
           },
         },
         "Handler": "__entrypoint__.handler",
@@ -2404,7 +2404,7 @@ exports[`NetworkVpcEndpointsStack Construct(NetworkVpcEndpointsStack):  Snapshot
       "Properties": {
         "Name": "/accelerator/AWSAccelerator-NetworkVpcEndpointsStack-555555555555-us-east-1/version",
         "Type": "String",
-        "Value": "1.12.5",
+        "Value": "1.12.6",
       },
       "Type": "AWS::SSM::Parameter",
     },

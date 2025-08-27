@@ -24,7 +24,7 @@ exports[`IdentityCenterStack Construct(IdentityCenterStack):  Snapshot Test 1`] 
         },
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.12.5",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.6",
           },
         },
         "Handler": "__entrypoint__.handler",
@@ -294,7 +294,7 @@ exports[`IdentityCenterStack Construct(IdentityCenterStack):  Snapshot Test 1`] 
         "Description": "Accelerator deployed IdentityCenterGetInstanceId custom resource lambda function.",
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.12.5",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.6",
           },
         },
         "Handler": "index.handler",
@@ -437,7 +437,7 @@ exports[`IdentityCenterStack Construct(IdentityCenterStack):  Snapshot Test 1`] 
         "Description": "AWS CDK resource provider framework - onEvent (AWSAccelerator-IdentityCenterStack-111111111111-us-east-1/IdentityCenterInstance/IdentityCenterGetInstanceId/Resource)",
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.12.5",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.6",
             "USER_ON_EVENT_FUNCTION_ARN": {
               "Fn::GetAtt": [
                 "IdentityCenterInstanceIdentityCenterGetInstanceIdFunctionE59FDB54",
@@ -780,7 +780,7 @@ exports[`IdentityCenterStack Construct(IdentityCenterStack):  Snapshot Test 1`] 
       "Properties": {
         "Name": "/accelerator/AWSAccelerator-IdentityCenterStack-111111111111-us-east-1/version",
         "Type": "String",
-        "Value": "1.12.5",
+        "Value": "1.12.6",
       },
       "Type": "AWS::SSM::Parameter",
     },

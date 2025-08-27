@@ -239,7 +239,7 @@ exports[`FinalizeStack Construct(FinalizeStack):  Snapshot Test 1`] = `
         },
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.12.5",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.6",
           },
         },
         "Handler": "__entrypoint__.handler",
@@ -349,7 +349,7 @@ exports[`FinalizeStack Construct(FinalizeStack):  Snapshot Test 1`] = `
         },
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.12.5",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.6",
           },
         },
         "Handler": "__entrypoint__.handler",
@@ -461,7 +461,7 @@ exports[`FinalizeStack Construct(FinalizeStack):  Snapshot Test 1`] = `
         },
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.12.5",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.6",
           },
         },
         "Handler": "__entrypoint__.handler",
@@ -554,7 +554,7 @@ exports[`FinalizeStack Construct(FinalizeStack):  Snapshot Test 1`] = `
         "Description": "Organizations create policy",
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.12.5",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.6",
           },
         },
         "Handler": "__entrypoint__.handler",
@@ -818,7 +818,7 @@ exports[`FinalizeStack Construct(FinalizeStack):  Snapshot Test 1`] = `
                 ],
               ],
             },
-            "SOLUTION_ID": "AwsSolution/SO0199/1.12.5",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.6",
           },
         },
         "Handler": "index.handler",
@@ -974,7 +974,7 @@ exports[`FinalizeStack Construct(FinalizeStack):  Snapshot Test 1`] = `
       "Properties": {
         "Name": "/accelerator/AWSAccelerator-FinalizeStack-111111111111-us-east-1/version",
         "Type": "String",
-        "Value": "1.12.5",
+        "Value": "1.12.6",
       },
       "Type": "AWS::SSM::Parameter",
     },

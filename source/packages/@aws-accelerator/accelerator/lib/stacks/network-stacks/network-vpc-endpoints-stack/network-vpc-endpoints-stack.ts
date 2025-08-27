@@ -725,7 +725,7 @@ export class NetworkVpcEndpointsStack extends NetworkStack {
 
     // Create the interface endpoint
     const securityGroupMap = new Map<string, SecurityGroup>();
-    const privateDnsValue = !vpcItem.interfaceEndpoints?.central ?? true;
+    const privateDnsValue = vpcItem.interfaceEndpoints?.central === false;
 
     for (const endpointItem of vpcItem.interfaceEndpoints?.endpoints ?? []) {
       if (this.isManagedByAsea(AseaResourceType.VPC_ENDPOINT, `${vpcItem.name}/${endpointItem.service}`)) {

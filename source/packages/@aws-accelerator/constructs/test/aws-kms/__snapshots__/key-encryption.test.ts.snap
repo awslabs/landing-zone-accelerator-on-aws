@@ -177,7 +177,7 @@ exports[`KmsEncryption Construct(KmsEncryption):  Snapshot Test 1`] = `
         "Description": "Accelerator deployed KmsEncryption custom resource lambda function.",
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.12.5",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.6",
           },
         },
         "Handler": "index.handler",
@@ -336,7 +336,7 @@ exports[`KmsEncryption Construct(KmsEncryption):  Snapshot Test 1`] = `
         "Description": "AWS CDK resource provider framework - onEvent (Default/KeyLookup/KmsEncryption/Resource)",
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.12.5",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.6",
             "USER_ON_EVENT_FUNCTION_ARN": {
               "Fn::GetAtt": [
                 "KeyLookupKmsEncryptionFunction076D1396",

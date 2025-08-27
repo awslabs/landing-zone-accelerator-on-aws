@@ -244,7 +244,7 @@ exports[`ShareActiveDirectory Construct(ShareActiveDirectory):  Snapshot Test 1`
         "Description": "Share Manage active directory handler",
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.12.5",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.6",
           },
         },
         "Handler": "index.handler",
@@ -380,7 +380,7 @@ exports[`ShareActiveDirectory Construct(ShareActiveDirectory):  Snapshot Test 1`
         "Description": "AWS CDK resource provider framework - onEvent (Default/ShareActiveDirectory/ShareManageActiveDirectoryProvider)",
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.12.5",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.12.6",
             "USER_ON_EVENT_FUNCTION_ARN": {
               "Fn::GetAtt": [
                 "ShareActiveDirectoryShareManageActiveDirectoryFunction44493028",
