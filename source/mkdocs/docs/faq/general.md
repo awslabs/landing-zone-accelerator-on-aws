@@ -31,3 +31,61 @@ Customers are able use the [AWS Support console](https://support.console.aws.ama
 ## Where can I find a software bill of materials (SBOM) for the Landing Zone Accelerator?
 
 A software bill of materials can be generated from the Landing Zone Accelerator repository hosted on [GitHub](https://github.com/awslabs/landing-zone-accelerator-on-aws). For instructions on how to generate the SBOM, please see [Exporting a software bill of materials for your repository](https://docs.github.com/en/code-security/supply-chain-security/understanding-your-software-supply-chain/exporting-a-software-bill-of-materials-for-your-repository).
+
+## How do I add a new region to Landing Zone Accelerator?
+
+The process for adding a new region depends on your deployment type. Choose the appropriate section below:
+
+### With AWS Organizations Only (No Control Tower)
+
+**Prerequisites:**
+
+1. For opt-in regions: Ensure STS Global Endpoints are set to be valid in all regions (IAM Settings in the Management account)
+2. For opt-in regions: Set `enableOptInRegions: true` in `global-config.yaml`
+3. In `security-config.yaml`, configure proper exclusions for security services or Config Rules that are not available in the target region (e.g., Amazon Macie is not supported in ca-west-1)
+4. Ensure AWS Config is enabled: Add `enableConfigurationRecorder: true` under `awsConfig` in `security-config.yaml`
+
+**Configuration Steps:**
+
+1. Add the new region to `enabledRegions` in `global-config.yaml`
+2. Deploy the LZA pipeline
+3. Monitor the deployment for any failed stacks and address issues as needed
+
+**Troubleshooting:**
+
+- **Failed Security_Resources Stacks:** If stacks fail during deployment:
+  1. Disable termination protection on failed stacks
+  2. Manually delete the orphaned CloudFormation stacks in the new region
+  3. Retry the Deploy stage in the LZA pipeline
+
+### With AWS Control Tower
+
+**Prerequisites:**
+
+1. For opt-in regions: Ensure STS Global Endpoints are set to be valid in all regions (IAM Settings in the Management account)
+2. For opt-in regions: Set `enableOptInRegions: true` in `global-config.yaml`
+3. Have Control Tower managed by LZA by defining the `controlTower/landingZone` in `global-config.yaml`
+4. In `security-config.yaml`, configure proper exclusions for security services or Config Rules that are not available in the target region (e.g., Amazon Macie is not supported in ca-west-1)
+5. Optionally, ensure AWS Config is enabled: Add `enableConfigurationRecorder: true` under `awsConfig` in `security-config.yaml`
+
+**Configuration Steps:**
+
+1. Add the new region to `enabledRegions` in `global-config.yaml`
+2. Deploy the LZA pipeline - it will call the UpdateLandingZone API with the new regions during the Prepare stage
+3. Once the operation completes, all accounts outside the Security OU will show as "Update Available" in Control Tower
+4. **Critical Step:** Manually update all accounts in Control Tower (5 at a time) to activate the region and deploy AWS Config recorders
+5. Verify all accounts show "Enrolled" status before proceeding
+
+**Troubleshooting:**
+
+- **"NoAvailableConfigurationRecorder" Error:** This occurs when AWS Config is not properly set up in the new region. You must update accounts in Control Tower before retrying the LZA pipeline.
+- **Failed Security_Resources Stacks:** If stacks fail during initial deployment:
+  1. Disable termination protection on failed stacks
+  2. Manually delete the orphaned CloudFormation stacks in the new region
+  3. Retry the Deploy stage in the LZA pipeline
+- **Mixed Governance State:** Ensure all accounts show as "Enrolled" (not "Update Available") in Control Tower before proceeding
+
+**Important Notes for Control Tower Deployments:**
+- Simply adding a region to `global-config.yaml` is not sufficient - manual Control Tower account updates are required
+- The process may take significant time for environments with many accounts
+- Always update Control Tower accounts before retrying failed LZA pipeline actions
