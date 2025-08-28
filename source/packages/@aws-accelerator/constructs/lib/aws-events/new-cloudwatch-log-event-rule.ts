@@ -137,6 +137,8 @@ export class NewCloudWatchLogEvent extends Construct {
         detail: {
           eventSource: ['logs.amazonaws.com'],
           eventName: ['CreateLogGroup'],
+          errorCode: [{ exists: false }],
+          errorMessage: [{ exists: false }],
         },
       },
     });
