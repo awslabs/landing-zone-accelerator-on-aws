@@ -351,6 +351,16 @@ exports[`NewCloudWatchLogEvent Construct(NewCloudWatchLogEvent):  Snapshot Test 
       "Properties": {
         "EventPattern": {
           "detail": {
+            "errorCode": [
+              {
+                "exists": false,
+              },
+            ],
+            "errorMessage": [
+              {
+                "exists": false,
+              },
+            ],
             "eventName": [
               "CreateLogGroup",
             ],
@@ -844,6 +854,16 @@ exports[`NewCloudWatchLogEvent Construct(NewCloudWatchLogEvent):  Snapshot Test 
       "Properties": {
         "EventPattern": {
           "detail": {
+            "errorCode": [
+              {
+                "exists": false,
+              },
+            ],
+            "errorMessage": [
+              {
+                "exists": false,
+              },
+            ],
             "eventName": [
               "CreateLogGroup",
             ],
