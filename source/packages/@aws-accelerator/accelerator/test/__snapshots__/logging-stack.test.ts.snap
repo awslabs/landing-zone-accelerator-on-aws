@@ -4485,6 +4485,16 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 1`] = `
       "Properties": {
         "EventPattern": {
           "detail": {
+            "errorCode": [
+              {
+                "exists": false,
+              },
+            ],
+            "errorMessage": [
+              {
+                "exists": false,
+              },
+            ],
             "eventName": [
               "CreateLogGroup",
             ],
@@ -9776,6 +9786,16 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 2`] = `
       "Properties": {
         "EventPattern": {
           "detail": {
+            "errorCode": [
+              {
+                "exists": false,
+              },
+            ],
+            "errorMessage": [
+              {
+                "exists": false,
+              },
+            ],
             "eventName": [
               "CreateLogGroup",
             ],
@@ -15257,6 +15277,16 @@ exports[`LoggingStackDelegatedAdmin Construct(LoggingStacKDelegatedAdmin):  Snap
       "Properties": {
         "EventPattern": {
           "detail": {
+            "errorCode": [
+              {
+                "exists": false,
+              },
+            ],
+            "errorMessage": [
+              {
+                "exists": false,
+              },
+            ],
             "eventName": [
               "CreateLogGroup",
             ],
@@ -19333,6 +19363,16 @@ exports[`LoggingStackOuTargets Construct(LoggingStackOuTargets):  Snapshot Test 
       "Properties": {
         "EventPattern": {
           "detail": {
+            "errorCode": [
+              {
+                "exists": false,
+              },
+            ],
+            "errorMessage": [
+              {
+                "exists": false,
+              },
+            ],
             "eventName": [
               "CreateLogGroup",
             ],
