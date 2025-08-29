@@ -141,11 +141,15 @@ else
     fi
 fi
 
+
 # PHASE 1: Deploy prepare and accounts stages first
 # These stages create the organizational structure and accounts
 echo "Running Prepare and Accounts stages"
 for Item1 in prepare accounts; do
     echo "DEPLOYING $Item1 STACK"
+
+    RUNNER_ARGS="--partition ${PARTITION} --region ${AWS_REGION} --config-dir $srcDirConfig --stage $Item1 --prefix AWSAccelerator"
+    set -e && yarn run ts-node ../modules/bin/runner.ts $RUNNER_ARGS
     
     yarn run ts-node --transpile-only cdk.ts synth \
         --stage $Item1 \
@@ -171,6 +175,8 @@ done
 # This ensures all newly created accounts are properly bootstrapped
 echo "BOOTSTRAPPING ALL ACCOUNTS"
 
+RUNNER_ARGS="--partition ${PARTITION} --region ${AWS_REGION} --config-dir $srcDirConfig --stage bootstrap --prefix AWSAccelerator"
+set -e && yarn run ts-node ../modules/bin/runner.ts $RUNNER_ARGS
 yarn run ts-node --transpile-only cdk.ts --require-approval never synth \
     --stage bootstrap \
     --config-dir $srcDirConfig \
@@ -183,6 +189,11 @@ yarn run ts-node --transpile-only cdk.ts --require-approval never bootstrap \
     --ca-bundle-path $caBundlePath \
     --app cdk.out
 
+## adding this specifically for network refactor v2 stacks
+RUNNER_ARGS="--partition ${PARTITION} --region ${AWS_REGION} --config-dir $srcDirConfig --stage network-vpc --prefix AWSAccelerator"
+set -e && CDK_OPTIONS=bootstrap yarn run ts-node ../modules/bin/runner.ts $RUNNER_ARGS
+
+
 if [ $? -ne 0 ]; then
     echo "BOOTSTRAP FAILED"
     exit 1
@@ -193,21 +204,12 @@ if [ -z "$SomeStacks" ]; then
     # If no specific stacks are specified, synthesize all stacks
     echo "Synthesizing all stacks"
     
-    yarn run ts-node --transpile-only cdk.ts synth \
-        --require-approval never \
-        --config-dir $srcDirConfig \
-        --partition $PARTITION \
-        --ca-bundle-path $caBundlePath
-    
-    if [ $? -ne 0 ]; then
-        echo "SYNTH FAILED"
-        exit 1
-    fi
-    
     # Deploy all remaining stacks in the predefined order
     echo "Deploying all remaining stacks in sequence"
     for Item1 in ${AllStacks[*]}; do
-        echo "DEPLOYING $Item1 STACK"
+        echo "DEPLOYING $Item1 STAGE"
+        RUNNER_ARGS="--partition ${PARTITION} --region ${AWS_REGION} --config-dir $srcDirConfig --stage $Item1 --prefix AWSAccelerator"
+        set -e && yarn run ts-node ../modules/bin/runner.ts $RUNNER_ARGS
         
         yarn run ts-node --transpile-only cdk.ts synth \
             --stage $Item1 \
@@ -224,15 +226,18 @@ if [ -z "$SomeStacks" ]; then
             --app cdk.out
         
         if [ $? -ne 0 ]; then
-            echo "$Item1 STACK FAILED"
+            echo "$Item1 STAGE FAILED"
             exit 1
         fi
     done
 else
     # Deploy only the specified stacks
-    echo "DEPLOYING ${SomeStacks[*]} STACKS"
+    echo "DEPLOYING ${SomeStacks[*]} STAGES"
     for Item2 in ${SomeStacks[*]}; do
-        echo "DEPLOYING $Item2 STACK"
+        echo "DEPLOYING $Item2 STAGE"
+
+        RUNNER_ARGS="--partition ${PARTITION} --region ${AWS_REGION} --config-dir $srcDirConfig --stage $Item2 --prefix AWSAccelerator"
+        set -e && yarn run ts-node ../modules/bin/runner.ts $RUNNER_ARGS
         
         yarn run ts-node --transpile-only cdk.ts synth \
             --stage $Item2 \
@@ -247,6 +252,10 @@ else
             --partition $PARTITION \
             --ca-bundle-path $caBundlePath \
             --app cdk.out
+        if [ $? -ne 0 ]; then
+            echo "$Item2 STAGE FAILED"
+            exit 1
+        fi
     done
 fi
 
