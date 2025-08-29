@@ -33,6 +33,8 @@ import {
   IOrganizationalUnitDetailsType,
 } from '../interfaces/aws-organizations/get-organizational-units-detail';
 import { GetOrganizationalUnitsDetailModule } from '../lib/aws-organizations/get-organizational-units-detail';
+import { ManageAccountAlias } from '../lib/aws-organizations/manage-account-alias';
+import { IManageAccountAliasHandlerParameter } from '../interfaces/aws-organizations/manage-account-alias';
 
 process.on('uncaughtException', err => {
   throw err;
@@ -314,6 +316,33 @@ export async function getOrganizationalUnitsDetail(
 ): Promise<IOrganizationalUnitDetailsType[]> {
   try {
     return await new GetOrganizationalUnitsDetailModule().handler(input);
+  } catch (e: unknown) {
+    logger.error(e);
+    throw e;
+  }
+}
+
+/**
+ * Function to manage AWS Organizations account alias
+ * @param input {@link IManageAccountAliasHandlerParameter}
+ * @returns status array of strings indicating the result(s) of the operation
+ *
+ * @description
+ * Use this function to manage an account alias
+ *
+ * @example
+ * const input: IManageAccountAliasHandlerParameter = {
+ *   operation: 'manage-account-alias',
+ *   partition: 'aws',
+ *   region: 'us-east-1',
+ *   configuration: {
+ *     alias: 'my-account-alias',
+ *   },
+ * };
+ */
+export async function manageAccountAlias(input: IManageAccountAliasHandlerParameter): Promise<string> {
+  try {
+    return await new ManageAccountAlias().handler(input);
   } catch (e: unknown) {
     logger.error(e);
     throw e;

@@ -58,10 +58,12 @@ export { getOrganizationalUnitsDetail } from './executors/accelerator-aws-organi
 
 export { getOrganizationId } from './common/functions';
 
+export { IManageAccountAliasHandlerParameter } from './interfaces/aws-organizations/manage-account-alias';
+export { manageAccountAlias } from './executors/accelerator-aws-organizations';
+
 //
 // Amazon EC2 Module resources
 //
-
 export { IManageEbsDefaultEncryptionHandlerParameter } from './interfaces/amazon-ec2/manage-ebs-default-encryption';
 export { manageEbsDefaultEncryption } from './executors/accelerator-amazon-ec2';
 

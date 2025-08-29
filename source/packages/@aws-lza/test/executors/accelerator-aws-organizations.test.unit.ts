@@ -18,6 +18,7 @@ import {
   getOrganizationalUnitsDetail,
   inviteAccountsBatchToOrganization,
   inviteAccountToOrganization,
+  manageAccountAlias,
   moveAccount,
   moveAccountsBatch,
 } from '../../executors/accelerator-aws-organizations';
@@ -28,6 +29,7 @@ import { MoveAccountModule } from '../../lib/aws-organizations/move-account';
 import { InviteAccountsBatchToOrganizationModule } from '../../lib/aws-organizations/invite-accounts-batch-to-organization';
 import { MoveAccountsBatchModule } from '../../lib/aws-organizations/move-accounts-batch';
 import { GetOrganizationalUnitsDetailModule } from '../../lib/aws-organizations/get-organizational-units-detail';
+import { ManageAccountAlias } from '../../lib/aws-organizations/manage-account-alias';
 
 // Mock dependencies
 jest.mock('../../lib/aws-organizations/create-organizational-unit/index');
@@ -36,6 +38,7 @@ jest.mock('../../lib/aws-organizations/invite-accounts-batch-to-organization/ind
 jest.mock('../../lib/aws-organizations/move-account/index');
 jest.mock('../../lib/aws-organizations/move-accounts-batch/index');
 jest.mock('../../lib/aws-organizations/get-organizational-units-detail/index');
+jest.mock('../../lib/aws-organizations/manage-account-alias/index');
 
 describe('AWSOrganizationsExecutor', () => {
   beforeEach(() => {
@@ -339,6 +342,47 @@ describe('AWSOrganizationsExecutor', () => {
 
       // Execute && Verify
       await expect(getOrganizationalUnitsDetail(input)).rejects.toThrow(errorMessage);
+
+      expect(mockHandler).toHaveBeenCalledWith(input);
+      expect(mockHandler).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe('manageAccountAlias', () => {
+    const input = {
+      ...MOCK_CONSTANTS.runnerParameters,
+      configuration: {
+        alias: 'mock-account-alias',
+      },
+    };
+    test('should successfully manage account alias', async () => {
+      // Setup
+      const mockHandler = jest.fn().mockResolvedValue('SUCCESS');
+
+      (ManageAccountAlias as unknown as jest.Mock).mockImplementation(() => ({
+        handler: mockHandler,
+      }));
+
+      // Execute
+      const result = await manageAccountAlias(input);
+
+      // Verify
+      expect(result).toEqual('SUCCESS');
+      expect(mockHandler).toHaveBeenCalledWith(input);
+      expect(mockHandler).toHaveBeenCalledTimes(1);
+    });
+
+    test('should throw error when manage account alias fails', async () => {
+      // Setup
+      const errorMessage = 'Manage account alias failed';
+      const mockHandler = jest.fn().mockRejectedValue(new Error(errorMessage));
+
+      (ManageAccountAlias as unknown as jest.Mock).mockImplementation(() => ({
+        handler: mockHandler,
+      }));
+
+      // Execute && Verify
+      await expect(manageAccountAlias(input)).rejects.toThrow(errorMessage);
 
       expect(mockHandler).toHaveBeenCalledWith(input);
       expect(mockHandler).toHaveBeenCalledTimes(1);
