@@ -970,14 +970,28 @@ function getV2TgwVpcAttachmentRoleResources(
         },
       })
     ) {
-      logger.info(
-        `VPC ${vpcItem.name} transit gateway vpc attachment role ${tgwAttachmentItem.name} is not present in the existing stack, resource will be deployed through V2 stacks`,
+      // Check if this role+accountId combination already exists in v2Components
+      const isDuplicate = v2Components.some(
+        component =>
+          component.resourceType === V2StackComponentsList.TGW_VPC_ATTACHMENT_ROLE &&
+          component.resourceName === `${roleName}|${env.accountId}`,
       );
-      v2Components.push({
-        vpcName: vpcItem.name,
-        resourceType: V2StackComponentsList.TGW_VPC_ATTACHMENT_ROLE,
-        resourceName: `${roleName}|${env.accountId}`,
-      });
+
+      if (!isDuplicate) {
+        logger.info(
+          `VPC ${vpcItem.name} transit gateway vpc attachment role ${tgwAttachmentItem.name} is not present in the existing stack, resource will be deployed through V2 stacks`,
+        );
+
+        v2Components.push({
+          vpcName: vpcItem.name,
+          resourceType: V2StackComponentsList.TGW_VPC_ATTACHMENT_ROLE,
+          resourceName: `${roleName}|${env.accountId}`,
+        });
+      } else {
+        logger.info(
+          `VPC ${vpcItem.name} transit gateway vpc attachment role ${tgwAttachmentItem.name} is present in the v2 component lists, so ignore adding duplicate entries.`,
+        );
+      }
     }
   }
 }
