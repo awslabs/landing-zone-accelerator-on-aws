@@ -11,6 +11,7 @@
  *  and limitations under the License.
  */
 import { ShareTargets, isNetworkType } from '../../lib/common';
+import { GlobalConfig } from '../../lib/global-config';
 import {
   ApplicationLoadBalancerConfig,
   CustomizationsConfig,
@@ -49,6 +50,7 @@ export class VpcValidator {
     helpers: NetworkValidatorFunctions,
     errors: string[],
     customizationsConfig?: CustomizationsConfig,
+    globalConfig?: GlobalConfig,
   ) {
     this.customizationsConfig = customizationsConfig;
     //
@@ -80,7 +82,7 @@ export class VpcValidator {
     //
     // Validate Outpost and Local Gateway (LGW) configurations
     //
-    this.validateOutpostConfiguration(values, helpers, errors);
+    this.validateOutpostConfiguration(values, helpers, errors, globalConfig);
     //
     // Validate VPC peering configurations
     //
@@ -873,7 +875,12 @@ export class VpcValidator {
    * Function to validate conditional dependencies for Outpost and Local Gateway configurations.
    * @param values
    */
-  private validateOutpostConfiguration(values: NetworkConfig, helpers: NetworkValidatorFunctions, errors: string[]) {
+  private validateOutpostConfiguration(
+    values: NetworkConfig,
+    helpers: NetworkValidatorFunctions,
+    errors: string[],
+    globalConfig?: GlobalConfig,
+  ) {
     //
     // Validate that local gateways do not have the same name across different outposts
     //
@@ -882,6 +889,10 @@ export class VpcValidator {
     // Validate that all outpost names are unique
     //
     this.validateOutpostNames(values, helpers, errors);
+    //
+    // Validate Outpost and V2 stacks
+    //
+    this.validateOutpostV2Stacks(values, errors, globalConfig);
   }
 
   /**
@@ -3133,6 +3144,32 @@ export class VpcValidator {
         }
       }
     });
+  }
+
+  /**
+   * Validate uniqueness of Outpost names
+   * @param values
+   * @param helpers
+   * @param errors
+   */
+  private validateOutpostV2Stacks(values: NetworkConfig, errors: string[], globalConfig?: GlobalConfig) {
+    if (!globalConfig) {
+      return;
+    }
+    if (!globalConfig.useV2Stacks) {
+      return;
+    }
+    const outpostNames = [];
+    values.vpcs.forEach(vpcItem => {
+      if (vpcItem.outposts) {
+        for (const outpost of vpcItem.outposts) {
+          outpostNames.push(outpost.name);
+        }
+      }
+    });
+    if (outpostNames.length > 0) {
+      errors.push('V2 stacks can not be enabled with outposts');
+    }
   }
 
   /**
