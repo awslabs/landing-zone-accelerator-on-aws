@@ -48,3 +48,5 @@ It is also *highly recommended* to enable the diff stage (via the LZA installer 
 ## Limitations
 
 The new stack format allows for the deployment of many VPCS and many resources for each VPC. However, this comes at the expense of deploying many more stacks for each environment. The CloudFormation stack limit for each account should be considered before enabling this feature.
+
+At this time outposts and V2 stacks can not be enabled at the same time.

@@ -83,7 +83,7 @@ export class NetworkConfigValidator {
     new DhcpOptionsValidator(values, helpers, errors);
     new EndpointPoliciesValidator(values, replacementsConfig, configDir, helpers, errors);
     new PrefixListValidator(values, helpers, errors);
-    new VpcValidator(values, helpers, errors, customizationsConfig);
+    new VpcValidator(values, helpers, errors, customizationsConfig, globalConfig);
     new CustomerGatewaysValidator(values, helpers, errors, customizationsConfig);
     new DirectConnectGatewaysValidator(values, errors);
     new FirewallManagerValidator(values, helpers, errors);
