@@ -573,27 +573,111 @@ export interface ICloudTrailConfig {
  *
  * @description
  * AWS Service Quotas configuration
+ *
+ * @remarks
+ * Use this configuration to request increases to AWS service quotas (formerly known as service limits).
+ * Service quotas are the maximum number of service resources or operations for your AWS account.
+ * Service quota increases are requested asynchronously and may take time to be approved.
+ * Some quotas require AWS Support cases and cannot be increased automatically.
+ * You can find service codes and quota codes in the AWS Service Quotas console.
+ *
+ * For more information, see:
+ * - [AWS Service Quotas User Guide](https://docs.aws.amazon.com/servicequotas/latest/userguide/intro.html)
+ * - [Requesting a quota increase](https://docs.aws.amazon.com/servicequotas/latest/userguide/request-quota-increase.html)
+ * - [AWS Lambda quotas](https://docs.aws.amazon.com/lambda/latest/dg/gettingstarted-limits.html)
+ * - [Amazon VPC quotas](https://docs.aws.amazon.com/vpc/latest/userguide/amazon-vpc-limits.html)
+ * - [IAM and AWS STS quotas](https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_iam-quotas.html)
+ *
+ * @example
+ * ```
+ * # Increase Lambda concurrent executions
+ * - serviceCode: lambda
+ *   quotaCode: L-B99A9384
+ *   desiredValue: 1000
+ *   deploymentTargets:
+ *     organizationalUnits:
+ *       - Root
+ *   regions:
+ *     - us-west-2
+ *
+ * # Increase IAM roles per account (global quota - no regions needed)
+ * - serviceCode: iam
+ *   quotaCode: L-4019AD8B
+ *   desiredValue: 15
+ *   deploymentTargets:
+ *     accounts:
+ *       - SharedServices
+ *
+ * # Increase VPCs per region
+ * - serviceCode: vpc
+ *   quotaCode: L-F678F1CE
+ *   desiredValue: 20
+ *   deploymentTargets:
+ *     organizationalUnits:
+ *       - Security
+ *       - Infrastructure
+ *   regions:
+ *     - us-east-1
+ *     - us-west-2
+ *
+ * # Increase Route 53 Resolver rules per region
+ * - serviceCode: route53resolver
+ *   quotaCode: L-4A669CC0
+ *   desiredValue: 10
+ *   deploymentTargets:
+ *     organizationalUnits:
+ *       - Infrastructure
+ * ```
  */
 export interface IServiceQuotaLimitsConfig {
   /**
    * Indicates which service Service Quota is changing the limit for.
+   *
+   * @remarks
+   * You can find service codes using: aws service-quotas list-services
+   *
+   * Example service codes (verify current codes in AWS console):
+   * - lambda (AWS Lambda)
+   * - iam (AWS Identity and Access Management)
+   * - vpc (Amazon Virtual Private Cloud)
+   * - route53resolver (Amazon Route 53 Resolver)
    */
   readonly serviceCode: string;
   /**
    * Indicates the code for the service as these are tied to the account.
    *
+   * @remarks
+   * You can find quota codes using: aws service-quotas list-service-quotas --service-code <service-code>
+   *
+   * Example quota codes (verify current codes in AWS console):
+   * - L-B99A9384 (Lambda concurrent executions)
+   * - L-4019AD8B (IAM roles per account)
+   * - L-F678F1CE (VPCs per region)
+   * - L-4A669CC0 (Route 53 Resolver rules per region)
    */
   readonly quotaCode: string;
   /**
    * Value associated with the limit change.
+   *
+   * @remarks
+   * This should be the new limit you want to request. The value must be higher than the current quota value.
+   * Some quotas have maximum values that cannot be exceeded.
    */
   readonly desiredValue: number;
   /**
    * List of AWS Account names to be included in the Service Quota changes
+   *
+   * @remarks
+   * Service quotas are account-specific, so this determines which accounts will have the quota increase requested.
+   * You can target specific accounts or entire organizational units.
    */
   readonly deploymentTargets: t.IDeploymentTargets;
   /**
    * (Optional) Region(s) where this service quota increase will be requested. Service Quota increases will be requested in the home region only if this property is not defined.
+   *
+   * @remarks
+   * If specified, the regions must also be listed in the enabledRegions section.
+   * Some quotas are global (like IAM) and don't require region specification.
    */
   readonly regions?: t.Region[];
 }
@@ -2663,12 +2747,54 @@ export interface IGlobalConfig {
    *
    * To enable limits within service quota, you need to provide below value for this parameter.
    *
+   * @remarks
+   * Service quotas define the maximum number of service resources or operations for your AWS account.
+   * Service quota increases are processed asynchronously and may require approval.
+   * Some quotas require AWS Support cases for increases beyond certain thresholds.
+   * Quotas are account-specific and region-specific (where applicable).
+   * You can find service and quota codes in the AWS Service Quotas console.
+   *
+   * For more information, see:
+   * - [AWS Service Quotas User Guide](https://docs.aws.amazon.com/servicequotas/latest/userguide/intro.html)
+   * - [Requesting a quota increase](https://docs.aws.amazon.com/servicequotas/latest/userguide/request-quota-increase.html)
+   *
    * @example
    * ```
    * limits:
+   *   # Increase Lambda concurrent executions
    *   - serviceCode: lambda
-   *     quotaCode: L-2ACBD22F
-   *     desiredValue: 2000
+   *     quotaCode: L-B99A9384
+   *     desiredValue: 1000
+   *     deploymentTargets:
+   *       organizationalUnits:
+   *         - Root
+   *     regions:
+   *       - us-west-2
+   *
+   *   # Increase IAM roles per account (global quota - no regions needed)
+   *   - serviceCode: iam
+   *     quotaCode: L-4019AD8B
+   *     desiredValue: 15
+   *     deploymentTargets:
+   *       accounts:
+   *         - SharedServices
+   *
+   *   # Increase VPCs per region
+   *   - serviceCode: vpc
+   *     quotaCode: L-F678F1CE
+   *     desiredValue: 20
+   *     deploymentTargets:
+   *       organizationalUnits:
+   *         - Security
+   *         - Infrastructure
+   *     regions:
+   *       - us-east-1
+   *       - us-west-2
+   *
+   *   # Increase Route 53 Resolver rules per region
+   *   - serviceCode: route53resolver
+   *     quotaCode: L-4A669CC0
+   *     desiredValue: 10
    *     deploymentTargets:
    *       organizationalUnits:
    *         - Infrastructure
