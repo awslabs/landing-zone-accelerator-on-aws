@@ -76,6 +76,66 @@ describe('SecurityConfigValidator', () => {
     jest.clearAllMocks();
   });
 
+  describe('validateAccessLogBucket', () => {
+    it('should fail if no replacement variables present in imported access log bucket name', () => {
+      const globalConfig = {
+        ...createGlobalConfig(),
+        logging: {
+          cloudtrail: {} as CloudTrailConfig,
+          sessionManager: {} as SessionManagerConfig,
+          account: 'LogArchive',
+          accessLogBucket: {
+            importedBucket: {
+              name: 'Imported-Access-Log-Bucket',
+            },
+          },
+        },
+      } as GlobalConfig;
+
+      expect(
+        () =>
+          new GlobalConfigValidator(
+            globalConfig,
+            mockAccountsConfig,
+            mockIamConfig,
+            mockOrganizationConfig,
+            mockSecurityConfig,
+            mockConfigDir,
+          ),
+      ).toThrow(
+        'Imported Access log bucket name for Imported-Access-Log-Bucket must include replacement variables ACCOUNT_ID and REGION',
+      );
+    });
+
+    it('should pass if replacement variables present in imported access log bucket name', () => {
+      const globalConfig = {
+        ...createGlobalConfig(),
+        logging: {
+          cloudtrail: {} as CloudTrailConfig,
+          sessionManager: {} as SessionManagerConfig,
+          account: 'LogArchive',
+          accessLogBucket: {
+            importedBucket: {
+              name: 'Imported-Access-Log-Bucket-${ACCOUNT_ID}-${REGION}',
+            },
+          },
+        },
+      } as GlobalConfig;
+
+      expect(
+        () =>
+          new GlobalConfigValidator(
+            globalConfig,
+            mockAccountsConfig,
+            mockIamConfig,
+            mockOrganizationConfig,
+            mockSecurityConfig,
+            mockConfigDir,
+          ),
+      ).toBeDefined();
+    });
+  });
+
   describe('validateStackPolicy', () => {
     it('validate disabled does not fail validation', () => {
       const stackPolicy: StackPolicyConfig = {

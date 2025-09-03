@@ -178,6 +178,7 @@ export class GlobalConfigValidator {
     //
     this.validateAccessLogsBucketConfigDeploymentTargetOUs(values, ouIdNames, errors);
     this.validateAccessLogsBucketConfigDeploymentTargetAccounts(values, accountNames, errors);
+    this.validateImportedAccessLogBucketName(values, errors);
 
     //
     // Validate S3 configuration
@@ -1536,6 +1537,15 @@ export class GlobalConfigValidator {
     ) {
       errors.push(
         `allowRootSessions is enabled without rootCredentialsManagement being enabled. rootCredentialsManagement must be enabled as well`,
+      );
+    }
+  }
+
+  private validateImportedAccessLogBucketName(values: GlobalConfig, errors: string[]) {
+    const name = values.logging.accessLogBucket?.importedBucket?.name;
+    if (name && (!name.includes('${REGION}') || !name.includes('${ACCOUNT_ID}'))) {
+      errors.push(
+        `Imported Access log bucket name for ${name} must include replacement variables ACCOUNT_ID and REGION`,
       );
     }
   }
