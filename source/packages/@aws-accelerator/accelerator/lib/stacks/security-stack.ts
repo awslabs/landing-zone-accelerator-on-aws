@@ -140,7 +140,7 @@ export class SecurityStack extends AcceleratorStack {
   private configureMacie() {
     if (
       this.props.securityConfig.centralSecurityServices.macie.enable &&
-      this.props.securityConfig.centralSecurityServices.macie.excludeRegions.indexOf(
+      (this.props.securityConfig.centralSecurityServices.macie.excludeRegions ?? []).indexOf(
         cdk.Stack.of(this).region as Region,
       ) === -1
     ) {
