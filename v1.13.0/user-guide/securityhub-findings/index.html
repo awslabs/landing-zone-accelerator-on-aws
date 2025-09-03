@@ -1,0 +1,1857 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Documentation for the Landing Zone Accelerator on AWS">
+      
+      
+        <meta name="author" content="Amazon Web Services">
+      
+      
+        <link rel="canonical" href="https://awslabs.github.io/landing-zone-accelerator-on-aws/v1.13.0/user-guide/securityhub-findings/">
+      
+      
+        <link rel="prev" href="../logging/">
+      
+      
+        <link rel="next" href="../replacement-variables/">
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.5.3, mkdocs-material-9.5.3">
+    
+    
+      
+        <title>SecurityHub Findings - Landing Zone Accelerator on AWS</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.50c56a3b.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.06af60db.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce((e,_)=>(e<<5)-e+_.charCodeAt(0),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="teal" data-md-color-accent="teal">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#security-hub-findings" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+      <div data-md-color-scheme="default" data-md-component="outdated" hidden>
+        
+      </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="Landing Zone Accelerator on AWS" class="md-header__button md-logo" aria-label="Landing Zone Accelerator on AWS" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m13.13 22.19-1.63-3.83c1.57-.58 3.04-1.36 4.4-2.27l-2.77 6.1M5.64 12.5l-3.83-1.63 6.1-2.77C7 9.46 6.22 10.93 5.64 12.5M21.61 2.39S16.66.269 11 5.93c-2.19 2.19-3.5 4.6-4.35 6.71-.28.75-.09 1.57.46 2.13l2.13 2.12c.55.56 1.37.74 2.12.46A19.1 19.1 0 0 0 18.07 13c5.66-5.66 3.54-10.61 3.54-10.61m-7.07 7.07c-.78-.78-.78-2.05 0-2.83s2.05-.78 2.83 0c.77.78.78 2.05 0 2.83-.78.78-2.05.78-2.83 0m-5.66 7.07-1.41-1.41 1.41 1.41M6.24 22l3.64-3.64c-.34-.09-.67-.24-.97-.45L4.83 22h1.41M2 22h1.41l4.77-4.76-1.42-1.41L2 20.59V22m0-2.83 4.09-4.08c-.21-.3-.36-.62-.45-.97L2 17.76v1.41Z"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3V6m0 5h18v2H3v-2m0 5h18v2H3v-2Z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Landing Zone Accelerator on AWS
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              SecurityHub Findings
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="teal" data-md-color-accent="teal"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 2a7 7 0 0 0-7 7c0 2.38 1.19 4.47 3 5.74V17a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1v-2.26c1.81-1.27 3-3.36 3-5.74a7 7 0 0 0-7-7M9 21a1 1 0 0 0 1 1h4a1 1 0 0 0 1-1v-1H9v1Z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="teal" data-md-color-accent="teal"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 2a7 7 0 0 1 7 7c0 2.38-1.19 4.47-3 5.74V17a1 1 0 0 1-1 1H9a1 1 0 0 1-1-1v-2.26C6.19 13.47 5 11.38 5 9a7 7 0 0 1 7-7M9 21v-1h6v1a1 1 0 0 1-1 1h-4a1 1 0 0 1-1-1m3-17a5 5 0 0 0-5 5c0 2.05 1.23 3.81 3 4.58V16h4v-2.42c1.77-.77 3-2.53 3-4.58a5 5 0 0 0-5-5Z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var media,input,key,value,palette=__md_get("__palette");if(palette&&palette.color){"(prefers-color-scheme)"===palette.color.media&&(media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']"),palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent"));for([key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      <label class="md-header__button md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5Z"/></svg>
+      </label>
+      <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5Z"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12Z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41Z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/awslabs/landing-zone-accelerator-on-aws/" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.5.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2023 Fonticons, Inc.--><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="Landing Zone Accelerator on AWS" class="md-nav__button md-logo" aria-label="Landing Zone Accelerator on AWS" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m13.13 22.19-1.63-3.83c1.57-.58 3.04-1.36 4.4-2.27l-2.77 6.1M5.64 12.5l-3.83-1.63 6.1-2.77C7 9.46 6.22 10.93 5.64 12.5M21.61 2.39S16.66.269 11 5.93c-2.19 2.19-3.5 4.6-4.35 6.71-.28.75-.09 1.57.46 2.13l2.13 2.12c.55.56 1.37.74 2.12.46A19.1 19.1 0 0 0 18.07 13c5.66-5.66 3.54-10.61 3.54-10.61m-7.07 7.07c-.78-.78-.78-2.05 0-2.83s2.05-.78 2.83 0c.77.78.78 2.05 0 2.83-.78.78-2.05.78-2.83 0m-5.66 7.07-1.41-1.41 1.41 1.41M6.24 22l3.64-3.64c-.34-.09-.67-.24-.97-.45L4.83 22h1.41M2 22h1.41l4.77-4.76-1.42-1.41L2 20.59V22m0-2.83 4.09-4.08c-.21-.3-.36-.62-.45-.97L2 17.76v1.41Z"/></svg>
+
+    </a>
+    Landing Zone Accelerator on AWS
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/awslabs/landing-zone-accelerator-on-aws/" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.5.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2023 Fonticons, Inc.--><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Home
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../installation/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Installation
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+      
+        
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" checked>
+        
+          
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../" class="md-nav__link ">
+              
+  
+  <span class="md-ellipsis">
+    User Guide
+  </span>
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_3" id="__nav_3_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            User Guide
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../config/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Services, Features, and Configuration References
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../logging/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Centralized Logging
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  <span class="md-ellipsis">
+    SecurityHub Findings
+  </span>
+  
+
+      </a>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../replacement-variables/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Replacement Variables
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../stack-policy/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    CloudFormation Stack Policy Protection
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+          
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        
+          
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../developer-guide/" class="md-nav__link ">
+              
+  
+  <span class="md-ellipsis">
+    Developer Guide
+  </span>
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_4" id="__nav_4_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            Developer Guide
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer-guide/dependencies/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Development Dependencies
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer-guide/package-dependencies.generated/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Package Dependencies
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer-guide/scripts/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Command Line Interface and Package Scripts
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer-guide/design/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Architecture and Design Philosophy
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer-guide/features/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Feature Development
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer-guide/doc-guidelines/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Documentation Guidelines
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer-guide/json-schema/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    JSON Schema
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer-guide/module-development/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Module Development
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" >
+        
+          
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../sample-configurations/" class="md-nav__link ">
+              
+  
+  <span class="md-ellipsis">
+    Sample Configurations
+  </span>
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_5" id="__nav_5_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            Sample Configurations
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_2" >
+        
+          
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../sample-configurations/standard/" class="md-nav__link ">
+              
+  
+  <span class="md-ellipsis">
+    Standard
+  </span>
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_5_2" id="__nav_5_2_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_5_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5_2">
+            <span class="md-nav__icon md-icon"></span>
+            Standard
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../sample-configurations/standard/overview/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Overview
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../sample-configurations/standard/org-structure/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Organization and Account Structure
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../sample-configurations/standard/authn-authz/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Authentication and Authorization
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../sample-configurations/standard/logging-monitoring/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Logging and Monitoring
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../sample-configurations/standard/networking/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Networking
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_3" >
+        
+          
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../sample-configurations/govcloud-us/" class="md-nav__link ">
+              
+  
+  <span class="md-ellipsis">
+    GovCloud (US)
+  </span>
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_5_3" id="__nav_5_3_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_5_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5_3">
+            <span class="md-nav__icon md-icon"></span>
+            GovCloud (US)
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../sample-configurations/govcloud-us/overview/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Overview
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../sample-configurations/govcloud-us/org-structure/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Organization and Account Structure
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../sample-configurations/govcloud-us/security-controls/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Security Controls
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../sample-configurations/govcloud-us/networking/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Networking
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../sample-configurations/govcloud-us/considerations/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Additional Considerations
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" >
+        
+          
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../faq/" class="md-nav__link ">
+              
+  
+  <span class="md-ellipsis">
+    FAQ
+  </span>
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_6" id="__nav_6_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6">
+            <span class="md-nav__icon md-icon"></span>
+            FAQ
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../faq/general/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    General
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../faq/architecture/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Architecture
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../faq/ct-cfct/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    AWS Control Tower and Customizations for Control Tower
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../faq/customizations/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Customizations
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../faq/operations/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Operations
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6_7" >
+        
+          
+          <label class="md-nav__link" for="__nav_6_7" id="__nav_6_7_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Networking
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_6_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6_7">
+            <span class="md-nav__icon md-icon"></span>
+            Networking
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../faq/networking/general/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    General
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../faq/networking/dpi/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Deep Packet Inspection
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../faq/networking/direct-connect/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    AWS Direct Connect
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../faq/networking/network-firewall/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    AWS Network Firewall
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../faq/networking/gwlb/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    AWS Gateway Load Balancer
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../faq/security/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Security
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6_9" >
+        
+          
+          <label class="md-nav__link" for="__nav_6_9" id="__nav_6_9_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Logging
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_6_9_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6_9">
+            <span class="md-nav__icon md-icon"></span>
+            Logging
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../faq/logging/cwl/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Amazon CloudWatch Log Group
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../typedocs/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    TypeDocs
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+  
+  
+
+
+<h1 id="security-hub-findings">Security Hub Findings<a class="headerlink" href="#security-hub-findings" title="Permanent link">⚓︎</a></h1>
+<p>The Landing Zone Accelerator on AWS (LZA) solution includes a feature to enable AWS Security Hub, which provides a comprehensive view of the security state and helps you assess your environment against security standards and best practices. When deploying LZA, it is essential to review and address the Security Hub findings to ensure a secure environment based on your requirements. The following table provides guidance on AWS Security Hub findings that you may encounter during the deployment of LZA using sample configurations.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>You should regularly review and monitor new findings in AWS Security Hub, as your environment and workloads evolve over time. This guidance applies to the resources created and managed by the Landing Zone Accelerator on AWS solution. For other findings in your environment, it is recommend to follow the <a href="https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-controls-reference.html">Security Hub controls reference</a>.</p>
+</div>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Title</th>
+<th>Severity</th>
+<th>Guidance</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="https://docs.aws.amazon.com/securityhub/latest/userguide/account-controls.html#account-1">Account.1</a></td>
+<td>Security contact information should be provided for an AWS account</td>
+<td>Medium</td>
+<td>This finding is generated when security contact information for an AWS account is not provided. <br><br> To add an alternate contact as a security contact to your AWS account, see <a href="https://docs.aws.amazon.com/awsaccountbilling/latest/aboutv2/manage-account-payment.html#manage-account-payment-alternate-contacts">Adding, changing, or removing alternate contacts</a> in the <em>AWS Billing and Cost Management User Guide</em>.</td>
+</tr>
+<tr>
+<td><a href="https://docs.aws.amazon.com/securityhub/latest/userguide/dynamodb-controls.html#dynamodb-4">DynamoDB.4</a></td>
+<td>DynamoDB tables should be present in a backup plan</td>
+<td>Medium</td>
+<td>When using the Landing Zone Accelerator on AWS solution, this finding includes the following Amazon DynamoDB tables with prefix <code>{ACCELERATOR_PREFIX}</code>: <br><br> - <code>{ACCELERATOR_PREFIX}</code>-PrepareStack-<code>{ACCOUNT_ID}</code>-<code>{REGION}</code>AcceleratorConfigTableXXXXX <br> - <code>{ACCELERATOR_PREFIX}</code>-PrepareStack-<code>{ACCOUNT_ID}</code>-<code>{REGION}</code>NewCTAccountsXXXX <br>- <code>{ACCELERATOR_PREFIX}</code>-PrepareStack-<code>{ACCOUNT_ID}</code>-<code>{REGION}</code>-NewOrgAccountsXXXX <br><br> You can disregard this finding, as these DynamoDB tables are managed by LZA to store environment specific information. All these tables have point-in-time recovery enabled which automate backups, and may be needed for troubleshooting in rare cases. Deleting them will not impact LZA, as they will be repopulated during next pipeline execution. Alternatively, you can choose to suppress the finding for these resources.</td>
+</tr>
+<tr>
+<td><a href="https://docs.aws.amazon.com/securityhub/latest/userguide/dynamodb-controls.html#dynamodb-6">DynamoDB.6</a></td>
+<td>DynamoDB tables should have deletion protection enabled</td>
+<td>Medium</td>
+<td>When using the Landing Zone Accelerator on AWS solution, this finding includes the following Amazon DynamoDB tables with prefix <code>{ACCELERATOR_PREFIX}</code>: <br><br> - <code>{ACCELERATOR_PREFIX}</code>-PrepareStack-<code>{ACCOUNT_ID}</code>-<code>{REGION}</code>AcceleratorConfigTableXXXXX <br> - <code>{ACCELERATOR_PREFIX}</code>-PrepareStack-<code>{ACCOUNT_ID}</code>-<code>{REGION}</code>NewCTAccountsXXXX <br> - <code>{ACCELERATOR_PREFIX}</code>-PrepareStack-<code>{ACCOUNT_ID}</code>-<code>{REGION}</code>-NewOrgAccountsXXXX <br><br> You can disregard this finding, as these DynamoDB tables are managed by LZA to store environment specific information. Deleting them will not impact LZA, as they will be repopulated during next pipeline execution. Alternatively, you can choose to suppress the finding for these resources.</td>
+</tr>
+<tr>
+<td><a href="https://docs.aws.amazon.com/securityhub/latest/userguide/ec2-controls.html#ec2-10">EC2.10</a></td>
+<td>Amazon EC2 should be configured to use VPC endpoints that are created for the Amazon EC2 service</td>
+<td>Medium</td>
+<td>When using the Landing Zone Accelerator on AWS solution, this finding includes the following Amazon VPCs: <br><br> - Network-Inspection <br> - SharedServices-Main <br><br> You can disregard this finding, as these VPCs are configured to utilize centralized endpoints. AWS Security Hub does not conduct cross-account checks for VPCs that are shared across accounts. Alternatively, you can choose to suppress the finding for these resources.</td>
+</tr>
+<tr>
+<td><a href="https://docs.aws.amazon.com/securityhub/latest/userguide/ec2-controls.html#ec2-21">EC2.21</a></td>
+<td>Network ACLs should not allow ingress from 0.0.0.0/0 to port 22 or port 3389</td>
+<td>Medium</td>
+<td>When using the Landing Zone Accelerator on AWS solution, this finding includes following Amazon VPCs with network ACLs: <br><br> - Network-Endpoints <br> -  Network-Inspection <br> - SharedServices-Main <br><br> The LZA creates VPCs that is defined in the network-config.yaml file, and your VPCs automatically comes with a modifiable default network ACL that allows all inbound and outbound IPv4 traffic. You can implement additional NACL with specific rules by creating a custom network ACL and associate it with a subnet to allow or deny specific inbound or outbound traffic to address this finding. <br><br> To create custom Network ACLs with defined inbound and outbound rule, you can use add the following <a href="https://awslabs.github.io/landing-zone-accelerator-on-aws/latest/typedocs/interfaces/___packages__aws_accelerator_config_dist_config_lib_models_network_config.INetworkAclConfig.html">networkACL</a> example in the VPCs defined in network-config.yaml configuration file: <br><br> <code>networkAcls:</code> <br>&nbsp;&nbsp;&nbsp;&nbsp; - <code>name: accelerator-nacl</code><br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <code>subnetAssociations:</code><br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; - <code>Subnet-A</code><br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <code>inboundRules</code><br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; - <code>rule: 200</code><br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <code>protocol: 6</code><br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <code>fromPort: 22</code><br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <code>action: allow</code><br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <code>source: &lt;CIDR RANGE&gt;</code><br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <code>outboundRules:</code><br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;- <code>rule: 200</code><br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <code>protocol: 6</code><br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <code>fromPort: 1024</code><br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <code>toPort: 65535</code><br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <code>action: allow</code><br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <code>destination: &lt;CIDR RANGE&gt;</code></td>
+</tr>
+<tr>
+<td><a href="https://docs.aws.amazon.com/securityhub/latest/userguide/ec2-controls.html#ec2-23">EC2.23</a></td>
+<td>Amazon EC2 Transit Gateways should not automatically accept VPC attachment requests</td>
+<td>High</td>
+<td>When using the Landing Zone Accelerator on AWS solution, this finding includes following AWS Transit Gateway named Network-Main. <br><br> The LZA uses <code>autoAcceptSharingAttachments: enable</code> features to shared out transit gateway (via Resource Access Manager) with only accounts  shared through <code>shareTargets</code> property in the AWS Organization. You can disregard this findings as the automatic acceptance of VPCs attachment request is only allowed for accounts present in the AWS Organization and defined in the <code>shareTargets</code> property of transit gateway. Alternatively, you can choose to suppress the finding for these resources.</td>
+</tr>
+<tr>
+<td><a href="https://docs.aws.amazon.com/securityhub/latest/userguide/ecr-controls.html#ecr-1">ECR.1</a></td>
+<td>ECR private repositories should have image scanning configured</td>
+<td>High</td>
+<td>When using the Landing Zone Accelerator on AWS solution, this finding includes <code>{cdk-accel}</code>-container-assets-<code>{ACCOUNT_ID}</code>-<code>{REGION}</code> Amazon ECR. <br><br> During <a href="https://docs.aws.amazon.com/cdk/v2/guide/bootstrapping.html#bootstrapping-template">bootstrapping</a> process with AWS Cloud Development Kit (CDK), the Amazon Elastic Container Registry (ECR) repository is automatically created to store docker images used by AWS CDK. You can disregard this finding, as this repository is not used by LZA for storing assets. Alternatively, you can choose to suppress this finding for these resources.</td>
+</tr>
+<tr>
+<td><a href="https://docs.aws.amazon.com/securityhub/latest/userguide/ecr-controls.html#ecr-3">ECR.3</a></td>
+<td>ECR repositories should have at least one lifecycle policy configured</td>
+<td>Medium</td>
+<td>When using the Landing Zone Accelerator on AWS solution, this finding includes <code>{cdk-accel}</code>-container-assets-<code>{ACCOUNT_ID}</code>-<code>{REGION}</code> Amazon ECR. <br><br> During <a href="https://docs.aws.amazon.com/cdk/v2/guide/bootstrapping.html#bootstrapping-template">bootstrapping</a> process with AWS Cloud Development Kit (CDK), the Amazon Elastic Container Registry (ECR) repository is automatically created to store docker images used by AWS CDK. You can disregard this finding, as this repository is not used by LZA for storing assets. Alternatively, you can choose to suppress this finding for these resources.</td>
+</tr>
+<tr>
+<td><a href="https://docs.aws.amazon.com/securityhub/latest/userguide/ecr-controls.html#ecr-5">ECR.5</a></td>
+<td>ECR repositories should be encrypted with customer managed AWS KMS keys</td>
+<td>Medium</td>
+<td>When using the Landing Zone Accelerator on AWS solution, this finding includes <code>{cdk-accel}</code>-container-assets-<code>{ACCOUNT_ID}</code>-<code>{REGION}</code> Amazon ECR. <br><br> During <a href="https://docs.aws.amazon.com/cdk/v2/guide/bootstrapping.html#bootstrapping-template">bootstrapping</a> process with AWS Cloud Development Kit (CDK), the Amazon Elastic Container Registry (ECR) repository is automatically created to store docker images used by AWS CDK. You can disregard this finding, as this repository is not used by LZA for storing assets. Alternatively, you can choose to suppress this finding for these resources.</td>
+</tr>
+<tr>
+<td><a href="https://docs.aws.amazon.com/securityhub/latest/userguide/iam-controls.html#iam-6">IAM.6</a></td>
+<td>Hardware MFA should be enabled for the root user</td>
+<td>Critical</td>
+<td>This finding is generated when your AWS account is not configured to use a hardware multi-factor authentication (MFA) device to sign in with root user credentials.<br><br>To add a hardware MFA device for the root user, see <a href="https://docs.aws.amazon.com/IAM/latest/UserGuide/id_credentials_mfa_enable_physical.html#enable-hw-mfa-for-root">Enable a hardware MFA device for the AWS account root user (console)</a> in the <em>IAM User Guide</em></td>
+</tr>
+<tr>
+<td><a href="https://docs.aws.amazon.com/securityhub/latest/userguide/iam-controls.html#iam-9">IAM.9</a></td>
+<td>MFA should be enabled for the root user</td>
+<td>Critical</td>
+<td>This finding is generated when your AWS account is not enabled to use a multi-factor authentication (MFA) device to sign in with root user credentials. <br><br> To enable MFA for the root user, see <a href="https://docs.aws.amazon.com/accounts/latest/reference/root-user-mfa.html">Activate MFA on the AWS account root user</a> in the <em>AWS Account Management Reference Guide</em></td>
+</tr>
+<tr>
+<td><a href="https://docs.aws.amazon.com/securityhub/latest/userguide/iam-controls.html#iam-18">IAM.18</a></td>
+<td>Ensure a support role has been created to manage incidents with AWS Support</td>
+<td>Low</td>
+<td>This finding is generated when support role is not created to manage incidents with AWS Support. <br><br> To create the role for AWS Support access, you can use add  it to the role in the <a href="https://awslabs.github.io/landing-zone-accelerator-on-aws/latest/typedocs/interfaces/___packages__aws_accelerator_config_lib_models_iam_config.IRoleSetConfig.html">iam-config.yaml</a> configuration file, as shown in the provided example: <br><br> <code>roleSets:</code><br>&nbsp;&nbsp;&nbsp;&nbsp;- <code>deploymentTargets:</code><br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <code>organizationalUnits:</code> <br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; - <code>Root</code><br>&nbsp;&nbsp;&nbsp;&nbsp; <code>roles:</code> <br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; - <code>name: &lt;ENTER THE ROLE NAME&gt;</code> <br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <code>assumedBy:</code> <br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; - <code>type: account</code> <br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <code>principal: &lt;ENTER AWS ACCOUNT ID TO GRANT ACCESS&gt;</code> <br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <code>policies:</code> <br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <code>awsManaged:</code> <br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;- <code>AWSSupportAccess</code></td>
+</tr>
+<tr>
+<td><a href="https://docs.aws.amazon.com/securityhub/latest/userguide/kinesis-controls.html#kinesis-3">Kinesis.3</a></td>
+<td>Kinesis streams should have an adequate data retention period</td>
+<td>Medium</td>
+<td>This finding is generated when centralized logging is enabled by the Landing Zone Accelerator and the field <code>globalConfig.logging.cloudwatchLogs.kinesis.retention</code> is not explicitly set. The default value set by the LZA is 24 hours while the default SecurityHub value to check for is 168 hours (7 days). <br><br> To set the Kinesis data stream data retention period higher using the accelerator, you can set the following configuration options in <code>global-config.yaml</code>: <br> <code>cloudwatchLogs:</code> <br> &nbsp;&nbsp;&nbsp; <code>kinesis</code> <br> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <code>retention: 168</code></td>
+</tr>
+<tr>
+<td><a href="https://docs.aws.amazon.com/securityhub/latest/userguide/kms-controls.html#kms-1">KMS.1</a></td>
+<td>IAM customer managed policies should not allow decryption actions on all KMS keys</td>
+<td>Medium</td>
+<td>When using the Landing Zone Accelerator on AWS solution, this finding includes the following AWS IAM customer managed policies with prefix <code>{ACCELERATOR_PREFIX}</code>: <br><br> - <code>{ACCELERATOR_PREFIX}</code>-OperationsStack-<code>{ACCOUNT_ID}</code>-<code>{REGION}</code>-SsmSessionManagerSettingsSessionManagerPolicyXXXX <br> - <code>{ACCELERATOR_PREFIX}</code>-SessionManagerLogging <br><br> You can disregard this finding, as these IAM policies are managed by LZA to enable decryption operations on KMS keys. These policies have conditions that restrict their usage to the LZA generated alias of KMS keys, ensuring that the decryption actions are performed only within the specific account and region. Additionally, the usage of these policies is restricted to solution created resources and protected by service control policies in the member accounts. Alternatively, you can choose to suppress the finding for these resources.</td>
+</tr>
+<tr>
+<td><a href="https://docs.aws.amazon.com/securityhub/latest/userguide/kms-controls.html#kms-2">KMS.2</a></td>
+<td>IAM principals should not have IAM inline policies that allow decryption actions on all KMS keys</td>
+<td>Medium</td>
+<td>When using the Landing Zone Accelerator on AWS solution, this finding includes the following AWS IAM principles with prefixes <code>{ACCELERATOR_PREFIX}</code>  and <code>{cdk-accel}</code>: <br><br> - <code>{ACCELERATOR_PREFIX}</code>-InstallerS-UpdatePipelineLambdaRoleXXXX (UpdatePipelineLambdaPolicy284ABC36) <br>- <code>{cdk-accel}</code>-file-publishing-role-211125696757-us-east-1 <br> - <code>{cdk-accel}</code>-deploy-role-211125696757-us-east-1 <br><br> You can disregard this finding related to AWS IAM principles with the prefix <code>{ACCELERATOR_PREFIX}</code>, as these roles with inline polices are managed by LZA to enable decryption operations on KMS keys. These policies are used by lambda functions created by the solution and performs decryption actions only within the specific account and region adhering to the principle of least privilege. <br><br> For the roles related to the AWS Cloud Developmental Kit (CDK), enabling the <code>useManagementAccessRole</code> option in the <code>global-config.yaml</code> file modifies CDK operations to use the IAM role specified in the <code>managementAccountAccessRole</code> option rather than the default roles created by CDK. The default CDK roles will still be created but will be only used for initial cdk resources setup. This finding  guidance is mentioned in the CDK <a href="https://docs.aws.amazon.com/cdk/v2/guide/bootstrapping.html#bootstrapping-securityhub">documentation</a>. Therefore, you can disregard those roles. <br><br> Alternatively, you can choose to suppress the finding for these resources.</td>
+</tr>
+<tr>
+<td><a href="https://docs.aws.amazon.com/securityhub/latest/userguide/lambda-controls.html#lambda-3">Lambda.3</a></td>
+<td>Lambda functions should be in a VPC</td>
+<td>Low</td>
+<td>When using the Landing Zone Accelerator on AWS solution, this finding includes AWS Lambda functions with the prefix <code>{ACCELERATOR_PREFIX}</code>. <br><br> You can disregard this finding, as these functions are created and managed by the LZA for infrastructure deployment, and solely used for communicating with AWS services. Alternatively, you can choose to suppress the finding for these resources.</td>
+</tr>
+<tr>
+<td><a href="https://docs.aws.amazon.com/securityhub/latest/userguide/s3-controls.html#s3-6">S3.6</a></td>
+<td>S3 general purpose bucket policies should restrict access to other AWS accounts</td>
+<td>High</td>
+<td>When using the Landing Zone Accelerator on AWS solution, this finding includes the following Amazon S3 buckets with prefixes <code>{ACCELERATOR_PREFIX}</code> and <code>{cdk-accel}</code>: <br><br> - <code>{ACCELERATOR_PREFIX}</code>-central-logs-<code>{ACCOUNT_ID}</code>-<code>{REGION}</code> <br> - <code>{cdk-accel}</code>-assets-<code>{ACCOUNT_ID}</code>-<code>{REGION}</code> <br><br> You can disregard this finding, as these buckets are created and managed by the LZA and AWS Cloud Development Kit (CDK). <code>{ACCELERATOR_PREFIX}</code> bucket stores solution artifacts and environment logs, while <code>{cdk-accel}</code> bucket stores files during bootstrapping process with AWS CDK. These buckets contains resources policies with conditions that restrict their usage to only accounts in the organization with access to limited roles including <code>{ACCELERATOR_PREFIX}</code>,<code>{managementAccountAccessRole}</code> and <code>{cdk-accel}</code>. Additionally, the usage of these roles are protected by service control policies in the members accounts. Alternatively, you can choose to suppress the finding for these resources.</td>
+</tr>
+<tr>
+<td><a href="https://docs.aws.amazon.com/securityhub/latest/userguide/s3-controls.html#s3-7">S3.7</a></td>
+<td>S3 general purpose buckets should use cross-Region replication</td>
+<td>Low</td>
+<td>When using the Landing Zone Accelerator on AWS solution, this finding includes Amazon S3 buckets with prefixes <code>{ACCELERATOR_PREFIX}</code> and <code>{cdk-accel}</code>. <br><br> You can disregard this finding, as <code>{ACCELERATOR_PREFIX}</code> bucket is created and managed by the LZA to store solution artifacts and environment logs. These buckets have versioning which keeps multiple variants of an object in the same s3 buckets to preserve, retrieve, and restore earlier versions of an object. <br><br> For the bucket related to <code>{cdk-accel}</code>, this bucket is automatically created for storing files during the <a href="https://docs.aws.amazon.com/cdk/v2/guide/bootstrapping.html#bootstrapping-template">bootstrapping</a> process with AWS Cloud Development Kit (CDK). You can disregard this finding, as this bucket stores and manages  assets, templates, and metadata related to your CDK deployments. <br><br> Alternatively, you can choose to suppress this finding for these resources.</td>
+</tr>
+<tr>
+<td><a href="https://docs.aws.amazon.com/securityhub/latest/userguide/s3-controls.html#s3-9">S3.9</a></td>
+<td>S3 general purpose buckets should have server access logging enabled</td>
+<td>Medium</td>
+<td>When using the Landing Zone Accelerator on AWS solution, this finding includes the following Amazon S3 buckets with prefixes <code>{ACCELERATOR_PREFIX}</code> and <code>{cdk-accel}</code> : <br><br> - <code>{ACCELERATOR_PREFIX}</code>-s3-access-logs-<code>{ACCOUNT_ID}</code>-<code>{REGION}</code> <br> - <code>{ACCELERATOR_PREFIX}</code>-s3-logs-<code>{ACCOUNT_ID}</code>-<code>{REGION}</code> <br> - <code>{ACCELERATOR_PREFIX}</code>-elb-access-logs-<code>{ACCOUNT_ID}</code>-<code>{REGION}</code><br> -  <code>{cdk-accel}</code>-assets-<code>{ACCOUNT_ID}</code>-<code>{REGION}</code>.<br><br>You can disregard this finding for s3-access-logs, s3-logs and elb-access-logs buckets with prefix , <code>{ACCELERATOR_PREFIX}</code> as these are target logging buckets and do not require server access logging enabled. <br><br> For the buckets related to <code>{cdk-accel}</code>, this bucket is automatically created for storing files during the <a href="https://docs.aws.amazon.com/cdk/v2/guide/bootstrapping.html#bootstrapping-template">bootstrapping</a> process with AWS Cloud Development Kit (CDK). You can disregard this finding, as this bucket stores and manages assets, templates, and metadata related to your CDK deployments. <br><br> Alternatively, you can choose to suppress the finding for these resources.</td>
+</tr>
+<tr>
+<td><a href="https://docs.aws.amazon.com/securityhub/latest/userguide/s3-controls.html#s3-11">S3.11</a></td>
+<td>S3 general purpose buckets should have event notifications enabled</td>
+<td>Medium</td>
+<td>When using the Landing Zone Accelerator on AWS solution, this finding includes all Amazon S3 buckets with prefixes <code>{ACCELERATOR_PREFIX}</code> and <code>{cdk-accel}</code>. <br><br> You can disregard this finding, as these buckets are created and managed by the LZA and AWS Cloud Development Kit (CDK) to store solution artifacts and environment logs. These buckets have versioning which keeps multiple variants of an object in the same s3 buckets to preserve, retrieve, and restore earlier versions of an object. Alternatively, you can choose to suppress the finding for these resources.</td>
+</tr>
+<tr>
+<td><a href="https://docs.aws.amazon.com/securityhub/latest/userguide/s3-controls.html#s3-15">S3.15</a></td>
+<td>S3 general purpose buckets should have Object Lock enabled</td>
+<td>Medium</td>
+<td>When using the Landing Zone Accelerator on AWS solution, this finding includes the Amazon S3 buckets with prefixes <code>{ACCELERATOR_PREFIX}</code> and <code>{cdk-accel}</code>. <br><br> You cannot <a href="https://docs.aws.amazon.com/AmazonS3/latest/userguide/object-lock-configure.html">enable object lock</a>for destination buckets <code>{ACCELERATOR_PREFIX}</code>-s3-access-logs-<code>{ACCOUNT-ID}</code>-<code>{REGION}</code>, <code>{ACCELERATOR_PREFIX}</code>-s3-logs-<code>{ACCOUNT-ID}</code>-<code>{REGION}</code>, <code>{ACCELERATOR_PREFIX}</code>-elb-access-logs-<code>{ACCOUNT-ID}</code>-<code>{REGION}</code>, used for server access logs. <br><br> You can disregard this finding for remaining buckets, as these buckets are created and managed by the LZA  and AWS Cloud Development Kit (CDK) to store solution artifacts and environment logs. These buckets have versioning which keeps multiple variants of an object in the same s3 buckets to preserve, retrieve, and restore earlier versions of an object. Alternatively, you can choose to suppress the finding for these resources.</td>
+</tr>
+<tr>
+<td><a href="https://docs.aws.amazon.com/securityhub/latest/userguide/s3-controls.html#s3-17">S3.17</a></td>
+<td>S3 general purpose buckets should be encrypted at rest with AWS KMS keys</td>
+<td>Medium</td>
+<td>When using the Landing Zone Accelerator on AWS solution, this finding includes the following Amazon S3 buckets: <br><br> - <code>{ACCELERATOR_PREFIX}</code>-assets-logs-<code>{ACCOUNT_ID}</code>-<code>{REGION}</code> <br> - <code>{ACCELERATOR_PREFIX}</code>-s3-access-logs-<code>{ACCOUNT_ID}</code>-<code>{REGION}</code> <br> - <code>{ACCELERATOR_PREFIX}</code>-cur-<code>{ACCOUNT_ID}</code>-<code>{REGION}</code> <br> - <code>{ACCELERATOR_PREFIX}</code>-s3-logs-<code>{ACCOUNT_ID}</code>-<code>{REGION}</code> <br><br> You can disregard this finding, as these buckets are created and managed by the LZA to store solution artifacts and environment logs, and enabled server side encryption with Amazon S3 managed keys (SSE-S3). Additionally, default server-side encryption with AWS Key Management Service (AWS KMS) keys (SSE-KMS) is not supported for <a href="https://docs.aws.amazon.com/AmazonS3/latest/userguide/enable-server-access-logging.html">server access logging buckets</a>. Alternatively, you can choose to suppress the finding for these resources.</td>
+</tr>
+<tr>
+<td><a href="https://docs.aws.amazon.com/securityhub/latest/userguide/s3-controls.html#s3-20">S3.20</a></td>
+<td>S3 general purpose buckets should have MFA delete enabled</td>
+<td>Low</td>
+<td>When using the Landing Zone Accelerator on AWS solution, this finding includes the all Amazon S3 buckets with prefixes <code>{ACCELERATOR_PREFIX}</code> and <code>{cdk-accel}</code>. <br><br> You can disregard this finding, as these buckets are created and managed by the LZA and AWS Cloud Development Kit (CDK) to store solution artifacts and environment logs. These buckets have Lifecycle configurations setup , and you cannot use <a href="https://docs.aws.amazon.com/AmazonS3/latest/userguide/MultiFactorAuthenticationDelete.html">MFA delete</a> for buckets with lifecycle configurations. Alternatively, you can choose to suppress the finding for these resources.</td>
+</tr>
+<tr>
+<td><a href="https://docs.aws.amazon.com/securityhub/latest/userguide/stepfunctions-controls.html#stepfunctions-1">StepFunctions.1</a></td>
+<td>Step Functions state machines should have logging turned on</td>
+<td>Medium</td>
+<td>When using the Landing Zone Accelerator on AWS solution, this finding includes the following AWS Step Functions: <br><br> - CreateCTAccountsXXXX <br> - CreateOrganizationAccountsXXXX <br><br> You can disregard this finding, as these step functions are created and managed by the LZA to execute Lambda functions for account creation. These Lambda functions associated with Step Functions have enabled cloudwatch logs for monitoring and logging purposes.  Alternatively, you can choose to suppress the finding for these resources.</td>
+</tr>
+</tbody>
+</table>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12Z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    <script id="__config" type="application/json">{"base": "../..", "features": ["content.code.copy", "navigation.tracking", "navigation.instant", "navigation.indexes", "navigation.top"], "search": "../../assets/javascripts/workers/search.f886a092.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"provider": "mike"}}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.d7c377c4.min.js"></script>
+      
+    
+  </body>
+</html>
