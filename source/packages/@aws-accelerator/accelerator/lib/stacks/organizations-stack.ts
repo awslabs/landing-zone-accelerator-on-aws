@@ -532,7 +532,9 @@ export class OrganizationsStack extends AcceleratorStack {
    */
   private enableMacieDelegatedAdminAccount(adminAccountId: string) {
     if (this.centralSecurityServices.macie.enable) {
-      if (this.centralSecurityServices.macie.excludeRegions.indexOf(cdk.Stack.of(this).region as Region) == -1) {
+      if (
+        (this.centralSecurityServices.macie.excludeRegions ?? []).indexOf(cdk.Stack.of(this).region as Region) == -1
+      ) {
         this.logger.debug(
           `Starts macie admin account delegation to the account with email ${
             this.stackProperties.accountsConfig.getAuditAccount().email

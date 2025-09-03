@@ -163,7 +163,7 @@ export class SecurityAuditStack extends AcceleratorStack {
       this.logger.info(`Configuring Macie`);
 
       if (
-        this.props.securityConfig.centralSecurityServices.macie.excludeRegions.indexOf(
+        (this.props.securityConfig.centralSecurityServices.macie.excludeRegions ?? []).indexOf(
           cdk.Stack.of(this).region as Region,
         ) === -1
       ) {
