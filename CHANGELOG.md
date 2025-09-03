@@ -33,20 +33,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - fix(asea): handle several asea vpc naming issues
 - fix(asea): lookup tgw attachments using asea vpc names
 - fix(aspects): update CDK aspect to use lza default node version for custom resource Lambda functions by default [#761](https://github.com/awslabs/landing-zone-accelerator-on-aws/issues/761)
+- fix(bootstrap): lookup data with query command
 - fix(config): ISnsConfig functionality for snsTopics property [#700](https://github.com/awslabs/landing-zone-accelerator-on-aws/issues/700) 
 - fix(diff): print output before approval [#723](https://github.com/awslabs/landing-zone-accelerator-on-aws/issues/723)
 - fix(documentation): fixed documentation for acceleratorMetadata [#498](https://github.com/awslabs/landing-zone-accelerator-on-aws/issues/498)
+- fix(kms): fix policy condition error
 - fix(logging): check for error in CreateLogGroup API
+- fix(lookup): filter out query with commitId
 - fix(macie): update macie custom resource policy statement to correct error preventing creation of service linked role
+- fix(networking): add ipam allocation to existing vpc
 - fix(networking): allow the creation of iam vpc interface endpoints
 - fix(networking): fix ipam scope lookup on shared pool
+- fix(networking): load balancer metadata lookup key name
+- fix(networking): remove duplicate roles
+- fix(networking): subnet route table association lookup and creation
 - fix(pipeline): move account alias module run after account creation [#782](https://github.com/awslabs/landing-zone-accelerator-on-aws/issues/782)
 - fix(pipeline): update iam policy for github token change lambda to allow pipeline update [#739](https://github.com/awslabs/landing-zone-accelerator-on-aws/issues/739)
 - fix(pre-approval): add wrapper around deployment 
 - fix(sample-config): extend preventative measures to roles
 - fix(security-audit): sns topic for controltower notifications
 - fix(securityhub): by default only send HIGH and CRITICAL SecurityHub events to CloudWatch. If other events are needed in CloudWatch update configuration
+- fix(ssm): fix idempotent deletion of SSM parameter
 - fix(tagging): fix tagging for custom resource providers
+- fix(test): fix all enabled configuration
 - fix(validation): allow the replacements that start with the string 'resolve' [#781](https://github.com/awslabs/landing-zone-accelerator-on-aws/issues/781)
 - fix(validation): allow wildcard tld in config validator for nfw rules
 
@@ -58,8 +67,37 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - chore(audit-manager): update sdk v3
 - chore(bootstrap): added termination protection for CDKToolkit stack
 - chore(constructs): directconnect constructs update sdk v3
+- chore(deployment): integrate module runner for network refactor
 - chore(docs): adding securityhub findings info for kinesis.3
 - chore(docs): update cloudwatch log group retention setting documentation
+- chore(docs): add v2 stack documentation
+- chore(docs): document the process of adding a new region
+- chore(docs): update readme with code protection description
+- chore(dcs): added outposts documentation and validation
+
+## [1.12.6] - 2025-08-28
+
+### Fixed
+
+- fix(asea): create tgw association asea resource without propagation
+- fix(asea): fix tgw route lookup with vpc name
+- fix(asea): lookup vpc endpoints using asea names and vpc
+- fix(asea): remove underscores from logical id lookup
+
+## [1.12.5] - 2025-07-22
+
+### Fixed
+
+- fix(kms): fix policy condition error
+
+## [1.12.4] - 2025-07-21
+
+### Fixed
+
+- fix(asea): lookup tgw attachments using asea vpc names
+- fix(logging): add permissions to cloudwatch log creation for kms association
+- fix(networking): remove duplicates for gateway loadbalancer endpoints
+
 
 ## [1.12.3] - 2025-06-11
 
