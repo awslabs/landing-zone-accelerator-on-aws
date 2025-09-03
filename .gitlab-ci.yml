@@ -545,6 +545,7 @@ release:run-tests:
     - "apt-cache gencaches"
   script:
     # Run tests in the same way as the AWS Solutions pipeline
+    - "export NODE_OPTIONS=--max_old_space_size=28672"
     - "cd source"
     - "chmod +x ./run-all-tests.sh && ./run-all-tests.sh"
   rules:
