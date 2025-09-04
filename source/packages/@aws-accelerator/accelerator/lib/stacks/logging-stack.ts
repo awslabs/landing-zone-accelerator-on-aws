@@ -509,7 +509,7 @@ export class LoggingStack extends AcceleratorStack {
       ],
     });
 
-    serverAccessLogsBucket.getS3Bucket().addToResourcePolicy(
+    const statements: cdk.aws_iam.PolicyStatement[] = [
       new iam.PolicyStatement({
         sid: 'Allow write access for logging service principal',
         effect: iam.Effect.ALLOW,
@@ -522,7 +522,25 @@ export class LoggingStack extends AcceleratorStack {
           },
         },
       }),
-    );
+    ];
+
+    for (const attachment of this.props.globalConfig.logging.accessLogBucket?.s3ResourcePolicyAttachments ?? []) {
+      const policyDocument = JSON.parse(
+        this.generatePolicyReplacements(
+          path.join(this.props.configDirPath, attachment.policy),
+          false,
+          this.organizationId,
+        ),
+      );
+
+      for (const statement of policyDocument.Statement) {
+        statements.push(cdk.aws_iam.PolicyStatement.fromJson(statement));
+      }
+    }
+
+    for (const statement of statements) {
+      serverAccessLogsBucket.getS3Bucket().addToResourcePolicy(statement);
+    }
 
     return serverAccessLogsBucket.getS3Bucket();
   }
