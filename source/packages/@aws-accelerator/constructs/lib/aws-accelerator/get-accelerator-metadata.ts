@@ -59,6 +59,10 @@ export interface AcceleratorMetadataProps {
    */
   readonly configBucketName: string;
   /**
+   * Secure bucket name
+   */
+  readonly secureBucketName: string;
+  /**
    * The Accelerator Organization Id
    */
   readonly organizationId: string;
@@ -117,6 +121,7 @@ export class AcceleratorMetadata extends Construct {
       region,
       props.metadataLogBucketName,
       props.configBucketName,
+      props.secureBucketName,
       configTableArn,
     );
     this.lambdaFunction = this.createLambdaFunction(functionName, stack, lambdaCode, this.role, props);
@@ -130,6 +135,7 @@ export class AcceleratorMetadata extends Construct {
     region: string,
     metadataLogBucketName: string,
     configBucketName: string,
+    secureBucketName: string,
     configTableArn: string,
   ) {
     const lambdaRole = new cdk.aws_iam.Role(this, 'MetadataLambda', {
@@ -182,6 +188,8 @@ export class AcceleratorMetadata extends Construct {
           `arn:${cdk.Stack.of(this).partition}:s3:::${metadataLogBucketName}/*`,
           `arn:${cdk.Stack.of(this).partition}:s3:::${configBucketName}`,
           `arn:${cdk.Stack.of(this).partition}:s3:::${configBucketName}/*`,
+          `arn:${cdk.Stack.of(this).partition}:s3:::${secureBucketName}`,
+          `arn:${cdk.Stack.of(this).partition}:s3:::${secureBucketName}/*`,
         ],
       }),
     );
