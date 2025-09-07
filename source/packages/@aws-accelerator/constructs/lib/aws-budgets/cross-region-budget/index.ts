@@ -11,13 +11,11 @@
  *  and limitations under the License.
  */
 
-import * as AWS from 'aws-sdk';
+import { BudgetsClient, CreateBudgetCommand, UpdateBudgetCommand, DeleteBudgetCommand } from '@aws-sdk/client-budgets';
 
 import { throttlingBackOff } from '@aws-accelerator/utils/lib/throttle';
 import { CloudFormationCustomResourceEvent } from '@aws-accelerator/utils/lib/common-types';
 import { getGlobalRegion } from '@aws-accelerator/utils/lib/common-functions';
-
-AWS.config.logger = console;
 
 /**
  * cross-region-report-definition - lambda handler
@@ -76,7 +74,7 @@ export async function handler(
 
   const partition = event.ResourceProperties['partition'];
   const globalRegion = getGlobalRegion(partition);
-  const budgetClient = new AWS.Budgets({ region: globalRegion });
+  const budgetClient = new BudgetsClient({ region: globalRegion });
 
   //AccountId retrieved from context
   const awsAccountId = context.invokedFunctionArn.split(':')[4];
@@ -144,7 +142,7 @@ export async function handler(
       };
 
       //const createParams = paramsArr[0];
-      await throttlingBackOff(() => budgetClient.createBudget(createParams).promise());
+      await throttlingBackOff(() => budgetClient.send(new CreateBudgetCommand(createParams)));
 
       return {
         PhysicalResourceId: budgetDefinition.name,
@@ -180,7 +178,7 @@ export async function handler(
           LastUpdatedTime: new Date(),
         },
       };
-      await throttlingBackOff(() => budgetClient.updateBudget(updateParams).promise());
+      await throttlingBackOff(() => budgetClient.send(new UpdateBudgetCommand(updateParams)));
 
       return {
         PhysicalResourceId: event.PhysicalResourceId,
@@ -194,7 +192,7 @@ export async function handler(
         AccountId: awsAccountId /* required */,
         BudgetName: budgetDefinition.name /* required */,
       };
-      await throttlingBackOff(() => budgetClient.deleteBudget(deleteParams).promise());
+      await throttlingBackOff(() => budgetClient.send(new DeleteBudgetCommand(deleteParams)));
 
       return {
         PhysicalResourceId: event.PhysicalResourceId,
