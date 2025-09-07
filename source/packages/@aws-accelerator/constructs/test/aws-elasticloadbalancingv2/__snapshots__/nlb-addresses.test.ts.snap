@@ -281,6 +281,16 @@ exports[`ConfigServiceTags Construct(NLBAddresses):  Snapshot Test 1`] = `
                 },
               ],
             },
+            {
+              "Action": "lambda:GetFunction",
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::GetAtt": [
+                  "NLBAddressesNLBAddressesProviderLambdaA8F7BC9A",
+                  "Arn",
+                ],
+              },
+            },
           ],
           "Version": "2012-10-17",
         },

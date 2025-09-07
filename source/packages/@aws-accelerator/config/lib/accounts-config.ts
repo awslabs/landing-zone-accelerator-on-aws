@@ -19,7 +19,7 @@ import * as path from 'path';
 import { createLogger } from '@aws-accelerator/utils/lib/logger';
 import { throttlingBackOff } from '@aws-accelerator/utils/lib/throttle';
 
-import { getGlobalRegion } from '../../utils/lib/common-functions';
+import { getGlobalRegion, getCrossAccountCredentials } from '../../utils/lib/common-functions';
 import { createSchema, DeploymentTargets, parseAccountsConfig } from './common';
 import * as i from './models/accounts-config';
 import { OrganizationalUnitConfig } from './organization-config';
@@ -202,6 +202,27 @@ export class AccountsConfig implements i.IAccountsConfig {
     managementAccountCredentials?: AWS.Credentials,
     loadFromDynamoDbTable?: boolean,
   ): Promise<void> {
+    let envCredentials: AWS.Credentials | undefined;
+    if (process.env['MANAGEMENT_ACCOUNT_ID'] && process.env['MANAGEMENT_ACCOUNT_ROLE_NAME']) {
+      logger.info('set management account credentials');
+      logger.info(`managementAccountId => ${process.env['MANAGEMENT_ACCOUNT_ID']}`);
+      logger.info(`management account role name => ${process.env['MANAGEMENT_ACCOUNT_ROLE_NAME']}`);
+      const crossAccountCredentials = await getCrossAccountCredentials(
+        process.env['MANAGEMENT_ACCOUNT_ID'],
+        getGlobalRegion(partition),
+        partition,
+        process.env['MANAGEMENT_ACCOUNT_ROLE_NAME'],
+        'accounts-config-lookup',
+      );
+      envCredentials = {
+        accessKeyId: crossAccountCredentials.Credentials!.AccessKeyId!,
+        secretAccessKey: crossAccountCredentials.Credentials!.SecretAccessKey!,
+        sessionToken: crossAccountCredentials.Credentials!.SessionToken,
+      } as AWS.Credentials;
+    }
+
+    // Priority: passed credentials > env credentials > undefined
+    const credentials = managementAccountCredentials ?? envCredentials;
     if (this.accountIds === undefined) {
       this.accountIds = [];
     }
@@ -228,22 +249,16 @@ export class AccountsConfig implements i.IAccountsConfig {
           process.env['ACCELERATOR_SSM_PARAM_NAME_PREFIX'] ?? '/accelerator'
         }/prepare-stack/configTable/name`;
 
-        const configTableName = await getSSMParameterValue(ssmConfigTableNameParameter, managementAccountCredentials);
+        const configTableName = await getSSMParameterValue(ssmConfigTableNameParameter, credentials);
         const [mandatoryAccountItems, workloadAccountItems] = await Promise.all([
           queryConfigTable(
             configTableName,
             'mandatoryAccount',
             'orgInfo',
-            managementAccountCredentials,
+            credentials,
             process.env['CONFIG_COMMIT_ID'],
           ),
-          queryConfigTable(
-            configTableName,
-            'workloadAccount',
-            'orgInfo',
-            managementAccountCredentials,
-            process.env['CONFIG_COMMIT_ID'],
-          ),
+          queryConfigTable(configTableName, 'workloadAccount', 'orgInfo', credentials, process.env['CONFIG_COMMIT_ID']),
         ]);
 
         const configAccountEmails = [
@@ -269,7 +284,7 @@ export class AccountsConfig implements i.IAccountsConfig {
         logger.debug(`Orgs is enabled, solution will query from AWS Organizations API`);
         const organizationsClient = new AWS.Organizations({
           region: getGlobalRegion(partition),
-          credentials: managementAccountCredentials,
+          credentials: credentials,
         });
 
         let nextToken: string | undefined = undefined;

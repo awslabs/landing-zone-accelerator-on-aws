@@ -387,7 +387,8 @@ export class SecurityResourcesStack extends AcceleratorStack {
       }
 
       for (const alarmItem of alarmSetItem.alarms ?? []) {
-        const alarm = new cdk.aws_cloudwatch.Alarm(this, pascalCase(alarmItem.alarmName), {
+        let alarm: cdk.aws_cloudwatch.Alarm | cdk.aws_cloudwatch.AnomalyDetectionAlarm;
+        const alarmProps = {
           alarmName: alarmItem.alarmName,
           alarmDescription: alarmItem.alarmDescription,
           metric: new cdk.aws_cloudwatch.Metric({
@@ -400,7 +401,13 @@ export class SecurityResourcesStack extends AcceleratorStack {
           evaluationPeriods: alarmItem.evaluationPeriods,
           threshold: alarmItem.threshold,
           treatMissingData: this.getTreatMissingData(alarmItem.treatMissingData),
-        });
+        };
+
+        if (this.isAnomalyDetectionOperator(alarmItem.comparisonOperator)) {
+          alarm = new cdk.aws_cloudwatch.AnomalyDetectionAlarm(this, pascalCase(alarmItem.alarmName), alarmProps);
+        } else {
+          alarm = new cdk.aws_cloudwatch.Alarm(this, pascalCase(alarmItem.alarmName), alarmProps);
+        }
 
         if (this.props.globalConfig.snsTopics) {
           alarm.addAlarmAction(
@@ -437,6 +444,18 @@ export class SecurityResourcesStack extends AcceleratorStack {
         }
       }
     }
+  }
+
+  private isAnomalyDetectionOperator(operator: string): boolean {
+    const anomalyDetectionOperators = [
+      cdk.aws_cloudwatch.ComparisonOperator.LESS_THAN_LOWER_OR_GREATER_THAN_UPPER_THRESHOLD,
+      cdk.aws_cloudwatch.ComparisonOperator.GREATER_THAN_UPPER_THRESHOLD,
+      cdk.aws_cloudwatch.ComparisonOperator.LESS_THAN_LOWER_THRESHOLD,
+    ];
+
+    return anomalyDetectionOperators.includes(
+      operator as cdk.aws_cloudwatch.ComparisonOperator.LESS_THAN_LOWER_THRESHOLD,
+    );
   }
 
   private configureCloudwatchLogGroups() {

@@ -692,6 +692,16 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
                 },
               ],
             },
+            {
+              "Action": "lambda:GetFunction",
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::GetAtt": [
+                  "CrossAccountRouteFrameworkCrossAccountRouteFunctionAFDC4801",
+                  "Arn",
+                ],
+              },
+            },
           ],
           "Version": "2012-10-17",
         },
@@ -4923,6 +4933,16 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
                 },
               ],
             },
+            {
+              "Action": "lambda:GetFunction",
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::GetAtt": [
+                  "appAnlbtg2ipLookupappAnlbtg2ipLookupProviderLambdaEF941FA2",
+                  "Arn",
+                ],
+              },
+            },
           ],
           "Version": "2012-10-17",
         },
@@ -5398,6 +5418,16 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
                   ],
                 },
               ],
+            },
+            {
+              "Action": "lambda:GetFunction",
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::GetAtt": [
+                  "AcceleratorManagedActiveDirectoryActiveDirectoryAcceleratorManagedActiveDirectoryLogSubscriptionManageActiveDirectoryLogSubscriptionFunction7DAC44F8",
+                  "Arn",
+                ],
+              },
             },
           ],
           "Version": "2012-10-17",
@@ -6683,6 +6713,16 @@ catch {
                 },
               ],
             },
+            {
+              "Action": "lambda:GetFunction",
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::GetAtt": [
+                  "AcceleratorManagedActiveDirectoryResolverRuleUpdateResolverRuleFunction177103F8",
+                  "Arn",
+                ],
+              },
+            },
           ],
           "Version": "2012-10-17",
         },
@@ -7165,6 +7205,16 @@ catch {
                 },
               ],
             },
+            {
+              "Action": "lambda:GetFunction",
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::GetAtt": [
+                  "AcceleratorManagedActiveDirectoryShareDirectoryShareManageActiveDirectoryFunctionF5252A97",
+                  "Arn",
+                ],
+              },
+            },
           ],
           "Version": "2012-10-17",
         },
@@ -7433,6 +7483,16 @@ catch {
                   ],
                 },
               ],
+            },
+            {
+              "Action": "lambda:GetFunction",
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::GetAtt": [
+                  "AcceleratorManagedActiveDirectorySharedServicesAppASubnetLookupSubnetIdLookupFunctionF062DAE0",
+                  "Arn",
+                ],
+              },
             },
           ],
           "Version": "2012-10-17",
@@ -7703,6 +7763,16 @@ catch {
                 },
               ],
             },
+            {
+              "Action": "lambda:GetFunction",
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::GetAtt": [
+                  "AcceleratorManagedActiveDirectorySharedServicesAppBSubnetLookupSubnetIdLookupFunction8383C6C9",
+                  "Arn",
+                ],
+              },
+            },
           ],
           "Version": "2012-10-17",
         },
@@ -7969,6 +8039,16 @@ catch {
                 },
               ],
             },
+            {
+              "Action": "lambda:GetFunction",
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::GetAtt": [
+                  "AcceleratorManagedActiveDirectoryVpcLookupVpcIdLookupFunction53EFBF78",
+                  "Arn",
+                ],
+              },
+            },
           ],
           "Version": "2012-10-17",
         },
@@ -8196,6 +8276,16 @@ catch {
                   ],
                 },
               ],
+            },
+            {
+              "Action": "lambda:GetFunction",
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::GetAtt": [
+                  "CrossAccountRouteFrameworkCrossAccountRouteFunctionAFDC4801",
+                  "Arn",
+                ],
+              },
             },
           ],
           "Version": "2012-10-17",
@@ -12964,6 +13054,16 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
                 },
               ],
             },
+            {
+              "Action": "lambda:GetFunction",
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::GetAtt": [
+                  "CrossAccountRouteFrameworkCrossAccountRouteFunctionAFDC4801",
+                  "Arn",
+                ],
+              },
+            },
           ],
           "Version": "2012-10-17",
         },
@@ -13747,6 +13847,16 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
                   ],
                 },
               ],
+            },
+            {
+              "Action": "lambda:GetFunction",
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::GetAtt": [
+                  "CrossAccountRouteFrameworkCrossAccountRouteFunctionAFDC4801",
+                  "Arn",
+                ],
+              },
             },
           ],
           "Version": "2012-10-17",
@@ -14961,6 +15071,16 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
                   ],
                 },
               ],
+            },
+            {
+              "Action": "lambda:GetFunction",
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::GetAtt": [
+                  "CrossAccountRouteFrameworkCrossAccountRouteFunctionAFDC4801",
+                  "Arn",
+                ],
+              },
             },
           ],
           "Version": "2012-10-17",
@@ -16239,6 +16359,16 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
                 },
               ],
             },
+            {
+              "Action": "lambda:GetFunction",
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::GetAtt": [
+                  "CrossAccountRouteFrameworkCrossAccountRouteFunctionAFDC4801",
+                  "Arn",
+                ],
+              },
+            },
           ],
           "Version": "2012-10-17",
         },
@@ -17127,6 +17257,16 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
                   ],
                 },
               ],
+            },
+            {
+              "Action": "lambda:GetFunction",
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::GetAtt": [
+                  "CrossAccountRouteFrameworkCrossAccountRouteFunctionAFDC4801",
+                  "Arn",
+                ],
+              },
             },
           ],
           "Version": "2012-10-17",
@@ -18405,6 +18545,16 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
                 },
               ],
             },
+            {
+              "Action": "lambda:GetFunction",
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::GetAtt": [
+                  "CrossAccountRouteFrameworkCrossAccountRouteFunctionAFDC4801",
+                  "Arn",
+                ],
+              },
+            },
           ],
           "Version": "2012-10-17",
         },
@@ -19499,6 +19649,16 @@ exports[`NoVpcFlowLogStack Construct(NetworkAssociationsStack):  Snapshot Test 1
                   ],
                 },
               ],
+            },
+            {
+              "Action": "lambda:GetFunction",
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::GetAtt": [
+                  "CrossAccountRouteFrameworkCrossAccountRouteFunctionAFDC4801",
+                  "Arn",
+                ],
+              },
             },
           ],
           "Version": "2012-10-17",

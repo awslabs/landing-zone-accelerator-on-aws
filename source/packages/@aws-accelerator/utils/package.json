@@ -8,7 +8,7 @@
     "name": "Amazon Web Services",
     "url": "https://aws.amazon.com/solutions"
   },
-  "main": "index.js",
+  "main": "dist/packages/@aws-accelerator/utils/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
     "build": "tsc",

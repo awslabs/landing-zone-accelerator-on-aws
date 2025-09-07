@@ -59,6 +59,7 @@ describe('LoggerUtil', () => {
 
   describe('Logger', () => {
     test('should create a logger with default settings', () => {
+      delete process.env['LOG_LEVEL'];
       // Execute
       require('../../common/logger');
 

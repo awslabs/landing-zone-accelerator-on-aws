@@ -9,7 +9,7 @@ The Landing Zone Accelerator CDK application is invoked using a custom-built imp
     2.  Change your local working directory (starting from the root directory of the project): `cd source/packages/\@aws-accelerator/accelerator`
 
 ???+ warning 
-     Local use of the CLI should be used with caution. Configuration changes deployed via this method do not have an approval/diff gate by default. You can add an approval gate to deploy operations by appending the following option: `--require-approval any-change`
+     Local use of the CLI should be used with caution. Configuration changes deployed via this method do not have an approval/diff gate by default. Approvals are automates so its advised to manually synth and check the change set or run a diff before deployment.
 
 **Example usage of the CLI:**
 ```
@@ -32,12 +32,12 @@ Native toolkit commands and options can be found in the [AWS CDK Toolkit referen
 
 ??? info "Example synth command"
     ```
-    yarn run ts-node --transpile-only cdk.ts synth --stage network-vpc --require-approval any-change --config-dir /path/to/aws-accelerator-config/ --partition aws --region <region> --account <REDACTED>
+    yarn run ts-node --transpile-only cdk.ts synth --stage network-vpc --config-dir /path/to/aws-accelerator-config/ --partition aws --region <region> --account <REDACTED>
     ```
 
 ??? info "Example deploy command"
     ```
-    yarn run ts-node --transpile-only cdk.ts deploy --stage network-vpc --require-approval any-change --config-dir /path/to/aws-accelerator-config/ --partition aws --region <region> --account <REDACTED> --app cdk.out
+    yarn run ts-node --transpile-only cdk.ts deploy --stage network-vpc --config-dir /path/to/aws-accelerator-config/ --partition aws --region <region> --account <REDACTED>
     ```
 
 ## Configuration Validator

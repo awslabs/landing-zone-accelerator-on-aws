@@ -182,7 +182,10 @@ export class VpnConnection extends cdk.Resource implements IVpnConnection {
         tags: props.tags,
         transitGatewayId: props.transitGatewayId,
         vpnGatewayId: props.virtualPrivateGateway,
-        vpnTunnelOptionsSpecifications: props.vpnTunnelOptionsSpecifications,
+        vpnTunnelOptionsSpecifications: props.vpnTunnelOptionsSpecifications as (
+          | cdk.IResolvable
+          | cdk.aws_ec2.CfnVPNConnection.VpnTunnelOptionsSpecificationProperty
+        )[],
       });
       resource.addMetadata(MetadataKeys.LZA_LOOKUP, props.metadata);
       cdk.Tags.of(this).add('Name', props.name);

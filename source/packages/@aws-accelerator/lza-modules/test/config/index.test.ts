@@ -23,7 +23,10 @@ import { Account } from '@aws-sdk/client-organizations';
 //
 jest.mock('../../lib/config/functions');
 jest.mock('../../lib/config/accelerator-config-loader');
-jest.mock('@aws-accelerator/utils/lib/common-functions');
+jest.mock('@aws-accelerator/utils/lib/common-functions', () => ({
+  getNodeVersion: jest.fn(() => 20),
+  getGlobalRegion: jest.fn(),
+}));
 
 //
 // Mock constants

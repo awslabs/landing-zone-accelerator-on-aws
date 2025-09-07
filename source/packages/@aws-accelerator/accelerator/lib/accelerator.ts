@@ -13,20 +13,16 @@
 
 /* istanbul ignore file */
 
-import { PluginHost } from 'aws-cdk/lib/api/plugin';
-import { RequireApproval } from 'aws-cdk/lib/diff';
-import { Command } from 'aws-cdk/lib/settings';
 import * as AWS from 'aws-sdk';
 import * as fs from 'fs';
-import { AssumeRoleCommandOutput } from '@aws-sdk/client-sts';
 import {
   SSMClient,
   GetParameterCommand,
   GetParameterCommandInput,
   GetParameterCommandOutput,
 } from '@aws-sdk/client-ssm';
-import { S3Client, HeadBucketCommand } from '@aws-sdk/client-s3';
-import { IAMClient, GetRoleCommand, GetRoleCommandInput } from '@aws-sdk/client-iam';
+import { S3Client } from '@aws-sdk/client-s3';
+import { IAMClient } from '@aws-sdk/client-iam';
 import {
   AccountsConfig,
   GlobalConfig,
@@ -44,13 +40,13 @@ import {
   getCurrentAccountId,
 } from '@aws-accelerator/utils/lib/common-functions';
 
-import { AssumeProfilePlugin } from '@aws-cdk-extensions/cdk-plugin-assume-role';
-import { isBeforeBootstrapStage, writeImportResources } from '../utils/app-utils';
+import { writeImportResources } from '../utils/app-utils';
 import { AcceleratorStage } from './accelerator-stage';
-import { AcceleratorToolkit, AcceleratorToolkitProps } from './toolkit';
+import { AcceleratorToolkit, AcceleratorToolkitProps, AcceleratorToolkitCommand } from './toolkit';
 import { v4 as uuidv4 } from 'uuid';
 import * as path from 'path';
 import { Regions } from '@aws-accelerator/utils/lib/regions';
+import { AssumeRoleCommandOutput } from '@aws-sdk/client-sts';
 
 export type CustomStackRunOrder = {
   /**
@@ -92,7 +88,7 @@ process.on('uncaughtException', err => {
   throw new Error('Synthesis failed');
 });
 
-export const BootstrapVersion = 21;
+export const BootstrapVersion = 29;
 
 //
 // The accelerator stack prefix value
@@ -162,16 +158,15 @@ export interface AcceleratorProps {
   readonly account?: string;
   readonly region?: string;
   readonly partition: string;
-  readonly requireApproval: RequireApproval;
   readonly app?: string;
   readonly caBundlePath?: string;
-  readonly ec2Creds?: boolean;
   readonly proxyAddress?: string;
   readonly enableSingleAccountMode: boolean;
-  readonly useExistingRoles: boolean;
   readonly qualifier?: string;
 }
-let maxStacks = Number(process.env['MAX_CONCURRENT_STACKS'] ?? 250);
+// Reducing concurrency as high concurrency is saturating socket with sdk calls
+// https://github.com/aws/aws-sdk-js-v3/issues/7310#issuecomment-3259235981
+let maxStacks = Number(process.env['MAX_CONCURRENT_STACKS'] ?? 100);
 
 /**
  * Wrapper around the CdkToolkit. The Accelerator defines this wrapper to add
@@ -202,13 +197,10 @@ export abstract class Accelerator {
     // Check to see if lookups for organization entities should be done in DynamoDB or native AWS Organizations API calls
     const loadFromDynamoDbTable = shouldLookupDynamoDb(props.stage);
     //
-    // If not pipeline stage, load global config, management account credentials,
-    // and assume role plugin
+    // If not pipeline stage, load global config and account ids
     //
     const configDependentStage = this.isConfigDependentStage(props.stage);
-    const managementAccountCredentials = configDependentStage
-      ? await this.getManagementAccountCredentials(props.partition)
-      : undefined;
+    const managementAccountId = await getManagementAccount(props.partition);
     const globalConfig = configDependentStage ? GlobalConfig.loadRawGlobalConfig(props.configDirPath) : undefined;
     if (globalConfig?.externalLandingZoneResources?.importExternalLandingZoneResources) {
       const orgsEnabled = OrganizationConfig.loadRawOrganizationsConfig(props.configDirPath).enable;
@@ -234,15 +226,11 @@ export abstract class Accelerator {
     if (props.command === 'deploy') {
       maxStacks = globalConfig?.acceleratorSettings?.maxConcurrentStacks
         ? globalConfig?.acceleratorSettings?.maxConcurrentStacks
-        : Number(process.env['MAX_CONCURRENT_STACKS'] ?? 250);
+        : // Reducing concurrency as high concurrency is saturating socket with sdk calls
+          // https://github.com/aws/aws-sdk-js-v3/issues/7310#issuecomment-3259235981
+          Number(process.env['MAX_CONCURRENT_STACKS'] ?? 100);
     }
     if (this.isConfigDependentStage(props.stage)) {
-      const assumeRoleName = setAssumeRoleName({
-        stage: props.stage,
-        customDeploymentRole: globalConfig?.cdkOptions?.customDeploymentRole,
-        command: props.command,
-        managementAccountAccessRole: globalConfig?.managementAccountAccessRole,
-      });
       const accountsConfig = AccountsConfig.load(props.configDirPath);
       const orgsConfig = OrganizationConfig.loadRawOrganizationsConfig(props.configDirPath);
       await accountsConfig.loadAccountIds(
@@ -253,17 +241,8 @@ export abstract class Accelerator {
         undefined,
         loadFromDynamoDbTable,
       );
-
-      if (props.account !== accountsConfig.getManagementAccountId()) {
-        await this.initializeAssumeRolePlugin({
-          region: props.region ?? globalRegion,
-          assumeRoleName,
-          partition: props.partition,
-          caBundlePath: props.caBundlePath,
-          credentials: managementAccountCredentials,
-        });
-      }
     }
+
     //
     // Set toolkit props
     //
@@ -274,16 +253,15 @@ export abstract class Accelerator {
       stackPrefix,
       stage: props.stage,
       configDirPath: props.configDirPath,
-      requireApproval: props.requireApproval,
       app: props.app,
       caBundlePath: props.caBundlePath,
-      ec2Creds: props.ec2Creds,
       proxyAddress: props.proxyAddress,
       centralizeCdkBootstrap: globalConfig?.centralizeCdkBuckets?.enable,
       cdkOptions: globalConfig?.cdkOptions,
-      useExistingRoles: props.useExistingRoles,
+      useExistingRoles: false, // deprecated option to be removed in a future release
       // central logs bucket kms key arn is dynamic and will be populated in app-utils
       centralLogsBucketKmsKeyArn: undefined,
+      managementAccountId,
     };
     //
     // When an account and region is specified, execute as single stack.
@@ -321,7 +299,6 @@ export abstract class Accelerator {
       );
       const replacementsConfig = ReplacementsConfig.load(props.configDirPath, accountsConfig);
       await replacementsConfig.loadDynamicReplacements(homeRegion);
-
       //
       // Set details about mandatory accounts
       //
@@ -371,6 +348,7 @@ export abstract class Accelerator {
         managementAccountDetails,
         auditAccountDetails,
         maxStacks,
+        globalConfig.managementAccountAccessRole,
       );
       //
       // Execute LOGGING stage
@@ -382,6 +360,7 @@ export abstract class Accelerator {
         logArchiveAccountDetails,
         regionDetails,
         maxStacks,
+        globalConfig.managementAccountAccessRole,
       );
 
       let enabledRegions = globalConfig.enabledRegions;
@@ -404,6 +383,7 @@ export abstract class Accelerator {
         enabledRegions,
         maxStacks,
         replacementsConfig,
+        globalConfig.managementAccountAccessRole,
       );
 
       await Promise.all(promises);
@@ -456,25 +436,6 @@ export abstract class Accelerator {
     }
   }
 
-  static async initializeAssumeRolePlugin(props: {
-    region: string | undefined;
-    assumeRoleName: string | undefined;
-    partition: string;
-    caBundlePath: string | undefined;
-    credentials?: AWS.STS.Credentials;
-  }): Promise<AssumeProfilePlugin> {
-    const assumeRolePlugin = new AssumeProfilePlugin({
-      region: props.region,
-      assumeRoleName: props.assumeRoleName,
-      assumeRoleDuration: 3600,
-      credentials: props.credentials,
-      partition: props.partition,
-      caBundlePath: props.caBundlePath,
-    });
-    assumeRolePlugin.init(PluginHost.instance);
-    return assumeRolePlugin;
-  }
-
   /**
    * Returns true if the stage is dependent on config directory, except pipeline, tester-pipeline and diagnostic-pack all stages are config dependent
    * @param stage
@@ -497,12 +458,14 @@ export abstract class Accelerator {
   private static isSingleStackAction(props: AcceleratorProps) {
     return (
       (props.account && props.region) ||
-      [Command.SYNTH.toString(), Command.SYNTHESIZE.toString()].includes(props.command)
+      [AcceleratorToolkitCommand.SYNTH.toString(), AcceleratorToolkitCommand.SYNTHESIZE.toString()].includes(
+        props.command,
+      )
     );
   }
 
   /**
-   * Executes a single stack if both account and region are specified in the CLI command.
+   * Executes a single stack if both account and region are specified in the CLI AcceleratorToolkitCommand.
    * Also used if synth or diff commands are specified.
    * @param props
    * @param globalConfig
@@ -523,9 +486,15 @@ export abstract class Accelerator {
         throw new Error(`CLI command validation failed at runtime.`);
       }
     }
+    // If config is provided then use that for assumedRole
+    const assumeRoleName = props.configDirPath
+      ? GlobalConfig.loadRawGlobalConfig(props.configDirPath).managementAccountAccessRole
+      : undefined;
+
     return AcceleratorToolkit.execute({
       accountId: props.account,
       region: props.region,
+      assumeRoleName,
       ...toolkitProps,
     });
   }
@@ -545,7 +514,7 @@ export abstract class Accelerator {
     globalConfig: GlobalConfig,
     accountsConfig: AccountsConfig,
   ) {
-    if (toolkitProps.command === Command.BOOTSTRAP) {
+    if (toolkitProps.command === AcceleratorToolkitCommand.BOOTSTRAP) {
       //
       // Bootstrap the Management account
       await this.bootstrapManagementAccount(
@@ -580,7 +549,7 @@ export abstract class Accelerator {
     enabledRegions: string[],
   ): Promise<void> {
     for (const region of enabledRegions) {
-      await delay(500);
+      // await delay(500);
       promises.push(
         AcceleratorToolkit.execute({
           accountId: managementAccountId,
@@ -611,43 +580,28 @@ export abstract class Accelerator {
     globalConfig: GlobalConfig,
     managementAccountDetails: { id: string; name: string },
   ): Promise<void> {
-    const partition = toolkitProps.partition;
     const managementAccountAccessRole = globalConfig.managementAccountAccessRole;
-    const centralizedBuckets = globalConfig.centralizeCdkBuckets?.enable || globalConfig.cdkOptions?.centralizeBuckets;
-    const homeRegion = globalConfig.homeRegion;
-    const customDeploymentRoleName = globalConfig.cdkOptions.customDeploymentRole;
-    const forceBootstrap = globalConfig.cdkOptions.forceBootstrap;
     const nonManagementAccounts = accountsConfig
       .getAccounts(toolkitProps.enableSingleAccountMode)
       .filter(accountItem => accountItem.name !== managementAccountDetails.name);
-    const bootstrapRequiredPromises = [];
-
-    for (const region of globalConfig.enabledRegions) {
-      for (const account of nonManagementAccounts) {
+    const environments = nonManagementAccounts
+      .map(account => {
+        const environmentArray = [];
         const accountId = accountsConfig.getAccountId(account.name);
-        bootstrapRequiredPromises.push(
-          bootstrapRequired({
-            accountId,
-            region,
-            partition,
-            managementAccountAccessRole,
-            centralizedBuckets,
-            homeRegion,
-            customDeploymentRoleName,
-            forceBootstrap,
-          }),
-        );
-      }
-    }
-    const bootstrapRequiredResults = await Promise.all(bootstrapRequiredPromises);
-    const environmentsToBootstrap = bootstrapRequiredResults.filter(bootstrapInfo => bootstrapInfo.forceBootstrap);
-    for (const env of environmentsToBootstrap) {
-      await delay(500);
+        for (const region of globalConfig.enabledRegions) {
+          environmentArray.push({ accountId, region });
+        }
+        return environmentArray;
+      })
+      .flat();
+
+    for (const env of environments) {
       promises.push(
         AcceleratorToolkit.execute({
           accountId: env.accountId,
           region: env.region,
           trustedAccountId: managementAccountDetails.id,
+          assumeRoleName: managementAccountAccessRole,
           ...toolkitProps,
           stage: 'bootstrap',
         }),
@@ -676,7 +630,7 @@ export abstract class Accelerator {
   ): Promise<void> {
     switch (toolkitProps.stage) {
       //
-      // PREPARE and IDENTITY CENTER stage
+      // PREPARE and IDENTITY CENTER stage deployed to home region
       case AcceleratorStage.IDENTITY_CENTER:
       case AcceleratorStage.PREPARE:
         logger.info(`Executing ${toolkitProps.stage} for ${managementAccountDetails.name} account.`);
@@ -687,7 +641,7 @@ export abstract class Accelerator {
         });
 
       //
-      // ACCOUNTS and FINALIZE stages
+      // ACCOUNTS and FINALIZE stages deployed to global region
       case AcceleratorStage.ACCOUNTS:
       case AcceleratorStage.FINALIZE:
         logger.info(`Executing ${toolkitProps.stage} for ${managementAccountDetails.name} account.`);
@@ -714,6 +668,7 @@ export abstract class Accelerator {
     managementAccountDetails: { id: string; name: string },
     auditAccountDetails: { id: string; name: string },
     maxStacks: number,
+    managementAccountAccessRole: string,
   ) {
     for (const region of enabledRegions) {
       switch (toolkitProps.stage) {
@@ -743,6 +698,7 @@ export abstract class Accelerator {
             AcceleratorToolkit.execute({
               accountId: auditAccountDetails.id,
               region: region,
+              assumeRoleName: managementAccountAccessRole,
               ...toolkitProps,
             }),
           );
@@ -770,6 +726,7 @@ export abstract class Accelerator {
     logArchiveAccountDetails: { id: string; name: string; centralizedLoggingRegion: string },
     regionDetails: { homeRegion: string; globalRegion: string; enabledRegions: string[] },
     maxStacks: number,
+    assumeRoleName: string,
   ) {
     if (toolkitProps.stage === AcceleratorStage.LOGGING) {
       //
@@ -781,6 +738,7 @@ export abstract class Accelerator {
       await AcceleratorToolkit.execute({
         accountId: logArchiveAccountDetails.id,
         region: logArchiveAccountDetails.centralizedLoggingRegion,
+        assumeRoleName,
         ...toolkitProps,
       });
       // Execute in all other regions in the LogArchive account
@@ -788,6 +746,7 @@ export abstract class Accelerator {
         toolkitProps,
         logArchiveAccountDetails,
         regionDetails.enabledRegions,
+        assumeRoleName,
       );
 
       //
@@ -799,6 +758,7 @@ export abstract class Accelerator {
         logArchiveAccountDetails,
         regionDetails.enabledRegions,
         maxStacks,
+        assumeRoleName,
       );
     }
   }
@@ -807,6 +767,7 @@ export abstract class Accelerator {
     toolkitProps: AcceleratorToolkitProps,
     logArchiveAccountDetails: { id: string; name: string; centralizedLoggingRegion: string },
     enabledRegions: string[],
+    assumeRoleName: string,
   ) {
     const nonCentralRegions = enabledRegions.filter(
       regionItem => regionItem !== logArchiveAccountDetails.centralizedLoggingRegion,
@@ -818,6 +779,7 @@ export abstract class Accelerator {
         AcceleratorToolkit.execute({
           accountId: logArchiveAccountDetails.id,
           region: region,
+          assumeRoleName,
           ...toolkitProps,
         }),
       );
@@ -840,6 +802,7 @@ export abstract class Accelerator {
     logArchiveAccountDetails: { id: string; name: string; centralizedLoggingRegion: string },
     enabledRegions: string[],
     maxStacks: number,
+    assumeRoleName: string,
   ) {
     let nonLogArchiveAccounts = [...accountsConfig.mandatoryAccounts, ...accountsConfig.workloadAccounts].filter(
       accountItem => accountItem.name !== logArchiveAccountDetails.name,
@@ -864,6 +827,7 @@ export abstract class Accelerator {
             AcceleratorToolkit.execute({
               accountId,
               region,
+              assumeRoleName,
               ...toolkitProps,
             }),
           );
@@ -893,6 +857,7 @@ export abstract class Accelerator {
     enabledRegions: string[],
     maxStacks: number,
     replacementsConfig: ReplacementsConfig,
+    assumeRoleName: string,
   ) {
     if (
       toolkitProps.stage === AcceleratorStage.SECURITY ||
@@ -918,6 +883,7 @@ export abstract class Accelerator {
         managementAccountDetails.name,
         enabledRegions,
         maxStacks,
+        assumeRoleName,
       );
       await Promise.all(promises);
       promises.length = 0;
@@ -934,6 +900,7 @@ export abstract class Accelerator {
           accountsConfig,
           enabledRegions,
           maxStacks,
+          assumeRoleName,
         );
       }
       // clearing queue after customizations run
@@ -948,6 +915,7 @@ export abstract class Accelerator {
     accountsConfig: AccountsConfig,
     enabledRegions: string[],
     maxStacks: number,
+    assumeRoleName: string,
   ) {
     const customizationsConfig = CustomizationsConfig.load(toolkitProps.configDirPath!, replacementsConfig);
     const customStacks = customizationsConfig.getCustomStacks();
@@ -977,6 +945,7 @@ export abstract class Accelerator {
           AcceleratorToolkit.execute({
             accountId: stack.account,
             region: stack.region,
+            assumeRoleName,
             ...toolkitProps,
             stackNames: stack.stackNames,
           }),
@@ -1008,6 +977,7 @@ export abstract class Accelerator {
             AcceleratorToolkit.execute({
               accountId: deploymentAcct,
               region: deploymentRegion,
+              assumeRoleName,
               ...toolkitProps,
               stackNames: [applicationStackName],
             }),
@@ -1062,6 +1032,7 @@ export abstract class Accelerator {
     managementAccountName: string,
     enabledRegions: string[],
     maxStacks: number,
+    assumeRoleName: string,
   ) {
     let nonManagementAccounts = [...accountsConfig.mandatoryAccounts, ...accountsConfig.workloadAccounts].filter(
       accountItem => accountItem.name !== managementAccountName,
@@ -1079,6 +1050,7 @@ export abstract class Accelerator {
           AcceleratorToolkit.execute({
             accountId,
             region,
+            assumeRoleName,
             ...toolkitProps,
           }),
         );
@@ -1144,6 +1116,7 @@ export abstract class Accelerator {
                 app: `cdk.out/phase${phase}-${accountId}-${region}`,
                 stackPrefix: aseaPrefix,
                 stack: stack.stackName,
+                assumeRoleName: globalConfig.managementAccountAccessRole,
                 // ASEA Adds "AcceleratorName" tag to all stacks
                 // Adding it to avoid updating all stacks
                 tags: [
@@ -1206,7 +1179,7 @@ export async function checkDiffStage(props: AcceleratorProps) {
   ];
 
   // if diff command is run and no stage is set then run all stages
-  if (props.command === Command.DIFF.toString() && !props.stage) {
+  if (props.command === AcceleratorToolkitCommand.DIFF.toString() && !props.stage) {
     for (const diffStage of allStages) {
       const diffProps: AcceleratorProps = {
         app: props.app,
@@ -1216,103 +1189,13 @@ export async function checkDiffStage(props: AcceleratorProps) {
         account: props.account,
         region: props.region,
         partition: props.partition,
-        requireApproval: props.requireApproval,
         caBundlePath: props.caBundlePath,
-        ec2Creds: props.ec2Creds,
         proxyAddress: props.proxyAddress,
         enableSingleAccountMode: props.enableSingleAccountMode,
-        useExistingRoles: props.useExistingRoles,
       };
       diffPromises.push(Accelerator.run(diffProps));
     }
     await Promise.all(diffPromises);
-  }
-}
-
-function delay(ms: number) {
-  return new Promise(resolve => setTimeout(resolve, ms));
-}
-
-async function bootstrapRequired(props: {
-  accountId: string;
-  region: string;
-  partition: string;
-  managementAccountAccessRole: string;
-  centralizedBuckets: boolean;
-  homeRegion: string;
-  customDeploymentRoleName?: string;
-  forceBootstrap?: boolean;
-}): Promise<{ accountId: string; region: string; forceBootstrap: boolean }> {
-  const bootstrapInfo = { accountId: props.accountId, region: props.region, forceBootstrap: true };
-  const crossAccountCredentials = await getCrossAccountCredentials(
-    props.accountId,
-    props.region,
-    props.partition,
-    props.managementAccountAccessRole,
-  );
-  if (props.forceBootstrap) {
-    return bootstrapInfo;
-  }
-  if (!props.centralizedBuckets) {
-    logger.info(`Checking if workload account CDK asset bucket exists in account ${props.accountId}`);
-    const s3Client = getCrossAccountClient(props.region, crossAccountCredentials, 'S3') as S3Client;
-    const assetBucketExists = await doesCdkAssetBucketExist(s3Client, props.accountId, props.region);
-    if (!assetBucketExists) {
-      return bootstrapInfo;
-    }
-  }
-
-  if (props.customDeploymentRoleName && props.region === props.homeRegion) {
-    logger.info(
-      `Checking account ${props.accountId} in home region ${props.homeRegion} to see if custom deployment role ${props.customDeploymentRoleName} exists`,
-    );
-    const iamClient = getCrossAccountClient(props.region, crossAccountCredentials, 'IAM') as IAMClient;
-    const deploymentRoleExists = await customDeploymentRoleExists(
-      iamClient,
-      props.customDeploymentRoleName,
-      props.region,
-    );
-    if (!deploymentRoleExists) {
-      return bootstrapInfo;
-    }
-  }
-  const bootstrapVersionName = ' /cdk-bootstrap/accel/version';
-  const ssmClient = (await getCrossAccountClient(props.region, crossAccountCredentials, 'SSM')) as SSMClient;
-  const bootstrapVersionValue = await getSsmParameterValue(bootstrapVersionName, ssmClient);
-  if (bootstrapVersionValue && Number(bootstrapVersionValue) >= BootstrapVersion) {
-    logger.info(`Skipping bootstrap for account-region: ${props.accountId}-${props.region}`);
-    bootstrapInfo.forceBootstrap = false;
-    return bootstrapInfo;
-  }
-
-  return bootstrapInfo;
-}
-
-async function doesCdkAssetBucketExist(s3Client: S3Client, accountId: string, region: string) {
-  const commandInput = {
-    Bucket: `cdk-accel-assets-${accountId}-${region}`,
-  };
-  try {
-    await throttlingBackOff(() => s3Client.send(new HeadBucketCommand(commandInput)));
-    return true;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  } catch (e: any) {
-    logger.info(`CDK Asset Bucket not found for account ${accountId}, attempting to re-bootstrap`);
-    return false;
-  }
-}
-
-async function customDeploymentRoleExists(iamClient: IAMClient, roleName: string, region: string) {
-  const commandInput: GetRoleCommandInput = {
-    RoleName: roleName,
-  };
-  try {
-    await throttlingBackOff(() => iamClient.send(new GetRoleCommand(commandInput)));
-    return true;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  } catch (e: any) {
-    logger.info(`Custom deployment role does not exist in region ${region}, attempting to re-bootstrap`);
-    return false;
   }
 }
 
@@ -1364,20 +1247,6 @@ function getCrossAccountClient(
       }
   }
   return client;
-}
-
-function setAssumeRoleName(props: {
-  managementAccountAccessRole?: string;
-  stage?: string;
-  command: string;
-  customDeploymentRole?: string;
-}) {
-  let assumeRoleName = props.managementAccountAccessRole;
-  if (!isBeforeBootstrapStage(props.command, props.stage) && props.customDeploymentRole) {
-    assumeRoleName = props.customDeploymentRole;
-  }
-
-  return assumeRoleName;
 }
 
 export async function getCentralLogBucketKmsKeyArn(
@@ -1561,4 +1430,12 @@ export function shouldLookupDynamoDb(stage?: string): boolean {
   }
 
   return !stages.includes(stage);
+}
+
+async function getManagementAccount(partition: string) {
+  const isExternalDeployment = process.env['MANAGEMENT_ACCOUNT_ID'] && process.env['MANAGEMENT_ACCOUNT_ROLE_NAME'];
+  if (isExternalDeployment) {
+    return process.env['MANAGEMENT_ACCOUNT_ID']!;
+  }
+  return getCurrentAccountId(partition, getGlobalRegion(partition));
 }

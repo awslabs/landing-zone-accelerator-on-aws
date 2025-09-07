@@ -388,7 +388,7 @@ exports[`CentralLogsBucket Construct(CentralLogsBucket):  Snapshot Test 1`] = `
               ],
               "Condition": {
                 "StringEquals": {
-                  "aws:PrincipalOrgID": "acceleratorOrg",
+                  "aws:PrincipalOrgID": "o-1234567890",
                 },
               },
               "Effect": "Allow",
@@ -413,7 +413,7 @@ exports[`CentralLogsBucket Construct(CentralLogsBucket):  Snapshot Test 1`] = `
               "Action": "sts:AssumeRole",
               "Condition": {
                 "StringEquals": {
-                  "aws:PrincipalOrgID": "acceleratorOrg",
+                  "aws:PrincipalOrgID": "o-1234567890",
                 },
               },
               "Effect": "Allow",
@@ -652,7 +652,7 @@ exports[`CentralLogsBucket Construct(CentralLogsBucket):  Snapshot Test 1`] = `
                   ],
                 },
                 "StringEquals": {
-                  "aws:PrincipalOrgID": "acceleratorOrg",
+                  "aws:PrincipalOrgID": "o-1234567890",
                 },
               },
               "Effect": "Allow",
@@ -694,7 +694,7 @@ exports[`CentralLogsBucket Construct(CentralLogsBucket):  Snapshot Test 1`] = `
               ],
               "Condition": {
                 "StringEquals": {
-                  "aws:PrincipalOrgID": "acceleratorOrg",
+                  "aws:PrincipalOrgID": "o-1234567890",
                 },
               },
               "Effect": "Allow",

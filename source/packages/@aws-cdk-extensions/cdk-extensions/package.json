@@ -8,7 +8,7 @@
     "name": "Amazon Web Services",
     "url": "https://aws.amazon.com/solutions"
   },
-  "main": "index.js",
+  "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
     "build": "tsc",
@@ -20,13 +20,12 @@
     "watch": "tsc -w"
   },
   "dependencies": {
-    "aws-cdk-lib": "2.158.0"
+    "aws-cdk-lib": "2.201.0"
   },
   "devDependencies": {
     "@aws-cdk/assert": "2.68.0",
     "@types/jest": "29.5.12",
     "@types/node": "18.19.50",
-    "aws-cdk-lib": "2.158.0",
     "constructs": "10.0.12",
     "eslint": "8.34.0",
     "eslint-config-prettier": "8.6.0",

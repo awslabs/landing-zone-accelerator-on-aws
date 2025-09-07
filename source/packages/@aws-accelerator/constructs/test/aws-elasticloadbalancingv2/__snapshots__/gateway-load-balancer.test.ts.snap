@@ -36,6 +36,12 @@ exports[`GatewayLoadBalancer Construct(GatewayLoadBalancer):  Snapshot Test 1`] 
             "Ref": "Test7BFAF513",
           },
         ],
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "Test",
+          },
+        ],
       },
       "Type": "AWS::EC2::VPCEndpointService",
     },
