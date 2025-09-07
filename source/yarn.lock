@@ -1571,7 +1571,7 @@
     tslib "^2.6.2"
     uuid "^9.0.1"
 
-"@aws-sdk/client-ec2@^3":
+"@aws-sdk/client-ec2@3.856.0", "@aws-sdk/client-ec2@^3":
   version "3.856.0"
   resolved "https://registry.yarnpkg.com/@aws-sdk/client-ec2/-/client-ec2-3.856.0.tgz#87e05fd4eb125a6fdb2d2a7ac86d574f217d7ee6"
   integrity sha512-GwSbKWbiVMWQPrpvm+tyyppPfr0OxX5wqpMWNTB8DvxMAmvvUjOyzJ17nZqwbnC+Xpr/d2YGj5f4s2So+LifvQ==
