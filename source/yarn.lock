@@ -4111,7 +4111,7 @@
     "@smithy/util-utf8" "^4.0.0"
     tslib "^2.6.2"
 
-"@aws-sdk/client-sts@^3":
+"@aws-sdk/client-sts@3.856.0", "@aws-sdk/client-sts@^3":
   version "3.856.0"
   resolved "https://registry.yarnpkg.com/@aws-sdk/client-sts/-/client-sts-3.856.0.tgz#5e909989a5f549451ebe7c8c0830d6ceeb407f9f"
   integrity sha512-dpZN0mKvHI2+C2Q3GIAU035DuetYrXEI/PDisGVIFvx4Xs0Sa3+yW0HpwEFL0Zs/cbG/c+oFWt8CmdvJHOXD0w==
