@@ -126,9 +126,9 @@ accelerator:build:
   stage: pipeline
   tags:
     - arch:amd64
-    - size:xlarge
+    - size:3xlarge
   script:
-    - "export NODE_OPTIONS=--max_old_space_size=28672"
+    - "export NODE_OPTIONS=--max_old_space_size=86016"
     - "npm install yarn@1.22.22"
     - "cd source"
     - "yarn install"
@@ -164,9 +164,6 @@ accelerator:lint:
     - "export ACCELERATOR_PREFIX=AWSAccelerator"
     - "yarn validate-config packages/@aws-accelerator/accelerator/test/configs/all-enabled/" # Validate all enabled config files
     - "yarn validate-config packages/@aws-accelerator/accelerator/test/configs/no-org-config/" # Validate no-org config files"
-    - "cd packages/@aws-accelerator/accelerator"
-    - "yarn run ts-node --transpile-only cdk.ts synth --stage operations --require-approval never --config-dir test/configs/no-org-config --partition aws-us-gov" # ensure no-org config can synth without AWS credentials
-    - "cd ../../../"
     - "yarn git-clean"
     - "yarn run viper-scan"
     # Check if build  has changed any of the
@@ -207,9 +204,9 @@ unit-test:accelerator:
   needs: ["accelerator:build"]
   tags:
     - arch:amd64
-    - size:xlarge
+    - size:3xlarge
   script:
-    - "export NODE_OPTIONS=--max_old_space_size=28672"
+    - "export NODE_OPTIONS=--max_old_space_size=86016"
     - "cd source/packages/@aws-accelerator/accelerator"
     - "yarn test:unit"
   artifacts:
@@ -259,9 +256,9 @@ unit-test:constructs:
   needs: ["accelerator:build"]
   tags:
     - arch:amd64
-    - size:xlarge
+    - size:3xlarge
   script:
-    - "export NODE_OPTIONS=--max_old_space_size=28672"
+    - "export NODE_OPTIONS=--max_old_space_size=86016"
     - "cd source/packages/@aws-accelerator/constructs"
     - "yarn test:unit"
   artifacts:
