@@ -126,9 +126,9 @@ accelerator:build:
   stage: pipeline
   tags:
     - arch:amd64
-    - size:3xlarge
+    - size:2xlarge
   script:
-    - "export NODE_OPTIONS=--max_old_space_size=86016"
+    - "export NODE_OPTIONS=--max_old_space_size=49152"
     - "npm install yarn@1.22.22"
     - "cd source"
     - "yarn install"
@@ -204,9 +204,9 @@ unit-test:accelerator:
   needs: ["accelerator:build"]
   tags:
     - arch:amd64
-    - size:3xlarge
+    - size:2xlarge
   script:
-    - "export NODE_OPTIONS=--max_old_space_size=86016"
+    - "export NODE_OPTIONS=--max_old_space_size=49152"
     - "cd source/packages/@aws-accelerator/accelerator"
     - "yarn test:unit"
   artifacts:
@@ -256,9 +256,9 @@ unit-test:constructs:
   needs: ["accelerator:build"]
   tags:
     - arch:amd64
-    - size:3xlarge
+    - size:2xlarge
   script:
-    - "export NODE_OPTIONS=--max_old_space_size=86016"
+    - "export NODE_OPTIONS=--max_old_space_size=49152"
     - "cd source/packages/@aws-accelerator/constructs"
     - "yarn test:unit"
   artifacts:
