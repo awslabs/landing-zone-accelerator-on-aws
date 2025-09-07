@@ -1,0 +1,176 @@
+Description: (SO0199-bootstrap) Landing Zone Accelerator on AWS. Version 1.13.0.
+Parameters:
+  ## this will be replaced in runtime with Accelerator prefix
+  AcceleratorPrefix:
+    Type: String
+    Default: 'AWSAccelerator'
+    Description: Prefix for accelerator resources
+  ## these are required, if not passed bootstrap with template fails with errors like
+  ## CloudFormationServiceException [ValidationError]: Parameters: [CloudFormationExecutionPolicies] do not exist in the template
+  TrustedAccounts:
+    Description: List of AWS accounts that are trusted to publish assets and deploy stacks to this environment
+    Default: ""
+    Type: CommaDelimitedList
+  TrustedAccountsForLookup:
+    Description: List of AWS accounts that are trusted to look up values in this environment
+    Default: ""
+    Type: CommaDelimitedList
+  CloudFormationExecutionPolicies:
+    Description: List of the ManagedPolicy ARN(s) to attach to the CloudFormation deployment role
+    Default: ""
+    Type: CommaDelimitedList
+  FileAssetsBucketName:
+    Description: The name of the S3 bucket used for file assets
+    Default: ""
+    Type: String
+  FileAssetsBucketKmsKeyId:
+    Description: Empty to create a new key (default), 'AWS_MANAGED_KEY' to use a managed S3 key, or the ID/ARN of an existing key.
+    Default: ""
+    Type: String
+  ContainerAssetsRepositoryName:
+    Description: A user-provided custom name to use for the container assets ECR repository
+    Default: ""
+    Type: String
+  Qualifier:
+    Description: An identifier to distinguish multiple bootstrap stacks in the same environment
+    Default: hnb659fds
+    Type: String
+    AllowedPattern: "[A-Za-z0-9_-]{1,10}"
+    ConstraintDescription: Qualifier must be an alphanumeric identifier of at most 10 characters
+  PublicAccessBlockConfiguration:
+    Description: Whether or not to enable S3 Staging Bucket Public Access Block Configuration
+    Default: "true"
+    Type: String
+    AllowedValues:
+      - "true"
+      - "false"
+  InputPermissionsBoundary:
+    Description: Whether or not to use either the CDK supplied or custom permissions boundary
+    Default: ""
+    Type: String
+  UseExamplePermissionsBoundary:
+    Default: "false"
+    AllowedValues:
+      - "true"
+      - "false"
+    Type: String
+  BootstrapVariant:
+    Type: String
+    Default: "AWS CDK: Default Resources"
+    Description: Describe the provenance of the resources in this bootstrap stack. Change this when you customize the template. To prevent accidents, the CDK CLI will not overwrite bootstrap stacks with a different variant.
+  DenyExternalId:
+    Type: String
+    Default: "true"
+    AllowedValues:
+      - "true"
+      - "false"
+    Description: Whether to deny AssumeRole calls with an ExternalId. This prevents calls that are intended to be deputized from accidentally assuming CDK Roles.
+
+Resources:
+  CustomDeploymentRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+          - Action: sts:AssumeRole
+            Effect: Allow
+            Principal:
+              AWS:
+                Fn::Sub: "arn:${AWS::Partition}:iam::${AWS::AccountId}:root"
+          - Action: sts:AssumeRole
+            Effect: Allow
+            Principal:
+              Service: cloudformation.amazonaws.com
+          - Action: sts:AssumeRole
+            Condition:
+              StringEquals:
+                AWS:PrincipalArn:
+                  Fn::Sub: "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/${AcceleratorPrefix}-Deployment-Role"
+            Effect: Allow
+            Principal:
+              AWS:
+                Fn::Sub: "arn:${AWS::Partition}:iam::${AWS::AccountId}:root"
+        Version: "2012-10-17"
+      ManagedPolicyArns:
+        - Fn::Sub: arn:${AWS::Partition}:iam::aws:policy/AdministratorAccess
+      RoleName: 
+        Fn::Sub: "${AcceleratorPrefix}-Deployment-Role"
+      Tags:
+        - Key: Accelerator
+          Value: 
+            Ref: AcceleratorPrefix
+  StagingBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName:
+        Fn::Sub: cdk-${Qualifier}-assets-${AWS::AccountId}-${AWS::Region}
+      AccessControl: Private
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true   
+      VersioningConfiguration:
+        Status: Enabled
+      LifecycleConfiguration:
+        Rules:
+          - Id: CleanupOldVersions
+            Status: Enabled
+            NoncurrentVersionExpiration:
+              NoncurrentDays: 30
+          - Id: AbortIncompleteMultipartUploads
+            Status: Enabled
+            AbortIncompleteMultipartUpload:
+              DaysAfterInitiation: 1
+    UpdateReplacePolicy: Retain
+    DeletionPolicy: Retain
+  StagingBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket:
+        Ref: StagingBucket
+      PolicyDocument:
+        Id: AccessControl
+        Version: "2012-10-17"
+        Statement:
+          - Sid: AllowSSLRequestsOnly
+            Action: s3:*
+            Effect: Deny
+            Resource:
+              - Fn::Sub: ${StagingBucket.Arn}
+              - Fn::Sub: ${StagingBucket.Arn}/*
+            Condition:
+              Bool:
+                aws:SecureTransport: "false"
+            Principal: "*"
+  CdkBootstrapVersion:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: /cdk-bootstrap/accel/version
+      Tags:
+        Accelerator: 
+          Ref: AcceleratorPrefix
+      Type: String
+      Value: "29"
+Outputs:
+  BucketName:
+    Description: The name of the S3 bucket owned by the CDK toolkit stack
+    Value:
+      Fn::Sub: ${StagingBucket}
+  BucketDomainName:
+    Description: The domain name of the S3 bucket owned by the CDK toolkit stack
+    Value:
+      Fn::Sub: ${StagingBucket.RegionalDomainName}
+    Export:
+      Name:
+        Fn::Sub: CdkBootstrap-${Qualifier}-FileAssetKeyArn
+  BootstrapVersion:
+    Description: The version of the bootstrap resources that are currently mastered in this stack
+    Value:
+      Fn::GetAtt:
+        - CdkBootstrapVersion
+        - Value

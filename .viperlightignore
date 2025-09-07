@@ -100,10 +100,10 @@ source/packages/@aws-accelerator/utils/lib/regions.ts:112
 source/packages/@aws-accelerator/utils/lib/regions.ts:113
 
 # Accelerator specific assume role declaration
-source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:448
-source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:449
-source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:1345
-source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:1346
+source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:428
+source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:429
+source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:1228
+source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:1229
 
 # Accelerator specific assume role declaration
 
@@ -242,7 +242,7 @@ SECURITY.md:10
 # Lza Modules unit test files
 source/packages/@aws-accelerator/lza-modules/test/config/functions.test.ts:46
 source/packages/@aws-accelerator/lza-modules/test/config/functions.test.ts:73
-source/packages/@aws-accelerator/lza-modules/test/config/index.test.ts:47
+source/packages/@aws-accelerator/lza-modules/test/config/index.test.ts:50
 
 # LzaModules unit test mock constant file
 source/packages/@aws-lza/test/mocked-resources.ts:106
@@ -262,3 +262,8 @@ source/packages/@aws-lza/test/lib/aws-cloudformation/create-stack-policy/index.t
 source/packages/@aws-lza/test/lib/aws-cloudformation/create-stack-policy/index.test.unit.ts:136
 source/packages/@aws-lza/test/lib/aws-cloudformation/create-stack-policy/index.test.unit.ts:400
 source/packages/@aws-lza/test/lib/aws-cloudformation/create-stack-policy/index.test.unit.ts:405
+
+source/packages/@aws-accelerator/config/lib/accounts-config.ts:218
+source/packages/@aws-accelerator/config/lib/accounts-config.ts:219
+source/packages/@aws-accelerator/config/lib/organization-config.ts:207
+source/packages/@aws-accelerator/config/lib/organization-config.ts:208

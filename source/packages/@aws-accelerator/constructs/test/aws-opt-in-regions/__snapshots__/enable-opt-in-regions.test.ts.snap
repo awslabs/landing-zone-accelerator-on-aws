@@ -403,6 +403,16 @@ exports[`EnableOptInRegions Construct(EnableOptInRegions):  Snapshot Test 1`] = 
               ],
             },
             {
+              "Action": "lambda:GetFunction",
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::GetAtt": [
+                  "OptInRegionsOptInRegionsOnEventDF9D2B80",
+                  "Arn",
+                ],
+              },
+            },
+            {
               "Action": "lambda:InvokeFunction",
               "Effect": "Allow",
               "Resource": [
@@ -427,6 +437,16 @@ exports[`EnableOptInRegions Construct(EnableOptInRegions):  Snapshot Test 1`] = 
                   ],
                 },
               ],
+            },
+            {
+              "Action": "lambda:GetFunction",
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::GetAtt": [
+                  "OptInRegionsOptInRegionsIsComplete20A899A2",
+                  "Arn",
+                ],
+              },
             },
           ],
           "Version": "2012-10-17",
@@ -515,6 +535,16 @@ exports[`EnableOptInRegions Construct(EnableOptInRegions):  Snapshot Test 1`] = 
               ],
             },
             {
+              "Action": "lambda:GetFunction",
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::GetAtt": [
+                  "OptInRegionsOptInRegionsOnEventDF9D2B80",
+                  "Arn",
+                ],
+              },
+            },
+            {
               "Action": "lambda:InvokeFunction",
               "Effect": "Allow",
               "Resource": [
@@ -539,6 +569,16 @@ exports[`EnableOptInRegions Construct(EnableOptInRegions):  Snapshot Test 1`] = 
                   ],
                 },
               ],
+            },
+            {
+              "Action": "lambda:GetFunction",
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::GetAtt": [
+                  "OptInRegionsOptInRegionsIsComplete20A899A2",
+                  "Arn",
+                ],
+              },
             },
             {
               "Action": "states:StartExecution",
@@ -693,6 +733,16 @@ exports[`EnableOptInRegions Construct(EnableOptInRegions):  Snapshot Test 1`] = 
               ],
             },
             {
+              "Action": "lambda:GetFunction",
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::GetAtt": [
+                  "OptInRegionsOptInRegionsOnEventDF9D2B80",
+                  "Arn",
+                ],
+              },
+            },
+            {
               "Action": "lambda:InvokeFunction",
               "Effect": "Allow",
               "Resource": [
@@ -717,6 +767,16 @@ exports[`EnableOptInRegions Construct(EnableOptInRegions):  Snapshot Test 1`] = 
                   ],
                 },
               ],
+            },
+            {
+              "Action": "lambda:GetFunction",
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::GetAtt": [
+                  "OptInRegionsOptInRegionsIsComplete20A899A2",
+                  "Arn",
+                ],
+              },
             },
           ],
           "Version": "2012-10-17",

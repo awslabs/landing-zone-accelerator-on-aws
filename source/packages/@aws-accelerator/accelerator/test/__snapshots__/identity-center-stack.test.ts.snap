@@ -540,6 +540,16 @@ exports[`IdentityCenterStack Construct(IdentityCenterStack):  Snapshot Test 1`] 
                 },
               ],
             },
+            {
+              "Action": "lambda:GetFunction",
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::GetAtt": [
+                  "IdentityCenterInstanceIdentityCenterGetInstanceIdFunctionE59FDB54",
+                  "Arn",
+                ],
+              },
+            },
           ],
           "Version": "2012-10-17",
         },

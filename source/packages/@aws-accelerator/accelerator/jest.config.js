@@ -22,7 +22,14 @@ module.exports = {
   coverageDirectory: 'coverage',
 
   // An array of regexp pattern strings used to skip coverage collection
-  coveragePathIgnorePatterns: ['/node_modules/'],
+  coveragePathIgnorePatterns: [
+    '/node_modules/',
+    '/lib/asea-resources/',
+    'app-lib.ts',
+    'import-asea-resources-stack.ts',
+    'import-stack-resources.ts',
+    'stack-utils.ts',
+  ],
 
   // An object that configures minimum threshold enforcement for coverage results
   coverageThreshold: {

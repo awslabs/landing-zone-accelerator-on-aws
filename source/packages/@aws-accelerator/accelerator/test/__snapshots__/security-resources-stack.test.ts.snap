@@ -3943,11 +3943,27 @@ exports[`SecurityResourcesStack Construct(SecurityResourcesStack):  Snapshot Tes
         "AlarmName": "GenericMetricGreaterThanUpperThreshold",
         "ComparisonOperator": "GreaterThanUpperThreshold",
         "EvaluationPeriods": 1,
-        "MetricName": "GenericMetricForTestingGreaterThanUpperThreshold",
-        "Namespace": "LzaMetrics",
-        "Period": 300,
-        "Statistic": "Sum",
-        "Threshold": 1,
+        "Metrics": [
+          {
+            "Expression": "ANOMALY_DETECTION_BAND(m0, 2)",
+            "Id": "expr_1",
+            "Label": "Anomaly Detection Band",
+            "ReturnData": true,
+          },
+          {
+            "Id": "m0",
+            "MetricStat": {
+              "Metric": {
+                "MetricName": "GenericMetricForTestingGreaterThanUpperThreshold",
+                "Namespace": "LzaMetrics",
+              },
+              "Period": 300,
+              "Stat": "Sum",
+            },
+            "ReturnData": true,
+          },
+        ],
+        "ThresholdMetricId": "expr_1",
         "TreatMissingData": "notBreaching",
       },
       "Type": "AWS::CloudWatch::Alarm",
@@ -3972,11 +3988,27 @@ exports[`SecurityResourcesStack Construct(SecurityResourcesStack):  Snapshot Tes
         "AlarmName": "GenericMetricLessThanLowerOrGreaterThanUpperThreshold",
         "ComparisonOperator": "LessThanLowerOrGreaterThanUpperThreshold",
         "EvaluationPeriods": 1,
-        "MetricName": "GenericMetricForTestingLessThanLowerOrGreaterThanUpperThreshold",
-        "Namespace": "LzaMetrics",
-        "Period": 300,
-        "Statistic": "Sum",
-        "Threshold": 1,
+        "Metrics": [
+          {
+            "Expression": "ANOMALY_DETECTION_BAND(m0, 2)",
+            "Id": "expr_1",
+            "Label": "Anomaly Detection Band",
+            "ReturnData": true,
+          },
+          {
+            "Id": "m0",
+            "MetricStat": {
+              "Metric": {
+                "MetricName": "GenericMetricForTestingLessThanLowerOrGreaterThanUpperThreshold",
+                "Namespace": "LzaMetrics",
+              },
+              "Period": 300,
+              "Stat": "Sum",
+            },
+            "ReturnData": true,
+          },
+        ],
+        "ThresholdMetricId": "expr_1",
         "TreatMissingData": "notBreaching",
       },
       "Type": "AWS::CloudWatch::Alarm",
@@ -4001,11 +4033,27 @@ exports[`SecurityResourcesStack Construct(SecurityResourcesStack):  Snapshot Tes
         "AlarmName": "GenericMetricLessThanLowerThreshold",
         "ComparisonOperator": "LessThanLowerThreshold",
         "EvaluationPeriods": 1,
-        "MetricName": "GenericMetricForTestingLessThanLowerThreshold",
-        "Namespace": "LzaMetrics",
-        "Period": 300,
-        "Statistic": "Sum",
-        "Threshold": 1,
+        "Metrics": [
+          {
+            "Expression": "ANOMALY_DETECTION_BAND(m0, 2)",
+            "Id": "expr_1",
+            "Label": "Anomaly Detection Band",
+            "ReturnData": true,
+          },
+          {
+            "Id": "m0",
+            "MetricStat": {
+              "Metric": {
+                "MetricName": "GenericMetricForTestingLessThanLowerThreshold",
+                "Namespace": "LzaMetrics",
+              },
+              "Period": 300,
+              "Stat": "Sum",
+            },
+            "ReturnData": true,
+          },
+        ],
+        "ThresholdMetricId": "expr_1",
         "TreatMissingData": "notBreaching",
       },
       "Type": "AWS::CloudWatch::Alarm",
@@ -4505,6 +4553,16 @@ exports[`SecurityResourcesStack Construct(SecurityResourcesStack):  Snapshot Tes
                   ],
                 },
               ],
+            },
+            {
+              "Action": "lambda:GetFunction",
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::GetAtt": [
+                  "SecurityHubEventsLogSecurityHubEventsFunction6170C5C5",
+                  "Arn",
+                ],
+              },
             },
           ],
           "Version": "2012-10-17",
@@ -7719,6 +7777,16 @@ exports[`delegatedAdminStack Construct(SecurityResourcesStack):  Snapshot Test 1
                   ],
                 },
               ],
+            },
+            {
+              "Action": "lambda:GetFunction",
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::GetAtt": [
+                  "SecurityHubEventsLogSecurityHubEventsFunction6170C5C5",
+                  "Arn",
+                ],
+              },
             },
           ],
           "Version": "2012-10-17",

@@ -15,31 +15,23 @@ import { AccountsConfig, OrganizationConfig } from '@aws-accelerator/config';
 import { mockClient } from 'aws-sdk-client-mock';
 import { EC2Client, DescribeVpcsCommand, DescribeVpcEndpointsCommand } from '@aws-sdk/client-ec2';
 import { STSClient, AssumeRoleCommand } from '@aws-sdk/client-sts';
-import {
-  AcceleratorResourcePrefixes,
-  getContext,
-  setResourcePrefixes,
-  isBeforeBootstrapStage,
-  setAcceleratorEnvironment,
-} from '../utils/app-utils';
+import { AcceleratorResourcePrefixes, setResourcePrefixes, setAcceleratorEnvironment } from '../utils/app-utils';
 import { describe, expect, test, jest } from '@jest/globals';
-import * as cdk from 'aws-cdk-lib';
 import * as path from 'path';
 import { AcceleratorStage } from '../lib/accelerator-stage';
 import { AcceleratorStackProps } from '../lib/stacks/accelerator-stack';
 
 function testAppUtils() {
-  const app = new cdk.App({
-    context: { 'config-dir': path.join(__dirname, `configs/snapshot-only`), partition: 'aws' },
-  });
-  // Read in context inputs
-  const context = getContext(app);
-
+  const context = {
+    configDirPath: path.join(__dirname, `configs/snapshot-only`),
+    partition: 'aws',
+    stage: AcceleratorStage.ACCOUNTS,
+  };
   // Set various resource name prefixes used in code base
   const resourcePrefixes = setResourcePrefixes(process.env['ACCELERATOR_PREFIX'] ?? 'AWSAccelerator');
 
   // Set accelerator environment variables
-  const acceleratorEnv = setAcceleratorEnvironment(process.env, resourcePrefixes, context.stage);
+  const acceleratorEnv = setAcceleratorEnvironment(process.env, resourcePrefixes);
   return { context, resourcePrefixes, acceleratorEnv };
 }
 
@@ -62,36 +54,6 @@ const prefixes: AcceleratorResourcePrefixes = {
   ssmLogName: 'aws-accelerator',
 };
 
-describe('getContext ideally', () => {
-  test('getContext default', () => {
-    const app = new cdk.App({
-      context: {
-        partition: 'aws',
-        'config-dir': '/path/to/config/dir',
-        stage: 'logging',
-        account: '123456789012',
-        region: 'us-east-1',
-      },
-    });
-    const context = getContext(app);
-    expect(context).toBeDefined();
-  });
-  test('getContext no partition', () => {
-    const app = new cdk.App({
-      context: {
-        'config-dir': '/path/to/config/dir',
-        stage: 'logging',
-        account: '123456789012',
-        region: 'us-east-1',
-      },
-    });
-    function getContextNoPartition() {
-      getContext(app);
-    }
-    expect(getContextNoPartition).toThrowError(new Error('Partition value must be specified in app context'));
-  });
-});
-
 describe('test setResourcePrefixes', () => {
   test('setResourcePrefixes default', () => {
     const prefixReturn = setResourcePrefixes(process.env['ACCELERATOR_PREFIX'] ?? 'AWSAccelerator');
@@ -100,25 +62,6 @@ describe('test setResourcePrefixes', () => {
   test('setResourcePrefixes custom prefix', () => {
     const prefixReturn = setResourcePrefixes('CustomPrefix');
     expect(prefixReturn.accelerator).toBe('CustomPrefix');
-  });
-});
-
-describe('test isBeforeBootstrapStage', () => {
-  test('isBeforeBootstrapStage default', () => {
-    const isBeforeBootstrapStageReturn = isBeforeBootstrapStage('synth', 'prepare');
-    expect(isBeforeBootstrapStageReturn).toBe(true);
-  });
-  test('isBeforeBootstrapStage post bootstrap', () => {
-    const isBeforeBootstrapStageReturn = isBeforeBootstrapStage('synth', 'logging');
-    expect(isBeforeBootstrapStageReturn).toBe(false);
-  });
-  test('isBeforeBootstrapStage bootstrap', () => {
-    const isBeforeBootstrapStageReturn = isBeforeBootstrapStage('bootstrap');
-    expect(isBeforeBootstrapStageReturn).toBe(true);
-  });
-  test('isBeforeBootstrapStage no stage', () => {
-    const isBeforeBootstrapStageReturn = isBeforeBootstrapStage('deploy');
-    expect(isBeforeBootstrapStageReturn).toBe(false);
   });
 });
 

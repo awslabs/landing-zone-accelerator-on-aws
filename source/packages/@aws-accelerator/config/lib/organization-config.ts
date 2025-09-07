@@ -25,7 +25,7 @@ import * as i from './models/organization-config';
 import { ReplacementsConfig } from './replacements-config';
 import { getSSMParameterValue } from '../../utils/lib/get-value-from-ssm';
 import { queryConfigTable } from '@aws-accelerator/utils/lib/query-config-table';
-
+import { getGlobalRegion, getCrossAccountCredentials } from '../../utils/lib/common-functions';
 const logger = createLogger(['organization-config']);
 
 export abstract class OrganizationalUnitConfig implements i.IOrganizationalUnitConfig {
@@ -191,6 +191,27 @@ export class OrganizationConfig implements i.IOrganizationConfig {
     managementAccountCredentials?: AWS.Credentials,
     loadFromDynamoDbTable?: boolean,
   ): Promise<void> {
+    let envCredentials: AWS.Credentials | undefined;
+    if (process.env['MANAGEMENT_ACCOUNT_ID'] && process.env['MANAGEMENT_ACCOUNT_ROLE_NAME']) {
+      logger.info('set management account credentials');
+      logger.info(`managementAccountId => ${process.env['MANAGEMENT_ACCOUNT_ID']}`);
+      logger.info(`management account role name => ${process.env['MANAGEMENT_ACCOUNT_ROLE_NAME']}`);
+      const crossAccountCredentials = await getCrossAccountCredentials(
+        process.env['MANAGEMENT_ACCOUNT_ID'],
+        getGlobalRegion(partition),
+        partition,
+        process.env['MANAGEMENT_ACCOUNT_ROLE_NAME'],
+        'accounts-config-lookup',
+      );
+      envCredentials = {
+        accessKeyId: crossAccountCredentials.Credentials!.AccessKeyId!,
+        secretAccessKey: crossAccountCredentials.Credentials!.SecretAccessKey!,
+        sessionToken: crossAccountCredentials.Credentials!.SessionToken,
+      } as AWS.Credentials;
+    }
+
+    // Priority: passed credentials > env credentials > undefined
+    const credentials = managementAccountCredentials ?? envCredentials;
     if (!this.enable) {
       // do nothing
       return;
@@ -198,11 +219,7 @@ export class OrganizationConfig implements i.IOrganizationConfig {
       this.organizationalUnitIds = [];
     }
     if (this.organizationalUnitIds?.length === 0 && !loadFromDynamoDbTable) {
-      this.organizationalUnitIds = await loadOrganizationalUnits(
-        partition,
-        this.organizationalUnits,
-        managementAccountCredentials,
-      );
+      this.organizationalUnitIds = await loadOrganizationalUnits(partition, this.organizationalUnits, credentials);
     } else if (this.organizationalUnitIds?.length === 0 && loadFromDynamoDbTable) {
       logger.debug(`Orgs is enabled, solution will query from dynamoDB table instead of AWS Organizations API`);
       if (!process.env['ACCELERATOR_SSM_PARAM_NAME_PREFIX']) {
@@ -211,13 +228,13 @@ export class OrganizationConfig implements i.IOrganizationConfig {
       const ssmConfigTableNameParameter = `${
         process.env['ACCELERATOR_SSM_PARAM_NAME_PREFIX'] ?? '/accelerator'
       }/prepare-stack/configTable/name`;
-      const configTableName = await getSSMParameterValue(ssmConfigTableNameParameter, managementAccountCredentials);
+      const configTableName = await getSSMParameterValue(ssmConfigTableNameParameter, credentials);
 
       const organizationItems = await queryConfigTable(
         configTableName,
         'organization',
         'orgInfo',
-        managementAccountCredentials,
+        credentials,
         process.env['CONFIG_COMMIT_ID'],
       );
 

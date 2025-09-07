@@ -14,7 +14,7 @@
 import * as cdk from 'aws-cdk-lib';
 import { RecordSet } from '../../lib/aws-route-53/record-set';
 import { HostedZone } from '../../lib/aws-route-53/hosted-zone';
-import { VpcEndpoint } from '../../lib/aws-ec2/vpc-endpoint';
+import { VpcEndpoint, VpcEndpointType } from '../../lib/aws-ec2/vpc-endpoint';
 import { SecurityGroup } from '../../lib/aws-ec2/vpc';
 import { snapShotTest } from '../snapshot-test';
 import { describe, expect, it } from '@jest/globals';
@@ -40,7 +40,7 @@ const securityGroup = new SecurityGroup(stack, 'TestSecurityGroup`', {
 // Create the interface endpoint
 const endpoint = new VpcEndpoint(stack, `TestVpcEndpoint`, {
   vpcId: 'Test',
-  vpcEndpointType: cdk.aws_ec2.VpcEndpointType.INTERFACE,
+  vpcEndpointType: VpcEndpointType.INTERFACE,
   service: 'ec2',
   subnets: ['Test1', 'Test2'],
   securityGroups: [securityGroup],

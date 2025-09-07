@@ -25,8 +25,7 @@
       "./packages/@aws-accelerator/tester/lambdas",
       "./packages/@aws-accelerator/tools",
       "./packages/@aws-accelerator/utils",
-      "./packages/@aws-cdk-extensions/cdk-extensions",
-      "./packages/@aws-cdk-extensions/cdk-plugin-assume-role"
+      "./packages/@aws-cdk-extensions/cdk-extensions"
     ],
     "nohoist": [
       "**/deepmerge",
@@ -84,7 +83,7 @@
     "@types/node": "18.19.50",
     "@typescript-eslint/eslint-plugin": "5.53.0",
     "@typescript-eslint/parser": "5.53.0",
-    "aws-cdk-lib": "2.158.0",
+    "aws-cdk-lib": "2.201.0",
     "cdk-from-cfn": "0.162.0",
     "constructs": "10.0.12",
     "esbuild": "0.25.0",

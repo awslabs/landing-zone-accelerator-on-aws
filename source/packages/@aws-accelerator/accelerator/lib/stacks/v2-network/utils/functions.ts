@@ -18,7 +18,7 @@ import {
   V2NetworkResourceEnvironmentType,
   V2NetworkResourceListType,
 } from './types';
-import { createLogger } from '../../../../../../@aws-lza/index';
+import { createLogger } from '@aws-accelerator/utils/lib/logger';
 import path from 'path';
 import { OrganizationConfig } from '@aws-accelerator/config/lib/organization-config';
 import { AccountsConfig } from '@aws-accelerator/config/lib/accounts-config';

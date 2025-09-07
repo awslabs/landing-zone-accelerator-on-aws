@@ -485,11 +485,11 @@ export class AcceleratorPipeline extends Construct {
               `if [ "$ACCELERATOR_STAGE" != "pre-approval" ]; then
                 if [ "\${CDK_OPTIONS}" = "bootstrap" ]; then
                   if [ $FULL_SYNTH = "true" ]; then 
-                    set -e && yarn run ts-node --transpile-only cdk.ts synth --stage $ACCELERATOR_STAGE --require-approval never --config-dir $CODEBUILD_SRC_DIR_Config --partition ${cdk.Aws.PARTITION};
+                    set -e && yarn run ts-node --transpile-only cdk.ts synth --stage $ACCELERATOR_STAGE --config-dir $CODEBUILD_SRC_DIR_Config --partition ${cdk.Aws.PARTITION};
                   fi
                   if [ "\${ACCELERATOR_STAGE}" = "bootstrap" ]; then
-                    yarn run ts-node --transpile-only cdk.ts synth --stage $ACCELERATOR_STAGE --require-approval never --config-dir $CODEBUILD_SRC_DIR_Config --partition ${cdk.Aws.PARTITION};
-                    yarn run ts-node --transpile-only cdk.ts $CDK_OPTIONS --require-approval never --config-dir $CODEBUILD_SRC_DIR_Config --partition ${cdk.Aws.PARTITION} --app cdk.out;
+                    yarn run ts-node --transpile-only cdk.ts synth --stage $ACCELERATOR_STAGE --config-dir $CODEBUILD_SRC_DIR_Config --partition ${cdk.Aws.PARTITION};
+                    yarn run ts-node --transpile-only cdk.ts $CDK_OPTIONS --config-dir $CODEBUILD_SRC_DIR_Config --partition ${cdk.Aws.PARTITION};
                   fi
                   if [ $FULL_SYNTH = "true" ]; then
                     set -e && tar -czf cf_$ARCHIVE_NAME -C cdk.out .;
@@ -497,7 +497,7 @@ export class AcceleratorPipeline extends Construct {
                     touch full-synth-false.txt;
                   fi
                   if [ "\${ACCELERATOR_ENABLE_APPROVAL_STAGE}" = "Yes" ] && [ "$ACCELERATOR_STAGE" != "bootstrap" ]; then
-                    set -e && yarn run ts-node --transpile-only cdk.ts diff --stage $ACCELERATOR_STAGE --require-approval never --config-dir $CODEBUILD_SRC_DIR_Config --partition ${cdk.Aws.PARTITION} --app cdk.out;
+                    set -e && yarn run ts-node --transpile-only cdk.ts diff --stage $ACCELERATOR_STAGE --config-dir $CODEBUILD_SRC_DIR_Config --partition ${cdk.Aws.PARTITION};
                     tar -czf diff_cdk_out_$ARCHIVE_NAME -C cdk.out .
                     find cdk.out -type f -name "*.diff" -print0 | tar --transform='s|.*/||' -czf diff_$ARCHIVE_NAME --null -T -
                     aws s3 cp diff_$ARCHIVE_NAME $DIFFS_DIR/$CODEPIPELINE_EXECUTION_ID/
@@ -508,9 +508,9 @@ export class AcceleratorPipeline extends Construct {
                      mkdir -p cdk.out
                      tar -xzf $ARTIFACTS/cf_$ARCHIVE_NAME -C cdk.out;
                  else
-                    set -e && yarn run ts-node --transpile-only cdk.ts synth --stage $ACCELERATOR_STAGE --require-approval never --config-dir $CODEBUILD_SRC_DIR_Config --partition ${cdk.Aws.PARTITION};
+                    set -e && yarn run ts-node --transpile-only cdk.ts synth --stage $ACCELERATOR_STAGE --config-dir $CODEBUILD_SRC_DIR_Config --partition ${cdk.Aws.PARTITION};
                  fi
-                set -e && yarn run ts-node --transpile-only cdk.ts $CDK_OPTIONS --require-approval never --config-dir $CODEBUILD_SRC_DIR_Config --partition ${cdk.Aws.PARTITION} --app cdk.out;
+                set -e && yarn run ts-node --transpile-only cdk.ts $CDK_OPTIONS --config-dir $CODEBUILD_SRC_DIR_Config --partition ${cdk.Aws.PARTITION};
                 fi
                fi`,
               `if [ "prepare" = "\${ACCELERATOR_STAGE}" ]; then 

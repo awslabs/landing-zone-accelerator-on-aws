@@ -573,6 +573,16 @@ exports[`AccountWarming Construct(WarmAccount):  Snapshot Test 1`] = `
               ],
             },
             {
+              "Action": "lambda:GetFunction",
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::GetAtt": [
+                  "AccountWarmingWarmAccountFunctionAD0DA263",
+                  "Arn",
+                ],
+              },
+            },
+            {
               "Action": "lambda:InvokeFunction",
               "Effect": "Allow",
               "Resource": [
@@ -597,6 +607,16 @@ exports[`AccountWarming Construct(WarmAccount):  Snapshot Test 1`] = `
                   ],
                 },
               ],
+            },
+            {
+              "Action": "lambda:GetFunction",
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::GetAtt": [
+                  "AccountWarmingWarmAccountStatusFunction25E39087",
+                  "Arn",
+                ],
+              },
             },
           ],
           "Version": "2012-10-17",
@@ -782,6 +802,16 @@ exports[`AccountWarming Construct(WarmAccount):  Snapshot Test 1`] = `
               ],
             },
             {
+              "Action": "lambda:GetFunction",
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::GetAtt": [
+                  "AccountWarmingWarmAccountFunctionAD0DA263",
+                  "Arn",
+                ],
+              },
+            },
+            {
               "Action": "lambda:InvokeFunction",
               "Effect": "Allow",
               "Resource": [
@@ -806,6 +836,16 @@ exports[`AccountWarming Construct(WarmAccount):  Snapshot Test 1`] = `
                   ],
                 },
               ],
+            },
+            {
+              "Action": "lambda:GetFunction",
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::GetAtt": [
+                  "AccountWarmingWarmAccountStatusFunction25E39087",
+                  "Arn",
+                ],
+              },
             },
             {
               "Action": "states:StartExecution",
@@ -995,6 +1035,16 @@ exports[`AccountWarming Construct(WarmAccount):  Snapshot Test 1`] = `
               ],
             },
             {
+              "Action": "lambda:GetFunction",
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::GetAtt": [
+                  "AccountWarmingWarmAccountFunctionAD0DA263",
+                  "Arn",
+                ],
+              },
+            },
+            {
               "Action": "lambda:InvokeFunction",
               "Effect": "Allow",
               "Resource": [
@@ -1019,6 +1069,16 @@ exports[`AccountWarming Construct(WarmAccount):  Snapshot Test 1`] = `
                   ],
                 },
               ],
+            },
+            {
+              "Action": "lambda:GetFunction",
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::GetAtt": [
+                  "AccountWarmingWarmAccountStatusFunction25E39087",
+                  "Arn",
+                ],
+              },
             },
           ],
           "Version": "2012-10-17",

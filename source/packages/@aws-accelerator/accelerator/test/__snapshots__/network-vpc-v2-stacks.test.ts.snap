@@ -77,6 +77,12 @@ exports[`NetworkVpcV2Stacks Construct(LbStack-Network-us-east-1-Network-Secondar
             "Ref": "AcceleratorGwlbSecondaryGatewayLoadBalancerD11F9F31",
           },
         ],
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "Accelerator-GWLB-secondary",
+          },
+        ],
       },
       "Type": "AWS::EC2::VPCEndpointService",
     },

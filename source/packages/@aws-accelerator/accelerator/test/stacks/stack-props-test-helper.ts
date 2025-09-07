@@ -75,7 +75,7 @@ export function createAcceleratorStackProps(
   };
 
   const organizationConfig: Partial<OrganizationConfig> = {
-    getOrganizationId: jest.fn(() => '1234567890'),
+    getOrganizationId: jest.fn(() => 'o-1234567890'),
     getOrganizationalUnitArn: jest.fn(ouName => `arn:aws:organizations::123456789012:ou/o-a1b2c3d4e5/${ouName}`),
     enable: true,
     backupPolicies: [],

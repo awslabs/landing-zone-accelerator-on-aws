@@ -276,6 +276,16 @@ exports[`GetCloudFormationResourceType Construct(GetCloudFormationResourceType):
                 },
               ],
             },
+            {
+              "Action": "lambda:GetFunction",
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::GetAtt": [
+                  "TestGetCloudFormationResourceTypeGetCloudFormationResourceTypeFunctionA13B89C3",
+                  "Arn",
+                ],
+              },
+            },
           ],
           "Version": "2012-10-17",
         },

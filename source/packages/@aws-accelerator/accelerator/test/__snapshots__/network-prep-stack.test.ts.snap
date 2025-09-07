@@ -1724,6 +1724,16 @@ drop http $HOME_NET any -> $EXTERNAL_NET any (http.host; content:"example.com"; 
                 },
               ],
             },
+            {
+              "Action": "lambda:GetFunction",
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::GetAtt": [
+                  "VpnOnEventHandler05011160",
+                  "Arn",
+                ],
+              },
+            },
           ],
           "Version": "2012-10-17",
         },

@@ -3,10 +3,8 @@ import { getCentralLogBucketKmsKeyArn, AcceleratorProps, Accelerator } from '../
 import { STSClient, AssumeRoleCommand, GetCallerIdentityCommand } from '@aws-sdk/client-sts';
 import { SSMClient, GetParameterCommand } from '@aws-sdk/client-ssm';
 import { mockClient, AwsClientStub } from 'aws-sdk-client-mock';
-import { RequireApproval } from 'aws-cdk/lib/diff';
 import { AccountsConfig, CustomizationsConfig, GlobalConfig, OrganizationConfig } from '@aws-accelerator/config';
-import { AssumeProfilePlugin } from '@aws-cdk-extensions/cdk-plugin-assume-role';
-import { AcceleratorToolkit } from '../lib/toolkit';
+import { AcceleratorToolkit, AcceleratorToolkitProps } from '../lib/toolkit';
 import fs, { PathLike } from 'fs';
 import { AcceleratorStage } from '../lib/accelerator-stage';
 import { shouldLookupDynamoDb } from '../lib/accelerator';
@@ -56,14 +54,6 @@ fakeAccountsConfig.accountIds = [
   { email: 'audit@example.com', accountId: '33333333', orgsApiResponse: {} },
 ];
 
-const fakeAssumeRolePlugin = new AssumeProfilePlugin({
-  region: 'fake-region',
-  assumeRoleName: 'fake-name',
-  assumeRoleDuration: 3600,
-  credentials: undefined,
-  partition: 'aws',
-});
-
 const fakeCustomizationConfig = new CustomizationsConfig({
   customizations: {
     cloudFormationStacks: [
@@ -92,12 +82,13 @@ const fakeCustomizationConfig = new CustomizationsConfig({
   ],
 });
 
-const runPropsTemplate = {
+const runPropsTemplate: AcceleratorToolkitProps = {
   app: undefined,
   caBundlePath: undefined,
   cdkOptions: {
     centralizeBuckets: true,
     customDeploymentRole: undefined,
+    deploymentMethod: undefined,
     forceBootstrap: undefined,
     skipStaticValidation: undefined,
     useManagementAccessRole: true,
@@ -106,11 +97,10 @@ const runPropsTemplate = {
   centralizeCdkBootstrap: undefined,
   command: 'deploy',
   configDirPath: '',
-  ec2Creds: undefined,
+  managementAccountId: '111111111111',
   enableSingleAccountMode: false,
   partition: 'aws',
   proxyAddress: undefined,
-  requireApproval: 'never',
   stackPrefix: 'AWSAccelerator',
   stage: 'network-prep',
   useExistingRoles: false,
@@ -219,6 +209,10 @@ describe('Accelerator.run', () => {
   ];
 
   beforeEach(() => {
+    stsMock = mockClient(STSClient);
+    stsMock.on(GetCallerIdentityCommand).resolves({
+      Account: '111111111111',
+    });
     jest.spyOn(GlobalConfig, 'loadRawGlobalConfig').mockReturnValue(fakeGlobalConfig);
 
     jest.spyOn(AccountsConfig, 'load').mockReturnValue(fakeAccountsConfig);
@@ -227,8 +221,6 @@ describe('Accelerator.run', () => {
     jest.spyOn(OrganizationConfig, 'load').mockReturnValue(new OrganizationConfig());
 
     jest.spyOn(AccountsConfig.prototype, 'loadAccountIds').mockResolvedValue();
-
-    jest.spyOn(Accelerator, 'initializeAssumeRolePlugin').mockResolvedValue(fakeAssumeRolePlugin);
 
     jest.spyOn(CustomizationsConfig, 'load').mockReturnValue(fakeCustomizationConfig);
 
@@ -240,6 +232,7 @@ describe('Accelerator.run', () => {
   });
 
   afterEach(() => {
+    stsMock.reset();
     jest.resetAllMocks();
     executeSpy.mockRestore();
   });
@@ -253,19 +246,23 @@ describe('Accelerator.run', () => {
       stage: 'network-prep',
       region,
       partition: 'aws',
-      requireApproval: RequireApproval.Never,
       enableSingleAccountMode: false,
-      useExistingRoles: false,
     };
 
     const callHistory = [];
-
     for (const accountId of accountIds) {
-      callHistory.push({
+      const callProps = {
+        ...runPropsTemplate,
         accountId,
         region,
-        ...runPropsTemplate,
-      });
+      };
+
+      // Add assumeRoleName for non-management accounts
+      if (accountId !== '11111111') {
+        callProps.assumeRoleName = 'fake-role';
+      }
+
+      callHistory.push(callProps);
     }
 
     await Accelerator.run(props);
@@ -284,9 +281,7 @@ describe('Accelerator.run', () => {
       stage: stage.valueOf(),
       region,
       partition: 'aws',
-      requireApproval: RequireApproval.Never,
       enableSingleAccountMode: false,
-      useExistingRoles: false,
     };
 
     await Accelerator.run(props);
@@ -302,9 +297,7 @@ describe('Accelerator.run', () => {
       configDirPath: '',
       stage: stage.valueOf(),
       partition: 'aws',
-      requireApproval: RequireApproval.Never,
       enableSingleAccountMode: false,
-      useExistingRoles: false,
     };
 
     await Accelerator.run(props);

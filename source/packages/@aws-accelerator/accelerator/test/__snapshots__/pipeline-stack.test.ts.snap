@@ -1609,7 +1609,7 @@ exports[`PipelineStack Construct(PipelineStack):  Snapshot Test 1`] = `
             "Arn",
           ],
         },
-        "Runtime": "nodejs20.x",
+        "Runtime": "nodejs22.x",
         "Timeout": 900,
       },
       "Type": "AWS::Lambda::Function",
@@ -1684,6 +1684,16 @@ exports[`PipelineStack Construct(PipelineStack):  Snapshot Test 1`] = `
                   ],
                 },
               ],
+            },
+            {
+              "Action": "lambda:GetFunction",
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::GetAtt": [
+                  "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleFunctionB3FFD974",
+                  "Arn",
+                ],
+              },
             },
           ],
           "Version": "2012-10-17",
@@ -2152,6 +2162,16 @@ exports[`PipelineStack Construct(PipelineStack):  Snapshot Test 1`] = `
               },
             },
             {
+              "Action": [
+                "kms:Decrypt",
+                "kms:GenerateDataKey*",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Ref": "SsmParameterValueacceleratorawsacceleratorinstallerkmskeyarnC96584B6F00A464EAD1953AFF4B05118Parameter",
+              },
+            },
+            {
               "Action": "sns:Publish",
               "Effect": "Allow",
               "Resource": {
@@ -2489,23 +2509,23 @@ exports[`PipelineStack Construct(PipelineStack):  Snapshot Test 1`] = `
         if [ "$ACCELERATOR_STAGE" != "pre-approval" ]; then
                         if [ "\${CDK_OPTIONS}" = "bootstrap" ]; then
                           if [ $FULL_SYNTH = "true" ]; then 
-                            set -e && yarn run ts-node --transpile-only cdk.ts synth --stage $ACCELERATOR_STAGE --require-approval never --config-dir $CODEBUILD_SRC_DIR_Config --partition ",
+                            set -e && yarn run ts-node --transpile-only cdk.ts synth --stage $ACCELERATOR_STAGE --config-dir $CODEBUILD_SRC_DIR_Config --partition ",
                 {
                   "Ref": "AWS::Partition",
                 },
                 ";
                           fi
                           if [ "\${ACCELERATOR_STAGE}" = "bootstrap" ]; then
-                            yarn run ts-node --transpile-only cdk.ts synth --stage $ACCELERATOR_STAGE --require-approval never --config-dir $CODEBUILD_SRC_DIR_Config --partition ",
+                            yarn run ts-node --transpile-only cdk.ts synth --stage $ACCELERATOR_STAGE --config-dir $CODEBUILD_SRC_DIR_Config --partition ",
                 {
                   "Ref": "AWS::Partition",
                 },
                 ";
-                            yarn run ts-node --transpile-only cdk.ts $CDK_OPTIONS --require-approval never --config-dir $CODEBUILD_SRC_DIR_Config --partition ",
+                            yarn run ts-node --transpile-only cdk.ts $CDK_OPTIONS --config-dir $CODEBUILD_SRC_DIR_Config --partition ",
                 {
                   "Ref": "AWS::Partition",
                 },
-                " --app cdk.out;
+                ";
                           fi
                           if [ $FULL_SYNTH = "true" ]; then
                             set -e && tar -czf cf_$ARCHIVE_NAME -C cdk.out .;
@@ -2513,11 +2533,11 @@ exports[`PipelineStack Construct(PipelineStack):  Snapshot Test 1`] = `
                             touch full-synth-false.txt;
                           fi
                           if [ "\${ACCELERATOR_ENABLE_APPROVAL_STAGE}" = "Yes" ] && [ "$ACCELERATOR_STAGE" != "bootstrap" ]; then
-                            set -e && yarn run ts-node --transpile-only cdk.ts diff --stage $ACCELERATOR_STAGE --require-approval never --config-dir $CODEBUILD_SRC_DIR_Config --partition ",
+                            set -e && yarn run ts-node --transpile-only cdk.ts diff --stage $ACCELERATOR_STAGE --config-dir $CODEBUILD_SRC_DIR_Config --partition ",
                 {
                   "Ref": "AWS::Partition",
                 },
-                " --app cdk.out;
+                ";
                             tar -czf diff_cdk_out_$ARCHIVE_NAME -C cdk.out .
                             find cdk.out -type f -name "*.diff" -print0 | tar --transform='s|.*/||' -czf diff_$ARCHIVE_NAME --null -T -
                             aws s3 cp diff_$ARCHIVE_NAME $DIFFS_DIR/$CODEPIPELINE_EXECUTION_ID/
@@ -2528,17 +2548,17 @@ exports[`PipelineStack Construct(PipelineStack):  Snapshot Test 1`] = `
                              mkdir -p cdk.out
                              tar -xzf $ARTIFACTS/cf_$ARCHIVE_NAME -C cdk.out;
                          else
-                            set -e && yarn run ts-node --transpile-only cdk.ts synth --stage $ACCELERATOR_STAGE --require-approval never --config-dir $CODEBUILD_SRC_DIR_Config --partition ",
+                            set -e && yarn run ts-node --transpile-only cdk.ts synth --stage $ACCELERATOR_STAGE --config-dir $CODEBUILD_SRC_DIR_Config --partition ",
                 {
                   "Ref": "AWS::Partition",
                 },
                 ";
                          fi
-                        set -e && yarn run ts-node --transpile-only cdk.ts $CDK_OPTIONS --require-approval never --config-dir $CODEBUILD_SRC_DIR_Config --partition ",
+                        set -e && yarn run ts-node --transpile-only cdk.ts $CDK_OPTIONS --config-dir $CODEBUILD_SRC_DIR_Config --partition ",
                 {
                   "Ref": "AWS::Partition",
                 },
-                " --app cdk.out;
+                ";
                         fi
                        fi
       - |-
@@ -4526,7 +4546,7 @@ exports[`PipelineStack Construct(PipelineStack):  Snapshot Test 2`] = `
             "Arn",
           ],
         },
-        "Runtime": "nodejs20.x",
+        "Runtime": "nodejs22.x",
         "Timeout": 900,
       },
       "Type": "AWS::Lambda::Function",
@@ -4601,6 +4621,16 @@ exports[`PipelineStack Construct(PipelineStack):  Snapshot Test 2`] = `
                   ],
                 },
               ],
+            },
+            {
+              "Action": "lambda:GetFunction",
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::GetAtt": [
+                  "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleFunctionB3FFD974",
+                  "Arn",
+                ],
+              },
             },
           ],
           "Version": "2012-10-17",
@@ -4863,6 +4893,16 @@ exports[`PipelineStack Construct(PipelineStack):  Snapshot Test 2`] = `
                 "Ref": "PipelineManualApprovalActionTopicB55612D2",
               },
             },
+            {
+              "Action": [
+                "kms:Decrypt",
+                "kms:GenerateDataKey*",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Ref": "SsmParameterValueacceleratorawsacceleratorinstallerkmskeyarnC96584B6F00A464EAD1953AFF4B05118Parameter",
+              },
+            },
           ],
           "Version": "2012-10-17",
         },
@@ -4894,15 +4934,9 @@ exports[`PipelineStack Construct(PipelineStack):  Snapshot Test 2`] = `
               "Effect": "Allow",
               "Principal": {
                 "AWS": {
-                  "Fn::Join": [
-                    "",
-                    [
-                      "arn:",
-                      {
-                        "Ref": "AWS::Partition",
-                      },
-                      ":iam::000000000000:root",
-                    ],
+                  "Fn::GetAtt": [
+                    "PipelinePipelineRole6D983AD5",
+                    "Arn",
                   ],
                 },
               },
@@ -4932,6 +4966,16 @@ exports[`PipelineStack Construct(PipelineStack):  Snapshot Test 2`] = `
               "Effect": "Allow",
               "Resource": {
                 "Ref": "PipelineManualApprovalActionTopicB55612D2",
+              },
+            },
+            {
+              "Action": [
+                "kms:Decrypt",
+                "kms:GenerateDataKey*",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Ref": "SsmParameterValueacceleratorawsacceleratorinstallerkmskeyarnC96584B6F00A464EAD1953AFF4B05118Parameter",
               },
             },
           ],
@@ -4965,15 +5009,9 @@ exports[`PipelineStack Construct(PipelineStack):  Snapshot Test 2`] = `
               "Effect": "Allow",
               "Principal": {
                 "AWS": {
-                  "Fn::Join": [
-                    "",
-                    [
-                      "arn:",
-                      {
-                        "Ref": "AWS::Partition",
-                      },
-                      ":iam::000000000000:root",
-                    ],
+                  "Fn::GetAtt": [
+                    "PipelinePipelineRole6D983AD5",
+                    "Arn",
                   ],
                 },
               },
@@ -5208,6 +5246,16 @@ exports[`PipelineStack Construct(PipelineStack):  Snapshot Test 2`] = `
               "Effect": "Allow",
               "Resource": {
                 "Ref": "PipelineManualApprovalActionTopicB55612D2",
+              },
+            },
+            {
+              "Action": [
+                "kms:Decrypt",
+                "kms:GenerateDataKey*",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Ref": "SsmParameterValueacceleratorawsacceleratorinstallerkmskeyarnC96584B6F00A464EAD1953AFF4B05118Parameter",
               },
             },
             {
@@ -5568,23 +5616,23 @@ exports[`PipelineStack Construct(PipelineStack):  Snapshot Test 2`] = `
         if [ "$ACCELERATOR_STAGE" != "pre-approval" ]; then
                         if [ "\${CDK_OPTIONS}" = "bootstrap" ]; then
                           if [ $FULL_SYNTH = "true" ]; then 
-                            set -e && yarn run ts-node --transpile-only cdk.ts synth --stage $ACCELERATOR_STAGE --require-approval never --config-dir $CODEBUILD_SRC_DIR_Config --partition ",
+                            set -e && yarn run ts-node --transpile-only cdk.ts synth --stage $ACCELERATOR_STAGE --config-dir $CODEBUILD_SRC_DIR_Config --partition ",
                 {
                   "Ref": "AWS::Partition",
                 },
                 ";
                           fi
                           if [ "\${ACCELERATOR_STAGE}" = "bootstrap" ]; then
-                            yarn run ts-node --transpile-only cdk.ts synth --stage $ACCELERATOR_STAGE --require-approval never --config-dir $CODEBUILD_SRC_DIR_Config --partition ",
+                            yarn run ts-node --transpile-only cdk.ts synth --stage $ACCELERATOR_STAGE --config-dir $CODEBUILD_SRC_DIR_Config --partition ",
                 {
                   "Ref": "AWS::Partition",
                 },
                 ";
-                            yarn run ts-node --transpile-only cdk.ts $CDK_OPTIONS --require-approval never --config-dir $CODEBUILD_SRC_DIR_Config --partition ",
+                            yarn run ts-node --transpile-only cdk.ts $CDK_OPTIONS --config-dir $CODEBUILD_SRC_DIR_Config --partition ",
                 {
                   "Ref": "AWS::Partition",
                 },
-                " --app cdk.out;
+                ";
                           fi
                           if [ $FULL_SYNTH = "true" ]; then
                             set -e && tar -czf cf_$ARCHIVE_NAME -C cdk.out .;
@@ -5592,11 +5640,11 @@ exports[`PipelineStack Construct(PipelineStack):  Snapshot Test 2`] = `
                             touch full-synth-false.txt;
                           fi
                           if [ "\${ACCELERATOR_ENABLE_APPROVAL_STAGE}" = "Yes" ] && [ "$ACCELERATOR_STAGE" != "bootstrap" ]; then
-                            set -e && yarn run ts-node --transpile-only cdk.ts diff --stage $ACCELERATOR_STAGE --require-approval never --config-dir $CODEBUILD_SRC_DIR_Config --partition ",
+                            set -e && yarn run ts-node --transpile-only cdk.ts diff --stage $ACCELERATOR_STAGE --config-dir $CODEBUILD_SRC_DIR_Config --partition ",
                 {
                   "Ref": "AWS::Partition",
                 },
-                " --app cdk.out;
+                ";
                             tar -czf diff_cdk_out_$ARCHIVE_NAME -C cdk.out .
                             find cdk.out -type f -name "*.diff" -print0 | tar --transform='s|.*/||' -czf diff_$ARCHIVE_NAME --null -T -
                             aws s3 cp diff_$ARCHIVE_NAME $DIFFS_DIR/$CODEPIPELINE_EXECUTION_ID/
@@ -5607,17 +5655,17 @@ exports[`PipelineStack Construct(PipelineStack):  Snapshot Test 2`] = `
                              mkdir -p cdk.out
                              tar -xzf $ARTIFACTS/cf_$ARCHIVE_NAME -C cdk.out;
                          else
-                            set -e && yarn run ts-node --transpile-only cdk.ts synth --stage $ACCELERATOR_STAGE --require-approval never --config-dir $CODEBUILD_SRC_DIR_Config --partition ",
+                            set -e && yarn run ts-node --transpile-only cdk.ts synth --stage $ACCELERATOR_STAGE --config-dir $CODEBUILD_SRC_DIR_Config --partition ",
                 {
                   "Ref": "AWS::Partition",
                 },
                 ";
                          fi
-                        set -e && yarn run ts-node --transpile-only cdk.ts $CDK_OPTIONS --require-approval never --config-dir $CODEBUILD_SRC_DIR_Config --partition ",
+                        set -e && yarn run ts-node --transpile-only cdk.ts $CDK_OPTIONS --config-dir $CODEBUILD_SRC_DIR_Config --partition ",
                 {
                   "Ref": "AWS::Partition",
                 },
-                " --app cdk.out;
+                ";
                         fi
                        fi
       - |-
@@ -7281,7 +7329,7 @@ exports[`PipelineStack customS3Path Construct(PipelineStack):  Snapshot Test 1`]
             "Arn",
           ],
         },
-        "Runtime": "nodejs20.x",
+        "Runtime": "nodejs22.x",
         "Timeout": 900,
       },
       "Type": "AWS::Lambda::Function",
@@ -7356,6 +7404,16 @@ exports[`PipelineStack customS3Path Construct(PipelineStack):  Snapshot Test 1`]
                   ],
                 },
               ],
+            },
+            {
+              "Action": "lambda:GetFunction",
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::GetAtt": [
+                  "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleFunctionB3FFD974",
+                  "Arn",
+                ],
+              },
             },
           ],
           "Version": "2012-10-17",
@@ -7824,6 +7882,16 @@ exports[`PipelineStack customS3Path Construct(PipelineStack):  Snapshot Test 1`]
               },
             },
             {
+              "Action": [
+                "kms:Decrypt",
+                "kms:GenerateDataKey*",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Ref": "SsmParameterValueacceleratorawsacceleratorinstallerkmskeyarnC96584B6F00A464EAD1953AFF4B05118Parameter",
+              },
+            },
+            {
               "Action": "sns:Publish",
               "Effect": "Allow",
               "Resource": {
@@ -8161,23 +8229,23 @@ exports[`PipelineStack customS3Path Construct(PipelineStack):  Snapshot Test 1`]
         if [ "$ACCELERATOR_STAGE" != "pre-approval" ]; then
                         if [ "\${CDK_OPTIONS}" = "bootstrap" ]; then
                           if [ $FULL_SYNTH = "true" ]; then 
-                            set -e && yarn run ts-node --transpile-only cdk.ts synth --stage $ACCELERATOR_STAGE --require-approval never --config-dir $CODEBUILD_SRC_DIR_Config --partition ",
+                            set -e && yarn run ts-node --transpile-only cdk.ts synth --stage $ACCELERATOR_STAGE --config-dir $CODEBUILD_SRC_DIR_Config --partition ",
                 {
                   "Ref": "AWS::Partition",
                 },
                 ";
                           fi
                           if [ "\${ACCELERATOR_STAGE}" = "bootstrap" ]; then
-                            yarn run ts-node --transpile-only cdk.ts synth --stage $ACCELERATOR_STAGE --require-approval never --config-dir $CODEBUILD_SRC_DIR_Config --partition ",
+                            yarn run ts-node --transpile-only cdk.ts synth --stage $ACCELERATOR_STAGE --config-dir $CODEBUILD_SRC_DIR_Config --partition ",
                 {
                   "Ref": "AWS::Partition",
                 },
                 ";
-                            yarn run ts-node --transpile-only cdk.ts $CDK_OPTIONS --require-approval never --config-dir $CODEBUILD_SRC_DIR_Config --partition ",
+                            yarn run ts-node --transpile-only cdk.ts $CDK_OPTIONS --config-dir $CODEBUILD_SRC_DIR_Config --partition ",
                 {
                   "Ref": "AWS::Partition",
                 },
-                " --app cdk.out;
+                ";
                           fi
                           if [ $FULL_SYNTH = "true" ]; then
                             set -e && tar -czf cf_$ARCHIVE_NAME -C cdk.out .;
@@ -8185,11 +8253,11 @@ exports[`PipelineStack customS3Path Construct(PipelineStack):  Snapshot Test 1`]
                             touch full-synth-false.txt;
                           fi
                           if [ "\${ACCELERATOR_ENABLE_APPROVAL_STAGE}" = "Yes" ] && [ "$ACCELERATOR_STAGE" != "bootstrap" ]; then
-                            set -e && yarn run ts-node --transpile-only cdk.ts diff --stage $ACCELERATOR_STAGE --require-approval never --config-dir $CODEBUILD_SRC_DIR_Config --partition ",
+                            set -e && yarn run ts-node --transpile-only cdk.ts diff --stage $ACCELERATOR_STAGE --config-dir $CODEBUILD_SRC_DIR_Config --partition ",
                 {
                   "Ref": "AWS::Partition",
                 },
-                " --app cdk.out;
+                ";
                             tar -czf diff_cdk_out_$ARCHIVE_NAME -C cdk.out .
                             find cdk.out -type f -name "*.diff" -print0 | tar --transform='s|.*/||' -czf diff_$ARCHIVE_NAME --null -T -
                             aws s3 cp diff_$ARCHIVE_NAME $DIFFS_DIR/$CODEPIPELINE_EXECUTION_ID/
@@ -8200,17 +8268,17 @@ exports[`PipelineStack customS3Path Construct(PipelineStack):  Snapshot Test 1`]
                              mkdir -p cdk.out
                              tar -xzf $ARTIFACTS/cf_$ARCHIVE_NAME -C cdk.out;
                          else
-                            set -e && yarn run ts-node --transpile-only cdk.ts synth --stage $ACCELERATOR_STAGE --require-approval never --config-dir $CODEBUILD_SRC_DIR_Config --partition ",
+                            set -e && yarn run ts-node --transpile-only cdk.ts synth --stage $ACCELERATOR_STAGE --config-dir $CODEBUILD_SRC_DIR_Config --partition ",
                 {
                   "Ref": "AWS::Partition",
                 },
                 ";
                          fi
-                        set -e && yarn run ts-node --transpile-only cdk.ts $CDK_OPTIONS --require-approval never --config-dir $CODEBUILD_SRC_DIR_Config --partition ",
+                        set -e && yarn run ts-node --transpile-only cdk.ts $CDK_OPTIONS --config-dir $CODEBUILD_SRC_DIR_Config --partition ",
                 {
                   "Ref": "AWS::Partition",
                 },
-                " --app cdk.out;
+                ";
                         fi
                        fi
       - |-

@@ -997,13 +997,6 @@ export class InstallerStack extends cdk.Stack {
               'if [ ! -z "$MANAGEMENT_ACCOUNT_ID" ] && [ ! -z "$MANAGEMENT_ACCOUNT_ROLE_NAME" ]; then ' +
                 'ENABLE_EXTERNAL_PIPELINE_ACCOUNT="yes"; ' +
                 'fi',
-              `set -e && if ! aws cloudformation describe-stacks --stack-name ${acceleratorPrefix}-CDKToolkit --region ${cdk.Aws.REGION}; then ` +
-                'BOOTSTRAPPED_HOME="no"; ' +
-                'fi',
-              `set -e && if ! aws cloudformation describe-stacks --stack-name ${acceleratorPrefix}-CDKToolkit --region ${globalRegion}; then ` +
-                'BOOTSTRAPPED_GLOBAL="no"; ' +
-                'fi',
-              `ENABLE_DIAGNOSTICS_PACK=${this.enableDiagnosticsPack.valueAsString}`,
             ],
           },
           build: {
@@ -1016,8 +1009,9 @@ export class InstallerStack extends cdk.Stack {
               'if [ -f .yarnrc ]; then yarn install --use-yarnrc .yarnrc; else yarn install; fi',
               'yarn build',
               'cd packages/@aws-accelerator/installer',
-              `set -e && if [ "$BOOTSTRAPPED_HOME" = "no" ]; then yarn run cdk bootstrap --toolkitStackName ${acceleratorPrefix}-CDKToolkit aws://${cdk.Aws.ACCOUNT_ID}/${cdk.Aws.REGION} --qualifier accel; fi`,
-              `set -e &&  if [ "$BOOTSTRAPPED_GLOBAL" = "no" ]; then yarn run cdk bootstrap --toolkitStackName ${acceleratorPrefix}-CDKToolkit aws://${cdk.Aws.ACCOUNT_ID}/${globalRegion} --qualifier accel; fi`,
+              `[ ! -z "$ACCELERATOR_PREFIX" ] && sed -i "s/AWSAccelerator/$ACCELERATOR_PREFIX/g" lib/cloudformation/bootstrap-management*.yaml`,
+              `set -e &&  yarn run cdk bootstrap --toolkitStackName ${acceleratorPrefix}-CDKToolkit aws://${cdk.Aws.ACCOUNT_ID}/${globalRegion} --qualifier accel  --template lib/cloudformation/bootstrap-management-global.yaml;`,
+              `set -e && yarn run cdk bootstrap --toolkitStackName ${acceleratorPrefix}-CDKToolkit aws://${cdk.Aws.ACCOUNT_ID}/${cdk.Aws.REGION} --qualifier accel  --template lib/cloudformation/bootstrap-management.yaml;`,
               `set -e && if [ $ENABLE_EXTERNAL_PIPELINE_ACCOUNT = "yes" ]; then
                   if ! MANAGEMENT_ACCOUNT_CREDENTIAL=$(aws sts assume-role --role-arn arn:${
                     cdk.Stack.of(this).partition
@@ -1029,16 +1023,12 @@ export class InstallerStack extends cdk.Stack {
                   # which doesn't have the S3 bucket (as it using the management account bucket)
                   yarn run cdk bootstrap --toolkitStackName ${acceleratorPrefix}-CDKToolkit aws://${
                 cdk.Aws.ACCOUNT_ID
-              }/${cdk.Aws.REGION} --qualifier accel --force
+              }/${cdk.Aws.REGION} --qualifier accel --template lib/cloudformation/bootstrap-management.yaml;
                   export $(printf "AWS_ACCESS_KEY_ID=%s AWS_SECRET_ACCESS_KEY=%s AWS_SESSION_TOKEN=%s" $MANAGEMENT_ACCOUNT_CREDENTIAL);
-                  if ! aws cloudformation describe-stacks --stack-name ${acceleratorPrefix}-CDKToolkit --region ${
+                  yarn run cdk bootstrap --toolkitStackName ${acceleratorPrefix}-CDKToolkit aws://$MANAGEMENT_ACCOUNT_ID/${
                 cdk.Aws.REGION
-              }; then MGMT_BOOTSTRAPPED_HOME="no"; fi;
-                  if ! aws cloudformation describe-stacks --stack-name ${acceleratorPrefix}-CDKToolkit --region ${globalRegion}; then MGMT_BOOTSTRAPPED_GLOBAL="no"; fi;
-                  if [ "$MGMT_BOOTSTRAPPED_HOME" = "no" ]; then yarn run cdk bootstrap --toolkitStackName ${acceleratorPrefix}-CDKToolkit aws://$MANAGEMENT_ACCOUNT_ID/${
-                cdk.Aws.REGION
-              } --qualifier accel; fi;
-                  if [ "$MGMT_BOOTSTRAPPED_GLOBAL" = "no" ]; then yarn run cdk bootstrap --toolkitStackName ${acceleratorPrefix}-CDKToolkit aws://$MANAGEMENT_ACCOUNT_ID/${globalRegion} --qualifier accel; fi;
+              } --qualifier accel  --template lib/cloudformation/bootstrap-management.yaml;
+                  yarn run cdk bootstrap --toolkitStackName ${acceleratorPrefix}-CDKToolkit aws://$MANAGEMENT_ACCOUNT_ID/${globalRegion} --qualifier accel  --template lib/cloudformation/bootstrap-management-global.yaml;
                   unset AWS_ACCESS_KEY_ID;
                   unset AWS_SECRET_ACCESS_KEY;
                   unset AWS_SESSION_TOKEN;
@@ -1054,10 +1044,12 @@ export class InstallerStack extends cdk.Stack {
                     export ENABLE_ASEA_MIGRATION=true
                   fi;`,
               `set -e && if [ $ENABLE_DIAGNOSTICS_PACK = "Yes" ]; then
-                yarn run ts-node --transpile-only cdk.ts deploy --require-approval never --stage diagnostics-pack --account ${cdk.Aws.ACCOUNT_ID} --region ${cdk.Aws.REGION} --partition ${cdk.Aws.PARTITION}
+                yarn run ts-node --transpile-only cdk.ts synth --stage diagnostics-pack --account ${cdk.Aws.ACCOUNT_ID} --region ${cdk.Aws.REGION} --partition ${cdk.Aws.PARTITION}
+                yarn run ts-node --transpile-only cdk.ts deploy --stage diagnostics-pack --account ${cdk.Aws.ACCOUNT_ID} --region ${cdk.Aws.REGION} --partition ${cdk.Aws.PARTITION}
               fi`,
-              `set -e && yarn run ts-node --transpile-only cdk.ts deploy --require-approval never --stage pipeline --account ${cdk.Aws.ACCOUNT_ID} --region ${cdk.Aws.REGION} --partition ${cdk.Aws.PARTITION}`,
-              `set -e && if [ "$ENABLE_TESTER" = "true" ]; then yarn run ts-node --transpile-only cdk.ts deploy --require-approval never --stage tester-pipeline --account ${cdk.Aws.ACCOUNT_ID} --region ${cdk.Aws.REGION}; fi`,
+              `set -e && yarn run ts-node --transpile-only cdk.ts synth --stage pipeline --account ${cdk.Aws.ACCOUNT_ID} --region ${cdk.Aws.REGION} --partition ${cdk.Aws.PARTITION}`,
+              `set -e && yarn run ts-node --transpile-only cdk.ts deploy --stage pipeline --account ${cdk.Aws.ACCOUNT_ID} --region ${cdk.Aws.REGION} --partition ${cdk.Aws.PARTITION}`,
+              `set -e && if [ "$ENABLE_TESTER" = "true" ]; then yarn run ts-node --transpile-only cdk.ts deploy --stage tester-pipeline --account ${cdk.Aws.ACCOUNT_ID} --region ${cdk.Aws.REGION}; fi`,
               `set -e && cd ../../../../ && zip -rqy /tmp/lza.zip . && aws s3 cp /tmp/lza.zip s3://${secureBucketName}/${customS3Path} --region ${cdk.Aws.REGION} --no-progress && rm -fr /tmp/lza.zip;`,
             ],
           },

@@ -33,6 +33,11 @@ export async function getCrossAccountCredentials(
   managementAccountAccessRole: string,
   sessionName?: string,
 ) {
+  logger.debug(`Getting credentials for account ${accountId} using role ${managementAccountAccessRole}`);
+  if (region === 'undefined') {
+    logger.debug(`Region was undefined, defaulting to creating STS client in the global region`);
+    region = getGlobalRegion(partition);
+  }
   const stsClient = new STSClient({
     region: region,
     retryStrategy: setRetryStrategy(),

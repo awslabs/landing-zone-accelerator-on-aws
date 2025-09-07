@@ -1721,41 +1721,6 @@ phases:
     commands:
       - ENABLE_EXTERNAL_PIPELINE_ACCOUNT="no"
       - if [ ! -z "$MANAGEMENT_ACCOUNT_ID" ] && [ ! -z "$MANAGEMENT_ACCOUNT_ROLE_NAME" ]; then ENABLE_EXTERNAL_PIPELINE_ACCOUNT="yes"; fi
-      - set -e && if ! aws cloudformation describe-stacks --stack-name ",
-                {
-                  "Fn::GetAtt": [
-                    "ResourceNamePrefixesGetPrefixResource96A10E6E",
-                    "acceleratorPrefix",
-                  ],
-                },
-                "-CDKToolkit --region ",
-                {
-                  "Ref": "AWS::Region",
-                },
-                "; then BOOTSTRAPPED_HOME="no"; fi
-      - set -e && if ! aws cloudformation describe-stacks --stack-name ",
-                {
-                  "Fn::GetAtt": [
-                    "ResourceNamePrefixesGetPrefixResource96A10E6E",
-                    "acceleratorPrefix",
-                  ],
-                },
-                "-CDKToolkit --region ",
-                {
-                  "Fn::FindInMap": [
-                    "GlobalRegionMap",
-                    {
-                      "Ref": "AWS::Partition",
-                    },
-                    "regionName",
-                  ],
-                },
-                "; then BOOTSTRAPPED_GLOBAL="no"; fi
-      - ENABLE_DIAGNOSTICS_PACK=",
-                {
-                  "Ref": "EnableDiagnosticsPack",
-                },
-                "
   build:
     commands:
       - cd source
@@ -1771,23 +1736,8 @@ phases:
       - if [ -f .yarnrc ]; then yarn install --use-yarnrc .yarnrc; else yarn install; fi
       - yarn build
       - cd packages/@aws-accelerator/installer
-      - set -e && if [ "$BOOTSTRAPPED_HOME" = "no" ]; then yarn run cdk bootstrap --toolkitStackName ",
-                {
-                  "Fn::GetAtt": [
-                    "ResourceNamePrefixesGetPrefixResource96A10E6E",
-                    "acceleratorPrefix",
-                  ],
-                },
-                "-CDKToolkit aws://",
-                {
-                  "Ref": "AWS::AccountId",
-                },
-                "/",
-                {
-                  "Ref": "AWS::Region",
-                },
-                " --qualifier accel; fi
-      - set -e &&  if [ "$BOOTSTRAPPED_GLOBAL" = "no" ]; then yarn run cdk bootstrap --toolkitStackName ",
+      - '[ ! -z "$ACCELERATOR_PREFIX" ] && sed -i "s/AWSAccelerator/$ACCELERATOR_PREFIX/g" lib/cloudformation/bootstrap-management*.yaml'
+      - set -e &&  yarn run cdk bootstrap --toolkitStackName ",
                 {
                   "Fn::GetAtt": [
                     "ResourceNamePrefixesGetPrefixResource96A10E6E",
@@ -1808,7 +1758,23 @@ phases:
                     "regionName",
                   ],
                 },
-                " --qualifier accel; fi
+                " --qualifier accel  --template lib/cloudformation/bootstrap-management-global.yaml;
+      - set -e && yarn run cdk bootstrap --toolkitStackName ",
+                {
+                  "Fn::GetAtt": [
+                    "ResourceNamePrefixesGetPrefixResource96A10E6E",
+                    "acceleratorPrefix",
+                  ],
+                },
+                "-CDKToolkit aws://",
+                {
+                  "Ref": "AWS::AccountId",
+                },
+                "/",
+                {
+                  "Ref": "AWS::Region",
+                },
+                " --qualifier accel  --template lib/cloudformation/bootstrap-management.yaml;
       - |-
         set -e && if [ $ENABLE_EXTERNAL_PIPELINE_ACCOUNT = "yes" ]; then
                           if ! MANAGEMENT_ACCOUNT_CREDENTIAL=$(aws sts assume-role --role-arn arn:",
@@ -1836,39 +1802,9 @@ phases:
                 {
                   "Ref": "AWS::Region",
                 },
-                " --qualifier accel --force
+                " --qualifier accel --template lib/cloudformation/bootstrap-management.yaml;
                           export $(printf "AWS_ACCESS_KEY_ID=%s AWS_SECRET_ACCESS_KEY=%s AWS_SESSION_TOKEN=%s" $MANAGEMENT_ACCOUNT_CREDENTIAL);
-                          if ! aws cloudformation describe-stacks --stack-name ",
-                {
-                  "Fn::GetAtt": [
-                    "ResourceNamePrefixesGetPrefixResource96A10E6E",
-                    "acceleratorPrefix",
-                  ],
-                },
-                "-CDKToolkit --region ",
-                {
-                  "Ref": "AWS::Region",
-                },
-                "; then MGMT_BOOTSTRAPPED_HOME="no"; fi;
-                          if ! aws cloudformation describe-stacks --stack-name ",
-                {
-                  "Fn::GetAtt": [
-                    "ResourceNamePrefixesGetPrefixResource96A10E6E",
-                    "acceleratorPrefix",
-                  ],
-                },
-                "-CDKToolkit --region ",
-                {
-                  "Fn::FindInMap": [
-                    "GlobalRegionMap",
-                    {
-                      "Ref": "AWS::Partition",
-                    },
-                    "regionName",
-                  ],
-                },
-                "; then MGMT_BOOTSTRAPPED_GLOBAL="no"; fi;
-                          if [ "$MGMT_BOOTSTRAPPED_HOME" = "no" ]; then yarn run cdk bootstrap --toolkitStackName ",
+                          yarn run cdk bootstrap --toolkitStackName ",
                 {
                   "Fn::GetAtt": [
                     "ResourceNamePrefixesGetPrefixResource96A10E6E",
@@ -1879,8 +1815,8 @@ phases:
                 {
                   "Ref": "AWS::Region",
                 },
-                " --qualifier accel; fi;
-                          if [ "$MGMT_BOOTSTRAPPED_GLOBAL" = "no" ]; then yarn run cdk bootstrap --toolkitStackName ",
+                " --qualifier accel  --template lib/cloudformation/bootstrap-management.yaml;
+                          yarn run cdk bootstrap --toolkitStackName ",
                 {
                   "Fn::GetAtt": [
                     "ResourceNamePrefixesGetPrefixResource96A10E6E",
@@ -1897,7 +1833,7 @@ phases:
                     "regionName",
                   ],
                 },
-                " --qualifier accel; fi;
+                " --qualifier accel  --template lib/cloudformation/bootstrap-management-global.yaml;
                           unset AWS_ACCESS_KEY_ID;
                           unset AWS_SECRET_ACCESS_KEY;
                           unset AWS_SESSION_TOKEN;
@@ -1915,7 +1851,20 @@ phases:
                           fi;
       - |-
         set -e && if [ $ENABLE_DIAGNOSTICS_PACK = "Yes" ]; then
-                        yarn run ts-node --transpile-only cdk.ts deploy --require-approval never --stage diagnostics-pack --account ",
+                        yarn run ts-node --transpile-only cdk.ts synth --stage diagnostics-pack --account ",
+                {
+                  "Ref": "AWS::AccountId",
+                },
+                " --region ",
+                {
+                  "Ref": "AWS::Region",
+                },
+                " --partition ",
+                {
+                  "Ref": "AWS::Partition",
+                },
+                "
+                        yarn run ts-node --transpile-only cdk.ts deploy --stage diagnostics-pack --account ",
                 {
                   "Ref": "AWS::AccountId",
                 },
@@ -1929,7 +1878,7 @@ phases:
                 },
                 "
                       fi
-      - set -e && yarn run ts-node --transpile-only cdk.ts deploy --require-approval never --stage pipeline --account ",
+      - set -e && yarn run ts-node --transpile-only cdk.ts synth --stage pipeline --account ",
                 {
                   "Ref": "AWS::AccountId",
                 },
@@ -1942,7 +1891,20 @@ phases:
                   "Ref": "AWS::Partition",
                 },
                 "
-      - set -e && if [ "$ENABLE_TESTER" = "true" ]; then yarn run ts-node --transpile-only cdk.ts deploy --require-approval never --stage tester-pipeline --account ",
+      - set -e && yarn run ts-node --transpile-only cdk.ts deploy --stage pipeline --account ",
+                {
+                  "Ref": "AWS::AccountId",
+                },
+                " --region ",
+                {
+                  "Ref": "AWS::Region",
+                },
+                " --partition ",
+                {
+                  "Ref": "AWS::Partition",
+                },
+                "
+      - set -e && if [ "$ENABLE_TESTER" = "true" ]; then yarn run ts-node --transpile-only cdk.ts deploy --stage tester-pipeline --account ",
                 {
                   "Ref": "AWS::AccountId",
                 },
@@ -5508,41 +5470,6 @@ phases:
     commands:
       - ENABLE_EXTERNAL_PIPELINE_ACCOUNT="no"
       - if [ ! -z "$MANAGEMENT_ACCOUNT_ID" ] && [ ! -z "$MANAGEMENT_ACCOUNT_ROLE_NAME" ]; then ENABLE_EXTERNAL_PIPELINE_ACCOUNT="yes"; fi
-      - set -e && if ! aws cloudformation describe-stacks --stack-name ",
-                {
-                  "Fn::GetAtt": [
-                    "ResourceNamePrefixesGetPrefixResource96A10E6E",
-                    "acceleratorPrefix",
-                  ],
-                },
-                "-CDKToolkit --region ",
-                {
-                  "Ref": "AWS::Region",
-                },
-                "; then BOOTSTRAPPED_HOME="no"; fi
-      - set -e && if ! aws cloudformation describe-stacks --stack-name ",
-                {
-                  "Fn::GetAtt": [
-                    "ResourceNamePrefixesGetPrefixResource96A10E6E",
-                    "acceleratorPrefix",
-                  ],
-                },
-                "-CDKToolkit --region ",
-                {
-                  "Fn::FindInMap": [
-                    "GlobalRegionMap",
-                    {
-                      "Ref": "AWS::Partition",
-                    },
-                    "regionName",
-                  ],
-                },
-                "; then BOOTSTRAPPED_GLOBAL="no"; fi
-      - ENABLE_DIAGNOSTICS_PACK=",
-                {
-                  "Ref": "EnableDiagnosticsPack",
-                },
-                "
   build:
     commands:
       - cd source
@@ -5558,23 +5485,8 @@ phases:
       - if [ -f .yarnrc ]; then yarn install --use-yarnrc .yarnrc; else yarn install; fi
       - yarn build
       - cd packages/@aws-accelerator/installer
-      - set -e && if [ "$BOOTSTRAPPED_HOME" = "no" ]; then yarn run cdk bootstrap --toolkitStackName ",
-                {
-                  "Fn::GetAtt": [
-                    "ResourceNamePrefixesGetPrefixResource96A10E6E",
-                    "acceleratorPrefix",
-                  ],
-                },
-                "-CDKToolkit aws://",
-                {
-                  "Ref": "AWS::AccountId",
-                },
-                "/",
-                {
-                  "Ref": "AWS::Region",
-                },
-                " --qualifier accel; fi
-      - set -e &&  if [ "$BOOTSTRAPPED_GLOBAL" = "no" ]; then yarn run cdk bootstrap --toolkitStackName ",
+      - '[ ! -z "$ACCELERATOR_PREFIX" ] && sed -i "s/AWSAccelerator/$ACCELERATOR_PREFIX/g" lib/cloudformation/bootstrap-management*.yaml'
+      - set -e &&  yarn run cdk bootstrap --toolkitStackName ",
                 {
                   "Fn::GetAtt": [
                     "ResourceNamePrefixesGetPrefixResource96A10E6E",
@@ -5595,7 +5507,23 @@ phases:
                     "regionName",
                   ],
                 },
-                " --qualifier accel; fi
+                " --qualifier accel  --template lib/cloudformation/bootstrap-management-global.yaml;
+      - set -e && yarn run cdk bootstrap --toolkitStackName ",
+                {
+                  "Fn::GetAtt": [
+                    "ResourceNamePrefixesGetPrefixResource96A10E6E",
+                    "acceleratorPrefix",
+                  ],
+                },
+                "-CDKToolkit aws://",
+                {
+                  "Ref": "AWS::AccountId",
+                },
+                "/",
+                {
+                  "Ref": "AWS::Region",
+                },
+                " --qualifier accel  --template lib/cloudformation/bootstrap-management.yaml;
       - |-
         set -e && if [ $ENABLE_EXTERNAL_PIPELINE_ACCOUNT = "yes" ]; then
                           if ! MANAGEMENT_ACCOUNT_CREDENTIAL=$(aws sts assume-role --role-arn arn:",
@@ -5623,39 +5551,9 @@ phases:
                 {
                   "Ref": "AWS::Region",
                 },
-                " --qualifier accel --force
+                " --qualifier accel --template lib/cloudformation/bootstrap-management.yaml;
                           export $(printf "AWS_ACCESS_KEY_ID=%s AWS_SECRET_ACCESS_KEY=%s AWS_SESSION_TOKEN=%s" $MANAGEMENT_ACCOUNT_CREDENTIAL);
-                          if ! aws cloudformation describe-stacks --stack-name ",
-                {
-                  "Fn::GetAtt": [
-                    "ResourceNamePrefixesGetPrefixResource96A10E6E",
-                    "acceleratorPrefix",
-                  ],
-                },
-                "-CDKToolkit --region ",
-                {
-                  "Ref": "AWS::Region",
-                },
-                "; then MGMT_BOOTSTRAPPED_HOME="no"; fi;
-                          if ! aws cloudformation describe-stacks --stack-name ",
-                {
-                  "Fn::GetAtt": [
-                    "ResourceNamePrefixesGetPrefixResource96A10E6E",
-                    "acceleratorPrefix",
-                  ],
-                },
-                "-CDKToolkit --region ",
-                {
-                  "Fn::FindInMap": [
-                    "GlobalRegionMap",
-                    {
-                      "Ref": "AWS::Partition",
-                    },
-                    "regionName",
-                  ],
-                },
-                "; then MGMT_BOOTSTRAPPED_GLOBAL="no"; fi;
-                          if [ "$MGMT_BOOTSTRAPPED_HOME" = "no" ]; then yarn run cdk bootstrap --toolkitStackName ",
+                          yarn run cdk bootstrap --toolkitStackName ",
                 {
                   "Fn::GetAtt": [
                     "ResourceNamePrefixesGetPrefixResource96A10E6E",
@@ -5666,8 +5564,8 @@ phases:
                 {
                   "Ref": "AWS::Region",
                 },
-                " --qualifier accel; fi;
-                          if [ "$MGMT_BOOTSTRAPPED_GLOBAL" = "no" ]; then yarn run cdk bootstrap --toolkitStackName ",
+                " --qualifier accel  --template lib/cloudformation/bootstrap-management.yaml;
+                          yarn run cdk bootstrap --toolkitStackName ",
                 {
                   "Fn::GetAtt": [
                     "ResourceNamePrefixesGetPrefixResource96A10E6E",
@@ -5684,7 +5582,7 @@ phases:
                     "regionName",
                   ],
                 },
-                " --qualifier accel; fi;
+                " --qualifier accel  --template lib/cloudformation/bootstrap-management-global.yaml;
                           unset AWS_ACCESS_KEY_ID;
                           unset AWS_SECRET_ACCESS_KEY;
                           unset AWS_SESSION_TOKEN;
@@ -5702,7 +5600,20 @@ phases:
                           fi;
       - |-
         set -e && if [ $ENABLE_DIAGNOSTICS_PACK = "Yes" ]; then
-                        yarn run ts-node --transpile-only cdk.ts deploy --require-approval never --stage diagnostics-pack --account ",
+                        yarn run ts-node --transpile-only cdk.ts synth --stage diagnostics-pack --account ",
+                {
+                  "Ref": "AWS::AccountId",
+                },
+                " --region ",
+                {
+                  "Ref": "AWS::Region",
+                },
+                " --partition ",
+                {
+                  "Ref": "AWS::Partition",
+                },
+                "
+                        yarn run ts-node --transpile-only cdk.ts deploy --stage diagnostics-pack --account ",
                 {
                   "Ref": "AWS::AccountId",
                 },
@@ -5716,7 +5627,7 @@ phases:
                 },
                 "
                       fi
-      - set -e && yarn run ts-node --transpile-only cdk.ts deploy --require-approval never --stage pipeline --account ",
+      - set -e && yarn run ts-node --transpile-only cdk.ts synth --stage pipeline --account ",
                 {
                   "Ref": "AWS::AccountId",
                 },
@@ -5729,7 +5640,20 @@ phases:
                   "Ref": "AWS::Partition",
                 },
                 "
-      - set -e && if [ "$ENABLE_TESTER" = "true" ]; then yarn run ts-node --transpile-only cdk.ts deploy --require-approval never --stage tester-pipeline --account ",
+      - set -e && yarn run ts-node --transpile-only cdk.ts deploy --stage pipeline --account ",
+                {
+                  "Ref": "AWS::AccountId",
+                },
+                " --region ",
+                {
+                  "Ref": "AWS::Region",
+                },
+                " --partition ",
+                {
+                  "Ref": "AWS::Partition",
+                },
+                "
+      - set -e && if [ "$ENABLE_TESTER" = "true" ]; then yarn run ts-node --transpile-only cdk.ts deploy --stage tester-pipeline --account ",
                 {
                   "Ref": "AWS::AccountId",
                 },
@@ -9361,41 +9285,6 @@ phases:
     commands:
       - ENABLE_EXTERNAL_PIPELINE_ACCOUNT="no"
       - if [ ! -z "$MANAGEMENT_ACCOUNT_ID" ] && [ ! -z "$MANAGEMENT_ACCOUNT_ROLE_NAME" ]; then ENABLE_EXTERNAL_PIPELINE_ACCOUNT="yes"; fi
-      - set -e && if ! aws cloudformation describe-stacks --stack-name ",
-                {
-                  "Fn::GetAtt": [
-                    "ResourceNamePrefixesGetPrefixResource96A10E6E",
-                    "acceleratorPrefix",
-                  ],
-                },
-                "-CDKToolkit --region ",
-                {
-                  "Ref": "AWS::Region",
-                },
-                "; then BOOTSTRAPPED_HOME="no"; fi
-      - set -e && if ! aws cloudformation describe-stacks --stack-name ",
-                {
-                  "Fn::GetAtt": [
-                    "ResourceNamePrefixesGetPrefixResource96A10E6E",
-                    "acceleratorPrefix",
-                  ],
-                },
-                "-CDKToolkit --region ",
-                {
-                  "Fn::FindInMap": [
-                    "GlobalRegionMap",
-                    {
-                      "Ref": "AWS::Partition",
-                    },
-                    "regionName",
-                  ],
-                },
-                "; then BOOTSTRAPPED_GLOBAL="no"; fi
-      - ENABLE_DIAGNOSTICS_PACK=",
-                {
-                  "Ref": "EnableDiagnosticsPack",
-                },
-                "
   build:
     commands:
       - cd source
@@ -9411,23 +9300,8 @@ phases:
       - if [ -f .yarnrc ]; then yarn install --use-yarnrc .yarnrc; else yarn install; fi
       - yarn build
       - cd packages/@aws-accelerator/installer
-      - set -e && if [ "$BOOTSTRAPPED_HOME" = "no" ]; then yarn run cdk bootstrap --toolkitStackName ",
-                {
-                  "Fn::GetAtt": [
-                    "ResourceNamePrefixesGetPrefixResource96A10E6E",
-                    "acceleratorPrefix",
-                  ],
-                },
-                "-CDKToolkit aws://",
-                {
-                  "Ref": "AWS::AccountId",
-                },
-                "/",
-                {
-                  "Ref": "AWS::Region",
-                },
-                " --qualifier accel; fi
-      - set -e &&  if [ "$BOOTSTRAPPED_GLOBAL" = "no" ]; then yarn run cdk bootstrap --toolkitStackName ",
+      - '[ ! -z "$ACCELERATOR_PREFIX" ] && sed -i "s/AWSAccelerator/$ACCELERATOR_PREFIX/g" lib/cloudformation/bootstrap-management*.yaml'
+      - set -e &&  yarn run cdk bootstrap --toolkitStackName ",
                 {
                   "Fn::GetAtt": [
                     "ResourceNamePrefixesGetPrefixResource96A10E6E",
@@ -9448,7 +9322,23 @@ phases:
                     "regionName",
                   ],
                 },
-                " --qualifier accel; fi
+                " --qualifier accel  --template lib/cloudformation/bootstrap-management-global.yaml;
+      - set -e && yarn run cdk bootstrap --toolkitStackName ",
+                {
+                  "Fn::GetAtt": [
+                    "ResourceNamePrefixesGetPrefixResource96A10E6E",
+                    "acceleratorPrefix",
+                  ],
+                },
+                "-CDKToolkit aws://",
+                {
+                  "Ref": "AWS::AccountId",
+                },
+                "/",
+                {
+                  "Ref": "AWS::Region",
+                },
+                " --qualifier accel  --template lib/cloudformation/bootstrap-management.yaml;
       - |-
         set -e && if [ $ENABLE_EXTERNAL_PIPELINE_ACCOUNT = "yes" ]; then
                           if ! MANAGEMENT_ACCOUNT_CREDENTIAL=$(aws sts assume-role --role-arn arn:",
@@ -9476,39 +9366,9 @@ phases:
                 {
                   "Ref": "AWS::Region",
                 },
-                " --qualifier accel --force
+                " --qualifier accel --template lib/cloudformation/bootstrap-management.yaml;
                           export $(printf "AWS_ACCESS_KEY_ID=%s AWS_SECRET_ACCESS_KEY=%s AWS_SESSION_TOKEN=%s" $MANAGEMENT_ACCOUNT_CREDENTIAL);
-                          if ! aws cloudformation describe-stacks --stack-name ",
-                {
-                  "Fn::GetAtt": [
-                    "ResourceNamePrefixesGetPrefixResource96A10E6E",
-                    "acceleratorPrefix",
-                  ],
-                },
-                "-CDKToolkit --region ",
-                {
-                  "Ref": "AWS::Region",
-                },
-                "; then MGMT_BOOTSTRAPPED_HOME="no"; fi;
-                          if ! aws cloudformation describe-stacks --stack-name ",
-                {
-                  "Fn::GetAtt": [
-                    "ResourceNamePrefixesGetPrefixResource96A10E6E",
-                    "acceleratorPrefix",
-                  ],
-                },
-                "-CDKToolkit --region ",
-                {
-                  "Fn::FindInMap": [
-                    "GlobalRegionMap",
-                    {
-                      "Ref": "AWS::Partition",
-                    },
-                    "regionName",
-                  ],
-                },
-                "; then MGMT_BOOTSTRAPPED_GLOBAL="no"; fi;
-                          if [ "$MGMT_BOOTSTRAPPED_HOME" = "no" ]; then yarn run cdk bootstrap --toolkitStackName ",
+                          yarn run cdk bootstrap --toolkitStackName ",
                 {
                   "Fn::GetAtt": [
                     "ResourceNamePrefixesGetPrefixResource96A10E6E",
@@ -9519,8 +9379,8 @@ phases:
                 {
                   "Ref": "AWS::Region",
                 },
-                " --qualifier accel; fi;
-                          if [ "$MGMT_BOOTSTRAPPED_GLOBAL" = "no" ]; then yarn run cdk bootstrap --toolkitStackName ",
+                " --qualifier accel  --template lib/cloudformation/bootstrap-management.yaml;
+                          yarn run cdk bootstrap --toolkitStackName ",
                 {
                   "Fn::GetAtt": [
                     "ResourceNamePrefixesGetPrefixResource96A10E6E",
@@ -9537,7 +9397,7 @@ phases:
                     "regionName",
                   ],
                 },
-                " --qualifier accel; fi;
+                " --qualifier accel  --template lib/cloudformation/bootstrap-management-global.yaml;
                           unset AWS_ACCESS_KEY_ID;
                           unset AWS_SECRET_ACCESS_KEY;
                           unset AWS_SESSION_TOKEN;
@@ -9555,7 +9415,20 @@ phases:
                           fi;
       - |-
         set -e && if [ $ENABLE_DIAGNOSTICS_PACK = "Yes" ]; then
-                        yarn run ts-node --transpile-only cdk.ts deploy --require-approval never --stage diagnostics-pack --account ",
+                        yarn run ts-node --transpile-only cdk.ts synth --stage diagnostics-pack --account ",
+                {
+                  "Ref": "AWS::AccountId",
+                },
+                " --region ",
+                {
+                  "Ref": "AWS::Region",
+                },
+                " --partition ",
+                {
+                  "Ref": "AWS::Partition",
+                },
+                "
+                        yarn run ts-node --transpile-only cdk.ts deploy --stage diagnostics-pack --account ",
                 {
                   "Ref": "AWS::AccountId",
                 },
@@ -9569,7 +9442,7 @@ phases:
                 },
                 "
                       fi
-      - set -e && yarn run ts-node --transpile-only cdk.ts deploy --require-approval never --stage pipeline --account ",
+      - set -e && yarn run ts-node --transpile-only cdk.ts synth --stage pipeline --account ",
                 {
                   "Ref": "AWS::AccountId",
                 },
@@ -9582,7 +9455,20 @@ phases:
                   "Ref": "AWS::Partition",
                 },
                 "
-      - set -e && if [ "$ENABLE_TESTER" = "true" ]; then yarn run ts-node --transpile-only cdk.ts deploy --require-approval never --stage tester-pipeline --account ",
+      - set -e && yarn run ts-node --transpile-only cdk.ts deploy --stage pipeline --account ",
+                {
+                  "Ref": "AWS::AccountId",
+                },
+                " --region ",
+                {
+                  "Ref": "AWS::Region",
+                },
+                " --partition ",
+                {
+                  "Ref": "AWS::Partition",
+                },
+                "
+      - set -e && if [ "$ENABLE_TESTER" = "true" ]; then yarn run ts-node --transpile-only cdk.ts deploy --stage tester-pipeline --account ",
                 {
                   "Ref": "AWS::AccountId",
                 },
@@ -13187,41 +13073,6 @@ phases:
     commands:
       - ENABLE_EXTERNAL_PIPELINE_ACCOUNT="no"
       - if [ ! -z "$MANAGEMENT_ACCOUNT_ID" ] && [ ! -z "$MANAGEMENT_ACCOUNT_ROLE_NAME" ]; then ENABLE_EXTERNAL_PIPELINE_ACCOUNT="yes"; fi
-      - set -e && if ! aws cloudformation describe-stacks --stack-name ",
-                {
-                  "Fn::GetAtt": [
-                    "ResourceNamePrefixesGetPrefixResource96A10E6E",
-                    "acceleratorPrefix",
-                  ],
-                },
-                "-CDKToolkit --region ",
-                {
-                  "Ref": "AWS::Region",
-                },
-                "; then BOOTSTRAPPED_HOME="no"; fi
-      - set -e && if ! aws cloudformation describe-stacks --stack-name ",
-                {
-                  "Fn::GetAtt": [
-                    "ResourceNamePrefixesGetPrefixResource96A10E6E",
-                    "acceleratorPrefix",
-                  ],
-                },
-                "-CDKToolkit --region ",
-                {
-                  "Fn::FindInMap": [
-                    "GlobalRegionMap",
-                    {
-                      "Ref": "AWS::Partition",
-                    },
-                    "regionName",
-                  ],
-                },
-                "; then BOOTSTRAPPED_GLOBAL="no"; fi
-      - ENABLE_DIAGNOSTICS_PACK=",
-                {
-                  "Ref": "EnableDiagnosticsPack",
-                },
-                "
   build:
     commands:
       - cd source
@@ -13237,23 +13088,8 @@ phases:
       - if [ -f .yarnrc ]; then yarn install --use-yarnrc .yarnrc; else yarn install; fi
       - yarn build
       - cd packages/@aws-accelerator/installer
-      - set -e && if [ "$BOOTSTRAPPED_HOME" = "no" ]; then yarn run cdk bootstrap --toolkitStackName ",
-                {
-                  "Fn::GetAtt": [
-                    "ResourceNamePrefixesGetPrefixResource96A10E6E",
-                    "acceleratorPrefix",
-                  ],
-                },
-                "-CDKToolkit aws://",
-                {
-                  "Ref": "AWS::AccountId",
-                },
-                "/",
-                {
-                  "Ref": "AWS::Region",
-                },
-                " --qualifier accel; fi
-      - set -e &&  if [ "$BOOTSTRAPPED_GLOBAL" = "no" ]; then yarn run cdk bootstrap --toolkitStackName ",
+      - '[ ! -z "$ACCELERATOR_PREFIX" ] && sed -i "s/AWSAccelerator/$ACCELERATOR_PREFIX/g" lib/cloudformation/bootstrap-management*.yaml'
+      - set -e &&  yarn run cdk bootstrap --toolkitStackName ",
                 {
                   "Fn::GetAtt": [
                     "ResourceNamePrefixesGetPrefixResource96A10E6E",
@@ -13274,7 +13110,23 @@ phases:
                     "regionName",
                   ],
                 },
-                " --qualifier accel; fi
+                " --qualifier accel  --template lib/cloudformation/bootstrap-management-global.yaml;
+      - set -e && yarn run cdk bootstrap --toolkitStackName ",
+                {
+                  "Fn::GetAtt": [
+                    "ResourceNamePrefixesGetPrefixResource96A10E6E",
+                    "acceleratorPrefix",
+                  ],
+                },
+                "-CDKToolkit aws://",
+                {
+                  "Ref": "AWS::AccountId",
+                },
+                "/",
+                {
+                  "Ref": "AWS::Region",
+                },
+                " --qualifier accel  --template lib/cloudformation/bootstrap-management.yaml;
       - |-
         set -e && if [ $ENABLE_EXTERNAL_PIPELINE_ACCOUNT = "yes" ]; then
                           if ! MANAGEMENT_ACCOUNT_CREDENTIAL=$(aws sts assume-role --role-arn arn:",
@@ -13302,39 +13154,9 @@ phases:
                 {
                   "Ref": "AWS::Region",
                 },
-                " --qualifier accel --force
+                " --qualifier accel --template lib/cloudformation/bootstrap-management.yaml;
                           export $(printf "AWS_ACCESS_KEY_ID=%s AWS_SECRET_ACCESS_KEY=%s AWS_SESSION_TOKEN=%s" $MANAGEMENT_ACCOUNT_CREDENTIAL);
-                          if ! aws cloudformation describe-stacks --stack-name ",
-                {
-                  "Fn::GetAtt": [
-                    "ResourceNamePrefixesGetPrefixResource96A10E6E",
-                    "acceleratorPrefix",
-                  ],
-                },
-                "-CDKToolkit --region ",
-                {
-                  "Ref": "AWS::Region",
-                },
-                "; then MGMT_BOOTSTRAPPED_HOME="no"; fi;
-                          if ! aws cloudformation describe-stacks --stack-name ",
-                {
-                  "Fn::GetAtt": [
-                    "ResourceNamePrefixesGetPrefixResource96A10E6E",
-                    "acceleratorPrefix",
-                  ],
-                },
-                "-CDKToolkit --region ",
-                {
-                  "Fn::FindInMap": [
-                    "GlobalRegionMap",
-                    {
-                      "Ref": "AWS::Partition",
-                    },
-                    "regionName",
-                  ],
-                },
-                "; then MGMT_BOOTSTRAPPED_GLOBAL="no"; fi;
-                          if [ "$MGMT_BOOTSTRAPPED_HOME" = "no" ]; then yarn run cdk bootstrap --toolkitStackName ",
+                          yarn run cdk bootstrap --toolkitStackName ",
                 {
                   "Fn::GetAtt": [
                     "ResourceNamePrefixesGetPrefixResource96A10E6E",
@@ -13345,8 +13167,8 @@ phases:
                 {
                   "Ref": "AWS::Region",
                 },
-                " --qualifier accel; fi;
-                          if [ "$MGMT_BOOTSTRAPPED_GLOBAL" = "no" ]; then yarn run cdk bootstrap --toolkitStackName ",
+                " --qualifier accel  --template lib/cloudformation/bootstrap-management.yaml;
+                          yarn run cdk bootstrap --toolkitStackName ",
                 {
                   "Fn::GetAtt": [
                     "ResourceNamePrefixesGetPrefixResource96A10E6E",
@@ -13363,7 +13185,7 @@ phases:
                     "regionName",
                   ],
                 },
-                " --qualifier accel; fi;
+                " --qualifier accel  --template lib/cloudformation/bootstrap-management-global.yaml;
                           unset AWS_ACCESS_KEY_ID;
                           unset AWS_SECRET_ACCESS_KEY;
                           unset AWS_SESSION_TOKEN;
@@ -13381,7 +13203,20 @@ phases:
                           fi;
       - |-
         set -e && if [ $ENABLE_DIAGNOSTICS_PACK = "Yes" ]; then
-                        yarn run ts-node --transpile-only cdk.ts deploy --require-approval never --stage diagnostics-pack --account ",
+                        yarn run ts-node --transpile-only cdk.ts synth --stage diagnostics-pack --account ",
+                {
+                  "Ref": "AWS::AccountId",
+                },
+                " --region ",
+                {
+                  "Ref": "AWS::Region",
+                },
+                " --partition ",
+                {
+                  "Ref": "AWS::Partition",
+                },
+                "
+                        yarn run ts-node --transpile-only cdk.ts deploy --stage diagnostics-pack --account ",
                 {
                   "Ref": "AWS::AccountId",
                 },
@@ -13395,7 +13230,7 @@ phases:
                 },
                 "
                       fi
-      - set -e && yarn run ts-node --transpile-only cdk.ts deploy --require-approval never --stage pipeline --account ",
+      - set -e && yarn run ts-node --transpile-only cdk.ts synth --stage pipeline --account ",
                 {
                   "Ref": "AWS::AccountId",
                 },
@@ -13408,7 +13243,20 @@ phases:
                   "Ref": "AWS::Partition",
                 },
                 "
-      - set -e && if [ "$ENABLE_TESTER" = "true" ]; then yarn run ts-node --transpile-only cdk.ts deploy --require-approval never --stage tester-pipeline --account ",
+      - set -e && yarn run ts-node --transpile-only cdk.ts deploy --stage pipeline --account ",
+                {
+                  "Ref": "AWS::AccountId",
+                },
+                " --region ",
+                {
+                  "Ref": "AWS::Region",
+                },
+                " --partition ",
+                {
+                  "Ref": "AWS::Partition",
+                },
+                "
+      - set -e && if [ "$ENABLE_TESTER" = "true" ]; then yarn run ts-node --transpile-only cdk.ts deploy --stage tester-pipeline --account ",
                 {
                   "Ref": "AWS::AccountId",
                 },
@@ -17018,41 +16866,6 @@ phases:
     commands:
       - ENABLE_EXTERNAL_PIPELINE_ACCOUNT="no"
       - if [ ! -z "$MANAGEMENT_ACCOUNT_ID" ] && [ ! -z "$MANAGEMENT_ACCOUNT_ROLE_NAME" ]; then ENABLE_EXTERNAL_PIPELINE_ACCOUNT="yes"; fi
-      - set -e && if ! aws cloudformation describe-stacks --stack-name ",
-                {
-                  "Fn::GetAtt": [
-                    "ResourceNamePrefixesGetPrefixResource96A10E6E",
-                    "acceleratorPrefix",
-                  ],
-                },
-                "-CDKToolkit --region ",
-                {
-                  "Ref": "AWS::Region",
-                },
-                "; then BOOTSTRAPPED_HOME="no"; fi
-      - set -e && if ! aws cloudformation describe-stacks --stack-name ",
-                {
-                  "Fn::GetAtt": [
-                    "ResourceNamePrefixesGetPrefixResource96A10E6E",
-                    "acceleratorPrefix",
-                  ],
-                },
-                "-CDKToolkit --region ",
-                {
-                  "Fn::FindInMap": [
-                    "GlobalRegionMap",
-                    {
-                      "Ref": "AWS::Partition",
-                    },
-                    "regionName",
-                  ],
-                },
-                "; then BOOTSTRAPPED_GLOBAL="no"; fi
-      - ENABLE_DIAGNOSTICS_PACK=",
-                {
-                  "Ref": "EnableDiagnosticsPack",
-                },
-                "
   build:
     commands:
       - cd source
@@ -17068,23 +16881,8 @@ phases:
       - if [ -f .yarnrc ]; then yarn install --use-yarnrc .yarnrc; else yarn install; fi
       - yarn build
       - cd packages/@aws-accelerator/installer
-      - set -e && if [ "$BOOTSTRAPPED_HOME" = "no" ]; then yarn run cdk bootstrap --toolkitStackName ",
-                {
-                  "Fn::GetAtt": [
-                    "ResourceNamePrefixesGetPrefixResource96A10E6E",
-                    "acceleratorPrefix",
-                  ],
-                },
-                "-CDKToolkit aws://",
-                {
-                  "Ref": "AWS::AccountId",
-                },
-                "/",
-                {
-                  "Ref": "AWS::Region",
-                },
-                " --qualifier accel; fi
-      - set -e &&  if [ "$BOOTSTRAPPED_GLOBAL" = "no" ]; then yarn run cdk bootstrap --toolkitStackName ",
+      - '[ ! -z "$ACCELERATOR_PREFIX" ] && sed -i "s/AWSAccelerator/$ACCELERATOR_PREFIX/g" lib/cloudformation/bootstrap-management*.yaml'
+      - set -e &&  yarn run cdk bootstrap --toolkitStackName ",
                 {
                   "Fn::GetAtt": [
                     "ResourceNamePrefixesGetPrefixResource96A10E6E",
@@ -17105,7 +16903,23 @@ phases:
                     "regionName",
                   ],
                 },
-                " --qualifier accel; fi
+                " --qualifier accel  --template lib/cloudformation/bootstrap-management-global.yaml;
+      - set -e && yarn run cdk bootstrap --toolkitStackName ",
+                {
+                  "Fn::GetAtt": [
+                    "ResourceNamePrefixesGetPrefixResource96A10E6E",
+                    "acceleratorPrefix",
+                  ],
+                },
+                "-CDKToolkit aws://",
+                {
+                  "Ref": "AWS::AccountId",
+                },
+                "/",
+                {
+                  "Ref": "AWS::Region",
+                },
+                " --qualifier accel  --template lib/cloudformation/bootstrap-management.yaml;
       - |-
         set -e && if [ $ENABLE_EXTERNAL_PIPELINE_ACCOUNT = "yes" ]; then
                           if ! MANAGEMENT_ACCOUNT_CREDENTIAL=$(aws sts assume-role --role-arn arn:",
@@ -17133,39 +16947,9 @@ phases:
                 {
                   "Ref": "AWS::Region",
                 },
-                " --qualifier accel --force
+                " --qualifier accel --template lib/cloudformation/bootstrap-management.yaml;
                           export $(printf "AWS_ACCESS_KEY_ID=%s AWS_SECRET_ACCESS_KEY=%s AWS_SESSION_TOKEN=%s" $MANAGEMENT_ACCOUNT_CREDENTIAL);
-                          if ! aws cloudformation describe-stacks --stack-name ",
-                {
-                  "Fn::GetAtt": [
-                    "ResourceNamePrefixesGetPrefixResource96A10E6E",
-                    "acceleratorPrefix",
-                  ],
-                },
-                "-CDKToolkit --region ",
-                {
-                  "Ref": "AWS::Region",
-                },
-                "; then MGMT_BOOTSTRAPPED_HOME="no"; fi;
-                          if ! aws cloudformation describe-stacks --stack-name ",
-                {
-                  "Fn::GetAtt": [
-                    "ResourceNamePrefixesGetPrefixResource96A10E6E",
-                    "acceleratorPrefix",
-                  ],
-                },
-                "-CDKToolkit --region ",
-                {
-                  "Fn::FindInMap": [
-                    "GlobalRegionMap",
-                    {
-                      "Ref": "AWS::Partition",
-                    },
-                    "regionName",
-                  ],
-                },
-                "; then MGMT_BOOTSTRAPPED_GLOBAL="no"; fi;
-                          if [ "$MGMT_BOOTSTRAPPED_HOME" = "no" ]; then yarn run cdk bootstrap --toolkitStackName ",
+                          yarn run cdk bootstrap --toolkitStackName ",
                 {
                   "Fn::GetAtt": [
                     "ResourceNamePrefixesGetPrefixResource96A10E6E",
@@ -17176,8 +16960,8 @@ phases:
                 {
                   "Ref": "AWS::Region",
                 },
-                " --qualifier accel; fi;
-                          if [ "$MGMT_BOOTSTRAPPED_GLOBAL" = "no" ]; then yarn run cdk bootstrap --toolkitStackName ",
+                " --qualifier accel  --template lib/cloudformation/bootstrap-management.yaml;
+                          yarn run cdk bootstrap --toolkitStackName ",
                 {
                   "Fn::GetAtt": [
                     "ResourceNamePrefixesGetPrefixResource96A10E6E",
@@ -17194,7 +16978,7 @@ phases:
                     "regionName",
                   ],
                 },
-                " --qualifier accel; fi;
+                " --qualifier accel  --template lib/cloudformation/bootstrap-management-global.yaml;
                           unset AWS_ACCESS_KEY_ID;
                           unset AWS_SECRET_ACCESS_KEY;
                           unset AWS_SESSION_TOKEN;
@@ -17212,7 +16996,20 @@ phases:
                           fi;
       - |-
         set -e && if [ $ENABLE_DIAGNOSTICS_PACK = "Yes" ]; then
-                        yarn run ts-node --transpile-only cdk.ts deploy --require-approval never --stage diagnostics-pack --account ",
+                        yarn run ts-node --transpile-only cdk.ts synth --stage diagnostics-pack --account ",
+                {
+                  "Ref": "AWS::AccountId",
+                },
+                " --region ",
+                {
+                  "Ref": "AWS::Region",
+                },
+                " --partition ",
+                {
+                  "Ref": "AWS::Partition",
+                },
+                "
+                        yarn run ts-node --transpile-only cdk.ts deploy --stage diagnostics-pack --account ",
                 {
                   "Ref": "AWS::AccountId",
                 },
@@ -17226,7 +17023,7 @@ phases:
                 },
                 "
                       fi
-      - set -e && yarn run ts-node --transpile-only cdk.ts deploy --require-approval never --stage pipeline --account ",
+      - set -e && yarn run ts-node --transpile-only cdk.ts synth --stage pipeline --account ",
                 {
                   "Ref": "AWS::AccountId",
                 },
@@ -17239,7 +17036,20 @@ phases:
                   "Ref": "AWS::Partition",
                 },
                 "
-      - set -e && if [ "$ENABLE_TESTER" = "true" ]; then yarn run ts-node --transpile-only cdk.ts deploy --require-approval never --stage tester-pipeline --account ",
+      - set -e && yarn run ts-node --transpile-only cdk.ts deploy --stage pipeline --account ",
+                {
+                  "Ref": "AWS::AccountId",
+                },
+                " --region ",
+                {
+                  "Ref": "AWS::Region",
+                },
+                " --partition ",
+                {
+                  "Ref": "AWS::Partition",
+                },
+                "
+      - set -e && if [ "$ENABLE_TESTER" = "true" ]; then yarn run ts-node --transpile-only cdk.ts deploy --stage tester-pipeline --account ",
                 {
                   "Ref": "AWS::AccountId",
                 },
@@ -20807,41 +20617,6 @@ phases:
     commands:
       - ENABLE_EXTERNAL_PIPELINE_ACCOUNT="no"
       - if [ ! -z "$MANAGEMENT_ACCOUNT_ID" ] && [ ! -z "$MANAGEMENT_ACCOUNT_ROLE_NAME" ]; then ENABLE_EXTERNAL_PIPELINE_ACCOUNT="yes"; fi
-      - set -e && if ! aws cloudformation describe-stacks --stack-name ",
-                {
-                  "Fn::GetAtt": [
-                    "ResourceNamePrefixesGetPrefixResource96A10E6E",
-                    "acceleratorPrefix",
-                  ],
-                },
-                "-CDKToolkit --region ",
-                {
-                  "Ref": "AWS::Region",
-                },
-                "; then BOOTSTRAPPED_HOME="no"; fi
-      - set -e && if ! aws cloudformation describe-stacks --stack-name ",
-                {
-                  "Fn::GetAtt": [
-                    "ResourceNamePrefixesGetPrefixResource96A10E6E",
-                    "acceleratorPrefix",
-                  ],
-                },
-                "-CDKToolkit --region ",
-                {
-                  "Fn::FindInMap": [
-                    "GlobalRegionMap",
-                    {
-                      "Ref": "AWS::Partition",
-                    },
-                    "regionName",
-                  ],
-                },
-                "; then BOOTSTRAPPED_GLOBAL="no"; fi
-      - ENABLE_DIAGNOSTICS_PACK=",
-                {
-                  "Ref": "EnableDiagnosticsPack",
-                },
-                "
   build:
     commands:
       - cd source
@@ -20857,23 +20632,8 @@ phases:
       - if [ -f .yarnrc ]; then yarn install --use-yarnrc .yarnrc; else yarn install; fi
       - yarn build
       - cd packages/@aws-accelerator/installer
-      - set -e && if [ "$BOOTSTRAPPED_HOME" = "no" ]; then yarn run cdk bootstrap --toolkitStackName ",
-                {
-                  "Fn::GetAtt": [
-                    "ResourceNamePrefixesGetPrefixResource96A10E6E",
-                    "acceleratorPrefix",
-                  ],
-                },
-                "-CDKToolkit aws://",
-                {
-                  "Ref": "AWS::AccountId",
-                },
-                "/",
-                {
-                  "Ref": "AWS::Region",
-                },
-                " --qualifier accel; fi
-      - set -e &&  if [ "$BOOTSTRAPPED_GLOBAL" = "no" ]; then yarn run cdk bootstrap --toolkitStackName ",
+      - '[ ! -z "$ACCELERATOR_PREFIX" ] && sed -i "s/AWSAccelerator/$ACCELERATOR_PREFIX/g" lib/cloudformation/bootstrap-management*.yaml'
+      - set -e &&  yarn run cdk bootstrap --toolkitStackName ",
                 {
                   "Fn::GetAtt": [
                     "ResourceNamePrefixesGetPrefixResource96A10E6E",
@@ -20894,7 +20654,23 @@ phases:
                     "regionName",
                   ],
                 },
-                " --qualifier accel; fi
+                " --qualifier accel  --template lib/cloudformation/bootstrap-management-global.yaml;
+      - set -e && yarn run cdk bootstrap --toolkitStackName ",
+                {
+                  "Fn::GetAtt": [
+                    "ResourceNamePrefixesGetPrefixResource96A10E6E",
+                    "acceleratorPrefix",
+                  ],
+                },
+                "-CDKToolkit aws://",
+                {
+                  "Ref": "AWS::AccountId",
+                },
+                "/",
+                {
+                  "Ref": "AWS::Region",
+                },
+                " --qualifier accel  --template lib/cloudformation/bootstrap-management.yaml;
       - |-
         set -e && if [ $ENABLE_EXTERNAL_PIPELINE_ACCOUNT = "yes" ]; then
                           if ! MANAGEMENT_ACCOUNT_CREDENTIAL=$(aws sts assume-role --role-arn arn:",
@@ -20922,39 +20698,9 @@ phases:
                 {
                   "Ref": "AWS::Region",
                 },
-                " --qualifier accel --force
+                " --qualifier accel --template lib/cloudformation/bootstrap-management.yaml;
                           export $(printf "AWS_ACCESS_KEY_ID=%s AWS_SECRET_ACCESS_KEY=%s AWS_SESSION_TOKEN=%s" $MANAGEMENT_ACCOUNT_CREDENTIAL);
-                          if ! aws cloudformation describe-stacks --stack-name ",
-                {
-                  "Fn::GetAtt": [
-                    "ResourceNamePrefixesGetPrefixResource96A10E6E",
-                    "acceleratorPrefix",
-                  ],
-                },
-                "-CDKToolkit --region ",
-                {
-                  "Ref": "AWS::Region",
-                },
-                "; then MGMT_BOOTSTRAPPED_HOME="no"; fi;
-                          if ! aws cloudformation describe-stacks --stack-name ",
-                {
-                  "Fn::GetAtt": [
-                    "ResourceNamePrefixesGetPrefixResource96A10E6E",
-                    "acceleratorPrefix",
-                  ],
-                },
-                "-CDKToolkit --region ",
-                {
-                  "Fn::FindInMap": [
-                    "GlobalRegionMap",
-                    {
-                      "Ref": "AWS::Partition",
-                    },
-                    "regionName",
-                  ],
-                },
-                "; then MGMT_BOOTSTRAPPED_GLOBAL="no"; fi;
-                          if [ "$MGMT_BOOTSTRAPPED_HOME" = "no" ]; then yarn run cdk bootstrap --toolkitStackName ",
+                          yarn run cdk bootstrap --toolkitStackName ",
                 {
                   "Fn::GetAtt": [
                     "ResourceNamePrefixesGetPrefixResource96A10E6E",
@@ -20965,8 +20711,8 @@ phases:
                 {
                   "Ref": "AWS::Region",
                 },
-                " --qualifier accel; fi;
-                          if [ "$MGMT_BOOTSTRAPPED_GLOBAL" = "no" ]; then yarn run cdk bootstrap --toolkitStackName ",
+                " --qualifier accel  --template lib/cloudformation/bootstrap-management.yaml;
+                          yarn run cdk bootstrap --toolkitStackName ",
                 {
                   "Fn::GetAtt": [
                     "ResourceNamePrefixesGetPrefixResource96A10E6E",
@@ -20983,7 +20729,7 @@ phases:
                     "regionName",
                   ],
                 },
-                " --qualifier accel; fi;
+                " --qualifier accel  --template lib/cloudformation/bootstrap-management-global.yaml;
                           unset AWS_ACCESS_KEY_ID;
                           unset AWS_SECRET_ACCESS_KEY;
                           unset AWS_SESSION_TOKEN;
@@ -21001,7 +20747,20 @@ phases:
                           fi;
       - |-
         set -e && if [ $ENABLE_DIAGNOSTICS_PACK = "Yes" ]; then
-                        yarn run ts-node --transpile-only cdk.ts deploy --require-approval never --stage diagnostics-pack --account ",
+                        yarn run ts-node --transpile-only cdk.ts synth --stage diagnostics-pack --account ",
+                {
+                  "Ref": "AWS::AccountId",
+                },
+                " --region ",
+                {
+                  "Ref": "AWS::Region",
+                },
+                " --partition ",
+                {
+                  "Ref": "AWS::Partition",
+                },
+                "
+                        yarn run ts-node --transpile-only cdk.ts deploy --stage diagnostics-pack --account ",
                 {
                   "Ref": "AWS::AccountId",
                 },
@@ -21015,7 +20774,7 @@ phases:
                 },
                 "
                       fi
-      - set -e && yarn run ts-node --transpile-only cdk.ts deploy --require-approval never --stage pipeline --account ",
+      - set -e && yarn run ts-node --transpile-only cdk.ts synth --stage pipeline --account ",
                 {
                   "Ref": "AWS::AccountId",
                 },
@@ -21028,7 +20787,20 @@ phases:
                   "Ref": "AWS::Partition",
                 },
                 "
-      - set -e && if [ "$ENABLE_TESTER" = "true" ]; then yarn run ts-node --transpile-only cdk.ts deploy --require-approval never --stage tester-pipeline --account ",
+      - set -e && yarn run ts-node --transpile-only cdk.ts deploy --stage pipeline --account ",
+                {
+                  "Ref": "AWS::AccountId",
+                },
+                " --region ",
+                {
+                  "Ref": "AWS::Region",
+                },
+                " --partition ",
+                {
+                  "Ref": "AWS::Partition",
+                },
+                "
+      - set -e && if [ "$ENABLE_TESTER" = "true" ]; then yarn run ts-node --transpile-only cdk.ts deploy --stage tester-pipeline --account ",
                 {
                   "Ref": "AWS::AccountId",
                 },
@@ -24651,41 +24423,6 @@ phases:
     commands:
       - ENABLE_EXTERNAL_PIPELINE_ACCOUNT="no"
       - if [ ! -z "$MANAGEMENT_ACCOUNT_ID" ] && [ ! -z "$MANAGEMENT_ACCOUNT_ROLE_NAME" ]; then ENABLE_EXTERNAL_PIPELINE_ACCOUNT="yes"; fi
-      - set -e && if ! aws cloudformation describe-stacks --stack-name ",
-                {
-                  "Fn::GetAtt": [
-                    "ResourceNamePrefixesGetPrefixResource96A10E6E",
-                    "acceleratorPrefix",
-                  ],
-                },
-                "-CDKToolkit --region ",
-                {
-                  "Ref": "AWS::Region",
-                },
-                "; then BOOTSTRAPPED_HOME="no"; fi
-      - set -e && if ! aws cloudformation describe-stacks --stack-name ",
-                {
-                  "Fn::GetAtt": [
-                    "ResourceNamePrefixesGetPrefixResource96A10E6E",
-                    "acceleratorPrefix",
-                  ],
-                },
-                "-CDKToolkit --region ",
-                {
-                  "Fn::FindInMap": [
-                    "GlobalRegionMap",
-                    {
-                      "Ref": "AWS::Partition",
-                    },
-                    "regionName",
-                  ],
-                },
-                "; then BOOTSTRAPPED_GLOBAL="no"; fi
-      - ENABLE_DIAGNOSTICS_PACK=",
-                {
-                  "Ref": "EnableDiagnosticsPack",
-                },
-                "
   build:
     commands:
       - cd source
@@ -24701,23 +24438,8 @@ phases:
       - if [ -f .yarnrc ]; then yarn install --use-yarnrc .yarnrc; else yarn install; fi
       - yarn build
       - cd packages/@aws-accelerator/installer
-      - set -e && if [ "$BOOTSTRAPPED_HOME" = "no" ]; then yarn run cdk bootstrap --toolkitStackName ",
-                {
-                  "Fn::GetAtt": [
-                    "ResourceNamePrefixesGetPrefixResource96A10E6E",
-                    "acceleratorPrefix",
-                  ],
-                },
-                "-CDKToolkit aws://",
-                {
-                  "Ref": "AWS::AccountId",
-                },
-                "/",
-                {
-                  "Ref": "AWS::Region",
-                },
-                " --qualifier accel; fi
-      - set -e &&  if [ "$BOOTSTRAPPED_GLOBAL" = "no" ]; then yarn run cdk bootstrap --toolkitStackName ",
+      - '[ ! -z "$ACCELERATOR_PREFIX" ] && sed -i "s/AWSAccelerator/$ACCELERATOR_PREFIX/g" lib/cloudformation/bootstrap-management*.yaml'
+      - set -e &&  yarn run cdk bootstrap --toolkitStackName ",
                 {
                   "Fn::GetAtt": [
                     "ResourceNamePrefixesGetPrefixResource96A10E6E",
@@ -24738,7 +24460,23 @@ phases:
                     "regionName",
                   ],
                 },
-                " --qualifier accel; fi
+                " --qualifier accel  --template lib/cloudformation/bootstrap-management-global.yaml;
+      - set -e && yarn run cdk bootstrap --toolkitStackName ",
+                {
+                  "Fn::GetAtt": [
+                    "ResourceNamePrefixesGetPrefixResource96A10E6E",
+                    "acceleratorPrefix",
+                  ],
+                },
+                "-CDKToolkit aws://",
+                {
+                  "Ref": "AWS::AccountId",
+                },
+                "/",
+                {
+                  "Ref": "AWS::Region",
+                },
+                " --qualifier accel  --template lib/cloudformation/bootstrap-management.yaml;
       - |-
         set -e && if [ $ENABLE_EXTERNAL_PIPELINE_ACCOUNT = "yes" ]; then
                           if ! MANAGEMENT_ACCOUNT_CREDENTIAL=$(aws sts assume-role --role-arn arn:",
@@ -24766,39 +24504,9 @@ phases:
                 {
                   "Ref": "AWS::Region",
                 },
-                " --qualifier accel --force
+                " --qualifier accel --template lib/cloudformation/bootstrap-management.yaml;
                           export $(printf "AWS_ACCESS_KEY_ID=%s AWS_SECRET_ACCESS_KEY=%s AWS_SESSION_TOKEN=%s" $MANAGEMENT_ACCOUNT_CREDENTIAL);
-                          if ! aws cloudformation describe-stacks --stack-name ",
-                {
-                  "Fn::GetAtt": [
-                    "ResourceNamePrefixesGetPrefixResource96A10E6E",
-                    "acceleratorPrefix",
-                  ],
-                },
-                "-CDKToolkit --region ",
-                {
-                  "Ref": "AWS::Region",
-                },
-                "; then MGMT_BOOTSTRAPPED_HOME="no"; fi;
-                          if ! aws cloudformation describe-stacks --stack-name ",
-                {
-                  "Fn::GetAtt": [
-                    "ResourceNamePrefixesGetPrefixResource96A10E6E",
-                    "acceleratorPrefix",
-                  ],
-                },
-                "-CDKToolkit --region ",
-                {
-                  "Fn::FindInMap": [
-                    "GlobalRegionMap",
-                    {
-                      "Ref": "AWS::Partition",
-                    },
-                    "regionName",
-                  ],
-                },
-                "; then MGMT_BOOTSTRAPPED_GLOBAL="no"; fi;
-                          if [ "$MGMT_BOOTSTRAPPED_HOME" = "no" ]; then yarn run cdk bootstrap --toolkitStackName ",
+                          yarn run cdk bootstrap --toolkitStackName ",
                 {
                   "Fn::GetAtt": [
                     "ResourceNamePrefixesGetPrefixResource96A10E6E",
@@ -24809,8 +24517,8 @@ phases:
                 {
                   "Ref": "AWS::Region",
                 },
-                " --qualifier accel; fi;
-                          if [ "$MGMT_BOOTSTRAPPED_GLOBAL" = "no" ]; then yarn run cdk bootstrap --toolkitStackName ",
+                " --qualifier accel  --template lib/cloudformation/bootstrap-management.yaml;
+                          yarn run cdk bootstrap --toolkitStackName ",
                 {
                   "Fn::GetAtt": [
                     "ResourceNamePrefixesGetPrefixResource96A10E6E",
@@ -24827,7 +24535,7 @@ phases:
                     "regionName",
                   ],
                 },
-                " --qualifier accel; fi;
+                " --qualifier accel  --template lib/cloudformation/bootstrap-management-global.yaml;
                           unset AWS_ACCESS_KEY_ID;
                           unset AWS_SECRET_ACCESS_KEY;
                           unset AWS_SESSION_TOKEN;
@@ -24845,7 +24553,20 @@ phases:
                           fi;
       - |-
         set -e && if [ $ENABLE_DIAGNOSTICS_PACK = "Yes" ]; then
-                        yarn run ts-node --transpile-only cdk.ts deploy --require-approval never --stage diagnostics-pack --account ",
+                        yarn run ts-node --transpile-only cdk.ts synth --stage diagnostics-pack --account ",
+                {
+                  "Ref": "AWS::AccountId",
+                },
+                " --region ",
+                {
+                  "Ref": "AWS::Region",
+                },
+                " --partition ",
+                {
+                  "Ref": "AWS::Partition",
+                },
+                "
+                        yarn run ts-node --transpile-only cdk.ts deploy --stage diagnostics-pack --account ",
                 {
                   "Ref": "AWS::AccountId",
                 },
@@ -24859,7 +24580,7 @@ phases:
                 },
                 "
                       fi
-      - set -e && yarn run ts-node --transpile-only cdk.ts deploy --require-approval never --stage pipeline --account ",
+      - set -e && yarn run ts-node --transpile-only cdk.ts synth --stage pipeline --account ",
                 {
                   "Ref": "AWS::AccountId",
                 },
@@ -24872,7 +24593,20 @@ phases:
                   "Ref": "AWS::Partition",
                 },
                 "
-      - set -e && if [ "$ENABLE_TESTER" = "true" ]; then yarn run ts-node --transpile-only cdk.ts deploy --require-approval never --stage tester-pipeline --account ",
+      - set -e && yarn run ts-node --transpile-only cdk.ts deploy --stage pipeline --account ",
+                {
+                  "Ref": "AWS::AccountId",
+                },
+                " --region ",
+                {
+                  "Ref": "AWS::Region",
+                },
+                " --partition ",
+                {
+                  "Ref": "AWS::Partition",
+                },
+                "
+      - set -e && if [ "$ENABLE_TESTER" = "true" ]; then yarn run ts-node --transpile-only cdk.ts deploy --stage tester-pipeline --account ",
                 {
                   "Ref": "AWS::AccountId",
                 },
@@ -28854,41 +28588,6 @@ phases:
     commands:
       - ENABLE_EXTERNAL_PIPELINE_ACCOUNT="no"
       - if [ ! -z "$MANAGEMENT_ACCOUNT_ID" ] && [ ! -z "$MANAGEMENT_ACCOUNT_ROLE_NAME" ]; then ENABLE_EXTERNAL_PIPELINE_ACCOUNT="yes"; fi
-      - set -e && if ! aws cloudformation describe-stacks --stack-name ",
-                {
-                  "Fn::GetAtt": [
-                    "ResourceNamePrefixesGetPrefixResource96A10E6E",
-                    "acceleratorPrefix",
-                  ],
-                },
-                "-CDKToolkit --region ",
-                {
-                  "Ref": "AWS::Region",
-                },
-                "; then BOOTSTRAPPED_HOME="no"; fi
-      - set -e && if ! aws cloudformation describe-stacks --stack-name ",
-                {
-                  "Fn::GetAtt": [
-                    "ResourceNamePrefixesGetPrefixResource96A10E6E",
-                    "acceleratorPrefix",
-                  ],
-                },
-                "-CDKToolkit --region ",
-                {
-                  "Fn::FindInMap": [
-                    "GlobalRegionMap",
-                    {
-                      "Ref": "AWS::Partition",
-                    },
-                    "regionName",
-                  ],
-                },
-                "; then BOOTSTRAPPED_GLOBAL="no"; fi
-      - ENABLE_DIAGNOSTICS_PACK=",
-                {
-                  "Ref": "EnableDiagnosticsPack",
-                },
-                "
   build:
     commands:
       - cd source
@@ -28904,23 +28603,8 @@ phases:
       - if [ -f .yarnrc ]; then yarn install --use-yarnrc .yarnrc; else yarn install; fi
       - yarn build
       - cd packages/@aws-accelerator/installer
-      - set -e && if [ "$BOOTSTRAPPED_HOME" = "no" ]; then yarn run cdk bootstrap --toolkitStackName ",
-                {
-                  "Fn::GetAtt": [
-                    "ResourceNamePrefixesGetPrefixResource96A10E6E",
-                    "acceleratorPrefix",
-                  ],
-                },
-                "-CDKToolkit aws://",
-                {
-                  "Ref": "AWS::AccountId",
-                },
-                "/",
-                {
-                  "Ref": "AWS::Region",
-                },
-                " --qualifier accel; fi
-      - set -e &&  if [ "$BOOTSTRAPPED_GLOBAL" = "no" ]; then yarn run cdk bootstrap --toolkitStackName ",
+      - '[ ! -z "$ACCELERATOR_PREFIX" ] && sed -i "s/AWSAccelerator/$ACCELERATOR_PREFIX/g" lib/cloudformation/bootstrap-management*.yaml'
+      - set -e &&  yarn run cdk bootstrap --toolkitStackName ",
                 {
                   "Fn::GetAtt": [
                     "ResourceNamePrefixesGetPrefixResource96A10E6E",
@@ -28941,7 +28625,23 @@ phases:
                     "regionName",
                   ],
                 },
-                " --qualifier accel; fi
+                " --qualifier accel  --template lib/cloudformation/bootstrap-management-global.yaml;
+      - set -e && yarn run cdk bootstrap --toolkitStackName ",
+                {
+                  "Fn::GetAtt": [
+                    "ResourceNamePrefixesGetPrefixResource96A10E6E",
+                    "acceleratorPrefix",
+                  ],
+                },
+                "-CDKToolkit aws://",
+                {
+                  "Ref": "AWS::AccountId",
+                },
+                "/",
+                {
+                  "Ref": "AWS::Region",
+                },
+                " --qualifier accel  --template lib/cloudformation/bootstrap-management.yaml;
       - |-
         set -e && if [ $ENABLE_EXTERNAL_PIPELINE_ACCOUNT = "yes" ]; then
                           if ! MANAGEMENT_ACCOUNT_CREDENTIAL=$(aws sts assume-role --role-arn arn:",
@@ -28969,39 +28669,9 @@ phases:
                 {
                   "Ref": "AWS::Region",
                 },
-                " --qualifier accel --force
+                " --qualifier accel --template lib/cloudformation/bootstrap-management.yaml;
                           export $(printf "AWS_ACCESS_KEY_ID=%s AWS_SECRET_ACCESS_KEY=%s AWS_SESSION_TOKEN=%s" $MANAGEMENT_ACCOUNT_CREDENTIAL);
-                          if ! aws cloudformation describe-stacks --stack-name ",
-                {
-                  "Fn::GetAtt": [
-                    "ResourceNamePrefixesGetPrefixResource96A10E6E",
-                    "acceleratorPrefix",
-                  ],
-                },
-                "-CDKToolkit --region ",
-                {
-                  "Ref": "AWS::Region",
-                },
-                "; then MGMT_BOOTSTRAPPED_HOME="no"; fi;
-                          if ! aws cloudformation describe-stacks --stack-name ",
-                {
-                  "Fn::GetAtt": [
-                    "ResourceNamePrefixesGetPrefixResource96A10E6E",
-                    "acceleratorPrefix",
-                  ],
-                },
-                "-CDKToolkit --region ",
-                {
-                  "Fn::FindInMap": [
-                    "GlobalRegionMap",
-                    {
-                      "Ref": "AWS::Partition",
-                    },
-                    "regionName",
-                  ],
-                },
-                "; then MGMT_BOOTSTRAPPED_GLOBAL="no"; fi;
-                          if [ "$MGMT_BOOTSTRAPPED_HOME" = "no" ]; then yarn run cdk bootstrap --toolkitStackName ",
+                          yarn run cdk bootstrap --toolkitStackName ",
                 {
                   "Fn::GetAtt": [
                     "ResourceNamePrefixesGetPrefixResource96A10E6E",
@@ -29012,8 +28682,8 @@ phases:
                 {
                   "Ref": "AWS::Region",
                 },
-                " --qualifier accel; fi;
-                          if [ "$MGMT_BOOTSTRAPPED_GLOBAL" = "no" ]; then yarn run cdk bootstrap --toolkitStackName ",
+                " --qualifier accel  --template lib/cloudformation/bootstrap-management.yaml;
+                          yarn run cdk bootstrap --toolkitStackName ",
                 {
                   "Fn::GetAtt": [
                     "ResourceNamePrefixesGetPrefixResource96A10E6E",
@@ -29030,7 +28700,7 @@ phases:
                     "regionName",
                   ],
                 },
-                " --qualifier accel; fi;
+                " --qualifier accel  --template lib/cloudformation/bootstrap-management-global.yaml;
                           unset AWS_ACCESS_KEY_ID;
                           unset AWS_SECRET_ACCESS_KEY;
                           unset AWS_SESSION_TOKEN;
@@ -29048,7 +28718,20 @@ phases:
                           fi;
       - |-
         set -e && if [ $ENABLE_DIAGNOSTICS_PACK = "Yes" ]; then
-                        yarn run ts-node --transpile-only cdk.ts deploy --require-approval never --stage diagnostics-pack --account ",
+                        yarn run ts-node --transpile-only cdk.ts synth --stage diagnostics-pack --account ",
+                {
+                  "Ref": "AWS::AccountId",
+                },
+                " --region ",
+                {
+                  "Ref": "AWS::Region",
+                },
+                " --partition ",
+                {
+                  "Ref": "AWS::Partition",
+                },
+                "
+                        yarn run ts-node --transpile-only cdk.ts deploy --stage diagnostics-pack --account ",
                 {
                   "Ref": "AWS::AccountId",
                 },
@@ -29062,7 +28745,7 @@ phases:
                 },
                 "
                       fi
-      - set -e && yarn run ts-node --transpile-only cdk.ts deploy --require-approval never --stage pipeline --account ",
+      - set -e && yarn run ts-node --transpile-only cdk.ts synth --stage pipeline --account ",
                 {
                   "Ref": "AWS::AccountId",
                 },
@@ -29075,7 +28758,20 @@ phases:
                   "Ref": "AWS::Partition",
                 },
                 "
-      - set -e && if [ "$ENABLE_TESTER" = "true" ]; then yarn run ts-node --transpile-only cdk.ts deploy --require-approval never --stage tester-pipeline --account ",
+      - set -e && yarn run ts-node --transpile-only cdk.ts deploy --stage pipeline --account ",
+                {
+                  "Ref": "AWS::AccountId",
+                },
+                " --region ",
+                {
+                  "Ref": "AWS::Region",
+                },
+                " --partition ",
+                {
+                  "Ref": "AWS::Partition",
+                },
+                "
+      - set -e && if [ "$ENABLE_TESTER" = "true" ]; then yarn run ts-node --transpile-only cdk.ts deploy --stage tester-pipeline --account ",
                 {
                   "Ref": "AWS::AccountId",
                 },
@@ -33085,41 +32781,6 @@ phases:
     commands:
       - ENABLE_EXTERNAL_PIPELINE_ACCOUNT="no"
       - if [ ! -z "$MANAGEMENT_ACCOUNT_ID" ] && [ ! -z "$MANAGEMENT_ACCOUNT_ROLE_NAME" ]; then ENABLE_EXTERNAL_PIPELINE_ACCOUNT="yes"; fi
-      - set -e && if ! aws cloudformation describe-stacks --stack-name ",
-                {
-                  "Fn::GetAtt": [
-                    "ResourceNamePrefixesGetPrefixResource96A10E6E",
-                    "acceleratorPrefix",
-                  ],
-                },
-                "-CDKToolkit --region ",
-                {
-                  "Ref": "AWS::Region",
-                },
-                "; then BOOTSTRAPPED_HOME="no"; fi
-      - set -e && if ! aws cloudformation describe-stacks --stack-name ",
-                {
-                  "Fn::GetAtt": [
-                    "ResourceNamePrefixesGetPrefixResource96A10E6E",
-                    "acceleratorPrefix",
-                  ],
-                },
-                "-CDKToolkit --region ",
-                {
-                  "Fn::FindInMap": [
-                    "GlobalRegionMap",
-                    {
-                      "Ref": "AWS::Partition",
-                    },
-                    "regionName",
-                  ],
-                },
-                "; then BOOTSTRAPPED_GLOBAL="no"; fi
-      - ENABLE_DIAGNOSTICS_PACK=",
-                {
-                  "Ref": "EnableDiagnosticsPack",
-                },
-                "
   build:
     commands:
       - cd source
@@ -33135,23 +32796,8 @@ phases:
       - if [ -f .yarnrc ]; then yarn install --use-yarnrc .yarnrc; else yarn install; fi
       - yarn build
       - cd packages/@aws-accelerator/installer
-      - set -e && if [ "$BOOTSTRAPPED_HOME" = "no" ]; then yarn run cdk bootstrap --toolkitStackName ",
-                {
-                  "Fn::GetAtt": [
-                    "ResourceNamePrefixesGetPrefixResource96A10E6E",
-                    "acceleratorPrefix",
-                  ],
-                },
-                "-CDKToolkit aws://",
-                {
-                  "Ref": "AWS::AccountId",
-                },
-                "/",
-                {
-                  "Ref": "AWS::Region",
-                },
-                " --qualifier accel; fi
-      - set -e &&  if [ "$BOOTSTRAPPED_GLOBAL" = "no" ]; then yarn run cdk bootstrap --toolkitStackName ",
+      - '[ ! -z "$ACCELERATOR_PREFIX" ] && sed -i "s/AWSAccelerator/$ACCELERATOR_PREFIX/g" lib/cloudformation/bootstrap-management*.yaml'
+      - set -e &&  yarn run cdk bootstrap --toolkitStackName ",
                 {
                   "Fn::GetAtt": [
                     "ResourceNamePrefixesGetPrefixResource96A10E6E",
@@ -33172,7 +32818,23 @@ phases:
                     "regionName",
                   ],
                 },
-                " --qualifier accel; fi
+                " --qualifier accel  --template lib/cloudformation/bootstrap-management-global.yaml;
+      - set -e && yarn run cdk bootstrap --toolkitStackName ",
+                {
+                  "Fn::GetAtt": [
+                    "ResourceNamePrefixesGetPrefixResource96A10E6E",
+                    "acceleratorPrefix",
+                  ],
+                },
+                "-CDKToolkit aws://",
+                {
+                  "Ref": "AWS::AccountId",
+                },
+                "/",
+                {
+                  "Ref": "AWS::Region",
+                },
+                " --qualifier accel  --template lib/cloudformation/bootstrap-management.yaml;
       - |-
         set -e && if [ $ENABLE_EXTERNAL_PIPELINE_ACCOUNT = "yes" ]; then
                           if ! MANAGEMENT_ACCOUNT_CREDENTIAL=$(aws sts assume-role --role-arn arn:",
@@ -33200,39 +32862,9 @@ phases:
                 {
                   "Ref": "AWS::Region",
                 },
-                " --qualifier accel --force
+                " --qualifier accel --template lib/cloudformation/bootstrap-management.yaml;
                           export $(printf "AWS_ACCESS_KEY_ID=%s AWS_SECRET_ACCESS_KEY=%s AWS_SESSION_TOKEN=%s" $MANAGEMENT_ACCOUNT_CREDENTIAL);
-                          if ! aws cloudformation describe-stacks --stack-name ",
-                {
-                  "Fn::GetAtt": [
-                    "ResourceNamePrefixesGetPrefixResource96A10E6E",
-                    "acceleratorPrefix",
-                  ],
-                },
-                "-CDKToolkit --region ",
-                {
-                  "Ref": "AWS::Region",
-                },
-                "; then MGMT_BOOTSTRAPPED_HOME="no"; fi;
-                          if ! aws cloudformation describe-stacks --stack-name ",
-                {
-                  "Fn::GetAtt": [
-                    "ResourceNamePrefixesGetPrefixResource96A10E6E",
-                    "acceleratorPrefix",
-                  ],
-                },
-                "-CDKToolkit --region ",
-                {
-                  "Fn::FindInMap": [
-                    "GlobalRegionMap",
-                    {
-                      "Ref": "AWS::Partition",
-                    },
-                    "regionName",
-                  ],
-                },
-                "; then MGMT_BOOTSTRAPPED_GLOBAL="no"; fi;
-                          if [ "$MGMT_BOOTSTRAPPED_HOME" = "no" ]; then yarn run cdk bootstrap --toolkitStackName ",
+                          yarn run cdk bootstrap --toolkitStackName ",
                 {
                   "Fn::GetAtt": [
                     "ResourceNamePrefixesGetPrefixResource96A10E6E",
@@ -33243,8 +32875,8 @@ phases:
                 {
                   "Ref": "AWS::Region",
                 },
-                " --qualifier accel; fi;
-                          if [ "$MGMT_BOOTSTRAPPED_GLOBAL" = "no" ]; then yarn run cdk bootstrap --toolkitStackName ",
+                " --qualifier accel  --template lib/cloudformation/bootstrap-management.yaml;
+                          yarn run cdk bootstrap --toolkitStackName ",
                 {
                   "Fn::GetAtt": [
                     "ResourceNamePrefixesGetPrefixResource96A10E6E",
@@ -33261,7 +32893,7 @@ phases:
                     "regionName",
                   ],
                 },
-                " --qualifier accel; fi;
+                " --qualifier accel  --template lib/cloudformation/bootstrap-management-global.yaml;
                           unset AWS_ACCESS_KEY_ID;
                           unset AWS_SECRET_ACCESS_KEY;
                           unset AWS_SESSION_TOKEN;
@@ -33279,7 +32911,20 @@ phases:
                           fi;
       - |-
         set -e && if [ $ENABLE_DIAGNOSTICS_PACK = "Yes" ]; then
-                        yarn run ts-node --transpile-only cdk.ts deploy --require-approval never --stage diagnostics-pack --account ",
+                        yarn run ts-node --transpile-only cdk.ts synth --stage diagnostics-pack --account ",
+                {
+                  "Ref": "AWS::AccountId",
+                },
+                " --region ",
+                {
+                  "Ref": "AWS::Region",
+                },
+                " --partition ",
+                {
+                  "Ref": "AWS::Partition",
+                },
+                "
+                        yarn run ts-node --transpile-only cdk.ts deploy --stage diagnostics-pack --account ",
                 {
                   "Ref": "AWS::AccountId",
                 },
@@ -33293,7 +32938,7 @@ phases:
                 },
                 "
                       fi
-      - set -e && yarn run ts-node --transpile-only cdk.ts deploy --require-approval never --stage pipeline --account ",
+      - set -e && yarn run ts-node --transpile-only cdk.ts synth --stage pipeline --account ",
                 {
                   "Ref": "AWS::AccountId",
                 },
@@ -33306,7 +32951,20 @@ phases:
                   "Ref": "AWS::Partition",
                 },
                 "
-      - set -e && if [ "$ENABLE_TESTER" = "true" ]; then yarn run ts-node --transpile-only cdk.ts deploy --require-approval never --stage tester-pipeline --account ",
+      - set -e && yarn run ts-node --transpile-only cdk.ts deploy --stage pipeline --account ",
+                {
+                  "Ref": "AWS::AccountId",
+                },
+                " --region ",
+                {
+                  "Ref": "AWS::Region",
+                },
+                " --partition ",
+                {
+                  "Ref": "AWS::Partition",
+                },
+                "
+      - set -e && if [ "$ENABLE_TESTER" = "true" ]; then yarn run ts-node --transpile-only cdk.ts deploy --stage tester-pipeline --account ",
                 {
                   "Ref": "AWS::AccountId",
                 },
