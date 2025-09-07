@@ -14,8 +14,8 @@
 import { NlbTargetTypeConfig } from '@aws-accelerator/config';
 import { throttlingBackOff } from '@aws-accelerator/utils/lib/throttle';
 import { CloudFormationCustomResourceEvent } from '@aws-accelerator/utils/lib/common-types';
-import * as AWS from 'aws-sdk';
-AWS.config.logger = console;
+import { STSClient, AssumeRoleCommand } from '@aws-sdk/client-sts';
+import { EC2Client, DescribeNetworkInterfacesCommand } from '@aws-sdk/client-ec2';
 
 /**
  * get cross account NLB IP Addresses and add static ip addresses in config- lambda handler
@@ -30,7 +30,7 @@ export async function handler(event: CloudFormationCustomResourceEvent) {
   const assumeRoleName: string = event.ResourceProperties['assumeRoleName'];
   const partition: string = event.ResourceProperties['partition'];
   const solutionId = process.env['SOLUTION_ID'];
-  const stsClient = new AWS.STS({ customUserAgent: solutionId, region: region });
+  const stsClient = new STSClient({ customUserAgent: solutionId, region: region });
   switch (event.RequestType) {
     case 'Create':
     case 'Update':
@@ -53,31 +53,31 @@ export async function handler(event: CloudFormationCustomResourceEvent) {
   }
 }
 
-async function assumeRole(stsClient: AWS.STS, assumeRoleName: string, accountId: string, partition: string) {
+async function assumeRole(stsClient: STSClient, assumeRoleName: string, accountId: string, partition: string) {
   const roleArn = `arn:${partition}:iam::${accountId}:role/${assumeRoleName}`;
   const assumeRole = await throttlingBackOff(() =>
-    stsClient.assumeRole({ RoleArn: roleArn, RoleSessionName: `fmsDeregisterAdmin` }).promise(),
+    stsClient.send(new AssumeRoleCommand({ RoleArn: roleArn, RoleSessionName: `fmsDeregisterAdmin` })),
   );
-  return new AWS.Credentials({
-    accessKeyId: assumeRole.Credentials!.AccessKeyId,
-    secretAccessKey: assumeRole.Credentials!.SecretAccessKey,
-    sessionToken: assumeRole.Credentials!.SessionToken,
-  });
+  return {
+    accessKeyId: assumeRole.Credentials!.AccessKeyId!,
+    secretAccessKey: assumeRole.Credentials!.SecretAccessKey!,
+    sessionToken: assumeRole.Credentials!.SessionToken!,
+  };
 }
 
 async function setEC2ClientMap(props: {
-  stsClient: AWS.STS;
+  stsClient: STSClient;
   partition: string;
   targets: (string | NlbTargetTypeConfig)[];
   assumeRoleName: string;
 }) {
-  const ec2ClientMap = new Map<string, AWS.EC2>();
+  const ec2ClientMap = new Map<string, EC2Client>();
 
   for (const target of props.targets) {
     if (typeof target !== 'string') {
       if (!ec2ClientMap.get(`${target.account}${target.region}`)) {
         const credentials = await assumeRole(props.stsClient, props.assumeRoleName, target.account, props.partition);
-        const ec2Client = new AWS.EC2({ credentials, region: target.region });
+        const ec2Client = new EC2Client({ credentials, region: target.region });
         ec2ClientMap.set(`${target.account}${target.region}`, ec2Client);
       }
     }
@@ -86,22 +86,22 @@ async function setEC2ClientMap(props: {
   return ec2ClientMap;
 }
 
-async function getEniIpAddresses(ec2ClientMap: Map<string, AWS.EC2>, targets: (string | NlbTargetTypeConfig)[]) {
+async function getEniIpAddresses(ec2ClientMap: Map<string, EC2Client>, targets: (string | NlbTargetTypeConfig)[]) {
   const ipAddresses = [];
   for (const target of targets) {
     if (typeof target !== 'string') {
       const ec2Client = ec2ClientMap.get(`${target.account}${target.region}`);
       if (ec2Client) {
-        const enis = await ec2Client
-          .describeNetworkInterfaces({
+        const enis = await ec2Client.send(
+          new DescribeNetworkInterfacesCommand({
             Filters: [
               {
                 Name: 'description',
                 Values: [`ELB net/${target.nlbName}*`],
               },
             ],
-          })
-          .promise();
+          }),
+        );
         const ips =
           enis.NetworkInterfaces?.map(eni => {
             return { Id: eni.PrivateIpAddress, AvailabilityZone: 'all' };
