@@ -1496,7 +1496,7 @@ export interface IIamPasswordPolicyConfig {
   /**
    * The number of days that an IAM user password is valid.
    *
-   * Note: If you do not specify a value for this parameter, then the operation uses the default value of 0. The result is that IAM user passwords never expire.
+   * Valid values are between 1 and 1095 days.
    *
    * @default 90
    */
