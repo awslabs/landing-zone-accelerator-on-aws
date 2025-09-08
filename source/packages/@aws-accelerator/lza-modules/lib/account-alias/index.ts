@@ -71,7 +71,7 @@ export class AccountAlias implements AcceleratorModule {
       enableSingleAccountMode,
       orgsEnabled,
       accountsConfig,
-      managementCredentials as AWS.Credentials,
+      managementCredentials,
     );
     const accounts = accountsConfig.getAccounts(enableSingleAccountMode);
 

@@ -49,13 +49,7 @@ export abstract class AcceleratorConfigLoader {
     managementAccountCredentials?: AssumeRoleCredentialType,
   ): Promise<AccountsConfig> {
     const accountsConfig = AccountsConfig.load(configDirPath);
-    await accountsConfig.loadAccountIds(
-      partition,
-      false,
-      orgsEnabled,
-      accountsConfig,
-      managementAccountCredentials as AWS.Credentials,
-    );
+    await accountsConfig.loadAccountIds(partition, false, orgsEnabled, accountsConfig, managementAccountCredentials);
 
     return accountsConfig;
   }

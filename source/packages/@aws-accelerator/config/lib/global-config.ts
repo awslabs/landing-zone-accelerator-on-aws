@@ -14,12 +14,17 @@
 import { StreamMode } from '@aws-sdk/client-kinesis';
 import { GetParametersByPathCommand, SSMClient } from '@aws-sdk/client-ssm';
 import { AssumeRoleCommandOutput } from '@aws-sdk/client-sts';
-import * as AWS from 'aws-sdk';
+import { S3Client, GetObjectCommand, NoSuchKey } from '@aws-sdk/client-s3';
 import * as fs from 'fs';
 import * as yaml from 'js-yaml';
 import * as path from 'path';
 
-import { directoryExists, fileExists, getCrossAccountCredentials } from '@aws-accelerator/utils/lib/common-functions';
+import {
+  directoryExists,
+  fileExists,
+  getCrossAccountCredentials,
+  setRetryStrategy,
+} from '@aws-accelerator/utils/lib/common-functions';
 import { createLogger } from '@aws-accelerator/utils/lib/logger';
 import { throttlingBackOff } from '@aws-accelerator/utils/lib/throttle';
 
@@ -754,7 +759,11 @@ export class GlobalConfig implements i.IGlobalConfig {
     if (!directoryExists('asea-assets')) {
       throw new Error(`Could not create temp directory ${aseaAssetPath} for asea assets`);
     }
-    const s3Client = new AWS.S3({ region: this.homeRegion });
+    const s3Client = new S3Client({
+      region: this.homeRegion,
+      customUserAgent: process.env['SOLUTION_ID'] ?? '',
+      retryStrategy: setRetryStrategy(),
+    });
     const mappingFile = await this.downloadFile({
       relativePath: 'mapping.json',
       tempDirectory: aseaAssetPath,
@@ -816,7 +825,7 @@ export class GlobalConfig implements i.IGlobalConfig {
   }
 
   private async downloadASEAStacksAndResources(props: {
-    s3Client: AWS.S3;
+    s3Client: S3Client;
     mappingBucket: string;
     tempDirectory: string;
     mapping: t.ASEAMappings;
@@ -865,7 +874,12 @@ export class GlobalConfig implements i.IGlobalConfig {
     return Promise.all(downloads);
   }
 
-  private async downloadFile(props: { relativePath: string; tempDirectory: string; bucket: string; s3Client: AWS.S3 }) {
+  private async downloadFile(props: {
+    relativePath: string;
+    tempDirectory: string;
+    bucket: string;
+    s3Client: S3Client;
+  }) {
     const filePath = path.join(props.tempDirectory, props.relativePath);
     const directory = filePath.split('/').slice(0, -1).join('/');
     if (!(await fileExists(filePath))) {
@@ -1042,26 +1056,31 @@ export class GlobalConfig implements i.IGlobalConfig {
   private async getS3Object(props: {
     bucket: string;
     objectKey: string;
-    s3Client?: AWS.S3;
+    s3Client?: S3Client;
   }): Promise<{ body: string; path: string } | undefined> {
     let s3Client = props.s3Client;
     if (!s3Client) {
-      s3Client = new AWS.S3({ region: this.homeRegion });
+      s3Client = new S3Client({
+        region: this.homeRegion,
+        customUserAgent: process.env['SOLUTION_ID'] ?? '',
+        retryStrategy: setRetryStrategy(),
+      });
     }
     try {
-      const response = await s3Client
-        .getObject({
+      const response = await s3Client.send(
+        new GetObjectCommand({
           Bucket: props.bucket,
           Key: props.objectKey,
-        })
-        .promise();
+        }),
+      );
       if (!response.Body) {
         logger.error(`Could not load file from path s3://${props.bucket}/${props.objectKey}`);
         return;
       }
-      return { body: response.Body.toString(), path: props.objectKey };
+      const bodyString = await response.Body.transformToString();
+      return { body: bodyString, path: props.objectKey };
     } catch (e) {
-      if ((e as AWS.AWSError).code === 'NoSuchKey') return;
+      if (e instanceof NoSuchKey) return;
       throw e;
     }
   }

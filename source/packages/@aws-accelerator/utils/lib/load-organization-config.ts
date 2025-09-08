@@ -38,7 +38,7 @@ export async function loadOrganizationalUnits(
   arrayFromConfig: OrganizationConfigArray[],
   /**
    * Management account credential when deployed from external account, otherwise this should remain undefined
-   */ managementAccountCredentials?: AWS.Credentials,
+   */ managementAccountCredentials?: { accessKeyId: string; secretAccessKey: string; sessionToken?: string },
 ): Promise<AcceleratorOu[]> {
   const client = new OrganizationsClient({
     retryStrategy: setRetryStrategy(),

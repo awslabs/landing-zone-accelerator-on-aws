@@ -138,7 +138,7 @@ describe('test setAcceleratorStackProps', () => {
       .fn<
         (
           partition: string,
-          managementAccountCredentials?: AWS.Credentials,
+          managementAccountCredentials?: { accessKeyId: string; secretAccessKey: string; sessionToken?: string },
           loadFromDynamoDbTable?: boolean,
         ) => Promise<void>
       >()

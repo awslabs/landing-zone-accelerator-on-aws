@@ -100,15 +100,15 @@ source/packages/@aws-accelerator/utils/lib/regions.ts:112
 source/packages/@aws-accelerator/utils/lib/regions.ts:113
 
 # Accelerator specific assume role declaration
-source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:428
-source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:429
-source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:1228
+source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:431
+source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:432
 source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:1229
+source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:1230
 
 # Accelerator specific assume role declaration
 
-source/packages/@aws-accelerator/config/lib/global-config.ts:1087
-source/packages/@aws-accelerator/config/lib/global-config.ts:1088
+source/packages/@aws-accelerator/config/lib/global-config.ts:1106
+source/packages/@aws-accelerator/config/lib/global-config.ts:1107
 
 # Accelerator specific assume role declaration
 
@@ -263,7 +263,7 @@ source/packages/@aws-lza/test/lib/aws-cloudformation/create-stack-policy/index.t
 source/packages/@aws-lza/test/lib/aws-cloudformation/create-stack-policy/index.test.unit.ts:400
 source/packages/@aws-lza/test/lib/aws-cloudformation/create-stack-policy/index.test.unit.ts:405
 
-source/packages/@aws-accelerator/config/lib/accounts-config.ts:218
-source/packages/@aws-accelerator/config/lib/accounts-config.ts:219
-source/packages/@aws-accelerator/config/lib/organization-config.ts:207
+source/packages/@aws-accelerator/config/lib/accounts-config.ts:223
+source/packages/@aws-accelerator/config/lib/accounts-config.ts:224
 source/packages/@aws-accelerator/config/lib/organization-config.ts:208
+source/packages/@aws-accelerator/config/lib/organization-config.ts:209
