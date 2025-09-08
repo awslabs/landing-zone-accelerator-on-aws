@@ -11,10 +11,7 @@
  *  and limitations under the License.
  */
 
-import * as AWS from 'aws-sdk';
-AWS.config.logger = console;
 import * as path from 'path';
-
 import { AccountsConfig } from '@aws-accelerator/config/lib/accounts-config';
 import { OrganizationConfig } from '@aws-accelerator/config/lib/organization-config';
 import { throttlingBackOff } from '@aws-accelerator/utils/lib/throttle';
@@ -22,6 +19,7 @@ import { ScheduledEvent } from '@aws-accelerator/utils/lib/common-types';
 import { setRetryStrategy } from '@aws-accelerator/utils/lib/common-functions';
 import { setOrganizationsClient } from '@aws-accelerator/utils/lib/set-organizations-client';
 import {
+  Policy,
   DescribePolicyCommand,
   UpdatePolicyCommand,
   AttachPolicyCommand,
@@ -61,7 +59,7 @@ export async function handler(event: ScheduledEvent): Promise<{ statusCode: numb
     };
   }
 
-  const policyDetail: AWS.Organizations.Policy = await getPolicyDetails(policyId);
+  const policyDetail: Policy = await getPolicyDetails(policyId);
   const organizationConfig = await getOrganizationConfig();
   const accountsConfig = await getAccountConfig();
 
@@ -137,10 +135,7 @@ async function detachScp(policyId: string, target: string): Promise<void> {
   );
 }
 
-async function revertScpModification(
-  policyDetail: AWS.Organizations.Policy,
-  orgConfig: OrganizationConfig,
-): Promise<void> {
+async function revertScpModification(policyDetail: Policy, orgConfig: OrganizationConfig): Promise<void> {
   const policyName = policyDetail.PolicySummary?.Name;
   const policyId = policyDetail.PolicySummary?.Id;
   if (!policyName || !policyId) {
@@ -159,7 +154,7 @@ async function revertScpModification(
   console.log('Policy update successful');
 }
 
-async function getPolicyDetails(policyId: string): Promise<AWS.Organizations.Policy> {
+async function getPolicyDetails(policyId: string): Promise<Policy> {
   const getPolicyParams = { PolicyId: policyId };
 
   try {
@@ -174,7 +169,7 @@ async function getPolicyDetails(policyId: string): Promise<AWS.Organizations.Pol
   }
 }
 
-async function isControlTowerPolicy(policyDetail: AWS.Organizations.Policy): Promise<boolean> {
+async function isControlTowerPolicy(policyDetail: Policy): Promise<boolean> {
   const policyName = policyDetail?.PolicySummary?.Name;
   if (policyName?.startsWith('aws-guardrails-')) {
     return true;
