@@ -13,7 +13,6 @@
 import path from 'path';
 import * as fs from 'fs';
 
-import * as AWS from 'aws-sdk';
 import * as uuid from 'uuid';
 
 import {
@@ -271,7 +270,10 @@ export class IntegrationTest {
       throw new Error(`STS credentials for role ${executorRole.RoleName} not found, cannot assume.`);
     }
 
-    AWS.config.credentials = executorRoleStsCredentials;
+    // Set AWS credentials via environment variables for SDK v3
+    process.env['AWS_ACCESS_KEY_ID'] = executorRoleStsCredentials.accessKeyId!;
+    process.env['AWS_SECRET_ACCESS_KEY'] = executorRoleStsCredentials.secretAccessKey!;
+    process.env['AWS_SESSION_TOKEN'] = executorRoleStsCredentials.sessionToken!;
     process.env['AWS_REGION'] = this.environment.region;
     process.env['SOLUTION_ID'] = AcceleratorIntegrationTestResources.solutionId;
   }
