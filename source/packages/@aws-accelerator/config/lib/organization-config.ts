@@ -17,6 +17,7 @@ import * as path from 'path';
 
 import { loadOrganizationalUnits } from '@aws-accelerator/utils/lib/load-organization-config';
 import { OrganizationalUnit, Root } from '@aws-sdk/client-organizations';
+import { AwsCredentialIdentity } from '@aws-sdk/types';
 import { createLogger } from '@aws-accelerator/utils/lib/logger';
 
 import { AccountsConfig } from './accounts-config';
@@ -183,15 +184,15 @@ export class OrganizationConfig implements i.IOrganizationConfig {
   /**
    * Load from string content
    * @param partition string
-   * @param managementAccountCredentials {@link AWS.Credentials}
+   * @param managementAccountCredentials credential object with accessKeyId, secretAccessKey, and optional sessionToken
    * @returns
    */
   public async loadOrganizationalUnitIds(
     partition: string,
-    managementAccountCredentials?: AWS.Credentials,
+    managementAccountCredentials?: AwsCredentialIdentity,
     loadFromDynamoDbTable?: boolean,
   ): Promise<void> {
-    let envCredentials: AWS.Credentials | undefined;
+    let envCredentials: AwsCredentialIdentity | undefined;
     if (process.env['MANAGEMENT_ACCOUNT_ID'] && process.env['MANAGEMENT_ACCOUNT_ROLE_NAME']) {
       logger.info('set management account credentials');
       logger.info(`managementAccountId => ${process.env['MANAGEMENT_ACCOUNT_ID']}`);
@@ -207,7 +208,7 @@ export class OrganizationConfig implements i.IOrganizationConfig {
         accessKeyId: crossAccountCredentials.Credentials!.AccessKeyId!,
         secretAccessKey: crossAccountCredentials.Credentials!.SecretAccessKey!,
         sessionToken: crossAccountCredentials.Credentials!.SessionToken,
-      } as AWS.Credentials;
+      };
     }
 
     // Priority: passed credentials > env credentials > undefined

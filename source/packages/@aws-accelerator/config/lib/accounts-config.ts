@@ -11,7 +11,9 @@
  *  and limitations under the License.
  */
 
-import * as AWS from 'aws-sdk';
+import { STSClient, GetCallerIdentityCommand } from '@aws-sdk/client-sts';
+import { AwsCredentialIdentity } from '@aws-sdk/types';
+import { OrganizationsClient, ListAccountsCommand } from '@aws-sdk/client-organizations';
 import * as fs from 'fs';
 import * as yaml from 'js-yaml';
 import * as path from 'path';
@@ -26,6 +28,7 @@ import { OrganizationalUnitConfig } from './organization-config';
 import { getSSMParameterValue } from '../../utils/lib/get-value-from-ssm';
 import { Account } from '@aws-sdk/client-organizations';
 import { queryConfigTable } from '@aws-accelerator/utils/lib/query-config-table';
+import { setRetryStrategy } from '@aws-accelerator/utils/lib/common-functions';
 
 const logger = createLogger(['accounts-config']);
 
@@ -199,10 +202,12 @@ export class AccountsConfig implements i.IAccountsConfig {
     /**
      * Management account credential when deployed from external account, otherwise this should remain undefined
      */
-    managementAccountCredentials?: AWS.Credentials,
+    managementAccountCredentials?: AwsCredentialIdentity,
     loadFromDynamoDbTable?: boolean,
   ): Promise<void> {
-    let envCredentials: AWS.Credentials | undefined;
+    let envCredentials: AwsCredentialIdentity | undefined;
+    const retryStrategy = setRetryStrategy();
+    const solutionId: string = process.env['SOLUTION_ID'] ?? '';
     if (process.env['MANAGEMENT_ACCOUNT_ID'] && process.env['MANAGEMENT_ACCOUNT_ROLE_NAME']) {
       logger.info('set management account credentials');
       logger.info(`managementAccountId => ${process.env['MANAGEMENT_ACCOUNT_ID']}`);
@@ -218,7 +223,7 @@ export class AccountsConfig implements i.IAccountsConfig {
         accessKeyId: crossAccountCredentials.Credentials!.AccessKeyId!,
         secretAccessKey: crossAccountCredentials.Credentials!.SecretAccessKey!,
         sessionToken: crossAccountCredentials.Credentials!.SessionToken,
-      } as AWS.Credentials;
+      };
     }
 
     // Priority: passed credentials > env credentials > undefined
@@ -228,8 +233,12 @@ export class AccountsConfig implements i.IAccountsConfig {
     }
     if (this.accountIds.length == 0) {
       if (enableSingleAccountMode) {
-        const stsClient = new AWS.STS({ region: process.env['AWS_REGION'] });
-        const stsCallerIdentity = await throttlingBackOff(() => stsClient.getCallerIdentity({}).promise());
+        const stsClient = new STSClient({
+          region: process.env['AWS_REGION'],
+          customUserAgent: solutionId,
+          retryStrategy,
+        });
+        const stsCallerIdentity = await throttlingBackOff(() => stsClient.send(new GetCallerIdentityCommand({})));
         const currentAccountId = stsCallerIdentity.Account!;
         this.mandatoryAccounts.forEach(item => {
           this.accountIds?.push({
@@ -282,16 +291,18 @@ export class AccountsConfig implements i.IAccountsConfig {
         // orgs are enabled but load from dynamoDB is false
       } else if (isOrgsEnabled && !loadFromDynamoDbTable) {
         logger.debug(`Orgs is enabled, solution will query from AWS Organizations API`);
-        const organizationsClient = new AWS.Organizations({
+        const organizationsClient = new OrganizationsClient({
           region: getGlobalRegion(partition),
           credentials: credentials,
+          customUserAgent: solutionId,
+          retryStrategy,
         });
 
         let nextToken: string | undefined = undefined;
 
         do {
           const page = await throttlingBackOff(() =>
-            organizationsClient.listAccounts({ NextToken: nextToken }).promise(),
+            organizationsClient.send(new ListAccountsCommand({ NextToken: nextToken })),
           );
 
           page.Accounts?.forEach(item => {

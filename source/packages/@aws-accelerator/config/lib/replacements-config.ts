@@ -11,7 +11,8 @@
  *  and limitations under the License.
  */
 
-import AWS from 'aws-sdk';
+import { SSMClient, GetParameterCommand } from '@aws-sdk/client-ssm';
+import { AwsCredentialIdentity } from '@aws-sdk/types';
 import * as fs from 'fs';
 import * as yaml from 'js-yaml';
 import * as path from 'path';
@@ -24,6 +25,7 @@ import { throttlingBackOff } from '@aws-accelerator/utils/lib/throttle';
 
 import * as t from './common';
 import * as i from './models/replacements-config';
+import { setRetryStrategy } from '@aws-accelerator/utils/lib/common-functions';
 
 const logger = createLogger(['replacements-config']);
 
@@ -131,15 +133,23 @@ export class ReplacementsConfig implements i.IReplacementsConfig {
    * Load dynamic replacements from SSM Parameter Store
    * @returns
    */
-  public async loadDynamicReplacements(region: string, managementAccountCredentials?: AWS.Credentials): Promise<void> {
+  public async loadDynamicReplacements(
+    region: string,
+    managementAccountCredentials?: AwsCredentialIdentity,
+  ): Promise<void> {
     const errors: string[] = [];
-    const ssmClient = new AWS.SSM({ region: region, credentials: managementAccountCredentials });
+    const ssmClient = new SSMClient({
+      region: region,
+      credentials: managementAccountCredentials,
+      customUserAgent: process.env['SOLUTION_ID'] ?? '',
+      retryStrategy: setRetryStrategy(),
+    });
 
     for (const item of this.globalReplacements) {
       if (item.path || (item as ParameterReplacementConfigV2).type === 'SSM') {
         try {
           logger.info(`Loading parameter at path ${item.path}`);
-          const t = await throttlingBackOff(() => ssmClient.getParameter({ Name: item.path! }).promise());
+          const t = await throttlingBackOff(() => ssmClient.send(new GetParameterCommand({ Name: item.path! })));
           const parameterValue = t.Parameter!.Value;
           if (parameterValue === undefined) {
             logger.error(`Invalid parameter value for ${item.path}`);

@@ -42,7 +42,7 @@ import { getCrossAccountCredentials, setRetryStrategy } from '@aws-accelerator/u
 import { throttlingBackOff } from '@aws-accelerator/utils/lib/throttle';
 import { PutObjectCommand, S3Client } from '@aws-sdk/client-s3';
 import { DescribeVpcEndpointsCommand, DescribeVpcsCommand, EC2Client } from '@aws-sdk/client-ec2';
-import { AssumeRoleCommandOutput } from '@aws-sdk/client-sts';
+import { AssumeRoleCommandOutput, Credentials } from '@aws-sdk/client-sts';
 
 const logger = createLogger(['app-utils']);
 export interface AcceleratorContext {
@@ -669,7 +669,7 @@ async function getVpcIdsByAccount(
     // Get all VPC IDs under the region bound to the client
     let nextToken: string | undefined = undefined;
     do {
-      const params: AWS.EC2.DescribeVpcsRequest = {};
+      const params: { NextToken?: string } = {};
       if (nextToken) {
         params.NextToken = nextToken;
       }
@@ -704,7 +704,7 @@ async function getVpcEndpointIdsByAccount(ec2Clients: EC2Client[]): Promise<stri
     // List all VPC Endpoint IDs
     let nextToken: string | undefined = undefined;
     do {
-      const params: AWS.EC2.DescribeVpcsRequest = {};
+      const params: { NextToken?: string } = {};
       if (nextToken) {
         params.NextToken = nextToken;
       }
@@ -875,7 +875,10 @@ function getManagedVpcNamesByAccountNames(networkConfig: NetworkConfig) {
  * @param managedVpcNames
  * @returns
  */
-function isLzaManagedVpc(vpc: AWS.EC2.Vpc, managedVpcNames: Set<string>): boolean {
+function isLzaManagedVpc(
+  vpc: { Tags?: { Key?: string; Value?: string }[]; VpcId?: string },
+  managedVpcNames: Set<string>,
+): boolean {
   const tag = vpc.Tags?.find(tag => tag.Key === 'Name' && tag.Value && managedVpcNames.has(tag.Value));
   return !!tag;
 }
@@ -909,7 +912,7 @@ async function getEc2ClientsByAccountAndRegions(regions: string[], credentials: 
 }
 
 export async function writeImportResources(props: {
-  credentials: AWS.STS.Credentials | undefined;
+  credentials: Credentials | undefined;
   globalConfig: GlobalConfig;
   mapping: ASEAMappings;
   accountsConfig: AccountsConfig;
@@ -1124,7 +1127,7 @@ async function writeMappingToS3(props: {
   return Promise.all(writePromises);
 }
 
-function setCredentials(stsCredentials: AWS.STS.Credentials | undefined) {
+function setCredentials(stsCredentials: Credentials | undefined) {
   let credentials;
   if (stsCredentials && stsCredentials.AccessKeyId && stsCredentials.SecretAccessKey && stsCredentials.SessionToken) {
     credentials = {

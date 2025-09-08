@@ -13,7 +13,6 @@
 
 /* istanbul ignore file */
 
-import * as AWS from 'aws-sdk';
 import * as fs from 'fs';
 import {
   SSMClient,
@@ -38,6 +37,7 @@ import {
   getCrossAccountCredentials,
   getGlobalRegion,
   getCurrentAccountId,
+  setRetryStrategy,
 } from '@aws-accelerator/utils/lib/common-functions';
 
 import { writeImportResources } from '../utils/app-utils';
@@ -46,7 +46,7 @@ import { AcceleratorToolkit, AcceleratorToolkitProps, AcceleratorToolkitCommand 
 import { v4 as uuidv4 } from 'uuid';
 import * as path from 'path';
 import { Regions } from '@aws-accelerator/utils/lib/regions';
-import { AssumeRoleCommandOutput } from '@aws-sdk/client-sts';
+import { AssumeRoleCommandOutput, Credentials, STSClient, AssumeRoleCommand } from '@aws-sdk/client-sts';
 
 export type CustomStackRunOrder = {
   /**
@@ -390,19 +390,19 @@ export abstract class Accelerator {
     }
   }
 
-  static async getManagementAccountCredentials(partition: string): Promise<AWS.STS.Credentials | undefined> {
+  static async getManagementAccountCredentials(partition: string): Promise<Credentials | undefined> {
     if (process.env['CREDENTIALS_PATH'] && fs.existsSync(process.env['CREDENTIALS_PATH'])) {
       logger.info('Detected Debugging environment. Loading temporary credentials.');
 
       const credentialsString = fs.readFileSync(process.env['CREDENTIALS_PATH']).toString();
       const credentials = JSON.parse(credentialsString);
 
-      // Support for V2 SDK
-      AWS.config.update({
-        accessKeyId: credentials.AccessKeyId,
-        secretAccessKey: credentials.SecretAccessKey,
-        sessionToken: credentials.SessionToken,
-      });
+      // Set environment variables for SDK v3
+      process.env['AWS_ACCESS_KEY_ID'] = credentials.AccessKeyId;
+      process.env['AWS_SECRET_ACCESS_KEY'] = credentials.SecretAccessKey;
+      if (credentials.SessionToken) {
+        process.env['AWS_SESSION_TOKEN'] = credentials.SessionToken;
+      }
     }
     if (process.env['MANAGEMENT_ACCOUNT_ID'] && process.env['MANAGEMENT_ACCOUNT_ROLE_NAME']) {
       logger.info('set management account credentials');
@@ -410,11 +410,15 @@ export abstract class Accelerator {
       logger.info(`management account role name => ${process.env['MANAGEMENT_ACCOUNT_ROLE_NAME']}`);
 
       const roleArn = `arn:${partition}:iam::${process.env['MANAGEMENT_ACCOUNT_ID']}:role/${process.env['MANAGEMENT_ACCOUNT_ROLE_NAME']}`;
-      const stsClient = new AWS.STS({ region: process.env['AWS_REGION'] });
+      const stsClient = new STSClient({
+        region: process.env['AWS_REGION'],
+        retryStrategy: setRetryStrategy(),
+        customUserAgent: process.env['SOLUTION_ID'] ?? '',
+      });
       logger.info(`management account roleArn => ${roleArn}`);
 
       const assumeRoleCredential = await throttlingBackOff(() =>
-        stsClient.assumeRole({ RoleArn: roleArn, RoleSessionName: 'acceleratorAssumeRoleSession' }).promise(),
+        stsClient.send(new AssumeRoleCommand({ RoleArn: roleArn, RoleSessionName: 'acceleratorAssumeRoleSession' })),
       );
 
       process.env['AWS_ACCESS_KEY_ID'] = assumeRoleCredential.Credentials!.AccessKeyId!;
@@ -423,14 +427,11 @@ export abstract class Accelerator {
       process.env['AWS_SECRET_ACCESS_KEY'] = assumeRoleCredential.Credentials!.SecretAccessKey!;
       process.env['AWS_SESSION_TOKEN'] = assumeRoleCredential.Credentials!.SessionToken;
 
-      // Support for V2 SDK
-      AWS.config.update({
-        accessKeyId: assumeRoleCredential.Credentials!.AccessKeyId,
-        secretAccessKey: assumeRoleCredential.Credentials!.SecretAccessKey,
-        sessionToken: assumeRoleCredential.Credentials!.SessionToken,
-      });
-
-      return assumeRoleCredential.Credentials;
+      return {
+        AccessKeyId: assumeRoleCredential.Credentials!.AccessKeyId!,
+        SecretAccessKey: assumeRoleCredential.Credentials!.SecretAccessKey!,
+        SessionToken: assumeRoleCredential.Credentials!.SessionToken,
+      } as Credentials;
     } else {
       return undefined;
     }
