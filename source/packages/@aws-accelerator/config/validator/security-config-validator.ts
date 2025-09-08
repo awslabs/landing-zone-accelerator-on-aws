@@ -127,6 +127,8 @@ export class SecurityConfigValidator {
     // Validate expiration for Macie and GuardDuty Lifecycle Rules
     this.macieLifecycleRules(securityConfig, errors);
     this.guarddutyLifecycleRules(securityConfig, errors);
+    // Validate IAM password policy
+    this.validateIamPasswordPolicy(securityConfig, errors);
     // Validate Config rule assets
     for (const ruleSet of securityConfig.awsConfig.ruleSets ?? []) {
       this.validateConfigRuleAssets(configDir, ruleSet, errors);
@@ -1498,5 +1500,21 @@ export class SecurityConfigValidator {
     }
 
     return undefined;
+  }
+
+  /**
+   * Validate IAM password policy configuration
+   * @param securityConfig SecurityConfig
+   * @param errors string[]
+   */
+  private validateIamPasswordPolicy(securityConfig: SecurityConfig, errors: string[]) {
+    if (securityConfig.iamPasswordPolicy) {
+      const maxPasswordAge = securityConfig.iamPasswordPolicy.maxPasswordAge;
+      if (maxPasswordAge < 1 || maxPasswordAge > 1095) {
+        errors.push(
+          `IAM password policy maxPasswordAge must be between 1 and 1095 days. Current value: ${maxPasswordAge}`,
+        );
+      }
+    }
   }
 }
