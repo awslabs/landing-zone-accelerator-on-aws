@@ -33,11 +33,6 @@ describe('TgwResources - Transit Gateway Peering', () => {
     jest.spyOn(NetworkVpcStack.prototype, 'getSsmPath').mockReturnValue('/test/ssm-path/');
     jest.spyOn(NetworkVpcStack.prototype, 'getAcceleratorKey').mockImplementation(() => cloudWatchKey as IKey);
 
-    jest.mock('aws-sdk', () => ({
-      Bucket: jest.fn(() => ({
-        fromBucketName: jest.fn(),
-      })),
-    }));
     mockGlobalProps = createProps('us-east-1');
     stack = new cdk.Stack();
     networkVpcStack = new NetworkVpcStack(stack, 'NetworkVpcStack', mockGlobalProps) as jest.Mocked<NetworkVpcStack>;

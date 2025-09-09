@@ -40,11 +40,6 @@ describe('ResolverResources', () => {
       .spyOn(ResolverResources.prototype as any, 'createResolverQueryLogs')
       .mockReturnValue(new Map<string, string>());
     jest.spyOn(ResolverFirewallDomainList.prototype as any, 'getAssetUrl').mockReturnValue('');
-    jest.mock('aws-sdk', () => ({
-      Bucket: jest.fn(() => ({
-        fromBucketName: jest.fn(),
-      })),
-    }));
 
     app = new cdk.App();
     props = createAcceleratorStackProps();
