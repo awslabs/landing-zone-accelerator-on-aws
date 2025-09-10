@@ -726,7 +726,7 @@ export class NetworkVpcEndpointsStack extends NetworkStack {
 
     // Create the interface endpoint
     const securityGroupMap = new Map<string, SecurityGroup>();
-    const privateDnsValue = vpcItem.interfaceEndpoints?.central === false;
+    const privateDnsValue = !vpcItem.interfaceEndpoints?.central ? true : false;
 
     for (const endpointItem of vpcItem.interfaceEndpoints?.endpoints ?? []) {
       const globalRegion = getGlobalRegion(cdk.Stack.of(this).partition);
