@@ -185,31 +185,12 @@ export class S3ConfigRepository extends ConfigRepository {
      *   If you are using s3deploy.Source.bucket() to take the file source from another bucket: the deployed files will only be updated if the key (file name) of the file in the source bucket changes. Mutating the file in place will not be good enough: the custom resource will simply not run if the properties don't change.
      *   If you use assets (s3deploy.Source.asset()) you don't need to worry about this: the asset system will make sure that if the files have changed, the file name is unique and the deployment will run.
      */
-    const defaultDeployment = new cdk.aws_s3_deployment.BucketDeployment(this, 'UploadDefaultZipFileToS3', {
+    new cdk.aws_s3_deployment.BucketDeployment(this, 'UploadDefaultZipFileToS3', {
       sources: [cdk.aws_s3_deployment.Source.asset(`${this.tempDirPath}/zipped`)],
       destinationBucket: this.configRepo.getS3Bucket(),
       destinationKeyPrefix: 'default',
       prune: false,
     });
-
-    /**
-     * CAUTION: This BucketDeployment controls the creation of LZA config files in S3.
-     * Modification of this resource has the potential to overwrite existing customer LZA configurations.
-     * Please see the following page for more information:
-     * https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_s3_deployment.BucketDeployment.html
-     *
-     * Copy default config to /zipped prefix to use as CodePipeline source
-     * */
-    const s3CopyDeployment = new cdk.aws_s3_deployment.BucketDeployment(this, 'CopyDefaultZipToTarget', {
-      sources: [
-        cdk.aws_s3_deployment.Source.bucket(this.configRepo.getS3Bucket(), 'default/aws-accelerator-config.zip'),
-      ],
-      destinationBucket: this.configRepo.getS3Bucket(),
-      destinationKeyPrefix: 'zipped',
-      extract: false,
-      prune: false,
-    });
-    s3CopyDeployment.node.addDependency(defaultDeployment);
 
     const cdkBucketDeploymentIds = [];
     for (const child of cdk.Stack.of(this).node.children) {
