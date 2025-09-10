@@ -265,8 +265,20 @@ export async function handler(event: CloudFormationCustomResourceEvent): Promise
         }
       }
 
-      // put accounts to create in DynamoDb
-      const allAccountsToAdd: DDBItems = [...ctAccountsToAdd, ...orgAccountsToAdd];
+      // add orgaccounts to table
+      const allAccountsToAdd: DDBItems = [...orgAccountsToAdd];
+      // add ctaccounts that don't exist
+      if (ctAccountsToAdd) {
+        for (const account of ctAccountsToAdd) {
+          if (
+            organizationAccounts.find(
+              item => item.Email?.toLocaleLowerCase() == account['acceleratorKey'].toLocaleLowerCase(),
+            )
+          )
+            continue;
+          allAccountsToAdd.push(account);
+        }
+      }
       console.log(`Org Accounts to add: ${JSON.stringify(allAccountsToAdd)}`);
       for (const account of allAccountsToAdd) {
         const accountOu = configActiveOuKeys.find(item => item.acceleratorKey === account['ouName']);
