@@ -1128,6 +1128,18 @@ vpcs:
             toPort: 3306
             protocol: 6
             source: 0.0.0.0/0
+    interfaceEndpoints:
+      defaultPolicy: Default
+      subnets:
+        - Network-Secondary-A
+        - Network-Secondary-B
+      endpoints:
+        - service: cloudformation
+        - service: application-autoscaling
+        - service: appmesh-envoy-management
+        - service: athena
+        - service: autoscaling
+        - service: autoscaling-plans
     gatewayEndpoints:
       defaultPolicy: Default
       endpoints:
@@ -1321,58 +1333,6 @@ vpcs:
           securityGroup: Network-Endpoints-CustomEndpointSg
         - service: access-analyzer
           securityGroup: Network-Endpoints-CustomEndpointSg
-        # - service: secretsmanager
-        # - service: cloudformation
-        # - service: application-autoscaling
-        # - service: appmesh-envoy-management
-        # - service: athena
-        # - service: autoscaling
-        # - service: autoscaling-plans
-        # - service: clouddirectory
-        # - service: cloudtrail
-        # - service: codebuild
-        # - service: codecommit
-        # - service: codepipeline
-        # - service: config
-        # - service: datasync
-        # - service: ecs
-        # - service: ecs-agent
-        # - service: ecs-telemetry
-        # - service: elasticfilesystem
-        # - service: elasticloadbalancing
-        # - service: elasticmapreduce
-        # - service: events
-        # - service: execute-api
-        # - service: git-codecommit
-        # - service: glue
-        # - service: kinesis-streams
-        # - service: kms
-        # - service: logs
-        # - service: monitoring
-        # - service: sagemaker.api
-        # - service: sagemaker.runtime
-        # - service: servicecatalog
-        # - service: sms
-        # - service: sns
-        # - service: sqs
-        # - service: storagegateway
-        # - service: sts
-        # - service: transfer
-        # - service: workspaces
-        # - service: awsconnector
-        # - service: kinesis-firehose
-        # - service: states
-        # - service: acm-pca
-        # - service: cassandra
-        # - service: ebs
-        # - service: elasticbeanstalk
-        # - service: elasticbeanstalk-health
-        # - service: email-smtp
-        # - service: license-manager
-        # - service: macie2
-        # - service: notebook
-        # - service: synthetics
-        # - service: transfer.server
     securityGroups:
       - name: 'Management'
         description: 'Management Security Group'

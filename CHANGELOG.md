@@ -8,7 +8,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [1.13.1] - 2025-09-09
 
 ### Fixed
-fix(metadata): missing s3 read permissions on accelerator metadata lambda role
+- fix(metadata): missing s3 read permissions on accelerator metadata lambda role
+- fix(networking): reverts bug disabling private dns for vpc interface endpoints
 
 ## [1.13.0] - 2025-08-29
 
