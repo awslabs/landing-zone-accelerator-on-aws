@@ -387,6 +387,20 @@ export class AcceleratorPipeline extends Construct {
           }),
         ],
       });
+
+      // create cloudformation output for s3 config source
+      new cdk.CfnOutput(this, 'ConfigRepositoryS3Source', {
+        value: s3ConfigRepository.s3UrlForObject('default/aws-accelerator-config.zip'),
+        description:
+          'S3 location of generated default LZA configuration files. These files represent an LZA with no resources configured and should be used for new installations only.',
+      });
+
+      // create cloudformation output for s3 config destination
+      new cdk.CfnOutput(this, 'ConfigRepositoryS3Destination', {
+        value: s3ConfigRepository.s3UrlForObject('zipped/aws-accelerator-config.zip'),
+        description:
+          'S3 location from which the LZA pipeline retrieves LZA configuration files. Customers will upload updated configuration files to this path to be processed by the LZA.',
+      });
     } else if (this.props.configRepositoryLocation === 'codeconnection' && this.props.codeconnectionArn !== '') {
       this.pipeline.addStage({
         stageName: 'Source',

@@ -1913,6 +1913,8 @@ phases:
                   "Ref": "AWS::Region",
                 },
                 "; fi
+      - chmod +x scripts/post_pipeline_s3_config_check.sh
+      - set -e && bash -e scripts/post_pipeline_s3_config_check.sh
       - set -e && cd ../../../../ && zip -rqy /tmp/lza.zip . && aws s3 cp /tmp/lza.zip s3://",
                 {
                   "Fn::GetAtt": [
@@ -5662,6 +5664,8 @@ phases:
                   "Ref": "AWS::Region",
                 },
                 "; fi
+      - chmod +x scripts/post_pipeline_s3_config_check.sh
+      - set -e && bash -e scripts/post_pipeline_s3_config_check.sh
       - set -e && cd ../../../../ && zip -rqy /tmp/lza.zip . && aws s3 cp /tmp/lza.zip s3://",
                 {
                   "Fn::GetAtt": [
@@ -9477,6 +9481,8 @@ phases:
                   "Ref": "AWS::Region",
                 },
                 "; fi
+      - chmod +x scripts/post_pipeline_s3_config_check.sh
+      - set -e && bash -e scripts/post_pipeline_s3_config_check.sh
       - set -e && cd ../../../../ && zip -rqy /tmp/lza.zip . && aws s3 cp /tmp/lza.zip s3://",
                 {
                   "Ref": "AcceleratorQualifier",
@@ -13265,6 +13271,8 @@ phases:
                   "Ref": "AWS::Region",
                 },
                 "; fi
+      - chmod +x scripts/post_pipeline_s3_config_check.sh
+      - set -e && bash -e scripts/post_pipeline_s3_config_check.sh
       - set -e && cd ../../../../ && zip -rqy /tmp/lza.zip . && aws s3 cp /tmp/lza.zip s3://",
                 {
                   "Ref": "AcceleratorQualifier",
@@ -17058,6 +17066,8 @@ phases:
                   "Ref": "AWS::Region",
                 },
                 "; fi
+      - chmod +x scripts/post_pipeline_s3_config_check.sh
+      - set -e && bash -e scripts/post_pipeline_s3_config_check.sh
       - set -e && cd ../../../../ && zip -rqy /tmp/lza.zip . && aws s3 cp /tmp/lza.zip s3://",
                 {
                   "Ref": "AcceleratorQualifier",
@@ -20809,6 +20819,8 @@ phases:
                   "Ref": "AWS::Region",
                 },
                 "; fi
+      - chmod +x scripts/post_pipeline_s3_config_check.sh
+      - set -e && bash -e scripts/post_pipeline_s3_config_check.sh
       - set -e && cd ../../../../ && zip -rqy /tmp/lza.zip . && aws s3 cp /tmp/lza.zip s3://",
                 {
                   "Fn::GetAtt": [
@@ -24615,6 +24627,8 @@ phases:
                   "Ref": "AWS::Region",
                 },
                 "; fi
+      - chmod +x scripts/post_pipeline_s3_config_check.sh
+      - set -e && bash -e scripts/post_pipeline_s3_config_check.sh
       - set -e && cd ../../../../ && zip -rqy /tmp/lza.zip . && aws s3 cp /tmp/lza.zip s3://",
                 {
                   "Fn::GetAtt": [
@@ -28780,6 +28794,8 @@ phases:
                   "Ref": "AWS::Region",
                 },
                 "; fi
+      - chmod +x scripts/post_pipeline_s3_config_check.sh
+      - set -e && bash -e scripts/post_pipeline_s3_config_check.sh
       - set -e && cd ../../../../ && zip -rqy /tmp/lza.zip . && aws s3 cp /tmp/lza.zip s3://",
                 {
                   "Fn::GetAtt": [
@@ -32973,6 +32989,8 @@ phases:
                   "Ref": "AWS::Region",
                 },
                 "; fi
+      - chmod +x scripts/post_pipeline_s3_config_check.sh
+      - set -e && bash -e scripts/post_pipeline_s3_config_check.sh
       - set -e && cd ../../../../ && zip -rqy /tmp/lza.zip . && aws s3 cp /tmp/lza.zip s3://",
                 {
                   "Fn::GetAtt": [

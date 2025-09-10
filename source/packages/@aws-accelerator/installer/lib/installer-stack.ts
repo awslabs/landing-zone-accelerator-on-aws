@@ -1050,6 +1050,8 @@ export class InstallerStack extends cdk.Stack {
               `set -e && yarn run ts-node --transpile-only cdk.ts synth --stage pipeline --account ${cdk.Aws.ACCOUNT_ID} --region ${cdk.Aws.REGION} --partition ${cdk.Aws.PARTITION}`,
               `set -e && yarn run ts-node --transpile-only cdk.ts deploy --stage pipeline --account ${cdk.Aws.ACCOUNT_ID} --region ${cdk.Aws.REGION} --partition ${cdk.Aws.PARTITION}`,
               `set -e && if [ "$ENABLE_TESTER" = "true" ]; then yarn run ts-node --transpile-only cdk.ts deploy --stage tester-pipeline --account ${cdk.Aws.ACCOUNT_ID} --region ${cdk.Aws.REGION}; fi`,
+              `chmod +x scripts/post_pipeline_s3_config_check.sh`,
+              `set -e && bash -e scripts/post_pipeline_s3_config_check.sh`,
               `set -e && cd ../../../../ && zip -rqy /tmp/lza.zip . && aws s3 cp /tmp/lza.zip s3://${secureBucketName}/${customS3Path} --region ${cdk.Aws.REGION} --no-progress && rm -fr /tmp/lza.zip;`,
             ],
           },
