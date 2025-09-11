@@ -2461,6 +2461,13 @@ exports[`PipelineStack Construct(PipelineStack):  Snapshot Test 1`] = `
               "Type": "PLAINTEXT",
               "Value": "main",
             },
+            {
+              "Name": "PARTITION",
+              "Type": "PLAINTEXT",
+              "Value": {
+                "Ref": "AWS::Partition",
+              },
+            },
           ],
           "Image": "aws/codebuild/standard:7.0",
           "ImagePullCredentialsType": "CODEBUILD",
@@ -5568,6 +5575,13 @@ exports[`PipelineStack Construct(PipelineStack):  Snapshot Test 2`] = `
               "Type": "PLAINTEXT",
               "Value": "main",
             },
+            {
+              "Name": "PARTITION",
+              "Type": "PLAINTEXT",
+              "Value": {
+                "Ref": "AWS::Partition",
+              },
+            },
           ],
           "Image": "aws/codebuild/standard:7.0",
           "ImagePullCredentialsType": "CODEBUILD",
@@ -8180,6 +8194,13 @@ exports[`PipelineStack customS3Path Construct(PipelineStack):  Snapshot Test 1`]
               "Name": "EXISTING_CONFIG_REPOSITORY_BRANCH_NAME",
               "Type": "PLAINTEXT",
               "Value": "main",
+            },
+            {
+              "Name": "PARTITION",
+              "Type": "PLAINTEXT",
+              "Value": {
+                "Ref": "AWS::Partition",
+              },
             },
           ],
           "Image": "aws/codebuild/standard:7.0",
