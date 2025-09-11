@@ -595,7 +595,7 @@ export class GlobalConfig implements i.IGlobalConfig {
   readonly useV2Stacks: boolean | undefined = undefined;
   readonly enabledRegions: t.Region[] = [];
   readonly managementAccountAccessRole: string = '';
-  readonly cloudwatchLogRetentionInDays = 3653;
+  readonly cloudwatchLogRetentionInDays = 365;
   readonly centralizeCdkBuckets: centralizeCdkBucketsConfig | undefined = undefined;
   readonly cdkOptions = new cdkOptionsConfig();
   readonly terminationProtection = true;
