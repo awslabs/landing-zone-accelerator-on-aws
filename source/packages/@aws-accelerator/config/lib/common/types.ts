@@ -580,7 +580,7 @@ class VpcFlowLogsCloudWatchLogsConfig implements IVpcFlowLogsCloudWatchLogsConfi
    * @optional
    * CloudWatchLogs retention days
    */
-  readonly retentionInDays = 3653;
+  readonly retentionInDays = 365;
   /**
    * @optional
    * CloudWatchLogs encryption key name
@@ -612,7 +612,7 @@ class VpcFlowLogsDestinationConfig implements IVpcFlowLogsDestinationConfig {
    * destinations:
    *     cloudWatchLogs:
    *       enable: true
-   *       retentionInDays: 3653
+   *       retentionInDays: 365
    * ```
    */
   readonly cloudWatchLogs: VpcFlowLogsCloudWatchLogsConfig = new VpcFlowLogsCloudWatchLogsConfig();
