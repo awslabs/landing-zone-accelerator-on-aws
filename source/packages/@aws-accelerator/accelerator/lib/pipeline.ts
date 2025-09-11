@@ -633,6 +633,10 @@ export class AcceleratorPipeline extends Construct {
             type: cdk.aws_codebuild.BuildEnvironmentVariableType.PLAINTEXT,
             value: this.props.configRepositoryBranchName,
           },
+          PARTITION: {
+            type: cdk.aws_codebuild.BuildEnvironmentVariableType.PLAINTEXT,
+            value: cdk.Aws.PARTITION,
+          },
           ...enableSingleAccountModeEnvVariables,
           ...pipelineAccountEnvVariables,
           ...aseaMigrationModeEnvVariables,
