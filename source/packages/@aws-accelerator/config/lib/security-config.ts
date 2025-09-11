@@ -373,7 +373,7 @@ export class LogGroupsConfig implements i.ILogGroupsConfig {
   readonly deploymentTargets: t.DeploymentTargets = new t.DeploymentTargets();
   readonly encryption: EncryptionConfig | undefined = undefined;
   readonly logGroupName: string = '';
-  readonly logRetentionInDays = 3653;
+  readonly logRetentionInDays = 365;
   readonly terminationProtected: boolean | undefined = undefined;
 }
 
