@@ -55,7 +55,17 @@ export class BootstrapStack extends AcceleratorStack {
       customDeploymentRoleName,
       this.props.globalConfig.homeRegion,
     );
+    const managementDeploymentRole = this.createManagementDeploymentRole(
+      `${props.prefixes.accelerator}-Management-Deployment-Role`,
+      this.props.accountsConfig.getManagementAccountId(),
+      this.props.globalConfig.homeRegion,
+    );
 
+    const deploymentRoles = [deploymentRole];
+    if (managementDeploymentRole) {
+      deploymentRoles.push(managementDeploymentRole);
+    }
+    const deploymentRoleNames = deploymentRoles.map(role => role.roleName);
     // Create S3 KMS key and bucket
     const centralizeBuckets = this.props.globalConfig.cdkOptions.centralizeBuckets;
     const shouldCreateBucket = !centralizeBuckets || (centralizeBuckets && this.account === this.managementAccount);
@@ -65,13 +75,13 @@ export class BootstrapStack extends AcceleratorStack {
 
       const s3KmsKey = this.createBucketCmk({
         accountId: this.account,
-        customDeploymentRole: deploymentRole.roleName,
+        deploymentRoles: deploymentRoleNames,
       });
       this.s3KmsKeyOutputValue = s3KmsKey.keyArn;
 
       this.createAssetBucket({
         kmsKey: s3KmsKey,
-        customDeploymentRole: deploymentRole.roleName,
+        deploymentRoles: deploymentRoleNames,
       });
     }
 
@@ -105,6 +115,12 @@ export class BootstrapStack extends AcceleratorStack {
       description: 'The ARN of the KMS key used to encrypt the asset bucket ',
       exportName: `CdkBootstrap-${this.qualifier}-FileAssetKeyArn`,
     });
+    if (managementDeploymentRole) {
+      new cdk.CfnOutput(this, 'ManagementDeploymentRoleArn', {
+        value: managementDeploymentRole.roleArn,
+        description: 'The ARN of the management account bootstrap role',
+      });
+    }
   }
 
   createCustomDeploymentRole(customRoleName: string, homeRegion: string) {
@@ -119,7 +135,6 @@ export class BootstrapStack extends AcceleratorStack {
       roleName: customRoleName,
     });
     this.setAssumeSelfPermissions(customDeploymentRole, customRoleName);
-    // amazonq-ignore-next-line
     customDeploymentRole.addManagedPolicy(cdk.aws_iam.ManagedPolicy.fromAwsManagedPolicyName('AdministratorAccess'));
     // Override logical Id
     const cfnCustomDeploymentRole = customDeploymentRole.node.defaultChild as cdk.aws_iam.CfnRole;
@@ -134,11 +149,39 @@ export class BootstrapStack extends AcceleratorStack {
     return customDeploymentRole;
   }
 
-  createBucketCmk(props: { accountId: string; customDeploymentRole?: string }) {
-    const conditions = this.setBootstrapResourceConditions(
-      this.props.organizationConfig.enable,
-      props.customDeploymentRole,
+  createManagementDeploymentRole(managementRoleName: string, managementAccount: string, homeRegion: string) {
+    if (cdk.Stack.of(this).account !== managementAccount) {
+      return;
+    }
+    if (cdk.Stack.of(this).region !== homeRegion) {
+      return cdk.aws_iam.Role.fromRoleName(this, 'ManagementDeploymentRole', managementRoleName);
+    }
+    const managementDeploymentRole = new cdk.aws_iam.Role(this, 'ManagementDeploymentRole', {
+      assumedBy: this.setCompositePrincipals({
+        managementAccount: this.managementAccount,
+        cfnServicePrincipal: true,
+      }),
+      roleName: managementRoleName,
+    });
+    this.setAssumeSelfPermissions(managementDeploymentRole, managementRoleName);
+    managementDeploymentRole.addManagedPolicy(
+      cdk.aws_iam.ManagedPolicy.fromAwsManagedPolicyName('AdministratorAccess'),
     );
+    // Override logical Id
+    const cfnManagementDeploymentRole = managementDeploymentRole.node.defaultChild as cdk.aws_iam.CfnRole;
+    cfnManagementDeploymentRole.overrideLogicalId('ManagementDeploymentRole');
+    // AwsSolutions-IAM4: The IAM user, role, or group uses AWS managed policies
+    NagSuppressions.addResourceSuppressionsByPath(this, `${this.stackName}/ManagementDeploymentRole/Resource`, [
+      {
+        id: 'AwsSolutions-IAM4',
+        reason: 'AWS Custom resource provider framework-role created by cdk.',
+      },
+    ]);
+    return managementDeploymentRole;
+  }
+
+  createBucketCmk(props: { accountId: string; deploymentRoles: string[] }) {
+    const conditions = this.setBootstrapResourceConditions(this.props.organizationConfig.enable, props.deploymentRoles);
     const principals = this.setBootstrapResourcePrincipals(this.props.organizationConfig.enable);
     const s3Key = new cdk.aws_kms.Key(this, 'AssetEncryptionKey', {
       alias: `${this.props.prefixes.kmsAlias}/kms/cdk/key`,
@@ -203,7 +246,7 @@ export class BootstrapStack extends AcceleratorStack {
     return s3Key;
   }
 
-  createAssetBucket(props: { kmsKey: cdk.aws_kms.Key; customDeploymentRole?: string }) {
+  createAssetBucket(props: { kmsKey: cdk.aws_kms.Key; deploymentRoles: string[] }) {
     const lifecycleRules: cdk.aws_s3.LifecycleRule[] = [
       {
         id: 'CleanupOldVersions',
@@ -224,10 +267,7 @@ export class BootstrapStack extends AcceleratorStack {
       versioned: true,
     });
     const principals = this.setBootstrapResourcePrincipals(this.props.organizationConfig.enable);
-    const conditions = this.setBootstrapResourceConditions(
-      this.props.organizationConfig.enable,
-      props.customDeploymentRole,
-    );
+    const conditions = this.setBootstrapResourceConditions(this.props.organizationConfig.enable, props.deploymentRoles);
 
     assetBucket.grantReadWrite(new cdk.aws_iam.ServicePrincipal('cloudformation.amazonaws.com'));
     assetBucket.grantReadWrite(new cdk.aws_iam.ServicePrincipal('lambda.amazonaws.com'));
@@ -291,13 +331,17 @@ export class BootstrapStack extends AcceleratorStack {
     return `cdk-${this.qualifier}-assets-${accountId}-${this.region}`;
   }
 
-  setBootstrapResourceConditions(isOrgsEnabled: boolean, customDeploymentRole?: string) {
+  setBootstrapResourceConditions(isOrgsEnabled: boolean, deploymentRoles: string[]) {
     const roleArns = [
       `arn:${cdk.Stack.of(this).partition}:iam::*:role/cdk-${this.qualifier}*`,
       `arn:${cdk.Stack.of(this).partition}:iam::*:role/${this.props.globalConfig.managementAccountAccessRole}`,
     ];
-    if (customDeploymentRole) {
-      roleArns.push(`arn:${cdk.Stack.of(this).partition}:iam::*:role/${customDeploymentRole}`);
+    for (const role of deploymentRoles) {
+      if (role.includes('Management-Deployment-Role')) {
+        roleArns.push(`arn:${cdk.Stack.of(this).partition}:iam::${cdk.Stack.of(this).account}:role/${role}`);
+      } else {
+        roleArns.push(`arn:${cdk.Stack.of(this).partition}:iam::*:role/${role}`);
+      }
     }
     const conditions: { [key: string]: unknown } = {
       ArnLike: {

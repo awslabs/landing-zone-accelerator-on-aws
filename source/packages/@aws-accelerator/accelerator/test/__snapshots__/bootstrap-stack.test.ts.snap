@@ -27,6 +27,15 @@ exports[`BootstrapStack Construct(BootstrapStack):  Snapshot Test 1`] = `
         ],
       },
     },
+    "ManagementDeploymentRoleArn": {
+      "Description": "The ARN of the management account bootstrap role",
+      "Value": {
+        "Fn::GetAtt": [
+          "ManagementDeploymentRole",
+          "Arn",
+        ],
+      },
+    },
   },
   "Parameters": {
     "CloudFormationExecutionPolicies": {
@@ -191,6 +200,21 @@ exports[`BootstrapStack Construct(BootstrapStack):  Snapshot Test 1`] = `
                         ],
                       ],
                     },
+                    {
+                      "Fn::Join": [
+                        "",
+                        [
+                          "arn:",
+                          {
+                            "Ref": "AWS::Partition",
+                          },
+                          ":iam::*:role/",
+                          {
+                            "Ref": "ManagementDeploymentRole",
+                          },
+                        ],
+                      ],
+                    },
                   ],
                 },
                 "StringEquals": {
@@ -350,6 +374,100 @@ exports[`BootstrapStack Construct(BootstrapStack):  Snapshot Test 1`] = `
           },
         ],
         "RoleName": "AWSA-Deployment",
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "ManagementDeploymentRole": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-IAM4",
+              "reason": "AWS Custom resource provider framework-role created by cdk.",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "AWS": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":iam::111111111111:root",
+                    ],
+                  ],
+                },
+              },
+            },
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "cloudformation.amazonaws.com",
+              },
+            },
+            {
+              "Action": "sts:AssumeRole",
+              "Condition": {
+                "StringEquals": {
+                  "AWS:PrincipalArn": {
+                    "Fn::Join": [
+                      "",
+                      [
+                        "arn:",
+                        {
+                          "Ref": "AWS::Partition",
+                        },
+                        ":iam::111111111111:role/AWSAccelerator-Management-Deployment-Role",
+                      ],
+                    ],
+                  },
+                },
+              },
+              "Effect": "Allow",
+              "Principal": {
+                "AWS": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":iam::111111111111:root",
+                    ],
+                  ],
+                },
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": [
+          {
+            "Fn::Join": [
+              "",
+              [
+                "arn:",
+                {
+                  "Ref": "AWS::Partition",
+                },
+                ":iam::aws:policy/AdministratorAccess",
+              ],
+            ],
+          },
+        ],
+        "RoleName": "AWSAccelerator-Management-Deployment-Role",
       },
       "Type": "AWS::IAM::Role",
     },
@@ -563,6 +681,21 @@ exports[`BootstrapStack Construct(BootstrapStack):  Snapshot Test 1`] = `
                           ":iam::*:role/",
                           {
                             "Ref": "CustomDeploymentRole",
+                          },
+                        ],
+                      ],
+                    },
+                    {
+                      "Fn::Join": [
+                        "",
+                        [
+                          "arn:",
+                          {
+                            "Ref": "AWS::Partition",
+                          },
+                          ":iam::*:role/",
+                          {
+                            "Ref": "ManagementDeploymentRole",
                           },
                         ],
                       ],
