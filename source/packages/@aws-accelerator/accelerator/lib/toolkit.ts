@@ -345,16 +345,39 @@ export class AcceleratorToolkit {
    */
   private static async deployStacks(cli: Toolkit, options: AcceleratorToolkitProps) {
     const stackName = await AcceleratorToolkit.getStackNames(options);
-
-    const deploymentRoleName = options.cdkOptions?.customDeploymentRole ?? `${options.stackPrefix}-Deployment-Role`;
+    const deploymentRoleName = AcceleratorToolkit.getDeploymentRole({
+      stackPrefix: options.stackPrefix,
+      customDeploymentRoleName: options.cdkOptions?.customDeploymentRole,
+      accountId: options.accountId!,
+      managementAccountId: options.managementAccountId,
+      stage: options.stage!,
+    });
     const roleArn = `arn:${options.partition}:iam::${options.accountId!}:role/${deploymentRoleName}`;
-
     const deployPromises: Promise<DeployResult>[] = [];
     for (const stack of stackName) {
       deployPromises.push(AcceleratorToolkit.runDeployStackCli(options, stack, cli, roleArn));
     }
     logger.debug(`Invoked deployStackCli for the following stacks: ${stackName}`);
     await Promise.all(deployPromises);
+  }
+
+  private static getDeploymentRole(props: {
+    stackPrefix: string;
+    customDeploymentRoleName?: string;
+    accountId: string;
+    managementAccountId: string;
+    stage: string;
+  }) {
+    if (
+      props.accountId === props.managementAccountId &&
+      [AcceleratorStage.ACCOUNTS, AcceleratorStage.PREPARE].includes(props.stage as AcceleratorStage)
+    ) {
+      return `${props.stackPrefix}-Management-Deployment-Role`;
+    }
+    if (props.customDeploymentRoleName) {
+      return props.customDeploymentRoleName;
+    }
+    return `${props.stackPrefix}-Deployment-Role`;
   }
 
   /**

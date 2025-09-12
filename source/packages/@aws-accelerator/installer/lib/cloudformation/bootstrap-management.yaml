@@ -67,6 +67,38 @@ Parameters:
     Description: Whether to deny AssumeRole calls with an ExternalId. This prevents calls that are intended to be deputized from accidentally assuming CDK Roles.
 
 Resources:
+  ManagementDeploymentRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+          - Action: sts:AssumeRole
+            Effect: Allow
+            Principal:
+              AWS:
+                Fn::Sub: "arn:${AWS::Partition}:iam::${AWS::AccountId}:root"
+          - Action: sts:AssumeRole
+            Effect: Allow
+            Principal:
+              Service: cloudformation.amazonaws.com
+          - Action: sts:AssumeRole
+            Condition:
+              StringEquals:
+                AWS:PrincipalArn:
+                  Fn::Sub: "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/${AcceleratorPrefix}-Management-Deployment-Role"
+            Effect: Allow
+            Principal:
+              AWS:
+                Fn::Sub: "arn:${AWS::Partition}:iam::${AWS::AccountId}:root"
+        Version: "2012-10-17"
+      ManagedPolicyArns:
+        - Fn::Sub: arn:${AWS::Partition}:iam::aws:policy/AdministratorAccess
+      RoleName: 
+        Fn::Sub: "${AcceleratorPrefix}-Management-Deployment-Role"
+      Tags:
+        - Key: Accelerator
+          Value: 
+            Ref: AcceleratorPrefix
   CustomDeploymentRole:
     Type: AWS::IAM::Role
     Properties:
@@ -99,6 +131,84 @@ Resources:
         - Key: Accelerator
           Value: 
             Ref: AcceleratorPrefix
+  AssetEncryptionKey49BA7B12:
+    Type: AWS::KMS::Key
+    Properties:
+      Description: Key used to encrypt centralized CDK assets
+      EnableKeyRotation: true
+      KeyPolicy:
+        Statement:
+          - Action: kms:*
+            Effect: Allow
+            Principal:
+              AWS:
+                Fn::Join:
+                  - ""
+                  - - "arn:"
+                    - Ref: AWS::Partition
+                    - ":iam::"
+                    - Ref: AWS::AccountId
+                    - ":root"
+            Resource: "*"
+          - Action:
+              - kms:Create*
+              - kms:Describe*
+              - kms:Enable*
+              - kms:List*
+              - kms:Put*
+              - kms:Update*
+              - kms:Revoke*
+              - kms:Disable*
+              - kms:Get*
+              - kms:Delete*
+              - kms:ScheduleKeyDeletion
+              - kms:CancelKeyDeletion
+              - kms:GenerateDataKey
+              - kms:TagResource
+              - kms:UntagResource
+            Effect: Allow
+            Principal:
+              AWS:
+                Fn::Join:
+                  - ""
+                  - - "arn:"
+                    - Ref: AWS::Partition
+                    - ":iam::"
+                    - Ref: AWS::AccountId
+                    - ":root"
+            Resource: "*"
+            Sid: Management Actions
+          - Action:
+              - kms:Decrypt
+              - kms:DescribeKey
+              - kms:Encrypt
+              - kms:ReEncrypt*
+              - kms:GenerateDataKey*
+            Effect: Allow
+            Principal:
+              Service: cloudformation.amazonaws.com
+            Resource: "*"
+          - Action:
+              - kms:Decrypt
+              - kms:DescribeKey
+              - kms:Encrypt
+              - kms:ReEncrypt*
+              - kms:GenerateDataKey*
+            Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Resource: "*"
+        Version: "2012-10-17"
+    UpdateReplacePolicy: Retain
+    DeletionPolicy: Retain
+  AssetEncryptionKeyAliasF99A8AC7:
+    Type: AWS::KMS::Alias
+    Properties:
+      AliasName: alias/accelerator/kms/cdk/key
+      TargetKeyId:
+        Fn::GetAtt:
+          - AssetEncryptionKey49BA7B12
+          - Arn
   StagingBucket:
     Type: AWS::S3::Bucket
     Properties:
@@ -174,3 +284,15 @@ Outputs:
       Fn::GetAtt:
         - CdkBootstrapVersion
         - Value
+  ManagementDeploymentRoleArn:
+    Description: The ARN of the management deployment role
+    Value:
+      Fn::GetAtt:
+        - ManagementDeploymentRole
+        - Arn
+  CustomDeploymentRoleArn:
+    Description: The ARN of the custom deployment role
+    Value:
+      Fn::GetAtt:
+        - CustomDeploymentRole
+        - Arn

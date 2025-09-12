@@ -1111,13 +1111,16 @@ export abstract class Accelerator {
 
           for (const key of stackKeys) {
             const stack = mapping[key];
+            const role = globalConfig.cdkOptions.customDeploymentRole ?? `${aseaPrefix}-Deployment-Role`;
             promises.push(
               AcceleratorToolkit.execute({
                 ...toolkitProps,
                 app: `cdk.out/phase${phase}-${accountId}-${region}`,
                 stackPrefix: aseaPrefix,
                 stack: stack.stackName,
-                assumeRoleName: globalConfig.managementAccountAccessRole,
+                assumeRoleName: role,
+                accountId,
+                region,
                 // ASEA Adds "AcceleratorName" tag to all stacks
                 // Adding it to avoid updating all stacks
                 tags: [

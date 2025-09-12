@@ -65,15 +65,21 @@ const logger = createLogger(['stack-utils']);
  * @param region
  * @returns
  */
-function getStackSynthesizer(props: AcceleratorStackProps, accountId: string, region: string) {
+function getStackSynthesizer(
+  props: AcceleratorStackProps,
+  accountId: string,
+  region: string,
+  deploymentRoleName?: string,
+) {
   const managementAccountId = props.accountsConfig.getManagementAccountId();
   const centralizeBuckets =
     props.globalConfig.centralizeCdkBuckets?.enable || props.globalConfig.cdkOptions?.centralizeBuckets;
   const fileAssetBucketName = centralizeBuckets ? `cdk-accel-assets-${managementAccountId}-${region}` : undefined;
   const bucketPrefix = centralizeBuckets ? `${accountId}/` : undefined;
-  const deploymentRoleName =
-    props.globalConfig.cdkOptions?.customDeploymentRole ?? `${props.prefixes.accelerator}-Deployment-Role`;
-
+  if (!deploymentRoleName) {
+    deploymentRoleName =
+      props.globalConfig.cdkOptions?.customDeploymentRole ?? `${props.prefixes.accelerator}-Deployment-Role`;
+  }
   logger.info(`Stack in account ${accountId} and region ${region} using deployment role ${deploymentRoleName}`);
   const deploymentRoleArn = `arn:${props.partition}:iam::${accountId}:role/${deploymentRoleName}`;
 
@@ -89,53 +95,6 @@ function getStackSynthesizer(props: AcceleratorStackProps, accountId: string, re
 }
 
 /**
- * This function returns a CDK stack synthesizer based on configuration options
- * @param props
- * @param accountId
- * @param region
- * @param bootstrapAccountId
- * @param qualifier
- * @param roleName
- * @returns
- */
-function getAseaStackSynthesizer(props: {
-  accelProps: AcceleratorStackProps;
-  accountId: string;
-  region: string;
-  qualifier?: string;
-  roleName?: string;
-}) {
-  const { accountId, region, qualifier, roleName, accelProps } = props;
-  const managementAccountId = accelProps.accountsConfig.getManagementAccountId();
-  const centralizeBuckets =
-    accelProps.globalConfig.centralizeCdkBuckets?.enable || accelProps.globalConfig.cdkOptions?.centralizeBuckets;
-  const fileAssetsBucketName = centralizeBuckets ? `cdk-accel-assets-${managementAccountId}-${region}` : undefined;
-  const bucketPrefix = `${accountId}/`;
-
-  if (accelProps.globalConfig.cdkOptions?.useManagementAccessRole) {
-    logger.info(`Stack in account ${accountId} and region ${region} using CliCredentialSynthesizer`);
-    return new cdk.CliCredentialsStackSynthesizer({
-      bucketPrefix,
-      fileAssetsBucketName,
-      qualifier,
-    });
-  } else {
-    logger.info(`Stack in account ${accountId} and region ${region} using DefaultSynthesizer`, roleName);
-    const executionRoleArn = `arn:aws:iam::${accountId}:role/${roleName!}`;
-    return new cdk.DefaultStackSynthesizer({
-      generateBootstrapVersionRule: false,
-      bucketPrefix,
-      fileAssetsBucketName,
-      qualifier,
-      cloudFormationExecutionRole: executionRoleArn,
-      deployRoleArn: executionRoleArn,
-      fileAssetPublishingRoleArn: executionRoleArn,
-      imageAssetPublishingRoleArn: executionRoleArn,
-    });
-  }
-}
-
-/**
  * Creates a CDK stack synthesizer for installer stacks with custom deployment role configuration
  * @param partition - AWS partition (e.g., 'aws', 'aws-cn', 'aws-us-gov')
  * @param accountId - AWS account ID where the stack will be deployed
@@ -144,7 +103,7 @@ function getAseaStackSynthesizer(props: {
  * @returns A configured DefaultStackSynthesizer instance for stacks in installer
  */
 function getInstallerSynthesizer(partition: string, accountId: string, prefix: string, region: string) {
-  const deploymentRoleArn = `arn:${partition}:iam::${accountId}:role/${prefix}-Deployment-Role`;
+  const deploymentRoleArn = `arn:${partition}:iam::${accountId}:role/${prefix}-Management-Deployment-Role`;
   return new cdk.DefaultStackSynthesizer({
     generateBootstrapVersionRule: false,
     fileAssetsBucketName: `cdk-accel-assets-${accountId}-${region}`,
@@ -152,6 +111,7 @@ function getInstallerSynthesizer(partition: string, accountId: string, prefix: s
     cloudFormationExecutionRole: deploymentRoleArn,
     deployRoleArn: deploymentRoleArn,
     lookupRoleArn: deploymentRoleArn,
+    fileAssetPublishingRoleArn: deploymentRoleArn,
     qualifier: 'accel',
   });
 }
@@ -510,7 +470,12 @@ export function createPrepareStack(
         region: homeRegion,
       },
       description: `(SO0199-prepare) Landing Zone Accelerator on AWS. Version ${version}.`,
-      synthesizer: getStackSynthesizer(props, managementAccountId, homeRegion),
+      synthesizer: getStackSynthesizer(
+        props,
+        managementAccountId,
+        homeRegion,
+        `${props.prefixes.accelerator}-Management-Deployment-Role`,
+      ),
       terminationProtection: props.globalConfig.terminationProtection ?? true,
       ...props,
     });
@@ -600,7 +565,12 @@ export function createAccountsStack(
         region: globalRegion,
       },
       description: `(SO0199-accounts) Landing Zone Accelerator on AWS. Version ${version}.`,
-      synthesizer: getStackSynthesizer(props, managementAccountId, globalRegion),
+      synthesizer: getStackSynthesizer(
+        props,
+        managementAccountId,
+        globalRegion,
+        `${props.prefixes.accelerator}-Management-Deployment-Role`,
+      ),
       terminationProtection: props.globalConfig.terminationProtection ?? true,
       ...props,
     });
@@ -1408,13 +1378,7 @@ export async function importAseaResourceStack(
       logger.warn(`No ASEA stack found for account ${accountId} in region ${enabledRegion} for ${phase}`);
       continue;
     }
-    const synthesizer = getAseaStackSynthesizer({
-      accelProps: props,
-      accountId,
-      region: enabledRegion,
-      roleName: props.globalConfig.cdkOptions.customDeploymentRole || `${acceleratorPrefix}-PipelineRole`,
-      qualifier: 'accel',
-    });
+    const synthesizer = getStackSynthesizer(props, accountId, enabledRegion);
     for (const aseaStack of stacksByPhase) {
       importStackPromises.push(
         ImportAseaResourcesStack.init(app, aseaStack.stackName, {
