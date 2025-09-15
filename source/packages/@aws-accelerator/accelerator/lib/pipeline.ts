@@ -651,6 +651,14 @@ export class AcceleratorPipeline extends Construct {
             type: cdk.aws_codebuild.BuildEnvironmentVariableType.PLAINTEXT,
             value: cdk.Aws.PARTITION,
           },
+          ACCELERATOR_PIPELINE_VERSION: {
+            type: codebuild.BuildEnvironmentVariableType.PARAMETER_STORE,
+            value: `${props.prefixes.ssmParamName}/${cdk.Stack.of(this).stackName}/version`,
+          },
+          ACCELERATOR_CHECK_VERSION: {
+            type: codebuild.BuildEnvironmentVariableType.PLAINTEXT,
+            value: 'yes',
+          },
           ...enableSingleAccountModeEnvVariables,
           ...pipelineAccountEnvVariables,
           ...aseaMigrationModeEnvVariables,
