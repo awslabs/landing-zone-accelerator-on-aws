@@ -70,6 +70,22 @@ exports[`PipelineStack Construct(PipelineStack):  Snapshot Test 1`] = `
         "PolicyDocument": {
           "Statement": [
             {
+              "Action": "ssm:GetParameters",
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:",
+                    {
+                      "Ref": "AWS::Partition",
+                    },
+                    ":ssm:us-east-1:000000000000:parameter/accelerator/PipelineStack/version",
+                  ],
+                ],
+              },
+            },
+            {
               "Action": [
                 "logs:CreateLogGroup",
                 "logs:CreateLogStream",
@@ -2448,6 +2464,16 @@ exports[`PipelineStack Construct(PipelineStack):  Snapshot Test 1`] = `
                 "Ref": "AWS::Partition",
               },
             },
+            {
+              "Name": "ACCELERATOR_PIPELINE_VERSION",
+              "Type": "PARAMETER_STORE",
+              "Value": "/accelerator/PipelineStack/version",
+            },
+            {
+              "Name": "ACCELERATOR_CHECK_VERSION",
+              "Type": "PLAINTEXT",
+              "Value": "yes",
+            },
           ],
           "Image": "aws/codebuild/standard:7.0",
           "ImagePullCredentialsType": "CODEBUILD",
@@ -2669,6 +2695,22 @@ exports[`PipelineStack Construct(PipelineStack):  Snapshot Test 2`] = `
       "Properties": {
         "PolicyDocument": {
           "Statement": [
+            {
+              "Action": "ssm:GetParameters",
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:",
+                    {
+                      "Ref": "AWS::Partition",
+                    },
+                    ":ssm:us-east-1:000000000000:parameter/accelerator/PipelineStackRegionalDeploy/version",
+                  ],
+                ],
+              },
+            },
             {
               "Action": [
                 "logs:CreateLogGroup",
@@ -5534,6 +5576,16 @@ exports[`PipelineStack Construct(PipelineStack):  Snapshot Test 2`] = `
                 "Ref": "AWS::Partition",
               },
             },
+            {
+              "Name": "ACCELERATOR_PIPELINE_VERSION",
+              "Type": "PARAMETER_STORE",
+              "Value": "/accelerator/PipelineStackRegionalDeploy/version",
+            },
+            {
+              "Name": "ACCELERATOR_CHECK_VERSION",
+              "Type": "PLAINTEXT",
+              "Value": "yes",
+            },
           ],
           "Image": "aws/codebuild/standard:7.0",
           "ImagePullCredentialsType": "CODEBUILD",
@@ -5755,6 +5807,22 @@ exports[`PipelineStack customS3Path Construct(PipelineStack):  Snapshot Test 1`]
       "Properties": {
         "PolicyDocument": {
           "Statement": [
+            {
+              "Action": "ssm:GetParameters",
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:",
+                    {
+                      "Ref": "AWS::Partition",
+                    },
+                    ":ssm:us-east-1:000000000000:parameter/accelerator/PipelineStackCustomS3Path/version",
+                  ],
+                ],
+              },
+            },
             {
               "Action": [
                 "logs:CreateLogGroup",
@@ -8133,6 +8201,16 @@ exports[`PipelineStack customS3Path Construct(PipelineStack):  Snapshot Test 1`]
               "Value": {
                 "Ref": "AWS::Partition",
               },
+            },
+            {
+              "Name": "ACCELERATOR_PIPELINE_VERSION",
+              "Type": "PARAMETER_STORE",
+              "Value": "/accelerator/PipelineStackCustomS3Path/version",
+            },
+            {
+              "Name": "ACCELERATOR_CHECK_VERSION",
+              "Type": "PLAINTEXT",
+              "Value": "yes",
             },
           ],
           "Image": "aws/codebuild/standard:7.0",
