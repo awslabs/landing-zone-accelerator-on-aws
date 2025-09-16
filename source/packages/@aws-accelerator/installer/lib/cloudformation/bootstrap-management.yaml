@@ -186,18 +186,24 @@ Resources:
               - kms:GenerateDataKey*
             Effect: Allow
             Principal:
-              Service: cloudformation.amazonaws.com
+              Service: 
+                - cloudformation.amazonaws.com
+                - lambda.amazonaws.com
             Resource: "*"
-          - Action:
+          - Effect: Allow
+            Principal:
+              AWS: "*"
+            Action:
               - kms:Decrypt
-              - kms:DescribeKey
+              - kms:Describe*
               - kms:Encrypt
               - kms:ReEncrypt*
-              - kms:GenerateDataKey*
-            Effect: Allow
-            Principal:
-              Service: lambda.amazonaws.com
+              - kms:GenerateDataKey
             Resource: "*"
+            Condition:
+              ArnLike:
+                "aws:PrincipalARN":
+                  - Fn::Sub: "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/${AcceleratorPrefix}*"
         Version: "2012-10-17"
     UpdateReplacePolicy: Retain
     DeletionPolicy: Retain

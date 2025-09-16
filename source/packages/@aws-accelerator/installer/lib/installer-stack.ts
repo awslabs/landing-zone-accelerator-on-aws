@@ -1009,9 +1009,7 @@ export class InstallerStack extends cdk.Stack {
               'if [ -f .yarnrc ]; then yarn install --use-yarnrc .yarnrc; else yarn install; fi',
               'yarn build',
               'cd packages/@aws-accelerator/installer',
-              `[ ! -z "$ACCELERATOR_PREFIX" ] && sed -i "s/AWSAccelerator/$ACCELERATOR_PREFIX/g" lib/cloudformation/bootstrap-management*.yaml`,
-              `set -e &&  yarn run cdk bootstrap --toolkitStackName ${acceleratorPrefix}-CDKToolkit aws://${cdk.Aws.ACCOUNT_ID}/${globalRegion} --qualifier accel  --template lib/cloudformation/bootstrap-management-global.yaml;`,
-              `set -e && yarn run cdk bootstrap --toolkitStackName ${acceleratorPrefix}-CDKToolkit aws://${cdk.Aws.ACCOUNT_ID}/${cdk.Aws.REGION} --qualifier accel  --template lib/cloudformation/bootstrap-management.yaml;`,
+              `set -e && ./lib/bash/bootstrap-management.sh ${acceleratorPrefix} ${cdk.Aws.REGION} ${cdk.Aws.ACCOUNT_ID} ${globalRegion} $FORCE_BOOTSTRAP`,
               `set -e && if [ $ENABLE_EXTERNAL_PIPELINE_ACCOUNT = "yes" ]; then
                   if ! MANAGEMENT_ACCOUNT_CREDENTIAL=$(aws sts assume-role --role-arn arn:${
                     cdk.Stack.of(this).partition
