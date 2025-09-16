@@ -1736,19 +1736,22 @@ phases:
       - if [ -f .yarnrc ]; then yarn install --use-yarnrc .yarnrc; else yarn install; fi
       - yarn build
       - cd packages/@aws-accelerator/installer
-      - '[ ! -z "$ACCELERATOR_PREFIX" ] && sed -i "s/AWSAccelerator/$ACCELERATOR_PREFIX/g" lib/cloudformation/bootstrap-management*.yaml'
-      - set -e &&  yarn run cdk bootstrap --toolkitStackName ",
+      - set -e && ./lib/bash/bootstrap-management.sh ",
                 {
                   "Fn::GetAtt": [
                     "ResourceNamePrefixesGetPrefixResource96A10E6E",
                     "acceleratorPrefix",
                   ],
                 },
-                "-CDKToolkit aws://",
+                " ",
+                {
+                  "Ref": "AWS::Region",
+                },
+                " ",
                 {
                   "Ref": "AWS::AccountId",
                 },
-                "/",
+                " ",
                 {
                   "Fn::FindInMap": [
                     "GlobalRegionMap",
@@ -1758,23 +1761,7 @@ phases:
                     "regionName",
                   ],
                 },
-                " --qualifier accel  --template lib/cloudformation/bootstrap-management-global.yaml;
-      - set -e && yarn run cdk bootstrap --toolkitStackName ",
-                {
-                  "Fn::GetAtt": [
-                    "ResourceNamePrefixesGetPrefixResource96A10E6E",
-                    "acceleratorPrefix",
-                  ],
-                },
-                "-CDKToolkit aws://",
-                {
-                  "Ref": "AWS::AccountId",
-                },
-                "/",
-                {
-                  "Ref": "AWS::Region",
-                },
-                " --qualifier accel  --template lib/cloudformation/bootstrap-management.yaml;
+                " $FORCE_BOOTSTRAP
       - |-
         set -e && if [ $ENABLE_EXTERNAL_PIPELINE_ACCOUNT = "yes" ]; then
                           if ! MANAGEMENT_ACCOUNT_CREDENTIAL=$(aws sts assume-role --role-arn arn:",
@@ -5487,19 +5474,22 @@ phases:
       - if [ -f .yarnrc ]; then yarn install --use-yarnrc .yarnrc; else yarn install; fi
       - yarn build
       - cd packages/@aws-accelerator/installer
-      - '[ ! -z "$ACCELERATOR_PREFIX" ] && sed -i "s/AWSAccelerator/$ACCELERATOR_PREFIX/g" lib/cloudformation/bootstrap-management*.yaml'
-      - set -e &&  yarn run cdk bootstrap --toolkitStackName ",
+      - set -e && ./lib/bash/bootstrap-management.sh ",
                 {
                   "Fn::GetAtt": [
                     "ResourceNamePrefixesGetPrefixResource96A10E6E",
                     "acceleratorPrefix",
                   ],
                 },
-                "-CDKToolkit aws://",
+                " ",
+                {
+                  "Ref": "AWS::Region",
+                },
+                " ",
                 {
                   "Ref": "AWS::AccountId",
                 },
-                "/",
+                " ",
                 {
                   "Fn::FindInMap": [
                     "GlobalRegionMap",
@@ -5509,23 +5499,7 @@ phases:
                     "regionName",
                   ],
                 },
-                " --qualifier accel  --template lib/cloudformation/bootstrap-management-global.yaml;
-      - set -e && yarn run cdk bootstrap --toolkitStackName ",
-                {
-                  "Fn::GetAtt": [
-                    "ResourceNamePrefixesGetPrefixResource96A10E6E",
-                    "acceleratorPrefix",
-                  ],
-                },
-                "-CDKToolkit aws://",
-                {
-                  "Ref": "AWS::AccountId",
-                },
-                "/",
-                {
-                  "Ref": "AWS::Region",
-                },
-                " --qualifier accel  --template lib/cloudformation/bootstrap-management.yaml;
+                " $FORCE_BOOTSTRAP
       - |-
         set -e && if [ $ENABLE_EXTERNAL_PIPELINE_ACCOUNT = "yes" ]; then
                           if ! MANAGEMENT_ACCOUNT_CREDENTIAL=$(aws sts assume-role --role-arn arn:",
@@ -9304,19 +9278,22 @@ phases:
       - if [ -f .yarnrc ]; then yarn install --use-yarnrc .yarnrc; else yarn install; fi
       - yarn build
       - cd packages/@aws-accelerator/installer
-      - '[ ! -z "$ACCELERATOR_PREFIX" ] && sed -i "s/AWSAccelerator/$ACCELERATOR_PREFIX/g" lib/cloudformation/bootstrap-management*.yaml'
-      - set -e &&  yarn run cdk bootstrap --toolkitStackName ",
+      - set -e && ./lib/bash/bootstrap-management.sh ",
                 {
                   "Fn::GetAtt": [
                     "ResourceNamePrefixesGetPrefixResource96A10E6E",
                     "acceleratorPrefix",
                   ],
                 },
-                "-CDKToolkit aws://",
+                " ",
+                {
+                  "Ref": "AWS::Region",
+                },
+                " ",
                 {
                   "Ref": "AWS::AccountId",
                 },
-                "/",
+                " ",
                 {
                   "Fn::FindInMap": [
                     "GlobalRegionMap",
@@ -9326,23 +9303,7 @@ phases:
                     "regionName",
                   ],
                 },
-                " --qualifier accel  --template lib/cloudformation/bootstrap-management-global.yaml;
-      - set -e && yarn run cdk bootstrap --toolkitStackName ",
-                {
-                  "Fn::GetAtt": [
-                    "ResourceNamePrefixesGetPrefixResource96A10E6E",
-                    "acceleratorPrefix",
-                  ],
-                },
-                "-CDKToolkit aws://",
-                {
-                  "Ref": "AWS::AccountId",
-                },
-                "/",
-                {
-                  "Ref": "AWS::Region",
-                },
-                " --qualifier accel  --template lib/cloudformation/bootstrap-management.yaml;
+                " $FORCE_BOOTSTRAP
       - |-
         set -e && if [ $ENABLE_EXTERNAL_PIPELINE_ACCOUNT = "yes" ]; then
                           if ! MANAGEMENT_ACCOUNT_CREDENTIAL=$(aws sts assume-role --role-arn arn:",
@@ -13094,19 +13055,22 @@ phases:
       - if [ -f .yarnrc ]; then yarn install --use-yarnrc .yarnrc; else yarn install; fi
       - yarn build
       - cd packages/@aws-accelerator/installer
-      - '[ ! -z "$ACCELERATOR_PREFIX" ] && sed -i "s/AWSAccelerator/$ACCELERATOR_PREFIX/g" lib/cloudformation/bootstrap-management*.yaml'
-      - set -e &&  yarn run cdk bootstrap --toolkitStackName ",
+      - set -e && ./lib/bash/bootstrap-management.sh ",
                 {
                   "Fn::GetAtt": [
                     "ResourceNamePrefixesGetPrefixResource96A10E6E",
                     "acceleratorPrefix",
                   ],
                 },
-                "-CDKToolkit aws://",
+                " ",
+                {
+                  "Ref": "AWS::Region",
+                },
+                " ",
                 {
                   "Ref": "AWS::AccountId",
                 },
-                "/",
+                " ",
                 {
                   "Fn::FindInMap": [
                     "GlobalRegionMap",
@@ -13116,23 +13080,7 @@ phases:
                     "regionName",
                   ],
                 },
-                " --qualifier accel  --template lib/cloudformation/bootstrap-management-global.yaml;
-      - set -e && yarn run cdk bootstrap --toolkitStackName ",
-                {
-                  "Fn::GetAtt": [
-                    "ResourceNamePrefixesGetPrefixResource96A10E6E",
-                    "acceleratorPrefix",
-                  ],
-                },
-                "-CDKToolkit aws://",
-                {
-                  "Ref": "AWS::AccountId",
-                },
-                "/",
-                {
-                  "Ref": "AWS::Region",
-                },
-                " --qualifier accel  --template lib/cloudformation/bootstrap-management.yaml;
+                " $FORCE_BOOTSTRAP
       - |-
         set -e && if [ $ENABLE_EXTERNAL_PIPELINE_ACCOUNT = "yes" ]; then
                           if ! MANAGEMENT_ACCOUNT_CREDENTIAL=$(aws sts assume-role --role-arn arn:",
@@ -16889,19 +16837,22 @@ phases:
       - if [ -f .yarnrc ]; then yarn install --use-yarnrc .yarnrc; else yarn install; fi
       - yarn build
       - cd packages/@aws-accelerator/installer
-      - '[ ! -z "$ACCELERATOR_PREFIX" ] && sed -i "s/AWSAccelerator/$ACCELERATOR_PREFIX/g" lib/cloudformation/bootstrap-management*.yaml'
-      - set -e &&  yarn run cdk bootstrap --toolkitStackName ",
+      - set -e && ./lib/bash/bootstrap-management.sh ",
                 {
                   "Fn::GetAtt": [
                     "ResourceNamePrefixesGetPrefixResource96A10E6E",
                     "acceleratorPrefix",
                   ],
                 },
-                "-CDKToolkit aws://",
+                " ",
+                {
+                  "Ref": "AWS::Region",
+                },
+                " ",
                 {
                   "Ref": "AWS::AccountId",
                 },
-                "/",
+                " ",
                 {
                   "Fn::FindInMap": [
                     "GlobalRegionMap",
@@ -16911,23 +16862,7 @@ phases:
                     "regionName",
                   ],
                 },
-                " --qualifier accel  --template lib/cloudformation/bootstrap-management-global.yaml;
-      - set -e && yarn run cdk bootstrap --toolkitStackName ",
-                {
-                  "Fn::GetAtt": [
-                    "ResourceNamePrefixesGetPrefixResource96A10E6E",
-                    "acceleratorPrefix",
-                  ],
-                },
-                "-CDKToolkit aws://",
-                {
-                  "Ref": "AWS::AccountId",
-                },
-                "/",
-                {
-                  "Ref": "AWS::Region",
-                },
-                " --qualifier accel  --template lib/cloudformation/bootstrap-management.yaml;
+                " $FORCE_BOOTSTRAP
       - |-
         set -e && if [ $ENABLE_EXTERNAL_PIPELINE_ACCOUNT = "yes" ]; then
                           if ! MANAGEMENT_ACCOUNT_CREDENTIAL=$(aws sts assume-role --role-arn arn:",
@@ -20642,19 +20577,22 @@ phases:
       - if [ -f .yarnrc ]; then yarn install --use-yarnrc .yarnrc; else yarn install; fi
       - yarn build
       - cd packages/@aws-accelerator/installer
-      - '[ ! -z "$ACCELERATOR_PREFIX" ] && sed -i "s/AWSAccelerator/$ACCELERATOR_PREFIX/g" lib/cloudformation/bootstrap-management*.yaml'
-      - set -e &&  yarn run cdk bootstrap --toolkitStackName ",
+      - set -e && ./lib/bash/bootstrap-management.sh ",
                 {
                   "Fn::GetAtt": [
                     "ResourceNamePrefixesGetPrefixResource96A10E6E",
                     "acceleratorPrefix",
                   ],
                 },
-                "-CDKToolkit aws://",
+                " ",
+                {
+                  "Ref": "AWS::Region",
+                },
+                " ",
                 {
                   "Ref": "AWS::AccountId",
                 },
-                "/",
+                " ",
                 {
                   "Fn::FindInMap": [
                     "GlobalRegionMap",
@@ -20664,23 +20602,7 @@ phases:
                     "regionName",
                   ],
                 },
-                " --qualifier accel  --template lib/cloudformation/bootstrap-management-global.yaml;
-      - set -e && yarn run cdk bootstrap --toolkitStackName ",
-                {
-                  "Fn::GetAtt": [
-                    "ResourceNamePrefixesGetPrefixResource96A10E6E",
-                    "acceleratorPrefix",
-                  ],
-                },
-                "-CDKToolkit aws://",
-                {
-                  "Ref": "AWS::AccountId",
-                },
-                "/",
-                {
-                  "Ref": "AWS::Region",
-                },
-                " --qualifier accel  --template lib/cloudformation/bootstrap-management.yaml;
+                " $FORCE_BOOTSTRAP
       - |-
         set -e && if [ $ENABLE_EXTERNAL_PIPELINE_ACCOUNT = "yes" ]; then
                           if ! MANAGEMENT_ACCOUNT_CREDENTIAL=$(aws sts assume-role --role-arn arn:",
@@ -24450,19 +24372,22 @@ phases:
       - if [ -f .yarnrc ]; then yarn install --use-yarnrc .yarnrc; else yarn install; fi
       - yarn build
       - cd packages/@aws-accelerator/installer
-      - '[ ! -z "$ACCELERATOR_PREFIX" ] && sed -i "s/AWSAccelerator/$ACCELERATOR_PREFIX/g" lib/cloudformation/bootstrap-management*.yaml'
-      - set -e &&  yarn run cdk bootstrap --toolkitStackName ",
+      - set -e && ./lib/bash/bootstrap-management.sh ",
                 {
                   "Fn::GetAtt": [
                     "ResourceNamePrefixesGetPrefixResource96A10E6E",
                     "acceleratorPrefix",
                   ],
                 },
-                "-CDKToolkit aws://",
+                " ",
+                {
+                  "Ref": "AWS::Region",
+                },
+                " ",
                 {
                   "Ref": "AWS::AccountId",
                 },
-                "/",
+                " ",
                 {
                   "Fn::FindInMap": [
                     "GlobalRegionMap",
@@ -24472,23 +24397,7 @@ phases:
                     "regionName",
                   ],
                 },
-                " --qualifier accel  --template lib/cloudformation/bootstrap-management-global.yaml;
-      - set -e && yarn run cdk bootstrap --toolkitStackName ",
-                {
-                  "Fn::GetAtt": [
-                    "ResourceNamePrefixesGetPrefixResource96A10E6E",
-                    "acceleratorPrefix",
-                  ],
-                },
-                "-CDKToolkit aws://",
-                {
-                  "Ref": "AWS::AccountId",
-                },
-                "/",
-                {
-                  "Ref": "AWS::Region",
-                },
-                " --qualifier accel  --template lib/cloudformation/bootstrap-management.yaml;
+                " $FORCE_BOOTSTRAP
       - |-
         set -e && if [ $ENABLE_EXTERNAL_PIPELINE_ACCOUNT = "yes" ]; then
                           if ! MANAGEMENT_ACCOUNT_CREDENTIAL=$(aws sts assume-role --role-arn arn:",
@@ -28617,19 +28526,22 @@ phases:
       - if [ -f .yarnrc ]; then yarn install --use-yarnrc .yarnrc; else yarn install; fi
       - yarn build
       - cd packages/@aws-accelerator/installer
-      - '[ ! -z "$ACCELERATOR_PREFIX" ] && sed -i "s/AWSAccelerator/$ACCELERATOR_PREFIX/g" lib/cloudformation/bootstrap-management*.yaml'
-      - set -e &&  yarn run cdk bootstrap --toolkitStackName ",
+      - set -e && ./lib/bash/bootstrap-management.sh ",
                 {
                   "Fn::GetAtt": [
                     "ResourceNamePrefixesGetPrefixResource96A10E6E",
                     "acceleratorPrefix",
                   ],
                 },
-                "-CDKToolkit aws://",
+                " ",
+                {
+                  "Ref": "AWS::Region",
+                },
+                " ",
                 {
                   "Ref": "AWS::AccountId",
                 },
-                "/",
+                " ",
                 {
                   "Fn::FindInMap": [
                     "GlobalRegionMap",
@@ -28639,23 +28551,7 @@ phases:
                     "regionName",
                   ],
                 },
-                " --qualifier accel  --template lib/cloudformation/bootstrap-management-global.yaml;
-      - set -e && yarn run cdk bootstrap --toolkitStackName ",
-                {
-                  "Fn::GetAtt": [
-                    "ResourceNamePrefixesGetPrefixResource96A10E6E",
-                    "acceleratorPrefix",
-                  ],
-                },
-                "-CDKToolkit aws://",
-                {
-                  "Ref": "AWS::AccountId",
-                },
-                "/",
-                {
-                  "Ref": "AWS::Region",
-                },
-                " --qualifier accel  --template lib/cloudformation/bootstrap-management.yaml;
+                " $FORCE_BOOTSTRAP
       - |-
         set -e && if [ $ENABLE_EXTERNAL_PIPELINE_ACCOUNT = "yes" ]; then
                           if ! MANAGEMENT_ACCOUNT_CREDENTIAL=$(aws sts assume-role --role-arn arn:",
@@ -32812,19 +32708,22 @@ phases:
       - if [ -f .yarnrc ]; then yarn install --use-yarnrc .yarnrc; else yarn install; fi
       - yarn build
       - cd packages/@aws-accelerator/installer
-      - '[ ! -z "$ACCELERATOR_PREFIX" ] && sed -i "s/AWSAccelerator/$ACCELERATOR_PREFIX/g" lib/cloudformation/bootstrap-management*.yaml'
-      - set -e &&  yarn run cdk bootstrap --toolkitStackName ",
+      - set -e && ./lib/bash/bootstrap-management.sh ",
                 {
                   "Fn::GetAtt": [
                     "ResourceNamePrefixesGetPrefixResource96A10E6E",
                     "acceleratorPrefix",
                   ],
                 },
-                "-CDKToolkit aws://",
+                " ",
+                {
+                  "Ref": "AWS::Region",
+                },
+                " ",
                 {
                   "Ref": "AWS::AccountId",
                 },
-                "/",
+                " ",
                 {
                   "Fn::FindInMap": [
                     "GlobalRegionMap",
@@ -32834,23 +32733,7 @@ phases:
                     "regionName",
                   ],
                 },
-                " --qualifier accel  --template lib/cloudformation/bootstrap-management-global.yaml;
-      - set -e && yarn run cdk bootstrap --toolkitStackName ",
-                {
-                  "Fn::GetAtt": [
-                    "ResourceNamePrefixesGetPrefixResource96A10E6E",
-                    "acceleratorPrefix",
-                  ],
-                },
-                "-CDKToolkit aws://",
-                {
-                  "Ref": "AWS::AccountId",
-                },
-                "/",
-                {
-                  "Ref": "AWS::Region",
-                },
-                " --qualifier accel  --template lib/cloudformation/bootstrap-management.yaml;
+                " $FORCE_BOOTSTRAP
       - |-
         set -e && if [ $ENABLE_EXTERNAL_PIPELINE_ACCOUNT = "yes" ]; then
                           if ! MANAGEMENT_ACCOUNT_CREDENTIAL=$(aws sts assume-role --role-arn arn:",

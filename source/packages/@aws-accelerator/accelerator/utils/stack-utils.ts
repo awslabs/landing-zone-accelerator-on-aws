@@ -90,6 +90,7 @@ function getStackSynthesizer(
     cloudFormationExecutionRole: deploymentRoleArn,
     deployRoleArn: deploymentRoleArn,
     lookupRoleArn: deploymentRoleArn,
+    fileAssetPublishingRoleArn: deploymentRoleArn,
     qualifier: 'accel',
   });
 }
