@@ -12,13 +12,16 @@
  */
 
 import { describe, beforeEach, expect, test, vi, afterEach } from 'vitest';
-import { manageEbsDefaultEncryption } from '../../executors/accelerator-amazon-ec2';
+import { manageEbsDefaultEncryption, deleteDefaultVpc } from '../../executors/accelerator-amazon-ec2';
 import { ManageEbsDefaultEncryptionModule } from '../../lib/amazon-ec2/manage-ebs-default-encryption/index';
+import { DeleteDefaultVpcModule } from '../../lib/amazon-ec2/delete-default-vpc';
 import { MOCK_CONSTANTS } from '../mocked-resources';
 import { IManageEbsDefaultEncryptionHandlerParameter } from '../../interfaces/amazon-ec2/manage-ebs-default-encryption';
+import { IDeleteDefaultVpcParameter } from '../../interfaces/amazon-ec2/delete-default-vpc';
 
 // Mock dependencies
 vi.mock('../../lib/amazon-ec2/manage-ebs-default-encryption/index');
+vi.mock('../../lib/amazon-ec2/delete-default-vpc');
 
 describe('AmazonEc2Executor', () => {
   beforeEach(() => {
@@ -61,6 +64,150 @@ describe('AmazonEc2Executor', () => {
       await expect(manageEbsDefaultEncryption(input)).rejects.toThrow(errorMessage);
 
       expect(mockHandler).toHaveBeenCalledWith(input);
+      expect(mockHandler).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe('deleteDefaultVpc', () => {
+    const input: IDeleteDefaultVpcParameter = {
+      ...MOCK_CONSTANTS.runnerParameters,
+      configuration: {},
+      operation: 'delete-default-vpc',
+    };
+
+    test('should successfully delete default VPC with dry run', async () => {
+      // Setup
+      const expectedResponse =
+        '[DRY-RUN]: delete-default-vpc delete-default-vpc (no actual changes were made)\nValidation: ✓ Successful\nStatus: No default VPCs found in the region';
+      const mockHandler = vi.fn().mockResolvedValue(expectedResponse);
+
+      (DeleteDefaultVpcModule as unknown as vi.Mock).mockImplementation(() => ({
+        handler: mockHandler,
+      }));
+
+      const dryRunInput = { ...input, dryRun: true };
+
+      // Execute
+      const result = await deleteDefaultVpc(dryRunInput);
+
+      // Verify
+      expect(result).toBe(expectedResponse);
+      expect(mockHandler).toHaveBeenCalledWith(dryRunInput);
+      expect(mockHandler).toHaveBeenCalledTimes(1);
+    });
+
+    test('should successfully delete default VPC without dry run', async () => {
+      // Setup
+      const expectedResponse = 'Successfully deleted 1 default VPC(s): vpc-12345';
+      const mockHandler = vi.fn().mockResolvedValue(expectedResponse);
+
+      (DeleteDefaultVpcModule as unknown as vi.Mock).mockImplementation(() => ({
+        handler: mockHandler,
+      }));
+
+      const actualRunInput = { ...input, dryRun: false };
+
+      // Execute
+      const result = await deleteDefaultVpc(actualRunInput);
+
+      // Verify
+      expect(result).toBe(expectedResponse);
+      expect(mockHandler).toHaveBeenCalledWith(actualRunInput);
+      expect(mockHandler).toHaveBeenCalledTimes(1);
+    });
+
+    test('should handle no default VPCs found', async () => {
+      // Setup
+      const expectedResponse = 'No default VPCs found in the region';
+      const mockHandler = vi.fn().mockResolvedValue(expectedResponse);
+
+      (DeleteDefaultVpcModule as unknown as vi.Mock).mockImplementation(() => ({
+        handler: mockHandler,
+      }));
+
+      // Execute
+      const result = await deleteDefaultVpc(input);
+
+      // Verify
+      expect(result).toBe(expectedResponse);
+      expect(mockHandler).toHaveBeenCalledWith(input);
+      expect(mockHandler).toHaveBeenCalledTimes(1);
+    });
+
+    test('should throw error when deletion fails', async () => {
+      // Setup
+      const errorMessage = 'ServiceException: Failed to delete VPC vpc-12345: DependencyViolation';
+      const mockHandler = vi.fn().mockRejectedValue(new Error(errorMessage));
+
+      (DeleteDefaultVpcModule as unknown as vi.Mock).mockImplementation(() => ({
+        handler: mockHandler,
+      }));
+
+      // Execute && Verify
+      await expect(deleteDefaultVpc(input)).rejects.toThrow(errorMessage);
+
+      expect(mockHandler).toHaveBeenCalledWith(input);
+      expect(mockHandler).toHaveBeenCalledTimes(1);
+    });
+
+    test('should handle AWS service errors', async () => {
+      // Setup
+      const errorMessage = 'AccessDenied: User is not authorized to perform this action';
+      const mockHandler = vi.fn().mockRejectedValue(new Error(errorMessage));
+
+      (DeleteDefaultVpcModule as unknown as vi.Mock).mockImplementation(() => ({
+        handler: mockHandler,
+      }));
+
+      // Execute && Verify
+      await expect(deleteDefaultVpc(input)).rejects.toThrow(errorMessage);
+
+      expect(mockHandler).toHaveBeenCalledWith(input);
+      expect(mockHandler).toHaveBeenCalledTimes(1);
+    });
+
+    test('should handle network connectivity errors', async () => {
+      // Setup
+      const errorMessage = 'NetworkingError: Unable to connect to AWS services';
+      const mockHandler = vi.fn().mockRejectedValue(new Error(errorMessage));
+
+      (DeleteDefaultVpcModule as unknown as vi.Mock).mockImplementation(() => ({
+        handler: mockHandler,
+      }));
+
+      // Execute && Verify
+      await expect(deleteDefaultVpc(input)).rejects.toThrow(errorMessage);
+
+      expect(mockHandler).toHaveBeenCalledWith(input);
+      expect(mockHandler).toHaveBeenCalledTimes(1);
+    });
+
+    test('should pass through all input parameters correctly', async () => {
+      // Setup
+      const mockHandler = vi.fn().mockResolvedValue('SUCCESS');
+      const customInput: IDeleteDefaultVpcParameter = {
+        region: 'us-west-2',
+        partition: 'aws-us-gov',
+        configuration: {},
+        operation: 'delete-default-vpc',
+        dryRun: true,
+        solutionId: 'custom-solution',
+        credentials: {
+          accessKeyId: 'test-key',
+          secretAccessKey: 'test-secret',
+          sessionToken: 'test-token',
+        },
+      };
+
+      (DeleteDefaultVpcModule as unknown as vi.Mock).mockImplementation(() => ({
+        handler: mockHandler,
+      }));
+
+      // Execute
+      await deleteDefaultVpc(customInput);
+
+      // Verify
+      expect(mockHandler).toHaveBeenCalledWith(customInput);
       expect(mockHandler).toHaveBeenCalledTimes(1);
     });
   });
