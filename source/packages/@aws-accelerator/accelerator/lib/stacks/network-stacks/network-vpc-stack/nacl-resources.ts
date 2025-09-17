@@ -23,7 +23,7 @@ import {
   NetworkAclInboundRuleConfig,
 } from '@aws-accelerator/config';
 import { NetworkAcl, Subnet, Vpc } from '@aws-accelerator/constructs';
-import { SsmResourceType } from '@aws-accelerator/utils/lib/ssm-parameter-path';
+import { SsmResourceType, MetadataKeys } from '@aws-accelerator/utils';
 import { NagSuppressions } from 'cdk-nag';
 import { pascalCase } from 'pascal-case';
 import { LogLevel } from '../network-stack';
@@ -31,7 +31,6 @@ import { getSubnet, getSubnetConfig, getVpc, getVpcConfig } from '../utils/gette
 import { isIpv6Cidr } from '../utils/validation-utils';
 import { NetworkVpcStack } from './network-vpc-stack';
 import * as cdk from 'aws-cdk-lib';
-import { MetadataKeys } from '@aws-accelerator/utils/lib/common-types';
 import { LZAResourceLookup, LZAResourceLookupType } from '../../../../utils/lza-resource-lookup';
 
 export class NaclResources {

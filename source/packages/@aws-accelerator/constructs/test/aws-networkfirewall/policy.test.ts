@@ -14,7 +14,7 @@
 import * as cdk from 'aws-cdk-lib';
 import { FirewallPolicyProperty, NetworkFirewallPolicy } from '../../lib/aws-networkfirewall/policy';
 import { snapShotTest } from '../snapshot-test';
-import { describe, it } from '@jest/globals';
+import { describe, it } from 'vitest';
 
 const testNamePrefix = 'Construct(NetworkFirewallPolicy): ';
 

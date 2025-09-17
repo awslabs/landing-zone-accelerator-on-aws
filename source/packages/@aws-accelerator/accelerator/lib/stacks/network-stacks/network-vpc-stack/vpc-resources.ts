@@ -29,15 +29,14 @@ import {
   Vpc,
   VpnConnection,
 } from '@aws-accelerator/constructs';
-import { SsmResourceType } from '@aws-accelerator/utils/lib/ssm-parameter-path';
+import { SsmResourceType, MetadataKeys } from '@aws-accelerator/utils';
 import * as cdk from 'aws-cdk-lib';
 import { NagSuppressions } from 'cdk-nag';
 import { pascalCase } from 'pascal-case';
 import { LogLevel, NetworkStack } from '../network-stack';
 import { getVpc, getVpcConfig } from '../utils/getter-utils';
 import { isIpv4 } from '../utils/validation-utils';
-import { MetadataKeys } from '../../../../../utils/lib/common-types';
-import { LZAResourceLookup, LZAResourceLookupType } from '@aws-accelerator/accelerator/utils/lza-resource-lookup';
+import { LZAResourceLookup, LZAResourceLookupType } from '@aws-accelerator/accelerator';
 
 type Ipv4VpcCidrBlock = { cidrBlock: string } | { ipv4IpamPoolId: string; ipv4NetmaskLength: number };
 type Ipv6VpcCidrBlock = {

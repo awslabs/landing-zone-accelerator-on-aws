@@ -11,32 +11,34 @@
  *  and limitations under the License.
  */
 
-import { describe, beforeEach, expect, test } from '@jest/globals';
+import { describe, beforeEach, afterEach, expect, test, vi } from 'vitest';
 import { GetParameterCommand, SSMClient } from '@aws-sdk/client-ssm';
+import { STSClient } from '@aws-sdk/client-sts';
 import { MOCK_CONSTANTS } from '../../../mocked-resources';
 import { GetSsmParametersValueModule } from '../../../../lib/aws-ssm/get-parameters';
 import { IGetSsmParametersValueHandlerParameter } from '../../../../interfaces/aws-ssm/get-parameters';
+import * as functions from '../../../../common/functions';
 
-jest.mock('@aws-sdk/client-ssm', () => ({
-  ...jest.requireActual('@aws-sdk/client-ssm'),
-  SSMClient: jest.fn(),
-  GetParameterCommand: jest.fn(),
+vi.mock('@aws-sdk/client-ssm', async () => ({
+  ...(await vi.importActual('@aws-sdk/client-ssm')),
+  SSMClient: vi.fn(),
+  GetParameterCommand: vi.fn(),
 }));
 
-jest.mock('@aws-sdk/client-sts', () => ({
-  ...jest.requireActual('@aws-sdk/client-sts'),
-  STSClient: jest.fn(),
+vi.mock('@aws-sdk/client-sts', async () => ({
+  ...(await vi.importActual('@aws-sdk/client-sts')),
+  STSClient: vi.fn(),
 }));
 
-jest.mock('../../../../common/throttle', () => ({
-  throttlingBackOff: jest.fn().mockImplementation(fn => fn()),
+vi.mock('../../../../common/throttle', () => ({
+  throttlingBackOff: vi.fn().mockImplementation(fn => fn()),
 }));
 
-jest.mock('../../../../common/functions', () => ({
-  ...jest.requireActual('../../../../common/functions'),
-  setRetryStrategy: jest.fn().mockReturnValue({}),
-  getCurrentAccountDetails: jest.fn().mockResolvedValue({ accountId: '111111111111', roleArn: 'mock-role-arn' }),
-  getCredentials: jest.fn().mockResolvedValue({
+vi.mock('../../../../common/functions', async () => ({
+  ...(await vi.importActual('../../../../common/functions')),
+  setRetryStrategy: vi.fn().mockReturnValue({}),
+  getCurrentAccountDetails: vi.fn().mockResolvedValue({ accountId: '111111111111', roleArn: 'mock-role-arn' }),
+  getCredentials: vi.fn().mockResolvedValue({
     accessKeyId: 'mock-access-key',
     secretAccessKey: 'mock-secret-key',
     sessionToken: 'mock-session-token',
@@ -57,7 +59,7 @@ describe('SsmGetParameterModule Contract Compliance', () => {
 
   beforeEach(() => {
     module = new GetSsmParametersValueModule();
-    jest.spyOn(module, 'handler').mockImplementation(async () => []);
+    vi.spyOn(module, 'handler').mockImplementation(async () => []);
   });
 
   test('should implement handler method', () => {
@@ -72,7 +74,7 @@ describe('SsmGetParameterModule Contract Compliance', () => {
   });
 
   test('should handle invalid inputs according to contract', async () => {
-    jest.spyOn(module, 'handler').mockRejectedValue(new Error('Invalid input'));
+    vi.spyOn(module, 'handler').mockRejectedValue(new Error('Invalid input'));
 
     await expect(module.handler({} as IGetSsmParametersValueHandlerParameter)).rejects.toThrow('Invalid input');
   });
@@ -84,24 +86,33 @@ describe('SsmGetParameterModule Contract Compliance', () => {
   });
 
   afterEach(() => {
-    jest.restoreAllMocks();
+    vi.restoreAllMocks();
   });
 });
 
 describe('SsmGetParameterModule', () => {
-  const mockSend = jest.fn();
-  const mockSTSSend = jest.fn();
+  const mockSend = vi.fn();
+  const mockSTSSend = vi.fn();
 
-  beforeEach(() => {
-    jest.clearAllMocks();
-    (SSMClient as jest.Mock).mockImplementation(() => ({
+  beforeEach(async () => {
+    vi.clearAllMocks();
+    (SSMClient as vi.Mock).mockImplementation(() => ({
       send: mockSend,
     }));
-    const { STSClient } = require('@aws-sdk/client-sts');
-    (STSClient as jest.Mock).mockImplementation(() => ({
+    (STSClient as vi.Mock).mockImplementation(() => ({
       send: mockSTSSend,
     }));
-    mockSTSSend.mockResolvedValue({ Account: '111111111111' });
+    mockSTSSend.mockResolvedValue({ Account: '111111111111', Arn: 'mock-role-arn' });
+
+    // Ensure getCurrentAccountDetails mock is properly set
+    vi.mocked(functions.getCurrentAccountDetails).mockResolvedValue({
+      accountId: '111111111111',
+      roleArn: 'mock-role-arn',
+    });
+
+    // Mock throttlingBackOff to return the response directly
+    const { throttlingBackOff } = await import('../../../../common/throttle');
+    vi.mocked(throttlingBackOff).mockImplementation(async fn => await fn());
   });
 
   const getInput = (configuration: IGetSsmParametersValueHandlerParameter['configuration']) => ({
@@ -208,7 +219,7 @@ describe('SsmGetParameterModule', () => {
       ]);
 
       // Verify getCredentials was called for cross-account access
-      expect(require('../../../../common/functions').getCredentials).toHaveBeenCalledWith({
+      expect(functions.getCredentials).toHaveBeenCalledWith({
         accountId: '222222222222',
         region: expect.any(String),
         solutionId: expect.any(String),
@@ -217,8 +228,7 @@ describe('SsmGetParameterModule', () => {
     });
 
     test('should throw error for cross-account credential failures', async () => {
-      const mockGetCredentials = require('../../../../common/functions').getCredentials;
-      mockGetCredentials.mockRejectedValueOnce(new Error('AssumeRole failed'));
+      vi.mocked(functions.getCredentials).mockRejectedValueOnce(new Error('AssumeRole failed'));
 
       const input = getInput([
         {
@@ -269,8 +279,7 @@ describe('SsmGetParameterModule', () => {
     });
 
     test('should throw error when trying to assume the same role', async () => {
-      const mockGetCurrentAccountDetails = require('../../../../common/functions').getCurrentAccountDetails;
-      mockGetCurrentAccountDetails.mockResolvedValueOnce({
+      vi.mocked(functions.getCurrentAccountDetails).mockResolvedValueOnce({
         accountId: '111111111111',
         roleArn: 'arn:aws:iam::111111111111:role/TestRole',
       });
@@ -296,5 +305,9 @@ describe('SsmGetParameterModule', () => {
 
       await expect(new GetSsmParametersValueModule().handler(input)).rejects.toThrow('Parameter name is required');
     });
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
   });
 });

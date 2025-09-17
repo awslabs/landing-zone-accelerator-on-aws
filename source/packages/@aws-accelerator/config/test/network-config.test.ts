@@ -51,26 +51,19 @@ import { ReplacementsConfig } from '../lib/replacements-config';
 
 import { VpcFlowLogsConfig } from '../lib/common/types';
 
-import { describe, it, expect } from '@jest/globals';
+import { describe, it, expect } from 'vitest';
 import * as path from 'path';
 import * as fs from 'fs';
 import { AccountsConfig } from '../lib/accounts-config';
+import { SNAPSHOT_CONFIG } from './config-test-helper';
 
-const configDir = path.resolve('../accelerator/test/configs/snapshot-only');
+const configDir = SNAPSHOT_CONFIG;
 
 describe('NetworkConfig', () => {
   describe('Test config', () => {
-    // const networkConfigFromFile = NetworkConfig.load(path.resolve('../accelerator/test/configs/all-enabled'), true);
     it('has loaded successfully', () => {
       const networkConfig = new NetworkConfig();
       expect(networkConfig.vpcs).toEqual([]);
-      // expect(networkConfigFromFile.accountNames).toEqual([
-      //   'Management',
-      //   'LogArchive',
-      //   'Audit',
-      //   'SharedServices',
-      //   'Network',
-      // ]);
     });
 
     it('loads from string', () => {

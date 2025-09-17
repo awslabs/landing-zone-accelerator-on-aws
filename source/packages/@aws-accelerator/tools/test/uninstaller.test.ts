@@ -11,6 +11,8 @@
  *  and limitations under the License.
  */
 
+import { test } from 'vitest';
+
 test('Uninstaller test', () => {
   //   // const app = new cdk.App();
   //   // // WHEN

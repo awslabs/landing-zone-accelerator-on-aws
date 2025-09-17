@@ -11,6 +11,7 @@
  *  and limitations under the License.
  */
 import { handler } from '../index';
+import { describe, beforeEach, expect, test, vi } from 'vitest';
 import {
   EnableMacieCommand,
   GetMacieSessionCommand,
@@ -21,11 +22,11 @@ import {
 } from '@aws-sdk/client-macie2';
 import { throttlingBackOff } from '@aws-accelerator/utils/lib/throttle';
 import { NEW_PROPS } from './fixtures';
-import { CloudFormationCustomResourceEvent } from '@aws-accelerator/utils/lib/common-types';
+import { CloudFormationCustomResourceEvent } from '@aws-accelerator/utils';
 import { AcceleratorMockClient, EventType } from '../../../../test/unit-test/common/resources';
 import { AcceleratorUnitTest } from '../../../../test/unit-test/accelerator-unit-test';
 
-jest.mock('@aws-accelerator/utils/lib/throttle');
+vi.mock('@aws-accelerator/utils/lib/throttle');
 
 const macie2Mock = AcceleratorMockClient(Macie2Client);
 
@@ -82,10 +83,10 @@ describe('Macie2 handler and helper functions', () => {
   const createEvent = AcceleratorUnitTest.getEvent(EventType.CREATE, { new: [NEW_PROPS] });
   const updateEvent = AcceleratorUnitTest.getEvent(EventType.UPDATE, { new: [NEW_PROPS] });
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     macie2Mock.reset();
     process.env['SOLUTION_ID'] = 'test-solution-id';
-    (throttlingBackOff as jest.Mock).mockImplementation(async wrappedFunction => {
+    (throttlingBackOff as vi.Mock).mockImplementation(async wrappedFunction => {
       return wrappedFunction();
     });
   });

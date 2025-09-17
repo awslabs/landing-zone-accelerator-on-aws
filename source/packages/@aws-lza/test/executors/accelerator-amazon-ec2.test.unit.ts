@@ -11,18 +11,18 @@
  *  and limitations under the License.
  */
 
-import { describe, beforeEach, expect, test } from '@jest/globals';
+import { describe, beforeEach, expect, test, vi, afterEach } from 'vitest';
 import { manageEbsDefaultEncryption } from '../../executors/accelerator-amazon-ec2';
 import { ManageEbsDefaultEncryptionModule } from '../../lib/amazon-ec2/manage-ebs-default-encryption/index';
 import { MOCK_CONSTANTS } from '../mocked-resources';
 import { IManageEbsDefaultEncryptionHandlerParameter } from '../../interfaces/amazon-ec2/manage-ebs-default-encryption';
 
 // Mock dependencies
-jest.mock('../../lib/amazon-ec2/manage-ebs-default-encryption/index');
+vi.mock('../../lib/amazon-ec2/manage-ebs-default-encryption/index');
 
 describe('AmazonEc2Executor', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   describe('manageEbsDefaultEncryption', () => {
@@ -32,9 +32,9 @@ describe('AmazonEc2Executor', () => {
     };
     test('should successfully configure default encryption key', async () => {
       // Setup
-      const mockHandler = jest.fn().mockResolvedValue('SUCCESS');
+      const mockHandler = vi.fn().mockResolvedValue('SUCCESS');
 
-      (ManageEbsDefaultEncryptionModule as unknown as jest.Mock).mockImplementation(() => ({
+      (ManageEbsDefaultEncryptionModule as unknown as vi.Mock).mockImplementation(() => ({
         handler: mockHandler,
       }));
 
@@ -51,9 +51,9 @@ describe('AmazonEc2Executor', () => {
       // Setup
 
       const errorMessage = 'Operation failed';
-      const mockHandler = jest.fn().mockRejectedValue(new Error(errorMessage));
+      const mockHandler = vi.fn().mockRejectedValue(new Error(errorMessage));
 
-      (ManageEbsDefaultEncryptionModule as unknown as jest.Mock).mockImplementation(() => ({
+      (ManageEbsDefaultEncryptionModule as unknown as vi.Mock).mockImplementation(() => ({
         handler: mockHandler,
       }));
 
@@ -72,28 +72,28 @@ describe('AmazonEc2Executor', () => {
     beforeEach(() => {
       originalProcessOn = process.on;
 
-      process.on = jest.fn((event: string, listener: NodeJS.UncaughtExceptionListener) => {
+      process.on = vi.fn((event: string, listener: NodeJS.UncaughtExceptionListener) => {
         if (event === 'uncaughtException') {
           processOnCallback = listener;
         }
         return process;
       }) as unknown as typeof process.on;
 
-      jest.resetModules();
+      vi.resetModules();
     });
 
     afterEach(() => {
       process.on = originalProcessOn;
     });
 
-    test('should register uncaughtException handler', () => {
-      require('../../executors/accelerator-amazon-ec2');
+    test('should register uncaughtException handler', async () => {
+      await import('../../executors/accelerator-amazon-ec2');
 
       expect(process.on).toHaveBeenCalledWith('uncaughtException', expect.any(Function));
     });
 
-    test('should rethrow the error when uncaughtException occurs', () => {
-      require('../../executors/accelerator-amazon-ec2');
+    test('should rethrow the error when uncaughtException occurs', async () => {
+      await import('../../executors/accelerator-amazon-ec2');
 
       const testError = new Error('Test uncaught exception');
       const origin = 'uncaughtException';

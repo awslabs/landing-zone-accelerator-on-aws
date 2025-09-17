@@ -17,6 +17,7 @@ import * as yaml from 'js-yaml';
 import * as fs from 'fs';
 import * as path from 'path';
 import { pascalCase } from 'pascal-case';
+import { describe, test } from 'vitest';
 
 const testNamePrefix = 'Construct(TesterStack): ';
 

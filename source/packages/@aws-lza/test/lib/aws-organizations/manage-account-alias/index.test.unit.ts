@@ -11,7 +11,7 @@
  *  and limitations under the License.
  */
 
-import { describe, beforeEach, expect, test } from '@jest/globals';
+import { describe, beforeEach, expect, test, vi } from 'vitest';
 import {
   IAMClient,
   CreateAccountAliasCommand,
@@ -23,29 +23,29 @@ import { ManageAccountAlias } from '../../../../lib/aws-organizations/manage-acc
 import { IManageAccountAliasHandlerParameter } from '../../../../interfaces/aws-organizations/manage-account-alias';
 import { MODULE_EXCEPTIONS } from '../../../../common/enums';
 
-jest.mock('@aws-sdk/client-iam', () => {
+vi.mock('@aws-sdk/client-iam', () => {
   return {
-    IAMClient: jest.fn(),
-    CreateAccountAliasCommand: jest.fn(),
-    DeleteAccountAliasCommand: jest.fn(),
-    ListAccountAliasesCommand: jest.fn(),
-    EntityAlreadyExistsException: jest.fn(),
+    IAMClient: vi.fn(),
+    CreateAccountAliasCommand: vi.fn(),
+    DeleteAccountAliasCommand: vi.fn(),
+    ListAccountAliasesCommand: vi.fn(),
+    EntityAlreadyExistsException: vi.fn(),
   };
 });
 
-jest.mock('../../../../common/throttle', () => ({
-  throttlingBackOff: jest.fn(fn => fn()),
+vi.mock('../../../../common/throttle', () => ({
+  throttlingBackOff: vi.fn(fn => fn()),
 }));
 
-jest.mock('../../../../common/functions', () => {
+vi.mock('../../../../common/functions', async () => {
   return {
-    ...jest.requireActual('../../../../common/functions'),
-    setRetryStrategy: jest.fn(() => ({})),
+    ...(await vi.importActual('../../../../common/functions')),
+    setRetryStrategy: vi.fn(() => ({})),
   };
 });
 
 describe('ManageAccountAlias', () => {
-  const mockSend = jest.fn();
+  const mockSend = vi.fn();
 
   const mockParams: IManageAccountAliasHandlerParameter = {
     operation: 'manage-account-alias',
@@ -57,9 +57,9 @@ describe('ManageAccountAlias', () => {
   };
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
 
-    (IAMClient as jest.Mock).mockImplementation(() => ({
+    (IAMClient as vi.Mock).mockImplementation(() => ({
       send: mockSend,
     }));
   });
@@ -273,7 +273,7 @@ describe('ManageAccountAlias', () => {
     };
 
     beforeEach(() => {
-      jest.clearAllMocks();
+      vi.clearAllMocks();
     });
 
     test('should be successful when alias already set', async () => {

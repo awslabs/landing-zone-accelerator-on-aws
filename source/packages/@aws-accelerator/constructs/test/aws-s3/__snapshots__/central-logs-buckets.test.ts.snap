@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`CentralLogsBucket Construct(CentralLogsBucket):  Snapshot Test 1`] = `
+exports[`CentralLogsBucket > Construct(CentralLogsBucket):  Snapshot Test 1`] = `
 {
   "Resources": {
     "AccessLogsBucketFA218D2A": {

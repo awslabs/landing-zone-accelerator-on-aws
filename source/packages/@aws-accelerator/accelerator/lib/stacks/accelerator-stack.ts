@@ -19,8 +19,6 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { v4 as uuidv4 } from 'uuid';
 import * as winston from 'winston';
-import { PrincipalOrgIdConditionType } from '@aws-accelerator/utils/lib/common-resources';
-
 import {
   AccountConfig,
   AccountsConfig,
@@ -48,11 +46,16 @@ import {
   VpcTemplatesConfig,
 } from '@aws-accelerator/config';
 import { KeyLookup, S3LifeCycleRule, ServiceLinkedRole } from '@aws-accelerator/constructs';
-import { createLogger } from '@aws-accelerator/utils/lib/logger';
-import { policyReplacements } from '@aws-accelerator/utils/lib/policy-replacements';
-import { SsmParameterPath, SsmResourceType } from '@aws-accelerator/utils/lib/ssm-parameter-path';
-import { version } from '../../../../../package.json';
+import {
+  PrincipalOrgIdConditionType,
+  createLogger,
+  policyReplacements,
+  SsmParameterPath,
+  SsmResourceType,
+} from '@aws-accelerator/utils';
 import { AcceleratorResourcePrefixes } from '../../utils/app-utils';
+import { version } from '../../../../../package.json';
+
 import { AcceleratorResourceNames } from '../accelerator-resource-names';
 
 /**

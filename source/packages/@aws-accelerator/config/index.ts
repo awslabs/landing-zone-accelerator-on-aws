@@ -23,6 +23,7 @@ export * from './lib/security-config';
 export * from './lib/models/accounts-config';
 export * from './lib/models/global-config';
 export * from './lib/models/iam-config';
+export * from './lib/models/network-config';
 export * from './lib/models/organization-config';
 export * from './lib/models/security-config';
 export * from './validator/accounts-config-validator';

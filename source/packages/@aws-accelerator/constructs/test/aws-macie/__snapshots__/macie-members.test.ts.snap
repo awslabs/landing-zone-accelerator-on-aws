@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`MacieMembers Construct(MacieMembers):  Snapshot Test 1`] = `
+exports[`MacieMembers > Construct(MacieMembers):  Snapshot Test 1`] = `
 {
   "Resources": {
     "CustomMacieCreateMemberCustomResourceProviderHandler913F75DB": {

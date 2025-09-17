@@ -11,7 +11,18 @@
  *  and limitations under the License.
  */
 
-import { beforeEach, describe, expect, test } from '@jest/globals';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
+
+// Mock the lambda module to prevent Node.js version issues
+vi.mock('@aws-accelerator/utils/lib/lambda', () => ({
+  DEFAULT_LAMBDA_RUNTIME: 'nodejs18.x',
+  CUSTOM_RESOURCE_PROVIDER_RUNTIME: 'nodejs18.x',
+  LzaLambdaRuntime: {
+    DEFAULT_RUNTIME: 'nodejs18.x',
+    getLambdaRuntime: vi.fn().mockReturnValue('nodejs18.x'),
+  },
+}));
+
 import { LzaConfiguration, LzaConfigurationProps } from '../../lib/config/index';
 import * as functions from '../../lib/config/functions';
 import { AcceleratorConfigLoader } from '../../lib/config/accelerator-config-loader';
@@ -21,12 +32,9 @@ import { Account } from '@aws-sdk/client-organizations';
 //
 // Mock Dependencies
 //
-jest.mock('../../lib/config/functions');
-jest.mock('../../lib/config/accelerator-config-loader');
-jest.mock('@aws-accelerator/utils/lib/common-functions', () => ({
-  getNodeVersion: jest.fn(() => 20),
-  getGlobalRegion: jest.fn(),
-}));
+vi.mock('../../lib/config/functions');
+vi.mock('../../lib/config/accelerator-config-loader');
+vi.mock('@aws-accelerator/utils/lib/common-functions');
 
 //
 // Mock constants
@@ -67,13 +75,15 @@ const MOCK_CONSTANTS = {
 
 describe('LzaConfiguration', () => {
   beforeEach(() => {
-    jest.resetAllMocks();
-    (functions.validateConfigDirPath as jest.Mock).mockImplementation(() => undefined);
-    (functions.getManagementAccountCredentials as jest.Mock).mockResolvedValue(MOCK_CONSTANTS.credentials);
-    (functions.getOrganizationAccounts as jest.Mock).mockResolvedValue(MOCK_CONSTANTS.accounts);
-    (functions.getOrganizationDetails as jest.Mock).mockResolvedValue(MOCK_CONSTANTS.organization);
-    (AcceleratorConfigLoader.getAllConfig as jest.Mock).mockResolvedValue(MOCK_CONSTANTS.allConfigs);
-    (getGlobalRegion as jest.Mock).mockReturnValue(MOCK_CONSTANTS.globalRegion);
+    // Set Node.js version before any operations
+    // Set Node.js version before any operations
+    vi.clearAllMocks();
+    (functions.validateConfigDirPath as vi.Mock).mockImplementation(() => undefined);
+    (functions.getManagementAccountCredentials as vi.Mock).mockResolvedValue(MOCK_CONSTANTS.credentials);
+    (functions.getOrganizationAccounts as vi.Mock).mockResolvedValue(MOCK_CONSTANTS.accounts);
+    (functions.getOrganizationDetails as vi.Mock).mockResolvedValue(MOCK_CONSTANTS.organization);
+    (AcceleratorConfigLoader.getAllConfig as vi.Mock).mockResolvedValue(MOCK_CONSTANTS.allConfigs);
+    (getGlobalRegion as vi.Mock).mockReturnValue(MOCK_CONSTANTS.globalRegion);
   });
 
   test('should return the correct configuration', async () => {
@@ -119,7 +129,7 @@ describe('LzaConfiguration', () => {
   });
 
   test('should throw an error if AWS Organizations is not configured but enabled in config', async () => {
-    (functions.getOrganizationDetails as jest.Mock).mockResolvedValue(null);
+    (functions.getOrganizationDetails as vi.Mock).mockResolvedValue(null);
 
     await expect(LzaConfiguration.getConfiguration(MOCK_CONSTANTS.lzaConfigurationProps)).rejects.toThrow(
       'AWS Organizations not configured but organization is enabled in organization-config.yaml file !!!',
@@ -131,7 +141,7 @@ describe('LzaConfiguration', () => {
       ...MOCK_CONSTANTS.allConfigs,
       organizationConfig: { enable: false },
     };
-    (AcceleratorConfigLoader.getAllConfig as jest.Mock).mockResolvedValue(disabledOrgConfig);
+    (AcceleratorConfigLoader.getAllConfig as vi.Mock).mockResolvedValue(disabledOrgConfig);
 
     await LzaConfiguration.getConfiguration(MOCK_CONSTANTS.lzaConfigurationProps);
 

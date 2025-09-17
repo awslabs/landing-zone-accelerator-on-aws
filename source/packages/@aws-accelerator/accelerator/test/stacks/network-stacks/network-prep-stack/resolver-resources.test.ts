@@ -17,8 +17,8 @@ import {
   DnsFirewallRuleGroupConfig,
   DnsFirewallRulesConfig,
 } from '@aws-accelerator/config';
-import { ResolverFirewallDomainList } from '@aws-accelerator/constructs/lib/aws-route-53-resolver/firewall-domain-list';
-import { beforeEach, describe, expect, jest, test } from '@jest/globals';
+import { ResolverFirewallDomainList } from '@aws-accelerator/constructs';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
 import * as cdk from 'aws-cdk-lib';
 import { AcceleratorStackProps } from '../../../../lib/stacks/accelerator-stack';
 import { NetworkPrepStack } from '../../../../lib/stacks/network-stacks/network-prep-stack/network-prep-stack';
@@ -31,15 +31,18 @@ describe('ResolverResources', () => {
   let networkStack: NetworkPrepStack;
 
   beforeEach(() => {
-    jest.resetAllMocks();
-    jest.spyOn(NetworkPrepStack.prototype, 'getCentralLogBucketName').mockReturnValue('unitTestLogBucket');
-    jest.spyOn(NetworkPrepStack.prototype, 'getSsmPath').mockReturnValue('/test/ssm-path/');
-    jest.spyOn(NetworkPrepStack.prototype, 'getAcceleratorKey').mockReturnValue(undefined);
-    jest.spyOn(NetworkPrepStack.prototype, 'isIncluded').mockReturnValue(true);
-    jest
-      .spyOn(ResolverResources.prototype as any, 'createResolverQueryLogs')
-      .mockReturnValue(new Map<string, string>());
-    jest.spyOn(ResolverFirewallDomainList.prototype as any, 'getAssetUrl').mockReturnValue('');
+    vi.clearAllMocks();
+    vi.spyOn(NetworkPrepStack.prototype, 'getCentralLogBucketName').mockReturnValue('unitTestLogBucket');
+    vi.spyOn(NetworkPrepStack.prototype, 'getSsmPath').mockReturnValue('/test/ssm-path/');
+    vi.spyOn(NetworkPrepStack.prototype, 'getAcceleratorKey').mockReturnValue(undefined);
+    vi.spyOn(NetworkPrepStack.prototype, 'isIncluded').mockReturnValue(true);
+    vi.spyOn(ResolverResources.prototype as any, 'createResolverQueryLogs').mockReturnValue(new Map<string, string>());
+    vi.spyOn(ResolverFirewallDomainList.prototype as any, 'getAssetUrl').mockReturnValue('');
+    vi.mock('aws-sdk', () => ({
+      Bucket: vi.fn(() => ({
+        fromBucketName: vi.fn(),
+      })),
+    }));
 
     app = new cdk.App();
     props = createAcceleratorStackProps();

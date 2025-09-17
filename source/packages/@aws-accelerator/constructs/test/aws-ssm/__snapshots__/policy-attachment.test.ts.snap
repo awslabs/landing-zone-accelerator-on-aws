@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`SsmSessionManagerPolicy Construct(SsmSessionManagerPolicy):  Snapshot Test 1`] = `
+exports[`SsmSessionManagerPolicy > Construct(SsmSessionManagerPolicy):  Snapshot Test 1`] = `
 {
   "Resources": {
     "SsmSessionManagerPolicySessionManagerEC2InstanceProfile9A6E976B": {

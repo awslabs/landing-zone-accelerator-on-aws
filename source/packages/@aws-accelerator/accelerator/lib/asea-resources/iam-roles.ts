@@ -24,7 +24,7 @@ import {
   ServicePrincipal,
 } from 'aws-cdk-lib/aws-iam';
 import { RoleConfig, AseaResourceType } from '@aws-accelerator/config';
-import { SsmResourceType } from '@aws-accelerator/utils/lib/ssm-parameter-path';
+import { SsmResourceType } from '@aws-accelerator/utils';
 import { pascalCase } from 'pascal-case';
 import { ImportAseaResourcesStack, LogLevel } from '../stacks/import-asea-resources-stack';
 import { AseaResource, AseaResourceProps } from './resource';

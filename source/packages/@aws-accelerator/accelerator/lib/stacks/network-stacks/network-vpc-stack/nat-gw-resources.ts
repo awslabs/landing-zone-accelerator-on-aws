@@ -13,12 +13,11 @@
 
 import { AseaResourceType, VpcConfig, VpcTemplatesConfig } from '@aws-accelerator/config';
 import { INatGateway, NatGateway, Subnet } from '@aws-accelerator/constructs';
-import { SsmResourceType } from '@aws-accelerator/utils/lib/ssm-parameter-path';
+import { SsmResourceType, MetadataKeys } from '@aws-accelerator/utils';
 import { pascalCase } from 'pascal-case';
 import { LogLevel } from '../network-stack';
 import { getSubnet } from '../utils/getter-utils';
 import { NetworkVpcStack } from './network-vpc-stack';
-import { MetadataKeys } from '@aws-accelerator/utils/lib/common-types';
 import { CfnResource } from 'aws-cdk-lib/core';
 import { LZAResourceLookup, LZAResourceLookupType } from '../../../../utils/lza-resource-lookup';
 

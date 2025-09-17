@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`Get Network Firewall endpoint Construct(GetNetworkFirewallEndpoint):  Snapshot Test 1`] = `
+exports[`Get Network Firewall endpoint > Construct(GetNetworkFirewallEndpoint):  Snapshot Test 1`] = `
 {
   "Resources": {
     "Custom8166710A": {

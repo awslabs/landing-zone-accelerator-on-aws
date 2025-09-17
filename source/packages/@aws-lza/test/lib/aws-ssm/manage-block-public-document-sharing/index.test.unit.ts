@@ -12,14 +12,14 @@
  */
 /* eslint @typescript-eslint/no-explicit-any: 0 */
 
-import { beforeEach, describe, expect, it, jest } from '@jest/globals';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { SSMClient, UpdateServiceSettingCommand, GetServiceSettingCommand } from '@aws-sdk/client-ssm';
 
-jest.mock('@aws-sdk/client-ssm', () => ({
-  SSMClient: jest.fn(),
-  UpdateServiceSettingCommand: jest.fn(),
-  GetServiceSettingCommand: jest.fn(),
+vi.mock('@aws-sdk/client-ssm', () => ({
+  SSMClient: vi.fn(),
+  UpdateServiceSettingCommand: vi.fn(),
+  GetServiceSettingCommand: vi.fn(),
   ServiceSettingNotFound: class extends Error {
     constructor(message?: string) {
       super(message || 'Service setting not found');
@@ -40,11 +40,11 @@ import { MOCK_CONSTANTS } from '../../../mocked-resources';
 import { MODULE_EXCEPTIONS } from '../../../../common/enums';
 
 describe('BlockPublicDocumentSharingModule', () => {
-  const mockSend = jest.fn();
+  const mockSend = vi.fn();
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
 
-    (SSMClient as jest.Mock).mockImplementation(() => ({
+    (SSMClient as vi.Mock).mockImplementation(() => ({
       send: mockSend,
     }));
   });
@@ -55,7 +55,7 @@ describe('BlockPublicDocumentSharingModule', () => {
       ...MOCK_CONSTANTS.runnerParameters,
     };
     beforeEach(() => {
-      jest.clearAllMocks();
+      vi.clearAllMocks();
     });
 
     it('should be successful in enabling SSM Block Public Document Sharing', async () => {

@@ -14,7 +14,7 @@
 import { expect as expectCDK, haveResource, SynthUtils } from '@aws-cdk/assert';
 import * as cdk from 'aws-cdk-lib';
 import * as CdkExtensions from '../index';
-import { test, describe, expect } from '@jest/globals';
+import { test, describe, expect } from 'vitest';
 
 describe('Initialized CodeCommit Repository', () => {
   const props: CdkExtensions.RepositoryProps = {

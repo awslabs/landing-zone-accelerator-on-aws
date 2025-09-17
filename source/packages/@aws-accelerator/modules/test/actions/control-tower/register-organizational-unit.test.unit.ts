@@ -11,7 +11,7 @@
  *  and limitations under the License.
  */
 
-import { beforeEach, describe, test } from '@jest/globals';
+import { beforeEach, describe, test, vi, afterEach, expect } from 'vitest';
 import { RegisterOrganizationalUnitModule } from '../../../lib/actions/control-tower/register-organizational-unit';
 import { AcceleratorModules, ModuleExecutionPhase } from '../../../models/enums';
 import { AcceleratorStage } from '../../../../accelerator';
@@ -37,18 +37,18 @@ describe('RegisterOrganizationalUnitModule', () => {
   let mockAccountsConfig: Partial<AccountsConfig>;
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
 
-    jest.spyOn(awsLza, 'registerOrganizationalUnit').mockResolvedValue(`Successful`);
-    jest.spyOn(awsLza, 'getOrganizationalUnitsDetail').mockResolvedValue(MOCK_CONSTANTS.organizationUnitsDetail);
+    vi.spyOn(awsLza, 'registerOrganizationalUnit').mockResolvedValue(`Successful`);
+    vi.spyOn(awsLza, 'getOrganizationalUnitsDetail').mockResolvedValue(MOCK_CONSTANTS.organizationUnitsDetail);
 
     mockAccountsConfig = {
-      getManagementAccount: jest.fn().mockReturnValue(MOCK_CONSTANTS.managementAccount),
-      getManagementAccountId: jest.fn().mockReturnValue(MOCK_CONSTANTS.managementAccount.name),
-      getAuditAccount: jest.fn().mockReturnValue(MOCK_CONSTANTS.auditAccount),
-      getAuditAccountId: jest.fn().mockReturnValue(MOCK_CONSTANTS.auditAccount.name),
-      getLogArchiveAccount: jest.fn().mockReturnValue(MOCK_CONSTANTS.logArchiveAccount),
-      getLogArchiveAccountId: jest.fn().mockReturnValue(MOCK_CONSTANTS.logArchiveAccount.name),
+      getManagementAccount: vi.fn().mockReturnValue(MOCK_CONSTANTS.managementAccount),
+      getManagementAccountId: vi.fn().mockReturnValue(MOCK_CONSTANTS.managementAccount.name),
+      getAuditAccount: vi.fn().mockReturnValue(MOCK_CONSTANTS.auditAccount),
+      getAuditAccountId: vi.fn().mockReturnValue(MOCK_CONSTANTS.auditAccount.name),
+      getLogArchiveAccount: vi.fn().mockReturnValue(MOCK_CONSTANTS.logArchiveAccount),
+      getLogArchiveAccountId: vi.fn().mockReturnValue(MOCK_CONSTANTS.logArchiveAccount.name),
       ...mockAccountsConfiguration,
     };
   });
@@ -64,7 +64,7 @@ describe('RegisterOrganizationalUnitModule', () => {
         name: AcceleratorModules.REGISTER_ORGANIZATIONAL_UNIT,
         description: '',
         runOrder: 1,
-        handler: jest.fn().mockResolvedValue(`Module 1 of ${AcceleratorStage.ACCOUNTS} stage executed`),
+        handler: vi.fn().mockResolvedValue(`Module 1 of ${AcceleratorStage.ACCOUNTS} stage executed`),
         executionPhase: ModuleExecutionPhase.DEPLOY,
       },
       runnerParameters: MOCK_CONSTANTS.runnerParameters,
@@ -103,7 +103,7 @@ describe('RegisterOrganizationalUnitModule', () => {
         name: AcceleratorModules.REGISTER_ORGANIZATIONAL_UNIT,
         description: '',
         runOrder: 1,
-        handler: jest.fn().mockResolvedValue(`Module 1 of ${AcceleratorStage.ACCOUNTS} stage executed`),
+        handler: vi.fn().mockResolvedValue(`Module 1 of ${AcceleratorStage.ACCOUNTS} stage executed`),
         executionPhase: ModuleExecutionPhase.DEPLOY,
       },
       runnerParameters: MOCK_CONSTANTS.runnerParameters,
@@ -140,13 +140,13 @@ describe('RegisterOrganizationalUnitModule', () => {
         item.registeredwithControlTower &&
         MOCK_CONSTANTS.configs.organizationConfig.organizationalUnits.some(ou => ou.name === item.completePath),
     );
-    jest.spyOn(awsLza, 'getOrganizationalUnitsDetail').mockResolvedValue(ouDetails);
+    vi.spyOn(awsLza, 'getOrganizationalUnitsDetail').mockResolvedValue(ouDetails);
     const param: ModuleParams = {
       moduleItem: {
         name: AcceleratorModules.REGISTER_ORGANIZATIONAL_UNIT,
         description: '',
         runOrder: 1,
-        handler: jest.fn().mockResolvedValue(`Module 1 of ${AcceleratorStage.ACCOUNTS} stage executed`),
+        handler: vi.fn().mockResolvedValue(`Module 1 of ${AcceleratorStage.ACCOUNTS} stage executed`),
         executionPhase: ModuleExecutionPhase.DEPLOY,
       },
       runnerParameters: MOCK_CONSTANTS.runnerParameters,
@@ -181,6 +181,6 @@ describe('RegisterOrganizationalUnitModule', () => {
   });
 
   afterEach(() => {
-    jest.restoreAllMocks();
+    vi.restoreAllMocks();
   });
 });

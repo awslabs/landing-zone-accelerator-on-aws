@@ -15,17 +15,17 @@ import * as fs from 'fs';
 import * as yaml from 'js-yaml';
 import * as path from 'path';
 
-import { loadOrganizationalUnits } from '@aws-accelerator/utils/lib/load-organization-config';
+import { createLogger } from '@aws-accelerator/utils/lib/logger';
+import { loadOrganizationalUnits } from '../../utils/lib/load-organization-config';
 import { OrganizationalUnit, Root } from '@aws-sdk/client-organizations';
 import { AwsCredentialIdentity } from '@aws-sdk/types';
-import { createLogger } from '@aws-accelerator/utils/lib/logger';
 
 import { AccountsConfig } from './accounts-config';
 import * as t from './common';
 import * as i from './models/organization-config';
 import { ReplacementsConfig } from './replacements-config';
 import { getSSMParameterValue } from '../../utils/lib/get-value-from-ssm';
-import { queryConfigTable } from '@aws-accelerator/utils/lib/query-config-table';
+import { queryConfigTable } from '../../utils/lib/query-config-table';
 import { getGlobalRegion, getCrossAccountCredentials } from '../../utils/lib/common-functions';
 const logger = createLogger(['organization-config']);
 

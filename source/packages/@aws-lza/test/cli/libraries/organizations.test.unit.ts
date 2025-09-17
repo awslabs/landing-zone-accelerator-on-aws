@@ -11,7 +11,7 @@
  *  and limitations under the License.
  */
 
-import { describe, expect, test } from '@jest/globals';
+import { describe, expect, test } from 'vitest';
 import { createOu, createScp } from '../../../lib/cli/libraries/organizations';
 
 describe('organizations', () => {

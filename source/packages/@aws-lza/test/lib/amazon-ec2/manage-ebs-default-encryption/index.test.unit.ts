@@ -10,7 +10,7 @@
  *  OR CONDITIONS OF ANY KIND, express or implied. See the License for the specific language governing permissions
  *  and limitations under the License.
  */
-import { describe, beforeEach, expect, test } from '@jest/globals';
+import { describe, beforeEach, expect, test, vi } from 'vitest';
 
 import { ManageEbsDefaultEncryptionModule } from '../../../../lib/amazon-ec2/manage-ebs-default-encryption/index';
 
@@ -27,23 +27,23 @@ import { IManageEbsDefaultEncryptionHandlerParameter } from '../../../../interfa
 import { MODULE_EXCEPTIONS } from '../../../../common/enums';
 
 // Mock dependencies
-jest.mock('@aws-sdk/client-ec2', () => {
+vi.mock('@aws-sdk/client-ec2', () => {
   return {
-    EC2Client: jest.fn(),
-    GetEbsEncryptionByDefaultCommand: jest.fn(),
-    GetEbsDefaultKmsKeyIdCommand: jest.fn(),
-    EnableEbsEncryptionByDefaultCommand: jest.fn(),
-    ModifyEbsDefaultKmsKeyIdCommand: jest.fn(),
-    DisableEbsEncryptionByDefaultCommand: jest.fn(),
+    EC2Client: vi.fn(),
+    GetEbsEncryptionByDefaultCommand: vi.fn(),
+    GetEbsDefaultKmsKeyIdCommand: vi.fn(),
+    EnableEbsEncryptionByDefaultCommand: vi.fn(),
+    ModifyEbsDefaultKmsKeyIdCommand: vi.fn(),
+    DisableEbsEncryptionByDefaultCommand: vi.fn(),
   };
 });
 
 describe('ManageEbsDefaultEncryptionModule', () => {
-  const mockSend = jest.fn();
+  const mockSend = vi.fn();
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
 
-    (EC2Client as jest.Mock).mockImplementation(() => ({
+    (EC2Client as vi.Mock).mockImplementation(() => ({
       send: mockSend,
     }));
   });
@@ -54,7 +54,7 @@ describe('ManageEbsDefaultEncryptionModule', () => {
       ...MOCK_CONSTANTS.runnerParameters,
     };
     beforeEach(() => {
-      jest.clearAllMocks();
+      vi.clearAllMocks();
     });
 
     test('should be successful in configuring default encryption key', async () => {
@@ -350,7 +350,7 @@ describe('ManageEbsDefaultEncryptionModule', () => {
     };
 
     beforeEach(() => {
-      jest.clearAllMocks();
+      vi.clearAllMocks();
     });
 
     test('should throw error when invalid configuration provided', async () => {

@@ -17,23 +17,18 @@ import { Construct } from 'constructs';
 import { AcceleratorKeyType, AcceleratorStack } from '../../accelerator-stack';
 import { RouteEntryPropertiesType, V2NetworkStacksBaseProps } from '../utils/types';
 import { VpcDetails } from '../constructs/vpc-details';
+import { OutpostsConfig, RouteTableConfig, RouteTableEntryConfig, SubnetConfig } from '@aws-accelerator/config';
 import {
-  OutpostsConfig,
-  RouteTableConfig,
-  RouteTableEntryConfig,
-  SubnetConfig,
-} from '@aws-accelerator/config/lib/network-config';
-import { PrefixListRoute, PrefixListRouteProps } from '@aws-accelerator/constructs/lib/aws-ec2/prefix-list-route';
-import { SsmResourceType } from '@aws-accelerator/utils/lib/ssm-parameter-path';
-import { isV2Resource } from '../utils/functions';
-import { NetworkStackGeneration, V2StackComponentsList } from '../utils/enums';
-import { NetworkVpcStackRouteEntryTypes } from '../utils/constants';
-import { MetadataKeys } from '@aws-accelerator/utils/lib/common-types';
-import {
+  PrefixListRoute,
+  PrefixListRouteProps,
   ResourceShare,
   ResourceShareItem,
   ResourceShareOwner,
-} from '@aws-accelerator/constructs/lib/aws-ram/resource-share';
+} from '@aws-accelerator/constructs';
+import { SsmResourceType, MetadataKeys } from '@aws-accelerator/utils';
+import { isV2Resource } from '../utils/functions';
+import { NetworkStackGeneration, V2StackComponentsList } from '../utils/enums';
+import { NetworkVpcStackRouteEntryTypes } from '../utils/constants';
 
 export class VpcRouteEntriesBaseStack extends AcceleratorStack {
   private v2StackProps: V2NetworkStacksBaseProps;

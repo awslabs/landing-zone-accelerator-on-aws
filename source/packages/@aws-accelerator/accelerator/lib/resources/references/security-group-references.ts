@@ -1,5 +1,5 @@
 import { VpcConfig, VpcTemplatesConfig } from '@aws-accelerator/config';
-import { SsmParameterPath, SsmResourceType } from '@aws-accelerator/utils/lib/ssm-parameter-path';
+import { SsmParameterPath, SsmResourceType } from '@aws-accelerator/utils';
 import * as cdk from 'aws-cdk-lib';
 import { Construct } from 'constructs';
 

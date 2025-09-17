@@ -11,7 +11,7 @@
  *  and limitations under the License.
  */
 
-import { beforeEach, describe, test } from '@jest/globals';
+import { beforeEach, describe, test,expect, vi, afterEach } from 'vitest';
 import { SetupControlTowerLandingZoneModule } from '../../../lib/actions/control-tower/setup-control-tower-landing-zone';
 import { AcceleratorModules, ModuleExecutionPhase } from '../../../models/enums';
 import { AcceleratorStage } from '../../../../accelerator';
@@ -30,17 +30,17 @@ describe('SetupControlTowerLandingZoneModule', () => {
   let mockAccountsConfig: Partial<AccountsConfig>;
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
 
-    jest.spyOn(awsLza, 'setupControlTowerLandingZone').mockResolvedValue(`Successful`);
+    vi.spyOn(awsLza, 'setupControlTowerLandingZone').mockResolvedValue(`Successful`);
 
     mockAccountsConfig = {
-      getManagementAccount: jest.fn().mockReturnValue(MOCK_CONSTANTS.managementAccount),
-      getManagementAccountId: jest.fn().mockReturnValue(MOCK_CONSTANTS.managementAccount.name),
-      getAuditAccount: jest.fn().mockReturnValue(MOCK_CONSTANTS.auditAccount),
-      getAuditAccountId: jest.fn().mockReturnValue(MOCK_CONSTANTS.auditAccount.name),
-      getLogArchiveAccount: jest.fn().mockReturnValue(MOCK_CONSTANTS.logArchiveAccount),
-      getLogArchiveAccountId: jest.fn().mockReturnValue(MOCK_CONSTANTS.logArchiveAccount.name),
+      getManagementAccount: vi.fn().mockReturnValue(MOCK_CONSTANTS.managementAccount),
+      getManagementAccountId: vi.fn().mockReturnValue(MOCK_CONSTANTS.managementAccount.name),
+      getAuditAccount: vi.fn().mockReturnValue(MOCK_CONSTANTS.auditAccount),
+      getAuditAccountId: vi.fn().mockReturnValue(MOCK_CONSTANTS.auditAccount.name),
+      getLogArchiveAccount: vi.fn().mockReturnValue(MOCK_CONSTANTS.logArchiveAccount),
+      getLogArchiveAccountId: vi.fn().mockReturnValue(MOCK_CONSTANTS.logArchiveAccount.name),
       ...mockAccountsConfiguration,
     };
   });
@@ -52,7 +52,7 @@ describe('SetupControlTowerLandingZoneModule', () => {
         name: AcceleratorModules.SETUP_CONTROL_TOWER_LANDING_ZONE,
         description: '',
         runOrder: 1,
-        handler: jest.fn().mockResolvedValue(`Module 1 of ${AcceleratorStage.ACCOUNTS} stage executed`),
+        handler: vi.fn().mockResolvedValue(`Module 1 of ${AcceleratorStage.ACCOUNTS} stage executed`),
         executionPhase: ModuleExecutionPhase.DEPLOY,
       },
       runnerParameters: MOCK_CONSTANTS.runnerParameters,
@@ -89,7 +89,7 @@ describe('SetupControlTowerLandingZoneModule', () => {
         name: AcceleratorModules.SETUP_CONTROL_TOWER_LANDING_ZONE,
         description: '',
         runOrder: 1,
-        handler: jest.fn().mockResolvedValue(`Module 1 of ${AcceleratorStage.ACCOUNTS} stage executed`),
+        handler: vi.fn().mockResolvedValue(`Module 1 of ${AcceleratorStage.ACCOUNTS} stage executed`),
         executionPhase: ModuleExecutionPhase.DEPLOY,
       },
       runnerParameters: MOCK_CONSTANTS.runnerParameters,
@@ -126,7 +126,7 @@ describe('SetupControlTowerLandingZoneModule', () => {
         name: AcceleratorModules.SETUP_CONTROL_TOWER_LANDING_ZONE,
         description: '',
         runOrder: 1,
-        handler: jest.fn().mockResolvedValue(`Module 1 of ${AcceleratorStage.ACCOUNTS} stage executed`),
+        handler: vi.fn().mockResolvedValue(`Module 1 of ${AcceleratorStage.ACCOUNTS} stage executed`),
         executionPhase: ModuleExecutionPhase.DEPLOY,
       },
       runnerParameters: MOCK_CONSTANTS.runnerParameters,
@@ -157,6 +157,6 @@ describe('SetupControlTowerLandingZoneModule', () => {
   });
 
   afterEach(() => {
-    jest.restoreAllMocks();
+    vi.restoreAllMocks();
   });
 });

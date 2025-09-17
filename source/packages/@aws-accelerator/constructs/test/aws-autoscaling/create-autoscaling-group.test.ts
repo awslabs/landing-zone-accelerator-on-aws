@@ -14,7 +14,7 @@
 import * as cdk from 'aws-cdk-lib';
 import { AutoscalingGroup } from '../../lib/aws-autoscaling/create-autoscaling-group';
 import { snapShotTest } from '../snapshot-test';
-import { describe } from '@jest/globals';
+import { describe } from 'vitest';
 
 const testNamePrefix = 'Construct(AutoscalingGroup): ';
 

@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`IpamOrganizationAdminAccount Construct(IpamOrganizationAdminAccount):  Snapshot Test 1`] = `
+exports[`IpamOrganizationAdminAccount > Construct(IpamOrganizationAdminAccount):  Snapshot Test 1`] = `
 {
   "Resources": {
     "CustomEnableIpamOrganizationAdminAccountCustomResourceProviderHandlerA3CAFE25": {

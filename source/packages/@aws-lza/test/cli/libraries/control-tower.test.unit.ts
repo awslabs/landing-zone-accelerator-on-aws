@@ -11,13 +11,13 @@
  *  and limitations under the License.
  */
 
-import { describe, expect, test } from '@jest/globals';
+import { describe, expect, test, vi } from 'vitest';
 
 import { setupControlTowerLandingZone } from '../../../executors/accelerator-control-tower';
 import { ControlTowerCommand, LZA_CONTROL_TOWER_MODULE } from '../../../lib/cli/libraries/control-tower';
 import { CliExecutionParameterType, ConfigurationObjectType } from '../../../lib/cli/libraries/root';
 
-jest.mock('../../../executors/accelerator-control-tower');
+vi.mock('../../../executors/accelerator-control-tower');
 
 const MOCKED_CONSTANTS = {
   moduleName: 'test-module',
@@ -79,7 +79,7 @@ describe('control-tower', () => {
         },
       };
 
-      const mockSetupControlTowerLandingZone = setupControlTowerLandingZone as jest.Mock;
+      const mockSetupControlTowerLandingZone = setupControlTowerLandingZone as vi.Mock;
       mockSetupControlTowerLandingZone.mockResolvedValue('Success');
 
       const result = await ControlTowerCommand.executeCommand(params);
@@ -131,7 +131,7 @@ describe('control-tower', () => {
         },
       };
 
-      const mockExit = jest
+      const mockExit = vi
         .spyOn(process, 'exit')
         .mockImplementation((code?: string | number | null | undefined): never => {
           throw new Error('Process.exit called with code: ' + code);
@@ -161,7 +161,7 @@ describe('control-tower', () => {
         return params;
       })();
 
-      const mockExit = jest
+      const mockExit = vi
         .spyOn(process, 'exit')
         .mockImplementation((code?: string | number | null | undefined): never => {
           throw new Error('Process.exit called with code: ' + code);
@@ -191,7 +191,7 @@ describe('control-tower', () => {
         return params;
       })();
 
-      const mockExit = jest
+      const mockExit = vi
         .spyOn(process, 'exit')
         .mockImplementation((code?: string | number | null | undefined): never => {
           throw new Error('Process.exit called with code: ' + code);
@@ -221,7 +221,7 @@ describe('control-tower', () => {
         return params;
       })();
 
-      const mockExit = jest
+      const mockExit = vi
         .spyOn(process, 'exit')
         .mockImplementation((code?: string | number | null | undefined): never => {
           throw new Error('Process.exit called with code: ' + code);

@@ -31,7 +31,7 @@ import {
   CloudFormationCustomResourceCreateEvent,
   CloudFormationCustomResourceDeleteEvent,
 } from '../../../lib/lza-custom-resource';
-import { expect, it, beforeEach, afterEach } from '@jest/globals';
+import { expect, it, beforeEach, afterEach } from 'vitest';
 
 let ssmMock: AwsClientStub<SSMClient>;
 let ec2Mock: AwsClientStub<EC2Client>;

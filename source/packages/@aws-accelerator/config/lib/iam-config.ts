@@ -15,7 +15,7 @@ import * as fs from 'fs';
 import * as yaml from 'js-yaml';
 import * as path from 'path';
 
-import { createLogger } from '@aws-accelerator/utils/lib/logger';
+import { createLogger } from '@aws-accelerator/utils';
 
 import { AccountsConfig } from './accounts-config';
 import * as t from './common';

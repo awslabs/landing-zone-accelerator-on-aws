@@ -14,7 +14,7 @@
 import * as cdk from 'aws-cdk-lib';
 import { ResolverRule, ResolverRuleAssociation } from '../../lib/aws-route-53-resolver/resolver-rule';
 import { snapShotTest } from '../snapshot-test';
-import { describe, expect, it } from '@jest/globals';
+import { describe, expect, it } from 'vitest';
 
 const testNamePrefix = 'Construct(ResolverRule): ';
 

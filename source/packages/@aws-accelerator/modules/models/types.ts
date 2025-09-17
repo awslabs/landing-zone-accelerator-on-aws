@@ -11,14 +11,16 @@
  *  and limitations under the License.
  */
 
-import { AccountsConfig } from '@aws-accelerator/config/lib/accounts-config';
-import { CustomizationsConfig } from '@aws-accelerator/config/lib/customizations-config';
-import { GlobalConfig } from '@aws-accelerator/config/lib/global-config';
-import { IamConfig } from '@aws-accelerator/config/lib/iam-config';
-import { NetworkConfig } from '@aws-accelerator/config/lib/network-config';
-import { OrganizationConfig } from '@aws-accelerator/config/lib/organization-config';
-import { ReplacementsConfig } from '@aws-accelerator/config/lib/replacements-config';
-import { SecurityConfig } from '@aws-accelerator/config/lib/security-config';
+import {
+  AccountsConfig,
+  CustomizationsConfig,
+  GlobalConfig,
+  IamConfig,
+  NetworkConfig,
+  OrganizationConfig,
+  ReplacementsConfig,
+  SecurityConfig,
+} from '@aws-accelerator/config';
 import { AcceleratorResourcePrefixes } from '../../accelerator/utils/app-utils';
 import { AcceleratorResourceNames } from '../../accelerator/lib/accelerator-resource-names';
 import { Account, Organization } from '@aws-sdk/client-organizations';

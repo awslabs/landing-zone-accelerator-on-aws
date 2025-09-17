@@ -8,8 +8,6 @@
     "name": "Amazon Web Services",
     "url": "https://aws.amazon.com/solutions"
   },
-  "main": "index.js",
-  "types": "dist/index.d.ts",
   "bin": {
     "govcloud-avm": "bin/govcloud-avm.js"
   },
@@ -19,7 +17,7 @@
     "cleanup:tsc": "tsc --build ./ --clean",
     "lint": "eslint --fix  --max-warnings 0 -c ../../../.eslintrc.json 'lib/**/*.{ts,tsx}'",
     "precommit": "eslint --max-warnings 0 -c ../../../.eslintrc.json 'lib/**/*.{ts,tsx}'",
-    "test:unit": "jest --coverage --ci --passWithNoTests",
+    "test:unit": "vitest run --coverage --passWithNoTests",
     "test:clean": "rm -f ./test-reports/*.xml",
     "watch": "tsc -w"
   },
@@ -37,7 +35,6 @@
   },
   "devDependencies": {
     "@types/fs-extra": "11.0.1",
-    "@types/jest": "29.5.12",
     "@types/mri": "1.1.1",
     "@types/node": "18.19.50",
     "@types/promptly": "3.0.2",
@@ -52,18 +49,11 @@
     "eslint-plugin-license-header": "0.6.0",
     "eslint-plugin-node": "11.1.0",
     "eslint-plugin-prettier": "4.2.1",
-    "jest": "29.4.3",
-    "jest-sonar-reporter": "2.0.0",
     "mri": "1.2.0",
     "prettier": "2.8.4",
     "promptly": "3.2.0",
-    "ts-jest": "29.0.5",
+    "vitest": "3.2.4",
     "ts-node": "10.9.1",
     "typescript": "5.8.3"
-  },
-  "jestSonar": {
-    "reportPath": "coverage",
-    "reportFile": "test-report.xml",
-    "indent": 4
   }
 }

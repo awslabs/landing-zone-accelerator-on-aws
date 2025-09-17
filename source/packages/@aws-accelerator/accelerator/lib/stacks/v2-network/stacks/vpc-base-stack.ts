@@ -19,15 +19,23 @@ import { pascalCase } from 'pascal-case';
 
 import { AcceleratorKeyType, AcceleratorStack, NagSuppressionRuleIds } from '../../accelerator-stack';
 import { ipamPoolIdType, V2NetworkStacksBaseProps } from '../utils/types';
-import { SsmResourceType } from '@aws-accelerator/utils/lib/ssm-parameter-path';
-import { SsmParameterLookup } from '@aws-accelerator/constructs/lib/aws-ssm/ssm-parameter-lookup';
-import { VpcDetails } from '../constructs/vpc-details';
+import { SsmResourceType, MetadataKeys } from '@aws-accelerator/utils';
 import {
+  SsmParameterLookup,
   IResourceShareItem,
   ResourceShare,
   ResourceShareItem,
   ResourceShareOwner,
-} from '@aws-accelerator/constructs/lib/aws-ram/resource-share';
+  DeleteDefaultSecurityGroupRules,
+  LzaLambda,
+  VpnConnection,
+  VpnConnectionProps,
+  VpnTunnelOptionsSpecifications,
+  CloudWatchLogGroups,
+  PutSsmParameter,
+  SsmParameterProps,
+} from '@aws-accelerator/constructs';
+import { VpcDetails } from '../constructs/vpc-details';
 import {
   CustomerGatewayConfig,
   IpamAllocationConfig,
@@ -35,22 +43,12 @@ import {
   VpcIpv6Config,
   VpcTemplatesConfig,
   VpnConnectionConfig,
-} from '@aws-accelerator/config/lib/network-config';
-import { VpcFlowLogsConfig } from '@aws-accelerator/config/lib/common/types';
-import { DeleteDefaultSecurityGroupRules } from '@aws-accelerator/constructs/lib/aws-ec2/vpc';
-import { LzaLambda } from '@aws-accelerator/constructs/lib/lza-lambda';
+  VpcFlowLogsConfig,
+} from '@aws-accelerator/config';
 import { hasAdvancedVpnOptions, isIpv4 } from '../../network-stacks/utils/validation-utils';
-import {
-  VpnConnection,
-  VpnConnectionProps,
-  VpnTunnelOptionsSpecifications,
-} from '@aws-accelerator/constructs/lib/aws-ec2/vpn-connection';
-import { CloudWatchLogGroups } from '@aws-accelerator/constructs/lib/aws-cloudwatch-logs/cloudwatch-log-group';
 import { getFirewallInstanceConfig } from '../../network-stacks/utils/getter-utils';
-import { PutSsmParameter, SsmParameterProps } from '@aws-accelerator/constructs/lib/aws-ssm/put-ssm-parameter';
 import { NetworkStackGeneration, V2StackComponentsList } from '../utils/enums';
 import { isV2Resource } from '../utils/functions';
-import { MetadataKeys } from '@aws-accelerator/utils/lib/common-types';
 
 export class VpcBaseStack extends AcceleratorStack {
   private v2StackProps: V2NetworkStacksBaseProps;

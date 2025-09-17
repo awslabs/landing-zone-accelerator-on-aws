@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`ValidateScpCount Construct(ValidateScpCount):  Snapshot Test 1`] = `
+exports[`ValidateScpCount > Construct(ValidateScpCount):  Snapshot Test 1`] = `
 {
   "Resources": {
     "CustomKey1E6D0D07": {
@@ -160,8 +160,8 @@ exports[`ValidateScpCount Construct(ValidateScpCount):  Snapshot Test 1`] = `
             "name": "Admin",
           },
         ],
-        "maxAccountAttachedScps": null,
-        "maxOuAttachedScps": null,
+        "maxAccountAttachedScps": 6,
+        "maxOuAttachedScps": 5,
         "organizationUnits": [
           {
             "id": "o-1234567",

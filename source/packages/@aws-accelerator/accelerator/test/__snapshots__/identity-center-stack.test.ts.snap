@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`IdentityCenterStack Construct(IdentityCenterStack):  Snapshot Test 1`] = `
+exports[`IdentityCenterStack > Construct(IdentityCenterStack):  Snapshot Test 1`] = `
 {
   "Parameters": {
     "SsmParameterValueacceleratorkmscloudwatchkeyarnC96584B6F00A464EAD1953AFF4B05118Parameter": {

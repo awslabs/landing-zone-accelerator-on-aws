@@ -14,7 +14,7 @@
 import * as cdk from 'aws-cdk-lib';
 import { NetworkLoadBalancer } from '../../lib/aws-elasticloadbalancingv2/network-load-balancer';
 import { snapShotTest } from '../snapshot-test';
-import { describe } from '@jest/globals';
+import { describe } from 'vitest';
 
 const testNamePrefix = 'Construct(NetworkLoadBalancer): ';
 

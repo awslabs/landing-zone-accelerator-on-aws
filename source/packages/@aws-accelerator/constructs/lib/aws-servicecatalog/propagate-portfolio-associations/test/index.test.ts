@@ -8,7 +8,7 @@ import {
 } from '@aws-sdk/client-service-catalog';
 import { IAMClient, ListRolesCommand } from '@aws-sdk/client-iam';
 import { AssumeRoleCommand, STSClient } from '@aws-sdk/client-sts';
-import { describe, beforeEach, expect, test, jest, afterAll } from '@jest/globals';
+import { describe, beforeEach, expect, test, vi, afterAll } from 'vitest';
 import { handler, getPermissionSetRoleArn } from '../index';
 import { AcceleratorMockClient, EventType } from '../../../../test/unit-test/common/resources';
 
@@ -26,7 +26,7 @@ describe('Create Event', () => {
     iamClient.reset();
     scClient.reset();
     stsClient.reset();
-    jest.resetModules(); // it clears the cache for environment
+    vi.resetModules(); // it clears the cache for environment
     process.env = { ...OLD_ENV }; // Make a copy
   });
   afterAll(() => {
@@ -129,7 +129,7 @@ describe('Create Event', () => {
     scClient.on(ListPrincipalsForPortfolioCommand, { PortfolioId: 'portfolioId' }).resolves({
       Principals: [{ PrincipalType: 'IAM', PrincipalARN: 'PrincipalARN' }],
     });
-    scClient.on(AssociatePrincipalWithPortfolioCommand).rejects({});
+    scClient.on(AssociatePrincipalWithPortfolioCommand).rejects(new Error('Mock error'));
     iamClient.on(ListRolesCommand).resolves({
       Roles: [
         {
@@ -148,7 +148,7 @@ describe('Create Event', () => {
     // Set the variables
     process.env['AWS_REGION'] = 'us-east-1';
     const event = AcceleratorUnitTest.getEvent(EventType.CREATE, { new: [StaticInput.newProps] });
-    stsClient.on(AssumeRoleCommand).rejects({});
+    stsClient.on(AssumeRoleCommand).rejects(new Error('Mock error'));
     const response = await handler(event);
     expect(response?.Status).toBe('FAILED');
   });
@@ -214,7 +214,7 @@ describe('Update Event', () => {
     iamClient.reset();
     scClient.reset();
     stsClient.reset();
-    jest.resetModules(); // it clears the cache for environment
+    vi.resetModules(); // it clears the cache for environment
     process.env = { ...OLD_ENV }; // Make a copy
   });
   afterAll(() => {
@@ -258,7 +258,7 @@ describe('Update Event', () => {
     scClient
       .on(ListAcceptedPortfolioSharesCommand, { PortfolioShareType: 'AWS_ORGANIZATIONS' })
       .resolves({ PortfolioDetails: [] });
-    scClient.on(AcceptPortfolioShareCommand).rejects({});
+    scClient.on(AcceptPortfolioShareCommand).rejects(new Error('Mock error'));
     scClient.on(ListPrincipalsForPortfolioCommand, { PortfolioId: 'portfolioId' }).resolves({});
     iamClient.on(ListRolesCommand).resolves({
       Roles: [
@@ -370,7 +370,7 @@ describe('Delete Event', () => {
     iamClient.reset();
     scClient.reset();
     stsClient.reset();
-    jest.resetModules(); // it clears the cache for environment
+    vi.resetModules(); // it clears the cache for environment
     process.env = { ...OLD_ENV }; // Make a copy
   });
   afterAll(() => {
@@ -486,7 +486,7 @@ describe('Delete Event', () => {
         },
       ],
     });
-    scClient.on(DisassociatePrincipalFromPortfolioCommand).rejects({});
+    scClient.on(DisassociatePrincipalFromPortfolioCommand).rejects(new Error('Mock error'));
     const response = await handler(event);
     expect(response?.Status).toBe('SUCCESS');
   });

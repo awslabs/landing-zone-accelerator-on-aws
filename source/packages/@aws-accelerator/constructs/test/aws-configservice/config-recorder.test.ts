@@ -14,6 +14,7 @@
 import * as cdk from 'aws-cdk-lib';
 import { ConfigServiceRecorder } from '../../lib/aws-configservice/config-recorder';
 import { snapShotTest } from '../snapshot-test';
+import { describe } from 'vitest';
 
 const testNamePrefix = 'Construct(ConfigServiceDeliveryChannel): ';
 

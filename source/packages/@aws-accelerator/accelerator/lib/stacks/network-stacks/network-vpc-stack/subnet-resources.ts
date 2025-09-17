@@ -27,14 +27,12 @@ import {
   Subnet,
   Vpc,
 } from '@aws-accelerator/constructs';
-import { getAvailabilityZoneMap } from '@aws-accelerator/utils/lib/regions';
-import { SsmResourceType } from '@aws-accelerator/utils/lib/ssm-parameter-path';
+import { getAvailabilityZoneMap, SsmResourceType, MetadataKeys } from '@aws-accelerator/utils';
 import * as cdk from 'aws-cdk-lib';
 import { pascalCase } from 'pascal-case';
 import { LogLevel } from '../network-stack';
 import { getRouteTable, getSubnet, getVpc } from '../utils/getter-utils';
 import { NetworkVpcStack } from './network-vpc-stack';
-import { MetadataKeys } from '@aws-accelerator/utils';
 import { LZAResourceLookup, LZAResourceLookupType } from '../../../../utils/lza-resource-lookup';
 
 export class SubnetResources {

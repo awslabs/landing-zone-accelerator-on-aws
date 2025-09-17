@@ -10,7 +10,7 @@
  *  OR CONDITIONS OF ANY KIND, express or implied. See the License for the specific language governing permissions
  *  and limitations under the License.
  */
-import { describe, beforeEach, expect, test } from '@jest/globals';
+import { describe, beforeEach, expect, test, vi } from 'vitest';
 import { Organization } from '../../../../../lib/control-tower/setup-landing-zone/prerequisites/organization';
 import {
   AWSOrganizationsNotInUseException,
@@ -26,26 +26,26 @@ import {
 import { paginateListInstances } from '@aws-sdk/client-sso-admin';
 
 // Mock dependencies
-jest.mock('@aws-sdk/client-organizations', () => {
+vi.mock('@aws-sdk/client-organizations', () => {
   return {
-    AWSOrganizationsNotInUseException: jest.fn(),
-    EnableAllFeaturesCommand: jest.fn(),
-    DescribeOrganizationCommand: jest.fn(),
-    ListRootsCommand: jest.fn(),
-    OrganizationsClient: jest.fn(),
-    paginateListAccounts: jest.fn(),
-    paginateListAWSServiceAccessForOrganization: jest.fn(),
-    paginateListOrganizationalUnitsForParent: jest.fn(),
+    AWSOrganizationsNotInUseException: vi.fn(),
+    EnableAllFeaturesCommand: vi.fn(),
+    DescribeOrganizationCommand: vi.fn(),
+    ListRootsCommand: vi.fn(),
+    OrganizationsClient: vi.fn(),
+    paginateListAccounts: vi.fn(),
+    paginateListAWSServiceAccessForOrganization: vi.fn(),
+    paginateListOrganizationalUnitsForParent: vi.fn(),
     OrganizationFeatureSet: {
       ALL: 'ALL',
       CONSOLIDATED_BILLING: 'CONSOLIDATED_BILLING',
     },
   };
 });
-jest.mock('@aws-sdk/client-sso-admin', () => {
+vi.mock('@aws-sdk/client-sso-admin', () => {
   return {
-    paginateListInstances: jest.fn(),
-    SSOAdminClient: jest.fn(),
+    paginateListInstances: vi.fn(),
+    SSOAdminClient: vi.fn(),
   };
 });
 
@@ -109,16 +109,16 @@ const MOCK_CONSTANTS = {
 };
 
 describe('IAM Role Tests', () => {
-  const mockOrganizationsSend = jest.fn();
+  const mockOrganizationsSend = vi.fn();
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
 
-    (OrganizationsClient as jest.Mock).mockImplementation(() => ({
+    (OrganizationsClient as vi.Mock).mockImplementation(() => ({
       send: mockOrganizationsSend,
     }));
 
-    (paginateListInstances as jest.Mock).mockImplementation(() => ({
+    (paginateListInstances as vi.Mock).mockImplementation(() => ({
       [Symbol.asyncIterator]: async function* () {
         yield {
           Instances: [],
@@ -126,7 +126,7 @@ describe('IAM Role Tests', () => {
       },
     }));
 
-    (paginateListOrganizationalUnitsForParent as jest.Mock).mockImplementation(() => ({
+    (paginateListOrganizationalUnitsForParent as vi.Mock).mockImplementation(() => ({
       [Symbol.asyncIterator]: async function* () {
         yield {
           OrganizationalUnits: [],
@@ -134,7 +134,7 @@ describe('IAM Role Tests', () => {
       },
     }));
 
-    (paginateListAccounts as jest.Mock).mockImplementation(() => ({
+    (paginateListAccounts as vi.Mock).mockImplementation(() => ({
       [Symbol.asyncIterator]: async function* () {
         yield {
           Accounts: [],
@@ -142,7 +142,7 @@ describe('IAM Role Tests', () => {
       },
     }));
 
-    (paginateListAWSServiceAccessForOrganization as jest.Mock).mockImplementation(() => ({
+    (paginateListAWSServiceAccessForOrganization as vi.Mock).mockImplementation(() => ({
       [Symbol.asyncIterator]: async function* () {
         yield {
           EnabledServicePrincipals: [],
@@ -184,7 +184,7 @@ describe('IAM Role Tests', () => {
 
   test('organizations validation failed becasue IdentityCenter already enabled', async () => {
     // Setup
-    (paginateListInstances as jest.Mock).mockImplementation(() => ({
+    (paginateListInstances as vi.Mock).mockImplementation(() => ({
       [Symbol.asyncIterator]: async function* () {
         yield {
           Instances: [MOCK_CONSTANTS.ssoInstances],
@@ -217,7 +217,7 @@ describe('IAM Role Tests', () => {
 
   test('should successfully validated organizations when IdentityCenter Instances undefined', async () => {
     // Setup
-    (paginateListInstances as jest.Mock).mockImplementation(() => ({
+    (paginateListInstances as vi.Mock).mockImplementation(() => ({
       [Symbol.asyncIterator]: async function* () {
         yield {
           Instances: undefined,
@@ -323,7 +323,7 @@ describe('IAM Role Tests', () => {
 
   test('organizations validation failed becasue Organizations have services enabled', async () => {
     // Setup
-    (paginateListAWSServiceAccessForOrganization as jest.Mock).mockImplementation(() => ({
+    (paginateListAWSServiceAccessForOrganization as vi.Mock).mockImplementation(() => ({
       [Symbol.asyncIterator]: async function* () {
         yield {
           EnabledServicePrincipals: MOCK_CONSTANTS.enabledServicePrincipals,
@@ -356,7 +356,7 @@ describe('IAM Role Tests', () => {
 
   test('should successfully validated organizations with EnabledServicePrincipals undefined', async () => {
     // Setup
-    (paginateListAWSServiceAccessForOrganization as jest.Mock).mockImplementation(() => ({
+    (paginateListAWSServiceAccessForOrganization as vi.Mock).mockImplementation(() => ({
       [Symbol.asyncIterator]: async function* () {
         yield {
           EnabledServicePrincipals: undefined,
@@ -394,7 +394,7 @@ describe('IAM Role Tests', () => {
 
   test('organizations validation failed becasue Organizations have other OUs', async () => {
     // Setup
-    (paginateListOrganizationalUnitsForParent as jest.Mock).mockImplementation(() => ({
+    (paginateListOrganizationalUnitsForParent as vi.Mock).mockImplementation(() => ({
       [Symbol.asyncIterator]: async function* () {
         yield {
           OrganizationalUnits: [MOCK_CONSTANTS.organizationalUnit],
@@ -427,7 +427,7 @@ describe('IAM Role Tests', () => {
 
   test('organizations validation failed becasue Organizations have other accounts', async () => {
     // Setup
-    (paginateListAccounts as jest.Mock).mockImplementation(() => ({
+    (paginateListAccounts as vi.Mock).mockImplementation(() => ({
       [Symbol.asyncIterator]: async function* () {
         yield {
           Accounts: MOCK_CONSTANTS.accounts,
@@ -460,7 +460,7 @@ describe('IAM Role Tests', () => {
 
   test('organizations validation failed becasue Organizations have other accounts and Accounts object undefined', async () => {
     // Setup
-    (paginateListAccounts as jest.Mock).mockImplementation(() => ({
+    (paginateListAccounts as vi.Mock).mockImplementation(() => ({
       [Symbol.asyncIterator]: async function* () {
         yield {
           Accounts: undefined,
@@ -498,7 +498,7 @@ describe('IAM Role Tests', () => {
 
   test('organizations validation failed becasue Organizations have other accounts for gov cloud partition', async () => {
     // Setup
-    (paginateListAccounts as jest.Mock).mockImplementation(() => ({
+    (paginateListAccounts as vi.Mock).mockImplementation(() => ({
       [Symbol.asyncIterator]: async function* () {
         yield {
           Accounts: MOCK_CONSTANTS.govCloudAccounts,
@@ -531,7 +531,7 @@ describe('IAM Role Tests', () => {
 
   test('should successfully validated organizations becasue Organizations have other accounts for gov cloud partition', async () => {
     // Setup
-    (paginateListAccounts as jest.Mock).mockImplementation(() => ({
+    (paginateListAccounts as vi.Mock).mockImplementation(() => ({
       [Symbol.asyncIterator]: async function* () {
         yield {
           Accounts: MOCK_CONSTANTS.govCloudAccounts.slice(0, -1),
@@ -633,7 +633,7 @@ describe('IAM Role Tests', () => {
     test('get accounts by email', async () => {
       // Setup
 
-      (paginateListAccounts as jest.Mock).mockImplementation(() => ({
+      (paginateListAccounts as vi.Mock).mockImplementation(() => ({
         [Symbol.asyncIterator]: async function* () {
           yield {
             Accounts: MOCK_CONSTANTS.govCloudAccounts,
@@ -656,7 +656,7 @@ describe('IAM Role Tests', () => {
       // Setup
       const dummyEmail = 'mock@example.com';
 
-      (paginateListAccounts as jest.Mock).mockImplementation(() => ({
+      (paginateListAccounts as vi.Mock).mockImplementation(() => ({
         [Symbol.asyncIterator]: async function* () {
           yield {
             Accounts: MOCK_CONSTANTS.govCloudAccounts,

@@ -11,7 +11,7 @@
  *  and limitations under the License.
  */
 import path from 'path';
-import { beforeAll, expect, test } from '@jest/globals';
+import { beforeAll, expect, test } from 'vitest';
 import { createLogger } from '../../../../common/logger';
 import { IntegrationTest } from '../../../helpers/integration-test';
 import { RegionalTestSuite } from '../../../helpers/test-suite';
@@ -48,9 +48,6 @@ let testOuId: string | undefined;
 let testOuArn: string | undefined;
 let controlTowerClient: ControlTowerClient;
 let organizationClient: OrganizationsClient;
-
-const minute = 60000;
-jest.setTimeout(10 * minute);
 
 //
 // Initialize integration test class

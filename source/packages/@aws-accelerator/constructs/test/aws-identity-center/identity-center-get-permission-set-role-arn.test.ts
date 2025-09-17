@@ -17,7 +17,7 @@ import {
   IdentityCenterGetPermissionRoleArnProvider,
 } from '../../lib/aws-identity-center/identity-center-get-permission-set-role-arn';
 import { snapShotTest } from '../snapshot-test';
-import { describe } from '@jest/globals';
+import { describe } from 'vitest';
 const testNamePrefix = 'Construct(IdentityCenterGetPermissionRoleArn): ';
 
 //Initialize stack for snapshot test and resource configuration test

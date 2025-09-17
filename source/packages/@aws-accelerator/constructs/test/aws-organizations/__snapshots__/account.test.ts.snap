@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`Account Construct(Account):  Snapshot Test 1`] = `
+exports[`Account > Construct(Account):  Snapshot Test 1`] = `
 {
   "Resources": {
     "Account0D856946": {

@@ -14,6 +14,7 @@
 import * as cdk from 'aws-cdk-lib';
 import { CreateControlTowerAccounts } from '../../lib/aws-controltower/create-accounts';
 import { snapShotTest } from '../snapshot-test';
+import { describe } from 'vitest';
 
 const testNamePrefix = 'Construct(ConfigServiceTags): ';
 

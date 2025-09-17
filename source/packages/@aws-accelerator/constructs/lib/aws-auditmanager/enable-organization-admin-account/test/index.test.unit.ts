@@ -10,8 +10,9 @@
  *  OR CONDITIONS OF ANY KIND, express or implied. See the License for the specific language governing permissions
  *  and limitations under the License.
  */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 
-import { describe, beforeEach, expect, test } from '@jest/globals';
+import { describe, beforeEach, afterEach, expect, test, it, vi } from 'vitest';
 import { handler } from '../index';
 import {
   AuditManagerClient,
@@ -30,20 +31,21 @@ import {
   ListAWSServiceAccessForOrganizationCommand,
 } from '@aws-sdk/client-organizations';
 
-jest.mock('@aws-sdk/client-auditmanager');
-jest.mock('@aws-sdk/client-organizations');
-jest.mock('@aws-accelerator/utils/lib/throttle', () => ({
-  throttlingBackOff: jest.fn(async fn => fn()),
+vi.mock('@aws-sdk/client-auditmanager');
+vi.mock('@aws-sdk/client-organizations');
+vi.mock('@aws-accelerator/utils/lib/throttle', () => ({
+  throttlingBackOff: vi.fn(async fn => fn()),
 }));
 
 describe('enable-organization-admin-account', () => {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let mockEvent: any;
-  let consoleSpy: jest.SpyInstance;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let consoleSpy: any;
 
   beforeEach(() => {
-    jest.clearAllMocks();
-    consoleSpy = jest.spyOn(console, 'warn').mockImplementation();
+    vi.clearAllMocks();
+    consoleSpy = vi.spyOn(console, 'warn').mockImplementation();
 
     mockEvent = {
       RequestType: 'Create',
@@ -72,8 +74,9 @@ describe('enable-organization-admin-account', () => {
       EnabledServicePrincipals: [],
     };
 
-    (AuditManagerClient as jest.Mock).mockImplementation(() => ({
-      send: jest.fn().mockImplementation(command => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (AuditManagerClient as any).mockImplementation(() => ({
+      send: vi.fn().mockImplementation(command => {
         if (command instanceof GetAccountStatusCommand) {
           return Promise.resolve(mockGetAccountStatus);
         }
@@ -81,8 +84,8 @@ describe('enable-organization-admin-account', () => {
       }),
     }));
 
-    (OrganizationsClient as jest.Mock).mockImplementation(() => ({
-      send: jest.fn().mockImplementation(command => {
+    (OrganizationsClient as any).mockImplementation(() => ({
+      send: vi.fn().mockImplementation(command => {
         if (command instanceof ListAWSServiceAccessForOrganizationCommand) {
           return Promise.resolve(mockListServiceAccess);
         }
@@ -124,8 +127,8 @@ describe('enable-organization-admin-account', () => {
       },
     };
 
-    (AuditManagerClient as jest.Mock).mockImplementation(() => ({
-      send: jest.fn().mockImplementation(command => {
+    (AuditManagerClient as any).mockImplementation(() => ({
+      send: vi.fn().mockImplementation(command => {
         if (command instanceof GetAccountStatusCommand) {
           return Promise.resolve(mockGetAccountStatus);
         }
@@ -160,8 +163,8 @@ describe('enable-organization-admin-account', () => {
 
     const existingAdminId = '222222222222';
 
-    (AuditManagerClient as jest.Mock).mockImplementation(() => ({
-      send: jest.fn().mockImplementation(command => {
+    (AuditManagerClient as any).mockImplementation(() => ({
+      send: vi.fn().mockImplementation(command => {
         if (command instanceof GetAccountStatusCommand) {
           return Promise.resolve({ status: AccountStatus.ACTIVE });
         }
@@ -215,8 +218,8 @@ describe('enable-organization-admin-account', () => {
 
     mockEvent.ResourceProperties.adminAccountId = mockEvent.ResourceProperties.managementAccountId;
 
-    (AuditManagerClient as jest.Mock).mockImplementation(() => ({
-      send: jest.fn().mockImplementation(command => {
+    (AuditManagerClient as any).mockImplementation(() => ({
+      send: vi.fn().mockImplementation(command => {
         if (command instanceof GetAccountStatusCommand) {
           return Promise.resolve({ status: AccountStatus.ACTIVE });
         }
@@ -239,8 +242,8 @@ describe('enable-organization-admin-account', () => {
 
     const existingAdminId = '333333333333';
 
-    (AuditManagerClient as jest.Mock).mockImplementation(() => ({
-      send: jest.fn().mockImplementation(command => {
+    (AuditManagerClient as any).mockImplementation(() => ({
+      send: vi.fn().mockImplementation(command => {
         if (command instanceof GetAccountStatusCommand) {
           return Promise.resolve({ status: AccountStatus.ACTIVE });
         }
@@ -270,8 +273,8 @@ describe('enable-organization-admin-account', () => {
 
     const existingKmsKey = 'arn:aws:kms:us-east-1:111111111111:key/1234abcd'; // Same as mockEvent.ResourceProperties.kmsKeyArn
 
-    (AuditManagerClient as jest.Mock).mockImplementation(() => ({
-      send: jest.fn().mockImplementation(command => {
+    (AuditManagerClient as any).mockImplementation(() => ({
+      send: vi.fn().mockImplementation(command => {
         if (command instanceof GetAccountStatusCommand) {
           return Promise.resolve({ status: AccountStatus.ACTIVE });
         }
@@ -311,8 +314,8 @@ describe('enable-organization-admin-account', () => {
 
     const existingKmsKey = 'arn:aws:kms:us-east-1:111111111111:key/different-key';
 
-    (AuditManagerClient as jest.Mock).mockImplementation(() => ({
-      send: jest.fn().mockImplementation(command => {
+    (AuditManagerClient as any).mockImplementation(() => ({
+      send: vi.fn().mockImplementation(command => {
         if (command instanceof GetAccountStatusCommand) {
           return Promise.resolve({ status: AccountStatus.ACTIVE });
         }
@@ -359,8 +362,8 @@ describe('enable-organization-admin-account', () => {
       ],
     };
 
-    (OrganizationsClient as jest.Mock).mockImplementation(() => ({
-      send: jest.fn().mockImplementation(command => {
+    (OrganizationsClient as any).mockImplementation(() => ({
+      send: vi.fn().mockImplementation(command => {
         if (command instanceof ListAWSServiceAccessForOrganizationCommand) {
           return Promise.resolve(mockListServiceAccess);
         }
@@ -389,8 +392,8 @@ describe('enable-organization-admin-account', () => {
       ],
     };
 
-    (OrganizationsClient as jest.Mock).mockImplementation(() => ({
-      send: jest.fn().mockImplementation(command => {
+    (OrganizationsClient as any).mockImplementation(() => ({
+      send: vi.fn().mockImplementation(command => {
         if (command instanceof ListAWSServiceAccessForOrganizationCommand) {
           return Promise.resolve(mockListServiceAccess);
         }
@@ -416,8 +419,8 @@ describe('enable-organization-admin-account', () => {
       EnabledServicePrincipals: [],
     };
 
-    (OrganizationsClient as jest.Mock).mockImplementation(() => ({
-      send: jest.fn().mockImplementation(command => {
+    (OrganizationsClient as any).mockImplementation(() => ({
+      send: vi.fn().mockImplementation(command => {
         if (command instanceof ListAWSServiceAccessForOrganizationCommand) {
           return Promise.resolve(mockListServiceAccess);
         }
@@ -443,8 +446,8 @@ describe('enable-organization-admin-account', () => {
       EnabledServicePrincipals: undefined,
     };
 
-    (OrganizationsClient as jest.Mock).mockImplementation(() => ({
-      send: jest.fn().mockImplementation(command => {
+    (OrganizationsClient as any).mockImplementation(() => ({
+      send: vi.fn().mockImplementation(command => {
         if (command instanceof ListAWSServiceAccessForOrganizationCommand) {
           return Promise.resolve(mockListServiceAccess);
         }
@@ -467,8 +470,8 @@ describe('enable-organization-admin-account', () => {
     // When
     delete mockEvent.ResourceProperties.kmsKeyArn;
 
-    (AuditManagerClient as jest.Mock).mockImplementation(() => ({
-      send: jest.fn().mockImplementation(command => {
+    (AuditManagerClient as any).mockImplementation(() => ({
+      send: vi.fn().mockImplementation(command => {
         if (command instanceof GetAccountStatusCommand) {
           return Promise.resolve({ status: AccountStatus.ACTIVE });
         }
@@ -497,8 +500,8 @@ describe('enable-organization-admin-account', () => {
     // When
     mockEvent.ResourceProperties.kmsKeyArn = undefined;
 
-    (AuditManagerClient as jest.Mock).mockImplementation(() => ({
-      send: jest.fn().mockImplementation(command => {
+    (AuditManagerClient as any).mockImplementation(() => ({
+      send: vi.fn().mockImplementation(command => {
         if (command instanceof GetAccountStatusCommand) {
           return Promise.resolve({ status: AccountStatus.ACTIVE });
         }
@@ -527,8 +530,8 @@ describe('enable-organization-admin-account', () => {
     // When
     mockEvent.ResourceProperties.kmsKeyArn = null;
 
-    (AuditManagerClient as jest.Mock).mockImplementation(() => ({
-      send: jest.fn().mockImplementation(command => {
+    (AuditManagerClient as any).mockImplementation(() => ({
+      send: vi.fn().mockImplementation(command => {
         if (command instanceof GetAccountStatusCommand) {
           return Promise.resolve({ status: AccountStatus.ACTIVE });
         }

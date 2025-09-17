@@ -14,6 +14,7 @@
 import * as cdk from 'aws-cdk-lib';
 import { ConfigAggregation } from '../../lib/aws-configservice/config-aggregation';
 import { snapShotTest } from '../snapshot-test';
+import { describe } from 'vitest';
 
 const testNamePrefix = 'Construct(ConfigAggregation): ';
 

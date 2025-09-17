@@ -12,6 +12,7 @@
  */
 
 import * as cdk from 'aws-cdk-lib';
+import { describe } from 'vitest';
 import { MacieExportConfigClassification } from '../../lib/aws-macie/macie-export-config-classification';
 import { snapShotTest } from '../snapshot-test';
 

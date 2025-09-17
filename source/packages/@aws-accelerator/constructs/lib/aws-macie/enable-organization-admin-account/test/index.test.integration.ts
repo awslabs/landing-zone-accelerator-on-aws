@@ -13,7 +13,7 @@
 
 import { Macie2Client, ListOrganizationAdminAccountsCommand } from '@aws-sdk/client-macie2';
 
-import { beforeAll, expect, test } from '@jest/globals';
+import { beforeAll, expect, test } from 'vitest';
 
 import { throttlingBackOff } from '@aws-accelerator/utils/lib/throttle';
 import { IntegrationTest } from '@aws-accelerator/utils/lib/test-util/common/integration-test';
@@ -29,9 +29,6 @@ import { handler } from '../index';
  * Successful return code for the custom resource
  */
 const successStatus = { Status: 'Success', StatusCode: 200 };
-
-const minute = 60000;
-jest.setTimeout(2 * minute);
 
 //
 // Initialize integration test class

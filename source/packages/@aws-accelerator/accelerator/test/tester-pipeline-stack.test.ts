@@ -13,7 +13,7 @@
 
 import * as cdk from 'aws-cdk-lib';
 import { TesterPipelineStack } from '../lib/stacks/tester-pipeline-stack';
-import { describe } from '@jest/globals';
+import { describe } from 'vitest';
 import { snapShotTest } from './snapshot-test';
 
 const testNamePrefix = 'Construct(TesterPipelineStack): ';

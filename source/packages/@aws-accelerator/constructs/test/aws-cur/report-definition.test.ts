@@ -14,6 +14,7 @@
 import * as cdk from 'aws-cdk-lib';
 import { ReportDefinition } from '../../lib/aws-cur/report-definition';
 import { snapShotTest } from '../snapshot-test';
+import { describe } from 'vitest';
 
 const testNamePrefix = 'Construct(ReportDefinition): ';
 

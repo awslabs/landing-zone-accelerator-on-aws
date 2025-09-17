@@ -1,10 +1,9 @@
 import { ImportAseaResourcesStack, LogLevel } from '../stacks/import-asea-resources-stack';
 import { AseaResource, AseaResourceProps } from './resource';
 import { pascalCase } from 'pascal-case';
-import { SsmResourceType } from '@aws-accelerator/utils/lib/ssm-parameter-path';
+import { SsmResourceType, getAseaConfigVpcName } from '@aws-accelerator/utils';
 import { ASEAMappings, AseaResourceType, NestedStack } from '@aws-accelerator/config';
 import { CfnHostedZone } from 'aws-cdk-lib/aws-route53';
-import { getAseaConfigVpcName } from '@aws-accelerator/utils';
 const ASEA_PHASE_NUMBER = '2';
 const enum RESOURCE_TYPE {
   VPC_ENDPOINT_TYPE = 'AWS::EC2::VPCEndpoint',

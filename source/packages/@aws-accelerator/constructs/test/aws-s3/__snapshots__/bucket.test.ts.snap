@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`Bucket Construct(Bucket):  Snapshot Test 1`] = `
+exports[`Bucket > Construct(Bucket):  Snapshot Test 1`] = `
 {
   "Resources": {
     "BucketAwsPrincipalAccess2BA6D9C4": {

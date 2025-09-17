@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`DetectiveOrganizationAdminAccount Construct(DetectiveOrganizationAdminAccount):  Snapshot Test 1`] = `
+exports[`DetectiveOrganizationAdminAccount > Construct(DetectiveOrganizationAdminAccount):  Snapshot Test 1`] = `
 {
   "Resources": {
     "CustomDetectiveEnableOrganizationAdminAccountCustomResourceProviderHandlerAC80FDA1": {

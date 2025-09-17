@@ -8,27 +8,27 @@
     "name": "Amazon Web Services",
     "url": "https://aws.amazon.com/solutions"
   },
-  "types": "dist/index.d.ts",
+  "main": "dist/packages/@aws-accelerator/config/index.js",
+  "types": "dist/packages/@aws-accelerator/config/index.d.ts",
   "scripts": {
     "build": "yarn schema:accounts && yarn schema:global && yarn schema:iam && yarn schema:organization && yarn schema:security && yarn schema:replacements && yarn schema:customizations && yarn schema:network && tsc",
     "cleanup": "tsc --build ./ --clean && rm -rf node_modules && rm -rf dist && rm -rf cdk.out",
     "cleanup:tsc": "tsc --build ./ --clean",
     "watch": "tsc -w",
-    "test:unit": "jest --coverage --ci --passWithNoTests",
+    "test:unit": "vitest run --coverage",
     "test:clean": "rm -f ./test-reports/*.xml",
     "lint": "eslint --fix  --max-warnings 0 -c ../../../.eslintrc.json 'lib/**/*.{ts,tsx}' 'test/**/*.{ts,tsx}' 'validator/**/*.{ts,tsx}' --ignore-pattern \"*.d.ts\" ",
     "precommit": "eslint --max-warnings 0 -c ../../../.eslintrc.json 'lib/**/*.{ts,tsx}' 'test/**/*.{ts,tsx}' 'validator/**/*.{ts,tsx}' --ignore-pattern \"*.d.ts\" ",
-    "schema:accounts": "ts-json-schema-generator --path lib/models/accounts-config.ts --type IAccountsConfig -o lib/schemas/accounts-config.json",
-    "schema:global": "ts-json-schema-generator --path lib/models/global-config.ts --type IGlobalConfig -o lib/schemas/global-config.json",
-    "schema:iam": "ts-json-schema-generator --path lib/models/iam-config.ts --type IIamConfig -o lib/schemas/iam-config.json",
-    "schema:organization": "ts-json-schema-generator --path lib/models/organization-config.ts --type IOrganizationConfig -o lib/schemas/organization-config.json",
-    "schema:security": "ts-json-schema-generator --path lib/models/security-config.ts --type ISecurityConfig -o lib/schemas/security-config.json",
-    "schema:replacements": "ts-json-schema-generator --path lib/models/replacements-config.ts --type IReplacementsConfig -o lib/schemas/replacements-config.json",
-    "schema:customizations": "ts-json-schema-generator --path lib/models/customizations-config.ts --type ICustomizationsConfig -o lib/schemas/customizations-config.json",
-    "schema:network": "ts-json-schema-generator --path lib/models/network-config.ts --type INetworkConfig -o lib/schemas/network-config.json"
+    "schema:accounts": "ts-json-schema-generator --path lib/models/accounts-config.ts --type IAccountsConfig -o lib/schemas/accounts-config.json --tsconfig tsconfig.json",
+    "schema:global": "ts-json-schema-generator --path lib/models/global-config.ts --type IGlobalConfig -o lib/schemas/global-config.json --tsconfig tsconfig.json",
+    "schema:iam": "ts-json-schema-generator --path lib/models/iam-config.ts --type IIamConfig -o lib/schemas/iam-config.json --tsconfig tsconfig.json",
+    "schema:organization": "ts-json-schema-generator --path lib/models/organization-config.ts --type IOrganizationConfig -o lib/schemas/organization-config.json --tsconfig tsconfig.json",
+    "schema:security": "ts-json-schema-generator --path lib/models/security-config.ts --type ISecurityConfig -o lib/schemas/security-config.json --tsconfig tsconfig.json",
+    "schema:replacements": "ts-json-schema-generator --path lib/models/replacements-config.ts --type IReplacementsConfig -o lib/schemas/replacements-config.json --tsconfig tsconfig.json",
+    "schema:customizations": "ts-json-schema-generator --path lib/models/customizations-config.ts --type ICustomizationsConfig -o lib/schemas/customizations-config.json --tsconfig tsconfig.json",
+    "schema:network": "ts-json-schema-generator --path lib/models/network-config.ts --type INetworkConfig -o lib/schemas/network-config.json --tsconfig tsconfig.json"
   },
   "devDependencies": {
-    "@types/jest": "29.5.12",
     "@types/node": "18.19.50",
     "@typescript-eslint/eslint-plugin": "5.53.0",
     "@typescript-eslint/parser": "5.53.0",
@@ -43,10 +43,9 @@
     "eslint-plugin-license-header": "0.6.0",
     "eslint-plugin-node": "11.1.0",
     "eslint-plugin-prettier": "4.2.1",
-    "jest": "29.4.3",
-    "jest-sonar-reporter": "2.0.0",
     "prettier": "2.8.4",
-    "ts-jest": "29.0.5",
+    "vitest": "3.2.4",
+    "@vitest/coverage-v8": "3.2.4",
     "ts-json-schema-generator": "1.4.1",
     "ts-node": "10.9.1",
     "typescript": "5.8.3"
@@ -55,10 +54,5 @@
     "ajv": "8.12.0",
     "email-validator": "2.0.4",
     "ip-num": "1.5.0"
-  },
-  "jestSonar": {
-    "reportPath": "coverage",
-    "reportFile": "test-report.xml",
-    "indent": 4
   }
 }

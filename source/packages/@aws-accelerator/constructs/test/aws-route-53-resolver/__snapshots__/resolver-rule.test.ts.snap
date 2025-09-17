@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`ResolverRule Construct(ResolverRule):  Snapshot Test 1`] = `
+exports[`ResolverRule > Construct(ResolverRule):  Snapshot Test 1`] = `
 {
   "Resources": {
     "CustomKey1E6D0D07": {
@@ -77,7 +77,7 @@ exports[`ResolverRule Construct(ResolverRule):  Snapshot Test 1`] = `
 }
 `;
 
-exports[`ResolverRule Construct(ResolverRule):  Snapshot Test 2`] = `
+exports[`ResolverRule > Construct(ResolverRule):  Snapshot Test 2`] = `
 {
   "Resources": {
     "CustomKey1E6D0D07": {

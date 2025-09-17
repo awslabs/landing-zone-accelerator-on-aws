@@ -21,7 +21,7 @@ import {
   AcceleratorImportedBucketType,
   AwsPrincipalAccessesType,
   PrincipalOrgIdConditionType,
-} from '@aws-accelerator/utils/lib/common-resources';
+} from '@aws-accelerator/utils';
 
 /**
  * Initialized BucketPolicyProps properties

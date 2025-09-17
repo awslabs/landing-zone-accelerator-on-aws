@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`Network Firewall Policy Construct(NetworkFirewallPolicy):  Snapshot Test 1`] = `
+exports[`Network Firewall Policy > Construct(NetworkFirewallPolicy):  Snapshot Test 1`] = `
 {
   "Resources": {
     "TestPolicy14DF854C3": {

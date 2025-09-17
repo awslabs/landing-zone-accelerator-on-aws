@@ -11,7 +11,7 @@
  *  and limitations under the License.
  */
 
-import { describe, beforeEach, expect, test } from '@jest/globals';
+import { describe, beforeEach, expect, test, vi, afterEach } from 'vitest';
 
 import {
   AdminAccount,
@@ -31,31 +31,34 @@ import { MODULE_EXCEPTIONS } from '../../../../common/enums';
 import { generateDryRunResponse } from '../../../../common/functions';
 import { AcceleratorModuleName } from '../../../../common/resources';
 
-jest.mock('@aws-sdk/client-macie2', () => {
+vi.mock('@aws-sdk/client-macie2', async () => {
+  const actual = await vi.importActual('@aws-sdk/client-macie2');
   return {
-    ...jest.requireActual('@aws-sdk/client-macie2'),
-    Macie2Client: jest.fn(),
-    DisableOrganizationAdminAccountCommand: jest.fn(),
-    EnableMacieCommand: jest.fn(),
-    EnableOrganizationAdminAccountCommand: jest.fn(),
-    GetMacieSessionCommand: jest.fn(),
-    paginateListOrganizationAdminAccounts: jest.fn(),
+    ...actual,
+    Macie2Client: vi.fn(),
+    DisableOrganizationAdminAccountCommand: vi.fn(),
+    EnableMacieCommand: vi.fn(),
+    EnableOrganizationAdminAccountCommand: vi.fn(),
+    GetMacieSessionCommand: vi.fn(),
+    AccessDeniedException: vi.fn(),
+    paginateListOrganizationAdminAccounts: vi.fn(),
   };
 });
 
-jest.mock('../../../../common/functions', () => {
+vi.mock('../../../../common/functions', async () => {
+  const actual = await vi.importActual('../../../../common/functions');
   return {
-    ...jest.requireActual('../../../../common/functions'),
-    delay: jest.fn().mockResolvedValue(undefined),
+    ...actual,
+    delay: vi.fn().mockResolvedValue(undefined),
   };
 });
 
 describe('ManageOrganizationAdminModule', () => {
-  const mockSend = jest.fn();
+  const mockSend = vi.fn();
 
   beforeEach(() => {
-    jest.clearAllMocks();
-    (Macie2Client as jest.Mock).mockImplementation(() => ({
+    vi.clearAllMocks();
+    (Macie2Client as vi.Mock).mockImplementation(() => ({
       send: mockSend,
     }));
   });
@@ -85,7 +88,7 @@ describe('ManageOrganizationAdminModule', () => {
       return Promise.reject(MOCK_CONSTANTS.unknownError);
     });
     let callIndex = 0;
-    (paginateListOrganizationAdminAccounts as jest.Mock).mockImplementation(() => {
+    (paginateListOrganizationAdminAccounts as vi.Mock).mockImplementation(() => {
       if (callIndex >= adminAccounts.length) {
         throw new Error('paginateListOrganizationAdminAccounts called too many times');
       }
@@ -376,7 +379,7 @@ describe('ManageOrganizationAdminModule', () => {
           return Promise.reject(MOCK_CONSTANTS.unknownError);
         });
         let callIndex = 0;
-        (paginateListOrganizationAdminAccounts as jest.Mock).mockImplementation(() => {
+        (paginateListOrganizationAdminAccounts as vi.Mock).mockImplementation(() => {
           if (callIndex == 0) {
             callIndex += 1;
             return [{}];
@@ -636,7 +639,7 @@ describe('ManageOrganizationAdminModule', () => {
         }
         return Promise.reject(MOCK_CONSTANTS.unknownError);
       });
-      (paginateListOrganizationAdminAccounts as jest.Mock).mockImplementation(() => []);
+      (paginateListOrganizationAdminAccounts as vi.Mock).mockImplementation(() => []);
 
       const input = getInput({ enable: true, dryRun: true });
       const response = await new MacieManageOrganizationAdminModule().handler(input);
@@ -667,7 +670,7 @@ describe('ManageOrganizationAdminModule', () => {
         }
         return Promise.reject(MOCK_CONSTANTS.unknownError);
       });
-      (paginateListOrganizationAdminAccounts as jest.Mock).mockImplementation(() => {
+      (paginateListOrganizationAdminAccounts as vi.Mock).mockImplementation(() => {
         return [Promise.reject(MOCK_CONSTANTS.serviceError)];
       });
 
@@ -684,7 +687,7 @@ describe('ManageOrganizationAdminModule', () => {
         }
         return Promise.reject(MOCK_CONSTANTS.unknownError);
       });
-      (paginateListOrganizationAdminAccounts as jest.Mock).mockImplementation(() => {
+      (paginateListOrganizationAdminAccounts as vi.Mock).mockImplementation(() => {
         return [Promise.reject(accessDenied)];
       });
 
@@ -703,7 +706,7 @@ describe('ManageOrganizationAdminModule', () => {
         }
         return Promise.reject(MOCK_CONSTANTS.unknownError);
       });
-      (paginateListOrganizationAdminAccounts as jest.Mock).mockImplementation(() => [
+      (paginateListOrganizationAdminAccounts as vi.Mock).mockImplementation(() => [
         {
           adminAccounts: [
             { accountId: adminId, status: AdminStatus.ENABLED },
@@ -730,7 +733,7 @@ describe('ManageOrganizationAdminModule', () => {
         }
         return Promise.reject(MOCK_CONSTANTS.unknownError);
       });
-      (paginateListOrganizationAdminAccounts as jest.Mock).mockImplementation(() => []);
+      (paginateListOrganizationAdminAccounts as vi.Mock).mockImplementation(() => []);
 
       const input = getInput({ enable: true, dryRun: false });
       const promise = new MacieManageOrganizationAdminModule().handler(input);
@@ -748,7 +751,7 @@ describe('ManageOrganizationAdminModule', () => {
         }
         return Promise.reject(MOCK_CONSTANTS.unknownError);
       });
-      (paginateListOrganizationAdminAccounts as jest.Mock).mockImplementation(() => [
+      (paginateListOrganizationAdminAccounts as vi.Mock).mockImplementation(() => [
         {
           adminAccounts: [{ accountId: adminId, status: AdminStatus.ENABLED }],
         },
@@ -770,7 +773,7 @@ describe('ManageOrganizationAdminModule', () => {
         }
         return Promise.reject(MOCK_CONSTANTS.unknownError);
       });
-      (paginateListOrganizationAdminAccounts as jest.Mock).mockImplementation(() => []);
+      (paginateListOrganizationAdminAccounts as vi.Mock).mockImplementation(() => []);
 
       const input = getInput({ enable: true, dryRun: false });
       const promise = new MacieManageOrganizationAdminModule().handler(input);
@@ -791,7 +794,7 @@ describe('ManageOrganizationAdminModule', () => {
         return Promise.reject(MOCK_CONSTANTS.unknownError);
       });
       let callIndex = 0;
-      (paginateListOrganizationAdminAccounts as jest.Mock).mockImplementation(() => {
+      (paginateListOrganizationAdminAccounts as vi.Mock).mockImplementation(() => {
         if (callIndex == 0) {
           callIndex += 1;
           return [{ adminAccounts: [{ accountId: adminId, status: AdminStatus.ENABLED }] }];

@@ -12,6 +12,7 @@
  */
 
 import * as cdk from 'aws-cdk-lib';
+import { describe } from 'vitest';
 import { GetNetworkFirewallEndpoint } from '../../lib/aws-networkfirewall/get-network-firewall-endpoint';
 import { snapShotTest } from '../snapshot-test';
 

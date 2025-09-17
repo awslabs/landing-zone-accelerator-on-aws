@@ -12,6 +12,7 @@
  */
 
 import * as cdk from 'aws-cdk-lib';
+import { describe } from 'vitest';
 import { TransitGatewayPeering } from '../../lib/aws-ec2/transit-gateway-peering';
 import { snapShotTest } from '../snapshot-test';
 

@@ -31,21 +31,21 @@ import {
   Region,
   DeploymentTargets,
 } from '@aws-accelerator/config';
-import { createLogger } from '@aws-accelerator/utils/lib/logger';
-import { throttlingBackOff } from '@aws-accelerator/utils/lib/throttle';
 import {
+  createLogger,
+  throttlingBackOff,
   getCrossAccountCredentials,
   getGlobalRegion,
   getCurrentAccountId,
+  Regions,
   setRetryStrategy,
-} from '@aws-accelerator/utils/lib/common-functions';
+} from '@aws-accelerator/utils';
 
 import { writeImportResources } from '../utils/app-utils';
 import { AcceleratorStage } from './accelerator-stage';
 import { AcceleratorToolkit, AcceleratorToolkitProps, AcceleratorToolkitCommand } from './toolkit';
 import { v4 as uuidv4 } from 'uuid';
 import * as path from 'path';
-import { Regions } from '@aws-accelerator/utils/lib/regions';
 import { AssumeRoleCommandOutput, Credentials, STSClient, AssumeRoleCommand } from '@aws-sdk/client-sts';
 
 export type CustomStackRunOrder = {

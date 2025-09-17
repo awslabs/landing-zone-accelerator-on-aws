@@ -21,7 +21,7 @@ import * as cdk from 'aws-cdk-lib';
 import path from 'path';
 import { FirewallAutoScalingGroup } from '../../lib/aws-ec2/firewall-asg';
 import { snapShotTest } from '../snapshot-test';
-import { describe } from '@jest/globals';
+import { describe } from 'vitest';
 
 const testNamePrefix = 'Construct(FirewallAutoScalingGroup): ';
 

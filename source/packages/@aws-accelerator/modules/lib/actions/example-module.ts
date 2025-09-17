@@ -14,7 +14,7 @@
 import path from 'path';
 import { createStatusLogger } from '../../../../@aws-lza/common/logger';
 import { getRunnerTargetRegions } from '../functions';
-import { DeploymentTargets } from '@aws-accelerator/config/lib/common';
+import { DeploymentTargets } from '@aws-accelerator/config';
 import { ListMembersCommand, SecurityHubClient } from '@aws-sdk/client-securityhub';
 import { throttlingBackOff } from '../../../../@aws-lza/common/throttle';
 import { getCredentials } from '../../../../@aws-lza/common/functions';

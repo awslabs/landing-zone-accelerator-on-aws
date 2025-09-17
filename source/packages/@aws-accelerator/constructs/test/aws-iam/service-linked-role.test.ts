@@ -14,7 +14,7 @@
 import * as cdk from 'aws-cdk-lib';
 import { ServiceLinkedRole } from '@aws-accelerator/constructs';
 import { snapShotTest } from '../snapshot-test';
-import { describe } from '@jest/globals';
+import { describe } from 'vitest';
 
 const testNamePrefix = 'Construct(ServiceLinkedRole): ';
 

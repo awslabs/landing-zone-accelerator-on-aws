@@ -1,23 +1,23 @@
-import { beforeEach, describe, expect, it, jest } from '@jest/globals';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { AcceleratorConfigurationsType, ModuleParams } from '../../../models/types';
 import { AcceleratorModules, AcceleratorModuleStages, ModuleExecutionPhase } from '../../../models/enums';
 import { CreateStackPolicyModule, MESSAGES } from '../../../lib/actions/aws-cloudformation/create-stack-policy-module';
 import * as awsLza from '../../../../../@aws-lza/index';
 
 // Mock the logger to avoid console output during tests
-jest.mock('@aws-accelerator/utils', () => ({
-  createLogger: jest.fn().mockReturnValue({
-    info: jest.fn(),
-    debug: jest.fn(),
-    warn: jest.fn(),
-    error: jest.fn(),
+vi.mock('@aws-accelerator/utils', () => ({
+  createLogger: vi.fn().mockReturnValue({
+    info: vi.fn(),
+    debug: vi.fn(),
+    warn: vi.fn(),
+    error: vi.fn(),
   }),
 }));
 
 describe('CreateStackPolicyModule', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
-    jest.spyOn(awsLza, 'createStackPolicy').mockResolvedValue('Test text');
+    vi.clearAllMocks();
+    vi.spyOn(awsLza, 'createStackPolicy').mockResolvedValue('Test text');
   });
 
   describe('skip on missing value', () => {
@@ -79,11 +79,11 @@ function createTestConfig(enable: boolean, undefinedStackPolicy = false): Accele
       managementAccountAccessRole: 'AWSControlTowerExecution',
     },
     organizationConfig: {
-      getIgnoredOus: jest.fn().mockReturnValue(['ou1', 'ou2']),
+      getIgnoredOus: vi.fn().mockReturnValue(['ou1', 'ou2']),
     },
     accountsConfig: {
-      getActiveAccountIds: jest.fn().mockReturnValue(['account1', 'account2']),
-      getManagementAccountId: jest.fn().mockReturnValue('managementAccount'),
+      getActiveAccountIds: vi.fn().mockReturnValue(['account1', 'account2']),
+      getManagementAccountId: vi.fn().mockReturnValue('managementAccount'),
     },
   } as unknown as AcceleratorConfigurationsType;
 }

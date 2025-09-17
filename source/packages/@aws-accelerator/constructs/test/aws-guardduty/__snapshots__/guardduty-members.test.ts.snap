@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`GuardDutyMembers Construct(GuardDutyMembers):  Snapshot Test 1`] = `
+exports[`GuardDutyMembers > Construct(GuardDutyMembers):  Snapshot Test 1`] = `
 {
   "Resources": {
     "CustomGuardDutyCreateMembersCustomResourceProviderHandler0A16C673": {

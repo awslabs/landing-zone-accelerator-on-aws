@@ -4,7 +4,7 @@ import {
   EnableRegionCommand,
   GetRegionOptStatusCommandOutput,
 } from '@aws-sdk/client-account';
-import { describe, beforeEach, afterEach, expect, test, jest } from '@jest/globals';
+import { describe, beforeEach, afterEach, expect, test, vi } from 'vitest';
 import { handler } from '../index';
 import { StaticInput } from './static-input';
 import { AcceleratorMockClient, EventType } from '../../../../test/unit-test/common/resources';
@@ -16,7 +16,7 @@ describe('Opt-In Regions Handler', () => {
   const OLD_ENV = process.env;
   beforeEach(() => {
     accountClient.reset();
-    jest.resetModules();
+    vi.resetModules();
     process.env = { ...OLD_ENV };
   });
   afterEach(() => {

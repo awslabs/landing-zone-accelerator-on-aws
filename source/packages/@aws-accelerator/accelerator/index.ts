@@ -16,7 +16,6 @@ export * from './lib/accelerator-stage';
 export * from './lib/config-repository';
 export * from './lib/pipeline';
 export * from './lib/stacks/accelerator-stack';
-export * from './lib/stacks/accounts-stack';
 export * from './lib/stacks/bootstrap-stack';
 export * from './lib/stacks/diagnostics-pack-stack';
 export * from './lib/stacks/network-stacks/network-associations-stack/network-associations-stack';
@@ -31,3 +30,16 @@ export * from './lib/stacks/security-audit-stack';
 export * from './lib/stacks/security-stack';
 export * from './lib/toolkit';
 export * from './lib/validate-environment-config';
+export {
+  AcceleratorContext,
+  AcceleratorEnvironment,
+  setResourcePrefixes,
+  setAcceleratorEnvironment,
+  setAcceleratorStackProps,
+  getCustomizationsConfig,
+  writeImportResources,
+} from './utils/app-utils';
+export * from '@aws-accelerator/utils';
+export * from './lib/accelerator-resource-names';
+export * from './utils/lza-resource-lookup';
+export * from './lza-lookup';

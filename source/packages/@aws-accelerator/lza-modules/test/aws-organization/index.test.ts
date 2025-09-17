@@ -11,7 +11,7 @@
  *  and limitations under the License.
  */
 
-import { describe, test } from '@jest/globals';
+import { describe, test } from 'vitest';
 
 describe('Success', () => {
   test('Mock Test', async () => {

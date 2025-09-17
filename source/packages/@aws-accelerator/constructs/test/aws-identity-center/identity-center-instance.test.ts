@@ -14,7 +14,7 @@
 import * as cdk from 'aws-cdk-lib';
 import { IdentityCenterInstance } from '../../lib/aws-identity-center/identity-center-instance';
 import { snapShotTest } from '../snapshot-test';
-import { describe } from '@jest/globals';
+import { describe } from 'vitest';
 const testNamePrefix = 'Construct(IdentityCenterGetInstanceId): ';
 
 //Initialize stack for snapshot test and resource configuration test

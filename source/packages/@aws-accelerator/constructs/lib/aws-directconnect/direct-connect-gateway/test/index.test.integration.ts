@@ -23,7 +23,7 @@ import { throttlingBackOff } from '@aws-accelerator/utils/lib/throttle';
 import { CreateEvent, UpdateEvent, DeleteEvent } from '@aws-accelerator/utils/lib/test-util/common/resources';
 import { AssertPropsType } from '@aws-accelerator/utils/lib/test-util/common/assertion';
 
-import { afterAll, beforeAll, expect, jest, test } from '@jest/globals';
+import { afterAll, beforeAll, expect, vi, test } from 'vitest';
 
 import { IntegrationTest } from '@aws-accelerator/utils/lib/test-util/common/integration-test';
 import { RegionalTestSuite } from '@aws-accelerator/utils/lib/test-util/common/test-suite';
@@ -33,7 +33,7 @@ import { DirectConnectGatewayPolicyStatements } from '../../direct-connect-gatew
 import { handler } from '../index';
 
 const msInMinute = 60000;
-jest.setTimeout(2 * msInMinute);
+vi.setTimeout(2 * msInMinute);
 
 const apiDelayInMinutes = 0.5; // delay before checking Status through API
 
@@ -101,7 +101,7 @@ RegionalTestSuite['sampleConfig:us-east-1']!.suite(RegionalTestSuite['sampleConf
     event.ResourceProperties['asn'] = asn + 1;
 
     // Spy on the send method
-    const sendSpy = jest.spyOn(DirectConnectClient.prototype, 'send');
+    const sendSpy = vi.spyOn(DirectConnectClient.prototype, 'send');
 
     // Verify that no UpdateDirectConnectGateway command was sent
     expect(sendSpy).not.toHaveBeenCalledWith(

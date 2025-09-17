@@ -3,7 +3,7 @@ import { GlobalConfig } from '../../../lib/global-config';
 import { ReplacementsConfig } from '../../../lib/replacements-config';
 import { ReplacementsConfigValidator } from '../../../validator/replacements-config-validator';
 
-import { describe, it, expect } from '@jest/globals';
+import { describe, it, expect } from 'vitest';
 import * as path from 'path';
 
 const loadConfigs = (configDir: string) => {
@@ -19,7 +19,7 @@ const loadConfigs = (configDir: string) => {
 
 describe('Replacements Config', () => {
   it('Validation should fail for undefined placeholder', () => {
-    const configDir = './test/validation/replacements/invalid-config';
+    const configDir = path.resolve(__dirname, 'invalid-config');
 
     const { replacementsConfig } = loadConfigs(configDir);
     expect(() => {
@@ -28,7 +28,7 @@ describe('Replacements Config', () => {
   });
 
   it('Validation should pass if undefined placeholder is commented', () => {
-    const configDir = './test/validation/replacements/valid-config';
+    const configDir = path.resolve(__dirname, 'valid-config');
 
     const { replacementsConfig } = loadConfigs(configDir);
     expect(() => {

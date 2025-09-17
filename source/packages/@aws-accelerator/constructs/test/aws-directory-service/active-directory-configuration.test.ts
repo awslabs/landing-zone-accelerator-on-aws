@@ -12,13 +12,18 @@
  */
 
 import * as cdk from 'aws-cdk-lib';
+import { describe } from 'vitest';
 import { ActiveDirectoryConfiguration } from '../../index';
 import { snapShotTest } from '../snapshot-test';
+import path from 'path';
+import { SNAPSHOT_CONFIG } from '../../../config/test/config-test-helper';
 
 const testNamePrefix = 'Construct(ActiveDirectoryConfiguration): ';
 
 //Initialize stack for snapshot test and resource configuration test
 const stack = new cdk.Stack();
+
+const adConfigScripts = path.join(SNAPSHOT_CONFIG, 'ad-config-scripts');
 
 new ActiveDirectoryConfiguration(stack, 'ActiveDirectoryConfiguration', {
   instanceType: 't3.large',
@@ -38,15 +43,15 @@ new ActiveDirectoryConfiguration(stack, 'ActiveDirectoryConfiguration', {
   userDataScripts: [
     {
       name: 'JoinDomain',
-      path: `${__dirname}/../../../accelerator/test/configs/snapshot-only/ad-config-scripts/Join-Domain.ps1`,
+      path: path.join(adConfigScripts, 'Join-Domain.ps1'),
     },
     {
       name: 'AWSQuickStart',
-      path: `${__dirname}/../../../accelerator/test/configs/snapshot-only/ad-config-scripts/AWSQuickStart.psm1`,
+      path: path.join(adConfigScripts, 'AWSQuickStart.psm1'),
     },
     {
       name: 'ADGroupSetup',
-      path: `${__dirname}/../../../accelerator/test/configs/snapshot-only/ad-config-scripts/AD-group-setup.ps1`,
+      path: path.join(adConfigScripts, 'AD-group-setup.ps1'),
     },
   ],
   adGroups: ['aws-Provisioning', 'aws-Billing'],

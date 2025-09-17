@@ -21,17 +21,18 @@ import {
 import { IAssumeRoleCredential } from '../../../../common/resources';
 import * as commonFunctions from '../../../../common/functions';
 import * as throttle from '../../../../common/throttle';
+import { vi, describe, beforeEach, afterEach, test, expect } from 'vitest';
 
 // Mock the AWS SDK clients and functions
-jest.mock('@aws-sdk/client-lambda');
-jest.mock('@aws-sdk/client-sts');
-jest.mock('../../../../common/functions');
-jest.mock('../../../../common/throttle');
+vi.mock('@aws-sdk/client-lambda');
+vi.mock('@aws-sdk/client-sts');
+vi.mock('../../../../common/functions');
+vi.mock('../../../../common/throttle');
 
 describe('CheckLambdaConcurrencyModule', () => {
   let module: CheckLambdaConcurrencyModule;
-  let mockLambdaClient: jest.Mocked<LambdaClient>;
-  let mockSTSClient: jest.Mocked<STSClient>;
+  let mockLambdaClient: vi.Mocked<LambdaClient>;
+  let mockSTSClient: vi.Mocked<STSClient>;
 
   // Test parameters
   const testRegion = 'us-east-1';
@@ -48,39 +49,39 @@ describe('CheckLambdaConcurrencyModule', () => {
   };
 
   beforeEach(() => {
-    jest.resetAllMocks();
+    vi.resetAllMocks();
 
     // Mock implementation for STS client
     mockSTSClient = {
-      send: jest.fn(),
-    } as unknown as jest.Mocked<STSClient>;
+      send: vi.fn(),
+    } as unknown as vi.Mocked<STSClient>;
 
     // Mock implementation for Lambda client with type cast to avoid TS errors
     mockLambdaClient = {
-      send: jest.fn(),
-    } as unknown as jest.Mocked<LambdaClient>;
+      send: vi.fn(),
+    } as unknown as vi.Mocked<LambdaClient>;
 
     // Mock the client constructors
-    (STSClient as jest.MockedClass<typeof STSClient>).mockImplementation(() => mockSTSClient);
-    (LambdaClient as jest.MockedClass<typeof LambdaClient>).mockImplementation(() => mockLambdaClient);
+    (STSClient as vi.MockedClass<typeof STSClient>).mockImplementation(() => mockSTSClient);
+    (LambdaClient as vi.MockedClass<typeof LambdaClient>).mockImplementation(() => mockLambdaClient);
 
     // Mock functions from common module
-    jest.spyOn(commonFunctions, 'getCurrentAccountId').mockResolvedValue(testCurrentAccountId);
-    jest
-      .spyOn(commonFunctions, 'setRetryStrategy')
-      .mockReturnValue({} as ReturnType<typeof commonFunctions.setRetryStrategy>);
-    jest
-      .spyOn(commonFunctions, 'getCredentials')
-      .mockResolvedValue({} as ReturnType<typeof commonFunctions.getCredentials>);
+    vi.spyOn(commonFunctions, 'getCurrentAccountId').mockResolvedValue(testCurrentAccountId);
+    vi.spyOn(commonFunctions, 'setRetryStrategy').mockReturnValue(
+      {} as ReturnType<typeof commonFunctions.setRetryStrategy>,
+    );
+    vi.spyOn(commonFunctions, 'getCredentials').mockResolvedValue(
+      {} as ReturnType<typeof commonFunctions.getCredentials>,
+    );
 
     // Mock throttlingBackOff function
-    jest.spyOn(throttle, 'throttlingBackOff').mockImplementation(fn => fn());
+    vi.spyOn(throttle, 'throttlingBackOff').mockImplementation(fn => fn());
 
     module = new CheckLambdaConcurrencyModule();
   });
 
   afterEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   describe('Interface Contract Compliance', () => {
@@ -90,7 +91,7 @@ describe('CheckLambdaConcurrencyModule', () => {
     beforeEach(() => {
       module = new CheckLambdaConcurrencyModule();
       // Mock the handler implementation
-      jest.spyOn(module, 'handler').mockImplementation(async () => true);
+      vi.spyOn(module, 'handler').mockImplementation(async () => true);
     });
 
     test('should implement all interface methods', () => {
@@ -109,7 +110,7 @@ describe('CheckLambdaConcurrencyModule', () => {
 
     test('should handle invalid inputs according to contract', async () => {
       // Reset mock to test error handling
-      jest.spyOn(module, 'handler').mockRejectedValue(new Error('Invalid input parameters'));
+      vi.spyOn(module, 'handler').mockRejectedValue(new Error('Invalid input parameters'));
 
       await expect(module.handler({} as ICheckLambdaConcurrencyParameter)).rejects.toThrow('Invalid input parameters');
     });
@@ -120,7 +121,7 @@ describe('CheckLambdaConcurrencyModule', () => {
     });
 
     afterEach(() => {
-      jest.restoreAllMocks();
+      vi.restoreAllMocks();
     });
   });
 
@@ -142,11 +143,7 @@ describe('CheckLambdaConcurrencyModule', () => {
       });
 
       expect(result).toBe(true);
-      expect(mockLambdaClient.send).toHaveBeenCalledWith(
-        expect.objectContaining({
-          constructor: GetAccountSettingsCommand,
-        }),
-      );
+      expect(mockLambdaClient.send).toHaveBeenCalledWith(expect.any(GetAccountSettingsCommand));
       // The modified interface no longer requires accountId, so getCurrentAccountId isn't called
     });
 

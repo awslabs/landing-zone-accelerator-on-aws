@@ -13,7 +13,7 @@
 
 import * as fs from 'fs';
 import * as path from 'path';
-import { createLogger } from '@aws-accelerator/utils/lib/logger';
+import { createLogger } from '@aws-accelerator/utils';
 import {
   ParameterReplacementConfigV2,
   ReplacementsConfig,

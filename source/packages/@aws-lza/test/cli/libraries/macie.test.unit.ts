@@ -11,13 +11,13 @@
  *  and limitations under the License.
  */
 
-import { describe, expect, test } from '@jest/globals';
+import { describe, expect, test, vi } from 'vitest';
 
 import { manageOrganizationAdmin } from '../../../executors/accelerator-macie';
 import { LZA_MACIE_MODULE, ManageOrganizationAdminCommand } from '../../../lib/cli/libraries/macie';
 import { CliExecutionParameterType } from '../../../lib/cli/libraries/root';
 
-jest.mock('../../../executors/accelerator-macie');
+vi.mock('../../../executors/accelerator-macie');
 
 const MOCKED_CONSTANTS = {
   partition: 'aws',
@@ -51,7 +51,7 @@ describe('macie', () => {
           },
         };
 
-        const mockManageOrganizationAdmin = manageOrganizationAdmin as jest.Mock;
+        const mockManageOrganizationAdmin = manageOrganizationAdmin as vi.Mock;
         mockManageOrganizationAdmin.mockResolvedValue('Success');
 
         const result = await LZA_MACIE_MODULE.commands[commandName].execute(params);
@@ -103,7 +103,7 @@ describe('macie', () => {
           },
         };
 
-        const mockExit = jest
+        const mockExit = vi
           .spyOn(process, 'exit')
           .mockImplementation((code?: string | number | null | undefined): never => {
             throw new Error('Process.exit called with code: ' + code);
@@ -133,7 +133,7 @@ describe('macie', () => {
           return params;
         })();
 
-        const mockExit = jest
+        const mockExit = vi
           .spyOn(process, 'exit')
           .mockImplementation((code?: string | number | null | undefined): never => {
             throw new Error('Process.exit called with code: ' + code);
@@ -163,7 +163,7 @@ describe('macie', () => {
           return params;
         })();
 
-        const mockExit = jest
+        const mockExit = vi
           .spyOn(process, 'exit')
           .mockImplementation((code?: string | number | null | undefined): never => {
             throw new Error('Process.exit called with code: ' + code);
@@ -193,7 +193,7 @@ describe('macie', () => {
           return params;
         })();
 
-        const mockExit = jest
+        const mockExit = vi
           .spyOn(process, 'exit')
           .mockImplementation((code?: string | number | null | undefined): never => {
             throw new Error('Process.exit called with code: ' + code);

@@ -14,7 +14,7 @@
 import { DEFAULT_LAMBDA_RUNTIME } from '@aws-accelerator/utils/lib/lambda';
 import * as cdk from 'aws-cdk-lib';
 import { Construct } from 'constructs';
-import path = require('path');
+import * as path from 'path';
 
 /**
  * Opt-in Regions Props

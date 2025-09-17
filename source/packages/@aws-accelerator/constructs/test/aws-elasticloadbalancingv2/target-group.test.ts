@@ -14,7 +14,7 @@
 import * as cdk from 'aws-cdk-lib';
 import { TargetGroup } from '../../lib/aws-elasticloadbalancingv2/target-group';
 import { snapShotTest } from '../snapshot-test';
-import { describe } from '@jest/globals';
+import { describe } from 'vitest';
 
 const testNamePrefix = 'Construct(TargetGroup): ';
 

@@ -39,9 +39,8 @@ import { SubnetResources } from './subnet-resources';
 import { TgwResources } from './tgw-resources';
 import { VpcResources } from './vpc-resources';
 import { pascalCase } from 'pascal-case';
-import { SsmResourceType } from '@aws-accelerator/utils';
+import { SsmResourceType, MetadataKeys } from '@aws-accelerator/utils';
 import { getVpcConfig } from '../utils/getter-utils';
-import { MetadataKeys } from '@aws-accelerator/utils/lib/common-types';
 
 export class NetworkVpcStack extends NetworkStack {
   constructor(scope: Construct, id: string, props: AcceleratorStackProps) {

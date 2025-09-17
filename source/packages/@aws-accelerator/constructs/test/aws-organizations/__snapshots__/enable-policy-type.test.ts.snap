@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`EnablePolicyType Construct(EnablePolicyType):  Snapshot Test 1`] = `
+exports[`EnablePolicyType > Construct(EnablePolicyType):  Snapshot Test 1`] = `
 {
   "Resources": {
     "CustomEnablePolicyTypeCustomResourceProviderHandlerC244F9E1": {

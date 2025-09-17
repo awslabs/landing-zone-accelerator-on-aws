@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`IpamSubnet Construct(IpamSubnet):  Snapshot Test 1`] = `
+exports[`IpamSubnet > Construct(IpamSubnet):  Snapshot Test 1`] = `
 {
   "Resources": {
     "CustomGetIpamSubnetCidrCustomResourceProviderHandler8C11DBB5": {

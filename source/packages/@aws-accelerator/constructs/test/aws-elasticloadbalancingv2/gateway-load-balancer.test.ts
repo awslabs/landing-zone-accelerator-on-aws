@@ -12,6 +12,7 @@
  */
 
 import * as cdk from 'aws-cdk-lib';
+import { describe } from 'vitest';
 import { GatewayLoadBalancer } from '../../lib/aws-elasticloadbalancingv2/gateway-load-balancer';
 import { snapShotTest } from '../snapshot-test';
 

@@ -14,6 +14,7 @@
 import * as cdk from 'aws-cdk-lib';
 import { EbsDefaultEncryption } from '../../lib/aws-ec2/ebs-encryption';
 import { snapShotTest } from '../snapshot-test';
+import { describe } from 'vitest';
 
 const testNamePrefix = 'Construct(EbsDefaultEncryption): ';
 

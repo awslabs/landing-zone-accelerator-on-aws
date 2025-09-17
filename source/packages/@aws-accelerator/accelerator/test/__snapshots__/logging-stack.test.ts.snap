@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 1`] = `
+exports[`LoggingStack > Construct(LoggingStack):  Snapshot Test 1`] = `
 {
   "Resources": {
     "AWSServiceRoleForAWSCloud9CreateServiceLinkedRoleFunction78452922": {
@@ -5664,7 +5664,7 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 1`] = `
 }
 `;
 
-exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 2`] = `
+exports[`LoggingStack > Construct(LoggingStack):  Snapshot Test 2`] = `
 {
   "Resources": {
     "AWSServiceRoleForAWSCloud9CreateServiceLinkedRoleFunction78452922": {
@@ -11357,7 +11357,7 @@ exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 2`] = `
 }
 `;
 
-exports[`LoggingStackDelegatedAdmin Construct(LoggingStacKDelegatedAdmin):  Snapshot Test 1`] = `
+exports[`LoggingStackDelegatedAdmin > Construct(LoggingStacKDelegatedAdmin):  Snapshot Test 1`] = `
 {
   "Resources": {
     "AWSServiceRoleForAWSCloud9CreateServiceLinkedRoleFunction78452922": {
@@ -16077,7 +16077,7 @@ exports[`LoggingStackDelegatedAdmin Construct(LoggingStacKDelegatedAdmin):  Snap
 }
 `;
 
-exports[`LoggingStackOuTargets Construct(LoggingStackOuTargets):  Snapshot Test 1`] = `
+exports[`LoggingStackOuTargets > Construct(LoggingStackOuTargets):  Snapshot Test 1`] = `
 {
   "Resources": {
     "AWSServiceRoleForAWSCloud9CreateServiceLinkedRoleFunction78452922": {

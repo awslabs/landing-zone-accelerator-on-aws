@@ -15,7 +15,7 @@ import * as cdk from 'aws-cdk-lib';
 import { SecurityGroup } from '../../lib/aws-ec2/vpc';
 import { VpcEndpoint, VpcEndpointType } from '../../lib/aws-ec2/vpc-endpoint';
 import { snapShotTest } from '../snapshot-test';
-import { describe, it, expect } from '@jest/globals';
+import { describe, it, expect } from 'vitest';
 
 const testNamePrefix = 'Construct(VpcEndpoint): ';
 

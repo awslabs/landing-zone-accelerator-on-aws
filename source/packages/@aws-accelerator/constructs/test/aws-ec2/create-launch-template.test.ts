@@ -15,7 +15,7 @@ import * as cdk from 'aws-cdk-lib';
 import { LaunchTemplate } from '../../lib/aws-ec2/create-launch-template';
 import { snapShotTest } from '../snapshot-test';
 import * as path from 'path';
-import { describe } from '@jest/globals';
+import { describe } from 'vitest';
 
 const testNamePrefix = 'Construct(LaunchTemplate): ';
 

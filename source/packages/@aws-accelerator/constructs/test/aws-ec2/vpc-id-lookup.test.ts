@@ -12,6 +12,7 @@
  */
 
 import * as cdk from 'aws-cdk-lib';
+import { describe } from 'vitest';
 
 import { VpcIdLookup } from '../../lib/aws-ec2/vpc-id-lookup';
 import { snapShotTest } from '../snapshot-test';

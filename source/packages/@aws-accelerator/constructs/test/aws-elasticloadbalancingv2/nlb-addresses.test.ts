@@ -12,6 +12,7 @@
  */
 
 import * as cdk from 'aws-cdk-lib';
+import { describe } from 'vitest';
 import { NLBAddresses } from '../../lib/aws-elasticloadbalancingv2/nlb-addresses';
 import { snapShotTest } from '../snapshot-test';
 

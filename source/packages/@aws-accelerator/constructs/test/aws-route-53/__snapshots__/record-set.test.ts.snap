@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`RecordSet Construct(RecordSet):  Snapshot Test 1`] = `
+exports[`RecordSet > Construct(RecordSet):  Snapshot Test 1`] = `
 {
   "Resources": {
     "TestHostedZone68F306E4": {

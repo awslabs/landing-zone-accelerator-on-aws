@@ -14,7 +14,7 @@
 import * as cdk from 'aws-cdk-lib';
 import { VpcPeering } from '../../lib/aws-ec2/vpc-peering';
 import { snapShotTest } from '../snapshot-test';
-import { describe, it, expect } from '@jest/globals';
+import { describe, it, expect } from 'vitest';
 
 const testNamePrefix = 'Construct(VpcPeering): ';
 

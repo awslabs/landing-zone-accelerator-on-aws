@@ -15,6 +15,7 @@ import * as cdk from 'aws-cdk-lib';
 
 import { DirectConnectGatewayAssociation } from '../../lib/aws-directconnect/gateway-association';
 import { snapShotTest } from '../snapshot-test';
+import { describe } from 'vitest';
 
 const testNamePrefix = 'Construct(DirectConnectGateway): ';
 

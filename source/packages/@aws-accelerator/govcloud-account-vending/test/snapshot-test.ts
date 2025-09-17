@@ -12,7 +12,7 @@
  */
 import * as cdk from 'aws-cdk-lib';
 import { SynthUtils } from '@aws-cdk/assert';
-import { expect, test } from '@jest/globals';
+import { expect, test } from 'vitest';
 
 export function snapShotTest(testNamePrefix: string, stack: cdk.Stack) {
   test(`${testNamePrefix} Snapshot Test`, () => {

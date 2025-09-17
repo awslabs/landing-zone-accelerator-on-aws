@@ -12,6 +12,7 @@
  */
 
 import * as cdk from 'aws-cdk-lib';
+import { describe } from 'vitest';
 
 import { SubnetIdLookup } from '../../lib/aws-ec2/subnet-id-lookup';
 import { snapShotTest } from '../snapshot-test';

@@ -12,6 +12,7 @@
  */
 
 import * as cdk from 'aws-cdk-lib';
+import { describe } from 'vitest';
 import { CreateOrganizationAccounts } from '../../lib/aws-organizations/create-accounts';
 import { snapShotTest } from '../snapshot-test';
 

@@ -31,7 +31,7 @@ import {
   SecurityConfigValidator,
   ReplacementsConfigValidator,
 } from '@aws-accelerator/config';
-import { createLogger } from '@aws-accelerator/utils/lib/logger';
+import { createLogger } from '@aws-accelerator/utils';
 import { Accelerator } from './accelerator';
 
 const logger = createLogger(['config-validator']);

@@ -11,7 +11,7 @@
  *  and limitations under the License.
  */
 
-import { describe, expect, it } from '@jest/globals';
+import { describe, expect, it, beforeAll, afterAll } from 'vitest';
 import * as fs from 'fs';
 import * as yaml from 'js-yaml';
 import * as path from 'path';
@@ -43,8 +43,9 @@ import {
   BlockPublicDocumentSharingConfig,
   SsmSettingsConfig,
 } from '../lib/security-config';
+import { SNAPSHOT_CONFIG } from './config-test-helper';
 
-const configDir = path.resolve('../accelerator/test/configs/snapshot-only');
+const configDir = SNAPSHOT_CONFIG;
 
 describe('SecurityConfig', () => {
   describe('Test config', () => {
@@ -120,29 +121,38 @@ describe('SecurityConfig', () => {
 });
 
 describe('should throw an exception for wrong config', () => {
-  function loadError() {
-    const accountsConfig = AccountsConfig.load(configDir);
-    const replacementsConfig = ReplacementsConfig.load(configDir, accountsConfig);
-    SecurityConfig.loadFromString('some random string', replacementsConfig);
-  }
+  it('should throw error when loading invalid config string', () => {
+    function loadError() {
+      const accountsConfig = AccountsConfig.load(configDir);
+      const replacementsConfig = ReplacementsConfig.load(configDir, accountsConfig);
+      SecurityConfig.loadFromString('some random string', replacementsConfig);
+    }
 
-  const errMsg = 'could not load configuration';
-  expect(loadError).toThrow(new Error(errMsg));
+    const errMsg = 'could not load configuration';
+    expect(loadError).toThrow(new Error(errMsg));
+  });
 });
 
 describe('should return right values for correct config', () => {
-  const accountsConfig = AccountsConfig.load(configDir);
-  const replacementsConfig = ReplacementsConfig.load(configDir, accountsConfig);
-  const buffer = fs.readFileSync(path.join(path.resolve(configDir), SecurityConfig.FILENAME), 'utf8');
-  const securityConfigFromString = SecurityConfig.loadFromString(buffer, replacementsConfig);
-  expect(securityConfigFromString?.awsConfig.enableConfigurationRecorder).toBe(true);
+  it('should load config from string correctly', () => {
+    const accountsConfig = AccountsConfig.load(configDir);
+    const replacementsConfig = ReplacementsConfig.load(configDir, accountsConfig);
+    const buffer = fs.readFileSync(path.join(path.resolve(configDir), SecurityConfig.FILENAME), 'utf8');
+    const securityConfigFromString = SecurityConfig.loadFromString(buffer, replacementsConfig);
+    expect(securityConfigFromString?.awsConfig.enableConfigurationRecorder).toBe(true);
+  });
 });
 
 describe('isPublicSsmDoc', () => {
-  expect(IsPublicSsmDoc('AWSDoc')).toBeFalsy(); // not public doc
-  expect(IsPublicSsmDoc('Doc')).toBeFalsy(); // not public doc
-  expect(IsPublicSsmDoc('AWSAccelerator-Attach-IAM-Instance-Profile')).toBeFalsy(); // not public doc
-  expect(IsPublicSsmDoc('AWS-AWSAccelerator-Attach-IAM-Instance-Profile')).toBeTruthy(); //public doc
+  it('should return false for non-public documents', () => {
+    expect(IsPublicSsmDoc('AWSDoc')).toBeFalsy(); // not public doc
+    expect(IsPublicSsmDoc('Doc')).toBeFalsy(); // not public doc
+    expect(IsPublicSsmDoc('AWSAccelerator-Attach-IAM-Instance-Profile')).toBeFalsy(); // not public doc
+  });
+
+  it('should return true for public documents', () => {
+    expect(IsPublicSsmDoc('AWS-AWSAccelerator-Attach-IAM-Instance-Profile')).toBeTruthy(); //public doc
+  });
 });
 
 describe('BlockPublicDocumentSharingConfig', () => {

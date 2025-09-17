@@ -1,4 +1,4 @@
-import { describe, test, expect } from '@jest/globals';
+import { describe, test, expect } from 'vitest';
 import { AccountConfig, AccountsConfig } from '../../lib/accounts-config';
 import { AccountsConfigValidator } from '../../validator/accounts-config-validator';
 import { OrganizationalUnitConfig, OrganizationConfig } from '../../lib/organization-config';

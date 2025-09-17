@@ -30,11 +30,11 @@ import {
   SecurityGroupRuleConfig,
   SecurityGroupSourceConfig,
   SubnetSourceConfig,
-} from '@aws-accelerator/config/lib/network-config';
-import { SsmResourceType } from '@aws-accelerator/utils/lib/ssm-parameter-path';
+  isNetworkType,
+  NonEmptyString,
+} from '@aws-accelerator/config';
+import { SsmResourceType, MetadataKeys } from '@aws-accelerator/utils';
 import { NetworkStackGeneration, SecurityGroupRules, V2StackComponentsList } from '../utils/enums';
-import { isNetworkType } from '@aws-accelerator/config/lib/common/parse';
-import { NonEmptyString } from '@aws-accelerator/config/lib/common/types';
 import { isIpv6Cidr } from '../../network-stacks/utils/validation-utils';
 import {
   SecurityGroupEgressRuleProps,
@@ -42,7 +42,6 @@ import {
 } from '@aws-accelerator/constructs/lib/aws-ec2/vpc';
 import { TCP_PROTOCOLS_PORT } from '../../network-stacks/utils/security-group-utils';
 import { isV2Resource } from '../utils/functions';
-import { MetadataKeys } from '@aws-accelerator/utils/lib/common-types';
 
 interface SecurityGroupCache {
   vpcName: string;

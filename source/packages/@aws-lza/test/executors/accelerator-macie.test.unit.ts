@@ -11,7 +11,7 @@
  *  and limitations under the License.
  */
 
-import { describe, beforeEach, expect, test } from '@jest/globals';
+import { describe, beforeEach, expect, test, vi, afterEach } from 'vitest';
 
 import { MacieManageOrganizationAdminModule } from '../../lib/macie/manage-organization-admin';
 import { Modules } from '../../lib/cli/modules';
@@ -30,21 +30,21 @@ const MOCK_CONSTANTS = {
 };
 
 // Mock dependencies
-jest.mock('../../lib/macie/manage-organization-admin/index');
+vi.mock('../../lib/macie/manage-organization-admin/index');
 
 describe('MacieExecutors', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   describe('manageOrganizationAdmin', () => {
     beforeEach(() => {
-      jest.clearAllMocks();
+      vi.clearAllMocks();
     });
 
     test('should successfully set organization admin', async () => {
-      const mockHandler = jest.fn().mockResolvedValue('SUCCESS');
-      (MacieManageOrganizationAdminModule as jest.Mock).mockImplementation(() => ({
+      const mockHandler = vi.fn().mockResolvedValue('SUCCESS');
+      (MacieManageOrganizationAdminModule as vi.Mock).mockImplementation(() => ({
         handler: mockHandler,
       }));
 
@@ -57,8 +57,8 @@ describe('MacieExecutors', () => {
 
     test('should throw error when setup fails', async () => {
       const errorMessage = 'failed';
-      const mockHandler = jest.fn().mockRejectedValue(new Error(errorMessage));
-      (MacieManageOrganizationAdminModule as jest.Mock).mockImplementation(() => ({
+      const mockHandler = vi.fn().mockRejectedValue(new Error(errorMessage));
+      (MacieManageOrganizationAdminModule as vi.Mock).mockImplementation(() => ({
         handler: mockHandler,
       }));
 
@@ -76,28 +76,28 @@ describe('MacieExecutors', () => {
     beforeEach(() => {
       originalProcessOn = process.on;
 
-      process.on = jest.fn((event: string, listener: NodeJS.UncaughtExceptionListener) => {
+      process.on = vi.fn((event: string, listener: NodeJS.UncaughtExceptionListener) => {
         if (event === 'uncaughtException') {
           processOnCallback = listener;
         }
         return process;
       }) as unknown as typeof process.on;
 
-      jest.resetModules();
+      vi.resetModules();
     });
 
     afterEach(() => {
       process.on = originalProcessOn;
     });
 
-    test('should register uncaughtException handler', () => {
-      require('../../executors/accelerator-macie');
+    test('should register uncaughtException handler', async () => {
+      await import('../../executors/accelerator-macie');
 
       expect(process.on).toHaveBeenCalledWith('uncaughtException', expect.any(Function));
     });
 
-    test('should rethrow the error when uncaughtException occurs', () => {
-      require('../../executors/accelerator-macie');
+    test('should rethrow the error when uncaughtException occurs', async () => {
+      await import('../../executors/accelerator-macie');
 
       const testError = new Error('Test uncaught exception');
       const origin = 'uncaughtException';

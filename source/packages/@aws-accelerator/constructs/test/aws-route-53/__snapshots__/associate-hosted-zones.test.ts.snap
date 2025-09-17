@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`AssociateHostedZones Construct(AssociateHostedZones):  Snapshot Test 1`] = `
+exports[`AssociateHostedZones > Construct(AssociateHostedZones):  Snapshot Test 1`] = `
 {
   "Resources": {
     "AssociateHostedZonesF0E2F0DA": {

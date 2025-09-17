@@ -20,9 +20,9 @@ import {
 } from './types';
 import { createLogger } from '@aws-accelerator/utils/lib/logger';
 import path from 'path';
-import { OrganizationConfig } from '@aws-accelerator/config/lib/organization-config';
-import { AccountsConfig } from '@aws-accelerator/config/lib/accounts-config';
 import {
+  OrganizationConfig,
+  AccountsConfig,
   NetworkConfig,
   VpcConfig,
   VpcTemplatesConfig,
@@ -32,9 +32,11 @@ import {
   SecurityGroupSourceConfig,
   SecurityGroupRuleConfig,
   SecurityGroupConfig,
-} from '@aws-accelerator/config/lib/network-config';
-import { isNetworkType } from '@aws-accelerator/config/lib/common/parse';
-import { Region } from '@aws-accelerator/config/lib/common/types';
+  isNetworkType,
+  Region,
+  GlobalConfig,
+  SecurityGroupRuleType,
+} from '@aws-accelerator/config';
 import { AcceleratorStackProps } from '../../accelerator-stack';
 import { VpcSubnetsBaseStack } from '../stacks/vpc-subnets-base-stack';
 import { VpcRouteTablesBaseStack } from '../stacks/vpc-route-tables-base-stack';
@@ -45,17 +47,11 @@ import { VpcNaclsBaseStack } from '../stacks/vp-nacls-base-stack';
 import { VpcLoadBalancersBaseStack } from '../stacks/vpc-load-balancers-base-stack';
 import { VpcSubnetsShareBaseStack } from '../stacks/vpc-subnets-share-base-stack';
 import { AcceleratorStackNames, AcceleratorV2Stacks } from '../../../accelerator';
-import {
-  LookupValues,
-  LZAResourceLookup,
-  LZAResourceLookupType,
-} from '@aws-accelerator/accelerator/utils/lza-resource-lookup';
-import { GlobalConfig } from '@aws-accelerator/config/lib/global-config';
+import { LookupValues, LZAResourceLookup, LZAResourceLookupType } from '../../../../utils/lza-resource-lookup';
 import { SecurityGroupRules, V2StackComponentsList } from './enums';
 import { isIpv4 } from '../../network-stacks/utils/validation-utils';
 import { NetworkVpcStackRouteEntryTypes } from './constants';
 import { TCP_PROTOCOLS_PORT } from '../../network-stacks/utils/security-group-utils';
-import { SecurityGroupRuleType } from '@aws-accelerator/config/lib/models/network-config';
 
 const logger = createLogger([path.parse(path.basename(__filename)).name]);
 

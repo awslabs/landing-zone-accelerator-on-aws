@@ -11,7 +11,7 @@
  *  and limitations under the License.
  */
 
-import { beforeEach, describe, test } from '@jest/globals';
+import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { InviteAccountsToOrganizationsModule } from '../../../lib/actions/aws-organizations/invite-accounts-to-organizations';
 import { AcceleratorModules, ModuleExecutionPhase } from '../../../models/enums';
 import { AcceleratorStage } from '../../../../accelerator';
@@ -30,17 +30,17 @@ describe('InviteAccountsToOrganizationsModule', () => {
   let mockAccountsConfig: Partial<AccountsConfig>;
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
 
-    jest.spyOn(awsLza, 'inviteAccountsBatchToOrganization').mockResolvedValue(status);
+    vi.spyOn(awsLza, 'inviteAccountsBatchToOrganization').mockResolvedValue(status);
 
     mockAccountsConfig = {
-      getManagementAccount: jest.fn().mockReturnValue(MOCK_CONSTANTS.managementAccount),
-      getManagementAccountId: jest.fn().mockReturnValue(MOCK_CONSTANTS.managementAccount.name),
-      getAuditAccount: jest.fn().mockReturnValue(MOCK_CONSTANTS.auditAccount),
-      getAuditAccountId: jest.fn().mockReturnValue(MOCK_CONSTANTS.auditAccount.name),
-      getLogArchiveAccount: jest.fn().mockReturnValue(MOCK_CONSTANTS.logArchiveAccount),
-      getLogArchiveAccountId: jest.fn().mockReturnValue(MOCK_CONSTANTS.logArchiveAccount.name),
+      getManagementAccount: vi.fn().mockReturnValue(MOCK_CONSTANTS.managementAccount),
+      getManagementAccountId: vi.fn().mockReturnValue(MOCK_CONSTANTS.managementAccount.name),
+      getAuditAccount: vi.fn().mockReturnValue(MOCK_CONSTANTS.auditAccount),
+      getAuditAccountId: vi.fn().mockReturnValue(MOCK_CONSTANTS.auditAccount.name),
+      getLogArchiveAccount: vi.fn().mockReturnValue(MOCK_CONSTANTS.logArchiveAccount),
+      getLogArchiveAccountId: vi.fn().mockReturnValue(MOCK_CONSTANTS.logArchiveAccount.name),
       ...mockAccountsConfiguration,
     };
   });
@@ -52,7 +52,7 @@ describe('InviteAccountsToOrganizationsModule', () => {
         name: AcceleratorModules.INVITE_ACCOUNTS_TO_ORGANIZATIONS,
         description: '',
         runOrder: 1,
-        handler: jest.fn().mockResolvedValue(`Module 1 of ${AcceleratorStage.ACCOUNTS} stage executed`),
+        handler: vi.fn().mockResolvedValue(`Module 1 of ${AcceleratorStage.ACCOUNTS} stage executed`),
         executionPhase: ModuleExecutionPhase.DEPLOY,
       },
       runnerParameters: MOCK_CONSTANTS.runnerParameters,
@@ -85,12 +85,12 @@ describe('InviteAccountsToOrganizationsModule', () => {
   test('Should execute successfully when no accounts to invite', async () => {
     // Setup
     mockAccountsConfig = {
-      getManagementAccount: jest.fn().mockReturnValue(MOCK_CONSTANTS.managementAccount),
-      getManagementAccountId: jest.fn().mockReturnValue(MOCK_CONSTANTS.managementAccount.name),
-      getAuditAccount: jest.fn().mockReturnValue(MOCK_CONSTANTS.auditAccount),
-      getAuditAccountId: jest.fn().mockReturnValue(MOCK_CONSTANTS.auditAccount.name),
-      getLogArchiveAccount: jest.fn().mockReturnValue(MOCK_CONSTANTS.logArchiveAccount),
-      getLogArchiveAccountId: jest.fn().mockReturnValue(MOCK_CONSTANTS.logArchiveAccount.name),
+      getManagementAccount: vi.fn().mockReturnValue(MOCK_CONSTANTS.managementAccount),
+      getManagementAccountId: vi.fn().mockReturnValue(MOCK_CONSTANTS.managementAccount.name),
+      getAuditAccount: vi.fn().mockReturnValue(MOCK_CONSTANTS.auditAccount),
+      getAuditAccountId: vi.fn().mockReturnValue(MOCK_CONSTANTS.auditAccount.name),
+      getLogArchiveAccount: vi.fn().mockReturnValue(MOCK_CONSTANTS.logArchiveAccount),
+      getLogArchiveAccountId: vi.fn().mockReturnValue(MOCK_CONSTANTS.logArchiveAccount.name),
       ...mockAccountsConfigurationNoAccountIds,
     };
 
@@ -99,7 +99,7 @@ describe('InviteAccountsToOrganizationsModule', () => {
         name: AcceleratorModules.INVITE_ACCOUNTS_TO_ORGANIZATIONS,
         description: '',
         runOrder: 1,
-        handler: jest.fn().mockResolvedValue(`Module 1 of ${AcceleratorStage.ACCOUNTS} stage executed`),
+        handler: vi.fn().mockResolvedValue(`Module 1 of ${AcceleratorStage.ACCOUNTS} stage executed`),
         executionPhase: ModuleExecutionPhase.DEPLOY,
       },
       runnerParameters: MOCK_CONSTANTS.runnerParameters,
@@ -130,6 +130,6 @@ describe('InviteAccountsToOrganizationsModule', () => {
   });
 
   afterEach(() => {
-    jest.restoreAllMocks();
+    vi.restoreAllMocks();
   });
 });

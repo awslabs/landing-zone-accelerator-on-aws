@@ -14,7 +14,7 @@
 import * as zlib from 'zlib';
 import { handler } from '../../../lib/aws-firehose/firehose-record-processing/index';
 import { mockClient, AwsClientStub } from 'aws-sdk-client-mock';
-import { expect, it, beforeEach, afterEach, describe } from '@jest/globals';
+import { expect, it, beforeEach, afterEach, describe } from 'vitest';
 import { KinesisClient, PutRecordsCommand } from '@aws-sdk/client-kinesis';
 import {
   FirehoseTransformationEvent,

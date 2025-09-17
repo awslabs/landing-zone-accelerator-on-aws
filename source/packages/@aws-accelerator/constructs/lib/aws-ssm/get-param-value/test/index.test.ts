@@ -1,6 +1,6 @@
 import { SSMClient, GetParameterCommand } from '@aws-sdk/client-ssm';
 import { AssumeRoleCommand, STSClient } from '@aws-sdk/client-sts';
-import { describe, beforeEach, expect, test } from '@jest/globals';
+import { describe, beforeEach, expect, test } from 'vitest';
 import { handler } from '../index';
 import { AcceleratorMockClient, EventType } from '../../../../test/unit-test/common/resources';
 import { StaticInput } from './static-input';

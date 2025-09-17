@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`IpamScope Construct(IpamScope):  Snapshot Test 1`] = `
+exports[`IpamScope > Construct(IpamScope):  Snapshot Test 1`] = `
 {
   "Resources": {
     "TestIpamScope20AAB890": {

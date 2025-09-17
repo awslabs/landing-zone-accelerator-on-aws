@@ -13,6 +13,7 @@
 
 import { EbsItemConfig, LaunchTemplateConfig, NetworkInterfaceItemConfig } from '@aws-accelerator/config';
 import * as cdk from 'aws-cdk-lib';
+import { describe } from 'vitest';
 import path from 'path';
 import { FirewallInstance } from '../../lib/aws-ec2/firewall-instance';
 import { snapShotTest } from '../snapshot-test';

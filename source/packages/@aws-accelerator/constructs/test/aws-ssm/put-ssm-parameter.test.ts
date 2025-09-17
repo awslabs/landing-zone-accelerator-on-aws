@@ -12,6 +12,7 @@
  */
 
 import * as cdk from 'aws-cdk-lib';
+import { describe } from 'vitest';
 
 import { PutSsmParameter } from '../../lib/aws-ssm/put-ssm-parameter';
 import { snapShotTest } from '../snapshot-test';

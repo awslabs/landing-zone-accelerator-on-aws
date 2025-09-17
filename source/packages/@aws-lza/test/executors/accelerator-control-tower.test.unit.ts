@@ -11,7 +11,7 @@
  *  and limitations under the License.
  */
 
-import { describe, beforeEach, expect, test } from '@jest/globals';
+import { describe, beforeEach, expect, test, vi, afterEach } from 'vitest';
 
 import { registerOrganizationalUnit, setupControlTowerLandingZone } from '../../executors/accelerator-control-tower';
 import { SetupLandingZoneModule } from '../../lib/control-tower/setup-landing-zone/index';
@@ -54,22 +54,22 @@ const MOCK_CONSTANTS = {
 };
 
 // Mock dependencies
-jest.mock('../../lib/control-tower/setup-landing-zone/index');
-jest.mock('../../lib/control-tower/register-organizational-unit/index');
+vi.mock('../../lib/control-tower/setup-landing-zone/index');
+vi.mock('../../lib/control-tower/register-organizational-unit/index');
 
 describe('ControlTowerExecutors', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   describe('setupControlTowerLandingZone', () => {
     beforeEach(() => {
-      jest.clearAllMocks();
+      vi.clearAllMocks();
     });
 
     test('should successfully setup Control Tower landing zone', async () => {
-      const mockHandler = jest.fn().mockResolvedValue('SUCCESS');
-      (SetupLandingZoneModule as jest.Mock).mockImplementation(() => ({
+      const mockHandler = vi.fn().mockResolvedValue('SUCCESS');
+      (SetupLandingZoneModule as vi.Mock).mockImplementation(() => ({
         handler: mockHandler,
       }));
 
@@ -82,8 +82,8 @@ describe('ControlTowerExecutors', () => {
 
     test('should throw error when setup fails', async () => {
       const errorMessage = 'Setup failed';
-      const mockHandler = jest.fn().mockRejectedValue(new Error(errorMessage));
-      (SetupLandingZoneModule as jest.Mock).mockImplementation(() => ({
+      const mockHandler = vi.fn().mockRejectedValue(new Error(errorMessage));
+      (SetupLandingZoneModule as vi.Mock).mockImplementation(() => ({
         handler: mockHandler,
       }));
 
@@ -100,12 +100,12 @@ describe('ControlTowerExecutors', () => {
       configuration: { name: 'mockOu' },
     };
     beforeEach(() => {
-      jest.clearAllMocks();
+      vi.clearAllMocks();
     });
 
     test('should successfully register organizational unit', async () => {
-      const mockHandler = jest.fn().mockResolvedValue('SUCCESS');
-      (RegisterOrganizationalUnitModule as unknown as jest.Mock).mockImplementation(() => ({
+      const mockHandler = vi.fn().mockResolvedValue('SUCCESS');
+      (RegisterOrganizationalUnitModule as unknown as vi.Mock).mockImplementation(() => ({
         handler: mockHandler,
       }));
 
@@ -118,8 +118,8 @@ describe('ControlTowerExecutors', () => {
 
     test('should throw error when setup fails', async () => {
       const errorMessage = 'Setup failed';
-      const mockHandler = jest.fn().mockRejectedValue(new Error(errorMessage));
-      (RegisterOrganizationalUnitModule as unknown as jest.Mock).mockImplementation(() => ({
+      const mockHandler = vi.fn().mockRejectedValue(new Error(errorMessage));
+      (RegisterOrganizationalUnitModule as unknown as vi.Mock).mockImplementation(() => ({
         handler: mockHandler,
       }));
 
@@ -137,28 +137,28 @@ describe('ControlTowerExecutors', () => {
     beforeEach(() => {
       originalProcessOn = process.on;
 
-      process.on = jest.fn((event: string, listener: NodeJS.UncaughtExceptionListener) => {
+      process.on = vi.fn((event: string, listener: NodeJS.UncaughtExceptionListener) => {
         if (event === 'uncaughtException') {
           processOnCallback = listener;
         }
         return process;
       }) as unknown as typeof process.on;
 
-      jest.resetModules();
+      vi.resetModules();
     });
 
     afterEach(() => {
       process.on = originalProcessOn;
     });
 
-    test('should register uncaughtException handler', () => {
-      require('../../executors/accelerator-control-tower');
+    test('should register uncaughtException handler', async () => {
+      await import('../../executors/accelerator-control-tower');
 
       expect(process.on).toHaveBeenCalledWith('uncaughtException', expect.any(Function));
     });
 
-    test('should rethrow the error when uncaughtException occurs', () => {
-      require('../../executors/accelerator-control-tower');
+    test('should rethrow the error when uncaughtException occurs', async () => {
+      await import('../../executors/accelerator-control-tower');
 
       const testError = new Error('Test uncaught exception');
       const origin = 'uncaughtException';

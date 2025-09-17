@@ -14,6 +14,7 @@
 import * as cdk from 'aws-cdk-lib';
 import { ConfigServiceTags } from '../../lib/aws-configservice/config-tags';
 import { snapShotTest } from '../snapshot-test';
+import { describe } from 'vitest';
 
 const testNamePrefix = 'Construct(ConfigServiceTags): ';
 

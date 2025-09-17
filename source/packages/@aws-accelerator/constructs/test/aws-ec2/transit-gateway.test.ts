@@ -20,7 +20,7 @@ import {
   TransitGatewayAttachmentType,
 } from '../../lib/aws-ec2/transit-gateway';
 import { snapShotTest } from '../snapshot-test';
-import { describe, it } from '@jest/globals';
+import { describe, it } from 'vitest';
 
 const testNamePrefix = 'Construct(TransitGatewayRouteTableAssociation): ';
 

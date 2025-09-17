@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`EnableSharingWithAwsOrganization Construct(EnableSharingWithAwsOrganization):  Snapshot Test 1`] = `
+exports[`EnableSharingWithAwsOrganization > Construct(EnableSharingWithAwsOrganization):  Snapshot Test 1`] = `
 {
   "Resources": {
     "CustomEnableSharingWithAwsOrganizationCustomResourceProviderHandler405D7398": {

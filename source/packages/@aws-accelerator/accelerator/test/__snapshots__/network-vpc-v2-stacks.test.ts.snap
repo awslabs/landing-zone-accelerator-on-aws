@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`NetworkVpcV2Stacks Construct(LbStack-Network-us-east-1-Network-Secondary):  Snapshot Test 1`] = `
+exports[`NetworkVpcV2Stacks > Construct(LbStack-Network-us-east-1-Network-Secondary):  Snapshot Test 1`] = `
 {
   "Metadata": {
     "lzaLookup": {
@@ -304,7 +304,7 @@ exports[`NetworkVpcV2Stacks Construct(LbStack-Network-us-east-1-Network-Secondar
 }
 `;
 
-exports[`NetworkVpcV2Stacks Construct(LbStack-Network-us-east-1-Network-Secondary-V2):  Snapshot Test 1`] = `
+exports[`NetworkVpcV2Stacks > Construct(LbStack-Network-us-east-1-Network-Secondary-V2):  Snapshot Test 1`] = `
 {
   "Metadata": {
     "lzaLookup": {
@@ -342,7 +342,7 @@ exports[`NetworkVpcV2Stacks Construct(LbStack-Network-us-east-1-Network-Secondar
 }
 `;
 
-exports[`NetworkVpcV2Stacks Construct(NackStack-Network-us-east-1-Network-Secondary):  Snapshot Test 1`] = `
+exports[`NetworkVpcV2Stacks > Construct(NackStack-Network-us-east-1-Network-Secondary):  Snapshot Test 1`] = `
 {
   "Metadata": {
     "lzaLookup": {
@@ -1302,7 +1302,7 @@ exports[`NetworkVpcV2Stacks Construct(NackStack-Network-us-east-1-Network-Second
 }
 `;
 
-exports[`NetworkVpcV2Stacks Construct(NackStack-Network-us-east-1-Network-Secondary-V2):  Snapshot Test 1`] = `
+exports[`NetworkVpcV2Stacks > Construct(NackStack-Network-us-east-1-Network-Secondary-V2):  Snapshot Test 1`] = `
 {
   "Metadata": {
     "lzaLookup": {
@@ -2111,7 +2111,7 @@ exports[`NetworkVpcV2Stacks Construct(NackStack-Network-us-east-1-Network-Second
 }
 `;
 
-exports[`NetworkVpcV2Stacks Construct(RouteEntriesStack-Network-us-east-1-Network-Inspection-V2):  Snapshot Test 1`] = `
+exports[`NetworkVpcV2Stacks > Construct(RouteEntriesStack-Network-us-east-1-Network-Inspection-V2):  Snapshot Test 1`] = `
 {
   "Metadata": {
     "lzaLookup": {
@@ -2434,7 +2434,7 @@ exports[`NetworkVpcV2Stacks Construct(RouteEntriesStack-Network-us-east-1-Networ
 }
 `;
 
-exports[`NetworkVpcV2Stacks Construct(RouteEntriesStack-Network-us-east-1-Network-Secondary):  Snapshot Test 1`] = `
+exports[`NetworkVpcV2Stacks > Construct(RouteEntriesStack-Network-us-east-1-Network-Secondary):  Snapshot Test 1`] = `
 {
   "Metadata": {
     "lzaLookup": {
@@ -2523,7 +2523,7 @@ exports[`NetworkVpcV2Stacks Construct(RouteEntriesStack-Network-us-east-1-Networ
 }
 `;
 
-exports[`NetworkVpcV2Stacks Construct(RouteEntriesStack-Network-us-east-1-Network-Secondary-V2):  Snapshot Test 1`] = `
+exports[`NetworkVpcV2Stacks > Construct(RouteEntriesStack-Network-us-east-1-Network-Secondary-V2):  Snapshot Test 1`] = `
 {
   "Metadata": {
     "lzaLookup": {
@@ -2612,7 +2612,7 @@ exports[`NetworkVpcV2Stacks Construct(RouteEntriesStack-Network-us-east-1-Networ
 }
 `;
 
-exports[`NetworkVpcV2Stacks Construct(RouteTableStack-Network-us-east-1-Network-Secondary):  Snapshot Test 1`] = `
+exports[`NetworkVpcV2Stacks > Construct(RouteTableStack-Network-us-east-1-Network-Secondary):  Snapshot Test 1`] = `
 {
   "Metadata": {
     "lzaLookup": {
@@ -2825,7 +2825,7 @@ exports[`NetworkVpcV2Stacks Construct(RouteTableStack-Network-us-east-1-Network-
 }
 `;
 
-exports[`NetworkVpcV2Stacks Construct(RouteTableStack-Network-us-east-1-Network-Secondary-V2):  Snapshot Test 1`] = `
+exports[`NetworkVpcV2Stacks > Construct(RouteTableStack-Network-us-east-1-Network-Secondary-V2):  Snapshot Test 1`] = `
 {
   "Metadata": {
     "lzaLookup": {
@@ -3003,7 +3003,7 @@ exports[`NetworkVpcV2Stacks Construct(RouteTableStack-Network-us-east-1-Network-
 }
 `;
 
-exports[`NetworkVpcV2Stacks Construct(SecurityGroupStack-Network-us-east-1-Network-Secondary):  Snapshot Test 1`] = `
+exports[`NetworkVpcV2Stacks > Construct(SecurityGroupStack-Network-us-east-1-Network-Secondary):  Snapshot Test 1`] = `
 {
   "Metadata": {
     "lzaLookup": {
@@ -3041,7 +3041,7 @@ exports[`NetworkVpcV2Stacks Construct(SecurityGroupStack-Network-us-east-1-Netwo
 }
 `;
 
-exports[`NetworkVpcV2Stacks Construct(SecurityGroupStack-Network-us-east-1-Network-Secondary-V2):  Snapshot Test 1`] = `
+exports[`NetworkVpcV2Stacks > Construct(SecurityGroupStack-Network-us-east-1-Network-Secondary-V2):  Snapshot Test 1`] = `
 {
   "Metadata": {
     "lzaLookup": {
@@ -3079,7 +3079,7 @@ exports[`NetworkVpcV2Stacks Construct(SecurityGroupStack-Network-us-east-1-Netwo
 }
 `;
 
-exports[`NetworkVpcV2Stacks Construct(SubnetShareStack-Network-us-east-1-Network-Secondary):  Snapshot Test 1`] = `
+exports[`NetworkVpcV2Stacks > Construct(SubnetShareStack-Network-us-east-1-Network-Secondary):  Snapshot Test 1`] = `
 {
   "Metadata": {
     "lzaLookup": {
@@ -3117,7 +3117,7 @@ exports[`NetworkVpcV2Stacks Construct(SubnetShareStack-Network-us-east-1-Network
 }
 `;
 
-exports[`NetworkVpcV2Stacks Construct(SubnetShareStack-Network-us-east-1-Network-Secondary-V2):  Snapshot Test 1`] = `
+exports[`NetworkVpcV2Stacks > Construct(SubnetShareStack-Network-us-east-1-Network-Secondary-V2):  Snapshot Test 1`] = `
 {
   "Metadata": {
     "lzaLookup": {
@@ -3342,7 +3342,7 @@ exports[`NetworkVpcV2Stacks Construct(SubnetShareStack-Network-us-east-1-Network
 }
 `;
 
-exports[`NetworkVpcV2Stacks Construct(SubnetStack-Network-us-east-1-Network-Secondary):  Snapshot Test 1`] = `
+exports[`NetworkVpcV2Stacks > Construct(SubnetStack-Network-us-east-1-Network-Secondary):  Snapshot Test 1`] = `
 {
   "Metadata": {
     "lzaLookup": {
@@ -4370,7 +4370,7 @@ exports[`NetworkVpcV2Stacks Construct(SubnetStack-Network-us-east-1-Network-Seco
 }
 `;
 
-exports[`NetworkVpcV2Stacks Construct(SubnetStack-Network-us-east-1-Network-Secondary-V2):  Snapshot Test 1`] = `
+exports[`NetworkVpcV2Stacks > Construct(SubnetStack-Network-us-east-1-Network-Secondary-V2):  Snapshot Test 1`] = `
 {
   "Metadata": {
     "lzaLookup": {
@@ -5309,7 +5309,7 @@ exports[`NetworkVpcV2Stacks Construct(SubnetStack-Network-us-east-1-Network-Seco
 }
 `;
 
-exports[`NetworkVpcV2Stacks Construct(SubnetStack-SharedServices-us-east-1-SharedServices-Main-V2):  Snapshot Test 1`] = `
+exports[`NetworkVpcV2Stacks > Construct(SubnetStack-SharedServices-us-east-1-SharedServices-Main-V2):  Snapshot Test 1`] = `
 {
   "Metadata": {
     "lzaLookup": {
@@ -5939,7 +5939,7 @@ exports[`NetworkVpcV2Stacks Construct(SubnetStack-SharedServices-us-east-1-Share
 }
 `;
 
-exports[`NetworkVpcV2Stacks Construct(VpcStack-Network-us-east-1-Network-Secondary):  Snapshot Test 1`] = `
+exports[`NetworkVpcV2Stacks > Construct(VpcStack-Network-us-east-1-Network-Secondary):  Snapshot Test 1`] = `
 {
   "Metadata": {
     "lzaLookup": {
@@ -6227,7 +6227,7 @@ exports[`NetworkVpcV2Stacks Construct(VpcStack-Network-us-east-1-Network-Seconda
 }
 `;
 
-exports[`NetworkVpcV2Stacks Construct(VpcStack-Network-us-east-1-Network-Secondary-V2):  Snapshot Test 1`] = `
+exports[`NetworkVpcV2Stacks > Construct(VpcStack-Network-us-east-1-Network-Secondary-V2):  Snapshot Test 1`] = `
 {
   "Metadata": {
     "lzaLookup": {

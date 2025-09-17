@@ -14,6 +14,7 @@
 import * as cdk from 'aws-cdk-lib';
 import { GetCloudFormationResourceType } from '../../lib/aws-cloudformation/get-resource-type';
 import { snapShotTest } from '../snapshot-test';
+import { describe } from 'vitest';
 
 const testNamePrefix = 'Construct(GetCloudFormationResourceType): ';
 

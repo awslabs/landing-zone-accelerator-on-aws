@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`CloudWatchLogsSubscriptionFilter Construct(CloudWatchLogsSubscriptionFilter):  Snapshot Test 1`] = `
+exports[`CloudWatchLogsSubscriptionFilter > Construct(CloudWatchLogsSubscriptionFilter):  Snapshot Test 1`] = `
 {
   "Resources": {
     "CloudWatchLogsSubscriptionFilter90533F2E": {

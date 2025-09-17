@@ -1,5 +1,5 @@
 import { AseaResourceType, AseaResourceMapping } from '@aws-accelerator/config';
-import { MetadataKeys, ILZAMetadata } from '../../utils/lib/common-types';
+import { MetadataKeys, ILZAMetadata } from '@aws-accelerator/utils';
 import path from 'path';
 import fs from 'fs';
 

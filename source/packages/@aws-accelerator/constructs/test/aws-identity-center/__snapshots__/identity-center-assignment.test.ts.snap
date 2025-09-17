@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`IdentityCenterAssignments Construct(IdentityCenterGetInstanceId):  Snapshot Test 1`] = `
+exports[`IdentityCenterAssignments > Construct(IdentityCenterGetInstanceId):  Snapshot Test 1`] = `
 {
   "Resources": {
     "CloudWatchKey9B181885": {

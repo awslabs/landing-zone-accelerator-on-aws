@@ -11,7 +11,7 @@
  *  and limitations under the License.
  */
 import * as functions from '../../../common/functions';
-import { describe, beforeEach, expect, test, jest } from '@jest/globals';
+import { describe, beforeEach, expect, test, vi, afterAll } from 'vitest';
 import { CloudFormationClient, GetTemplateCommand } from '@aws-sdk/client-cloudformation';
 import path from 'path';
 import { promises as fs } from 'fs';
@@ -21,30 +21,29 @@ import { MOCK_CONSTANTS } from '../../mocked-resources';
 import { MODULE_EXCEPTIONS } from '../../../common/enums';
 import { AcceleratorEnvironment } from '../../../common/types';
 
-jest.mock(
-  '../../../common/functions',
-  () =>
-    ({
-      ...jest.requireActual('../../../common/functions'),
-      getCredentials: jest.fn(),
-    } as typeof functions),
-);
+vi.mock('../../../common/functions', async importOriginal => {
+  const actual = await importOriginal();
+  return {
+    ...actual,
+    getCredentials: vi.fn(),
+  };
+});
 
-jest.mock('@aws-sdk/client-cloudformation', () => ({
-  CloudFormationClient: jest.fn(),
-  GetTemplateCommand: jest.fn(),
+vi.mock('@aws-sdk/client-cloudformation', () => ({
+  CloudFormationClient: vi.fn(),
+  GetTemplateCommand: vi.fn(),
 }));
 
 describe('GetCloudFormationTemplatesModule', () => {
-  const mockCfnClientSend = jest.fn();
+  const mockCfnClientSend = vi.fn();
   let cfnModule: GetCloudFormationTemplatesModule;
 
   beforeEach(() => {
-    jest.clearAllMocks();
-    (CloudFormationClient as jest.Mock).mockImplementation(() => ({
+    vi.clearAllMocks();
+    (CloudFormationClient as vi.Mock).mockImplementation(() => ({
       send: mockCfnClientSend,
     }));
-    (functions.getCredentials as jest.Mock).mockReturnValue(Promise.resolve(MOCK_CONSTANTS.credentials));
+    (functions.getCredentials as vi.Mock).mockReturnValue(Promise.resolve(MOCK_CONSTANTS.credentials));
     cfnModule = new GetCloudFormationTemplatesModule();
   });
 
@@ -176,7 +175,7 @@ describe('GetCloudFormationTemplatesModule', () => {
     });
 
     test('should throw error when no credentials returned', async () => {
-      (functions.getCredentials as jest.Mock).mockReturnValue(Promise.resolve(undefined));
+      (functions.getCredentials as vi.Mock).mockReturnValue(Promise.resolve(undefined));
 
       expect(
         // eslint-disable-next-line @typescript-eslint/no-explicit-any

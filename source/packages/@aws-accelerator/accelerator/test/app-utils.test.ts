@@ -16,7 +16,7 @@ import { mockClient } from 'aws-sdk-client-mock';
 import { EC2Client, DescribeVpcsCommand, DescribeVpcEndpointsCommand } from '@aws-sdk/client-ec2';
 import { STSClient, AssumeRoleCommand } from '@aws-sdk/client-sts';
 import { AcceleratorResourcePrefixes, setResourcePrefixes, setAcceleratorEnvironment } from '../utils/app-utils';
-import { describe, expect, test, jest } from '@jest/globals';
+import { describe, expect, test, vi } from 'vitest';
 import * as path from 'path';
 import { AcceleratorStage } from '../lib/accelerator-stage';
 import { AcceleratorStackProps } from '../lib/stacks/accelerator-stack';
@@ -123,7 +123,7 @@ describe('test setAcceleratorEnvironment', () => {
 
 describe('test setAcceleratorStackProps', () => {
   function initializeMock() {
-    AccountsConfig.prototype.loadAccountIds = jest
+    AccountsConfig.prototype.loadAccountIds = vi
       .fn<
         (
           partition: string,
@@ -134,7 +134,7 @@ describe('test setAcceleratorStackProps', () => {
       >()
       .mockResolvedValue();
 
-    OrganizationConfig.prototype.loadOrganizationalUnitIds = jest
+    OrganizationConfig.prototype.loadOrganizationalUnitIds = vi
       .fn<
         (
           partition: string,
@@ -184,14 +184,16 @@ describe('test setAcceleratorStackProps', () => {
         VpcEndpoints: [{ VpcEndpointId: 'fake-vpce-id-2' }],
       });
 
-    const accelerator = require('../lib/accelerator.ts');
-    accelerator.getCentralLogBucketKmsKeyArn = jest.fn().mockReturnValue(Promise.resolve('fake-kms-arn'));
+    vi.doMock('../lib/accelerator.ts', () => ({
+      ...vi.importActual('../lib/accelerator.ts'),
+      getCentralLogBucketKmsKeyArn: vi.fn().mockReturnValue(Promise.resolve('fake-kms-arn')),
+    }));
   }
 
   test('should load VPC IDs and VPCE IDs in network config for Finalize Stage', async () => {
     initializeMock();
     const { context, resourcePrefixes, acceleratorEnv } = testAppUtils();
-    const { setAcceleratorStackProps } = require('../utils/app-utils');
+    const { setAcceleratorStackProps } = await import('../utils/app-utils');
 
     context.stage = AcceleratorStage.FINALIZE;
     const { networkConfig } = (await setAcceleratorStackProps(
@@ -215,7 +217,7 @@ describe('test setAcceleratorStackProps', () => {
 
   test('should not load VPC IDs and VPCE IDs in network config for other Stages except for finalize and account stage', async () => {
     initializeMock();
-    const { setAcceleratorStackProps } = require('../utils/app-utils');
+    const { setAcceleratorStackProps } = await import('../utils/app-utils');
 
     const { context, resourcePrefixes, acceleratorEnv } = testAppUtils();
 

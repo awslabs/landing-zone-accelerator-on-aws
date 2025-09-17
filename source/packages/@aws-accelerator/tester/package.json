@@ -8,7 +8,7 @@
     "name": "Amazon Web Services",
     "url": "https://aws.amazon.com/solutions"
   },
-  "main": "index.js",
+  "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
     "build": "tsc",
@@ -16,7 +16,7 @@
     "cleanup:tsc": "tsc --build ../tests --clean",
     "lint": "eslint --fix  --max-warnings 0 -c ../../../.eslintrc.json 'lib/**/*.{ts,tsx}'  --ignore-pattern \\\\\\\"*.d.ts\\\\\\\" ",
     "precommit": "eslint --max-warnings 0 -c ../../../.eslintrc.json 'lib/**/*.{ts,tsx}'  --ignore-pattern \\\\\\\"*.d.ts\\\\\\\" ",
-    "test:unit": "jest --coverage --ci --passWithNoTests",
+    "test:unit": "vitest run --coverage --passWithNoTests",
     "watch": "tsc -w"
   },
   "dependencies": {
@@ -25,7 +25,6 @@
     "ts-node": "10.9.1"
   },
   "devDependencies": {
-    "@types/jest": "29.5.12",
     "@types/node": "18.19.50",
     "@typescript-eslint/eslint-plugin": "5.53.0",
     "@typescript-eslint/parser": "5.53.0",
@@ -40,16 +39,10 @@
     "eslint-plugin-node": "11.1.0",
     "eslint-plugin-prettier": "4.2.1",
     "fs-extra": "11.1.0",
-    "jest": "29.4.3",
-    "jest-sonar-reporter": "2.0.0",
     "prettier": "2.8.4",
-    "ts-jest": "29.0.5",
+    "vitest": "3.2.4",
+    "@vitest/coverage-v8": "3.2.4",
     "ts-node": "10.9.1",
     "typescript": "5.8.3"
-  },
-  "jestSonar": {
-    "reportPath": "coverage",
-    "reportFile": "test-report.xml",
-    "indent": 4
   }
 }

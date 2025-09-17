@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`Document Construct(Document):  Snapshot Test 1`] = `
+exports[`Document > Construct(Document):  Snapshot Test 1`] = `
 {
   "Resources": {
     "CustomSSMShareDocumentCustomResourceProviderHandler02D98C87": {

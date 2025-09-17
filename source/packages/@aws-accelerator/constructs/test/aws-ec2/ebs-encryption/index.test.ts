@@ -17,7 +17,7 @@ import {
   EnableEbsEncryptionByDefaultCommand,
   ModifyEbsDefaultKmsKeyIdCommand,
 } from '@aws-sdk/client-ec2';
-import { afterEach, beforeEach, expect, it } from '@jest/globals';
+import { afterEach, beforeEach, expect, it } from 'vitest';
 import { AwsClientStub, mockClient } from 'aws-sdk-client-mock';
 import { handler } from '../../../lib/aws-ec2/ebs-default-encryption/index';
 import {

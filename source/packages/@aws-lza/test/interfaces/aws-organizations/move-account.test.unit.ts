@@ -10,7 +10,7 @@
  *  OR CONDITIONS OF ANY KIND, express or implied. See the License for the specific language governing permissions
  *  and limitations under the License.
  */
-import { describe, beforeEach, expect, test } from '@jest/globals';
+import { describe, beforeEach, expect, test, vi, afterEach } from 'vitest';
 import { MoveAccountModule } from '../../../lib/aws-organizations/move-account';
 import { MOCK_CONSTANTS } from '../../mocked-resources';
 import {
@@ -29,7 +29,7 @@ describe('MoveAccountModule Contract Compliance', () => {
   beforeEach(() => {
     module = new MoveAccountModule();
     // Mock the handler implementation
-    jest.spyOn(module, 'handler').mockImplementation(async () => 'mocked-response');
+    vi.spyOn(module, 'handler').mockImplementation(async () => 'mocked-response');
   });
 
   test('should implement all interface methods', () => {
@@ -48,7 +48,7 @@ describe('MoveAccountModule Contract Compliance', () => {
 
   test('should handle invalid inputs according to contract', async () => {
     // Reset mock to test error handling
-    jest.spyOn(module, 'handler').mockRejectedValue(new Error('Invalid input parameters'));
+    vi.spyOn(module, 'handler').mockRejectedValue(new Error('Invalid input parameters'));
 
     await expect(module.handler({} as IMoveAccountHandlerParameter)).rejects.toThrow('Invalid input parameters');
   });
@@ -60,7 +60,7 @@ describe('MoveAccountModule Contract Compliance', () => {
   });
 
   afterEach(() => {
-    jest.restoreAllMocks();
+    vi.restoreAllMocks();
   });
 });
 
@@ -74,7 +74,7 @@ describe('MoveAccountsBatchModule Contract Compliance', () => {
   beforeEach(() => {
     module = new MoveAccountsBatchModule();
     // Mock the handler implementation
-    jest.spyOn(module, 'handler').mockImplementation(async () => 'mocked-response');
+    vi.spyOn(module, 'handler').mockImplementation(async () => 'mocked-response');
   });
 
   test('should implement all interface methods', () => {
@@ -93,7 +93,7 @@ describe('MoveAccountsBatchModule Contract Compliance', () => {
 
   test('should handle invalid inputs according to contract', async () => {
     // Reset mock to test error handling
-    jest.spyOn(module, 'handler').mockRejectedValue(new Error('Invalid input parameters'));
+    vi.spyOn(module, 'handler').mockRejectedValue(new Error('Invalid input parameters'));
 
     await expect(module.handler({} as IMoveAccountsBatchHandlerParameter)).rejects.toThrow('Invalid input parameters');
   });
@@ -105,6 +105,6 @@ describe('MoveAccountsBatchModule Contract Compliance', () => {
   });
 
   afterEach(() => {
-    jest.restoreAllMocks();
+    vi.restoreAllMocks();
   });
 });

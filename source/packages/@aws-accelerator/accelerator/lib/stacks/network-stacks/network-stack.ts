@@ -34,6 +34,7 @@ import {
   VpcTemplatesConfig,
   VpnConnectionConfig,
 } from '@aws-accelerator/config';
+import * as path from 'path';
 import {
   CloudWatchLogGroups,
   IIpamSubnet,
@@ -53,7 +54,7 @@ import {
   VpnConnectionProps,
   VpnTunnelOptionsSpecifications,
 } from '@aws-accelerator/constructs';
-import { SsmResourceType } from '@aws-accelerator/utils/lib/ssm-parameter-path';
+import { SsmResourceType, isArn, MetadataKeys } from '@aws-accelerator/utils';
 import * as cdk from 'aws-cdk-lib';
 import { NagSuppressions } from 'cdk-nag';
 import { Construct } from 'constructs';
@@ -75,9 +76,7 @@ import {
   SecurityGroupRuleProps,
 } from './utils/security-group-utils';
 import { hasAdvancedVpnOptions, isIpv4 } from './utils/validation-utils';
-import { isArn } from '@aws-accelerator/utils/lib/is-arn';
-import { MetadataKeys } from '@aws-accelerator/utils/lib/common-types';
-import { LZAResourceLookup, LZAResourceLookupType } from '../../../utils/lza-resource-lookup';
+import { LZAResourceLookup, LZAResourceLookupType } from '@aws-accelerator/accelerator';
 
 /**
  * Resource share type for RAM resource shares
@@ -1291,7 +1290,10 @@ export abstract class NetworkStack extends AcceleratorStack {
     //
     // Create Lambda handler
     return new LzaLambda(this, 'VpnOnEventHandler', {
-      assetPath: '../constructs/lib/aws-ec2/custom-vpn-connection/dist',
+      assetPath: path.resolve(
+        __dirname,
+        '../../../../../@aws-accelerator/constructs/lib/aws-ec2/custom-vpn-connection/dist',
+      ),
       environmentEncryptionKmsKey: this.lambdaKey,
       cloudWatchLogKmsKey: this.cloudwatchKey,
       cloudWatchLogRetentionInDays: this.logRetention,

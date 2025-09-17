@@ -22,7 +22,7 @@
     "strictBuiltinIteratorReturn": false,
     "useDefineForClassFields": false,
     "skipLibCheck": true,
-    "assumeChangesOnlyAffectDirectDependencies": true,
+    "assumeChangesOnlyAffectDirectDependencies": true
   },
   "ts-node": { "swc": true }
 }

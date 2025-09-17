@@ -14,7 +14,7 @@
 import * as cdk from 'aws-cdk-lib';
 import { IdentityCenterOrganizationAdminAccount } from '../../lib/aws-identity-center/identity-center-organization-admin-account';
 import { snapShotTest } from '../snapshot-test';
-import { describe } from '@jest/globals';
+import { describe } from 'vitest';
 const testNamePrefix = 'Construct(IdentityCenterOrganizationAdminAccount): ';
 
 //Initialize stack for snapshot test and resource configuration test

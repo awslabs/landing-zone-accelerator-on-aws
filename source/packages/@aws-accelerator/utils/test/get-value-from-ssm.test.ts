@@ -13,7 +13,7 @@
 import { mockClient, AwsClientStub } from 'aws-sdk-client-mock';
 import { SSMClient, GetParameterCommand, SSMServiceException } from '@aws-sdk/client-ssm';
 import { getSSMParameterValue, SSMOperationError } from '../lib/get-value-from-ssm';
-import { expect, it, beforeEach, afterEach, describe } from '@jest/globals';
+import { expect, it, beforeEach, afterEach, describe } from 'vitest';
 
 let ssmMock: AwsClientStub<SSMClient>;
 

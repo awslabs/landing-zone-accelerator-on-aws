@@ -23,8 +23,8 @@ import {
 import { RouteTable } from '../../lib/aws-ec2/route-table';
 import { snapShotTest } from '../snapshot-test';
 import { OutpostsConfig } from '@aws-accelerator/config';
-import { describe } from '@jest/globals';
-import { LZAResourceLookup } from '@aws-accelerator/accelerator/utils/lza-resource-lookup';
+import { describe } from 'vitest';
+import { LZAResourceLookup } from '@aws-accelerator/accelerator';
 
 const testNamePrefix = 'Construct(Vpc): ';
 

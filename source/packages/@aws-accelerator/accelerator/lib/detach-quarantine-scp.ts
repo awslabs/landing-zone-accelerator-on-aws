@@ -15,7 +15,7 @@ import * as cdk from 'aws-cdk-lib';
 import { v4 as uuidv4 } from 'uuid';
 import { Construct } from 'constructs';
 import { CUSTOM_RESOURCE_PROVIDER_RUNTIME } from '../../utils/lib/lambda';
-import path = require('path');
+import * as path from 'path';
 
 export interface DetachQuarantineScpProps {
   readonly scpPolicyId: string;

@@ -14,6 +14,7 @@
 import * as cdk from 'aws-cdk-lib';
 import { DetectiveGraphConfig } from '../../lib/aws-detective/detective-graph-config';
 import { snapShotTest } from '../snapshot-test';
+import { describe } from 'vitest';
 
 const testNamePrefix = 'Construct(DetectiveGraphConfig): ';
 

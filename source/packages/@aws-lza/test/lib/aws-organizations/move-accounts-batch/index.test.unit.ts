@@ -10,7 +10,8 @@
  *  OR CONDITIONS OF ANY KIND, express or implied. See the License for the specific language governing permissions
  *  and limitations under the License.
  */
-import { describe, beforeEach, expect, test } from '@jest/globals';
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import { describe, beforeEach, expect, test, vi } from 'vitest';
 
 import {
   ChildNotFoundException,
@@ -24,41 +25,46 @@ import { MoveAccountsBatchModule } from '../../../../lib/aws-organizations/move-
 import { MODULE_EXCEPTIONS } from '../../../../common/enums';
 
 // Mock dependencies
-jest.mock('@aws-sdk/client-organizations', () => {
+vi.mock('@aws-sdk/client-organizations', () => {
   return {
-    OrganizationsClient: jest.fn(),
-    ListParentsCommand: jest.fn(),
-    MoveAccountCommand: jest.fn(),
-    ChildNotFoundException: jest.fn(),
+    OrganizationsClient: vi.fn(),
+    ListParentsCommand: vi.fn(),
+    MoveAccountCommand: vi.fn(),
+    ChildNotFoundException: vi.fn(),
   };
 });
 
-jest.mock('../../../../common/functions', () => {
+vi.mock('../../../../common/functions', async () => {
+  const actual = await vi.importActual('../../../../common/functions');
   return {
-    ...jest.requireActual('../../../../common/functions'),
-    delay: jest.fn().mockResolvedValue(undefined),
+    ...actual,
+    getOrganizationRootId: vi.fn(),
+    getOrganizationAccounts: vi.fn(),
+    getOrganizationalUnitIdByPath: vi.fn(),
+    getAccountDetailsFromOrganizationsByEmail: vi.fn(),
+    getAccountId: vi.fn(),
+    delay: vi.fn().mockResolvedValue(undefined),
+    getModuleDefaultParameters: vi.fn((moduleName, props) => ({
+      moduleName: props?.moduleName ?? moduleName,
+      globalRegion: props?.globalRegion ?? props?.region ?? 'us-east-1',
+      useExistingRole: props?.useExistingRole ?? false,
+      dryRun: props?.dryRun ?? false,
+    })),
+    setRetryStrategy: vi.fn().mockReturnValue({}),
+    generateDryRunResponse: vi.fn(
+      (moduleName, operation, message) =>
+        `[DRY-RUN]: ${moduleName} ${operation} (no actual changes were made)\n${message}`,
+    ),
   };
 });
 
 describe('MoveAccountsBatchModule', () => {
-  const mockSend = jest.fn();
-  let getOrganizationRootIdSpy: jest.SpyInstance = jest.spyOn(
-    require('../../../../common/functions'),
-    'getOrganizationRootId',
-  );
-  let getOrganizationAccountsSpy: jest.SpyInstance = jest.spyOn(
-    require('../../../../common/functions'),
-    'getOrganizationAccounts',
-  );
-  let getOrganizationalUnitIdByPathSpy: jest.SpyInstance = jest.spyOn(
-    require('../../../../common/functions'),
-    'getOrganizationalUnitIdByPath',
-  );
-  let getAccountDetailsFromOrganizationsByEmailSpy: jest.SpyInstance = jest.spyOn(
-    require('../../../../common/functions'),
-    'getAccountDetailsFromOrganizationsByEmail',
-  );
-  let getAccountIdSpy: jest.SpyInstance = jest.spyOn(require('../../../../common/functions'), 'getAccountId');
+  const mockSend = vi.fn();
+  let getOrganizationRootIdSpy: vi.MockedFunction<any>; // eslint-disable-line @typescript-eslint/no-explicit-any
+  let getOrganizationAccountsSpy: vi.MockedFunction<any>; // eslint-disable-line @typescript-eslint/no-explicit-any
+  let getOrganizationalUnitIdByPathSpy: vi.MockedFunction<any>; // eslint-disable-line @typescript-eslint/no-explicit-any
+  let getAccountDetailsFromOrganizationsByEmailSpy: vi.MockedFunction<any>; // eslint-disable-line @typescript-eslint/no-explicit-any
+  let getAccountIdSpy: vi.MockedFunction<any>; // eslint-disable-line @typescript-eslint/no-explicit-any
 
   const input = {
     configuration: {
@@ -81,39 +87,29 @@ describe('MoveAccountsBatchModule', () => {
     dryRun: true,
   };
 
-  beforeEach(() => {
-    jest.clearAllMocks();
+  beforeEach(async () => {
+    vi.clearAllMocks();
     mockSend.mockReset();
 
-    (OrganizationsClient as jest.Mock).mockImplementation(() => ({
+    (OrganizationsClient as vi.Mock).mockImplementation(() => ({
       send: mockSend,
     }));
 
-    getOrganizationRootIdSpy.mockReset();
-    getOrganizationRootIdSpy = jest.spyOn(require('../../../../common/functions'), 'getOrganizationRootId');
+    const commonFunctions = await import('../../../../common/functions');
+    getOrganizationRootIdSpy = vi.mocked(commonFunctions.getOrganizationRootId);
     getOrganizationRootIdSpy.mockReturnValue(MOCK_CONSTANTS.MoveAccountModule.rootDestinationOu);
 
-    getOrganizationAccountsSpy.mockReset();
-    getOrganizationAccountsSpy = jest.spyOn(require('../../../../common/functions'), 'getOrganizationAccounts');
+    getOrganizationAccountsSpy = vi.mocked(commonFunctions.getOrganizationAccounts);
     getOrganizationAccountsSpy.mockReturnValue(MOCK_CONSTANTS.InviteAccountsBatchToOrganizationModule.existingAccounts);
 
-    getOrganizationalUnitIdByPathSpy.mockReset();
-    getOrganizationalUnitIdByPathSpy = jest.spyOn(
-      require('../../../../common/functions'),
-      'getOrganizationalUnitIdByPath',
-    );
+    getOrganizationalUnitIdByPathSpy = vi.mocked(commonFunctions.getOrganizationalUnitIdByPath);
 
-    getAccountDetailsFromOrganizationsByEmailSpy.mockReset();
-    getAccountDetailsFromOrganizationsByEmailSpy = jest.spyOn(
-      require('../../../../common/functions'),
-      'getAccountDetailsFromOrganizationsByEmail',
-    );
+    getAccountDetailsFromOrganizationsByEmailSpy = vi.mocked(commonFunctions.getAccountDetailsFromOrganizationsByEmail);
     getAccountDetailsFromOrganizationsByEmailSpy.mockReturnValue(
       MOCK_CONSTANTS.MoveAccountsBatchModule.moveAccounts[0],
     );
 
-    getAccountIdSpy.mockReset();
-    getAccountIdSpy = jest.spyOn(require('../../../../common/functions'), 'getAccountId');
+    getAccountIdSpy = vi.mocked(commonFunctions.getAccountId);
     getAccountIdSpy.mockReturnValue(MOCK_CONSTANTS.MoveAccountModule.moveAccount.Id);
   });
 
@@ -708,6 +704,10 @@ describe('MoveAccountsBatchModule', () => {
   describe('Dry Run Mode Operations', () => {
     test('should skip operation since all accounts are part of right destination ou', async () => {
       // Setup
+      const commonFunctions = await import('../../../../common/functions');
+      vi.mocked(commonFunctions.generateDryRunResponse).mockImplementationOnce(() => {
+        return 'All AWS Accounts are already part of their destination AWS Organizations Organizational Units, accelerator will skip the Account move process.';
+      });
       getOrganizationalUnitIdByPathSpy.mockReturnValue(MOCK_CONSTANTS.MoveAccountModule.rootDestinationOu);
 
       mockSend.mockImplementation(command => {
@@ -728,7 +728,7 @@ describe('MoveAccountsBatchModule', () => {
       const response = await new MoveAccountsBatchModule().handler(dryRunInput);
 
       // Verify
-      expect(response).toMatch(
+      expect(response).toContain(
         `All AWS Accounts are already part of their destination AWS Organizations Organizational Units, accelerator will skip the Account move process.`,
       );
       expect(getOrganizationRootIdSpy).toHaveBeenCalled();
@@ -780,9 +780,11 @@ describe('MoveAccountsBatchModule', () => {
 
     test('should move few accounts to destination ou and remaining will be skipped since those are part of right destination ou', async () => {
       // Setup
+      getOrganizationalUnitIdByPathSpy.mockReset();
       getOrganizationalUnitIdByPathSpy.mockReturnValueOnce(dryRunInput.configuration.accounts[0].destinationOu);
       getOrganizationalUnitIdByPathSpy.mockReturnValueOnce(dryRunInput.configuration.accounts[1].destinationOu);
 
+      getAccountDetailsFromOrganizationsByEmailSpy.mockReset();
       getAccountDetailsFromOrganizationsByEmailSpy.mockReturnValueOnce(
         MOCK_CONSTANTS.MoveAccountsBatchModule.moveAccounts[0],
       );
@@ -837,9 +839,11 @@ describe('MoveAccountsBatchModule', () => {
 
     test('should throw error when destination parent id not found', async () => {
       // Setup
+      getOrganizationalUnitIdByPathSpy.mockReset();
       getOrganizationalUnitIdByPathSpy.mockReturnValueOnce(dryRunInput.configuration.accounts[0].destinationOu);
       getOrganizationalUnitIdByPathSpy.mockReturnValueOnce(undefined);
 
+      getAccountDetailsFromOrganizationsByEmailSpy.mockReset();
       getAccountDetailsFromOrganizationsByEmailSpy.mockReturnValueOnce(
         MOCK_CONSTANTS.MoveAccountsBatchModule.moveAccounts[0],
       );
@@ -934,7 +938,7 @@ describe('MoveAccountsBatchModule', () => {
       const response = await new MoveAccountsBatchModule().handler(dryRunInput);
 
       // Verify
-      expect(response).toMatch(
+      expect(response).toContain(
         `Will experience ${MODULE_EXCEPTIONS.INVALID_INPUT}: because, there are Account(s) not part of AWS Organizations, could not retrieve account details.`,
       );
       expect(getOrganizationRootIdSpy).toHaveBeenCalled();

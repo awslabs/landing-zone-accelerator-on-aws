@@ -18,20 +18,17 @@ import { Construct } from 'constructs';
 import { AcceleratorKeyType, AcceleratorStack } from '../../accelerator-stack';
 import { V2NetworkStacksBaseProps } from '../utils/types';
 import { VpcDetails } from '../constructs/vpc-details';
-import { NetworkLoadBalancer } from '@aws-accelerator/constructs/lib/aws-elasticloadbalancingv2/network-load-balancer';
+import { ApplicationLoadBalancerConfig, NetworkLoadBalancerConfig, GwlbConfig } from '@aws-accelerator/config';
+import { MetadataKeys, SsmResourceType } from '@aws-accelerator/utils';
 import {
-  ApplicationLoadBalancerConfig,
-  NetworkLoadBalancerConfig,
-} from '@aws-accelerator/config/lib/customizations-config';
-import { SsmResourceType } from '@aws-accelerator/utils/lib/ssm-parameter-path';
-import { ApplicationLoadBalancer } from '@aws-accelerator/constructs/lib/aws-elasticloadbalancingv2/application-load-balancer';
-import { PutSsmParameter, SsmParameterProps } from '@aws-accelerator/constructs/lib/aws-ssm/put-ssm-parameter';
-import { GatewayLoadBalancer } from '@aws-accelerator/constructs/lib/aws-elasticloadbalancingv2/gateway-load-balancer';
-import { GwlbConfig } from '@aws-accelerator/config/lib/network-config';
+  NetworkLoadBalancer,
+  ApplicationLoadBalancer,
+  PutSsmParameter,
+  SsmParameterProps,
+  GatewayLoadBalancer,
+} from '@aws-accelerator/constructs';
 import { isV2Resource } from '../utils/functions';
 import { NetworkStackGeneration, V2StackComponentsList } from '../utils/enums';
-import { MetadataKeys } from '@aws-accelerator/utils/lib/common-types';
-
 export class VpcLoadBalancersBaseStack extends AcceleratorStack {
   private v2StackProps: V2NetworkStacksBaseProps;
   private vpcDetails: VpcDetails;

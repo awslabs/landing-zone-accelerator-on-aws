@@ -12,6 +12,7 @@
  */
 
 import * as cdk from 'aws-cdk-lib';
+import { describe } from 'vitest';
 import { TransitGatewayPrefixListReference } from '../../lib/aws-ec2/transit-gateway-prefix-list-reference';
 import { snapShotTest } from '../snapshot-test';
 

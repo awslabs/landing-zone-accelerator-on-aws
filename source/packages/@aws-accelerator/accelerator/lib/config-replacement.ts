@@ -23,7 +23,7 @@ import {
   ReplacementsConfig,
   SecurityConfig,
 } from '@aws-accelerator/config';
-import { createLogger } from '@aws-accelerator/utils/lib/logger';
+import { createLogger } from '@aws-accelerator/utils';
 import { Accelerator, shouldLookupDynamoDb } from './accelerator';
 
 const logger = createLogger(['config-replacement']);

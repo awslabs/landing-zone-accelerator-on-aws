@@ -11,7 +11,7 @@
  *  and limitations under the License.
  */
 
-import { describe, beforeEach, expect, test } from '@jest/globals';
+import { describe, beforeEach, expect, test, vi, afterEach } from 'vitest';
 
 import { GuardDutyManageOrganizationAdminModule } from '../../lib/guardduty/manage-organization-admin';
 import { manageGuardDutyAdminAccount } from '../../executors/accelerator-aws-guardduty';
@@ -31,21 +31,21 @@ const MOCK_CONSTANTS = {
 };
 
 // Mock dependencies
-jest.mock('../../lib/guardduty/manage-organization-admin/index');
+vi.mock('../../lib/guardduty/manage-organization-admin/index');
 
 describe('GuardDutyExecutors', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   describe('manageGuardDutyOrganizationAdminAccount', () => {
     beforeEach(() => {
-      jest.clearAllMocks();
+      vi.clearAllMocks();
     });
 
     test('should successfully set organization admin', async () => {
-      const mockHandler = jest.fn().mockResolvedValue('SUCCESS');
-      (GuardDutyManageOrganizationAdminModule as jest.Mock).mockImplementation(() => ({
+      const mockHandler = vi.fn().mockResolvedValue('SUCCESS');
+      (GuardDutyManageOrganizationAdminModule as vi.Mock).mockImplementation(() => ({
         handler: mockHandler,
       }));
 
@@ -57,8 +57,8 @@ describe('GuardDutyExecutors', () => {
     });
 
     test('should successfully disable organization admin', async () => {
-      const mockHandler = jest.fn().mockResolvedValue('SUCCESS');
-      (GuardDutyManageOrganizationAdminModule as jest.Mock).mockImplementation(() => ({
+      const mockHandler = vi.fn().mockResolvedValue('SUCCESS');
+      (GuardDutyManageOrganizationAdminModule as vi.Mock).mockImplementation(() => ({
         handler: mockHandler,
       }));
 
@@ -78,8 +78,8 @@ describe('GuardDutyExecutors', () => {
     });
 
     test('should handle dry run mode', async () => {
-      const mockHandler = jest.fn().mockResolvedValue('DRY_RUN_SUCCESS');
-      (GuardDutyManageOrganizationAdminModule as jest.Mock).mockImplementation(() => ({
+      const mockHandler = vi.fn().mockResolvedValue('DRY_RUN_SUCCESS');
+      (GuardDutyManageOrganizationAdminModule as vi.Mock).mockImplementation(() => ({
         handler: mockHandler,
       }));
 
@@ -97,8 +97,8 @@ describe('GuardDutyExecutors', () => {
 
     test('should throw error when setup fails', async () => {
       const errorMessage = 'module failed to manage aws guardduty organization admin';
-      const mockHandler = jest.fn().mockRejectedValue(new Error(errorMessage));
-      (GuardDutyManageOrganizationAdminModule as jest.Mock).mockImplementation(() => ({
+      const mockHandler = vi.fn().mockRejectedValue(new Error(errorMessage));
+      (GuardDutyManageOrganizationAdminModule as vi.Mock).mockImplementation(() => ({
         handler: mockHandler,
       }));
 
@@ -110,8 +110,8 @@ describe('GuardDutyExecutors', () => {
 
     test('should throw error when handler throws unknown error', async () => {
       const errorMessage = 'unknown error occurred';
-      const mockHandler = jest.fn().mockRejectedValue(errorMessage);
-      (GuardDutyManageOrganizationAdminModule as jest.Mock).mockImplementation(() => ({
+      const mockHandler = vi.fn().mockRejectedValue(errorMessage);
+      (GuardDutyManageOrganizationAdminModule as vi.Mock).mockImplementation(() => ({
         handler: mockHandler,
       }));
 
@@ -122,8 +122,8 @@ describe('GuardDutyExecutors', () => {
     });
 
     test('should handle different partition', async () => {
-      const mockHandler = jest.fn().mockResolvedValue('SUCCESS');
-      (GuardDutyManageOrganizationAdminModule as jest.Mock).mockImplementation(() => ({
+      const mockHandler = vi.fn().mockResolvedValue('SUCCESS');
+      (GuardDutyManageOrganizationAdminModule as vi.Mock).mockImplementation(() => ({
         handler: mockHandler,
       }));
 
@@ -140,8 +140,8 @@ describe('GuardDutyExecutors', () => {
     });
 
     test('should handle different region', async () => {
-      const mockHandler = jest.fn().mockResolvedValue('SUCCESS');
-      (GuardDutyManageOrganizationAdminModule as jest.Mock).mockImplementation(() => ({
+      const mockHandler = vi.fn().mockResolvedValue('SUCCESS');
+      (GuardDutyManageOrganizationAdminModule as vi.Mock).mockImplementation(() => ({
         handler: mockHandler,
       }));
 
@@ -165,28 +165,28 @@ describe('GuardDutyExecutors', () => {
     beforeEach(() => {
       originalProcessOn = process.on;
 
-      process.on = jest.fn((event: string, listener: NodeJS.UncaughtExceptionListener) => {
+      process.on = vi.fn((event: string, listener: NodeJS.UncaughtExceptionListener) => {
         if (event === 'uncaughtException') {
           processOnCallback = listener;
         }
         return process;
       }) as unknown as typeof process.on;
 
-      jest.resetModules();
+      vi.resetModules();
     });
 
     afterEach(() => {
       process.on = originalProcessOn;
     });
 
-    test('should register uncaughtException handler', () => {
-      require('../../executors/accelerator-aws-guardduty');
+    test('should register uncaughtException handler', async () => {
+      await import('../../executors/accelerator-aws-guardduty');
 
       expect(process.on).toHaveBeenCalledWith('uncaughtException', expect.any(Function));
     });
 
-    test('should rethrow the error when uncaughtException occurs', () => {
-      require('../../executors/accelerator-aws-guardduty');
+    test('should rethrow the error when uncaughtException occurs', async () => {
+      await import('../../executors/accelerator-aws-guardduty');
 
       const testError = new Error('Test uncaught exception');
       const origin = 'uncaughtException';

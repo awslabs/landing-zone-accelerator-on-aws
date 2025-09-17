@@ -12,6 +12,7 @@
  */
 
 import * as cdk from 'aws-cdk-lib';
+import { describe } from 'vitest';
 import { SecurityHubStandards } from '../../index';
 import { snapShotTest } from '../snapshot-test';
 

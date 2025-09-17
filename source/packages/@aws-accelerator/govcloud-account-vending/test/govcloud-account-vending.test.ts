@@ -12,6 +12,7 @@
  */
 
 import * as cdk from 'aws-cdk-lib';
+import { describe } from 'vitest';
 // import { Template } from 'aws-cdk-lib/assertions';
 import { GovCloudAccountVendingStack } from '../lib/govcloud-avm-stack';
 import { snapShotTest } from './snapshot-test';

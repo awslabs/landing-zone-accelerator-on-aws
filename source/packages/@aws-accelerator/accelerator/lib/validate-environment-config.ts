@@ -14,7 +14,7 @@
 import * as cdk from 'aws-cdk-lib';
 import { v4 as uuidv4 } from 'uuid';
 import { Construct } from 'constructs';
-import path = require('path');
+import * as path from 'path';
 import { NagSuppressions } from 'cdk-nag';
 import { DEFAULT_LAMBDA_RUNTIME } from '../../utils/lib/lambda';
 import { AcceleratorResourcePrefixes } from '../utils/app-utils';

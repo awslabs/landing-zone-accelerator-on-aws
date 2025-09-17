@@ -12,7 +12,7 @@
  */
 import * as cdk from 'aws-cdk-lib';
 import { SynthUtils } from '@aws-cdk/assert';
-import { expect, test } from '@jest/globals';
+import { expect, test } from 'vitest';
 
 export function snapShotTest(testNamePrefix: string, stackProvider: () => cdk.Stack | undefined) {
   test(`${testNamePrefix} Snapshot Test`, () => {
@@ -24,7 +24,7 @@ export function snapShotTest(testNamePrefix: string, stackProvider: () => cdk.St
     configureSnapshotSeriliazers();
 
     expect(SynthUtils.toCloudFormation(stack)).toMatchSnapshot();
-  });
+  }, 120000);
 }
 
 const uuidRegex = /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/;

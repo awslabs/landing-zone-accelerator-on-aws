@@ -10,6 +10,7 @@
  *  OR CONDITIONS OF ANY KIND, express or implied. See the License for the specific language governing permissions
  *  and limitations under the License.
  */
+import { describe, beforeEach, afterEach, test, expect, vi } from 'vitest';
 import {
   CloudWatchLogsClient,
   DescribeLogGroupsCommand,
@@ -35,7 +36,7 @@ describe('update-subscription-policy lambda handler', () => {
   const OLD_ENV = process.env;
 
   beforeEach(() => {
-    jest.resetModules();
+    vi.resetModules();
     process.env = { ...OLD_ENV };
     cloudWatchLogsMock.reset();
   });
@@ -190,7 +191,7 @@ describe('update-subscription-policy lambda handler', () => {
     cloudWatchLogsMock.on(PutRetentionPolicyCommand).resolves({});
     cloudWatchLogsMock.on(AssociateKmsKeyCommand).resolves({});
 
-    const consoleSpy = jest.spyOn(console, 'info');
+    const consoleSpy = vi.spyOn(console, 'info');
 
     const response = await handler(event);
 
@@ -228,7 +229,7 @@ describe('update-subscription-policy lambda handler', () => {
     cloudWatchLogsMock.on(PutRetentionPolicyCommand).resolves({});
     cloudWatchLogsMock.on(AssociateKmsKeyCommand).resolves({});
 
-    const consoleSpy = jest.spyOn(console, 'info');
+    const consoleSpy = vi.spyOn(console, 'info');
 
     const response = await handler(event);
 
@@ -256,7 +257,7 @@ describe('update-subscription-policy lambda handler', () => {
     });
     cloudWatchLogsMock.on(PutAccountPolicyCommand).resolves({});
 
-    const consoleSpy = jest.spyOn(console, 'info');
+    const consoleSpy = vi.spyOn(console, 'info');
 
     const response = await handler(event);
 
@@ -289,7 +290,7 @@ describe('update-subscription-policy lambda handler', () => {
       accountPolicies: [{ policyName: StaticInput.policyName }],
     });
 
-    const consoleSpy = jest.spyOn(console, 'warn');
+    const consoleSpy = vi.spyOn(console, 'warn');
 
     const response = await handler(event);
 
@@ -319,7 +320,7 @@ describe('update-subscription-policy lambda handler', () => {
     cloudWatchLogsMock.on(DeleteAccountPolicyCommand).resolves({});
     cloudWatchLogsMock.on(PutAccountPolicyCommand).resolves({});
 
-    const consoleSpy = jest.spyOn(console, 'info');
+    const consoleSpy = vi.spyOn(console, 'info');
 
     const response = await handler(event);
 
@@ -359,7 +360,7 @@ describe('update-subscription-policy lambda handler', () => {
     cloudWatchLogsMock.on(PutRetentionPolicyCommand).resolves({});
     cloudWatchLogsMock.on(AssociateKmsKeyCommand).resolves({});
 
-    const consoleSpy = jest.spyOn(console, 'info');
+    const consoleSpy = vi.spyOn(console, 'info');
 
     const response = await handler(event);
 
@@ -398,7 +399,7 @@ describe('update-subscription-policy lambda handler', () => {
     cloudWatchLogsMock.on(PutRetentionPolicyCommand).resolves({});
     cloudWatchLogsMock.on(AssociateKmsKeyCommand).resolves({});
 
-    const consoleSpy = jest.spyOn(console, 'info');
+    const consoleSpy = vi.spyOn(console, 'info');
 
     const response = await handler(event);
 

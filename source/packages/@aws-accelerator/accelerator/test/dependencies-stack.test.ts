@@ -12,7 +12,7 @@
  */
 
 import { AcceleratorStage } from '../lib/accelerator-stage';
-import { describe, test } from '@jest/globals';
+import { describe, test } from 'vitest';
 import { snapShotTest } from './snapshot-test';
 import { Template } from 'aws-cdk-lib/assertions';
 import { Create, memoize } from './accelerator-test-helpers';

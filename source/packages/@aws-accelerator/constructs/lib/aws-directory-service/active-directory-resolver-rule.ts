@@ -15,7 +15,7 @@ import * as cdk from 'aws-cdk-lib';
 import { Construct } from 'constructs';
 import { v4 as uuidv4 } from 'uuid';
 
-import path = require('path');
+import * as path from 'path';
 import { DEFAULT_LAMBDA_RUNTIME } from '@aws-accelerator/utils/lib/lambda';
 
 /**

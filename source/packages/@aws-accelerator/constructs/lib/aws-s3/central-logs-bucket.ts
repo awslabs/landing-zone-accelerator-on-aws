@@ -17,7 +17,7 @@ import { Bucket, BucketEncryptionType } from '@aws-accelerator/constructs';
 import { GlobalConfig } from '@aws-accelerator/config';
 import { S3LifeCycleRule } from './bucket';
 import { BucketPrefixProps } from './bucket-prefix';
-import { AwsPrincipalAccessesType, BucketAccessType } from '@aws-accelerator/utils/lib/common-resources';
+import { AwsPrincipalAccessesType, BucketAccessType } from '@aws-accelerator/utils';
 
 export interface CentralLogsBucketProps {
   s3BucketName: string;

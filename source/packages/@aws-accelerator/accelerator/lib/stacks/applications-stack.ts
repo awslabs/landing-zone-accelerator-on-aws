@@ -38,7 +38,7 @@ import {
   LaunchTemplate,
   AutoscalingGroup,
 } from '@aws-accelerator/constructs';
-import { SsmResourceType } from '@aws-accelerator/utils/lib/ssm-parameter-path';
+import { SsmResourceType } from '@aws-accelerator/utils';
 
 export type PrivateIpAddressConfig = {
   primary: boolean | undefined;

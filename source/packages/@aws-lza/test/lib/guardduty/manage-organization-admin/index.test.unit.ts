@@ -11,7 +11,7 @@
  *  and limitations under the License.
  */
 
-import { describe, beforeEach, expect, test } from '@jest/globals';
+import { describe, beforeEach, expect, test, vi, afterEach } from 'vitest';
 
 import {
   AdminAccount,
@@ -32,39 +32,41 @@ import { MODULE_EXCEPTIONS } from '../../../../common/enums';
 import { generateDryRunResponse } from '../../../../common/functions';
 import { AcceleratorModuleName } from '../../../../common/resources';
 
-jest.mock('@aws-sdk/client-guardduty', () => {
+vi.mock('@aws-sdk/client-guardduty', async () => {
+  const actual = await vi.importActual('@aws-sdk/client-guardduty');
   return {
-    ...jest.requireActual('@aws-sdk/client-guardduty'),
-    GuardDutyClient: jest.fn(),
-    CreateDetectorCommand: jest.fn(),
-    DisableOrganizationAdminAccountCommand: jest.fn(),
-    EnableOrganizationAdminAccountCommand: jest.fn(),
-    GetDetectorCommand: jest.fn(),
-    ListDetectorsCommand: jest.fn(),
-    ListOrganizationAdminAccountsCommand: jest.fn(),
+    ...actual,
+    GuardDutyClient: vi.fn(),
+    CreateDetectorCommand: vi.fn(),
+    DisableOrganizationAdminAccountCommand: vi.fn(),
+    EnableOrganizationAdminAccountCommand: vi.fn(),
+    GetDetectorCommand: vi.fn(),
+    ListDetectorsCommand: vi.fn(),
+    ListOrganizationAdminAccountsCommand: vi.fn(),
   };
 });
 
-jest.mock('../../../../common/functions', () => {
+vi.mock('../../../../common/functions', async () => {
+  const actual = await vi.importActual('../../../../common/functions');
   return {
-    ...jest.requireActual('../../../../common/functions'),
-    delay: jest.fn().mockResolvedValue(undefined),
-    waitUntil: jest.fn(),
+    ...actual,
+    delay: vi.fn().mockResolvedValue(undefined),
+    waitUntil: vi.fn(),
   };
 });
 
 describe('GuardDutyManageOrganizationAdminModule', () => {
-  const mockSend = jest.fn();
+  const mockSend = vi.fn();
 
-  beforeEach(() => {
-    jest.clearAllMocks();
-    (GuardDutyClient as jest.Mock).mockImplementation(() => ({
+  beforeEach(async () => {
+    vi.clearAllMocks();
+    (GuardDutyClient as vi.Mock).mockImplementation(() => ({
       send: mockSend,
     }));
 
     // Set up default waitUntil mock implementation
-    const { waitUntil } = jest.requireMock('../../../../common/functions');
-    waitUntil.mockImplementation(async (predicate: () => Promise<boolean>, error: string) => {
+    const { waitUntil } = await import('../../../../common/functions');
+    vi.mocked(waitUntil).mockImplementation(async (predicate: () => Promise<boolean>, error: string) => {
       // Default implementation that just calls the predicate once
       const result = await predicate();
       if (!result) {
@@ -507,10 +509,10 @@ describe('GuardDutyManageOrganizationAdminModule', () => {
     test('should directly test isGuardDutyEnabled error handling', async () => {
       // Mock the logger to verify it's called
       const mockLogger = {
-        error: jest.fn(),
-        info: jest.fn(),
-        warn: jest.fn(),
-        debug: jest.fn(),
+        error: vi.fn(),
+        info: vi.fn(),
+        warn: vi.fn(),
+        debug: vi.fn(),
       };
 
       // Create a test instance with the mocked logger
@@ -520,7 +522,7 @@ describe('GuardDutyManageOrganizationAdminModule', () => {
 
       // Mock the getDetectors method to throw an error
       // @ts-ignore - Replace the private method with our mock
-      module.getDetectors = jest.fn().mockImplementation(() => {
+      module.getDetectors = vi.fn().mockImplementation(() => {
         throw new Error('Direct error test');
       });
 
@@ -631,8 +633,8 @@ describe('GuardDutyManageOrganizationAdminModule', () => {
       });
 
       // Mock waitUntil to simulate timeout
-      const { waitUntil } = jest.requireMock('../../../../common/functions');
-      waitUntil.mockImplementation(() => {
+      const { waitUntil } = await import('../../../../common/functions');
+      vi.mocked(waitUntil).mockImplementation(() => {
         throw new Error(
           `${MODULE_EXCEPTIONS.SERVICE_EXCEPTION}: Could not get confirmation that ${adminId} was removed as GuardDuty Organization Admin`,
         );
@@ -739,10 +741,10 @@ describe('GuardDutyManageOrganizationAdminModule', () => {
 test('should directly test getDetectors error handling', async () => {
   // Mock the logger to verify it's called
   const mockLogger = {
-    error: jest.fn(),
-    info: jest.fn(),
-    warn: jest.fn(),
-    debug: jest.fn(),
+    error: vi.fn(),
+    info: vi.fn(),
+    warn: vi.fn(),
+    debug: vi.fn(),
   };
 
   // Create a test instance with the mocked logger
@@ -752,7 +754,7 @@ test('should directly test getDetectors error handling', async () => {
 
   // Create a mock client with a mock send function
   const mockClient = {
-    send: jest.fn().mockImplementation(() => {
+    send: vi.fn().mockImplementation(() => {
       throw new Error('Direct detector error test');
     }),
   };
@@ -770,7 +772,7 @@ test('should directly test getDetectors error handling', async () => {
 test('should test getDetectors with empty detector IDs', async () => {
   // Create a mock client with a mock send function
   const mockClient = {
-    send: jest.fn().mockImplementation(command => {
+    send: vi.fn().mockImplementation(command => {
       if (command instanceof ListDetectorsCommand) {
         return Promise.resolve({ DetectorIds: [] });
       }
@@ -789,7 +791,7 @@ test('should test getDetectors with empty detector IDs', async () => {
 test('should test getDetectors with undefined detector IDs', async () => {
   // Create a mock client with a mock send function
   const mockClient = {
-    send: jest.fn().mockImplementation(command => {
+    send: vi.fn().mockImplementation(command => {
       if (command instanceof ListDetectorsCommand) {
         return Promise.resolve({ DetectorIds: undefined });
       }
@@ -808,7 +810,7 @@ test('should test getDetectors with undefined detector IDs', async () => {
 test('should test getDetectors with undefined detector status', async () => {
   // Create a mock client with a mock send function
   const mockClient = {
-    send: jest.fn().mockImplementation(command => {
+    send: vi.fn().mockImplementation(command => {
       if (command instanceof ListDetectorsCommand) {
         return Promise.resolve({ DetectorIds: ['detector-123'] });
       }
@@ -833,7 +835,7 @@ test('should test listAdminAccounts pagination', async () => {
   // Create a mock client with a mock send function that simulates pagination
   let callCount = 0;
   const mockClient = {
-    send: jest.fn().mockImplementation(command => {
+    send: vi.fn().mockImplementation(command => {
       if (command instanceof ListOrganizationAdminAccountsCommand) {
         callCount++;
         if (callCount === 1) {
@@ -867,7 +869,7 @@ test('should test listAdminAccounts pagination', async () => {
 test('should test listAdminAccounts with undefined AdminAccounts', async () => {
   // Create a mock client with a mock send function that returns undefined AdminAccounts
   const mockClient = {
-    send: jest.fn().mockImplementation(command => {
+    send: vi.fn().mockImplementation(command => {
       if (command instanceof ListOrganizationAdminAccountsCommand) {
         return Promise.resolve({
           // AdminAccounts is undefined

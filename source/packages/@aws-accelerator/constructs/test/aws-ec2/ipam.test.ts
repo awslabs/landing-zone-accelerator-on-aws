@@ -12,6 +12,7 @@
  */
 
 import * as cdk from 'aws-cdk-lib';
+import { describe } from 'vitest';
 import { Ipam } from '../../lib/aws-ec2/ipam';
 import { snapShotTest } from '../snapshot-test';
 

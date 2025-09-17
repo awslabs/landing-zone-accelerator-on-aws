@@ -12,6 +12,7 @@
  */
 
 import * as cdk from 'aws-cdk-lib';
+import { describe } from 'vitest';
 import { AuditManagerDefaultReportsDestination } from '../../lib/aws-auditmanager/auditmanager-reports-destination';
 import { snapShotTest } from '../snapshot-test';
 

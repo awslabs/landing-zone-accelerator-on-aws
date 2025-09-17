@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`CloudWatchDestination Construct(CloudWatchDestination):  Snapshot Test 1`] = `
+exports[`CloudWatchDestination > Construct(CloudWatchDestination):  Snapshot Test 1`] = `
 {
   "Conditions": {
     "AwsCdkKinesisEncryptedStreamsUnsupportedRegions": {
@@ -309,7 +309,7 @@ exports[`CloudWatchDestination Construct(CloudWatchDestination):  Snapshot Test 
 }
 `;
 
-exports[`CloudWatchDestination Construct(CloudWatchDestination):  Snapshot Test 2`] = `
+exports[`CloudWatchDestination > Construct(CloudWatchDestination):  Snapshot Test 2`] = `
 {
   "Conditions": {
     "AwsCdkKinesisEncryptedStreamsUnsupportedRegions": {

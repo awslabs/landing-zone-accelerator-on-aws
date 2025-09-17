@@ -38,7 +38,7 @@ import {
   SsmSessionManagerPolicy,
   WarmAccount,
 } from '@aws-accelerator/constructs';
-import { SsmResourceType } from '@aws-accelerator/utils/lib/ssm-parameter-path';
+import { SsmResourceType } from '@aws-accelerator/utils';
 import {
   AcceleratorKeyType,
   AcceleratorStack,

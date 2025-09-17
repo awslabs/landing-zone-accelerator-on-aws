@@ -12,6 +12,7 @@
  */
 
 import * as cdk from 'aws-cdk-lib';
+import { describe } from 'vitest';
 import { GuardDutyPublishingDestination } from '../../lib/aws-guardduty/guardduty-publishing-destination';
 import { snapShotTest } from '../snapshot-test';
 

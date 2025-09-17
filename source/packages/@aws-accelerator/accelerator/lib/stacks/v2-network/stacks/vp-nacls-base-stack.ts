@@ -18,14 +18,11 @@ import { Construct } from 'constructs';
 import { AcceleratorStack } from '../../accelerator-stack';
 import { V2NetworkResourceListType, V2NetworkStacksBaseProps } from '../utils/types';
 import { VpcDetails } from '../constructs/vpc-details';
-import { isNetworkType } from '@aws-accelerator/config/lib/common/parse';
-import { NetworkAclConfig, NetworkAclSubnetSelection } from '@aws-accelerator/config/lib/network-config';
-import { NonEmptyString } from '@aws-accelerator/config/lib/common/types';
+import { isNetworkType, NetworkAclConfig, NetworkAclSubnetSelection, NonEmptyString } from '@aws-accelerator/config';
 import { isIpv6Cidr } from '../../network-stacks/utils/validation-utils';
-import { SsmResourceType } from '@aws-accelerator/utils/lib/ssm-parameter-path';
+import { SsmResourceType, MetadataKeys } from '@aws-accelerator/utils';
 import { isV2Resource } from '../utils/functions';
 import { NetworkStackGeneration, V2StackComponentsList } from '../utils/enums';
-import { MetadataKeys } from '@aws-accelerator/utils/lib/common-types';
 
 export class VpcNaclsBaseStack extends AcceleratorStack {
   private v2StackProps: V2NetworkStacksBaseProps;

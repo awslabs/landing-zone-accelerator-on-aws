@@ -12,6 +12,7 @@
  */
 
 import * as cdk from 'aws-cdk-lib';
+import { describe } from 'vitest';
 import { FMSNotificationChannel } from '../../lib/aws-fms/fms-notification-channel';
 import { snapShotTest } from '../snapshot-test';
 

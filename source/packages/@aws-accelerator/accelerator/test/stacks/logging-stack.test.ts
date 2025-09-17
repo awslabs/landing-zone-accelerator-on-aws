@@ -15,12 +15,12 @@
 
 import { AssetBucketConfig, CentralLogBucketConfig } from '@aws-accelerator/config';
 import { AcceleratorImportedBucketType } from '@aws-accelerator/utils';
-import { beforeEach, describe, expect, jest, test } from '@jest/globals';
+import { beforeEach, describe, expect, vi, test, afterEach, it } from 'vitest';
 import * as cdk from 'aws-cdk-lib';
 import { LoggingStack } from '../../lib/stacks/logging-stack';
 import { createAcceleratorStackProps } from './stack-props-test-helper';
 import { PolicyStatement } from 'aws-cdk-lib/aws-iam';
-import { SpiedClass, SpiedFunction } from 'jest-mock';
+import { MockedClass, MockedFunction } from 'vitest';
 import { AcceleratorStack } from '../../lib/stacks/accelerator-stack';
 
 let app: cdk.App;
@@ -28,13 +28,13 @@ let loggingStack: LoggingStack;
 
 beforeEach(() => {
   app = new cdk.App();
-  jest.spyOn(LoggingStack.prototype as any, 'createReplicationProps');
+  vi.spyOn(LoggingStack.prototype as any, 'createReplicationProps');
   const props = createAcceleratorStackProps();
   loggingStack = new LoggingStack(app, 'unit-test-logging-stack', props);
 });
 
 afterEach(() => {
-  jest.clearAllMocks();
+  vi.clearAllMocks();
 });
 
 describe('normalizeExtension', () => {
@@ -55,10 +55,10 @@ describe('normalizeExtension', () => {
 });
 
 describe('createImportedBucketKey', () => {
-  let addToResourcePolicySpy: SpiedClass<any> | SpiedFunction<any>;
+  let addToResourcePolicySpy: MockedClass<any> | MockedFunction<any>;
 
   beforeEach(() => {
-    addToResourcePolicySpy = jest.spyOn(cdk.aws_kms.Key.prototype, 'addToResourcePolicy');
+    addToResourcePolicySpy = vi.spyOn(cdk.aws_kms.Key.prototype, 'addToResourcePolicy');
   });
 
   describe('ASSETS_BUCKET', () => {
@@ -142,28 +142,28 @@ describe('createImportedBucketKey', () => {
 
 describe('updateImportedBucketEncryption', () => {
   const key = {
-    addToResourcePolicy: jest.fn(),
+    addToResourcePolicy: vi.fn(),
   } as unknown as cdk.aws_kms.Key;
-  let externalPolicyFilePathsSpy: SpiedClass<any> | SpiedFunction<any>;
-  let importBucketKeySpy: SpiedClass<any> | SpiedFunction<any>;
-  let externalPolicySpy: SpiedClass<any> | SpiedFunction<any>;
-  let kmsPolicyStatementsSpy: SpiedClass<any> | SpiedFunction<any>;
+  let externalPolicyFilePathsSpy: MockedClass<any> | MockedFunction<any>;
+  let importBucketKeySpy: MockedClass<any> | MockedFunction<any>;
+  let externalPolicySpy: MockedClass<any> | MockedFunction<any>;
+  let kmsPolicyStatementsSpy: MockedClass<any> | MockedFunction<any>;
 
   beforeEach(() => {
-    externalPolicyFilePathsSpy = jest
+    externalPolicyFilePathsSpy = vi
       .spyOn(LoggingStack.prototype as any, 'getExternalPolicyFilePaths')
       .mockReturnValue(['1', '2']);
-    importBucketKeySpy = jest.spyOn(LoggingStack.prototype as any, 'createImportedBucketKey').mockReturnValue(key);
-    externalPolicySpy = jest
+    importBucketKeySpy = vi.spyOn(LoggingStack.prototype as any, 'createImportedBucketKey').mockReturnValue(key);
+    externalPolicySpy = vi
       .spyOn(LoggingStack.prototype as any, 'getExternalPolicyStatements')
       .mockReturnValue([new PolicyStatement()]);
-    kmsPolicyStatementsSpy = jest
+    kmsPolicyStatementsSpy = vi
       .spyOn(LoggingStack.prototype as any, 'createImportedBucketKmsPolicyStatements')
       .mockReturnValue([new PolicyStatement()]);
   });
 
   afterEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   it('ASSETS_BUCKET', () => {
@@ -182,7 +182,7 @@ describe('updateImportedBucketEncryption', () => {
   it('CENTRAL_LOGS_BUCKET', () => {
     const bucketType = AcceleratorImportedBucketType.CENTRAL_LOGS_BUCKET;
     const options = createBucketConfig('aws-central-log-bucket', bucketType);
-    const keyLookupSpy = jest.spyOn(cdk.aws_kms.Key as any, 'fromKeyArn').mockReturnValue(key);
+    const keyLookupSpy = vi.spyOn(cdk.aws_kms.Key as any, 'fromKeyArn').mockReturnValue(key);
 
     loggingStack['updateImportedBucketEncryption'](options);
     expect(externalPolicyFilePathsSpy).toHaveBeenCalledWith(undefined, undefined);
@@ -197,7 +197,7 @@ describe('updateImportedBucketEncryption', () => {
 
 describe('createS3KmsKey', () => {
   it('returns undefined if S3 CMK is enabled', () => {
-    jest.spyOn(AcceleratorStack.prototype as any, 'isCmkEnabledS3Encryption').mockReturnValue(false);
+    vi.spyOn(AcceleratorStack.prototype as any, 'isCmkEnabledS3Encryption').mockReturnValue(false);
     const props = createAcceleratorStackProps();
     const stack = new LoggingStack(app, 'unit-test-s3key-logging-stack', props);
     const result = stack['createS3KmsKey']();
@@ -205,8 +205,8 @@ describe('createS3KmsKey', () => {
   });
 
   it('uses audit account logic for audit account', () => {
-    jest.spyOn(AcceleratorStack.prototype as any, 'isCmkEnabledS3Encryption').mockReturnValue(true);
-    const spy = jest.spyOn(LoggingStack.prototype as any, 'createAuditAccountS3Key').mockReturnValue(undefined);
+    vi.spyOn(AcceleratorStack.prototype as any, 'isCmkEnabledS3Encryption').mockReturnValue(true);
+    const spy = vi.spyOn(LoggingStack.prototype as any, 'createAuditAccountS3Key').mockReturnValue(undefined);
 
     const props = createAcceleratorStackProps(undefined, '00000001');
     new LoggingStack(app, 'unit-test-s3key-logging-stack', props);
@@ -214,8 +214,8 @@ describe('createS3KmsKey', () => {
   });
 
   it('creates non audit key', () => {
-    jest.spyOn(AcceleratorStack.prototype as any, 'isCmkEnabledS3Encryption').mockReturnValue(true);
-    const spy = jest.spyOn(LoggingStack.prototype as any, 'createNonAuditS3Key').mockReturnValue({ keyArn: 'arn' });
+    vi.spyOn(AcceleratorStack.prototype as any, 'isCmkEnabledS3Encryption').mockReturnValue(true);
+    const spy = vi.spyOn(LoggingStack.prototype as any, 'createNonAuditS3Key').mockReturnValue({ keyArn: 'arn' });
     const props = createAcceleratorStackProps();
     new LoggingStack(app, 'unit-test-s3key-logging-stack', props);
     expect(spy).toHaveBeenCalledTimes(1);

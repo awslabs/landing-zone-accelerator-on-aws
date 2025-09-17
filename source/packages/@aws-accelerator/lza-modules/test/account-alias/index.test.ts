@@ -11,7 +11,7 @@
  *  and limitations under the License.
  */
 
-import { describe, test, beforeEach } from '@jest/globals';
+import { describe, test, beforeEach } from 'vitest';
 
 import * as path from 'path';
 
@@ -36,7 +36,7 @@ const MOCK_CONSTANTS = {
 
 describe('AccountAlias', () => {
   const iamMockClient = AcceleratorMockClient(IAMClient);
-  const accountsConfig = AccountsConfig.load(path.resolve('../lza-modules/test/account-alias/config'));
+  const accountsConfig = AccountsConfig.load(path.resolve(__dirname, 'config'));
 
   let accountAlias: AccountAlias;
   let statuses: string[] = [];

@@ -13,7 +13,8 @@
 
 import * as ts from 'typescript';
 import * as path from 'path';
-import * as fs from 'fs';
+
+import { test, describe, expect } from 'vitest';
 
 interface ConfigFileMapping {
   interfaceFile: string;
@@ -23,6 +24,15 @@ interface ConfigFileMapping {
 }
 
 describe('Config Files Sync Test', () => {
+  // eslint-disable-next-line prefer-const
+  let cachedProgram: ts.Program;
+  // eslint-disable-next-line prefer-const
+  let cachedTypeChecker: ts.TypeChecker;
+  const cachedData: Map<
+    string,
+    { interfaces: Record<string, ts.InterfaceDeclaration>; classes: Record<string, ts.ClassDeclaration> }
+  > = new Map();
+
   const configMappings: ConfigFileMapping[] = [
     {
       interfaceFile: 'lib/models/global-config.ts',
@@ -74,38 +84,46 @@ describe('Config Files Sync Test', () => {
     },
   ];
 
+  // Initialize cache once before all tests
+  const basePath = path.resolve(__dirname, '..');
+  const allFiles = configMappings.flatMap(m => [
+    path.join(basePath, m.interfaceFile),
+    path.join(basePath, m.implementationFile),
+  ]);
+  // eslint-disable-next-line prefer-const
+  cachedProgram = ts.createProgram(allFiles, {
+    target: ts.ScriptTarget.ES2020,
+    module: ts.ModuleKind.CommonJS,
+  });
+  // eslint-disable-next-line prefer-const
+  cachedTypeChecker = cachedProgram.getTypeChecker();
+
+  // Pre-extract all interfaces and classes
+  configMappings.forEach(mapping => {
+    const interfaceFilePath = path.join(basePath, mapping.interfaceFile);
+    const implementationFilePath = path.join(basePath, mapping.implementationFile);
+    const interfaceSourceFile = cachedProgram.getSourceFile(interfaceFilePath)!;
+    const implementationSourceFile = cachedProgram.getSourceFile(implementationFilePath)!;
+
+    cachedData.set(mapping.description, {
+      interfaces: extractInterfaces(interfaceSourceFile),
+      classes: extractClasses(implementationSourceFile),
+    });
+  });
+
   configMappings.forEach(mapping => {
     test(`${mapping.description} interface definitions and implementations should be in sync`, () => {
-      const basePath = path.resolve(__dirname, '..');
-      const interfaceFilePath = path.join(basePath, mapping.interfaceFile);
-      const implementationFilePath = path.join(basePath, mapping.implementationFile);
-
-      expect(fs.existsSync(interfaceFilePath)).toBe(true);
-      expect(fs.existsSync(implementationFilePath)).toBe(true);
-
-      const program = ts.createProgram([interfaceFilePath, implementationFilePath], {
-        target: ts.ScriptTarget.ES2020,
-        module: ts.ModuleKind.CommonJS,
-      });
-
-      const interfaceSourceFile = program.getSourceFile(interfaceFilePath);
-      const implementationSourceFile = program.getSourceFile(implementationFilePath);
-
-      expect(interfaceSourceFile).toBeDefined();
-      expect(implementationSourceFile).toBeDefined();
-
-      const interfaces = extractInterfaces(interfaceSourceFile!);
-      const classes = extractClasses(implementationSourceFile!);
+      const cached = cachedData.get(mapping.description)!;
 
       const issues = compareInterfacesWithImplementations(
-        interfaces,
-        classes,
+        cached.interfaces,
+        cached.classes,
         mapping.ignoreExtraClassProperties || {},
-        program.getTypeChecker(),
+        cachedTypeChecker,
       );
 
       expect(issues).toEqual([]);
-    });
+    }, 120000);
   });
 
   function extractInterfaces(sourceFile: ts.SourceFile) {

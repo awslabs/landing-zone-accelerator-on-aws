@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`CustomizationsStack Construct(CustomizationsStack):  Snapshot Test 1`] = `
+exports[`CustomizationsStack > Construct(CustomizationsStack):  Snapshot Test 1`] = `
 {
   "Parameters": {
     "SsmParameterValueacceleratorkmscloudwatchkeyarnC96584B6F00A464EAD1953AFF4B05118Parameter": {
@@ -700,7 +700,7 @@ exports[`CustomizationsStack Construct(CustomizationsStack):  Snapshot Test 1`] 
 }
 `;
 
-exports[`CustomizationsStack Construct(CustomizationsStack):  Snapshot Test 2`] = `
+exports[`CustomizationsStack > Construct(CustomizationsStack):  Snapshot Test 2`] = `
 {
   "Resources": {
     "CustomPortfolioAssociationsRoleArnProviderCustomPortfolioAssociationsRoleArnProviderProviderLambda303083B3": {
@@ -1181,7 +1181,7 @@ exports[`CustomizationsStack Construct(CustomizationsStack):  Snapshot Test 2`] 
 }
 `;
 
-exports[`CustomizationsStack Construct(CustomizationsStack):  Snapshot Test 3`] = `
+exports[`CustomizationsStack > Construct(CustomizationsStack):  Snapshot Test 3`] = `
 {
   "Parameters": {
     "SsmParameterValueacceleratorkmscloudwatchkeyarnC96584B6F00A464EAD1953AFF4B05118Parameter": {
@@ -1879,7 +1879,7 @@ exports[`CustomizationsStack Construct(CustomizationsStack):  Snapshot Test 3`] 
 }
 `;
 
-exports[`CustomizationsStack Construct(CustomizationsStack):  Snapshot Test 4`] = `
+exports[`CustomizationsStack > Construct(CustomizationsStack):  Snapshot Test 4`] = `
 {
   "Resources": {
     "CustomPortfolioAssociationsRoleArnProviderCustomPortfolioAssociationsRoleArnProviderProviderLambda303083B3": {

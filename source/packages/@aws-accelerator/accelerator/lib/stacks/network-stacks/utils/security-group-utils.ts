@@ -22,7 +22,8 @@ import {
   isNetworkType,
   NonEmptyString,
 } from '@aws-accelerator/config';
-import { LZAResourceLookup, LZAResourceLookupType } from '../../../../utils/lza-resource-lookup';
+import { createLogger } from '@aws-accelerator/utils';
+import { LZAResourceLookup, LZAResourceLookupType } from '@aws-accelerator/accelerator';
 import {
   IIpamSubnet,
   PrefixList,
@@ -31,7 +32,6 @@ import {
   SecurityGroupIngressRuleProps,
   Subnet,
 } from '@aws-accelerator/constructs';
-import { createLogger } from '@aws-accelerator/utils/lib/logger';
 import * as cdk from 'aws-cdk-lib';
 import { getPrefixList, getSecurityGroup, getSubnet, getSubnetConfig, getVpcConfig } from './getter-utils';
 import { isIpv6Cidr } from './validation-utils';

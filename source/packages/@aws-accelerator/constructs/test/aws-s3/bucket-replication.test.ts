@@ -14,7 +14,7 @@
 import * as cdk from 'aws-cdk-lib';
 import { BucketReplication } from '@aws-accelerator/constructs';
 import { snapShotTest } from '../snapshot-test';
-import { describe, expect, test } from '@jest/globals';
+import { describe, expect, test } from 'vitest';
 
 const testNamePrefix = 'Construct(BucketReplication): ';
 

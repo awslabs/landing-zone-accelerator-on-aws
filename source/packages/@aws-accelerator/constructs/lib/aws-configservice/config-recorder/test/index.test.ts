@@ -11,7 +11,7 @@ import {
   PutConfigurationRecorderCommand,
 } from '@aws-sdk/client-config-service';
 
-import { describe, beforeEach, expect, test } from '@jest/globals';
+import { describe, beforeEach, expect, test } from 'vitest';
 import { AcceleratorMockClient, EventType } from '../../../../test/unit-test/common/resources';
 import { AcceleratorUnitTest } from '../../../../test/unit-test/accelerator-unit-test';
 import { StaticInput } from './static-input';

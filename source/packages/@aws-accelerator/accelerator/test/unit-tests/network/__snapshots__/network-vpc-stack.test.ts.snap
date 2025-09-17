@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`NetworkVpcStack tests Construct(NetworkVpcStack):  Snapshot Test 1`] = `
+exports[`NetworkVpcStack tests > Construct(NetworkVpcStack):  Snapshot Test 1`] = `
 {
   "Metadata": {
     "lzaLookup": {

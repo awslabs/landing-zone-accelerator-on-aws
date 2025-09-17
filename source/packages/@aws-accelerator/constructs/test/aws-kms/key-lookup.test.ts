@@ -12,6 +12,7 @@
  */
 
 import * as cdk from 'aws-cdk-lib';
+import { describe } from 'vitest';
 import { KeyLookup } from '../../lib/aws-kms/key-lookup';
 import { snapShotTest } from '../snapshot-test';
 

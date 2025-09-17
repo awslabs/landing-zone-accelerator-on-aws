@@ -14,7 +14,7 @@
 import * as cdk from 'aws-cdk-lib';
 import { ApplicationLoadBalancer } from '../../lib/aws-elasticloadbalancingv2/application-load-balancer';
 import { snapShotTest } from '../snapshot-test';
-import { describe } from '@jest/globals';
+import { describe } from 'vitest';
 
 const testNamePrefix = 'Construct(ApplicationLoadBalancer): ';
 
