@@ -43,7 +43,7 @@
     "yargs": "17.7.1"
   },
   "devDependencies": {
-    "aws-sdk-client-mock":"3.0.1",
+    "aws-sdk-client-mock": "3.0.1",
     "@types/fs-extra": "11.0.1",
     "@types/yargs": "17.0.32",
     "@types/mri": "1.1.1",
