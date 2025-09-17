@@ -70,7 +70,6 @@ export enum AcceleratorModules {
    * Move AWS Accounts to destination AWS Organizations Organizational Unit (OU) module
    */
   MOVE_ACCOUNTS = 'move-accounts',
-
   /**
    * Retrieves cross account CloudFormation Templates
    */
@@ -94,7 +93,10 @@ export enum AcceleratorModules {
    * For more information on SSM Block Public Document Sharing, please refer the [document](https://docs.aws.amazon.com/systems-manager/latest/userguide/document-public-access-block.html)
    */
   SSM_BLOCK_PUBLIC_DOCUMENT_SHARING = 'ssm-block-public-document-sharing',
-
+  /**
+   * Sets an account alias
+   */
+  MANAGE_ACCOUNTS_ALIAS = 'manage-accounts-alias',
   /**
    * An Example module which is executed in `PREPARE` stage
    */

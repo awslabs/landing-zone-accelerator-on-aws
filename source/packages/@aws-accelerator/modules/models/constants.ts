@@ -22,6 +22,7 @@ import { ConfigureRootUserManagementModule } from '../lib/actions/aws-iam/root-u
 import { SsmBlockPublicDocumentSharingModule } from '../lib/actions/aws-ssm/ssm-block-public-document-sharing';
 import { AcceleratorModules, AcceleratorModuleStages, ModuleExecutionPhase } from './enums';
 import { AcceleratorModuleStageDetailsType, AcceleratorModuleStageOrdersType, ModuleParams } from './types';
+import { ManageAccountsAliasModule } from '../lib/actions/aws-organizations/manage-accounts-alias';
 
 /**
  * Execution order for the Accelerator module stages
@@ -146,7 +147,17 @@ export const AcceleratorModuleStageDetails: AcceleratorModuleStageDetailsType[] 
       name: AcceleratorModuleStages.ACCOUNTS,
       runOrder: AcceleratorModuleStageOrders[AcceleratorModuleStages.ACCOUNTS].runOrder,
     },
-    modules: [],
+    modules: [
+      {
+        name: AcceleratorModules.MANAGE_ACCOUNTS_ALIAS,
+        description: 'Manage the alias of accounts',
+        runOrder: 1,
+        handler: async (params: ModuleParams) => {
+          return await ManageAccountsAliasModule.execute(params);
+        },
+        executionPhase: ModuleExecutionPhase.DEPLOY,
+      },
+    ],
   },
   {
     stage: {

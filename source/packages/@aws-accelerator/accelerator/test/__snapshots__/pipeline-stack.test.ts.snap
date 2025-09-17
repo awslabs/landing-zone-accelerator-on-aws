@@ -2602,11 +2602,6 @@ exports[`PipelineStack > Construct(PipelineStack):  Snapshot Test 1`] = `
                   "Ref": "AWS::Partition",
                 },
                 "
-                        yarn run ts-node ../lza-modules/bin/runner.ts --module account-alias --partition ",
-                {
-                  "Ref": "AWS::Partition",
-                },
-                " --use-existing-role No --config-dir $CODEBUILD_SRC_DIR_Config
                       fi
 artifacts:
   base-directory: $WORK_DIR
@@ -5742,11 +5737,6 @@ exports[`PipelineStack > Construct(PipelineStack):  Snapshot Test 2`] = `
                   "Ref": "AWS::Partition",
                 },
                 "
-                        yarn run ts-node ../lza-modules/bin/runner.ts --module account-alias --partition ",
-                {
-                  "Ref": "AWS::Partition",
-                },
-                " --use-existing-role No --config-dir $CODEBUILD_SRC_DIR_Config
                       fi
 artifacts:
   base-directory: $WORK_DIR
@@ -8388,11 +8378,6 @@ exports[`PipelineStack customS3Path > Construct(PipelineStack):  Snapshot Test 1
                   "Ref": "AWS::Partition",
                 },
                 "
-                        yarn run ts-node ../lza-modules/bin/runner.ts --module account-alias --partition ",
-                {
-                  "Ref": "AWS::Partition",
-                },
-                " --use-existing-role No --config-dir $CODEBUILD_SRC_DIR_Config
                       fi
 artifacts:
   base-directory: $WORK_DIR

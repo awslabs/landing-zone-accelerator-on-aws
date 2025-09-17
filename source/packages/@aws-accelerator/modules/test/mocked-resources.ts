@@ -114,6 +114,7 @@ export const mockImportedLoggingBucketGlobalConfig = {
 
 export const mockGlobalConfiguration = {
   homeRegion: 'mockHomeRegion',
+  managementAccountAccessRole: 'AWSControlTowerExecution',
   controlTower: {
     enable: true,
     landingZone: {
@@ -218,12 +219,14 @@ export const mockAccountsConfiguration: Partial<AccountsConfig> = {
       description: 'mockManagement',
       email: 'mockManagement@example.com',
       organizationalUnit: 'Root',
+      accountAlias: 'mock-management-account-alias',
     },
     {
       name: 'LogArchive',
       description: 'mockLogArchive',
       email: 'mockLogArchive@example.com',
       organizationalUnit: 'Security',
+      accountAlias: 'mock-log-archive-account-alias',
     },
     {
       name: 'Audit',

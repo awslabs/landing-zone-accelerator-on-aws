@@ -11,7 +11,7 @@
  *  and limitations under the License.
  */
 
-import { beforeEach, describe, test,expect, vi, afterEach } from 'vitest';
+import { beforeEach, describe, test, expect, vi, afterEach } from 'vitest';
 import { SetupControlTowerLandingZoneModule } from '../../../lib/actions/control-tower/setup-control-tower-landing-zone';
 import { AcceleratorModules, ModuleExecutionPhase } from '../../../models/enums';
 import { AcceleratorStage } from '../../../../accelerator';
