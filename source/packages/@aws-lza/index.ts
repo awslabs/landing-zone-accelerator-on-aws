@@ -67,6 +67,9 @@ export { manageAccountAlias } from './executors/accelerator-aws-organizations';
 export { IManageEbsDefaultEncryptionHandlerParameter } from './interfaces/amazon-ec2/manage-ebs-default-encryption';
 export { manageEbsDefaultEncryption } from './executors/accelerator-amazon-ec2';
 
+export { IDeleteDefaultVpcParameter } from './interfaces/amazon-ec2/delete-default-vpc';
+export { deleteDefaultVpc } from './executors/accelerator-amazon-ec2';
+
 export { IGetCloudFormationTemplatesHandlerParameter } from './interfaces/aws-cloudformation/get-cloudformation-templates';
 export { getCloudFormationTemplates } from './executors/accelerator-aws-cloudformation';
 

@@ -15,6 +15,8 @@ import path from 'path';
 import { createLogger } from '../common/logger';
 import { IManageEbsDefaultEncryptionHandlerParameter } from '../interfaces/amazon-ec2/manage-ebs-default-encryption';
 import { ManageEbsDefaultEncryptionModule } from '../lib/amazon-ec2/manage-ebs-default-encryption';
+import { IDeleteDefaultVpcParameter } from '../interfaces/amazon-ec2/delete-default-vpc';
+import { DeleteDefaultVpcModule } from '../lib/amazon-ec2/delete-default-vpc';
 
 process.on('uncaughtException', err => {
   throw err;
@@ -51,6 +53,35 @@ const logger = createLogger([path.parse(path.basename(__filename)).name]);
 export async function manageEbsDefaultEncryption(input: IManageEbsDefaultEncryptionHandlerParameter): Promise<string> {
   try {
     return await new ManageEbsDefaultEncryptionModule().handler(input);
+  } catch (e: unknown) {
+    logger.error(e);
+    throw e;
+  }
+}
+
+/**
+ * Function to manage default VPC deletion in AWS account
+ * @param input {@link IDeleteDefaultVpcParameter}
+ * @returns string
+ *
+ * @description
+ * Use this function to manage default vpc deletion in AWS account
+ *
+ * @example
+ * ```
+ * const param: IDeleteDefaultVpcParameter = {
+    region: 'us-west-1',
+    partition: 'aws',
+    configuration: {},
+    operation: 'delete-default-vpc',
+    dryRun: true, // Start with dry run for safety
+    solutionId: 'test',
+  };
+ * ```
+ */
+export async function deleteDefaultVpc(input: IDeleteDefaultVpcParameter): Promise<string> {
+  try {
+    return await new DeleteDefaultVpcModule().handler(input);
   } catch (e: unknown) {
     logger.error(e);
     throw e;
