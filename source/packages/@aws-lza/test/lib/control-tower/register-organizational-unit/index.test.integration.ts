@@ -11,7 +11,7 @@
  *  and limitations under the License.
  */
 import path from 'path';
-import { beforeAll, expect, test } from 'vitest';
+import { beforeAll, expect, test, describe } from 'vitest';
 import { createLogger } from '../../../../common/logger';
 import { IntegrationTest } from '../../../helpers/integration-test';
 import { RegionalTestSuite } from '../../../helpers/test-suite';
@@ -54,98 +54,101 @@ let organizationClient: OrganizationsClient;
 //
 const integrationTest = new IntegrationTest();
 
-RegionalTestSuite['sampleConfig:us-east-1']!.suite(RegionalTestSuite['sampleConfig:us-east-1']!.suiteName, () => {
-  beforeAll(async () => {
-    //
-    // Setup Integration account environment
-    //
-    await integrationTest.prepare();
-  });
+RegionalTestSuite(describe)['sampleConfig:us-east-1']!.suite(
+  RegionalTestSuite(describe)['sampleConfig:us-east-1']!.suiteName,
+  () => {
+    beforeAll(async () => {
+      //
+      // Setup Integration account environment
+      //
+      await integrationTest.prepare();
+    });
 
-  test('should skip registration becasue ou already registered', async () => {
-    // Setup
-    await prepare(testOuItems.existingOuName);
+    test('should skip registration becasue ou already registered', async () => {
+      // Setup
+      await prepare(testOuItems.existingOuName);
 
-    // Execute && Verify
-    expect(
-      await new RegisterOrganizationalUnitModule().handler({
-        configuration: {
-          name: testOuItems.existingOuName,
-        },
-        operation: 'register-organizational-unit',
-        partition: integrationTest.environment.partition,
-        region: integrationTest.environment.region,
-        credentials: integrationTest.environment.integrationAccountStsCredentials,
-      }),
-    ).toMatch(testOuItems.existingOuResponsePattern);
+      // Execute && Verify
+      expect(
+        await new RegisterOrganizationalUnitModule().handler({
+          configuration: {
+            name: testOuItems.existingOuName,
+          },
+          operation: 'register-organizational-unit',
+          partition: integrationTest.environment.partition,
+          region: integrationTest.environment.region,
+          credentials: integrationTest.environment.integrationAccountStsCredentials,
+        }),
+      ).toMatch(testOuItems.existingOuResponsePattern);
 
-    // Assert
-    const assertProps = await getAssertProperties();
-    expect(
-      await integrationTest.assertion.assertApiCallPartial({
-        expectedResponse: { enabledBaselines: [{ targetIdentifier: testOuArn }] },
-        ...assertProps,
-      }),
-    ).toBeTruthy();
-  });
+      // Assert
+      const assertProps = await getAssertProperties();
+      expect(
+        await integrationTest.assertion.assertApiCallPartial({
+          expectedResponse: { enabledBaselines: [{ targetIdentifier: testOuArn }] },
+          ...assertProps,
+        }),
+      ).toBeTruthy();
+    });
 
-  test('should skip registration becasue ou already registered for nested ou name', async () => {
-    // Setup
-    await prepare(testOuItems.existingNestedOuName);
+    test('should skip registration becasue ou already registered for nested ou name', async () => {
+      // Setup
+      await prepare(testOuItems.existingNestedOuName);
 
-    // Execute && Verify
-    expect(
-      await new RegisterOrganizationalUnitModule().handler({
-        configuration: {
-          name: testOuItems.existingNestedOuName,
-        },
-        operation: 'register-organizational-unit',
-        partition: integrationTest.environment.partition,
-        region: integrationTest.environment.region,
-        credentials: integrationTest.environment.integrationAccountStsCredentials,
-      }),
-    ).toMatch(testOuItems.existingOuResponsePattern);
+      // Execute && Verify
+      expect(
+        await new RegisterOrganizationalUnitModule().handler({
+          configuration: {
+            name: testOuItems.existingNestedOuName,
+          },
+          operation: 'register-organizational-unit',
+          partition: integrationTest.environment.partition,
+          region: integrationTest.environment.region,
+          credentials: integrationTest.environment.integrationAccountStsCredentials,
+        }),
+      ).toMatch(testOuItems.existingOuResponsePattern);
 
-    // Assert
-    const assertProps = await getAssertProperties();
-    expect(
-      await integrationTest.assertion.assertApiCallPartial({
-        expectedResponse: { enabledBaselines: [{ targetIdentifier: testOuArn }] },
-        ...assertProps,
-      }),
-    ).toBeTruthy();
-  });
+      // Assert
+      const assertProps = await getAssertProperties();
+      expect(
+        await integrationTest.assertion.assertApiCallPartial({
+          expectedResponse: { enabledBaselines: [{ targetIdentifier: testOuArn }] },
+          ...assertProps,
+        }),
+      ).toBeTruthy();
+    });
 
-  test('should register ou successfully', async () => {
-    // Setup
-    await prepare(testOuItems.newOuName);
+    test('should register ou successfully', async () => {
+      // Setup
+      await prepare(testOuItems.newOuName);
 
-    // Execute && Verify
-    expect(
-      await new RegisterOrganizationalUnitModule().handler({
-        configuration: {
-          name: testOuItems.newOuName,
-        },
-        operation: 'register-organizational-unit',
-        partition: integrationTest.environment.partition,
-        region: integrationTest.environment.region,
-        credentials: integrationTest.environment.integrationAccountStsCredentials,
-      }),
-    ).toMatch(testOuItems.newOuResponsePattern);
+      // Execute && Verify
+      expect(
+        await new RegisterOrganizationalUnitModule().handler({
+          configuration: {
+            name: testOuItems.newOuName,
+          },
+          operation: 'register-organizational-unit',
+          partition: integrationTest.environment.partition,
+          region: integrationTest.environment.region,
+          credentials: integrationTest.environment.integrationAccountStsCredentials,
+        }),
+      ).toMatch(testOuItems.newOuResponsePattern);
 
-    // Assert
-    const assertProps = await getAssertProperties();
-    expect(
-      await integrationTest.assertion.assertApiCallPartial({
-        expectedResponse: { enabledBaselines: [{ targetIdentifier: testOuArn }] },
-        ...assertProps,
-      }),
-    ).toBeTruthy();
+      // Assert
+      const assertProps = await getAssertProperties();
+      expect(
+        await integrationTest.assertion.assertApiCallPartial({
+          expectedResponse: { enabledBaselines: [{ targetIdentifier: testOuArn }] },
+          ...assertProps,
+        }),
+      ).toBeTruthy();
 
-    // Cleanup
-    await cleanup();
-  });
-});
+      // Cleanup
+      await cleanup();
+    });
+  },
+);
 
 /**
  * Function to prepare integration test environment.

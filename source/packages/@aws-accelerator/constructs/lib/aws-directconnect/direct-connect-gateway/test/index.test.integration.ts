@@ -23,7 +23,7 @@ import { throttlingBackOff } from '@aws-accelerator/utils/lib/throttle';
 import { CreateEvent, UpdateEvent, DeleteEvent } from '@aws-accelerator/utils/lib/test-util/common/resources';
 import { AssertPropsType } from '@aws-accelerator/utils/lib/test-util/common/assertion';
 
-import { afterAll, beforeAll, expect, vi, test } from 'vitest';
+import { afterAll, beforeAll, expect, vi, test, describe } from 'vitest';
 
 import { IntegrationTest } from '@aws-accelerator/utils/lib/test-util/common/integration-test';
 import { RegionalTestSuite } from '@aws-accelerator/utils/lib/test-util/common/test-suite';
@@ -33,7 +33,7 @@ import { DirectConnectGatewayPolicyStatements } from '../../direct-connect-gatew
 import { handler } from '../index';
 
 const msInMinute = 60000;
-vi.setTimeout(2 * msInMinute);
+vi.setConfig({ testTimeout: 2 * msInMinute });
 
 const apiDelayInMinutes = 0.5; // delay before checking Status through API
 
@@ -51,108 +51,111 @@ const integrationTest = new IntegrationTest({
   executorRolePolicyStatements: DirectConnectGatewayPolicyStatements,
 });
 
-RegionalTestSuite['sampleConfig:us-east-1']!.suite(RegionalTestSuite['sampleConfig:us-east-1']!.suiteName, () => {
-  beforeAll(async () => {
-    //
-    // Setup Integration account environment
-    //
-    await integrationTest.setup();
-  });
+RegionalTestSuite(describe)['sampleConfig:us-east-1']!.suite(
+  RegionalTestSuite(describe)['sampleConfig:us-east-1']!.suiteName,
+  () => {
+    beforeAll(async () => {
+      //
+      // Setup Integration account environment
+      //
+      await integrationTest.setup();
+    });
 
-  afterAll(async () => {
-    //
-    // Cleanup of environment
-    //
-    await cleanup();
-  });
+    afterAll(async () => {
+      //
+      // Cleanup of environment
+      //
+      await cleanup();
+    });
 
-  test('[CREATE event]: Should pass when trying to create Direct Connect Gateway', async () => {
-    const event = CreateEvent;
+    test('[CREATE event]: Should pass when trying to create Direct Connect Gateway', async () => {
+      const event = CreateEvent;
 
-    event.ResourceProperties['gatewayName'] = gatewayName;
-    event.ResourceProperties['asn'] = asn;
+      event.ResourceProperties['gatewayName'] = gatewayName;
+      event.ResourceProperties['asn'] = asn;
 
-    const response = await handler(event);
-    directConnectGatewayId = response?.PhysicalResourceId;
+      const response = await handler(event);
+      directConnectGatewayId = response?.PhysicalResourceId;
 
-    expect(response).toHaveProperty('Status', 'SUCCESS');
-    expect(directConnectGatewayId).toBeDefined();
+      expect(response).toHaveProperty('Status', 'SUCCESS');
+      expect(directConnectGatewayId).toBeDefined();
 
-    // Call DX Client for verification
-    const assertProps = await getAssertProperties(directConnectGatewayId!, apiDelayInMinutes);
-    const gateway = assertProps.actualResponse['directConnectGateways'][0];
+      // Call DX Client for verification
+      const assertProps = await getAssertProperties(directConnectGatewayId!, apiDelayInMinutes);
+      const gateway = assertProps.actualResponse['directConnectGateways'][0];
 
-    // Verify DXGW is created and available
-    expect(gateway.amazonSideAsn).toBe(asn);
-    expect(gateway.directConnectGatewayId).toBe(directConnectGatewayId);
-    expect(gateway.directConnectGatewayName).toBe(gatewayName);
-    expect(gateway.directConnectGatewayState).toBe(DirectConnectGatewayState.available);
-  });
+      // Verify DXGW is created and available
+      expect(gateway.amazonSideAsn).toBe(asn);
+      expect(gateway.directConnectGatewayId).toBe(directConnectGatewayId);
+      expect(gateway.directConnectGatewayName).toBe(gatewayName);
+      expect(gateway.directConnectGatewayState).toBe(DirectConnectGatewayState.available);
+    });
 
-  test('[UPDATE event]: Should pass with error message when changing the ASN of Direct Connect Gateway', async () => {
-    const event = UpdateEvent;
+    test('[UPDATE event]: Should pass with error message when changing the ASN of Direct Connect Gateway', async () => {
+      const event = UpdateEvent;
 
-    event.PhysicalResourceId = directConnectGatewayId!;
+      event.PhysicalResourceId = directConnectGatewayId!;
 
-    event.OldResourceProperties['gatewayName'] = gatewayName;
-    event.OldResourceProperties['asn'] = asn;
+      event.OldResourceProperties['gatewayName'] = gatewayName;
+      event.OldResourceProperties['asn'] = asn;
 
-    event.ResourceProperties['gatewayName'] = gatewayName;
-    event.ResourceProperties['asn'] = asn + 1;
+      event.ResourceProperties['gatewayName'] = gatewayName;
+      event.ResourceProperties['asn'] = asn + 1;
 
-    // Spy on the send method
-    const sendSpy = vi.spyOn(DirectConnectClient.prototype, 'send');
+      // Spy on the send method
+      const sendSpy = vi.spyOn(DirectConnectClient.prototype, 'send');
 
-    // Verify that no UpdateDirectConnectGateway command was sent
-    expect(sendSpy).not.toHaveBeenCalledWith(
-      expect.objectContaining({
-        input: expect.any(UpdateDirectConnectGatewayCommand),
-      }),
-    );
-  });
+      // Verify that no UpdateDirectConnectGateway command was sent
+      expect(sendSpy).not.toHaveBeenCalledWith(
+        expect.objectContaining({
+          input: expect.any(UpdateDirectConnectGatewayCommand),
+        }),
+      );
+    });
 
-  test('[UPDATE event]: Should pass when changing the name of Direct Connect Gateway', async () => {
-    const event = UpdateEvent;
+    test('[UPDATE event]: Should pass when changing the name of Direct Connect Gateway', async () => {
+      const event = UpdateEvent;
 
-    event.PhysicalResourceId = directConnectGatewayId!;
+      event.PhysicalResourceId = directConnectGatewayId!;
 
-    event.OldResourceProperties['gatewayName'] = gatewayName;
+      event.OldResourceProperties['gatewayName'] = gatewayName;
 
-    event.ResourceProperties['gatewayName'] = gatewayNameUpdated;
+      event.ResourceProperties['gatewayName'] = gatewayNameUpdated;
 
-    expect(await handler(event)).toHaveProperty('Status', 'SUCCESS');
+      expect(await handler(event)).toHaveProperty('Status', 'SUCCESS');
 
-    // Call DX Client for verification
-    const assertProps = await getAssertProperties(directConnectGatewayId!, apiDelayInMinutes);
-    const gateway = assertProps.actualResponse['directConnectGateways'][0];
+      // Call DX Client for verification
+      const assertProps = await getAssertProperties(directConnectGatewayId!, apiDelayInMinutes);
+      const gateway = assertProps.actualResponse['directConnectGateways'][0];
 
-    // Verify DXGW is renamed
-    expect(gateway.directConnectGatewayId).toBe(directConnectGatewayId);
-    expect(gateway.directConnectGatewayName).toBe(gatewayNameUpdated);
-    expect(gateway.directConnectGatewayState).toBe(DirectConnectGatewayState.available);
-  });
+      // Verify DXGW is renamed
+      expect(gateway.directConnectGatewayId).toBe(directConnectGatewayId);
+      expect(gateway.directConnectGatewayName).toBe(gatewayNameUpdated);
+      expect(gateway.directConnectGatewayState).toBe(DirectConnectGatewayState.available);
+    });
 
-  test('[DELETE event]: Should pass when deleting Direct Connect Gateway', async () => {
-    const event = DeleteEvent;
+    test('[DELETE event]: Should pass when deleting Direct Connect Gateway', async () => {
+      const event = DeleteEvent;
 
-    event.ResourceProperties['gatewayName'] = gatewayNameUpdated;
-    event.ResourceProperties['asn'] = asn;
-    event.PhysicalResourceId = directConnectGatewayId!;
+      event.ResourceProperties['gatewayName'] = gatewayNameUpdated;
+      event.ResourceProperties['asn'] = asn;
+      event.PhysicalResourceId = directConnectGatewayId!;
 
-    expect(await handler(event)).toHaveProperty('Status', 'SUCCESS');
+      expect(await handler(event)).toHaveProperty('Status', 'SUCCESS');
 
-    // Verift DXGW is in deleted||deleting
-    const assertProps = await getAssertProperties(directConnectGatewayId!, apiDelayInMinutes);
-    const gateway = assertProps.actualResponse['directConnectGateways'][0];
+      // Verift DXGW is in deleted||deleting
+      const assertProps = await getAssertProperties(directConnectGatewayId!, apiDelayInMinutes);
+      const gateway = assertProps.actualResponse['directConnectGateways'][0];
 
-    expect(gateway.directConnectGatewayId).toBe(directConnectGatewayId);
-    expect(gateway.directConnectGatewayName).toBe(gatewayNameUpdated);
-    // Expect a deleting or deleted status
-    expect([DirectConnectGatewayState.deleted, DirectConnectGatewayState.deleting]).toContain(
-      gateway.directConnectGatewayState,
-    );
-  });
-});
+      expect(gateway.directConnectGatewayId).toBe(directConnectGatewayId);
+      expect(gateway.directConnectGatewayName).toBe(gatewayNameUpdated);
+      // Expect a deleting or deleted status
+      expect([DirectConnectGatewayState.deleted, DirectConnectGatewayState.deleting]).toContain(
+        gateway.directConnectGatewayState,
+      );
+    });
+  },
+);
 
 /**
  * Function to perform integration test environment cleanup.
