@@ -595,8 +595,7 @@ export class AcceleratorToolkit {
         deploymentMethod: deploymentMethod,
         roleArn: roleArn,
         stacks: {
-          patterns: [stackName],
-          strategy: StackSelectionStrategy.PATTERN_MUST_MATCH,
+          strategy: StackSelectionStrategy.ALL_STACKS,
         },
         tags: options.tags,
       });
