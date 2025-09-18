@@ -12,9 +12,20 @@
  */
 
 import * as cdk from 'aws-cdk-lib';
-import { ImportAseaResourcesStack } from '../stacks/import-asea-resources-stack';
+import { ImportAseaResourcesStack, LogLevel } from '../stacks/import-asea-resources-stack';
 
 import { AseaResource, AseaResourceProps } from './resource';
+
+interface LambdaResource {
+  logicalResourceId: string;
+  resourceMetadata: {
+    Properties?: {
+      Role?: {
+        'Fn::Join'?: [string, unknown[]];
+      };
+    };
+  };
+}
 
 const RESOURCE_TYPE = 'AWS::Lambda::Function';
 
@@ -53,14 +64,27 @@ export class Lambda extends AseaResource {
     const lambdas = this.scope.importStackResources.getResourcesByType(RESOURCE_TYPE);
 
     for (const lambda of lambdas) {
-      try {
-        const lambdaFunction = this.stack.getResource(lambda.logicalResourceId) as cdk.aws_lambda.CfnFunction;
-        if (lambdaFunction.role.includes(oldPartialRoleName)) {
-          lambdaFunction.role = newRoleArn;
-        }
-      } catch (e) {
-        console.log(e);
+      if (this.hasMatchingRole(lambda, oldPartialRoleName)) {
+        this.updateLambdaRole(lambda, newRoleArn);
       }
+    }
+  }
+
+  private hasMatchingRole(lambda: LambdaResource, roleName: string): boolean {
+    const roleJoin = lambda.resourceMetadata.Properties?.Role?.['Fn::Join'];
+    if (!roleJoin || !roleJoin[1]) {
+      return false;
+    }
+    const roleArray = JSON.stringify(roleJoin[1]);
+    return roleArray.includes(roleName);
+  }
+
+  private updateLambdaRole(lambda: LambdaResource, newRoleArn: string): void {
+    try {
+      const lambdaFunction = this.stack.getResource(lambda.logicalResourceId) as cdk.aws_lambda.CfnFunction;
+      lambdaFunction.role = newRoleArn;
+    } catch (e) {
+      this.scope.addLogs(LogLevel.ERROR, String(e));
     }
   }
 }
