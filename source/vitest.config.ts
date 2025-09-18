@@ -17,7 +17,6 @@ export default defineConfig({
       'packages/@aws-accelerator/tools',
       'packages/@aws-accelerator/utils',
       'packages/@aws-cdk-extensions/cdk-extensions',
-      'packages/@aws-cdk-extensions/cdk-plugin-assume-role',
       'packages/@aws-lza',
     ],
   },

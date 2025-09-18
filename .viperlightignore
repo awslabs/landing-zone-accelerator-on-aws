@@ -268,3 +268,6 @@ source/packages/@aws-accelerator/config/lib/accounts-config.ts:223
 source/packages/@aws-accelerator/config/lib/accounts-config.ts:224
 source/packages/@aws-accelerator/config/lib/organization-config.ts:208
 source/packages/@aws-accelerator/config/lib/organization-config.ts:209
+
+source/packages/@aws-accelerator/utils/lib/test-util/common/integration-test.ts:280
+source/packages/@aws-accelerator/utils/lib/test-util/common/integration-test.ts:281

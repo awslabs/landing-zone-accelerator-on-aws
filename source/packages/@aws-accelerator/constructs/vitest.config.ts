@@ -2,9 +2,11 @@ import { defineConfig } from 'vitest/config';
 
 export default defineConfig({
   test: {
-    exclude: ['**/*.integration.test.ts', '**/*.test.integration.ts', '**/node_modules/**'],
+    exclude: ['**/*.integration.test.ts', '**/dist/*', '**/node_modules/**'],
+    include: ['**/*.test.ts'],
+    passWithNoTests: true,
     setupFiles: ['./vitest.setup.ts'],
-    reporter: ['default'],
+    reporters: ['default'],
     coverage: {
       include: ['**/*.ts'],
       thresholds: {

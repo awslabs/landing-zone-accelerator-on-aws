@@ -16,7 +16,7 @@ type DescribeFunction = {
   skip: (name: string, fn: () => void) => void;
 };
 
-declare const describe: DescribeFunction | undefined;
+const isTestEnvironment = process.env['VITEST'] === 'true';
 
 /**
  * Integration testing environment name
@@ -39,8 +39,8 @@ const region = process.env['AWS_DEFAULT_REGION'];
  * Accelerator regional security environment test suite
  *
  */
-export const RegionalTestSuite =
-  typeof describe !== 'undefined' // Only export the RegionalTestSuite object if the file is being executed as part of a test
+export const RegionalTestSuite = (describe: DescribeFunction) => {
+  return isTestEnvironment
     ? {
         ['sampleConfig:us-east-1']: {
           suite: environmentName === 'sampleConfig' && region === 'us-east-1' ? describe : describe.skip,
@@ -52,3 +52,4 @@ export const RegionalTestSuite =
         },
       }
     : {};
+};

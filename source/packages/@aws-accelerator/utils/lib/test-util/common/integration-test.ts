@@ -270,10 +270,22 @@ export class IntegrationTest {
       throw new Error(`STS credentials for role ${executorRole.RoleName} not found, cannot assume.`);
     }
 
-    // Set AWS credentials via environment variables for SDK v3
-    process.env['AWS_ACCESS_KEY_ID'] = executorRoleStsCredentials.accessKeyId!;
-    process.env['AWS_SECRET_ACCESS_KEY'] = executorRoleStsCredentials.secretAccessKey!;
-    process.env['AWS_SESSION_TOKEN'] = executorRoleStsCredentials.sessionToken!;
+    const { vi } = await import('vitest');
+
+    vi.mock('@aws-sdk/credential-provider-node', () => {
+      return {
+        ...vi.importActual('@aws-sdk/credential-provider-node'),
+        defaultProvider: () => {
+          return async () => ({
+            accessKeyId: executorRoleStsCredentials.accessKeyId!,
+            secretAccessKey: executorRoleStsCredentials.secretAccessKey!,
+            sessionToken: executorRoleStsCredentials.sessionToken!,
+            expiration: executorRoleStsCredentials.expiration,
+          });
+        },
+      };
+    });
+
     process.env['AWS_REGION'] = this.environment.region;
     process.env['SOLUTION_ID'] = AcceleratorIntegrationTestResources.solutionId;
   }
@@ -293,6 +305,8 @@ export class IntegrationTest {
    */
   public async cleanup(): Promise<void> {
     this.logger.info(`Start environment cleanup`);
+    const { vi } = await import('vitest');
+    vi.clearAllMocks();
     const iamClient: IAMClient = new IAMClient({
       region: this.environment.region,
       customUserAgent: AcceleratorIntegrationTestResources.solutionId,

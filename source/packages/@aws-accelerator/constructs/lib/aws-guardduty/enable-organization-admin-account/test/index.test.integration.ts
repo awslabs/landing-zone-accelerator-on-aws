@@ -24,7 +24,7 @@ import {
   RegisterDelegatedAdministratorCommand,
 } from '@aws-sdk/client-organizations';
 
-import { beforeAll, expect, test, vi } from 'vitest';
+import { beforeAll, afterAll, expect, test, vi, describe } from 'vitest';
 
 import { throttlingBackOff } from '@aws-accelerator/utils/lib/throttle';
 import { AssertPropsType } from '@aws-accelerator/utils/lib/test-util/common/assertion';
@@ -51,203 +51,209 @@ const integrationTest = new IntegrationTest({
   executorRolePolicyStatements: GuardDutyEnableOrganizationAdminAccountPolicyStatements,
 });
 
-RegionalTestSuite['sampleConfig:us-east-1']!.suite(RegionalTestSuite['sampleConfig:us-east-1']!.suiteName, () => {
-  beforeAll(async () => {
-    //
-    // Setup Integration account environment
-    //
-    await integrationTest.setup();
-  });
+RegionalTestSuite(describe)['sampleConfig:us-east-1']!.suite(
+  RegionalTestSuite(describe)['sampleConfig:us-east-1']!.suiteName,
+  () => {
+    beforeAll(async () => {
+      //
+      // Setup Integration account environment
+      //
+      await integrationTest.setup();
+    });
 
-  afterAll(async () => {
-    //
-    // Cleanup of environment
-    //
-    await cleanup();
-  });
+    afterAll(async () => {
+      //
+      // Cleanup of environment
+      //
+      await cleanup();
+    });
 
-  test('[CREATE event]: Should fail when a different delegated admin account is already set', async () => {
-    const auditAccountId = integrationTest.getAccountId('Audit');
-    const logArchiveAccountId = integrationTest.getAccountId('Log Archive');
-    const event = CreateEvent;
-    event.ResourceProperties['region'] = integrationTest.environment.region;
-    event.ResourceProperties['adminAccountId'] = auditAccountId;
+    test('[CREATE event]: Should fail when a different delegated admin account is already set', async () => {
+      const auditAccountId = integrationTest.getAccountId('Audit');
+      const logArchiveAccountId = integrationTest.getAccountId('Log Archive');
+      const event = CreateEvent;
+      event.ResourceProperties['region'] = integrationTest.environment.region;
+      event.ResourceProperties['adminAccountId'] = auditAccountId;
 
-    await setGuardDutyOrgAdmin(logArchiveAccountId);
+      await setGuardDutyOrgAdmin(logArchiveAccountId);
 
-    await expect(async () => handler(event)).rejects.toThrow('GuardDuty delegated admin is already set');
+      await expect(async () => handler(event)).rejects.toThrow('GuardDuty delegated admin is already set');
 
-    await unsetGuardDutyOrgAdmin();
-  });
+      await unsetGuardDutyOrgAdmin();
+    });
 
-  test('[CREATE event]: Should fail when a different organizations delegated admin account is already set', async () => {
-    const auditAccountId = integrationTest.getAccountId('Audit');
-    const logArchiveAccountId = integrationTest.getAccountId('Log Archive');
-    const event = CreateEvent;
-    event.ResourceProperties['region'] = integrationTest.environment.region;
-    event.ResourceProperties['adminAccountId'] = auditAccountId;
+    test('[CREATE event]: Should fail when a different organizations delegated admin account is already set', async () => {
+      const auditAccountId = integrationTest.getAccountId('Audit');
+      const logArchiveAccountId = integrationTest.getAccountId('Log Archive');
+      const event = CreateEvent;
+      event.ResourceProperties['region'] = integrationTest.environment.region;
+      event.ResourceProperties['adminAccountId'] = auditAccountId;
 
-    await setOrganizationsGuardDutyAdmin(logArchiveAccountId);
+      await setOrganizationsGuardDutyAdmin(logArchiveAccountId);
 
-    await expect(async () => handler(event)).rejects.toThrow(
-      'Another account is already enabled as GuardDuty delegated administrator for the organization',
-    );
+      await expect(async () => handler(event)).rejects.toThrow(
+        'Another account is already enabled as GuardDuty delegated administrator for the organization',
+      );
 
-    await unsetGuardDutyOrgAdmin();
-  });
+      await unsetGuardDutyOrgAdmin();
+    });
 
-  test('[CREATE event]: Should pass when adding Management account as delegated admin account', async () => {
-    const auditAccountId = integrationTest.getAccountId('Audit');
-    const event = CreateEvent;
-    event.ResourceProperties['region'] = integrationTest.environment.region;
-    event.ResourceProperties['adminAccountId'] = auditAccountId;
+    test('[CREATE event]: Should pass when adding Management account as delegated admin account', async () => {
+      const auditAccountId = integrationTest.getAccountId('Audit');
+      const event = CreateEvent;
+      event.ResourceProperties['region'] = integrationTest.environment.region;
+      event.ResourceProperties['adminAccountId'] = auditAccountId;
 
-    expect(await handler(event)).toEqual(successStatus);
+      expect(await handler(event)).toEqual(successStatus);
 
-    const assertProps = await getAssertProperties();
-    expect(
-      await integrationTest.assertion.assertApiCall({
-        expectedResponse: { AdminAccounts: [{ AdminAccountId: auditAccountId, AdminStatus: 'ENABLED' }] },
-        ...assertProps,
-      }),
-    ).toBeTruthy();
-  });
+      const assertProps = await getAssertProperties();
+      expect(
+        await integrationTest.assertion.assertApiCall({
+          expectedResponse: { AdminAccounts: [{ AdminAccountId: auditAccountId, AdminStatus: 'ENABLED' }] },
+          ...assertProps,
+        }),
+      ).toBeTruthy();
+    });
 
-  test('[UPDATE event]: Should pass when trying to update delegated admin account to the same value', async () => {
-    const auditAccountId = integrationTest.getAccountId('Audit');
-    const event = UpdateEvent;
-    event.ResourceProperties['region'] = integrationTest.environment.region;
-    event.ResourceProperties['adminAccountId'] = auditAccountId;
-    event.OldResourceProperties['region'] = integrationTest.environment.region;
-    event.OldResourceProperties['adminAccountId'] = auditAccountId;
+    test('[UPDATE event]: Should pass when trying to update delegated admin account to the same value', async () => {
+      const auditAccountId = integrationTest.getAccountId('Audit');
+      const event = UpdateEvent;
+      event.ResourceProperties['region'] = integrationTest.environment.region;
+      event.ResourceProperties['adminAccountId'] = auditAccountId;
+      event.OldResourceProperties['region'] = integrationTest.environment.region;
+      event.OldResourceProperties['adminAccountId'] = auditAccountId;
 
-    expect(await handler(event)).toEqual(successStatus);
+      expect(await handler(event)).toEqual(successStatus);
 
-    const assertProps = await getAssertProperties();
-    expect(
-      await integrationTest.assertion.assertApiCall({
-        expectedResponse: { AdminAccounts: [{ AdminAccountId: auditAccountId, AdminStatus: 'ENABLED' }] },
-        ...assertProps,
-      }),
-    ).toBeTruthy();
-  });
+      const assertProps = await getAssertProperties();
+      expect(
+        await integrationTest.assertion.assertApiCall({
+          expectedResponse: { AdminAccounts: [{ AdminAccountId: auditAccountId, AdminStatus: 'ENABLED' }] },
+          ...assertProps,
+        }),
+      ).toBeTruthy();
+    });
 
-  test('[DELETE event]: Should pass when deleting the delegated admin account', async () => {
-    const auditAccountId = integrationTest.getAccountId('Audit');
-    const event = DeleteEvent;
-    event.ResourceProperties['region'] = integrationTest.environment.region;
-    event.ResourceProperties['adminAccountId'] = auditAccountId;
+    test('[DELETE event]: Should pass when deleting the delegated admin account', async () => {
+      const auditAccountId = integrationTest.getAccountId('Audit');
+      const event = DeleteEvent;
+      event.ResourceProperties['region'] = integrationTest.environment.region;
+      event.ResourceProperties['adminAccountId'] = auditAccountId;
 
-    expect(await handler(event)).toEqual(successStatus);
+      expect(await handler(event)).toEqual(successStatus);
 
-    const assertProps = await getAssertProperties(1);
-    expect(
-      await integrationTest.assertion.assertApiCall({
-        expectedResponse: { AdminAccounts: [] },
-        ...assertProps,
-      }),
-    ).toBeTruthy();
-  });
-});
+      const assertProps = await getAssertProperties(1);
+      expect(
+        await integrationTest.assertion.assertApiCall({
+          expectedResponse: { AdminAccounts: [] },
+          ...assertProps,
+        }),
+      ).toBeTruthy();
+    });
+  },
+);
 
-RegionalTestSuite['sampleConfig:us-west-2']!.suite(RegionalTestSuite['sampleConfig:us-west-2']!.suiteName, () => {
-  beforeAll(async () => {
-    //
-    // Setup Integration account environment
-    //
-    await integrationTest.setup();
-  });
+RegionalTestSuite(describe)['sampleConfig:us-west-2']!.suite(
+  RegionalTestSuite(describe)['sampleConfig:us-west-2']!.suiteName,
+  () => {
+    beforeAll(async () => {
+      //
+      // Setup Integration account environment
+      //
+      await integrationTest.setup();
+    });
 
-  afterAll(async () => {
-    //
-    // Cleanup of environment
-    //
-    await cleanup();
-  });
+    afterAll(async () => {
+      //
+      // Cleanup of environment
+      //
+      await cleanup();
+    });
 
-  test('[CREATE event]: Should fail when a different delegated admin account is already set', async () => {
-    const auditAccountId = integrationTest.getAccountId('Audit');
-    const logArchiveAccountId = integrationTest.getAccountId('Log Archive');
-    const event = CreateEvent;
-    event.ResourceProperties['region'] = integrationTest.environment.region;
-    event.ResourceProperties['adminAccountId'] = auditAccountId;
+    test('[CREATE event]: Should fail when a different delegated admin account is already set', async () => {
+      const auditAccountId = integrationTest.getAccountId('Audit');
+      const logArchiveAccountId = integrationTest.getAccountId('Log Archive');
+      const event = CreateEvent;
+      event.ResourceProperties['region'] = integrationTest.environment.region;
+      event.ResourceProperties['adminAccountId'] = auditAccountId;
 
-    await setGuardDutyOrgAdmin(logArchiveAccountId);
+      await setGuardDutyOrgAdmin(logArchiveAccountId);
 
-    await expect(async () => handler(event)).rejects.toThrow('GuardDuty delegated admin is already set');
+      await expect(async () => handler(event)).rejects.toThrow('GuardDuty delegated admin is already set');
 
-    await unsetGuardDutyOrgAdmin();
-  });
+      await unsetGuardDutyOrgAdmin();
+    });
 
-  test('[CREATE event]: Should fail when a different organizations delegated admin account is already set', async () => {
-    const auditAccountId = integrationTest.getAccountId('Audit');
-    const logArchiveAccountId = integrationTest.getAccountId('Log Archive');
-    const event = CreateEvent;
-    event.ResourceProperties['region'] = integrationTest.environment.region;
-    event.ResourceProperties['adminAccountId'] = auditAccountId;
+    test('[CREATE event]: Should fail when a different organizations delegated admin account is already set', async () => {
+      const auditAccountId = integrationTest.getAccountId('Audit');
+      const logArchiveAccountId = integrationTest.getAccountId('Log Archive');
+      const event = CreateEvent;
+      event.ResourceProperties['region'] = integrationTest.environment.region;
+      event.ResourceProperties['adminAccountId'] = auditAccountId;
 
-    await setOrganizationsGuardDutyAdmin(logArchiveAccountId);
+      await setOrganizationsGuardDutyAdmin(logArchiveAccountId);
 
-    await expect(async () => handler(event)).rejects.toThrow(
-      'Another account is already enabled as GuardDuty delegated administrator for the organization',
-    );
+      await expect(async () => handler(event)).rejects.toThrow(
+        'Another account is already enabled as GuardDuty delegated administrator for the organization',
+      );
 
-    await unsetGuardDutyOrgAdmin();
-  });
+      await unsetGuardDutyOrgAdmin();
+    });
 
-  test('[CREATE event]: Should pass when adding Audit account as delegated admin account', async () => {
-    const auditAccountId = integrationTest.getAccountId('Audit');
-    const event = CreateEvent;
-    event.ResourceProperties['region'] = integrationTest.environment.region;
-    event.ResourceProperties['adminAccountId'] = auditAccountId;
+    test('[CREATE event]: Should pass when adding Audit account as delegated admin account', async () => {
+      const auditAccountId = integrationTest.getAccountId('Audit');
+      const event = CreateEvent;
+      event.ResourceProperties['region'] = integrationTest.environment.region;
+      event.ResourceProperties['adminAccountId'] = auditAccountId;
 
-    expect(await handler(event)).toEqual(successStatus);
+      expect(await handler(event)).toEqual(successStatus);
 
-    const assertProps = await getAssertProperties();
-    expect(
-      await integrationTest.assertion.assertApiCall({
-        expectedResponse: { AdminAccounts: [{ AdminAccountId: auditAccountId, AdminStatus: 'ENABLED' }] },
-        ...assertProps,
-      }),
-    ).toBeTruthy();
-  });
+      const assertProps = await getAssertProperties();
+      expect(
+        await integrationTest.assertion.assertApiCall({
+          expectedResponse: { AdminAccounts: [{ AdminAccountId: auditAccountId, AdminStatus: 'ENABLED' }] },
+          ...assertProps,
+        }),
+      ).toBeTruthy();
+    });
 
-  test('[UPDATE event]: Should pass when trying to update delegated admin account to the same value', async () => {
-    const auditAccountId = integrationTest.getAccountId('Audit');
-    const event = UpdateEvent;
-    event.ResourceProperties['region'] = integrationTest.environment.region;
-    event.ResourceProperties['adminAccountId'] = auditAccountId;
-    event.OldResourceProperties['region'] = integrationTest.environment.region;
-    event.OldResourceProperties['adminAccountId'] = auditAccountId;
+    test('[UPDATE event]: Should pass when trying to update delegated admin account to the same value', async () => {
+      const auditAccountId = integrationTest.getAccountId('Audit');
+      const event = UpdateEvent;
+      event.ResourceProperties['region'] = integrationTest.environment.region;
+      event.ResourceProperties['adminAccountId'] = auditAccountId;
+      event.OldResourceProperties['region'] = integrationTest.environment.region;
+      event.OldResourceProperties['adminAccountId'] = auditAccountId;
 
-    expect(await handler(event)).toEqual(successStatus);
+      expect(await handler(event)).toEqual(successStatus);
 
-    const assertProps = await getAssertProperties();
-    expect(
-      await integrationTest.assertion.assertApiCall({
-        expectedResponse: { AdminAccounts: [{ AdminAccountId: auditAccountId, AdminStatus: 'ENABLED' }] },
-        ...assertProps,
-      }),
-    ).toBeTruthy();
-  });
+      const assertProps = await getAssertProperties();
+      expect(
+        await integrationTest.assertion.assertApiCall({
+          expectedResponse: { AdminAccounts: [{ AdminAccountId: auditAccountId, AdminStatus: 'ENABLED' }] },
+          ...assertProps,
+        }),
+      ).toBeTruthy();
+    });
 
-  test('[DELETE event]: Should pass when deleting the delegated admin account', async () => {
-    const auditAccountId = integrationTest.getAccountId('Audit');
-    const event = DeleteEvent;
-    event.ResourceProperties['region'] = integrationTest.environment.region;
-    event.ResourceProperties['adminAccountId'] = auditAccountId;
+    test('[DELETE event]: Should pass when deleting the delegated admin account', async () => {
+      const auditAccountId = integrationTest.getAccountId('Audit');
+      const event = DeleteEvent;
+      event.ResourceProperties['region'] = integrationTest.environment.region;
+      event.ResourceProperties['adminAccountId'] = auditAccountId;
 
-    expect(await handler(event)).toEqual(successStatus);
+      expect(await handler(event)).toEqual(successStatus);
 
-    const assertProps = await getAssertProperties(1);
-    expect(
-      await integrationTest.assertion.assertApiCall({
-        expectedResponse: { AdminAccounts: [] },
-        ...assertProps,
-      }),
-    ).toBeTruthy();
-  });
-});
+      const assertProps = await getAssertProperties(1);
+      expect(
+        await integrationTest.assertion.assertApiCall({
+          expectedResponse: { AdminAccounts: [] },
+          ...assertProps,
+        }),
+      ).toBeTruthy();
+    });
+  },
+);
 
 /**
  * Function to perform integration test environment cleanup.

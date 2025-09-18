@@ -16,8 +16,8 @@
     "cleanup:tsc": "tsc --build ./ --clean",
     "lint": "eslint --fix  --max-warnings 0 -c ../../../../../../.eslintrc.json '**/*.{ts,tsx}' --ignore-pattern \"*.d.ts\" ",
     "precommit": "eslint --max-warnings 0 -c ../../../../../../.eslintrc.json '**/*.{ts,tsx}' --ignore-pattern \"*.d.ts\" ",
-    "test:unit": "vitest run --passWithNoTests",
-    "test:integration": "vitest run --testNamePattern='integration'",
+    "test:unit": "vitest run test/*.test.unit.ts --passWithNoTests",
+    "test:integration": "vitest run test/*.test.integration.ts",
     "test:clean": "rm -f ./test-reports/*/*/*.xml"
   },
   "dependencies": {
