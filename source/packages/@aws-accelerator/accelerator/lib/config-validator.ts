@@ -31,8 +31,7 @@ import {
   SecurityConfigValidator,
   ReplacementsConfigValidator,
 } from '@aws-accelerator/config';
-import { createLogger } from '@aws-accelerator/utils';
-import { Accelerator } from './accelerator';
+import { createLogger, setExternalManagementAccountCredentials } from '@aws-accelerator/utils';
 
 const logger = createLogger(['config-validator']);
 const configDirPath = process.argv[2];
@@ -118,7 +117,8 @@ async function validateConfig(props: {
   regionByRegionDeployOrder: string | undefined;
   stage: string | undefined;
 }) {
-  await Accelerator.getManagementAccountCredentials(props.partition);
+  await setExternalManagementAccountCredentials(props.partition, homeRegion);
+
   const orgsEnabled = OrganizationConfig.loadRawOrganizationsConfig(configDirPath).enable;
 
   // Load accounts config

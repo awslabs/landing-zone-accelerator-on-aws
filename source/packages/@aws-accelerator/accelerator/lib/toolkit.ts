@@ -721,13 +721,7 @@ async function sdkProvider(
     logger.debug(
       `Using temporary credentials for external deployment of management account ${accountId} with role ${process.env['MANAGEMENT_ACCOUNT_ROLE_NAME']}`,
     );
-    return fromTemporaryCredentials({
-      params: {
-        RoleArn: `arn:${partition}:iam::${process.env['MANAGEMENT_ACCOUNT_ID']}:role/${process.env['MANAGEMENT_ACCOUNT_ROLE_NAME']}`,
-        RoleSessionName: 'lza-external-pipeline-session',
-      },
-      clientConfig: { retryStrategy: setRetryStrategy(), region: region ?? getGlobalRegion(partition) },
-    });
+    return fromNodeProviderChain();
   } else if (isNonManagementAccountExternalDeployment) {
     logger.debug(
       `Using chained temporary credentials for external deployment: Management Account ${process.env['MANAGEMENT_ACCOUNT_ID']} -> Target Account ${accountId} with role ${assumeRoleName}`,
@@ -737,12 +731,6 @@ async function sdkProvider(
         RoleArn: `arn:${partition}:iam::${accountId}:role/${assumeRoleName}`,
         RoleSessionName: 'cdk-toolkit-session',
       },
-      masterCredentials: fromTemporaryCredentials({
-        params: {
-          RoleArn: `arn:${partition}:iam::${process.env['MANAGEMENT_ACCOUNT_ID']}:role/${process.env['MANAGEMENT_ACCOUNT_ROLE_NAME']}`,
-          RoleSessionName: 'lza-external-pipeline-session',
-        },
-      }),
       clientConfig: { retryStrategy: setRetryStrategy(), region: region ?? getGlobalRegion(partition) },
     });
   } else if (isManagementAccount || !assumeRoleName || !accountId) {

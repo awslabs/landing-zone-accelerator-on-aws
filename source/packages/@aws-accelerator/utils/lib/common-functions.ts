@@ -4,6 +4,7 @@ import {
   AssumeRoleCommandInput,
   AssumeRoleCommandOutput,
   GetCallerIdentityCommand,
+  Credentials,
 } from '@aws-sdk/client-sts';
 import { throttlingBackOff } from './throttle';
 import { ConfiguredRetryStrategy } from '@aws-sdk/util-retry';
@@ -81,6 +82,100 @@ export async function getCurrentAccountId(partition: string, region: string): Pr
     logger.error(`Error to assume role while trying to get current account id ${JSON.stringify(error)}`);
     throw new Error(error.message);
   }
+}
+
+export async function getManagementAccountCredentials(partition: string): Promise<Credentials | undefined> {
+  if (process.env['CREDENTIALS_PATH'] && fs.existsSync(process.env['CREDENTIALS_PATH'])) {
+    logger.info('Detected Debugging environment. Loading temporary credentials.');
+
+    const credentialsString = fs.readFileSync(process.env['CREDENTIALS_PATH']).toString();
+    const credentials = JSON.parse(credentialsString);
+
+    // Set environment variables for SDK v3
+    process.env['AWS_ACCESS_KEY_ID'] = credentials.AccessKeyId;
+    process.env['AWS_SECRET_ACCESS_KEY'] = credentials.SecretAccessKey;
+    if (credentials.SessionToken) {
+      process.env['AWS_SESSION_TOKEN'] = credentials.SessionToken;
+    }
+  }
+
+  if (process.env['MANAGEMENT_ACCOUNT_ID'] && process.env['MANAGEMENT_ACCOUNT_ROLE_NAME']) {
+    logger.info('set management account credentials');
+    logger.info(`managementAccountId => ${process.env['MANAGEMENT_ACCOUNT_ID']}`);
+    logger.info(`management account role name => ${process.env['MANAGEMENT_ACCOUNT_ROLE_NAME']}`);
+
+    const roleArn = `arn:${partition}:iam::${process.env['MANAGEMENT_ACCOUNT_ID']}:role/${process.env['MANAGEMENT_ACCOUNT_ROLE_NAME']}`;
+    const stsClient = new STSClient({
+      region: process.env['AWS_REGION'],
+      retryStrategy: setRetryStrategy(),
+      customUserAgent: process.env['SOLUTION_ID'] ?? '',
+    });
+    const callerIdentity = await throttlingBackOff(() => stsClient.send(new GetCallerIdentityCommand({})));
+    if (callerIdentity.Account && callerIdentity.Account === process.env['MANAGEMENT_ACCOUNT_ID']) {
+      logger.info(`Currently using management account credentials with role ${callerIdentity.Arn}`);
+      return undefined;
+    }
+    const assumeRoleCredential = await throttlingBackOff(() =>
+      stsClient.send(new AssumeRoleCommand({ RoleArn: roleArn, RoleSessionName: 'acceleratorAssumeRoleSession' })),
+    );
+    const acceleratorPrefix = process.env['ACCELERATOR_PREFIX'] ?? 'AWSAccelerator';
+    const lzaManagementRoleArn = `arn:${partition}:iam::${process.env['MANAGEMENT_ACCOUNT_ID']}:role/${acceleratorPrefix}-Management-Deployment-Role`;
+    logger.info(`management account role name => ${acceleratorPrefix}-Management-Deployment-Role`);
+    const managementStsClient = new STSClient({
+      region: process.env['AWS_REGION'],
+      retryStrategy: setRetryStrategy(),
+      customUserAgent: process.env['SOLUTION_ID'] ?? '',
+      credentials: {
+        accessKeyId: assumeRoleCredential.Credentials!.AccessKeyId!,
+        secretAccessKey: assumeRoleCredential.Credentials!.SecretAccessKey!,
+        sessionToken: assumeRoleCredential.Credentials!.SessionToken!,
+      },
+    });
+
+    const assumeLzaManagementRole = await throttlingBackOff(() =>
+      managementStsClient.send(
+        new AssumeRoleCommand({ RoleArn: lzaManagementRoleArn, RoleSessionName: 'lzaManagementRoleSession' }),
+      ),
+    );
+    return {
+      AccessKeyId: assumeLzaManagementRole.Credentials!.AccessKeyId!,
+      SecretAccessKey: assumeLzaManagementRole.Credentials!.SecretAccessKey!,
+      SessionToken: assumeLzaManagementRole.Credentials!.SessionToken,
+    } as Credentials;
+  } else {
+    return undefined;
+  }
+}
+
+export function setEnvironmentCredentials(credentials: Credentials | undefined) {
+  if (!credentials) {
+    return;
+  }
+  process.env['AWS_ACCESS_KEY_ID'] = credentials.AccessKeyId;
+  process.env['AWS_ACCESS_KEY'] = credentials.AccessKeyId;
+  process.env['AWS_SECRET_KEY'] = credentials.SecretAccessKey;
+  process.env['AWS_SECRET_ACCESS_KEY'] = credentials.SecretAccessKey;
+  process.env['AWS_SESSION_TOKEN'] = credentials.SessionToken;
+}
+
+export async function setExternalManagementAccountCredentials(
+  partition: string,
+  region: string,
+): Promise<Credentials | undefined> {
+  if (!process.env['PIPELINE_ACCOUNT_ID'] || !process.env['MANAGEMENT_ACCOUNT_ID']) {
+    return undefined;
+  }
+
+  const currentAccountId = await getCurrentAccountId(partition, region);
+  if (
+    currentAccountId === process.env['PIPELINE_ACCOUNT_ID'] &&
+    process.env['MANAGEMENT_ACCOUNT_ID'] !== process.env['PIPELINE_ACCOUNT_ID']
+  ) {
+    const credentials = await getManagementAccountCredentials(partition);
+    setEnvironmentCredentials(credentials);
+  }
+
+  return undefined;
 }
 
 export function setRetryStrategy() {
@@ -250,7 +345,7 @@ export function getNodeVersion(): number {
 /**
  * Helper function to remove the string that makes a vpc
  * name unique when upgraded from ASEA. Will return the
- * original string if the delimeter characters are not
+ * original string if the delimiter characters are not
  * in the string
  * @param vpcName
  * @returns string

@@ -43,6 +43,7 @@ import {
   throttlingBackOff,
   setRetryStrategy,
   getCrossAccountCredentials,
+  setExternalManagementAccountCredentials,
 } from '@aws-accelerator/utils';
 import { PutObjectCommand, S3Client } from '@aws-sdk/client-s3';
 import { DescribeVpcEndpointsCommand, DescribeVpcsCommand, EC2Client } from '@aws-sdk/client-ec2';
@@ -485,7 +486,7 @@ export async function setAcceleratorStackProps(
     if (globalConfig.logging.centralLogBucket?.importedBucket?.name) {
       centralLogBucketCmkParameter = acceleratorResourceNames.parameters.importedCentralLogBucketCmkArn;
     }
-
+    await setExternalManagementAccountCredentials(context.partition, globalConfig.homeRegion);
     const centralLogsBucketKmsKeyArn = await getCentralLogBucketKmsKeyArn(
       centralizedLoggingRegion,
       context.partition,

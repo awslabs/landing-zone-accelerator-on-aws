@@ -38,7 +38,8 @@ import {
   getGlobalRegion,
   getCurrentAccountId,
   Regions,
-  setRetryStrategy,
+  getManagementAccountCredentials,
+  setExternalManagementAccountCredentials,
 } from '@aws-accelerator/utils';
 
 import { writeImportResources } from '../utils/app-utils';
@@ -46,7 +47,34 @@ import { AcceleratorStage } from './accelerator-stage';
 import { AcceleratorToolkit, AcceleratorToolkitProps, AcceleratorToolkitCommand } from './toolkit';
 import { v4 as uuidv4 } from 'uuid';
 import * as path from 'path';
-import { AssumeRoleCommandOutput, Credentials, STSClient, AssumeRoleCommand } from '@aws-sdk/client-sts';
+import { AssumeRoleCommandOutput } from '@aws-sdk/client-sts';
+
+export type AcceleratorConfiguration =
+  | {
+      globalConfig: GlobalConfig;
+      orgsConfig: OrganizationConfig;
+      accountsConfig: AccountsConfig;
+      managementAccountDetails: {
+        id: string;
+        name: string;
+      };
+      logArchiveAccountDetails: {
+        id: string;
+        name: string;
+        centralizedLoggingRegion: string;
+      };
+      auditAccountDetails: {
+        id: string;
+        name: string;
+      };
+      regionDetails: {
+        homeRegion: string;
+        globalRegion: string;
+        enabledRegions: Region[];
+      };
+      replacementsConfig: ReplacementsConfig;
+    }
+  | undefined;
 
 export type CustomStackRunOrder = {
   /**
@@ -195,52 +223,26 @@ export abstract class Accelerator {
     const globalRegion = getGlobalRegion(props.partition);
 
     // Check to see if lookups for organization entities should be done in DynamoDB or native AWS Organizations API calls
-    const loadFromDynamoDbTable = shouldLookupDynamoDb(props.stage);
+    const loadFromDDB = shouldLookupDynamoDb(props.stage);
     //
     // If not pipeline stage, load global config and account ids
     //
-    const configDependentStage = this.isConfigDependentStage(props.stage);
+    const isConfigDependentStage = this.isConfigDependentStage(props.stage);
     const managementAccountId = await getManagementAccount(props.partition);
-    const globalConfig = configDependentStage ? GlobalConfig.loadRawGlobalConfig(props.configDirPath) : undefined;
-    if (globalConfig?.externalLandingZoneResources?.importExternalLandingZoneResources) {
-      const orgsEnabled = OrganizationConfig.loadRawOrganizationsConfig(props.configDirPath).enable;
-      const accountsConfig = AccountsConfig.load(props.configDirPath);
-      await accountsConfig.loadAccountIds(
-        props.partition,
-        props.enableSingleAccountMode,
-        orgsEnabled,
-        accountsConfig,
-        undefined,
-        loadFromDynamoDbTable,
-      );
-      logger.info('Loading ASEA mapping for stacks list');
-      await globalConfig.loadExternalMapping(accountsConfig);
-      logger.info('Loaded ASEA mapping');
-    }
+    const acceleratorConfig = await Accelerator.loadAcceleratorConfiguration({
+      isConfigDependentStage,
+      loadFromDDB,
+      acceleratorProps: props,
+    });
 
     await checkDiffStage(props);
 
-    //
-    // When running parallel, this will be the max concurrent stacks
-    //
     if (props.command === 'deploy') {
-      maxStacks = globalConfig?.acceleratorSettings?.maxConcurrentStacks
-        ? globalConfig?.acceleratorSettings?.maxConcurrentStacks
+      maxStacks = acceleratorConfig?.globalConfig?.acceleratorSettings?.maxConcurrentStacks
+        ? acceleratorConfig?.globalConfig?.acceleratorSettings?.maxConcurrentStacks
         : // Reducing concurrency as high concurrency is saturating socket with sdk calls
           // https://github.com/aws/aws-sdk-js-v3/issues/7310#issuecomment-3259235981
           Number(process.env['MAX_CONCURRENT_STACKS'] ?? 100);
-    }
-    if (this.isConfigDependentStage(props.stage)) {
-      const accountsConfig = AccountsConfig.load(props.configDirPath);
-      const orgsConfig = OrganizationConfig.loadRawOrganizationsConfig(props.configDirPath);
-      await accountsConfig.loadAccountIds(
-        props.partition,
-        props.enableSingleAccountMode,
-        orgsConfig.enable,
-        accountsConfig,
-        undefined,
-        loadFromDynamoDbTable,
-      );
     }
 
     //
@@ -256,8 +258,8 @@ export abstract class Accelerator {
       app: props.app,
       caBundlePath: props.caBundlePath,
       proxyAddress: props.proxyAddress,
-      centralizeCdkBootstrap: globalConfig?.centralizeCdkBuckets?.enable,
-      cdkOptions: globalConfig?.cdkOptions,
+      centralizeCdkBootstrap: acceleratorConfig?.globalConfig?.centralizeCdkBuckets?.enable,
+      cdkOptions: acceleratorConfig?.globalConfig?.cdkOptions,
       useExistingRoles: false, // deprecated option to be removed in a future release
       // central logs bucket kms key arn is dynamic and will be populated in app-utils
       centralLogsBucketKmsKeyArn: undefined,
@@ -277,66 +279,37 @@ export abstract class Accelerator {
       //
       // Global config is required for remaining stages
       //
-      if (!globalConfig) {
-        throw new Error(
-          `global-config.yaml could not be loaded. Global configuration is required for stage ${props.stage}`,
-        );
+      if (!acceleratorConfig) {
+        throw new Error('Global config is required for remaining stages');
       }
-      //
-      // Read in the accounts config file and load account IDs
-      // if not provided as inputs in accountsConfig
-      //
-      const accountsConfig = AccountsConfig.load(props.configDirPath);
-      const orgsEnabled = OrganizationConfig.loadRawOrganizationsConfig(props.configDirPath).enable;
-      const homeRegion = GlobalConfig.loadRawGlobalConfig(props.configDirPath).homeRegion;
-      await accountsConfig.loadAccountIds(
-        props.partition,
-        props.enableSingleAccountMode,
-        orgsEnabled,
-        accountsConfig,
-        undefined,
-        loadFromDynamoDbTable,
-      );
-      const replacementsConfig = ReplacementsConfig.load(props.configDirPath, accountsConfig);
-      await replacementsConfig.loadDynamicReplacements(homeRegion);
-      //
-      // Set details about mandatory accounts
-      //
-      const managementAccountDetails = {
-        id: accountsConfig.getManagementAccountId(),
-        name: accountsConfig.getManagementAccount().name,
-      };
-      const logArchiveAccountDetails = {
-        id: accountsConfig.getLogArchiveAccountId(),
-        name: accountsConfig.getLogArchiveAccount().name,
-        centralizedLoggingRegion: globalConfig.logging.centralizedLoggingRegion ?? globalConfig.homeRegion,
-      };
-      const auditAccountDetails = {
-        id: accountsConfig.getAuditAccountId(),
-        name: accountsConfig.getAuditAccount().name,
-      };
-      const regionDetails = {
-        homeRegion: globalConfig.homeRegion,
-        globalRegion: globalRegion,
-        enabledRegions: globalConfig.enabledRegions,
-      };
-
       //
       // Execute IMPORT_ASEA_RESOURCES Stage
       //
-      await this.executeImportAseaResources(toolkitProps, promises, globalConfig, accountsConfig, maxStacks);
+      await this.executeImportAseaResources(
+        toolkitProps,
+        promises,
+        acceleratorConfig.globalConfig,
+        acceleratorConfig.accountsConfig,
+        maxStacks,
+      );
       //
       // Execute Bootstrap stacks for all identified accounts
       //
-      await this.executeBootstrapStage(toolkitProps, promises, managementAccountDetails, globalConfig, accountsConfig);
+      await this.executeBootstrapStage(
+        toolkitProps,
+        promises,
+        acceleratorConfig.managementAccountDetails,
+        acceleratorConfig.globalConfig,
+        acceleratorConfig.accountsConfig,
+      );
       //
       // Execute PREPARE, ACCOUNTS, and FINALIZE stages in the management account
       //
       await this.executeManagementAccountStages(
         toolkitProps,
-        globalConfig.homeRegion,
+        acceleratorConfig.globalConfig.homeRegion,
         globalRegion,
-        managementAccountDetails,
+        acceleratorConfig.managementAccountDetails,
       );
       //
       // Execute ORGANIZATIONS and SECURITY AUDIT stages
@@ -344,11 +317,11 @@ export abstract class Accelerator {
       await this.executeSingleAccountMultiRegionStages(
         toolkitProps,
         promises,
-        globalConfig.enabledRegions,
-        managementAccountDetails,
-        auditAccountDetails,
+        acceleratorConfig.globalConfig.enabledRegions,
+        acceleratorConfig.managementAccountDetails,
+        acceleratorConfig.auditAccountDetails,
         maxStacks,
-        globalConfig.managementAccountAccessRole,
+        acceleratorConfig.globalConfig.managementAccountAccessRole,
       );
       //
       // Execute LOGGING stage
@@ -356,14 +329,14 @@ export abstract class Accelerator {
       await this.executeLoggingStage(
         toolkitProps,
         promises,
-        accountsConfig,
-        logArchiveAccountDetails,
-        regionDetails,
+        acceleratorConfig.accountsConfig,
+        acceleratorConfig.logArchiveAccountDetails,
+        acceleratorConfig.regionDetails,
         maxStacks,
-        globalConfig.managementAccountAccessRole,
+        acceleratorConfig.globalConfig.managementAccountAccessRole,
       );
 
-      let enabledRegions = globalConfig.enabledRegions;
+      let enabledRegions = acceleratorConfig.globalConfig.enabledRegions;
 
       if (props.region) {
         if (!Regions.includes(props.region)) {
@@ -378,63 +351,79 @@ export abstract class Accelerator {
       await this.executeRemainingStages(
         toolkitProps,
         promises,
-        accountsConfig,
-        managementAccountDetails,
+        acceleratorConfig.accountsConfig,
+        acceleratorConfig.managementAccountDetails,
         enabledRegions,
         maxStacks,
-        replacementsConfig,
-        globalConfig.managementAccountAccessRole,
+        acceleratorConfig.replacementsConfig,
+        acceleratorConfig.globalConfig.managementAccountAccessRole,
       );
 
       await Promise.all(promises);
     }
   }
 
-  static async getManagementAccountCredentials(partition: string): Promise<Credentials | undefined> {
-    if (process.env['CREDENTIALS_PATH'] && fs.existsSync(process.env['CREDENTIALS_PATH'])) {
-      logger.info('Detected Debugging environment. Loading temporary credentials.');
-
-      const credentialsString = fs.readFileSync(process.env['CREDENTIALS_PATH']).toString();
-      const credentials = JSON.parse(credentialsString);
-
-      // Set environment variables for SDK v3
-      process.env['AWS_ACCESS_KEY_ID'] = credentials.AccessKeyId;
-      process.env['AWS_SECRET_ACCESS_KEY'] = credentials.SecretAccessKey;
-      if (credentials.SessionToken) {
-        process.env['AWS_SESSION_TOKEN'] = credentials.SessionToken;
-      }
-    }
-    if (process.env['MANAGEMENT_ACCOUNT_ID'] && process.env['MANAGEMENT_ACCOUNT_ROLE_NAME']) {
-      logger.info('set management account credentials');
-      logger.info(`managementAccountId => ${process.env['MANAGEMENT_ACCOUNT_ID']}`);
-      logger.info(`management account role name => ${process.env['MANAGEMENT_ACCOUNT_ROLE_NAME']}`);
-
-      const roleArn = `arn:${partition}:iam::${process.env['MANAGEMENT_ACCOUNT_ID']}:role/${process.env['MANAGEMENT_ACCOUNT_ROLE_NAME']}`;
-      const stsClient = new STSClient({
-        region: process.env['AWS_REGION'],
-        retryStrategy: setRetryStrategy(),
-        customUserAgent: process.env['SOLUTION_ID'] ?? '',
-      });
-      logger.info(`management account roleArn => ${roleArn}`);
-
-      const assumeRoleCredential = await throttlingBackOff(() =>
-        stsClient.send(new AssumeRoleCommand({ RoleArn: roleArn, RoleSessionName: 'acceleratorAssumeRoleSession' })),
-      );
-
-      process.env['AWS_ACCESS_KEY_ID'] = assumeRoleCredential.Credentials!.AccessKeyId!;
-      process.env['AWS_ACCESS_KEY'] = assumeRoleCredential.Credentials!.AccessKeyId!;
-      process.env['AWS_SECRET_KEY'] = assumeRoleCredential.Credentials!.SecretAccessKey!;
-      process.env['AWS_SECRET_ACCESS_KEY'] = assumeRoleCredential.Credentials!.SecretAccessKey!;
-      process.env['AWS_SESSION_TOKEN'] = assumeRoleCredential.Credentials!.SessionToken;
-
-      return {
-        AccessKeyId: assumeRoleCredential.Credentials!.AccessKeyId!,
-        SecretAccessKey: assumeRoleCredential.Credentials!.SecretAccessKey!,
-        SessionToken: assumeRoleCredential.Credentials!.SessionToken,
-      } as Credentials;
-    } else {
+  private static async loadAcceleratorConfiguration(props: {
+    isConfigDependentStage: boolean;
+    loadFromDDB: boolean;
+    acceleratorProps: AcceleratorProps;
+  }): Promise<AcceleratorConfiguration> {
+    if (!props.isConfigDependentStage) {
       return undefined;
     }
+    const globalRegion = getGlobalRegion(props.acceleratorProps.partition);
+    const globalConfig = GlobalConfig.loadRawGlobalConfig(props.acceleratorProps.configDirPath);
+    const homeRegion = globalConfig.homeRegion;
+    await setExternalManagementAccountCredentials(props.acceleratorProps.partition, homeRegion);
+    const orgsConfig = OrganizationConfig.loadRawOrganizationsConfig(props.acceleratorProps.configDirPath);
+    const accountsConfig = AccountsConfig.load(props.acceleratorProps.configDirPath);
+    await accountsConfig.loadAccountIds(
+      props.acceleratorProps.partition,
+      props.acceleratorProps.enableSingleAccountMode,
+      orgsConfig.enable,
+      accountsConfig,
+      undefined,
+      props.loadFromDDB,
+    );
+    const replacementsConfig = ReplacementsConfig.load(props.acceleratorProps.configDirPath, accountsConfig);
+    await replacementsConfig.loadDynamicReplacements(homeRegion);
+    //
+    // Set details about mandatory accounts
+    //
+    const managementAccountDetails = {
+      id: accountsConfig.getManagementAccountId(),
+      name: accountsConfig.getManagementAccount().name,
+    };
+    const logArchiveAccountDetails = {
+      id: accountsConfig.getLogArchiveAccountId(),
+      name: accountsConfig.getLogArchiveAccount().name,
+      centralizedLoggingRegion: globalConfig.logging.centralizedLoggingRegion ?? globalConfig.homeRegion,
+    };
+    const auditAccountDetails = {
+      id: accountsConfig.getAuditAccountId(),
+      name: accountsConfig.getAuditAccount().name,
+    };
+    const regionDetails = {
+      homeRegion: globalConfig.homeRegion,
+      globalRegion: globalRegion,
+      enabledRegions: globalConfig.enabledRegions,
+    };
+    if (globalConfig?.externalLandingZoneResources?.importExternalLandingZoneResources) {
+      logger.info('Loading ASEA mapping for stacks list');
+      await globalConfig.loadExternalMapping(accountsConfig);
+      logger.info('Loaded ASEA mapping');
+    }
+
+    return {
+      globalConfig,
+      orgsConfig,
+      accountsConfig,
+      managementAccountDetails,
+      logArchiveAccountDetails,
+      auditAccountDetails,
+      regionDetails,
+      replacementsConfig,
+    };
   }
 
   /**
@@ -1147,7 +1136,7 @@ export abstract class Accelerator {
       throw new Error(`Configuration validation failed at runtime.`);
     });
     // Write resource mapping and stacks to s3
-    const managementCredentials = await this.getManagementAccountCredentials(toolkitProps.partition);
+    const managementCredentials = await getManagementAccountCredentials(toolkitProps.partition);
 
     await writeImportResources({
       credentials: managementCredentials,

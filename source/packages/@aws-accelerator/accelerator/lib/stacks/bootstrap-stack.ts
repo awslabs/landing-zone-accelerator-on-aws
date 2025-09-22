@@ -302,6 +302,10 @@ export class BootstrapStack extends AcceleratorStack {
     const cfnAssetBucket = assetBucket.node.defaultChild as cdk.aws_s3.CfnBucket;
     cfnAssetBucket.overrideLogicalId('StagingBucket');
 
+    // Override bucket policy logical Id
+    const cfnBucketPolicy = assetBucket.policy?.node.defaultChild as cdk.aws_s3.CfnBucketPolicy;
+    cfnBucketPolicy.overrideLogicalId('StagingBucketPolicy');
+
     // AwsSolutions-S1: The S3 Bucket has server access logs disabled.
     NagSuppressions.addResourceSuppressionsByPath(this, `${this.stackName}/StagingBucket/Resource`, [
       {

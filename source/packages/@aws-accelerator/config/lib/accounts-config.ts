@@ -18,13 +18,14 @@ import * as fs from 'fs';
 import * as yaml from 'js-yaml';
 import * as path from 'path';
 
-import { createLogger } from '../../utils/lib/logger';
-import { throttlingBackOff } from '../../utils/lib/throttle';
-import { getGlobalRegion, getCrossAccountCredentials } from '../../utils/lib/common-functions';
-import { queryConfigTable } from '../../utils/lib/query-config-table';
-import { setRetryStrategy } from '../../utils/lib/common-functions';
-import { getSSMParameterValue } from '../../utils/lib/get-value-from-ssm';
-
+import {
+  createLogger,
+  getGlobalRegion,
+  getSSMParameterValue,
+  queryConfigTable,
+  setRetryStrategy,
+  throttlingBackOff,
+} from '@aws-accelerator/utils';
 import { createSchema, DeploymentTargets, parseAccountsConfig } from './common';
 import * as i from './models/accounts-config';
 import { OrganizationalUnitConfig } from './organization-config';
@@ -208,23 +209,6 @@ export class AccountsConfig implements i.IAccountsConfig {
     let envCredentials: AwsCredentialIdentity | undefined;
     const retryStrategy = setRetryStrategy();
     const solutionId: string = process.env['SOLUTION_ID'] ?? '';
-    if (process.env['MANAGEMENT_ACCOUNT_ID'] && process.env['MANAGEMENT_ACCOUNT_ROLE_NAME']) {
-      logger.info('set management account credentials');
-      logger.info(`managementAccountId => ${process.env['MANAGEMENT_ACCOUNT_ID']}`);
-      logger.info(`management account role name => ${process.env['MANAGEMENT_ACCOUNT_ROLE_NAME']}`);
-      const crossAccountCredentials = await getCrossAccountCredentials(
-        process.env['MANAGEMENT_ACCOUNT_ID'],
-        getGlobalRegion(partition),
-        partition,
-        process.env['MANAGEMENT_ACCOUNT_ROLE_NAME'],
-        'accounts-config-lookup',
-      );
-      envCredentials = {
-        accessKeyId: crossAccountCredentials.Credentials!.AccessKeyId!,
-        secretAccessKey: crossAccountCredentials.Credentials!.SecretAccessKey!,
-        sessionToken: crossAccountCredentials.Credentials!.SessionToken,
-      };
-    }
 
     // Priority: passed credentials > env credentials > undefined
     const credentials = managementAccountCredentials ?? envCredentials;
