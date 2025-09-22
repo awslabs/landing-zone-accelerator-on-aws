@@ -554,7 +554,7 @@ exports[`BootstrapStack > Construct(BootstrapStack):  Snapshot Test 1`] = `
       "Type": "AWS::S3::Bucket",
       "UpdateReplacePolicy": "Retain",
     },
-    "StagingBucketPolicy83BEDEEE": {
+    "StagingBucketPolicy": {
       "Properties": {
         "Bucket": {
           "Ref": "StagingBucket",

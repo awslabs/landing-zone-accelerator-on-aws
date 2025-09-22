@@ -14,7 +14,7 @@
 import { AccountsConfig, OrganizationConfig } from '@aws-accelerator/config';
 import { mockClient } from 'aws-sdk-client-mock';
 import { EC2Client, DescribeVpcsCommand, DescribeVpcEndpointsCommand } from '@aws-sdk/client-ec2';
-import { STSClient, AssumeRoleCommand } from '@aws-sdk/client-sts';
+import { STSClient, AssumeRoleCommand, GetCallerIdentityCommand } from '@aws-sdk/client-sts';
 import { AcceleratorResourcePrefixes, setResourcePrefixes, setAcceleratorEnvironment } from '../utils/app-utils';
 import { describe, expect, test, vi } from 'vitest';
 import * as path from 'path';
@@ -153,6 +153,9 @@ describe('test setAcceleratorStackProps', () => {
         SessionToken: 'fake-cred',
         Expiration: new Date(),
       },
+    });
+    stsMock.on(GetCallerIdentityCommand).resolves({
+      Account: '123456789012',
     });
 
     // Mock EC2 Client

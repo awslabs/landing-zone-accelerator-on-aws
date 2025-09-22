@@ -24,9 +24,7 @@ import { AccountsConfig } from './accounts-config';
 import * as t from './common';
 import * as i from './models/organization-config';
 import { ReplacementsConfig } from './replacements-config';
-import { getSSMParameterValue } from '../../utils/lib/get-value-from-ssm';
-import { queryConfigTable } from '../../utils/lib/query-config-table';
-import { getGlobalRegion, getCrossAccountCredentials } from '../../utils/lib/common-functions';
+import { queryConfigTable, getSSMParameterValue } from '@aws-accelerator/utils';
 const logger = createLogger(['organization-config']);
 
 export abstract class OrganizationalUnitConfig implements i.IOrganizationalUnitConfig {
@@ -192,27 +190,8 @@ export class OrganizationConfig implements i.IOrganizationConfig {
     managementAccountCredentials?: AwsCredentialIdentity,
     loadFromDynamoDbTable?: boolean,
   ): Promise<void> {
-    let envCredentials: AwsCredentialIdentity | undefined;
-    if (process.env['MANAGEMENT_ACCOUNT_ID'] && process.env['MANAGEMENT_ACCOUNT_ROLE_NAME']) {
-      logger.info('set management account credentials');
-      logger.info(`managementAccountId => ${process.env['MANAGEMENT_ACCOUNT_ID']}`);
-      logger.info(`management account role name => ${process.env['MANAGEMENT_ACCOUNT_ROLE_NAME']}`);
-      const crossAccountCredentials = await getCrossAccountCredentials(
-        process.env['MANAGEMENT_ACCOUNT_ID'],
-        getGlobalRegion(partition),
-        partition,
-        process.env['MANAGEMENT_ACCOUNT_ROLE_NAME'],
-        'accounts-config-lookup',
-      );
-      envCredentials = {
-        accessKeyId: crossAccountCredentials.Credentials!.AccessKeyId!,
-        secretAccessKey: crossAccountCredentials.Credentials!.SecretAccessKey!,
-        sessionToken: crossAccountCredentials.Credentials!.SessionToken,
-      };
-    }
-
     // Priority: passed credentials > env credentials > undefined
-    const credentials = managementAccountCredentials ?? envCredentials;
+    const credentials = managementAccountCredentials ?? undefined;
     if (!this.enable) {
       // do nothing
       return;

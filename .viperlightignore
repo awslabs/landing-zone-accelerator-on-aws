@@ -102,8 +102,8 @@ source/packages/@aws-accelerator/utils/lib/regions.ts:113
 # Accelerator specific assume role declaration
 source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:431
 source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:432
-source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:1232
-source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:1233
+source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:1221
+source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:1222
 
 # Accelerator specific assume role declaration
 
@@ -271,3 +271,9 @@ source/packages/@aws-accelerator/config/lib/organization-config.ts:209
 
 source/packages/@aws-accelerator/utils/lib/test-util/common/integration-test.ts:280
 source/packages/@aws-accelerator/utils/lib/test-util/common/integration-test.ts:281
+
+source/packages/@aws-accelerator/utils/lib/common-functions.ts:129
+source/packages/@aws-accelerator/utils/lib/common-functions.ts:130
+source/packages/@aws-accelerator/utils/lib/common-functions.ts:141
+source/packages/@aws-accelerator/utils/lib/common-functions.ts:142
+

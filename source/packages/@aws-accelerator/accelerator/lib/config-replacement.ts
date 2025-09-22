@@ -23,8 +23,8 @@ import {
   ReplacementsConfig,
   SecurityConfig,
 } from '@aws-accelerator/config';
-import { createLogger } from '@aws-accelerator/utils';
-import { Accelerator, shouldLookupDynamoDb } from './accelerator';
+import { createLogger, getManagementAccountCredentials } from '@aws-accelerator/utils';
+import { shouldLookupDynamoDb } from './accelerator';
 
 const logger = createLogger(['config-replacement']);
 const configDirPath = process.argv[2];
@@ -67,7 +67,7 @@ async function processReplacements(props: {
   account: string | undefined;
   stage: string | undefined;
 }) {
-  await Accelerator.getManagementAccountCredentials(props.partition);
+  await getManagementAccountCredentials(props.partition);
   const orgsEnabled = OrganizationConfig.loadRawOrganizationsConfig(configDirPath).enable;
   const loadFromDynamoDbTable = shouldLookupDynamoDb(props.stage);
 
