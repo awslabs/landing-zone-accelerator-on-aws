@@ -550,7 +550,7 @@ export abstract class AcceleratorStack extends cdk.Stack {
    */
   protected createConfigServiceLinkedRole(key: { cloudwatch?: cdk.aws_kms.IKey; lambda?: cdk.aws_kms.IKey }) {
     const isManagementAccount = cdk.Stack.of(this).account === this.props.accountsConfig.getManagementAccountId();
-    const isControlTowerEnabled = this.props.globalConfig.controlTower;
+    const isControlTowerEnabled = this.props.globalConfig.controlTower.enable;
     const isConfigRecorderEnabled = this.props.securityConfig.awsConfig.enableConfigurationRecorder;
     const isPartitionSupported = this.serviceLinkedRoleSupportedPartitionList.includes(this.props.partition);
     const isServiceLinkedRoleEnabled = this.props.securityConfig.awsConfig.useServiceLinkedRole === true;
@@ -560,7 +560,7 @@ export abstract class AcceleratorStack extends cdk.Stack {
 
     if (
       (!isControlTowerEnabled || // If Control Tower is Disabled OR
-        (this.props.globalConfig.controlTower && isManagementAccount)) && // Control Tower is Enabled, and this is the Mgmt Acct
+        (isControlTowerEnabled && isManagementAccount)) && // Control Tower is Enabled, and this is the Mgmt Acct
       isConfigRecorderEnabled &&
       isPartitionSupported &&
       isDeploymentTarget &&
