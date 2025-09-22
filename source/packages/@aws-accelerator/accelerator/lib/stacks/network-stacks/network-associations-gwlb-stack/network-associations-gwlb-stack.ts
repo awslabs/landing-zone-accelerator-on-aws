@@ -410,10 +410,14 @@ export class NetworkAssociationsGwlbStack extends NetworkStack {
     const targetGroupMap = new Map<string, TargetGroup>();
     for (const group of this.props.customizationsConfig.firewalls?.targetGroups ?? []) {
       // Check for instance targets in group
-      if (group.targets && this.includesTargets(group, instanceMap)) {
+      if (group.targets) {
         const vpcName = this.getVpcNameFromTargets(group);
-        const targets = this.processFirewallInstanceReplacements(group.targets as string[], instanceMap);
-        targetGroupMap.set(group.name, this.createTargetGroup(group, vpcName, targets));
+        if (group.type === 'instance' && this.includesTargets(group, instanceMap)) {
+          const targets = this.processFirewallInstanceReplacements(group.targets as string[], instanceMap);
+          targetGroupMap.set(group.name, this.createTargetGroup(group, vpcName, targets));
+        } else if (group.type === 'ip') {
+          targetGroupMap.set(group.name, this.createTargetGroup(group, vpcName, group.targets as string[]));
+        }
       }
       // Check if any autoscaling groups reference the target group
       for (const asg of this.props.customizationsConfig.firewalls?.autoscalingGroups ?? []) {
