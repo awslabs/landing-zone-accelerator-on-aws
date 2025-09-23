@@ -570,29 +570,6 @@ export async function setAcceleratorStackProps(
   }
 }
 
-// /**
-//  * Checks if the stage is at or before the bootstrap stage in the LZA pipeline
-//  * @param command
-//  * @param stage
-//  * @returns
-//  */
-
-// export function isBeforeBootstrapStage(command: string, stage?: string): boolean {
-//   const preBootstrapStages = [
-//     AcceleratorStage.PREPARE,
-//     AcceleratorStage.ACCOUNTS,
-//     AcceleratorStage.BOOTSTRAP,
-//   ] as string[];
-//   if (command === 'bootstrap') {
-//     return true;
-//   }
-//   if (!stage) {
-//     return false;
-//   }
-
-//   return preBootstrapStages.includes(stage);
-// }
-
 /**
  * Get customizationsConfig object
  * @param configDirPath
