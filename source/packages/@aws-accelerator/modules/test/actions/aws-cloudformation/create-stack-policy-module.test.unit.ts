@@ -78,11 +78,8 @@ function createTestConfig(enable: boolean, undefinedStackPolicy = false): Accele
       enabledRegions: undefinedStackPolicy ? undefined : ['us-east-1', 'us-west-2'],
       managementAccountAccessRole: 'AWSControlTowerExecution',
     },
-    organizationConfig: {
-      getIgnoredOus: vi.fn().mockReturnValue(['ou1', 'ou2']),
-    },
     accountsConfig: {
-      getActiveAccountIds: vi.fn().mockReturnValue(['account1', 'account2']),
+      getAccountIds: vi.fn().mockReturnValue(['account1', 'account2']),
       getManagementAccountId: vi.fn().mockReturnValue('managementAccount'),
     },
   } as unknown as AcceleratorConfigurationsType;
