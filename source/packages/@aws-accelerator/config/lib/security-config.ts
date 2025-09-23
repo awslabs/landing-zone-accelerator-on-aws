@@ -90,7 +90,7 @@ export class ResourcePolicyEnforcementConfig implements i.IResourcePolicyEnforce
 
 export class MacieConfig implements i.IMacieConfig {
   readonly enable = false;
-  readonly excludeRegions: t.Region[] = [];
+  readonly excludeRegions: string[] = [];
   readonly policyFindingsPublishingFrequency = 'FIFTEEN_MINUTES';
   readonly publishSensitiveDataFindings = false;
   readonly publishPolicyFindings: boolean | undefined = undefined;
@@ -99,29 +99,29 @@ export class MacieConfig implements i.IMacieConfig {
 
 export class GuardDutyS3ProtectionConfig implements i.IGuardDutyS3ProtectionConfig {
   readonly enable: boolean = false;
-  readonly excludeRegions: t.Region[] = [];
+  readonly excludeRegions: string[] = [];
 }
 
 export class GuardDutyEksProtectionConfig implements i.IGuardDutyEksProtectionConfig {
   readonly enable: boolean = false;
   readonly manageAgent?: boolean | undefined = false;
-  readonly excludeRegions: t.Region[] = [];
+  readonly excludeRegions: string[] = [];
 }
 
 export class GuardDutyEc2ProtectionConfig implements i.IGuardDutyEc2ProtectionConfig {
   readonly enable: boolean = false;
   readonly keepSnapshots: boolean = false;
-  readonly excludeRegions: t.Region[] = [];
+  readonly excludeRegions: string[] = [];
 }
 
 export class GuardDutyRdsProtectionConfig implements i.IGuardDutyRdsProtectionConfig {
   readonly enable: boolean = false;
-  readonly excludeRegions: t.Region[] = [];
+  readonly excludeRegions: string[] = [];
 }
 
 export class GuardDutyLambdaProtectionConfig implements i.IGuardDutyLambdaProtectionConfig {
   readonly enable: boolean = false;
-  readonly excludeRegions: t.Region[] = [];
+  readonly excludeRegions: string[] = [];
 }
 
 export class GuardDutyExportFindingsConfig implements i.IGuardDutyExportFindingsConfig {
@@ -134,7 +134,7 @@ export class GuardDutyExportFindingsConfig implements i.IGuardDutyExportFindings
 
 export class GuardDutyConfig implements i.IGuardDutyConfig {
   readonly enable: boolean = false;
-  readonly excludeRegions: t.Region[] = [];
+  readonly excludeRegions: string[] = [];
   readonly deploymentTargets: t.DeploymentTargets | undefined = undefined;
   readonly autoEnableOrgMembers: boolean | undefined = undefined;
   readonly s3Protection: GuardDutyS3ProtectionConfig = new GuardDutyS3ProtectionConfig();
@@ -153,7 +153,7 @@ export class AuditManagerDefaultReportsDestinationConfig implements i.IAuditMana
 
 export class AuditManagerConfig implements i.IAuditManagerConfig {
   readonly enable = false;
-  readonly excludeRegions: t.Region[] = [];
+  readonly excludeRegions: string[] = [];
   readonly defaultReportsConfiguration: AuditManagerDefaultReportsDestinationConfig =
     new AuditManagerDefaultReportsDestinationConfig();
   readonly lifecycleRules: t.LifeCycleRule[] | undefined = undefined;
@@ -161,7 +161,7 @@ export class AuditManagerConfig implements i.IAuditManagerConfig {
 
 export class DetectiveConfig implements i.IDetectiveConfig {
   readonly enable = false;
-  readonly excludeRegions: t.Region[] = [];
+  readonly excludeRegions: string[] = [];
 }
 
 export class SecurityHubStandardConfig implements i.ISecurityHubStandardConfig {
@@ -186,7 +186,7 @@ export class SecurityHubConfig implements i.ISecurityHubConfig {
   readonly regionAggregation = false;
   readonly snsTopicName = undefined;
   readonly notificationLevel = undefined;
-  readonly excludeRegions: t.Region[] = [];
+  readonly excludeRegions: string[] = [];
   readonly deploymentTargets: t.DeploymentTargets | undefined = undefined;
   readonly autoEnableOrgMembers: boolean | undefined = undefined;
   readonly standards: SecurityHubStandardConfig[] = [];
@@ -202,7 +202,7 @@ export class EbsDefaultVolumeEncryptionConfig implements i.IEbsDefaultVolumeEncr
   readonly enable = false;
   readonly kmsKey: undefined | string = undefined;
   readonly deploymentTargets?: t.DeploymentTargets | undefined;
-  readonly excludeRegions: t.Region[] = [];
+  readonly excludeRegions: string[] = [];
 }
 
 export class DocumentConfig implements i.IDocumentConfig {
@@ -217,7 +217,7 @@ export class DocumentSetConfig implements i.IDocumentSetConfig {
 }
 
 export class SsmAutomationConfig implements i.ISsmAutomationConfig {
-  readonly excludeRegions: t.Region[] = [];
+  readonly excludeRegions: string[] = [];
   readonly documentSets: DocumentSetConfig[] = [];
 }
 
@@ -273,7 +273,7 @@ export class ConfigRuleRemediation implements i.IConfigRuleRemediationType {
   readonly retryAttemptSeconds = 0;
   readonly maximumAutomaticAttempts = 0;
   readonly parameters = [];
-  readonly excludeRegions: t.Region[] = [];
+  readonly excludeRegions: string[] = [];
 }
 
 export class CustomRuleLambda implements i.ICustomRuleLambdaType {
@@ -337,7 +337,7 @@ export class MetricConfig implements i.IMetricConfig {
 }
 
 export class MetricSetConfig implements i.IMetricSetConfig {
-  readonly regions: t.Region[] | undefined = undefined;
+  readonly regions: string[] | undefined = undefined;
   readonly deploymentTargets: t.DeploymentTargets = new t.DeploymentTargets();
   readonly metrics: MetricConfig[] = [];
 }
@@ -358,7 +358,7 @@ export class AlarmConfig implements i.IAlarmConfig {
 }
 
 export class AlarmSetConfig implements i.IAlarmSetConfig {
-  readonly regions: t.Region[] | undefined = undefined;
+  readonly regions: string[] | undefined = undefined;
   readonly deploymentTargets: t.DeploymentTargets = new t.DeploymentTargets();
   readonly alarms: AlarmConfig[] = [];
 }

@@ -238,6 +238,7 @@
     },
     "IDeploymentTargets": {
       "additionalProperties": false,
+      "description": "Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.\n\nLicensed under the Apache License, Version 2.0 (the \"License\"). You may not use this file except in compliance with the License. A copy of the License is located at\n\n    http://www.apache.org/licenses/LICENSE-2.0\n\nor in the 'license' file accompanying this file. This file is distributed on an 'AS IS' BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, express or implied. See the License for the specific language governing permissions and limitations under the License.",
       "properties": {
         "accounts": {
           "items": {
@@ -318,8 +319,8 @@
           "type": "array"
         },
         "homeRegion": {
-          "$ref": "#/definitions/Region",
-          "description": "Accelerator home region name."
+          "description": "Accelerator home region name.",
+          "type": "string"
         },
         "identityCenter": {
           "$ref": "#/definitions/IIdentityCenterConfig",
@@ -560,8 +561,8 @@
           "description": "A short identifier for your Net BIOS domain name."
         },
         "region": {
-          "$ref": "#/definitions/Region",
-          "description": "Active directory deploy target region"
+          "description": "Active directory deploy target region",
+          "type": "string"
         },
         "resolverRuleName": {
           "$ref": "#/definitions/NonEmptyString",
@@ -630,8 +631,8 @@
           "description": "Active directory admin user secret account name. When no account name provided Accelerator will create the secret into the account MAD exists\n\nNote: Please do not use the Management account for the admin user secret account name."
         },
         "region": {
-          "$ref": "#/definitions/Region",
-          "description": "Active directory admin user secret region name. When no region name provided Accelerator will create the secret into the region MAD exists"
+          "description": "Active directory admin user secret region name. When no region name provided Accelerator will create the secret into the region MAD exists",
+          "type": "string"
         }
       },
       "type": "object"
@@ -906,55 +907,6 @@
       "enum": [
         "USER",
         "GROUP"
-      ],
-      "type": "string"
-    },
-    "Region": {
-      "description": "AWS Region",
-      "enum": [
-        "af-south-1",
-        "ap-east-1",
-        "ap-east-2",
-        "ap-northeast-1",
-        "ap-northeast-2",
-        "ap-northeast-3",
-        "ap-south-1",
-        "ap-south-2",
-        "ap-southeast-1",
-        "ap-southeast-2",
-        "ap-southeast-3",
-        "ap-southeast-4",
-        "ap-southeast-5",
-        "ap-southeast-7",
-        "ca-central-1",
-        "ca-west-1",
-        "cn-north-1",
-        "cn-northwest-1",
-        "eu-central-1",
-        "eu-central-2",
-        "eu-north-1",
-        "eu-south-1",
-        "eu-south-2",
-        "eu-west-1",
-        "eu-west-2",
-        "eu-west-3",
-        "eu-isoe-west-1",
-        "il-central-1",
-        "me-central-1",
-        "me-south-1",
-        "mx-central-1",
-        "sa-east-1",
-        "us-east-1",
-        "us-east-2",
-        "us-gov-west-1",
-        "us-gov-east-1",
-        "us-iso-east-1",
-        "us-isob-east-1",
-        "us-iso-west-1",
-        "us-isof-south-1",
-        "us-isof-east-1",
-        "us-west-1",
-        "us-west-2"
       ],
       "type": "string"
     }

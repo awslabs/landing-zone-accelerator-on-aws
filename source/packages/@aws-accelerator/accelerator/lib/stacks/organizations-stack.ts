@@ -17,7 +17,6 @@ import {
   GuardDutyConfig,
   IdentityCenterAssignmentConfig,
   IdentityCenterPermissionSetConfig,
-  Region,
 } from '@aws-accelerator/config';
 import {
   AuditManagerOrganizationAdminAccount,
@@ -532,9 +531,7 @@ export class OrganizationsStack extends AcceleratorStack {
    */
   private enableMacieDelegatedAdminAccount(adminAccountId: string) {
     if (this.centralSecurityServices.macie.enable) {
-      if (
-        (this.centralSecurityServices.macie.excludeRegions ?? []).indexOf(cdk.Stack.of(this).region as Region) == -1
-      ) {
+      if ((this.centralSecurityServices.macie.excludeRegions ?? []).indexOf(cdk.Stack.of(this).region) == -1) {
         this.logger.debug(
           `Starts macie admin account delegation to the account with email ${
             this.stackProperties.accountsConfig.getAuditAccount().email
@@ -607,9 +604,7 @@ export class OrganizationsStack extends AcceleratorStack {
    */
   private enableAuditManagerDelegatedAdminAccount(adminAccountId: string) {
     if (this.centralSecurityServices.auditManager?.enable) {
-      if (
-        this.centralSecurityServices.auditManager?.excludeRegions.indexOf(cdk.Stack.of(this).region as Region) == -1
-      ) {
+      if (this.centralSecurityServices.auditManager?.excludeRegions.indexOf(cdk.Stack.of(this).region) == -1) {
         this.logger.debug(
           `Starts audit manager admin account delegation to the account with email ${
             this.stackProperties.accountsConfig.getAuditAccount().email
@@ -639,7 +634,7 @@ export class OrganizationsStack extends AcceleratorStack {
    */
   private enableDetectiveDelegatedAdminAccount(adminAccountId: string) {
     if (this.centralSecurityServices.detective?.enable) {
-      if (this.centralSecurityServices.detective?.excludeRegions.indexOf(cdk.Stack.of(this).region as Region) == -1) {
+      if (this.centralSecurityServices.detective?.excludeRegions.indexOf(cdk.Stack.of(this).region) == -1) {
         this.logger.debug(
           `Starts detective admin account delegation to the account with email ${
             this.stackProperties.accountsConfig.getAuditAccount().email

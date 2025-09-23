@@ -2,6 +2,7 @@ import { describe, beforeEach, afterEach, expect, test, vi, it } from 'vitest';
 import { getCentralLogBucketKmsKeyArn, AcceleratorProps, Accelerator } from '../lib/accelerator';
 import { STSClient, AssumeRoleCommand, GetCallerIdentityCommand } from '@aws-sdk/client-sts';
 import { SSMClient, GetParameterCommand } from '@aws-sdk/client-ssm';
+import { EC2Client, DescribeRegionsCommand } from '@aws-sdk/client-ec2';
 import { mockClient, AwsClientStub } from 'aws-sdk-client-mock';
 import { AccountsConfig, CustomizationsConfig, GlobalConfig, OrganizationConfig } from '@aws-accelerator/config';
 import { AcceleratorToolkit, AcceleratorToolkitProps } from '../lib/toolkit';
@@ -11,6 +12,7 @@ import { shouldLookupDynamoDb } from '../lib/accelerator';
 
 let stsMock: AwsClientStub<STSClient>;
 let ssmMock: AwsClientStub<SSMClient>;
+let ec2Mock: AwsClientStub<EC2Client>;
 
 const fakeGlobalConfig = new GlobalConfig(
   {
@@ -226,6 +228,11 @@ describe('Accelerator.run', () => {
     vi.spyOn(fs, 'existsSync').mockImplementation((path: PathLike) => path.toString() === 'customizations-config.yaml');
 
     executeSpy = vi.spyOn(AcceleratorToolkit, 'execute').mockResolvedValue();
+
+    ec2Mock = mockClient(EC2Client);
+    ec2Mock.on(DescribeRegionsCommand).resolves({
+      Regions: [{ RegionName: 'us-east-1' }, { RegionName: 'us-east-2' }, { RegionName: 'eu-central-1' }],
+    });
   });
 
   afterEach(() => {
@@ -337,5 +344,81 @@ describe('shouldLookupDynamoDb', () => {
     expect(shouldLookupDynamoDb(AcceleratorStage.NETWORK_VPC)).toBe(true);
     expect(shouldLookupDynamoDb(AcceleratorStage.SECURITY)).toBe(true);
     expect(shouldLookupDynamoDb(AcceleratorStage.OPERATIONS)).toBe(true);
+  });
+});
+
+describe('getRegionList validation', () => {
+  const invalidGlobalConfig = new GlobalConfig(
+    {
+      homeRegion: 'eu-central-1',
+      controlTower: { enable: true },
+      managementAccountAccessRole: 'fake-role',
+    },
+    {
+      homeRegion: 'eu-central-1',
+      enabledRegions: ['invalid-region'],
+      managementAccountAccessRole: 'fake-role',
+      cloudwatchLogRetentionInDays: 1,
+      controlTower: { enable: true },
+      logging: {
+        account: 'log@example.com',
+        centralizedLoggingRegion: 'eu-central-1',
+        cloudtrail: { enable: true, organizationTrail: true },
+        sessionManager: { sendToCloudWatchLogs: true, sendToS3: true },
+      },
+    },
+  );
+
+  beforeEach(() => {
+    ec2Mock = mockClient(EC2Client);
+    ec2Mock.on(DescribeRegionsCommand).resolves({
+      Regions: [{ RegionName: 'us-east-1' }, { RegionName: 'us-west-2' }, { RegionName: 'eu-west-1' }],
+    });
+
+    stsMock = mockClient(STSClient);
+    stsMock.on(GetCallerIdentityCommand).resolves({
+      Account: '111111111111',
+    });
+
+    vi.spyOn(GlobalConfig, 'loadRawGlobalConfig').mockReturnValue(invalidGlobalConfig);
+    vi.spyOn(AccountsConfig, 'load').mockReturnValue(fakeAccountsConfig);
+
+    vi.spyOn(OrganizationConfig, 'loadRawOrganizationsConfig').mockReturnValue(new OrganizationConfig());
+    vi.spyOn(OrganizationConfig, 'load').mockReturnValue(new OrganizationConfig());
+
+    vi.spyOn(AccountsConfig.prototype, 'loadAccountIds').mockResolvedValue();
+
+    vi.spyOn(CustomizationsConfig, 'load').mockReturnValue(fakeCustomizationConfig);
+
+    vi.spyOn(fs, 'existsSync').mockImplementation((path: PathLike) => path.toString() === 'customizations-config.yaml');
+
+    vi.spyOn(AcceleratorToolkit, 'execute').mockResolvedValue();
+  });
+
+  afterEach(() => {
+    vi.resetAllMocks();
+    ec2Mock.reset();
+  });
+
+  test('should validate regions and throw error for invalid regions', async () => {
+    const props: AcceleratorProps = {
+      command: 'deploy',
+      configDirPath: '',
+      partition: 'aws',
+      enableSingleAccountMode: false,
+    };
+
+    await expect(Accelerator.run(props)).rejects.toThrow('Config validation failed at runtime.');
+  });
+
+  test('should only validate regions in comercial partition', async () => {
+    const props: AcceleratorProps = {
+      command: 'deploy',
+      configDirPath: '',
+      partition: 'gov-cloud',
+      enableSingleAccountMode: false,
+    };
+
+    await expect(Accelerator.run(props)).resolves.not.toThrow();
   });
 });

@@ -24,7 +24,6 @@ import {
   OrganizationConfig,
   ReplacementsConfig,
   SecurityConfig,
-  Region,
 } from '@aws-accelerator/config';
 import fs from 'fs';
 import path from 'path';
@@ -953,7 +952,7 @@ export async function writeImportResources(props: {
     if (!lzaAccountIds.includes(mapping.accountId)) {
       return acc;
     }
-    if (!lzaRegions.includes(mapping.region as Region)) {
+    if (!lzaRegions.includes(mapping.region)) {
       return acc;
     }
     acc[key] = mapping;

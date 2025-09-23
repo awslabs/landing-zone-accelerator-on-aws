@@ -215,7 +215,7 @@ export abstract class ControlTowerControlConfig implements i.IControlTowerContro
   readonly identifier: string = '';
   readonly enable: boolean = true;
   readonly deploymentTargets: t.DeploymentTargets = new t.DeploymentTargets();
-  readonly regions: t.Region[] | undefined = undefined;
+  readonly regions: string[] | undefined = undefined;
 }
 
 /**
@@ -365,13 +365,13 @@ export class ServiceQuotaLimitsConfig implements i.IServiceQuotaLimitsConfig {
   readonly quotaCode = '';
   readonly desiredValue = 2000;
   readonly deploymentTargets: t.DeploymentTargets = new t.DeploymentTargets();
-  readonly regions?: t.Region[];
+  readonly regions?: string[];
 }
 
 export class SessionManagerConfig implements i.ISessionManagerConfig {
   readonly sendToCloudWatchLogs = false;
   readonly sendToS3 = false;
-  readonly excludeRegions: t.Region[] = [];
+  readonly excludeRegions: string[] = [];
   readonly excludeAccounts: string[] = [];
   readonly lifecycleRules: t.LifeCycleRule[] = [];
   readonly attachPolicyToIamRoles = [];
@@ -415,7 +415,7 @@ export class CloudWatchLogSkipBulkUpdateConfig implements i.ICloudWatchLogSkipBu
 
 export class CloudWatchLogsExclusionConfig implements i.ICloudWatchLogsExclusionConfig {
   readonly organizationalUnits: string[] | undefined = undefined;
-  readonly regions: t.Region[] | undefined = undefined;
+  readonly regions: string[] | undefined = undefined;
   readonly accounts: string[] | undefined = undefined;
   readonly excludeAll: boolean | undefined = undefined;
   readonly logGroupNames: string[] | undefined = undefined;
@@ -593,7 +593,7 @@ export class GlobalConfig implements i.IGlobalConfig {
   static readonly FILENAME = 'global-config.yaml';
   readonly homeRegion: string = '';
   readonly useV2Stacks: boolean | undefined = undefined;
-  readonly enabledRegions: t.Region[] = [];
+  readonly enabledRegions: string[] = [];
   readonly managementAccountAccessRole: string = '';
   readonly cloudwatchLogRetentionInDays = 365;
   readonly centralizeCdkBuckets: centralizeCdkBucketsConfig | undefined = undefined;
@@ -646,7 +646,7 @@ export class GlobalConfig implements i.IGlobalConfig {
       Object.assign(this, values);
     } else {
       this.homeRegion = props.homeRegion;
-      this.enabledRegions = [props.homeRegion as t.Region];
+      this.enabledRegions = [props.homeRegion];
       this.controlTower = {
         enable: props.controlTower.enable,
         landingZone: props.controlTower.landingZone,

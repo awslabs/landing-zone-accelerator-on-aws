@@ -11,13 +11,6 @@
  *  and limitations under the License.
  */
 
-import { RegionName } from '@aws-accelerator/utils';
-
-/**
- * AWS Region
- */
-export type Region = keyof typeof RegionName;
-
 export interface IDeploymentTargets {
   organizationalUnits?: string[];
   accounts?: string[];
@@ -252,7 +245,7 @@ export class DeploymentTargets implements IDeploymentTargets {
    *   - ap-south-1
    * ```
    */
-  readonly excludedRegions: Region[] = [];
+  readonly excludedRegions: string[] = [];
   /**
    * List of AWS account names that should be excluded from deployment.
    *

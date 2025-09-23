@@ -18,7 +18,6 @@ import {
   NetworkConfig,
   OrganizationConfig,
   SecurityConfig,
-  Region,
   ControlTowerLandingZoneConfig,
 } from '@aws-accelerator/config';
 import { Bucket, BucketEncryptionType } from '@aws-accelerator/constructs';
@@ -81,7 +80,7 @@ export class ConfigRepository extends Construct {
       path.join(this.tempDirPath, GlobalConfig.FILENAME),
       yaml.dump(
         new GlobalConfig({
-          homeRegion: cdk.Stack.of(this).region as Region,
+          homeRegion: cdk.Stack.of(this).region,
           controlTower: { enable: controlTowerEnabledValue, landingZone: props.controlTowerLandingZoneConfig },
           managementAccountAccessRole: managementAccountAccessRole,
           useV2Stacks: true,

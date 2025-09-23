@@ -22,13 +22,13 @@ import {
 } from '@aws-sdk/client-ssm';
 import { S3Client } from '@aws-sdk/client-s3';
 import { IAMClient } from '@aws-sdk/client-iam';
+import { AssumeRoleCommandOutput } from '@aws-sdk/client-sts';
 import {
   AccountsConfig,
   GlobalConfig,
   OrganizationConfig,
   CustomizationsConfig,
   ReplacementsConfig,
-  Region,
   DeploymentTargets,
 } from '@aws-accelerator/config';
 import {
@@ -37,9 +37,9 @@ import {
   getCrossAccountCredentials,
   getGlobalRegion,
   getCurrentAccountId,
-  Regions,
   getManagementAccountCredentials,
   setExternalManagementAccountCredentials,
+  getRegionList,
 } from '@aws-accelerator/utils';
 
 import { writeImportResources } from '../utils/app-utils';
@@ -47,7 +47,6 @@ import { AcceleratorStage } from './accelerator-stage';
 import { AcceleratorToolkit, AcceleratorToolkitProps, AcceleratorToolkitCommand } from './toolkit';
 import { v4 as uuidv4 } from 'uuid';
 import * as path from 'path';
-import { AssumeRoleCommandOutput } from '@aws-sdk/client-sts';
 
 export type AcceleratorConfiguration =
   | {
@@ -70,7 +69,7 @@ export type AcceleratorConfiguration =
       regionDetails: {
         homeRegion: string;
         globalRegion: string;
-        enabledRegions: Region[];
+        enabledRegions: string[];
       };
       replacementsConfig: ReplacementsConfig;
     }
@@ -237,6 +236,27 @@ export abstract class Accelerator {
 
     await checkDiffStage(props);
 
+    if (props.partition === 'aws') {
+      const regionList = await getRegionList(globalRegion);
+      const invalidRegions =
+        acceleratorConfig?.globalConfig?.enabledRegions.filter(region => !regionList.includes(region)) ?? [];
+
+      if (invalidRegions.length > 0) {
+        logger.error(
+          `Invalid regions found: ${invalidRegions.join(', ')}. Available regions: ${regionList.join(', ')}`,
+        );
+        throw new Error('Config validation failed at runtime.');
+      }
+
+      if (props.region && !regionList.includes(props.region)) {
+        logger.error(`Invalid region found: ${props.region}. Available regions: ${regionList.join(', ')}`);
+        throw new Error('Config validation failed at runtime.');
+      }
+    }
+
+    //
+    // When running parallel, this will be the max concurrent stacks
+    //
     if (props.command === 'deploy') {
       maxStacks = acceleratorConfig?.globalConfig?.acceleratorSettings?.maxConcurrentStacks
         ? acceleratorConfig?.globalConfig?.acceleratorSettings?.maxConcurrentStacks
@@ -339,11 +359,7 @@ export abstract class Accelerator {
       let enabledRegions = acceleratorConfig.globalConfig.enabledRegions;
 
       if (props.region) {
-        if (!Regions.includes(props.region)) {
-          throw Error(`Provided region: ${props.region} is not a valid aws region.`);
-        }
-
-        enabledRegions = [props.region as Region];
+        enabledRegions = [props.region];
       }
       //
       // Execute all remaining stages
@@ -1391,7 +1407,7 @@ export function getRegionsFromDeploymentTarget(
   const regions: string[] = [];
   regions.push(
     ...enabledRegions.filter(region => {
-      return !deploymentTargets?.excludedRegions?.includes(region as Region);
+      return !deploymentTargets?.excludedRegions?.includes(region);
     }),
   );
   return regions;

@@ -24,14 +24,14 @@ export class NetworkValidatorFunctions {
   private accounts: (AccountConfig | GovCloudAccountConfig)[];
   private snsTopicNames: string[];
   private values: NetworkConfig;
-  private enabledRegions: t.Region[];
+  private enabledRegions: string[];
 
   constructor(
     values: NetworkConfig,
     ouIdNames: string[],
     accounts: (AccountConfig | GovCloudAccountConfig)[],
     snsTopicNames: string[],
-    enabledRegions: t.Region[],
+    enabledRegions: string[],
   ) {
     this.ouIdNames = ouIdNames;
     this.accounts = accounts;
@@ -47,8 +47,8 @@ export class NetworkValidatorFunctions {
    * @param targets
    * @returns
    */
-  public getRegionsFromDeploymentTarget(targets: t.DeploymentTargets): t.Region[] {
-    const enabledRegions: t.Region[] = this.enabledRegions;
+  public getRegionsFromDeploymentTarget(targets: t.DeploymentTargets): string[] {
+    const enabledRegions: string[] = this.enabledRegions;
 
     return enabledRegions.filter(region => !targets.excludedRegions?.includes(region));
   }
@@ -288,6 +288,6 @@ export class NetworkValidatorFunctions {
    * @returns
    */
   public isEnabledRegion(region: string): boolean {
-    return this.enabledRegions.includes(region as t.Region);
+    return this.enabledRegions.includes(region);
   }
 }

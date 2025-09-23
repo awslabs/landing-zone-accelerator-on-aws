@@ -19,7 +19,6 @@ import { NagSuppressions } from 'cdk-nag';
 import {
   AseaResourceType,
   InterfaceEndpointServiceConfig,
-  Region,
   ResolverEndpointConfig,
   ResolverRuleConfig,
   VpcConfig,
@@ -443,7 +442,7 @@ export class NetworkVpcDnsStack extends NetworkStack {
     // Process SYSTEM rules
     for (const ruleItem of rules ?? []) {
       // Only deploy if the region isn't excluded
-      if (!ruleItem.excludedRegions?.includes(cdk.Stack.of(this).region as Region) || !ruleItem.excludedRegions) {
+      if (!ruleItem.excludedRegions?.includes(cdk.Stack.of(this).region) || !ruleItem.excludedRegions) {
         this.logger.info(`Add Route 53 Resolver SYSTEM rule ${ruleItem.name}`);
 
         const rule = new ResolverRule(this, `SystemResolverRule${pascalCase(ruleItem.name)}`, {

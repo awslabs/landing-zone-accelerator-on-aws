@@ -101,7 +101,7 @@
         "regions": {
           "description": "AWS region names to configure CloudWatch Alarms",
           "items": {
-            "$ref": "#/definitions/Region"
+            "type": "string"
           },
           "type": "array"
         }
@@ -127,7 +127,7 @@
         "excludeRegions": {
           "description": "(OPTIONAL) List of AWS Region names to be excluded from configuring AWS Audit Manager. Please ensure any regions enabled in the global configuration that do not support Audit Manager are added to the excluded regions list.  {@link  https://aws.amazon.com/about-aws/global-infrastructure/regional-product-services/ Supported services by region } .",
           "items": {
-            "$ref": "#/definitions/Region"
+            "type": "string"
           },
           "type": "array"
         },
@@ -437,7 +437,7 @@
         "excludeRegions": {
           "description": "List of AWS Region names to be excluded from applying remediation",
           "items": {
-            "$ref": "#/definitions/Region"
+            "type": "string"
           },
           "type": "array"
         },
@@ -552,6 +552,7 @@
     },
     "IDeploymentTargets": {
       "additionalProperties": false,
+      "description": "Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.\n\nLicensed under the Apache License, Version 2.0 (the \"License\"). You may not use this file except in compliance with the License. A copy of the License is located at\n\n    http://www.apache.org/licenses/LICENSE-2.0\n\nor in the 'license' file accompanying this file. This file is distributed on an 'AS IS' BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, express or implied. See the License for the specific language governing permissions and limitations under the License.",
       "properties": {
         "accounts": {
           "items": {
@@ -591,7 +592,7 @@
         "excludeRegions": {
           "description": "(OPTIONAL) List of AWS Region names to be excluded from configuring Amazon Detective. Please ensure any regions enabled in the global configuration that do not support Amazon Detective are added to the excluded regions list.  {@link  https://aws.amazon.com/about-aws/global-infrastructure/regional-product-services/ Supported services by region } .",
           "items": {
-            "$ref": "#/definitions/Region"
+            "type": "string"
           },
           "type": "array"
         }
@@ -661,7 +662,7 @@
         "excludeRegions": {
           "description": "(OPTIONAL) List of AWS Region names to be excluded from configuring AWS EBS volume default encryption",
           "items": {
-            "$ref": "#/definitions/Region"
+            "type": "string"
           },
           "type": "array"
         },
@@ -722,7 +723,7 @@
         "excludeRegions": {
           "description": "(OPTIONAL) List of AWS Region names to be excluded from configuring Amazon GuardDuty\n\nPlease only specify one of the `excludeRegions` or `deploymentTargets` properties.",
           "items": {
-            "$ref": "#/definitions/Region"
+            "type": "string"
           },
           "type": "array"
         },
@@ -768,7 +769,7 @@
         "excludeRegions": {
           "description": "(OPTIONAL) List of AWS Region names to be excluded from configuring Amazon GuardDuty EC2 Malware Protection",
           "items": {
-            "$ref": "#/definitions/Region"
+            "type": "string"
           },
           "type": "array"
         },
@@ -794,7 +795,7 @@
         "excludeRegions": {
           "description": "(OPTIONAL) List of AWS Region names to be excluded from configuring Amazon GuardDuty EKS Protection",
           "items": {
-            "$ref": "#/definitions/Region"
+            "type": "string"
           },
           "type": "array"
         },
@@ -857,7 +858,7 @@
         "excludeRegions": {
           "description": "(OPTIONAL) List of AWS Region names to be excluded from configuring Amazon GuardDuty Lambda Malware Protection",
           "items": {
-            "$ref": "#/definitions/Region"
+            "type": "string"
           },
           "type": "array"
         }
@@ -878,7 +879,7 @@
         "excludeRegions": {
           "description": "(OPTIONAL) List of AWS Region names to be excluded from configuring Amazon GuardDuty RDS Malware Protection",
           "items": {
-            "$ref": "#/definitions/Region"
+            "type": "string"
           },
           "type": "array"
         }
@@ -899,7 +900,7 @@
         "excludeRegions": {
           "description": "(OPTIONAL) List of AWS Region names to be excluded from configuring Amazon GuardDuty S3 Protection",
           "items": {
-            "$ref": "#/definitions/Region"
+            "type": "string"
           },
           "type": "array"
         }
@@ -1134,7 +1135,7 @@
         "excludeRegions": {
           "description": "List of AWS Region names to be excluded from configuring Amazon Macie",
           "items": {
-            "$ref": "#/definitions/Region"
+            "type": "string"
           },
           "type": "array"
         },
@@ -1234,7 +1235,7 @@
         "regions": {
           "description": "(OPTIONAL) AWS region names to configure CloudWatch Metrics",
           "items": {
-            "$ref": "#/definitions/Region"
+            "type": "string"
           },
           "type": "array"
         }
@@ -1466,8 +1467,8 @@
           "$ref": "#/definitions/ICloudWatchConfig"
         },
         "homeRegion": {
-          "$ref": "#/definitions/Region",
-          "description": "Accelerator home region name."
+          "description": "Accelerator home region name.",
+          "type": "string"
         },
         "iamPasswordPolicy": {
           "$ref": "#/definitions/IIamPasswordPolicyConfig"
@@ -1508,7 +1509,7 @@
         "excludeRegions": {
           "description": "(OPTIONAL) List of AWS Region names to be excluded from configuring Security Hub",
           "items": {
-            "$ref": "#/definitions/Region"
+            "type": "string"
           },
           "type": "array"
         },
@@ -1667,7 +1668,7 @@
         "excludeRegions": {
           "description": "(OPTIONAL) List of AWS Region names to be excluded from configuring block S3 public access",
           "items": {
-            "$ref": "#/definitions/Region"
+            "type": "string"
           },
           "type": "array"
         }
@@ -1750,55 +1751,6 @@
     "NonEmptyString": {
       "description": "A string that has at least 1 character",
       "minLength": 1,
-      "type": "string"
-    },
-    "Region": {
-      "description": "AWS Region",
-      "enum": [
-        "af-south-1",
-        "ap-east-1",
-        "ap-east-2",
-        "ap-northeast-1",
-        "ap-northeast-2",
-        "ap-northeast-3",
-        "ap-south-1",
-        "ap-south-2",
-        "ap-southeast-1",
-        "ap-southeast-2",
-        "ap-southeast-3",
-        "ap-southeast-4",
-        "ap-southeast-5",
-        "ap-southeast-7",
-        "ca-central-1",
-        "ca-west-1",
-        "cn-north-1",
-        "cn-northwest-1",
-        "eu-central-1",
-        "eu-central-2",
-        "eu-north-1",
-        "eu-south-1",
-        "eu-south-2",
-        "eu-west-1",
-        "eu-west-2",
-        "eu-west-3",
-        "eu-isoe-west-1",
-        "il-central-1",
-        "me-central-1",
-        "me-south-1",
-        "mx-central-1",
-        "sa-east-1",
-        "us-east-1",
-        "us-east-2",
-        "us-gov-west-1",
-        "us-gov-east-1",
-        "us-iso-east-1",
-        "us-isob-east-1",
-        "us-iso-west-1",
-        "us-isof-south-1",
-        "us-isof-east-1",
-        "us-west-1",
-        "us-west-2"
-      ],
       "type": "string"
     },
     "SecurityHubSeverityLevel": {

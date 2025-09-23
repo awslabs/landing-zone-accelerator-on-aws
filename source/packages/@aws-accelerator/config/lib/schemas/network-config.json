@@ -461,8 +461,8 @@
           "description": "The name of the CGW.\n\nThe value of this property will be utilized as the logical id for this resource. Any references to this object should specify this value."
         },
         "region": {
-          "$ref": "#/definitions/Region",
-          "description": "The AWS region to provision the customer gateway in"
+          "description": "The AWS region to provision the customer gateway in",
+          "type": "string"
         },
         "tags": {
           "description": "Define tags for the Customer Gateway",
@@ -506,7 +506,7 @@
         "excludeRegions": {
           "description": "(OPTIONAL) Include an array of AWS regions to exclude from default VPC deletion.",
           "items": {
-            "$ref": "#/definitions/Region"
+            "type": "string"
           },
           "type": "array"
         }
@@ -518,6 +518,7 @@
     },
     "IDeploymentTargets": {
       "additionalProperties": false,
+      "description": "Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.\n\nLicensed under the Apache License, Version 2.0 (the \"License\"). You may not use this file except in compliance with the License. A copy of the License is located at\n\n    http://www.apache.org/licenses/LICENSE-2.0\n\nor in the 'license' file accompanying this file. This file is distributed on an 'AS IS' BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, express or implied. See the License for the specific language governing permissions and limitations under the License.",
       "properties": {
         "accounts": {
           "items": {
@@ -593,7 +594,7 @@
         "regions": {
           "description": "An array of regions to deploy the options set.",
           "items": {
-            "$ref": "#/definitions/Region"
+            "type": "string"
           },
           "type": "array"
         },
@@ -623,7 +624,7 @@
         "regions": {
           "description": "The regions to deploy the rule group to.",
           "items": {
-            "$ref": "#/definitions/Region"
+            "type": "string"
           },
           "type": "array"
         },
@@ -710,7 +711,7 @@
         },
         "excludedRegions": {
           "items": {
-            "$ref": "#/definitions/Region"
+            "type": "string"
           },
           "type": "array"
         },
@@ -862,8 +863,8 @@
           "description": "The friendly name of the owning account of the DX connection."
         },
         "region": {
-          "$ref": "#/definitions/Region",
-          "description": "The region of the virtual interface."
+          "description": "The region of the virtual interface.",
+          "type": "string"
         },
         "tags": {
           "description": "(OPTIONAL) An array of tags to apply to the virtual interface.",
@@ -1235,7 +1236,7 @@
         "operatingRegions": {
           "description": "(OPTIONAL) An array of regions that the IPAM will manage.",
           "items": {
-            "$ref": "#/definitions/Region"
+            "type": "string"
           },
           "type": "array"
         },
@@ -1247,8 +1248,8 @@
           "type": "array"
         },
         "region": {
-          "$ref": "#/definitions/Region",
-          "description": "The region to deploy the IPAM."
+          "description": "The region to deploy the IPAM.",
+          "type": "string"
         },
         "scopes": {
           "description": "(OPTIONAL) An array of IPAM scope configurations to create under the IPAM.",
@@ -1307,8 +1308,8 @@
           "description": "(OPTIONAL) A description for the IPAM pool."
         },
         "locale": {
-          "$ref": "#/definitions/Region",
-          "description": "(OPTIONAL) The AWS Region where you want to make an IPAM pool available for allocations."
+          "description": "(OPTIONAL) The AWS Region where you want to make an IPAM pool available for allocations.",
+          "type": "string"
         },
         "name": {
           "$ref": "#/definitions/NonEmptyString",
@@ -1692,8 +1693,8 @@
           "type": "boolean"
         },
         "region": {
-          "$ref": "#/definitions/Region",
-          "description": "(OPTIONAL) The region that the subnet is located in."
+          "description": "(OPTIONAL) The region that the subnet is located in.",
+          "type": "string"
         },
         "subnet": {
           "$ref": "#/definitions/NonEmptyString",
@@ -1789,8 +1790,8 @@
           "description": "Firewall manager service configuration"
         },
         "homeRegion": {
-          "$ref": "#/definitions/Region",
-          "description": "Accelerator home region name."
+          "description": "Accelerator home region name.",
+          "type": "string"
         },
         "prefixLists": {
           "description": "An optional list of prefix list set configurations.",
@@ -2009,7 +2010,7 @@
         "regions": {
           "description": "The regions to deploy the policy to.",
           "items": {
-            "$ref": "#/definitions/Region"
+            "type": "string"
           },
           "type": "array"
         },
@@ -2141,7 +2142,7 @@
         "regions": {
           "description": "The regions to deploy the rule group to.",
           "items": {
-            "$ref": "#/definitions/Region"
+            "type": "string"
           },
           "type": "array"
         },
@@ -2854,7 +2855,7 @@
         "regions": {
           "description": "(DEPRECATED) An array of region names for the prefix list to be deployed.",
           "items": {
-            "$ref": "#/definitions/Region"
+            "type": "string"
           },
           "type": "array"
         },
@@ -2994,7 +2995,7 @@
         "excludedRegions": {
           "description": "(OPTIONAL) Regions to exclude from SYSTEM rule deployment.",
           "items": {
-            "$ref": "#/definitions/Region"
+            "type": "string"
           },
           "type": "array"
         },
@@ -3724,8 +3725,8 @@
           "description": "A friendly name for the Transit Gateway."
         },
         "region": {
-          "$ref": "#/definitions/Region",
-          "description": "The region name to deploy the Transit Gateway."
+          "description": "The region name to deploy the Transit Gateway.",
+          "type": "string"
         },
         "routeTables": {
           "description": "An array of Transit Gateway route table configuration objects.",
@@ -3869,8 +3870,8 @@
           "type": "boolean"
         },
         "region": {
-          "$ref": "#/definitions/Region",
-          "description": "The name of the region the accepter transit gateway resides in"
+          "description": "The name of the region the accepter transit gateway resides in",
+          "type": "string"
         },
         "routeTableAssociations": {
           "$ref": "#/definitions/NonEmptyString",
@@ -3922,8 +3923,8 @@
           "description": "The friendly name of the account of the requester transit gateway"
         },
         "region": {
-          "$ref": "#/definitions/Region",
-          "description": "The name of the region the accepter transit gateway resides in"
+          "description": "The name of the region the accepter transit gateway resides in",
+          "type": "string"
         },
         "routeTableAssociations": {
           "$ref": "#/definitions/NonEmptyString",
@@ -4215,8 +4216,8 @@
           "type": "array"
         },
         "region": {
-          "$ref": "#/definitions/Region",
-          "description": "The AWS region to deploy the VPC to"
+          "description": "The AWS region to deploy the VPC to",
+          "type": "string"
         },
         "resolverRules": {
           "description": "(OPTIONAL) A list of Route 53 resolver rule names.",
@@ -4547,8 +4548,8 @@
           "type": "array"
         },
         "region": {
-          "$ref": "#/definitions/Region",
-          "description": "The AWS region to deploy the VPCs to"
+          "description": "The AWS region to deploy the VPCs to",
+          "type": "string"
         },
         "resolverRules": {
           "description": "(OPTIONAL) A list of Route 53 resolver rule names.",
@@ -4989,55 +4990,6 @@
         24
       ],
       "type": "number"
-    },
-    "Region": {
-      "description": "AWS Region",
-      "enum": [
-        "af-south-1",
-        "ap-east-1",
-        "ap-east-2",
-        "ap-northeast-1",
-        "ap-northeast-2",
-        "ap-northeast-3",
-        "ap-south-1",
-        "ap-south-2",
-        "ap-southeast-1",
-        "ap-southeast-2",
-        "ap-southeast-3",
-        "ap-southeast-4",
-        "ap-southeast-5",
-        "ap-southeast-7",
-        "ca-central-1",
-        "ca-west-1",
-        "cn-north-1",
-        "cn-northwest-1",
-        "eu-central-1",
-        "eu-central-2",
-        "eu-north-1",
-        "eu-south-1",
-        "eu-south-2",
-        "eu-west-1",
-        "eu-west-2",
-        "eu-west-3",
-        "eu-isoe-west-1",
-        "il-central-1",
-        "me-central-1",
-        "me-south-1",
-        "mx-central-1",
-        "sa-east-1",
-        "us-east-1",
-        "us-east-2",
-        "us-gov-west-1",
-        "us-gov-east-1",
-        "us-iso-east-1",
-        "us-isob-east-1",
-        "us-iso-west-1",
-        "us-isof-south-1",
-        "us-isof-east-1",
-        "us-west-1",
-        "us-west-2"
-      ],
-      "type": "string"
     },
     "ResolverEndpointType": {
       "enum": [

@@ -17,7 +17,7 @@ import * as path from 'path';
 import { createLogger } from '@aws-accelerator/utils';
 
 import { AccountsConfig } from '../lib/accounts-config';
-import { DeploymentTargets, Region, ShareTargets, isCustomizationsType, isNetworkType } from '../lib/common';
+import { DeploymentTargets, ShareTargets, isCustomizationsType, isNetworkType } from '../lib/common';
 import {
   AppConfigItem,
   ApplicationLoadBalancerConfig,
@@ -323,11 +323,11 @@ class CustomizationValidator {
     resourceName: string,
     resourceType: string,
     regions: string[],
-    enabledRegions: Region[],
+    enabledRegions: string[],
     errors: string[],
   ) {
     for (const region of regions) {
-      if (!enabledRegions.includes(region as Region)) {
+      if (!enabledRegions.includes(region)) {
         errors.push(
           `Invalid region ${region} specified for ${resourceType} ${resourceName}. Region must be part of enabled regions: ${enabledRegions}.`,
         );
@@ -565,7 +565,7 @@ class CustomizationValidator {
     }
 
     const allEnabledRegions = globalConfig.enabledRegions;
-    let filteredRegions: Region[];
+    let filteredRegions: string[];
     if (app.deploymentTargets.excludedAccounts && app.deploymentTargets.excludedAccounts.length > 0) {
       filteredRegions = allEnabledRegions.filter(obj => !app.deploymentTargets.excludedAccounts.includes(obj));
     } else {

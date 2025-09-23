@@ -1122,7 +1122,7 @@ export interface IManagedActiveDirectorySecretConfig {
   /**
    * Active directory admin user secret region name. When no region name provided Accelerator will create the secret into the region MAD exists
    */
-  readonly region?: t.Region;
+  readonly region?: string;
   /**
    * Active directory admin user secret account name. When no account name provided Accelerator will create the secret into the account MAD exists
    *
@@ -1200,7 +1200,7 @@ export interface IManagedActiveDirectoryConfig {
   /**
    * Active directory deploy target region
    */
-  readonly region: t.Region;
+  readonly region: string;
   /**
    * A fully qualified domain name. This name will resolve inside your VPC only. It does not need to be publicly resolvable.
    */
@@ -1289,7 +1289,7 @@ export interface IIamConfig {
    * homeRegion: &HOME_REGION us-east-1
    * ```
    */
-  readonly homeRegion?: t.Region;
+  readonly homeRegion?: string;
   /**
    * SAML provider configuration
    * To configure SAML configuration, you need to provide the following values for this parameter.

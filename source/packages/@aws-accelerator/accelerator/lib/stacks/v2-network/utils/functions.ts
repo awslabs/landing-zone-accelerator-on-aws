@@ -33,7 +33,6 @@ import {
   SecurityGroupRuleConfig,
   SecurityGroupConfig,
   isNetworkType,
-  Region,
   GlobalConfig,
   SecurityGroupRuleType,
 } from '@aws-accelerator/config';
@@ -73,7 +72,7 @@ export function getVpcsInScope(
   for (const vpcItem of vpcResources) {
     const vpcAccountIds = getVpcAccountIds(vpcItem, accountsConfig);
 
-    if (vpcAccountIds.includes(env.accountId) && [vpcItem.region].includes(env.region as Region)) {
+    if (vpcAccountIds.includes(env.accountId) && [vpcItem.region].includes(env.region)) {
       // Add condition on VPC lookup
       vpcsInScope.push(vpcItem);
     }

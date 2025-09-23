@@ -11,7 +11,10 @@
  *  and limitations under the License.
  */
 
+import { EC2Client, DescribeRegionsCommand } from '@aws-sdk/client-ec2';
 import { createLogger } from './logger';
+import { setRetryStrategy } from './common-functions';
+import { throttlingBackOff } from './throttle';
 
 const logger = createLogger(['regions']);
 
@@ -21,53 +24,7 @@ type RegionInfo = {
   optIn: boolean;
 };
 
-export enum RegionName {
-  'af-south-1',
-  'ap-east-1',
-  'ap-east-2',
-  'ap-northeast-1',
-  'ap-northeast-2',
-  'ap-northeast-3',
-  'ap-south-1',
-  'ap-south-2',
-  'ap-southeast-1',
-  'ap-southeast-2',
-  'ap-southeast-3',
-  'ap-southeast-4',
-  'ap-southeast-5',
-  'ap-southeast-7',
-  'ca-central-1',
-  'ca-west-1',
-  'cn-north-1',
-  'cn-northwest-1',
-  'eu-central-1',
-  'eu-central-2',
-  'eu-north-1',
-  'eu-south-1',
-  'eu-south-2',
-  'eu-west-1',
-  'eu-west-2',
-  'eu-west-3',
-  'eu-isoe-west-1',
-  'il-central-1',
-  'me-central-1',
-  'me-south-1',
-  'mx-central-1',
-  'sa-east-1',
-  'us-east-1',
-  'us-east-2',
-  'us-gov-west-1',
-  'us-gov-east-1',
-  'us-iso-east-1',
-  'us-isob-east-1',
-  'us-iso-west-1',
-  'us-isof-south-1',
-  'us-isof-east-1',
-  'us-west-1',
-  'us-west-2',
-}
-
-const regionsInfo: Record<keyof typeof RegionName, RegionInfo> = {
+const regionsInfo: Record<string, RegionInfo> = {
   'af-south-1': { azId: 'afs1-az', elbAccount: '098369216593', optIn: true },
   'ap-east-1': { azId: 'ape1-az', elbAccount: '754344448648', optIn: true },
   'ap-east-2': { azId: 'ape2-az', elbAccount: undefined, optIn: true },
@@ -137,8 +94,29 @@ export function getAvailabilityZoneMap(region: string) {
 
   const availabilityZoneId = availabilityZoneIdMap.get(region);
   if (!availabilityZoneIdMap.get(region)) {
-    logger.error(`The ${region} provided does not support Physical AZ IDs.`);
+    logger.error(
+      `The ${region} region does not support Physical AZ IDs. This could be a new AWS region requiring full AZ ID strings, or Physical AZ IDs are not supported in this region.`,
+    );
     throw new Error(`Configuration validation failed at runtime.`);
   }
   return availabilityZoneId;
+}
+
+/**
+ * Retrieves a list of all AWS regions using the EC2 DescribeRegions API.
+ *
+ * @returns string[]
+ */
+export async function getRegionList(region: string): Promise<string[]> {
+  const ec2Client = new EC2Client({
+    region,
+    customUserAgent: process.env['SOLUTION_ID'] ?? '',
+    retryStrategy: setRetryStrategy(),
+  });
+  const describeRegionsCommand = new DescribeRegionsCommand({ AllRegions: true });
+
+  const response = await throttlingBackOff(() => ec2Client.send(describeRegionsCommand));
+  const regions = response.Regions || [];
+
+  return regions.map(region => region.RegionName).filter((regionName): regionName is string => Boolean(regionName));
 }

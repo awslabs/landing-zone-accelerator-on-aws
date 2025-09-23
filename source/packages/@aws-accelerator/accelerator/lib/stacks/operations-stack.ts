@@ -20,7 +20,6 @@ import {
   Ec2FirewallAutoScalingGroupConfig,
   Ec2FirewallConfig,
   Ec2FirewallInstanceConfig,
-  Region,
   RoleConfig,
   RoleSetConfig,
   UserConfig,
@@ -263,7 +262,7 @@ export class OperationsStack extends AcceleratorStack {
             logRetentionInDays: this.props.globalConfig.cloudwatchLogRetentionInDays,
           });
           // Specified Regions
-        } else if (limit.regions && limit.regions.includes(cdk.Stack.of(this).region as Region)) {
+        } else if (limit.regions && limit.regions.includes(cdk.Stack.of(this).region)) {
           this.logger.info(
             `Creating service quota increase ${limit.quotaCode} in specified region ${cdk.Stack.of(this).region}`,
           );

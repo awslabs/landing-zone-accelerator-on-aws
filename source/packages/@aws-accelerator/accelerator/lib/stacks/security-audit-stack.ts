@@ -22,7 +22,6 @@ import { DEFAULT_LAMBDA_RUNTIME } from '../../../utils/lib/lambda';
 import {
   DeploymentTargets,
   GuardDutyConfig,
-  Region,
   ResourcePolicyEnforcementConfig,
   SecurityHubConfig,
 } from '@aws-accelerator/config';
@@ -164,7 +163,7 @@ export class SecurityAuditStack extends AcceleratorStack {
 
       if (
         (this.props.securityConfig.centralSecurityServices.macie.excludeRegions ?? []).indexOf(
-          cdk.Stack.of(this).region as Region,
+          cdk.Stack.of(this).region,
         ) === -1
       ) {
         this.logger.info('Adding Macie');
@@ -296,7 +295,7 @@ export class SecurityAuditStack extends AcceleratorStack {
     if (this.props.securityConfig.centralSecurityServices.auditManager?.enable) {
       if (
         this.props.securityConfig.centralSecurityServices.auditManager.excludeRegions.includes(
-          cdk.Stack.of(this).region as Region,
+          cdk.Stack.of(this).region,
         )
       ) {
         this.logger.info(`Audit Manager enabled, but excluded in ${cdk.Stack.of(this).region} region.`);
@@ -396,7 +395,7 @@ export class SecurityAuditStack extends AcceleratorStack {
     if (this.props.securityConfig.centralSecurityServices.detective?.enable) {
       if (
         this.props.securityConfig.centralSecurityServices.detective?.excludeRegions.indexOf(
-          cdk.Stack.of(this).region as Region,
+          cdk.Stack.of(this).region,
         ) === -1
       ) {
         this.logger.info('Adding Detective ');
@@ -468,7 +467,7 @@ export class SecurityAuditStack extends AcceleratorStack {
     if (
       this.props.securityConfig.centralSecurityServices.ssmAutomation.excludeRegions === undefined ||
       this.props.securityConfig.centralSecurityServices.ssmAutomation.excludeRegions.indexOf(
-        cdk.Stack.of(this).region as Region,
+        cdk.Stack.of(this).region,
       ) === -1
     ) {
       //

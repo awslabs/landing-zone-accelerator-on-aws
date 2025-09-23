@@ -99,8 +99,8 @@ export class CommonValidatorFunctions {
    * @param globalConfig {@link globalConfig}
    * @returns
    */
-  public static getRegionsFromDeploymentTargets(target: t.DeploymentTargets, global: GlobalConfig): t.Region[] {
-    const enabledRegions: t.Region[] = global.enabledRegions;
+  public static getRegionsFromDeploymentTargets(target: t.DeploymentTargets, global: GlobalConfig): string[] {
+    const enabledRegions: string[] = global.enabledRegions;
     if (target.excludedRegions) {
       return enabledRegions.filter(region => !target.excludedRegions.includes(region));
     }

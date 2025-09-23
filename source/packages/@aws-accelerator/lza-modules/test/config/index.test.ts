@@ -34,7 +34,15 @@ import { Account } from '@aws-sdk/client-organizations';
 //
 vi.mock('../../lib/config/functions');
 vi.mock('../../lib/config/accelerator-config-loader');
-vi.mock('@aws-accelerator/utils/lib/common-functions');
+
+vi.mock('@aws-accelerator/utils/lib/common-functions', async () => {
+  const actual = await vi.importActual('@aws-accelerator/utils/lib/common-functions');
+
+  return {
+    getGlobalRegion: vi.fn(),
+    getNodeVersion: actual['getNodeVersion'],
+  };
+});
 
 //
 // Mock constants

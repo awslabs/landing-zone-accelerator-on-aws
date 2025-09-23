@@ -14,7 +14,6 @@
 import { createLogger } from '@aws-accelerator/utils';
 import fs from 'fs';
 import path from 'path';
-import * as t from '../lib/common';
 import { AccountsConfig } from '../lib/accounts-config';
 import { DeploymentTargets } from '../lib/common';
 import {
@@ -533,7 +532,7 @@ export class SecurityConfigValidator {
       globalConfig,
     );
     let configRuleSetAccounts: string[] = [];
-    let configRuleSetRegions: t.Region[] = [];
+    let configRuleSetRegions: string[] = [];
 
     for (const ruleSet of values.awsConfig.ruleSets ?? []) {
       configRuleSetAccounts.push(
@@ -597,7 +596,7 @@ export class SecurityConfigValidator {
       globalConfig,
     );
     let securityHubStandardAccounts: string[] = [];
-    let securityHubStandardRegions: t.Region[] = [];
+    let securityHubStandardRegions: string[] = [];
 
     for (const securityHubStandard of securityHubStandards ?? []) {
       if (securityHubStandard.deploymentTargets) {
