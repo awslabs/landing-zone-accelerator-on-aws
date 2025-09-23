@@ -16,6 +16,8 @@ export default defineConfig({
     },
     hookTimeout: 90000,
     teardownTimeout: 90000,
+    reporters: ['default', 'junit'],
+    outputFile: './test-reports/test-results.xml',
     coverage: {
       include: ['**/*.ts'],
       exclude: [

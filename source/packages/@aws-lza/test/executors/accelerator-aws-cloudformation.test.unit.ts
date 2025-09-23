@@ -14,7 +14,7 @@
 import { describe, beforeEach, expect, test, vi, afterEach } from 'vitest';
 import { GetCloudFormationTemplatesModule } from '../../lib/aws-cloudformation/get-cloudformation-templates';
 import { MOCK_CONSTANTS } from '../mocked-resources';
-import { IGetCloudFormationTemplatesHandlerParameter } from '../../../@aws-accelerator/modules/dist/packages/@aws-lza/interfaces/aws-cloudformation/get-cloudformation-templates';
+import { IGetCloudFormationTemplatesHandlerParameter } from '../../interfaces/aws-cloudformation/get-cloudformation-templates';
 import { createStackPolicy, getCloudFormationTemplates } from '../../executors/accelerator-aws-cloudformation';
 import { StackPolicyModule } from '../../lib/aws-cloudformation/create-stack-policy';
 import { IStackPolicyHandlerParameter } from '../../interfaces/aws-cloudformation/create-stack-policy';

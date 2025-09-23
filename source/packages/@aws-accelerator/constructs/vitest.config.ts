@@ -6,7 +6,8 @@ export default defineConfig({
     include: ['**/*.test.ts'],
     passWithNoTests: true,
     setupFiles: ['./vitest.setup.ts'],
-    reporters: ['default'],
+    reporters: ['default', 'junit'],
+    outputFile: './test-reports/test-results.xml',
     coverage: {
       include: ['**/*.ts'],
       thresholds: {

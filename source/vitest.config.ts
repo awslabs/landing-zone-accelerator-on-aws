@@ -6,6 +6,8 @@ export default defineConfig({
     silent: true,
     testTimeout: 90000,
     setupFiles: ['./vitest.setup.ts'],
+    reporters: ['default', 'junit'],
+    outputFile: './test-reports/test-results.xml',
     projects: [
       'packages/@aws-accelerator/accelerator',
       'packages/@aws-accelerator/config',

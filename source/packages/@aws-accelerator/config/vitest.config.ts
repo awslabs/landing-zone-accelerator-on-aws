@@ -2,7 +2,8 @@ import { defineConfig } from 'vitest/config';
 
 export default defineConfig({
   test: {
-    reporters: ['default'],
+    reporters: ['default', 'junit'],
+    outputFile: './test-reports/test-results.xml',
     pool: 'threads',
     silent: true,
     testTimeout: 300000,

@@ -38,6 +38,7 @@ import {
 } from './resources';
 
 import { Assertion } from './assertion';
+import { fromNodeProviderChain } from '@aws-sdk/credential-providers';
 
 /**
  * Accelerator integration test props interface
@@ -229,7 +230,7 @@ export class IntegrationTest {
     });
 
     this.environment.integrationAccountStsCredentials = (await this.isInsideIntegrationAccount(client))
-      ? undefined
+      ? await fromNodeProviderChain()()
       : await AcceleratorIntegrationTestResources.getIntegrationAccountCredentials(
           client,
           this.environment.integrationAccountIamRoleArn,
@@ -270,21 +271,9 @@ export class IntegrationTest {
       throw new Error(`STS credentials for role ${executorRole.RoleName} not found, cannot assume.`);
     }
 
-    const { vi } = await import('vitest');
-
-    vi.mock('@aws-sdk/credential-provider-node', () => {
-      return {
-        ...vi.importActual('@aws-sdk/credential-provider-node'),
-        defaultProvider: () => {
-          return async () => ({
-            accessKeyId: executorRoleStsCredentials.accessKeyId!,
-            secretAccessKey: executorRoleStsCredentials.secretAccessKey!,
-            sessionToken: executorRoleStsCredentials.sessionToken!,
-            expiration: executorRoleStsCredentials.expiration,
-          });
-        },
-      };
-    });
+    process.env['AWS_ACCESS_KEY_ID'] = executorRoleStsCredentials.accessKeyId!;
+    process.env['AWS_SECRET_ACCESS_KEY'] = executorRoleStsCredentials.secretAccessKey!;
+    process.env['AWS_SESSION_TOKEN'] = executorRoleStsCredentials.sessionToken!;
 
     process.env['AWS_REGION'] = this.environment.region;
     process.env['SOLUTION_ID'] = AcceleratorIntegrationTestResources.solutionId;
@@ -305,8 +294,6 @@ export class IntegrationTest {
    */
   public async cleanup(): Promise<void> {
     this.logger.info(`Start environment cleanup`);
-    const { vi } = await import('vitest');
-    vi.clearAllMocks();
     const iamClient: IAMClient = new IAMClient({
       region: this.environment.region,
       customUserAgent: AcceleratorIntegrationTestResources.solutionId,
