@@ -1,6 +1,0 @@
-[
-  {
-    "logGroupPattern": "/AWSAccelerator-SecurityHub",
-    "s3Prefix": "security-hub"
-  }
-]
