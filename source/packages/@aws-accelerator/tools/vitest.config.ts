@@ -9,7 +9,8 @@ export default defineConfig({
     teardownTimeout: 60000,
     hookTimeout: 60000,
     // No setupFiles for this package
-    reporters: ['default'],
+    reporters: ['default', 'junit'],
+    outputFile: './test-reports/test-results.xml',
     coverage: {
       provider: 'v8',
       reporter: ['text', 'lcov'],

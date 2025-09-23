@@ -2,8 +2,8 @@ import { defineConfig } from 'vitest/config';
 
 export default defineConfig({
   test: {
-    reporters: ['default'],
-    outputFile: undefined,
+    reporters: ['default', 'junit'],
+    outputFile: './test-reports/test-results.xml',
     silent: true,
     coverage: {
       thresholds: {
