@@ -182,6 +182,7 @@ export function addAcceleratorTags(
     'AWS::Route53Resolver::FirewallDomainList',
     'AWS::Route53Resolver::ResolverEndpoint',
     'AWS::Route53Resolver::ResolverRule',
+    'AWS::Route53Resolver::ResolverQueryLoggingConfig',
   ];
 
   const tagsWithPrefix = globalConfig.tags;
