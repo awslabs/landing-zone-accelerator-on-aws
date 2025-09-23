@@ -20,10 +20,11 @@ PARTITION=${PARTITION:-$(aws sts get-caller-identity --query 'Arn' --output text
 
 # Bootstrap CDK in each enabled region
 # First synth to generate CloudFormation templates, then bootstrap to create CDK resources
+# ACCELERATOR_SKIP_DYNAMODB_LOOKUP=true forces lookup to AWS Organizations API instead of DynamoDB
 for ENABLED_REGION in $ENABLED_REGIONS; do
   echo "Bootstrapping CDK in region: $ENABLED_REGION for account: $ACCOUNT_ID"
   # Generate CloudFormation templates for bootstrap stage
-  yarn run ts-node --transpile-only cdk.ts synth --config-dir $CODEBUILD_SRC_DIR_Config --partition $PARTITION --stage bootstrap --account $ACCOUNT_ID --region $ENABLED_REGION
+  ACCELERATOR_SKIP_DYNAMODB_LOOKUP=true yarn run ts-node --transpile-only cdk.ts synth --config-dir $CODEBUILD_SRC_DIR_Config --partition $PARTITION --stage bootstrap --account $ACCOUNT_ID --region $ENABLED_REGION
   # Deploy CDK bootstrap resources (S3 bucket, IAM roles, etc.)
-  yarn run ts-node --transpile-only cdk.ts bootstrap --config-dir $CODEBUILD_SRC_DIR_Config --partition $PARTITION --stage bootstrap --account $ACCOUNT_ID --region $ENABLED_REGION
+  ACCELERATOR_SKIP_DYNAMODB_LOOKUP=true yarn run ts-node --transpile-only cdk.ts bootstrap --config-dir $CODEBUILD_SRC_DIR_Config --partition $PARTITION --stage bootstrap --account $ACCOUNT_ID --region $ENABLED_REGION
 done
