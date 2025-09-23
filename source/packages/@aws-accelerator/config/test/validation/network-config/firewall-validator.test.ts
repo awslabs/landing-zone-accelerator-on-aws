@@ -4,7 +4,6 @@ import { NetworkConfig } from '../../../lib/network-config';
 import { NetworkValidatorFunctions } from '../../../validator/network-config-validator/network-validator-functions';
 import { INetworkConfig } from '../../../lib/models/network-config';
 import { AccountConfig, GovCloudAccountConfig } from '../../../lib/accounts-config';
-import { Region } from '../../../lib/common';
 
 describe('NetworkFirewallValidator', () => {
   test('should pass a basic empty config', () => {
@@ -139,7 +138,7 @@ type HelperProps = {
   // Accounts
   accounts: (AccountConfig | GovCloudAccountConfig)[];
   snsTopicNames: string[];
-  enabledRegions: Region[];
+  enabledRegions: string[];
 };
 
 type ValidateProps = {

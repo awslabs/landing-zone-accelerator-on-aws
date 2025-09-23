@@ -683,7 +683,7 @@
         "regions": {
           "description": "List of regions where the exclusion will be applied to. If no value is supplied, exclusion is applied to all enabled regions.",
           "items": {
-            "$ref": "#/definitions/Region"
+            "type": "string"
           },
           "type": "array"
         }
@@ -782,7 +782,7 @@
         "regions": {
           "description": "(Optional) Region(s) where this service quota increase will be requested. Service Quota increases will be requested in the home region only if this property is not defined.  If this property is defined, the regions must also be listed in the enabledRegions section or the change will not be applied.",
           "items": {
-            "$ref": "#/definitions/Region"
+            "type": "string"
           },
           "type": "array"
         }
@@ -972,6 +972,7 @@
     },
     "IDeploymentTargets": {
       "additionalProperties": false,
+      "description": "Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.\n\nLicensed under the Apache License, Version 2.0 (the \"License\"). You may not use this file except in compliance with the License. A copy of the License is located at\n\n    http://www.apache.org/licenses/LICENSE-2.0\n\nor in the 'license' file accompanying this file. This file is distributed on an 'AS IS' BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, express or implied. See the License for the specific language governing permissions and limitations under the License.",
       "properties": {
         "accounts": {
           "items": {
@@ -1103,7 +1104,7 @@
         "enabledRegions": {
           "description": "List of AWS Region names where accelerator will be deployed. Home region must be part of this list.\n\nTo add us-west-2 along with home region for accelerator deployment, you need to provide below value for this parameter.",
           "items": {
-            "$ref": "#/definitions/Region"
+            "type": "string"
           },
           "type": "array"
         },
@@ -1531,7 +1532,7 @@
         "regions": {
           "description": "(Optional) Region(s) where this service quota increase will be requested. Service Quota increases will be requested in the home region only if this property is not defined.",
           "items": {
-            "$ref": "#/definitions/Region"
+            "type": "string"
           },
           "type": "array"
         },
@@ -1569,7 +1570,7 @@
         "excludeRegions": {
           "description": "List of AWS Region names to be excluded from configuring SessionManager configuration",
           "items": {
-            "$ref": "#/definitions/Region"
+            "type": "string"
           },
           "type": "array"
         },
@@ -1800,55 +1801,6 @@
       "enum": [
         "ACTUAL",
         "FORECASTED"
-      ],
-      "type": "string"
-    },
-    "Region": {
-      "description": "AWS Region",
-      "enum": [
-        "af-south-1",
-        "ap-east-1",
-        "ap-east-2",
-        "ap-northeast-1",
-        "ap-northeast-2",
-        "ap-northeast-3",
-        "ap-south-1",
-        "ap-south-2",
-        "ap-southeast-1",
-        "ap-southeast-2",
-        "ap-southeast-3",
-        "ap-southeast-4",
-        "ap-southeast-5",
-        "ap-southeast-7",
-        "ca-central-1",
-        "ca-west-1",
-        "cn-north-1",
-        "cn-northwest-1",
-        "eu-central-1",
-        "eu-central-2",
-        "eu-north-1",
-        "eu-south-1",
-        "eu-south-2",
-        "eu-west-1",
-        "eu-west-2",
-        "eu-west-3",
-        "eu-isoe-west-1",
-        "il-central-1",
-        "me-central-1",
-        "me-south-1",
-        "mx-central-1",
-        "sa-east-1",
-        "us-east-1",
-        "us-east-2",
-        "us-gov-west-1",
-        "us-gov-east-1",
-        "us-iso-east-1",
-        "us-isob-east-1",
-        "us-iso-west-1",
-        "us-isof-south-1",
-        "us-isof-east-1",
-        "us-west-1",
-        "us-west-2"
       ],
       "type": "string"
     },

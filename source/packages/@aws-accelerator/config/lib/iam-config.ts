@@ -32,7 +32,7 @@ export class ManagedActiveDirectorySharedOuConfig implements i.IManagedActiveDir
 export class ManagedActiveDirectorySecretConfig implements i.IManagedActiveDirectorySecretConfig {
   readonly adminSecretName: string | undefined = undefined;
   readonly account: string | undefined = undefined;
-  readonly region: t.Region = 'us-east-1';
+  readonly region: string = 'us-east-1';
 }
 
 export class ActiveDirectoryConfigurationInstanceUserDataConfig
@@ -89,7 +89,7 @@ export class ManagedActiveDirectoryVpcSettingsConfig implements i.IManagedActive
 export class ManagedActiveDirectoryConfig implements i.IManagedActiveDirectoryConfig {
   readonly name = '';
   readonly account = '';
-  readonly region: t.Region = 'us-east-1';
+  readonly region: string = 'us-east-1';
   readonly dnsName = '';
   readonly netBiosDomainName = '';
   readonly description: string | undefined = undefined;

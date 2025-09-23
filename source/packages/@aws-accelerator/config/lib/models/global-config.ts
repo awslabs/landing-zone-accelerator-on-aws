@@ -180,7 +180,7 @@ export interface IControlTowerControlConfig {
   /**
    * (Optional) Region(s) where this service quota increase will be requested. Service Quota increases will be requested in the home region only if this property is not defined.  If this property is defined, the regions must also be listed in the enabledRegions section or the change will not be applied.
    */
-  readonly regions?: t.Region[];
+  readonly regions?: string[];
 }
 
 /**
@@ -679,7 +679,7 @@ export interface IServiceQuotaLimitsConfig {
    * If specified, the regions must also be listed in the enabledRegions section.
    * Some quotas are global (like IAM) and don't require region specification.
    */
-  readonly regions?: t.Region[];
+  readonly regions?: string[];
 }
 
 /**
@@ -712,7 +712,7 @@ export interface ISessionManagerConfig {
   /**
    * List of AWS Region names to be excluded from configuring SessionManager configuration
    */
-  readonly excludeRegions?: t.Region[];
+  readonly excludeRegions?: string[];
   /**
    * List of AWS Account names to be excluded from configuring SessionManager configuration
    */
@@ -1175,7 +1175,7 @@ export interface ICloudWatchLogsExclusionConfig {
   /**
    * List of regions where the exclusion will be applied to. If no value is supplied, exclusion is applied to all enabled regions.
    */
-  readonly regions?: t.Region[];
+  readonly regions?: string[];
   /**
    * List of accounts where the exclusion will be applied to
    */
@@ -2584,7 +2584,7 @@ export interface IGlobalConfig {
    *   - us-west-2
    * ```
    */
-  readonly enabledRegions: t.Region[];
+  readonly enabledRegions: string[];
   /**
    * This role trusts the management account, allowing users in the management
    * account to assume the role, as permitted by the management account

@@ -35,7 +35,6 @@ import {
   LifeCycleRule,
   NetworkConfig,
   OrganizationConfig,
-  Region,
   ReplacementsConfig,
   S3EncryptionConfig,
   SecurityConfig,
@@ -374,9 +373,9 @@ export abstract class AcceleratorStack extends cdk.Stack {
     return (
       inputConfig.enable &&
       (inputConfig.excludeRegions
-        ? inputConfig.excludeRegions.indexOf(this.region as Region) === -1
+        ? inputConfig.excludeRegions.indexOf(this.region) === -1
         : inputConfig.deploymentTargets?.excludedRegions
-        ? inputConfig.deploymentTargets?.excludedRegions?.indexOf(this.region as Region) === -1
+        ? inputConfig.deploymentTargets?.excludedRegions?.indexOf(this.region) === -1
         : true)
     );
   }
@@ -1497,8 +1496,8 @@ export abstract class AcceleratorStack extends cdk.Stack {
     return accountIds;
   }
 
-  public getRegionsFromDeploymentTarget(deploymentTargets: DeploymentTargets): Region[] {
-    const regions: Region[] = [];
+  public getRegionsFromDeploymentTarget(deploymentTargets: DeploymentTargets): string[] {
+    const regions: string[] = [];
     const enabledRegions = this.props.globalConfig.enabledRegions;
     regions.push(
       ...enabledRegions.filter(region => {

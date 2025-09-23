@@ -15,7 +15,7 @@ import * as cdk from 'aws-cdk-lib';
 import * as iam from 'aws-cdk-lib/aws-iam';
 import { Construct } from 'constructs';
 
-import { EbsDefaultVolumeEncryptionConfig, GuardDutyConfig, Region, SecurityHubConfig } from '@aws-accelerator/config';
+import { EbsDefaultVolumeEncryptionConfig, GuardDutyConfig, SecurityHubConfig } from '@aws-accelerator/config';
 import {
   AcceleratorMetadata,
   EbsDefaultEncryption,
@@ -141,7 +141,7 @@ export class SecurityStack extends AcceleratorStack {
     if (
       this.props.securityConfig.centralSecurityServices.macie.enable &&
       (this.props.securityConfig.centralSecurityServices.macie.excludeRegions ?? []).indexOf(
-        cdk.Stack.of(this).region as Region,
+        cdk.Stack.of(this).region,
       ) === -1
     ) {
       // Validate Delegated Admin Account name is part of account config
@@ -171,7 +171,7 @@ export class SecurityStack extends AcceleratorStack {
     if (
       guardDutyConfig.enable &&
       (guardDutyConfig.excludeRegions
-        ? guardDutyConfig.excludeRegions.indexOf(this.region as Region) === -1
+        ? guardDutyConfig.excludeRegions.indexOf(this.region) === -1
         : guardDutyConfig.deploymentTargets
         ? this.isIncluded(guardDutyConfig.deploymentTargets)
         : true)
@@ -266,7 +266,7 @@ export class SecurityStack extends AcceleratorStack {
    */
   private deployEbsEncryption(ebsEncryptionConfig: EbsDefaultVolumeEncryptionConfig): boolean {
     if (ebsEncryptionConfig.excludeRegions) {
-      return ebsEncryptionConfig.excludeRegions.indexOf(this.region as Region) === -1;
+      return ebsEncryptionConfig.excludeRegions.indexOf(this.region) === -1;
     } else {
       return ebsEncryptionConfig.deploymentTargets ? this.isIncluded(ebsEncryptionConfig.deploymentTargets) : true;
     }

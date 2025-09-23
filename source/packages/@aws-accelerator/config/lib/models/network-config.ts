@@ -55,7 +55,7 @@ export interface IDefaultVpcsConfig {
    * @remarks
    * Note: The regions included in the array must exist in the `enabledRegions` section of the global-config.yaml.
    */
-  readonly excludeRegions?: t.Region[];
+  readonly excludeRegions?: string[];
 }
 
 /**
@@ -341,7 +341,7 @@ export interface ITransitGatewayPeeringRequesterConfig {
    *
    * @see {@link TransitGatewayConfig}
    */
-  readonly region: t.Region;
+  readonly region: string;
   /**
    * The friendly name of TGW route table to associate with this peering attachment.
    *
@@ -401,7 +401,7 @@ export interface ITransitGatewayPeeringAccepterConfig {
    *
    * @see {@link TransitGatewayConfig}
    */
-  readonly region: t.Region;
+  readonly region: string;
   /**
    * The friendly name of TGW route table to associate with this peering attachment.
    *
@@ -553,7 +553,7 @@ export interface ITransitGatewayConfig {
   /**
    * The region name to deploy the Transit Gateway.
    */
-  readonly region: t.Region;
+  readonly region: string;
   /**
    * (OPTIONAL) Resource Access Manager (RAM) share targets.
    *
@@ -719,7 +719,7 @@ export interface IDxVirtualInterfaceConfig {
    * @remarks
    * Please note this region must match the region where the physical connection is hosted.
    */
-  readonly region: t.Region;
+  readonly region: string;
   /**
    * The type of the virtual interface
    *
@@ -1090,7 +1090,7 @@ export interface IIpamPoolConfig {
    * A base (top-level) pool does not require a locale.
    * A regional pool requires a locale.
    */
-  readonly locale?: t.Region;
+  readonly locale?: string;
   /**
    * An array of CIDR ranges to provision for the IPAM pool.
    *
@@ -1173,7 +1173,7 @@ export interface IIpamConfig {
    * Note that IPAMs must be deployed to a single region but may be used to manage allocations in multiple regions.
    * Configure the `operatingRegions` property to define multiple regions to manage.
    */
-  readonly region: t.Region;
+  readonly region: string;
   /**
    * (OPTIONAL) A description for the IPAM.
    */
@@ -1181,7 +1181,7 @@ export interface IIpamConfig {
   /**
    * (OPTIONAL) An array of regions that the IPAM will manage.
    */
-  readonly operatingRegions?: t.Region[];
+  readonly operatingRegions?: string[];
   /**
    * (OPTIONAL) An array of IPAM scope configurations to create under the IPAM.
    *
@@ -2145,10 +2145,8 @@ export interface IPrefixListConfig {
    *
    * @remarks
    * **NOTE**: This property is deprecated as of v1.4.0. It is recommended to use `deploymentTargets` instead.
-   *
-   * @see {@link Region}
    */
-  readonly regions?: t.Region[];
+  readonly regions?: string[];
   /**
    * Prefix List deployment targets
    *
@@ -2808,7 +2806,7 @@ export interface INetworkAclSubnetSelection {
    * This property only needs to be defined if targeting a subnet in a different region
    * than the one in which this VPC is deployed.
    */
-  readonly region?: t.Region;
+  readonly region?: string;
 }
 
 /**
@@ -3106,10 +3104,8 @@ export interface IDhcpOptsConfig {
   readonly accounts: t.NonEmptyString[];
   /**
    * An array of regions to deploy the options set.
-   *
-   * @see {@link Region}
    */
-  readonly regions: t.Region[];
+  readonly regions: string[];
   /**
    * (OPTIONAL) A domain name to assign to hosts using the options set.
    *
@@ -4035,7 +4031,7 @@ export interface ICustomerGatewayConfig {
   /**
    * The AWS region to provision the customer gateway in
    */
-  readonly region: t.Region;
+  readonly region: string;
   /**
    * Defines the IP address of the Customer Gateway
    *
@@ -4282,7 +4278,7 @@ export interface IVpcConfig {
   /**
    * The AWS region to deploy the VPC to
    */
-  readonly region: t.Region;
+  readonly region: string;
   /**
    * (OPTIONAL) A list of IPv4 CIDRs to associate with the VPC.
    *
@@ -4644,7 +4640,7 @@ export interface IVpcTemplatesConfig {
   /**
    * The AWS region to deploy the VPCs to
    */
-  readonly region: t.Region;
+  readonly region: string;
   /**
    * VPC deployment targets.
    *
@@ -4961,7 +4957,7 @@ export interface IResolverRuleConfig {
    * Only define this property if creating a `SYSTEM` rule type.
    * This does not apply to rules of type `FORWARD`.
    */
-  readonly excludedRegions?: t.Region[];
+  readonly excludedRegions?: string[];
   /**
    * (OPTIONAL) The friendly name of an inbound endpoint to target.
    *
@@ -5214,7 +5210,7 @@ export interface IDnsQueryLogsConfig {
    * @see {@link ShareTargets}
    */
   readonly shareTargets?: t.IShareTargets;
-  readonly excludedRegions?: t.Region[];
+  readonly excludedRegions?: string[];
 }
 
 export type DnsFirewallRuleActionType = 'ALLOW' | 'ALERT' | 'BLOCK';
@@ -5367,10 +5363,8 @@ export interface IDnsFirewallRuleGroupConfig {
   readonly name: t.NonEmptyString;
   /**
    * The regions to deploy the rule group to.
-   *
-   * @see {@link Region}
    */
-  readonly regions: t.Region[];
+  readonly regions: string[];
   /**
    * An array of DNS firewall rule configurations.
    *
@@ -6427,10 +6421,8 @@ export interface INfwRuleGroupConfig {
   readonly name: t.NonEmptyString;
   /**
    * The regions to deploy the rule group to.
-   *
-   * @see {@link Region}
    */
-  readonly regions: t.Region[];
+  readonly regions: string[];
   /**
    * The capacity of the rule group.
    */
@@ -6649,10 +6641,8 @@ export interface INfwFirewallPolicyConfig {
   readonly firewallPolicy: INfwFirewallPolicyPolicyConfig;
   /**
    * The regions to deploy the policy to.
-   *
-   * @see {@link Region}
    */
-  readonly regions: t.Region[];
+  readonly regions: string[];
   /**
    * (OPTIONAL) A description for the policy.
    */
@@ -7326,7 +7316,7 @@ export interface INetworkConfig {
    * homeRegion: &HOME_REGION us-east-1
    * ```
    */
-  readonly homeRegion?: t.Region;
+  readonly homeRegion?: string;
   /**
    * A default VPC configuration.
    *

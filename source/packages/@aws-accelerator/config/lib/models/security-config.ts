@@ -259,7 +259,7 @@ export interface IMacieConfig {
   /**
    * List of AWS Region names to be excluded from configuring Amazon Macie
    */
-  readonly excludeRegions?: t.Region[];
+  readonly excludeRegions?: string[];
   /**
    * (OPTIONAL) Specifies how often to publish updates to policy findings for the account. This includes publishing updates to Security Hub and Amazon EventBridge (formerly called Amazon CloudWatch Events).
    * An enum value that specifies how frequently findings are published
@@ -303,7 +303,7 @@ export interface IGuardDutyS3ProtectionConfig {
   /**
    * (OPTIONAL) List of AWS Region names to be excluded from configuring Amazon GuardDuty S3 Protection
    */
-  readonly excludeRegions?: t.Region[];
+  readonly excludeRegions?: string[];
 }
 
 /**
@@ -321,7 +321,7 @@ export interface IGuardDutyEksProtectionConfig {
   /**
    * (OPTIONAL) List of AWS Region names to be excluded from configuring Amazon GuardDuty EKS Protection
    */
-  readonly excludeRegions?: t.Region[];
+  readonly excludeRegions?: string[];
 }
 
 /**
@@ -339,7 +339,7 @@ export interface IGuardDutyEc2ProtectionConfig {
   /**
    * (OPTIONAL) List of AWS Region names to be excluded from configuring Amazon GuardDuty EC2 Malware Protection
    */
-  readonly excludeRegions?: t.Region[];
+  readonly excludeRegions?: string[];
 }
 
 /**
@@ -353,7 +353,7 @@ export interface IGuardDutyRdsProtectionConfig {
   /**
    * (OPTIONAL) List of AWS Region names to be excluded from configuring Amazon GuardDuty RDS Malware Protection
    */
-  readonly excludeRegions?: t.Region[];
+  readonly excludeRegions?: string[];
 }
 
 /**
@@ -367,7 +367,7 @@ export interface IGuardDutyLambdaProtectionConfig {
   /**
    * (OPTIONAL) List of AWS Region names to be excluded from configuring Amazon GuardDuty Lambda Malware Protection
    */
-  readonly excludeRegions?: t.Region[];
+  readonly excludeRegions?: string[];
 }
 
 /**
@@ -463,7 +463,7 @@ export interface IGuardDutyConfig {
    * Please only specify one of the `excludeRegions` or `deploymentTargets` properties.
    *
    */
-  readonly excludeRegions?: t.Region[];
+  readonly excludeRegions?: string[];
   /**
    * (OPTIONAL) Deployment targets for GuardDuty
    *
@@ -572,7 +572,7 @@ export interface IAuditManagerConfig {
   /**
    * (OPTIONAL) List of AWS Region names to be excluded from configuring AWS Audit Manager. Please ensure any regions enabled in the global configuration that do not support Audit Manager are added to the excluded regions list. {@link https://aws.amazon.com/about-aws/global-infrastructure/regional-product-services/ | Supported services by region}.
    */
-  readonly excludeRegions?: t.Region[];
+  readonly excludeRegions?: string[];
   /**
    * AWS Audit Manager Default Reports configuration.
    * @type object
@@ -608,7 +608,7 @@ export interface IDetectiveConfig {
   /**
    * (OPTIONAL) List of AWS Region names to be excluded from configuring Amazon Detective. Please ensure any regions enabled in the global configuration that do not support Amazon Detective are added to the excluded regions list. {@link https://aws.amazon.com/about-aws/global-infrastructure/regional-product-services/ | Supported services by region}.
    */
-  readonly excludeRegions?: t.Region[];
+  readonly excludeRegions?: string[];
 }
 
 /**
@@ -794,7 +794,7 @@ export interface ISecurityHubConfig {
   /**
    * (OPTIONAL) List of AWS Region names to be excluded from configuring Security Hub
    */
-  readonly excludeRegions?: t.Region[];
+  readonly excludeRegions?: string[];
   /**
    * (OPTIONAL) Deployment targets for SecurityHub
    *
@@ -882,7 +882,7 @@ export interface IEbsDefaultVolumeEncryptionConfig {
   /**
    * (OPTIONAL) List of AWS Region names to be excluded from configuring AWS EBS volume default encryption
    */
-  readonly excludeRegions?: t.Region[];
+  readonly excludeRegions?: string[];
 }
 
 /**
@@ -969,7 +969,7 @@ export interface ISsmAutomationConfig {
   /**
    * (OPTIONAL) List of AWS Region names to be excluded from configuring block S3 public access
    */
-  readonly excludeRegions?: t.Region[];
+  readonly excludeRegions?: string[];
   /**
    * List of documents for automation
    */
@@ -1717,7 +1717,7 @@ export interface IConfigRuleRemediationType {
   /**
    * List of AWS Region names to be excluded from applying remediation
    */
-  readonly excludeRegions?: t.Region[];
+  readonly excludeRegions?: string[];
 }
 
 /**
@@ -2101,7 +2101,7 @@ export interface IMetricSetConfig {
   /**
    * (OPTIONAL) AWS region names to configure CloudWatch Metrics
    */
-  readonly regions?: t.Region[];
+  readonly regions?: string[];
   /**
    * Deployment targets for CloudWatch Metrics configuration
    */
@@ -2239,7 +2239,7 @@ export interface IAlarmSetConfig {
   /**
    * AWS region names to configure CloudWatch Alarms
    */
-  readonly regions?: t.Region[];
+  readonly regions?: string[];
   /**
    * Deployment targets for CloudWatch Alarms configuration
    */
@@ -2566,7 +2566,7 @@ export interface ISecurityConfig {
    * homeRegion: &HOME_REGION us-east-1
    * ```
    */
-  readonly homeRegion?: t.Region;
+  readonly homeRegion?: string;
   /**
    * Central security configuration
    */

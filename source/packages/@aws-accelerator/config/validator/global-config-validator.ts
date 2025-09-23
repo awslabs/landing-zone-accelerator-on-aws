@@ -22,7 +22,7 @@ import { IamConfig } from '../lib/iam-config';
 import { SecurityConfig } from '../lib/security-config';
 import { OrganizationConfig } from '../lib/organization-config';
 import { CommonValidatorFunctions } from './common/common-validator-functions';
-import { DeploymentTargets, Region } from '../lib/common';
+import { DeploymentTargets } from '../lib/common';
 import { StreamMode } from '@aws-sdk/client-kinesis';
 
 export class GlobalConfigValidator {
@@ -1376,7 +1376,7 @@ export class GlobalConfigValidator {
     const deployOrder = regionByRegionDeployOrder.split(',').map(region => region.trim());
     // Ensure region from deploy order exists in enabledRegions
     for (const deployOrderRegion of deployOrder) {
-      if (!values.enabledRegions.includes(deployOrderRegion as Region)) {
+      if (!values.enabledRegions.includes(deployOrderRegion)) {
         errors.push(`Region ${deployOrderRegion} is not part of enabled regions.`);
       }
     }

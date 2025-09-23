@@ -11,7 +11,7 @@
  *  and limitations under the License.
  */
 
-import { GuardDutyConfig, GuardDutyExportFindingsConfig, Region } from '@aws-accelerator/config';
+import { GuardDutyConfig, GuardDutyExportFindingsConfig } from '@aws-accelerator/config';
 import { describe, beforeEach, test, expect } from 'vitest';
 import * as cdk from 'aws-cdk-lib';
 import { SecurityAuditStack } from '../../lib/stacks/security-audit-stack';
@@ -58,7 +58,7 @@ describe('unit tests', () => {
   });
 });
 
-function createConfig(enable: boolean, excludedRegions: Region[]): GuardDutyConfig {
+function createConfig(enable: boolean, excludedRegions: string[]): GuardDutyConfig {
   const config: GuardDutyConfig = {
     enable: enable,
     excludeRegions: [],

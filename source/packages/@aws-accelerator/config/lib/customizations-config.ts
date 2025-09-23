@@ -61,7 +61,7 @@ export class CloudFormationStackConfig implements i.ICloudFormationStack {
   readonly deploymentTargets: t.DeploymentTargets = new t.DeploymentTargets();
   readonly description: string = '';
   readonly name: string = '';
-  readonly regions: t.Region[] = ['us-east-1'];
+  readonly regions: string[] = ['us-east-1'];
   readonly runOrder: number = 1;
   readonly template: string = '';
   readonly terminationProtection: boolean = false;
@@ -73,7 +73,7 @@ export class CloudFormationStackSetConfig implements i.ICloudFormationStackSet {
   readonly deploymentTargets: t.DeploymentTargets = new t.DeploymentTargets();
   readonly description: string = '';
   readonly name: string = '';
-  readonly regions: t.Region[] = ['us-east-1'];
+  readonly regions: string[] = ['us-east-1'];
   readonly template: string = '';
   readonly parameters: t.CfnParameter[] | undefined = undefined;
   readonly operationPreferences: t.OperationPreferences | undefined = undefined;
@@ -339,7 +339,7 @@ export class PortfolioConfig implements i.IPortfolioConfig {
   readonly name: string = '';
   readonly provider: string = '';
   readonly account: string = '';
-  readonly regions: t.Region[] = [];
+  readonly regions: string[] = [];
   readonly portfolioAssociations: PortfolioAssociationConfig[] = [];
   readonly products: ProductConfig[] = [];
   readonly shareTargets: t.ShareTargets | undefined = undefined;

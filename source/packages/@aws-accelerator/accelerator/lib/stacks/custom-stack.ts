@@ -24,7 +24,6 @@ import {
   IamConfig,
   NetworkConfig,
   OrganizationConfig,
-  Region,
   SecurityConfig,
   CfnParameter,
 } from '@aws-accelerator/config';
@@ -173,7 +172,7 @@ export function isOrganizationalUnitIncluded(
   return false;
 }
 
-export function mapRegionToString(regionList: Region[]): string[] {
+export function mapRegionToString(regionList: string[]): string[] {
   return regionList.map(item => {
     return item.toString();
   });

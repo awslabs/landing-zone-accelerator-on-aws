@@ -17,7 +17,6 @@ import {
   AwsConfigRuleSet,
   ConfigRule,
   IsPublicSsmDoc,
-  Region,
   Tag,
 } from '@aws-accelerator/config';
 import { Tag as ConfigRuleTag } from '@aws-sdk/client-config-service';
@@ -344,7 +343,7 @@ export class SecurityResourcesStack extends AcceleratorStack {
    */
   private configureCloudWatchMetrics() {
     for (const metricSetItem of this.props.securityConfig.cloudWatch.metricSets ?? []) {
-      if (!metricSetItem.regions?.includes(cdk.Stack.of(this).region as Region)) {
+      if (!metricSetItem.regions?.includes(cdk.Stack.of(this).region)) {
         continue;
       }
 
@@ -378,7 +377,7 @@ export class SecurityResourcesStack extends AcceleratorStack {
    */
   private configureCloudwatchAlarm() {
     for (const alarmSetItem of this.props.securityConfig.cloudWatch.alarmSets ?? []) {
-      if (!alarmSetItem.regions?.includes(cdk.Stack.of(this).region as Region)) {
+      if (!alarmSetItem.regions?.includes(cdk.Stack.of(this).region)) {
         continue;
       }
 
@@ -959,10 +958,7 @@ export class SecurityResourcesStack extends AcceleratorStack {
         // Tag rule
         this.setupConfigServicesTagging(rule, configRule);
         // Create remediation for config rule
-        if (
-          rule.remediation &&
-          (rule.remediation.excludeRegions ?? []).indexOf(cdk.Stack.of(this).region as Region) === -1
-        ) {
+        if (rule.remediation && (rule.remediation.excludeRegions ?? []).indexOf(cdk.Stack.of(this).region) === -1) {
           this.setupConfigRuleRemediation(rule, configRule);
         }
 
