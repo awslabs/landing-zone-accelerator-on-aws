@@ -68,6 +68,7 @@ export abstract class ManageAccountsAliasModule {
               solutionId: params.runnerParameters.solutionId,
               partition: params.runnerParameters.partition,
               assumeRoleName: globalConfig.managementAccountAccessRole,
+              credentials: params.moduleRunnerParameters.managementAccountCredentials,
             });
           }
 
