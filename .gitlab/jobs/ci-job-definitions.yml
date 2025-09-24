@@ -27,7 +27,7 @@ integ:detective:enable-organization-admin:aws:us-east-1:
     when: always
     reports:
       junit:
-        - "source/packages/@aws-accelerator/constructs/lib/aws-detective/test-reports/${ENV_NAME}/${AWS_DEFAULT_REGION}/*.*"
+        - "source/packages/@aws-accelerator/constructs/lib/aws-detective/enable-organization-admin-account/test-reports/${ENV_NAME}/${AWS_DEFAULT_REGION}/*.*"
     expire_in: 1 day
 integ:detective:enable-organization-admin:aws:us-west-2:
   stage: pipeline
@@ -55,7 +55,7 @@ integ:detective:enable-organization-admin:aws:us-west-2:
     when: always
     reports:
       junit:
-        - "source/packages/@aws-accelerator/constructs/lib/aws-detective/test-reports/${ENV_NAME}/${AWS_DEFAULT_REGION}/*.*"
+        - "source/packages/@aws-accelerator/constructs/lib/aws-detective/enable-organization-admin-account/test-reports/${ENV_NAME}/${AWS_DEFAULT_REGION}/*.*"
     expire_in: 1 day
 integ:direct-connect-gateway:aws:us-east-1:
   stage: pipeline
@@ -83,7 +83,7 @@ integ:direct-connect-gateway:aws:us-east-1:
     when: always
     reports:
       junit:
-        - "source/packages/@aws-accelerator/constructs/lib/aws-directconnect/test-reports/${ENV_NAME}/${AWS_DEFAULT_REGION}/*.*"
+        - "source/packages/@aws-accelerator/constructs/lib/aws-directconnect/direct-connect-gateway/test-reports/${ENV_NAME}/${AWS_DEFAULT_REGION}/*.*"
     expire_in: 1 day
 integ:macie:enable-organization-admin:aws:us-east-1:
   stage: pipeline
@@ -112,7 +112,7 @@ integ:macie:enable-organization-admin:aws:us-east-1:
     when: always
     reports:
       junit:
-        - "source/packages/@aws-accelerator/constructs/lib/aws-macie/test-reports/${ENV_NAME}/${AWS_DEFAULT_REGION}/*.xml"
+        - "source/packages/@aws-accelerator/constructs/lib/aws-macie/enable-organization-admin-account/test-reports/${ENV_NAME}/${AWS_DEFAULT_REGION}/*.*"
     expire_in: 1 day
 integ:macie:enable-organization-admin:aws:us-west-2:
   stage: pipeline
@@ -140,7 +140,7 @@ integ:macie:enable-organization-admin:aws:us-west-2:
     when: always
     reports:
       junit:
-        - "source/packages/@aws-accelerator/constructs/lib/aws-macie/test-reports/${ENV_NAME}/${AWS_DEFAULT_REGION}/*.*"
+        - "source/packages/@aws-accelerator/constructs/lib/aws-macie/enable-organization-admin-account/test-reports/${ENV_NAME}/${AWS_DEFAULT_REGION}/*.*"
     expire_in: 1 day
 integ:guardduty:enable-organization-admin:aws:us-east-1:
   stage: pipeline
@@ -168,7 +168,7 @@ integ:guardduty:enable-organization-admin:aws:us-east-1:
     when: always
     reports:
       junit:
-        - "source/packages/@aws-accelerator/constructs/lib/aws-guardduty/test-reports/${ENV_NAME}/${AWS_DEFAULT_REGION}/*.*"
+        - "source/packages/@aws-accelerator/constructs/lib/aws-guardduty/enable-organization-admin-account/test-reports/${ENV_NAME}/${AWS_DEFAULT_REGION}/*.*"
     expire_in: 1 day
 integ:guardduty:enable-organization-admin:aws:us-west-2:
   stage: pipeline
@@ -196,7 +196,7 @@ integ:guardduty:enable-organization-admin:aws:us-west-2:
     when: always
     reports:
       junit:
-        - "source/packages/@aws-accelerator/constructs/lib/aws-guardduty/test-reports/${ENV_NAME}/${AWS_DEFAULT_REGION}/*.xml"
+        - "source/packages/@aws-accelerator/constructs/lib/aws-guardduty/enable-organization-admin-account/test-reports/${ENV_NAME}/${AWS_DEFAULT_REGION}/*.*"
     expire_in: 1 day
 integ:audit-manager:enable-organization-admin:aws:us-east-1:
   stage: pipeline
@@ -224,7 +224,7 @@ integ:audit-manager:enable-organization-admin:aws:us-east-1:
     when: always
     reports:
       junit:
-        - "source/packages/@aws-accelerator/constructs/lib/aws-auditmanager/test-reports/${ENV_NAME}/${AWS_DEFAULT_REGION}/*.*"
+        - "source/packages/@aws-accelerator/constructs/lib/aws-auditmanager/enable-organization-admin-account/test-reports/${ENV_NAME}/${AWS_DEFAULT_REGION}/*.*"
     expire_in: 1 day
 integ:audit-manager:enable-organization-admin:aws:us-west-2:
   stage: pipeline
@@ -252,7 +252,7 @@ integ:audit-manager:enable-organization-admin:aws:us-west-2:
     when: always
     reports:
       junit:
-        - "source/packages/@aws-accelerator/constructs/lib/aws-auditmanager/test-reports/${ENV_NAME}/${AWS_DEFAULT_REGION}/*.xml"
+        - "source/packages/@aws-accelerator/constructs/lib/aws-auditmanager/enable-organization-admin-account/test-reports/${ENV_NAME}/${AWS_DEFAULT_REGION}/*.*"
     expire_in: 1 day
 integ:register-organizational-unit:aws:us-east-1:
   stage: pipeline
