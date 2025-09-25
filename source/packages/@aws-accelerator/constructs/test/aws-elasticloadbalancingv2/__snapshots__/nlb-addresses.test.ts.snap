@@ -40,7 +40,7 @@ exports[`ConfigServiceTags Construct(NLBAddresses):  Snapshot Test 1`] = `
         },
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.13.1",
           },
         },
         "Handler": "index.handler",
@@ -178,7 +178,7 @@ exports[`ConfigServiceTags Construct(NLBAddresses):  Snapshot Test 1`] = `
         "Description": "AWS CDK resource provider framework - onEvent (Stack/NLBAddresses/NLBAddressesProvider)",
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.13.1",
             "USER_ON_EVENT_FUNCTION_ARN": {
               "Fn::GetAtt": [
                 "NLBAddressesNLBAddressesProviderLambdaA8F7BC9A",

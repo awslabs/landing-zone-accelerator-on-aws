@@ -47,7 +47,7 @@ exports[`AuditManagerOrganizationAdminAccount Construct(AuditManagerOrganization
         },
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.13.1",
           },
         },
         "Handler": "__entrypoint__.handler",
