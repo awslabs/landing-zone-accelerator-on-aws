@@ -23,7 +23,7 @@ import { AcceleratorStackProps } from '../lib/stacks/accelerator-stack';
 import { AccountsStack } from '../lib/stacks/accounts-stack';
 import { ApplicationsStack } from '../lib/stacks/applications-stack';
 import { BootstrapStack } from '../lib/stacks/bootstrap-stack';
-import { CustomStack, generateCustomStackMappings, isIncluded } from '../lib/stacks/custom-stack';
+import { CustomStack, customStackMapping, generateCustomStackMappings, isIncluded } from '../lib/stacks/custom-stack';
 import { CustomizationsStack } from '../lib/stacks/customizations-stack';
 import { DependenciesStack } from '../lib/stacks/dependencies-stack/dependencies-stack';
 import { FinalizeStack } from '../lib/stacks/finalize-stack';
@@ -1278,12 +1278,11 @@ export function createCustomizationsStacks(
     });
     cdk.Aspects.of(customizationsStack).add(new AwsSolutionsChecks());
     cdk.Aspects.of(customizationsStack).add(new PermissionsBoundaryAspect(accountId, context.partition));
-
-    createCustomStacks(app, props, env, accountId, enabledRegion);
-
-    createApplicationsStacks(app, context, props, env, accountId, enabledRegion);
+    let dependencyStacks = [customizationsStack as cdk.Stack];
+    createCustomStacks(app, props, env, accountId, enabledRegion, dependencyStacks);
+    dependencyStacks = app.node.children.filter(child => child instanceof cdk.Stack) as cdk.Stack[];
+    createApplicationsStacks(app, context, props, env, accountId, enabledRegion, dependencyStacks);
     new AcceleratorAspects(app, context.partition, context.useExistingRoles ?? false);
-
     const resourcePolicyEnforcementStackName = `${
       AcceleratorStackNames[AcceleratorStage.RESOURCE_POLICY_ENFORCEMENT]
     }-${accountId}-${enabledRegion}`;
@@ -1299,6 +1298,8 @@ export function createCustomizationsStacks(
         ...props,
       },
     );
+    dependencyStacks = app.node.children.filter(child => child instanceof cdk.Stack) as cdk.Stack[];
+    dependencyStacks.forEach(stack => resourcePolicyEnforcementStack.addDependency(stack));
     addAcceleratorTags(
       resourcePolicyEnforcementStack,
       context.partition,
@@ -1446,6 +1447,7 @@ function createCustomStacks(
   env: cdk.Environment,
   accountId: string,
   enabledRegion: string,
+  dependencyStacks: cdk.Stack[],
 ) {
   if (props.customizationsConfig?.customizations?.cloudFormationStacks) {
     const customStackList = generateCustomStackMappings(
@@ -1455,6 +1457,7 @@ function createCustomStacks(
       accountId,
       enabledRegion,
     );
+
     for (const stack of customStackList ?? []) {
       logger.info(`New custom stack ${stack.stackConfig.name}`);
       const customStackName = `${stack.stackConfig.name}-${accountId}-${enabledRegion}`;
@@ -1470,6 +1473,23 @@ function createCustomStacks(
         ssmParamNamePrefix: props.prefixes.ssmParamName,
         ...props,
       });
+      dependencyStacks.forEach(dependencyStack => stack.stackObj?.addDependency(dependencyStack));
+    }
+    setCustomStackDependencies(customStackList ?? []);
+  }
+}
+
+function setCustomStackDependencies(customStackList: customStackMapping[]) {
+  for (const stack of customStackList) {
+    if (!stack.stackObj) {
+      continue;
+    }
+    const stackDependencies = customStackList.filter(customStack => customStack.runOrder < stack.runOrder);
+    for (const dependency of stackDependencies) {
+      if (!dependency.stackObj) {
+        continue;
+      }
+      stack.stackObj.addDependency(dependency.stackObj);
     }
   }
 }
@@ -1490,6 +1510,7 @@ function createApplicationsStacks(
   env: cdk.Environment,
   accountId: string,
   enabledRegion: string,
+  dependencyStacks: cdk.Stack[],
 ) {
   for (const application of props.customizationsConfig.applications ?? []) {
     if (
@@ -1504,7 +1525,6 @@ function createApplicationsStacks(
       // application stacks are created in customization stage
       // so the output directory will be customizations folder specific to that account and region
       const applicationStackName = `${props.prefixes.accelerator}-App-${application.name}-${accountId}-${enabledRegion}`;
-
       const applicationStack = new ApplicationsStack(app, applicationStackName, {
         env,
         description: `(SO0199-customizations) Landing Zone Accelerator on AWS. Version ${version}.`,
@@ -1516,6 +1536,7 @@ function createApplicationsStacks(
       cdk.Aspects.of(applicationStack).add(new AwsSolutionsChecks());
       cdk.Aspects.of(applicationStack).add(new PermissionsBoundaryAspect(accountId, context.partition));
       new AcceleratorAspects(app, context.partition, context.useExistingRoles ?? false);
+      dependencyStacks.forEach(stack => applicationStack.addDependency(stack));
     }
   }
 }
