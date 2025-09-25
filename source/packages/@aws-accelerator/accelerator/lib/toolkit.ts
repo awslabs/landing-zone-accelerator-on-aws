@@ -453,13 +453,6 @@ export class AcceleratorToolkit {
           `${AcceleratorStackNames[AcceleratorStage.NETWORK_ASSOCIATIONS_GWLB]}-${options.accountId}-${options.region}`,
         ];
         break;
-      case AcceleratorStage.CUSTOMIZATIONS:
-        stackName.push(
-          `${AcceleratorStackNames[AcceleratorStage.RESOURCE_POLICY_ENFORCEMENT]}-${options.accountId}-${
-            options.region
-          }`,
-        );
-        break;
       case AcceleratorStage.IMPORT_ASEA_RESOURCES:
       case AcceleratorStage.POST_IMPORT_ASEA_RESOURCES:
         stackName = [options.stack!];
