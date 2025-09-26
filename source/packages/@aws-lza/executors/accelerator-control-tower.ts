@@ -60,7 +60,7 @@ const logger = createLogger([path.parse(path.basename(__filename)).name]);
  *     enable: true,
  *     version: '3.3',
  *     enabledRegions: ['us-east-1', 'us-west-2'],
- *     logging: { organizationTrail: true, retention: { loggingBucket: 3650, accessLoggingBucket: 365 } },
+ *     logging: { organizationTrail: true, retention: { loggingBucket: 365, accessLoggingBucket: 365 } },
  *     security: { enableIdentityCenterAccess: true },
  *     sharedAccounts: {
  *       management: { name: 'Management', email: '<management-account>@example.com' },

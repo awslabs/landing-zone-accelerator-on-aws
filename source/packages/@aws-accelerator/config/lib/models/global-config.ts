@@ -27,7 +27,7 @@ import { StreamMode } from '@aws-sdk/client-kinesis';
  * ```
  *   logging:
  *     loggingBucketRetentionDays: 365
- *     accessLoggingBucketRetentionDays: 3650
+ *     accessLoggingBucketRetentionDays: 365
  *     organizationTrail: true
  * ```
  */
@@ -43,7 +43,7 @@ export interface IControlTowerLandingZoneLoggingConfig {
    * Retention time of the logs for access to the bucket.
    *
    * @default
-   * 3650
+   * 365
    */
   readonly accessLoggingBucketRetentionDays: number;
   /**
@@ -100,7 +100,7 @@ export interface IControlTowerLandingZoneSecurityConfig {
  *   version: '3.3'
  *   logging:
  *     loggingBucketRetentionDays: 365
- *     accessLoggingBucketRetentionDays: 3650
+ *     accessLoggingBucketRetentionDays: 365
  *     organizationTrail: true
  *   security:
  *     enableIdentityCenterAccess: true
@@ -197,7 +197,7 @@ export interface IControlTowerControlConfig {
  *     version: '3.3'
  *     logging:
  *       loggingBucketRetentionDays: 365
- *       accessLoggingBucketRetentionDays: 3650
+ *       accessLoggingBucketRetentionDays: 365
  *       organizationTrail: true
  *     security:
  *       enableIdentityCenterAccess: true

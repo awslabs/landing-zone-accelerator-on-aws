@@ -155,7 +155,7 @@ const MOCK_CONSTANTS = {
         accountId: 'mockLogArchiveId',
         configurations: {
           loggingBucket: {
-            retentionDays: 3650,
+            retentionDays: 365,
           },
           kmsKeyArn: 'mockCtKmsKeyArn',
           accessLoggingBucket: {

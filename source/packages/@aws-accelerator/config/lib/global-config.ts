@@ -98,7 +98,7 @@ export class AccountCloudTrailConfig implements i.IAccountCloudTrailConfig {
  * ```
  *   logging:
  *     loggingBucketRetentionDays: 365
- *     accessLoggingBucketRetentionDays: 3650
+ *     accessLoggingBucketRetentionDays: 365
  *     organizationTrail: true
  * ```
  */
@@ -114,9 +114,9 @@ export class ControlTowerLandingZoneLoggingConfig implements i.IControlTowerLand
    * Retention time of the logs for access to the bucket.
    *
    * @default
-   * 3650
+   * 365
    */
-  readonly accessLoggingBucketRetentionDays: number = 3650;
+  readonly accessLoggingBucketRetentionDays: number = 365;
   /**
    * Flag indicates Organizational-level AWS CloudTrail configuration is configured or not.
    *
@@ -173,7 +173,7 @@ export class ControlTowerLandingZoneSecurityConfig implements i.IControlTowerLan
  *   version: '3.3'
  *   logging:
  *     loggingBucketRetentionDays: 365
- *     accessLoggingBucketRetentionDays: 3650
+ *     accessLoggingBucketRetentionDays:
  *     organizationTrail: true
  *   security:
  *     enableIdentityCenterAccess: true
@@ -227,7 +227,7 @@ export abstract class ControlTowerControlConfig implements i.IControlTowerContro
  *     version: '3.3'
  *     logging:
  *       loggingBucketRetentionDays: 365
- *       accessLoggingBucketRetentionDays: 3650
+ *       accessLoggingBucketRetentionDays: 365
  *       organizationTrail: true
  *     security:
  *       enableIdentityCenterAccess: true
