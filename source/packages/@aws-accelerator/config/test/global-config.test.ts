@@ -152,7 +152,7 @@ describe('GlobalConfig', () => {
       const globalConfig = GlobalConfig.load(configDir, replacementsConfig);
 
       expect(globalConfig.controlTower.landingZone!.logging.loggingBucketRetentionDays).toBe(365);
-      expect(globalConfig.controlTower.landingZone!.logging.accessLoggingBucketRetentionDays).toBe(3650);
+      expect(globalConfig.controlTower.landingZone!.logging.accessLoggingBucketRetentionDays).toBe(365);
     });
   });
 });

@@ -823,7 +823,7 @@
       "description": "{@link  IGlobalConfig }  /  {@link  IControlTowerConfig }  /  {@link  IControlTowerLandingZoneConfig }  /  {@link  IControlTowerLandingZoneLoggingConfig } \n\nAWS Control Tower Landing Zone logging configuration",
       "properties": {
         "accessLoggingBucketRetentionDays": {
-          "default": 3650,
+          "default": 365,
           "description": "Retention time of the logs for access to the bucket.",
           "type": "number"
         },

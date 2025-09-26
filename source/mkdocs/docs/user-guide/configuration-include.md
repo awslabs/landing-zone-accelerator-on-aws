@@ -162,7 +162,7 @@ landingZone:
   version: '3.3'
   logging:
     loggingBucketRetentionDays: 365
-    accessLoggingBucketRetentionDays: 3650
+    accessLoggingBucketRetentionDays: 365
     organizationTrail: true
   security:
     enableIdentityCenterAccess: true
