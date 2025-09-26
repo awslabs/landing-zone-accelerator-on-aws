@@ -1,12 +1,11 @@
 #!/bin/bash
 
 # LZA Bootstrap Management Script
-# This script bootstraps CDK in all enabled regions for the management account
+# This script bootstraps CDK in AWS_REGION and GLOBAL_REGION for the management account
 # It runs during the 'prepare' stage of the LZA pipeline
 
-# Parse global-config.yaml to extract all enabled regions (homeRegion + enabledRegions)
-# Uses Node.js with yaml module to avoid installing additional dependencies
-ENABLED_REGIONS=$(node -e "const yaml=require('yaml');const fs=require('fs');const config=yaml.parse(fs.readFileSync('$CODEBUILD_SRC_DIR_Config/global-config.yaml','utf8'));const regions=[config.homeRegion,...(config.enabledRegions||[])];console.log([...new Set(regions)].join(' '));")
+GLOBAL_REGION=$1
+REGIONS="$AWS_REGION $GLOBAL_REGION"
 
 # Determine which AWS account ID to use (priority order):
 # 1. MANAGEMENT_ACCOUNT_ID environment variable
@@ -18,13 +17,13 @@ ACCOUNT_ID=${MANAGEMENT_ACCOUNT_ID:-${PIPELINE_ACCOUNT_ID:-$(aws sts get-caller-
 # Uses PARTITION env var if set, otherwise extracts from STS caller identity ARN
 PARTITION=${PARTITION:-$(aws sts get-caller-identity --query 'Arn' --output text | cut -d':' -f2)}
 
-# Bootstrap CDK in each enabled region
+# Bootstrap CDK in AWS_REGION and GLOBAL_REGION
 # First synth to generate CloudFormation templates, then bootstrap to create CDK resources
 # ACCELERATOR_SKIP_DYNAMODB_LOOKUP=true forces lookup to AWS Organizations API instead of DynamoDB
-for ENABLED_REGION in $ENABLED_REGIONS; do
-  echo "Bootstrapping CDK in region: $ENABLED_REGION for account: $ACCOUNT_ID"
+for REGION in $REGIONS; do
+  echo "Bootstrapping CDK in region: $REGION for account: $ACCOUNT_ID"
   # Generate CloudFormation templates for bootstrap stage
-  ACCELERATOR_SKIP_DYNAMODB_LOOKUP=true yarn run ts-node --transpile-only cdk.ts synth --config-dir $CODEBUILD_SRC_DIR_Config --partition $PARTITION --stage bootstrap --account $ACCOUNT_ID --region $ENABLED_REGION
+  ACCELERATOR_SKIP_DYNAMODB_LOOKUP=true yarn run ts-node --transpile-only cdk.ts synth --config-dir $CODEBUILD_SRC_DIR_Config --partition $PARTITION --stage bootstrap --account $ACCOUNT_ID --region $REGION
   # Deploy CDK bootstrap resources (S3 bucket, IAM roles, etc.)
-  ACCELERATOR_SKIP_DYNAMODB_LOOKUP=true yarn run ts-node --transpile-only cdk.ts bootstrap --config-dir $CODEBUILD_SRC_DIR_Config --partition $PARTITION --stage bootstrap --account $ACCOUNT_ID --region $ENABLED_REGION
+  ACCELERATOR_SKIP_DYNAMODB_LOOKUP=true yarn run ts-node --transpile-only cdk.ts bootstrap --config-dir $CODEBUILD_SRC_DIR_Config --partition $PARTITION --stage bootstrap --account $ACCOUNT_ID --region $REGION
 done

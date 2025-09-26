@@ -24,7 +24,7 @@ import { AcceleratorStage } from './accelerator-stage';
 import * as config_repository from './config-repository';
 import { AcceleratorToolkitCommand } from './toolkit';
 import { Repository } from '@aws-cdk-extensions/cdk-extensions';
-import { CONTROL_TOWER_LANDING_ZONE_VERSION, getNodeVersion } from '@aws-accelerator/utils';
+import { CONTROL_TOWER_LANDING_ZONE_VERSION, getGlobalRegion, getNodeVersion } from '@aws-accelerator/utils';
 import { ControlTowerLandingZoneConfig } from '@aws-accelerator/config';
 import { version } from '../../../../package.json';
 export interface AcceleratorPipelineProps {
@@ -437,6 +437,7 @@ export class AcceleratorPipeline extends Construct {
         ],
       });
     }
+    const globalRegion = getGlobalRegion(this.props.partition);
 
     /**
      * Toolkit CodeBuild project is used to run all Accelerator stages, including diff
@@ -481,7 +482,7 @@ export class AcceleratorPipeline extends Construct {
                   fi
                 fi
                 cd $WORK_DIR;
-                set -e && ./scripts/bootstrap_management_before_prepare.sh
+                set -e && ./scripts/bootstrap_management_before_prepare.sh ${globalRegion}
               fi`,
               `cd $WORK_DIR;`,
               `RUNNER_ARGS="--partition ${cdk.Aws.PARTITION} --region ${cdk.Aws.REGION} --config-dir $CODEBUILD_SRC_DIR_Config --stage $ACCELERATOR_STAGE --prefix ${props.prefixes.accelerator}"`,
