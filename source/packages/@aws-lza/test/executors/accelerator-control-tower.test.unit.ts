@@ -30,7 +30,7 @@ const MOCK_CONSTANTS = {
       logging: {
         organizationTrail: true,
         retention: {
-          loggingBucket: 3650,
+          loggingBucket: 365,
           accessLoggingBucket: 365,
         },
       },
