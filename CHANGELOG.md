@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 - feat(networking): add vpn connection ipv6 support
+- feat(module): add control tower logging 
 
 ### Fixed
 
