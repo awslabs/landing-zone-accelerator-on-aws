@@ -293,6 +293,10 @@ export class SetupLandingZoneModule implements ISetupLandingZoneModule {
       );
     }
 
+    if (landingZoneUpdateOrResetStatus.updateRequired || landingZoneUpdateOrResetStatus.resetRequired) {
+      logger.info(`The Landing Zone will be ${landingZoneUpdateOrResetStatus.resetRequired ? 'reset' : 'updated'}`);
+      logger.info(`The reason(s) for the change is/are: ${landingZoneUpdateOrResetStatus.reason}`);
+    }
     if (landingZoneUpdateOrResetStatus.updateRequired) {
       return await LandingZoneOperation.updateLandingZone(
         client,
