@@ -23,7 +23,6 @@ import {
 import { VpcFlowLogsConfig } from '@aws-accelerator/config';
 import {
   DeleteDefaultSecurityGroupRules,
-  DeleteDefaultVpc,
   PutSsmParameter,
   SsmParameterProps,
   Vpc,
@@ -48,7 +47,6 @@ type Ipv6VpcCidrBlock = {
 };
 
 export class VpcResources {
-  public readonly deleteDefaultVpc?: DeleteDefaultVpc;
   public readonly sharedParameterMap: Map<string, SsmParameterProps[]>;
   public readonly vpcMap: Map<string, Vpc>;
   public readonly vpnMap: Map<string, string>;
@@ -88,8 +86,6 @@ export class VpcResources {
         this.stack.props.globalConfig.externalLandingZoneResources?.importExternalLandingZoneResources,
       stackName: this.stack.stackName,
     });
-    // Delete default VPC
-    this.deleteDefaultVpc = this.deleteDefaultVpcMethod(configData.defaultVpcsConfig);
     // Create central endpoints role
     this.centralEndpointRole = this.createCentralEndpointRole(
       vpcResources,
@@ -97,7 +93,6 @@ export class VpcResources {
       acceleratorData.acceleratorPrefix,
     );
     // Create VPCs
-
     this.vpcMap = this.createVpcs(
       this.stack.vpcsInScope,
       ipamPoolMap,
@@ -130,25 +125,6 @@ export class VpcResources {
       this.vpcMap,
       configData.customerGatewayConfigs,
     );
-  }
-
-  /**
-   * Delete default VPC in the current account+region
-   * @param props
-   * @returns
-   */
-  private deleteDefaultVpcMethod(defaultVpc: DefaultVpcsConfig): DeleteDefaultVpc | undefined {
-    const accountExcluded = defaultVpc.excludeAccounts && this.stack.isAccountExcluded(defaultVpc.excludeAccounts);
-    const regionExcluded = defaultVpc.excludeRegions && this.stack.isRegionExcluded(defaultVpc.excludeRegions);
-
-    if (defaultVpc.delete && !accountExcluded && !regionExcluded) {
-      this.stack.addLogs(LogLevel.INFO, 'Add DeleteDefaultVpc');
-      return new DeleteDefaultVpc(this.stack, 'DeleteDefaultVpc', {
-        kmsKey: this.stack.cloudwatchKey,
-        logRetentionInDays: this.stack.logRetention,
-      });
-    }
-    return;
   }
 
   /**
@@ -511,10 +487,6 @@ export class VpcResources {
     // Delete default security group rules
     //
     this.deleteDefaultSgRules(vpc, vpcItem);
-    //
-    // Add dependency on default VPC deletion
-    //
-    this.addDefaultVpcDependency(vpc, vpcItem);
     return vpc;
   }
 
@@ -948,19 +920,6 @@ export class VpcResources {
       return true;
     }
     return false;
-  }
-
-  /**
-   * Add dependency on deleting the default VPC to reduce risk of exceeding service limits
-   * @param vpc
-   * @param vpcItem
-   * @returns
-   */
-  private addDefaultVpcDependency(vpc: Vpc, vpcItem: VpcConfig | VpcTemplatesConfig): void {
-    if (this.deleteDefaultVpc) {
-      this.stack.addLogs(LogLevel.INFO, `Adding dependency on deletion of the default VPC for ${vpcItem.name}`);
-      vpc.node.addDependency(this.deleteDefaultVpc);
-    }
   }
 
   /**

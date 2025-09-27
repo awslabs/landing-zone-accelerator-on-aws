@@ -591,22 +591,6 @@ exports[`NetworkVpcStack > Construct(NetworkVpcStack):  Snapshot Test 1`] = `
       },
       "Type": "AWS::IAM::Role",
     },
-    "DeleteDefaultVpc4DBAE36C": {
-      "DeletionPolicy": "Delete",
-      "DependsOn": [
-        "CustomDeleteDefaultVpcCustomResourceProviderLogGroup4113DA48",
-      ],
-      "Properties": {
-        "ServiceToken": {
-          "Fn::GetAtt": [
-            "CustomDeleteDefaultVpcCustomResourceProviderHandler87E89F35",
-            "Arn",
-          ],
-        },
-      },
-      "Type": "Custom::DeleteDefaultVpc",
-      "UpdateReplacePolicy": "Delete",
-    },
     "GetIpamCidrRole2DCCA945": {
       "Metadata": {
         "cdk_nag": {
