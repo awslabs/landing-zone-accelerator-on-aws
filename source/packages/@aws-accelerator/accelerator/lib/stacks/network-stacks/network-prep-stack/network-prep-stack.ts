@@ -16,6 +16,7 @@ import { Construct } from 'constructs';
 import { AcceleratorStackProps } from '../../accelerator-stack';
 import { NetworkStack } from '../network-stack';
 import { CentralNetworkResources } from './central-network-resources';
+import { DefaultVpcResources } from './default-vpc-resources';
 import { DxResources } from './dx-resources';
 import { FmsResources } from './fms-resources';
 import { MadResources } from './mad-resources';
@@ -26,6 +27,10 @@ import { LoadBalancerResources } from './load-balancer-resources';
 export class NetworkPrepStack extends NetworkStack {
   constructor(scope: Construct, id: string, props: AcceleratorStackProps) {
     super(scope, id, props);
+
+    // Delete Default VPC
+    new DefaultVpcResources(this, props);
+
     //
     // Generate Transit Gateways and
     // Transit Gateway peering role
