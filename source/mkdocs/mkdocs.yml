@@ -15,6 +15,7 @@ nav:
       - SecurityHub Findings: user-guide/securityhub-findings.md
       - Replacement Variables: user-guide/replacement-variables.md
       - CloudFormation Stack Policy Protection: user-guide/stack-policy.md
+      - V2 Network Stack Usage: user-guide/v2-stacks.md
   - Developer Guide:
       - developer-guide/index.md
       - Development Dependencies: developer-guide/dependencies.md
