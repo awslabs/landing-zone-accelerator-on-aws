@@ -586,6 +586,7 @@ export class AcceleratorToolkit {
       return await toolkit.deploy(cloudAssemblySource, {
         concurrency: 1,
         deploymentMethod: deploymentMethod,
+        forceAssetPublishing: process.env['ACCELERATOR_FORCE_ASSET_PUBLISHING'] === 'true',
         roleArn: roleArn,
         stacks: {
           strategy: StackSelectionStrategy.ALL_STACKS,
