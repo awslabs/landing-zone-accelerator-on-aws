@@ -16,6 +16,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - fix(metadata): missing s3 read permissions on accelerator metadata lambda role
 - fix(networking): reverts bug disabling private dns for vpc interface endpoints
 
+### Changed
+- chore(docs): add v2 mkdoc navigation
+
 ## [1.13.0] - 2025-08-29
 
 ### Added

@@ -16,6 +16,7 @@ nav:
       - Replacement Variables: user-guide/replacement-variables.md
       - Configuration File Includes: user-guide/configuration-include.md
       - CloudFormation Stack Policy Protection: user-guide/stack-policy.md
+      - V2 Network Stack Usage: user-guide/v2-stacks.md
   - Developer Guide:
       - developer-guide/index.md
       - Development Dependencies: developer-guide/dependencies.md
