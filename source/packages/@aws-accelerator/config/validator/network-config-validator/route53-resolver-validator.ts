@@ -734,9 +734,14 @@ export class Route53ResolverValidator {
         errors.push(`[Resolver rule ${rule.name}]: SYSTEM rule type cannot include targets`);
       }
       // Validate domain name regex
-      if (!helpers.matchesRegex(rule.domainName, '(^\\.$)|(^[-a-zA-Z0-9@:%._\\+~#=]{1,256}\\.[a-z]{2,8}$)')) {
+      if (
+        !helpers.matchesRegex(
+          rule.domainName,
+          '(^\\.$)|(^[-a-zA-Z0-9@:%._\\+~#=]{1,256}$)|(^[-a-zA-Z0-9@:%._\\+~#=]{1,256}\\.[a-z]{2,8}$)',
+        )
+      ) {
         errors.push(
-          `[Resolver rule ${rule.name}]: domain name "${rule.domainName}" is invalid. Domain name must match the pattern "(^\\.$)|(^[-a-zA-Z0-9@:%._\\+~#=]{1,256}\\.[a-z]{2,8}$)"`,
+          `[Resolver rule ${rule.name}]: domain name "${rule.domainName}" is invalid. Domain name must match the pattern "(^\\.$)|(^[-a-zA-Z0-9@:%._\\+~#=]{1,256}$)|(^[-a-zA-Z0-9@:%._\\+~#=]{1,256}\\.[a-z]{2,8}$)"`,
         );
       }
     }
@@ -852,9 +857,14 @@ export class Route53ResolverValidator {
     errors: string[],
   ): boolean {
     // Validate domain name
-    if (!helpers.matchesRegex(rule.domainName, '(^\\.$)|(^[-a-zA-Z0-9@:%._\\+~#=]{1,256}\\.[a-z]{2,8}$)')) {
+    if (
+      !helpers.matchesRegex(
+        rule.domainName,
+        '(^\\.$)|(^[-a-zA-Z0-9@:%._\\+~#=]{1,256}$)|(^[-a-zA-Z0-9@:%._\\+~#=]{1,256}\\.[a-z]{2,8}$)',
+      )
+    ) {
       errors.push(
-        `[Resolver endpoint ${endpoint.name} rule ${rule.name}]: domain name ${rule.domainName} is invalid. Domain name must match the pattern "(^\\.$)(^[-a-zA-Z0-9@:%._\\+~#=]{1,256}\\.[a-z]{2,8}$)"`,
+        `[Resolver endpoint ${endpoint.name} rule ${rule.name}]: domain name ${rule.domainName} is invalid. Domain name must match the pattern "(^\\.$)|(^[-a-zA-Z0-9@:%._\\+~#=]{1,256}$)|(^[-a-zA-Z0-9@:%._\\+~#=]{1,256}\\.[a-z]{2,8}$)"`,
       );
     }
 
