@@ -35,6 +35,9 @@ import {
 import { GetOrganizationalUnitsDetailModule } from '../lib/aws-organizations/get-organizational-units-detail';
 import { ManageAccountAlias } from '../lib/aws-organizations/manage-account-alias';
 import { IManageAccountAliasHandlerParameter } from '../interfaces/aws-organizations/manage-account-alias';
+import { ModuleHandlerReturnType } from '../common/types';
+import { ManagePolicy } from '../lib/aws-organizations/manage-policy';
+import { IManagePolicyHandlerParameter } from '../interfaces/aws-organizations/manage-policy';
 
 process.on('uncaughtException', err => {
   throw err;
@@ -343,6 +346,53 @@ export async function getOrganizationalUnitsDetail(
 export async function manageAccountAlias(input: IManageAccountAliasHandlerParameter): Promise<string> {
   try {
     return await new ManageAccountAlias().handler(input);
+  } catch (e: unknown) {
+    logger.error(e);
+    throw e;
+  }
+}
+
+/**
+ * Function to manage AWS Organizations policies
+ * @param input {@link IManagePolicyHandlerParameter}
+ * @returns {@link ModuleHandlerReturnType} object with status and message
+ *
+ * @description
+ * Use this function to create, update, or delete AWS Organizations policies (SCPs, Tag Policies, etc.).
+ * Supports policy content from direct input or S3 bucket storage.
+ *
+ * @example
+ * ```
+ * const input: IManagePolicyHandlerParameter = {
+ *   operation: 'manage-policy',
+ *   partition: 'aws',
+ *   region: 'us-east-1',
+ *   configuration: {
+ *     name: 'my-scp-policy',
+ *     type: PolicyType.SERVICE_CONTROL_POLICY,
+ *     operationFlag: OperationFlag.UPSERT,
+ *     content: JSON.stringify({
+ *       Version: '2012-10-17',
+ *       Statement: [{
+ *         Effect: 'Allow',
+ *         Action: '*',
+ *         Resource: '*'
+ *       }]
+ *     }),
+ *     description: 'My custom SCP policy',
+ *     tags: [{
+ *       Key: 'Environment',
+ *       Value: 'Production'
+ *     }]
+ *   }
+ * };
+ *
+ * const result = await managePolicy(input);
+ * ```
+ */
+export async function managePolicy(input: IManagePolicyHandlerParameter): Promise<ModuleHandlerReturnType> {
+  try {
+    return await new ManagePolicy().handler(input);
   } catch (e: unknown) {
     logger.error(e);
     throw e;

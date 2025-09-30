@@ -19,6 +19,7 @@ import {
   inviteAccountsBatchToOrganization,
   inviteAccountToOrganization,
   manageAccountAlias,
+  managePolicy,
   moveAccount,
   moveAccountsBatch,
 } from '../../executors/accelerator-aws-organizations';
@@ -30,6 +31,9 @@ import { InviteAccountsBatchToOrganizationModule } from '../../lib/aws-organizat
 import { MoveAccountsBatchModule } from '../../lib/aws-organizations/move-accounts-batch';
 import { GetOrganizationalUnitsDetailModule } from '../../lib/aws-organizations/get-organizational-units-detail';
 import { ManageAccountAlias } from '../../lib/aws-organizations/manage-account-alias/index';
+import { ManagePolicy } from '../../lib/aws-organizations/manage-policy/index';
+import { PolicyType } from '@aws-sdk/client-organizations';
+import { OperationFlag } from '../../interfaces/aws-organizations/manage-policy';
 
 // Mock dependencies
 vi.mock('../../lib/aws-organizations/create-organizational-unit/index');
@@ -39,6 +43,7 @@ vi.mock('../../lib/aws-organizations/move-account/index');
 vi.mock('../../lib/aws-organizations/move-accounts-batch/index');
 vi.mock('../../lib/aws-organizations/get-organizational-units-detail/index');
 vi.mock('../../lib/aws-organizations/manage-account-alias/index');
+vi.mock('../../lib/aws-organizations/manage-policy/index');
 
 describe('AWSOrganizationsExecutor', () => {
   beforeEach(() => {
@@ -383,6 +388,60 @@ describe('AWSOrganizationsExecutor', () => {
 
       // Execute && Verify
       await expect(manageAccountAlias(input)).rejects.toThrow(errorMessage);
+
+      expect(mockHandler).toHaveBeenCalledWith(input);
+      expect(mockHandler).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe('managePolicy', () => {
+    const input = {
+      ...MOCK_CONSTANTS.runnerParameters,
+      configuration: {
+        name: 'mock-policy',
+        type: PolicyType.SERVICE_CONTROL_POLICY,
+        operationFlag: OperationFlag.UPSERT,
+        content: JSON.stringify({
+          Version: '2012-10-17',
+          Statement: [
+            {
+              Effect: 'Allow',
+              Action: '*',
+              Resource: '*',
+            },
+          ],
+        }),
+      },
+    };
+
+    test('should successfully manage policy', async () => {
+      // Setup
+      const mockHandler = vi.fn().mockResolvedValue('SUCCESS');
+
+      (ManagePolicy as vi.Mock).mockImplementation(() => ({
+        handler: mockHandler,
+      }));
+
+      // Execute
+      const result = await managePolicy(input);
+
+      // Verify
+      expect(result).toEqual('SUCCESS');
+      expect(mockHandler).toHaveBeenCalledWith(input);
+      expect(mockHandler).toHaveBeenCalledTimes(1);
+    });
+
+    test('should throw error when manage policy fails', async () => {
+      // Setup
+      const errorMessage = 'Manage policy failed';
+      const mockHandler = vi.fn().mockRejectedValue(new Error(errorMessage));
+
+      (ManagePolicy as vi.Mock).mockImplementation(() => ({
+        handler: mockHandler,
+      }));
+
+      // Execute && Verify
+      await expect(managePolicy(input)).rejects.toThrow(errorMessage);
 
       expect(mockHandler).toHaveBeenCalledWith(input);
       expect(mockHandler).toHaveBeenCalledTimes(1);
