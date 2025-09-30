@@ -2531,11 +2531,6 @@ exports[`PipelineStack > Construct(PipelineStack):  Snapshot Test 1`] = `
                         for file in ./*.tgz; do tar -xf "$file" -C .; done;
                         for file in ./*.diff; do cat "$file"; done;
                       fi
-      - if [ "prepare" = "\${ACCELERATOR_STAGE}" ]; then set -e && yarn run ts-node  ./lib/prerequisites.ts --config-dir $CODEBUILD_SRC_DIR_Config --partition ",
-                {
-                  "Ref": "AWS::Partition",
-                },
-                " --minimal; fi
       - export FULL_SYNTH="true"
       - if [ $ASEA_MAPPING_BUCKET ]; then aws s3api head-object --bucket $ASEA_MAPPING_BUCKET --key $ASEA_MAPPING_FILE >/dev/null 2>&1 || export FULL_SYNTH="false"; fi;
       - |-
@@ -2594,15 +2589,6 @@ exports[`PipelineStack > Construct(PipelineStack):  Snapshot Test 1`] = `
                 ";
                         fi
                        fi
-      - |-
-        if [ "prepare" = "\${ACCELERATOR_STAGE}" ]; then 
-                        set -e
-                        yarn run ts-node ./lib/prerequisites.ts --config-dir $CODEBUILD_SRC_DIR_Config --partition ",
-                {
-                  "Ref": "AWS::Partition",
-                },
-                "
-                      fi
 artifacts:
   base-directory: $WORK_DIR
   files:
@@ -5666,11 +5652,6 @@ exports[`PipelineStack > Construct(PipelineStack):  Snapshot Test 2`] = `
                         for file in ./*.tgz; do tar -xf "$file" -C .; done;
                         for file in ./*.diff; do cat "$file"; done;
                       fi
-      - if [ "prepare" = "\${ACCELERATOR_STAGE}" ]; then set -e && yarn run ts-node  ./lib/prerequisites.ts --config-dir $CODEBUILD_SRC_DIR_Config --partition ",
-                {
-                  "Ref": "AWS::Partition",
-                },
-                " --minimal; fi
       - export FULL_SYNTH="true"
       - if [ $ASEA_MAPPING_BUCKET ]; then aws s3api head-object --bucket $ASEA_MAPPING_BUCKET --key $ASEA_MAPPING_FILE >/dev/null 2>&1 || export FULL_SYNTH="false"; fi;
       - |-
@@ -5729,15 +5710,6 @@ exports[`PipelineStack > Construct(PipelineStack):  Snapshot Test 2`] = `
                 ";
                         fi
                        fi
-      - |-
-        if [ "prepare" = "\${ACCELERATOR_STAGE}" ]; then 
-                        set -e
-                        yarn run ts-node ./lib/prerequisites.ts --config-dir $CODEBUILD_SRC_DIR_Config --partition ",
-                {
-                  "Ref": "AWS::Partition",
-                },
-                "
-                      fi
 artifacts:
   base-directory: $WORK_DIR
   files:
@@ -8307,11 +8279,6 @@ exports[`PipelineStack customS3Path > Construct(PipelineStack):  Snapshot Test 1
                         for file in ./*.tgz; do tar -xf "$file" -C .; done;
                         for file in ./*.diff; do cat "$file"; done;
                       fi
-      - if [ "prepare" = "\${ACCELERATOR_STAGE}" ]; then set -e && yarn run ts-node  ./lib/prerequisites.ts --config-dir $CODEBUILD_SRC_DIR_Config --partition ",
-                {
-                  "Ref": "AWS::Partition",
-                },
-                " --minimal; fi
       - export FULL_SYNTH="true"
       - if [ $ASEA_MAPPING_BUCKET ]; then aws s3api head-object --bucket $ASEA_MAPPING_BUCKET --key $ASEA_MAPPING_FILE >/dev/null 2>&1 || export FULL_SYNTH="false"; fi;
       - |-
@@ -8370,15 +8337,6 @@ exports[`PipelineStack customS3Path > Construct(PipelineStack):  Snapshot Test 1
                 ";
                         fi
                        fi
-      - |-
-        if [ "prepare" = "\${ACCELERATOR_STAGE}" ]; then 
-                        set -e
-                        yarn run ts-node ./lib/prerequisites.ts --config-dir $CODEBUILD_SRC_DIR_Config --partition ",
-                {
-                  "Ref": "AWS::Partition",
-                },
-                "
-                      fi
 artifacts:
   base-directory: $WORK_DIR
   files:

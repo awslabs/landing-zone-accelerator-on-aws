@@ -12,22 +12,26 @@
  */
 import { vi, describe, beforeEach, test, expect } from 'vitest';
 import { CheckServiceQuota } from '../../lib/service-quotas/check-service-quota';
+import { GetServiceQuotaCode } from '../../lib/service-quotas/get-service-quota-code';
 import { ICheckServiceQuotaParameter } from '../../interfaces/service-quotas/check-service-quota';
+import { IGetServiceQuotaCodeParameter } from '../../interfaces/service-quotas/get-service-quota-code';
 
 // Mock modules
 vi.mock('../../lib/service-quotas/check-service-quota');
+vi.mock('../../lib/service-quotas/get-service-quota-code');
 vi.mock('../../common/logger', () => ({
   createLogger: vi.fn(() => ({
     error: vi.fn(),
   })),
 }));
 
-const mockHandler = vi.fn();
+const mockCheckHandler = vi.fn();
+const mockGetCodeHandler = vi.fn();
 
-import { checkServiceQuota } from '../../executors/accelerator-service-quotas';
+import { checkServiceQuota, getServiceQuotaCode } from '../../executors/accelerator-service-quotas';
 
 describe('accelerator-service-quotas.ts', () => {
-  const testInput: ICheckServiceQuotaParameter = {
+  const testCheckInput: ICheckServiceQuotaParameter = {
     configuration: {
       serviceCode: 'codebuild',
       quotaCode: 'L-2DC20C30',
@@ -38,12 +42,26 @@ describe('accelerator-service-quotas.ts', () => {
     operation: 'CheckServiceQuota',
   };
 
+  const testGetCodeInput: IGetServiceQuotaCodeParameter = {
+    configuration: {
+      serviceCode: 'codebuild',
+      quotaName: 'Concurrently running builds for Linux/Medium environment',
+    },
+    partition: 'aws',
+    region: 'us-east-1',
+    operation: 'GetServiceQuotaCode',
+  };
+
   beforeEach(() => {
     vi.clearAllMocks();
 
     // Setup mocks
-    (CheckServiceQuota as vi.Mock).mockImplementation(() => ({
-      handler: mockHandler,
+    (CheckServiceQuota as vi.MockedClass<typeof CheckServiceQuota>).mockImplementation(() => ({
+      handler: mockCheckHandler,
+    }));
+
+    (GetServiceQuotaCode as vi.MockedClass<typeof GetServiceQuotaCode>).mockImplementation(() => ({
+      handler: mockGetCodeHandler,
     }));
   });
 
@@ -83,28 +101,76 @@ describe('accelerator-service-quotas.ts', () => {
 
   describe('checkServiceQuota', () => {
     test('should call the handler method of CheckServiceQuota and return its result', async () => {
-      mockHandler.mockResolvedValue(true);
+      mockCheckHandler.mockResolvedValue(true);
 
-      const result = await checkServiceQuota(testInput);
+      const result = await checkServiceQuota(testCheckInput);
 
       expect(result).toBe(true);
       expect(CheckServiceQuota).toHaveBeenCalledTimes(1);
-      expect(mockHandler).toHaveBeenCalledWith(testInput);
+      expect(mockCheckHandler).toHaveBeenCalledWith(testCheckInput);
     });
 
     test('should return false when the handler returns false', async () => {
-      mockHandler.mockResolvedValue(false);
+      mockCheckHandler.mockResolvedValue(false);
 
-      const result = await checkServiceQuota(testInput);
+      const result = await checkServiceQuota(testCheckInput);
 
       expect(result).toBe(false);
     });
 
     test('should log and re-throw error when an exception occurs', async () => {
       const testError = new Error('Test error');
-      mockHandler.mockRejectedValue(testError);
+      mockCheckHandler.mockRejectedValue(testError);
 
-      await expect(checkServiceQuota(testInput)).rejects.toThrow(testError);
+      await expect(checkServiceQuota(testCheckInput)).rejects.toThrow(testError);
+    });
+  });
+
+  describe('getServiceQuotaCode', () => {
+    test('should call the handler method of GetServiceQuotaCode and return quota code', async () => {
+      const expectedQuotaCode = 'L-2DC20C30';
+      mockGetCodeHandler.mockResolvedValue(expectedQuotaCode);
+
+      const result = await getServiceQuotaCode(testGetCodeInput);
+
+      expect(result).toBe(expectedQuotaCode);
+      expect(GetServiceQuotaCode).toHaveBeenCalledTimes(1);
+      expect(mockGetCodeHandler).toHaveBeenCalledWith(testGetCodeInput);
+    });
+
+    test('should return undefined when quota code is not found', async () => {
+      mockGetCodeHandler.mockResolvedValue(undefined);
+
+      const result = await getServiceQuotaCode(testGetCodeInput);
+
+      expect(result).toBeUndefined();
+    });
+
+    test('should log and re-throw error when an exception occurs', async () => {
+      const testError = new Error('Service quota code retrieval failed');
+      mockGetCodeHandler.mockRejectedValue(testError);
+
+      await expect(getServiceQuotaCode(testGetCodeInput)).rejects.toThrow(testError);
+    });
+
+    test('should handle different service codes and quota names', async () => {
+      const customInput: IGetServiceQuotaCodeParameter = {
+        configuration: {
+          serviceCode: 'lambda',
+          quotaName: 'Concurrent executions',
+        },
+        partition: 'aws',
+        region: 'us-west-2',
+        operation: 'GetServiceQuotaCode',
+      };
+
+      const expectedQuotaCode = 'L-B99A9384';
+      mockGetCodeHandler.mockResolvedValue(expectedQuotaCode);
+
+      const result = await getServiceQuotaCode(customInput);
+
+      expect(result).toBe(expectedQuotaCode);
+      expect(mockGetCodeHandler).toHaveBeenCalledWith(customInput);
     });
   });
 });

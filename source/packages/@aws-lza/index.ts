@@ -113,6 +113,9 @@ export { checkLambdaConcurrency } from './executors/accelerator-aws-lambda';
 export { ICheckServiceQuotaParameter } from './interfaces/service-quotas/check-service-quota';
 export { checkServiceQuota } from './executors/accelerator-service-quotas';
 
+export { IGetServiceQuotaCodeParameter } from './interfaces/service-quotas/get-service-quota-code';
+export { getServiceQuotaCode } from './executors/accelerator-service-quotas';
+
 //
 // AWS SSM Module resources
 //

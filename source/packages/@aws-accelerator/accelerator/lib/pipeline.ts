@@ -495,7 +495,6 @@ export class AcceleratorPipeline extends Construct {
                 for file in ./*.tgz; do tar -xf "$file" -C .; done;
                 for file in ./*.diff; do cat "$file"; done;
               fi`,
-              `if [ "prepare" = "\${ACCELERATOR_STAGE}" ]; then set -e && yarn run ts-node  ./lib/prerequisites.ts --config-dir $CODEBUILD_SRC_DIR_Config --partition ${cdk.Aws.PARTITION} --minimal; fi`,
               'export FULL_SYNTH="true"',
               'if [ $ASEA_MAPPING_BUCKET ]; then aws s3api head-object --bucket $ASEA_MAPPING_BUCKET --key $ASEA_MAPPING_FILE >/dev/null 2>&1 || export FULL_SYNTH="false"; fi;',
               `if [ "$ACCELERATOR_STAGE" != "pre-approval" ]; then
@@ -529,10 +528,6 @@ export class AcceleratorPipeline extends Construct {
                 set -e && yarn run ts-node --transpile-only cdk.ts $CDK_OPTIONS --config-dir $CODEBUILD_SRC_DIR_Config --partition ${cdk.Aws.PARTITION};
                 fi
                fi`,
-              `if [ "prepare" = "\${ACCELERATOR_STAGE}" ]; then 
-                set -e
-                yarn run ts-node ./lib/prerequisites.ts --config-dir $CODEBUILD_SRC_DIR_Config --partition ${cdk.Aws.PARTITION}
-              fi`,
             ],
           },
         },

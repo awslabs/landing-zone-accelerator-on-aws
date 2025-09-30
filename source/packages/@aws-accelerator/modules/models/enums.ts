@@ -97,6 +97,17 @@ export enum AcceleratorModules {
    * Sets an account alias
    */
   MANAGE_ACCOUNTS_ALIAS = 'manage-accounts-alias',
+
+  /**
+   * Accelerator prerequisites module
+   */
+  ACCELERATOR_PREREQUISITES = 'accelerator-prerequisites',
+
+  /**
+   * Pipeline prerequisites module
+   */
+  PIPELINE_PREREQUISITES = 'pipeline-prerequisites',
+
   /**
    * An Example module which is executed in `PREPARE` stage
    */
