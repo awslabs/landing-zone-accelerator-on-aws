@@ -688,7 +688,7 @@ release:upload-installer-stack-to-cornerstone:
     - "export AUTHOR_EMAIL=$(echo \"$CI_COMMIT_AUTHOR\" | grep -oP '(?<=<).*(?=>)' || echo \"unknown\")"
     - "echo \"The commit author's email is: $AUTHOR_EMAIL\""
     - "zip artifact.zip AWSAccelerator-InstallerStack.template.json"
-    - aws s3 cp artifact.zip s3://$CORNERSTONE_PACKAGE_BUCKET/SO0199/$PUBLISHED_VERSION/$CI_COMMIT_SHA/artifact.zip --metadata "package=landing-zone-accelerator-on-aws,commitId=$CI_COMMIT_SHA,solutionId=SO0199,solutionVersion=$PUBLISHED_VERSION,solutionName=landing-zone-accelerator-on-aws,commitauthor=$AUTHOR_EMAIL,publishpublicecrimage=false,commitmessage=$CI_COMMIT_MESSAGE,committimestamp=$CI_COMMIT_TIMESTAMP,enablequicksight=No,branch=$CI_COMMIT_MESSAGE"
+    - aws s3 cp artifact.zip s3://$CORNERSTONE_PACKAGE_BUCKET/SO0199/$PUBLISHED_VERSION/$CI_COMMIT_SHA/artifact.zip --metadata "package=Landing-zone-accelerator-on-aws,commitId=$CI_COMMIT_SHA,solutionId=SO0199,solutionVersion=$PUBLISHED_VERSION,solutionName=landing-zone-accelerator-on-aws,commitauthor=$AUTHOR_EMAIL,publishpublicecrimage=false,commitmessage=$CI_COMMIT_MESSAGE,committimestamp=$CI_COMMIT_TIMESTAMP,enablequicksight=No,branch=$CI_COMMIT_MESSAGE"
     - "echo \"Published installer stack to s3://$CORNERSTONE_PACKAGE_BUCKET/SO0199/$PUBLISHED_VERSION/$CI_COMMIT_SHA/artifact.zip\""
   rules:
     - if: $CI_PROJECT_ID == "11925" && $CI_COMMIT_TAG =~ /v(\d.+){2}\d/
