@@ -666,7 +666,7 @@ release:upload-to-cornerstone:
   stage: pipeline
   tags:
     - arch:amd64
-    - size:medium
+    - size:2xlarge
   variables:
     AWS_DEFAULT_REGION: us-east-1
     AWS_CREDS_TARGET_ROLE: "${CORNERSTONE_ROLE_ARN}"
@@ -678,8 +678,10 @@ release:upload-to-cornerstone:
     - "unzip -q /tmp/awscliv2.zip -d /tmp"
     - "/tmp/aws/install"
   script:
+    - "export NODE_OPTIONS=--max_old_space_size=49152"
     - "cd source"
     - "export PUBLISHED_VERSION=v$(cat package.json | jq -r '.version')"
+    - "chmod +x ./run-all-tests.sh && ./run-all-tests.sh"
     - "cd ../deployment"
     - "source ./solution_config"
     - "export AUTHOR_EMAIL=$(echo \"$CI_COMMIT_AUTHOR\" | grep -oP '(?<=<).*(?=>)' || echo \"unknown\")"
@@ -687,7 +689,7 @@ release:upload-to-cornerstone:
     - "./build-s3-dist.sh $CORNERSTONE_PACKAGE_BUCKET $PUBLISHED_VERSION"
     - "./build-open-source-dist.sh $SOLUTION_TRADEMARKEDNAME"
     - "cd .."
-    - "zip -r artifact.zip . -x '*.git*' 'node_modules/*' '*/node_modules/*' '*.log' 'dist/*' '*/dist/*'"
+    - "zip -r artifact.zip deployment/ source/ .gitignore sonar-project.properties README.md LICENSE.txt NOTICE.txt CODE_OF_CONDUCT.md CONTRIBUTING.md .github/ buildspec.yml CHANGELOG.md SECURITY.md .cfnnag_* .viperlightignore codescan-postbuild-custom.sh solution-manifest.yaml"
     - aws s3 cp artifact.zip s3://$CORNERSTONE_PACKAGE_BUCKET/SO0199/$PUBLISHED_VERSION/$CI_COMMIT_SHA/artifact.zip --metadata "package=Landing-zone-accelerator-on-aws,commitId=$CI_COMMIT_SHA,solutionId=SO0199,solutionVersion=$PUBLISHED_VERSION,solutionName=landing-zone-accelerator-on-aws,commitauthor=$AUTHOR_EMAIL,publishpublicecrimage=false,commitmessage=$CI_COMMIT_MESSAGE,committimestamp=$CI_COMMIT_TIMESTAMP,enablequicksight=No,branch=$CI_COMMIT_MESSAGE"
     - "echo \"Published solution archive to s3://$CORNERSTONE_PACKAGE_BUCKET/SO0199/$PUBLISHED_VERSION/$CI_COMMIT_SHA/artifact.zip\""
   rules:
