@@ -130,6 +130,7 @@ export interface AcceleratorToolProps {
   readonly actionName: string;
   readonly debug: boolean;
   readonly ignoreTerminationProtection: boolean;
+  readonly configPath?: string;
 }
 
 /**
@@ -796,6 +797,12 @@ export class AcceleratorTool {
    * @private
    */
   private async getGlobalConfig(): Promise<GlobalConfig> {
+    // If configPath is provided, use local files instead of downloading from repository
+    if (this.acceleratorToolProps.configPath) {
+      this.logger.info(`Using local config path: ${this.acceleratorToolProps.configPath}`);
+      return GlobalConfig.loadRawGlobalConfig(this.acceleratorToolProps.configPath);
+    }
+
     this.logger.info(`Config Repository Name:  ${this.pipelineConfigSourceRepo?.repositoryName}`);
     let fileContent: string;
     if (this.pipelineConfigSourceRepo?.provider.toLocaleLowerCase() === 'codecommit') {

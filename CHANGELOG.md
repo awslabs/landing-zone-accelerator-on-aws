@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 - fix(validation): updated regex validation for Route53 Resover Rule DNS to pass TLD
+- feat(uninstaller): add support for local config directories when uninstalling LZA
 
 ## [1.13.1] - 2025-09-09
 
