@@ -294,7 +294,7 @@ export abstract class Organization {
     const accounts = await Organization.getOrganizationAccounts(client);
 
     for (const account of accounts) {
-      if (account.Id && account.Email === email) {
+      if (account.Id && account.Email?.toLowerCase() === email.toLowerCase()) {
         return account;
       }
     }
