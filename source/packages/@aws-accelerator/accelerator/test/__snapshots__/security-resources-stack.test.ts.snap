@@ -135,7 +135,7 @@ exports[`SecurityResourcesStack Construct(SecurityResourcesStack):  Snapshot Tes
         "Description": "AWS Config custom rule function used for "accelerator-attach-ec2-instance-profile" rule",
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.13.1",
           },
         },
         "Handler": "index.handler",
@@ -862,7 +862,7 @@ exports[`SecurityResourcesStack Construct(SecurityResourcesStack):  Snapshot Tes
         "Description": "AWS Config custom rule function used for "accelerator-ec2-instance-profile-permission" rule",
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.13.1",
           },
         },
         "Handler": "index.handler",
@@ -2000,7 +2000,7 @@ exports[`SecurityResourcesStack Construct(SecurityResourcesStack):  Snapshot Tes
         "Description": "AWS Config custom rule function used for "accelerator-target-document-01" rule",
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.13.1",
           },
         },
         "Handler": "index.handler",
@@ -2206,7 +2206,7 @@ exports[`SecurityResourcesStack Construct(SecurityResourcesStack):  Snapshot Tes
         "Description": "Function used in Attach-IAM-Instance-Profile SSM document for "accelerator-target-document-01" custom config rule to remediation",
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.13.1",
           },
         },
         "Handler": "index.handler",
@@ -2465,7 +2465,7 @@ exports[`SecurityResourcesStack Construct(SecurityResourcesStack):  Snapshot Tes
         "Description": "AWS Config custom rule function used for "accelerator-waf-logging-enabled" rule",
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.13.1",
           },
         },
         "Handler": "index.handler",
@@ -2741,7 +2741,7 @@ exports[`SecurityResourcesStack Construct(SecurityResourcesStack):  Snapshot Tes
         },
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.13.1",
           },
         },
         "Handler": "__entrypoint__.handler",
@@ -3511,7 +3511,7 @@ exports[`SecurityResourcesStack Construct(SecurityResourcesStack):  Snapshot Tes
         },
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.13.1",
           },
         },
         "Handler": "__entrypoint__.handler",
@@ -3600,7 +3600,7 @@ exports[`SecurityResourcesStack Construct(SecurityResourcesStack):  Snapshot Tes
         },
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.13.1",
           },
         },
         "Handler": "__entrypoint__.handler",
@@ -3690,7 +3690,7 @@ exports[`SecurityResourcesStack Construct(SecurityResourcesStack):  Snapshot Tes
         },
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.13.1",
           },
         },
         "Handler": "__entrypoint__.handler",
@@ -4217,7 +4217,7 @@ exports[`SecurityResourcesStack Construct(SecurityResourcesStack):  Snapshot Tes
         "Description": "Creates a CloudWatch Logs Group to store SecurityHub findings and updates CW Log Group resource policy",
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.13.1",
           },
         },
         "Handler": "index.handler",
@@ -4403,7 +4403,7 @@ exports[`SecurityResourcesStack Construct(SecurityResourcesStack):  Snapshot Tes
         "Description": "AWS CDK resource provider framework - onEvent (AWSAccelerator-SecurityResourcesStack-111111111111-us-east-1/SecurityHubEventsLog/SecurityHubEventsFunction/Resource)",
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.13.1",
             "USER_ON_EVENT_FUNCTION_ARN": {
               "Fn::GetAtt": [
                 "SecurityHubEventsLogSecurityHubEventsFunction6170C5C5",
@@ -4615,7 +4615,7 @@ exports[`SecurityResourcesStack Construct(SecurityResourcesStack):  Snapshot Tes
       "Properties": {
         "Name": "/accelerator/AWSAccelerator-SecurityResourcesStack-111111111111-us-east-1/version",
         "Type": "String",
-        "Value": "1.13.0",
+        "Value": "1.13.1",
       },
       "Type": "AWS::SSM::Parameter",
     },
@@ -4883,7 +4883,7 @@ exports[`delegatedAdminStack Construct(SecurityResourcesStack):  Snapshot Test 1
         "Description": "AWS Config custom rule function used for "accelerator-attach-ec2-instance-profile" rule",
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.13.1",
           },
         },
         "Handler": "index.handler",
@@ -5393,7 +5393,7 @@ exports[`delegatedAdminStack Construct(SecurityResourcesStack):  Snapshot Test 1
         "Description": "AWS Config custom rule function used for "accelerator-ec2-instance-profile-permission" rule",
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.13.1",
           },
         },
         "Handler": "index.handler",
@@ -7099,7 +7099,7 @@ exports[`delegatedAdminStack Construct(SecurityResourcesStack):  Snapshot Test 1
         },
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.13.1",
           },
         },
         "Handler": "__entrypoint__.handler",
@@ -7189,7 +7189,7 @@ exports[`delegatedAdminStack Construct(SecurityResourcesStack):  Snapshot Test 1
         },
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.13.1",
           },
         },
         "Handler": "__entrypoint__.handler",
@@ -7431,7 +7431,7 @@ exports[`delegatedAdminStack Construct(SecurityResourcesStack):  Snapshot Test 1
         "Description": "Creates a CloudWatch Logs Group to store SecurityHub findings and updates CW Log Group resource policy",
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.13.1",
           },
         },
         "Handler": "index.handler",
@@ -7617,7 +7617,7 @@ exports[`delegatedAdminStack Construct(SecurityResourcesStack):  Snapshot Test 1
         "Description": "AWS CDK resource provider framework - onEvent (AWSAccelerator-SecurityResourcesStack-111111111111-us-east-1/SecurityHubEventsLog/SecurityHubEventsFunction/Resource)",
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.13.1",
             "USER_ON_EVENT_FUNCTION_ARN": {
               "Fn::GetAtt": [
                 "SecurityHubEventsLogSecurityHubEventsFunction6170C5C5",
@@ -7828,7 +7828,7 @@ exports[`delegatedAdminStack Construct(SecurityResourcesStack):  Snapshot Test 1
       "Properties": {
         "Name": "/accelerator/AWSAccelerator-SecurityResourcesStack-111111111111-us-east-1/version",
         "Type": "String",
-        "Value": "1.13.0",
+        "Value": "1.13.1",
       },
       "Type": "AWS::SSM::Parameter",
     },

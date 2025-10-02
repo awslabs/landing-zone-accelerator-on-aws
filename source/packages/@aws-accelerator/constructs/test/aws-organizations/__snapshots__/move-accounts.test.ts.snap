@@ -258,7 +258,7 @@ exports[`MoveAccounts Construct(MoveAccounts):  Snapshot Test 1`] = `
         "Description": "Moves accounts to conform account config",
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.13.1",
           },
         },
         "Handler": "index.handler",
@@ -414,7 +414,7 @@ exports[`MoveAccounts Construct(MoveAccounts):  Snapshot Test 1`] = `
         "Description": "AWS CDK resource provider framework - onEvent (Default/MoveAccounts/MoveAccountsProvider)",
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.13.1",
             "USER_ON_EVENT_FUNCTION_ARN": {
               "Fn::GetAtt": [
                 "MoveAccountsMoveAccountsFunctionD31A3773",
