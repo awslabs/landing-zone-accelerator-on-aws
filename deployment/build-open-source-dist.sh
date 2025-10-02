@@ -80,6 +80,12 @@ cp $deployment_dir/build-s3-dist.sh $dist_dir/deployment/
 echo "cp $deployment_dir/solution_config $dist_dir/deployment/"
 cp $deployment_dir/solution_config $dist_dir/deployment/
 
+echo "cp -r $deployment_dir/global-s3-assets $dist_dir/deployment/global-s3-assets"
+cp -r $deployment_dir/global-s3-assets $dist_dir/deployment/global-s3-assets 2>/dev/null || echo "No global-s3-assets folder found"
+
+echo "cp -r $deployment_dir/regional-s3-assets $dist_dir/deployment/regional-s3-assets"
+cp -r $deployment_dir/regional-s3-assets $dist_dir/deployment/regional-s3-assets 2>/dev/null || echo "No regional-s3-assets folder found"
+
 echo "------------------------------------------------------------------------------"
 echo "[Packing] Reference folder"
 echo "------------------------------------------------------------------------------"

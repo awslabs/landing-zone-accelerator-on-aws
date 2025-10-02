@@ -686,8 +686,8 @@ release:upload-installer-stack-to-cornerstone:
     - "echo \"The commit author's email is: $AUTHOR_EMAIL\""
     - "./build-s3-dist.sh $CORNERSTONE_PACKAGE_BUCKET $PUBLISHED_VERSION"
     - "./build-open-source-dist.sh $SOLUTION_TRADEMARKEDNAME"
-    - "cp open-source/$SOLUTION_TRADEMARKEDNAME.zip ../artifact.zip"
-    - "cd .."
+    - cd ..
+    - "zip -r artifact.zip . -x '*.git*' 'node_modules/*' '*/node_modules/*' '*.log' 'dist/*' '*/dist/*'"
     - aws s3 cp artifact.zip s3://$CORNERSTONE_PACKAGE_BUCKET/SO0199/$PUBLISHED_VERSION/$CI_COMMIT_SHA/artifact.zip --metadata "package=Landing-zone-accelerator-on-aws,commitId=$CI_COMMIT_SHA,solutionId=SO0199,solutionVersion=$PUBLISHED_VERSION,solutionName=landing-zone-accelerator-on-aws,commitauthor=$AUTHOR_EMAIL,publishpublicecrimage=false,commitmessage=$CI_COMMIT_MESSAGE,committimestamp=$CI_COMMIT_TIMESTAMP,enablequicksight=No,branch=$CI_COMMIT_MESSAGE"
     - "echo \"Published solution archive to s3://$CORNERSTONE_PACKAGE_BUCKET/SO0199/$PUBLISHED_VERSION/$CI_COMMIT_SHA/artifact.zip\""
   rules:
