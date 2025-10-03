@@ -530,29 +530,6 @@ release:build-typedocs:
       when: always
     - when: never
 
-release:run-tests:
-  stage: pipeline
-  needs: 
-    - job: accelerator:build
-      artifacts: true
-  tags:
-    - arch:amd64
-    - size:xlarge
-  before_script:
-    # Install dependencies
-    - "rm -rf /var/lib/apt/lists/*"
-    - "apt-get update"
-    - "apt-cache gencaches"
-  script:
-    # Run tests in the same way as the AWS Solutions pipeline
-    - "export NODE_OPTIONS=--max_old_space_size=28672"
-    - "cd source"
-    - "chmod +x ./run-all-tests.sh && ./run-all-tests.sh"
-  rules:
-    - if: $CI_PROJECT_ID == "11925" && $CI_COMMIT_TAG =~ /v(\d.+){2}\d/
-      when: always
-    - when: never
-
 # make a zip file upon commit tag
 release:artifact-al2023-prep:
   stage: pipeline
@@ -665,34 +642,100 @@ release:artifact-al2023-release:
       when: always
     - when: never
 
-release:upload-installer-stack-to-cornerstone:
+release:run-tests:
   stage: pipeline
   tags:
     - arch:amd64
-    - size:2xlarge
+    - size:xlarge
+  before_script:
+    # Install dependencies
+    - "rm -rf /var/lib/apt/lists/*"
+    - "apt-get update"
+    - "apt-cache gencaches"
+  script:
+    # Run tests in the same way as the AWS Solutions pipeline
+    - "export NODE_OPTIONS=--max_old_space_size=28672"
+    - "cd source"
+    - "chmod +x ./run-all-tests.sh && ./run-all-tests.sh"
+  artifacts:
+    name: test-results
+    when: on_success
+    untracked: true
+  rules:
+    - if: $CI_PROJECT_ID == "11925" && $CI_COMMIT_TAG =~ /v(\d.+){2}\d/
+      when: always
+    - when: never
+
+release:build-distributions:
+  stage: pipeline
+  needs:
+    - job: release:run-tests
+      artifacts: true
+  tags:
+    - arch:amd64
+    - size:xlarge
+  before_script:
+    - "apt-get update && apt-get install -y jq"
+  script:
+    - "cd source"
+    - "export PUBLISHED_VERSION=v$(cat package.json | jq -r '.version')"
+    - "cd ../deployment"
+    - "source ./solution_config"
+    - "./build-s3-dist.sh temp-bucket $PUBLISHED_VERSION"
+    - "./build-open-source-dist.sh $SOLUTION_TRADEMARKEDNAME"
+  artifacts:
+    name: distributions
+    when: on_success
+    untracked: true
+  rules:
+    - if: $CI_PROJECT_ID == "11925" && $CI_COMMIT_TAG =~ /v(\d.+){2}\d/
+      when: always
+    - when: never
+
+release:package-artifact:
+  stage: pipeline
+  needs:
+    - job: release:build-distributions
+      artifacts: true
+  tags:
+    - arch:amd64
+    - size:large
+  before_script:
+    - "apt-get update && apt-get install -y zip"
+  script:
+    - "zip -r artifact.zip deployment/ source/ .gitignore sonar-project.properties README.md LICENSE.txt NOTICE.txt CODE_OF_CONDUCT.md CONTRIBUTING.md .github/ buildspec.yml CHANGELOG.md SECURITY.md .cfnnag_* .viperlightignore codescan-postbuild-custom.sh solution-manifest.yaml"
+  artifacts:
+    name: packaged-artifact
+    when: on_success
+    paths:
+      - artifact.zip
+  rules:
+    - if: $CI_PROJECT_ID == "11925" && $CI_COMMIT_TAG =~ /v(\d.+){2}\d/
+      when: always
+    - when: never
+
+release:upload-to-cornerstone:
+  stage: pipeline
+  needs:
+    - job: release:package-artifact
+      artifacts: true
+  tags:
+    - arch:amd64
+    - size:large
   variables:
     AWS_DEFAULT_REGION: us-east-1
     AWS_CREDS_TARGET_ROLE: "${CORNERSTONE_ROLE_ARN}"
     CORNERSTONE_PACKAGE_BUCKET: "${CORNERSTONE_PACKAGE_BUCKET}"
   before_script:
-    - echo "Building and uploading LZA to Cornerstone for $CI_COMMIT_TAG"
-    - "apt-get update && apt-get install -y zip jq"
+    - "apt-get update && apt-get install -y jq"
     - "wget --progress=dot:mega -O /tmp/awscliv2.zip https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip"
     - "unzip -q /tmp/awscliv2.zip -d /tmp"
     - "/tmp/aws/install"
   script:
-    - "export NODE_OPTIONS=--max_old_space_size=49152"
     - "cd source"
     - "export PUBLISHED_VERSION=v$(cat package.json | jq -r '.version')"
-    - "chmod +x ./run-all-tests.sh && ./run-all-tests.sh"
-    - "cd ../deployment"
-    - "source ./solution_config"
-    - "export AUTHOR_EMAIL=$(echo \"$CI_COMMIT_AUTHOR\" | grep -oP '(?<=<).*(?=>)' || echo \"unknown\")"
-    - "echo \"The commit author's email is: $AUTHOR_EMAIL\""
-    - "./build-s3-dist.sh $CORNERSTONE_PACKAGE_BUCKET $PUBLISHED_VERSION"
-    - "./build-open-source-dist.sh $SOLUTION_TRADEMARKEDNAME"
     - "cd .."
-    - "zip -r artifact.zip deployment/ source/ .gitignore sonar-project.properties README.md LICENSE.txt NOTICE.txt CODE_OF_CONDUCT.md CONTRIBUTING.md .github/ buildspec.yml CHANGELOG.md SECURITY.md .cfnnag_* .viperlightignore codescan-postbuild-custom.sh solution-manifest.yaml"
+    - "export AUTHOR_EMAIL=$(echo \"$CI_COMMIT_AUTHOR\" | grep -oP '(?<=<).*(?=>)' || echo \"unknown\")"
     - aws s3 cp artifact.zip s3://$CORNERSTONE_PACKAGE_BUCKET/SO0199/$PUBLISHED_VERSION/$CI_COMMIT_SHA/artifact.zip --metadata "package=Landing-zone-accelerator-on-aws,commitId=$CI_COMMIT_SHA,solutionId=SO0199,solutionVersion=$PUBLISHED_VERSION,solutionName=landing-zone-accelerator-on-aws,commitauthor=$AUTHOR_EMAIL,publishpublicecrimage=false,commitmessage=$CI_COMMIT_MESSAGE,committimestamp=$CI_COMMIT_TIMESTAMP,enablequicksight=No,branch=$CI_COMMIT_MESSAGE"
     - "echo \"Published solution archive to s3://$CORNERSTONE_PACKAGE_BUCKET/SO0199/$PUBLISHED_VERSION/$CI_COMMIT_SHA/artifact.zip\""
   rules:
