@@ -125,6 +125,15 @@ export abstract class KmsKey {
           Resource: '*',
         },
         {
+          Sid: 'Allow Control Tower Admin Role',
+          Effect: 'Allow',
+          Principal: {
+            AWS: `arn:${partition}:iam::${accountId}:role/service-role/AWSControlTowerAdmin`,
+          },
+          Action: ['kms:DescribeKey', 'kms:GenerateDataKey*', 'kms:Decrypt'],
+          Resource: `${keyArn}`,
+        },
+        {
           Sid: 'Allow CloudTrail to encrypt/decrypt logs',
           Effect: 'Allow',
           Principal: {
