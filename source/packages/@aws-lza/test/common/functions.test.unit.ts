@@ -269,6 +269,7 @@ describe('functions', () => {
         version: mockResponse.landingZone.version,
         latestAvailableVersion: mockResponse.landingZone.latestAvailableVersion,
         driftStatus: mockResponse.landingZone.driftStatus.status,
+        manifest: mockResponse.landingZone.manifest,
       });
       expect(GetLandingZoneCommand).toHaveBeenCalledTimes(1);
     });

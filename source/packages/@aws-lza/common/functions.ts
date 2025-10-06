@@ -202,6 +202,7 @@ export async function getLandingZoneDetails(
       landingZoneDetails.version = response.landingZone.version!;
       landingZoneDetails.latestAvailableVersion = response.landingZone.latestAvailableVersion!;
       landingZoneDetails.driftStatus = response.landingZone.driftStatus!.status!;
+      landingZoneDetails.manifest = response.landingZone.manifest;
     }
   } catch (e: unknown) {
     if (e instanceof ResourceNotFoundException) {
