@@ -2522,7 +2522,8 @@ exports[`PipelineStack > Construct(PipelineStack):  Snapshot Test 1`] = `
                 },
                 " --config-dir $CODEBUILD_SRC_DIR_Config --stage $ACCELERATOR_STAGE --prefix AWSAccelerator"
       - if false; then RUNNER_ARGS="$RUNNER_ARGS --use-existing-roles"; fi
-      - set -e && yarn run ts-node ../modules/bin/runner.ts $RUNNER_ARGS
+      - set -e && yarn run ts-node ../modules/bin/runner.ts $RUNNER_ARGS;
+      - set -e && ./scripts/bootstrap_management_before_prepare.sh us-east-1;
       - |-
         if [ "\${ACCELERATOR_STAGE}" = "pre-approval" ]; then
                         mkdir rawDiff;
@@ -5643,7 +5644,8 @@ exports[`PipelineStack > Construct(PipelineStack):  Snapshot Test 2`] = `
                 },
                 " --config-dir $CODEBUILD_SRC_DIR_Config --stage $ACCELERATOR_STAGE --prefix AWSAccelerator"
       - if false; then RUNNER_ARGS="$RUNNER_ARGS --use-existing-roles"; fi
-      - set -e && yarn run ts-node ../modules/bin/runner.ts $RUNNER_ARGS
+      - set -e && yarn run ts-node ../modules/bin/runner.ts $RUNNER_ARGS;
+      - set -e && ./scripts/bootstrap_management_before_prepare.sh us-east-1;
       - |-
         if [ "\${ACCELERATOR_STAGE}" = "pre-approval" ]; then
                         mkdir rawDiff;
@@ -8270,7 +8272,8 @@ exports[`PipelineStack customS3Path > Construct(PipelineStack):  Snapshot Test 1
                 },
                 " --config-dir $CODEBUILD_SRC_DIR_Config --stage $ACCELERATOR_STAGE --prefix AWSAccelerator"
       - if false; then RUNNER_ARGS="$RUNNER_ARGS --use-existing-roles"; fi
-      - set -e && yarn run ts-node ../modules/bin/runner.ts $RUNNER_ARGS
+      - set -e && yarn run ts-node ../modules/bin/runner.ts $RUNNER_ARGS;
+      - set -e && ./scripts/bootstrap_management_before_prepare.sh us-east-1;
       - |-
         if [ "\${ACCELERATOR_STAGE}" = "pre-approval" ]; then
                         mkdir rawDiff;
