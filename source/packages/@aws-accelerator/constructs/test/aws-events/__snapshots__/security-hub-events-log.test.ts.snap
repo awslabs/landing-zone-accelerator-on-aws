@@ -218,7 +218,7 @@ exports[`SecurityHubEventsLog > Construct(SecurityHubEventsLog):  Snapshot Test 
         "Description": "Creates a CloudWatch Logs Group to store SecurityHub findings and updates CW Log Group resource policy",
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.14.0",
           },
         },
         "Handler": "index.handler",
@@ -433,7 +433,7 @@ exports[`SecurityHubEventsLog > Construct(SecurityHubEventsLog):  Snapshot Test 
         "Description": "AWS CDK resource provider framework - onEvent (Default/SecurityHubEventsLog/SecurityHubEventsFunction/Resource)",
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.14.0",
             "USER_ON_EVENT_FUNCTION_ARN": {
               "Fn::GetAtt": [
                 "SecurityHubEventsLogSecurityHubEventsFunction6170C5C5",

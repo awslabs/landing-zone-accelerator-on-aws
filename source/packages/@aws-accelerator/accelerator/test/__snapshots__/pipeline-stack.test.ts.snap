@@ -312,7 +312,7 @@ exports[`PipelineStack > Construct(PipelineStack):  Snapshot Test 1`] = `
                 "Configuration": {
                   "PollForSourceChanges": false,
                   "S3Bucket": "test-bucket",
-                  "S3ObjectKey": "lza/v1.13.0.zip",
+                  "S3ObjectKey": "lza/v1.14.0.zip",
                 },
                 "Name": "Source",
                 "OutputArtifacts": [
@@ -2088,7 +2088,7 @@ exports[`PipelineStack > Construct(PipelineStack):  Snapshot Test 1`] = `
                       {
                         "Ref": "AWS::Partition",
                       },
-                      ":s3:::test-bucket/lza/v1.13.0.zip",
+                      ":s3:::test-bucket/lza/v1.14.0.zip",
                     ],
                   ],
                 },
@@ -2610,7 +2610,7 @@ artifacts:
       "Properties": {
         "Name": "/accelerator/PipelineStack/version",
         "Type": "String",
-        "Value": "1.13.0",
+        "Value": "1.14.0",
       },
       "Type": "AWS::SSM::Parameter",
     },
@@ -2940,7 +2940,7 @@ exports[`PipelineStack > Construct(PipelineStack):  Snapshot Test 2`] = `
                 "Configuration": {
                   "PollForSourceChanges": false,
                   "S3Bucket": "test-bucket",
-                  "S3ObjectKey": "lza/v1.13.0.zip",
+                  "S3ObjectKey": "lza/v1.14.0.zip",
                 },
                 "Name": "Source",
                 "OutputArtifacts": [
@@ -5190,7 +5190,7 @@ exports[`PipelineStack > Construct(PipelineStack):  Snapshot Test 2`] = `
                       {
                         "Ref": "AWS::Partition",
                       },
-                      ":s3:::test-bucket/lza/v1.13.0.zip",
+                      ":s3:::test-bucket/lza/v1.14.0.zip",
                     ],
                   ],
                 },
@@ -5732,7 +5732,7 @@ artifacts:
       "Properties": {
         "Name": "/accelerator/PipelineStackRegionalDeploy/version",
         "Type": "String",
-        "Value": "1.13.0",
+        "Value": "1.14.0",
       },
       "Type": "AWS::SSM::Parameter",
     },
@@ -6062,7 +6062,7 @@ exports[`PipelineStack customS3Path > Construct(PipelineStack):  Snapshot Test 1
                 "Configuration": {
                   "PollForSourceChanges": false,
                   "S3Bucket": "test-bucket",
-                  "S3ObjectKey": "lza/v1.13.0.zip",
+                  "S3ObjectKey": "lza/v1.14.0.zip",
                 },
                 "Name": "Source",
                 "OutputArtifacts": [
@@ -7838,7 +7838,7 @@ exports[`PipelineStack customS3Path > Construct(PipelineStack):  Snapshot Test 1
                       {
                         "Ref": "AWS::Partition",
                       },
-                      ":s3:::test-bucket/lza/v1.13.0.zip",
+                      ":s3:::test-bucket/lza/v1.14.0.zip",
                     ],
                   ],
                 },
@@ -8360,7 +8360,7 @@ artifacts:
       "Properties": {
         "Name": "/accelerator/PipelineStackCustomS3Path/version",
         "Type": "String",
-        "Value": "1.13.0",
+        "Value": "1.14.0",
       },
       "Type": "AWS::SSM::Parameter",
     },

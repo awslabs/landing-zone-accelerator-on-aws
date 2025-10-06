@@ -236,7 +236,7 @@ exports[`SubnetIdLookup > Construct(SubnetIdLookup):  Snapshot Test 1`] = `
         "Description": "Lookup subnet id from account",
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.14.0",
           },
         },
         "Handler": "index.handler",
@@ -351,7 +351,7 @@ exports[`SubnetIdLookup > Construct(SubnetIdLookup):  Snapshot Test 1`] = `
         "Description": "AWS CDK resource provider framework - onEvent (Default/SubnetIdLookup/SubnetIdLookupProvider)",
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.14.0",
             "USER_ON_EVENT_FUNCTION_ARN": {
               "Fn::GetAtt": [
                 "SubnetIdLookupSubnetIdLookupFunction2C56B17D",

@@ -16,7 +16,7 @@ exports[`MacieMembers > Construct(MacieMembers):  Snapshot Test 1`] = `
         },
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.14.0",
           },
         },
         "Handler": "__entrypoint__.handler",

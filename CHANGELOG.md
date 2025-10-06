@@ -5,20 +5,39 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [1.14.0]
+## [1.14.0] - 2025-10-27
 
 ### Fixed
-- fix(validation): updated regex validation for Route53 Resover Rule DNS to pass TLD
+- fix(validation): updated regex validation for Route53 Resolver Rule DNS to pass TLD
 - feat(uninstaller): add support for local config directories when uninstalling LZA
 
-## [1.13.1] - 2025-09-09
+## [1.13.1] - 2025-10-01
 
 ### Fixed
-- fix(metadata): missing s3 read permissions on accelerator metadata lambda role
+
+- fix(asea): fix lambda role replacement for asea functions
+- fix(asea): remove deprecated asea phase5 lambdas
+- fix(config-service): create service linked role when orgs only [#834](https://github.com/awslabs/landing-zone-accelerator-on-aws/issues/834) [#857](https://github.com/awslabs/landing-zone-accelerator-on-aws/issues/857)
+- fix(macie): allow undefined value for excluded regions
+- fix(metadata): missing s3 read permissions on accelerator metadata lambda role [#864](https://github.com/awslabs/landing-zone-accelerator-on-aws/issues/864)
+- fix(networking): fix rql resource from being recreated
 - fix(networking): reverts bug disabling private dns for vpc interface endpoints
+- fix(organizations): don't add existing accounts to org account creation
+- fix(pipeline): add missing environment variable for validation
+- fix(stack-policy): fix error on new account creation
+- fix(validation): added partition env var to pipeline
+- fix(validation): add validation for imported access log bucket name
 
 ### Changed
+
+- chore(configs): update sample configurations to lza universal config
+- chore(control-tower): updated default access logs retention to 365 days
 - chore(docs): add v2 mkdoc navigation
+- chore(docs): update documentation for maxPasswordAge
+- chore(docs): update service quota documentation
+- chore(docs): update security hub findings and universal configuration reference
+- chore(logging): updated default cloudwatch log retention to 1 year
+- Revert "fix(validation): query log without r53 resolver configured" [#876](https://github.com/awslabs/landing-zone-accelerator-on-aws/issues/876)
 
 ## [1.13.0] - 2025-08-29
 

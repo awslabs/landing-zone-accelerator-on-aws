@@ -803,7 +803,7 @@ def script_handler(events, context):
                 ],
               ],
             },
-            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.14.0",
           },
         },
         "Handler": "index.handler",
@@ -936,7 +936,7 @@ def script_handler(events, context):
         },
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.14.0",
           },
         },
         "Handler": "__entrypoint__.handler",
@@ -1025,7 +1025,7 @@ def script_handler(events, context):
         },
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.14.0",
           },
         },
         "Handler": "__entrypoint__.handler",
@@ -1140,7 +1140,7 @@ def script_handler(events, context):
         },
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.14.0",
           },
         },
         "Handler": "__entrypoint__.handler",
@@ -1278,7 +1278,7 @@ def script_handler(events, context):
         },
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.14.0",
           },
         },
         "Handler": "__entrypoint__.handler",
@@ -1397,7 +1397,7 @@ def script_handler(events, context):
         },
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.14.0",
           },
         },
         "Handler": "__entrypoint__.handler",
@@ -1490,7 +1490,7 @@ def script_handler(events, context):
         },
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.14.0",
           },
         },
         "Handler": "__entrypoint__.handler",
@@ -1601,7 +1601,7 @@ def script_handler(events, context):
         },
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.14.0",
           },
         },
         "Handler": "__entrypoint__.handler",
@@ -1693,7 +1693,7 @@ def script_handler(events, context):
         },
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.14.0",
           },
         },
         "Handler": "__entrypoint__.handler",
@@ -1794,7 +1794,7 @@ def script_handler(events, context):
         },
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.14.0",
           },
         },
         "Handler": "__entrypoint__.handler",
@@ -1903,7 +1903,7 @@ def script_handler(events, context):
         },
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.14.0",
           },
         },
         "Handler": "__entrypoint__.handler",
@@ -1997,7 +1997,7 @@ def script_handler(events, context):
         },
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.14.0",
           },
         },
         "Handler": "__entrypoint__.handler",
@@ -2805,7 +2805,7 @@ def script_handler(events, context):
       "Properties": {
         "Name": "/accelerator/AWSAccelerator-SecurityAuditStack-222222222222-us-east-1/version",
         "Type": "String",
-        "Value": "1.13.0",
+        "Value": "1.14.0",
       },
       "Type": "AWS::SSM::Parameter",
     },
@@ -3595,7 +3595,7 @@ def script_handler(events, context):
                 ],
               ],
             },
-            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.14.0",
           },
         },
         "Handler": "index.handler",
@@ -3728,7 +3728,7 @@ def script_handler(events, context):
         },
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.14.0",
           },
         },
         "Handler": "__entrypoint__.handler",
@@ -3817,7 +3817,7 @@ def script_handler(events, context):
         },
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.14.0",
           },
         },
         "Handler": "__entrypoint__.handler",
@@ -3932,7 +3932,7 @@ def script_handler(events, context):
         },
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.14.0",
           },
         },
         "Handler": "__entrypoint__.handler",
@@ -4070,7 +4070,7 @@ def script_handler(events, context):
         },
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.14.0",
           },
         },
         "Handler": "__entrypoint__.handler",
@@ -4189,7 +4189,7 @@ def script_handler(events, context):
         },
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.14.0",
           },
         },
         "Handler": "__entrypoint__.handler",
@@ -4282,7 +4282,7 @@ def script_handler(events, context):
         },
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.14.0",
           },
         },
         "Handler": "__entrypoint__.handler",
@@ -4393,7 +4393,7 @@ def script_handler(events, context):
         },
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.14.0",
           },
         },
         "Handler": "__entrypoint__.handler",
@@ -4485,7 +4485,7 @@ def script_handler(events, context):
         },
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.14.0",
           },
         },
         "Handler": "__entrypoint__.handler",
@@ -4586,7 +4586,7 @@ def script_handler(events, context):
         },
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.14.0",
           },
         },
         "Handler": "__entrypoint__.handler",
@@ -4695,7 +4695,7 @@ def script_handler(events, context):
         },
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.14.0",
           },
         },
         "Handler": "__entrypoint__.handler",
@@ -4789,7 +4789,7 @@ def script_handler(events, context):
         },
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.14.0",
           },
         },
         "Handler": "__entrypoint__.handler",
@@ -5231,7 +5231,7 @@ def script_handler(events, context):
       "Properties": {
         "Name": "/accelerator/AWSAccelerator-SecurityAuditStack-222222222222-us-east-1/version",
         "Type": "String",
-        "Value": "1.13.0",
+        "Value": "1.14.0",
       },
       "Type": "AWS::SSM::Parameter",
     },

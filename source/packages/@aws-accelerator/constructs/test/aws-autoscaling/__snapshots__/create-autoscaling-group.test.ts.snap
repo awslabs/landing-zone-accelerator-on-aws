@@ -246,7 +246,7 @@ exports[`AutoscalingGroup > Construct(AutoscalingGroup):  Snapshot Test 1`] = `
         "Description": "Custom resource provider to create service linked role",
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.14.0",
           },
         },
         "Handler": "index.handler",
@@ -364,7 +364,7 @@ exports[`AutoscalingGroup > Construct(AutoscalingGroup):  Snapshot Test 1`] = `
         "Description": "AWS CDK resource provider framework - onEvent (Default/Test/AutoScalingServiceLinkedRole/CreateServiceLinkedRoleProvider)",
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.14.0",
             "USER_ON_EVENT_FUNCTION_ARN": {
               "Fn::GetAtt": [
                 "TestAutoScalingServiceLinkedRoleCreateServiceLinkedRoleFunction48483210",

@@ -93,7 +93,7 @@ exports[`RemediateResourcePolicy > Construct(RemediateResourcePolicy):  Snapshot
               "Ref": "AWS::Partition",
             },
             "HOME_REGION": "us-west-2",
-            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.14.0",
           },
         },
         "Handler": "remediate-resource-policy.handler",
