@@ -231,6 +231,11 @@ export type ControlTowerLandingZoneDetailsType = {
    * AWS KMS CMK arn to encrypt AWS Control Tower Landing Zone resources
    */
   kmsKeyArn?: string;
+  /**
+   * The manifest document for the AWS Control Tower Landing Zone
+   */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  manifest?: any;
 };
 
 /**

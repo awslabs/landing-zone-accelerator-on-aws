@@ -429,6 +429,7 @@ abstract class LandingZoneOperation {
       landingZoneDetails.securityOuName,
       landingZoneDetails.kmsKeyArn,
       landingZoneDetails.sandboxOuName,
+      landingZoneDetails.manifest,
     );
 
     const response = await throttlingBackOff(() =>

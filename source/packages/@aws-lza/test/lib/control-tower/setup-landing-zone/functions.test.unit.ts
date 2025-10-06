@@ -77,8 +77,30 @@ describe('resources utility functions', () => {
       const securityOuName = 'Security';
       const sandboxOuName = 'Sandbox';
       const kmsKeyArn = 'arn:aws:kms:region:account:key/12345';
+      const existingManifest = {
+        governedRegions: ['mockRegion1', 'mockRegion1'],
+        accessManagement: { enabled: true },
+        organizationStructure: {
+          security: { name: 'mockSecurityOuName' },
+          sandbox: { name: 'mockSandboxOuName' },
+        },
+        centralizedLogging: {
+          configurations: {
+            loggingBucket: { retentionDays: 365 },
+            accessLoggingBucket: { retentionDays: 365 },
+            kmsKeyArn: 'mockKmsKeyArn',
+          },
+        },
+      };
 
-      const result = makeManifestDocument(mockLandingZoneConfig, 'UPDATE', securityOuName, kmsKeyArn, sandboxOuName);
+      const result = makeManifestDocument(
+        mockLandingZoneConfig,
+        'UPDATE',
+        securityOuName,
+        kmsKeyArn,
+        sandboxOuName,
+        existingManifest,
+      );
 
       expect(result.organizationStructure).toEqual({
         security: {

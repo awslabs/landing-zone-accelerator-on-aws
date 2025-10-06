@@ -20,7 +20,7 @@ import {
 
 /**
  * Function to make manifest document for CT API
- * @param landingZoneConfiguration ${@link LandingZoneConfigType}
+ * @param landingZoneConfiguration {@link ControlTowerLandingZoneConfigType}
  * @param event string 'CREATE' | 'UPDATE'
  * @param securityOuName string
  * @param kmsKeyArn string | undefined
@@ -33,6 +33,8 @@ export function makeManifestDocument(
   securityOuName: string,
   kmsKeyArn?: string,
   sandboxOuName?: string,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  existingManifest?: any,
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
 ): any {
   let organizationStructure = {};
@@ -69,6 +71,12 @@ export function makeManifestDocument(
   }
 
   const manifestJsonDocument = {
+    accessManagement: {
+      enabled: landingZoneConfiguration.enableIdentityCenterAccess,
+    },
+    securityRoles: {
+      accountId: landingZoneConfiguration.auditAccountId,
+    },
     governedRegions: landingZoneConfiguration.governedRegions,
     organizationStructure,
     centralizedLogging: {
@@ -84,13 +92,15 @@ export function makeManifestDocument(
       },
       enabled: landingZoneConfiguration.enableOrganizationTrail,
     },
-    securityRoles: {
-      accountId: landingZoneConfiguration.auditAccountId,
-    },
-    accessManagement: {
-      enabled: landingZoneConfiguration.enableIdentityCenterAccess,
-    },
   };
+
+  // For UPDATE operations, merge with existing manifest to preserve other modules
+  if (event === 'UPDATE' && existingManifest) {
+    return {
+      ...existingManifest,
+      ...manifestJsonDocument,
+    };
+  }
 
   return manifestJsonDocument;
 }
