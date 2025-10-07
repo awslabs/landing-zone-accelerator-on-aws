@@ -1371,6 +1371,7 @@ class NetworkInterface implements INetworkInterface {
       }
       try {
         return this.secondaryIps[index - 1].split(':')[0];
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
       } catch (e) {
         throw new Error(`Private IP index ${index} does not exist on network interface ${this.interfaceId}`);
       }
@@ -1395,6 +1396,7 @@ class NetworkInterface implements INetworkInterface {
       }
       try {
         return this.secondaryIps[index - 1].split(':')[1];
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
       } catch (e) {
         throw new Error(`Public IP index ${index} does not exist on network interface ${this.interfaceId}`);
       }

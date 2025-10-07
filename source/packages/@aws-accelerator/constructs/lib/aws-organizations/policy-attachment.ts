@@ -20,8 +20,7 @@ import { createLogger } from '@aws-accelerator/utils/lib/logger';
 import { CUSTOM_RESOURCE_PROVIDER_RUNTIME } from '@aws-accelerator/utils/lib/lambda';
 
 const logger = createLogger(['constructs-organization-policy-attachment']);
-
-const path = require('path');
+import * as path from 'path';
 
 /**
  * Initialized Policy properties

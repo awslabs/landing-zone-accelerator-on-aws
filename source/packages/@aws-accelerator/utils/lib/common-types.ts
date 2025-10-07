@@ -303,7 +303,6 @@ export type ScheduledHandler<TDetail = any> = EventBridgeHandler<'Scheduled Even
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type ScheduledEvent<TDetail = any> = EventBridgeEvent<'Scheduled Event', TDetail>;
 
-// eslint-disable-next-line @typescript-eslint/no-invalid-void-type
 export type SQSHandler = Handler<SQSEvent, SQSBatchResponse | void>;
 
 // SQS

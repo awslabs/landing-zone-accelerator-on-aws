@@ -14,8 +14,7 @@
 import { CUSTOM_RESOURCE_PROVIDER_RUNTIME } from '@aws-accelerator/utils/lib/lambda';
 import * as cdk from 'aws-cdk-lib';
 import { Construct } from 'constructs';
-
-const path = require('path');
+import * as path from 'path';
 
 export type accountItem = {
   accountId: string;
@@ -84,8 +83,8 @@ export class ValidateScpCount extends cdk.Resource {
         accounts: props.accounts,
         scps: props.scps,
         partition: cdk.Stack.of(this).partition,
-        maxOuAttachedScps: Number(process.env['ORGANIZATIONAL_UNIT_SCP_LIMIT']) ?? 5,
-        maxAccountAttachedScps: Number(process.env['ACCOUNT_SCP_LIMIT']) ?? 5,
+        maxOuAttachedScps: Number(process.env['ORGANIZATIONAL_UNIT_SCP_LIMIT']) || 5,
+        maxAccountAttachedScps: Number(process.env['ACCOUNT_SCP_LIMIT']) || 5,
       },
     });
 

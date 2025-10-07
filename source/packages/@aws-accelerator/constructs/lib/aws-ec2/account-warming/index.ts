@@ -91,7 +91,7 @@ async function checkWarm(ssmPrefix: string): Promise<boolean> {
     );
     warmed = (parameter.Parameter?.Value ?? 'false') === 'true';
   } catch (e) {
-    console.log(`SSM parameter doesn't exist warming account`);
+    console.log(`SSM parameter doesn't exist warming account`, e);
   }
   return warmed;
 }

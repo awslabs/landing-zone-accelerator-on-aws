@@ -190,6 +190,7 @@ export function tagCustomResourceRole(
     if (customResourceRole) {
       setTagsForChildResources(customResourceRole, tags);
     }
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
   } catch (e) {
     logger.info(`No child node for role associated with ${tagCustomResourceRole.name}`);
     return;
@@ -211,6 +212,7 @@ export function tagCustomResourceLambda(
     if (lambdaHandler) {
       setTagsForChildResources(lambdaHandler, tags);
     }
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
   } catch (e) {
     logger.info(`No child node for lambda associated with ${tagCustomResourceLambda.name}`);
   }

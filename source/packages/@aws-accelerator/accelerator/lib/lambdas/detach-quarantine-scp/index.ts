@@ -29,7 +29,7 @@ let organizationsClient: OrganizationsClient;
  * @param event
  * @returns
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+
 export async function handler(event: CloudFormationCustomResourceEvent): Promise<
   | {
       PhysicalResourceId: string | undefined;

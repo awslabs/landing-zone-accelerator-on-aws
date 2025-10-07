@@ -144,11 +144,10 @@ export class NewCloudWatchLogEvent extends Construct {
     });
 
     // Lambda function that sets expiration and puts subscription filter on
-    const lambdaEnvironmentList:
-      | {
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          [key: string]: any;
-        }[] = [
+    const lambdaEnvironmentList: {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      [key: string]: any;
+    }[] = [
       { LogRetention: props.logsRetentionInDaysValue },
       { LogDestination: props.logDestinationArn },
       { LogSubscriptionRole: LogSubscriptionRole },

@@ -1345,6 +1345,7 @@ export class VpcResources extends AseaResource {
   private isValidIpv4Cidr(cidr: string): boolean {
     try {
       IPv4CidrRange.fromCidr(cidr);
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (e) {
       return false;
     }
@@ -1359,6 +1360,7 @@ export class VpcResources extends AseaResource {
   private isValidIpv6Cidr(cidr: string): boolean {
     try {
       IPv6CidrRange.fromCidr(cidr);
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (e) {
       return false;
     }
@@ -1507,6 +1509,7 @@ export class VpcResources extends AseaResource {
               ingressRule.logicalResourceId,
             );
           }
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
         } catch (error) {
           // continue the ref may not exits
         }
@@ -1522,6 +1525,7 @@ export class VpcResources extends AseaResource {
               ingressRule.logicalResourceId,
             );
           }
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
         } catch (error) {
           // the ref may not exist
         }
@@ -1533,6 +1537,7 @@ export class VpcResources extends AseaResource {
             this.scope.addLogs(LogLevel.WARN, `Deleting Egress Rule: ${egressRule.logicalResourceId}`);
             this.scope.addDeleteFlagForNestedResource(nestedStackResources.getStackKey(), egressRule.logicalResourceId);
           }
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
         } catch (error) {
           // continue the ref may not exist
         }
@@ -1544,6 +1549,7 @@ export class VpcResources extends AseaResource {
             this.scope.addLogs(LogLevel.WARN, `Deleting Egress Rule: ${egressRule.logicalResourceId}`);
             this.scope.addDeleteFlagForNestedResource(nestedStackResources.getStackKey(), egressRule.logicalResourceId);
           }
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
         } catch (error) {
           // continue the ref may not exist
         }

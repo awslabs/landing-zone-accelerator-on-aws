@@ -33,7 +33,7 @@ export function throttlingBackOff<T>(
 }
 
 export const isThrottlingError = (
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any,@typescript-eslint/explicit-module-boundary-types
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   e: any,
 ): boolean => {
   return (

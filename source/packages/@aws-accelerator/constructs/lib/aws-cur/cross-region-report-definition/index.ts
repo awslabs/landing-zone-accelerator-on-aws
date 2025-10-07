@@ -122,6 +122,7 @@ export async function handler(
 function returnBoolean(input: string): boolean | undefined {
   try {
     return JSON.parse(input.toLowerCase());
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
   } catch (e) {
     return undefined;
   }

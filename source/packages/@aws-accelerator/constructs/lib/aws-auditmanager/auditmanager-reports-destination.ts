@@ -14,8 +14,7 @@
 import * as cdk from 'aws-cdk-lib';
 import { Construct } from 'constructs';
 import { CUSTOM_RESOURCE_PROVIDER_RUNTIME } from '../../../utils/lib/lambda';
-
-const path = require('path');
+import * as path from 'path';
 
 /**
  * Export config destination types

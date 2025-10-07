@@ -274,6 +274,7 @@ export async function deleteSubscription(logGroupName: string) {
     await throttlingBackOff(() =>
       logsClient.send(new DeleteSubscriptionFilterCommand({ logGroupName: logGroupName, filterName: logGroupName })),
     );
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
   } catch (e) {
     console.warn(`Failed to delete subscription filter ${logGroupName} for log group ${logGroupName}`);
   }

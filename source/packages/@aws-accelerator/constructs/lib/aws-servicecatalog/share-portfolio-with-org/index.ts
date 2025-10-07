@@ -129,6 +129,7 @@ export async function updatePortfolioShare(
     );
     return response.PortfolioShareToken!;
   } catch (error) {
+    console.log(error);
     throw new Error(
       `UpdatePortfolioShare ran into error with portfolio id: ${portfolioId} on organization resource: ${orgResourceId}`,
     );
@@ -154,6 +155,7 @@ export async function deletePortfolioShare(
     );
     return response.PortfolioShareToken!;
   } catch (error) {
+    console.log(error);
     throw new Error(`Delete Portfolio share failed on portfolio: ${portfolioId}, organization unit: ${orgResourceId}`);
   }
 }
@@ -173,6 +175,7 @@ export async function checkPortfolioShareTokenStatus(
     console.log(response);
     return response.Status!;
   } catch (error) {
+    console.log(error);
     throw new Error(`Error on checking portfolio share status with portfolioId: ${portfolioId}`);
   }
 }

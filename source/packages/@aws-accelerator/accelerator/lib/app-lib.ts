@@ -213,6 +213,7 @@ async function createMultiAccountMultiRegionStacks(context: AcceleratorContext, 
         // Retrieve account ID and create stack env
         try {
           accountId = props.accountsConfig.getAccountId(accountItem.name);
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
         } catch (error) {
           continue;
         }

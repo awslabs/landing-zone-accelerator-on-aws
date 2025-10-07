@@ -66,6 +66,7 @@ export class ManagedPolicies extends AseaResource {
       let resource;
       try {
         resource = this.stack.getResource(existingPolicy.logicalResourceId) as cdk.aws_iam.CfnManagedPolicy;
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
       } catch (e) {
         this.scope.addLogs(
           LogLevel.WARN,
@@ -115,6 +116,7 @@ export class ManagedPolicies extends AseaResource {
     let policyResource;
     try {
       policyResource = this.scope.getResource(importPolicy.logicalResourceId) as cdk.aws_iam.CfnManagedPolicy;
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (e) {
       this.scope.addLogs(LogLevel.WARN, `Could not find resource ${importPolicy.logicalResourceId}`);
       const policyName = importPolicy.resourceMetadata['Properties']['ManagedPolicyName'];

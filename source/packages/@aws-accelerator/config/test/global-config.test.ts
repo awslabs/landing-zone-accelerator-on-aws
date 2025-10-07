@@ -136,10 +136,11 @@ describe('GlobalConfig', () => {
       expect(new VaultConfig().policy).toEqual('');
       expect(new SsmParameterConfig().name).toEqual('');
       expect(new SsmParametersConfig().parameters).toEqual([]);
+      // eslint-disable-next-line @typescript-eslint/no-unused-expressions
       expect(new SsmInventoryConfig().enable).toBeFalsy;
-
+      // eslint-disable-next-line @typescript-eslint/no-unused-expressions
       expect(new AcceleratorSettingsConfig().maxConcurrentStacks).toBeUndefined;
-
+      // eslint-disable-next-line @typescript-eslint/no-unused-expressions
       expect(new AcceleratorMetadataConfig().enable).toBeFalsy;
       expect(new SnsConfig().topics).toEqual([]);
       expect(new SnsTopicConfig().emailAddresses).toEqual([]);

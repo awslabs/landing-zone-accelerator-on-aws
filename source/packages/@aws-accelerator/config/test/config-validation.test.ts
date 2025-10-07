@@ -24,9 +24,8 @@ interface ConfigFileMapping {
 }
 
 describe('Config Files Sync Test', () => {
-  // eslint-disable-next-line prefer-const
   let cachedProgram: ts.Program;
-  // eslint-disable-next-line prefer-const
+
   let cachedTypeChecker: ts.TypeChecker;
   const cachedData: Map<
     string,
@@ -279,6 +278,7 @@ describe('Config Files Sync Test', () => {
                 if (extendedInterface) {
                   processInterface(extendedInterface);
                 }
+                // eslint-disable-next-line @typescript-eslint/no-unused-vars
               } catch (error) {
                 // Continue if error processing extended interface
               }

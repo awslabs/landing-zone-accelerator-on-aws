@@ -74,7 +74,9 @@ function generatePolicy(policyFilePaths: string[]): string {
 
   for (const bucketPolicyFilePath of policyFilePaths) {
     const policyFile = path.join(__dirname, bucketPolicyFilePath);
+
     const policyContent: { Version?: string; Statement: PolicyStatementType[] } = JSON.parse(
+      /* eslint-disable-next-line @typescript-eslint/no-require-imports */
       JSON.stringify(require(policyFile)),
     );
 

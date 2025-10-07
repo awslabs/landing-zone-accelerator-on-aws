@@ -15,8 +15,7 @@ import { DEFAULT_LAMBDA_RUNTIME } from '@aws-accelerator/utils/lib/lambda';
 import * as cdk from 'aws-cdk-lib';
 import { Construct } from 'constructs';
 import { v4 as uuidv4 } from 'uuid';
-
-const path = require('path');
+import * as path from 'path';
 
 export interface MoveAccountsProps {
   /**

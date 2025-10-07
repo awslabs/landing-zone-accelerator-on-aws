@@ -39,6 +39,7 @@ export class ImportStackResources {
     try {
       const cfnResources = (await fs.promises.readFile(filePath)).toString();
       return JSON.parse(cfnResources);
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (e) {
       throw new Error(`Unable to read file ${filePath}`);
     }
@@ -66,6 +67,7 @@ export class ImportStackResources {
     try {
       const cfnResources = fs.readFileSync(filePath).toString();
       return JSON.parse(cfnResources);
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (e) {
       throw new Error(`Unable to read file ${filePath}`);
     }

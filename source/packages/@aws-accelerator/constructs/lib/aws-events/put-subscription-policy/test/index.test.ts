@@ -105,7 +105,7 @@ describe('CloudWatch Logs Handler', () => {
     };
 
     // Mock the pagination function
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
     vi.mocked(paginateDescribeLogGroups).mockReturnValue({
       async *[Symbol.asyncIterator]() {
         yield { logGroups: [{ logGroupName: '/aws/lambda/my-function' }] };
@@ -170,14 +170,14 @@ describe('CloudWatch Logs Handler', () => {
     };
 
     // Mock pagination for multiple calls
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
     vi.mocked(paginateDescribeLogGroups)
       .mockReturnValueOnce({
         async *[Symbol.asyncIterator]() {
           yield { logGroups: [{ logGroupName: '/aws/lambda/function1', retentionInDays: 30 }] };
         },
       } as any)
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
       .mockReturnValueOnce({
         async *[Symbol.asyncIterator]() {
           yield { logGroups: [{ logGroupName: 'aws-controltower1', retentionInDays: 365 }] };

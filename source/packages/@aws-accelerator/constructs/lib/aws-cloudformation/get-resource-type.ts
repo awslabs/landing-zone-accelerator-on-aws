@@ -15,8 +15,7 @@ import * as cdk from 'aws-cdk-lib';
 import { Construct } from 'constructs';
 import { NagSuppressions } from 'cdk-nag';
 import { DEFAULT_LAMBDA_RUNTIME } from '../../../utils/lib/lambda';
-
-const path = require('path');
+import * as path from 'path';
 
 /**
  * Get the ResourceType from a CloudFormation Stack by supplying

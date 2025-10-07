@@ -81,6 +81,7 @@ export async function handler(event: CloudFormationCustomResourceEvent): Promise
 
       console.log('starting - UpdateOrganizationConfiguration');
       try {
+        // eslint-disable-next-line @typescript-eslint/no-unused-expressions
         autoEnableOrgMembersFlag
           ? await updateOrganizationConfiguration(guardDutyClient, detectorId!, autoEnableOrgMembers, features)
           : await updateOrganizationConfiguration(guardDutyClient, detectorId!, autoEnableOrgMembers);

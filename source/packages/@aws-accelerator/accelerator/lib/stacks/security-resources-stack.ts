@@ -782,6 +782,8 @@ export class SecurityResourcesStack extends AcceleratorStack {
     });
 
     // Read in the policy document which should be properly formatted json
+
+    /* eslint-disable-next-line @typescript-eslint/no-require-imports */
     const policyDocument = require(path.join(this.props.configDirPath, rule.customRule.lambda.rolePolicyFile));
     // Create a statements list using the PolicyStatement factory
     const policyStatements: cdk.aws_iam.PolicyStatement[] = [];
@@ -1350,6 +1352,8 @@ export class SecurityResourcesStack extends AcceleratorStack {
     isLambdaRole = false,
   ): cdk.aws_iam.IRole {
     // Read in the policy document which should be properly formatted json
+
+    /* eslint-disable-next-line @typescript-eslint/no-require-imports */
     const policyDocument = require(policyFilePath);
     // Create a statements list using the PolicyStatement factory
     const policyStatements: cdk.aws_iam.PolicyStatement[] = [];

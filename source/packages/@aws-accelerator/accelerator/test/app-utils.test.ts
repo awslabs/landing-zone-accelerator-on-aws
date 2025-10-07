@@ -72,6 +72,7 @@ describe('test setAcceleratorEnvironment', () => {
       prefixes,
       'prepare',
     );
+    // eslint-disable-next-line @typescript-eslint/no-unused-expressions
     expect(setAcceleratorEnvironmentReturn.qualifier).toBeDefined;
   });
   test('setAcceleratorEnvironment config repo error', () => {
