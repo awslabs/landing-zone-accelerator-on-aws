@@ -2516,7 +2516,28 @@ exports[`PipelineStack > Construct(PipelineStack):  Snapshot Test 1`] = `
             "Fn::Join": [
               "",
               [
-                "REPLACED-JSON-PATH.json",
+                "version: 0.2
+phases:
+  install:
+    runtime-versions:
+      nodejs: 20
+  pre_build:
+    commands:
+      - "export WORK_DIR=$CODEBUILD_SRC_DIR/source/packages/@aws-accelerator/accelerator
+
+        \\               export ARCHIVE_NAME=\\"\${ACCELERATOR_STAGE}.tgz\\"
+
+        \\               export DIFFS_DIR=\\"s3://aws-accelerator-pipeline-000000000000-us-east-1/AWSAccelerator-Pipel/Diffs\\"
+
+        \\               export STAGE_ARTIFACT=$(echo \\"$ACCELERATOR_STAGE\\" | sed 's/-/ /g' | awk '{for (i=1; i<=NF; ++i) $i=toupper(substr($i,1,1))tolower(substr($i,2))}1' | sed 's/ /_/g')
+
+        \\              "
+  build:
+    commands:
+      - env
+      - '"\${WORK_DIR}/scripts/prepare-stage.sh"'
+      - cd $WORK_DIR;
+      - RUNNER_ARGS="--partition ",
                 {
                   "Ref": "AWS::Partition",
                 },
@@ -5642,7 +5663,28 @@ exports[`PipelineStack > Construct(PipelineStack):  Snapshot Test 2`] = `
             "Fn::Join": [
               "",
               [
-                "REPLACED-JSON-PATH.json",
+                "version: 0.2
+phases:
+  install:
+    runtime-versions:
+      nodejs: 20
+  pre_build:
+    commands:
+      - "export WORK_DIR=$CODEBUILD_SRC_DIR/source/packages/@aws-accelerator/accelerator
+
+        \\               export ARCHIVE_NAME=\\"\${ACCELERATOR_STAGE}.tgz\\"
+
+        \\               export DIFFS_DIR=\\"s3://aws-accelerator-pipeline-000000000000-us-east-1/AWSAccelerator-Pipel/Diffs\\"
+
+        \\               export STAGE_ARTIFACT=$(echo \\"$ACCELERATOR_STAGE\\" | sed 's/-/ /g' | awk '{for (i=1; i<=NF; ++i) $i=toupper(substr($i,1,1))tolower(substr($i,2))}1' | sed 's/ /_/g')
+
+        \\              "
+  build:
+    commands:
+      - env
+      - '"\${WORK_DIR}/scripts/prepare-stage.sh"'
+      - cd $WORK_DIR;
+      - RUNNER_ARGS="--partition ",
                 {
                   "Ref": "AWS::Partition",
                 },
@@ -8274,7 +8316,28 @@ exports[`PipelineStack customS3Path > Construct(PipelineStack):  Snapshot Test 1
             "Fn::Join": [
               "",
               [
-                "REPLACED-JSON-PATH.json",
+                "version: 0.2
+phases:
+  install:
+    runtime-versions:
+      nodejs: 20
+  pre_build:
+    commands:
+      - "export WORK_DIR=$CODEBUILD_SRC_DIR/source/packages/@aws-accelerator/accelerator
+
+        \\               export ARCHIVE_NAME=\\"\${ACCELERATOR_STAGE}.tgz\\"
+
+        \\               export DIFFS_DIR=\\"s3://aws-accelerator-pipeline-000000000000-us-east-1/AWSAccelerator-Pipel/Diffs\\"
+
+        \\               export STAGE_ARTIFACT=$(echo \\"$ACCELERATOR_STAGE\\" | sed 's/-/ /g' | awk '{for (i=1; i<=NF; ++i) $i=toupper(substr($i,1,1))tolower(substr($i,2))}1' | sed 's/ /_/g')
+
+        \\              "
+  build:
+    commands:
+      - env
+      - '"\${WORK_DIR}/scripts/prepare-stage.sh"'
+      - cd $WORK_DIR;
+      - RUNNER_ARGS="--partition ",
                 {
                   "Ref": "AWS::Partition",
                 },
