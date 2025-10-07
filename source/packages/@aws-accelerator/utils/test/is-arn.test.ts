@@ -4,6 +4,7 @@ import { isArn } from '../lib/is-arn';
 const validArns = [
   'arn:aws:iam::123456789012:user/johndoe',
   'arn:aws:network-firewall:ap-southeast-2:123456789012:firewall-policy/central-egress-nfw-policy',
+  'arn:aws-us-gov:network-firewall:us-gov-west-1:123456789012:firewall-policy/awspeter-test-manual-policy',
 ];
 
 const invalidArns = ['abcd', '', 'http://www.test.com:8080', 'test:aws:iam::123456789012:user/johndoe'];
