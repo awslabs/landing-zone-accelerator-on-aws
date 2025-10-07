@@ -68,6 +68,7 @@ export function isIpv4Cidr(cidr: string): boolean {
   try {
     IPv4CidrRange.fromCidr(cidr);
     return true;
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
   } catch (e) {
     return false;
   }
@@ -83,6 +84,7 @@ export function isIpv6Cidr(cidr: string): boolean {
   try {
     IPv6CidrRange.fromCidr(cidr);
     return true;
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
   } catch (e) {
     return false;
   }
@@ -98,6 +100,7 @@ export function isIpv4(ip: string): boolean {
   try {
     IPv4.fromString(ip);
     return true;
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
   } catch (e) {
     return false;
   }

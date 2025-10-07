@@ -1019,8 +1019,8 @@ export class InstallerStack extends cdk.Stack {
                   fi
                   export $(printf "AWS_ACCESS_KEY_ID=%s AWS_SECRET_ACCESS_KEY=%s AWS_SESSION_TOKEN=%s" $MANAGEMENT_ACCOUNT_CREDENTIAL);
                   set -e && ./lib/bash/bootstrap-management.sh ${acceleratorPrefix} ${
-                cdk.Aws.REGION
-              } $MANAGEMENT_ACCOUNT_ID ${globalRegion} $FORCE_BOOTSTRAP;
+                    cdk.Aws.REGION
+                  } $MANAGEMENT_ACCOUNT_ID ${globalRegion} $FORCE_BOOTSTRAP;
                   unset AWS_ACCESS_KEY_ID;
                   unset AWS_SECRET_ACCESS_KEY;
                   unset AWS_SESSION_TOKEN;

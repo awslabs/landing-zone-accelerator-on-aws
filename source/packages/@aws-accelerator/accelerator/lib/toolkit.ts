@@ -59,6 +59,7 @@ export enum AcceleratorToolkitCommand {
   DEPLOY = 'deploy',
   DIFF = 'diff',
   SYNTH = 'synth',
+  //eslint-disable-next-line @typescript-eslint/no-duplicate-enum-values
   SYNTHESIZE = 'synth',
 }
 

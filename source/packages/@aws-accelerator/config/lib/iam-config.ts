@@ -299,6 +299,7 @@ export class IamConfig implements i.IIamConfig {
           if (managedActiveDirectory.secretConfig.account) {
             return managedActiveDirectory.secretConfig.account;
           } else {
+            // eslint-disable-next-line @typescript-eslint/no-unused-expressions
             managedActiveDirectory.account;
           }
         }

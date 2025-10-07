@@ -204,6 +204,7 @@ export class NetworkValidatorFunctions {
 
     try {
       IPv4CidrRange.fromCidr(cidr);
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (e) {
       return false;
     }
@@ -222,6 +223,7 @@ export class NetworkValidatorFunctions {
 
     try {
       IPv6CidrRange.fromCidr(cidr);
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (e) {
       return false;
     }
@@ -236,6 +238,7 @@ export class NetworkValidatorFunctions {
   public isValidIpv4(ip: string): boolean {
     try {
       IPv4.fromString(ip);
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (e) {
       return false;
     }
@@ -250,6 +253,7 @@ export class NetworkValidatorFunctions {
   public isValidIpv6(ip: string): boolean {
     try {
       IPv6.fromString(ip);
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (e) {
       return false;
     }

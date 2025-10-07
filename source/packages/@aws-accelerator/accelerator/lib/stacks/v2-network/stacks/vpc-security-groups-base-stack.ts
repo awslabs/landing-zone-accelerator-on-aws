@@ -298,6 +298,7 @@ export class VpcSecurityGroupsBaseStack extends AcceleratorStack {
           ),
         });
       } else {
+        // eslint-disable-next-line @typescript-eslint/no-unused-expressions
         source.ipv6
           ? securityGroupSourceDetails.push({ cidrIpv6: subnetConfigItem.ipv6CidrBlock })
           : securityGroupSourceDetails.push({ cidrIp: subnetConfigItem.ipv4CidrBlock });

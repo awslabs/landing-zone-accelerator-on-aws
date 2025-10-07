@@ -219,6 +219,7 @@ export class LZAResourceLookup {
     }
     try {
       return fs.readFileSync(templatePath).toString();
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (err) {
       return '{}';
     }

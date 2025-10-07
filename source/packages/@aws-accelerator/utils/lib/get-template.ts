@@ -128,6 +128,7 @@ function isValidJsonObject(str: string): string {
   } catch (error) {
     // If there's an error during parsing (e.g., the input string is not valid JSON),
     // return an empty JSON object string
+    logger.debug('is valid json', error);
     return '{}';
   }
 }

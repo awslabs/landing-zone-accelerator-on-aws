@@ -302,6 +302,7 @@ export async function fileExists(filePath: string): Promise<boolean> {
     await fs.promises.stat(filePath);
     return true;
   } catch (err) {
+    logger.debug('file exists check', err);
     return false;
   }
 }
@@ -311,6 +312,7 @@ export async function directoryExists(directory: string): Promise<boolean> {
     const stats = await fs.promises.stat(directory);
     return stats.isDirectory();
   } catch (err) {
+    logger.debug('directory exists check', err);
     return false;
   }
 }

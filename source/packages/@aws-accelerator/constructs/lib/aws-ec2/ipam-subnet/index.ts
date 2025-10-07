@@ -269,6 +269,7 @@ async function updateTags(subnetId: string, ec2Client: EC2Client, newTags: Tag[]
 function returnBoolean(input: string): boolean | undefined {
   try {
     return JSON.parse(input.toLowerCase());
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
   } catch (e) {
     return undefined;
   }

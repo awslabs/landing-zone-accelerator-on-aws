@@ -98,15 +98,15 @@ describe('SecurityConfig', () => {
     expect(new AwsConfigRuleSet().rules).toStrictEqual([]);
 
     expect(new MetricConfig().filterName).toBe('');
-
+    // eslint-disable-next-line @typescript-eslint/no-unused-expressions
     expect(new MetricSetConfig().regions).toBeUndefined;
 
     expect(new AlarmConfig().alarmName).toBe('');
-
+    // eslint-disable-next-line @typescript-eslint/no-unused-expressions
     expect(new AlarmSetConfig().regions).toBeUndefined;
-
+    // eslint-disable-next-line @typescript-eslint/no-unused-expressions
     expect(new EncryptionConfig().kmsKeyName).toBeUndefined;
-
+    // eslint-disable-next-line @typescript-eslint/no-unused-expressions
     expect(new LogGroupsConfig().encryption).toBeUndefined;
 
     // Test BlockPublicDocumentSharingConfig

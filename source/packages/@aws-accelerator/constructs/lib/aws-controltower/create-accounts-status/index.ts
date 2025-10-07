@@ -114,18 +114,16 @@ export async function handler(event: any): Promise<
 }
 
 async function inProgress(): Promise<number> {
-  const provisionedProductsUnderChange: ProvisionedProductAttribute[] = await getProvisionedProductsWithStatus(
-    'UNDER_CHANGE',
-  );
+  const provisionedProductsUnderChange: ProvisionedProductAttribute[] =
+    await getProvisionedProductsWithStatus('UNDER_CHANGE');
   let accountsInProcess = 0;
   if (provisionedProductsUnderChange.length > 0) {
     console.log(`Products that are UNDER_CHANGE ${provisionedProductsUnderChange.length}`);
     accountsInProcess = accountsInProcess + provisionedProductsUnderChange.length;
   }
 
-  const provisionedProductsPlan: ProvisionedProductAttribute[] = await getProvisionedProductsWithStatus(
-    'PLAN_IN_PROGRESS',
-  );
+  const provisionedProductsPlan: ProvisionedProductAttribute[] =
+    await getProvisionedProductsWithStatus('PLAN_IN_PROGRESS');
   if (provisionedProductsPlan.length > 0) {
     console.log(`Products that are PLAN_IN_PROGRESS ${provisionedProductsPlan.length}`);
     accountsInProcess = accountsInProcess + provisionedProductsPlan.length;

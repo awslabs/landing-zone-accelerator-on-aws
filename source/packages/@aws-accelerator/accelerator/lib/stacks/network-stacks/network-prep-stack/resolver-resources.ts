@@ -185,6 +185,7 @@ export class ResolverResources {
       if (ruleItem.customDomainList) {
         try {
           domainListName = path.basename(ruleItem.customDomainList, path.extname(ruleItem.customDomainList));
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
         } catch (e) {
           this.stack.addLogs(LogLevel.ERROR, `Error parsing list name from ${ruleItem.customDomainList}`);
           throw new Error(`Configuration validation failed at runtime.`);

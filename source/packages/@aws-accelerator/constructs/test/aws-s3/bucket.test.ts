@@ -129,6 +129,7 @@ describe('Bucket', () => {
           acceleratorPrefix: 'AWSAccelerator',
         },
       });
+      // eslint-disable-next-line @typescript-eslint/no-unused-expressions
       noKmsBucket.getKey().keyArn;
       return noKmsBucket.getS3Bucket().bucketName;
     }

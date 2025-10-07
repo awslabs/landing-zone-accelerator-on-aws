@@ -619,6 +619,7 @@ export class NetworkAssociationsStack extends NetworkStack {
             vpc: vpcId,
           });
         }
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
       } catch (err) {
         this.logger.error(
           `Could not create target group for ${targetGroupItem.name} in vpc ${vpcItem.name}. Please review the target group configuration`,

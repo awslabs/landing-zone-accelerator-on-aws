@@ -15,7 +15,7 @@ import * as cdk from 'aws-cdk-lib';
 import { Construct } from 'constructs';
 import { NagSuppressions } from 'cdk-nag';
 import { pascalCase } from 'change-case';
-const path = require('path');
+import * as path from 'path';
 import { DEFAULT_LAMBDA_RUNTIME } from '../../../utils/lib/lambda';
 
 /**

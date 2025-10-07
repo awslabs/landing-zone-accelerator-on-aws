@@ -38,9 +38,8 @@ vi.mock('@aws-accelerator/utils/lib/throttle', () => ({
 }));
 
 describe('enable-organization-admin-account', () => {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let mockEvent: any;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
   let consoleSpy: any;
 
   beforeEach(() => {
@@ -74,7 +73,6 @@ describe('enable-organization-admin-account', () => {
       EnabledServicePrincipals: [],
     };
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (AuditManagerClient as any).mockImplementation(() => ({
       send: vi.fn().mockImplementation(command => {
         if (command instanceof GetAccountStatusCommand) {

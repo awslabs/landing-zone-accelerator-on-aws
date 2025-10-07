@@ -279,6 +279,7 @@ export class Vpc implements IVpc {
     try {
       const pool = Pool.fromCidrRanges([vpcCidr]);
       return pool.getCidrRange(requestedPrefix);
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (e) {
       // If the above operation fails, it's due to the requested prefix being too large.
       // Return undefined to indicate that no CIDR range could be found.

@@ -418,7 +418,7 @@ export class AcceleratorPipeline extends Construct {
       });
     } else {
       const configRepositoryBranchName = this.props.useExistingConfigRepo
-        ? this.props.configRepositoryBranchName ?? 'main'
+        ? (this.props.configRepositoryBranchName ?? 'main')
         : 'main';
       const codecommitConfigRepository = this.getCodeCommitConfigRepository(configRepositoryBranchName);
       this.pipeline.addStage({

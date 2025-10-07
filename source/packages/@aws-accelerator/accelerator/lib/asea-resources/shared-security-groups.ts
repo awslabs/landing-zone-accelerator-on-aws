@@ -151,6 +151,7 @@ export class SharedSecurityGroups extends AseaResource {
                 ingressRule.logicalResourceId,
               );
             }
+            // eslint-disable-next-line @typescript-eslint/no-unused-vars
           } catch (error) {
             // continue the ref may not exits
           }
@@ -166,6 +167,7 @@ export class SharedSecurityGroups extends AseaResource {
                 ingressRule.logicalResourceId,
               );
             }
+            // eslint-disable-next-line @typescript-eslint/no-unused-vars
           } catch (error) {
             // the ref may not exist
           }
@@ -181,6 +183,7 @@ export class SharedSecurityGroups extends AseaResource {
                   egressRule.logicalResourceId,
                 );
               }
+              // eslint-disable-next-line @typescript-eslint/no-unused-vars
             } catch (error) {
               // continue the ref may not exist
             }
@@ -195,6 +198,7 @@ export class SharedSecurityGroups extends AseaResource {
                   egressRule.logicalResourceId,
                 );
               }
+              // eslint-disable-next-line @typescript-eslint/no-unused-vars
             } catch (error) {
               // continue the ref may not exist
             }

@@ -173,8 +173,8 @@ export class SecurityStack extends AcceleratorStack {
       (guardDutyConfig.excludeRegions
         ? guardDutyConfig.excludeRegions.indexOf(this.region) === -1
         : guardDutyConfig.deploymentTargets
-        ? this.isIncluded(guardDutyConfig.deploymentTargets)
-        : true)
+          ? this.isIncluded(guardDutyConfig.deploymentTargets)
+          : true)
     ) {
       if (guardDutyConfig.exportConfiguration.enable) {
         // Validate Delegated Admin Account name is part of account config

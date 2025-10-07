@@ -12,7 +12,6 @@ import { AccountId, EventType, Partition, Region } from './common/resources';
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type PropertyType = { [Key: string]: any };
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 type EventPropertiesType = { new?: PropertyType[]; old?: PropertyType[] };
 
 /**
@@ -45,11 +44,10 @@ type EventPropertiesType = { new?: PropertyType[]; old?: PropertyType[] };
  */
 export abstract class AcceleratorUnitTest {
   private static prepareResourceProperties(properties?: PropertyType[]): PropertyType | undefined {
-    const resourcePropertyList:
-      | {
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          [key: string]: any;
-        }[] = properties ?? [];
+    const resourcePropertyList: {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      [key: string]: any;
+    }[] = properties ?? [];
 
     const resourceProperties: {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any

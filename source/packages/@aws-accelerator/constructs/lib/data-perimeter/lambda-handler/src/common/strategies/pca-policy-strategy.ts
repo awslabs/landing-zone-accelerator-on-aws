@@ -53,7 +53,8 @@ export class PcaPolicyStrategy extends AllowedOnlyPolicyStrategy {
 
     let policyDocument: PolicyDocument;
     const currPolicyText = await this.getResourcePolicy(arn);
-    if (!currPolicyText) return; // Do nothing if current resource policy is empty
+    if (!currPolicyText)
+      return; // Do nothing if current resource policy is empty
     else {
       policyDocument = JSON.parse(currPolicyText);
     }

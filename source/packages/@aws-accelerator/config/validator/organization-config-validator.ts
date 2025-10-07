@@ -18,8 +18,8 @@ import { ReplacementsConfig } from '../lib/replacements-config';
 import { CommonValidatorFunctions } from './common/common-validator-functions';
 
 export class OrganizationConfigValidator {
-  private readonly ouScpLimit = Number(process.env['ORGANIZATIONAL_UNIT_SCP_LIMIT']) ?? 5;
-  private readonly accountScpLimit = Number(process.env['ACCOUNT_SCP_LIMIT']) ?? 5;
+  private readonly ouScpLimit = Number(process.env['ORGANIZATIONAL_UNIT_SCP_LIMIT']) || 5;
+  private readonly accountScpLimit = Number(process.env['ACCOUNT_SCP_LIMIT']) || 5;
 
   constructor(values: OrganizationConfig, replacementsConfig: ReplacementsConfig | undefined, configDir: string) {
     const errors: string[] = [];

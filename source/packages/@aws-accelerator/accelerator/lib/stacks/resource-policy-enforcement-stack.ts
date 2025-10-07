@@ -380,13 +380,16 @@ export class ResourcePolicyEnforcementStack extends AcceleratorStack {
     policySet: ResourcePolicySetConfig,
     defaultPolicies: ResourcePolicyConfig[],
   ): ResourcePolicyConfig[] {
-    const resourcePolicies = defaultPolicies.reduce((acc, policy) => {
-      acc[policy.resourceType] = {
-        resourceType: policy.resourceType,
-        document: policy.document,
-      };
-      return acc;
-    }, {} as { [key: string]: ResourcePolicyConfig });
+    const resourcePolicies = defaultPolicies.reduce(
+      (acc, policy) => {
+        acc[policy.resourceType] = {
+          resourceType: policy.resourceType,
+          document: policy.document,
+        };
+        return acc;
+      },
+      {} as { [key: string]: ResourcePolicyConfig },
+    );
 
     for (const policy of policySet.resourcePolicies) {
       resourcePolicies[policy.resourceType] = policy;

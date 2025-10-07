@@ -15,8 +15,7 @@ import * as cdk from 'aws-cdk-lib';
 import { Construct } from 'constructs';
 import { PolicyStatementType } from '@aws-accelerator/utils';
 import { CUSTOM_RESOURCE_PROVIDER_RUNTIME } from '../../../utils/lib/lambda';
-
-const path = require('path');
+import * as path from 'path';
 
 /**
  * Initialized AuditManagerOrganizationalAdminAccountProps properties

@@ -172,11 +172,10 @@ export class LzaLambda extends Construct {
         [key: string]: any;
       }
     | undefined {
-    const lambdaEnvironmentList:
-      | {
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          [key: string]: any;
-        }[] = props.environmentVariables ?? [];
+    const lambdaEnvironmentList: {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      [key: string]: any;
+    }[] = props.environmentVariables ?? [];
 
     const lambdaEnvironment: {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any

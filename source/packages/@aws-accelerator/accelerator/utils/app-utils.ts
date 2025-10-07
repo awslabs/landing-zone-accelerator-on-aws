@@ -1040,7 +1040,6 @@ async function handleNestedStacksMapping(mapping: ASEAMapping) {
   return nestedStacks;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function addNewResourcesFromStack(resources: CfnResourceType[], stackResources: StackResources) {
   // Turn into a hash map for faster processing
   const resourceObj = resources.reduce((acc: { [key: string]: CfnResourceType }, resource) => {

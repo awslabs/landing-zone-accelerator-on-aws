@@ -179,6 +179,7 @@ async function isControlTowerPolicy(policyDetail: Policy): Promise<boolean> {
 
 async function getOriginalPolicyDocument(policyName: string, orgConfig: OrganizationConfig): Promise<string> {
   const policyPath = await getOriginalPolicyDocumentPath(policyName, orgConfig);
+  /* eslint-disable-next-line @typescript-eslint/no-require-imports */
   return JSON.stringify(require(path.join(__dirname, 'policies', policyPath)));
 }
 

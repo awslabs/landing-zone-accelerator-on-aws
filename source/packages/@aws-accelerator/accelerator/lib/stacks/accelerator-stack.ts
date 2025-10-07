@@ -375,8 +375,8 @@ export abstract class AcceleratorStack extends cdk.Stack {
       (inputConfig.excludeRegions
         ? inputConfig.excludeRegions.indexOf(this.region) === -1
         : inputConfig.deploymentTargets?.excludedRegions
-        ? inputConfig.deploymentTargets?.excludedRegions?.indexOf(this.region) === -1
-        : true)
+          ? inputConfig.deploymentTargets?.excludedRegions?.indexOf(this.region) === -1
+          : true)
     );
   }
 

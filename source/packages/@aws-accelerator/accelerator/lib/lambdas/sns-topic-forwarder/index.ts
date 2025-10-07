@@ -26,7 +26,7 @@ const snsClient = new SNSClient({ customUserAgent: process.env['SOLUTION_ID'] })
  * @param event
  * @returns
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+
 export async function handler(event: SNSEvent): Promise<void> {
   console.log(JSON.stringify(event));
 

@@ -262,6 +262,7 @@ export class ImportAseaResourcesStack extends NetworkStack {
           this.logger.debug(`Updating ${parameterItem.logicalId} ssm Parameter`);
           cfnParameter.addPropertyOverride('Name', parameterItem.parameterName);
           cfnParameter.addPropertyOverride('Value', parameterItem.stringValue);
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
         } catch (err) {
           this.logger.debug(`${parameterItem.logicalId} not found creating new ssm Parameter`);
           cfnParameter = new cdk.aws_ssm.CfnParameter(this, parameterItem.logicalId, {
@@ -316,6 +317,7 @@ export class ImportAseaResourcesStack extends NetworkStack {
           this.logger.debug(`Updating ${parameterItem.logicalId} ssm Parameter`);
           cfnParameter.addPropertyOverride('Name', parameterItem.parameterName);
           cfnParameter.addPropertyOverride('Value', parameterItem.stringValue);
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
         } catch (err) {
           this.logger.debug(`${parameterItem.logicalId} not found creating new ssm Parameter`);
           cfnParameter = new cdk.aws_ssm.CfnParameter(nestedStack.stack, parameterItem.logicalId, {
