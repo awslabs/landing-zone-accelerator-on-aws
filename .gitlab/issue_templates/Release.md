@@ -39,4 +39,6 @@ Additional information regarding the release process can be found on the followi
 - [ ] I have updated the repository's default branch to be the new release branch
 
 ### Post-Release
-- [ ] I have closed all [pending release](https://github.com/awslabs/landing-zone-accelerator-on-aws/issues?q=is%3Aissue%20state%3Aopen%20label%3Apending-release) issues in GitHub 
+- [ ] I have closed all [pending release](https://github.com/awslabs/landing-zone-accelerator-on-aws/issues?q=is%3Aissue%20state%3Aopen%20label%3Apending-release) issues in GitHub
+- [ ] I have merged the GitLab release branch back into the `integ` branch to create a merge commit
+- [ ] I have created a merge request against the `integ` branch to increment the LZA version
