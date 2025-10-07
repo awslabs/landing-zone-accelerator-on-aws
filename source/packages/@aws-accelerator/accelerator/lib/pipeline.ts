@@ -471,17 +471,7 @@ export class AcceleratorPipeline extends Construct {
           build: {
             commands: [
               'env',
-              `if [ "prepare" = "\${ACCELERATOR_STAGE}" ]; then 
-                cd source;
-                set -e && LOG_LEVEL=info yarn validate-config $CODEBUILD_SRC_DIR_Config;
-                export PACKAGE_VERSION=$(cat package.json | grep version | head -1 | awk -F: '{ print $2 }' | sed 's/[",]//g' | tr -d '[:space:]');
-                if [ "$ACCELERATOR_CHECK_VERSION" = "yes" ]; then
-                  if [ "$PACKAGE_VERSION" != "$ACCELERATOR_PIPELINE_VERSION" ]; then
-                    echo "ERROR: Accelerator package version in Source does not match currently installed LZA version. Please ensure that the Installer stack has been updated prior to updating the Source code in CodePipeline."
-                    exit 1
-                  fi
-                fi
-              fi`,
+              `"\${WORK_DIR}/scripts/prepare-stage.sh"`,
               `cd $WORK_DIR;`,
               `RUNNER_ARGS="--partition ${cdk.Aws.PARTITION} --region ${cdk.Aws.REGION} --config-dir $CODEBUILD_SRC_DIR_Config --stage $ACCELERATOR_STAGE --prefix ${props.prefixes.accelerator}"`,
               `if ${this.props.useExistingRoles}; then RUNNER_ARGS="$RUNNER_ARGS --use-existing-roles"; fi`,
