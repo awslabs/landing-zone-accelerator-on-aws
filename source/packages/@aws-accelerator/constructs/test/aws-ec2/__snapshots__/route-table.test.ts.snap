@@ -447,6 +447,12 @@ exports[`RouteTable > Construct(RouteTable):  Snapshot Test 1`] = `
         },
       },
       "Properties": {
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "Test",
+          },
+        ],
         "VpcId": {
           "Ref": "TestVpcE77CE678",
         },

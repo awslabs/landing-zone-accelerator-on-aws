@@ -329,6 +329,10 @@ exports[`EnableOptInRegions > Construct(EnableOptInRegions):  Snapshot Test 1`] 
           },
         },
         "Handler": "framework.isComplete",
+        "LoggingConfig": {
+          "ApplicationLogLevel": "FATAL",
+          "LogFormat": "JSON",
+        },
         "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
@@ -492,6 +496,10 @@ exports[`EnableOptInRegions > Construct(EnableOptInRegions):  Snapshot Test 1`] 
           },
         },
         "Handler": "framework.onEvent",
+        "LoggingConfig": {
+          "ApplicationLogLevel": "FATAL",
+          "LogFormat": "JSON",
+        },
         "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
@@ -659,6 +667,10 @@ exports[`EnableOptInRegions > Construct(EnableOptInRegions):  Snapshot Test 1`] 
           },
         },
         "Handler": "framework.onTimeout",
+        "LoggingConfig": {
+          "ApplicationLogLevel": "FATAL",
+          "LogFormat": "JSON",
+        },
         "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
@@ -818,22 +830,6 @@ exports[`EnableOptInRegions > Construct(EnableOptInRegions):  Snapshot Test 1`] 
             ],
           ],
         },
-        "LoggingConfiguration": {
-          "Destinations": [
-            {
-              "CloudWatchLogsLogGroup": {
-                "LogGroupArn": {
-                  "Fn::GetAtt": [
-                    "OptInRegionsOptInRegionsProviderwaiterstatemachineLogGroupDDB06910",
-                    "Arn",
-                  ],
-                },
-              },
-            },
-          ],
-          "IncludeExecutionData": false,
-          "Level": "ERROR",
-        },
         "RoleArn": {
           "Fn::GetAtt": [
             "OptInRegionsOptInRegionsProviderwaiterstatemachineRoleB3284282",
@@ -842,26 +838,6 @@ exports[`EnableOptInRegions > Construct(EnableOptInRegions):  Snapshot Test 1`] 
         },
       },
       "Type": "AWS::StepFunctions::StateMachine",
-    },
-    "OptInRegionsOptInRegionsProviderwaiterstatemachineLogGroupDDB06910": {
-      "DeletionPolicy": "Retain",
-      "Properties": {
-        "LogGroupName": {
-          "Fn::Join": [
-            "",
-            [
-              "/aws/vendedlogs/states/waiter-state-machine-",
-              {
-                "Ref": "OptInRegionsOptInRegionsProviderframeworkisCompleteA55ADDD8",
-              },
-              "-c841d4c9c0fdb8d6f91953b31a208bd1b2bcd0c384",
-            ],
-          ],
-        },
-        "RetentionInDays": 731,
-      },
-      "Type": "AWS::Logs::LogGroup",
-      "UpdateReplacePolicy": "Retain",
     },
     "OptInRegionsOptInRegionsProviderwaiterstatemachineRoleB3284282": {
       "Properties": {
@@ -935,22 +911,6 @@ exports[`EnableOptInRegions > Construct(EnableOptInRegions):  Snapshot Test 1`] 
                   ],
                 },
               ],
-            },
-            {
-              "Action": [
-                "logs:CreateLogDelivery",
-                "logs:CreateLogStream",
-                "logs:GetLogDelivery",
-                "logs:UpdateLogDelivery",
-                "logs:DeleteLogDelivery",
-                "logs:ListLogDeliveries",
-                "logs:PutLogEvents",
-                "logs:PutResourcePolicy",
-                "logs:DescribeResourcePolicies",
-                "logs:DescribeLogGroups",
-              ],
-              "Effect": "Allow",
-              "Resource": "*",
             },
           ],
           "Version": "2012-10-17",

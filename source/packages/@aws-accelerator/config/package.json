@@ -32,7 +32,7 @@
     "@types/node": "18.19.50",
     "@typescript-eslint/eslint-plugin": "8.45.0",
     "@typescript-eslint/parser": "8.45.0",
-    "aws-cdk-lib": "2.201.0",
+    "aws-cdk-lib": "2.219.0",
     "email-validator": "2.0.4",
     "eslint": "9.37.0",
     "eslint-config-prettier": "10.1.8",

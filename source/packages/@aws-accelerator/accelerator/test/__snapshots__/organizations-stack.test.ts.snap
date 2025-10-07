@@ -2136,6 +2136,10 @@ exports[`MultiOuOrganizationsStack > Construct(OrganizationsStack):  Snapshot Te
           },
         },
         "Handler": "framework.onEvent",
+        "LoggingConfig": {
+          "ApplicationLogLevel": "FATAL",
+          "LogFormat": "JSON",
+        },
         "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
@@ -2424,6 +2428,10 @@ exports[`MultiOuOrganizationsStack > Construct(OrganizationsStack):  Snapshot Te
           },
         },
         "Handler": "framework.onEvent",
+        "LoggingConfig": {
+          "ApplicationLogLevel": "FATAL",
+          "LogFormat": "JSON",
+        },
         "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
@@ -2714,6 +2722,10 @@ exports[`MultiOuOrganizationsStack > Construct(OrganizationsStack):  Snapshot Te
           },
         },
         "Handler": "framework.onEvent",
+        "LoggingConfig": {
+          "ApplicationLogLevel": "FATAL",
+          "LogFormat": "JSON",
+        },
         "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
@@ -5674,6 +5686,10 @@ exports[`OrganizationsStack > Construct(OrganizationsStack):  Snapshot Test 1`] 
           },
         },
         "Handler": "framework.onEvent",
+        "LoggingConfig": {
+          "ApplicationLogLevel": "FATAL",
+          "LogFormat": "JSON",
+        },
         "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
@@ -5962,6 +5978,10 @@ exports[`OrganizationsStack > Construct(OrganizationsStack):  Snapshot Test 1`] 
           },
         },
         "Handler": "framework.onEvent",
+        "LoggingConfig": {
+          "ApplicationLogLevel": "FATAL",
+          "LogFormat": "JSON",
+        },
         "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
@@ -6252,6 +6272,10 @@ exports[`OrganizationsStack > Construct(OrganizationsStack):  Snapshot Test 1`] 
           },
         },
         "Handler": "framework.onEvent",
+        "LoggingConfig": {
+          "ApplicationLogLevel": "FATAL",
+          "LogFormat": "JSON",
+        },
         "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
@@ -9100,6 +9124,10 @@ exports[`delegatedAdminStack > Construct(OrganizationsStack):  Snapshot Test 1`]
           },
         },
         "Handler": "framework.onEvent",
+        "LoggingConfig": {
+          "ApplicationLogLevel": "FATAL",
+          "LogFormat": "JSON",
+        },
         "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
@@ -9388,6 +9416,10 @@ exports[`delegatedAdminStack > Construct(OrganizationsStack):  Snapshot Test 1`]
           },
         },
         "Handler": "framework.onEvent",
+        "LoggingConfig": {
+          "ApplicationLogLevel": "FATAL",
+          "LogFormat": "JSON",
+        },
         "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
@@ -9678,6 +9710,10 @@ exports[`delegatedAdminStack > Construct(OrganizationsStack):  Snapshot Test 1`]
           },
         },
         "Handler": "framework.onEvent",
+        "LoggingConfig": {
+          "ApplicationLogLevel": "FATAL",
+          "LogFormat": "JSON",
+        },
         "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [

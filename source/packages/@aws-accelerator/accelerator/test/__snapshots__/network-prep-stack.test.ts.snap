@@ -1631,6 +1631,10 @@ drop http $HOME_NET any -> $EXTERNAL_NET any (http.host; content:"example.com"; 
           },
         },
         "Handler": "framework.onEvent",
+        "LoggingConfig": {
+          "ApplicationLogLevel": "FATAL",
+          "LogFormat": "JSON",
+        },
         "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [

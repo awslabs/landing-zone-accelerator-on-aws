@@ -388,7 +388,7 @@ export class VpcResources extends AseaResource {
       let subnetId = subnets[natGatewayItem.subnet].ref;
       if (!subnetId) {
         subnetId = this.scope.getExternalResourceParameter(
-          this.scope.getSsmPath(SsmResourceType.SUBNET, [vpcItem.name, natGateway.subnetId]),
+          this.scope.getSsmPath(SsmResourceType.SUBNET, [vpcItem.name, natGateway.subnetId!]),
         );
       }
       if (subnetId) {
