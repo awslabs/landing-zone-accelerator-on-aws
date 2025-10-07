@@ -21,7 +21,8 @@
   },
   "dependencies": {
     "@types/fs-extra": "11.0.1",
-    "aws-cdk-lib": "2.201.0",
+    "aws-cdk": "2.1029.4",
+    "aws-cdk-lib": "2.219.0",
     "ts-node": "10.9.1"
   },
   "devDependencies": {

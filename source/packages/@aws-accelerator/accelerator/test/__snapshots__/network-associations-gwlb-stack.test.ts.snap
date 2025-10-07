@@ -389,6 +389,10 @@ exports[`NetworkAssociationsGwlbStack > Construct(NetworkAssociationsGwlbStack):
           },
         },
         "Handler": "framework.onEvent",
+        "LoggingConfig": {
+          "ApplicationLogLevel": "FATAL",
+          "LogFormat": "JSON",
+        },
         "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
@@ -1258,6 +1262,10 @@ exports[`NetworkAssociationsGwlbStack > Construct(NetworkAssociationsGwlbStack):
           },
         },
         "Handler": "framework.onEvent",
+        "LoggingConfig": {
+          "ApplicationLogLevel": "FATAL",
+          "LogFormat": "JSON",
+        },
         "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
@@ -1849,6 +1857,10 @@ exports[`NetworkAssociationsGwlbStack > Construct(NetworkAssociationsGwlbStack):
           },
         },
         "Handler": "framework.onEvent",
+        "LoggingConfig": {
+          "ApplicationLogLevel": "FATAL",
+          "LogFormat": "JSON",
+        },
         "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
@@ -2166,6 +2178,10 @@ exports[`NetworkAssociationsGwlbStack > Construct(NetworkAssociationsGwlbStack):
           },
         },
         "Handler": "framework.onEvent",
+        "LoggingConfig": {
+          "ApplicationLogLevel": "FATAL",
+          "LogFormat": "JSON",
+        },
         "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [

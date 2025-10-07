@@ -4,6 +4,7 @@
     "@aws-cdk/core:bootstrapQualifier": "accel",
     "@aws-cdk/core:newStyleStackSynthesis": "true",
     "@aws-cdk/toolkit:requireApproval": "never",
-    "@aws-cdk/aws-iam:minimizePolicies": "true"
+    "@aws-cdk/aws-iam:minimizePolicies": "true",
+    "cli-telemetry": "false"
   }
 }

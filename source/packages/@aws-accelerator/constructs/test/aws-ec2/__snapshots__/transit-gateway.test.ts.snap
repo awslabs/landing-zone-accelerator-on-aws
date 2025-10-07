@@ -43,6 +43,9 @@ exports[`ImportTransitGateway > Construct(ImportTransitGateway):  Snapshot Test 
       "ap-southeast-5": {
         "value": "nodejs22.x",
       },
+      "ap-southeast-6": {
+        "value": "nodejs22.x",
+      },
       "ap-southeast-7": {
         "value": "nodejs22.x",
       },
@@ -65,7 +68,7 @@ exports[`ImportTransitGateway > Construct(ImportTransitGateway):  Snapshot Test 
         "value": "nodejs22.x",
       },
       "eu-isoe-west-1": {
-        "value": "nodejs18.x",
+        "value": "nodejs22.x",
       },
       "eu-north-1": {
         "value": "nodejs22.x",
@@ -83,6 +86,9 @@ exports[`ImportTransitGateway > Construct(ImportTransitGateway):  Snapshot Test 
         "value": "nodejs22.x",
       },
       "eu-west-3": {
+        "value": "nodejs22.x",
+      },
+      "eusc-de-east-1": {
         "value": "nodejs22.x",
       },
       "il-central-1": {
@@ -113,16 +119,22 @@ exports[`ImportTransitGateway > Construct(ImportTransitGateway):  Snapshot Test 
         "value": "nodejs22.x",
       },
       "us-iso-east-1": {
-        "value": "nodejs18.x",
+        "value": "nodejs22.x",
       },
       "us-iso-west-1": {
-        "value": "nodejs18.x",
+        "value": "nodejs22.x",
       },
       "us-isob-east-1": {
         "value": "nodejs18.x",
       },
       "us-isob-west-1": {
         "value": "nodejs18.x",
+      },
+      "us-isof-east-1": {
+        "value": "nodejs22.x",
+      },
+      "us-isof-south-1": {
+        "value": "nodejs22.x",
       },
       "us-west-1": {
         "value": "nodejs22.x",
@@ -473,6 +485,10 @@ exports[`ImportTransitGateway > Construct(ImportTransitGateway):  Snapshot Test 
           },
         },
         "Handler": "framework.onEvent",
+        "LoggingConfig": {
+          "ApplicationLogLevel": "FATAL",
+          "LogFormat": "JSON",
+        },
         "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
@@ -683,6 +699,10 @@ exports[`ImportTransitGateway > Construct(ImportTransitGateway):  Snapshot Test 
           },
         },
         "Handler": "framework.onEvent",
+        "LoggingConfig": {
+          "ApplicationLogLevel": "FATAL",
+          "LogFormat": "JSON",
+        },
         "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
@@ -879,6 +899,9 @@ exports[`TransitGateway > Construct(TransitGateway):  Snapshot Test 1`] = `
       "ap-southeast-5": {
         "value": "nodejs22.x",
       },
+      "ap-southeast-6": {
+        "value": "nodejs22.x",
+      },
       "ap-southeast-7": {
         "value": "nodejs22.x",
       },
@@ -901,7 +924,7 @@ exports[`TransitGateway > Construct(TransitGateway):  Snapshot Test 1`] = `
         "value": "nodejs22.x",
       },
       "eu-isoe-west-1": {
-        "value": "nodejs18.x",
+        "value": "nodejs22.x",
       },
       "eu-north-1": {
         "value": "nodejs22.x",
@@ -919,6 +942,9 @@ exports[`TransitGateway > Construct(TransitGateway):  Snapshot Test 1`] = `
         "value": "nodejs22.x",
       },
       "eu-west-3": {
+        "value": "nodejs22.x",
+      },
+      "eusc-de-east-1": {
         "value": "nodejs22.x",
       },
       "il-central-1": {
@@ -949,16 +975,22 @@ exports[`TransitGateway > Construct(TransitGateway):  Snapshot Test 1`] = `
         "value": "nodejs22.x",
       },
       "us-iso-east-1": {
-        "value": "nodejs18.x",
+        "value": "nodejs22.x",
       },
       "us-iso-west-1": {
-        "value": "nodejs18.x",
+        "value": "nodejs22.x",
       },
       "us-isob-east-1": {
         "value": "nodejs18.x",
       },
       "us-isob-west-1": {
         "value": "nodejs18.x",
+      },
+      "us-isof-east-1": {
+        "value": "nodejs22.x",
+      },
+      "us-isof-south-1": {
+        "value": "nodejs22.x",
       },
       "us-west-1": {
         "value": "nodejs22.x",
@@ -1309,6 +1341,10 @@ exports[`TransitGateway > Construct(TransitGateway):  Snapshot Test 1`] = `
           },
         },
         "Handler": "framework.onEvent",
+        "LoggingConfig": {
+          "ApplicationLogLevel": "FATAL",
+          "LogFormat": "JSON",
+        },
         "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
@@ -1519,6 +1555,10 @@ exports[`TransitGateway > Construct(TransitGateway):  Snapshot Test 1`] = `
           },
         },
         "Handler": "framework.onEvent",
+        "LoggingConfig": {
+          "ApplicationLogLevel": "FATAL",
+          "LogFormat": "JSON",
+        },
         "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
@@ -1715,6 +1755,9 @@ exports[`TransitGatewayAttachment > Construct(TransitGatewayAttachment):  Snapsh
       "ap-southeast-5": {
         "value": "nodejs22.x",
       },
+      "ap-southeast-6": {
+        "value": "nodejs22.x",
+      },
       "ap-southeast-7": {
         "value": "nodejs22.x",
       },
@@ -1737,7 +1780,7 @@ exports[`TransitGatewayAttachment > Construct(TransitGatewayAttachment):  Snapsh
         "value": "nodejs22.x",
       },
       "eu-isoe-west-1": {
-        "value": "nodejs18.x",
+        "value": "nodejs22.x",
       },
       "eu-north-1": {
         "value": "nodejs22.x",
@@ -1755,6 +1798,9 @@ exports[`TransitGatewayAttachment > Construct(TransitGatewayAttachment):  Snapsh
         "value": "nodejs22.x",
       },
       "eu-west-3": {
+        "value": "nodejs22.x",
+      },
+      "eusc-de-east-1": {
         "value": "nodejs22.x",
       },
       "il-central-1": {
@@ -1785,16 +1831,22 @@ exports[`TransitGatewayAttachment > Construct(TransitGatewayAttachment):  Snapsh
         "value": "nodejs22.x",
       },
       "us-iso-east-1": {
-        "value": "nodejs18.x",
+        "value": "nodejs22.x",
       },
       "us-iso-west-1": {
-        "value": "nodejs18.x",
+        "value": "nodejs22.x",
       },
       "us-isob-east-1": {
         "value": "nodejs18.x",
       },
       "us-isob-west-1": {
         "value": "nodejs18.x",
+      },
+      "us-isof-east-1": {
+        "value": "nodejs22.x",
+      },
+      "us-isof-south-1": {
+        "value": "nodejs22.x",
       },
       "us-west-1": {
         "value": "nodejs22.x",
@@ -2145,6 +2197,10 @@ exports[`TransitGatewayAttachment > Construct(TransitGatewayAttachment):  Snapsh
           },
         },
         "Handler": "framework.onEvent",
+        "LoggingConfig": {
+          "ApplicationLogLevel": "FATAL",
+          "LogFormat": "JSON",
+        },
         "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
@@ -2355,6 +2411,10 @@ exports[`TransitGatewayAttachment > Construct(TransitGatewayAttachment):  Snapsh
           },
         },
         "Handler": "framework.onEvent",
+        "LoggingConfig": {
+          "ApplicationLogLevel": "FATAL",
+          "LogFormat": "JSON",
+        },
         "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
@@ -2551,6 +2611,9 @@ exports[`TransitGatewayRouteTableAssociation > Construct(TransitGatewayRouteTabl
       "ap-southeast-5": {
         "value": "nodejs22.x",
       },
+      "ap-southeast-6": {
+        "value": "nodejs22.x",
+      },
       "ap-southeast-7": {
         "value": "nodejs22.x",
       },
@@ -2573,7 +2636,7 @@ exports[`TransitGatewayRouteTableAssociation > Construct(TransitGatewayRouteTabl
         "value": "nodejs22.x",
       },
       "eu-isoe-west-1": {
-        "value": "nodejs18.x",
+        "value": "nodejs22.x",
       },
       "eu-north-1": {
         "value": "nodejs22.x",
@@ -2591,6 +2654,9 @@ exports[`TransitGatewayRouteTableAssociation > Construct(TransitGatewayRouteTabl
         "value": "nodejs22.x",
       },
       "eu-west-3": {
+        "value": "nodejs22.x",
+      },
+      "eusc-de-east-1": {
         "value": "nodejs22.x",
       },
       "il-central-1": {
@@ -2621,16 +2687,22 @@ exports[`TransitGatewayRouteTableAssociation > Construct(TransitGatewayRouteTabl
         "value": "nodejs22.x",
       },
       "us-iso-east-1": {
-        "value": "nodejs18.x",
+        "value": "nodejs22.x",
       },
       "us-iso-west-1": {
-        "value": "nodejs18.x",
+        "value": "nodejs22.x",
       },
       "us-isob-east-1": {
         "value": "nodejs18.x",
       },
       "us-isob-west-1": {
         "value": "nodejs18.x",
+      },
+      "us-isof-east-1": {
+        "value": "nodejs22.x",
+      },
+      "us-isof-south-1": {
+        "value": "nodejs22.x",
       },
       "us-west-1": {
         "value": "nodejs22.x",
@@ -2723,6 +2795,10 @@ exports[`TransitGatewayRouteTableAssociation > Construct(TransitGatewayRouteTabl
           },
         },
         "Handler": "framework.onEvent",
+        "LoggingConfig": {
+          "ApplicationLogLevel": "FATAL",
+          "LogFormat": "JSON",
+        },
         "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
@@ -2933,6 +3009,10 @@ exports[`TransitGatewayRouteTableAssociation > Construct(TransitGatewayRouteTabl
           },
         },
         "Handler": "framework.onEvent",
+        "LoggingConfig": {
+          "ApplicationLogLevel": "FATAL",
+          "LogFormat": "JSON",
+        },
         "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
@@ -3129,6 +3209,9 @@ exports[`TransitGatewayRouteTablePropagation > Construct(TransitGatewayRouteTabl
       "ap-southeast-5": {
         "value": "nodejs22.x",
       },
+      "ap-southeast-6": {
+        "value": "nodejs22.x",
+      },
       "ap-southeast-7": {
         "value": "nodejs22.x",
       },
@@ -3151,7 +3234,7 @@ exports[`TransitGatewayRouteTablePropagation > Construct(TransitGatewayRouteTabl
         "value": "nodejs22.x",
       },
       "eu-isoe-west-1": {
-        "value": "nodejs18.x",
+        "value": "nodejs22.x",
       },
       "eu-north-1": {
         "value": "nodejs22.x",
@@ -3169,6 +3252,9 @@ exports[`TransitGatewayRouteTablePropagation > Construct(TransitGatewayRouteTabl
         "value": "nodejs22.x",
       },
       "eu-west-3": {
+        "value": "nodejs22.x",
+      },
+      "eusc-de-east-1": {
         "value": "nodejs22.x",
       },
       "il-central-1": {
@@ -3199,16 +3285,22 @@ exports[`TransitGatewayRouteTablePropagation > Construct(TransitGatewayRouteTabl
         "value": "nodejs22.x",
       },
       "us-iso-east-1": {
-        "value": "nodejs18.x",
+        "value": "nodejs22.x",
       },
       "us-iso-west-1": {
-        "value": "nodejs18.x",
+        "value": "nodejs22.x",
       },
       "us-isob-east-1": {
         "value": "nodejs18.x",
       },
       "us-isob-west-1": {
         "value": "nodejs18.x",
+      },
+      "us-isof-east-1": {
+        "value": "nodejs22.x",
+      },
+      "us-isof-south-1": {
+        "value": "nodejs22.x",
       },
       "us-west-1": {
         "value": "nodejs22.x",
@@ -3559,6 +3651,10 @@ exports[`TransitGatewayRouteTablePropagation > Construct(TransitGatewayRouteTabl
           },
         },
         "Handler": "framework.onEvent",
+        "LoggingConfig": {
+          "ApplicationLogLevel": "FATAL",
+          "LogFormat": "JSON",
+        },
         "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
@@ -3769,6 +3865,10 @@ exports[`TransitGatewayRouteTablePropagation > Construct(TransitGatewayRouteTabl
           },
         },
         "Handler": "framework.onEvent",
+        "LoggingConfig": {
+          "ApplicationLogLevel": "FATAL",
+          "LogFormat": "JSON",
+        },
         "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [

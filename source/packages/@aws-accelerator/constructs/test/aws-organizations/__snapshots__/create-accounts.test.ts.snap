@@ -43,6 +43,9 @@ exports[`ReportDefinition > Construct(ConfigServiceTags):  Snapshot Test 1`] = `
       "ap-southeast-5": {
         "value": "nodejs22.x",
       },
+      "ap-southeast-6": {
+        "value": "nodejs22.x",
+      },
       "ap-southeast-7": {
         "value": "nodejs22.x",
       },
@@ -65,7 +68,7 @@ exports[`ReportDefinition > Construct(ConfigServiceTags):  Snapshot Test 1`] = `
         "value": "nodejs22.x",
       },
       "eu-isoe-west-1": {
-        "value": "nodejs18.x",
+        "value": "nodejs22.x",
       },
       "eu-north-1": {
         "value": "nodejs22.x",
@@ -83,6 +86,9 @@ exports[`ReportDefinition > Construct(ConfigServiceTags):  Snapshot Test 1`] = `
         "value": "nodejs22.x",
       },
       "eu-west-3": {
+        "value": "nodejs22.x",
+      },
+      "eusc-de-east-1": {
         "value": "nodejs22.x",
       },
       "il-central-1": {
@@ -113,16 +119,22 @@ exports[`ReportDefinition > Construct(ConfigServiceTags):  Snapshot Test 1`] = `
         "value": "nodejs22.x",
       },
       "us-iso-east-1": {
-        "value": "nodejs18.x",
+        "value": "nodejs22.x",
       },
       "us-iso-west-1": {
-        "value": "nodejs18.x",
+        "value": "nodejs22.x",
       },
       "us-isob-east-1": {
         "value": "nodejs18.x",
       },
       "us-isob-west-1": {
         "value": "nodejs18.x",
+      },
+      "us-isof-east-1": {
+        "value": "nodejs22.x",
+      },
+      "us-isof-south-1": {
+        "value": "nodejs22.x",
       },
       "us-west-1": {
         "value": "nodejs22.x",
@@ -416,6 +428,10 @@ exports[`ReportDefinition > Construct(ConfigServiceTags):  Snapshot Test 1`] = `
           },
         },
         "Handler": "framework.isComplete",
+        "LoggingConfig": {
+          "ApplicationLogLevel": "FATAL",
+          "LogFormat": "JSON",
+        },
         "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
@@ -581,6 +597,10 @@ exports[`ReportDefinition > Construct(ConfigServiceTags):  Snapshot Test 1`] = `
           },
         },
         "Handler": "framework.onEvent",
+        "LoggingConfig": {
+          "ApplicationLogLevel": "FATAL",
+          "LogFormat": "JSON",
+        },
         "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
@@ -750,6 +770,10 @@ exports[`ReportDefinition > Construct(ConfigServiceTags):  Snapshot Test 1`] = `
           },
         },
         "Handler": "framework.onTimeout",
+        "LoggingConfig": {
+          "ApplicationLogLevel": "FATAL",
+          "LogFormat": "JSON",
+        },
         "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
@@ -909,22 +933,6 @@ exports[`ReportDefinition > Construct(ConfigServiceTags):  Snapshot Test 1`] = `
             ],
           ],
         },
-        "LoggingConfiguration": {
-          "Destinations": [
-            {
-              "CloudWatchLogsLogGroup": {
-                "LogGroupArn": {
-                  "Fn::GetAtt": [
-                    "CreateOrganizationAccountsCreateOrganizationAccountsWaiterLogGroup60891BB2",
-                    "Arn",
-                  ],
-                },
-              },
-            },
-          ],
-          "IncludeExecutionData": true,
-          "Level": "ERROR",
-        },
         "RoleArn": {
           "Fn::GetAtt": [
             "CreateOrganizationAccountsCreateOrganizationAccountsProviderwaiterstatemachineRole22D85F30",
@@ -1006,22 +1014,6 @@ exports[`ReportDefinition > Construct(ConfigServiceTags):  Snapshot Test 1`] = `
                   ],
                 },
               ],
-            },
-            {
-              "Action": [
-                "logs:CreateLogDelivery",
-                "logs:CreateLogStream",
-                "logs:GetLogDelivery",
-                "logs:UpdateLogDelivery",
-                "logs:DeleteLogDelivery",
-                "logs:ListLogDeliveries",
-                "logs:PutLogEvents",
-                "logs:PutResourcePolicy",
-                "logs:DescribeResourcePolicies",
-                "logs:DescribeLogGroups",
-              ],
-              "Effect": "Allow",
-              "Resource": "*",
             },
           ],
           "Version": "2012-10-17",

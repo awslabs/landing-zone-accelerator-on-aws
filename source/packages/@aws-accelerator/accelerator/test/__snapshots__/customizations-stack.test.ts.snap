@@ -165,6 +165,10 @@ exports[`CustomizationsStack > Construct(CustomizationsStack):  Snapshot Test 1`
           },
         },
         "Handler": "framework.onEvent",
+        "LoggingConfig": {
+          "ApplicationLogLevel": "FATAL",
+          "LogFormat": "JSON",
+        },
         "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
@@ -826,6 +830,10 @@ exports[`CustomizationsStack > Construct(CustomizationsStack):  Snapshot Test 2`
           },
         },
         "Handler": "framework.onEvent",
+        "LoggingConfig": {
+          "ApplicationLogLevel": "FATAL",
+          "LogFormat": "JSON",
+        },
         "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
@@ -1344,6 +1352,10 @@ exports[`CustomizationsStack > Construct(CustomizationsStack):  Snapshot Test 3`
           },
         },
         "Handler": "framework.onEvent",
+        "LoggingConfig": {
+          "ApplicationLogLevel": "FATAL",
+          "LogFormat": "JSON",
+        },
         "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
@@ -2005,6 +2017,10 @@ exports[`CustomizationsStack > Construct(CustomizationsStack):  Snapshot Test 4`
           },
         },
         "Handler": "framework.onEvent",
+        "LoggingConfig": {
+          "ApplicationLogLevel": "FATAL",
+          "LogFormat": "JSON",
+        },
         "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [

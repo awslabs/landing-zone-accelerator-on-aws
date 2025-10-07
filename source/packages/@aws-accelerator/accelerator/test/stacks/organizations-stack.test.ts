@@ -21,6 +21,7 @@ import { IKey } from 'aws-cdk-lib/aws-kms';
 import { AcceleratorStackProps } from '../../lib/stacks/accelerator-stack';
 import { OrganizationsStack } from '../../lib/stacks/organizations-stack';
 import { createAcceleratorStackProps } from './stack-props-test-helper';
+import { AcceleratorKeyType } from '../../lib/stacks/accelerator-stack';
 
 let app: cdk.App;
 
@@ -28,7 +29,12 @@ beforeEach(() => {
   vi.clearAllMocks();
   vi.spyOn(OrganizationsStack.prototype, 'getCentralLogBucketName').mockImplementation(() => 'unitTestLogBucket');
   vi.spyOn(OrganizationsStack.prototype, 'getSsmPath').mockImplementation(() => '/test/ssm-path/');
-  vi.spyOn(OrganizationsStack.prototype, 'getAcceleratorKey').mockReturnValue({} as IKey);
+  vi.spyOn(OrganizationsStack.prototype, 'getAcceleratorKey').mockImplementation(keyType => {
+    if (keyType === AcceleratorKeyType.CLOUDWATCH_KEY) {
+      return undefined; // This simulates the case where CloudWatch encryption is disabled
+    }
+    return { keyArn: 'arn:aws:kms:us-east-1:123456789012:key/test-key-id' } as IKey;
+  });
   vi.spyOn(OrganizationsStack.prototype, 'isIncluded').mockImplementation(() => true);
 
   app = new cdk.App();

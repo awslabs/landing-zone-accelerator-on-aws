@@ -37,6 +37,7 @@
     "@aws-cdk/core:target-partitions": [
       "aws",
       "aws-cn"
-    ]
+    ],
+    "cli-telemetry": "false"
   }
 }

@@ -127,6 +127,10 @@ exports[`ConfigServiceTags > Construct(ConfigServiceTags):  Snapshot Test 1`] = 
           },
         },
         "Handler": "framework.isComplete",
+        "LoggingConfig": {
+          "ApplicationLogLevel": "FATAL",
+          "LogFormat": "JSON",
+        },
         "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
@@ -290,6 +294,10 @@ exports[`ConfigServiceTags > Construct(ConfigServiceTags):  Snapshot Test 1`] = 
           },
         },
         "Handler": "framework.onEvent",
+        "LoggingConfig": {
+          "ApplicationLogLevel": "FATAL",
+          "LogFormat": "JSON",
+        },
         "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
@@ -457,6 +465,10 @@ exports[`ConfigServiceTags > Construct(ConfigServiceTags):  Snapshot Test 1`] = 
           },
         },
         "Handler": "framework.onTimeout",
+        "LoggingConfig": {
+          "ApplicationLogLevel": "FATAL",
+          "LogFormat": "JSON",
+        },
         "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
@@ -616,22 +628,6 @@ exports[`ConfigServiceTags > Construct(ConfigServiceTags):  Snapshot Test 1`] = 
             ],
           ],
         },
-        "LoggingConfiguration": {
-          "Destinations": [
-            {
-              "CloudWatchLogsLogGroup": {
-                "LogGroupArn": {
-                  "Fn::GetAtt": [
-                    "TestCreateCTAccountsCreateControlTowerAccountWaiterLogGroupB3F2D4BA",
-                    "Arn",
-                  ],
-                },
-              },
-            },
-          ],
-          "IncludeExecutionData": true,
-          "Level": "ERROR",
-        },
         "RoleArn": {
           "Fn::GetAtt": [
             "TestCreateCTAccountsCreateControlTowerAcccountsProviderwaiterstatemachineRoleC1F4B90C",
@@ -713,22 +709,6 @@ exports[`ConfigServiceTags > Construct(ConfigServiceTags):  Snapshot Test 1`] = 
                   ],
                 },
               ],
-            },
-            {
-              "Action": [
-                "logs:CreateLogDelivery",
-                "logs:CreateLogStream",
-                "logs:GetLogDelivery",
-                "logs:UpdateLogDelivery",
-                "logs:DeleteLogDelivery",
-                "logs:ListLogDeliveries",
-                "logs:PutLogEvents",
-                "logs:PutResourcePolicy",
-                "logs:DescribeResourcePolicies",
-                "logs:DescribeLogGroups",
-              ],
-              "Effect": "Allow",
-              "Resource": "*",
             },
           ],
           "Version": "2012-10-17",

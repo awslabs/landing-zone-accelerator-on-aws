@@ -43,6 +43,9 @@ exports[`ValidateBucketKmsEncryption > Construct(ValidateBucketS3Encryption):  S
       "ap-southeast-5": {
         "value": "nodejs22.x",
       },
+      "ap-southeast-6": {
+        "value": "nodejs22.x",
+      },
       "ap-southeast-7": {
         "value": "nodejs22.x",
       },
@@ -65,7 +68,7 @@ exports[`ValidateBucketKmsEncryption > Construct(ValidateBucketS3Encryption):  S
         "value": "nodejs22.x",
       },
       "eu-isoe-west-1": {
-        "value": "nodejs18.x",
+        "value": "nodejs22.x",
       },
       "eu-north-1": {
         "value": "nodejs22.x",
@@ -83,6 +86,9 @@ exports[`ValidateBucketKmsEncryption > Construct(ValidateBucketS3Encryption):  S
         "value": "nodejs22.x",
       },
       "eu-west-3": {
+        "value": "nodejs22.x",
+      },
+      "eusc-de-east-1": {
         "value": "nodejs22.x",
       },
       "il-central-1": {
@@ -113,16 +119,22 @@ exports[`ValidateBucketKmsEncryption > Construct(ValidateBucketS3Encryption):  S
         "value": "nodejs22.x",
       },
       "us-iso-east-1": {
-        "value": "nodejs18.x",
+        "value": "nodejs22.x",
       },
       "us-iso-west-1": {
-        "value": "nodejs18.x",
+        "value": "nodejs22.x",
       },
       "us-isob-east-1": {
         "value": "nodejs18.x",
       },
       "us-isob-west-1": {
         "value": "nodejs18.x",
+      },
+      "us-isof-east-1": {
+        "value": "nodejs22.x",
+      },
+      "us-isof-south-1": {
+        "value": "nodejs22.x",
       },
       "us-west-1": {
         "value": "nodejs22.x",
@@ -471,6 +483,10 @@ exports[`ValidateBucketKmsEncryption > Construct(ValidateBucketS3Encryption):  S
           },
         },
         "Handler": "framework.onEvent",
+        "LoggingConfig": {
+          "ApplicationLogLevel": "FATAL",
+          "LogFormat": "JSON",
+        },
         "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
@@ -774,6 +790,10 @@ exports[`ValidateBucketKmsEncryption > Construct(ValidateBucketS3Encryption):  S
           },
         },
         "Handler": "framework.onEvent",
+        "LoggingConfig": {
+          "ApplicationLogLevel": "FATAL",
+          "LogFormat": "JSON",
+        },
         "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
@@ -936,6 +956,9 @@ exports[`ValidateBucketS3Encryption > Construct(ValidateBucketS3Encryption):  Sn
       "ap-southeast-5": {
         "value": "nodejs22.x",
       },
+      "ap-southeast-6": {
+        "value": "nodejs22.x",
+      },
       "ap-southeast-7": {
         "value": "nodejs22.x",
       },
@@ -958,7 +981,7 @@ exports[`ValidateBucketS3Encryption > Construct(ValidateBucketS3Encryption):  Sn
         "value": "nodejs22.x",
       },
       "eu-isoe-west-1": {
-        "value": "nodejs18.x",
+        "value": "nodejs22.x",
       },
       "eu-north-1": {
         "value": "nodejs22.x",
@@ -976,6 +999,9 @@ exports[`ValidateBucketS3Encryption > Construct(ValidateBucketS3Encryption):  Sn
         "value": "nodejs22.x",
       },
       "eu-west-3": {
+        "value": "nodejs22.x",
+      },
+      "eusc-de-east-1": {
         "value": "nodejs22.x",
       },
       "il-central-1": {
@@ -1006,16 +1032,22 @@ exports[`ValidateBucketS3Encryption > Construct(ValidateBucketS3Encryption):  Sn
         "value": "nodejs22.x",
       },
       "us-iso-east-1": {
-        "value": "nodejs18.x",
+        "value": "nodejs22.x",
       },
       "us-iso-west-1": {
-        "value": "nodejs18.x",
+        "value": "nodejs22.x",
       },
       "us-isob-east-1": {
         "value": "nodejs18.x",
       },
       "us-isob-west-1": {
         "value": "nodejs18.x",
+      },
+      "us-isof-east-1": {
+        "value": "nodejs22.x",
+      },
+      "us-isof-south-1": {
+        "value": "nodejs22.x",
       },
       "us-west-1": {
         "value": "nodejs22.x",
@@ -1364,6 +1396,10 @@ exports[`ValidateBucketS3Encryption > Construct(ValidateBucketS3Encryption):  Sn
           },
         },
         "Handler": "framework.onEvent",
+        "LoggingConfig": {
+          "ApplicationLogLevel": "FATAL",
+          "LogFormat": "JSON",
+        },
         "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
@@ -1667,6 +1703,10 @@ exports[`ValidateBucketS3Encryption > Construct(ValidateBucketS3Encryption):  Sn
           },
         },
         "Handler": "framework.onEvent",
+        "LoggingConfig": {
+          "ApplicationLogLevel": "FATAL",
+          "LogFormat": "JSON",
+        },
         "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
