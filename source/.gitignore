@@ -11,9 +11,9 @@ node_modules
 dist
 !source/.typescript/lambda/**/*.js
 !source/lambda/**/*.js
-source/packages/@aws-accelerator/accelerator/lib/logger.js.map
+packages/@aws-accelerator/accelerator/lib/logger.js.map
 asea-assets
-source/packages/@aws-accelerator/accelerator/cfn-templates/
+packages/@aws-accelerator/accelerator/cfn-templates/
 !commitlint.config.js
 
 ### log files
