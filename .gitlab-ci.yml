@@ -199,6 +199,26 @@ accelerator:attribution-check:
     - if: $CI_PROJECT_ID == "11925" && $CI_COMMIT_AUTHOR !~ /@amazon/ && $CI_MERGE_REQUEST_SQUASH_ON_MERGE == "true"
       when: always
     - when: never
+accelerator:gitlab-ci-isolation:
+  stage: pipeline
+  tags:
+    - arch:amd64
+    - size:medium
+  script:
+    - |
+      git fetch origin $CI_MERGE_REQUEST_TARGET_BRANCH_NAME
+      changed_files=$(git diff --name-only $CI_MERGE_REQUEST_DIFF_BASE_SHA...$CI_COMMIT_SHA)
+      file_count=$(echo "$changed_files" | grep -v '^$' | wc -l)
+      if echo "$changed_files" | grep -q "\.gitlab-ci\.yml$" && [ "$file_count" -gt 1 ]; then
+        echo "Error: .gitlab-ci.yml changes must be isolated from other file changes"
+        echo "Changed files:"
+        echo "$changed_files"
+        exit 1
+      fi
+  rules:
+    - if: $CI_MERGE_REQUEST_IID != null
+      when: always
+    - when: never 
 unit-test:accelerator:
   stage: pipeline
   needs: ["accelerator:build"]
@@ -380,7 +400,7 @@ unit-test:modules:
       when: never
     - if: $CI_MERGE_REQUEST_IID != null
       when: never
-    - when: always    
+    - when: always  
 unit-test:tools:
   stage: pipeline
   needs: ["accelerator:build"]
