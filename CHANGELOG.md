@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [1.14.0] - 2025-10-27
 
+### Added
+- feat(networking): add vpn connection ipv6 support
+
 ### Fixed
 
 - fix(validation): updated regex validation for Route53 Resolver Rule DNS to pass TLD

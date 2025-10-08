@@ -4632,9 +4632,17 @@
           "$ref": "#/definitions/NonEmptyString",
           "description": "(OPTIONAL) The Amazon-side IPv4 CIDR range that is allowed through the site-to-site VPN tunnel. Configuring this option restricts the Amazon-side CIDR range that can communicate with your local network.\n\nDefault - `0.0.0.0/0`"
         },
+        "amazonIpv6NetworkCidr": {
+          "$ref": "#/definitions/NonEmptyString",
+          "description": "(OPTIONAL) The Amazon-side IPv6 CIDR range that is allowed through the site-to-site VPN tunnel. Configuring this option restricts the Amazon-side CIDR range that can communicate with your local network.\n\nDefault - `::/0`"
+        },
         "customerIpv4NetworkCidr": {
           "$ref": "#/definitions/NonEmptyString",
           "description": "(OPTIONAL) The customer-side IPv4 CIDR range that is allowed through the site-to-site VPN tunnel. Configuring this option restricts the local CIDR range that can communicate with your AWS environment.\n\nDefault - `0.0.0.0/0`"
+        },
+        "customerIpv6NetworkCidr": {
+          "$ref": "#/definitions/NonEmptyString",
+          "description": "(OPTIONAL) The customer-side IPv6 CIDR range that is allowed through the site-to-site VPN tunnel. Configuring this option restricts the local CIDR range that can communicate with your AWS environment.\n\nDefault - `::/0`"
         },
         "enableVpnAcceleration": {
           "description": "(OPTIONAL) Enable Site-to-Site VPN Acceleration. For more information, see  {@link  https://docs.aws.amazon.com/vpn/latest/s2svpn/accelerated-vpn.html Accelerated Site-to-Site VPN connections } .",
@@ -4643,6 +4651,10 @@
         "name": {
           "$ref": "#/definitions/NonEmptyString",
           "description": "The name of the VPN Connection.\n\nThe value of this property will be utilized as the logical id for this resource. Any references to this object should specify this value."
+        },
+        "outsideIpAddressType": {
+          "$ref": "#/definitions/OutsideIpAddressType",
+          "description": "(OPTIONALThe type of IP address assigned to the outside interface of the customer gateway device. Valid values include `PublicIpv4` or `Ipv6`."
         },
         "routeTableAssociations": {
           "description": "(OPTIONAL) An array of Transit Gateway route table names to associate the VPN attachment to",
@@ -4763,6 +4775,10 @@
         "tunnelInsideCidr": {
           "$ref": "#/definitions/NonEmptyString",
           "description": "(OPTIONAL): The range of inside IP addresses for the tunnel. Any specified CIDR blocks must be unique across all VPN connections that use the same virtual private gateway."
+        },
+        "tunnelInsideIpv6Cidr": {
+          "$ref": "#/definitions/NonEmptyString",
+          "description": "(OPTIONAL): The range of inside IPv6 addresses for the tunnel. Any specified CIDR blocks must be unique across all VPN connections that use the same virtual private gateway."
         },
         "tunnelLifecycleControl": {
           "description": "(OPTIONAL) Enable tunnel endpoint lifecycle control. This feature provides control over the schedule of endpoint replacements. For more information, see  {@link  https://docs.aws.amazon.com/vpn/latest/s2svpn/tunnel-endpoint-lifecycle.html Tunnel Endpoint Lifecycle Control } .",
@@ -4954,6 +4970,13 @@
     "NonEmptyString": {
       "description": "A string that has at least 1 character",
       "minLength": 1,
+      "type": "string"
+    },
+    "OutsideIpAddressType": {
+      "enum": [
+        "PublicIpv4",
+        "Ipv6"
+      ],
       "type": "string"
     },
     "Phase1DhGroupType": {

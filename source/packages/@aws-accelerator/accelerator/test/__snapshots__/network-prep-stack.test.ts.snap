@@ -77,6 +77,25 @@ exports[`NetworkPrepStack > Construct(NetworkPrepStack):  Snapshot Test 1`] = `
       },
       "Type": "AWS::EC2::CustomerGateway",
     },
+    "AcceleratorCgwIpv6CustomerGateway3C91F2AE": {
+      "Metadata": {
+        "lzaLookup": {
+          "cgwName": "accelerator-cgw-ipv6",
+        },
+      },
+      "Properties": {
+        "BgpAsn": 65501,
+        "IpAddress": "2803::f800",
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "accelerator-cgw-ipv6",
+          },
+        ],
+        "Type": "ipsec.1",
+      },
+      "Type": "AWS::EC2::CustomerGateway",
+    },
     "AcceleratorIpamIpamB72C793C": {
       "Properties": {
         "Description": "Accelerator IPAM",
@@ -419,6 +438,179 @@ drop http $HOME_NET any -> $EXTERNAL_NET any (http.host; content:"example.com"; 
         "Type": "STATEFUL",
       },
       "Type": "AWS::NetworkFirewall::RuleGroup",
+    },
+    "AcceleratorVpnIpv6VpnConnectionCustomResourceCustomResourceResource0B194643": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "ServiceToken": {
+          "Fn::GetAtt": [
+            "AcceleratorVpnIpv6VpnConnectionCustomResourceframeworkonEvent992B4AB2",
+            "Arn",
+          ],
+        },
+        "amazonIpv6NetworkCidr": "::/128",
+        "customerGatewayId": {
+          "Ref": "AcceleratorCgwIpv6CustomerGateway3C91F2AE",
+        },
+        "customerIpv6NetworkCidr": "::/128",
+        "outsideIpAddressType": "Ipv6",
+        "roleName": "AWSAccelerator-CrossAccount-SiteToSiteVpn-Role",
+        "staticRoutesOnly": false,
+        "tags": [
+          {
+            "Key": "Name",
+            "Value": "accelerator-vpn-ipv6",
+          },
+        ],
+        "transitGatewayId": {
+          "Ref": "NetworkMainTransitGatewayF6473E53",
+        },
+        "tunnelInsideIpVersion": "ipv6",
+      },
+      "Type": "AWS::CloudFormation::CustomResource",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "AcceleratorVpnIpv6VpnConnectionCustomResourceframeworkonEvent992B4AB2": {
+      "DependsOn": [
+        "AcceleratorVpnIpv6VpnConnectionCustomResourceframeworkonEventServiceRoleDefaultPolicy0461B6CA",
+        "AcceleratorVpnIpv6VpnConnectionCustomResourceframeworkonEventServiceRole4B655EC0",
+      ],
+      "Properties": {
+        "Code": {
+          "S3Bucket": "cdk-hnb659fds-assets-555555555555-us-east-1",
+          "S3Key": "REPLACED-GENERATED-NAME.zip",
+        },
+        "Description": "AWS CDK resource provider framework - onEvent (AWSAccelerator-NetworkPrepStack-555555555555-us-east-1/AcceleratorVpnIpv6VpnConnection/CustomResource/Resource)",
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.14.0",
+            "USER_ON_EVENT_FUNCTION_ARN": {
+              "Fn::GetAtt": [
+                "VpnOnEventHandler05011160",
+                "Arn",
+              ],
+            },
+          },
+        },
+        "Handler": "framework.onEvent",
+        "LoggingConfig": {
+          "ApplicationLogLevel": "FATAL",
+          "LogFormat": "JSON",
+        },
+        "MemorySize": 512,
+        "Role": {
+          "Fn::GetAtt": [
+            "AcceleratorVpnIpv6VpnConnectionCustomResourceframeworkonEventServiceRole4B655EC0",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs20.x",
+        "Timeout": 900,
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "AcceleratorVpnIpv6VpnConnectionCustomResourceframeworkonEventServiceRole4B655EC0": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-IAM4",
+              "reason": "AWS Custom resource provider framework-role created by cdk.",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": [
+          {
+            "Fn::Join": [
+              "",
+              [
+                "arn:",
+                {
+                  "Ref": "AWS::Partition",
+                },
+                ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+              ],
+            ],
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "AcceleratorVpnIpv6VpnConnectionCustomResourceframeworkonEventServiceRoleDefaultPolicy0461B6CA": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-IAM5",
+              "reason": "Allows only specific policy.",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": "lambda:InvokeFunction",
+              "Effect": "Allow",
+              "Resource": [
+                {
+                  "Fn::GetAtt": [
+                    "VpnOnEventHandler05011160",
+                    "Arn",
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      {
+                        "Fn::GetAtt": [
+                          "VpnOnEventHandler05011160",
+                          "Arn",
+                        ],
+                      },
+                      ":*",
+                    ],
+                  ],
+                },
+              ],
+            },
+            {
+              "Action": "lambda:GetFunction",
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::GetAtt": [
+                  "VpnOnEventHandler05011160",
+                  "Arn",
+                ],
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "AcceleratorVpnIpv6VpnConnectionCustomResourceframeworkonEventServiceRoleDefaultPolicy0461B6CA",
+        "Roles": [
+          {
+            "Ref": "AcceleratorVpnIpv6VpnConnectionCustomResourceframeworkonEventServiceRole4B655EC0",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
     },
     "AcceleratorVpnVpnConnection4C6D9196": {
       "Properties": {
@@ -2459,7 +2651,7 @@ drop http $HOME_NET any -> $EXTERNAL_NET any (http.host; content:"example.com"; 
     },
     "SsmParamNetworkDxgwAccelratorVifVirtualInterface811176E7": {
       "DependsOn": [
-        "SsmParamenhancedVpnVpnConnection0FB23967",
+        "SsmParamNetworkDxgwAuthVifAccelratorVifVirtualInterface8E0DF7B7",
       ],
       "Properties": {
         "Name": "/accelerator/network/directConnectGateways/Network-DXGW/virtualInterfaces/Accelrator-VIF/id",
@@ -2471,9 +2663,6 @@ drop http $HOME_NET any -> $EXTERNAL_NET any (http.host; content:"example.com"; 
       "Type": "AWS::SSM::Parameter",
     },
     "SsmParamNetworkDxgwAuthVifAccelratorVifVirtualInterface8E0DF7B7": {
-      "DependsOn": [
-        "SsmParamenhancedVpnVpnConnection0FB23967",
-      ],
       "Properties": {
         "Name": "/accelerator/network/directConnectGateways/Network-DXGW-AuthVif/virtualInterfaces/Accelrator-VIF/id",
         "Type": "String",
@@ -2485,7 +2674,7 @@ drop http $HOME_NET any -> $EXTERNAL_NET any (http.host; content:"example.com"; 
     },
     "SsmParamNetworkDxgwAuthVifDirectConnectGateway41E055B8": {
       "DependsOn": [
-        "SsmParamenhancedVpnVpnConnection0FB23967",
+        "SsmParamacceleratorCgwCustomerGateway984E0261",
       ],
       "Properties": {
         "Name": "/accelerator/network/directConnectGateways/Network-DXGW-AuthVif/id",
@@ -2498,7 +2687,7 @@ drop http $HOME_NET any -> $EXTERNAL_NET any (http.host; content:"example.com"; 
     },
     "SsmParamNetworkDxgwDirectConnectGatewayC782B366": {
       "DependsOn": [
-        "SsmParamenhancedVpnVpnConnection0FB23967",
+        "SsmParamacceleratorCgwCustomerGateway984E0261",
       ],
       "Properties": {
         "Name": "/accelerator/network/directConnectGateways/Network-DXGW/id",
@@ -2658,6 +2847,9 @@ drop http $HOME_NET any -> $EXTERNAL_NET any (http.host; content:"example.com"; 
       "Type": "AWS::SSM::Parameter",
     },
     "SsmParamacceleratorBlockGroupRuleGroupEA562A3B": {
+      "DependsOn": [
+        "SsmParamhomeRegionProdPoolPoolId5672D6D3",
+      ],
       "Properties": {
         "Name": "/accelerator/network/route53Resolver/firewall/ruleGroups/accelerator-block-group/id",
         "Type": "String",
@@ -2668,9 +2860,6 @@ drop http $HOME_NET any -> $EXTERNAL_NET any (http.host; content:"example.com"; 
       "Type": "AWS::SSM::Parameter",
     },
     "SsmParamacceleratorCgwCustomerGateway984E0261": {
-      "DependsOn": [
-        "SsmParamNetworkMain2NetworkMain2StandaloneTransitGatewayRouteTableIdF641FDF1",
-      ],
       "Properties": {
         "Name": "/accelerator/network/customerGateways/accelerator-cgw/id",
         "Type": "String",
@@ -2680,7 +2869,23 @@ drop http $HOME_NET any -> $EXTERNAL_NET any (http.host; content:"example.com"; 
       },
       "Type": "AWS::SSM::Parameter",
     },
+    "SsmParamacceleratorCgwIpv6CustomerGateway4067F1EF": {
+      "DependsOn": [
+        "SsmParamNetworkMain2NetworkMain2StandaloneTransitGatewayRouteTableIdF641FDF1",
+      ],
+      "Properties": {
+        "Name": "/accelerator/network/customerGateways/accelerator-cgw-ipv6/id",
+        "Type": "String",
+        "Value": {
+          "Ref": "AcceleratorCgwIpv6CustomerGateway3C91F2AE",
+        },
+      },
+      "Type": "AWS::SSM::Parameter",
+    },
     "SsmParamacceleratorIpamIpamId271C0A36": {
+      "DependsOn": [
+        "SsmParamNetworkDxgwAuthVifAccelratorVifVirtualInterface8E0DF7B7",
+      ],
       "Properties": {
         "Name": "/accelerator/network/ipam/accelerator-ipam/id",
         "Type": "String",
@@ -2692,7 +2897,7 @@ drop http $HOME_NET any -> $EXTERNAL_NET any (http.host; content:"example.com"; 
     },
     "SsmParamacceleratorPolicyNetworkFirewallPolicy68E9C1A5": {
       "DependsOn": [
-        "SsmParamacceleratorSuricataRuleGroupNetworkFirewallRuleGroup5707985D",
+        "SsmParamdomainListGroupNetworkFirewallRuleGroupC2BC037A",
       ],
       "Properties": {
         "Name": "/accelerator/network/networkFirewall/policies/accelerator-policy/arn",
@@ -2705,7 +2910,7 @@ drop http $HOME_NET any -> $EXTERNAL_NET any (http.host; content:"example.com"; 
     },
     "SsmParamacceleratorQueryLogsCwlQueryLogConfig0E6CC558": {
       "DependsOn": [
-        "SsmParamacceleratorBlockGroupRuleGroupEA562A3B",
+        "SsmParamhomeRegionProdPoolPoolId5672D6D3",
       ],
       "Properties": {
         "Name": "/accelerator/network/route53Resolver/queryLogConfigs/accelerator-query-logs-cwl/id",
@@ -2721,7 +2926,7 @@ drop http $HOME_NET any -> $EXTERNAL_NET any (http.host; content:"example.com"; 
     },
     "SsmParamacceleratorQueryLogsS3QueryLogConfig0B1FF32F": {
       "DependsOn": [
-        "SsmParamacceleratorBlockGroupRuleGroupEA562A3B",
+        "SsmParamhomeRegionProdPoolPoolId5672D6D3",
       ],
       "Properties": {
         "Name": "/accelerator/network/route53Resolver/queryLogConfigs/accelerator-query-logs-s3/id",
@@ -2737,7 +2942,7 @@ drop http $HOME_NET any -> $EXTERNAL_NET any (http.host; content:"example.com"; 
     },
     "SsmParamacceleratorRuleGroupNetworkFirewallRuleGroup28931513": {
       "DependsOn": [
-        "SsmParamacceleratorSuricataRuleGroupNetworkFirewallRuleGroup5707985D",
+        "SsmParamnetworkLocalEndpointQueryLogsS3QueryLogConfig14EBC8D4",
       ],
       "Properties": {
         "Name": "/accelerator/network/networkFirewall/ruleGroups/accelerator-rule-group/arn",
@@ -2749,6 +2954,9 @@ drop http $HOME_NET any -> $EXTERNAL_NET any (http.host; content:"example.com"; 
       "Type": "AWS::SSM::Parameter",
     },
     "SsmParamacceleratorStrictPolicyNetworkFirewallPolicy2C70E8B6": {
+      "DependsOn": [
+        "SsmParamdomainListGroupNetworkFirewallRuleGroupC2BC037A",
+      ],
       "Properties": {
         "Name": "/accelerator/network/networkFirewall/policies/accelerator-strict-policy/arn",
         "Type": "String",
@@ -2760,7 +2968,7 @@ drop http $HOME_NET any -> $EXTERNAL_NET any (http.host; content:"example.com"; 
     },
     "SsmParamacceleratorStrictRuleGroupNetworkFirewallRuleGroup315F5768": {
       "DependsOn": [
-        "SsmParamacceleratorSuricataRuleGroupNetworkFirewallRuleGroup5707985D",
+        "SsmParamnetworkLocalEndpointQueryLogsS3QueryLogConfig14EBC8D4",
       ],
       "Properties": {
         "Name": "/accelerator/network/networkFirewall/ruleGroups/accelerator-strict-rule-group/arn",
@@ -2772,6 +2980,9 @@ drop http $HOME_NET any -> $EXTERNAL_NET any (http.host; content:"example.com"; 
       "Type": "AWS::SSM::Parameter",
     },
     "SsmParamacceleratorSuricataRuleGroupNetworkFirewallRuleGroup5707985D": {
+      "DependsOn": [
+        "SsmParamnetworkLocalEndpointQueryLogsS3QueryLogConfig14EBC8D4",
+      ],
       "Properties": {
         "Name": "/accelerator/network/networkFirewall/ruleGroups/accelerator-suricata-rule-group/arn",
         "Type": "String",
@@ -2781,9 +2992,22 @@ drop http $HOME_NET any -> $EXTERNAL_NET any (http.host; content:"example.com"; 
       },
       "Type": "AWS::SSM::Parameter",
     },
-    "SsmParamacceleratorVpnVpnConnection261CAE04": {
+    "SsmParamacceleratorVpnIpv6VpnConnection7C1F581D": {
       "DependsOn": [
         "SsmParamNetworkMain2NetworkMain2StandaloneTransitGatewayRouteTableIdF641FDF1",
+      ],
+      "Properties": {
+        "Name": "/accelerator/network/vpnConnection/accelerator-vpn-ipv6/id",
+        "Type": "String",
+        "Value": {
+          "Ref": "AcceleratorVpnIpv6VpnConnectionCustomResourceCustomResourceResource0B194643",
+        },
+      },
+      "Type": "AWS::SSM::Parameter",
+    },
+    "SsmParamacceleratorVpnVpnConnection261CAE04": {
+      "DependsOn": [
+        "SsmParamacceleratorCgwCustomerGateway984E0261",
       ],
       "Properties": {
         "Name": "/accelerator/network/vpnConnection/accelerator-vpn/id",
@@ -2796,7 +3020,7 @@ drop http $HOME_NET any -> $EXTERNAL_NET any (http.host; content:"example.com"; 
     },
     "SsmParambasePoolPoolId86A35FFC": {
       "DependsOn": [
-        "SsmParamacceleratorIpamIpamId271C0A36",
+        "SsmParamNetworkDxgwAuthVifAccelratorVifVirtualInterface8E0DF7B7",
       ],
       "Properties": {
         "Name": "/accelerator/network/ipam/pools/base-pool/id",
@@ -2808,9 +3032,6 @@ drop http $HOME_NET any -> $EXTERNAL_NET any (http.host; content:"example.com"; 
       "Type": "AWS::SSM::Parameter",
     },
     "SsmParamdomainListGroupNetworkFirewallRuleGroupC2BC037A": {
-      "DependsOn": [
-        "SsmParamacceleratorSuricataRuleGroupNetworkFirewallRuleGroup5707985D",
-      ],
       "Properties": {
         "Name": "/accelerator/network/networkFirewall/ruleGroups/domain-list-group/arn",
         "Type": "String",
@@ -2821,6 +3042,9 @@ drop http $HOME_NET any -> $EXTERNAL_NET any (http.host; content:"example.com"; 
       "Type": "AWS::SSM::Parameter",
     },
     "SsmParamenhancedVpnVpnConnection0FB23967": {
+      "DependsOn": [
+        "SsmParamacceleratorCgwCustomerGateway984E0261",
+      ],
       "Properties": {
         "Name": "/accelerator/network/vpnConnection/enhanced-vpn/id",
         "Type": "String",
@@ -2832,7 +3056,7 @@ drop http $HOME_NET any -> $EXTERNAL_NET any (http.host; content:"example.com"; 
     },
     "SsmParamhomeRegionPoolPoolId475D7271": {
       "DependsOn": [
-        "SsmParamacceleratorIpamIpamId271C0A36",
+        "SsmParamNetworkDxgwAuthVifAccelratorVifVirtualInterface8E0DF7B7",
       ],
       "Properties": {
         "Name": "/accelerator/network/ipam/pools/home-region-pool/id",
@@ -2844,9 +3068,6 @@ drop http $HOME_NET any -> $EXTERNAL_NET any (http.host; content:"example.com"; 
       "Type": "AWS::SSM::Parameter",
     },
     "SsmParamhomeRegionProdPoolPoolId5672D6D3": {
-      "DependsOn": [
-        "SsmParamacceleratorIpamIpamId271C0A36",
-      ],
       "Properties": {
         "Name": "/accelerator/network/ipam/pools/home-region-prod-pool/id",
         "Type": "String",
@@ -2858,7 +3079,7 @@ drop http $HOME_NET any -> $EXTERNAL_NET any (http.host; content:"example.com"; 
     },
     "SsmParamnetworkLocalEndpointQueryLogsCwlQueryLogConfig40CFAA3E": {
       "DependsOn": [
-        "SsmParamacceleratorBlockGroupRuleGroupEA562A3B",
+        "SsmParamnetworkLocalEndpointQueryLogsS3QueryLogConfig14EBC8D4",
       ],
       "Properties": {
         "Name": "/accelerator/network/route53Resolver/queryLogConfigs/network-local-endpoint-query-logs-cwl/id",
@@ -2873,9 +3094,6 @@ drop http $HOME_NET any -> $EXTERNAL_NET any (http.host; content:"example.com"; 
       "Type": "AWS::SSM::Parameter",
     },
     "SsmParamnetworkLocalEndpointQueryLogsS3QueryLogConfig14EBC8D4": {
-      "DependsOn": [
-        "SsmParamacceleratorBlockGroupRuleGroupEA562A3B",
-      ],
       "Properties": {
         "Name": "/accelerator/network/route53Resolver/queryLogConfigs/network-local-endpoint-query-logs-s3/id",
         "Type": "String",
@@ -2890,7 +3108,7 @@ drop http $HOME_NET any -> $EXTERNAL_NET any (http.host; content:"example.com"; 
     },
     "SsmParamwestRegionPoolPoolId673ACD76": {
       "DependsOn": [
-        "SsmParamacceleratorIpamIpamId271C0A36",
+        "SsmParamhomeRegionProdPoolPoolId5672D6D3",
       ],
       "Properties": {
         "Name": "/accelerator/network/ipam/pools/west-region-pool/id",

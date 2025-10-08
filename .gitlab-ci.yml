@@ -117,8 +117,8 @@ before_script:
   - apt-get install -y zip
   - apt-get install -y jq
 
-include:
-  - '.gitlab/jobs/ci-job-definitions.yml'
+# include:
+#   - '.gitlab/jobs/ci-job-definitions.yml'
 
 stages:
   - pipeline

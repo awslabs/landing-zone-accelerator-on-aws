@@ -2916,6 +2916,23 @@ vpcPeering:
       - Security-Template-Full-Ipam-West
 
 customerGateways:
+  - name: accelerator-cgw-ipv6
+    account: Network
+    region: *HOME_REGION
+    ipAddress: "2803::f800"
+    asn: 65501
+    vpnConnections:
+      - name: accelerator-vpn-ipv6
+        amazonIpv6NetworkCidr: ::/128
+        customerIpv6NetworkCidr: ::/128
+        outsideIpAddressType: Ipv6
+        transitGateway: Network-Main
+        staticRoutesOnly: false
+        routeTableAssociations:
+          - Network-Main-Core
+        routeTablePropagations:
+          - Network-Main-Core
+          
   - name: accelerator-cgw
     account: Network
     region: *HOME_REGION

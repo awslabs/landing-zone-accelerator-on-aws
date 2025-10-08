@@ -3346,6 +3346,7 @@ export type Phase2DhGroupType = 2 | 5 | 14 | 15 | 16 | 17 | 18 | 19 | 20 | 21 | 
 export type EncryptionAlgorithmType = 'AES128' | 'AES256' | 'AES128-GCM-16' | 'AES256-GCM-16';
 export type IntegrityAlgorithmType = 'SHA1' | 'SHA2-256' | 'SHA2-384' | 'SHA2-512';
 export type VpnLoggingOutputFormatType = 'json' | 'text';
+export type OutsideIpAddressType = 'PublicIpv4' | 'Ipv6';
 
 /**
  * *{@link NetworkConfig} / {@link CustomerGatewayConfig} / {@link VpnConnectionConfig} / {@link VpnTunnelOptionsSpecificationsConfig} / {@link Phase1Config}*
@@ -3785,6 +3786,17 @@ export interface IVpnTunnelOptionsSpecificationsConfig {
    */
   readonly tunnelInsideCidr?: t.NonEmptyString;
   /**
+   * (OPTIONAL): The range of inside IPv6 addresses for the tunnel. Any specified CIDR blocks must be unique across
+   * all VPN connections that use the same virtual private gateway.
+   *
+   * @remarks
+   * **CAUTION**: Changing this property value after initial deployment causes the VPN to be recreated.
+   * Please be aware that any downstream dependencies may cause this property update to fail.
+   *
+   * Constraints: from the local fd00::/8 range.
+   */
+  readonly tunnelInsideIpv6Cidr?: t.NonEmptyString;
+  /**
    * (OPTIONAL) Enable tunnel endpoint lifecycle control. This feature provides control over the schedule of endpoint replacements.
    * For more information, see {@link https://docs.aws.amazon.com/vpn/latest/s2svpn/tunnel-endpoint-lifecycle.html | Tunnel Endpoint Lifecycle Control}.
    *
@@ -3899,6 +3911,51 @@ export interface IVpnConnectionConfig {
    * Use CIDR notation, i.e. 10.0.0.0/16.
    */
   readonly customerIpv4NetworkCidr?: t.NonEmptyString;
+  /**
+   * (OPTIONAL) The Amazon-side IPv6 CIDR range that is allowed through the site-to-site VPN tunnel.
+   * Configuring this option restricts the Amazon-side CIDR range that can communicate with your
+   * local network.
+   *
+   * Default - `::/0`
+   *
+   * @remarks
+   * **CAUTION:** if you configure this property on a VPN connection that was deployed prior to v1.5.0, your VPN connection
+   * will be recreated. Please be aware that any downstream dependencies may cause this property update to fail. To ensure
+   * a clean replacement, we highly recommend deleting the original connection and its downstream dependencies prior to making this change.
+   *
+   * If you update this property after deployment, both of your VPN tunnel endpoints will become temporarily unavailable. Please see
+   * {@link https://docs.aws.amazon.com/vpn/latest/s2svpn/endpoint-replacements.html#endpoint-replacements-for-vpn-modifications | Customer initiated endpoint replacements} for
+   * additional details.
+   *
+   * Use CIDR notation, i.e. ::/128.
+   */
+  readonly amazonIpv6NetworkCidr?: t.NonEmptyString;
+  /**
+   * (OPTIONAL) The customer-side IPv6 CIDR range that is allowed through the site-to-site VPN tunnel.
+   * Configuring this option restricts the local CIDR range that can communicate with your AWS environment.
+   *
+   * Default - `::/0`
+   *
+   * @remarks
+   * **CAUTION:** if you configure this property on a VPN connection that was deployed prior to v1.5.0, your VPN connection
+   * will be recreated. Please be aware that any downstream dependencies may cause this property update to fail. To ensure
+   * a clean replacement, we highly recommend deleting the original connection and its downstream dependencies prior to making this change.
+   *
+   * If you update this property after deployment, both of your VPN tunnel endpoints will become temporarily unavailable. Please see
+   * {@link https://docs.aws.amazon.com/vpn/latest/s2svpn/endpoint-replacements.html#endpoint-replacements-for-vpn-modifications | Customer initiated endpoint replacements} for
+   * additional details.
+   *
+   * Use CIDR notation, i.e. ::/128.
+   */
+  readonly customerIpv6NetworkCidr?: t.NonEmptyString;
+  /**
+   * (OPTIONALThe type of IP address assigned to the outside interface of the customer gateway device.
+   * Valid values include `PublicIpv4` or `Ipv6`.
+   *
+   * @remarks
+   * *Note: If this property is not specified, this will default to `PublicIpv4`.
+   */
+  readonly outsideIpAddressType?: OutsideIpAddressType;
   /**
    * (OPTIONAL) Enable Site-to-Site VPN Acceleration.
    * For more information, see {@link https://docs.aws.amazon.com/vpn/latest/s2svpn/accelerated-vpn.html | Accelerated Site-to-Site VPN connections}.

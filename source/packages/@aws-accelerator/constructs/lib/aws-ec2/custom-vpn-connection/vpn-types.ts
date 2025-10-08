@@ -78,6 +78,10 @@ export interface VpnTunnelOptions {
    */
   readonly tunnelInsideCidr?: string;
   /**
+   * A /126 CIDR block from the local fd00::/8 range.
+   */
+  readonly tunnelInsideIpv6Cidr?: string;
+  /**
    * Enable tunnel lifecycle control
    */
   readonly tunnelLifecycleControl?: boolean;
@@ -120,6 +124,22 @@ export interface VpnOptions {
    */
   readonly customerIpv4NetworkCidr?: string;
   /**
+   * Amazon-side IPv6 CIDR
+   */
+  readonly amazonIpv6NetworkCidr?: string;
+  /**
+   * Customer-side IPv6 CIDR
+   */
+  readonly customerIpv6NetworkCidr?: string;
+  /**
+   * Outside IP address type
+   */
+  readonly outsideIpAddressType?: string;
+  /**
+   * IPv4 or IPv6
+   */
+  readonly tunnelInsideIpVersion?: string;
+  /**
    * Owning account ID for cross-account customer gateways
    */
   readonly owningAccountId?: string;
@@ -139,6 +159,10 @@ export interface VpnOptions {
    * The ID of the Transit Gateway to terminate the VPN Connection.
    */
   readonly transitGatewayId?: string;
+  /**
+   * The Direct Connect Gateway that is attached to the Transit Gateway.
+   */
+  readonly directConnectGateway?: string;
   /**
    * The ID of the Virtual Private Gateway to terminate the VPN Connection.
    */

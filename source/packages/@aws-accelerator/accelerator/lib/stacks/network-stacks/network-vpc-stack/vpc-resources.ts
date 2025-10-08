@@ -35,7 +35,7 @@ import { NagSuppressions } from 'cdk-nag';
 import { pascalCase } from 'pascal-case';
 import { LogLevel, NetworkStack } from '../network-stack';
 import { getVpc, getVpcConfig } from '../utils/getter-utils';
-import { isIpv4 } from '../utils/validation-utils';
+import { isIpAddress, isIpv4, isIpv6 } from '../utils/validation-utils';
 import { LZAResourceLookup, LZAResourceLookupType } from '@aws-accelerator/accelerator';
 
 type Ipv4VpcCidrBlock = { cidrBlock: string } | { ipv4IpamPoolId: string; ipv4NetmaskLength: number };
@@ -977,8 +977,9 @@ export class VpcResources {
   ): Map<string, string> {
     const vpnMap = new Map<string, string>();
     const ipv4Cgws = customerGatewayConfig?.filter(cgw => isIpv4(cgw.ipAddress));
+    const ipv6Cgws = customerGatewayConfig?.filter(cgw => isIpv6(cgw.ipAddress));
 
-    for (const cgw of ipv4Cgws ?? []) {
+    for (const cgw of [...(ipv4Cgws ?? []), ...(ipv6Cgws ?? [])]) {
       for (const vpnItem of cgw.vpnConnections ?? []) {
         if (vpnItem.vpc && vpcMap.has(vpnItem.vpc)) {
           if (
@@ -1067,7 +1068,7 @@ export class VpcResources {
       ? customerGateways.filter(cgw => cgw.vpnConnections?.filter(vpn => vpcNames.includes(vpn.vpc ?? '')))
       : [];
     const crossAcctFirewallReferenceCgws = vgwVpnCustomerGateways.filter(
-      cgw => !isIpv4(cgw.ipAddress) && !this.stack.firewallVpcInScope(cgw),
+      cgw => !isIpAddress(cgw.ipAddress) && !this.stack.firewallVpcInScope(cgw),
     );
 
     for (const crossAcctCgw of crossAcctFirewallReferenceCgws) {
@@ -1078,12 +1079,12 @@ export class VpcResources {
       if (parameters.length > 0) {
         this.stack.addLogs(
           LogLevel.INFO,
-          `Putting cross-account/cross-region SSM parameters for VPC ${firewallVpcConfig.name}`,
+          `Putting cross-account/cross-region SSM parameters for VPC ${firewallVpcConfig!.name}`,
         );
         // Put SSM parameters
         new PutSsmParameter(this.stack, pascalCase(`${crossAcctCgw.name}VgwVpnSharedParameters`), {
           accountIds,
-          region: firewallVpcConfig.region,
+          region: firewallVpcConfig!.region,
           roleName: this.stack.acceleratorResourceNames.roles.crossAccountSsmParameterShare,
           kmsKey: this.stack.cloudwatchKey,
           logRetentionInDays: this.stack.logRetention,

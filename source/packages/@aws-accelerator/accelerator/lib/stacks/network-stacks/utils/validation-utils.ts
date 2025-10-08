@@ -18,7 +18,7 @@ import {
   VpnConnectionConfig,
   isNetworkType,
 } from '@aws-accelerator/config';
-import { IPv4, IPv4CidrRange, IPv6CidrRange } from 'ip-num';
+import { IPv4, IPv6, IPv4CidrRange, IPv6CidrRange } from 'ip-num';
 import { getObjectKeys } from './getter-utils';
 
 /**
@@ -56,6 +56,16 @@ export function hasAdvancedVpnOptions(vpn: VpnConnectionConfig): boolean {
     return true;
   }
   return false;
+}
+
+/**
+ * Returns true if the passed string is a valid IPv4 or IPv6 CIDR.
+ *
+ * @param cidr string
+ * @returns boolean
+ */
+export function isIpAddress(ip: string) {
+  return isIpv4(ip) || isIpv6(ip);
 }
 
 /**
@@ -99,6 +109,22 @@ export function isIpv6Cidr(cidr: string): boolean {
 export function isIpv4(ip: string): boolean {
   try {
     IPv4.fromString(ip);
+    return true;
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  } catch (e) {
+    return false;
+  }
+}
+
+/**
+ * Returns true if the passed string is a valid IPv6 address.
+ *
+ * @param ip string
+ * @returns boolean
+ */
+export function isIpv6(ip: string): boolean {
+  try {
+    IPv6.fromString(ip);
     return true;
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
   } catch (e) {

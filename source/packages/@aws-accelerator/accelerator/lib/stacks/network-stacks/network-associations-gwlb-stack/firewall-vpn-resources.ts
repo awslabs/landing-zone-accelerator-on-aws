@@ -46,7 +46,7 @@ import {
   getVpcConfig,
   getVpnAttachmentId,
 } from '../utils/getter-utils';
-import { hasAdvancedVpnOptions, isIpv4 } from '../utils/validation-utils';
+import { hasAdvancedVpnOptions, isIpv4, isIpv6 } from '../utils/validation-utils';
 import { NetworkAssociationsGwlbStack } from './network-associations-gwlb-stack';
 
 export class FirewallVpnResources {
@@ -114,7 +114,7 @@ export class FirewallVpnResources {
   ): CustomerGatewayConfig[] {
     const customerGatewaysInScope: CustomerGatewayConfig[] = [];
     for (const cgw of props.networkConfig.customerGateways ?? []) {
-      if (!isIpv4(cgw.ipAddress) && this.cgwInScope(cgw, instanceMap)) {
+      if (!isIpv4(cgw.ipAddress) && !isIpv6(cgw.ipAddress) && this.cgwInScope(cgw, instanceMap)) {
         customerGatewaysInScope.push(cgw);
       }
     }
