@@ -372,16 +372,18 @@ export class AcceleratorToolkit {
     managementAccountId: string;
     stage: string;
   }) {
-    if (
-      props.accountId === props.managementAccountId &&
-      [AcceleratorStage.ACCOUNTS, AcceleratorStage.PREPARE].includes(props.stage as AcceleratorStage)
-    ) {
-      return `${props.stackPrefix}-Management-Deployment-Role`;
+    const managementAcceleratorStages = [
+      AcceleratorStage.ACCOUNTS,
+      AcceleratorStage.PREPARE,
+      AcceleratorStage.DIAGNOSTICS_PACK,
+      AcceleratorStage.PIPELINE,
+    ];
+    const deploymentRole = props.customDeploymentRoleName ?? `${props.stackPrefix}-Deployment-Role`;
+    const managementDeploymentRole = `${props.stackPrefix}-Management-Deployment-Role`;
+    if (managementAcceleratorStages.includes(props.stage as AcceleratorStage)) {
+      return managementDeploymentRole;
     }
-    if (props.customDeploymentRoleName) {
-      return props.customDeploymentRoleName;
-    }
-    return `${props.stackPrefix}-Deployment-Role`;
+    return deploymentRole;
   }
 
   /**
