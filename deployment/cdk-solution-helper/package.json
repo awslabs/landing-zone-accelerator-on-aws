@@ -8,9 +8,7 @@
     "url": "https://aws.amazon.com/solutions"
   },
   "dependencies": {
-    "fs": "0.0.1-security"
   },
   "devDependencies": {
-    "fs": "0.0.1-security"
   }
 }
