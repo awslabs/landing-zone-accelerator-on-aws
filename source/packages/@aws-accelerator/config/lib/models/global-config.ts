@@ -151,7 +151,7 @@ export interface IControlTowerLandingZoneConfig {
  * Not all controls can be deployed to Security OU. Please see this page for more information: https://docs.aws.amazon.com/controltower/latest/controlreference/exception-to-controls-security-ou.html.
  *
  * @example
- * controlTowerControls:
+ * controls:
  *   - identifier: AWS-GR_RESTRICT_ROOT_USER_ACCESS_KEYS
  *     enable: true
  *     deploymentTargets:
@@ -201,6 +201,12 @@ export interface IControlTowerControlConfig {
  *       organizationTrail: true
  *     security:
  *       enableIdentityCenterAccess: true
+ *     controls:
+ *       - identifier: AWS-GR_RDS_INSTANCE_PUBLIC_ACCESS_CHECK
+ *         enable: true
+ *         deploymentTargets:
+ *           organizationalUnits:
+ *             - SecureWorkloads
  * ```
  */
 export interface IControlTowerConfig {
