@@ -21,7 +21,6 @@ import {
   ControlTowerLandingZoneConfig,
 } from '@aws-accelerator/config';
 import { Bucket, BucketEncryptionType } from '@aws-accelerator/constructs';
-import { NagSuppressions } from 'cdk-nag';
 import * as cdk_extensions from '@aws-cdk-extensions/cdk-extensions';
 import * as cdk from 'aws-cdk-lib';
 import * as s3_assets from 'aws-cdk-lib/aws-s3-assets';
@@ -175,41 +174,6 @@ export class S3ConfigRepository extends ConfigRepository {
     });
 
     this.getZippedConfigFiles();
-
-    /**
-     * The default LZA configuration must first be uploaded to a separate path in the bucket.
-     * This lowers the risk of overwriting customer configuration zip files when the default LZA config files change
-     *
-     * https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_s3_deployment-readme.html#notes
-     *   If you are using s3deploy.Source.bucket() to take the file source from another bucket: the deployed files will only be updated if the key (file name) of the file in the source bucket changes. Mutating the file in place will not be good enough: the custom resource will simply not run if the properties don't change.
-     *   If you use assets (s3deploy.Source.asset()) you don't need to worry about this: the asset system will make sure that if the files have changed, the file name is unique and the deployment will run.
-     */
-    new cdk.aws_s3_deployment.BucketDeployment(this, 'UploadDefaultZipFileToS3', {
-      sources: [cdk.aws_s3_deployment.Source.asset(`${this.tempDirPath}/zipped`)],
-      destinationBucket: this.configRepo.getS3Bucket(),
-      destinationKeyPrefix: 'default',
-      prune: false,
-    });
-
-    const cdkBucketDeploymentIds = [];
-    for (const child of cdk.Stack.of(this).node.children) {
-      if (child.node.id.startsWith('Custom::CDKBucketDeployment')) {
-        cdkBucketDeploymentIds.push(child.node.id);
-      }
-    }
-
-    for (const cdkBucketDeploymentId of cdkBucketDeploymentIds) {
-      NagSuppressions.addResourceSuppressionsByPath(
-        cdk.Stack.of(this),
-        `${cdk.Stack.of(this).stackName}/${cdkBucketDeploymentId}/ServiceRole/Resource`,
-        [
-          {
-            id: 'AwsSolutions-IAM4',
-            reason: 'CDK construct auto-generated role.',
-          },
-        ],
-      );
-    }
   }
 
   /**

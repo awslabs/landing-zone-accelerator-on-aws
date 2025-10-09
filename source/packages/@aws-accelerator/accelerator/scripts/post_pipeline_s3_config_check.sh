@@ -66,8 +66,25 @@ if [ -n "$S3_DEST_URI" ] && [ "$S3_DEST_URI" != "None" ]; then
     # Check if the destination object already exists
     echo "Checking if configuration already exists at destination..."
     if ! aws s3 ls "$S3_DEST_URI" >/dev/null 2>&1; then
-        # Object doesn't exist - copy from source to destination
+        # Object doesn't exist - check if source exists, if not copy from local
         echo "✓ Configuration not found at destination"
+        
+        # Check if source file exists in S3
+        if ! aws s3 ls "$S3_SRC_URI" >/dev/null 2>&1; then
+            echo "⚠️  Source configuration not found at: $S3_SRC_URI"
+            echo "📦 Copying local configuration to source location..."
+            
+            # Look for local config zip file in temp directory
+            LOCAL_CONFIG_ZIP=$(find /tmp -name "aws-accelerator-config.zip" -path "*/zipped/*" 2>/dev/null | head -1)
+            if [ -n "$LOCAL_CONFIG_ZIP" ] && [ -f "$LOCAL_CONFIG_ZIP" ]; then
+                aws s3 cp "$LOCAL_CONFIG_ZIP" "$S3_SRC_URI"
+                echo "✅ Local configuration uploaded to source location"
+            else
+                echo "❌ Local configuration file not found in temp directories"
+                exit 1
+            fi
+        fi
+        
         echo "📋 Copying configuration from source to destination..."
         echo "   From: $S3_SRC_URI"
         echo "   To:   $S3_DEST_URI"
