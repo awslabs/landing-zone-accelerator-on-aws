@@ -24,7 +24,7 @@
     "@aws-accelerator/config": "^0.0.0",
     "@aws-accelerator/constructs": "^0.0.0",
     "@aws-accelerator/utils": "^0.0.0",
-    "@aws-cdk/toolkit-lib": "1.6.1",
+    "@aws-cdk/toolkit-lib": "1.9.0",
     "@aws-cdk/cli-plugin-contract": "2.174.0",
     "@aws-sdk/client-config-service": "3.835.0",
     "@aws-sdk/client-controltower": "3.835.0",

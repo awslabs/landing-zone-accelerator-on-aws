@@ -291,6 +291,7 @@ export class AcceleratorToolkit {
       parameters: bootstrapStackParameters,
       source,
       terminationProtection: true,
+      forceDeployment: options.cdkOptions?.forceBootstrap ?? false,
     };
 
     try {
