@@ -21,6 +21,13 @@ vi.mock('@aws-cdk/toolkit-lib', () => ({
   StackSelectionStrategy: {
     ALL_STACKS: 'ALL_STACKS',
   },
+  BootstrapSource: {
+    default: vi.fn().mockReturnValue('default-source'),
+    customTemplate: vi.fn().mockReturnValue('custom-source'),
+  },
+  BootstrapEnvironments: {
+    fromList: vi.fn().mockReturnValue('environments'),
+  },
 }));
 
 describe('AcceleratorToolkit', () => {
@@ -114,6 +121,67 @@ describe('AcceleratorToolkit', () => {
         },
         tags: options.tags,
       });
+    });
+  });
+
+  describe('bootstrapToolKitStacks', () => {
+    it('should set forceDeployment to true when forceBootstrap is enabled', async () => {
+      // Arrange
+      const options = {
+        command: 'bootstrap',
+        accountId: '123456789012',
+        region: 'us-east-1',
+        partition: 'aws',
+        stackPrefix: 'AWSAccelerator',
+        managementAccountId: '123456789012',
+        enableSingleAccountMode: false,
+        useExistingRoles: false,
+        cdkOptions: {
+          forceBootstrap: true,
+        },
+      };
+
+      mockToolkit.bootstrap = vi.fn().mockResolvedValue(undefined);
+
+      // Act
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      await (AcceleratorToolkit as any).bootstrapToolKitStacks(mockToolkit, options);
+
+      // Assert
+      expect(mockToolkit.bootstrap).toHaveBeenCalledWith(
+        'environments',
+        expect.objectContaining({
+          forceDeployment: true,
+        }),
+      );
+    });
+
+    it('should set forceDeployment to false when forceBootstrap is not set', async () => {
+      // Arrange
+      const options = {
+        command: 'bootstrap',
+        accountId: '123456789012',
+        region: 'us-east-1',
+        partition: 'aws',
+        stackPrefix: 'AWSAccelerator',
+        managementAccountId: '123456789012',
+        enableSingleAccountMode: false,
+        useExistingRoles: false,
+      };
+
+      mockToolkit.bootstrap = vi.fn().mockResolvedValue(undefined);
+
+      // Act
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      await (AcceleratorToolkit as any).bootstrapToolKitStacks(mockToolkit, options);
+
+      // Assert
+      expect(mockToolkit.bootstrap).toHaveBeenCalledWith(
+        'environments',
+        expect.objectContaining({
+          forceDeployment: false,
+        }),
+      );
     });
   });
 });
