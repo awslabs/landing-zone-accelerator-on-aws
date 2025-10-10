@@ -472,6 +472,4 @@ export class AccountsConfig implements i.IAccountsConfig {
   public getAuditAccountId(): string {
     return this.getAccountId(AccountsConfig.AUDIT_ACCOUNT);
   }
-
-  private getAccountFromOrgs(): Promise<Account> {}
 }
