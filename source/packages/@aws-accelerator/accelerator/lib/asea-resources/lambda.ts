@@ -65,7 +65,7 @@ export class Lambda extends AseaResource {
     };
 
     // Only process/delete resources for management account and Phase5 stacks
-    if (baseParams.account !== baseParams.managementAccount || !baseParams.stackName.includes('Management-Phase5')) {
+    if (baseParams.account !== baseParams.managementAccount || !baseParams.stackName.includes('Phase5')) {
       return;
     }
 
