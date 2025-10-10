@@ -15,6 +15,7 @@ dist/
 .snap
 
 yarn.lock
+.gitlab-ci.yml
 
 # Ignore typescript documentation
 
