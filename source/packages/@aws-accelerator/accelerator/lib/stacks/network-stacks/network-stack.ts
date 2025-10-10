@@ -72,9 +72,12 @@ import {
   processSecurityGroupIngressRules,
   processSecurityGroupSgEgressSources,
   processSecurityGroupSgIngressSources,
+  SecurityGroupRuleProps,
 } from './utils/security-group-utils';
 import { hasAdvancedVpnOptions, isIpv4 } from './utils/validation-utils';
 import { isArn } from '@aws-accelerator/utils/lib/is-arn';
+import { MetadataKeys } from '@aws-accelerator/utils/lib/common-types';
+import { LZAResourceLookup, LZAResourceLookupType } from '../../../utils/lza-resource-lookup';
 
 /**
  * Resource share type for RAM resource shares
@@ -147,6 +150,8 @@ export abstract class NetworkStack extends AcceleratorStack {
    */
   public readonly vpcResources: (VpcConfig | VpcTemplatesConfig)[];
 
+  private readonly lzaLookup: LZAResourceLookup;
+
   protected constructor(scope: Construct, id: string, props: AcceleratorStackProps) {
     super(scope, id, props);
 
@@ -162,6 +167,16 @@ export abstract class NetworkStack extends AcceleratorStack {
 
     this.cloudwatchKey = this.getAcceleratorKey(AcceleratorKeyType.CLOUDWATCH_KEY);
     this.lambdaKey = this.getAcceleratorKey(AcceleratorKeyType.LAMBDA_KEY);
+
+    this.lzaLookup = new LZAResourceLookup({
+      accountId: this.account,
+      region: this.region,
+      aseaResourceList: this.props.globalConfig.externalLandingZoneResources?.resourceList ?? [],
+      enableV2Stacks: this.props.globalConfig.useV2Stacks,
+      externalLandingZoneResources:
+        this.props.globalConfig.externalLandingZoneResources?.importExternalLandingZoneResources,
+      stackName: this.stackName,
+    });
   }
 
   /**
@@ -508,8 +523,12 @@ export abstract class NetworkStack extends AcceleratorStack {
 
     for (const vpcItem of vpcResources) {
       if (vpcItem.interfaceEndpoints?.central) {
-        // Set interface endpoint DNS names
+        // Skip IAM for centralized DNS
         for (const endpointItem of vpcItem.interfaceEndpoints?.endpoints ?? []) {
+          if (endpointItem.service === 'iam') {
+            this.logger.info(`Skipping DNS retrieval for IAM endpoint as centralized endpoint is not supported here`);
+            continue;
+          }
           const endpointDns = cdk.aws_ssm.StringParameter.valueForStringParameter(
             this,
             this.getSsmPath(SsmResourceType.ENDPOINT_DNS, [vpcItem.name, endpointItem.service]),
@@ -662,8 +681,9 @@ export abstract class NetworkStack extends AcceleratorStack {
    * @param item
    * @param resourceShareName
    * @param resourceArns
+   * @returns ResourceShare
    */
-  public addResourceShare(item: ResourceShareType, resourceShareName: string, resourceArns: string[]) {
+  public addResourceShare(item: ResourceShareType, resourceShareName: string, resourceArns: string[]): ResourceShare {
     // Build a list of principals to share to
     const principals: string[] = [];
 
@@ -687,7 +707,7 @@ export abstract class NetworkStack extends AcceleratorStack {
     }
 
     // Create the Resource Share
-    new ResourceShare(this, `${pascalCase(resourceShareName)}ResourceShare`, {
+    return new ResourceShare(this, `${pascalCase(resourceShareName)}ResourceShare`, {
       name: resourceShareName,
       principals,
       resourceArns: resourceArns,
@@ -842,6 +862,17 @@ export abstract class NetworkStack extends AcceleratorStack {
 
     for (const vpcItem of vpcResources) {
       for (const securityGroupItem of vpcItem.securityGroups ?? []) {
+        if (
+          !this.lzaLookup.resourceExists({
+            resourceType: LZAResourceLookupType.SECURITY_GROUP,
+            lookupValues: {
+              vpcName: vpcItem.name,
+              securityGroupName: securityGroupItem.name,
+            },
+          })
+        ) {
+          continue;
+        }
         this.logger.info(`Processing rules for ${securityGroupItem.name} in VPC ${vpcItem.name}`);
 
         // Process configured rules
@@ -862,6 +893,9 @@ export abstract class NetworkStack extends AcceleratorStack {
 
         // Get VPC
         const vpc = getVpc(vpcMap, vpcItem.name);
+        if (!vpc) {
+          continue;
+        }
 
         // Create security group
         const securityGroup = this.createSecurityGroupItem(
@@ -872,7 +906,10 @@ export abstract class NetworkStack extends AcceleratorStack {
           processedEgressRules,
           allIngressRule,
         );
-        securityGroupMap.set(`${vpcItem.name}_${securityGroupItem.name}`, securityGroup);
+
+        if (securityGroup) {
+          securityGroupMap.set(`${vpcItem.name}_${securityGroupItem.name}`, securityGroup);
+        }
       }
       // Create security group rules that reference other security groups
       this.createSecurityGroupSgSources(vpcItem, subnetMap, prefixListMap, securityGroupMap);
@@ -900,6 +937,14 @@ export abstract class NetworkStack extends AcceleratorStack {
         this.logger.info(`Skipping security group ${securityGroupItem.name} in VPC ${vpcItem.name}`);
         continue;
       }
+      if (
+        !this.lzaLookup.resourceExists({
+          resourceType: LZAResourceLookupType.SECURITY_GROUP,
+          lookupValues: { vpcName: vpcItem.name, securityGroupName: securityGroupItem.name },
+        })
+      ) {
+        continue;
+      }
       const securityGroup = getSecurityGroup(securityGroupMap, vpcItem.name, securityGroupItem.name) as SecurityGroup;
       const ingressRules = processSecurityGroupSgIngressSources(
         this.vpcResources,
@@ -908,6 +953,7 @@ export abstract class NetworkStack extends AcceleratorStack {
         subnetMap,
         prefixListMap,
         securityGroupMap,
+        this.lzaLookup,
       );
       const egressRules = processSecurityGroupSgEgressSources(
         this.vpcResources,
@@ -916,24 +962,95 @@ export abstract class NetworkStack extends AcceleratorStack {
         subnetMap,
         prefixListMap,
         securityGroupMap,
+        this.lzaLookup,
       );
 
+      const baseMetadata = {
+        vpcName: vpcItem.name,
+        sourceSecurityGroupName: securityGroupItem.name,
+        account: this.account,
+        region: this.region,
+      };
+
       // Create ingress rules
-      ingressRules.forEach(ingressRule => {
-        securityGroup.addIngressRule(ingressRule.logicalId, {
-          sourceSecurityGroup: ingressRule.rule.targetSecurityGroup,
-          ...ingressRule.rule,
+      ingressRules
+        .filter(rule =>
+          this.securityGroupRuleResourceExists(LZAResourceLookupType.SECURITY_GROUP_INGRESS, {
+            rule: rule.rule,
+            ...baseMetadata,
+          }),
+        )
+        .forEach(ingressRule => {
+          const rule = securityGroup.addIngressRule(ingressRule.logicalId, {
+            sourceSecurityGroup: ingressRule.rule.targetSecurityGroup,
+            ...ingressRule.rule,
+          });
+          this.addMetadataToSecurityGroupRule(rule, { rule: ingressRule.rule, ...baseMetadata });
         });
-      });
 
       // Create egress rules
-      egressRules.forEach(egressRule => {
-        securityGroup.addEgressRule(egressRule.logicalId, {
-          destinationSecurityGroup: egressRule.rule.targetSecurityGroup,
-          ...egressRule.rule,
+      egressRules
+        .filter(rule =>
+          this.securityGroupRuleResourceExists(LZAResourceLookupType.SECURITY_GROUP_EGRESS, {
+            rule: rule.rule,
+            ...baseMetadata,
+          }),
+        )
+        .forEach(egressRule => {
+          const rule = securityGroup.addEgressRule(egressRule.logicalId, {
+            destinationSecurityGroup: egressRule.rule.targetSecurityGroup,
+            ...egressRule.rule,
+          });
+          this.addMetadataToSecurityGroupRule(rule, { rule: egressRule.rule, ...baseMetadata });
         });
-      });
     }
+  }
+
+  private addMetadataToSecurityGroupRule(
+    resource: cdk.CfnResource,
+    props: {
+      rule: SecurityGroupRuleProps;
+      vpcName: string;
+      sourceSecurityGroupName: string;
+      account: string;
+      region: string;
+    },
+  ) {
+    resource.addMetadata(MetadataKeys.LZA_LOOKUP, {
+      targetSecurityGroupName: props.rule.targetSecurityGroup?.securityGroupName,
+      sourceSecurityGroupName: props.sourceSecurityGroupName,
+      vpcName: props.vpcName,
+      vpcAccount: props.account,
+      vpcRegion: props.region,
+      ipProtocol: props.rule.ipProtocol,
+      fromPort: props.rule.fromPort,
+      toPort: props.rule.toPort,
+    });
+  }
+
+  private securityGroupRuleResourceExists(
+    type: LZAResourceLookupType,
+    props: {
+      rule: SecurityGroupRuleProps;
+      vpcName: string;
+      sourceSecurityGroupName: string;
+      account: string;
+      region: string;
+    },
+  ): boolean {
+    return this.lzaLookup.resourceExists({
+      resourceType: type,
+      lookupValues: {
+        targetSecurityGroupName: props.rule.targetSecurityGroup?.securityGroupName,
+        sourceSecurityGroupName: props.sourceSecurityGroupName,
+        vpcName: props.vpcName,
+        vpcAccount: props.account,
+        vpcRegion: props.region,
+        ipProtocol: props.rule.ipProtocol,
+        fromPort: props.rule.fromPort,
+        toPort: props.rule.toPort,
+      },
+    });
   }
 
   /**
@@ -953,7 +1070,7 @@ export abstract class NetworkStack extends AcceleratorStack {
     processedIngressRules: SecurityGroupIngressRuleProps[],
     processedEgressRules: SecurityGroupEgressRuleProps[],
     allIngressRule: boolean,
-  ): SecurityGroup {
+  ): SecurityGroup | undefined {
     this.logger.info(`Adding Security Group ${securityGroupItem.name} in VPC ${vpcItem.name}`);
     let securityGroup;
     if (this.isManagedByAsea(AseaResourceType.EC2_SECURITY_GROUP, `${vpcItem.name}/${securityGroupItem.name}`)) {
@@ -983,6 +1100,11 @@ export abstract class NetworkStack extends AcceleratorStack {
           tags: securityGroupItem.tags,
         },
       );
+      const resource = securityGroup.node.findChild('Resource') as cdk.CfnResource;
+      resource.addMetadata(MetadataKeys.LZA_LOOKUP, {
+        vpcName: vpcItem.name,
+        securityGroupName: securityGroupItem.name,
+      });
       this.addSsmParameter({
         logicalId: pascalCase(`SsmParam${pascalCase(vpcItem.name) + pascalCase(securityGroupItem.name)}SecurityGroup`),
         parameterName: this.getSsmPath(SsmResourceType.SECURITY_GROUP, [vpcItem.name, securityGroupItem.name]),
@@ -991,7 +1113,7 @@ export abstract class NetworkStack extends AcceleratorStack {
     }
 
     // AwsSolutions-EC23: The Security Group allows for 0.0.0.0/0 or ::/0 inbound access.
-    if (allIngressRule) {
+    if (securityGroup && allIngressRule) {
       NagSuppressions.addResourceSuppressions(securityGroup, [
         { id: 'AwsSolutions-EC23', reason: 'User defined an all ingress rule in configuration.' },
       ]);
@@ -1193,6 +1315,7 @@ export abstract class NetworkStack extends AcceleratorStack {
     owningRegion?: string;
     transitGatewayId?: string;
     virtualPrivateGateway?: string;
+    metadata?: { [key: string]: string | number | boolean | undefined };
   }): VpnConnectionProps {
     const hasCrossAccountOptions = options.owningAccountId || options.owningRegion ? true : false;
 
@@ -1217,6 +1340,7 @@ export abstract class NetworkStack extends AcceleratorStack {
         options.owningAccountId,
         options.owningRegion,
       ),
+      metadata: options.metadata,
     };
   }
 

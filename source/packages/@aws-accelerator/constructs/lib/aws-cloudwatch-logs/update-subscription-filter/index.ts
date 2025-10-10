@@ -29,6 +29,7 @@ import {
   DeleteAccountPolicyCommand,
   LogGroupClass,
   ValidationException,
+  Distribution,
 } from '@aws-sdk/client-cloudwatch-logs';
 
 import { setRetryStrategy, wildcardMatch } from '@aws-accelerator/utils/lib/common-functions';
@@ -80,6 +81,12 @@ export async function handler(event: CloudFormationCustomResourceEvent): Promise
   const selectionCriteria: string | undefined = event.ResourceProperties['selectionCriteria'];
   const overrideExisting = event.ResourceProperties['overrideExisting'] === 'true' ? true : false;
   const filterPattern = event.ResourceProperties['filterPattern'] ?? '';
+  const NO_OP = process.env['NO_OP'];
+
+  if (NO_OP === 'true') {
+    console.info('NO_OP is true, will not make any changes');
+    return { Status: 'SUCCESS' };
+  }
 
   let logExclusionParse: cloudwatchExclusionProcessedItem | undefined;
   if (logExclusionOption && isValidLogExclusionOption(logExclusionOption)) {
@@ -179,10 +186,11 @@ async function manageLogGroups(
   );
 
   // Process retention and encryption setting for ALL log groups
-  for (const allLogGroup of logGroups.allLogGroups) {
-    await updateRetentionPolicy(parseInt(retention.acceleratorLogRetentionInDays), allLogGroup);
+  for (const logGroup of logGroups.allLogGroups) {
+    await updateRetentionPolicy(parseInt(retention.acceleratorLogRetentionInDays), logGroup);
 
-    await updateLogGroupEncryption(allLogGroup, encryption.acceleratorLogKmsKeyArn);
+    // Ignore log groups prefixed with 'AWS' as it's a restricted action
+    await updateLogGroupEncryption(logGroup, encryption.acceleratorLogKmsKeyArn);
   }
 
   if (subscription.subscriptionType === 'ACCOUNT') {
@@ -456,6 +464,7 @@ async function updateLogSubscription(
             roleArn: acceleratorLogSubscriptionRoleArn,
             filterName: logGroupName,
             filterPattern: '',
+            distribution: Distribution.Random,
           }),
         ),
       );
@@ -572,14 +581,26 @@ async function deleteSubscription(logGroupName: string, acceleratorCreatedLogDes
  */
 async function updateLogGroupEncryption(logGroup: LogGroup, acceleratorLogKmsKeyArn?: string) {
   if (!logGroup.kmsKeyId && acceleratorLogKmsKeyArn) {
-    await throttlingBackOff(() =>
-      logsClient.send(
-        new AssociateKmsKeyCommand({
-          logGroupName: logGroup.logGroupName!,
-          kmsKeyId: acceleratorLogKmsKeyArn,
-        }),
-      ),
-    );
+    try {
+      await throttlingBackOff(() =>
+        logsClient.send(
+          new AssociateKmsKeyCommand({
+            logGroupName: logGroup.logGroupName!,
+            kmsKeyId: acceleratorLogKmsKeyArn,
+          }),
+        ),
+      );
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (error: any) {
+      if (
+        error.name === 'InvalidParameterException' &&
+        error.message.includes('Log groups starting with AWS/ are reserved for AWS')
+      ) {
+        console.warn(`Skipping encryption for log group ${logGroup.logGroupName} as it is an AWS managed log group`);
+        return;
+      }
+      throw error;
+    }
   }
 }
 

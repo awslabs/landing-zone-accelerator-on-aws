@@ -1,0 +1,15 @@
+globalReplacements:
+  - key: DEFINED_PLACEHOLDER
+    type: String
+    value: 'TagReplacementValue'
+  - key: AcceleratorPrefix
+    type: String
+    value: accelerator
+  - key: AcceleratorHomeRegion
+    type: String
+    value: us-east-1
+  - key: NonHomeEnabledRegions
+    type: StringList
+    value:
+      - us-west-2
+      - ca-central-1

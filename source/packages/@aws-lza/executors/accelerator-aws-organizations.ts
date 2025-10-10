@@ -16,10 +16,23 @@ import { OrganizationalUnit } from '@aws-sdk/client-organizations';
 import { ICreateOrganizationalUnitHandlerParameter } from '../interfaces/aws-organizations/create-organizational-unit';
 import { CreateOrganizationalUnitModule } from '../lib/aws-organizations/create-organizational-unit';
 import { createLogger } from '../common/logger';
-import { IMoveAccountHandlerParameter } from '../interfaces/aws-organizations/move-account';
+import {
+  IMoveAccountHandlerParameter,
+  IMoveAccountsBatchHandlerParameter,
+} from '../interfaces/aws-organizations/move-account';
 import { MoveAccountModule } from '../lib/aws-organizations/move-account';
-import { IInviteAccountToOrganizationHandlerParameter } from '../interfaces/aws-organizations/invite-account-to-organization';
+import {
+  IInviteAccountsBatchToOrganizationHandlerParameter,
+  IInviteAccountToOrganizationHandlerParameter,
+} from '../interfaces/aws-organizations/invite-account-to-organization';
 import { InviteAccountToOrganizationModule } from '../lib/aws-organizations/invite-account-to-organization';
+import { InviteAccountsBatchToOrganizationModule } from '../lib/aws-organizations/invite-accounts-batch-to-organization';
+import { MoveAccountsBatchModule } from '../lib/aws-organizations/move-accounts-batch';
+import {
+  IGetOrganizationalUnitsDetailHandlerParameter,
+  IOrganizationalUnitDetailsType,
+} from '../interfaces/aws-organizations/get-organizational-units-detail';
+import { GetOrganizationalUnitsDetailModule } from '../lib/aws-organizations/get-organizational-units-detail';
 
 process.on('uncaughtException', err => {
   throw err;
@@ -178,6 +191,129 @@ export async function inviteAccountToOrganization(
 export async function moveAccount(input: IMoveAccountHandlerParameter): Promise<string> {
   try {
     return await new MoveAccountModule().handler(input);
+  } catch (e: unknown) {
+    logger.error(e);
+    throw e;
+  }
+}
+
+/**
+ * Function to invite accounts batch to AWS Organizations
+ * @param input {@link IInviteAccountsBatchToOrganizationHandlerParameter }
+ * @returns
+ *
+ * @example
+ * ```
+ * const input: IInviteAccountsBatchToOrganizationHandlerParameter = {
+ *   operation: 'invite-accounts-batch-to-organization',
+ *   partition: 'aws',
+ *   region: 'us-east-1',
+ *   configuration: {
+ *     accounts: [
+ *       {
+ *         email: 'account@example.com',
+ *         accountId: 'XXXXXXXXX',
+ *         tags: [
+ *           {
+ *             Key: 'tag1',
+ *             Value: 'value1',
+ *           },
+ *           {
+ *             Key: 'tag2',
+ *             Value: 'value2',
+ *           },
+ *         ],
+ *       },
+ *       {
+ *         email: 'account@example.com',
+ *         accountId: 'XXXXXXXXX',
+ *         tags: [
+ *           {
+ *             Key: 'tag1',
+ *             Value: 'value1',
+ *           },
+ *           {
+ *             Key: 'tag2',
+ *             Value: 'value2',
+ *           },
+ *         ],
+ *       },
+ *     ],
+ *   },
+ * };
+ *
+ * const status = await inviteAccountsBatchToOrganization(input);
+ * ```
+ */
+export async function inviteAccountsBatchToOrganization(
+  input: IInviteAccountsBatchToOrganizationHandlerParameter,
+): Promise<string> {
+  try {
+    return await new InviteAccountsBatchToOrganizationModule().handler(input);
+  } catch (e: unknown) {
+    logger.error(e);
+    throw e;
+  }
+}
+
+/**
+ * Function to move accounts batch to target OU
+ * @param input {@link IMoveAccountsBatchHandlerParameter}
+ * @returns string
+ *
+ * @example
+ * ```
+ * const input: IMoveAccountsBatchHandlerParameter = {
+ *   operation: 'move-accounts-batch',
+ *   partition: 'aws',
+ *   region: 'us-east-1',
+ *   configuration: {
+ *     accounts: [
+ *       {
+ *         email: 'account@example.com',
+ *         destinationOu: 'OU1/OU2/OU3',
+ *       },
+ *       {
+ *         email: 'account@example.com',
+ *         destinationOu: 'OU1/OU2/OU3',
+ *       },
+ *     ],
+ *   },
+ * };
+ *
+ * const status = await moveAccountsBatch(input);
+ * ```
+ */
+export async function moveAccountsBatch(input: IMoveAccountsBatchHandlerParameter): Promise<string> {
+  try {
+    return await new MoveAccountsBatchModule().handler(input);
+  } catch (e: unknown) {
+    logger.error(e);
+    throw e;
+  }
+}
+
+/**
+ * Function to get AWS Organizations Organizational Units detail
+ * @param input {@link IGetOrganizationalUnitsDetailHandlerParameter}
+ * @returns
+ *
+ * @example
+ * ```
+ * const input: IGetOrganizationalUnitsDetailHandlerParameter = {
+ *   operation: 'get-organizational-units-detail',
+ *   partition: 'aws',
+ *   region: 'us-east-1',
+ * };
+ *
+ * const response: IOrganizationalUnitDetailsType[] = await getOrganizationalUnitsDetail(input);
+ * ```
+ */
+export async function getOrganizationalUnitsDetail(
+  input: IGetOrganizationalUnitsDetailHandlerParameter,
+): Promise<IOrganizationalUnitDetailsType[]> {
+  try {
+    return await new GetOrganizationalUnitsDetailModule().handler(input);
   } catch (e: unknown) {
     logger.error(e);
     throw e;

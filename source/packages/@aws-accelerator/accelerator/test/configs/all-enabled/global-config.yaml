@@ -29,7 +29,9 @@ enabledRegions:
   # - ap-east-1
   # - ap-southeast-3
   # - ca-west-1
+  # - mx-central-1
 
+# useV2Stacks: true
 managementAccountAccessRole: AWSControlTowerExecution
 defaultEventBus:
   policy: event-bus-policies/eventbus-policy.json
@@ -137,6 +139,14 @@ controlTower:
       deploymentTargets:
         organizationalUnits:
           - SecureWorkloads
+    - identifier: 6s095tcdtgab75dd0229m5x6n
+      enable: true
+      deploymentTargets:
+        organizationalUnits:
+          - SecureWorkloads
+          - Devops
+          - Infrastructure
+          - Level1
 cdkOptions:
   centralizeBuckets: true
   useManagementAccessRole: true
@@ -288,6 +298,7 @@ logging:
     enable: true
     dynamicPartitioning: dynamic-partitioning/log-filters.json
     dynamicPartitioningByAccountId: true
+    organizationIdConditionSupported: true
     # replaceLogDestinationArn: replaceLogDestinationArn
 
     exclusions:
@@ -334,6 +345,12 @@ limits:
     regions:
       - us-east-1
       - us-west-2
+  - serviceCode: route53resolver
+    quotaCode: L-4A669CC0
+    desiredValue: 10
+    deploymentTargets:
+      organizationalUnits:
+        - Infrastructure
 reports:
   costAndUsageReport:
     compression: Parquet

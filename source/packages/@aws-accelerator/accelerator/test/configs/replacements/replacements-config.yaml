@@ -1,0 +1,72 @@
+globalReplacements:
+  - key: ssmparam
+    type: SSM
+    path: /accelerator/myparam
+  - key: ALLOWED_CORPORATE_CIDRS
+    type: StringList
+    value:
+      - 10.0.1.0/24
+      - 10.0.2.0/24
+  - key: ALLOWED_PRINCIPAL_ARNS
+    type: StringList
+    value:
+      - arn:aws:iam::*:role/cdk-accel-*
+      - arn:aws:iam::*:role/AWSA*
+      - arn:aws:iam::*:role/OrganizationAccountAccessRole
+  - key: ALLOWED_EXTERNAL_ACCOUNTS
+    type: StringList
+    value:
+      - '123456789012'
+  - key: DEFINED_PLACEHOLDER
+    type: String
+    value: 'TagReplacementValue'
+  - key: AcceleratorPrefix
+    type: String
+    value: accelerator
+  - key: AcceleratorHomeRegion
+    type: String
+    value: us-east-1
+  - key: NonHomeEnabledRegions
+    type: StringList
+    value:
+      - us-west-2
+      - ca-central-1
+  - key: AllEnabledRegions
+    type: StringList
+    value:
+      - us-east-1
+      - us-west-2
+      - ca-central-1
+  - key: SecurityEmailNotification
+    type: String
+    value: notify-security@example.com
+  - key: BudgetEmailNotification
+    type: String
+    value: myemail+pa-budg@example.com
+  - key: BudgetEmailNotificationList
+    type: StringList
+    value:
+      - myemail+pa-budg@example.com
+      - myemail+pa1-budg@example.com
+  - key: CoreOUs
+    type: StringList
+    value:
+      - Security
+      - Infrastructure
+  - key: BaseManagedPolicies
+    type: StringList
+    value:
+      - PowerUserAccess
+      - ReadOnlyAccess
+  - key: PCIControlsToDisable
+    type: StringList
+    value:
+      - PCI.IAM.3
+      - PCI.S3.3
+      - PCI.EC2.3
+      - PCI.Lambda.2
+  - key: CustomizationSubnetsDeployment
+    type: StringList
+    value:
+      - SharedServices-appVpc-PrivateSubnetA
+      - SharedServices-appVpc-PrivateSubnetB

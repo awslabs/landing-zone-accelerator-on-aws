@@ -487,7 +487,13 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
         "Description": "Cross account EC2 route OnEvent handler",
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
+          },
+        },
         "Handler": "index.handler",
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "CrossAccountRouteFrameworkCrossAccountRouteFunctionServiceRole0BC7B615",
@@ -624,6 +630,7 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
         "Description": "AWS CDK resource provider framework - onEvent (AWSAccelerator-NetworkAssociationsStack-555555555555-us-east-1/CrossAccountRouteFramework/CrossAccountRouteProvider)",
         "Environment": {
           "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
             "USER_ON_EVENT_FUNCTION_ARN": {
               "Fn::GetAtt": [
                 "CrossAccountRouteFrameworkCrossAccountRouteFunctionAFDC4801",
@@ -633,6 +640,7 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
           },
         },
         "Handler": "framework.onEvent",
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "CrossAccountRouteFrameworkCrossAccountRouteProviderframeworkonEventServiceRoleED507AC0",
@@ -1038,8 +1046,13 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
           "S3Bucket": "cdk-hnb659fds-assets-555555555555-us-east-1",
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
+          },
+        },
         "Handler": "__entrypoint__.handler",
-        "MemorySize": 128,
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "CustomDirectConnectGatewayAssociationCustomResourceProviderRole7D012188",
@@ -1150,8 +1163,13 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
           "S3Bucket": "cdk-hnb659fds-assets-555555555555-us-east-1",
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
+          },
+        },
         "Handler": "__entrypoint__.handler",
-        "MemorySize": 128,
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "CustomGetIpamSubnetCidrCustomResourceProviderRoleADF93CF4",
@@ -1238,8 +1256,13 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
           "S3Bucket": "cdk-hnb659fds-assets-555555555555-us-east-1",
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
+          },
+        },
         "Handler": "__entrypoint__.handler",
-        "MemorySize": 128,
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "CustomGetResourceShareCustomResourceProviderRoleBC3FCEEF",
@@ -1301,8 +1324,13 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
           "S3Bucket": "cdk-hnb659fds-assets-555555555555-us-east-1",
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
+          },
+        },
         "Handler": "__entrypoint__.handler",
-        "MemorySize": 128,
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "CustomGetResourceShareItemCustomResourceProviderRoleA7181EBA",
@@ -1381,8 +1409,13 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
           "S3Bucket": "cdk-hnb659fds-assets-555555555555-us-east-1",
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
+          },
+        },
         "Handler": "__entrypoint__.handler",
-        "MemorySize": 128,
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "CustomGetTransitGatewayAttachmentCustomResourceProviderRoleA6A22C3D",
@@ -1468,6 +1501,11 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
         "Code": {
           "S3Bucket": "cdk-hnb659fds-assets-555555555555-us-east-1",
           "S3Key": "REPLACED-GENERATED-NAME.zip",
+        },
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
+          },
         },
         "Handler": "__entrypoint__.handler",
         "MemorySize": 512,
@@ -1555,8 +1593,13 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
           "S3Bucket": "cdk-hnb659fds-assets-555555555555-us-east-1",
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
+          },
+        },
         "Handler": "__entrypoint__.handler",
-        "MemorySize": 128,
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "CustomShareSubnetTagsCustomResourceProviderRole2582495C",
@@ -1687,8 +1730,13 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
           "S3Bucket": "cdk-hnb659fds-assets-555555555555-us-east-1",
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
+          },
+        },
         "Handler": "__entrypoint__.handler",
-        "MemorySize": 128,
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "CustomSsmGetParameterValueCustomResourceProviderRoleB3AFDDB2",
@@ -1794,8 +1842,13 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
         "Description": "Custom resource provider to put cross-account ssm parameter value",
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
+          },
+        },
         "Handler": "__entrypoint__.handler",
-        "MemorySize": 128,
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "CustomSsmPutParameterValueCustomResourceProviderRole9E1F101A",
@@ -1899,8 +1952,13 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
           "S3Bucket": "cdk-hnb659fds-assets-555555555555-us-east-1",
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
+          },
+        },
         "Handler": "__entrypoint__.handler",
-        "MemorySize": 128,
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "CustomTransitGatewayPrefixListReferenceCustomResourceProviderRoleC5D4C080",
@@ -3427,50 +3485,11 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
       "Type": "Custom::GetTransitGatewayAttachment",
       "UpdateReplacePolicy": "Delete",
     },
-    "SharedServicesMainVpcSharedServicesMainRsyslogSgSg82BD8A5A": {
-      "Properties": {
-        "GroupDescription": "Security Group for AWS Accelerator rsyslog",
-        "GroupName": "SharedServices-Main-Rsyslog-sg",
-        "SecurityGroupEgress": [
-          {
-            "CidrIp": "0.0.0.0/0",
-            "Description": "All Outbound",
-            "IpProtocol": "-1",
-          },
-        ],
-        "SecurityGroupIngress": [
-          {
-            "CidrIp": "10.0.0.0/8",
-            "Description": "allow inbound traffic",
-            "FromPort": 514,
-            "IpProtocol": "tcp",
-            "ToPort": 514,
-          },
-          {
-            "CidrIp": "10.0.0.0/8",
-            "Description": "allow inbound traffic",
-            "FromPort": 514,
-            "IpProtocol": "udp",
-            "ToPort": 514,
-          },
-        ],
-        "Tags": [
-          {
-            "Key": "Name",
-            "Value": "SharedServices-Main-Rsyslog-sg",
-          },
-        ],
-        "VpcId": {
-          "Ref": "SsmParameterValueacceleratornetworkvpcSharedServicesMainidC96584B6F00A464EAD1953AFF4B05118Parameter",
-        },
-      },
-      "Type": "AWS::EC2::SecurityGroup",
-    },
     "SsmParamAcceleratorVersionFF83282D": {
       "Properties": {
         "Name": "/accelerator/AWSAccelerator-NetworkAssociationsStack-555555555555-us-east-1/version",
         "Type": "String",
-        "Value": "1.12.0",
+        "Value": "1.13.0",
       },
       "Type": "AWS::SSM::Parameter",
     },
@@ -4152,19 +4171,6 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
       },
       "Type": "AWS::SSM::Parameter",
     },
-    "SsmParamSharedServicesMainSharedServicesMainRsyslogSgSecurityGroupFCDC7FBA": {
-      "DependsOn": [
-        "SsmParamTemplateRequesterSameOuHalfCrossRegionIpamVpcPeering8DEF3C15",
-      ],
-      "Properties": {
-        "Name": "/accelerator/network/vpc/SharedServices-Main/securityGroup/SharedServices-Main-Rsyslog-sg/id",
-        "Type": "String",
-        "Value": {
-          "Ref": "SharedServicesMainVpcSharedServicesMainRsyslogSgSg82BD8A5A",
-        },
-      },
-      "Type": "AWS::SSM::Parameter",
-    },
     "SsmParamStackId521A78D3": {
       "Properties": {
         "Name": "/accelerator/AWSAccelerator-NetworkAssociationsStack-555555555555-us-east-1/stack-id",
@@ -4680,7 +4686,13 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
           "S3Bucket": "cdk-hnb659fds-assets-555555555555-us-east-1",
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
+          },
+        },
         "Handler": "index.handler",
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "appAnlbtg2ipLookupappAnlbtg2ipLookupProviderLambdaServiceRole92332B48",
@@ -4808,6 +4820,7 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
         "Description": "AWS CDK resource provider framework - onEvent (AWSAccelerator-NetworkAssociationsStack-555555555555-us-east-1/appA-nlb-tg-2-ipLookup/appA-nlb-tg-2-ipLookupProvider)",
         "Environment": {
           "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
             "USER_ON_EVENT_FUNCTION_ARN": {
               "Fn::GetAtt": [
                 "appAnlbtg2ipLookupappAnlbtg2ipLookupProviderLambdaEF941FA2",
@@ -4817,6 +4830,7 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
           },
         },
         "Handler": "framework.onEvent",
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "appAnlbtg2ipLookupappAnlbtg2ipLookupProviderframeworkonEventServiceRoleA31E553B",
@@ -5155,7 +5169,13 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
         "Description": "Manage active directory log subscription handler",
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
+          },
+        },
         "Handler": "index.handler",
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "AcceleratorManagedActiveDirectoryActiveDirectoryAcceleratorManagedActiveDirectoryLogSubscriptionManageActiveDirectoryLogSubscriptionFunctionServiceRoleE5897B15",
@@ -5276,6 +5296,7 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
         "Description": "AWS CDK resource provider framework - onEvent (AWSAccelerator-NetworkAssociationsStack-444444444444-us-east-1/AcceleratorManagedActiveDirectoryActiveDirectory/AcceleratorManagedActiveDirectoryLogSubscription/ManageActiveDirectoryLogSubscriptionProvider)",
         "Environment": {
           "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
             "USER_ON_EVENT_FUNCTION_ARN": {
               "Fn::GetAtt": [
                 "AcceleratorManagedActiveDirectoryActiveDirectoryAcceleratorManagedActiveDirectoryLogSubscriptionManageActiveDirectoryLogSubscriptionFunction7DAC44F8",
@@ -5285,6 +5306,7 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
           },
         },
         "Handler": "framework.onEvent",
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "AcceleratorManagedActiveDirectoryActiveDirectoryAcceleratorManagedActiveDirectoryLogSubscriptionManageActiveDirectoryLogSubscriptionProviderframeworkonEventServiceRole28ADC179",
@@ -6456,7 +6478,13 @@ catch {
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
         "Description": "Update resolver group rule target ips",
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
+          },
+        },
         "Handler": "index.handler",
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "AcceleratorManagedActiveDirectoryResolverRuleUpdateResolverRuleFunctionServiceRole83EF458E",
@@ -6593,6 +6621,7 @@ catch {
         "Description": "AWS CDK resource provider framework - onEvent (AWSAccelerator-NetworkAssociationsStack-444444444444-us-east-1/AcceleratorManagedActiveDirectoryResolverRule/UpdateResolverRuleProvider)",
         "Environment": {
           "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
             "USER_ON_EVENT_FUNCTION_ARN": {
               "Fn::GetAtt": [
                 "AcceleratorManagedActiveDirectoryResolverRuleUpdateResolverRuleFunction177103F8",
@@ -6602,6 +6631,7 @@ catch {
           },
         },
         "Handler": "framework.onEvent",
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "AcceleratorManagedActiveDirectoryResolverRuleUpdateResolverRuleProviderframeworkonEventServiceRoleEBC7B9DF",
@@ -6812,7 +6842,13 @@ catch {
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
         "Description": "Share Manage active directory handler",
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
+          },
+        },
         "Handler": "index.handler",
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "AcceleratorManagedActiveDirectoryShareDirectoryShareManageActiveDirectoryFunctionServiceRole772D6922",
@@ -7000,6 +7036,7 @@ catch {
         "Description": "AWS CDK resource provider framework - onEvent (AWSAccelerator-NetworkAssociationsStack-444444444444-us-east-1/AcceleratorManagedActiveDirectoryShareDirectory/ShareManageActiveDirectoryProvider)",
         "Environment": {
           "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
             "USER_ON_EVENT_FUNCTION_ARN": {
               "Fn::GetAtt": [
                 "AcceleratorManagedActiveDirectoryShareDirectoryShareManageActiveDirectoryFunctionF5252A97",
@@ -7009,6 +7046,7 @@ catch {
           },
         },
         "Handler": "framework.onEvent",
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "AcceleratorManagedActiveDirectoryShareDirectoryShareManageActiveDirectoryProviderframeworkonEventServiceRoleD7FD8283",
@@ -7170,7 +7208,13 @@ catch {
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
         "Description": "Lookup subnet id from account",
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
+          },
+        },
         "Handler": "index.handler",
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "AcceleratorManagedActiveDirectorySharedServicesAppASubnetLookupSubnetIdLookupFunctionServiceRoleEB14A5A3",
@@ -7287,6 +7331,7 @@ catch {
         "Description": "AWS CDK resource provider framework - onEvent (AWSAccelerator-NetworkAssociationsStack-444444444444-us-east-1/AcceleratorManagedActiveDirectorySharedServicesAppASubnetLookup/SubnetIdLookupProvider)",
         "Environment": {
           "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
             "USER_ON_EVENT_FUNCTION_ARN": {
               "Fn::GetAtt": [
                 "AcceleratorManagedActiveDirectorySharedServicesAppASubnetLookupSubnetIdLookupFunctionF062DAE0",
@@ -7296,6 +7341,7 @@ catch {
           },
         },
         "Handler": "framework.onEvent",
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "AcceleratorManagedActiveDirectorySharedServicesAppASubnetLookupSubnetIdLookupProviderframeworkonEventServiceRoleA4FEBDEC",
@@ -7431,7 +7477,13 @@ catch {
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
         "Description": "Lookup subnet id from account",
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
+          },
+        },
         "Handler": "index.handler",
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "AcceleratorManagedActiveDirectorySharedServicesAppBSubnetLookupSubnetIdLookupFunctionServiceRoleDF7E4CD5",
@@ -7548,6 +7600,7 @@ catch {
         "Description": "AWS CDK resource provider framework - onEvent (AWSAccelerator-NetworkAssociationsStack-444444444444-us-east-1/AcceleratorManagedActiveDirectorySharedServicesAppBSubnetLookup/SubnetIdLookupProvider)",
         "Environment": {
           "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
             "USER_ON_EVENT_FUNCTION_ARN": {
               "Fn::GetAtt": [
                 "AcceleratorManagedActiveDirectorySharedServicesAppBSubnetLookupSubnetIdLookupFunction8383C6C9",
@@ -7557,6 +7610,7 @@ catch {
           },
         },
         "Handler": "framework.onEvent",
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "AcceleratorManagedActiveDirectorySharedServicesAppBSubnetLookupSubnetIdLookupProviderframeworkonEventServiceRoleD9B17EC7",
@@ -7689,7 +7743,13 @@ catch {
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
         "Description": "Lookup vpc id from account",
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
+          },
+        },
         "Handler": "index.handler",
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "AcceleratorManagedActiveDirectoryVpcLookupVpcIdLookupFunctionServiceRoleDCBF26B1",
@@ -7806,6 +7866,7 @@ catch {
         "Description": "AWS CDK resource provider framework - onEvent (AWSAccelerator-NetworkAssociationsStack-444444444444-us-east-1/AcceleratorManagedActiveDirectoryVpcLookup/VpcIdLookupProvider)",
         "Environment": {
           "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
             "USER_ON_EVENT_FUNCTION_ARN": {
               "Fn::GetAtt": [
                 "AcceleratorManagedActiveDirectoryVpcLookupVpcIdLookupFunction53EFBF78",
@@ -7815,6 +7876,7 @@ catch {
           },
         },
         "Handler": "framework.onEvent",
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "AcceleratorManagedActiveDirectoryVpcLookupVpcIdLookupProviderframeworkonEventServiceRole2DA585BD",
@@ -7930,7 +7992,13 @@ catch {
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
         "Description": "Cross account EC2 route OnEvent handler",
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
+          },
+        },
         "Handler": "index.handler",
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "CrossAccountRouteFrameworkCrossAccountRouteFunctionServiceRole0BC7B615",
@@ -8067,6 +8135,7 @@ catch {
         "Description": "AWS CDK resource provider framework - onEvent (AWSAccelerator-NetworkAssociationsStack-444444444444-us-east-1/CrossAccountRouteFramework/CrossAccountRouteProvider)",
         "Environment": {
           "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
             "USER_ON_EVENT_FUNCTION_ARN": {
               "Fn::GetAtt": [
                 "CrossAccountRouteFrameworkCrossAccountRouteFunctionAFDC4801",
@@ -8076,6 +8145,7 @@ catch {
           },
         },
         "Handler": "framework.onEvent",
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "CrossAccountRouteFrameworkCrossAccountRouteProviderframeworkonEventServiceRoleED507AC0",
@@ -8685,8 +8755,13 @@ catch {
           "S3Bucket": "cdk-hnb659fds-assets-444444444444-us-east-1",
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
+          },
+        },
         "Handler": "__entrypoint__.handler",
-        "MemorySize": 128,
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "CustomGetIpamSubnetCidrCustomResourceProviderRoleADF93CF4",
@@ -8773,8 +8848,13 @@ catch {
           "S3Bucket": "cdk-hnb659fds-assets-444444444444-us-east-1",
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
+          },
+        },
         "Handler": "__entrypoint__.handler",
-        "MemorySize": 128,
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "CustomGetResourceShareCustomResourceProviderRoleBC3FCEEF",
@@ -8836,8 +8916,13 @@ catch {
           "S3Bucket": "cdk-hnb659fds-assets-444444444444-us-east-1",
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
+          },
+        },
         "Handler": "__entrypoint__.handler",
-        "MemorySize": 128,
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "CustomGetResourceShareItemCustomResourceProviderRoleA7181EBA",
@@ -8916,8 +9001,13 @@ catch {
           "S3Bucket": "cdk-hnb659fds-assets-444444444444-us-east-1",
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
+          },
+        },
         "Handler": "__entrypoint__.handler",
-        "MemorySize": 128,
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "CustomShareSubnetTagsCustomResourceProviderRole2582495C",
@@ -9048,8 +9138,13 @@ catch {
           "S3Bucket": "cdk-hnb659fds-assets-444444444444-us-east-1",
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
+          },
+        },
         "Handler": "__entrypoint__.handler",
-        "MemorySize": 128,
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "CustomSsmGetParameterValueCustomResourceProviderRoleB3AFDDB2",
@@ -9155,8 +9250,13 @@ catch {
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
         "Description": "Custom resource provider to put cross-account ssm parameter value",
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
+          },
+        },
         "Handler": "__entrypoint__.handler",
-        "MemorySize": 128,
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "CustomSsmPutParameterValueCustomResourceProviderRole9E1F101A",
@@ -9260,8 +9360,13 @@ catch {
           "S3Bucket": "cdk-hnb659fds-assets-444444444444-us-east-1",
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
+          },
+        },
         "Handler": "__entrypoint__.handler",
-        "MemorySize": 128,
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "CustomTransitGatewayPrefixListReferenceCustomResourceProviderRoleC5D4C080",
@@ -9446,381 +9551,6 @@ catch {
       },
       "Type": "Custom::GetIpamSubnetCidr",
       "UpdateReplacePolicy": "Delete",
-    },
-    "NetworkEndpointsVpcManagementSg2B8F9418": {
-      "Properties": {
-        "GroupDescription": "Management Security Group",
-        "GroupName": "Management",
-        "SecurityGroupEgress": [
-          {
-            "CidrIp": "10.0.0.0/8",
-            "Description": "All Outbound",
-            "IpProtocol": "-1",
-          },
-          {
-            "CidrIp": "100.96.252.0/23",
-            "Description": "All Outbound",
-            "IpProtocol": "-1",
-          },
-          {
-            "CidrIp": "100.96.250.0/23",
-            "Description": "All Outbound",
-            "IpProtocol": "-1",
-          },
-          {
-            "CidrIp": {
-              "Fn::GetAtt": [
-                "NetworkEndpointsNetworkEndpointsTgwAttachAIpamSubnetLookup4EED1D71",
-                "ipv4CidrBlock",
-              ],
-            },
-            "Description": "All Outbound",
-            "IpProtocol": "-1",
-          },
-          {
-            "CidrIp": {
-              "Fn::GetAtt": [
-                "NetworkEndpointsNetworkEndpointsTgwAttachBIpamSubnetLookupC27B33FE",
-                "ipv4CidrBlock",
-              ],
-            },
-            "Description": "All Outbound",
-            "IpProtocol": "-1",
-          },
-          {
-            "Description": "All Outbound",
-            "DestinationPrefixListId": {
-              "Ref": "SsmParameterValueacceleratornetworkprefixListacceleratorprefixlistidC96584B6F00A464EAD1953AFF4B05118Parameter",
-            },
-            "IpProtocol": "-1",
-          },
-          {
-            "CidrIp": "10.0.0.0/8",
-            "Description": "Limited Outbound",
-            "FromPort": 22,
-            "IpProtocol": "tcp",
-            "ToPort": 22,
-          },
-          {
-            "CidrIp": "10.0.0.0/8",
-            "Description": "Limited Outbound",
-            "FromPort": 22,
-            "IpProtocol": "udp",
-            "ToPort": 22,
-          },
-          {
-            "CidrIp": "10.0.0.0/8",
-            "Description": "IP Protocol Rule",
-            "IpProtocol": "50",
-          },
-          {
-            "CidrIp": "10.0.0.0/8",
-            "Description": "IP Protocol Rule",
-            "IpProtocol": "45",
-          },
-          {
-            "CidrIp": "10.0.0.0/8",
-            "Description": "IP Protocol Rule",
-            "IpProtocol": "5",
-          },
-        ],
-        "SecurityGroupIngress": [
-          {
-            "CidrIp": "10.0.0.0/8",
-            "Description": "Management RDP Traffic Inbound",
-            "FromPort": 3389,
-            "IpProtocol": "tcp",
-            "ToPort": 3389,
-          },
-          {
-            "CidrIp": "100.96.252.0/23",
-            "Description": "Management RDP Traffic Inbound",
-            "FromPort": 3389,
-            "IpProtocol": "tcp",
-            "ToPort": 3389,
-          },
-          {
-            "CidrIp": "100.96.250.0/23",
-            "Description": "Management RDP Traffic Inbound",
-            "FromPort": 3389,
-            "IpProtocol": "tcp",
-            "ToPort": 3389,
-          },
-          {
-            "CidrIpv6": "fd00::/8",
-            "Description": "Management RDP Traffic Inbound",
-            "FromPort": 3389,
-            "IpProtocol": "tcp",
-            "ToPort": 3389,
-          },
-          {
-            "CidrIp": {
-              "Fn::GetAtt": [
-                "NetworkEndpointsNetworkEndpointsTgwAttachAIpamSubnetLookup4EED1D71",
-                "ipv4CidrBlock",
-              ],
-            },
-            "Description": "Management RDP Traffic Inbound",
-            "FromPort": 3389,
-            "IpProtocol": "tcp",
-            "ToPort": 3389,
-          },
-          {
-            "CidrIp": {
-              "Fn::GetAtt": [
-                "NetworkEndpointsNetworkEndpointsTgwAttachBIpamSubnetLookupC27B33FE",
-                "ipv4CidrBlock",
-              ],
-            },
-            "Description": "Management RDP Traffic Inbound",
-            "FromPort": 3389,
-            "IpProtocol": "tcp",
-            "ToPort": 3389,
-          },
-          {
-            "Description": "Management RDP Traffic Inbound",
-            "FromPort": 3389,
-            "IpProtocol": "tcp",
-            "SourcePrefixListId": {
-              "Ref": "SsmParameterValueacceleratornetworkprefixListacceleratorprefixlistidC96584B6F00A464EAD1953AFF4B05118Parameter",
-            },
-            "ToPort": 3389,
-          },
-          {
-            "CidrIp": "10.0.0.0/8",
-            "Description": "Management SSH Traffic Inbound",
-            "FromPort": 22,
-            "IpProtocol": "tcp",
-            "ToPort": 22,
-          },
-          {
-            "CidrIp": "100.96.252.0/23",
-            "Description": "Management SSH Traffic Inbound",
-            "FromPort": 22,
-            "IpProtocol": "tcp",
-            "ToPort": 22,
-          },
-          {
-            "CidrIp": "100.96.250.0/23",
-            "Description": "Management SSH Traffic Inbound",
-            "FromPort": 22,
-            "IpProtocol": "tcp",
-            "ToPort": 22,
-          },
-          {
-            "CidrIp": {
-              "Fn::GetAtt": [
-                "NetworkEndpointsNetworkEndpointsTgwAttachAIpamSubnetLookup4EED1D71",
-                "ipv4CidrBlock",
-              ],
-            },
-            "Description": "Management SSH Traffic Inbound",
-            "FromPort": 22,
-            "IpProtocol": "tcp",
-            "ToPort": 22,
-          },
-          {
-            "CidrIp": {
-              "Fn::GetAtt": [
-                "NetworkEndpointsNetworkEndpointsTgwAttachBIpamSubnetLookupC27B33FE",
-                "ipv4CidrBlock",
-              ],
-            },
-            "Description": "Management SSH Traffic Inbound",
-            "FromPort": 22,
-            "IpProtocol": "tcp",
-            "ToPort": 22,
-          },
-          {
-            "Description": "Management SSH Traffic Inbound",
-            "FromPort": 22,
-            "IpProtocol": "tcp",
-            "SourcePrefixListId": {
-              "Ref": "SsmParameterValueacceleratornetworkprefixListacceleratorprefixlistidC96584B6F00A464EAD1953AFF4B05118Parameter",
-            },
-            "ToPort": 22,
-          },
-          {
-            "CidrIp": "10.0.0.0/8",
-            "Description": "Management SSH Traffic Inbound",
-            "FromPort": 22,
-            "IpProtocol": "udp",
-            "ToPort": 22,
-          },
-          {
-            "CidrIp": "100.96.252.0/23",
-            "Description": "Management SSH Traffic Inbound",
-            "FromPort": 22,
-            "IpProtocol": "udp",
-            "ToPort": 22,
-          },
-          {
-            "CidrIp": "100.96.250.0/23",
-            "Description": "Management SSH Traffic Inbound",
-            "FromPort": 22,
-            "IpProtocol": "udp",
-            "ToPort": 22,
-          },
-          {
-            "CidrIp": {
-              "Fn::GetAtt": [
-                "NetworkEndpointsNetworkEndpointsTgwAttachAIpamSubnetLookup4EED1D71",
-                "ipv4CidrBlock",
-              ],
-            },
-            "Description": "Management SSH Traffic Inbound",
-            "FromPort": 22,
-            "IpProtocol": "udp",
-            "ToPort": 22,
-          },
-          {
-            "CidrIp": {
-              "Fn::GetAtt": [
-                "NetworkEndpointsNetworkEndpointsTgwAttachBIpamSubnetLookupC27B33FE",
-                "ipv4CidrBlock",
-              ],
-            },
-            "Description": "Management SSH Traffic Inbound",
-            "FromPort": 22,
-            "IpProtocol": "udp",
-            "ToPort": 22,
-          },
-          {
-            "Description": "Management SSH Traffic Inbound",
-            "FromPort": 22,
-            "IpProtocol": "udp",
-            "SourcePrefixListId": {
-              "Ref": "SsmParameterValueacceleratornetworkprefixListacceleratorprefixlistidC96584B6F00A464EAD1953AFF4B05118Parameter",
-            },
-            "ToPort": 22,
-          },
-          {
-            "CidrIp": "100.96.252.0/23",
-            "Description": "IP Protocol Rule",
-            "IpProtocol": "50",
-          },
-          {
-            "CidrIp": "100.96.252.0/23",
-            "Description": "IP Protocol Rule",
-            "IpProtocol": "45",
-          },
-          {
-            "CidrIp": "100.96.252.0/23",
-            "Description": "IP Protocol Rule",
-            "IpProtocol": "5",
-          },
-        ],
-        "Tags": [
-          {
-            "Key": "Name",
-            "Value": "Management",
-          },
-        ],
-        "VpcId": {
-          "Ref": "SsmParameterValueacceleratornetworkvpcNetworkEndpointsidC96584B6F00A464EAD1953AFF4B05118Parameter",
-        },
-      },
-      "Type": "AWS::EC2::SecurityGroup",
-    },
-    "NetworkEndpointsVpcManagementSgManagementEgress00D58058BF": {
-      "Properties": {
-        "Description": "All Outbound",
-        "DestinationSecurityGroupId": {
-          "Ref": "NetworkEndpointsVpcManagementSg2B8F9418",
-        },
-        "GroupId": {
-          "Ref": "NetworkEndpointsVpcManagementSg2B8F9418",
-        },
-        "IpProtocol": "-1",
-      },
-      "Type": "AWS::EC2::SecurityGroupEgress",
-    },
-    "NetworkEndpointsVpcManagementSgManagementIngress008FD972B5": {
-      "Properties": {
-        "Description": "Management RDP Traffic Inbound",
-        "FromPort": 3389,
-        "GroupId": {
-          "Ref": "NetworkEndpointsVpcManagementSg2B8F9418",
-        },
-        "IpProtocol": "tcp",
-        "SourceSecurityGroupId": {
-          "Ref": "NetworkEndpointsVpcManagementSg2B8F9418",
-        },
-        "ToPort": 3389,
-      },
-      "Type": "AWS::EC2::SecurityGroupIngress",
-    },
-    "NetworkEndpointsVpcManagementSgManagementIngress105119E927": {
-      "Properties": {
-        "Description": "Management SSH Traffic Inbound",
-        "FromPort": 22,
-        "GroupId": {
-          "Ref": "NetworkEndpointsVpcManagementSg2B8F9418",
-        },
-        "IpProtocol": "tcp",
-        "SourceSecurityGroupId": {
-          "Ref": "NetworkEndpointsVpcManagementSg2B8F9418",
-        },
-        "ToPort": 22,
-      },
-      "Type": "AWS::EC2::SecurityGroupIngress",
-    },
-    "NetworkEndpointsVpcManagementSgManagementIngress1135D6C2DD": {
-      "Properties": {
-        "Description": "Management SSH Traffic Inbound",
-        "FromPort": 22,
-        "GroupId": {
-          "Ref": "NetworkEndpointsVpcManagementSg2B8F9418",
-        },
-        "IpProtocol": "udp",
-        "SourceSecurityGroupId": {
-          "Ref": "NetworkEndpointsVpcManagementSg2B8F9418",
-        },
-        "ToPort": 22,
-      },
-      "Type": "AWS::EC2::SecurityGroupIngress",
-    },
-    "NetworkEndpointsVpcNetworkEndpointsCustomEndpointSgSg4BB9279D": {
-      "Metadata": {
-        "cdk_nag": {
-          "rules_to_suppress": [
-            {
-              "id": "AwsSolutions-EC23",
-              "reason": "User defined an all ingress rule in configuration.",
-            },
-          ],
-        },
-      },
-      "Properties": {
-        "GroupDescription": "Accelerator security group for custom endpoint",
-        "GroupName": "Network-Endpoints-CustomEndpointSg",
-        "SecurityGroupEgress": [
-          {
-            "CidrIp": "0.0.0.0/0",
-            "Description": "Allow all outbound",
-            "IpProtocol": "-1",
-          },
-        ],
-        "SecurityGroupIngress": [
-          {
-            "CidrIp": "0.0.0.0/0",
-            "Description": "Allow access to 443",
-            "FromPort": 443,
-            "IpProtocol": "tcp",
-            "ToPort": 443,
-          },
-        ],
-        "Tags": [
-          {
-            "Key": "Name",
-            "Value": "Network-Endpoints-CustomEndpointSg",
-          },
-        ],
-        "VpcId": {
-          "Ref": "SsmParameterValueacceleratornetworkvpcNetworkEndpointsidC96584B6F00A464EAD1953AFF4B05118Parameter",
-        },
-      },
-      "Type": "AWS::EC2::SecurityGroup",
     },
     "NetworkInspectiondeployedtg2898BDF56": {
       "Properties": {
@@ -10116,7 +9846,7 @@ catch {
       "Properties": {
         "Name": "/accelerator/AWSAccelerator-NetworkAssociationsStack-444444444444-us-east-1/version",
         "Type": "String",
-        "Value": "1.12.0",
+        "Value": "1.13.0",
       },
       "Type": "AWS::SSM::Parameter",
     },
@@ -11582,32 +11312,6 @@ catch {
       "Type": "Custom::SsmGetParameterValue",
       "UpdateReplacePolicy": "Delete",
     },
-    "SsmParamNetworkEndpointsManagementSecurityGroup157CDC67": {
-      "DependsOn": [
-        "SsmParamTemplateAccepterDifferentOuCrossRegionStaticVpcPeering2222222222222B7169AA",
-      ],
-      "Properties": {
-        "Name": "/accelerator/network/vpc/Network-Endpoints/securityGroup/Management/id",
-        "Type": "String",
-        "Value": {
-          "Ref": "NetworkEndpointsVpcManagementSg2B8F9418",
-        },
-      },
-      "Type": "AWS::SSM::Parameter",
-    },
-    "SsmParamNetworkEndpointsNetworkEndpointsCustomEndpointSgSecurityGroupE01E3A88": {
-      "DependsOn": [
-        "SsmParamTemplateAccepterDifferentOuCrossRegionStaticVpcPeering2222222222222B7169AA",
-      ],
-      "Properties": {
-        "Name": "/accelerator/network/vpc/Network-Endpoints/securityGroup/Network-Endpoints-CustomEndpointSg/id",
-        "Type": "String",
-        "Value": {
-          "Ref": "NetworkEndpointsVpcNetworkEndpointsCustomEndpointSgSg4BB9279D",
-        },
-      },
-      "Type": "AWS::SSM::Parameter",
-    },
     "SsmParamNonTemplateIpamSameRegionSameAccountVpcPeeringB7EBA950": {
       "Properties": {
         "Name": "/accelerator/network/vpcPeering/NonTemplate-Ipam-Same-Region-Same-Account/id",
@@ -13055,7 +12759,13 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
         "Description": "Cross account EC2 route OnEvent handler",
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
+          },
+        },
         "Handler": "index.handler",
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "CrossAccountRouteFrameworkCrossAccountRouteFunctionServiceRole0BC7B615",
@@ -13192,6 +12902,7 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
         "Description": "AWS CDK resource provider framework - onEvent (AWSAccelerator-NetworkAssociationsStack-555555555555-us-west-2/CrossAccountRouteFramework/CrossAccountRouteProvider)",
         "Environment": {
           "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
             "USER_ON_EVENT_FUNCTION_ARN": {
               "Fn::GetAtt": [
                 "CrossAccountRouteFrameworkCrossAccountRouteFunctionAFDC4801",
@@ -13201,6 +12912,7 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
           },
         },
         "Handler": "framework.onEvent",
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "CrossAccountRouteFrameworkCrossAccountRouteProviderframeworkonEventServiceRoleED507AC0",
@@ -13345,8 +13057,13 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
           "S3Bucket": "cdk-hnb659fds-assets-555555555555-us-west-2",
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
+          },
+        },
         "Handler": "__entrypoint__.handler",
-        "MemorySize": 128,
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "CustomSsmGetParameterValueCustomResourceProviderRoleB3AFDDB2",
@@ -13452,8 +13169,13 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
         "Description": "Custom resource provider to put cross-account ssm parameter value",
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
+          },
+        },
         "Handler": "__entrypoint__.handler",
-        "MemorySize": 128,
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "CustomSsmPutParameterValueCustomResourceProviderRole9E1F101A",
@@ -13623,7 +13345,7 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
       "Properties": {
         "Name": "/accelerator/AWSAccelerator-NetworkAssociationsStack-555555555555-us-west-2/version",
         "Type": "String",
-        "Value": "1.12.0",
+        "Value": "1.13.0",
       },
       "Type": "AWS::SSM::Parameter",
     },
@@ -13821,7 +13543,13 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
         "Description": "Cross account EC2 route OnEvent handler",
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
+          },
+        },
         "Handler": "index.handler",
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "CrossAccountRouteFrameworkCrossAccountRouteFunctionServiceRole0BC7B615",
@@ -13958,6 +13686,7 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
         "Description": "AWS CDK resource provider framework - onEvent (AWSAccelerator-NetworkAssociationsStack-444444444444-us-west-2/CrossAccountRouteFramework/CrossAccountRouteProvider)",
         "Environment": {
           "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
             "USER_ON_EVENT_FUNCTION_ARN": {
               "Fn::GetAtt": [
                 "CrossAccountRouteFrameworkCrossAccountRouteFunctionAFDC4801",
@@ -13967,6 +13696,7 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
           },
         },
         "Handler": "framework.onEvent",
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "CrossAccountRouteFrameworkCrossAccountRouteProviderframeworkonEventServiceRoleED507AC0",
@@ -14142,8 +13872,13 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
           "S3Bucket": "cdk-hnb659fds-assets-444444444444-us-west-2",
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
+          },
+        },
         "Handler": "__entrypoint__.handler",
-        "MemorySize": 128,
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "CustomSsmGetParameterValueCustomResourceProviderRoleB3AFDDB2",
@@ -14249,8 +13984,13 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
         "Description": "Custom resource provider to put cross-account ssm parameter value",
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
+          },
+        },
         "Handler": "__entrypoint__.handler",
-        "MemorySize": 128,
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "CustomSsmPutParameterValueCustomResourceProviderRole9E1F101A",
@@ -14349,7 +14089,7 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
       "Properties": {
         "Name": "/accelerator/AWSAccelerator-NetworkAssociationsStack-444444444444-us-west-2/version",
         "Type": "String",
-        "Value": "1.12.0",
+        "Value": "1.13.0",
       },
       "Type": "AWS::SSM::Parameter",
     },
@@ -15014,7 +14754,13 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
         "Description": "Cross account EC2 route OnEvent handler",
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
+          },
+        },
         "Handler": "index.handler",
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "CrossAccountRouteFrameworkCrossAccountRouteFunctionServiceRole0BC7B615",
@@ -15154,6 +14900,7 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
         "Description": "AWS CDK resource provider framework - onEvent (AWSAccelerator-NetworkAssociationsStack-222222222222-us-east-1/CrossAccountRouteFramework/CrossAccountRouteProvider)",
         "Environment": {
           "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
             "USER_ON_EVENT_FUNCTION_ARN": {
               "Fn::GetAtt": [
                 "CrossAccountRouteFrameworkCrossAccountRouteFunctionAFDC4801",
@@ -15163,6 +14910,7 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
           },
         },
         "Handler": "framework.onEvent",
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "CrossAccountRouteFrameworkCrossAccountRouteProviderframeworkonEventServiceRoleED507AC0",
@@ -15338,8 +15086,13 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
           "S3Bucket": "cdk-hnb659fds-assets-222222222222-us-east-1",
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
+          },
+        },
         "Handler": "__entrypoint__.handler",
-        "MemorySize": 128,
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "CustomGetResourceShareCustomResourceProviderRoleBC3FCEEF",
@@ -15401,8 +15154,13 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
           "S3Bucket": "cdk-hnb659fds-assets-222222222222-us-east-1",
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
+          },
+        },
         "Handler": "__entrypoint__.handler",
-        "MemorySize": 128,
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "CustomGetResourceShareItemCustomResourceProviderRoleA7181EBA",
@@ -15484,8 +15242,13 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
           "S3Bucket": "cdk-hnb659fds-assets-222222222222-us-east-1",
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
+          },
+        },
         "Handler": "__entrypoint__.handler",
-        "MemorySize": 128,
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "CustomShareSubnetTagsCustomResourceProviderRole2582495C",
@@ -15619,8 +15382,13 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
           "S3Bucket": "cdk-hnb659fds-assets-222222222222-us-east-1",
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
+          },
+        },
         "Handler": "__entrypoint__.handler",
-        "MemorySize": 128,
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "CustomSsmGetParameterValueCustomResourceProviderRoleB3AFDDB2",
@@ -15729,8 +15497,13 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
         "Description": "Custom resource provider to put cross-account ssm parameter value",
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
+          },
+        },
         "Handler": "__entrypoint__.handler",
-        "MemorySize": 128,
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "CustomSsmPutParameterValueCustomResourceProviderRole9E1F101A",
@@ -15933,50 +15706,11 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
       "Type": "Custom::GetResourceShare",
       "UpdateReplacePolicy": "Delete",
     },
-    "SharedServicesMainVpcSharedServicesMainRsyslogSgSg82BD8A5A": {
-      "Properties": {
-        "GroupDescription": "Security Group for AWS Accelerator rsyslog",
-        "GroupName": "SharedServices-Main-Rsyslog-sg",
-        "SecurityGroupEgress": [
-          {
-            "CidrIp": "0.0.0.0/0",
-            "Description": "All Outbound",
-            "IpProtocol": "-1",
-          },
-        ],
-        "SecurityGroupIngress": [
-          {
-            "CidrIp": "10.0.0.0/8",
-            "Description": "allow inbound traffic",
-            "FromPort": 514,
-            "IpProtocol": "tcp",
-            "ToPort": 514,
-          },
-          {
-            "CidrIp": "10.0.0.0/8",
-            "Description": "allow inbound traffic",
-            "FromPort": 514,
-            "IpProtocol": "udp",
-            "ToPort": 514,
-          },
-        ],
-        "Tags": [
-          {
-            "Key": "Name",
-            "Value": "SharedServices-Main-Rsyslog-sg",
-          },
-        ],
-        "VpcId": {
-          "Ref": "SsmParameterValueacceleratornetworkvpcSharedServicesMainidC96584B6F00A464EAD1953AFF4B05118Parameter",
-        },
-      },
-      "Type": "AWS::EC2::SecurityGroup",
-    },
     "SsmParamAcceleratorVersionFF83282D": {
       "Properties": {
         "Name": "/accelerator/AWSAccelerator-NetworkAssociationsStack-222222222222-us-east-1/version",
         "Type": "String",
-        "Value": "1.12.0",
+        "Value": "1.13.0",
       },
       "Type": "AWS::SSM::Parameter",
     },
@@ -16115,16 +15849,6 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
       },
       "Type": "Custom::SsmGetParameterValue",
       "UpdateReplacePolicy": "Delete",
-    },
-    "SsmParamSharedServicesMainSharedServicesMainRsyslogSgSecurityGroupFCDC7FBA": {
-      "Properties": {
-        "Name": "/accelerator/network/vpc/SharedServices-Main/securityGroup/SharedServices-Main-Rsyslog-sg/id",
-        "Type": "String",
-        "Value": {
-          "Ref": "SharedServicesMainVpcSharedServicesMainRsyslogSgSg82BD8A5A",
-        },
-      },
-      "Type": "AWS::SSM::Parameter",
     },
     "SsmParamStackId521A78D3": {
       "Properties": {
@@ -16310,7 +16034,13 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
         "Description": "Cross account EC2 route OnEvent handler",
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
+          },
+        },
         "Handler": "index.handler",
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "CrossAccountRouteFrameworkCrossAccountRouteFunctionServiceRole0BC7B615",
@@ -16447,6 +16177,7 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
         "Description": "AWS CDK resource provider framework - onEvent (AWSAccelerator-NetworkAssociationsStack-222222222222-us-west-2/CrossAccountRouteFramework/CrossAccountRouteProvider)",
         "Environment": {
           "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
             "USER_ON_EVENT_FUNCTION_ARN": {
               "Fn::GetAtt": [
                 "CrossAccountRouteFrameworkCrossAccountRouteFunctionAFDC4801",
@@ -16456,6 +16187,7 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
           },
         },
         "Handler": "framework.onEvent",
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "CrossAccountRouteFrameworkCrossAccountRouteProviderframeworkonEventServiceRoleED507AC0",
@@ -16631,8 +16363,13 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
           "S3Bucket": "cdk-hnb659fds-assets-222222222222-us-west-2",
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
+          },
+        },
         "Handler": "__entrypoint__.handler",
-        "MemorySize": 128,
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "CustomSsmGetParameterValueCustomResourceProviderRoleB3AFDDB2",
@@ -16738,8 +16475,13 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
         "Description": "Custom resource provider to put cross-account ssm parameter value",
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
+          },
+        },
         "Handler": "__entrypoint__.handler",
-        "MemorySize": 128,
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "CustomSsmPutParameterValueCustomResourceProviderRole9E1F101A",
@@ -16838,7 +16580,7 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
       "Properties": {
         "Name": "/accelerator/AWSAccelerator-NetworkAssociationsStack-222222222222-us-west-2/version",
         "Type": "String",
-        "Value": "1.12.0",
+        "Value": "1.13.0",
       },
       "Type": "AWS::SSM::Parameter",
     },
@@ -17178,7 +16920,13 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
         "Description": "Cross account EC2 route OnEvent handler",
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
+          },
+        },
         "Handler": "index.handler",
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "CrossAccountRouteFrameworkCrossAccountRouteFunctionServiceRole0BC7B615",
@@ -17318,6 +17066,7 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
         "Description": "AWS CDK resource provider framework - onEvent (AWSAccelerator-NetworkAssociationsStack-333333333333-us-east-1/CrossAccountRouteFramework/CrossAccountRouteProvider)",
         "Environment": {
           "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
             "USER_ON_EVENT_FUNCTION_ARN": {
               "Fn::GetAtt": [
                 "CrossAccountRouteFrameworkCrossAccountRouteFunctionAFDC4801",
@@ -17327,6 +17076,7 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
           },
         },
         "Handler": "framework.onEvent",
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "CrossAccountRouteFrameworkCrossAccountRouteProviderframeworkonEventServiceRoleED507AC0",
@@ -17502,8 +17252,13 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
           "S3Bucket": "cdk-hnb659fds-assets-333333333333-us-east-1",
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
+          },
+        },
         "Handler": "__entrypoint__.handler",
-        "MemorySize": 128,
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "CustomGetResourceShareCustomResourceProviderRoleBC3FCEEF",
@@ -17565,8 +17320,13 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
           "S3Bucket": "cdk-hnb659fds-assets-333333333333-us-east-1",
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
+          },
+        },
         "Handler": "__entrypoint__.handler",
-        "MemorySize": 128,
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "CustomGetResourceShareItemCustomResourceProviderRoleA7181EBA",
@@ -17648,8 +17408,13 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
           "S3Bucket": "cdk-hnb659fds-assets-333333333333-us-east-1",
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
+          },
+        },
         "Handler": "__entrypoint__.handler",
-        "MemorySize": 128,
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "CustomShareSubnetTagsCustomResourceProviderRole2582495C",
@@ -17783,8 +17548,13 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
           "S3Bucket": "cdk-hnb659fds-assets-333333333333-us-east-1",
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
+          },
+        },
         "Handler": "__entrypoint__.handler",
-        "MemorySize": 128,
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "CustomSsmGetParameterValueCustomResourceProviderRoleB3AFDDB2",
@@ -17893,8 +17663,13 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
         "Description": "Custom resource provider to put cross-account ssm parameter value",
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
+          },
+        },
         "Handler": "__entrypoint__.handler",
-        "MemorySize": 128,
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "CustomSsmPutParameterValueCustomResourceProviderRole9E1F101A",
@@ -18097,50 +17872,11 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
       "Type": "Custom::GetResourceShare",
       "UpdateReplacePolicy": "Delete",
     },
-    "SharedServicesMainVpcSharedServicesMainRsyslogSgSg82BD8A5A": {
-      "Properties": {
-        "GroupDescription": "Security Group for AWS Accelerator rsyslog",
-        "GroupName": "SharedServices-Main-Rsyslog-sg",
-        "SecurityGroupEgress": [
-          {
-            "CidrIp": "0.0.0.0/0",
-            "Description": "All Outbound",
-            "IpProtocol": "-1",
-          },
-        ],
-        "SecurityGroupIngress": [
-          {
-            "CidrIp": "10.0.0.0/8",
-            "Description": "allow inbound traffic",
-            "FromPort": 514,
-            "IpProtocol": "tcp",
-            "ToPort": 514,
-          },
-          {
-            "CidrIp": "10.0.0.0/8",
-            "Description": "allow inbound traffic",
-            "FromPort": 514,
-            "IpProtocol": "udp",
-            "ToPort": 514,
-          },
-        ],
-        "Tags": [
-          {
-            "Key": "Name",
-            "Value": "SharedServices-Main-Rsyslog-sg",
-          },
-        ],
-        "VpcId": {
-          "Ref": "SsmParameterValueacceleratornetworkvpcSharedServicesMainidC96584B6F00A464EAD1953AFF4B05118Parameter",
-        },
-      },
-      "Type": "AWS::EC2::SecurityGroup",
-    },
     "SsmParamAcceleratorVersionFF83282D": {
       "Properties": {
         "Name": "/accelerator/AWSAccelerator-NetworkAssociationsStack-333333333333-us-east-1/version",
         "Type": "String",
-        "Value": "1.12.0",
+        "Value": "1.13.0",
       },
       "Type": "AWS::SSM::Parameter",
     },
@@ -18279,16 +18015,6 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
       },
       "Type": "Custom::SsmGetParameterValue",
       "UpdateReplacePolicy": "Delete",
-    },
-    "SsmParamSharedServicesMainSharedServicesMainRsyslogSgSecurityGroupFCDC7FBA": {
-      "Properties": {
-        "Name": "/accelerator/network/vpc/SharedServices-Main/securityGroup/SharedServices-Main-Rsyslog-sg/id",
-        "Type": "String",
-        "Value": {
-          "Ref": "SharedServicesMainVpcSharedServicesMainRsyslogSgSg82BD8A5A",
-        },
-      },
-      "Type": "AWS::SSM::Parameter",
     },
     "SsmParamStackId521A78D3": {
       "Properties": {
@@ -18474,7 +18200,13 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
         "Description": "Cross account EC2 route OnEvent handler",
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
+          },
+        },
         "Handler": "index.handler",
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "CrossAccountRouteFrameworkCrossAccountRouteFunctionServiceRole0BC7B615",
@@ -18611,6 +18343,7 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
         "Description": "AWS CDK resource provider framework - onEvent (AWSAccelerator-NetworkAssociationsStack-333333333333-us-west-2/CrossAccountRouteFramework/CrossAccountRouteProvider)",
         "Environment": {
           "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
             "USER_ON_EVENT_FUNCTION_ARN": {
               "Fn::GetAtt": [
                 "CrossAccountRouteFrameworkCrossAccountRouteFunctionAFDC4801",
@@ -18620,6 +18353,7 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
           },
         },
         "Handler": "framework.onEvent",
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "CrossAccountRouteFrameworkCrossAccountRouteProviderframeworkonEventServiceRoleED507AC0",
@@ -18795,8 +18529,13 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
           "S3Bucket": "cdk-hnb659fds-assets-333333333333-us-west-2",
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
+          },
+        },
         "Handler": "__entrypoint__.handler",
-        "MemorySize": 128,
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "CustomSsmGetParameterValueCustomResourceProviderRoleB3AFDDB2",
@@ -18902,8 +18641,13 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
         "Description": "Custom resource provider to put cross-account ssm parameter value",
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
+          },
+        },
         "Handler": "__entrypoint__.handler",
-        "MemorySize": 128,
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "CustomSsmPutParameterValueCustomResourceProviderRole9E1F101A",
@@ -19002,7 +18746,7 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
       "Properties": {
         "Name": "/accelerator/AWSAccelerator-NetworkAssociationsStack-333333333333-us-west-2/version",
         "Type": "String",
-        "Value": "1.12.0",
+        "Value": "1.13.0",
       },
       "Type": "AWS::SSM::Parameter",
     },
@@ -19548,7 +19292,13 @@ exports[`NoVpcFlowLogStack Construct(NetworkAssociationsStack):  Snapshot Test 1
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
         "Description": "Cross account EC2 route OnEvent handler",
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
+          },
+        },
         "Handler": "index.handler",
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "CrossAccountRouteFrameworkCrossAccountRouteFunctionServiceRole0BC7B615",
@@ -19688,6 +19438,7 @@ exports[`NoVpcFlowLogStack Construct(NetworkAssociationsStack):  Snapshot Test 1
         "Description": "AWS CDK resource provider framework - onEvent (AWSAccelerator-NetworkAssociationsStack-555555555555-us-east-1/CrossAccountRouteFramework/CrossAccountRouteProvider)",
         "Environment": {
           "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
             "USER_ON_EVENT_FUNCTION_ARN": {
               "Fn::GetAtt": [
                 "CrossAccountRouteFrameworkCrossAccountRouteFunctionAFDC4801",
@@ -19697,6 +19448,7 @@ exports[`NoVpcFlowLogStack Construct(NetworkAssociationsStack):  Snapshot Test 1
           },
         },
         "Handler": "framework.onEvent",
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "CrossAccountRouteFrameworkCrossAccountRouteProviderframeworkonEventServiceRoleED507AC0",
@@ -19944,8 +19696,13 @@ exports[`NoVpcFlowLogStack Construct(NetworkAssociationsStack):  Snapshot Test 1
           "S3Bucket": "cdk-hnb659fds-assets-555555555555-us-east-1",
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
+          },
+        },
         "Handler": "__entrypoint__.handler",
-        "MemorySize": 128,
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "CustomDirectConnectGatewayAssociationCustomResourceProviderRole7D012188",
@@ -20059,8 +19816,13 @@ exports[`NoVpcFlowLogStack Construct(NetworkAssociationsStack):  Snapshot Test 1
           "S3Bucket": "cdk-hnb659fds-assets-555555555555-us-east-1",
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
+          },
+        },
         "Handler": "__entrypoint__.handler",
-        "MemorySize": 128,
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "CustomGetTransitGatewayAttachmentCustomResourceProviderRoleA6A22C3D",
@@ -20149,6 +19911,11 @@ exports[`NoVpcFlowLogStack Construct(NetworkAssociationsStack):  Snapshot Test 1
         "Code": {
           "S3Bucket": "cdk-hnb659fds-assets-555555555555-us-east-1",
           "S3Key": "REPLACED-GENERATED-NAME.zip",
+        },
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
+          },
         },
         "Handler": "__entrypoint__.handler",
         "MemorySize": 512,
@@ -20239,8 +20006,13 @@ exports[`NoVpcFlowLogStack Construct(NetworkAssociationsStack):  Snapshot Test 1
           "S3Bucket": "cdk-hnb659fds-assets-555555555555-us-east-1",
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
+          },
+        },
         "Handler": "__entrypoint__.handler",
-        "MemorySize": 128,
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "CustomSsmGetParameterValueCustomResourceProviderRoleB3AFDDB2",
@@ -20349,8 +20121,13 @@ exports[`NoVpcFlowLogStack Construct(NetworkAssociationsStack):  Snapshot Test 1
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
         "Description": "Custom resource provider to put cross-account ssm parameter value",
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
+          },
+        },
         "Handler": "__entrypoint__.handler",
-        "MemorySize": 128,
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "CustomSsmPutParameterValueCustomResourceProviderRole9E1F101A",
@@ -20457,8 +20234,13 @@ exports[`NoVpcFlowLogStack Construct(NetworkAssociationsStack):  Snapshot Test 1
           "S3Bucket": "cdk-hnb659fds-assets-555555555555-us-east-1",
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
+          },
+        },
         "Handler": "__entrypoint__.handler",
-        "MemorySize": 128,
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "CustomTransitGatewayPrefixListReferenceCustomResourceProviderRoleC5D4C080",
@@ -21040,7 +20822,7 @@ exports[`NoVpcFlowLogStack Construct(NetworkAssociationsStack):  Snapshot Test 1
       "Properties": {
         "Name": "/accelerator/AWSAccelerator-NetworkAssociationsStack-555555555555-us-east-1/version",
         "Type": "String",
-        "Value": "1.12.0",
+        "Value": "1.13.0",
       },
       "Type": "AWS::SSM::Parameter",
     },

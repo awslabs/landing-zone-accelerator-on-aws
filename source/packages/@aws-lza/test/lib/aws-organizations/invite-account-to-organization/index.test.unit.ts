@@ -69,7 +69,7 @@ describe('InviteAccountToOrganizationModule', () => {
 
     getAccountDetailsFromOrganizationsSpy = jest.spyOn(
       require('../../../../common/functions'),
-      'getAccountDetailsFromOrganizations',
+      'getAccountDetailsFromOrganizationsByEmail',
     );
     getAccountDetailsFromOrganizationsSpy.mockReturnValue(
       MOCK_CONSTANTS.InviteAccountToOrganizationModule.invitingAccount,

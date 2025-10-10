@@ -49,4 +49,5 @@ export enum AcceleratorStage {
   FINALIZE = 'finalize',
   IMPORT_ASEA_RESOURCES = 'import-asea-resources',
   POST_IMPORT_ASEA_RESOURCES = 'post-import-asea-resources',
+  PRE_APPROVAL = 'pre-approval',
 }

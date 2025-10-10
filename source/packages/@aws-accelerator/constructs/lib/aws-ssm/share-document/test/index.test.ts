@@ -45,6 +45,20 @@ describe('Update Event', () => {
     const response = await handler(event);
     expect(response?.PhysicalResourceId).toEqual('share-document');
   });
+  test('Update event - accountIds are same but in different order', async () => {
+    const event = AcceleratorUnitTest.getEvent(EventType.UPDATE, {
+      new: [StaticInput.updatePropsAscAccountArray1],
+      old: [StaticInput.updatePropsDescAccountArray1],
+    });
+    ssmClient.on(DescribeDocumentPermissionCommand).resolves({
+      AccountIds: StaticInput.manyAccounts,
+    });
+
+    ssmClient.on(ModifyDocumentPermissionCommand).resolves({});
+
+    const response = await handler(event);
+    expect(response?.PhysicalResourceId).toEqual('share-document');
+  });
 });
 
 describe('Delete Event', () => {

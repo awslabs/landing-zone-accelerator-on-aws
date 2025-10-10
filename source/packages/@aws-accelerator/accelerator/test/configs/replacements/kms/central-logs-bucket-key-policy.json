@@ -1,0 +1,36 @@
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Sid": "Policy statement 1 from file",
+            "Effect": "Allow",
+            "Principal": {
+                "Service": "macie.amazonaws.com"
+            },
+            "Action": [
+                "kms:Decrypt",
+                "kms:DescribeKey",
+                "kms:Encrypt",
+                "kms:ReEncrypt*",
+                "kms:GenerateDataKey*"
+            ],
+            "Resource": "*"
+        },
+        {
+            "Sid": "Policy statement 2 from file",
+            "Effect": "Allow",
+            "Principal": {
+                "AWS": "*"
+            },
+            "Action": [
+                "kms:ListAliases"
+            ],
+            "Resource": "*",
+            "Condition": {
+                "StringEquals": {
+                    "aws:PrincipalOrgID": "${ORG_ID}"
+                }
+            }
+        }
+    ]
+}

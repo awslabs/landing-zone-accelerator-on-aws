@@ -253,18 +253,16 @@ export class LoggingStack extends AcceleratorStack {
    */
   private configureCloudWatchLogReplication(props: AcceleratorStackProps): void {
     if (props.globalConfig.logging.cloudwatchLogs?.enable ?? true) {
-      if (props.partition === 'aws' || props.partition === 'aws-us-gov' || props.partition === 'aws-cn') {
-        if (cdk.Stack.of(this).account === props.accountsConfig.getLogArchiveAccountId()) {
-          const receivingLogs = this.cloudwatchLogReceivingAccount(this.centralLogsBucketName, this.lambdaKey);
-          const creatingLogs = this.cloudwatchLogCreatingAccount();
+      if (cdk.Stack.of(this).account === props.accountsConfig.getLogArchiveAccountId()) {
+        const receivingLogs = this.cloudwatchLogReceivingAccount(this.centralLogsBucketName, this.lambdaKey);
+        const creatingLogs = this.cloudwatchLogCreatingAccount();
 
-          // Log receiving setup should be complete before logs creation setup can start or else there will be errors about destination not ready.
-          creatingLogs.node.addDependency(receivingLogs);
-        } else {
-          // Any account in LZA needs to setup log subscriptions for CloudWatch Logs
-          // The destination needs to be present before its setup
-          this.cloudwatchLogCreatingAccount();
-        }
+        // Log receiving setup should be complete before logs creation setup can start or else there will be errors about destination not ready.
+        creatingLogs.node.addDependency(receivingLogs);
+      } else {
+        // Any account in LZA needs to setup log subscriptions for CloudWatch Logs
+        // The destination needs to be present before its setup
+        this.cloudwatchLogCreatingAccount();
       }
     }
   }
@@ -678,7 +676,7 @@ export class LoggingStack extends AcceleratorStack {
       alias: this.acceleratorResourceNames.customerManagedKeys.sqs.alias,
       description: this.acceleratorResourceNames.customerManagedKeys.sqs.description,
       enableKeyRotation: true,
-      removalPolicy: cdk.RemovalPolicy.RETAIN,
+      removalPolicy: cdk.RemovalPolicy.DESTROY,
     });
 
     this.ssmParameters.push({
@@ -739,7 +737,7 @@ export class LoggingStack extends AcceleratorStack {
     if (
       props.globalConfig.snsTopics &&
       cdk.Stack.of(this).account === props.accountsConfig.getLogArchiveAccountId() &&
-      !this.isRegionExcluded(props.globalConfig.snsTopics?.deploymentTargets.excludedRegions ?? [])
+      !this.isRegionExcluded(props.globalConfig.snsTopics?.deploymentTargets?.excludedRegions ?? [])
     ) {
       this.createCentralSnsKey();
 
@@ -1082,11 +1080,14 @@ export class LoggingStack extends AcceleratorStack {
       organizationId: this.organizationId,
       partition: this.props.partition,
       accountIds:
-        this.props.partition === 'aws-cn' || !this.organizationId
+        (this.props.globalConfig.logging.cloudwatchLogs?.organizationIdConditionSupported ?? undefined) === false ||
+        !this.organizationId
           ? this.props.accountsConfig.getAccountIds()
           : undefined,
       acceleratorPrefix: this.props.prefixes.accelerator,
       useExistingRoles: this.props.useExistingRoles ?? false,
+      organizationIdConditionSupported:
+        this.props.globalConfig.logging.cloudwatchLogs?.organizationIdConditionSupported ?? undefined,
     });
 
     // Setup Firehose to take records from Kinesis and place in S3
@@ -1177,6 +1178,9 @@ export class LoggingStack extends AcceleratorStack {
         });
       }
     }
+    const skipBulkUpdate = this.props.globalConfig.logging.cloudwatchLogs?.skipBulkUpdate?.enable;
+    const skipBulkUpdateTargets = this.props.globalConfig.logging.cloudwatchLogs?.skipBulkUpdate?.skipBulkUpdateTargets;
+    const noOp = skipBulkUpdate && this.isIncluded(skipBulkUpdateTargets!);
     // Run a custom resource to update subscription, KMS and retention for all existing log groups
     const customResourceExistingLogs = new CloudWatchLogsSubscriptionFilter(this, 'LogsSubscriptionFilter', {
       logDestinationArn: logsDestinationArnValue,
@@ -1193,6 +1197,7 @@ export class LoggingStack extends AcceleratorStack {
       selectionCriteria: this.props.globalConfig.logging.cloudwatchLogs?.subscription?.selectionCriteria,
       overrideExisting: this.props.globalConfig.logging.cloudwatchLogs?.subscription?.overrideExisting,
       filterPattern: this.props.globalConfig.logging.cloudwatchLogs?.subscription?.filterPattern,
+      noOp,
     });
 
     //For every new log group that is created, set up subscription, KMS and retention

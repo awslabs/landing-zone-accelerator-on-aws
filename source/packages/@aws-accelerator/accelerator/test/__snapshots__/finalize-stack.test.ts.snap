@@ -30,7 +30,7 @@ exports[`FinalizeStack Construct(FinalizeStack):  Snapshot Test 1`] = `
       "DeletionPolicy": "Delete",
       "DependsOn": [
         "CustomOrganizationsCreatePolicyCustomResourceProviderLogGroup019B74A9",
-        "enablePolicyTypeScpB4BC96BE",
+        "enableSERVICECONTROLPOLICY8F20A574",
       ],
       "Properties": {
         "ServiceToken": {
@@ -56,7 +56,7 @@ exports[`FinalizeStack Construct(FinalizeStack):  Snapshot Test 1`] = `
       "DeletionPolicy": "Delete",
       "DependsOn": [
         "CustomOrganizationsCreatePolicyCustomResourceProviderLogGroup019B74A9",
-        "enablePolicyTypeScpB4BC96BE",
+        "enableSERVICECONTROLPOLICY8F20A574",
       ],
       "Properties": {
         "ServiceToken": {
@@ -82,7 +82,7 @@ exports[`FinalizeStack Construct(FinalizeStack):  Snapshot Test 1`] = `
       "DeletionPolicy": "Delete",
       "DependsOn": [
         "CustomOrganizationsCreatePolicyCustomResourceProviderLogGroup019B74A9",
-        "enablePolicyTypeScpB4BC96BE",
+        "enableSERVICECONTROLPOLICY8F20A574",
       ],
       "Properties": {
         "ServiceToken": {
@@ -110,6 +110,7 @@ exports[`FinalizeStack Construct(FinalizeStack):  Snapshot Test 1`] = `
       "DependsOn": [
         "AcceleratorGuardrails10AD44C7D",
         "CustomOrganizationsAttachPolicyCustomResourceProviderLogGroup03FEC039",
+        "enableSERVICECONTROLPOLICY8F20A574",
       ],
       "Properties": {
         "ServiceToken": {
@@ -141,6 +142,7 @@ exports[`FinalizeStack Construct(FinalizeStack):  Snapshot Test 1`] = `
       "DependsOn": [
         "AcceleratorGuardrails26DF90F53",
         "CustomOrganizationsAttachPolicyCustomResourceProviderLogGroup03FEC039",
+        "enableSERVICECONTROLPOLICY8F20A574",
       ],
       "Properties": {
         "ServiceToken": {
@@ -171,6 +173,7 @@ exports[`FinalizeStack Construct(FinalizeStack):  Snapshot Test 1`] = `
       "DependsOn": [
         "AllowList6FC5040C",
         "CustomOrganizationsAttachPolicyCustomResourceProviderLogGroup03FEC039",
+        "enableSERVICECONTROLPOLICY8F20A574",
       ],
       "Properties": {
         "ServiceToken": {
@@ -181,6 +184,7 @@ exports[`FinalizeStack Construct(FinalizeStack):  Snapshot Test 1`] = `
         },
         "configPolicyNames": [
           "AllowList",
+          "DeputyAttackRcp",
         ],
         "partition": {
           "Ref": "AWS::Partition",
@@ -202,6 +206,7 @@ exports[`FinalizeStack Construct(FinalizeStack):  Snapshot Test 1`] = `
       "DependsOn": [
         "CustomOrganizationsAttachPolicyCustomResourceProviderLogGroup03FEC039",
         "DataPerimeter67F0B7E1",
+        "enableSERVICECONTROLPOLICY8F20A574",
       ],
       "Properties": {
         "ServiceToken": {
@@ -228,6 +233,70 @@ exports[`FinalizeStack Construct(FinalizeStack):  Snapshot Test 1`] = `
       "Type": "Custom::AttachPolicy",
       "UpdateReplacePolicy": "Delete",
     },
+    "AttachDeputyAttackRcpSecureWorkloads9D4EBCE2": {
+      "DeletionPolicy": "Delete",
+      "DependsOn": [
+        "CustomOrganizationsAttachPolicyCustomResourceProviderLogGroup03FEC039",
+        "DeputyAttackRcp52CD2596",
+        "enableRESOURCECONTROLPOLICY2452560F",
+      ],
+      "Properties": {
+        "ServiceToken": {
+          "Fn::GetAtt": [
+            "CustomOrganizationsAttachPolicyCustomResourceProviderHandlerB3233202",
+            "Arn",
+          ],
+        },
+        "configPolicyNames": [
+          "AllowList",
+          "DeputyAttackRcp",
+        ],
+        "partition": {
+          "Ref": "AWS::Partition",
+        },
+        "policyId": {
+          "Ref": "DeputyAttackRcp52CD2596",
+        },
+        "policyTagKey": "AWSAcceleratorManaged",
+        "targetId": "ou-asdf-33333333",
+        "type": "RESOURCE_CONTROL_POLICY",
+        "uuid": "REPLACED-MD5",
+      },
+      "Type": "Custom::AttachPolicy",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "AttachEc2SettingsInfrastructureDF515771": {
+      "DeletionPolicy": "Delete",
+      "DependsOn": [
+        "CustomOrganizationsAttachPolicyCustomResourceProviderLogGroup03FEC039",
+        "EC2Settings4848FB11",
+        "enableDECLARATIVEPOLICYEC202BC8878",
+      ],
+      "Properties": {
+        "ServiceToken": {
+          "Fn::GetAtt": [
+            "CustomOrganizationsAttachPolicyCustomResourceProviderHandlerB3233202",
+            "Arn",
+          ],
+        },
+        "configPolicyNames": [
+          "AcceleratorGuardrails1",
+          "DataPerimeter",
+        ],
+        "partition": {
+          "Ref": "AWS::Partition",
+        },
+        "policyId": {
+          "Ref": "EC2Settings4848FB11",
+        },
+        "policyTagKey": "AWSAcceleratorManaged",
+        "targetId": "ou-asdf-22222222",
+        "type": "DECLARATIVE_POLICY_EC2",
+        "uuid": "REPLACED-MD5",
+      },
+      "Type": "Custom::AttachPolicy",
+      "UpdateReplacePolicy": "Delete",
+    },
     "CustomDetachQuarantineScpCustomResourceProviderHandlerA1F1C263": {
       "DependsOn": [
         "CustomDetachQuarantineScpCustomResourceProviderRoleE5C433C1",
@@ -237,8 +306,13 @@ exports[`FinalizeStack Construct(FinalizeStack):  Snapshot Test 1`] = `
           "S3Bucket": "cdk-hnb659fds-assets-111111111111-us-east-1",
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
+          },
+        },
         "Handler": "__entrypoint__.handler",
-        "MemorySize": 128,
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "CustomDetachQuarantineScpCustomResourceProviderRoleE5C433C1",
@@ -342,8 +416,13 @@ exports[`FinalizeStack Construct(FinalizeStack):  Snapshot Test 1`] = `
           "S3Bucket": "cdk-hnb659fds-assets-111111111111-us-east-1",
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
+          },
+        },
         "Handler": "__entrypoint__.handler",
-        "MemorySize": 128,
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "CustomEnablePolicyTypeCustomResourceProviderRoleAE71B2CA",
@@ -449,8 +528,13 @@ exports[`FinalizeStack Construct(FinalizeStack):  Snapshot Test 1`] = `
           "S3Bucket": "cdk-hnb659fds-assets-111111111111-us-east-1",
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
+          },
+        },
         "Handler": "__entrypoint__.handler",
-        "MemorySize": 128,
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "CustomOrganizationsAttachPolicyCustomResourceProviderRole051E00A6",
@@ -537,8 +621,13 @@ exports[`FinalizeStack Construct(FinalizeStack):  Snapshot Test 1`] = `
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
         "Description": "Organizations create policy",
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
+          },
+        },
         "Handler": "__entrypoint__.handler",
-        "MemorySize": 128,
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "CustomOrganizationsCreatePolicyCustomResourceProviderRoleBA0ADB43",
@@ -639,7 +728,7 @@ exports[`FinalizeStack Construct(FinalizeStack):  Snapshot Test 1`] = `
       "DeletionPolicy": "Delete",
       "DependsOn": [
         "CustomOrganizationsCreatePolicyCustomResourceProviderLogGroup019B74A9",
-        "enablePolicyTypeScpB4BC96BE",
+        "enableSERVICECONTROLPOLICY8F20A574",
       ],
       "Properties": {
         "ServiceToken": {
@@ -656,6 +745,32 @@ exports[`FinalizeStack Construct(FinalizeStack):  Snapshot Test 1`] = `
         "partition": "aws",
         "policyTagKey": "AWSAcceleratorManaged",
         "type": "SERVICE_CONTROL_POLICY",
+        "uuid": "REPLACED-MD5",
+      },
+      "Type": "Custom::CreatePolicy",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "DeputyAttackRcp52CD2596": {
+      "DeletionPolicy": "Delete",
+      "DependsOn": [
+        "CustomOrganizationsCreatePolicyCustomResourceProviderLogGroup019B74A9",
+        "enableRESOURCECONTROLPOLICY2452560F",
+      ],
+      "Properties": {
+        "ServiceToken": {
+          "Fn::GetAtt": [
+            "CustomOrganizationsCreatePolicyCustomResourceProviderHandler7A188619",
+            "Arn",
+          ],
+        },
+        "bucket": "cdk-hnb659fds-assets-111111111111-us-east-1",
+        "description": "Enforce Deputy Attack RCP
+",
+        "key": "REPLACED-JSON-PATH.json",
+        "name": "DeputyAttackRcp",
+        "partition": "aws",
+        "policyTagKey": "AWSAcceleratorManaged",
+        "type": "RESOURCE_CONTROL_POLICY",
         "uuid": "REPLACED-MD5",
       },
       "Type": "Custom::CreatePolicy",
@@ -681,11 +796,37 @@ exports[`FinalizeStack Construct(FinalizeStack):  Snapshot Test 1`] = `
       "Type": "Custom::DetachQuarantineScp",
       "UpdateReplacePolicy": "Delete",
     },
+    "EC2Settings4848FB11": {
+      "DeletionPolicy": "Delete",
+      "DependsOn": [
+        "CustomOrganizationsCreatePolicyCustomResourceProviderLogGroup019B74A9",
+        "enableDECLARATIVEPOLICYEC202BC8878",
+      ],
+      "Properties": {
+        "ServiceToken": {
+          "Fn::GetAtt": [
+            "CustomOrganizationsCreatePolicyCustomResourceProviderHandler7A188619",
+            "Arn",
+          ],
+        },
+        "bucket": "cdk-hnb659fds-assets-111111111111-us-east-1",
+        "description": "EC2 settings enablement
+",
+        "key": "REPLACED-JSON-PATH.json",
+        "name": "EC2Settings",
+        "partition": "aws",
+        "policyTagKey": "AWSAcceleratorManaged",
+        "type": "DECLARATIVE_POLICY_EC2",
+        "uuid": "REPLACED-MD5",
+      },
+      "Type": "Custom::CreatePolicy",
+      "UpdateReplacePolicy": "Delete",
+    },
     "Quarantine23FF09FE": {
       "DeletionPolicy": "Delete",
       "DependsOn": [
         "CustomOrganizationsCreatePolicyCustomResourceProviderLogGroup019B74A9",
-        "enablePolicyTypeScpB4BC96BE",
+        "enableSERVICECONTROLPOLICY8F20A574",
       ],
       "Properties": {
         "ServiceToken": {
@@ -798,12 +939,14 @@ exports[`FinalizeStack Construct(FinalizeStack):  Snapshot Test 1`] = `
                 ],
               ],
             },
+            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
           },
         },
         "Handler": "index.handler",
         "KmsKeyArn": {
           "Ref": "SsmParameterValueacceleratorkmslambdakeyarnC96584B6F00A464EAD1953AFF4B05118Parameter",
         },
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "RevertScpChangesRevertScpChangesFunctionServiceRole4F571613",
@@ -952,7 +1095,7 @@ exports[`FinalizeStack Construct(FinalizeStack):  Snapshot Test 1`] = `
       "Properties": {
         "Name": "/accelerator/AWSAccelerator-FinalizeStack-111111111111-us-east-1/version",
         "Type": "String",
-        "Value": "1.12.0",
+        "Value": "1.13.0",
       },
       "Type": "AWS::SSM::Parameter",
     },
@@ -966,7 +1109,47 @@ exports[`FinalizeStack Construct(FinalizeStack):  Snapshot Test 1`] = `
       },
       "Type": "AWS::SSM::Parameter",
     },
-    "enablePolicyTypeScpB4BC96BE": {
+    "enableDECLARATIVEPOLICYEC202BC8878": {
+      "DeletionPolicy": "Delete",
+      "DependsOn": [
+        "CustomEnablePolicyTypeCustomResourceProviderLogGroup81BE8EF5",
+      ],
+      "Properties": {
+        "ServiceToken": {
+          "Fn::GetAtt": [
+            "CustomEnablePolicyTypeCustomResourceProviderHandlerC244F9E1",
+            "Arn",
+          ],
+        },
+        "partition": {
+          "Ref": "AWS::Partition",
+        },
+        "policyType": "DECLARATIVE_POLICY_EC2",
+      },
+      "Type": "Custom::EnablePolicyType",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "enableRESOURCECONTROLPOLICY2452560F": {
+      "DeletionPolicy": "Delete",
+      "DependsOn": [
+        "CustomEnablePolicyTypeCustomResourceProviderLogGroup81BE8EF5",
+      ],
+      "Properties": {
+        "ServiceToken": {
+          "Fn::GetAtt": [
+            "CustomEnablePolicyTypeCustomResourceProviderHandlerC244F9E1",
+            "Arn",
+          ],
+        },
+        "partition": {
+          "Ref": "AWS::Partition",
+        },
+        "policyType": "RESOURCE_CONTROL_POLICY",
+      },
+      "Type": "Custom::EnablePolicyType",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "enableSERVICECONTROLPOLICY8F20A574": {
       "DeletionPolicy": "Delete",
       "DependsOn": [
         "CustomEnablePolicyTypeCustomResourceProviderLogGroup81BE8EF5",

@@ -651,6 +651,22 @@ centralNetworkServices:
         subnets:
           - Network-Endpoints-A
           - Network-Endpoints-B
+      - name: accelerator-inbound-fips
+        type: INBOUND
+        vpc: Network-Endpoints
+        protocols:
+          - DoH-FIPS
+        subnets:
+          - Network-Endpoints-A
+          - Network-Endpoints-B
+      - name: accelerator-inbound-doh
+        type: INBOUND
+        vpc: Network-Endpoints
+        protocols:
+          - DoH
+        subnets:
+          - Network-Endpoints-A
+          - Network-Endpoints-B
       - name: accelerator-outbound
         type: OUTBOUND
         vpc: Network-Endpoints
@@ -860,6 +876,9 @@ vpcs:
         - service: dynamodb
 
   - name: Network-Secondary
+    tags:
+      - key: env
+        value: prod
     account: Network
     region: *HOME_REGION
     ipamAllocations:
@@ -949,15 +968,16 @@ vpcs:
         ipamAllocation:
           ipamPoolName: home-region-prod-pool
           netmaskLength: 28
-      - name: Network-Secondary-Dual-Stack
-        availabilityZone: a
-        routeTable: Network-Secondary-A-Rt
-        ipv4CidrBlock: 10.0.0.192/28
-        ipv6CidrBlock: 2600:1f18:1305:b700::/64
-      - name: Network-Secondary-Ipv6-Only
-        availabilityZone: b
-        routeTable: Network-Secondary-B-Rt
-        ipv6CidrBlock: 2600:1f18:1305:b701::/64
+      # - name: Network-Secondary-Dual-Stack
+      #   availabilityZone: a
+      #   routeTable: Network-Secondary-A-Rt
+      #   ipv4CidrBlock: 10.0.0.192/28
+      #   ipv6CidrBlock: 2600:1f18:1305:b700::/64
+      # - name: Network-Secondary-Ipv6-Only
+      #   availabilityZone: b
+      #   routeTable: Network-Secondary-B-Rt
+      #   ipv6CidrBlock: 2600:1f18:1305:b701::/64
+                         
     networkAcls:
       - name: TestNacl
         subnetAssociations:
@@ -1038,6 +1058,24 @@ vpcs:
             toPort: -1
             protocol: -1
             destination: ::/0
+          - rule: 109
+            action: allow
+            icmp:
+              type: 10
+              code: 5
+            protocol: 1
+            destination:
+              account: Network
+              vpc: Network-Endpoints
+              subnet: Network-Endpoints-B
+              region: us-east-1
+          - rule: 110
+            action: allow
+            icmp:
+              type: 32
+              code: 5
+            protocol: 1
+            destination: 10.0.0.0/24
         inboundRules:
           - rule: 101
             action: allow
@@ -1111,6 +1149,30 @@ vpcs:
             toPort: -1
             protocol: -1
             source: ::/0
+          - rule: 109
+            action: allow
+            icmp:
+              type: 10
+              code: 5
+            protocol: 1
+            source:
+              account: Network
+              vpc: Network-Endpoints
+              subnet: Network-Endpoints-B
+              region: us-east-1
+          - rule: 110
+            action: allow
+            icmp:
+              type: 32
+              code: 5
+            protocol: 1
+            source: 10.0.0.0/24
+          - rule: 111
+            action: deny
+            fromPort: 3306
+            toPort: 3306
+            protocol: 6
+            source: 0.0.0.0/0
     gatewayEndpoints:
       defaultPolicy: Default
       endpoints:
@@ -1294,6 +1356,7 @@ vpcs:
         - service: sagemaker.runtime
         - service: sagemaker.api
         - service: sagemaker.featurestore-runtime
+        - service: iam
         - service: eks
           applyPolicy: false
         - service: secretsmanager
@@ -1736,6 +1799,14 @@ vpcs:
         - service: s3
         - service: dynamodb
     useCentralEndpoints: true
+    interfaceEndpoints:
+      defaultPolicy: Default
+      subnets:
+        - Network-Inspection-A
+        - Network-Inspection-B
+      endpoints:
+        - service: iam
+
   - name: SharedServices-Main
     account: SharedServices
     region: *HOME_REGION

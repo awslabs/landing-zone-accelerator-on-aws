@@ -118,6 +118,9 @@ create_template_installer_json()
     do_cmd yarn run cdk synth --output=$staging_dist_dir --context use-external-pipeline-account=true
     do_cmd find $staging_dist_dir -name '*InstallerStack.template.json' -exec mv {} {}-ExternalPipeline.template.json \;
 
+    do_cmd yarn run cdk synth --output=$staging_dist_dir --context enable-set-node-version=true
+    do_cmd find $staging_dist_dir -name '*InstallerStack.template.json' -exec mv {} {}-NodeVersionPipeline.template.json \;
+
     do_cmd yarn run cdk synth --output=$staging_dist_dir
     # Remove unnecessary output files
     do_cmd cd $staging_dist_dir

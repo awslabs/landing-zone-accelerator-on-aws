@@ -110,12 +110,8 @@ export abstract class AcceleratorConfigLoader {
     //
     // Get replacement config
     //
-    const replacementsConfig = AcceleratorConfigLoader.getReplacementsConfig(configDirPath, accountsConfig);
-    replacementsConfig.loadReplacementValues(
-      { region: homeRegion },
-      orgsEnabled,
-      managementAccountCredentials as AWS.Credentials,
-    );
+    const replacementsConfig = ReplacementsConfig.load(configDirPath, accountsConfig);
+    await replacementsConfig.loadDynamicReplacements(homeRegion, managementAccountCredentials as AWS.Credentials);
 
     //
     // Get Global config
@@ -218,24 +214,6 @@ export abstract class AcceleratorConfigLoader {
         bucketKeyArn: centralLogsBucketKeyArn,
       },
     };
-  }
-
-  /**
-   * Get replacementsConfig object
-   * @param configDirPath string
-   * @param accountsConfig {@link AccountsConfig}
-   * @returns
-   */
-  private static getReplacementsConfig(configDirPath: string, accountsConfig: AccountsConfig): ReplacementsConfig {
-    let replacementsConfig: ReplacementsConfig;
-
-    // Create empty replacementsConfig if optional configuration file does not exist
-    if (fs.existsSync(path.join(configDirPath, ReplacementsConfig.FILENAME))) {
-      replacementsConfig = ReplacementsConfig.load(configDirPath, accountsConfig);
-    } else {
-      replacementsConfig = new ReplacementsConfig(undefined, accountsConfig);
-    }
-    return replacementsConfig;
   }
 
   /**

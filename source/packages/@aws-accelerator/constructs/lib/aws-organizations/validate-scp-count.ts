@@ -84,6 +84,8 @@ export class ValidateScpCount extends cdk.Resource {
         accounts: props.accounts,
         scps: props.scps,
         partition: cdk.Stack.of(this).partition,
+        maxOuAttachedScps: Number(process.env['ORGANIZATIONAL_UNIT_SCP_LIMIT']) ?? 5,
+        maxAccountAttachedScps: Number(process.env['ACCOUNT_SCP_LIMIT']) ?? 5,
       },
     });
 

@@ -11,6 +11,7 @@
  *  and limitations under the License.
  */
 
+import { AccountsConfig } from '../lib/accounts-config';
 import {
   CustomizationsConfig,
   CloudFormationStackConfig,
@@ -33,14 +34,17 @@ import {
   AutoScalingConfig,
   AppConfigItem,
 } from '../lib/customizations-config';
+import { ReplacementsConfig } from '../lib/replacements-config';
+
 import { describe, expect, it } from '@jest/globals';
 import * as path from 'path';
 
 describe('CustomizationsConfig', () => {
   describe('Test config', () => {
-    const customizationsConfigFromFile = CustomizationsConfig.load(
-      path.resolve('../accelerator/test/configs/snapshot-only'),
-    );
+    const configDir = path.resolve('../accelerator/test/configs/snapshot-only');
+    const accountsConfig = AccountsConfig.load(configDir);
+    const replacementsConfig = ReplacementsConfig.load(configDir, accountsConfig);
+    const customizationsConfigFromFile = CustomizationsConfig.load(configDir, replacementsConfig);
     const customizationsConfig = new CustomizationsConfig();
 
     it('has loaded successfully', () => {

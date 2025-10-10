@@ -64,6 +64,16 @@ export class EnablePolicyTypeStack extends Stack {
       logRetentionInDays: 3653,
     });
 
+    new EnablePolicyType(this, 'EnableRcp', {
+      policyType: PolicyTypeEnum.RESOURCE_CONTROL_POLICY,
+      logRetentionInDays: 3653,
+    });
+
+    new EnablePolicyType(this, 'EnableDce2', {
+      policyType: PolicyTypeEnum.DECLARATIVE_POLICY_EC2,
+      logRetentionInDays: 3653,
+    });
+
     Aspects.of(this).add(new ApplyDestroyPolicyAspect());
   }
 }
@@ -102,6 +112,8 @@ integ.assertions.awsApiCall('Organizations', 'listRoots', {}).expect(
           { Type: 'BACKUP_POLICY', Status: 'ENABLED' },
           { Type: 'TAG_POLICY', Status: 'ENABLED' },
           { Type: 'SERVICE_CONTROL_POLICY', Status: 'ENABLED' },
+          { Type: 'RESOURCE_CONTROL_POLICY', Status: 'ENABLED' },
+          { Type: 'DECLARATIVE_POLICY_EC2', Status: 'ENABLED' },
         ],
       },
     ],

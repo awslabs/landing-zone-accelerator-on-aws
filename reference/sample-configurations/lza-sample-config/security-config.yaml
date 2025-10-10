@@ -80,6 +80,10 @@ centralSecurityServices:
   ssmAutomation:
     excludeRegions: []
     documentSets: []
+  logging:
+    cloudWatch:
+      enable: true
+      logLevel: HIGH
 accessAnalyzer:
   enable: true
 iamPasswordPolicy:

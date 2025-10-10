@@ -12,7 +12,6 @@
  */
 
 import { Construct } from 'constructs';
-
 import { OutpostsConfig, VpcConfig, VpcTemplatesConfig } from '@aws-accelerator/config';
 import {
   INatGateway,
@@ -23,6 +22,7 @@ import {
   ISubnet,
 } from '@aws-accelerator/constructs';
 
+import * as cdk from 'aws-cdk-lib';
 import { AcceleratorStackProps } from '../../accelerator-stack';
 import { NetworkStack } from '../network-stack';
 import { AcmResources } from './acm-resources';
@@ -41,9 +41,16 @@ import { VpcResources } from './vpc-resources';
 import { pascalCase } from 'pascal-case';
 import { SsmResourceType } from '@aws-accelerator/utils';
 import { getVpcConfig } from '../utils/getter-utils';
+import { MetadataKeys } from '@aws-accelerator/utils/lib/common-types';
+
 export class NetworkVpcStack extends NetworkStack {
   constructor(scope: Construct, id: string, props: AcceleratorStackProps) {
     super(scope, id, props);
+
+    this.addMetadata(MetadataKeys.LZA_LOOKUP, {
+      accountName: this.props.accountsConfig.getAccountNameById(this.account),
+      region: cdk.Stack.of(this).region,
+    });
     //
     // Create ACM Certificates
     //
@@ -152,6 +159,10 @@ export class NetworkVpcStack extends NetworkStack {
     //
     this.createStackResourceParameters(vpcResources.vpcMap, subnetResources.subnetMap);
     //
+    // Add DHCP SSM Parameters
+    //
+    this.addDhcpOptionsParameter(dhcpResources);
+    //
     // Create SSM Parameters
     //
     this.createSsmParameters();
@@ -161,6 +172,21 @@ export class NetworkVpcStack extends NetworkStack {
     this.addResourceSuppressionsByPath();
 
     this.logger.info('Completed stack synthesis');
+  }
+
+  /**
+   * Adds DHCP SSM Parameters
+   *
+   * @param dhcpResources {@link DhcpResources}
+   */
+  private addDhcpOptionsParameter(dhcpResources: DhcpResources) {
+    for (const [key, value] of dhcpResources.dhcpOptionsIds.entries()) {
+      this.addSsmParameter({
+        logicalId: pascalCase(`SsmParam${pascalCase(key)}DhcpOptionsId`),
+        parameterName: this.getSsmPath(SsmResourceType.DHCP_OPTION_ID, [key]),
+        stringValue: value,
+      });
+    }
   }
 
   /**
@@ -179,7 +205,7 @@ export class NetworkVpcStack extends NetworkStack {
     for (const vpcItem of this.vpcsInScope) {
       for (const subnetItem of vpcItem.subnets ?? []) {
         const subnet = subnetMap.get(`${vpcItem.name}_${subnetItem.name}`)!;
-        if (subnet.ipv4CidrBlock) {
+        if (subnet && subnet.ipv4CidrBlock) {
           parameters.push({
             name: this.getSsmPath(SsmResourceType.SUBNET_IPV4_CIDR_BLOCK, [vpcItem.name, subnetItem.name]),
             value: subnet.ipv4CidrBlock,

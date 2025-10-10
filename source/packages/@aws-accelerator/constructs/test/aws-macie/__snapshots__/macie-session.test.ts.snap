@@ -14,8 +14,13 @@ exports[`MacieSession Construct(MacieSession):  Snapshot Test 1`] = `
           },
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
+          },
+        },
         "Handler": "__entrypoint__.handler",
-        "MemorySize": 128,
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "CustomMacieEnableMacieCustomResourceProviderRole2B29C97C",
@@ -92,14 +97,23 @@ exports[`MacieSession Construct(MacieSession):  Snapshot Test 1`] = `
                     "iam:CreateServiceLinkedRole",
                   ],
                   "Condition": {
-                    "StringLikeIfExists": {
-                      "iam:CreateServiceLinkedRole": [
-                        "macie.amazonaws.com",
-                      ],
+                    "StringLike": {
+                      "iam:AWSServiceName": "macie.amazonaws.com",
                     },
                   },
                   "Effect": "Allow",
-                  "Resource": "*",
+                  "Resource": {
+                    "Fn::Join": [
+                      "",
+                      [
+                        "arn:",
+                        {
+                          "Ref": "AWS::Partition",
+                        },
+                        ":iam::*:role/aws-service-role/macie.amazonaws.com/AWSServiceRoleForAmazonMacie",
+                      ],
+                    ],
+                  },
                   "Sid": "MacieEnableMacieTaskIamAction",
                 },
               ],

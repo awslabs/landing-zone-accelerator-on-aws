@@ -141,6 +141,45 @@ export const mockGlobalConfiguration = {
     centralizeBuckets: true,
     useManagementAccessRole: true,
   },
+  centralRootUserManagement: {
+    enable: true,
+    capabilities: {
+      rootCredentialsManagement: true,
+      allowRootSessions: true,
+    },
+  },
+} as GlobalConfig;
+
+export const mockGlobalConfigurationWithoutCentralRootUserManagment = {
+  homeRegion: 'mockHomeRegion',
+  controlTower: {
+    enable: true,
+    landingZone: {
+      version: 'mockCTVersion',
+      logging: {
+        loggingBucketRetentionDays: 365,
+        accessLoggingBucketRetentionDays: 365,
+        organizationTrail: true,
+      },
+      security: {
+        enableIdentityCenterAccess: true,
+      },
+    },
+  },
+  logging: {
+    cloudwatchLogs: {} as CloudWatchLogsConfig,
+    sessionManager: {
+      sendToCloudWatchLogs: false,
+      sendToS3: false,
+    },
+    cloudtrail: {
+      enable: false,
+    },
+  } as LoggingConfig,
+  cdkOptions: {
+    centralizeBuckets: true,
+    useManagementAccessRole: true,
+  },
 } as GlobalConfig;
 
 export const mockGlobalConfigurationWithOutLandingZone = {
@@ -161,6 +200,13 @@ export const mockGlobalConfigurationWithOutLandingZone = {
   cdkOptions: {
     centralizeBuckets: true,
     useManagementAccessRole: true,
+  },
+} as GlobalConfig;
+
+export const mockGlobalConfigurationWithOutControlTower = {
+  homeRegion: 'mockHomeRegion',
+  controlTower: {
+    enable: false,
   },
 } as GlobalConfig;
 
@@ -201,16 +247,65 @@ export const mockAccountsConfiguration: Partial<AccountsConfig> = {
   ] as AccountConfig[],
   accountIds: [
     {
-      email: 'mockAccount1@example.com',
+      email: 'mockManagement@example.com',
       accountId: '111111111111',
       status: 'ACTIVE',
     },
     {
-      email: 'mockAccount2@example.com',
+      email: 'mockLogArchive@example.com',
       accountId: '222222222222',
       status: 'ACTIVE',
     },
+    {
+      email: 'mockAccount1@example.com',
+      accountId: '888888888888',
+      status: 'ACTIVE',
+      orgsApiResponse: {},
+    },
+    {
+      email: 'mockAccount2@example.com',
+      accountId: '999999999999',
+      status: 'ACTIVE',
+      orgsApiResponse: {},
+    },
   ],
+};
+
+export const mockAccountsConfigurationNoAccountIds: Partial<AccountsConfig> = {
+  mandatoryAccounts: [
+    {
+      name: 'Management',
+      description: 'mockManagement',
+      email: 'mockManagement@example.com',
+      organizationalUnit: 'Root',
+    },
+    {
+      name: 'LogArchive',
+      description: 'mockLogArchive',
+      email: 'mockLogArchive@example.com',
+      organizationalUnit: 'Security',
+    },
+    {
+      name: 'Audit',
+      description: 'mockAudit',
+      email: 'mockAudit@example.com',
+      organizationalUnit: 'Security',
+    },
+  ] as AccountConfig[],
+  workloadAccounts: [
+    {
+      name: 'SharedServices',
+      description: 'mockSharedServices',
+      email: 'mockSharedServices@example.com',
+      organizationalUnit: 'Infrastructure',
+    },
+    {
+      name: 'Network',
+      description: 'mockNetwork',
+      email: 'mockNetwork@example.com',
+      organizationalUnit: 'Infrastructure',
+    },
+  ] as AccountConfig[],
 };
 
 export const mockCustomizationsConfig: Partial<CustomizationsConfig> = {
@@ -251,6 +346,21 @@ export const mockOrganizationConfig: Partial<OrganizationConfig> = {
       name: 'Suspended',
       ignore: true,
     } as OrganizationalUnitConfig,
+    {
+      name: 'Level1',
+    } as OrganizationalUnitConfig,
+    {
+      name: 'Level1/Level2',
+    } as OrganizationalUnitConfig,
+    {
+      name: 'Level1/Level3',
+    } as OrganizationalUnitConfig,
+    {
+      name: 'Level1/Level2/Level2-1',
+    } as OrganizationalUnitConfig,
+    {
+      name: 'Level1/Level2/Level2-2',
+    } as OrganizationalUnitConfig,
   ],
   serviceControlPolicies: [],
   taggingPolicies: [],
@@ -267,7 +377,6 @@ export const mockReplacementsConfig: Partial<ReplacementsConfig> = {
     SharedServices: 'SharedServices',
     Network: 'Network',
   },
-  validateOnly: false,
 };
 
 export const mockSecurityConfig: Partial<SecurityConfig> = {
@@ -318,9 +427,10 @@ export const MOCK_CONSTANTS = {
     region: 'mockRegion',
     prefix: 'mockPrefix',
     configDirPath: '/path/to/config',
-    useExistingRole: false,
+    useExistingRoles: false,
     solutionId: 'mockSolutionId',
     dryRun: false,
+    maxConcurrentExecution: 10,
   },
   configs: {
     customizationsConfig: mockCustomizationsConfig as CustomizationsConfig,
@@ -546,4 +656,84 @@ export const MOCK_CONSTANTS = {
 
   enabledRegions: ['mockRegion1', 'mockRegion2', 'mockRegion3'],
   excludedRegions: ['mockRegion1', 'mockRegion2'],
+  organizationUnitsDetail: [
+    {
+      organizationId: 'mockSecurityId1',
+      rootId: 'mockRootId1',
+      name: 'Security',
+      id: 'mockId1',
+      arn: 'mockArn1',
+      ouLevel: 1,
+      parentId: 'mockParentId1',
+      parentName: 'mockParentName1',
+      completePath: 'Security',
+      parentCompletePath: 'mockParentCompletePath1',
+      registeredwithControlTower: true,
+    },
+    {
+      organizationId: 'mockOrganizationId1',
+      rootId: 'mockRootId1',
+      name: 'mockName1',
+      id: 'mockId1',
+      arn: 'mockArn1',
+      ouLevel: 1,
+      parentId: 'mockParentId1',
+      parentName: 'mockParentName1',
+      completePath: 'mockCompletePath1',
+      parentCompletePath: 'mockParentCompletePath1',
+      registeredwithControlTower: true,
+    },
+    {
+      organizationId: 'mockOrganizationId2',
+      rootId: 'mockRootId2',
+      name: 'mockName2',
+      id: 'mockId2',
+      arn: 'mockArn2',
+      ouLevel: 2,
+      parentId: 'mockParentId2',
+      parentName: 'mockParentName2',
+      completePath: 'mockCompletePath2',
+      parentCompletePath: 'mockParentCompletePath2',
+      registeredwithControlTower: false,
+    },
+    {
+      organizationId: 'mockOrganizationId3',
+      rootId: 'mockRootId3',
+      name: 'mockName3',
+      id: 'mockId3',
+      arn: 'mockArn3',
+      ouLevel: 2,
+      parentId: 'mockParentId3',
+      parentName: 'mockParentName3',
+      completePath: 'Level1/Level2',
+      parentCompletePath: 'mockParentCompletePath3',
+      registeredwithControlTower: false,
+    },
+    {
+      organizationId: 'mockOrganizationId4',
+      rootId: 'mockRootId4',
+      name: 'mockName4',
+      id: 'mockId4',
+      arn: 'mockArn4',
+      ouLevel: 3,
+      parentId: 'mockParentId4',
+      parentName: 'mockParentName4',
+      completePath: 'Level1/Level2/Level2-1',
+      parentCompletePath: 'Level1/Level2',
+      registeredwithControlTower: false,
+    },
+    {
+      organizationId: 'mockOrganizationId4',
+      rootId: 'mockRootId4',
+      name: 'mockName4',
+      id: 'mockId4',
+      arn: 'mockArn4',
+      ouLevel: 3,
+      parentId: 'mockParentId4',
+      parentName: 'mockParentName4',
+      completePath: 'Level1/Level2/Level2-2',
+      parentCompletePath: 'mockParentCompletePath4',
+      registeredwithControlTower: false,
+    },
+  ],
 };

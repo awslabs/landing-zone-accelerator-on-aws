@@ -15,5 +15,5 @@ Using the accelerator, you can define any number of core and workload VPCs for y
 This can be accomplished by configuring a **gateway route table** for your workload VPCs and targeting a Gateway Load Balancer or AWS Network Firewall endpoint deployed to a subnet in that VPC. Using the accelerator, you can do this by configuring the `gatewayAssociation` property for a VPC route table. Traffic traverses these VPC endpoints transparently, meaning source IP addresses are preserved. This allows fine-grained inspection of network traffic based on external/untrusted security zones defined in the configuration of the Network Firewall or backend security appliance policy. Gateway route tables can be associated with a VPC’s internet gateway or virtual private gateway.
 
 !!!note "See also"
-    * [Route table configuration reference](../../typedocs/latest/classes/_aws_accelerator_config.RouteTableConfig.html)
+    * [Route table configuration reference](../../typedocs/interfaces/___packages__aws_accelerator_config_dist_config_lib_models_network_config.ITransitGatewayRouteTableConfig.html)
     * [AWS PrivateLink Developer Guide: More information on traffic patterns for edge inspection](https://docs.aws.amazon.com/vpc/latest/privatelink/create-gateway-load-balancer-endpoint-service.html)

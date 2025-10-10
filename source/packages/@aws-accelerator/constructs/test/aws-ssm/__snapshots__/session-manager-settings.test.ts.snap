@@ -14,8 +14,13 @@ exports[`SsmSessionManagerSettings Construct(SsmSessionManagerSettings):  Snapsh
           },
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
+          },
+        },
         "Handler": "__entrypoint__.handler",
-        "MemorySize": 128,
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "CustomSessionManagerLoggingCustomResourceProviderRole1D8EE686",
@@ -150,6 +155,7 @@ exports[`SsmSessionManagerSettings Construct(SsmSessionManagerSettings):  Snapsh
         "s3BucketName": "bucketName",
         "s3EncryptionEnabled": true,
         "s3KeyPrefix": "prefix",
+        "sendToS3": true,
       },
       "Type": "Custom::SsmSessionManagerSettings",
       "UpdateReplacePolicy": "Delete",
@@ -217,32 +223,6 @@ exports[`SsmSessionManagerSettings Construct(SsmSessionManagerSettings):  Snapsh
         },
       },
       "Type": "AWS::KMS::Alias",
-    },
-    "SsmSessionManagerSettingsSessionManagerUserKMSPolicyFB96BB42": {
-      "Properties": {
-        "Description": "",
-        "ManagedPolicyName": "AWSAccelerator-SessionManagerUserKMS-us-east-1",
-        "Path": "/",
-        "PolicyDocument": {
-          "Statement": [
-            {
-              "Action": [
-                "kms:Decrypt",
-                "kms:GenerateDataKey",
-              ],
-              "Effect": "Allow",
-              "Resource": {
-                "Fn::GetAtt": [
-                  "SsmSessionManagerSettingsSessionManagerSessionKey23B7175C",
-                  "Arn",
-                ],
-              },
-            },
-          ],
-          "Version": "2012-10-17",
-        },
-      },
-      "Type": "AWS::IAM::ManagedPolicy",
     },
   },
 }

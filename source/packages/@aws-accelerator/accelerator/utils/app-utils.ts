@@ -31,7 +31,7 @@ import fs from 'fs';
 import path from 'path';
 import { AcceleratorStage } from '../lib/accelerator-stage';
 import { AcceleratorStackProps } from '../lib/stacks/accelerator-stack';
-import { getCentralLogBucketKmsKeyArn } from '../lib/accelerator';
+import { getCentralLogBucketKmsKeyArn, shouldLookupDynamoDb } from '../lib/accelerator';
 import { AcceleratorResourceNames } from '../lib/accelerator-resource-names';
 import {
   POLICY_LOOKUP_TYPE,
@@ -40,8 +40,9 @@ import {
 } from '@aws-accelerator/utils/lib/policy-replacements';
 import { createLogger } from '@aws-accelerator/utils/lib/logger';
 import { throttlingBackOff } from '@aws-accelerator/utils/lib/throttle';
-import AWS from 'aws-sdk';
 import { PutObjectCommand, S3Client } from '@aws-sdk/client-s3';
+import { DescribeVpcEndpointsCommand, DescribeVpcsCommand, EC2Client } from '@aws-sdk/client-ec2';
+import { AssumeRoleCommand, STSClient } from '@aws-sdk/client-sts';
 const logger = createLogger(['app-utils']);
 export interface AcceleratorContext {
   /**
@@ -254,6 +255,10 @@ export interface AcceleratorEnvironment {
    * All the regions set here need to be in the enabled regions in config file.
    */
   regionByRegionDeploymentOrder?: string;
+  /**
+   * Source Bucket name
+   */
+  secureBucketName: string;
 }
 
 /**
@@ -406,6 +411,7 @@ export function setAcceleratorEnvironment(
     qualifier: env['ACCELERATOR_QUALIFIER'],
     acceleratorPermissionBoundary: env['ACCELERATOR_PERMISSION_BOUNDARY'],
     regionByRegionDeploymentOrder: env['REGION_BY_REGION_DEPLOYMENT_ORDER'],
+    secureBucketName: env['SECURE_BUCKET_NAME'] ?? '',
   };
 }
 
@@ -459,19 +465,23 @@ export async function setAcceleratorStackProps(
   const homeRegion = GlobalConfig.loadRawGlobalConfig(context.configDirPath).homeRegion;
   const orgsEnabled = OrganizationConfig.loadRawOrganizationsConfig(context.configDirPath).enable;
 
+  // Check to see if lookups for organization entities should be done in DynamoDB or native AWS Organizations API calls
+  const loadFromDynamoDbTable = shouldLookupDynamoDb(context.stage);
   const accountsConfig = AccountsConfig.load(context.configDirPath);
   await accountsConfig.loadAccountIds(
     context.partition,
     acceleratorEnv.enableSingleAccountMode,
     orgsEnabled,
     accountsConfig,
+    undefined,
+    loadFromDynamoDbTable,
   );
 
-  const replacementsConfig = getReplacementsConfig(context.configDirPath, accountsConfig);
-  await replacementsConfig.loadReplacementValues({ region: homeRegion }, orgsEnabled);
+  const replacementsConfig = ReplacementsConfig.load(context.configDirPath, accountsConfig);
+  await replacementsConfig.loadDynamicReplacements(homeRegion);
   const globalConfig = GlobalConfig.load(context.configDirPath, replacementsConfig);
   const organizationConfig = OrganizationConfig.load(context.configDirPath, replacementsConfig);
-  await organizationConfig.loadOrganizationalUnitIds(context.partition);
+  await organizationConfig.loadOrganizationalUnitIds(context.partition, undefined, loadFromDynamoDbTable);
 
   if (globalConfig.externalLandingZoneResources?.importExternalLandingZoneResources) {
     await globalConfig.loadExternalMapping(accountsConfig);
@@ -610,23 +620,6 @@ export function getCustomizationsConfig(
 }
 
 /**
- * Get replacementsConfig object
- * @param configDirPath
- * @returns
- */
-export function getReplacementsConfig(configDirPath: string, accountsConfig: AccountsConfig): ReplacementsConfig {
-  let replacementsConfig: ReplacementsConfig;
-
-  // Create empty replacementsConfig if optional configuration file does not exist
-  if (fs.existsSync(path.join(configDirPath, ReplacementsConfig.FILENAME))) {
-    replacementsConfig = ReplacementsConfig.load(configDirPath, accountsConfig);
-  } else {
-    replacementsConfig = new ReplacementsConfig(undefined, accountsConfig);
-  }
-  return replacementsConfig;
-}
-
-/**
  * Load all the VPC IDs under for accounts and regions
  * @param managementAccountAccessRole
  * @param partition
@@ -673,7 +666,7 @@ async function loadVpcIds(
  * @returns
  */
 async function getVpcIdsByAccount(
-  ec2Clients: AWS.EC2[],
+  ec2Clients: EC2Client[],
   managedVpcOnly?: boolean,
   managedVpcNames?: Set<string>,
 ): Promise<string[]> {
@@ -688,7 +681,7 @@ async function getVpcIdsByAccount(
         params.NextToken = nextToken;
       }
 
-      const response = await throttlingBackOff(() => ec2Client.describeVpcs(params).promise());
+      const response = await throttlingBackOff(() => ec2Client.send(new DescribeVpcsCommand(params)));
       if (response.Vpcs) {
         let vpcList = response.Vpcs.filter(vpc => vpc.VpcId);
         if (managedVpcOnly) {
@@ -711,7 +704,7 @@ async function getVpcIdsByAccount(
  * @param managedVpcNames
  * @returns
  */
-async function getVpcEndpointIdsByAccount(ec2Clients: AWS.EC2[]): Promise<string[]> {
+async function getVpcEndpointIdsByAccount(ec2Clients: EC2Client[]): Promise<string[]> {
   const vpceIds: string[] = [];
 
   for (const ec2Client of ec2Clients) {
@@ -723,7 +716,7 @@ async function getVpcEndpointIdsByAccount(ec2Clients: AWS.EC2[]): Promise<string
         params.NextToken = nextToken;
       }
 
-      const response = await throttlingBackOff(() => ec2Client.describeVpcEndpoints(params).promise());
+      const response = await throttlingBackOff(() => ec2Client.send(new DescribeVpcEndpointsCommand(params)));
       if (response.VpcEndpoints) {
         response.VpcEndpoints.filter(vpce => vpce.VpcEndpointId).forEach(vpce => vpceIds.push(vpce.VpcEndpointId!));
       }
@@ -908,24 +901,23 @@ async function getEc2ClientsByAccountAndRegions(
   regions: string[],
   managementAccountAccessRole: string,
 ) {
-  const stsClient = new AWS.STS({ region: process.env['AWS_REGION'] });
+  const stsClient = new STSClient({ region: process.env['AWS_REGION'] });
   const cred = await throttlingBackOff(() =>
-    stsClient
-      .assumeRole({
+    stsClient.send(
+      new AssumeRoleCommand({
         RoleArn: `arn:${partition}:iam::${accountId}:role/${managementAccountAccessRole}`,
         RoleSessionName: 'cdk-build-time',
-      })
-      .promise(),
+      }),
+    ),
   );
-
-  const ec2Clients: AWS.EC2[] = [];
+  const ec2Clients: EC2Client[] = [];
   regions.forEach(region =>
     ec2Clients.push(
-      new AWS.EC2({
+      new EC2Client({
         region: region,
         credentials: {
-          accessKeyId: cred.Credentials!.AccessKeyId,
-          secretAccessKey: cred.Credentials!.SecretAccessKey,
+          accessKeyId: cred.Credentials!.AccessKeyId!,
+          secretAccessKey: cred.Credentials!.SecretAccessKey!,
           sessionToken: cred.Credentials!.SessionToken,
         },
       }),

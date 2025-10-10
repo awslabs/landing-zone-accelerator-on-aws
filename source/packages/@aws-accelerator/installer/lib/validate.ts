@@ -16,11 +16,11 @@ import { Construct } from 'constructs';
 import { NagSuppressions } from 'cdk-nag';
 import * as fs from 'fs';
 import * as path from 'path';
-import { DEFAULT_LAMBDA_RUNTIME } from '../../utils/lib/lambda';
 
 export interface ValidateProps {
   readonly configRepositoryLocation: string;
   readonly acceleratorPipelineName?: string;
+  readonly lambdaRuntime: cdk.aws_lambda.Runtime;
 }
 
 export class Validate extends Construct {
@@ -41,7 +41,7 @@ export class Validate extends Construct {
     const fileContents = fs.readFileSync(path.join(__dirname, '..', 'lib', 'lambdas/validate/index.js'));
 
     const lambdaFunction = new cdk.aws_lambda.Function(this, 'ValidationFunction', {
-      runtime: DEFAULT_LAMBDA_RUNTIME,
+      runtime: props.lambdaRuntime,
       handler: 'index.handler',
       description: 'This function validates installer parameters',
       initialPolicy: [readCodePipelinePolicy],

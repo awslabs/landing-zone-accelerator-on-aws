@@ -29,7 +29,8 @@ import {
 } from '@aws-accelerator/config';
 
 import { Stack } from 'aws-cdk-lib';
-import { AcceleratorStackNames } from '../lib/accelerator';
+import { AcceleratorStackNames, AcceleratorV2Stacks } from '../lib/accelerator';
+import { AcceleratorAspects } from '../lib/accelerator-aspects';
 import { AcceleratorStage } from '../lib/accelerator-stage';
 import { AcceleratorStack, AcceleratorStackProps } from '../lib/stacks/accelerator-stack';
 import { AccountsStack } from '../lib/stacks/accounts-stack';
@@ -55,12 +56,21 @@ import { SecurityAuditStack } from '../lib/stacks/security-audit-stack';
 import { SecurityResourcesStack } from '../lib/stacks/security-resources-stack';
 import { SecurityStack } from '../lib/stacks/security-stack';
 import { ResourcePolicyEnforcementStack } from '../lib/stacks/resource-policy-enforcement-stack';
+import { getV2NetworkResources, getVpcsInScope } from '../lib/stacks/v2-network/utils/functions';
+import { VpcBaseStack } from '../lib/stacks/v2-network/stacks/vpc-base-stack';
+import { VpcRouteTablesBaseStack } from '../lib/stacks/v2-network/stacks/vpc-route-tables-base-stack';
+import { VpcSecurityGroupsBaseStack } from '../lib/stacks/v2-network/stacks/vpc-security-groups-base-stack';
+import { VpcSubnetsBaseStack } from '../lib/stacks/v2-network/stacks/vpc-subnets-base-stack';
+import { VpcSubnetsShareBaseStack } from '../lib/stacks/v2-network/stacks/vpc-subnets-share-base-stack';
+import { VpcNaclsBaseStack } from '../lib/stacks/v2-network/stacks/vp-nacls-base-stack';
+import { VpcLoadBalancersBaseStack } from '../lib/stacks/v2-network/stacks/vpc-load-balancers-base-stack';
+import { VpcRouteEntriesBaseStack } from '../lib/stacks/v2-network/stacks/vpc-route-entries-base-stack';
 
 export class AcceleratorSynthStacks {
   private readonly configFolderName: string;
   private readonly partition: string;
   private readonly configDirPath: string;
-  private readonly props: AcceleratorStackProps;
+  private props: AcceleratorStackProps;
   private readonly app: cdk.App;
   private readonly homeRegion: string;
   private readonly managementAccountId: string;
@@ -69,6 +79,10 @@ export class AcceleratorSynthStacks {
   private readonly auditAccount: AccountConfig;
   private readonly stageName: string;
   private readonly globalRegion: string;
+  private readonly globalConfig: GlobalConfig;
+  private readonly accountsConfig: AccountsConfig;
+  private readonly customizationsConfig: CustomizationsConfig;
+  private readonly replacementsConfig: ReplacementsConfig;
 
   public readonly stacks = new Map<string, AcceleratorStack | CustomStack | Stack>();
   constructor(stageName: string, partition: string, globalRegion: string, configFolderName?: string) {
@@ -83,35 +97,66 @@ export class AcceleratorSynthStacks {
     this.app = new cdk.App({
       context: { 'config-dir': path.join(__dirname, `configs/${this.configFolderName}`) },
     });
+    new AcceleratorAspects(this.app, this.partition, false);
     this.configDirPath = this.app.node.tryGetContext('config-dir');
-
-    const globalConfig = GlobalConfig.load(this.configDirPath);
-
-    let customizationsConfig: CustomizationsConfig;
+    this.accountsConfig = AccountsConfig.load(this.configDirPath);
+    // Account IDs and dynamic replacements from SSM are not loaded here
+    this.replacementsConfig = ReplacementsConfig.load(this.configDirPath, this.accountsConfig);
+    this.globalConfig = GlobalConfig.load(this.configDirPath, this.replacementsConfig);
     // Create empty customizationsConfig if optional configuration file does not exist
     if (fs.existsSync(path.join(this.configDirPath, 'customizations-config.yaml'))) {
-      customizationsConfig = CustomizationsConfig.load(this.configDirPath);
+      this.customizationsConfig = CustomizationsConfig.load(this.configDirPath, this.replacementsConfig);
     } else {
-      customizationsConfig = new CustomizationsConfig();
+      this.customizationsConfig = new CustomizationsConfig();
     }
 
-    const accountsConfig = AccountsConfig.load(this.configDirPath);
-    const orgConfig = OrganizationConfig.load(this.configDirPath);
-    const replacementsConfig = ReplacementsConfig.load(this.configDirPath, accountsConfig);
-    replacementsConfig.loadReplacementValues({}, orgConfig.enable);
+    this.props = this.getProps(false, this.accountsConfig, this.customizationsConfig, this.replacementsConfig);
+    this.homeRegion = this.props.globalConfig.homeRegion;
+
+    this.managementAccount = this.props.accountsConfig.getManagementAccount();
+    this.managementAccountId = this.props.accountsConfig.getManagementAccountId();
+
+    this.auditAccount = this.props.accountsConfig.getAuditAccount();
+    this.auditAccountId = this.props.accountsConfig.getAuditAccountId();
+
+    /**
+     * synth all test stacks
+     */
+    this.synthAllTestStacks();
+  }
+
+  /**
+   * Function to get properties
+   * @param v2Props boolean
+   * @param accountsConfig {@link AccountsConfig}
+   * @param customizationsConfig {@link CustomizationsConfig}
+   * @param replacementsConfig {@link ReplacementsConfig}
+   * @returns
+   */
+  private getProps(
+    v2Props: boolean,
+    accountsConfig: AccountsConfig,
+    customizationsConfig: CustomizationsConfig,
+    replacementsConfig: ReplacementsConfig,
+  ): AcceleratorStackProps {
+    let networkConfig = NetworkConfig.load(this.configDirPath, replacementsConfig);
+    if (v2Props) {
+      const buffer = fs.readFileSync(path.join(this.configDirPath, 'v2-network-config.yaml'), 'utf8');
+      networkConfig = NetworkConfig.loadFromString(buffer, replacementsConfig)!;
+    }
     this.props = {
       configDirPath: this.configDirPath,
-      accountsConfig: accountsConfig,
+      accountsConfig,
       customizationsConfig,
-      globalConfig,
-      iamConfig: IamConfig.load(this.configDirPath),
-      networkConfig: NetworkConfig.load(this.configDirPath),
-      organizationConfig: OrganizationConfig.load(this.configDirPath),
-      securityConfig: SecurityConfig.load(this.configDirPath),
+      globalConfig: this.globalConfig,
+      iamConfig: IamConfig.load(this.configDirPath, replacementsConfig),
+      networkConfig,
+      organizationConfig: OrganizationConfig.load(this.configDirPath, replacementsConfig),
+      securityConfig: SecurityConfig.load(this.configDirPath, replacementsConfig),
       replacementsConfig: replacementsConfig,
       partition: this.partition,
       globalRegion: this.globalRegion,
-      centralizedLoggingRegion: globalConfig.logging.centralizedLoggingRegion ?? globalConfig.homeRegion,
+      centralizedLoggingRegion: this.globalConfig.logging.centralizedLoggingRegion ?? this.globalConfig.homeRegion,
       configRepositoryName: 'aws-accelerator-config',
       configRepositoryLocation: 'codecommit',
       prefixes: {
@@ -132,20 +177,10 @@ export class AcceleratorSynthStacks {
       centralLogsBucketKmsKeyArn: 'arn:aws:kms:us-east-1:111111111111:key/00000000-0000-0000-0000-000000000000',
       isDiagnosticsPackEnabled: 'Yes',
       pipelineAccountId: '111111111111',
+      installerStackName: 'AWSAccelerator-InstallerStack',
     };
 
-    this.homeRegion = this.props.globalConfig.homeRegion;
-
-    this.managementAccount = this.props.accountsConfig.getManagementAccount();
-    this.managementAccountId = this.props.accountsConfig.getManagementAccountId();
-
-    this.auditAccount = this.props.accountsConfig.getAuditAccount();
-    this.auditAccountId = this.props.accountsConfig.getAuditAccountId();
-
-    /**
-     * synth all test stacks
-     */
-    this.synthAllTestStacks();
+    return this.props;
   }
 
   private synthAllTestStacks() {
@@ -552,6 +587,224 @@ export class AcceleratorSynthStacks {
   }
 
   /**
+   * Synth V2 Network VPC stacks
+   * @returns
+   */
+  public synthV2NetworkVpcStacks() {
+    if (!this.props.globalConfig.useV2Stacks) {
+      return;
+    }
+
+    if (this.configFolderName !== 'snapshot-only') {
+      return;
+    }
+
+    this.saveStackTemplate(`${AcceleratorStackNames[AcceleratorStage.NETWORK_VPC]}`);
+    this.copySynthesizedTemplates();
+
+    // Create separate CDK app for V2 synthesis
+    const v2App = new cdk.App({
+      context: { 'config-dir': this.configDirPath },
+    });
+    new AcceleratorAspects(v2App, this.partition, false);
+
+    this.props = this.getProps(true, this.accountsConfig, this.customizationsConfig, this.replacementsConfig);
+
+    for (const enabledRegion of this.props.globalConfig.enabledRegions) {
+      for (const account of [
+        ...this.props.accountsConfig.mandatoryAccounts,
+        ...this.props.accountsConfig.workloadAccounts,
+      ]) {
+        const accountId = this.props.accountsConfig.getAccountId(account.name);
+        const vpcsInScope = getVpcsInScope(this.props.networkConfig, this.props.accountsConfig, {
+          accountId,
+          region: enabledRegion,
+        });
+        const v2NetworkResources = getV2NetworkResources(
+          vpcsInScope,
+          this.props.globalConfig,
+          this.props.accountsConfig,
+          this.props.networkConfig,
+          this.props.prefixes.accelerator,
+          {
+            accountId,
+            region: enabledRegion,
+            stackName: `${AcceleratorStackNames[AcceleratorStage.NETWORK_VPC]}-${accountId}-${enabledRegion}`,
+          },
+        );
+
+        for (const vpcItem of vpcsInScope) {
+          const sanitizedVpcName = vpcItem.name.replace(/[^A-Za-z0-9-]/g, '-');
+          this.stacks.set(
+            `VpcStack-${account.name}-${enabledRegion}-${sanitizedVpcName}`,
+            new VpcBaseStack(
+              v2App,
+              `${
+                AcceleratorStackNames[AcceleratorV2Stacks.VPC_STACK]
+              }-${sanitizedVpcName}-${accountId}-${enabledRegion}`,
+              {
+                env: {
+                  account: accountId,
+                  region: enabledRegion,
+                },
+                ...this.props,
+                vpcConfig: vpcItem,
+                vpcStack: true,
+                v2NetworkResources,
+              },
+            ),
+          );
+
+          this.stacks.set(
+            `RouteTableStack-${account.name}-${enabledRegion}-${sanitizedVpcName}`,
+            new VpcRouteTablesBaseStack(
+              v2App,
+              `${
+                AcceleratorStackNames[AcceleratorV2Stacks.ROUTE_TABLES_STACK]
+              }-${sanitizedVpcName}-${accountId}-${enabledRegion}`,
+              {
+                env: {
+                  account: accountId,
+                  region: enabledRegion,
+                },
+                ...this.props,
+                vpcConfig: vpcItem,
+                vpcStack: false,
+                v2NetworkResources,
+              },
+            ),
+          );
+
+          this.stacks.set(
+            `SecurityGroupStack-${account.name}-${enabledRegion}-${sanitizedVpcName}`,
+            new VpcSecurityGroupsBaseStack(
+              v2App,
+              `${
+                AcceleratorStackNames[AcceleratorV2Stacks.SECURITY_GROUPS_STACK]
+              }-${sanitizedVpcName}-${accountId}-${enabledRegion}`,
+              {
+                env: {
+                  account: accountId,
+                  region: enabledRegion,
+                },
+                ...this.props,
+                vpcConfig: vpcItem,
+                vpcStack: false,
+                v2NetworkResources,
+              },
+            ),
+          );
+
+          this.stacks.set(
+            `SubnetStack-${account.name}-${enabledRegion}-${sanitizedVpcName}`,
+            new VpcSubnetsBaseStack(
+              v2App,
+              `${
+                AcceleratorStackNames[AcceleratorV2Stacks.SUBNETS_STACK]
+              }-${sanitizedVpcName}-${accountId}-${enabledRegion}`,
+              {
+                env: {
+                  account: accountId,
+                  region: enabledRegion,
+                },
+                ...this.props,
+                vpcConfig: vpcItem,
+                vpcStack: false,
+                v2NetworkResources,
+              },
+            ),
+          );
+
+          this.stacks.set(
+            `SubnetShareStack-${account.name}-${enabledRegion}-${sanitizedVpcName}`,
+            new VpcSubnetsShareBaseStack(
+              v2App,
+              `${
+                AcceleratorStackNames[AcceleratorV2Stacks.SUBNETS_SHARE_STACK]
+              }-${sanitizedVpcName}-${accountId}-${enabledRegion}`,
+              {
+                env: {
+                  account: accountId,
+                  region: enabledRegion,
+                },
+                ...this.props,
+                vpcConfig: vpcItem,
+                vpcStack: false,
+                v2NetworkResources,
+              },
+            ),
+          );
+
+          this.stacks.set(
+            `RouteEntriesStack-${account.name}-${enabledRegion}-${sanitizedVpcName}`,
+            new VpcRouteEntriesBaseStack(
+              v2App,
+              `${
+                AcceleratorStackNames[AcceleratorV2Stacks.ROUTE_ENTRIES_STACK]
+              }-${sanitizedVpcName}-${accountId}-${enabledRegion}`,
+              {
+                env: {
+                  account: accountId,
+                  region: enabledRegion,
+                },
+                ...this.props,
+                vpcConfig: vpcItem,
+                vpcStack: false,
+                v2NetworkResources,
+              },
+            ),
+          );
+
+          this.stacks.set(
+            `NackStack-${account.name}-${enabledRegion}-${sanitizedVpcName}`,
+            new VpcNaclsBaseStack(
+              v2App,
+              `${
+                AcceleratorStackNames[AcceleratorV2Stacks.NACLS_STACK]
+              }-${sanitizedVpcName}-${accountId}-${enabledRegion}`,
+              {
+                env: {
+                  account: accountId,
+                  region: enabledRegion,
+                },
+                ...this.props,
+                vpcConfig: vpcItem,
+                vpcStack: false,
+                v2NetworkResources,
+              },
+            ),
+          );
+
+          this.stacks.set(
+            `LbStack-${account.name}-${enabledRegion}-${sanitizedVpcName}`,
+            new VpcLoadBalancersBaseStack(
+              v2App,
+              `${
+                AcceleratorStackNames[AcceleratorV2Stacks.LB_STACK]
+              }-${sanitizedVpcName}-${accountId}-${enabledRegion}`,
+              {
+                env: {
+                  account: accountId,
+                  region: enabledRegion,
+                },
+                ...this.props,
+                vpcConfig: vpcItem,
+                vpcStack: false,
+                v2NetworkResources,
+              },
+            ),
+          );
+        }
+      }
+
+      this.props.networkConfig.vpcs.pop();
+    }
+
+    // reset the props
+    this.props = this.getProps(false, this.accountsConfig, this.customizationsConfig, this.replacementsConfig);
+  }
+
+  /**
    * synth Operations stacks
    */
   private synthOperationsStacks() {
@@ -811,6 +1064,41 @@ export class AcceleratorSynthStacks {
             },
           ),
         );
+      }
+    }
+  }
+
+  private async copySynthesizedTemplates() {
+    const sourcePath = path.join(__dirname, `configs/${this.configFolderName}/synthesized-cfn-templates`);
+    const destinationPath = path.join(__dirname, '../cfn-templates');
+    console.log(`Copying synthesized templates from ${sourcePath} into ${destinationPath} path.`);
+    const sourcePathExists = fs.existsSync(sourcePath);
+    if (sourcePathExists) {
+      fs.cpSync(sourcePath, destinationPath, { recursive: true });
+      fs.rmSync(sourcePath, { recursive: true, force: true });
+    }
+  }
+
+  /**
+   * Function to save the templates for V2 stack snapshot test
+   *
+   * @description
+   * Use this function during development to generate template to be used for future V2 stack snapshot test
+   * @param stackPrefix string
+   */
+  public async saveStackTemplate(stackPrefix: string) {
+    for (const [key, stack] of this.stacks) {
+      if (stack.stackName.startsWith(stackPrefix)) {
+        console.log(`Saving stack ${stack.stackName} template. Stack key is ${key}`);
+        const outputDir = `${this.configDirPath}/synthesized-cfn-templates/${stack.account}/${stack.region}`;
+        console.log(`Getting template for stack ${stack.stackName}`);
+        const template = this.app.synth().getStackByName(stack.stackName).template;
+        if (!fs.existsSync(outputDir)) {
+          fs.mkdirSync(outputDir, { recursive: true });
+        }
+
+        fs.writeFileSync(path.join(outputDir, `${stack.stackName}.json`), JSON.stringify(template, null, 2));
+        this.app.synth().getStackByName(stack.stackName).template;
       }
     }
   }

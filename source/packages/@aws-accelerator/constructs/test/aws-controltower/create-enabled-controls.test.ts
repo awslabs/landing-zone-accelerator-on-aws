@@ -56,6 +56,11 @@ const controls: EnabledControlProps[] = [
     ouArn: 'arn:aws:organizations::123456789012:ou/o-a1b2c3d4e5/ou-ab12-c3d4e5f6',
     ouName: 'ExampleOU',
   },
+  {
+    enabledControlIdentifier: '6s095tcdtgab75dd0229m5x6n',
+    ouArn: 'arn:aws:organizations::123456789012:ou/o-a1b2c3d4e5/ou-ab12-c3d4e5f6',
+    ouName: 'ExampleOU',
+  },
 ];
 new CreateControlTowerEnabledControls(stack, 'TestCreateCTControls', {
   dependencyFrequency: 2,

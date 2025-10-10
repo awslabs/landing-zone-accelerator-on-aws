@@ -13,9 +13,15 @@
 
 import { delay, throttlingBackOff } from '@aws-accelerator/utils/lib/throttle';
 import { CloudFormationCustomResourceEvent } from '@aws-accelerator/utils/lib/common-types';
-import * as AWS from 'aws-sdk';
-AWS.config.logger = console;
-
+import {
+  AdminAccount,
+  BadRequestException,
+  DisableOrganizationAdminAccountCommand,
+  EnableOrganizationAdminAccountCommand,
+  GuardDutyClient,
+  ListOrganizationAdminAccountsCommand,
+} from '@aws-sdk/client-guardduty';
+import { setRetryStrategy } from '@aws-accelerator/utils/lib/common-functions';
 /**
  * enable-guardduty - lambda handler
  *
@@ -33,7 +39,11 @@ export async function handler(event: CloudFormationCustomResourceEvent): Promise
   const adminAccountId = event.ResourceProperties['adminAccountId'];
   const solutionId = process.env['SOLUTION_ID'];
 
-  const guardDutyClient = new AWS.GuardDuty({ region: region, customUserAgent: solutionId });
+  const guardDutyClient = new GuardDutyClient({
+    region,
+    customUserAgent: solutionId,
+    retryStrategy: setRetryStrategy(),
+  });
 
   const guardDutyAdminAccount = await isGuardDutyEnable(guardDutyClient, adminAccountId);
 
@@ -47,9 +57,9 @@ export async function handler(event: CloudFormationCustomResourceEvent): Promise
           );
           return { Status: 'Success', StatusCode: 200 };
         } else {
-          console.warn(
-            `GuardDuty delegated admin is already set to ${guardDutyAdminAccount.accountId} account can not assign another delegated account`,
-          );
+          const message = `GuardDuty delegated admin is already set to ${guardDutyAdminAccount.accountId} account, cannot assign another delegated account ${adminAccountId}. Please remove ${guardDutyAdminAccount.accountId} as a delegated administrator and rerun the pipeline.`;
+          console.warn(message);
+          throw new Error(message);
         }
       } else {
         console.log(
@@ -62,11 +72,20 @@ export async function handler(event: CloudFormationCustomResourceEvent): Promise
           console.log('enable');
           try {
             await throttlingBackOff(() =>
-              guardDutyClient.enableOrganizationAdminAccount({ AdminAccountId: adminAccountId }).promise(),
+              guardDutyClient.send(new EnableOrganizationAdminAccountCommand({ AdminAccountId: adminAccountId })),
             );
             console.log('command run');
             break;
           } catch (error) {
+            if (
+              error instanceof BadRequestException &&
+              error.message ===
+                'The request failed because another account is already enabled as GuardDuty delegated administrator for the organization.'
+            ) {
+              throw new Error(
+                `Another account is already enabled as GuardDuty delegated administrator for the organization, can not assign another delegated account ${adminAccountId}. Please remove the existing delegated administrator in organization setting and rerun the pipeline.`,
+              );
+            }
             console.log(error);
             retries = retries + 1;
           }
@@ -82,11 +101,11 @@ export async function handler(event: CloudFormationCustomResourceEvent): Promise
             `Started disableOrganizationAdminAccount function in ${event.ResourceProperties['region']} region for account ${adminAccountId}`,
           );
           await throttlingBackOff(() =>
-            guardDutyClient
-              .disableOrganizationAdminAccount({
+            guardDutyClient.send(
+              new DisableOrganizationAdminAccountCommand({
                 AdminAccountId: adminAccountId,
-              })
-              .promise(),
+              }),
+            ),
           );
         }
       }
@@ -96,15 +115,15 @@ export async function handler(event: CloudFormationCustomResourceEvent): Promise
 }
 
 async function isGuardDutyEnable(
-  guardDutyClient: AWS.GuardDuty,
+  guardDutyClient: GuardDutyClient,
   adminAccountId: string,
 ): Promise<{ accountId: string | undefined; status: string | undefined }> {
-  const adminAccounts: AWS.GuardDuty.AdminAccount[] = [];
+  const adminAccounts: AdminAccount[] = [];
   let nextToken: string | undefined = undefined;
   console.log('isenabled');
   do {
     const page = await throttlingBackOff(() =>
-      guardDutyClient.listOrganizationAdminAccounts({ NextToken: nextToken }).promise(),
+      guardDutyClient.send(new ListOrganizationAdminAccountsCommand({ NextToken: nextToken })),
     );
     for (const account of page.AdminAccounts ?? []) {
       adminAccounts.push(account);

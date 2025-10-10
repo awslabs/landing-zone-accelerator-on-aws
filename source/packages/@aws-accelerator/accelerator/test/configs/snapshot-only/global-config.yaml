@@ -2,6 +2,7 @@ homeRegion: &HOME_REGION us-east-1
 enabledRegions:
   - *HOME_REGION
   - us-west-2
+useV2Stacks: true
 managementAccountAccessRole: AWSControlTowerExecution
 cloudwatchLogRetentionInDays: 3653
 acceleratorMetadata:
@@ -63,6 +64,11 @@ controlTower:
           - SecureWorkloads
     - identifier: AWS-GR_RDS_SNAPSHOTS_PUBLIC_PROHIBITED
       enable: false
+      deploymentTargets:
+        organizationalUnits:
+          - SecureWorkloads
+    - identifier: 6s095tcdtgab75dd0229m5x6n
+      enable: true
       deploymentTargets:
         organizationalUnits:
           - SecureWorkloads
@@ -214,6 +220,7 @@ logging:
     enable: true
     replaceLogDestinationArn: arn:aws:logs:us-east-1:111111111111:destination/log-destination
     dynamicPartitioning: dynamic-partitioning/log-filters.json
+    organizationIdConditionSupported: true
     kinesis: 
       streamingMode: PROVISIONED
       shardCount: 4

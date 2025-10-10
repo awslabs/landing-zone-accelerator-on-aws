@@ -100,7 +100,7 @@ The Landing Zone Accelerator will deploy AWS KMS CMK to encrypt AWS Control Towe
 
 The Landing Zone Accelerator solution will add the following `landingZone` configuration.
 
-[GlobalConfig](../typedocs/latest/classes/_aws_accelerator_config.GlobalConfig.html) / [ControlTowerConfig](../typedocs/latest/classes/_aws_accelerator_config.ControlTowerConfig.html) / [ControlTowerLandingZoneConfig](../typedocs/latest/classes/_aws_accelerator_config.ControlTowerLandingZoneConfig.html)
+[ControlTowerLandingZoneConfig](../typedocs/classes/___packages__aws_accelerator_config_dist_config_lib_global_config.ControlTowerLandingZoneConfig.html)
 
 ```
 landingZone:
@@ -116,11 +116,11 @@ landingZone:
 #### AWS Control Tower Landing Zone Deployment
 Landing Zone Accelerator will create two organizational units (`Security` and `Infrastructure`) when it deploys AWS Control Tower Landing Zone. In addition, AWS Organization level AWS CloudTrail trails will be configured with AWS KMS CMK encryption.
 
-In the event that there is already an existing AWS Control Tower Landing Zone, Landing Zone Accelerator will not make any changes to it during initial deployment. In order to manage existing AWS Control Tower Landing Zone through the Landing Zone Accelerator solution, you will need to add `landingZone` configuration [ControlTowerLandingZoneConfig](../typedocs/latest/classes/_aws_accelerator_config.ControlTowerLandingZoneConfig.html) for `controlTower` configuration [GlobalConfig](../typedocs/latest/classes/_aws_accelerator_config.GlobalConfig.html) / [ControlTowerConfig](../typedocs/latest/classes/_aws_accelerator_config.ControlTowerConfig.html).
+In the event that there is already an existing AWS Control Tower Landing Zone, Landing Zone Accelerator will not make any changes to it during initial deployment. In order to manage existing AWS Control Tower Landing Zone through the Landing Zone Accelerator solution, you will need to add `landingZone` configuration [ControlTowerLandingZoneConfig](../../typedocs/classes/___packages__aws_accelerator_config_dist_config_lib_global_config.ControlTowerLandingZoneConfig.html) for `controlTower` configuration [ControlTowerConfig](../typedocs/classes/___packages__aws_accelerator_config_dist_config_lib_global_config.ControlTowerConfig.html).
 
 If any changes are made to the AWS Control Tower Landing Zone configuration, the Landing Zone Accelerator solution will attempt to update the AWS Control Tower Landing Zone. In the event that the current AWS Control Tower Landing Zone has drifted, the solution will attempt to reset it. 
 
-The Landing Zone Accelerator solution will update AWS Control Tower Landing Zone when the [GlobalConfig.enabledRegions](../typedocs/latest/classes/_aws_accelerator_config.GlobalConfig.html#enabledRegions) property is modified. In this solution, the AWS Control Tower Landing Zone govern regions will be updated to match those included in [GlobalConfig.enabledRegions](../typedocs/latest/classes/_aws_accelerator_config.GlobalConfig.html#enabledRegions). 
+The Landing Zone Accelerator solution will update AWS Control Tower Landing Zone when the [GlobalConfig.enabledRegions](../typedocs/interfaces/___packages__aws_accelerator_config_dist_config_lib_models_global_config.IGlobalConfig.html#enabledRegions) property is modified. In this solution, the AWS Control Tower Landing Zone govern regions will be updated to match those included in [GlobalConfig.enabledRegions](../typedocs/interfaces/___packages__aws_accelerator_config_dist_config_lib_models_global_config.IGlobalConfig.html#enabledRegions). 
 
 !!! note
     Due to the fact that the Landing Zone Accelerator may deploy certain global AWS services, such as AWS Identity and Access Management (IAM) and AWS Organizations, the solution will add the global region to the list of governed regions in the AWS Control Tower if the home region of the Landing Zone Accelerator is not the same as the global region.  
@@ -129,7 +129,7 @@ The Landing Zone Accelerator solution will update AWS Control Tower Landing Zone
 
 !!! warning "Important"
 
-    In the event that the Landing Zone Accelerator solution determines that an existing AWS Control Tower Landing Zone needs to be reset or updated due to a change in `landingZone` [ControlTowerLandingZoneConfig](../typedocs/latest/classes/_aws_accelerator_config.ControlTowerLandingZoneConfig.html) configuration, it will validate that the version property of `landingZone` [ControlTowerLandingZoneConfig](../typedocs/latest/classes/_aws_accelerator_config.ControlTowerLandingZoneConfig.html) configuration is similar to the latest version ([AWS Control Tower release notes](https://docs.aws.amazon.com/controltower/latest/userguide/release-notes.html)) of AWS Control Tower Landing Zone available. This is due to the fact that changes to AWS Control Tower Landing Zone can only be made when the version matches that of the most recent available version of AWS Control Tower Landing Zone. A version mismatch error will be thrown when the Landing Zone Accelerator solution finds the latest version is not provided in global configuration.
+    In the event that the Landing Zone Accelerator solution determines that an existing AWS Control Tower Landing Zone needs to be reset or updated due to a change in `landingZone` [ControlTowerLandingZoneConfig](../typedocs/classes/___packages__aws_accelerator_config_dist_config_lib_global_config.ControlTowerLandingZoneConfig.html) configuration, it will validate that the version property of `landingZone` [ControlTowerLandingZoneConfig](../typedocs/classes/___packages__aws_accelerator_config_dist_config_lib_global_config.ControlTowerLandingZoneConfig.html) configuration is similar to the latest version ([AWS Control Tower release notes](https://docs.aws.amazon.com/controltower/latest/userguide/release-notes.html)) of AWS Control Tower Landing Zone available. This is due to the fact that changes to AWS Control Tower Landing Zone can only be made when the version matches that of the most recent available version of AWS Control Tower Landing Zone. A version mismatch error will be thrown when the Landing Zone Accelerator solution finds the latest version is not provided in global configuration.
 
 
 
@@ -153,10 +153,10 @@ If a new organizational unit is found in the organization configuration file, th
 - Enrollment in the AWS Control Tower for the invited accounts
 
 
-Creating new organizational units and registering with AWS Control Tower is accomplished by adding them to the [OrganizationalUnitConfig](../typedocs/latest/classes/_aws_accelerator_config.OrganizationalUnitConfig.html) configuration.
+Creating new organizational units and registering with AWS Control Tower is accomplished by adding them to the [OrganizationalUnitConfig](../typedocs/interfaces/___packages__aws_accelerator_config_dist_config_lib_models_organization_config.IOrganizationalUnitConfig.html) configuration.
 
 !!! note
-    For existing AWS accounts to be invited into AWS Organizations and registered with AWS Control Tower, the `managementAccountAccessRole` role in [GlobalConfig](../typedocs/latest/classes/_aws_accelerator_config.GlobalConfig.html) must be created. It is necessary for this role to include a trust policy that allows the management account to assume the role. The AWS managed policy [AdministratorAccess](https://docs.aws.amazon.com/aws-managed-policy/latest/reference/AdministratorAccess.html) must be assigned to this role. This role allows AWS Control Tower to manage your individual accounts and report information about them to your Audit and Log Archive accounts. The following is an example of a role trust policy. 
+    For existing AWS accounts to be invited into AWS Organizations and registered with AWS Control Tower, the `managementAccountAccessRole` role in [GlobalConfig](../typedocs/interfaces/___packages__aws_accelerator_config_dist_config_lib_models_global_config.IGlobalConfig.html) must be created. It is necessary for this role to include a trust policy that allows the management account to assume the role. The AWS managed policy [AdministratorAccess](https://docs.aws.amazon.com/aws-managed-policy/latest/reference/AdministratorAccess.html) must be assigned to this role. This role allows AWS Control Tower to manage your individual accounts and report information about them to your Audit and Log Archive accounts. The following is an example of a role trust policy. 
 ```
 {
     "Version": "2012-10-17",

@@ -14,8 +14,13 @@ exports[`RouteTable Construct(RouteTable):  Snapshot Test 1`] = `
           },
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
+          },
+        },
         "Handler": "__entrypoint__.handler",
-        "MemorySize": 128,
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "CustomPrefixListRouteCustomResourceProviderRoleD08268B5",
@@ -94,6 +99,12 @@ exports[`RouteTable Construct(RouteTable):  Snapshot Test 1`] = `
       "Type": "AWS::IAM::Role",
     },
     "RouteTable82FB8FA6": {
+      "Metadata": {
+        "lzaLookup": {
+          "routeTableName": "TestRouteTable",
+          "vpcName": "Test",
+        },
+      },
       "Properties": {
         "Tags": [
           {
@@ -115,6 +126,11 @@ exports[`RouteTable Construct(RouteTable):  Snapshot Test 1`] = `
       "DependsOn": [
         "TestVpcInternetGatewayAttachment60E451D5",
       ],
+      "Metadata": {
+        "lzaLookup": {
+          "test": "123",
+        },
+      },
       "Properties": {
         "GatewayId": {
           "Ref": "TestVpcInternetGateway01360C82",
@@ -129,6 +145,11 @@ exports[`RouteTable Construct(RouteTable):  Snapshot Test 1`] = `
       "DependsOn": [
         "TestVpcVirtualPrivateGatewayAttachment5D655F8D",
       ],
+      "Metadata": {
+        "lzaLookup": {
+          "test": "234",
+        },
+      },
       "Properties": {
         "GatewayId": {
           "Ref": "TestVpcVirtualPrivateGateway56B5C340",
@@ -400,6 +421,11 @@ exports[`RouteTable Construct(RouteTable):  Snapshot Test 1`] = `
       "UpdateReplacePolicy": "Delete",
     },
     "TestVpcE77CE678": {
+      "Metadata": {
+        "lzaLookup": {
+          "vpcName": "Test",
+        },
+      },
       "Properties": {
         "CidrBlock": "10.0.0.0/16",
         "EnableDnsHostnames": false,
@@ -415,6 +441,11 @@ exports[`RouteTable Construct(RouteTable):  Snapshot Test 1`] = `
       "Type": "AWS::EC2::VPC",
     },
     "TestVpcEgressOnlyIgwE0823B1A": {
+      "Metadata": {
+        "lzaLookup": {
+          "vpcName": "Test",
+        },
+      },
       "Properties": {
         "VpcId": {
           "Ref": "TestVpcE77CE678",
@@ -423,6 +454,11 @@ exports[`RouteTable Construct(RouteTable):  Snapshot Test 1`] = `
       "Type": "AWS::EC2::EgressOnlyInternetGateway",
     },
     "TestVpcInternetGateway01360C82": {
+      "Metadata": {
+        "lzaLookup": {
+          "vpcName": "Test",
+        },
+      },
       "Properties": {
         "Tags": [
           {
@@ -445,6 +481,11 @@ exports[`RouteTable Construct(RouteTable):  Snapshot Test 1`] = `
       "Type": "AWS::EC2::VPCGatewayAttachment",
     },
     "TestVpcVirtualPrivateGateway56B5C340": {
+      "Metadata": {
+        "lzaLookup": {
+          "vpcName": "Test",
+        },
+      },
       "Properties": {
         "AmazonSideAsn": 65000,
         "Tags": [
@@ -536,6 +577,12 @@ exports[`RouteTable Construct(RouteTable):  Snapshot Test 1`] = `
       "UpdateReplacePolicy": "Retain",
     },
     "testsubnetFBD9E7FF": {
+      "Metadata": {
+        "lzaLookup": {
+          "subnetName": "test-subnet",
+          "vpcName": "Test",
+        },
+      },
       "Properties": {
         "AvailabilityZone": "a",
         "CidrBlock": "10.0.2.0/24",

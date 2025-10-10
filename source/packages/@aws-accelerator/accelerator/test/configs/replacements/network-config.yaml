@@ -1,0 +1,3033 @@
+defaultVpc:
+  delete: true
+  excludeAccounts: []
+  excludeRegions: []
+transitGatewayConnects:
+  - name: Network-Inspection
+    region: {{AcceleratorHomeRegion}}
+    transitGateway:
+      name: Network-Main
+      account: Network
+    vpc:
+      vpcName: Network-Endpoints
+      vpcAttachment: Network-Endpoints
+    options:
+      protocol: gre
+    tags:
+      - key: Environment
+        value: CentralInspection
+
+transitGateways:
+  - name: Network-Main
+    account: Network
+    region: {{AcceleratorHomeRegion}}
+    transitGatewayCidrBlocks:
+      - 10.0.0.0/20
+      - 10.5.0.0/20
+    transitGatewayIpv6CidrBlocks:
+      - 2001:db8::/64
+    shareTargets:
+      organizationalUnits:
+        - Infrastructure
+    asn: 65521
+    dnsSupport: enable
+    vpnEcmpSupport: enable
+    defaultRouteTableAssociation: disable
+    defaultRouteTablePropagation: disable
+    autoAcceptSharingAttachments: enable
+    routeTables:
+      - name: Network-Main-Core
+        routes:
+          - destinationCidrBlock: 10.100.0.0/16
+            attachment:
+              vpcName: Network-Endpoints
+              account: Network
+          - destinationCidrBlock: ::/0
+            attachment:
+              vpcName: Network-Endpoints
+              account: Network
+          - destinationCidrBlock: 10.200.0.0/16
+            attachment:
+              directConnectGatewayName: Network-DXGW
+          - destinationCidrBlock: 10.30.0.0/16
+            attachment:
+              vpnConnectionName: accelerator-vpn
+          - destinationCidrBlock: 1.1.1.1/32
+            blackhole: true
+          - destinationCidrBlock: fd00::/8
+            blackhole: true
+          - destinationPrefixList: accelerator-prefix-list
+            attachment:
+              vpcName: Network-Endpoints
+              account: Network
+          - destinationCidrBlock: 10.40.0.0/16
+            attachment:
+              vpnConnectionName: same-account-tgw-vpn
+          - destinationCidrBlock: 10.50.0.0/16
+            attachment:
+              vpnConnectionName: same-account-tgw-vpn
+      - name: Network-Main-Segregated
+        routes: []
+      - name: Network-Main-Shared
+        routes:
+          - destinationCidrBlock: 10.200.0.0/16
+            attachment:
+              transitGatewayPeeringName: Network-Main-And-SharedServices-Main-Peering
+          - destinationPrefixList: accelerator-prefix-list
+            attachment:
+              vpnConnectionName: cross-account-tgw-vpn
+      - name: Network-Main-Standalone
+        routes:
+          - destinationPrefixList: accelerator-prefix-list
+            attachment:
+              vpnConnectionName: same-account-tgw-vpn
+  - name: Network-Main-2
+    account: Network
+    region: {{AcceleratorHomeRegion}}
+    transitGatewayCidrBlocks:
+      - 10.50.0.0/20
+    shareTargets:
+      organizationalUnits:
+        - Infrastructure
+    asn: 65521
+    dnsSupport: enable
+    vpnEcmpSupport: enable
+    defaultRouteTableAssociation: disable
+    defaultRouteTablePropagation: disable
+    autoAcceptSharingAttachments: enable
+    routeTables:
+      - name: Network-Main-2-Core
+        routes:
+          - destinationCidrBlock: 10.100.0.0/16
+            attachment:
+              vpcName: Network-Endpoints
+              account: Network
+          - destinationCidrBlock: 1.1.1.1/32
+            blackhole: true
+          - destinationPrefixList: accelerator-prefix-list
+            attachment:
+              vpcName: Network-Endpoints
+              account: Network
+      - name: Network-Main-2-Segregated
+        routes: []
+      - name: Network-Main-2-Shared
+        routes: []
+      - name: Network-Main-2-Standalone
+        routes: []
+  - name: SharedServices-Main
+    account: SharedServices
+    region: {{AcceleratorHomeRegion}}
+    transitGatewayIpv6CidrBlocks:
+      - 5000:aaaa::/64
+    shareTargets:
+      organizationalUnits:
+        - Infrastructure
+    asn: 64512
+    dnsSupport: enable
+    vpnEcmpSupport: enable
+    defaultRouteTableAssociation: disable
+    defaultRouteTablePropagation: disable
+    autoAcceptSharingAttachments: enable
+    routeTables:
+      - name: SharedServices-Main-Core
+        routes: []
+      - name: SharedServices-Main-Segregated
+        routes: []
+      - name: SharedServices-Main-Shared
+        routes:
+          - destinationCidrBlock: 10.100.0.0/16
+            attachment:
+              transitGatewayPeeringName: Network-Main-And-SharedServices-Main-Peering
+      - name: SharedServices-Main-Standalone
+        routes: []
+      - name: SharedServices-Main-Test01
+        routes:
+          - destinationPrefixList: accelerator-prefix-list-001
+            blackhole: true
+  - name: SharedServices-SecondaryTgw
+    account: SharedServices
+    region: {{AcceleratorHomeRegion}}
+    shareTargets:
+      organizationalUnits:
+        - Infrastructure
+    asn: 65524
+    dnsSupport: enable
+    vpnEcmpSupport: enable
+    defaultRouteTableAssociation: disable
+    defaultRouteTablePropagation: disable
+    autoAcceptSharingAttachments: disable
+    routeTables: []
+transitGatewayPeering:
+  - name: Network-Main-And-SharedServices-Main-Peering
+    requester:
+      transitGatewayName: SharedServices-Main
+      account: SharedServices
+      region: {{AcceleratorHomeRegion}}
+      routeTableAssociations: SharedServices-Main-Shared
+      tags:
+        - key: Name
+          value: Network-Main-And-SharedServices-Main-Peering
+        - key: CostCenter
+          value: TSD-LZA
+        - key: Company
+          value: AWS
+        - key: Organization
+          value: WWPS
+        - key: Team
+          value: Development
+    accepter:
+      transitGatewayName: Network-Main
+      account: Network
+      region: {{AcceleratorHomeRegion}}
+      routeTableAssociations: Network-Main-Shared
+      autoAccept: true
+      applyTags: true
+  - name: Network-Main-2-And-SharedServices-Main-Peering
+    autoAccept: false
+    requester:
+      transitGatewayName: SharedServices-Main
+      account: SharedServices
+      region: {{AcceleratorHomeRegion}}
+      routeTableAssociations: SharedServices-Main-Shared
+      tags:
+        - key: Name
+          value: Network-Main-2-And-SharedServices-Main-Peering
+        - key: CostCenter
+          value: TSD-LZA
+        - key: Company
+          value: AWS
+        - key: Organization
+          value: WWPS
+        - key: Team
+          value: Development
+    accepter:
+      transitGatewayName: Network-Main-2
+      account: Network
+      region: {{AcceleratorHomeRegion}}
+      routeTableAssociations: Network-Main-2-Core
+      autoAccept: true
+      applyTags: true
+
+dhcpOptions:
+  - name: accelerator-dhcp-opts
+    accounts:
+      - Network
+    regions:
+      - {{AcceleratorHomeRegion}}
+    domainName: example.com
+    domainNameServers:
+      - 1.1.1.1
+      - 2.2.2.2
+    netbiosNameServers:
+      - 1.1.1.1
+      - 2.2.2.2
+    netbiosNodeType: 2
+    ntpServers:
+      - 1.1.1.1
+      - 2.2.2.2
+  - name: test-ipv6
+    accounts:
+      - Network
+    regions:
+      - us-east-1
+    domainName: example.com
+    domainNameServers:
+      - 192.168.1.2
+      - 192.168.2.2
+      - 10.0.0.2
+      - 10.0.1.2
+      - ::1
+      - ::2
+      - ::3
+      - ::4
+    ntpServers:
+      - 192.168.1.2
+      - 192.168.2.2
+      - 10.0.0.2
+      - 10.0.1.2
+      - ::1
+      - ::2
+      - ::3
+      - ::4
+    netbiosNameServers:
+      - 192.168.1.2
+      - 192.168.2.2
+      - 10.0.0.2
+      - 10.0.1.2
+centralNetworkServices:
+  delegatedAdminAccount: Network
+  ipams:
+    - name: accelerator-ipam
+      region: {{AcceleratorHomeRegion}}
+      description: Accelerator IPAM
+      operatingRegions:
+        - {{AcceleratorHomeRegion}}
+        - us-west-2
+      pools:
+        - name: &BASE_POOL base-pool
+          description: accelerator-base
+          provisionedCidrs:
+            - 10.0.0.0/8
+            - 172.16.0.0/12
+            - 192.168.0.0/16
+        - name: home-region-pool
+          description: Pool for us-east-1
+          locale: {{AcceleratorHomeRegion}}
+          provisionedCidrs:
+            - 10.0.0.0/16
+            - 10.2.0.0/16
+          sourceIpamPool: *BASE_POOL
+          shareTargets:
+            organizationalUnits: [{{CoreOUs}}]
+        - name: home-region-prod-pool
+          description: Pool for prod environment
+          allocationResourceTags:
+            - key: env
+              value: prod
+          locale: {{AcceleratorHomeRegion}}
+          provisionedCidrs:
+            - 10.0.0.0/24
+            - 10.2.0.0/24
+          shareTargets:
+            organizationalUnits:
+              - Infrastructure
+          sourceIpamPool: home-region-pool
+        - name: west-region-pool
+          description: Pool for us-west-2
+          locale: us-west-2
+          provisionedCidrs:
+            - 10.1.0.0/16
+          sourceIpamPool: *BASE_POOL
+          shareTargets:
+            organizationalUnits: [{{CoreOUs}}]
+  gatewayLoadBalancers:
+    - name: Accelerator-GWLB
+      subnets:
+        - Network-Inspection-A
+        - Network-Inspection-B
+      vpc: Network-Inspection
+      deletionProtection: true
+      targetGroup: instance-target
+      endpoints:
+        - name: Endpoint-A
+          account: Network
+          subnet: Network-Inspection-A
+          vpc: Network-Inspection
+        - name: Endpoint-B
+          account: Network
+          subnet: Network-Inspection-B
+          vpc: Network-Inspection
+    - name: Accelerator-GWLB-secondary
+      subnets:
+        - Network-Secondary-A
+        - Network-Secondary-B
+      vpc: Network-Secondary
+      deletionProtection: true
+      endpoints:
+        - name: Secondary-Endpoint-A
+          account: Network
+          subnet: Network-Secondary-A
+          vpc: Network-Secondary
+        - name: Secondary-Endpoint-B
+          account: Network
+          subnet: Network-Secondary-B
+          vpc: Network-Secondary
+        - name: SharedServices-Endpoint-B #Need to use us-east-1b in Shared Services
+          account: SharedServices
+          subnet: SharedServices-App-B
+          vpc: SharedServices-Main
+        - name: SharedServices-Endpoint-C #Need to use us-east-1c in Shared Services
+          account: SharedServices
+          subnet: SharedServices-App-C
+          vpc: SharedServices-Main
+    - name: Accelerator-GWLB-NonDelegated
+      subnets:
+        - SharedServices-App-A
+        - SharedServices-App-B
+      account: SharedServices
+      vpc: SharedServices-Main
+      deletionProtection: true
+      targetGroup: shared-services-target
+      endpoints:
+        - name: Shared-Endpoint-A
+          account: SharedServices
+          subnet: SharedServices-App-A
+          vpc: SharedServices-Main
+        - name: Shared-Endpoint-B
+          account: SharedServices
+          subnet: SharedServices-App-B
+          vpc: SharedServices-Main
+        - name: Shared-Secondary-Endpoint-D
+          account: Network
+          vpc: Network-Secondary
+          subnet: Network-Secondary-D
+        - name: Shared-Secondary-Endpoint-A
+          account: Network
+          vpc: Network-Secondary
+          subnet: Network-Secondary-A
+  networkFirewall:
+    firewalls:
+      - name: accelerator-firewall
+        firewallPolicy: accelerator-policy
+        subnets:
+          - Network-Inspection-A
+          - Network-Inspection-B
+        vpc: Network-Inspection
+        loggingConfiguration:
+          - destination: s3
+            type: ALERT
+          - destination: cloud-watch-logs
+            type: FLOW
+      - name: az-id-firewall
+        firewallPolicy: "arn:aws:network-firewall:ap-southeast-2:123456789012:firewall-policy/central-egress-nfw-policy"
+        subnets:
+          - Network-Secondary-C
+          - Network-Secondary-D
+        vpc: Network-Secondary
+        loggingConfiguration:
+          - destination: s3
+            type: ALERT
+          - destination: cloud-watch-logs
+            type: FLOW
+    policies:
+      - name: accelerator-policy
+        regions:
+          - {{AcceleratorHomeRegion}}
+        firewallPolicy:
+          statelessDefaultActions: ['aws:forward_to_sfe']
+          statelessFragmentDefaultActions: ['aws:forward_to_sfe']
+          statefulRuleGroups:
+            - name: accelerator-rule-group
+            - name: domain-list-group
+        shareTargets:
+          organizationalUnits:
+            - Infrastructure
+      - name: accelerator-strict-policy
+        regions:
+          - {{AcceleratorHomeRegion}}
+        firewallPolicy:
+          statelessDefaultActions: ['aws:forward_to_sfe']
+          statelessFragmentDefaultActions: ['aws:forward_to_sfe']
+          statefulEngineOptions: STRICT_ORDER
+          statefulRuleGroups:
+            - name: accelerator-strict-rule-group
+              priority: 100
+        shareTargets:
+          organizationalUnits:
+            - Infrastructure
+    rules:
+      - name: accelerator-suricata-rule-group
+        regions:
+          - {{AcceleratorHomeRegion}}
+        capacity: 100
+        type: STATEFUL
+        ruleGroup:
+          rulesSource:
+            rulesFile: firewall-rules/rules.txt
+          ruleVariables:
+            ipSets:
+              name: HOME_NET
+              definition:
+                - 10.0.0.0/16
+                - 10.1.0.0/16
+            portSets:
+              name: HOME_NET
+              definition:
+                - '80'
+                - '443'
+      - name: accelerator-strict-rule-group
+        regions:
+          - {{AcceleratorHomeRegion}}
+        capacity: 100
+        type: STATEFUL
+        ruleGroup:
+          statefulRuleOptions: STRICT_ORDER
+          rulesSource:
+            rulesFile: firewall-rules/rules.txt
+          ruleVariables:
+            ipSets:
+              - name: HOME_NET
+                definition:
+                  - 10.0.0.0/16
+                  - 10.1.0.0/16
+            portSets:
+              - name: HOME_NET
+                definition:
+                  - '80'
+                  - '443'
+      - name: accelerator-rule-group
+        regions:
+          - {{AcceleratorHomeRegion}}
+        capacity: 100
+        type: STATEFUL
+        ruleGroup:
+          rulesSource:
+            statefulRules:
+              - action: PASS
+                header:
+                  destination: 10.0.0.0/16
+                  destinationPort: ANY
+                  direction: FORWARD
+                  protocol: IP
+                  source: 10.1.0.0/16
+                  sourcePort: ANY
+                ruleOptions:
+                  - keyword: sid
+                    settings: ['100']
+              - action: DROP
+                header:
+                  destination: ANY
+                  destinationPort: ANY
+                  direction: ANY
+                  protocol: IP
+                  source: ANY
+                  sourcePort: ANY
+                ruleOptions:
+                  - keyword: sid
+                    settings: ['101']
+              - action: ALERT
+                header:
+                  destination: 1.1.1.1/32
+                  destinationPort: '80'
+                  direction: FORWARD
+                  protocol: TCP
+                  source: ANY
+                  sourcePort: ANY
+                ruleOptions:
+                  - keyword: msg
+                    settings: ['"example message"']
+                  - keyword: sid
+                    settings: ['102']
+      - name: domain-list-group
+        regions:
+          - {{AcceleratorHomeRegion}}
+        capacity: 10
+        type: STATEFUL
+        ruleGroup:
+          rulesSource:
+            rulesSourceList:
+              generatedRulesType: DENYLIST
+              targets: ['.example.com']
+              targetTypes: ['TLS_SNI', 'HTTP_HOST']
+          ruleVariables:
+            ipSets:
+              name: HOME_NET
+              definition:
+                - 10.0.0.0/16
+                - 10.1.0.0/16
+            portSets:
+              name: HOME_NET
+              definition:
+                - '80'
+                - '443'
+  route53Resolver:
+    endpoints:
+      - name: accelerator-inbound
+        type: INBOUND
+        vpc: Network-Endpoints
+        subnets:
+          - Network-Endpoints-A
+          - Network-Endpoints-B
+      - name: accelerator-outbound
+        type: OUTBOUND
+        vpc: Network-Endpoints
+        subnets:
+          - Network-Endpoints-A
+          - Network-Endpoints-B
+        rules:
+          - name: example-rule
+            domainName: example.com
+            targetIps:
+              - ip: 1.1.1.1
+                port: '5353' # only include if targeting a non-standard DNS port
+              - ip: 2.2.2.2
+            shareTargets:
+              organizationalUnits:
+                - Infrastructure
+          - name: inbound-target-rule
+            domainName: aws.internal.domain
+            inboundEndpointTarget: accelerator-inbound # This endpoint must be listed in the configuration before the outbound endpoint
+    queryLogs:
+      name: accelerator-query-logs
+      destinations:
+        - s3
+        - cloud-watch-logs
+      shareTargets:
+        organizationalUnits:
+          - Infrastructure
+    firewallRuleGroups:
+      - name: accelerator-block-group
+        regions:
+          - {{AcceleratorHomeRegion}}
+        rules:
+          - name: nxdomain-block-rule
+            action: BLOCK
+            customDomainList: dns-firewall-domain-lists/domain-list-1.txt
+            priority: 100
+            blockResponse: NXDOMAIN
+          # - name: override-block-rule
+          #   action: BLOCK
+          #   customDomainList: dns-firewall-domain-lists/domain-list-2.txt
+          #   priority: 200
+          #   blockResponse: OVERRIDE
+          #   blockOverrideDomain: amazon.com
+          #   blockOverrideTtl: 3600
+          - name: managed-rule
+            action: BLOCK
+            managedDomainList: AWSManagedDomainsBotnetCommandandControl
+            priority: 300
+            blockResponse: NODATA
+        shareTargets:
+          organizationalUnits:
+            - Infrastructure
+prefixLists:
+  - name: accelerator-prefix-list
+    accounts:
+      - Network
+      - SharedServices
+    regions:
+      - {{AcceleratorHomeRegion}}
+    addressFamily: 'IPv4'
+    maxEntries: 1
+    entries:
+      - 10.1.0.1/32
+  - name: accelerator-prefix-list-001
+    accounts:
+      - SharedServices
+    regions:
+      - {{AcceleratorHomeRegion}}
+    addressFamily: 'IPv4'
+    maxEntries: 1
+    entries:
+      - 10.100.0.1/32
+  - name: accelerator-prefix-list-ipv6
+    deploymentTargets:
+      organizationalUnits:
+        - Infrastructure
+    addressFamily: IPv6
+    maxEntries: 10
+    entries:
+      - 2400:cb00::/32
+      - 2606:4700::/32
+      - 2803:f800::/32
+      - 2405:b500::/32
+      - 2405:8100::/32
+      - 2a06:98c0::/29
+      - 2c0f:f248::/32
+
+endpointPolicies:
+  - name: Default
+    document: vpc-endpoint-policies/default.json
+  - name: Ec2
+    document: vpc-endpoint-policies/ec2.json
+
+vpcs:
+  - name: SharedServices-Ipam-East
+    account: SharedServices
+    region: {{AcceleratorHomeRegion}}
+    ipamAllocations:
+      - ipamPoolName: home-region-pool
+        netmaskLength: 25
+    internetGateway: false
+    enableDnsHostnames: true
+    enableDnsSupport: true
+    instanceTenancy: default
+    routeTables:
+      - name: SharedServices-A-Rt
+        routes: []
+      - name: SharedServices-B-Rt
+        routes: []
+    subnets:
+      - name: SharedServices-A
+        availabilityZone: a
+        routeTable: SharedServices-A-Rt
+        ipamAllocation:
+          ipamPoolName: home-region-pool
+          netmaskLength: 28
+      - name: SharedServices-B
+        availabilityZone: b
+        routeTable: SharedServices-B-Rt
+        ipamAllocation:
+          ipamPoolName: home-region-pool
+          netmaskLength: 28
+    gatewayEndpoints:
+      defaultPolicy: Default
+      endpoints:
+        - service: s3
+        - service: dynamodb
+
+  - name: SharedServices-Ipam-West
+    account: SharedServices
+    region: us-west-2
+    ipamAllocations:
+      - ipamPoolName: west-region-pool
+        netmaskLength: 25
+    internetGateway: false
+    enableDnsHostnames: true
+    enableDnsSupport: true
+    instanceTenancy: default
+    routeTables:
+      - name: SharedServices-A-Rt
+        routes: []
+      - name: SharedServices-B-Rt
+        routes: []
+    subnets:
+      - name: SharedServices-A
+        availabilityZone: a
+        routeTable: SharedServices-A-Rt
+        ipamAllocation:
+          ipamPoolName: west-region-pool
+          netmaskLength: 28
+      - name: SharedServices-B
+        availabilityZone: b
+        routeTable: SharedServices-B-Rt
+        ipamAllocation:
+          ipamPoolName: west-region-pool
+          netmaskLength: 28
+    gatewayEndpoints:
+      defaultPolicy: Default
+      endpoints:
+        - service: s3
+        - service: dynamodb
+
+  - name: Network-Ipam-West
+    account: Network
+    region: us-west-2
+    ipamAllocations:
+      - ipamPoolName: west-region-pool
+        netmaskLength: 25
+    internetGateway: false
+    enableDnsHostnames: true
+    enableDnsSupport: true
+    instanceTenancy: default
+    routeTables:
+      - name: Network-West-A-Rt
+        routes: []
+      - name: Network-West-B-Rt
+        routes: []
+    subnets:
+      - name: Network-West-A
+        availabilityZone: a
+        routeTable: Network-West-A-Rt
+        ipamAllocation:
+          ipamPoolName: west-region-pool
+          netmaskLength: 28
+      - name: Network-West-B
+        availabilityZone: b
+        routeTable: Network-West-B-Rt
+        ipamAllocation:
+          ipamPoolName: west-region-pool
+          netmaskLength: 28
+      - name: Network-West-Local-A
+        localZone: lax-1a
+        routeTable: Network-West-A-Rt
+        ipamAllocation:
+          ipamPoolName: west-region-pool
+          netmaskLength: 28
+      - name: Network-West-Local-B
+        localZone: lax-1b
+        routeTable: Network-West-B-Rt
+        ipamAllocation:
+          ipamPoolName: west-region-pool
+          netmaskLength: 28
+    gatewayEndpoints:
+      defaultPolicy: Default
+      endpoints:
+        - service: s3
+        - service: dynamodb
+
+  - name: Network-Secondary
+    account: Network
+    region: {{AcceleratorHomeRegion}}
+    ipamAllocations:
+      - ipamPoolName: home-region-prod-pool
+        netmaskLength: 25
+    ipv6Cidrs:
+      - amazonProvided: true
+    egressOnlyIgw: true
+    internetGateway: false
+    enableDnsHostnames: true
+    enableDnsSupport: true
+    instanceTenancy: default
+    vpcRoute53Resolver:
+      endpoints:
+        - name: inbound-endpoint-local
+          type: INBOUND
+          vpc: Network-Secondary
+          subnets:
+            - Network-Secondary-A
+            - Network-Secondary-B
+      queryLogs:
+        name: network-local-endpoint-query-logs
+        destinations:
+          - s3
+          - cloud-watch-logs
+    routeTables:
+      - name: Network-Secondary-A-Rt
+        routes:
+          - name: GwlbRoute
+            destination: 10.0.0.0/24
+            type: gatewayLoadBalancerEndpoint
+            target: Shared-Secondary-Endpoint-A
+          - name: GwlbRoutev6
+            ipv6Destination: ::/0
+            type: gatewayLoadBalancerEndpoint
+            target: Shared-Secondary-Endpoint-A
+      - name: Network-Secondary-B-Rt
+        routes:
+          - name: LgwRoute
+            destination: 0.0.0.0/0
+            type: localGateway
+            target: accelerator-lgw-1
+          - name: eigwRoute
+            ipv6Destination: ::/0
+            type: egressOnlyIgw
+      - name: Network-Secondary-C-Rt
+        routes:
+          - name: NfwRoute
+            destination: 0.0.0.0/0
+            type: networkFirewall
+            target: az-id-firewall
+            targetAvailabilityZone: 1
+          - name: NfwRoutev6
+            ipv6Destination: ::/0
+            type: networkFirewall
+            target: az-id-firewall
+            targetAvailabilityZone: 1
+      - name: Network-Secondary-D-Rt
+        routes:
+          - name: NfwRoute
+            destination: 0.0.0.0/0
+            type: networkFirewall
+            target: az-id-firewall
+            targetAvailabilityZone: 2
+          - name: GwlbRoute
+            destination: 10.0.0.0/24
+            type: gatewayLoadBalancerEndpoint
+            target: Shared-Secondary-Endpoint-D
+    subnets:
+      - name: Network-Secondary-A
+        availabilityZone: a
+        routeTable: Network-Secondary-A-Rt
+        ipamAllocation:
+          ipamPoolName: home-region-prod-pool
+          netmaskLength: 28
+      - name: Network-Secondary-B
+        availabilityZone: b
+        routeTable: Network-Secondary-B-Rt
+        ipamAllocation:
+          ipamPoolName: home-region-prod-pool
+          netmaskLength: 28
+      - name: Network-Secondary-C
+        availabilityZone: 1
+        routeTable: Network-Secondary-C-Rt
+        ipamAllocation:
+          ipamPoolName: home-region-prod-pool
+          netmaskLength: 28
+      - name: Network-Secondary-D
+        availabilityZone: 2
+        routeTable: Network-Secondary-D-Rt
+        ipamAllocation:
+          ipamPoolName: home-region-prod-pool
+          netmaskLength: 28
+      - name: Network-Secondary-Outposts-A
+        routeTable: Network-Secondary-A-Rt
+        outpost: accelerator-outpost-a
+        ipamAllocation:
+          ipamPoolName: home-region-prod-pool
+          netmaskLength: 28
+      - name: Network-Secondary-Outposts-1
+        routeTable: Network-Secondary-B-Rt
+        outpost: accelerator-outpost-1
+        ipamAllocation:
+          ipamPoolName: home-region-prod-pool
+          netmaskLength: 28
+      - name: Network-Secondary-Dual-Stack
+        availabilityZone: a
+        routeTable: Network-Secondary-A-Rt
+        ipv4CidrBlock: 10.0.0.192/28
+        ipv6CidrBlock: fd00::/64
+      - name: Network-Secondary-Ipv6-Only
+        availabilityZone: b
+        routeTable: Network-Secondary-B-Rt
+        ipv6CidrBlock: fd01::/64
+    outposts:
+      - name: accelerator-outpost-a
+        arn: test-arn
+        availabilityZone: a
+        localGateway:
+          name: accelerator-lgw-1
+          id: lgw-abcxyz
+          routeTables: []
+      - name: accelerator-outpost-1
+        arn: test-arn-2
+        availabilityZone: 1
+        localGateway:
+          name: accelerator-lgw-2
+          id: lgw-abcxyz
+          routeTables: []
+    networkAcls:
+      - name: TestNacl
+        subnetAssociations:
+          - Network-Secondary-A
+          - Network-Secondary-B
+          - Network-Secondary-C
+          - Network-Secondary-D
+        outboundRules:
+          - rule: 101
+            action: allow
+            fromPort: 80
+            toPort: 80
+            protocol: -1
+            destination: 172.16.0.0/12
+          - rule: 102
+            action: allow
+            fromPort: 443
+            toPort: 443
+            protocol: -1
+            destination:
+              account: Network
+              vpc: Network-Endpoints
+              subnet: Network-Endpoints-A
+              region: us-east-1
+          - rule: 103
+            action: allow
+            fromPort: 80
+            toPort: 80
+            protocol: -1
+            destination:
+              account: Network
+              vpc: Network-Endpoints
+              subnet: Network-Endpoints-B
+              region: us-east-1
+          - rule: 104
+            action: allow
+            fromPort: -1
+            toPort: -1
+            protocol: -1
+            destination:
+              account: Network
+              vpc: Network-Endpoints
+              subnet: Network-Endpoints-B
+              region: us-east-1
+          - rule: 105
+            action: allow
+            fromPort: -1
+            toPort: -1
+            protocol: -1
+            destination:
+              account: SharedServices
+              vpc: SharedServices-Ipam-East
+              subnet: SharedServices-A
+              region: us-east-1
+          - rule: 106
+            action: deny
+            fromPort: -1
+            toPort: -1
+            protocol: -1
+            destination:
+              account: SharedServices
+              vpc: SharedServices-Ipam-West
+              subnet: SharedServices-A
+              region: us-west-2
+          - rule: 107
+            action: deny
+            fromPort: -1
+            toPort: -1
+            protocol: -1
+            destination:
+              account: SharedServices
+              vpc: SharedServices-Main
+              subnet: SharedServices-App-A
+              region: us-east-1
+          - rule: 108
+            action: deny
+            fromPort: -1
+            toPort: -1
+            protocol: -1
+            destination: ::/0
+        inboundRules:
+          - rule: 101
+            action: allow
+            fromPort: 22
+            toPort: 22
+            protocol: 22
+            source: 10.0.0.0/24
+          - rule: 102
+            action: deny
+            fromPort: 443
+            toPort: 443
+            protocol: -1
+            source:
+              account: Network
+              vpc: Network-Endpoints
+              subnet: Network-Endpoints-B
+              region: us-east-1
+          - rule: 103
+            action: allow
+            fromPort: 80
+            toPort: 80
+            protocol: -1
+            source:
+              account: Network
+              vpc: Network-Endpoints
+              subnet: Network-Endpoints-A
+              region: us-east-1
+          - rule: 104
+            action: allow
+            fromPort: -1
+            toPort: -1
+            protocol: -1
+            source:
+              account: Network
+              vpc: Network-Endpoints
+              subnet: Network-Endpoints-B
+              region: us-east-1
+          - rule: 105
+            action: allow
+            fromPort: -1
+            toPort: -1
+            protocol: -1
+            source:
+              account: SharedServices
+              vpc: SharedServices-Ipam-East
+              subnet: SharedServices-A
+              region: us-east-1
+          - rule: 106
+            action: deny
+            fromPort: -1
+            toPort: -1
+            protocol: -1
+            source:
+              account: SharedServices
+              vpc: SharedServices-Ipam-West
+              subnet: SharedServices-A
+              region: us-west-2
+          - rule: 107
+            action: deny
+            fromPort: -1
+            toPort: -1
+            protocol: -1
+            source:
+              account: SharedServices
+              vpc: SharedServices-Main
+              subnet: SharedServices-App-A
+              region: us-east-1
+          - rule: 108
+            action: deny
+            fromPort: -1
+            toPort: -1
+            protocol: -1
+            source: ::/0
+    gatewayEndpoints:
+      defaultPolicy: Default
+      endpoints:
+        - service: s3
+        - service: dynamodb
+    tags:
+      - key: env
+        value: prod
+
+  - name: Network-Endpoints
+    account: Network
+    region: {{AcceleratorHomeRegion}}
+    ipamAllocations:
+      - ipamPoolName: home-region-prod-pool
+        netmaskLength: 25
+      - ipamPoolName: home-region-prod-pool
+        netmaskLength: 25
+    internetGateway: true
+    dhcpOptions: accelerator-dhcp-opts
+    enableDnsHostnames: true
+    enableDnsSupport: true
+    instanceTenancy: default
+    dnsFirewallRuleGroups:
+      - name: accelerator-block-group
+        priority: 101
+    queryLogs:
+      - accelerator-query-logs
+    resolverRules:
+      - example-rule
+    routeTables:
+      - name: Network-Endpoints-Tgw-A
+        routes: []
+      - name: Network-Endpoints-Tgw-B
+        routes: []
+      - name: Network-Endpoints-A
+        routes:
+          - name: TgwRoute
+            destination: 0.0.0.0/0
+            type: transitGateway
+            target: Network-Main
+          - name: TgwRoutev6
+            ipv6Destination: ::/0
+            type: transitGateway
+            target: Network-Main
+          - name: S3Gateway
+            type: gatewayEndpoint
+            target: s3
+          - name: DynamoDBGateway
+            type: gatewayEndpoint
+            target: dynamodb
+          - name: PlRoute
+            destinationPrefixList: accelerator-prefix-list
+            type: transitGateway
+            target: Network-Main
+          - name: VpcPeer
+            destination: 10.4.0.0/16
+            type: vpcPeering
+            target: CrossAccount
+          - name: PeeringRouteToWorkloadTemplate
+            type: vpcPeering
+            target: WorkloadTemplateToNetworkEndpoints
+          - name: VpcPeerv6
+            ipv6Destination: fd00::/8
+            type: vpcPeering
+            target: CrossAccount
+      - name: Network-Endpoints-B
+        routes:
+          - name: TgwRoute
+            destination: 0.0.0.0/0
+            type: transitGateway
+            target: Network-Main
+          - name: S3Gateway
+            type: gatewayEndpoint
+            target: s3
+          - name: DynamoDBGateway
+            type: gatewayEndpoint
+            target: dynamodb
+          - name: PlRoute
+            destinationPrefixList: accelerator-prefix-list
+            type: transitGateway
+            target: Network-Main
+          - name: VpcPeer
+            destination: 10.4.0.0/16
+            type: vpcPeering
+            target: CrossAccount
+          - name: PeeringRouteToWorkloadTemplate
+            type: vpcPeering
+            target: WorkloadTemplateToNetworkEndpoints
+          - name: VpcPeerv6
+            ipv6Destination: fd00::/8
+            type: vpcPeering
+            target: CrossAccount
+    subnets:
+      - name: Network-Endpoints-A
+        availabilityZone: a
+        routeTable: Network-Endpoints-A
+        ipamAllocation:
+          ipamPoolName: home-region-prod-pool
+          netmaskLength: 27
+        shareTargets:
+          organizationalUnits:
+            - Infrastructure
+          accounts:
+            - SharedServices
+        tags:
+          - key: exampleKey
+            value: exampleValue
+      - name: Network-Endpoints-B
+        availabilityZone: b
+        routeTable: Network-Endpoints-B
+        ipamAllocation:
+          ipamPoolName: home-region-prod-pool
+          netmaskLength: 27
+      - name: Network-EndpointsTgwAttach-A
+        availabilityZone: a
+        routeTable: Network-Endpoints-Tgw-A
+        ipamAllocation:
+          ipamPoolName: home-region-prod-pool
+          netmaskLength: 28
+      - name: Network-EndpointsTgwAttach-B
+        availabilityZone: b
+        routeTable: Network-Endpoints-Tgw-B
+        ipamAllocation:
+          ipamPoolName: home-region-prod-pool
+          netmaskLength: 28
+    transitGatewayAttachments:
+      - name: Network-Endpoints
+        transitGateway:
+          name: Network-Main
+          account: Network
+        routeTableAssociations:
+          - Network-Main-Shared
+        routeTablePropagations:
+          - Network-Main-Core
+          - Network-Main-Shared
+          - Network-Main-Segregated
+        subnets:
+          - Network-EndpointsTgwAttach-A
+          - Network-EndpointsTgwAttach-B
+      - name: Network-Endpoints-2
+        transitGateway:
+          name: Network-Main-2
+          account: Network
+        routeTableAssociations:
+          - Network-Main-2-Shared
+        routeTablePropagations:
+          - Network-Main-2-Core
+          - Network-Main-2-Shared
+          - Network-Main-2-Segregated
+        subnets:
+          - Network-EndpointsTgwAttach-A
+          - Network-EndpointsTgwAttach-B
+    virtualPrivateGateway:
+      asn: 65200
+    gatewayEndpoints:
+      defaultPolicy: Default
+      endpoints:
+        - service: s3
+        - service: dynamodb
+    interfaceEndpoints:
+      central: true
+      tags:
+        - key: Environment
+          value: CentralVpc
+      defaultPolicy: Default
+      subnets:
+        - Network-Endpoints-A
+        - Network-Endpoints-B
+      endpoints:
+        - service: ec2
+        - service: ec2messages
+        - service: ssm
+        - service: ssmmessages
+        - service: kms
+        - service: logs
+        - service: s3
+        - service: ecr.dkr
+        - service: s3-global.accesspoint
+        - service: codeartifact.repositories
+        - service: codeartifact.api
+        - service: sagemaker.runtime
+        - service: sagemaker.api
+        - service: sagemaker.featurestore-runtime
+        - service: eks
+          applyPolicy: false
+        - service: secretsmanager
+          securityGroup: Network-Endpoints-CustomEndpointSg
+        - service: access-analyzer
+          securityGroup: Network-Endpoints-CustomEndpointSg
+        # - service: secretsmanager
+        # - service: cloudformation
+        # - service: application-autoscaling
+        # - service: appmesh-envoy-management
+        # - service: athena
+        # - service: autoscaling
+        # - service: autoscaling-plans
+        # - service: clouddirectory
+        # - service: cloudtrail
+        # - service: codebuild
+        # - service: codecommit
+        # - service: codepipeline
+        # - service: config
+        # - service: datasync
+        # - service: ecs
+        # - service: ecs-agent
+        # - service: ecs-telemetry
+        # - service: elasticfilesystem
+        # - service: elasticloadbalancing
+        # - service: elasticmapreduce
+        # - service: events
+        # - service: execute-api
+        # - service: git-codecommit
+        # - service: glue
+        # - service: kinesis-streams
+        # - service: kms
+        # - service: logs
+        # - service: monitoring
+        # - service: sagemaker.api
+        # - service: sagemaker.runtime
+        # - service: servicecatalog
+        # - service: sms
+        # - service: sns
+        # - service: sqs
+        # - service: storagegateway
+        # - service: sts
+        # - service: transfer
+        # - service: workspaces
+        # - service: awsconnector
+        # - service: kinesis-firehose
+        # - service: states
+        # - service: acm-pca
+        # - service: cassandra
+        # - service: ebs
+        # - service: elasticbeanstalk
+        # - service: elasticbeanstalk-health
+        # - service: email-smtp
+        # - service: license-manager
+        # - service: macie2
+        # - service: notebook
+        # - service: synthetics
+        # - service: transfer.server
+    securityGroups:
+      - name: 'Management'
+        description: 'Management Security Group'
+        inboundRules:
+          - description: 'Management RDP Traffic Inbound'
+            types:
+              - RDP
+            sources:
+              - '10.0.0.0/8'
+              - '100.96.252.0/23'
+              - '100.96.250.0/23'
+              - fd00::/8
+              - account: 'Network'
+                vpc: 'Network-Endpoints'
+                subnets:
+                  - 'Network-EndpointsTgwAttach-A'
+                  - 'Network-EndpointsTgwAttach-B'
+              - securityGroups:
+                  - Management
+              - prefixLists:
+                  - accelerator-prefix-list
+          - description: 'Management SSH Traffic Inbound'
+            tcpPorts:
+              - 22
+            udpPorts:
+              - 22
+            sources:
+              - 10.0.0.0/8
+              - 100.96.252.0/23
+              - 100.96.250.0/23
+              - account: Network
+                vpc: Network-Endpoints
+                subnets:
+                  - Network-EndpointsTgwAttach-A
+                  - Network-EndpointsTgwAttach-B
+              - securityGroups:
+                  - Management
+              - prefixLists:
+                  - accelerator-prefix-list
+          - description: 'IP Protocol Rule'
+            ipProtocols:
+              - ESP
+              - IDRP
+              - ST
+            sources:
+              - 100.96.252.0/23
+        outboundRules:
+          - description: 'All Outbound'
+            types:
+              - ALL
+            sources:
+              - 10.0.0.0/8
+              - 100.96.252.0/23
+              - 100.96.250.0/23
+              - account: Network
+                vpc: Network-Endpoints
+                subnets:
+                  - Network-EndpointsTgwAttach-A
+                  - Network-EndpointsTgwAttach-B
+              - securityGroups:
+                  - Management
+              - prefixLists:
+                  - accelerator-prefix-list
+          - description: 'Limited Outbound'
+            tcpPorts:
+              - 22
+            udpPorts:
+              - 22
+            sources:
+              - 10.0.0.0/8
+          - description: 'IP Protocol Rule'
+            ipProtocols:
+              - ESP
+              - IDRP
+              - ST
+            sources:
+              - 10.0.0.0/8
+      - name: Network-Endpoints-CustomEndpointSg
+        description: Accelerator security group for custom endpoint
+        inboundRules:
+          - description: Allow access to 443
+            types:
+              - HTTPS
+            sources:
+              - 0.0.0.0/0
+
+        outboundRules:
+          - description: Allow all outbound
+            types:
+              - ALL
+            sources:
+              - 0.0.0.0/0
+    networkAcls:
+      - name: TestNACL
+        subnetAssociations:
+          - Network-Endpoints-A
+        inboundRules:
+          - action: allow
+            rule: 10
+            fromPort: -1
+            toPort: -1
+            protocol: -1
+            source: 10.0.0.0/8
+          - action: allow
+            rule: 20
+            fromPort: -1
+            toPort: -1
+            protocol: -1
+            source:
+              account: Network
+              vpc: Network-Endpoints
+              subnet: Network-Endpoints-A
+        outboundRules:
+          - action: allow
+            rule: 10
+            fromPort: -1
+            toPort: -1
+            protocol: -1
+            destination: 0.0.0.0/0
+          - action: allow
+            rule: 20
+            fromPort: -1
+            toPort: -1
+            protocol: -1
+            destination:
+              account: Network
+              vpc: Network-Endpoints
+              subnet: Network-Endpoints-A
+    vpcFlowLogs:
+      trafficType: ALL
+      maxAggregationInterval: 60
+      destinations:
+        - s3
+        - cloud-watch-logs
+      defaultFormat: true
+      customFields:
+        - version
+        - account-id
+        - interface-id
+        - srcaddr
+        - dstaddr
+        - srcport
+        - dstport
+        - protocol
+        - packets
+        - bytes
+        - start
+        - end
+        - action
+        - log-status
+        - vpc-id
+        - subnet-id
+        - instance-id
+        - tcp-flags
+        - type
+        - pkt-srcaddr
+        - pkt-dstaddr
+        - region
+        - az-id
+        - pkt-src-aws-service
+        - pkt-dst-aws-service
+        - flow-direction
+        - traffic-path
+    loadBalancers:
+      applicationLoadBalancers:
+        - name: appA-alb-01
+          scheme: internet-facing
+          subnets:
+            - 'Network-EndpointsTgwAttach-A'
+            - 'Network-EndpointsTgwAttach-B'
+          securityGroups:
+            - Management
+          listeners:
+            - name: appA-listener-2
+              port: 80
+              protocol: HTTP
+              targetGroup: appA-alb-tg-1
+              type: forward
+      networkLoadBalancers:
+        - name: appA-nlb-01
+          scheme: internet-facing
+          deletionProtection: false
+          subnets:
+            - 'Network-EndpointsTgwAttach-A'
+            - 'Network-EndpointsTgwAttach-B'
+          listeners:
+            - name: appA-listener-1
+              port: 80
+              protocol: TCP
+              targetGroup: appA-nlb-tg-1
+            - name: appA-listener-2
+              port: 80
+              protocol: TCP
+              targetGroup: appA-nlb-tg-2
+    targetGroups:
+      - name: appA-nlb-tg-1
+        port: 80
+        protocol: TCP
+        type: instance
+        connectionTermination: true
+        preserveClientIp: true
+        proxyProtocolV2: true
+        healthCheck:
+          enabled: true
+          port: 80
+          protocol: TCP
+      - name: appA-alb-tg-1
+        port: 80
+        protocol: HTTP
+        type: instance
+        connectionTermination: true
+        preserveClientIp: true
+        proxyProtocolV2: true
+        healthCheck:
+          enabled: true
+          port: 80
+          protocol: HTTP
+      - name: deployed-tg-2
+        port: 443
+        protocol: HTTPS
+        type: instance
+        shareTargets:
+          organizationalUnits:
+            - Security
+      - name: appA-nlb-tg-2
+        port: 80
+        protocol: TCP
+        type: ip
+        targets:
+          - account: Network
+            region: {{AcceleratorHomeRegion}}
+            nlbName: appA-nlb-01
+        connectionTermination: true
+        preserveClientIp: true
+        proxyProtocolV2: true
+        healthCheck:
+          enabled: true
+          port: 80
+          protocol: TCP
+    tags:
+      - key: env
+        value: prod
+
+  - name: Network-Inspection
+    account: Network
+    region: {{AcceleratorHomeRegion}}
+    cidrs:
+      - 10.2.0.0/22
+      - 10.3.0.0/16
+    defaultSecurityGroupRulesDeletion: true
+    internetGateway: true
+    natGateways:
+      - name: accelerator-nat-gw-a
+        subnet: Network-Inspection-A
+        # allocationId: eipalloc-acbdefg123456 # This is a placeholder value and should not be used in a test config
+      - name: accelerator-nat-gw-b
+        subnet: Network-Inspection-B
+      - name: accelerator-nat-gw-c
+        subnet: Network-Inspection-B
+        private: true
+    routeTables:
+      - name: Network-Inspection-A
+        routes:
+          - name: TgwRoute
+            destination: 0.0.0.0/0
+            type: transitGateway
+            target: Network-Main
+          - name: S3Gateway
+            type: gatewayEndpoint
+            target: s3
+          - name: DynamoDBGateway
+            type: gatewayEndpoint
+            target: dynamodb
+      - name: Network-Inspection-B
+        routes:
+          - name: TgwRoute
+            destination: 0.0.0.0/0
+            type: transitGateway
+            target: Network-Main
+          - name: S3Gateway
+            type: gatewayEndpoint
+            target: s3
+          - name: DynamoDBGateway
+            type: gatewayEndpoint
+            target: dynamodb
+      - name: Network-Inspection-Tgw-A
+        routes:
+          - name: NfwRoute
+            destination: 0.0.0.0/0
+            type: networkFirewall
+            target: accelerator-firewall
+            targetAvailabilityZone: a
+          - name: GwlbRoute
+            destination: 10.0.0.0/8
+            type: gatewayLoadBalancerEndpoint
+            target: Endpoint-A
+          - name: NetworkInterfaceRoute
+            destination: 10.0.0.0/26
+            type: networkInterface
+            target: ${ACCEL_LOOKUP::EC2:ENI_1:accelerator-firewall}
+          - name: NetworkInterfaceDirectRoute
+            destination: 10.0.0.0/28
+            type: networkInterface
+            target: eni-0123456789abcdeff
+          - name: NetworkInterfaceRoutev6
+            ipv6Destination: fd00::/8
+            type: networkInterface
+            target: ${ACCEL_LOOKUP::EC2:ENI_1:accelerator-firewall}
+          - name: NetworkInterfaceDirectRoutev6
+            ipv6Destination: fd01::/8
+            type: networkInterface
+            target: eni-0123456789abcdeff
+      - name: Network-Inspection-Tgw-B
+        routes:
+          - name: NfwRoute
+            destination: 0.0.0.0/0
+            type: networkFirewall
+            target: accelerator-firewall
+            targetAvailabilityZone: b
+          - name: GwlbRoute
+            destination: 10.0.0.0/8
+            type: gatewayLoadBalancerEndpoint
+            target: Endpoint-B
+      - name: Network-Inspection-Gateway
+        gatewayAssociation: internetGateway
+        routes:
+          - name: NfwRouteDynamic-A
+            destination: Network-Inspection-A
+            type: networkFirewall
+            target: accelerator-firewall
+            targetAvailabilityZone: a
+          - name: GwlbRouteDynamic-A
+            destination: Network-InspectionTgwAttach-A
+            type: gatewayLoadBalancerEndpoint
+            target: Endpoint-A
+          - name: NfwRouteDynamic-B
+            destination: Network-Inspection-B
+            type: networkFirewall
+            target: accelerator-firewall
+            targetAvailabilityZone: b
+          - name: GwlbRouteDynamic-B
+            destination: Network-InspectionTgwAttach-B
+            type: gatewayLoadBalancerEndpoint
+            target: Endpoint-B
+      - name: Network-Inspection-Local-Rt-A
+        routes: []
+    subnets:
+      - name: Network-Inspection-A
+        availabilityZone: a
+        routeTable: Network-Inspection-A
+        ipv4CidrBlock: 10.2.0.0/24
+      - name: Network-Inspection-B
+        availabilityZone: b
+        routeTable: Network-Inspection-B
+        ipv4CidrBlock: 10.2.1.0/24
+      - name: Network-InspectionTgwAttach-A
+        availabilityZone: a
+        routeTable: Network-Inspection-Tgw-A
+        ipv4CidrBlock: 10.2.3.208/28
+      - name: Network-InspectionTgwAttach-B
+        availabilityZone: b
+        routeTable: Network-Inspection-Tgw-B
+        ipv4CidrBlock: 10.2.3.224/28
+      - name: Network-Inspection-Local-A
+        localZone: atl-2a
+        routeTable: Network-Inspection-Local-Rt-A
+        ipv4CidrBlock: 10.3.0.0/24
+    securityGroups:
+      - name: Data
+        description: Firewall data
+        inboundRules:
+          - description: GENEVE
+            sources:
+              - 10.2.0.0/22
+            udpPorts:
+              - 6081
+        outboundRules:
+          - description: All outbound
+            types:
+              - ALL
+            sources:
+              - 0.0.0.0/0
+    targetGroups:
+      - name: deployed-tg-2
+        port: 443
+        protocol: HTTPS
+        type: instance
+        shareTargets:
+          organizationalUnits:
+            - Infrastructure
+      - name: tg-with-target-ip
+        port: 80
+        protocol: HTTP
+        protocolVersion: HTTP1
+        type: ip
+        healthCheck:
+          enabled: true
+          port: 80
+          protocol: HTTP
+        targets:
+          - '10.3.100.20'
+      - name: tg-without-target-ip
+        port: 80
+        protocol: HTTP
+        protocolVersion: HTTP1
+        type: ip
+        healthCheck:
+          enabled: true
+          port: 80
+          protocol: HTTP
+    transitGatewayAttachments:
+      - name: Network-Inspection
+        transitGateway:
+          name: Network-Main
+          account: Network
+        options:
+          applianceModeSupport: enable
+        routeTableAssociations:
+          - Network-Main-Shared
+        routeTablePropagations:
+          - Network-Main-Core
+          - Network-Main-Shared
+          - Network-Main-Segregated
+        subnets:
+          - Network-InspectionTgwAttach-A
+          - Network-InspectionTgwAttach-B
+    virtualPrivateGateway:
+      asn: 65000
+    gatewayEndpoints:
+      defaultPolicy: Default
+      endpoints:
+        - service: s3
+        - service: dynamodb
+    useCentralEndpoints: true
+  - name: SharedServices-Main
+    account: SharedServices
+    region: {{AcceleratorHomeRegion}}
+    cidrs:
+      - 10.4.0.0/16
+    internetGateway: true
+    routeTables:
+      - name: SharedServices-Main-Default
+        routes:
+          - name: TgwRoute
+            destination: 0.0.0.0/0
+            type: transitGateway
+            target: Network-Main
+      - name: SharedServices-Tgw-A
+        routes: []
+      - name: SharedServices-Tgw-B
+        routes: []
+      - name: SharedServices-App-A
+        routes:
+          - name: TgwRoute
+            destination: 0.0.0.0/0
+            type: transitGateway
+            target: Network-Main
+          - name: S3Gateway
+            type: gatewayEndpoint
+            target: s3
+          - name: DynamoDBGateway
+            type: gatewayEndpoint
+            target: dynamodb
+          - name: VpcPeer
+            destination: 10.0.0.0/24
+            type: vpcPeering
+            target: CrossAccount
+          - name: VpcPeerv6
+            ipv6Destination: fd00::/8
+            type: vpcPeering
+            target: CrossAccount
+          - name: CrossAcctNetworkInterfaceRoute
+            destination: 10.0.0.0/28
+            type: networkInterface
+            target: ${ACCEL_LOOKUP::EC2:ENI_0:firewall-with-shared-subnet}
+          - name: CrossAcctNetworkInterfaceRoutev6
+            ipv6Destination: ff06::/64
+            type: networkInterface
+            target: ${ACCEL_LOOKUP::EC2:ENI_0:firewall-with-shared-subnet}
+          - name: GwlbRoute
+            destination: 10.1.0.0/24
+            type: gatewayLoadBalancerEndpoint
+            target: Shared-Endpoint-A
+      - name: SharedServices-App-B
+        routes:
+          - name: TgwRoute
+            destination: 0.0.0.0/0
+            type: transitGateway
+            target: Network-Main
+          - name: S3Gateway
+            type: gatewayEndpoint
+            target: s3
+          - name: DynamoDBGateway
+            type: gatewayEndpoint
+            target: dynamodb
+          - name: VpcPeer
+            destination: 10.0.0.0/24
+            type: vpcPeering
+            target: CrossAccount
+          - name: VpcPeerv6
+            ipv6Destination: fd00::/8
+            type: vpcPeering
+            target: CrossAccount
+          - name: GwlbRoute
+            destination: 10.1.0.0/24
+            type: gatewayLoadBalancerEndpoint
+            target: Shared-Endpoint-B
+      - name: SharedServices-App-C
+        routes:
+          - name: TgwRoute
+            destination: 0.0.0.0/0
+            type: transitGateway
+            target: Network-Main
+          - name: S3Gateway
+            type: gatewayEndpoint
+            target: s3
+          - name: DynamoDBGateway
+            type: gatewayEndpoint
+            target: dynamodb
+          - name: VpcPeer
+            destination: 10.0.0.0/24
+            type: vpcPeering
+            target: CrossAccount
+    subnets:
+      - name: SharedServices-App-A
+        availabilityZone: a
+        routeTable: SharedServices-Main-Default
+        ipv4CidrBlock: 10.4.0.0/24
+        shareTargets:
+          organizationalUnits:
+            - Security
+        tags:
+          - key: Name
+            value: SharedServices-App-A
+      - name: SharedServices-App-B
+        availabilityZone: b
+        routeTable: SharedServices-App-B
+        ipv4CidrBlock: 10.4.1.0/24
+      - name: SharedServices-App-C
+        availabilityZone: c
+        routeTable: SharedServices-App-C
+        ipv4CidrBlock: 10.4.2.0/24
+        shareTargets:
+          organizationalUnits:
+            - Infrastructure
+      - name: SharedServices-MainTgwAttach-A
+        availabilityZone: a
+        routeTable: SharedServices-Tgw-A
+        ipv4CidrBlock: 10.4.255.208/28
+      - name: SharedServices-MainTgwAttach-B
+        availabilityZone: b
+        routeTable: SharedServices-Tgw-B
+        ipv4CidrBlock: 10.4.255.224/28
+    transitGatewayAttachments:
+      - name: SharedServices-Main
+        transitGateway:
+          name: Network-Main
+          account: Network
+        routeTableAssociations:
+          - Network-Main-Shared
+        routeTablePropagations:
+          - Network-Main-Core
+          - Network-Main-Shared
+          - Network-Main-Segregated
+        subnets:
+          - SharedServices-MainTgwAttach-A
+          - SharedServices-MainTgwAttach-B
+    gatewayEndpoints:
+      defaultPolicy: Default
+      endpoints:
+        - service: s3
+        - service: dynamodb
+    virtualPrivateGateway:
+      asn: 65002
+    useCentralEndpoints: true
+    securityGroups:
+      - name: SharedServices-Main-Rsyslog-sg
+        description: Security Group for AWS Accelerator rsyslog
+        inboundRules:
+          - description: allow inbound traffic
+            udpPorts:
+              - 514
+            tcpPorts:
+              - 514
+            sources:
+              - 10.0.0.0/8
+        outboundRules:
+          - description: All Outbound
+            types:
+              - ALL
+            sources:
+              - 0.0.0.0/0
+    vpcFlowLogs:
+      trafficType: ALL
+      maxAggregationInterval: 60
+      destinations:
+        - s3
+        - cloud-watch-logs
+      destinationsConfig:
+        s3:
+          lifecycleRules: []
+        cloudWatchLogs:
+          retentionInDays: 3653
+      defaultFormat: true
+      customFields:
+        - version
+        - account-id
+        - interface-id
+        - srcaddr
+        - dstaddr
+        - srcport
+        - dstport
+        - protocol
+        - packets
+        - bytes
+        - start
+        - end
+        - action
+        - log-status
+        - vpc-id
+        - subnet-id
+        - instance-id
+        - tcp-flags
+        - type
+        - pkt-srcaddr
+        - pkt-dstaddr
+        - region
+        - az-id
+        - pkt-src-aws-service
+        - pkt-dst-aws-service
+        - flow-direction
+        - traffic-path
+      loadBalancers:
+        applicationLoadBalancers:
+          - name: appA-alb-test-01
+            scheme: internal
+            subnets:
+              - SharedServices-App-A
+              - SharedServices-App-B
+            securityGroups:
+              - InternalHTTP-SG
+            listeners:
+              - name: appA-listener-3
+                port: 443
+                protocol: HTTPS
+                targetGroup: deployed-tg-2
+                order: 3
+                type: forward
+                certificate: cert1
+                sslPolicy: ELBSecurityPolicy-2016-08
+            shareTargets:
+              organizationalUnits:
+                - Security
+  - name: SharedServices-appVpc
+    account: SharedServices
+    region: us-east-1
+    cidrs:
+      - 10.1.0.0/16
+    internetGateway: true
+    enableDnsHostnames: true
+    enableDnsSupport: true
+    instanceTenancy: default
+    routeTables:
+      - name: SharedServices-appVpc-PrivRtA
+        routes:
+          - name: SharedServices-appVpc-NatRouteA
+            destination: 0.0.0.0/0
+            type: natGateway
+            target: SharedServices-appVpc-NatGwA
+      - name: SharedServices-appVpc-PrivRtB
+        routes:
+          - name: SharedServices-appVpc-NatRouteB
+            destination: 0.0.0.0/0
+            type: natGateway
+            target: SharedServices-appVpc-NatGwB
+      - name: SharedServices-appVpc-PublicRouteA
+        routes:
+          - name: IgwRoute
+            destination: 0.0.0.0/0
+            type: internetGateway
+            target: IGW
+      - name: SharedServices-appVpc-PublicRouteB
+        routes:
+          - name: IgwRoute
+            destination: 0.0.0.0/0
+            type: internetGateway
+            target: IGW
+    subnets:
+      - name: SharedServices-appVpc-PublicSubnetA
+        availabilityZone: a
+        routeTable: SharedServices-appVpc-PublicRouteA
+        ipv4CidrBlock: 10.1.0.0/24
+      - name: SharedServices-appVpc-PublicSubnetB
+        availabilityZone: b
+        routeTable: SharedServices-appVpc-PublicRouteB
+        ipv4CidrBlock: 10.1.1.0/24
+      - name: SharedServices-appVpc-PrivateSubnetA
+        availabilityZone: a
+        routeTable: SharedServices-appVpc-PrivRtA
+        ipv4CidrBlock: 10.1.2.0/24
+      - name: SharedServices-appVpc-PrivateSubnetB
+        availabilityZone: b
+        routeTable: SharedServices-appVpc-PrivRtB
+        ipv4CidrBlock: 10.1.3.0/24
+    natGateways:
+      - name: SharedServices-appVpc-NatGwA
+        subnet: SharedServices-appVpc-PublicSubnetA
+      - name: SharedServices-appVpc-NatGwB
+        subnet: SharedServices-appVpc-PublicSubnetB
+    securityGroups:
+      - name: SharedServices-appVpc-appSecurityGroup
+        description: Accelerator security group
+        inboundRules:
+          - description: Remote access security group
+            types:
+              - ALL
+            sources:
+              - securityGroups:
+                  - SharedServices-appVpc-appSecurityGroup
+
+        outboundRules:
+          - description: Allow all outbound
+            types:
+              - ALL
+            sources:
+              - 0.0.0.0/0
+    vpcFlowLogs:
+      trafficType: ALL
+      maxAggregationInterval: 600
+      destinations:
+        #    - s3
+        - cloud-watch-logs
+      defaultFormat: false
+      customFields:
+        - version
+        - account-id
+        - interface-id
+        - srcaddr
+        - dstaddr
+        - srcport
+        - dstport
+        - protocol
+        - packets
+        - bytes
+        - start
+        - end
+        - action
+        - log-status
+        - vpc-id
+        - subnet-id
+        - instance-id
+        - tcp-flags
+        - type
+        - pkt-srcaddr
+        - pkt-dstaddr
+        - region
+        - az-id
+        - pkt-src-aws-service
+        - pkt-dst-aws-service
+        - flow-direction
+        - traffic-path
+  - name: Network-NonTemplate-Static-Central
+    region: {{AcceleratorHomeRegion}}
+    account: Network
+    cidrs:
+      - 172.17.0.0/24
+    internetGateway: false
+    instanceTenancy: default
+    routeTables:
+      - name: Network-NonTemplate-Static-Public
+        routes:
+          - name: PeeringRouteToSharedServicesStatic
+            destination: 172.19.0.0/24
+            type: vpcPeering
+            target: NonTemplate-Static-Same-Region-Cross-Account
+          - name: PeeringRouteToNetworkStaticWest
+            destination: 172.18.0.0/24
+            type: vpcPeering
+            target: NonTemplate-Static-Cross-Region-Same-Account
+    subnets:
+      - name: Network-Public-A
+        availabilityZone: a
+        routeTable: Network-NonTemplate-Static-Public
+        ipv4CidrBlock: 172.17.0.0/28
+  - name: Network-NonTemplate-Ipam-Central
+    region: {{AcceleratorHomeRegion}}
+    account: Network
+    internetGateway: false
+    enableDnsHostnames: true
+    enableDnsSupport: true
+    instanceTenancy: default
+    ipamAllocations:
+      - ipamPoolName: home-region-pool
+        netmaskLength: 24
+    routeTables:
+      - name: Network-NonTemplate-Ipam-Public
+        routes:
+          - name: PeeringRouteToSharedServicesIpam
+            type: vpcPeering
+            target: NonTemplate-Ipam-Same-Region-Cross-Account
+          - name: PeeringRouteToNetworkIpamWest
+            type: vpcPeering
+            target: NonTemplate-Ipam-Cross-Region-Same-Account
+          - name: PeeringRouteToInfraTemplateFullIpam
+            type: vpcPeering
+            target: Template-Requester-Same-OU-Same-Region-Ipam
+          - name: PeeringRouteToInfraTemplateHalfIpam
+            type: vpcPeering
+            target: Template-Requester-Same-OU-Half-Same-Region-Ipam
+          - name: PeeringRouteToSecurityTemplateFullIpam
+            type: vpcPeering
+            target: Template-Requester-Different-OU-Same-Region-Ipam
+          - name: PeeringRouteToSecurityTemplateFullIpamWest
+            type: vpcPeering
+            target: Template-Requester-Different-OU-Cross-Region-Ipam
+    subnets:
+      - name: Network-NonTemplate-Ipam-Public-A
+        availabilityZone: a
+        routeTable: Network-NonTemplate-Ipam-Public
+        ipamAllocation:
+          ipamPoolName: home-region-pool
+          netmaskLength: 28
+  - name: Network-NonTemplate-Static-West
+    region: us-west-2
+    account: Network
+    cidrs:
+      - 172.18.0.0/24
+    internetGateway: false
+    enableDnsHostnames: true
+    enableDnsSupport: true
+    instanceTenancy: default
+    routeTables:
+      - name: Network-NonTemplate-Static-Public-West
+        routes:
+          - name: PeeringRouteToNetworkStaticCentral
+            destination: 172.17.0.0/24
+            type: vpcPeering
+            target: NonTemplate-Static-Cross-Region-Same-Account
+          - name: PeeringRouteToSharedServicesStatic
+            destination: 172.19.0.0/24
+            type: vpcPeering
+            target: NonTemplate-Static-Cross-Region-Cross-Account
+    subnets:
+      - name: Network-NonTemplate-Static-Public-A
+        availabilityZone: a
+        routeTable: Network-NonTemplate-Static-Public-West
+        ipv4CidrBlock: 172.18.0.0/28
+  - name: Network-NonTemplate-Ipam-West
+    region: us-west-2
+    account: Network
+    ipamAllocations:
+      - ipamPoolName: west-region-pool
+        netmaskLength: 24
+    internetGateway: false
+    enableDnsHostnames: true
+    enableDnsSupport: true
+    instanceTenancy: default
+    routeTables:
+      - name: Network-NonTemplate-Ipam-Public-West
+        routes:
+          - name: PeeringRouteToNetworkIpamCentral
+            type: vpcPeering
+            target: NonTemplate-Ipam-Cross-Region-Same-Account
+          - name: PeeringRouteToSharedServicesIpam
+            type: vpcPeering
+            target: NonTemplate-Ipam-Cross-Region-Cross-Account
+    subnets:
+      - name: Network-NonTemplate-Ipam-Public-A
+        availabilityZone: a
+        routeTable: Network-NonTemplate-Ipam-Public-West
+        ipamAllocation:
+          ipamPoolName: west-region-pool
+          netmaskLength: 28
+  - name: SharedServices-NonTemplate-Static-Central
+    region: {{AcceleratorHomeRegion}}
+    account: SharedServices
+    cidrs:
+      - 172.19.0.0/24
+    internetGateway: false
+    enableDnsHostnames: true
+    enableDnsSupport: true
+    instanceTenancy: default
+    routeTables:
+      - name: Network-NonTemplate-Static-Public
+        routes:
+          - name: PeeringRouteToNetworkStaticCentral
+            destination: 172.17.0.0/24
+            type: vpcPeering
+            target: NonTemplate-Static-Same-Region-Cross-Account
+          - name: PeeringRouteToNetworkStaticWest
+            destination: 172.18.0.0/24
+            type: vpcPeering
+            target: NonTemplate-Static-Cross-Region-Cross-Account
+          - name: PeeringRouteToSharedServicesStatic2
+            destination: 172.20.0.0/24
+            type: vpcPeering
+            target: NonTemplate-Static-Same-Region-Same-Account
+    subnets:
+      - name: Network-NonTemplate-Static-Public-A
+        availabilityZone: a
+        routeTable: Network-NonTemplate-Static-Public
+        ipv4CidrBlock: 172.19.0.0/28
+  - name: SharedServices-NonTemplate-Ipam-Central
+    region: {{AcceleratorHomeRegion}}
+    account: SharedServices
+    ipamAllocations:
+      - ipamPoolName: home-region-pool
+        netmaskLength: 24
+    internetGateway: false
+    enableDnsHostnames: true
+    enableDnsSupport: true
+    instanceTenancy: default
+    routeTables:
+      - name: Network-NonTemplate-Ipam-Public
+        routes:
+          - name: PeeringRouteToNetworkIpamCentral
+            type: vpcPeering
+            target: NonTemplate-Ipam-Same-Region-Cross-Account
+          - name: PeeringRouteToNetworkIpamWest
+            type: vpcPeering
+            target: NonTemplate-Ipam-Cross-Region-Cross-Account
+          - name: PeeringRouteToSharedServicesIpam2
+            type: vpcPeering
+            target: NonTemplate-Ipam-Same-Region-Same-Account
+          - name: PeeringRouteToInfraTemplateFullIpam
+            type: vpcPeering
+            target: Template-Accepter-Same-OU-Same-Region-Ipam
+          - name: PeeringRouteToInfraTemplateHalfIpamWest
+            type: vpcPeering
+            target: Template-Accepter-Same-OU-Half-Cross-Region-Ipam
+          - name: PeeringRouteToSecurityTemplateFullIpam
+            type: vpcPeering
+            target: Template-Accepter-Different-OU-Same-Region-Ipam
+          - name: PeeringRouteToSecurityTemplateFullIpamWest
+            type: vpcPeering
+            target: Template-Accepter-Different-OU-Cross-Region-Ipam
+    subnets:
+      - name: Network-NonTemplate-Ipam-Public-A
+        availabilityZone: a
+        routeTable: Network-NonTemplate-Ipam-Public
+        ipamAllocation:
+          ipamPoolName: home-region-pool
+          netmaskLength: 28
+  - name: SharedServices-NonTemplate-Static-Central-2
+    region: {{AcceleratorHomeRegion}}
+    account: SharedServices
+    cidrs:
+      - 172.20.0.0/24
+    internetGateway: false
+    enableDnsHostnames: true
+    enableDnsSupport: true
+    instanceTenancy: default
+    routeTables:
+      - name: Network-NonTemplate-Static-Public-2
+        routes:
+          - name: PeeringRouteToSharedServicesStatic
+            destination: 172.19.0.0/24
+            type: vpcPeering
+            target: NonTemplate-Static-Same-Region-Same-Account
+    subnets:
+      - name: Network-NonTemplate-Static-2-Public-A
+        availabilityZone: a
+        routeTable: Network-NonTemplate-Static-Public-2
+        ipv4CidrBlock: 172.20.0.0/28
+  - name: SharedServices-NonTemplate-Ipam-Central-2
+    region: {{AcceleratorHomeRegion}}
+    account: SharedServices
+    ipamAllocations:
+      - ipamPoolName: home-region-pool
+        netmaskLength: 24
+    internetGateway: false
+    enableDnsHostnames: true
+    enableDnsSupport: true
+    instanceTenancy: default
+    routeTables:
+      - name: Network-NonTemplate-Ipam-Public-2
+        routes:
+          - name: PeeringRouteToSharedServicesIpam
+            type: vpcPeering
+            target: NonTemplate-Ipam-Same-Region-Same-Account
+    subnets:
+      - name: Network-NonTemplate-Ipam-Public-2-A
+        availabilityZone: a
+        routeTable: Network-NonTemplate-Ipam-Public-2
+        ipamAllocation:
+          ipamPoolName: home-region-pool
+          netmaskLength: 28
+  - name: SharedServices-NonTemplate-Static-West
+    region: us-west-2
+    account: SharedServices
+    cidrs:
+      - 172.26.0.0/24
+    internetGateway: false
+    enableDnsHostnames: true
+    enableDnsSupport: true
+    instanceTenancy: default
+    routeTables:
+      - name: Network-NonTemplate-Static-Public
+        routes:
+          - name: PeeringRouteToInfraTemplateFullIpamCentral
+            type: vpcPeering
+            target: Template-Accepter-Same-OU-Cross-Region-Ipam
+          - name: PeeringRouteToInfraTemplateHalfIpam
+            type: vpcPeering
+            target: Template-Accepter-Same-OU-Half-Same-Region-Ipam
+    subnets:
+      - name: Network-NonTemplate-Static-Public-A
+        availabilityZone: a
+        routeTable: Network-NonTemplate-Static-Public
+        ipv4CidrBlock: 172.26.0.0/28
+  - name: SharedServices-NonTemplate-Ipam-West
+    region: us-west-2
+    account: SharedServices
+    ipamAllocations:
+      - ipamPoolName: west-region-pool
+        netmaskLength: 24
+    internetGateway: false
+    enableDnsHostnames: true
+    enableDnsSupport: true
+    instanceTenancy: default
+    routeTables:
+      - name: Network-NonTemplate-Ipam
+        routes:
+          - name: PeeringRouteToInfraTemplateHalfIpam
+            type: vpcPeering
+            target: Template-Requester-Same-OU-Cross-Region-Ipam
+          - name: PeeringRouteToInfraTemplateHalfIpam2
+            type: vpcPeering
+            target: Template-Requester-Same-OU-Half-Cross-Region-Ipam
+    subnets:
+      - name: Network-NonTemplate-Ipam-A
+        availabilityZone: a
+        routeTable: Network-NonTemplate-Ipam
+        ipamAllocation:
+          ipamPoolName: west-region-pool
+          netmaskLength: 28
+
+vpcTemplates:
+  - name: Workload-Template
+    region: {{AcceleratorHomeRegion}}
+    deploymentTargets:
+      organizationalUnits:
+        - Infrastructure
+    ipamAllocations:
+      - ipamPoolName: home-region-pool
+        netmaskLength: 25
+    internetGateway: false
+    enableDnsHostnames: true
+    enableDnsSupport: true
+    instanceTenancy: default
+    routeTables:
+      - name: Workload-A-Rt
+        routes:
+          - name: PeeringRouteToNetworkEndpoints
+            type: vpcPeering
+            target: WorkloadTemplateToNetworkEndpoints
+      - name: Workload-B-Rt
+        routes:
+          - name: PeeringRouteToNetworkEndpoints
+            type: vpcPeering
+            target: WorkloadTemplateToNetworkEndpoints
+    subnets:
+      - name: Workload-A
+        availabilityZone: a
+        routeTable: Workload-A-Rt
+        ipamAllocation:
+          ipamPoolName: home-region-pool
+          netmaskLength: 28
+      - name: Workload-B
+        availabilityZone: b
+        routeTable: Workload-B-Rt
+        ipamAllocation:
+          ipamPoolName: home-region-pool
+          netmaskLength: 28
+  - name: Infra-Template-Full-Static-Central
+    region: {{AcceleratorHomeRegion}}
+    deploymentTargets:
+      organizationalUnits:
+        - Infrastructure
+      excludedRegions:
+        - us-west-2
+    cidrs:
+      - 172.25.0.0/24
+    internetGateway: false
+    enableDnsHostnames: true
+    enableDnsSupport: true
+    instanceTenancy: default
+    routeTables:
+      - name: Workload-A-Rt
+        routes:
+          - name: PeeringToNetworkStaticCentral
+            type: vpcPeering
+            target: Template-Requester-Same-OU-Same-Region-Static
+            destination: 172.17.0.0/24
+          - name: PeeringToNetworkStaticWest
+            type: vpcPeering
+            target: Template-Requester-Same-OU-Cross-Region-Static
+            destination: 172.18.0.0/24
+          - name: PeeringToSharedServicesStaticCentral
+            type: vpcPeering
+            target: Template-Accepter-Same-OU-Same-Region-Static
+            destination: 172.19.0.0/24
+          - name: PeeringToSharedServicesStaticWest
+            type: vpcPeering
+            target: Template-Accepter-Same-OU-Cross-Region-Static
+            destination: 172.20.0.0/24
+    subnets:
+      - name: Workload-A
+        availabilityZone: a
+        routeTable: Workload-A-Rt
+        ipv4CidrBlock: 172.25.0.0/28
+  - name: Infra-Template-Full-Ipam-Central
+    region: {{AcceleratorHomeRegion}}
+    deploymentTargets:
+      organizationalUnits:
+        - Infrastructure
+      excludedRegions:
+        - us-west-2
+    ipamAllocations:
+      - ipamPoolName: home-region-pool
+        netmaskLength: 25
+    internetGateway: false
+    enableDnsHostnames: true
+    enableDnsSupport: true
+    instanceTenancy: default
+    routeTables:
+      - name: Workload-A-Rt
+        routes:
+          - name: PeeringToNetworkIpamCentral
+            type: vpcPeering
+            target: Template-Requester-Same-OU-Same-Region-Ipam
+          - name: PeeringToNetworkIpamWest
+            type: vpcPeering
+            target: Template-Requester-Same-OU-Cross-Region-Ipam
+          - name: PeeringToSharedServicesIpamCentral
+            type: vpcPeering
+            target: Template-Accepter-Same-OU-Same-Region-Ipam
+          - name: PeeringToSharedServicesIpamWest
+            type: vpcPeering
+            target: Template-Accepter-Same-OU-Cross-Region-Ipam
+    subnets:
+      - name: Workload-A
+        availabilityZone: a
+        routeTable: Workload-A-Rt
+        ipamAllocation:
+          ipamPoolName: home-region-pool
+          netmaskLength: 28
+  - name: Infra-Template-Half-Static-Central
+    region: {{AcceleratorHomeRegion}}
+    deploymentTargets:
+      organizationalUnits:
+        - Infrastructure
+      excludedAccounts:
+        - SharedServices
+      excludedRegions:
+        - us-west-2
+    cidrs:
+      - 172.21.0.0/24
+    internetGateway: false
+    enableDnsHostnames: true
+    enableDnsSupport: true
+    instanceTenancy: default
+    routeTables:
+      - name: Workload-A-Rt
+        routes:
+          - name: PeeringToNetworkStaticCentral
+            type: vpcPeering
+            target: Template-Requester-Same-OU-Half-Same-Region-Static
+            destination: 172.17.0.0/24
+          - name: PeeringToNetworkStaticWest
+            type: vpcPeering
+            target: Template-Requester-Same-OU-Half-Cross-Region-Static
+            destination: 172.18.0.0/24
+    subnets:
+      - name: Workload-A
+        availabilityZone: a
+        routeTable: Workload-A-Rt
+        ipv4CidrBlock: 172.21.0.0/28
+  - name: Infra-Template-Half-Ipam-Central
+    region: {{AcceleratorHomeRegion}}
+    deploymentTargets:
+      organizationalUnits:
+        - Infrastructure
+      excludedAccounts:
+        - SharedServices
+      excludedRegions:
+        - us-west-2
+    ipamAllocations:
+      - ipamPoolName: home-region-pool
+        netmaskLength: 25
+    internetGateway: false
+    enableDnsHostnames: true
+    enableDnsSupport: true
+    instanceTenancy: default
+    routeTables:
+      - name: Workload-A-Rt
+        routes:
+          - name: PeeringToNetworkIpamCentral
+            type: vpcPeering
+            target: Template-Requester-Same-OU-Half-Same-Region-Ipam
+          - name: PeeringToNetworkIpamWest
+            type: vpcPeering
+            target: Template-Requester-Same-OU-Half-Cross-Region-Ipam
+    subnets:
+      - name: Workload-A
+        availabilityZone: a
+        routeTable: Workload-A-Rt
+        ipamAllocation:
+          ipamPoolName: home-region-pool
+          netmaskLength: 28
+
+  - name: Infra-Template-Half-Static-West
+    region: us-west-2
+    deploymentTargets:
+      organizationalUnits:
+        - Infrastructure
+      excludedAccounts:
+        - Network
+      excludedRegions:
+        - {{AcceleratorHomeRegion}}
+    cidrs:
+      - 172.22.0.0/24
+    internetGateway: false
+    enableDnsHostnames: true
+    enableDnsSupport: true
+    instanceTenancy: default
+    routeTables:
+      - name: Workload-A-Rt
+        routes:
+          - name: PeeringToSharedServicesStaticWest
+            type: vpcPeering
+            target: Template-Accepter-Same-OU-Half-Same-Region-Static
+            destination: 172.19.0.0/24
+          - name: PeeringToSharedServicesStaticCentral
+            type: vpcPeering
+            target: Template-Accepter-Same-OU-Half-Cross-Region-Static
+            destination: 172.18.0.0/24
+    subnets:
+      - name: Workload-A
+        availabilityZone: a
+        routeTable: Workload-A-Rt
+        ipv4CidrBlock: 172.22.0.0/28
+  - name: Infra-Template-Half-Ipam-West
+    region: us-west-2
+    deploymentTargets:
+      organizationalUnits:
+        - Infrastructure
+      excludedAccounts:
+        - Network
+      excludedRegions:
+        - {{AcceleratorHomeRegion}}
+    ipamAllocations:
+      - ipamPoolName: west-region-pool
+        netmaskLength: 25
+    internetGateway: false
+    enableDnsHostnames: true
+    enableDnsSupport: true
+    instanceTenancy: default
+    routeTables:
+      - name: Workload-A-Rt
+        routes:
+          - name: PeeringToSharedServicesIpamWest
+            type: vpcPeering
+            target: Template-Accepter-Same-OU-Half-Same-Region-Ipam
+            destination: 172.19.0.0/24
+          - name: PeeringToSharedServicesIpamCentral
+            type: vpcPeering
+            target: Template-Accepter-Same-OU-Half-Cross-Region-Ipam
+            destination: 172.18.0.0/24
+    subnets:
+      - name: Workload-A
+        availabilityZone: a
+        routeTable: Workload-A-Rt
+        ipamAllocation:
+          ipamPoolName: west-region-pool
+          netmaskLength: 28
+
+  - name: Security-Template-Full-Static-Central
+    region: {{AcceleratorHomeRegion}}
+    deploymentTargets:
+      organizationalUnits:
+        - Security
+      excludedRegions:
+        - us-west-2
+    cidrs:
+      - 172.23.0.0/24
+    internetGateway: false
+    enableDnsHostnames: true
+    enableDnsSupport: true
+    instanceTenancy: default
+    routeTables:
+      - name: Workload-A-Rt
+        routes:
+          - name: PeeringToNetworkNonTemplateStaticCentral
+            type: vpcPeering
+            target: Template-Requester-Different-OU-Same-Region-Static
+            destination: 172.17.0.0/24
+          - name: PeeringToSharedServicesNonTemplateStaticCentral
+            type: vpcPeering
+            target: Template-Accepter-Different-OU-Same-Region-Static
+            destination: 172.19.0.0/24
+    subnets:
+      - name: Workload-A
+        availabilityZone: a
+        routeTable: Workload-A-Rt
+        ipv4CidrBlock: 172.23.0.0/28
+  - name: Security-Template-Full-Ipam-Central
+    region: {{AcceleratorHomeRegion}}
+    deploymentTargets:
+      organizationalUnits:
+        - Security
+      excludedRegions:
+        - us-west-2
+    ipamAllocations:
+      - ipamPoolName: home-region-pool
+        netmaskLength: 25
+    internetGateway: false
+    enableDnsHostnames: true
+    enableDnsSupport: true
+    instanceTenancy: default
+    routeTables:
+      - name: Workload-A-Rt
+        routes:
+          - name: PeeringToNetworkNonTemplateIpamCentral
+            type: vpcPeering
+            target: Template-Requester-Different-OU-Same-Region-Ipam
+          - name: PeeringToSharedServicesNonTemplateIpamCentral
+            type: vpcPeering
+            target: Template-Accepter-Different-OU-Same-Region-Ipam
+    subnets:
+      - name: Workload-A
+        availabilityZone: a
+        routeTable: Workload-A-Rt
+        ipamAllocation:
+          ipamPoolName: home-region-pool
+          netmaskLength: 28
+
+  - name: Security-Template-Full-Static-West
+    region: us-west-2
+    deploymentTargets:
+      organizationalUnits:
+        - Security
+      excludedRegions:
+        - {{AcceleratorHomeRegion}}
+    cidrs:
+      - 172.24.0.0/24
+    internetGateway: false
+    enableDnsHostnames: true
+    enableDnsSupport: true
+    instanceTenancy: default
+    routeTables:
+      - name: Workload-A-Rt
+        routes:
+          - name: PeeringToNetworkNonTemplateStaticCentral
+            type: vpcPeering
+            target: Template-Requester-Different-OU-Cross-Region-Static
+            destination: 172.17.0.0/24
+          - name: PeeringToSharedServicesNonTemplateStaticCentral
+            type: vpcPeering
+            target: Template-Accepter-Different-OU-Cross-Region-Static
+            destination: 172.19.0.0/24
+    subnets:
+      - name: Workload-A
+        availabilityZone: a
+        routeTable: Workload-A-Rt
+        ipv4CidrBlock: 172.24.0.0/28
+  - name: Security-Template-Full-Ipam-West
+    region: us-west-2
+    deploymentTargets:
+      organizationalUnits:
+        - Security
+      excludedRegions:
+        - {{AcceleratorHomeRegion}}
+    ipamAllocations:
+      - ipamPoolName: west-region-pool
+        netmaskLength: 25
+    internetGateway: false
+    enableDnsHostnames: true
+    enableDnsSupport: true
+    instanceTenancy: default
+    routeTables:
+      - name: Workload-A-Rt
+        routes:
+          - name: PeeringToNetworkNonTemplateIpamCentral
+            type: vpcPeering
+            target: Template-Requester-Different-OU-Cross-Region-Ipam
+          - name: PeeringToSharedServicesNonTemplateIpamCentral
+            type: vpcPeering
+            target: Template-Accepter-Different-OU-Cross-Region-Ipam
+    subnets:
+      - name: Workload-A
+        availabilityZone: a
+        routeTable: Workload-A-Rt
+        ipamAllocation:
+          ipamPoolName: west-region-pool
+          netmaskLength: 28
+directConnectGateways:
+  - name: Network-DXGW-AuthVif
+    account: Network
+    asn: 65001
+    gatewayName: Network-DXGW
+    virtualInterfaces:
+      - name: Accelrator-VIF
+        connectionId: dxcon-test1234
+        customerAsn: 65003
+        interfaceName: Accelrator-VIF-2
+        ownerAccount: Network
+        region: eu-west-2
+        type: transit
+        authKey: dx/vif/secret
+        vlan: 124
+
+  - name: Network-DXGW
+    account: Network
+    asn: 65000
+    gatewayName: Network-DXGW
+    virtualInterfaces:
+      - name: Accelrator-VIF
+        connectionId: dxcon-test1234
+        customerAsn: 65002
+        interfaceName: Accelrator-VIF
+        ownerAccount: Network
+        region: us-east-1
+        type: transit
+        vlan: 575
+        enableSiteLink: true
+        jumboFrames: true
+    transitGatewayAssociations:
+      - name: Network-Main
+        account: Network
+        allowedPrefixes:
+          - 10.0.0.0/8
+          - 192.168.0.0/16
+        routeTableAssociations:
+          - Network-Main-Core
+        routeTablePropagations:
+          - Network-Main-Core
+
+vpcPeering:
+  - name: NetworkEndpointsToSecondary
+    vpcs:
+      - Network-Endpoints
+      - Network-Secondary
+  - name: CrossAccount
+    vpcs:
+      - Network-Endpoints
+      - SharedServices-Main
+  - name: WorkloadTemplateToNetworkEndpoints
+    vpcs:
+      - Workload-Template
+      - Network-Endpoints
+  - name: NonTemplate-Static-Same-Region-Same-Account
+    vpcs:
+      - SharedServices-NonTemplate-Static-Central
+      - SharedServices-NonTemplate-Static-Central-2
+  - name: NonTemplate-Static-Cross-Region-Same-Account
+    vpcs:
+      - Network-NonTemplate-Static-Central
+      - Network-NonTemplate-Static-West
+  - name: NonTemplate-Static-Same-Region-Cross-Account
+    vpcs:
+      - Network-NonTemplate-Static-Central
+      - SharedServices-NonTemplate-Static-Central
+  - name: NonTemplate-Static-Cross-Region-Cross-Account
+    vpcs:
+      - SharedServices-NonTemplate-Static-Central
+      - Network-NonTemplate-Static-West
+  - name: NonTemplate-Ipam-Same-Region-Same-Account
+    vpcs:
+      - SharedServices-NonTemplate-Ipam-Central
+      - SharedServices-NonTemplate-Ipam-Central-2
+  - name: NonTemplate-Ipam-Cross-Region-Same-Account
+    vpcs:
+      - Network-NonTemplate-Ipam-Central
+      - Network-NonTemplate-Ipam-West
+  - name: NonTemplate-Ipam-Same-Region-Cross-Account
+    vpcs:
+      - Network-NonTemplate-Ipam-Central
+      - SharedServices-NonTemplate-Ipam-Central
+  - name: NonTemplate-Ipam-Cross-Region-Cross-Account
+    vpcs:
+      - Network-NonTemplate-Ipam-West
+      - SharedServices-NonTemplate-Ipam-Central
+
+  - name: Template-Requester-Same-OU-Same-Region-Static
+    vpcs:
+      - Infra-Template-Full-Static-Central
+      - Network-NonTemplate-Static-Central
+  - name: Template-Requester-Same-OU-Same-Region-Ipam
+    vpcs:
+      - Infra-Template-Full-Ipam-Central
+      - Network-NonTemplate-Ipam-Central
+  - name: Template-Requester-Same-OU-Cross-Region-Static
+    vpcs:
+      - Infra-Template-Full-Static-Central
+      - Network-NonTemplate-Static-West
+  - name: Template-Requester-Same-OU-Cross-Region-Ipam
+    vpcs:
+      - Infra-Template-Full-Ipam-Central
+      - Network-NonTemplate-Ipam-West
+  - name: Template-Requester-Same-OU-Half-Same-Region-Static
+    vpcs:
+      - Infra-Template-Half-Static-Central
+      - Network-NonTemplate-Static-Central
+  - name: Template-Requester-Same-OU-Half-Same-Region-Ipam
+    vpcs:
+      - Infra-Template-Half-Ipam-Central
+      - Network-NonTemplate-Ipam-Central
+  - name: Template-Requester-Same-OU-Half-Cross-Region-Static
+    vpcs:
+      - Infra-Template-Half-Static-Central
+      - Network-NonTemplate-Static-West
+  - name: Template-Requester-Same-OU-Half-Cross-Region-Ipam
+    vpcs:
+      - Infra-Template-Half-Ipam-Central
+      - Network-NonTemplate-Ipam-West
+  - name: Template-Requester-Different-OU-Same-Region-Static
+    vpcs:
+      - Security-Template-Full-Static-Central
+      - Network-NonTemplate-Static-Central
+  - name: Template-Requester-Different-OU-Same-Region-Ipam
+    vpcs:
+      - Security-Template-Full-Ipam-Central
+      - Network-NonTemplate-Ipam-Central
+  - name: Template-Requester-Different-OU-Cross-Region-Static
+    vpcs:
+      - Security-Template-Full-Static-West
+      - Network-NonTemplate-Static-Central
+  - name: Template-Requester-Different-OU-Cross-Region-Ipam
+    vpcs:
+      - Security-Template-Full-Ipam-West
+      - Network-NonTemplate-Ipam-Central
+
+  - name: Template-Accepter-Same-OU-Same-Region-Static
+    vpcs:
+      - SharedServices-NonTemplate-Static-Central
+      - Infra-Template-Full-Static-Central
+  - name: Template-Accepter-Same-OU-Same-Region-Ipam
+    vpcs:
+      - SharedServices-NonTemplate-Ipam-Central
+      - Infra-Template-Full-Ipam-Central
+  - name: Template-Accepter-Same-OU-Cross-Region-Static
+    vpcs:
+      - SharedServices-NonTemplate-Static-West
+      - Infra-Template-Full-Static-Central
+  - name: Template-Accepter-Same-OU-Cross-Region-Ipam
+    vpcs:
+      - SharedServices-NonTemplate-Ipam-West
+      - Infra-Template-Full-Ipam-Central
+  - name: Template-Accepter-Same-OU-Half-Same-Region-Static
+    vpcs:
+      - SharedServices-NonTemplate-Static-West
+      - Infra-Template-Half-Static-West
+  - name: Template-Accepter-Same-OU-Half-Same-Region-Ipam
+    vpcs:
+      - SharedServices-NonTemplate-Ipam-West
+      - Infra-Template-Half-Ipam-West
+  - name: Template-Accepter-Same-OU-Half-Cross-Region-Static
+    vpcs:
+      - SharedServices-NonTemplate-Static-Central
+      - Infra-Template-Half-Static-West
+  - name: Template-Accepter-Same-OU-Half-Cross-Region-Ipam
+    vpcs:
+      - SharedServices-NonTemplate-Ipam-Central
+      - Infra-Template-Half-Ipam-West
+  - name: Template-Accepter-Different-OU-Same-Region-Static
+    vpcs:
+      - SharedServices-NonTemplate-Static-Central
+      - Security-Template-Full-Static-Central
+  - name: Template-Accepter-Different-OU-Same-Region-Ipam
+    vpcs:
+      - SharedServices-NonTemplate-Ipam-Central
+      - Security-Template-Full-Ipam-Central
+  - name: Template-Accepter-Different-OU-Cross-Region-Static
+    vpcs:
+      - SharedServices-NonTemplate-Static-Central
+      - Security-Template-Full-Static-West
+  - name: Template-Accepter-Different-OU-Cross-Region-Ipam
+    vpcs:
+      - SharedServices-NonTemplate-Ipam-Central
+      - Security-Template-Full-Ipam-West
+
+customerGateways:
+  - name: accelerator-cgw
+    account: Network
+    region: {{AcceleratorHomeRegion}}
+    ipAddress: 1.1.1.1
+    asn: 65500
+    vpnConnections:
+      - name: accelerator-vpn
+        transitGateway: Network-Main
+        staticRoutesOnly: false
+        routeTableAssociations:
+          - Network-Main-Core
+        routeTablePropagations:
+          - Network-Main-Core
+        tunnelSpecifications:
+          - tunnelInsideCidr: 169.254.200.0/30
+          - tunnelInsideCidr: 169.254.200.100/30
+
+      - name: VpcInspectionVpnConnection
+        vpc: Network-Inspection
+        staticRoutesOnly: false
+        tunnelSpecifications:
+          - tunnelInsideCidr: 169.254.100.0/30
+          - tunnelInsideCidr: 169.254.100.100/30
+
+      - name: enhanced-vpn
+        amazonIpv4NetworkCidr: 10.0.0.0/16
+        customerIpv4NetworkCidr: 192.168.0.0/16
+        enableVpnAcceleration: true
+        transitGateway: Network-Main
+        routeTableAssociations:
+          - Network-Main-Core
+        routeTablePropagations:
+          - Network-Main-Core
+        staticRoutesOnly: false
+        tunnelSpecifications:
+          - tunnelInsideCidr: 169.254.200.0/30
+            dpdTimeoutAction: restart
+            dpdTimeoutSeconds: 60
+            ikeVersions: [2]
+            logging:
+              enable: true
+            phase1:
+              dhGroups: [2, 14, 20, 21, 22]
+              encryptionAlgorithms: [AES256, AES256-GCM-16]
+              integrityAlgorithms: [SHA2-256, SHA2-512]
+              lifetimeSeconds: 3600
+            phase2:
+              dhGroups: [5, 20]
+              encryptionAlgorithms: [AES128]
+              integrityAlgorithms: [SHA2-256]
+              lifetimeSeconds: 900
+            rekeyFuzzPercentage: 80
+            rekeyMarginTimeSeconds: 350
+            replayWindowSize: 64
+            startupAction: start
+            tunnelLifecycleControl: false
+          - tunnelInsideCidr: 169.254.200.100/30
+            dpdTimeoutAction: clear
+            dpdTimeoutSeconds: 120
+            ikeVersions: [2]
+            logging:
+              enable: true
+            phase1:
+              dhGroups: [2, 14, 20, 21, 22]
+              encryptionAlgorithms: [AES256, AES256-GCM-16]
+              integrityAlgorithms: [SHA2-256, SHA2-512]
+              lifetimeSeconds: 3600
+            phase2:
+              dhGroups: [5, 20]
+              encryptionAlgorithms: [AES128]
+              integrityAlgorithms: [SHA2-256]
+              lifetimeSeconds: 900
+            rekeyFuzzPercentage: 65
+            rekeyMarginTimeSeconds: 120
+            replayWindowSize: 64
+  - name: cross-account-cgw
+    account: Network
+    region: {{AcceleratorHomeRegion}}
+    ipAddress: ${ACCEL_LOOKUP::EC2:ENI_0:cross-account-firewall}
+    asn: 65500
+    vpnConnections:
+      - name: cross-account-tgw-vpn
+        transitGateway: Network-Main
+        routeTableAssociations:
+          - Network-Main-Shared
+        routeTablePropagations:
+          - Network-Main-Core
+          - Network-Main-Shared
+      - name: cross-account-vgw-vpn
+        vpc: Network-Inspection
+  - name: same-account-firewall-cgw
+    account: Network
+    region: {{AcceleratorHomeRegion}}
+    ipAddress: ${ACCEL_LOOKUP::EC2:ENI_1:accelerator-firewall}
+    asn: 65500
+    vpnConnections:
+      - name: same-account-tgw-vpn
+        transitGateway: Network-Main
+        routeTableAssociations:
+          - Network-Main-Shared
+        routeTablePropagations:
+          - Network-Main-Core
+          - Network-Main-Shared
+      - name: same-account-vgw-vpn
+        vpc: Network-Inspection
+
+vpcFlowLogs:
+  trafficType: ALL
+  maxAggregationInterval: 60
+  destinations:
+    - s3
+    - cloud-watch-logs
+  destinationsConfig:
+    s3:
+      lifecycleRules:
+        - abortIncompleteMultipartUpload: 1
+          enabled: true
+          expiration: 365
+          noncurrentVersionExpiration: 30
+    cloudWatchLogs:
+      retentionInDays: 3653
+  defaultFormat: true
+  customFields:
+    - version
+    - account-id
+    - interface-id
+    - srcaddr
+    - dstaddr
+    - srcport
+    - dstport
+    - protocol
+    - packets
+    - bytes
+    - start
+    - end
+    - action
+    - log-status
+    - vpc-id
+    - subnet-id
+    - instance-id
+    - tcp-flags
+    - type
+    - pkt-srcaddr
+    - pkt-dstaddr
+    - region
+    - az-id
+    - pkt-src-aws-service
+    - pkt-dst-aws-service
+    - flow-direction
+    - traffic-path
+
+certificates:
+  - name: cert1
+    type: import
+    privKey: cert1/privKey.key
+    cert: cert1/cert.crt
+    deploymentTargets:
+      accounts:
+        - Management
+        - Audit
+        - SharedServices
+      organizationalUnits:
+        - Security
+  - name: cert2
+    type: import
+    privKey: cert1/privKey.key
+    cert: cert1/cert.crt
+    deploymentTargets:
+      accounts:
+        - Management
+        - Audit
+  - name: cert3
+    type: request
+    validation: DNS
+    domain: example.com
+    san:
+      - www.example.com
+      - www.example.net
+      - e.co
+    deploymentTargets:
+      organizationalUnits:
+        - Security
+
+firewallManagerService:
+  delegatedAdminAccount: Audit
+  notificationChannels:
+    - snsTopic: Security
+      region: us-east-1

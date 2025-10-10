@@ -446,7 +446,10 @@ export class PrepareStack extends AcceleratorStack {
       logRetentionInDays: options.props.globalConfig.cloudwatchLogRetentionInDays,
       driftDetectionParameter: options.driftDetectedParameter,
       driftDetectionMessageParameter: options.driftMessageParameter,
+      prefixes: this.props.prefixes,
       vpcsCidrs,
+      useV2StacksValue: this.props.globalConfig.useV2Stacks ?? false,
+      v2StacksParamName: this.getSsmPath(SsmResourceType.USE_V2_STACKS_FLAG, ['network-stacks']),
     });
 
     validation.node.addDependency(options.moveAccounts);
@@ -466,6 +469,7 @@ export class PrepareStack extends AcceleratorStack {
       accountRoleName: options.props.globalConfig.managementAccountAccessRole,
       kmsKey: options.cloudwatchKey,
       logRetentionInDays: options.props.globalConfig.cloudwatchLogRetentionInDays,
+      configTable: options.configTable,
     });
     options.organizationAccounts.node.addDependency(validation);
 

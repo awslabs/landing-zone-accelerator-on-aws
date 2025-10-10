@@ -1,0 +1,19 @@
+description: Associate AWS Iam Instance Profile to EC2 Instance
+schemaVersion: '0.3'
+assumeRole: '{{ AutomationAssumeRole }}'
+parameters:
+  IamInstanceProfile:
+    type: String
+  InstanceId:
+    type: String
+  AutomationAssumeRole:
+    type: String
+mainSteps:
+  - name: associateIamProfile
+    action: 'aws:executeAwsApi'
+    inputs:
+      Service: ec2
+      Api: associate_iam_instance_profile
+      IamInstanceProfile: 
+        Name: '{{ IamInstanceProfile }}'
+      InstanceId: '{{ InstanceId }}'

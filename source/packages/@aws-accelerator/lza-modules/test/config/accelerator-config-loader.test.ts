@@ -180,7 +180,7 @@ jest.mock('@aws-accelerator/config', () => {
     ),
     ReplacementsConfig: {
       load: jest.fn().mockReturnValue({
-        loadReplacementValues: jest.fn().mockReturnValue(undefined),
+        loadDynamicReplacements: jest.fn().mockReturnValue(undefined),
       } as unknown as ReplacementsConfig),
     },
   };
@@ -251,7 +251,7 @@ describe('AcceleratorConfigLoader', () => {
 
   describe('getAllConfig', () => {
     //
-    let mockReplacementsConfigInstance: { loadReplacementValues: jest.Mock };
+    let mockReplacementsConfigInstance: { loadDynamicReplacements: jest.Mock };
     let mockOrganizationConfigInstance: { loadOrganizationalUnitIds: jest.Mock };
     let mockGlobalConfigInstance: {
       homeRegion: string;
@@ -302,7 +302,7 @@ describe('AcceleratorConfigLoader', () => {
 
       // Mock ReplacementsConfig instance
       mockReplacementsConfigInstance = {
-        loadReplacementValues: jest.fn().mockReturnValue(undefined),
+        loadDynamicReplacements: jest.fn().mockReturnValue(undefined),
       };
       (ReplacementsConfig.load as jest.Mock).mockReturnValue(mockReplacementsConfigInstance);
 
@@ -609,12 +609,12 @@ function validateCommonExpectations(result: AllConfigType) {
   );
   expect(result.replacementsConfig).toEqual(
     expect.objectContaining({
-      loadReplacementValues: expect.any(Function),
+      loadDynamicReplacements: expect.any(Function),
     }),
   );
   expect(result.replacementsConfig).toEqual(
     expect.objectContaining({
-      loadReplacementValues: expect.any(Function),
+      loadDynamicReplacements: expect.any(Function),
     }),
   );
 }

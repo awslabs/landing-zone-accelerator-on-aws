@@ -59,6 +59,11 @@ exports[`NetworkPrepStack Construct(NetworkPrepStack):  Snapshot Test 1`] = `
       "Type": "AWS::Route53Resolver::FirewallRuleGroup",
     },
     "AcceleratorCgwCustomerGateway56465E97": {
+      "Metadata": {
+        "lzaLookup": {
+          "cgwName": "accelerator-cgw",
+        },
+      },
       "Properties": {
         "BgpAsn": 65500,
         "IpAddress": "1.1.1.1",
@@ -680,6 +685,32 @@ drop http $HOME_NET any -> $EXTERNAL_NET any (http.host; content:"example.com"; 
               },
               "Sid": "LogsCRUD",
             },
+            {
+              "Action": [
+                "kms:Encrypt",
+                "kms:Decrypt",
+                "kms:GenerateDataKey",
+              ],
+              "Condition": {
+                "StringEquals": {
+                  "kms:RequestAlias": "alias/accelerator/kms/cloudwatch/key",
+                },
+              },
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:",
+                    {
+                      "Ref": "AWS::Partition",
+                    },
+                    ":kms:*:555555555555:key:/*",
+                  ],
+                ],
+              },
+              "Sid": "KMS",
+            },
           ],
           "Version": "2012-10-17",
         },
@@ -964,8 +995,13 @@ drop http $HOME_NET any -> $EXTERNAL_NET any (http.host; content:"example.com"; 
           "S3Bucket": "cdk-hnb659fds-assets-555555555555-us-east-1",
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
+          },
+        },
         "Handler": "__entrypoint__.handler",
-        "MemorySize": 128,
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "CustomDirectConnectGatewayCustomResourceProviderRole60C5A7B2",
@@ -1047,8 +1083,13 @@ drop http $HOME_NET any -> $EXTERNAL_NET any (http.host; content:"example.com"; 
           "S3Bucket": "cdk-hnb659fds-assets-555555555555-us-east-1",
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
+          },
+        },
         "Handler": "__entrypoint__.handler",
-        "MemorySize": 128,
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "CustomDirectConnectVirtualInterfaceCustomResourceProviderRoleD8C9D582",
@@ -1170,8 +1211,13 @@ drop http $HOME_NET any -> $EXTERNAL_NET any (http.host; content:"example.com"; 
           "S3Bucket": "cdk-hnb659fds-assets-555555555555-us-east-1",
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
+          },
+        },
         "Handler": "__entrypoint__.handler",
-        "MemorySize": 128,
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "CustomResolverManagedDomainListCustomResourceProviderRole33DECC65",
@@ -1251,8 +1297,13 @@ drop http $HOME_NET any -> $EXTERNAL_NET any (http.host; content:"example.com"; 
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
         "Description": "Custom resource provider to put cross-account ssm parameter value",
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
+          },
+        },
         "Handler": "__entrypoint__.handler",
-        "MemorySize": 128,
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "CustomSsmPutParameterValueCustomResourceProviderRole9E1F101A",
@@ -1570,6 +1621,7 @@ drop http $HOME_NET any -> $EXTERNAL_NET any (http.host; content:"example.com"; 
         "Description": "AWS CDK resource provider framework - onEvent (AWSAccelerator-NetworkPrepStack-555555555555-us-east-1/EnhancedVpnVpnConnection/CustomResource/Resource)",
         "Environment": {
           "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
             "USER_ON_EVENT_FUNCTION_ARN": {
               "Fn::GetAtt": [
                 "VpnOnEventHandler05011160",
@@ -1579,6 +1631,7 @@ drop http $HOME_NET any -> $EXTERNAL_NET any (http.host; content:"example.com"; 
           },
         },
         "Handler": "framework.onEvent",
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "EnhancedVpnVpnConnectionCustomResourceframeworkonEventServiceRole8400FDCC",
@@ -2386,7 +2439,7 @@ drop http $HOME_NET any -> $EXTERNAL_NET any (http.host; content:"example.com"; 
       "Properties": {
         "Name": "/accelerator/AWSAccelerator-NetworkPrepStack-555555555555-us-east-1/version",
         "Type": "String",
-        "Value": "1.12.0",
+        "Value": "1.13.0",
       },
       "Type": "AWS::SSM::Parameter",
     },
@@ -2946,6 +2999,11 @@ drop http $HOME_NET any -> $EXTERNAL_NET any (http.host; content:"example.com"; 
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
         "Description": "Custom resource onEvent handler for site-to-site VPN",
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
+          },
+        },
         "Handler": "index.handler",
         "KmsKeyArn": {
           "Ref": "SsmParameterValueacceleratorkmslambdakeyarnC96584B6F00A464EAD1953AFF4B05118Parameter",

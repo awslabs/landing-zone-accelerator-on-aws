@@ -14,8 +14,9 @@ import { describe, beforeEach, expect, test } from '@jest/globals';
 
 const originalEnv = process.env;
 
-describe('Logger', () => {
+describe('LoggerUtil', () => {
   let mockCreateLogger: jest.Mock;
+  let mockAdd: jest.Mock;
   let mockFormat: {
     combine: jest.Mock;
     colorize: jest.Mock;
@@ -32,6 +33,8 @@ describe('Logger', () => {
       child: jest.fn(),
     }));
 
+    mockAdd = jest.fn();
+
     mockFormat = {
       combine: jest.fn(() => 'mockedCombinedFormat'),
       colorize: jest.fn(() => 'mockedColorize'),
@@ -46,7 +49,7 @@ describe('Logger', () => {
       transports: {
         Console: jest.fn(),
       },
-      add: jest.fn(),
+      add: mockAdd,
     }));
   });
 
@@ -54,77 +57,79 @@ describe('Logger', () => {
     process.env = originalEnv;
   });
 
-  test('should create a logger with default settings', () => {
-    // Execute
-    require('../../common/logger');
+  describe('Logger', () => {
+    test('should create a logger with default settings', () => {
+      // Execute
+      require('../../common/logger');
 
-    // Verify
-    expect(mockCreateLogger).toHaveBeenCalledWith(
-      expect.objectContaining({
-        defaultMeta: { mainLabel: 'accelerator' },
-        level: 'info',
-        format: 'mockedCombinedFormat',
-        transports: [expect.any(Object)],
-      }),
-    );
+      // Verify
+      expect(mockCreateLogger).toHaveBeenCalledWith(
+        expect.objectContaining({
+          defaultMeta: { mainLabel: 'accelerator' },
+          level: 'info',
+          format: 'mockedCombinedFormat',
+          transports: [expect.any(Object)],
+        }),
+      );
 
-    // Verify format configuration
-    expect(mockFormat.combine).toHaveBeenCalledWith(
-      'mockedColorize',
-      'mockedTimestamp',
-      expect.any(Function),
-      'mockedAlign',
-    );
+      // Verify format configuration
+      expect(mockFormat.combine).toHaveBeenCalledWith(
+        'mockedColorize',
+        'mockedTimestamp',
+        expect.any(Function),
+        'mockedAlign',
+      );
 
-    expect(mockFormat.timestamp).toHaveBeenCalledWith({
-      format: 'YYYY-MM-DD HH:mm:ss.SSS',
+      expect(mockFormat.timestamp).toHaveBeenCalledWith({
+        format: 'YYYY-MM-DD HH:mm:ss.SSS',
+      });
     });
-  });
 
-  test('should use LOG_LEVEL environment variable if set', () => {
-    // Setup
-    process.env['LOG_LEVEL'] = 'debug';
+    test('should use LOG_LEVEL environment variable if set', () => {
+      // Setup
+      process.env['LOG_LEVEL'] = 'debug';
 
-    // Execute
-    require('../../common/logger');
+      // Execute
+      require('../../common/logger');
 
-    // Verify
-    expect(mockCreateLogger).toHaveBeenCalledWith(
-      expect.objectContaining({
-        level: 'debug',
-      }),
-    );
+      // Verify
+      expect(mockCreateLogger).toHaveBeenCalledWith(
+        expect.objectContaining({
+          level: 'debug',
+        }),
+      );
 
-    // Clean up
-    delete process.env['LOG_LEVEL'];
-  });
+      // Clean up
+      delete process.env['LOG_LEVEL'];
+    });
 
-  test('should create a logger with the correct format', () => {
-    // Execute
-    require('../../common/logger');
+    test('should create a logger with the correct format', () => {
+      // Execute
+      require('../../common/logger');
 
-    // Get the printf formatter function
-    const printfFormatter = mockFormat.printf.mock.calls[0][0];
+      // Get the printf formatter function
+      const printfFormatter = mockFormat.printf.mock.calls[0][0];
 
-    // Test the formatter with different inputs
-    expect(
-      printfFormatter({
-        timestamp: '2023-05-20 10:00:00',
-        level: 'info',
-        message: 'Test message',
-        mainLabel: 'Main',
-      }),
-    ).toBe('2023-05-20 10:00:00 | info | Main | Test message');
+      // Test the formatter with different inputs
+      expect(
+        printfFormatter({
+          timestamp: '2023-05-20 10:00:00',
+          level: 'info',
+          message: 'Test message',
+          mainLabel: 'Main',
+        }),
+      ).toBe('2023-05-20 10:00:00 | info | Main | Test message');
 
-    expect(
-      printfFormatter({
-        timestamp: '2023-05-20 10:00:00',
-        level: 'error',
-        message: 'Error message',
-        mainLabel: 'Main',
-        childLabel: 'Child',
-      }),
-    ).toBe('2023-05-20 10:00:00 | error | Child | Error message');
+      expect(
+        printfFormatter({
+          timestamp: '2023-05-20 10:00:00',
+          level: 'error',
+          message: 'Error message',
+          mainLabel: 'Main',
+          childLabel: 'Child',
+        }),
+      ).toBe('2023-05-20 10:00:00 | error | Child | Error message');
+    });
   });
 
   describe('createLogger', () => {
@@ -141,6 +146,71 @@ describe('Logger', () => {
       expect(mockChild).toHaveBeenCalledWith({
         childLabel: 'test | child',
       });
+    });
+  });
+
+  describe('StatusLogger', () => {
+    test('should create and add status logger', () => {
+      // Execute
+      require('../../common/logger');
+
+      // Verify winston.add is called twice (Logger and StatusLogger)
+      expect(mockAdd).toHaveBeenCalledTimes(2);
+    });
+
+    test('should create status logger without defaultMeta', () => {
+      // Execute
+      require('../../common/logger');
+
+      // Verify StatusLogger (second call) doesn't have defaultMeta
+      expect(mockCreateLogger).toHaveBeenNthCalledWith(
+        2,
+        expect.objectContaining({
+          level: 'info',
+          format: 'mockedCombinedFormat',
+        }),
+      );
+    });
+
+    test('should create status logger with correct format', () => {
+      // Execute
+      require('../../common/logger');
+
+      // Get the second printf formatter function (StatusLogger)
+      const statusPrintfFormatter = mockFormat.printf.mock.calls[1][0];
+
+      // Test the formatter - should show hardcoded "status" level and only childLabel
+      expect(
+        statusPrintfFormatter({
+          timestamp: '2023-05-20 10:00:00',
+          message: 'Status message',
+          childLabel: 'module-name',
+        }),
+      ).toBe('2023-05-20 10:00:00 | status | module-name | Status message');
+    });
+  });
+
+  describe('createStatusLogger', () => {
+    test('should create a child status logger with the correct label', () => {
+      // Setup
+      const mockChild = jest.fn();
+      mockCreateLogger.mockReturnValue({ child: mockChild });
+      const { createStatusLogger } = require('../../common/logger');
+
+      // Execute
+      createStatusLogger(['status', 'test']);
+
+      // Verify
+      expect(mockChild).toHaveBeenCalledWith({
+        childLabel: 'status | test',
+      });
+    });
+
+    test('should throw error when called with empty or null array', () => {
+      const { createStatusLogger } = require('../../common/logger');
+
+      expect(() => createStatusLogger([])).toThrow('createStatusLogger requires at least one log info item');
+      expect(() => createStatusLogger(null)).toThrow('createStatusLogger requires at least one log info item');
     });
   });
 });

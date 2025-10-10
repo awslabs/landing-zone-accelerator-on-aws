@@ -11,15 +11,18 @@
  *  and limitations under the License.
  */
 
+import { AccountsConfig } from '../lib/accounts-config';
 import { OrganizationConfig } from '../lib/organization-config';
+import { ReplacementsConfig } from '../lib/replacements-config';
 import { describe, expect } from '@jest/globals';
 import * as path from 'path';
 
 describe('OrganizationConfig', () => {
   describe('Test config', () => {
-    const organizationConfigFromFile = OrganizationConfig.load(
-      path.resolve('../accelerator/test/configs/snapshot-only'),
-    );
+    const configDir = path.resolve('../accelerator/test/configs/snapshot-only');
+    const accountsConfig = AccountsConfig.load(configDir);
+    const replacementsConfig = ReplacementsConfig.load(configDir, accountsConfig);
+    const organizationConfigFromFile = OrganizationConfig.load(configDir, replacementsConfig);
     const organizationConfig = new OrganizationConfig();
     it('has loaded successfully', () => {
       expect(organizationConfigFromFile.enable).toBe(true);

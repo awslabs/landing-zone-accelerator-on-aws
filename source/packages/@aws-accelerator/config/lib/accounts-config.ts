@@ -22,12 +22,17 @@ import { throttlingBackOff } from '@aws-accelerator/utils/lib/throttle';
 import * as i from './models/accounts-config';
 import { DeploymentTargets, parseAccountsConfig } from './common';
 import { getGlobalRegion } from '../../utils/lib/common-functions';
+import { OrganizationalUnitConfig } from './organization-config';
+import { getSSMParameterValue } from '../../utils/lib/get-value-from-ssm';
+import { Account } from '@aws-sdk/client-organizations';
+import { queryConfigTable } from '@aws-accelerator/utils/lib/query-config-table';
 
 const logger = createLogger(['accounts-config']);
 
 export class AccountIdConfig implements i.IAccountIdConfig {
   readonly email: string = '';
   readonly accountId: string = '';
+  readonly orgsApiResponse?: Account = undefined;
   readonly status?: string = '';
 }
 
@@ -45,6 +50,7 @@ export class GovCloudAccountConfig implements i.IGovCloudAccountConfig {
   readonly description: string = '';
   readonly email: string = '';
   readonly organizationalUnit: string = '';
+  readonly orgsApiResponse: Account | undefined = undefined;
   readonly warm: boolean | undefined = undefined;
   readonly enableGovCloud: boolean | undefined = undefined;
   readonly accountAlias?: string | undefined = undefined;
@@ -191,6 +197,7 @@ export class AccountsConfig implements i.IAccountsConfig {
      * Management account credential when deployed from external account, otherwise this should remain undefined
      */
     managementAccountCredentials?: AWS.Credentials,
+    loadFromDynamoDbTable?: boolean,
   ): Promise<void> {
     if (this.accountIds === undefined) {
       this.accountIds = [];
@@ -201,10 +208,62 @@ export class AccountsConfig implements i.IAccountsConfig {
         const stsCallerIdentity = await throttlingBackOff(() => stsClient.getCallerIdentity({}).promise());
         const currentAccountId = stsCallerIdentity.Account!;
         this.mandatoryAccounts.forEach(item => {
-          this.accountIds?.push({ email: item.email.toLocaleLowerCase(), accountId: currentAccountId });
+          this.accountIds?.push({
+            email: item.email.toLocaleLowerCase(),
+            accountId: currentAccountId,
+          });
         });
-        // orgs are enabled
-      } else if (isOrgsEnabled) {
+        // orgs is enabled and loadFromDynamoDBTable is true
+      } else if (isOrgsEnabled && loadFromDynamoDbTable) {
+        logger.debug(`Orgs is enabled, solution will query from dynamoDB table instead of AWS Organizations API`);
+        if (!process.env['ACCELERATOR_SSM_PARAM_NAME_PREFIX']) {
+          logger.warn(
+            'ACCELERATOR_SSM_PARAM_NAME_PREFIX environment variable is not defined, continuing with default value of /accelerator',
+          );
+        }
+        const ssmConfigTableNameParameter = `${
+          process.env['ACCELERATOR_SSM_PARAM_NAME_PREFIX'] ?? '/accelerator'
+        }/prepare-stack/configTable/name`;
+
+        const configTableName = await getSSMParameterValue(ssmConfigTableNameParameter, managementAccountCredentials);
+        const [mandatoryAccountItems, workloadAccountItems] = await Promise.all([
+          queryConfigTable(
+            configTableName,
+            'mandatoryAccount',
+            'orgInfo',
+            managementAccountCredentials,
+            process.env['CONFIG_COMMIT_ID'],
+          ),
+          queryConfigTable(
+            configTableName,
+            'workloadAccount',
+            'orgInfo',
+            managementAccountCredentials,
+            process.env['CONFIG_COMMIT_ID'],
+          ),
+        ]);
+
+        const configAccountEmails = [
+          ...accountsConfig.mandatoryAccounts.map(account => account.email.toLowerCase()),
+          ...accountsConfig.workloadAccounts.map(account => account.email.toLowerCase()),
+        ];
+
+        const allAccounts = [
+          ...mandatoryAccountItems.map(item => JSON.parse(item['orgInfo'] as string) as AccountIdConfig),
+          ...workloadAccountItems.map(item => JSON.parse(item['orgInfo'] as string) as AccountIdConfig),
+        ];
+
+        const filteredAccounts = allAccounts.filter(account =>
+          configAccountEmails.includes(account.email.toLowerCase()),
+        );
+
+        logger.debug(`Successfully retrieved accounts data from DynamoDB`);
+
+        this.accountIds.push(...filteredAccounts);
+
+        // orgs are enabled but load from dynamoDB is false
+      } else if (isOrgsEnabled && !loadFromDynamoDbTable) {
+        logger.debug(`Orgs is enabled, solution will query from AWS Organizations API`);
         const organizationsClient = new AWS.Organizations({
           region: getGlobalRegion(partition),
           credentials: managementAccountCredentials,
@@ -219,7 +278,12 @@ export class AccountsConfig implements i.IAccountsConfig {
 
           page.Accounts?.forEach(item => {
             if (item.Email && item.Id) {
-              this.accountIds?.push({ email: item.Email.toLocaleLowerCase(), accountId: item.Id, status: item.Status });
+              this.accountIds?.push({
+                email: item.Email.toLocaleLowerCase(),
+                accountId: item.Id,
+                status: item.Status,
+                orgsApiResponse: item as Account,
+              });
             }
           });
           nextToken = page.NextToken;
@@ -229,7 +293,10 @@ export class AccountsConfig implements i.IAccountsConfig {
         //There should be 3 or more accounts in accounts config.
       } else if (!isOrgsEnabled && (accountsConfig.accountIds ?? []).length > 2) {
         for (const account of accountsConfig.accountIds ?? []) {
-          this.accountIds?.push({ email: account.email.toLowerCase(), accountId: account.accountId });
+          this.accountIds?.push({
+            email: account.email.toLowerCase(),
+            accountId: account.accountId,
+          });
         }
         // if orgs is disabled, the accountId is read from accounts config.
         //But less than 3 account Ids are provided then throw an error
@@ -245,10 +312,10 @@ export class AccountsConfig implements i.IAccountsConfig {
     if (accountId) {
       return accountId;
     }
-    logger.error(
-      `Account ID not found for ${name}. Validate that the emails in the parameter ManagementAccountEmail of the AWSAccelerator-InstallerStack and account configs (accounts-config.yaml) match the correct account emails shown in AWS Organizations.`,
+
+    throw new Error(
+      `Account Name not found for ${accountId}. Validate that the emails in the parameter ManagementAccountEmail of the AWSAccelerator-InstallerStack and account configs (accounts-config.yaml) match the correct account emails shown in AWS Organizations. Configuration validation failed.`,
     );
-    throw new Error('configuration validation failed.');
   }
 
   public getAccountNameById(accountId: string): string | undefined {
@@ -259,10 +326,10 @@ export class AccountsConfig implements i.IAccountsConfig {
     if (accountName) {
       return accountName;
     }
-    logger.error(
-      `Account Name not found for ${accountId}. Validate that the emails in the parameter ManagementAccountEmail of the AWSAccelerator-InstallerStack and account configs (accounts-config.yaml) match the correct account emails shown in AWS Organizations.`,
+
+    throw new Error(
+      `Account Name not found for ${accountId}. Validate that the emails in the parameter ManagementAccountEmail of the AWSAccelerator-InstallerStack and account configs (accounts-config.yaml) match the correct account emails shown in AWS Organizations. Configuration validation failed.`,
     );
-    throw new Error('configuration validation failed.');
   }
 
   public getAccountIds(): string[] {
@@ -284,6 +351,18 @@ export class AccountsConfig implements i.IAccountsConfig {
     return lzaAccounts.map(account => account.accountId);
   }
 
+  private getActiveAccounts(suspendedOus: OrganizationalUnitConfig[]): (AccountConfig | GovCloudAccountConfig)[] {
+    const accounts = this.getAccounts();
+    const suspendedOuNames = suspendedOus.flatMap(item => item.name);
+    return accounts.filter(account => !suspendedOuNames.includes(account.organizationalUnit));
+  }
+
+  public getActiveAccountIds(suspendedOus: OrganizationalUnitConfig[]) {
+    const activeAccounts = this.getActiveAccounts(suspendedOus);
+    const activeAccountIds = activeAccounts.map(account => this.getAccountId(account.name));
+    const accountIds = this.getAccountIds();
+    return accountIds.filter(accountId => activeAccountIds.includes(accountId));
+  }
   public getAccount(name: string): AccountConfig {
     const value = [...this.mandatoryAccounts, ...this.workloadAccounts].find(item => item.name == name);
     if (value) {
@@ -304,7 +383,7 @@ export class AccountsConfig implements i.IAccountsConfig {
     return false;
   }
 
-  public getAccounts(enableSingleAccountMode: boolean): (AccountConfig | GovCloudAccountConfig)[] {
+  public getAccounts(enableSingleAccountMode?: boolean): (AccountConfig | GovCloudAccountConfig)[] {
     if (enableSingleAccountMode) {
       return [this.getManagementAccount()];
     } else {

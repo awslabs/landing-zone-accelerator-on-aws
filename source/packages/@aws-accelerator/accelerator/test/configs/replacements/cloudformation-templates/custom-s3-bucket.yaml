@@ -1,0 +1,56 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Parameters:
+  pStringParameter:
+    Description: A parameter passed explicitly as a string
+    Type: String
+    Default: ""
+  pDynamicParameter:
+    Description: A parameter passed as a dynamic lookup from SSM
+    Type: String
+    Default: ""
+Conditions:
+  hasStringParameter: !Not [ !Equals [ !Ref pStringParameter, "" ]]
+  hasDynamicParameter: !Not [ !Equals [ !Ref pDynamicParameter, "" ]]
+  hasParameters: !And [!Condition hasStringParameter, !Condition hasDynamicParameter]
+Resources:
+  LZACustomizationsBucket:
+    Type: 'AWS::S3::Bucket'
+    Properties:
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - BucketKeyEnabled: false
+            ServerSideEncryptionByDefault:
+              SSEAlgorithm: 'aws:kms'
+              KMSMasterKeyID: 'aws/s3'
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      VersioningConfiguration:
+        Status: Enabled
+
+  LZACustomizationsSampleBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref LZACustomizationsBucket
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Principal:
+              AWS: '*'
+            Action:
+              - 's3:*'
+            Resource:
+              - !Sub 'arn:aws:s3:::${LZACustomizationsBucket}/*'
+              - !Sub 'arn:aws:s3:::${LZACustomizationsBucket}'
+            Effect: 'Deny'
+            Condition:
+              Bool:
+                aws:SecureTransport: 'false'
+
+  MySNSTopic:
+    Condition: hasParameters
+    Type: AWS::SNS::Topic
+    Properties:
+      TopicName: !Sub ${pDynamicParameter}-${pStringParameter}-topic

@@ -1,0 +1,14 @@
+mandatoryAccounts:
+  - name: Management
+    description: The management (primary) account
+    email: alias+no-org-root@example.com
+    organizationalUnit: Root
+  - name: LogArchive
+    description: The log archive account
+    email: alias+no-org-log@example.com
+    organizationalUnit: Root
+  - name: Audit
+    description: The security audit account (also referred to as the audit account)
+    email: alias+no-org-audit@example.com
+    organizationalUnit: Root
+workloadAccounts: []

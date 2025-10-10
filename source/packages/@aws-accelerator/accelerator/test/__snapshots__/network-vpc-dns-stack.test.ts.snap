@@ -7,6 +7,14 @@ exports[`NetworkVpcDnsStack Construct(NetworkVpcDnsStack):  Snapshot Test 1`] = 
       "Default": "/accelerator/kms/lambda/key-arn",
       "Type": "AWS::SSM::Parameter::Value<String>",
     },
+    "SsmParameterValueacceleratornetworkroute53ResolverendpointsacceleratorinbounddohidC96584B6F00A464EAD1953AFF4B05118Parameter": {
+      "Default": "/accelerator/network/route53Resolver/endpoints/accelerator-inbound-doh/id",
+      "Type": "AWS::SSM::Parameter::Value<String>",
+    },
+    "SsmParameterValueacceleratornetworkroute53ResolverendpointsacceleratorinboundfipsidC96584B6F00A464EAD1953AFF4B05118Parameter": {
+      "Default": "/accelerator/network/route53Resolver/endpoints/accelerator-inbound-fips/id",
+      "Type": "AWS::SSM::Parameter::Value<String>",
+    },
     "SsmParameterValueacceleratornetworkroute53ResolverendpointsacceleratorinboundidC96584B6F00A464EAD1953AFF4B05118Parameter": {
       "Default": "/accelerator/network/route53Resolver/endpoints/accelerator-inbound/id",
       "Type": "AWS::SSM::Parameter::Value<String>",
@@ -353,8 +361,13 @@ exports[`NetworkVpcDnsStack Construct(NetworkVpcDnsStack):  Snapshot Test 1`] = 
           "S3Bucket": "cdk-hnb659fds-assets-555555555555-us-east-1",
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
+          },
+        },
         "Handler": "__entrypoint__.handler",
-        "MemorySize": 128,
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "CustomResolverEndpointAddressesCustomResourceProviderRoleA94B4F27",
@@ -1263,7 +1276,7 @@ exports[`NetworkVpcDnsStack Construct(NetworkVpcDnsStack):  Snapshot Test 1`] = 
       "Properties": {
         "Name": "/accelerator/AWSAccelerator-NetworkVpcDnsStack-555555555555-us-east-1/version",
         "Type": "String",
-        "Value": "1.12.0",
+        "Value": "1.13.0",
       },
       "Type": "AWS::SSM::Parameter",
     },

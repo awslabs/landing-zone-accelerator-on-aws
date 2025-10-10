@@ -13,10 +13,23 @@
 
 import { throttlingBackOff } from '@aws-accelerator/utils/lib/throttle';
 import { CloudFormationCustomResourceEvent } from '@aws-accelerator/utils/lib/common-types';
-import { getGlobalRegion } from '@aws-accelerator/utils/lib/common-functions';
-import * as AWS from 'aws-sdk';
-AWS.config.logger = console;
-
+import { getGlobalRegion, setRetryStrategy } from '@aws-accelerator/utils/lib/common-functions';
+import {
+  DeregisterDelegatedAdministratorCommand,
+  EnableAWSServiceAccessCommand,
+  ListAWSServiceAccessForOrganizationCommand,
+  ListDelegatedAdministratorsCommand,
+  ListDelegatedAdministratorsResponse,
+  OrganizationsClient,
+  RegisterDelegatedAdministratorCommand,
+} from '@aws-sdk/client-organizations';
+import {
+  AssociateAdminAccountCommand,
+  DisassociateAdminAccountCommand,
+  FMSClient,
+  GetAdminAccountCommand,
+} from '@aws-sdk/client-fms';
+import { AssumeRoleCommand, STSClient } from '@aws-sdk/client-sts';
 /**
  * enable-fms - lambda handler
  *
@@ -27,18 +40,28 @@ export async function handler(event: CloudFormationCustomResourceEvent) {
   console.log(JSON.stringify(event, null, 4));
   const partition = event.ResourceProperties['partition'];
   const globalRegion = getGlobalRegion(partition);
-  const fmsClient = new AWS.FMS({ region: globalRegion });
-  const fmsServicePrincipal = 'fms.amazonaws.com';
-  const currentFMSAdminAccount = await throttlingBackOff(() => fmsClient.getAdminAccount({}).promise()).catch(err => {
-    console.log(err);
-    return undefined;
+  const solutionId = process.env['SOLUTION_ID'];
+  const fmsClient = new FMSClient({
+    region: globalRegion,
+    customUserAgent: solutionId,
+    retryStrategy: setRetryStrategy(),
   });
+  const fmsServicePrincipal = 'fms.amazonaws.com';
+  const currentFMSAdminAccount = await throttlingBackOff(() => fmsClient.send(new GetAdminAccountCommand({}))).catch(
+    err => {
+      console.log(err);
+      return undefined;
+    },
+  );
   const newFMSAdminAccount = event.ResourceProperties['adminAccountId'];
   const assumeRoleName = event.ResourceProperties['assumeRoleName'];
   const region = event.ResourceProperties['region'];
-  const solutionId = process.env['SOLUTION_ID'];
 
-  const organizationsClient = new AWS.Organizations({ customUserAgent: solutionId, region: globalRegion });
+  const organizationsClient = new OrganizationsClient({
+    region: globalRegion,
+    customUserAgent: solutionId,
+    retryStrategy: setRetryStrategy(),
+  });
 
   console.log(`Current FMS Account: ${currentFMSAdminAccount?.AdminAccount || 'No account found'}`);
   console.log(`New FMS Account: ${newFMSAdminAccount}`);
@@ -63,12 +86,12 @@ export async function handler(event: CloudFormationCustomResourceEvent) {
       if (!fmsEnabled) {
         console.log('Enabling FMS service in Organizations');
         await throttlingBackOff(() =>
-          organizationsClient.enableAWSServiceAccess({ ServicePrincipal: fmsServicePrincipal }).promise(),
+          organizationsClient.send(new EnableAWSServiceAccessCommand({ ServicePrincipal: fmsServicePrincipal })),
         );
       }
       console.log('Getting delegated Administrator for Organizations');
       const delegatedAdmins = await throttlingBackOff(() =>
-        organizationsClient.listDelegatedAdministrators({ ServicePrincipal: fmsServicePrincipal }).promise(),
+        organizationsClient.send(new ListDelegatedAdministratorsCommand({ ServicePrincipal: fmsServicePrincipal })),
       );
 
       let delegatedAdminAccounts: string[] = [];
@@ -86,30 +109,49 @@ export async function handler(event: CloudFormationCustomResourceEvent) {
       console.log('setting delegated administrator for Organizations');
       if (!delegatedAdminAccounts.includes(newFMSAdminAccount)) {
         await throttlingBackOff(() =>
-          organizationsClient
-            .registerDelegatedAdministrator({ AccountId: newFMSAdminAccount, ServicePrincipal: fmsServicePrincipal })
-            .promise(),
+          organizationsClient.send(
+            new RegisterDelegatedAdministratorCommand({
+              AccountId: newFMSAdminAccount,
+              ServicePrincipal: fmsServicePrincipal,
+            }),
+          ),
         );
       }
       console.log('Enabling FMS');
-      await throttlingBackOff(() => fmsClient.associateAdminAccount({ AdminAccount: newFMSAdminAccount }).promise());
+      await throttlingBackOff(() =>
+        fmsClient.send(new AssociateAdminAccountCommand({ AdminAccount: newFMSAdminAccount })),
+      );
       return { Status: 'Success', StatusCode: 200 };
 
     case 'Delete':
       const adminAccountId = currentFMSAdminAccount?.AdminAccount;
-      const stsClient = new AWS.STS({ customUserAgent: solutionId, region: region });
+      const stsClient = new STSClient({
+        region,
+        customUserAgent: solutionId,
+        retryStrategy: setRetryStrategy(),
+      });
       if (adminAccountId) {
         const assumeRoleCredentials = await assumeRole(stsClient, assumeRoleName, adminAccountId, partition);
         console.log('Deregistering Admin Account');
-        const adminFmsClient = new AWS.FMS({ credentials: assumeRoleCredentials, region: globalRegion });
-        await throttlingBackOff(() => adminFmsClient.disassociateAdminAccount({}).promise());
+        const adminFmsClient = new FMSClient({
+          region: globalRegion,
+          customUserAgent: solutionId,
+          retryStrategy: setRetryStrategy(),
+          credentials: {
+            accessKeyId: assumeRoleCredentials.AccessKeyId!,
+            secretAccessKey: assumeRoleCredentials.SecretAccessKey!,
+            sessionToken: assumeRoleCredentials.SessionToken,
+            expiration: assumeRoleCredentials.Expiration,
+          },
+        });
+        await throttlingBackOff(() => adminFmsClient.send(new DisassociateAdminAccountCommand({})));
         await throttlingBackOff(() =>
-          organizationsClient
-            .deregisterDelegatedAdministrator({
+          organizationsClient.send(
+            new DeregisterDelegatedAdministratorCommand({
               AccountId: adminAccountId,
               ServicePrincipal: 'fms.amazonaws.com',
-            })
-            .promise(),
+            }),
+          ),
         );
       } else {
         console.log('No FMS Admin Account exists');
@@ -119,11 +161,13 @@ export async function handler(event: CloudFormationCustomResourceEvent) {
   }
 }
 
-async function isOrganizationServiceEnabled(organizationsClient: AWS.Organizations, servicePrincipal: string) {
+async function isOrganizationServiceEnabled(organizationsClient: OrganizationsClient, servicePrincipal: string) {
   let nextToken;
   const enabledOrgServices = [];
   do {
-    const services = await organizationsClient.listAWSServiceAccessForOrganization({ NextToken: nextToken }).promise();
+    const services = await throttlingBackOff(() =>
+      organizationsClient.send(new ListAWSServiceAccessForOrganizationCommand({ NextToken: nextToken })),
+    );
     if (services.EnabledServicePrincipals) {
       enabledOrgServices.push(...services.EnabledServicePrincipals);
     }
@@ -137,34 +181,31 @@ async function isOrganizationServiceEnabled(organizationsClient: AWS.Organizatio
 }
 
 async function deregisterDelegatedAdministrators(
-  organizationsClient: AWS.Organizations,
+  organizationsClient: OrganizationsClient,
   servicePrincipal: string,
-  delegatedAdmins: AWS.Organizations.ListDelegatedAdministratorsResponse,
+  delegatedAdmins: ListDelegatedAdministratorsResponse,
   accountsToExclude: string[] = [],
 ) {
   for (const delegatedAdmin of delegatedAdmins.DelegatedAdministrators || []) {
     if (!accountsToExclude.includes(delegatedAdmin.Id!)) {
       console.log(`Deregistering delegated Admin Account ${delegatedAdmin.Id}`);
       await throttlingBackOff(() =>
-        organizationsClient
-          .deregisterDelegatedAdministrator({
+        organizationsClient.send(
+          new DeregisterDelegatedAdministratorCommand({
             AccountId: delegatedAdmin.Id!,
             ServicePrincipal: servicePrincipal,
-          })
-          .promise(),
+          }),
+        ),
       );
     }
   }
 }
 
-async function assumeRole(stsClient: AWS.STS, assumeRoleName: string, accountId: string, partition: string) {
+async function assumeRole(stsClient: STSClient, assumeRoleName: string, accountId: string, partition: string) {
   const roleArn = `arn:${partition}:iam::${accountId}:role/${assumeRoleName}`;
   const assumeRole = await throttlingBackOff(() =>
-    stsClient.assumeRole({ RoleArn: roleArn, RoleSessionName: `fmsDeregisterAdmin` }).promise(),
+    stsClient.send(new AssumeRoleCommand({ RoleArn: roleArn, RoleSessionName: `fmsDeregisterAdmin` })),
   );
-  return new AWS.Credentials({
-    accessKeyId: assumeRole.Credentials!.AccessKeyId,
-    secretAccessKey: assumeRole.Credentials!.SecretAccessKey,
-    sessionToken: assumeRole.Credentials!.SessionToken,
-  });
+
+  return assumeRole.Credentials!;
 }

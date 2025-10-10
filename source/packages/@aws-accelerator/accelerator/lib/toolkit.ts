@@ -35,6 +35,7 @@ import { isBeforeBootstrapStage } from '../utils/app-utils';
 
 import { AcceleratorStackNames } from './accelerator';
 import { AcceleratorStage } from './accelerator-stage';
+import { DeploymentMethod } from 'aws-cdk/lib/api';
 
 const logger = createLogger(['toolkit']);
 process.on('unhandledRejection', err => {
@@ -338,6 +339,7 @@ export class AcceleratorToolkit {
 
     let bootstrapEnvOptions: BootstrapEnvironmentOptions = {
       toolkitStackName: toolkitStackName,
+      terminationProtection: true,
       parameters: {
         bucketName: configuration.settings.get(['toolkitBucket', 'bucketName']),
         kmsKeyId: configuration.settings.get(['toolkitBucket', 'kmsKeyId']),
@@ -598,6 +600,7 @@ export class AcceleratorToolkit {
     roleArn: string | undefined,
   ) {
     const cli = await AcceleratorToolkit.getCdkToolKit(context, options, stack);
+    const deploymentMethod: DeploymentMethod = getDeploymentMethod(stack, options?.cdkOptions?.deploymentMethod);
     const selector: StackSelector = {
       patterns: [stack],
     };
@@ -606,10 +609,7 @@ export class AcceleratorToolkit {
         selector,
         toolkitStackName,
         requireApproval: options.requireApproval,
-        deploymentMethod: {
-          method: 'change-set',
-          changeSetName: `${stack}-change-set`,
-        },
+        deploymentMethod,
         hotswap: HotswapMode.FULL_DEPLOYMENT,
         tags: options.tags,
         roleArn: roleArn,
@@ -622,8 +622,11 @@ export class AcceleratorToolkit {
   private static async runDiffStackCli(options: AcceleratorToolkitProps, stack: string) {
     const saveDirectory = await AcceleratorToolkit.setOutputDirectory(options, stack);
     const savePath = path.join(__dirname, '..', saveDirectory!);
-    const stacksInFolder = await getAllFilesInPattern(savePath, '.template.json');
-
+    let stacksInFolder = await getAllFilesInPattern(savePath, '.template.json');
+    // Customizations evaluates on a per stack basis, so this ensures that only one stack will be processed instead of all stacks in the directory
+    if (options.stage === AcceleratorStage.CUSTOMIZATIONS) {
+      stacksInFolder = stacksInFolder.filter(stackInFolder => stackInFolder.includes(stack));
+    }
     const roleName = GlobalConfig.loadRawGlobalConfig(options.configDirPath!).managementAccountAccessRole;
 
     for (const eachStack of stacksInFolder) {
@@ -640,7 +643,7 @@ export class AcceleratorToolkit {
         roleName,
       );
       const stream = fs.createWriteStream(path.join(savePath, `${eachStack}.diff`), { flags: 'w' });
-      await stream.write(`\nStack: ${stack} \n`);
+      await stream.write(`\nStack: ${eachStack} \n`);
       await printStackDiff(
         path.join(savePath, `${eachStack}.json`),
         path.join(savePath, `${eachStack}.template.json`),
@@ -652,7 +655,10 @@ export class AcceleratorToolkit {
       );
       await stream.close();
     }
-    await checkDiffFiles(savePath, '.template.json', '.diff');
+    // Customizations stack will evaluate on a per stack basis, so no need to check the diff files on this stage.
+    if (options.stage !== AcceleratorStage.CUSTOMIZATIONS) {
+      await checkDiffFiles(savePath, '.template.json', '.diff');
+    }
   }
 
   private static async setOutputDirectory(
@@ -702,4 +708,17 @@ function getDeploymentRoleArn(props: {
     roleArn = `arn:${props.partition}:iam::${props.account}:role/${props.cdkOptions.customDeploymentRole}`;
   }
   return roleArn;
+}
+
+function getDeploymentMethod(stack: string, deploymentType: string | undefined): DeploymentMethod {
+  if (deploymentType === 'change-set') {
+    return {
+      method: 'change-set',
+      changeSetName: `${stack}-change-set`,
+    };
+  }
+
+  return {
+    method: 'direct',
+  };
 }

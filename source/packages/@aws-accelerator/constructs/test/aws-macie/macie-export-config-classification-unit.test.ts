@@ -47,6 +47,7 @@ jest.mock('aws-cdk-lib', () => ({
       node: {
         tryFindChild: jest.fn(),
       },
+      partition: 'aws',
     }),
   },
   aws_logs: {
@@ -138,6 +139,17 @@ describe('MacieExportConfigClassification', () => {
               'macie2:PutFindingsPublicationConfiguration',
             ],
             Resource: '*',
+          },
+          {
+            Sid: 'MacieCreateSlr',
+            Effect: 'Allow',
+            Action: ['iam:CreateServiceLinkedRole'],
+            Resource: `arn:aws:iam::*:role/aws-service-role/macie.amazonaws.com/AWSServiceRoleForAmazonMacie`,
+            Condition: {
+              StringLike: {
+                'iam:AWSServiceName': 'macie.amazonaws.com',
+              },
+            },
           },
         ],
       },

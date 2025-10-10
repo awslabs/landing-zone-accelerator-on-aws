@@ -14,6 +14,7 @@
 import * as cdk from 'aws-cdk-lib';
 import { Construct } from 'constructs';
 import { LzaCustomResource } from '../lza-custom-resource';
+import { MetadataKeys } from '@aws-accelerator/utils';
 
 export interface CustomerGatewayProps {
   /**
@@ -91,6 +92,7 @@ export class CustomerGateway extends cdk.Resource implements ICustomerGateway {
         type: 'ipsec.1',
         tags: props.tags,
       });
+      resource.addMetadata(MetadataKeys.LZA_LOOKUP, { cgwName: this.name });
       cdk.Tags.of(this).add('Name', this.name);
     } else {
       // Convert tags to EC2 API format
@@ -118,6 +120,7 @@ export class CustomerGateway extends cdk.Resource implements ICustomerGateway {
         },
       }).resource;
     }
+    resource.node.addMetadata(MetadataKeys.LZA_LOOKUP, { cgwName: this.name });
     this.customerGatewayId = resource.ref;
   }
 }

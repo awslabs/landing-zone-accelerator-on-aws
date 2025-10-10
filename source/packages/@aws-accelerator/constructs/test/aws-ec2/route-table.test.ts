@@ -17,12 +17,22 @@ import { NatGateway, Vpc, Subnet } from '../../lib/aws-ec2/vpc';
 import { snapShotTest } from '../snapshot-test';
 import { describe, it, expect } from '@jest/globals';
 import { TransitGatewayAttachment } from '../../lib/aws-ec2/transit-gateway';
+import { LZAResourceLookup } from '@aws-accelerator/accelerator/utils/lza-resource-lookup';
 
 const testNamePrefix = 'Construct(RouteTable): ';
 
 //Initialize stack for snapshot test and resource configuration test
 const stack = new cdk.Stack();
 const key = new cdk.aws_kms.Key(stack, 'testKey');
+const lzaLookup = new LZAResourceLookup({
+  accountId: '111111111111',
+  region: 'us-east-1',
+  stackName: stack.stackName,
+  aseaResourceList: [],
+  enableV2Stacks: false,
+  externalLandingZoneResources: false,
+});
+
 const vpc = new Vpc(stack, 'TestVpc', {
   name: 'Test',
   ipv4CidrBlock: '10.0.0.0/16',
@@ -33,6 +43,7 @@ const vpc = new Vpc(stack, 'TestVpc', {
   virtualPrivateGateway: {
     asn: 65000,
   },
+  lzaLookup,
 });
 vpc.addEgressOnlyIgw();
 
@@ -50,6 +61,7 @@ const subnet = new Subnet(stack, 'test-subnet', {
   availabilityZoneId: undefined,
   ipv4CidrBlock: '10.0.2.0/24',
 });
+subnet.associateRouteTable(rt);
 
 const ngw = new NatGateway(stack, 'ngw', { name: 'ngw', subnet });
 
@@ -76,8 +88,8 @@ rt.addEgressOnlyIgwRoute('testEigwRoute3', undefined, undefined, '::1', key, 10)
 rt.addVirtualPrivateGatewayRoute('testVgwRoute', '10.0.30./24', undefined, undefined, key, 10);
 rt.addVirtualPrivateGatewayRoute('testVgw2Route', undefined, 'pl-1234', undefined, key, 10);
 rt.addVirtualPrivateGatewayRoute('testVgw3Route', undefined, undefined, '::1', key, 10);
-rt.addGatewayAssociation('internetGateway');
-rt.addGatewayAssociation('virtualPrivateGateway');
+rt.addGatewayAssociation('internetGateway', { test: '123' });
+rt.addGatewayAssociation('virtualPrivateGateway', { test: '234' });
 /**
  * RouteTable construct test
  */

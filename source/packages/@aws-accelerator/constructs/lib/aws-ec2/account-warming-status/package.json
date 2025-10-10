@@ -8,10 +8,10 @@
     "name": "Amazon Web Services",
     "url": "https://aws.amazon.com/solutions"
   },
-  "main": "dist/index.js",
+  "main": "index.js",
   "types": "dist/index.d.ts",
   "scripts": {
-    "build": "esbuild --minify --bundle --sourcemap --platform=node --target=node20 --outfile=./dist/index.js index.ts",
+    "build": "esbuild --minify --bundle --sourcemap --platform=node --outfile=./dist/index.js index.ts",
     "cleanup": "tsc --build ./ --clean && rm -rf node_modules && rm -rf dist && rm -rf cdk.out",
     "cleanup:tsc": "tsc --build ./ --clean",
     "lint": "eslint --fix  --max-warnings 0 -c ../../../../../../.eslintrc.json '**/*.{ts,tsx}' --ignore-pattern \"*.d.ts\" ",
@@ -21,13 +21,13 @@
   },
   "dependencies": {
     "@aws-accelerator/utils": "^0.0.0",
-    "@aws-sdk/client-ec2": "3.641.0",
-    "@aws-sdk/client-ssm": "3.637.0",
+    "@aws-sdk/client-ec2": "3.835.0",
+    "@aws-sdk/client-ssm": "3.835.0",
     "@aws-sdk/util-retry": "3.374.0"
   },
   "devDependencies": {
     "@types/jest": "29.5.12",
-    "@types/node": "18.14.0",
+    "@types/node": "18.19.50",
     "esbuild": "0.25.0",
     "eslint": "8.34.0",
     "eslint-config-prettier": "8.6.0",
@@ -41,6 +41,6 @@
     "jest": "29.4.3",
     "prettier": "2.8.4",
     "ts-jest": "29.0.5",
-    "typescript": "4.9.5"
+    "typescript": "5.8.3"
   }
 }

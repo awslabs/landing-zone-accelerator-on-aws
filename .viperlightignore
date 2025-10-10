@@ -96,30 +96,29 @@ source/packages/@aws-accelerator/utils/lib/regions.ts:103
 source/packages/@aws-accelerator/utils/lib/regions.ts:104
 source/packages/@aws-accelerator/utils/lib/regions.ts:105
 source/packages/@aws-accelerator/utils/lib/regions.ts:106
-source/packages/@aws-accelerator/utils/lib/regions.ts:107
+source/packages/@aws-accelerator/utils/lib/regions.ts:112
+source/packages/@aws-accelerator/utils/lib/regions.ts:113
+
+# Accelerator specific assume role declaration
+source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:448
+source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:449
+source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:1345
+source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:1346
 
 # Accelerator specific assume role declaration
 
-source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:432
-source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:433
-source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:1329
-source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:1330
+source/packages/@aws-accelerator/config/lib/global-config.ts:1084
+source/packages/@aws-accelerator/config/lib/global-config.ts:1085
 
 # Accelerator specific assume role declaration
 
-source/packages/@aws-accelerator/config/lib/global-config.ts:1058
-source/packages/@aws-accelerator/config/lib/global-config.ts:1059
+source/packages/@aws-accelerator/constructs/lib/aws-accelerator/get-accelerator-metadata/index.ts:122
+source/packages/@aws-accelerator/constructs/lib/aws-accelerator/get-accelerator-metadata/index.ts:123
 
 # Accelerator specific assume role declaration
 
-source/packages/@aws-accelerator/constructs/lib/aws-accelerator/get-accelerator-metadata/index.ts:97
-source/packages/@aws-accelerator/constructs/lib/aws-accelerator/get-accelerator-metadata/index.ts:98
-source/packages/@aws-accelerator/constructs/lib/aws-accelerator/get-accelerator-metadata/index.ts:99
-
-# Accelerator specific assume role declaration
-
-source/packages/@aws-accelerator/constructs/lib/aws-directory-service/share-directory/index.ts:144
-source/packages/@aws-accelerator/constructs/lib/aws-directory-service/share-directory/index.ts:145
+source/packages/@aws-accelerator/constructs/lib/aws-directory-service/share-directory/index.ts:157
+source/packages/@aws-accelerator/constructs/lib/aws-directory-service/share-directory/index.ts:158
 
 # Accelerator specific assume role declaration
 
@@ -138,24 +137,24 @@ source/packages/@aws-accelerator/constructs/lib/aws-ssm/put-param-value/index.ts
 
 # Accelerator specific assume role declaration
 
-source/packages/@aws-accelerator/tools/lib/classes/accelerator-tool.ts:1385
-source/packages/@aws-accelerator/tools/lib/classes/accelerator-tool.ts:1386
-source/packages/@aws-accelerator/tools/lib/classes/accelerator-tool.ts:1484
-source/packages/@aws-accelerator/tools/lib/classes/accelerator-tool.ts:1493
-source/packages/@aws-accelerator/tools/lib/classes/accelerator-tool.ts:1502
-source/packages/@aws-accelerator/tools/lib/classes/accelerator-tool.ts:1511
-source/packages/@aws-accelerator/tools/lib/classes/accelerator-tool.ts:1520
-source/packages/@aws-accelerator/tools/lib/classes/accelerator-tool.ts:1528
-source/packages/@aws-accelerator/tools/lib/classes/accelerator-tool.ts:1529
-source/packages/@aws-accelerator/tools/lib/classes/accelerator-tool.ts:2177
-source/packages/@aws-accelerator/tools/lib/classes/accelerator-tool.ts:2178
-source/packages/@aws-accelerator/tools/lib/classes/accelerator-tool.ts:2260
-source/packages/@aws-accelerator/tools/lib/classes/accelerator-tool.ts:2261
-source/packages/@aws-accelerator/tools/lib/classes/accelerator-tool.ts:1483
-source/packages/@aws-accelerator/tools/lib/classes/accelerator-tool.ts:1492
-source/packages/@aws-accelerator/tools/lib/classes/accelerator-tool.ts:1501
-source/packages/@aws-accelerator/tools/lib/classes/accelerator-tool.ts:1510
-source/packages/@aws-accelerator/tools/lib/classes/accelerator-tool.ts:1519
+source/packages/@aws-accelerator/tools/lib/classes/accelerator-tool.ts:1389
+source/packages/@aws-accelerator/tools/lib/classes/accelerator-tool.ts:1390
+source/packages/@aws-accelerator/tools/lib/classes/accelerator-tool.ts:1498
+source/packages/@aws-accelerator/tools/lib/classes/accelerator-tool.ts:1499
+source/packages/@aws-accelerator/tools/lib/classes/accelerator-tool.ts:1507
+source/packages/@aws-accelerator/tools/lib/classes/accelerator-tool.ts:1508
+source/packages/@aws-accelerator/tools/lib/classes/accelerator-tool.ts:1516
+source/packages/@aws-accelerator/tools/lib/classes/accelerator-tool.ts:1517
+source/packages/@aws-accelerator/tools/lib/classes/accelerator-tool.ts:1525
+source/packages/@aws-accelerator/tools/lib/classes/accelerator-tool.ts:1526
+source/packages/@aws-accelerator/tools/lib/classes/accelerator-tool.ts:1534
+source/packages/@aws-accelerator/tools/lib/classes/accelerator-tool.ts:1535
+source/packages/@aws-accelerator/tools/lib/classes/accelerator-tool.ts:1543
+source/packages/@aws-accelerator/tools/lib/classes/accelerator-tool.ts:1544
+source/packages/@aws-accelerator/tools/lib/classes/accelerator-tool.ts:2266
+source/packages/@aws-accelerator/tools/lib/classes/accelerator-tool.ts:2267
+source/packages/@aws-accelerator/tools/lib/classes/accelerator-tool.ts:2349
+source/packages/@aws-accelerator/tools/lib/classes/accelerator-tool.ts:2350
 
 # Sample configuration READMEs
 
@@ -191,6 +190,9 @@ source/packages/@aws-accelerator/constructs/lib/aws-identity-center/build-identi
 
 source/packages/@aws-accelerator/accelerator/test/configs/all-enabled/certificates/certA/privKey.key
 source/packages/@aws-accelerator/accelerator/test/configs/all-enabled/certificates/certA/cert.crt
+
+source/packages/@aws-accelerator/accelerator/test/configs/replacements/certificates/certA/privKey.key
+source/packages/@aws-accelerator/accelerator/test/configs/replacements/certificates/certA/cert.crt
 
 # Ignore password policy construct files
 
@@ -247,3 +249,16 @@ source/packages/@aws-lza/test/mocked-resources.ts:106
 source/packages/@aws-lza/test/mocked-resources.ts:117
 source/packages/@aws-lza/test/mocked-resources.ts:128
 source/packages/@aws-lza/test/mocked-resources.ts:135
+source/packages/@aws-lza/test/mocked-resources.ts:271
+
+# SDK Client settings
+source/packages/@aws-accelerator/constructs/lib/aws-fms/enable-organization-admin-account/index.ts:141
+source/packages/@aws-accelerator/constructs/lib/aws-fms/enable-organization-admin-account/index.ts:142
+
+# Stack Policy Unit tests and wrong credential warnings
+source/packages/@aws-lza/lib/aws-cloudformation/create-stack-policy/index.ts:107
+source/packages/@aws-lza/lib/aws-cloudformation/create-stack-policy/index.ts:108
+source/packages/@aws-lza/test/lib/aws-cloudformation/create-stack-policy/index.test.unit.ts:111
+source/packages/@aws-lza/test/lib/aws-cloudformation/create-stack-policy/index.test.unit.ts:136
+source/packages/@aws-lza/test/lib/aws-cloudformation/create-stack-policy/index.test.unit.ts:400
+source/packages/@aws-lza/test/lib/aws-cloudformation/create-stack-policy/index.test.unit.ts:405

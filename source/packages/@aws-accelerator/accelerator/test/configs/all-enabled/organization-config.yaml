@@ -22,6 +22,24 @@ organizationalUnits:
 quarantineNewAccounts:
   enable: true
   scpPolicyName: Quarantine
+declarativePolicies:
+  - name: EC2Settings
+    description: >
+      EC2 settings enablement
+    policy: declarative-policies/ec2-access.json
+    type: customerManaged
+    deploymentTargets:
+      organizationalUnits:
+        - Infrastructure
+resourceControlPolicies:
+  - name: DeputyAttackRcp
+    description: >
+      Enforce Deputy Attack RCP
+    type: customerManaged
+    policy: resource-control-policies/confused-deputy-attack.json
+    deploymentTargets:
+      organizationalUnits:
+        - Level1/Level2-02/Level3-01/Level4-01/Level5-01
 serviceControlPolicies:
   - name: AcceleratorGuardrails1
     description: >

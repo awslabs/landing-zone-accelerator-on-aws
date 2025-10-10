@@ -144,3 +144,22 @@ export enum ResourceType {
 }
 
 export const RESOURCE_TYPE_WITH_ALLOW_ONLY_POLICY = [ResourceType.CERTIFICATE_AUTHORITY, ResourceType.LAMBDA_FUNCTION];
+
+/**
+ * Custom error class for DynamoDB operations
+ */
+export class DynamoDBOperationError extends Error {
+  readonly originalError: unknown;
+  readonly tableName: string;
+  readonly dataType: string;
+  readonly acceleratorKey: string;
+
+  constructor(message: string, originalError: unknown, tableName: string, dataType: string, acceleratorKey: string) {
+    super(message);
+    this.name = 'DynamoDBOperationError';
+    this.originalError = originalError;
+    this.tableName = tableName;
+    this.dataType = dataType;
+    this.acceleratorKey = acceleratorKey;
+  }
+}

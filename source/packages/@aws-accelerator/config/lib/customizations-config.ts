@@ -382,7 +382,7 @@ export class CustomizationsConfig implements i.ICustomizationsConfig {
    * @param replacementsConfig
    * @returns
    */
-  static load(dir: string, replacementsConfig?: ReplacementsConfig): CustomizationsConfig {
+  static load(dir: string, replacementsConfig: ReplacementsConfig): CustomizationsConfig {
     const initialBuffer = fs.readFileSync(path.join(dir, CustomizationsConfig.FILENAME), 'utf8');
     const buffer = replacementsConfig ? replacementsConfig.preProcessBuffer(initialBuffer) : initialBuffer;
     const values = t.parseCustomizationsConfig(yaml.load(buffer));

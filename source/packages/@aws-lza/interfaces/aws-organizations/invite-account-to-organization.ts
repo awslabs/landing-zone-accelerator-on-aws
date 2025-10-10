@@ -64,11 +64,11 @@ export interface IInviteAccountToOrganizationConfiguration {
 }
 
 /**
- * AWS Organizations organizational unit (OU) registration handler parameter
+ * Invite AWS Account to Organization configuration handler parameter
  */
 export interface IInviteAccountToOrganizationHandlerParameter extends IModuleCommonParameter {
   /**
-   * AWS Control Tower Landing Zone configuration
+   * Invite AWS Account to Organization configuration
    *
    * @example
    * ```
@@ -103,4 +103,144 @@ export interface IInviteAccountToOrganizationModule {
    *
    */
   handler(props: IInviteAccountToOrganizationHandlerParameter): Promise<string>;
+}
+
+/**
+ * AWS Organizations batch invite accounts configuration
+ *
+ * @description
+ * This is the essential inputs for API operation by this module to invite multiple accounts into AWS Organizations
+ *
+ * @example
+ *
+ * ```
+ * [
+ *   {
+ *     email: 'account@example.com',
+ *     accountId: 'XXXXXXXXX',
+ *     tags: [
+ *       {
+ *         Key: 'tag1',
+ *         Value: 'value1',
+ *       },
+ *       {
+ *         Key: 'tag2',
+ *         Value: 'value2',
+ *       },
+ *     ],
+ *   },
+ *   {
+ *     email: 'account@example.com',
+ *     accountId: 'XXXXXXXXX',
+ *     tags: [
+ *       {
+ *         Key: 'tag1',
+ *         Value: 'value1',
+ *       },
+ *       {
+ *         Key: 'tag2',
+ *         Value: 'value2',
+ *       },
+ *     ],
+ *   },
+ * ]
+ * ```
+ */
+export interface IInviteAccountsBatchToOrganizationConfiguration {
+  /**
+   * List of AWS Accounts to be invited into AWS Organizations
+   *
+   * @example
+   * ```
+   * [
+   *   {
+   *     email: 'account@example.com',
+   *     accountId: 'XXXXXXXXX',
+   *     tags: [
+   *       {
+   *         Key: 'tag1',
+   *         Value: 'value1',
+   *       },
+   *       {
+   *         Key: 'tag2',
+   *         Value: 'value2',
+   *       },
+   *     ],
+   *   },
+   *   {
+   *     email: 'account@example.com',
+   *     accountId: 'XXXXXXXXX',
+   *     tags: [
+   *       {
+   *         Key: 'tag1',
+   *         Value: 'value1',
+   *       },
+   *       {
+   *         Key: 'tag2',
+   *         Value: 'value2',
+   *       },
+   *     ],
+   *   },
+   * ]
+   * ```
+   */
+  readonly accounts: IInviteAccountToOrganizationConfiguration[];
+}
+
+/**
+ * Invite AWS Accounts to Organization configuration handler parameter
+ */
+export interface IInviteAccountsBatchToOrganizationHandlerParameter extends IModuleCommonParameter {
+  /**
+   * Invite AWS Accounts batch to Organization configuration
+   *
+   * @example
+   * ```
+   * [
+   *   {
+   *     email: 'account@example.com',
+   *     accountId: 'XXXXXXXXX',
+   *     tags: [
+   *       {
+   *         Key: 'tag1',
+   *         Value: 'value1',
+   *       },
+   *       {
+   *         Key: 'tag2',
+   *         Value: 'value2',
+   *       },
+   *     ],
+   *   },
+   *   {
+   *     email: 'account@example.com',
+   *     accountId: 'XXXXXXXXX',
+   *     tags: [
+   *       {
+   *         Key: 'tag1',
+   *         Value: 'value1',
+   *       },
+   *       {
+   *         Key: 'tag2',
+   *         Value: 'value2',
+   *       },
+   *     ],
+   *   },
+   * ]
+   * ```
+   */
+  configuration: IInviteAccountsBatchToOrganizationConfiguration;
+}
+
+/**
+ * AWS Accounts batch invite to AWS Organizations module interface
+ */
+export interface IInviteAccountsBatchToOrganizationModule {
+  /**
+   * Handler function to manage Accelerator Modules
+   *
+   * @param props {@link IInviteAccountsBatchToOrganizationHandlerParameter}
+   * @returns status string
+   *
+   */
+  handler(props: IInviteAccountsBatchToOrganizationHandlerParameter): Promise<string>;
 }

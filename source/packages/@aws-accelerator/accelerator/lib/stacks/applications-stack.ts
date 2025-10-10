@@ -121,7 +121,7 @@ export class ApplicationsStack extends AcceleratorStack {
   constructor(scope: Construct, id: string, props: ApplicationStackProps) {
     super(scope, id, props);
     this.props = props;
-    const allVpcItems = [...props.networkConfig.vpcs, ...(props.networkConfig.vpcTemplates ?? [])] ?? [];
+    const allVpcItems = [...props.networkConfig.vpcs, ...(props.networkConfig.vpcTemplates ?? [])];
     const allAppConfigs: AppConfigItem[] = props.customizationsConfig.applications ?? [];
     const elbLogsBucketName = this.getElbLogsBucketName();
 

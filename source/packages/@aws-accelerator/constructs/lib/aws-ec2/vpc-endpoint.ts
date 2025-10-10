@@ -13,7 +13,6 @@
 
 import * as cdk from 'aws-cdk-lib';
 import { Construct } from 'constructs';
-
 import { ISecurityGroup } from './vpc';
 
 export interface IVpcEndpoint extends cdk.IResource {
@@ -104,6 +103,9 @@ export class VpcEndpoint extends VpcEndpointBase {
         serviceName = `aws.sagemaker.${cdk.Stack.of(this).region}.${props.service}`;
       }
       if (this.service === 's3-global.accesspoint') {
+        serviceName = `com.amazonaws.${props.service}`;
+      }
+      if (this.service === 'iam') {
         serviceName = `com.amazonaws.${props.service}`;
       }
       // Add the ability against China region to override serviceName due to the prefix of

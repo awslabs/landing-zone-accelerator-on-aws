@@ -170,6 +170,7 @@ export class IpamSubnet extends cdk.Resource implements IIpamSubnet {
 
   public readonly ipv4CidrBlock: string;
   public readonly subnetId: string;
+  public readonly resource: cdk.CustomResource;
   private tags: { Key: string; Value: string }[] = [];
 
   constructor(scope: Construct, id: string, props: IpamSubnetProps) {
@@ -212,7 +213,7 @@ export class IpamSubnet extends cdk.Resource implements IIpamSubnet {
       });
     }
 
-    const resource = new cdk.CustomResource(this, 'Resource', {
+    this.resource = new cdk.CustomResource(this, 'Resource', {
       resourceType: IPAM_SUBNET,
       serviceToken: provider.serviceToken,
       properties: {
@@ -228,8 +229,8 @@ export class IpamSubnet extends cdk.Resource implements IIpamSubnet {
       },
     });
 
-    this.ipv4CidrBlock = resource.getAttString('ipv4CidrBlock');
-    this.subnetId = resource.ref;
+    this.ipv4CidrBlock = this.resource.getAttString('ipv4CidrBlock');
+    this.subnetId = this.resource.ref;
 
     /**
      * Single pattern to define the log group for the singleton function
@@ -244,6 +245,6 @@ export class IpamSubnet extends cdk.Resource implements IIpamSubnet {
         encryptionKey: props.kmsKey,
         removalPolicy: cdk.RemovalPolicy.DESTROY,
       });
-    resource.node.addDependency(logGroup);
+    this.resource.node.addDependency(logGroup);
   }
 }

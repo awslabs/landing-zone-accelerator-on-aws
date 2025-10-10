@@ -97,7 +97,7 @@ export class LoadAcceleratorConfigTable extends Construct {
         {
           Sid: 'configTable',
           Effect: 'Allow',
-          Action: ['dynamodb:UpdateItem', 'dynamodb:PutItem'],
+          Action: ['dynamodb:UpdateItem', 'dynamodb:PutItem', 'dynamodb:Scan', 'dynamodb:DeleteItem'],
           Resource: [props.acceleratorConfigTable.tableArn],
         },
         {

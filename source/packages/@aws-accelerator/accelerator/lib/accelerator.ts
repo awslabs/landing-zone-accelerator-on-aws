@@ -45,7 +45,7 @@ import {
 } from '@aws-accelerator/utils/lib/common-functions';
 
 import { AssumeProfilePlugin } from '@aws-cdk-extensions/cdk-plugin-assume-role';
-import { getReplacementsConfig, isBeforeBootstrapStage, writeImportResources } from '../utils/app-utils';
+import { isBeforeBootstrapStage, writeImportResources } from '../utils/app-utils';
 import { AcceleratorStage } from './accelerator-stage';
 import { AcceleratorToolkit, AcceleratorToolkitProps } from './toolkit';
 import { v4 as uuidv4 } from 'uuid';
@@ -100,6 +100,20 @@ export const BootstrapVersion = 21;
 const stackPrefix = process.env['ACCELERATOR_PREFIX'] ?? 'AWSAccelerator';
 
 /**
+ * Accelerator V2 stacks
+ */
+export enum AcceleratorV2Stacks {
+  VPC_STACK = 'VpcStack',
+  ROUTE_TABLES_STACK = 'RouteTablesStack',
+  ROUTE_ENTRIES_STACK = 'RouteEntriesStack',
+  SECURITY_GROUPS_STACK = 'SecurityGroupsStack',
+  SUBNETS_STACK = 'SubnetsStack',
+  SUBNETS_SHARE_STACK = 'SubnetsShareStack',
+  NACLS_STACK = 'NaclsStack',
+  LB_STACK = 'LoadBalancersStack',
+}
+
+/**
  * constant maintaining cloudformation stack names
  */
 export const AcceleratorStackNames: Record<string, string> = {
@@ -127,6 +141,15 @@ export const AcceleratorStackNames: Record<string, string> = {
   [AcceleratorStage.FINALIZE]: `${stackPrefix}-FinalizeStack`,
   [AcceleratorStage.SECURITY_AUDIT]: `${stackPrefix}-SecurityAuditStack`,
   [AcceleratorStage.CUSTOMIZATIONS]: `${stackPrefix}-CustomizationsStack`,
+
+  [AcceleratorV2Stacks.VPC_STACK]: `${stackPrefix}-${AcceleratorV2Stacks.VPC_STACK}`,
+  [AcceleratorV2Stacks.ROUTE_TABLES_STACK]: `${stackPrefix}-${AcceleratorV2Stacks.ROUTE_TABLES_STACK}`,
+  [AcceleratorV2Stacks.ROUTE_ENTRIES_STACK]: `${stackPrefix}-${AcceleratorV2Stacks.ROUTE_ENTRIES_STACK}`,
+  [AcceleratorV2Stacks.SECURITY_GROUPS_STACK]: `${stackPrefix}-${AcceleratorV2Stacks.SECURITY_GROUPS_STACK}`,
+  [AcceleratorV2Stacks.SUBNETS_STACK]: `${stackPrefix}-${AcceleratorV2Stacks.SUBNETS_STACK}`,
+  [AcceleratorV2Stacks.SUBNETS_SHARE_STACK]: `${stackPrefix}-${AcceleratorV2Stacks.SUBNETS_SHARE_STACK}`,
+  [AcceleratorV2Stacks.NACLS_STACK]: `${stackPrefix}-${AcceleratorV2Stacks.NACLS_STACK}`,
+  [AcceleratorV2Stacks.LB_STACK]: `${stackPrefix}-${AcceleratorV2Stacks.LB_STACK}`,
 };
 
 /**
@@ -175,6 +198,9 @@ export abstract class Accelerator {
     // Set global region
     //
     const globalRegion = getGlobalRegion(props.partition);
+
+    // Check to see if lookups for organization entities should be done in DynamoDB or native AWS Organizations API calls
+    const loadFromDynamoDbTable = shouldLookupDynamoDb(props.stage);
     //
     // If not pipeline stage, load global config, management account credentials,
     // and assume role plugin
@@ -187,17 +213,17 @@ export abstract class Accelerator {
     if (globalConfig?.externalLandingZoneResources?.importExternalLandingZoneResources) {
       const orgsEnabled = OrganizationConfig.loadRawOrganizationsConfig(props.configDirPath).enable;
       const accountsConfig = AccountsConfig.load(props.configDirPath);
-      await accountsConfig.loadAccountIds(props.partition, props.enableSingleAccountMode, orgsEnabled, accountsConfig);
+      await accountsConfig.loadAccountIds(
+        props.partition,
+        props.enableSingleAccountMode,
+        orgsEnabled,
+        accountsConfig,
+        undefined,
+        loadFromDynamoDbTable,
+      );
       logger.info('Loading ASEA mapping for stacks list');
       await globalConfig.loadExternalMapping(accountsConfig);
       logger.info('Loaded ASEA mapping');
-    }
-
-    const shouldPerformNetworkRefactor = globalConfig?.cdkOptions?.stackRefactor?.networkVpcStack ?? false;
-
-    if (shouldPerformNetworkRefactor && props.stage !== AcceleratorStage.NETWORK_VPC && props.command !== 'synth') {
-      logger.info('Accelerator NetworkVpc Stack Refactor in progress, execution skipped.');
-      return;
     }
 
     await checkDiffStage(props);
@@ -224,6 +250,8 @@ export abstract class Accelerator {
         props.enableSingleAccountMode,
         orgsConfig.enable,
         accountsConfig,
+        undefined,
+        loadFromDynamoDbTable,
       );
 
       if (props.account !== accountsConfig.getManagementAccountId()) {
@@ -263,13 +291,6 @@ export abstract class Accelerator {
     //
     if (this.isSingleStackAction(props)) {
       await this.executeSingleStack(props, toolkitProps);
-
-      //
-      // Perform network refactor - diff set
-      //
-      if (shouldPerformNetworkRefactor && props.command === 'synth' && props.stage === AcceleratorStage.NETWORK_VPC) {
-        logger.info('NetworkVpc Stack Refactor diff set will be calculated here.');
-      }
     } else {
       //
       // Initialize array to enumerate promises created for parallel stack creation
@@ -288,16 +309,18 @@ export abstract class Accelerator {
       // if not provided as inputs in accountsConfig
       //
       const accountsConfig = AccountsConfig.load(props.configDirPath);
-      const organizationsConfig = OrganizationConfig.load(props.configDirPath);
+      const orgsEnabled = OrganizationConfig.loadRawOrganizationsConfig(props.configDirPath).enable;
       const homeRegion = GlobalConfig.loadRawGlobalConfig(props.configDirPath).homeRegion;
       await accountsConfig.loadAccountIds(
         props.partition,
         props.enableSingleAccountMode,
-        organizationsConfig.enable,
+        orgsEnabled,
         accountsConfig,
+        undefined,
+        loadFromDynamoDbTable,
       );
-      const replacementsConfig = getReplacementsConfig(props.configDirPath, accountsConfig);
-      replacementsConfig.loadReplacementValues({ region: homeRegion }, organizationsConfig.enable);
+      const replacementsConfig = ReplacementsConfig.load(props.configDirPath, accountsConfig);
+      await replacementsConfig.loadDynamicReplacements(homeRegion);
 
       //
       // Set details about mandatory accounts
@@ -369,13 +392,6 @@ export abstract class Accelerator {
         }
 
         enabledRegions = [props.region as Region];
-      }
-
-      //
-      // Perform network refactor - execute refactor
-      //
-      if (shouldPerformNetworkRefactor && props.command === 'deploy' && props.stage === AcceleratorStage.NETWORK_VPC) {
-        logger.info('NetworkVpc Stack Refactor will be executed here.');
       }
       //
       // Execute all remaining stages
@@ -1517,4 +1533,32 @@ export function getRegionsFromDeploymentTarget(
     }),
   );
   return regions;
+}
+
+/**
+ * Determines if DynamoDB lookup should be performed for the given stage.
+ * Returns true if the stage is NOT in the excluded list of stages AND the environment
+ * variable ACCELERATOR_SKIP_DYNAMODB_LOOKUP is not set to 'true'.
+ *
+ * @param stage - The deployment stage to check
+ * @returns boolean - True if DynamoDB lookup should be performed, false otherwise
+ */
+export function shouldLookupDynamoDb(stage?: string): boolean {
+  const stages = [
+    AcceleratorStage.PREPARE,
+    AcceleratorStage.ACCOUNTS,
+    AcceleratorStage.PIPELINE,
+    AcceleratorStage.TESTER_PIPELINE,
+    AcceleratorStage.DIAGNOSTICS_PACK,
+  ] as string[];
+
+  const lookup = process.env['ACCELERATOR_SKIP_DYNAMODB_LOOKUP']
+    ? process.env['ACCELERATOR_SKIP_DYNAMODB_LOOKUP'] === 'true'
+    : false;
+
+  if (!stage || lookup) {
+    return false;
+  }
+
+  return !stages.includes(stage);
 }

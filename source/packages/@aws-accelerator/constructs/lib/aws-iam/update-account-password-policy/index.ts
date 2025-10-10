@@ -13,8 +13,8 @@
 
 import { throttlingBackOff } from '@aws-accelerator/utils/lib/throttle';
 import { CloudFormationCustomResourceEvent } from '@aws-accelerator/utils/lib/common-types';
-import * as AWS from 'aws-sdk';
-AWS.config.logger = console;
+import { IAMClient, UpdateAccountPasswordPolicyCommand } from '@aws-sdk/client-iam';
+import { setRetryStrategy } from '@aws-accelerator/utils/lib/common-functions';
 
 /**
  * update-account-password-policy - lambda handler
@@ -32,10 +32,13 @@ export async function handler(event: CloudFormationCustomResourceEvent): Promise
   switch (event.RequestType) {
     case 'Create':
     case 'Update':
-      const iamClient = new AWS.IAM({ customUserAgent: process.env['SOLUTION_ID'] });
+      const iamClient = new IAMClient({
+        customUserAgent: process.env['SOLUTION_ID'],
+        retryStrategy: setRetryStrategy(),
+      });
       await throttlingBackOff(() =>
-        iamClient
-          .updateAccountPasswordPolicy({
+        iamClient.send(
+          new UpdateAccountPasswordPolicyCommand({
             AllowUsersToChangePassword: event.ResourceProperties['allowUsersToChangePassword'] === 'true',
             HardExpiry: event.ResourceProperties['hardExpiry'] === 'true',
             RequireUppercaseCharacters: event.ResourceProperties['requireUppercaseCharacters'] === 'true',
@@ -45,8 +48,8 @@ export async function handler(event: CloudFormationCustomResourceEvent): Promise
             MinimumPasswordLength: event.ResourceProperties['minimumPasswordLength'],
             PasswordReusePrevention: event.ResourceProperties['passwordReusePrevention'],
             MaxPasswordAge: event.ResourceProperties['maxPasswordAge'],
-          })
-          .promise(),
+          }),
+        ),
       );
       return {
         PhysicalResourceId: 'update-account-password-policy',

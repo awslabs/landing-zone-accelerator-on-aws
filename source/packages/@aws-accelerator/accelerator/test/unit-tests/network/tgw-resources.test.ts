@@ -27,7 +27,7 @@ describe('TgwResources - Transit Gateway Peering', () => {
   let subnetMap: Map<string, Subnet>;
   let tgwResources: TgwResources;
   let mockGlobalProps: AcceleratorStackProps;
-  let cloudWatchKey: IKey;
+  const cloudWatchKey: IKey = {} as IKey;
 
   beforeEach(() => {
     jest.spyOn(NetworkVpcStack.prototype, 'getSsmPath').mockReturnValue('/test/ssm-path/');
@@ -71,6 +71,7 @@ describe('TgwResources - Transit Gateway Peering', () => {
     } as unknown as OrganizationConfig;
     const mockAccountsConfig = {
       getAccountId: jest.fn().mockReturnValue(500000),
+      getAccountNameById: jest.fn(() => 'accountName'),
       getAccountIds: jest.fn().mockImplementation(() => [
         {
           Dev: 100000,

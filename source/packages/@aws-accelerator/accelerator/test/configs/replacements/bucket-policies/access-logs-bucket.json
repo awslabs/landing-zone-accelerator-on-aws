@@ -1,0 +1,22 @@
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Sid": "statement from policy file",
+            "Effect": "Deny",
+            "Principal": {
+                "AWS": "*"
+            },
+            "Action": "s3:*",
+            "Resource": [
+                "arn:aws:s3:::existing-access-logs-bucket-${ACCOUNT_ID}-${REGION}",
+                "arn:aws:s3:::existing-access-logs-bucket-${ACCOUNT_ID}-${REGION}/*"
+            ],
+            "Condition": {
+                "Bool": {
+                    "aws:SecureTransport": "false"
+                }
+            }
+        }        
+    ]
+  }

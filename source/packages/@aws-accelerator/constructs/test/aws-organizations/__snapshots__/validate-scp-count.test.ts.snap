@@ -49,8 +49,13 @@ exports[`ValidateScpCount Construct(ValidateScpCount):  Snapshot Test 1`] = `
           },
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
+          },
+        },
         "Handler": "__entrypoint__.handler",
-        "MemorySize": 128,
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "CustomValidateScpCountCustomResourceProviderRole6657C548",
@@ -155,6 +160,8 @@ exports[`ValidateScpCount Construct(ValidateScpCount):  Snapshot Test 1`] = `
             "name": "Admin",
           },
         ],
+        "maxAccountAttachedScps": null,
+        "maxOuAttachedScps": null,
         "organizationUnits": [
           {
             "id": "o-1234567",

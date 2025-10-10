@@ -17,6 +17,7 @@ import { Construct } from 'constructs';
 import { PrefixListRoute } from './prefix-list-route';
 import { ITransitGatewayAttachment } from './transit-gateway';
 import { Vpc } from './vpc';
+import { MetadataKeys } from '@aws-accelerator/utils/lib/common-types';
 
 export interface IRouteTable extends cdk.IResource {
   /**
@@ -296,12 +297,13 @@ export abstract class RouteTableBase extends cdk.Resource implements IRouteTable
     return route;
   }
 
-  public addGatewayAssociation(type: string): void {
+  public addGatewayAssociation(type: string, metadata: { [key: string]: string }): void {
     if (type === 'internetGateway') {
       const association = new cdk.aws_ec2.CfnGatewayRouteTableAssociation(this, 'GatewayAssociation', {
         routeTableId: this.routeTableId,
         gatewayId: this.vpc.internetGatewayId!,
       });
+      association.addMetadata(MetadataKeys.LZA_LOOKUP, metadata);
       this.vpc.addInternetGatewayDependent(association);
     }
 
@@ -310,6 +312,7 @@ export abstract class RouteTableBase extends cdk.Resource implements IRouteTable
         routeTableId: this.routeTableId,
         gatewayId: this.vpc.virtualPrivateGatewayId!,
       });
+      association.addMetadata(MetadataKeys.LZA_LOOKUP, metadata);
       this.vpc.addVirtualPrivateGatewayDependent(association);
     }
   }
@@ -338,6 +341,11 @@ export class RouteTable extends RouteTableBase {
     const resource = new cdk.aws_ec2.CfnRouteTable(this, 'Resource', {
       vpcId: props.vpc.vpcId,
       tags: props.tags,
+    });
+
+    resource.addMetadata(MetadataKeys.LZA_LOOKUP, {
+      routeTableName: props.name,
+      vpcName: props.vpc.name,
     });
     cdk.Tags.of(this).add('Name', props.name);
 

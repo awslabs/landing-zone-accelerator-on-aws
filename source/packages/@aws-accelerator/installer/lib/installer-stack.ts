@@ -17,13 +17,13 @@ import { Construct } from 'constructs';
 import * as fs from 'fs';
 import * as path from 'path';
 
-import { Bucket, BucketEncryptionType } from '@aws-accelerator/constructs';
+import { Bucket, BucketEncryptionType, S3LifeCycleRule } from '@aws-accelerator/constructs';
 
-import { version } from '../../../../package.json';
+import { version, config } from '../../../../package.json';
 import { ResourceNamePrefixes } from './resource-name-prefixes';
 import { SolutionHelper } from './solutions-helper';
 import { Validate } from './validate';
-import { DEFAULT_LAMBDA_RUNTIME } from '../../utils/lib/lambda';
+import { LzaLambdaRuntime } from '@aws-accelerator/utils/lib/lambda';
 
 export enum RepositorySources {
   GITHUB = 'github',
@@ -65,6 +65,10 @@ export interface InstallerStackProps extends cdk.StackProps {
    * Region by region deployment usage flag
    */
   readonly enableRegionByRegionDeployment: boolean;
+  /**
+   * Set node version
+   */
+  readonly setNodeVersion: boolean;
 }
 
 export class InstallerStack extends cdk.Stack {
@@ -104,8 +108,10 @@ export class InstallerStack extends cdk.Stack {
   });
 
   private readonly approvalStageNotifyEmailList = new cdk.CfnParameter(this, 'ApprovalStageNotifyEmailList', {
-    type: 'CommaDelimitedList',
+    type: 'String',
     description: 'Provide comma(,) separated list of email ids to receive manual approval stage notification email',
+    allowedPattern: '^$|^[^\\s@]+@[^\\s@]+\\.[^\\s@]+(\\s*,\\s*[^\\s@]+@[^\\s@]+\\.[^\\s@]+)*$',
+    constraintDescription: 'Must be a valid list of one or more email addresses separated by commas',
   });
 
   private readonly managementAccountEmail = new cdk.CfnParameter(this, 'ManagementAccountEmail', {
@@ -272,6 +278,12 @@ export class InstallerStack extends cdk.Stack {
    */
   private readonly regionByRegionDeployOrder: cdk.CfnParameter | undefined;
 
+  /**
+   * Accelerator node version
+   * @private
+   */
+  private readonly acceleratorNodeVersion: cdk.CfnParameter | undefined;
+
   constructor(scope: Construct, id: string, props: InstallerStackProps) {
     super(scope, id, props);
 
@@ -373,6 +385,47 @@ export class InstallerStack extends cdk.Stack {
     let targetAcceleratorEnvVariables: { [p: string]: cdk.aws_codebuild.BuildEnvironmentVariable } = {};
     let s3EnvVariables: { [p: string]: cdk.aws_codebuild.BuildEnvironmentVariable } = {};
 
+    /**
+     * `nodeVersion` configures the Node.js version for the accelerator.
+     *
+     * This code block determines and sets the Node.js version to be used throughout the accelerator solution.
+     * It updates relevant CloudFormation parameters and environment variables based on the configuration.
+     * The resulting `nodeVersion` will be used in the rest of the application for lambda function and codebuild nodejs.
+     *
+     */
+    let nodeVersion = config.node.version.default.toString();
+
+    if (props.setNodeVersion) {
+      this.acceleratorNodeVersion = new cdk.CfnParameter(this, 'AcceleratorNodeVersion', {
+        type: 'String',
+        description: 'Set the node version in solution. For example, 20 would set node version to 20 in the solution.',
+      });
+
+      parameterGroups.push({
+        Label: { default: 'Node Version Configuration' },
+        Parameters: [this.acceleratorNodeVersion.logicalId],
+      });
+      targetAcceleratorEnvVariables = {
+        ...targetAcceleratorEnvVariables,
+        ACCELERATOR_NODE_VERSION: {
+          type: cdk.aws_codebuild.BuildEnvironmentVariableType.PLAINTEXT,
+          value: this.acceleratorNodeVersion.valueAsString,
+        },
+      };
+      nodeVersion = this.acceleratorNodeVersion.valueAsString;
+    }
+
+    const lambdaRuntime = LzaLambdaRuntime.getLambdaRuntime(nodeVersion);
+
+    const approvalNotifyEmailSetting = new cdk.CfnRule(this, 'RequireApprovalNotificationEmail', {
+      ruleCondition: cdk.Fn.conditionEquals(this.enableApprovalStage.valueAsString, 'Yes'),
+    });
+
+    approvalNotifyEmailSetting.addAssertion(
+      cdk.Fn.conditionNot(cdk.Fn.conditionEquals(this.approvalStageNotifyEmailList.valueAsString, '')),
+      'Approval Stage notification email list is required when approval is enabled',
+    );
+
     if (props.enableRegionByRegionDeployment) {
       this.regionByRegionDeployOrder = new cdk.CfnParameter(this, 'RegionByRegionDeployOrder', {
         type: 'String',
@@ -430,9 +483,11 @@ export class InstallerStack extends cdk.Stack {
     if (props.useExternalPipelineAccount) {
       this.acceleratorQualifier = new cdk.CfnParameter(this, 'AcceleratorQualifier', {
         type: 'String',
-        description: 'Accelerator assets arn qualifier',
+        description:
+          'Names the resources in the external deployment account. This must be unique for each LZA pipeline created in a single external deployment account, for example "env2" or "app1." Do not use "aws-accelerator" or a similar value that could be confused with the prefix."',
         allowedPattern: '^[a-z]+[a-z0-9-]{1,61}[a-z0-9]+$',
-        constraintDescription: 'Qualifier must include lowercase letters and numbers only',
+        constraintDescription:
+          'Qualifier must include lowercase letters and numbers only and cannot be aws-accelerator',
       });
 
       this.managementAccountId = new cdk.CfnParameter(this, 'ManagementAccountId', {
@@ -541,6 +596,7 @@ export class InstallerStack extends cdk.Stack {
     const resourceNamePrefixes = new ResourceNamePrefixes(this, 'ResourceNamePrefixes', {
       acceleratorPrefix: this.acceleratorPrefix.valueAsString,
       acceleratorQualifier: this.acceleratorQualifier?.valueAsString,
+      lambdaRuntime,
     });
     // cfn-nag suppression
     const resourceNameFunctionResource = resourceNamePrefixes.node.findChild('ResourceNamePrefixesFunction').node
@@ -656,6 +712,7 @@ export class InstallerStack extends cdk.Stack {
     const validatorFunction = new Validate(this, 'ValidateInstaller', {
       acceleratorPipelineName: acceleratorPipelineName,
       configRepositoryLocation: this.configurationRepositoryLocation.valueAsString,
+      lambdaRuntime,
     });
     // cfn-nag suppression
     const validatorFunctionResource = validatorFunction.node.findChild('ValidationFunction').node
@@ -714,6 +771,7 @@ export class InstallerStack extends cdk.Stack {
       repositoryOwner: this.repositoryOwner,
       repositoryBranchName: this.repositoryBranchName,
       repositoryName: this.repositoryName,
+      lambdaRuntime,
     });
 
     // Create Accelerator Installer KMS Key
@@ -853,12 +911,55 @@ export class InstallerStack extends cdk.Stack {
       stringValue: installerServerAccessLogsBucket.getS3Bucket().bucketName,
       simpleName: false,
     });
+    const secureBucketLifecycleRule: S3LifeCycleRule[] = [
+      // Default lifecycle rule for all objects except lza/ prefix
+      {
+        abortIncompleteMultipartUploadAfter: 1,
+        enabled: true,
+        expiration: 1825,
+        expiredObjectDeleteMarker: false,
+        id: `LifecycleRule${secureBucketName}`,
+        noncurrentVersionExpiration: 1825,
+        noncurrentVersionTransitions: [
+          {
+            storageClass: 'DEEP_ARCHIVE',
+            transitionAfter: 366,
+          },
+        ],
+        transitions: [
+          {
+            storageClass: 'DEEP_ARCHIVE',
+            transitionAfter: 366,
+          },
+        ],
+        prefix: '',
+      },
+
+      // Special rule for lza/ prefix - move noncurrent versions to IA
+      {
+        abortIncompleteMultipartUploadAfter: 1,
+        enabled: true,
+        expiredObjectDeleteMarker: false,
+        id: `LifecycleRuleLza${secureBucketName}`,
+        prefix: 'lza/',
+        noncurrentVersionExpiration: 1825,
+        // current version is needed for pipeline run and will never be transitioned
+        transitions: [],
+        noncurrentVersionTransitions: [
+          {
+            storageClass: 'ONEZONE_IA',
+            transitionAfter: 30,
+          },
+        ],
+      },
+    ];
 
     const bucket = new Bucket(this, 'SecureBucket', {
       encryptionType: BucketEncryptionType.SSE_KMS,
       s3BucketName: secureBucketName,
       kmsKey: installerKey,
       serverAccessLogsBucket: installerServerAccessLogsBucket.getS3Bucket(),
+      s3LifeCycleRules: secureBucketLifecycleRule,
     });
 
     let roleName: string | undefined = undefined;
@@ -875,6 +976,9 @@ export class InstallerStack extends cdk.Stack {
 
     const globalRegion = globalRegionMap.findInMap(cdk.Aws.PARTITION, 'regionName');
 
+    // S3 path for the accelerator source code - uses custom path from environment variable or defaults to versioned LZA path
+    const customS3Path = process.env['ACCELERATOR_CUSTOM_SOURCE_KEY'] ?? `lza/v${version}.zip`;
+
     const installerProject = new cdk.aws_codebuild.PipelineProject(this, 'InstallerProject', {
       projectName: installerProjectName,
       encryptionKey: installerKey,
@@ -884,7 +988,7 @@ export class InstallerStack extends cdk.Stack {
         phases: {
           install: {
             'runtime-versions': {
-              nodejs: 18,
+              nodejs: nodeVersion,
             },
           },
           pre_build: {
@@ -921,6 +1025,11 @@ export class InstallerStack extends cdk.Stack {
                     echo "Failed to assume $MANAGEMENT_ACCOUNT_ROLE_NAME role in management account $MANAGEMENT_ACCOUNT_ID"
                     exit 1
                   fi
+                  # Force bootstrapping is to account for where the LZA framework has previously bootstrapped the account and therefore uses a custom template
+                  # which doesn't have the S3 bucket (as it using the management account bucket)
+                  yarn run cdk bootstrap --toolkitStackName ${acceleratorPrefix}-CDKToolkit aws://${
+                cdk.Aws.ACCOUNT_ID
+              }/${cdk.Aws.REGION} --qualifier accel --force
                   export $(printf "AWS_ACCESS_KEY_ID=%s AWS_SECRET_ACCESS_KEY=%s AWS_SESSION_TOKEN=%s" $MANAGEMENT_ACCOUNT_CREDENTIAL);
                   if ! aws cloudformation describe-stacks --stack-name ${acceleratorPrefix}-CDKToolkit --region ${
                 cdk.Aws.REGION
@@ -949,6 +1058,7 @@ export class InstallerStack extends cdk.Stack {
               fi`,
               `set -e && yarn run ts-node --transpile-only cdk.ts deploy --require-approval never --stage pipeline --account ${cdk.Aws.ACCOUNT_ID} --region ${cdk.Aws.REGION} --partition ${cdk.Aws.PARTITION}`,
               `set -e && if [ "$ENABLE_TESTER" = "true" ]; then yarn run ts-node --transpile-only cdk.ts deploy --require-approval never --stage tester-pipeline --account ${cdk.Aws.ACCOUNT_ID} --region ${cdk.Aws.REGION}; fi`,
+              `set -e && cd ../../../../ && zip -rqy /tmp/lza.zip . && aws s3 cp /tmp/lza.zip s3://${secureBucketName}/${customS3Path} --region ${cdk.Aws.REGION} --no-progress && rm -fr /tmp/lza.zip;`,
             ],
           },
           post_build: {
@@ -1022,7 +1132,7 @@ export class InstallerStack extends cdk.Stack {
           },
           APPROVAL_STAGE_NOTIFY_EMAIL_LIST: {
             type: cdk.aws_codebuild.BuildEnvironmentVariableType.PLAINTEXT,
-            value: cdk.Fn.join(',', this.approvalStageNotifyEmailList.valueAsList),
+            value: this.approvalStageNotifyEmailList.valueAsString,
           },
           MANAGEMENT_ACCOUNT_EMAIL: {
             type: cdk.aws_codebuild.BuildEnvironmentVariableType.PLAINTEXT,
@@ -1055,6 +1165,10 @@ export class InstallerStack extends cdk.Stack {
           PIPELINE_ACCOUNT_ID: {
             type: cdk.aws_codebuild.BuildEnvironmentVariableType.PLAINTEXT,
             value: cdk.Stack.of(this).account,
+          },
+          SECURE_BUCKET_NAME: {
+            type: cdk.aws_codebuild.BuildEnvironmentVariableType.PLAINTEXT,
+            value: secureBucketName,
           },
           ...targetAcceleratorEnvVariables,
           ...targetAcceleratorTestEnvVariables,
@@ -1225,6 +1339,14 @@ export class InstallerStack extends cdk.Stack {
           actions: ['iam:PassRole'],
           resources: [acceleratorPrincipalArn, gitHubPipelineRole.roleArn],
         }),
+        new cdk.aws_iam.PolicyStatement({
+          actions: ['codestar-connections:PassConnection', 'codestar-connections:UseConnection'],
+          resources: [
+            `arn:${cdk.Stack.of(this).partition}:codeconnections:${cdk.Stack.of(this).region}:${
+              cdk.Stack.of(this).account
+            }:connection/*`,
+          ],
+        }),
       ],
     });
 
@@ -1232,7 +1354,7 @@ export class InstallerStack extends cdk.Stack {
 
     const updatePipelineGithubTokenFunction = new cdk.aws_lambda.Function(this, 'UpdatePipelineGithubTokenFunction', {
       code: new cdk.aws_lambda.InlineCode(fileContents.toString()),
-      runtime: DEFAULT_LAMBDA_RUNTIME,
+      runtime: lambdaRuntime,
       handler: 'index.handler',
       description: 'Lambda function to update CodePipeline OAuth Token',
       timeout: cdk.Duration.minutes(1),

@@ -188,7 +188,7 @@ async function getOriginalPolicyDocument(policyName: string, orgConfig: Organiza
 }
 
 async function getOrganizationConfig(): Promise<OrganizationConfig> {
-  const organizationConfig = OrganizationConfig.load(path.join(__dirname, '/config'));
+  const organizationConfig = OrganizationConfig.loadRawOrganizationsConfig(path.join(__dirname, '/config'));
   await organizationConfig.loadOrganizationalUnitIds(partition);
   if (!organizationConfig) {
     throw Error('Error parsing organization-config file, object undefined');

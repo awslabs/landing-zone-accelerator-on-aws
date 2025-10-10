@@ -14,8 +14,13 @@ exports[`MacieOrganizationAdminAccount Construct(MacieOrganizationAdminAccount):
           },
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
+          },
+        },
         "Handler": "__entrypoint__.handler",
-        "MemorySize": 128,
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "CustomMacieEnableOrganizationAdminAccountCustomResourceProviderRoleA386B194",
@@ -81,39 +86,12 @@ exports[`MacieOrganizationAdminAccount Construct(MacieOrganizationAdminAccount):
                     "organizations:DescribeOrganization",
                     "organizations:EnableAWSServiceAccess",
                     "organizations:ListAWSServiceAccessForOrganization",
-                    "organizations:ListAccounts",
                     "organizations:ListDelegatedAdministrators",
                     "organizations:RegisterDelegatedAdministrator",
-                    "organizations:ServicePrincipal",
-                    "organizations:UpdateOrganizationConfiguration",
                   ],
                   "Condition": {
                     "StringLikeIfExists": {
-                      "organizations:DeregisterDelegatedAdministrator": [
-                        "macie.amazonaws.com",
-                      ],
-                      "organizations:DescribeOrganization": [
-                        "macie.amazonaws.com",
-                      ],
-                      "organizations:EnableAWSServiceAccess": [
-                        "macie.amazonaws.com",
-                      ],
-                      "organizations:ListAWSServiceAccessForOrganization": [
-                        "macie.amazonaws.com",
-                      ],
-                      "organizations:ListAccounts": [
-                        "macie.amazonaws.com",
-                      ],
-                      "organizations:ListDelegatedAdministrators": [
-                        "macie.amazonaws.com",
-                      ],
-                      "organizations:RegisterDelegatedAdministrator": [
-                        "macie.amazonaws.com",
-                      ],
                       "organizations:ServicePrincipal": [
-                        "macie.amazonaws.com",
-                      ],
-                      "organizations:UpdateOrganizationConfiguration": [
                         "macie.amazonaws.com",
                       ],
                     },
@@ -140,13 +118,24 @@ exports[`MacieOrganizationAdminAccount Construct(MacieOrganizationAdminAccount):
                   ],
                   "Condition": {
                     "StringLikeIfExists": {
-                      "iam:CreateServiceLinkedRole": [
+                      "iam:AWSServiceName": [
                         "macie.amazonaws.com",
                       ],
                     },
                   },
                   "Effect": "Allow",
-                  "Resource": "*",
+                  "Resource": {
+                    "Fn::Join": [
+                      "",
+                      [
+                        "arn:aws:",
+                        {
+                          "Ref": "AWS::Partition",
+                        },
+                        "::*:role/aws-service-role/macie.amazonaws.com/AWSServiceRoleForAmazonMacie",
+                      ],
+                    ],
+                  },
                   "Sid": "MacieEnableMacieTaskIamAction",
                 },
               ],

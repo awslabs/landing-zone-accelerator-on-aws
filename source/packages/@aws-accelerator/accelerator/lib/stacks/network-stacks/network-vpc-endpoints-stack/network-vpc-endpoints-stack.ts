@@ -16,6 +16,7 @@ import { NagSuppressions } from 'cdk-nag';
 import { pascalCase } from 'change-case';
 import { Construct } from 'constructs';
 import * as path from 'path';
+import { getGlobalRegion } from '../../../../../../@aws-accelerator/utils/lib/common-functions';
 
 import {
   AseaResourceType,
@@ -725,13 +726,19 @@ export class NetworkVpcEndpointsStack extends NetworkStack {
 
     // Create the interface endpoint
     const securityGroupMap = new Map<string, SecurityGroup>();
-    const privateDnsValue = !vpcItem.interfaceEndpoints?.central ?? true;
+    const privateDnsValue = vpcItem.interfaceEndpoints?.central === false;
 
     for (const endpointItem of vpcItem.interfaceEndpoints?.endpoints ?? []) {
+      const globalRegion = getGlobalRegion(cdk.Stack.of(this).partition);
       if (this.isManagedByAsea(AseaResourceType.VPC_ENDPOINT, `${vpcItem.name}/${endpointItem.service}`)) {
         this.logger.info(
           `Interface Endpoint "${endpointItem.service}" for VPC "${vpcItem.name}" is managed externally`,
         );
+        continue;
+      }
+      // Skip creating hosted zone if service is 'iam'
+      if (endpointItem.service === 'iam' && cdk.Stack.of(this).region !== globalRegion) {
+        this.logger.info(`Skipping interface endpoint creation for IAM service in VPC: ${vpcItem.name}`);
         continue;
       }
       this.logger.info(`Adding Interface Endpoint for ${endpointItem.service}`);
@@ -934,6 +941,8 @@ export class NetworkVpcEndpointsStack extends NetworkStack {
       ipAddresses: subnets,
       name: endpointItem.name,
       securityGroupIds: [securityGroup.securityGroupId],
+      // If protocols are undefined, Do53 must be present to maintain default behavior.
+      protocols: endpointItem.protocols ?? ['Do53'],
       tags: endpointItem.tags ?? [],
     });
     this.ssmParameters.push({

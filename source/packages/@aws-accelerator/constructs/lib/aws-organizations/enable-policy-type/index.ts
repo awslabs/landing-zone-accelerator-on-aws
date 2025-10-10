@@ -69,7 +69,6 @@ export async function handler(event: CloudFormationCustomResourceEvent): Promise
       } while (nextToken);
 
       throw new Error(`Error enabling policy type for Root`);
-
     case 'Update':
     case 'Delete':
       // Do Nothing, leave Policy Type enabled

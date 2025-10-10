@@ -26,7 +26,7 @@ import {
   SecurityConfig,
 } from '@aws-accelerator/config';
 import { AcceleratorModuleRunnerParametersType, PromiseItemType } from '../models/types';
-import { AcceleratorModules, AcceleratorModuleStages } from '../models/enums';
+import { AcceleratorModules, AcceleratorModuleStages, ModuleExecutionPhase } from '../models/enums';
 import {
   MOCK_CONSTANTS,
   mockAccountsConfiguration,
@@ -38,6 +38,7 @@ import {
   mockReplacementsConfig,
   mockSecurityConfig,
 } from './mocked-resources';
+import { MODULE_EXCEPTIONS } from '../../../@aws-lza/index';
 
 //
 // Mock Dependencies
@@ -45,6 +46,8 @@ import {
 jest.mock('../lib/functions', () => ({
   getManagementAccountCredentials: jest.fn().mockReturnValue(undefined),
   getAcceleratorModuleRunnerParameters: jest.fn().mockReturnValue(undefined),
+  getCentralLoggingResources: jest.fn(),
+  isModuleExecutionSkippedByEnvironment: jest.fn().mockReturnValue(true),
 }));
 
 jest.mock('../../accelerator/utils/app-utils', () => ({
@@ -63,6 +66,7 @@ describe('ModuleRunner', () => {
   let mockModuleRunnerParameters: AcceleratorModuleRunnerParametersType;
 
   beforeEach(() => {
+    process.env['CDK_OPTIONS'] = 'synth';
     jest.clearAllMocks();
 
     mockAccountsConfig = {
@@ -89,7 +93,10 @@ describe('ModuleRunner', () => {
       globalRegion: MOCK_CONSTANTS.globalRegion,
       resourcePrefixes: MOCK_CONSTANTS.resourcePrefixes,
       acceleratorResourceNames: MOCK_CONSTANTS.acceleratorResourceNames,
-      logging: MOCK_CONSTANTS.logging,
+      logging: {
+        centralizedRegion: MOCK_CONSTANTS.logging.centralizedRegion,
+        bucketName: MOCK_CONSTANTS.logging.bucketName,
+      },
       organizationAccounts: [],
       organizationDetails: undefined,
       managementAccountCredentials: MOCK_CONSTANTS.credentials,
@@ -98,6 +105,47 @@ describe('ModuleRunner', () => {
     jest
       .spyOn(require('../lib/functions'), 'getAcceleratorModuleRunnerParameters')
       .mockReturnValue(mockModuleRunnerParameters);
+  });
+
+  describe('getStageRunOrder', () => {
+    beforeEach(() => {
+      jest.clearAllMocks();
+    });
+
+    test('should return the correct run order for a valid stage name', () => {
+      // Setup
+      constants.AcceleratorModuleStageDetails = [
+        {
+          stage: {
+            name: AcceleratorModuleStages.PREPARE,
+            runOrder: 2,
+          },
+          modules: [],
+        },
+      ];
+
+      // Execute
+      const result = ModuleRunner['getStageRunOrder'](AcceleratorModuleStages.PREPARE);
+
+      // Verify
+      expect(result).toBe(2);
+    });
+
+    test('should throw an error when stage name is not found', () => {
+      // Setup
+      constants.AcceleratorModuleStageDetails = [];
+      const errorLogSpy = jest.spyOn(ModuleRunner['logger'], 'error');
+
+      // Execute & Verify
+      expect(() => {
+        ModuleRunner['getStageRunOrder'](MOCK_CONSTANTS.invalidStage);
+      }).toThrow(
+        `${MODULE_EXCEPTIONS.INVALID_INPUT}: Stage ${MOCK_CONSTANTS.invalidStage} not found in AcceleratorModuleStageDetails.`,
+      );
+      expect(errorLogSpy).toHaveBeenCalledWith(
+        `${MODULE_EXCEPTIONS.INVALID_INPUT}: Stage ${MOCK_CONSTANTS.invalidStage} not found in AcceleratorModuleStageDetails.`,
+      );
+    });
   });
 
   describe('execute', () => {
@@ -144,26 +192,70 @@ describe('ModuleRunner', () => {
       await expect(
         ModuleRunner.execute({ ...MOCK_CONSTANTS.runnerParameters, stage: MOCK_CONSTANTS.invalidStage }),
       ).rejects.toThrow(
-        `Internal error - duplicate entries found for stage ${MOCK_CONSTANTS.invalidStage} in AcceleratorModuleStageDetails`,
+        `${MODULE_EXCEPTIONS.INVALID_INPUT} - duplicate entries found for stage ${MOCK_CONSTANTS.invalidStage} in AcceleratorModuleStageDetails`,
       );
     });
 
     test('should execute stage less modules and return status', async () => {
       // Setup
+      mockModuleRunnerParameters = {
+        configs: {
+          accountsConfig: mockAccountsConfig as AccountsConfig,
+          customizationsConfig: mockCustomizationsConfig as CustomizationsConfig,
+          globalConfig: mockGlobalConfiguration,
+          iamConfig: mockIamConfig as IamConfig,
+          networkConfig: mockNetworkConfig as NetworkConfig,
+          organizationConfig: mockOrganizationConfig as OrganizationConfig,
+          replacementsConfig: mockReplacementsConfig as ReplacementsConfig,
+          securityConfig: mockSecurityConfig as SecurityConfig,
+        },
+        globalRegion: MOCK_CONSTANTS.globalRegion,
+        resourcePrefixes: MOCK_CONSTANTS.resourcePrefixes,
+        acceleratorResourceNames: MOCK_CONSTANTS.acceleratorResourceNames,
+        logging: {
+          centralizedRegion: MOCK_CONSTANTS.logging.centralizedRegion,
+          bucketName: MOCK_CONSTANTS.logging.bucketName,
+        },
+        organizationAccounts: [],
+        organizationDetails: undefined,
+        managementAccountCredentials: MOCK_CONSTANTS.credentials,
+      };
+
+      jest
+        .spyOn(require('../lib/functions'), 'getAcceleratorModuleRunnerParameters')
+        .mockReturnValue(mockModuleRunnerParameters);
+
+      jest.spyOn(require('../lib/functions'), 'getCentralLoggingResources').mockReturnValue({
+        bucketName: MOCK_CONSTANTS.logging.bucketName,
+        keyArn: MOCK_CONSTANTS.logging.bucketKeyArn,
+      });
+
       constants.AcceleratorModuleStageOrders = {
         [AcceleratorModuleStages.PREPARE]: { name: AcceleratorModuleStages.PREPARE, runOrder: 2 },
 
         [AcceleratorModuleStages.ACCOUNTS]: { name: AcceleratorModuleStages.ACCOUNTS, runOrder: 1 },
 
-        [AcceleratorModuleStages.FINALIZE]: { name: AcceleratorModuleStages.ACCOUNTS, runOrder: 3 },
+        [AcceleratorModuleStages.FINALIZE]: { name: AcceleratorModuleStages.FINALIZE, runOrder: 4 },
+
+        [AcceleratorModuleStages.LOGGING]: { name: AcceleratorModuleStages.LOGGING, runOrder: 3 },
       };
       constants.AcceleratorModuleStageDetails = [
         {
-          stage: { name: AcceleratorStage.FINALIZE },
+          stage: { name: AcceleratorStage.LOGGING, runOrder: 3 },
           modules: [],
         },
         {
-          stage: { name: AcceleratorStage.ACCOUNTS },
+          stage: { name: AcceleratorStage.FINALIZE, runOrder: 4 },
+          modules: [
+            {
+              name: AcceleratorModules.SETUP_CONTROL_TOWER_LANDING_ZONE,
+              runOrder: 1,
+              handler: jest.fn().mockResolvedValue(`Module 1 of ${AcceleratorStage.FINALIZE} stage executed`),
+            },
+          ],
+        },
+        {
+          stage: { name: AcceleratorStage.ACCOUNTS, runOrder: 2 },
           modules: [
             {
               name: AcceleratorModules.SETUP_CONTROL_TOWER_LANDING_ZONE,
@@ -178,7 +270,7 @@ describe('ModuleRunner', () => {
           ],
         },
         {
-          stage: { name: AcceleratorStage.PREPARE },
+          stage: { name: AcceleratorStage.PREPARE, runOrder: 1 },
           modules: [
             {
               name: AcceleratorModules.SETUP_CONTROL_TOWER_LANDING_ZONE,
@@ -194,11 +286,11 @@ describe('ModuleRunner', () => {
         },
       ];
 
+      // Execute
       const result = await ModuleRunner.execute({ ...MOCK_CONSTANTS.runnerParameters });
 
-      expect(result).toBe(
-        `Module 1 of ${AcceleratorStage.ACCOUNTS} stage executed\nModule 1 of ${AcceleratorStage.PREPARE} stage executed\nModule 2 of ${AcceleratorStage.ACCOUNTS} stage executed\nModule 2 of ${AcceleratorStage.PREPARE} stage executed`,
-      );
+      // Verify
+      expect(result.split('\n').length).toEqual(5);
     });
 
     test('should execute stage modules and return status when no modules found for the stage', async () => {
@@ -218,6 +310,151 @@ describe('ModuleRunner', () => {
       expect(result).toBe(`No modules found for "${MOCK_CONSTANTS.invalidStage}" stage`);
     });
 
+    test('should execute stage modules with synth phase modules', async () => {
+      // Setup
+      process.env['CDK_OPTIONS'] = 'bootstrap';
+      constants.AcceleratorModuleStageDetails = [
+        {
+          stage: { name: AcceleratorStage.PREPARE },
+          modules: [
+            {
+              name: AcceleratorModules.SETUP_CONTROL_TOWER_LANDING_ZONE,
+              runOrder: 1,
+              handler: jest.fn().mockResolvedValue('Module 1 executed'),
+              executionPhase: ModuleExecutionPhase.SYNTH,
+            },
+            {
+              name: AcceleratorModules.EXAMPLE_MODULE,
+              runOrder: 2,
+              handler: jest.fn().mockResolvedValue('Module 2 executed'),
+              executionPhase: ModuleExecutionPhase.SYNTH,
+            },
+          ],
+        },
+      ];
+
+      const result = await ModuleRunner.execute({
+        ...MOCK_CONSTANTS.runnerParameters,
+        stage: AcceleratorStage.PREPARE,
+      });
+
+      expect(result).toBe('Module 1 executed\nModule 2 executed');
+    });
+
+    test('should skip stage modules execution becasue all modules are for synth phase', async () => {
+      // Setup
+      process.env['CDK_OPTIONS'] = 'bootstrap';
+      constants.AcceleratorModuleStageDetails = [
+        {
+          stage: { name: AcceleratorStage.PREPARE },
+          modules: [
+            {
+              name: AcceleratorModules.SETUP_CONTROL_TOWER_LANDING_ZONE,
+              runOrder: 1,
+              handler: jest.fn().mockResolvedValue('Module 1 executed'),
+              executionPhase: ModuleExecutionPhase.DEPLOY,
+            },
+            {
+              name: AcceleratorModules.EXAMPLE_MODULE,
+              runOrder: 2,
+              handler: jest.fn().mockResolvedValue('Module 2 executed'),
+              executionPhase: ModuleExecutionPhase.DEPLOY,
+            },
+          ],
+        },
+      ];
+
+      const result = await ModuleRunner.execute({
+        ...MOCK_CONSTANTS.runnerParameters,
+        stage: AcceleratorStage.PREPARE,
+      });
+
+      expect(result).toBe(`No modules found for "${AcceleratorStage.PREPARE}" stage`);
+    });
+
+    test('should execute stage modules and return status', async () => {
+      // Setup
+      jest.spyOn(require('../lib/functions'), 'getCentralLoggingResources').mockReturnValue({
+        bucketName: MOCK_CONSTANTS.logging.bucketName,
+        keyArn: MOCK_CONSTANTS.logging.bucketKeyArn,
+      });
+
+      constants.AcceleratorModuleStageDetails = [
+        {
+          stage: { name: AcceleratorStage.PREPARE },
+          modules: [
+            {
+              name: AcceleratorModules.SETUP_CONTROL_TOWER_LANDING_ZONE,
+              runOrder: 1,
+              handler: jest.fn().mockResolvedValue('Module 1 executed'),
+              executionPhase: ModuleExecutionPhase.DEPLOY,
+            },
+            {
+              name: AcceleratorModules.EXAMPLE_MODULE,
+              runOrder: 2,
+              handler: jest.fn().mockResolvedValue('Module 2 executed'),
+              executionPhase: ModuleExecutionPhase.DEPLOY,
+            },
+          ],
+        },
+        {
+          stage: { name: AcceleratorStage.FINALIZE },
+          modules: [
+            {
+              name: AcceleratorModules.SETUP_CONTROL_TOWER_LANDING_ZONE,
+              runOrder: 1,
+              handler: jest.fn().mockResolvedValue('Module 1 executed'),
+              executionPhase: ModuleExecutionPhase.DEPLOY,
+            },
+            {
+              name: AcceleratorModules.EXAMPLE_MODULE,
+              runOrder: 2,
+              handler: jest.fn().mockResolvedValue('Module 2 executed'),
+              executionPhase: ModuleExecutionPhase.DEPLOY,
+            },
+          ],
+        },
+      ];
+
+      const result = await ModuleRunner.execute({
+        ...MOCK_CONSTANTS.runnerParameters,
+        stage: AcceleratorStage.PREPARE,
+      });
+
+      expect(result).toBe('Module 1 executed\nModule 2 executed');
+    });
+
+    test('should skip stage modules execution becasue all modules are for synth phase', async () => {
+      // Setup
+      process.env['CDK_OPTIONS'] = 'bootstrap';
+      constants.AcceleratorModuleStageDetails = [
+        {
+          stage: { name: AcceleratorStage.PREPARE },
+          modules: [
+            {
+              name: AcceleratorModules.SETUP_CONTROL_TOWER_LANDING_ZONE,
+              runOrder: 1,
+              handler: jest.fn().mockResolvedValue('Module 1 executed'),
+              executionPhase: ModuleExecutionPhase.DEPLOY,
+            },
+            {
+              name: AcceleratorModules.EXAMPLE_MODULE,
+              runOrder: 2,
+              handler: jest.fn().mockResolvedValue('Module 2 executed'),
+              executionPhase: ModuleExecutionPhase.DEPLOY,
+            },
+          ],
+        },
+      ];
+
+      const result = await ModuleRunner.execute({
+        ...MOCK_CONSTANTS.runnerParameters,
+        stage: AcceleratorStage.PREPARE,
+      });
+
+      expect(result).toBe(`No modules found for "${AcceleratorStage.PREPARE}" stage`);
+    });
+
     test('should execute stage modules and return status', async () => {
       // Setup
       constants.AcceleratorModuleStageDetails = [
@@ -228,11 +465,13 @@ describe('ModuleRunner', () => {
               name: AcceleratorModules.SETUP_CONTROL_TOWER_LANDING_ZONE,
               runOrder: 1,
               handler: jest.fn().mockResolvedValue('Module 1 executed'),
+              executionPhase: ModuleExecutionPhase.DEPLOY,
             },
             {
               name: AcceleratorModules.EXAMPLE_MODULE,
               runOrder: 2,
               handler: jest.fn().mockResolvedValue('Module 2 executed'),
+              executionPhase: ModuleExecutionPhase.DEPLOY,
             },
           ],
         },
@@ -256,11 +495,13 @@ describe('ModuleRunner', () => {
               name: AcceleratorModules.SETUP_CONTROL_TOWER_LANDING_ZONE,
               runOrder: 1,
               handler: jest.fn().mockResolvedValue('Module 1 executed'),
+              executionPhase: ModuleExecutionPhase.DEPLOY,
             },
             {
               name: AcceleratorModules.EXAMPLE_MODULE,
               runOrder: 1,
               handler: jest.fn().mockResolvedValue('Module 2 executed'),
+              executionPhase: ModuleExecutionPhase.DEPLOY,
             },
           ],
         },
@@ -424,6 +665,7 @@ describe('ModuleRunner', () => {
                   .mockResolvedValue(
                     `${AcceleratorModules.SETUP_CONTROL_TOWER_LANDING_ZONE} execution skipped, No configuration found for Control Tower Landing zone`,
                   ),
+                executionPhase: ModuleExecutionPhase.DEPLOY,
               },
             ],
           },

@@ -58,7 +58,7 @@ export interface IBaseAccountConfig {
   organizationalUnit?: t.NonEmptyString;
   /**
    * Account alias used for sign-in page URL in place of 12-digit number. This must be unique within the AWS partition and be
-   * only digits, lowercase letters, and hyphens. It will be validated againt the Regular Expression ^[a-z0-9]([a-z0-9]|-(?!-)){1,61}[a-z0-9]$
+   * only digits, lowercase letters, and hyphens. It will be validated against the Regular Expression ^[a-z0-9]([a-z0-9]|-(?!-)){1,61}[a-z0-9]$
    */
   accountAlias?: t.NonEmptyNoSpaceString;
 }
@@ -115,6 +115,16 @@ export interface IGovCloudAccountConfig extends IBaseAccountConfig {
    * should be created.
    */
   enableGovCloud?: boolean;
+  /**
+   * 'Warm' the account by creating an EC2 instance
+   * that runs for 15 minutes
+   * Use for new accounts that will need to have
+   * ec2 instance provisioned as part of the solution
+   * The 'warming' will take place in the operations stack
+   * This property may be removed after the account has
+   * been provisioned
+   */
+  warm?: boolean;
 }
 
 export interface IAccountIdConfig {

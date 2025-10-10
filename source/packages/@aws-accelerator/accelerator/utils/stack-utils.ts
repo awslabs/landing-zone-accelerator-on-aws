@@ -46,7 +46,7 @@ import { SecurityStack } from '../lib/stacks/security-stack';
 import { TesterPipelineStack } from '../lib/stacks/tester-pipeline-stack';
 import { AcceleratorContext, AcceleratorEnvironment, AcceleratorResourcePrefixes } from './app-utils';
 import { ImportAseaResourcesStack } from '../lib/stacks/import-asea-resources-stack';
-import { AcceleratorAspects, PermissionsBoundaryAspect } from '../lib/accelerator-aspects';
+import { AcceleratorAspects, AseaLambdaRuntimeAspect, PermissionsBoundaryAspect } from '../lib/accelerator-aspects';
 import { ResourcePolicyEnforcementStack } from '../lib/stacks/resource-policy-enforcement-stack';
 import { DiagnosticsPackStack } from '../lib/stacks/diagnostics-pack-stack';
 import { AcceleratorToolkit } from '../lib/toolkit';
@@ -54,6 +54,8 @@ import { AssumeRoleCommand, GetCallerIdentityCommand, STSClient } from '@aws-sdk
 import { setRetryStrategy } from '@aws-accelerator/utils/lib/common-functions';
 import { throttlingBackOff } from '@aws-accelerator/utils/lib/throttle';
 import { ControlTowerClient, ListLandingZonesCommand } from '@aws-sdk/client-controltower';
+import { CfnResource } from 'aws-cdk-lib';
+import { createAndGetV2NetworkVpcDependencyStacks } from '../lib/stacks/v2-network/utils/functions';
 
 const logger = createLogger(['stack-utils']);
 /**
@@ -165,7 +167,7 @@ function getAseaStackSynthesizer(props: {
  * @param globalConfig
  * @param acceleratorPrefix
  */
-function addAcceleratorTags(
+export function addAcceleratorTags(
   node: IConstruct,
   partition: string,
   globalConfig: GlobalConfig,
@@ -181,6 +183,15 @@ function addAcceleratorTags(
     'AWS::Route53Resolver::ResolverEndpoint',
     'AWS::Route53Resolver::ResolverRule',
   ];
+
+  const tagsWithPrefix = globalConfig.tags;
+  const acceleratorTag = tagsWithPrefix.find(tag => tag.key === 'Accelerator');
+  if (!acceleratorTag) {
+    tagsWithPrefix.push({
+      key: 'Accelerator',
+      value: acceleratorPrefix,
+    });
+  }
 
   for (const resource of node.node.findAll()) {
     if (resource instanceof cdk.CfnResource && !excludeResourceTypes.includes(resource.cfnResourceType)) {
@@ -198,7 +209,74 @@ function addAcceleratorTags(
         });
       }
     }
+
+    if (resource instanceof cdk.CustomResourceProvider) {
+      tagCustomResourceLambda(resource, tagsWithPrefix);
+      tagCustomResourceRole(resource, tagsWithPrefix);
+    }
   }
+}
+
+/**
+ * Tags the IAM Role associated with a custom resource provider.
+ * @param customResource - The custom resource provider whose role needs to be tagged
+ * @param tags - Array of key-value pairs to be applied as tags to the role
+ * @returns void
+ */
+export function tagCustomResourceRole(
+  customResource: cdk.CustomResourceProvider,
+  tags: { key: string; value: string }[],
+): void {
+  try {
+    const customResourceRole = customResource.node.findChild('Role') as CfnResource;
+    if (customResourceRole) {
+      setTagsForChildResources(customResourceRole, tags);
+    }
+  } catch (e) {
+    logger.info(`No child node for role associated with ${tagCustomResourceRole.name}`);
+    return;
+  }
+}
+
+/**
+ * Tags the Lambda function associated with a custom resource provider.
+ * @param customResource - The custom resource provider whose Lambda function needs to be tagged
+ * @param tags - Array of key-value pairs to be applied as tags to the Lambda function
+ * @returns void
+ */
+export function tagCustomResourceLambda(
+  customResource: cdk.CustomResourceProvider,
+  tags: { key: string; value: string }[],
+): void {
+  try {
+    const lambdaHandler = customResource.node.findChild('Handler') as CfnResource;
+    if (lambdaHandler) {
+      setTagsForChildResources(lambdaHandler, tags);
+    }
+  } catch (e) {
+    logger.info(`No child node for lambda associated with ${tagCustomResourceLambda.name}`);
+  }
+}
+
+/**
+ * Adds tags to a CloudFormation resource, applying alphabetical ordering.
+ * @param resource - The CloudFormation resource to tag
+ * @param tags - Array of key-value pairs to be applied as tags
+ */
+export function setTagsForChildResources(resource: CfnResource, tags: { key: string; value: string }[]): void {
+  if (!tags || tags.length === 0) {
+    return;
+  }
+
+  // Convert tags to CloudFormation format and sort by key
+  const formattedTags = tags
+    .map(tag => ({
+      Key: tag.key,
+      Value: tag.value,
+    }))
+    .sort((a, b) => a.Key.localeCompare(b.Key));
+
+  resource.addPropertyOverride('Tags', formattedTags);
 }
 
 /**
@@ -282,7 +360,7 @@ export async function createPipelineStack(
     });
     cdk.Aspects.of(pipelineStack).add(new AwsSolutionsChecks());
     cdk.Aspects.of(pipelineStack).add(new PermissionsBoundaryAspect(context.account!, context.partition));
-
+    new AcceleratorAspects(app, context.partition, context.useExistingRoles ?? false);
     NagSuppressions.addStackSuppressions(pipelineStack, [
       {
         id: 'AwsSolutions-IAM5',
@@ -377,6 +455,7 @@ export function createDiagnosticsPackStack(
     });
     cdk.Aspects.of(diagnosticsPackStack).add(new AwsSolutionsChecks());
     cdk.Aspects.of(diagnosticsPackStack).add(new PermissionsBoundaryAspect(context.account!, context.partition));
+    new AcceleratorAspects(app, context.partition, context.useExistingRoles ?? false);
   }
 }
 
@@ -1025,6 +1104,27 @@ export function createNetworkVpcStacks(
     cdk.Aspects.of(vpcStack).add(new AwsSolutionsChecks());
     cdk.Aspects.of(vpcStack).add(new PermissionsBoundaryAspect(accountId, context.partition));
 
+    // V2 stacks
+    const v2DependencyStacks: cdk.Stack[] = [];
+    if (props.globalConfig.useV2Stacks) {
+      v2DependencyStacks.push(
+        ...getV2NetworkVpcDependencyStacks({
+          dependencyStack: vpcStack,
+          app,
+          context,
+          props,
+          env,
+          partition: context.partition,
+          accountId,
+          enabledRegion,
+          version,
+          stage: context.stage,
+        }),
+      );
+    } else {
+      v2DependencyStacks.push(vpcStack);
+    }
+
     const endpointsStack = new NetworkVpcEndpointsStack(
       app,
       `${AcceleratorStackNames[AcceleratorStage.NETWORK_VPC_ENDPOINTS]}-${accountId}-${enabledRegion}`,
@@ -1037,7 +1137,11 @@ export function createNetworkVpcStacks(
       },
     );
     addAcceleratorTags(endpointsStack, context.partition, props.globalConfig, props.prefixes.accelerator);
-    endpointsStack.addDependency(vpcStack);
+
+    for (const v2DependencyStack of v2DependencyStacks) {
+      endpointsStack.addDependency(v2DependencyStack);
+    }
+
     cdk.Aspects.of(endpointsStack).add(new AwsSolutionsChecks());
     cdk.Aspects.of(endpointsStack).add(new PermissionsBoundaryAspect(accountId, context.partition));
     const dnsStack = new NetworkVpcDnsStack(app, `${dnsStackName}`, {
@@ -1053,6 +1157,48 @@ export function createNetworkVpcStacks(
     cdk.Aspects.of(dnsStack).add(new PermissionsBoundaryAspect(accountId, context.partition));
     new AcceleratorAspects(app, context.partition, context.useExistingRoles ?? false);
   }
+}
+
+/**
+ * Function to create V2 network VPC stacks and return the list of v2 stacks for dependency
+ * @param options
+ */
+function getV2NetworkVpcDependencyStacks(options: {
+  dependencyStack: cdk.Stack;
+  app: cdk.App;
+  context: AcceleratorContext;
+  props: AcceleratorStackProps;
+  env: cdk.Environment;
+  partition: string;
+  accountId: string;
+  enabledRegion: string;
+  version: string;
+  stage?: string;
+}): cdk.Stack[] {
+  const synthesizer = getStackSynthesizer(options.props, options.accountId, options.enabledRegion, options.stage);
+
+  const v2Stacks: cdk.Stack[] = [];
+  const v2NetworkVpcDependencyStacks = createAndGetV2NetworkVpcDependencyStacks({
+    v2Stacks,
+    dependencyStack: options.dependencyStack,
+    app: options.app,
+    props: options.props,
+    env: options.env,
+    partition: options.partition,
+    accountId: options.accountId,
+    enabledRegion: options.enabledRegion,
+    version,
+    synthesizer,
+  });
+
+  for (const v2Stack of v2Stacks) {
+    addAcceleratorTags(v2Stack, options.partition, options.props.globalConfig, options.props.prefixes.accelerator);
+    cdk.Aspects.of(v2Stack).add(new AwsSolutionsChecks());
+    cdk.Aspects.of(v2Stack).add(new PermissionsBoundaryAspect(options.accountId, options.partition));
+    new AcceleratorAspects(v2Stack, options.context.partition, options.context.useExistingRoles ?? false);
+  }
+
+  return v2NetworkVpcDependencyStacks;
 }
 
 /**
@@ -1112,7 +1258,7 @@ export function createNetworkAssociationsStacks(
     // Since shared security groups are created in networkAssociations. NetworkGwlbStack depends on NetworkAssociationsStack
     networkGwlbStack.addDependency(networkAssociationsStack);
     cdk.Aspects.of(networkGwlbStack).add(new AwsSolutionsChecks());
-    cdk.Aspects.of(networkAssociationsStack).add(new PermissionsBoundaryAspect(accountId, context.partition));
+    cdk.Aspects.of(networkGwlbStack).add(new PermissionsBoundaryAspect(accountId, context.partition));
     new AcceleratorAspects(app, context.partition, context.useExistingRoles ?? false);
   }
 }
@@ -1284,6 +1430,7 @@ export async function importAseaResourceStack(
     }
     const resourceMappings = await Promise.all(importStackPromises);
     const saveResourceMappingPromises = [];
+    cdk.Aspects.of(app).add(new AseaLambdaRuntimeAspect());
     for (const mapping of resourceMappings) {
       saveResourceMappingPromises.push(mapping.saveLocalResourceFile());
       resourceMapping.push(...mapping.resourceMapping);

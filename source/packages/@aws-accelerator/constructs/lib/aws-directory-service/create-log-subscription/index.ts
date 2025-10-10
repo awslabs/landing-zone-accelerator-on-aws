@@ -13,8 +13,12 @@
 
 import { throttlingBackOff } from '@aws-accelerator/utils/lib/throttle';
 import { CloudFormationCustomResourceEvent } from '@aws-accelerator/utils/lib/common-types';
-import * as AWS from 'aws-sdk';
-AWS.config.logger = console;
+import {
+  CreateLogSubscriptionCommand,
+  DeleteLogSubscriptionCommand,
+  DirectoryServiceClient,
+  ListLogSubscriptionsCommand,
+} from '@aws-sdk/client-directory-service';
 
 /**
  * add-macie-members - lambda handler
@@ -33,7 +37,9 @@ export async function handler(event: CloudFormationCustomResourceEvent): Promise
   const logGroupName = event.ResourceProperties['logGroupName'];
   const solutionId = process.env['SOLUTION_ID'];
 
-  const directoryServiceClient = new AWS.DirectoryService({ customUserAgent: solutionId });
+  const directoryServiceClient = new DirectoryServiceClient({
+    customUserAgent: solutionId,
+  });
 
   const existingLogGroups = await getExistingLogGroups(directoryServiceClient, directoryId);
 
@@ -43,12 +49,12 @@ export async function handler(event: CloudFormationCustomResourceEvent): Promise
       console.log('start createLogSubscription');
       if (existingLogGroups.indexOf(logGroupName) === -1) {
         await throttlingBackOff(() =>
-          directoryServiceClient
-            .createLogSubscription({
+          directoryServiceClient.send(
+            new CreateLogSubscriptionCommand({
               DirectoryId: directoryId,
               LogGroupName: logGroupName,
-            })
-            .promise(),
+            }),
+          ),
         );
       } else {
         console.warn(`Log group ${logGroupName} already subscribed for the directory service`);
@@ -60,11 +66,11 @@ export async function handler(event: CloudFormationCustomResourceEvent): Promise
       console.log('start deleteLogSubscription');
       if (existingLogGroups.indexOf(logGroupName) !== -1) {
         await throttlingBackOff(() =>
-          directoryServiceClient
-            .deleteLogSubscription({
+          directoryServiceClient.send(
+            new DeleteLogSubscriptionCommand({
               DirectoryId: directoryId,
-            })
-            .promise(),
+            }),
+          ),
         );
       } else {
         console.warn(`Log group ${logGroupName} subscription not found to delete`);
@@ -80,19 +86,19 @@ export async function handler(event: CloudFormationCustomResourceEvent): Promise
  * @returns
  */
 async function getExistingLogGroups(
-  directoryServiceClient: AWS.DirectoryService,
+  directoryServiceClient: DirectoryServiceClient,
   directoryId: string,
 ): Promise<string[]> {
   const logGroupNames: string[] = [];
   let nextToken: string | undefined = undefined;
   do {
     const page = await throttlingBackOff(() =>
-      directoryServiceClient
-        .listLogSubscriptions({
+      directoryServiceClient.send(
+        new ListLogSubscriptionsCommand({
           DirectoryId: directoryId,
           NextToken: nextToken,
-        })
-        .promise(),
+        }),
+      ),
     );
 
     for (const LogSubscription of page.LogSubscriptions ?? []) {

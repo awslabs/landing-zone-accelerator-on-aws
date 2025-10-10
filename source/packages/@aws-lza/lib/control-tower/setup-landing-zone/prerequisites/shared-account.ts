@@ -25,6 +25,7 @@ import { IAssumeRoleCredential } from '../../../../common/resources';
 import { createLogger } from '../../../../common/logger';
 import { throttlingBackOff } from '../../../../common/throttle';
 import { ISharedAccountDetails } from '../resources';
+import { MODULE_EXCEPTIONS } from '../../../../common/enums';
 
 type AccountCreationStatusType = { name: string; status: string; reason: string; id?: string };
 
@@ -59,7 +60,7 @@ export abstract class SharedAccount {
 
     if (!response.CreateAccountStatus) {
       throw new Error(
-        `Internal error: account creation failed, CreateAccountCommand didn't return CreateAccountStatus object for ${accountDetails.name} account`,
+        `${MODULE_EXCEPTIONS.SERVICE_EXCEPTION}: account creation failed, CreateAccountCommand didn't return CreateAccountStatus object for ${accountDetails.name} account`,
       );
     }
 
@@ -108,7 +109,7 @@ export abstract class SharedAccount {
       );
       if (!response.CreateAccountStatus) {
         throw new Error(
-          `Internal error: account creation failed, DescribeCreateAccountStatusCommand didn't return CreateAccountStatus object for ${createAccountStatus.AccountName} account`,
+          `${MODULE_EXCEPTIONS.SERVICE_EXCEPTION}: account creation failed, DescribeCreateAccountStatusCommand didn't return CreateAccountStatus object for ${createAccountStatus.AccountName} account`,
         );
       }
 

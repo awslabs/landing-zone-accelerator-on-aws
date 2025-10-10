@@ -556,9 +556,6 @@
           },
           "type": "array"
         },
-        "createCfnStackSetExecutionRole": {
-          "type": "boolean"
-        },
         "serviceCatalogPortfolios": {
           "items": {
             "$ref": "#/definitions/IPortfolioConfig"
@@ -840,6 +837,7 @@
       "description": "Configure a launch template for the application.",
       "properties": {
         "blockDeviceMappings": {
+          "description": "The block device mapping.",
           "items": {
             "$ref": "#/definitions/IBlockDeviceMappingItem"
           },
@@ -866,7 +864,8 @@
           "description": "The name of the key pair. LZA does not create keypair. This should exist in the account/region or else deployment will fail."
         },
         "name": {
-          "$ref": "#/definitions/NonEmptyString"
+          "$ref": "#/definitions/NonEmptyString",
+          "description": "Name of Launch Template"
         },
         "networkInterfaces": {
           "description": "One or more network interfaces. If you specify a network interface, you must specify any security groups and subnets as part of the network interface.",
@@ -1607,6 +1606,7 @@
       "enum": [
         "af-south-1",
         "ap-east-1",
+        "ap-east-2",
         "ap-northeast-1",
         "ap-northeast-2",
         "ap-northeast-3",
@@ -1617,6 +1617,7 @@
         "ap-southeast-3",
         "ap-southeast-4",
         "ap-southeast-5",
+        "ap-southeast-7",
         "ca-central-1",
         "ca-west-1",
         "cn-north-1",
@@ -1633,6 +1634,7 @@
         "il-central-1",
         "me-central-1",
         "me-south-1",
+        "mx-central-1",
         "sa-east-1",
         "us-east-1",
         "us-east-2",

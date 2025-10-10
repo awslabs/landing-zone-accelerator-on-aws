@@ -24,6 +24,16 @@ new ResolverEndpoint(stack, 'TestEndpoint', {
   ipAddresses: ['subnet-1', 'subnet-2'],
   name: 'TestEndpoint',
   securityGroupIds: ['sg-123test'],
+  protocols: ['DoH'],
+  tags: [],
+});
+
+new ResolverEndpoint(stack, 'TestInboundEndpoint', {
+  direction: 'Inbound',
+  ipAddresses: ['subnet-1', 'subnet-2'],
+  name: 'TestInboundEndpoint',
+  securityGroupIds: ['sg-123test'],
+  protocols: ['DoH-FIPS', 'Do53'],
   tags: [],
 });
 

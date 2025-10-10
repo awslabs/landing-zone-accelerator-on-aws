@@ -14,29 +14,37 @@
 import * as cdk from 'aws-cdk-lib';
 import { Construct } from 'constructs';
 import { AcceleratorStack, AcceleratorStackProps, AcceleratorKeyType } from './accelerator-stack';
+import { PolicyResource } from '../resources/policy-resource';
 import { DetachQuarantineScp } from '../detach-quarantine-scp';
-import { ScpResource } from '../resources/scp-resource';
+
+export type policyItem = {
+  /**
+   * Name of the policy
+   */
+  name: string;
+  /**
+   * policy id
+   */
+  id: string;
+};
 
 export class FinalizeStack extends AcceleratorStack {
+  readonly cloudwatchKey: cdk.aws_kms.IKey | undefined;
+  readonly lambdaKey: cdk.aws_kms.IKey | undefined;
+
   constructor(scope: Construct, id: string, props: AcceleratorStackProps) {
     super(scope, id, props);
 
     if (props.globalRegion === cdk.Stack.of(this).region) {
       this.logger.debug(`Retrieving CloudWatch kms key`);
 
-      const lambdaKey = this.getAcceleratorKey(AcceleratorKeyType.LAMBDA_KEY);
       const cloudwatchKey = this.getAcceleratorKey(AcceleratorKeyType.CLOUDWATCH_KEY);
-      const scpResource = new ScpResource(this, cloudwatchKey, lambdaKey, props);
+      const lambdaKey = this.getAcceleratorKey(AcceleratorKeyType.LAMBDA_KEY);
+      const policy = new PolicyResource(this, cloudwatchKey, lambdaKey, props);
 
-      //
-      // Update SCP with dynamic parameters
-      //
-      scpResource.createAndAttachScps(props);
-
-      //
-      // Configure revert scp changes rule
-      //
-      scpResource.configureRevertScpChanges(props);
+      policy.loadPolicyReplacements(props);
+      policy.createAndAttachPolicies(props);
+      policy.configureRevertScpChanges(props);
 
       if (process.env['CONFIG_COMMIT_ID']) {
         this.logger.debug(`Storing configuration commit id in SSM`);

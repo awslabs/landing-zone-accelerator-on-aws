@@ -70,7 +70,7 @@
     },
     "IAccessLogBucketConfig": {
       "additionalProperties": false,
-      "description": "Accelerator global S3 access logging configuration",
+      "description": "Accelerator S3 access logs configuration. S3 access logs is implemented in LZA using the native S3 feature offered by the service as per: https://docs.aws.amazon.com/AmazonS3/latest/userguide/ServerLogs.html",
       "properties": {
         "customPolicyOverrides": {
           "$ref": "#/definitions/ICustomS3ResourcePolicyOverridesConfig",
@@ -310,13 +310,21 @@
           "description": "Creates a deployment role in all accounts in the home region with the name specified in the parameter. This role is used by the LZA for all CDK deployment tasks.",
           "type": "string"
         },
+        "deploymentMethod": {
+          "description": "Sets the cdk deployment method for the LZA. Defaults to direct. Setting to change-set will display additional progress information but can increase deployment time.",
+          "enum": [
+            "change-set",
+            "direct"
+          ],
+          "type": "string"
+        },
         "forceBootstrap": {
           "description": "Forces the Accelerator to deploy the bootstrapping stack and circumvent the ssm parameter check. This option is needed when adding or removing a custom deployment role",
           "type": "boolean"
         },
-        "stackRefactor": {
-          "$ref": "#/definitions/IStackRefactor",
-          "description": "Enables stack refactoring for specific stacks. When enabled, the Accelerator will reorganize the resources defined in the stack to avoid exceeding the 500-resource limit for CloudFormation stacks."
+        "skipStaticValidation": {
+          "description": "Determines if the LZA pipeline will skip the static config validation step during the pipeline's Build phase. This can be helpful in cases where the config-validator incorrectly throws errors for a valid configuration.",
+          "type": "boolean"
         },
         "useManagementAccessRole": {
           "description": "Indicates whether CDK operations use the IAM role specified in the `managementAccountAccessRole` option in `global-config.yaml` rather than the default roles created by CDK.\n\nThe roles created and leveraged by CDK by default can be found [here](https://docs.aws.amazon.com/cdk/v2/guide/bootstrapping.html#bootstrapping-contract).",
@@ -365,6 +373,23 @@
           "type": "array"
         }
       },
+      "type": "object"
+    },
+    "ICentralRootUserManagementConfig": {
+      "additionalProperties": false,
+      "description": "IAM Root User Management\nDocumentation [page](https://docs.aws.amazon.com/IAM/latest/UserGuide/id_root-user.html)",
+      "properties": {
+        "capabilities": {
+          "$ref": "#/definitions/IRootUserManagementCapabiltiesConfig"
+        },
+        "enable": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "enable",
+        "capabilities"
+      ],
       "type": "object"
     },
     "ICentralizeCdkBucketsConfig": {
@@ -469,7 +494,7 @@
     },
     "ICloudWatchDataProtectionConfig": {
       "additionalProperties": false,
-      "description": "AWS CloudWatch Log data protection configuration, you can find more information [here](https://awslabs.github.io/landing-zone-accelerator-on-aws/latest/faq/Logging/cwl/)",
+      "description": "AWS CloudWatch Log data protection configuration, you can find more information [here](https://awslabs.github.io/landing-zone-accelerator-on-aws/latest/faq/logging/cwl/)",
       "properties": {
         "deploymentTargets": {
           "$ref": "#/definitions/IDeploymentTargets",
@@ -488,6 +513,81 @@
       },
       "required": [
         "managedDataIdentifiers"
+      ],
+      "type": "object"
+    },
+    "ICloudWatchFirehoseConfig": {
+      "additionalProperties": false,
+      "description": "Accelerator global CloudWatch Logs firehose configuration",
+      "properties": {
+        "fileExtension": {
+          "$ref": "#/definitions/NonEmptyString",
+          "description": "Configuration that will be applicable for firehose delivery of logs in LogArchive"
+        },
+        "lambdaProcessor": {
+          "$ref": "#/definitions/ICloudWatchFirehoseLambdaProcessorConfig",
+          "description": "Describes hints for the firehose lambda processor when Amazon Data Firehose receives data. Amazon Data Firehose can invokes Lambda function to take source data and deliver the data to destination specified in dynamic partition."
+        }
+      },
+      "type": "object"
+    },
+    "ICloudWatchFirehoseLambdaProcessorConfig": {
+      "additionalProperties": false,
+      "properties": {
+        "bufferInterval": {
+          "default": 60,
+          "description": "The period of time in seconds during which Amazon Data Firehose buffers incoming data before invoking the AWS Lambda function. The AWS Lambda function is invoked once the value of the buffer size or the buffer interval is reached. Range 60 to 900s.",
+          "type": "number"
+        },
+        "bufferSize": {
+          "default": 0.2,
+          "description": "The AWS Lambda function has a 6 MB invocation payload quota. Your data can expand in size after it's processed by the AWS Lambda function. A smaller buffer size allows for more room should the data expand after processing. Range is 0.2 to 3 MB.",
+          "type": "number"
+        },
+        "retries": {
+          "default": 3,
+          "type": "number"
+        }
+      },
+      "type": "object"
+    },
+    "ICloudWatchKinesisConfig": {
+      "additionalProperties": false,
+      "description": "Accelerator global CloudWatch Logs Kinesis stream configuration",
+      "properties": {
+        "retention": {
+          "default": 24,
+          "type": "number"
+        },
+        "shardCount": {
+          "default": 1,
+          "type": "number"
+        },
+        "streamingMode": {
+          "$ref": "#/definitions/StreamMode",
+          "default": "PROVISIONED"
+        }
+      },
+      "required": [
+        "streamingMode"
+      ],
+      "type": "object"
+    },
+    "ICloudWatchLogSkipBulkUpdateConfig": {
+      "additionalProperties": false,
+      "description": "Accelerator global CloudWatch Logs skip bulk update configuration.\nWARNING: This configuration option could cause CloudWatch log group configurations to become out of sync\nwith the global configuration. Only enable this option if you fully understand the implications.",
+      "properties": {
+        "enable": {
+          "description": "Flag to enable skip bulk updates",
+          "type": "boolean"
+        },
+        "skipBulkUpdateTargets": {
+          "$ref": "#/definitions/IDeploymentTargets",
+          "description": "Accounts, regions, and OUs to target skipping bulk updates of CloudFormation Log Group subscription filters"
+        }
+      },
+      "required": [
+        "enable"
       ],
       "type": "object"
     },
@@ -522,10 +622,31 @@
           },
           "type": "array"
         },
+        "firehose": {
+          "$ref": "#/definitions/ICloudWatchFirehoseConfig",
+          "description": "CloudWatch Logs Firehose configuration."
+        },
+        "kinesis": {
+          "$ref": "#/definitions/ICloudWatchKinesisConfig",
+          "description": "CloudWatch Logs Kinesis configuration."
+        },
+        "organizationIdConditionSupported": {
+          "description": "Determines if a list of account ids is used instead of a principal organization condition in the CloudWatch Logs destination access policy. This is useful in partitions where the principal organization condition is not supported.",
+          "type": "boolean"
+        },
         "replaceLogDestinationArn": {
           "$ref": "#/definitions/NonEmptyString",
           "default": "undefined",
           "description": "Customer defined log subscription filter destination arn, that is associated with with the existing log group. Accelerator solution needs to disassociate this destination before configuring solution defined subscription filter destination."
+        },
+        "skipBulkUpdate": {
+          "$ref": "#/definitions/ICloudWatchLogSkipBulkUpdateConfig",
+          "default": "undefined",
+          "description": "Used to skip the bulk update of CloudWatch logs settings in the LZA pipeline"
+        },
+        "subscription": {
+          "$ref": "#/definitions/ICloudWatchSubscriptionConfig",
+          "description": "CloudWatch Logs subscription configuration."
         }
       },
       "type": "object"
@@ -587,6 +708,36 @@
       ],
       "type": "object"
     },
+    "ICloudWatchSubscriptionConfig": {
+      "additionalProperties": false,
+      "description": "Accelerator global CloudWatch Logs subscription configuration",
+      "properties": {
+        "filterPattern": {
+          "$ref": "#/definitions/NonEmptyString",
+          "description": "(OPTIONAL) Indicates whether to apply specific filter pattern to the subscription as per https://docs.aws.amazon.com/AmazonCloudWatch/latest/logs/CreateSubscriptionFilter-Account.html If no value is provided all logs events will match filter criteria\n\n(This property is only applicable when type is set to 'LOG_GROUP'."
+        },
+        "overrideExisting": {
+          "default": false,
+          "description": "(OPTIONAL) Indicates whether existing CloudWatch Log subscription configuration can be overwritten. Any existing policy will be updated and renamed to 'ACCELERATOR_ACCOUNT_SUBSCRIPTION_POLICY'. Upon deleting the solution or disabling logging for cloudwatch in global config, this policy will be removed. If type is set to 'LOG_GROUP' this parameter will not be used.",
+          "type": "boolean"
+        },
+        "selectionCriteria": {
+          "$ref": "#/definitions/NonEmptyString",
+          "description": "Only applicable, when type is set to 'ACCOUNT'. The selection criteria is set to take input as string based on service api listed here: https://docs.aws.amazon.com/AmazonCloudWatchLogs/latest/APIReference/API_PutAccountPolicy.html"
+        },
+        "type": {
+          "enum": [
+            "ACCOUNT",
+            "LOG_GROUP"
+          ],
+          "type": "string"
+        }
+      },
+      "required": [
+        "type"
+      ],
+      "type": "object"
+    },
     "IControlTowerConfig": {
       "additionalProperties": false,
       "description": "AWS Control Tower Landing Zone configuration",
@@ -626,7 +777,7 @@
         },
         "identifier": {
           "$ref": "#/definitions/NonEmptyString",
-          "description": "Control Tower control identifier, for Strongly Recommended or Elective controls this should start with AWS-GR"
+          "description": "Control Tower control identifier. For Strongly Recommended or Elective controls this should start with AWS-GR. For Global Control Tower Controls, this should be the CONTROL_TOWER_OPAQUE_ID, please see this page for more information: https://docs.aws.amazon.com/controltower/latest/controlreference/all-global-identifiers.html."
         },
         "regions": {
           "description": "(Optional) Region(s) where this service quota increase will be requested. Service Quota increases will be requested in the home region only if this property is not defined.  If this property is defined, the regions must also be listed in the enabledRegions section or the change will not be applied.",
@@ -925,6 +1076,10 @@
           "$ref": "#/definitions/ICdkOptionsConfig",
           "description": "AWS CDK options configuration. This lets you customize the operation of the CDK within LZA, specifically:\n\ncentralizeBuckets: Enabling this option modifies the CDK bootstrap process to utilize a single S3 bucket per region located in the management account for CDK assets generated by LZA. Otherwise, CDK will create a new S3 bucket in every account and every region supported by LZA. useManagementAccessRole: Enabling this option modifies CDK operations to use the IAM role specified in the `managementAccountAccessRole` option in `global-config.yaml` rather than the default roles created by CDK. Default CDK roles will still be created, but will remain unused. Any stacks previously deployed by LZA will retain their [associated execution role](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/using-iam-servicerole.html). For more information on these roles, please see [here](https://docs.aws.amazon.com/cdk/v2/guide/bootstrapping.html#bootstrapping-contract)."
         },
+        "centralRootUserManagement": {
+          "$ref": "#/definitions/ICentralRootUserManagementConfig",
+          "description": "Configuration for centralized root user management."
+        },
         "centralizeCdkBuckets": {
           "$ref": "#/definitions/ICentralizeCdkBucketsConfig",
           "description": "***Deprecated***\n\nNOTICE: The configuration of CDK buckets is being moved to cdkOptions in the Global Config. This block is deprecated and will be removed in a future release"
@@ -991,6 +1146,10 @@
           "$ref": "#/definitions/ISnsConfig",
           "description": "SNS Topics Configuration\n\nTo send CloudWatch Alarms and SecurityHub notifications you will need to configure at least one SNS Topic For SecurityHub notification you will need to set the deployment target to Root in order to receive notifications from all accounts"
         },
+        "sqs": {
+          "$ref": "#/definitions/ISqsConfig",
+          "description": "SQS Queue configuration settings."
+        },
         "ssmInventory": {
           "$ref": "#/definitions/ISsmInventoryConfig",
           "description": "SSM Inventory Configuration\n\n[EC2 prerequisites](https://docs.aws.amazon.com/systems-manager/latest/userguide/sysman-inventory-walk.html) [Connectivity prerequisites](https://docs.aws.amazon.com/systems-manager/latest/userguide/systems-manager-prereqs.html)"
@@ -1002,6 +1161,10 @@
           },
           "type": "array"
         },
+        "stackPolicy": {
+          "$ref": "#/definitions/IStackPolicyConfig",
+          "description": "Configuration for stack policies. Resource types will be protected for Update:Replace and Update:Delete. Protected types need to be AWS:: resource types e.g. AWS::EC2::InternetGateway."
+        },
         "tags": {
           "description": "Custom Tags for all resources created by Landing Zone Accelerator that can be tagged.",
           "items": {
@@ -1011,6 +1174,11 @@
         },
         "terminationProtection": {
           "description": "Whether to enable termination protection for this stack.",
+          "type": "boolean"
+        },
+        "useV2Stacks": {
+          "default": false,
+          "description": "Enable V2 stacks. When enabled, Accelerator will place newly defined resources into separate CloudFormation stacks while preserving existing resources in their original stacks. This prevents exceeding the 500-resource limit per CloudFormation stack.",
           "type": "boolean"
         }
       },
@@ -1277,6 +1445,23 @@
       ],
       "type": "object"
     },
+    "IRootUserManagementCapabiltiesConfig": {
+      "additionalProperties": false,
+      "description": "IAM Root User Management\nDocumentation [page](https://docs.aws.amazon.com/IAM/latest/UserGuide/id_root-user.html)",
+      "properties": {
+        "allowRootSessions": {
+          "type": "boolean"
+        },
+        "rootCredentialsManagement": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "rootCredentialsManagement",
+        "allowRootSessions"
+      ],
+      "type": "object"
+    },
     "IS3EncryptionConfig": {
       "additionalProperties": false,
       "description": "AWS S3 encryption configuration settings",
@@ -1426,6 +1611,10 @@
           "type": "array"
         }
       },
+      "required": [
+        "deploymentTargets",
+        "topics"
+      ],
       "type": "object"
     },
     "ISnsTopicConfig": {
@@ -1448,6 +1637,17 @@
         "name",
         "emailAddresses"
       ],
+      "type": "object"
+    },
+    "ISqsConfig": {
+      "additionalProperties": false,
+      "description": "SQS Queue configuration settings",
+      "properties": {
+        "encryption": {
+          "$ref": "#/definitions/IServiceEncryptionConfig",
+          "description": "Encryption setting for AWS Lambda environment variables."
+        }
+      },
       "type": "object"
     },
     "ISsmInventoryConfig": {
@@ -1515,15 +1715,25 @@
       ],
       "type": "object"
     },
-    "IStackRefactor": {
+    "IStackPolicyConfig": {
       "additionalProperties": false,
-      "description": "LZA Stack refactor configuration. This interface allows you to specify which stacks should undergo refactoring.\nRefactoring helps optimize resource distribution and avoid exceeding the 500-resource limit for CloudFormation stacks.",
+      "description": "Cloudformation Stack Policy configuration\nThe Cloudformation Stack Policy configuration determines how stack resources can be updated or modified during stack operations.\nWhen this value is not specified, any existing stack policies will remain in effect and unchanged.\nThis behavior is intentionally different from the typical LZA default handling, where unset values are commonly treated as false.\nThis design choice allows organizations to manage and maintain stack policies independently through other mechanisms outside of LZA if preferred.",
       "properties": {
-        "networkVpcStack": {
-          "description": "Enables refactoring for the network stacks.",
+        "enable": {
+          "description": "Indicates whether Stack policies are enabled in your organization. Resource types will be protected for Update:Replace and Update:Delete. Protected types need to be AWS:: resource types e.g. AWS::EC2::InternetGateway.",
           "type": "boolean"
+        },
+        "protectedTypes": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
         }
       },
+      "required": [
+        "enable",
+        "protectedTypes"
+      ],
       "type": "object"
     },
     "ITag": {
@@ -1598,6 +1808,7 @@
       "enum": [
         "af-south-1",
         "ap-east-1",
+        "ap-east-2",
         "ap-northeast-1",
         "ap-northeast-2",
         "ap-northeast-3",
@@ -1608,6 +1819,7 @@
         "ap-southeast-3",
         "ap-southeast-4",
         "ap-southeast-5",
+        "ap-southeast-7",
         "ca-central-1",
         "ca-west-1",
         "cn-north-1",
@@ -1624,6 +1836,7 @@
         "il-central-1",
         "me-central-1",
         "me-south-1",
+        "mx-central-1",
         "sa-east-1",
         "us-east-1",
         "us-east-2",
@@ -1647,6 +1860,13 @@
         "STANDARD_IA",
         "INTELLIGENT_TIERING",
         "ONEZONE_IA"
+      ],
+      "type": "string"
+    },
+    "StreamMode": {
+      "enum": [
+        "ON_DEMAND",
+        "PROVISIONED"
       ],
       "type": "string"
     },

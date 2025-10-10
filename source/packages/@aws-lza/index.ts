@@ -12,6 +12,12 @@
  */
 
 //
+// Common resources
+//
+export { MODULE_EXCEPTIONS } from './common/enums';
+export { createLogger, createStatusLogger } from './common/logger';
+
+//
 // Control Tower Module resources
 //
 export { ISetupLandingZoneHandlerParameter } from './interfaces/control-tower/setup-landing-zone';
@@ -29,13 +35,53 @@ export {
   createAndRetrieveOrganizationalUnit,
 } from './executors/accelerator-aws-organizations';
 
-export { IInviteAccountToOrganizationHandlerParameter } from './interfaces/aws-organizations/invite-account-to-organization';
-export { inviteAccountToOrganization } from './executors/accelerator-aws-organizations';
+export {
+  IInviteAccountToOrganizationHandlerParameter,
+  IInviteAccountsBatchToOrganizationHandlerParameter,
+} from './interfaces/aws-organizations/invite-account-to-organization';
+export {
+  inviteAccountToOrganization,
+  inviteAccountsBatchToOrganization,
+} from './executors/accelerator-aws-organizations';
 
-export { IMoveAccountHandlerParameter } from './interfaces/aws-organizations/move-account';
-export { moveAccount } from './executors/accelerator-aws-organizations';
+export {
+  IMoveAccountHandlerParameter,
+  IMoveAccountsBatchHandlerParameter,
+} from './interfaces/aws-organizations/move-account';
+export { moveAccount, moveAccountsBatch } from './executors/accelerator-aws-organizations';
+
+export {
+  IGetOrganizationalUnitsDetailHandlerParameter,
+  IOrganizationalUnitDetailsType,
+} from './interfaces/aws-organizations/get-organizational-units-detail';
+export { getOrganizationalUnitsDetail } from './executors/accelerator-aws-organizations';
 
 export { getOrganizationId } from './common/functions';
 
+//
+// Amazon EC2 Module resources
+//
+
 export { IManageEbsDefaultEncryptionHandlerParameter } from './interfaces/amazon-ec2/manage-ebs-default-encryption';
 export { manageEbsDefaultEncryption } from './executors/accelerator-amazon-ec2';
+
+export { IGetCloudFormationTemplatesHandlerParameter } from './interfaces/aws-cloudformation/get-cloudformation-templates';
+export { getCloudFormationTemplates } from './executors/accelerator-aws-cloudformation';
+
+export { IStackPolicyHandlerParameter } from './interfaces/aws-cloudformation/create-stack-policy';
+export { createStackPolicy } from './executors/accelerator-aws-cloudformation';
+
+// AWS IAM Module resources
+export { IRootUserManagementHandlerParameter } from './interfaces/aws-iam/root-user-management';
+export { configureRootUserManagment } from './executors/accelerator-aws-iam';
+
+// AWS Macie Module resource
+
+export { IMacieManageOrganizationAdminParameter } from './interfaces/macie/manage-organization-admin';
+export { manageOrganizationAdmin } from './executors/accelerator-macie';
+
+//
+// AWS SSM Module resources
+//
+export { IBlockPublicDocumentSharingHandlerParameter } from './interfaces/aws-ssm/manage-document-public-access-block';
+export { manageBlockPublicDocumentSharing } from './executors/accelerator-aws-ssm';

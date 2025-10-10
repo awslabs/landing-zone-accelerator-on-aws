@@ -773,11 +773,11 @@ export interface INetworkInterfaceItem {
  * ```
  */
 export interface ILaunchTemplateConfig {
-  /*
+  /**
    * Name of Launch Template
    */
   readonly name: t.NonEmptyString;
-  /*
+  /**
    * The block device mapping.
    */
   readonly blockDeviceMappings?: IBlockDeviceMappingItem[];
@@ -1951,7 +1951,6 @@ export interface IServiceCatalogConfig {
  *
  */
 export interface ICustomizationConfig {
-  readonly createCfnStackSetExecutionRole?: boolean;
   readonly cloudFormationStacks?: ICloudFormationStack[];
   readonly cloudFormationStackSets?: ICloudFormationStackSet[];
   readonly serviceCatalogPortfolios?: IPortfolioConfig[];

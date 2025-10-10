@@ -16,12 +16,12 @@ import { describe, beforeEach, expect, test } from '@jest/globals';
 import { registerOrganizationalUnit, setupControlTowerLandingZone } from '../../executors/accelerator-control-tower';
 import { SetupLandingZoneModule } from '../../lib/control-tower/setup-landing-zone/index';
 import { RegisterOrganizationalUnitModule } from '../../lib/control-tower/register-organizational-unit/index';
-import { ModuleCommands, Modules } from '../../lib/cli/libraries/modules';
+import { Modules } from '../../lib/cli/modules';
 import { MOCK_CONSTANTS as COMMON_MOCK_CONSTANTS } from '../mocked-resources';
 
 const MOCK_CONSTANTS = {
   input: {
-    operation: ModuleCommands[Modules.CONTROL_TOWER.name][0].name,
+    operation: Object.keys(Modules.CONTROL_TOWER)[0],
     partition: 'aws',
     region: 'us-east-1',
     configuration: {

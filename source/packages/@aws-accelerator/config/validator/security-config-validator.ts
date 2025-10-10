@@ -35,6 +35,7 @@ import {
   ConfigRule,
   GuardDutyConfig,
   SecurityHubConfig,
+  BlockPublicDocumentSharingConfig,
 } from '../lib/security-config';
 import { CommonValidatorFunctions } from './common/common-validator-functions';
 
@@ -42,7 +43,7 @@ const RESERVED_STATIC_PARAMETER_FOR_RESOURCE_POLICY = 'ATTACHED_RESOURCE_ARN';
 
 export class SecurityConfigValidator {
   constructor(
-    values: SecurityConfig,
+    securityConfig: SecurityConfig,
     accountsConfig: AccountsConfig,
     globalConfig: GlobalConfig,
     organizationConfig: OrganizationConfig,
@@ -57,7 +58,7 @@ export class SecurityConfigValidator {
     logger.info(`${SecurityConfig.FILENAME} file validation started`);
 
     // SSM Document validations
-    const ssmDocuments = this.getSsmDocuments(values);
+    const ssmDocuments = this.getSsmDocuments(securityConfig);
 
     // Get list of OU ID names from organization config file
     ouIdNames.push(...this.getOuIdNames(organizationConfig));
@@ -75,70 +76,87 @@ export class SecurityConfigValidator {
     this.validateSsmDocumentFiles(configDir, ssmDocuments, errors);
 
     // Validate KMS key policy files
-    this.validateKeyPolicyFiles(values, configDir, errors);
+    this.validateKeyPolicyFiles(securityConfig, configDir, errors);
 
     // Create list of custom CMKs, any services to be validated against key list from keyManagementService
-    const keyNames: string[] = [values.centralSecurityServices.ebsDefaultVolumeEncryption.kmsKey!];
+    const keyNames: string[] = [securityConfig.centralSecurityServices.ebsDefaultVolumeEncryption.kmsKey!];
 
     // Validate custom CMK names
-    this.validateCustomKeyName(values, keyNames, errors);
+    this.validateCustomKeyName(securityConfig, keyNames, errors);
 
     // Validate EBS default encryption configuration
-    this.validateEbsEncryptionConfiguration(values.centralSecurityServices.ebsDefaultVolumeEncryption, errors);
+    this.validateEbsEncryptionConfiguration(securityConfig.centralSecurityServices.ebsDefaultVolumeEncryption, errors);
 
     // Validate GuardDuty configuration
-    this.validateGuardDutyConfiguration(values.centralSecurityServices.guardduty, errors);
+    this.validateGuardDutyConfiguration(securityConfig.centralSecurityServices.guardduty, errors);
     // Validate SecurityHub configuration
-    this.validateSecurityHubConfiguration(values.centralSecurityServices.securityHub, errors);
+    this.validateSecurityHubConfiguration(securityConfig.centralSecurityServices.securityHub, errors);
+
+    // Validate SSM Block Public Document Sharing configuration
+    this.validateSsmBlockPublicDocumentSharing(
+      securityConfig.centralSecurityServices.ssmSettings?.blockPublicDocumentSharing,
+      accountNames,
+      errors,
+    );
 
     // Validate delegated admin account
     // Validate deployment targets against organization config file
     // validate deployment target OUs for security services
-    this.validateDelegatedAdminAccount(values, accountsConfig, errors);
-    this.validateDeploymentTargetOUs(values, ouIdNames, errors);
-    this.validateDeploymentTargetAccountNames(values, accountNames, errors);
-    this.validateConfigRuleDeploymentTargetsInConfigDeploymentTargets(values, accountsConfig, globalConfig, errors);
-    this.validateConfigDeloymentTargetsInSecurityHubDeploymentTargets(values, accountsConfig, globalConfig, errors);
-    this.validateSecurityHubStandardDeloymentTargetsInSecurityHubDeloymentTargets(
-      values,
+    this.validateDelegatedAdminAccount(securityConfig, accountsConfig, errors);
+    this.validateDeploymentTargetOUs(securityConfig, ouIdNames, errors);
+    this.validateDeploymentTargetAccountNames(securityConfig, accountNames, errors);
+    this.validateConfigRuleDeploymentTargetsInConfigDeploymentTargets(
+      securityConfig,
       accountsConfig,
       globalConfig,
       errors,
     );
-    this.validateSecurityHubAndConfig(values, globalConfig.controlTower.enable, errors);
+    this.validateConfigDeloymentTargetsInSecurityHubDeploymentTargets(
+      securityConfig,
+      accountsConfig,
+      globalConfig,
+      errors,
+    );
+    this.validateSecurityHubStandardDeloymentTargetsInSecurityHubDeloymentTargets(
+      securityConfig,
+      accountsConfig,
+      globalConfig,
+      errors,
+    );
+    this.validateSecurityHubAndConfig(securityConfig, globalConfig.controlTower.enable, errors);
     // Validate expiration for Macie and GuardDuty Lifecycle Rules
-    this.macieLifecycleRules(values, errors);
-    this.guarddutyLifecycleRules(values, errors);
+    this.macieLifecycleRules(securityConfig, errors);
+    this.guarddutyLifecycleRules(securityConfig, errors);
     // Validate Config rule assets
-    for (const ruleSet of values.awsConfig.ruleSets ?? []) {
+    for (const ruleSet of securityConfig.awsConfig.ruleSets ?? []) {
       this.validateConfigRuleAssets(configDir, ruleSet, errors);
       this.validateConfigRuleRemediationAccountNames(ruleSet, accountNames, errors);
       this.validateConfigRuleRemediationAssumeRoleFile(configDir, ruleSet, errors);
       this.validateConfigRuleRemediationTargetAssets(configDir, ruleSet, ssmDocuments, errors);
     }
-    this.validateConfigRuleNames(values.awsConfig, accountsConfig, globalConfig, errors);
+    this.validateConfigRuleNames(securityConfig.awsConfig, accountsConfig, globalConfig, errors);
 
     // Validate SNS Topics for CloudWatch Alarms
     const snsTopicNames = this.getSnsTopicNames(globalConfig);
-    for (const alarm of values.cloudWatch.alarmSets ?? []) {
+    for (const alarm of securityConfig.cloudWatch.alarmSets ?? []) {
       this.validateSnsTopics(globalConfig, alarm, snsTopicNames, errors);
     }
 
     this.validateSecurityHubNotifications(
       snsTopicNames,
-      values.centralSecurityServices.securityHub.snsTopicName ?? undefined,
-      values.centralSecurityServices.securityHub.notificationLevel ?? undefined,
+      securityConfig.centralSecurityServices.securityHub.snsTopicName ?? undefined,
+      securityConfig.centralSecurityServices.securityHub.notificationLevel ?? undefined,
       errors,
     );
 
-    this.validateAwsConfigAggregation(globalConfig, accountNames, values, errors);
+    this.validateAwsConfigAggregation(globalConfig, accountNames, securityConfig, errors);
 
-    this.validateAwsCloudWatchLogGroups(values, errors);
-    this.validateAwsCloudWatchLogGroupsRetention(values, errors);
-    this.validateResourcePolicyEnforcementConfig(values, ouIdNames, accountNames, errors);
-    this.validateResourcePolicyParameters(configDir, values, replacementsConfig, errors);
+    this.validateAwsCloudWatchLogGroups(securityConfig, errors);
+    this.validateAwsCloudWatchLogGroupsRetention(securityConfig, errors);
+    this.validateResourcePolicyEnforcementConfig(securityConfig, ouIdNames, accountNames, errors);
+    this.validateResourcePolicyParameters(configDir, securityConfig, replacementsConfig, errors);
 
-    this.validateConfigRuleCmkDependency(values, globalConfig, accountsConfig, errors);
+    this.validateConfigRuleCmkDependency(securityConfig, globalConfig, accountsConfig, errors);
 
     if (errors.length) {
       throw new Error(`${SecurityConfig.FILENAME} has ${errors.length} issues:\n${errors.join('\n')}`);
@@ -356,6 +374,39 @@ export class SecurityConfigValidator {
       errors.push(
         `"autoEnableOrgMembers" should be set to "false" when using "deploymentTargets" property in securityHub configuration`,
       );
+    }
+  }
+
+  /**
+   * Validate SSM Block Public Document Sharing configuration
+   * @param blockPublicDocumentSharingConfig BlockPublicDocumentSharingConfig | undefined
+   * @param accountNames string[]
+   * @param errors string[]
+   */
+  private validateSsmBlockPublicDocumentSharing(
+    blockPublicDocumentSharingConfig: BlockPublicDocumentSharingConfig | undefined,
+    accountNames: string[],
+    errors: string[],
+  ) {
+    // Only validate if the configuration is present
+    if (blockPublicDocumentSharingConfig) {
+      // Validate that enable property is a boolean
+      if (typeof blockPublicDocumentSharingConfig.enable !== 'boolean') {
+        errors.push(
+          `SSM Block Public Document Sharing configuration "enable" property must be a boolean value. This setting controls whether SSM documents are blocked from public sharing across all enabled regions.`,
+        );
+      }
+
+      // Validate that excludeAccounts contains valid account names
+      if (blockPublicDocumentSharingConfig.excludeAccounts) {
+        for (const account of blockPublicDocumentSharingConfig.excludeAccounts) {
+          if (accountNames.indexOf(account) === -1) {
+            errors.push(
+              `Excluded account "${account}" for SSM Block Public Document Sharing does not exist in accounts-config.yaml file. Account names must match those defined in the accounts configuration.`,
+            );
+          }
+        }
+      }
     }
   }
 
@@ -795,6 +846,30 @@ export class SecurityConfigValidator {
   }
 
   /**
+   * Validate deployment target accounts for SSM Block Public Document Sharing
+   * @param values SecurityConfig
+   * @param accountNames string[]
+   * @param errors string[]
+   */
+  private validateSsmBlockPublicDocumentSharingDeploymentTargetAccounts(
+    values: ISecurityConfig,
+    accountNames: string[],
+    errors: string[],
+  ) {
+    // Only validate if the configuration is present
+    if (values.centralSecurityServices.ssmSettings?.blockPublicDocumentSharing) {
+      for (const account of values.centralSecurityServices.ssmSettings.blockPublicDocumentSharing.excludeAccounts ??
+        []) {
+        if (accountNames.indexOf(account) === -1) {
+          errors.push(
+            `Excluded account "${account}" for SSM Block Public Document Sharing does not exist in accounts-config.yaml file. Account names must match those defined in the accounts configuration.`,
+          );
+        }
+      }
+    }
+  }
+
+  /**
    * Validate deployment target accounts for GuardDuty
    * @param values SecurityConfig
    * @param accountNames string[]
@@ -841,6 +916,7 @@ export class SecurityConfigValidator {
     this.validateCloudWatchLogGroupsDeploymentTargetAccounts(values, accountNames, errors);
     this.validateKmsKeyConfigDeploymentTargetAccounts(values, accountNames, errors);
     this.validateEbsEncryptionDeploymentTargetAccounts(values, accountNames, errors);
+    this.validateSsmBlockPublicDocumentSharingDeploymentTargetAccounts(values, accountNames, errors);
     this.validateGuardDutyDeploymentTargetAccounts(values, accountNames, errors);
     this.validateSecurityHubDeploymentTargetAccounts(values, accountNames, errors);
   }
@@ -931,14 +1007,18 @@ export class SecurityConfigValidator {
   /**
    * Function to validate existence of Key Management Service Config deployment target OUs
    * Make sure deployment target OUs are part of Organization config file
-   * @param values
+   * @param securityConfig
    */
-  private validateKmsKeyConfigDeploymentTargetOUs(values: ISecurityConfig, ouIdNames: string[], errors: string[]) {
-    for (const keySet of values.keyManagementService?.keySets ?? []) {
-      for (const ou of keySet.deploymentTargets.organizationalUnits ?? []) {
+  private validateKmsKeyConfigDeploymentTargetOUs(
+    securityConfig: ISecurityConfig,
+    ouIdNames: string[],
+    errors: string[],
+  ) {
+    for (const keyConfig of securityConfig.keyManagementService?.keySets ?? []) {
+      for (const ou of keyConfig.deploymentTargets.organizationalUnits ?? []) {
         if (ouIdNames.indexOf(ou) === -1) {
           errors.push(
-            `Deployment target OU ${ou} for KMS key ${keySet.name} does not exists in organization-config.yaml file.`,
+            `Deployment target OU ${ou} for KMS key ${keyConfig.name} does not exists in organization-config.yaml file.`,
           );
         }
       }
@@ -992,18 +1072,18 @@ export class SecurityConfigValidator {
 
   /**
    * Function to validate Deployment targets OU name for security services
-   * @param values
+   * @param securityConfig
    */
-  private validateDeploymentTargetOUs(values: SecurityConfig, ouIdNames: string[], errors: string[]) {
-    this.validateSsmDocumentDeploymentTargetOUs(values, ouIdNames, errors);
-    this.validateCloudWatchAlarmsDeploymentTargetOUs(values, ouIdNames, errors);
-    this.validateCloudWatchMetricsDeploymentTargetOUs(values, ouIdNames, errors);
-    this.validateConfigDeploymentTargetOUs(values, ouIdNames, errors);
-    this.validateConfigRuleDeploymentTargetOUs(values, ouIdNames, errors);
-    this.validateKmsKeyConfigDeploymentTargetOUs(values, ouIdNames, errors);
-    this.validateEbsEncryptionDeploymentTargetOUs(values, ouIdNames, errors);
-    this.validateGuardDutyDeploymentTargetOUs(values, ouIdNames, errors);
-    this.validateSecurityHubDeploymentTargetOUs(values, ouIdNames, errors);
+  private validateDeploymentTargetOUs(securityConfig: SecurityConfig, ouIdNames: string[], errors: string[]) {
+    this.validateSsmDocumentDeploymentTargetOUs(securityConfig, ouIdNames, errors);
+    this.validateCloudWatchAlarmsDeploymentTargetOUs(securityConfig, ouIdNames, errors);
+    this.validateCloudWatchMetricsDeploymentTargetOUs(securityConfig, ouIdNames, errors);
+    this.validateConfigDeploymentTargetOUs(securityConfig, ouIdNames, errors);
+    this.validateConfigRuleDeploymentTargetOUs(securityConfig, ouIdNames, errors);
+    this.validateKmsKeyConfigDeploymentTargetOUs(securityConfig, ouIdNames, errors);
+    this.validateEbsEncryptionDeploymentTargetOUs(securityConfig, ouIdNames, errors);
+    this.validateGuardDutyDeploymentTargetOUs(securityConfig, ouIdNames, errors);
+    this.validateSecurityHubDeploymentTargetOUs(securityConfig, ouIdNames, errors);
   }
 
   /**
@@ -1256,7 +1336,7 @@ export class SecurityConfigValidator {
     values: ISecurityConfig,
     errors: string[],
   ) {
-    if (values.awsConfig.aggregation && globalConfig.controlTower.enable) {
+    if (values.awsConfig.aggregation?.enable && globalConfig.controlTower.enable) {
       errors.push(`Control Tower is enabled.  Config aggregation cannot be managed by AWS LZA`);
     }
 

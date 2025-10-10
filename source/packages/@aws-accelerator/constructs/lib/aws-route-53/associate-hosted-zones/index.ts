@@ -22,6 +22,7 @@ import {
   GetHostedZoneCommand,
   GetHostedZoneResponse,
   Route53Client,
+  ConflictingDomainExists,
 } from '@aws-sdk/client-route-53';
 
 import type {
@@ -259,6 +260,7 @@ async function getHostedZone(route53Client: Route53Client, hostedZoneId: string)
 }
 
 async function associateVpcs(vpcsToAssociate: VpcAssociation, awsClients: AWSClients): Promise<void> {
+  console.log('Associating VPCs to Hosted Zones', vpcsToAssociate);
   const hostedZoneAssociationPromises = Object.keys(vpcsToAssociate).map(hostedZoneId =>
     associateVpcsPerHostedZone(vpcsToAssociate[hostedZoneId], awsClients),
   );
@@ -287,7 +289,15 @@ async function associateVpc(
   route53Client: Route53Client,
   hostedZoneParams: CreateVPCAssociationAuthorizationRequest,
 ): Promise<void> {
-  await throttlingBackOff(() => route53Client.send(new AssociateVPCWithHostedZoneCommand(hostedZoneParams)));
+  try {
+    await throttlingBackOff(() => route53Client.send(new AssociateVPCWithHostedZoneCommand(hostedZoneParams)));
+  } catch (e) {
+    if (e instanceof ConflictingDomainExists) {
+      console.log(e.message);
+    } else {
+      throw e;
+    }
+  }
 }
 
 async function associateCrossAccountVpc(

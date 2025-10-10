@@ -178,11 +178,15 @@ export class IpamResources {
    * @param poolItem {@link IpamPoolConfig}
    * @param scopeMap Map<string, string>
    */
-  private checkIpamScopeExists(poolItem: IpamPoolConfig, scopeMap: Map<string, string>): string | undefined {
+  private checkIpamScopeExists(
+    poolItem: IpamPoolConfig,
+    ipamItem: IpamConfig,
+    scopeMap: Map<string, string>,
+  ): string | undefined {
     let poolScope: string | undefined;
 
     if (poolItem.scope) {
-      poolScope = scopeMap.get(poolItem.scope);
+      poolScope = scopeMap.get(`${ipamItem.name}_${poolItem.scope}`);
 
       if (!poolScope) {
         this.stack.addLogs(LogLevel.ERROR, `Unable to locate IPAM scope ${poolItem.scope} for pool ${poolItem.name}`);
@@ -227,7 +231,7 @@ export class IpamResources {
 
         if (sourcePool && !poolExists) {
           this.stack.addLogs(LogLevel.INFO, `Add IPAM nested pool ${poolItem.name}`);
-          const poolScope = this.checkIpamScopeExists(poolItem, scopeMap);
+          const poolScope = this.checkIpamScopeExists(poolItem, ipamItem, scopeMap);
 
           // Create nested pool
           const pool = this.createIpamPool(ipam, poolItem, poolScope, sourcePool);

@@ -1,0 +1,21 @@
+{
+    "ec2_attributes": {
+      "serial_console_access": {
+        "status": {
+          "@@assign": "enabled"
+        }
+      },
+      "allowed_images_settings": {
+        "state": {
+          "@@assign": "disabled"
+        },
+        "image_criteria": {
+          "criteria_1": {
+            "allowed_image_providers": {
+              "@@assign": []
+            }
+          }
+        }
+      }
+    }
+  }

@@ -11,11 +11,17 @@
  *  and limitations under the License.
  */
 
-import * as AWS from 'aws-sdk';
+import {
+  DetachPolicyCommand,
+  ListAccountsCommand,
+  ListAccountsRequest,
+  OrganizationsClient,
+} from '@aws-sdk/client-organizations';
 import { throttlingBackOff } from '@aws-accelerator/utils/lib/throttle';
 import { CloudFormationCustomResourceEvent } from '@aws-accelerator/utils/lib/common-types';
+import { setRetryStrategy } from '@aws-accelerator/utils/lib/common-functions';
 
-let organizationsClient: AWS.Organizations;
+let organizationsClient: OrganizationsClient;
 
 /**
  * detach-quarantine-scp - lambda handler
@@ -35,7 +41,10 @@ export async function handler(event: CloudFormationCustomResourceEvent): Promise
   const policyId: string = event.ResourceProperties['scpPolicyId'] ?? '';
   const solutionId = process.env['SOLUTION_ID'];
 
-  organizationsClient = new AWS.Organizations({ customUserAgent: solutionId });
+  organizationsClient = new OrganizationsClient({
+    customUserAgent: solutionId,
+    retryStrategy: setRetryStrategy(),
+  });
   switch (event.RequestType) {
     case 'Create':
     case 'Update':
@@ -61,8 +70,8 @@ async function getAccountIds(): Promise<string[]> {
   const accountIdList: string[] = [];
   let nextToken: string | undefined = undefined;
   do {
-    const params: AWS.Organizations.ListAccountsRequest = { NextToken: nextToken };
-    const page = await throttlingBackOff(() => organizationsClient.listAccounts(params).promise());
+    const params: ListAccountsRequest = { NextToken: nextToken };
+    const page = await throttlingBackOff(() => organizationsClient.send(new ListAccountsCommand(params)));
     for (const account of page.Accounts ?? []) {
       accountIdList.push(account.Id!);
     }
@@ -74,12 +83,12 @@ async function getAccountIds(): Promise<string[]> {
 async function detachQuarantineScp(accountId: string, policyId: string): Promise<boolean> {
   try {
     await throttlingBackOff(() =>
-      organizationsClient
-        .detachPolicy({
+      organizationsClient.send(
+        new DetachPolicyCommand({
           PolicyId: policyId,
           TargetId: accountId,
-        })
-        .promise(),
+        }),
+      ),
     );
     console.log(`Detached Quarantine SCP from account: ${accountId}`);
     // eslint-disable-next-line @typescript-eslint/no-explicit-any

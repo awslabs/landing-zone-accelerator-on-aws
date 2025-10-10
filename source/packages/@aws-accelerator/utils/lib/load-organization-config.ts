@@ -16,22 +16,17 @@ import {
   ListOrganizationalUnitsForParentCommand,
   ListRootsCommand,
   ListOrganizationalUnitsForParentCommandOutput,
+  OrganizationalUnit,
+  Root,
 } from '@aws-sdk/client-organizations';
 import { getGlobalRegion, setRetryStrategy } from './common-functions';
-
-type OrgUnit = {
-  Id: string;
-  ParentId: string;
-  Name: string;
-  Arn: string;
-};
-
-type OrgUnits = OrgUnit[];
+import { throttlingBackOff } from './throttle';
 
 type AcceleratorOu = {
   name: string;
   id: string;
   arn: string;
+  orgsApiResponse: OrganizationalUnit | Root;
 };
 type OrganizationConfigArray = {
   name: string;
@@ -51,7 +46,7 @@ export async function loadOrganizationalUnits(
     credentials: managementAccountCredentials,
   });
   const acceleratorOrganizationalUnit: AcceleratorOu[] = [];
-  const rootResults = await client.send(new ListRootsCommand({}));
+  const rootResults = await throttlingBackOff(() => client.send(new ListRootsCommand({})));
 
   let rootId: string;
   if (rootResults.Roots) {
@@ -60,6 +55,7 @@ export async function loadOrganizationalUnits(
       name: rootResults.Roots[0].Name!,
       arn: rootResults.Roots[0].Arn!,
       id: rootId,
+      orgsApiResponse: rootResults.Roots[0],
     });
   }
   const level0 = await getChildrenForParent(rootId!, undefined, client);
@@ -67,11 +63,7 @@ export async function loadOrganizationalUnits(
   const level2 = await processLevel(level1, client);
   const level3 = await processLevel(level2, client);
   const level4 = await processLevel(level3, client);
-  acceleratorOrganizationalUnit.push(...(await parseArray(level0)));
-  acceleratorOrganizationalUnit.push(...(await parseArray(level1)));
-  acceleratorOrganizationalUnit.push(...(await parseArray(level2)));
-  acceleratorOrganizationalUnit.push(...(await parseArray(level3)));
-  acceleratorOrganizationalUnit.push(...(await parseArray(level4)));
+  acceleratorOrganizationalUnit.push(...level0, ...level1, ...level2, ...level3, ...level4);
 
   const filteredArray = acceleratorOrganizationalUnit.filter(obj => {
     return arrayFromConfig.filter(value => {
@@ -81,22 +73,10 @@ export async function loadOrganizationalUnits(
   return filteredArray;
 }
 
-async function parseArray(levelArray: OrgUnits): Promise<AcceleratorOu[]> {
+async function processLevel(levelArray: AcceleratorOu[], client: OrganizationsClient): Promise<AcceleratorOu[]> {
   const output: AcceleratorOu[] = [];
-  for (const item of levelArray) {
-    output.push({
-      name: item.Name,
-      id: item.Id,
-      arn: item.Arn,
-    });
-  }
-  return output;
-}
-
-async function processLevel(levelArray: OrgUnits, client: OrganizationsClient): Promise<OrgUnits> {
-  const output: OrgUnits = [];
   for (const ou of levelArray) {
-    const results = await getChildrenForParent(ou.Id!, ou.Name!, client);
+    const results = await getChildrenForParent(ou.id, ou.name, client);
     output.push(...results);
   }
   return output;
@@ -106,15 +86,17 @@ async function getChildrenForParent(
   parentId: string,
   parentName: string | undefined,
   client: OrganizationsClient,
-): Promise<OrgUnits> {
-  const orgUnits: OrgUnits = [];
+): Promise<AcceleratorOu[]> {
+  const orgUnits: AcceleratorOu[] = [];
   let nextToken: string | undefined = undefined;
   do {
-    const results: ListOrganizationalUnitsForParentCommandOutput = await client.send(
-      new ListOrganizationalUnitsForParentCommand({
-        ParentId: parentId,
-        NextToken: nextToken,
-      }),
+    const results: ListOrganizationalUnitsForParentCommandOutput = await throttlingBackOff(() =>
+      client.send(
+        new ListOrganizationalUnitsForParentCommand({
+          ParentId: parentId,
+          NextToken: nextToken,
+        }),
+      ),
     );
     nextToken = results.NextToken;
     if (results.OrganizationalUnits) {
@@ -122,10 +104,10 @@ async function getChildrenForParent(
         // if parentName is defined, prefix parent name or else just return item.Name
         const itemName = parentName ? `${parentName}/${item.Name!}` : item.Name!;
         orgUnits.push({
-          Id: item.Id!,
-          ParentId: parentId,
-          Name: itemName,
-          Arn: item.Arn!,
+          id: item.Id!,
+          name: itemName,
+          arn: item.Arn!,
+          orgsApiResponse: item,
         });
       }
     }

@@ -10,6 +10,7 @@ import {
 } from '@aws-accelerator/config';
 import { AseaResource, AseaResourceProps } from './resource';
 import { ImportAseaResourcesStack, LogLevel } from '../stacks/import-asea-resources-stack';
+import { getAseaConfigVpcName } from '@aws-accelerator/utils';
 
 const enum RESOURCE_TYPE {
   VPC = 'AWS::EC2::VPC',
@@ -48,7 +49,7 @@ export class TgwCrossAccountResources extends AseaResource {
     accountNames: string[],
     mapping: ASEAMappings,
   ) {
-    if (this.propagationResources.length === 0) return;
+    if (this.propagationResources.length === 0 && this.associationResources.length === 0) return;
     if (vpcItem.transitGatewayAttachments?.length === 0) {
       this.scope.addLogs(LogLevel.WARN, `TGW Attachment is removed from VPC "${vpcItem.name}" configuration`);
       return;
@@ -110,7 +111,11 @@ export class TgwCrossAccountResources extends AseaResource {
 
     let vpcStack: ASEAMapping | undefined;
     for (const vpcStackInfo of vpcStacksInfo) {
-      const vpcResource = this.findResourceByTypeAndTag(vpcStackInfo.cfnResources, RESOURCE_TYPE.VPC, vpcName);
+      const vpcResource = this.findResourceByTypeAndTag(
+        vpcStackInfo.cfnResources,
+        RESOURCE_TYPE.VPC,
+        getAseaConfigVpcName(vpcName),
+      );
       if (vpcResource) {
         vpcStack = vpcStackInfo;
         break;

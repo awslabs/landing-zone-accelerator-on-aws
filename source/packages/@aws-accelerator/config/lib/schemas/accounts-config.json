@@ -21,7 +21,7 @@
       "properties": {
         "accountAlias": {
           "$ref": "#/definitions/NonEmptyNoSpaceString",
-          "description": "Account alias used for sign-in page URL in place of 12-digit number. This must be unique within the AWS partition and be only digits, lowercase letters, and hyphens. It will be validated againt the Regular Expression ^[a-z0-9]([a-z0-9]|-(?!-)){1,61}[a-z0-9]$"
+          "description": "Account alias used for sign-in page URL in place of 12-digit number. This must be unique within the AWS partition and be only digits, lowercase letters, and hyphens. It will be validated against the Regular Expression ^[a-z0-9]([a-z0-9]|-(?!-)){1,61}[a-z0-9]$"
         },
         "description": {
           "$ref": "#/definitions/NonEmptyString",
@@ -120,7 +120,7 @@
       "properties": {
         "accountAlias": {
           "$ref": "#/definitions/NonEmptyNoSpaceString",
-          "description": "Account alias used for sign-in page URL in place of 12-digit number. This must be unique within the AWS partition and be only digits, lowercase letters, and hyphens. It will be validated againt the Regular Expression ^[a-z0-9]([a-z0-9]|-(?!-)){1,61}[a-z0-9]$"
+          "description": "Account alias used for sign-in page URL in place of 12-digit number. This must be unique within the AWS partition and be only digits, lowercase letters, and hyphens. It will be validated against the Regular Expression ^[a-z0-9]([a-z0-9]|-(?!-)){1,61}[a-z0-9]$"
         },
         "description": {
           "$ref": "#/definitions/NonEmptyString",
@@ -141,6 +141,10 @@
         "organizationalUnit": {
           "$ref": "#/definitions/NonEmptyString",
           "description": "The friendly name for the Organizational Unit that this account is a member of. This Organizational Unit must exist in the organization-config.yaml file."
+        },
+        "warm": {
+          "description": "'Warm' the account by creating an EC2 instance that runs for 15 minutes Use for new accounts that will need to have ec2 instance provisioned as part of the solution The 'warming' will take place in the operations stack This property may be removed after the account has been provisioned",
+          "type": "boolean"
         }
       },
       "required": [

@@ -54,6 +54,11 @@ export interface ResolverEndpointProps {
   readonly securityGroupIds: string[];
 
   /**
+   * The protocols to use for the resolver endpoint.
+   */
+  readonly protocols?: string[];
+
+  /**
    * A list of CloudFormation tags.
    */
   readonly tags?: cdk.CfnTag[];
@@ -78,6 +83,7 @@ export class ResolverEndpoint extends cdk.Resource implements IResolverEndpoint 
       ipAddresses: this.ipAddresses,
       name: props.name,
       securityGroupIds: props.securityGroupIds,
+      protocols: props.protocols,
       tags: props.tags,
     });
     cdk.Tags.of(this).add('Name', this.name);

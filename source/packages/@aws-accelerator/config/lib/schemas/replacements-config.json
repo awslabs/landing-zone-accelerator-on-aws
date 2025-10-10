@@ -47,6 +47,9 @@
                 "$ref": "#/definitions/NonEmptyString"
               },
               "type": "array"
+            },
+            {
+              "type": "number"
             }
           ],
           "description": "Value of the parameter if type is string or array"
@@ -88,7 +91,8 @@
       "enum": [
         "SSM",
         "String",
-        "StringList"
+        "StringList",
+        "Number"
       ],
       "type": "string"
     }

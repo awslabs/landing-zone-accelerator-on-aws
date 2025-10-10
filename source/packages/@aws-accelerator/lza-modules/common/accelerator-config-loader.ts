@@ -11,7 +11,13 @@
  *  and limitations under the License.
  */
 
-import { AccountsConfig, GlobalConfig, OrganizationConfig, SecurityConfig } from '@aws-accelerator/config';
+import {
+  AccountsConfig,
+  GlobalConfig,
+  OrganizationConfig,
+  SecurityConfig,
+  ReplacementsConfig,
+} from '@aws-accelerator/config';
 import { AssumeRoleCredentialType } from './resources';
 
 /**
@@ -61,16 +67,51 @@ export abstract class AcceleratorConfigLoader {
    * @returns configs {@link AllConfigType}
    */
   public static async getAllConfig(configDirPath: string, partition: string): Promise<AllConfigType> {
+    //
+    // Get home region
+    //
+    const homeRegion = GlobalConfig.loadRawGlobalConfig(configDirPath).homeRegion;
+
+    //
+    // Get Org enable flag
+    //
     const orgsEnabled = OrganizationConfig.loadRawOrganizationsConfig(configDirPath).enable;
+
+    //
+    // Get accounts config
+    //
+    const accountsConfig = await AcceleratorConfigLoader.getAccountsConfigWithAccountIds(
+      configDirPath,
+      partition,
+      orgsEnabled,
+    );
+
+    //
+    // Get replacement config
+    //
+    const replacementsConfig = ReplacementsConfig.load(configDirPath, accountsConfig);
+    await replacementsConfig.loadDynamicReplacements(homeRegion);
+
+    //
+    // Get Global config
+    //
+    const globalConfig = GlobalConfig.load(configDirPath, replacementsConfig);
+
+    //
+    // Get Organization config
+    //
+    const organizationConfig = OrganizationConfig.load(configDirPath, replacementsConfig);
+
+    //
+    // Get Security config
+    //
+    const securityConfig = SecurityConfig.load(configDirPath, replacementsConfig);
+
     return {
-      globalConfig: GlobalConfig.load(configDirPath),
-      organizationConfig: OrganizationConfig.load(configDirPath),
-      accountsConfig: await AcceleratorConfigLoader.getAccountsConfigWithAccountIds(
-        configDirPath,
-        partition,
-        orgsEnabled,
-      ),
-      securityConfig: SecurityConfig.load(configDirPath),
+      globalConfig: globalConfig,
+      organizationConfig: organizationConfig,
+      accountsConfig: accountsConfig,
+      securityConfig: securityConfig,
     };
   }
 }

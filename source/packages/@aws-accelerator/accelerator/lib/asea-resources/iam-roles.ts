@@ -61,6 +61,13 @@ export class Roles extends AseaResource {
     const rolesInScope = roleSetItemsInScope.map(roleSetItem => roleSetItem.roles).flat();
     this.addDeletionFlagForRoles(rolesInScope, CFN_ROLE_TYPE, prefix);
     this.updateRoles(rolesInScope);
+    this.addRoleToManagementAccount(
+      this.props.stackInfo.accountId,
+      this.props.stackInfo.region,
+      this.props.accountsConfig.getManagementAccountId(),
+      this.props.globalConfig.homeRegion,
+      `${prefix}-LZA-Lambda-Execution`,
+    );
   }
 
   private getManagedPolicies(roleItem: RoleConfig) {
@@ -185,6 +192,7 @@ export class Roles extends AseaResource {
       `${acceleratorPrefix}-VPC-FlowLog`,
       `${acceleratorPrefix}-VPC-PCX`,
       `${acceleratorPrefix}-Reports`,
+      `${acceleratorPrefix}-L-SFN-MasterRole`,
     ];
     const importRoles = this.scope.importStackResources.getResourcesByType(resourceType);
     for (const importRole of importRoles) {
@@ -252,5 +260,29 @@ export class Roles extends AseaResource {
       });
       this.scope.addAseaResource(AseaResourceType.IAM_ROLE, roleItem.name);
     }
+  }
+
+  private addRoleToManagementAccount(
+    account: string,
+    region: string,
+    managementAccount: string,
+    homeRegion: string,
+    roleName: string,
+  ) {
+    if (account !== managementAccount || region !== homeRegion) {
+      return;
+    }
+
+    const role = this.scope.importStackResources.getResourceByName('RoleName', roleName);
+    if (role) {
+      return;
+    }
+    const newRole = new cdk.aws_iam.Role(this.scope, `${roleName}`, {
+      assumedBy: new cdk.aws_iam.ServicePrincipal('lambda.amazonaws.com'),
+      roleName,
+    });
+    newRole.addManagedPolicy(
+      cdk.aws_iam.ManagedPolicy.fromAwsManagedPolicyName('service-role/AWSLambdaBasicExecutionRole'),
+    );
   }
 }

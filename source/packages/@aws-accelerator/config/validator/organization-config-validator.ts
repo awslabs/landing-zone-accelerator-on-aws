@@ -18,6 +18,9 @@ import { ReplacementsConfig } from '../lib/replacements-config';
 import { CommonValidatorFunctions } from './common/common-validator-functions';
 
 export class OrganizationConfigValidator {
+  private readonly ouScpLimit = Number(process.env['ORGANIZATIONAL_UNIT_SCP_LIMIT']) ?? 5;
+  private readonly accountScpLimit = Number(process.env['ACCOUNT_SCP_LIMIT']) ?? 5;
+
   constructor(values: OrganizationConfig, replacementsConfig: ReplacementsConfig | undefined, configDir: string) {
     const errors: string[] = [];
 
@@ -27,6 +30,12 @@ export class OrganizationConfigValidator {
 
     // Validate presence of service control policy file
     this.validateServiceControlPolicyFile(configDir, values, errors);
+
+    // Validate presence of resource control policy file
+    this.validateResourceControlPolicyFile(configDir, values, errors);
+
+    // Validate presence of declarative policy file
+    this.validateDeclarativePolicyFile(configDir, values, errors);
 
     // Validate presence of tagging policy file
     this.validateTaggingPolicyFile(configDir, values, errors);
@@ -54,6 +63,7 @@ export class OrganizationConfigValidator {
       appliedScpName: string[];
     };
     const validateScpCountForOrg: validateScpItem[] = [];
+    const validateScpCountForAcc: validateScpItem[] = [];
     for (const serviceControlPolicy of values.serviceControlPolicies ?? []) {
       if (!fs.existsSync(path.join(configDir, serviceControlPolicy.policy))) {
         errors.push(
@@ -76,11 +86,11 @@ export class OrganizationConfigValidator {
       }
       for (const accUnitScp of serviceControlPolicy.deploymentTargets.accounts ?? []) {
         //check in array to see if account is already there
-        const index = validateScpCountForOrg.map(object => object.orgEntity).indexOf(accUnitScp);
+        const index = validateScpCountForAcc.map(object => object.orgEntity).indexOf(accUnitScp);
         if (index > -1) {
-          validateScpCountForOrg[index].appliedScpName.push(serviceControlPolicy.name);
+          validateScpCountForAcc[index].appliedScpName.push(serviceControlPolicy.name);
         } else {
-          validateScpCountForOrg.push({
+          validateScpCountForAcc.push({
             orgEntity: accUnitScp,
             orgEntityType: 'Account',
             appliedScpName: [serviceControlPolicy.name],
@@ -88,10 +98,49 @@ export class OrganizationConfigValidator {
         }
       }
     }
+
     for (const validateOrgEntity of validateScpCountForOrg) {
-      if (validateOrgEntity.appliedScpName.length > 5) {
+      if (validateOrgEntity.appliedScpName.length > this.ouScpLimit) {
         errors.push(
-          `${validateOrgEntity.orgEntityType} - ${validateOrgEntity.orgEntity} has ${validateOrgEntity.appliedScpName.length} out of 5 allowed scps`,
+          `${validateOrgEntity.orgEntityType} - ${validateOrgEntity.orgEntity} has ${validateOrgEntity.appliedScpName.length} out of ${this.ouScpLimit} allowed scps. To validate a against a higher limit add the environment variable ACCELERATOR_MAX_OU_ATTACHED_SCPS to the toolkit build project`,
+        );
+      }
+    }
+
+    for (const validateAccEntity of validateScpCountForAcc) {
+      if (validateAccEntity.appliedScpName.length > this.accountScpLimit) {
+        errors.push(
+          `${validateAccEntity.orgEntityType} - ${validateAccEntity.orgEntity} has ${validateAccEntity.appliedScpName.length} out of ${this.accountScpLimit} allowed scps.  To validate a against a higher limit add the environment variable ACCELERATOR_MAX_ACCOUNT_ATTACHED_SCPS to the toolkit build project`,
+        );
+      }
+    }
+  }
+
+  /**
+   * Function to validate resource control policy file existence
+   * @param configDir
+   * @param values
+   */
+  private validateResourceControlPolicyFile(configDir: string, values: OrganizationConfig, errors: string[]) {
+    for (const resourceControlPolicy of values.resourceControlPolicies ?? []) {
+      if (!fs.existsSync(path.join(configDir, resourceControlPolicy.policy))) {
+        errors.push(
+          `Invalid policy file ${resourceControlPolicy.policy} for resource control policy ${resourceControlPolicy.name}!`,
+        );
+      }
+    }
+  }
+
+  /**
+   * Function to validate Declarative policy file existence
+   * @param configDir
+   * @param values
+   */
+  private validateDeclarativePolicyFile(configDir: string, values: OrganizationConfig, errors: string[]) {
+    for (const declarativePolicy of values.declarativePolicies ?? []) {
+      if (!fs.existsSync(path.join(configDir, declarativePolicy.policy))) {
+        errors.push(
+          `Invalid policy file ${declarativePolicy.policy} for resource control policy ${declarativePolicy.name}!`,
         );
       }
     }
@@ -105,7 +154,7 @@ export class OrganizationConfigValidator {
   private validateTaggingPolicyFile(configDir: string, values: OrganizationConfig, errors: string[]) {
     for (const taggingPolicy of values.taggingPolicies ?? []) {
       if (!fs.existsSync(path.join(configDir, taggingPolicy.policy))) {
-        errors.push(`Invalid policy file ${taggingPolicy.policy} for tagging policy ${taggingPolicy.name} !!!`);
+        errors.push(`Invalid policy file ${taggingPolicy.policy} for tagging policy ${taggingPolicy.name}!`);
       }
     }
   }
@@ -119,7 +168,7 @@ export class OrganizationConfigValidator {
     // Validate presence of backup policy file
     for (const backupPolicy of values.backupPolicies ?? []) {
       if (!fs.existsSync(path.join(configDir, backupPolicy.policy))) {
-        errors.push(`Invalid policy file ${backupPolicy.policy} for backup policy ${backupPolicy.name} !!!`);
+        errors.push(`Invalid policy file ${backupPolicy.policy} for backup policy ${backupPolicy.name}!`);
       }
     }
   }

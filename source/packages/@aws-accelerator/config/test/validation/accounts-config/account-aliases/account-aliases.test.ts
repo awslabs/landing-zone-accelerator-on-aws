@@ -11,7 +11,7 @@ describe('AccountsConfigValidator', () => {
   const accountsNoDuplicateAliases = AccountsConfig.load(
     path.resolve('./test/validation/accounts-config/account-aliases/no-duplicate-config'),
   );
-  const organization = OrganizationConfig.load(
+  const organization = OrganizationConfig.loadRawOrganizationsConfig(
     path.resolve('./test/validation/accounts-config/account-aliases/duplicate-config'),
   );
 
@@ -76,14 +76,17 @@ describe('AccountsConfigValidator', () => {
             name: 'Management',
             email: 'alias+root@example.com',
             accountAlias: 'valid-alias',
+            organizationalUnit: 'Root',
           },
           {
             name: 'LogArchive',
             email: 'alias+log@example.com',
+            organizationalUnit: 'Root',
           },
           {
             name: 'Audit',
             email: 'alias+audit@example.com',
+            organizationalUnit: 'Root',
           },
         ],
         workloadAccounts: [],

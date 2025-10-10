@@ -359,3 +359,11 @@ export interface SQSBatchResponse {
 export interface SQSBatchItemFailure {
   itemIdentifier: string;
 }
+
+export interface ILZAMetadata {
+  [key: string]: string | boolean | number | undefined;
+}
+
+export enum MetadataKeys {
+  LZA_LOOKUP = 'lzaLookup',
+}

@@ -2357,6 +2357,11 @@ export interface IInterfaceEndpointConfig {
    * @remarks
    * This is the logical `name` property of the VPC subnet as defined in network-config.yaml.
    *
+   * For global services like `iam`, the centralized endpoint architecture is not supported. You will have to define an
+   * interface endpoint for each VPC where you require private communication to the service control plane. Some endpoints that are global
+   * can only be created in the Region where the control plane is located.
+   *
+   *
    * @see {@link SubnetConfig}
    */
   readonly subnets: t.NonEmptyString[];
@@ -2807,6 +2812,49 @@ export interface INetworkAclSubnetSelection {
 }
 
 /**
+ * *{@link NetworkConfig} / {@link VpcConfig} | {@link VpcTemplatesConfig} / {@link NetworkAclConfig} / {@link IcmpRuleConfig}*
+ *
+ *
+ * @description
+ * Use this configuration to define ICMP rules for your network ACLs.
+ *
+ * The following example allows inbound ICMP traffic for Mobile Host Redirect
+ * @example
+ * ```
+ * - rule: 200
+ *   protocol: 1
+ *   icmp:
+ *     type: 32
+ *     code: 5
+ *   action: allow
+ *   source: 10.0.0.0/16
+ * ```
+ * This example allows all ICMP types and codes
+ * ```
+ * - rule: 201
+ *   protocol: 1
+ *   icmp:
+ *     type: -1
+ *     code: -1
+ *   action: allow
+ *   source: 10.0.50.0/28
+ * ```
+ *
+ * * @remarks
+ * For possible ICMP Code Types reference this {@link https://www.iana.org/assignments/icmp-parameters/icmp-parameters.xhtml | documentation}.
+ */
+export interface IIcmpRuleConfig {
+  /**
+   * The ICMP type number. A value of -1 indicates all types.
+   */
+  readonly type: number;
+  /**
+   * The ICMP code number. A value of -1 indicates all types.
+   */
+  readonly code: number;
+}
+
+/**
  * *{@link NetworkConfig} / {@link VpcConfig} | {@link VpcTemplatesConfig} / {@link NetworkAclConfig} / {@link NetworkAclInboundRuleConfig}*
  *
  * {@link https://docs.aws.amazon.com/vpc/latest/userguide/vpc-network-acls.html#nacl-rules | Network ACL inbound rule} configuration.
@@ -2847,11 +2895,11 @@ export interface INetworkAclInboundRuleConfig {
   /**
    * The port to start from in the network ACL rule.
    */
-  readonly fromPort: number;
+  readonly fromPort?: number;
   /**
    * The port to end with in the network ACL rule.
    */
-  readonly toPort: number;
+  readonly toPort?: number;
   /**
    * The action for the network ACL rule.
    */
@@ -2865,6 +2913,11 @@ export interface INetworkAclInboundRuleConfig {
    * @see {@link NetworkAclSubnetSelection}
    */
   readonly source: t.NonEmptyString | INetworkAclSubnetSelection;
+  /**
+   * (OPTIONAL) The Internet Control Message Protocol (ICMP) code and type. Required if specifying 1 (ICMP) for the protocol parameter.
+   *
+   */
+  readonly icmp?: t.NonEmptyString | IIcmpRuleConfig;
 }
 
 /**
@@ -2908,11 +2961,11 @@ export interface INetworkAclOutboundRuleConfig {
   /**
    * The port to start from in the network ACL rule.
    */
-  readonly fromPort: number;
+  readonly fromPort?: number;
   /**
    * The port to end with in the network ACL rule.
    */
-  readonly toPort: number;
+  readonly toPort?: number;
   /**
    * The action for the network ACL rule.
    */
@@ -2926,6 +2979,11 @@ export interface INetworkAclOutboundRuleConfig {
    * @see {@link NetworkAclSubnetSelection}
    */
   readonly destination: t.NonEmptyString | INetworkAclSubnetSelection;
+  /**
+   * (OPTIONAL) The Internet Control Message Protocol (ICMP) code and type. Required if specifying 1 (ICMP) for the protocol parameter.
+   *
+   */
+  readonly icmp?: t.NonEmptyString | IIcmpRuleConfig;
 }
 
 /**
@@ -4367,7 +4425,11 @@ export interface IVpcConfig {
    * (OPTIONAL) When set to true, this VPC will be configured to utilize centralized
    * endpoints. This includes having the Route 53 Private Hosted Zone
    * associated with this VPC. Centralized endpoints are configured per
-   * region, and can span to spoke accounts
+   * region, and can span to spoke accounts.
+   *
+   * NOTE: The AWS partition and regions must support the creation of Route 53 private hosted zones and DNS alias records for
+   * AWS VPC Endpoint resource types or the pipeline will fail. Ensure your partition and regions will support useCentralEndpoints
+   * before enabling it.
    *
    * @default false
    *
@@ -4961,6 +5023,7 @@ export interface IResolverRuleConfig {
 }
 
 export type ResolverEndpointType = 'INBOUND' | 'OUTBOUND';
+export type ResolverProtocol = 'DoH-FIPS' | 'DoH' | 'Do53';
 
 /**
  * *{@link NetworkConfig} / {@link CentralNetworkServicesConfig} / {@link ResolverConfig} / {@link ResolverEndpointConfig}*
@@ -5062,6 +5125,38 @@ export interface IResolverEndpointConfig {
    * @see {@link ResolverRuleConfig}
    */
   readonly rules?: IResolverRuleConfig[];
+  /**
+   * (OPTIONAL) An array of DNS Queries over HTTPS (DoH) Protocols to apply to the
+   * Route 53 Resolver Endpoints.
+   *
+   * @remarks
+   * DoH uses TLS encryption and increases privacy and security by preventing eavesdropping and manipulation of DNS
+   * data as it is exchanged between a DoH client and the DoH-based DNS resolver. This helps you implement a
+   * zero-trust architecture where no actor, system, network, or service operating outside or within your security
+   * perimeter is trusted and all network traffic is encrypted.
+   *
+   * For more information, please see: {@link https://datatracker.ietf.org/doc/html/rfc8484}
+   *
+   * Valid configurations are available here: {@link https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-route53resolver-resolverendpoint.html#cfn-route53resolver-resolverendpoint-protocols}
+   *
+   * Note: Not specifying the protocol property for an endpoint, defaults to the `Do53` protocol.
+   *
+   * @example
+   *
+   * To implement an INBOUND resolver endpoint using the DoH protocol.
+   *
+   * ```
+   * - name: accelerator-inbound
+   *   type: INBOUND
+   *   vpc: Network-Endpoints
+   *   protocols:
+   *     - DoH
+   *   subnets:
+   *     - Network-Endpoints-A
+   *     - Network-Endpoints-B
+   * ```
+   */
+  readonly protocols?: ResolverProtocol[];
   /**
    * (OPTIONAL) An array of tags for the resolver endpoint.
    */

@@ -74,3 +74,8 @@ module.exports = {
     ],
   ],
 };
+
+process.env = Object.assign(process.env, {
+  ORGANIZATIONAL_UNIT_SCP_LIMIT: '5',
+  ACCOUNT_SCP_LIMIT: '6',
+});

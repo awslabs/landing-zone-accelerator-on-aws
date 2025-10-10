@@ -855,7 +855,10 @@ export class NetworkAssociationsGwlbStack extends NetworkStack {
     const endpointMap = new Map<string, VpcEndpoint>();
     let endpointServiceId: string | undefined = undefined;
     for (const endpointItem of loadBalancerItem.endpoints) {
-      if (endpointItem.vpc === vpcItem.name) {
+      if (
+        endpointItem.vpc === vpcItem.name &&
+        this.props.accountsConfig.getAccountId(endpointItem.account) === cdk.Stack.of(this).account
+      ) {
         // Get endpoint service ID
         endpointServiceId = cdk.aws_ssm.StringParameter.valueForStringParameter(
           this,

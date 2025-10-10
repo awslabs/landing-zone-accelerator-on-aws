@@ -24,6 +24,7 @@ import {
   AttachPolicyCommand,
   DuplicatePolicyAttachmentException,
   PolicyType,
+  PolicyTypeNotEnabledException,
 } from '@aws-sdk/client-organizations';
 import { CloudFormationCustomResourceEvent } from '@aws-accelerator/utils/lib/common-types';
 
@@ -158,7 +159,13 @@ async function attachSpecificPolicy(organizationsClient: OrganizationsClient, po
       organizationsClient.send(new AttachPolicyCommand({ PolicyId: policyId, TargetId: targetId })),
     );
   } catch (error: unknown) {
-    if (error instanceof DuplicatePolicyAttachmentException) {
+    if (error instanceof PolicyTypeNotEnabledException) {
+      console.log(`Policy type not enabled. Retrying...`);
+      // Delay needed for RCPs
+      await throttlingBackOff(() =>
+        organizationsClient.send(new AttachPolicyCommand({ PolicyId: policyId, TargetId: targetId })),
+      );
+    } else if (error instanceof DuplicatePolicyAttachmentException) {
       console.log('Policy already attached. Continuing...');
     } else {
       throw new Error(`Error while trying to attach policy: ${policyId}. Error message: ${JSON.stringify(error)}`);

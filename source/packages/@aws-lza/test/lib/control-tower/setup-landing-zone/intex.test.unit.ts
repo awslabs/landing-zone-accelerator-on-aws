@@ -284,7 +284,7 @@ describe('Accelerator ControlTower Landing Zone Module', () => {
       });
 
       // Verify
-      expect(response).toMatch(/Module "control-tower-landing-zone" The Landing Zone deployed successfully./);
+      expect(response).toMatch(/AWS Control Tower landing zone deployed successfully./);
       expect(CreateLandingZoneCommand).toHaveBeenCalledTimes(1);
       expect(GetLandingZoneOperationCommand).toHaveBeenCalledTimes(1);
     });
@@ -321,7 +321,7 @@ describe('Accelerator ControlTower Landing Zone Module', () => {
       });
 
       // Verify
-      expect(response).toMatch(/Module "control-tower-landing-zone" The Landing Zone deployed successfully./);
+      expect(response).toMatch(/AWS Control Tower landing zone deployed successfully./);
       expect(CreateLandingZoneCommand).toHaveBeenCalledTimes(1);
       expect(GetLandingZoneOperationCommand).toHaveBeenCalledTimes(2);
     });
@@ -629,9 +629,7 @@ describe('Accelerator ControlTower Landing Zone Module', () => {
       });
 
       // Verify
-      expect(response).toMatch(
-        /Module "control-tower-landing-zone" completed successfully with status mock reason for update/,
-      );
+      expect(response).toMatch(/mock reason for update/);
       expect(CreateLandingZoneCommand).toHaveBeenCalledTimes(0);
       expect(UpdateLandingZoneCommand).toHaveBeenCalledTimes(0);
       expect(ResetLandingZoneCommand).toHaveBeenCalledTimes(0);
@@ -1013,9 +1011,7 @@ describe('Accelerator ControlTower Landing Zone Module', () => {
       });
 
       // Verify
-      expect(response).toMatch(
-        /Module "control-tower-landing-zone" completed successfully with status mock reason for update/,
-      );
+      expect(response).toMatch(/mock reason for update/);
       expect(CreateLandingZoneCommand).toHaveBeenCalledTimes(0);
       expect(UpdateLandingZoneCommand).toHaveBeenCalledTimes(0);
       expect(ResetLandingZoneCommand).toHaveBeenCalledTimes(0);

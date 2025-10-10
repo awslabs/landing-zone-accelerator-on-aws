@@ -11,12 +11,15 @@
  *  and limitations under the License.
  */
 import { ShareTargets, isNetworkType } from '../../lib/common';
+import { GlobalConfig } from '../../lib/global-config';
 import {
   ApplicationLoadBalancerConfig,
   CustomizationsConfig,
   Ec2FirewallInstanceConfig,
 } from '../../lib/customizations-config';
 import {
+  NetworkAclInboundRuleConfig,
+  NetworkAclOutboundRuleConfig,
   NetworkAclSubnetSelection,
   NetworkConfig,
   NfwFirewallConfig,
@@ -47,6 +50,7 @@ export class VpcValidator {
     helpers: NetworkValidatorFunctions,
     errors: string[],
     customizationsConfig?: CustomizationsConfig,
+    globalConfig?: GlobalConfig,
   ) {
     this.customizationsConfig = customizationsConfig;
     //
@@ -78,7 +82,7 @@ export class VpcValidator {
     //
     // Validate Outpost and Local Gateway (LGW) configurations
     //
-    this.validateOutpostConfiguration(values, helpers, errors);
+    this.validateOutpostConfiguration(values, helpers, errors, globalConfig);
     //
     // Validate VPC peering configurations
     //
@@ -96,7 +100,6 @@ export class VpcValidator {
   ): string[] {
     const vpcs = [...values.vpcs, ...(values.vpcTemplates ?? [])];
     const centralVpcs: VpcConfig[] = [];
-    const unsupportedRegions = ['us-gov-west-1', 'us-gov-east-1'];
     // Get VPCs marked as central; do not allow VPC templates
     vpcs.forEach(vpc => {
       if (vpc.interfaceEndpoints?.central && !isNetworkType<VpcConfig>('IVpcConfig', vpc)) {
@@ -113,11 +116,6 @@ export class VpcValidator {
     if (helpers.hasDuplicates(vpcRegions)) {
       errors.push(
         `More than one central endpoint VPC configured in a single region. One central endpoint VPC per region is supported. Central endpoint VPC regions configured: ${vpcRegions}`,
-      );
-    }
-    if (vpcRegions.some(region => unsupportedRegions.includes(region))) {
-      errors.push(
-        `Central endpoints VPC configured in an unsupported region. Central endpoint VPC regions configured: ${vpcRegions}`,
       );
     }
     return vpcRegions;
@@ -877,7 +875,12 @@ export class VpcValidator {
    * Function to validate conditional dependencies for Outpost and Local Gateway configurations.
    * @param values
    */
-  private validateOutpostConfiguration(values: NetworkConfig, helpers: NetworkValidatorFunctions, errors: string[]) {
+  private validateOutpostConfiguration(
+    values: NetworkConfig,
+    helpers: NetworkValidatorFunctions,
+    errors: string[],
+    globalConfig?: GlobalConfig,
+  ) {
     //
     // Validate that local gateways do not have the same name across different outposts
     //
@@ -886,6 +889,10 @@ export class VpcValidator {
     // Validate that all outpost names are unique
     //
     this.validateOutpostNames(values, helpers, errors);
+    //
+    // Validate Outpost and V2 stacks
+    //
+    this.validateOutpostV2Stacks(values, errors, globalConfig);
   }
 
   /**
@@ -893,7 +900,7 @@ export class VpcValidator {
    * @param values
    */
   private validateVpcConfiguration(values: NetworkConfig, helpers: NetworkValidatorFunctions, errors: string[]) {
-    const vpcs = [...values.vpcs, ...(values.vpcTemplates ?? [])] ?? [];
+    const vpcs = [...values.vpcs, ...(values.vpcTemplates ?? [])];
     vpcs.forEach(vpcItem => {
       //
       // Validate VPC structure
@@ -1351,6 +1358,8 @@ export class VpcValidator {
     this.validateNaclPorts(vpcItem, errors);
     // Validate NACL source/destination
     this.validateNaclSourceDestinationConfig(vpcItem, helpers, errors);
+    // Validate NACL ICMP Rules
+    this.validateNaclRules(vpcItem, errors);
   }
 
   /**
@@ -1461,47 +1470,51 @@ export class VpcValidator {
     vpcItem.networkAcls?.forEach(nacl => {
       // Validate inbound ports
       nacl.inboundRules?.forEach(inbound => {
-        const isAllPorts = inbound.fromPort === -1 && inbound.toPort === -1;
-        const isValidPortRange = inbound.fromPort <= inbound.toPort;
-        const portRangeString = `fromPort: ${inbound.fromPort}, toPort: ${inbound.toPort}`;
-        if (!isValidPortRange) {
-          errors.push(
-            `[VPC ${vpcItem.name} NACL ${nacl.name} inbound rule ${inbound.rule}]: fromPort must be less than or equal to toPort. Defined port range: ${portRangeString}`,
-          );
-        } else {
-          if (!isAllPorts && (inbound.fromPort < 0 || inbound.fromPort > 65535)) {
+        if (inbound.fromPort && inbound.toPort) {
+          const isAllPorts = inbound.fromPort === -1 && inbound.toPort === -1;
+          const isValidPortRange = inbound.fromPort <= inbound.toPort;
+          const portRangeString = `fromPort: ${inbound.fromPort}, toPort: ${inbound.toPort}`;
+          if (!isValidPortRange) {
             errors.push(
-              `[VPC ${vpcItem.name} NACL ${nacl.name} inbound rule ${inbound.rule}]: when not using -1, fromPort value must be between 0 and 65535. Defined port range: ${portRangeString}`,
+              `[VPC ${vpcItem.name} NACL ${nacl.name} inbound rule ${inbound.rule}]: fromPort must be less than or equal to toPort. Defined port range: ${portRangeString}`,
             );
-          }
+          } else {
+            if (!isAllPorts && (inbound.fromPort < 0 || inbound.fromPort > 65535)) {
+              errors.push(
+                `[VPC ${vpcItem.name} NACL ${nacl.name} inbound rule ${inbound.rule}]: when not using -1, fromPort value must be between 0 and 65535. Defined port range: ${portRangeString}`,
+              );
+            }
 
-          if (!isAllPorts && (inbound.toPort < 0 || inbound.toPort > 65535)) {
-            errors.push(
-              `[VPC ${vpcItem.name} NACL ${nacl.name} inbound rule ${inbound.rule}]: when not using -1, toPort value must be between 0 and 65535. Defined port range: ${portRangeString}`,
-            );
+            if (!isAllPorts && (inbound.toPort < 0 || inbound.toPort > 65535)) {
+              errors.push(
+                `[VPC ${vpcItem.name} NACL ${nacl.name} inbound rule ${inbound.rule}]: when not using -1, toPort value must be between 0 and 65535. Defined port range: ${portRangeString}`,
+              );
+            }
           }
         }
       });
       // Validate outbound ports
       nacl.outboundRules?.forEach(outbound => {
-        const isAllPorts = outbound.fromPort === -1 && outbound.toPort === -1;
-        const isValidPortRange = outbound.fromPort <= outbound.toPort;
-        const portRangeString = `fromPort: ${outbound.fromPort}, toPort: ${outbound.toPort}`;
-        if (!isValidPortRange) {
-          errors.push(
-            `[VPC ${vpcItem.name} NACL ${nacl.name} outbound rule ${outbound.rule}]: fromPort must be less than or equal to toPort. Defined port range: ${portRangeString}`,
-          );
-        } else {
-          if (!isAllPorts && (outbound.fromPort < 0 || outbound.fromPort > 65535)) {
+        if (outbound.fromPort && outbound.toPort) {
+          const isAllPorts = outbound.fromPort === -1 && outbound.toPort === -1;
+          const isValidPortRange = outbound.fromPort <= outbound.toPort;
+          const portRangeString = `fromPort: ${outbound.fromPort}, toPort: ${outbound.toPort}`;
+          if (!isValidPortRange) {
             errors.push(
-              `[VPC ${vpcItem.name} NACL ${nacl.name} outbound rule ${outbound.rule}]: when not using -1, fromPort value must be between 0 and 65535. Defined port range: ${portRangeString}`,
+              `[VPC ${vpcItem.name} NACL ${nacl.name} outbound rule ${outbound.rule}]: fromPort must be less than or equal to toPort. Defined port range: ${portRangeString}`,
             );
-          }
+          } else {
+            if (!isAllPorts && (outbound.fromPort < 0 || outbound.fromPort > 65535)) {
+              errors.push(
+                `[VPC ${vpcItem.name} NACL ${nacl.name} outbound rule ${outbound.rule}]: when not using -1, fromPort value must be between 0 and 65535. Defined port range: ${portRangeString}`,
+              );
+            }
 
-          if (!isAllPorts && (outbound.toPort < 0 || outbound.toPort > 65535)) {
-            errors.push(
-              `[VPC ${vpcItem.name} NACL ${nacl.name} outbound rule ${outbound.rule}]: when not using -1, toPort value must be between 0 and 65535. Defined port range: ${portRangeString}`,
-            );
+            if (!isAllPorts && (outbound.toPort < 0 || outbound.toPort > 65535)) {
+              errors.push(
+                `[VPC ${vpcItem.name} NACL ${nacl.name} outbound rule ${outbound.rule}]: when not using -1, toPort value must be between 0 and 65535. Defined port range: ${portRangeString}`,
+              );
+            }
           }
         }
       });
@@ -1525,6 +1538,39 @@ export class VpcValidator {
     this.validateNaclInboundSubnetSelections(vpcItem, helpers, errors);
     // Validate NACL outbound subnet selection
     this.validateNaclOutboundSubnetSelections(vpcItem, helpers, errors);
+  }
+
+  private validateIcmpRules(
+    rules: NetworkAclInboundRuleConfig[] | NetworkAclOutboundRuleConfig[],
+    direction: 'inbound' | 'outbound',
+    naclName: string,
+    vpcName: string,
+  ): string[] {
+    const errors: string[] = [];
+
+    rules.forEach(rule => {
+      if (rule.protocol !== 1 && rule.icmp) {
+        errors.push(
+          `[VPC ${vpcName} NACL ${naclName} ${direction} rule ${rule.rule}]: Protocol must be set to "1" if using ICMP`,
+        );
+      }
+    });
+
+    return errors;
+  }
+
+  /**
+   * Validate NACL ICMP Rules
+   * @param vpcItem
+   * @param errors
+   */
+  private validateNaclRules(vpcItem: VpcConfig | VpcTemplatesConfig, errors: string[]) {
+    vpcItem.networkAcls?.forEach(nacl => {
+      errors.push(
+        ...this.validateIcmpRules(nacl.inboundRules ?? [], 'inbound', nacl.name, vpcItem.name),
+        ...this.validateIcmpRules(nacl.outboundRules ?? [], 'outbound', nacl.name, vpcItem.name),
+      );
+    });
   }
 
   /**
@@ -1679,6 +1725,20 @@ export class VpcValidator {
     helpers: NetworkValidatorFunctions,
     errors: string[],
   ) {
+    if (vpcItem.queryLogs && vpcItem.queryLogs.length > 0) {
+      const hasCentralResolver = !!values.centralNetworkServices?.route53Resolver?.endpoints?.some(
+        endpoint => endpoint.vpc === vpcItem.name,
+      );
+      const hasVpcResolver = 'vpcRoute53Resolver' in vpcItem ? vpcItem.vpcRoute53Resolver : undefined;
+
+      if (!hasCentralResolver && !hasVpcResolver) {
+        errors.push(
+          `[VPC ${vpcItem.name}]: queryLogs specified but no Route53 resolver endpoints found in this VPC. Please configure either centralNetworkServices.route53Resolver endpoints in this VPC or vpcRoute53Resolver`,
+        );
+        return;
+      }
+    }
+
     // Validate query log name
     const queryLogs = values.centralNetworkServices?.route53Resolver?.queryLogs;
     vpcItem.queryLogs?.forEach(name => {
@@ -3084,6 +3144,32 @@ export class VpcValidator {
         }
       }
     });
+  }
+
+  /**
+   * Validate uniqueness of Outpost names
+   * @param values
+   * @param helpers
+   * @param errors
+   */
+  private validateOutpostV2Stacks(values: NetworkConfig, errors: string[], globalConfig?: GlobalConfig) {
+    if (!globalConfig) {
+      return;
+    }
+    if (!globalConfig.useV2Stacks) {
+      return;
+    }
+    const outpostNames = [];
+    values.vpcs.forEach(vpcItem => {
+      if (vpcItem.outposts) {
+        for (const outpost of vpcItem.outposts) {
+          outpostNames.push(outpost.name);
+        }
+      }
+    });
+    if (outpostNames.length > 0) {
+      errors.push('V2 stacks can not be enabled with outposts');
+    }
   }
 
   /**

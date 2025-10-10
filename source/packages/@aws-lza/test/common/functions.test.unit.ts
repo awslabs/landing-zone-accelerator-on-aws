@@ -16,10 +16,12 @@ import {
   ControlTowerClient,
   GetLandingZoneCommand,
   ListLandingZonesCommand,
+  paginateListEnabledBaselines,
   ResourceNotFoundException,
 } from '@aws-sdk/client-controltower';
 import {
   Account,
+  AWSOrganizationsNotInUseException,
   DescribeOrganizationCommand,
   InvalidInputException,
   ListRootsCommand,
@@ -33,10 +35,11 @@ import { AssumeRoleCommand, GetCallerIdentityCommand, STSClient } from '@aws-sdk
 import {
   delay,
   generateDryRunResponse,
-  getAccountDetailsFromOrganizations,
+  getAccountDetailsFromOrganizationsByEmail,
   getAccountId,
   getCredentials,
   getCurrentAccountId,
+  getEnabledBaselines,
   getLandingZoneDetails,
   getLandingZoneIdentifier,
   getModuleDefaultParameters,
@@ -47,6 +50,8 @@ import {
   getOrganizationId,
   getOrganizationRootId,
   getParentOuId,
+  isOrganizationsConfigured,
+  processModulePromises,
   setRetryStrategy,
 } from '../../common/functions';
 import { MOCK_CONSTANTS } from '../mocked-resources';
@@ -60,6 +65,7 @@ jest.mock('@aws-sdk/client-controltower', () => {
     GetLandingZoneCommand: jest.fn(),
     ResourceNotFoundException: jest.fn(),
     ListLandingZonesCommand: jest.fn(),
+    paginateListEnabledBaselines: jest.fn(),
   };
 });
 jest.mock('@aws-sdk/client-organizations', () => ({
@@ -75,6 +81,7 @@ jest.mock('@aws-sdk/client-organizations', () => ({
     return error;
   }),
   ListRootsCommand: jest.fn(),
+  AWSOrganizationsNotInUseException: jest.fn(),
 }));
 jest.mock('@aws-sdk/client-sts', () => {
   return {
@@ -497,7 +504,9 @@ describe('functions', () => {
       // Execute && Verify
       expect(async () => {
         await getLandingZoneIdentifier(new ControlTowerClient({}));
-      }).rejects.toThrowError(`Internal error: ListLandingZonesCommand returned multiple landing zones`);
+      }).rejects.toThrowError(
+        `${MODULE_EXCEPTIONS.SERVICE_EXCEPTION}: ListLandingZonesCommand returned multiple landing zones`,
+      );
       expect(ListLandingZonesCommand).toHaveBeenCalledTimes(1);
     });
 
@@ -513,7 +522,9 @@ describe('functions', () => {
       // Execute && Verify
       expect(async () => {
         await getLandingZoneIdentifier(new ControlTowerClient({}));
-      }).rejects.toThrowError(`Internal error: ListLandingZonesCommand did not return landingZones object`);
+      }).rejects.toThrowError(
+        `${MODULE_EXCEPTIONS.SERVICE_EXCEPTION}: ListLandingZonesCommand did not return landingZones object`,
+      );
       expect(ListLandingZonesCommand).toHaveBeenCalledTimes(1);
     });
   });
@@ -650,7 +661,7 @@ describe('functions', () => {
           partition: MOCK_CONSTANTS.partition,
           assumeRoleArn: MOCK_CONSTANTS.assumeRoleArn,
         }),
-      ).rejects.toThrow('Internal error: AssumeRoleCommand did not return AccessKeyId');
+      ).rejects.toThrow(`${MODULE_EXCEPTIONS.SERVICE_EXCEPTION}: AssumeRoleCommand did not return AccessKeyId`);
       expect(GetCallerIdentityCommand).toHaveBeenCalledTimes(1);
       expect(AssumeRoleCommand).toHaveBeenCalledTimes(1);
       expect(AssumeRoleCommand).toHaveBeenCalledWith({
@@ -681,7 +692,7 @@ describe('functions', () => {
           assumeRoleArn: MOCK_CONSTANTS.assumeRoleArn,
           sessionName: MOCK_CONSTANTS.sessionName,
         }),
-      ).rejects.toThrow('Internal error: AssumeRoleCommand did not return SecretAccessKey');
+      ).rejects.toThrow(`${MODULE_EXCEPTIONS.SERVICE_EXCEPTION}: AssumeRoleCommand did not return SecretAccessKey`);
       expect(GetCallerIdentityCommand).toHaveBeenCalledTimes(1);
       expect(AssumeRoleCommand).toHaveBeenCalledTimes(1);
       expect(AssumeRoleCommand).toHaveBeenCalledWith({
@@ -716,7 +727,7 @@ describe('functions', () => {
           partition: MOCK_CONSTANTS.partition,
           assumeRoleName: MOCK_CONSTANTS.assumeRoleName,
         }),
-      ).rejects.toThrow('Internal error: AssumeRoleCommand did not return SessionToken');
+      ).rejects.toThrow(`${MODULE_EXCEPTIONS.SERVICE_EXCEPTION}: AssumeRoleCommand did not return SessionToken`);
       expect(GetCallerIdentityCommand).toHaveBeenCalledTimes(1);
       expect(AssumeRoleCommand).toHaveBeenCalledTimes(1);
       expect(AssumeRoleCommand).toHaveBeenCalledWith({
@@ -746,7 +757,7 @@ describe('functions', () => {
           partition: MOCK_CONSTANTS.partition,
           assumeRoleName: MOCK_CONSTANTS.assumeRoleName,
         }),
-      ).rejects.toThrow(`Internal error: AssumeRoleCommand did not return Credentials`);
+      ).rejects.toThrow(`${MODULE_EXCEPTIONS.SERVICE_EXCEPTION}: AssumeRoleCommand did not return Credentials`);
       expect(GetCallerIdentityCommand).toHaveBeenCalledTimes(1);
       expect(AssumeRoleCommand).toHaveBeenCalledTimes(1);
       expect(AssumeRoleCommand).toHaveBeenCalledWith({
@@ -846,6 +857,35 @@ describe('functions', () => {
       (OrganizationsClient as jest.Mock).mockImplementation(() => ({
         send: mockSend,
       }));
+    });
+
+    test('should return OU id for valid path with root id provided', async () => {
+      // Setup
+      (paginateListOrganizationalUnitsForParent as jest.Mock)
+        .mockImplementationOnce(() => ({
+          [Symbol.asyncIterator]: async function* () {
+            yield {
+              OrganizationalUnits: [MOCK_CONSTANTS.existingOrganizationalUnits[0]],
+            };
+          },
+        }))
+        .mockImplementationOnce(() => ({
+          [Symbol.asyncIterator]: async function* () {
+            yield {
+              OrganizationalUnits: [MOCK_CONSTANTS.existingOrganizationalUnits[1]],
+            };
+          },
+        }));
+
+      // Execute
+      const result = await getOrganizationalUnitIdByPath(
+        new OrganizationsClient({}),
+        `${MOCK_CONSTANTS.existingOrganizationalUnits[0].Name}/${MOCK_CONSTANTS.existingOrganizationalUnits[1].Name}`,
+        MOCK_CONSTANTS.organizationRoot.Id,
+      );
+
+      // Verify
+      expect(result).toEqual(MOCK_CONSTANTS.existingOrganizationalUnits[1].Id);
     });
 
     test('should return OU id for valid path', async () => {
@@ -1127,7 +1167,7 @@ describe('functions', () => {
     });
   });
 
-  describe('getAccountDetailsFromOrganizations', () => {
+  describe('getAccountDetailsFromOrganizationsByEmail', () => {
     beforeEach(() => {
       jest.clearAllMocks();
     });
@@ -1153,7 +1193,21 @@ describe('functions', () => {
       }));
 
       // Execute
-      const result = await getAccountDetailsFromOrganizations(new OrganizationsClient({}), email);
+      const result = await getAccountDetailsFromOrganizationsByEmail(new OrganizationsClient({}), email);
+
+      // Verify
+      expect(result).toBeUndefined();
+    });
+
+    test('returns undefined when Account object does not have email property with organizationAccounts provided', async () => {
+      const mockAccounts: Account[] = [
+        { Id: 'mockId1', Name: 'mockName1', Arn: 'mockArn1' },
+        { Id: 'mockId2', Name: 'mockName2', Arn: 'mockArn2' },
+      ];
+      const email = 'mock-email@example.com';
+
+      // Execute
+      const result = await getAccountDetailsFromOrganizationsByEmail(new OrganizationsClient({}), email, mockAccounts);
 
       // Verify
       expect(result).toBeUndefined();
@@ -1181,7 +1235,7 @@ describe('functions', () => {
       }));
 
       // Execute
-      const result = await getAccountDetailsFromOrganizations(new OrganizationsClient({}), email);
+      const result = await getAccountDetailsFromOrganizationsByEmail(new OrganizationsClient({}), email, mockAccounts);
 
       // Verify
       expect(result).toBeUndefined();
@@ -1209,7 +1263,10 @@ describe('functions', () => {
       }));
 
       // Execute
-      const result = await getAccountDetailsFromOrganizations(new OrganizationsClient({}), 'MOCKEMAIL1@example.COM');
+      const result = await getAccountDetailsFromOrganizationsByEmail(
+        new OrganizationsClient({}),
+        'MOCKEMAIL1@example.COM',
+      );
 
       // Verify
       expect(result).toBe(mockAccounts[0]);
@@ -1237,7 +1294,10 @@ describe('functions', () => {
       }));
 
       // Execute
-      const result = await getAccountDetailsFromOrganizations(new OrganizationsClient({}), mockAccounts[1].Email!);
+      const result = await getAccountDetailsFromOrganizationsByEmail(
+        new OrganizationsClient({}),
+        mockAccounts[1].Email!,
+      );
 
       // Verify
       expect(result).toBe(mockAccounts[1]);
@@ -1481,9 +1541,7 @@ describe('functions', () => {
 
       // Verify
       expect(response).toBe(
-        `arn:${MOCK_CONSTANTS.runnerParameters.partition}:organizations::${MOCK_CONSTANTS.accountId}:ou/${
-          MOCK_CONSTANTS.organization.Id
-        }/${MOCK_CONSTANTS.organization.Id.toLowerCase()}`,
+        `arn:${MOCK_CONSTANTS.runnerParameters.partition}:organizations::${MOCK_CONSTANTS.accountId}:ou/${MOCK_CONSTANTS.organization.Id}/${MOCK_CONSTANTS.organization.Id}`,
       );
       expect(GetCallerIdentityCommand).toHaveBeenCalledTimes(1);
       expect(DescribeOrganizationCommand).toHaveBeenCalledTimes(1);
@@ -1509,12 +1567,210 @@ describe('functions', () => {
 
       // Verify
       expect(response).toBe(
-        `arn:${MOCK_CONSTANTS.runnerParameters.partition}:organizations::${MOCK_CONSTANTS.accountId}:ou/${
-          MOCK_CONSTANTS.organization.Id
-        }/${MOCK_CONSTANTS.organization.Id.toLowerCase()}`,
+        `arn:${MOCK_CONSTANTS.runnerParameters.partition}:organizations::${MOCK_CONSTANTS.accountId}:ou/${MOCK_CONSTANTS.organization.Id}/${MOCK_CONSTANTS.organization.Id}`,
       );
       expect(GetCallerIdentityCommand).toHaveBeenCalledTimes(1);
       expect(DescribeOrganizationCommand).toHaveBeenCalledTimes(0);
+    });
+  });
+
+  describe('processModulePromises', () => {
+    const originalEnv = process.env;
+
+    beforeEach(() => {
+      jest.clearAllMocks();
+      process.env = { ...originalEnv };
+    });
+
+    afterEach(() => {
+      process.env = originalEnv;
+    });
+
+    test('should process promises in batches with default batch size', async () => {
+      // Setup
+      const promises = [
+        Promise.resolve('result1'),
+        Promise.resolve('result2'),
+        Promise.resolve('result3'),
+        Promise.resolve('result4'),
+        Promise.resolve('result5'),
+      ];
+      const statuses: string[] = [];
+
+      // Execute
+      await processModulePromises(MOCK_CONSTANTS.testModuleName, promises, statuses);
+
+      // Verify
+      expect(statuses).toEqual(['result1', 'result2', 'result3', 'result4', 'result5']);
+    });
+
+    test('should process promises in multiple batches when batch size is smaller than promises length', async () => {
+      // Setup
+      process.env['MAX_CONCURRENT_MODULES'] = '2';
+      const promises = [
+        Promise.resolve('result1'),
+        Promise.resolve('result2'),
+        Promise.resolve('result3'),
+        Promise.resolve('result4'),
+        Promise.resolve('result5'),
+      ];
+      const statuses: string[] = [];
+
+      // Execute
+      await processModulePromises(MOCK_CONSTANTS.testModuleName, promises, statuses);
+
+      // Verify
+      expect(statuses).toEqual(['result1', 'result2', 'result3', 'result4', 'result5']);
+    });
+
+    test('should handle empty promises array', async () => {
+      // Setup
+      const promises: Promise<string>[] = [];
+      const statuses: string[] = [];
+
+      // Execute
+      await processModulePromises(MOCK_CONSTANTS.testModuleName, promises, statuses);
+
+      // Verify
+      expect(statuses).toEqual([]);
+    });
+
+    test('should handle rejected promises', async () => {
+      // Setup
+      const error = new Error('Test error');
+      const promises = [Promise.resolve('result1'), Promise.reject(error), Promise.resolve('result3')];
+      const statuses: string[] = [];
+
+      // Execute & Verify
+      await expect(processModulePromises(MOCK_CONSTANTS.testModuleName, promises, statuses, 10)).rejects.toThrow(error);
+    });
+  });
+
+  describe('isOrganizationsConfigured', () => {
+    const mockSend = jest.fn();
+
+    beforeEach(() => {
+      jest.clearAllMocks();
+
+      (OrganizationsClient as jest.Mock).mockImplementation(() => ({
+        send: mockSend,
+      }));
+    });
+
+    test('should return true when organization configured', async () => {
+      // Setup
+      mockSend.mockImplementation(command => {
+        if (command instanceof DescribeOrganizationCommand) {
+          return Promise.resolve({ Organization: MOCK_CONSTANTS.organization });
+        }
+        return Promise.reject(new Error('Unexpected command'));
+      });
+
+      // Execute
+      const response = await isOrganizationsConfigured(new OrganizationsClient({}));
+
+      // Verify
+      expect(response).toBeTruthy();
+      expect(DescribeOrganizationCommand).toHaveBeenCalledTimes(1);
+    });
+
+    test('should return false when organization not configured', async () => {
+      // Setup
+      mockSend.mockImplementation(command => {
+        if (command instanceof DescribeOrganizationCommand) {
+          return Promise.resolve({ Organization: undefined });
+        }
+        return Promise.reject(new Error('Unexpected command'));
+      });
+
+      // Execute
+      const response = await isOrganizationsConfigured(new OrganizationsClient({}));
+
+      // Verify
+      expect(response).toBeFalsy();
+      expect(DescribeOrganizationCommand).toHaveBeenCalledTimes(1);
+    });
+
+    test('should return false when DescribeOrganizationCommand api did return AWSOrganizationsNotInUseException error', async () => {
+      // Setup
+      mockSend.mockImplementation(command => {
+        if (command instanceof DescribeOrganizationCommand) {
+          return Promise.reject(
+            new AWSOrganizationsNotInUseException({ message: 'Organization not in use', $metadata: {} }),
+          );
+        }
+        return Promise.reject(new Error('Unexpected command'));
+      });
+
+      // Execute
+      const response = await isOrganizationsConfigured(new OrganizationsClient({}));
+
+      // Verify
+      expect(response).toBeFalsy();
+      expect(DescribeOrganizationCommand).toHaveBeenCalledTimes(1);
+    });
+
+    test('should handle unknown error for DescribeOrganizationCommand api', async () => {
+      // Setup
+      mockSend.mockImplementation(command => {
+        if (command instanceof DescribeOrganizationCommand) {
+          return Promise.reject(MOCK_CONSTANTS.unknownError);
+        }
+        return Promise.reject(new Error('Unexpected command'));
+      });
+
+      // Execute && verify
+      await expect(async () => {
+        await isOrganizationsConfigured(new OrganizationsClient({}));
+      }).rejects.toThrowError(MOCK_CONSTANTS.unknownError);
+      expect(DescribeOrganizationCommand).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe('getEnabledBaselines', () => {
+    const mockSend = jest.fn();
+
+    beforeEach(() => {
+      jest.clearAllMocks();
+
+      (ControlTowerClient as jest.Mock).mockImplementation(() => ({
+        send: mockSend,
+      }));
+    });
+
+    test('should return list of enabled baselines', async () => {
+      // Setup
+      (paginateListEnabledBaselines as jest.Mock).mockImplementation(() => ({
+        [Symbol.asyncIterator]: async function* () {
+          yield {
+            enabledBaselines: MOCK_CONSTANTS.controlTowerEnabledBaselines,
+          };
+        },
+      }));
+
+      // Execute
+      const response = await getEnabledBaselines(new ControlTowerClient({}));
+
+      // Verify
+      expect(response.length).toEqual(MOCK_CONSTANTS.controlTowerEnabledBaselines.length);
+      expect(response).toEqual(MOCK_CONSTANTS.controlTowerEnabledBaselines);
+    });
+
+    test('should return empty list of enabled baselines when enabledBaselines object is undefined', async () => {
+      // Setup
+      (paginateListEnabledBaselines as jest.Mock).mockImplementation(() => ({
+        [Symbol.asyncIterator]: async function* () {
+          yield {
+            enabledBaselines: undefined,
+          };
+        },
+      }));
+
+      // Execute
+      const response = await getEnabledBaselines(new ControlTowerClient({}));
+
+      // Verify
+      expect(response.length).toEqual(0);
     });
   });
 });

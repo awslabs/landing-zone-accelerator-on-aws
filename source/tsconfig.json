@@ -10,15 +10,19 @@
     "noUnusedLocals": true,
     "resolveJsonModule": true,
     "strict": true,
-    "module": "commonjs",
+    "module": "nodenext",
     "declaration": true,
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
     "preserveSymlinks": true,
     "sourceMap": true,
-    "lib": ["ES2019", "ES2020.Promise", "ES2021"],
-    "target": "ES2019",
-    "composite": false
+    "target": "ES2022",
+    "lib": ["es2023"],
+    "composite": false,
+    "strictBuiltinIteratorReturn": false,
+    "useDefineForClassFields": false,
+    "skipLibCheck": true,
+    "assumeChangesOnlyAffectDirectDependencies": true,
   },
   "ts-node": { "swc": true }
 }

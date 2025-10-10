@@ -28,6 +28,15 @@ export class S3PublicAccessBlockConfig implements i.IS3PublicAccessBlockConfig {
   readonly excludeAccounts: string[] = [];
 }
 
+export class BlockPublicDocumentSharingConfig implements i.IBlockPublicDocumentSharingConfig {
+  readonly enable = false;
+  readonly excludeAccounts: string[] = [];
+}
+
+export class SsmSettingsConfig implements i.ISsmSettingsConfig {
+  readonly blockPublicDocumentSharing: BlockPublicDocumentSharingConfig | undefined = undefined;
+}
+
 export class ScpRevertChangesConfig implements i.IScpRevertChangesConfig {
   readonly enable = false;
   readonly snsTopicName = undefined;
@@ -165,11 +174,11 @@ export class SecurityHubStandardConfig implements i.ISecurityHubStandardConfig {
 export class SecurityHubLoggingCloudwatchConfig implements i.ISecurityHubLoggingCloudwatchConfig {
   readonly enable = true;
   readonly logGroupName? = undefined;
-  readonly logLevel? = undefined;
+  readonly logLevel = 'HIGH';
 }
 
 export class SecurityHubLoggingConfig implements i.ISecurityHubLoggingConfig {
-  readonly cloudWatch: SecurityHubLoggingCloudwatchConfig | undefined = undefined;
+  readonly cloudWatch: SecurityHubLoggingCloudwatchConfig = new SecurityHubLoggingCloudwatchConfig();
 }
 
 export class SecurityHubConfig implements i.ISecurityHubConfig {
@@ -181,7 +190,7 @@ export class SecurityHubConfig implements i.ISecurityHubConfig {
   readonly deploymentTargets: t.DeploymentTargets | undefined = undefined;
   readonly autoEnableOrgMembers: boolean | undefined = undefined;
   readonly standards: SecurityHubStandardConfig[] = [];
-  readonly logging: SecurityHubLoggingConfig | undefined = undefined;
+  readonly logging: SecurityHubLoggingConfig = new SecurityHubLoggingConfig();
 }
 
 export class SnsSubscriptionConfig implements i.ISnsSubscriptionConfig {
@@ -216,6 +225,7 @@ export class CentralSecurityServicesConfig implements i.ICentralSecurityServices
   readonly delegatedAdminAccount = 'Audit';
   readonly ebsDefaultVolumeEncryption: EbsDefaultVolumeEncryptionConfig = new EbsDefaultVolumeEncryptionConfig();
   readonly s3PublicAccessBlock: S3PublicAccessBlockConfig = new S3PublicAccessBlockConfig();
+  readonly ssmSettings: SsmSettingsConfig | undefined = undefined;
   readonly scpRevertChangesConfig: ScpRevertChangesConfig = new ScpRevertChangesConfig();
   readonly snsSubscriptions: SnsSubscriptionConfig[] = [];
   readonly macie: MacieConfig = new MacieConfig();
@@ -266,6 +276,28 @@ export class ConfigRuleRemediation implements i.IConfigRuleRemediationType {
   readonly excludeRegions: t.Region[] = [];
 }
 
+export class CustomRuleLambda implements i.ICustomRuleLambdaType {
+  readonly sourceFilePath: t.NonEmptyString = '';
+  readonly handler: t.NonEmptyString = '';
+  readonly runtime: t.NonEmptyString = '';
+  readonly rolePolicyFile: t.NonEmptyString = '';
+  readonly timeout?: number;
+}
+
+export class TriggeringResource implements i.ITriggeringResourceType {
+  readonly lookupType: string = 'ResourceId';
+  readonly lookupKey: t.NonEmptyString = '';
+  readonly lookupValue: t.NonEmptyString[] = [];
+}
+
+export class CustomRuleConfig implements i.ICustomRuleConfigType {
+  readonly lambda: i.ICustomRuleLambdaType = new CustomRuleLambda();
+  readonly periodic?: boolean;
+  readonly maximumExecutionFrequency: string = 'TwentyFour_Hours';
+  readonly configurationChanges?: boolean;
+  readonly triggeringResources: i.ITriggeringResourceType = new TriggeringResource();
+}
+
 export class ConfigRule implements i.IConfigRule {
   readonly name = '';
   readonly description = '';
@@ -274,23 +306,7 @@ export class ConfigRule implements i.IConfigRule {
   readonly complianceResourceTypes: string[] = [];
   readonly type = '';
   readonly tags = [];
-  readonly customRule = {
-    lambda: {
-      sourceFilePath: '',
-      handler: '',
-      runtime: '',
-      rolePolicyFile: '',
-      timeout: 3,
-    },
-    periodic: true,
-    maximumExecutionFrequency: 'TwentyFour_Hours',
-    configurationChanges: true,
-    triggeringResources: {
-      lookupType: '',
-      lookupKey: '',
-      lookupValue: [],
-    },
-  };
+  readonly customRule: CustomRuleConfig | undefined;
   readonly remediation: ConfigRuleRemediation = new ConfigRuleRemediation();
 }
 
@@ -317,6 +333,7 @@ export class MetricConfig implements i.IMetricConfig {
   readonly metricName: string = '';
   readonly metricValue: string = '';
   readonly treatMissingData: string | undefined = undefined;
+  readonly defaultValue?: number | undefined = undefined;
 }
 
 export class MetricSetConfig implements i.IMetricSetConfig {
@@ -404,7 +421,7 @@ export class SecurityConfig implements i.ISecurityConfig {
    * @returns
    */
 
-  static load(dir: string, replacementsConfig?: ReplacementsConfig): SecurityConfig {
+  static load(dir: string, replacementsConfig: ReplacementsConfig): SecurityConfig {
     const initialBuffer = fs.readFileSync(path.join(dir, SecurityConfig.FILENAME), 'utf8');
     const buffer = replacementsConfig ? replacementsConfig.preProcessBuffer(initialBuffer) : initialBuffer;
     const values = t.parseSecurityConfig(yaml.load(buffer));
@@ -415,9 +432,10 @@ export class SecurityConfig implements i.ISecurityConfig {
    * Load from string content
    * @param content
    */
-  static loadFromString(content: string): SecurityConfig | undefined {
+  static loadFromString(content: string, replacementsConfig: ReplacementsConfig): SecurityConfig | undefined {
+    const buffer = replacementsConfig ? replacementsConfig.preProcessBuffer(content) : content;
     try {
-      const values = t.parseSecurityConfig(yaml.load(content));
+      const values = t.parseSecurityConfig(yaml.load(buffer));
       return new SecurityConfig(values);
     } catch (e) {
       logger.error('Error parsing input, security config undefined');

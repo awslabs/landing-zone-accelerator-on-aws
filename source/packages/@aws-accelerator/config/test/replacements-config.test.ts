@@ -95,7 +95,6 @@ let globalConfigWithReplacements: GlobalConfig;
 describe('GlobalConfig', () => {
   describe('Test config', () => {
     it('has loaded successfully', async () => {
-      await replacementsConfig.loadReplacementValues({ region: 'us-east-1' }, true);
       globalConfigWithReplacements = GlobalConfig.load(
         path.resolve('../accelerator/test/configs/snapshot-only'),
         replacementsConfig,
@@ -126,7 +125,6 @@ describe('Replacement config', () => {
     const replacementsConfig = ReplacementsConfig.load(
       path.resolve('../accelerator/test/configs/snapshot-only'),
       accountConfig,
-      true,
     );
     it('has loaded successfully', () => {
       expect(replacementsConfig.globalReplacements).toHaveLength(4);

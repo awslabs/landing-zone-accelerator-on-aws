@@ -1,0 +1,24 @@
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Sid": "Policy from file",
+            "Effect": "Allow",
+            "Principal": {
+                "AWS": "*"
+            },
+            "Action": [
+                "s3:List*"
+            ],
+            "Resource": [
+                "arn:aws:s3:::existing-elb-logs-bucket-${ACCOUNT_ID}-${REGION}",
+                "arn:aws:s3:::existing-elb-logs-bucket-${ACCOUNT_ID}-${REGION}/*"
+            ],
+            "Condition": {
+                "StringEquals": {
+                    "aws:PrincipalOrgID": "${ORG_ID}"
+                }
+            }
+        }        
+    ]
+  }

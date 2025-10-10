@@ -243,7 +243,7 @@ export class IamConfig implements i.IIamConfig {
    * @returns
    */
 
-  static load(dir: string, replacementsConfig?: ReplacementsConfig): IamConfig {
+  static load(dir: string, replacementsConfig: ReplacementsConfig): IamConfig {
     const initialBuffer = fs.readFileSync(path.join(dir, IamConfig.FILENAME), 'utf8');
     const buffer = replacementsConfig ? replacementsConfig.preProcessBuffer(initialBuffer) : initialBuffer;
     const values = t.parseIamConfig(yaml.load(buffer));
@@ -254,9 +254,10 @@ export class IamConfig implements i.IIamConfig {
    * Load from string content
    * @param content
    */
-  static loadFromString(content: string): IamConfig | undefined {
+  static loadFromString(content: string, replacementsConfig: ReplacementsConfig): IamConfig | undefined {
+    const buffer = replacementsConfig ? replacementsConfig.preProcessBuffer(content) : content;
     try {
-      const values = t.parseIamConfig(yaml.load(content));
+      const values = t.parseIamConfig(yaml.load(buffer));
       return new IamConfig(values);
     } catch (e) {
       logger.error('Error parsing input, iam config undefined');

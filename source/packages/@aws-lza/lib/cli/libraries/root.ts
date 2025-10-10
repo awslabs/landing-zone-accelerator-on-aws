@@ -10,6 +10,7 @@
  *  OR CONDITIONS OF ANY KIND, express or implied. See the License for the specific language governing permissions
  *  and limitations under the License.
  */
+import fs from 'fs';
 
 /**
  * Configuration object type
@@ -39,8 +40,8 @@ export type CliInvokeArgumentType = {
  */
 export type CliExecutionParameterType = {
   moduleName: string;
-  command: string;
-  [x: string]: unknown;
+  commandName: string;
+  args: CliInvokeArgumentType;
 };
 
 /**
@@ -59,7 +60,11 @@ export type CommandOptionsType = {
 /**
  * CLI Command details type
  */
-export type CliCommandDetailsType = { name: string; description: string; options?: CommandOptionsType[] };
+export type CliCommandDetailsType = {
+  description: string;
+  options?: CommandOptionsType[];
+  execute(args: CliExecutionParameterType): Promise<string>;
+};
 
 /**
  * Module details type
@@ -70,6 +75,10 @@ export type ModuleDetailsType = {
    * Description of the module
    */
   description: string;
+  /**
+   * List of commands this module supports
+   */
+  commands: Record<string, CliCommandDetailsType>;
 };
 
 /**
@@ -92,3 +101,17 @@ export const CliCommonOptions: CommandOptionsType[] = [
     },
   },
 ];
+
+export function getConfig(configArg: string): ConfigurationObjectType {
+  if (configArg.startsWith('file://')) {
+    const filePath = configArg.slice(7);
+    if (!fs.existsSync(filePath)) {
+      console.error(
+        `lza: error: An error occurred (MissingConfigurationFile): The configuration file ${filePath} does not exists.`,
+      );
+      process.exit(1);
+    }
+    return JSON.parse(fs.readFileSync(filePath, 'utf8'));
+  }
+  return JSON.parse(configArg);
+}

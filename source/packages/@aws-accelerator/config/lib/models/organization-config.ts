@@ -12,6 +12,7 @@
  */
 
 import * as t from '../common/types';
+import { OrganizationalUnit, Root } from '@aws-sdk/client-organizations';
 
 /**
  * *{@link OrganizationConfig} / {@link OrganizationalUnitConfig}*
@@ -76,6 +77,10 @@ export interface IOrganizationalUnitIdConfig {
    * OU arn
    */
   readonly arn: t.NonEmptyString;
+  /**
+   * Orgs API response
+   */
+  readonly orgsApiResponse?: OrganizationalUnit | Root;
 }
 
 /**
@@ -105,7 +110,81 @@ export interface IQuarantineNewAccountsConfig {
    */
   readonly scpPolicyName?: t.NonEmptyString;
 }
-
+/**
+ * *{@link OrganizationConfig} / {@link DeclarativePolicyConfig}*
+ *
+ * @description
+ * Declarative policy configuration
+ *
+ * @example
+ * ```
+ * declarativePolicies:
+ *   - name: DeclarativePolicy
+ *     description: Declarative Policy Controls
+ *     policy: path/to/declarative-policy.json
+ *     deploymentTargets:
+ *       organizationalUnits: []
+ * ```
+ */
+export interface IDeclarativePolicyConfig {
+  /**
+   * The friendly name to assign to the policy.
+   * The regex pattern that is used to validate this parameter is a string of any of the characters in the ASCII character range.
+   */
+  readonly name: t.NonEmptyString;
+  /**
+   * A description to assign to the policy.
+   */
+  readonly description: t.NonEmptyString;
+  /**
+   * Declarative policy definition json file. This file must be present in config repository
+   */
+  readonly policy: t.NonEmptyString;
+  /**
+   * Declarative policy deployment targets
+   */
+  readonly deploymentTargets: t.IDeploymentTargets;
+}
+/**
+ * *{@link OrganizationConfig} / {@link ResourceControlPolicyConfig}*
+ *
+ * @description
+ * Resource control policy configuration
+ *
+ * @example
+ * ```
+ * resourceControlPolicies:
+ *   - name: DataPerimeterControls
+ *     description: Data Perimeter Controls
+ *     policy: path/to/data-perimeter.json
+ *     deploymentTargets:
+ *       organizationalUnits: []
+ * ```
+ */
+export interface IResourceControlPolicyConfig {
+  /**
+   * The friendly name to assign to the policy.
+   * The regex pattern that is used to validate this parameter is a string of any of the characters in the ASCII character range.
+   */
+  readonly name: t.NonEmptyString;
+  /**
+   * A description to assign to the policy.
+   */
+  readonly description: t.NonEmptyString;
+  /**
+   * Resource control policy definition json file. This file must be present in config repository
+   */
+  readonly policy: t.NonEmptyString;
+  /**
+   * Resource control policy strategy.
+   * https://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_policies_rcps_evaluation.html
+   */
+  readonly strategy?: 'deny-list' | 'allow-list';
+  /**
+   * Resource control policy deployment targets
+   */
+  readonly deploymentTargets: t.IDeploymentTargets;
+}
 /**
  * *{@link OrganizationConfig} / {@link ServiceControlPolicyConfig}*
  *
@@ -277,6 +356,28 @@ export interface IBackupPolicyConfig {
  */
 export interface IOrganizationConfig {
   /**
+   * A Record of Declarative Policy configurations
+   *
+   * @see DeclarativePolicyConfig
+   *
+   * To create a declarative policy named EC2Settings from declarative-policies/ec2-settings.json file in config repository, you need to provide following values for this parameter.
+   *
+   * Restrict making AMIs public and enable serial console access
+   * @example
+   * ```
+   * declarativePolicies:
+   *   - name: ResrictHttpsConnection
+   *     description: >
+   *       This policy restricts making AMIs public and enable serial console access
+   *     policy: declarative-policies/ec2-settings.json
+   *     type: customerManaged
+   *     deploymentTargets:
+   *       organizationalUnits:
+   *         - Infrastructure
+   * ```
+   */
+  readonly declarativePolicies?: IDeclarativePolicyConfig[];
+  /**
    * Indicates whether AWS Organization enabled.
    *
    */
@@ -312,6 +413,29 @@ export interface IOrganizationConfig {
    * @see QuarantineNewAccountsConfig
    */
   readonly quarantineNewAccounts?: IQuarantineNewAccountsConfig;
+  /**
+   * A Record of Resource Control Policy configurations
+   *
+   * @see ResourceControlPolicyConfig
+   *
+   * To create a resource control policy named ResrictHttpsConnection from resource-control-policies/restrict-https-connections.json file in config repository, you need to provide following values for this parameter.
+   *
+   * Restrict access to only HTTPS connections to your resources
+   * @example
+   * ```
+   * resourceControlPolicies:
+   *   - name: ResrictHttpsConnection
+   *     description: >
+   *       This RCP restricts access to only HTTPS connections to your resources.
+   *     policy: resource-control-policies/restrict-https-connections.json
+   *     type: customerManaged
+   *     strategy: deny-list # defines RCP strategy - deny-list or allow-list. See https://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_policies_rcps_evaluation.html#how_rcps_deny
+   *     deploymentTargets:
+   *       organizationalUnits:
+   *         - Security
+   * ```
+   */
+  readonly resourceControlPolicies?: IResourceControlPolicyConfig[];
   /**
    * A Record of Service Control Policy configurations
    *

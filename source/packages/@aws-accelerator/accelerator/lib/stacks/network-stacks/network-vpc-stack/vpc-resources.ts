@@ -36,6 +36,8 @@ import { pascalCase } from 'pascal-case';
 import { LogLevel, NetworkStack } from '../network-stack';
 import { getVpc, getVpcConfig } from '../utils/getter-utils';
 import { isIpv4 } from '../utils/validation-utils';
+import { MetadataKeys } from '../../../../../utils/lib/common-types';
+import { LZAResourceLookup, LZAResourceLookupType } from '@aws-accelerator/accelerator/utils/lza-resource-lookup';
 
 type Ipv4VpcCidrBlock = { cidrBlock: string } | { ipv4IpamPoolId: string; ipv4NetmaskLength: number };
 type Ipv6VpcCidrBlock = {
@@ -54,6 +56,7 @@ export class VpcResources {
   public readonly centralEndpointRole?: cdk.aws_iam.Role;
 
   private stack: NetworkStack;
+  lzaLookup: LZAResourceLookup;
 
   constructor(
     networkStack: NetworkStack,
@@ -77,12 +80,19 @@ export class VpcResources {
     },
   ) {
     this.stack = networkStack;
-
+    this.lzaLookup = new LZAResourceLookup({
+      accountId: this.stack.account,
+      region: this.stack.region,
+      aseaResourceList: this.stack.props.globalConfig.externalLandingZoneResources?.resourceList ?? [],
+      enableV2Stacks: this.stack.props.globalConfig.useV2Stacks,
+      externalLandingZoneResources:
+        this.stack.props.globalConfig.externalLandingZoneResources?.importExternalLandingZoneResources,
+      stackName: this.stack.stackName,
+    });
     // Delete default VPC
     this.deleteDefaultVpc = this.deleteDefaultVpcMethod(configData.defaultVpcsConfig);
     // Create central endpoints role
     this.centralEndpointRole = this.createCentralEndpointRole(
-      acceleratorData.partition,
       vpcResources,
       configData.centralEndpointVpc,
       acceleratorData.acceleratorPrefix,
@@ -149,12 +159,11 @@ export class VpcResources {
    * @returns
    */
   private createCentralEndpointRole(
-    partition: string,
     vpcResources: (VpcConfig | VpcTemplatesConfig)[],
     centralEndpointVpc: VpcConfig | undefined,
     acceleratorPrefix: string,
   ): cdk.aws_iam.Role | undefined {
-    if (this.useCentralEndpoints(vpcResources, partition)) {
+    if (this.useCentralEndpoints(vpcResources)) {
       if (!centralEndpointVpc) {
         this.stack.addLogs(LogLevel.ERROR, `useCentralEndpoints set to true, but no central endpoint VPC detected`);
         throw new Error(`Configuration validation failed at runtime.`);
@@ -205,17 +214,9 @@ export class VpcResources {
    * @param vpcResources
    * @param partition
    */
-  private useCentralEndpoints(vpcResources: (VpcConfig | VpcTemplatesConfig)[], partition: string): boolean {
+  private useCentralEndpoints(vpcResources: (VpcConfig | VpcTemplatesConfig)[]): boolean {
     for (const vpcItem of vpcResources) {
       if (vpcItem.useCentralEndpoints) {
-        if (partition !== 'aws' && partition !== 'aws-cn') {
-          this.stack.addLogs(
-            LogLevel.ERROR,
-            'useCentralEndpoints set to true, but AWS Partition is not commercial. Please change it to false.',
-          );
-          throw new Error(`Configuration validation failed at runtime.`);
-        }
-
         return true;
       }
     }
@@ -420,6 +421,14 @@ export class VpcResources {
     const vpcMap = new Map<string, Vpc>();
 
     for (const vpcItem of vpcResources) {
+      if (
+        !this.lzaLookup.resourceExists({
+          resourceType: LZAResourceLookupType.VPC,
+          lookupValues: { vpcName: vpcItem.name },
+        })
+      ) {
+        continue;
+      }
       const vpc = this.createVpcItem(
         vpcItem,
         dhcpOptionsIds,
@@ -524,7 +533,12 @@ export class VpcResources {
   }): Vpc {
     let vpc: Vpc;
 
-    if (this.stack.isManagedByAsea(AseaResourceType.EC2_VPC, options.vpcItem.name)) {
+    if (
+      this.lzaLookup.isManagedByAsea({
+        resourceType: AseaResourceType.EC2_VPC,
+        resourceIdentifier: options.vpcItem.name,
+      })
+    ) {
       //
       // Import VPC
       //
@@ -544,6 +558,7 @@ export class VpcResources {
         virtualPrivateGatewayId,
         // ASEA VPC Resources are all cidr specified resources. IPAM is not supported during migration.
         cidrBlock: options.vpcItem.cidrs?.[0] ?? '',
+        lzaLookup: this.lzaLookup,
       });
       if (options.vpcItem.internetGateway && !internetGatewayId) {
         vpc.addInternetGateway();
@@ -551,18 +566,16 @@ export class VpcResources {
       if (options.vpcItem.virtualPrivateGateway && !virtualPrivateGatewayId) {
         vpc.addVirtualPrivateGateway(options.vpcItem.virtualPrivateGateway.asn);
       }
-      if (options.vpcItem.dhcpOptions) {
-        vpc.setDhcpOptions(options.vpcItem.dhcpOptions);
-      }
+      const dhcpOptions = this.setDhcpOptions(options.vpcItem.dhcpOptions, options.dhcpOptionsIds);
+
+      vpc.setDhcpOptions(dhcpOptions);
     } else {
-      //
-      // Create VPC
-      //
+      const dhcpOptions = this.setDhcpOptions(options.vpcItem.dhcpOptions, options.dhcpOptionsIds);
       vpc = new Vpc(this.stack, pascalCase(`${options.vpcItem.name}Vpc`), {
         name: options.vpcItem.name,
         ipv4CidrBlock: options.cidr,
         internetGateway: options.vpcItem.internetGateway,
-        dhcpOptions: options.dhcpOptionsIds.get(options.vpcItem.dhcpOptions ?? ''),
+        dhcpOptions,
         egressOnlyIgw: options.vpcItem.egressOnlyIgw,
         enableDnsHostnames: options.vpcItem.enableDnsHostnames ?? true,
         enableDnsSupport: options.vpcItem.enableDnsSupport ?? true,
@@ -571,6 +584,7 @@ export class VpcResources {
         ipv4NetmaskLength: options.poolNetmask,
         tags: options.vpcItem.tags,
         virtualPrivateGateway: options.vpcItem.virtualPrivateGateway,
+        lzaLookup: this.lzaLookup,
       });
       this.stack.addSsmParameter({
         logicalId: pascalCase(`SsmParam${pascalCase(options.vpcItem.name)}VpcId`),
@@ -578,15 +592,121 @@ export class VpcResources {
         stringValue: vpc.vpcId,
       });
 
+      if (vpc.internetGatewayId) {
+        this.stack.addSsmParameter({
+          logicalId: pascalCase(`SsmParam${pascalCase(options.vpcItem.name)}IgwId`),
+          parameterName: this.stack.getSsmPath(SsmResourceType.IGW, [options.vpcItem.name]),
+          stringValue: vpc.internetGatewayId,
+        });
+      }
+
+      if (vpc.egressOnlyIgwId) {
+        this.stack.addSsmParameter({
+          logicalId: pascalCase(`SsmParam${pascalCase(options.vpcItem.name)}EgressOnlyIgwId`),
+          parameterName: this.stack.getSsmPath(SsmResourceType.VPC_EGRESS_ONLY_IGW, [options.vpcItem.name]),
+          stringValue: vpc.egressOnlyIgwId,
+        });
+      }
+
       if (vpc.virtualPrivateGatewayId) {
         this.stack.addSsmParameter({
           logicalId: pascalCase(`SsmParam${pascalCase(options.vpcItem.name)}VpnGatewayId`),
           parameterName: this.stack.getSsmPath(SsmResourceType.VPN_GW, [options.vpcItem.name]),
-          stringValue: vpc.virtualPrivateGatewayId!,
+          stringValue: vpc.virtualPrivateGatewayId,
         });
       }
     }
     return vpc;
+  }
+
+  private setDhcpOptions(dhcpOptionsName: string | undefined, dhcpOptionsIds: Map<string, string>) {
+    let dhcpOptions;
+    if (!dhcpOptionsName) {
+      return dhcpOptions;
+    }
+
+    const dhcpOptionsId = dhcpOptionsIds.get(dhcpOptionsName);
+    if (dhcpOptionsId) {
+      dhcpOptions = {
+        name: dhcpOptionsName,
+        id: dhcpOptionsId,
+      };
+    }
+
+    return dhcpOptions;
+  }
+
+  private createAdditionalStaticIpv4Cidrs(props: {
+    vpc: Vpc;
+    vpcItem: VpcConfig | VpcTemplatesConfig;
+  }): Ipv4VpcCidrBlock[] {
+    const additionalCidrs: Ipv4VpcCidrBlock[] = [];
+    // If vpc cidrs are undefined, or there is only 1 vpc cidr defined, return an empty array
+    if (!props.vpcItem.cidrs) {
+      return [];
+    }
+    if (props.vpcItem.cidrs.length < 2) {
+      return [];
+    }
+
+    // Removes the first cidr from the list that is used by the creation of the vpc
+    const newCidrs = props.vpcItem.cidrs.slice(1);
+    for (const vpcCidr of newCidrs) {
+      if (this.stack.isManagedByAsea(AseaResourceType.EC2_VPC_CIDR, `${props.vpcItem.name}-${vpcCidr}`)) {
+        // CIDR is created by external source. Skipping creation
+        continue;
+      }
+      this.stack.addLogs(LogLevel.INFO, `Adding secondary CIDR ${vpcCidr} to VPC ${props.vpcItem.name}`);
+      props.vpc.addIpv4Cidr({ cidrBlock: vpcCidr, metadata: { vpcName: props.vpcItem.name, cidrBlock: vpcCidr } });
+      additionalCidrs.push({ cidrBlock: vpcCidr });
+    }
+    return additionalCidrs;
+  }
+
+  private createAdditionalIpamIpv4Cidrs(props: {
+    vpc: Vpc;
+    vpcItem: VpcConfig | VpcTemplatesConfig;
+    ipamPoolMap: Map<string, string>;
+  }): Ipv4VpcCidrBlock[] {
+    const additionalCidrs: Ipv4VpcCidrBlock[] = [];
+    // If vpc ipam allocations are undefined, or there is only 1 vpc ipam allocation defined, return an empty array
+    if (!props.vpcItem.ipamAllocations) {
+      return [];
+    }
+    if (props.vpcItem.ipamAllocations.length < 2) {
+      return [];
+    }
+    const newIpamVpcCidrs = props.vpcItem.ipamAllocations.slice(1);
+    const ipamCidrsMap: { [key: string]: number } = {};
+    for (const alloc of newIpamVpcCidrs) {
+      const ipamCidrKey = `${alloc.ipamPoolName}-${alloc.netmaskLength}`;
+      if (!(ipamCidrKey in ipamCidrsMap)) {
+        ipamCidrsMap[ipamCidrKey] = 0;
+      } else {
+        ipamCidrsMap[ipamCidrKey]++;
+      }
+      this.stack.addLogs(
+        LogLevel.INFO,
+        `Adding secondary IPAM allocation with netmask ${alloc.netmaskLength} to VPC ${props.vpcItem.name}`,
+      );
+      const poolId = props.ipamPoolMap.get(alloc.ipamPoolName);
+      if (!poolId) {
+        this.stack.addLogs(LogLevel.ERROR, `${props.vpcItem.name}: unable to locate IPAM pool ${alloc.ipamPoolName}`);
+        throw new Error(`Configuration validation failed at runtime.`);
+      }
+      props.vpc.addIpv4Cidr({
+        ipv4IpamPoolId: poolId,
+        ipv4NetmaskLength: alloc.netmaskLength,
+        metadata: {
+          vpcName: props.vpcItem.name,
+          netmaskLength: alloc.netmaskLength.toString(),
+          ipamPoolName: alloc.ipamPoolName,
+          ipamCidrIndex: ipamCidrsMap[ipamCidrKey],
+        },
+      });
+      additionalCidrs.push({ ipv4IpamPoolId: poolId, ipv4NetmaskLength: alloc.netmaskLength });
+    }
+    return additionalCidrs;
   }
 
   /**
@@ -602,37 +722,71 @@ export class VpcResources {
     ipamPoolMap: Map<string, string>,
   ): Ipv4VpcCidrBlock[] {
     const additionalCidrs: Ipv4VpcCidrBlock[] = [];
-
-    if (vpcItem.cidrs && vpcItem.cidrs.length > 1) {
-      for (const vpcCidr of vpcItem.cidrs.slice(1)) {
-        if (this.stack.isManagedByAsea(AseaResourceType.EC2_VPC_CIDR, `${vpcItem.name}-${vpcCidr}`)) {
-          // CIDR is created by external source. Skipping creation
-          continue;
-        }
-        this.stack.addLogs(LogLevel.INFO, `Adding secondary CIDR ${vpcCidr} to VPC ${vpcItem.name}`);
-        vpc.addIpv4Cidr({ cidrBlock: vpcCidr });
-        additionalCidrs.push({ cidrBlock: vpcCidr });
-      }
-    }
-
-    if (vpcItem.ipamAllocations && vpcItem.ipamAllocations.length > 1) {
-      for (const alloc of vpcItem.ipamAllocations.slice(1)) {
-        this.stack.addLogs(
-          LogLevel.INFO,
-          `Adding secondary IPAM allocation with netmask ${alloc.netmaskLength} to VPC ${vpcItem.name}`,
-        );
-        const poolId = ipamPoolMap.get(alloc.ipamPoolName);
-        if (!poolId) {
-          this.stack.addLogs(LogLevel.ERROR, `${vpcItem.name}: unable to locate IPAM pool ${alloc.ipamPoolName}`);
-          throw new Error(`Configuration validation failed at runtime.`);
-        }
-        vpc.addIpv4Cidr({ ipv4IpamPoolId: poolId, ipv4NetmaskLength: alloc.netmaskLength });
-        additionalCidrs.push({ ipv4IpamPoolId: poolId, ipv4NetmaskLength: alloc.netmaskLength });
-      }
-    }
+    const additionalStaticCidrs = this.createAdditionalStaticIpv4Cidrs({ vpc, vpcItem });
+    const additionalIpamIpv4Cidrs = this.createAdditionalIpamIpv4Cidrs({ vpc, vpcItem, ipamPoolMap });
+    additionalCidrs.push(...additionalStaticCidrs, ...additionalIpamIpv4Cidrs);
     return additionalCidrs;
   }
 
+  /**
+   * Create BYOIP IPv6 CIDRs for a given VPC
+   * @param vpc Vpc
+   * @param vpcItem VpcConfig | VpcTemplatesConfig
+   * @returns Ipv6VpcCidrBlock[]
+   */
+  private createIpv6IpamCidrs(vpc: Vpc, vpcItem: VpcConfig | VpcTemplatesConfig): Ipv6VpcCidrBlock[] {
+    if (!vpcItem.ipv6Cidrs) {
+      return [];
+    }
+    const cidrIndex: { [key: string]: number } = {};
+    const ipamPoolIdCidrs = vpcItem.ipv6Cidrs.filter(cidrItem => cidrItem.byoipPoolId && cidrItem.cidrBlock);
+    const additionalCidrs = ipamPoolIdCidrs.map(cidrItem => {
+      const cidrKey = `${cidrItem.byoipPoolId}-${cidrItem.cidrBlock}`;
+      if (!(cidrKey in cidrIndex)) {
+        cidrIndex[cidrKey] = 0;
+      } else {
+        cidrIndex[cidrKey]++;
+      }
+      const cidrInfo = {
+        ipv6CidrBlock: cidrItem.cidrBlock,
+        ipv6Pool: cidrItem.byoipPoolId,
+        metadata: {
+          vpcName: vpcItem.name,
+          ipv6CidrBlock: cidrItem.cidrBlock,
+          ipv6pool: cidrItem.byoipPoolId,
+          ipamCidrIndex: cidrIndex[cidrKey],
+        },
+      };
+      vpc.addIpv6Cidr(cidrInfo);
+      return cidrInfo;
+    });
+    return additionalCidrs;
+  }
+  /**
+   * Create Amazon Provided IPv6 CIDRs for a given VPC
+   * @param vpc Vpc
+   * @param vpcItem VpcConfig | VpcTemplatesConfig
+   * @returns Ipv6VpcCidrBlock[]
+   */
+  private createIpv6CidrsAmazonProvided(vpc: Vpc, vpcItem: VpcConfig | VpcTemplatesConfig): Ipv6VpcCidrBlock[] {
+    if (!vpcItem.ipv6Cidrs) {
+      return [];
+    }
+    const amazonProvidedCidrs = vpcItem.ipv6Cidrs.filter(cidrItem => cidrItem.amazonProvided);
+    const additionalCidrs = amazonProvidedCidrs.map((cidrItem, index) => {
+      const cidrInfo = {
+        amazonProvidedIpv6CidrBlock: cidrItem.amazonProvided,
+        metadata: {
+          vpcName: vpcItem.name,
+          amazonProvidedIpv6CidrBlock: cidrItem.amazonProvided,
+          amazonProvidedCidrIndex: index,
+        },
+      };
+      vpc.addIpv6Cidr(cidrInfo);
+      return cidrInfo;
+    });
+    return additionalCidrs;
+  }
   /**
    * Create IPv6 CIDRs for a given VPC
    * @param vpc Vpc
@@ -640,18 +794,12 @@ export class VpcResources {
    * @returns Ipv6VpcCidrBlock[]
    */
   private createIpv6Cidrs(vpc: Vpc, vpcItem: VpcConfig | VpcTemplatesConfig): Ipv6VpcCidrBlock[] {
-    const ipv6Cidrs: Ipv6VpcCidrBlock[] = [];
-
-    for (const vpcCidr of vpcItem.ipv6Cidrs ?? []) {
-      const cidrProps = {
-        amazonProvidedIpv6CidrBlock: vpcCidr.amazonProvided,
-        ipv6CidrBlock: vpcCidr.cidrBlock,
-        ipv6Pool: vpcCidr.byoipPoolId,
-      };
-      vpc.addIpv6Cidr(cidrProps);
-      ipv6Cidrs.push(cidrProps);
+    if (!vpcItem.ipv6Cidrs) {
+      return [];
     }
-    return ipv6Cidrs;
+    const byoIpCidrs = this.createIpv6IpamCidrs(vpc, vpcItem);
+    const amazonProvidedCidrs = this.createIpv6CidrsAmazonProvided(vpc, vpcItem);
+    return [...byoIpCidrs, ...amazonProvidedCidrs];
   }
 
   /**
@@ -770,13 +918,34 @@ export class VpcResources {
    * @returns
    */
   private deleteDefaultSgRules(vpc: Vpc, vpcItem: VpcConfig | VpcTemplatesConfig): boolean {
+    if (
+      !this.lzaLookup.resourceExists({
+        resourceType: LZAResourceLookupType.DELETE_VPC_DEFAULT_SECURITY_GROUP_RULES,
+        lookupValues: {
+          vpcName: vpcItem.name,
+        },
+      })
+    ) {
+      return true;
+    }
+
     if (vpcItem.defaultSecurityGroupRulesDeletion) {
       this.stack.addLogs(LogLevel.INFO, `Delete default security group ingress and egress rules for ${vpcItem.name}`);
-      new DeleteDefaultSecurityGroupRules(this.stack, pascalCase(`DeleteSecurityGroupRules-${vpcItem.name}`), {
-        vpcId: vpc.vpcId,
-        kmsKey: this.stack.cloudwatchKey,
-        logRetentionInDays: this.stack.logRetention,
+      const deleteDefaultSgCustomResource = new DeleteDefaultSecurityGroupRules(
+        this.stack,
+        pascalCase(`DeleteSecurityGroupRules-${vpcItem.name}`),
+        {
+          vpcId: vpc.vpcId,
+          kmsKey: this.stack.cloudwatchKey,
+          logRetentionInDays: this.stack.logRetention,
+        },
+      );
+
+      const cfnResource = deleteDefaultSgCustomResource.resource.node.defaultChild as cdk.CfnResource;
+      cfnResource.addMetadata(MetadataKeys.LZA_LOOKUP, {
+        vpcName: vpcItem.name,
       });
+
       return true;
     }
     return false;
@@ -813,6 +982,23 @@ export class VpcResources {
     for (const cgw of ipv4Cgws ?? []) {
       for (const vpnItem of cgw.vpnConnections ?? []) {
         if (vpnItem.vpc && vpcMap.has(vpnItem.vpc)) {
+          if (
+            !this.lzaLookup.resourceExists({
+              resourceType: LZAResourceLookupType.VPN_CONNECTION,
+              lookupValues: {
+                vpcName: vpnItem.vpc,
+                vpnName: vpnItem.name,
+                cgwName: cgw.name,
+              },
+            })
+          ) {
+            continue;
+          }
+          const metadata = {
+            vpnName: vpnItem.name,
+            vpcName: vpnItem.vpc,
+            cgwName: cgw.name,
+          };
           //
           // Get CGW ID and VPC
           const customerGatewayId = cdk.aws_ssm.StringParameter.valueForStringParameter(
@@ -820,7 +1006,9 @@ export class VpcResources {
             this.stack.getSsmPath(SsmResourceType.CGW, [cgw.name]),
           );
           const vpc = getVpc(vpcMap, vpnItem.vpc) as Vpc;
-
+          if (!vpc) {
+            continue;
+          }
           this.stack.addLogs(
             LogLevel.INFO,
             `Creating Vpn Connection with Customer Gateway ${cgw.name} to the VPC ${vpnItem.vpc}`,
@@ -833,8 +1021,10 @@ export class VpcResources {
               customerGatewayId,
               customResourceHandler,
               virtualPrivateGateway: vpc.virtualPrivateGatewayId,
+              metadata,
             }),
           );
+
           vpnMap.set(`${vpc.name}_${vpnItem.name}`, vpn.vpnConnectionId);
           vpc.vpnConnections.push(vpn);
         }
@@ -928,6 +1118,9 @@ export class VpcResources {
         // Set VGW ID
         const vpcConfig = getVpcConfig(vpcResources, vpnItem.vpc);
         const vpc = getVpc(vpcMap, vpnItem.vpc) as Vpc;
+        if (!vpc) {
+          continue;
+        }
         ssmParameters.push({
           name: this.stack.getSsmPath(SsmResourceType.CROSS_ACCOUNT_VGW, [cgw.name, vpcConfig.name]),
           value: vpc.virtualPrivateGatewayId ?? '',

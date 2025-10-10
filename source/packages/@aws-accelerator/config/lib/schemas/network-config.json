@@ -1104,6 +1104,25 @@
       ],
       "type": "object"
     },
+    "IIcmpRuleConfig": {
+      "additionalProperties": false,
+      "description": "Use this configuration to define ICMP rules for your network ACLs.\n\nThe following example allows inbound ICMP traffic for Mobile Host Redirect",
+      "properties": {
+        "code": {
+          "description": "The ICMP code number. A value of -1 indicates all types.",
+          "type": "number"
+        },
+        "type": {
+          "description": "The ICMP type number. A value of -1 indicates all types.",
+          "type": "number"
+        }
+      },
+      "required": [
+        "type",
+        "code"
+      ],
+      "type": "object"
+    },
     "IInterfaceEndpointConfig": {
       "additionalProperties": false,
       "description": "Use this configuration to define interface endpoints for your VPC.\nInterface endpoints powered by AWS PrivateLink to connect your VPC to AWS services as if they were in your VPC, without the use of an internet gateway.",
@@ -1562,6 +1581,17 @@
           "description": "The port to start from in the network ACL rule.",
           "type": "number"
         },
+        "icmp": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/NonEmptyString"
+            },
+            {
+              "$ref": "#/definitions/IIcmpRuleConfig"
+            }
+          ],
+          "description": "(OPTIONAL) The Internet Control Message Protocol (ICMP) code and type. Required if specifying 1 (ICMP) for the protocol parameter."
+        },
         "protocol": {
           "description": "The  {@link  https://www.iana.org/assignments/protocol-numbers/protocol-numbers.xhtml IANA protocol number }  for the network ACL rule. You may also specify -1 for all protocols.",
           "type": "number"
@@ -1589,8 +1619,6 @@
       "required": [
         "rule",
         "protocol",
-        "fromPort",
-        "toPort",
         "action",
         "source"
       ],
@@ -1619,6 +1647,17 @@
           "description": "The port to start from in the network ACL rule.",
           "type": "number"
         },
+        "icmp": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/NonEmptyString"
+            },
+            {
+              "$ref": "#/definitions/IIcmpRuleConfig"
+            }
+          ],
+          "description": "(OPTIONAL) The Internet Control Message Protocol (ICMP) code and type. Required if specifying 1 (ICMP) for the protocol parameter."
+        },
         "protocol": {
           "description": "The  {@link  https://www.iana.org/assignments/protocol-numbers/protocol-numbers.xhtml IANA protocol number }  for the network ACL rule. You may also specify -1 for all protocols.",
           "type": "number"
@@ -1635,8 +1674,6 @@
       "required": [
         "rule",
         "protocol",
-        "fromPort",
-        "toPort",
         "action",
         "destination"
       ],
@@ -2900,6 +2937,13 @@
         "name": {
           "$ref": "#/definitions/NonEmptyString",
           "description": "The friendly name of the resolver endpoint."
+        },
+        "protocols": {
+          "description": "(OPTIONAL) An array of DNS Queries over HTTPS (DoH) Protocols to apply to the Route 53 Resolver Endpoints.",
+          "items": {
+            "$ref": "#/definitions/ResolverProtocol"
+          },
+          "type": "array"
         },
         "rules": {
           "description": "(OPTIONAL) An array of resolver rule configurations for the endpoint.",
@@ -4227,7 +4271,7 @@
         },
         "useCentralEndpoints": {
           "default": false,
-          "description": "(OPTIONAL) When set to true, this VPC will be configured to utilize centralized endpoints. This includes having the Route 53 Private Hosted Zone associated with this VPC. Centralized endpoints are configured per region, and can span to spoke accounts",
+          "description": "(OPTIONAL) When set to true, this VPC will be configured to utilize centralized endpoints. This includes having the Route 53 Private Hosted Zone associated with this VPC. Centralized endpoints are configured per region, and can span to spoke accounts.\n\nNOTE: The AWS partition and regions must support the creation of Route 53 private hosted zones and DNS alias records for AWS VPC Endpoint resource types or the pipeline will fail. Ensure your partition and regions will support useCentralEndpoints before enabling it.",
           "type": "boolean"
         },
         "virtualPrivateGateway": {
@@ -4951,6 +4995,7 @@
       "enum": [
         "af-south-1",
         "ap-east-1",
+        "ap-east-2",
         "ap-northeast-1",
         "ap-northeast-2",
         "ap-northeast-3",
@@ -4961,6 +5006,7 @@
         "ap-southeast-3",
         "ap-southeast-4",
         "ap-southeast-5",
+        "ap-southeast-7",
         "ca-central-1",
         "ca-west-1",
         "cn-north-1",
@@ -4977,6 +5023,7 @@
         "il-central-1",
         "me-central-1",
         "me-south-1",
+        "mx-central-1",
         "sa-east-1",
         "us-east-1",
         "us-east-2",
@@ -4996,6 +5043,14 @@
       "enum": [
         "INBOUND",
         "OUTBOUND"
+      ],
+      "type": "string"
+    },
+    "ResolverProtocol": {
+      "enum": [
+        "DoH-FIPS",
+        "DoH",
+        "Do53"
       ],
       "type": "string"
     },

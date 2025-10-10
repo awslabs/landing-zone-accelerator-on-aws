@@ -1,0 +1,6 @@
+defaultVpc:
+  delete: false
+  excludeAccounts: []
+transitGateways: []
+endpointPolicies: []
+vpcs: []

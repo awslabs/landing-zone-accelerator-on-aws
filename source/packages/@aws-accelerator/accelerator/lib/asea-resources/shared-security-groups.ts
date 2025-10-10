@@ -1,4 +1,5 @@
 import { AseaResourceType, VpcConfig, VpcTemplatesConfig } from '@aws-accelerator/config';
+import { getAseaVpcName } from '@aws-accelerator/utils';
 import { SsmResourceType } from '@aws-accelerator/utils/lib/ssm-parameter-path';
 import { AseaResource, AseaResourceProps } from './resource';
 import { ImportAseaResourcesStack, LogLevel } from '../stacks/import-asea-resources-stack';
@@ -59,9 +60,7 @@ export class SharedSecurityGroups extends AseaResource {
     }
   }
   private getSecurityGroupResourceByVpc(vpcName: string) {
-    if (vpcName.includes('_vpc')) {
-      vpcName = vpcName.replace('_vpc', '');
-    }
+    const aseaConfigVpcName = getAseaVpcName(vpcName).replace('_vpc', '');
     for (const [, nestedStackResources] of Object.entries(this.scope.nestedStackResources ?? {})) {
       const stackKey = nestedStackResources.getStackKey();
       const nestedStack = this.scope.nestedStacks[stackKey];
@@ -76,13 +75,13 @@ export class SharedSecurityGroups extends AseaResource {
           return false;
         }
         const descriptionWords = description.split(' ');
-        return descriptionWords.includes(vpcName);
+        return descriptionWords.includes(aseaConfigVpcName);
       });
       if (securityGroupMatch && securityGroupMatch.length > 0) {
         return { nestedStack, nestedStackResources, stackKey };
       }
     }
-    this.scope.addLogs(LogLevel.WARN, `Could not find nested stack for ${vpcName}`);
+    this.scope.addLogs(LogLevel.WARN, `Could not find nested stack for ${aseaConfigVpcName}`);
     return;
   }
 

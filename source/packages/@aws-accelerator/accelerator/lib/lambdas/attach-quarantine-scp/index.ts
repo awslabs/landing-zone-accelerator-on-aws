@@ -11,10 +11,17 @@
  *  and limitations under the License.
  */
 
-import * as AWS from 'aws-sdk';
 import { delay, throttlingBackOff } from '@aws-accelerator/utils/lib/throttle';
 import { Context } from '@aws-accelerator/utils/lib/common-types';
-import { getGlobalRegion } from '@aws-accelerator/utils/lib/common-functions';
+import { getGlobalRegion, setRetryStrategy } from '@aws-accelerator/utils/lib/common-functions';
+import {
+  AttachPolicyCommand,
+  DescribeCreateAccountStatusCommand,
+  DescribeCreateAccountStatusResponse,
+  ListPoliciesCommand,
+  OrganizationsClient,
+  PolicySummary,
+} from '@aws-sdk/client-organizations';
 
 /**
  * attach-quarantine-scp - lambda handler
@@ -29,9 +36,10 @@ export async function handler(event: any, context: Context): Promise<any> {
   const partition = context.invokedFunctionArn.split(':')[1];
   const globalRegion = getGlobalRegion(partition);
   // Move to setOrganizationsClient method after refactoring to SDK v3
-  const organizationsClient = new AWS.Organizations({
-    customUserAgent: process.env['SOLUTION_ID'],
+  const organizationsClient = new OrganizationsClient({
     region: globalRegion,
+    customUserAgent: process.env['SOLUTION_ID'],
+    retryStrategy: setRetryStrategy(),
   });
 
   // eslint-disable-next-line prefer-const
@@ -65,20 +73,21 @@ export async function handler(event: any, context: Context): Promise<any> {
 
 async function getAccountCreationStatus(
   requestId: string,
-  orgsClient: AWS.Organizations,
-): Promise<AWS.Organizations.DescribeCreateAccountStatusResponse> {
-  return throttlingBackOff(() =>
-    orgsClient.describeCreateAccountStatus({ CreateAccountRequestId: requestId }).promise(),
+  orgsClient: OrganizationsClient,
+): Promise<DescribeCreateAccountStatusResponse> {
+  return await throttlingBackOff(() =>
+    orgsClient.send(new DescribeCreateAccountStatusCommand({ CreateAccountRequestId: requestId })),
   );
 }
 
-async function getPolicyId(policyName: string, orgsClient: AWS.Organizations) {
+async function getPolicyId(policyName: string, orgsClient: OrganizationsClient) {
   console.log(`Looking for policy named ${policyName}`);
-  const scpPolicies: AWS.Organizations.PolicySummary[] = [];
+  const scpPolicies: PolicySummary[] = [];
   let nextToken: string | undefined = undefined;
   do {
-    const page = await throttlingBackOff(() => orgsClient.listPolicies({ Filter: 'SERVICE_CONTROL_POLICY' }).promise());
-
+    const page = await throttlingBackOff(() =>
+      orgsClient.send(new ListPoliciesCommand({ Filter: 'SERVICE_CONTROL_POLICY' })),
+    );
     for (const scpPolicy of page.Policies ?? []) {
       console.log(`Policy named ${scpPolicy.Name} added to list`);
       scpPolicies.push(scpPolicy);
@@ -98,16 +107,16 @@ async function getPolicyId(policyName: string, orgsClient: AWS.Organizations) {
 async function attachQuarantineScp(
   accountId: string,
   policyId: string,
-  orgsClient: AWS.Organizations,
+  orgsClient: OrganizationsClient,
 ): Promise<boolean> {
   try {
     await throttlingBackOff(() =>
-      orgsClient
-        .attachPolicy({
+      orgsClient.send(
+        new AttachPolicyCommand({
           PolicyId: policyId,
           TargetId: accountId,
-        })
-        .promise(),
+        }),
+      ),
     );
     console.log(`Attached Quarantine SCP to account: ${accountId}`);
     // eslint-disable-next-line @typescript-eslint/no-explicit-any

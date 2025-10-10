@@ -1,0 +1,47 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "EnforceIdentityPerimeter",
+      "Principal": {
+        "AWS": "*"
+      },
+      "Effect": "Deny",
+      "Resource": "${ACCEL_LOOKUP::CUSTOM:ATTACHED_RESOURCE_ARN}",
+      "Action": "*",
+      "Condition": {
+      "StringNotEqualsIfExists": {
+          "aws:PrincipalOrgID": "${ORG_ID}"
+        },
+        "BoolIfExists": {
+          "aws:PrincipalIsAWSService": "false"
+        }
+      }
+    },
+    {
+      "Sid": "EnforceNetworkPerimeter",
+      "Effect": "Deny",
+      "Principal": {
+        "AWS": "*"
+      },
+      "Resource": "${ACCEL_LOOKUP::CUSTOM:ATTACHED_RESOURCE_ARN}",
+      "Action": "*",
+      "Condition": {
+        "StringNotEqualsIfExists": {
+          "aws:SourceVpc": [${ACCEL_LOOKUP::VPC_ID:OU:Infrastructure}],
+          "aws:sourceVpce": [${ACCEL_LOOKUP::VPCE_ID:ACCOUNT:Network}]
+        },
+        "NotIpAddressIfExists": {
+          "aws:SourceIp": ${ACCEL_LOOKUP::CUSTOM:ALLOWED_CORPORATE_CIDRS}
+        },
+        "BoolIfExists": {
+          "aws:PrincipalIsAWSService": "false",
+          "aws:ViaAWSService": "false"
+        },
+        "ArnNotLikeIfExists": {
+          "aws:PrincipalARN": ${ACCEL_LOOKUP::CUSTOM:ALLOWED_PRINCIPAL_ARNS}
+        }
+      }
+    }
+  ]
+}

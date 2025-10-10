@@ -12,7 +12,6 @@
  */
 
 import * as cdk from 'aws-cdk-lib';
-import { NagSuppressions } from 'cdk-nag';
 import * as codebuild from 'aws-cdk-lib/aws-codebuild';
 import * as codecommit from 'aws-cdk-lib/aws-codecommit';
 import * as codepipeline from 'aws-cdk-lib/aws-codepipeline';
@@ -27,7 +26,8 @@ import { AcceleratorToolkitCommand } from './toolkit';
 import { Repository } from '@aws-cdk-extensions/cdk-extensions';
 import { CONTROL_TOWER_LANDING_ZONE_VERSION } from '@aws-accelerator/utils/lib/control-tower';
 import { ControlTowerLandingZoneConfig } from '@aws-accelerator/config';
-
+import { getNodeVersion } from '@aws-accelerator/utils/lib/common-functions';
+import { version } from '../../../../package.json';
 export interface AcceleratorPipelineProps {
   readonly toolkitRole: cdk.aws_iam.Role;
   readonly awsCodeStarSupportedRegions: string[];
@@ -139,6 +139,10 @@ export interface AcceleratorPipelineProps {
    * Accelerator region by region deploy order
    */
   readonly regionByRegionDeploymentOrder?: string;
+  /**
+   * Source Bucket name
+   */
+  secureBucketName: string;
 }
 
 enum BuildLogLevel {
@@ -173,6 +177,7 @@ const otherActions: [AcceleratorStage, string][] = [
   [AcceleratorStage.ACCOUNTS, 'Accounts'],
   [AcceleratorStage.IMPORT_ASEA_RESOURCES, 'ImportAseaResources'],
   [AcceleratorStage.POST_IMPORT_ASEA_RESOURCES, 'PostImportAseaResources'],
+  [AcceleratorStage.PRE_APPROVAL, 'Pre-Approval'],
 ];
 
 const actionNames = Object.fromEntries([...coreActions, ...otherActions]);
@@ -183,7 +188,6 @@ const actionNames = Object.fromEntries([...coreActions, ...otherActions]);
 export class AcceleratorPipeline extends Construct {
   private readonly pipelineRole: iam.Role;
   private readonly toolkitProject: codebuild.PipelineProject;
-  private readonly buildOutput: codepipeline.Artifact;
   private readonly acceleratorRepoArtifact: codepipeline.Artifact;
   private readonly configRepoArtifact: codepipeline.Artifact;
   private readonly pipelineArtifacts: codepipeline.Artifact[];
@@ -217,8 +221,10 @@ export class AcceleratorPipeline extends Construct {
     }`;
     this.serverAccessLogsBucketNameSsmParam = `${props.prefixes.ssmParamName}/installer-access-logs-bucket-name`;
     let pipelineName = `${props.prefixes.accelerator}-Pipeline`;
-    let buildProjectName = `${props.prefixes.accelerator}-BuildProject`;
     let toolkitProjectName = `${props.prefixes.accelerator}-ToolkitProject`;
+    this.diffS3Uri = `s3://${this.props.prefixes.bucketName}-pipeline-${cdk.Stack.of(this).account}-${
+      cdk.Stack.of(this).region
+    }/AWSAccelerator-Pipel/Diffs`;
 
     //
     // Change the fields when qualifier is present
@@ -230,8 +236,26 @@ export class AcceleratorPipeline extends Construct {
       }`;
       this.serverAccessLogsBucketNameSsmParam = `${props.prefixes.ssmParamName}/${this.props.qualifier}/installer-access-logs-bucket-name`;
       pipelineName = `${this.props.qualifier}-pipeline`;
-      buildProjectName = `${this.props.qualifier}-build-project`;
       toolkitProjectName = `${this.props.qualifier}-toolkit-project`;
+      this.diffS3Uri = `s3://${this.props.qualifier}-pipeline-${cdk.Stack.of(this).account}-${
+        cdk.Stack.of(this).region
+      }/AWSAccelerator-Pipel/Diffs`;
+    }
+
+    let nodeEnvVariables: { [p: string]: codebuild.BuildEnvironmentVariable } | undefined;
+
+    /**
+     * This environment variable is only present when user decides to have a custom runtime
+     * If this environment variable is not present then runtime is set to whatever the value
+     * is in source/package.json `config.node.version.default`
+     */
+    if (process.env['ACCELERATOR_NODE_VERSION']) {
+      nodeEnvVariables = {
+        ACCELERATOR_NODE_VERSION: {
+          type: codebuild.BuildEnvironmentVariableType.PLAINTEXT,
+          value: getNodeVersion(),
+        },
+      };
     }
 
     let pipelineAccountEnvVariables: { [p: string]: codebuild.BuildEnvironmentVariable } | undefined;
@@ -338,48 +362,14 @@ export class AcceleratorPipeline extends Construct {
 
     this.pipelineArtifacts = coreActions.map(([stage]) => new codepipeline.Artifact(formatArtifactName(stage)));
 
-    let sourceAction:
-      | cdk.aws_codepipeline_actions.CodeCommitSourceAction
-      | cdk.aws_codepipeline_actions.S3SourceAction
-      | cdk.aws_codepipeline_actions.GitHubSourceAction;
-
-    if (this.props.sourceRepository === 'codecommit') {
-      sourceAction = new codepipeline_actions.CodeCommitSourceAction({
-        actionName: 'Source',
-        repository: codecommit.Repository.fromRepositoryName(this, 'SourceRepo', this.props.sourceRepositoryName),
-        branch: this.props.sourceBranchName,
-        output: this.acceleratorRepoArtifact,
-        trigger: codepipeline_actions.CodeCommitTrigger.NONE,
-        role: this.pipelineRole,
-      });
-    } else if (this.props.sourceBucketName && this.props.sourceBucketName.length > 0) {
-      // hidden parameter to use S3 for source code via cdk context
-      const bucket = cdk.aws_s3.Bucket.fromBucketAttributes(this, 'ExistingBucket', {
-        bucketName: this.props.sourceBucketName,
-        ...(this.props.sourceBucketKmsKeyArn && {
-          encryptionKey: cdk.aws_kms.Key.fromKeyArn(this, 'S3SourceKmsKey', this.props.sourceBucketKmsKeyArn),
-        }),
-      });
-
-      sourceAction = new codepipeline_actions.S3SourceAction({
-        actionName: 'Source',
-        bucket: bucket,
-        bucketKey: this.props.sourceBucketObject,
-        output: this.acceleratorRepoArtifact,
-        trigger: codepipeline_actions.S3Trigger.NONE,
-        role: this.pipelineRole,
-      });
-    } else {
-      sourceAction = new cdk.aws_codepipeline_actions.GitHubSourceAction({
-        actionName: 'Source',
-        owner: this.props.sourceRepositoryOwner,
-        repo: this.props.sourceRepositoryName,
-        branch: this.props.sourceBranchName,
-        oauthToken: cdk.SecretValue.secretsManager('accelerator/github-token'),
-        output: this.acceleratorRepoArtifact,
-        trigger: cdk.aws_codepipeline_actions.GitHubTrigger.NONE,
-      });
-    }
+    const sourceAction = new codepipeline_actions.S3SourceAction({
+      actionName: 'Source',
+      bucket: cdk.aws_s3.Bucket.fromBucketName(this, 'SourceBucket', this.props.secureBucketName),
+      bucketKey: process.env['ACCELERATOR_CUSTOM_SOURCE_KEY'] ?? `lza/v${version}.zip`,
+      output: this.acceleratorRepoArtifact,
+      trigger: codepipeline_actions.S3Trigger.NONE,
+      role: this.pipelineRole,
+    });
 
     if (this.props.configRepositoryLocation === 's3') {
       const s3ConfigRepository = this.getS3ConfigRepository();
@@ -436,141 +426,11 @@ export class AcceleratorPipeline extends Construct {
     }
 
     /**
-     * Build Stage
-     */
-    const buildRole = new iam.Role(this, 'BuildRole', {
-      assumedBy: new iam.ServicePrincipal('codebuild.amazonaws.com'),
-    });
-
-    const validateConfigPolicyDocument = new cdk.aws_iam.PolicyDocument({
-      statements: [
-        new cdk.aws_iam.PolicyStatement({
-          effect: cdk.aws_iam.Effect.ALLOW,
-          actions: ['organizations:ListAccounts', 'ssm:GetParameter'],
-          resources: ['*'],
-        }),
-      ],
-    });
-
-    const validateConfigPolicy = new cdk.aws_iam.ManagedPolicy(this, 'ValidateConfigPolicyDocument', {
-      document: validateConfigPolicyDocument,
-    });
-    buildRole.addManagedPolicy(validateConfigPolicy);
-
-    if (this.props.managementAccountId && this.props.managementAccountRoleName) {
-      const assumeExternalDeploymentRolePolicyDocument = new cdk.aws_iam.PolicyDocument({
-        statements: [
-          new cdk.aws_iam.PolicyStatement({
-            effect: cdk.aws_iam.Effect.ALLOW,
-            actions: ['sts:AssumeRole'],
-            resources: [
-              `arn:${this.props.partition}:iam::${this.props.managementAccountId}:role/${this.props.managementAccountRoleName}`,
-            ],
-          }),
-        ],
-      });
-
-      /**
-       * Create an IAM Policy for the build role to be able to lookup replacement parameters in the external deployment
-       * target account
-       */
-      const assumeExternalDeploymentRolePolicy = new cdk.aws_iam.ManagedPolicy(this, 'AssumeExternalDeploymentPolicy', {
-        document: assumeExternalDeploymentRolePolicyDocument,
-      });
-      buildRole.addManagedPolicy(assumeExternalDeploymentRolePolicy);
-    }
-
-    // Pipeline/BuildRole/Resource AwsSolutions-IAM4: The IAM user, role, or group uses AWS managed policies.
-    NagSuppressions.addResourceSuppressionsByPath(
-      cdk.Stack.of(this),
-      `${cdk.Stack.of(this).stackName}/Pipeline/BuildRole/Resource`,
-      [
-        {
-          id: 'AwsSolutions-IAM4',
-          reason: 'AWS Managed policy for External Pipeline Deployment Lookups attached.',
-        },
-      ],
-    );
-
-    const buildProject = new codebuild.PipelineProject(this, 'BuildProject', {
-      projectName: buildProjectName,
-      encryptionKey: this.installerKey,
-      role: buildRole,
-      buildSpec: codebuild.BuildSpec.fromObject({
-        version: '0.2',
-        phases: {
-          install: {
-            'runtime-versions': {
-              nodejs: 18,
-            },
-          },
-          pre_build: {
-            commands: [
-              `export PACKAGE_VERSION=$(cat source/package.json | grep version | head -1 | awk -F: '{ print $2 }' | sed 's/[",]//g' | tr -d '[:space:]')`,
-              `if [ "$ACCELERATOR_CHECK_VERSION" = "yes" ]; then
-                if [ "$PACKAGE_VERSION" != "$ACCELERATOR_PIPELINE_VERSION" ]; then
-                  echo "ERROR: Accelerator package version in Source does not match currently installed LZA version. Please ensure that the Installer stack has been updated prior to updating the Source code in CodePipeline."
-                  exit 1
-                fi
-              fi`,
-            ],
-          },
-          build: {
-            commands: [
-              'env',
-              'cd source',
-              `if [ "${cdk.Stack.of(this).partition}" = "aws-cn" ]; then
-                  sed -i "s#registry.yarnpkg.com#registry.npmmirror.com#g" yarn.lock;
-                  yarn config set registry https://registry.npmmirror.com
-               fi`,
-              'if [ -f .yarnrc ]; then yarn install --use-yarnrc .yarnrc; else yarn install; fi',
-              'yarn build',
-              'yarn validate-config $CODEBUILD_SRC_DIR_Config',
-            ],
-          },
-        },
-        artifacts: {
-          files: ['**/*'],
-          'enable-symlinks': 'yes',
-        },
-      }),
-      environment: {
-        buildImage: codebuild.LinuxBuildImage.STANDARD_7_0,
-        privileged: false,
-        computeType: codebuild.ComputeType.LARGE,
-        environmentVariables: {
-          NODE_OPTIONS: {
-            type: codebuild.BuildEnvironmentVariableType.PLAINTEXT,
-            value: '--max_old_space_size=12288 --no-warnings',
-          },
-          PARTITION: {
-            type: codebuild.BuildEnvironmentVariableType.PLAINTEXT,
-            value: cdk.Stack.of(this).partition,
-          },
-          ACCELERATOR_PIPELINE_VERSION: {
-            type: codebuild.BuildEnvironmentVariableType.PARAMETER_STORE,
-            value: `${props.prefixes.ssmParamName}/${cdk.Stack.of(this).stackName}/version`,
-          },
-          ACCELERATOR_CHECK_VERSION: {
-            type: codebuild.BuildEnvironmentVariableType.PLAINTEXT,
-            value: 'yes',
-          },
-          ...enableSingleAccountModeEnvVariables,
-          ...pipelineAccountEnvVariables,
-        },
-      },
-      cache: codebuild.Cache.local(codebuild.LocalCacheMode.SOURCE),
-    });
-
-    /**
-     * Toolkit CodeBuild poroject is used to run all Accelerator stages, including diff
+     * Toolkit CodeBuild project is used to run all Accelerator stages, including diff
      * First it executes synth of all Pipeline stages and then diff within the same container.
      * CloudFormation templates are then reused for all further stages
-     * Diff files are uploaded to pipeline S3 bucket
+     * Diff files are uploaded to pipeline S3 bucket - consideration needed if running in external account
      */
-    this.diffS3Uri = `s3://${this.props.prefixes.bucketName}-pipeline-${cdk.Stack.of(this).account}-${
-      cdk.Stack.of(this).region
-    }/AWSAccelerator-Pipel/Diffs`;
 
     this.toolkitProject = new codebuild.PipelineProject(this, 'ToolkitProject', {
       projectName: toolkitProjectName,
@@ -582,12 +442,12 @@ export class AcceleratorPipeline extends Construct {
         phases: {
           install: {
             'runtime-versions': {
-              nodejs: 18,
+              nodejs: getNodeVersion(),
             },
           },
           pre_build: {
             commands: [
-              `export WORK_DIR=source/packages/@aws-accelerator/accelerator
+              `export WORK_DIR=$CODEBUILD_SRC_DIR/source/packages/@aws-accelerator/accelerator
                export ARCHIVE_NAME="\${ACCELERATOR_STAGE}.tgz"
                export DIFFS_DIR="${this.diffS3Uri}"
                export STAGE_ARTIFACT=$(echo "$ACCELERATOR_STAGE" | sed 's/-/ /g' | awk '{for (i=1; i<=NF; ++i) $i=toupper(substr($i,1,1))tolower(substr($i,2))}1' | sed 's/ /_/g')
@@ -597,28 +457,33 @@ export class AcceleratorPipeline extends Construct {
           build: {
             commands: [
               'env',
+              `if [ "prepare" = "\${ACCELERATOR_STAGE}" ]; then 
+                cd source;
+                set -e && LOG_LEVEL=info yarn validate-config $CODEBUILD_SRC_DIR_Config;
+                export PACKAGE_VERSION=$(cat package.json | grep version | head -1 | awk -F: '{ print $2 }' | sed 's/[",]//g' | tr -d '[:space:]');
+                if [ "$ACCELERATOR_CHECK_VERSION" = "yes" ]; then
+                  if [ "$PACKAGE_VERSION" != "$ACCELERATOR_PIPELINE_VERSION" ]; then
+                    echo "ERROR: Accelerator package version in Source does not match currently installed LZA version. Please ensure that the Installer stack has been updated prior to updating the Source code in CodePipeline."
+                    exit 1
+                  fi
+                fi
+              fi`,
               'cd $WORK_DIR',
-              `if [ "prepare" = "\${ACCELERATOR_STAGE}" ]; then set -e && LOG_LEVEL=${
-                BuildLogLevel.INFO
-              } yarn run ts-node ../lza-modules/bin/runner.ts --module control-tower --partition ${
-                cdk.Aws.PARTITION
-              } --use-existing-role ${
-                this.props.useExistingRoles ? 'Yes' : 'No'
-              } --config-dir $CODEBUILD_SRC_DIR_Config; fi`,
-              `if [ "prepare" = "\${ACCELERATOR_STAGE}" ] && [ -z "\${ACCELERATOR_NO_ORG_MODULE}" ]; then set -e && LOG_LEVEL=info && yarn run ts-node ../lza-modules/bin/runner.ts --module aws-organizations --partition  ${
-                cdk.Aws.PARTITION
-              } --use-existing-role ${
-                this.props.useExistingRoles ? 'Yes' : 'No'
-              } --config-dir $CODEBUILD_SRC_DIR_Config; else echo "Module aws-organizations execution skipped by environment settings."; fi`,
-              `if [ "prepare" = "\${ACCELERATOR_STAGE}" ]; then set -e && LOG_LEVEL=info && yarn run ts-node ../lza-modules/bin/runner.ts --module account-alias --partition  ${
-                cdk.Aws.PARTITION
-              } --use-existing-role ${
-                this.props.useExistingRoles ? 'Yes' : 'No'
-              } --config-dir $CODEBUILD_SRC_DIR_Config; fi`,
+              `RUNNER_ARGS="--partition ${cdk.Aws.PARTITION} --region ${cdk.Aws.REGION} --config-dir $CODEBUILD_SRC_DIR_Config --stage $ACCELERATOR_STAGE --prefix ${props.prefixes.accelerator}"`,
+              `if ${this.props.useExistingRoles}; then RUNNER_ARGS="$RUNNER_ARGS --use-existing-roles"; fi`,
+              `set -e && yarn run ts-node ../modules/bin/runner.ts $RUNNER_ARGS`,
+              `if [ "\${ACCELERATOR_STAGE}" = "pre-approval" ]; then
+                mkdir rawDiff;
+                cd rawDiff;
+                aws s3 sync "\${DIFFS_DIR}/\${CODEPIPELINE_EXECUTION_ID}/" .;
+                for file in ./*.tgz; do tar -xf "$file" -C .; done;
+                for file in ./*.diff; do cat "$file"; done;
+              fi`,
               `if [ "prepare" = "\${ACCELERATOR_STAGE}" ]; then set -e && yarn run ts-node  ./lib/prerequisites.ts --config-dir $CODEBUILD_SRC_DIR_Config --partition ${cdk.Aws.PARTITION} --minimal; fi`,
               'export FULL_SYNTH="true"',
               'if [ $ASEA_MAPPING_BUCKET ]; then aws s3api head-object --bucket $ASEA_MAPPING_BUCKET --key $ASEA_MAPPING_FILE >/dev/null 2>&1 || export FULL_SYNTH="false"; fi;',
-              `if [ "\${CDK_OPTIONS}" = "bootstrap" ]; then
+              `if [ "$ACCELERATOR_STAGE" != "pre-approval" ]; then
+                if [ "\${CDK_OPTIONS}" = "bootstrap" ]; then
                   if [ $FULL_SYNTH = "true" ]; then 
                     set -e && yarn run ts-node --transpile-only cdk.ts synth --stage $ACCELERATOR_STAGE --require-approval never --config-dir $CODEBUILD_SRC_DIR_Config --partition ${cdk.Aws.PARTITION};
                   fi
@@ -645,9 +510,20 @@ export class AcceleratorPipeline extends Construct {
                  else
                     set -e && yarn run ts-node --transpile-only cdk.ts synth --stage $ACCELERATOR_STAGE --require-approval never --config-dir $CODEBUILD_SRC_DIR_Config --partition ${cdk.Aws.PARTITION};
                  fi
-                 set -e && yarn run ts-node --transpile-only cdk.ts $CDK_OPTIONS --require-approval never --config-dir $CODEBUILD_SRC_DIR_Config --partition ${cdk.Aws.PARTITION} --app cdk.out;
+                set -e && yarn run ts-node --transpile-only cdk.ts $CDK_OPTIONS --require-approval never --config-dir $CODEBUILD_SRC_DIR_Config --partition ${cdk.Aws.PARTITION} --app cdk.out;
+                fi
                fi`,
-              `if [ "prepare" = "\${ACCELERATOR_STAGE}" ]; then set -e && yarn run ts-node  ./lib/prerequisites.ts --config-dir $CODEBUILD_SRC_DIR_Config --partition ${cdk.Aws.PARTITION}; fi`,
+              `if [ "prepare" = "\${ACCELERATOR_STAGE}" ]; then 
+                set -e
+                yarn run ts-node ./lib/prerequisites.ts --config-dir $CODEBUILD_SRC_DIR_Config --partition ${
+                  cdk.Aws.PARTITION
+                }
+                yarn run ts-node ../lza-modules/bin/runner.ts --module account-alias --partition ${
+                  cdk.Aws.PARTITION
+                } --use-existing-role ${
+                this.props.useExistingRoles ? 'Yes' : 'No'
+              } --config-dir $CODEBUILD_SRC_DIR_Config
+              fi`,
             ],
           },
         },
@@ -747,7 +623,7 @@ export class AcceleratorPipeline extends Construct {
           },
           USE_EXISTING_CONFIG_REPO: {
             type: cdk.aws_codebuild.BuildEnvironmentVariableType.PLAINTEXT,
-            value: this.props.useExistingConfigRepo,
+            value: this.props.useExistingConfigRepo ? 'Yes' : 'No',
           },
           EXISTING_CONFIG_REPOSITORY_NAME: {
             type: cdk.aws_codebuild.BuildEnvironmentVariableType.PLAINTEXT,
@@ -760,31 +636,10 @@ export class AcceleratorPipeline extends Construct {
           ...enableSingleAccountModeEnvVariables,
           ...pipelineAccountEnvVariables,
           ...aseaMigrationModeEnvVariables,
+          ...nodeEnvVariables,
         },
       },
       cache: codebuild.Cache.local(codebuild.LocalCacheMode.SOURCE),
-    });
-
-    this.buildOutput = new codepipeline.Artifact('Build');
-
-    this.pipeline.addStage({
-      stageName: 'Build',
-      actions: [
-        new codepipeline_actions.CodeBuildAction({
-          actionName: 'Build',
-          project: buildProject,
-          input: this.acceleratorRepoArtifact,
-          extraInputs: [this.configRepoArtifact],
-          outputs: [this.buildOutput],
-          role: this.pipelineRole,
-          environmentVariables: {
-            REGION_BY_REGION_DEPLOYMENT_ORDER: {
-              type: codebuild.BuildEnvironmentVariableType.PLAINTEXT,
-              value: this.props.regionByRegionDeploymentOrder ?? '',
-            },
-          },
-        }),
-      ],
     });
 
     /**
@@ -936,7 +791,7 @@ export class AcceleratorPipeline extends Construct {
 
   private getBuildProps(stageName: string, command: string) {
     const commonProps = {
-      input: this.buildOutput,
+      input: this.acceleratorRepoArtifact,
       extraInputs: [this.configRepoArtifact],
     };
     const excludedArtifacts = ['Source', 'Build', 'Prepare', 'Accounts', 'Bootstrap'];
@@ -981,8 +836,8 @@ export class AcceleratorPipeline extends Construct {
        */
       const reviewLink = `https://${cdk.Stack.of(this).region}.console.${this.getConsoleUrlSuffixForPartition(
         this.props.partition,
-      )}/s3/buckets/${this.props.prefixes.bucketName}-pipeline-${cdk.Stack.of(this).account}-${
-        cdk.Stack.of(this).region
+      )}/s3/buckets/${
+        this.pipeline.artifactBucket.bucketName
       }?prefix=AWSAccelerator-Pipel/Diffs/#{codepipeline.PipelineExecutionId}/&region=${
         cdk.Stack.of(this).region
       }&bucketType=general`;
@@ -990,6 +845,12 @@ export class AcceleratorPipeline extends Construct {
       this.pipeline.addStage({
         stageName: 'Review',
         actions: [
+          this.createToolkitStage({
+            actionName: actionNames[AcceleratorStage.PRE_APPROVAL],
+            command: 'deploy',
+            stage: AcceleratorStage.PRE_APPROVAL,
+            runOrder: 1,
+          }),
           new codepipeline_actions.ManualApprovalAction({
             actionName: 'Approve',
             runOrder: 2,

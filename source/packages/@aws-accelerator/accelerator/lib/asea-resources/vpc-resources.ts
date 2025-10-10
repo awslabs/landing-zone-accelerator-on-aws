@@ -32,6 +32,7 @@ import {
   CfnResourceType,
   NetworkAclConfig,
 } from '@aws-accelerator/config';
+import { getAseaConfigVpcName } from '@aws-accelerator/utils';
 import { SsmResourceType } from '@aws-accelerator/utils/lib/ssm-parameter-path';
 import { ImportAseaResourcesStack, LogLevel } from '../stacks/import-asea-resources-stack';
 import { AseaResource, AseaResourceProps } from './resource';
@@ -104,7 +105,7 @@ export class VpcResources extends AseaResource {
 
     for (const vpcInScope of vpcsInScope) {
       // ASEA creates NestedStack for each VPC. All SSM Parameters related to VPC goes to nested stack
-      const vpcResourceInfo = this.getVpcResourceByTag(vpcInScope.name);
+      const vpcResourceInfo = this.getVpcResourceByTag(getAseaConfigVpcName(vpcInScope.name));
       if (!vpcResourceInfo || !vpcResourceInfo.resource.physicalResourceId) {
         this.scope.addLogs(
           LogLevel.INFO,
@@ -287,7 +288,11 @@ export class VpcResources extends AseaResource {
 
     let vpcId: string | undefined;
     for (const [, vpcStackInfo] of Object.entries(vpcStacksInfo)) {
-      const vpcResource = this.findResourceByTypeAndTag(vpcStackInfo.cfnResources ?? [], RESOURCE_TYPE.VPC, vpcName);
+      const vpcResource = this.findResourceByTypeAndTag(
+        vpcStackInfo.cfnResources ?? [],
+        RESOURCE_TYPE.VPC,
+        getAseaConfigVpcName(vpcName),
+      );
       if (vpcResource) {
         vpcId = vpcResource.physicalResourceId;
         break;
@@ -622,6 +627,7 @@ export class VpcResources extends AseaResource {
           ),
         );
       } else {
+        if (ruleType === 'UDP' || ruleType === 'TCP') continue;
         const defaultRuleProps = {
           protocol: cdk.aws_ec2.Protocol.TCP,
           type: ruleType,
@@ -647,11 +653,31 @@ export class VpcResources extends AseaResource {
     securityGroupVpc: string,
   ) => {
     const securityGroupRules: SecurityGroupRuleInfo[] = [];
-    for (const tcpPort of securityGroupRuleItem.udpPorts ?? []) {
-      const defaultRuleProps = {
+    let defaultRuleProps: { protocol: cdk.aws_ec2.Protocol; from?: number; to?: number };
+    if (securityGroupRuleItem.udpPorts) {
+      for (const udpPort of securityGroupRuleItem.udpPorts ?? []) {
+        const defaultRuleProps = {
+          protocol: cdk.aws_ec2.Protocol.UDP,
+          from: udpPort,
+          to: udpPort,
+        };
+        securityGroupRules.push(
+          ...this.processSecurityGroupSources(
+            securityGroupRuleItem,
+            defaultRuleProps,
+            securityGroupsMap,
+            securityGroupVpc,
+          ),
+        );
+      }
+      return securityGroupRules;
+    }
+    for (const ruleType of securityGroupRuleItem.types ?? []) {
+      if (ruleType !== 'UDP') continue;
+      defaultRuleProps = {
         protocol: cdk.aws_ec2.Protocol.UDP,
-        from: tcpPort,
-        to: tcpPort,
+        from: securityGroupRuleItem.fromPort,
+        to: securityGroupRuleItem.toPort,
       };
       securityGroupRules.push(
         ...this.processSecurityGroupSources(
@@ -671,11 +697,31 @@ export class VpcResources extends AseaResource {
     securityGroupVpc: string,
   ) => {
     const securityGroupRules: SecurityGroupRuleInfo[] = [];
-    for (const tcpPort of securityGroupRuleItem.tcpPorts ?? []) {
-      const defaultRuleProps = {
+    let defaultRuleProps: { protocol: cdk.aws_ec2.Protocol; from?: number; to?: number };
+    if (securityGroupRuleItem.tcpPorts) {
+      for (const tcpPort of securityGroupRuleItem.tcpPorts ?? []) {
+        const defaultRuleProps = {
+          protocol: cdk.aws_ec2.Protocol.TCP,
+          from: tcpPort,
+          to: tcpPort,
+        };
+        securityGroupRules.push(
+          ...this.processSecurityGroupSources(
+            securityGroupRuleItem,
+            defaultRuleProps,
+            securityGroupsMap,
+            securityGroupVpc,
+          ),
+        );
+      }
+      return securityGroupRules;
+    }
+    for (const ruleType of securityGroupRuleItem.types ?? []) {
+      if (ruleType !== 'TCP') continue;
+      defaultRuleProps = {
         protocol: cdk.aws_ec2.Protocol.TCP,
-        from: tcpPort,
-        to: tcpPort,
+        from: securityGroupRuleItem.fromPort,
+        to: securityGroupRuleItem.toPort,
       };
       securityGroupRules.push(
         ...this.processSecurityGroupSources(
@@ -1009,6 +1055,7 @@ export class VpcResources extends AseaResource {
     if (tgwAssociations.length === 0) return;
     const createAssociations = (tgwAttachmentItem: TransitGatewayAttachmentConfig) => {
       for (const routeTableItem of tgwAttachmentItem.routeTableAssociations ?? []) {
+        // This is an exact match and TGW Attachment, RT, and Association were created in ASEA
         const tgwAssociationRes = tgwAssociations.find(
           propagation =>
             propagation.resourceMetadata['Properties'].TransitGatewayAttachmentId.Ref ===
@@ -1016,16 +1063,30 @@ export class VpcResources extends AseaResource {
             propagation.resourceMetadata['Properties'].TransitGatewayRouteTableId ===
               this.getTgwRouteTableId(routeTableItem),
         );
-        if (!tgwAssociationRes) continue;
-        const tgwAssociation = nestedStack.getResource(
-          tgwAssociationRes.logicalResourceId,
-        ) as cdk.aws_ec2.CfnTransitGatewayRouteTableAssociation;
-        if (!tgwAssociation) {
-          this.scope.addLogs(
-            LogLevel.WARN,
-            `TGW Association for "${tgwAttachmentItem.name}/${routeTableItem}" exists in Mapping but not found in resources`,
+        if (!tgwAssociationRes) {
+          // If we don't have exact match, but have an attachment match, we delete and allow LZA to recreate natively
+          const tgwAssociationRes = tgwAssociations.find(
+            propagation =>
+              propagation.resourceMetadata['Properties'].TransitGatewayAttachmentId.Ref ===
+              tgwAttachMap[tgwAttachmentItem.name],
           );
+          if (tgwAssociationRes) {
+            this.deleteTgwAssociation(nestedStackResources, tgwAssociationRes);
+          }
         }
+
+        if (tgwAssociationRes) {
+          const tgwAssociation = nestedStack.getResource(
+            tgwAssociationRes.logicalResourceId,
+          ) as cdk.aws_ec2.CfnTransitGatewayRouteTableAssociation;
+          if (!tgwAssociation) {
+            this.scope.addLogs(
+              LogLevel.WARN,
+              `TGW Association for "${tgwAttachmentItem.name}/${routeTableItem}" exists in Mapping but not found in resources`,
+            );
+          }
+        }
+
         // Propagation resourceId is not used anywhere in LZA. No need of SSM Parameter.
         this.scope.addAseaResource(
           AseaResourceType.TRANSIT_GATEWAY_ASSOCIATION,
@@ -1077,6 +1138,11 @@ export class VpcResources extends AseaResource {
       }
     }
     return;
+  }
+
+  private deleteTgwAssociation(nestedStackResources: ImportStackResources, tgwAssociation: CfnResourceType) {
+    this.scope.addLogs(LogLevel.INFO, `Removing TGW RT Association: ${tgwAssociation.logicalResourceId}`);
+    this.scope.addDeleteFlagForNestedResource(nestedStackResources.getStackKey(), tgwAssociation.logicalResourceId);
   }
 
   private deleteAseaNetworkFirewallRuleGroups(nestedStackResources: ImportStackResources) {

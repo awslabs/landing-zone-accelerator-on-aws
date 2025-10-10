@@ -14,7 +14,6 @@
 import { throttlingBackOff } from '@aws-accelerator/utils/lib/throttle';
 import { CloudFormationCustomResourceEvent } from '@aws-accelerator/utils/lib/common-types';
 import {
-  AttachmentStatus,
   DeleteInternetGatewayCommand,
   DeleteNetworkAclCommand,
   DeleteRouteCommand,
@@ -104,7 +103,7 @@ export async function handler(event: CloudFormationCustomResourceEvent): Promise
           );
           for (const igw of page.InternetGateways ?? []) {
             for (const attachment of igw.Attachments ?? []) {
-              if (attachment.State == AttachmentStatus.attached) {
+              if ((attachment.State as string) === 'available') {
                 console.log(`Detaching ${igw.InternetGatewayId}`);
                 await throttlingBackOff(() =>
                   ec2Client.send(

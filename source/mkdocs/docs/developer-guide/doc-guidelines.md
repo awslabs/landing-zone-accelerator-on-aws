@@ -22,7 +22,7 @@ The following style should be used for documenting classes, methods, and class p
     * Breadcrumb trail `@link` -- this should follow the full configuration object path so it is easier to navigate between nested configurations.
     * Description of class/property:
         * Is the class/property optional? Include `(OPTIONAL)` in the description.
-        * Include links to public AWS documentation when relevant to do so. For example, link to the [What is Amazon VPC?](https://docs.aws.amazon.com/vpc/latest/userguide/what-is-amazon-vpc.html) documentation for the [VPCConfig](../typedocs/latest/classes/_aws_accelerator_config.VpcConfig.html) class.
+        * Include links to public AWS documentation when relevant to do so. For example, link to the [What is Amazon VPC?](https://docs.aws.amazon.com/vpc/latest/userguide/what-is-amazon-vpc.html) documentation for the [VPCConfig](../typedocs/interfaces/___packages__aws_accelerator_config_dist_config_lib_models_network_config.IVpcConfig.html) class.
         * Provide a high-level overview of the service/feature. Put yourself in the shoes of someone that doesn't have a fundamental understanding of what the service does. Use the service FAQ or "Getting Started" documentation as a guide for this description.
         * Do not use acronyms before first introducing the full service/feature name.
     * `@example` to be provided showing the proper use or multiple example uses in YAML format.
@@ -33,7 +33,7 @@ The following style should be used for documenting classes, methods, and class p
         * Warn users of destructive actions appropriately in the notes. The following boilerplate serves as an example:
             * **CAUTION**: changing this value after initial deployment will cause `<resource type>` to be recreated. Please be aware that any downstream dependencies may cause this property update to fail.
 
-The following example contains all of the necessary content as an example for the top-level class description for [IpamPoolConfig](../typedocs/latest/classes/_aws_accelerator_config.IpamPoolConfig.html) within [NetworkConfig](../typedocs/latest/classes/_aws_accelerator_config.NetworkConfig.html):
+The following example contains all of the necessary content as an example for the top-level class description for [IpamPoolConfig](../typedocs/interfaces/___packages__aws_accelerator_config_dist_config_lib_models_network_config.IIpamPoolConfig.html) within [NetworkConfig](../typedocs/modules/___packages__aws_accelerator_config_lib_models_network_config.html):
 
 ```ts
 /**

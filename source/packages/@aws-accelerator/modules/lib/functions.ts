@@ -11,6 +11,7 @@
  *  and limitations under the License.
  */
 
+import { pascalCase } from 'pascal-case';
 import path from 'path';
 import yargs from 'yargs';
 import { version } from '../../../../package.json';
@@ -38,6 +39,12 @@ import { GlobalConfig } from '@aws-accelerator/config/lib/global-config';
 import { AccountsConfig } from '@aws-accelerator/config/lib/accounts-config';
 import { GetParameterCommand, ParameterNotFound, SSMClient } from '@aws-sdk/client-ssm';
 import { ConfigLoader } from './config-loader';
+import {
+  AcceleratorModuleStageOrders,
+  EXECUTION_CONTROLLABLE_MODULES,
+  MaxConcurrentModuleExecutionLimit,
+} from '../models/constants';
+import { ModuleExecutionPhase } from '../models/enums';
 
 const logger = createLogger([path.parse(path.basename(__filename)).name]);
 
@@ -45,7 +52,7 @@ const logger = createLogger([path.parse(path.basename(__filename)).name]);
  * Module runner command with option to execute the command.
  */
 export const scriptUsage =
-  'Usage: yarn run ts-node packages/@aws-accelerator/modules/bin/runner.ts --partition <PARTITION> --account-id <ACCOUNT_ID> --region <REGION> --config-dir <CONFIG_DIR_PATH> --stage <PIPELINE_STAGE_NAME> [--prefix <ACCELERATOR_PREFIX> --use-existing-role <Yes/No> --dry-run <Yes/No>]';
+  'Usage: yarn run ts-node packages/@aws-accelerator/modules/bin/runner.ts --partition <PARTITION> --account-id <ACCOUNT_ID> --region <REGION> --config-dir <CONFIG_DIR_PATH> --stage <PIPELINE_STAGE_NAME> [--prefix <ACCELERATOR_PREFIX> --use-existing-roles --dry-run]';
 
 /**
  * Function to validate and get runner parameters
@@ -59,8 +66,8 @@ export function validateAndGetRunnerParameters(): RunnerParametersType {
       prefix: { type: 'string', default: undefined },
       'config-dir': { type: 'string', default: undefined },
       stage: { type: 'string', default: undefined },
-      'use-existing-role': { type: 'string', default: undefined },
-      'dry-run': { type: 'string', default: undefined },
+      'use-existing-roles': { type: 'boolean', default: false },
+      'dry-run': { type: 'boolean', default: false },
     })
     .parseSync();
 
@@ -68,16 +75,8 @@ export function validateAndGetRunnerParameters(): RunnerParametersType {
     throw new Error(`Missing required parameters for lza module \n ** Script Usage ** ${scriptUsage}`);
   }
 
-  let useExistingRole = false;
-  let dryRun = false;
-
-  if (argv['use-existing-role']) {
-    useExistingRole = argv['use-existing-role'].toLowerCase() === 'yes';
-  }
-
-  if (argv['dry-run']) {
-    dryRun = argv['dry-run'].toLowerCase() === 'yes';
-  }
+  const useExistingRoles = Boolean(argv['use-existing-roles']);
+  const dryRun = Boolean(argv['dry-run']);
 
   return {
     partition: argv.partition,
@@ -85,9 +84,10 @@ export function validateAndGetRunnerParameters(): RunnerParametersType {
     configDirPath: argv['config-dir'],
     stage: argv.stage,
     prefix: argv.prefix ?? 'AWSAccelerator',
-    useExistingRole,
+    useExistingRoles,
     solutionId: `AwsSolution/SO0199/${version}`,
     dryRun,
+    maxConcurrentExecution: Number(process.env['MAX_CONCURRENT_MODULE_EXECUTION'] ?? MaxConcurrentModuleExecutionLimit),
   };
 }
 
@@ -227,34 +227,6 @@ export async function getAcceleratorModuleRunnerParameters(
   });
 
   //
-  // Get Central log bucket name
-  //
-  const centralLogBucketName = getCentralLogBucketName(
-    centralizedLoggingRegion,
-    acceleratorResourceNames,
-    {
-      accountId: acceleratorConfigurations.accountsConfig.getLogArchiveAccountId(),
-      accountName: acceleratorConfigurations.accountsConfig.getLogArchiveAccount().name,
-      region: centralizedLoggingRegion,
-    },
-    acceleratorConfigurations.globalConfig,
-    acceleratorConfigurations.accountsConfig,
-  );
-
-  //
-  // Get Central log bucket CMK arn
-  //
-  const centralLogsBucketKeyArn = await getCentralLogsBucketKeyArn(
-    partition,
-    solutionId,
-    centralizedLoggingRegion,
-    acceleratorResourceNames,
-    acceleratorConfigurations.globalConfig,
-    acceleratorConfigurations.accountsConfig,
-    managementAccountCredentials,
-  );
-
-  //
   // Get Global Region
   //
   const globalRegion = getGlobalRegion(partition);
@@ -283,8 +255,8 @@ export async function getAcceleratorModuleRunnerParameters(
     acceleratorResourceNames,
     logging: {
       centralizedRegion: centralizedLoggingRegion,
-      bucketName: centralLogBucketName,
-      bucketKeyArn: centralLogsBucketKeyArn,
+      bucketName: undefined,
+      bucketKeyArn: undefined,
     },
     organizationAccounts,
     organizationDetails,
@@ -293,25 +265,66 @@ export async function getAcceleratorModuleRunnerParameters(
 }
 
 /**
- * Function to get Central Logs bucket key arn
+ * Function to get Central Logging resources like Central log bucket name and bucket key arn
  * @param partition string
  * @param solutionId string
  * @param centralizedLoggingRegion string
- * @param acceleratorResourceNames {@link AcceleratorResourceNames}
- * @param globalConfig {@link GlobalConfig}
+ * @param acceleratorResourceNames {@link AcceleratorResourceNames }
+ * @param globalConfig {@link GlobalConfig }
  * @param accountsConfig {@link AccountsConfig}
- * @param managementAccountCredentials {@link IAssumeRoleCredential}
+ * @param stage
+ * @param managementAccountCredentials {@link IAssumeRoleCredential} | undefined
  * @returns
  */
-export async function getCentralLogsBucketKeyArn(
+export async function getCentralLoggingResources(
   partition: string,
   solutionId: string,
   centralizedLoggingRegion: string,
   acceleratorResourceNames: AcceleratorResourceNames,
   globalConfig: GlobalConfig,
   accountsConfig: AccountsConfig,
+  stage: {
+    name: string;
+    runOrder: number;
+    module: {
+      name: string;
+      executionPhase: ModuleExecutionPhase;
+    };
+  },
   managementAccountCredentials?: IAssumeRoleCredential,
-): Promise<string | undefined> {
+): Promise<{ bucketName: string; keyArn: string } | undefined> {
+  if (stage.runOrder <= AcceleratorModuleStageOrders.logging.runOrder) {
+    logger.info(
+      `Central Logging resources are not required to be fetched for ${stage.module.name} module of ${stage.name} stage.`,
+    );
+    return undefined;
+  }
+
+  if (stage.module.executionPhase === ModuleExecutionPhase.SYNTH) {
+    logger.info(
+      `Central Logging resources are not required to be fetched for ${stage.module.name} module of ${stage.name} stage, becasue module execution phase is ${stage.module.executionPhase}`,
+    );
+
+    return undefined;
+  }
+
+  logger.info(`Fetching Central Logging resources for ${stage.module.name} module of ${stage.name} stage.`);
+
+  //
+  // Get Central log bucket name
+  //
+  const centralLogBucketName = getCentralLogBucketName(
+    centralizedLoggingRegion,
+    acceleratorResourceNames,
+    {
+      accountId: accountsConfig.getLogArchiveAccountId(),
+      accountName: accountsConfig.getLogArchiveAccount().name,
+      region: centralizedLoggingRegion,
+    },
+    globalConfig,
+    accountsConfig,
+  );
+
   let ssmParamName = acceleratorResourceNames.parameters.centralLogBucketCmkArn;
   if (globalConfig.logging.centralLogBucket?.importedBucket?.createAcceleratorManagedKey) {
     ssmParamName = acceleratorResourceNames.parameters.importedCentralLogBucketCmkArn;
@@ -335,8 +348,7 @@ export async function getCentralLogsBucketKeyArn(
 
   try {
     const response = await throttlingBackOff(() => client.send(new GetParameterCommand({ Name: ssmParamName })));
-
-    return response.Parameter!.Value!;
+    return { bucketName: centralLogBucketName, keyArn: response.Parameter!.Value! };
   } catch (
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     e: any
@@ -385,4 +397,28 @@ export function getCentralLogBucketName(
 export function getRunnerTargetRegions(enabledRegions: string[], excludedRegions: string[]): string[] {
   const includedRegions = enabledRegions.filter(item => !excludedRegions.includes(item));
   return includedRegions;
+}
+
+/**
+ * Function to check if module execution is skipped by environment
+ * @param moduleName
+ * @returns
+ */
+export function isModuleExecutionSkippedByEnvironment(moduleName: string): boolean {
+  if (!EXECUTION_CONTROLLABLE_MODULES.includes(moduleName)) {
+    return false;
+  }
+
+  const environmentVariableName = pascalCase(`skip-${moduleName}`);
+  const environmentSetting = process.env[pascalCase(environmentVariableName)]?.toLowerCase() === 'true';
+  if (environmentSetting) {
+    logger.warn(
+      `Module ${moduleName} skipped by environment variable settings. To enable the module execution set the environment variable ${environmentVariableName} to true (case insensitive) for AWSAccelerator-ToolkitProject CodeBuild project.`,
+    );
+    return true;
+  }
+  logger.info(
+    `Module ${moduleName} will be executed, module execution can be skipped by setting environment variable ${environmentVariableName} to false (case insensitive) for AWSAccelerator-ToolkitProject CodeBuild project. Removing the variable will enable module execution. Contact AWS Support prior to making changes to the module's default settings.`,
+  );
+  return false;
 }

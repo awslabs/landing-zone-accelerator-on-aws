@@ -17,11 +17,14 @@ import * as path from 'path';
 
 import { createLogger } from '@aws-accelerator/utils/lib/logger';
 import { loadOrganizationalUnits } from '@aws-accelerator/utils/lib/load-organization-config';
+import { OrganizationalUnit, Root } from '@aws-sdk/client-organizations';
 
 import * as t from './common';
 import * as i from './models/organization-config';
 import { ReplacementsConfig } from './replacements-config';
 import { AccountsConfig } from './accounts-config';
+import { getSSMParameterValue } from '../../utils/lib/get-value-from-ssm';
+import { queryConfigTable } from '@aws-accelerator/utils/lib/query-config-table';
 
 const logger = createLogger(['organization-config']);
 
@@ -34,11 +37,27 @@ export abstract class OrganizationalUnitIdConfig implements i.IOrganizationalUni
   readonly name: string = '';
   readonly id: string = '';
   readonly arn: string = '';
+  readonly orgsApiResponse: OrganizationalUnit | Root | undefined = undefined;
 }
 
 export abstract class QuarantineNewAccountsConfig implements i.IQuarantineNewAccountsConfig {
   readonly enable: boolean = true;
   readonly scpPolicyName: string = 'QuarantineAccounts';
+}
+
+export abstract class DeclarativePolicyConfig implements i.IDeclarativePolicyConfig {
+  readonly name: string = '';
+  readonly description: string = '';
+  readonly policy: string = '';
+  readonly deploymentTargets: t.DeploymentTargets = new t.DeploymentTargets();
+}
+
+export abstract class ResourceControlPolicyConfig implements i.IResourceControlPolicyConfig {
+  readonly name: string = '';
+  readonly description: string = '';
+  readonly policy: string = '';
+  readonly strategy = 'deny-list';
+  readonly deploymentTargets: t.DeploymentTargets = new t.DeploymentTargets();
 }
 
 export abstract class ServiceControlPolicyConfig implements i.IServiceControlPolicyConfig {
@@ -93,6 +112,8 @@ export class OrganizationConfig implements i.IOrganizationConfig {
 
   public organizationalUnitIds: OrganizationalUnitIdConfig[] | undefined = undefined;
   readonly quarantineNewAccounts: QuarantineNewAccountsConfig | undefined = undefined;
+  readonly declarativePolicies?: DeclarativePolicyConfig[] | undefined = undefined;
+  readonly resourceControlPolicies?: ResourceControlPolicyConfig[] | undefined;
   readonly serviceControlPolicies: ServiceControlPolicyConfig[] = [];
   readonly taggingPolicies: TaggingPolicyConfig[] = [];
   readonly chatbotPolicies?: ChatbotPolicyConfig[] = [];
@@ -111,12 +132,13 @@ export class OrganizationConfig implements i.IOrganizationConfig {
   }
 
   /**
-   * Load from config file content
+   * Load from config file content by processing replacementsConfig.
+   * Use loadRawOrganizationsConfig to load with placeholder replacements
    * @param dir
-   * @param validateConfig
+   * @param replacementsConfig
    * @returns
    */
-  static load(dir: string, replacementsConfig?: ReplacementsConfig): OrganizationConfig {
+  static load(dir: string, replacementsConfig: ReplacementsConfig): OrganizationConfig {
     const initialBuffer = fs.readFileSync(path.join(dir, OrganizationConfig.FILENAME), 'utf8');
     const buffer = replacementsConfig ? replacementsConfig.preProcessBuffer(initialBuffer) : initialBuffer;
     const values = t.parseOrganizationConfig(yaml.load(buffer));
@@ -128,16 +150,7 @@ export class OrganizationConfig implements i.IOrganizationConfig {
    */
   static loadRawOrganizationsConfig(dir: string): OrganizationConfig {
     const accountsConfig = AccountsConfig.load(dir);
-    const orgConfig = OrganizationConfig.load(dir);
-    let replacementsConfig: ReplacementsConfig;
-
-    if (fs.existsSync(path.join(dir, ReplacementsConfig.FILENAME))) {
-      replacementsConfig = ReplacementsConfig.load(dir, accountsConfig, true);
-    } else {
-      replacementsConfig = new ReplacementsConfig();
-    }
-
-    replacementsConfig.loadReplacementValues({}, orgConfig.enable);
+    const replacementsConfig = ReplacementsConfig.load(dir, accountsConfig);
     return OrganizationConfig.load(dir, replacementsConfig);
   }
 
@@ -159,7 +172,7 @@ export class OrganizationConfig implements i.IOrganizationConfig {
    * @param replacementsConfig
    * @returns
    */
-  static loadBuffer(dir: string, replacementsConfig?: ReplacementsConfig): string {
+  static loadBuffer(dir: string, replacementsConfig: ReplacementsConfig): string {
     const initialBuffer = fs.readFileSync(path.join(dir, OrganizationConfig.FILENAME), 'utf8');
     return replacementsConfig ? replacementsConfig.preProcessBuffer(initialBuffer) : initialBuffer;
   }
@@ -173,6 +186,7 @@ export class OrganizationConfig implements i.IOrganizationConfig {
   public async loadOrganizationalUnitIds(
     partition: string,
     managementAccountCredentials?: AWS.Credentials,
+    loadFromDynamoDbTable?: boolean,
   ): Promise<void> {
     if (!this.enable) {
       // do nothing
@@ -180,12 +194,37 @@ export class OrganizationConfig implements i.IOrganizationConfig {
     } else {
       this.organizationalUnitIds = [];
     }
-    if (this.organizationalUnitIds?.length == 0) {
+    if (this.organizationalUnitIds?.length === 0 && !loadFromDynamoDbTable) {
       this.organizationalUnitIds = await loadOrganizationalUnits(
         partition,
         this.organizationalUnits,
         managementAccountCredentials,
       );
+    } else if (this.organizationalUnitIds?.length === 0 && loadFromDynamoDbTable) {
+      logger.debug(`Orgs is enabled, solution will query from dynamoDB table instead of AWS Organizations API`);
+      if (!process.env['ACCELERATOR_SSM_PARAM_NAME_PREFIX']) {
+        logger.warn('ACCELERATOR_SSM_PARAM_NAME_PREFIX environment variable not set using /accelerator');
+      }
+      const ssmConfigTableNameParameter = `${
+        process.env['ACCELERATOR_SSM_PARAM_NAME_PREFIX'] ?? '/accelerator'
+      }/prepare-stack/configTable/name`;
+      const configTableName = await getSSMParameterValue(ssmConfigTableNameParameter, managementAccountCredentials);
+
+      const organizationItems = await queryConfigTable(
+        configTableName,
+        'organization',
+        'orgInfo',
+        managementAccountCredentials,
+        process.env['CONFIG_COMMIT_ID'],
+      );
+
+      const configOuNames = [...this.organizationalUnits.map(ou => ou.name), 'Root'];
+      const allOrganizations = organizationItems.map(
+        item => JSON.parse(item['orgInfo'] as string) as OrganizationalUnitIdConfig,
+      );
+      const filteredOrganizations = allOrganizations.filter(org => configOuNames.includes(org.name));
+
+      this.organizationalUnitIds = filteredOrganizations;
     }
   }
 
@@ -230,6 +269,13 @@ export class OrganizationConfig implements i.IOrganizationConfig {
     }
     logger.error(`Could not get Organization Arn for name: ${name}. Organizations not enabled or OU doesn't exist`);
     throw new Error('configuration validation failed.');
+  }
+
+  public getIgnoredOus(): OrganizationalUnitConfig[] {
+    if (!this.organizationalUnits) {
+      return [];
+    }
+    return this.organizationalUnits?.filter(ouItem => ouItem.ignore);
   }
 
   public isIgnored(name: string): boolean {

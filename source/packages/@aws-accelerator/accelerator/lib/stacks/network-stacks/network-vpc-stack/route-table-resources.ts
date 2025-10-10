@@ -18,13 +18,26 @@ import * as cdk from 'aws-cdk-lib';
 import { pascalCase } from 'pascal-case';
 import { getVpc } from '../utils/getter-utils';
 import { NetworkVpcStack } from './network-vpc-stack';
+import { MetadataKeys } from '@aws-accelerator/utils/lib/common-types';
+import { LZAResourceLookup, LZAResourceLookupType } from '@aws-accelerator/accelerator/utils/lza-resource-lookup';
 
 export class RouteTableResources {
   public readonly routeTableMap: Map<string, RouteTable>;
   private stack: NetworkVpcStack;
+  private lzaLookup: LZAResourceLookup;
 
   constructor(networkVpcStack: NetworkVpcStack, vpcMap: Map<string, Vpc>) {
     this.stack = networkVpcStack;
+
+    this.lzaLookup = new LZAResourceLookup({
+      accountId: this.stack.account,
+      region: this.stack.region,
+      aseaResourceList: this.stack.props.globalConfig.externalLandingZoneResources?.resourceList ?? [],
+      enableV2Stacks: this.stack.props.globalConfig.useV2Stacks,
+      externalLandingZoneResources:
+        this.stack.props.globalConfig.externalLandingZoneResources?.importExternalLandingZoneResources,
+      stackName: this.stack.stackName,
+    });
 
     // Create route table resources
     this.routeTableMap = this.createRouteTableResources(this.stack.vpcsInScope, vpcMap);
@@ -44,6 +57,9 @@ export class RouteTableResources {
 
     for (const vpcItem of vpcResources) {
       const vpc = getVpc(vpcMap, vpcItem.name) as Vpc;
+      if (!vpc) {
+        continue;
+      }
       //
       // Create outpost route tables
       //
@@ -88,6 +104,18 @@ export class RouteTableResources {
     const outpostRouteTableMap = new Map<string, RouteTable>();
     for (const outpost of vpcItem.outposts ?? []) {
       for (const routeTableItem of outpost.localGateway?.routeTables ?? []) {
+        if (
+          !this.lzaLookup.resourceExists({
+            resourceType: LZAResourceLookupType.LOCAL_GATEWAY_ROUTE_TABLE_VPC_ASSOCIATION,
+            lookupValues: {
+              routeTableName: routeTableItem.name,
+              vpcName: vpcItem.name,
+              vpcAccount: vpcItem.account,
+            },
+          })
+        ) {
+          continue;
+        }
         const outpostRouteTable = { routeTableId: routeTableItem.id, vpc } as RouteTable;
         outpostRouteTableMap.set(`${vpcItem.name}_${routeTableItem.name}`, outpostRouteTable);
 
@@ -113,7 +141,7 @@ export class RouteTableResources {
     routeTables: Map<string, RouteTable>;
   }): void {
     for (const [name, routeTable] of localGateway.routeTables) {
-      new cdk.aws_ec2.CfnLocalGatewayRouteTableVPCAssociation(
+      const localGatewayRouteTableVPCAssociation = new cdk.aws_ec2.CfnLocalGatewayRouteTableVPCAssociation(
         this.stack,
         `${name}-${localGateway.vpcName}-${localGateway.vpcAccountName}`,
         {
@@ -121,6 +149,12 @@ export class RouteTableResources {
           localGatewayRouteTableId: routeTable.routeTableId,
         },
       );
+
+      localGatewayRouteTableVPCAssociation.addMetadata(MetadataKeys.LZA_LOOKUP, {
+        routeTableName: name,
+        vpcName: localGateway.vpcName,
+        vpcAccount: localGateway.vpcAccountName,
+      });
     }
   }
 
@@ -133,6 +167,18 @@ export class RouteTableResources {
   private createRouteTables(vpc: Vpc, vpcItem: VpcConfig | VpcTemplatesConfig): Map<string, RouteTable> {
     const routeTableMap = new Map<string, RouteTable>();
     for (const routeTableItem of vpcItem.routeTables ?? []) {
+      if (
+        !this.lzaLookup.resourceExists({
+          resourceType: LZAResourceLookupType.ROUTE_TABLE,
+          lookupValues: {
+            routeTableName: routeTableItem.name,
+            vpcName: vpcItem.name,
+          },
+        })
+      ) {
+        continue;
+      }
+
       let routeTable;
       if (this.stack.isManagedByAsea(AseaResourceType.ROUTE_TABLE, `${vpcItem.name}/${routeTableItem.name}`)) {
         const routeTableId = this.stack.getExternalResourceParameter(
@@ -164,8 +210,23 @@ export class RouteTableResources {
       }
 
       // Add gateway association if configured
-      if (routeTableItem.gatewayAssociation) {
-        routeTable.addGatewayAssociation(routeTableItem.gatewayAssociation);
+      if (
+        routeTableItem.gatewayAssociation &&
+        this.lzaLookup.resourceExists({
+          resourceType: LZAResourceLookupType.GATEWAY_ROUTE_TABLE_ASSOCIATION,
+          lookupValues: {
+            routeTableName: routeTableItem.name,
+            vpcName: vpcItem.name,
+            associationType: routeTableItem.gatewayAssociation,
+          },
+        })
+      ) {
+        const metadata = {
+          vpcName: vpcItem.name,
+          routeTableName: routeTableItem.name,
+          associationType: routeTableItem.gatewayAssociation,
+        };
+        routeTable.addGatewayAssociation(routeTableItem.gatewayAssociation, metadata);
       }
       routeTableMap.set(`${vpcItem.name}_${routeTableItem.name}`, routeTable);
     }

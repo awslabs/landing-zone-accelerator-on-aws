@@ -23,7 +23,7 @@ import { AcceleratorResourcePrefixes } from '../../accelerator/utils/app-utils';
 import { AcceleratorResourceNames } from '../../accelerator/lib/accelerator-resource-names';
 import { Account, Organization } from '@aws-sdk/client-organizations';
 import { IAssumeRoleCredential } from '../../../@aws-lza/common/resources';
-import { AcceleratorModules, AcceleratorModuleStages } from './enums';
+import { AcceleratorModules, AcceleratorModuleStages, ModuleExecutionPhase } from './enums';
 
 /**
  * Accelerator logging details type
@@ -36,7 +36,7 @@ type AcceleratorLoggingType = {
   /**
    * Central Log bucket name
    */
-  readonly bucketName?: string;
+  bucketName?: string;
   /**
    *  Central log bucket key arn
    */
@@ -104,9 +104,9 @@ export type RunnerParametersType = {
    */
   readonly prefix: string;
   /**
-   * Flag indicating existing role
+   * Flag indicating existing roles are used
    */
-  readonly useExistingRole: boolean;
+  readonly useExistingRoles: boolean;
   /**
    * Solution Id
    */
@@ -119,6 +119,13 @@ export type RunnerParametersType = {
    * Accelerator pipeline stage name
    */
   readonly stage?: string;
+  /**
+   * Maximum concurrent execution
+   *
+   * @default
+   * 50
+   */
+  readonly maxConcurrentExecution: number;
 };
 
 /**
@@ -145,6 +152,10 @@ export type AcceleratorModuleDetailsType = {
    * @returns Promise<string> - This is the return value for the module. It will be different for each module.
    */
   readonly handler: (params: ModuleParams) => Promise<string>;
+  /**
+   * Flag indicating when the module will be executed is it during synth or deploy time
+   */
+  readonly executionPhase: ModuleExecutionPhase;
 };
 
 /**

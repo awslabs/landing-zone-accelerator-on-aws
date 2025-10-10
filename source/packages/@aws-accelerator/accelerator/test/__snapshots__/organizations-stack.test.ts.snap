@@ -63,6 +63,7 @@ exports[`MultiOuOrganizationsStack Construct(OrganizationsStack):  Snapshot Test
         "configPolicyNames": [
           "AcceleratorGuardrails1",
           "AcceleratorGuardrails2",
+          "BackupPolicy",
         ],
         "partition": {
           "Ref": "AWS::Partition",
@@ -91,7 +92,9 @@ exports[`MultiOuOrganizationsStack Construct(OrganizationsStack):  Snapshot Test
             "Arn",
           ],
         },
-        "configPolicyNames": [],
+        "configPolicyNames": [
+          "BackupPolicy",
+        ],
         "partition": {
           "Ref": "AWS::Partition",
         },
@@ -122,6 +125,7 @@ exports[`MultiOuOrganizationsStack Construct(OrganizationsStack):  Snapshot Test
         "configPolicyNames": [
           "AcceleratorGuardrails1",
           "AcceleratorGuardrails2",
+          "BackupPolicy",
         ],
         "partition": {
           "Ref": "AWS::Partition",
@@ -150,7 +154,9 @@ exports[`MultiOuOrganizationsStack Construct(OrganizationsStack):  Snapshot Test
             "Arn",
           ],
         },
-        "configPolicyNames": [],
+        "configPolicyNames": [
+          "BackupPolicy",
+        ],
         "partition": {
           "Ref": "AWS::Partition",
         },
@@ -221,8 +227,13 @@ exports[`MultiOuOrganizationsStack Construct(OrganizationsStack):  Snapshot Test
           "S3Bucket": "cdk-hnb659fds-assets-111111111111-us-east-1",
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
+          },
+        },
         "Handler": "__entrypoint__.handler",
-        "MemorySize": 128,
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "CustomAuditManagerEnableOrganizationAdminAccountCustomResourceProviderRoleF4A6BEA4",
@@ -288,16 +299,7 @@ exports[`MultiOuOrganizationsStack Construct(OrganizationsStack):  Snapshot Test
                   ],
                   "Condition": {
                     "StringLikeIfExists": {
-                      "organizations:DescribeOrganization": [
-                        "auditmanager.amazonaws.com",
-                      ],
-                      "organizations:EnableAWSServiceAccess": [
-                        "auditmanager.amazonaws.com",
-                      ],
-                      "organizations:ListAWSServiceAccessForOrganization": [
-                        "auditmanager.amazonaws.com",
-                      ],
-                      "organizations:RegisterDelegatedAdministrator": [
+                      "organizations:ServicePrincipal": [
                         "auditmanager.amazonaws.com",
                       ],
                     },
@@ -312,15 +314,24 @@ exports[`MultiOuOrganizationsStack Construct(OrganizationsStack):  Snapshot Test
                   ],
                   "Condition": {
                     "StringLikeIfExists": {
-                      "iam:CreateServiceLinkedRole": [
+                      "iam:AWSServiceName": [
                         "auditmanager.amazonaws.com",
                       ],
                     },
                   },
                   "Effect": "Allow",
-                  "Resource": [
-                    "*",
-                  ],
+                  "Resource": {
+                    "Fn::Join": [
+                      "",
+                      [
+                        "arn:",
+                        {
+                          "Ref": "AWS::Partition",
+                        },
+                        ":iam::*:role/aws-service-role/auditmanager.amazonaws.com/AWSServiceRoleForAuditManager",
+                      ],
+                    ],
+                  },
                   "Sid": "AuditManagerIamPermission",
                 },
                 {
@@ -371,8 +382,13 @@ exports[`MultiOuOrganizationsStack Construct(OrganizationsStack):  Snapshot Test
           "S3Bucket": "cdk-hnb659fds-assets-111111111111-us-east-1",
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
+          },
+        },
         "Handler": "__entrypoint__.handler",
-        "MemorySize": 128,
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "CustomDetectiveEnableOrganizationAdminAccountCustomResourceProviderRoleF6060FD6",
@@ -516,8 +532,13 @@ exports[`MultiOuOrganizationsStack Construct(OrganizationsStack):  Snapshot Test
           "S3Bucket": "cdk-hnb659fds-assets-111111111111-us-east-1",
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
+          },
+        },
         "Handler": "__entrypoint__.handler",
-        "MemorySize": 128,
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "CustomEnableIpamOrganizationAdminAccountCustomResourceProviderRoleC4A018D1",
@@ -632,8 +653,13 @@ exports[`MultiOuOrganizationsStack Construct(OrganizationsStack):  Snapshot Test
           "S3Bucket": "cdk-hnb659fds-assets-111111111111-us-east-1",
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
+          },
+        },
         "Handler": "__entrypoint__.handler",
-        "MemorySize": 128,
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "CustomEnablePolicyTypeCustomResourceProviderRoleAE71B2CA",
@@ -739,8 +765,13 @@ exports[`MultiOuOrganizationsStack Construct(OrganizationsStack):  Snapshot Test
           "S3Bucket": "cdk-hnb659fds-assets-111111111111-us-east-1",
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
+          },
+        },
         "Handler": "__entrypoint__.handler",
-        "MemorySize": 128,
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "CustomEnableSharingWithAwsOrganizationCustomResourceProviderRole4FE5EBD7",
@@ -826,8 +857,13 @@ exports[`MultiOuOrganizationsStack Construct(OrganizationsStack):  Snapshot Test
           "S3Bucket": "cdk-hnb659fds-assets-111111111111-us-east-1",
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
+          },
+        },
         "Handler": "__entrypoint__.handler",
-        "MemorySize": 128,
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "CustomGuardDutyEnableOrganizationAdminAccountCustomResourceProviderRole30371E09",
@@ -893,36 +929,10 @@ exports[`MultiOuOrganizationsStack Construct(OrganizationsStack):  Snapshot Test
                     "organizations:ListAccounts",
                     "organizations:ListDelegatedAdministrators",
                     "organizations:RegisterDelegatedAdministrator",
-                    "organizations:ServicePrincipal",
-                    "organizations:UpdateOrganizationConfiguration",
                   ],
                   "Condition": {
                     "StringLikeIfExists": {
-                      "organizations:DeregisterDelegatedAdministrator": [
-                        "guardduty.amazonaws.com",
-                      ],
-                      "organizations:DescribeOrganization": [
-                        "guardduty.amazonaws.com",
-                      ],
-                      "organizations:EnableAWSServiceAccess": [
-                        "guardduty.amazonaws.com",
-                      ],
-                      "organizations:ListAWSServiceAccessForOrganization": [
-                        "guardduty.amazonaws.com",
-                      ],
-                      "organizations:ListAccounts": [
-                        "guardduty.amazonaws.com",
-                      ],
-                      "organizations:ListDelegatedAdministrators": [
-                        "guardduty.amazonaws.com",
-                      ],
-                      "organizations:RegisterDelegatedAdministrator": [
-                        "guardduty.amazonaws.com",
-                      ],
                       "organizations:ServicePrincipal": [
-                        "guardduty.amazonaws.com",
-                      ],
-                      "organizations:UpdateOrganizationConfiguration": [
                         "guardduty.amazonaws.com",
                       ],
                     },
@@ -959,8 +969,13 @@ exports[`MultiOuOrganizationsStack Construct(OrganizationsStack):  Snapshot Test
           "S3Bucket": "cdk-hnb659fds-assets-111111111111-us-east-1",
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
+          },
+        },
         "Handler": "__entrypoint__.handler",
-        "MemorySize": 128,
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "CustomMacieEnableOrganizationAdminAccountCustomResourceProviderRoleA386B194",
@@ -1023,39 +1038,12 @@ exports[`MultiOuOrganizationsStack Construct(OrganizationsStack):  Snapshot Test
                     "organizations:DescribeOrganization",
                     "organizations:EnableAWSServiceAccess",
                     "organizations:ListAWSServiceAccessForOrganization",
-                    "organizations:ListAccounts",
                     "organizations:ListDelegatedAdministrators",
                     "organizations:RegisterDelegatedAdministrator",
-                    "organizations:ServicePrincipal",
-                    "organizations:UpdateOrganizationConfiguration",
                   ],
                   "Condition": {
                     "StringLikeIfExists": {
-                      "organizations:DeregisterDelegatedAdministrator": [
-                        "macie.amazonaws.com",
-                      ],
-                      "organizations:DescribeOrganization": [
-                        "macie.amazonaws.com",
-                      ],
-                      "organizations:EnableAWSServiceAccess": [
-                        "macie.amazonaws.com",
-                      ],
-                      "organizations:ListAWSServiceAccessForOrganization": [
-                        "macie.amazonaws.com",
-                      ],
-                      "organizations:ListAccounts": [
-                        "macie.amazonaws.com",
-                      ],
-                      "organizations:ListDelegatedAdministrators": [
-                        "macie.amazonaws.com",
-                      ],
-                      "organizations:RegisterDelegatedAdministrator": [
-                        "macie.amazonaws.com",
-                      ],
                       "organizations:ServicePrincipal": [
-                        "macie.amazonaws.com",
-                      ],
-                      "organizations:UpdateOrganizationConfiguration": [
                         "macie.amazonaws.com",
                       ],
                     },
@@ -1082,13 +1070,24 @@ exports[`MultiOuOrganizationsStack Construct(OrganizationsStack):  Snapshot Test
                   ],
                   "Condition": {
                     "StringLikeIfExists": {
-                      "iam:CreateServiceLinkedRole": [
+                      "iam:AWSServiceName": [
                         "macie.amazonaws.com",
                       ],
                     },
                   },
                   "Effect": "Allow",
-                  "Resource": "*",
+                  "Resource": {
+                    "Fn::Join": [
+                      "",
+                      [
+                        "arn:aws:",
+                        {
+                          "Ref": "AWS::Partition",
+                        },
+                        "::*:role/aws-service-role/macie.amazonaws.com/AWSServiceRoleForAmazonMacie",
+                      ],
+                    ],
+                  },
                   "Sid": "MacieEnableMacieTaskIamAction",
                 },
               ],
@@ -1109,8 +1108,13 @@ exports[`MultiOuOrganizationsStack Construct(OrganizationsStack):  Snapshot Test
           "S3Bucket": "cdk-hnb659fds-assets-111111111111-us-east-1",
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
+          },
+        },
         "Handler": "__entrypoint__.handler",
-        "MemorySize": 128,
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "CustomOrganizationsAttachPolicyCustomResourceProviderRole051E00A6",
@@ -1197,8 +1201,13 @@ exports[`MultiOuOrganizationsStack Construct(OrganizationsStack):  Snapshot Test
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
         "Description": "Organizations create policy",
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
+          },
+        },
         "Handler": "__entrypoint__.handler",
-        "MemorySize": 128,
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "CustomOrganizationsCreatePolicyCustomResourceProviderRoleBA0ADB43",
@@ -1304,8 +1313,13 @@ exports[`MultiOuOrganizationsStack Construct(OrganizationsStack):  Snapshot Test
           "S3Bucket": "cdk-hnb659fds-assets-111111111111-us-east-1",
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
+          },
+        },
         "Handler": "__entrypoint__.handler",
-        "MemorySize": 128,
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "CustomOrganizationsEnableAwsServiceAccessCustomResourceProviderRole59F76BA2",
@@ -1388,8 +1402,13 @@ exports[`MultiOuOrganizationsStack Construct(OrganizationsStack):  Snapshot Test
           "S3Bucket": "cdk-hnb659fds-assets-111111111111-us-east-1",
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
+          },
+        },
         "Handler": "__entrypoint__.handler",
-        "MemorySize": 128,
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "CustomOrganizationsRegisterDelegatedAdministratorCustomResourceProviderRole4B3EAD1B",
@@ -1472,8 +1491,13 @@ exports[`MultiOuOrganizationsStack Construct(OrganizationsStack):  Snapshot Test
           "S3Bucket": "cdk-hnb659fds-assets-111111111111-us-east-1",
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
+          },
+        },
         "Handler": "__entrypoint__.handler",
-        "MemorySize": 128,
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "CustomS3PutBucketReplicationCustomResourceProviderRole1C378488",
@@ -1559,8 +1583,13 @@ exports[`MultiOuOrganizationsStack Construct(OrganizationsStack):  Snapshot Test
           "S3Bucket": "cdk-hnb659fds-assets-111111111111-us-east-1",
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
+          },
+        },
         "Handler": "__entrypoint__.handler",
-        "MemorySize": 128,
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "CustomSecurityHubEnableOrganizationAdminAccountCustomResourceProviderRole1CBC866F",
@@ -1705,8 +1734,13 @@ exports[`MultiOuOrganizationsStack Construct(OrganizationsStack):  Snapshot Test
           "S3Bucket": "cdk-hnb659fds-assets-111111111111-us-east-1",
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
+          },
+        },
         "Handler": "__entrypoint__.handler",
-        "MemorySize": 128,
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "CustomSsmGetParameterValueCustomResourceProviderRoleB3AFDDB2",
@@ -1897,7 +1931,13 @@ exports[`MultiOuOrganizationsStack Construct(OrganizationsStack):  Snapshot Test
           "S3Bucket": "cdk-hnb659fds-assets-111111111111-us-east-1",
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
+          },
+        },
         "Handler": "index.handler",
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "FMSOrganizationAdminAccountFMSOrganizationAdminAccountProviderLambdaServiceRole28F3C566",
@@ -2086,6 +2126,7 @@ exports[`MultiOuOrganizationsStack Construct(OrganizationsStack):  Snapshot Test
         "Description": "AWS CDK resource provider framework - onEvent (AWSAccelerator-OrganizationsStack-111111111111-us-east-1/FMSOrganizationAdminAccount/Resource)",
         "Environment": {
           "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
             "USER_ON_EVENT_FUNCTION_ARN": {
               "Fn::GetAtt": [
                 "FMSOrganizationAdminAccountFMSOrganizationAdminAccountProviderLambda2D69B84E",
@@ -2095,6 +2136,7 @@ exports[`MultiOuOrganizationsStack Construct(OrganizationsStack):  Snapshot Test
           },
         },
         "Handler": "framework.onEvent",
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "FMSOrganizationAdminAccountframeworkonEventServiceRole6775A101",
@@ -2230,6 +2272,11 @@ exports[`MultiOuOrganizationsStack Construct(OrganizationsStack):  Snapshot Test
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
         "Description": "Custom resource provider to create service linked role",
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
+          },
+        },
         "Handler": "index.handler",
         "KmsKeyArn": {
           "Ref": "SsmParameterValueacceleratorkmslambdakeyarnC96584B6F00A464EAD1953AFF4B05118Parameter",
@@ -2357,6 +2404,7 @@ exports[`MultiOuOrganizationsStack Construct(OrganizationsStack):  Snapshot Test
         "Description": "AWS CDK resource provider framework - onEvent (AWSAccelerator-OrganizationsStack-111111111111-us-east-1/FirewallManagerServiceLinkedRole/CreateServiceLinkedRoleProvider)",
         "Environment": {
           "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
             "USER_ON_EVENT_FUNCTION_ARN": {
               "Fn::GetAtt": [
                 "FirewallManagerServiceLinkedRoleCreateServiceLinkedRoleFunctionA541DABF",
@@ -2366,6 +2414,7 @@ exports[`MultiOuOrganizationsStack Construct(OrganizationsStack):  Snapshot Test
           },
         },
         "Handler": "framework.onEvent",
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "FirewallManagerServiceLinkedRoleCreateServiceLinkedRoleProviderframeworkonEventServiceRole41A12BB9",
@@ -2517,7 +2566,13 @@ exports[`MultiOuOrganizationsStack Construct(OrganizationsStack):  Snapshot Test
           "S3Bucket": "cdk-hnb659fds-assets-111111111111-us-east-1",
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
+          },
+        },
         "Handler": "index.handler",
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "IdentityCenterAdminIdentityCenterAdminProviderLambdaServiceRole6939696D",
@@ -2629,6 +2684,7 @@ exports[`MultiOuOrganizationsStack Construct(OrganizationsStack):  Snapshot Test
         "Description": "AWS CDK resource provider framework - onEvent (AWSAccelerator-OrganizationsStack-111111111111-us-east-1/IdentityCenterAdmin/Resource)",
         "Environment": {
           "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
             "USER_ON_EVENT_FUNCTION_ARN": {
               "Fn::GetAtt": [
                 "IdentityCenterAdminIdentityCenterAdminProviderLambdaE457A029",
@@ -2638,6 +2694,7 @@ exports[`MultiOuOrganizationsStack Construct(OrganizationsStack):  Snapshot Test
           },
         },
         "Handler": "framework.onEvent",
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "IdentityCenterAdminframeworkonEventServiceRole2ED5ECC8",
@@ -3199,7 +3256,7 @@ exports[`MultiOuOrganizationsStack Construct(OrganizationsStack):  Snapshot Test
       "Properties": {
         "Name": "/accelerator/AWSAccelerator-OrganizationsStack-111111111111-us-east-1/version",
         "Type": "String",
-        "Value": "1.12.0",
+        "Value": "1.13.0",
       },
       "Type": "AWS::SSM::Parameter",
     },
@@ -3295,6 +3352,27 @@ exports[`OrganizationsStack Construct(OrganizationsStack):  Snapshot Test 1`] = 
     },
   },
   "Resources": {
+    "6s095tcdtgab75dd0229m5x6nSecureWorkloads": {
+      "DependsOn": [
+        "AwsGrRestrictRootUserAccessKeysSecureWorkloads",
+      ],
+      "Properties": {
+        "ControlIdentifier": {
+          "Fn::Join": [
+            "",
+            [
+              "arn:",
+              {
+                "Ref": "AWS::Partition",
+              },
+              ":controlcatalog:::control/6s095tcdtgab75dd0229m5x6n",
+            ],
+          ],
+        },
+        "TargetIdentifier": "arn:aws:organizations::111111111111:ou/o-asdf123456/ou-asdf-33333333",
+      },
+      "Type": "AWS::ControlTower::EnabledControl",
+    },
     "AcceleratorImportedCentralLogBucketKeyLookupCDD7B719": {
       "DeletionPolicy": "Delete",
       "DependsOn": [
@@ -3342,7 +3420,10 @@ exports[`OrganizationsStack Construct(OrganizationsStack):  Snapshot Test 1`] = 
             "Arn",
           ],
         },
-        "configPolicyNames": [],
+        "configPolicyNames": [
+          "BackupPolicy",
+          "BackupPolicy01",
+        ],
         "partition": {
           "Ref": "AWS::Partition",
         },
@@ -3370,7 +3451,10 @@ exports[`OrganizationsStack Construct(OrganizationsStack):  Snapshot Test 1`] = 
             "Arn",
           ],
         },
-        "configPolicyNames": [],
+        "configPolicyNames": [
+          "BackupPolicy",
+          "BackupPolicy01",
+        ],
         "partition": {
           "Ref": "AWS::Partition",
         },
@@ -3457,7 +3541,10 @@ exports[`OrganizationsStack Construct(OrganizationsStack):  Snapshot Test 1`] = 
             "Arn",
           ],
         },
-        "configPolicyNames": [],
+        "configPolicyNames": [
+          "BackupPolicy",
+          "BackupPolicy01",
+        ],
         "partition": {
           "Ref": "AWS::Partition",
         },
@@ -3485,7 +3572,10 @@ exports[`OrganizationsStack Construct(OrganizationsStack):  Snapshot Test 1`] = 
             "Arn",
           ],
         },
-        "configPolicyNames": [],
+        "configPolicyNames": [
+          "BackupPolicy",
+          "BackupPolicy01",
+        ],
         "partition": {
           "Ref": "AWS::Partition",
         },
@@ -3645,8 +3735,13 @@ exports[`OrganizationsStack Construct(OrganizationsStack):  Snapshot Test 1`] = 
           "S3Bucket": "cdk-hnb659fds-assets-111111111111-us-east-1",
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
+          },
+        },
         "Handler": "__entrypoint__.handler",
-        "MemorySize": 128,
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "CustomAuditManagerEnableOrganizationAdminAccountCustomResourceProviderRoleF4A6BEA4",
@@ -3712,16 +3807,7 @@ exports[`OrganizationsStack Construct(OrganizationsStack):  Snapshot Test 1`] = 
                   ],
                   "Condition": {
                     "StringLikeIfExists": {
-                      "organizations:DescribeOrganization": [
-                        "auditmanager.amazonaws.com",
-                      ],
-                      "organizations:EnableAWSServiceAccess": [
-                        "auditmanager.amazonaws.com",
-                      ],
-                      "organizations:ListAWSServiceAccessForOrganization": [
-                        "auditmanager.amazonaws.com",
-                      ],
-                      "organizations:RegisterDelegatedAdministrator": [
+                      "organizations:ServicePrincipal": [
                         "auditmanager.amazonaws.com",
                       ],
                     },
@@ -3736,15 +3822,24 @@ exports[`OrganizationsStack Construct(OrganizationsStack):  Snapshot Test 1`] = 
                   ],
                   "Condition": {
                     "StringLikeIfExists": {
-                      "iam:CreateServiceLinkedRole": [
+                      "iam:AWSServiceName": [
                         "auditmanager.amazonaws.com",
                       ],
                     },
                   },
                   "Effect": "Allow",
-                  "Resource": [
-                    "*",
-                  ],
+                  "Resource": {
+                    "Fn::Join": [
+                      "",
+                      [
+                        "arn:",
+                        {
+                          "Ref": "AWS::Partition",
+                        },
+                        ":iam::*:role/aws-service-role/auditmanager.amazonaws.com/AWSServiceRoleForAuditManager",
+                      ],
+                    ],
+                  },
                   "Sid": "AuditManagerIamPermission",
                 },
                 {
@@ -3795,8 +3890,13 @@ exports[`OrganizationsStack Construct(OrganizationsStack):  Snapshot Test 1`] = 
           "S3Bucket": "cdk-hnb659fds-assets-111111111111-us-east-1",
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
+          },
+        },
         "Handler": "__entrypoint__.handler",
-        "MemorySize": 128,
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "CustomDetectiveEnableOrganizationAdminAccountCustomResourceProviderRoleF6060FD6",
@@ -3940,8 +4040,13 @@ exports[`OrganizationsStack Construct(OrganizationsStack):  Snapshot Test 1`] = 
           "S3Bucket": "cdk-hnb659fds-assets-111111111111-us-east-1",
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
+          },
+        },
         "Handler": "__entrypoint__.handler",
-        "MemorySize": 128,
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "CustomEnableIpamOrganizationAdminAccountCustomResourceProviderRoleC4A018D1",
@@ -4056,8 +4161,13 @@ exports[`OrganizationsStack Construct(OrganizationsStack):  Snapshot Test 1`] = 
           "S3Bucket": "cdk-hnb659fds-assets-111111111111-us-east-1",
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
+          },
+        },
         "Handler": "__entrypoint__.handler",
-        "MemorySize": 128,
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "CustomEnablePolicyTypeCustomResourceProviderRoleAE71B2CA",
@@ -4163,8 +4273,13 @@ exports[`OrganizationsStack Construct(OrganizationsStack):  Snapshot Test 1`] = 
           "S3Bucket": "cdk-hnb659fds-assets-111111111111-us-east-1",
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
+          },
+        },
         "Handler": "__entrypoint__.handler",
-        "MemorySize": 128,
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "CustomEnableSharingWithAwsOrganizationCustomResourceProviderRole4FE5EBD7",
@@ -4250,8 +4365,13 @@ exports[`OrganizationsStack Construct(OrganizationsStack):  Snapshot Test 1`] = 
           "S3Bucket": "cdk-hnb659fds-assets-111111111111-us-east-1",
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
+          },
+        },
         "Handler": "__entrypoint__.handler",
-        "MemorySize": 128,
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "CustomGuardDutyEnableOrganizationAdminAccountCustomResourceProviderRole30371E09",
@@ -4317,36 +4437,10 @@ exports[`OrganizationsStack Construct(OrganizationsStack):  Snapshot Test 1`] = 
                     "organizations:ListAccounts",
                     "organizations:ListDelegatedAdministrators",
                     "organizations:RegisterDelegatedAdministrator",
-                    "organizations:ServicePrincipal",
-                    "organizations:UpdateOrganizationConfiguration",
                   ],
                   "Condition": {
                     "StringLikeIfExists": {
-                      "organizations:DeregisterDelegatedAdministrator": [
-                        "guardduty.amazonaws.com",
-                      ],
-                      "organizations:DescribeOrganization": [
-                        "guardduty.amazonaws.com",
-                      ],
-                      "organizations:EnableAWSServiceAccess": [
-                        "guardduty.amazonaws.com",
-                      ],
-                      "organizations:ListAWSServiceAccessForOrganization": [
-                        "guardduty.amazonaws.com",
-                      ],
-                      "organizations:ListAccounts": [
-                        "guardduty.amazonaws.com",
-                      ],
-                      "organizations:ListDelegatedAdministrators": [
-                        "guardduty.amazonaws.com",
-                      ],
-                      "organizations:RegisterDelegatedAdministrator": [
-                        "guardduty.amazonaws.com",
-                      ],
                       "organizations:ServicePrincipal": [
-                        "guardduty.amazonaws.com",
-                      ],
-                      "organizations:UpdateOrganizationConfiguration": [
                         "guardduty.amazonaws.com",
                       ],
                     },
@@ -4383,8 +4477,13 @@ exports[`OrganizationsStack Construct(OrganizationsStack):  Snapshot Test 1`] = 
           "S3Bucket": "cdk-hnb659fds-assets-111111111111-us-east-1",
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
+          },
+        },
         "Handler": "__entrypoint__.handler",
-        "MemorySize": 128,
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "CustomMacieEnableOrganizationAdminAccountCustomResourceProviderRoleA386B194",
@@ -4447,39 +4546,12 @@ exports[`OrganizationsStack Construct(OrganizationsStack):  Snapshot Test 1`] = 
                     "organizations:DescribeOrganization",
                     "organizations:EnableAWSServiceAccess",
                     "organizations:ListAWSServiceAccessForOrganization",
-                    "organizations:ListAccounts",
                     "organizations:ListDelegatedAdministrators",
                     "organizations:RegisterDelegatedAdministrator",
-                    "organizations:ServicePrincipal",
-                    "organizations:UpdateOrganizationConfiguration",
                   ],
                   "Condition": {
                     "StringLikeIfExists": {
-                      "organizations:DeregisterDelegatedAdministrator": [
-                        "macie.amazonaws.com",
-                      ],
-                      "organizations:DescribeOrganization": [
-                        "macie.amazonaws.com",
-                      ],
-                      "organizations:EnableAWSServiceAccess": [
-                        "macie.amazonaws.com",
-                      ],
-                      "organizations:ListAWSServiceAccessForOrganization": [
-                        "macie.amazonaws.com",
-                      ],
-                      "organizations:ListAccounts": [
-                        "macie.amazonaws.com",
-                      ],
-                      "organizations:ListDelegatedAdministrators": [
-                        "macie.amazonaws.com",
-                      ],
-                      "organizations:RegisterDelegatedAdministrator": [
-                        "macie.amazonaws.com",
-                      ],
                       "organizations:ServicePrincipal": [
-                        "macie.amazonaws.com",
-                      ],
-                      "organizations:UpdateOrganizationConfiguration": [
                         "macie.amazonaws.com",
                       ],
                     },
@@ -4506,13 +4578,24 @@ exports[`OrganizationsStack Construct(OrganizationsStack):  Snapshot Test 1`] = 
                   ],
                   "Condition": {
                     "StringLikeIfExists": {
-                      "iam:CreateServiceLinkedRole": [
+                      "iam:AWSServiceName": [
                         "macie.amazonaws.com",
                       ],
                     },
                   },
                   "Effect": "Allow",
-                  "Resource": "*",
+                  "Resource": {
+                    "Fn::Join": [
+                      "",
+                      [
+                        "arn:aws:",
+                        {
+                          "Ref": "AWS::Partition",
+                        },
+                        "::*:role/aws-service-role/macie.amazonaws.com/AWSServiceRoleForAmazonMacie",
+                      ],
+                    ],
+                  },
                   "Sid": "MacieEnableMacieTaskIamAction",
                 },
               ],
@@ -4533,8 +4616,13 @@ exports[`OrganizationsStack Construct(OrganizationsStack):  Snapshot Test 1`] = 
           "S3Bucket": "cdk-hnb659fds-assets-111111111111-us-east-1",
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
+          },
+        },
         "Handler": "__entrypoint__.handler",
-        "MemorySize": 128,
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "CustomOrganizationsAttachPolicyCustomResourceProviderRole051E00A6",
@@ -4621,8 +4709,13 @@ exports[`OrganizationsStack Construct(OrganizationsStack):  Snapshot Test 1`] = 
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
         "Description": "Organizations create policy",
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
+          },
+        },
         "Handler": "__entrypoint__.handler",
-        "MemorySize": 128,
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "CustomOrganizationsCreatePolicyCustomResourceProviderRoleBA0ADB43",
@@ -4728,8 +4821,13 @@ exports[`OrganizationsStack Construct(OrganizationsStack):  Snapshot Test 1`] = 
           "S3Bucket": "cdk-hnb659fds-assets-111111111111-us-east-1",
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
+          },
+        },
         "Handler": "__entrypoint__.handler",
-        "MemorySize": 128,
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "CustomOrganizationsEnableAwsServiceAccessCustomResourceProviderRole59F76BA2",
@@ -4812,8 +4910,13 @@ exports[`OrganizationsStack Construct(OrganizationsStack):  Snapshot Test 1`] = 
           "S3Bucket": "cdk-hnb659fds-assets-111111111111-us-east-1",
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
+          },
+        },
         "Handler": "__entrypoint__.handler",
-        "MemorySize": 128,
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "CustomOrganizationsRegisterDelegatedAdministratorCustomResourceProviderRole4B3EAD1B",
@@ -4896,8 +4999,13 @@ exports[`OrganizationsStack Construct(OrganizationsStack):  Snapshot Test 1`] = 
           "S3Bucket": "cdk-hnb659fds-assets-111111111111-us-east-1",
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
+          },
+        },
         "Handler": "__entrypoint__.handler",
-        "MemorySize": 128,
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "CustomS3PutBucketReplicationCustomResourceProviderRole1C378488",
@@ -4983,8 +5091,13 @@ exports[`OrganizationsStack Construct(OrganizationsStack):  Snapshot Test 1`] = 
           "S3Bucket": "cdk-hnb659fds-assets-111111111111-us-east-1",
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
+          },
+        },
         "Handler": "__entrypoint__.handler",
-        "MemorySize": 128,
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "CustomSecurityHubEnableOrganizationAdminAccountCustomResourceProviderRole1CBC866F",
@@ -5129,8 +5242,13 @@ exports[`OrganizationsStack Construct(OrganizationsStack):  Snapshot Test 1`] = 
           "S3Bucket": "cdk-hnb659fds-assets-111111111111-us-east-1",
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
+          },
+        },
         "Handler": "__entrypoint__.handler",
-        "MemorySize": 128,
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "CustomSsmGetParameterValueCustomResourceProviderRoleB3AFDDB2",
@@ -5321,7 +5439,13 @@ exports[`OrganizationsStack Construct(OrganizationsStack):  Snapshot Test 1`] = 
           "S3Bucket": "cdk-hnb659fds-assets-111111111111-us-east-1",
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
+          },
+        },
         "Handler": "index.handler",
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "FMSOrganizationAdminAccountFMSOrganizationAdminAccountProviderLambdaServiceRole28F3C566",
@@ -5510,6 +5634,7 @@ exports[`OrganizationsStack Construct(OrganizationsStack):  Snapshot Test 1`] = 
         "Description": "AWS CDK resource provider framework - onEvent (AWSAccelerator-OrganizationsStack-111111111111-us-east-1/FMSOrganizationAdminAccount/Resource)",
         "Environment": {
           "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
             "USER_ON_EVENT_FUNCTION_ARN": {
               "Fn::GetAtt": [
                 "FMSOrganizationAdminAccountFMSOrganizationAdminAccountProviderLambda2D69B84E",
@@ -5519,6 +5644,7 @@ exports[`OrganizationsStack Construct(OrganizationsStack):  Snapshot Test 1`] = 
           },
         },
         "Handler": "framework.onEvent",
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "FMSOrganizationAdminAccountframeworkonEventServiceRole6775A101",
@@ -5654,6 +5780,11 @@ exports[`OrganizationsStack Construct(OrganizationsStack):  Snapshot Test 1`] = 
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
         "Description": "Custom resource provider to create service linked role",
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
+          },
+        },
         "Handler": "index.handler",
         "KmsKeyArn": {
           "Ref": "SsmParameterValueacceleratorkmslambdakeyarnC96584B6F00A464EAD1953AFF4B05118Parameter",
@@ -5781,6 +5912,7 @@ exports[`OrganizationsStack Construct(OrganizationsStack):  Snapshot Test 1`] = 
         "Description": "AWS CDK resource provider framework - onEvent (AWSAccelerator-OrganizationsStack-111111111111-us-east-1/FirewallManagerServiceLinkedRole/CreateServiceLinkedRoleProvider)",
         "Environment": {
           "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
             "USER_ON_EVENT_FUNCTION_ARN": {
               "Fn::GetAtt": [
                 "FirewallManagerServiceLinkedRoleCreateServiceLinkedRoleFunctionA541DABF",
@@ -5790,6 +5922,7 @@ exports[`OrganizationsStack Construct(OrganizationsStack):  Snapshot Test 1`] = 
           },
         },
         "Handler": "framework.onEvent",
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "FirewallManagerServiceLinkedRoleCreateServiceLinkedRoleProviderframeworkonEventServiceRole41A12BB9",
@@ -5941,7 +6074,13 @@ exports[`OrganizationsStack Construct(OrganizationsStack):  Snapshot Test 1`] = 
           "S3Bucket": "cdk-hnb659fds-assets-111111111111-us-east-1",
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
+          },
+        },
         "Handler": "index.handler",
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "IdentityCenterAdminIdentityCenterAdminProviderLambdaServiceRole6939696D",
@@ -6053,6 +6192,7 @@ exports[`OrganizationsStack Construct(OrganizationsStack):  Snapshot Test 1`] = 
         "Description": "AWS CDK resource provider framework - onEvent (AWSAccelerator-OrganizationsStack-111111111111-us-east-1/IdentityCenterAdmin/Resource)",
         "Environment": {
           "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
             "USER_ON_EVENT_FUNCTION_ARN": {
               "Fn::GetAtt": [
                 "IdentityCenterAdminIdentityCenterAdminProviderLambdaE457A029",
@@ -6062,6 +6202,7 @@ exports[`OrganizationsStack Construct(OrganizationsStack):  Snapshot Test 1`] = 
           },
         },
         "Handler": "framework.onEvent",
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "IdentityCenterAdminframeworkonEventServiceRole2ED5ECC8",
@@ -6699,7 +6840,7 @@ exports[`OrganizationsStack Construct(OrganizationsStack):  Snapshot Test 1`] = 
       "Properties": {
         "Name": "/accelerator/AWSAccelerator-OrganizationsStack-111111111111-us-east-1/version",
         "Type": "String",
-        "Value": "1.12.0",
+        "Value": "1.13.0",
       },
       "Type": "AWS::SSM::Parameter",
     },
@@ -6887,7 +7028,9 @@ exports[`delegatedAdminStack Construct(OrganizationsStack):  Snapshot Test 1`] =
             "Arn",
           ],
         },
-        "configPolicyNames": [],
+        "configPolicyNames": [
+          "BackupPolicy",
+        ],
         "partition": {
           "Ref": "AWS::Partition",
         },
@@ -6915,7 +7058,9 @@ exports[`delegatedAdminStack Construct(OrganizationsStack):  Snapshot Test 1`] =
             "Arn",
           ],
         },
-        "configPolicyNames": [],
+        "configPolicyNames": [
+          "BackupPolicy",
+        ],
         "partition": {
           "Ref": "AWS::Partition",
         },
@@ -6986,8 +7131,13 @@ exports[`delegatedAdminStack Construct(OrganizationsStack):  Snapshot Test 1`] =
           "S3Bucket": "cdk-hnb659fds-assets-111111111111-us-east-1",
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
+          },
+        },
         "Handler": "__entrypoint__.handler",
-        "MemorySize": 128,
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "CustomAuditManagerEnableOrganizationAdminAccountCustomResourceProviderRoleF4A6BEA4",
@@ -7053,16 +7203,7 @@ exports[`delegatedAdminStack Construct(OrganizationsStack):  Snapshot Test 1`] =
                   ],
                   "Condition": {
                     "StringLikeIfExists": {
-                      "organizations:DescribeOrganization": [
-                        "auditmanager.amazonaws.com",
-                      ],
-                      "organizations:EnableAWSServiceAccess": [
-                        "auditmanager.amazonaws.com",
-                      ],
-                      "organizations:ListAWSServiceAccessForOrganization": [
-                        "auditmanager.amazonaws.com",
-                      ],
-                      "organizations:RegisterDelegatedAdministrator": [
+                      "organizations:ServicePrincipal": [
                         "auditmanager.amazonaws.com",
                       ],
                     },
@@ -7077,15 +7218,24 @@ exports[`delegatedAdminStack Construct(OrganizationsStack):  Snapshot Test 1`] =
                   ],
                   "Condition": {
                     "StringLikeIfExists": {
-                      "iam:CreateServiceLinkedRole": [
+                      "iam:AWSServiceName": [
                         "auditmanager.amazonaws.com",
                       ],
                     },
                   },
                   "Effect": "Allow",
-                  "Resource": [
-                    "*",
-                  ],
+                  "Resource": {
+                    "Fn::Join": [
+                      "",
+                      [
+                        "arn:",
+                        {
+                          "Ref": "AWS::Partition",
+                        },
+                        ":iam::*:role/aws-service-role/auditmanager.amazonaws.com/AWSServiceRoleForAuditManager",
+                      ],
+                    ],
+                  },
                   "Sid": "AuditManagerIamPermission",
                 },
                 {
@@ -7136,8 +7286,13 @@ exports[`delegatedAdminStack Construct(OrganizationsStack):  Snapshot Test 1`] =
           "S3Bucket": "cdk-hnb659fds-assets-111111111111-us-east-1",
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
+          },
+        },
         "Handler": "__entrypoint__.handler",
-        "MemorySize": 128,
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "CustomDetectiveEnableOrganizationAdminAccountCustomResourceProviderRoleF6060FD6",
@@ -7281,8 +7436,13 @@ exports[`delegatedAdminStack Construct(OrganizationsStack):  Snapshot Test 1`] =
           "S3Bucket": "cdk-hnb659fds-assets-111111111111-us-east-1",
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
+          },
+        },
         "Handler": "__entrypoint__.handler",
-        "MemorySize": 128,
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "CustomEnableIpamOrganizationAdminAccountCustomResourceProviderRoleC4A018D1",
@@ -7397,8 +7557,13 @@ exports[`delegatedAdminStack Construct(OrganizationsStack):  Snapshot Test 1`] =
           "S3Bucket": "cdk-hnb659fds-assets-111111111111-us-east-1",
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
+          },
+        },
         "Handler": "__entrypoint__.handler",
-        "MemorySize": 128,
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "CustomEnablePolicyTypeCustomResourceProviderRoleAE71B2CA",
@@ -7504,8 +7669,13 @@ exports[`delegatedAdminStack Construct(OrganizationsStack):  Snapshot Test 1`] =
           "S3Bucket": "cdk-hnb659fds-assets-111111111111-us-east-1",
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
+          },
+        },
         "Handler": "__entrypoint__.handler",
-        "MemorySize": 128,
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "CustomEnableSharingWithAwsOrganizationCustomResourceProviderRole4FE5EBD7",
@@ -7591,8 +7761,13 @@ exports[`delegatedAdminStack Construct(OrganizationsStack):  Snapshot Test 1`] =
           "S3Bucket": "cdk-hnb659fds-assets-111111111111-us-east-1",
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
+          },
+        },
         "Handler": "__entrypoint__.handler",
-        "MemorySize": 128,
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "CustomGuardDutyEnableOrganizationAdminAccountCustomResourceProviderRole30371E09",
@@ -7658,36 +7833,10 @@ exports[`delegatedAdminStack Construct(OrganizationsStack):  Snapshot Test 1`] =
                     "organizations:ListAccounts",
                     "organizations:ListDelegatedAdministrators",
                     "organizations:RegisterDelegatedAdministrator",
-                    "organizations:ServicePrincipal",
-                    "organizations:UpdateOrganizationConfiguration",
                   ],
                   "Condition": {
                     "StringLikeIfExists": {
-                      "organizations:DeregisterDelegatedAdministrator": [
-                        "guardduty.amazonaws.com",
-                      ],
-                      "organizations:DescribeOrganization": [
-                        "guardduty.amazonaws.com",
-                      ],
-                      "organizations:EnableAWSServiceAccess": [
-                        "guardduty.amazonaws.com",
-                      ],
-                      "organizations:ListAWSServiceAccessForOrganization": [
-                        "guardduty.amazonaws.com",
-                      ],
-                      "organizations:ListAccounts": [
-                        "guardduty.amazonaws.com",
-                      ],
-                      "organizations:ListDelegatedAdministrators": [
-                        "guardduty.amazonaws.com",
-                      ],
-                      "organizations:RegisterDelegatedAdministrator": [
-                        "guardduty.amazonaws.com",
-                      ],
                       "organizations:ServicePrincipal": [
-                        "guardduty.amazonaws.com",
-                      ],
-                      "organizations:UpdateOrganizationConfiguration": [
                         "guardduty.amazonaws.com",
                       ],
                     },
@@ -7724,8 +7873,13 @@ exports[`delegatedAdminStack Construct(OrganizationsStack):  Snapshot Test 1`] =
           "S3Bucket": "cdk-hnb659fds-assets-111111111111-us-east-1",
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
+          },
+        },
         "Handler": "__entrypoint__.handler",
-        "MemorySize": 128,
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "CustomMacieEnableOrganizationAdminAccountCustomResourceProviderRoleA386B194",
@@ -7788,39 +7942,12 @@ exports[`delegatedAdminStack Construct(OrganizationsStack):  Snapshot Test 1`] =
                     "organizations:DescribeOrganization",
                     "organizations:EnableAWSServiceAccess",
                     "organizations:ListAWSServiceAccessForOrganization",
-                    "organizations:ListAccounts",
                     "organizations:ListDelegatedAdministrators",
                     "organizations:RegisterDelegatedAdministrator",
-                    "organizations:ServicePrincipal",
-                    "organizations:UpdateOrganizationConfiguration",
                   ],
                   "Condition": {
                     "StringLikeIfExists": {
-                      "organizations:DeregisterDelegatedAdministrator": [
-                        "macie.amazonaws.com",
-                      ],
-                      "organizations:DescribeOrganization": [
-                        "macie.amazonaws.com",
-                      ],
-                      "organizations:EnableAWSServiceAccess": [
-                        "macie.amazonaws.com",
-                      ],
-                      "organizations:ListAWSServiceAccessForOrganization": [
-                        "macie.amazonaws.com",
-                      ],
-                      "organizations:ListAccounts": [
-                        "macie.amazonaws.com",
-                      ],
-                      "organizations:ListDelegatedAdministrators": [
-                        "macie.amazonaws.com",
-                      ],
-                      "organizations:RegisterDelegatedAdministrator": [
-                        "macie.amazonaws.com",
-                      ],
                       "organizations:ServicePrincipal": [
-                        "macie.amazonaws.com",
-                      ],
-                      "organizations:UpdateOrganizationConfiguration": [
                         "macie.amazonaws.com",
                       ],
                     },
@@ -7847,13 +7974,24 @@ exports[`delegatedAdminStack Construct(OrganizationsStack):  Snapshot Test 1`] =
                   ],
                   "Condition": {
                     "StringLikeIfExists": {
-                      "iam:CreateServiceLinkedRole": [
+                      "iam:AWSServiceName": [
                         "macie.amazonaws.com",
                       ],
                     },
                   },
                   "Effect": "Allow",
-                  "Resource": "*",
+                  "Resource": {
+                    "Fn::Join": [
+                      "",
+                      [
+                        "arn:aws:",
+                        {
+                          "Ref": "AWS::Partition",
+                        },
+                        "::*:role/aws-service-role/macie.amazonaws.com/AWSServiceRoleForAmazonMacie",
+                      ],
+                    ],
+                  },
                   "Sid": "MacieEnableMacieTaskIamAction",
                 },
               ],
@@ -7874,8 +8012,13 @@ exports[`delegatedAdminStack Construct(OrganizationsStack):  Snapshot Test 1`] =
           "S3Bucket": "cdk-hnb659fds-assets-111111111111-us-east-1",
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
+          },
+        },
         "Handler": "__entrypoint__.handler",
-        "MemorySize": 128,
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "CustomOrganizationsAttachPolicyCustomResourceProviderRole051E00A6",
@@ -7962,8 +8105,13 @@ exports[`delegatedAdminStack Construct(OrganizationsStack):  Snapshot Test 1`] =
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
         "Description": "Organizations create policy",
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
+          },
+        },
         "Handler": "__entrypoint__.handler",
-        "MemorySize": 128,
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "CustomOrganizationsCreatePolicyCustomResourceProviderRoleBA0ADB43",
@@ -8069,8 +8217,13 @@ exports[`delegatedAdminStack Construct(OrganizationsStack):  Snapshot Test 1`] =
           "S3Bucket": "cdk-hnb659fds-assets-111111111111-us-east-1",
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
+          },
+        },
         "Handler": "__entrypoint__.handler",
-        "MemorySize": 128,
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "CustomOrganizationsEnableAwsServiceAccessCustomResourceProviderRole59F76BA2",
@@ -8153,8 +8306,13 @@ exports[`delegatedAdminStack Construct(OrganizationsStack):  Snapshot Test 1`] =
           "S3Bucket": "cdk-hnb659fds-assets-111111111111-us-east-1",
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
+          },
+        },
         "Handler": "__entrypoint__.handler",
-        "MemorySize": 128,
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "CustomOrganizationsRegisterDelegatedAdministratorCustomResourceProviderRole4B3EAD1B",
@@ -8237,8 +8395,13 @@ exports[`delegatedAdminStack Construct(OrganizationsStack):  Snapshot Test 1`] =
           "S3Bucket": "cdk-hnb659fds-assets-111111111111-us-east-1",
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
+          },
+        },
         "Handler": "__entrypoint__.handler",
-        "MemorySize": 128,
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "CustomS3PutBucketReplicationCustomResourceProviderRole1C378488",
@@ -8324,8 +8487,13 @@ exports[`delegatedAdminStack Construct(OrganizationsStack):  Snapshot Test 1`] =
           "S3Bucket": "cdk-hnb659fds-assets-111111111111-us-east-1",
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
+          },
+        },
         "Handler": "__entrypoint__.handler",
-        "MemorySize": 128,
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "CustomSecurityHubEnableOrganizationAdminAccountCustomResourceProviderRole1CBC866F",
@@ -8470,8 +8638,13 @@ exports[`delegatedAdminStack Construct(OrganizationsStack):  Snapshot Test 1`] =
           "S3Bucket": "cdk-hnb659fds-assets-111111111111-us-east-1",
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
+          },
+        },
         "Handler": "__entrypoint__.handler",
-        "MemorySize": 128,
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "CustomSsmGetParameterValueCustomResourceProviderRoleB3AFDDB2",
@@ -8662,7 +8835,13 @@ exports[`delegatedAdminStack Construct(OrganizationsStack):  Snapshot Test 1`] =
           "S3Bucket": "cdk-hnb659fds-assets-111111111111-us-east-1",
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
+          },
+        },
         "Handler": "index.handler",
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "FMSOrganizationAdminAccountFMSOrganizationAdminAccountProviderLambdaServiceRole28F3C566",
@@ -8851,6 +9030,7 @@ exports[`delegatedAdminStack Construct(OrganizationsStack):  Snapshot Test 1`] =
         "Description": "AWS CDK resource provider framework - onEvent (AWSAccelerator-OrganizationsStack-111111111111-us-east-1/FMSOrganizationAdminAccount/Resource)",
         "Environment": {
           "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
             "USER_ON_EVENT_FUNCTION_ARN": {
               "Fn::GetAtt": [
                 "FMSOrganizationAdminAccountFMSOrganizationAdminAccountProviderLambda2D69B84E",
@@ -8860,6 +9040,7 @@ exports[`delegatedAdminStack Construct(OrganizationsStack):  Snapshot Test 1`] =
           },
         },
         "Handler": "framework.onEvent",
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "FMSOrganizationAdminAccountframeworkonEventServiceRole6775A101",
@@ -8995,6 +9176,11 @@ exports[`delegatedAdminStack Construct(OrganizationsStack):  Snapshot Test 1`] =
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
         "Description": "Custom resource provider to create service linked role",
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
+          },
+        },
         "Handler": "index.handler",
         "KmsKeyArn": {
           "Ref": "SsmParameterValueacceleratorkmslambdakeyarnC96584B6F00A464EAD1953AFF4B05118Parameter",
@@ -9122,6 +9308,7 @@ exports[`delegatedAdminStack Construct(OrganizationsStack):  Snapshot Test 1`] =
         "Description": "AWS CDK resource provider framework - onEvent (AWSAccelerator-OrganizationsStack-111111111111-us-east-1/FirewallManagerServiceLinkedRole/CreateServiceLinkedRoleProvider)",
         "Environment": {
           "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
             "USER_ON_EVENT_FUNCTION_ARN": {
               "Fn::GetAtt": [
                 "FirewallManagerServiceLinkedRoleCreateServiceLinkedRoleFunctionA541DABF",
@@ -9131,6 +9318,7 @@ exports[`delegatedAdminStack Construct(OrganizationsStack):  Snapshot Test 1`] =
           },
         },
         "Handler": "framework.onEvent",
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "FirewallManagerServiceLinkedRoleCreateServiceLinkedRoleProviderframeworkonEventServiceRole41A12BB9",
@@ -9282,7 +9470,13 @@ exports[`delegatedAdminStack Construct(OrganizationsStack):  Snapshot Test 1`] =
           "S3Bucket": "cdk-hnb659fds-assets-111111111111-us-east-1",
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
+          },
+        },
         "Handler": "index.handler",
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "IdentityCenterAdminIdentityCenterAdminProviderLambdaServiceRole6939696D",
@@ -9394,6 +9588,7 @@ exports[`delegatedAdminStack Construct(OrganizationsStack):  Snapshot Test 1`] =
         "Description": "AWS CDK resource provider framework - onEvent (AWSAccelerator-OrganizationsStack-111111111111-us-east-1/IdentityCenterAdmin/Resource)",
         "Environment": {
           "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
             "USER_ON_EVENT_FUNCTION_ARN": {
               "Fn::GetAtt": [
                 "IdentityCenterAdminIdentityCenterAdminProviderLambdaE457A029",
@@ -9403,6 +9598,7 @@ exports[`delegatedAdminStack Construct(OrganizationsStack):  Snapshot Test 1`] =
           },
         },
         "Handler": "framework.onEvent",
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "IdentityCenterAdminframeworkonEventServiceRole2ED5ECC8",
@@ -9990,7 +10186,7 @@ exports[`delegatedAdminStack Construct(OrganizationsStack):  Snapshot Test 1`] =
       "Properties": {
         "Name": "/accelerator/AWSAccelerator-OrganizationsStack-111111111111-us-east-1/version",
         "Type": "String",
-        "Value": "1.12.0",
+        "Value": "1.13.0",
       },
       "Type": "AWS::SSM::Parameter",
     },

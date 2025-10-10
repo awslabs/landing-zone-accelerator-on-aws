@@ -9,6 +9,7 @@ import { AssumeProfilePlugin } from '@aws-cdk-extensions/cdk-plugin-assume-role'
 import { AcceleratorToolkit } from '../lib/toolkit';
 import fs, { PathLike } from 'fs';
 import { AcceleratorStage } from '../lib/accelerator-stage';
+import { shouldLookupDynamoDb } from '../lib/accelerator';
 
 jest.mock('uuid', () => ({ v4: () => '123456789' }));
 let stsMock: AwsClientStub<STSClient>;
@@ -50,9 +51,9 @@ const fakeAccountsConfig = new AccountsConfig({
 });
 
 fakeAccountsConfig.accountIds = [
-  { email: 'mangement@example.com', accountId: '11111111' },
-  { email: 'log@example.com', accountId: '22222222' },
-  { email: 'audit@example.com', accountId: '33333333' },
+  { email: 'mangement@example.com', accountId: '11111111', orgsApiResponse: {} },
+  { email: 'log@example.com', accountId: '22222222', orgsApiResponse: {} },
+  { email: 'audit@example.com', accountId: '33333333', orgsApiResponse: {} },
 ];
 
 const fakeAssumeRolePlugin = new AssumeProfilePlugin({
@@ -311,5 +312,41 @@ describe('Accelerator.run', () => {
     const deployRegions = executeSpy.mock.calls.flatMap(c => c[0]).map(c => c.region!);
 
     fakeGlobalConfig.enabledRegions.forEach(r => expect(deployRegions).toContain(r));
+  });
+});
+
+describe('shouldLookupDynamoDb', () => {
+  const originalEnv = process.env;
+
+  beforeEach(() => {
+    jest.resetModules();
+    process.env = { ...originalEnv };
+  });
+
+  afterEach(() => {
+    process.env = originalEnv;
+  });
+
+  it('should return false when stage is undefined', () => {
+    expect(shouldLookupDynamoDb()).toBe(false);
+  });
+
+  it('should return false when ACCELERATOR_SKIP_DYNAMODB_LOOKUP is true', () => {
+    process.env['ACCELERATOR_SKIP_DYNAMODB_LOOKUP'] = 'true';
+    expect(shouldLookupDynamoDb(AcceleratorStage.NETWORK_ASSOCIATIONS)).toBe(false);
+  });
+
+  it('should return false for excluded stages', () => {
+    expect(shouldLookupDynamoDb(AcceleratorStage.PREPARE)).toBe(false);
+    expect(shouldLookupDynamoDb(AcceleratorStage.ACCOUNTS)).toBe(false);
+    expect(shouldLookupDynamoDb(AcceleratorStage.PIPELINE)).toBe(false);
+    expect(shouldLookupDynamoDb(AcceleratorStage.TESTER_PIPELINE)).toBe(false);
+    expect(shouldLookupDynamoDb(AcceleratorStage.DIAGNOSTICS_PACK)).toBe(false);
+  });
+
+  it('should return true for non-excluded stages', () => {
+    expect(shouldLookupDynamoDb(AcceleratorStage.NETWORK_VPC)).toBe(true);
+    expect(shouldLookupDynamoDb(AcceleratorStage.SECURITY)).toBe(true);
+    expect(shouldLookupDynamoDb(AcceleratorStage.OPERATIONS)).toBe(true);
   });
 });

@@ -439,6 +439,9 @@ export class Route53ResolverValidator {
       //
       if (allValid) {
         this.validateResolverEndpointVpcs(values, endpoint, helpers, errors);
+        if (endpoint.protocols) {
+          this.validateResolverProtocols(endpoint, errors);
+        }
       }
     }
   }
@@ -495,6 +498,51 @@ export class Route53ResolverValidator {
       errors.push(`[Resolver endpoint ${endpoint.name}]: endpoint has duplicate allowed CIDRs`);
     }
     return allValid;
+  }
+
+  /**
+   * Validate endpoint protocols
+   * @param endpoint
+   * @param errors
+   */
+  private validateResolverProtocols(endpoint: ResolverEndpointConfig, errors: string[]) {
+    if (endpoint.protocols && endpoint.protocols.length < 1) {
+      errors.push(
+        `[Resolver endpoint ${endpoint.name}]: If specifying protocols, please use at least one of 'DoH', 'DoH-FIPS', or 'Do53'.`,
+      );
+    }
+    // Validating possible configurations through
+    // https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-route53resolver-resolverendpoint.html#cfn-route53resolver-resolverendpoint-protocols
+    if (endpoint.type === 'INBOUND') {
+      this.validateInboundResolverEndpoint(endpoint, errors);
+    }
+    if (endpoint.type === 'OUTBOUND') {
+      this.validateOutboundResolverEndpoint(endpoint, errors);
+    }
+  }
+
+  /**
+   * Validate inboud endpoint protocols
+   * @param endpoint
+   * @param errors
+   */
+  private validateInboundResolverEndpoint(endpoint: ResolverEndpointConfig, errors: string[]) {
+    if (endpoint.protocols?.includes('DoH-FIPS') && endpoint.protocols?.includes('DoH')) {
+      errors.push(
+        `[Resolver endpoint ${endpoint.name}]: INBOUND endpoint type cannot have both DoH and DoH FIPS protocols.`,
+      );
+    }
+  }
+
+  /**
+   * Validate outbound endpoint protocols
+   * @param endpoint
+   * @param errors
+   */
+  private validateOutboundResolverEndpoint(endpoint: ResolverEndpointConfig, errors: string[]) {
+    if (endpoint.protocols?.includes('DoH-FIPS')) {
+      errors.push(`[Resolver endpoint ${endpoint.name}]: OUTBOUND endpoint type cannot use DoH-FIPS.`);
+    }
   }
 
   /**

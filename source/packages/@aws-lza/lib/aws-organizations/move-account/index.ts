@@ -24,7 +24,7 @@ import { throttlingBackOff } from '../../../common/throttle';
 import path from 'path';
 import {
   generateDryRunResponse,
-  getAccountDetailsFromOrganizations,
+  getAccountDetailsFromOrganizationsByEmail,
   getAccountId,
   getModuleDefaultParameters,
   getOrganizationalUnitIdByPath,
@@ -80,7 +80,10 @@ export class MoveAccountModule implements IMoveAccountModule {
       credentials: props.credentials,
     });
 
-    const accountDetailsFromOrganizations = await getAccountDetailsFromOrganizations(client, props.configuration.email);
+    const accountDetailsFromOrganizations = await getAccountDetailsFromOrganizationsByEmail(
+      client,
+      props.configuration.email,
+    );
 
     const destinationParentId = await getOrganizationalUnitIdByPath(client, props.configuration.destinationOu);
 

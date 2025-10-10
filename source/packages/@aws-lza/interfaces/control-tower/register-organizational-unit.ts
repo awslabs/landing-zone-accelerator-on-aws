@@ -41,11 +41,6 @@ export interface IRegisterOrganizationalUnitConfiguration {
    * If this property is set to `Root`, program will try to register ou `Root/Root`. Organization Root is always registered with Control Tower.
    */
   readonly name: string;
-
-  /**
-   * Organization id
-   */
-  readonly organizationalUnitId?: string;
 }
 
 /**

@@ -7,8 +7,6 @@ The CloudWatch Logs managed data identifiers for Credentials category can be fou
 
 The Landing Zone Accelerator solution will need the following `dataProtection` configuration to configure CloudWatch Log group data protection policy. It is possible to restrict the functionality to specific target environments (AWS Accounts and Regions) using the `deploymentTargets` property.
 
-[GlobalConfig](../typedocs/latest/classes/_aws_accelerator_config.GlobalConfig.html) / [LoggingConfig](../typedocs/latest/classes/_aws_accelerator_config.LoggingConfig.html) | [CloudWatchLogsConfig](../typedocs/latest/classes/_aws_accelerator_config.CloudWatchLogsConfig.html)
-
 ```
 dataProtection: 
   managedDataIdentifiers:
@@ -16,9 +14,9 @@ dataProtection:
       - Credentials
 ```
 
-In existing Landing Zone Accelerator environments, if you wish to configure CloudWatch Log group data protection policies, you can add the above `dataProtection` configuration and deploy the Landing Zone Accelerator pipeline.
+In existing Landing Zone Accelerator environments, if you wish to configure CloudWatch Log group data protection policies, you can add the above [dataProtection](../../../typedocs/interfaces/___packages__aws_accelerator_config_dist_config_lib_models_global_config.ICloudWatchDataProtectionConfig.html) configuration and deploy the Landing Zone Accelerator pipeline.
 
-The Landing Zone Accelerator solution configures CloudWatch Logs data protection audit policies to write audit reports to `centralLogBucket` Amazon S3 bucket defined in [GlobalConfig](../typedocs/latest/classes/_aws_accelerator_config.GlobalConfig.html) / [LoggingConfig](../typedocs/latest/classes/_aws_accelerator_config.LoggingConfig.html)  / [CentralLogBucketConfig](../typedocs/latest/classes/_aws_accelerator_config.CentralLogBucketConfig.html)
+The Landing Zone Accelerator solution configures CloudWatch Logs data protection audit policies to write audit reports to `centralLogBucket` Amazon S3 bucket defined in the [CentralLogBucketConfig](../../../typedocs/interfaces/___packages__aws_accelerator_config_dist_config_lib_models_global_config.ICentralLogBucketConfig.html).
 
 !!! note
     Please note that this feature is only available for AWS Commercial Regions.

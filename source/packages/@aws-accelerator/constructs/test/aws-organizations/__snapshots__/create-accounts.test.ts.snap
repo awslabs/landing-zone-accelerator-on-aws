@@ -162,12 +162,16 @@ exports[`ReportDefinition Construct(ConfigServiceTags):  Snapshot Test 1`] = `
         "Environment": {
           "Variables": {
             "AccountRoleName": "managementAccountAccessRole",
+            "ConfigTableName": {
+              "Ref": "NewOrgAccountsE5BA262F",
+            },
             "GovCloudAccountMappingTableName": {
               "Ref": "govCloudAccountMapping0E3D2AD8",
             },
             "NewOrgAccountsTableName": {
               "Ref": "NewOrgAccountsE5BA262F",
             },
+            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
           },
         },
         "Handler": "index.handler",
@@ -177,6 +181,7 @@ exports[`ReportDefinition Construct(ConfigServiceTags):  Snapshot Test 1`] = `
             "Arn",
           ],
         },
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "CreateOrganizationAccountsCreateOrganizationAccountStatusServiceRole5944FA8B",
@@ -287,10 +292,25 @@ exports[`ReportDefinition Construct(ConfigServiceTags):  Snapshot Test 1`] = `
                 "organizations:DescribeCreateAccountStatus",
                 "organizations:ListRoots",
                 "organizations:MoveAccount",
+                "organizations:DescribeAccount",
               ],
               "Effect": "Allow",
               "Resource": "*",
               "Sid": "Organizations",
+            },
+            {
+              "Action": [
+                "dynamodb:GetItem",
+                "dynamodb:UpdateItem",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::GetAtt": [
+                  "NewOrgAccountsE5BA262F",
+                  "Arn",
+                ],
+              },
+              "Sid": "DynamoDbConfig",
             },
             {
               "Action": [
@@ -374,6 +394,7 @@ exports[`ReportDefinition Construct(ConfigServiceTags):  Snapshot Test 1`] = `
         "Description": "AWS CDK resource provider framework - isComplete (Stack/CreateOrganizationAccounts/CreateOrganizationAccountsProvider)",
         "Environment": {
           "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
             "USER_IS_COMPLETE_FUNCTION_ARN": {
               "Fn::GetAtt": [
                 "CreateOrganizationAccountsCreateOrganizationAccountStatusBBDEFDFE",
@@ -389,21 +410,14 @@ exports[`ReportDefinition Construct(ConfigServiceTags):  Snapshot Test 1`] = `
           },
         },
         "Handler": "framework.isComplete",
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "CreateOrganizationAccountsCreateOrganizationAccountsProviderframeworkisCompleteServiceRole19A96F30",
             "Arn",
           ],
         },
-        "Runtime": {
-          "Fn::FindInMap": [
-            "LatestNodeRuntimeMap",
-            {
-              "Ref": "AWS::Region",
-            },
-            "value",
-          ],
-        },
+        "Runtime": "nodejs20.x",
         "Timeout": 900,
       },
       "Type": "AWS::Lambda::Function",
@@ -522,6 +536,7 @@ exports[`ReportDefinition Construct(ConfigServiceTags):  Snapshot Test 1`] = `
         "Description": "AWS CDK resource provider framework - onEvent (Stack/CreateOrganizationAccounts/CreateOrganizationAccountsProvider)",
         "Environment": {
           "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
             "USER_IS_COMPLETE_FUNCTION_ARN": {
               "Fn::GetAtt": [
                 "CreateOrganizationAccountsCreateOrganizationAccountStatusBBDEFDFE",
@@ -540,21 +555,14 @@ exports[`ReportDefinition Construct(ConfigServiceTags):  Snapshot Test 1`] = `
           },
         },
         "Handler": "framework.onEvent",
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "CreateOrganizationAccountsCreateOrganizationAccountsProviderframeworkonEventServiceRole66CD01EF",
             "Arn",
           ],
         },
-        "Runtime": {
-          "Fn::FindInMap": [
-            "LatestNodeRuntimeMap",
-            {
-              "Ref": "AWS::Region",
-            },
-            "value",
-          ],
-        },
+        "Runtime": "nodejs20.x",
         "Timeout": 900,
       },
       "Type": "AWS::Lambda::Function",
@@ -680,6 +688,7 @@ exports[`ReportDefinition Construct(ConfigServiceTags):  Snapshot Test 1`] = `
         "Description": "AWS CDK resource provider framework - onTimeout (Stack/CreateOrganizationAccounts/CreateOrganizationAccountsProvider)",
         "Environment": {
           "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
             "USER_IS_COMPLETE_FUNCTION_ARN": {
               "Fn::GetAtt": [
                 "CreateOrganizationAccountsCreateOrganizationAccountStatusBBDEFDFE",
@@ -695,21 +704,14 @@ exports[`ReportDefinition Construct(ConfigServiceTags):  Snapshot Test 1`] = `
           },
         },
         "Handler": "framework.onTimeout",
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "CreateOrganizationAccountsCreateOrganizationAccountsProviderframeworkonTimeoutServiceRoleA8ECA8F4",
             "Arn",
           ],
         },
-        "Runtime": {
-          "Fn::FindInMap": [
-            "LatestNodeRuntimeMap",
-            {
-              "Ref": "AWS::Region",
-            },
-            "value",
-          ],
-        },
+        "Runtime": "nodejs20.x",
         "Timeout": 900,
       },
       "Type": "AWS::Lambda::Function",
@@ -994,6 +996,11 @@ exports[`ReportDefinition Construct(ConfigServiceTags):  Snapshot Test 1`] = `
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
         "Description": "Create Organization Accounts OnEvent handler",
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
+          },
+        },
         "Handler": "index.handler",
         "KmsKeyArn": {
           "Fn::GetAtt": [
@@ -1001,6 +1008,7 @@ exports[`ReportDefinition Construct(ConfigServiceTags):  Snapshot Test 1`] = `
             "Arn",
           ],
         },
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "CreateOrganizationAccountsServiceRole99CB3720",

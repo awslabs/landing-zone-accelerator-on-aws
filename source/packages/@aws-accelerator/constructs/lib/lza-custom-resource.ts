@@ -17,6 +17,7 @@ import { NagSuppressions } from 'cdk-nag';
 import { v4 as uuidv4 } from 'uuid';
 import { pascalCase } from 'change-case';
 import { LzaLambda } from './lza-lambda';
+import { MetadataKeys } from '@aws-accelerator/utils';
 
 /**
  * Initialized LzaCustomResourceProps properties
@@ -134,6 +135,12 @@ export interface LzaCustomResourceProps {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       [key: string]: any;
     }[];
+  };
+  /*
+   * Adds LZA metadata to the custom resource
+   */
+  readonly metadata?: {
+    [key: string]: string | number | boolean | undefined;
   };
   /**
    * Prefix for nag suppression
@@ -273,6 +280,11 @@ export class LzaCustomResource extends Construct {
     if (props.lambda && lzaLambda?.logGroup) {
       this.resource.node.addDependency(lzaLambda!.logGroup);
     }
+    if (props.metadata) {
+      const cfnResource = this.resource.node.defaultChild as cdk.CfnResource;
+      cfnResource.addMetadata(MetadataKeys.LZA_LOOKUP, props.metadata);
+    }
+
     this.addSuppression(scope, props);
   }
 

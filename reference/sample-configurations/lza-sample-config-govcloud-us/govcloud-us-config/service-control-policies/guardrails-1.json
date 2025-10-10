@@ -15,9 +15,9 @@
       "Condition": {
         "ArnNotLike": {
           "aws:PrincipalARN": [
-            "arn:${PARTITION}:iam::*:role/${ACCELERATOR_PREFIX}-*",
+            "arn:${PARTITION}:iam::*:role/${ACCELERATOR_PREFIX}*",
             "arn:${PARTITION}:iam::*:role/${MANAGEMENT_ACCOUNT_ACCESS_ROLE}",
-            "arn:${PARTITION}:iam::*:role/cdk-accel-*"
+            "arn:${PARTITION}:iam::*:role/cdk-accel*"
           ]
         }
       }
@@ -39,13 +39,13 @@
         "lambda:UpdateFunctionCode",
         "lambda:UpdateFunctionConfiguration"
       ],
-      "Resource": "arn:${PARTITION}:lambda:*:*:function:${ACCELERATOR_PREFIX}-*",
+      "Resource": "arn:${PARTITION}:lambda:*:*:function:${ACCELERATOR_PREFIX}*",
       "Condition": {
         "ArnNotLike": {
           "aws:PrincipalARN": [
-            "arn:${PARTITION}:iam::*:role/${ACCELERATOR_PREFIX}-*",
+            "arn:${PARTITION}:iam::*:role/${ACCELERATOR_PREFIX}*",
             "arn:${PARTITION}:iam::*:role/${MANAGEMENT_ACCOUNT_ACCESS_ROLE}",
-            "arn:${PARTITION}:iam::*:role/cdk-accel-*"
+            "arn:${PARTITION}:iam::*:role/cdk-accel*"
           ]
         }
       }
@@ -62,13 +62,13 @@
         "sns:Subscribe",
         "sns:Unsubscribe"
       ],
-      "Resource": "arn:${PARTITION}:sns:*:*:aws-accelerator-*",
+      "Resource": "arn:${PARTITION}:sns:*:*:aws-accelerator*",
       "Condition": {
         "ArnNotLike": {
           "aws:PrincipalARN": [
-            "arn:${PARTITION}:iam::*:role/${ACCELERATOR_PREFIX}-*",
+            "arn:${PARTITION}:iam::*:role/${ACCELERATOR_PREFIX}*",
             "arn:${PARTITION}:iam::*:role/${MANAGEMENT_ACCOUNT_ACCESS_ROLE}",
-            "arn:${PARTITION}:iam::*:role/cdk-accel-*"
+            "arn:${PARTITION}:iam::*:role/cdk-accel*"
           ]
         }
       }
@@ -81,9 +81,9 @@
       "Condition": {
         "ArnNotLike": {
           "aws:PrincipalARN": [
-            "arn:${PARTITION}:iam::*:role/${ACCELERATOR_PREFIX}-*",
+            "arn:${PARTITION}:iam::*:role/${ACCELERATOR_PREFIX}*",
             "arn:${PARTITION}:iam::*:role/${MANAGEMENT_ACCOUNT_ACCESS_ROLE}",
-            "arn:${PARTITION}:iam::*:role/cdk-accel-*"
+            "arn:${PARTITION}:iam::*:role/cdk-accel*"
           ]
         }
       }
@@ -100,15 +100,15 @@
         "logs:CreateLogGroup"
       ],
       "Resource": [
-        "arn:${PARTITION}:logs:*:*:log-group:aws-accelerator-*",
-        "arn:${PARTITION}:logs:*:*:log-group:/aws/lambda/${ACCELERATOR_PREFIX}-*"
+        "arn:${PARTITION}:logs:*:*:log-group:aws-accelerator*",
+        "arn:${PARTITION}:logs:*:*:log-group:/aws/lambda/${ACCELERATOR_PREFIX}*"
       ],
       "Condition": {
         "ArnNotLike": {
           "aws:PrincipalARN": [
-            "arn:${PARTITION}:iam::*:role/${ACCELERATOR_PREFIX}-*",
+            "arn:${PARTITION}:iam::*:role/${ACCELERATOR_PREFIX}*",
             "arn:${PARTITION}:iam::*:role/${MANAGEMENT_ACCOUNT_ACCESS_ROLE}",
-            "arn:${PARTITION}:iam::*:role/cdk-accel-*"
+            "arn:${PARTITION}:iam::*:role/cdk-accel*"
           ]
         }
       }
@@ -118,15 +118,15 @@
       "Effect": "Deny",
       "Action": ["logs:DeleteLogStream"],
       "Resource": [
-        "arn:${PARTITION}:logs:*:*:log-group:aws-accelerator-*:log-stream:*",
-        "arn:${PARTITION}:logs:*:*:log-group:/aws/lambda/${ACCELERATOR_PREFIX}-*:log-stream:*"
+        "arn:${PARTITION}:logs:*:*:log-group:aws-accelerator*:log-stream:*",
+        "arn:${PARTITION}:logs:*:*:log-group:/aws/lambda/${ACCELERATOR_PREFIX}*:log-stream:*"
       ],
       "Condition": {
         "ArnNotLike": {
           "aws:PrincipalARN": [
-            "arn:${PARTITION}:iam::*:role/${ACCELERATOR_PREFIX}-*",
+            "arn:${PARTITION}:iam::*:role/${ACCELERATOR_PREFIX}*",
             "arn:${PARTITION}:iam::*:role/${MANAGEMENT_ACCOUNT_ACCESS_ROLE}",
-            "arn:${PARTITION}:iam::*:role/cdk-accel-*"
+            "arn:${PARTITION}:iam::*:role/cdk-accel*"
           ]
         }
       }

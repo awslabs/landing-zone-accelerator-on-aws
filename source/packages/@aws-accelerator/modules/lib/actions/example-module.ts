@@ -12,7 +12,7 @@
  */
 
 import path from 'path';
-import { createLogger } from '../../../../@aws-lza/common/logger';
+import { createStatusLogger } from '../../../../@aws-lza/common/logger';
 import { getRunnerTargetRegions } from '../functions';
 import { DeploymentTargets } from '@aws-accelerator/config/lib/common';
 import { ListMembersCommand, SecurityHubClient } from '@aws-sdk/client-securityhub';
@@ -28,7 +28,7 @@ import { ModuleParams } from '../../models/types';
  * This is a boiler plate code to create baseline for any new module integration with Accelerator pipeline
  */
 export abstract class ExampleModule {
-  private static logger = createLogger([path.parse(path.basename(__filename)).name]);
+  private static statusLogger = createStatusLogger([path.parse(path.basename(__filename)).name]);
 
   /**
    * Function to invoke example module
@@ -40,17 +40,17 @@ export abstract class ExampleModule {
    * @returns status string
    */
   public static async execute(params: ModuleParams, stage?: string): Promise<string> {
-    ExampleModule.logger.info(
+    ExampleModule.statusLogger.info(
       `Module ${params.moduleItem.name} execution started on ${ExampleModule.formatDate(new Date())}`,
     );
 
     if (!params.moduleRunnerParameters.configs.securityConfig.centralSecurityServices.securityHub.enable) {
       const status = `Security Hub is not enabled. Skipping module execution`;
-      ExampleModule.logger.info(status);
+      ExampleModule.statusLogger.info(status);
       return status;
     }
 
-    ExampleModule.logger.info(`Security Hub is enabled. Accelerator will configure AWS Security Hub`);
+    ExampleModule.statusLogger.info(`Security Hub is enabled. Accelerator will configure AWS Security Hub`);
 
     const statuses: string[] = [];
 
@@ -58,7 +58,7 @@ export abstract class ExampleModule {
 
     statuses.push(await ExampleModule.executeCreateMembersAction(params, stage));
 
-    ExampleModule.logger.info(
+    ExampleModule.statusLogger.info(
       `Module ${params.moduleItem.name} execution completed on ${ExampleModule.formatDate(new Date())}`,
     );
 
@@ -190,9 +190,9 @@ export abstract class ExampleModule {
     const client = new SecurityHubClient({ region, credentials });
     const response = await throttlingBackOff(() => client.send(new ListMembersCommand({})));
 
-    ExampleModule.logger.info(`From ${accountName} account region ${region}, current member accounts are`);
+    ExampleModule.statusLogger.info(`From ${accountName} account region ${region}, current member accounts are`);
     for (const member of response.Members ?? []) {
-      ExampleModule.logger.info(`Account id:${member.AccountId} -> Status: ${member.MemberStatus}\n`);
+      ExampleModule.statusLogger.info(`Account id:${member.AccountId} -> Status: ${member.MemberStatus}\n`);
     }
 
     return new Promise(resolve => {

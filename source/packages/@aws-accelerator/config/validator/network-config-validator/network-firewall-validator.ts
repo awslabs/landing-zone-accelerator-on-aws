@@ -721,7 +721,7 @@ export class NetworkFirewallValidator {
     }
     // Validate targets
     for (const target of domainList.targets) {
-      if (!helpers.matchesRegex(target, '^\\.?[-a-zA-Z0-9@:%._\\+~#=]{1,256}\\.[a-z]{2,8}$')) {
+      if (!helpers.matchesRegex(target, '^(\\.[-a-zA-Z0-9]+(\\.[-a-zA-Z0-9]+)*|[-a-zA-Z0-9]+(\\.[-a-zA-Z0-9]+)+)$')) {
         errors.push(
           `[Network Firewall rule group ${rule.name}]: target "${target}" is invalid. Targets must be formatted ".example.com" for wildcard domains and "example.com" for explicit match domains`,
         );

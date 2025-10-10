@@ -27,6 +27,22 @@ export enum AcceleratorModuleName {
    * Amazon EC2 module
    */
   AMAZON_EC2 = 'amazon-ec2',
+  /**
+   * AWS CloudFormation Module
+   */
+  AWS_CLOUDFORMATION = 'aws-cloudformation',
+  /**
+   * AWS Macie Module
+   */
+  AWS_MACIE = 'aws-macie',
+  /**
+   * AWS IAM Module
+   */
+  AWS_IAM = 'aws-iam',
+  /**
+   * AWS SSM Module
+   */
+  AWS_SSM = 'aws-ssm',
 }
 
 /**
@@ -97,6 +113,11 @@ export interface IModuleCommonParameter {
    * false
    */
   dryRun?: boolean;
+  /**
+   * Maximum concurrent execution
+   *
+   */
+  readonly maxConcurrentExecution?: number;
 }
 
 /**

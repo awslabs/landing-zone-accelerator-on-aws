@@ -4,7 +4,6 @@ import {
   AwsConfig,
   AwsConfigAggregation,
   CentralSecurityServicesConfig,
-  CloudWatchLogsConfig,
   ControlTowerConfig,
   CustomizationsConfig,
   DetectiveConfig,
@@ -23,6 +22,7 @@ import {
   SecurityConfig,
   SecurityHubConfig,
   SsmAutomationConfig,
+  SsmSettingsConfig,
   UserSetConfig,
 } from '@aws-accelerator/config';
 import { jest } from '@jest/globals';
@@ -47,6 +47,7 @@ export function createAcceleratorStackProps(
     getManagementAccountId: jest.fn(() => '234567890'),
     getLogArchiveAccountId: jest.fn(() => '345678901'),
     getAuditAccountId: jest.fn(() => auditAccountId ?? '456789012'),
+    getAccountNameById: jest.fn(() => 'accountName'),
     mandatoryAccounts: [],
     workloadAccounts: [],
   };
@@ -55,7 +56,9 @@ export function createAcceleratorStackProps(
     homeRegion: 'us-east-1',
     controlTower: new ControlTowerConfig(),
     logging: {
-      cloudwatchLogs: new CloudWatchLogsConfig(),
+      cloudwatchLogs: {
+        enable: false,
+      },
       sessionManager: {
         sendToCloudWatchLogs: false,
         sendToS3: false,
@@ -91,6 +94,7 @@ export function createAcceleratorStackProps(
     scpRevertChangesConfig: new ScpRevertChangesConfig(),
     snsSubscriptions: [],
     ssmAutomation: new SsmAutomationConfig(),
+    ssmSettings: new SsmSettingsConfig(),
   };
 
   const aggregation = {
@@ -133,6 +137,7 @@ export function createAcceleratorStackProps(
     pipelineAccountId: '1234567890',
     enableSingleAccountMode: true,
     useExistingRoles: false,
+    installerStackName: 'AWSAccelerator-InstallerStack',
     stackName: 'test-stack-name',
     env: {
       region: 'us-east-1',

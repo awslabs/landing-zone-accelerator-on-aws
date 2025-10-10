@@ -370,8 +370,9 @@ export class NetworkAclSubnetSelection implements i.INetworkAclSubnetSelection {
 export class NetworkAclInboundRuleConfig implements i.INetworkAclInboundRuleConfig {
   readonly rule: number = 100;
   readonly protocol: number = -1;
-  readonly fromPort: number = -1;
-  readonly toPort: number = -1;
+  readonly fromPort: number | undefined = undefined;
+  readonly toPort: number | undefined = undefined;
+  readonly icmp: IcmpRuleConfig | undefined = undefined;
   readonly action: t.AllowDeny = 'allow';
   readonly source: string | NetworkAclSubnetSelection = '';
 }
@@ -379,10 +380,16 @@ export class NetworkAclInboundRuleConfig implements i.INetworkAclInboundRuleConf
 export class NetworkAclOutboundRuleConfig implements i.INetworkAclOutboundRuleConfig {
   readonly rule: number = 100;
   readonly protocol: number = -1;
-  readonly fromPort: number = -1;
-  readonly toPort: number = -1;
+  readonly fromPort: number | undefined = undefined;
+  readonly toPort: number | undefined = undefined;
+  readonly icmp: IcmpRuleConfig | undefined = undefined;
   readonly action: t.AllowDeny = 'allow';
   readonly destination: string | NetworkAclSubnetSelection = '';
+}
+
+export class IcmpRuleConfig implements i.IIcmpRuleConfig {
+  readonly type: number = -1;
+  readonly code: number = -1;
 }
 
 export class NetworkAclConfig implements i.INetworkAclConfig {
@@ -576,6 +583,7 @@ export class ResolverEndpointConfig implements i.IResolverEndpointConfig {
   readonly subnets: string[] = [];
   readonly allowedCidrs: string[] | undefined = undefined;
   readonly rules: ResolverRuleConfig[] | undefined = undefined;
+  readonly protocols: i.ResolverProtocol[] | undefined = undefined;
   readonly tags: t.Tag[] | undefined = undefined;
 }
 
@@ -608,11 +616,15 @@ export class DnsFirewallRuleGroupConfig implements i.IDnsFirewallRuleGroupConfig
 export class LocalResolverConfig implements i.IResolverConfig {
   readonly endpoints: ResolverEndpointConfig[] | undefined = undefined;
   readonly queryLogs: DnsQueryLogsConfig | undefined = undefined;
+  readonly firewallRuleGroups: DnsFirewallRuleGroupConfig[] | undefined = undefined;
+  readonly rules?: ResolverRuleConfig[] | undefined = undefined;
 }
 
 export class VpcResolverConfig implements i.IResolverConfig {
   readonly endpoints: ResolverEndpointConfig[] | undefined = undefined;
   readonly queryLogs: DnsQueryLogsConfig | undefined = undefined;
+  readonly firewallRuleGroups?: DnsFirewallRuleGroupConfig[] | undefined = undefined;
+  readonly rules?: ResolverRuleConfig[] | undefined = undefined;
 }
 export class ResolverConfig implements i.IResolverConfig {
   readonly endpoints: ResolverEndpointConfig[] | undefined = undefined;
@@ -929,7 +941,7 @@ export class NetworkConfig implements i.INetworkConfig {
    * @param dir
    * @returns
    */
-  static load(dir: string, replacementsConfig?: ReplacementsConfig): NetworkConfig {
+  static load(dir: string, replacementsConfig: ReplacementsConfig): NetworkConfig {
     const initialBuffer = fs.readFileSync(path.join(dir, NetworkConfig.FILENAME), 'utf8');
     const buffer = replacementsConfig ? replacementsConfig.preProcessBuffer(initialBuffer) : initialBuffer;
     const values = t.parseNetworkConfig(yaml.load(buffer));
@@ -941,9 +953,10 @@ export class NetworkConfig implements i.INetworkConfig {
    * Load from string content
    * @param content
    */
-  static loadFromString(content: string): NetworkConfig | undefined {
+  static loadFromString(content: string, replacementsConfig: ReplacementsConfig): NetworkConfig | undefined {
+    const buffer = replacementsConfig ? replacementsConfig.preProcessBuffer(content) : content;
     try {
-      const values = t.parseNetworkConfig(yaml.load(content));
+      const values = t.parseNetworkConfig(yaml.load(buffer));
       return new NetworkConfig(values);
     } catch (e) {
       logger.error('Error parsing input, network config undefined');

@@ -13,6 +13,7 @@
 
 import * as t from '../common/types';
 import { StreamMode } from '@aws-sdk/client-kinesis';
+
 /**
  * {@link IGlobalConfig} / {@link IControlTowerConfig} / {@link IControlTowerLandingZoneConfig} / {@link IControlTowerLandingZoneLoggingConfig}
  *
@@ -143,8 +144,11 @@ export interface IControlTowerLandingZoneConfig {
  * This allows you to enable Strongly Recommended or Elective Controls
  * https://docs.aws.amazon.com/controltower/latest/userguide/optional-controls.html
  *
- * @remarks AWS Control Tower is limited to 10 concurrent operations, where enabling a control for one Organizational Unit constitutes a single operation.
+ * @remarks
+ * AWS Control Tower is limited to 10 concurrent operations, where enabling a control for one Organizational Unit constitutes a single operation.
  * To avoid throttling, please enable controls in batches of 10 or fewer each pipeline run. Keep in mind other Control Tower operations may use up some of the available quota.
+ *
+ * Not all controls can be deployed to Security OU. Please see this page for more information: https://docs.aws.amazon.com/controltower/latest/controlreference/exception-to-controls-security-ou.html.
  *
  * @example
  * controlTowerControls:
@@ -153,10 +157,16 @@ export interface IControlTowerLandingZoneConfig {
  *     deploymentTargets:
  *       organizationalUnits:
  *         - Workloads
+ *   - identifier: m7a5gbdf08wg2o0en010mkng
+ *     enable: true
+ *     deploymentTargets:
+ *       organizationalUnits:
+ *         - Infrastructure
  */
 export interface IControlTowerControlConfig {
   /**
-   * Control Tower control identifier, for Strongly Recommended or Elective controls this should start with AWS-GR
+   * Control Tower control identifier. For Strongly Recommended or Elective controls this should start with AWS-GR. For Global Control Tower Controls, this should be the CONTROL_TOWER_OPAQUE_ID,
+   * please see this page for more information: https://docs.aws.amazon.com/controltower/latest/controlreference/all-global-identifiers.html.
    */
   readonly identifier: t.NonEmptyString;
   /**
@@ -322,33 +332,6 @@ export interface ICentralizeCdkBucketsConfig {
 }
 
 /**
- * *{@link GlobalConfig} / {@link cdkOptionsConfig} / {@link stackRefactor}*
- *
- * @experimental
- * This configuration is intended for internal development purposes only.
- * It will not trigger an actual stack refactor when used.
- *
- * @description
- * LZA Stack refactor configuration. This interface allows you to specify which stacks should undergo refactoring.
- * Refactoring helps optimize resource distribution and avoid exceeding the 500-resource limit for CloudFormation stacks.
- *
- * @remarks
- * Stack refactoring is a one-time action. Please change this configuration back to false when stack refactoring is finished.
- *
- * @example
- * ```
- * stackRefactor:
- *   networkVpcStack: true
- * ```
- */
-export interface IStackRefactor {
-  /**
-   * Enables refactoring for the network stacks.
-   */
-  networkVpcStack?: boolean;
-}
-
-/**
  * *{@link GlobalConfig} / {@link cdkOptionsConfig}*
  *
  * @description
@@ -362,8 +345,7 @@ export interface IStackRefactor {
  * cdkOptions:
  *   centralizeBuckets: true
  *   useManagementAccessRole: true
- *   stackRefactor:
- *    networkVpcStack: true
+ *   deploymentMethod: 'direct'
  * ```
  */
 export interface ICdkOptionsConfig {
@@ -389,14 +371,14 @@ export interface ICdkOptionsConfig {
    */
   readonly forceBootstrap?: boolean;
   /**
-   * Enables stack refactoring for specific stacks. When enabled, the Accelerator will reorganize the resources defined in the stack to avoid exceeding the
-   * 500-resource limit for CloudFormation stacks.
-   *
-   * @experimental
-   * This configuration is intended for internal development purposes only.
-   * It will not trigger an actual stack refactor when used.
+   * Sets the cdk deployment method for the LZA. Defaults to direct. Setting to change-set will display additional progress information but can increase deployment time.
    */
-  readonly stackRefactor?: IStackRefactor;
+  readonly deploymentMethod?: 'change-set' | 'direct';
+  /**
+   * Determines if the LZA pipeline will skip the static config validation step during the pipeline's Build phase.
+   * This can be helpful in cases where the config-validator incorrectly throws errors for a valid configuration.
+   */
+  readonly skipStaticValidation?: boolean | undefined;
 }
 
 /**
@@ -746,7 +728,7 @@ export interface IAssetBucketConfig {
  * *{@link GlobalConfig} / {@link LoggingConfig} / {@link AccessLogBucketConfig}*
  *
  * @description
- * Accelerator global S3 access logging configuration
+ * Accelerator S3 access logs configuration. S3 access logs is implemented in LZA using the native S3 feature offered by the service as per: https://docs.aws.amazon.com/AmazonS3/latest/userguide/ServerLogs.html
  *
  * @example
  * ```
@@ -784,7 +766,7 @@ export interface IAssetBucketConfig {
  *           transitionAfter: 365
  *       prefix: PREFIX
  *   importedBucket:
- *     name: existing-access-log-bucket
+ *     name: existing-access-log-bucket-${ACCOUNT_ID}-${REGION}
  *     applyAcceleratorManagedBucketPolicy: true
  * ```
  */
@@ -821,15 +803,25 @@ export interface IAccessLogBucketConfig {
   /**
    * Imported bucket configuration.
    *
-   * @remarks
-   * Use this configuration when accelerator will import existing AccessLogs bucket.
    *
-   * Use the following configuration to imported AccessLogs bucket, manage bucket resource policy through solution.
+   * @remarks
+   * Use this configuration to import an existing AccessLogs bucket and manage its resource policy through the solution.
+   *
+   * **Important:** Per AWS S3 documentation, both source and destination buckets must be in the same AWS Region and owned by the same account.
+   * Reference: https://docs.aws.amazon.com/AmazonS3/latest/userguide/ServerLogs.html
+   *
+   * The bucket must be pre-created in each target account and region using a repeatable naming pattern so the LZA can locate the bucket across accounts and regions. Include the ${ACCOUNT_ID} and ${REGION} parameters in your naming pattern, which will be automatically populated by the LZA to ensure uniqueness.
+   * 
+   * For more information on solution-specific variables, see: https://docs.aws.amazon.com/solutions/latest/landing-zone-accelerator-on-aws/working-with-solution-specific-variables.html
+ 
+   *
+   * @example
    * ```
    * importedBucket:
-   *    name: existing-access-log-bucket
-   *    applyAcceleratorManagedBucketPolicy: true
+   *   name: existing-access-log-bucket-${ACCOUNT_ID}-${REGION}
+   *   applyAcceleratorManagedBucketPolicy: true
    * ```
+   *
    *
    * @default
    * undefined
@@ -1056,6 +1048,7 @@ export interface IElbLogBucketConfig {
    * When customPolicyOverrides.s3Policy defined importedBucket.applyAcceleratorManagedBucketPolicy can not be set to true also s3ResourcePolicyAttachments property can not be defined.
    *
    * Use the following configuration to apply custom bucket resource policy overrides through policy JSON file.
+   * customPolicyOverrides can ONLY be applied to imported buckets.
    * ```
    * customPolicyOverrides:
    *   s3Policy: path/to/policy.json
@@ -1122,6 +1115,40 @@ export interface ICloudWatchLogsExclusionConfig {
 }
 
 /**
+ * *{@link GlobalConfig} / {@link LoggingConfig} / {@link CloudWatchLogsConfig}/ {@link CloudWatchLogSkipBulkUpdateConfig}*
+ *
+ * @description
+ * Accelerator global CloudWatch Logs skip bulk update configuration.
+ * WARNING: This configuration option could cause CloudWatch log group configurations to become out of sync
+ * with the global configuration. Only enable this option if you fully understand the implications.
+ *
+ * @example
+ * ```
+ * skipBulkUpdate:
+ *   enable: true
+ *   skipBulkUpdateTargets:
+ *     organizationalUnits:
+ *      - Sandbox
+ *     regions:
+ *      - us-west-1
+ *      - us-west-2
+ *     accounts:
+ *      - WorkloadAccount1
+ *
+ * ```
+ */
+
+export interface ICloudWatchLogSkipBulkUpdateConfig {
+  /**
+   * Flag to enable skip bulk updates
+   */
+  readonly enable: boolean;
+  /**
+   * Accounts, regions, and OUs to target skipping bulk updates of CloudFormation Log Group subscription filters
+   */
+  readonly skipBulkUpdateTargets: t.IDeploymentTargets | undefined;
+}
+/**
  * *{@link GlobalConfig} / {@link LoggingConfig} / {@link CloudWatchLogsConfig}/ {@link CloudWatchFirehoseConfig}*
  *
  * @description
@@ -1154,7 +1181,7 @@ export interface ICloudWatchFirehoseConfig {
    */
   readonly fileExtension?: t.NonEmptyString;
   /**
-   * Describes hints for the firehose lambda processor when Amazon Data Firehose recieves data. Amazon Data Firehose can invokes Lambda function to take source data and deliver the data to destination specified in dynamic partition.
+   * Describes hints for the firehose lambda processor when Amazon Data Firehose receives data. Amazon Data Firehose can invokes Lambda function to take source data and deliver the data to destination specified in dynamic partition.
    */
   readonly lambdaProcessor?: ICloudWatchFirehoseLambdaProcessorConfig;
 }
@@ -1434,6 +1461,41 @@ export interface ICloudWatchLogsConfig {
    * CloudWatch Log data protection configuration
    */
   readonly dataProtection?: ICloudWatchDataProtectionConfig;
+  /**
+   * Determines if a list of account ids is used instead of a principal organization condition in the CloudWatch Logs destination access policy.
+   * This is useful in partitions where the principal organization condition is not supported.
+   */
+  readonly organizationIdConditionSupported?: boolean;
+
+  /**
+   * Used to skip the bulk update of CloudWatch logs settings in the LZA pipeline
+   * @default undefined
+   *
+   * @remarks
+   * This option is used to skip bulk update of cloudwatch log groups in the LZA pipeline
+   * WARNING: This configuration option could cause CloudWatch log group configurations to become out of sync
+   * with the global configuration. Only enable this option if you fully understand the implications.
+   */
+  readonly skipBulkUpdate?: ICloudWatchLogSkipBulkUpdateConfig;
+
+  /**
+   * CloudWatch Logs subscription configuration.
+   */
+  readonly subscription?: ICloudWatchSubscriptionConfig;
+
+  /**
+   * CloudWatch Logs Firehose configuration.
+   *
+   * @see {@link ICloudWatchFirehoseConfig} for more information.
+   */
+  readonly firehose?: ICloudWatchFirehoseConfig;
+
+  /**
+   * CloudWatch Logs Kinesis configuration.
+   *
+   * @see {@link ICloudWatchKinesisConfig} for more information.
+   */
+  readonly kinesis?: ICloudWatchKinesisConfig;
 }
 
 /**
@@ -1986,11 +2048,11 @@ export interface ISnsConfig {
    * email subscriptions will be in the Log Archive account
    * All other accounts and regions will forward to the Logging account
    */
-  readonly deploymentTargets?: t.IDeploymentTargets;
+  readonly deploymentTargets: t.IDeploymentTargets;
   /**
    * List of SNS Topics
    */
-  readonly topics?: ISnsTopicConfig[];
+  readonly topics: ISnsTopicConfig[];
 }
 
 /**
@@ -2003,7 +2065,7 @@ export interface ISnsConfig {
  *
  * @example
  * ```
- * acceleratorMetadataConfig:
+ * acceleratorMetadata:
  *   enable: true
  *   account: Logging
  *   readOnlyAccessRoleArns:
@@ -2107,7 +2169,7 @@ export interface ICloudWatchManagedDataProtectionIdentifierConfig {
  * *{@link IGlobalConfig} / {@link ILoggingConfig} / {@link ICloudWatchLogsConfig}/ {@link ICloudWatchDataProtectionConfig}*
  *
  * @description
- * AWS CloudWatch Log data protection configuration, you can find more information [here](https://awslabs.github.io/landing-zone-accelerator-on-aws/latest/faq/Logging/cwl/)
+ * AWS CloudWatch Log data protection configuration, you can find more information [here](https://awslabs.github.io/landing-zone-accelerator-on-aws/latest/faq/logging/cwl/)
  *
  * @example
  * ```
@@ -2307,10 +2369,99 @@ export interface IDefaultEventBusConfig {
    * Default Event Bus Policy deployment targets.
    *
    * @remarks
-   * With this configuration, LZA will deploy the LZA Managed or cust policy provided via the `customPolicyOverride` property to the
+   * With this configuration, LZA will deploy the LZA Managed or customer policy provided via the `customPolicyOverride` property to the
    * default event bus resource-based policy for the respective account(s).
    */
   readonly deploymentTargets: t.IDeploymentTargets;
+}
+
+/**
+ * *{@link SecurityConfig} / {@link StackPolicyConfig}*
+ *
+ * @description
+ * Cloudformation Stack Policy configuration
+ * The Cloudformation Stack Policy configuration determines how stack resources can be updated or modified during stack operations.
+ * When this value is not specified, any existing stack policies will remain in effect and unchanged.
+ * This behavior is intentionally different from the typical LZA default handling, where unset values are commonly treated as false.
+ * This design choice allows organizations to manage and maintain stack policies independently through other mechanisms outside of LZA if preferred.
+ *
+ * @example
+ * ```
+ * stackPolicy:
+ *   enable: true
+ *   protectedTypes:
+ *     - "AWS::EC2::InternetGateway"
+ *     - "AWS::EC2::NatGateway"
+ *     - "AWS::EC2::PrefixList"
+ *     - "AWS::EC2::Route"
+ *     - "AWS::EC2::RouteTable"
+ *     - "AWS::EC2::SubnetRouteTableAssociation"
+ *     - "AWS::EC2::TransitGateway"
+ *     - "AWS::EC2::TransitGatewayPeeringAttachment"
+ *     - "AWS::EC2::TransitGatewayRoute"
+ *     - "AWS::EC2::TransitGatewayRouteTable"
+ *     - "AWS::EC2::TransitGatewayRouteTableAssociation"
+ *     - "AWS::EC2::TransitGatewayRouteTablePropagation"
+ *     - "AWS::EC2::TransitGatewayVpcAttachment"
+ *     - "AWS::EC2::VPC"
+ *     - "AWS::EC2::VPCCidrBlock"
+ *     - "AWS::EC2::VPCEndpoint"
+ *     - "AWS::EC2::VPCGatewayAttachment"
+ *     - "AWS::NetworkFirewall::Firewall"
+ *     - "AWS::NetworkFirewall::LoggingConfiguration"
+ *     - "AWS::RAM::ResourceShare"
+ * ```
+ */
+export interface IStackPolicyConfig {
+  /**
+   * Indicates whether Stack policies are enabled in your organization.
+   * Resource types will be protected for Update:Replace and Update:Delete.
+   * Protected types need to be AWS:: resource types e.g. AWS::EC2::InternetGateway.
+   */
+  readonly enable: boolean;
+  readonly protectedTypes: string[];
+}
+
+/**
+ * *{@link GlobalConfig} / {@link CentralRootUserManagementConfig} / {@link RootUserManagementCapabiltiesConfig}*
+ *
+ * @description
+ * IAM Root User Management
+ * Documentation [page](https://docs.aws.amazon.com/IAM/latest/UserGuide/id_root-user.html)
+ *
+ * @example
+ * ```
+ *   capabilities:
+ *    rootCredentialsManagement: true
+ *    allowRootSessions: true
+ * ```
+ *
+ */
+export interface IRootUserManagementCapabiltiesConfig {
+  readonly rootCredentialsManagement: boolean;
+  readonly allowRootSessions: boolean;
+}
+
+/**
+ * *{@link GlobalConfig} / {@link CentralRootUserManagementConfig}*
+ *
+ * @description
+ * IAM Root User Management
+ * Documentation [page](https://docs.aws.amazon.com/IAM/latest/UserGuide/id_root-user.html)
+ *
+ * @example
+ * ```
+ * centralRootUserManagement:
+ *   enable: true
+ *   capabilities:
+ *    rootCredentialsManagement: true
+ *    allowRootSessions: true
+ * ```
+ *
+ */
+export interface ICentralRootUserManagementConfig {
+  readonly enable: boolean;
+  readonly capabilities: IRootUserManagementCapabiltiesConfig;
 }
 
 /**
@@ -2329,6 +2480,14 @@ export interface IGlobalConfig {
    * ```
    */
   readonly homeRegion: t.NonEmptyString;
+  /**
+   * Enable V2 stacks. When enabled, Accelerator will place newly defined resources into separate CloudFormation
+   * stacks while preserving existing resources in their original stacks. This prevents exceeding the 500-resource
+   * limit per CloudFormation stack.
+   *
+   * @default false
+   */
+  readonly useV2Stacks?: boolean;
   /**
    * List of AWS Region names where accelerator will be deployed. Home region must be part of this list.
    *
@@ -2360,6 +2519,17 @@ export interface IGlobalConfig {
    * This retention setting will be applied to all CloudWatch log groups created by the accelerator.
    * Additionally, this retention setting will be applied to any CloudWatch log groups that already exist
    * in the target environment if the log group's retention setting is LOWER than this configured value.
+   *
+   * Scenario 1: If you have a `cloudwatchLogRetentionInDays` setting of 365 days, and create a new CloudWatch Log Group with a 545-day retention setting,
+   * the LZA solution will update the CloudWatch Log Group to 365 days.
+   *
+   * Scenario 2: The global `cloudwatchLogRetentionInDays` is set to 365 days and has an existing CloudWatch Log Group that has a retention of 545 days. When
+   * the LZA solution runs, the CloudWatch Log Group in question will be evaluated and skipped given that the retention setting (545 days in this example) is
+   * higher than the global `cloudwatchLogRetentionInDays` setting.
+   *
+   * Scenario 3: The global `cloudwatchLogRetentionInDays` is set to 365 days and has an existing CloudWatch Log Group that has a retention of 30 days. When
+   * the LZA solution runs, the CloudWatch Log Group in question will be evaluated and updated given that the retention setting (30 days in this example) is
+   * lower than the global `cloudwatchLogRetentionInDays` setting.
    *
    */
   readonly cloudwatchLogRetentionInDays: number;
@@ -2682,4 +2852,38 @@ export interface IGlobalConfig {
    * ```
    */
   readonly defaultEventBus?: IDefaultEventBusConfig;
+
+  /**
+   * Configuration for centralized root user management.
+   * @example
+   * ```
+   * centralRootUserManagement:
+   *   enable: true
+   *   capabilities:
+   *     rootCredentialsManagement: true
+   *     allowRootSessions: true
+   * ```
+   */
+  readonly centralRootUserManagement?: ICentralRootUserManagementConfig;
+
+  /**
+   * Configuration for stack policies.
+   * Resource types will be protected for Update:Replace and Update:Delete.
+   * Protected types need to be AWS:: resource types e.g. AWS::EC2::InternetGateway.
+   * @example
+   * ```
+   * stackPolicy:
+   *   enable: true
+   *   protectedTypes: ['AWS::EC2::InternetGateway']
+   * ```
+   */
+
+  readonly stackPolicy?: IStackPolicyConfig;
+
+  /**
+   * SQS Queue configuration settings.
+   *
+   * @see {@link ISqsConfig} for more information.
+   */
+  readonly sqs?: ISqsConfig;
 }

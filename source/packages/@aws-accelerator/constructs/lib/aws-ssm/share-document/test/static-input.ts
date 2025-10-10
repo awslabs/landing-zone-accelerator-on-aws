@@ -10,6 +10,14 @@ export abstract class StaticInput {
     name: 'name',
     accountIds: genAccArray(21),
   };
+  public static readonly updatePropsAscAccountArray1 = {
+    name: 'name',
+    accountIds: ['account1', 'account2'],
+  };
+  public static readonly updatePropsDescAccountArray1 = {
+    name: 'name',
+    accountIds: ['account2', 'account1'],
+  };
   public static readonly manyAccounts = genAccArray(100);
 }
 // function to generate an array of strings based on length of array as input

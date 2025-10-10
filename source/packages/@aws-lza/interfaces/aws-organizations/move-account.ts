@@ -76,3 +76,84 @@ export interface IMoveAccountModule {
    */
   handler(props: IMoveAccountHandlerParameter): Promise<string>;
 }
+
+/**
+ * AWS Organizations batch move accounts configuration
+ *
+ * @description
+ * This is the essential inputs for API operation by this module to move multiple accounts into AWS Organizations
+ *
+ * @example
+ *
+ * ```
+ * [
+ *   {
+ *     email: 'account@example.com',
+ *     destinationOu: 'XXXXXXXXX',
+ *   },
+ *   {
+ *     email: 'account@example.com',
+ *     destinationOu: 'XXXXXXXXX',
+ *   },
+ * ]
+ * ```
+ */
+export interface IMoveAccountsBatchConfiguration {
+  /**
+   * List of accounts to move
+   *
+   * @example
+   * ```
+   * [
+   *   {
+   *     email: 'account@example.com',
+   *     destinationOu: 'XXXXXXXXX',
+   *   },
+   *   {
+   *     email: 'account@example.com',
+   *     destinationOu: 'XXXXXXXXX',
+   *   },
+   * ]
+   * ```
+   */
+  accounts: IMoveAccountConfiguration[];
+}
+
+/**
+ * AWS Organizations batch move accounts handler parameter
+ */
+export interface IMoveAccountsBatchHandlerParameter extends IModuleCommonParameter {
+  /**
+   * List of account configuration to move
+   *
+   * @example
+   * ```
+   * [
+   *   {
+   *     email: 'account@example.com',
+   *     destinationOu: 'XXXXXXXXX',
+   *   },
+   *   {
+   *     email: 'account@example.com',
+   *     destinationOu: 'XXXXXXXXX',
+   *   },
+   * ]
+   * ```
+   */
+  configuration: IMoveAccountsBatchConfiguration;
+}
+
+/**
+ * AWS Organizations batch move accounts module interface
+ *
+ */
+export interface IMoveAccountsBatchModule {
+  /**
+   * Handler function to manage Accelerator Modules
+   *
+   * @param props {@link IMoveAccountsBatchHandlerParameter}
+   * @returns status string
+   *
+   */
+  handler(props: IMoveAccountsBatchHandlerParameter): Promise<string>;
+}

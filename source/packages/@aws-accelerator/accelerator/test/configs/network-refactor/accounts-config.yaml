@@ -1,0 +1,48 @@
+mandatoryAccounts:
+  - name: Management
+    description: >-
+      The management (primary) account. Do not change the name field for this
+      mandatory account. Note, the account name key does not need to match the
+      AWS account name.
+    email: network-testing-root@example.com
+    organizationalUnit: Root
+    warm: false
+  - name: LogArchive
+    description: >-
+      The log archive account. Do not change the name field for this mandatory
+      account. Note, the account name key does not need to match the AWS account
+      name.
+    email: network-testing-logging@example.com
+    organizationalUnit: Security
+    warm: false
+  - name: Audit
+    description: >-
+      The security audit account (also referred to as the audit account). Do not
+      change the name field for this mandatory account. Note, the account name
+      key does not need to match the AWS account name.
+    email: network-testing-audit@example.com
+    organizationalUnit: Security
+    warm: false
+workloadAccounts:
+  - name: SharedServices
+    description: The SharedServices account
+    email: network-testing-sharedservices@example.com 
+    organizationalUnit: Infrastructure
+  - name: Network
+    description: The Network account
+    email: network-testing-networking@example.com
+    organizationalUnit: Infrastructure
+    accountAlias: sample-config-cicd-01-network-account-alias
+accountIds:
+  - email: network-testing-root@example.com
+    accountId: '111111111111'
+  - email: network-testing-logging@example.com
+    accountId: '222222222222'
+  - email: network-testing-audit@example.com
+    accountId: '333333333333'
+  - email: network-testing-sharedservices@example.com 
+    accountId: '444444444444'
+  - email: all-enabled-network@example.com
+    accountId: '555555555555'
+  - email: network-testing-networking@example.com
+    accountId: '666666666666'

@@ -28,7 +28,6 @@ import * as i from './models/global-config';
 
 import { AccountsConfig } from './accounts-config';
 import { ReplacementsConfig } from './replacements-config';
-import { OrganizationConfig } from './organization-config';
 
 const logger = createLogger(['global-config']);
 
@@ -54,20 +53,16 @@ export class centralizeCdkBucketsConfig implements i.ICentralizeCdkBucketsConfig
   readonly enable = true;
 }
 
-export class StackRefactor implements i.IStackRefactor {
-  readonly networkVpcStack: boolean = false;
-}
-
 export class cdkOptionsConfig implements i.ICdkOptionsConfig {
   readonly centralizeBuckets = true;
   readonly useManagementAccessRole = true;
   readonly customDeploymentRole = undefined;
   readonly forceBootstrap = undefined;
+  readonly deploymentMethod?: 'change-set' | 'direct' | undefined = undefined;
   /**
    * Determines if the LZA pipeline will skip the static config validation step during the pipeline's Build phase. This can be helpful in cases where the config-validator incorrectly throws errors for a valid configuration.
    */
   readonly skipStaticValidation = undefined;
-  readonly stackRefactor: StackRefactor | undefined = undefined;
 }
 
 export class CloudTrailSettingsConfig implements i.ICloudTrailSettingsConfig {
@@ -408,6 +403,11 @@ export class ElbLogBucketConfig implements i.IElbLogBucketConfig {
   readonly customPolicyOverrides: t.CustomS3ResourcePolicyOverridesConfig | undefined = undefined;
 }
 
+export class CloudWatchLogSkipBulkUpdateConfig implements i.ICloudWatchLogSkipBulkUpdateConfig {
+  readonly enable: boolean = false;
+  readonly skipBulkUpdateTargets: t.DeploymentTargets | undefined = undefined;
+}
+
 export class CloudWatchLogsExclusionConfig implements i.ICloudWatchLogsExclusionConfig {
   readonly organizationalUnits: string[] | undefined = undefined;
   readonly regions: t.Region[] | undefined = undefined;
@@ -443,12 +443,14 @@ export class CloudWatchLogsConfig implements i.ICloudWatchLogsConfig {
   readonly dynamicPartitioningByAccountId: boolean | undefined = undefined;
   readonly enable: boolean | undefined = undefined;
   readonly encryption: ServiceEncryptionConfig | undefined = undefined;
+  readonly skipBulkUpdate: CloudWatchLogSkipBulkUpdateConfig | undefined = undefined;
   readonly exclusions: CloudWatchLogsExclusionConfig[] | undefined = undefined;
   readonly replaceLogDestinationArn: string | undefined = undefined;
   readonly dataProtection: CloudWatchDataProtectionConfig | undefined = undefined;
   readonly firehose: CloudWatchFirehoseConfig | undefined = undefined;
   readonly subscription: CloudWatchSubscriptionConfig | undefined = undefined;
   readonly kinesis: CloudWatchKinesisConfig | undefined = undefined;
+  readonly organizationIdConditionSupported: boolean | undefined = undefined;
 }
 
 export class LoggingConfig implements i.ILoggingConfig {
@@ -564,12 +566,28 @@ export class SsmParameterConfig implements i.ISsmParameterConfig {
   readonly value = '';
 }
 
+export class StackPolicyConfig implements i.IStackPolicyConfig {
+  readonly enable: boolean = false;
+  readonly protectedTypes: string[] = [];
+}
+
+export class RootUserManagementCapabiltiesConfig implements i.IRootUserManagementCapabiltiesConfig {
+  readonly rootCredentialsManagement: boolean = false;
+  readonly allowRootSessions: boolean = false;
+}
+
+export class CentralRootUserManagementConfig implements i.ICentralRootUserManagementConfig {
+  readonly enable: boolean = false;
+  readonly capabilities: RootUserManagementCapabiltiesConfig = new RootUserManagementCapabiltiesConfig();
+}
+
 export class GlobalConfig implements i.IGlobalConfig {
   /**
    * Global configuration file name, this file must be present in accelerator config repository
    */
   static readonly FILENAME = 'global-config.yaml';
   readonly homeRegion: string = '';
+  readonly useV2Stacks: boolean | undefined = undefined;
   readonly enabledRegions: t.Region[] = [];
   readonly managementAccountAccessRole: string = '';
   readonly cloudwatchLogRetentionInDays = 3653;
@@ -593,6 +611,8 @@ export class GlobalConfig implements i.IGlobalConfig {
   readonly s3: S3GlobalConfig | undefined = undefined;
   readonly defaultEventBus: DefaultEventBusConfig | undefined = undefined;
   readonly sqs: SqsConfig | undefined = undefined;
+  readonly stackPolicy: StackPolicyConfig | undefined;
+  readonly centralRootUserManagement?: CentralRootUserManagementConfig | undefined = undefined;
 
   /**
    * SSM IAM Role Parameters to be loaded for session manager policy attachments
@@ -613,6 +633,7 @@ export class GlobalConfig implements i.IGlobalConfig {
       homeRegion: string;
       controlTower: { enable: boolean; landingZone?: ControlTowerLandingZoneConfig };
       managementAccountAccessRole: string;
+      useV2Stacks?: boolean;
     },
     values?: i.IGlobalConfig,
   ) {
@@ -627,6 +648,7 @@ export class GlobalConfig implements i.IGlobalConfig {
         controls: [],
       };
       this.managementAccountAccessRole = props.managementAccountAccessRole;
+      this.useV2Stacks = props.useV2Stacks;
     }
   }
 
@@ -635,12 +657,13 @@ export class GlobalConfig implements i.IGlobalConfig {
   }
 
   /**
-   * Load from file in given directory
+   * Load from file in given directory by processing replacementsConfig.
+   * Use loadRawGlobalConfig to load with placeholder replacements
    * @param dir
-   * @param validateConfig
+   * @param replacementsConfig
    * @returns
    */
-  static load(dir: string, replacementsConfig?: ReplacementsConfig): GlobalConfig {
+  static load(dir: string, replacementsConfig: ReplacementsConfig): GlobalConfig {
     const initialBuffer = fs.readFileSync(path.join(dir, GlobalConfig.FILENAME), 'utf8');
     const buffer = replacementsConfig ? replacementsConfig.preProcessBuffer(initialBuffer) : initialBuffer;
     const values = t.parseGlobalConfig(yaml.load(buffer));
@@ -667,17 +690,19 @@ export class GlobalConfig implements i.IGlobalConfig {
    * loading is not accidentally used to partially load config files.
    */
   static loadRawGlobalConfig(dir: string): GlobalConfig {
-    const accountsConfig = AccountsConfig.load(dir);
-    const orgConfig = OrganizationConfig.load(dir);
-    let replacementsConfig: ReplacementsConfig;
-
-    if (fs.existsSync(path.join(dir, ReplacementsConfig.FILENAME))) {
-      replacementsConfig = ReplacementsConfig.load(dir, accountsConfig, true);
+    const accountFilePath = path.join(dir, AccountsConfig.FILENAME);
+    let accountsConfig: AccountsConfig;
+    if (fs.existsSync(accountFilePath)) {
+      accountsConfig = AccountsConfig.load(dir);
     } else {
-      replacementsConfig = new ReplacementsConfig();
+      // If the accounts-config.yaml file does not exist next to the global-config.yaml, we use dummy values in order to load the global config successfully.
+      accountsConfig = new AccountsConfig({
+        managementAccountEmail: 'mangement@example.com',
+        logArchiveAccountEmail: 'log@example.com',
+        auditAccountEmail: 'audit@example.com',
+      });
     }
-
-    replacementsConfig.loadReplacementValues({}, orgConfig.enable);
+    const replacementsConfig = ReplacementsConfig.load(dir, accountsConfig);
     return GlobalConfig.load(dir, replacementsConfig);
   }
 
@@ -685,9 +710,10 @@ export class GlobalConfig implements i.IGlobalConfig {
    * Load from string content
    * @param content
    */
-  static loadFromString(content: string): GlobalConfig | undefined {
+  static loadFromString(content: string, replacementsConfig: ReplacementsConfig): GlobalConfig | undefined {
+    const buffer = replacementsConfig ? replacementsConfig.preProcessBuffer(content) : content;
     try {
-      const values = t.parseGlobalConfig(yaml.load(content));
+      const values = t.parseGlobalConfig(yaml.load(buffer));
       return new GlobalConfig(values);
     } catch (e) {
       logger.error('Error parsing input, global config undefined');

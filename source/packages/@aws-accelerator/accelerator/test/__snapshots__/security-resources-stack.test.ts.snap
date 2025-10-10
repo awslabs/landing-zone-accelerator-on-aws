@@ -133,7 +133,13 @@ exports[`SecurityResourcesStack Construct(SecurityResourcesStack):  Snapshot Tes
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
         "Description": "AWS Config custom rule function used for "accelerator-attach-ec2-instance-profile" rule",
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
+          },
+        },
         "Handler": "index.handler",
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "AcceleratorAttachEc2InstanceProfileFunctionServiceRoleF2BC24EC",
@@ -854,7 +860,13 @@ exports[`SecurityResourcesStack Construct(SecurityResourcesStack):  Snapshot Tes
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
         "Description": "AWS Config custom rule function used for "accelerator-ec2-instance-profile-permission" rule",
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
+          },
+        },
         "Handler": "index.handler",
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "AcceleratorEc2InstanceProfilePermissionFunctionServiceRoleAA6A6427",
@@ -1986,7 +1998,13 @@ exports[`SecurityResourcesStack Construct(SecurityResourcesStack):  Snapshot Tes
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
         "Description": "AWS Config custom rule function used for "accelerator-target-document-01" rule",
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
+          },
+        },
         "Handler": "index.handler",
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "AcceleratorTargetDocument01FunctionServiceRoleCDB753E0",
@@ -2186,7 +2204,13 @@ exports[`SecurityResourcesStack Construct(SecurityResourcesStack):  Snapshot Tes
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
         "Description": "Function used in Attach-IAM-Instance-Profile SSM document for "accelerator-target-document-01" custom config rule to remediation",
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
+          },
+        },
         "Handler": "index.handler",
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "AcceleratorTargetDocument01RemediationRoleB6FD3A5D",
@@ -2439,7 +2463,13 @@ exports[`SecurityResourcesStack Construct(SecurityResourcesStack):  Snapshot Tes
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
         "Description": "AWS Config custom rule function used for "accelerator-waf-logging-enabled" rule",
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
+          },
+        },
         "Handler": "index.handler",
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "AcceleratorWafLoggingEnabledFunctionServiceRole3388E650",
@@ -2709,8 +2739,13 @@ exports[`SecurityResourcesStack Construct(SecurityResourcesStack):  Snapshot Tes
           "S3Bucket": "cdk-hnb659fds-assets-111111111111-us-east-1",
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
+          },
+        },
         "Handler": "__entrypoint__.handler",
-        "MemorySize": 128,
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "AppTest2CustomCreateLogGroupCustomResourceProviderRole24FD6060",
@@ -2796,6 +2831,15 @@ exports[`SecurityResourcesStack Construct(SecurityResourcesStack):  Snapshot Tes
                   ],
                   "Effect": "Allow",
                   "Resource": "*",
+                },
+                {
+                  "Action": [
+                    "kms:Encrypt",
+                    "kms:Decrypt",
+                    "kms:GenerateDataKey",
+                  ],
+                  "Effect": "Allow",
+                  "Resource": "arn:aws:kms:us-east-1:111111111111:key/121ac3b6-8d53-4d8a-a05c-1234567789",
                 },
               ],
               "Version": "2012-10-17",
@@ -3465,8 +3509,13 @@ exports[`SecurityResourcesStack Construct(SecurityResourcesStack):  Snapshot Tes
           "S3Bucket": "cdk-hnb659fds-assets-111111111111-us-east-1",
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
+          },
+        },
         "Handler": "__entrypoint__.handler",
-        "MemorySize": 128,
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "CustomConfigServiceTagsCustomResourceProviderRoleDC1C2A56",
@@ -3549,8 +3598,13 @@ exports[`SecurityResourcesStack Construct(SecurityResourcesStack):  Snapshot Tes
           "S3Bucket": "cdk-hnb659fds-assets-111111111111-us-east-1",
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
+          },
+        },
         "Handler": "__entrypoint__.handler",
-        "MemorySize": 128,
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "CustomSessionManagerLoggingCustomResourceProviderRole1D8EE686",
@@ -3634,8 +3688,13 @@ exports[`SecurityResourcesStack Construct(SecurityResourcesStack):  Snapshot Tes
           "S3Bucket": "cdk-hnb659fds-assets-111111111111-us-east-1",
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
+          },
+        },
         "Handler": "__entrypoint__.handler",
-        "MemorySize": 128,
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "CustomSsmGetParameterValueCustomResourceProviderRoleB3AFDDB2",
@@ -4156,6 +4215,11 @@ exports[`SecurityResourcesStack Construct(SecurityResourcesStack):  Snapshot Tes
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
         "Description": "Creates a CloudWatch Logs Group to store SecurityHub findings and updates CW Log Group resource policy",
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
+          },
+        },
         "Handler": "index.handler",
         "KmsKeyArn": {
           "Ref": "SsmParameterValueacceleratorkmslambdakeyarnC96584B6F00A464EAD1953AFF4B05118Parameter",
@@ -4339,6 +4403,7 @@ exports[`SecurityResourcesStack Construct(SecurityResourcesStack):  Snapshot Tes
         "Description": "AWS CDK resource provider framework - onEvent (AWSAccelerator-SecurityResourcesStack-111111111111-us-east-1/SecurityHubEventsLog/SecurityHubEventsFunction/Resource)",
         "Environment": {
           "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
             "USER_ON_EVENT_FUNCTION_ARN": {
               "Fn::GetAtt": [
                 "SecurityHubEventsLogSecurityHubEventsFunction6170C5C5",
@@ -4348,6 +4413,7 @@ exports[`SecurityResourcesStack Construct(SecurityResourcesStack):  Snapshot Tes
           },
         },
         "Handler": "framework.onEvent",
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "SecurityHubEventsLogSecurityHubEventsFunctionframeworkonEventServiceRole2DBDE006",
@@ -4549,7 +4615,7 @@ exports[`SecurityResourcesStack Construct(SecurityResourcesStack):  Snapshot Tes
       "Properties": {
         "Name": "/accelerator/AWSAccelerator-SecurityResourcesStack-111111111111-us-east-1/version",
         "Type": "String",
-        "Value": "1.12.0",
+        "Value": "1.13.0",
       },
       "Type": "AWS::SSM::Parameter",
     },
@@ -4594,6 +4660,7 @@ exports[`SecurityResourcesStack Construct(SecurityResourcesStack):  Snapshot Tes
             ],
           ],
         },
+        "sendToS3": true,
       },
       "Type": "Custom::SsmSessionManagerSettings",
       "UpdateReplacePolicy": "Delete",
@@ -4642,32 +4709,6 @@ exports[`SecurityResourcesStack Construct(SecurityResourcesStack):  Snapshot Tes
         },
       },
       "Type": "AWS::KMS::Alias",
-    },
-    "SsmSessionManagerSettingsSessionManagerUserKMSPolicyFB96BB42": {
-      "Properties": {
-        "Description": "",
-        "ManagedPolicyName": "AWSAccelerator-SessionManagerUserKMS-us-east-1",
-        "Path": "/",
-        "PolicyDocument": {
-          "Statement": [
-            {
-              "Action": [
-                "kms:Decrypt",
-                "kms:GenerateDataKey",
-              ],
-              "Effect": "Allow",
-              "Resource": {
-                "Fn::GetAtt": [
-                  "SsmSessionManagerSettingsSessionManagerSessionKey23B7175C",
-                  "Arn",
-                ],
-              },
-            },
-          ],
-          "Version": "2012-10-17",
-        },
-      },
-      "Type": "AWS::IAM::ManagedPolicy",
     },
     "UnauthorizedApiCallsMetricFilter95DF459D": {
       "DependsOn": [
@@ -4840,7 +4881,13 @@ exports[`delegatedAdminStack Construct(SecurityResourcesStack):  Snapshot Test 1
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
         "Description": "AWS Config custom rule function used for "accelerator-attach-ec2-instance-profile" rule",
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
+          },
+        },
         "Handler": "index.handler",
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "AcceleratorAttachEc2InstanceProfileFunctionServiceRoleF2BC24EC",
@@ -5344,7 +5391,13 @@ exports[`delegatedAdminStack Construct(SecurityResourcesStack):  Snapshot Test 1
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
         "Description": "AWS Config custom rule function used for "accelerator-ec2-instance-profile-permission" rule",
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
+          },
+        },
         "Handler": "index.handler",
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "AcceleratorEc2InstanceProfilePermissionFunctionServiceRoleAA6A6427",
@@ -7044,8 +7097,13 @@ exports[`delegatedAdminStack Construct(SecurityResourcesStack):  Snapshot Test 1
           "S3Bucket": "cdk-hnb659fds-assets-111111111111-us-east-1",
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
+          },
+        },
         "Handler": "__entrypoint__.handler",
-        "MemorySize": 128,
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "CustomSessionManagerLoggingCustomResourceProviderRole1D8EE686",
@@ -7129,8 +7187,13 @@ exports[`delegatedAdminStack Construct(SecurityResourcesStack):  Snapshot Test 1
           "S3Bucket": "cdk-hnb659fds-assets-111111111111-us-east-1",
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
+          },
+        },
         "Handler": "__entrypoint__.handler",
-        "MemorySize": 128,
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "CustomSsmGetParameterValueCustomResourceProviderRoleB3AFDDB2",
@@ -7366,6 +7429,11 @@ exports[`delegatedAdminStack Construct(SecurityResourcesStack):  Snapshot Test 1
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
         "Description": "Creates a CloudWatch Logs Group to store SecurityHub findings and updates CW Log Group resource policy",
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
+          },
+        },
         "Handler": "index.handler",
         "KmsKeyArn": {
           "Ref": "SsmParameterValueacceleratorkmslambdakeyarnC96584B6F00A464EAD1953AFF4B05118Parameter",
@@ -7549,6 +7617,7 @@ exports[`delegatedAdminStack Construct(SecurityResourcesStack):  Snapshot Test 1
         "Description": "AWS CDK resource provider framework - onEvent (AWSAccelerator-SecurityResourcesStack-111111111111-us-east-1/SecurityHubEventsLog/SecurityHubEventsFunction/Resource)",
         "Environment": {
           "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
             "USER_ON_EVENT_FUNCTION_ARN": {
               "Fn::GetAtt": [
                 "SecurityHubEventsLogSecurityHubEventsFunction6170C5C5",
@@ -7558,6 +7627,7 @@ exports[`delegatedAdminStack Construct(SecurityResourcesStack):  Snapshot Test 1
           },
         },
         "Handler": "framework.onEvent",
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "SecurityHubEventsLogSecurityHubEventsFunctionframeworkonEventServiceRole2DBDE006",
@@ -7676,6 +7746,16 @@ exports[`delegatedAdminStack Construct(SecurityResourcesStack):  Snapshot Test 1
       "Properties": {
         "Description": "Sends Security Hub Findings above threshold to CloudWatch Logs",
         "EventPattern": {
+          "detail": {
+            "findings": {
+              "Severity": {
+                "Label": [
+                  "CRITICAL",
+                  "HIGH",
+                ],
+              },
+            },
+          },
           "detail-type": [
             "Security Hub Findings - Imported",
           ],
@@ -7748,7 +7828,7 @@ exports[`delegatedAdminStack Construct(SecurityResourcesStack):  Snapshot Test 1
       "Properties": {
         "Name": "/accelerator/AWSAccelerator-SecurityResourcesStack-111111111111-us-east-1/version",
         "Type": "String",
-        "Value": "1.12.0",
+        "Value": "1.13.0",
       },
       "Type": "AWS::SSM::Parameter",
     },
@@ -7793,6 +7873,7 @@ exports[`delegatedAdminStack Construct(SecurityResourcesStack):  Snapshot Test 1
             ],
           ],
         },
+        "sendToS3": true,
       },
       "Type": "Custom::SsmSessionManagerSettings",
       "UpdateReplacePolicy": "Delete",
@@ -7841,32 +7922,6 @@ exports[`delegatedAdminStack Construct(SecurityResourcesStack):  Snapshot Test 1
         },
       },
       "Type": "AWS::KMS::Alias",
-    },
-    "SsmSessionManagerSettingsSessionManagerUserKMSPolicyFB96BB42": {
-      "Properties": {
-        "Description": "",
-        "ManagedPolicyName": "AWSAccelerator-SessionManagerUserKMS-us-east-1",
-        "Path": "/",
-        "PolicyDocument": {
-          "Statement": [
-            {
-              "Action": [
-                "kms:Decrypt",
-                "kms:GenerateDataKey",
-              ],
-              "Effect": "Allow",
-              "Resource": {
-                "Fn::GetAtt": [
-                  "SsmSessionManagerSettingsSessionManagerSessionKey23B7175C",
-                  "Arn",
-                ],
-              },
-            },
-          ],
-          "Version": "2012-10-17",
-        },
-      },
-      "Type": "AWS::IAM::ManagedPolicy",
     },
     "UnauthorizedApiCallsMetricFilter95DF459D": {
       "Properties": {

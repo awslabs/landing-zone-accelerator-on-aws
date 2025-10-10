@@ -17,6 +17,7 @@ import { Construct } from 'constructs';
 import path = require('path');
 import { NagSuppressions } from 'cdk-nag';
 import { DEFAULT_LAMBDA_RUNTIME } from '../../utils/lib/lambda';
+import { AcceleratorResourcePrefixes } from '../utils/app-utils';
 
 export interface ValidateEnvironmentConfigProps {
   readonly acceleratorConfigTable: cdk.aws_dynamodb.ITable;
@@ -45,7 +46,10 @@ export interface ValidateEnvironmentConfigProps {
    * Custom resource lambda log retention in days
    */
   readonly logRetentionInDays: number;
+  readonly prefixes: AcceleratorResourcePrefixes;
   readonly vpcsCidrs: { vpcName: string; logicalId: string; cidrs: string[]; parameterName: string }[];
+  readonly useV2StacksValue: boolean;
+  readonly v2StacksParamName: string;
 }
 
 /**
@@ -103,9 +107,6 @@ export class ValidateEnvironmentConfig extends Construct {
         `arn:${props.partition}:cloudformation:${props.region}:${props.managementAccountId}:stack/${props.stackName}*`,
       ],
     });
-    const validationParameters = props.vpcsCidrs.map(
-      p => `arn:${props.partition}:ssm:${props.region}:${props.managementAccountId}:parameter${p.parameterName}`,
-    );
     const ssmPolicy = new cdk.aws_iam.PolicyStatement({
       sid: 'sms',
       effect: cdk.aws_iam.Effect.ALLOW,
@@ -113,7 +114,16 @@ export class ValidateEnvironmentConfig extends Construct {
       resources: [
         props.driftDetectionParameter.parameterArn,
         props.driftDetectionMessageParameter.parameterArn,
-        ...validationParameters,
+        `arn:${props.partition}:ssm:${props.region}:${props.managementAccountId}:parameter${props.prefixes.ssmParamName}/validation/*/network/vpc/*/deployedCidrs`,
+        `arn:${props.partition}:ssm:${props.region}:${props.managementAccountId}:parameter${props.v2StacksParamName}`,
+      ],
+    });
+    const ssmCreateParamPolicy = new cdk.aws_iam.PolicyStatement({
+      sid: 'ssmCreate',
+      effect: cdk.aws_iam.Effect.ALLOW,
+      actions: ['ssm:PutParameter'],
+      resources: [
+        `arn:${props.partition}:ssm:${props.region}:${props.managementAccountId}:parameter${props.v2StacksParamName}`,
       ],
     });
 
@@ -131,6 +141,7 @@ export class ValidateEnvironmentConfig extends Construct {
     providerLambda.addToRolePolicy(kmsPolicy);
     providerLambda.addToRolePolicy(cloudformationPolicy);
     providerLambda.addToRolePolicy(ssmPolicy);
+    providerLambda.addToRolePolicy(ssmCreateParamPolicy);
 
     // Custom resource lambda log group
     const logGroup = new cdk.aws_logs.LogGroup(this, `${providerLambda.node.id}LogGroup`, {
@@ -160,8 +171,13 @@ export class ValidateEnvironmentConfig extends Construct {
         driftDetectionMessageParameterName: props.driftDetectionMessageParameter.parameterName,
         serviceControlPolicies: props.serviceControlPolicies,
         skipScpValidation: process.env['ACCELERATOR_SKIP_SCP_VALIDATION'] ?? 'no',
+        maxOuAttachedScps: process.env['ACCELERATOR_MAX_OU_ATTACHED_SCPS'] ?? 5,
+        maxAccountAttachedScps: process.env['ACCELERATOR_MAX_ACCOUNT_ATTACHED_SCPS'] ?? 5,
+        policyTagKey: props.policyTagKey,
         uuid: uuidv4(), // Generates a new UUID to force the resource to update,
         vpcCidrs: props.vpcsCidrs,
+        useV2StacksValue: props.useV2StacksValue,
+        v2StacksParamName: props.v2StacksParamName,
       },
     });
     // Ensure that the LogGroup is created by Cloudformation prior to Lambda execution
