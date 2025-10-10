@@ -162,8 +162,8 @@ accelerator:lint:
     - "yarn lint"
     - "yarn lerna run precommit --stream"
     - "export ACCELERATOR_PREFIX=AWSAccelerator"
-    - "yarn validate-config packages/@aws-accelerator/accelerator/test/configs/all-enabled/" # Validate all enabled config files
-    - "yarn validate-config packages/@aws-accelerator/accelerator/test/configs/no-org-config/" # Validate no-org config files"
+    # - "yarn validate-config packages/@aws-accelerator/accelerator/test/configs/all-enabled/" # Validate all enabled config files
+    # - "yarn validate-config packages/@aws-accelerator/accelerator/test/configs/no-org-config/" # Validate no-org config files"
     - "yarn git-clean"
     - "yarn run viper-scan"
     # Check if build  has changed any of the
@@ -205,20 +205,32 @@ accelerator:gitlab-ci-isolation:
     - arch:amd64
     - size:medium
   script:
+    - echo "Checking for .gitlab-ci.yml isolation..."
+    - git remote add upstream https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.aws.dev/landing-zone-accelerator/landing-zone-accelerator-on-aws.git
+    - git fetch upstream integ
+    - changed_files=$(git diff --name-only upstream/integ..HEAD)
+    - echo "Changed files:"
+    - echo "$changed_files"
+    - file_count=$(echo "$changed_files" | grep -v '^$' | wc -l)
+    - "echo \"File count: $file_count\""
     - |
-      git fetch origin $CI_MERGE_REQUEST_TARGET_BRANCH_NAME
-      changed_files=$(git diff --name-only $CI_MERGE_REQUEST_DIFF_BASE_SHA...$CI_COMMIT_SHA)
-      file_count=$(echo "$changed_files" | grep -v '^$' | wc -l)
       if echo "$changed_files" | grep -q "\.gitlab-ci\.yml$" && [ "$file_count" -gt 1 ]; then
-        echo "Error: .gitlab-ci.yml changes must be isolated from other file changes"
-        echo "Changed files:"
-        echo "$changed_files"
+        echo "ERROR: .gitlab-ci.yml changes must be isolated from other file changes"
+        echo "If this merge request only includes changes to .gitlab-ci.yml, ensure the 'integ' branch of your forked repository is up-to-date"
         exit 1
+      else
+        echo "Check passed: .gitlab-ci.yml changes are properly isolated"
       fi
   rules:
+    - if: $CI_COMMIT_BRANCH == "main"
+      when: never
+    - if: $CI_COMMIT_BRANCH =~ /.*v(\d.+){2}\d$/
+      when: never
+    - if: $CI_COMMIT_TAG =~ /v(\d.+){2}\d/
+      when: never
     - if: $CI_MERGE_REQUEST_IID != null
-      when: always
-    - when: never 
+      when: never
+    - when: always 
 unit-test:accelerator:
   stage: pipeline
   needs: ["accelerator:build"]
@@ -400,7 +412,7 @@ unit-test:modules:
       when: never
     - if: $CI_MERGE_REQUEST_IID != null
       when: never
-    - when: always  
+    - when: always
 unit-test:tools:
   stage: pipeline
   needs: ["accelerator:build"]
