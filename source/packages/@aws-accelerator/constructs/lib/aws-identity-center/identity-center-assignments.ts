@@ -81,8 +81,8 @@ export class IdentityCenterAssignments extends Construct {
           Action: [
             'iam:ListRoles',
             'iam:ListPolicies',
-            'identitystore:ListGroups',
-            'identitystore:ListUsers',
+            'identitystore:GetGroupId',
+            'identitystore:GetUserId',
             'sso:CreateAccountAssignment',
             'sso:DeleteAccountAssignment',
             'sso:ListAccountAssignments',

@@ -89,8 +89,8 @@ exports[`IdentityCenterStack > Construct(IdentityCenterStack):  Snapshot Test 1`
                   "Action": [
                     "iam:ListRoles",
                     "iam:ListPolicies",
-                    "identitystore:ListGroups",
-                    "identitystore:ListUsers",
+                    "identitystore:GetGroupId",
+                    "identitystore:GetUserId",
                     "sso:CreateAccountAssignment",
                     "sso:DeleteAccountAssignment",
                     "sso:ListAccountAssignments",
