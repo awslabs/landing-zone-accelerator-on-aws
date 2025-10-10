@@ -124,7 +124,9 @@ export class PrepareStack extends AcceleratorStack {
           encryption: cdk.aws_dynamodb.TableEncryption.CUSTOMER_MANAGED,
           encryptionKey: managementAccountKey,
           removalPolicy: cdk.RemovalPolicy.DESTROY,
-          pointInTimeRecovery: true,
+          pointInTimeRecoverySpecification: {
+            pointInTimeRecoveryEnabled: true,
+          },
         });
 
         configTable.addLocalSecondaryIndex({
@@ -310,7 +312,9 @@ export class PrepareStack extends AcceleratorStack {
         encryption: cdk.aws_dynamodb.TableEncryption.CUSTOMER_MANAGED,
         encryptionKey: managementAccountKey,
         removalPolicy: cdk.RemovalPolicy.DESTROY,
-        pointInTimeRecovery: true,
+        pointInTimeRecoverySpecification: {
+          pointInTimeRecoveryEnabled: true,
+        },
       });
 
       new cdk.aws_ssm.StringParameter(this, 'ResourceTableNameParameter', {
@@ -354,7 +358,9 @@ export class PrepareStack extends AcceleratorStack {
       encryption: cdk.aws_dynamodb.TableEncryption.CUSTOMER_MANAGED,
       encryptionKey: options.managementAccountKey,
       removalPolicy: cdk.RemovalPolicy.DESTROY,
-      pointInTimeRecovery: true,
+      pointInTimeRecoverySpecification: {
+        pointInTimeRecoveryEnabled: true,
+      },
     });
 
     // AwsSolutions-DDB3: The DynamoDB table does not have Point-in-time Recovery enabled.
@@ -375,7 +381,9 @@ export class PrepareStack extends AcceleratorStack {
       encryption: cdk.aws_dynamodb.TableEncryption.CUSTOMER_MANAGED,
       encryptionKey: options.managementAccountKey,
       removalPolicy: cdk.RemovalPolicy.DESTROY,
-      pointInTimeRecovery: true,
+      pointInTimeRecoverySpecification: {
+        pointInTimeRecoveryEnabled: true,
+      },
     });
 
     // AwsSolutions-DDB3: The DynamoDB table does not have Point-in-time Recovery enabled.
@@ -403,7 +411,9 @@ export class PrepareStack extends AcceleratorStack {
         billingMode: cdk.aws_dynamodb.BillingMode.PAY_PER_REQUEST,
         encryption: cdk.aws_dynamodb.TableEncryption.CUSTOMER_MANAGED,
         encryptionKey: options.managementAccountKey,
-        pointInTimeRecovery: true,
+        pointInTimeRecoverySpecification: {
+          pointInTimeRecoveryEnabled: true,
+        },
       });
 
       this.ssmParameters.push({
