@@ -537,16 +537,6 @@ export class AcceleratorToolkit {
       agentOptions.port = parseInt(proxyUrl.port);
     }
 
-    if (options.command === 'diff' || options.command === 'synth') {
-      new Toolkit({
-        sdkConfig: {
-          httpOptions: {
-            agent: new https.Agent(agentOptions),
-          },
-        },
-        toolkitStackName: toolkitStackName,
-      });
-    }
     return new Toolkit({
       sdkConfig: {
         httpOptions: {
@@ -561,6 +551,7 @@ export class AcceleratorToolkit {
             options.assumeRoleName,
             options.stage,
           ),
+          region: options.region ?? getGlobalRegion(options.partition),
         }),
       },
       toolkitStackName: toolkitStackName,

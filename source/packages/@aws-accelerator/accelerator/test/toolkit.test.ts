@@ -28,6 +28,22 @@ vi.mock('@aws-cdk/toolkit-lib', () => ({
   BootstrapEnvironments: {
     fromList: vi.fn().mockReturnValue('environments'),
   },
+  BaseCredentials: {
+    custom: vi.fn().mockReturnValue('mock-credentials'),
+  },
+  CdkAppMultiContext: vi.fn(),
+  ToolkitError: {
+    isAuthenticationError: vi.fn().mockReturnValue(false),
+    isAssemblyError: vi.fn().mockReturnValue(false),
+    isContextProviderError: vi.fn().mockReturnValue(false),
+    isToolkitError: vi.fn().mockReturnValue(false),
+  },
+}));
+
+// Mock AWS SDK credential providers
+vi.mock('@aws-sdk/credential-providers', () => ({
+  fromNodeProviderChain: vi.fn().mockReturnValue('mock-node-provider'),
+  fromTemporaryCredentials: vi.fn().mockReturnValue('mock-temp-credentials'),
 }));
 
 describe('AcceleratorToolkit', () => {
@@ -182,6 +198,54 @@ describe('AcceleratorToolkit', () => {
           forceDeployment: false,
         }),
       );
+    });
+  });
+
+  describe('getCdkToolKit', () => {
+    it('should create toolkit with correct configuration', async () => {
+      // Arrange
+      const options = {
+        command: 'deploy',
+        accountId: '123456789012',
+        region: 'us-east-1',
+        partition: 'aws',
+        stackPrefix: 'AWSAccelerator',
+        managementAccountId: '123456789012',
+        enableSingleAccountMode: false,
+        useExistingRoles: false,
+      };
+      const toolkitStackName = 'AWSAccelerator-CDKToolkit';
+
+      // Act
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const result = await (AcceleratorToolkit as any).getCdkToolKit(options, toolkitStackName);
+
+      // Assert
+      expect(result).toBeDefined();
+      expect(Toolkit).toHaveBeenCalled();
+    });
+
+    it('should create toolkit with GovCloud configuration', async () => {
+      // Arrange
+      const options = {
+        command: 'deploy',
+        accountId: '123456789012',
+        region: 'us-gov-west-1',
+        partition: 'aws-us-gov',
+        stackPrefix: 'AWSAccelerator',
+        managementAccountId: '123456789012',
+        enableSingleAccountMode: false,
+        useExistingRoles: false,
+      };
+      const toolkitStackName = 'AWSAccelerator-CDKToolkit';
+
+      // Act
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const result = await (AcceleratorToolkit as any).getCdkToolKit(options, toolkitStackName);
+
+      // Assert
+      expect(result).toBeDefined();
+      expect(Toolkit).toHaveBeenCalled();
     });
   });
 });
