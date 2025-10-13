@@ -17,6 +17,9 @@ import { IGetCloudFormationTemplatesHandlerParameter } from '../interfaces/aws-c
 import { GetCloudFormationTemplatesModule } from '../lib/aws-cloudformation/get-cloudformation-templates';
 import { IStackPolicyHandlerParameter } from '../interfaces/aws-cloudformation/create-stack-policy';
 import { StackPolicyModule } from '../lib/aws-cloudformation/create-stack-policy';
+import { ICustomResourceTemplateModifierHandlerParameter } from '../interfaces/aws-cloudformation/custom-resource-template-modifier';
+import { CustomResourceTemplateModifierModule } from '../lib/aws-cloudformation/custom-resource-template-modifier';
+import { ModuleHandlerReturnType } from '../common/types';
 
 process.on('uncaughtException', err => {
   throw err;
@@ -83,6 +86,31 @@ export async function getCloudFormationTemplates(input: IGetCloudFormationTempla
 export async function createStackPolicy(input: IStackPolicyHandlerParameter): Promise<string> {
   try {
     return await new StackPolicyModule().handler(input);
+  } catch (e: unknown) {
+    logger.error(e);
+    throw e;
+  }
+}
+
+/**
+ * Function to update CloudFormation template for given custom resources
+ * @param input {@link ICustomResourceTemplateModifierHandlerParameter}
+ * @returns status {@link ModuleHandlerReturnType}
+ *
+ * @example
+ * {
+ *   directory: './',
+ *   accountId: 'XXXXXXXXXXXX',
+ *   region: 'us-east-1',
+ *   stackName: 'stack1',
+ *   resourceNames: ['resource1', 'resource2'],
+ * }
+ */
+export async function customResourceTemplateModifier(
+  input: ICustomResourceTemplateModifierHandlerParameter,
+): Promise<ModuleHandlerReturnType> {
+  try {
+    return await new CustomResourceTemplateModifierModule().handler(input);
   } catch (e: unknown) {
     logger.error(e);
     throw e;

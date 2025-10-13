@@ -25,3 +25,6 @@ viperlight*.zip
 
 ### Sonarqube
 .scannerwork
+
+### Unit test
+source/packages/@aws-lza/custom-resource-templates/

@@ -73,11 +73,17 @@ export { manageEbsDefaultEncryption } from './executors/accelerator-amazon-ec2';
 export { IDeleteDefaultVpcParameter } from './interfaces/amazon-ec2/delete-default-vpc';
 export { deleteDefaultVpc } from './executors/accelerator-amazon-ec2';
 
+//
+// AWS CloudFormation resources
+//
 export { IGetCloudFormationTemplatesHandlerParameter } from './interfaces/aws-cloudformation/get-cloudformation-templates';
 export { getCloudFormationTemplates } from './executors/accelerator-aws-cloudformation';
 
 export { IStackPolicyHandlerParameter } from './interfaces/aws-cloudformation/create-stack-policy';
 export { createStackPolicy } from './executors/accelerator-aws-cloudformation';
+
+export { ICustomResourceTemplateModifierHandlerParameter } from './interfaces/aws-cloudformation/custom-resource-template-modifier';
+export { customResourceTemplateModifier } from './executors/accelerator-aws-cloudformation';
 
 //
 // AWS GuardDuty Module resources
