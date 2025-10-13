@@ -140,6 +140,7 @@ export function addAcceleratorTags(
     'AWS::Route53Resolver::ResolverEndpoint',
     'AWS::Route53Resolver::ResolverRule',
     'AWS::Route53Resolver::ResolverQueryLoggingConfig',
+    'AWS::Events::Rule',
   ];
 
   const tagsWithPrefix = globalConfig.tags;
