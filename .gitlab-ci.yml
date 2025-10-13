@@ -224,6 +224,8 @@ accelerator:gitlab-ci-isolation:
   rules:
     - if: $CI_COMMIT_BRANCH == "main"
       when: never
+    - if: $CI_COMMIT_BRANCH == "integ"
+      when: never
     - if: $CI_COMMIT_BRANCH =~ /.*v(\d.+){2}\d$/
       when: never
     - if: $CI_COMMIT_TAG =~ /v(\d.+){2}\d/
