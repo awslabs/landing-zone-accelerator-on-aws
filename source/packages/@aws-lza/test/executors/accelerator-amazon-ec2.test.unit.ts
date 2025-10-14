@@ -12,15 +12,23 @@
  */
 
 import { describe, beforeEach, expect, test, vi, afterEach } from 'vitest';
-import { manageEbsDefaultEncryption, deleteDefaultVpc } from '../../executors/accelerator-amazon-ec2';
+import type { Mock } from 'vitest';
+import {
+  manageEbsDefaultEncryption,
+  deleteDefaultSecurityGroupRules,
+  deleteDefaultVpc,
+} from '../../executors/accelerator-amazon-ec2';
 import { ManageEbsDefaultEncryptionModule } from '../../lib/amazon-ec2/manage-ebs-default-encryption/index';
+import { DeleteDefaultSecurityGroupRulesModule } from '../../lib/amazon-ec2/delete-default-security-group-rules';
 import { DeleteDefaultVpcModule } from '../../lib/amazon-ec2/delete-default-vpc';
 import { MOCK_CONSTANTS } from '../mocked-resources';
 import { IManageEbsDefaultEncryptionHandlerParameter } from '../../interfaces/amazon-ec2/manage-ebs-default-encryption';
+import { IDeleteDefaultSecurityGroupRulesParameter } from '../../interfaces/amazon-ec2/delete-default-security-group-rules';
 import { IDeleteDefaultVpcParameter } from '../../interfaces/amazon-ec2/delete-default-vpc';
 
 // Mock dependencies
 vi.mock('../../lib/amazon-ec2/manage-ebs-default-encryption/index');
+vi.mock('../../lib/amazon-ec2/delete-default-security-group-rules');
 vi.mock('../../lib/amazon-ec2/delete-default-vpc');
 
 describe('AmazonEc2Executor', () => {
@@ -37,7 +45,7 @@ describe('AmazonEc2Executor', () => {
       // Setup
       const mockHandler = vi.fn().mockResolvedValue('SUCCESS');
 
-      (ManageEbsDefaultEncryptionModule as unknown as vi.Mock).mockImplementation(() => ({
+      (ManageEbsDefaultEncryptionModule as unknown as Mock).mockImplementation(() => ({
         handler: mockHandler,
       }));
 
@@ -56,7 +64,7 @@ describe('AmazonEc2Executor', () => {
       const errorMessage = 'Operation failed';
       const mockHandler = vi.fn().mockRejectedValue(new Error(errorMessage));
 
-      (ManageEbsDefaultEncryptionModule as unknown as vi.Mock).mockImplementation(() => ({
+      (ManageEbsDefaultEncryptionModule as unknown as Mock).mockImplementation(() => ({
         handler: mockHandler,
       }));
 
@@ -64,6 +72,104 @@ describe('AmazonEc2Executor', () => {
       await expect(manageEbsDefaultEncryption(input)).rejects.toThrow(errorMessage);
 
       expect(mockHandler).toHaveBeenCalledWith(input);
+      expect(mockHandler).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe('deleteDefaultSecurityGroupRules', () => {
+    const input: IDeleteDefaultSecurityGroupRulesParameter = {
+      ...MOCK_CONSTANTS.runnerParameters,
+      configuration: {
+        vpcId: 'vpc-12345678',
+      },
+      operation: 'delete-default-security-group-rules',
+    };
+
+    test('should successfully delete default security group rules with dry run', async () => {
+      // Setup
+      const expectedResponse =
+        '[DRY-RUN]: delete-default-security-group-rules delete-default-security-group-rules (no actual changes were made)\nValidation: ✓ Successful\nStatus: Will delete default security group rules for VPC: vpc-12345678';
+      const mockHandler = vi.fn().mockResolvedValue(expectedResponse);
+
+      (DeleteDefaultSecurityGroupRulesModule as unknown as Mock).mockImplementation(() => ({
+        handler: mockHandler,
+      }));
+
+      const dryRunInput = { ...input, dryRun: true };
+
+      // Execute
+      const result = await deleteDefaultSecurityGroupRules(dryRunInput);
+
+      // Verify
+      expect(result).toBe(expectedResponse);
+      expect(mockHandler).toHaveBeenCalledWith(dryRunInput);
+      expect(mockHandler).toHaveBeenCalledTimes(1);
+    });
+
+    test('should successfully delete default security group rules without dry run', async () => {
+      // Setup
+      const expectedResponse = 'Successfully deleted default security group rules for VPC: vpc-12345678';
+      const mockHandler = vi.fn().mockResolvedValue(expectedResponse);
+
+      (DeleteDefaultSecurityGroupRulesModule as unknown as Mock).mockImplementation(() => ({
+        handler: mockHandler,
+      }));
+
+      const actualRunInput = { ...input, dryRun: false };
+
+      // Execute
+      const result = await deleteDefaultSecurityGroupRules(actualRunInput);
+
+      // Verify
+      expect(result).toBe(expectedResponse);
+      expect(mockHandler).toHaveBeenCalledWith(actualRunInput);
+      expect(mockHandler).toHaveBeenCalledTimes(1);
+    });
+
+    test('should handle security group not found', async () => {
+      // Setup
+      const errorMessage = 'ServiceException: Default security group not found for VPC: vpc-12345678';
+      const mockHandler = vi.fn().mockRejectedValue(new Error(errorMessage));
+
+      (DeleteDefaultSecurityGroupRulesModule as unknown as Mock).mockImplementation(() => ({
+        handler: mockHandler,
+      }));
+
+      // Execute && Verify
+      await expect(deleteDefaultSecurityGroupRules(input)).rejects.toThrow(errorMessage);
+
+      expect(mockHandler).toHaveBeenCalledWith(input);
+      expect(mockHandler).toHaveBeenCalledTimes(1);
+    });
+
+    test('should pass through all input parameters correctly', async () => {
+      // Setup
+      const mockHandler = vi.fn().mockResolvedValue('SUCCESS');
+      const customInput: IDeleteDefaultSecurityGroupRulesParameter = {
+        region: 'us-west-2',
+        partition: 'aws-us-gov',
+        configuration: {
+          vpcId: 'vpc-custom123',
+        },
+        operation: 'delete-default-security-group-rules',
+        dryRun: true,
+        solutionId: 'custom-solution',
+        credentials: {
+          accessKeyId: 'test-key',
+          secretAccessKey: 'test-secret',
+          sessionToken: 'test-token',
+        },
+      };
+
+      (DeleteDefaultSecurityGroupRulesModule as unknown as Mock).mockImplementation(() => ({
+        handler: mockHandler,
+      }));
+
+      // Execute
+      await deleteDefaultSecurityGroupRules(customInput);
+
+      // Verify
+      expect(mockHandler).toHaveBeenCalledWith(customInput);
       expect(mockHandler).toHaveBeenCalledTimes(1);
     });
   });
@@ -81,7 +187,7 @@ describe('AmazonEc2Executor', () => {
         '[DRY-RUN]: delete-default-vpc delete-default-vpc (no actual changes were made)\nValidation: ✓ Successful\nStatus: No default VPCs found in the region';
       const mockHandler = vi.fn().mockResolvedValue(expectedResponse);
 
-      (DeleteDefaultVpcModule as unknown as vi.Mock).mockImplementation(() => ({
+      (DeleteDefaultVpcModule as unknown as Mock).mockImplementation(() => ({
         handler: mockHandler,
       }));
 
@@ -101,7 +207,7 @@ describe('AmazonEc2Executor', () => {
       const expectedResponse = 'Successfully deleted 1 default VPC(s): vpc-12345';
       const mockHandler = vi.fn().mockResolvedValue(expectedResponse);
 
-      (DeleteDefaultVpcModule as unknown as vi.Mock).mockImplementation(() => ({
+      (DeleteDefaultVpcModule as unknown as Mock).mockImplementation(() => ({
         handler: mockHandler,
       }));
 
@@ -121,7 +227,7 @@ describe('AmazonEc2Executor', () => {
       const expectedResponse = 'No default VPCs found in the region';
       const mockHandler = vi.fn().mockResolvedValue(expectedResponse);
 
-      (DeleteDefaultVpcModule as unknown as vi.Mock).mockImplementation(() => ({
+      (DeleteDefaultVpcModule as unknown as Mock).mockImplementation(() => ({
         handler: mockHandler,
       }));
 
@@ -139,7 +245,7 @@ describe('AmazonEc2Executor', () => {
       const errorMessage = 'ServiceException: Failed to delete VPC vpc-12345: DependencyViolation';
       const mockHandler = vi.fn().mockRejectedValue(new Error(errorMessage));
 
-      (DeleteDefaultVpcModule as unknown as vi.Mock).mockImplementation(() => ({
+      (DeleteDefaultVpcModule as unknown as Mock).mockImplementation(() => ({
         handler: mockHandler,
       }));
 
@@ -155,7 +261,7 @@ describe('AmazonEc2Executor', () => {
       const errorMessage = 'AccessDenied: User is not authorized to perform this action';
       const mockHandler = vi.fn().mockRejectedValue(new Error(errorMessage));
 
-      (DeleteDefaultVpcModule as unknown as vi.Mock).mockImplementation(() => ({
+      (DeleteDefaultVpcModule as unknown as Mock).mockImplementation(() => ({
         handler: mockHandler,
       }));
 
@@ -171,7 +277,7 @@ describe('AmazonEc2Executor', () => {
       const errorMessage = 'NetworkingError: Unable to connect to AWS services';
       const mockHandler = vi.fn().mockRejectedValue(new Error(errorMessage));
 
-      (DeleteDefaultVpcModule as unknown as vi.Mock).mockImplementation(() => ({
+      (DeleteDefaultVpcModule as unknown as Mock).mockImplementation(() => ({
         handler: mockHandler,
       }));
 
@@ -199,7 +305,7 @@ describe('AmazonEc2Executor', () => {
         },
       };
 
-      (DeleteDefaultVpcModule as unknown as vi.Mock).mockImplementation(() => ({
+      (DeleteDefaultVpcModule as unknown as Mock).mockImplementation(() => ({
         handler: mockHandler,
       }));
 

@@ -18,6 +18,9 @@ import { ManageEbsDefaultEncryptionModule } from '../lib/amazon-ec2/manage-ebs-d
 import { IDeleteDefaultVpcParameter } from '../interfaces/amazon-ec2/delete-default-vpc';
 import { DeleteDefaultVpcModule } from '../lib/amazon-ec2/delete-default-vpc';
 
+import { IDeleteDefaultSecurityGroupRulesParameter } from '../interfaces/amazon-ec2/delete-default-security-group-rules';
+import { DeleteDefaultSecurityGroupRulesModule } from '../lib/amazon-ec2/delete-default-security-group-rules';
+
 process.on('uncaughtException', err => {
   throw err;
 });
@@ -60,6 +63,22 @@ export async function manageEbsDefaultEncryption(input: IManageEbsDefaultEncrypt
 }
 
 /**
+ * Function to manage default security group rules deletion in AWS account
+ * @param input {@link IDeleteDefaultSecurityGroupRulesParameter}
+ * @returns string
+ */
+
+export async function deleteDefaultSecurityGroupRules(
+  input: IDeleteDefaultSecurityGroupRulesParameter,
+): Promise<string> {
+  try {
+    return await new DeleteDefaultSecurityGroupRulesModule().handler(input);
+  } catch (e: unknown) {
+    logger.error(e);
+    throw e;
+  }
+}
+/*
  * Function to manage default VPC deletion in AWS account
  * @param input {@link IDeleteDefaultVpcParameter}
  * @returns string
