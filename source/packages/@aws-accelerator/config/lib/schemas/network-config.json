@@ -1162,6 +1162,10 @@
             "$ref": "#/definitions/ITag"
           },
           "type": "array"
+        },
+        "privateDns": {
+          "description": "(OPTIONAL) Enable or disable private DNS for the interface endpoints. When set to true, private DNS is enabled. When set to false, private DNS is disabled. When not specified, the default behavior applies: for central endpoints (central: true), private DNS is disabled by default; for non-central endpoints, private DNS is enabled by default.",
+          "type": "boolean"
         }
       },
       "required": [

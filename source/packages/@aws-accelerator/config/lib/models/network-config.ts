@@ -2394,6 +2394,23 @@ export interface IInterfaceEndpointConfig {
    * (OPTIONAL) An array of tag objects for the private hosted zones associated with the VPC Interface endpoints.
    */
   readonly tags?: t.ITag[];
+  /**
+   * (OPTIONAL) Enable or disable private DNS for the interface endpoints.
+   *
+   * @remarks
+   * When set to `true`, private DNS is enabled for the interface endpoint.
+   * When set to `false`, private DNS is disabled.
+   * When not specified, the default behavior applies:
+   * - For central endpoints (`central: true`), private DNS is disabled by default
+   * - For non-central endpoints, private DNS is enabled by default
+   *
+   * This is useful when you need to create S3 interface endpoints outside the central
+   * endpoint VPC for specific connectivity scenarios (e.g., Direct Connect) where you
+   * want to avoid conflicts with S3 gateway endpoints.
+   *
+   * @see {@link https://docs.aws.amazon.com/vpc/latest/privatelink/vpce-interface.html#vpce-private-dns}
+   */
+  readonly privateDns?: boolean;
 }
 
 export type SecurityGroupRuleType =

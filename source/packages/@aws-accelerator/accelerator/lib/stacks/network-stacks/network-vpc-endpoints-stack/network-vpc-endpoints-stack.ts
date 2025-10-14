@@ -726,7 +726,8 @@ export class NetworkVpcEndpointsStack extends NetworkStack {
 
     // Create the interface endpoint
     const securityGroupMap = new Map<string, SecurityGroup>();
-    const privateDnsValue = !vpcItem.interfaceEndpoints?.central ? true : false;
+    // Determine default privateDns value based on whether endpoints are central
+    const defaultPrivateDnsValue = !vpcItem.interfaceEndpoints?.central ? true : false;
 
     for (const endpointItem of vpcItem.interfaceEndpoints?.endpoints ?? []) {
       const globalRegion = getGlobalRegion(cdk.Stack.of(this).partition);
@@ -745,6 +746,12 @@ export class NetworkVpcEndpointsStack extends NetworkStack {
 
       // Create or get interface endpoint security group
       const endpointSg = this.createOrGetInterfaceEndpointSecurityGroup(vpcItem, endpointItem, securityGroupMap, vpcId);
+
+      // Use configured privateDns value if provided, otherwise use default based on central setting
+      const privateDnsValue =
+        vpcItem.interfaceEndpoints?.privateDns !== undefined
+          ? vpcItem.interfaceEndpoints.privateDns
+          : defaultPrivateDnsValue;
 
       // Create the interface endpoint
       const endpoint = new VpcEndpoint(this, `${pascalCase(vpcItem.name)}Vpc${pascalCase(endpointItem.service)}Ep`, {
