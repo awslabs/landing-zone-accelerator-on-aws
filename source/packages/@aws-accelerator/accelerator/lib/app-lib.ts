@@ -116,6 +116,17 @@ function createManagementAccountStacks(
 ) {
   const managementCdkApps: App[] = [];
   //
+  // BOOTSTRAP Stack
+  addCdkApps(
+    managementCdkApps,
+    createBootstrapStack(
+      context,
+      props,
+      { account: managementAccountId, region: globalRegion },
+      managementAccountId,
+      globalRegion,
+    ),
+  );
   // PREPARE Stack
   addCdkApps(managementCdkApps, createPrepareStack(context, props, managementAccountId, homeRegion));
   //
