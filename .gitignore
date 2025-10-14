@@ -73,6 +73,3 @@ viperlight*.zip
 ### Integ testing
 **/integ.*.ts.snapshot
 **/integ.*.ts.snapshot/**
-
-### Claude Code
-.claude/
