@@ -269,9 +269,9 @@ export function getStackDependencies(stackMappings: customStackMapping[]): custo
 
 function transformCfnParametersArrayToObject(
   parameters?: CfnParameter[],
-): { [parameterName: string]: string } | undefined {
+): { [parameterName: string]: string | string[] } | undefined {
   if (parameters) {
-    const parameterObject: { [key: string]: string } = {};
+    const parameterObject: { [key: string]: string | string[] } = {};
     for (const parameter of parameters) {
       parameterObject[parameter.name] = parameter.value;
     }

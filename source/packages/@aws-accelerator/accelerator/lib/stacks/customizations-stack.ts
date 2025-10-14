@@ -94,7 +94,8 @@ export class CustomizationsStack extends AcceleratorStack {
         const templateUrl = this.getAssetUrl(stackSet.name, stackSet.template);
 
         const parameters = stackSet.parameters?.map(parameter => {
-          return { parameterKey: parameter.name, parameterValue: parameter.value };
+          const parameterValue = Array.isArray(parameter.value) ? parameter.value.join(',') : parameter.value;
+          return { parameterKey: parameter.name, parameterValue };
         });
 
         const operationPreferences: cdk.CfnStackSet.OperationPreferencesProperty = {

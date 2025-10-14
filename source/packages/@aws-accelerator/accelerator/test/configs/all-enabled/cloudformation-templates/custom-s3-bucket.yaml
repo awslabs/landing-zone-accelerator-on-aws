@@ -8,10 +8,15 @@ Parameters:
     Description: A parameter passed as a dynamic lookup from SSM
     Type: String
     Default: ""
+  pListParameter:
+    Description: A parameter passed as a list of strings
+    Type: CommaDelimitedList
+    Default: ""
 Conditions:
   hasStringParameter: !Not [ !Equals [ !Ref pStringParameter, "" ]]
   hasDynamicParameter: !Not [ !Equals [ !Ref pDynamicParameter, "" ]]
-  hasParameters: !And [!Condition hasStringParameter, !Condition hasDynamicParameter]
+  hasListParameter: !Not [ !Equals [ !Join [ "", !Ref pListParameter ], "" ]]
+  hasParameters: !And [!Condition hasStringParameter, !Condition hasDynamicParameter, !Condition hasListParameter]
 Resources:
   LZACustomizationsBucket:
     Type: 'AWS::S3::Bucket'
@@ -53,3 +58,6 @@ Resources:
     Type: AWS::SNS::Topic
     Properties:
       TopicName: !Sub ${pDynamicParameter}-${pStringParameter}-topic
+      Tags:
+        - Key: ListValues
+          Value: !Join ["-", !Ref pListParameter]
