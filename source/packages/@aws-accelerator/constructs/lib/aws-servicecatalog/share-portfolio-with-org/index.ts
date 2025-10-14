@@ -86,26 +86,46 @@ export async function createPortfolioShare(
   tagShareOptions: boolean,
   nodeType: string,
 ): Promise<string> {
-  try {
-    const response = await throttlingBackOff(() =>
-      serviceCatalogClient.send(
-        new CreatePortfolioShareCommand({
-          PortfolioId: portfolioId,
-          OrganizationNode: {
-            Type: nodeType as OrganizationNodeType,
-            Value: orgResourceId,
-          },
-          ShareTagOptions: tagShareOptions,
-        }),
-      ),
-    );
-    return response.PortfolioShareToken!;
-  } catch (error) {
-    console.error(error);
-    throw new Error(
-      `Error while trying to create portfolio share with organization resource id: ${orgResourceId} with portfolio id: ${portfolioId}`,
-    );
+  const maxRetries = 5;
+  let retryCount = 0;
+
+  while (retryCount < maxRetries) {
+    try {
+      const response = await throttlingBackOff(() =>
+        serviceCatalogClient.send(
+          new CreatePortfolioShareCommand({
+            PortfolioId: portfolioId,
+            OrganizationNode: {
+              Type: nodeType as OrganizationNodeType,
+              Value: orgResourceId,
+            },
+            ShareTagOptions: tagShareOptions,
+          }),
+        ),
+      );
+      return response.PortfolioShareToken!;
+    } catch (error) {
+      // Retry on InvalidStateException
+      if ((error as Error).name === 'InvalidStateException') {
+        retryCount++;
+        if (retryCount < maxRetries) {
+          const waitTime = Math.min(1000 * Math.pow(2, retryCount), 10000); // Exponential backoff with max 10s
+          console.log(
+            `InvalidStateException encountered. Retrying in ${waitTime}ms (attempt ${retryCount}/${maxRetries})...`,
+          );
+          await delay(waitTime);
+          continue;
+        }
+      }
+      console.error(error);
+      throw new Error(
+        `Error while trying to create portfolio share with organization resource id: ${orgResourceId} with portfolio id: ${portfolioId}`,
+      );
+    }
   }
+  throw new Error(
+    `Failed to create portfolio share after ${maxRetries} retries for organization resource id: ${orgResourceId} with portfolio id: ${portfolioId}`,
+  );
 }
 
 export async function updatePortfolioShare(
@@ -114,25 +134,46 @@ export async function updatePortfolioShare(
   tagShareOptions: boolean,
   nodeType: string,
 ): Promise<string> {
-  try {
-    const response = await throttlingBackOff(() =>
-      serviceCatalogClient.send(
-        new UpdatePortfolioShareCommand({
-          PortfolioId: portfolioId,
-          OrganizationNode: {
-            Type: nodeType as OrganizationNodeType,
-            Value: orgResourceId,
-          },
-          ShareTagOptions: tagShareOptions,
-        }),
-      ),
-    );
-    return response.PortfolioShareToken!;
-  } catch (error) {
-    throw new Error(
-      `UpdatePortfolioShare ran into error with portfolio id: ${portfolioId} on organization resource: ${orgResourceId}`,
-    );
+  const maxRetries = 5;
+  let retryCount = 0;
+
+  while (retryCount < maxRetries) {
+    try {
+      const response = await throttlingBackOff(() =>
+        serviceCatalogClient.send(
+          new UpdatePortfolioShareCommand({
+            PortfolioId: portfolioId,
+            OrganizationNode: {
+              Type: nodeType as OrganizationNodeType,
+              Value: orgResourceId,
+            },
+            ShareTagOptions: tagShareOptions,
+          }),
+        ),
+      );
+      return response.PortfolioShareToken!;
+    } catch (error) {
+      // Retry on InvalidStateException
+      if ((error as Error).name === 'InvalidStateException') {
+        retryCount++;
+        if (retryCount < maxRetries) {
+          const waitTime = Math.min(1000 * Math.pow(2, retryCount), 10000); // Exponential backoff with max 10s
+          console.log(
+            `InvalidStateException encountered. Retrying in ${waitTime}ms (attempt ${retryCount}/${maxRetries})...`,
+          );
+          await delay(waitTime);
+          continue;
+        }
+      }
+      console.error(error);
+      throw new Error(
+        `UpdatePortfolioShare ran into error with portfolio id: ${portfolioId} on organization resource: ${orgResourceId}`,
+      );
+    }
   }
+  throw new Error(
+    `Failed to update portfolio share after ${maxRetries} retries for organization resource id: ${orgResourceId} with portfolio id: ${portfolioId}`,
+  );
 }
 
 export async function deletePortfolioShare(
@@ -140,22 +181,45 @@ export async function deletePortfolioShare(
   portfolioId: string,
   nodeType: string,
 ): Promise<string> {
-  try {
-    const response = await throttlingBackOff(() =>
-      serviceCatalogClient.send(
-        new DeletePortfolioShareCommand({
-          PortfolioId: portfolioId,
-          OrganizationNode: {
-            Type: nodeType as OrganizationNodeType,
-            Value: orgResourceId,
-          },
-        }),
-      ),
-    );
-    return response.PortfolioShareToken!;
-  } catch (error) {
-    throw new Error(`Delete Portfolio share failed on portfolio: ${portfolioId}, organization unit: ${orgResourceId}`);
+  const maxRetries = 5;
+  let retryCount = 0;
+
+  while (retryCount < maxRetries) {
+    try {
+      const response = await throttlingBackOff(() =>
+        serviceCatalogClient.send(
+          new DeletePortfolioShareCommand({
+            PortfolioId: portfolioId,
+            OrganizationNode: {
+              Type: nodeType as OrganizationNodeType,
+              Value: orgResourceId,
+            },
+          }),
+        ),
+      );
+      return response.PortfolioShareToken!;
+    } catch (error) {
+      // Retry on InvalidStateException
+      if ((error as Error).name === 'InvalidStateException') {
+        retryCount++;
+        if (retryCount < maxRetries) {
+          const waitTime = Math.min(1000 * Math.pow(2, retryCount), 10000); // Exponential backoff with max 10s
+          console.log(
+            `InvalidStateException encountered. Retrying in ${waitTime}ms (attempt ${retryCount}/${maxRetries})...`,
+          );
+          await delay(waitTime);
+          continue;
+        }
+      }
+      console.error(error);
+      throw new Error(
+        `Delete Portfolio share failed on portfolio: ${portfolioId}, organization unit: ${orgResourceId}`,
+      );
+    }
   }
+  throw new Error(
+    `Failed to delete portfolio share after ${maxRetries} retries for organization resource id: ${orgResourceId} with portfolio id: ${portfolioId}`,
+  );
 }
 
 export async function checkPortfolioShareTokenStatus(
@@ -201,8 +265,8 @@ export async function modifyPortfolioShare(
   tagShareOptions: boolean,
   nodeType: string,
 ) {
-  // Random delay to reduce the chance to process more than one portfolio share action at the same time which triggers InvalidStateException
-  await delay(Math.floor(Math.random() * 5) * 5000);
+  // Sequential processing is now enforced via CDK resource dependencies
+  // Retry logic for InvalidStateException is implemented in individual functions
   let portfolioShareToken = '';
   let portfolioShareStatus = 'NOT_STARTED';
   switch (requestType) {
