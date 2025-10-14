@@ -82,6 +82,9 @@ export { getCloudFormationTemplates } from './executors/accelerator-aws-cloudfor
 export { IStackPolicyHandlerParameter } from './interfaces/aws-cloudformation/create-stack-policy';
 export { createStackPolicy } from './executors/accelerator-aws-cloudformation';
 
+export { IDeleteDefaultSecurityGroupRulesParameter } from './interfaces/amazon-ec2/delete-default-security-group-rules';
+export { deleteDefaultSecurityGroupRules } from './executors/accelerator-amazon-ec2';
+
 export { ICustomResourceTemplateModifierHandlerParameter } from './interfaces/aws-cloudformation/custom-resource-template-modifier';
 export { customResourceTemplateModifier } from './executors/accelerator-aws-cloudformation';
 
