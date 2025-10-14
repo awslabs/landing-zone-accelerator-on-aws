@@ -307,6 +307,7 @@ export class InterfaceEndpointConfig implements i.IInterfaceEndpointConfig {
   readonly central: boolean | undefined = undefined;
   readonly allowedCidrs: string[] | undefined = undefined;
   readonly tags: t.Tag[] | undefined = undefined;
+  readonly privateDns: boolean | undefined = undefined;
 }
 export class SubnetSourceConfig implements i.ISubnetSourceConfig {
   readonly account: string = '';
