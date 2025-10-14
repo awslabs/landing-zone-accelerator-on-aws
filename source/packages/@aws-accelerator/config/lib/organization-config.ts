@@ -219,6 +219,13 @@ export class OrganizationConfig implements i.IOrganizationConfig {
       );
 
       const configOuNames = [...this.organizationalUnits.map(ou => ou.name), 'Root'];
+
+      // Check if the config table has invalid entries missing the orgInfo attribute.
+      if (organizationItems.length != organizationItems.filter(item => 'orgInfo' in item).length) {
+        logger.error(`DynamoDB table ${configTableName} has "organization" entries missing the "orgInfo" attribute.`);
+        throw new Error('configuration validation failed.');
+      }
+
       const allOrganizations = organizationItems.map(
         item => JSON.parse(item['orgInfo'] as string) as OrganizationalUnitIdConfig,
       );
