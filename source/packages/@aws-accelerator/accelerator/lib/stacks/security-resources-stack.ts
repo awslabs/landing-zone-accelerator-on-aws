@@ -909,17 +909,32 @@ export class SecurityResourcesStack extends AcceleratorStack {
     rule: ConfigRule,
     configRule: cdk.aws_config.ManagedRule | cdk.aws_config.CustomRule,
   ) {
-    if (rule.tags) {
-      const configRuleTags = this.convertAcceleratorTags(rule.tags);
-      new ConfigServiceTags(this, pascalCase(rule.name + 'tags'), {
-        resourceArn: configRule.configRuleArn,
-        tags: configRuleTags,
-        logRetentionInDays: this.props.globalConfig.cloudwatchLogRetentionInDays,
-        kmsKey: this.cloudwatchKey,
-        partition: this.props.partition,
-        accountId: cdk.Stack.of(this).account,
-      });
+    // Combine global tags, accelerator tag, and rule-specific tags
+    const tags: Tag[] = [];
+
+    // Add global tags
+    if (this.props.globalConfig.tags) {
+      tags.push(...this.props.globalConfig.tags);
     }
+
+    // Add Accelerator tag
+    tags.push({ key: 'Accelerator', value: this.props.prefixes.accelerator });
+
+    // Add rule-specific tags (these can override global/accelerator tags)
+    if (rule.tags) {
+      tags.push(...rule.tags);
+    }
+
+    // Convert and apply tags
+    const configRuleTags = this.convertAcceleratorTags(tags);
+    new ConfigServiceTags(this, pascalCase(rule.name + 'tags'), {
+      resourceArn: configRule.configRuleArn,
+      tags: configRuleTags,
+      logRetentionInDays: this.props.globalConfig.cloudwatchLogRetentionInDays,
+      kmsKey: this.cloudwatchKey,
+      partition: this.props.partition,
+      accountId: cdk.Stack.of(this).account,
+    });
   }
 
   /**
@@ -1437,6 +1452,15 @@ export class SecurityResourcesStack extends AcceleratorStack {
     // only forward events if Security Hub is enabled and logging is enabled. If logging is undefined, its assumed to be true.
     if (securityHubConfig.enable && (securityHubConfig.logging?.cloudWatch?.enable ?? true)) {
       if (!securityHubConfig.deploymentTargets || this.isIncluded(securityHubConfig.deploymentTargets)) {
+        // Prepare tags for log group
+        const tags: Record<string, string> = {};
+        if (this.props.globalConfig.tags) {
+          for (const tag of this.props.globalConfig.tags) {
+            tags[tag.key] = tag.value;
+          }
+        }
+        tags['Accelerator'] = this.props.prefixes.accelerator;
+
         new SecurityHubEventsLog(this, 'SecurityHubEventsLog', {
           acceleratorPrefix: this.props.prefixes.accelerator,
           snsTopicArn: `arn:${cdk.Stack.of(this).partition}:sns:${cdk.Stack.of(this).region}:${
@@ -1448,6 +1472,7 @@ export class SecurityResourcesStack extends AcceleratorStack {
           cloudWatchLogRetentionInDays: this.props.globalConfig.cloudwatchLogRetentionInDays,
           logLevel: securityHubConfig.logging?.cloudWatch?.logLevel ?? 'HIGH',
           logGroupName: securityHubConfig.logging?.cloudWatch?.logGroupName,
+          tags,
         });
       }
       this.nagSuppressionInputs.push({
