@@ -77,33 +77,43 @@ export class SharePortfolioWithOrg extends Construct {
     });
 
     const customResourceObjects = [];
+    let previousResource: cdk.CustomResource | undefined;
+
     if (props.organizationId) {
-      customResourceObjects.push(
-        new cdk.CustomResource(this, 'PortfolioShare-Root', {
-          resourceType: RESOURCE_TYPE,
-          serviceToken: provider.serviceToken,
-          properties: {
-            portfolioId: props.portfolioId,
-            organizationalUnitId: '',
-            organizationId: props.organizationId,
-            tagShareOptions: props.tagShareOptions,
-          },
-        }),
-      );
+      const resource = new cdk.CustomResource(this, 'PortfolioShare-Root', {
+        resourceType: RESOURCE_TYPE,
+        serviceToken: provider.serviceToken,
+        properties: {
+          portfolioId: props.portfolioId,
+          organizationalUnitId: '',
+          organizationId: props.organizationId,
+          tagShareOptions: props.tagShareOptions,
+        },
+      });
+      customResourceObjects.push(resource);
+      previousResource = resource;
     }
+
     for (const orgUnit of props.organizationalUnitIds) {
-      customResourceObjects.push(
-        new cdk.CustomResource(this, `PortfolioShare-${orgUnit}`, {
-          resourceType: RESOURCE_TYPE,
-          serviceToken: provider.serviceToken,
-          properties: {
-            portfolioId: props.portfolioId,
-            organizationalUnitId: orgUnit,
-            organizationId: '',
-            tagShareOptions: props.tagShareOptions,
-          },
-        }),
-      );
+      const resource = new cdk.CustomResource(this, `PortfolioShare-${orgUnit}`, {
+        resourceType: RESOURCE_TYPE,
+        serviceToken: provider.serviceToken,
+        properties: {
+          portfolioId: props.portfolioId,
+          organizationalUnitId: orgUnit,
+          organizationId: '',
+          tagShareOptions: props.tagShareOptions,
+        },
+      });
+
+      // Add dependency on previous resource to ensure sequential processing
+      // This prevents InvalidStateException from parallel portfolio share operations
+      if (previousResource) {
+        resource.node.addDependency(previousResource);
+      }
+
+      customResourceObjects.push(resource);
+      previousResource = resource;
     }
 
     /**
