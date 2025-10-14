@@ -207,10 +207,12 @@ export class RegisterOrganizationalUnitModule implements IRegisterOrganizational
 
     const parameters: EnabledBaselineParameter[] = [];
 
-    parameters.push({
-      key: 'IdentityCenterEnabledBaselineArn',
-      value: identityCenterBaselineIdentifier,
-    });
+    if (identityCenterBaselineIdentifier) {
+      parameters.push({
+        key: 'IdentityCenterEnabledBaselineArn',
+        value: identityCenterBaselineIdentifier,
+      });
+    }
 
     if (!ouRegisteredInControlTower) {
       return await this.registerOuWithControlTower(
