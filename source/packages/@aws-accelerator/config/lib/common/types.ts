@@ -487,12 +487,12 @@ export class OperationPreferences implements IOperationPreferences {
 
 export interface ICfnParameter {
   name: string;
-  value: string;
+  value: string | string[];
 }
 
 export class CfnParameter implements ICfnParameter {
   readonly name: string = '';
-  readonly value: string = '';
+  readonly value: string | string[] = '';
 }
 
 export type TrafficType = 'ALL' | 'ACCEPT' | 'REJECT';
