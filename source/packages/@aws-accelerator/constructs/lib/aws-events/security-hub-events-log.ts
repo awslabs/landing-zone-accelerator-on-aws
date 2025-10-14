@@ -48,6 +48,10 @@ export interface SecurityHubEventsLogProps {
    * Log Group Name
    */
   logGroupName?: string;
+  /**
+   * Tags to apply to the log group
+   */
+  tags?: Record<string, string>;
 }
 
 /**
@@ -66,7 +70,11 @@ export class SecurityHubEventsLog extends Construct {
       resource: {
         name: 'SecurityHubEventsFunction',
         parentId: id,
-        properties: [{ logGroupName: logGroupName }, { logGroupArn: logGroupArn }],
+        properties: [
+          { logGroupName: logGroupName },
+          { logGroupArn: logGroupArn },
+          ...(props.tags ? [{ tags: JSON.stringify(props.tags) }] : []),
+        ],
         forceUpdate: true,
       },
       lambda: {

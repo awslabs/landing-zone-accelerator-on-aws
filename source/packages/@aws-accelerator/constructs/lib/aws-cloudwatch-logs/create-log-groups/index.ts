@@ -46,6 +46,9 @@ export async function handler(
   const owningAccountId: string | undefined = event.ResourceProperties['owningAccountId'];
   const owningRegion: string | undefined = event.ResourceProperties['owningRegion'];
   const roleName: string | undefined = event.ResourceProperties['roleName'];
+  const tags: Record<string, string> | undefined = event.ResourceProperties['tags']
+    ? JSON.parse(event.ResourceProperties['tags'])
+    : undefined;
   const invokingAccountId = event.ServiceToken.split(':')[4];
   const invokingRegion = event.ServiceToken.split(':')[3];
   const partition = event.ServiceToken.split(':')[1];
@@ -90,7 +93,7 @@ export async function handler(
       //
       // Code Block for CloudWatch Log Group if it doesn't exist
       else {
-        await createLogGroup(logClient, logGroupName, encryptionKey);
+        await createLogGroup(logClient, logGroupName, encryptionKey, tags);
       }
       //
       // Put log group retention policy
@@ -257,10 +260,16 @@ async function associateKey(logClient: CloudWatchLogsClient, kmsKeyId: string, l
  * @param logClient CloudWatchLogsClient
  * @param logGroupName string
  * @param kmsKeyId string | undefined
+ * @param tags Record<string, string> | undefined
  */
-async function createLogGroup(logClient: CloudWatchLogsClient, logGroupName: string, kmsKeyId?: string) {
+async function createLogGroup(
+  logClient: CloudWatchLogsClient,
+  logGroupName: string,
+  kmsKeyId?: string,
+  tags?: Record<string, string>,
+) {
   console.log(`Creating log group ${logGroupName}...`);
-  await throttlingBackOff(() => logClient.send(new CreateLogGroupCommand({ kmsKeyId, logGroupName })));
+  await throttlingBackOff(() => logClient.send(new CreateLogGroupCommand({ kmsKeyId, logGroupName, tags })));
 }
 
 /**

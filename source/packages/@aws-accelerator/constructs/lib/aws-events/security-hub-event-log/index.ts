@@ -31,9 +31,10 @@ export async function handler(event: CloudFormationCustomResourceEvent) {
     case 'Update':
       const logGroupName = event.ResourceProperties['logGroupName'];
       const logGroupArn = event.ResourceProperties['logGroupArn'];
+      const tags = event.ResourceProperties['tags'] ? JSON.parse(event.ResourceProperties['tags']) : undefined;
 
       // Create the log group /AWSAccelerator-SecurityHub (if a specified log group name wasn't provided) if it does not exist.
-      await createLogGroup(logGroupName);
+      await createLogGroup(logGroupName, tags);
       // Update resource policy
       await putLogGroupResourcePolicy(logGroupArn);
       return {
@@ -83,10 +84,10 @@ export async function generateResourcePolicy(logGroupArn: string) {
   });
 }
 
-export async function createLogGroup(logGroupName: string) {
+export async function createLogGroup(logGroupName: string, tags?: Record<string, string>) {
   try {
     console.log(`Attempting to create CloudWatch log group ${logGroupName}`);
-    await logsClient.send(new CreateLogGroupCommand({ logGroupName: logGroupName }));
+    await logsClient.send(new CreateLogGroupCommand({ logGroupName: logGroupName, tags }));
   } catch (e) {
     if (e instanceof ResourceAlreadyExistsException) {
       console.log(`Found existing CloudWatch log group ${logGroupName}, continuing`);
