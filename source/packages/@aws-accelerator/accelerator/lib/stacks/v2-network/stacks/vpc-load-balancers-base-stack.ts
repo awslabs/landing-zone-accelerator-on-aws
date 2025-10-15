@@ -394,10 +394,8 @@ export class VpcLoadBalancersBaseStack extends AcceleratorStack {
           `Configuration validation failed at runtime. Could not find subnets for NLB Item ${networkLoadBalancerItem.name}`,
         );
       }
-
       this.createNetworkLoadBalancer(networkLoadBalancerItem, subnetIds, accessLogsBucketName);
     }
-
     const roleName = `${this.props.prefixes.accelerator}-GetNLBIPAddressLookup`;
     if (
       cdk.Stack.of(this).region === this.props.globalConfig.homeRegion &&

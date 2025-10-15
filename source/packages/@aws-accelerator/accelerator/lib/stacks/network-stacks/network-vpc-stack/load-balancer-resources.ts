@@ -473,85 +473,49 @@ export class LoadBalancerResources {
     props: AcceleratorStackProps,
   ) {
     const nlbMap = new Map<string, NetworkLoadBalancer>();
-
+    const nlbAccountIds = this.getNlbAccountIds();
     const accessLogsBucketName = this.stack.getElbAccessLogBucketName();
+    if (
+      cdk.Stack.of(this.stack).region === props.globalConfig.homeRegion &&
+      nlbAccountIds.includes(cdk.Stack.of(this.stack).account) &&
+      !this.lzaLookup.resourceExists({
+        resourceType: LZAResourceLookupType.ROLE,
+        lookupValues: { roleName: `${props.prefixes.accelerator}-GetNLBIPAddressLookup` },
+      })
+    ) {
+      const role = new cdk.aws_iam.Role(this.stack, `GetNLBIPAddressLookup`, {
+        roleName: `${props.prefixes.accelerator}-GetNLBIPAddressLookup`,
+        assumedBy: new cdk.aws_iam.CompositePrincipal(
+          ...nlbAccountIds.map(accountId => new cdk.aws_iam.AccountPrincipal(accountId)),
+        ),
+        inlinePolicies: {
+          default: new cdk.aws_iam.PolicyDocument({
+            statements: [
+              new cdk.aws_iam.PolicyStatement({
+                effect: cdk.aws_iam.Effect.ALLOW,
+                actions: ['ec2:DescribeNetworkInterfaces'],
+                resources: ['*'],
+              }),
+            ],
+          }),
+        },
+      });
+
+      (role.node.defaultChild as cdk.aws_iam.CfnRole).addMetadata(MetadataKeys.LZA_LOOKUP, {
+        roleName: `${props.prefixes.accelerator}-GetNLBIPAddressLookup`,
+      });
+
+      NagSuppressions.addResourceSuppressionsByPath(this.stack, `/${this.stack.stackName}/GetNLBIPAddressLookup`, [
+        {
+          id: 'AwsSolutions-IAM5',
+          reason: 'Allows only specific role arns.',
+        },
+      ]);
+    }
     for (const vpcItem of vpcResources) {
-      // Set account IDs
-      const principals = this.setNlbPrincipalIds(vpcItem, props);
-
       this.createNetworkLoadBalancer(vpcItem, accessLogsBucketName, nlbMap, subnetMap, props);
-
-      if (
-        cdk.Stack.of(this.stack).region === props.globalConfig.homeRegion &&
-        vpcItem.loadBalancers?.networkLoadBalancers &&
-        vpcItem.loadBalancers?.networkLoadBalancers.length > 0 &&
-        this.lzaLookup.resourceExists({
-          resourceType: LZAResourceLookupType.ROLE,
-          lookupValues: { roleName: `${props.prefixes.accelerator}-GetNLBIPAddressLookup` },
-        })
-      ) {
-        const role = new cdk.aws_iam.Role(this.stack, `GetNLBIPAddressLookup`, {
-          roleName: `${props.prefixes.accelerator}-GetNLBIPAddressLookup`,
-          assumedBy: new cdk.aws_iam.CompositePrincipal(...principals!),
-          inlinePolicies: {
-            default: new cdk.aws_iam.PolicyDocument({
-              statements: [
-                new cdk.aws_iam.PolicyStatement({
-                  effect: cdk.aws_iam.Effect.ALLOW,
-                  actions: ['ec2:DescribeNetworkInterfaces'],
-                  resources: ['*'],
-                }),
-              ],
-            }),
-          },
-        });
-
-        (role.node.defaultChild as cdk.aws_iam.CfnRole).addMetadata(MetadataKeys.LZA_LOOKUP, {
-          roleName: `${props.prefixes.accelerator}-GetNLBIPAddressLookup`,
-        });
-
-        NagSuppressions.addResourceSuppressionsByPath(this.stack, `/${this.stack.stackName}/GetNLBIPAddressLookup`, [
-          {
-            id: 'AwsSolutions-IAM5',
-            reason: 'Allows only specific role arns.',
-          },
-        ]);
-      }
     }
     return nlbMap;
-  }
-
-  /**
-   * Set principal account IDs for a given VPC item
-   * @param vpcItem
-   * @param props
-   * @returns
-   */
-  private setNlbPrincipalIds(
-    vpcItem: VpcConfig | VpcTemplatesConfig,
-    props: AcceleratorStackProps,
-  ): cdk.aws_iam.AccountPrincipal[] | void {
-    if (!vpcItem.loadBalancers?.networkLoadBalancers || vpcItem.loadBalancers.networkLoadBalancers.length === 0) {
-      return;
-    }
-    const vpcItemsWithTargetGroups = props.networkConfig.vpcs.filter(
-      vpcItem => vpcItem.targetGroups && vpcItem.targetGroups.length > 0,
-    );
-    const vpcTemplatesWithTargetGroups =
-      props.networkConfig.vpcTemplates?.filter(vpcItem => vpcItem.targetGroups && vpcItem.targetGroups.length > 0) ??
-      [];
-    const accountIdTargetsForVpcs = vpcItemsWithTargetGroups.map(vpcItem =>
-      props.accountsConfig.getAccountId(vpcItem.account),
-    );
-    const accountIdTargetsForVpcTemplates =
-      vpcTemplatesWithTargetGroups?.map(vpcTemplate =>
-        this.stack.getAccountIdsFromDeploymentTargets(vpcTemplate.deploymentTargets),
-      ) ?? [];
-    const principalAccountIds = [...accountIdTargetsForVpcs, ...accountIdTargetsForVpcTemplates];
-    principalAccountIds.push(cdk.Stack.of(this.stack).account);
-    const principalIds = [...new Set(principalAccountIds)];
-
-    return principalIds.map(accountId => new cdk.aws_iam.AccountPrincipal(accountId)) ?? undefined;
   }
 
   /**
@@ -567,5 +531,28 @@ export class LoadBalancerResources {
       vpcName: vpcName,
       [`${type}Name`]: loadBalancerName,
     });
+  }
+  /**
+   * Function to check if account has network load balancers and returns a list of account IDs to reference against
+   * @returns
+   */
+  private getNlbAccountIds(): string[] {
+    let nlbAccountIds: string[] = [];
+    for (const vpcItem of this.stack.props.networkConfig.vpcs) {
+      if (vpcItem.loadBalancers?.networkLoadBalancers && vpcItem.loadBalancers?.networkLoadBalancers?.length > 0) {
+        nlbAccountIds.push(this.stack.props.accountsConfig.getAccountId(vpcItem.account));
+      }
+    }
+    for (const vpcItem of this.stack.props.networkConfig.vpcTemplates ?? []) {
+      if (vpcItem.loadBalancers?.networkLoadBalancers && vpcItem.loadBalancers?.networkLoadBalancers?.length > 0) {
+        for (const accountItem of this.stack.props.accountsConfig.getAccountIdsFromDeploymentTarget(
+          vpcItem.deploymentTargets,
+        )) {
+          nlbAccountIds.push(accountItem);
+        }
+      }
+    }
+    nlbAccountIds = [...new Set(nlbAccountIds)];
+    return nlbAccountIds;
   }
 }

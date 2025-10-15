@@ -12,8 +12,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - feat(module): add control tower logging 
 
 ### Fixed
-
-- fix(validation): updated regex validation for Route53 Resolver Rule DNS to pass TLD
+- fix(validation): updated regex validation for Route53 Resover Rule DNS to pass TLD
+- fix(networking): fix logic for nlb ip address role not provisioning'
 - feat(uninstaller): add support for local config directories when uninstalling LZA
 
 ## [1.13.1] - 2025-10-01
