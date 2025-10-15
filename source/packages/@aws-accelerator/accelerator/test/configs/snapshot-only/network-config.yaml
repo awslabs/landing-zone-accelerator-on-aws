@@ -751,6 +751,24 @@ vpcs:
         ipamAllocation:
           ipamPoolName: west-region-pool
           netmaskLength: 28
+    loadBalancers:
+      networkLoadBalancers:
+        - name: nlb-west-downstream
+          scheme: internal
+          crossZoneLoadBalancing: false
+          deletionProtection: true
+          subnets:
+            - SharedServices-B
+          listeners:
+            - name: http
+              port: 80
+              protocol: TCP
+              targetGroup: tg-downstream-http
+    targetGroups:
+      - name: tg-downstream-http
+        port: 80
+        protocol: TCP
+        type: instance
     gatewayEndpoints:
       defaultPolicy: Default
       endpoints:
@@ -797,6 +815,28 @@ vpcs:
         ipamAllocation:
           ipamPoolName: west-region-pool
           netmaskLength: 28
+    loadBalancers:
+      networkLoadBalancers:
+        - name: nlb-west-upstream
+          scheme: internal
+          crossZoneLoadBalancing: false
+          deletionProtection: true
+          subnets:
+            - Network-West-A
+          listeners:
+            - name: http
+              port: 80
+              protocol: TCP
+              targetGroup: tg-west-upstream
+    targetGroups:
+      - name: tg-west-upstream
+        port: 80
+        protocol: TCP
+        type: ip
+        targets:
+          - account: Network
+            region: us-west-2
+            nlbName: nlb-west-downstream
     gatewayEndpoints:
       defaultPolicy: Default
       endpoints:
@@ -1700,6 +1740,19 @@ vpcs:
         localZone: atl-2a
         routeTable: Network-Inspection-Local-Rt-A
         ipv4CidrBlock: 10.3.0.0/24
+    loadBalancers:
+      networkLoadBalancers:
+        - name: new-sample-downstream
+          scheme: internal
+          crossZoneLoadBalancing: false
+          deletionProtection: true
+          subnets:
+            - Network-Inspection-A
+          listeners:
+            - name: http
+              port: 80
+              protocol: TCP
+              targetGroup: new-sample-downstream-http      
     securityGroups:
       - name: Data
         description: Firewall data
@@ -1716,6 +1769,10 @@ vpcs:
             sources:
               - 0.0.0.0/0
     targetGroups:
+      - name: new-sample-downstream-http
+        port: 80
+        protocol: TCP
+        type: instance
       - name: deployed-tg-2
         port: 443
         protocol: HTTPS
@@ -2037,6 +2094,28 @@ vpcs:
         availabilityZone: b
         routeTable: SharedServices-appVpc-PrivRtB
         ipv4CidrBlock: 10.1.3.0/24
+    loadBalancers:
+      networkLoadBalancers:
+        - name: sample-upstream
+          scheme: internet-facing
+          crossZoneLoadBalancing: false
+          deletionProtection: true
+          subnets:
+            - SharedServices-appVpc-PublicSubnetA
+          listeners:
+            - name: http
+              port: 80
+              protocol: TCP
+              targetGroup: sample-upstream-http
+    targetGroups:
+      - name: sample-upstream-http
+        port: 80
+        protocol: TCP
+        type: ip
+        targets:
+          - account: Network
+            region: *HOME_REGION
+            nlbName: new-sample-downstream
     natGateways:
       - name: SharedServices-appVpc-NatGwA
         subnet: SharedServices-appVpc-PublicSubnetA
