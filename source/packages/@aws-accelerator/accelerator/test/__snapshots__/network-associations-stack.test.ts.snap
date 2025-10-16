@@ -4774,7 +4774,7 @@ exports[`NetworkAssociationsStack > Construct(NetworkAssociationsStack):  Snapsh
             "Arn",
           ],
         },
-        "assumeRoleName": "AWSAccelerator-GetNLBIPAddressLookup",
+        "assumeRoleName": "AWSAccelerator-NetworkLoadBalancerIPAddress-Lookup",
         "partition": {
           "Ref": "AWS::Partition",
         },
@@ -4903,7 +4903,7 @@ exports[`NetworkAssociationsStack > Construct(NetworkAssociationsStack):  Snapsh
                     {
                       "Ref": "AWS::Partition",
                     },
-                    ":iam::*:role/AWSAccelerator-GetNLBIPAddressLookup",
+                    ":iam::*:role/AWSAccelerator-NetworkLoadBalancerIPAddress-Lookup",
                   ],
                 ],
               },
@@ -13057,7 +13057,7 @@ catch {
             "Arn",
           ],
         },
-        "assumeRoleName": "AWSAccelerator-GetNLBIPAddressLookup",
+        "assumeRoleName": "AWSAccelerator-NetworkLoadBalancerIPAddress-Lookup",
         "partition": {
           "Ref": "AWS::Partition",
         },
@@ -13186,7 +13186,7 @@ catch {
                     {
                       "Ref": "AWS::Partition",
                     },
-                    ":iam::*:role/AWSAccelerator-GetNLBIPAddressLookup",
+                    ":iam::*:role/AWSAccelerator-NetworkLoadBalancerIPAddress-Lookup",
                   ],
                 ],
               },
@@ -14201,7 +14201,7 @@ exports[`NetworkAssociationsStack > Construct(NetworkAssociationsStack):  Snapsh
             "Arn",
           ],
         },
-        "assumeRoleName": "AWSAccelerator-GetNLBIPAddressLookup",
+        "assumeRoleName": "AWSAccelerator-NetworkLoadBalancerIPAddress-Lookup",
         "partition": {
           "Ref": "AWS::Partition",
         },
@@ -14330,7 +14330,7 @@ exports[`NetworkAssociationsStack > Construct(NetworkAssociationsStack):  Snapsh
                     {
                       "Ref": "AWS::Partition",
                     },
-                    ":iam::*:role/AWSAccelerator-GetNLBIPAddressLookup",
+                    ":iam::*:role/AWSAccelerator-NetworkLoadBalancerIPAddress-Lookup",
                   ],
                 ],
               },

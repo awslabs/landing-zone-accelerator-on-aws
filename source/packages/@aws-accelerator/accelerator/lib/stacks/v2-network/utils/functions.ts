@@ -1173,7 +1173,7 @@ function getV2NetworkLoadBalancerRoleResources(
     vpcItem.loadBalancers?.networkLoadBalancers.length > 0 &&
     !lzaLookup.resourceExists({
       resourceType: LZAResourceLookupType.ROLE,
-      lookupValues: { roleName: `${acceleratorPrefix}-GetNLBIPAddressLookup` },
+      lookupValues: { roleName: `${acceleratorPrefix}-NetworkLoadBalancerIPAddress-Lookup` },
     })
   ) {
     logger.info(
@@ -1183,7 +1183,7 @@ function getV2NetworkLoadBalancerRoleResources(
     v2Components.push({
       vpcName: vpcItem.name,
       resourceType: V2StackComponentsList.NETWORK_LOAD_BALANCER_ROLE,
-      resourceName: `${acceleratorPrefix}-GetNLBIPAddressLookup|${env.accountId}`,
+      resourceName: `${acceleratorPrefix}-NetworkLoadBalancerIPAddress-Lookup|${env.accountId}`,
     });
   }
 }

@@ -585,7 +585,7 @@ export class NetworkAssociationsStack extends NetworkStack {
         if (nlbTargetsWithAccountIds && nlbTargetsWithAccountIds.length > 0) {
           const nlbAddresses = new NLBAddresses(this, `${targetGroupItem.name}-ipLookup`, {
             targets: [...nlbTargetsWithAccountIds, ...staticIpTargets],
-            assumeRoleName: `${this.props.prefixes.accelerator}-GetNLBIPAddressLookup`,
+            assumeRoleName: `${this.props.prefixes.accelerator}-NetworkLoadBalancerIPAddress-Lookup`,
             partition: cdk.Stack.of(this).partition,
             kmsKey: this.cloudwatchKey,
             logRetentionInDays: this.logRetention,

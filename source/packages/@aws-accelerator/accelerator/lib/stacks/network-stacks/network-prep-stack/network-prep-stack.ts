@@ -21,6 +21,7 @@ import { FmsResources } from './fms-resources';
 import { MadResources } from './mad-resources';
 import { TgwResources } from './tgw-resources';
 import { VpnResources } from './vpn-resources';
+import { LoadBalancerResources } from './load-balancer-resources';
 
 export class NetworkPrepStack extends NetworkStack {
   constructor(scope: Construct, id: string, props: AcceleratorStackProps) {
@@ -45,6 +46,11 @@ export class NetworkPrepStack extends NetworkStack {
     // Create Direct Connect Gateways and virtual interfaces
     //
     new DxResources(this, props);
+
+    //
+    // Create Load Balancer IAM Roles
+    //
+    new LoadBalancerResources(this, props);
 
     //
     // Central network services
