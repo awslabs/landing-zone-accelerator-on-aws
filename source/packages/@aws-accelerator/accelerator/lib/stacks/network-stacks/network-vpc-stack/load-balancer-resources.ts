@@ -474,6 +474,43 @@ export class LoadBalancerResources {
   ) {
     const nlbMap = new Map<string, NetworkLoadBalancer>();
     const accessLogsBucketName = this.stack.getElbAccessLogBucketName();
+    if (
+      cdk.Stack.of(this.stack).region === props.globalConfig.homeRegion &&
+      nlbAccountIds.includes(cdk.Stack.of(this.stack).account) &&
+      this.lzaLookup.resourceExists({
+        resourceType: LZAResourceLookupType.ROLE,
+        lookupValues: { roleName: `${props.prefixes.accelerator}-GetNLBIPAddressLookup` },
+      })
+    ) {
+      const role = new cdk.aws_iam.Role(this.stack, `GetNLBIPAddressLookup`, {
+        roleName: `${props.prefixes.accelerator}-GetNLBIPAddressLookup`,
+        assumedBy: new cdk.aws_iam.CompositePrincipal(
+          ...nlbAccountIds.map(accountId => new cdk.aws_iam.AccountPrincipal(accountId)),
+        ),
+        inlinePolicies: {
+          default: new cdk.aws_iam.PolicyDocument({
+            statements: [
+              new cdk.aws_iam.PolicyStatement({
+                effect: cdk.aws_iam.Effect.ALLOW,
+                actions: ['ec2:DescribeNetworkInterfaces'],
+                resources: ['*'],
+              }),
+            ],
+          }),
+        },
+      });
+
+      (role.node.defaultChild as cdk.aws_iam.CfnRole).addMetadata(MetadataKeys.LZA_LOOKUP, {
+        roleName: `${props.prefixes.accelerator}-GetNLBIPAddressLookup`,
+      });
+
+      NagSuppressions.addResourceSuppressionsByPath(this.stack, `/${this.stack.stackName}/GetNLBIPAddressLookup`, [
+        {
+          id: 'AwsSolutions-IAM5',
+          reason: 'Allows only specific role arns.',
+        },
+      ]);
+    }
     for (const vpcItem of vpcResources) {
       this.createNetworkLoadBalancer(vpcItem, accessLogsBucketName, nlbMap, subnetMap, props);
     }
