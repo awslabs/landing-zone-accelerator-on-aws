@@ -717,6 +717,24 @@ vpcs:
         ipamAllocation:
           ipamPoolName: home-region-pool
           netmaskLength: 28
+    loadBalancers:
+      networkLoadBalancers:
+        - name: nlb-west-downstream
+          scheme: internal
+          crossZoneLoadBalancing: false
+          deletionProtection: true
+          subnets:
+            - SharedServices-B
+          listeners:
+            - name: http
+              port: 80
+              protocol: TCP
+              targetGroup: tg-downstream-http
+    targetGroups:
+      - name: tg-downstream-http
+        port: 80
+        protocol: TCP
+        type: instance
     gatewayEndpoints:
       defaultPolicy: Default
       endpoints:
@@ -751,24 +769,6 @@ vpcs:
         ipamAllocation:
           ipamPoolName: west-region-pool
           netmaskLength: 28
-    loadBalancers:
-      networkLoadBalancers:
-        - name: nlb-west-downstream
-          scheme: internal
-          crossZoneLoadBalancing: false
-          deletionProtection: true
-          subnets:
-            - SharedServices-B
-          listeners:
-            - name: http
-              port: 80
-              protocol: TCP
-              targetGroup: tg-downstream-http
-    targetGroups:
-      - name: tg-downstream-http
-        port: 80
-        protocol: TCP
-        type: instance
     gatewayEndpoints:
       defaultPolicy: Default
       endpoints:
@@ -790,6 +790,28 @@ vpcs:
         routes: []
       - name: Network-West-B-Rt
         routes: []
+    loadBalancers:
+      networkLoadBalancers:
+        - name: nlb-west-upstream
+          scheme: internal
+          crossZoneLoadBalancing: false
+          deletionProtection: true
+          subnets:
+            - Network-West-A
+          listeners:
+            - name: http
+              port: 80
+              protocol: TCP
+              targetGroup: tg-west-upstream
+    targetGroups:
+      - name: tg-west-upstream
+        port: 80
+        protocol: TCP
+        type: ip
+        targets:
+          - account: Network
+            region: us-west-2
+            nlbName: nlb-west-downstream
     subnets:
       - name: Network-West-A
         availabilityZone: a
@@ -815,28 +837,6 @@ vpcs:
         ipamAllocation:
           ipamPoolName: west-region-pool
           netmaskLength: 28
-    loadBalancers:
-      networkLoadBalancers:
-        - name: nlb-west-upstream
-          scheme: internal
-          crossZoneLoadBalancing: false
-          deletionProtection: true
-          subnets:
-            - Network-West-A
-          listeners:
-            - name: http
-              port: 80
-              protocol: TCP
-              targetGroup: tg-west-upstream
-    targetGroups:
-      - name: tg-west-upstream
-        port: 80
-        protocol: TCP
-        type: ip
-        targets:
-          - account: Network
-            region: us-west-2
-            nlbName: nlb-west-downstream
     gatewayEndpoints:
       defaultPolicy: Default
       endpoints:
@@ -1752,7 +1752,7 @@ vpcs:
             - name: http
               port: 80
               protocol: TCP
-              targetGroup: new-sample-downstream-http      
+              targetGroup: new-sample-downstream-http
     securityGroups:
       - name: Data
         description: Firewall data

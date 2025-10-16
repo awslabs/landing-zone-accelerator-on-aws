@@ -478,7 +478,7 @@ export class LoadBalancerResources {
     if (
       cdk.Stack.of(this.stack).region === props.globalConfig.homeRegion &&
       nlbAccountIds.includes(cdk.Stack.of(this.stack).account) &&
-      !this.lzaLookup.resourceExists({
+      this.lzaLookup.resourceExists({
         resourceType: LZAResourceLookupType.ROLE,
         lookupValues: { roleName: `${props.prefixes.accelerator}-GetNLBIPAddressLookup` },
       })

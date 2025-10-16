@@ -5146,6 +5146,10 @@ exports[`NetworkAssociationsStack > Construct(NetworkAssociationsStack):  Snapsh
       "Default": "/accelerator/network/vpc/SharedServices-Ipam-East/id",
       "Type": "AWS::SSM::Parameter::Value<String>",
     },
+    "SsmParameterValueacceleratornetworkvpcSharedServicesIpamEastnlbnlbwestdownstreamidC96584B6F00A464EAD1953AFF4B05118Parameter": {
+      "Default": "/accelerator/network/vpc/SharedServices-Ipam-East/nlb/nlb-west-downstream/id",
+      "Type": "AWS::SSM::Parameter::Value<String>",
+    },
     "SsmParameterValueacceleratornetworkvpcSharedServicesIpamEastrouteTableSharedServicesARtidC96584B6F00A464EAD1953AFF4B05118Parameter": {
       "Default": "/accelerator/network/vpc/SharedServices-Ipam-East/routeTable/SharedServices-A-Rt/id",
       "Type": "AWS::SSM::Parameter::Value<String>",
@@ -9700,6 +9704,37 @@ catch {
       },
       "Type": "AWS::ElasticLoadBalancingV2::Listener",
     },
+    "ListenerSharedServicesIpamEastnlbWestDownstreamhttp": {
+      "Properties": {
+        "AlpnPolicy": [],
+        "Certificates": [
+          {},
+        ],
+        "DefaultActions": [
+          {
+            "ForwardConfig": {
+              "TargetGroups": [
+                {
+                  "TargetGroupArn": {
+                    "Ref": "SharedServicesIpamEasttgdownstreamhttp6FFFECB0",
+                  },
+                },
+              ],
+            },
+            "TargetGroupArn": {
+              "Ref": "SharedServicesIpamEasttgdownstreamhttp6FFFECB0",
+            },
+            "Type": "forward",
+          },
+        ],
+        "LoadBalancerArn": {
+          "Ref": "SsmParameterValueacceleratornetworkvpcSharedServicesIpamEastnlbnlbwestdownstreamidC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+        "Port": 80,
+        "Protocol": "TCP",
+      },
+      "Type": "AWS::ElasticLoadBalancingV2::Listener",
+    },
     "NetworkEndpointsNetworkEndpointsASubnetA733F49A": {
       "DeletionPolicy": "Delete",
       "DependsOn": [
@@ -10065,6 +10100,26 @@ catch {
       },
       "Type": "Custom::ShareSubnetTags",
       "UpdateReplacePolicy": "Delete",
+    },
+    "SharedServicesIpamEasttgdownstreamhttp6FFFECB0": {
+      "Properties": {
+        "HealthCheckEnabled": true,
+        "Matcher": {},
+        "Name": "tg-downstream-http",
+        "Port": 80,
+        "Protocol": "TCP",
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "tg-downstream-http",
+          },
+        ],
+        "TargetType": "instance",
+        "VpcId": {
+          "Ref": "SsmParameterValueacceleratornetworkvpcSharedServicesIpamEastidC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+      },
+      "Type": "AWS::ElasticLoadBalancingV2::TargetGroup",
     },
     "SharedServicesMainShared101000016NetworkMainAndSharedServicesMainPeeringStaticRouteA3EACCC2": {
       "Properties": {
@@ -14466,10 +14521,6 @@ exports[`NetworkAssociationsStack > Construct(NetworkAssociationsStack):  Snapsh
       "Default": "/accelerator/network/vpc/SharedServices-Ipam-West/id",
       "Type": "AWS::SSM::Parameter::Value<String>",
     },
-    "SsmParameterValueacceleratornetworkvpcSharedServicesIpamWestnlbnlbwestdownstreamidC96584B6F00A464EAD1953AFF4B05118Parameter": {
-      "Default": "/accelerator/network/vpc/SharedServices-Ipam-West/nlb/nlb-west-downstream/id",
-      "Type": "AWS::SSM::Parameter::Value<String>",
-    },
     "SsmParameterValueacceleratornetworkvpcSharedServicesIpamWestrouteTableSharedServicesARtidC96584B6F00A464EAD1953AFF4B05118Parameter": {
       "Default": "/accelerator/network/vpc/SharedServices-Ipam-West/routeTable/SharedServices-A-Rt/id",
       "Type": "AWS::SSM::Parameter::Value<String>",
@@ -15066,57 +15117,6 @@ exports[`NetworkAssociationsStack > Construct(NetworkAssociationsStack):  Snapsh
         ],
       },
       "Type": "AWS::IAM::Role",
-    },
-    "ListenerSharedServicesIpamWestnlbWestDownstreamhttp": {
-      "Properties": {
-        "AlpnPolicy": [],
-        "Certificates": [
-          {},
-        ],
-        "DefaultActions": [
-          {
-            "ForwardConfig": {
-              "TargetGroups": [
-                {
-                  "TargetGroupArn": {
-                    "Ref": "SharedServicesIpamWesttgdownstreamhttpCBC29CDD",
-                  },
-                },
-              ],
-            },
-            "TargetGroupArn": {
-              "Ref": "SharedServicesIpamWesttgdownstreamhttpCBC29CDD",
-            },
-            "Type": "forward",
-          },
-        ],
-        "LoadBalancerArn": {
-          "Ref": "SsmParameterValueacceleratornetworkvpcSharedServicesIpamWestnlbnlbwestdownstreamidC96584B6F00A464EAD1953AFF4B05118Parameter",
-        },
-        "Port": 80,
-        "Protocol": "TCP",
-      },
-      "Type": "AWS::ElasticLoadBalancingV2::Listener",
-    },
-    "SharedServicesIpamWesttgdownstreamhttpCBC29CDD": {
-      "Properties": {
-        "HealthCheckEnabled": true,
-        "Matcher": {},
-        "Name": "tg-downstream-http",
-        "Port": 80,
-        "Protocol": "TCP",
-        "Tags": [
-          {
-            "Key": "Name",
-            "Value": "tg-downstream-http",
-          },
-        ],
-        "TargetType": "instance",
-        "VpcId": {
-          "Ref": "SsmParameterValueacceleratornetworkvpcSharedServicesIpamWestidC96584B6F00A464EAD1953AFF4B05118Parameter",
-        },
-      },
-      "Type": "AWS::ElasticLoadBalancingV2::TargetGroup",
     },
     "SsmParamAcceleratorVersionFF83282D": {
       "Properties": {
