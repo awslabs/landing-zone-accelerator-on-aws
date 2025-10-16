@@ -335,39 +335,6 @@ export class VpcLoadBalancersBaseStack extends AcceleratorStack {
   }
 
   /**
-   * Function to set Network load balancer principal Ids
-   * @returns
-   */
-  private setNetworkLoadBalancerPrincipalIds(): cdk.aws_iam.AccountPrincipal[] | void {
-    if (this.vpcDetails.networkLoadBalancers.length === 0) {
-      return;
-    }
-
-    const vpcItemsWithTargetGroups = this.props.networkConfig.vpcs.filter(
-      vpcItem => vpcItem.targetGroups && vpcItem.targetGroups.length > 0,
-    );
-
-    const vpcTemplatesWithTargetGroups =
-      this.props.networkConfig.vpcTemplates?.filter(
-        vpcItem => vpcItem.targetGroups && vpcItem.targetGroups.length > 0,
-      ) ?? [];
-
-    const accountIdTargetsForVpcs = vpcItemsWithTargetGroups.map(vpcItem =>
-      this.props.accountsConfig.getAccountId(vpcItem.account),
-    );
-
-    const accountIdTargetsForVpcTemplates =
-      vpcTemplatesWithTargetGroups?.map(vpcTemplate =>
-        this.getAccountIdsFromDeploymentTargets(vpcTemplate.deploymentTargets),
-      ) ?? [];
-
-    const principalAccountIds = [...accountIdTargetsForVpcs, ...accountIdTargetsForVpcTemplates];
-    principalAccountIds.push(cdk.Stack.of(this).account);
-    const principalIds = [...new Set(principalAccountIds)];
-    return principalIds.map(accountId => new cdk.aws_iam.AccountPrincipal(accountId)) ?? undefined;
-  }
-
-  /**
    * Function to create Network load balancers
    * @param accessLogsBucketName string
    */
@@ -395,47 +362,6 @@ export class VpcLoadBalancersBaseStack extends AcceleratorStack {
         );
       }
       this.createNetworkLoadBalancer(networkLoadBalancerItem, subnetIds, accessLogsBucketName);
-    }
-    const roleName = `${this.props.prefixes.accelerator}-GetNLBIPAddressLookup`;
-    if (
-      cdk.Stack.of(this).region === this.props.globalConfig.homeRegion &&
-      this.vpcDetails.networkLoadBalancers.length > 0 &&
-      !isV2Resource(
-        this.v2StackProps.v2NetworkResources,
-        this.vpcDetails.name,
-        V2StackComponentsList.NETWORK_LOAD_BALANCER_ROLE,
-        `${roleName}|${cdk.Stack.of(this).account}`,
-      )
-    ) {
-      const principals = this.setNetworkLoadBalancerPrincipalIds();
-      const role = new cdk.aws_iam.Role(this, `GetNLBIPAddressLookup`, {
-        roleName,
-        assumedBy: new cdk.aws_iam.CompositePrincipal(...principals!),
-        inlinePolicies: {
-          default: new cdk.aws_iam.PolicyDocument({
-            statements: [
-              new cdk.aws_iam.PolicyStatement({
-                effect: cdk.aws_iam.Effect.ALLOW,
-                actions: ['ec2:DescribeNetworkInterfaces'],
-                resources: ['*'],
-              }),
-            ],
-          }),
-        },
-      });
-
-      NagSuppressions.addResourceSuppressionsByPath(this, `/${this.stackName}/GetNLBIPAddressLookup`, [
-        {
-          id: 'AwsSolutions-IAM5',
-          reason: 'Allows only specific role arns.',
-        },
-      ]);
-
-      (role.node.defaultChild as cdk.aws_iam.CfnRole).addMetadata(MetadataKeys.LZA_LOOKUP, {
-        resourceType: V2StackComponentsList.NETWORK_LOAD_BALANCER_ROLE,
-        roleDescription: 'GetNLBIPAddressLookup',
-        roleName,
-      });
     }
   }
 
