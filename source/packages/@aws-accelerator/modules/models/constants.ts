@@ -351,4 +351,4 @@ export const DefaultMinimumCodeBuildConcurrencyThreshold = '3';
  * @description
  * This is the default minimum Lambda Concurrency threshold for prerequisites. This is used to limit the number of parallel module execution.
  */
-export const DefaultMinimumLambdaConcurrencyThreshold = '1000';
+export const DefaultMinimumLambdaConcurrencyThreshold = '100';
