@@ -212,7 +212,7 @@ describe('PipelinePrerequisites', () => {
       expect(mockCheckLambdaConcurrency).toHaveBeenCalledWith(
         expect.objectContaining({
           configuration: {
-            requiredConcurrency: 1000,
+            requiredConcurrency: 100,
           },
         }),
       );
@@ -278,7 +278,7 @@ describe('PipelinePrerequisites', () => {
         operation: 'prerequisites',
         dryRun: MOCK_CONSTANTS.runnerParameters.dryRun,
         configuration: {
-          requiredConcurrency: 1000,
+          requiredConcurrency: 100,
         },
       });
     });
@@ -402,7 +402,7 @@ describe('PipelinePrerequisites', () => {
     test('should skip CodeBuild check when getServiceQuotaCode returns null', async () => {
       // Setup
       mockCheckLambdaConcurrency.mockResolvedValue(true);
-      mockGetServiceQuotaCode.mockResolvedValue(null); // This will trigger the skip logic
+      mockGetServiceQuotaCode.mockResolvedValue(undefined); // This will trigger the skip logic
       mockGetGlobalRegion.mockReturnValue('us-west-2');
 
       // Execute

@@ -216,7 +216,7 @@ describe('AcceleratorPrerequisites', () => {
           moduleName: AcceleratorModules.ACCELERATOR_PREREQUISITES,
           credentials: MOCK_CONSTANTS.credentials,
           configuration: {
-            requiredConcurrency: 1000,
+            requiredConcurrency: 100,
           },
         }),
       );
@@ -290,7 +290,7 @@ describe('AcceleratorPrerequisites', () => {
       expect(mockCheckLambdaConcurrency).toHaveBeenCalledWith(
         expect.objectContaining({
           configuration: {
-            requiredConcurrency: 1000,
+            requiredConcurrency: 100,
           },
         }),
       );
@@ -333,7 +333,7 @@ describe('AcceleratorPrerequisites', () => {
         operation: 'prerequisites',
         dryRun: MOCK_CONSTANTS.runnerParameters.dryRun,
         configuration: {
-          requiredConcurrency: 1000,
+          requiredConcurrency: 100,
         },
       });
     });
