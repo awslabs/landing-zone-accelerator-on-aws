@@ -20,7 +20,7 @@
     "test:unit": "vitest run --coverage",
     "test:integration": "vitest run --config vitest.integration.config.ts",
     "test:clean": "rm -f ./test-reports/*.xml",
-    "lint": "eslint --fix  --max-warnings 0 -c ../../eslint.config.mjs 'lib/**/*.{ts,tsx}' 'bin/**/*.{ts,tsx}'",
+    "lint": "eslint --fix  --max-warnings 0 -c ../../eslint.config.mjs 'lib/**/*.{ts,tsx}' 'bin/**/*.{ts,tsx}' 'test/**/*.{ts,tsx}'",
     "precommit": "eslint --max-warnings 0 -c ../../eslint.config.mjs 'lib/**/*.{ts,tsx}' 'bin/**/*.{ts,tsx}'",
     "prepare": "npm run build",
     "lza": "bin/lza"
@@ -35,6 +35,7 @@
     "@aws-sdk/client-sts": "3.835.0",
     "@aws-sdk/util-retry": "3.374.0",
     "@aws-sdk/client-ec2": "3.835.0",
+    "@aws-sdk/client-s3": "3.835.0",
     "email-validator": "2.0.4",
     "fs-extra": "11.1.0",
     "winston": "3.8.2",

@@ -60,11 +60,11 @@ vi.mock('../../../../common/functions', async () => {
 
 describe('MoveAccountsBatchModule', () => {
   const mockSend = vi.fn();
-  let getOrganizationRootIdSpy: vi.MockedFunction<any>; // eslint-disable-line @typescript-eslint/no-explicit-any
-  let getOrganizationAccountsSpy: vi.MockedFunction<any>; // eslint-disable-line @typescript-eslint/no-explicit-any
-  let getOrganizationalUnitIdByPathSpy: vi.MockedFunction<any>; // eslint-disable-line @typescript-eslint/no-explicit-any
-  let getAccountDetailsFromOrganizationsByEmailSpy: vi.MockedFunction<any>; // eslint-disable-line @typescript-eslint/no-explicit-any
-  let getAccountIdSpy: vi.MockedFunction<any>; // eslint-disable-line @typescript-eslint/no-explicit-any
+  let getOrganizationRootIdSpy: vi.MockedFunction<any>;
+  let getOrganizationAccountsSpy: vi.MockedFunction<any>;
+  let getOrganizationalUnitIdByPathSpy: vi.MockedFunction<any>;
+  let getAccountDetailsFromOrganizationsByEmailSpy: vi.MockedFunction<any>;
+  let getAccountIdSpy: vi.MockedFunction<any>;
 
   const input = {
     configuration: {

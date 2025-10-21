@@ -7,6 +7,8 @@ export default defineConfig({
     reporters: ['default', 'junit'],
     outputFile: './test-reports/test-results.xml',
     coverage: {
+      include: ['lib/**', 'common/**', 'executors/**'],
+      exclude: ['**/*.test.*', '**/node_modules/**', '**/test/**'],
       thresholds: {
         branches: 70,
         functions: 92,

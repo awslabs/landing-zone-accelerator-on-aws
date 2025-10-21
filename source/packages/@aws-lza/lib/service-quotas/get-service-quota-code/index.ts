@@ -85,7 +85,9 @@ export class GetServiceQuotaCode implements IGetServiceQuotaCodeModule {
 
       return serviceQuotas;
     } catch (error) {
-      throw new Error(`${MODULE_EXCEPTIONS.SERVICE_EXCEPTION}: Encountered an error in getting service quotas.`);
+      throw new Error(
+        `${MODULE_EXCEPTIONS.SERVICE_EXCEPTION}: Encountered an error in getting service quotas. Error: ${error}`,
+      );
     }
   }
 }

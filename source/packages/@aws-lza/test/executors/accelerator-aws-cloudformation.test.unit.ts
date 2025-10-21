@@ -19,16 +19,20 @@ import {
   createStackPolicy,
   getCloudFormationTemplates,
   customResourceTemplateModifier,
+  deployStack,
 } from '../../executors/accelerator-aws-cloudformation';
 import { StackPolicyModule } from '../../lib/aws-cloudformation/create-stack-policy';
 import { IStackPolicyHandlerParameter } from '../../interfaces/aws-cloudformation/create-stack-policy';
 import { ICustomResourceTemplateModifierHandlerParameter } from '../../interfaces/aws-cloudformation/custom-resource-template-modifier';
 import { CustomResourceTemplateModifierModule } from '../../lib/aws-cloudformation/custom-resource-template-modifier';
+import { DeployStackModule } from '../../lib/aws-cloudformation/deploy-stack';
+import { IDeployStackHandlerParameter } from '../../../@aws-accelerator/modules/dist/packages/@aws-lza';
 
 // Mock dependencies
 vi.mock('../../lib/aws-cloudformation/get-cloudformation-templates');
 vi.mock('../../lib/aws-cloudformation/create-stack-policy');
 vi.mock('../../lib/aws-cloudformation/custom-resource-template-modifier');
+vi.mock('../../lib/aws-cloudformation/deploy-stack');
 
 describe('getCloudFormationTemplates', () => {
   beforeEach(() => {
@@ -181,6 +185,42 @@ describe('customResourceTemplateModifier', () => {
 
     // Execute
     const response = await customResourceTemplateModifier(input);
+
+    // Verify
+    expect(response).toBe(result);
+    expect(mockHandler).toHaveBeenCalledWith(input);
+    expect(mockHandler).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('deployStack', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  test('error rethrows exception', async () => {
+    const errorMessage = 'mock error';
+    const mockHandler = vi.fn().mockRejectedValue(new Error(errorMessage));
+
+    (DeployStackModule as unknown as vi.Mock).mockImplementation(() => ({
+      handler: mockHandler,
+    }));
+    const input = {} as IDeployStackHandlerParameter;
+
+    await expect(deployStack(input)).rejects.toThrow(errorMessage);
+  });
+
+  test('success returns value', async () => {
+    const result = { status: true, message: 'Module success message' };
+    const mockHandler = vi.fn().mockReturnValue(result);
+
+    (DeployStackModule as unknown as vi.Mock).mockImplementation(() => ({
+      handler: mockHandler,
+    }));
+    const input = {} as IDeployStackHandlerParameter;
+
+    // Execute
+    const response = await deployStack(input);
 
     // Verify
     expect(response).toBe(result);

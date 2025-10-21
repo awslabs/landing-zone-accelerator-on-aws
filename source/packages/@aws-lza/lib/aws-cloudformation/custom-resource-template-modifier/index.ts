@@ -10,16 +10,12 @@
  *  OR CONDITIONS OF ANY KIND, express or implied. See the License for the specific language governing permissions
  *  and limitations under the License.
  */
-import {
-  CloudFormationClient,
-  DescribeStacksCommand,
-  GetTemplateCommand,
-  TemplateStage,
-} from '@aws-sdk/client-cloudformation';
+import { CloudFormationClient, GetTemplateCommand, TemplateStage } from '@aws-sdk/client-cloudformation';
 import { createLogger } from '../../../common/logger';
 import { throttlingBackOff } from '../../../common/throttle';
 import path from 'path';
 import { mkdir, writeFile } from 'fs/promises';
+import { isStackExists } from '../../../common/cloudformation-functions';
 
 import {
   ICustomResourceTemplateModifierConfiguration,
@@ -57,7 +53,7 @@ export class CustomResourceTemplateModifierModule implements ICustomResourceTemp
       credentials: props.credentials,
     });
 
-    const stackExists = await this.isStackExists(client, stackName);
+    const stackExists = await isStackExists(client, stackName);
 
     if (props.dryRun) {
       const dryRunMessage = stackExists
@@ -94,53 +90,6 @@ export class CustomResourceTemplateModifierModule implements ICustomResourceTemp
       status: true,
       message: `Module ${defaultProps.moduleName} ${props.operation} operation completed successfully.`,
     };
-  }
-
-  /**
-   * Function to check if stack exists
-   * @param client {@link CloudFormationClient}
-   * @param stackName string
-   * @returns
-   */
-  private async isStackExists(client: CloudFormationClient, stackName: string): Promise<boolean> {
-    this.logger.info(`Checking if stack ${stackName} exists.`);
-    try {
-      const response = await throttlingBackOff(() =>
-        client.send(
-          new DescribeStacksCommand({
-            StackName: stackName,
-          }),
-        ),
-      );
-
-      if (!response.Stacks) {
-        throw new Error(
-          `${MODULE_EXCEPTIONS.SERVICE_EXCEPTION}: DescribeStacks api did not return Stacks object for ${stackName} stack.`,
-        );
-      }
-      const stackCount = response.Stacks.length;
-      if (stackCount > 1) {
-        throw new Error(
-          `${MODULE_EXCEPTIONS.SERVICE_EXCEPTION}: DescribeStacks api returned more than 1 stack for ${stackName} stack.`,
-        );
-      }
-
-      if (stackCount === 0) {
-        this.logger.info(`Stack ${stackName} does not exist.`);
-        return false;
-      }
-
-      this.logger.info(`Stack ${stackName} exists.`);
-      return true;
-    } catch (e: unknown) {
-      if (e instanceof Error) {
-        if (e.name === 'ValidationError' && e.message.includes('does not exist')) {
-          this.logger.info(`Stack ${stackName} does not exist.`);
-          return false;
-        }
-      }
-      throw e;
-    }
   }
 
   /**
@@ -217,7 +166,9 @@ export class CustomResourceTemplateModifierModule implements ICustomResourceTemp
     try {
       templateJson = JSON.parse(templateBody);
     } catch (e) {
-      throw new Error(`${MODULE_EXCEPTIONS.SERVICE_EXCEPTION}: Invalid JSON in template for stack ${stackName}`);
+      throw new Error(
+        `${MODULE_EXCEPTIONS.SERVICE_EXCEPTION}: Invalid JSON in template for stack ${stackName}, error: ${e}`,
+      );
     }
 
     if (!templateJson.Resources) {

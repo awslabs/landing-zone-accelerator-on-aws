@@ -27,7 +27,7 @@ const mockAsyncIterable = (data: unknown) =>
     async *[Symbol.asyncIterator]() {
       yield data;
     },
-  } as ReturnType<typeof paginateListPolicies>);
+  }) as ReturnType<typeof paginateListPolicies>;
 
 // Helper function to create base parameters
 const createBaseParams = (

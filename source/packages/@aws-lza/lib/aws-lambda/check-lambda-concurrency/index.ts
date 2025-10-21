@@ -77,7 +77,7 @@ export class CheckLambdaConcurrencyModule implements ICheckLambdaConcurrencyModu
       return response.AccountLimit.ConcurrentExecutions;
     } catch (error) {
       throw new Error(
-        `${MODULE_EXCEPTIONS.SERVICE_EXCEPTION}: Encountered an error in getting Lambda concurrency limit.`,
+        `${MODULE_EXCEPTIONS.SERVICE_EXCEPTION}: Encountered an error in getting Lambda concurrency limit. Error: ${error}`,
       );
     }
   }

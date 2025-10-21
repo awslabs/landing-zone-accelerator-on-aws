@@ -20,6 +20,8 @@ import { StackPolicyModule } from '../lib/aws-cloudformation/create-stack-policy
 import { ICustomResourceTemplateModifierHandlerParameter } from '../interfaces/aws-cloudformation/custom-resource-template-modifier';
 import { CustomResourceTemplateModifierModule } from '../lib/aws-cloudformation/custom-resource-template-modifier';
 import { ModuleHandlerReturnType } from '../common/types';
+import { IDeployStackHandlerParameter } from '../interfaces/aws-cloudformation/deploy-stack';
+import { DeployStackModule } from '../lib/aws-cloudformation/deploy-stack';
 
 process.on('uncaughtException', err => {
   throw err;
@@ -111,6 +113,26 @@ export async function customResourceTemplateModifier(
 ): Promise<ModuleHandlerReturnType> {
   try {
     return await new CustomResourceTemplateModifierModule().handler(input);
+  } catch (e: unknown) {
+    logger.error(e);
+    throw e;
+  }
+}
+
+/**
+ * Function to deploy CloudFormation stack
+ * @param input {@link IDeployStackHandlerParameter}
+ * @returns status {@link ModuleHandlerReturnType}
+ *
+ * @example
+ * {
+ *   stackName: 'stack1',
+ *   templatePath: './template.yaml',
+ * }
+ */
+export async function deployStack(input: IDeployStackHandlerParameter): Promise<ModuleHandlerReturnType> {
+  try {
+    return await new DeployStackModule().handler(input);
   } catch (e: unknown) {
     logger.error(e);
     throw e;

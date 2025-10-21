@@ -278,7 +278,7 @@ export class GetCloudFormationTemplatesModule implements IGetCloudFormationTempl
       }
     } catch (err) {
       this.logger.warn(
-        `No template found for account ${props.environment.accountId} in region ${props.environment.region}. Returning empty template.`,
+        `No template found for account ${props.environment.accountId} in region ${props.environment.region}. Returning empty template. Error: ${err}`,
       );
     }
     await this.writeTemplateToDisk(stackTemplateItem);

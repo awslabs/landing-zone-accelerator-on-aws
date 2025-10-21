@@ -153,19 +153,21 @@ export class MoveAccountsBatchModule implements IMoveAccountsBatchModule {
         organizationAccounts,
       );
 
-      accountDetailsFromOrganizationsByEmail?.Id === undefined
-        ? accountsDetailWithOuId.push({
-            accountItem: accountDetailsFromOrganizationsByEmail,
-            destinationOuId,
-          })
-        : accountsDetailWithOuId.push({
-            accountItem: accountDetailsFromOrganizationsByEmail,
-            currentOuId: await this.getCurrentOrganizationalUnitForAccount(
-              client,
-              accountDetailsFromOrganizationsByEmail,
-            ),
-            destinationOuId,
-          });
+      if (accountDetailsFromOrganizationsByEmail?.Id === undefined) {
+        accountsDetailWithOuId.push({
+          accountItem: accountDetailsFromOrganizationsByEmail,
+          destinationOuId,
+        });
+      } else {
+        accountsDetailWithOuId.push({
+          accountItem: accountDetailsFromOrganizationsByEmail,
+          currentOuId: await this.getCurrentOrganizationalUnitForAccount(
+            client,
+            accountDetailsFromOrganizationsByEmail,
+          ),
+          destinationOuId,
+        });
+      }
     }
 
     return accountsDetailWithOuId;

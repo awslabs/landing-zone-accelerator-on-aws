@@ -88,6 +88,9 @@ export { deleteDefaultSecurityGroupRules } from './executors/accelerator-amazon-
 export { ICustomResourceTemplateModifierHandlerParameter } from './interfaces/aws-cloudformation/custom-resource-template-modifier';
 export { customResourceTemplateModifier } from './executors/accelerator-aws-cloudformation';
 
+export { IDeployStackHandlerParameter } from './interfaces/aws-cloudformation/deploy-stack';
+export { deployStack } from './executors/accelerator-aws-cloudformation';
+
 //
 // AWS GuardDuty Module resources
 //
