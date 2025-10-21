@@ -44,6 +44,7 @@ export enum V2StackComponentsList {
   NAT_GATEWAY = 'nat-gateway',
   TGW_VPC_ATTACHMENT_ROLE = 'tgw-vpc-attachment-role',
   TGW_VPC_ATTACHMENT = 'tgw-vpc-attachment',
+  TGW_ATTACHMENT = 'tgw-attachment',
 
   SUBNET_SHARE = 'subnet-share',
 

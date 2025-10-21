@@ -207,9 +207,14 @@ export class TgwResources {
 
     for (const vpcItem of vpcResources) {
       for (const tgwAttachmentItem of vpcItem.transitGatewayAttachments ?? []) {
+        // Determine the TGW-VPC resource type based on partition
+        const resourceType =
+          partition === 'aws'
+            ? LZAResourceLookupType.TRANSIT_GATEWAY_VPC_ATTACHMENT
+            : LZAResourceLookupType.TRANSIT_GATEWAY_ATTACHMENT;
         if (
           !this.lzaLookup.resourceExists({
-            resourceType: LZAResourceLookupType.TRANSIT_GATEWAY_VPC_ATTACHMENT,
+            resourceType,
             lookupValues: {
               vpcName: vpcItem.name,
               transitGatewayName: tgwAttachmentItem.transitGateway.name,

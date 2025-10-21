@@ -565,11 +565,16 @@ export class VpcSubnetsBaseStack extends AcceleratorStack {
   private createTgwAttachments(): void {
     for (const tgwAttachmentItem of this.vpcDetails.transitGatewayAttachments) {
       const tgwAccountId = this.props.accountsConfig.getAccountId(tgwAttachmentItem.transitGateway.account);
+      const resourceType =
+        this.props.partition === 'aws'
+          ? V2StackComponentsList.TGW_VPC_ATTACHMENT
+          : V2StackComponentsList.TGW_ATTACHMENT;
+
       if (
         !isV2Resource(
           this.v2StackProps.v2NetworkResources,
           this.vpcDetails.name,
-          V2StackComponentsList.TGW_VPC_ATTACHMENT,
+          resourceType,
           `${tgwAttachmentItem.name}|${tgwAttachmentItem.transitGateway.name}|${tgwAccountId}`,
         )
       ) {
