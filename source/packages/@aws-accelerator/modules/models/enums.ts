@@ -109,6 +109,10 @@ export enum AcceleratorModules {
   PIPELINE_PREREQUISITES = 'pipeline-prerequisites',
 
   /**
+   * Delete default VPCs in accounts
+   */
+  DELETE_DEFAULT_VPC = 'delete-default-vpc',
+  /**
    * An Example module which is executed in `PREPARE` stage
    */
   EXAMPLE_MODULE = 'example-module',

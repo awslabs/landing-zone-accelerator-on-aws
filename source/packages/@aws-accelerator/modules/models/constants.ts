@@ -25,6 +25,7 @@ import { AcceleratorModuleStageDetailsType, AcceleratorModuleStageOrdersType, Mo
 import { ManageAccountsAliasModule } from '../lib/actions/aws-organizations/manage-accounts-alias';
 import { AcceleratorPrerequisites } from '../lib/actions/prerequisites/accelerator-prerequisites';
 import { PipelinePrerequisites } from '../lib/actions/prerequisites/pipeline-prerequisites';
+import { DeleteDefaultVpc } from '../lib/actions/aws-ec2/delete-default-vpc';
 
 /**
  * Execution order for the Accelerator module stages
@@ -220,7 +221,17 @@ export const AcceleratorModuleStageDetails: AcceleratorModuleStageDetailsType[] 
       name: AcceleratorModuleStages.NETWORK_PREP,
       runOrder: AcceleratorModuleStageOrders[AcceleratorModuleStages.NETWORK_PREP].runOrder,
     },
-    modules: [],
+    modules: [
+      {
+        name: AcceleratorModules.DELETE_DEFAULT_VPC,
+        description: 'Delete default VPCs in accounts',
+        runOrder: 1,
+        handler: async (params: ModuleParams) => {
+          return await DeleteDefaultVpc.execute(params);
+        },
+        executionPhase: ModuleExecutionPhase.DEPLOY,
+      },
+    ],
   },
   {
     stage: {
