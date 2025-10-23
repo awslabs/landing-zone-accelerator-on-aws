@@ -1042,6 +1042,8 @@ export interface ISsmAutomationConfig {
  *           - Control2
  *       - name: CIS AWS Foundations Benchmark v3.0.0
  *         enable: true
+ *       - name: CIS AWS Foundations Benchmark v5.0.0
+ *         enable: true
  *       - name: NIST Special Publication 800-53 Revision 5
  *         enable: true
  *         controlsToDisable:
