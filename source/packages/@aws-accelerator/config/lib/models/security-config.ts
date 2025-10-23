@@ -651,6 +651,7 @@ export interface ISecurityHubStandardConfig {
     | 'CIS AWS Foundations Benchmark v1.2.0'
     | 'CIS AWS Foundations Benchmark v1.4.0'
     | 'CIS AWS Foundations Benchmark v3.0.0'
+    | 'CIS AWS Foundations Benchmark v5.0.0'
     | 'NIST Special Publication 800-53 Revision 5'
     | 'AWS Resource Tagging Standard v1.0.0'
     | 'PCI DSS v3.2.1'
@@ -1041,6 +1042,8 @@ export interface ISsmAutomationConfig {
  *           - Control1
  *           - Control2
  *       - name: CIS AWS Foundations Benchmark v3.0.0
+ *         enable: true
+ *       - name: CIS AWS Foundations Benchmark v5.0.0
  *         enable: true
  *       - name: NIST Special Publication 800-53 Revision 5
  *         enable: true
