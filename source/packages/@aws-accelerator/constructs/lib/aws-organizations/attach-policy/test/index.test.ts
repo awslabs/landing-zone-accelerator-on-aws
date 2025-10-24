@@ -253,4 +253,45 @@ describe('Delete Event', () => {
     const response = await handler(event);
     expect(response?.Status).toStrictEqual('SUCCESS');
   });
+  test('Delete operation detaches only one policy', async () => {
+    const event = AcceleratorUnitTest.getEvent(EventType.DELETE, {
+      new: [
+        {
+          policyId: 'p-specific123',
+          targetId: 'ou-test123',
+          type: 'SERVICE_CONTROL_POLICY',
+          partition: 'aws',
+          policyTagKey: 'LZAManaged',
+        },
+      ],
+    });
+
+    orgClient.on(ListPoliciesCommand).resolves({
+      Policies: [{ Name: 'policy1', Id: 'p-specific123' }],
+    });
+
+    orgClient.on(ListPoliciesForTargetCommand).resolves({
+      Policies: [
+        { Name: 'policy1', Id: 'p-specific123' },
+        { Name: 'policy2', Id: 'p-other456' },
+        { Name: 'policy3', Id: 'p-other789' },
+      ],
+    });
+
+    orgClient.on(ListTagsForResourceCommand).resolves({
+      Tags: [{ Key: 'LZAManaged', Value: 'Yes' }],
+    });
+
+    orgClient.on(DetachPolicyCommand).resolves({});
+
+    const response = await handler(event);
+    expect(response?.Status).toStrictEqual('SUCCESS');
+
+    // Verify only one policy was detached
+    const detachCalls = orgClient.commandCalls(DetachPolicyCommand);
+    expect(detachCalls.length).toBe(1);
+
+    const detachedIds = detachCalls.map(call => call.args[0].input.PolicyId);
+    expect(detachedIds).toContain('p-specific123');
+  });
 });
