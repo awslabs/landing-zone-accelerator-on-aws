@@ -2457,11 +2457,6 @@ exports[`PipelineStack > Construct(PipelineStack):  Snapshot Test 1`] = `
               "Value": "codecommit",
             },
             {
-              "Name": "ACCELERATOR_SKIP_PREREQUISITES",
-              "Type": "PLAINTEXT",
-              "Value": "true",
-            },
-            {
               "Name": "ACCELERATOR_ENABLE_APPROVAL_STAGE",
               "Type": "PLAINTEXT",
               "Value": "Yes",
@@ -5604,11 +5599,6 @@ exports[`PipelineStack > Construct(PipelineStack):  Snapshot Test 2`] = `
               "Value": "codecommit",
             },
             {
-              "Name": "ACCELERATOR_SKIP_PREREQUISITES",
-              "Type": "PLAINTEXT",
-              "Value": "true",
-            },
-            {
               "Name": "ACCELERATOR_ENABLE_APPROVAL_STAGE",
               "Type": "PLAINTEXT",
               "Value": "Yes",
@@ -8255,11 +8245,6 @@ exports[`PipelineStack > Construct(PipelineStack):  Snapshot Test 3`] = `
               "Name": "CONFIG_REPOSITORY_LOCATION",
               "Type": "PLAINTEXT",
               "Value": "codecommit",
-            },
-            {
-              "Name": "ACCELERATOR_SKIP_PREREQUISITES",
-              "Type": "PLAINTEXT",
-              "Value": "true",
             },
             {
               "Name": "ACCELERATOR_ENABLE_APPROVAL_STAGE",
@@ -11161,11 +11146,6 @@ exports[`PipelineStack > Construct(PipelineStack):  Snapshot Test 4`] = `
               "Value": "codecommit",
             },
             {
-              "Name": "ACCELERATOR_SKIP_PREREQUISITES",
-              "Type": "PLAINTEXT",
-              "Value": "true",
-            },
-            {
               "Name": "ACCELERATOR_ENABLE_APPROVAL_STAGE",
               "Type": "PLAINTEXT",
               "Value": "Yes",
@@ -13812,11 +13792,6 @@ exports[`PipelineStack customS3Path > Construct(PipelineStack):  Snapshot Test 1
               "Name": "CONFIG_REPOSITORY_LOCATION",
               "Type": "PLAINTEXT",
               "Value": "codecommit",
-            },
-            {
-              "Name": "ACCELERATOR_SKIP_PREREQUISITES",
-              "Type": "PLAINTEXT",
-              "Value": "true",
             },
             {
               "Name": "ACCELERATOR_ENABLE_APPROVAL_STAGE",

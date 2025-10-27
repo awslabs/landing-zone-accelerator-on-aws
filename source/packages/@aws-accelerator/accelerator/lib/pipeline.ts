@@ -606,10 +606,6 @@ export class AcceleratorPipeline extends Construct {
             type: codebuild.BuildEnvironmentVariableType.PLAINTEXT,
             value: process.env['CONFIG_REPOSITORY_LOCATION'] ?? 'codecommit',
           },
-          ACCELERATOR_SKIP_PREREQUISITES: {
-            type: codebuild.BuildEnvironmentVariableType.PLAINTEXT,
-            value: 'true',
-          },
           ACCELERATOR_ENABLE_APPROVAL_STAGE: {
             type: codebuild.BuildEnvironmentVariableType.PLAINTEXT,
             value: props.enableApprovalStage ? 'Yes' : 'No',
