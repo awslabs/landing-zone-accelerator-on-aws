@@ -193,7 +193,12 @@ export async function handler(_event: CloudFormationCustomResourceEvent): Promis
   const version = await getSsmParameterValue(ssmClient, ssmAcceleratorVersionPath);
   const ddbConfigTable = await getSsmParameterValue(ssmClient, acceleratorConfigTable);
   const ddbItems = await scanDDBTable(ddbClient, ddbConfigTable!);
-  const ddbOus = ddbItems.filter(item => item.dataType === 'organization');
+  const latestCommit = ddbItems.filter(item => item.dataType === 'commitId').pop()?.commitId;
+  const ddbOus = ddbItems.filter(item => {
+    const isOU = item.dataType === 'organization';
+    const commitIdMatch = item.commitId === latestCommit;
+    return isOU && commitIdMatch;
+  });
   const ddbAccounts = ddbItems.filter(
     item => item.dataType === 'mandatoryAccount' || item.dataType === 'workloadAccount',
   );

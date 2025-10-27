@@ -12,9 +12,44 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - feat(module): add control tower logging 
 
 ### Fixed
-- fix(validation): updated regex validation for Route53 Resover Rule DNS to pass TLD
-- fix(networking): fix logic for nlb ip address role not provisioning'
-- feat(uninstaller): add support for local config directories when uninstalling LZA
+
+- fix(asea): fix conditional to delete custom resources with old naming convention
+- fix(cdk): fix external pipeline diagnostics
+- fix(cdk): updated cdk from 2.158 to 2.1027, disabled telemetry by default
+- fix(cdk): update customizations to use cdk dependency management
+- fix(config): fix issue where accountIds were not be added to list, update pitr config for dynamodb tables
+- fix(control-tower): landing zone operation fails on cmk permission
+- fix(control-tower): ou registration fails in CT with BadRequestException: Invalid request body
+- fix(control-tower): update operation to maintain existing unchanged manifests properties
+- fix(identity-center): removed deprecated filter option
+- fix(logging): ignore failed CreateLogGroup event
+- fix(metadata): add s3 read permissions for config artifact bucket to accelerator metadata lambda service role
+- fix(metadata): changed ou lookups to only latest commit
+- fix(modules): fixed external credentials for account alias module
+- fix(networking): delete default vpc in accounts without a vpc
+- fix(networking): fix logic for nlb ip address role not provisioning
+- fix(pipeline): replace cdk s3 deploy with s3 api for s3 based config
+- fix(pipeline): removed cdk bucket deploy for config that has s3 as source
+- fix(s3): add s3ResourcePolicyAttachments for access log bucket
+- fix(tags): skip adding tags for events rule
+- fix(utility): fix aws arn validation to support partitions other than commercial
+- fix(validation): allow top-level domains in route53 resolver rules
+- fix(validation): updated regex validation for Route53 Resolver Rule DNS to pass TLD
+- fix: make email comparison case-insensitive in account validation
+
+### Changed
+
+- chore(cdk): upgrade aws-cdk-lib and migrate stack management to toolkit-lib
+- chore(package): removes dependency of fs package
+- chore(package): upgrade lerna, nx, axios, eslint*, prettier packages
+- chore(pipeline): accelerator package version error obscures validation errors
+- chore(prerequisites): update lambda concurrency threshold
+- chore: add securityHub disable documentation
+- chore: changed tests to use vi-test instead of ts-jest
+- chore: removed AWS JS SDK V2 dependency
+- chore: update Config file to remove inaccessible link
+- chore: update documentation for controlTower controls
+- chore: update imports to reduce size of @aws-accelerator/constructs-aws-route53-associate-hosted-zones
 
 ## [1.13.1] - 2025-10-01
 
