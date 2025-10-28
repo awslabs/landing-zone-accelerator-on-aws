@@ -674,11 +674,17 @@ export class GlobalConfig implements i.IGlobalConfig {
     // Create schema with custom !include tag
     const schema = t.createSchema(dir);
     // Load YAML with custom schema
-    const values = t.parseGlobalConfig(yaml.load(buffer, { schema }));
+    let values: i.IGlobalConfig | undefined = undefined;
+    try {
+      values = t.parseGlobalConfig(yaml.load(buffer, { schema }));
+    } catch (e) {
+      logger.error('parsing global-config failed', e);
+      throw new Error('Could not parse global configuration');
+    }
 
-    const homeRegion = values.homeRegion;
-    const controlTower = values.controlTower;
-    const managementAccountAccessRole = values.managementAccountAccessRole;
+    const homeRegion = values!.homeRegion;
+    const controlTower = values!.controlTower;
+    const managementAccountAccessRole = values!.managementAccountAccessRole;
 
     return new GlobalConfig(
       {
@@ -726,7 +732,7 @@ export class GlobalConfig implements i.IGlobalConfig {
     } catch (e) {
       logger.error('Error parsing input, global config undefined');
       logger.error(`${e}`);
-      throw new Error('Could not load global configuration');
+      throw new Error('Could not parse global configuration');
     }
   }
 

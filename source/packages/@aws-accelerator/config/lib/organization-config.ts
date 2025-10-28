@@ -143,8 +143,13 @@ export class OrganizationConfig implements i.IOrganizationConfig {
     // Create schema with custom !include tag
     const schema = t.createSchema(dir);
     // Load YAML with custom schema
-    const values = t.parseOrganizationConfig(yaml.load(buffer, { schema }));
-    return new OrganizationConfig(values);
+    try {
+      const values = t.parseOrganizationConfig(yaml.load(buffer, { schema }));
+      return new OrganizationConfig(values);
+    } catch (e) {
+      logger.error('parsing organization-config failed', e);
+      throw new Error('Could not parse organization configuration');
+    }
   }
 
   /**

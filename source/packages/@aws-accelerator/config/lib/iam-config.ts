@@ -249,8 +249,13 @@ export class IamConfig implements i.IIamConfig {
     // Create schema with custom !include tag
     const schema = t.createSchema(dir);
     // Load YAML with custom schema
-    const values = t.parseIamConfig(yaml.load(buffer, { schema }));
-    return new IamConfig(values);
+    try {
+      const values = t.parseIamConfig(yaml.load(buffer, { schema }));
+      return new IamConfig(values);
+    } catch (e) {
+      logger.error('parsing iam-config failed', e);
+      throw new Error('Could not parse iam configuration');
+    }
   }
 
   /**

@@ -951,8 +951,13 @@ export class NetworkConfig implements i.INetworkConfig {
     // Create schema with custom !include tag
     const schema = t.createSchema(dir);
     // Load YAML with custom schema
-    const values = t.parseNetworkConfig(yaml.load(buffer, { schema }));
-    return new NetworkConfig(values);
+    try {
+      const values = t.parseNetworkConfig(yaml.load(buffer, { schema }));
+      return new NetworkConfig(values);
+    } catch (e) {
+      logger.error('parsing network-config failed', e);
+      throw new Error('Could not parse network configuration');
+    }
   }
 
   /**
