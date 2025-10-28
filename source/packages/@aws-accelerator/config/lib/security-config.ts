@@ -427,8 +427,13 @@ export class SecurityConfig implements i.ISecurityConfig {
     // Create schema with custom !include tag
     const schema = t.createSchema(dir);
     // Load YAML with custom schema
-    const values = t.parseSecurityConfig(yaml.load(buffer, { schema }));
-    return new SecurityConfig(values);
+    try {
+      const values = t.parseSecurityConfig(yaml.load(buffer, { schema }));
+      return new SecurityConfig(values);
+    } catch (e) {
+      logger.error('parsing security-config failed', e);
+      throw new Error('Could not parse security configuration');
+    }
   }
 
   /**

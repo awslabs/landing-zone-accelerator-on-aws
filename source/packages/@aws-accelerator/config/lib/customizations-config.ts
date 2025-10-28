@@ -17,6 +17,9 @@ import * as path from 'path';
 import * as t from './common';
 import * as i from './models/customizations-config';
 import { ReplacementsConfig } from './replacements-config';
+import { createLogger } from '@aws-accelerator/utils';
+
+const logger = createLogger(['accounts-config']);
 
 export class FirewallStaticReplacementsConfig implements i.IFirewallStaticReplacementsConfig {
   readonly key: string = '';
@@ -388,7 +391,12 @@ export class CustomizationsConfig implements i.ICustomizationsConfig {
     // Create schema with custom !include tag
     const schema = t.createSchema(dir);
     // Load YAML with custom schema
-    const values = t.parseCustomizationsConfig(yaml.load(buffer, { schema }));
-    return new CustomizationsConfig(values);
+    try {
+      const values = t.parseCustomizationsConfig(yaml.load(buffer, { schema }));
+      return new CustomizationsConfig(values);
+    } catch (e) {
+      logger.error('parsing customizations-config failed', e);
+      throw new Error('Could not parse customizations configuration');
+    }
   }
 }

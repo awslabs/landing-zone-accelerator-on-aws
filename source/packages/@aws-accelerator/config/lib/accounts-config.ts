@@ -164,20 +164,27 @@ export class AccountsConfig implements i.IAccountsConfig {
     }
 
     const buffer = fs.readFileSync(path.join(dir, AccountsConfig.FILENAME), 'utf8');
+    logger.debug('accounts loaded file');
     // Create schema with custom !include tag
     const schema = createSchema(dir);
     // Load YAML with custom schema
-    const values = parseAccountsConfig(yaml.load(buffer, { schema }));
+    let values: i.IAccountsConfig | undefined = undefined;
+    try {
+      values = parseAccountsConfig(yaml.load(buffer, { schema }));
+    } catch (e) {
+      logger.error('parsing accounts-config failed', e);
+      throw new Error('Could not parse accounts configuration');
+    }
     const managementAccountEmail =
-      (values.mandatoryAccounts as unknown as i.IBaseAccountConfig[])
+      (values!.mandatoryAccounts as unknown as i.IBaseAccountConfig[])
         .find(value => value.name == AccountsConfig.MANAGEMENT_ACCOUNT)
         ?.email.toLocaleLowerCase() || '<management-account>@example.com <----- UPDATE EMAIL ADDRESS';
     const logArchiveAccountEmail =
-      (values.mandatoryAccounts as unknown as i.IBaseAccountConfig[])
+      (values!.mandatoryAccounts as unknown as i.IBaseAccountConfig[])
         .find(value => value.name == AccountsConfig.LOG_ARCHIVE_ACCOUNT)
         ?.email.toLocaleLowerCase() || '<log-archive-account>@example.com <----- UPDATE EMAIL ADDRESS';
     const auditAccountEmail =
-      (values.mandatoryAccounts as unknown as i.IBaseAccountConfig[])
+      (values!.mandatoryAccounts as unknown as i.IBaseAccountConfig[])
         .find(value => value.name == AccountsConfig.AUDIT_ACCOUNT)
         ?.email.toLocaleLowerCase() || '<audit-account>@example.com <----- UPDATE EMAIL ADDRESS';
 

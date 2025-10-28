@@ -101,8 +101,13 @@ export class ReplacementsConfig implements i.IReplacementsConfig {
     // Create schema with custom !include tag
     const schema = t.createSchema(dir);
     // Load YAML with custom schema
-    const values = t.parseReplacementsConfig(yaml.load(buffer, { schema }));
-    return new ReplacementsConfig(values, accountsConfig);
+    try {
+      const values = t.parseReplacementsConfig(yaml.load(buffer, { schema }));
+      return new ReplacementsConfig(values, accountsConfig);
+    } catch (e) {
+      logger.error('parsing replacements-config failed', e);
+      throw new Error('Could not parse replacements configuration');
+    }
   }
 
   /**
@@ -123,10 +128,12 @@ export class ReplacementsConfig implements i.IReplacementsConfig {
 
     if (this.accountsConfig) {
       [...this.accountsConfig.mandatoryAccounts, ...this.accountsConfig.workloadAccounts].forEach(item => {
-        logger.debug(`Adding account ${item.name}`);
+        logger.debug(`Static Adding account ${item.name}`);
         this.placeholders[item.name] = item.name;
       });
+      logger.debug('Finished adding accounts');
     }
+    logger.debug('Finished loadStaticReplacements');
   }
 
   /**
@@ -172,7 +179,7 @@ export class ReplacementsConfig implements i.IReplacementsConfig {
 
     if (this.accountsConfig) {
       [...this.accountsConfig.mandatoryAccounts, ...this.accountsConfig.workloadAccounts].forEach(item => {
-        logger.debug(`Adding account ${item.name}`);
+        logger.debug(`Dynamic Adding account ${item.name}`);
         this.placeholders[item.name] = item.name;
       });
     }
