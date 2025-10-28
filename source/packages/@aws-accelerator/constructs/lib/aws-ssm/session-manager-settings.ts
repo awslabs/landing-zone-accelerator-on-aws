@@ -79,7 +79,7 @@ export class SsmSessionManagerSettings extends Construct {
       policyStatements: [
         {
           Effect: 'Allow',
-          Action: ['ssm:DescribeDocument', 'ssm:CreateDocument', 'ssm:UpdateDocument'],
+          Action: ['ssm:CreateDocument', 'ssm:GetDocument', 'ssm:UpdateDocument'],
           Resource: '*',
         },
       ],

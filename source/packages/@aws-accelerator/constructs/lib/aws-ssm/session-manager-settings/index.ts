@@ -16,8 +16,8 @@ import { CloudFormationCustomResourceEvent } from '@aws-accelerator/utils/lib/co
 import {
   CreateDocumentCommand,
   CreateDocumentCommandInput,
-  DescribeDocumentCommand,
   DuplicateDocumentContent,
+  GetDocumentCommand,
   InvalidDocument,
   SSMClient,
   UpdateDocumentCommand,
@@ -70,7 +70,18 @@ export async function handler(event: CloudFormationCustomResourceEvent): Promise
         },
       };
       try {
-        await throttlingBackOff(() => ssm.send(new DescribeDocumentCommand({ Name: documentName })));
+        const getDocumentResult = await throttlingBackOff(() =>
+          ssm.send(new GetDocumentCommand({ Name: documentName })),
+        );
+        if (!getDocumentResult.Content) {
+          throw new Error('Error reading regional settings from SSM document. Content seems to be undefined.');
+        }
+        const json = JSON.parse(getDocumentResult.Content);
+
+        // Prefer the values from the existing document if present
+        settings.inputs.runAsEnabled = json?.inputs?.runAsEnabled ?? settings.inputs.runAsEnabled;
+        settings.inputs.runAsDefaultUser = json?.inputs?.runAsDefaultUser ?? settings.inputs.runAsDefaultUser;
+
         const updateDocumentRequest: UpdateDocumentCommandInput = {
           Content: JSON.stringify(settings),
           Name: documentName,
@@ -79,8 +90,7 @@ export async function handler(event: CloudFormationCustomResourceEvent): Promise
         console.log('Update SSM Document Request: ', updateDocumentRequest);
         await throttlingBackOff(() => ssm.send(new UpdateDocumentCommand(updateDocumentRequest)));
         console.log('Update SSM Document Success');
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      } catch (e: any) {
+      } catch (e: unknown) {
         if (e instanceof DuplicateDocumentContent) {
           console.log(`SSM Document is Already latest :${documentName}`);
         } else if (e instanceof InvalidDocument) {

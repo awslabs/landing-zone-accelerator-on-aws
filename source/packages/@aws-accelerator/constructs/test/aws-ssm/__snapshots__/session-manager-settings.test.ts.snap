@@ -82,8 +82,8 @@ exports[`SsmSessionManagerSettings > Construct(SsmSessionManagerSettings):  Snap
               "Statement": [
                 {
                   "Action": [
-                    "ssm:DescribeDocument",
                     "ssm:CreateDocument",
+                    "ssm:GetDocument",
                     "ssm:UpdateDocument",
                   ],
                   "Effect": "Allow",
