@@ -10,6 +10,15 @@ export abstract class StaticInput {
     cloudWatchEncryptionEnabled: 'cloudWatchEncryptionEnabled',
     kmsKeyId: 'kmsKeyId',
   };
+  public static readonly documentWithoutRunAsSettings = { Content: '{}' };
+  public static readonly documentWithRunAsSettings = {
+    Content: JSON.stringify({
+      inputs: {
+        runAsEnabled: true,
+        runAsDefaultUser: 'XXXX',
+      },
+    }),
+  };
   public static readonly createPropsSetting = {
     schemaVersion: '1.0',
     description: 'Document to hold regional settings for Session Manager',
@@ -23,6 +32,21 @@ export abstract class StaticInput {
       s3KeyPrefix: StaticInput.createProps.s3KeyPrefix,
       runAsEnabled: false,
       runAsDefaultUser: '',
+    },
+  };
+  public static readonly createPropsWithRunAsSettings = {
+    schemaVersion: '1.0',
+    description: 'Document to hold regional settings for Session Manager',
+    sessionType: 'Standard_Stream',
+    inputs: {
+      cloudWatchEncryptionEnabled: StaticInput.createProps.cloudWatchEncryptionEnabled === 'true',
+      cloudWatchLogGroupName: StaticInput.createProps.cloudWatchLogGroupName,
+      kmsKeyId: StaticInput.createProps.kmsKeyId,
+      s3BucketName: StaticInput.createProps.s3BucketName,
+      s3EncryptionEnabled: StaticInput.createProps.s3EncryptionEnabled === 'true',
+      s3KeyPrefix: StaticInput.createProps.s3KeyPrefix,
+      runAsEnabled: true,
+      runAsDefaultUser: 'XXXX',
     },
   };
   public static readonly updateProps = {

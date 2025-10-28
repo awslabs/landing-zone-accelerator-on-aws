@@ -1,11 +1,11 @@
 import {
   SSMClient,
-  DescribeDocumentCommand,
   UpdateDocumentCommand,
   CreateDocumentCommand,
   DuplicateDocumentContent,
   InvalidDocument,
   MaxDocumentSizeExceeded,
+  GetDocumentCommand,
 } from '@aws-sdk/client-ssm';
 import { describe, beforeEach, expect, test } from 'vitest';
 import { handler } from '../index';
@@ -21,10 +21,22 @@ describe('Create Event', () => {
   });
   test('Create event - put parameter value cross account', async () => {
     const event = AcceleratorUnitTest.getEvent(EventType.CREATE, { new: [StaticInput.createProps] });
-    ssmClient.on(DescribeDocumentCommand, { Name: documentName }).resolves({});
+    ssmClient.on(GetDocumentCommand, { Name: documentName }).resolves(StaticInput.documentWithoutRunAsSettings);
     ssmClient
       .on(UpdateDocumentCommand, {
         Content: JSON.stringify(StaticInput.createPropsSetting),
+        Name: documentName,
+        DocumentVersion: '$LATEST',
+      })
+      .resolves({});
+    expect(await handler(event)).toEqual({ PhysicalResourceId: 'session-manager-settings', Status: 'SUCCESS' });
+  });
+  test('Create event - put parameter value cross account with run as values', async () => {
+    const event = AcceleratorUnitTest.getEvent(EventType.CREATE, { new: [StaticInput.createProps] });
+    ssmClient.on(GetDocumentCommand, { Name: documentName }).resolves(StaticInput.documentWithRunAsSettings);
+    ssmClient
+      .on(UpdateDocumentCommand, {
+        Content: JSON.stringify(StaticInput.createPropsWithRunAsSettings),
         Name: documentName,
         DocumentVersion: '$LATEST',
       })
@@ -42,7 +54,7 @@ describe('Update Event', () => {
       new: [StaticInput.createProps],
     });
     ssmClient
-      .on(DescribeDocumentCommand, { Name: documentName })
+      .on(GetDocumentCommand, { Name: documentName })
       .rejects(new DuplicateDocumentContent({ $metadata: { httpStatusCode: 400 }, message: 'Error' }));
     expect(await handler(event)).toEqual({ PhysicalResourceId: 'session-manager-settings', Status: 'SUCCESS' });
   });
@@ -51,7 +63,7 @@ describe('Update Event', () => {
       new: [StaticInput.createProps],
     });
     ssmClient
-      .on(DescribeDocumentCommand, { Name: documentName })
+      .on(GetDocumentCommand, { Name: documentName })
       .rejects(new MaxDocumentSizeExceeded({ $metadata: { httpStatusCode: 400 }, message: 'Error' }));
     await expect(handler(event)).rejects.toThrowError(
       'Error while updating SSM Document :SSM-SessionManagerRunShell. Received: {"name":"MaxDocumentSizeExceeded","$fault":"client","$metadata":{"httpStatusCode":400}}',
@@ -62,7 +74,7 @@ describe('Update Event', () => {
       new: [StaticInput.updateProps],
     });
     ssmClient
-      .on(DescribeDocumentCommand, { Name: documentName })
+      .on(GetDocumentCommand, { Name: documentName })
       .rejects(new InvalidDocument({ $metadata: { httpStatusCode: 400 }, message: 'Error' }));
     ssmClient
       .on(CreateDocumentCommand, {
