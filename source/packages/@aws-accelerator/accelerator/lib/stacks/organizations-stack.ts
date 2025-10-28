@@ -441,7 +441,10 @@ export class OrganizationsStack extends AcceleratorStack {
    * Function to enable IPAM delegated admin account
    */
   private enableIpamDelegatedAdminAccount() {
-    if (this.stackProperties.networkConfig.centralNetworkServices?.ipams) {
+    if (
+      this.stackProperties.networkConfig.centralNetworkServices?.ipams &&
+      this.stackProperties.networkConfig.centralNetworkServices?.ipams?.length > 0
+    ) {
       // Get delegated admin account
       const networkAdminAccountId = this.stackProperties.accountsConfig.getAccountId(
         this.stackProperties.networkConfig.centralNetworkServices.delegatedAdminAccount,
