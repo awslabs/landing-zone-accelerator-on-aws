@@ -810,17 +810,7 @@ export interface ISecurityHubStandardConfig {
    * Note: AWS may add new standards over time. This field accepts any string
    * to allow for future standards without requiring code changes.
    */
-  readonly name:
-    | 'AWS Foundational Security Best Practices v1.0.0'
-    | 'CIS AWS Foundations Benchmark v1.2.0'
-    | 'CIS AWS Foundations Benchmark v1.4.0'
-    | 'CIS AWS Foundations Benchmark v3.0.0'
-    | 'CIS AWS Foundations Benchmark v5.0.0'
-    | 'NIST Special Publication 800-53 Revision 5'
-    | 'AWS Resource Tagging Standard v1.0.0'
-    | 'PCI DSS v3.2.1'
-    | 'PCI DSS v4.0.1'
-    | '';
+  readonly name: t.NonEmptyString;
 
   /**
    * Specifies which organizational units and accounts this security standard will be applied to.

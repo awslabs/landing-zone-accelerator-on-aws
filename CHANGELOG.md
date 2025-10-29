@@ -28,6 +28,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - fix(ssm): fixed session manager log group permissions
 
 ### Changed
+- feat(securityhub): add suppport for any future standard supported by securityhub
 
 - chore(typedocs): enriched security-config TypeDoc with added context and clarity
 - chore(typedocs): enriched global-config TypeDoc with added context and clarity
