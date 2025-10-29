@@ -636,27 +636,23 @@ export interface IDetectiveConfig {
  */
 export interface ISecurityHubStandardConfig {
   /**
-   * An enum value that specifies one of three security standards supported by Security Hub
-   * Possible values are 'AWS Foundational Security Best Practices v1.0.0',
-   * 'CIS AWS Foundations Benchmark v1.2.0',
-   * 'CIS AWS Foundations Benchmark v1.4.0',
-   * 'CIS AWS Foundations Benchmark v3.0.0',
-   * 'NIST Special Publication 800-53 Revision 5',
-   * 'AWS Resource Tagging Standard v1.0.0'
-   * 'PCI DSS v4.0.1',
-   * and 'PCI DSS v3.2.1'
+   * The name of the AWS Security Hub standard to enable or disable.
+   * This can be any valid Security Hub standard name supported by AWS.
+   *
+   * Common examples include:
+   * - 'AWS Foundational Security Best Practices v1.0.0'
+   * - 'CIS AWS Foundations Benchmark v1.2.0'
+   * - 'CIS AWS Foundations Benchmark v1.4.0'
+   * - 'CIS AWS Foundations Benchmark v3.0.0'
+   * - 'NIST Special Publication 800-53 Revision 5'
+   * - 'AWS Resource Tagging Standard v1.0.0'
+   * - 'PCI DSS v3.2.1'
+   * - 'PCI DSS v4.0.1'
+   *
+   * Note: AWS may add new standards over time. This field accepts any string
+   * to allow for future standards without requiring code changes.
    */
-  readonly name:
-    | 'AWS Foundational Security Best Practices v1.0.0'
-    | 'CIS AWS Foundations Benchmark v1.2.0'
-    | 'CIS AWS Foundations Benchmark v1.4.0'
-    | 'CIS AWS Foundations Benchmark v3.0.0'
-    | 'CIS AWS Foundations Benchmark v5.0.0'
-    | 'NIST Special Publication 800-53 Revision 5'
-    | 'AWS Resource Tagging Standard v1.0.0'
-    | 'PCI DSS v3.2.1'
-    | 'PCI DSS v4.0.1'
-    | '';
+  readonly name: t.NonEmptyString;
 
   /**
    * (OPTIONAL) Deployment targets for AWS Security Hub standard.

@@ -38,6 +38,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - fix: make email comparison case-insensitive in account validation
 
 ### Changed
+- feat(securityhub): add suppport for any future standard supported by securityhub
 
 - chore(cdk): upgrade aws-cdk-lib and migrate stack management to toolkit-lib
 - chore(package): removes dependency of fs package
