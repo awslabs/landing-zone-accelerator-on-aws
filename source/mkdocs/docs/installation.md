@@ -20,10 +20,16 @@ cd <rootDir>/source
 yarn install
 ```
 
-3. To run the CDK synthesis
+3. To run the CDK synthesis (in Management account)
 ```
 cd <rootDir>/source/packages/@aws-accelerator/installer
 yarn build && yarn cdk synth
+```
+
+3. To run the CDK synthesis (in External Deployment account)
+```
+cd <rootDir>/source/packages/@aws-accelerator/installer
+yarn build && yarn cdk synth --context use-external-pipeline-account=true
 ```
 
 After running these commands, the Installer stack template will be saved to `<rootDir>/source/packages/@aws-accelerator/installer/cdk.out/AWSAccelerator-InstallerStack.template.json`
@@ -68,6 +74,7 @@ aws s3 cp ./cdk.out/AWSAccelerator-InstallerStack.template.json s3://$BUCKET_NAM
 3. Create the Installer stack with AWS CLI command:
 ```
 aws cloudformation create-stack --stack-name AWSAccelerator-InstallerStack --template-url https://$BUCKET_NAME.s3.<region>.amazonaws.com/AWSAccelerator-InstallerStack.template.json \
+--capabilities CAPABILITY_IAM \
 --parameters ParameterKey=RepositoryName,ParameterValue=<Repository_Name> \
 ParameterKey=RepositoryBranchName,ParameterValue=<Branch_Name> \
 ParameterKey=ManagementAccountEmail,ParameterValue=<Management_Email> \
@@ -75,9 +82,18 @@ ParameterKey=LogArchiveAccountEmail,ParameterValue=<LogArchive_Email> \
 ParameterKey=AuditAccountEmail,ParameterValue=<Audit_Email> \
 ParameterKey=EnableApprovalStage,ParameterValue=Yes \
 ParameterKey=ApprovalStageNotifyEmailList,ParameterValue=<Comma_Delimited_Notify_Emails> \
-ParameterKey=ControlTowerEnabled,ParameterValue=Yes \
---capabilities CAPABILITY_IAM
+ParameterKey=ControlTowerEnabled,ParameterValue=Yes
 ```
+
+
+_**(Optional)**_ If using an External Deployment Account, add the below parameters     
+
+~~~bash
+    ManagementAccountRoleName=<AwsRoleName>,
+    ManagementAccountId=<AwsAccountId>,
+    AcceleratorQualifier=<Qualifier>
+~~~
+
 4. _**(Optional)**_ Alternate deployment of CloudFormation via AWS console:
     1. From your Management account, navigate to CloudFormation page in the AWS console
     2. Select ‘Create Stack’ and from the dropdown pick ‘with new resources (standard)’
