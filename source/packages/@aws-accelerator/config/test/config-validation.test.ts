@@ -54,6 +54,7 @@ describe('Config Files Sync Test', () => {
       ignoreExtraClassProperties: {
         AccountIdConfig: ['orgsApiResponse', 'status'],
         GovCloudAccountConfig: ['orgsApiResponse'],
+        AccountsConfig: ['solutionId', 'awsRegion', 'acceleratorSsmParamNamePrefix', 'configCommitId'],
       },
     },
     {
