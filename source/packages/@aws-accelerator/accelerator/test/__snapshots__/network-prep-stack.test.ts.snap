@@ -2312,6 +2312,78 @@ drop http $HOME_NET any -> $EXTERNAL_NET any (http.host; content:"example.com"; 
       },
       "Type": "AWS::IAM::Role",
     },
+    "MulticastCoreTransitGatewayRouteTable713DE18B": {
+      "Properties": {
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "Multicast-Core",
+          },
+        ],
+        "TransitGatewayId": {
+          "Ref": "MutlicastTgwTransitGatewayE837D150",
+        },
+      },
+      "Type": "AWS::EC2::TransitGatewayRouteTable",
+    },
+    "MulticastIsolatedTransitGatewayRouteTable93DEC7F7": {
+      "Properties": {
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "Multicast-Isolated",
+          },
+        ],
+        "TransitGatewayId": {
+          "Ref": "MutlicastTgwTransitGatewayE837D150",
+        },
+      },
+      "Type": "AWS::EC2::TransitGatewayRouteTable",
+    },
+    "MutlicastTgwTransitGatewayE837D150": {
+      "Properties": {
+        "AmazonSideAsn": 65426,
+        "AutoAcceptSharedAttachments": "enable",
+        "DefaultRouteTableAssociation": "disable",
+        "DefaultRouteTablePropagation": "disable",
+        "DnsSupport": "enable",
+        "MulticastSupport": "enable",
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "MutlicastTgw",
+          },
+        ],
+        "VpnEcmpSupport": "enable",
+      },
+      "Type": "AWS::EC2::TransitGateway",
+    },
+    "MutlicastTgwTransitGatewayShareResourceShare6C69625A": {
+      "Properties": {
+        "Name": "MutlicastTgw_TransitGatewayShare",
+        "Principals": [
+          "arn:aws:organizations::111111111111:ou/o-asdf123456/ou-asdf-22222222",
+        ],
+        "ResourceArns": [
+          {
+            "Fn::Join": [
+              "",
+              [
+                "arn:",
+                {
+                  "Ref": "AWS::Partition",
+                },
+                ":ec2:us-east-1:555555555555:transit-gateway/",
+                {
+                  "Ref": "MutlicastTgwTransitGatewayE837D150",
+                },
+              ],
+            ],
+          },
+        ],
+      },
+      "Type": "AWS::RAM::ResourceShare",
+    },
     "NetworkDxgwAccelratorVifVirtualInterface0F06099A": {
       "DeletionPolicy": "Delete",
       "DependsOn": [
@@ -2473,7 +2545,7 @@ drop http $HOME_NET any -> $EXTERNAL_NET any (http.host; content:"example.com"; 
             "PolicyName": "default",
           },
         ],
-        "RoleName": "AWSAccelerator-NetworkLoadBalancerIPAddress-Lookup",
+        "RoleName": "AWSAccelerator-NetworkLoadBalancerIPAddressLookup",
       },
       "Type": "AWS::IAM::Role",
     },
@@ -2834,9 +2906,39 @@ drop http $HOME_NET any -> $EXTERNAL_NET any (http.host; content:"example.com"; 
       },
       "Type": "AWS::SSM::Parameter",
     },
+    "SsmParamMutlicastTgwMulticastCoreTransitGatewayRouteTableId5B349951": {
+      "Properties": {
+        "Name": "/accelerator/network/transitGateways/MutlicastTgw/routeTables/Multicast-Core/id",
+        "Type": "String",
+        "Value": {
+          "Ref": "MulticastCoreTransitGatewayRouteTable713DE18B",
+        },
+      },
+      "Type": "AWS::SSM::Parameter",
+    },
+    "SsmParamMutlicastTgwMulticastIsolatedTransitGatewayRouteTableIdB77C09A9": {
+      "Properties": {
+        "Name": "/accelerator/network/transitGateways/MutlicastTgw/routeTables/Multicast-Isolated/id",
+        "Type": "String",
+        "Value": {
+          "Ref": "MulticastIsolatedTransitGatewayRouteTable93DEC7F7",
+        },
+      },
+      "Type": "AWS::SSM::Parameter",
+    },
+    "SsmParamMutlicastTgwTransitGatewayId8D796CCC": {
+      "Properties": {
+        "Name": "/accelerator/network/transitGateways/MutlicastTgw/id",
+        "Type": "String",
+        "Value": {
+          "Ref": "MutlicastTgwTransitGatewayE837D150",
+        },
+      },
+      "Type": "AWS::SSM::Parameter",
+    },
     "SsmParamNetworkDxgwAccelratorVifVirtualInterface811176E7": {
       "DependsOn": [
-        "SsmParamNetworkDxgwAuthVifAccelratorVifVirtualInterface8E0DF7B7",
+        "SsmParamenhancedVpnVpnConnection0FB23967",
       ],
       "Properties": {
         "Name": "/accelerator/network/directConnectGateways/Network-DXGW/virtualInterfaces/Accelrator-VIF/id",
@@ -2848,6 +2950,9 @@ drop http $HOME_NET any -> $EXTERNAL_NET any (http.host; content:"example.com"; 
       "Type": "AWS::SSM::Parameter",
     },
     "SsmParamNetworkDxgwAuthVifAccelratorVifVirtualInterface8E0DF7B7": {
+      "DependsOn": [
+        "SsmParamenhancedVpnVpnConnection0FB23967",
+      ],
       "Properties": {
         "Name": "/accelerator/network/directConnectGateways/Network-DXGW-AuthVif/virtualInterfaces/Accelrator-VIF/id",
         "Type": "String",
@@ -2859,7 +2964,7 @@ drop http $HOME_NET any -> $EXTERNAL_NET any (http.host; content:"example.com"; 
     },
     "SsmParamNetworkDxgwAuthVifDirectConnectGateway41E055B8": {
       "DependsOn": [
-        "SsmParamacceleratorCgwCustomerGateway984E0261",
+        "SsmParamenhancedVpnVpnConnection0FB23967",
       ],
       "Properties": {
         "Name": "/accelerator/network/directConnectGateways/Network-DXGW-AuthVif/id",
@@ -2872,7 +2977,7 @@ drop http $HOME_NET any -> $EXTERNAL_NET any (http.host; content:"example.com"; 
     },
     "SsmParamNetworkDxgwDirectConnectGatewayC782B366": {
       "DependsOn": [
-        "SsmParamacceleratorCgwCustomerGateway984E0261",
+        "SsmParamenhancedVpnVpnConnection0FB23967",
       ],
       "Properties": {
         "Name": "/accelerator/network/directConnectGateways/Network-DXGW/id",
@@ -2884,9 +2989,6 @@ drop http $HOME_NET any -> $EXTERNAL_NET any (http.host; content:"example.com"; 
       "Type": "AWS::SSM::Parameter",
     },
     "SsmParamNetworkMain2NetworkMain2CoreTransitGatewayRouteTableIdC5E730F7": {
-      "DependsOn": [
-        "SsmParamNetworkMainNetworkMainStandaloneTransitGatewayRouteTableId81A119C5",
-      ],
       "Properties": {
         "Name": "/accelerator/network/transitGateways/Network-Main-2/routeTables/Network-Main-2-Core/id",
         "Type": "String",
@@ -2898,7 +3000,7 @@ drop http $HOME_NET any -> $EXTERNAL_NET any (http.host; content:"example.com"; 
     },
     "SsmParamNetworkMain2NetworkMain2SegregatedTransitGatewayRouteTableId8571D494": {
       "DependsOn": [
-        "SsmParamNetworkMainNetworkMainStandaloneTransitGatewayRouteTableId81A119C5",
+        "SsmParamNetworkMain2NetworkMain2CoreTransitGatewayRouteTableIdC5E730F7",
       ],
       "Properties": {
         "Name": "/accelerator/network/transitGateways/Network-Main-2/routeTables/Network-Main-2-Segregated/id",
@@ -2911,7 +3013,7 @@ drop http $HOME_NET any -> $EXTERNAL_NET any (http.host; content:"example.com"; 
     },
     "SsmParamNetworkMain2NetworkMain2SharedTransitGatewayRouteTableIdE9E46782": {
       "DependsOn": [
-        "SsmParamNetworkMainNetworkMainStandaloneTransitGatewayRouteTableId81A119C5",
+        "SsmParamNetworkMain2NetworkMain2CoreTransitGatewayRouteTableIdC5E730F7",
       ],
       "Properties": {
         "Name": "/accelerator/network/transitGateways/Network-Main-2/routeTables/Network-Main-2-Shared/id",
@@ -2923,6 +3025,9 @@ drop http $HOME_NET any -> $EXTERNAL_NET any (http.host; content:"example.com"; 
       "Type": "AWS::SSM::Parameter",
     },
     "SsmParamNetworkMain2NetworkMain2StandaloneTransitGatewayRouteTableIdF641FDF1": {
+      "DependsOn": [
+        "SsmParamNetworkMain2NetworkMain2CoreTransitGatewayRouteTableIdC5E730F7",
+      ],
       "Properties": {
         "Name": "/accelerator/network/transitGateways/Network-Main-2/routeTables/Network-Main-2-Standalone/id",
         "Type": "String",
@@ -2934,7 +3039,7 @@ drop http $HOME_NET any -> $EXTERNAL_NET any (http.host; content:"example.com"; 
     },
     "SsmParamNetworkMain2TransitGatewayId3D6B0437": {
       "DependsOn": [
-        "SsmParamNetworkMainNetworkMainStandaloneTransitGatewayRouteTableId81A119C5",
+        "SsmParamNetworkMainNetworkMainCoreTransitGatewayRouteTableId45D6D502",
       ],
       "Properties": {
         "Name": "/accelerator/network/transitGateways/Network-Main-2/id",
@@ -2946,9 +3051,6 @@ drop http $HOME_NET any -> $EXTERNAL_NET any (http.host; content:"example.com"; 
       "Type": "AWS::SSM::Parameter",
     },
     "SsmParamNetworkMain3NetworkMain3CoreTransitGatewayRouteTableIdF8149237": {
-      "DependsOn": [
-        "SsmParamNetworkMain2NetworkMain2StandaloneTransitGatewayRouteTableIdF641FDF1",
-      ],
       "Properties": {
         "Name": "/accelerator/network/transitGateways/Network-Main-3/routeTables/Network-Main-3-Core/id",
         "Type": "String",
@@ -2960,7 +3062,7 @@ drop http $HOME_NET any -> $EXTERNAL_NET any (http.host; content:"example.com"; 
     },
     "SsmParamNetworkMain3TransitGatewayId4CC1131B": {
       "DependsOn": [
-        "SsmParamNetworkMain2NetworkMain2StandaloneTransitGatewayRouteTableIdF641FDF1",
+        "SsmParamNetworkMain2NetworkMain2CoreTransitGatewayRouteTableIdC5E730F7",
       ],
       "Properties": {
         "Name": "/accelerator/network/transitGateways/Network-Main-3/id",
@@ -2982,6 +3084,9 @@ drop http $HOME_NET any -> $EXTERNAL_NET any (http.host; content:"example.com"; 
       "Type": "AWS::SSM::Parameter",
     },
     "SsmParamNetworkMainNetworkMainSegregatedTransitGatewayRouteTableIdF2215D71": {
+      "DependsOn": [
+        "SsmParamNetworkMainNetworkMainCoreTransitGatewayRouteTableId45D6D502",
+      ],
       "Properties": {
         "Name": "/accelerator/network/transitGateways/Network-Main/routeTables/Network-Main-Segregated/id",
         "Type": "String",
@@ -2992,6 +3097,9 @@ drop http $HOME_NET any -> $EXTERNAL_NET any (http.host; content:"example.com"; 
       "Type": "AWS::SSM::Parameter",
     },
     "SsmParamNetworkMainNetworkMainSharedTransitGatewayRouteTableId0C5DAACF": {
+      "DependsOn": [
+        "SsmParamNetworkMainNetworkMainCoreTransitGatewayRouteTableId45D6D502",
+      ],
       "Properties": {
         "Name": "/accelerator/network/transitGateways/Network-Main/routeTables/Network-Main-Shared/id",
         "Type": "String",
@@ -3002,6 +3110,9 @@ drop http $HOME_NET any -> $EXTERNAL_NET any (http.host; content:"example.com"; 
       "Type": "AWS::SSM::Parameter",
     },
     "SsmParamNetworkMainNetworkMainStandaloneTransitGatewayRouteTableId81A119C5": {
+      "DependsOn": [
+        "SsmParamNetworkMainNetworkMainCoreTransitGatewayRouteTableId45D6D502",
+      ],
       "Properties": {
         "Name": "/accelerator/network/transitGateways/Network-Main/routeTables/Network-Main-Standalone/id",
         "Type": "String",
@@ -3032,9 +3143,6 @@ drop http $HOME_NET any -> $EXTERNAL_NET any (http.host; content:"example.com"; 
       "Type": "AWS::SSM::Parameter",
     },
     "SsmParamacceleratorBlockGroupRuleGroupEA562A3B": {
-      "DependsOn": [
-        "SsmParamhomeRegionProdPoolPoolId5672D6D3",
-      ],
       "Properties": {
         "Name": "/accelerator/network/route53Resolver/firewall/ruleGroups/accelerator-block-group/id",
         "Type": "String",
@@ -3045,6 +3153,9 @@ drop http $HOME_NET any -> $EXTERNAL_NET any (http.host; content:"example.com"; 
       "Type": "AWS::SSM::Parameter",
     },
     "SsmParamacceleratorCgwCustomerGateway984E0261": {
+      "DependsOn": [
+        "SsmParamNetworkMain3NetworkMain3CoreTransitGatewayRouteTableIdF8149237",
+      ],
       "Properties": {
         "Name": "/accelerator/network/customerGateways/accelerator-cgw/id",
         "Type": "String",
@@ -3056,7 +3167,7 @@ drop http $HOME_NET any -> $EXTERNAL_NET any (http.host; content:"example.com"; 
     },
     "SsmParamacceleratorCgwIpv6CustomerGateway4067F1EF": {
       "DependsOn": [
-        "SsmParamNetworkMain2NetworkMain2StandaloneTransitGatewayRouteTableIdF641FDF1",
+        "SsmParamNetworkMain3NetworkMain3CoreTransitGatewayRouteTableIdF8149237",
       ],
       "Properties": {
         "Name": "/accelerator/network/customerGateways/accelerator-cgw-ipv6/id",
@@ -3068,9 +3179,6 @@ drop http $HOME_NET any -> $EXTERNAL_NET any (http.host; content:"example.com"; 
       "Type": "AWS::SSM::Parameter",
     },
     "SsmParamacceleratorIpamIpamId271C0A36": {
-      "DependsOn": [
-        "SsmParamNetworkDxgwAuthVifAccelratorVifVirtualInterface8E0DF7B7",
-      ],
       "Properties": {
         "Name": "/accelerator/network/ipam/accelerator-ipam/id",
         "Type": "String",
@@ -3082,7 +3190,7 @@ drop http $HOME_NET any -> $EXTERNAL_NET any (http.host; content:"example.com"; 
     },
     "SsmParamacceleratorPolicyNetworkFirewallPolicy68E9C1A5": {
       "DependsOn": [
-        "SsmParamdomainListGroupNetworkFirewallRuleGroupC2BC037A",
+        "SsmParamacceleratorSuricataRuleGroupNetworkFirewallRuleGroup5707985D",
       ],
       "Properties": {
         "Name": "/accelerator/network/networkFirewall/policies/accelerator-policy/arn",
@@ -3095,7 +3203,7 @@ drop http $HOME_NET any -> $EXTERNAL_NET any (http.host; content:"example.com"; 
     },
     "SsmParamacceleratorQueryLogsCwlQueryLogConfig0E6CC558": {
       "DependsOn": [
-        "SsmParamhomeRegionProdPoolPoolId5672D6D3",
+        "SsmParamacceleratorBlockGroupRuleGroupEA562A3B",
       ],
       "Properties": {
         "Name": "/accelerator/network/route53Resolver/queryLogConfigs/accelerator-query-logs-cwl/id",
@@ -3111,7 +3219,7 @@ drop http $HOME_NET any -> $EXTERNAL_NET any (http.host; content:"example.com"; 
     },
     "SsmParamacceleratorQueryLogsS3QueryLogConfig0B1FF32F": {
       "DependsOn": [
-        "SsmParamhomeRegionProdPoolPoolId5672D6D3",
+        "SsmParamacceleratorBlockGroupRuleGroupEA562A3B",
       ],
       "Properties": {
         "Name": "/accelerator/network/route53Resolver/queryLogConfigs/accelerator-query-logs-s3/id",
@@ -3127,7 +3235,7 @@ drop http $HOME_NET any -> $EXTERNAL_NET any (http.host; content:"example.com"; 
     },
     "SsmParamacceleratorRuleGroupNetworkFirewallRuleGroup28931513": {
       "DependsOn": [
-        "SsmParamnetworkLocalEndpointQueryLogsS3QueryLogConfig14EBC8D4",
+        "SsmParamacceleratorSuricataRuleGroupNetworkFirewallRuleGroup5707985D",
       ],
       "Properties": {
         "Name": "/accelerator/network/networkFirewall/ruleGroups/accelerator-rule-group/arn",
@@ -3139,9 +3247,6 @@ drop http $HOME_NET any -> $EXTERNAL_NET any (http.host; content:"example.com"; 
       "Type": "AWS::SSM::Parameter",
     },
     "SsmParamacceleratorStrictPolicyNetworkFirewallPolicy2C70E8B6": {
-      "DependsOn": [
-        "SsmParamdomainListGroupNetworkFirewallRuleGroupC2BC037A",
-      ],
       "Properties": {
         "Name": "/accelerator/network/networkFirewall/policies/accelerator-strict-policy/arn",
         "Type": "String",
@@ -3153,7 +3258,7 @@ drop http $HOME_NET any -> $EXTERNAL_NET any (http.host; content:"example.com"; 
     },
     "SsmParamacceleratorStrictRuleGroupNetworkFirewallRuleGroup315F5768": {
       "DependsOn": [
-        "SsmParamnetworkLocalEndpointQueryLogsS3QueryLogConfig14EBC8D4",
+        "SsmParamacceleratorSuricataRuleGroupNetworkFirewallRuleGroup5707985D",
       ],
       "Properties": {
         "Name": "/accelerator/network/networkFirewall/ruleGroups/accelerator-strict-rule-group/arn",
@@ -3165,9 +3270,6 @@ drop http $HOME_NET any -> $EXTERNAL_NET any (http.host; content:"example.com"; 
       "Type": "AWS::SSM::Parameter",
     },
     "SsmParamacceleratorSuricataRuleGroupNetworkFirewallRuleGroup5707985D": {
-      "DependsOn": [
-        "SsmParamnetworkLocalEndpointQueryLogsS3QueryLogConfig14EBC8D4",
-      ],
       "Properties": {
         "Name": "/accelerator/network/networkFirewall/ruleGroups/accelerator-suricata-rule-group/arn",
         "Type": "String",
@@ -3179,7 +3281,7 @@ drop http $HOME_NET any -> $EXTERNAL_NET any (http.host; content:"example.com"; 
     },
     "SsmParamacceleratorVpnIpv6VpnConnection7C1F581D": {
       "DependsOn": [
-        "SsmParamNetworkMain2NetworkMain2StandaloneTransitGatewayRouteTableIdF641FDF1",
+        "SsmParamNetworkMain3NetworkMain3CoreTransitGatewayRouteTableIdF8149237",
       ],
       "Properties": {
         "Name": "/accelerator/network/vpnConnection/accelerator-vpn-ipv6/id",
@@ -3192,7 +3294,7 @@ drop http $HOME_NET any -> $EXTERNAL_NET any (http.host; content:"example.com"; 
     },
     "SsmParamacceleratorVpnVpnConnection261CAE04": {
       "DependsOn": [
-        "SsmParamacceleratorCgwCustomerGateway984E0261",
+        "SsmParamNetworkMain3NetworkMain3CoreTransitGatewayRouteTableIdF8149237",
       ],
       "Properties": {
         "Name": "/accelerator/network/vpnConnection/accelerator-vpn/id",
@@ -3205,7 +3307,7 @@ drop http $HOME_NET any -> $EXTERNAL_NET any (http.host; content:"example.com"; 
     },
     "SsmParambasePoolPoolId86A35FFC": {
       "DependsOn": [
-        "SsmParamNetworkDxgwAuthVifAccelratorVifVirtualInterface8E0DF7B7",
+        "SsmParamacceleratorIpamIpamId271C0A36",
       ],
       "Properties": {
         "Name": "/accelerator/network/ipam/pools/base-pool/id",
@@ -3217,6 +3319,9 @@ drop http $HOME_NET any -> $EXTERNAL_NET any (http.host; content:"example.com"; 
       "Type": "AWS::SSM::Parameter",
     },
     "SsmParamdomainListGroupNetworkFirewallRuleGroupC2BC037A": {
+      "DependsOn": [
+        "SsmParamacceleratorSuricataRuleGroupNetworkFirewallRuleGroup5707985D",
+      ],
       "Properties": {
         "Name": "/accelerator/network/networkFirewall/ruleGroups/domain-list-group/arn",
         "Type": "String",
@@ -3227,9 +3332,6 @@ drop http $HOME_NET any -> $EXTERNAL_NET any (http.host; content:"example.com"; 
       "Type": "AWS::SSM::Parameter",
     },
     "SsmParamenhancedVpnVpnConnection0FB23967": {
-      "DependsOn": [
-        "SsmParamacceleratorCgwCustomerGateway984E0261",
-      ],
       "Properties": {
         "Name": "/accelerator/network/vpnConnection/enhanced-vpn/id",
         "Type": "String",
@@ -3241,7 +3343,7 @@ drop http $HOME_NET any -> $EXTERNAL_NET any (http.host; content:"example.com"; 
     },
     "SsmParamhomeRegionPoolPoolId475D7271": {
       "DependsOn": [
-        "SsmParamNetworkDxgwAuthVifAccelratorVifVirtualInterface8E0DF7B7",
+        "SsmParamacceleratorIpamIpamId271C0A36",
       ],
       "Properties": {
         "Name": "/accelerator/network/ipam/pools/home-region-pool/id",
@@ -3253,6 +3355,9 @@ drop http $HOME_NET any -> $EXTERNAL_NET any (http.host; content:"example.com"; 
       "Type": "AWS::SSM::Parameter",
     },
     "SsmParamhomeRegionProdPoolPoolId5672D6D3": {
+      "DependsOn": [
+        "SsmParamacceleratorIpamIpamId271C0A36",
+      ],
       "Properties": {
         "Name": "/accelerator/network/ipam/pools/home-region-prod-pool/id",
         "Type": "String",
@@ -3264,7 +3369,7 @@ drop http $HOME_NET any -> $EXTERNAL_NET any (http.host; content:"example.com"; 
     },
     "SsmParamnetworkLocalEndpointQueryLogsCwlQueryLogConfig40CFAA3E": {
       "DependsOn": [
-        "SsmParamnetworkLocalEndpointQueryLogsS3QueryLogConfig14EBC8D4",
+        "SsmParamacceleratorBlockGroupRuleGroupEA562A3B",
       ],
       "Properties": {
         "Name": "/accelerator/network/route53Resolver/queryLogConfigs/network-local-endpoint-query-logs-cwl/id",
@@ -3279,6 +3384,9 @@ drop http $HOME_NET any -> $EXTERNAL_NET any (http.host; content:"example.com"; 
       "Type": "AWS::SSM::Parameter",
     },
     "SsmParamnetworkLocalEndpointQueryLogsS3QueryLogConfig14EBC8D4": {
+      "DependsOn": [
+        "SsmParamacceleratorBlockGroupRuleGroupEA562A3B",
+      ],
       "Properties": {
         "Name": "/accelerator/network/route53Resolver/queryLogConfigs/network-local-endpoint-query-logs-s3/id",
         "Type": "String",
@@ -3293,7 +3401,7 @@ drop http $HOME_NET any -> $EXTERNAL_NET any (http.host; content:"example.com"; 
     },
     "SsmParamwestRegionPoolPoolId673ACD76": {
       "DependsOn": [
-        "SsmParamhomeRegionProdPoolPoolId5672D6D3",
+        "SsmParamacceleratorIpamIpamId271C0A36",
       ],
       "Properties": {
         "Name": "/accelerator/network/ipam/pools/west-region-pool/id",

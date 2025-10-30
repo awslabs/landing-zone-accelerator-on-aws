@@ -43,6 +43,18 @@ exports[`NetworkAssociationsStack > Construct(NetworkAssociationsStack):  Snapsh
       "Default": "/accelerator/network/route53Resolver/rules/example-rule/id",
       "Type": "AWS::SSM::Parameter::Value<String>",
     },
+    "SsmParameterValueacceleratornetworktransitGatewaysMutlicastTgwidC96584B6F00A464EAD1953AFF4B05118Parameter": {
+      "Default": "/accelerator/network/transitGateways/MutlicastTgw/id",
+      "Type": "AWS::SSM::Parameter::Value<String>",
+    },
+    "SsmParameterValueacceleratornetworktransitGatewaysMutlicastTgwrouteTablesMulticastCoreidC96584B6F00A464EAD1953AFF4B05118Parameter": {
+      "Default": "/accelerator/network/transitGateways/MutlicastTgw/routeTables/Multicast-Core/id",
+      "Type": "AWS::SSM::Parameter::Value<String>",
+    },
+    "SsmParameterValueacceleratornetworktransitGatewaysMutlicastTgwrouteTablesMulticastIsolatedidC96584B6F00A464EAD1953AFF4B05118Parameter": {
+      "Default": "/accelerator/network/transitGateways/MutlicastTgw/routeTables/Multicast-Isolated/id",
+      "Type": "AWS::SSM::Parameter::Value<String>",
+    },
     "SsmParameterValueacceleratornetworktransitGatewaysNetworkMain2idC96584B6F00A464EAD1953AFF4B05118Parameter": {
       "Default": "/accelerator/network/transitGateways/Network-Main-2/id",
       "Type": "AWS::SSM::Parameter::Value<String>",
@@ -4861,7 +4873,7 @@ exports[`NetworkAssociationsStack > Construct(NetworkAssociationsStack):  Snapsh
             "Arn",
           ],
         },
-        "assumeRoleName": "AWSAccelerator-NetworkLoadBalancerIPAddress-Lookup",
+        "assumeRoleName": "AWSAccelerator-NetworkLoadBalancerIPAddressLookup",
         "partition": {
           "Ref": "AWS::Partition",
         },
@@ -4990,7 +5002,7 @@ exports[`NetworkAssociationsStack > Construct(NetworkAssociationsStack):  Snapsh
                     {
                       "Ref": "AWS::Partition",
                     },
-                    ":iam::*:role/AWSAccelerator-NetworkLoadBalancerIPAddress-Lookup",
+                    ":iam::*:role/AWSAccelerator-NetworkLoadBalancerIPAddressLookup",
                   ],
                 ],
               },
@@ -13144,7 +13156,7 @@ catch {
             "Arn",
           ],
         },
-        "assumeRoleName": "AWSAccelerator-NetworkLoadBalancerIPAddress-Lookup",
+        "assumeRoleName": "AWSAccelerator-NetworkLoadBalancerIPAddressLookup",
         "partition": {
           "Ref": "AWS::Partition",
         },
@@ -13273,7 +13285,7 @@ catch {
                     {
                       "Ref": "AWS::Partition",
                     },
-                    ":iam::*:role/AWSAccelerator-NetworkLoadBalancerIPAddress-Lookup",
+                    ":iam::*:role/AWSAccelerator-NetworkLoadBalancerIPAddressLookup",
                   ],
                 ],
               },
@@ -14288,7 +14300,7 @@ exports[`NetworkAssociationsStack > Construct(NetworkAssociationsStack):  Snapsh
             "Arn",
           ],
         },
-        "assumeRoleName": "AWSAccelerator-NetworkLoadBalancerIPAddress-Lookup",
+        "assumeRoleName": "AWSAccelerator-NetworkLoadBalancerIPAddressLookup",
         "partition": {
           "Ref": "AWS::Partition",
         },
@@ -14417,7 +14429,7 @@ exports[`NetworkAssociationsStack > Construct(NetworkAssociationsStack):  Snapsh
                     {
                       "Ref": "AWS::Partition",
                     },
-                    ":iam::*:role/AWSAccelerator-NetworkLoadBalancerIPAddress-Lookup",
+                    ":iam::*:role/AWSAccelerator-NetworkLoadBalancerIPAddressLookup",
                   ],
                 ],
               },

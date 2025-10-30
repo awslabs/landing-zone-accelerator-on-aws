@@ -102,6 +102,7 @@ export class TgwResources {
         defaultRouteTablePropagation: tgwItem.defaultRouteTablePropagation,
         dnsSupport: tgwItem.dnsSupport,
         vpnEcmpSupport: tgwItem.vpnEcmpSupport,
+        multicastSupport: tgwItem.multicastSupport,
         transitGatewayCidrBlocks: transitGatewayCidrBlocks,
         tags: tgwItem.tags,
       });

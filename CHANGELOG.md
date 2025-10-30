@@ -55,7 +55,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - feat(control-tower): add additional status logging
 - feat(control-tower): add support of control tower 4.0
 - feat(networking): add vpn connection ipv6 support
-- feat(module): add control tower logging
+- feat(module): add control tower logging 
+- feat(networking): add multicast support for transit gateways
 
 ### Fixed
 

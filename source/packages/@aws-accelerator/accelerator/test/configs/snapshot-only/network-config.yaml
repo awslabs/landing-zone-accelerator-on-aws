@@ -20,6 +20,24 @@ transitGatewayConnects:
         value: CentralInspection
 
 transitGateways:
+  - name: MutlicastTgw
+    account: Network
+    region: *HOME_REGION
+    shareTargets:
+      organizationalUnits:
+        - Infrastructure
+    asn: 65426
+    dnsSupport: enable
+    vpnEcmpSupport: enable
+    defaultRouteTableAssociation: disable
+    defaultRouteTablePropagation: disable
+    autoAcceptSharingAttachments: enable
+    multicastSupport: enable
+    routeTables:
+      - name: Multicast-Core
+        routes: []
+      - name: Multicast-Isolated
+        routes: []
   - name: Network-Main
     account: Network
     region: *HOME_REGION

@@ -3734,6 +3734,10 @@
           "$ref": "#/definitions/EnableDisable",
           "description": "Configure DNS support between VPCs."
         },
+        "multicastSupport": {
+          "$ref": "#/definitions/EnableDisable",
+          "description": "(OPTIONAL) Enable this option to turn on multicast on the Transit Gateway."
+        },
         "name": {
           "$ref": "#/definitions/NonEmptyString",
           "description": "A friendly name for the Transit Gateway."

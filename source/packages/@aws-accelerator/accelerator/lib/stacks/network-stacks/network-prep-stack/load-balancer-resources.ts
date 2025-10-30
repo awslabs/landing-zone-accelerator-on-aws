@@ -36,7 +36,7 @@ export class LoadBalancerResources {
       nlbAccountIds.includes(cdk.Stack.of(this.stack).account)
     ) {
       const nlbIpAddressRole = new cdk.aws_iam.Role(this.stack, `NetworkLoadBalancerIPAddressLookup`, {
-        roleName: `${props.prefixes.accelerator}-NetworkLoadBalancerIPAddress-Lookup`,
+        roleName: `${props.prefixes.accelerator}-NetworkLoadBalancerIPAddressLookup`,
         assumedBy: new cdk.aws_iam.CompositePrincipal(
           ...nlbAccountIds.map(accountId => new cdk.aws_iam.AccountPrincipal(accountId)),
         ),

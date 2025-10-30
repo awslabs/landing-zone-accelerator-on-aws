@@ -623,6 +623,15 @@ export interface ITransitGatewayConfig {
    */
   readonly autoAcceptSharingAttachments: t.EnableDisable;
   /**
+   * (OPTIONAL) Enable this option to turn on multicast on the Transit Gateway.
+   *
+   * @remarks
+   * Note: Changing the value on an existing Transit Gateway will result in a replacement of the resource.
+   *
+   * Default - disable
+   */
+  readonly multicastSupport?: t.EnableDisable;
+  /**
    * An array of Transit Gateway route table configuration objects.
    *
    * @see {@link TransitGatewayRouteTableConfig}
