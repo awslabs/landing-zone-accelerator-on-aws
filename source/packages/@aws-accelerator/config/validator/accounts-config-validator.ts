@@ -17,39 +17,40 @@ import { AccountsConfig, AccountConfig } from '../lib/accounts-config';
 import { OrganizationConfig } from '../lib/organization-config';
 
 export class AccountsConfigValidator {
-  constructor(values: AccountsConfig, organizationConfig: OrganizationConfig) {
-    const ouIdNames: string[] = ['Root'];
+  private readonly accountsConfig: AccountsConfig;
+  private readonly organizationConfig: OrganizationConfig;
+  private readonly logger = createLogger(['accounts-config-validator']);
 
+  constructor(values: AccountsConfig, organizationConfig: OrganizationConfig) {
+    this.accountsConfig = values;
+    this.organizationConfig = organizationConfig;
+  }
+
+  public validate(): void {
     const errors: string[] = [];
 
-    const logger = createLogger(['accounts-config-validator']);
+    this.logger.info(`${AccountsConfig.FILENAME} file validation started`);
 
-    logger.info(`${AccountsConfig.FILENAME} file validation started`);
-
-    //
-    // Get list of OU ID names from organization config file
-    //
-    ouIdNames.push(...this.getOuIdNames(organizationConfig));
     //
     // Validate OU name for account
     //
-    this.validateAccountOrganizationalUnit(values, ouIdNames, organizationConfig, errors);
+    errors.push(...this.validateAccountOrganizationalUnit());
     //
     // Verify mandatory account names did not change
     //
-    this.validateMandatoryAccountNames(values, errors);
+    errors.push(...this.validateMandatoryAccountNames());
     //
     // Verify account names are unique and name without space
     //
-    this.validateAccountNames(values, errors);
+    errors.push(...this.validateAccountNames());
     //
     // Email validation
     //
-    this.validateEmails(values, errors);
+    errors.push(...this.validateEmails());
     //
     // Account Alias validation
     //
-    this.validateAccountAliases(values, errors);
+    errors.push(...this.validateAccountAliases());
 
     if (errors.length) {
       throw new Error(`${AccountsConfig.FILENAME} has ${errors.length} issues:\n${errors.join('\n')}`);
@@ -58,9 +59,10 @@ export class AccountsConfigValidator {
 
   /**
    * Function to validate account aliases and look for duplicates within the config
-   * @param values
+   * @returns Array of validation errors
    */
-  private validateAccountAliases(values: AccountsConfig, errors: string[]) {
+  private validateAccountAliases(): string[] {
+    const errors: string[] = [];
     const aliases = new Set<string>();
 
     // Helper function to check for duplicate aliases
@@ -79,8 +81,8 @@ export class AccountsConfigValidator {
     };
 
     // Check mandatory and workload accounts for duplicate aliases
-    checkForDuplicateAliases(values.mandatoryAccounts, 'Account');
-    checkForDuplicateAliases(values.workloadAccounts, 'Workload Account');
+    checkForDuplicateAliases(this.accountsConfig.mandatoryAccounts, 'Account');
+    checkForDuplicateAliases(this.accountsConfig.workloadAccounts, 'Workload Account');
 
     // Validate alias format
     aliases.forEach(alias => {
@@ -97,14 +99,19 @@ export class AccountsConfigValidator {
         );
       }
     });
+
+    return errors;
   }
 
   /**
    * Function to validate email formats, default and duplicate email checks
-   * @param values
+   * @returns Array of validation errors
    */
-  private validateEmails(values: AccountsConfig, errors: string[]) {
-    const emails = [...values.mandatoryAccounts, ...values.workloadAccounts].map(item => item.email);
+  private validateEmails(): string[] {
+    const errors: string[] = [];
+    const emails = [...this.accountsConfig.mandatoryAccounts, ...this.accountsConfig.workloadAccounts].map(
+      item => item.email,
+    );
     const defaultEmails = ['management-account@example.com', 'log-archive@example.com', 'audit@example.com'];
 
     //
@@ -130,27 +137,29 @@ export class AccountsConfigValidator {
       ? process.env['ACCELERATOR_ENABLE_SINGLE_ACCOUNT_MODE'] === 'true'
       : false;
     if (singleAccountDeployment) {
-      return;
+      return errors;
     } else {
-      this.findDuplicateEmails(values, errors);
+      errors.push(...this.findDuplicateEmails());
     }
+
+    return errors;
   }
 
   /**
    * Finds duplicate emails in the given accounts configuration.
    *
-   * @param values - The AccountsConfig object containing mandatory and workload accounts.
-   * @param errors - An array to store error messages for duplicate emails.
+   * @returns Array of validation errors for duplicate emails.
    *
    * @description This function iterates over the mandatory and workload accounts in the provided AccountsConfig object.
    * It checks for duplicate emails by maintaining a Map of emails and their associated account names.
-   * If a duplicate email is found, it adds an error message to the `errors` array with the duplicate email
+   * If a duplicate email is found, it adds an error message to the returned array with the duplicate email
    * and the associated account names.
    * Adding account name will help find all affected accounts in arrays with over 100 objects.
    */
-  private findDuplicateEmails(values: AccountsConfig, errors: string[]) {
+  private findDuplicateEmails(): string[] {
+    const errors: string[] = [];
     const emailMap = new Map<string, string[]>();
-    const allAccounts = [...values.mandatoryAccounts, ...values.workloadAccounts];
+    const allAccounts = [...this.accountsConfig.mandatoryAccounts, ...this.accountsConfig.workloadAccounts];
 
     for (const account of allAccounts) {
       const { name, email } = account;
@@ -162,53 +171,65 @@ export class AccountsConfigValidator {
         emailMap.set(email, [name]);
       }
     }
+
+    return errors;
   }
 
   /**
    * Function to verify account names are unique and name without space
-   * @param values
+   * @returns Array of validation errors
    */
-  private validateAccountNames(values: AccountsConfig, errors: string[]) {
-    const accountNames = [...values.mandatoryAccounts, ...values.workloadAccounts].map(item => item.name);
+  private validateAccountNames(): string[] {
+    const errors: string[] = [];
+    const accountNames = [...this.accountsConfig.mandatoryAccounts, ...this.accountsConfig.workloadAccounts].map(
+      item => item.name,
+    );
     if (new Set(accountNames).size !== accountNames.length) {
       errors.push(`Duplicate account names defined [${accountNames}].`);
     }
 
-    for (const account of [...values.mandatoryAccounts, ...values.workloadAccounts]) {
+    for (const account of [...this.accountsConfig.mandatoryAccounts, ...this.accountsConfig.workloadAccounts]) {
       if (account.name.indexOf(' ') > 0) {
         errors.push(`Account name (${account.name}) found with spaces. Please remove spaces and retry the pipeline.`);
       }
     }
+
+    return errors;
   }
 
   /**
    * Function to verify mandatory account names did not change
-   * @param values
+   * @returns Array of validation errors
    */
-  private validateMandatoryAccountNames(values: AccountsConfig, errors: string[]) {
+  private validateMandatoryAccountNames(): string[] {
+    const errors: string[] = [];
     for (const accountName of [
       AccountsConfig.MANAGEMENT_ACCOUNT,
       AccountsConfig.AUDIT_ACCOUNT,
       AccountsConfig.LOG_ARCHIVE_ACCOUNT,
     ]) {
-      if (!values.mandatoryAccounts.find(item => item.name === accountName)) {
+      if (!this.accountsConfig.mandatoryAccounts.find(item => item.name === accountName)) {
         errors.push(`Unable to find mandatory account with name ${accountName}.`);
       }
     }
+
+    return errors;
   }
 
   /**
    * Function to validate existence of account deployment target OUs
    * Make sure deployment target OUs are part of Organization config file
-   * @param values
+   * @returns Array of validation errors
    */
-  private validateAccountOrganizationalUnit(
-    values: AccountsConfig,
-    ouIdNames: string[],
-    organizationConfig: OrganizationConfig,
-    errors: string[],
-  ) {
-    for (const account of [...values.mandatoryAccounts, ...values.workloadAccounts]) {
+  private validateAccountOrganizationalUnit(): string[] {
+    const errors: string[] = [];
+    const ouIdNames: string[] = ['Root'];
+
+    //
+    // Get list of OU ID names from organization config file
+    //
+    ouIdNames.push(...this.getOuIdNames());
+    for (const account of [...this.accountsConfig.mandatoryAccounts, ...this.accountsConfig.workloadAccounts]) {
       if (account.organizationalUnit) {
         // Check if OU exists
         if (!ouIdNames.includes(account.organizationalUnit)) {
@@ -217,7 +238,7 @@ export class AccountsConfigValidator {
           );
         } else {
           // Check if OU is ignored
-          const isIgnoredOu = organizationConfig.organizationalUnits.find(
+          const isIgnoredOu = this.organizationConfig.organizationalUnits.find(
             ou => ou.name === account.organizationalUnit && ou.ignore,
           );
           if (isIgnoredOu) {
@@ -230,16 +251,17 @@ export class AccountsConfigValidator {
         errors.push(`Organizational Unit not defined for account ${account.name}.`);
       }
     }
+
+    return errors;
   }
 
   /**
    * Prepare list of OU ids from organization config file
-   * @param configDir
    */
-  private getOuIdNames(organizationConfig: OrganizationConfig): string[] {
+  private getOuIdNames(): string[] {
     const ouIdNames: string[] = [];
 
-    for (const organizationalUnit of organizationConfig.organizationalUnits) {
+    for (const organizationalUnit of this.organizationConfig.organizationalUnits) {
       ouIdNames.push(organizationalUnit.name);
     }
     return ouIdNames;

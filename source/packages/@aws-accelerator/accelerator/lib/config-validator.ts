@@ -249,7 +249,7 @@ function runValidators(
   // Accounts config validator
   if (accountsConfig && organizationConfig) {
     try {
-      new AccountsConfigValidator(accountsConfig, organizationConfig);
+      new AccountsConfigValidator(accountsConfig, organizationConfig).validate();
     } catch (e) {
       configErrors.push(e);
     }

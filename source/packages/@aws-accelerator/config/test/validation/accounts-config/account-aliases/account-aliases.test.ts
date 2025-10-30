@@ -12,13 +12,13 @@ describe('AccountsConfigValidator', () => {
   it('should throw error when duplicate aliases are found', () => {
     const errMsg = `Workload Account alias "tenant-alias" is duplicated. Account aliases must be unique across all accounts.`;
     expect(() => {
-      new AccountsConfigValidator(accountsDuplicateAliases, organization);
+      new AccountsConfigValidator(accountsDuplicateAliases, organization).validate();
     }).toThrow(errMsg);
   });
 
   it('should validate unique aliases successfully', () => {
     expect(() => {
-      new AccountsConfigValidator(accountsNoDuplicateAliases, organization);
+      new AccountsConfigValidator(accountsNoDuplicateAliases, organization).validate();
     }).not.toThrow();
   });
 
@@ -53,7 +53,7 @@ describe('AccountsConfigValidator', () => {
       `Account alias "Invalid-Alias-With-Uppercase" is invalid. Aliases must be between 3 and 63 characters long, ` +
       `contain only lowercase letters, numbers, and hyphens, and must start and end with a letter or number.`;
     expect(() => {
-      new AccountsConfigValidator(accountsInvalidAlias, organization);
+      new AccountsConfigValidator(accountsInvalidAlias, organization).validate();
     }).toThrow(errMsg);
   });
 
@@ -88,7 +88,7 @@ describe('AccountsConfigValidator', () => {
       },
     );
     expect(() => {
-      new AccountsConfigValidator(accountsValidAlias, organization);
+      new AccountsConfigValidator(accountsValidAlias, organization).validate();
     }).not.toThrow();
   });
 });

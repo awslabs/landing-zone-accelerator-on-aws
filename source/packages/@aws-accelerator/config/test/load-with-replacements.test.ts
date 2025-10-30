@@ -223,7 +223,7 @@ describe('load-with-replacements', async () => {
 
     it('should be valid', async () => {
       expect(() => {
-        new AccountsConfigValidator(accountsConfig, organizationConfig);
+        new AccountsConfigValidator(accountsConfig, organizationConfig).validate();
       }).not.toThrow();
     });
   });

@@ -10,7 +10,7 @@ describe('AccountsConfigValidator', () => {
     const loadedAccounts = AccountsConfig.load(path.resolve(__dirname, 'no-org-config'));
     const loadedOus = OrganizationConfig.loadRawOrganizationsConfig(path.resolve(__dirname, 'no-org-config'));
     function duplicateEmailError() {
-      new AccountsConfigValidator(loadedAccounts, loadedOus);
+      new AccountsConfigValidator(loadedAccounts, loadedOus).validate();
     }
     const errMsg = `accounts-config.yaml has 1 issues:\nDuplicate email: alias+no-org-tenant01@example.com, associated with multiple accounts: Tenant01, Tenant01Duplicate`;
     expect(duplicateEmailError).toThrow(new Error(errMsg));
