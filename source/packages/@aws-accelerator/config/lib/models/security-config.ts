@@ -987,6 +987,334 @@ export interface ISecurityHubConfig {
    * Please note, this option can be toggled but log group with `/${acceleratorPrefix}-SecurityHub` will remain in the account for every enabled region and will need to be manually deleted. This is designed to ensure no accidental loss of data occurs.
    */
   readonly logging?: ISecurityHubLoggingConfig;
+  /**
+   * (OPTIONAL) Security Hub automation rules configuration
+   */
+  readonly automationRules?: ISecurityHubAutomationRuleConfig[];
+}
+
+/**
+ * *{@link SecurityConfig} / {@link CentralSecurityServicesConfig} / {@link SecurityHubConfig} / {@link SecurityHubAutomationRuleConfig} / {@link SecurityHubAutomationRulesStringFilter}*
+ *
+ * @description
+ * Security Hub automation rule string filter configuration for filtering findings based on string values
+ */
+export interface ISecurityHubAutomationRulesStringFilter {
+  /**
+   * The string value to filter on
+   */
+  readonly value: string;
+  /**
+   * The comparison operator to use for filtering
+   */
+  readonly comparison:
+    | 'EQUALS'
+    | 'PREFIX'
+    | 'NOT_EQUALS'
+    | 'PREFIX_NOT_EQUALS'
+    | 'CONTAINS'
+    | 'NOT_CONTAINS'
+    | 'CONTAINS_WORD';
+}
+
+/**
+ * *{@link SecurityConfig} / {@link CentralSecurityServicesConfig} / {@link SecurityHubConfig} / {@link SecurityHubAutomationRuleConfig} / {@link SecurityHubAutomationRulesNumberFilter}*
+ *
+ * @description
+ * Security Hub automation rule number filter configuration for filtering findings based on numeric values
+ */
+export interface ISecurityHubAutomationRulesNumberFilter {
+  /**
+   * Greater than or equal to value
+   */
+  readonly gte?: number;
+  /**
+   * Less than or equal to value
+   */
+  readonly lte?: number;
+  /**
+   * Greater than value
+   */
+  readonly gt?: number;
+  /**
+   * Less than value
+   */
+  readonly lt?: number;
+  /**
+   * Equal to value
+   */
+  readonly eq?: number;
+}
+
+/**
+ * *{@link SecurityConfig} / {@link CentralSecurityServicesConfig} / {@link SecurityHubConfig} / {@link SecurityHubAutomationRuleConfig} / {@link SecurityHubAutomationRulesDateFilter}*
+ *
+ * @description
+ * Security Hub automation rule date filter configuration for filtering findings based on date ranges
+ */
+export interface ISecurityHubAutomationRulesDateFilter {
+  /**
+   * Start date in ISO 8601 format
+   */
+  readonly start?: string;
+  /**
+   * End date in ISO 8601 format
+   */
+  readonly end?: string;
+  /**
+   * Date range configuration
+   */
+  readonly dateRange?: {
+    /**
+     * Number of days
+     */
+    value: number;
+    /**
+     * Time unit (currently only DAYS is supported)
+     */
+    unit: 'DAYS';
+  };
+}
+
+/**
+ * *{@link SecurityConfig} / {@link CentralSecurityServicesConfig} / {@link SecurityHubConfig} / {@link SecurityHubAutomationRuleConfig} / {@link SecurityHubAutomationRulesKeyValueFilter}*
+ *
+ * @description
+ * Security Hub automation rule key-value filter configuration for filtering findings based on key-value pairs
+ */
+export interface ISecurityHubAutomationRulesKeyValueFilter {
+  /**
+   * The key to filter on
+   */
+  readonly key: string;
+  /**
+   * The value to filter on
+   */
+  readonly value: string;
+  /**
+   * The comparison operator to use for filtering
+   */
+  readonly comparison: 'EQUALS' | 'NOT_EQUALS' | 'CONTAINS' | 'NOT_CONTAINS';
+}
+
+/**
+ * *{@link SecurityConfig} / {@link CentralSecurityServicesConfig} / {@link SecurityHubConfig} / {@link SecurityHubAutomationRuleConfig} / {@link SecurityHubAutomationRuleNote}*
+ *
+ * @description
+ * Security Hub automation rule note configuration for updating finding notes
+ */
+export interface ISecurityHubAutomationRuleNote {
+  /**
+   * The note text content
+   */
+  readonly text: string;
+  /**
+   * The entity that updated the note
+   */
+  readonly updatedBy: string;
+}
+
+/**
+ * *{@link SecurityConfig} / {@link CentralSecurityServicesConfig} / {@link SecurityHubConfig} / {@link SecurityHubAutomationRuleConfig} / {@link SecurityHubAutomationRuleRelatedFinding}*
+ *
+ * @description
+ * Security Hub automation rule related finding configuration for linking related findings
+ */
+export interface ISecurityHubAutomationRuleRelatedFinding {
+  /**
+   * The product ARN of the related finding
+   */
+  readonly productArn: string;
+  /**
+   * The ID of the related finding
+   */
+  readonly id: string;
+}
+
+/**
+ * *{@link SecurityConfig} / {@link CentralSecurityServicesConfig} / {@link SecurityHubConfig} / {@link SecurityHubAutomationRuleConfig} / {@link SecurityHubAutomationRuleFindingFieldsUpdate}*
+ *
+ * @description
+ * Security Hub automation rule finding fields update configuration for modifying finding attributes
+ *
+ * @example
+ * ```
+ * note:
+ *   text: "Automatically suppressed by automation rule"
+ *   updatedBy: "AWSAccelerator"
+ * severityLabel: "LOW"
+ * workflowStatus: "SUPPRESSED"
+ * ```
+ */
+export interface ISecurityHubAutomationRuleFindingFieldsUpdate {
+  /**
+   * (OPTIONAL) Note to add to the finding
+   */
+  readonly note?: ISecurityHubAutomationRuleNote;
+  /**
+   * (OPTIONAL) Severity label to assign to the finding
+   */
+  readonly severityLabel?: string;
+  /**
+   * (OPTIONAL) Verification state to assign to the finding
+   */
+  readonly verificationState?: string;
+  /**
+   * (OPTIONAL) Confidence score to assign to the finding (0-100)
+   */
+  readonly confidence?: number;
+  /**
+   * (OPTIONAL) Criticality score to assign to the finding (0-100)
+   */
+  readonly criticality?: number;
+  /**
+   * (OPTIONAL) Types to assign to the finding
+   */
+  readonly types?: string[];
+  /**
+   * (OPTIONAL) User-defined fields to assign to the finding
+   */
+  readonly userDefinedFields?: Record<string, string>;
+  /**
+   * (OPTIONAL) Workflow status to assign to the finding
+   */
+  readonly workflowStatus?: string;
+  /**
+   * (OPTIONAL) Related findings to link to this finding
+   */
+  readonly relatedFindings?: ISecurityHubAutomationRuleRelatedFinding[];
+}
+
+/**
+ * *{@link SecurityConfig} / {@link CentralSecurityServicesConfig} / {@link SecurityHubConfig} / {@link SecurityHubAutomationRuleConfig} / {@link SecurityHubAutomationRuleAction}*
+ *
+ * @description
+ * Security Hub automation rule action configuration for defining what actions to take on matching findings
+ *
+ * @example
+ * ```
+ * type: "FINDING_FIELDS_UPDATE"
+ * findingFieldsUpdate:
+ *   workflowStatus: "SUPPRESSED"
+ *   note:
+ *     text: "Automatically suppressed by automation rule"
+ *     updatedBy: "SecurityTeam"
+ * ```
+ */
+export interface ISecurityHubAutomationRuleAction {
+  /**
+   * The type of action to perform
+   */
+  readonly type: string;
+  /**
+   * (OPTIONAL) Finding fields to update when the action is triggered
+   */
+  readonly findingFieldsUpdate?: ISecurityHubAutomationRuleFindingFieldsUpdate;
+}
+
+/**
+ * *{@link SecurityConfig} / {@link CentralSecurityServicesConfig} / {@link SecurityHubConfig} / {@link SecurityHubAutomationRuleConfig} / {@link SecurityHubAutomationRuleCriteria}*
+ *
+ * @description
+ * Security Hub automation rule criteria configuration with dynamic keys for flexible filtering
+ * Supports any valid SecurityHub finding field as a key with appropriate filter arrays as values
+ *
+ * @example
+ * ```
+ * - key: "AwsAccountId"
+ *   filter:
+ *     - value: "123456789012"
+ *       comparison: "EQUALS"
+ * - key: "SeverityLabel"
+ *   filter:
+ *     - value: "HIGH"
+ *       comparison: "EQUALS"
+ * - key: "ResourceType"
+ *   filter:
+ *     - value: "AwsS3Bucket"
+ *       comparison: "EQUALS"
+ * ```
+ */
+export interface ISecurityHubAutomationRuleCriteria {
+  /**
+   * The criteria key/field name
+   */
+  readonly key: string;
+  /**
+   * The filter to apply for this criteria
+   */
+  readonly filter:
+    | ISecurityHubAutomationRulesStringFilter[]
+    | ISecurityHubAutomationRulesNumberFilter[]
+    | ISecurityHubAutomationRulesDateFilter[]
+    | ISecurityHubAutomationRulesKeyValueFilter[];
+}
+
+/**
+ * *{@link SecurityConfig} / {@link CentralSecurityServicesConfig} / {@link SecurityHubConfig} / {@link SecurityHubAutomationRuleConfig}*
+ *
+ * {@link https://docs.aws.amazon.com/securityhub/latest/userguide/automation-rules.html} | AWS Security Hub automation rule configuration
+ *
+ * @description
+ * Use this configuration to define Security Hub automation rules that automatically update findings based on specified criteria.
+ * Automation rules help streamline security operations by automatically suppressing, updating, or enriching findings.
+ *
+ * @example
+ * ```
+ * - name: "SuppressLowSeverityS3Findings"
+ *   description: "Automatically suppress low severity S3 findings"
+ *   enabled: true
+ *   actions:
+ *     - type: "FINDING_FIELDS_UPDATE"
+ *       findingFieldsUpdate:
+ *         workflowStatus: "SUPPRESSED"
+ *         note:
+ *           text: "Low severity S3 finding automatically suppressed"
+ *           updatedBy: "SecurityAutomation"
+ *   criteria:
+ *     - key: "SeverityLabel"
+ *       filter:
+ *         - value: "LOW"
+ *           comparison: "EQUALS"
+ *     - key: "ResourceType"
+ *       filter:
+ *         - value: "AwsS3Bucket"
+ *           comparison: "EQUALS"
+ * ```
+ */
+export interface ISecurityHubAutomationRuleConfig {
+  /**
+   * The name of the automation rule
+   */
+  readonly name: string;
+  /**
+   * A description of what the automation rule does
+   */
+  readonly description: string;
+  /**
+   * Whether the automation rule is enabled
+   */
+  readonly enabled: boolean;
+  /**
+   * The action to take when findings match the criteria
+   */
+  readonly actions: ISecurityHubAutomationRuleAction[];
+  /**
+   * The criteria that findings must match to trigger the action
+   */
+  readonly criteria: ISecurityHubAutomationRuleCriteria[];
+  /**
+   * (OPTIONAL) An integer from 1 to 1000 that represents the order in which the rule action is applied to findings
+   */
+  readonly ruleOrder?: number;
+  /**
+   * (OPTIONAL) Specifies whether a rule is the last to be applied with respect to a finding that matches the rule criteria
+   */
+  readonly isTerminal?: boolean;
+  /**
+   * (OPTIONAL) List of regions to be excluded from applying this automation rule
+   */
+  readonly excludeRegions?: string[];
 }
 
 /**

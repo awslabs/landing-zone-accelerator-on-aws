@@ -14,10 +14,14 @@
 import { describe, beforeEach, afterEach, expect, test, vi } from 'vitest';
 
 import { SecurityHubManageOrganizationAdminModule } from '../../lib/security-hub/manage-organization-admin';
-import { manageSecurityHubOrganizationAdminAccount } from '../../executors/accelerator-security-hub';
+import { SecurityHubManageAutomationRulesModule } from '../../lib/security-hub/manage-automation-rules';
+import {
+  manageSecurityHubOrganizationAdminAccount,
+  manageSecurityHubAutomationRules,
+} from '../../executors/accelerator-security-hub';
 
 const MOCK_CONSTANTS = {
-  input: {
+  organizationAdminInput: {
     operation: 'manage-organization-admin',
     partition: 'aws',
     region: 'us-east-1',
@@ -28,10 +32,52 @@ const MOCK_CONSTANTS = {
     dryRun: false,
     solutionId: 'test',
   },
+  automationRulesInput: {
+    operation: 'manage-automation-rules',
+    partition: 'aws',
+    region: 'us-east-1',
+    configuration: {
+      automationRules: [
+        {
+          name: 'SuppressLowSeverityFindings',
+          description: 'Automatically suppress low severity findings',
+          enabled: true,
+          actions: [
+            {
+              type: 'FINDING_FIELDS_UPDATE',
+              findingFieldsUpdate: {
+                workflowStatus: 'SUPPRESSED',
+                note: {
+                  text: 'Automatically suppressed by automation rule',
+                  updatedBy: 'SecurityTeam',
+                },
+              },
+            },
+          ],
+          criteria: [
+            {
+              key: 'SeverityLabel',
+              filter: [
+                {
+                  value: 'LOW',
+                  comparison: 'EQUALS' as const,
+                },
+              ],
+            },
+          ],
+          ruleOrder: 1,
+          isTerminal: false,
+        },
+      ],
+    },
+    dryRun: false,
+    solutionId: 'test',
+  },
 };
 
 // Mock dependencies
 vi.mock('../../lib/security-hub/manage-organization-admin/index');
+vi.mock('../../lib/security-hub/manage-automation-rules/index');
 
 describe('SecurityHubExecutors', () => {
   beforeEach(() => {
@@ -49,10 +95,10 @@ describe('SecurityHubExecutors', () => {
         handler: mockHandler,
       }));
 
-      const result = await manageSecurityHubOrganizationAdminAccount(MOCK_CONSTANTS.input);
+      const result = await manageSecurityHubOrganizationAdminAccount(MOCK_CONSTANTS.organizationAdminInput);
 
       expect(result).toBe('SUCCESS');
-      expect(mockHandler).toHaveBeenCalledWith(MOCK_CONSTANTS.input);
+      expect(mockHandler).toHaveBeenCalledWith(MOCK_CONSTANTS.organizationAdminInput);
       expect(mockHandler).toHaveBeenCalledTimes(1);
     });
 
@@ -63,7 +109,7 @@ describe('SecurityHubExecutors', () => {
       }));
 
       const inputWithDisable = {
-        ...MOCK_CONSTANTS.input,
+        ...MOCK_CONSTANTS.organizationAdminInput,
         configuration: {
           enable: false,
           accountId: '123456789012',
@@ -84,7 +130,7 @@ describe('SecurityHubExecutors', () => {
       }));
 
       const inputWithDryRun = {
-        ...MOCK_CONSTANTS.input,
+        ...MOCK_CONSTANTS.organizationAdminInput,
         dryRun: true,
       };
 
@@ -102,9 +148,11 @@ describe('SecurityHubExecutors', () => {
         handler: mockHandler,
       }));
 
-      await expect(manageSecurityHubOrganizationAdminAccount(MOCK_CONSTANTS.input)).rejects.toThrow(errorMessage);
+      await expect(manageSecurityHubOrganizationAdminAccount(MOCK_CONSTANTS.organizationAdminInput)).rejects.toThrow(
+        errorMessage,
+      );
 
-      expect(mockHandler).toHaveBeenCalledWith(MOCK_CONSTANTS.input);
+      expect(mockHandler).toHaveBeenCalledWith(MOCK_CONSTANTS.organizationAdminInput);
       expect(mockHandler).toHaveBeenCalledTimes(1);
     });
 
@@ -115,9 +163,11 @@ describe('SecurityHubExecutors', () => {
         handler: mockHandler,
       }));
 
-      await expect(manageSecurityHubOrganizationAdminAccount(MOCK_CONSTANTS.input)).rejects.toBe(errorMessage);
+      await expect(manageSecurityHubOrganizationAdminAccount(MOCK_CONSTANTS.organizationAdminInput)).rejects.toBe(
+        errorMessage,
+      );
 
-      expect(mockHandler).toHaveBeenCalledWith(MOCK_CONSTANTS.input);
+      expect(mockHandler).toHaveBeenCalledWith(MOCK_CONSTANTS.organizationAdminInput);
       expect(mockHandler).toHaveBeenCalledTimes(1);
     });
 
@@ -128,7 +178,7 @@ describe('SecurityHubExecutors', () => {
       }));
 
       const inputWithGovCloud = {
-        ...MOCK_CONSTANTS.input,
+        ...MOCK_CONSTANTS.organizationAdminInput,
         partition: 'aws-us-gov',
       };
 
@@ -146,7 +196,7 @@ describe('SecurityHubExecutors', () => {
       }));
 
       const inputWithDifferentRegion = {
-        ...MOCK_CONSTANTS.input,
+        ...MOCK_CONSTANTS.organizationAdminInput,
         region: 'us-west-2',
       };
 
@@ -196,6 +246,65 @@ describe('SecurityHubExecutors', () => {
           processOnCallback(testError, origin);
         }).toThrow(testError);
       });
+    });
+  });
+
+  describe('manageSecurityHubAutomationRules', () => {
+    beforeEach(() => {
+      vi.clearAllMocks();
+    });
+
+    test('should successfully manage automation rules', async () => {
+      const mockHandler = vi.fn().mockResolvedValue({
+        status: true,
+        message: 'Successfully created automation rules: SuppressLowSeverityFindings',
+      });
+      (SecurityHubManageAutomationRulesModule as vi.Mock).mockImplementation(() => ({
+        handler: mockHandler,
+      }));
+
+      const result = await manageSecurityHubAutomationRules(MOCK_CONSTANTS.automationRulesInput);
+
+      expect(result).toBe('Successfully created automation rules: SuppressLowSeverityFindings');
+      expect(mockHandler).toHaveBeenCalledWith(MOCK_CONSTANTS.automationRulesInput);
+      expect(mockHandler).toHaveBeenCalledTimes(1);
+    });
+
+    test('should handle dry run mode for automation rules', async () => {
+      const mockHandler = vi.fn().mockResolvedValue({
+        status: true,
+        message: 'DRY_RUN: SuppressLowSeverityFindings will be created',
+      });
+      (SecurityHubManageAutomationRulesModule as vi.Mock).mockImplementation(() => ({
+        handler: mockHandler,
+      }));
+
+      const inputWithDryRun = {
+        ...MOCK_CONSTANTS.automationRulesInput,
+        dryRun: true,
+      };
+
+      const result = await manageSecurityHubAutomationRules(inputWithDryRun);
+
+      expect(result).toBe('DRY_RUN: SuppressLowSeverityFindings will be created');
+      expect(mockHandler).toHaveBeenCalledWith(inputWithDryRun);
+      expect(mockHandler).toHaveBeenCalledTimes(1);
+    });
+
+    test('should handle error in executor', async () => {
+      const mockHandler = vi.fn().mockRejectedValue(new Error('Error'));
+      (SecurityHubManageAutomationRulesModule as vi.Mock).mockImplementation(() => ({
+        handler: mockHandler,
+      }));
+
+      const inputWithDryRun = {
+        ...MOCK_CONSTANTS.automationRulesInput,
+      };
+
+      await expect(manageSecurityHubAutomationRules(inputWithDryRun)).rejects.toThrowError('Error');
+
+      expect(mockHandler).toHaveBeenCalledWith(inputWithDryRun);
+      expect(mockHandler).toHaveBeenCalledTimes(1);
     });
   });
 });

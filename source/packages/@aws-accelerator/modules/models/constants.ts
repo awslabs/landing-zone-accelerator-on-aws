@@ -26,6 +26,7 @@ import { ManageAccountsAliasModule } from '../lib/actions/aws-organizations/mana
 import { AcceleratorPrerequisites } from '../lib/actions/prerequisites/accelerator-prerequisites';
 import { PipelinePrerequisites } from '../lib/actions/prerequisites/pipeline-prerequisites';
 import { DeleteDefaultVpc } from '../lib/actions/aws-ec2/delete-default-vpc';
+import { ManageAutomationRulesModule } from '../lib/actions/aws-security-hub/manage-automation-rules';
 
 /**
  * Execution order for the Accelerator module stages
@@ -245,6 +246,15 @@ export const AcceleratorModuleStageDetails: AcceleratorModuleStageDetailsType[] 
         runOrder: 1,
         handler: async (params: ModuleParams) => {
           return await SsmBlockPublicDocumentSharingModule.execute(params);
+        },
+        executionPhase: ModuleExecutionPhase.DEPLOY,
+      },
+      {
+        name: AcceleratorModules.MANAGE_AUTOMATION_RULES,
+        description: 'Manage Automation Rules module',
+        runOrder: 1,
+        handler: async (params: ModuleParams) => {
+          return await ManageAutomationRulesModule.execute(params);
         },
         executionPhase: ModuleExecutionPhase.DEPLOY,
       },

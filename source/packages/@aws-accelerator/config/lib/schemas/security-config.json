@@ -1526,6 +1526,333 @@
       ],
       "type": "object"
     },
+    "ISecurityHubAutomationRuleAction": {
+      "additionalProperties": false,
+      "description": "Security Hub automation rule action configuration for defining what actions to take on matching findings",
+      "properties": {
+        "findingFieldsUpdate": {
+          "$ref": "#/definitions/ISecurityHubAutomationRuleFindingFieldsUpdate",
+          "description": "(OPTIONAL) Finding fields to update when the action is triggered"
+        },
+        "type": {
+          "description": "The type of action to perform",
+          "type": "string"
+        }
+      },
+      "required": [
+        "type"
+      ],
+      "type": "object"
+    },
+    "ISecurityHubAutomationRuleConfig": {
+      "additionalProperties": false,
+      "description": "Use this configuration to define Security Hub automation rules that automatically update findings based on specified criteria.\nAutomation rules help streamline security operations by automatically suppressing, updating, or enriching findings.",
+      "properties": {
+        "actions": {
+          "description": "The action to take when findings match the criteria",
+          "items": {
+            "$ref": "#/definitions/ISecurityHubAutomationRuleAction"
+          },
+          "type": "array"
+        },
+        "criteria": {
+          "description": "The criteria that findings must match to trigger the action",
+          "items": {
+            "$ref": "#/definitions/ISecurityHubAutomationRuleCriteria"
+          },
+          "type": "array"
+        },
+        "description": {
+          "description": "A description of what the automation rule does",
+          "type": "string"
+        },
+        "enabled": {
+          "description": "Whether the automation rule is enabled",
+          "type": "boolean"
+        },
+        "excludeRegions": {
+          "description": "(OPTIONAL) List of regions to be excluded from applying this automation rule",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "isTerminal": {
+          "description": "(OPTIONAL) Specifies whether a rule is the last to be applied with respect to a finding that matches the rule criteria",
+          "type": "boolean"
+        },
+        "name": {
+          "description": "The name of the automation rule",
+          "type": "string"
+        },
+        "ruleOrder": {
+          "description": "(OPTIONAL) An integer from 1 to 1000 that represents the order in which the rule action is applied to findings",
+          "type": "number"
+        }
+      },
+      "required": [
+        "name",
+        "description",
+        "enabled",
+        "actions",
+        "criteria"
+      ],
+      "type": "object"
+    },
+    "ISecurityHubAutomationRuleCriteria": {
+      "additionalProperties": false,
+      "description": "Security Hub automation rule criteria configuration with dynamic keys for flexible filtering\nSupports any valid SecurityHub finding field as a key with appropriate filter arrays as values",
+      "properties": {
+        "filter": {
+          "anyOf": [
+            {
+              "items": {
+                "$ref": "#/definitions/ISecurityHubAutomationRulesStringFilter"
+              },
+              "type": "array"
+            },
+            {
+              "items": {
+                "$ref": "#/definitions/ISecurityHubAutomationRulesNumberFilter"
+              },
+              "type": "array"
+            },
+            {
+              "items": {
+                "$ref": "#/definitions/ISecurityHubAutomationRulesDateFilter"
+              },
+              "type": "array"
+            },
+            {
+              "items": {
+                "$ref": "#/definitions/ISecurityHubAutomationRulesKeyValueFilter"
+              },
+              "type": "array"
+            }
+          ],
+          "description": "The filter to apply for this criteria"
+        },
+        "key": {
+          "description": "The criteria key/field name",
+          "type": "string"
+        }
+      },
+      "required": [
+        "key",
+        "filter"
+      ],
+      "type": "object"
+    },
+    "ISecurityHubAutomationRuleFindingFieldsUpdate": {
+      "additionalProperties": false,
+      "description": "Security Hub automation rule finding fields update configuration for modifying finding attributes",
+      "properties": {
+        "confidence": {
+          "description": "(OPTIONAL) Confidence score to assign to the finding (0-100)",
+          "type": "number"
+        },
+        "criticality": {
+          "description": "(OPTIONAL) Criticality score to assign to the finding (0-100)",
+          "type": "number"
+        },
+        "note": {
+          "$ref": "#/definitions/ISecurityHubAutomationRuleNote",
+          "description": "(OPTIONAL) Note to add to the finding"
+        },
+        "relatedFindings": {
+          "description": "(OPTIONAL) Related findings to link to this finding",
+          "items": {
+            "$ref": "#/definitions/ISecurityHubAutomationRuleRelatedFinding"
+          },
+          "type": "array"
+        },
+        "severityLabel": {
+          "description": "(OPTIONAL) Severity label to assign to the finding",
+          "type": "string"
+        },
+        "types": {
+          "description": "(OPTIONAL) Types to assign to the finding",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "userDefinedFields": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "description": "(OPTIONAL) User-defined fields to assign to the finding",
+          "type": "object"
+        },
+        "verificationState": {
+          "description": "(OPTIONAL) Verification state to assign to the finding",
+          "type": "string"
+        },
+        "workflowStatus": {
+          "description": "(OPTIONAL) Workflow status to assign to the finding",
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "ISecurityHubAutomationRuleNote": {
+      "additionalProperties": false,
+      "description": "Security Hub automation rule note configuration for updating finding notes",
+      "properties": {
+        "text": {
+          "description": "The note text content",
+          "type": "string"
+        },
+        "updatedBy": {
+          "description": "The entity that updated the note",
+          "type": "string"
+        }
+      },
+      "required": [
+        "text",
+        "updatedBy"
+      ],
+      "type": "object"
+    },
+    "ISecurityHubAutomationRuleRelatedFinding": {
+      "additionalProperties": false,
+      "description": "Security Hub automation rule related finding configuration for linking related findings",
+      "properties": {
+        "id": {
+          "description": "The ID of the related finding",
+          "type": "string"
+        },
+        "productArn": {
+          "description": "The product ARN of the related finding",
+          "type": "string"
+        }
+      },
+      "required": [
+        "productArn",
+        "id"
+      ],
+      "type": "object"
+    },
+    "ISecurityHubAutomationRulesDateFilter": {
+      "additionalProperties": false,
+      "description": "Security Hub automation rule date filter configuration for filtering findings based on date ranges",
+      "properties": {
+        "dateRange": {
+          "additionalProperties": false,
+          "description": "Date range configuration",
+          "properties": {
+            "unit": {
+              "const": "DAYS",
+              "description": "Time unit (currently only DAYS is supported)",
+              "type": "string"
+            },
+            "value": {
+              "description": "Number of days",
+              "type": "number"
+            }
+          },
+          "required": [
+            "value",
+            "unit"
+          ],
+          "type": "object"
+        },
+        "end": {
+          "description": "End date in ISO 8601 format",
+          "type": "string"
+        },
+        "start": {
+          "description": "Start date in ISO 8601 format",
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "ISecurityHubAutomationRulesKeyValueFilter": {
+      "additionalProperties": false,
+      "description": "Security Hub automation rule key-value filter configuration for filtering findings based on key-value pairs",
+      "properties": {
+        "comparison": {
+          "description": "The comparison operator to use for filtering",
+          "enum": [
+            "EQUALS",
+            "NOT_EQUALS",
+            "CONTAINS",
+            "NOT_CONTAINS"
+          ],
+          "type": "string"
+        },
+        "key": {
+          "description": "The key to filter on",
+          "type": "string"
+        },
+        "value": {
+          "description": "The value to filter on",
+          "type": "string"
+        }
+      },
+      "required": [
+        "key",
+        "value",
+        "comparison"
+      ],
+      "type": "object"
+    },
+    "ISecurityHubAutomationRulesNumberFilter": {
+      "additionalProperties": false,
+      "description": "Security Hub automation rule number filter configuration for filtering findings based on numeric values",
+      "properties": {
+        "eq": {
+          "description": "Equal to value",
+          "type": "number"
+        },
+        "gt": {
+          "description": "Greater than value",
+          "type": "number"
+        },
+        "gte": {
+          "description": "Greater than or equal to value",
+          "type": "number"
+        },
+        "lt": {
+          "description": "Less than value",
+          "type": "number"
+        },
+        "lte": {
+          "description": "Less than or equal to value",
+          "type": "number"
+        }
+      },
+      "type": "object"
+    },
+    "ISecurityHubAutomationRulesStringFilter": {
+      "additionalProperties": false,
+      "description": "Security Hub automation rule string filter configuration for filtering findings based on string values",
+      "properties": {
+        "comparison": {
+          "description": "The comparison operator to use for filtering",
+          "enum": [
+            "EQUALS",
+            "PREFIX",
+            "NOT_EQUALS",
+            "PREFIX_NOT_EQUALS",
+            "CONTAINS",
+            "NOT_CONTAINS",
+            "CONTAINS_WORD"
+          ],
+          "type": "string"
+        },
+        "value": {
+          "description": "The string value to filter on",
+          "type": "string"
+        }
+      },
+      "required": [
+        "value",
+        "comparison"
+      ],
+      "type": "object"
+    },
     "ISecurityHubConfig": {
       "additionalProperties": false,
       "default": "logLevel HIGH",
@@ -1535,6 +1862,13 @@
           "default": true,
           "description": "Controls whether Security Hub is automatically enabled for new accounts joining the organization.",
           "type": "boolean"
+        },
+        "automationRules": {
+          "description": "(OPTIONAL) Security Hub automation rules configuration",
+          "items": {
+            "$ref": "#/definitions/ISecurityHubAutomationRuleConfig"
+          },
+          "type": "array"
         },
         "deploymentTargets": {
           "$ref": "#/definitions/IDeploymentTargets",

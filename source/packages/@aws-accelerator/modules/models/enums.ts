@@ -112,6 +112,12 @@ export enum AcceleratorModules {
    * Delete default VPCs in accounts
    */
   DELETE_DEFAULT_VPC = 'delete-default-vpc',
+
+  /**
+   * Manage Security Hub Automation rules module
+   */
+  MANAGE_AUTOMATION_RULES = 'manage-automation-rules',
+
   /**
    * An Example module which is executed in `PREPARE` stage
    */

@@ -145,3 +145,6 @@ export { getSsmParametersValue } from './executors/accelerator-aws-ssm';
 //
 export { ISecurityHubManageOrganizationAdminParameter } from './interfaces/security-hub/manage-organization-admin';
 export { manageSecurityHubOrganizationAdminAccount } from './executors/accelerator-security-hub';
+
+export { ISecurityHubManageAutomationRulesParameter } from './interfaces/security-hub/manage-automation-rules';
+export { manageSecurityHubAutomationRules } from './executors/accelerator-security-hub';

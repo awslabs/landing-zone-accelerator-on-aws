@@ -181,6 +181,88 @@ export class SecurityHubLoggingConfig implements i.ISecurityHubLoggingConfig {
   readonly cloudWatch: SecurityHubLoggingCloudwatchConfig = new SecurityHubLoggingCloudwatchConfig();
 }
 
+export class SecurityHubAutomationRulesStringFilter implements i.ISecurityHubAutomationRulesStringFilter {
+  readonly value: string = '';
+  readonly comparison:
+    | 'EQUALS'
+    | 'PREFIX'
+    | 'NOT_EQUALS'
+    | 'PREFIX_NOT_EQUALS'
+    | 'CONTAINS'
+    | 'NOT_CONTAINS'
+    | 'CONTAINS_WORD' = 'EQUALS';
+}
+
+export class SecurityHubAutomationRulesNumberFilter implements i.ISecurityHubAutomationRulesNumberFilter {
+  readonly gte?: number;
+  readonly lte?: number;
+  readonly gt?: number;
+  readonly lt?: number;
+  readonly eq?: number;
+}
+
+export class SecurityHubAutomationRulesDateFilter implements i.ISecurityHubAutomationRulesDateFilter {
+  readonly start?: string;
+  readonly end?: string;
+  readonly dateRange?: {
+    value: number;
+    unit: 'DAYS';
+  };
+}
+
+export class SecurityHubAutomationRulesKeyValueFilter implements i.ISecurityHubAutomationRulesKeyValueFilter {
+  readonly key: string = '';
+  readonly value: string = '';
+  readonly comparison: 'EQUALS' | 'NOT_EQUALS' | 'CONTAINS' | 'NOT_CONTAINS' = 'EQUALS';
+}
+
+export class SecurityHubAutomationRuleNote implements i.ISecurityHubAutomationRuleNote {
+  readonly text: string = '';
+  readonly updatedBy: string = '';
+}
+
+export class SecurityHubAutomationRuleRelatedFinding implements i.ISecurityHubAutomationRuleRelatedFinding {
+  readonly productArn: string = '';
+  readonly id: string = '';
+}
+
+export class SecurityHubAutomationRuleFindingFieldsUpdate implements i.ISecurityHubAutomationRuleFindingFieldsUpdate {
+  readonly note?: SecurityHubAutomationRuleNote;
+  readonly severityLabel?: string;
+  readonly verificationState?: string;
+  readonly confidence?: number;
+  readonly criticality?: number;
+  readonly types?: string[];
+  readonly userDefinedFields?: Record<string, string>;
+  readonly workflowStatus?: string;
+  readonly relatedFindings?: SecurityHubAutomationRuleRelatedFinding[];
+}
+
+export class SecurityhubAutomationRuleAction implements i.ISecurityHubAutomationRuleAction {
+  readonly type: string = 'FINDING_FIELDS_UPDATE';
+  readonly findingFieldsUpdate?: SecurityHubAutomationRuleFindingFieldsUpdate;
+}
+
+export class SecurityHubAutomationRuleCriteria implements i.ISecurityHubAutomationRuleCriteria {
+  readonly key: string = '';
+  readonly filter:
+    | SecurityHubAutomationRulesStringFilter[]
+    | SecurityHubAutomationRulesNumberFilter[]
+    | SecurityHubAutomationRulesDateFilter[]
+    | SecurityHubAutomationRulesKeyValueFilter[] = [];
+}
+
+export class SecurityhubAutomationRuleConfig implements i.ISecurityHubAutomationRuleConfig {
+  readonly name: string = '';
+  readonly description: string = '';
+  readonly enabled: boolean = false;
+  readonly actions: SecurityhubAutomationRuleAction[] = [];
+  readonly criteria: SecurityHubAutomationRuleCriteria[] = [];
+  readonly ruleOrder?: number = undefined;
+  readonly isTerminal?: boolean = undefined;
+  readonly excludeRegions?: string[] = undefined;
+}
+
 export class SecurityHubConfig implements i.ISecurityHubConfig {
   readonly enable = false;
   readonly regionAggregation = false;
@@ -191,6 +273,7 @@ export class SecurityHubConfig implements i.ISecurityHubConfig {
   readonly autoEnableOrgMembers: boolean | undefined = undefined;
   readonly standards: SecurityHubStandardConfig[] = [];
   readonly logging: SecurityHubLoggingConfig = new SecurityHubLoggingConfig();
+  readonly automationRules: SecurityhubAutomationRuleConfig[] = [];
 }
 
 export class SnsSubscriptionConfig implements i.ISnsSubscriptionConfig {

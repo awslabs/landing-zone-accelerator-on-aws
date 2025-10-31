@@ -159,6 +159,9 @@ export class SecurityConfigValidator {
 
     this.validateConfigRuleCmkDependency(securityConfig, globalConfig, accountsConfig, errors);
 
+    // Validate SecurityHub automation rules
+    this.validateSecurityHubAutomationRules(securityConfig, globalConfig, errors);
+
     if (errors.length) {
       throw new Error(`${SecurityConfig.FILENAME} has ${errors.length} issues:\n${errors.join('\n')}`);
     }
@@ -1515,5 +1518,42 @@ export class SecurityConfigValidator {
         );
       }
     }
+  }
+
+  /**
+   * Validate SecurityHub automation rules configuration
+   * @param securityConfig SecurityConfig
+   * @param globalConfig GlobalConfig
+   * @param errors string[]
+   */
+  private validateSecurityHubAutomationRules(
+    securityConfig: SecurityConfig,
+    globalConfig: GlobalConfig,
+    errors: string[],
+  ) {
+    const automationRules = securityConfig.centralSecurityServices.securityHub.automationRules;
+    if (!automationRules || automationRules.length === 0) return;
+
+    const enabledRegions = globalConfig.enabledRegions;
+
+    // Validate rule names are unique
+    const ruleNames = automationRules.map(rule => rule.name);
+
+    if (this.hasDuplicates(ruleNames)) {
+      errors.push(`Duplicate SecurityHub automation rule names exist. Rule names must be unique.`);
+    }
+
+    // Validate excludeRegions are in enabledRegions
+    const regionErrors = automationRules.flatMap(
+      rule =>
+        rule.excludeRegions
+          ?.filter(excludeRegion => !enabledRegions.includes(excludeRegion))
+          .map(
+            excludeRegion =>
+              `SecurityHub automation rule "${rule.name}" excludeRegion "${excludeRegion}" is not in the list of enabled regions.`,
+          ) ?? [],
+    );
+
+    regionErrors.forEach(error => errors.push(error));
   }
 }

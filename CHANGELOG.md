@@ -10,7 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - feat(ssm): preserve ssm runAsEnabled setting and runAsDefaultUser
 
-- feat(networking): batch lookup tgw attachment id
+- feat(securityHub): added support for AWS Security Hub automation rules
 
 ### Fixed
 
