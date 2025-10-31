@@ -1040,47 +1040,42 @@ export abstract class Accelerator {
       for (const region of globalConfig.enabledRegions) {
         for (const account of [...accountsConfig.mandatoryAccounts, ...accountsConfig.workloadAccounts]) {
           const accountId = accountsConfig.getAccountId(account.name);
-          const stackKeys: string[] = [];
-          Object.keys(mapping).forEach(key => {
-            if (
+          const phaseExists = Object.keys(mapping).find(key => {
+            return (
               mapping[key].accountId === accountId &&
               mapping[key].region === region &&
               mapping[key].phase === phase &&
               !mapping[key].parentStack
-            ) {
-              stackKeys.push(key);
-            }
+            );
           });
 
-          for (const key of stackKeys) {
-            const stack = mapping[key];
-            const role = globalConfig.cdkOptions.customDeploymentRole ?? `${aseaPrefix}-Deployment-Role`;
-            promises.push(
-              AcceleratorToolkit.execute({
-                ...toolkitProps,
-                app: `cdk.out/phase${phase}-${accountId}-${region}`,
-                stackPrefix: aseaPrefix,
-                stack: stack.stackName,
-                assumeRoleName: role,
-                accountId,
-                region,
-                // ASEA Adds "AcceleratorName" tag to all stacks
-                // Adding it to avoid updating all stacks
-                tags: [
-                  {
-                    Key: 'AcceleratorName',
-                    Value: aseaName,
-                  },
-                ],
-              }),
-            );
-            if (promises.length >= maxStacks) {
-              await Promise.all(promises).catch(err => {
-                logger.error(err);
-                throw new Error(`Configuration validation failed at runtime.`);
-              });
-              promises.length = 0;
-            }
+          if (!phaseExists) continue;
+          //for (const key of stackKeys) {
+          const role = globalConfig.cdkOptions.customDeploymentRole ?? `${aseaPrefix}-Deployment-Role`;
+          promises.push(
+            AcceleratorToolkit.execute({
+              ...toolkitProps,
+              app: `cdk.out/phase${phase}-${accountId}-${region}`,
+              stackPrefix: aseaPrefix,
+              assumeRoleName: role,
+              accountId,
+              region,
+              // ASEA Adds "AcceleratorName" tag to all stacks
+              // Adding it to avoid updating all stacks
+              tags: [
+                {
+                  Key: 'AcceleratorName',
+                  Value: aseaName,
+                },
+              ],
+            }),
+          );
+          if (promises.length >= maxStacks) {
+            await Promise.all(promises).catch(err => {
+              logger.error(err);
+              throw new Error(`Configuration validation failed at runtime.`);
+            });
+            promises.length = 0;
           }
         }
       }
