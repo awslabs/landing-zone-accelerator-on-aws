@@ -46,8 +46,8 @@ export class Lambda extends AseaResource {
     const iamRoles = this.scope.importStackResources.getResourcesByType(IAM_ROLE_RESOURCE_TYPE);
     const iamPolicies = this.scope.importStackResources.getResourcesByType(IAM_POLICY_RESOURCE_TYPE);
     const stepFunctions = this.scope.importStackResources.getResourcesByType(STEP_FUNCTIONS_RESOURCE_TYPE);
-    const customResources = this.scope.importStackResources.cfnResources.filter(
-      r => r.resourceType.startsWith('Custom::') && !r.isDeleted,
+    const customResources = this.scope.importStackResources.cfnResources.filter(r =>
+      r.resourceType.startsWith('Custom::') && !r.isDeleted,
     );
 
     this.replaceLambdaRole(
