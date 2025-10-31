@@ -19,6 +19,8 @@ import {
   ICheckServiceQuotaModule,
 } from '../../../interfaces/service-quotas/check-service-quota';
 import { MODULE_EXCEPTIONS } from '../../../common/enums';
+import { createLogger } from '../../../common/logger';
+import path from 'path';
 
 /**
  * CheckServiceQuota verifies AWS service quotas for an account.
@@ -31,21 +33,30 @@ import { MODULE_EXCEPTIONS } from '../../../common/enums';
  * @implements {ICheckServiceQuotaModule}
  */
 export class CheckServiceQuota implements ICheckServiceQuotaModule {
+  private readonly logger = createLogger([path.parse(path.basename(__filename)).name]);
   /**
    * Main handler method for checking service quotas.
    *
    * This method validates if the specified AWS account has sufficient service
-   * quota to meet the required threshold. It connects to the
-   * Service Quotas service in the specified account and region, retrieves the account's
-   * quota for the specified service, and compares it against the required threshold.
+   * quota to meet the required threshold. If the service quota cannot be retrieved
+   * (e.g., service not available in partition), it logs a warning and returns true
+   * to allow the process to continue gracefully.
    *
    * @param props {@link ICheckServiceQuotaParameter}
    * @returns Promise resolving to boolean indicating if the account meets the required service quota
    */
   async handler(props: ICheckServiceQuotaParameter): Promise<boolean> {
-    const serviceQuota = await this.getLimits(props);
-
-    return serviceQuota >= props.configuration.requiredServiceQuota;
+    try {
+      const serviceQuota = await this.getLimits(props);
+      return serviceQuota >= props.configuration.requiredServiceQuota;
+    } catch (error) {
+      // Log warning and continue gracefully when service quota cannot be retrieved
+      this.logger.warn(
+        `Unable to retrieve service quota for service ${props.configuration.serviceCode} with quota code ${props.configuration.quotaCode}. GetServiceQuotaCommand failed with the following error: \n ${error}.`,
+      );
+      this.logger.warn('Continuing with deployment as this is not a critical service quota.');
+      return true;
+    }
   }
 
   /**

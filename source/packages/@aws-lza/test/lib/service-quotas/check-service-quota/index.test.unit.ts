@@ -28,6 +28,8 @@ vi.mock('@aws-sdk/client-sts');
 vi.mock('../../../../common/functions');
 vi.mock('../../../../common/throttle');
 
+vi.mock('../../../../common/logger');
+
 describe('CheckServiceQuota', () => {
   let module: CheckServiceQuota;
   let mockServiceQuotasClient: vi.Mocked<ServiceQuotasClient>;
@@ -206,15 +208,22 @@ describe('CheckServiceQuota', () => {
       expect(result).toBe(false);
     });
 
-    test('should handle quota with undefined value', async () => {
+    test('should handle quota with undefined value gracefully and catch error', async () => {
+      // Mock the logger
+      const mockLogger = {
+        warn: vi.fn(),
+        error: vi.fn(),
+      };
+
+      // @ts-ignore - Replace the private logger with our mock
+      module.logger = mockLogger;
       // Setup mock responses with undefined Quota value
       mockServiceQuotasClient.send.mockResolvedValueOnce({
         Quota: undefined,
       } as unknown as never);
 
-      await expect(module.handler(baseInput)).rejects.toThrow(
-        'ServiceException: Encountered an error in getting service ec2 limit for quota L-1234ABCD.',
-      );
+      const result = await module.handler(baseInput);
+      expect(result).toBe(true);
     });
 
     test('should pass the correct service and quota codes to the API', async () => {
@@ -336,6 +345,99 @@ describe('CheckServiceQuota', () => {
       ).rejects.toThrow('ServiceException: Quota L-1234ABCD not found for service ec2.');
 
       expect(throttle.throttlingBackOff).toHaveBeenCalled();
+    });
+  });
+
+  describe('graceful handling of service quota failures', () => {
+    test('should return true and log warning when service quota cannot be retrieved', async () => {
+      const mockLogger = {
+        warn: vi.fn(),
+        error: vi.fn(),
+      };
+
+      // @ts-ignore
+      module.logger = mockLogger;
+
+      // Setup mock to throw NoSuchResourceException
+      const noSuchResourceException = new NoSuchResourceException({
+        message: 'The quota code does not exist',
+        $metadata: {},
+      });
+      mockServiceQuotasClient.send.mockRejectedValueOnce(noSuchResourceException as unknown as never);
+
+      const result = await module.handler(baseInput);
+
+      expect(result).toBe(true);
+      expect(mockServiceQuotasClient.send).toHaveBeenCalledWith(expect.any(GetServiceQuotaCommand));
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        expect.stringContaining('Unable to retrieve service quota for service ec2 with quota code L-1234ABCD'),
+      );
+    });
+
+    test('should return true and log warning when service does not exist in partition', async () => {
+      const mockLogger = {
+        warn: vi.fn(),
+        error: vi.fn(),
+      };
+
+      // @ts-ignore
+      module.logger = mockLogger;
+
+      // Setup mock to throw a generic error (service not available in partition)
+      const serviceError = new Error('Service not available in this partition');
+      mockServiceQuotasClient.send.mockRejectedValueOnce(serviceError as unknown as never);
+
+      const result = await module.handler(baseInput);
+
+      expect(result).toBe(true);
+      expect(mockServiceQuotasClient.send).toHaveBeenCalledWith(expect.any(GetServiceQuotaCommand));
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        expect.stringContaining('Unable to retrieve service quota for service ec2 with quota code L-1234ABCD'),
+      );
+    });
+
+    test('should return true and log warning when API returns undefined quota value', async () => {
+      const mockLogger = {
+        warn: vi.fn(),
+        error: vi.fn(),
+      };
+
+      // @ts-ignore
+      module.logger = mockLogger;
+
+      mockServiceQuotasClient.send.mockResolvedValueOnce({
+        Quota: {
+          Value: undefined,
+        },
+      } as unknown as never);
+
+      const result = await module.handler(baseInput);
+
+      expect(result).toBe(true);
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        expect.stringContaining('Unable to retrieve service quota for service ec2 with quota code L-1234ABCD'),
+      );
+    });
+
+    test('should return true and log warning when API returns no quota object', async () => {
+      const mockLogger = {
+        warn: vi.fn(),
+        error: vi.fn(),
+      };
+
+      // @ts-ignore
+      module.logger = mockLogger;
+
+      mockServiceQuotasClient.send.mockResolvedValueOnce({
+        Quota: undefined,
+      } as unknown as never);
+
+      const result = await module.handler(baseInput);
+
+      expect(result).toBe(true);
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        expect.stringContaining('Unable to retrieve service quota for service ec2 with quota code L-1234ABCD'),
+      );
     });
   });
 });
