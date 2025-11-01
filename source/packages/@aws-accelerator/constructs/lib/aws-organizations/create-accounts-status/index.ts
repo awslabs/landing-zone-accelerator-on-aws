@@ -18,7 +18,7 @@
  */
 
 import { throttlingBackOff } from '@aws-accelerator/utils/lib/throttle';
-import { CreateAccountResponse } from 'aws-sdk/clients/organizations';
+import { CreateAccountResponse } from '@aws-sdk/client-organizations';
 import { getGlobalRegion, setRetryStrategy } from '@aws-accelerator/utils/lib/common-functions';
 import { CloudFormationCustomResourceEvent, Context } from '@aws-accelerator/utils/lib/common-types';
 import {
@@ -88,6 +88,16 @@ export async function handler(
       };
     }
 
+    if (partition === 'aws-us-gov') {
+      console.error(
+        'Cannot add accounts in the GovCloud partition.  Accounts must be added in the commercial parition.',
+      );
+      deleteAllRecordsFromTable(newOrgAccountsTableName);
+      throw new Error(
+        'Cannot create new accounts in the GovCloud partition. Did you add the accountId to the accounts-config file?',
+      );
+    }
+
     const singleAccountToAdd = accountToAdd[0];
     console.log(`enablegovcloud value: ${singleAccountToAdd.enableGovCloud}`);
     let createAccountResponse: CreateAccountResponse;
@@ -119,6 +129,17 @@ export async function handler(
             singleAccountToAdd.organizationalUnitId,
           );
           break;
+        case 'FAILED':
+          if (createAccountResponse.CreateAccountStatus?.FailureReason === 'EMAIL_ALREADY_EXISTS') {
+            console.warn(`Account with the email address of ${singleAccountToAdd.email} already exists`);
+            await deleteSingleAccountConfigFromTable(singleAccountToAdd.email);
+            return {
+              IsComplete: true,
+            };
+          }
+          throw new Error(
+            `Could not create account ${singleAccountToAdd.email}. Response state: ${createAccountResponse.CreateAccountStatus?.State}. Failure reason: ${createAccountResponse.CreateAccountStatus?.FailureReason}`,
+          );
         default:
           throw new Error(
             `Could not create account ${singleAccountToAdd.email}. Response state: ${createAccountResponse.CreateAccountStatus?.State}. Failure reason: ${createAccountResponse.CreateAccountStatus?.FailureReason}`,
@@ -143,6 +164,17 @@ export async function handler(
             singleAccountToAdd.organizationalUnitId,
           );
           break;
+        case 'FAILED':
+          if (createAccountStatusResponse.CreateAccountStatus?.FailureReason === 'EMAIL_ALREADY_EXISTS') {
+            console.warn(`Account with the email address of ${singleAccountToAdd.email} already exists`);
+            await deleteSingleAccountConfigFromTable(singleAccountToAdd.email);
+            return {
+              IsComplete: true,
+            };
+          }
+          throw new Error(
+            `Could not create account ${singleAccountToAdd.email}. Response state: ${createAccountStatusResponse.CreateAccountStatus?.State}, Failure reason: ${createAccountStatusResponse.CreateAccountStatus?.FailureReason}`,
+          );
         default:
           throw new Error(
             `Could not create account ${singleAccountToAdd.email}. Response state: ${createAccountStatusResponse.CreateAccountStatus?.State}, Failure reason: ${createAccountStatusResponse.CreateAccountStatus?.FailureReason}`,
@@ -296,18 +328,22 @@ async function deleteAllRecordsFromTable(paramTableName: string) {
     TableName: paramTableName,
     ProjectionExpression: 'accountEmail',
   };
-  const response = await throttlingBackOff(() => documentClient.send(new ScanCommand(params)));
-  if (response.Items) {
-    for (const item of response.Items) {
-      console.log(item['accountEmail']);
-      const itemParams = {
-        TableName: paramTableName,
-        Key: {
-          accountEmail: item['accountEmail'],
-        },
-      };
-      await throttlingBackOff(() => documentClient.send(new DeleteCommand(itemParams)));
+  try {
+    const response = await throttlingBackOff(() => documentClient.send(new ScanCommand(params)));
+    if (response.Items) {
+      for (const item of response.Items) {
+        console.log(item['accountEmail']);
+        const itemParams = {
+          TableName: paramTableName,
+          Key: {
+            accountEmail: item['accountEmail'],
+          },
+        };
+        await throttlingBackOff(() => documentClient.send(new DeleteCommand(itemParams)));
+      }
     }
+  } catch (e) {
+    console.warn('Failed to delete all records: ', e);
   }
 }
 
