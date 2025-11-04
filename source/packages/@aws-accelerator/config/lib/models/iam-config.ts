@@ -2306,16 +2306,7 @@ export interface IManagedActiveDirectoryConfig {
  * *{@link IamConfig}*
  *
  * @description
- * AWS Identity and Access Management (IAM) configuration for the Landing Zone Accelerator.
- * This configuration defines IAM identities (users, groups, roles), policies, and related
- * services like SAML providers, AWS Managed Microsoft AD, and AWS Identity Center.
- *
- * IAM enables you to manage access to AWS services and resources securely. Using IAM, you can
- * create and manage AWS users and groups, and use permissions to allow and deny their access
- * to AWS resources.
- *
- * @see {@link https://docs.aws.amazon.com/IAM/latest/UserGuide/access_policies.html | Policies and permissions in AWS Identity and Access Management}
- * @see {@link https://docs.aws.amazon.com/IAM/latest/UserGuide/id.html | IAM Identities}
+ * IAM configuration
  *
  * @category IAM Configuration
  */

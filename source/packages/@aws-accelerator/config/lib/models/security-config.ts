@@ -3328,3 +3328,30 @@ export interface ICloudWatchConfig {
    */
   readonly logGroups?: ILogGroupsConfig[];
 }
+
+/**
+ * Accelerator security configuration
+ *
+ * @category Security Configuration
+ */
+export interface ISecurityConfig {
+  /**
+   * Accelerator home region name.
+   *
+   * @example
+   * ```
+   * homeRegion: &HOME_REGION us-east-1
+   * ```
+   */
+  readonly homeRegion?: string;
+  /**
+   * Central security configuration
+   */
+  readonly centralSecurityServices: ICentralSecurityServicesConfig;
+  readonly accessAnalyzer: IAccessAnalyzerConfig;
+  readonly iamPasswordPolicy: IIamPasswordPolicyConfig;
+  readonly awsConfig: IAwsConfig;
+  readonly cloudWatch: ICloudWatchConfig;
+  readonly keyManagementService?: IKeyManagementServiceConfig;
+  readonly resourcePolicyEnforcement?: IResourcePolicyEnforcementConfig;
+}

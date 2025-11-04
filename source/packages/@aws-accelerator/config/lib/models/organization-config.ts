@@ -374,9 +374,7 @@ export interface IBackupPolicyConfig {
 /**
  * Organization configuration
  *
- * Defines organizational structure and governance policies to be deployed across your multi-account environment.
- * Controls whether organizational management is enabled and specifies the account hierarchy, security policies,
- * and automated controls that will be applied.
+ * @category Organization Configuration
  */
 export interface IOrganizationConfig {
   /**
