@@ -2555,6 +2555,8 @@ export interface ICloudWatchConfig {
 
 /**
  * Accelerator security configuration
+ *
+ * @category Security Configuration
  */
 export interface ISecurityConfig {
   /**
