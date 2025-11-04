@@ -243,6 +243,10 @@ source/packages/@aws-lza/test/lib/aws-cloudformation/create-stack-policy/index.t
 
 source/packages/@aws-accelerator/config/lib/accounts-config.ts:223
 source/packages/@aws-accelerator/config/lib/accounts-config.ts:224
+source/packages/@aws-accelerator/config/lib/models/accounts-config.ts:71
+source/packages/@aws-accelerator/config/lib/models/accounts-config.ts:207
+source/packages/@aws-accelerator/config/lib/models/accounts-config.ts:503
+source/packages/@aws-accelerator/config/lib/models/accounts-config.ts:512
 source/packages/@aws-accelerator/config/lib/organization-config.ts:208
 source/packages/@aws-accelerator/config/lib/organization-config.ts:209
 

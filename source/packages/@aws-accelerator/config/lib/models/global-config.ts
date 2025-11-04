@@ -2567,6 +2567,8 @@ export interface ICentralRootUserManagementConfig {
 
 /**
  * Accelerator global configuration
+ *
+ * @category Global Configuration
  */
 export interface IGlobalConfig {
   /**

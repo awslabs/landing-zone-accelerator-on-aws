@@ -353,6 +353,8 @@ export interface IBackupPolicyConfig {
 
 /**
  * Organization configuration
+ *
+ * @category Organization Configuration
  */
 export interface IOrganizationConfig {
   /**

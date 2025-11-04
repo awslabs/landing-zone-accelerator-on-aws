@@ -104,6 +104,8 @@ export interface IParameterReplacementV2 {
 
 /**
  * Accelerator replacements configuration
+ *
+ * @category Replacements Configuration
  */
 export interface IReplacementsConfig {
   /**

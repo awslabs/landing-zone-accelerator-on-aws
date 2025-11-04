@@ -1,0 +1,35 @@
+{
+  "entryPoints": [
+    "./packages/@aws-accelerator/config/lib/models/accounts-config.ts",
+    "./packages/@aws-accelerator/config/lib/models/global-config.ts",
+    "./packages/@aws-accelerator/config/lib/models/iam-config.ts",
+    "./packages/@aws-accelerator/config/lib/models/network-config.ts",
+    "./packages/@aws-accelerator/config/lib/models/organization-config.ts",
+    "./packages/@aws-accelerator/config/lib/models/security-config.ts",
+    "./packages/@aws-accelerator/config/lib/models/customizations-config.ts",
+    "./packages/@aws-accelerator/config/lib/models/replacements-config.ts"
+  ],
+  "exclude": ["**/test/**/*"],
+  "excludeExternals": true,
+  "excludeNotDocumented": true,
+  "excludePrivate": true,
+  "excludeProtected": true,
+  "excludeInternal": true,
+  "disableSources": true,
+  "skipErrorChecking": true,
+  "sort": ["source-order"],
+  "categorizeByGroup": true,
+  "defaultCategory": "Other Interfaces",
+  "categoryOrder": [
+    "Accounts Configuration", 
+    "Organization Configuration",
+    "Global Configuration",
+    "IAM Configuration",
+    "Network Configuration",
+    "Security Configuration",
+    "Customizations Configuration",
+    "Replacements Configuration",
+    "*"
+  ],
+  "out": "./mkdocs/docs/typedocs"
+}

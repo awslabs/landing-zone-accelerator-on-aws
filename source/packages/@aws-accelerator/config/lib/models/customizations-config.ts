@@ -2649,6 +2649,8 @@ export interface IEc2FirewallConfig {
 /**
  * *{@link CustomizationsConfig}*
  *
+ * @category Customizations Configuration
+ *
  * @description
  * Defines custom CloudFormation and external web and application tier resources. We recommend creating resources
  * with native LZA features where possible.

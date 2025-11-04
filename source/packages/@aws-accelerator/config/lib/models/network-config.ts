@@ -7363,6 +7363,8 @@ export interface ICertificateConfig {
 /**
  * Network Configuration.
  * Used to define a network configuration for the accelerator.
+ *
+ * @category Network Configuration
  */
 export interface INetworkConfig {
   /**

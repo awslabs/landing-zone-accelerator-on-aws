@@ -1279,6 +1279,8 @@ export interface IManagedActiveDirectoryConfig {
  *
  * @description
  * IAM configuration
+ *
+ * @category IAM Configuration
  */
 export interface IIamConfig {
   /**
