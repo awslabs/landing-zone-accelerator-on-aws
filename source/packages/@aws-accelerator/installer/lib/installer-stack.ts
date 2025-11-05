@@ -1029,7 +1029,7 @@ export class InstallerStack extends cdk.Stack {
                   # which doesn't have the S3 bucket (as it using the management account bucket)
                   yarn run cdk bootstrap --toolkitStackName ${acceleratorPrefix}-CDKToolkit aws://${
                 cdk.Aws.ACCOUNT_ID
-              }/${cdk.Aws.REGION} --qualifier accel --force
+              }/${cdk.Aws.REGION} --qualifier $ACCELERATOR_QUALIFIER --force
                   export $(printf "AWS_ACCESS_KEY_ID=%s AWS_SECRET_ACCESS_KEY=%s AWS_SESSION_TOKEN=%s" $MANAGEMENT_ACCOUNT_CREDENTIAL);
                   if ! aws cloudformation describe-stacks --stack-name ${acceleratorPrefix}-CDKToolkit --region ${
                 cdk.Aws.REGION
