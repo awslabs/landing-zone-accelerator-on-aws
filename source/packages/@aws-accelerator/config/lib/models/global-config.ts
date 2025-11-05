@@ -445,18 +445,29 @@ export interface ICloudTrailSettingsConfig {
    * Management events can also include non-API events that occur in your account.
    * For example, when a user logs in to your account, CloudTrail logs the ConsoleLogin event.
    * Enabling will set ReadWriteType.ALL
+   *
    */
   managementEvents: boolean;
   /**
    * Adds an S3 Data Event Selector for filtering events that match S3 operations.
    * These events provide insight into the resource operations performed on or within a resource.
    * These are also known as data plane operations.
+   *
+   * @remarks
+   * This property is set to `true` by default and will incur additional costs if enabled for your CloudTrail.
+   * For more information about data events, see {@link https://docs.aws.amazon.com/awscloudtrail/latest/userguide/logging-data-events-with-cloudtrail.html | Logging data events with CloudTrail}.
+   * For pricing information, see {@link https://aws.amazon.com/cloudtrail/pricing/ | CloudTrail pricing}.
    */
   s3DataEvents: boolean;
   /**
    * Adds an Lambda Data Event Selector for filtering events that match Lambda operations.
    * These events provide insight into the resource operations performed on or within a resource.
    * These are also known as data plane operations.
+   *
+   * @remarks
+   * This property is set to `true` by default and will incur additional costs if enabled for your CloudTrail.
+   * For more information about data events, see {@link https://docs.aws.amazon.com/awscloudtrail/latest/userguide/logging-data-events-with-cloudtrail.html | Logging data events with CloudTrail}.
+   * For pricing information, see {@link https://aws.amazon.com/cloudtrail/pricing/ | CloudTrail pricing}.
    */
   lambdaDataEvents: boolean;
   /**
