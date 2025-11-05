@@ -1579,11 +1579,11 @@ export interface ICloudTrailSettingsConfig {
    */
   globalServiceEvents: boolean;
   /**
-   * **Management Events** *(Required)*
-   *
-   * Whether or not to log management events, or control plane operations.
-   * Management events can also include non-API events that occur in your account, such as a user logging in to the account.
-   * Enabling sets ReadWriteType.ALL.
+   * Management events provide insight into management operations that are
+   * on resources in your AWS account. These are also known as control plane operations.
+   * Management events can also include non-API events that occur in your account.
+   * For example, when a user logs in to your account, CloudTrail logs the ConsoleLogin event.
+   * Enabling will set ReadWriteType.ALL
    *
    */
   managementEvents: boolean;
@@ -1594,13 +1594,10 @@ export interface ICloudTrailSettingsConfig {
    * These events provide insight into the resource operations performed on or within a resource.
    * These are also known as data plane operations.
    *
-   * **Considerations**
-   * By default, this feature is enabled and will incur additional costs if enabled for your CloudTrail.
-   *
-   * @default true
-   *
-   * @see {@link https://docs.aws.amazon.com/awscloudtrail/latest/userguide/logging-data-events-with-cloudtrail.html | Logging data events with CloudTrail} for more information about data events
-   * @see {@link  https://aws.amazon.com/cloudtrail/pricing/ | CloudTrail pricing} for additional information about pricing
+   * @remarks
+   * This property is set to `true` by default and will incur additional costs if enabled for your CloudTrail.
+   * For more information about data events, see {@link https://docs.aws.amazon.com/awscloudtrail/latest/userguide/logging-data-events-with-cloudtrail.html | Logging data events with CloudTrail}.
+   * For pricing information, see {@link https://aws.amazon.com/cloudtrail/pricing/ | CloudTrail pricing}.
    */
   s3DataEvents: boolean;
   /**
@@ -1612,13 +1609,10 @@ export interface ICloudTrailSettingsConfig {
    * These events provide insight into the resource operations performed on or within a resource.
    * These are also known as data plane operations.
    *
-   * **Considerations**
-   * By default, this feature is enabled and will incur additional costs if enabled for your CloudTrail.
-   *
-   * @default true
-   *
-   * @see {@link https://docs.aws.amazon.com/awscloudtrail/latest/userguide/logging-data-events-with-cloudtrail.html | Logging data events with CloudTrail} for more information about data events
-   * @see {@link  https://aws.amazon.com/cloudtrail/pricing/ | CloudTrail pricing} for additional information about pricing
+   * @remarks
+   * This property is set to `true` by default and will incur additional costs if enabled for your CloudTrail.
+   * For more information about data events, see {@link https://docs.aws.amazon.com/awscloudtrail/latest/userguide/logging-data-events-with-cloudtrail.html | Logging data events with CloudTrail}.
+   * For pricing information, see {@link https://aws.amazon.com/cloudtrail/pricing/ | CloudTrail pricing}.
    */
   lambdaDataEvents: boolean;
   /**
