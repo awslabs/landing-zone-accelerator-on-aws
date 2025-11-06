@@ -11,7 +11,13 @@
  *  and limitations under the License.
  */
 
-import { SSMClient, PutParameterCommand, DeleteParameterCommand } from '@aws-sdk/client-ssm';
+import {
+  SSMClient,
+  PutParameterCommand,
+  DeleteParameterCommand,
+  AddTagsToResourceCommand,
+  RemoveTagsFromResourceCommand,
+} from '@aws-sdk/client-ssm';
 import { STSClient } from '@aws-sdk/client-sts';
 import { setRetryStrategy, getStsCredentials } from '@aws-accelerator/utils/lib/common-functions';
 import { throttlingBackOff } from '@aws-accelerator/utils/lib/throttle';
@@ -20,6 +26,27 @@ import { CloudFormationCustomResourceEvent } from '@aws-accelerator/utils/lib/co
 interface SsmParameterProps {
   readonly name: string;
   readonly value: string;
+  readonly tags?: Record<string, string>;
+}
+
+/**
+ * Compare two tag objects to check if they have changed
+ * @param newTags Record<string, string> | undefined
+ * @param oldTags Record<string, string> | undefined
+ * @returns boolean
+ */
+function tagsChanged(newTags?: Record<string, string>, oldTags?: Record<string, string>): boolean {
+  const newTagsObj = newTags ?? {};
+  const oldTagsObj = oldTags ?? {};
+
+  const newKeys = Object.keys(newTagsObj);
+  const oldKeys = Object.keys(oldTagsObj);
+
+  if (newKeys.length !== oldKeys.length) {
+    return true;
+  }
+
+  return newKeys.some(key => newTagsObj[key] !== oldTagsObj[key]);
 }
 
 /**
@@ -246,9 +273,15 @@ async function createParameters(ssmClient: SSMClient, parameterAccountId: string
   // Put parameters
   for (const parameter of parameters) {
     console.log(`Put SSM parameter ${parameter.name} to account ${parameterAccountId}`);
+
     await throttlingBackOff(() =>
       ssmClient.send(
-        new PutParameterCommand({ Name: parameter.name, Value: parameter.value, Type: 'String', Overwrite: true }),
+        new PutParameterCommand({
+          Name: parameter.name,
+          Value: parameter.value,
+          Type: 'String',
+          Tags: parameter.tags && Object.entries(parameter.tags).map(([Key, Value]) => ({ Key, Value })),
+        }),
       ),
     );
   }
@@ -307,20 +340,92 @@ async function modifyParameters(
   const modifiedParameters: SsmParameterProps[] = [];
 
   for (const newParameter of newParameters) {
-    const filterParameters = oldParameters.filter(item => item.name === newParameter.name);
-    for (const filterParameter of filterParameters) {
-      if (filterParameter.value !== newParameter.value) {
+    const oldParameter = oldParameters.find(item => item.name === newParameter.name);
+    if (oldParameter) {
+      // Check if value or tags have changed
+      const valueChanged = oldParameter.value !== newParameter.value;
+      const haveTagsChanged = tagsChanged(newParameter.tags, oldParameter.tags);
+
+      if (valueChanged || haveTagsChanged) {
         modifiedParameters.push(newParameter);
       }
     }
   }
 
-  // Modify existing parameters if their values have changed
+  // Modify existing parameters if their values or tags have changed
   for (const parameter of modifiedParameters) {
     console.log(`Modify SSM parameter ${parameter.name} in account ${parameterAccountId}`);
+
+    // Update parameter value
     await throttlingBackOff(() =>
       ssmClient.send(
-        new PutParameterCommand({ Name: parameter.name, Value: parameter.value, Type: 'String', Overwrite: true }),
+        new PutParameterCommand({
+          Name: parameter.name,
+          Value: parameter.value,
+          Type: 'String',
+          Overwrite: true,
+        }),
+      ),
+    );
+
+    // Update tags separately
+    const oldParameter = oldParameters.find(item => item.name === parameter.name);
+    if (oldParameter) {
+      await updateParameterTags(ssmClient, parameterAccountId, parameter, oldParameter);
+    }
+  }
+}
+
+/**
+ * Update tags for an SSM parameter
+ * @param ssmClient {@link SSMClient}
+ * @param parameterAccountId string
+ * @param newParameter {@link SsmParameterProps}
+ * @param oldParameter {@link SsmParameterProps}
+ */
+async function updateParameterTags(
+  ssmClient: SSMClient,
+  parameterAccountId: string,
+  newParameter: SsmParameterProps,
+  oldParameter: SsmParameterProps,
+): Promise<void> {
+  const newTags = newParameter.tags ?? {};
+  const oldTags = oldParameter.tags ?? {};
+
+  // Check if tags have changed
+  if (!tagsChanged(newParameter.tags, oldParameter.tags)) {
+    return;
+  }
+
+  console.log(`Updating tags for SSM parameter ${newParameter.name} in account ${parameterAccountId}`);
+
+  const oldTagKeys = Object.keys(oldTags);
+  const newTagKeys = Object.keys(newTags);
+
+  const tagKeysToRemove = oldTagKeys.filter(key => !newTagKeys.includes(key));
+  if (tagKeysToRemove.length > 0) {
+    console.log(`Removing tags from SSM parameter ${newParameter.name}: ${tagKeysToRemove.join(', ')}`);
+    await throttlingBackOff(() =>
+      ssmClient.send(
+        new RemoveTagsFromResourceCommand({
+          ResourceType: 'Parameter',
+          ResourceId: newParameter.name,
+          TagKeys: tagKeysToRemove,
+        }),
+      ),
+    );
+  }
+
+  const newTagsList = Object.entries(newTags).map(([Key, Value]) => ({ Key, Value }));
+  if (newTagsList.length > 0) {
+    console.log(`Adding/updating tags for SSM parameter ${newParameter.name}`);
+    await throttlingBackOff(() =>
+      ssmClient.send(
+        new AddTagsToResourceCommand({
+          ResourceType: 'Parameter',
+          ResourceId: newParameter.name,
+          Tags: newTagsList,
+        }),
       ),
     );
   }

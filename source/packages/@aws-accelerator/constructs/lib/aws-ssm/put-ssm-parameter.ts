@@ -26,6 +26,10 @@ export interface SsmParameterProps {
    * Value of the parameter
    */
   readonly value: string;
+  /**
+   * Tags for the parameter
+   */
+  readonly tags?: Record<string, string>;
 }
 
 /**
@@ -82,7 +86,7 @@ export class PutSsmParameter extends Construct {
     policyStatements.push({
       Sid: 'SsmPutParameterActions',
       Effect: 'Allow',
-      Action: ['ssm:DeleteParameter', 'ssm:PutParameter'],
+      Action: ['ssm:DeleteParameter', 'ssm:PutParameter', 'ssm:AddTagsToResource', 'ssm:RemoveTagsFromResource'],
       Resource: ['*'],
     });
 

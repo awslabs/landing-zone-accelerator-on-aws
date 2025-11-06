@@ -1650,6 +1650,8 @@ drop http $HOME_NET any -> $EXTERNAL_NET any (http.host; content:"example.com"; 
                   "Action": [
                     "ssm:DeleteParameter",
                     "ssm:PutParameter",
+                    "ssm:AddTagsToResource",
+                    "ssm:RemoveTagsFromResource",
                   ],
                   "Effect": "Allow",
                   "Resource": [

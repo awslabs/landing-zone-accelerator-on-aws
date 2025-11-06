@@ -168,6 +168,10 @@ export function addAcceleratorTags(
           new cdk.Tag(t.key, t.value).visit(resource);
         });
       }
+
+      if (resource.cfnResourceType === 'Custom::SsmPutParameterValue') {
+        addTagsToPutSsmParameterResource(resource, tagsWithPrefix);
+      }
     }
 
     if (resource instanceof cdk.CustomResourceProvider) {
@@ -239,6 +243,38 @@ export function setTagsForChildResources(resource: CfnResource, tags: { key: str
     .sort((a, b) => a.Key.localeCompare(b.Key));
 
   resource.addPropertyOverride('Tags', formattedTags);
+}
+
+/**
+ * Adds tags to PutSsmParameter custom resource parameters
+ * @param resource - The PutSsmParameter custom resource
+ * @param tags - Array of key-value pairs to be applied as tags
+ */
+export function addTagsToPutSsmParameterResource(resource: CfnResource, tags: { key: string; value: string }[]): void {
+  if (!tags || tags.length === 0) {
+    return;
+  }
+
+  // Convert tags to Record<string, string> format
+  const tagsRecord: Record<string, string> = {};
+  tags.forEach(tag => {
+    tagsRecord[tag.key] = tag.value;
+  });
+
+  // Get the existing parameters from the custom resource properties
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const existingParameters = (resource as any)._cfnProperties?.parameters;
+
+    if (Array.isArray(existingParameters)) {
+      existingParameters.forEach((param: { tags?: Record<string, string> }, index: number) => {
+        const existingTags = param.tags || {};
+        resource.addPropertyOverride(`parameters.${index}.tags`, { ...tagsRecord, ...existingTags });
+      });
+    }
+  } catch (e) {
+    logger.warn(`Could not add tags to PutSsmParameter parameters: ${e}`);
+  }
 }
 
 /**

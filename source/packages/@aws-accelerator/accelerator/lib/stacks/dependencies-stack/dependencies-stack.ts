@@ -90,7 +90,14 @@ export class DependenciesStack extends AcceleratorStack {
           statements: [
             new cdk.aws_iam.PolicyStatement({
               effect: cdk.aws_iam.Effect.ALLOW,
-              actions: ['ssm:PutParameter', 'ssm:DeleteParameter', 'ssm:GetParameter'],
+              actions: [
+                'ssm:PutParameter',
+                'ssm:DeleteParameter',
+                'ssm:GetParameter',
+                'ssm:GetParameters',
+                'ssm:AddTagsToResource',
+                'ssm:RemoveTagsFromResource',
+              ],
               resources: [`arn:${partition}:ssm:*:*:parameter${ssmPrefix}*`],
             }),
           ],

@@ -85,6 +85,8 @@ exports[`SsmParameter > Construct(SsmParameter):  Snapshot Test 1`] = `
                   "Action": [
                     "ssm:DeleteParameter",
                     "ssm:PutParameter",
+                    "ssm:AddTagsToResource",
+                    "ssm:RemoveTagsFromResource",
                   ],
                   "Effect": "Allow",
                   "Resource": [
@@ -142,6 +144,9 @@ exports[`SsmParameter > Construct(SsmParameter):  Snapshot Test 1`] = `
         "parameters": [
           {
             "name": "/accelerator/network/vpcPeering/name/id",
+            "tags": {
+              "key2": "value2",
+            },
             "value": "vp-123123123",
           },
         ],
