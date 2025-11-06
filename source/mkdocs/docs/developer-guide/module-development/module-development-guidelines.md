@@ -159,7 +159,7 @@ export class ModuleImplementation implements IModuleInterface {
 - Document parameter types and returns
 - Provide usage examples
 
-For more information refer [doc-guidelines](./doc-guidelines.md)
+For more information refer [doc-guidelines](./../doc-guidelines.md)
 
 
 ## 9. Deployment Guidelines
