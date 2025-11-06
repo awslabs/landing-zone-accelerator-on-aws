@@ -14,9 +14,9 @@ dataProtection:
       - Credentials
 ```
 
-In existing Landing Zone Accelerator environments, if you wish to configure CloudWatch Log group data protection policies, you can add the above [dataProtection](../../../typedocs/interfaces/packages__aws-accelerator_config_lib_models_global-config.ICloudWatchDataProtectionConfig.html) configuration and deploy the Landing Zone Accelerator pipeline.
+In existing Landing Zone Accelerator environments, if you wish to configure CloudWatch Log group data protection policies, you can add the above [dataProtection](../../../typedocs/interfaces/___packages__aws_accelerator_config_lib_models_global_config.ICloudWatchDataProtectionConfig.html) configuration and deploy the Landing Zone Accelerator pipeline.
 
-The Landing Zone Accelerator solution configures CloudWatch Logs data protection audit policies to write audit reports to `centralLogBucket` Amazon S3 bucket defined in the [CentralLogBucketConfig](../../../typedocs/interfaces/packages__aws-accelerator_config_lib_models_global-config.ICentralLogBucketConfig.html).
+The Landing Zone Accelerator solution configures CloudWatch Logs data protection audit policies to write audit reports to `centralLogBucket` Amazon S3 bucket defined in the [CentralLogBucketConfig](../../../typedocs/interfaces/___packages__aws_accelerator_config_lib_models_global_config.ICentralLogBucketConfig.html).
 
 !!! note
     Please note that this feature is only available for AWS Commercial Regions.
