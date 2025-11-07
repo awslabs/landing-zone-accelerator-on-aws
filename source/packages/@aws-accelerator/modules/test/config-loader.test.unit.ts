@@ -88,8 +88,10 @@ vi.mock('@aws-accelerator/config', () => {
       loadDynamicReplacements: mockLoadDynamicReplacements,
     });
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    constructor(public arg1: any, public arg2: any) {}
+    constructor(
+      public arg1: any,
+      public arg2: any,
+    ) {}
 
     loadDynamicReplacements = mockLoadDynamicReplacements;
   }
@@ -154,7 +156,7 @@ describe('ConfigLoader', () => {
       // Setup
 
       vi.spyOn(fs, 'existsSync').mockReturnValue(true);
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
       vi.spyOn(fs, 'readdirSync').mockReturnValue([] as any);
 
       // Verify
@@ -168,7 +170,7 @@ describe('ConfigLoader', () => {
       // Setup
 
       vi.spyOn(fs, 'existsSync').mockReturnValue(true);
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
       vi.spyOn(fs, 'readdirSync').mockReturnValue(MOCK_CONSTANTS.mandatoryConfigFiles as any);
 
       // Verify
@@ -205,6 +207,7 @@ describe('ConfigLoader', () => {
         MOCK_CONSTANTS.orgEnabled,
         mockAccountsConfig,
         MOCK_CONSTANTS.credentials,
+        false,
       );
       expect(result).toBe(mockAccountsConfig);
       expect(await mockAccountsConfig.loadAccountIds()).toEqual({
@@ -236,6 +239,96 @@ describe('ConfigLoader', () => {
         MOCK_CONSTANTS.orgEnabled,
         mockAccountsConfig,
         undefined,
+        false,
+      );
+    });
+  });
+  describe('getAccountsConfigWithAccountIds - shouldSkipDynamoDbLookup', () => {
+    afterEach(() => {
+      delete process.env['ACCELERATOR_SKIP_DYNAMODB_LOOKUP'];
+      delete process.env['ACCELERATOR_STAGE'];
+      vi.restoreAllMocks();
+    });
+
+    test('should skip DynamoDB lookup when ACCELERATOR_SKIP_DYNAMODB_LOOKUP is true', async () => {
+      // Setup
+      process.env['ACCELERATOR_SKIP_DYNAMODB_LOOKUP'] = 'true';
+
+      const mockAccountsConfig = {
+        loadAccountIds: vi.fn().mockResolvedValue(undefined),
+      };
+      (AccountsConfig.load as any).mockReturnValue(mockAccountsConfig);
+
+      // Execute
+      await ConfigLoader.getAccountsConfigWithAccountIds(
+        MOCK_CONSTANTS.runnerParameters.configDirPath,
+        MOCK_CONSTANTS.runnerParameters.partition,
+        MOCK_CONSTANTS.orgEnabled,
+      );
+
+      // Verify
+      expect(mockAccountsConfig.loadAccountIds).toHaveBeenCalledWith(
+        MOCK_CONSTANTS.runnerParameters.partition,
+        MOCK_CONSTANTS.enableSingleAccountMode,
+        MOCK_CONSTANTS.orgEnabled,
+        mockAccountsConfig,
+        undefined,
+        true,
+      );
+    });
+
+    test('should skip DynamoDB lookup when ACCELERATOR_STAGE is prepare', async () => {
+      // Setup
+      process.env['ACCELERATOR_STAGE'] = 'prepare';
+
+      const mockAccountsConfig = {
+        loadAccountIds: vi.fn().mockResolvedValue(undefined),
+      };
+      (AccountsConfig.load as any).mockReturnValue(mockAccountsConfig);
+
+      // Execute
+      await ConfigLoader.getAccountsConfigWithAccountIds(
+        MOCK_CONSTANTS.runnerParameters.configDirPath,
+        MOCK_CONSTANTS.runnerParameters.partition,
+        MOCK_CONSTANTS.orgEnabled,
+      );
+
+      // Verify
+      expect(mockAccountsConfig.loadAccountIds).toHaveBeenCalledWith(
+        MOCK_CONSTANTS.runnerParameters.partition,
+        MOCK_CONSTANTS.enableSingleAccountMode,
+        MOCK_CONSTANTS.orgEnabled,
+        mockAccountsConfig,
+        undefined,
+        true,
+      );
+    });
+
+    test('should not skip DynamoDB lookup when neither condition is met', async () => {
+      // Setup
+      process.env['ACCELERATOR_SKIP_DYNAMODB_LOOKUP'] = 'false';
+      process.env['ACCELERATOR_STAGE'] = 'deploy';
+
+      const mockAccountsConfig = {
+        loadAccountIds: vi.fn().mockResolvedValue(undefined),
+      };
+      (AccountsConfig.load as any).mockReturnValue(mockAccountsConfig);
+
+      // Execute
+      await ConfigLoader.getAccountsConfigWithAccountIds(
+        MOCK_CONSTANTS.runnerParameters.configDirPath,
+        MOCK_CONSTANTS.runnerParameters.partition,
+        MOCK_CONSTANTS.orgEnabled,
+      );
+
+      // Verify
+      expect(mockAccountsConfig.loadAccountIds).toHaveBeenCalledWith(
+        MOCK_CONSTANTS.runnerParameters.partition,
+        MOCK_CONSTANTS.enableSingleAccountMode,
+        MOCK_CONSTANTS.orgEnabled,
+        mockAccountsConfig,
+        undefined,
+        false,
       );
     });
   });
@@ -280,7 +373,7 @@ describe('ConfigLoader', () => {
 
       // Mock fs functions
       vi.spyOn(fs, 'existsSync').mockReturnValue(true);
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
       vi.spyOn(fs, 'readdirSync').mockReturnValue(MOCK_CONSTANTS.mandatoryConfigFiles as any);
 
       // Mock GlobalConfig instance
@@ -485,8 +578,6 @@ describe('ConfigLoader', () => {
           MOCK_CONSTANTS.resourcePrefixes,
           MOCK_CONSTANTS.credentials,
         );
-
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
       } catch (error: any) {
         // Verify
 

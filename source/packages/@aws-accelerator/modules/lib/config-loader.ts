@@ -76,7 +76,17 @@ export abstract class ConfigLoader {
     managementAccountCredentials?: IAssumeRoleCredential,
   ): Promise<AccountsConfig> {
     const accountsConfig = AccountsConfig.load(configDirPath);
-    await accountsConfig.loadAccountIds(partition, false, orgsEnabled, accountsConfig, managementAccountCredentials);
+    const shouldSkipDynamoDbLookup =
+      process.env['ACCELERATOR_SKIP_DYNAMODB_LOOKUP'] === 'true' || process.env['ACCELERATOR_STAGE'] === 'prepare';
+
+    await accountsConfig.loadAccountIds(
+      partition,
+      false,
+      orgsEnabled,
+      accountsConfig,
+      managementAccountCredentials,
+      shouldSkipDynamoDbLookup,
+    );
 
     return accountsConfig;
   }
