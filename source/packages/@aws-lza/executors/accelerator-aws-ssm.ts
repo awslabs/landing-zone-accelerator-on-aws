@@ -54,7 +54,7 @@ const logger = createLogger([path.parse(path.basename(__filename)).name]);
 export async function manageBlockPublicDocumentSharing(params: {
   accountId: string;
   region: string;
-  credentials: IAssumeRoleCredential;
+  credentials?: IAssumeRoleCredential;
   enable: boolean;
   solutionId: string;
 }): Promise<string> {

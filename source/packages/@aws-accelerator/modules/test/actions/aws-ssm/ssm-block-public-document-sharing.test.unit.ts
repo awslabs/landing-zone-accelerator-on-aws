@@ -572,7 +572,7 @@ describe('SsmBlockPublicDocumentSharingModule', () => {
 
       const result = await SsmBlockPublicDocumentSharingModule.execute(params);
 
-      expect(mockGetCredentials).toHaveBeenCalledTimes(5);
+      expect(mockGetCredentials).toHaveBeenCalledTimes(4);
       expect(mockManageBlockPublicDocumentSharing).toHaveBeenCalledTimes(5);
 
       // Verify all accounts are enabled in us-east-1
@@ -599,7 +599,7 @@ describe('SsmBlockPublicDocumentSharingModule', () => {
 
       const result = await SsmBlockPublicDocumentSharingModule.execute(params);
 
-      expect(mockGetCredentials).toHaveBeenCalledTimes(5);
+      expect(mockGetCredentials).toHaveBeenCalledTimes(4);
       expect(mockManageBlockPublicDocumentSharing).toHaveBeenCalledTimes(5);
 
       // Verify enabled accounts
@@ -635,7 +635,7 @@ describe('SsmBlockPublicDocumentSharingModule', () => {
 
       const result = await SsmBlockPublicDocumentSharingModule.execute(params);
 
-      expect(mockGetCredentials).toHaveBeenCalledTimes(5);
+      expect(mockGetCredentials).toHaveBeenCalledTimes(4);
       expect(mockManageBlockPublicDocumentSharing).toHaveBeenCalledTimes(5);
 
       // Verify all accounts are disabled in us-east-1
@@ -662,7 +662,7 @@ describe('SsmBlockPublicDocumentSharingModule', () => {
 
       const result = await SsmBlockPublicDocumentSharingModule.execute(params);
 
-      expect(mockGetCredentials).toHaveBeenCalledTimes(5);
+      expect(mockGetCredentials).toHaveBeenCalledTimes(4);
       expect(mockManageBlockPublicDocumentSharing).toHaveBeenCalledTimes(5);
 
       // All accounts should be enabled in us-east-1
@@ -692,7 +692,7 @@ describe('SsmBlockPublicDocumentSharingModule', () => {
 
       const result = await SsmBlockPublicDocumentSharingModule.execute(params);
 
-      expect(mockGetCredentials).toHaveBeenCalledTimes(5);
+      expect(mockGetCredentials).toHaveBeenCalledTimes(4);
       expect(mockManageBlockPublicDocumentSharing).toHaveBeenCalledTimes(5);
 
       // All accounts should be enabled since null excludeAccounts becomes []
@@ -719,7 +719,7 @@ describe('SsmBlockPublicDocumentSharingModule', () => {
       Object.defineProperty(globalConfig, 'enabledRegions', { value: ['us-east-1'], writable: false });
       const params = createModuleParams(securityConfig, globalConfig);
 
-      mockGetCredentials.mockResolvedValueOnce(undefined);
+      mockGetCredentials.mockRejectedValueOnce(new Error('Failed to get credentials for account'));
 
       const result = await SsmBlockPublicDocumentSharingModule.execute(params);
 
@@ -905,7 +905,8 @@ describe('SsmBlockPublicDocumentSharingModule', () => {
       const securityConfig = createMockSecurityConfig(ssmConfig);
       const globalConfig = createMockGlobalConfig('us-east-1');
       Object.defineProperty(globalConfig, 'enabledRegions', { value: ['us-east-1'], writable: false });
-      const params = createModuleParams(securityConfig, globalConfig, 'us-east-1', [testAccounts[0]]);
+      // Use a non-Management account to trigger getCredentials call
+      const params = createModuleParams(securityConfig, globalConfig, 'us-east-1', [testAccounts[1]]);
 
       // Mock credential failure
       mockGetCredentials.mockRejectedValueOnce(new Error('Credential failure: Unable to assume role'));
@@ -976,7 +977,7 @@ describe('SsmBlockPublicDocumentSharingModule', () => {
 
       const result = await SsmBlockPublicDocumentSharingModule.execute(params);
 
-      expect(mockGetCredentials).toHaveBeenCalledTimes(6);
+      expect(mockGetCredentials).toHaveBeenCalledTimes(5);
       expect(mockManageBlockPublicDocumentSharing).toHaveBeenCalledTimes(6);
 
       // Account with missing name should be enabled (not in exclude list)
@@ -1001,7 +1002,7 @@ describe('SsmBlockPublicDocumentSharingModule', () => {
 
       const result = await SsmBlockPublicDocumentSharingModule.execute(params);
 
-      expect(mockGetCredentials).toHaveBeenCalledTimes(5);
+      expect(mockGetCredentials).toHaveBeenCalledTimes(4);
       expect(mockManageBlockPublicDocumentSharing).toHaveBeenCalledTimes(5);
 
       // Both Workload1 and Workload2 should be disabled
@@ -1034,7 +1035,7 @@ describe('SsmBlockPublicDocumentSharingModule', () => {
 
       const result = await SsmBlockPublicDocumentSharingModule.execute(params);
 
-      expect(mockGetCredentials).toHaveBeenCalledTimes(5);
+      expect(mockGetCredentials).toHaveBeenCalledTimes(4);
       expect(mockManageBlockPublicDocumentSharing).toHaveBeenCalledTimes(5);
 
       // Only Workload1 should be disabled (NonExistentAccount doesn't exist)
@@ -1488,13 +1489,8 @@ describe('SsmBlockPublicDocumentSharingModule', () => {
 
       expect(result).toContain('Account Management (111111111111) in region us-east-1:');
       expect(result).toContain('SSM Block Public Document Sharing enabled successfully');
-      expect(mockGetCredentials).toHaveBeenCalledWith({
-        accountId: '111111111111',
-        region: 'us-east-1',
-        solutionId: MOCK_CONSTANTS.runnerParameters.solutionId,
-        partition: 'aws',
-        assumeRoleName: 'AWSControlTowerExecution',
-      });
+      // Management account should NOT call getCredentials - it uses management credentials directly
+      expect(mockGetCredentials).not.toHaveBeenCalled();
     });
 
     test('should test real import function without mocking', async () => {
