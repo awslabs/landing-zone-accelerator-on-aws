@@ -65,6 +65,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - fix(networking): fix logic for nlb ip address role not provisioning'
 - feat(uninstaller): add support for local config directories when uninstalling LZA
 - fix(metadata): changed ou lookups to only latest commit
+- fix(ssm): block public document sharing module fails to assume role in external pipeline account
 
 ## [1.13.1] - 2025-10-01
 
