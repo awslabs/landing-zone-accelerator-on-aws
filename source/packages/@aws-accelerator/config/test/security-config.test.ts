@@ -156,6 +156,9 @@ describe('isPublicSsmDoc', () => {
 });
 
 describe('BlockPublicDocumentSharingConfig', () => {
+  const accountsConfig = AccountsConfig.load(configDir);
+  const replacementsConfig = ReplacementsConfig.load(configDir, accountsConfig);
+
   describe('configuration parsing and validation', () => {
     it('should parse valid configuration with enable true and no excluded accounts', () => {
       const validConfig = `
@@ -206,8 +209,6 @@ cloudWatch:
 keyManagementService:
   keySets: []
 `;
-      const accountsConfig = AccountsConfig.load(configDir);
-      const replacementsConfig = ReplacementsConfig.load(configDir, accountsConfig);
       const securityConfig = SecurityConfig.loadFromString(validConfig, replacementsConfig);
 
       expect(securityConfig).toBeDefined();
@@ -267,8 +268,6 @@ cloudWatch:
 keyManagementService:
   keySets: []
 `;
-      const accountsConfig = AccountsConfig.load(configDir);
-      const replacementsConfig = ReplacementsConfig.load(configDir, accountsConfig);
       const securityConfig = SecurityConfig.loadFromString(validConfig, replacementsConfig);
 
       expect(securityConfig).toBeDefined();
@@ -328,8 +327,6 @@ cloudWatch:
 keyManagementService:
   keySets: []
 `;
-      const accountsConfig = AccountsConfig.load(configDir);
-      const replacementsConfig = ReplacementsConfig.load(configDir, accountsConfig);
       const securityConfig = SecurityConfig.loadFromString(validConfig, replacementsConfig);
 
       expect(securityConfig).toBeDefined();
@@ -393,8 +390,6 @@ cloudWatch:
 keyManagementService:
   keySets: []
 `;
-      const accountsConfig = AccountsConfig.load(configDir);
-      const replacementsConfig = ReplacementsConfig.load(configDir, accountsConfig);
       const securityConfig = SecurityConfig.loadFromString(validConfig, replacementsConfig);
 
       expect(securityConfig).toBeDefined();
@@ -452,9 +447,6 @@ cloudWatch:
 keyManagementService:
   keySets: []
 `;
-      const accountsConfig = AccountsConfig.load(configDir);
-      const replacementsConfig = ReplacementsConfig.load(configDir, accountsConfig);
-
       expect(() => {
         SecurityConfig.loadFromString(invalidConfig, replacementsConfig);
       }).toThrow();
@@ -508,9 +500,6 @@ cloudWatch:
 keyManagementService:
   keySets: []
 `;
-      const accountsConfig = AccountsConfig.load(configDir);
-      const replacementsConfig = ReplacementsConfig.load(configDir, accountsConfig);
-
       expect(() => {
         SecurityConfig.loadFromString(invalidConfig, replacementsConfig);
       }).toThrow();
@@ -561,8 +550,6 @@ cloudWatch:
 keyManagementService:
   keySets: []
 `;
-      const accountsConfig = AccountsConfig.load(configDir);
-      const replacementsConfig = ReplacementsConfig.load(configDir, accountsConfig);
       const securityConfig = SecurityConfig.loadFromString(validConfig, replacementsConfig);
 
       expect(securityConfig).toBeDefined();

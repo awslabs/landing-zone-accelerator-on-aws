@@ -36,6 +36,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - fix(validation): allow top-level domains in route53 resolver rules
 - fix(validation): updated regex validation for Route53 Resolver Rule DNS to pass TLD
 - fix: make email comparison case-insensitive in account validation
+- fix(ssm): block public document sharing module fails to assume role in external pipeline account
 
 ### Changed
 - feat(securityhub): add suppport for any future standard supported by securityhub

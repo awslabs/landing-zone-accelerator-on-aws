@@ -17,6 +17,7 @@ import { ModuleParams } from '../../../models/types';
 import { Account } from '@aws-sdk/client-organizations';
 import { IAssumeRoleCredential } from '../../../../../@aws-lza/common/resources';
 import { getCredentials } from '../../../../../@aws-lza/common/functions';
+import { AccountsConfig } from '@aws-accelerator/config';
 
 /**
  * Abstract class to manage SSM Block Public Document Sharing feature across organization accounts
@@ -198,6 +199,7 @@ export abstract class SsmBlockPublicDocumentSharingModule {
           account.Id!,
           account.Name!,
           params.runnerParameters.region,
+          params.runnerParameters.partition,
           params.moduleRunnerParameters.managementAccountCredentials!,
           true,
           params.runnerParameters.solutionId,
@@ -213,6 +215,7 @@ export abstract class SsmBlockPublicDocumentSharingModule {
           account.Id!,
           account.Name!,
           params.runnerParameters.region,
+          params.runnerParameters.partition,
           params.moduleRunnerParameters.managementAccountCredentials!,
           false,
           params.runnerParameters.solutionId,
@@ -311,7 +314,7 @@ export abstract class SsmBlockPublicDocumentSharingModule {
     manageBlockPublicDocumentSharing: (params: {
       accountId: string;
       region: string;
-      credentials: IAssumeRoleCredential;
+      credentials?: IAssumeRoleCredential;
       enable: boolean;
       solutionId: string;
     }) => Promise<string>;
@@ -331,6 +334,7 @@ export abstract class SsmBlockPublicDocumentSharingModule {
    * @param accountId AWS Account ID where SSM Block Public Document Sharing will be managed
    * @param accountName AWS Account Name for logging and identification purposes
    * @param region AWS Region where the SSM Block Public Document Sharing operation will be performed
+   * @param partition AWS partition where the SSM Block Public Document Sharing operation will be performed
    * @param managementCredentials Management account credentials for cross-account access (unused in current implementation)
    * @param enable Whether to enable SSM Block Public Document Sharing (true) or disable it (false)
    * @param solutionId Solution ID for AWS SDK user agent identification
@@ -342,7 +346,8 @@ export abstract class SsmBlockPublicDocumentSharingModule {
     accountId: string,
     accountName: string,
     region: string,
-    _managementCredentials: IAssumeRoleCredential,
+    partition: string,
+    managementCredentials: IAssumeRoleCredential,
     enable: boolean,
     solutionId: string,
     managementAccountAccessRole: string,
@@ -355,17 +360,17 @@ export abstract class SsmBlockPublicDocumentSharingModule {
       );
 
       // Get credentials for the target account
-      const targetAccountCredentials = await getCredentials({
-        accountId,
-        region,
-        solutionId,
-        partition: 'aws', // Default partition
-        assumeRoleName: managementAccountAccessRole,
-      });
-
-      if (!targetAccountCredentials) {
-        throw new Error(`Failed to get credentials for account ${accountId}`);
-      }
+      const targetAccountCredentials =
+        accountName === AccountsConfig.MANAGEMENT_ACCOUNT
+          ? managementCredentials
+          : await getCredentials({
+              accountId,
+              region,
+              solutionId,
+              partition,
+              assumeRoleName: managementAccountAccessRole,
+              credentials: managementCredentials,
+            });
 
       // Use the executor implementation
       const { manageBlockPublicDocumentSharing } =
