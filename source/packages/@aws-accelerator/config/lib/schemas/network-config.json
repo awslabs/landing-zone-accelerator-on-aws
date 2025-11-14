@@ -4306,7 +4306,7 @@
           "description": "VPC flog log configuration. Use this property to define a VPC-specific VPC flow logs configuration."
         },
         "vpcRoute53Resolver": {
-          "$ref": "#/definitions/IResolverConfig",
+          "$ref": "#/definitions/IVpcResolverConfig",
           "description": "A Route 53 resolver configuration local to the VPC."
         }
       },
@@ -4481,6 +4481,24 @@
         "name",
         "vpcs"
       ],
+      "type": "object"
+    },
+    "IVpcResolverConfig": {
+      "additionalProperties": false,
+      "description": "Use this configuration to define local resolver endpoints and Route 53 query logging to the VPC.",
+      "properties": {
+        "endpoints": {
+          "description": "(OPTIONAL) An array of Route 53 resolver endpoint configurations.",
+          "items": {
+            "$ref": "#/definitions/IResolverEndpointConfig"
+          },
+          "type": "array"
+        },
+        "queryLogs": {
+          "$ref": "#/definitions/IDnsQueryLogsConfig",
+          "description": "(OPTIONAL) A Route 53 resolver DNS query logging configuration."
+        }
+      },
       "type": "object"
     },
     "IVpcTemplatesConfig": {

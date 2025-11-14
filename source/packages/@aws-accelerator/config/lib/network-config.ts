@@ -625,11 +625,9 @@ export class LocalResolverConfig implements i.IResolverConfig {
   readonly rules?: ResolverRuleConfig[] | undefined = undefined;
 }
 
-export class VpcResolverConfig implements i.IResolverConfig {
+export class VpcResolverConfig implements i.IVpcResolverConfig {
   readonly endpoints: ResolverEndpointConfig[] | undefined = undefined;
   readonly queryLogs: DnsQueryLogsConfig | undefined = undefined;
-  readonly firewallRuleGroups?: DnsFirewallRuleGroupConfig[] | undefined = undefined;
-  readonly rules?: ResolverRuleConfig[] | undefined = undefined;
 }
 export class ResolverConfig implements i.IResolverConfig {
   readonly endpoints: ResolverEndpointConfig[] | undefined = undefined;

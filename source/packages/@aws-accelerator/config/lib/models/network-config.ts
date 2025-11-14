@@ -4614,9 +4614,9 @@ export interface IVpcConfig {
   /**
    * A Route 53 resolver configuration local to the VPC.
    *
-   * @see {@link ResolverConfig}
+   * @see {@link VpcResolverConfig}
    */
-  readonly vpcRoute53Resolver?: IResolverConfig;
+  readonly vpcRoute53Resolver?: IVpcResolverConfig;
 }
 
 /**
