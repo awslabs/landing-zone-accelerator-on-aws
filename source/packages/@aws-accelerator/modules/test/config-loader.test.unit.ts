@@ -207,7 +207,7 @@ describe('ConfigLoader', () => {
         MOCK_CONSTANTS.orgEnabled,
         mockAccountsConfig,
         MOCK_CONSTANTS.credentials,
-        false,
+        true,
       );
       expect(result).toBe(mockAccountsConfig);
       expect(await mockAccountsConfig.loadAccountIds()).toEqual({
@@ -239,7 +239,7 @@ describe('ConfigLoader', () => {
         MOCK_CONSTANTS.orgEnabled,
         mockAccountsConfig,
         undefined,
-        false,
+        true,
       );
     });
   });
@@ -273,7 +273,7 @@ describe('ConfigLoader', () => {
         MOCK_CONSTANTS.orgEnabled,
         mockAccountsConfig,
         undefined,
-        true,
+        false,
       );
     });
 
@@ -300,7 +300,7 @@ describe('ConfigLoader', () => {
         MOCK_CONSTANTS.orgEnabled,
         mockAccountsConfig,
         undefined,
-        true,
+        false,
       );
     });
 
@@ -328,7 +328,7 @@ describe('ConfigLoader', () => {
         MOCK_CONSTANTS.orgEnabled,
         mockAccountsConfig,
         undefined,
-        false,
+        true,
       );
     });
   });

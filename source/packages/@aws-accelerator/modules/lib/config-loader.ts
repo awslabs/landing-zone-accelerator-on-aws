@@ -85,7 +85,7 @@ export abstract class ConfigLoader {
       orgsEnabled,
       accountsConfig,
       managementAccountCredentials,
-      shouldSkipDynamoDbLookup,
+      !shouldSkipDynamoDbLookup,
     );
 
     return accountsConfig;
