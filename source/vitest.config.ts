@@ -18,7 +18,6 @@ export default defineConfig({
       'packages/@aws-accelerator/constructs',
       'packages/@aws-accelerator/govcloud-account-vending',
       'packages/@aws-accelerator/installer',
-      'packages/@aws-accelerator/lza-modules',
       'packages/@aws-accelerator/modules',
       'packages/@aws-accelerator/tools',
       'packages/@aws-accelerator/utils',

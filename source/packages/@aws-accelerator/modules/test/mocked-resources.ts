@@ -484,8 +484,6 @@ export const MOCK_CONSTANTS = {
       importedCentralLogBucketCmkArn: '/accelerator/imported-resources/logging/central-bucket/kms/arn',
       importedAssetBucket: '/accelerator/imported-bucket/assets/s3',
       centralLogBucketCmkArn: '/accelerator/logging/central-bucket/kms/arn',
-      controlTowerDriftDetection: '/accelerator/controltower/driftDetected',
-      controlTowerLastDriftMessage: '/accelerator/controltower/lastDriftMessage',
       configTableArn: '/accelerator/prepare-stack/configTable/arn',
       configTableName: '/accelerator/prepare-stack/configTable/name',
       cloudTrailBucketName: '/accelerator/organization/security/cloudtrail/log/bucket-name',

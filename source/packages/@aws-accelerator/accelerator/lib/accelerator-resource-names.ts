@@ -45,8 +45,6 @@ interface ParameterNames {
   importedCentralLogBucketCmkArn: string;
   importedAssetBucket: string;
   centralLogBucketCmkArn: string;
-  controlTowerDriftDetection: string;
-  controlTowerLastDriftMessage: string;
   configTableArn: string;
   configTableName: string;
   cloudTrailBucketName: string;
@@ -129,8 +127,6 @@ export class AcceleratorResourceNames {
     importedCentralLogBucketCmkArn: 'PLACE_HOLDER',
     importedAssetBucket: 'PLACE_HOLDER',
     centralLogBucketCmkArn: 'PLACE_HOLDER',
-    controlTowerDriftDetection: 'PLACE_HOLDER',
-    controlTowerLastDriftMessage: 'PLACE_HOLDER',
     configTableArn: 'PLACE_HOLDER',
     configTableName: 'PLACE_HOLDER',
     cloudTrailBucketName: 'PLACE_HOLDER',
@@ -220,8 +216,6 @@ export class AcceleratorResourceNames {
       props.prefixes.importResourcesSsmParamName + '/logging/central-bucket/kms/arn';
     this.parameters.importedAssetBucket = props.prefixes.ssmParamName + '/imported-bucket/assets/s3';
     this.parameters.centralLogBucketCmkArn = props.prefixes.ssmParamName + '/logging/central-bucket/kms/arn';
-    this.parameters.controlTowerDriftDetection = props.prefixes.ssmParamName + '/controltower/driftDetected';
-    this.parameters.controlTowerLastDriftMessage = props.prefixes.ssmParamName + '/controltower/lastDriftMessage';
     this.parameters.configTableArn = props.prefixes.ssmParamName + '/prepare-stack/configTable/arn';
     this.parameters.configTableName = props.prefixes.ssmParamName + '/prepare-stack/configTable/name';
     this.parameters.resourceTableName = props.prefixes.ssmParamName + '/prepare-stack/resourceTable/name';
