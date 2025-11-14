@@ -12,11 +12,9 @@
  */
 
 import * as cdk from 'aws-cdk-lib';
-import { SnsEventSource } from 'aws-cdk-lib/aws-lambda-event-sources';
 import { Construct } from 'constructs';
 import * as fs from 'fs';
 import path from 'path';
-import { DEFAULT_LAMBDA_RUNTIME } from '../../../utils/lib/lambda';
 
 import {
   Account,
@@ -100,21 +98,6 @@ export class PrepareStack extends AcceleratorStack {
           path: path.join(props.configDirPath, ReplacementsConfig.FILENAME),
         });
       }
-
-      const driftDetectedParameter = new cdk.aws_ssm.StringParameter(this, 'AcceleratorControlTowerDriftParameter', {
-        parameterName: this.acceleratorResourceNames.parameters.controlTowerDriftDetection,
-        stringValue: 'false',
-        allowedPattern: '^(true|false)$',
-      });
-
-      const driftMessageParameter = new cdk.aws_ssm.StringParameter(
-        this,
-        'AcceleratorControlTowerDriftMessageParameter',
-        {
-          parameterName: this.acceleratorResourceNames.parameters.controlTowerLastDriftMessage,
-          stringValue: 'none',
-        },
-      );
 
       if (props.organizationConfig.enable) {
         const configTable = new cdk.aws_dynamodb.Table(this, 'AcceleratorConfigTable', {
@@ -296,8 +279,6 @@ export class PrepareStack extends AcceleratorStack {
           loadAcceleratorConfigTable,
           organizationAccounts,
           controlTowerAccounts,
-          driftDetectedParameter,
-          driftMessageParameter,
           moveAccounts,
           managementAccountKey,
           cloudwatchKey,
@@ -341,8 +322,6 @@ export class PrepareStack extends AcceleratorStack {
     loadAcceleratorConfigTable: LoadAcceleratorConfigTable;
     organizationAccounts?: CreateOrganizationAccounts;
     controlTowerAccounts?: CreateControlTowerAccounts;
-    driftDetectedParameter: cdk.aws_ssm.StringParameter;
-    driftMessageParameter: cdk.aws_ssm.StringParameter;
     moveAccounts: MoveAccounts;
     managementAccountKey: cdk.aws_kms.IKey;
     cloudwatchKey?: cdk.aws_kms.IKey;
@@ -454,8 +433,6 @@ export class PrepareStack extends AcceleratorStack {
       serviceControlPolicies: this.createScpListsForValidation(),
       policyTagKey: `${options.props.prefixes.accelerator}Managed`,
       logRetentionInDays: options.props.globalConfig.cloudwatchLogRetentionInDays,
-      driftDetectionParameter: options.driftDetectedParameter,
-      driftDetectionMessageParameter: options.driftMessageParameter,
       prefixes: this.props.prefixes,
       vpcsCidrs,
       useV2StacksValue: this.props.globalConfig.useV2Stacks ?? false,
@@ -573,141 +550,6 @@ export class PrepareStack extends AcceleratorStack {
 
       // AwsSolutions-SF2: The Step Function does not have X-Ray tracing enabled.
       this.createNagSuppressionsInputs(NagSuppressionRuleIds.SF2, ctAccountsSfSuppressionPaths);
-
-      // resources for control tower lifecycle events
-      const controlTowerOuEventsFunction = new cdk.aws_lambda.Function(this, 'ControlTowerOuEventsFunction', {
-        code: cdk.aws_lambda.Code.fromAsset(path.join(__dirname, '../lambdas/control-tower-ou-events/dist')),
-        runtime: DEFAULT_LAMBDA_RUNTIME,
-        handler: 'index.handler',
-        description: 'Lambda function to process ControlTower OU events from CloudTrail',
-        timeout: cdk.Duration.minutes(5),
-        environment: {
-          CONFIG_TABLE_NAME: options.configTable.tableName,
-        },
-      });
-
-      controlTowerOuEventsFunction.addToRolePolicy(
-        new cdk.aws_iam.PolicyStatement({
-          sid: 'dynamodb',
-          effect: cdk.aws_iam.Effect.ALLOW,
-          actions: ['dynamodb:UpdateItem', 'dynamodb:PutItem'],
-          resources: [options.configTable.tableArn],
-        }),
-      );
-
-      controlTowerOuEventsFunction.addToRolePolicy(
-        new cdk.aws_iam.PolicyStatement({
-          sid: 'organizations',
-          effect: cdk.aws_iam.Effect.ALLOW,
-          actions: ['organizations:DescribeOrganizationalUnit', 'organizations:ListParents'],
-          resources: [
-            `arn:${
-              cdk.Stack.of(this).partition
-            }:organizations::${options.props.accountsConfig.getManagementAccountId()}:account/o-*/*`,
-          ],
-        }),
-      );
-
-      // AwsSolutions-IAM5: The IAM entity contains wildcard permissions and does not have a cdk_nag rule suppression with evidence for those permission
-      this.nagSuppressionInputs.push({
-        id: NagSuppressionRuleIds.IAM5,
-        details: [
-          {
-            path: `${this.stackName}/ControlTowerOuEventsFunction/ServiceRole/DefaultPolicy/Resource`,
-            reason: 'Requires access to all org units.',
-          },
-        ],
-      });
-
-      new cdk.aws_logs.LogGroup(this, `${controlTowerOuEventsFunction.node.id}LogGroup`, {
-        logGroupName: `/aws/lambda/${controlTowerOuEventsFunction.functionName}`,
-        retention: options.props.globalConfig.cloudwatchLogRetentionInDays,
-        encryptionKey: options.cloudwatchKey,
-        removalPolicy: cdk.RemovalPolicy.DESTROY,
-      });
-
-      // AwsSolutions-IAM4: The IAM user, role, or group uses AWS managed policies
-      this.nagSuppressionInputs.push({
-        id: NagSuppressionRuleIds.IAM4,
-        details: [
-          {
-            path: `${this.stackName}/ControlTowerOuEventsFunction/ServiceRole/Resource`,
-            reason: 'AWS Basic Lambda execution permissions.',
-          },
-        ],
-      });
-
-      const controlTowerOuEventsRule = new cdk.aws_events.Rule(this, 'ControlTowerOuEventsRule', {
-        description: 'Rule to monitor for Control Tower OU registration and de-registration events',
-        eventPattern: {
-          source: ['aws.controltower'],
-          detailType: ['AWS Service Event via CloudTrail'],
-          detail: {
-            eventName: ['RegisterOrganizationalUnit', 'DeregisterOrganizationalUnit'],
-          },
-        },
-      });
-
-      controlTowerOuEventsRule.addTarget(
-        new cdk.aws_events_targets.LambdaFunction(controlTowerOuEventsFunction, { retryAttempts: 3 }),
-      );
-
-      const controlTowerNotificationTopic = new cdk.aws_sns.Topic(this, 'ControlTowerNotification', {
-        //Check this if it causes any issue changing topic name
-        topicName: `${options.props.prefixes.accelerator}-ControlTowerNotification`,
-        displayName: 'ForwardedControlTowerNotifications',
-        masterKey: options.managementAccountKey,
-      });
-
-      controlTowerNotificationTopic.addToResourcePolicy(
-        new cdk.aws_iam.PolicyStatement({
-          sid: 'auditAccount',
-          principals: [new cdk.aws_iam.AccountPrincipal(options.props.accountsConfig.getAuditAccountId())],
-          actions: ['sns:Publish'],
-          resources: [controlTowerNotificationTopic.topicArn],
-        }),
-      );
-
-      // function to process control tower notifications
-      const controlTowerNotificationsFunction = new cdk.aws_lambda.Function(this, 'ControlTowerNotificationsFunction', {
-        code: cdk.aws_lambda.Code.fromAsset(path.join(__dirname, '../lambdas/control-tower-notifications/dist')),
-        runtime: DEFAULT_LAMBDA_RUNTIME,
-        handler: 'index.handler',
-        description: 'Lambda function to process ControlTower notifications from audit account',
-        timeout: cdk.Duration.minutes(5),
-        environment: {
-          DRIFT_PARAMETER_NAME: options.driftDetectedParameter.parameterName,
-          DRIFT_MESSAGE_PARAMETER_NAME: options.driftMessageParameter.parameterName,
-        },
-      });
-
-      new cdk.aws_logs.LogGroup(this, `${controlTowerNotificationsFunction.node.id}LogGroup`, {
-        logGroupName: `/aws/lambda/${controlTowerNotificationsFunction.functionName}`,
-        retention: options.props.globalConfig.cloudwatchLogRetentionInDays,
-        encryptionKey: options.cloudwatchKey,
-        removalPolicy: cdk.RemovalPolicy.DESTROY,
-      });
-
-      controlTowerNotificationsFunction.addEventSource(new SnsEventSource(controlTowerNotificationTopic));
-      controlTowerNotificationsFunction.addToRolePolicy(
-        new cdk.aws_iam.PolicyStatement({
-          sid: 'ssm',
-          effect: cdk.aws_iam.Effect.ALLOW,
-          actions: ['ssm:PutParameter'],
-          resources: [options.driftDetectedParameter.parameterArn, options.driftMessageParameter.parameterArn],
-        }),
-      );
-
-      // AwsSolutions-IAM4: The IAM user, role, or group uses AWS managed policies
-      this.nagSuppressionInputs.push({
-        id: NagSuppressionRuleIds.IAM4,
-        details: [
-          {
-            path: `${this.stackName}/ControlTowerNotificationsFunction/ServiceRole/Resource`,
-            reason: 'AWS Basic Lambda execution permissions.',
-          },
-        ],
-      });
     }
   }
 

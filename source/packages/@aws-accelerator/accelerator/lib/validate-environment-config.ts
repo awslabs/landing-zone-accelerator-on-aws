@@ -30,8 +30,6 @@ export interface ValidateEnvironmentConfigProps {
   readonly region: string;
   readonly managementAccountId: string;
   readonly partition: string;
-  readonly driftDetectionParameter: cdk.aws_ssm.IParameter;
-  readonly driftDetectionMessageParameter: cdk.aws_ssm.IParameter;
   readonly serviceControlPolicies: {
     name: string;
     targetType: 'ou' | 'account';
@@ -112,8 +110,6 @@ export class ValidateEnvironmentConfig extends Construct {
       effect: cdk.aws_iam.Effect.ALLOW,
       actions: ['ssm:GetParameter'],
       resources: [
-        props.driftDetectionParameter.parameterArn,
-        props.driftDetectionMessageParameter.parameterArn,
         `arn:${props.partition}:ssm:${props.region}:${props.managementAccountId}:parameter${props.prefixes.ssmParamName}/validation/*/network/vpc/*/deployedCidrs`,
         `arn:${props.partition}:ssm:${props.region}:${props.managementAccountId}:parameter${props.v2StacksParamName}`,
       ],
@@ -167,8 +163,6 @@ export class ValidateEnvironmentConfig extends Construct {
         commitId: props.commitId,
         stackName: props.stackName,
         partition: props.partition,
-        driftDetectionParameterName: props.driftDetectionParameter.parameterName,
-        driftDetectionMessageParameterName: props.driftDetectionMessageParameter.parameterName,
         serviceControlPolicies: props.serviceControlPolicies,
         skipScpValidation: process.env['ACCELERATOR_SKIP_SCP_VALIDATION'] ?? 'no',
         maxOuAttachedScps: process.env['ACCELERATOR_MAX_OU_ATTACHED_SCPS'] ?? 5,

@@ -17,7 +17,6 @@ import * as fs from 'fs';
 import * as yaml from 'js-yaml';
 import { pascalCase } from 'pascal-case';
 import * as path from 'path';
-import { DEFAULT_LAMBDA_RUNTIME } from '../../../utils/lib/lambda';
 
 import {
   DeploymentTargets,
@@ -42,7 +41,6 @@ import {
   SecurityHubRegionAggregation,
 } from '@aws-accelerator/constructs';
 
-import { SnsEventSource } from 'aws-cdk-lib/aws-lambda-event-sources';
 import {
   AcceleratorKeyType,
   AcceleratorStack,
@@ -120,12 +118,6 @@ export class SecurityAuditStack extends AcceleratorStack {
     // SNS Notification Topics and Subscriptions
     //
     this.configureSnsNotifications();
-
-    //
-    // create lambda function to forward
-    // control tower notifications to the management account
-    //
-    this.configureControlTowerNotification();
 
     //
     // Create SSM Parameters
@@ -598,90 +590,5 @@ export class SecurityAuditStack extends AcceleratorStack {
       this.logger.info(`Create SNS Subscription: ${snsSubscriptionItem.email}`);
       topic.addSubscription(new cdk.aws_sns_subscriptions.EmailSubscription(snsSubscriptionItem.email));
     }
-  }
-
-  /**
-   * Function to configure CT notification
-   */
-  private configureControlTowerNotification() {
-    if (
-      this.props.globalConfig.controlTower.enable &&
-      cdk.Stack.of(this).region == this.props.globalConfig.homeRegion
-    ) {
-      const mgmtAccountSnsTopicArn = `arn:${cdk.Stack.of(this).partition}:sns:${
-        cdk.Stack.of(this).region
-      }:${this.props.accountsConfig.getManagementAccountId()}:${
-        this.props.prefixes.accelerator
-      }-ControlTowerNotification`;
-      const controlTowerNotificationsForwarderFunction = new cdk.aws_lambda.Function(
-        this,
-        'ControlTowerNotificationsForwarderFunction',
-        {
-          code: cdk.aws_lambda.Code.fromAsset(
-            path.join(__dirname, '../lambdas/control-tower-notifications-forwarder/dist'),
-          ),
-          runtime: DEFAULT_LAMBDA_RUNTIME,
-          handler: 'index.handler',
-          description: 'Lambda function to forward ControlTower notifications to management account',
-          timeout: cdk.Duration.minutes(2),
-          environment: {
-            SNS_TOPIC_ARN: mgmtAccountSnsTopicArn,
-          },
-        },
-      );
-      controlTowerNotificationsForwarderFunction.addToRolePolicy(
-        new cdk.aws_iam.PolicyStatement({
-          sid: 'sns',
-          effect: cdk.aws_iam.Effect.ALLOW,
-          actions: ['sns:Publish'],
-          resources: [mgmtAccountSnsTopicArn],
-        }),
-      );
-
-      controlTowerNotificationsForwarderFunction.addToRolePolicy(
-        new cdk.aws_iam.PolicyStatement({
-          sid: 'kms',
-          effect: cdk.aws_iam.Effect.ALLOW,
-          actions: ['kms:DescribeKey', 'kms:GenerateDataKey', 'kms:Decrypt', 'kms:Encrypt'],
-          resources: [
-            `arn:${cdk.Stack.of(this).partition}:kms:${
-              cdk.Stack.of(this).region
-            }:${this.props.accountsConfig.getManagementAccountId()}:key/*`,
-          ],
-        }),
-      );
-
-      const existingControlTowerSNSTopic = cdk.aws_sns.Topic.fromTopicArn(
-        this,
-        'ControlTowerSNSTopic',
-        `arn:${cdk.Stack.of(this).partition}:sns:${cdk.Stack.of(this).region}:${
-          cdk.Stack.of(this).account
-        }:aws-controltower-AggregateSecurityNotifications`,
-      );
-
-      controlTowerNotificationsForwarderFunction.addEventSource(new SnsEventSource(existingControlTowerSNSTopic));
-    }
-
-    // AwsSolutions-IAM4: The IAM user, role, or group uses AWS managed policies
-    this.nagSuppressionInputs.push({
-      id: NagSuppressionRuleIds.IAM4,
-      details: [
-        {
-          path: `${this.stackName}/ControlTowerNotificationsForwarderFunction/ServiceRole/Resource`,
-          reason: 'AWS Custom resource provider lambda role created by cdk.',
-        },
-      ],
-    });
-
-    // AwsSolutions-IAM5: TThe IAM entity contains wildcard permissions
-    this.nagSuppressionInputs.push({
-      id: NagSuppressionRuleIds.IAM5,
-      details: [
-        {
-          path: `${this.stackName}/ControlTowerNotificationsForwarderFunction/ServiceRole/DefaultPolicy/Resource`,
-          reason: 'Require access to all keys in management account',
-        },
-      ],
-    });
   }
 }

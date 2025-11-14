@@ -109,8 +109,6 @@ let configAllOuKeys: ConfigOrganizationalUnitKeys[] = [];
 let configActiveOuKeys: ConfigOrganizationalUnitKeys[] = [];
 let configIgnoredOuKeys: ConfigOrganizationalUnitKeys[] = [];
 const awsOuKeys: AwsOrganizationalUnitKeys[] = [];
-let driftDetectionParameterName = '';
-let driftDetectionMessageParameterName = '';
 
 /**
  * validate-environment - lambda handler
@@ -134,8 +132,6 @@ export async function handler(event: CloudFormationCustomResourceEvent): Promise
   const commitId = event.ResourceProperties['commitId'];
   const stackName = event.ResourceProperties['stackName'];
   const serviceControlPolicies: serviceControlPolicyType[] = event.ResourceProperties['serviceControlPolicies'];
-  driftDetectionParameterName = event.ResourceProperties['driftDetectionParameterName'];
-  driftDetectionMessageParameterName = event.ResourceProperties['driftDetectionMessageParameterName'];
   const skipScpValidation = event.ResourceProperties['skipScpValidation'];
   const maxOuAttachedScps = event.ResourceProperties['maxOuAttachedScps'] ?? 5;
   const maxAccountAttachedScps = event.ResourceProperties['maxAccountAttachedScps'] ?? 5;
@@ -486,7 +482,6 @@ async function getTotalScps(
   );
   let allowListStrategyAndFullAWSAccessPolicyFlag = false;
   for (const existingScp of existingScps) {
-    // check for control tower drift
     let nextToken: string | undefined = undefined;
     do {
       const page = await throttlingBackOff(() =>
@@ -613,26 +608,6 @@ async function validateControlTower() {
   // validate that no ou's are deregistered
   const validateOrganizationalUnitsRegistered = await validateOrganizationalUnitsAreRegistered(configActiveOuKeys);
   validationErrors.push(...validateOrganizationalUnitsRegistered);
-
-  // check for control tower drift
-  const driftDetected = await throttlingBackOff(() =>
-    ssmClient.send(
-      new GetParameterCommand({
-        Name: driftDetectionParameterName,
-      }),
-    ),
-  );
-
-  if (driftDetected.Parameter?.Value == 'true') {
-    const driftDetectedMessage = await throttlingBackOff(() =>
-      ssmClient.send(
-        new GetParameterCommand({
-          Name: driftDetectionMessageParameterName,
-        }),
-      ),
-    );
-    validationErrors.push(driftDetectedMessage.Parameter?.Value ?? '');
-  }
 
   if (workloadAccounts) {
     for (const workloadAccount of workloadAccounts) {
