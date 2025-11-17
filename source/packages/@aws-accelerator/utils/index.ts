@@ -11,6 +11,7 @@
  *  and limitations under the License.
  */
 
+export * from './lib/check-stack-diffs';
 export * from './lib/common-functions';
 export * from './lib/common-resources';
 export * from './lib/common-types';
