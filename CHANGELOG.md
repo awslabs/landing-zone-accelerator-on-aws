@@ -9,10 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 - feat(ssm): preserve ssm runAsEnabled setting and runAsDefaultUser
-
 - feat(securityHub): added support for AWS Security Hub automation rules
 
 ### Fixed
+- fix(securityhub): fix invalid input exception on batch enabled standards call
 
 - fix(asea): don't fail on tgw route lookup
 - fix(container): add accelerator stage on prepare stage for modules

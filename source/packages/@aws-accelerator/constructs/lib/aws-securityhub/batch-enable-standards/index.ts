@@ -18,6 +18,7 @@ import {
   BatchDisableStandardsCommand,
   BatchEnableStandardsCommand,
   EnableSecurityHubCommand,
+  InvalidInputException,
   paginateDescribeStandards,
   paginateDescribeStandardsControls,
   paginateGetEnabledStandards,
@@ -31,6 +32,14 @@ import {
 
 type InputStandardType = { name: string; enable: string; controlsToDisable: string[] | undefined };
 type SecurityHubStandardType = { [name: string]: string };
+
+/**
+ * Delay function for waiting
+ * @param ms milliseconds to wait
+ */
+function delay(ms: number): Promise<void> {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
 /**
  * batch-enable-standards - lambda handler
  *
@@ -82,13 +91,41 @@ export async function handler(event: CloudFormationCustomResourceEvent): Promise
       if (standardsModificationList.toEnableStandardRequests.length > 0) {
         console.log('To enable:');
         console.log(standardsModificationList.toEnableStandardRequests);
-        await throttlingBackOff(() =>
-          client.send(
-            new BatchEnableStandardsCommand({
-              StandardsSubscriptionRequests: standardsModificationList.toEnableStandardRequests,
-            }),
-          ),
-        );
+        try {
+          await throttlingBackOff(() =>
+            client.send(
+              new BatchEnableStandardsCommand({
+                StandardsSubscriptionRequests: standardsModificationList.toEnableStandardRequests,
+              }),
+            ),
+          );
+        } catch (error: unknown) {
+          if (error instanceof InvalidInputException) {
+            console.warn('InvalidInputException:', error.message);
+
+            // Check if standards are in READY state
+            let allStandardsReady = false;
+            do {
+              const enabledStandards = await getExistingEnabledStandards(client);
+              allStandardsReady = enabledStandards.every(standard => standard.StandardsStatus === 'READY');
+              if (!allStandardsReady) {
+                console.log('Standards not ready, waiting 5 seconds...');
+                await delay(5000);
+              }
+            } while (!allStandardsReady);
+
+            console.log('Retrying BatchEnableStandardsCommand...');
+            await throttlingBackOff(() =>
+              client.send(
+                new BatchEnableStandardsCommand({
+                  StandardsSubscriptionRequests: standardsModificationList.toEnableStandardRequests,
+                }),
+              ),
+            );
+          } else {
+            throw new Error(`Error enabling batch security standards: ${JSON.stringify(error)}`);
+          }
+        }
       }
 
       // When there are standards to be disable
@@ -311,10 +348,6 @@ async function getStandardsModificationList(
   }
 
   return { toEnableStandardRequests: toEnableStandardRequests, toDisableStandardArns: toDisableStandardArns };
-}
-
-async function delay(ms: number) {
-  return new Promise(resolve => setTimeout(resolve, ms));
 }
 
 /**
