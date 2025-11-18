@@ -463,8 +463,12 @@ export class SecurityStack extends AcceleratorStack {
       assumeRole: acceleratorProps.globalConfig.managementAccountAccessRole,
       centralLogBucketName,
       configRepositoryLocation: acceleratorProps.configRepositoryLocation,
-      configBucketName: `${this.props.qualifier}-config-${cdk.Stack.of(this).account}-${cdk.Stack.of(this).region}`,
-      secureBucketName: `${this.props.qualifier}-pipeline-${cdk.Stack.of(this).account}-${cdk.Stack.of(this).region}`,
+      configBucketName: `${this.props.prefixes.bucketName}-config-${cdk.Stack.of(this).account}-${
+        cdk.Stack.of(this).region
+      }`,
+      secureBucketName: `${this.props.prefixes.bucketName}-pipeline-${cdk.Stack.of(this).account}-${
+        cdk.Stack.of(this).region
+      }`,
       elbLogBucketName,
       cloudwatchKmsKey,
       loggingAccountId: acceleratorProps.accountsConfig.getAccountId(
