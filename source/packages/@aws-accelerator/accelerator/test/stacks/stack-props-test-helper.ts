@@ -80,6 +80,9 @@ export function createAcceleratorStackProps(
     enable: true,
     backupPolicies: [],
     taggingPolicies: [],
+    serviceControlPolicies: [],
+    resourceControlPolicies: [],
+    declarativePolicies: [],
   };
 
   const centralSecurityServices: CentralSecurityServicesConfig = {
