@@ -1219,7 +1219,12 @@
         "controlTower",
         "logging"
       ],
-      "type": "object"
+      "type": "object",
+      "patternProperties": {
+        "^\\.": {
+          "description": "YAML anchor"
+        }
+      }
     },
     "IImportedCustomerManagedEncryptionKeyBucketConfig": {
       "additionalProperties": false,

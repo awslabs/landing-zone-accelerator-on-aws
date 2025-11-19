@@ -1861,7 +1861,12 @@
         "transitGateways",
         "vpcs"
       ],
-      "type": "object"
+      "type": "object",
+      "patternProperties": {
+        "^\\.": {
+          "description": "YAML anchor"
+        }
+      }
     },
     "INetworkLoadBalancerConfig": {
       "additionalProperties": false,

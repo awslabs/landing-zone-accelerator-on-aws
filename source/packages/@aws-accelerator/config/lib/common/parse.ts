@@ -36,11 +36,20 @@ const ajv = new Ajv({ allErrors: true, verbose: true });
 
 const logger = createLogger(['parse']);
 
-interface JsonSchema {
-  $ref: string;
-  $schema: string;
-  definitions: {
-    [key: string]: object;
+interface SchemaDefinition {
+  additionalProperties?: boolean;
+  patternProperties?: {
+    [pattern: string]: {
+      description?: string;
+    };
+  };
+  [key: string]: unknown;
+}
+
+export interface JsonSchema {
+  $ref?: string;
+  definitions?: {
+    [key: string]: SchemaDefinition;
   };
 }
 

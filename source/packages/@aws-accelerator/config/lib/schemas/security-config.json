@@ -1524,7 +1524,12 @@
         "awsConfig",
         "cloudWatch"
       ],
-      "type": "object"
+      "type": "object",
+      "patternProperties": {
+        "^\\.": {
+          "description": "YAML anchor"
+        }
+      }
     },
     "ISecurityHubAutomationRuleAction": {
       "additionalProperties": false,

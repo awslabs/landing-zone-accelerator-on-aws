@@ -200,7 +200,12 @@
         "taggingPolicies",
         "backupPolicies"
       ],
-      "type": "object"
+      "type": "object",
+      "patternProperties": {
+        "^\\.": {
+          "description": "YAML anchor"
+        }
+      }
     },
     "IOrganizationalUnitConfig": {
       "additionalProperties": false,

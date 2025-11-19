@@ -120,7 +120,12 @@
         "mandatoryAccounts",
         "workloadAccounts"
       ],
-      "type": "object"
+      "type": "object",
+      "patternProperties": {
+        "^\\.": {
+          "description": "YAML anchor"
+        }
+      }
     },
     "IGovCloudAccountConfig": {
       "additionalProperties": false,

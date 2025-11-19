@@ -376,7 +376,12 @@
           "type": "array"
         }
       },
-      "type": "object"
+      "type": "object",
+      "patternProperties": {
+        "^\\.": {
+          "description": "YAML anchor"
+        }
+      }
     },
     "IIdentityCenterAssignmentConfig": {
       "additionalProperties": false,

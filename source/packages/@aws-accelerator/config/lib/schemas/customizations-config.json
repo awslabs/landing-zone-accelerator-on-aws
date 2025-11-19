@@ -589,7 +589,12 @@
           "$ref": "#/definitions/IEc2FirewallConfig"
         }
       },
-      "type": "object"
+      "type": "object",
+      "patternProperties": {
+        "^\\.": {
+          "description": "YAML anchor"
+        }
+      }
     },
     "IDeploymentTargets": {
       "additionalProperties": false,
