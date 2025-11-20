@@ -8,6 +8,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [1.14.0] - 2025-10-27
 
 ### Added
+- feat(cloudwatch): add config for cloud watch metric filter default value
+- feat(config): dynamic aws regions lookup
+- feat(config): support include in yaml files
+- feat(control-tower): add additional status logging
+- feat(control-tower): add support of control tower 4.0
 - feat(networking): add vpn connection ipv6 support
 - feat(module): add control tower logging 
 

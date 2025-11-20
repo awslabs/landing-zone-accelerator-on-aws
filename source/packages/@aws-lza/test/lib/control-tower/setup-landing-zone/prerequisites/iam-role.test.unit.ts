@@ -171,8 +171,8 @@ describe('IAM Role Tests', () => {
       }),
     );
     expect(CreateRoleCommand).toHaveBeenCalledTimes(MOCK_CONSTANTS.requiredControlTowerRoleNames.length);
-    expect(PutRolePolicyCommand).toHaveBeenCalledTimes(MOCK_CONSTANTS.requiredControlTowerRoleNames.length - 1);
-    expect(AttachRolePolicyCommand).toHaveBeenCalledTimes(MOCK_CONSTANTS.requiredControlTowerRoleNames.length - 2);
+    expect(PutRolePolicyCommand).toHaveBeenCalledTimes(MOCK_CONSTANTS.requiredControlTowerRoleNames.length - 2);
+    expect(AttachRolePolicyCommand).toHaveBeenCalledTimes(MOCK_CONSTANTS.requiredControlTowerRoleNames.length - 1);
   });
 
   test('should handle role creation failure', async () => {
@@ -253,8 +253,8 @@ describe('IAM Role Tests', () => {
       }),
     );
     expect(CreateRoleCommand).toHaveBeenCalledTimes(MOCK_CONSTANTS.requiredControlTowerRoleNames.length);
-    expect(PutRolePolicyCommand).toHaveBeenCalledTimes(MOCK_CONSTANTS.requiredControlTowerRoleNames.length - 1);
-    expect(AttachRolePolicyCommand).toHaveBeenCalledTimes(MOCK_CONSTANTS.requiredControlTowerRoleNames.length - 2);
+    expect(PutRolePolicyCommand).toHaveBeenCalledTimes(MOCK_CONSTANTS.requiredControlTowerRoleNames.length - 2);
+    expect(AttachRolePolicyCommand).toHaveBeenCalledTimes(MOCK_CONSTANTS.requiredControlTowerRoleNames.length - 1);
   });
 
   test('should handle other exceptions while checking for roles', async () => {

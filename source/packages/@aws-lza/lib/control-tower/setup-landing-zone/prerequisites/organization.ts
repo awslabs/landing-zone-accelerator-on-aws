@@ -25,13 +25,22 @@ import {
   paginateListAWSServiceAccessForOrganization,
   EnabledServicePrincipal,
   OrganizationFeatureSet,
+  CreateOrganizationalUnitCommand,
+  MoveAccountCommand,
+  ListParentsCommand,
 } from '@aws-sdk/client-organizations';
 import { InstanceMetadata, paginateListInstances, SSOAdminClient } from '@aws-sdk/client-sso-admin';
 
-import { getOrganizationalUnitsForParent, setRetryStrategy } from '../../../../common/functions';
+import {
+  getOrganizationalUnitsForParent,
+  setRetryStrategy,
+  getParentOuId,
+  getAccountId,
+} from '../../../../common/functions';
 import { createLogger } from '../../../../common/logger';
 import { IAssumeRoleCredential, OrganizationRootType } from '../../../../common/resources';
 import { throttlingBackOff } from '../../../../common/throttle';
+import { MODULE_EXCEPTIONS } from '../../../../common/enums';
 
 /**
  * Organization abstract class to get AWS Organizations details and create AWS Organizations if not exists
@@ -368,5 +377,150 @@ export abstract class Organization {
     }
 
     await Organization.enableAllFeatures(client);
+  }
+
+  /**
+   * Function to create an Organizational Unit
+   *
+   * @param globalRegion string
+   * @param ouName string - Name of the OU to create
+   * @param parentOuName string - Name of the parent OU (default: 'Root')
+   * @param credentials {@link IAssumeRoleCredential} | undefined
+   * @param solutionId string | undefined
+   * @returns string OuId
+   */
+  public static async createOu(
+    globalRegion: string,
+    ouName: string,
+    parentOuName: string = 'Root',
+    credentials?: IAssumeRoleCredential,
+    solutionId?: string,
+  ): Promise<string> {
+    Organization.logger.info(`Creating Organizational Unit "${ouName}" under "${parentOuName}"`);
+
+    const client: OrganizationsClient = new OrganizationsClient({
+      region: globalRegion,
+      customUserAgent: solutionId,
+      retryStrategy: setRetryStrategy(),
+      credentials: credentials,
+    });
+
+    const parentOuId = await getParentOuId(client, parentOuName);
+
+    if (!parentOuId) {
+      throw new Error(`${MODULE_EXCEPTIONS.INVALID_INPUT}: Parent OU "${parentOuName}" not found.`);
+    }
+
+    const organizationalUnitsForParent = await getOrganizationalUnitsForParent(client, parentOuId);
+    const existingOu = organizationalUnitsForParent.find(ou => ou.Name === ouName);
+
+    if (existingOu && existingOu.Id) {
+      Organization.logger.info(
+        `AWS Organizations organizational unit "${ouName}" already exists with ID "${existingOu.Id}", skipping creation.`,
+      );
+      return existingOu.Id;
+    }
+
+    const response = await throttlingBackOff(() =>
+      client.send(
+        new CreateOrganizationalUnitCommand({
+          Name: ouName,
+          ParentId: parentOuId,
+        }),
+      ),
+    );
+
+    if (!response.OrganizationalUnit || !response.OrganizationalUnit.Id) {
+      throw new Error(
+        `${MODULE_EXCEPTIONS.SERVICE_EXCEPTION}: Organization unit "${ouName}" create organization unit api did not return OrganizationalUnit object with ID.`,
+      );
+    }
+
+    Organization.logger.info(
+      `AWS Organizations organizational unit "${ouName}" created successfully with ID "${response.OrganizationalUnit.Id}".`,
+    );
+    return response.OrganizationalUnit.Id;
+  }
+
+  /**
+   * Function to move accounts to a specified OU
+   *
+   * @param globalRegion string
+   * @param destinationOuId string - The ID of the destination OU
+   * @param accountEmails string[] - Array of account email addresses to move
+   * @param credentials {@link IAssumeRoleCredential} | undefined
+   * @param solutionId string | undefined
+   */
+  public static async moveAccounts(
+    globalRegion: string,
+    destinationOuId: string,
+    accountEmails: string[],
+    credentials?: IAssumeRoleCredential,
+    solutionId?: string,
+  ): Promise<void> {
+    Organization.logger.info(`Moving ${accountEmails.length} account(s) to OU "${destinationOuId}"`);
+
+    const client: OrganizationsClient = new OrganizationsClient({
+      region: globalRegion,
+      customUserAgent: solutionId,
+      retryStrategy: setRetryStrategy(),
+      credentials: credentials,
+    });
+
+    // Move accounts in parallel
+    const promises: Promise<void>[] = [];
+    for (const accountEmail of accountEmails) {
+      promises.push(Organization.moveAccountToOu(client, accountEmail, destinationOuId));
+    }
+
+    await Promise.all(promises);
+
+    Organization.logger.info(`Successfully moved ${accountEmails.length} account(s) to OU "${destinationOuId}"`);
+  }
+
+  /**
+   * Helper function to move an account to a destination OU
+   *
+   * @param client {@link OrganizationsClient}
+   * @param accountEmail string
+   * @param destinationOuId string - The ID of the destination OU
+   */
+  private static async moveAccountToOu(
+    client: OrganizationsClient,
+    accountEmail: string,
+    destinationOuId: string,
+  ): Promise<void> {
+    const accountId = await getAccountId(client, accountEmail);
+
+    const listParentsResponse = await throttlingBackOff(() =>
+      client.send(
+        new ListParentsCommand({
+          ChildId: accountId,
+        }),
+      ),
+    );
+
+    if (!listParentsResponse.Parents || listParentsResponse.Parents.length === 0) {
+      throw new Error(`${MODULE_EXCEPTIONS.SERVICE_EXCEPTION}: Account "${accountEmail}" does not have a parent OU.`);
+    }
+
+    const sourceParentId = listParentsResponse.Parents[0].Id!;
+
+    if (sourceParentId === destinationOuId) {
+      Organization.logger.info(`Account "${accountEmail}" is already in OU "${destinationOuId}", skipping move.`);
+      return;
+    }
+
+    await throttlingBackOff(() =>
+      client.send(
+        new MoveAccountCommand({
+          AccountId: accountId,
+          DestinationParentId: destinationOuId,
+          SourceParentId: sourceParentId,
+        }),
+      ),
+    );
+
+    Organization.logger.info(`Account "${accountEmail}" successfully moved to OU "${destinationOuId}".`);
   }
 }

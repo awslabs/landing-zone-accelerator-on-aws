@@ -781,12 +781,12 @@ describe('RegisterOrganizationalUnitModule', () => {
       });
     });
 
-    test('should return default baseline version 4.0 for unknown landing zone version', () => {
-      const unknownVersions = ['1.9', '4.0', '3.2', 'invalid'];
+    test('should return default baseline version 5.0 for unknown landing zone version', () => {
+      const unknownVersions = ['1.9', '3.4', 'invalid'];
 
       unknownVersions.forEach(version => {
         const result = getBaselineVersion(version);
-        expect(result).toBe('4.0');
+        expect(result).toBe('5.0');
       });
     });
   });

@@ -309,7 +309,7 @@ export const MOCK_CONSTANTS = {
           status: 'SUCCEEDED',
         },
         targetIdentifier: 'mockTargetIdentifier1',
-        baselineVersion: '4.0',
+        baselineVersion: '5.0',
       },
       mockTarget2: {
         arn: 'mockEnabledBaselineArn1',
@@ -318,7 +318,7 @@ export const MOCK_CONSTANTS = {
           status: 'SUCCEEDED',
         },
         targetIdentifier: 'mockTargetIdentifier1',
-        baselineVersion: '4.0',
+        baselineVersion: '5.0',
       },
       mockOu: {
         arn: 'mockOuArn',
@@ -327,7 +327,7 @@ export const MOCK_CONSTANTS = {
           status: 'SUCCEEDED',
         },
         targetIdentifier: 'mockOuArn',
-        baselineVersion: '4.0',
+        baselineVersion: '5.0',
       },
       mockOuFailed: {
         arn: 'mockOuArn',
@@ -336,7 +336,7 @@ export const MOCK_CONSTANTS = {
           status: 'FAILED',
         },
         targetIdentifier: 'mockOuArn',
-        baselineVersion: '4.0',
+        baselineVersion: '5.0',
       },
       mockOuOldBaseLineVersion: {
         arn: 'mockOuArn',
@@ -345,7 +345,7 @@ export const MOCK_CONSTANTS = {
           status: 'SUCCEEDED',
         },
         targetIdentifier: 'mockOuArn',
-        baselineVersion: '3.0',
+        baselineVersion: '4.0',
       },
       mockIdentityCenterBaseline: {
         arn: 'mockIdentityCenterBaselineArn',
@@ -354,7 +354,7 @@ export const MOCK_CONSTANTS = {
           status: 'SUCCEEDED',
         },
         targetIdentifier: 'mockIdentityCenterBaselineArn',
-        baselineVersion: '4.0',
+        baselineVersion: '5.0',
       },
     },
     baselines: {
@@ -406,7 +406,7 @@ export const MOCK_CONSTANTS = {
         status: 'SUCCEEDED',
       },
       targetIdentifier: 'mockTargetIdentifier1',
-      baselineVersion: '4.0',
+      baselineVersion: '5.0',
     },
     {
       arn: 'mockEnabledBaselineArn2',
@@ -415,7 +415,7 @@ export const MOCK_CONSTANTS = {
         status: 'SUCCEEDED',
       },
       targetIdentifier: 'mockTargetIdentifier2',
-      baselineVersion: '4.0',
+      baselineVersion: '5.0',
     },
     {
       arn: 'mockEnabledBaselineArn3',
@@ -424,7 +424,7 @@ export const MOCK_CONSTANTS = {
         status: 'SUCCEEDED',
       },
       targetIdentifier: 'mockTargetIdentifier3',
-      baselineVersion: '4.0',
+      baselineVersion: '5.0',
     },
   ],
   ConfigureRootUserManagmentModule: {
