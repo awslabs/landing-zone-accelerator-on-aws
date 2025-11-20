@@ -14,9 +14,12 @@ import { describe, beforeEach, expect, test, vi } from 'vitest';
 import { Organization } from '../../../../../lib/control-tower/setup-landing-zone/prerequisites/organization';
 import {
   AWSOrganizationsNotInUseException,
+  CreateOrganizationalUnitCommand,
   DescribeOrganizationCommand,
   EnableAllFeaturesCommand,
+  ListParentsCommand,
   ListRootsCommand,
+  MoveAccountCommand,
   OrganizationFeatureSet,
   OrganizationsClient,
   paginateListAccounts,
@@ -32,6 +35,9 @@ vi.mock('@aws-sdk/client-organizations', () => {
     EnableAllFeaturesCommand: vi.fn(),
     DescribeOrganizationCommand: vi.fn(),
     ListRootsCommand: vi.fn(),
+    CreateOrganizationalUnitCommand: vi.fn(),
+    MoveAccountCommand: vi.fn(),
+    ListParentsCommand: vi.fn(),
     OrganizationsClient: vi.fn(),
     paginateListAccounts: vi.fn(),
     paginateListAWSServiceAccessForOrganization: vi.fn(),
@@ -46,6 +52,14 @@ vi.mock('@aws-sdk/client-sso-admin', () => {
   return {
     paginateListInstances: vi.fn(),
     SSOAdminClient: vi.fn(),
+  };
+});
+
+vi.mock('../../../../../common/functions', async () => {
+  const actual = await vi.importActual('../../../../../common/functions');
+  return {
+    ...actual,
+    getAccountId: vi.fn().mockReturnValue('fakeAccountId'),
   };
 });
 
@@ -149,6 +163,198 @@ describe('IAM Role Tests', () => {
         };
       },
     }));
+  });
+
+  test('should successfully moveAccountToOu', async () => {
+    mockOrganizationsSend.mockImplementation(command => {
+      if (command instanceof ListParentsCommand) {
+        return Promise.resolve({ Parents: [{ Id: 'mockId' }] });
+      }
+      if (command instanceof MoveAccountCommand) {
+        return Promise.resolve(undefined);
+      }
+      return Promise.reject(MOCK_CONSTANTS.unknownError);
+    });
+
+    await Organization.moveAccounts('fakeRegion', 'mockId2', ['mockEmail']);
+
+    expect(MoveAccountCommand).toHaveBeenCalledWith(
+      expect.objectContaining({
+        AccountId: 'fakeAccountId',
+        DestinationParentId: 'mockId2',
+        SourceParentId: 'mockId',
+      }),
+    );
+  });
+
+  test('should skip moveAccountToOu if already in the same OU', async () => {
+    mockOrganizationsSend.mockImplementation(command => {
+      if (command instanceof ListParentsCommand) {
+        return Promise.resolve({ Parents: [{ Id: 'mockId' }] });
+      }
+      if (command instanceof MoveAccountCommand) {
+        return Promise.resolve(undefined);
+      }
+      return Promise.reject(MOCK_CONSTANTS.unknownError);
+    });
+
+    await Organization.moveAccounts('fakeRegion', 'mockId', ['mockEmail']);
+
+    expect(MoveAccountCommand).not.toHaveBeenCalled();
+  });
+
+  test('should fail moveAccountToOu if no returned parent', async () => {
+    mockOrganizationsSend.mockImplementation(command => {
+      if (command instanceof ListParentsCommand) {
+        return Promise.resolve({});
+      }
+      return Promise.reject(MOCK_CONSTANTS.unknownError);
+    });
+
+    expect(async () => {
+      await Organization.moveAccounts('fakeRegion', 'mockId2', ['mockEmail']);
+    }).rejects.toThrow('Account "mockEmail" does not have a parent OU.');
+  });
+
+  test('should fail moveAccountToOu if no Parents', async () => {
+    mockOrganizationsSend.mockImplementation(command => {
+      if (command instanceof ListParentsCommand) {
+        return Promise.resolve({ Parents: [] });
+      }
+      return Promise.reject(MOCK_CONSTANTS.unknownError);
+    });
+
+    expect(async () => {
+      await Organization.moveAccounts('fakeRegion', 'mockId2', ['mockEmail']);
+    }).rejects.toThrow('Account "mockEmail" does not have a parent OU.');
+  });
+
+  test('should successfully create OU', async () => {
+    mockOrganizationsSend.mockImplementation(command => {
+      if (command instanceof CreateOrganizationalUnitCommand) {
+        return Promise.resolve({
+          OrganizationalUnit: {
+            Id: 'mockId4',
+            Name: 'fakeNewOu',
+            Arn: 'mockArn4',
+          },
+        });
+      }
+
+      if (command instanceof ListRootsCommand) {
+        return Promise.resolve({ Roots: [MOCK_CONSTANTS.roots] });
+      }
+    });
+
+    (paginateListOrganizationalUnitsForParent as vi.Mock).mockImplementation(() => ({
+      [Symbol.asyncIterator]: async function* () {
+        yield {
+          OrganizationalUnits: [MOCK_CONSTANTS.organizationalUnit],
+        };
+      },
+    }));
+
+    const result = await Organization.createOu('fakeRegion', 'fakeNewOu', 'mockName');
+
+    expect(result).toBe('mockId4');
+  });
+
+  test('should fail to create OU if no parentOu', async () => {
+    mockOrganizationsSend.mockImplementation(command => {
+      if (command instanceof ListRootsCommand) {
+        return Promise.resolve({ Roots: [MOCK_CONSTANTS.roots] });
+      }
+    });
+
+    (paginateListOrganizationalUnitsForParent as vi.Mock).mockImplementation(() => ({
+      [Symbol.asyncIterator]: async function* () {
+        yield {
+          OrganizationalUnits: [MOCK_CONSTANTS.organizationalUnit],
+        };
+      },
+    }));
+
+    expect(async () => {
+      await Organization.createOu('fakeRegion', 'fakeNewOu', 'wrongOuName');
+    }).rejects.toThrow('InvalidInputException: Parent OU "wrongOuName" not found.');
+  });
+
+  test('should fail to create OU if SDK call returns no OU id', async () => {
+    mockOrganizationsSend.mockImplementation(command => {
+      if (command instanceof CreateOrganizationalUnitCommand) {
+        return Promise.resolve({
+          OrganizationalUnit: {
+            Name: 'fakeNewOu',
+            Arn: 'mockArn4',
+          },
+        });
+      }
+
+      if (command instanceof ListRootsCommand) {
+        return Promise.resolve({ Roots: [MOCK_CONSTANTS.roots] });
+      }
+    });
+
+    (paginateListOrganizationalUnitsForParent as vi.Mock).mockImplementation(() => ({
+      [Symbol.asyncIterator]: async function* () {
+        yield {
+          OrganizationalUnits: [MOCK_CONSTANTS.organizationalUnit],
+        };
+      },
+    }));
+
+    expect(async () => {
+      await Organization.createOu('fakeRegion', 'fakeNewOu', 'mockName');
+    }).rejects.toThrow(
+      'ServiceException: Organization unit "fakeNewOu" create organization unit api did not return OrganizationalUnit object with ID.',
+    );
+  });
+
+  test('should fail to create OU if SDK call fails', async () => {
+    mockOrganizationsSend.mockImplementation(command => {
+      if (command instanceof CreateOrganizationalUnitCommand) {
+        return Promise.resolve({});
+      }
+
+      if (command instanceof ListRootsCommand) {
+        return Promise.resolve({ Roots: [MOCK_CONSTANTS.roots] });
+      }
+    });
+
+    (paginateListOrganizationalUnitsForParent as vi.Mock).mockImplementation(() => ({
+      [Symbol.asyncIterator]: async function* () {
+        yield {
+          OrganizationalUnits: [MOCK_CONSTANTS.organizationalUnit],
+        };
+      },
+    }));
+
+    expect(async () => {
+      await Organization.createOu('fakeRegion', 'fakeNewOu', 'mockName');
+    }).rejects.toThrow(
+      'ServiceException: Organization unit "fakeNewOu" create organization unit api did not return OrganizationalUnit object with ID.',
+    );
+  });
+
+  test('should skip to create OU if OU already exists', async () => {
+    mockOrganizationsSend.mockImplementation(command => {
+      if (command instanceof ListRootsCommand) {
+        return Promise.resolve({ Roots: [MOCK_CONSTANTS.roots] });
+      }
+    });
+
+    (paginateListOrganizationalUnitsForParent as vi.Mock).mockImplementation(() => ({
+      [Symbol.asyncIterator]: async function* () {
+        yield {
+          OrganizationalUnits: [MOCK_CONSTANTS.organizationalUnit],
+        };
+      },
+    }));
+
+    const result = await Organization.createOu('fakeRegion', 'mockName', 'mockName');
+
+    expect(result).toBe('mockId');
+    expect(CreateOrganizationalUnitCommand).not.toHaveBeenCalled();
   });
 
   test('should successfully validated organizations', async () => {

@@ -216,7 +216,79 @@ describe('functions', () => {
       expect(result).toBeUndefined();
     });
 
-    test('should return landing zone details when valid response is received', async () => {
+    test('should return landing zone details when valid V4 response is received', async () => {
+      // Setup
+      const mockResponse = {
+        landingZone: {
+          arn: 'mockArn',
+          status: 'mockStatus',
+          version: 'mockVersionV4',
+          latestAvailableVersion: 'mockLatestAvailableVersion',
+          driftStatus: { status: 'mockDriftStatus' },
+          manifest: {
+            governedRegions: ['mockRegion1', 'mockRegion1'],
+            accessManagement: { enabled: true },
+            centralizedLogging: {
+              accountId: 'mockAccountId',
+              configurations: {
+                loggingBucket: { retentionDays: 365 },
+                accessLoggingBucket: { retentionDays: 365 },
+                kmsKeyArn: 'mockKmsKeyArn',
+              },
+            },
+            config: {
+              accountId: 'mockAccountId',
+              configurations: {
+                loggingBucket: { retentionDays: 365 },
+                accessLoggingBucket: { retentionDays: 365 },
+                kmsKeyArn: 'mockKmsKeyArn2',
+              },
+            },
+          },
+        },
+      };
+
+      mockSend.mockImplementation(command => {
+        if (command instanceof GetLandingZoneCommand) {
+          return Promise.resolve(mockResponse);
+        }
+        return Promise.reject(new Error('Unexpected command'));
+      });
+
+      // Execute
+      const result = await getLandingZoneDetails(new ControlTowerClient({}), mockRegion, mockLandingZoneIdentifier);
+
+      // Verify
+      expect(result).toEqual({
+        landingZoneIdentifier: mockResponse.landingZone.arn,
+        governedRegions: mockResponse.landingZone.manifest.governedRegions,
+        enableIdentityCenterAccess: mockResponse.landingZone.manifest.accessManagement.enabled,
+        centralizedLoggingConfig: {
+          loggingBucketRetentionDays:
+            mockResponse.landingZone.manifest.centralizedLogging.configurations.loggingBucket.retentionDays,
+          accessLoggingBucketRetentionDays:
+            mockResponse.landingZone.manifest.centralizedLogging.configurations.accessLoggingBucket.retentionDays,
+          kmsKeyArn: mockResponse.landingZone.manifest.centralizedLogging.configurations.kmsKeyArn,
+          accountId: mockResponse.landingZone.manifest.centralizedLogging.accountId,
+        },
+        configHubConfig: {
+          loggingBucketRetentionDays:
+            mockResponse.landingZone.manifest.config.configurations.loggingBucket.retentionDays,
+          accessLoggingBucketRetentionDays:
+            mockResponse.landingZone.manifest.config.configurations.accessLoggingBucket.retentionDays,
+          kmsKeyArn: mockResponse.landingZone.manifest.config.configurations.kmsKeyArn,
+          accountId: mockResponse.landingZone.manifest.config.accountId,
+        },
+        status: mockResponse.landingZone.status,
+        version: mockResponse.landingZone.version,
+        latestAvailableVersion: mockResponse.landingZone.latestAvailableVersion,
+        driftStatus: mockResponse.landingZone.driftStatus.status,
+        manifest: mockResponse.landingZone.manifest,
+      });
+      expect(GetLandingZoneCommand).toHaveBeenCalledTimes(1);
+    });
+
+    test('should return landing zone details when valid V3 response is received', async () => {
       // Setup
       const mockResponse = {
         landingZone: {
@@ -260,11 +332,13 @@ describe('functions', () => {
         enableIdentityCenterAccess: mockResponse.landingZone.manifest.accessManagement.enabled,
         securityOuName: mockResponse.landingZone.manifest.organizationStructure.security.name,
         sandboxOuName: mockResponse.landingZone.manifest.organizationStructure.sandbox.name,
-        loggingBucketRetentionDays:
-          mockResponse.landingZone.manifest.centralizedLogging.configurations.loggingBucket.retentionDays,
-        accessLoggingBucketRetentionDays:
-          mockResponse.landingZone.manifest.centralizedLogging.configurations.accessLoggingBucket.retentionDays,
-        kmsKeyArn: mockResponse.landingZone.manifest.centralizedLogging.configurations.kmsKeyArn,
+        centralizedLoggingConfig: {
+          loggingBucketRetentionDays:
+            mockResponse.landingZone.manifest.centralizedLogging.configurations.loggingBucket.retentionDays,
+          accessLoggingBucketRetentionDays:
+            mockResponse.landingZone.manifest.centralizedLogging.configurations.accessLoggingBucket.retentionDays,
+          kmsKeyArn: mockResponse.landingZone.manifest.centralizedLogging.configurations.kmsKeyArn,
+        },
         status: mockResponse.landingZone.status,
         version: mockResponse.landingZone.version,
         latestAvailableVersion: mockResponse.landingZone.latestAvailableVersion,

@@ -52,6 +52,16 @@ vi.mock('@aws-sdk/client-controltower', () => {
   };
 });
 
+vi.mock('@aws-sdk/client-organizations', async () => {
+  const actual = await vi.importActual('@aws-sdk/client-organizations');
+  return {
+    ...actual,
+    OrganizationsClient: vi.fn(),
+    paginateListAccounts: vi.fn(),
+    paginateListOrganizationalUnitsForParent: vi.fn(),
+  };
+});
+
 vi.mock('../../../../common/functions', async () => {
   const actual = await vi.importActual('../../../../common/functions');
   return {
@@ -79,7 +89,7 @@ vi.mock('../../../../lib/control-tower/setup-landing-zone/prerequisites/kms-key'
     ...actual,
     KmsKey: {
       ...actual.KmsKey,
-      createControlTowerKey: vi.fn(),
+      createControlTowerKeys: vi.fn(),
     },
   };
 });
@@ -189,6 +199,7 @@ const MOCK_CONSTANTS = {
 
 describe('Accelerator ControlTower Landing Zone Module', () => {
   const mockSend = vi.fn();
+  const mockOrganizationsSend = vi.fn();
 
   let getLandingZoneIdentifierSpy: vi.SpyInstance;
 
@@ -197,7 +208,7 @@ describe('Accelerator ControlTower Landing Zone Module', () => {
 
   let createControlTowerRolesSpy: vi.SpyInstance;
 
-  let createControlTowerKeySpy: vi.SpyInstance;
+  let createControlTowerKeysSpy: vi.SpyInstance;
 
   let createSharedAccountsSpy: vi.SpyInstance;
 
@@ -214,6 +225,96 @@ describe('Accelerator ControlTower Landing Zone Module', () => {
       send: mockSend,
     }));
 
+    const {
+      OrganizationsClient,
+      ListRootsCommand,
+      DescribeOrganizationCommand,
+      CreateOrganizationalUnitCommand,
+      ListOrganizationalUnitsForParentCommand,
+      ListParentsCommand,
+      MoveAccountCommand,
+      paginateListAccounts,
+      paginateListOrganizationalUnitsForParent,
+    } = await import('@aws-sdk/client-organizations');
+
+    // Setup default mock responses for Organizations commands
+    mockOrganizationsSend.mockImplementation(command => {
+      if (command instanceof ListRootsCommand) {
+        return Promise.resolve({
+          Roots: [
+            {
+              Id: 'r-mockRootId',
+              Arn: 'arn:aws:organizations::123456789012:root/o-mockOrgId/r-mockRootId',
+              Name: 'Root',
+            },
+          ],
+        });
+      }
+      if (command instanceof DescribeOrganizationCommand) {
+        return Promise.resolve({
+          Organization: {
+            Id: 'o-mockOrgId',
+            Arn: 'arn:aws:organizations::123456789012:organization/o-mockOrgId',
+            FeatureSet: 'ALL',
+            MasterAccountArn: 'arn:aws:organizations::123456789012:account/o-mockOrgId/123456789012',
+            MasterAccountId: '123456789012',
+            MasterAccountEmail: 'mockManagement@example.com',
+          },
+        });
+      }
+      if (command instanceof CreateOrganizationalUnitCommand) {
+        return Promise.resolve({
+          OrganizationalUnit: {
+            Id: 'ou-mockSecurityOuId',
+            Arn: 'arn:aws:organizations::123456789012:ou/o-mockOrgId/ou-mockSecurityOuId',
+            Name: 'Security',
+          },
+        });
+      }
+      if (command instanceof ListOrganizationalUnitsForParentCommand) {
+        return Promise.resolve({
+          OrganizationalUnits: [],
+        });
+      }
+      if (command instanceof ListParentsCommand) {
+        return Promise.resolve({
+          Parents: [
+            {
+              Id: 'r-mockRootId',
+              Type: 'ROOT',
+            },
+          ],
+        });
+      }
+      if (command instanceof MoveAccountCommand) {
+        return Promise.resolve({});
+      }
+      return Promise.resolve({});
+    });
+
+    (OrganizationsClient as vi.Mock).mockImplementation(() => ({
+      send: mockOrganizationsSend,
+    }));
+
+    // Mock paginators to return mock accounts
+    (paginateListAccounts as vi.Mock).mockReturnValue({
+      async *[Symbol.asyncIterator]() {
+        yield {
+          Accounts: [
+            MOCK_CONSTANTS.managementAccountItem,
+            MOCK_CONSTANTS.logArchiveAccountItem,
+            MOCK_CONSTANTS.auditAccountItem,
+          ],
+        };
+      },
+    });
+
+    (paginateListOrganizationalUnitsForParent as vi.Mock).mockReturnValue({
+      async *[Symbol.asyncIterator]() {
+        yield { OrganizationalUnits: [] };
+      },
+    });
+
     const commonFunctions = await import('../../../../common/functions');
     getLandingZoneIdentifierSpy = vi.mocked(commonFunctions.getLandingZoneIdentifier);
     organizationValidateSpy = vi.spyOn(Organization, 'validate');
@@ -221,7 +322,7 @@ describe('Accelerator ControlTower Landing Zone Module', () => {
 
     createControlTowerRolesSpy = vi.spyOn(IamRole, 'createControlTowerRoles');
 
-    createControlTowerKeySpy = vi.mocked(KmsKey.createControlTowerKey);
+    createControlTowerKeysSpy = vi.mocked(KmsKey.createControlTowerKeys);
 
     createSharedAccountsSpy = vi.mocked(SharedAccount.createAccounts);
     const setupFunctions = await import('../../../../lib/control-tower/setup-landing-zone/functions');
@@ -247,7 +348,10 @@ describe('Accelerator ControlTower Landing Zone Module', () => {
 
       createSharedAccountsSpy.mockReturnValue(undefined);
 
-      createControlTowerKeySpy.mockReturnValue(MOCK_CONSTANTS.ctKmsKeyArn);
+      createControlTowerKeysSpy.mockResolvedValue({
+        centralizedLoggingKeyArn: MOCK_CONSTANTS.ctKmsKeyArn,
+        configLoggingKeyArn: MOCK_CONSTANTS.ctKmsKeyArn,
+      });
 
       makeManifestDocumentSpy.mockResolvedValue(MOCK_CONSTANTS.existingLandingZoneDetails.manifest);
 
@@ -958,6 +1062,154 @@ describe('Accelerator ControlTower Landing Zone Module', () => {
 
       expect(UpdateLandingZoneCommand).toHaveBeenCalledTimes(0);
       expect(GetLandingZoneOperationCommand).toHaveBeenCalledTimes(0);
+    });
+
+    test('should call makeManifestDocument with correct KMS keys when configHubConfig.kmsKeyArn exists', async () => {
+      // Setup
+      const mockCentralizedLoggingKeyArn = 'arn:aws:kms:region:account:key/centralized-logging';
+      const mockConfigHubKeyArn = 'arn:aws:kms:region:account:key/config-hub';
+
+      getLandingZoneDetailsSpy.mockResolvedValue({
+        landingZoneIdentifier: MOCK_CONSTANTS.existingLandingZoneIdentifier,
+        status: LandingZoneStatus.ACTIVE,
+        securityOuName: 'Security',
+        version: '4.0',
+        centralizedLoggingConfig: {
+          kmsKeyArn: mockCentralizedLoggingKeyArn,
+        },
+        configHubConfig: {
+          kmsKeyArn: mockConfigHubKeyArn,
+        },
+        manifest: MOCK_CONSTANTS.existingLandingZoneDetails.manifest,
+      });
+
+      mockSend.mockImplementation(command => {
+        if (command instanceof UpdateLandingZoneCommand) {
+          return Promise.resolve({
+            operationIdentifier: MOCK_CONSTANTS.operationIdentifier,
+          });
+        }
+        if (command instanceof GetLandingZoneOperationCommand) {
+          return Promise.resolve({
+            operationDetails: { status: LandingZoneOperationStatus.SUCCEEDED },
+          });
+        }
+        return Promise.reject(new Error('Unexpected command'));
+      });
+
+      // Execute
+      await new SetupLandingZoneModule().handler({
+        ...MOCK_CONSTANTS.moduleCommonParameter,
+        useExistingRole: false,
+        configuration: MOCK_CONSTANTS.controlTowerLandingZoneConfiguration,
+      });
+
+      // Verify
+      expect(makeManifestDocumentSpy).toHaveBeenCalledWith(
+        expect.any(Object),
+        'UPDATE',
+        {
+          centralizedLoggingKeyArn: mockCentralizedLoggingKeyArn,
+          configLoggingKeyArn: mockCentralizedLoggingKeyArn,
+        },
+        MOCK_CONSTANTS.existingLandingZoneDetails.manifest,
+      );
+    });
+
+    test('should call makeManifestDocument with correct KMS keys for existing v3 LZ', async () => {
+      // Setup
+      const mockCentralizedLoggingKeyArn = 'arn:aws:kms:region:account:key/centralized-logging';
+
+      getLandingZoneDetailsSpy.mockResolvedValue({
+        landingZoneIdentifier: MOCK_CONSTANTS.existingLandingZoneIdentifier,
+        status: LandingZoneStatus.ACTIVE,
+        securityOuName: 'Security',
+        version: '3.3',
+        centralizedLoggingConfig: {
+          kmsKeyArn: mockCentralizedLoggingKeyArn,
+        },
+        manifest: MOCK_CONSTANTS.existingLandingZoneDetails.manifest,
+      });
+
+      mockSend.mockImplementation(command => {
+        if (command instanceof UpdateLandingZoneCommand) {
+          return Promise.resolve({
+            operationIdentifier: MOCK_CONSTANTS.operationIdentifier,
+          });
+        }
+        if (command instanceof GetLandingZoneOperationCommand) {
+          return Promise.resolve({
+            operationDetails: { status: LandingZoneOperationStatus.SUCCEEDED },
+          });
+        }
+        return Promise.reject(new Error('Unexpected command'));
+      });
+
+      // Execute
+      await new SetupLandingZoneModule().handler({
+        ...MOCK_CONSTANTS.moduleCommonParameter,
+        useExistingRole: false,
+        configuration: MOCK_CONSTANTS.controlTowerLandingZoneConfiguration,
+      });
+
+      // Verify
+      expect(makeManifestDocumentSpy).toHaveBeenCalledWith(
+        expect.any(Object),
+        'UPDATE',
+        {
+          centralizedLoggingKeyArn: mockCentralizedLoggingKeyArn,
+          configLoggingKeyArn: mockCentralizedLoggingKeyArn,
+        },
+        MOCK_CONSTANTS.existingLandingZoneDetails.manifest,
+      );
+    });
+
+    test('should call makeManifestDocument with no KMS key if not configured in V4 LZ', async () => {
+      // Setup
+      const mockCentralizedLoggingKeyArn = 'arn:aws:kms:region:account:key/centralized-logging';
+
+      getLandingZoneDetailsSpy.mockResolvedValue({
+        landingZoneIdentifier: MOCK_CONSTANTS.existingLandingZoneIdentifier,
+        status: LandingZoneStatus.ACTIVE,
+        securityOuName: 'Security',
+        version: '4.0',
+        centralizedLoggingConfig: {
+          kmsKeyArn: mockCentralizedLoggingKeyArn,
+        },
+        manifest: MOCK_CONSTANTS.existingLandingZoneDetails.manifest,
+      });
+
+      mockSend.mockImplementation(command => {
+        if (command instanceof UpdateLandingZoneCommand) {
+          return Promise.resolve({
+            operationIdentifier: MOCK_CONSTANTS.operationIdentifier,
+          });
+        }
+        if (command instanceof GetLandingZoneOperationCommand) {
+          return Promise.resolve({
+            operationDetails: { status: LandingZoneOperationStatus.SUCCEEDED },
+          });
+        }
+        return Promise.reject(new Error('Unexpected command'));
+      });
+
+      // Execute
+      await new SetupLandingZoneModule().handler({
+        ...MOCK_CONSTANTS.moduleCommonParameter,
+        useExistingRole: false,
+        configuration: MOCK_CONSTANTS.controlTowerLandingZoneConfiguration,
+      });
+
+      // Verify
+      expect(makeManifestDocumentSpy).toHaveBeenCalledWith(
+        expect.any(Object),
+        'UPDATE',
+        {
+          centralizedLoggingKeyArn: mockCentralizedLoggingKeyArn,
+          configLoggingKeyArn: undefined,
+        },
+        MOCK_CONSTANTS.existingLandingZoneDetails.manifest,
+      );
     });
   });
 

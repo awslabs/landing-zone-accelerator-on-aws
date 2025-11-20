@@ -24,7 +24,7 @@ import {
 
 describe('resources utility functions', () => {
   const mockLandingZoneConfig: ControlTowerLandingZoneConfigType = {
-    version: '3.0',
+    version: '4.0',
     governedRegions: ['mockRegion1', 'mockRegion2'],
     logArchiveAccountId: '111122223333',
     auditAccountId: '444455556666',
@@ -36,20 +36,16 @@ describe('resources utility functions', () => {
 
   describe('makeManifestDocument', () => {
     test('should create manifest for CREATE event', () => {
-      const securityOuName = 'Security';
-      const kmsKeyArn = 'arn:aws:kms:region:account:key/12345';
+      const kmsKeyArns = {
+        centralizedLoggingKeyArn: 'arn:aws:kms:region:account:key/12345',
+        configLoggingKeyArn: 'arn:aws:kms:region:account:key/67890',
+      };
 
-      const result = makeManifestDocument(mockLandingZoneConfig, 'CREATE', securityOuName, kmsKeyArn);
+      const result = makeManifestDocument(mockLandingZoneConfig, 'CREATE', kmsKeyArns);
 
       expect(result).toEqual({
-        governedRegions: mockLandingZoneConfig.governedRegions,
-        organizationStructure: {
-          security: {
-            name: 'Security',
-          },
-          sandbox: {
-            name: 'Infrastructure',
-          },
+        accessManagement: {
+          enabled: mockLandingZoneConfig.enableIdentityCenterAccess,
         },
         centralizedLogging: {
           accountId: mockLandingZoneConfig.logArchiveAccountId,
@@ -60,23 +56,39 @@ describe('resources utility functions', () => {
             accessLoggingBucket: {
               retentionDays: mockLandingZoneConfig.accessLoggingBucketRetentionDays,
             },
-            kmsKeyArn,
+            kmsKeyArn: kmsKeyArns.centralizedLoggingKeyArn,
           },
           enabled: mockLandingZoneConfig.enableOrganizationTrail,
         },
-        securityRoles: {
+        config: {
           accountId: mockLandingZoneConfig.auditAccountId,
+          configurations: {
+            loggingBucket: {
+              retentionDays: mockLandingZoneConfig.loggingBucketRetentionDays,
+            },
+            accessLoggingBucket: {
+              retentionDays: mockLandingZoneConfig.accessLoggingBucketRetentionDays,
+            },
+            kmsKeyArn: kmsKeyArns.configLoggingKeyArn,
+          },
+          enabled: true,
         },
-        accessManagement: {
-          enabled: mockLandingZoneConfig.enableIdentityCenterAccess,
+        governedRegions: mockLandingZoneConfig.governedRegions,
+        backup: {
+          enabled: false,
+        },
+        securityRoles: {
+          enabled: true,
+          accountId: mockLandingZoneConfig.auditAccountId,
         },
       });
     });
 
-    test('should create manifest for UPDATE event with sandboxOuName', () => {
-      const securityOuName = 'Security';
-      const sandboxOuName = 'Sandbox';
-      const kmsKeyArn = 'arn:aws:kms:region:account:key/12345';
+    test('should create manifest for UPDATE event with existing manifest', () => {
+      const kmsKeyArns = {
+        centralizedLoggingKeyArn: 'arn:aws:kms:region:account:key/12345',
+        configLoggingKeyArn: 'arn:aws:kms:region:account:key/67890',
+      };
       const existingManifest = {
         governedRegions: ['mockRegion1', 'mockRegion1'],
         accessManagement: { enabled: true },
@@ -91,36 +103,221 @@ describe('resources utility functions', () => {
             kmsKeyArn: 'mockKmsKeyArn',
           },
         },
+        securityRoles: {
+          accountId: '444455556666',
+          enabled: false,
+        },
       };
 
-      const result = makeManifestDocument(
-        mockLandingZoneConfig,
-        'UPDATE',
-        securityOuName,
-        kmsKeyArn,
-        sandboxOuName,
-        existingManifest,
-      );
+      const result = makeManifestDocument(mockLandingZoneConfig, 'UPDATE', kmsKeyArns, existingManifest);
 
-      expect(result.organizationStructure).toEqual({
-        security: {
-          name: 'Security',
+      expect(result.organizationStructure).toBeUndefined();
+    });
+
+    test('should preserve minimal V4 manifest without changes', () => {
+      const kmsKeyArns = {
+        centralizedLoggingKeyArn: 'arn:aws:kms:region:account:key/12345',
+        configLoggingKeyArn: 'arn:aws:kms:region:account:key/67890',
+      };
+      const existingManifest = {
+        accessManagement: {
+          enabled: true,
         },
-        sandbox: {
-          name: 'Sandbox',
+        centralizedLogging: {
+          accountId: '111122223333',
+          configurations: {
+            loggingBucket: {
+              retentionDays: 30,
+            },
+            accessLoggingBucket: {
+              retentionDays: 30,
+            },
+            kmsKeyArn: 'arn:aws:kms:region:account:key/12345',
+          },
+          enabled: true,
+        },
+        config: {
+          accountId: '444455556666',
+          configurations: {
+            loggingBucket: {
+              retentionDays: 30,
+            },
+            accessLoggingBucket: {
+              retentionDays: 30,
+            },
+            kmsKeyArn: 'arn:aws:kms:region:account:key/67890',
+          },
+          enabled: true,
+        },
+        governedRegions: ['mockRegion1', 'mockRegion2'],
+        securityRoles: {
+          enabled: true,
+          accountId: '444455556666',
+        },
+      };
+
+      const result = makeManifestDocument(mockLandingZoneConfig, 'UPDATE', kmsKeyArns, existingManifest);
+
+      expect(result).toEqual({
+        accessManagement: {
+          enabled: mockLandingZoneConfig.enableIdentityCenterAccess,
+        },
+        centralizedLogging: {
+          accountId: mockLandingZoneConfig.logArchiveAccountId,
+          configurations: {
+            loggingBucket: {
+              retentionDays: mockLandingZoneConfig.loggingBucketRetentionDays,
+            },
+            accessLoggingBucket: {
+              retentionDays: mockLandingZoneConfig.accessLoggingBucketRetentionDays,
+            },
+            kmsKeyArn: kmsKeyArns.centralizedLoggingKeyArn,
+          },
+          enabled: mockLandingZoneConfig.enableOrganizationTrail,
+        },
+        config: {
+          accountId: mockLandingZoneConfig.auditAccountId,
+          configurations: {
+            loggingBucket: {
+              retentionDays: mockLandingZoneConfig.loggingBucketRetentionDays,
+            },
+            accessLoggingBucket: {
+              retentionDays: mockLandingZoneConfig.accessLoggingBucketRetentionDays,
+            },
+            kmsKeyArn: kmsKeyArns.configLoggingKeyArn,
+          },
+          enabled: true,
+        },
+        governedRegions: mockLandingZoneConfig.governedRegions,
+        securityRoles: {
+          enabled: true,
+          accountId: mockLandingZoneConfig.auditAccountId,
         },
       });
     });
 
-    test('should create manifest for UPDATE event without sandboxOuName', () => {
-      const securityOuName = 'Security';
-      const kmsKeyArn = 'arn:aws:kms:region:account:key/12345';
+    test('should preserve backup and securityRoles config in existing V4 manifest', () => {
+      const kmsKeyArns = {
+        centralizedLoggingKeyArn: 'arn:aws:kms:region:account:key/12345',
+        configLoggingKeyArn: 'arn:aws:kms:region:account:key/67890',
+      };
+      const existingManifest = {
+        accessManagement: {
+          enabled: false,
+        },
+        centralizedLogging: {
+          accountId: '111122223333',
+          configurations: {
+            loggingBucket: {
+              retentionDays: 365,
+            },
+            accessLoggingBucket: {
+              retentionDays: 365,
+            },
+            kmsKeyArn: 'arn:aws:kms:region:account:key/old-key',
+          },
+          enabled: false,
+        },
+        config: {
+          accountId: '444455556666',
+          configurations: {
+            loggingBucket: {
+              retentionDays: 365,
+            },
+            accessLoggingBucket: {
+              retentionDays: 365,
+            },
+            kmsKeyArn: 'arn:aws:kms:region:account:key/old-config-key',
+          },
+          enabled: true,
+        },
+        governedRegions: ['mockRegion1'],
+        backup: {
+          enabled: true,
+        },
+        securityRoles: {
+          enabled: true,
+        },
+      };
 
-      const result = makeManifestDocument(mockLandingZoneConfig, 'UPDATE', securityOuName, kmsKeyArn);
+      const result = makeManifestDocument(mockLandingZoneConfig, 'UPDATE', kmsKeyArns, existingManifest);
 
-      expect(result.organizationStructure).toEqual({
-        security: {
-          name: 'Security',
+      expect(result.backup).toEqual({ enabled: true });
+      expect(result.securityRoles).toEqual({ enabled: true, accountId: mockLandingZoneConfig.auditAccountId });
+      expect(result.accessManagement.enabled).toBe(mockLandingZoneConfig.enableIdentityCenterAccess);
+      expect(result.centralizedLogging.accountId).toBe(mockLandingZoneConfig.logArchiveAccountId);
+      expect(result.config.accountId).toBe(mockLandingZoneConfig.auditAccountId);
+      expect(result.governedRegions).toEqual(mockLandingZoneConfig.governedRegions);
+    });
+
+    test('should create new V4 manifest from existing V3.3 manifest', () => {
+      const kmsKeyArns = {
+        centralizedLoggingKeyArn: 'arn:aws:kms:region:account:key/12345',
+        configLoggingKeyArn: 'arn:aws:kms:region:account:key/67890',
+      };
+      const existingV33Manifest = {
+        governedRegions: ['mockRegion1'],
+        organizationStructure: {
+          security: { name: 'Security' },
+          sandbox: { name: 'Sandbox' },
+        },
+        centralizedLogging: {
+          accountId: '111122223333',
+          configurations: {
+            loggingBucket: {
+              retentionDays: 365,
+            },
+            accessLoggingBucket: {
+              retentionDays: 365,
+            },
+          },
+          enabled: true,
+        },
+        securityRoles: {
+          accountId: '444455556666',
+        },
+        accessManagement: {
+          enabled: false,
+        },
+      };
+
+      const result = makeManifestDocument(mockLandingZoneConfig, 'UPDATE', kmsKeyArns, existingV33Manifest);
+
+      expect(result.organizationStructure).toBeUndefined();
+      expect(result).toEqual({
+        accessManagement: {
+          enabled: mockLandingZoneConfig.enableIdentityCenterAccess,
+        },
+        centralizedLogging: {
+          accountId: mockLandingZoneConfig.logArchiveAccountId,
+          configurations: {
+            loggingBucket: {
+              retentionDays: mockLandingZoneConfig.loggingBucketRetentionDays,
+            },
+            accessLoggingBucket: {
+              retentionDays: mockLandingZoneConfig.accessLoggingBucketRetentionDays,
+            },
+            kmsKeyArn: kmsKeyArns.centralizedLoggingKeyArn,
+          },
+          enabled: mockLandingZoneConfig.enableOrganizationTrail,
+        },
+        config: {
+          accountId: mockLandingZoneConfig.auditAccountId,
+          configurations: {
+            loggingBucket: {
+              retentionDays: mockLandingZoneConfig.loggingBucketRetentionDays,
+            },
+            accessLoggingBucket: {
+              retentionDays: mockLandingZoneConfig.accessLoggingBucketRetentionDays,
+            },
+            kmsKeyArn: kmsKeyArns.configLoggingKeyArn,
+          },
+          enabled: true,
+        },
+        governedRegions: mockLandingZoneConfig.governedRegions,
+        securityRoles: {
+          accountId: mockLandingZoneConfig.auditAccountId,
+          enabled: true,
         },
       });
     });
@@ -260,15 +457,22 @@ describe('resources utility functions', () => {
       const mockLandingZoneDetails: ControlTowerLandingZoneDetailsType = {
         landingZoneIdentifier: 'mockLandingZoneIdentifier',
         status: 'ACTIVE',
-        version: '3.0',
-        latestAvailableVersion: '3.0',
+        version: '4.0',
+        latestAvailableVersion: '4.0',
         driftStatus: 'IN_SYNC',
         governedRegions: mockLandingZoneConfig.governedRegions,
         securityOuName: 'Security',
         enableIdentityCenterAccess: true,
-        loggingBucketRetentionDays: 30,
-        accessLoggingBucketRetentionDays: 30,
-        kmsKeyArn: 'mockKmsKeyArn',
+        centralizedLoggingConfig: {
+          loggingBucketRetentionDays: 30,
+          accessLoggingBucketRetentionDays: 30,
+          kmsKeyArn: 'mockKmsKeyArn',
+        },
+        configHubConfig: {
+          loggingBucketRetentionDays: 30,
+          accessLoggingBucketRetentionDays: 30,
+          kmsKeyArn: 'mockConfigKmsKeyArn',
+        },
       };
 
       // Execute
@@ -288,15 +492,17 @@ describe('resources utility functions', () => {
       const mockLandingZoneDetails: ControlTowerLandingZoneDetailsType = {
         landingZoneIdentifier: 'mockLandingZoneIdentifier',
         status: 'ACTIVE',
-        version: '3.0',
-        latestAvailableVersion: '3.0',
+        version: '4.0',
+        latestAvailableVersion: '4.0',
         driftStatus: 'DRIFTED',
         governedRegions: mockLandingZoneConfig.governedRegions,
         securityOuName: 'Security',
         enableIdentityCenterAccess: true,
-        loggingBucketRetentionDays: 90,
-        accessLoggingBucketRetentionDays: 90,
-        kmsKeyArn: 'mockKmsKeyArn',
+        centralizedLoggingConfig: {
+          loggingBucketRetentionDays: 90,
+          accessLoggingBucketRetentionDays: 90,
+          kmsKeyArn: 'mockKmsKeyArn',
+        },
       };
 
       // Act
@@ -316,19 +522,28 @@ describe('resources utility functions', () => {
       const mockLandingZoneDetails: ControlTowerLandingZoneDetailsType = {
         landingZoneIdentifier: 'mockLandingZoneIdentifier',
         status: 'ACTIVE',
-        version: '3.0',
-        latestAvailableVersion: '3.0',
+        version: '4.0',
+        latestAvailableVersion: '4.0',
         driftStatus: 'IN_SYNC',
         governedRegions: [...mockLandingZoneConfig.governedRegions, 'mockRegion3'],
         securityOuName: 'Security',
         enableIdentityCenterAccess: false,
-        loggingBucketRetentionDays: 90,
-        accessLoggingBucketRetentionDays: 90,
-        kmsKeyArn: 'mockKmsKeyArn',
+        centralizedLoggingConfig: {
+          loggingBucketRetentionDays: 90,
+          accessLoggingBucketRetentionDays: 90,
+          kmsKeyArn: 'mockKmsKeyArn',
+        },
+        configHubConfig: {
+          loggingBucketRetentionDays: 90,
+          accessLoggingBucketRetentionDays: 90,
+          kmsKeyArn: 'mockConfigKmsKeyArn',
+        },
       };
       const reasons: string[] = [
-        `Changes made in AccessLoggingBucketRetentionDays from ${mockLandingZoneDetails.accessLoggingBucketRetentionDays} to ${mockLandingZoneConfig.accessLoggingBucketRetentionDays}`,
-        `Changes made in LoggingBucketRetentionDays from ${mockLandingZoneDetails.loggingBucketRetentionDays} to ${mockLandingZoneConfig.loggingBucketRetentionDays}`,
+        `Changes made in Centralized Logging AccessLoggingBucketRetentionDays from ${mockLandingZoneDetails.centralizedLoggingConfig?.accessLoggingBucketRetentionDays} to ${mockLandingZoneConfig.accessLoggingBucketRetentionDays}`,
+        `Changes made in Centralized Logging LoggingBucketRetentionDays from ${mockLandingZoneDetails.centralizedLoggingConfig?.loggingBucketRetentionDays} to ${mockLandingZoneConfig.loggingBucketRetentionDays}`,
+        `Changes made in Config AccessLoggingBucketRetentionDays from ${mockLandingZoneDetails.configHubConfig?.accessLoggingBucketRetentionDays} to ${mockLandingZoneConfig.accessLoggingBucketRetentionDays}`,
+        `Changes made in Config LoggingBucketRetentionDays from ${mockLandingZoneDetails.configHubConfig?.loggingBucketRetentionDays} to ${mockLandingZoneConfig.loggingBucketRetentionDays}`,
         `Changes made in EnableIdentityCenterAccess from ${mockLandingZoneDetails.enableIdentityCenterAccess} to ${mockLandingZoneConfig.enableIdentityCenterAccess}`,
         `Changes made in governed regions from [${mockLandingZoneDetails.governedRegions?.join(
           ',',
@@ -352,14 +567,21 @@ describe('resources utility functions', () => {
       const mockLandingZoneDetails: ControlTowerLandingZoneDetailsType = {
         landingZoneIdentifier: 'mockLandingZoneIdentifier',
         status: 'ACTIVE',
-        version: '3.0',
-        latestAvailableVersion: '3.0',
+        version: '4.0',
+        latestAvailableVersion: '4.0',
         driftStatus: 'IN_SYNC',
         securityOuName: 'Security',
         enableIdentityCenterAccess: true,
-        loggingBucketRetentionDays: 30,
-        accessLoggingBucketRetentionDays: 30,
-        kmsKeyArn: 'mockKmsKeyArn',
+        centralizedLoggingConfig: {
+          loggingBucketRetentionDays: 30,
+          accessLoggingBucketRetentionDays: 30,
+          kmsKeyArn: 'mockKmsKeyArn',
+        },
+        configHubConfig: {
+          loggingBucketRetentionDays: 30,
+          accessLoggingBucketRetentionDays: 30,
+          kmsKeyArn: 'mockConfigKmsKeyArn',
+        },
       };
       const reasons: string[] = [
         `Changes made in governed regions from [${mockLandingZoneDetails.governedRegions?.join(
@@ -376,6 +598,119 @@ describe('resources utility functions', () => {
         targetVersion: mockLandingZoneDetails.version,
         resetRequired: false,
         reason: `${reasons.join('. ')}`,
+      });
+    });
+
+    test('should detect changes in configHubConfig retention days', () => {
+      // Setup
+      const mockLandingZoneDetails: ControlTowerLandingZoneDetailsType = {
+        landingZoneIdentifier: 'mockLandingZoneIdentifier',
+        status: 'ACTIVE',
+        version: '4.0',
+        latestAvailableVersion: '4.0',
+        driftStatus: 'IN_SYNC',
+        governedRegions: mockLandingZoneConfig.governedRegions,
+        securityOuName: 'Security',
+        enableIdentityCenterAccess: true,
+        centralizedLoggingConfig: {
+          loggingBucketRetentionDays: 30,
+          accessLoggingBucketRetentionDays: 30,
+          kmsKeyArn: 'mockKmsKeyArn',
+        },
+        configHubConfig: {
+          loggingBucketRetentionDays: 60,
+          accessLoggingBucketRetentionDays: 60,
+          kmsKeyArn: 'mockConfigKmsKeyArn',
+        },
+      };
+      const reasons: string[] = [
+        `Changes made in Config AccessLoggingBucketRetentionDays from 60 to 30`,
+        `Changes made in Config LoggingBucketRetentionDays from 60 to 30`,
+      ];
+
+      // Act
+      const result = landingZoneUpdateOrResetRequired(mockLandingZoneConfig, mockLandingZoneDetails);
+
+      // Assert
+      expect(result).toEqual({
+        updateRequired: true,
+        targetVersion: mockLandingZoneDetails.version,
+        resetRequired: false,
+        reason: `${reasons.join('. ')}`,
+      });
+    });
+
+    test('should detect changes in centralizedLoggingConfig only', () => {
+      // Setup
+      const mockLandingZoneDetails: ControlTowerLandingZoneDetailsType = {
+        landingZoneIdentifier: 'mockLandingZoneIdentifier',
+        status: 'ACTIVE',
+        version: '4.0',
+        latestAvailableVersion: '4.0',
+        driftStatus: 'IN_SYNC',
+        governedRegions: mockLandingZoneConfig.governedRegions,
+        securityOuName: 'Security',
+        enableIdentityCenterAccess: true,
+        centralizedLoggingConfig: {
+          loggingBucketRetentionDays: 60,
+          accessLoggingBucketRetentionDays: 60,
+          kmsKeyArn: 'mockKmsKeyArn',
+        },
+        configHubConfig: {
+          loggingBucketRetentionDays: 30,
+          accessLoggingBucketRetentionDays: 30,
+          kmsKeyArn: 'mockConfigKmsKeyArn',
+        },
+      };
+      const reasons: string[] = [
+        `Changes made in Centralized Logging AccessLoggingBucketRetentionDays from 60 to 30`,
+        `Changes made in Centralized Logging LoggingBucketRetentionDays from 60 to 30`,
+      ];
+
+      // Act
+      const result = landingZoneUpdateOrResetRequired(mockLandingZoneConfig, mockLandingZoneDetails);
+
+      // Assert
+      expect(result).toEqual({
+        updateRequired: true,
+        targetVersion: mockLandingZoneDetails.version,
+        resetRequired: false,
+        reason: `${reasons.join('. ')}`,
+      });
+    });
+
+    test('should not detect changes when both configs match', () => {
+      // Setup
+      const mockLandingZoneDetails: ControlTowerLandingZoneDetailsType = {
+        landingZoneIdentifier: 'mockLandingZoneIdentifier',
+        status: 'ACTIVE',
+        version: '4.0',
+        latestAvailableVersion: '4.0',
+        driftStatus: 'IN_SYNC',
+        governedRegions: mockLandingZoneConfig.governedRegions,
+        securityOuName: 'Security',
+        enableIdentityCenterAccess: true,
+        centralizedLoggingConfig: {
+          loggingBucketRetentionDays: 30,
+          accessLoggingBucketRetentionDays: 30,
+          kmsKeyArn: 'mockKmsKeyArn',
+        },
+        configHubConfig: {
+          loggingBucketRetentionDays: 30,
+          accessLoggingBucketRetentionDays: 30,
+          kmsKeyArn: 'mockConfigKmsKeyArn',
+        },
+      };
+
+      // Act
+      const result = landingZoneUpdateOrResetRequired(mockLandingZoneConfig, mockLandingZoneDetails);
+
+      // Assert
+      expect(result).toEqual({
+        updateRequired: false,
+        targetVersion: mockLandingZoneDetails.version,
+        resetRequired: false,
+        reason: 'There were no changes found to update or reset the Landing Zone.',
       });
     });
   });

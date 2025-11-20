@@ -33,7 +33,7 @@ const MOCK_CONSTANTS = {
   solutionId: 'mockSolutionId',
   accountId: 'mockAccountId',
   differentKeyAlias: { AliasName: 'mockDifferentKeyAlias' },
-  controlTowerKeyAlias: { AliasName: 'alias/aws-controltower/key' },
+  controlTowerKeyAlias: { AliasName: 'alias/aws-controltower/logging/key' },
   createKeyResponse: {
     KeyMetadata: {
       KeyId: 'mockKeyId',
@@ -53,8 +53,8 @@ describe('KmsKey', () => {
     (KMSClient as vi.Mock).mockImplementation(() => mockKmsClient);
   });
 
-  describe('createControlTowerKey', () => {
-    test('should create a new KMS key when alias does not exist', async () => {
+  describe('createControlTowerKeys', () => {
+    test('should create new KMS keys when aliases do not exist', async () => {
       // Setup
       const { paginateListAliases } = await import('@aws-sdk/client-kms');
       (paginateListAliases as vi.Mock).mockImplementation(() => ({
@@ -79,7 +79,7 @@ describe('KmsKey', () => {
       });
 
       // Execute
-      const result = await KmsKey.createControlTowerKey(
+      const result = await KmsKey.createControlTowerKeys(
         MOCK_CONSTANTS.partition,
         MOCK_CONSTANTS.accountId,
         MOCK_CONSTANTS.region,
@@ -87,13 +87,14 @@ describe('KmsKey', () => {
       );
 
       // Verify
-      expect(result).toBe(MOCK_CONSTANTS.createKeyResponse.KeyMetadata.Arn);
+      expect(result.centralizedLoggingKeyArn).toBe(MOCK_CONSTANTS.createKeyResponse.KeyMetadata.Arn);
+      expect(result.configLoggingKeyArn).toBe(MOCK_CONSTANTS.createKeyResponse.KeyMetadata.Arn);
       expect(mockKmsClient.send).toHaveBeenCalledWith(expect.any(CreateKeyCommand));
       expect(mockKmsClient.send).toHaveBeenCalledWith(expect.any(PutKeyPolicyCommand));
       expect(mockKmsClient.send).toHaveBeenCalledWith(expect.any(CreateAliasCommand));
     });
 
-    test('should create a new KMS key when alias undefined', async () => {
+    test('should create new KMS keys when aliases undefined', async () => {
       // Setup
       const { paginateListAliases } = await import('@aws-sdk/client-kms');
       (paginateListAliases as vi.Mock).mockImplementation(() => ({
@@ -118,7 +119,7 @@ describe('KmsKey', () => {
       });
 
       // Execute
-      const result = await KmsKey.createControlTowerKey(
+      const result = await KmsKey.createControlTowerKeys(
         MOCK_CONSTANTS.partition,
         MOCK_CONSTANTS.accountId,
         MOCK_CONSTANTS.region,
@@ -126,7 +127,8 @@ describe('KmsKey', () => {
       );
 
       // Verify
-      expect(result).toBe(MOCK_CONSTANTS.createKeyResponse.KeyMetadata.Arn);
+      expect(result.centralizedLoggingKeyArn).toBe(MOCK_CONSTANTS.createKeyResponse.KeyMetadata.Arn);
+      expect(result.configLoggingKeyArn).toBe(MOCK_CONSTANTS.createKeyResponse.KeyMetadata.Arn);
       expect(mockKmsClient.send).toHaveBeenCalledWith(expect.any(CreateKeyCommand));
       expect(mockKmsClient.send).toHaveBeenCalledWith(expect.any(PutKeyPolicyCommand));
       expect(mockKmsClient.send).toHaveBeenCalledWith(expect.any(CreateAliasCommand));
@@ -143,8 +145,11 @@ describe('KmsKey', () => {
         },
       }));
 
+      // Don't set up mockKmsClient.send to return anything - it shouldn't be called
+      mockKmsClient.send.mockRejectedValue(MOCK_CONSTANTS.unknownError);
+
       await expect(
-        KmsKey.createControlTowerKey(
+        KmsKey.createControlTowerKeys(
           MOCK_CONSTANTS.partition,
           MOCK_CONSTANTS.accountId,
           MOCK_CONSTANTS.region,
@@ -181,7 +186,7 @@ describe('KmsKey', () => {
       });
 
       // Execute
-      const result = await KmsKey.createControlTowerKey(
+      const result = await KmsKey.createControlTowerKeys(
         MOCK_CONSTANTS.partition,
         MOCK_CONSTANTS.accountId,
         MOCK_CONSTANTS.region,
@@ -189,7 +194,8 @@ describe('KmsKey', () => {
       );
 
       // Verify
-      expect(result).toBe(MOCK_CONSTANTS.createKeyResponse.KeyMetadata.Arn);
+      expect(result.centralizedLoggingKeyArn).toBe(MOCK_CONSTANTS.createKeyResponse.KeyMetadata.Arn);
+      expect(result.configLoggingKeyArn).toBe(MOCK_CONSTANTS.createKeyResponse.KeyMetadata.Arn);
       expect(mockKmsClient.send).toHaveBeenCalledWith(expect.any(CreateKeyCommand));
       expect(mockKmsClient.send).toHaveBeenCalledWith(expect.any(PutKeyPolicyCommand));
       expect(mockKmsClient.send).toHaveBeenCalledWith(expect.any(CreateAliasCommand));

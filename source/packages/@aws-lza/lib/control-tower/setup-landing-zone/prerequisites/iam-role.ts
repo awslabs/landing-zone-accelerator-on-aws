@@ -162,10 +162,9 @@ export abstract class IamRole {
         await IamRole.createRole(client, roleName, 'cloudtrail.amazonaws.com');
         await throttlingBackOff(() =>
           client.send(
-            new PutRolePolicyCommand({
+            new AttachRolePolicyCommand({
               RoleName: roleName,
-              PolicyName: 'AWSControlTowerCloudTrailRolePolicy',
-              PolicyDocument: `{"Version": "2012-10-17","Statement": [{"Action": "logs:CreateLogStream","Resource": "arn:${partition}:logs:*:*:log-group:aws-controltower/CloudTrailLogs:*","Effect": "Allow"},{"Action": "logs:PutLogEvents","Resource": "arn:${partition}:logs:*:*:log-group:aws-controltower/CloudTrailLogs:*","Effect": "Allow"}]}`,
+              PolicyArn: `arn:${partition}:iam::aws:policy/service-role/AWSControlTowerCloudTrailRolePolicy`,
             }),
           ),
         );

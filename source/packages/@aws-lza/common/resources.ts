@@ -168,6 +168,28 @@ export interface IModuleDefaultParameter {
 }
 
 /**
+ * AWS Control Tower Landing Zone Logging configuration type.
+ */
+export type ControlTowerLoggingConfigurationType = {
+  /**
+   * AWS Control Tower Landing Zone hub account id
+   */
+  accountId?: string;
+  /**
+   * AWS Control Tower Landing Zone logging bucket retention in days
+   */
+  loggingBucketRetentionDays?: number;
+  /**
+   * AWS Control Tower Landing Zone access logging bucket retention in days
+   */
+  accessLoggingBucketRetentionDays?: number;
+  /**
+   * AWS KMS CMK arn to encrypt AWS Control Tower Landing Zone bucket
+   */
+  kmsKeyArn?: string;
+};
+
+/**
  * AWS Control Tower Landing Zone details type.
  */
 export type ControlTowerLandingZoneDetailsType = {
@@ -220,17 +242,13 @@ export type ControlTowerLandingZoneDetailsType = {
    */
   enableIdentityCenterAccess?: boolean;
   /**
-   * AWS Control Tower Landing Zone central logging bucket retention in days
+   * Config hub configuration
    */
-  loggingBucketRetentionDays?: number;
+  configHubConfig?: ControlTowerLoggingConfigurationType;
   /**
-   * AWS Control Tower Landing Zone access logging bucket retention in days
+   * Centralized logging configuration
    */
-  accessLoggingBucketRetentionDays?: number;
-  /**
-   * AWS KMS CMK arn to encrypt AWS Control Tower Landing Zone resources
-   */
-  kmsKeyArn?: string;
+  centralizedLoggingConfig?: ControlTowerLoggingConfigurationType;
   /**
    * The manifest document for the AWS Control Tower Landing Zone
    */

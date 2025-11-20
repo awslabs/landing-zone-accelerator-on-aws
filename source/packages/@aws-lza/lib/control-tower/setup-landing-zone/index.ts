@@ -28,6 +28,7 @@ import { Account } from '@aws-sdk/client-organizations';
 import {
   ControlTowerLandingZoneConfigType,
   ControlTowerLandingZoneDetailsType,
+  IControlTowerKmsKeys,
   LandingZoneUpdateOrResetRequiredType,
 } from './resources';
 
@@ -169,11 +170,7 @@ export class SetupLandingZoneModule implements ISetupLandingZoneModule {
         landingZoneIdentifier,
       );
     } else {
-      return await LandingZoneOperation.createLandingZone(
-        client,
-        landingZoneConfiguration,
-        preRequisitesResources!.kmsKeyArn,
-      );
+      return await LandingZoneOperation.createLandingZone(client, landingZoneConfiguration, preRequisitesResources!);
     }
   }
 
@@ -333,15 +330,15 @@ abstract class LandingZoneOperation {
    * Function to deploy the landing zone
    * @param client {@link ControlTowerClient}
    * @param landingZoneConfiguration {@link ControlTowerLandingZoneConfigType}
-   * @param kmsKeyArn string
+   * @param kmsKeyArns string
    * @returns operationIdentifier string
    */
   public static async createLandingZone(
     client: ControlTowerClient,
     landingZoneConfiguration: ControlTowerLandingZoneConfigType,
-    kmsKeyArn: string,
+    kmsKeyArns: IControlTowerKmsKeys,
   ): Promise<string> {
-    const manifestDocument = makeManifestDocument(landingZoneConfiguration, 'CREATE', 'Security', kmsKeyArn);
+    const manifestDocument = makeManifestDocument(landingZoneConfiguration, 'CREATE', kmsKeyArns);
     const param: CreateLandingZoneCommandInput = {
       version: landingZoneConfiguration.version,
       manifest: manifestDocument,
@@ -430,9 +427,13 @@ abstract class LandingZoneOperation {
     const manifestDocument = makeManifestDocument(
       landingZoneConfiguration,
       'UPDATE',
-      landingZoneDetails.securityOuName,
-      landingZoneDetails.kmsKeyArn,
-      landingZoneDetails.sandboxOuName,
+      {
+        centralizedLoggingKeyArn: landingZoneDetails.centralizedLoggingConfig?.kmsKeyArn,
+        configLoggingKeyArn:
+          (landingZoneDetails.configHubConfig?.kmsKeyArn ?? landingZoneDetails.version?.startsWith('3'))
+            ? landingZoneDetails.centralizedLoggingConfig?.kmsKeyArn
+            : undefined,
+      },
       landingZoneDetails.manifest,
     );
 
@@ -551,6 +552,7 @@ abstract class ControlTowerPreRequisites {
    * - Create AWS Control Tower Roles
    * - Create AWS KMS CMK to encrypt AWS Control Tower resources
    * - Create the shared accounts (LogArchive and Audit)
+   * - Create Security OU and move shared accounts (for Control Tower 4.0)
    *
    * @param props {@link ISetupLandingZoneHandlerParameter}
    * @param globalRegion string
@@ -563,7 +565,7 @@ abstract class ControlTowerPreRequisites {
     globalRegion: string,
     useExistingRole: boolean,
     landingZoneIdentifier?: string,
-  ): Promise<{ kmsKeyArn: string } | undefined> {
+  ): Promise<IControlTowerKmsKeys | undefined> {
     if (!landingZoneIdentifier) {
       await Organization.validate(
         globalRegion,
@@ -604,16 +606,32 @@ abstract class ControlTowerPreRequisites {
           props.solutionId,
           props.credentials,
         );
+
+        const securityOuId = await Organization.createOu(
+          globalRegion,
+          'Security',
+          'Root',
+          props.credentials,
+          props.solutionId,
+        );
+
+        await Organization.moveAccounts(
+          globalRegion,
+          securityOuId,
+          [props.configuration.sharedAccounts.logging.email, props.configuration.sharedAccounts.audit.email],
+          props.credentials,
+          props.solutionId,
+        );
       }
 
-      const kmsKeyArn = await KmsKey.createControlTowerKey(
+      const kmsKeyArns = await KmsKey.createControlTowerKeys(
         props.partition,
         managementAccountId,
         props.region,
         props.solutionId,
         props.credentials,
       );
-      return { kmsKeyArn };
+      return kmsKeyArns;
     }
 
     return undefined;
