@@ -191,17 +191,17 @@ export async function getLandingZoneDetails(
             break;
           case 'centralizedLogging':
             landingZoneDetails.centralizedLoggingConfig = {
-              loggingBucketRetentionDays: value['configurations']?.['loggingBucket']?.['retentionDays'],
-              accessLoggingBucketRetentionDays: value['configurations']?.['accessLoggingBucket']?.['retentionDays'],
-              kmsKeyArn: value['configurations']?.['kmsKeyArn'],
+              loggingBucketRetentionDays: value['configurations']['loggingBucket']['retentionDays'],
+              accessLoggingBucketRetentionDays: value['configurations']['accessLoggingBucket']['retentionDays'],
+              kmsKeyArn: value['configurations']['kmsKeyArn'],
               accountId: value['accountId'],
             };
             break;
           case 'config':
             landingZoneDetails.configHubConfig = {
-              loggingBucketRetentionDays: value['configurations']?.['loggingBucket']?.['retentionDays'],
-              accessLoggingBucketRetentionDays: value['configurations']?.['accessLoggingBucket']?.['retentionDays'],
-              kmsKeyArn: value['configurations']?.['kmsKeyArn'],
+              loggingBucketRetentionDays: value['configurations']['loggingBucket']['retentionDays'],
+              accessLoggingBucketRetentionDays: value['configurations']['accessLoggingBucket']['retentionDays'],
+              kmsKeyArn: value['configurations']['kmsKeyArn'],
               accountId: value['accountId'],
             };
             break;
