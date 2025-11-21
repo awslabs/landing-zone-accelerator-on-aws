@@ -5,48 +5,66 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [1.14.0] - 2025-10-27
+## [1.14.0] - 2025-11-24
 
 ### Added
+
 - feat(cloudwatch): add config for cloud watch metric filter default value
 - feat(config): dynamic aws regions lookup
 - feat(config): support include in yaml files
 - feat(control-tower): add additional status logging
 - feat(control-tower): add support of control tower 4.0
 - feat(networking): add vpn connection ipv6 support
-- feat(module): add control tower logging 
+- feat(networking): enable ip targets
+- feat(organizations): override default allowed scp attachment values
+- feat(securityhub): add support for CIS AWS Foundations Benchmark v5.0.0
+- feat(securityhub): add support for any future standard supported by securityhub
+- feat(ssm): implement ssm document block public access at account level
+- feat(toolkit): enable forceBootstrap with toolkit
+- feat(uninstaller): add support for local config directories when uninstalling LZA
 
 ### Fixed
 
+- fix(account): improve error handling for org account creation
+- fix(asea): avoid re-processing custom resources deleted from ASEA stacks
 - fix(asea): fix conditional to delete custom resources with old naming convention
 - fix(cdk): fix external pipeline diagnostics
 - fix(cdk): updated cdk from 2.158 to 2.1027, disabled telemetry by default
 - fix(cdk): update customizations to use cdk dependency management
 - fix(config): fix issue where accountIds were not be added to list, update pitr config for dynamodb tables
+- fix(config): improve error logging in validation
 - fix(control-tower): landing zone operation fails on cmk permission
 - fix(control-tower): ou registration fails in CT with BadRequestException: Invalid request body
 - fix(control-tower): update operation to maintain existing unchanged manifests properties
+- fix(control-tower): upgrade check fails for missing configHubConfig object in manifest
+- fix(dependencies): update glob package version
 - fix(identity-center): removed deprecated filter option
 - fix(logging): ignore failed CreateLogGroup event
+- fix(logging): skipped tags for AWS::Lambda::EventSourceMapping resource in govcloud
 - fix(metadata): add s3 read permissions for config artifact bucket to accelerator metadata lambda service role
 - fix(metadata): changed ou lookups to only latest commit
 - fix(modules): fixed external credentials for account alias module
+- fix(modules): enable each module execution skip by environment variable
 - fix(networking): delete default vpc in accounts without a vpc
 - fix(networking): fix logic for nlb ip address role not provisioning
+- fix(networking): fix vpc stack dependencies
+- fix(networking): update lookup for tgw vpc attachment in govcloud
+- fix(organizations): updated detachment logic to target policy based on the event only
 - fix(pipeline): replace cdk s3 deploy with s3 api for s3 based config
 - fix(pipeline): removed cdk bucket deploy for config that has s3 as source
+- fix(prerequisites): updated service quota logic to continue if it encounters an error
 - fix(s3): add s3ResourcePolicyAttachments for access log bucket
+- fix(ssm): block public document sharing module fails to assume role in external pipeline account
+- fix(ssm): preserve ssm runAsEnabled setting and runAsDefaultUser
 - fix(tags): skip adding tags for events rule
 - fix(utility): fix aws arn validation to support partitions other than commercial
 - fix(validation): allow top-level domains in route53 resolver rules
 - fix(validation): updated regex validation for Route53 Resolver Rule DNS to pass TLD
 - fix: make email comparison case-insensitive in account validation
-- fix(ssm): block public document sharing module fails to assume role in external pipeline account
 
 ### Changed
-- feat(securityhub): add suppport for any future standard supported by securityhub
-- chore(cloudtrail): add documentation for cloudtrail data events behavior
 
+- chore(cloudtrail): add documentation for cloudtrail data events behavior
 - chore(cdk): upgrade aws-cdk-lib and migrate stack management to toolkit-lib
 - chore(package): removes dependency of fs package
 - chore(package): upgrade lerna, nx, axios, eslint*, prettier packages
