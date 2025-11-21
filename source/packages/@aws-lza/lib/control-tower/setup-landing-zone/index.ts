@@ -22,6 +22,7 @@ import {
   LandingZoneStatus,
   ResetLandingZoneCommand,
   UpdateLandingZoneCommand,
+  ValidationException,
 } from '@aws-sdk/client-controltower';
 import { Account } from '@aws-sdk/client-organizations';
 
@@ -294,24 +295,59 @@ export class SetupLandingZoneModule implements ISetupLandingZoneModule {
       logger.info(`The Landing Zone will be ${landingZoneUpdateOrResetStatus.resetRequired ? 'reset' : 'updated'}`);
       logger.info(`The reason(s) for the change is/are: ${landingZoneUpdateOrResetStatus.reason}`);
     }
-    if (landingZoneUpdateOrResetStatus.updateRequired) {
-      return await LandingZoneOperation.updateLandingZone(
-        client,
-        landingZoneUpdateOrResetStatus.targetVersion,
-        landingZoneUpdateOrResetStatus.reason,
-        landingZoneConfiguration,
-        landingZoneDetails,
-        defaultProps.moduleName,
-      );
-    }
+    try {
+      if (landingZoneUpdateOrResetStatus.updateRequired) {
+        return await LandingZoneOperation.updateLandingZone(
+          client,
+          landingZoneUpdateOrResetStatus.targetVersion,
+          landingZoneUpdateOrResetStatus.reason,
+          landingZoneConfiguration,
+          landingZoneDetails,
+          defaultProps.moduleName,
+        );
+      }
 
-    if (landingZoneUpdateOrResetStatus.resetRequired) {
-      return await LandingZoneOperation.resetLandingZone(
-        client,
-        landingZoneDetails.landingZoneIdentifier,
-        landingZoneUpdateOrResetStatus.reason,
-        defaultProps.moduleName,
-      );
+      if (landingZoneUpdateOrResetStatus.resetRequired) {
+        return await LandingZoneOperation.resetLandingZone(
+          client,
+          landingZoneDetails.landingZoneIdentifier,
+          landingZoneUpdateOrResetStatus.reason,
+          defaultProps.moduleName,
+        );
+      }
+    } catch (error: unknown) {
+      if (error instanceof ValidationException) {
+        if (
+          error.message.includes(
+            'AWS Control Tower cannot perform this operation because the IAM role AWSControlTowerCloudTrailRole does not exist or have sufficient permissions.',
+          )
+        ) {
+          logger.warn('AWSControlTowerCloudTrailRole role policy update needed, updating');
+          await IamRole.updateCloudTrailRolePolicy(props.partition, props.region, props.solutionId, props.credentials);
+          await delay(1);
+          logger.info('AWSControlTowerCloudTrailRole role policy updated, retrying landing zone update');
+          if (landingZoneUpdateOrResetStatus.updateRequired) {
+            return await LandingZoneOperation.updateLandingZone(
+              client,
+              landingZoneUpdateOrResetStatus.targetVersion,
+              landingZoneUpdateOrResetStatus.reason,
+              landingZoneConfiguration,
+              landingZoneDetails,
+              defaultProps.moduleName,
+            );
+          }
+
+          if (landingZoneUpdateOrResetStatus.resetRequired) {
+            return await LandingZoneOperation.resetLandingZone(
+              client,
+              landingZoneDetails.landingZoneIdentifier,
+              landingZoneUpdateOrResetStatus.reason,
+              defaultProps.moduleName,
+            );
+          }
+        }
+      }
+      throw error;
     }
 
     // When no changes required

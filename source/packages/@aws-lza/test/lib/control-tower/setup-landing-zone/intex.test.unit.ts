@@ -35,6 +35,7 @@ vi.mock('@aws-sdk/client-controltower', () => {
     ControlTowerClient: vi.fn(),
     CreateLandingZoneCommand: vi.fn(),
     GetLandingZoneOperationCommand: vi.fn(),
+    ValidationException: vi.fn(),
     LandingZoneOperationStatus: {
       FAILED: 'FAILED',
       IN_PROGRESS: 'IN_PROGRESS',
