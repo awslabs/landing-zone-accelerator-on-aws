@@ -191,21 +191,24 @@ export function landingZoneUpdateOrResetRequired(
     );
   }
 
-  if (
-    landingZoneDetails.configHubConfig?.accessLoggingBucketRetentionDays !==
-    landingZoneConfiguration.accessLoggingBucketRetentionDays
-  ) {
-    reasons.push(
-      `Changes made in Config AccessLoggingBucketRetentionDays from ${landingZoneDetails.configHubConfig?.accessLoggingBucketRetentionDays} to ${landingZoneConfiguration.accessLoggingBucketRetentionDays}`,
-    );
-  }
-  if (
-    landingZoneDetails.configHubConfig?.loggingBucketRetentionDays !==
-    landingZoneConfiguration.loggingBucketRetentionDays
-  ) {
-    reasons.push(
-      `Changes made in Config LoggingBucketRetentionDays from ${landingZoneDetails.configHubConfig?.loggingBucketRetentionDays} to ${landingZoneConfiguration.loggingBucketRetentionDays}`,
-    );
+  // During upgrade from 3.3 to 4.0 configHubConfig will be undefined
+  if (landingZoneDetails.configHubConfig) {
+    if (
+      landingZoneDetails.configHubConfig.accessLoggingBucketRetentionDays !==
+      landingZoneConfiguration.accessLoggingBucketRetentionDays
+    ) {
+      reasons.push(
+        `Changes made in Config AccessLoggingBucketRetentionDays from ${landingZoneDetails.configHubConfig.accessLoggingBucketRetentionDays} to ${landingZoneConfiguration.accessLoggingBucketRetentionDays}`,
+      );
+    }
+    if (
+      landingZoneDetails.configHubConfig.loggingBucketRetentionDays !==
+      landingZoneConfiguration.loggingBucketRetentionDays
+    ) {
+      reasons.push(
+        `Changes made in Config LoggingBucketRetentionDays from ${landingZoneDetails.configHubConfig.loggingBucketRetentionDays} to ${landingZoneConfiguration.loggingBucketRetentionDays}`,
+      );
+    }
   }
 
   if (landingZoneDetails.enableIdentityCenterAccess !== landingZoneConfiguration.enableIdentityCenterAccess) {
