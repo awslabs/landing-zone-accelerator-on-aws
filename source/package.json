@@ -96,7 +96,7 @@
     "lerna": "9.0.1",
     "lint-staged": "15.2.10",
     "prettier": "3.6.2",
-    "vitest": "4.0.12",
+    "vitest": "3.2.4",
     "ts-node": "10.9.1",
     "typedoc": "0.28.13",
     "typescript": "5.8.3",
