@@ -1086,7 +1086,7 @@ export function createNetworkVpcStacks(
     cdk.Aspects.of(vpcStack).add(new PermissionsBoundaryAspect(accountId, context.partition));
 
     // V2 stacks
-    const v2DependencyStacks: cdk.Stack[] = [];
+    const v2DependencyStacks: cdk.Stack[] = [vpcStack];
     if (props.globalConfig.useV2Stacks) {
       v2DependencyStacks.push(
         ...getV2NetworkVpcDependencyStacks({
@@ -1102,8 +1102,6 @@ export function createNetworkVpcStacks(
           stage: context.stage,
         }),
       );
-    } else {
-      v2DependencyStacks.push(vpcStack);
     }
 
     const endpointsStack = new NetworkVpcEndpointsStack(
@@ -1122,7 +1120,6 @@ export function createNetworkVpcStacks(
     for (const v2DependencyStack of v2DependencyStacks) {
       endpointsStack.addDependency(v2DependencyStack);
     }
-
     cdk.Aspects.of(endpointsStack).add(new AwsSolutionsChecks());
     cdk.Aspects.of(endpointsStack).add(new PermissionsBoundaryAspect(accountId, context.partition));
     const dnsStack = new NetworkVpcDnsStack(app, `${dnsStackName}`, {
@@ -1133,6 +1130,10 @@ export function createNetworkVpcStacks(
       ...props,
     });
     addAcceleratorTags(dnsStack, context.partition, props.globalConfig, props.prefixes.accelerator);
+    for (const v2DependencyStack of v2DependencyStacks) {
+      dnsStack.addDependency(v2DependencyStack);
+    }
+
     dnsStack.addDependency(endpointsStack);
     cdk.Aspects.of(dnsStack).add(new AwsSolutionsChecks());
     cdk.Aspects.of(dnsStack).add(new PermissionsBoundaryAspect(accountId, context.partition));
