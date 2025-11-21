@@ -225,6 +225,12 @@ export function landingZoneUpdateOrResetRequired(
     );
   }
 
+  if (landingZoneDetails.version !== landingZoneConfiguration.version) {
+    reasons.push(
+      `Changes made in control tower version from ${landingZoneDetails.version} to ${landingZoneConfiguration.version}`,
+    );
+  }
+
   if (reasons.length > 0) {
     validateLandingZoneVersion(
       landingZoneConfiguration.version,
