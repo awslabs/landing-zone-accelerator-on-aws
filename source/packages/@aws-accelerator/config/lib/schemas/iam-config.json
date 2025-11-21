@@ -13,14 +13,14 @@
     },
     "IActiveDirectoryConfigurationInstanceConfig": {
       "additionalProperties": false,
-      "description": "Active directory configuration instance configuration. The machine will be used to configure and manage active directory configuration.\nAccelerator can create users and groups when the following configuration is provided",
+      "description": "Defines the configuration for an Amazon EC2 Windows instance that will automatically configure\nand manage the AWS Managed Microsoft Active Directory. This instance acts as a domain-joined\nmanagement server that runs PowerShell scripts to set up users, groups, organizational units,\npassword policies, and other Active Directory configurations.\n\nThe configuration instance provides automated setup of the directory structure, eliminating\nthe need for manual Active Directory administration. It can create standardized user accounts,\nsecurity groups, and organizational structures that integrate with AWS services like Identity\nCenter and AWS Directory Service connectors.\n\nThis approach ensures consistent directory configuration across deployments and provides\ninfrastructure-as-code management of Active Directory resources.",
       "properties": {
         "adConnectorGroup": {
           "$ref": "#/definitions/NonEmptyString",
-          "description": "Active directory connector group"
+          "description": "The name of the Active Directory group that will be used for AWS Directory Service connector permissions."
         },
         "adGroups": {
-          "description": "Active directory group list",
+          "description": "List of Active Directory security groups to create in the managed directory.",
           "items": {
             "$ref": "#/definitions/NonEmptyString"
           },
@@ -28,17 +28,17 @@
         },
         "adPasswordPolicy": {
           "$ref": "#/definitions/IActiveDirectoryPasswordPolicyConfig",
-          "description": "Active directory user password policy"
+          "description": "Password policy configuration for the managed Active Directory domain."
         },
         "adPerAccountGroups": {
-          "description": "Active directory per account group list",
+          "description": "List of per-account Active Directory groups to create.",
           "items": {
             "$ref": "#/definitions/NonEmptyString"
           },
           "type": "array"
         },
         "adUsers": {
-          "description": "Active directory user list",
+          "description": "List of Active Directory users to create in the managed directory.",
           "items": {
             "$ref": "#/definitions/IActiveDirectoryUserConfig"
           },
@@ -46,23 +46,23 @@
         },
         "enableTerminationProtection": {
           "default": false,
-          "description": "Flag for Ec2 instance enable api termination protection",
+          "description": "Whether to enable termination protection for the configuration instance.",
           "type": "boolean"
         },
         "imagePath": {
           "$ref": "#/definitions/NonEmptyString",
-          "description": "Ec2 image path"
+          "description": "The path to the Amazon Machine Image (AMI) for the Windows instance."
         },
         "instanceRole": {
           "$ref": "#/definitions/NonEmptyString",
-          "description": "Ec2 instance role name"
+          "description": "The name of the IAM role to attach to the configuration instance."
         },
         "instanceType": {
           "$ref": "#/definitions/NonEmptyString",
-          "description": "Ec2 instance type"
+          "description": "The EC2 instance type for the Active Directory configuration instance."
         },
         "securityGroupInboundSources": {
-          "description": "Ec2 security group inbound sources",
+          "description": "List of CIDR blocks or IP addresses that are allowed inbound access to the configuration instance.",
           "items": {
             "$ref": "#/definitions/NonEmptyString"
           },
@@ -70,10 +70,10 @@
         },
         "subnetName": {
           "$ref": "#/definitions/NonEmptyString",
-          "description": "Ec2 instance subnet name"
+          "description": "The logical name of the subnet where the configuration instance will be deployed."
         },
         "userDataScripts": {
-          "description": "Instance user data script configuration",
+          "description": "List of PowerShell scripts that will be executed on the configuration instance to set up the Active Directory environment.",
           "items": {
             "$ref": "#/definitions/IActiveDirectoryConfigurationInstanceUserDataConfig"
           },
@@ -81,7 +81,7 @@
         },
         "vpcName": {
           "$ref": "#/definitions/NonEmptyString",
-          "description": "Ec2 instance vpc name"
+          "description": "The logical name of the VPC where the configuration instance will be deployed."
         }
       },
       "required": [
@@ -102,15 +102,15 @@
     },
     "IActiveDirectoryConfigurationInstanceUserDataConfig": {
       "additionalProperties": false,
-      "description": "User data scripts to create users, groups, password policy.\n\nAccelerator can provision users, groups when following user data scripts are provided, these scripts are part of Accelerator sample configuration",
+      "description": "Defines a PowerShell script that will be executed on the Active Directory configuration instance\nduring startup. These scripts automate the setup and configuration of the AWS Managed Microsoft\nActive Directory, including tasks like domain joining, user creation, group setup, and policy\nconfiguration.\n\nThe scripts are executed in the order they are specified in the userDataScripts array. The\nLanding Zone Accelerator provides sample scripts for common Active Directory setup tasks,\nbut you can customize these or provide your own scripts to meet specific requirements.\n\nAll scripts must be PowerShell scripts (.ps1 or .psm1 files) and must be present in your\nconfiguration repository at the specified paths.",
       "properties": {
         "scriptFilePath": {
           "$ref": "#/definitions/NonEmptyString",
-          "description": "Script file path"
+          "description": "The file path to the PowerShell script in your configuration repository."
         },
         "scriptName": {
           "$ref": "#/definitions/NonEmptyString",
-          "description": "Friendly name for the user data script"
+          "description": "A descriptive name for the PowerShell script that will be executed."
         }
       },
       "required": [
@@ -121,42 +121,51 @@
     },
     "IActiveDirectoryPasswordPolicyConfig": {
       "additionalProperties": false,
-      "description": "Managed active directory user password policy configuration",
+      "description": "Defines the password policy configuration for the AWS Managed Microsoft Active Directory domain.\nPassword policies enforce security requirements for user passwords, including complexity requirements,\nexpiration settings, and account lockout policies to protect against brute force attacks.\n\nThese settings apply to all user accounts in the domain and help ensure compliance with\norganizational security standards and regulatory requirements. The policy is enforced by\nthe domain controllers and affects both interactive logons and programmatic authentication.",
       "properties": {
         "complexity": {
-          "description": "Whether password complexity requirements are enforced",
+          "default": true,
+          "description": "Whether password complexity requirements are enforced.",
           "type": "boolean"
         },
         "failedAttempts": {
-          "description": "Number of failed login attempts before account lockout",
+          "default": 6,
+          "description": "Number of failed login attempts before the account is locked out.",
           "type": "number"
         },
         "history": {
-          "description": "Number of previous passwords to remember",
+          "default": 24,
+          "description": "Number of previous passwords to remember and prevent reuse.",
           "type": "number"
         },
         "lockoutAttemptsReset": {
-          "description": "Time in minutes after which failed login attempt counter is reset",
+          "default": 30,
+          "description": "Time in minutes after which the failed login attempt counter is reset.",
           "type": "number"
         },
         "lockoutDuration": {
-          "description": "Account lockout duration in minutes",
+          "default": 30,
+          "description": "Account lockout duration in minutes.",
           "type": "number"
         },
         "maximumAge": {
-          "description": "Maximum password age in days",
+          "default": 90,
+          "description": "Maximum password age in days before users must change their password.",
           "type": "number"
         },
         "minimumAge": {
-          "description": "Minimum password age in days",
+          "default": 1,
+          "description": "Minimum password age in days before users can change their password again.",
           "type": "number"
         },
         "minimumLength": {
-          "description": "Minimum password length in characters",
+          "default": 14,
+          "description": "Minimum password length in characters.",
           "type": "number"
         },
         "reversible": {
-          "description": "Whether passwords can be stored using reversible encryption",
+          "default": false,
+          "description": "Whether passwords can be stored using reversible encryption.",
           "type": "boolean"
         }
       },
@@ -175,14 +184,14 @@
     },
     "IActiveDirectoryUserConfig": {
       "additionalProperties": false,
-      "description": "Active directory user configuration",
+      "description": "Defines a user account to be created in the AWS Managed Microsoft Active Directory. These users\ncan be used for human authentication, service accounts for AWS integrations, or connector accounts\nfor AWS services that need to authenticate to the directory.\n\nUsers created through this configuration will be standard Active Directory user accounts with\nthe specified group memberships and email attributes. They can be used for authentication to\nAWS services through Identity Center.",
       "properties": {
         "email": {
           "$ref": "#/definitions/NonEmptyString",
-          "description": "Active directory user email"
+          "description": "The email address for the Active Directory user account."
         },
         "groups": {
-          "description": "Active directory user group names",
+          "description": "List of Active Directory groups that this user should be added to.",
           "items": {
             "$ref": "#/definitions/NonEmptyString"
           },
@@ -190,7 +199,7 @@
         },
         "name": {
           "$ref": "#/definitions/NonEmptyString",
-          "description": "Active directory user name"
+          "description": "The username for the Active Directory user account."
         }
       },
       "required": [
@@ -202,15 +211,15 @@
     },
     "IAssumedByConfig": {
       "additionalProperties": false,
-      "description": "AssumedBy configuration\n\nService principal:",
+      "description": "Defines the trust relationship for an IAM role by specifying which principals (entities)\ncan assume the role. The trust relationship is a key component of IAM roles that determines\nwho or what can use the role to access AWS resources.\n\nThis configuration creates the trust policy (assume role policy) that gets attached to the\nIAM role, allowing the specified principals to call the AWS Security Token Service (STS)\nAssumeRole API operation.",
       "properties": {
         "principal": {
           "$ref": "#/definitions/NonEmptyString",
-          "description": "Type of IAM principal type like service, account, principalArn or provider, which can assume this role."
+          "description": "The principal identifier that can assume this role. The format depends on the type specified."
         },
         "type": {
           "$ref": "#/definitions/AssumedByType",
-          "description": "IAM principal of either service, account, principalArn or provider type.\n\nIAM principal of sns service type (i.e. new ServicePrincipal('sns.amazonaws.com')), which can assume this role."
+          "description": "The type of principal that can assume this role."
         }
       },
       "required": [
@@ -220,11 +229,11 @@
     },
     "ICustomerManagedPolicyReferenceConfig": {
       "additionalProperties": false,
-      "description": "Customer Managed Policy Reference Config",
+      "description": "Defines a reference to a customer managed IAM policy to use as a permissions boundary for\nIdentity Center permission sets. This configuration specifies the name and path of an existing\ncustomer managed policy that will limit the maximum permissions granted by the permission set.",
       "properties": {
         "name": {
           "$ref": "#/definitions/NonEmptyString",
-          "description": "Identity Center PermissionSet permissions boundary customer managed policy name."
+          "description": "The name of the customer managed IAM policy to use as a permissions boundary."
         },
         "path": {
           "$ref": "#/definitions/NonEmptyString",
@@ -269,15 +278,15 @@
     },
     "IGroupConfig": {
       "additionalProperties": false,
-      "description": "IAM group configuration",
+      "description": "Defines an AWS IAM group configuration. IAM groups are collections of IAM users that make it\neasier to manage permissions for multiple users. Instead of attaching policies to individual\nusers, you can attach policies to groups and then add users to the appropriate groups.\n\nGroups provide a way to organize users and apply common permissions. When you add a user to\na group, the user inherits all the permissions assigned to that group through attached policies.\nUsers can belong to multiple groups and will have the combined permissions of all their groups.",
       "properties": {
         "name": {
           "$ref": "#/definitions/NonEmptyString",
-          "description": "A name for the IAM group. For valid values, see the GroupName parameter for the CreateGroup action in the IAM API Reference. If you don't specify a name, AWS CloudFormation generates a unique physical ID and uses that ID for the group name.\n\nIf you specify a name, you must specify the CAPABILITY_NAMED_IAM value to acknowledge your template's capabilities. For more information, see Acknowledging IAM Resources in AWS CloudFormation Templates."
+          "description": "The logical name for this IAM group. This name will be used as the group name in AWS IAM and can be referenced when assigning users to groups."
         },
         "policies": {
           "$ref": "#/definitions/IPoliciesConfig",
-          "description": "List of policy objects"
+          "description": "IAM policies to attach to this group, defining the permissions that group members will inherit."
         }
       },
       "required": [
@@ -287,14 +296,14 @@
     },
     "IGroupSetConfig": {
       "additionalProperties": false,
-      "description": "IAM group set configuration",
+      "description": "Defines a collection of IAM groups to be deployed to specific AWS accounts or organizational units.\nGroup sets provide a way to consistently deploy the same set of groups with their associated\npolicies across multiple accounts in your AWS organization, ensuring standardized permission\nstructures and access management.\n\nThis is particularly useful for establishing consistent organizational roles (like Administrators,\nDevelopers, ReadOnly users) across all accounts in your organization with the same permissions\nand access patterns.",
       "properties": {
         "deploymentTargets": {
           "$ref": "#/definitions/IDeploymentTargets",
-          "description": "Group set's deployment targets"
+          "description": "Specifies the AWS accounts and/or organizational units where these groups will be created."
         },
         "groups": {
-          "description": "List of IAM group objects",
+          "description": "List of IAM groups to create in the targeted accounts.",
           "items": {
             "$ref": "#/definitions/IGroupConfig"
           },
@@ -309,39 +318,39 @@
     },
     "IIamConfig": {
       "additionalProperties": false,
-      "description": "IAM configuration",
+      "description": "AWS Identity and Access Management (IAM) configuration for the Landing Zone Accelerator.\nThis configuration defines IAM identities (users, groups, roles), policies, and related\nservices like SAML providers, AWS Managed Microsoft AD, and AWS Identity Center.\n\nIAM enables you to manage access to AWS services and resources securely. Using IAM, you can\ncreate and manage AWS users and groups, and use permissions to allow and deny their access\nto AWS resources.",
       "properties": {
         "groupSets": {
-          "description": "Group set configuration",
+          "description": "IAM group sets configuration.",
           "items": {
             "$ref": "#/definitions/IGroupSetConfig"
           },
           "type": "array"
         },
         "homeRegion": {
-          "description": "Accelerator home region name.",
+          "description": "The primary AWS region where global IAM resources will be managed and deployed.",
           "type": "string"
         },
         "identityCenter": {
           "$ref": "#/definitions/IIdentityCenterConfig",
-          "description": "Identity Center configuration"
+          "description": "AWS Identity Center (successor to AWS Single Sign-On) helps you securely create or connect\nyour workforce identities and manage their access centrally across AWS accounts and applications.\nIdentity Center provides a unified administration experience to define, customize, and assign\nfine-grained permissions."
         },
         "managedActiveDirectories": {
-          "description": "Managed active directory configuration",
+          "description": "AWS Managed Microsoft AD creates a fully managed Microsoft Active Directory in the AWS Cloud.\nIt enables you to run directory-aware workloads in AWS, including Microsoft SharePoint,\nMicrosoft SQL Server Always On Availability Groups, and .NET applications.",
           "items": {
             "$ref": "#/definitions/IManagedActiveDirectoryConfig"
           },
           "type": "array"
         },
         "policySets": {
-          "description": "Policy set configuration.\n\nTo configure IAM policy named Default-Boundary-Policy with permission boundary defined in iam-policies/boundary-policy.json file, you need to provide following values for this parameter.",
+          "description": "IAM managed policy sets configuration.",
           "items": {
             "$ref": "#/definitions/IPolicySetConfig"
           },
           "type": "array"
         },
         "providers": {
-          "description": "SAML provider configuration To configure SAML configuration, you need to provide the following values for this parameter. Replace provider name and metadata document file. Document file must be in config repository",
+          "description": "SAML identity provider configuration for federated access to AWS.",
           "items": {
             "$ref": "#/definitions/ISamlProviderConfig"
           },
@@ -355,7 +364,7 @@
           "type": "array"
         },
         "userSets": {
-          "description": "User set configuration",
+          "description": "IAM user sets configuration.",
           "items": {
             "$ref": "#/definitions/IUserSetConfig"
           },
@@ -366,32 +375,32 @@
     },
     "IIdentityCenterAssignmentConfig": {
       "additionalProperties": false,
-      "description": "Identity Center Assignment Configuration",
+      "description": "Defines an Identity Center assignment that grants users or groups access to AWS accounts with\nspecific permissions. Assignments are the mechanism that connects your identity source (users\nand groups) with AWS accounts and the level of access they should have (permission sets).\n\nWhen you create an assignment, Identity Center creates an IAM role in the target AWS account\nbased on the permission set configuration. Users or groups can then assume this role to access\nAWS resources with the permissions defined in the permission set.\n\nAssignments can target specific AWS accounts or entire organizational units, and can be made\nto individual users or groups of users.",
       "properties": {
         "deploymentTargets": {
           "$ref": "#/definitions/IDeploymentTargets",
-          "description": "Identity Center assignment deployment targets"
+          "description": "Specifies the AWS accounts and/or organizational units where this assignment will be created."
         },
         "name": {
           "$ref": "#/definitions/NonEmptyString",
-          "description": "The Name for the Assignment."
+          "description": "The logical name for this assignment configuration."
         },
         "permissionSetName": {
           "$ref": "#/definitions/NonEmptyString",
-          "description": "Permission Set name that will be used for the Assignment."
+          "description": "The name of the permission set to assign to the principals."
         },
         "principalId": {
           "$ref": "#/definitions/NonEmptyString",
-          "deprecated": "This is a temporary property and it has been deprecated.\nPlease use principals property to specify principal name for assignment.",
-          "description": "PrincipalId that will be used for the Assignment"
+          "deprecated": "This property is deprecated and will be removed in a future version. Use the `principals`\nproperty instead to specify principal names, which provides better maintainability and\nreadability.",
+          "description": "The unique identifier of the principal (user or group) to grant access to."
         },
         "principalType": {
           "$ref": "#/definitions/PrincipalType",
-          "deprecated": "This is a temporary property and it has been deprecated.\nPlease use principals property to specify principal type for assignment.",
-          "description": "PrincipalType that will be used for the Assignment"
+          "deprecated": "This property is deprecated and will be removed in a future version. Use the `principals`\nproperty instead to specify both principal type and name in a more maintainable format.",
+          "description": "The type of principal being granted access."
         },
         "principals": {
-          "description": "Assignment principal configuration list.",
+          "description": "List of principals (users or groups) to grant access to the specified AWS accounts.",
           "items": {
             "$ref": "#/definitions/IIdentityCenterAssignmentPrincipalConfig"
           },
@@ -399,23 +408,23 @@
         }
       },
       "required": [
+        "name",
         "permissionSetName",
-        "deploymentTargets",
-        "name"
+        "deploymentTargets"
       ],
       "type": "object"
     },
     "IIdentityCenterAssignmentPrincipalConfig": {
       "additionalProperties": false,
-      "description": "Identity Center Permission Set Assignment Principal Configuration",
+      "description": "Defines a principal (user or group) for Identity Center permission set assignments. Principals\nare the identities from your identity source that will be granted access to AWS accounts through\nIdentity Center assignments.\n\nThis configuration allows you to specify principals by their human-readable names rather than\ninternal IDs, making the configuration more maintainable and easier to understand. The accelerator\nwill resolve these names to the appropriate internal identifiers during deployment.",
       "properties": {
         "name": {
           "$ref": "#/definitions/NonEmptyString",
-          "description": "Name of the principal"
+          "description": "The name of the principal from your identity source."
         },
         "type": {
           "$ref": "#/definitions/NonEmptyString",
-          "description": "Assignment principal type"
+          "description": "The type of principal being specified."
         }
       },
       "required": [
@@ -426,21 +435,21 @@
     },
     "IIdentityCenterConfig": {
       "additionalProperties": false,
-      "description": "Identity Center Configuration",
+      "description": "Defines AWS Identity Center (formerly known as AWS Single Sign-On (SSO) Identity Center) configuration\nfor centralized access management across your AWS organization.\nIdentity Center enables you to create or connect your workforce identities and\ncentrally manage their access to multiple AWS accounts and applications.\n\nIdentity Center provides a single place where you can create users and groups, or connect to\nyour existing identity source (such as Microsoft Active Directory), and assign their level\nof access to each AWS account in your organization. Users get a user portal where they can\nfind and access all their assigned AWS accounts and applications in one place.\n\nThis configuration allows you to define permission sets (collections of policies) and\nassignments (which users/groups get which permissions in which accounts).",
       "properties": {
         "delegatedAdminAccount": {
           "$ref": "#/definitions/NonEmptyString",
-          "description": "Override for Delegated Admin Account"
+          "description": "The AWS account that will serve as the delegated administrator for Identity Center operations. This serves as an override for the Delegated Admin account."
         },
         "identityCenterAssignments": {
-          "description": "List of Assignments",
+          "description": "List of assignments that grant users or groups access to AWS accounts using permission sets.\nAssignments determine which users can access which accounts with what level of permissions.",
           "items": {
             "$ref": "#/definitions/IIdentityCenterAssignmentConfig"
           },
           "type": "array"
         },
         "identityCenterPermissionSets": {
-          "description": "List of PermissionSets",
+          "description": "List of permission sets to create in AWS Identity Center. Permission sets define collections of\npolicies that determine what actions users can perform when they access AWS accounts.",
           "items": {
             "$ref": "#/definitions/IIdentityCenterPermissionSetConfig"
           },
@@ -448,7 +457,7 @@
         },
         "name": {
           "$ref": "#/definitions/NonEmptyString",
-          "description": "A name for the Identity Center Configuration"
+          "description": "The logical name for this Identity Center configuration. This name is used to reference this Identity Center instance in other accelerator configurations."
         }
       },
       "required": [
@@ -458,24 +467,24 @@
     },
     "IIdentityCenterPermissionSetConfig": {
       "additionalProperties": false,
-      "description": "Identity Center Permission Set Configuration",
+      "description": "Defines an AWS Identity Center permission set configuration. Permission sets are templates that\ndefine a collection of policies and permissions that determine what users and groups can access\nwithin AWS accounts. They act as a bridge between your identity source (users and groups) and\nAWS accounts, defining what level of access identities have when they access AWS resources.\n\nPermission sets are assigned to users or groups for specific AWS accounts, creating the actual\naccess permissions. When users sign in through Identity Center, they can assume roles based on\ntheir permission set assignments to access AWS resources.\n\nEach permission set can include AWS managed policies, customer managed policies, inline policies,\nand permissions boundaries to provide fine-grained access control.",
       "properties": {
         "description": {
           "$ref": "#/definitions/NonEmptyString",
           "default": "undefined",
-          "description": "A description string for the Permission Set"
+          "description": "A human-readable description of what this permission set is intended for."
         },
         "name": {
           "$ref": "#/definitions/NonEmptyString",
-          "description": "A name for the Identity Center Permission Set Configuration"
+          "description": "The name for this permission set configuration. This name will be used to reference the permission set in Identity Center assignments and will be visible to users in the AWS access portal."
         },
         "policies": {
           "$ref": "#/definitions/IIdentityCenterPoliciesConfig",
-          "description": "Policy Configuration for Customer Managed Permissions and AWS Managed Permissions"
+          "description": "The policy config that define the permissions for this permission set."
         },
         "sessionDuration": {
-          "default": "undefined",
-          "description": "A number value (in minutes). The length of time that the application user sessions are valid for in the ISO-8601 standard.",
+          "default": "60 minutes",
+          "description": "The length of time (in minutes) that users can stay signed in to their AWS session.",
           "type": "number"
         }
       },
@@ -486,24 +495,24 @@
     },
     "IIdentityCenterPoliciesConfig": {
       "additionalProperties": false,
-      "description": "Identity Center Permission Set Policy Configuration",
+      "description": "Defines the policy configuration for an Identity Center permission set. This configuration\nspecifies which policies will be attached to the permission set to define the permissions\nthat users will have when they assume roles created from this permission set.\n\nIdentity Center supports multiple types of policies that can be combined to create the exact\npermissions needed: AWS managed policies (maintained by AWS), customer managed policies\n(maintained by you), accelerator managed policies (created by the Landing Zone Accelerator),\ninline policies (embedded directly in the permission set), and permissions boundaries\n(to limit maximum permissions).",
       "properties": {
         "acceleratorManaged": {
-          "description": "List of the names customer managed policies that would be attached to permission set.",
+          "description": "List of accelerator-managed policy names to attach to this permission set.",
           "items": {
             "$ref": "#/definitions/NonEmptyString"
           },
           "type": "array"
         },
         "awsManaged": {
-          "description": "List of AWS managed policies that would be attached to permission set.",
+          "description": "List of AWS managed policies to attach to this permission set.",
           "items": {
             "$ref": "#/definitions/NonEmptyString"
           },
           "type": "array"
         },
         "customerManaged": {
-          "description": "List of the names and paths of the customer managed policies that would be attached to permission set.",
+          "description": "List of customer managed policy names to attach to this permission set.",
           "items": {
             "$ref": "#/definitions/NonEmptyString"
           },
@@ -511,37 +520,37 @@
         },
         "inlinePolicy": {
           "$ref": "#/definitions/NonEmptyString",
-          "description": "The inline policy that is attached to the permission set.\n\n {@link  http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-sso-permissionset.html#cfn-sso-permissionset-inlinepolicy InlinePolicy }  reference"
+          "description": "Path to a JSON file containing an inline policy to embed directly in the permission set."
         },
         "permissionsBoundary": {
           "$ref": "#/definitions/IPermissionsBoundaryConfig",
-          "description": "Specifies the configuration of the AWS managed or customer managed policy that you want to set as a permissions boundary."
+          "description": "Permissions boundary configuration to set the maximum permissions for this permission set."
         }
       },
       "type": "object"
     },
     "IManagedActiveDirectoryConfig": {
       "additionalProperties": false,
-      "description": "Managed Active directory configuration.",
+      "description": "Defines an AWS Managed Microsoft Active Directory configuration. AWS Managed Microsoft AD is a\nfully managed Microsoft Active Directory service in the AWS Cloud. It provides a highly available,\nresilient Active Directory infrastructure that can be used for user authentication, group policies,\nand integration with other AWS services.\n\nThis service enables you to run directory-aware workloads in the AWS Cloud, including Microsoft\nSharePoint, Microsoft SQL Server Always On Availability Groups, and .NET applications. It also\nsupports integration with AWS services like Amazon WorkSpaces, Amazon QuickSight, and AWS Single\nSign-On (Identity Center).",
       "properties": {
         "account": {
           "$ref": "#/definitions/NonEmptyString",
-          "description": "Active directory deploy target account"
+          "description": "The AWS account where the managed Active Directory will be deployed."
         },
         "activeDirectoryConfigurationInstance": {
           "$ref": "#/definitions/IActiveDirectoryConfigurationInstanceConfig",
-          "description": "(OPTIONAL) Active directory instance to configure active directory"
+          "description": "Configuration for an EC2 instance that will automatically configure users, groups, and organizational units in the managed Active Directory."
         },
         "description": {
           "$ref": "#/definitions/NonEmptyString",
-          "description": "Descriptive text that appears on the details page after the directory has been created."
+          "description": "A human-readable description of the managed Active Directory."
         },
         "dnsName": {
           "$ref": "#/definitions/NonEmptyString",
-          "description": "A fully qualified domain name. This name will resolve inside your VPC only. It does not need to be publicly resolvable."
+          "description": "The fully qualified domain name (FQDN) for the managed Active Directory."
         },
         "edition": {
-          "description": "Active directory edition, example AWS Managed Microsoft AD is available in two editions: Standard and Enterprise",
+          "description": "The edition of AWS Managed Microsoft AD to deploy.",
           "enum": [
             "Standard",
             "Enterprise"
@@ -550,30 +559,31 @@
         },
         "logs": {
           "$ref": "#/definitions/IManagedActiveDirectoryLogConfig",
-          "description": "(OPTIONAL) Active directory logs configuration"
+          "description": "Configuration for directory logging to Amazon CloudWatch Logs."
         },
         "name": {
           "$ref": "#/definitions/NonEmptyString",
-          "description": "Friendly name for the active directory"
+          "description": "The logical name for this managed Active Directory instance."
         },
         "netBiosDomainName": {
           "$ref": "#/definitions/NonEmptyString",
-          "description": "A short identifier for your Net BIOS domain name."
+          "description": "The NetBIOS name for the Active Directory domain."
         },
         "region": {
-          "description": "Active directory deploy target region",
+          "default": "us-east-1",
+          "description": "The AWS region where the managed Active Directory will be deployed.",
           "type": "string"
         },
         "resolverRuleName": {
           "$ref": "#/definitions/NonEmptyString",
-          "description": "(OPTIONAL) Active directory route 53 resolver rule name"
+          "description": "The name of a Route 53 resolver rule to update with the directory's DNS server IP addresses."
         },
         "secretConfig": {
           "$ref": "#/definitions/IManagedActiveDirectorySecretConfig",
-          "description": "(OPTIONAL) Active directory admin user secret configuration.\n\n* {@link  IamConfig  }  /  {@link  ManagedActiveDirectoryConfig  }  /  {@link  ManagedActiveDirectorySecretConfig  }"
+          "description": "Configuration for storing the directory administrator credentials in AWS Secrets Manager."
         },
         "sharedAccounts": {
-          "description": "(OPTIONAL) Active directory shared account name list.",
+          "description": "List of AWS account names to share the directory with directly.",
           "items": {
             "$ref": "#/definitions/NonEmptyString"
           },
@@ -581,11 +591,11 @@
         },
         "sharedOrganizationalUnits": {
           "$ref": "#/definitions/IManagedActiveDirectorySharedOuConfig",
-          "description": "(OPTIONAL) Active directory shared ou configuration.\n\n* {@link  IamConfig  }  /  {@link  ManagedActiveDirectoryConfig  }  /  {@link  ManagedActiveDirectorySharedOuConfig  }"
+          "description": "Configuration for sharing the directory with other AWS accounts in your organization."
         },
         "vpcSettings": {
           "$ref": "#/definitions/IManagedActiveDirectoryVpcSettingsConfig",
-          "description": "Specifies the VPC settings of the Microsoft AD directory server in AWS"
+          "description": "VPC configuration specifying where the managed Active Directory will be deployed."
         }
       },
       "required": [
@@ -601,15 +611,16 @@
     },
     "IManagedActiveDirectoryLogConfig": {
       "additionalProperties": false,
-      "description": "Active directory logs configuration",
+      "description": "Defines the logging configuration for AWS Managed Microsoft Active Directory. Directory logging\ncaptures security events, authentication attempts, group policy applications, and other directory\nactivities in Amazon CloudWatch Logs for monitoring, troubleshooting, and compliance auditing.\n\nDirectory logs provide valuable insights into user authentication patterns, failed login attempts,\ngroup membership changes, and other security-relevant events. This information is essential for\nsecurity monitoring, incident response, and meeting compliance requirements.\n\nLogs are automatically forwarded from the directory domain controllers to the specified CloudWatch\nlog group, where they can be searched, filtered, and analyzed using CloudWatch Logs Insights or\nexported to other analysis tools.",
       "properties": {
         "groupName": {
           "$ref": "#/definitions/NonEmptyString",
-          "default": "undefined, Accelerator will create log group name as /aws/directoryservice/DirectoryServiceName",
-          "description": "Active directory log group name,  that will be used to receive the security logs from your domain controllers. We recommend pre-pending the name with /aws/directoryservice/, but that is not required."
+          "default": "`/aws/directoryservice/{DirectoryServiceName}`",
+          "description": "The name of the CloudWatch log group that will receive directory security logs."
         },
         "retentionInDays": {
-          "description": "Log group retention in days",
+          "default": "Never expire (logs retained indefinitely)",
+          "description": "The number of days to retain log events in the CloudWatch log group.",
           "type": "number"
         }
       },
@@ -620,18 +631,21 @@
     },
     "IManagedActiveDirectorySecretConfig": {
       "additionalProperties": false,
-      "description": "Active directory admin user secret configuration.",
+      "description": "Defines the configuration for storing AWS Managed Microsoft Active Directory administrator\ncredentials in AWS Secrets Manager. When a managed directory is created, AWS automatically\ngenerates administrator credentials that can be securely stored and retrieved from Secrets Manager.\n\nThis configuration allows you to specify where the administrator secret should be stored,\nproviding secure access to directory administration capabilities without hardcoding credentials\nin your infrastructure code.",
       "properties": {
         "account": {
           "$ref": "#/definitions/NonEmptyString",
-          "description": "Active directory admin user secret account name. When no account name provided Accelerator will create the secret into the account MAD exists\n\nNote: Please do not use the Management account for the admin user secret account name."
+          "default": "Same account as the managed Active Directory",
+          "description": "The AWS account where the administrator secret will be stored."
         },
         "adminSecretName": {
           "$ref": "#/definitions/NonEmptyString",
-          "description": "Active directory admin user secret account name. When no account name provided Accelerator will create the secret into the account MAD exists\n\nNote: Please do not use the Management account for the admin user secret account name."
+          "default": "Generated based on directory name",
+          "description": "The name for the administrator secret in AWS Secrets Manager."
         },
         "region": {
-          "description": "Active directory admin user secret region name. When no region name provided Accelerator will create the secret into the region MAD exists",
+          "default": "Same region as the managed Active Directory",
+          "description": "The AWS region where the administrator secret will be stored.",
           "type": "string"
         }
       },
@@ -639,15 +653,18 @@
     },
     "IManagedActiveDirectorySharedOuConfig": {
       "additionalProperties": false,
-      "description": "Active directory shared ou configuration.",
+      "description": "Defines the organizational unit (OU) sharing configuration for AWS Managed Microsoft Active Directory.\nDirectory sharing allows other AWS accounts in your organization to use the managed Active Directory\nfor authentication and authorization, enabling centralized identity management across multiple accounts.\n\nWhen you share a directory with other accounts, those accounts can:\n- Join EC2 instances to the domain\n- Use the directory for AWS Single Sign-On (Identity Center) authentication\n- Access directory information for applications and services\n- Authenticate users and groups from the shared directory\n\nThis configuration allows you to specify which organizational units should have access to the\ndirectory, with optional exclusions for specific accounts that should not have access.",
       "properties": {
         "excludedAccounts": {
+          "default": "undefined (no accounts excluded)",
+          "description": "List of AWS account names that should be excluded from directory sharing, even if they are in the specified organizational units.",
           "items": {
             "$ref": "#/definitions/NonEmptyString"
           },
           "type": "array"
         },
         "organizationalUnits": {
+          "description": "List of organizational unit names that should have access to the managed Active Directory.",
           "items": {
             "$ref": "#/definitions/NonEmptyString"
           },
@@ -661,10 +678,10 @@
     },
     "IManagedActiveDirectoryVpcSettingsConfig": {
       "additionalProperties": false,
-      "description": "Specifies the VPC settings of the Microsoft AD directory server in AWS",
+      "description": "Defines the VPC network configuration for AWS Managed Microsoft Active Directory. The directory\nrequires network connectivity within a VPC to provide domain services to EC2 instances and other\nAWS resources. The directory domain controllers will be deployed in the specified subnets and\nwill provide DNS and authentication services to resources in the VPC.\n\nFor high availability and fault tolerance, the directory requires at least two subnets in\ndifferent Availability Zones. The directory will automatically deploy domain controllers\nacross these subnets to ensure service availability.",
       "properties": {
         "subnets": {
-          "description": "Friendly name of the vpc subnets, where active directory will be deployed\n\nMinimum of two subnets from two different availability zone is required",
+          "description": "List of subnet names where the directory domain controllers will be deployed.",
           "items": {
             "$ref": "#/definitions/NonEmptyString"
           },
@@ -672,7 +689,7 @@
         },
         "vpcName": {
           "$ref": "#/definitions/NonEmptyString",
-          "description": "Friendly name of the vpc where active directory will be deployed"
+          "description": "The logical name of the VPC where the managed Active Directory will be deployed."
         }
       },
       "required": [
@@ -683,32 +700,32 @@
     },
     "IPermissionsBoundaryConfig": {
       "additionalProperties": false,
-      "description": "Specify either customerManagedPolicy to use the name and path of a customer managed policy, or managedPolicy to use the ARN of an AWS managed policy.",
+      "description": "Defines a permissions boundary configuration for Identity Center permission sets. A permissions\nboundary is an advanced IAM feature that sets the maximum permissions that an identity-based\npolicy can grant to an IAM entity. When applied to a permission set, it limits the effective\npermissions to the intersection of the permission set's policies and the permissions boundary.\n\nPermissions boundaries are useful for delegating permission management while maintaining\nsecurity guardrails. They allow you to grant users the ability to create and manage IAM\nentities while ensuring those entities cannot exceed certain permission limits.\n\nSpecify either customerManagedPolicy to use the name and path of a customer managed policy,\nor managedPolicy to use the ARN of an AWS managed policy.",
       "properties": {
         "awsManagedPolicyName": {
           "$ref": "#/definitions/NonEmptyString",
-          "description": "The AWS managed policy name that you want to attach to a permission set as a permissions boundary."
+          "description": "The name of an AWS managed policy to use as the permissions boundary."
         },
         "customerManagedPolicy": {
           "$ref": "#/definitions/ICustomerManagedPolicyReferenceConfig",
-          "description": "Specifies the name and path of a customer managed policy."
+          "description": "Configuration for a customer managed policy to use as the permissions boundary. This specifies the name and path of a customer managed policy."
         }
       },
       "type": "object"
     },
     "IPoliciesConfig": {
       "additionalProperties": false,
-      "description": "IAM policies configuration",
+      "description": "Defines the IAM policies to attach to a group or role. Policies grant permissions by defining\nwhat actions are allowed or denied on which AWS resources. This configuration supports both\nAWS managed policies (created and maintained by AWS) and customer managed policies (created\nand maintained by you).\n\nAWS managed policies are standalone policies that are created and maintained by AWS. They\ntypically grant permissions for common use cases and are updated by AWS when new services\nor features are released.\n\nCustomer managed policies are standalone policies that you create and maintain in your AWS\naccount. They provide more precise control over permissions than AWS managed policies.",
       "properties": {
         "awsManaged": {
-          "description": "List of AWS managed policies. Values can be policy arn or policy name",
+          "description": "List of AWS managed policies to attach. Values can be policy ARNs or policy names.",
           "items": {
             "$ref": "#/definitions/NonEmptyString"
           },
           "type": "array"
         },
         "customerManaged": {
-          "description": "List of Customer managed policies",
+          "description": "List of customer managed policy names to attach.",
           "items": {
             "$ref": "#/definitions/NonEmptyString"
           },
@@ -719,15 +736,15 @@
     },
     "IPolicyConfig": {
       "additionalProperties": false,
-      "description": "Use this configuration to define accelerator managed IAM managed policies.",
+      "description": "Defines an AWS IAM Customer managed policy that will be created and managed by the accelerator.\nIAM managed policies are standalone identity-based policies that you can attach to multiple\nusers, groups, or roles in your AWS account. Unlike inline policies, managed policies have\ntheir own Amazon Resource Name (ARN) and can be versioned.\n\nThe policy document content is read from a JSON file in your configuration repository,\nallowing you to define complex permissions using standard IAM policy syntax.",
       "properties": {
         "name": {
           "$ref": "#/definitions/NonEmptyString",
-          "description": "The name of the managed policy."
+          "description": "The logical name for this managed policy resource. This name will be used as the policy name in AWS IAM."
         },
         "policy": {
           "$ref": "#/definitions/NonEmptyString",
-          "description": "A JSON file containing policy boundary definition."
+          "description": "Path to a JSON file containing the IAM policy document."
         }
       },
       "required": [
@@ -738,18 +755,19 @@
     },
     "IPolicySetConfig": {
       "additionalProperties": false,
-      "description": "Policy set configuration",
+      "description": "Defines a collection of IAM managed policies to be deployed to specific AWS accounts or\norganizational units. Policy sets provide a way to consistently deploy custom managed policies\nacross multiple accounts in your AWS organization, ensuring standardized permission definitions\nthat can be referenced by roles, groups, and users.\n\nManaged policies created through policy sets can be used as permissions boundaries, attached\nto IAM entities, or referenced in Identity Center permission sets. This provides a centralized\nway to define and maintain custom permissions across your organization.",
       "properties": {
         "deploymentTargets": {
           "$ref": "#/definitions/IDeploymentTargets",
-          "description": "Policy set deployment targets"
+          "description": "Specifies the AWS accounts and/or organizational units where these policies will be created."
         },
         "identityCenterDependency": {
-          "description": "Flag indicates if the policy is used in Identity Center PermissionSet assignments.",
+          "default": false,
+          "description": "Indicates whether these policies are used in AWS Identity Center permission set assignments.",
           "type": "boolean"
         },
         "policies": {
-          "description": "List of Policies",
+          "description": "List of IAM managed policies to create in the targeted accounts.",
           "items": {
             "$ref": "#/definitions/IPolicyConfig"
           },
@@ -764,10 +782,10 @@
     },
     "IRoleConfig": {
       "additionalProperties": false,
-      "description": "IAM Role configuration",
+      "description": "Defines an AWS IAM role configuration. IAM roles are AWS identities with specific permissions\nthat can be assumed by trusted entities such as AWS services, users, or applications. Unlike\nIAM users, roles don't have permanent credentials - instead, they provide temporary security\ncredentials when assumed.\n\nRoles are commonly used for cross-account access, service-to-service authentication, and\nproviding temporary access to AWS resources without embedding long-term credentials.",
       "properties": {
         "assumedBy": {
-          "description": "AssumedBy configuration",
+          "description": "List of principals that can assume this role and their trust relationship configuration.",
           "items": {
             "$ref": "#/definitions/IAssumedByConfig"
           },
@@ -775,26 +793,27 @@
         },
         "boundaryPolicy": {
           "$ref": "#/definitions/NonEmptyString",
-          "description": "A permissions boundary configuration"
+          "description": "The name of an IAM managed policy to use as a permissions boundary for this role."
         },
         "externalIds": {
-          "description": "List of IDs that the role assumer needs to provide one of when assuming this role",
+          "description": "List of external IDs that must be provided when assuming this role.",
           "items": {
             "$ref": "#/definitions/NonEmptyString"
           },
           "type": "array"
         },
         "instanceProfile": {
-          "description": "Indicates whether role is used for EC2 instance profile",
+          "default": false,
+          "description": "Specifies whether to create an EC2 instance profile for this role.",
           "type": "boolean"
         },
         "name": {
           "$ref": "#/definitions/NonEmptyString",
-          "description": "A name for the role"
+          "description": "The logical name for this IAM role. This name will be used as the role name in AWS IAM and can be referenced by other AWS resources and services."
         },
         "policies": {
           "$ref": "#/definitions/IPoliciesConfig",
-          "description": "List of policies for the role"
+          "description": "IAM policies to attach to this role, providing the permissions the role will have when assumed."
         }
       },
       "required": [
@@ -805,18 +824,19 @@
     },
     "IRoleSetConfig": {
       "additionalProperties": false,
-      "description": "Role set configuration",
+      "description": "Defines a collection of IAM roles to be deployed to specific AWS accounts or organizational units.\nRole sets provide a way to consistently deploy the same set of roles with their trust relationships\nand permissions across multiple accounts in your AWS organization, ensuring standardized access\npatterns for services, cross-account access, and federated users.\n\nThis is particularly useful for creating service roles (like EC2 instance roles), cross-account\naccess roles, or federated access roles that need to exist across multiple accounts with\nconsistent configurations.",
       "properties": {
         "deploymentTargets": {
           "$ref": "#/definitions/IDeploymentTargets",
-          "description": "Role set deployment targets"
+          "description": "Specifies the AWS accounts and/or organizational units where these roles will be created."
         },
         "path": {
           "$ref": "#/definitions/NonEmptyString",
-          "description": "The path to the role"
+          "default": "/ (root path)",
+          "description": "The path for all roles in this set."
         },
         "roles": {
-          "description": "List of role objects",
+          "description": "List of IAM roles to create in the targeted accounts.",
           "items": {
             "$ref": "#/definitions/IRoleConfig"
           },
@@ -831,16 +851,16 @@
     },
     "ISamlProviderConfig": {
       "additionalProperties": false,
-      "description": "SAML provider configuration",
+      "description": "Defines a Security Assertion Markup Language (SAML) 2.0 identity provider configuration for AWS IAM.\nSAML providers enable federated access to AWS resources by allowing users to authenticate with\nexternal identity providers (such as Microsoft Active Directory, Okta, or Azure AD)\nand assume AWS IAM roles without needing separate AWS credentials.\n\nThis configuration creates an IAM SAML identity provider that can be referenced in role trust\npolicies to enable single sign-on (SSO) access to AWS.",
       "properties": {
         "metadataDocument": {
           "$ref": "#/definitions/NonEmptyString",
-          "description": "SAML metadata document XML file, this file must be present in config repository"
+          "description": "The SAML metadata document XML file containing the identity provider's configuration."
         },
         "name": {
           "$ref": "#/definitions/NonEmptyString",
           "default": "a CloudFormation generated name",
-          "description": "The name of the provider to create.\n\nThis parameter allows a string of characters consisting of upper and lowercase alphanumeric characters with no spaces. You can also include any of the following characters: _+=,.@-\n\nLength must be between 1 and 128 characters."
+          "description": "The logical name for this SAML identity provider. This name will be used to reference the provider in IAM role trust policies and other AWS configurations."
         }
       },
       "required": [
@@ -851,23 +871,24 @@
     },
     "IUserConfig": {
       "additionalProperties": false,
-      "description": "IAM User configuration",
+      "description": "Defines an AWS IAM user configuration. IAM users are identities with long-term credentials\nthat can be used to access AWS services and resources. Each user has a unique name within\nthe AWS account and can be assigned to groups, have policies attached directly, and optionally\nhave AWS Management Console access with a password.\n\nIAM users are typically used for individual people or applications that need programmatic\naccess to AWS services with either the AWS Console, AWS CLI or AWS SDK. For console access,\nusers can be granted a password to sign in to the AWS Management Console.",
       "properties": {
         "boundaryPolicy": {
           "$ref": "#/definitions/NonEmptyString",
-          "description": "AWS supports permissions boundaries for IAM entities (users or roles). A permissions boundary is an advanced feature for using a managed policy to set the maximum permissions that an identity-based policy can grant to an IAM entity. An entity's permissions boundary allows it to perform only the actions that are allowed by both its identity-based policies and its permissions boundaries.\n\nPermission boundary is derived from iam-policies/boundary-policy.json file in config repository"
+          "description": "The name of an IAM managed policy to use as a permissions boundary for this user."
         },
         "disableConsoleAccess": {
-          "description": "A boolean value to define if the user should have access to the AWS console. True will disable console access, False will enable it. defaults to False.",
+          "default": "false (console access enabled)",
+          "description": "Controls whether the user can access the AWS Management Console with a password.",
           "type": "boolean"
         },
         "group": {
           "$ref": "#/definitions/NonEmptyString",
-          "description": "Group to add this user to."
+          "description": "The name of the IAM group to add this user to. The group must be defined in the same deployment target scope as this user."
         },
         "username": {
           "$ref": "#/definitions/NonEmptyString",
-          "description": "A name for the IAM user. For valid values, see the UserName parameter for the CreateUser action in the IAM API Reference. If you don't specify a name, AWS CloudFormation generates a unique physical ID and uses that ID for the user name.\n\nIf you specify a name, you cannot perform updates that require replacement of this resource. You can perform updates that require no or some interruption. If you must replace the resource, specify a new name."
+          "description": "The name for the IAM user. This will be the user's sign-in name for the AWS Management Console and the name used in API calls."
         }
       },
       "required": [
@@ -878,14 +899,14 @@
     },
     "IUserSetConfig": {
       "additionalProperties": false,
-      "description": "User set configuration\n\n```\nuserSets:\n  - deploymentTargets:\n      accounts:\n        - Management\n    users:\n      - username: accelerator-user\n        boundaryPolicy: Default-Boundary-Policy\n        group: Admins\n```",
+      "description": "Defines a collection of IAM users to be deployed to specific AWS accounts or organizational units.\nUser sets provide a way to consistently deploy the same set of users across multiple accounts\nin your AWS organization, ensuring standardized access patterns and user management.\n\nThis is particularly useful for creating break-glass users, service accounts, or other\nadministrative users that need to exist across multiple accounts with consistent configurations.",
       "properties": {
         "deploymentTargets": {
           "$ref": "#/definitions/IDeploymentTargets",
-          "description": "User set's deployment target"
+          "description": "Specifies the AWS accounts and/or organizational units where these users will be created."
         },
         "users": {
-          "description": "List of user objects",
+          "description": "List of IAM users to create in the targeted accounts.",
           "items": {
             "$ref": "#/definitions/IUserConfig"
           },
