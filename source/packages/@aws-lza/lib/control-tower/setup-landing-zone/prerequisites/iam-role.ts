@@ -20,6 +20,9 @@ import {
   waitUntilRoleExists,
   GetRoleCommand,
   NoSuchEntityException,
+  ListRolePoliciesCommand,
+  DeleteRolePolicyCommand,
+  ListAttachedRolePoliciesCommand,
 } from '@aws-sdk/client-iam';
 
 import { setRetryStrategy } from '../../../../common/functions';
@@ -195,6 +198,97 @@ export abstract class IamRole {
     }
 
     IamRole.logger.info(`AWS Control Tower Landing Zone role ${roleName} created successfully.`);
+  }
+
+  /**
+   * Function to update AWSControlTowerCloudTrailRole by replacing inline policies with managed policy
+   * @param partition string
+   * @param region string
+   * @param solutionId string | undefined
+   * @param credentials {@link IAssumeRoleCredential} | undefined
+   */
+  public static async updateCloudTrailRolePolicy(
+    partition: string,
+    region: string,
+    solutionId?: string,
+    credentials?: IAssumeRoleCredential,
+  ): Promise<void> {
+    const roleName = 'AWSControlTowerCloudTrailRole';
+    const managedPolicyArn = `arn:${partition}:iam::aws:policy/service-role/AWSControlTowerCloudTrailRolePolicy`;
+
+    const client: IAMClient = new IAMClient({
+      region: region,
+      customUserAgent: solutionId,
+      retryStrategy: setRetryStrategy(),
+      credentials: credentials,
+    });
+
+    IamRole.logger.info(`Checking if role ${roleName} exists and needs policy update.`);
+
+    // Check if role exists
+    const roleExists = await IamRole.roleExists(client, roleName);
+    if (!roleExists) {
+      const message = `${MODULE_EXCEPTIONS.SERVICE_EXCEPTION}: Role ${roleName} does not exist, skipping policy update.`;
+      IamRole.logger.warn(message);
+      throw new Error(message);
+    }
+
+    // Check if managed policy is already attached
+    const attachedPoliciesResponse = await throttlingBackOff(() =>
+      client.send(
+        new ListAttachedRolePoliciesCommand({
+          RoleName: roleName,
+        }),
+      ),
+    );
+
+    const hasManagedPolicy = attachedPoliciesResponse.AttachedPolicies?.some(
+      policy => policy.PolicyArn === managedPolicyArn,
+    );
+
+    if (hasManagedPolicy) {
+      IamRole.logger.info(`Role ${roleName} already has the managed policy attached.`);
+      return;
+    }
+
+    // List and delete all inline policies
+    const inlinePoliciesResponse = await throttlingBackOff(() =>
+      client.send(
+        new ListRolePoliciesCommand({
+          RoleName: roleName,
+        }),
+      ),
+    );
+
+    if (inlinePoliciesResponse.PolicyNames && inlinePoliciesResponse.PolicyNames.length > 0) {
+      IamRole.logger.info(
+        `Found ${inlinePoliciesResponse.PolicyNames.length} inline policy(ies) on role ${roleName}, removing them.`,
+      );
+
+      for (const policyName of inlinePoliciesResponse.PolicyNames) {
+        await throttlingBackOff(() =>
+          client.send(
+            new DeleteRolePolicyCommand({
+              RoleName: roleName,
+              PolicyName: policyName,
+            }),
+          ),
+        );
+        IamRole.logger.info(`Deleted inline policy ${policyName} from role ${roleName}.`);
+      }
+    }
+
+    // Attach the managed policy
+    await throttlingBackOff(() =>
+      client.send(
+        new AttachRolePolicyCommand({
+          RoleName: roleName,
+          PolicyArn: managedPolicyArn,
+        }),
+      ),
+    );
+
+    IamRole.logger.info(`Successfully attached managed policy ${managedPolicyArn} to role ${roleName}.`);
   }
 
   /**
