@@ -1524,7 +1524,7 @@ export interface IActiveDirectoryPasswordPolicyConfig {
  * All scripts must be PowerShell scripts (.ps1 or .psm1 files) and must be present in your
  * configuration repository at the specified paths.
  *
- * @see {@link https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/user-data.html#ec2-windows-user-data | User Data Scripts}
+ * @see {@link https://docs.aws.amazon.com/ec2/latest/windowsguide/ec2-windows-user-data.html | User Data Scripts}
  * @see {@link https://docs.microsoft.com/en-us/powershell/ | PowerShell Documentation}
  *
  * Accelerator can provision users and/or groups when the following user data scripts are provided.
@@ -1600,7 +1600,7 @@ export interface IActiveDirectoryConfigurationInstanceUserDataConfig {
  * infrastructure-as-code management of Active Directory resources.
  *
  * @see {@link https://docs.aws.amazon.com/directoryservice/latest/admin-guide/ms_ad_manage_users_groups.html | Managing Users and Groups}
- * @see {@link https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-windows-instances.html | Windows Instances}
+ * @see {@link https://docs.aws.amazon.com/ec2/latest/windowsguide/ec2-windows-instances.html | Windows Instances}
  *
  * @example
  *
@@ -1900,7 +1900,7 @@ export interface IManagedActiveDirectoryVpcSettingsConfig {
  * exported to other analysis tools.
  *
  * @see {@link https://docs.aws.amazon.com/directoryservice/latest/admin-guide/ms_ad_enable_log_forwarding.html | Enable Log Forwarding}
- * @see {@link https://docs.aws.amazon.com/AmazonCloudWatch/latest/logs/WhatIsCloudWatchLogs.html | Amazon CloudWatch Logs}
+ * @see {@link https://docs.aws.amazon.com/logs/latest/userguide/what-is-logs.html | Amazon CloudWatch Logs}
  */
 export interface IManagedActiveDirectoryLogConfig {
   /**
@@ -2306,7 +2306,16 @@ export interface IManagedActiveDirectoryConfig {
  * *{@link IamConfig}*
  *
  * @description
- * IAM configuration
+ * AWS Identity and Access Management (IAM) configuration for the Landing Zone Accelerator.
+ * This configuration defines IAM identities (users, groups, roles), policies, and related
+ * services like SAML providers, AWS Managed Microsoft AD, and AWS Identity Center.
+ *
+ * IAM enables you to manage access to AWS services and resources securely. Using IAM, you can
+ * create and manage AWS users and groups, and use permissions to allow and deny their access
+ * to AWS resources.
+ *
+ * @see {@link https://docs.aws.amazon.com/IAM/latest/UserGuide/access_policies.html | Policies and permissions in AWS Identity and Access Management}
+ * @see {@link https://docs.aws.amazon.com/IAM/latest/UserGuide/id.html | IAM Identities}
  *
  * @category IAM Configuration
  */
