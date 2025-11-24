@@ -157,11 +157,22 @@ export class TransitGatewayRoutes extends AseaResource {
   private setTransitGatewayResourcesMap(tgwItem: TransitGatewayConfig, tgwStackMapping: ImportStackResources) {
     for (const routeTableItem of tgwItem.routeTables ?? []) {
       // ASEA RouteTable name includes TGW Name. No need to use TGW Id since TGW names are unique
-      const routeTableResource = tgwStackMapping.getResourceByTypeAndTag(
+      let routeTableResource = tgwStackMapping.getResourceByTypeAndTag(
         RESOURCE_TYPE.TGW_ROUTE_TABLE,
         routeTableItem.name,
       );
+
+      // If not found, try with TGW name prefix (ASEA naming convention)
       if (!routeTableResource || !routeTableResource.physicalResourceId) {
+        const aseaRouteTableName = `${tgwItem.name}_${routeTableItem.name}`;
+        routeTableResource = tgwStackMapping.getResourceByTypeAndTag(RESOURCE_TYPE.TGW_ROUTE_TABLE, aseaRouteTableName);
+      }
+
+      if (!routeTableResource || !routeTableResource.physicalResourceId) {
+        this.scope.addLogs(
+          LogLevel.WARN,
+          `Route table ${routeTableItem.name} not found for TGW ${tgwItem.name}. Skipping.`,
+        );
         continue;
       }
       this.transitGatewayRouteTables.set(
@@ -349,8 +360,11 @@ export class TransitGatewayRoutes extends AseaResource {
       this.transitGatewayGlobalRouteTables.get(routeTableItem.name);
 
     if (!transitGatewayRouteTableId) {
-      this.scope.addLogs(LogLevel.ERROR, `Transit Gateway route table ${routeTableKey} not found`);
-      throw new Error(`Configuration validation failed at runtime.`);
+      this.scope.addLogs(
+        LogLevel.INFO,
+        `Transit Gateway route table ${routeTableKey} not found, will create new route.`,
+      );
+      return;
     }
 
     for (const routeItem of routeTableItem.routes ?? []) {
