@@ -39,6 +39,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - chore(logging): updated default cloudwatch log retention to 1 year
 - Revert "fix(validation): query log without r53 resolver configured" [#876](https://github.com/awslabs/landing-zone-accelerator-on-aws/issues/876)
 
+### Changed
+- chore(docs): add v2 mkdoc navigation
+
 ## [1.13.0] - 2025-08-29
 
 ### Added
