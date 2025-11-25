@@ -148,6 +148,7 @@ echo "Running Prepare and Accounts stages"
 for Item1 in prepare accounts; do
     echo "DEPLOYING $Item1 STACK"
 
+    export ACCELERATOR_STAGE=$Item1
     RUNNER_ARGS="--partition ${PARTITION} --region ${AWS_REGION} --config-dir $srcDirConfig --stage $Item1 --prefix AWSAccelerator"
     set -e && yarn run ts-node ../modules/bin/runner.ts $RUNNER_ARGS
     
@@ -164,7 +165,7 @@ for Item1 in prepare accounts; do
         --partition $PARTITION \
         --ca-bundle-path $caBundlePath \
         --app cdk.out
-    
+    unset ACCELERATOR_STAGE
     if [ $? -ne 0 ]; then
         echo "$Item1 STACK FAILED"
         exit 1
