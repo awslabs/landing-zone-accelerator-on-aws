@@ -17,7 +17,8 @@
     "lint": "eslint --fix  --max-warnings 0 -c ../../../eslint.config.mjs 'lib/**/*.{ts,tsx}' 'test/**/*.{ts,tsx}' --ignore-pattern \"*.d.ts\" ",
     "precommit": "eslint --max-warnings 0 -c ../../../eslint.config.mjs 'lib/**/*.{ts,tsx}' 'test/**/*.{ts,tsx}' --ignore-pattern \"*.d.ts\" ",
     "test:unit": "vitest run --coverage --passWithNoTests",
-    "watch": "tsc -w"
+    "watch": "tsc -w",
+    "build-prod": "tsc"
   },
   "dependencies": {
     "aws-cdk-lib": "2.219.0"

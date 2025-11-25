@@ -17,7 +17,8 @@
     "lint": "eslint --fix  --max-warnings 0 -c ../../../../../../eslint.config.mjs '**/*.{ts,tsx}' --ignore-pattern \"*.d.ts\" ",
     "precommit": "eslint --max-warnings 0 -c ../../../../../../eslint.config.mjs '**/*.{ts,tsx}' --ignore-pattern \"*.d.ts\" ",
     "test:unit": "vitest run --coverage --passWithNoTests",
-    "testreport": ""
+    "testreport": "",
+    "build-prod": "esbuild --minify --bundle --platform=node --outfile=./dist/index.js index.ts"
   },
   "dependencies": {
     "@aws-accelerator/utils": "^0.0.0",

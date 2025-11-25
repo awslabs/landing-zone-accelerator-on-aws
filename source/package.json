@@ -42,6 +42,8 @@
   "scripts": {
     "prebuild": "cd packages/@aws-lza && yarn cleanup && yarn install && yarn build",
     "build": "lerna run build --stream",
+    "build-prod": "yarn run prebuild && lerna run build-prod --stream",
+    "build-clean-prod": "yarn run git-clean && yarn install && yarn run prebuild && yarn run build-prod",
     "build-clean": "yarn run git-clean && yarn install && yarn run build",
     "cleanup": "lerna run cleanup --stream && rm -rf node_modules",
     "cleanup:tsc": "lerna run cleanup:tsc --stream",

@@ -8,10 +8,10 @@
     "name": "Amazon Web Services",
     "url": "https://aws.amazon.com/solutions"
   },
-"main": "bin/lza.js",
- "bin" : {
-  "lza": "bin/lza"
- },
+  "main": "bin/lza.js",
+  "bin": {
+    "lza": "bin/lza"
+  },
   "scripts": {
     "cleanup": "tsc --build ./ --clean && rm -rf node_modules && rm -rf dist",
     "cleanup:tsc": "tsc --build ./ --clean",
@@ -23,7 +23,8 @@
     "lint": "eslint --fix  --max-warnings 0 -c ../../eslint.config.mjs 'lib/**/*.{ts,tsx}' 'bin/**/*.{ts,tsx}' 'test/**/*.{ts,tsx}'",
     "precommit": "eslint --max-warnings 0 -c ../../eslint.config.mjs 'lib/**/*.{ts,tsx}' 'bin/**/*.{ts,tsx}'",
     "prepare": "npm run build",
-    "lza": "bin/lza"
+    "lza": "bin/lza",
+    "build-prod": "tsc"
   },
   "dependencies": {
     "@aws-sdk/client-controltower": "3.940.0",
@@ -39,8 +40,8 @@
     "email-validator": "2.0.4",
     "fs-extra": "11.1.0",
     "winston": "3.8.2",
-     "exponential-backoff": "3.1.1",
-     "yargs": "17.7.1"
+    "exponential-backoff": "3.1.1",
+    "yargs": "17.7.1"
   },
   "devDependencies": {
     "aws-sdk-client-mock": "3.0.1",

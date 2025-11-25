@@ -1007,7 +1007,7 @@ export class InstallerStack extends cdk.Stack {
                   set -e && yarn config set registry https://registry.npmmirror.com
                fi`,
               'if [ -f .yarnrc ]; then yarn install --use-yarnrc .yarnrc; else yarn install; fi',
-              'yarn build',
+              'yarn build-prod',
               'cd packages/@aws-accelerator/installer',
               `set -e && ./lib/bash/bootstrap-management.sh ${acceleratorPrefix} ${cdk.Aws.REGION} ${cdk.Aws.ACCOUNT_ID} ${globalRegion} $FORCE_BOOTSTRAP`,
               `set -e && if [ $ENABLE_EXTERNAL_PIPELINE_ACCOUNT = "yes" ]; then

@@ -18,7 +18,8 @@
     "test:unit": "vitest run --coverage",
     "test:clean": "rm -f ./test-reports/*.xml",
     "lint": "eslint --fix  --max-warnings 0 -c ../../../eslint.config.mjs 'lib/**/*.{ts,tsx}'",
-    "precommit": "eslint --max-warnings 0 -c ../../../eslint.config.mjs 'lib/**/*.{ts,tsx}'"
+    "precommit": "eslint --max-warnings 0 -c ../../../eslint.config.mjs 'lib/**/*.{ts,tsx}'",
+    "build-prod": "tsc"
   },
   "dependencies": {
     "@aws-accelerator/config": "^0.0.0",

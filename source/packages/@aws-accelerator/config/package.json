@@ -26,7 +26,8 @@
     "schema:security": "ts-json-schema-generator --path lib/models/security-config.ts --type ISecurityConfig -o lib/schemas/security-config.json --tsconfig tsconfig.json && ts-node scripts/patch-schema.ts ISecurityConfig",
     "schema:replacements": "ts-json-schema-generator --path lib/models/replacements-config.ts --type IReplacementsConfig -o lib/schemas/replacements-config.json --tsconfig tsconfig.json && ts-node scripts/patch-schema.ts IReplacementsConfig",
     "schema:customizations": "ts-json-schema-generator --path lib/models/customizations-config.ts --type ICustomizationsConfig -o lib/schemas/customizations-config.json --tsconfig tsconfig.json && ts-node scripts/patch-schema.ts ICustomizationsConfig",
-    "schema:network": "ts-json-schema-generator --path lib/models/network-config.ts --type INetworkConfig -o lib/schemas/network-config.json --tsconfig tsconfig.json && ts-node scripts/patch-schema.ts INetworkConfig"
+    "schema:network": "ts-json-schema-generator --path lib/models/network-config.ts --type INetworkConfig -o lib/schemas/network-config.json --tsconfig tsconfig.json && ts-node scripts/patch-schema.ts INetworkConfig",
+    "build-prod": "yarn schema:accounts && yarn schema:global && yarn schema:iam && yarn schema:organization && yarn schema:security && yarn schema:replacements && yarn schema:customizations && yarn schema:network && tsc"
   },
   "devDependencies": {
     "@types/node": "18.19.50",

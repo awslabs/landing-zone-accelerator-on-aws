@@ -9,13 +9,14 @@
     "url": "https://aws.amazon.com/solutions"
   },
   "scripts": {
-    "build": "esbuild --minify --bundle --outfile=./dist/detect-resource-policy.js --platform=node ./src/detect-resource-policy/index.ts && esbuild --minify --bundle --outfile=./dist/remediate-resource-policy.js --platform=node ./src/remediate-resource-policy/index.ts",
+    "build": "esbuild --sourcemap --minify --bundle --outfile=./dist/detect-resource-policy.js --platform=node ./src/detect-resource-policy/index.ts && esbuild --sourcemap --minify --bundle --outfile=./dist/remediate-resource-policy.js --platform=node ./src/remediate-resource-policy/index.ts",
     "cleanup": "tsc --build ./ --clean && rm -rf node_modules && rm -rf dist && rm -rf cdk.out",
     "cleanup:tsc": "tsc --build ./ --clean",
     "lint": "eslint --fix  --max-warnings 0 -c ../../../../../../eslint.config.mjs '**/*.{ts,tsx}' --ignore-pattern \"*.d.ts\" ",
     "precommit": "eslint --max-warnings 0 -c ../../../../../../eslint.config.mjs '**/*.{ts,tsx}' --ignore-pattern \"*.d.ts\" ",
     "test": "vitest run --coverage --passWithNoTests",
-    "testreport": ""
+    "testreport": "",
+    "build-prod": "esbuild --minify --bundle --outfile=./dist/detect-resource-policy.js --platform=node ./src/detect-resource-policy/index.ts && esbuild --minify --bundle --outfile=./dist/remediate-resource-policy.js --platform=node ./src/remediate-resource-policy/index.ts"
   },
   "devDependencies": {
     "@aws-sdk/client-acm-pca": "3.835.0",
