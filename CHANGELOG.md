@@ -5,7 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [1.13.1] - 2025-10-02
+## [1.14.0]
+
+### Fixed
+
+- fix(validation): updated regex validation for Route53 Resolver Rule DNS to pass TLD
+
+## [1.13.1] - 2025-09-09
 
 ### Fixed
 
@@ -62,7 +68,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - fix(asea): lookup tgw attachments using asea vpc names
 - fix(aspects): update CDK aspect to use lza default node version for custom resource Lambda functions by default [#761](https://github.com/awslabs/landing-zone-accelerator-on-aws/issues/761)
 - fix(bootstrap): lookup data with query command
-- fix(config): ISnsConfig functionality for snsTopics property [#700](https://github.com/awslabs/landing-zone-accelerator-on-aws/issues/700) 
+- fix(config): ISnsConfig functionality for snsTopics property [#700](https://github.com/awslabs/landing-zone-accelerator-on-aws/issues/700)
 - fix(diff): print output before approval [#723](https://github.com/awslabs/landing-zone-accelerator-on-aws/issues/723)
 - fix(documentation): fixed documentation for acceleratorMetadata [#498](https://github.com/awslabs/landing-zone-accelerator-on-aws/issues/498)
 - fix(kms): fix policy condition error
@@ -77,7 +83,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - fix(networking): subnet route table association lookup and creation
 - fix(pipeline): move account alias module run after account creation [#782](https://github.com/awslabs/landing-zone-accelerator-on-aws/issues/782)
 - fix(pipeline): update iam policy for github token change lambda to allow pipeline update [#739](https://github.com/awslabs/landing-zone-accelerator-on-aws/issues/739)
-- fix(pre-approval): add wrapper around deployment 
+- fix(pre-approval): add wrapper around deployment
 - fix(sample-config): extend preventative measures to roles
 - fix(security-audit): sns topic for controltower notifications
 - fix(securityhub): by default only send HIGH and CRITICAL SecurityHub events to CloudWatch. If other events are needed in CloudWatch update configuration
@@ -126,7 +132,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - fix(logging): add permissions to cloudwatch log creation for kms association
 - fix(networking): remove duplicates for gateway loadbalancer endpoints
 
-
 ## [1.12.3] - 2025-06-11
 
 ### Added
@@ -145,7 +150,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- feat(region): add support for mx-central-1 region 
+- feat(region): add support for mx-central-1 region
 - feat(securityhub): added PCI DSS v4.0.1 and AWS Resource Tagging Standard v1.0.0 standards
 
 ### Fixed
@@ -303,8 +308,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - fix: added missing imports to test file
-- fix: Disable management events for Lambda & S3 Cloudtrail event selectors 
-- fix: hosted zone DNS for Sagemaker VPC Endpoints 
+- fix: Disable management events for Lambda & S3 Cloudtrail event selectors
+- fix: hosted zone DNS for Sagemaker VPC Endpoints
 - fix: updated GitHub action target
 - fix(account): remove partition checks for account creation in prepare stack
 - fix(assets): add local account for ssm parameters to assets policy
@@ -365,7 +370,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - fix(metadata): accelerator metadata lambda times out without error
 - fix(docs): resolve broken links in mkdocs
-- fix(route53): fix hosted zone DNS for Sagemaker VPC Endpoints 
+- fix(route53): fix hosted zone DNS for Sagemaker VPC Endpoints
 - fix(route53): fix hosted zone DNS for EKS-Auth VPC Endpoints
 - fix(pipeline): bootstrap stage failed silently
 - fix(organizations): fix enabled controls cfn throttling
@@ -434,7 +439,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - chore(sample-config): update s3 service control policy
 - chore(sts): updated sts endpoints
 - chore(uninstaller): improved performance for deployments with many regions
-- chore(validation): extending validation on ENI lookups to allow for _ character
+- chore(validation): extending validation on ENI lookups to allow for \_ character
 
 ## [1.9.2] - 2024-08-26
 
