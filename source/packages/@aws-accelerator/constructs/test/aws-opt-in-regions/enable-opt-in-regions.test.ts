@@ -12,6 +12,7 @@
  */
 
 import * as cdk from 'aws-cdk-lib';
+import { describe } from 'vitest';
 import { OptInRegions } from '../../lib/aws-opt-in-regions/enable-opt-in-regions';
 import { snapShotTest } from '../snapshot-test';
 

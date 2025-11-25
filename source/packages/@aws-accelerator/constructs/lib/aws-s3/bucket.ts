@@ -20,7 +20,7 @@ import { BucketReplication, BucketReplicationProps } from './bucket-replication'
 import { BucketPrefix, BucketPrefixProps } from './bucket-prefix';
 import { Construct } from 'constructs';
 import { pascalCase } from 'change-case';
-import { BucketAccessType } from '@aws-accelerator/utils/lib/common-resources';
+import { BucketAccessType } from '@aws-accelerator/utils';
 
 export enum BucketEncryptionType {
   SSE_S3 = 'sse-s3',

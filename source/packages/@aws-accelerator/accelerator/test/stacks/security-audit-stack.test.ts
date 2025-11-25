@@ -12,7 +12,7 @@
  */
 
 import { GuardDutyConfig, GuardDutyExportFindingsConfig, Region } from '@aws-accelerator/config';
-import { describe } from '@jest/globals';
+import { describe, beforeEach, test, expect } from 'vitest';
 import * as cdk from 'aws-cdk-lib';
 import { SecurityAuditStack } from '../../lib/stacks/security-audit-stack';
 import { createAcceleratorStackProps } from './stack-props-test-helper';

@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`Policy Construct(Policy):  Snapshot Test 1`] = `
+exports[`Policy > Construct(Policy):  Snapshot Test 1`] = `
 {
   "Resources": {
     "CustomKey1E6D0D07": {
@@ -176,7 +176,7 @@ exports[`Policy Construct(Policy):  Snapshot Test 1`] = `
           "Fn::Sub": "cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}",
         },
         "description": "Testing Policy construct",
-        "key": "cc6645b789ecec398524e5ade5814359a8403b9c8c2c4b54b7c4e7ba20348a98.ts",
+        "key": "627b5e364864c1e629985018e157442af44e678c3602a9b5217afb939973b9d1.ts",
         "name": "TestPolicy",
         "partition": "aws",
         "policyTagKey": "AWSAcceleratorManaged",

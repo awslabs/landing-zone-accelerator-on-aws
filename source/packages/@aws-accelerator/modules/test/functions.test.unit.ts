@@ -10,7 +10,8 @@
  *  OR CONDITIONS OF ANY KIND, express or implied. See the License for the specific language governing permissions
  *  and limitations under the License.
  */
-import { beforeEach, describe, expect, test } from '@jest/globals';
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import {
   getAcceleratorModuleRunnerParameters,
   getCentralLogBucketName,
@@ -58,29 +59,30 @@ import {
 import { AcceleratorModuleStageOrders, EXECUTION_CONTROLLABLE_MODULES } from '../models/constants';
 import { pascalCase } from 'pascal-case';
 import { AcceleratorModules, AcceleratorModuleStages, ModuleExecutionPhase } from '../models/enums';
+import * as lzaCommonFunctions from '../../../@aws-lza/common/functions';
 
 const mockYargs = {
-  options: jest.fn().mockReturnThis(),
-  parseSync: jest.fn(),
+  options: vi.fn().mockReturnThis(),
+  parseSync: vi.fn(),
 };
 
 //
 // Mock Dependencies
 //
-jest.mock('@aws-sdk/client-organizations', () => ({
-  ...jest.requireActual('@aws-sdk/client-organizations'),
-  paginateListAccounts: jest.fn(),
-  OrganizationsClient: jest.fn(),
-  DescribeOrganizationCommand: jest.fn(),
+vi.mock('@aws-sdk/client-organizations', async () => ({
+  ...(await vi.importActual('@aws-sdk/client-organizations')),
+  paginateListAccounts: vi.fn(),
+  OrganizationsClient: vi.fn(),
+  DescribeOrganizationCommand: vi.fn(),
 }));
 
-jest.mock('@aws-sdk/client-ssm', () => ({
-  SSMClient: jest.fn().mockImplementation(() => ({
-    send: jest.fn().mockResolvedValue({
+vi.mock('@aws-sdk/client-ssm', () => ({
+  SSMClient: vi.fn().mockImplementation(() => ({
+    send: vi.fn().mockResolvedValue({
       Parameter: MOCK_CONSTANTS.centralLogBucketCmkSsmParameter,
     }),
   })),
-  GetParameterCommand: jest.fn(),
+  GetParameterCommand: vi.fn(),
   ParameterNotFound: class ParameterNotFound extends Error {
     constructor() {
       super('Parameter not found');
@@ -89,38 +91,38 @@ jest.mock('@aws-sdk/client-ssm', () => ({
   },
 }));
 
-jest.mock('yargs', () => ({
+vi.mock('yargs', () => ({
   __esModule: true,
   default: () => mockYargs,
 }));
 
-jest.mock('../../../@aws-lza/common/functions', () => ({
-  getCredentials: jest.fn(),
-  setRetryStrategy: jest.fn().mockReturnValue(undefined),
+vi.mock('../../../@aws-lza/common/functions', () => ({
+  getCredentials: vi.fn(),
+  setRetryStrategy: vi.fn().mockReturnValue(undefined),
 }));
 
-jest.mock('../../../@aws-lza/common/logger', () => ({
-  createLogger: jest.fn().mockReturnValue({
-    info: jest.fn().mockReturnValue(undefined),
-    warn: jest.fn().mockReturnValue(undefined),
-    error: jest.fn().mockReturnValue(undefined),
+vi.mock('../../../@aws-lza/common/logger', () => ({
+  createLogger: vi.fn().mockReturnValue({
+    info: vi.fn().mockReturnValue(undefined),
+    warn: vi.fn().mockReturnValue(undefined),
+    error: vi.fn().mockReturnValue(undefined),
   }),
-  createStatusLogger: jest.fn().mockReturnValue({
-    info: jest.fn().mockReturnValue(undefined),
-    warn: jest.fn().mockReturnValue(undefined),
-    error: jest.fn().mockReturnValue(undefined),
+  createStatusLogger: vi.fn().mockReturnValue({
+    info: vi.fn().mockReturnValue(undefined),
+    warn: vi.fn().mockReturnValue(undefined),
+    error: vi.fn().mockReturnValue(undefined),
   }),
 }));
 
-jest.mock('../../utils/lib/common-functions', () => ({
-  ...jest.requireActual('../../utils/lib/common-functions'),
-  getGlobalRegion: jest.fn(),
+vi.mock('../../utils/lib/common-functions', async () => ({
+  ...(await vi.importActual('../../utils/lib/common-functions')),
+  getGlobalRegion: vi.fn(),
 }));
 
 describe('functions', () => {
   describe('validateAndGetRunnerParameters', () => {
     beforeEach(() => {
-      jest.clearAllMocks();
+      vi.clearAllMocks();
       mockYargs.options.mockReturnValue(mockYargs);
     });
 
@@ -283,7 +285,7 @@ describe('functions', () => {
 
   describe('getManagementAccountCredentials', () => {
     beforeEach(() => {
-      jest.clearAllMocks();
+      vi.clearAllMocks();
 
       delete process.env['MANAGEMENT_ACCOUNT_ID'];
       delete process.env['MANAGEMENT_ACCOUNT_ROLE_NAME'];
@@ -307,9 +309,7 @@ describe('functions', () => {
       process.env['MANAGEMENT_ACCOUNT_ID'] = MOCK_CONSTANTS.managementAccountId;
       process.env['MANAGEMENT_ACCOUNT_ROLE_NAME'] = MOCK_CONSTANTS.managementAccountAccessRole;
 
-      jest
-        .spyOn(require('../../../@aws-lza/common/functions'), 'getCredentials')
-        .mockResolvedValue(MOCK_CONSTANTS.credentials);
+      vi.spyOn(lzaCommonFunctions, 'getCredentials').mockResolvedValue(MOCK_CONSTANTS.credentials);
 
       // Execute
 
@@ -348,7 +348,7 @@ describe('functions', () => {
       // Setup
 
       const mockPaginator = [{ Accounts: MOCK_CONSTANTS.organizationAccounts }];
-      (paginateListAccounts as jest.Mock).mockImplementation(() => mockPaginator);
+      (paginateListAccounts as any).mockImplementation(() => mockPaginator);
 
       // Execute
 
@@ -374,7 +374,7 @@ describe('functions', () => {
       // Setup
 
       const mockPaginator = [{ Accounts: MOCK_CONSTANTS.organizationAccounts }];
-      (paginateListAccounts as jest.Mock).mockImplementation(() => mockPaginator);
+      (paginateListAccounts as vi.Mock).mockImplementation(() => mockPaginator);
 
       // Execute
 
@@ -400,7 +400,7 @@ describe('functions', () => {
       // Setup
 
       const mockPaginator = [{ Accounts: MOCK_CONSTANTS.organizationAccounts }];
-      (paginateListAccounts as jest.Mock).mockImplementation(() => mockPaginator);
+      (paginateListAccounts as vi.Mock).mockImplementation(() => mockPaginator);
 
       // Execute
 
@@ -426,7 +426,7 @@ describe('functions', () => {
       // Setup
 
       const mockPaginator = [{ Accounts: [] }];
-      (paginateListAccounts as jest.Mock).mockImplementation(() => mockPaginator);
+      (paginateListAccounts as vi.Mock).mockImplementation(() => mockPaginator);
 
       // Execute
 
@@ -447,7 +447,7 @@ describe('functions', () => {
         { Accounts: [MOCK_CONSTANTS.organizationAccounts[0]] },
         { Accounts: [MOCK_CONSTANTS.organizationAccounts[1]] },
       ];
-      (paginateListAccounts as jest.Mock).mockImplementation(() => mockPaginator);
+      (paginateListAccounts as vi.Mock).mockImplementation(() => mockPaginator);
 
       // Execute
 
@@ -465,7 +465,7 @@ describe('functions', () => {
       // Setup
 
       const mockPaginator = [{ Accounts: undefined }];
-      (paginateListAccounts as jest.Mock).mockImplementation(() => mockPaginator);
+      (paginateListAccounts as vi.Mock).mockImplementation(() => mockPaginator);
 
       // Execute
 
@@ -481,11 +481,11 @@ describe('functions', () => {
   });
 
   describe('getOrganizationDetails', () => {
-    const mockSend = jest.fn();
+    const mockSend = vi.fn();
 
     beforeEach(() => {
-      jest.clearAllMocks();
-      (OrganizationsClient as jest.Mock).mockImplementation(() => ({
+      vi.clearAllMocks();
+      (OrganizationsClient as any).mockImplementation(() => ({
         send: mockSend,
       }));
     });
@@ -607,30 +607,28 @@ describe('functions', () => {
   });
 
   describe('getCentralLoggingResources', () => {
-    const mockSend = jest.fn();
+    const mockSend = vi.fn();
     let ssmMockClient: SSMClient;
     let mockAccountsConfig: Partial<AccountsConfig>;
 
     beforeEach(() => {
-      jest.clearAllMocks();
-      (SSMClient as jest.Mock).mockImplementation(() => ({
+      vi.clearAllMocks();
+      (SSMClient as any).mockImplementation(() => ({
         send: mockSend,
       }));
       ssmMockClient = new SSMClient({});
       mockAccountsConfig = {
-        getLogArchiveAccount: jest.fn().mockReturnValue(MOCK_CONSTANTS.logArchiveAccount),
-        getLogArchiveAccountId: jest.fn().mockReturnValue(MOCK_CONSTANTS.logArchiveAccountId),
+        getLogArchiveAccount: vi.fn().mockReturnValue(MOCK_CONSTANTS.logArchiveAccount),
+        getLogArchiveAccountId: vi.fn().mockReturnValue(MOCK_CONSTANTS.logArchiveAccountId),
         ...mockAccountsConfiguration,
       };
     });
 
     test('should return CMK ARN', async () => {
       // Setup
-      jest
-        .spyOn(require('../../../@aws-lza/common/functions'), 'getCredentials')
-        .mockResolvedValue(MOCK_CONSTANTS.credentials);
+      vi.spyOn(lzaCommonFunctions, 'getCredentials').mockResolvedValue(MOCK_CONSTANTS.credentials);
 
-      (ssmMockClient.send as jest.Mock).mockReturnValue({
+      (ssmMockClient.send as vi.Mock).mockReturnValue({
         Parameter: MOCK_CONSTANTS.centralLogBucketCmkSsmParameter,
       });
 
@@ -670,9 +668,7 @@ describe('functions', () => {
 
     test('should return undefined when parameter not found', async () => {
       // Setup
-      jest
-        .spyOn(require('../../../@aws-lza/common/functions'), 'getCredentials')
-        .mockResolvedValue(MOCK_CONSTANTS.credentials);
+      vi.spyOn(lzaCommonFunctions, 'getCredentials').mockResolvedValue(MOCK_CONSTANTS.credentials);
 
       mockSend.mockRejectedValueOnce(
         new ParameterNotFound({
@@ -707,9 +703,7 @@ describe('functions', () => {
     test('should throw error for other exceptions', async () => {
       // Setup
       const mockError = new Error('Some other error');
-      jest
-        .spyOn(require('../../../@aws-lza/common/functions'), 'getCredentials')
-        .mockResolvedValue(MOCK_CONSTANTS.credentials);
+      vi.spyOn(lzaCommonFunctions, 'getCredentials').mockResolvedValue(MOCK_CONSTANTS.credentials);
 
       mockSend.mockRejectedValueOnce(mockError);
 
@@ -737,9 +731,7 @@ describe('functions', () => {
 
     test('should return undefined when stage execution order is prior to logging stage', async () => {
       // Setup
-      jest
-        .spyOn(require('../../../@aws-lza/common/functions'), 'getCredentials')
-        .mockResolvedValue(MOCK_CONSTANTS.credentials);
+      vi.spyOn(lzaCommonFunctions, 'getCredentials').mockResolvedValue(MOCK_CONSTANTS.credentials);
 
       // Execute
       const result = await getCentralLoggingResources(
@@ -766,9 +758,7 @@ describe('functions', () => {
 
     test('should return undefined when module execution phase is synth', async () => {
       // Setup
-      jest
-        .spyOn(require('../../../@aws-lza/common/functions'), 'getCredentials')
-        .mockResolvedValue(MOCK_CONSTANTS.credentials);
+      vi.spyOn(lzaCommonFunctions, 'getCredentials').mockResolvedValue(MOCK_CONSTANTS.credentials);
 
       // Execute
       const result = await getCentralLoggingResources(
@@ -797,10 +787,10 @@ describe('functions', () => {
   describe('getCentralLogBucketName', () => {
     let mockAccountsConfig: Partial<AccountsConfig>;
     beforeEach(() => {
-      jest.clearAllMocks();
+      vi.clearAllMocks();
       mockAccountsConfig = {
-        getLogArchiveAccount: jest.fn().mockReturnValue(MOCK_CONSTANTS.logArchiveAccount),
-        getLogArchiveAccountId: jest.fn().mockReturnValue(MOCK_CONSTANTS.logArchiveAccountId),
+        getLogArchiveAccount: vi.fn().mockReturnValue(MOCK_CONSTANTS.logArchiveAccount),
+        getLogArchiveAccountId: vi.fn().mockReturnValue(MOCK_CONSTANTS.logArchiveAccountId),
         ...mockAccountsConfiguration,
       };
     });
@@ -836,21 +826,21 @@ describe('functions', () => {
   });
 
   describe('getAcceleratorModuleRunnerParameters', () => {
-    const mockSsmSend = jest.fn();
-    const mockOrgSend = jest.fn();
+    const mockSsmSend = vi.fn();
+    const mockOrgSend = vi.fn();
     let ssmMockClient: SSMClient;
     let orgMockClient: OrganizationsClient;
     let mockAccountsConfig: Partial<AccountsConfig>;
     let configs: AcceleratorConfigurationsType;
 
     beforeEach(() => {
-      jest.clearAllMocks();
+      vi.clearAllMocks();
 
-      (OrganizationsClient as jest.Mock).mockImplementation(() => ({
+      (OrganizationsClient as any).mockImplementation(() => ({
         send: mockOrgSend,
       }));
 
-      (SSMClient as jest.Mock).mockImplementation(() => ({
+      (SSMClient as any).mockImplementation(() => ({
         send: mockSsmSend,
       }));
 
@@ -858,19 +848,19 @@ describe('functions', () => {
       orgMockClient = new OrganizationsClient({});
 
       mockAccountsConfig = {
-        getLogArchiveAccount: jest.fn().mockReturnValue(MOCK_CONSTANTS.logArchiveAccount),
-        getLogArchiveAccountId: jest.fn().mockReturnValue(MOCK_CONSTANTS.logArchiveAccountId),
+        getLogArchiveAccount: vi.fn().mockReturnValue(MOCK_CONSTANTS.logArchiveAccount),
+        getLogArchiveAccountId: vi.fn().mockReturnValue(MOCK_CONSTANTS.logArchiveAccountId),
         ...mockAccountsConfiguration,
       };
 
       const mockPaginator = [{ Accounts: MOCK_CONSTANTS.organizationAccounts }];
-      (paginateListAccounts as jest.Mock).mockImplementation(() => mockPaginator);
+      (paginateListAccounts as any).mockImplementation(() => mockPaginator);
 
-      (ssmMockClient.send as jest.Mock).mockReturnValue({
+      (ssmMockClient.send as any).mockReturnValue({
         Parameter: MOCK_CONSTANTS.centralLogBucketCmkSsmParameter,
       });
 
-      (orgMockClient.send as jest.Mock).mockReturnValue({
+      (orgMockClient.send as any).mockReturnValue({
         Organization: MOCK_CONSTANTS.organizationDetails,
       });
 
@@ -885,14 +875,14 @@ describe('functions', () => {
         securityConfig: mockSecurityConfig as SecurityConfig,
       };
 
-      jest.spyOn(ConfigLoader, 'getAcceleratorConfigurations').mockResolvedValue(configs);
+      vi.spyOn(ConfigLoader, 'getAcceleratorConfigurations').mockResolvedValue(configs);
     });
 
     test('should return correct parameters when organization is enabled', async () => {
       // Setup
-      jest
-        .spyOn(require('../../utils/lib/common-functions'), 'getGlobalRegion')
-        .mockReturnValue(MOCK_CONSTANTS.globalRegion);
+      vi.spyOn(await import('../../utils/lib/common-functions'), 'getGlobalRegion').mockReturnValue(
+        MOCK_CONSTANTS.globalRegion,
+      );
 
       // Execute
       const result = await getAcceleratorModuleRunnerParameters(
@@ -938,7 +928,7 @@ describe('functions', () => {
         securityConfig: mockSecurityConfig as SecurityConfig,
       };
 
-      jest.spyOn(ConfigLoader, 'getAcceleratorConfigurations').mockResolvedValue(configs);
+      vi.spyOn(ConfigLoader, 'getAcceleratorConfigurations').mockResolvedValue(configs);
 
       // Execute
       const result = await getAcceleratorModuleRunnerParameters(
@@ -1026,7 +1016,7 @@ describe('functions', () => {
     const originalEnv = process.env;
 
     beforeEach(() => {
-      jest.clearAllMocks();
+      vi.clearAllMocks();
       process.env = { ...originalEnv };
     });
 

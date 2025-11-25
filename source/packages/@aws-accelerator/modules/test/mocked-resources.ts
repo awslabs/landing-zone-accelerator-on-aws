@@ -11,6 +11,7 @@
  *  and limitations under the License.
  */
 
+import { vi } from 'vitest';
 import {
   AccountConfig,
   AccountsConfig,
@@ -312,8 +313,8 @@ export const mockCustomizationsConfig: Partial<CustomizationsConfig> = {
   customizations: { cloudFormationStacks: [], cloudFormationStackSets: [], serviceCatalogPortfolios: [] },
   applications: [],
   firewalls: undefined,
-  getCustomStacks: jest.fn().mockReturnValue(undefined),
-  getAppStacks: jest.fn().mockReturnValue(undefined),
+  getCustomStacks: vi.fn().mockReturnValue(undefined),
+  getAppStacks: vi.fn().mockReturnValue(undefined),
 };
 
 export const mockIamConfig: Partial<IamConfig> = {

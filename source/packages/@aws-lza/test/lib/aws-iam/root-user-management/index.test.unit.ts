@@ -12,7 +12,7 @@
  */
 /* eslint @typescript-eslint/no-explicit-any: 0 */
 
-import { beforeEach, describe, expect, it, jest } from '@jest/globals';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import {
   DisableAWSServiceAccessCommand,
@@ -36,19 +36,19 @@ import { RootUserManagementModule } from '../../../../lib/aws-iam/root-user-mana
 
 import { MOCK_CONSTANTS } from '../../../mocked-resources';
 
-jest.mock('@aws-sdk/client-organizations', () => ({
-  OrganizationsClient: jest.fn(),
-  EnableAWSServiceAccessCommand: jest.fn(),
-  DisableAWSServiceAccessCommand: jest.fn(),
+vi.mock('@aws-sdk/client-organizations', () => ({
+  OrganizationsClient: vi.fn(),
+  EnableAWSServiceAccessCommand: vi.fn(),
+  DisableAWSServiceAccessCommand: vi.fn(),
 }));
 
-jest.mock('@aws-sdk/client-iam', () => ({
-  IAMClient: jest.fn(),
-  EnableOrganizationsRootCredentialsManagementCommand: jest.fn(),
-  DisableOrganizationsRootCredentialsManagementCommand: jest.fn(),
-  EnableOrganizationsRootSessionsCommand: jest.fn(),
-  DisableOrganizationsRootSessionsCommand: jest.fn(),
-  ListOrganizationsFeaturesCommand: jest.fn(),
+vi.mock('@aws-sdk/client-iam', () => ({
+  IAMClient: vi.fn(),
+  EnableOrganizationsRootCredentialsManagementCommand: vi.fn(),
+  DisableOrganizationsRootCredentialsManagementCommand: vi.fn(),
+  EnableOrganizationsRootSessionsCommand: vi.fn(),
+  DisableOrganizationsRootSessionsCommand: vi.fn(),
+  ListOrganizationsFeaturesCommand: vi.fn(),
   ServiceAccessNotEnabledException: class extends Error {
     constructor(message?: string) {
       super(message);
@@ -58,15 +58,15 @@ jest.mock('@aws-sdk/client-iam', () => ({
 }));
 
 describe('CentralRootUserManagementModule', () => {
-  const mockSend = jest.fn();
+  const mockSend = vi.fn();
   const rootUserManagement: RootUserManagementModule = new RootUserManagementModule();
 
   beforeEach(() => {
-    jest.clearAllMocks();
-    (OrganizationsClient as jest.Mock).mockImplementation(() => ({
+    vi.clearAllMocks();
+    (OrganizationsClient as vi.Mock).mockImplementation(() => ({
       send: mockSend,
     }));
-    (IAMClient as jest.Mock).mockImplementation(() => ({
+    (IAMClient as vi.Mock).mockImplementation(() => ({
       send: mockSend,
     }));
   });
@@ -264,15 +264,15 @@ describe('CentralRootUserManagementModule', () => {
 });
 
 describe('CentralRootUserManagementModule DryRun', () => {
-  const mockSend = jest.fn();
+  const mockSend = vi.fn();
   const rootUserManagement: RootUserManagementModule = new RootUserManagementModule();
 
   beforeEach(() => {
-    jest.clearAllMocks();
-    (OrganizationsClient as jest.Mock).mockImplementation(() => ({
+    vi.clearAllMocks();
+    (OrganizationsClient as vi.Mock).mockImplementation(() => ({
       send: mockSend,
     }));
-    (IAMClient as jest.Mock).mockImplementation(() => ({
+    (IAMClient as vi.Mock).mockImplementation(() => ({
       send: mockSend,
     }));
   });
@@ -625,14 +625,14 @@ describe('CentralRootUserManagementModule DryRun', () => {
 });
 
 describe('CentralRootUserManagementModule Failures', () => {
-  const mockSend = jest.fn();
+  const mockSend = vi.fn();
 
   beforeEach(() => {
-    jest.clearAllMocks();
-    (OrganizationsClient as jest.Mock).mockImplementation(() => ({
+    vi.clearAllMocks();
+    (OrganizationsClient as vi.Mock).mockImplementation(() => ({
       send: mockSend,
     }));
-    (IAMClient as jest.Mock).mockImplementation(() => ({
+    (IAMClient as vi.Mock).mockImplementation(() => ({
       send: mockSend,
     }));
   });

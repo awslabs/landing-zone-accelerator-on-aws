@@ -11,7 +11,7 @@
  *  and limitations under the License.
  */
 
-import { describe, beforeEach, expect, test } from '@jest/globals';
+import { describe, beforeEach, expect, test, vi } from 'vitest';
 import {
   AcceleratorMockClient,
   AccountCreationInternalFailureError,
@@ -30,8 +30,22 @@ import {
 } from '@aws-sdk/client-organizations';
 import * as CommonResources from '../../lib/control-tower/utils/resources';
 
+// Mock console output
+vi.spyOn(console, 'log').mockImplementation(() => {
+  /* mock implementation */
+});
+vi.spyOn(console, 'error').mockImplementation(() => {
+  /* mock implementation */
+});
+vi.spyOn(console, 'warn').mockImplementation(() => {
+  /* mock implementation */
+});
+vi.spyOn(console, 'info').mockImplementation(() => {
+  /* mock implementation */
+});
+
 const client = AcceleratorMockClient(OrganizationsClient);
-const mockDelay = jest.spyOn(CommonResources, 'delay');
+const mockDelay = vi.spyOn(CommonResources, 'delay');
 
 describe('Success', () => {
   beforeEach(() => {

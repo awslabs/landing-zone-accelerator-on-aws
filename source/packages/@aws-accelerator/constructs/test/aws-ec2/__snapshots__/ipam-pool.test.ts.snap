@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`IpamPool Construct(IpamPool):  Snapshot Test 1`] = `
+exports[`IpamPool > Construct(IpamPool):  Snapshot Test 1`] = `
 {
   "Resources": {
     "TestIpamPool2D962DC3": {

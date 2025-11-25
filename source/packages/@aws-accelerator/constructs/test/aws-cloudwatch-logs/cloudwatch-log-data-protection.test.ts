@@ -14,7 +14,7 @@
 import * as cdk from 'aws-cdk-lib';
 import { CloudWatchLogDataProtection } from '../../lib/aws-cloudwatch-logs/cloudwatch-log-data-protection';
 import { snapShotTest } from '../snapshot-test';
-import { describe } from '@jest/globals';
+import { describe } from 'vitest';
 
 const testNamePrefix = 'Construct(CloudWatchLogDataProtection): ';
 

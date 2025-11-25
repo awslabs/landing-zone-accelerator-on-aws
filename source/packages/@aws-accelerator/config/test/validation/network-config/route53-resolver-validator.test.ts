@@ -1,4 +1,4 @@
-import { describe, expect, it } from '@jest/globals';
+import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest';
 import { Route53ResolverValidator } from '../../../validator/network-config-validator/route53-resolver-validator';
 import { NetworkConfig, ResolverEndpointConfig } from '../../../lib/network-config';
 import { NetworkValidatorFunctions } from '../../../validator/network-config-validator/network-validator-functions';
@@ -8,7 +8,7 @@ describe('Route53ResolverValidator', () => {
   let errors: string[];
 
   afterEach(() => {
-    jest.restoreAllMocks();
+    vi.restoreAllMocks();
   });
 
   beforeEach(() => {
@@ -21,13 +21,13 @@ describe('Route53ResolverValidator', () => {
   });
 
   describe('validateResolverProtocols', () => {
-    let validateSpy: jest.SpyInstance;
+    let validateSpy: vi.SpyInstance;
 
     it('calls inbound', () => {
       const endpoint = {
         type: 'INBOUND',
       } as ResolverEndpointConfig;
-      validateSpy = jest.spyOn(validator, 'validateInboundResolverEndpoint' as keyof Route53ResolverValidator);
+      validateSpy = vi.spyOn(validator, 'validateInboundResolverEndpoint' as keyof Route53ResolverValidator);
       validator['validateResolverProtocols'](endpoint, errors);
       expect(validateSpy).toHaveBeenLastCalledWith(endpoint, errors);
     });
@@ -36,7 +36,7 @@ describe('Route53ResolverValidator', () => {
       const endpoint = {
         type: 'OUTBOUND',
       } as ResolverEndpointConfig;
-      validateSpy = jest.spyOn(validator, 'validateOutboundResolverEndpoint' as keyof Route53ResolverValidator);
+      validateSpy = vi.spyOn(validator, 'validateOutboundResolverEndpoint' as keyof Route53ResolverValidator);
       validator['validateResolverProtocols'](endpoint, errors);
       expect(validateSpy).toHaveBeenLastCalledWith(endpoint, errors);
     });

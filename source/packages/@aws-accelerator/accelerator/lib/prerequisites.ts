@@ -13,9 +13,7 @@
 import mri from 'mri';
 import * as fs from 'fs';
 import process from 'process';
-import { createLogger } from '@aws-accelerator/utils/lib/logger';
-import { evaluateLimits } from '@aws-accelerator/utils/lib/evaluate-limits';
-import { getCurrentAccountId, getGlobalRegion } from '@aws-accelerator/utils/lib/common-functions';
+import { createLogger, evaluateLimits, getCurrentAccountId, getGlobalRegion } from '@aws-accelerator/utils';
 import { AccountsConfig, GlobalConfig, OrganizationConfig } from '@aws-accelerator/config';
 
 const logger = createLogger(['prerequisites']);

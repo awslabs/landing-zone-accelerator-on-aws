@@ -14,7 +14,7 @@
 import * as cdk from 'aws-cdk-lib';
 import { Document } from '../../lib/aws-ssm/document';
 import { snapShotTest } from '../snapshot-test';
-import { describe } from '@jest/globals';
+import { describe } from 'vitest';
 
 const testNamePrefix = 'Construct(Document): ';
 

@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`AccountWarming Construct(WarmAccount):  Snapshot Test 1`] = `
+exports[`AccountWarming > Construct(WarmAccount):  Snapshot Test 1`] = `
 {
   "Resources": {
     "AccountWarmingWarmAccountFunctionAD0DA263": {

@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`ReportDefinition Construct(ReportDefinition):  Snapshot Test 1`] = `
+exports[`ReportDefinition > Construct(ReportDefinition):  Snapshot Test 1`] = `
 {
   "Resources": {
     "NativeStack5E60C508": {
@@ -158,7 +158,7 @@ exports[`ReportDefinition Construct(ReportDefinition):  Snapshot Test 1`] = `
 }
 `;
 
-exports[`ReportDefinition Construct(ReportDefinition):  Snapshot Test 2`] = `
+exports[`ReportDefinition > Construct(ReportDefinition):  Snapshot Test 2`] = `
 {
   "Resources": {
     "CustomCrossRegionReportDefinitionCustomResourceProviderHandler8E3AEE17": {

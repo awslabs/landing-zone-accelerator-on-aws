@@ -20,17 +20,18 @@ import {
 } from '../../../../interfaces/service-quotas/check-service-quota';
 import * as commonFunctions from '../../../../common/functions';
 import * as throttle from '../../../../common/throttle';
+import { vi, describe, beforeEach, afterEach, test, expect } from 'vitest';
 
 // Mock the AWS SDK clients and functions
-jest.mock('@aws-sdk/client-service-quotas');
-jest.mock('@aws-sdk/client-sts');
-jest.mock('../../../../common/functions');
-jest.mock('../../../../common/throttle');
+vi.mock('@aws-sdk/client-service-quotas');
+vi.mock('@aws-sdk/client-sts');
+vi.mock('../../../../common/functions');
+vi.mock('../../../../common/throttle');
 
 describe('CheckServiceQuota', () => {
   let module: CheckServiceQuota;
-  let mockServiceQuotasClient: jest.Mocked<ServiceQuotasClient>;
-  let mockSTSClient: jest.Mocked<STSClient>;
+  let mockServiceQuotasClient: vi.Mocked<ServiceQuotasClient>;
+  let mockSTSClient: vi.Mocked<STSClient>;
 
   // Test parameters
   const testRegion = 'us-east-1';
@@ -51,41 +52,41 @@ describe('CheckServiceQuota', () => {
   };
 
   beforeEach(() => {
-    jest.resetAllMocks();
+    vi.resetAllMocks();
 
     // Mock implementation for STS client
     mockSTSClient = {
-      send: jest.fn(),
-    } as unknown as jest.Mocked<STSClient>;
+      send: vi.fn(),
+    } as unknown as vi.Mocked<STSClient>;
 
     // Mock implementation for ServiceQuotas client with type cast to avoid TS errors
     mockServiceQuotasClient = {
-      send: jest.fn(),
-    } as unknown as jest.Mocked<ServiceQuotasClient>;
+      send: vi.fn(),
+    } as unknown as vi.Mocked<ServiceQuotasClient>;
 
     // Mock the client constructors
-    (STSClient as jest.MockedClass<typeof STSClient>).mockImplementation(() => mockSTSClient);
-    (ServiceQuotasClient as jest.MockedClass<typeof ServiceQuotasClient>).mockImplementation(
+    (STSClient as vi.MockedClass<typeof STSClient>).mockImplementation(() => mockSTSClient);
+    (ServiceQuotasClient as vi.MockedClass<typeof ServiceQuotasClient>).mockImplementation(
       () => mockServiceQuotasClient,
     );
 
     // Mock functions from common module
-    jest.spyOn(commonFunctions, 'getCurrentAccountId').mockResolvedValue(testCurrentAccountId);
-    jest
-      .spyOn(commonFunctions, 'setRetryStrategy')
-      .mockReturnValue({} as ReturnType<typeof commonFunctions.setRetryStrategy>);
-    jest
-      .spyOn(commonFunctions, 'getCredentials')
-      .mockResolvedValue({} as ReturnType<typeof commonFunctions.getCredentials>);
+    vi.spyOn(commonFunctions, 'getCurrentAccountId').mockResolvedValue(testCurrentAccountId);
+    vi.spyOn(commonFunctions, 'setRetryStrategy').mockReturnValue(
+      {} as ReturnType<typeof commonFunctions.setRetryStrategy>,
+    );
+    vi.spyOn(commonFunctions, 'getCredentials').mockResolvedValue(
+      {} as ReturnType<typeof commonFunctions.getCredentials>,
+    );
 
     // Mock throttlingBackOff function
-    jest.spyOn(throttle, 'throttlingBackOff').mockImplementation(fn => fn());
+    vi.spyOn(throttle, 'throttlingBackOff').mockImplementation(fn => fn());
 
     module = new CheckServiceQuota();
   });
 
   afterEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   describe('Interface Contract Compliance', () => {
@@ -95,7 +96,7 @@ describe('CheckServiceQuota', () => {
     beforeEach(() => {
       module = new CheckServiceQuota();
       // Mock the handler implementation
-      jest.spyOn(module, 'handler').mockImplementation(async () => true);
+      vi.spyOn(module, 'handler').mockImplementation(async () => true);
     });
 
     test('should implement all interface methods', () => {
@@ -114,7 +115,7 @@ describe('CheckServiceQuota', () => {
 
     test('should handle invalid inputs according to contract', async () => {
       // Reset mock to test error handling
-      jest.spyOn(module, 'handler').mockRejectedValue(new Error('Invalid input parameters'));
+      vi.spyOn(module, 'handler').mockRejectedValue(new Error('Invalid input parameters'));
 
       await expect(module.handler({} as ICheckServiceQuotaParameter)).rejects.toThrow('Invalid input parameters');
     });
@@ -125,7 +126,7 @@ describe('CheckServiceQuota', () => {
     });
 
     afterEach(() => {
-      jest.restoreAllMocks();
+      vi.restoreAllMocks();
     });
   });
 
@@ -147,11 +148,7 @@ describe('CheckServiceQuota', () => {
       });
 
       expect(result).toBe(true);
-      expect(mockServiceQuotasClient.send).toHaveBeenCalledWith(
-        expect.objectContaining({
-          constructor: GetServiceQuotaCommand,
-        }),
-      );
+      expect(mockServiceQuotasClient.send).toHaveBeenCalledWith(expect.any(GetServiceQuotaCommand));
     });
 
     test('should return true when quota exceeds requirement', async () => {

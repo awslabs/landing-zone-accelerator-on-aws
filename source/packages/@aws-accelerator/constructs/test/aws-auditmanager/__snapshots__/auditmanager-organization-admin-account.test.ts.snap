@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`AuditManagerOrganizationAdminAccount Construct(AuditManagerOrganizationAdminAccount):  Snapshot Test 1`] = `
+exports[`AuditManagerOrganizationAdminAccount > Construct(AuditManagerOrganizationAdminAccount):  Snapshot Test 1`] = `
 {
   "Resources": {
     "AuditManagerOrganizationAdminAccount34B8BA90": {

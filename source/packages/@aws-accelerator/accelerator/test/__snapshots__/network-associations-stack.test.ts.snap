@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot Test 1`] = `
+exports[`NetworkAssociationsStack > Construct(NetworkAssociationsStack):  Snapshot Test 1`] = `
 {
   "Parameters": {
     "SsmParameterValueacceleratorkmslambdakeyarnC96584B6F00A464EAD1953AFF4B05118Parameter": {
@@ -4959,7 +4959,7 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
 }
 `;
 
-exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot Test 2`] = `
+exports[`NetworkAssociationsStack > Construct(NetworkAssociationsStack):  Snapshot Test 2`] = `
 {
   "Parameters": {
     "SsmParameterValueacceleratornetworkprefixListacceleratorprefixlist001idC96584B6F00A464EAD1953AFF4B05118Parameter": {
@@ -12797,7 +12797,7 @@ catch {
 }
 `;
 
-exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot Test 3`] = `
+exports[`NetworkAssociationsStack > Construct(NetworkAssociationsStack):  Snapshot Test 3`] = `
 {
   "Parameters": {
     "SsmParameterValueacceleratornetworkprefixListacceleratorprefixlistipv6idC96584B6F00A464EAD1953AFF4B05118Parameter": {
@@ -13575,7 +13575,7 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
 }
 `;
 
-exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot Test 4`] = `
+exports[`NetworkAssociationsStack > Construct(NetworkAssociationsStack):  Snapshot Test 4`] = `
 {
   "Parameters": {
     "SsmParameterValueacceleratornetworkprefixListacceleratorprefixlistipv6idC96584B6F00A464EAD1953AFF4B05118Parameter": {
@@ -14812,7 +14812,7 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
 }
 `;
 
-exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot Test 5`] = `
+exports[`NetworkAssociationsStack > Construct(NetworkAssociationsStack):  Snapshot Test 5`] = `
 {
   "Parameters": {
     "SsmParameterValueacceleratorkmscloudwatchkeyarnC96584B6F00A464EAD1953AFF4B05118Parameter": {
@@ -16118,7 +16118,7 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
 }
 `;
 
-exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot Test 6`] = `
+exports[`NetworkAssociationsStack > Construct(NetworkAssociationsStack):  Snapshot Test 6`] = `
 {
   "Parameters": {
     "SsmParameterValueacceleratornetworkvpcSecurityTemplateFullIpamWestcidripv4C96584B6F00A464EAD1953AFF4B05118Parameter": {
@@ -16998,7 +16998,7 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
 }
 `;
 
-exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot Test 7`] = `
+exports[`NetworkAssociationsStack > Construct(NetworkAssociationsStack):  Snapshot Test 7`] = `
 {
   "Parameters": {
     "SsmParameterValueacceleratorkmscloudwatchkeyarnC96584B6F00A464EAD1953AFF4B05118Parameter": {
@@ -18304,7 +18304,7 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
 }
 `;
 
-exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot Test 8`] = `
+exports[`NetworkAssociationsStack > Construct(NetworkAssociationsStack):  Snapshot Test 8`] = `
 {
   "Parameters": {
     "SsmParameterValueacceleratornetworkvpcSecurityTemplateFullIpamWestcidripv4C96584B6F00A464EAD1953AFF4B05118Parameter": {
@@ -19184,7 +19184,7 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
 }
 `;
 
-exports[`NoVpcFlowLogStack Construct(NetworkAssociationsStack):  Snapshot Test 1`] = `
+exports[`NoVpcFlowLogStack > Construct(NetworkAssociationsStack):  Snapshot Test 1`] = `
 {
   "Parameters": {
     "SsmParameterValueacceleratorkmscloudwatchkeyarnC96584B6F00A464EAD1953AFF4B05118Parameter": {

@@ -15,7 +15,7 @@ import { DynamoDBServiceException } from '@aws-sdk/client-dynamodb';
 import { DynamoDBDocumentClient, GetCommand } from '@aws-sdk/lib-dynamodb';
 import { getColumnFromConfigTable } from '../lib/get-column-from-config-table';
 import { DynamoDBOperationError } from '../lib/common-resources';
-import { expect, it, beforeEach, afterEach, describe } from '@jest/globals';
+import { expect, it, beforeEach, afterEach, describe } from 'vitest';
 
 let ddbMock: AwsClientStub<DynamoDBDocumentClient>;
 

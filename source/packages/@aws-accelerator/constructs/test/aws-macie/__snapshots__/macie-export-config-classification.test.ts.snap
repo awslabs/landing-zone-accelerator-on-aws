@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`MacieExportConfigClassification Construct(MacieExportConfigClassification):  Snapshot Test 1`] = `
+exports[`MacieExportConfigClassification > Construct(MacieExportConfigClassification):  Snapshot Test 1`] = `
 {
   "Resources": {
     "AwsMacieUpdateExportConfigClassification832781E3": {

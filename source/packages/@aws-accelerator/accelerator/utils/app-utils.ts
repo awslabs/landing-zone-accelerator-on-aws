@@ -28,18 +28,22 @@ import {
 } from '@aws-accelerator/config';
 import fs from 'fs';
 import path from 'path';
-import { AcceleratorStage } from '../lib/accelerator-stage';
-import { AcceleratorStackProps } from '../lib/stacks/accelerator-stack';
-import { getCentralLogBucketKmsKeyArn, shouldLookupDynamoDb } from '../lib/accelerator';
+import {
+  AcceleratorStage,
+  AcceleratorStackProps,
+  getCentralLogBucketKmsKeyArn,
+  shouldLookupDynamoDb,
+} from '@aws-accelerator/accelerator';
 import { AcceleratorResourceNames } from '../lib/accelerator-resource-names';
 import {
   POLICY_LOOKUP_TYPE,
   POLICY_LOOKUP_SCOPE,
   ACCEL_POLICY_LOOKUP_REGEX,
-} from '@aws-accelerator/utils/lib/policy-replacements';
-import { createLogger } from '@aws-accelerator/utils/lib/logger';
-import { getCrossAccountCredentials, setRetryStrategy } from '@aws-accelerator/utils/lib/common-functions';
-import { throttlingBackOff } from '@aws-accelerator/utils/lib/throttle';
+  createLogger,
+  throttlingBackOff,
+  setRetryStrategy,
+  getCrossAccountCredentials,
+} from '@aws-accelerator/utils';
 import { PutObjectCommand, S3Client } from '@aws-sdk/client-s3';
 import { DescribeVpcEndpointsCommand, DescribeVpcsCommand, EC2Client } from '@aws-sdk/client-ec2';
 import { AssumeRoleCommandOutput, Credentials } from '@aws-sdk/client-sts';

@@ -24,19 +24,17 @@ import {
   OutpostsConfig,
   SubnetConfig,
   TransitGatewayAttachmentConfig,
-} from '@aws-accelerator/config/lib/network-config';
-import { SsmResourceType } from '@aws-accelerator/utils/lib/ssm-parameter-path';
-import { IpamSubnet } from '@aws-accelerator/constructs/lib/aws-ec2/ipam-subnet';
-import { getAvailabilityZoneMap } from '@aws-accelerator/utils/lib/regions';
-import { TransitGatewayAttachment } from '@aws-accelerator/constructs/lib/aws-ec2/transit-gateway';
-import { isV2Resource } from '../utils/functions';
-import { NetworkStackGeneration, V2StackComponentsList } from '../utils/enums';
-import { MetadataKeys } from '@aws-accelerator/utils/lib/common-types';
+} from '@aws-accelerator/config';
+import { SsmResourceType, getAvailabilityZoneMap, MetadataKeys } from '@aws-accelerator/utils';
 import {
+  IpamSubnet,
+  TransitGatewayAttachment,
   ResourceShare,
   ResourceShareItem,
   ResourceShareOwner,
-} from '@aws-accelerator/constructs/lib/aws-ram/resource-share';
+} from '@aws-accelerator/constructs';
+import { isV2Resource } from '../utils/functions';
+import { NetworkStackGeneration, V2StackComponentsList } from '../utils/enums';
 
 type CreatedSubnetType = { name: string; id: string };
 

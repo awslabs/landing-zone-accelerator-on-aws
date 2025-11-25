@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`InstallerStack Stack(installer):  Snapshot Test 1`] = `
+exports[`InstallerStack > Stack(installer):  Snapshot Test 1`] = `
 {
   "Conditions": {
     "IsCommercialCondition": {
@@ -3748,7 +3748,7 @@ exports.handler = async function (event, context) {
 }
 `;
 
-exports[`InstallerStack Stack(installer):  Snapshot Test 2`] = `
+exports[`InstallerStack > Stack(installer):  Snapshot Test 2`] = `
 {
   "Conditions": {
     "IsCommercialCondition": {
@@ -7486,7 +7486,7 @@ exports.handler = async function (event, context) {
 }
 `;
 
-exports[`InstallerStack Stack(installer):  Snapshot Test 3`] = `
+exports[`InstallerStack > Stack(installer):  Snapshot Test 3`] = `
 {
   "Conditions": {
     "IsCommercialCondition": {
@@ -11273,7 +11273,7 @@ exports.handler = async function (event, context) {
 }
 `;
 
-exports[`InstallerStack Stack(installer):  Snapshot Test 4`] = `
+exports[`InstallerStack > Stack(installer):  Snapshot Test 4`] = `
 {
   "Conditions": {
     "IsCommercialCondition": {
@@ -15050,7 +15050,7 @@ exports.handler = async function (event, context) {
 }
 `;
 
-exports[`InstallerStack Stack(installer):  Snapshot Test 5`] = `
+exports[`InstallerStack > Stack(installer):  Snapshot Test 5`] = `
 {
   "Conditions": {
     "IsCommercialCondition": {
@@ -18832,7 +18832,7 @@ exports.handler = async function (event, context) {
 }
 `;
 
-exports[`InstallerStack Stack(installer):  Snapshot Test 6`] = `
+exports[`InstallerStack > Stack(installer):  Snapshot Test 6`] = `
 {
   "Conditions": {
     "IsCommercialCondition": {
@@ -22589,7 +22589,7 @@ exports.handler = async function (event, context) {
 }
 `;
 
-exports[`InstallerStack Stack(installer):  Snapshot Test 7`] = `
+exports[`InstallerStack > Stack(installer):  Snapshot Test 7`] = `
 {
   "Conditions": {
     "IsCommercialCondition": {
@@ -26721,7 +26721,7 @@ exports.handler = async function (event, context) {
 }
 `;
 
-exports[`InstallerStack Stack(installer):  Snapshot Test 8`] = `
+exports[`InstallerStack > Stack(installer):  Snapshot Test 8`] = `
 {
   "Conditions": {
     "IsCommercialCondition": {
@@ -30902,7 +30902,7 @@ exports.handler = async function (event, context) {
 }
 `;
 
-exports[`InstallerStack Stack(installer):  Snapshot Test 9`] = `
+exports[`InstallerStack > Stack(installer):  Snapshot Test 9`] = `
 {
   "Conditions": {
     "IsCommercialCondition": {

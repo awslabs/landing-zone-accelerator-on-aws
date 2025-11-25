@@ -30,7 +30,7 @@ import {
   ResourcePolicySetConfig,
   ResourceTypeEnum,
 } from '@aws-accelerator/config';
-import { RESOURCE_TYPE_WITH_ALLOW_ONLY_POLICY, ResourceType } from '@aws-accelerator/utils/lib/common-resources';
+import { RESOURCE_TYPE_WITH_ALLOW_ONLY_POLICY, ResourceType } from '@aws-accelerator/utils';
 
 /**
  * Resource-based policy generated file path type

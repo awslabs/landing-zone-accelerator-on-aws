@@ -11,159 +11,86 @@
  *  and limitations under the License.
  */
 
-import { Construct } from 'constructs';
 import * as cdk from 'aws-cdk-lib';
-import { jest } from '@jest/globals';
+import { describe, beforeEach, test } from 'vitest';
+import { Template } from 'aws-cdk-lib/assertions';
 import {
   MacieExportConfigClassification,
   MacieExportConfigClassificationProps,
 } from '../../lib/aws-macie/macie-export-config-classification';
 
-// Mock CDK constructs
-jest.mock('constructs', () => ({
-  Construct: jest.fn().mockImplementation(function () {
-    // This empty function will replace the actual Construct constructor
-  }),
-}));
-
-jest.mock('aws-cdk-lib', () => ({
-  CustomResource: jest.fn(),
-  CustomResourceProvider: {
-    getOrCreateProvider: jest.fn(),
-  },
-  CustomResourceProviderRuntime: {
-    NODEJS_18_X: 'nodejs18.x',
-    NODEJS_20_X: 'nodejs20.x',
-  },
-  aws_lambda: {
-    Runtime: {
-      NODEJS_18_X: 'nodejs18.x',
-      NODEJS_20_X: 'nodejs20.x',
-    },
-  },
-  Stack: {
-    of: () => ({
-      region: 'mock-region',
-      node: {
-        tryFindChild: jest.fn(),
-      },
-      partition: 'aws',
-    }),
-  },
-  aws_logs: {
-    LogGroup: jest.fn(),
-  },
-  RemovalPolicy: {
-    DESTROY: 'destroy',
-  },
-}));
-
 describe('MacieExportConfigClassification', () => {
+  let stack: cdk.Stack;
+  let template: Template;
   let mockProps: MacieExportConfigClassificationProps;
-  let mockScope: Construct;
 
   beforeEach(() => {
-    (cdk.CustomResource as unknown as jest.Mock).mockImplementation(() => {
-      return {
-        node: {
-          addDependency: jest.fn(),
-        },
-        ref: 'random-ref',
-      };
-    });
-    (cdk.CustomResourceProvider.getOrCreateProvider as unknown as jest.Mock).mockImplementation(() => ({
-      serviceToken: 'mock-service-token',
-      addToRolePolicy: jest.fn(),
-      node: {
-        id: 'provider-node-id',
-        findChild: () => ({ ref: 'find-child-ref' }),
-      },
-    }));
+    const app = new cdk.App();
+    stack = new cdk.Stack(app, 'TestStack');
+
     mockProps = {
       bucketName: 'mock-bucket',
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      bucketKmsKey: { keyArn: 'mock-kms-arn' } as any,
+      bucketKmsKey: cdk.aws_kms.Key.fromKeyArn(
+        stack,
+        'BucketKey',
+        'arn:aws:kms:us-east-1:123456789012:key/12345678-1234-1234-1234-123456789012',
+      ),
       keyPrefix: 'mock-prefix',
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      logKmsKey: { keyArn: 'mock-log-kms-arn' } as any,
+      logKmsKey: cdk.aws_kms.Key.fromKeyArn(
+        stack,
+        'LogKey',
+        'arn:aws:kms:us-east-1:123456789012:key/87654321-4321-4321-4321-210987654321',
+      ),
       logRetentionInDays: 7,
       findingPublishingFrequency: 'FIFTEEN_MINUTES',
       publishClassificationFindings: true,
       publishPolicyFindings: true,
     };
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    mockScope = new Construct(null as any, 'MockScope');
-
-    // Clear all mocks before each test
-    jest.clearAllMocks();
+    new MacieExportConfigClassification(stack, 'TestConstruct', mockProps);
+    template = Template.fromStack(stack);
   });
 
   test('CustomResource is created with correct properties', () => {
-    new MacieExportConfigClassification(mockScope, 'TestConstruct', mockProps);
-
-    expect(cdk.CustomResource).toHaveBeenCalledWith(expect.any(Object), 'Resource', {
-      resourceType: 'Custom::MaciePutClassificationExportConfiguration',
-      serviceToken: 'mock-service-token',
-      properties: {
-        region: 'mock-region',
-        bucketName: mockProps.bucketName,
-        keyPrefix: mockProps.keyPrefix,
-        kmsKeyArn: mockProps.bucketKmsKey.keyArn,
-        findingPublishingFrequency: mockProps.findingPublishingFrequency,
-        publishClassificationFindings: mockProps.publishClassificationFindings,
-        publishPolicyFindings: mockProps.publishPolicyFindings,
+    template.hasResourceProperties('Custom::MaciePutClassificationExportConfiguration', {
+      ServiceToken: {
+        'Fn::GetAtt': ['CustomMaciePutClassificationExportConfigurationCustomResourceProviderHandlerC53E2FCC', 'Arn'],
       },
+      bucketName: 'mock-bucket',
+      keyPrefix: 'mock-prefix',
+      kmsKeyArn: 'arn:aws:kms:us-east-1:123456789012:key/12345678-1234-1234-1234-123456789012',
+      findingPublishingFrequency: 'FIFTEEN_MINUTES',
+      publishClassificationFindings: true,
+      publishPolicyFindings: true,
     });
   });
 
-  test('CustomResourceProvider is created with correct properties', () => {
-    new MacieExportConfigClassification(mockScope, 'TestConstruct', mockProps);
+  test('Lambda function is created for custom resource provider', () => {
+    template.hasResourceProperties('AWS::Lambda::Function', {
+      Runtime: 'nodejs20.x',
+    });
+  });
 
-    expect(cdk.CustomResourceProvider.getOrCreateProvider).toHaveBeenCalledWith(
-      expect.any(Object),
-      'Custom::MaciePutClassificationExportConfiguration',
-      {
-        codeDirectory: expect.stringContaining('put-export-config-classification/dist'),
-        runtime: 'nodejs20.x',
-        policyStatements: [
+  test('LogGroup is created with correct properties', () => {
+    template.hasResourceProperties('AWS::Logs::LogGroup', {
+      RetentionInDays: 7,
+      KmsKeyId: 'arn:aws:kms:us-east-1:123456789012:key/87654321-4321-4321-4321-210987654321',
+    });
+  });
+
+  test('IAM role has correct permissions', () => {
+    template.hasResourceProperties('AWS::IAM::Role', {
+      AssumeRolePolicyDocument: {
+        Statement: [
           {
-            Sid: 'MaciePutClassificationExportConfigurationTaskMacieActions',
+            Action: 'sts:AssumeRole',
             Effect: 'Allow',
-            Action: [
-              'macie2:EnableMacie',
-              'macie2:GetClassificationExportConfiguration',
-              'macie2:UpdateMacieSession',
-              'macie2:GetMacieSession',
-              'macie2:PutClassificationExportConfiguration',
-              'macie2:PutFindingsPublicationConfiguration',
-            ],
-            Resource: '*',
-          },
-          {
-            Sid: 'MacieCreateSlr',
-            Effect: 'Allow',
-            Action: ['iam:CreateServiceLinkedRole'],
-            Resource: `arn:aws:iam::*:role/aws-service-role/macie.amazonaws.com/AWSServiceRoleForAmazonMacie`,
-            Condition: {
-              StringLike: {
-                'iam:AWSServiceName': 'macie.amazonaws.com',
-              },
+            Principal: {
+              Service: 'lambda.amazonaws.com',
             },
           },
         ],
       },
-    );
-  });
-
-  test('LogGroup is created with correct properties', () => {
-    new MacieExportConfigClassification(mockScope, 'TestConstruct', mockProps);
-
-    expect(cdk.aws_logs.LogGroup).toHaveBeenCalledWith(expect.any(Object), expect.any(String), {
-      logGroupName: expect.stringContaining('/aws/lambda/'),
-      retention: mockProps.logRetentionInDays,
-      encryptionKey: mockProps.logKmsKey,
-      removalPolicy: 'destroy',
     });
   });
 });

@@ -15,7 +15,7 @@ import * as cdk from 'aws-cdk-lib';
 
 import { PipelineStack } from '../lib/stacks/pipeline-stack';
 import { snapShotTest } from './snapshot-test';
-import { describe } from '@jest/globals';
+import { describe } from 'vitest';
 import { memoize } from './accelerator-test-helpers';
 
 const testNamePrefix = 'Construct(PipelineStack): ';

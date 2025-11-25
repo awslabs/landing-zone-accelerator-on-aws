@@ -1,4 +1,26 @@
-import { expect, describe, it } from '@jest/globals';
+import { expect, describe, it, vi } from 'vitest';
+
+// Mock the entire config module to prevent winston.add error
+vi.mock('@aws-accelerator/config', () => ({
+  AccountsConfig: vi.fn().mockImplementation(() => ({
+    getAccountIds: vi.fn(() => ['111111111111', '222222222222', '333333333333', '444444444444', '555555555555']),
+    getAccountId: vi.fn((name: string) => {
+      const accountMap: { [key: string]: string } = {
+        Network: '555555555555',
+        SharedServices: '444444444444',
+        Management: '111111111111',
+        Audit: '222222222222',
+        LogArchive: '333333333333',
+      };
+      return accountMap[name];
+    }),
+    getAccounts: vi.fn(() => [
+      { name: 'SharedServices', organizationalUnit: 'Infrastructure' },
+      { name: 'Network', organizationalUnit: 'Infrastructure' },
+    ]),
+  })),
+}));
+
 import { AccountsConfig } from '@aws-accelerator/config';
 import { policyReplacements } from '../lib/policy-replacements';
 

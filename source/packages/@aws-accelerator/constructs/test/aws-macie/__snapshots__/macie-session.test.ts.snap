@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`MacieSession Construct(MacieSession):  Snapshot Test 1`] = `
+exports[`MacieSession > Construct(MacieSession):  Snapshot Test 1`] = `
 {
   "Resources": {
     "CustomMacieEnableMacieCustomResourceProviderHandler1B3444A0": {

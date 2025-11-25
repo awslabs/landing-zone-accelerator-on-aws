@@ -17,7 +17,7 @@ import { Construct } from 'constructs';
 import { PrefixListRoute } from './prefix-list-route';
 import { ITransitGatewayAttachment } from './transit-gateway';
 import { Vpc } from './vpc';
-import { MetadataKeys } from '@aws-accelerator/utils/lib/common-types';
+import { MetadataKeys } from '@aws-accelerator/utils';
 
 export interface IRouteTable extends cdk.IResource {
   /**

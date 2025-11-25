@@ -12,6 +12,7 @@
  */
 
 import * as cdk from 'aws-cdk-lib';
+import { describe } from 'vitest';
 import { Inventory } from '../../lib/aws-ssm/inventory';
 import { snapShotTest } from '../snapshot-test';
 

@@ -10,47 +10,67 @@
  *  OR CONDITIONS OF ANY KIND, express or implied. See the License for the specific language governing permissions
  *  and limitations under the License.
  */
-import { describe, beforeEach, expect, test } from '@jest/globals';
+import { describe, beforeEach, expect, test, afterAll, vi, type Mock } from 'vitest';
 
 const originalEnv = process.env;
 
+// Mock winston at the top level
+vi.mock('winston', () => ({
+  createLogger: vi.fn(),
+  format: {
+    combine: vi.fn(),
+    colorize: vi.fn(),
+    timestamp: vi.fn(),
+    printf: vi.fn(),
+    align: vi.fn(),
+  },
+  transports: {
+    Console: vi.fn(),
+  },
+  add: vi.fn(),
+}));
+
 describe('LoggerUtil', () => {
-  let mockCreateLogger: jest.Mock;
-  let mockAdd: jest.Mock;
+  let mockCreateLogger: Mock;
+  let mockAdd: Mock;
   let mockFormat: {
-    combine: jest.Mock;
-    colorize: jest.Mock;
-    timestamp: jest.Mock;
-    printf: jest.Mock;
-    align: jest.Mock;
+    combine: Mock;
+    colorize: Mock;
+    timestamp: Mock;
+    printf: Mock;
+    align: Mock;
   };
 
-  beforeEach(() => {
-    jest.resetModules();
+  beforeEach(async () => {
+    vi.resetModules();
     process.env = { ...originalEnv };
 
-    mockCreateLogger = jest.fn(() => ({
-      child: jest.fn(),
+    // Get the mocked winston module
+    const winston = await import('winston');
+
+    mockCreateLogger = vi.fn(() => ({
+      child: vi.fn(),
     }));
 
-    mockAdd = jest.fn();
+    mockAdd = vi.fn();
 
     mockFormat = {
-      combine: jest.fn(() => 'mockedCombinedFormat'),
-      colorize: jest.fn(() => 'mockedColorize'),
-      timestamp: jest.fn(() => 'mockedTimestamp'),
-      printf: jest.fn(formatter => formatter),
-      align: jest.fn(() => 'mockedAlign'),
+      combine: vi.fn(() => 'mockedCombinedFormat'),
+      colorize: vi.fn(() => 'mockedColorize'),
+      timestamp: vi.fn(() => 'mockedTimestamp'),
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      printf: vi.fn((formatter: any) => formatter),
+      align: vi.fn(() => 'mockedAlign'),
     };
 
-    jest.mock('winston', () => ({
-      createLogger: mockCreateLogger,
-      format: mockFormat,
-      transports: {
-        Console: jest.fn(),
-      },
-      add: mockAdd,
-    }));
+    // Set up the mock implementations
+    vi.mocked(winston.createLogger).mockImplementation(mockCreateLogger);
+    vi.mocked(winston.add).mockImplementation(mockAdd);
+    vi.mocked(winston.format.combine).mockImplementation(mockFormat.combine);
+    vi.mocked(winston.format.colorize).mockImplementation(mockFormat.colorize);
+    vi.mocked(winston.format.timestamp).mockImplementation(mockFormat.timestamp);
+    vi.mocked(winston.format.printf).mockImplementation(mockFormat.printf);
+    vi.mocked(winston.format.align).mockImplementation(mockFormat.align);
   });
 
   afterAll(() => {
@@ -58,10 +78,10 @@ describe('LoggerUtil', () => {
   });
 
   describe('Logger', () => {
-    test('should create a logger with default settings', () => {
+    test('should create a logger with default settings', async () => {
       delete process.env['LOG_LEVEL'];
       // Execute
-      require('../../common/logger');
+      await import('../../common/logger');
 
       // Verify
       expect(mockCreateLogger).toHaveBeenCalledWith(
@@ -86,12 +106,12 @@ describe('LoggerUtil', () => {
       });
     });
 
-    test('should use LOG_LEVEL environment variable if set', () => {
+    test('should use LOG_LEVEL environment variable if set', async () => {
       // Setup
       process.env['LOG_LEVEL'] = 'debug';
 
       // Execute
-      require('../../common/logger');
+      await import('../../common/logger');
 
       // Verify
       expect(mockCreateLogger).toHaveBeenCalledWith(
@@ -104,9 +124,9 @@ describe('LoggerUtil', () => {
       delete process.env['LOG_LEVEL'];
     });
 
-    test('should create a logger with the correct format', () => {
+    test('should create a logger with the correct format', async () => {
       // Execute
-      require('../../common/logger');
+      await import('../../common/logger');
 
       // Get the printf formatter function
       const printfFormatter = mockFormat.printf.mock.calls[0][0];
@@ -134,11 +154,11 @@ describe('LoggerUtil', () => {
   });
 
   describe('createLogger', () => {
-    test('should create a child logger with the correct label', () => {
+    test('should create a child logger with the correct label', async () => {
       // Setup
-      const mockChild = jest.fn();
+      const mockChild = vi.fn();
       mockCreateLogger.mockReturnValue({ child: mockChild });
-      const { createLogger } = require('../../common/logger');
+      const { createLogger } = await import('../../common/logger');
 
       // Execute
       createLogger(['test', 'child']);
@@ -151,17 +171,17 @@ describe('LoggerUtil', () => {
   });
 
   describe('StatusLogger', () => {
-    test('should create and add status logger', () => {
+    test('should create and add status logger', async () => {
       // Execute
-      require('../../common/logger');
+      await import('../../common/logger');
 
       // Verify winston.add is called twice (Logger and StatusLogger)
       expect(mockAdd).toHaveBeenCalledTimes(2);
     });
 
-    test('should create status logger without defaultMeta', () => {
+    test('should create status logger without defaultMeta', async () => {
       // Execute
-      require('../../common/logger');
+      await import('../../common/logger');
 
       // Verify StatusLogger (second call) doesn't have defaultMeta
       expect(mockCreateLogger).toHaveBeenNthCalledWith(
@@ -173,9 +193,9 @@ describe('LoggerUtil', () => {
       );
     });
 
-    test('should create status logger with correct format', () => {
+    test('should create status logger with correct format', async () => {
       // Execute
-      require('../../common/logger');
+      await import('../../common/logger');
 
       // Get the second printf formatter function (StatusLogger)
       const statusPrintfFormatter = mockFormat.printf.mock.calls[1][0];
@@ -192,11 +212,11 @@ describe('LoggerUtil', () => {
   });
 
   describe('createStatusLogger', () => {
-    test('should create a child status logger with the correct label', () => {
+    test('should create a child status logger with the correct label', async () => {
       // Setup
-      const mockChild = jest.fn();
+      const mockChild = vi.fn();
       mockCreateLogger.mockReturnValue({ child: mockChild });
-      const { createStatusLogger } = require('../../common/logger');
+      const { createStatusLogger } = await import('../../common/logger');
 
       // Execute
       createStatusLogger(['status', 'test']);
@@ -207,8 +227,8 @@ describe('LoggerUtil', () => {
       });
     });
 
-    test('should throw error when called with empty or null array', () => {
-      const { createStatusLogger } = require('../../common/logger');
+    test('should throw error when called with empty or null array', async () => {
+      const { createStatusLogger } = await import('../../common/logger');
 
       expect(() => createStatusLogger([])).toThrow('createStatusLogger requires at least one log info item');
       expect(() => createStatusLogger(null)).toThrow('createStatusLogger requires at least one log info item');

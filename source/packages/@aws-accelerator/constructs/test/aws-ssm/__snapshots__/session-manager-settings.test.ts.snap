@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`SsmSessionManagerSettings Construct(SsmSessionManagerSettings):  Snapshot Test 1`] = `
+exports[`SsmSessionManagerSettings > Construct(SsmSessionManagerSettings):  Snapshot Test 1`] = `
 {
   "Resources": {
     "CustomSessionManagerLoggingCustomResourceProviderHandler4FE51699": {

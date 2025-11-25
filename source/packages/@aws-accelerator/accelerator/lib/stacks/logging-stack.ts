@@ -29,7 +29,7 @@ import {
   SnsTopicConfig,
   VpcFlowLogsConfig,
 } from '@aws-accelerator/config';
-import * as t from '@aws-accelerator/config/lib/common/types';
+import * as t from '@aws-accelerator/config';
 import {
   Bucket,
   BucketEncryption,
@@ -58,8 +58,9 @@ import {
   AwsPrincipalAccessesType,
   BucketAccessType,
   PrincipalOrgIdConditionType,
-} from '@aws-accelerator/utils/lib/common-resources';
-import { AcceleratorElbRootAccounts, OptInRegions } from '@aws-accelerator/utils/lib/regions';
+  AcceleratorElbRootAccounts,
+  OptInRegions,
+} from '@aws-accelerator/utils';
 
 import {
   AcceleratorKeyType,

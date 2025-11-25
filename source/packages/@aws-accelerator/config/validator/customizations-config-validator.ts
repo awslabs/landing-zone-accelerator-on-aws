@@ -14,7 +14,7 @@
 import * as fs from 'fs';
 import * as path from 'path';
 
-import { createLogger } from '@aws-accelerator/utils/lib/logger';
+import { createLogger } from '@aws-accelerator/utils';
 
 import { AccountsConfig } from '../lib/accounts-config';
 import { DeploymentTargets, Region, ShareTargets, isCustomizationsType, isNetworkType } from '../lib/common';

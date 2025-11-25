@@ -13,6 +13,7 @@
 
 import * as cdk from 'aws-cdk-lib';
 import { Template } from 'aws-cdk-lib/assertions';
+import { describe, test, expect } from 'vitest';
 import { BucketPolicy } from '@aws-accelerator/constructs';
 import { snapShotTest } from '../snapshot-test';
 import { AcceleratorImportedBucketType } from '@aws-accelerator/utils';

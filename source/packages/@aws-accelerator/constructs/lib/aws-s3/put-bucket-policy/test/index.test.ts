@@ -1,6 +1,6 @@
 import { generateBucketPolicy } from '../index';
-import { AcceleratorImportedBucketType, AwsPrincipalAccessesType } from '@aws-accelerator/utils/lib/common-resources';
-import { describe, expect, test } from '@jest/globals';
+import { AcceleratorImportedBucketType, AwsPrincipalAccessesType } from '@aws-accelerator/utils';
+import { describe, expect, test } from 'vitest';
 
 describe('generateBucketPolicy', () => {
   let elbAccountId = '';

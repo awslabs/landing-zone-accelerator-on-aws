@@ -17,7 +17,7 @@ import { HostedZone } from '../../lib/aws-route-53/hosted-zone';
 import { VpcEndpoint, VpcEndpointType } from '../../lib/aws-ec2/vpc-endpoint';
 import { SecurityGroup } from '../../lib/aws-ec2/vpc';
 import { snapShotTest } from '../snapshot-test';
-import { describe, expect, it } from '@jest/globals';
+import { describe, expect, it } from 'vitest';
 
 const testNamePrefix = 'Construct(RecordSet): ';
 

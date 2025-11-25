@@ -13,7 +13,7 @@
 
 import { DetectiveClient, ListOrganizationAdminAccountsCommand } from '@aws-sdk/client-detective';
 
-import { afterAll, beforeAll, expect, jest, test } from '@jest/globals';
+import { afterAll, beforeAll, expect, test } from 'vitest';
 
 import { throttlingBackOff } from '@aws-accelerator/utils/lib/throttle';
 import { AssertPropsType } from '@aws-accelerator/utils/lib/test-util/common/assertion';
@@ -31,7 +31,7 @@ import { handler } from '../index';
 const successStatus = { Status: 'Success', StatusCode: 200 };
 
 const minute = 60000;
-jest.setTimeout(2 * minute);
+vi.setTimeout(2 * minute);
 
 //
 // Initialize integration test class

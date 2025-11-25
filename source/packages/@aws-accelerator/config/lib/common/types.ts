@@ -11,7 +11,7 @@
  *  and limitations under the License.
  */
 
-import { RegionName } from '@aws-accelerator/utils/lib/regions';
+import { RegionName } from '@aws-accelerator/utils';
 
 /**
  * AWS Region

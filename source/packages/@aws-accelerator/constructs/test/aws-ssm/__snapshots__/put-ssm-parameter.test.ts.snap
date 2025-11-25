@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`SsmParameter Construct(SsmParameter):  Snapshot Test 1`] = `
+exports[`SsmParameter > Construct(SsmParameter):  Snapshot Test 1`] = `
 {
   "Resources": {
     "CustomSsmPutParameterValueCustomResourceProviderHandler2A0BDE7F": {

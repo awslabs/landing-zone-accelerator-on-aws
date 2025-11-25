@@ -1,37 +1,45 @@
-import { describe } from '@jest/globals';
+import { describe, it, expect, beforeAll, vi } from 'vitest';
+
 import { snapShotTest } from '../../snapshot-test';
 import { Create } from '../../accelerator-test-helpers';
 import { AcceleratorStage } from '../../../lib/accelerator-stage';
 import path from 'path';
-import { readFileSync } from 'fs';
+import fs from 'fs';
 import { Template } from 'aws-cdk-lib/assertions';
 import { Stack } from 'aws-cdk-lib';
 
 describe('NetworkVpcStack tests', () => {
-  let originalCwd: string;
   let testDir: string;
   let existingTemplate: Template;
   let newTemplate: Template;
 
   beforeAll(() => {
-    originalCwd = process.cwd();
-    testDir = path.join(process.cwd(), 'test');
-    process.chdir(testDir);
+    testDir = path.join(__dirname, '../../../test');
 
-    const existingTemplateString = readFileSync(
-      'cfn-templates/666666666666/us-east-1/AWSAccelerator-NetworkVpcStack-666666666666-us-east-1.json',
-    ).toString();
+    const existingTemplateString = fs
+      .readFileSync(
+        path.join(
+          testDir,
+          'cfn-templates/666666666666/us-east-1/AWSAccelerator-NetworkVpcStack-666666666666-us-east-1.json',
+        ),
+      )
+      .toString();
     existingTemplate = Template.fromString(existingTemplateString);
+
+    const originalReadFileSync = fs.readFileSync;
+    vi.spyOn(fs, 'readFileSync').mockImplementation((filePath, ...args) => {
+      if (typeof filePath === 'string' && filePath.startsWith('cfn-templates')) {
+        const correctedPath = path.join(testDir, filePath);
+        return originalReadFileSync(correctedPath, ...args);
+      }
+      return originalReadFileSync(filePath, ...args);
+    });
 
     const stack = Create.stack(`Network-us-east-1`, {
       stage: AcceleratorStage.NETWORK_VPC,
       configFolderName: 'network-refactor',
     }) as Stack;
     newTemplate = Template.fromStack(stack);
-  });
-
-  afterAll(() => {
-    process.chdir(originalCwd);
   });
 
   snapShotTest(

@@ -41,7 +41,7 @@ import {
   VpcEndpoint,
   VpcEndpointType,
 } from '@aws-accelerator/constructs';
-import { SsmResourceType } from '@aws-accelerator/utils/lib/ssm-parameter-path';
+import { SsmResourceType } from '@aws-accelerator/utils';
 import { SecurityGroupReferences } from '../../../resources/references/security-group-references';
 import { SubnetReferences } from '../../../resources/references/subnet-references';
 import { AcceleratorStackProps } from '../../accelerator-stack';

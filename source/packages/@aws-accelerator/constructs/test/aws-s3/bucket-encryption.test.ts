@@ -12,6 +12,7 @@
  */
 
 import * as cdk from 'aws-cdk-lib';
+import { describe } from 'vitest';
 import { BucketEncryption } from '@aws-accelerator/constructs';
 import { snapShotTest } from '../snapshot-test';
 

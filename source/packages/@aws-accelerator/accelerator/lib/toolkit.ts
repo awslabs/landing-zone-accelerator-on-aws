@@ -17,11 +17,14 @@ import * as https from 'https';
 import { App } from 'aws-cdk-lib';
 
 import { cdkOptionsConfig, GlobalConfig } from '@aws-accelerator/config';
-import { createLogger } from '@aws-accelerator/utils/lib/logger';
-import { getCloudFormationTemplate } from '@aws-accelerator/utils/lib/get-template';
-import { getAllFilesInPattern, checkDiffFiles } from '@aws-accelerator/utils/lib/common-functions';
-import { printStackDiff } from '@aws-accelerator/utils/lib/diff-stack';
 import { createCdkApp } from './app-lib';
+import {
+  createLogger,
+  getCloudFormationTemplate,
+  getAllFilesInPattern,
+  checkDiffFiles,
+  printStackDiff,
+} from '@aws-accelerator/utils';
 
 import { AcceleratorStackNames } from './accelerator';
 import { AcceleratorStage } from './accelerator-stage';

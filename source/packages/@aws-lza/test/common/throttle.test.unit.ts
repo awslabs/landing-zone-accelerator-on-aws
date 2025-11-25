@@ -11,7 +11,7 @@
  *  and limitations under the License.
  */
 
-import { describe, expect, test } from '@jest/globals';
+import { describe, expect, test, vi } from 'vitest';
 
 import { throttlingBackOff, isThrottlingError } from '../../common/throttle';
 
@@ -57,7 +57,7 @@ describe('throttle', () => {
 
   describe('throttlingBackOff', () => {
     test('should retry on throttling errors', async () => {
-      const mockRequest = jest.fn();
+      const mockRequest = vi.fn();
       mockRequest.mockRejectedValueOnce({ code: 'ThrottlingException' }).mockResolvedValueOnce('success');
 
       const result = await throttlingBackOff(mockRequest, { numOfAttempts: 2 });
@@ -67,7 +67,7 @@ describe('throttle', () => {
     });
 
     test('should throw error after max attempts', async () => {
-      const mockRequest = jest.fn();
+      const mockRequest = vi.fn();
       mockRequest.mockRejectedValue({ code: 'ThrottlingException' });
 
       await expect(throttlingBackOff(mockRequest, { numOfAttempts: 2 })).rejects.toEqual({
@@ -78,7 +78,7 @@ describe('throttle', () => {
     });
 
     test('should succeed on first try if no error', async () => {
-      const mockRequest = jest.fn().mockResolvedValue('success');
+      const mockRequest = vi.fn().mockResolvedValue('success');
 
       const result = await throttlingBackOff(mockRequest);
 

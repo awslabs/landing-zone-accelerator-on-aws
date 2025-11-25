@@ -11,7 +11,7 @@
  *  and limitations under the License.
  */
 
-import { describe, beforeEach, expect, test } from '@jest/globals';
+import { describe, beforeEach, expect, test } from 'vitest';
 
 import { IamRole } from '../../lib/control-tower/prerequisites/iam-role';
 import {

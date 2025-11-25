@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`Certificate Construct(Certificate):  Snapshot Test 1`] = `
+exports[`Certificate > Construct(Certificate):  Snapshot Test 1`] = `
 {
   "Mappings": {
     "LatestNodeRuntimeMap": {
@@ -617,7 +617,7 @@ exports[`Certificate Construct(Certificate):  Snapshot Test 1`] = `
 }
 `;
 
-exports[`ImportCertificate Construct(Certificate):  Snapshot Test 1`] = `
+exports[`ImportCertificate > Construct(Certificate):  Snapshot Test 1`] = `
 {
   "Mappings": {
     "LatestNodeRuntimeMap": {

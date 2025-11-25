@@ -10,7 +10,7 @@
  *  OR CONDITIONS OF ANY KIND, express or implied. See the License for the specific language governing permissions
  *  and limitations under the License.
  */
-import { describe, beforeEach, expect, test } from '@jest/globals';
+import { describe, beforeEach, expect, test, vi, afterAll, afterEach } from 'vitest';
 import { ConfiguredRetryStrategy } from '@aws-sdk/util-retry';
 import {
   ControlTowerClient,
@@ -59,51 +59,52 @@ import {
 import { MOCK_CONSTANTS } from '../mocked-resources';
 import { MODULE_EXCEPTIONS } from '../../common/enums';
 import { AcceleratorModuleName, IModuleCommonParameter } from '../../common/resources';
+import { fail } from 'assert';
 
-jest.mock('@aws-sdk/util-retry');
-jest.mock('@aws-sdk/client-controltower', () => {
+vi.mock('@aws-sdk/util-retry');
+vi.mock('@aws-sdk/client-controltower', () => {
   return {
-    ControlTowerClient: jest.fn(),
-    GetLandingZoneCommand: jest.fn(),
-    ResourceNotFoundException: jest.fn(),
-    ListLandingZonesCommand: jest.fn(),
-    paginateListEnabledBaselines: jest.fn(),
+    ControlTowerClient: vi.fn(),
+    GetLandingZoneCommand: vi.fn(),
+    ResourceNotFoundException: vi.fn(),
+    ListLandingZonesCommand: vi.fn(),
+    paginateListEnabledBaselines: vi.fn(),
   };
 });
-jest.mock('@aws-sdk/client-organizations', () => ({
-  DescribeOrganizationCommand: jest.fn(),
-  OrganizationsClient: jest.fn(),
-  paginateListOrganizationalUnitsForParent: jest.fn(),
-  paginateListAccounts: jest.fn(),
+vi.mock('@aws-sdk/client-organizations', () => ({
+  DescribeOrganizationCommand: vi.fn(),
+  OrganizationsClient: vi.fn(),
+  paginateListOrganizationalUnitsForParent: vi.fn(),
+  paginateListAccounts: vi.fn(),
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  InvalidInputException: jest.fn().mockImplementation(function (this: any, params) {
+  InvalidInputException: vi.fn().mockImplementation(function (this: any, params) {
     const error = new Error(params.message);
     error.name = 'InvalidInputException';
     Object.setPrototypeOf(error, InvalidInputException.prototype);
     return error;
   }),
-  ListRootsCommand: jest.fn(),
-  AWSOrganizationsNotInUseException: jest.fn(),
+  ListRootsCommand: vi.fn(),
+  AWSOrganizationsNotInUseException: vi.fn(),
 }));
-jest.mock('@aws-sdk/client-sts', () => {
+vi.mock('@aws-sdk/client-sts', () => {
   return {
-    STSClient: jest.fn(),
-    GetCallerIdentityCommand: jest.fn(),
-    AssumeRoleCommand: jest.fn(),
+    STSClient: vi.fn(),
+    GetCallerIdentityCommand: vi.fn(),
+    AssumeRoleCommand: vi.fn(),
   };
 });
 
-jest.mock('../../common/throttle', () => ({
-  throttlingBackOff: jest.fn(fn => fn()),
+vi.mock('../../common/throttle', () => ({
+  throttlingBackOff: vi.fn(fn => fn()),
 }));
 
 describe('functions', () => {
-  const mockSend = jest.fn();
+  const mockSend = vi.fn();
   describe('setRetryStrategy', () => {
     const originalEnv = process.env;
 
     beforeEach(() => {
-      jest.resetModules();
+      vi.resetModules();
       process.env = { ...originalEnv };
     });
 
@@ -130,7 +131,7 @@ describe('functions', () => {
     test('should pass a correct retry delay function', () => {
       setRetryStrategy();
 
-      const mockConstructor = ConfiguredRetryStrategy as jest.MockedClass<typeof ConfiguredRetryStrategy>;
+      const mockConstructor = ConfiguredRetryStrategy as vi.MockedClass<typeof ConfiguredRetryStrategy>;
       const constructorArgs = mockConstructor.mock.calls[0];
       const delayArgument = constructorArgs[1];
 
@@ -148,13 +149,13 @@ describe('functions', () => {
     const originalSetTimeout = global.setTimeout;
 
     beforeEach(() => {
-      jest.useFakeTimers();
-      jest.spyOn(global, 'setTimeout');
+      vi.useFakeTimers();
+      vi.spyOn(global, 'setTimeout');
     });
 
     afterEach(() => {
-      jest.clearAllTimers();
-      jest.useRealTimers();
+      vi.clearAllTimers();
+      vi.useRealTimers();
       global.setTimeout = originalSetTimeout;
     });
 
@@ -166,7 +167,7 @@ describe('functions', () => {
       const delayPromise = delay(minutes);
 
       // Verify
-      jest.advanceTimersByTime(minutes * 60000);
+      vi.advanceTimersByTime(minutes * 60000);
       await expect(delayPromise).resolves.toBeUndefined();
     });
 
@@ -178,7 +179,7 @@ describe('functions', () => {
       const delayPromise = delay(minutes);
 
       // Verify
-      jest.advanceTimersByTime(minutes * 60000 - 1);
+      vi.advanceTimersByTime(minutes * 60000 - 1);
       const immediatePromise = Promise.resolve();
       await expect(Promise.race([delayPromise, immediatePromise])).resolves.toBeUndefined();
     });
@@ -200,9 +201,9 @@ describe('functions', () => {
     const mockRegion = 'mockRegion';
 
     beforeEach(() => {
-      jest.clearAllMocks();
+      vi.clearAllMocks();
 
-      (ControlTowerClient as jest.Mock).mockImplementation(() => ({
+      (ControlTowerClient as vi.Mock).mockImplementation(() => ({
         send: mockSend,
       }));
     });
@@ -311,16 +312,16 @@ describe('functions', () => {
     const parentId = 'mockParentId';
 
     beforeEach(() => {
-      jest.clearAllMocks();
+      vi.clearAllMocks();
 
-      (OrganizationsClient as jest.Mock).mockImplementation(() => ({
+      (OrganizationsClient as vi.Mock).mockImplementation(() => ({
         send: mockSend,
       }));
     });
 
     test('should return an empty array when no organizational units are found', async () => {
       // Setup
-      (paginateListOrganizationalUnitsForParent as jest.Mock).mockImplementation(() => ({
+      (paginateListOrganizationalUnitsForParent as vi.Mock).mockImplementation(() => ({
         [Symbol.asyncIterator]: async function* () {
           yield {
             OrganizationalUnits: [],
@@ -341,7 +342,7 @@ describe('functions', () => {
         { Id: 'mockId1', Name: 'mockName1', Arn: 'mockArn1' },
         { Id: 'mockId2', Name: 'mockName2', Arn: 'mockArn2' },
       ];
-      (paginateListOrganizationalUnitsForParent as jest.Mock).mockImplementation(() => ({
+      (paginateListOrganizationalUnitsForParent as vi.Mock).mockImplementation(() => ({
         [Symbol.asyncIterator]: async function* () {
           yield {
             OrganizationalUnits: mockOUs,
@@ -364,7 +365,7 @@ describe('functions', () => {
       ];
       const mockOUs2: OrganizationalUnit[] = [{ Id: 'mockId3', Name: 'mockName3', Arn: 'mockArn3' }];
 
-      (paginateListOrganizationalUnitsForParent as jest.Mock).mockImplementation(() => ({
+      (paginateListOrganizationalUnitsForParent as vi.Mock).mockImplementation(() => ({
         [Symbol.asyncIterator]: async function* () {
           yield { OrganizationalUnits: mockOUs1 };
           yield { OrganizationalUnits: mockOUs2 };
@@ -383,7 +384,7 @@ describe('functions', () => {
       const invalidParentId = 'invalidParentId';
       const errorMessage = 'Invalid input';
 
-      (paginateListOrganizationalUnitsForParent as jest.Mock).mockImplementation(() => {
+      (paginateListOrganizationalUnitsForParent as vi.Mock).mockImplementation(() => {
         throw new InvalidInputException({ message: errorMessage, $metadata: {} });
       });
 
@@ -399,7 +400,7 @@ describe('functions', () => {
       const parentId = 'mockParentId';
       const errorMessage = 'Unknown error';
 
-      (paginateListOrganizationalUnitsForParent as jest.Mock).mockImplementation(() => {
+      (paginateListOrganizationalUnitsForParent as vi.Mock).mockImplementation(() => {
         const error = new Error(errorMessage);
         error.name = 'UnknownError';
         throw error;
@@ -418,7 +419,7 @@ describe('functions', () => {
         { Id: 'mockId2', Name: 'mockName2', Arn: 'mockArn2' },
       ];
 
-      (paginateListOrganizationalUnitsForParent as jest.Mock).mockImplementation(() => ({
+      (paginateListOrganizationalUnitsForParent as vi.Mock).mockImplementation(() => ({
         [Symbol.asyncIterator]: async function* () {
           yield { OrganizationalUnits: undefined };
           yield { OrganizationalUnits: mockOUs };
@@ -435,9 +436,9 @@ describe('functions', () => {
 
   describe('getLandingZoneIdentifier', () => {
     beforeEach(() => {
-      jest.clearAllMocks();
+      vi.clearAllMocks();
 
-      (ControlTowerClient as jest.Mock).mockImplementation(() => ({
+      (ControlTowerClient as vi.Mock).mockImplementation(() => ({
         send: mockSend,
       }));
     });
@@ -533,9 +534,9 @@ describe('functions', () => {
 
   describe('getCredentials', () => {
     beforeEach(() => {
-      jest.clearAllMocks();
+      vi.clearAllMocks();
 
-      (STSClient as jest.Mock).mockImplementation(() => ({
+      (STSClient as vi.Mock).mockImplementation(() => ({
         send: mockSend,
       }));
     });
@@ -771,9 +772,9 @@ describe('functions', () => {
 
   describe('getOrganizationRootId', () => {
     beforeEach(() => {
-      jest.clearAllMocks();
+      vi.clearAllMocks();
 
-      (OrganizationsClient as jest.Mock).mockImplementation(() => ({
+      (OrganizationsClient as vi.Mock).mockImplementation(() => ({
         send: mockSend,
       }));
     });
@@ -854,16 +855,16 @@ describe('functions', () => {
 
   describe('getOrganizationalUnitIdByPath', () => {
     beforeEach(() => {
-      jest.clearAllMocks();
+      vi.clearAllMocks();
 
-      (OrganizationsClient as jest.Mock).mockImplementation(() => ({
+      (OrganizationsClient as vi.Mock).mockImplementation(() => ({
         send: mockSend,
       }));
     });
 
     test('should return OU id for valid path with root id provided', async () => {
       // Setup
-      (paginateListOrganizationalUnitsForParent as jest.Mock)
+      (paginateListOrganizationalUnitsForParent as vi.Mock)
         .mockImplementationOnce(() => ({
           [Symbol.asyncIterator]: async function* () {
             yield {
@@ -901,7 +902,7 @@ describe('functions', () => {
         return Promise.reject(MOCK_CONSTANTS.unknownError);
       });
 
-      (paginateListOrganizationalUnitsForParent as jest.Mock)
+      (paginateListOrganizationalUnitsForParent as vi.Mock)
         .mockImplementationOnce(() => ({
           [Symbol.asyncIterator]: async function* () {
             yield {
@@ -938,7 +939,7 @@ describe('functions', () => {
         return Promise.reject(MOCK_CONSTANTS.unknownError);
       });
 
-      (paginateListOrganizationalUnitsForParent as jest.Mock).mockImplementation(() => ({
+      (paginateListOrganizationalUnitsForParent as vi.Mock).mockImplementation(() => ({
         [Symbol.asyncIterator]: async function* () {
           yield {
             OrganizationalUnits: [],
@@ -964,7 +965,7 @@ describe('functions', () => {
         return Promise.reject(MOCK_CONSTANTS.unknownError);
       });
 
-      (paginateListOrganizationalUnitsForParent as jest.Mock).mockImplementation(() => ({
+      (paginateListOrganizationalUnitsForParent as vi.Mock).mockImplementation(() => ({
         [Symbol.asyncIterator]: async function* () {
           yield {
             OrganizationalUnits: [],
@@ -993,7 +994,7 @@ describe('functions', () => {
         return Promise.reject(MOCK_CONSTANTS.unknownError);
       });
 
-      (paginateListOrganizationalUnitsForParent as jest.Mock).mockImplementation(() => ({
+      (paginateListOrganizationalUnitsForParent as vi.Mock).mockImplementation(() => ({
         [Symbol.asyncIterator]: async function* () {
           yield {
             OrganizationalUnits: [MOCK_CONSTANTS.organizationRoot],
@@ -1107,7 +1108,7 @@ describe('functions', () => {
     test('returns non root id', async () => {
       // Setup
 
-      (paginateListOrganizationalUnitsForParent as jest.Mock).mockImplementation(() => ({
+      (paginateListOrganizationalUnitsForParent as vi.Mock).mockImplementation(() => ({
         [Symbol.asyncIterator]: async function* () {
           yield {
             OrganizationalUnits: [MOCK_CONSTANTS.existingOrganizationalUnits[0]],
@@ -1128,7 +1129,7 @@ describe('functions', () => {
 
   describe('getOrganizationAccounts', () => {
     beforeEach(() => {
-      jest.clearAllMocks();
+      vi.clearAllMocks();
     });
     test('returns organizations accounts', async () => {
       // Setup
@@ -1136,7 +1137,7 @@ describe('functions', () => {
         { Id: 'mockId1', Name: 'mockName1', Arn: 'mockArn1', Email: 'mockEmail1@example.com' },
         { Id: 'mockId2', Name: 'mockName2', Arn: 'mockArn2', Email: 'mockEmail2@example.com' },
       ];
-      (paginateListAccounts as jest.Mock).mockImplementation(() => ({
+      (paginateListAccounts as vi.Mock).mockImplementation(() => ({
         [Symbol.asyncIterator]: async function* () {
           yield {
             Accounts: mockAccounts,
@@ -1153,7 +1154,7 @@ describe('functions', () => {
 
     test('returns organizations accounts when Accounts object undefined', async () => {
       // Setup
-      (paginateListAccounts as jest.Mock).mockImplementation(() => ({
+      (paginateListAccounts as vi.Mock).mockImplementation(() => ({
         [Symbol.asyncIterator]: async function* () {
           yield {
             Accounts: undefined,
@@ -1171,14 +1172,14 @@ describe('functions', () => {
 
   describe('getAccountDetailsFromOrganizationsByEmail', () => {
     beforeEach(() => {
-      jest.clearAllMocks();
+      vi.clearAllMocks();
     });
     test('returns undefined when account with email not found accounts', async () => {
       const mockAccounts: Account[] = [
         { Id: 'mockId1', Name: 'mockName1', Arn: 'mockArn1', Email: 'mockEmail1@example.com' },
         { Id: 'mockId2', Name: 'mockName2', Arn: 'mockArn2', Email: 'mockEmail2@example.com' },
       ];
-      (paginateListAccounts as jest.Mock).mockImplementation(() => ({
+      (paginateListAccounts as vi.Mock).mockImplementation(() => ({
         [Symbol.asyncIterator]: async function* () {
           yield {
             Accounts: mockAccounts,
@@ -1186,7 +1187,7 @@ describe('functions', () => {
         },
       }));
       const email = 'mock-email@example.com';
-      (paginateListAccounts as jest.Mock).mockImplementation(() => ({
+      (paginateListAccounts as vi.Mock).mockImplementation(() => ({
         [Symbol.asyncIterator]: async function* () {
           yield {
             Accounts: mockAccounts,
@@ -1220,7 +1221,7 @@ describe('functions', () => {
         { Id: 'mockId1', Name: 'mockName1', Arn: 'mockArn1' },
         { Id: 'mockId2', Name: 'mockName2', Arn: 'mockArn2' },
       ];
-      (paginateListAccounts as jest.Mock).mockImplementation(() => ({
+      (paginateListAccounts as vi.Mock).mockImplementation(() => ({
         [Symbol.asyncIterator]: async function* () {
           yield {
             Accounts: mockAccounts,
@@ -1228,7 +1229,7 @@ describe('functions', () => {
         },
       }));
       const email = 'mock-email@example.com';
-      (paginateListAccounts as jest.Mock).mockImplementation(() => ({
+      (paginateListAccounts as vi.Mock).mockImplementation(() => ({
         [Symbol.asyncIterator]: async function* () {
           yield {
             Accounts: mockAccounts,
@@ -1248,7 +1249,7 @@ describe('functions', () => {
         { Id: 'mockId1', Name: 'mockName1', Arn: 'mockArn1', Email: 'mockEmail1@example.com' },
         { Id: 'mockId2', Name: 'mockName2', Arn: 'mockArn2', Email: 'mockEmail2@example.com' },
       ];
-      (paginateListAccounts as jest.Mock).mockImplementation(() => ({
+      (paginateListAccounts as vi.Mock).mockImplementation(() => ({
         [Symbol.asyncIterator]: async function* () {
           yield {
             Accounts: mockAccounts,
@@ -1256,7 +1257,7 @@ describe('functions', () => {
         },
       }));
 
-      (paginateListAccounts as jest.Mock).mockImplementation(() => ({
+      (paginateListAccounts as vi.Mock).mockImplementation(() => ({
         [Symbol.asyncIterator]: async function* () {
           yield {
             Accounts: mockAccounts,
@@ -1279,7 +1280,7 @@ describe('functions', () => {
         { Id: 'mockId1', Name: 'mockName1', Arn: 'mockArn1', Email: 'mockEmail1@example.com' },
         { Id: 'mockId2', Name: 'mockName2', Arn: 'mockArn2', Email: 'mockEmail2@example.com' },
       ];
-      (paginateListAccounts as jest.Mock).mockImplementation(() => ({
+      (paginateListAccounts as vi.Mock).mockImplementation(() => ({
         [Symbol.asyncIterator]: async function* () {
           yield {
             Accounts: mockAccounts,
@@ -1287,7 +1288,7 @@ describe('functions', () => {
         },
       }));
 
-      (paginateListAccounts as jest.Mock).mockImplementation(() => ({
+      (paginateListAccounts as vi.Mock).mockImplementation(() => ({
         [Symbol.asyncIterator]: async function* () {
           yield {
             Accounts: mockAccounts,
@@ -1308,14 +1309,14 @@ describe('functions', () => {
 
   describe('getAccountId', () => {
     beforeEach(() => {
-      jest.clearAllMocks();
+      vi.clearAllMocks();
     });
     test('returns error when account not found', async () => {
       const mockAccounts: Account[] = [
         { Id: 'mockId1', Name: 'mockName1', Arn: 'mockArn1', Email: 'mockEmail1@example.com' },
         { Id: 'mockId2', Name: 'mockName2', Arn: 'mockArn2', Email: 'mockEmail2@example.com' },
       ];
-      (paginateListAccounts as jest.Mock).mockImplementation(() => ({
+      (paginateListAccounts as vi.Mock).mockImplementation(() => ({
         [Symbol.asyncIterator]: async function* () {
           yield {
             Accounts: mockAccounts,
@@ -1323,7 +1324,7 @@ describe('functions', () => {
         },
       }));
       const email = 'mock-email@example.com';
-      (paginateListAccounts as jest.Mock).mockImplementation(() => ({
+      (paginateListAccounts as vi.Mock).mockImplementation(() => ({
         [Symbol.asyncIterator]: async function* () {
           yield {
             Accounts: mockAccounts,
@@ -1344,14 +1345,14 @@ describe('functions', () => {
         { Name: 'mockName1', Arn: 'mockArn1', Email: 'mockEmail1@example.com' },
         { Id: 'mockId2', Name: 'mockName2', Arn: 'mockArn2', Email: 'mockEmail2@example.com' },
       ];
-      (paginateListAccounts as jest.Mock).mockImplementation(() => ({
+      (paginateListAccounts as vi.Mock).mockImplementation(() => ({
         [Symbol.asyncIterator]: async function* () {
           yield {
             Accounts: mockAccounts,
           };
         },
       }));
-      (paginateListAccounts as jest.Mock).mockImplementation(() => ({
+      (paginateListAccounts as vi.Mock).mockImplementation(() => ({
         [Symbol.asyncIterator]: async function* () {
           yield {
             Accounts: mockAccounts,
@@ -1372,14 +1373,14 @@ describe('functions', () => {
         { Name: 'mockName1', Arn: 'mockArn1', Email: 'mockEmail1@example.com' },
         { Id: 'mockId2', Name: 'mockName2', Arn: 'mockArn2', Email: 'mockEmail2@example.com' },
       ];
-      (paginateListAccounts as jest.Mock).mockImplementation(() => ({
+      (paginateListAccounts as vi.Mock).mockImplementation(() => ({
         [Symbol.asyncIterator]: async function* () {
           yield {
             Accounts: mockAccounts,
           };
         },
       }));
-      (paginateListAccounts as jest.Mock).mockImplementation(() => ({
+      (paginateListAccounts as vi.Mock).mockImplementation(() => ({
         [Symbol.asyncIterator]: async function* () {
           yield {
             Accounts: mockAccounts,
@@ -1395,9 +1396,9 @@ describe('functions', () => {
 
   describe('getOrganizationId', () => {
     beforeEach(() => {
-      jest.clearAllMocks();
+      vi.clearAllMocks();
 
-      (OrganizationsClient as jest.Mock).mockImplementation(() => ({
+      (OrganizationsClient as vi.Mock).mockImplementation(() => ({
         send: mockSend,
       }));
     });
@@ -1458,9 +1459,9 @@ describe('functions', () => {
 
   describe('getCurrentAccountId', () => {
     beforeEach(() => {
-      jest.clearAllMocks();
+      vi.clearAllMocks();
 
-      (STSClient as jest.Mock).mockImplementation(() => ({
+      (STSClient as vi.Mock).mockImplementation(() => ({
         send: mockSend,
       }));
     });
@@ -1502,17 +1503,17 @@ describe('functions', () => {
   });
 
   describe('getOrganizationalUnitArn', () => {
-    const mockOrgSend = jest.fn();
-    const mockStsSend = jest.fn();
+    const mockOrgSend = vi.fn();
+    const mockStsSend = vi.fn();
 
     beforeEach(() => {
-      jest.clearAllMocks();
+      vi.clearAllMocks();
 
-      (OrganizationsClient as jest.Mock).mockImplementation(() => ({
+      (OrganizationsClient as vi.Mock).mockImplementation(() => ({
         send: mockOrgSend,
       }));
 
-      (STSClient as jest.Mock).mockImplementation(() => ({
+      (STSClient as vi.Mock).mockImplementation(() => ({
         send: mockStsSend,
       }));
     });
@@ -1580,7 +1581,7 @@ describe('functions', () => {
     const originalEnv = process.env;
 
     beforeEach(() => {
-      jest.clearAllMocks();
+      vi.clearAllMocks();
       process.env = { ...originalEnv };
     });
 
@@ -1649,12 +1650,12 @@ describe('functions', () => {
   });
 
   describe('isOrganizationsConfigured', () => {
-    const mockSend = jest.fn();
+    const mockSend = vi.fn();
 
     beforeEach(() => {
-      jest.clearAllMocks();
+      vi.clearAllMocks();
 
-      (OrganizationsClient as jest.Mock).mockImplementation(() => ({
+      (OrganizationsClient as vi.Mock).mockImplementation(() => ({
         send: mockSend,
       }));
     });
@@ -1730,19 +1731,19 @@ describe('functions', () => {
   });
 
   describe('getEnabledBaselines', () => {
-    const mockSend = jest.fn();
+    const mockSend = vi.fn();
 
     beforeEach(() => {
-      jest.clearAllMocks();
+      vi.clearAllMocks();
 
-      (ControlTowerClient as jest.Mock).mockImplementation(() => ({
+      (ControlTowerClient as vi.Mock).mockImplementation(() => ({
         send: mockSend,
       }));
     });
 
     test('should return list of enabled baselines', async () => {
       // Setup
-      (paginateListEnabledBaselines as jest.Mock).mockImplementation(() => ({
+      (paginateListEnabledBaselines as vi.Mock).mockImplementation(() => ({
         [Symbol.asyncIterator]: async function* () {
           yield {
             enabledBaselines: MOCK_CONSTANTS.controlTowerEnabledBaselines,
@@ -1760,7 +1761,7 @@ describe('functions', () => {
 
     test('should return empty list of enabled baselines when enabledBaselines object is undefined', async () => {
       // Setup
-      (paginateListEnabledBaselines as jest.Mock).mockImplementation(() => ({
+      (paginateListEnabledBaselines as vi.Mock).mockImplementation(() => ({
         [Symbol.asyncIterator]: async function* () {
           yield {
             enabledBaselines: undefined,
@@ -1778,12 +1779,12 @@ describe('functions', () => {
 
   describe('waitUntil function', () => {
     beforeEach(() => {
-      jest.clearAllMocks();
+      vi.clearAllMocks();
     });
 
     test('should succeed when predicate returns true on first try', async () => {
       // Mock predicate that returns true immediately
-      const mockPredicate = jest.fn().mockResolvedValue(true);
+      const mockPredicate = vi.fn().mockResolvedValue(true);
       const errorMessage = 'Test error message';
 
       // Execute - this should succeed immediately without any delays
@@ -1796,7 +1797,7 @@ describe('functions', () => {
     test('should handle predicate that throws an error', async () => {
       // Mock predicate that throws an error
       const mockError = new Error('Predicate error');
-      const mockPredicate = jest.fn().mockRejectedValue(mockError);
+      const mockPredicate = vi.fn().mockRejectedValue(mockError);
       const errorMessage = 'Test error message';
 
       // Execute & Verify - should propagate the predicate error
@@ -1808,7 +1809,7 @@ describe('functions', () => {
 
     test('should use default retry limit and interval parameters', async () => {
       // Mock predicate that returns true immediately
-      const mockPredicate = jest.fn().mockResolvedValue(true);
+      const mockPredicate = vi.fn().mockResolvedValue(true);
       const errorMessage = 'Test error message';
 
       // Execute with no custom parameters
@@ -1820,7 +1821,7 @@ describe('functions', () => {
 
     test('should accept custom retry limit and interval parameters', async () => {
       // Mock predicate that returns true immediately
-      const mockPredicate = jest.fn().mockResolvedValue(true);
+      const mockPredicate = vi.fn().mockResolvedValue(true);
       const errorMessage = 'Test error message';
       const customRetryLimit = 10;
       const customInterval = 5;
@@ -1834,7 +1835,7 @@ describe('functions', () => {
 
     test('should call predicate function with no arguments', async () => {
       // Mock predicate that returns true immediately
-      const mockPredicate = jest.fn().mockResolvedValue(true);
+      const mockPredicate = vi.fn().mockResolvedValue(true);
       const errorMessage = 'Test error message';
 
       // Execute
@@ -1846,7 +1847,7 @@ describe('functions', () => {
 
     test('should handle async predicate functions', async () => {
       // Mock async predicate that returns true after a promise resolution
-      const mockPredicate = jest.fn().mockImplementation(async () => {
+      const mockPredicate = vi.fn().mockImplementation(async () => {
         await Promise.resolve();
         return true;
       });
@@ -1859,8 +1860,8 @@ describe('functions', () => {
       expect(mockPredicate).toHaveBeenCalledTimes(1);
     });
     test('should throw error when retry limit is exceeded', async () => {
-      const mockDelay = jest.fn().mockResolvedValue(undefined);
-      const mockPredicate = jest.fn().mockResolvedValue(false);
+      const mockDelay = vi.fn().mockResolvedValue(undefined);
+      const mockPredicate = vi.fn().mockResolvedValue(false);
       const errorMessage = 'Test error message';
 
       await expect(waitUntil(mockPredicate, errorMessage, 5, 1, mockDelay)).rejects.toThrow(
@@ -1875,9 +1876,9 @@ describe('functions', () => {
 
   describe('getCurrentAccountDetails', () => {
     beforeEach(() => {
-      jest.clearAllMocks();
+      vi.clearAllMocks();
 
-      (STSClient as jest.Mock).mockImplementation(() => ({
+      (STSClient as vi.Mock).mockImplementation(() => ({
         send: mockSend,
       }));
     });

@@ -13,9 +13,9 @@
 
 import { NlbTargetTypeConfig } from '@aws-accelerator/config';
 import { throttlingBackOff } from '@aws-accelerator/utils/lib/throttle';
-import { CloudFormationCustomResourceEvent } from '@aws-accelerator/utils/lib/common-types';
 import { STSClient, AssumeRoleCommand } from '@aws-sdk/client-sts';
 import { EC2Client, DescribeNetworkInterfacesCommand } from '@aws-sdk/client-ec2';
+import { CloudFormationCustomResourceEvent } from '@aws-accelerator/utils';
 
 /**
  * get cross account NLB IP Addresses and add static ip addresses in config- lambda handler

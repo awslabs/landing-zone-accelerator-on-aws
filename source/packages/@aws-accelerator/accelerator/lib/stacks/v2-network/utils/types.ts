@@ -24,7 +24,7 @@ import {
   TransitGatewayConfig,
   VpcConfig,
   VpcTemplatesConfig,
-} from '@aws-accelerator/config/lib/network-config';
+} from '@aws-accelerator/config';
 import { AcceleratorStackProps } from '../../accelerator-stack';
 import {
   SecurityGroupEgressRuleProps,

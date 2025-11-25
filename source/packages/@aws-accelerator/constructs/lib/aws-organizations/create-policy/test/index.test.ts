@@ -12,7 +12,7 @@ import {
 
 import { GetObjectCommand, S3Client } from '@aws-sdk/client-s3';
 
-import { describe, beforeEach, expect, test } from '@jest/globals';
+import { describe, beforeEach, expect, test } from 'vitest';
 import { handler } from '../index';
 import { AcceleratorMockClient, EventType } from '../../../../test/unit-test/common/resources';
 

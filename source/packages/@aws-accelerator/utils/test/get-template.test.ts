@@ -19,7 +19,7 @@ import {
   ChangeSetNotFoundException,
 } from '@aws-sdk/client-cloudformation';
 import { STSClient, AssumeRoleCommand, GetCallerIdentityCommand } from '@aws-sdk/client-sts';
-import { expect, it, beforeEach, afterEach } from '@jest/globals';
+import { expect, it, beforeEach, afterEach } from 'vitest';
 import * as path from 'path';
 import * as fs from 'fs';
 

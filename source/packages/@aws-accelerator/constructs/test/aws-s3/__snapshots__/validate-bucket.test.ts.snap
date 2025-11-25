@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`ValidateBucketKmsEncryption Construct(ValidateBucketKmsEncryption):  Snapshot Test 1`] = `
+exports[`ValidateBucketKmsEncryption > Construct(ValidateBucketS3Encryption):  Snapshot Test 1`] = `
 {
   "Mappings": {
     "LatestNodeRuntimeMap": {
@@ -893,7 +893,7 @@ exports[`ValidateBucketKmsEncryption Construct(ValidateBucketKmsEncryption):  Sn
 }
 `;
 
-exports[`ValidateBucketS3Encryption Construct(ValidateBucketS3Encryption):  Snapshot Test 1`] = `
+exports[`ValidateBucketS3Encryption > Construct(ValidateBucketS3Encryption):  Snapshot Test 1`] = `
 {
   "Mappings": {
     "LatestNodeRuntimeMap": {

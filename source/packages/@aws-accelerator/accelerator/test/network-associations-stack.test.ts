@@ -11,7 +11,7 @@
  *  and limitations under the License.
  */
 
-import { describe, test, it } from '@jest/globals';
+import { describe, test, it, expect } from 'vitest';
 import { AcceleratorStage } from '../lib/accelerator-stage';
 import { snapShotTest } from './snapshot-test';
 import { Create } from './accelerator-test-helpers';

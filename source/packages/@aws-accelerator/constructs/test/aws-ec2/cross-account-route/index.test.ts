@@ -13,7 +13,7 @@
 
 import { CreateRouteCommand, DeleteRouteCommand, EC2Client } from '@aws-sdk/client-ec2';
 import { AssumeRoleCommand, STSClient } from '@aws-sdk/client-sts';
-import { afterEach, beforeEach, expect, it } from '@jest/globals';
+import { afterEach, beforeEach, expect, it } from 'vitest';
 import { AwsClientStub, mockClient } from 'aws-sdk-client-mock';
 import { handler } from '../../../lib/aws-ec2/cross-account-route/index';
 import {

@@ -11,9 +11,10 @@
  *  and limitations under the License.
  */
 
-import { describe, expect, it } from '@jest/globals';
+import { describe, it, expect } from 'vitest';
+import { AccountIdConfig, AccountConfig, GovCloudAccountConfig, AccountsConfig } from '../lib/accounts-config';
+import { SNAPSHOT_CONFIG } from './config-test-helper';
 import * as path from 'path';
-import { AccountConfig, AccountIdConfig, AccountsConfig, GovCloudAccountConfig } from '../lib/accounts-config';
 
 const accountsConfigObject = {
   mandatoryAccounts: [
@@ -219,12 +220,12 @@ describe('accounts-config', () => {
     });
 
     it('load config successfully', () => {
-      const loadedConfig = AccountsConfig.load(path.resolve('../accelerator/test/configs/snapshot-only'));
+      const loadedConfig = AccountsConfig.load(SNAPSHOT_CONFIG);
       expect(loadedConfig && typeof loadedConfig === 'object').toBe(true);
     });
 
     it('yaml !include works with nesting', () => {
-      const loadedConfig = AccountsConfig.load(path.resolve('../accelerator/test/configs/snapshot-only'));
+      const loadedConfig = AccountsConfig.load(path.join(__dirname, '../../accelerator/test/configs/snapshot-only'));
       expect(loadedConfig.workloadAccounts).toHaveLength(3);
     });
   });

@@ -15,7 +15,7 @@ import * as cdk from 'aws-cdk-lib';
 import { BucketAccessType } from '@aws-accelerator/utils';
 import { Bucket, BucketEncryptionType } from '../../lib/aws-s3/bucket';
 import { snapShotTest } from '../snapshot-test';
-import { describe, it, expect } from '@jest/globals';
+import { describe, it, expect } from 'vitest';
 
 const testNamePrefix = 'Construct(Bucket): ';
 

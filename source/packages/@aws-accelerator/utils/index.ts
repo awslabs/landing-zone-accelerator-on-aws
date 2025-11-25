@@ -27,6 +27,7 @@ export * from './lib/evaluate-limits';
 export * from './lib/common-types';
 export * from './lib/control-tower';
 export * from './lib/query-config-table';
+export * from './lib/is-arn';
 
 //
 // Common integration test utilities

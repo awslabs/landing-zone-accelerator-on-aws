@@ -12,6 +12,7 @@
  */
 
 import * as cdk from 'aws-cdk-lib';
+import { describe } from 'vitest';
 import { ResolverEndpoint } from '../../lib/aws-route-53-resolver/resolver-endpoint';
 import { snapShotTest } from '../snapshot-test';
 

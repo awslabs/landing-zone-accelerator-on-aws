@@ -11,6 +11,13 @@
  *  and limitations under the License.
  */
 
+type DescribeFunction = {
+  (name: string, fn: () => void): void;
+  skip: (name: string, fn: () => void) => void;
+};
+
+declare const describe: DescribeFunction | undefined;
+
 /**
  * Integration testing environment name
  *
@@ -33,7 +40,7 @@ const region = process.env['AWS_DEFAULT_REGION'];
  *
  */
 export const RegionalTestSuite =
-  typeof jest !== 'undefined' // Only export the RegionalTestSuite object if the file is being executed as part of a Jest test
+  typeof describe !== 'undefined' // Only export the RegionalTestSuite object if the file is being executed as part of a test
     ? {
         ['sampleConfig:us-east-1']: {
           suite: environmentName === 'sampleConfig' && region === 'us-east-1' ? describe : describe.skip,

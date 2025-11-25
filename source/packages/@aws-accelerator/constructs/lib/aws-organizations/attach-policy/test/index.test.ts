@@ -11,7 +11,7 @@ import {
   ListPoliciesCommand,
 } from '@aws-sdk/client-organizations';
 
-import { describe, beforeEach, afterEach, expect, test, jest } from '@jest/globals';
+import { describe, beforeEach, afterEach, expect, test, vi } from 'vitest';
 import { handler } from '../index';
 import { AcceleratorMockClient, EventType } from '../../../../test/unit-test/common/resources';
 
@@ -26,7 +26,7 @@ describe('Create Event', () => {
   const OLD_ENV = process.env; // cache old env
   beforeEach(() => {
     orgClient.reset();
-    jest.resetModules(); // Most important - it clears the cache
+    vi.resetModules(); // Most important - it clears the cache
     process.env = { ...OLD_ENV }; // Make a copy
   });
   // process env can change between tests so making this afterEach not afterAll
@@ -149,7 +149,7 @@ describe('Update Event', () => {
   const OLD_ENV = process.env; // cache old env
   beforeEach(() => {
     orgClient.reset();
-    jest.resetModules(); // Most important - it clears the cache
+    vi.resetModules(); // Most important - it clears the cache
     process.env = { ...OLD_ENV }; // Make a copy
   });
   // process env can change between tests so making this afterEach not afterAll
@@ -178,7 +178,7 @@ describe('Delete Event', () => {
   const OLD_ENV = process.env; // cache old env
   beforeEach(() => {
     orgClient.reset();
-    jest.resetModules(); // Most important - it clears the cache
+    vi.resetModules(); // Most important - it clears the cache
     process.env = { ...OLD_ENV }; // Make a copy
   });
   // process env can change between tests so making this afterEach not afterAll

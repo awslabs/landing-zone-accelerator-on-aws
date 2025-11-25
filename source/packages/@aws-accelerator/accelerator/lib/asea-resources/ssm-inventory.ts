@@ -3,7 +3,7 @@ import { AseaResource, AseaResourceProps } from './resource';
 import { AseaResourceType, CfnResourceType } from '@aws-accelerator/config';
 import * as ssm from 'aws-cdk-lib/aws-ssm';
 import { pascalCase } from 'pascal-case';
-import { SsmResourceType } from '@aws-accelerator/utils/lib/ssm-parameter-path';
+import { SsmResourceType } from '@aws-accelerator/utils';
 
 const enum RESOURCE_TYPE {
   RESOURCE_DATA_SYNC = 'AWS::SSM::ResourceDataSync',

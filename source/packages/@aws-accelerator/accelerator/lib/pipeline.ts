@@ -24,9 +24,8 @@ import { AcceleratorStage } from './accelerator-stage';
 import * as config_repository from './config-repository';
 import { AcceleratorToolkitCommand } from './toolkit';
 import { Repository } from '@aws-cdk-extensions/cdk-extensions';
-import { CONTROL_TOWER_LANDING_ZONE_VERSION } from '@aws-accelerator/utils/lib/control-tower';
+import { CONTROL_TOWER_LANDING_ZONE_VERSION, getNodeVersion } from '@aws-accelerator/utils';
 import { ControlTowerLandingZoneConfig } from '@aws-accelerator/config';
-import { getNodeVersion } from '@aws-accelerator/utils/lib/common-functions';
 import { version } from '../../../../package.json';
 export interface AcceleratorPipelineProps {
   readonly toolkitRole: cdk.aws_iam.Role;

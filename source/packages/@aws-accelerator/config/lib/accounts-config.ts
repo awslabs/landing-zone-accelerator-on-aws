@@ -18,17 +18,17 @@ import * as fs from 'fs';
 import * as yaml from 'js-yaml';
 import * as path from 'path';
 
-import { createLogger } from '@aws-accelerator/utils/lib/logger';
-import { throttlingBackOff } from '@aws-accelerator/utils/lib/throttle';
-
+import { createLogger } from '../../utils/lib/logger';
+import { throttlingBackOff } from '../../utils/lib/throttle';
 import { getGlobalRegion, getCrossAccountCredentials } from '../../utils/lib/common-functions';
+import { queryConfigTable } from '../../utils/lib/query-config-table';
+import { setRetryStrategy } from '../../utils/lib/common-functions';
+import { getSSMParameterValue } from '../../utils/lib/get-value-from-ssm';
+
 import { createSchema, DeploymentTargets, parseAccountsConfig } from './common';
 import * as i from './models/accounts-config';
 import { OrganizationalUnitConfig } from './organization-config';
-import { getSSMParameterValue } from '../../utils/lib/get-value-from-ssm';
 import { Account } from '@aws-sdk/client-organizations';
-import { queryConfigTable } from '@aws-accelerator/utils/lib/query-config-table';
-import { setRetryStrategy } from '@aws-accelerator/utils/lib/common-functions';
 
 const logger = createLogger(['accounts-config']);
 

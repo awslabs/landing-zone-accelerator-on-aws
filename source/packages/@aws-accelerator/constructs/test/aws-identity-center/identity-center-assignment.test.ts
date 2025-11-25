@@ -13,7 +13,7 @@
 
 import * as cdk from 'aws-cdk-lib';
 import { snapShotTest } from '../snapshot-test';
-import { describe } from '@jest/globals';
+import { describe } from 'vitest';
 import { IdentityCenterAssignments } from '../../lib/aws-identity-center/identity-center-assignments';
 const testNamePrefix = 'Construct(IdentityCenterGetInstanceId): ';
 

@@ -10,7 +10,7 @@
  *  OR CONDITIONS OF ANY KIND, express or implied. See the License for the specific language governing permissions
  *  and limitations under the License.
  */
-import { describe, beforeEach, expect, test } from '@jest/globals';
+import { describe, beforeEach, expect, test, vi } from 'vitest';
 
 import { IamRole } from '../../../../../lib/control-tower/setup-landing-zone/prerequisites/iam-role';
 
@@ -26,16 +26,16 @@ import {
 import { MODULE_EXCEPTIONS } from '../../../../../common/enums';
 
 // Mock dependencies
-jest.mock('@aws-sdk/client-iam', () => {
+vi.mock('@aws-sdk/client-iam', () => {
   return {
-    IAMClient: jest.fn(),
-    GetRoleCommand: jest.fn(),
-    CreateRoleCommand: jest.fn(),
-    PutRolePolicyCommand: jest.fn(),
-    AttachRolePolicyCommand: jest.fn(),
-    TagRoleCommand: jest.fn(),
-    NoSuchEntityException: jest.fn(),
-    waitUntilRoleExists: jest.fn(),
+    IAMClient: vi.fn(),
+    GetRoleCommand: vi.fn(),
+    CreateRoleCommand: vi.fn(),
+    PutRolePolicyCommand: vi.fn(),
+    AttachRolePolicyCommand: vi.fn(),
+    TagRoleCommand: vi.fn(),
+    NoSuchEntityException: vi.fn(),
+    waitUntilRoleExists: vi.fn(),
   };
 });
 
@@ -67,13 +67,13 @@ const MOCK_CONSTANTS = {
 };
 
 describe('IAM Role Tests', () => {
-  const mockSend = jest.fn();
+  const mockSend = vi.fn();
 
   beforeEach(() => {
     // Clear all mocks before each test
-    jest.clearAllMocks();
+    vi.clearAllMocks();
 
-    (IAMClient as jest.Mock).mockImplementation(() => ({
+    (IAMClient as vi.Mock).mockImplementation(() => ({
       send: mockSend,
     }));
   });
@@ -151,7 +151,7 @@ describe('IAM Role Tests', () => {
       return Promise.reject(MOCK_CONSTANTS.unknownError);
     });
 
-    (waitUntilRoleExists as jest.Mock).mockReturnValue({ state: 'SUCCESS' });
+    (waitUntilRoleExists as vi.Mock).mockReturnValue({ state: 'SUCCESS' });
 
     // Execute
     const response = await IamRole.createControlTowerRoles(
@@ -196,7 +196,7 @@ describe('IAM Role Tests', () => {
       return Promise.reject(MOCK_CONSTANTS.unknownError);
     });
 
-    (waitUntilRoleExists as jest.Mock).mockReturnValue({ state: 'FAILURE' });
+    (waitUntilRoleExists as vi.Mock).mockReturnValue({ state: 'FAILURE' });
 
     // Execute and Verify
     await expect(async () => {
@@ -233,7 +233,7 @@ describe('IAM Role Tests', () => {
       return Promise.reject(MOCK_CONSTANTS.unknownError);
     });
 
-    (waitUntilRoleExists as jest.Mock).mockReturnValue({ state: 'SUCCESS' });
+    (waitUntilRoleExists as vi.Mock).mockReturnValue({ state: 'SUCCESS' });
 
     // Execute
     const response = await IamRole.createControlTowerRoles(
@@ -277,7 +277,7 @@ describe('IAM Role Tests', () => {
       return Promise.reject(MOCK_CONSTANTS.unknownError);
     });
 
-    (waitUntilRoleExists as jest.Mock).mockReturnValue({ state: 'SUCCESS' });
+    (waitUntilRoleExists as vi.Mock).mockReturnValue({ state: 'SUCCESS' });
 
     // Execute and Verify
     await expect(async () => {

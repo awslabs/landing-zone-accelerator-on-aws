@@ -12,6 +12,7 @@
  */
 
 import * as cdk from 'aws-cdk-lib';
+import { describe } from 'vitest';
 
 import { VpnConnection } from '../../lib/aws-ec2/vpn-connection';
 import { snapShotTest } from '../snapshot-test';

@@ -12,7 +12,7 @@
  */
 /* eslint @typescript-eslint/no-explicit-any: 0 */
 
-import { afterEach, beforeEach, describe, expect, it, jest } from '@jest/globals';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { CloudFormationClient, StackStatus } from '@aws-sdk/client-cloudformation';
 import { IStackPolicyHandlerParameter } from '../../../../interfaces/aws-cloudformation/create-stack-policy';
@@ -21,10 +21,10 @@ import * as commonFunctions from '../../../../common/functions';
 import * as throttle from '../../../../common/throttle';
 
 // Mock the AWS SDK clients and commands
-jest.mock('@aws-sdk/client-cloudformation', () => ({
-  CloudFormationClient: jest.fn(),
-  paginateListStacks: jest.fn(),
-  SetStackPolicyCommand: jest.fn().mockImplementation(params => {
+vi.mock('@aws-sdk/client-cloudformation', () => ({
+  CloudFormationClient: vi.fn(),
+  paginateListStacks: vi.fn(),
+  SetStackPolicyCommand: vi.fn().mockImplementation(params => {
     return { params };
   }),
   StackStatus: {
@@ -41,16 +41,16 @@ describe('StackPolicy', () => {
 
   beforeEach(() => {
     stackPolicy = new StackPolicyModule();
-    jest.spyOn(commonFunctions, 'getCurrentAccountId').mockResolvedValue('123456789012');
-    jest.spyOn(commonFunctions, 'setRetryStrategy').mockReturnValue({ mode: 'standard' } as any);
-    jest.spyOn(throttle, 'throttlingBackOff').mockImplementation((fn: any) => fn());
+    vi.spyOn(commonFunctions, 'getCurrentAccountId').mockResolvedValue('123456789012');
+    vi.spyOn(commonFunctions, 'setRetryStrategy').mockReturnValue({ mode: 'standard' } as any);
+    vi.spyOn(throttle, 'throttlingBackOff').mockImplementation((fn: any) => fn());
 
     // Clear all mocks before each test
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   afterEach(() => {
-    jest.restoreAllMocks();
+    vi.restoreAllMocks();
   });
 
   describe('createAllowStackPolicy', () => {
@@ -93,11 +93,12 @@ describe('StackPolicy', () => {
 
   describe('handler', () => {
     beforeEach(() => {
-      jest
-        .spyOn(StackPolicyModule.prototype, 'loadLzaStackNames' as any)
-        .mockResolvedValue(['AWSAccelerator-Stack1', 'AWSAccelerator-Stack2']);
-      jest.spyOn(StackPolicyModule.prototype, 'setStackPolicy' as any).mockResolvedValue(undefined);
-      jest.spyOn(StackPolicyModule.prototype, 'getAccountCredentials' as any).mockImplementation(() => {
+      vi.spyOn(StackPolicyModule.prototype, 'loadLzaStackNames' as any).mockResolvedValue([
+        'AWSAccelerator-Stack1',
+        'AWSAccelerator-Stack2',
+      ]);
+      vi.spyOn(StackPolicyModule.prototype, 'setStackPolicy' as any).mockResolvedValue(undefined);
+      vi.spyOn(StackPolicyModule.prototype, 'getAccountCredentials' as any).mockImplementation(() => {
         return Promise.resolve({
           accessKeyId: 'test',
           secretAccessKey: 'test',
@@ -120,15 +121,16 @@ describe('StackPolicy', () => {
       };
 
       // Mock empty stack list to test the null coalescing operator
-      jest.spyOn(StackPolicyModule.prototype, 'loadLzaStackNames' as any).mockResolvedValue(null);
+      vi.spyOn(StackPolicyModule.prototype, 'loadLzaStackNames' as any).mockResolvedValue(null);
 
       const result = await stackPolicy.handler(props);
       expect(result).toEqual(`StackPolicy has been succesfully changed to ${props.enabled}`);
 
       // Restore the original mock for other tests
-      jest
-        .spyOn(StackPolicyModule.prototype, 'loadLzaStackNames' as any)
-        .mockResolvedValue(['AWSAccelerator-Stack1', 'AWSAccelerator-Stack2']);
+      vi.spyOn(StackPolicyModule.prototype, 'loadLzaStackNames' as any).mockResolvedValue([
+        'AWSAccelerator-Stack1',
+        'AWSAccelerator-Stack2',
+      ]);
     });
 
     it('handler returns enabled on success', async () => {
@@ -180,7 +182,7 @@ describe('StackPolicy', () => {
         region: 'us-east-1',
       };
 
-      jest.spyOn(StackPolicyModule.prototype, 'executeDryRun' as any).mockReturnValue('Dry run response');
+      vi.spyOn(StackPolicyModule.prototype, 'executeDryRun' as any).mockReturnValue('Dry run response');
 
       const result = await stackPolicy.handler(props);
       expect(result).toBe('Dry run response');
@@ -206,7 +208,7 @@ describe('StackPolicy', () => {
 
   describe('loadLzaStackNames', () => {
     it('loadLzaStackNames only finds lza stacks using paginator', async () => {
-      const mockPaginator = jest.fn().mockImplementation(async function* () {
+      const mockPaginator = vi.fn().mockImplementation(async function* () {
         yield {
           StackSummaries: [
             { StackName: 'AWSAccelerator-Stack1', StackStatus: StackStatus.CREATE_COMPLETE },
@@ -216,8 +218,8 @@ describe('StackPolicy', () => {
         };
       });
 
-      const paginateListStacks = require('@aws-sdk/client-cloudformation').paginateListStacks;
-      paginateListStacks.mockImplementation(() => mockPaginator());
+      const { paginateListStacks } = await import('@aws-sdk/client-cloudformation');
+      vi.mocked(paginateListStacks).mockImplementation(() => mockPaginator());
 
       const cfnClientMock = {} as CloudFormationClient;
       const result = await stackPolicy['loadLzaStackNames'](cfnClientMock, 'AWSAccelerator');
@@ -225,7 +227,7 @@ describe('StackPolicy', () => {
     });
 
     it('loadLzaStackNames gets all pages from paginator', async () => {
-      const mockPaginator = jest.fn().mockImplementation(async function* () {
+      const mockPaginator = vi.fn().mockImplementation(async function* () {
         yield {
           StackSummaries: [
             { StackName: 'AWSAccelerator-Stack1', StackStatus: StackStatus.CREATE_COMPLETE },
@@ -245,8 +247,8 @@ describe('StackPolicy', () => {
         };
       });
 
-      const paginateListStacks = require('@aws-sdk/client-cloudformation').paginateListStacks;
-      paginateListStacks.mockImplementation(() => mockPaginator());
+      const { paginateListStacks } = await import('@aws-sdk/client-cloudformation');
+      vi.mocked(paginateListStacks).mockImplementation(() => mockPaginator());
 
       const cfnClientMock = {} as CloudFormationClient;
       const result = await stackPolicy['loadLzaStackNames'](cfnClientMock, 'AWSAccelerator');
@@ -254,14 +256,14 @@ describe('StackPolicy', () => {
     });
 
     it('handles empty StackSummaries', async () => {
-      const mockPaginator = jest.fn().mockImplementation(async function* () {
+      const mockPaginator = vi.fn().mockImplementation(async function* () {
         yield {
           StackSummaries: undefined,
         };
       });
 
-      const paginateListStacks = require('@aws-sdk/client-cloudformation').paginateListStacks;
-      paginateListStacks.mockImplementation(() => mockPaginator());
+      const { paginateListStacks } = await import('@aws-sdk/client-cloudformation');
+      vi.mocked(paginateListStacks).mockImplementation(() => mockPaginator());
 
       const cfnClientMock = {} as CloudFormationClient;
       const result = await stackPolicy['loadLzaStackNames'](cfnClientMock, 'AWSAccelerator');
@@ -269,7 +271,7 @@ describe('StackPolicy', () => {
     });
 
     it('handles stack summaries with undefined stack names', async () => {
-      const mockPaginator = jest.fn().mockImplementation(async function* () {
+      const mockPaginator = vi.fn().mockImplementation(async function* () {
         yield {
           StackSummaries: [
             { StackName: undefined, StackStatus: StackStatus.CREATE_COMPLETE },
@@ -278,8 +280,8 @@ describe('StackPolicy', () => {
         };
       });
 
-      const paginateListStacks = require('@aws-sdk/client-cloudformation').paginateListStacks;
-      paginateListStacks.mockImplementation(() => mockPaginator());
+      const { paginateListStacks } = await import('@aws-sdk/client-cloudformation');
+      vi.mocked(paginateListStacks).mockImplementation(() => mockPaginator());
 
       const cfnClientMock = {} as CloudFormationClient;
       const result = await stackPolicy['loadLzaStackNames'](cfnClientMock, 'AWSAccelerator');
@@ -291,7 +293,7 @@ describe('StackPolicy', () => {
   describe('setStackPolicy', () => {
     it('throws error on non 200 result', async () => {
       const cfnClientMock = {
-        send: jest.fn().mockImplementation(() => {
+        send: vi.fn().mockImplementation(() => {
           return Promise.resolve({
             $metadata: { httpStatusCode: 400 },
           });
@@ -304,7 +306,7 @@ describe('StackPolicy', () => {
 
     it('no error on 200 result', async () => {
       const cfnClientMock = {
-        send: jest.fn().mockImplementation(() => {
+        send: vi.fn().mockImplementation(() => {
           return Promise.resolve({
             $metadata: { httpStatusCode: 200 },
           });
@@ -331,7 +333,7 @@ describe('StackPolicy', () => {
         region: 'us-east-1',
       };
 
-      jest.spyOn(commonFunctions, 'generateDryRunResponse').mockReturnValue('Dry run response');
+      vi.spyOn(commonFunctions, 'generateDryRunResponse').mockReturnValue('Dry run response');
 
       const result = stackPolicy['executeDryRun'](['stack1', 'stack2'], 'us-east-1', props);
       expect(result).toBe('Dry run response');
@@ -350,7 +352,7 @@ describe('StackPolicy', () => {
         region: 'us-east-1',
       };
 
-      jest.spyOn(commonFunctions, 'generateDryRunResponse').mockReturnValue('Dry run response');
+      vi.spyOn(commonFunctions, 'generateDryRunResponse').mockReturnValue('Dry run response');
 
       const result = stackPolicy['executeDryRun'](['stack1'], 'us-east-1', props);
       expect(result).toBe('Dry run response');
@@ -370,7 +372,7 @@ describe('StackPolicy', () => {
       };
 
       const expectedResponse = 'response';
-      jest.spyOn(commonFunctions, 'generateDryRunResponse').mockReturnValue(expectedResponse);
+      vi.spyOn(commonFunctions, 'generateDryRunResponse').mockReturnValue(expectedResponse);
 
       const result = stackPolicy['executeDryRun'](undefined as any, 'us-east-1', props);
       expect(result).toBe(expectedResponse);
@@ -395,7 +397,7 @@ describe('StackPolicy', () => {
       } as any;
 
       const mockCredentials = { accessKeyId: 'new', secretAccessKey: 'new', sessionToken: 'new' };
-      jest.spyOn(commonFunctions, 'getCredentials').mockResolvedValue(mockCredentials);
+      vi.spyOn(commonFunctions, 'getCredentials').mockResolvedValue(mockCredentials);
 
       const result = await stackPolicy['getAccountCredentials']('234567890123', '123456789012', 'us-east-1', props);
       expect(result).toBe(mockCredentials);

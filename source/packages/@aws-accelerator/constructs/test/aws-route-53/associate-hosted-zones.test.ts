@@ -12,6 +12,7 @@
  */
 
 import * as cdk from 'aws-cdk-lib';
+import { describe } from 'vitest';
 import { AssociateHostedZones } from '../../lib/aws-route-53/associate-hosted-zones';
 import { snapShotTest } from '../snapshot-test';
 

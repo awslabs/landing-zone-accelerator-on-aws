@@ -11,18 +11,18 @@
  *  and limitations under the License.
  */
 
-import { describe, beforeEach, expect, test } from '@jest/globals';
+import { describe, beforeEach, expect, test, vi, afterEach } from 'vitest';
 import { configureRootUserManagment } from '../../executors/accelerator-aws-iam';
 import { RootUserManagementModule } from '../../lib/aws-iam/root-user-management';
 import { IRootUserManagementHandlerParameter } from '../../interfaces/aws-iam/root-user-management';
 import { MOCK_CONSTANTS } from '../mocked-resources';
 
 // Mock dependencies
-jest.mock('../../lib/aws-iam/root-user-management/index');
+vi.mock('../../lib/aws-iam/root-user-management/index');
 
 describe('configureRootUserManagement', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
   const input: IRootUserManagementHandlerParameter = {
     configuration: { enabled: true, credentials: true, session: true },
@@ -31,9 +31,9 @@ describe('configureRootUserManagement', () => {
 
   test('error rethrows exception', async () => {
     const errorMessage = 'Configure Root User Management Error';
-    const mockHandler = jest.fn().mockRejectedValue(new Error(errorMessage));
+    const mockHandler = vi.fn().mockRejectedValue(new Error(errorMessage));
 
-    (RootUserManagementModule as unknown as jest.Mock).mockImplementation(() => ({
+    (RootUserManagementModule as unknown as vi.Mock).mockImplementation(() => ({
       handler: mockHandler,
     }));
 
@@ -42,9 +42,9 @@ describe('configureRootUserManagement', () => {
 
   test('success returns value', async () => {
     const resultMessage = 'Module success message';
-    const mockHandler = jest.fn().mockReturnValue(resultMessage);
+    const mockHandler = vi.fn().mockReturnValue(resultMessage);
 
-    (RootUserManagementModule as unknown as jest.Mock).mockImplementation(() => ({
+    (RootUserManagementModule as unknown as vi.Mock).mockImplementation(() => ({
       handler: mockHandler,
     }));
 
@@ -64,28 +64,28 @@ describe('configureRootUserManagement', () => {
     beforeEach(() => {
       originalProcessOn = process.on;
 
-      process.on = jest.fn((event: string, listener: NodeJS.UncaughtExceptionListener) => {
+      process.on = vi.fn((event: string, listener: NodeJS.UncaughtExceptionListener) => {
         if (event === 'uncaughtException') {
           processOnCallback = listener;
         }
         return process;
       }) as unknown as typeof process.on;
 
-      jest.resetModules();
+      vi.resetModules();
     });
 
     afterEach(() => {
       process.on = originalProcessOn;
     });
 
-    test('should register uncaughtException handler', () => {
-      require('../../executors/accelerator-aws-iam');
+    test('should register uncaughtException handler', async () => {
+      await import('../../executors/accelerator-aws-iam');
 
       expect(process.on).toHaveBeenCalledWith('uncaughtException', expect.any(Function));
     });
 
-    test('should rethrow the error when uncaughtException occurs', () => {
-      require('../../executors/accelerator-aws-iam');
+    test('should rethrow the error when uncaughtException occurs', async () => {
+      await import('../../executors/accelerator-aws-iam');
 
       const testError = new Error('Test uncaught exception');
       const origin = 'uncaughtException';

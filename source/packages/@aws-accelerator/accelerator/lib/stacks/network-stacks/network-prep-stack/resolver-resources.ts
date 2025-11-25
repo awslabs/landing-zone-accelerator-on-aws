@@ -23,7 +23,7 @@ import {
   ResolverFirewallDomainListType,
   ResolverFirewallRuleGroup,
 } from '@aws-accelerator/constructs';
-import { SsmResourceType } from '@aws-accelerator/utils/lib/ssm-parameter-path';
+import { SsmResourceType } from '@aws-accelerator/utils';
 import * as cdk from 'aws-cdk-lib';
 import { pascalCase } from 'pascal-case';
 import path from 'path';

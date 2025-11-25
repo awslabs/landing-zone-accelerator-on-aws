@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`Network Firewall Construct(NetworkFirewall):  Snapshot Test 1`] = `
+exports[`Network Firewall > Construct(NetworkFirewall):  Snapshot Test 1`] = `
 {
   "Resources": {
     "CloudWatchKey9B181885": {
@@ -272,7 +272,7 @@ exports[`Network Firewall Construct(NetworkFirewall):  Snapshot Test 1`] = `
 }
 `;
 
-exports[`Network Firewall Construct(NetworkFirewall):  Snapshot Test 2`] = `
+exports[`Network Firewall > Construct(NetworkFirewall):  Snapshot Test 2`] = `
 {
   "Resources": {
     "firewallLogicalId": {

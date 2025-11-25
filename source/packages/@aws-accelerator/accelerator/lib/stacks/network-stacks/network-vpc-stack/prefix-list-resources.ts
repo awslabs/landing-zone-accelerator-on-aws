@@ -19,7 +19,7 @@ import {
   isNetworkType,
 } from '@aws-accelerator/config';
 import { PrefixList, PutSsmParameter, SsmParameterProps } from '@aws-accelerator/constructs';
-import { SsmResourceType } from '@aws-accelerator/utils/lib/ssm-parameter-path';
+import { SsmResourceType } from '@aws-accelerator/utils';
 import { pascalCase } from 'pascal-case';
 import { AcceleratorStackProps } from '../../accelerator-stack';
 import { LogLevel, NetworkStack } from '../network-stack';

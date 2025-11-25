@@ -1,4 +1,5 @@
 import { hasDuplicates } from '../../../validator/utils/common-validator-functions';
+import { describe, test, expect } from 'vitest';
 
 describe('hasDuplicates', () => {
   test('should return false for empty array', () => {

@@ -35,8 +35,7 @@ import { throttlingBackOff } from '../../../@aws-lza/common/throttle';
 import { AcceleratorResourcePrefixes } from '../../accelerator/utils/app-utils';
 import { AcceleratorResourceNames } from '../../accelerator/lib/accelerator-resource-names';
 import { getGlobalRegion } from '@aws-accelerator/utils/lib/common-functions';
-import { GlobalConfig } from '@aws-accelerator/config/lib/global-config';
-import { AccountsConfig } from '@aws-accelerator/config/lib/accounts-config';
+import { GlobalConfig, AccountsConfig } from '@aws-accelerator/config';
 import { GetParameterCommand, ParameterNotFound, SSMClient } from '@aws-sdk/client-ssm';
 import { ConfigLoader } from './config-loader';
 import {

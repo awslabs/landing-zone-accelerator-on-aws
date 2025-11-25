@@ -12,7 +12,7 @@
  */
 
 import { SynthUtils } from '@aws-cdk/assert';
-import { test, describe, expect } from '@jest/globals';
+import { test, describe, expect } from 'vitest';
 import * as CdkExtensions from '../index';
 import * as TestConfig from './test-config';
 

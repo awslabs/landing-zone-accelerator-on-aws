@@ -14,8 +14,7 @@
 import * as cdk from 'aws-cdk-lib';
 import { IConstruct } from 'constructs';
 import { version } from '../../../../package.json';
-import { createLogger } from '@aws-accelerator/utils/lib/logger';
-import { getGlobalRegion, getNodeVersion } from '@aws-accelerator/utils';
+import { createLogger, getGlobalRegion, getNodeVersion } from '@aws-accelerator/utils';
 
 const logger = createLogger(['accelerator-aspects']);
 /**

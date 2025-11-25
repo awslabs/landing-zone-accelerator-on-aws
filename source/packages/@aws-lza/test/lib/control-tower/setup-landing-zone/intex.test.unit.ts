@@ -10,7 +10,7 @@
  *  OR CONDITIONS OF ANY KIND, express or implied. See the License for the specific language governing permissions
  *  and limitations under the License.
  */
-import { describe, beforeEach, expect, test } from '@jest/globals';
+import { describe, beforeEach, expect, test, vi, afterAll } from 'vitest';
 
 import { SetupLandingZoneModule } from '../../../../lib/control-tower/setup-landing-zone/index';
 import { Organization } from '../../../../lib/control-tower/setup-landing-zone/prerequisites/organization';
@@ -30,11 +30,11 @@ import { SharedAccount } from '../../../../lib/control-tower/setup-landing-zone/
 import { MODULE_EXCEPTIONS } from '../../../../common/enums';
 
 // Mock dependencies
-jest.mock('@aws-sdk/client-controltower', () => {
+vi.mock('@aws-sdk/client-controltower', () => {
   return {
-    ControlTowerClient: jest.fn(),
-    CreateLandingZoneCommand: jest.fn(),
-    GetLandingZoneOperationCommand: jest.fn(),
+    ControlTowerClient: vi.fn(),
+    CreateLandingZoneCommand: vi.fn(),
+    GetLandingZoneOperationCommand: vi.fn(),
     LandingZoneOperationStatus: {
       FAILED: 'FAILED',
       IN_PROGRESS: 'IN_PROGRESS',
@@ -45,27 +45,44 @@ jest.mock('@aws-sdk/client-controltower', () => {
       FAILED: 'FAILED',
       PROCESSING: 'PROCESSING',
     },
-    ListLandingZonesCommand: jest.fn(),
-    GetLandingZoneCommand: jest.fn(),
-    ResetLandingZoneCommand: jest.fn(),
-    UpdateLandingZoneCommand: jest.fn(),
+    ListLandingZonesCommand: vi.fn(),
+    GetLandingZoneCommand: vi.fn(),
+    ResetLandingZoneCommand: vi.fn(),
+    UpdateLandingZoneCommand: vi.fn(),
   };
 });
 
-jest.mock('../../../../common/functions', () => ({
-  ...jest.requireActual('../../../../common/functions'),
-  delay: jest.fn().mockResolvedValue(undefined),
-}));
+vi.mock('../../../../common/functions', async () => {
+  const actual = await vi.importActual('../../../../common/functions');
+  return {
+    ...actual,
+    delay: vi.fn().mockResolvedValue(undefined),
+    getLandingZoneIdentifier: vi.fn(),
+    getLandingZoneDetails: vi.fn(),
+  };
+});
 
-jest.mock('../../../../lib/control-tower/setup-landing-zone/prerequisites/shared-account', () => ({
-  ...jest.requireActual('../../../../lib/control-tower/setup-landing-zone/prerequisites/shared-account'),
-  createAccounts: jest.fn(),
-}));
+vi.mock('../../../../lib/control-tower/setup-landing-zone/prerequisites/shared-account', async () => {
+  const actual = await vi.importActual('../../../../lib/control-tower/setup-landing-zone/prerequisites/shared-account');
+  return {
+    ...actual,
+    SharedAccount: {
+      ...actual.SharedAccount,
+      createAccounts: vi.fn(),
+    },
+  };
+});
 
-jest.mock('../../../../lib/control-tower/setup-landing-zone/prerequisites/kms-key', () => ({
-  ...jest.requireActual('../../../../lib/control-tower/setup-landing-zone/prerequisites/kms-key'),
-  createControlTowerKey: jest.fn(),
-}));
+vi.mock('../../../../lib/control-tower/setup-landing-zone/prerequisites/kms-key', async () => {
+  const actual = await vi.importActual('../../../../lib/control-tower/setup-landing-zone/prerequisites/kms-key');
+  return {
+    ...actual,
+    KmsKey: {
+      ...actual.KmsKey,
+      createControlTowerKey: vi.fn(),
+    },
+  };
+});
 
 const MOCK_CONSTANTS = {
   unknownError: new Error('Unknown command'),
@@ -171,57 +188,53 @@ const MOCK_CONSTANTS = {
 };
 
 describe('Accelerator ControlTower Landing Zone Module', () => {
-  const mockSend = jest.fn();
+  const mockSend = vi.fn();
 
-  let getLandingZoneIdentifierSpy: jest.SpyInstance;
+  let getLandingZoneIdentifierSpy: vi.SpyInstance;
 
-  let organizationValidateSpy: jest.SpyInstance;
-  let getOrganizationAccountDetailsByEmailSpy: jest.SpyInstance;
+  let organizationValidateSpy: vi.SpyInstance;
+  let getOrganizationAccountDetailsByEmailSpy: vi.SpyInstance;
 
-  let createControlTowerRolesSpy: jest.SpyInstance;
+  let createControlTowerRolesSpy: vi.SpyInstance;
 
-  let createControlTowerKeySpy: jest.SpyInstance;
+  let createControlTowerKeySpy: vi.SpyInstance;
 
-  let createSharedAccountsSpy: jest.SpyInstance;
+  let createSharedAccountsSpy: vi.SpyInstance;
 
-  let makeManifestDocumentSpy: jest.SpyInstance;
+  let makeManifestDocumentSpy: vi.SpyInstance;
 
-  let getLandingZoneDetailsSpy: jest.SpyInstance;
+  let getLandingZoneDetailsSpy: vi.SpyInstance;
 
-  let landingZoneUpdateOrResetRequiredSpy: jest.SpyInstance;
+  let landingZoneUpdateOrResetRequiredSpy: vi.SpyInstance;
 
-  beforeEach(() => {
-    jest.clearAllMocks();
+  beforeEach(async () => {
+    vi.clearAllMocks();
 
-    (ControlTowerClient as jest.Mock).mockImplementation(() => ({
+    (ControlTowerClient as vi.Mock).mockImplementation(() => ({
       send: mockSend,
     }));
 
-    getLandingZoneIdentifierSpy = jest.spyOn(require('../../../../common/functions'), 'getLandingZoneIdentifier');
-    organizationValidateSpy = jest.spyOn(Organization, 'validate');
-    getOrganizationAccountDetailsByEmailSpy = jest.spyOn(Organization, 'getOrganizationAccountDetailsByEmail');
+    const commonFunctions = await import('../../../../common/functions');
+    getLandingZoneIdentifierSpy = vi.mocked(commonFunctions.getLandingZoneIdentifier);
+    organizationValidateSpy = vi.spyOn(Organization, 'validate');
+    getOrganizationAccountDetailsByEmailSpy = vi.spyOn(Organization, 'getOrganizationAccountDetailsByEmail');
 
-    createControlTowerRolesSpy = jest.spyOn(IamRole, 'createControlTowerRoles');
+    createControlTowerRolesSpy = vi.spyOn(IamRole, 'createControlTowerRoles');
 
-    createControlTowerKeySpy = jest.spyOn(KmsKey, 'createControlTowerKey');
+    createControlTowerKeySpy = vi.mocked(KmsKey.createControlTowerKey);
 
-    createSharedAccountsSpy = jest.spyOn(SharedAccount, 'createAccounts');
-    makeManifestDocumentSpy = jest.spyOn(
-      require('../../../../lib/control-tower/setup-landing-zone/functions'),
-      'makeManifestDocument',
-    );
+    createSharedAccountsSpy = vi.mocked(SharedAccount.createAccounts);
+    const setupFunctions = await import('../../../../lib/control-tower/setup-landing-zone/functions');
+    makeManifestDocumentSpy = vi.spyOn(setupFunctions, 'makeManifestDocument');
 
-    getLandingZoneDetailsSpy = jest.spyOn(require('../../../../common/functions'), 'getLandingZoneDetails');
+    getLandingZoneDetailsSpy = vi.mocked(commonFunctions.getLandingZoneDetails);
 
-    landingZoneUpdateOrResetRequiredSpy = jest.spyOn(
-      require('../../../../lib/control-tower/setup-landing-zone/functions'),
-      'landingZoneUpdateOrResetRequired',
-    );
+    landingZoneUpdateOrResetRequiredSpy = vi.spyOn(setupFunctions, 'landingZoneUpdateOrResetRequired');
   });
 
   describe('Create landing zone operation', () => {
     beforeEach(() => {
-      jest.clearAllMocks();
+      vi.clearAllMocks();
       getLandingZoneIdentifierSpy.mockResolvedValue(undefined);
 
       organizationValidateSpy.mockReturnValue(true);
@@ -495,7 +508,7 @@ describe('Accelerator ControlTower Landing Zone Module', () => {
 
   describe('Update landing zone operation', () => {
     beforeEach(() => {
-      jest.clearAllMocks();
+      vi.clearAllMocks();
 
       getLandingZoneIdentifierSpy.mockResolvedValue(MOCK_CONSTANTS.existingLandingArn);
 
@@ -950,7 +963,7 @@ describe('Accelerator ControlTower Landing Zone Module', () => {
 
   describe('Reset landing zone operation', () => {
     beforeEach(() => {
-      jest.clearAllMocks();
+      vi.clearAllMocks();
 
       getLandingZoneIdentifierSpy.mockResolvedValue(MOCK_CONSTANTS.existingLandingArn);
 

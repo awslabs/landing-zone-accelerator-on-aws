@@ -12,7 +12,7 @@
  */
 
 import { AcceleratorStage } from '../lib/accelerator-stage';
-import { describe } from '@jest/globals';
+import { describe } from 'vitest';
 import { snapShotTest } from './snapshot-test';
 import { Create } from './accelerator-test-helpers';
 

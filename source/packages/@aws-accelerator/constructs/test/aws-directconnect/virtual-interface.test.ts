@@ -15,7 +15,7 @@ import * as cdk from 'aws-cdk-lib';
 
 import { VirtualInterface } from '../../lib/aws-directconnect/virtual-interface';
 import { snapShotTest } from '../snapshot-test';
-import { describe, expect } from '@jest/globals';
+import { describe, expect, test } from 'vitest';
 import { VirtualInterfaceAttributes } from '../../lib/aws-directconnect/virtual-interface/attributes';
 import { VirtualInterfaceAllocationAttributes } from '../../lib/aws-directconnect/virtual-interface-allocation/attributes';
 
@@ -93,91 +93,107 @@ describe('VirtualInterface', () => {
  * VirtualInterface attribute test
  */
 describe('VirtualInterfaceAttributes', () => {
-  const privAttribute = new VirtualInterfaceAttributes({
-    addressFamily: 'addressFamily',
-    asn: 1234,
-    connectionId: 'connectionId',
-    directConnectGatewayId: 'directConnectGatewayId',
-    jumboFrames: true,
-    siteLink: true,
-    virtualInterfaceName: 'virtualInterfaceName',
-    virtualInterfaceType: 'private',
-    vlan: 123,
-    amazonAddress: 'earth',
-    customerAddress: 'earth',
+  test('should return correct MTU for private interface with jumbo frames', () => {
+    const privAttribute = new VirtualInterfaceAttributes({
+      addressFamily: 'addressFamily',
+      asn: 1234,
+      connectionId: 'connectionId',
+      directConnectGatewayId: 'directConnectGatewayId',
+      jumboFrames: true,
+      siteLink: true,
+      virtualInterfaceName: 'virtualInterfaceName',
+      virtualInterfaceType: 'private',
+      vlan: 123,
+      amazonAddress: 'earth',
+      customerAddress: 'earth',
+    });
+    expect(privAttribute.mtu).toEqual(9001);
   });
-  expect(privAttribute.mtu).toEqual(9001);
-  const transitAttribute = new VirtualInterfaceAttributes({
-    addressFamily: 'addressFamily',
-    asn: 1234,
-    connectionId: 'connectionId',
-    directConnectGatewayId: 'directConnectGatewayId',
-    jumboFrames: true,
-    siteLink: true,
-    virtualInterfaceName: 'virtualInterfaceName',
-    virtualInterfaceType: 'transit',
-    vlan: 123,
-    amazonAddress: 'earth',
-    customerAddress: 'earth',
+
+  test('should return correct MTU for transit interface with jumbo frames', () => {
+    const transitAttribute = new VirtualInterfaceAttributes({
+      addressFamily: 'addressFamily',
+      asn: 1234,
+      connectionId: 'connectionId',
+      directConnectGatewayId: 'directConnectGatewayId',
+      jumboFrames: true,
+      siteLink: true,
+      virtualInterfaceName: 'virtualInterfaceName',
+      virtualInterfaceType: 'transit',
+      vlan: 123,
+      amazonAddress: 'earth',
+      customerAddress: 'earth',
+    });
+    expect(transitAttribute.mtu).toEqual(8500);
   });
-  expect(transitAttribute.mtu).toEqual(8500);
-  const noJumboAttribute = new VirtualInterfaceAttributes({
-    addressFamily: 'addressFamily',
-    asn: 1234,
-    connectionId: 'connectionId',
-    directConnectGatewayId: 'directConnectGatewayId',
-    jumboFrames: false,
-    siteLink: true,
-    virtualInterfaceName: 'virtualInterfaceName',
-    virtualInterfaceType: 'transit',
-    vlan: 123,
-    amazonAddress: 'earth',
-    customerAddress: 'earth',
+
+  test('should return correct MTU for interface without jumbo frames', () => {
+    const noJumboAttribute = new VirtualInterfaceAttributes({
+      addressFamily: 'addressFamily',
+      asn: 1234,
+      connectionId: 'connectionId',
+      directConnectGatewayId: 'directConnectGatewayId',
+      jumboFrames: false,
+      siteLink: true,
+      virtualInterfaceName: 'virtualInterfaceName',
+      virtualInterfaceType: 'transit',
+      vlan: 123,
+      amazonAddress: 'earth',
+      customerAddress: 'earth',
+    });
+    expect(noJumboAttribute.mtu).toEqual(1500);
   });
-  expect(noJumboAttribute.mtu).toEqual(1500);
 });
 
 describe('VirtualInterfaceAllocationAttributes', () => {
-  const privAttribute = new VirtualInterfaceAllocationAttributes({
-    addressFamily: 'addressFamily',
-    asn: 1234,
-    connectionId: 'connectionId',
-    jumboFrames: true,
-    ownerAccount: 'ownerAccount',
-    siteLink: true,
-    virtualInterfaceName: 'virtualInterfaceName',
-    virtualInterfaceType: 'private',
-    vlan: 123,
-    amazonAddress: 'earth',
-    customerAddress: 'earth',
+  test('should return correct MTU for private allocation with jumbo frames', () => {
+    const privAttribute = new VirtualInterfaceAllocationAttributes({
+      addressFamily: 'addressFamily',
+      asn: 1234,
+      connectionId: 'connectionId',
+      jumboFrames: true,
+      ownerAccount: 'ownerAccount',
+      siteLink: true,
+      virtualInterfaceName: 'virtualInterfaceName',
+      virtualInterfaceType: 'private',
+      vlan: 123,
+      amazonAddress: 'earth',
+      customerAddress: 'earth',
+    });
+    expect(privAttribute.mtu).toEqual(9001);
   });
-  expect(privAttribute.mtu).toEqual(9001);
-  const transitAttribute = new VirtualInterfaceAllocationAttributes({
-    addressFamily: 'addressFamily',
-    asn: 1234,
-    connectionId: 'connectionId',
-    ownerAccount: 'ownerAccount',
-    jumboFrames: true,
-    siteLink: true,
-    virtualInterfaceName: 'virtualInterfaceName',
-    virtualInterfaceType: 'transit',
-    vlan: 123,
-    amazonAddress: 'earth',
-    customerAddress: 'earth',
+
+  test('should return correct MTU for transit allocation with jumbo frames', () => {
+    const transitAttribute = new VirtualInterfaceAllocationAttributes({
+      addressFamily: 'addressFamily',
+      asn: 1234,
+      connectionId: 'connectionId',
+      ownerAccount: 'ownerAccount',
+      jumboFrames: true,
+      siteLink: true,
+      virtualInterfaceName: 'virtualInterfaceName',
+      virtualInterfaceType: 'transit',
+      vlan: 123,
+      amazonAddress: 'earth',
+      customerAddress: 'earth',
+    });
+    expect(transitAttribute.mtu).toEqual(8500);
   });
-  expect(transitAttribute.mtu).toEqual(8500);
-  const noJumboAttribute = new VirtualInterfaceAllocationAttributes({
-    addressFamily: 'addressFamily',
-    asn: 1234,
-    connectionId: 'connectionId',
-    ownerAccount: 'ownerAccount',
-    jumboFrames: false,
-    siteLink: true,
-    virtualInterfaceName: 'virtualInterfaceName',
-    virtualInterfaceType: 'transit',
-    vlan: 123,
-    amazonAddress: 'earth',
-    customerAddress: 'earth',
+
+  test('should return correct MTU for allocation without jumbo frames', () => {
+    const noJumboAttribute = new VirtualInterfaceAllocationAttributes({
+      addressFamily: 'addressFamily',
+      asn: 1234,
+      connectionId: 'connectionId',
+      ownerAccount: 'ownerAccount',
+      jumboFrames: false,
+      siteLink: true,
+      virtualInterfaceName: 'virtualInterfaceName',
+      virtualInterfaceType: 'transit',
+      vlan: 123,
+      amazonAddress: 'earth',
+      customerAddress: 'earth',
+    });
+    expect(noJumboAttribute.mtu).toEqual(1500);
   });
-  expect(noJumboAttribute.mtu).toEqual(1500);
 });

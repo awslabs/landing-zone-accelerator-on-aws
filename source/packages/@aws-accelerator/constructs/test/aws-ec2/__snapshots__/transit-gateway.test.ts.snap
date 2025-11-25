@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`ImportTransitGateway Construct(ImportTransitGateway):  Snapshot Test 1`] = `
+exports[`ImportTransitGateway > Construct(ImportTransitGateway):  Snapshot Test 1`] = `
 {
   "Mappings": {
     "LatestNodeRuntimeMap": {
@@ -836,7 +836,7 @@ exports[`ImportTransitGateway Construct(ImportTransitGateway):  Snapshot Test 1`
 }
 `;
 
-exports[`TransitGateway Construct(TransitGateway):  Snapshot Test 1`] = `
+exports[`TransitGateway > Construct(TransitGateway):  Snapshot Test 1`] = `
 {
   "Mappings": {
     "LatestNodeRuntimeMap": {
@@ -1672,7 +1672,7 @@ exports[`TransitGateway Construct(TransitGateway):  Snapshot Test 1`] = `
 }
 `;
 
-exports[`TransitGatewayAttachment Construct(TransitGatewayAttachment):  Snapshot Test 1`] = `
+exports[`TransitGatewayAttachment > Construct(TransitGatewayAttachment):  Snapshot Test 1`] = `
 {
   "Mappings": {
     "LatestNodeRuntimeMap": {
@@ -2508,7 +2508,7 @@ exports[`TransitGatewayAttachment Construct(TransitGatewayAttachment):  Snapshot
 }
 `;
 
-exports[`TransitGatewayRouteTableAssociation Construct(TransitGatewayRouteTableAssociation):  Snapshot Test 1`] = `
+exports[`TransitGatewayRouteTableAssociation > Construct(TransitGatewayRouteTableAssociation):  Snapshot Test 1`] = `
 {
   "Mappings": {
     "LatestNodeRuntimeMap": {
@@ -3086,7 +3086,7 @@ exports[`TransitGatewayRouteTableAssociation Construct(TransitGatewayRouteTableA
 }
 `;
 
-exports[`TransitGatewayRouteTablePropagation Construct(TransitGatewayRouteTablePropagation):  Snapshot Test 1`] = `
+exports[`TransitGatewayRouteTablePropagation > Construct(TransitGatewayRouteTablePropagation):  Snapshot Test 1`] = `
 {
   "Mappings": {
     "LatestNodeRuntimeMap": {

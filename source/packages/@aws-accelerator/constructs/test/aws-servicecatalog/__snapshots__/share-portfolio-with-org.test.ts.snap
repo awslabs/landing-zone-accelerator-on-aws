@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`SharePortfolioWithOrg Construct(SharePortfolioWithOrg):  Snapshot Test 1`] = `
+exports[`SharePortfolioWithOrg > Construct(SharePortfolioWithOrg):  Snapshot Test 1`] = `
 {
   "Resources": {
     "CustomSharePortfolioWithOrgCustomResourceProviderHandler4644676D": {

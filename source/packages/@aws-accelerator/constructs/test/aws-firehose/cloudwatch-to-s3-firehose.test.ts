@@ -14,7 +14,8 @@
 import * as cdk from 'aws-cdk-lib';
 import { CloudWatchToS3Firehose } from '../../lib/aws-firehose/cloudwatch-to-s3-firehose';
 import { snapShotTest } from '../snapshot-test';
-import { describe, expect, test } from '@jest/globals';
+import { describe, expect, test } from 'vitest';
+import { SNAPSHOT_CONFIG } from '../../../config/test/config-test-helper';
 
 const testNamePrefix = 'Construct(CloudWatchToS3Firehose): ';
 const stack = new cdk.Stack();
@@ -33,7 +34,7 @@ describe('CloudWatchToS3Firehose', () => {
     bucket: new cdk.aws_s3.Bucket(stack, 'CustomBucket', {}),
     dynamicPartitioningValue: 'dynamic-partitioning/log-filters.json',
     homeRegion: 'someregion',
-    configDir: `${__dirname}/../../../accelerator/test/configs/snapshot-only`,
+    configDir: SNAPSHOT_CONFIG,
     acceleratorPrefix: 'AWSAccelerator',
     useExistingRoles: false,
     firehoseRecordsProcessorFunctionName: 'test',
@@ -55,7 +56,7 @@ describe('CloudWatchToS3FirehoseBucketName', () => {
     bucketName: 'somebucket',
     dynamicPartitioningValue: 'dynamic-partitioning/log-filters.json',
     homeRegion: 'someregion',
-    configDir: `${__dirname}/../../../accelerator/test/configs/snapshot-only`,
+    configDir: SNAPSHOT_CONFIG,
     acceleratorPrefix: 'AWSAccelerator',
     useExistingRoles: false,
     firehoseRecordsProcessorFunctionName: 'test',
@@ -79,7 +80,7 @@ test('should throw an exception for bucket name and bucket are present', () => {
       bucket: new cdk.aws_s3.Bucket(stack, 'CustomBucketError', {}),
       dynamicPartitioningValue: 'dynamic-partitioning/log-filters.json',
       homeRegion: 'someregion',
-      configDir: `${__dirname}/../../../accelerator/test/configs/snapshot-only`,
+      configDir: SNAPSHOT_CONFIG,
       acceleratorPrefix: 'AWSAccelerator',
       useExistingRoles: false,
       firehoseRecordsProcessorFunctionName: 'test',
@@ -105,7 +106,7 @@ describe('CloudWatchToS3FirehoseExistingIam', () => {
     bucketName: 'somebucket',
     dynamicPartitioningValue: 'dynamic-partitioning/log-filters.json',
     homeRegion: 'someregion',
-    configDir: `${__dirname}/../../../accelerator/test/configs/snapshot-only`,
+    configDir: SNAPSHOT_CONFIG,
     acceleratorPrefix: 'AWSAccelerator',
     useExistingRoles: true,
     firehoseRecordsProcessorFunctionName: 'test',
@@ -129,7 +130,7 @@ describe('File Extension Tests', () => {
       bucket: new cdk.aws_s3.Bucket(testStack, 'XXXXXXXXXXXXXXXXXXX', {}),
       dynamicPartitioningValue: 'dynamic-partitioning/log-filters.json',
       homeRegion: 'someregion',
-      configDir: `${__dirname}/../../../accelerator/test/configs/snapshot-only`,
+      configDir: SNAPSHOT_CONFIG,
       acceleratorPrefix: 'AWSAccelerator',
       useExistingRoles: false,
       firehoseRecordsProcessorFunctionName: 'test',
@@ -161,7 +162,7 @@ describe('File Extension Tests', () => {
       bucket: new cdk.aws_s3.Bucket(testStack, 'XXXXXXXXXXXXXXXXX', {}),
       dynamicPartitioningValue: 'dynamic-partitioning/log-filters.json',
       homeRegion: 'someregion',
-      configDir: `${__dirname}/../../../accelerator/test/configs/snapshot-only`,
+      configDir: SNAPSHOT_CONFIG,
       acceleratorPrefix: 'AWSAccelerator',
       useExistingRoles: false,
       firehoseRecordsProcessorFunctionName: 'test',
@@ -194,7 +195,7 @@ describe('DynamicPartitioningByAccountId Tests', () => {
       dynamicPartitioningValue: 'dynamic-partitioning/log-filters.json',
       dynamicPartitioningByAccountId: true,
       homeRegion: 'someregion',
-      configDir: `${__dirname}/../../../accelerator/test/configs/snapshot-only`,
+      configDir: SNAPSHOT_CONFIG,
       acceleratorPrefix: 'AWSAccelerator',
       useExistingRoles: false,
       firehoseRecordsProcessorFunctionName: 'test',
@@ -218,7 +219,7 @@ describe('DynamicPartitioningByAccountId Tests', () => {
       dynamicPartitioningValue: 'dynamic-partitioning/log-filters.json',
       dynamicPartitioningByAccountId: false,
       homeRegion: 'someregion',
-      configDir: `${__dirname}/../../../accelerator/test/configs/snapshot-only`,
+      configDir: SNAPSHOT_CONFIG,
       acceleratorPrefix: 'AWSAccelerator',
       useExistingRoles: false,
       firehoseRecordsProcessorFunctionName: 'test',
@@ -241,7 +242,7 @@ describe('DynamicPartitioningByAccountId Tests', () => {
       bucket: new cdk.aws_s3.Bucket(testStack, 'TestBucketUndefinedAccountId', {}),
       dynamicPartitioningValue: 'dynamic-partitioning/log-filters.json',
       homeRegion: 'someregion',
-      configDir: `${__dirname}/../../../accelerator/test/configs/snapshot-only`,
+      configDir: SNAPSHOT_CONFIG,
       acceleratorPrefix: 'AWSAccelerator',
       useExistingRoles: false,
       firehoseRecordsProcessorFunctionName: 'test',

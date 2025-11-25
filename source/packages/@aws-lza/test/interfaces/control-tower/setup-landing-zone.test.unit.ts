@@ -10,7 +10,7 @@
  *  OR CONDITIONS OF ANY KIND, express or implied. See the License for the specific language governing permissions
  *  and limitations under the License.
  */
-import { describe, beforeEach, expect, test } from '@jest/globals';
+import { describe, beforeEach, expect, test, vi, afterEach } from 'vitest';
 import { SetupLandingZoneModule } from '../../../lib/control-tower/setup-landing-zone';
 import { MOCK_CONSTANTS } from '../../mocked-resources';
 import { ISetupLandingZoneHandlerParameter } from '../../../interfaces/control-tower/setup-landing-zone';
@@ -25,7 +25,7 @@ describe('SetupLandingZoneModule Contract Compliance', () => {
   beforeEach(() => {
     module = new SetupLandingZoneModule();
     // Mock the handler implementation
-    jest.spyOn(module, 'handler').mockImplementation(async () => 'mocked-response');
+    vi.spyOn(module, 'handler').mockImplementation(async () => 'mocked-response');
   });
 
   test('should implement all interface methods', () => {
@@ -44,7 +44,7 @@ describe('SetupLandingZoneModule Contract Compliance', () => {
 
   test('should handle invalid inputs according to contract', async () => {
     // Reset mock to test error handling
-    jest.spyOn(module, 'handler').mockRejectedValue(new Error('Invalid input parameters'));
+    vi.spyOn(module, 'handler').mockRejectedValue(new Error('Invalid input parameters'));
 
     await expect(module.handler({} as ISetupLandingZoneHandlerParameter)).rejects.toThrow('Invalid input parameters');
   });
@@ -56,6 +56,6 @@ describe('SetupLandingZoneModule Contract Compliance', () => {
   });
 
   afterEach(() => {
-    jest.restoreAllMocks();
+    vi.restoreAllMocks();
   });
 });

@@ -23,7 +23,7 @@ import fs from 'fs';
 import * as yaml from 'js-yaml';
 import os from 'os';
 import path from 'path';
-import { getNodeVersion } from '@aws-accelerator/utils/lib/common-functions';
+import { getNodeVersion } from '@aws-accelerator/utils';
 
 import { Bucket, BucketEncryptionType } from '@aws-accelerator/constructs';
 import * as cdk_extensions from '@aws-cdk-extensions/cdk-extensions';

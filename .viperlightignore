@@ -242,7 +242,8 @@ SECURITY.md:10
 # Lza Modules unit test files
 source/packages/@aws-accelerator/lza-modules/test/config/functions.test.ts:46
 source/packages/@aws-accelerator/lza-modules/test/config/functions.test.ts:73
-source/packages/@aws-accelerator/lza-modules/test/config/index.test.ts:50
+source/packages/@aws-accelerator/lza-modules/test/config/index.test.ts:57
+source/packages/@aws-accelerator/lza-modules/test/config/index.test.ts:58
 
 # LzaModules unit test mock constant file
 source/packages/@aws-lza/test/mocked-resources.ts:106
@@ -258,10 +259,10 @@ source/packages/@aws-accelerator/constructs/lib/aws-fms/enable-organization-admi
 # Stack Policy Unit tests and wrong credential warnings
 source/packages/@aws-lza/lib/aws-cloudformation/create-stack-policy/index.ts:107
 source/packages/@aws-lza/lib/aws-cloudformation/create-stack-policy/index.ts:108
-source/packages/@aws-lza/test/lib/aws-cloudformation/create-stack-policy/index.test.unit.ts:111
-source/packages/@aws-lza/test/lib/aws-cloudformation/create-stack-policy/index.test.unit.ts:136
-source/packages/@aws-lza/test/lib/aws-cloudformation/create-stack-policy/index.test.unit.ts:400
-source/packages/@aws-lza/test/lib/aws-cloudformation/create-stack-policy/index.test.unit.ts:405
+source/packages/@aws-lza/test/lib/aws-cloudformation/create-stack-policy/index.test.unit.ts:112
+source/packages/@aws-lza/test/lib/aws-cloudformation/create-stack-policy/index.test.unit.ts:138
+source/packages/@aws-lza/test/lib/aws-cloudformation/create-stack-policy/index.test.unit.ts:402
+source/packages/@aws-lza/test/lib/aws-cloudformation/create-stack-policy/index.test.unit.ts:407
 
 source/packages/@aws-accelerator/config/lib/accounts-config.ts:223
 source/packages/@aws-accelerator/config/lib/accounts-config.ts:224

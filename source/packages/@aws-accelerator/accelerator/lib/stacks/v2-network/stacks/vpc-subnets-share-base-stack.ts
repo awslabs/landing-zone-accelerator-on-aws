@@ -17,13 +17,11 @@ import { Construct } from 'constructs';
 import { AcceleratorKeyType, AcceleratorStack } from '../../accelerator-stack';
 import { V2NetworkStacksBaseProps } from '../utils/types';
 import { VpcDetails } from '../constructs/vpc-details';
-import { SubnetConfig } from '@aws-accelerator/config/lib/network-config';
+import { SubnetConfig } from '@aws-accelerator/config';
 import { getResourceSharePrincipals, isV2Resource } from '../utils/functions';
-import { SsmResourceType } from '@aws-accelerator/utils/lib/ssm-parameter-path';
-import { PutSsmParameter, SsmParameterProps } from '@aws-accelerator/constructs/lib/aws-ssm/put-ssm-parameter';
-import { ResourceShare } from '@aws-accelerator/constructs/lib/aws-ram/resource-share';
+import { SsmResourceType, MetadataKeys } from '@aws-accelerator/utils';
+import { PutSsmParameter, SsmParameterProps, ResourceShare } from '@aws-accelerator/constructs';
 import { NetworkStackGeneration, V2StackComponentsList } from '../utils/enums';
-import { MetadataKeys } from '@aws-accelerator/utils/lib/common-types';
 
 export class VpcSubnetsShareBaseStack extends AcceleratorStack {
   private v2StackProps: V2NetworkStacksBaseProps;

@@ -1,6 +1,6 @@
 import * as fs from 'fs';
 import { ASEAMapping, CfnResourceType, NestedStack } from '@aws-accelerator/config';
-import { createLogger } from '@aws-accelerator/utils/lib/logger';
+import { createLogger } from '@aws-accelerator/utils';
 import * as winston from 'winston';
 import path from 'path';
 export class ImportStackResources {

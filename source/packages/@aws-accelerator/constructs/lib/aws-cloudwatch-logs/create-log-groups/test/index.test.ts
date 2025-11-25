@@ -9,7 +9,7 @@ import {
 
 import { AssumeRoleCommand, STSClient } from '@aws-sdk/client-sts';
 
-import { describe, beforeEach, expect, test } from '@jest/globals';
+import { describe, beforeEach, expect, test } from 'vitest';
 import { handler } from '../index';
 import { AcceleratorMockClient, EventType } from '../../../../test/unit-test/common/resources';
 
@@ -17,7 +17,7 @@ import { StaticInput } from './static-input';
 
 import { AcceleratorUnitTest } from '../../../../test/unit-test/accelerator-unit-test';
 
-import { CloudFormationCustomResourceDeleteEvent } from '@aws-accelerator/utils/lib/common-types';
+import { CloudFormationCustomResourceDeleteEvent } from '@aws-accelerator/utils';
 
 const client = AcceleratorMockClient(CloudWatchLogsClient);
 

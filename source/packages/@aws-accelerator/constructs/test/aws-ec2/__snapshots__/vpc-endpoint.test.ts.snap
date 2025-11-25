@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`VpcEndpoint Construct(VpcEndpoint):  Snapshot Test 1`] = `
+exports[`VpcEndpoint > Construct(VpcEndpoint):  Snapshot Test 1`] = `
 {
   "Resources": {
     "TestSecurityGroupDA4B5F83": {

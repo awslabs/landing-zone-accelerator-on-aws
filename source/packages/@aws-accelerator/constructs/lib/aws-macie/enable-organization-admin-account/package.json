@@ -16,8 +16,8 @@
     "cleanup:tsc": "tsc --build ./ --clean",
     "lint": "eslint --fix  --max-warnings 0 -c ../../../../../../.eslintrc.json '**/*.{ts,tsx}' --ignore-pattern \"*.d.ts\" ",
     "precommit": "eslint --max-warnings 0 -c ../../../../../../.eslintrc.json '**/*.{ts,tsx}' --ignore-pattern \"*.d.ts\" ",
-    "test:unit": "jest --ci --passWithNoTests -o --coverage --testMatch '**/*.test.unit.ts'",
-    "test:integration": "jest --ci --passWithNoTests --testMatch '**/*test.integration.ts'",
+    "test:unit": "vitest run --passWithNoTests",
+    "test:integration": "vitest run --testNamePattern='integration'",
     "test:clean": "rm -f ./test-reports/*/*/*.xml"
   },
   "dependencies": {
@@ -25,7 +25,6 @@
     "@aws-sdk/client-macie2": "3.835.0"
   },
   "devDependencies": {
-    "@types/jest": "29.5.12",
     "@types/node": "18.19.50",
     "esbuild": "0.25.0",
     "eslint": "8.34.0",
@@ -37,9 +36,9 @@
     "eslint-plugin-license-header": "0.6.0",
     "eslint-plugin-node": "11.1.0",
     "eslint-plugin-prettier": "4.2.1",
-    "jest": "29.4.3",
+    "@vitest/coverage-v8": "3.2.4",
     "prettier": "2.8.4",
-    "ts-jest": "29.0.5",
+    "vitest": "3.2.4",
     "ts-node": "10.9.1",
     "typescript": "5.8.3"
   }

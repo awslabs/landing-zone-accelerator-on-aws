@@ -38,7 +38,7 @@ import { TransitGatewayRoutes } from '../asea-resources/transit-gateway-routes';
 import { VpcEndpoints } from '../asea-resources/vpc-endpoints';
 import { SsmInventory } from '../asea-resources/ssm-inventory';
 import { Lambda } from '../asea-resources/lambda';
-import { createLogger } from '@aws-accelerator/utils/lib/logger';
+import { createLogger } from '@aws-accelerator/utils';
 import { FirewallResources } from '../asea-resources/firewall-resources';
 import { Route53ResolverQueryLogging } from '../asea-resources/route-53-query-logging';
 import { Route53ResolverQueryLoggingAssociation } from '../asea-resources/route-53-query-logging-association';

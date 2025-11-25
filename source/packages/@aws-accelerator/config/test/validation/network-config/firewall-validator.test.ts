@@ -1,4 +1,4 @@
-import { describe, expect, test } from '@jest/globals';
+import { describe, expect, test } from 'vitest';
 import { NetworkFirewallValidator } from '../../../validator/network-config-validator/network-firewall-validator';
 import { NetworkConfig } from '../../../lib/network-config';
 import { NetworkValidatorFunctions } from '../../../validator/network-config-validator/network-validator-functions';

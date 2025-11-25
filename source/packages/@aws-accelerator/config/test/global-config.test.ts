@@ -11,9 +11,6 @@
  *  and limitations under the License.
  */
 
-import { describe, expect, it } from '@jest/globals';
-import * as fs from 'fs';
-import * as path from 'path';
 import { AccountsConfig } from '../lib/accounts-config';
 import {
   AcceleratorMetadataConfig,
@@ -40,8 +37,12 @@ import {
   externalLandingZoneResourcesConfig,
 } from '../lib/global-config';
 import { ReplacementsConfig } from '../lib/replacements-config';
+import { describe, it, expect } from 'vitest';
+import * as path from 'path';
+import * as fs from 'fs';
+import { SNAPSHOT_CONFIG } from './config-test-helper';
 
-const configDir = path.resolve('../accelerator/test/configs/snapshot-only');
+const configDir = SNAPSHOT_CONFIG;
 
 describe('GlobalConfig', () => {
   describe('Test config', () => {

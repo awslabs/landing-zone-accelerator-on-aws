@@ -11,7 +11,7 @@
  *  and limitations under the License.
  */
 
-import { PolicyStatementType } from '@aws-accelerator/utils/lib/common-resources';
+import { PolicyStatementType } from '@aws-accelerator/utils';
 import { CUSTOM_RESOURCE_PROVIDER_RUNTIME } from '@aws-accelerator/utils/lib/lambda';
 import * as cdk from 'aws-cdk-lib';
 import { Construct } from 'constructs';

@@ -34,7 +34,7 @@ import {
   StackPolicyConfig,
 } from '../../lib/global-config';
 import { OrganizationConfig } from '../../lib/organization-config';
-import { describe, it, expect, beforeEach } from '@jest/globals';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { DeploymentTargets } from '../../lib/common';
 import { GlobalConfigValidator } from '../../validator/global-config-validator';
 import { IamConfig, RoleSetConfig } from '../../lib/iam-config';
@@ -49,8 +49,8 @@ describe('SecurityConfigValidator', () => {
   let mockIamConfig: IamConfig;
 
   beforeEach(() => {
-    jest.spyOn(GlobalConfig.prototype, 'getS3Object' as any).mockReturnValue({});
-    jest.spyOn(GlobalConfig.prototype, 'getSnsTopicNames').mockReturnValue([]);
+    vi.spyOn(GlobalConfig.prototype, 'getS3Object' as any).mockReturnValue({});
+    vi.spyOn(GlobalConfig.prototype, 'getSnsTopicNames').mockReturnValue([]);
 
     // Mock configs
     mockSecurityConfig = createSecurityConfig() as SecurityConfig;
@@ -73,7 +73,7 @@ describe('SecurityConfigValidator', () => {
   });
 
   afterEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   describe('validateAccessLogBucket', () => {
@@ -311,8 +311,8 @@ function createSecurityConfig(delegatedAdminAccount = 'Audit'): Partial<Security
 
 function createAccountsConfig(): Partial<AccountsConfig> {
   const accountConfig: Partial<AccountsConfig> = {
-    getAuditAccount: jest.fn().mockReturnValue({ name: 'Audit' }),
-    getAccountIds: jest.fn().mockReturnValue(['123456789012']),
+    getAuditAccount: vi.fn().mockReturnValue({ name: 'Audit' }),
+    getAccountIds: vi.fn().mockReturnValue(['123456789012']),
     mandatoryAccounts: [
       {
         name: 'LogArchive',
@@ -333,7 +333,7 @@ function createGlobalConfig(stackPolicy: StackPolicyConfig | undefined = undefin
 
   const globalConfig: Partial<GlobalConfig> = {
     controlTower: new ControlTowerConfig(),
-    getSnsTopicNames: jest.fn().mockReturnValue([]),
+    getSnsTopicNames: vi.fn().mockReturnValue([]),
     stackPolicy: stackPolicy,
     logging: loggingConig as LoggingConfig,
   };

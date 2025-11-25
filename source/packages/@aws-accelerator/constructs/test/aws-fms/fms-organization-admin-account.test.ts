@@ -12,6 +12,7 @@
  */
 
 import * as cdk from 'aws-cdk-lib';
+import { describe } from 'vitest';
 import { FMSOrganizationAdminAccount } from '../../lib/aws-fms/fms-organization-admin-account';
 import { snapShotTest } from '../snapshot-test';
 

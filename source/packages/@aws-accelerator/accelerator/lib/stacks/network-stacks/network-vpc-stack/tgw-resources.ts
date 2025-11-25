@@ -27,7 +27,7 @@ import {
   TransitGatewayPeering,
   Vpc,
 } from '@aws-accelerator/constructs';
-import { SsmResourceType } from '@aws-accelerator/utils/lib/ssm-parameter-path';
+import { SsmResourceType, MetadataKeys } from '@aws-accelerator/utils';
 import * as cdk from 'aws-cdk-lib';
 import { NagSuppressions } from 'cdk-nag';
 import { pascalCase } from 'pascal-case';
@@ -35,7 +35,6 @@ import { AcceleratorStackProps } from '../../accelerator-stack';
 import { LogLevel } from '../network-stack';
 import { getSubnet, getTransitGatewayId, getVpc } from '../utils/getter-utils';
 import { NetworkVpcStack } from './network-vpc-stack';
-import { MetadataKeys } from '@aws-accelerator/utils/lib/common-types';
 import { LZAResourceLookup, LZAResourceLookupType } from '../../../../utils/lza-resource-lookup';
 
 export class TgwResources {

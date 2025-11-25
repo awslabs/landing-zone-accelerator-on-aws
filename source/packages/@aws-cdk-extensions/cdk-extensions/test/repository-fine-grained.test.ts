@@ -12,7 +12,7 @@
  */
 
 import { expect as expectCDK, haveResourceLike } from '@aws-cdk/assert';
-import { test, describe } from '@jest/globals';
+import { test, describe } from 'vitest';
 import * as TestConfig from './test-config';
 import * as CdkExtensions from '../index';
 

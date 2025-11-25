@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`CloudWatchLogDataProtection Construct(CloudWatchLogDataProtection):  Snapshot Test 1`] = `
+exports[`CloudWatchLogDataProtection > Construct(CloudWatchLogDataProtection):  Snapshot Test 1`] = `
 {
   "Mappings": {
     "LatestNodeRuntimeMap": {

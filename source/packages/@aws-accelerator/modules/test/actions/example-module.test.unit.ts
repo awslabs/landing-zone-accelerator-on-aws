@@ -11,7 +11,7 @@
  *  and limitations under the License.
  */
 
-import { beforeEach, describe, test } from '@jest/globals';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { AcceleratorModules, ModuleExecutionPhase } from '../../models/enums';
 import { AcceleratorStage } from '../../../accelerator';
 import { ModuleParams } from '../../models/types';
@@ -38,51 +38,53 @@ import {
 } from '@aws-accelerator/config';
 import { ExampleModule } from '../../lib/actions/example-module';
 import { ListMembersCommand, SecurityHubClient } from '@aws-sdk/client-securityhub';
+import * as moduleLibFunctions from '../../lib/functions';
+import * as lzaCommonFunctions from '../../../../@aws-lza/common/functions';
 
 //
 // Mock Dependencies
 //
-jest.mock('@aws-sdk/client-organizations', () => ({
-  ...jest.requireActual('@aws-sdk/client-securityhub'),
-  ListMembersCommand: jest.fn(),
-  SecurityHubClient: jest.fn(),
+vi.mock('@aws-sdk/client-organizations', () => ({
+  ...vi.importActual('@aws-sdk/client-securityhub'),
+  ListMembersCommand: vi.fn(),
+  SecurityHubClient: vi.fn(),
 }));
 
-jest.mock('@aws-sdk/client-securityhub', () => ({
-  ...jest.requireActual('@aws-sdk/client-securityhub'),
-  ListMembersCommand: jest.fn(),
-  SecurityHubClient: jest.fn(),
+vi.mock('@aws-sdk/client-securityhub', () => ({
+  ...vi.importActual('@aws-sdk/client-securityhub'),
+  ListMembersCommand: vi.fn(),
+  SecurityHubClient: vi.fn(),
 }));
 
-jest.mock('../../lib/functions', () => ({
-  ...jest.requireActual('../../lib/functions'),
-  getRunnerTargetRegions: jest.fn(),
+vi.mock('../../lib/functions', () => ({
+  ...vi.importActual('../../lib/functions'),
+  getRunnerTargetRegions: vi.fn(),
 }));
 
-jest.mock('../../../../@aws-lza/common/functions', () => ({
-  ...jest.requireActual('../../../../@aws-lza/common/functions'),
-  getCredentials: jest.fn(),
+vi.mock('../../../../@aws-lza/common/functions', () => ({
+  ...vi.importActual('../../../../@aws-lza/common/functions'),
+  getCredentials: vi.fn(),
 }));
 
 describe('ExampleModule', () => {
-  const mockSend = jest.fn();
+  const mockSend = vi.fn();
   let mockAccountsConfig: Partial<AccountsConfig>;
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
 
-    (SecurityHubClient as jest.Mock).mockImplementation(() => ({
+    (SecurityHubClient as vi.Mock).mockImplementation(() => ({
       send: mockSend,
     }));
 
     mockAccountsConfig = {
-      getManagementAccount: jest.fn().mockReturnValue(MOCK_CONSTANTS.managementAccount),
-      getManagementAccountId: jest.fn().mockReturnValue(MOCK_CONSTANTS.managementAccount.name),
-      getAuditAccount: jest.fn().mockReturnValue(MOCK_CONSTANTS.auditAccount),
-      getAuditAccountId: jest.fn().mockReturnValue(MOCK_CONSTANTS.auditAccount.name),
-      getLogArchiveAccount: jest.fn().mockReturnValue(MOCK_CONSTANTS.logArchiveAccount),
-      getLogArchiveAccountId: jest.fn().mockReturnValue(MOCK_CONSTANTS.logArchiveAccount.name),
-      getAccountId: jest.fn().mockReturnValue(MOCK_CONSTANTS.auditAccountId),
-      getAccountIdsFromDeploymentTarget: jest
+      getManagementAccount: vi.fn().mockReturnValue(MOCK_CONSTANTS.managementAccount),
+      getManagementAccountId: vi.fn().mockReturnValue(MOCK_CONSTANTS.managementAccount.name),
+      getAuditAccount: vi.fn().mockReturnValue(MOCK_CONSTANTS.auditAccount),
+      getAuditAccountId: vi.fn().mockReturnValue(MOCK_CONSTANTS.auditAccount.name),
+      getLogArchiveAccount: vi.fn().mockReturnValue(MOCK_CONSTANTS.logArchiveAccount),
+      getLogArchiveAccountId: vi.fn().mockReturnValue(MOCK_CONSTANTS.logArchiveAccount.name),
+      getAccountId: vi.fn().mockReturnValue(MOCK_CONSTANTS.auditAccountId),
+      getAccountIdsFromDeploymentTarget: vi
         .fn()
         .mockReturnValue([
           MOCK_CONSTANTS.logArchiveAccountId,
@@ -99,7 +101,7 @@ describe('ExampleModule', () => {
         name: AcceleratorModules.SETUP_CONTROL_TOWER_LANDING_ZONE,
         description: '',
         runOrder: 1,
-        handler: jest.fn().mockResolvedValue(`Module 1 of ${AcceleratorStage.PREPARE} stage executed`),
+        handler: vi.fn().mockResolvedValue(`Module 1 of ${AcceleratorStage.PREPARE} stage executed`),
         executionPhase: ModuleExecutionPhase.DEPLOY,
       },
       runnerParameters: MOCK_CONSTANTS.runnerParameters,
@@ -129,12 +131,8 @@ describe('ExampleModule', () => {
   });
 
   test('should execute successfully when service is enabled', async () => {
-    jest
-      .spyOn(require('../../lib/functions'), 'getRunnerTargetRegions')
-      .mockReturnValue(MOCK_CONSTANTS.includedRegions);
-    jest
-      .spyOn(require('../../../../@aws-lza/common/functions'), 'getCredentials')
-      .mockResolvedValue(MOCK_CONSTANTS.credentials);
+    vi.spyOn(moduleLibFunctions, 'getRunnerTargetRegions').mockReturnValue(MOCK_CONSTANTS.includedRegions);
+    vi.spyOn(lzaCommonFunctions, 'getCredentials').mockResolvedValue(MOCK_CONSTANTS.credentials);
 
     mockSend.mockImplementation(command => {
       if (command instanceof ListMembersCommand) {
@@ -154,7 +152,7 @@ describe('ExampleModule', () => {
         name: AcceleratorModules.SETUP_CONTROL_TOWER_LANDING_ZONE,
         description: '',
         runOrder: 1,
-        handler: jest.fn().mockResolvedValue(`Module 1 of ${AcceleratorStage.ACCOUNTS} stage executed`),
+        handler: vi.fn().mockResolvedValue(`Module 1 of ${AcceleratorStage.ACCOUNTS} stage executed`),
         executionPhase: ModuleExecutionPhase.DEPLOY,
       },
       runnerParameters: MOCK_CONSTANTS.runnerParameters,
@@ -190,12 +188,8 @@ describe('ExampleModule', () => {
   });
 
   test('should execute successfully when service is enabled but no members to add for create members action', async () => {
-    jest
-      .spyOn(require('../../lib/functions'), 'getRunnerTargetRegions')
-      .mockReturnValue(MOCK_CONSTANTS.includedRegions);
-    jest
-      .spyOn(require('../../../../@aws-lza/common/functions'), 'getCredentials')
-      .mockResolvedValue(MOCK_CONSTANTS.credentials);
+    vi.spyOn(moduleLibFunctions, 'getRunnerTargetRegions').mockReturnValue(MOCK_CONSTANTS.includedRegions);
+    vi.spyOn(lzaCommonFunctions, 'getCredentials').mockResolvedValue(MOCK_CONSTANTS.credentials);
 
     mockSend.mockImplementation(command => {
       if (command instanceof ListMembersCommand) {
@@ -211,7 +205,7 @@ describe('ExampleModule', () => {
         name: AcceleratorModules.SETUP_CONTROL_TOWER_LANDING_ZONE,
         description: '',
         runOrder: 1,
-        handler: jest.fn().mockResolvedValue(`Module 1 of ${AcceleratorStage.ACCOUNTS} stage executed`),
+        handler: vi.fn().mockResolvedValue(`Module 1 of ${AcceleratorStage.ACCOUNTS} stage executed`),
         executionPhase: ModuleExecutionPhase.DEPLOY,
       },
       runnerParameters: MOCK_CONSTANTS.runnerParameters,

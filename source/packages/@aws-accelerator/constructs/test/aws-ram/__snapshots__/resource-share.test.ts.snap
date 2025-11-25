@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`ResourceShare Construct(ResourceShare):  Snapshot Test 1`] = `
+exports[`ResourceShare > Construct(ResourceShare):  Snapshot Test 1`] = `
 {
   "Resources": {
     "CustomKey1E6D0D07": {
@@ -96,7 +96,7 @@ exports[`ResourceShare Construct(ResourceShare):  Snapshot Test 1`] = `
 }
 `;
 
-exports[`ResourceShareItem Construct(ResourceShare):  Snapshot Test 1`] = `
+exports[`ResourceShareItem > Construct(ResourceShare):  Snapshot Test 1`] = `
 {
   "Resources": {
     "CustomKey1E6D0D07": {

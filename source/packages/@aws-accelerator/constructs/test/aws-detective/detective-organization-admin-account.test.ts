@@ -14,6 +14,7 @@
 import * as cdk from 'aws-cdk-lib';
 import { DetectiveOrganizationAdminAccount } from '../../lib/aws-detective/detective-organization-admin-account';
 import { snapShotTest } from '../snapshot-test';
+import { describe } from 'vitest';
 
 const testNamePrefix = 'Construct(DetectiveOrganizationAdminAccount): ';
 

@@ -14,6 +14,7 @@
 import * as cdk from 'aws-cdk-lib';
 import { AcceleratorMetadata } from '../../lib/aws-accelerator/get-accelerator-metadata';
 import { snapShotTest } from '../snapshot-test';
+import { describe } from 'vitest';
 
 const testNamePrefix = 'Construct(AcceleratorMetadata): ';
 

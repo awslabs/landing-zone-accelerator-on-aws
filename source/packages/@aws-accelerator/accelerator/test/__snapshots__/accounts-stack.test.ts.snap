@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`AccountsStack us-east-1 Construct(AccountsStack):  Snapshot Test 1`] = `
+exports[`AccountsStack us-east-1 > Construct(AccountsStack):  Snapshot Test 1`] = `
 {
   "Parameters": {
     "SsmParameterValueacceleratorkmscloudwatchkeyarnC96584B6F00A464EAD1953AFF4B05118Parameter": {
@@ -3267,7 +3267,7 @@ exports[`AccountsStack us-east-1 Construct(AccountsStack):  Snapshot Test 1`] = 
 }
 `;
 
-exports[`AccountsStack us-west-2 Construct(AccountsStackUsWest2):  Snapshot Test 1`] = `
+exports[`AccountsStack us-west-2 > Construct(AccountsStackUsWest2):  Snapshot Test 1`] = `
 {
   "Resources": {
     "OptInRegions8611CE24": {

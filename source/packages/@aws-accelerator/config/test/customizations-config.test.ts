@@ -36,12 +36,12 @@ import {
 } from '../lib/customizations-config';
 import { ReplacementsConfig } from '../lib/replacements-config';
 
-import { describe, expect, it } from '@jest/globals';
-import * as path from 'path';
+import { describe, expect, it } from 'vitest';
+import { SNAPSHOT_CONFIG } from './config-test-helper';
 
 describe('CustomizationsConfig', () => {
   describe('Test config', () => {
-    const configDir = path.resolve('../accelerator/test/configs/snapshot-only');
+    const configDir = SNAPSHOT_CONFIG;
     const accountsConfig = AccountsConfig.load(configDir);
     const replacementsConfig = ReplacementsConfig.load(configDir, accountsConfig);
     const customizationsConfigFromFile = CustomizationsConfig.load(configDir, replacementsConfig);

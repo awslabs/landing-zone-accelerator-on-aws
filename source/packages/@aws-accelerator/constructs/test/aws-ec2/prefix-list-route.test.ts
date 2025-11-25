@@ -12,6 +12,7 @@
  */
 
 import * as cdk from 'aws-cdk-lib';
+import { describe } from 'vitest';
 import { PrefixListRoute } from '../../lib/aws-ec2/prefix-list-route';
 import { snapShotTest } from '../snapshot-test';
 

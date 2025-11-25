@@ -15,7 +15,7 @@ import { Stack } from 'aws-cdk-lib';
 import { Key } from 'aws-cdk-lib/aws-kms';
 import { Policy, PolicyType } from '../../lib/aws-organizations/policy';
 import { snapShotTest } from '../snapshot-test';
-import { describe } from '@jest/globals';
+import { describe } from 'vitest';
 
 const testNamePrefix = 'Construct(Policy): ';
 

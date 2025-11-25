@@ -15,9 +15,9 @@ import * as cdk from 'aws-cdk-lib';
 import { RouteTable } from '../../lib/aws-ec2/route-table';
 import { NatGateway, Vpc, Subnet } from '../../lib/aws-ec2/vpc';
 import { snapShotTest } from '../snapshot-test';
-import { describe, it, expect } from '@jest/globals';
+import { describe, it, expect } from 'vitest';
 import { TransitGatewayAttachment } from '../../lib/aws-ec2/transit-gateway';
-import { LZAResourceLookup } from '@aws-accelerator/accelerator/utils/lza-resource-lookup';
+import { LZAResourceLookup } from '@aws-accelerator/accelerator';
 
 const testNamePrefix = 'Construct(RouteTable): ';
 

@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`PrefixList Construct(PrefixList):  Snapshot Test 1`] = `
+exports[`PrefixList > Construct(PrefixList):  Snapshot Test 1`] = `
 {
   "Resources": {
     "TestPrefixListF3A076C9": {

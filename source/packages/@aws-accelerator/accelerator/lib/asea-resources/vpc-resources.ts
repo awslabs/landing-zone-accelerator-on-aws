@@ -1,7 +1,7 @@
 import * as cdk from 'aws-cdk-lib';
 import { pascalCase } from 'pascal-case';
 import { IPv4CidrRange, IPv6CidrRange } from 'ip-num';
-import { isArn } from '@aws-accelerator/utils/lib/is-arn';
+import { isArn, getAseaConfigVpcName, SsmResourceType } from '@aws-accelerator/utils';
 
 import {
   CfnInternetGateway,
@@ -32,8 +32,6 @@ import {
   CfnResourceType,
   NetworkAclConfig,
 } from '@aws-accelerator/config';
-import { getAseaConfigVpcName } from '@aws-accelerator/utils';
-import { SsmResourceType } from '@aws-accelerator/utils/lib/ssm-parameter-path';
 import { ImportAseaResourcesStack, LogLevel } from '../stacks/import-asea-resources-stack';
 import { AseaResource, AseaResourceProps } from './resource';
 import { getSubnetConfig, getVpcConfig } from '../stacks/network-stacks/utils/getter-utils';

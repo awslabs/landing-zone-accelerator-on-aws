@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`TransitGatewayPeering Construct(TransitGatewayPrefixListReference):  Snapshot Test 1`] = `
+exports[`TransitGatewayPeering > Construct(TransitGatewayPrefixListReference):  Snapshot Test 1`] = `
 {
   "Resources": {
     "CustomTransitGatewayAcceptPeeringCustomResourceProviderHandler692671C6": {

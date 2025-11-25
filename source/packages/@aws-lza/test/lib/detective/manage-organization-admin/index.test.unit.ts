@@ -11,7 +11,7 @@
  *  and limitations under the License.
  */
 
-import { describe, beforeEach, expect, test, afterEach } from '@jest/globals';
+import { describe, beforeEach, expect, test, afterEach, vi } from 'vitest';
 
 import {
   Administrator,
@@ -31,26 +31,37 @@ import {
   IDetectiveManageOrganizationAdminParameter,
 } from '../../../../interfaces/detective/manage-organization-admin';
 
-jest.mock('@aws-sdk/client-detective', () => {
+vi.mock('@aws-sdk/client-detective', () => {
   return {
-    ...jest.requireActual('@aws-sdk/client-detective'),
-    DetectiveClient: jest.fn(),
-    DisableOrganizationAdminAccountCommand: jest.fn(),
-    EnableOrganizationAdminAccountCommand: jest.fn(),
-    ListOrganizationAdminAccountsCommand: jest.fn(),
+    ...vi.importActual('@aws-sdk/client-detective'),
+    DetectiveClient: vi.fn(),
+    DisableOrganizationAdminAccountCommand: vi.fn(),
+    EnableOrganizationAdminAccountCommand: vi.fn(),
+    ListOrganizationAdminAccountsCommand: vi.fn(),
   };
 });
 
-jest.mock('../../../../common/functions', () => {
+vi.mock('../../../../common/functions', () => {
   return {
-    ...jest.requireActual('../../../../common/functions'),
-    delay: jest.fn().mockResolvedValue(undefined),
+    ...vi.importActual('../../../../common/functions'),
+    delay: vi.fn().mockResolvedValue(undefined),
+    getModuleDefaultParameters: vi.fn((moduleName, props) => ({
+      moduleName: props?.moduleName ?? moduleName,
+      globalRegion: props?.globalRegion ?? props?.region ?? 'us-east-1',
+      useExistingRole: props?.useExistingRole ?? false,
+      dryRun: props?.dryRun ?? false,
+    })),
+    setRetryStrategy: vi.fn().mockReturnValue({}),
+    generateDryRunResponse: vi.fn(
+      (moduleName, operation, message) =>
+        `[DRY-RUN]: ${moduleName} ${operation} (no actual changes were made)\nValidation: ✓ Successful\nStatus: ${message}`,
+    ),
   };
 });
 
-jest.mock('../../../../common/throttle', () => {
+vi.mock('../../../../common/throttle', () => {
   return {
-    throttlingBackOff: jest.fn().mockImplementation(fn => fn()),
+    throttlingBackOff: vi.fn().mockImplementation(fn => fn()),
   };
 });
 
@@ -67,7 +78,7 @@ describe('DetectiveManageOrganizationAdminModule Contract Compliance', () => {
   beforeEach(() => {
     module = new DetectiveManageOrganizationAdminModule();
     // Mock the handler implementation
-    jest.spyOn(module, 'handler').mockImplementation(async () => 'mocked-response');
+    vi.spyOn(module, 'handler').mockImplementation(async () => 'mocked-response');
   });
 
   test('should implement all interface methods', () => {
@@ -86,7 +97,7 @@ describe('DetectiveManageOrganizationAdminModule Contract Compliance', () => {
 
   test('should handle invalid inputs according to contract', async () => {
     // Reset mock to test error handling
-    jest.spyOn(module, 'handler').mockRejectedValue(new Error('Invalid input parameters'));
+    vi.spyOn(module, 'handler').mockRejectedValue(new Error('Invalid input parameters'));
 
     await expect(module.handler({} as IDetectiveManageOrganizationAdminParameter)).rejects.toThrow(
       'Invalid input parameters',
@@ -100,16 +111,16 @@ describe('DetectiveManageOrganizationAdminModule Contract Compliance', () => {
   });
 
   afterEach(() => {
-    jest.restoreAllMocks();
+    vi.clearAllMocks();
   });
 });
 
 describe('DetectiveManageOrganizationAdminModule', () => {
-  const mockSend = jest.fn();
+  const mockSend = vi.fn();
 
   beforeEach(() => {
-    jest.clearAllMocks();
-    (DetectiveClient as jest.Mock).mockImplementation(() => ({
+    vi.clearAllMocks();
+    (DetectiveClient as vi.Mock).mockImplementation(() => ({
       send: mockSend,
     }));
   });

@@ -13,7 +13,7 @@
 
 import * as cdk from 'aws-cdk-lib';
 import { Construct } from 'constructs';
-import { PolicyStatementType } from '@aws-accelerator/utils/lib/common-resources';
+import { PolicyStatementType } from '@aws-accelerator/utils';
 import { CUSTOM_RESOURCE_PROVIDER_RUNTIME } from '@aws-accelerator/utils/lib/lambda';
 
 const path = require('path');

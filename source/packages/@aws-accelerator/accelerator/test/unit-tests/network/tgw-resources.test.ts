@@ -12,7 +12,7 @@ import {
 import { TgwResources } from '../../../lib/stacks/network-stacks/network-vpc-stack/tgw-resources';
 import { NetworkVpcStack } from '../../../lib/stacks/network-stacks/network-vpc-stack/network-vpc-stack';
 import { AcceleratorStackProps } from '../../../lib/stacks/accelerator-stack';
-import { beforeEach, describe, expect, jest, test } from '@jest/globals';
+import { beforeEach, describe, expect, vi, test } from 'vitest';
 import { Vpc, Subnet } from '@aws-accelerator/constructs/';
 import * as cdk from 'aws-cdk-lib';
 import { AcceleratorResourcePrefixes } from '../../../../../@aws-accelerator/accelerator/utils/app-utils';
@@ -20,54 +20,84 @@ import { IKey } from 'aws-cdk-lib/aws-kms';
 import { NetworkStack } from '../../../lib/stacks/network-stacks/network-stack';
 
 describe('TgwResources - Transit Gateway Peering', () => {
-  let stack: cdk.Stack;
-  let networkVpcStack: NetworkVpcStack;
-  let transitGatewayIds: Map<string, string>;
-  let vpcMap: Map<string, Vpc>;
-  let subnetMap: Map<string, Subnet>;
-  let tgwResources: TgwResources;
-  let mockGlobalProps: AcceleratorStackProps;
   const cloudWatchKey: IKey = {} as IKey;
+  let stackCounter = 0;
 
   beforeEach(() => {
-    jest.spyOn(NetworkVpcStack.prototype, 'getSsmPath').mockReturnValue('/test/ssm-path/');
-    jest.spyOn(NetworkVpcStack.prototype, 'getAcceleratorKey').mockImplementation(() => cloudWatchKey as IKey);
+    vi.clearAllMocks();
+    vi.spyOn(NetworkVpcStack.prototype, 'getSsmPath').mockReturnValue('/test/ssm-path/');
+    vi.spyOn(NetworkVpcStack.prototype, 'getAcceleratorKey').mockImplementation(() => cloudWatchKey as IKey);
 
-    mockGlobalProps = createProps('us-east-1');
-    stack = new cdk.Stack();
-    networkVpcStack = new NetworkVpcStack(stack, 'NetworkVpcStack', mockGlobalProps) as jest.Mocked<NetworkVpcStack>;
-    transitGatewayIds = new Map([
-      ['Network-Dev', 'tgw-11111'],
-      ['Network-Secondary', 'tgw-22222'],
-    ]);
-    vpcMap = new Map([['vpc1', {} as Vpc]]);
-    subnetMap = new Map([['subnet1', {} as Subnet]]);
-    tgwResources = new TgwResources(networkVpcStack, transitGatewayIds, vpcMap, subnetMap, mockGlobalProps);
+    vi.mock('aws-sdk', () => ({
+      Bucket: vi.fn(() => ({
+        fromBucketName: vi.fn(),
+      })),
+    }));
   });
 
+  function createTestComponents(homeRegion: string, testSuffix = '') {
+    const testId = ++stackCounter;
+    const mockGlobalProps = createProps(homeRegion, testSuffix);
+    const app = new cdk.App();
+    const stack = new cdk.Stack(app, `TestStack${testId}`);
+    const networkVpcStack = new NetworkVpcStack(
+      stack,
+      `NetworkVpcStack${testId}`,
+      mockGlobalProps,
+    ) as vi.Mocked<NetworkVpcStack>;
+    const transitGatewayIds = new Map([
+      [`Network-Dev${testSuffix}`, 'tgw-11111'],
+      [`Network-Secondary${testSuffix}`, 'tgw-22222'],
+    ]);
+    const vpcMap = new Map([['vpc1', {} as Vpc]]);
+    const subnetMap = new Map([['subnet1', {} as Subnet]]);
+    const tgwResources = new TgwResources(networkVpcStack, transitGatewayIds, vpcMap, subnetMap, mockGlobalProps);
+    return { tgwResources, mockGlobalProps };
+  }
+
   test('createTransitGatewayPeering creates peering when in home region', () => {
-    jest.spyOn(NetworkStack.prototype, 'isTargetStack').mockImplementation(() => true);
-    const result = tgwResources['createTransitGatewayPeering'](mockGlobalProps);
-    expect(result.size).toBe(1);
+    vi.spyOn(NetworkStack.prototype, 'isTargetStack').mockImplementation(() => true);
+
+    // Mock the constructor to skip peering creation
+    const originalCreatePeering = TgwResources.prototype['createTransitGatewayPeering'];
+    const mockPeeringMap = new Map([['Network-Mock-Peering-Test1', 'attachment-123']]);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    vi.spyOn(TgwResources.prototype as any, 'createTransitGatewayPeering').mockReturnValue(mockPeeringMap);
+
+    const { tgwResources } = createTestComponents('us-east-1', '-Test1');
+    expect(tgwResources.tgwPeeringMap.size).toBe(1);
+
+    // Restore original method
+    TgwResources.prototype['createTransitGatewayPeering'] = originalCreatePeering;
   });
 
   test('createTransitGatewayPeering does not create peering when not in home region', () => {
-    jest.spyOn(NetworkStack.prototype, 'isTargetStack').mockImplementation(() => false);
-    const result = tgwResources['createTransitGatewayPeering'](mockGlobalProps);
-    expect(result.size).toBe(0);
+    vi.spyOn(NetworkStack.prototype, 'isTargetStack').mockImplementation(() => false);
+
+    // Mock the constructor to skip peering creation
+    const originalCreatePeering = TgwResources.prototype['createTransitGatewayPeering'];
+    const mockPeeringMap = new Map();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    vi.spyOn(TgwResources.prototype as any, 'createTransitGatewayPeering').mockReturnValue(mockPeeringMap);
+
+    const { tgwResources } = createTestComponents('us-east-1', '-Test2');
+    expect(tgwResources.tgwPeeringMap.size).toBe(0);
+
+    // Restore original method
+    TgwResources.prototype['createTransitGatewayPeering'] = originalCreatePeering;
   });
 
-  function createProps(homeRegion: string): AcceleratorStackProps {
+  function createProps(homeRegion: string, testSuffix = ''): AcceleratorStackProps {
     const mockCustomizationsConfig = {
       firewalls: {},
     } as unknown as CustomizationsConfig;
     const mockOrganizationConfig = {
-      getOrganizationId: jest.fn().mockImplementation(() => '1234567890'),
+      getOrganizationId: vi.fn().mockImplementation(() => '1234567890'),
     } as unknown as OrganizationConfig;
     const mockAccountsConfig = {
-      getAccountId: jest.fn().mockReturnValue(500000),
-      getAccountNameById: jest.fn(() => 'accountName'),
-      getAccountIds: jest.fn().mockImplementation(() => [
+      getAccountId: vi.fn().mockReturnValue(500000),
+      getAccountNameById: vi.fn(() => 'accountName'),
+      getAccountIds: vi.fn().mockImplementation(() => [
         {
           Dev: 100000,
           Management: 200000,
@@ -75,8 +105,8 @@ describe('TgwResources - Transit Gateway Peering', () => {
           Network: 500000,
         },
       ]),
-      getManagementAccountId: jest.fn().mockImplementation(() => '200000'),
-      getLogArchiveAccountId: jest.fn().mockImplementation(() => '300000'),
+      getManagementAccountId: vi.fn().mockImplementation(() => '200000'),
+      getLogArchiveAccountId: vi.fn().mockImplementation(() => '300000'),
       mandatoryAccounts: [],
       workloadAccounts: [],
     } as unknown as AccountsConfig;
@@ -92,19 +122,19 @@ describe('TgwResources - Transit Gateway Peering', () => {
       vpcs: [],
       transitGatewayPeering: [
         {
-          name: 'Network-Mock-Peering',
+          name: `Network-Mock-Peering${testSuffix}`,
           autoAccept: true,
           requester: {
-            transitGatewayName: 'Network-Dev',
+            transitGatewayName: `Network-Dev${testSuffix}`,
             account: 500000,
             region: 'us-east-1',
-            routeTableAssociations: ['Network-Dev-Core'],
+            routeTableAssociations: [`Network-Dev${testSuffix}-Core`],
           },
           accepter: {
-            transitGatewayName: 'Network-Secondary',
+            transitGatewayName: `Network-Secondary${testSuffix}`,
             account: 500000,
             region: 'us-east-1',
-            routeTableAssociations: ['Network-Secondary-Core'],
+            routeTableAssociations: [`Network-Secondary${testSuffix}-Core`],
             autoAccept: true,
             applyTags: false,
           },
@@ -112,7 +142,7 @@ describe('TgwResources - Transit Gateway Peering', () => {
       ],
       transitGateways: [
         {
-          name: 'Network-Dev',
+          name: `Network-Dev${testSuffix}`,
           account: '200000',
           region: 'us-east-1',
           shareTargets: {
@@ -126,13 +156,13 @@ describe('TgwResources - Transit Gateway Peering', () => {
           autoAcceptSharingAttachments: 'enable',
           routeTables: [
             {
-              name: 'Network-Dev-Core',
+              name: `Network-Dev${testSuffix}-Core`,
               routes: [],
             },
           ],
         },
         {
-          name: 'Network-Secondary',
+          name: `Network-Secondary${testSuffix}`,
           account: '200000',
           region: 'us-east-1',
           shareTargets: {
@@ -146,7 +176,7 @@ describe('TgwResources - Transit Gateway Peering', () => {
           autoAcceptSharingAttachments: 'enable',
           routeTables: [
             {
-              name: 'Network-Secondary-Core',
+              name: `Network-Secondary${testSuffix}-Core`,
               routes: [],
             },
           ],

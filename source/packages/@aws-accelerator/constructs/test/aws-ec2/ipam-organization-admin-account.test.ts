@@ -12,6 +12,7 @@
  */
 
 import * as cdk from 'aws-cdk-lib';
+import { describe } from 'vitest';
 import { IpamOrganizationAdminAccount } from '../../lib/aws-ec2/ipam-organization-admin-account';
 import { snapShotTest } from '../snapshot-test';
 

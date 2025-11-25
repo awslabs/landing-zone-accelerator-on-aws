@@ -13,7 +13,7 @@
 import { setStsTokenPreferences, setTokenVersion } from '../lib/set-token-preferences';
 import { mockClient, AwsClientStub } from 'aws-sdk-client-mock';
 import { IAMClient, SetSecurityTokenServicePreferencesCommand, GetAccountSummaryCommand } from '@aws-sdk/client-iam';
-import { expect, it, beforeEach, afterEach, test } from '@jest/globals';
+import { expect, it, beforeEach, afterEach, test } from 'vitest';
 
 let iamMock: AwsClientStub<IAMClient>;
 beforeEach(() => {

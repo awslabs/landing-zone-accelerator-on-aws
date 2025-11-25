@@ -12,6 +12,7 @@
  */
 
 import * as cdk from 'aws-cdk-lib';
+import { describe } from 'vitest';
 import { DeleteDefaultSecurityGroupRules } from '../../lib/aws-ec2/vpc';
 import { snapShotTest } from '../snapshot-test';
 

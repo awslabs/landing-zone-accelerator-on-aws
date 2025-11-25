@@ -12,6 +12,7 @@
  */
 
 import * as cdk from 'aws-cdk-lib';
+import { describe } from 'vitest';
 import { GuardDutyOrganizationAdminAccount } from '../../lib/aws-guardduty/guardduty-organization-admin-account';
 import { snapShotTest } from '../snapshot-test';
 

@@ -17,16 +17,13 @@ import { throttlingBackOff } from '@aws-accelerator/utils/lib/throttle';
 import { CreateEvent, DeleteEvent, UpdateEvent } from '@aws-accelerator/utils/lib/test-util/common/resources';
 import { AssertPropsType } from '@aws-accelerator/utils/lib/test-util/common/assertion';
 
-import { beforeAll, expect, test } from '@jest/globals';
+import { afterAll, beforeAll, expect, test } from 'vitest';
 
 import { IntegrationTest } from '@aws-accelerator/utils/lib/test-util/common/integration-test';
 import { RegionalTestSuite } from '@aws-accelerator/utils/lib/test-util/common/test-suite';
 
 import { AuditManagerOrganizationAdminAccount } from '../../auditmanager-organization-admin-account';
 import { handler } from '../index';
-
-const minute = 60000;
-jest.setTimeout(2 * minute);
 
 //
 // Initialize integration test class

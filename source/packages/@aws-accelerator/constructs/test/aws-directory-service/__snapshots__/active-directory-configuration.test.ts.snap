@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`ActiveDirectoryConfiguration Construct(ActiveDirectoryConfiguration):  Snapshot Test 1`] = `
+exports[`ActiveDirectoryConfiguration > Construct(ActiveDirectoryConfiguration):  Snapshot Test 1`] = `
 {
   "Parameters": {
     "SsmParameterValueawsserviceamiwindowslatestWindowsServer2016EnglishFullBaseC96584B6F00A464EAD1953AFF4B05118Parameter": {

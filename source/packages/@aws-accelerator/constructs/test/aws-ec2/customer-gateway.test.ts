@@ -12,6 +12,7 @@
  */
 
 import * as cdk from 'aws-cdk-lib';
+import { describe } from 'vitest';
 
 import { CustomerGateway } from '../../lib/aws-ec2/customer-gateway';
 import { snapShotTest } from '../snapshot-test';

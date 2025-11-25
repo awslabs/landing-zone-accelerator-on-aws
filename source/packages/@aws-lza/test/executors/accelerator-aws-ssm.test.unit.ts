@@ -11,19 +11,19 @@
  *  and limitations under the License.
  */
 
-import { describe, beforeEach, expect, test, afterEach } from '@jest/globals';
+import { describe, beforeEach, expect, test, afterEach, vi } from 'vitest';
 import { manageBlockPublicDocumentSharing, getSsmParametersValue } from '../../executors/accelerator-aws-ssm';
 import { BlockPublicDocumentSharingModule } from '../../lib/aws-ssm/manage-document-public-access-block';
 import { GetSsmParametersValueModule } from '../../lib/aws-ssm/get-parameters';
 import { MOCK_CONSTANTS } from '../mocked-resources';
 
 // Mock dependencies
-jest.mock('../../lib/aws-ssm/manage-document-public-access-block');
-jest.mock('../../lib/aws-ssm/get-parameters/index');
+vi.mock('../../lib/aws-ssm/manage-document-public-access-block');
+vi.mock('../../lib/aws-ssm/get-parameters/index');
 
 describe('AwsSsmExecutor', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   describe('manageBlockPublicDocumentSharing', () => {
@@ -37,9 +37,9 @@ describe('AwsSsmExecutor', () => {
 
     test('should successfully manage SSM Block Public Document Sharing', async () => {
       // Setup
-      const mockHandler = jest.fn().mockResolvedValue('SUCCESS');
+      const mockHandler = vi.fn().mockResolvedValue('SUCCESS');
 
-      (BlockPublicDocumentSharingModule as unknown as jest.Mock).mockImplementation(() => ({
+      (BlockPublicDocumentSharingModule as unknown as vi.Mock).mockImplementation(() => ({
         handler: mockHandler,
       }));
 
@@ -64,9 +64,9 @@ describe('AwsSsmExecutor', () => {
     test('should throw error when module handler fails', async () => {
       // Setup
       const errorMessage = 'Module operation failed';
-      const mockHandler = jest.fn().mockRejectedValue(new Error(errorMessage));
+      const mockHandler = vi.fn().mockRejectedValue(new Error(errorMessage));
 
-      (BlockPublicDocumentSharingModule as unknown as jest.Mock).mockImplementation(() => ({
+      (BlockPublicDocumentSharingModule as unknown as vi.Mock).mockImplementation(() => ({
         handler: mockHandler,
       }));
 
@@ -89,8 +89,8 @@ describe('AwsSsmExecutor', () => {
 
   describe('getSsmParameters', () => {
     test('should successfully retrieve parameters', async () => {
-      const mockHandler = jest.fn().mockResolvedValue(MOCK_CONSTANTS.GetSsmParametersValueModule.response);
-      (GetSsmParametersValueModule as jest.Mock).mockImplementation(() => ({
+      const mockHandler = vi.fn().mockResolvedValue(MOCK_CONSTANTS.GetSsmParametersValueModule.response);
+      (GetSsmParametersValueModule as vi.Mock).mockImplementation(() => ({
         handler: mockHandler,
       }));
 
@@ -110,8 +110,8 @@ describe('AwsSsmExecutor', () => {
         },
       ];
 
-      const mockHandler = jest.fn().mockResolvedValue(notFoundResponse);
-      (GetSsmParametersValueModule as jest.Mock).mockImplementation(() => ({
+      const mockHandler = vi.fn().mockResolvedValue(notFoundResponse);
+      (GetSsmParametersValueModule as vi.Mock).mockImplementation(() => ({
         handler: mockHandler,
       }));
 
@@ -124,8 +124,8 @@ describe('AwsSsmExecutor', () => {
 
     test('should throw error when parameter retrieval fails', async () => {
       const errorMessage = 'failed to get SSM parameters';
-      const mockHandler = jest.fn().mockRejectedValue(new Error(errorMessage));
-      (GetSsmParametersValueModule as jest.Mock).mockImplementation(() => ({
+      const mockHandler = vi.fn().mockRejectedValue(new Error(errorMessage));
+      (GetSsmParametersValueModule as vi.Mock).mockImplementation(() => ({
         handler: mockHandler,
       }));
 
@@ -139,8 +139,8 @@ describe('AwsSsmExecutor', () => {
 
     test('should throw error when handler throws unknown error', async () => {
       const errorMessage = 'unknown error occurred';
-      const mockHandler = jest.fn().mockRejectedValue(new Error(errorMessage));
-      (GetSsmParametersValueModule as jest.Mock).mockImplementation(() => ({
+      const mockHandler = vi.fn().mockRejectedValue(new Error(errorMessage));
+      (GetSsmParametersValueModule as vi.Mock).mockImplementation(() => ({
         handler: mockHandler,
       }));
 
@@ -153,8 +153,8 @@ describe('AwsSsmExecutor', () => {
     });
 
     test('should handle different partition', async () => {
-      const mockHandler = jest.fn().mockResolvedValue(MOCK_CONSTANTS.GetSsmParametersValueModule.response);
-      (GetSsmParametersValueModule as jest.Mock).mockImplementation(() => ({
+      const mockHandler = vi.fn().mockResolvedValue(MOCK_CONSTANTS.GetSsmParametersValueModule.response);
+      (GetSsmParametersValueModule as vi.Mock).mockImplementation(() => ({
         handler: mockHandler,
       }));
 
@@ -171,8 +171,8 @@ describe('AwsSsmExecutor', () => {
     });
 
     test('should handle different region', async () => {
-      const mockHandler = jest.fn().mockResolvedValue(MOCK_CONSTANTS.GetSsmParametersValueModule.response);
-      (GetSsmParametersValueModule as jest.Mock).mockImplementation(() => ({
+      const mockHandler = vi.fn().mockResolvedValue(MOCK_CONSTANTS.GetSsmParametersValueModule.response);
+      (GetSsmParametersValueModule as vi.Mock).mockImplementation(() => ({
         handler: mockHandler,
       }));
 
@@ -196,28 +196,28 @@ describe('AwsSsmExecutor', () => {
     beforeEach(() => {
       originalProcessOn = process.on;
 
-      process.on = jest.fn((event: string, listener: NodeJS.UncaughtExceptionListener) => {
+      process.on = vi.fn((event: string, listener: NodeJS.UncaughtExceptionListener) => {
         if (event === 'uncaughtException') {
           processOnCallback = listener;
         }
         return process;
       }) as unknown as typeof process.on;
 
-      jest.resetModules();
+      vi.resetModules();
     });
 
     afterEach(() => {
       process.on = originalProcessOn;
     });
 
-    test('should register uncaughtException handler', () => {
-      require('../../executors/accelerator-aws-ssm');
+    test('should register uncaughtException handler', async () => {
+      await import('../../executors/accelerator-aws-ssm');
 
       expect(process.on).toHaveBeenCalledWith('uncaughtException', expect.any(Function));
     });
 
-    test('should rethrow the error when uncaughtException occurs', () => {
-      require('../../executors/accelerator-aws-ssm');
+    test('should rethrow the error when uncaughtException occurs', async () => {
+      await import('../../executors/accelerator-aws-ssm');
 
       const testError = new Error('Test uncaught exception');
       const origin = 'uncaughtException';

@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`FirewallConfigReplacements Construct(FirewallConfigReplacements):  Snapshot Test 1`] = `
+exports[`FirewallConfigReplacements > Construct(FirewallConfigReplacements):  Snapshot Test 1`] = `
 {
   "Mappings": {
     "LatestNodeRuntimeMap": {

@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`TestCreateCTControls Construct(TestCreateCTControls):  Snapshot Test 1`] = `
+exports[`TestCreateCTControls > Construct(TestCreateCTControls):  Snapshot Test 1`] = `
 {
   "Resources": {
     "6s095tcdtgab75dd0229m5x6nExampleOu": {

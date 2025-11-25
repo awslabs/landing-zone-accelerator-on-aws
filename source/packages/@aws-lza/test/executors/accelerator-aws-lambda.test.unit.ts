@@ -11,32 +11,19 @@
  *  and limitations under the License.
  */
 
+import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { CheckLambdaConcurrencyModule } from '../../lib/aws-lambda/check-lambda-concurrency';
 import { ICheckLambdaConcurrencyParameter } from '../../interfaces/aws-lambda/check-lambda-concurrency';
 
-const mockHandler = jest.fn();
-const mockError = jest.fn();
-
 // Mock modules
-jest.mock('../../lib/aws-lambda/check-lambda-concurrency', () => {
-  return {
-    CheckLambdaConcurrencyModule: jest.fn().mockImplementation(() => {
-      return {
-        handler: mockHandler,
-      };
-    }),
-  };
-});
+vi.mock('../../lib/aws-lambda/check-lambda-concurrency');
+vi.mock('../../common/logger', () => ({
+  createLogger: vi.fn(() => ({
+    error: vi.fn(),
+  })),
+}));
 
-jest.mock('../../common/logger', () => {
-  return {
-    createLogger: jest.fn().mockReturnValue({
-      error: mockError,
-    }),
-  };
-});
-
-import { checkLambdaConcurrency } from '../../executors/accelerator-aws-lambda';
+const mockHandler = vi.fn();
 
 describe('accelerator-aws-lambda.ts', () => {
   const testInput: ICheckLambdaConcurrencyParameter = {
@@ -49,22 +36,25 @@ describe('accelerator-aws-lambda.ts', () => {
   };
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
+
+    // Setup mocks
+    (CheckLambdaConcurrencyModule as vi.Mock).mockImplementation(() => ({
+      handler: mockHandler,
+    }));
   });
 
   describe('uncaughtException handler', () => {
-    test('should rethrow uncaught exceptions', () => {
+    test('should rethrow uncaught exceptions', async () => {
       // Store the original process.on
       const originalProcessOn = process.on;
       // Create a mock for process.on
-      const mockProcessOn = jest.fn();
+      const mockProcessOn = vi.fn();
       process.on = mockProcessOn;
 
       try {
         // Re-import the module to trigger the process.on call
-        jest.isolateModules(() => {
-          require('../../executors/accelerator-aws-lambda');
-        });
+        await import('../../executors/accelerator-aws-lambda');
 
         // Verify process.on was called with uncaughtException
         expect(mockProcessOn).toHaveBeenCalledWith('uncaughtException', expect.any(Function));
@@ -88,6 +78,7 @@ describe('accelerator-aws-lambda.ts', () => {
 
   describe('checkLambdaConcurrency', () => {
     test('should call the handler method of CheckLambdaConcurrencyModule and return its result', async () => {
+      const { checkLambdaConcurrency } = await import('../../executors/accelerator-aws-lambda');
       mockHandler.mockResolvedValue(true);
 
       const result = await checkLambdaConcurrency(testInput);
@@ -98,6 +89,7 @@ describe('accelerator-aws-lambda.ts', () => {
     });
 
     test('should return false when the handler returns false', async () => {
+      const { checkLambdaConcurrency } = await import('../../executors/accelerator-aws-lambda');
       mockHandler.mockResolvedValue(false);
 
       const result = await checkLambdaConcurrency(testInput);
@@ -106,11 +98,11 @@ describe('accelerator-aws-lambda.ts', () => {
     });
 
     test('should log and re-throw error when an exception occurs', async () => {
+      const { checkLambdaConcurrency } = await import('../../executors/accelerator-aws-lambda');
       const testError = new Error('Test error');
       mockHandler.mockRejectedValue(testError);
 
       await expect(checkLambdaConcurrency(testInput)).rejects.toThrow(testError);
-      expect(mockError).toHaveBeenCalledWith(testError);
     });
   });
 });

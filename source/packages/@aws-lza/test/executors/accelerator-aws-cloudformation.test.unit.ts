@@ -11,7 +11,7 @@
  *  and limitations under the License.
  */
 
-import { describe, beforeEach, expect, test } from '@jest/globals';
+import { describe, beforeEach, expect, test, vi, afterEach } from 'vitest';
 import { GetCloudFormationTemplatesModule } from '../../lib/aws-cloudformation/get-cloudformation-templates';
 import { MOCK_CONSTANTS } from '../mocked-resources';
 import { IGetCloudFormationTemplatesHandlerParameter } from '../../../@aws-accelerator/modules/dist/packages/@aws-lza/interfaces/aws-cloudformation/get-cloudformation-templates';
@@ -20,12 +20,12 @@ import { StackPolicyModule } from '../../lib/aws-cloudformation/create-stack-pol
 import { IStackPolicyHandlerParameter } from '../../interfaces/aws-cloudformation/create-stack-policy';
 
 // Mock dependencies
-jest.mock('../../lib/aws-cloudformation/get-cloudformation-templates');
-jest.mock('../../lib/aws-cloudformation/create-stack-policy');
+vi.mock('../../lib/aws-cloudformation/get-cloudformation-templates');
+vi.mock('../../lib/aws-cloudformation/create-stack-policy');
 
 describe('getCloudFormationTemplates', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   describe('GetCloudFormationTemplatesModule', () => {
@@ -35,9 +35,9 @@ describe('getCloudFormationTemplates', () => {
     };
     test('should successfully configure default encryption key', async () => {
       // Setup
-      const mockHandler = jest.fn().mockResolvedValue('SUCCESS');
+      const mockHandler = vi.fn().mockResolvedValue('SUCCESS');
 
-      (GetCloudFormationTemplatesModule as unknown as jest.Mock).mockImplementation(() => ({
+      (GetCloudFormationTemplatesModule as unknown as vi.Mock).mockImplementation(() => ({
         handler: mockHandler,
       }));
 
@@ -54,9 +54,9 @@ describe('getCloudFormationTemplates', () => {
       // Setup
 
       const errorMessage = 'Operation failed';
-      const mockHandler = jest.fn().mockRejectedValue(new Error(errorMessage));
+      const mockHandler = vi.fn().mockRejectedValue(new Error(errorMessage));
 
-      (GetCloudFormationTemplatesModule as unknown as jest.Mock).mockImplementation(() => ({
+      (GetCloudFormationTemplatesModule as unknown as vi.Mock).mockImplementation(() => ({
         handler: mockHandler,
       }));
 
@@ -75,28 +75,28 @@ describe('getCloudFormationTemplates', () => {
     beforeEach(() => {
       originalProcessOn = process.on;
 
-      process.on = jest.fn((event: string, listener: NodeJS.UncaughtExceptionListener) => {
+      process.on = vi.fn((event: string, listener: NodeJS.UncaughtExceptionListener) => {
         if (event === 'uncaughtException') {
           processOnCallback = listener;
         }
         return process;
       }) as unknown as typeof process.on;
 
-      jest.resetModules();
+      vi.resetModules();
     });
 
     afterEach(() => {
       process.on = originalProcessOn;
     });
 
-    test('should register uncaughtException handler', () => {
-      require('../../executors/accelerator-aws-cloudformation');
+    test('should register uncaughtException handler', async () => {
+      await import('../../executors/accelerator-aws-cloudformation');
 
       expect(process.on).toHaveBeenCalledWith('uncaughtException', expect.any(Function));
     });
 
-    test('should rethrow the error when uncaughtException occurs', () => {
-      require('../../executors/accelerator-aws-cloudformation');
+    test('should rethrow the error when uncaughtException occurs', async () => {
+      await import('../../executors/accelerator-aws-cloudformation');
 
       const testError = new Error('Test uncaught exception');
       const origin = 'uncaughtException';
@@ -112,14 +112,14 @@ describe('getCloudFormationTemplates', () => {
 
 describe('createStackPolicy', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   test('error rethrows exception', async () => {
     const errorMessage = 'Create Stack Policy test error';
-    const mockHandler = jest.fn().mockRejectedValue(new Error(errorMessage));
+    const mockHandler = vi.fn().mockRejectedValue(new Error(errorMessage));
 
-    (StackPolicyModule as unknown as jest.Mock).mockImplementation(() => ({
+    (StackPolicyModule as unknown as vi.Mock).mockImplementation(() => ({
       handler: mockHandler,
     }));
     const input = {} as IStackPolicyHandlerParameter;
@@ -129,9 +129,9 @@ describe('createStackPolicy', () => {
 
   test('success returns value', async () => {
     const resultMessage = 'Module success message';
-    const mockHandler = jest.fn().mockReturnValue(resultMessage);
+    const mockHandler = vi.fn().mockReturnValue(resultMessage);
 
-    (StackPolicyModule as unknown as jest.Mock).mockImplementation(() => ({
+    (StackPolicyModule as unknown as vi.Mock).mockImplementation(() => ({
       handler: mockHandler,
     }));
     const input = {} as IStackPolicyHandlerParameter;

@@ -24,7 +24,7 @@ import {
   RegisterDelegatedAdministratorCommand,
 } from '@aws-sdk/client-organizations';
 
-import { beforeAll, expect, test } from '@jest/globals';
+import { beforeAll, expect, test, vi } from 'vitest';
 
 import { throttlingBackOff } from '@aws-accelerator/utils/lib/throttle';
 import { AssertPropsType } from '@aws-accelerator/utils/lib/test-util/common/assertion';
@@ -42,7 +42,7 @@ import { handler } from '../index';
 const successStatus = { Status: 'Success', StatusCode: 200 };
 
 const minute = 60000;
-jest.setTimeout(2 * minute);
+vi.setConfig({ testTimeout: 2 * minute });
 
 //
 // Initialize integration test class

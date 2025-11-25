@@ -12,6 +12,7 @@
  */
 
 import * as cdk from 'aws-cdk-lib';
+import { describe } from 'vitest';
 import { FirewallConfigReplacements } from '../../lib/aws-ec2/firewall-config-replacements';
 import { snapShotTest } from '../snapshot-test';
 

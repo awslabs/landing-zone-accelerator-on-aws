@@ -12,7 +12,7 @@
  */
 
 import { ASEAMapping, AseaResourceMapping, GlobalConfig } from '@aws-accelerator/config';
-import { createLogger } from '@aws-accelerator/utils/lib/logger';
+import { createLogger, setRetryStrategy, throttlingBackOff } from '@aws-accelerator/utils';
 import * as cdk from 'aws-cdk-lib';
 import { AwsSolutionsChecks, NagSuppressions } from 'cdk-nag';
 import { IConstruct } from 'constructs';
@@ -51,8 +51,6 @@ import { ResourcePolicyEnforcementStack } from '../lib/stacks/resource-policy-en
 import { DiagnosticsPackStack } from '../lib/stacks/diagnostics-pack-stack';
 import { AcceleratorToolkit } from '../lib/toolkit';
 import { AssumeRoleCommand, GetCallerIdentityCommand, STSClient } from '@aws-sdk/client-sts';
-import { setRetryStrategy } from '@aws-accelerator/utils/lib/common-functions';
-import { throttlingBackOff } from '@aws-accelerator/utils/lib/throttle';
 import { ControlTowerClient, ListLandingZonesCommand } from '@aws-sdk/client-controltower';
 import { CfnResource } from 'aws-cdk-lib';
 import { createAndGetV2NetworkVpcDependencyStacks } from '../lib/stacks/v2-network/utils/functions';

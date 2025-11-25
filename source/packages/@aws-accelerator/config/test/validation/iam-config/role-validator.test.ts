@@ -11,7 +11,8 @@
  *  and limitations under the License.
  */
 
-import { describe, expect, test } from '@jest/globals';
+import { describe, expect, test } from 'vitest';
+import * as path from 'path';
 import { IamConfig } from '../../../lib/iam-config';
 import { IamConfigValidator } from '../../../validator/iam-config-validator';
 import { AccountsConfig } from '../../../lib/accounts-config';
@@ -20,7 +21,7 @@ import { OrganizationConfig } from '../../../lib/organization-config';
 import { ReplacementsConfig } from '../../../lib/replacements-config';
 import { SecurityConfig } from '../../../lib/security-config';
 
-const configDir = './test/validation/global-config/regional-deploy/config';
+const configDir = path.resolve(__dirname, '../global-config/regional-deploy/config');
 const accountsConfig = AccountsConfig.load(configDir);
 const replacementsConfig = ReplacementsConfig.load(configDir, accountsConfig);
 const organizationConfig = OrganizationConfig.load(configDir, replacementsConfig);

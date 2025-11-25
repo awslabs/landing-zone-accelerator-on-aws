@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`DeleteDefaultVpc Construct(DeleteDefaultVpc):  Snapshot Test 1`] = `
+exports[`DeleteDefaultVpc > Construct(DeleteDefaultVpc):  Snapshot Test 1`] = `
 {
   "Resources": {
     "CustomDeleteDefaultVpcCustomResourceProviderHandler87E89F35": {

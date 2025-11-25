@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`PipelineStack Construct(PipelineStack):  Snapshot Test 1`] = `
+exports[`PipelineStack > Construct(PipelineStack):  Snapshot Test 1`] = `
 {
   "Parameters": {
     "SsmParameterValueacceleratorawsacceleratorinstalleraccesslogsbucketnameC96584B6F00A464EAD1953AFF4B05118Parameter": {
@@ -2646,7 +2646,7 @@ artifacts:
 }
 `;
 
-exports[`PipelineStack Construct(PipelineStack):  Snapshot Test 2`] = `
+exports[`PipelineStack > Construct(PipelineStack):  Snapshot Test 2`] = `
 {
   "Parameters": {
     "SsmParameterValueacceleratorawsacceleratorinstalleraccesslogsbucketnameC96584B6F00A464EAD1953AFF4B05118Parameter": {
@@ -5786,7 +5786,7 @@ artifacts:
 }
 `;
 
-exports[`PipelineStack customS3Path Construct(PipelineStack):  Snapshot Test 1`] = `
+exports[`PipelineStack customS3Path > Construct(PipelineStack):  Snapshot Test 1`] = `
 {
   "Parameters": {
     "SsmParameterValueacceleratorawsacceleratorinstalleraccesslogsbucketnameC96584B6F00A464EAD1953AFF4B05118Parameter": {
