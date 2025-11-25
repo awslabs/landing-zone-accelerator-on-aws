@@ -19,7 +19,7 @@ import { pascalCase } from 'pascal-case';
 import { AcceleratorStackProps, NagSuppressionRuleIds } from '../../accelerator-stack';
 import { LogLevel } from '../network-stack';
 import { getTransitGatewayId } from '../utils/getter-utils';
-import { isIpv4 } from '../utils/validation-utils';
+import { isIpAddress } from '../utils/validation-utils';
 import { NetworkPrepStack } from './network-prep-stack';
 
 export class VpnResources {
@@ -49,6 +49,7 @@ export class VpnResources {
 
     // Create cross-account VPN roles, if needed
     const [hasCrossAcctVpn, hasCrossAcctTgwVpn] = this.hasCrossAccountVpn(props);
+
     if (hasCrossAcctVpn) {
       this.crossAccountCgwRole = this.createCrossAccountCgwRole();
       this.crossAccountLogsRole = this.createCrossAccountLogsRole();
@@ -76,7 +77,8 @@ export class VpnResources {
     //
     for (const cgwItem of props.networkConfig.customerGateways ?? []) {
       const accountId = props.accountsConfig.getAccountId(cgwItem.account);
-      if (this.stack.isTargetStack([accountId], [cgwItem.region]) && isIpv4(cgwItem.ipAddress)) {
+
+      if (this.stack.isTargetStack([accountId], [cgwItem.region]) && isIpAddress(cgwItem.ipAddress)) {
         this.stack.addLogs(LogLevel.INFO, `Add Customer Gateway ${cgwItem.name} in ${cgwItem.region}`);
         const cgw = new CustomerGateway(this.stack, pascalCase(`${cgwItem.name}CustomerGateway`), {
           name: cgwItem.name,
@@ -85,13 +87,11 @@ export class VpnResources {
           tags: cgwItem.tags,
         });
         cgwMap.set(cgwItem.name, cgw.customerGatewayId);
-
         this.stack.addSsmParameter({
           logicalId: pascalCase(`SsmParam${cgwItem.name}CustomerGateway`),
           parameterName: this.stack.getSsmPath(SsmResourceType.CGW, [cgwItem.name]),
           stringValue: cgw.customerGatewayId,
         });
-
         for (const vpnItem of cgwItem.vpnConnections ?? []) {
           // Make sure that VPN Connections are created for TGWs in this stack only.
           if (vpnItem.transitGateway) {
@@ -119,11 +119,11 @@ export class VpnResources {
   ): VpnConnection {
     // Get the Transit Gateway ID
     const transitGatewayId = getTransitGatewayId(this.transitGatewayMap, vpnItem.transitGateway!);
-
     this.stack.addLogs(
       LogLevel.INFO,
       `Attaching Customer Gateway ${cgwItem.name} to ${vpnItem.transitGateway} in ${cgwItem.region}`,
     );
+    // Create the VPN connection
     const vpnConnection = new VpnConnection(
       this.stack,
       pascalCase(`${vpnItem.name}VpnConnection`),
@@ -140,7 +140,6 @@ export class VpnResources {
       parameterName: this.stack.getSsmPath(SsmResourceType.TGW_VPN, [vpnItem.name]),
       stringValue: vpnConnection.vpnConnectionId,
     });
-
     return vpnConnection;
   }
 
@@ -152,12 +151,11 @@ export class VpnResources {
    */
   private hasCrossAccountVpn(props: AcceleratorStackProps): boolean[] {
     let [hasCrossAcctVpn, hasCrossAcctTgwVpn] = [false, false];
-
     for (const cgw of props.networkConfig.customerGateways ?? []) {
       const cgwAccountId = props.accountsConfig.getAccountId(cgw.account);
       if (
         this.stack.isTargetStack([cgwAccountId], [props.globalConfig.homeRegion]) &&
-        !isIpv4(cgw.ipAddress) &&
+        !isIpAddress(cgw.ipAddress) &&
         !this.firewallVpcInAccount(cgw, props)
       ) {
         hasCrossAcctVpn = true;

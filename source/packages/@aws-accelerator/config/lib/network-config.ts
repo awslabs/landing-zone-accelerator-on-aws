@@ -455,6 +455,7 @@ export class VpnTunnelOptionsSpecificationsConfig implements i.IVpnTunnelOptions
   readonly replayWindowSize: number | undefined = undefined;
   readonly startupAction: i.StartupActionType | undefined = undefined;
   readonly tunnelInsideCidr: string | undefined = undefined;
+  readonly tunnelInsideIpv6Cidr: string | undefined = undefined;
   readonly tunnelLifecycleControl: boolean | undefined = undefined;
 }
 
@@ -462,6 +463,9 @@ export class VpnConnectionConfig implements i.IVpnConnectionConfig {
   readonly name: string = '';
   readonly amazonIpv4NetworkCidr: string | undefined = undefined;
   readonly customerIpv4NetworkCidr: string | undefined = undefined;
+  readonly amazonIpv6NetworkCidr: string | undefined = undefined;
+  readonly customerIpv6NetworkCidr: string | undefined = undefined;
+  readonly outsideIpAddressType: i.OutsideIpAddressType | undefined = undefined;
   readonly enableVpnAcceleration: boolean | undefined = undefined;
   readonly transitGateway: string | undefined = undefined;
   readonly vpc: string | undefined = undefined;

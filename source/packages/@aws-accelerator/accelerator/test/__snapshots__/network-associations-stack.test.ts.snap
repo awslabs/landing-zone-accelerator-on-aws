@@ -341,6 +341,51 @@ exports[`NetworkAssociationsStack > Construct(NetworkAssociationsStack):  Snapsh
     },
   },
   "Resources": {
+    "AcceleratorVpnIpv6NetworkMainCoreAssociationD8C8CC10": {
+      "Properties": {
+        "TransitGatewayAttachmentId": {
+          "Ref": "AcceleratorVpnIpv6VpnTransitGatewayAttachment334C0CDE",
+        },
+        "TransitGatewayRouteTableId": {
+          "Ref": "SsmParameterValueacceleratornetworktransitGatewaysNetworkMainrouteTablesNetworkMainCoreidC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+      },
+      "Type": "AWS::EC2::TransitGatewayRouteTableAssociation",
+    },
+    "AcceleratorVpnIpv6NetworkMainCorePropagation60BBB733": {
+      "Properties": {
+        "TransitGatewayAttachmentId": {
+          "Ref": "AcceleratorVpnIpv6VpnTransitGatewayAttachment334C0CDE",
+        },
+        "TransitGatewayRouteTableId": {
+          "Ref": "SsmParameterValueacceleratornetworktransitGatewaysNetworkMainrouteTablesNetworkMainCoreidC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+      },
+      "Type": "AWS::EC2::TransitGatewayRouteTablePropagation",
+    },
+    "AcceleratorVpnIpv6VpnTransitGatewayAttachment334C0CDE": {
+      "DeletionPolicy": "Delete",
+      "DependsOn": [
+        "CustomGetTransitGatewayAttachmentCustomResourceProviderLogGroup41699CF3",
+      ],
+      "Properties": {
+        "ServiceToken": {
+          "Fn::GetAtt": [
+            "CustomGetTransitGatewayAttachmentCustomResourceProviderHandler7E079354",
+            "Arn",
+          ],
+        },
+        "name": "accelerator-vpn-ipv6",
+        "region": "us-east-1",
+        "transitGatewayId": {
+          "Ref": "SsmParameterValueacceleratornetworktransitGatewaysNetworkMainidC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+        "type": "vpn",
+        "uuid": "REPLACED-UUID",
+      },
+      "Type": "Custom::GetTransitGatewayAttachment",
+      "UpdateReplacePolicy": "Delete",
+    },
     "AcceleratorVpnNetworkMainCoreAssociationEF397C51": {
       "Properties": {
         "TransitGatewayAttachmentId": {

@@ -39,6 +39,16 @@ new CustomerGateway(stack, 'TestCustomCgw', {
   roleName: 'test-role',
 });
 
+new CustomerGateway(stack, 'TestIpv6CustomCgw', {
+  name: 'Custom-Ipv6-CGW',
+  bgpAsn: 65501,
+  ipAddress: '2803::f800',
+  customResourceHandler: cdk.aws_lambda.Function.fromFunctionName(stack, 'Ipv6Function', 'TestFunction'),
+  owningAccountId: '111111111111',
+  owningRegion: 'us-west-2',
+  roleName: 'test-role',
+});
+
 /**
  * CustomerGateway construct test
  */

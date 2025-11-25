@@ -408,6 +408,39 @@ exports[`VpnConnection > Construct(VpnConnection):  Snapshot Test 1`] = `
       },
       "Type": "AWS::IAM::Policy",
     },
+    "TestIpv6VpnVpnConnectionF293721C": {
+      "Properties": {
+        "CustomerGatewayId": "Test-Ipv6-Cgw",
+        "LocalIpv6NetworkCidr": "::/128",
+        "OutsideIpAddressType": "Ipv6",
+        "RemoteIpv6NetworkCidr": "::/128",
+        "StaticRoutesOnly": true,
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "Test-Ipv6-Vpn",
+          },
+          {
+            "Key": "Test-Key",
+            "Value": "Test-Value",
+          },
+        ],
+        "TransitGatewayId": "Test-tgw",
+        "TunnelInsideIpVersion": "ipv6",
+        "Type": "ipsec.1",
+        "VpnTunnelOptionsSpecifications": [
+          {
+            "PreSharedKey": "test-key-2",
+            "TunnelInsideIpv6Cidr": "fd12:3456:789a:1::/126",
+          },
+          {
+            "PreSharedKey": "test-key-2",
+            "TunnelInsideIpv6Cidr": "fd98:abcd:4321:7::/126",
+          },
+        ],
+      },
+      "Type": "AWS::EC2::VPNConnection",
+    },
     "TestVpnVpnConnection655CF32D": {
       "Properties": {
         "CustomerGatewayId": "Test-Cgw",

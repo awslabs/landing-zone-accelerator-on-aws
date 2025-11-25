@@ -45,7 +45,7 @@ import {
   VpnConnectionConfig,
   VpcFlowLogsConfig,
 } from '@aws-accelerator/config';
-import { hasAdvancedVpnOptions, isIpv4 } from '../../network-stacks/utils/validation-utils';
+import { hasAdvancedVpnOptions, isIpAddress, isIpv4, isIpv6 } from '../../network-stacks/utils/validation-utils';
 import { getFirewallInstanceConfig } from '../../network-stacks/utils/getter-utils';
 import { NetworkStackGeneration, V2StackComponentsList } from '../utils/enums';
 import { isV2Resource } from '../utils/functions';
@@ -636,8 +636,9 @@ export class VpcBaseStack extends AcceleratorStack {
    */
   private createVpnConnections(customResourceHandler?: cdk.aws_lambda.IFunction): void {
     const ipv4Cgws = this.props.networkConfig.customerGateways?.filter(cgw => isIpv4(cgw.ipAddress));
+    const ipv6Cgws = this.props.networkConfig.customerGateways?.filter(cgw => isIpv6(cgw.ipAddress));
 
-    for (const cgw of ipv4Cgws ?? []) {
+    for (const cgw of [...(ipv4Cgws ?? []), ...(ipv6Cgws ?? [])]) {
       for (const vpnItem of cgw.vpnConnections ?? []) {
         if (
           isV2Resource(
@@ -695,7 +696,7 @@ export class VpcBaseStack extends AcceleratorStack {
       : [];
 
     const crossAcctFirewallReferenceCgws = vgwVpnCustomerGateways.filter(
-      cgw => !isIpv4(cgw.ipAddress) && !this.firewallVpcInScope(cgw),
+      cgw => !isIpAddress(cgw.ipAddress) && !this.firewallVpcInScope(cgw),
     );
 
     for (const crossAcctCgw of crossAcctFirewallReferenceCgws) {
@@ -905,6 +906,7 @@ export class VpcBaseStack extends AcceleratorStack {
         replayWindowSize: tunnel.replayWindowSize,
         startupAction: tunnel.startupAction,
         tunnelInsideCidr: tunnel.tunnelInsideCidr,
+        tunnelInsideIpv6Cidr: tunnel.tunnelInsideIpv6Cidr,
         tunnelLifecycleControl: tunnel.tunnelLifecycleControl,
       });
     }

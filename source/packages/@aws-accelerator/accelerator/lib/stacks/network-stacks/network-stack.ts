@@ -41,6 +41,7 @@ import {
   IResourceShareItem,
   IpamSubnet,
   LzaLambda,
+  OutsideIpAddressType,
   PrefixList,
   ResourceShare,
   ResourceShareItem,
@@ -1317,6 +1318,7 @@ export abstract class NetworkStack extends AcceleratorStack {
     owningRegion?: string;
     transitGatewayId?: string;
     virtualPrivateGateway?: string;
+    directConnectGateway?: string;
     metadata?: { [key: string]: string | number | boolean | undefined };
   }): VpnConnectionProps {
     const hasCrossAccountOptions = options.owningAccountId || options.owningRegion ? true : false;
@@ -1326,6 +1328,9 @@ export abstract class NetworkStack extends AcceleratorStack {
       customerGatewayId: options.customerGatewayId,
       amazonIpv4NetworkCidr: options.vpnItem.amazonIpv4NetworkCidr,
       customerIpv4NetworkCidr: options.vpnItem.customerIpv4NetworkCidr,
+      amazonIpv6NetworkCidr: options.vpnItem.amazonIpv6NetworkCidr,
+      customerIpv6NetworkCidr: options.vpnItem.customerIpv6NetworkCidr,
+      outsideIpAddressType: options.vpnItem.outsideIpAddressType as OutsideIpAddressType,
       customResourceHandler:
         hasAdvancedVpnOptions(options.vpnItem) || hasCrossAccountOptions ? options.customResourceHandler : undefined,
       enableVpnAcceleration: options.vpnItem.enableVpnAcceleration,
@@ -1414,6 +1419,7 @@ export abstract class NetworkStack extends AcceleratorStack {
         replayWindowSize: tunnel.replayWindowSize,
         startupAction: tunnel.startupAction,
         tunnelInsideCidr: tunnel.tunnelInsideCidr,
+        tunnelInsideIpv6Cidr: tunnel.tunnelInsideIpv6Cidr,
         tunnelLifecycleControl: tunnel.tunnelLifecycleControl,
       });
     }
