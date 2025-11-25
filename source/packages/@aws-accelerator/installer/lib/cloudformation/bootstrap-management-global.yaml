@@ -1,4 +1,4 @@
-Description: (SO0199-bootstrap) Landing Zone Accelerator on AWS. Version 1.13.0.
+Description: (SO0199-bootstrap) Landing Zone Accelerator on AWS. Version 1.14.0.
 Parameters:
   ## this will be replaced in runtime with Accelerator prefix
   AcceleratorPrefix:

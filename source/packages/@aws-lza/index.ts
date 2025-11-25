@@ -94,10 +94,8 @@ export { configureRootUserManagment } from './executors/accelerator-aws-iam';
 //
 export { IDetectiveManageOrganizationAdminParameter } from './interfaces/detective/manage-organization-admin';
 export { manageDetectiveOrganizationAdminAccount } from './executors/accelerator-detective';
-
-//
 // AWS Macie Module resource
-//
+
 export { IMacieManageOrganizationAdminParameter } from './interfaces/macie/manage-organization-admin';
 export { manageOrganizationAdmin } from './executors/accelerator-macie';
 
@@ -130,6 +128,7 @@ export {
 } from './interfaces/aws-ssm/get-parameters';
 export { getSsmParametersValue } from './executors/accelerator-aws-ssm';
 
+//
 // AWS Security Hub Module resources
 //
 export { ISecurityHubManageOrganizationAdminParameter } from './interfaces/security-hub/manage-organization-admin';

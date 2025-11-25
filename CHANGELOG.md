@@ -5,14 +5,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [1.14.0]
+## [1.14.0] - 2025-10-27
 
 ### Fixed
 
 - fix(validation): updated regex validation for Route53 Resolver Rule DNS to pass TLD
 - feat(uninstaller): add support for local config directories when uninstalling LZA
 
-## [1.13.1] - 2025-09-09
+## [1.13.1] - 2025-10-01
 
 ### Fixed
 
@@ -39,10 +39,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - chore(docs): update security hub findings and universal configuration reference
 - chore(logging): updated default cloudwatch log retention to 1 year
 - Revert "fix(validation): query log without r53 resolver configured" [#876](https://github.com/awslabs/landing-zone-accelerator-on-aws/issues/876)
-
-### Changed
-
-- chore(docs): add v2 mkdoc navigation
 
 ## [1.13.0] - 2025-08-29
 
@@ -112,7 +108,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - chore(docs): add v2 stack documentation
 - chore(docs): document the process of adding a new region
 - chore(docs): update readme with code protection description
-- chore(docs): added outposts documentation and validation
+- chore(dcs): added outposts documentation and validation
 
 ## [1.12.6] - 2025-08-28
 
