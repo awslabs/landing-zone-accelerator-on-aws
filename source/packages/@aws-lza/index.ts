@@ -102,6 +102,23 @@ export { IMacieManageOrganizationAdminParameter } from './interfaces/macie/manag
 export { manageOrganizationAdmin } from './executors/accelerator-macie';
 
 //
+// AWS Lambda Module Resources
+//
+
+export { ICheckLambdaConcurrencyParameter } from './interfaces/aws-lambda/check-lambda-concurrency';
+export { checkLambdaConcurrency } from './executors/accelerator-aws-lambda';
+
+//
+// Service Quotas Module Resources
+//
+
+export { ICheckServiceQuotaParameter } from './interfaces/service-quotas/check-service-quota';
+export { checkServiceQuota } from './executors/accelerator-service-quotas';
+
+export { IGetServiceQuotaCodeParameter } from './interfaces/service-quotas/get-service-quota-code';
+export { getServiceQuotaCode } from './executors/accelerator-service-quotas';
+
+//
 // AWS SSM Module resources
 //
 export { IBlockPublicDocumentSharingHandlerParameter } from './interfaces/aws-ssm/manage-document-public-access-block';
@@ -112,18 +129,6 @@ export {
   ISsmParameterValue,
 } from './interfaces/aws-ssm/get-parameters';
 export { getSsmParametersValue } from './executors/accelerator-aws-ssm';
-
-//
-// AWS Lambda Module Resources
-//
-export { ICheckLambdaConcurrencyParameter } from './interfaces/aws-lambda/check-lambda-concurrency';
-export { checkLambdaConcurrency } from './executors/accelerator-aws-lambda';
-
-//
-// Service Quotas Module Resources
-//
-export { ICheckServiceQuotaParameter } from './interfaces/service-quotas/check-service-quota';
-export { checkServiceQuota } from './executors/accelerator-service-quotas';
 
 // AWS Security Hub Module resources
 //

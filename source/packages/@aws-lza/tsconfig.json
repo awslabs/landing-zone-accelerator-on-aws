@@ -4,6 +4,12 @@
     "outDir": "dist",
     "allowJs": true
   },
-  "include": ["lib/**/*", "bin/**/*", "index.ts"],
-  "exclude": [ "test/**/*"]
+  "include": [
+    "lib/**/*",
+    "bin/**/*",
+    "index.ts",
+  ],
+  "exclude": [
+    "test/**/*"
+  ]
 }

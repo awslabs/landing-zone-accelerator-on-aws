@@ -15,6 +15,8 @@ import path from 'path';
 import { createLogger } from '../common/logger';
 import { ICheckServiceQuotaParameter } from '../interfaces/service-quotas/check-service-quota';
 import { CheckServiceQuota } from '../lib/service-quotas/check-service-quota';
+import { IGetServiceQuotaCodeParameter } from '../interfaces/service-quotas/get-service-quota-code';
+import { GetServiceQuotaCode } from '../lib/service-quotas/get-service-quota-code';
 
 process.on('uncaughtException', err => {
   throw err;
@@ -54,6 +56,42 @@ const logger = createLogger([path.parse(path.basename(__filename)).name]);
 export async function checkServiceQuota(input: ICheckServiceQuotaParameter): Promise<boolean> {
   try {
     return await new CheckServiceQuota().handler(input);
+  } catch (e: unknown) {
+    logger.error(e);
+    throw e;
+  }
+}
+
+/**
+ *
+ * Function to retrieve an AWS Service Quota Code by quota name
+ *
+ * @param input  { @link IGetServiceQuotaCodeParameter}
+ * @returns string | undefined
+ *
+ * @description
+ * This function is used to find the quota code for a specific AWS service quota
+ * by searching through all available quotas for a given service and matching
+ * the quota name. Returns the quota code if found, otherwise undefined.
+ *
+ * @example
+ * ```
+ * const input: IGetServiceQuotaCodeParameter = {
+ *   configuration: {
+ *     serviceCode: "codebuild",
+ *     quotaName: "Concurrently running builds for Linux/Medium environment"
+ *   },
+ *   partition: 'aws',
+ *   region: 'us-east-1'
+ * };
+ *
+ * const quotaCode = await getServiceQuotaCode(input);
+ * // Returns: "L-2DC20C30" (or undefined if not found)
+ * ```
+ */
+export async function getServiceQuotaCode(input: IGetServiceQuotaCodeParameter): Promise<string | undefined> {
+  try {
+    return await new GetServiceQuotaCode().handler(input);
   } catch (e: unknown) {
     logger.error(e);
     throw e;
