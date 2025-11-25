@@ -10,6 +10,7 @@
     "./packages/@aws-accelerator/config/lib/models/replacements-config.ts"
   ],
   "exclude": ["**/test/**/*"],
+  "basePath": ".",
   "excludeExternals": true,
   "excludeNotDocumented": true,
   "excludePrivate": true,
