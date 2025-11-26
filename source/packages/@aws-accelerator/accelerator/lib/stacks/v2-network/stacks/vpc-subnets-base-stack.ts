@@ -487,7 +487,6 @@ export class VpcSubnetsBaseStack extends AcceleratorStack {
         this.props.partition === 'aws'
           ? V2StackComponentsList.TGW_VPC_ATTACHMENT
           : V2StackComponentsList.TGW_ATTACHMENT;
-
       if (
         !isV2Resource(
           this.v2StackProps.v2NetworkResources,

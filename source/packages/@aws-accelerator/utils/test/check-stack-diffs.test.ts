@@ -27,7 +27,7 @@ describe('checkStackDiffs', () => {
 
     const result = await checkStackDiffs(testDir);
 
-    expect(result).toEqual(['stack1', 'stack3']);
+    expect(result.sort()).toEqual(['stack1', 'stack3']);
   });
 
   test('should treat stack as having no differences if message is on last line', async () => {
