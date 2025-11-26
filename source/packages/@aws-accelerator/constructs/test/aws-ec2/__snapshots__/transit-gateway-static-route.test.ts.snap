@@ -186,7 +186,7 @@ exports[`TransitGatewayStaticRoute > Construct(TransitGatewayStaticRoute):  Snap
         "Description": "AWS CDK resource provider framework - onEvent (Default/TransitGatewayStaticRouteCustom/CustomResource/Resource)",
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.14.0",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.14.1",
             "USER_ON_EVENT_FUNCTION_ARN": {
               "Fn::Join": [
                 "",
@@ -394,7 +394,7 @@ exports[`TransitGatewayStaticRoute > Construct(TransitGatewayStaticRoute):  Snap
         "Description": "AWS CDK resource provider framework - onEvent (Default/TransitGatewayStaticRouteCustomv4Blackhole/CustomResource/Resource)",
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.14.0",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.14.1",
             "USER_ON_EVENT_FUNCTION_ARN": {
               "Fn::Join": [
                 "",
@@ -602,7 +602,7 @@ exports[`TransitGatewayStaticRoute > Construct(TransitGatewayStaticRoute):  Snap
         "Description": "AWS CDK resource provider framework - onEvent (Default/TransitGatewayStaticRouteCustomv6Blackhole/CustomResource/Resource)",
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.14.0",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.14.1",
             "USER_ON_EVENT_FUNCTION_ARN": {
               "Fn::Join": [
                 "",
@@ -811,7 +811,7 @@ exports[`TransitGatewayStaticRoute > Construct(TransitGatewayStaticRoute):  Snap
         "Description": "AWS CDK resource provider framework - onEvent (Default/TransitGatewayStaticRouteCustomv6/CustomResource/Resource)",
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.14.0",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.14.1",
             "USER_ON_EVENT_FUNCTION_ARN": {
               "Fn::Join": [
                 "",
