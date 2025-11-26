@@ -5,6 +5,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.14.1] - 2025-11-26
+
+### Fixed
+
+- fix(budgets): remove trailing slash in path
+- fix(networking): added lookup for tgw attachments using v2 stacks in govcloud
+- fix(typedocs): updated basePath for compatibility with latest version
+
 ## [1.14.0] - 2025-11-24
 
 ### Added
