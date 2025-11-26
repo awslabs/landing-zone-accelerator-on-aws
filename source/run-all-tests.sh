@@ -132,7 +132,7 @@ run_cdk_project_test() {
     # export overrideWarningsEnabled=false
 
     # run unit tests
-    yarn test:unit
+    yarn test:unit --coverage
 
     # prepare coverage reports
     # prepare_jest_coverage_report $component_name
