@@ -3267,7 +3267,7 @@ exports[`MultiOuOrganizationsStack > Construct(OrganizationsStack):  Snapshot Te
         "S3Bucket": {
           "Ref": "ReportBucket93428221",
         },
-        "S3Prefix": "cur/111111111111/",
+        "S3Prefix": "cur/111111111111",
         "S3Region": "us-east-1",
         "TimeUnit": "DAILY",
       },
@@ -6893,7 +6893,7 @@ exports[`OrganizationsStack > Construct(OrganizationsStack):  Snapshot Test 1`] 
         "S3Bucket": {
           "Ref": "ReportBucket93428221",
         },
-        "S3Prefix": "cur/111111111111/",
+        "S3Prefix": "cur/111111111111",
         "S3Region": "us-east-1",
         "TimeUnit": "DAILY",
       },
@@ -10281,7 +10281,7 @@ exports[`delegatedAdminStack > Construct(OrganizationsStack):  Snapshot Test 1`]
         "S3Bucket": {
           "Ref": "ReportBucket93428221",
         },
-        "S3Prefix": "cur/111111111111/",
+        "S3Prefix": "cur/111111111111",
         "S3Region": "us-east-1",
         "TimeUnit": "DAILY",
       },
