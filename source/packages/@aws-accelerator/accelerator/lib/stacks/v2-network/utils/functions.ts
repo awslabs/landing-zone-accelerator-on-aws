@@ -135,6 +135,7 @@ export function getV2NetworkResources(
   networkConfig: NetworkConfig,
   acceleratorPrefix: string,
   env: V2NetworkResourceEnvironmentType,
+  partition: string,
 ): V2NetworkResourceListType[] {
   const v2Components: V2NetworkResourceListType[] = [];
   const lzaLookup: LZAResourceLookup = new LZAResourceLookup({
@@ -185,7 +186,7 @@ export function getV2NetworkResources(
 
     getV2TgwVpcAttachmentRoleResources(accountsConfig, vpcItem, acceleratorPrefix, env, lzaLookup, v2Components);
 
-    getV2TgwVpcAttachmentResources(accountsConfig, vpcItem, lzaLookup, v2Components);
+    getV2TgwVpcAttachmentResources(accountsConfig, vpcItem, lzaLookup, v2Components, partition);
 
     getV2LoadBalancersResources(
       networkConfig,
@@ -1003,11 +1004,17 @@ function getV2TgwVpcAttachmentResources(
   vpcItem: VpcConfig | VpcTemplatesConfig,
   lzaLookup: LZAResourceLookup,
   v2Components: V2NetworkResourceListType[],
+  partition: string,
 ): void {
   for (const tgwAttachmentItem of vpcItem.transitGatewayAttachments ?? []) {
+    const resourceType =
+      partition === 'aws'
+        ? LZAResourceLookupType.TRANSIT_GATEWAY_VPC_ATTACHMENT
+        : LZAResourceLookupType.TRANSIT_GATEWAY_ATTACHMENT;
+
     if (
       !lzaLookup.resourceExists({
-        resourceType: LZAResourceLookupType.TRANSIT_GATEWAY_VPC_ATTACHMENT,
+        resourceType,
         lookupValues: {
           vpcName: vpcItem.name,
           transitGatewayName: tgwAttachmentItem.transitGateway.name,
@@ -1021,7 +1028,8 @@ function getV2TgwVpcAttachmentResources(
       const tgwAccountId = accountsConfig.getAccountId(tgwAttachmentItem.transitGateway.account);
       v2Components.push({
         vpcName: vpcItem.name,
-        resourceType: V2StackComponentsList.TGW_VPC_ATTACHMENT,
+        resourceType:
+          partition === 'aws' ? V2StackComponentsList.TGW_VPC_ATTACHMENT : V2StackComponentsList.TGW_ATTACHMENT,
         resourceName: `${tgwAttachmentItem.name}|${tgwAttachmentItem.transitGateway.name}|${tgwAccountId}`,
       });
     }
@@ -1577,6 +1585,7 @@ export function createAndGetV2NetworkVpcDependencyStacks(options: {
       region: options.enabledRegion,
       stackName: options.dependencyStack.stackName,
     },
+    options.partition,
   );
 
   if (v2NetworkResources.length > 0 && vpcsInScope.length === 0) {
