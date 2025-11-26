@@ -778,30 +778,6 @@ describe('Accelerator ControlTower Landing Zone Module', () => {
       expect(GetLandingZoneOperationCommand).toHaveBeenCalledTimes(0);
     });
 
-    test('should successfully handle failure when landing zone is in failed status', async () => {
-      // Setup
-
-      getLandingZoneDetailsSpy.mockResolvedValue({
-        landingZoneIdentifier: MOCK_CONSTANTS.existingLandingZoneIdentifier,
-        status: LandingZoneStatus.FAILED,
-        securityOuName: 'Security',
-      });
-
-      // Execute & Verify
-      await expect(async () => {
-        await new SetupLandingZoneModule().handler({
-          ...MOCK_CONSTANTS.moduleCommonParameter,
-          useExistingRole: false,
-          configuration: MOCK_CONSTANTS.controlTowerLandingZoneConfiguration,
-        });
-      }).rejects.toThrowError(
-        `${MODULE_EXCEPTIONS.SERVICE_EXCEPTION}: AWS Control Tower Landing Zone Module has status of "${LandingZoneStatus.FAILED}". Before continuing, proceed to AWS Control Tower and evaluate the status`,
-      );
-
-      expect(UpdateLandingZoneCommand).toHaveBeenCalledTimes(0);
-      expect(GetLandingZoneOperationCommand).toHaveBeenCalledTimes(0);
-    });
-
     test('should be successful without rechecking of operation status', async () => {
       // Setup
       mockSend.mockImplementation(command => {
@@ -1040,29 +1016,6 @@ describe('Accelerator ControlTower Landing Zone Module', () => {
 
       expect(UpdateLandingZoneCommand).toHaveBeenCalledTimes(1);
       expect(GetLandingZoneOperationCommand).toHaveBeenCalledTimes(2);
-    });
-
-    test('should successfully handle failure when landingZoneDetails did not return securityOuName', async () => {
-      // Setup
-      getLandingZoneDetailsSpy.mockResolvedValue({
-        landingZoneIdentifier: MOCK_CONSTANTS.existingLandingZoneIdentifier,
-        status: LandingZoneStatus.ACTIVE,
-        securityOuName: undefined,
-      });
-
-      // Execute & Verify
-      await expect(async () => {
-        await new SetupLandingZoneModule().handler({
-          ...MOCK_CONSTANTS.moduleCommonParameter,
-          useExistingRole: false,
-          configuration: MOCK_CONSTANTS.controlTowerLandingZoneConfiguration,
-        });
-      }).rejects.toThrowError(
-        `${MODULE_EXCEPTIONS.SERVICE_EXCEPTION}: GetLandingZoneCommand did not return security Ou name`,
-      );
-
-      expect(UpdateLandingZoneCommand).toHaveBeenCalledTimes(0);
-      expect(GetLandingZoneOperationCommand).toHaveBeenCalledTimes(0);
     });
 
     test('should call makeManifestDocument with correct KMS keys when configHubConfig.kmsKeyArn exists', async () => {

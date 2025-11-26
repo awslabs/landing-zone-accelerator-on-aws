@@ -26,7 +26,7 @@
     "lza": "bin/lza"
   },
   "dependencies": {
-    "@aws-sdk/client-controltower": "3.835.0",
+    "@aws-sdk/client-controltower": "3.940.0",
     "@aws-sdk/client-iam": "3.835.0",
     "@aws-sdk/client-sso-admin": "3.835.0",
     "@aws-sdk/client-kms": "3.835.0",

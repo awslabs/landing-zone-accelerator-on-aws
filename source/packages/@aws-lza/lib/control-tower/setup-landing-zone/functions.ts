@@ -11,7 +11,7 @@
  *  and limitations under the License.
  */
 
-import { LandingZoneDriftStatus } from '@aws-sdk/client-controltower';
+import { LandingZoneDriftStatus, LandingZoneStatus } from '@aws-sdk/client-controltower';
 import {
   ControlTowerLandingZoneConfigType,
   ControlTowerLandingZoneDetailsType,
@@ -153,8 +153,11 @@ export function landingZoneUpdateOrResetRequired(
   landingZoneDetails: ControlTowerLandingZoneDetailsType,
 ): LandingZoneUpdateOrResetRequiredType {
   //when drifted
-  if (landingZoneDetails.driftStatus === LandingZoneDriftStatus.DRIFTED) {
-    const reason = 'The Landing Zone has drifted';
+  if (
+    landingZoneDetails.driftStatus === LandingZoneDriftStatus.DRIFTED ||
+    landingZoneDetails.status === LandingZoneStatus.FAILED
+  ) {
+    const reason = `The Landing Zone has drifted or failed, resetting`;
     validateLandingZoneVersion(
       landingZoneConfiguration.version,
       landingZoneDetails.latestAvailableVersion!,
