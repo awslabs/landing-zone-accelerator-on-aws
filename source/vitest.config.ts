@@ -8,6 +8,10 @@ export default defineConfig({
     setupFiles: ['./vitest.setup.ts'],
     reporters: ['default', 'junit'],
     outputFile: './test-reports/test-results.xml',
+    coverage: {
+      reporter: ['lcov', 'text'],
+      reportsDirectory: './coverage',
+    },
     projects: [
       'packages/@aws-accelerator/accelerator',
       'packages/@aws-accelerator/config',
