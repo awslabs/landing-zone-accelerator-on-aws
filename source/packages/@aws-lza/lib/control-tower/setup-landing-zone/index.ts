@@ -160,7 +160,6 @@ export class SetupLandingZoneModule implements ISetupLandingZoneModule {
     );
 
     const landingZoneDetails = await getLandingZoneDetails(client, props.region, landingZoneIdentifier);
-
     if (landingZoneDetails) {
       return await this.handleUpdateResetOperation(
         props,
@@ -268,7 +267,6 @@ export class SetupLandingZoneModule implements ISetupLandingZoneModule {
       landingZoneConfiguration,
       landingZoneDetails,
     );
-
     if (defaultProps.dryRun) {
       return this.getDryRunResponse(
         defaultProps.moduleName,
@@ -282,12 +280,6 @@ export class SetupLandingZoneModule implements ISetupLandingZoneModule {
     if (landingZoneDetails.status === LandingZoneStatus.PROCESSING && !defaultProps.dryRun) {
       throw new Error(
         `${MODULE_EXCEPTIONS.SERVICE_EXCEPTION}: AWS Control Tower Landing Zone update operation failed with error - ConflictException - AWS Control Tower cannot begin landing zone setup while another execution is in progress.`,
-      );
-    }
-
-    if (landingZoneDetails.status === LandingZoneStatus.FAILED && !defaultProps.dryRun) {
-      throw new Error(
-        `${MODULE_EXCEPTIONS.SERVICE_EXCEPTION}: AWS Control Tower Landing Zone Module has status of "${LandingZoneStatus.FAILED}". Before continuing, proceed to AWS Control Tower and evaluate the status`,
       );
     }
 
@@ -456,9 +448,6 @@ abstract class LandingZoneOperation {
     moduleName: string,
   ): Promise<string> {
     logger.info(`The Landing Zone update operation will begin, because "${reason}"`);
-    if (!landingZoneDetails.securityOuName) {
-      throw new Error(`${MODULE_EXCEPTIONS.SERVICE_EXCEPTION}: GetLandingZoneCommand did not return security Ou name`);
-    }
 
     const manifestDocument = makeManifestDocument(
       landingZoneConfiguration,

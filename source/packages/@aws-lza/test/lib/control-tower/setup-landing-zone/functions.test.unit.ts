@@ -513,7 +513,7 @@ describe('resources utility functions', () => {
         updateRequired: false,
         targetVersion: mockLandingZoneDetails.version,
         resetRequired: true,
-        reason: 'The Landing Zone has drifted',
+        reason: 'The Landing Zone has drifted or failed, resetting',
       });
     });
 
