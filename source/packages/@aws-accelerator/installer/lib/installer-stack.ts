@@ -287,10 +287,6 @@ export class InstallerStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props: InstallerStackProps) {
     super(scope, id, props);
 
-    const isCommercialCondition = new cdk.CfnCondition(this, 'IsCommercialCondition', {
-      expression: cdk.Fn.conditionEquals(cdk.Stack.of(this).partition, 'aws'),
-    });
-
     const globalRegionMap = new cdk.CfnMapping(this, 'GlobalRegionMap', {
       mapping: {
         aws: {
@@ -819,6 +815,15 @@ export class InstallerStack extends cdk.Stack {
           Resource: '*',
         },
         {
+          Sid: 'Allow EventBridge service to use the encryption key',
+          Effect: 'Allow',
+          Principal: {
+            Service: 'events.amazonaws.com',
+          },
+          Action: ['kms:Encrypt', 'kms:Decrypt', 'kms:ReEncrypt*', 'kms:GenerateDataKey*', 'kms:DescribeKey'],
+          Resource: '*',
+        },
+        {
           Sid: 'Allow Cloudwatch Logs service to use the encryption key',
           Effect: 'Allow',
           Principal: {
@@ -834,24 +839,6 @@ export class InstallerStack extends cdk.Stack {
             },
           },
         },
-        cdk.Fn.conditionIf(
-          isCommercialCondition.logicalId,
-          {
-            Sid: 'KMS key access to codestar-notifications',
-            Effect: 'Allow',
-            Principal: {
-              Service: 'codestar-notifications.amazonaws.com',
-            },
-            Action: ['kms:GenerateDataKey*', 'kms:Decrypt'],
-            Resource: '*',
-            Condition: {
-              StringEquals: {
-                'kms:ViaService': `sns.${cdk.Stack.of(this).region}.amazonaws.com`,
-              },
-            },
-          },
-          cdk.Aws.NO_VALUE,
-        ),
       ],
     };
 

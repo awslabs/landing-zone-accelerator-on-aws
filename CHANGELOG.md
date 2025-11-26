@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - feat(securityHub): added support for AWS Security Hub automation rules
 - feat(config): added support for yaml anchors in json schema
 - feat(controlTower): add support of control tower 4.0
+- feat(pipeline): replace codestar notification with EventBridge and SNS
 
 ### Fixed
 - fix(securityhub): fix invalid input exception on batch enabled standards call

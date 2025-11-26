@@ -268,14 +268,6 @@ exports[`PipelineStack > Construct(PipelineStack):  Snapshot Test 1`] = `
     },
     "Pipeline8E4BFAC9": {
       "DependsOn": [
-        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleFunctionB3FFD974",
-        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleFunctionServiceRoleDefaultPolicy28F66406",
-        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleFunctionServiceRoleD177D2D7",
-        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleFunctionLogGroup28940852",
-        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleProviderframeworkonEvent8BAA45B0",
-        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleProviderframeworkonEventServiceRoleDefaultPolicyD8319C53",
-        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleProviderframeworkonEventServiceRole4961EAEB",
-        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleResource12D935F1",
         "PipelinePipelineRoleDefaultPolicy7D262A22",
         "PipelinePipelineRole6D983AD5",
       ],
@@ -1482,307 +1474,6 @@ exports[`PipelineStack > Construct(PipelineStack):  Snapshot Test 1`] = `
       },
       "Type": "AWS::CodePipeline::Pipeline",
     },
-    "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleFunctionB3FFD974": {
-      "DependsOn": [
-        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleFunctionServiceRoleDefaultPolicy28F66406",
-        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleFunctionServiceRoleD177D2D7",
-      ],
-      "Properties": {
-        "Code": {
-          "S3Bucket": "cdk-hnb659fds-assets-000000000000-us-east-1",
-          "S3Key": "REPLACED-GENERATED-NAME.zip",
-        },
-        "Description": "Custom resource provider to create service linked role",
-        "Handler": "index.handler",
-        "KmsKeyArn": {
-          "Ref": "SsmParameterValueacceleratorawsacceleratorinstallerkmskeyarnC96584B6F00A464EAD1953AFF4B05118Parameter",
-        },
-        "MemorySize": 512,
-        "Role": {
-          "Fn::GetAtt": [
-            "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleFunctionServiceRoleD177D2D7",
-            "Arn",
-          ],
-        },
-        "Runtime": "nodejs20.x",
-        "Timeout": 900,
-      },
-      "Type": "AWS::Lambda::Function",
-    },
-    "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleFunctionLogGroup28940852": {
-      "DeletionPolicy": "Delete",
-      "Properties": {
-        "KmsKeyId": {
-          "Ref": "SsmParameterValueacceleratorawsacceleratorinstallerkmskeyarnC96584B6F00A464EAD1953AFF4B05118Parameter",
-        },
-        "LogGroupName": {
-          "Fn::Join": [
-            "",
-            [
-              "/aws/lambda/",
-              {
-                "Ref": "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleFunctionB3FFD974",
-              },
-            ],
-          ],
-        },
-        "RetentionInDays": 7,
-      },
-      "Type": "AWS::Logs::LogGroup",
-      "UpdateReplacePolicy": "Delete",
-    },
-    "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleFunctionServiceRoleD177D2D7": {
-      "Metadata": {
-        "cdk_nag": {
-          "rules_to_suppress": [
-            {
-              "id": "AwsSolutions-IAM4",
-              "reason": "CodeStar Notification SLR needs managed policies.",
-            },
-          ],
-        },
-      },
-      "Properties": {
-        "AssumeRolePolicyDocument": {
-          "Statement": [
-            {
-              "Action": "sts:AssumeRole",
-              "Effect": "Allow",
-              "Principal": {
-                "Service": "lambda.amazonaws.com",
-              },
-            },
-          ],
-          "Version": "2012-10-17",
-        },
-        "ManagedPolicyArns": [
-          {
-            "Fn::Join": [
-              "",
-              [
-                "arn:",
-                {
-                  "Ref": "AWS::Partition",
-                },
-                ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
-              ],
-            ],
-          },
-        ],
-      },
-      "Type": "AWS::IAM::Role",
-    },
-    "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleFunctionServiceRoleDefaultPolicy28F66406": {
-      "Properties": {
-        "PolicyDocument": {
-          "Statement": [
-            {
-              "Action": [
-                "iam:CreateServiceLinkedRole",
-                "iam:GetRole",
-                "lambda:GetFunction",
-              ],
-              "Effect": "Allow",
-              "Resource": "*",
-            },
-          ],
-          "Version": "2012-10-17",
-        },
-        "PolicyName": "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleFunctionServiceRoleDefaultPolicy28F66406",
-        "Roles": [
-          {
-            "Ref": "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleFunctionServiceRoleD177D2D7",
-          },
-        ],
-      },
-      "Type": "AWS::IAM::Policy",
-    },
-    "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleProviderframeworkonEvent8BAA45B0": {
-      "DependsOn": [
-        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleProviderframeworkonEventServiceRoleDefaultPolicyD8319C53",
-        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleProviderframeworkonEventServiceRole4961EAEB",
-      ],
-      "Properties": {
-        "Code": {
-          "S3Bucket": "cdk-hnb659fds-assets-000000000000-us-east-1",
-          "S3Key": "REPLACED-GENERATED-NAME.zip",
-        },
-        "Description": "AWS CDK resource provider framework - onEvent (PipelineStack/Pipeline/AWSServiceRoleForCodeStarNotifications/CreateServiceLinkedRoleProvider)",
-        "Environment": {
-          "Variables": {
-            "USER_ON_EVENT_FUNCTION_ARN": {
-              "Fn::GetAtt": [
-                "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleFunctionB3FFD974",
-                "Arn",
-              ],
-            },
-          },
-        },
-        "Handler": "framework.onEvent",
-        "LoggingConfig": {
-          "ApplicationLogLevel": "FATAL",
-          "LogFormat": "JSON",
-        },
-        "Role": {
-          "Fn::GetAtt": [
-            "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleProviderframeworkonEventServiceRole4961EAEB",
-            "Arn",
-          ],
-        },
-        "Runtime": "nodejs22.x",
-        "Timeout": 900,
-      },
-      "Type": "AWS::Lambda::Function",
-    },
-    "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleProviderframeworkonEventServiceRole4961EAEB": {
-      "Metadata": {
-        "cdk_nag": {
-          "rules_to_suppress": [
-            {
-              "id": "AwsSolutions-IAM4",
-              "reason": "CodeStar Notification SLR needs managed policies.",
-            },
-          ],
-        },
-      },
-      "Properties": {
-        "AssumeRolePolicyDocument": {
-          "Statement": [
-            {
-              "Action": "sts:AssumeRole",
-              "Effect": "Allow",
-              "Principal": {
-                "Service": "lambda.amazonaws.com",
-              },
-            },
-          ],
-          "Version": "2012-10-17",
-        },
-        "ManagedPolicyArns": [
-          {
-            "Fn::Join": [
-              "",
-              [
-                "arn:",
-                {
-                  "Ref": "AWS::Partition",
-                },
-                ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
-              ],
-            ],
-          },
-        ],
-      },
-      "Type": "AWS::IAM::Role",
-    },
-    "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleProviderframeworkonEventServiceRoleDefaultPolicyD8319C53": {
-      "Properties": {
-        "PolicyDocument": {
-          "Statement": [
-            {
-              "Action": "lambda:InvokeFunction",
-              "Effect": "Allow",
-              "Resource": [
-                {
-                  "Fn::GetAtt": [
-                    "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleFunctionB3FFD974",
-                    "Arn",
-                  ],
-                },
-                {
-                  "Fn::Join": [
-                    "",
-                    [
-                      {
-                        "Fn::GetAtt": [
-                          "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleFunctionB3FFD974",
-                          "Arn",
-                        ],
-                      },
-                      ":*",
-                    ],
-                  ],
-                },
-              ],
-            },
-            {
-              "Action": "lambda:GetFunction",
-              "Effect": "Allow",
-              "Resource": {
-                "Fn::GetAtt": [
-                  "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleFunctionB3FFD974",
-                  "Arn",
-                ],
-              },
-            },
-          ],
-          "Version": "2012-10-17",
-        },
-        "PolicyName": "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleProviderframeworkonEventServiceRoleDefaultPolicyD8319C53",
-        "Roles": [
-          {
-            "Ref": "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleProviderframeworkonEventServiceRole4961EAEB",
-          },
-        ],
-      },
-      "Type": "AWS::IAM::Policy",
-    },
-    "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleResource12D935F1": {
-      "DeletionPolicy": "Delete",
-      "DependsOn": [
-        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleFunctionLogGroup28940852",
-      ],
-      "Properties": {
-        "ServiceToken": {
-          "Fn::GetAtt": [
-            "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleProviderframeworkonEvent8BAA45B0",
-            "Arn",
-          ],
-        },
-        "description": "Allows AWS CodeStar Notifications to access Amazon CloudWatch Events on your behalf",
-        "roleName": "AWSServiceRoleForCodeStarNotifications",
-        "serviceName": "codestar-notifications.amazonaws.com",
-        "uuid": "REPLACED-UUID",
-      },
-      "Type": "Custom::CreateServiceLinkedRole",
-      "UpdateReplacePolicy": "Delete",
-    },
-    "PipelineAcceleratorFailedStatusTopic614002B3": {
-      "Properties": {
-        "DisplayName": "aws-accelerator-pipeline-failed-status-topic",
-        "KmsMasterKeyId": {
-          "Ref": "SsmParameterValueacceleratorawsacceleratorinstallerkmskeyarnC96584B6F00A464EAD1953AFF4B05118Parameter",
-        },
-        "TopicName": "aws-accelerator-pipeline-failed-status-topic",
-      },
-      "Type": "AWS::SNS::Topic",
-    },
-    "PipelineAcceleratorFailedStatusTopicPolicy903B57F7": {
-      "Properties": {
-        "PolicyDocument": {
-          "Statement": [
-            {
-              "Action": "sns:Publish",
-              "Effect": "Allow",
-              "Principal": {
-                "Service": "codestar-notifications.amazonaws.com",
-              },
-              "Resource": {
-                "Ref": "PipelineAcceleratorFailedStatusTopic614002B3",
-              },
-              "Sid": "0",
-            },
-          ],
-          "Version": "2012-10-17",
-        },
-        "Topics": [
-          {
-            "Ref": "PipelineAcceleratorFailedStatusTopic614002B3",
-          },
-        ],
-      },
-      "Type": "AWS::SNS::TopicPolicy",
-    },
     "PipelineAcceleratorPipelineFailureAlarm479BDCEA": {
       "Properties": {
         "AlarmDescription": "AWS Accelerator pipeline failure alarm, created by accelerator",
@@ -1794,7 +1485,7 @@ exports[`PipelineStack > Construct(PipelineStack):  Snapshot Test 1`] = `
             "Name": "TopicName",
             "Value": {
               "Fn::GetAtt": [
-                "PipelineAcceleratorFailedStatusTopic614002B3",
+                "PipelinePipelineNotificationFailureTopicF006540A",
                 "TopicName",
               ],
             },
@@ -1809,136 +1500,6 @@ exports[`PipelineStack > Construct(PipelineStack):  Snapshot Test 1`] = `
         "TreatMissingData": "notBreaching",
       },
       "Type": "AWS::CloudWatch::Alarm",
-    },
-    "PipelineAcceleratorPipelineFailureNotification5BE0EB21": {
-      "DependsOn": [
-        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleFunctionB3FFD974",
-        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleFunctionServiceRoleDefaultPolicy28F66406",
-        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleFunctionServiceRoleD177D2D7",
-        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleFunctionLogGroup28940852",
-        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleProviderframeworkonEvent8BAA45B0",
-        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleProviderframeworkonEventServiceRoleDefaultPolicyD8319C53",
-        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleProviderframeworkonEventServiceRole4961EAEB",
-        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleResource12D935F1",
-      ],
-      "Properties": {
-        "DetailType": "FULL",
-        "EventTypeIds": [
-          "codepipeline-pipeline-pipeline-execution-failed",
-        ],
-        "Name": "elineStackPipelineAcceleratorPipelineFailureNotificationDB4C2A96",
-        "Resource": {
-          "Fn::Join": [
-            "",
-            [
-              "arn:",
-              {
-                "Ref": "AWS::Partition",
-              },
-              ":codepipeline:us-east-1:000000000000:",
-              {
-                "Ref": "Pipeline8E4BFAC9",
-              },
-            ],
-          ],
-        },
-        "Targets": [
-          {
-            "TargetAddress": {
-              "Ref": "PipelineAcceleratorFailedStatusTopic614002B3",
-            },
-            "TargetType": "SNS",
-          },
-        ],
-      },
-      "Type": "AWS::CodeStarNotifications::NotificationRule",
-    },
-    "PipelineAcceleratorPipelineStatusNotification0FCF4387": {
-      "DependsOn": [
-        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleFunctionB3FFD974",
-        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleFunctionServiceRoleDefaultPolicy28F66406",
-        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleFunctionServiceRoleD177D2D7",
-        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleFunctionLogGroup28940852",
-        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleProviderframeworkonEvent8BAA45B0",
-        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleProviderframeworkonEventServiceRoleDefaultPolicyD8319C53",
-        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleProviderframeworkonEventServiceRole4961EAEB",
-        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleResource12D935F1",
-      ],
-      "Properties": {
-        "DetailType": "FULL",
-        "EventTypeIds": [
-          "codepipeline-pipeline-manual-approval-failed",
-          "codepipeline-pipeline-manual-approval-needed",
-          "codepipeline-pipeline-manual-approval-succeeded",
-          "codepipeline-pipeline-pipeline-execution-canceled",
-          "codepipeline-pipeline-pipeline-execution-failed",
-          "codepipeline-pipeline-pipeline-execution-resumed",
-          "codepipeline-pipeline-pipeline-execution-started",
-          "codepipeline-pipeline-pipeline-execution-succeeded",
-          "codepipeline-pipeline-pipeline-execution-superseded",
-        ],
-        "Name": "pelineStackPipelineAcceleratorPipelineStatusNotification753A71B4",
-        "Resource": {
-          "Fn::Join": [
-            "",
-            [
-              "arn:",
-              {
-                "Ref": "AWS::Partition",
-              },
-              ":codepipeline:us-east-1:000000000000:",
-              {
-                "Ref": "Pipeline8E4BFAC9",
-              },
-            ],
-          ],
-        },
-        "Targets": [
-          {
-            "TargetAddress": {
-              "Ref": "PipelineAcceleratorStatusTopic2BD5793F",
-            },
-            "TargetType": "SNS",
-          },
-        ],
-      },
-      "Type": "AWS::CodeStarNotifications::NotificationRule",
-    },
-    "PipelineAcceleratorStatusTopic2BD5793F": {
-      "Properties": {
-        "DisplayName": "aws-accelerator-pipeline-status-topic",
-        "KmsMasterKeyId": {
-          "Ref": "SsmParameterValueacceleratorawsacceleratorinstallerkmskeyarnC96584B6F00A464EAD1953AFF4B05118Parameter",
-        },
-        "TopicName": "aws-accelerator-pipeline-status-topic",
-      },
-      "Type": "AWS::SNS::Topic",
-    },
-    "PipelineAcceleratorStatusTopicPolicy30BCED97": {
-      "Properties": {
-        "PolicyDocument": {
-          "Statement": [
-            {
-              "Action": "sns:Publish",
-              "Effect": "Allow",
-              "Principal": {
-                "Service": "codestar-notifications.amazonaws.com",
-              },
-              "Resource": {
-                "Ref": "PipelineAcceleratorStatusTopic2BD5793F",
-              },
-              "Sid": "0",
-            },
-          ],
-          "Version": "2012-10-17",
-        },
-        "Topics": [
-          {
-            "Ref": "PipelineAcceleratorStatusTopic2BD5793F",
-          },
-        ],
-      },
-      "Type": "AWS::SNS::TopicPolicy",
     },
     "PipelineConfigRepositoryE5225086": {
       "DeletionPolicy": "Retain",
@@ -1964,6 +1525,311 @@ exports[`PipelineStack > Construct(PipelineStack):  Snapshot Test 1`] = `
         "TopicName": "aws-accelerator-pipeline-review-topic",
       },
       "Type": "AWS::SNS::Topic",
+    },
+    "PipelinePipelineNotificationApprovalEventRule0542E766": {
+      "Properties": {
+        "Description": {
+          "Fn::Join": [
+            "",
+            [
+              "Capture manual approval events for ",
+              {
+                "Ref": "Pipeline8E4BFAC9",
+              },
+            ],
+          ],
+        },
+        "EventPattern": {
+          "detail": {
+            "pipeline": [
+              {
+                "Ref": "Pipeline8E4BFAC9",
+              },
+            ],
+            "state": [
+              "STARTED",
+              "SUCCEEDED",
+              "FAILED",
+            ],
+            "type": {
+              "category": [
+                "Approval",
+              ],
+            },
+          },
+          "detail-type": [
+            "CodePipeline Action Execution State Change",
+          ],
+          "source": [
+            "aws.codepipeline",
+          ],
+        },
+        "State": "ENABLED",
+        "Targets": [
+          {
+            "Arn": {
+              "Ref": "PipelinePipelineNotificationStatusTopic81485964",
+            },
+            "Id": "Target0",
+            "InputTransformer": {
+              "InputPathsMap": {
+                "account": "$.account",
+                "detail-action": "$.detail.action",
+                "detail-execution-id": "$.detail.execution-id",
+                "detail-pipeline": "$.detail.pipeline",
+                "detail-stage": "$.detail.stage",
+                "detail-state": "$.detail.state",
+                "region": "$.region",
+                "time": "$.time",
+              },
+              "InputTemplate": ""Pipeline <detail-pipeline> - Action <detail-action> has <detail-state>"
+""
+"Stage: <detail-stage>"
+"Action: <detail-action>"
+"Execution ID: <detail-execution-id>"
+"Time: <time>"
+"Region: <region>"
+"Account: <account>"
+""
+"View pipeline: https://console.aws.amazon.com/codesuite/codepipeline/pipelines/<detail-pipeline>/view?region=<region>"
+"View execution: https://console.aws.amazon.com/codesuite/codepipeline/pipelines/<detail-pipeline>/executions/<detail-execution-id>/timeline?region=<region>"",
+            },
+          },
+        ],
+      },
+      "Type": "AWS::Events::Rule",
+    },
+    "PipelinePipelineNotificationFailureEventRule7F10782B": {
+      "Properties": {
+        "Description": {
+          "Fn::Join": [
+            "",
+            [
+              "Capture pipeline failure events for ",
+              {
+                "Ref": "Pipeline8E4BFAC9",
+              },
+            ],
+          ],
+        },
+        "EventPattern": {
+          "detail": {
+            "pipeline": [
+              {
+                "Ref": "Pipeline8E4BFAC9",
+              },
+            ],
+            "state": [
+              "FAILED",
+            ],
+          },
+          "detail-type": [
+            "CodePipeline Pipeline Execution State Change",
+          ],
+          "source": [
+            "aws.codepipeline",
+          ],
+        },
+        "State": "ENABLED",
+        "Targets": [
+          {
+            "Arn": {
+              "Ref": "PipelinePipelineNotificationFailureTopicF006540A",
+            },
+            "Id": "Target0",
+            "InputTransformer": {
+              "InputPathsMap": {
+                "account": "$.account",
+                "detail-execution-id": "$.detail.execution-id",
+                "detail-pipeline": "$.detail.pipeline",
+                "detail-state": "$.detail.state",
+                "region": "$.region",
+                "time": "$.time",
+              },
+              "InputTemplate": ""Pipeline <detail-pipeline> has <detail-state>"
+""
+"Execution ID: <detail-execution-id>"
+"Time: <time>"
+"Region: <region>"
+"Account: <account>"
+""
+"View pipeline: https://console.aws.amazon.com/codesuite/codepipeline/pipelines/<detail-pipeline>/view?region=<region>"
+"View execution: https://console.aws.amazon.com/codesuite/codepipeline/pipelines/<detail-pipeline>/executions/<detail-execution-id>/timeline?region=<region>"",
+            },
+          },
+        ],
+      },
+      "Type": "AWS::Events::Rule",
+    },
+    "PipelinePipelineNotificationFailureTopicF006540A": {
+      "Properties": {
+        "DisplayName": "aws-accelerator-pipeline-failure",
+        "KmsMasterKeyId": {
+          "Ref": "SsmParameterValueacceleratorawsacceleratorinstallerkmskeyarnC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+        "TopicName": "aws-accelerator-pipeline-failure",
+      },
+      "Type": "AWS::SNS::Topic",
+    },
+    "PipelinePipelineNotificationFailureTopicPolicy4628719D": {
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sns:Publish",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "events.amazonaws.com",
+              },
+              "Resource": {
+                "Ref": "PipelinePipelineNotificationFailureTopicF006540A",
+              },
+              "Sid": "0",
+            },
+            {
+              "Action": "sns:Publish",
+              "Condition": {
+                "StringEquals": {
+                  "aws:SourceAccount": "000000000000",
+                },
+              },
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "events.amazonaws.com",
+              },
+              "Resource": {
+                "Ref": "PipelinePipelineNotificationFailureTopicF006540A",
+              },
+              "Sid": "1",
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "Topics": [
+          {
+            "Ref": "PipelinePipelineNotificationFailureTopicF006540A",
+          },
+        ],
+      },
+      "Type": "AWS::SNS::TopicPolicy",
+    },
+    "PipelinePipelineNotificationStatusEventRuleA9A78523": {
+      "Properties": {
+        "Description": {
+          "Fn::Join": [
+            "",
+            [
+              "Capture pipeline status events for ",
+              {
+                "Ref": "Pipeline8E4BFAC9",
+              },
+            ],
+          ],
+        },
+        "EventPattern": {
+          "detail": {
+            "pipeline": [
+              {
+                "Ref": "Pipeline8E4BFAC9",
+              },
+            ],
+            "state": [
+              "STARTED",
+              "SUCCEEDED",
+              "RESUMED",
+              "SUPERSEDED",
+              "CANCELED",
+            ],
+          },
+          "detail-type": [
+            "CodePipeline Pipeline Execution State Change",
+          ],
+          "source": [
+            "aws.codepipeline",
+          ],
+        },
+        "State": "ENABLED",
+        "Targets": [
+          {
+            "Arn": {
+              "Ref": "PipelinePipelineNotificationStatusTopic81485964",
+            },
+            "Id": "Target0",
+            "InputTransformer": {
+              "InputPathsMap": {
+                "account": "$.account",
+                "detail-execution-id": "$.detail.execution-id",
+                "detail-pipeline": "$.detail.pipeline",
+                "detail-state": "$.detail.state",
+                "region": "$.region",
+                "time": "$.time",
+              },
+              "InputTemplate": ""Pipeline <detail-pipeline> has <detail-state>"
+""
+"Execution ID: <detail-execution-id>"
+"Time: <time>"
+"Region: <region>"
+"Account: <account>"
+""
+"View pipeline: https://console.aws.amazon.com/codesuite/codepipeline/pipelines/<detail-pipeline>/view?region=<region>"
+"View execution: https://console.aws.amazon.com/codesuite/codepipeline/pipelines/<detail-pipeline>/executions/<detail-execution-id>/timeline?region=<region>"",
+            },
+          },
+        ],
+      },
+      "Type": "AWS::Events::Rule",
+    },
+    "PipelinePipelineNotificationStatusTopic81485964": {
+      "Properties": {
+        "DisplayName": "aws-accelerator-pipeline-status",
+        "KmsMasterKeyId": {
+          "Ref": "SsmParameterValueacceleratorawsacceleratorinstallerkmskeyarnC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+        "TopicName": "aws-accelerator-pipeline-status",
+      },
+      "Type": "AWS::SNS::Topic",
+    },
+    "PipelinePipelineNotificationStatusTopicPolicyBBB6FD6B": {
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sns:Publish",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "events.amazonaws.com",
+              },
+              "Resource": {
+                "Ref": "PipelinePipelineNotificationStatusTopic81485964",
+              },
+              "Sid": "0",
+            },
+            {
+              "Action": "sns:Publish",
+              "Condition": {
+                "StringEquals": {
+                  "aws:SourceAccount": "000000000000",
+                },
+              },
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "events.amazonaws.com",
+              },
+              "Resource": {
+                "Ref": "PipelinePipelineNotificationStatusTopic81485964",
+              },
+              "Sid": "1",
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "Topics": [
+          {
+            "Ref": "PipelinePipelineNotificationStatusTopic81485964",
+          },
+        ],
+      },
+      "Type": "AWS::SNS::TopicPolicy",
     },
     "PipelinePipelineRole6D983AD5": {
       "Properties": {
@@ -2189,20 +2055,6 @@ exports[`PipelineStack > Construct(PipelineStack):  Snapshot Test 1`] = `
               "Effect": "Allow",
               "Resource": {
                 "Ref": "SsmParameterValueacceleratorawsacceleratorinstallerkmskeyarnC96584B6F00A464EAD1953AFF4B05118Parameter",
-              },
-            },
-            {
-              "Action": "sns:Publish",
-              "Effect": "Allow",
-              "Resource": {
-                "Ref": "PipelineAcceleratorStatusTopic2BD5793F",
-              },
-            },
-            {
-              "Action": "sns:Publish",
-              "Effect": "Allow",
-              "Resource": {
-                "Ref": "PipelineAcceleratorFailedStatusTopic614002B3",
               },
             },
           ],
@@ -2916,14 +2768,6 @@ exports[`PipelineStack > Construct(PipelineStack):  Snapshot Test 2`] = `
     },
     "Pipeline8E4BFAC9": {
       "DependsOn": [
-        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleFunctionB3FFD974",
-        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleFunctionServiceRoleDefaultPolicy28F66406",
-        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleFunctionServiceRoleD177D2D7",
-        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleFunctionLogGroup28940852",
-        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleProviderframeworkonEvent8BAA45B0",
-        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleProviderframeworkonEventServiceRoleDefaultPolicyD8319C53",
-        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleProviderframeworkonEventServiceRole4961EAEB",
-        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleResource12D935F1",
         "PipelinePipelineRoleDefaultPolicy7D262A22",
         "PipelinePipelineRole6D983AD5",
       ],
@@ -4454,307 +4298,6 @@ exports[`PipelineStack > Construct(PipelineStack):  Snapshot Test 2`] = `
       },
       "Type": "AWS::CodePipeline::Pipeline",
     },
-    "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleFunctionB3FFD974": {
-      "DependsOn": [
-        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleFunctionServiceRoleDefaultPolicy28F66406",
-        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleFunctionServiceRoleD177D2D7",
-      ],
-      "Properties": {
-        "Code": {
-          "S3Bucket": "cdk-hnb659fds-assets-000000000000-us-east-1",
-          "S3Key": "REPLACED-GENERATED-NAME.zip",
-        },
-        "Description": "Custom resource provider to create service linked role",
-        "Handler": "index.handler",
-        "KmsKeyArn": {
-          "Ref": "SsmParameterValueacceleratorawsacceleratorinstallerkmskeyarnC96584B6F00A464EAD1953AFF4B05118Parameter",
-        },
-        "MemorySize": 512,
-        "Role": {
-          "Fn::GetAtt": [
-            "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleFunctionServiceRoleD177D2D7",
-            "Arn",
-          ],
-        },
-        "Runtime": "nodejs20.x",
-        "Timeout": 900,
-      },
-      "Type": "AWS::Lambda::Function",
-    },
-    "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleFunctionLogGroup28940852": {
-      "DeletionPolicy": "Delete",
-      "Properties": {
-        "KmsKeyId": {
-          "Ref": "SsmParameterValueacceleratorawsacceleratorinstallerkmskeyarnC96584B6F00A464EAD1953AFF4B05118Parameter",
-        },
-        "LogGroupName": {
-          "Fn::Join": [
-            "",
-            [
-              "/aws/lambda/",
-              {
-                "Ref": "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleFunctionB3FFD974",
-              },
-            ],
-          ],
-        },
-        "RetentionInDays": 7,
-      },
-      "Type": "AWS::Logs::LogGroup",
-      "UpdateReplacePolicy": "Delete",
-    },
-    "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleFunctionServiceRoleD177D2D7": {
-      "Metadata": {
-        "cdk_nag": {
-          "rules_to_suppress": [
-            {
-              "id": "AwsSolutions-IAM4",
-              "reason": "CodeStar Notification SLR needs managed policies.",
-            },
-          ],
-        },
-      },
-      "Properties": {
-        "AssumeRolePolicyDocument": {
-          "Statement": [
-            {
-              "Action": "sts:AssumeRole",
-              "Effect": "Allow",
-              "Principal": {
-                "Service": "lambda.amazonaws.com",
-              },
-            },
-          ],
-          "Version": "2012-10-17",
-        },
-        "ManagedPolicyArns": [
-          {
-            "Fn::Join": [
-              "",
-              [
-                "arn:",
-                {
-                  "Ref": "AWS::Partition",
-                },
-                ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
-              ],
-            ],
-          },
-        ],
-      },
-      "Type": "AWS::IAM::Role",
-    },
-    "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleFunctionServiceRoleDefaultPolicy28F66406": {
-      "Properties": {
-        "PolicyDocument": {
-          "Statement": [
-            {
-              "Action": [
-                "iam:CreateServiceLinkedRole",
-                "iam:GetRole",
-                "lambda:GetFunction",
-              ],
-              "Effect": "Allow",
-              "Resource": "*",
-            },
-          ],
-          "Version": "2012-10-17",
-        },
-        "PolicyName": "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleFunctionServiceRoleDefaultPolicy28F66406",
-        "Roles": [
-          {
-            "Ref": "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleFunctionServiceRoleD177D2D7",
-          },
-        ],
-      },
-      "Type": "AWS::IAM::Policy",
-    },
-    "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleProviderframeworkonEvent8BAA45B0": {
-      "DependsOn": [
-        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleProviderframeworkonEventServiceRoleDefaultPolicyD8319C53",
-        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleProviderframeworkonEventServiceRole4961EAEB",
-      ],
-      "Properties": {
-        "Code": {
-          "S3Bucket": "cdk-hnb659fds-assets-000000000000-us-east-1",
-          "S3Key": "REPLACED-GENERATED-NAME.zip",
-        },
-        "Description": "AWS CDK resource provider framework - onEvent (PipelineStackRegionalDeploy/Pipeline/AWSServiceRoleForCodeStarNotifications/CreateServiceLinkedRoleProvider)",
-        "Environment": {
-          "Variables": {
-            "USER_ON_EVENT_FUNCTION_ARN": {
-              "Fn::GetAtt": [
-                "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleFunctionB3FFD974",
-                "Arn",
-              ],
-            },
-          },
-        },
-        "Handler": "framework.onEvent",
-        "LoggingConfig": {
-          "ApplicationLogLevel": "FATAL",
-          "LogFormat": "JSON",
-        },
-        "Role": {
-          "Fn::GetAtt": [
-            "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleProviderframeworkonEventServiceRole4961EAEB",
-            "Arn",
-          ],
-        },
-        "Runtime": "nodejs22.x",
-        "Timeout": 900,
-      },
-      "Type": "AWS::Lambda::Function",
-    },
-    "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleProviderframeworkonEventServiceRole4961EAEB": {
-      "Metadata": {
-        "cdk_nag": {
-          "rules_to_suppress": [
-            {
-              "id": "AwsSolutions-IAM4",
-              "reason": "CodeStar Notification SLR needs managed policies.",
-            },
-          ],
-        },
-      },
-      "Properties": {
-        "AssumeRolePolicyDocument": {
-          "Statement": [
-            {
-              "Action": "sts:AssumeRole",
-              "Effect": "Allow",
-              "Principal": {
-                "Service": "lambda.amazonaws.com",
-              },
-            },
-          ],
-          "Version": "2012-10-17",
-        },
-        "ManagedPolicyArns": [
-          {
-            "Fn::Join": [
-              "",
-              [
-                "arn:",
-                {
-                  "Ref": "AWS::Partition",
-                },
-                ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
-              ],
-            ],
-          },
-        ],
-      },
-      "Type": "AWS::IAM::Role",
-    },
-    "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleProviderframeworkonEventServiceRoleDefaultPolicyD8319C53": {
-      "Properties": {
-        "PolicyDocument": {
-          "Statement": [
-            {
-              "Action": "lambda:InvokeFunction",
-              "Effect": "Allow",
-              "Resource": [
-                {
-                  "Fn::GetAtt": [
-                    "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleFunctionB3FFD974",
-                    "Arn",
-                  ],
-                },
-                {
-                  "Fn::Join": [
-                    "",
-                    [
-                      {
-                        "Fn::GetAtt": [
-                          "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleFunctionB3FFD974",
-                          "Arn",
-                        ],
-                      },
-                      ":*",
-                    ],
-                  ],
-                },
-              ],
-            },
-            {
-              "Action": "lambda:GetFunction",
-              "Effect": "Allow",
-              "Resource": {
-                "Fn::GetAtt": [
-                  "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleFunctionB3FFD974",
-                  "Arn",
-                ],
-              },
-            },
-          ],
-          "Version": "2012-10-17",
-        },
-        "PolicyName": "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleProviderframeworkonEventServiceRoleDefaultPolicyD8319C53",
-        "Roles": [
-          {
-            "Ref": "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleProviderframeworkonEventServiceRole4961EAEB",
-          },
-        ],
-      },
-      "Type": "AWS::IAM::Policy",
-    },
-    "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleResource12D935F1": {
-      "DeletionPolicy": "Delete",
-      "DependsOn": [
-        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleFunctionLogGroup28940852",
-      ],
-      "Properties": {
-        "ServiceToken": {
-          "Fn::GetAtt": [
-            "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleProviderframeworkonEvent8BAA45B0",
-            "Arn",
-          ],
-        },
-        "description": "Allows AWS CodeStar Notifications to access Amazon CloudWatch Events on your behalf",
-        "roleName": "AWSServiceRoleForCodeStarNotifications",
-        "serviceName": "codestar-notifications.amazonaws.com",
-        "uuid": "REPLACED-UUID",
-      },
-      "Type": "Custom::CreateServiceLinkedRole",
-      "UpdateReplacePolicy": "Delete",
-    },
-    "PipelineAcceleratorFailedStatusTopic614002B3": {
-      "Properties": {
-        "DisplayName": "aws-accelerator-pipeline-failed-status-topic",
-        "KmsMasterKeyId": {
-          "Ref": "SsmParameterValueacceleratorawsacceleratorinstallerkmskeyarnC96584B6F00A464EAD1953AFF4B05118Parameter",
-        },
-        "TopicName": "aws-accelerator-pipeline-failed-status-topic",
-      },
-      "Type": "AWS::SNS::Topic",
-    },
-    "PipelineAcceleratorFailedStatusTopicPolicy903B57F7": {
-      "Properties": {
-        "PolicyDocument": {
-          "Statement": [
-            {
-              "Action": "sns:Publish",
-              "Effect": "Allow",
-              "Principal": {
-                "Service": "codestar-notifications.amazonaws.com",
-              },
-              "Resource": {
-                "Ref": "PipelineAcceleratorFailedStatusTopic614002B3",
-              },
-              "Sid": "0",
-            },
-          ],
-          "Version": "2012-10-17",
-        },
-        "Topics": [
-          {
-            "Ref": "PipelineAcceleratorFailedStatusTopic614002B3",
-          },
-        ],
-      },
-      "Type": "AWS::SNS::TopicPolicy",
-    },
     "PipelineAcceleratorPipelineFailureAlarm479BDCEA": {
       "Properties": {
         "AlarmDescription": "AWS Accelerator pipeline failure alarm, created by accelerator",
@@ -4766,7 +4309,7 @@ exports[`PipelineStack > Construct(PipelineStack):  Snapshot Test 2`] = `
             "Name": "TopicName",
             "Value": {
               "Fn::GetAtt": [
-                "PipelineAcceleratorFailedStatusTopic614002B3",
+                "PipelinePipelineNotificationFailureTopicF006540A",
                 "TopicName",
               ],
             },
@@ -4781,136 +4324,6 @@ exports[`PipelineStack > Construct(PipelineStack):  Snapshot Test 2`] = `
         "TreatMissingData": "notBreaching",
       },
       "Type": "AWS::CloudWatch::Alarm",
-    },
-    "PipelineAcceleratorPipelineFailureNotification5BE0EB21": {
-      "DependsOn": [
-        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleFunctionB3FFD974",
-        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleFunctionServiceRoleDefaultPolicy28F66406",
-        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleFunctionServiceRoleD177D2D7",
-        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleFunctionLogGroup28940852",
-        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleProviderframeworkonEvent8BAA45B0",
-        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleProviderframeworkonEventServiceRoleDefaultPolicyD8319C53",
-        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleProviderframeworkonEventServiceRole4961EAEB",
-        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleResource12D935F1",
-      ],
-      "Properties": {
-        "DetailType": "FULL",
-        "EventTypeIds": [
-          "codepipeline-pipeline-pipeline-execution-failed",
-        ],
-        "Name": "onalDeployPipelineAcceleratorPipelineFailureNotification1D7F3759",
-        "Resource": {
-          "Fn::Join": [
-            "",
-            [
-              "arn:",
-              {
-                "Ref": "AWS::Partition",
-              },
-              ":codepipeline:us-east-1:000000000000:",
-              {
-                "Ref": "Pipeline8E4BFAC9",
-              },
-            ],
-          ],
-        },
-        "Targets": [
-          {
-            "TargetAddress": {
-              "Ref": "PipelineAcceleratorFailedStatusTopic614002B3",
-            },
-            "TargetType": "SNS",
-          },
-        ],
-      },
-      "Type": "AWS::CodeStarNotifications::NotificationRule",
-    },
-    "PipelineAcceleratorPipelineStatusNotification0FCF4387": {
-      "DependsOn": [
-        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleFunctionB3FFD974",
-        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleFunctionServiceRoleDefaultPolicy28F66406",
-        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleFunctionServiceRoleD177D2D7",
-        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleFunctionLogGroup28940852",
-        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleProviderframeworkonEvent8BAA45B0",
-        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleProviderframeworkonEventServiceRoleDefaultPolicyD8319C53",
-        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleProviderframeworkonEventServiceRole4961EAEB",
-        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleResource12D935F1",
-      ],
-      "Properties": {
-        "DetailType": "FULL",
-        "EventTypeIds": [
-          "codepipeline-pipeline-manual-approval-failed",
-          "codepipeline-pipeline-manual-approval-needed",
-          "codepipeline-pipeline-manual-approval-succeeded",
-          "codepipeline-pipeline-pipeline-execution-canceled",
-          "codepipeline-pipeline-pipeline-execution-failed",
-          "codepipeline-pipeline-pipeline-execution-resumed",
-          "codepipeline-pipeline-pipeline-execution-started",
-          "codepipeline-pipeline-pipeline-execution-succeeded",
-          "codepipeline-pipeline-pipeline-execution-superseded",
-        ],
-        "Name": "ionalDeployPipelineAcceleratorPipelineStatusNotification8099D3A2",
-        "Resource": {
-          "Fn::Join": [
-            "",
-            [
-              "arn:",
-              {
-                "Ref": "AWS::Partition",
-              },
-              ":codepipeline:us-east-1:000000000000:",
-              {
-                "Ref": "Pipeline8E4BFAC9",
-              },
-            ],
-          ],
-        },
-        "Targets": [
-          {
-            "TargetAddress": {
-              "Ref": "PipelineAcceleratorStatusTopic2BD5793F",
-            },
-            "TargetType": "SNS",
-          },
-        ],
-      },
-      "Type": "AWS::CodeStarNotifications::NotificationRule",
-    },
-    "PipelineAcceleratorStatusTopic2BD5793F": {
-      "Properties": {
-        "DisplayName": "aws-accelerator-pipeline-status-topic",
-        "KmsMasterKeyId": {
-          "Ref": "SsmParameterValueacceleratorawsacceleratorinstallerkmskeyarnC96584B6F00A464EAD1953AFF4B05118Parameter",
-        },
-        "TopicName": "aws-accelerator-pipeline-status-topic",
-      },
-      "Type": "AWS::SNS::Topic",
-    },
-    "PipelineAcceleratorStatusTopicPolicy30BCED97": {
-      "Properties": {
-        "PolicyDocument": {
-          "Statement": [
-            {
-              "Action": "sns:Publish",
-              "Effect": "Allow",
-              "Principal": {
-                "Service": "codestar-notifications.amazonaws.com",
-              },
-              "Resource": {
-                "Ref": "PipelineAcceleratorStatusTopic2BD5793F",
-              },
-              "Sid": "0",
-            },
-          ],
-          "Version": "2012-10-17",
-        },
-        "Topics": [
-          {
-            "Ref": "PipelineAcceleratorStatusTopic2BD5793F",
-          },
-        ],
-      },
-      "Type": "AWS::SNS::TopicPolicy",
     },
     "PipelineConfigRepositoryE5225086": {
       "DeletionPolicy": "Retain",
@@ -4928,16 +4341,6 @@ exports[`PipelineStack > Construct(PipelineStack):  Snapshot Test 2`] = `
       "UpdateReplacePolicy": "Retain",
     },
     "PipelineDeployuseast1ApproveCodePipelineActionRoleDefaultPolicy17EBE690": {
-      "DependsOn": [
-        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleFunctionB3FFD974",
-        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleFunctionServiceRoleDefaultPolicy28F66406",
-        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleFunctionServiceRoleD177D2D7",
-        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleFunctionLogGroup28940852",
-        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleProviderframeworkonEvent8BAA45B0",
-        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleProviderframeworkonEventServiceRoleDefaultPolicyD8319C53",
-        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleProviderframeworkonEventServiceRole4961EAEB",
-        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleResource12D935F1",
-      ],
       "Properties": {
         "PolicyDocument": {
           "Statement": [
@@ -4971,16 +4374,6 @@ exports[`PipelineStack > Construct(PipelineStack):  Snapshot Test 2`] = `
       "Type": "AWS::IAM::Policy",
     },
     "PipelineDeployuseast1ApproveCodePipelineActionRoleEFC660DD": {
-      "DependsOn": [
-        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleFunctionB3FFD974",
-        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleFunctionServiceRoleDefaultPolicy28F66406",
-        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleFunctionServiceRoleD177D2D7",
-        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleFunctionLogGroup28940852",
-        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleProviderframeworkonEvent8BAA45B0",
-        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleProviderframeworkonEventServiceRoleDefaultPolicyD8319C53",
-        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleProviderframeworkonEventServiceRole4961EAEB",
-        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleResource12D935F1",
-      ],
       "Properties": {
         "AssumeRolePolicyDocument": {
           "Statement": [
@@ -5003,16 +4396,6 @@ exports[`PipelineStack > Construct(PipelineStack):  Snapshot Test 2`] = `
       "Type": "AWS::IAM::Role",
     },
     "PipelineDeployuswest1ApproveCodePipelineActionRoleDefaultPolicyF13C1840": {
-      "DependsOn": [
-        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleFunctionB3FFD974",
-        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleFunctionServiceRoleDefaultPolicy28F66406",
-        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleFunctionServiceRoleD177D2D7",
-        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleFunctionLogGroup28940852",
-        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleProviderframeworkonEvent8BAA45B0",
-        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleProviderframeworkonEventServiceRoleDefaultPolicyD8319C53",
-        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleProviderframeworkonEventServiceRole4961EAEB",
-        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleResource12D935F1",
-      ],
       "Properties": {
         "PolicyDocument": {
           "Statement": [
@@ -5046,16 +4429,6 @@ exports[`PipelineStack > Construct(PipelineStack):  Snapshot Test 2`] = `
       "Type": "AWS::IAM::Policy",
     },
     "PipelineDeployuswest1ApproveCodePipelineActionRoleFF6A41DF": {
-      "DependsOn": [
-        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleFunctionB3FFD974",
-        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleFunctionServiceRoleDefaultPolicy28F66406",
-        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleFunctionServiceRoleD177D2D7",
-        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleFunctionLogGroup28940852",
-        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleProviderframeworkonEvent8BAA45B0",
-        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleProviderframeworkonEventServiceRoleDefaultPolicyD8319C53",
-        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleProviderframeworkonEventServiceRole4961EAEB",
-        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleResource12D935F1",
-      ],
       "Properties": {
         "AssumeRolePolicyDocument": {
           "Statement": [
@@ -5086,6 +4459,311 @@ exports[`PipelineStack > Construct(PipelineStack):  Snapshot Test 2`] = `
         "TopicName": "aws-accelerator-pipeline-review-topic",
       },
       "Type": "AWS::SNS::Topic",
+    },
+    "PipelinePipelineNotificationApprovalEventRule0542E766": {
+      "Properties": {
+        "Description": {
+          "Fn::Join": [
+            "",
+            [
+              "Capture manual approval events for ",
+              {
+                "Ref": "Pipeline8E4BFAC9",
+              },
+            ],
+          ],
+        },
+        "EventPattern": {
+          "detail": {
+            "pipeline": [
+              {
+                "Ref": "Pipeline8E4BFAC9",
+              },
+            ],
+            "state": [
+              "STARTED",
+              "SUCCEEDED",
+              "FAILED",
+            ],
+            "type": {
+              "category": [
+                "Approval",
+              ],
+            },
+          },
+          "detail-type": [
+            "CodePipeline Action Execution State Change",
+          ],
+          "source": [
+            "aws.codepipeline",
+          ],
+        },
+        "State": "ENABLED",
+        "Targets": [
+          {
+            "Arn": {
+              "Ref": "PipelinePipelineNotificationStatusTopic81485964",
+            },
+            "Id": "Target0",
+            "InputTransformer": {
+              "InputPathsMap": {
+                "account": "$.account",
+                "detail-action": "$.detail.action",
+                "detail-execution-id": "$.detail.execution-id",
+                "detail-pipeline": "$.detail.pipeline",
+                "detail-stage": "$.detail.stage",
+                "detail-state": "$.detail.state",
+                "region": "$.region",
+                "time": "$.time",
+              },
+              "InputTemplate": ""Pipeline <detail-pipeline> - Action <detail-action> has <detail-state>"
+""
+"Stage: <detail-stage>"
+"Action: <detail-action>"
+"Execution ID: <detail-execution-id>"
+"Time: <time>"
+"Region: <region>"
+"Account: <account>"
+""
+"View pipeline: https://console.aws.amazon.com/codesuite/codepipeline/pipelines/<detail-pipeline>/view?region=<region>"
+"View execution: https://console.aws.amazon.com/codesuite/codepipeline/pipelines/<detail-pipeline>/executions/<detail-execution-id>/timeline?region=<region>"",
+            },
+          },
+        ],
+      },
+      "Type": "AWS::Events::Rule",
+    },
+    "PipelinePipelineNotificationFailureEventRule7F10782B": {
+      "Properties": {
+        "Description": {
+          "Fn::Join": [
+            "",
+            [
+              "Capture pipeline failure events for ",
+              {
+                "Ref": "Pipeline8E4BFAC9",
+              },
+            ],
+          ],
+        },
+        "EventPattern": {
+          "detail": {
+            "pipeline": [
+              {
+                "Ref": "Pipeline8E4BFAC9",
+              },
+            ],
+            "state": [
+              "FAILED",
+            ],
+          },
+          "detail-type": [
+            "CodePipeline Pipeline Execution State Change",
+          ],
+          "source": [
+            "aws.codepipeline",
+          ],
+        },
+        "State": "ENABLED",
+        "Targets": [
+          {
+            "Arn": {
+              "Ref": "PipelinePipelineNotificationFailureTopicF006540A",
+            },
+            "Id": "Target0",
+            "InputTransformer": {
+              "InputPathsMap": {
+                "account": "$.account",
+                "detail-execution-id": "$.detail.execution-id",
+                "detail-pipeline": "$.detail.pipeline",
+                "detail-state": "$.detail.state",
+                "region": "$.region",
+                "time": "$.time",
+              },
+              "InputTemplate": ""Pipeline <detail-pipeline> has <detail-state>"
+""
+"Execution ID: <detail-execution-id>"
+"Time: <time>"
+"Region: <region>"
+"Account: <account>"
+""
+"View pipeline: https://console.aws.amazon.com/codesuite/codepipeline/pipelines/<detail-pipeline>/view?region=<region>"
+"View execution: https://console.aws.amazon.com/codesuite/codepipeline/pipelines/<detail-pipeline>/executions/<detail-execution-id>/timeline?region=<region>"",
+            },
+          },
+        ],
+      },
+      "Type": "AWS::Events::Rule",
+    },
+    "PipelinePipelineNotificationFailureTopicF006540A": {
+      "Properties": {
+        "DisplayName": "aws-accelerator-pipeline-failure",
+        "KmsMasterKeyId": {
+          "Ref": "SsmParameterValueacceleratorawsacceleratorinstallerkmskeyarnC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+        "TopicName": "aws-accelerator-pipeline-failure",
+      },
+      "Type": "AWS::SNS::Topic",
+    },
+    "PipelinePipelineNotificationFailureTopicPolicy4628719D": {
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sns:Publish",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "events.amazonaws.com",
+              },
+              "Resource": {
+                "Ref": "PipelinePipelineNotificationFailureTopicF006540A",
+              },
+              "Sid": "0",
+            },
+            {
+              "Action": "sns:Publish",
+              "Condition": {
+                "StringEquals": {
+                  "aws:SourceAccount": "000000000000",
+                },
+              },
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "events.amazonaws.com",
+              },
+              "Resource": {
+                "Ref": "PipelinePipelineNotificationFailureTopicF006540A",
+              },
+              "Sid": "1",
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "Topics": [
+          {
+            "Ref": "PipelinePipelineNotificationFailureTopicF006540A",
+          },
+        ],
+      },
+      "Type": "AWS::SNS::TopicPolicy",
+    },
+    "PipelinePipelineNotificationStatusEventRuleA9A78523": {
+      "Properties": {
+        "Description": {
+          "Fn::Join": [
+            "",
+            [
+              "Capture pipeline status events for ",
+              {
+                "Ref": "Pipeline8E4BFAC9",
+              },
+            ],
+          ],
+        },
+        "EventPattern": {
+          "detail": {
+            "pipeline": [
+              {
+                "Ref": "Pipeline8E4BFAC9",
+              },
+            ],
+            "state": [
+              "STARTED",
+              "SUCCEEDED",
+              "RESUMED",
+              "SUPERSEDED",
+              "CANCELED",
+            ],
+          },
+          "detail-type": [
+            "CodePipeline Pipeline Execution State Change",
+          ],
+          "source": [
+            "aws.codepipeline",
+          ],
+        },
+        "State": "ENABLED",
+        "Targets": [
+          {
+            "Arn": {
+              "Ref": "PipelinePipelineNotificationStatusTopic81485964",
+            },
+            "Id": "Target0",
+            "InputTransformer": {
+              "InputPathsMap": {
+                "account": "$.account",
+                "detail-execution-id": "$.detail.execution-id",
+                "detail-pipeline": "$.detail.pipeline",
+                "detail-state": "$.detail.state",
+                "region": "$.region",
+                "time": "$.time",
+              },
+              "InputTemplate": ""Pipeline <detail-pipeline> has <detail-state>"
+""
+"Execution ID: <detail-execution-id>"
+"Time: <time>"
+"Region: <region>"
+"Account: <account>"
+""
+"View pipeline: https://console.aws.amazon.com/codesuite/codepipeline/pipelines/<detail-pipeline>/view?region=<region>"
+"View execution: https://console.aws.amazon.com/codesuite/codepipeline/pipelines/<detail-pipeline>/executions/<detail-execution-id>/timeline?region=<region>"",
+            },
+          },
+        ],
+      },
+      "Type": "AWS::Events::Rule",
+    },
+    "PipelinePipelineNotificationStatusTopic81485964": {
+      "Properties": {
+        "DisplayName": "aws-accelerator-pipeline-status",
+        "KmsMasterKeyId": {
+          "Ref": "SsmParameterValueacceleratorawsacceleratorinstallerkmskeyarnC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+        "TopicName": "aws-accelerator-pipeline-status",
+      },
+      "Type": "AWS::SNS::Topic",
+    },
+    "PipelinePipelineNotificationStatusTopicPolicyBBB6FD6B": {
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sns:Publish",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "events.amazonaws.com",
+              },
+              "Resource": {
+                "Ref": "PipelinePipelineNotificationStatusTopic81485964",
+              },
+              "Sid": "0",
+            },
+            {
+              "Action": "sns:Publish",
+              "Condition": {
+                "StringEquals": {
+                  "aws:SourceAccount": "000000000000",
+                },
+              },
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "events.amazonaws.com",
+              },
+              "Resource": {
+                "Ref": "PipelinePipelineNotificationStatusTopic81485964",
+              },
+              "Sid": "1",
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "Topics": [
+          {
+            "Ref": "PipelinePipelineNotificationStatusTopic81485964",
+          },
+        ],
+      },
+      "Type": "AWS::SNS::TopicPolicy",
     },
     "PipelinePipelineRole6D983AD5": {
       "Properties": {
@@ -5331,20 +5009,6 @@ exports[`PipelineStack > Construct(PipelineStack):  Snapshot Test 2`] = `
                   "PipelineDeployuswest1ApproveCodePipelineActionRoleFF6A41DF",
                   "Arn",
                 ],
-              },
-            },
-            {
-              "Action": "sns:Publish",
-              "Effect": "Allow",
-              "Resource": {
-                "Ref": "PipelineAcceleratorStatusTopic2BD5793F",
-              },
-            },
-            {
-              "Action": "sns:Publish",
-              "Effect": "Allow",
-              "Resource": {
-                "Ref": "PipelineAcceleratorFailedStatusTopic614002B3",
               },
             },
           ],
@@ -6058,14 +5722,6 @@ exports[`PipelineStack > Construct(PipelineStack):  Snapshot Test 3`] = `
     },
     "Pipeline8E4BFAC9": {
       "DependsOn": [
-        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleFunctionB3FFD974",
-        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleFunctionServiceRoleDefaultPolicy28F66406",
-        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleFunctionServiceRoleD177D2D7",
-        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleFunctionLogGroup28940852",
-        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleProviderframeworkonEvent8BAA45B0",
-        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleProviderframeworkonEventServiceRoleDefaultPolicyD8319C53",
-        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleProviderframeworkonEventServiceRole4961EAEB",
-        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleResource12D935F1",
         "PipelinePipelineRoleDefaultPolicy7D262A22",
         "PipelinePipelineRole6D983AD5",
       ],
@@ -7272,307 +6928,6 @@ exports[`PipelineStack > Construct(PipelineStack):  Snapshot Test 3`] = `
       },
       "Type": "AWS::CodePipeline::Pipeline",
     },
-    "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleFunctionB3FFD974": {
-      "DependsOn": [
-        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleFunctionServiceRoleDefaultPolicy28F66406",
-        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleFunctionServiceRoleD177D2D7",
-      ],
-      "Properties": {
-        "Code": {
-          "S3Bucket": "cdk-hnb659fds-assets-000000000000-us-east-1",
-          "S3Key": "REPLACED-GENERATED-NAME.zip",
-        },
-        "Description": "Custom resource provider to create service linked role",
-        "Handler": "index.handler",
-        "KmsKeyArn": {
-          "Ref": "SsmParameterValueacceleratorawsacceleratorinstallerkmskeyarnC96584B6F00A464EAD1953AFF4B05118Parameter",
-        },
-        "MemorySize": 512,
-        "Role": {
-          "Fn::GetAtt": [
-            "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleFunctionServiceRoleD177D2D7",
-            "Arn",
-          ],
-        },
-        "Runtime": "nodejs20.x",
-        "Timeout": 900,
-      },
-      "Type": "AWS::Lambda::Function",
-    },
-    "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleFunctionLogGroup28940852": {
-      "DeletionPolicy": "Delete",
-      "Properties": {
-        "KmsKeyId": {
-          "Ref": "SsmParameterValueacceleratorawsacceleratorinstallerkmskeyarnC96584B6F00A464EAD1953AFF4B05118Parameter",
-        },
-        "LogGroupName": {
-          "Fn::Join": [
-            "",
-            [
-              "/aws/lambda/",
-              {
-                "Ref": "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleFunctionB3FFD974",
-              },
-            ],
-          ],
-        },
-        "RetentionInDays": 7,
-      },
-      "Type": "AWS::Logs::LogGroup",
-      "UpdateReplacePolicy": "Delete",
-    },
-    "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleFunctionServiceRoleD177D2D7": {
-      "Metadata": {
-        "cdk_nag": {
-          "rules_to_suppress": [
-            {
-              "id": "AwsSolutions-IAM4",
-              "reason": "CodeStar Notification SLR needs managed policies.",
-            },
-          ],
-        },
-      },
-      "Properties": {
-        "AssumeRolePolicyDocument": {
-          "Statement": [
-            {
-              "Action": "sts:AssumeRole",
-              "Effect": "Allow",
-              "Principal": {
-                "Service": "lambda.amazonaws.com",
-              },
-            },
-          ],
-          "Version": "2012-10-17",
-        },
-        "ManagedPolicyArns": [
-          {
-            "Fn::Join": [
-              "",
-              [
-                "arn:",
-                {
-                  "Ref": "AWS::Partition",
-                },
-                ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
-              ],
-            ],
-          },
-        ],
-      },
-      "Type": "AWS::IAM::Role",
-    },
-    "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleFunctionServiceRoleDefaultPolicy28F66406": {
-      "Properties": {
-        "PolicyDocument": {
-          "Statement": [
-            {
-              "Action": [
-                "iam:CreateServiceLinkedRole",
-                "iam:GetRole",
-                "lambda:GetFunction",
-              ],
-              "Effect": "Allow",
-              "Resource": "*",
-            },
-          ],
-          "Version": "2012-10-17",
-        },
-        "PolicyName": "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleFunctionServiceRoleDefaultPolicy28F66406",
-        "Roles": [
-          {
-            "Ref": "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleFunctionServiceRoleD177D2D7",
-          },
-        ],
-      },
-      "Type": "AWS::IAM::Policy",
-    },
-    "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleProviderframeworkonEvent8BAA45B0": {
-      "DependsOn": [
-        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleProviderframeworkonEventServiceRoleDefaultPolicyD8319C53",
-        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleProviderframeworkonEventServiceRole4961EAEB",
-      ],
-      "Properties": {
-        "Code": {
-          "S3Bucket": "cdk-hnb659fds-assets-000000000000-us-east-1",
-          "S3Key": "REPLACED-GENERATED-NAME.zip",
-        },
-        "Description": "AWS CDK resource provider framework - onEvent (PipelineStackCustomS3Path/Pipeline/AWSServiceRoleForCodeStarNotifications/CreateServiceLinkedRoleProvider)",
-        "Environment": {
-          "Variables": {
-            "USER_ON_EVENT_FUNCTION_ARN": {
-              "Fn::GetAtt": [
-                "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleFunctionB3FFD974",
-                "Arn",
-              ],
-            },
-          },
-        },
-        "Handler": "framework.onEvent",
-        "LoggingConfig": {
-          "ApplicationLogLevel": "FATAL",
-          "LogFormat": "JSON",
-        },
-        "Role": {
-          "Fn::GetAtt": [
-            "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleProviderframeworkonEventServiceRole4961EAEB",
-            "Arn",
-          ],
-        },
-        "Runtime": "nodejs22.x",
-        "Timeout": 900,
-      },
-      "Type": "AWS::Lambda::Function",
-    },
-    "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleProviderframeworkonEventServiceRole4961EAEB": {
-      "Metadata": {
-        "cdk_nag": {
-          "rules_to_suppress": [
-            {
-              "id": "AwsSolutions-IAM4",
-              "reason": "CodeStar Notification SLR needs managed policies.",
-            },
-          ],
-        },
-      },
-      "Properties": {
-        "AssumeRolePolicyDocument": {
-          "Statement": [
-            {
-              "Action": "sts:AssumeRole",
-              "Effect": "Allow",
-              "Principal": {
-                "Service": "lambda.amazonaws.com",
-              },
-            },
-          ],
-          "Version": "2012-10-17",
-        },
-        "ManagedPolicyArns": [
-          {
-            "Fn::Join": [
-              "",
-              [
-                "arn:",
-                {
-                  "Ref": "AWS::Partition",
-                },
-                ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
-              ],
-            ],
-          },
-        ],
-      },
-      "Type": "AWS::IAM::Role",
-    },
-    "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleProviderframeworkonEventServiceRoleDefaultPolicyD8319C53": {
-      "Properties": {
-        "PolicyDocument": {
-          "Statement": [
-            {
-              "Action": "lambda:InvokeFunction",
-              "Effect": "Allow",
-              "Resource": [
-                {
-                  "Fn::GetAtt": [
-                    "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleFunctionB3FFD974",
-                    "Arn",
-                  ],
-                },
-                {
-                  "Fn::Join": [
-                    "",
-                    [
-                      {
-                        "Fn::GetAtt": [
-                          "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleFunctionB3FFD974",
-                          "Arn",
-                        ],
-                      },
-                      ":*",
-                    ],
-                  ],
-                },
-              ],
-            },
-            {
-              "Action": "lambda:GetFunction",
-              "Effect": "Allow",
-              "Resource": {
-                "Fn::GetAtt": [
-                  "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleFunctionB3FFD974",
-                  "Arn",
-                ],
-              },
-            },
-          ],
-          "Version": "2012-10-17",
-        },
-        "PolicyName": "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleProviderframeworkonEventServiceRoleDefaultPolicyD8319C53",
-        "Roles": [
-          {
-            "Ref": "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleProviderframeworkonEventServiceRole4961EAEB",
-          },
-        ],
-      },
-      "Type": "AWS::IAM::Policy",
-    },
-    "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleResource12D935F1": {
-      "DeletionPolicy": "Delete",
-      "DependsOn": [
-        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleFunctionLogGroup28940852",
-      ],
-      "Properties": {
-        "ServiceToken": {
-          "Fn::GetAtt": [
-            "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleProviderframeworkonEvent8BAA45B0",
-            "Arn",
-          ],
-        },
-        "description": "Allows AWS CodeStar Notifications to access Amazon CloudWatch Events on your behalf",
-        "roleName": "AWSServiceRoleForCodeStarNotifications",
-        "serviceName": "codestar-notifications.amazonaws.com",
-        "uuid": "REPLACED-UUID",
-      },
-      "Type": "Custom::CreateServiceLinkedRole",
-      "UpdateReplacePolicy": "Delete",
-    },
-    "PipelineAcceleratorFailedStatusTopic614002B3": {
-      "Properties": {
-        "DisplayName": "aws-accelerator-pipeline-failed-status-topic",
-        "KmsMasterKeyId": {
-          "Ref": "SsmParameterValueacceleratorawsacceleratorinstallerkmskeyarnC96584B6F00A464EAD1953AFF4B05118Parameter",
-        },
-        "TopicName": "aws-accelerator-pipeline-failed-status-topic",
-      },
-      "Type": "AWS::SNS::Topic",
-    },
-    "PipelineAcceleratorFailedStatusTopicPolicy903B57F7": {
-      "Properties": {
-        "PolicyDocument": {
-          "Statement": [
-            {
-              "Action": "sns:Publish",
-              "Effect": "Allow",
-              "Principal": {
-                "Service": "codestar-notifications.amazonaws.com",
-              },
-              "Resource": {
-                "Ref": "PipelineAcceleratorFailedStatusTopic614002B3",
-              },
-              "Sid": "0",
-            },
-          ],
-          "Version": "2012-10-17",
-        },
-        "Topics": [
-          {
-            "Ref": "PipelineAcceleratorFailedStatusTopic614002B3",
-          },
-        ],
-      },
-      "Type": "AWS::SNS::TopicPolicy",
-    },
     "PipelineAcceleratorPipelineFailureAlarm479BDCEA": {
       "Properties": {
         "AlarmDescription": "AWS Accelerator pipeline failure alarm, created by accelerator",
@@ -7584,7 +6939,7 @@ exports[`PipelineStack > Construct(PipelineStack):  Snapshot Test 3`] = `
             "Name": "TopicName",
             "Value": {
               "Fn::GetAtt": [
-                "PipelineAcceleratorFailedStatusTopic614002B3",
+                "PipelinePipelineNotificationFailureTopicF006540A",
                 "TopicName",
               ],
             },
@@ -7599,136 +6954,6 @@ exports[`PipelineStack > Construct(PipelineStack):  Snapshot Test 3`] = `
         "TreatMissingData": "notBreaching",
       },
       "Type": "AWS::CloudWatch::Alarm",
-    },
-    "PipelineAcceleratorPipelineFailureNotification5BE0EB21": {
-      "DependsOn": [
-        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleFunctionB3FFD974",
-        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleFunctionServiceRoleDefaultPolicy28F66406",
-        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleFunctionServiceRoleD177D2D7",
-        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleFunctionLogGroup28940852",
-        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleProviderframeworkonEvent8BAA45B0",
-        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleProviderframeworkonEventServiceRoleDefaultPolicyD8319C53",
-        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleProviderframeworkonEventServiceRole4961EAEB",
-        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleResource12D935F1",
-      ],
-      "Properties": {
-        "DetailType": "FULL",
-        "EventTypeIds": [
-          "codepipeline-pipeline-pipeline-execution-failed",
-        ],
-        "Name": "stomS3PathPipelineAcceleratorPipelineFailureNotificationB25CD5AE",
-        "Resource": {
-          "Fn::Join": [
-            "",
-            [
-              "arn:",
-              {
-                "Ref": "AWS::Partition",
-              },
-              ":codepipeline:us-east-1:000000000000:",
-              {
-                "Ref": "Pipeline8E4BFAC9",
-              },
-            ],
-          ],
-        },
-        "Targets": [
-          {
-            "TargetAddress": {
-              "Ref": "PipelineAcceleratorFailedStatusTopic614002B3",
-            },
-            "TargetType": "SNS",
-          },
-        ],
-      },
-      "Type": "AWS::CodeStarNotifications::NotificationRule",
-    },
-    "PipelineAcceleratorPipelineStatusNotification0FCF4387": {
-      "DependsOn": [
-        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleFunctionB3FFD974",
-        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleFunctionServiceRoleDefaultPolicy28F66406",
-        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleFunctionServiceRoleD177D2D7",
-        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleFunctionLogGroup28940852",
-        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleProviderframeworkonEvent8BAA45B0",
-        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleProviderframeworkonEventServiceRoleDefaultPolicyD8319C53",
-        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleProviderframeworkonEventServiceRole4961EAEB",
-        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleResource12D935F1",
-      ],
-      "Properties": {
-        "DetailType": "FULL",
-        "EventTypeIds": [
-          "codepipeline-pipeline-manual-approval-failed",
-          "codepipeline-pipeline-manual-approval-needed",
-          "codepipeline-pipeline-manual-approval-succeeded",
-          "codepipeline-pipeline-pipeline-execution-canceled",
-          "codepipeline-pipeline-pipeline-execution-failed",
-          "codepipeline-pipeline-pipeline-execution-resumed",
-          "codepipeline-pipeline-pipeline-execution-started",
-          "codepipeline-pipeline-pipeline-execution-succeeded",
-          "codepipeline-pipeline-pipeline-execution-superseded",
-        ],
-        "Name": "ustomS3PathPipelineAcceleratorPipelineStatusNotification92F57F1B",
-        "Resource": {
-          "Fn::Join": [
-            "",
-            [
-              "arn:",
-              {
-                "Ref": "AWS::Partition",
-              },
-              ":codepipeline:us-east-1:000000000000:",
-              {
-                "Ref": "Pipeline8E4BFAC9",
-              },
-            ],
-          ],
-        },
-        "Targets": [
-          {
-            "TargetAddress": {
-              "Ref": "PipelineAcceleratorStatusTopic2BD5793F",
-            },
-            "TargetType": "SNS",
-          },
-        ],
-      },
-      "Type": "AWS::CodeStarNotifications::NotificationRule",
-    },
-    "PipelineAcceleratorStatusTopic2BD5793F": {
-      "Properties": {
-        "DisplayName": "aws-accelerator-pipeline-status-topic",
-        "KmsMasterKeyId": {
-          "Ref": "SsmParameterValueacceleratorawsacceleratorinstallerkmskeyarnC96584B6F00A464EAD1953AFF4B05118Parameter",
-        },
-        "TopicName": "aws-accelerator-pipeline-status-topic",
-      },
-      "Type": "AWS::SNS::Topic",
-    },
-    "PipelineAcceleratorStatusTopicPolicy30BCED97": {
-      "Properties": {
-        "PolicyDocument": {
-          "Statement": [
-            {
-              "Action": "sns:Publish",
-              "Effect": "Allow",
-              "Principal": {
-                "Service": "codestar-notifications.amazonaws.com",
-              },
-              "Resource": {
-                "Ref": "PipelineAcceleratorStatusTopic2BD5793F",
-              },
-              "Sid": "0",
-            },
-          ],
-          "Version": "2012-10-17",
-        },
-        "Topics": [
-          {
-            "Ref": "PipelineAcceleratorStatusTopic2BD5793F",
-          },
-        ],
-      },
-      "Type": "AWS::SNS::TopicPolicy",
     },
     "PipelineConfigRepositoryE5225086": {
       "DeletionPolicy": "Retain",
@@ -7754,6 +6979,311 @@ exports[`PipelineStack > Construct(PipelineStack):  Snapshot Test 3`] = `
         "TopicName": "aws-accelerator-pipeline-review-topic",
       },
       "Type": "AWS::SNS::Topic",
+    },
+    "PipelinePipelineNotificationApprovalEventRule0542E766": {
+      "Properties": {
+        "Description": {
+          "Fn::Join": [
+            "",
+            [
+              "Capture manual approval events for ",
+              {
+                "Ref": "Pipeline8E4BFAC9",
+              },
+            ],
+          ],
+        },
+        "EventPattern": {
+          "detail": {
+            "pipeline": [
+              {
+                "Ref": "Pipeline8E4BFAC9",
+              },
+            ],
+            "state": [
+              "STARTED",
+              "SUCCEEDED",
+              "FAILED",
+            ],
+            "type": {
+              "category": [
+                "Approval",
+              ],
+            },
+          },
+          "detail-type": [
+            "CodePipeline Action Execution State Change",
+          ],
+          "source": [
+            "aws.codepipeline",
+          ],
+        },
+        "State": "ENABLED",
+        "Targets": [
+          {
+            "Arn": {
+              "Ref": "PipelinePipelineNotificationStatusTopic81485964",
+            },
+            "Id": "Target0",
+            "InputTransformer": {
+              "InputPathsMap": {
+                "account": "$.account",
+                "detail-action": "$.detail.action",
+                "detail-execution-id": "$.detail.execution-id",
+                "detail-pipeline": "$.detail.pipeline",
+                "detail-stage": "$.detail.stage",
+                "detail-state": "$.detail.state",
+                "region": "$.region",
+                "time": "$.time",
+              },
+              "InputTemplate": ""Pipeline <detail-pipeline> - Action <detail-action> has <detail-state>"
+""
+"Stage: <detail-stage>"
+"Action: <detail-action>"
+"Execution ID: <detail-execution-id>"
+"Time: <time>"
+"Region: <region>"
+"Account: <account>"
+""
+"View pipeline: https://console.aws.amazon.com/codesuite/codepipeline/pipelines/<detail-pipeline>/view?region=<region>"
+"View execution: https://console.aws.amazon.com/codesuite/codepipeline/pipelines/<detail-pipeline>/executions/<detail-execution-id>/timeline?region=<region>"",
+            },
+          },
+        ],
+      },
+      "Type": "AWS::Events::Rule",
+    },
+    "PipelinePipelineNotificationFailureEventRule7F10782B": {
+      "Properties": {
+        "Description": {
+          "Fn::Join": [
+            "",
+            [
+              "Capture pipeline failure events for ",
+              {
+                "Ref": "Pipeline8E4BFAC9",
+              },
+            ],
+          ],
+        },
+        "EventPattern": {
+          "detail": {
+            "pipeline": [
+              {
+                "Ref": "Pipeline8E4BFAC9",
+              },
+            ],
+            "state": [
+              "FAILED",
+            ],
+          },
+          "detail-type": [
+            "CodePipeline Pipeline Execution State Change",
+          ],
+          "source": [
+            "aws.codepipeline",
+          ],
+        },
+        "State": "ENABLED",
+        "Targets": [
+          {
+            "Arn": {
+              "Ref": "PipelinePipelineNotificationFailureTopicF006540A",
+            },
+            "Id": "Target0",
+            "InputTransformer": {
+              "InputPathsMap": {
+                "account": "$.account",
+                "detail-execution-id": "$.detail.execution-id",
+                "detail-pipeline": "$.detail.pipeline",
+                "detail-state": "$.detail.state",
+                "region": "$.region",
+                "time": "$.time",
+              },
+              "InputTemplate": ""Pipeline <detail-pipeline> has <detail-state>"
+""
+"Execution ID: <detail-execution-id>"
+"Time: <time>"
+"Region: <region>"
+"Account: <account>"
+""
+"View pipeline: https://console.aws.amazon.com/codesuite/codepipeline/pipelines/<detail-pipeline>/view?region=<region>"
+"View execution: https://console.aws.amazon.com/codesuite/codepipeline/pipelines/<detail-pipeline>/executions/<detail-execution-id>/timeline?region=<region>"",
+            },
+          },
+        ],
+      },
+      "Type": "AWS::Events::Rule",
+    },
+    "PipelinePipelineNotificationFailureTopicF006540A": {
+      "Properties": {
+        "DisplayName": "aws-accelerator-pipeline-failure",
+        "KmsMasterKeyId": {
+          "Ref": "SsmParameterValueacceleratorawsacceleratorinstallerkmskeyarnC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+        "TopicName": "aws-accelerator-pipeline-failure",
+      },
+      "Type": "AWS::SNS::Topic",
+    },
+    "PipelinePipelineNotificationFailureTopicPolicy4628719D": {
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sns:Publish",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "events.amazonaws.com",
+              },
+              "Resource": {
+                "Ref": "PipelinePipelineNotificationFailureTopicF006540A",
+              },
+              "Sid": "0",
+            },
+            {
+              "Action": "sns:Publish",
+              "Condition": {
+                "StringEquals": {
+                  "aws:SourceAccount": "000000000000",
+                },
+              },
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "events.amazonaws.com",
+              },
+              "Resource": {
+                "Ref": "PipelinePipelineNotificationFailureTopicF006540A",
+              },
+              "Sid": "1",
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "Topics": [
+          {
+            "Ref": "PipelinePipelineNotificationFailureTopicF006540A",
+          },
+        ],
+      },
+      "Type": "AWS::SNS::TopicPolicy",
+    },
+    "PipelinePipelineNotificationStatusEventRuleA9A78523": {
+      "Properties": {
+        "Description": {
+          "Fn::Join": [
+            "",
+            [
+              "Capture pipeline status events for ",
+              {
+                "Ref": "Pipeline8E4BFAC9",
+              },
+            ],
+          ],
+        },
+        "EventPattern": {
+          "detail": {
+            "pipeline": [
+              {
+                "Ref": "Pipeline8E4BFAC9",
+              },
+            ],
+            "state": [
+              "STARTED",
+              "SUCCEEDED",
+              "RESUMED",
+              "SUPERSEDED",
+              "CANCELED",
+            ],
+          },
+          "detail-type": [
+            "CodePipeline Pipeline Execution State Change",
+          ],
+          "source": [
+            "aws.codepipeline",
+          ],
+        },
+        "State": "ENABLED",
+        "Targets": [
+          {
+            "Arn": {
+              "Ref": "PipelinePipelineNotificationStatusTopic81485964",
+            },
+            "Id": "Target0",
+            "InputTransformer": {
+              "InputPathsMap": {
+                "account": "$.account",
+                "detail-execution-id": "$.detail.execution-id",
+                "detail-pipeline": "$.detail.pipeline",
+                "detail-state": "$.detail.state",
+                "region": "$.region",
+                "time": "$.time",
+              },
+              "InputTemplate": ""Pipeline <detail-pipeline> has <detail-state>"
+""
+"Execution ID: <detail-execution-id>"
+"Time: <time>"
+"Region: <region>"
+"Account: <account>"
+""
+"View pipeline: https://console.aws.amazon.com/codesuite/codepipeline/pipelines/<detail-pipeline>/view?region=<region>"
+"View execution: https://console.aws.amazon.com/codesuite/codepipeline/pipelines/<detail-pipeline>/executions/<detail-execution-id>/timeline?region=<region>"",
+            },
+          },
+        ],
+      },
+      "Type": "AWS::Events::Rule",
+    },
+    "PipelinePipelineNotificationStatusTopic81485964": {
+      "Properties": {
+        "DisplayName": "aws-accelerator-pipeline-status",
+        "KmsMasterKeyId": {
+          "Ref": "SsmParameterValueacceleratorawsacceleratorinstallerkmskeyarnC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+        "TopicName": "aws-accelerator-pipeline-status",
+      },
+      "Type": "AWS::SNS::Topic",
+    },
+    "PipelinePipelineNotificationStatusTopicPolicyBBB6FD6B": {
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sns:Publish",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "events.amazonaws.com",
+              },
+              "Resource": {
+                "Ref": "PipelinePipelineNotificationStatusTopic81485964",
+              },
+              "Sid": "0",
+            },
+            {
+              "Action": "sns:Publish",
+              "Condition": {
+                "StringEquals": {
+                  "aws:SourceAccount": "000000000000",
+                },
+              },
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "events.amazonaws.com",
+              },
+              "Resource": {
+                "Ref": "PipelinePipelineNotificationStatusTopic81485964",
+              },
+              "Sid": "1",
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "Topics": [
+          {
+            "Ref": "PipelinePipelineNotificationStatusTopic81485964",
+          },
+        ],
+      },
+      "Type": "AWS::SNS::TopicPolicy",
     },
     "PipelinePipelineRole6D983AD5": {
       "Properties": {
@@ -7979,20 +7509,6 @@ exports[`PipelineStack > Construct(PipelineStack):  Snapshot Test 3`] = `
               "Effect": "Allow",
               "Resource": {
                 "Ref": "SsmParameterValueacceleratorawsacceleratorinstallerkmskeyarnC96584B6F00A464EAD1953AFF4B05118Parameter",
-              },
-            },
-            {
-              "Action": "sns:Publish",
-              "Effect": "Allow",
-              "Resource": {
-                "Ref": "PipelineAcceleratorStatusTopic2BD5793F",
-              },
-            },
-            {
-              "Action": "sns:Publish",
-              "Effect": "Allow",
-              "Resource": {
-                "Ref": "PipelineAcceleratorFailedStatusTopic614002B3",
               },
             },
           ],
@@ -8738,14 +8254,6 @@ exports[`PipelineStack > Construct(PipelineStack):  Snapshot Test 4`] = `
     },
     "Pipeline8E4BFAC9": {
       "DependsOn": [
-        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleFunctionB3FFD974",
-        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleFunctionServiceRoleDefaultPolicy28F66406",
-        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleFunctionServiceRoleD177D2D7",
-        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleFunctionLogGroup28940852",
-        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleProviderframeworkonEvent8BAA45B0",
-        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleProviderframeworkonEventServiceRoleDefaultPolicyD8319C53",
-        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleProviderframeworkonEventServiceRole4961EAEB",
-        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleResource12D935F1",
         "PipelinePipelineRoleDefaultPolicy7D262A22",
         "PipelinePipelineRole6D983AD5",
       ],
@@ -9949,307 +9457,6 @@ exports[`PipelineStack > Construct(PipelineStack):  Snapshot Test 4`] = `
       },
       "Type": "AWS::CodePipeline::Pipeline",
     },
-    "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleFunctionB3FFD974": {
-      "DependsOn": [
-        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleFunctionServiceRoleDefaultPolicy28F66406",
-        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleFunctionServiceRoleD177D2D7",
-      ],
-      "Properties": {
-        "Code": {
-          "S3Bucket": "cdk-hnb659fds-assets-000000000000-us-east-1",
-          "S3Key": "REPLACED-GENERATED-NAME.zip",
-        },
-        "Description": "Custom resource provider to create service linked role",
-        "Handler": "index.handler",
-        "KmsKeyArn": {
-          "Ref": "SsmParameterValueacceleratorawsacceleratorinstallerkmskeyarnC96584B6F00A464EAD1953AFF4B05118Parameter",
-        },
-        "MemorySize": 512,
-        "Role": {
-          "Fn::GetAtt": [
-            "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleFunctionServiceRoleD177D2D7",
-            "Arn",
-          ],
-        },
-        "Runtime": "nodejs20.x",
-        "Timeout": 900,
-      },
-      "Type": "AWS::Lambda::Function",
-    },
-    "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleFunctionLogGroup28940852": {
-      "DeletionPolicy": "Delete",
-      "Properties": {
-        "KmsKeyId": {
-          "Ref": "SsmParameterValueacceleratorawsacceleratorinstallerkmskeyarnC96584B6F00A464EAD1953AFF4B05118Parameter",
-        },
-        "LogGroupName": {
-          "Fn::Join": [
-            "",
-            [
-              "/aws/lambda/",
-              {
-                "Ref": "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleFunctionB3FFD974",
-              },
-            ],
-          ],
-        },
-        "RetentionInDays": 7,
-      },
-      "Type": "AWS::Logs::LogGroup",
-      "UpdateReplacePolicy": "Delete",
-    },
-    "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleFunctionServiceRoleD177D2D7": {
-      "Metadata": {
-        "cdk_nag": {
-          "rules_to_suppress": [
-            {
-              "id": "AwsSolutions-IAM4",
-              "reason": "CodeStar Notification SLR needs managed policies.",
-            },
-          ],
-        },
-      },
-      "Properties": {
-        "AssumeRolePolicyDocument": {
-          "Statement": [
-            {
-              "Action": "sts:AssumeRole",
-              "Effect": "Allow",
-              "Principal": {
-                "Service": "lambda.amazonaws.com",
-              },
-            },
-          ],
-          "Version": "2012-10-17",
-        },
-        "ManagedPolicyArns": [
-          {
-            "Fn::Join": [
-              "",
-              [
-                "arn:",
-                {
-                  "Ref": "AWS::Partition",
-                },
-                ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
-              ],
-            ],
-          },
-        ],
-      },
-      "Type": "AWS::IAM::Role",
-    },
-    "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleFunctionServiceRoleDefaultPolicy28F66406": {
-      "Properties": {
-        "PolicyDocument": {
-          "Statement": [
-            {
-              "Action": [
-                "iam:CreateServiceLinkedRole",
-                "iam:GetRole",
-                "lambda:GetFunction",
-              ],
-              "Effect": "Allow",
-              "Resource": "*",
-            },
-          ],
-          "Version": "2012-10-17",
-        },
-        "PolicyName": "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleFunctionServiceRoleDefaultPolicy28F66406",
-        "Roles": [
-          {
-            "Ref": "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleFunctionServiceRoleD177D2D7",
-          },
-        ],
-      },
-      "Type": "AWS::IAM::Policy",
-    },
-    "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleProviderframeworkonEvent8BAA45B0": {
-      "DependsOn": [
-        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleProviderframeworkonEventServiceRoleDefaultPolicyD8319C53",
-        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleProviderframeworkonEventServiceRole4961EAEB",
-      ],
-      "Properties": {
-        "Code": {
-          "S3Bucket": "cdk-hnb659fds-assets-000000000000-us-east-1",
-          "S3Key": "REPLACED-GENERATED-NAME.zip",
-        },
-        "Description": "AWS CDK resource provider framework - onEvent (PipelineStackConfigInS3/Pipeline/AWSServiceRoleForCodeStarNotifications/CreateServiceLinkedRoleProvider)",
-        "Environment": {
-          "Variables": {
-            "USER_ON_EVENT_FUNCTION_ARN": {
-              "Fn::GetAtt": [
-                "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleFunctionB3FFD974",
-                "Arn",
-              ],
-            },
-          },
-        },
-        "Handler": "framework.onEvent",
-        "LoggingConfig": {
-          "ApplicationLogLevel": "FATAL",
-          "LogFormat": "JSON",
-        },
-        "Role": {
-          "Fn::GetAtt": [
-            "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleProviderframeworkonEventServiceRole4961EAEB",
-            "Arn",
-          ],
-        },
-        "Runtime": "nodejs22.x",
-        "Timeout": 900,
-      },
-      "Type": "AWS::Lambda::Function",
-    },
-    "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleProviderframeworkonEventServiceRole4961EAEB": {
-      "Metadata": {
-        "cdk_nag": {
-          "rules_to_suppress": [
-            {
-              "id": "AwsSolutions-IAM4",
-              "reason": "CodeStar Notification SLR needs managed policies.",
-            },
-          ],
-        },
-      },
-      "Properties": {
-        "AssumeRolePolicyDocument": {
-          "Statement": [
-            {
-              "Action": "sts:AssumeRole",
-              "Effect": "Allow",
-              "Principal": {
-                "Service": "lambda.amazonaws.com",
-              },
-            },
-          ],
-          "Version": "2012-10-17",
-        },
-        "ManagedPolicyArns": [
-          {
-            "Fn::Join": [
-              "",
-              [
-                "arn:",
-                {
-                  "Ref": "AWS::Partition",
-                },
-                ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
-              ],
-            ],
-          },
-        ],
-      },
-      "Type": "AWS::IAM::Role",
-    },
-    "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleProviderframeworkonEventServiceRoleDefaultPolicyD8319C53": {
-      "Properties": {
-        "PolicyDocument": {
-          "Statement": [
-            {
-              "Action": "lambda:InvokeFunction",
-              "Effect": "Allow",
-              "Resource": [
-                {
-                  "Fn::GetAtt": [
-                    "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleFunctionB3FFD974",
-                    "Arn",
-                  ],
-                },
-                {
-                  "Fn::Join": [
-                    "",
-                    [
-                      {
-                        "Fn::GetAtt": [
-                          "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleFunctionB3FFD974",
-                          "Arn",
-                        ],
-                      },
-                      ":*",
-                    ],
-                  ],
-                },
-              ],
-            },
-            {
-              "Action": "lambda:GetFunction",
-              "Effect": "Allow",
-              "Resource": {
-                "Fn::GetAtt": [
-                  "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleFunctionB3FFD974",
-                  "Arn",
-                ],
-              },
-            },
-          ],
-          "Version": "2012-10-17",
-        },
-        "PolicyName": "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleProviderframeworkonEventServiceRoleDefaultPolicyD8319C53",
-        "Roles": [
-          {
-            "Ref": "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleProviderframeworkonEventServiceRole4961EAEB",
-          },
-        ],
-      },
-      "Type": "AWS::IAM::Policy",
-    },
-    "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleResource12D935F1": {
-      "DeletionPolicy": "Delete",
-      "DependsOn": [
-        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleFunctionLogGroup28940852",
-      ],
-      "Properties": {
-        "ServiceToken": {
-          "Fn::GetAtt": [
-            "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleProviderframeworkonEvent8BAA45B0",
-            "Arn",
-          ],
-        },
-        "description": "Allows AWS CodeStar Notifications to access Amazon CloudWatch Events on your behalf",
-        "roleName": "AWSServiceRoleForCodeStarNotifications",
-        "serviceName": "codestar-notifications.amazonaws.com",
-        "uuid": "REPLACED-UUID",
-      },
-      "Type": "Custom::CreateServiceLinkedRole",
-      "UpdateReplacePolicy": "Delete",
-    },
-    "PipelineAcceleratorFailedStatusTopic614002B3": {
-      "Properties": {
-        "DisplayName": "aws-accelerator-pipeline-failed-status-topic",
-        "KmsMasterKeyId": {
-          "Ref": "SsmParameterValueacceleratorawsacceleratorinstallerkmskeyarnC96584B6F00A464EAD1953AFF4B05118Parameter",
-        },
-        "TopicName": "aws-accelerator-pipeline-failed-status-topic",
-      },
-      "Type": "AWS::SNS::Topic",
-    },
-    "PipelineAcceleratorFailedStatusTopicPolicy903B57F7": {
-      "Properties": {
-        "PolicyDocument": {
-          "Statement": [
-            {
-              "Action": "sns:Publish",
-              "Effect": "Allow",
-              "Principal": {
-                "Service": "codestar-notifications.amazonaws.com",
-              },
-              "Resource": {
-                "Ref": "PipelineAcceleratorFailedStatusTopic614002B3",
-              },
-              "Sid": "0",
-            },
-          ],
-          "Version": "2012-10-17",
-        },
-        "Topics": [
-          {
-            "Ref": "PipelineAcceleratorFailedStatusTopic614002B3",
-          },
-        ],
-      },
-      "Type": "AWS::SNS::TopicPolicy",
-    },
     "PipelineAcceleratorPipelineFailureAlarm479BDCEA": {
       "Properties": {
         "AlarmDescription": "AWS Accelerator pipeline failure alarm, created by accelerator",
@@ -10261,7 +9468,7 @@ exports[`PipelineStack > Construct(PipelineStack):  Snapshot Test 4`] = `
             "Name": "TopicName",
             "Value": {
               "Fn::GetAtt": [
-                "PipelineAcceleratorFailedStatusTopic614002B3",
+                "PipelinePipelineNotificationFailureTopicF006540A",
                 "TopicName",
               ],
             },
@@ -10276,136 +9483,6 @@ exports[`PipelineStack > Construct(PipelineStack):  Snapshot Test 4`] = `
         "TreatMissingData": "notBreaching",
       },
       "Type": "AWS::CloudWatch::Alarm",
-    },
-    "PipelineAcceleratorPipelineFailureNotification5BE0EB21": {
-      "DependsOn": [
-        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleFunctionB3FFD974",
-        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleFunctionServiceRoleDefaultPolicy28F66406",
-        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleFunctionServiceRoleD177D2D7",
-        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleFunctionLogGroup28940852",
-        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleProviderframeworkonEvent8BAA45B0",
-        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleProviderframeworkonEventServiceRoleDefaultPolicyD8319C53",
-        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleProviderframeworkonEventServiceRole4961EAEB",
-        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleResource12D935F1",
-      ],
-      "Properties": {
-        "DetailType": "FULL",
-        "EventTypeIds": [
-          "codepipeline-pipeline-pipeline-execution-failed",
-        ],
-        "Name": "ConfigInS3PipelineAcceleratorPipelineFailureNotificationBDDD6005",
-        "Resource": {
-          "Fn::Join": [
-            "",
-            [
-              "arn:",
-              {
-                "Ref": "AWS::Partition",
-              },
-              ":codepipeline:us-east-1:000000000000:",
-              {
-                "Ref": "Pipeline8E4BFAC9",
-              },
-            ],
-          ],
-        },
-        "Targets": [
-          {
-            "TargetAddress": {
-              "Ref": "PipelineAcceleratorFailedStatusTopic614002B3",
-            },
-            "TargetType": "SNS",
-          },
-        ],
-      },
-      "Type": "AWS::CodeStarNotifications::NotificationRule",
-    },
-    "PipelineAcceleratorPipelineStatusNotification0FCF4387": {
-      "DependsOn": [
-        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleFunctionB3FFD974",
-        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleFunctionServiceRoleDefaultPolicy28F66406",
-        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleFunctionServiceRoleD177D2D7",
-        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleFunctionLogGroup28940852",
-        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleProviderframeworkonEvent8BAA45B0",
-        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleProviderframeworkonEventServiceRoleDefaultPolicyD8319C53",
-        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleProviderframeworkonEventServiceRole4961EAEB",
-        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleResource12D935F1",
-      ],
-      "Properties": {
-        "DetailType": "FULL",
-        "EventTypeIds": [
-          "codepipeline-pipeline-manual-approval-failed",
-          "codepipeline-pipeline-manual-approval-needed",
-          "codepipeline-pipeline-manual-approval-succeeded",
-          "codepipeline-pipeline-pipeline-execution-canceled",
-          "codepipeline-pipeline-pipeline-execution-failed",
-          "codepipeline-pipeline-pipeline-execution-resumed",
-          "codepipeline-pipeline-pipeline-execution-started",
-          "codepipeline-pipeline-pipeline-execution-succeeded",
-          "codepipeline-pipeline-pipeline-execution-superseded",
-        ],
-        "Name": "kConfigInS3PipelineAcceleratorPipelineStatusNotification0A0DE619",
-        "Resource": {
-          "Fn::Join": [
-            "",
-            [
-              "arn:",
-              {
-                "Ref": "AWS::Partition",
-              },
-              ":codepipeline:us-east-1:000000000000:",
-              {
-                "Ref": "Pipeline8E4BFAC9",
-              },
-            ],
-          ],
-        },
-        "Targets": [
-          {
-            "TargetAddress": {
-              "Ref": "PipelineAcceleratorStatusTopic2BD5793F",
-            },
-            "TargetType": "SNS",
-          },
-        ],
-      },
-      "Type": "AWS::CodeStarNotifications::NotificationRule",
-    },
-    "PipelineAcceleratorStatusTopic2BD5793F": {
-      "Properties": {
-        "DisplayName": "aws-accelerator-pipeline-status-topic",
-        "KmsMasterKeyId": {
-          "Ref": "SsmParameterValueacceleratorawsacceleratorinstallerkmskeyarnC96584B6F00A464EAD1953AFF4B05118Parameter",
-        },
-        "TopicName": "aws-accelerator-pipeline-status-topic",
-      },
-      "Type": "AWS::SNS::Topic",
-    },
-    "PipelineAcceleratorStatusTopicPolicy30BCED97": {
-      "Properties": {
-        "PolicyDocument": {
-          "Statement": [
-            {
-              "Action": "sns:Publish",
-              "Effect": "Allow",
-              "Principal": {
-                "Service": "codestar-notifications.amazonaws.com",
-              },
-              "Resource": {
-                "Ref": "PipelineAcceleratorStatusTopic2BD5793F",
-              },
-              "Sid": "0",
-            },
-          ],
-          "Version": "2012-10-17",
-        },
-        "Topics": [
-          {
-            "Ref": "PipelineAcceleratorStatusTopic2BD5793F",
-          },
-        ],
-      },
-      "Type": "AWS::SNS::TopicPolicy",
     },
     "PipelineConfigRepositorySecureBucket87451DF5": {
       "DeletionPolicy": "Retain",
@@ -10505,6 +9582,311 @@ exports[`PipelineStack > Construct(PipelineStack):  Snapshot Test 4`] = `
         "TopicName": "aws-accelerator-pipeline-review-topic",
       },
       "Type": "AWS::SNS::Topic",
+    },
+    "PipelinePipelineNotificationApprovalEventRule0542E766": {
+      "Properties": {
+        "Description": {
+          "Fn::Join": [
+            "",
+            [
+              "Capture manual approval events for ",
+              {
+                "Ref": "Pipeline8E4BFAC9",
+              },
+            ],
+          ],
+        },
+        "EventPattern": {
+          "detail": {
+            "pipeline": [
+              {
+                "Ref": "Pipeline8E4BFAC9",
+              },
+            ],
+            "state": [
+              "STARTED",
+              "SUCCEEDED",
+              "FAILED",
+            ],
+            "type": {
+              "category": [
+                "Approval",
+              ],
+            },
+          },
+          "detail-type": [
+            "CodePipeline Action Execution State Change",
+          ],
+          "source": [
+            "aws.codepipeline",
+          ],
+        },
+        "State": "ENABLED",
+        "Targets": [
+          {
+            "Arn": {
+              "Ref": "PipelinePipelineNotificationStatusTopic81485964",
+            },
+            "Id": "Target0",
+            "InputTransformer": {
+              "InputPathsMap": {
+                "account": "$.account",
+                "detail-action": "$.detail.action",
+                "detail-execution-id": "$.detail.execution-id",
+                "detail-pipeline": "$.detail.pipeline",
+                "detail-stage": "$.detail.stage",
+                "detail-state": "$.detail.state",
+                "region": "$.region",
+                "time": "$.time",
+              },
+              "InputTemplate": ""Pipeline <detail-pipeline> - Action <detail-action> has <detail-state>"
+""
+"Stage: <detail-stage>"
+"Action: <detail-action>"
+"Execution ID: <detail-execution-id>"
+"Time: <time>"
+"Region: <region>"
+"Account: <account>"
+""
+"View pipeline: https://console.aws.amazon.com/codesuite/codepipeline/pipelines/<detail-pipeline>/view?region=<region>"
+"View execution: https://console.aws.amazon.com/codesuite/codepipeline/pipelines/<detail-pipeline>/executions/<detail-execution-id>/timeline?region=<region>"",
+            },
+          },
+        ],
+      },
+      "Type": "AWS::Events::Rule",
+    },
+    "PipelinePipelineNotificationFailureEventRule7F10782B": {
+      "Properties": {
+        "Description": {
+          "Fn::Join": [
+            "",
+            [
+              "Capture pipeline failure events for ",
+              {
+                "Ref": "Pipeline8E4BFAC9",
+              },
+            ],
+          ],
+        },
+        "EventPattern": {
+          "detail": {
+            "pipeline": [
+              {
+                "Ref": "Pipeline8E4BFAC9",
+              },
+            ],
+            "state": [
+              "FAILED",
+            ],
+          },
+          "detail-type": [
+            "CodePipeline Pipeline Execution State Change",
+          ],
+          "source": [
+            "aws.codepipeline",
+          ],
+        },
+        "State": "ENABLED",
+        "Targets": [
+          {
+            "Arn": {
+              "Ref": "PipelinePipelineNotificationFailureTopicF006540A",
+            },
+            "Id": "Target0",
+            "InputTransformer": {
+              "InputPathsMap": {
+                "account": "$.account",
+                "detail-execution-id": "$.detail.execution-id",
+                "detail-pipeline": "$.detail.pipeline",
+                "detail-state": "$.detail.state",
+                "region": "$.region",
+                "time": "$.time",
+              },
+              "InputTemplate": ""Pipeline <detail-pipeline> has <detail-state>"
+""
+"Execution ID: <detail-execution-id>"
+"Time: <time>"
+"Region: <region>"
+"Account: <account>"
+""
+"View pipeline: https://console.aws.amazon.com/codesuite/codepipeline/pipelines/<detail-pipeline>/view?region=<region>"
+"View execution: https://console.aws.amazon.com/codesuite/codepipeline/pipelines/<detail-pipeline>/executions/<detail-execution-id>/timeline?region=<region>"",
+            },
+          },
+        ],
+      },
+      "Type": "AWS::Events::Rule",
+    },
+    "PipelinePipelineNotificationFailureTopicF006540A": {
+      "Properties": {
+        "DisplayName": "aws-accelerator-pipeline-failure",
+        "KmsMasterKeyId": {
+          "Ref": "SsmParameterValueacceleratorawsacceleratorinstallerkmskeyarnC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+        "TopicName": "aws-accelerator-pipeline-failure",
+      },
+      "Type": "AWS::SNS::Topic",
+    },
+    "PipelinePipelineNotificationFailureTopicPolicy4628719D": {
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sns:Publish",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "events.amazonaws.com",
+              },
+              "Resource": {
+                "Ref": "PipelinePipelineNotificationFailureTopicF006540A",
+              },
+              "Sid": "0",
+            },
+            {
+              "Action": "sns:Publish",
+              "Condition": {
+                "StringEquals": {
+                  "aws:SourceAccount": "000000000000",
+                },
+              },
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "events.amazonaws.com",
+              },
+              "Resource": {
+                "Ref": "PipelinePipelineNotificationFailureTopicF006540A",
+              },
+              "Sid": "1",
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "Topics": [
+          {
+            "Ref": "PipelinePipelineNotificationFailureTopicF006540A",
+          },
+        ],
+      },
+      "Type": "AWS::SNS::TopicPolicy",
+    },
+    "PipelinePipelineNotificationStatusEventRuleA9A78523": {
+      "Properties": {
+        "Description": {
+          "Fn::Join": [
+            "",
+            [
+              "Capture pipeline status events for ",
+              {
+                "Ref": "Pipeline8E4BFAC9",
+              },
+            ],
+          ],
+        },
+        "EventPattern": {
+          "detail": {
+            "pipeline": [
+              {
+                "Ref": "Pipeline8E4BFAC9",
+              },
+            ],
+            "state": [
+              "STARTED",
+              "SUCCEEDED",
+              "RESUMED",
+              "SUPERSEDED",
+              "CANCELED",
+            ],
+          },
+          "detail-type": [
+            "CodePipeline Pipeline Execution State Change",
+          ],
+          "source": [
+            "aws.codepipeline",
+          ],
+        },
+        "State": "ENABLED",
+        "Targets": [
+          {
+            "Arn": {
+              "Ref": "PipelinePipelineNotificationStatusTopic81485964",
+            },
+            "Id": "Target0",
+            "InputTransformer": {
+              "InputPathsMap": {
+                "account": "$.account",
+                "detail-execution-id": "$.detail.execution-id",
+                "detail-pipeline": "$.detail.pipeline",
+                "detail-state": "$.detail.state",
+                "region": "$.region",
+                "time": "$.time",
+              },
+              "InputTemplate": ""Pipeline <detail-pipeline> has <detail-state>"
+""
+"Execution ID: <detail-execution-id>"
+"Time: <time>"
+"Region: <region>"
+"Account: <account>"
+""
+"View pipeline: https://console.aws.amazon.com/codesuite/codepipeline/pipelines/<detail-pipeline>/view?region=<region>"
+"View execution: https://console.aws.amazon.com/codesuite/codepipeline/pipelines/<detail-pipeline>/executions/<detail-execution-id>/timeline?region=<region>"",
+            },
+          },
+        ],
+      },
+      "Type": "AWS::Events::Rule",
+    },
+    "PipelinePipelineNotificationStatusTopic81485964": {
+      "Properties": {
+        "DisplayName": "aws-accelerator-pipeline-status",
+        "KmsMasterKeyId": {
+          "Ref": "SsmParameterValueacceleratorawsacceleratorinstallerkmskeyarnC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+        "TopicName": "aws-accelerator-pipeline-status",
+      },
+      "Type": "AWS::SNS::Topic",
+    },
+    "PipelinePipelineNotificationStatusTopicPolicyBBB6FD6B": {
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sns:Publish",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "events.amazonaws.com",
+              },
+              "Resource": {
+                "Ref": "PipelinePipelineNotificationStatusTopic81485964",
+              },
+              "Sid": "0",
+            },
+            {
+              "Action": "sns:Publish",
+              "Condition": {
+                "StringEquals": {
+                  "aws:SourceAccount": "000000000000",
+                },
+              },
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "events.amazonaws.com",
+              },
+              "Resource": {
+                "Ref": "PipelinePipelineNotificationStatusTopic81485964",
+              },
+              "Sid": "1",
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "Topics": [
+          {
+            "Ref": "PipelinePipelineNotificationStatusTopic81485964",
+          },
+        ],
+      },
+      "Type": "AWS::SNS::TopicPolicy",
     },
     "PipelinePipelineRole6D983AD5": {
       "Properties": {
@@ -10726,20 +10108,6 @@ exports[`PipelineStack > Construct(PipelineStack):  Snapshot Test 4`] = `
                 "Ref": "SsmParameterValueacceleratorawsacceleratorinstallerkmskeyarnC96584B6F00A464EAD1953AFF4B05118Parameter",
               },
             },
-            {
-              "Action": "sns:Publish",
-              "Effect": "Allow",
-              "Resource": {
-                "Ref": "PipelineAcceleratorStatusTopic2BD5793F",
-              },
-            },
-            {
-              "Action": "sns:Publish",
-              "Effect": "Allow",
-              "Resource": {
-                "Ref": "PipelineAcceleratorFailedStatusTopic614002B3",
-              },
-            },
           ],
           "Version": "2012-10-17",
         },
@@ -10870,16 +10238,6 @@ exports[`PipelineStack > Construct(PipelineStack):  Snapshot Test 4`] = `
       "Type": "AWS::S3::BucketPolicy",
     },
     "PipelineSourceConfigurationCodePipelineActionRoleA2807B19": {
-      "DependsOn": [
-        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleFunctionB3FFD974",
-        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleFunctionServiceRoleDefaultPolicy28F66406",
-        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleFunctionServiceRoleD177D2D7",
-        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleFunctionLogGroup28940852",
-        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleProviderframeworkonEvent8BAA45B0",
-        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleProviderframeworkonEventServiceRoleDefaultPolicyD8319C53",
-        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleProviderframeworkonEventServiceRole4961EAEB",
-        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleResource12D935F1",
-      ],
       "Properties": {
         "AssumeRolePolicyDocument": {
           "Statement": [
@@ -10902,16 +10260,6 @@ exports[`PipelineStack > Construct(PipelineStack):  Snapshot Test 4`] = `
       "Type": "AWS::IAM::Role",
     },
     "PipelineSourceConfigurationCodePipelineActionRoleDefaultPolicy5FE1A228": {
-      "DependsOn": [
-        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleFunctionB3FFD974",
-        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleFunctionServiceRoleDefaultPolicy28F66406",
-        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleFunctionServiceRoleD177D2D7",
-        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleFunctionLogGroup28940852",
-        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleProviderframeworkonEvent8BAA45B0",
-        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleProviderframeworkonEventServiceRoleDefaultPolicyD8319C53",
-        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleProviderframeworkonEventServiceRole4961EAEB",
-        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleResource12D935F1",
-      ],
       "Metadata": {
         "cdk_nag": {
           "rules_to_suppress": [
@@ -11605,14 +10953,6 @@ exports[`PipelineStack customS3Path > Construct(PipelineStack):  Snapshot Test 1
     },
     "Pipeline8E4BFAC9": {
       "DependsOn": [
-        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleFunctionB3FFD974",
-        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleFunctionServiceRoleDefaultPolicy28F66406",
-        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleFunctionServiceRoleD177D2D7",
-        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleFunctionLogGroup28940852",
-        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleProviderframeworkonEvent8BAA45B0",
-        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleProviderframeworkonEventServiceRoleDefaultPolicyD8319C53",
-        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleProviderframeworkonEventServiceRole4961EAEB",
-        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleResource12D935F1",
         "PipelinePipelineRoleDefaultPolicy7D262A22",
         "PipelinePipelineRole6D983AD5",
       ],
@@ -12819,307 +12159,6 @@ exports[`PipelineStack customS3Path > Construct(PipelineStack):  Snapshot Test 1
       },
       "Type": "AWS::CodePipeline::Pipeline",
     },
-    "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleFunctionB3FFD974": {
-      "DependsOn": [
-        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleFunctionServiceRoleDefaultPolicy28F66406",
-        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleFunctionServiceRoleD177D2D7",
-      ],
-      "Properties": {
-        "Code": {
-          "S3Bucket": "cdk-hnb659fds-assets-000000000000-us-east-1",
-          "S3Key": "REPLACED-GENERATED-NAME.zip",
-        },
-        "Description": "Custom resource provider to create service linked role",
-        "Handler": "index.handler",
-        "KmsKeyArn": {
-          "Ref": "SsmParameterValueacceleratorawsacceleratorinstallerkmskeyarnC96584B6F00A464EAD1953AFF4B05118Parameter",
-        },
-        "MemorySize": 512,
-        "Role": {
-          "Fn::GetAtt": [
-            "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleFunctionServiceRoleD177D2D7",
-            "Arn",
-          ],
-        },
-        "Runtime": "nodejs20.x",
-        "Timeout": 900,
-      },
-      "Type": "AWS::Lambda::Function",
-    },
-    "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleFunctionLogGroup28940852": {
-      "DeletionPolicy": "Delete",
-      "Properties": {
-        "KmsKeyId": {
-          "Ref": "SsmParameterValueacceleratorawsacceleratorinstallerkmskeyarnC96584B6F00A464EAD1953AFF4B05118Parameter",
-        },
-        "LogGroupName": {
-          "Fn::Join": [
-            "",
-            [
-              "/aws/lambda/",
-              {
-                "Ref": "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleFunctionB3FFD974",
-              },
-            ],
-          ],
-        },
-        "RetentionInDays": 7,
-      },
-      "Type": "AWS::Logs::LogGroup",
-      "UpdateReplacePolicy": "Delete",
-    },
-    "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleFunctionServiceRoleD177D2D7": {
-      "Metadata": {
-        "cdk_nag": {
-          "rules_to_suppress": [
-            {
-              "id": "AwsSolutions-IAM4",
-              "reason": "CodeStar Notification SLR needs managed policies.",
-            },
-          ],
-        },
-      },
-      "Properties": {
-        "AssumeRolePolicyDocument": {
-          "Statement": [
-            {
-              "Action": "sts:AssumeRole",
-              "Effect": "Allow",
-              "Principal": {
-                "Service": "lambda.amazonaws.com",
-              },
-            },
-          ],
-          "Version": "2012-10-17",
-        },
-        "ManagedPolicyArns": [
-          {
-            "Fn::Join": [
-              "",
-              [
-                "arn:",
-                {
-                  "Ref": "AWS::Partition",
-                },
-                ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
-              ],
-            ],
-          },
-        ],
-      },
-      "Type": "AWS::IAM::Role",
-    },
-    "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleFunctionServiceRoleDefaultPolicy28F66406": {
-      "Properties": {
-        "PolicyDocument": {
-          "Statement": [
-            {
-              "Action": [
-                "iam:CreateServiceLinkedRole",
-                "iam:GetRole",
-                "lambda:GetFunction",
-              ],
-              "Effect": "Allow",
-              "Resource": "*",
-            },
-          ],
-          "Version": "2012-10-17",
-        },
-        "PolicyName": "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleFunctionServiceRoleDefaultPolicy28F66406",
-        "Roles": [
-          {
-            "Ref": "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleFunctionServiceRoleD177D2D7",
-          },
-        ],
-      },
-      "Type": "AWS::IAM::Policy",
-    },
-    "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleProviderframeworkonEvent8BAA45B0": {
-      "DependsOn": [
-        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleProviderframeworkonEventServiceRoleDefaultPolicyD8319C53",
-        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleProviderframeworkonEventServiceRole4961EAEB",
-      ],
-      "Properties": {
-        "Code": {
-          "S3Bucket": "cdk-hnb659fds-assets-000000000000-us-east-1",
-          "S3Key": "REPLACED-GENERATED-NAME.zip",
-        },
-        "Description": "AWS CDK resource provider framework - onEvent (PipelineStackCustomS3Path/Pipeline/AWSServiceRoleForCodeStarNotifications/CreateServiceLinkedRoleProvider)",
-        "Environment": {
-          "Variables": {
-            "USER_ON_EVENT_FUNCTION_ARN": {
-              "Fn::GetAtt": [
-                "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleFunctionB3FFD974",
-                "Arn",
-              ],
-            },
-          },
-        },
-        "Handler": "framework.onEvent",
-        "LoggingConfig": {
-          "ApplicationLogLevel": "FATAL",
-          "LogFormat": "JSON",
-        },
-        "Role": {
-          "Fn::GetAtt": [
-            "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleProviderframeworkonEventServiceRole4961EAEB",
-            "Arn",
-          ],
-        },
-        "Runtime": "nodejs22.x",
-        "Timeout": 900,
-      },
-      "Type": "AWS::Lambda::Function",
-    },
-    "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleProviderframeworkonEventServiceRole4961EAEB": {
-      "Metadata": {
-        "cdk_nag": {
-          "rules_to_suppress": [
-            {
-              "id": "AwsSolutions-IAM4",
-              "reason": "CodeStar Notification SLR needs managed policies.",
-            },
-          ],
-        },
-      },
-      "Properties": {
-        "AssumeRolePolicyDocument": {
-          "Statement": [
-            {
-              "Action": "sts:AssumeRole",
-              "Effect": "Allow",
-              "Principal": {
-                "Service": "lambda.amazonaws.com",
-              },
-            },
-          ],
-          "Version": "2012-10-17",
-        },
-        "ManagedPolicyArns": [
-          {
-            "Fn::Join": [
-              "",
-              [
-                "arn:",
-                {
-                  "Ref": "AWS::Partition",
-                },
-                ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
-              ],
-            ],
-          },
-        ],
-      },
-      "Type": "AWS::IAM::Role",
-    },
-    "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleProviderframeworkonEventServiceRoleDefaultPolicyD8319C53": {
-      "Properties": {
-        "PolicyDocument": {
-          "Statement": [
-            {
-              "Action": "lambda:InvokeFunction",
-              "Effect": "Allow",
-              "Resource": [
-                {
-                  "Fn::GetAtt": [
-                    "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleFunctionB3FFD974",
-                    "Arn",
-                  ],
-                },
-                {
-                  "Fn::Join": [
-                    "",
-                    [
-                      {
-                        "Fn::GetAtt": [
-                          "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleFunctionB3FFD974",
-                          "Arn",
-                        ],
-                      },
-                      ":*",
-                    ],
-                  ],
-                },
-              ],
-            },
-            {
-              "Action": "lambda:GetFunction",
-              "Effect": "Allow",
-              "Resource": {
-                "Fn::GetAtt": [
-                  "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleFunctionB3FFD974",
-                  "Arn",
-                ],
-              },
-            },
-          ],
-          "Version": "2012-10-17",
-        },
-        "PolicyName": "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleProviderframeworkonEventServiceRoleDefaultPolicyD8319C53",
-        "Roles": [
-          {
-            "Ref": "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleProviderframeworkonEventServiceRole4961EAEB",
-          },
-        ],
-      },
-      "Type": "AWS::IAM::Policy",
-    },
-    "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleResource12D935F1": {
-      "DeletionPolicy": "Delete",
-      "DependsOn": [
-        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleFunctionLogGroup28940852",
-      ],
-      "Properties": {
-        "ServiceToken": {
-          "Fn::GetAtt": [
-            "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleProviderframeworkonEvent8BAA45B0",
-            "Arn",
-          ],
-        },
-        "description": "Allows AWS CodeStar Notifications to access Amazon CloudWatch Events on your behalf",
-        "roleName": "AWSServiceRoleForCodeStarNotifications",
-        "serviceName": "codestar-notifications.amazonaws.com",
-        "uuid": "REPLACED-UUID",
-      },
-      "Type": "Custom::CreateServiceLinkedRole",
-      "UpdateReplacePolicy": "Delete",
-    },
-    "PipelineAcceleratorFailedStatusTopic614002B3": {
-      "Properties": {
-        "DisplayName": "aws-accelerator-pipeline-failed-status-topic",
-        "KmsMasterKeyId": {
-          "Ref": "SsmParameterValueacceleratorawsacceleratorinstallerkmskeyarnC96584B6F00A464EAD1953AFF4B05118Parameter",
-        },
-        "TopicName": "aws-accelerator-pipeline-failed-status-topic",
-      },
-      "Type": "AWS::SNS::Topic",
-    },
-    "PipelineAcceleratorFailedStatusTopicPolicy903B57F7": {
-      "Properties": {
-        "PolicyDocument": {
-          "Statement": [
-            {
-              "Action": "sns:Publish",
-              "Effect": "Allow",
-              "Principal": {
-                "Service": "codestar-notifications.amazonaws.com",
-              },
-              "Resource": {
-                "Ref": "PipelineAcceleratorFailedStatusTopic614002B3",
-              },
-              "Sid": "0",
-            },
-          ],
-          "Version": "2012-10-17",
-        },
-        "Topics": [
-          {
-            "Ref": "PipelineAcceleratorFailedStatusTopic614002B3",
-          },
-        ],
-      },
-      "Type": "AWS::SNS::TopicPolicy",
-    },
     "PipelineAcceleratorPipelineFailureAlarm479BDCEA": {
       "Properties": {
         "AlarmDescription": "AWS Accelerator pipeline failure alarm, created by accelerator",
@@ -13131,7 +12170,7 @@ exports[`PipelineStack customS3Path > Construct(PipelineStack):  Snapshot Test 1
             "Name": "TopicName",
             "Value": {
               "Fn::GetAtt": [
-                "PipelineAcceleratorFailedStatusTopic614002B3",
+                "PipelinePipelineNotificationFailureTopicF006540A",
                 "TopicName",
               ],
             },
@@ -13146,136 +12185,6 @@ exports[`PipelineStack customS3Path > Construct(PipelineStack):  Snapshot Test 1
         "TreatMissingData": "notBreaching",
       },
       "Type": "AWS::CloudWatch::Alarm",
-    },
-    "PipelineAcceleratorPipelineFailureNotification5BE0EB21": {
-      "DependsOn": [
-        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleFunctionB3FFD974",
-        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleFunctionServiceRoleDefaultPolicy28F66406",
-        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleFunctionServiceRoleD177D2D7",
-        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleFunctionLogGroup28940852",
-        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleProviderframeworkonEvent8BAA45B0",
-        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleProviderframeworkonEventServiceRoleDefaultPolicyD8319C53",
-        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleProviderframeworkonEventServiceRole4961EAEB",
-        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleResource12D935F1",
-      ],
-      "Properties": {
-        "DetailType": "FULL",
-        "EventTypeIds": [
-          "codepipeline-pipeline-pipeline-execution-failed",
-        ],
-        "Name": "stomS3PathPipelineAcceleratorPipelineFailureNotificationB25CD5AE",
-        "Resource": {
-          "Fn::Join": [
-            "",
-            [
-              "arn:",
-              {
-                "Ref": "AWS::Partition",
-              },
-              ":codepipeline:us-east-1:000000000000:",
-              {
-                "Ref": "Pipeline8E4BFAC9",
-              },
-            ],
-          ],
-        },
-        "Targets": [
-          {
-            "TargetAddress": {
-              "Ref": "PipelineAcceleratorFailedStatusTopic614002B3",
-            },
-            "TargetType": "SNS",
-          },
-        ],
-      },
-      "Type": "AWS::CodeStarNotifications::NotificationRule",
-    },
-    "PipelineAcceleratorPipelineStatusNotification0FCF4387": {
-      "DependsOn": [
-        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleFunctionB3FFD974",
-        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleFunctionServiceRoleDefaultPolicy28F66406",
-        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleFunctionServiceRoleD177D2D7",
-        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleFunctionLogGroup28940852",
-        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleProviderframeworkonEvent8BAA45B0",
-        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleProviderframeworkonEventServiceRoleDefaultPolicyD8319C53",
-        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleProviderframeworkonEventServiceRole4961EAEB",
-        "PipelineAWSServiceRoleForCodeStarNotificationsCreateServiceLinkedRoleResource12D935F1",
-      ],
-      "Properties": {
-        "DetailType": "FULL",
-        "EventTypeIds": [
-          "codepipeline-pipeline-manual-approval-failed",
-          "codepipeline-pipeline-manual-approval-needed",
-          "codepipeline-pipeline-manual-approval-succeeded",
-          "codepipeline-pipeline-pipeline-execution-canceled",
-          "codepipeline-pipeline-pipeline-execution-failed",
-          "codepipeline-pipeline-pipeline-execution-resumed",
-          "codepipeline-pipeline-pipeline-execution-started",
-          "codepipeline-pipeline-pipeline-execution-succeeded",
-          "codepipeline-pipeline-pipeline-execution-superseded",
-        ],
-        "Name": "ustomS3PathPipelineAcceleratorPipelineStatusNotification92F57F1B",
-        "Resource": {
-          "Fn::Join": [
-            "",
-            [
-              "arn:",
-              {
-                "Ref": "AWS::Partition",
-              },
-              ":codepipeline:us-east-1:000000000000:",
-              {
-                "Ref": "Pipeline8E4BFAC9",
-              },
-            ],
-          ],
-        },
-        "Targets": [
-          {
-            "TargetAddress": {
-              "Ref": "PipelineAcceleratorStatusTopic2BD5793F",
-            },
-            "TargetType": "SNS",
-          },
-        ],
-      },
-      "Type": "AWS::CodeStarNotifications::NotificationRule",
-    },
-    "PipelineAcceleratorStatusTopic2BD5793F": {
-      "Properties": {
-        "DisplayName": "aws-accelerator-pipeline-status-topic",
-        "KmsMasterKeyId": {
-          "Ref": "SsmParameterValueacceleratorawsacceleratorinstallerkmskeyarnC96584B6F00A464EAD1953AFF4B05118Parameter",
-        },
-        "TopicName": "aws-accelerator-pipeline-status-topic",
-      },
-      "Type": "AWS::SNS::Topic",
-    },
-    "PipelineAcceleratorStatusTopicPolicy30BCED97": {
-      "Properties": {
-        "PolicyDocument": {
-          "Statement": [
-            {
-              "Action": "sns:Publish",
-              "Effect": "Allow",
-              "Principal": {
-                "Service": "codestar-notifications.amazonaws.com",
-              },
-              "Resource": {
-                "Ref": "PipelineAcceleratorStatusTopic2BD5793F",
-              },
-              "Sid": "0",
-            },
-          ],
-          "Version": "2012-10-17",
-        },
-        "Topics": [
-          {
-            "Ref": "PipelineAcceleratorStatusTopic2BD5793F",
-          },
-        ],
-      },
-      "Type": "AWS::SNS::TopicPolicy",
     },
     "PipelineConfigRepositoryE5225086": {
       "DeletionPolicy": "Retain",
@@ -13301,6 +12210,311 @@ exports[`PipelineStack customS3Path > Construct(PipelineStack):  Snapshot Test 1
         "TopicName": "aws-accelerator-pipeline-review-topic",
       },
       "Type": "AWS::SNS::Topic",
+    },
+    "PipelinePipelineNotificationApprovalEventRule0542E766": {
+      "Properties": {
+        "Description": {
+          "Fn::Join": [
+            "",
+            [
+              "Capture manual approval events for ",
+              {
+                "Ref": "Pipeline8E4BFAC9",
+              },
+            ],
+          ],
+        },
+        "EventPattern": {
+          "detail": {
+            "pipeline": [
+              {
+                "Ref": "Pipeline8E4BFAC9",
+              },
+            ],
+            "state": [
+              "STARTED",
+              "SUCCEEDED",
+              "FAILED",
+            ],
+            "type": {
+              "category": [
+                "Approval",
+              ],
+            },
+          },
+          "detail-type": [
+            "CodePipeline Action Execution State Change",
+          ],
+          "source": [
+            "aws.codepipeline",
+          ],
+        },
+        "State": "ENABLED",
+        "Targets": [
+          {
+            "Arn": {
+              "Ref": "PipelinePipelineNotificationStatusTopic81485964",
+            },
+            "Id": "Target0",
+            "InputTransformer": {
+              "InputPathsMap": {
+                "account": "$.account",
+                "detail-action": "$.detail.action",
+                "detail-execution-id": "$.detail.execution-id",
+                "detail-pipeline": "$.detail.pipeline",
+                "detail-stage": "$.detail.stage",
+                "detail-state": "$.detail.state",
+                "region": "$.region",
+                "time": "$.time",
+              },
+              "InputTemplate": ""Pipeline <detail-pipeline> - Action <detail-action> has <detail-state>"
+""
+"Stage: <detail-stage>"
+"Action: <detail-action>"
+"Execution ID: <detail-execution-id>"
+"Time: <time>"
+"Region: <region>"
+"Account: <account>"
+""
+"View pipeline: https://console.aws.amazon.com/codesuite/codepipeline/pipelines/<detail-pipeline>/view?region=<region>"
+"View execution: https://console.aws.amazon.com/codesuite/codepipeline/pipelines/<detail-pipeline>/executions/<detail-execution-id>/timeline?region=<region>"",
+            },
+          },
+        ],
+      },
+      "Type": "AWS::Events::Rule",
+    },
+    "PipelinePipelineNotificationFailureEventRule7F10782B": {
+      "Properties": {
+        "Description": {
+          "Fn::Join": [
+            "",
+            [
+              "Capture pipeline failure events for ",
+              {
+                "Ref": "Pipeline8E4BFAC9",
+              },
+            ],
+          ],
+        },
+        "EventPattern": {
+          "detail": {
+            "pipeline": [
+              {
+                "Ref": "Pipeline8E4BFAC9",
+              },
+            ],
+            "state": [
+              "FAILED",
+            ],
+          },
+          "detail-type": [
+            "CodePipeline Pipeline Execution State Change",
+          ],
+          "source": [
+            "aws.codepipeline",
+          ],
+        },
+        "State": "ENABLED",
+        "Targets": [
+          {
+            "Arn": {
+              "Ref": "PipelinePipelineNotificationFailureTopicF006540A",
+            },
+            "Id": "Target0",
+            "InputTransformer": {
+              "InputPathsMap": {
+                "account": "$.account",
+                "detail-execution-id": "$.detail.execution-id",
+                "detail-pipeline": "$.detail.pipeline",
+                "detail-state": "$.detail.state",
+                "region": "$.region",
+                "time": "$.time",
+              },
+              "InputTemplate": ""Pipeline <detail-pipeline> has <detail-state>"
+""
+"Execution ID: <detail-execution-id>"
+"Time: <time>"
+"Region: <region>"
+"Account: <account>"
+""
+"View pipeline: https://console.aws.amazon.com/codesuite/codepipeline/pipelines/<detail-pipeline>/view?region=<region>"
+"View execution: https://console.aws.amazon.com/codesuite/codepipeline/pipelines/<detail-pipeline>/executions/<detail-execution-id>/timeline?region=<region>"",
+            },
+          },
+        ],
+      },
+      "Type": "AWS::Events::Rule",
+    },
+    "PipelinePipelineNotificationFailureTopicF006540A": {
+      "Properties": {
+        "DisplayName": "aws-accelerator-pipeline-failure",
+        "KmsMasterKeyId": {
+          "Ref": "SsmParameterValueacceleratorawsacceleratorinstallerkmskeyarnC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+        "TopicName": "aws-accelerator-pipeline-failure",
+      },
+      "Type": "AWS::SNS::Topic",
+    },
+    "PipelinePipelineNotificationFailureTopicPolicy4628719D": {
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sns:Publish",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "events.amazonaws.com",
+              },
+              "Resource": {
+                "Ref": "PipelinePipelineNotificationFailureTopicF006540A",
+              },
+              "Sid": "0",
+            },
+            {
+              "Action": "sns:Publish",
+              "Condition": {
+                "StringEquals": {
+                  "aws:SourceAccount": "000000000000",
+                },
+              },
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "events.amazonaws.com",
+              },
+              "Resource": {
+                "Ref": "PipelinePipelineNotificationFailureTopicF006540A",
+              },
+              "Sid": "1",
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "Topics": [
+          {
+            "Ref": "PipelinePipelineNotificationFailureTopicF006540A",
+          },
+        ],
+      },
+      "Type": "AWS::SNS::TopicPolicy",
+    },
+    "PipelinePipelineNotificationStatusEventRuleA9A78523": {
+      "Properties": {
+        "Description": {
+          "Fn::Join": [
+            "",
+            [
+              "Capture pipeline status events for ",
+              {
+                "Ref": "Pipeline8E4BFAC9",
+              },
+            ],
+          ],
+        },
+        "EventPattern": {
+          "detail": {
+            "pipeline": [
+              {
+                "Ref": "Pipeline8E4BFAC9",
+              },
+            ],
+            "state": [
+              "STARTED",
+              "SUCCEEDED",
+              "RESUMED",
+              "SUPERSEDED",
+              "CANCELED",
+            ],
+          },
+          "detail-type": [
+            "CodePipeline Pipeline Execution State Change",
+          ],
+          "source": [
+            "aws.codepipeline",
+          ],
+        },
+        "State": "ENABLED",
+        "Targets": [
+          {
+            "Arn": {
+              "Ref": "PipelinePipelineNotificationStatusTopic81485964",
+            },
+            "Id": "Target0",
+            "InputTransformer": {
+              "InputPathsMap": {
+                "account": "$.account",
+                "detail-execution-id": "$.detail.execution-id",
+                "detail-pipeline": "$.detail.pipeline",
+                "detail-state": "$.detail.state",
+                "region": "$.region",
+                "time": "$.time",
+              },
+              "InputTemplate": ""Pipeline <detail-pipeline> has <detail-state>"
+""
+"Execution ID: <detail-execution-id>"
+"Time: <time>"
+"Region: <region>"
+"Account: <account>"
+""
+"View pipeline: https://console.aws.amazon.com/codesuite/codepipeline/pipelines/<detail-pipeline>/view?region=<region>"
+"View execution: https://console.aws.amazon.com/codesuite/codepipeline/pipelines/<detail-pipeline>/executions/<detail-execution-id>/timeline?region=<region>"",
+            },
+          },
+        ],
+      },
+      "Type": "AWS::Events::Rule",
+    },
+    "PipelinePipelineNotificationStatusTopic81485964": {
+      "Properties": {
+        "DisplayName": "aws-accelerator-pipeline-status",
+        "KmsMasterKeyId": {
+          "Ref": "SsmParameterValueacceleratorawsacceleratorinstallerkmskeyarnC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+        "TopicName": "aws-accelerator-pipeline-status",
+      },
+      "Type": "AWS::SNS::Topic",
+    },
+    "PipelinePipelineNotificationStatusTopicPolicyBBB6FD6B": {
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sns:Publish",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "events.amazonaws.com",
+              },
+              "Resource": {
+                "Ref": "PipelinePipelineNotificationStatusTopic81485964",
+              },
+              "Sid": "0",
+            },
+            {
+              "Action": "sns:Publish",
+              "Condition": {
+                "StringEquals": {
+                  "aws:SourceAccount": "000000000000",
+                },
+              },
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "events.amazonaws.com",
+              },
+              "Resource": {
+                "Ref": "PipelinePipelineNotificationStatusTopic81485964",
+              },
+              "Sid": "1",
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "Topics": [
+          {
+            "Ref": "PipelinePipelineNotificationStatusTopic81485964",
+          },
+        ],
+      },
+      "Type": "AWS::SNS::TopicPolicy",
     },
     "PipelinePipelineRole6D983AD5": {
       "Properties": {
@@ -13526,20 +12740,6 @@ exports[`PipelineStack customS3Path > Construct(PipelineStack):  Snapshot Test 1
               "Effect": "Allow",
               "Resource": {
                 "Ref": "SsmParameterValueacceleratorawsacceleratorinstallerkmskeyarnC96584B6F00A464EAD1953AFF4B05118Parameter",
-              },
-            },
-            {
-              "Action": "sns:Publish",
-              "Effect": "Allow",
-              "Resource": {
-                "Ref": "PipelineAcceleratorStatusTopic2BD5793F",
-              },
-            },
-            {
-              "Action": "sns:Publish",
-              "Effect": "Allow",
-              "Resource": {
-                "Ref": "PipelineAcceleratorFailedStatusTopic614002B3",
               },
             },
           ],

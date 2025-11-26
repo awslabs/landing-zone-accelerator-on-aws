@@ -19,7 +19,7 @@ import * as codepipeline_actions from 'aws-cdk-lib/aws-codepipeline-actions';
 import * as iam from 'aws-cdk-lib/aws-iam';
 import { Construct } from 'constructs';
 
-import { Bucket, BucketEncryptionType, ServiceLinkedRole } from '@aws-accelerator/constructs';
+import { Bucket, BucketEncryptionType, PipelineNotification } from '@aws-accelerator/constructs';
 import { AcceleratorStage } from './accelerator-stage';
 import * as config_repository from './config-repository';
 import { AcceleratorToolkitCommand } from './toolkit';
@@ -29,7 +29,6 @@ import { ControlTowerLandingZoneConfig } from '@aws-accelerator/config';
 import { version } from '../../../../package.json';
 export interface AcceleratorPipelineProps {
   readonly toolkitRole: cdk.aws_iam.Role;
-  readonly awsCodeStarSupportedRegions: string[];
   readonly sourceRepository: string;
   readonly sourceRepositoryOwner: string;
   readonly sourceRepositoryName: string;
@@ -1010,81 +1009,33 @@ export class AcceleratorPipeline extends Construct {
   }
 
   /**
-   * Enable pipeline notification for commercial partition and supported regions
+   * Enable pipeline notification using EventBridge
    */
   private enablePipelineNotification() {
     if (this.props.enableSingleAccountMode) {
       return;
     }
 
-    // We can Enable pipeline notification only for regions with AWS CodeStar being available
-    if (this.props.awsCodeStarSupportedRegions.includes(cdk.Stack.of(this).region)) {
-      const codeStarNotificationsRole = new ServiceLinkedRole(this, 'AWSServiceRoleForCodeStarNotifications', {
-        environmentEncryptionKmsKey: this.installerKey,
-        cloudWatchLogKmsKey: this.installerKey,
-        // specifying this as it will be overwritten with global retention in logging stack
-        cloudWatchLogRetentionInDays: 7,
-        awsServiceName: 'codestar-notifications.amazonaws.com',
-        description: 'Allows AWS CodeStar Notifications to access Amazon CloudWatch Events on your behalf',
-        roleName: 'AWSServiceRoleForCodeStarNotifications',
+    // Use the new PipelineNotification construct
+    const pipelineNotification = new PipelineNotification(this, 'PipelineNotification', {
+      pipeline: this.pipeline,
+      kmsKey: this.installerKey,
+      topicNamePrefix: this.props.qualifier ? this.props.qualifier : this.props.prefixes.snsTopicName,
+    });
+
+    // Create alarm on failure topic
+    pipelineNotification.failureTopic
+      .metricNumberOfMessagesPublished()
+      .createAlarm(this, 'AcceleratorPipelineFailureAlarm', {
+        threshold: 1,
+        evaluationPeriods: 1,
+        datapointsToAlarm: 1,
+        treatMissingData: cdk.aws_cloudwatch.TreatMissingData.NOT_BREACHING,
+        alarmName: this.props.qualifier
+          ? this.props.qualifier + '-pipeline-failed-alarm'
+          : `${this.props.prefixes.accelerator}FailedAlarm`,
+        alarmDescription: 'AWS Accelerator pipeline failure alarm, created by accelerator',
       });
-
-      this.pipeline.node.addDependency(codeStarNotificationsRole);
-
-      const acceleratorStatusTopic = new cdk.aws_sns.Topic(this, 'AcceleratorStatusTopic', {
-        topicName:
-          (this.props.qualifier ? this.props.qualifier : this.props.prefixes.snsTopicName) + '-pipeline-status-topic',
-        displayName:
-          (this.props.qualifier ? this.props.qualifier : this.props.prefixes.snsTopicName) + '-pipeline-status-topic',
-        masterKey: this.installerKey,
-      });
-
-      acceleratorStatusTopic.grantPublish(this.pipeline.role);
-
-      this.pipeline.notifyOn('AcceleratorPipelineStatusNotification', acceleratorStatusTopic, {
-        events: [
-          cdk.aws_codepipeline.PipelineNotificationEvents.MANUAL_APPROVAL_FAILED,
-          cdk.aws_codepipeline.PipelineNotificationEvents.MANUAL_APPROVAL_NEEDED,
-          cdk.aws_codepipeline.PipelineNotificationEvents.MANUAL_APPROVAL_SUCCEEDED,
-          cdk.aws_codepipeline.PipelineNotificationEvents.PIPELINE_EXECUTION_CANCELED,
-          cdk.aws_codepipeline.PipelineNotificationEvents.PIPELINE_EXECUTION_FAILED,
-          cdk.aws_codepipeline.PipelineNotificationEvents.PIPELINE_EXECUTION_RESUMED,
-          cdk.aws_codepipeline.PipelineNotificationEvents.PIPELINE_EXECUTION_STARTED,
-          cdk.aws_codepipeline.PipelineNotificationEvents.PIPELINE_EXECUTION_SUCCEEDED,
-          cdk.aws_codepipeline.PipelineNotificationEvents.PIPELINE_EXECUTION_SUPERSEDED,
-        ],
-      });
-
-      // Pipeline failure status topic and alarm
-      const acceleratorFailedStatusTopic = new cdk.aws_sns.Topic(this, 'AcceleratorFailedStatusTopic', {
-        topicName:
-          (this.props.qualifier ? this.props.qualifier : this.props.prefixes.snsTopicName) +
-          '-pipeline-failed-status-topic',
-        displayName:
-          (this.props.qualifier ? this.props.qualifier : this.props.prefixes.snsTopicName) +
-          '-pipeline-failed-status-topic',
-        masterKey: this.installerKey,
-      });
-
-      acceleratorFailedStatusTopic.grantPublish(this.pipeline.role);
-
-      this.pipeline.notifyOn('AcceleratorPipelineFailureNotification', acceleratorFailedStatusTopic, {
-        events: [cdk.aws_codepipeline.PipelineNotificationEvents.PIPELINE_EXECUTION_FAILED],
-      });
-
-      acceleratorFailedStatusTopic
-        .metricNumberOfMessagesPublished()
-        .createAlarm(this, 'AcceleratorPipelineFailureAlarm', {
-          threshold: 1,
-          evaluationPeriods: 1,
-          datapointsToAlarm: 1,
-          treatMissingData: cdk.aws_cloudwatch.TreatMissingData.NOT_BREACHING,
-          alarmName: this.props.qualifier
-            ? this.props.qualifier + '-pipeline-failed-alarm'
-            : `${this.props.prefixes.accelerator}FailedAlarm`,
-          alarmDescription: 'AWS Accelerator pipeline failure alarm, created by accelerator',
-        });
-    }
   }
 
   /**

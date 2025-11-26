@@ -3,14 +3,6 @@
 exports[`InstallerStack > Stack(installer):  Snapshot Test 1`] = `
 {
   "Conditions": {
-    "IsCommercialCondition": {
-      "Fn::Equals": [
-        {
-          "Ref": "AWS::Partition",
-        },
-        "aws",
-      ],
-    },
     "SolutionHelperAnonymousDataToAWS62E4FDE2": {
       "Fn::Equals": [
         {
@@ -1358,6 +1350,21 @@ exports[`InstallerStack > Stack(installer):  Snapshot Test 1`] = `
                 "kms:GenerateDataKey*",
                 "kms:DescribeKey",
               ],
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "events.amazonaws.com",
+              },
+              "Resource": "*",
+              "Sid": "Allow EventBridge service to use the encryption key",
+            },
+            {
+              "Action": [
+                "kms:Encrypt",
+                "kms:Decrypt",
+                "kms:ReEncrypt*",
+                "kms:GenerateDataKey*",
+                "kms:DescribeKey",
+              ],
               "Condition": {
                 "ArnLike": {
                   "kms:EncryptionContext:aws:logs:arn": {
@@ -1399,42 +1406,6 @@ exports[`InstallerStack > Stack(installer):  Snapshot Test 1`] = `
               },
               "Resource": "*",
               "Sid": "Allow Cloudwatch Logs service to use the encryption key",
-            },
-            {
-              "Fn::If": [
-                "IsCommercialCondition",
-                {
-                  "Action": [
-                    "kms:GenerateDataKey*",
-                    "kms:Decrypt",
-                  ],
-                  "Condition": {
-                    "StringEquals": {
-                      "kms:ViaService": {
-                        "Fn::Join": [
-                          "",
-                          [
-                            "sns.",
-                            {
-                              "Ref": "AWS::Region",
-                            },
-                            ".amazonaws.com",
-                          ],
-                        ],
-                      },
-                    },
-                  },
-                  "Effect": "Allow",
-                  "Principal": {
-                    "Service": "codestar-notifications.amazonaws.com",
-                  },
-                  "Resource": "*",
-                  "Sid": "KMS key access to codestar-notifications",
-                },
-                {
-                  "Ref": "AWS::NoValue",
-                },
-              ],
             },
           ],
         },
@@ -3725,14 +3696,6 @@ exports.handler = async function (event, context) {
 exports[`InstallerStack > Stack(installer):  Snapshot Test 2`] = `
 {
   "Conditions": {
-    "IsCommercialCondition": {
-      "Fn::Equals": [
-        {
-          "Ref": "AWS::Partition",
-        },
-        "aws",
-      ],
-    },
     "SolutionHelperAnonymousDataToAWS62E4FDE2": {
       "Fn::Equals": [
         {
@@ -5080,6 +5043,21 @@ exports[`InstallerStack > Stack(installer):  Snapshot Test 2`] = `
                 "kms:GenerateDataKey*",
                 "kms:DescribeKey",
               ],
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "events.amazonaws.com",
+              },
+              "Resource": "*",
+              "Sid": "Allow EventBridge service to use the encryption key",
+            },
+            {
+              "Action": [
+                "kms:Encrypt",
+                "kms:Decrypt",
+                "kms:ReEncrypt*",
+                "kms:GenerateDataKey*",
+                "kms:DescribeKey",
+              ],
               "Condition": {
                 "ArnLike": {
                   "kms:EncryptionContext:aws:logs:arn": {
@@ -5121,42 +5099,6 @@ exports[`InstallerStack > Stack(installer):  Snapshot Test 2`] = `
               },
               "Resource": "*",
               "Sid": "Allow Cloudwatch Logs service to use the encryption key",
-            },
-            {
-              "Fn::If": [
-                "IsCommercialCondition",
-                {
-                  "Action": [
-                    "kms:GenerateDataKey*",
-                    "kms:Decrypt",
-                  ],
-                  "Condition": {
-                    "StringEquals": {
-                      "kms:ViaService": {
-                        "Fn::Join": [
-                          "",
-                          [
-                            "sns.",
-                            {
-                              "Ref": "AWS::Region",
-                            },
-                            ".amazonaws.com",
-                          ],
-                        ],
-                      },
-                    },
-                  },
-                  "Effect": "Allow",
-                  "Principal": {
-                    "Service": "codestar-notifications.amazonaws.com",
-                  },
-                  "Resource": "*",
-                  "Sid": "KMS key access to codestar-notifications",
-                },
-                {
-                  "Ref": "AWS::NoValue",
-                },
-              ],
             },
           ],
         },
@@ -7437,14 +7379,6 @@ exports.handler = async function (event, context) {
 exports[`InstallerStack > Stack(installer):  Snapshot Test 3`] = `
 {
   "Conditions": {
-    "IsCommercialCondition": {
-      "Fn::Equals": [
-        {
-          "Ref": "AWS::Partition",
-        },
-        "aws",
-      ],
-    },
     "SolutionHelperAnonymousDataToAWS62E4FDE2": {
       "Fn::Equals": [
         {
@@ -8829,6 +8763,21 @@ exports[`InstallerStack > Stack(installer):  Snapshot Test 3`] = `
                 "kms:GenerateDataKey*",
                 "kms:DescribeKey",
               ],
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "events.amazonaws.com",
+              },
+              "Resource": "*",
+              "Sid": "Allow EventBridge service to use the encryption key",
+            },
+            {
+              "Action": [
+                "kms:Encrypt",
+                "kms:Decrypt",
+                "kms:ReEncrypt*",
+                "kms:GenerateDataKey*",
+                "kms:DescribeKey",
+              ],
               "Condition": {
                 "ArnLike": {
                   "kms:EncryptionContext:aws:logs:arn": {
@@ -8870,42 +8819,6 @@ exports[`InstallerStack > Stack(installer):  Snapshot Test 3`] = `
               },
               "Resource": "*",
               "Sid": "Allow Cloudwatch Logs service to use the encryption key",
-            },
-            {
-              "Fn::If": [
-                "IsCommercialCondition",
-                {
-                  "Action": [
-                    "kms:GenerateDataKey*",
-                    "kms:Decrypt",
-                  ],
-                  "Condition": {
-                    "StringEquals": {
-                      "kms:ViaService": {
-                        "Fn::Join": [
-                          "",
-                          [
-                            "sns.",
-                            {
-                              "Ref": "AWS::Region",
-                            },
-                            ".amazonaws.com",
-                          ],
-                        ],
-                      },
-                    },
-                  },
-                  "Effect": "Allow",
-                  "Principal": {
-                    "Service": "codestar-notifications.amazonaws.com",
-                  },
-                  "Resource": "*",
-                  "Sid": "KMS key access to codestar-notifications",
-                },
-                {
-                  "Ref": "AWS::NoValue",
-                },
-              ],
             },
           ],
         },
@@ -11198,14 +11111,6 @@ exports.handler = async function (event, context) {
 exports[`InstallerStack > Stack(installer):  Snapshot Test 4`] = `
 {
   "Conditions": {
-    "IsCommercialCondition": {
-      "Fn::Equals": [
-        {
-          "Ref": "AWS::Partition",
-        },
-        "aws",
-      ],
-    },
     "SolutionHelperAnonymousDataToAWS62E4FDE2": {
       "Fn::Equals": [
         {
@@ -12590,6 +12495,21 @@ exports[`InstallerStack > Stack(installer):  Snapshot Test 4`] = `
                 "kms:GenerateDataKey*",
                 "kms:DescribeKey",
               ],
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "events.amazonaws.com",
+              },
+              "Resource": "*",
+              "Sid": "Allow EventBridge service to use the encryption key",
+            },
+            {
+              "Action": [
+                "kms:Encrypt",
+                "kms:Decrypt",
+                "kms:ReEncrypt*",
+                "kms:GenerateDataKey*",
+                "kms:DescribeKey",
+              ],
               "Condition": {
                 "ArnLike": {
                   "kms:EncryptionContext:aws:logs:arn": {
@@ -12631,42 +12551,6 @@ exports[`InstallerStack > Stack(installer):  Snapshot Test 4`] = `
               },
               "Resource": "*",
               "Sid": "Allow Cloudwatch Logs service to use the encryption key",
-            },
-            {
-              "Fn::If": [
-                "IsCommercialCondition",
-                {
-                  "Action": [
-                    "kms:GenerateDataKey*",
-                    "kms:Decrypt",
-                  ],
-                  "Condition": {
-                    "StringEquals": {
-                      "kms:ViaService": {
-                        "Fn::Join": [
-                          "",
-                          [
-                            "sns.",
-                            {
-                              "Ref": "AWS::Region",
-                            },
-                            ".amazonaws.com",
-                          ],
-                        ],
-                      },
-                    },
-                  },
-                  "Effect": "Allow",
-                  "Principal": {
-                    "Service": "codestar-notifications.amazonaws.com",
-                  },
-                  "Resource": "*",
-                  "Sid": "KMS key access to codestar-notifications",
-                },
-                {
-                  "Ref": "AWS::NoValue",
-                },
-              ],
             },
           ],
         },
@@ -14949,14 +14833,6 @@ exports.handler = async function (event, context) {
 exports[`InstallerStack > Stack(installer):  Snapshot Test 5`] = `
 {
   "Conditions": {
-    "IsCommercialCondition": {
-      "Fn::Equals": [
-        {
-          "Ref": "AWS::Partition",
-        },
-        "aws",
-      ],
-    },
     "SolutionHelperAnonymousDataToAWS62E4FDE2": {
       "Fn::Equals": [
         {
@@ -16341,6 +16217,21 @@ exports[`InstallerStack > Stack(installer):  Snapshot Test 5`] = `
                 "kms:GenerateDataKey*",
                 "kms:DescribeKey",
               ],
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "events.amazonaws.com",
+              },
+              "Resource": "*",
+              "Sid": "Allow EventBridge service to use the encryption key",
+            },
+            {
+              "Action": [
+                "kms:Encrypt",
+                "kms:Decrypt",
+                "kms:ReEncrypt*",
+                "kms:GenerateDataKey*",
+                "kms:DescribeKey",
+              ],
               "Condition": {
                 "ArnLike": {
                   "kms:EncryptionContext:aws:logs:arn": {
@@ -16382,42 +16273,6 @@ exports[`InstallerStack > Stack(installer):  Snapshot Test 5`] = `
               },
               "Resource": "*",
               "Sid": "Allow Cloudwatch Logs service to use the encryption key",
-            },
-            {
-              "Fn::If": [
-                "IsCommercialCondition",
-                {
-                  "Action": [
-                    "kms:GenerateDataKey*",
-                    "kms:Decrypt",
-                  ],
-                  "Condition": {
-                    "StringEquals": {
-                      "kms:ViaService": {
-                        "Fn::Join": [
-                          "",
-                          [
-                            "sns.",
-                            {
-                              "Ref": "AWS::Region",
-                            },
-                            ".amazonaws.com",
-                          ],
-                        ],
-                      },
-                    },
-                  },
-                  "Effect": "Allow",
-                  "Principal": {
-                    "Service": "codestar-notifications.amazonaws.com",
-                  },
-                  "Resource": "*",
-                  "Sid": "KMS key access to codestar-notifications",
-                },
-                {
-                  "Ref": "AWS::NoValue",
-                },
-              ],
             },
           ],
         },
@@ -18705,14 +18560,6 @@ exports.handler = async function (event, context) {
 exports[`InstallerStack > Stack(installer):  Snapshot Test 6`] = `
 {
   "Conditions": {
-    "IsCommercialCondition": {
-      "Fn::Equals": [
-        {
-          "Ref": "AWS::Partition",
-        },
-        "aws",
-      ],
-    },
     "SolutionHelperAnonymousDataToAWS62E4FDE2": {
       "Fn::Equals": [
         {
@@ -20072,6 +19919,21 @@ exports[`InstallerStack > Stack(installer):  Snapshot Test 6`] = `
                 "kms:GenerateDataKey*",
                 "kms:DescribeKey",
               ],
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "events.amazonaws.com",
+              },
+              "Resource": "*",
+              "Sid": "Allow EventBridge service to use the encryption key",
+            },
+            {
+              "Action": [
+                "kms:Encrypt",
+                "kms:Decrypt",
+                "kms:ReEncrypt*",
+                "kms:GenerateDataKey*",
+                "kms:DescribeKey",
+              ],
               "Condition": {
                 "ArnLike": {
                   "kms:EncryptionContext:aws:logs:arn": {
@@ -20113,42 +19975,6 @@ exports[`InstallerStack > Stack(installer):  Snapshot Test 6`] = `
               },
               "Resource": "*",
               "Sid": "Allow Cloudwatch Logs service to use the encryption key",
-            },
-            {
-              "Fn::If": [
-                "IsCommercialCondition",
-                {
-                  "Action": [
-                    "kms:GenerateDataKey*",
-                    "kms:Decrypt",
-                  ],
-                  "Condition": {
-                    "StringEquals": {
-                      "kms:ViaService": {
-                        "Fn::Join": [
-                          "",
-                          [
-                            "sns.",
-                            {
-                              "Ref": "AWS::Region",
-                            },
-                            ".amazonaws.com",
-                          ],
-                        ],
-                      },
-                    },
-                  },
-                  "Effect": "Allow",
-                  "Principal": {
-                    "Service": "codestar-notifications.amazonaws.com",
-                  },
-                  "Resource": "*",
-                  "Sid": "KMS key access to codestar-notifications",
-                },
-                {
-                  "Ref": "AWS::NoValue",
-                },
-              ],
             },
           ],
         },
@@ -22436,14 +22262,6 @@ exports.handler = async function (event, context) {
 exports[`InstallerStack > Stack(installer):  Snapshot Test 7`] = `
 {
   "Conditions": {
-    "IsCommercialCondition": {
-      "Fn::Equals": [
-        {
-          "Ref": "AWS::Partition",
-        },
-        "aws",
-      ],
-    },
     "SolutionHelperAnonymousDataToAWS62E4FDE2": {
       "Fn::Equals": [
         {
@@ -23827,6 +23645,21 @@ exports[`InstallerStack > Stack(installer):  Snapshot Test 7`] = `
                 "kms:GenerateDataKey*",
                 "kms:DescribeKey",
               ],
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "events.amazonaws.com",
+              },
+              "Resource": "*",
+              "Sid": "Allow EventBridge service to use the encryption key",
+            },
+            {
+              "Action": [
+                "kms:Encrypt",
+                "kms:Decrypt",
+                "kms:ReEncrypt*",
+                "kms:GenerateDataKey*",
+                "kms:DescribeKey",
+              ],
               "Condition": {
                 "ArnLike": {
                   "kms:EncryptionContext:aws:logs:arn": {
@@ -23868,42 +23701,6 @@ exports[`InstallerStack > Stack(installer):  Snapshot Test 7`] = `
               },
               "Resource": "*",
               "Sid": "Allow Cloudwatch Logs service to use the encryption key",
-            },
-            {
-              "Fn::If": [
-                "IsCommercialCondition",
-                {
-                  "Action": [
-                    "kms:GenerateDataKey*",
-                    "kms:Decrypt",
-                  ],
-                  "Condition": {
-                    "StringEquals": {
-                      "kms:ViaService": {
-                        "Fn::Join": [
-                          "",
-                          [
-                            "sns.",
-                            {
-                              "Ref": "AWS::Region",
-                            },
-                            ".amazonaws.com",
-                          ],
-                        ],
-                      },
-                    },
-                  },
-                  "Effect": "Allow",
-                  "Principal": {
-                    "Service": "codestar-notifications.amazonaws.com",
-                  },
-                  "Resource": "*",
-                  "Sid": "KMS key access to codestar-notifications",
-                },
-                {
-                  "Ref": "AWS::NoValue",
-                },
-              ],
             },
           ],
         },
@@ -26542,14 +26339,6 @@ exports.handler = async function (event, context) {
 exports[`InstallerStack > Stack(installer):  Snapshot Test 8`] = `
 {
   "Conditions": {
-    "IsCommercialCondition": {
-      "Fn::Equals": [
-        {
-          "Ref": "AWS::Partition",
-        },
-        "aws",
-      ],
-    },
     "SolutionHelperAnonymousDataToAWS62E4FDE2": {
       "Fn::Equals": [
         {
@@ -27948,6 +27737,21 @@ exports[`InstallerStack > Stack(installer):  Snapshot Test 8`] = `
                 "kms:GenerateDataKey*",
                 "kms:DescribeKey",
               ],
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "events.amazonaws.com",
+              },
+              "Resource": "*",
+              "Sid": "Allow EventBridge service to use the encryption key",
+            },
+            {
+              "Action": [
+                "kms:Encrypt",
+                "kms:Decrypt",
+                "kms:ReEncrypt*",
+                "kms:GenerateDataKey*",
+                "kms:DescribeKey",
+              ],
               "Condition": {
                 "ArnLike": {
                   "kms:EncryptionContext:aws:logs:arn": {
@@ -27989,42 +27793,6 @@ exports[`InstallerStack > Stack(installer):  Snapshot Test 8`] = `
               },
               "Resource": "*",
               "Sid": "Allow Cloudwatch Logs service to use the encryption key",
-            },
-            {
-              "Fn::If": [
-                "IsCommercialCondition",
-                {
-                  "Action": [
-                    "kms:GenerateDataKey*",
-                    "kms:Decrypt",
-                  ],
-                  "Condition": {
-                    "StringEquals": {
-                      "kms:ViaService": {
-                        "Fn::Join": [
-                          "",
-                          [
-                            "sns.",
-                            {
-                              "Ref": "AWS::Region",
-                            },
-                            ".amazonaws.com",
-                          ],
-                        ],
-                      },
-                    },
-                  },
-                  "Effect": "Allow",
-                  "Principal": {
-                    "Service": "codestar-notifications.amazonaws.com",
-                  },
-                  "Resource": "*",
-                  "Sid": "KMS key access to codestar-notifications",
-                },
-                {
-                  "Ref": "AWS::NoValue",
-                },
-              ],
             },
           ],
         },
@@ -30697,14 +30465,6 @@ exports.handler = async function (event, context) {
 exports[`InstallerStack > Stack(installer):  Snapshot Test 9`] = `
 {
   "Conditions": {
-    "IsCommercialCondition": {
-      "Fn::Equals": [
-        {
-          "Ref": "AWS::Partition",
-        },
-        "aws",
-      ],
-    },
     "SolutionHelperAnonymousDataToAWS62E4FDE2": {
       "Fn::Equals": [
         {
@@ -32100,6 +31860,21 @@ exports[`InstallerStack > Stack(installer):  Snapshot Test 9`] = `
                 "kms:GenerateDataKey*",
                 "kms:DescribeKey",
               ],
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "events.amazonaws.com",
+              },
+              "Resource": "*",
+              "Sid": "Allow EventBridge service to use the encryption key",
+            },
+            {
+              "Action": [
+                "kms:Encrypt",
+                "kms:Decrypt",
+                "kms:ReEncrypt*",
+                "kms:GenerateDataKey*",
+                "kms:DescribeKey",
+              ],
               "Condition": {
                 "ArnLike": {
                   "kms:EncryptionContext:aws:logs:arn": {
@@ -32141,42 +31916,6 @@ exports[`InstallerStack > Stack(installer):  Snapshot Test 9`] = `
               },
               "Resource": "*",
               "Sid": "Allow Cloudwatch Logs service to use the encryption key",
-            },
-            {
-              "Fn::If": [
-                "IsCommercialCondition",
-                {
-                  "Action": [
-                    "kms:GenerateDataKey*",
-                    "kms:Decrypt",
-                  ],
-                  "Condition": {
-                    "StringEquals": {
-                      "kms:ViaService": {
-                        "Fn::Join": [
-                          "",
-                          [
-                            "sns.",
-                            {
-                              "Ref": "AWS::Region",
-                            },
-                            ".amazonaws.com",
-                          ],
-                        ],
-                      },
-                    },
-                  },
-                  "Effect": "Allow",
-                  "Principal": {
-                    "Service": "codestar-notifications.amazonaws.com",
-                  },
-                  "Resource": "*",
-                  "Sid": "KMS key access to codestar-notifications",
-                },
-                {
-                  "Ref": "AWS::NoValue",
-                },
-              ],
             },
           ],
         },
