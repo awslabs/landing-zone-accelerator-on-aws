@@ -374,7 +374,7 @@ export class OrganizationsStack extends AcceleratorStack {
         s3Bucket: reportBucket.getS3Bucket(),
         s3Prefix: `${this.stackProperties.globalConfig.reports.costAndUsageReport.s3Prefix}/${
           cdk.Stack.of(this).account
-        }/`,
+        }`,
         s3Region: cdk.Stack.of(this).region,
         timeUnit: this.stackProperties.globalConfig.reports.costAndUsageReport.timeUnit,
         additionalArtifacts: this.stackProperties.globalConfig.reports.costAndUsageReport.additionalArtifacts,
