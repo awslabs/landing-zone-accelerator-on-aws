@@ -102,4 +102,23 @@ import { AcceleratorToolkit } from './lib/toolkit';
     console.log(err.message);
     process.exit(1);
   });
+
+  // Run diff after synth if synth command was executed
+  if (commands[0] === 'synth' && stage) {
+    await Accelerator.run({
+      command: 'diff',
+      configDirPath,
+      stage,
+      account,
+      region,
+      partition,
+      app,
+      caBundlePath,
+      proxyAddress,
+      enableSingleAccountMode,
+    }).catch(function (err) {
+      console.log(err.message);
+      process.exit(1);
+    });
+  }
 })();

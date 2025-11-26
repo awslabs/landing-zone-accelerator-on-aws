@@ -500,7 +500,6 @@ export class AcceleratorPipeline extends Construct {
                     touch full-synth-false.txt;
                   fi
                   if [ "\${ACCELERATOR_ENABLE_APPROVAL_STAGE}" = "Yes" ] && [ "$ACCELERATOR_STAGE" != "bootstrap" ]; then
-                    set -e && yarn run ts-node --transpile-only cdk.ts diff --stage $ACCELERATOR_STAGE --config-dir $CODEBUILD_SRC_DIR_Config --partition ${cdk.Aws.PARTITION};
                     tar -czf diff_cdk_out_$ARCHIVE_NAME -C cdk.out .
                     find cdk.out -type f -name "*.diff" -print0 | tar --transform='s|.*/||' -czf diff_$ARCHIVE_NAME --null -T -
                     aws s3 cp diff_$ARCHIVE_NAME $DIFFS_DIR/$CODEPIPELINE_EXECUTION_ID/
