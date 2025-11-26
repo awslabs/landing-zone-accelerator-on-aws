@@ -86,7 +86,13 @@ export class PutSsmParameter extends Construct {
     policyStatements.push({
       Sid: 'SsmPutParameterActions',
       Effect: 'Allow',
-      Action: ['ssm:DeleteParameter', 'ssm:PutParameter', 'ssm:AddTagsToResource', 'ssm:RemoveTagsFromResource'],
+      Action: [
+        'ssm:DeleteParameter',
+        'ssm:PutParameter',
+        'ssm:GetParameters',
+        'ssm:AddTagsToResource',
+        'ssm:RemoveTagsFromResource',
+      ],
       Resource: ['*'],
     });
 

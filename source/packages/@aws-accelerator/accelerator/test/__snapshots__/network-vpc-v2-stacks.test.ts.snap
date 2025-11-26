@@ -225,6 +225,7 @@ exports[`NetworkVpcV2Stacks > Construct(LbStack-Network-us-east-1-Network-Second
                   "Action": [
                     "ssm:DeleteParameter",
                     "ssm:PutParameter",
+                    "ssm:GetParameters",
                     "ssm:AddTagsToResource",
                     "ssm:RemoveTagsFromResource",
                   ],
@@ -3213,6 +3214,7 @@ exports[`NetworkVpcV2Stacks > Construct(SubnetShareStack-Network-us-east-1-Netwo
                   "Action": [
                     "ssm:DeleteParameter",
                     "ssm:PutParameter",
+                    "ssm:GetParameters",
                     "ssm:AddTagsToResource",
                     "ssm:RemoveTagsFromResource",
                   ],

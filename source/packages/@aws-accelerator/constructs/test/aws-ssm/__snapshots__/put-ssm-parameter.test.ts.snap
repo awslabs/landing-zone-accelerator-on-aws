@@ -85,6 +85,7 @@ exports[`SsmParameter > Construct(SsmParameter):  Snapshot Test 1`] = `
                   "Action": [
                     "ssm:DeleteParameter",
                     "ssm:PutParameter",
+                    "ssm:GetParameters",
                     "ssm:AddTagsToResource",
                     "ssm:RemoveTagsFromResource",
                   ],

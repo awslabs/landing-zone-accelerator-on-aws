@@ -2068,6 +2068,7 @@ exports[`NetworkAssociationsStack > Construct(NetworkAssociationsStack):  Snapsh
                   "Action": [
                     "ssm:DeleteParameter",
                     "ssm:PutParameter",
+                    "ssm:GetParameters",
                     "ssm:AddTagsToResource",
                     "ssm:RemoveTagsFromResource",
                   ],
@@ -9649,6 +9650,7 @@ catch {
                   "Action": [
                     "ssm:DeleteParameter",
                     "ssm:PutParameter",
+                    "ssm:GetParameters",
                     "ssm:AddTagsToResource",
                     "ssm:RemoveTagsFromResource",
                   ],
@@ -13997,6 +13999,7 @@ exports[`NetworkAssociationsStack > Construct(NetworkAssociationsStack):  Snapsh
                   "Action": [
                     "ssm:DeleteParameter",
                     "ssm:PutParameter",
+                    "ssm:GetParameters",
                     "ssm:AddTagsToResource",
                     "ssm:RemoveTagsFromResource",
                   ],
@@ -15186,6 +15189,7 @@ exports[`NetworkAssociationsStack > Construct(NetworkAssociationsStack):  Snapsh
                   "Action": [
                     "ssm:DeleteParameter",
                     "ssm:PutParameter",
+                    "ssm:GetParameters",
                     "ssm:AddTagsToResource",
                     "ssm:RemoveTagsFromResource",
                   ],
@@ -16718,6 +16722,7 @@ exports[`NetworkAssociationsStack > Construct(NetworkAssociationsStack):  Snapsh
                   "Action": [
                     "ssm:DeleteParameter",
                     "ssm:PutParameter",
+                    "ssm:GetParameters",
                     "ssm:AddTagsToResource",
                     "ssm:RemoveTagsFromResource",
                   ],
@@ -17709,6 +17714,7 @@ exports[`NetworkAssociationsStack > Construct(NetworkAssociationsStack):  Snapsh
                   "Action": [
                     "ssm:DeleteParameter",
                     "ssm:PutParameter",
+                    "ssm:GetParameters",
                     "ssm:AddTagsToResource",
                     "ssm:RemoveTagsFromResource",
                   ],
@@ -18916,6 +18922,7 @@ exports[`NetworkAssociationsStack > Construct(NetworkAssociationsStack):  Snapsh
                   "Action": [
                     "ssm:DeleteParameter",
                     "ssm:PutParameter",
+                    "ssm:GetParameters",
                     "ssm:AddTagsToResource",
                     "ssm:RemoveTagsFromResource",
                   ],
@@ -19907,6 +19914,7 @@ exports[`NetworkAssociationsStack > Construct(NetworkAssociationsStack):  Snapsh
                   "Action": [
                     "ssm:DeleteParameter",
                     "ssm:PutParameter",
+                    "ssm:GetParameters",
                     "ssm:AddTagsToResource",
                     "ssm:RemoveTagsFromResource",
                   ],
@@ -21465,6 +21473,7 @@ exports[`NoVpcFlowLogStack > Construct(NetworkAssociationsStack):  Snapshot Test
                   "Action": [
                     "ssm:DeleteParameter",
                     "ssm:PutParameter",
+                    "ssm:GetParameters",
                     "ssm:AddTagsToResource",
                     "ssm:RemoveTagsFromResource",
                   ],
