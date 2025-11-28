@@ -12,11 +12,12 @@
  */
 
 import * as cdk from 'aws-cdk-lib';
+import { describe } from 'vitest';
 import { Bucket, BucketEncryptionType, CentralLogsBucket } from '@aws-accelerator/constructs';
 import { snapShotTest } from '../snapshot-test';
 
 const testNamePrefix = 'Construct(CentralLogsBucket): ';
-const organizationId = 'acceleratorOrg';
+const organizationId = 'o-1234567890';
 
 //Initialize stack for snapshot test and resource configuration test
 const stack = new cdk.Stack();

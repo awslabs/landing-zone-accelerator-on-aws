@@ -14,6 +14,7 @@
 import * as cdk from 'aws-cdk-lib';
 import { AcceleratorMetadata } from '../../lib/aws-accelerator/get-accelerator-metadata';
 import { snapShotTest } from '../snapshot-test';
+import { describe } from 'vitest';
 
 const testNamePrefix = 'Construct(AcceleratorMetadata): ';
 
@@ -35,6 +36,7 @@ new AcceleratorMetadata(stack, 'AcceleratorMetadata', {
   globalRegion: 'us-east-1',
   configRepositoryLocation: 'codecommit',
   configBucketName: 'aws-accelerator-config-111111111111-us-east-1',
+  secureBucketName: 'aws-accelerator-pipeline-111111111111-us-east-1',
   installerStackName: 'AWSAccelerator-InstallerStack',
   accountOuConfigTableParameterPath: '/testPath',
   accountOuConfigTableArnParameterPath: '/testArnPath',

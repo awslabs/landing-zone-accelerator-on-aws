@@ -22,7 +22,7 @@ import {
   UserConfig,
   UserSetConfig,
 } from '@aws-accelerator/config';
-import { beforeEach, describe, expect, jest, test } from '@jest/globals';
+import { beforeEach, describe, expect, vi, test } from 'vitest';
 import * as cdk from 'aws-cdk-lib';
 import { Match, Template } from 'aws-cdk-lib/assertions';
 import { AcceleratorStackProps } from '../../lib/stacks/accelerator-stack';
@@ -33,11 +33,11 @@ let app: cdk.App;
 let operationsStack: OperationsStack;
 
 beforeEach(() => {
-  jest.resetAllMocks();
-  jest.spyOn(OperationsStack.prototype, 'getCentralLogBucketName').mockImplementation(() => 'unitTestLogBucket');
-  jest.spyOn(OperationsStack.prototype, 'getSsmPath').mockImplementation(() => '/test/ssm-path/');
-  jest.spyOn(OperationsStack.prototype, 'getAcceleratorKey').mockImplementation(() => undefined);
-  jest.spyOn(OperationsStack.prototype, 'isIncluded').mockImplementation(() => true);
+  vi.clearAllMocks();
+  vi.spyOn(OperationsStack.prototype, 'getCentralLogBucketName').mockImplementation(() => 'unitTestLogBucket');
+  vi.spyOn(OperationsStack.prototype, 'getSsmPath').mockImplementation(() => '/test/ssm-path/');
+  vi.spyOn(OperationsStack.prototype, 'getAcceleratorKey').mockImplementation(() => undefined);
+  vi.spyOn(OperationsStack.prototype, 'isIncluded').mockImplementation(() => true);
 
   app = new cdk.App();
   const props = createAcceleratorStackProps();

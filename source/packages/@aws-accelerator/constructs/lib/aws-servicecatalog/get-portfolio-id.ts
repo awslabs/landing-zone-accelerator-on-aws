@@ -15,8 +15,7 @@ import * as cdk from 'aws-cdk-lib';
 import { v4 as uuidv4 } from 'uuid';
 import { Construct } from 'constructs';
 import { CUSTOM_RESOURCE_PROVIDER_RUNTIME } from '@aws-accelerator/utils/lib/lambda';
-
-const path = require('path');
+import * as path from 'path';
 
 /**
  * Get the PortfolioId from servicecatalog

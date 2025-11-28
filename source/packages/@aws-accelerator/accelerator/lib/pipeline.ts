@@ -24,9 +24,8 @@ import { AcceleratorStage } from './accelerator-stage';
 import * as config_repository from './config-repository';
 import { AcceleratorToolkitCommand } from './toolkit';
 import { Repository } from '@aws-cdk-extensions/cdk-extensions';
-import { CONTROL_TOWER_LANDING_ZONE_VERSION } from '@aws-accelerator/utils/lib/control-tower';
+import { CONTROL_TOWER_LANDING_ZONE_VERSION, getGlobalRegion, getNodeVersion } from '@aws-accelerator/utils';
 import { ControlTowerLandingZoneConfig } from '@aws-accelerator/config';
-import { getNodeVersion } from '@aws-accelerator/utils/lib/common-functions';
 import { version } from '../../../../package.json';
 export interface AcceleratorPipelineProps {
   readonly toolkitRole: cdk.aws_iam.Role;
@@ -387,6 +386,20 @@ export class AcceleratorPipeline extends Construct {
           }),
         ],
       });
+
+      // create cloudformation output for s3 config source
+      new cdk.CfnOutput(this, 'ConfigRepositoryS3Source', {
+        value: s3ConfigRepository.s3UrlForObject('default/aws-accelerator-config.zip'),
+        description:
+          'S3 location of generated default LZA configuration files. These files represent an LZA with no resources configured and should be used for new installations only.',
+      });
+
+      // create cloudformation output for s3 config destination
+      new cdk.CfnOutput(this, 'ConfigRepositoryS3Destination', {
+        value: s3ConfigRepository.s3UrlForObject('zipped/aws-accelerator-config.zip'),
+        description:
+          'S3 location from which the LZA pipeline retrieves LZA configuration files. Customers will upload updated configuration files to this path to be processed by the LZA.',
+      });
     } else if (this.props.configRepositoryLocation === 'codeconnection' && this.props.codeconnectionArn !== '') {
       this.pipeline.addStage({
         stageName: 'Source',
@@ -405,7 +418,7 @@ export class AcceleratorPipeline extends Construct {
       });
     } else {
       const configRepositoryBranchName = this.props.useExistingConfigRepo
-        ? this.props.configRepositoryBranchName ?? 'main'
+        ? (this.props.configRepositoryBranchName ?? 'main')
         : 'main';
       const codecommitConfigRepository = this.getCodeCommitConfigRepository(configRepositoryBranchName);
       this.pipeline.addStage({
@@ -424,6 +437,7 @@ export class AcceleratorPipeline extends Construct {
         ],
       });
     }
+    const globalRegion = getGlobalRegion(this.props.partition);
 
     /**
      * Toolkit CodeBuild project is used to run all Accelerator stages, including diff
@@ -457,21 +471,12 @@ export class AcceleratorPipeline extends Construct {
           build: {
             commands: [
               'env',
-              `if [ "prepare" = "\${ACCELERATOR_STAGE}" ]; then 
-                cd source;
-                set -e && LOG_LEVEL=info yarn validate-config $CODEBUILD_SRC_DIR_Config;
-                export PACKAGE_VERSION=$(cat package.json | grep version | head -1 | awk -F: '{ print $2 }' | sed 's/[",]//g' | tr -d '[:space:]');
-                if [ "$ACCELERATOR_CHECK_VERSION" = "yes" ]; then
-                  if [ "$PACKAGE_VERSION" != "$ACCELERATOR_PIPELINE_VERSION" ]; then
-                    echo "ERROR: Accelerator package version in Source does not match currently installed LZA version. Please ensure that the Installer stack has been updated prior to updating the Source code in CodePipeline."
-                    exit 1
-                  fi
-                fi
-              fi`,
-              'cd $WORK_DIR',
+              `"\${WORK_DIR}/scripts/prepare-stage.sh"`,
+              `cd $WORK_DIR;`,
               `RUNNER_ARGS="--partition ${cdk.Aws.PARTITION} --region ${cdk.Aws.REGION} --config-dir $CODEBUILD_SRC_DIR_Config --stage $ACCELERATOR_STAGE --prefix ${props.prefixes.accelerator}"`,
               `if ${this.props.useExistingRoles}; then RUNNER_ARGS="$RUNNER_ARGS --use-existing-roles"; fi`,
-              `set -e && yarn run ts-node ../modules/bin/runner.ts $RUNNER_ARGS`,
+              `set -e && yarn run ts-node ../modules/bin/runner.ts $RUNNER_ARGS;`,
+              `set -e && ./scripts/bootstrap_management_before_prepare.sh ${globalRegion};`,
               `if [ "\${ACCELERATOR_STAGE}" = "pre-approval" ]; then
                 mkdir rawDiff;
                 cd rawDiff;
@@ -479,17 +484,16 @@ export class AcceleratorPipeline extends Construct {
                 for file in ./*.tgz; do tar -xf "$file" -C .; done;
                 for file in ./*.diff; do cat "$file"; done;
               fi`,
-              `if [ "prepare" = "\${ACCELERATOR_STAGE}" ]; then set -e && yarn run ts-node  ./lib/prerequisites.ts --config-dir $CODEBUILD_SRC_DIR_Config --partition ${cdk.Aws.PARTITION} --minimal; fi`,
               'export FULL_SYNTH="true"',
               'if [ $ASEA_MAPPING_BUCKET ]; then aws s3api head-object --bucket $ASEA_MAPPING_BUCKET --key $ASEA_MAPPING_FILE >/dev/null 2>&1 || export FULL_SYNTH="false"; fi;',
               `if [ "$ACCELERATOR_STAGE" != "pre-approval" ]; then
                 if [ "\${CDK_OPTIONS}" = "bootstrap" ]; then
                   if [ $FULL_SYNTH = "true" ]; then 
-                    set -e && yarn run ts-node --transpile-only cdk.ts synth --stage $ACCELERATOR_STAGE --require-approval never --config-dir $CODEBUILD_SRC_DIR_Config --partition ${cdk.Aws.PARTITION};
+                    set -e && yarn run ts-node --transpile-only cdk.ts synth --stage $ACCELERATOR_STAGE --config-dir $CODEBUILD_SRC_DIR_Config --partition ${cdk.Aws.PARTITION};
                   fi
                   if [ "\${ACCELERATOR_STAGE}" = "bootstrap" ]; then
-                    yarn run ts-node --transpile-only cdk.ts synth --stage $ACCELERATOR_STAGE --require-approval never --config-dir $CODEBUILD_SRC_DIR_Config --partition ${cdk.Aws.PARTITION};
-                    yarn run ts-node --transpile-only cdk.ts $CDK_OPTIONS --require-approval never --config-dir $CODEBUILD_SRC_DIR_Config --partition ${cdk.Aws.PARTITION} --app cdk.out;
+                    yarn run ts-node --transpile-only cdk.ts synth --stage $ACCELERATOR_STAGE --config-dir $CODEBUILD_SRC_DIR_Config --partition ${cdk.Aws.PARTITION};
+                    yarn run ts-node --transpile-only cdk.ts $CDK_OPTIONS --config-dir $CODEBUILD_SRC_DIR_Config --partition ${cdk.Aws.PARTITION};
                   fi
                   if [ $FULL_SYNTH = "true" ]; then
                     set -e && tar -czf cf_$ARCHIVE_NAME -C cdk.out .;
@@ -497,7 +501,7 @@ export class AcceleratorPipeline extends Construct {
                     touch full-synth-false.txt;
                   fi
                   if [ "\${ACCELERATOR_ENABLE_APPROVAL_STAGE}" = "Yes" ] && [ "$ACCELERATOR_STAGE" != "bootstrap" ]; then
-                    set -e && yarn run ts-node --transpile-only cdk.ts diff --stage $ACCELERATOR_STAGE --require-approval never --config-dir $CODEBUILD_SRC_DIR_Config --partition ${cdk.Aws.PARTITION} --app cdk.out;
+                    set -e && yarn run ts-node --transpile-only cdk.ts diff --stage $ACCELERATOR_STAGE --config-dir $CODEBUILD_SRC_DIR_Config --partition ${cdk.Aws.PARTITION};
                     tar -czf diff_cdk_out_$ARCHIVE_NAME -C cdk.out .
                     find cdk.out -type f -name "*.diff" -print0 | tar --transform='s|.*/||' -czf diff_$ARCHIVE_NAME --null -T -
                     aws s3 cp diff_$ARCHIVE_NAME $DIFFS_DIR/$CODEPIPELINE_EXECUTION_ID/
@@ -508,22 +512,11 @@ export class AcceleratorPipeline extends Construct {
                      mkdir -p cdk.out
                      tar -xzf $ARTIFACTS/cf_$ARCHIVE_NAME -C cdk.out;
                  else
-                    set -e && yarn run ts-node --transpile-only cdk.ts synth --stage $ACCELERATOR_STAGE --require-approval never --config-dir $CODEBUILD_SRC_DIR_Config --partition ${cdk.Aws.PARTITION};
+                    set -e && yarn run ts-node --transpile-only cdk.ts synth --stage $ACCELERATOR_STAGE --config-dir $CODEBUILD_SRC_DIR_Config --partition ${cdk.Aws.PARTITION};
                  fi
-                set -e && yarn run ts-node --transpile-only cdk.ts $CDK_OPTIONS --require-approval never --config-dir $CODEBUILD_SRC_DIR_Config --partition ${cdk.Aws.PARTITION} --app cdk.out;
+                set -e && yarn run ts-node --transpile-only cdk.ts $CDK_OPTIONS --config-dir $CODEBUILD_SRC_DIR_Config --partition ${cdk.Aws.PARTITION};
                 fi
                fi`,
-              `if [ "prepare" = "\${ACCELERATOR_STAGE}" ]; then 
-                set -e
-                yarn run ts-node ./lib/prerequisites.ts --config-dir $CODEBUILD_SRC_DIR_Config --partition ${
-                  cdk.Aws.PARTITION
-                }
-                yarn run ts-node ../lza-modules/bin/runner.ts --module account-alias --partition ${
-                  cdk.Aws.PARTITION
-                } --use-existing-role ${
-                this.props.useExistingRoles ? 'Yes' : 'No'
-              } --config-dir $CODEBUILD_SRC_DIR_Config
-              fi`,
             ],
           },
         },
@@ -613,10 +606,6 @@ export class AcceleratorPipeline extends Construct {
             type: codebuild.BuildEnvironmentVariableType.PLAINTEXT,
             value: process.env['CONFIG_REPOSITORY_LOCATION'] ?? 'codecommit',
           },
-          ACCELERATOR_SKIP_PREREQUISITES: {
-            type: codebuild.BuildEnvironmentVariableType.PLAINTEXT,
-            value: 'true',
-          },
           ACCELERATOR_ENABLE_APPROVAL_STAGE: {
             type: codebuild.BuildEnvironmentVariableType.PLAINTEXT,
             value: props.enableApprovalStage ? 'Yes' : 'No',
@@ -632,6 +621,18 @@ export class AcceleratorPipeline extends Construct {
           EXISTING_CONFIG_REPOSITORY_BRANCH_NAME: {
             type: cdk.aws_codebuild.BuildEnvironmentVariableType.PLAINTEXT,
             value: this.props.configRepositoryBranchName,
+          },
+          PARTITION: {
+            type: cdk.aws_codebuild.BuildEnvironmentVariableType.PLAINTEXT,
+            value: cdk.Aws.PARTITION,
+          },
+          ACCELERATOR_PIPELINE_VERSION: {
+            type: codebuild.BuildEnvironmentVariableType.PARAMETER_STORE,
+            value: `${props.prefixes.ssmParamName}/${cdk.Stack.of(this).stackName}/version`,
+          },
+          ACCELERATOR_CHECK_VERSION: {
+            type: codebuild.BuildEnvironmentVariableType.PLAINTEXT,
+            value: 'yes',
           },
           ...enableSingleAccountModeEnvVariables,
           ...pipelineAccountEnvVariables,
@@ -1166,7 +1167,7 @@ export class AcceleratorPipeline extends Construct {
       version: CONTROL_TOWER_LANDING_ZONE_VERSION,
       logging: {
         loggingBucketRetentionDays: 365,
-        accessLoggingBucketRetentionDays: 3650,
+        accessLoggingBucketRetentionDays: 365,
         organizationTrail: true,
       },
       security: { enableIdentityCenterAccess: true },

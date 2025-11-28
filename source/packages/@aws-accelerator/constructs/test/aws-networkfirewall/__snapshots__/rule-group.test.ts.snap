@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`Network Firewall Rule Group Construct(NetworkFirewallPolicy):  Snapshot Test 1`] = `
+exports[`Network Firewall Rule Group > Construct(NetworkFirewallPolicy):  Snapshot Test 1`] = `
 {
   "Resources": {
     "TestGroupAF88660E": {
@@ -142,7 +142,7 @@ exports[`Network Firewall Rule Group Construct(NetworkFirewallPolicy):  Snapshot
 }
 `;
 
-exports[`Network Firewall Rule Group Stateless Construct(NetworkFirewallPolicy):  Snapshot Test 1`] = `
+exports[`Network Firewall Rule Group Stateless > Construct(NetworkFirewallPolicy):  Snapshot Test 1`] = `
 {
   "Resources": {
     "TestGroupAF88660E": {

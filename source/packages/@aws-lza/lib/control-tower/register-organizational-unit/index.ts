@@ -207,10 +207,12 @@ export class RegisterOrganizationalUnitModule implements IRegisterOrganizational
 
     const parameters: EnabledBaselineParameter[] = [];
 
-    parameters.push({
-      key: 'IdentityCenterEnabledBaselineArn',
-      value: identityCenterBaselineIdentifier,
-    });
+    if (identityCenterBaselineIdentifier) {
+      parameters.push({
+        key: 'IdentityCenterEnabledBaselineArn',
+        value: identityCenterBaselineIdentifier,
+      });
+    }
 
     if (!ouRegisteredInControlTower) {
       return await this.registerOuWithControlTower(
@@ -471,8 +473,9 @@ export class RegisterOrganizationalUnitModule implements IRegisterOrganizational
     const landingZoneVersionSet1 = ['2.0', '2.1', '2.2', '2.3', '2.4', '2.5', '2.6', '2.7'];
     const landingZoneVersionSet2 = ['2.8', '2.9'];
     const landingZoneVersionSet3 = ['3.0', '3.1'];
+    const landingZoneVersionSet4 = ['3.2', '3.3'];
 
-    const baselineVersion = '4.0';
+    const baselineVersion = '5.0';
 
     if (landingZoneVersionSet1.includes(landingZoneVersion)) {
       return '1.0';
@@ -482,6 +485,9 @@ export class RegisterOrganizationalUnitModule implements IRegisterOrganizational
     }
     if (landingZoneVersionSet3.includes(landingZoneVersion)) {
       return '3.0';
+    }
+    if (landingZoneVersionSet4.includes(landingZoneVersion)) {
+      return '4.0';
     }
 
     return baselineVersion;

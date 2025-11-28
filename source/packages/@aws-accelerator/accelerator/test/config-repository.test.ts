@@ -13,7 +13,7 @@
 
 import { CodeCommitConfigRepository, S3ConfigRepository } from '../lib/config-repository';
 import * as cdk from 'aws-cdk-lib';
-import { describe, it, expect } from '@jest/globals';
+import { describe, it, expect } from 'vitest';
 import { Repository } from 'aws-cdk-lib/aws-codecommit';
 import * as fs from 'fs';
 

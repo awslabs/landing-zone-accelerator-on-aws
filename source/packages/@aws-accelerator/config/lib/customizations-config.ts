@@ -17,6 +17,9 @@ import * as path from 'path';
 import * as t from './common';
 import * as i from './models/customizations-config';
 import { ReplacementsConfig } from './replacements-config';
+import { createLogger } from '@aws-accelerator/utils';
+
+const logger = createLogger(['accounts-config']);
 
 export class FirewallStaticReplacementsConfig implements i.IFirewallStaticReplacementsConfig {
   readonly key: string = '';
@@ -61,7 +64,7 @@ export class CloudFormationStackConfig implements i.ICloudFormationStack {
   readonly deploymentTargets: t.DeploymentTargets = new t.DeploymentTargets();
   readonly description: string = '';
   readonly name: string = '';
-  readonly regions: t.Region[] = ['us-east-1'];
+  readonly regions: string[] = ['us-east-1'];
   readonly runOrder: number = 1;
   readonly template: string = '';
   readonly terminationProtection: boolean = false;
@@ -73,7 +76,7 @@ export class CloudFormationStackSetConfig implements i.ICloudFormationStackSet {
   readonly deploymentTargets: t.DeploymentTargets = new t.DeploymentTargets();
   readonly description: string = '';
   readonly name: string = '';
-  readonly regions: t.Region[] = ['us-east-1'];
+  readonly regions: string[] = ['us-east-1'];
   readonly template: string = '';
   readonly parameters: t.CfnParameter[] | undefined = undefined;
   readonly operationPreferences: t.OperationPreferences | undefined = undefined;
@@ -339,7 +342,7 @@ export class PortfolioConfig implements i.IPortfolioConfig {
   readonly name: string = '';
   readonly provider: string = '';
   readonly account: string = '';
-  readonly regions: t.Region[] = [];
+  readonly regions: string[] = [];
   readonly portfolioAssociations: PortfolioAssociationConfig[] = [];
   readonly products: ProductConfig[] = [];
   readonly shareTargets: t.ShareTargets | undefined = undefined;
@@ -385,7 +388,15 @@ export class CustomizationsConfig implements i.ICustomizationsConfig {
   static load(dir: string, replacementsConfig: ReplacementsConfig): CustomizationsConfig {
     const initialBuffer = fs.readFileSync(path.join(dir, CustomizationsConfig.FILENAME), 'utf8');
     const buffer = replacementsConfig ? replacementsConfig.preProcessBuffer(initialBuffer) : initialBuffer;
-    const values = t.parseCustomizationsConfig(yaml.load(buffer));
-    return new CustomizationsConfig(values);
+    // Create schema with custom !include tag
+    const schema = t.createSchema(dir);
+    // Load YAML with custom schema
+    try {
+      const values = t.parseCustomizationsConfig(yaml.load(buffer, { schema }));
+      return new CustomizationsConfig(values);
+    } catch (e) {
+      logger.error('parsing customizations-config failed', e);
+      throw new Error('Could not parse customizations configuration');
+    }
   }
 }

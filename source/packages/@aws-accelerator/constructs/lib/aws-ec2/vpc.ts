@@ -24,11 +24,7 @@ import { IRouteTable } from './route-table';
 import { VpnConnection } from './vpn-connection';
 import { CUSTOM_RESOURCE_PROVIDER_RUNTIME } from '@aws-accelerator/utils/lib/lambda';
 import { ILZAMetadata, MetadataKeys } from '@aws-accelerator/utils';
-import {
-  LookupValues,
-  LZAResourceLookup,
-  LZAResourceLookupType,
-} from '@aws-accelerator/accelerator/utils/lza-resource-lookup';
+import { LookupValues, LZAResourceLookup, LZAResourceLookupType } from '@aws-accelerator/accelerator';
 
 export interface ISubnet extends cdk.IResource {
   /**

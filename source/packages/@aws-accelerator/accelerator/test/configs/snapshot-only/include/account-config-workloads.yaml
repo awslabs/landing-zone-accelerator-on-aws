@@ -1,0 +1,9 @@
+- name: SharedServices
+  description: The SharedServices account
+  email: all-enabled-shared-services@example.com
+  organizationalUnit: Infrastructure
+- name: Network
+  description: The Network account
+  email: all-enabled-network@example.com
+  organizationalUnit: Infrastructure
+- !include account-config-workload-nested.yaml

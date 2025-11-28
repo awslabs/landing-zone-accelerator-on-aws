@@ -190,10 +190,20 @@ export async function getLandingZoneDetails(
             }
             break;
           case 'centralizedLogging':
-            landingZoneDetails.loggingBucketRetentionDays = value['configurations']['loggingBucket']['retentionDays'];
-            landingZoneDetails.accessLoggingBucketRetentionDays =
-              value['configurations']['accessLoggingBucket']['retentionDays'];
-            landingZoneDetails.kmsKeyArn = value['configurations']['kmsKeyArn'];
+            landingZoneDetails.centralizedLoggingConfig = {
+              loggingBucketRetentionDays: value['configurations']['loggingBucket']['retentionDays'],
+              accessLoggingBucketRetentionDays: value['configurations']['accessLoggingBucket']['retentionDays'],
+              kmsKeyArn: value['configurations']['kmsKeyArn'],
+              accountId: value['accountId'],
+            };
+            break;
+          case 'config':
+            landingZoneDetails.configHubConfig = {
+              loggingBucketRetentionDays: value['configurations']['loggingBucket']['retentionDays'],
+              accessLoggingBucketRetentionDays: value['configurations']['accessLoggingBucket']['retentionDays'],
+              kmsKeyArn: value['configurations']['kmsKeyArn'],
+              accountId: value['accountId'],
+            };
             break;
         }
       }
@@ -202,6 +212,7 @@ export async function getLandingZoneDetails(
       landingZoneDetails.version = response.landingZone.version!;
       landingZoneDetails.latestAvailableVersion = response.landingZone.latestAvailableVersion!;
       landingZoneDetails.driftStatus = response.landingZone.driftStatus!.status!;
+      landingZoneDetails.manifest = response.landingZone.manifest;
     }
   } catch (e: unknown) {
     if (e instanceof ResourceNotFoundException) {
@@ -616,4 +627,58 @@ export async function disableServiceAccess(client: OrganizationsClient, serviceP
     );
   }
   return true;
+}
+
+/**
+ * Utility function to wait until a predicate condition is met with retry logic
+ * @param predicate - Async function that returns true when the desired condition is met
+ * @param error - Error message to throw if retry limit is exceeded
+ * @param retryLimit - Maximum number of retries (default: 5)
+ * @param queryIntervalMinutes - Delay between retries in minutes (default: 1)
+ * @throws Error with SERVICE_EXCEPTION if retry limit is exceeded
+ */
+export async function waitUntil(
+  predicate: () => Promise<boolean>,
+  error: string,
+  retryLimit = 5,
+  queryIntervalMinutes = 1,
+  delayFn: (minutes: number) => Promise<unknown> = delay, // Use Promise<any> for flexibility
+): Promise<void> {
+  let retryCount = 0;
+  while (retryCount <= retryLimit) {
+    if (await predicate()) {
+      return;
+    }
+    if (retryCount < retryLimit) {
+      await delayFn(queryIntervalMinutes);
+    }
+    retryCount += 1;
+    if (retryCount > retryLimit) {
+      throw new Error(`${MODULE_EXCEPTIONS.SERVICE_EXCEPTION}: ${error}`);
+    }
+  }
+}
+/**
+ * Function to get current account ID and role ARN
+ * @param client {@link STSClient}
+ * @returns Promise containing accountId and roleArn
+ */
+export async function getCurrentAccountDetails(client: STSClient): Promise<{ accountId: string; roleArn: string }> {
+  const response = await throttlingBackOff(() => client.send(new GetCallerIdentityCommand({})));
+
+  if (!response.Account) {
+    throw new Error(
+      `${MODULE_EXCEPTIONS.SERVICE_EXCEPTION}: GetCallerIdentityCommand api did not return Account property.`,
+    );
+  }
+
+  if (!response.Arn) {
+    throw new Error(
+      `${MODULE_EXCEPTIONS.SERVICE_EXCEPTION}: GetCallerIdentityCommand api did not return Arn property.`,
+    );
+  }
+  return {
+    accountId: response.Account,
+    roleArn: response.Arn,
+  };
 }

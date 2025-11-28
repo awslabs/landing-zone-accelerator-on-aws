@@ -11,66 +11,35 @@
  *  and limitations under the License.
  */
 
-import { LandingZoneDriftStatus } from '@aws-sdk/client-controltower';
+import { LandingZoneDriftStatus, LandingZoneStatus } from '@aws-sdk/client-controltower';
 import {
   ControlTowerLandingZoneConfigType,
   ControlTowerLandingZoneDetailsType,
+  IControlTowerKmsKeys,
   LandingZoneUpdateOrResetRequiredType,
 } from './resources';
 
 /**
  * Function to make manifest document for CT API
- * @param landingZoneConfiguration ${@link LandingZoneConfigType}
+ * @param landingZoneConfiguration {@link ControlTowerLandingZoneConfigType}
  * @param event string 'CREATE' | 'UPDATE'
- * @param securityOuName string
- * @param kmsKeyArn string | undefined
- * @param sandboxOuName string | undefined
+ * @param kmsKeyArns IControlTowerKmsKeys | undefined
+ * @param existingManifest any | undefined
  * @returns
  */
 export function makeManifestDocument(
   landingZoneConfiguration: ControlTowerLandingZoneConfigType,
   event: 'CREATE' | 'UPDATE',
-  securityOuName: string,
-  kmsKeyArn?: string,
-  sandboxOuName?: string,
+  kmsKeyArns?: IControlTowerKmsKeys,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  existingManifest?: any,
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
 ): any {
-  let organizationStructure = {};
-
-  switch (event) {
-    case 'CREATE':
-      organizationStructure = {
-        security: {
-          name: securityOuName,
-        },
-        sandbox: {
-          name: 'Infrastructure',
-        },
-      };
-      break;
-    case 'UPDATE':
-      if (sandboxOuName) {
-        organizationStructure = {
-          security: {
-            name: securityOuName,
-          },
-          sandbox: {
-            name: sandboxOuName,
-          },
-        };
-      } else {
-        organizationStructure = {
-          security: {
-            name: securityOuName,
-          },
-        };
-      }
-      break;
-  }
-
-  const manifestJsonDocument = {
-    governedRegions: landingZoneConfiguration.governedRegions,
-    organizationStructure,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let manifestJsonDocument: any = {
+    accessManagement: {
+      enabled: landingZoneConfiguration.enableIdentityCenterAccess,
+    },
     centralizedLogging: {
       accountId: landingZoneConfiguration.logArchiveAccountId,
       configurations: {
@@ -80,17 +49,54 @@ export function makeManifestDocument(
         accessLoggingBucket: {
           retentionDays: landingZoneConfiguration.accessLoggingBucketRetentionDays,
         },
-        kmsKeyArn,
+        kmsKeyArn: kmsKeyArns?.centralizedLoggingKeyArn,
       },
       enabled: landingZoneConfiguration.enableOrganizationTrail,
     },
+    config: {
+      accountId: landingZoneConfiguration.auditAccountId,
+      configurations: {
+        loggingBucket: {
+          retentionDays: landingZoneConfiguration.loggingBucketRetentionDays,
+        },
+        accessLoggingBucket: {
+          retentionDays: landingZoneConfiguration.accessLoggingBucketRetentionDays,
+        },
+        kmsKeyArn: kmsKeyArns?.configLoggingKeyArn,
+      },
+      enabled: true,
+    },
     securityRoles: {
+      enabled: true,
       accountId: landingZoneConfiguration.auditAccountId,
     },
-    accessManagement: {
-      enabled: landingZoneConfiguration.enableIdentityCenterAccess,
-    },
+    governedRegions: landingZoneConfiguration.governedRegions,
   };
+
+  if (event === 'CREATE') {
+    manifestJsonDocument = {
+      ...manifestJsonDocument,
+      backup: {
+        enabled: false,
+      },
+    };
+  }
+
+  // For UPDATE operations, merge with existing manifest to preserve other modules
+  if (event === 'UPDATE' && existingManifest) {
+    if (existingManifest.organizationStructure) {
+      delete existingManifest.organizationStructure;
+    }
+
+    if (existingManifest.securityRoles.accountId && !existingManifest.securityRoles.enabled) {
+      existingManifest.securityRoles.enabled = true;
+    }
+
+    return {
+      ...existingManifest,
+      ...manifestJsonDocument,
+    };
+  }
 
   return manifestJsonDocument;
 }
@@ -146,12 +152,12 @@ export function landingZoneUpdateOrResetRequired(
   landingZoneConfiguration: ControlTowerLandingZoneConfigType,
   landingZoneDetails: ControlTowerLandingZoneDetailsType,
 ): LandingZoneUpdateOrResetRequiredType {
-  // validate landing zone version listed in global config
-  validateLandingZoneVersion(landingZoneConfiguration.version, landingZoneDetails.latestAvailableVersion!);
-
   //when drifted
-  if (landingZoneDetails.driftStatus === LandingZoneDriftStatus.DRIFTED) {
-    const reason = 'The Landing Zone has drifted';
+  if (
+    landingZoneDetails.driftStatus === LandingZoneDriftStatus.DRIFTED ||
+    landingZoneDetails.status === LandingZoneStatus.FAILED
+  ) {
+    const reason = `The Landing Zone has drifted or failed, resetting`;
     validateLandingZoneVersion(
       landingZoneConfiguration.version,
       landingZoneDetails.latestAvailableVersion!,
@@ -170,18 +176,44 @@ export function landingZoneUpdateOrResetRequired(
   // Changes in the AWS Control Tower Landing Zone configuration force an update of the AWS Control Tower Landing Zone, which will update the AWS Control Tower Landing Zone to the latest version if it is available
   // find reasons to update
   const reasons: string[] = [];
+
   if (
-    landingZoneDetails.accessLoggingBucketRetentionDays !== landingZoneConfiguration.accessLoggingBucketRetentionDays
+    landingZoneDetails.centralizedLoggingConfig?.accessLoggingBucketRetentionDays !==
+    landingZoneConfiguration.accessLoggingBucketRetentionDays
   ) {
     reasons.push(
-      `Changes made in AccessLoggingBucketRetentionDays from ${landingZoneDetails.accessLoggingBucketRetentionDays} to ${landingZoneConfiguration.accessLoggingBucketRetentionDays}`,
+      `Changes made in Centralized Logging AccessLoggingBucketRetentionDays from ${landingZoneDetails.centralizedLoggingConfig?.accessLoggingBucketRetentionDays} to ${landingZoneConfiguration.accessLoggingBucketRetentionDays}`,
     );
   }
-  if (landingZoneDetails.loggingBucketRetentionDays !== landingZoneConfiguration.loggingBucketRetentionDays) {
+  if (
+    landingZoneDetails.centralizedLoggingConfig?.loggingBucketRetentionDays !==
+    landingZoneConfiguration.loggingBucketRetentionDays
+  ) {
     reasons.push(
-      `Changes made in LoggingBucketRetentionDays from ${landingZoneDetails.loggingBucketRetentionDays} to ${landingZoneConfiguration.loggingBucketRetentionDays}`,
+      `Changes made in Centralized Logging LoggingBucketRetentionDays from ${landingZoneDetails.centralizedLoggingConfig?.loggingBucketRetentionDays} to ${landingZoneConfiguration.loggingBucketRetentionDays}`,
     );
   }
+
+  // During upgrade from 3.3 to 4.0 configHubConfig will be undefined
+  if (landingZoneDetails.configHubConfig) {
+    if (
+      landingZoneDetails.configHubConfig.accessLoggingBucketRetentionDays !==
+      landingZoneConfiguration.accessLoggingBucketRetentionDays
+    ) {
+      reasons.push(
+        `Changes made in Config AccessLoggingBucketRetentionDays from ${landingZoneDetails.configHubConfig.accessLoggingBucketRetentionDays} to ${landingZoneConfiguration.accessLoggingBucketRetentionDays}`,
+      );
+    }
+    if (
+      landingZoneDetails.configHubConfig.loggingBucketRetentionDays !==
+      landingZoneConfiguration.loggingBucketRetentionDays
+    ) {
+      reasons.push(
+        `Changes made in Config LoggingBucketRetentionDays from ${landingZoneDetails.configHubConfig.loggingBucketRetentionDays} to ${landingZoneConfiguration.loggingBucketRetentionDays}`,
+      );
+    }
+  }
+
   if (landingZoneDetails.enableIdentityCenterAccess !== landingZoneConfiguration.enableIdentityCenterAccess) {
     reasons.push(
       `Changes made in EnableIdentityCenterAccess from ${landingZoneDetails.enableIdentityCenterAccess} to ${landingZoneConfiguration.enableIdentityCenterAccess}`,
@@ -193,6 +225,12 @@ export function landingZoneUpdateOrResetRequired(
       `Changes made in governed regions from [${landingZoneDetails.governedRegions?.join(
         ',',
       )}] to [${landingZoneConfiguration.governedRegions.join(',')}]`,
+    );
+  }
+
+  if (landingZoneDetails.version !== landingZoneConfiguration.version) {
+    reasons.push(
+      `Changes made in control tower version from ${landingZoneDetails.version} to ${landingZoneConfiguration.version}`,
     );
   }
 

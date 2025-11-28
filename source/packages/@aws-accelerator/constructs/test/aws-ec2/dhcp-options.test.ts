@@ -14,6 +14,7 @@
 import * as cdk from 'aws-cdk-lib';
 import { DhcpOptions } from '../../lib/aws-ec2/dhcp-options';
 import { snapShotTest } from '../snapshot-test';
+import { describe } from 'vitest';
 
 const testNamePrefix = 'Construct(DhcpOptions): ';
 

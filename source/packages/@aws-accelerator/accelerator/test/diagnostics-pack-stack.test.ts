@@ -15,7 +15,7 @@ import * as cdk from 'aws-cdk-lib';
 
 import { DiagnosticsPackStack } from '../lib/stacks/diagnostics-pack-stack';
 import { snapShotTest } from './snapshot-test';
-import { describe } from '@jest/globals';
+import { describe } from 'vitest';
 
 const testNamePrefix = 'Construct(DiagnosticsPackStack): ';
 

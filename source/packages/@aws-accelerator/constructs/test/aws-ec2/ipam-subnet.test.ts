@@ -14,7 +14,7 @@
 import * as cdk from 'aws-cdk-lib';
 import { IpamSubnet } from '../../lib/aws-ec2/ipam-subnet';
 import { snapShotTest } from '../snapshot-test';
-import { describe } from '@jest/globals';
+import { describe } from 'vitest';
 
 const testNamePrefix = 'Construct(IpamSubnet): ';
 

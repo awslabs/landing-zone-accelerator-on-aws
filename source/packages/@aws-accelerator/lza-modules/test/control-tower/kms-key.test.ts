@@ -11,7 +11,7 @@
  *  and limitations under the License.
  */
 
-import { describe, beforeEach, expect, test } from '@jest/globals';
+import { describe, beforeEach, expect, test } from 'vitest';
 
 import { KmsKey } from '../../lib/control-tower/prerequisites/kms-key';
 import { KMSClient, CreateKeyCommand, paginateListAliases, ListAliasesCommand } from '@aws-sdk/client-kms';

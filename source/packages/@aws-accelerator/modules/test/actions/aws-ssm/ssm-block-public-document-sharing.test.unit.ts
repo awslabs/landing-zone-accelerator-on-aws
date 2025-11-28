@@ -9,7 +9,7 @@
  *  and limitations under the License.
  */
 
-import { beforeEach, afterEach, describe, test, expect, jest } from '@jest/globals';
+import { beforeEach, afterEach, describe, test, expect, vi } from 'vitest';
 import { Account } from '@aws-sdk/client-organizations';
 import { AcceleratorModules, ModuleExecutionPhase } from '../../../models/enums';
 import { ModuleParams } from '../../../models/types';
@@ -41,13 +41,13 @@ import { SsmBlockPublicDocumentSharingModule } from '../../../lib/actions/aws-ss
 import { IAssumeRoleCredential } from '../../../../../@aws-lza/common/resources';
 
 // Mock the getCredentials function
-jest.mock('../../../../../@aws-lza/common/functions', () => ({
-  getCredentials: jest.fn(),
+vi.mock('../../../../../@aws-lza/common/functions', () => ({
+  getCredentials: vi.fn(),
 }));
 
 // Mock the manageBlockPublicDocumentSharing function
 const mockManageBlockPublicDocumentSharing =
-  jest.fn<
+  vi.fn<
     (params: {
       accountId: string;
       region: string;
@@ -59,8 +59,8 @@ const mockManageBlockPublicDocumentSharing =
 
 describe('SsmBlockPublicDocumentSharingModule', () => {
   let mockAccountsConfig: AccountsConfig;
-  let mockImportSpy: jest.SpiedFunction<() => Promise<unknown>>;
-  let mockGetCredentials: jest.MockedFunction<typeof import('../../../../../@aws-lza/common/functions').getCredentials>;
+  let mockImportSpy: ReturnType<typeof vi.spyOn>;
+  let mockGetCredentials: ReturnType<typeof vi.fn>;
 
   // Test organization accounts
   const testAccounts: Account[] = [
@@ -96,19 +96,19 @@ describe('SsmBlockPublicDocumentSharingModule', () => {
     },
   ];
 
-  beforeEach(() => {
-    jest.clearAllMocks();
+  beforeEach(async () => {
+    vi.clearAllMocks();
 
     // Get the mocked function reference
-    mockGetCredentials = require('../../../../../@aws-lza/common/functions').getCredentials;
+    mockGetCredentials = vi.mocked((await import('../../../../../@aws-lza/common/functions')).getCredentials);
 
     mockAccountsConfig = {
-      getManagementAccount: jest.fn().mockReturnValue(MOCK_CONSTANTS.managementAccount),
-      getManagementAccountId: jest.fn().mockReturnValue(MOCK_CONSTANTS.managementAccount.name),
-      getAuditAccount: jest.fn().mockReturnValue(MOCK_CONSTANTS.auditAccount),
-      getAuditAccountId: jest.fn().mockReturnValue(MOCK_CONSTANTS.auditAccount.name),
-      getLogArchiveAccount: jest.fn().mockReturnValue(MOCK_CONSTANTS.logArchiveAccount),
-      getLogArchiveAccountId: jest.fn().mockReturnValue(MOCK_CONSTANTS.logArchiveAccount.name),
+      getManagementAccount: vi.fn().mockReturnValue(MOCK_CONSTANTS.managementAccount),
+      getManagementAccountId: vi.fn().mockReturnValue(MOCK_CONSTANTS.managementAccount.name),
+      getAuditAccount: vi.fn().mockReturnValue(MOCK_CONSTANTS.auditAccount),
+      getAuditAccountId: vi.fn().mockReturnValue(MOCK_CONSTANTS.auditAccount.name),
+      getLogArchiveAccount: vi.fn().mockReturnValue(MOCK_CONSTANTS.logArchiveAccount),
+      getLogArchiveAccountId: vi.fn().mockReturnValue(MOCK_CONSTANTS.logArchiveAccount.name),
       ...mockAccountsConfiguration,
     } as AccountsConfig;
 
@@ -117,7 +117,7 @@ describe('SsmBlockPublicDocumentSharingModule', () => {
     mockManageBlockPublicDocumentSharing.mockResolvedValue('SSM Block Public Document Sharing enabled successfully');
 
     // Mock the import wrapper function
-    mockImportSpy = jest.spyOn(
+    mockImportSpy = vi.spyOn(
       SsmBlockPublicDocumentSharingModule as unknown as {
         importBlockPublicDocumentSharing: () => Promise<unknown>;
       },
@@ -164,7 +164,7 @@ describe('SsmBlockPublicDocumentSharingModule', () => {
         name: AcceleratorModules.SSM_BLOCK_PUBLIC_DOCUMENT_SHARING,
         description: 'Manage SSM Block Public Document Sharing across organization accounts',
         runOrder: 1,
-        handler: jest.fn<(params: ModuleParams) => Promise<string>>(),
+        handler: vi.fn<(params: ModuleParams) => Promise<string>>(),
         executionPhase: ModuleExecutionPhase.DEPLOY,
       },
       runnerParameters: {
@@ -418,7 +418,7 @@ describe('SsmBlockPublicDocumentSharingModule', () => {
       expect(resultSingleRegion).not.toContain('Region us-west-2:');
 
       // Reset mocks
-      jest.clearAllMocks();
+      vi.clearAllMocks();
       mockManageBlockPublicDocumentSharing.mockResolvedValue('SSM Block Public Document Sharing enabled successfully');
 
       // Now add us-west-2 to enabled regions (create new config object)
@@ -489,7 +489,7 @@ describe('SsmBlockPublicDocumentSharingModule', () => {
       expect(resultMultiRegion).toContain('Region us-west-2:');
 
       // Reset mocks
-      jest.clearAllMocks();
+      vi.clearAllMocks();
       mockManageBlockPublicDocumentSharing.mockResolvedValue('SSM Block Public Document Sharing enabled successfully');
 
       // Now remove us-west-2 from enabled regions (create new config object)
@@ -548,7 +548,7 @@ describe('SsmBlockPublicDocumentSharingModule', () => {
       const originalExecuteAccountActions = (SsmBlockPublicDocumentSharingModule as unknown as Record<string, unknown>)[
         'executeAccountActions'
       ];
-      (SsmBlockPublicDocumentSharingModule as unknown as Record<string, unknown>)['executeAccountActions'] = jest
+      (SsmBlockPublicDocumentSharingModule as unknown as Record<string, unknown>)['executeAccountActions'] = vi
         .fn<(params: ModuleParams) => Promise<string>>()
         .mockRejectedValue(new Error('executeAccountActions failed'));
 
@@ -572,7 +572,7 @@ describe('SsmBlockPublicDocumentSharingModule', () => {
 
       const result = await SsmBlockPublicDocumentSharingModule.execute(params);
 
-      expect(mockGetCredentials).toHaveBeenCalledTimes(5);
+      expect(mockGetCredentials).toHaveBeenCalledTimes(4);
       expect(mockManageBlockPublicDocumentSharing).toHaveBeenCalledTimes(5);
 
       // Verify all accounts are enabled in us-east-1
@@ -599,7 +599,7 @@ describe('SsmBlockPublicDocumentSharingModule', () => {
 
       const result = await SsmBlockPublicDocumentSharingModule.execute(params);
 
-      expect(mockGetCredentials).toHaveBeenCalledTimes(5);
+      expect(mockGetCredentials).toHaveBeenCalledTimes(4);
       expect(mockManageBlockPublicDocumentSharing).toHaveBeenCalledTimes(5);
 
       // Verify enabled accounts
@@ -635,7 +635,7 @@ describe('SsmBlockPublicDocumentSharingModule', () => {
 
       const result = await SsmBlockPublicDocumentSharingModule.execute(params);
 
-      expect(mockGetCredentials).toHaveBeenCalledTimes(5);
+      expect(mockGetCredentials).toHaveBeenCalledTimes(4);
       expect(mockManageBlockPublicDocumentSharing).toHaveBeenCalledTimes(5);
 
       // Verify all accounts are disabled in us-east-1
@@ -662,7 +662,7 @@ describe('SsmBlockPublicDocumentSharingModule', () => {
 
       const result = await SsmBlockPublicDocumentSharingModule.execute(params);
 
-      expect(mockGetCredentials).toHaveBeenCalledTimes(5);
+      expect(mockGetCredentials).toHaveBeenCalledTimes(4);
       expect(mockManageBlockPublicDocumentSharing).toHaveBeenCalledTimes(5);
 
       // All accounts should be enabled in us-east-1
@@ -692,7 +692,7 @@ describe('SsmBlockPublicDocumentSharingModule', () => {
 
       const result = await SsmBlockPublicDocumentSharingModule.execute(params);
 
-      expect(mockGetCredentials).toHaveBeenCalledTimes(5);
+      expect(mockGetCredentials).toHaveBeenCalledTimes(4);
       expect(mockManageBlockPublicDocumentSharing).toHaveBeenCalledTimes(5);
 
       // All accounts should be enabled since null excludeAccounts becomes []
@@ -719,7 +719,7 @@ describe('SsmBlockPublicDocumentSharingModule', () => {
       Object.defineProperty(globalConfig, 'enabledRegions', { value: ['us-east-1'], writable: false });
       const params = createModuleParams(securityConfig, globalConfig);
 
-      mockGetCredentials.mockResolvedValueOnce(undefined);
+      mockGetCredentials.mockRejectedValueOnce(new Error('Failed to get credentials for account'));
 
       const result = await SsmBlockPublicDocumentSharingModule.execute(params);
 
@@ -820,7 +820,7 @@ describe('SsmBlockPublicDocumentSharingModule', () => {
       const originalMethod = (SsmBlockPublicDocumentSharingModule as unknown as Record<string, unknown>)[
         'blockPublicDocumentSharing'
       ];
-      (SsmBlockPublicDocumentSharingModule as unknown as Record<string, unknown>)['blockPublicDocumentSharing'] = jest
+      (SsmBlockPublicDocumentSharingModule as unknown as Record<string, unknown>)['blockPublicDocumentSharing'] = vi
         .fn()
         .mockReturnValue(rejectedPromise);
 
@@ -905,7 +905,8 @@ describe('SsmBlockPublicDocumentSharingModule', () => {
       const securityConfig = createMockSecurityConfig(ssmConfig);
       const globalConfig = createMockGlobalConfig('us-east-1');
       Object.defineProperty(globalConfig, 'enabledRegions', { value: ['us-east-1'], writable: false });
-      const params = createModuleParams(securityConfig, globalConfig, 'us-east-1', [testAccounts[0]]);
+      // Use a non-Management account to trigger getCredentials call
+      const params = createModuleParams(securityConfig, globalConfig, 'us-east-1', [testAccounts[1]]);
 
       // Mock credential failure
       mockGetCredentials.mockRejectedValueOnce(new Error('Credential failure: Unable to assume role'));
@@ -976,7 +977,7 @@ describe('SsmBlockPublicDocumentSharingModule', () => {
 
       const result = await SsmBlockPublicDocumentSharingModule.execute(params);
 
-      expect(mockGetCredentials).toHaveBeenCalledTimes(6);
+      expect(mockGetCredentials).toHaveBeenCalledTimes(5);
       expect(mockManageBlockPublicDocumentSharing).toHaveBeenCalledTimes(6);
 
       // Account with missing name should be enabled (not in exclude list)
@@ -1001,7 +1002,7 @@ describe('SsmBlockPublicDocumentSharingModule', () => {
 
       const result = await SsmBlockPublicDocumentSharingModule.execute(params);
 
-      expect(mockGetCredentials).toHaveBeenCalledTimes(5);
+      expect(mockGetCredentials).toHaveBeenCalledTimes(4);
       expect(mockManageBlockPublicDocumentSharing).toHaveBeenCalledTimes(5);
 
       // Both Workload1 and Workload2 should be disabled
@@ -1034,7 +1035,7 @@ describe('SsmBlockPublicDocumentSharingModule', () => {
 
       const result = await SsmBlockPublicDocumentSharingModule.execute(params);
 
-      expect(mockGetCredentials).toHaveBeenCalledTimes(5);
+      expect(mockGetCredentials).toHaveBeenCalledTimes(4);
       expect(mockManageBlockPublicDocumentSharing).toHaveBeenCalledTimes(5);
 
       // Only Workload1 should be disabled (NonExistentAccount doesn't exist)
@@ -1344,7 +1345,7 @@ describe('SsmBlockPublicDocumentSharingModule', () => {
       // Mock Date to ensure consistent formatting
       const mockDate = new Date('2023-01-01T12:00:00.000Z');
       const originalDate = global.Date;
-      global.Date = jest.fn(() => mockDate) as unknown as DateConstructor;
+      global.Date = vi.fn(() => mockDate) as unknown as DateConstructor;
       global.Date.now = originalDate.now;
 
       const result = await SsmBlockPublicDocumentSharingModule.execute(params);
@@ -1488,13 +1489,8 @@ describe('SsmBlockPublicDocumentSharingModule', () => {
 
       expect(result).toContain('Account Management (111111111111) in region us-east-1:');
       expect(result).toContain('SSM Block Public Document Sharing enabled successfully');
-      expect(mockGetCredentials).toHaveBeenCalledWith({
-        accountId: '111111111111',
-        region: 'us-east-1',
-        solutionId: MOCK_CONSTANTS.runnerParameters.solutionId,
-        partition: 'aws',
-        assumeRoleName: 'AWSControlTowerExecution',
-      });
+      // Management account should NOT call getCredentials - it uses management credentials directly
+      expect(mockGetCredentials).not.toHaveBeenCalled();
     });
 
     test('should test real import function without mocking', async () => {
@@ -1518,7 +1514,7 @@ describe('SsmBlockPublicDocumentSharingModule', () => {
         );
       } finally {
         // Re-mock the import function for other tests
-        mockImportSpy = jest.spyOn(
+        mockImportSpy = vi.spyOn(
           SsmBlockPublicDocumentSharingModule as unknown as {
             importBlockPublicDocumentSharing: () => Promise<unknown>;
           },

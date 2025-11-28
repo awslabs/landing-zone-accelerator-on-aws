@@ -11,7 +11,7 @@
  *  and limitations under the License.
  */
 import { EnablePolicyTypeCommand, ListRootsCommand, OrganizationsClient } from '@aws-sdk/client-organizations';
-import { afterEach, beforeEach, expect, it } from '@jest/globals';
+import { afterEach, beforeEach, expect, it } from 'vitest';
 import { AwsClientStub, mockClient } from 'aws-sdk-client-mock';
 import { handler } from '../../../lib/aws-organizations/enable-policy-type/index';
 import {

@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`IdentityCenterStack Construct(IdentityCenterStack):  Snapshot Test 1`] = `
+exports[`IdentityCenterStack > Construct(IdentityCenterStack):  Snapshot Test 1`] = `
 {
   "Parameters": {
     "SsmParameterValueacceleratorkmscloudwatchkeyarnC96584B6F00A464EAD1953AFF4B05118Parameter": {
@@ -24,7 +24,7 @@ exports[`IdentityCenterStack Construct(IdentityCenterStack):  Snapshot Test 1`] 
         },
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.14.1",
           },
         },
         "Handler": "__entrypoint__.handler",
@@ -89,8 +89,8 @@ exports[`IdentityCenterStack Construct(IdentityCenterStack):  Snapshot Test 1`] 
                   "Action": [
                     "iam:ListRoles",
                     "iam:ListPolicies",
-                    "identitystore:ListGroups",
-                    "identitystore:ListUsers",
+                    "identitystore:GetGroupId",
+                    "identitystore:GetUserId",
                     "sso:CreateAccountAssignment",
                     "sso:DeleteAccountAssignment",
                     "sso:ListAccountAssignments",
@@ -294,7 +294,7 @@ exports[`IdentityCenterStack Construct(IdentityCenterStack):  Snapshot Test 1`] 
         "Description": "Accelerator deployed IdentityCenterGetInstanceId custom resource lambda function.",
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.14.1",
           },
         },
         "Handler": "index.handler",
@@ -437,7 +437,7 @@ exports[`IdentityCenterStack Construct(IdentityCenterStack):  Snapshot Test 1`] 
         "Description": "AWS CDK resource provider framework - onEvent (AWSAccelerator-IdentityCenterStack-111111111111-us-east-1/IdentityCenterInstance/IdentityCenterGetInstanceId/Resource)",
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.14.1",
             "USER_ON_EVENT_FUNCTION_ARN": {
               "Fn::GetAtt": [
                 "IdentityCenterInstanceIdentityCenterGetInstanceIdFunctionE59FDB54",
@@ -447,6 +447,10 @@ exports[`IdentityCenterStack Construct(IdentityCenterStack):  Snapshot Test 1`] 
           },
         },
         "Handler": "framework.onEvent",
+        "LoggingConfig": {
+          "ApplicationLogLevel": "FATAL",
+          "LogFormat": "JSON",
+        },
         "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
@@ -539,6 +543,16 @@ exports[`IdentityCenterStack Construct(IdentityCenterStack):  Snapshot Test 1`] 
                   ],
                 },
               ],
+            },
+            {
+              "Action": "lambda:GetFunction",
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::GetAtt": [
+                  "IdentityCenterInstanceIdentityCenterGetInstanceIdFunctionE59FDB54",
+                  "Arn",
+                ],
+              },
             },
           ],
           "Version": "2012-10-17",
@@ -780,7 +794,7 @@ exports[`IdentityCenterStack Construct(IdentityCenterStack):  Snapshot Test 1`] 
       "Properties": {
         "Name": "/accelerator/AWSAccelerator-IdentityCenterStack-111111111111-us-east-1/version",
         "Type": "String",
-        "Value": "1.13.0",
+        "Value": "1.14.1",
       },
       "Type": "AWS::SSM::Parameter",
     },

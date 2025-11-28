@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`FMSNotificationChannel Construct(FMSNotificationChannel):  Snapshot Test 1`] = `
+exports[`FMSNotificationChannel > Construct(FMSNotificationChannel):  Snapshot Test 1`] = `
 {
   "Resources": {
     "FMSNotificationChannel09689B03": {

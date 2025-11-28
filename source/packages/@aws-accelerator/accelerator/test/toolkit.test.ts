@@ -1,0 +1,251 @@
+/**
+ *  Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ *
+ *  Licensed under the Apache License, Version 2.0 (the "License"). You may not use this file except in compliance
+ *  with the License. A copy of the License is located at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *  or in the 'license' file accompanying this file. This file is distributed on an 'AS IS' BASIS, WITHOUT WARRANTIES
+ *  OR CONDITIONS OF ANY KIND, express or implied. See the License for the specific language governing permissions
+ *  and limitations under the License.
+ */
+
+import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { AcceleratorToolkit } from '../lib/toolkit';
+import { Toolkit, StackSelectionStrategy } from '@aws-cdk/toolkit-lib';
+
+// Mock the Toolkit class
+vi.mock('@aws-cdk/toolkit-lib', () => ({
+  Toolkit: vi.fn(),
+  StackSelectionStrategy: {
+    ALL_STACKS: 'ALL_STACKS',
+  },
+  BootstrapSource: {
+    default: vi.fn().mockReturnValue('default-source'),
+    customTemplate: vi.fn().mockReturnValue('custom-source'),
+  },
+  BootstrapEnvironments: {
+    fromList: vi.fn().mockReturnValue('environments'),
+  },
+  BaseCredentials: {
+    custom: vi.fn().mockReturnValue('mock-credentials'),
+  },
+  CdkAppMultiContext: vi.fn(),
+  ToolkitError: {
+    isAuthenticationError: vi.fn().mockReturnValue(false),
+    isAssemblyError: vi.fn().mockReturnValue(false),
+    isContextProviderError: vi.fn().mockReturnValue(false),
+    isToolkitError: vi.fn().mockReturnValue(false),
+  },
+}));
+
+// Mock AWS SDK credential providers
+vi.mock('@aws-sdk/credential-providers', () => ({
+  fromNodeProviderChain: vi.fn().mockReturnValue('mock-node-provider'),
+  fromTemporaryCredentials: vi.fn().mockReturnValue('mock-temp-credentials'),
+}));
+
+describe('AcceleratorToolkit', () => {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let mockToolkit: any;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let mockCloudAssemblySource: any;
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+
+    mockCloudAssemblySource = {
+      dispose: vi.fn(),
+    };
+
+    mockToolkit = {
+      fromAssemblyDirectory: vi.fn().mockResolvedValue(mockCloudAssemblySource),
+      deploy: vi.fn().mockResolvedValue({ success: true }),
+    };
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (Toolkit as any).mockImplementation(() => mockToolkit);
+  });
+
+  describe('runDeployStackCli', () => {
+    it('should deploy with correct parameters when ACCELERATOR_FORCE_ASSET_PUBLISHING is true', async () => {
+      // Arrange
+      process.env['ACCELERATOR_FORCE_ASSET_PUBLISHING'] = 'true';
+      const options = {
+        command: 'deploy',
+        accountId: '123456789012',
+        region: 'us-east-1',
+        stage: 'PREPARE',
+        tags: { Environment: 'test' },
+      };
+      const stackName = 'TestStack';
+      const roleArn = 'arn:aws:iam::123456789012:role/TestRole';
+
+      // Mock setOutputDirectory
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      vi.spyOn(AcceleratorToolkit as any, 'setOutputDirectory').mockResolvedValue('cdk.out/TestStack');
+
+      // Act
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const result = await (AcceleratorToolkit as any).runDeployStackCli(options, stackName, mockToolkit, roleArn);
+
+      // Assert
+      expect(mockToolkit.fromAssemblyDirectory).toHaveBeenCalledWith('cdk.out/TestStack');
+      expect(mockToolkit.deploy).toHaveBeenCalledWith(mockCloudAssemblySource, {
+        concurrency: 1,
+        deploymentMethod: { method: 'direct' },
+        forceAssetPublishing: true,
+        roleArn: roleArn,
+        stacks: {
+          strategy: StackSelectionStrategy.ALL_STACKS,
+        },
+        tags: options.tags,
+      });
+      expect(result).toEqual({ success: true });
+    });
+
+    it('should deploy with forceAssetPublishing false when env var is not set', async () => {
+      // Arrange
+      delete process.env['ACCELERATOR_FORCE_ASSET_PUBLISHING'];
+      const options = {
+        command: 'deploy',
+        accountId: '123456789012',
+        region: 'us-east-1',
+        stage: 'PREPARE',
+        tags: { Environment: 'test' },
+      };
+      const stackName = 'TestStack';
+      const roleArn = 'arn:aws:iam::123456789012:role/TestRole';
+
+      // Mock setOutputDirectory
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      vi.spyOn(AcceleratorToolkit as any, 'setOutputDirectory').mockResolvedValue('cdk.out/TestStack');
+
+      // Act
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      await (AcceleratorToolkit as any).runDeployStackCli(options, stackName, mockToolkit, roleArn);
+
+      // Assert
+      expect(mockToolkit.deploy).toHaveBeenCalledWith(mockCloudAssemblySource, {
+        concurrency: 1,
+        deploymentMethod: { method: 'direct' },
+        forceAssetPublishing: false,
+        roleArn: roleArn,
+        stacks: {
+          strategy: StackSelectionStrategy.ALL_STACKS,
+        },
+        tags: options.tags,
+      });
+    });
+  });
+
+  describe('bootstrapToolKitStacks', () => {
+    it('should set forceDeployment to true when forceBootstrap is enabled', async () => {
+      // Arrange
+      const options = {
+        command: 'bootstrap',
+        accountId: '123456789012',
+        region: 'us-east-1',
+        partition: 'aws',
+        stackPrefix: 'AWSAccelerator',
+        managementAccountId: '123456789012',
+        enableSingleAccountMode: false,
+        useExistingRoles: false,
+        cdkOptions: {
+          forceBootstrap: true,
+        },
+      };
+
+      mockToolkit.bootstrap = vi.fn().mockResolvedValue(undefined);
+
+      // Act
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      await (AcceleratorToolkit as any).bootstrapToolKitStacks(mockToolkit, options);
+
+      // Assert
+      expect(mockToolkit.bootstrap).toHaveBeenCalledWith(
+        'environments',
+        expect.objectContaining({
+          forceDeployment: true,
+        }),
+      );
+    });
+
+    it('should set forceDeployment to false when forceBootstrap is not set', async () => {
+      // Arrange
+      const options = {
+        command: 'bootstrap',
+        accountId: '123456789012',
+        region: 'us-east-1',
+        partition: 'aws',
+        stackPrefix: 'AWSAccelerator',
+        managementAccountId: '123456789012',
+        enableSingleAccountMode: false,
+        useExistingRoles: false,
+      };
+
+      mockToolkit.bootstrap = vi.fn().mockResolvedValue(undefined);
+
+      // Act
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      await (AcceleratorToolkit as any).bootstrapToolKitStacks(mockToolkit, options);
+
+      // Assert
+      expect(mockToolkit.bootstrap).toHaveBeenCalledWith(
+        'environments',
+        expect.objectContaining({
+          forceDeployment: false,
+        }),
+      );
+    });
+  });
+
+  describe('getCdkToolKit', () => {
+    it('should create toolkit with correct configuration', async () => {
+      // Arrange
+      const options = {
+        command: 'deploy',
+        accountId: '123456789012',
+        region: 'us-east-1',
+        partition: 'aws',
+        stackPrefix: 'AWSAccelerator',
+        managementAccountId: '123456789012',
+        enableSingleAccountMode: false,
+        useExistingRoles: false,
+      };
+      const toolkitStackName = 'AWSAccelerator-CDKToolkit';
+
+      // Act
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const result = await (AcceleratorToolkit as any).getCdkToolKit(options, toolkitStackName);
+
+      // Assert
+      expect(result).toBeDefined();
+      expect(Toolkit).toHaveBeenCalled();
+    });
+
+    it('should create toolkit with GovCloud configuration', async () => {
+      // Arrange
+      const options = {
+        command: 'deploy',
+        accountId: '123456789012',
+        region: 'us-gov-west-1',
+        partition: 'aws-us-gov',
+        stackPrefix: 'AWSAccelerator',
+        managementAccountId: '123456789012',
+        enableSingleAccountMode: false,
+        useExistingRoles: false,
+      };
+      const toolkitStackName = 'AWSAccelerator-CDKToolkit';
+
+      // Act
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const result = await (AcceleratorToolkit as any).getCdkToolKit(options, toolkitStackName);
+
+      // Assert
+      expect(result).toBeDefined();
+      expect(Toolkit).toHaveBeenCalled();
+    });
+  });
+});

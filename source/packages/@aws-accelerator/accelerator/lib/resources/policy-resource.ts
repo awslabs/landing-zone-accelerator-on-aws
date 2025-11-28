@@ -26,10 +26,9 @@ import {
   ServiceControlPolicyConfig,
 } from '@aws-accelerator/config';
 import winston from 'winston';
-import { createLogger } from '@aws-accelerator/utils/lib/logger';
+import { createLogger, DEFAULT_LAMBDA_RUNTIME, SsmResourceType } from '@aws-accelerator/utils';
 import path from 'path';
 import { pascalCase } from 'pascal-case';
-import { DEFAULT_LAMBDA_RUNTIME, SsmResourceType } from '@aws-accelerator/utils';
 
 export type policyItem = {
   /**

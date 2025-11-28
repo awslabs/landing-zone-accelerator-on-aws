@@ -15,7 +15,7 @@ import * as cdk from 'aws-cdk-lib';
 
 import { CfnGroup, CfnManagedPolicy } from 'aws-cdk-lib/aws-iam';
 import { GroupConfig, AseaResourceType } from '@aws-accelerator/config';
-import { SsmResourceType } from '@aws-accelerator/utils/lib/ssm-parameter-path';
+import { SsmResourceType } from '@aws-accelerator/utils';
 import { ImportAseaResourcesStack, LogLevel } from '../stacks/import-asea-resources-stack';
 import { pascalCase } from 'pascal-case';
 import { AseaResource, AseaResourceProps } from './resource';

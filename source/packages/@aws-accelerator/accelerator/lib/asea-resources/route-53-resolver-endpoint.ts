@@ -1,10 +1,9 @@
 import { AseaResourceType } from '@aws-accelerator/config';
-import { getAseaVpcName } from '@aws-accelerator/utils';
+import { getAseaVpcName, SsmResourceType } from '@aws-accelerator/utils';
 import { ImportAseaResourcesStack, LogLevel } from '../stacks/import-asea-resources-stack';
 import { AseaResource, AseaResourceProps } from './resource';
 import * as cdk from 'aws-cdk-lib';
 import { pascalCase } from 'pascal-case';
-import { SsmResourceType } from '@aws-accelerator/utils';
 
 const ASEA_PHASE_NUMBER = '3';
 const enum RESOURCE_TYPE {

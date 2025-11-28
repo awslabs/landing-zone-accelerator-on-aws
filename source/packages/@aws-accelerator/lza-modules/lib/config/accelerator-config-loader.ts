@@ -55,13 +55,7 @@ export abstract class AcceleratorConfigLoader {
     managementAccountCredentials?: AssumeRoleCredentialType,
   ): Promise<AccountsConfig> {
     const accountsConfig = AccountsConfig.load(configDirPath);
-    await accountsConfig.loadAccountIds(
-      partition,
-      false,
-      orgsEnabled,
-      accountsConfig,
-      managementAccountCredentials as AWS.Credentials,
-    );
+    await accountsConfig.loadAccountIds(partition, false, orgsEnabled, accountsConfig, managementAccountCredentials);
 
     return accountsConfig;
   }
@@ -111,7 +105,7 @@ export abstract class AcceleratorConfigLoader {
     // Get replacement config
     //
     const replacementsConfig = ReplacementsConfig.load(configDirPath, accountsConfig);
-    await replacementsConfig.loadDynamicReplacements(homeRegion, managementAccountCredentials as AWS.Credentials);
+    await replacementsConfig.loadDynamicReplacements(homeRegion, managementAccountCredentials);
 
     //
     // Get Global config
@@ -122,7 +116,7 @@ export abstract class AcceleratorConfigLoader {
     // Get Organization config
     //
     const organizationConfig = OrganizationConfig.load(configDirPath, replacementsConfig);
-    await organizationConfig.loadOrganizationalUnitIds(partition, managementAccountCredentials as AWS.Credentials);
+    await organizationConfig.loadOrganizationalUnitIds(partition, managementAccountCredentials);
 
     //
     // Load global config external mapping details

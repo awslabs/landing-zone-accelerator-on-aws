@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`ConfigServiceRecorder Construct(ConfigServiceDeliveryChannel):  Snapshot Test 1`] = `
+exports[`ConfigServiceRecorder > Construct(ConfigServiceDeliveryChannel):  Snapshot Test 1`] = `
 {
   "Resources": {
     "CustomKey1E6D0D07": {
@@ -108,7 +108,7 @@ exports[`ConfigServiceRecorder Construct(ConfigServiceDeliveryChannel):  Snapsho
         "Description": "Create/Update Config Recorder",
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.14.1",
           },
         },
         "Handler": "index.handler",
@@ -248,7 +248,7 @@ exports[`ConfigServiceRecorder Construct(ConfigServiceDeliveryChannel):  Snapsho
         "Description": "AWS CDK resource provider framework - onEvent (Stack/TestConfigServiceRecorder/ConfigServiceRecorderProvider)",
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.14.1",
             "USER_ON_EVENT_FUNCTION_ARN": {
               "Fn::GetAtt": [
                 "TestConfigServiceRecorderConfigServiceRecorderFunction78E08DB1",
@@ -258,6 +258,10 @@ exports[`ConfigServiceRecorder Construct(ConfigServiceDeliveryChannel):  Snapsho
           },
         },
         "Handler": "framework.onEvent",
+        "LoggingConfig": {
+          "ApplicationLogLevel": "FATAL",
+          "LogFormat": "JSON",
+        },
         "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
@@ -330,6 +334,16 @@ exports[`ConfigServiceRecorder Construct(ConfigServiceDeliveryChannel):  Snapsho
                   ],
                 },
               ],
+            },
+            {
+              "Action": "lambda:GetFunction",
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::GetAtt": [
+                  "TestConfigServiceRecorderConfigServiceRecorderFunction78E08DB1",
+                  "Arn",
+                ],
+              },
             },
           ],
           "Version": "2012-10-17",

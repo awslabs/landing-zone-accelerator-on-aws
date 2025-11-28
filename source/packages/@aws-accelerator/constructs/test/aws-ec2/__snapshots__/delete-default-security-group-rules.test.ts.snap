@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`DeleteDefaultSGRules Construct(DeleteDefaultSGRules):  Snapshot Test 1`] = `
+exports[`DeleteDefaultSGRules > Construct(DeleteDefaultSGRules):  Snapshot Test 1`] = `
 {
   "Resources": {
     "CustomDeleteDefaultSecurityGroupRulesCustomResourceProviderHandler0579558F": {
@@ -16,7 +16,7 @@ exports[`DeleteDefaultSGRules Construct(DeleteDefaultSGRules):  Snapshot Test 1`
         },
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.14.1",
           },
         },
         "Handler": "__entrypoint__.handler",

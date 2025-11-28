@@ -15,7 +15,7 @@ import * as cdk from 'aws-cdk-lib';
 import { NfwRuleGroupRuleConfig } from '@aws-accelerator/config';
 import { NetworkFirewallRuleGroup } from '../../lib/aws-networkfirewall/rule-group';
 import { snapShotTest } from '../snapshot-test';
-import { describe } from '@jest/globals';
+import { describe } from 'vitest';
 
 const testNamePrefix = 'Construct(NetworkFirewallPolicy): ';
 

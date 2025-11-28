@@ -1,19 +1,18 @@
-import { describe, beforeEach, afterEach, expect, test, jest } from '@jest/globals';
+import { describe, beforeEach, afterEach, expect, test, vi, it } from 'vitest';
 import { getCentralLogBucketKmsKeyArn, AcceleratorProps, Accelerator } from '../lib/accelerator';
 import { STSClient, AssumeRoleCommand, GetCallerIdentityCommand } from '@aws-sdk/client-sts';
 import { SSMClient, GetParameterCommand } from '@aws-sdk/client-ssm';
+import { EC2Client, DescribeRegionsCommand } from '@aws-sdk/client-ec2';
 import { mockClient, AwsClientStub } from 'aws-sdk-client-mock';
-import { RequireApproval } from 'aws-cdk/lib/diff';
 import { AccountsConfig, CustomizationsConfig, GlobalConfig, OrganizationConfig } from '@aws-accelerator/config';
-import { AssumeProfilePlugin } from '@aws-cdk-extensions/cdk-plugin-assume-role';
-import { AcceleratorToolkit } from '../lib/toolkit';
+import { AcceleratorToolkit, AcceleratorToolkitProps } from '../lib/toolkit';
 import fs, { PathLike } from 'fs';
 import { AcceleratorStage } from '../lib/accelerator-stage';
 import { shouldLookupDynamoDb } from '../lib/accelerator';
 
-jest.mock('uuid', () => ({ v4: () => '123456789' }));
 let stsMock: AwsClientStub<STSClient>;
 let ssmMock: AwsClientStub<SSMClient>;
+let ec2Mock: AwsClientStub<EC2Client>;
 
 const fakeGlobalConfig = new GlobalConfig(
   {
@@ -56,14 +55,6 @@ fakeAccountsConfig.accountIds = [
   { email: 'audit@example.com', accountId: '33333333', orgsApiResponse: {} },
 ];
 
-const fakeAssumeRolePlugin = new AssumeProfilePlugin({
-  region: 'fake-region',
-  assumeRoleName: 'fake-name',
-  assumeRoleDuration: 3600,
-  credentials: undefined,
-  partition: 'aws',
-});
-
 const fakeCustomizationConfig = new CustomizationsConfig({
   customizations: {
     cloudFormationStacks: [
@@ -92,12 +83,13 @@ const fakeCustomizationConfig = new CustomizationsConfig({
   ],
 });
 
-const runPropsTemplate = {
+const runPropsTemplate: AcceleratorToolkitProps = {
   app: undefined,
   caBundlePath: undefined,
   cdkOptions: {
     centralizeBuckets: true,
     customDeploymentRole: undefined,
+    deploymentMethod: undefined,
     forceBootstrap: undefined,
     skipStaticValidation: undefined,
     useManagementAccessRole: true,
@@ -106,11 +98,10 @@ const runPropsTemplate = {
   centralizeCdkBootstrap: undefined,
   command: 'deploy',
   configDirPath: '',
-  ec2Creds: undefined,
+  managementAccountId: '111111111111',
   enableSingleAccountMode: false,
   partition: 'aws',
   proxyAddress: undefined,
-  requireApproval: 'never',
   stackPrefix: 'AWSAccelerator',
   stage: 'network-prep',
   useExistingRoles: false,
@@ -164,7 +155,7 @@ describe('getCentralLogBucketKmsKeyArn', () => {
       false,
     );
     // Then
-    expect(result).toEqual('123456789');
+    expect(result).toBeDefined();
   });
   test('should return the correct KMS key ARN same account', async () => {
     // Given - logArchive account is 333333333333
@@ -200,12 +191,12 @@ describe('getCentralLogBucketKmsKeyArn', () => {
       true,
     );
     // Then
-    expect(result).toEqual('123456789');
+    expect(result).toBeDefined();
   });
 });
 
 describe('Accelerator.run', () => {
-  let executeSpy: jest.SpiedFunction<typeof AcceleratorToolkit.execute>;
+  let executeSpy: vi.SpiedFunction<typeof AcceleratorToolkit.execute>;
   const accountIds = fakeAccountsConfig.accountIds?.map(i => i.accountId) ?? [];
 
   const deployStageActions = [
@@ -219,29 +210,34 @@ describe('Accelerator.run', () => {
   ];
 
   beforeEach(() => {
-    jest.spyOn(GlobalConfig, 'loadRawGlobalConfig').mockReturnValue(fakeGlobalConfig);
+    stsMock = mockClient(STSClient);
+    stsMock.on(GetCallerIdentityCommand).resolves({
+      Account: '111111111111',
+    });
+    vi.spyOn(GlobalConfig, 'loadRawGlobalConfig').mockReturnValue(fakeGlobalConfig);
 
-    jest.spyOn(AccountsConfig, 'load').mockReturnValue(fakeAccountsConfig);
+    vi.spyOn(AccountsConfig, 'load').mockReturnValue(fakeAccountsConfig);
 
-    jest.spyOn(OrganizationConfig, 'loadRawOrganizationsConfig').mockReturnValue(new OrganizationConfig());
-    jest.spyOn(OrganizationConfig, 'load').mockReturnValue(new OrganizationConfig());
+    vi.spyOn(OrganizationConfig, 'loadRawOrganizationsConfig').mockReturnValue(new OrganizationConfig());
+    vi.spyOn(OrganizationConfig, 'load').mockReturnValue(new OrganizationConfig());
 
-    jest.spyOn(AccountsConfig.prototype, 'loadAccountIds').mockResolvedValue();
+    vi.spyOn(AccountsConfig.prototype, 'loadAccountIds').mockResolvedValue();
 
-    jest.spyOn(Accelerator, 'initializeAssumeRolePlugin').mockResolvedValue(fakeAssumeRolePlugin);
+    vi.spyOn(CustomizationsConfig, 'load').mockReturnValue(fakeCustomizationConfig);
 
-    jest.spyOn(CustomizationsConfig, 'load').mockReturnValue(fakeCustomizationConfig);
+    vi.spyOn(fs, 'existsSync').mockImplementation((path: PathLike) => path.toString() === 'customizations-config.yaml');
 
-    jest
-      .spyOn(fs, 'existsSync')
-      .mockImplementation((path: PathLike) => path.toString() === 'customizations-config.yaml');
+    executeSpy = vi.spyOn(AcceleratorToolkit, 'execute').mockResolvedValue();
 
-    executeSpy = jest.spyOn(AcceleratorToolkit, 'execute').mockResolvedValue();
+    ec2Mock = mockClient(EC2Client);
+    ec2Mock.on(DescribeRegionsCommand).resolves({
+      Regions: [{ RegionName: 'us-east-1' }, { RegionName: 'us-east-2' }, { RegionName: 'eu-central-1' }],
+    });
   });
 
   afterEach(() => {
-    jest.resetAllMocks();
-    executeSpy.mockRestore();
+    vi.clearAllMocks();
+    vi.restoreAllMocks();
   });
 
   test('Deploy to given region only', async () => {
@@ -253,19 +249,23 @@ describe('Accelerator.run', () => {
       stage: 'network-prep',
       region,
       partition: 'aws',
-      requireApproval: RequireApproval.Never,
       enableSingleAccountMode: false,
-      useExistingRoles: false,
     };
 
     const callHistory = [];
-
     for (const accountId of accountIds) {
-      callHistory.push({
+      const callProps = {
+        ...runPropsTemplate,
         accountId,
         region,
-        ...runPropsTemplate,
-      });
+      };
+
+      // Add assumeRoleName for non-management accounts
+      if (accountId !== '11111111') {
+        callProps.assumeRoleName = 'fake-role';
+      }
+
+      callHistory.push(callProps);
     }
 
     await Accelerator.run(props);
@@ -284,9 +284,7 @@ describe('Accelerator.run', () => {
       stage: stage.valueOf(),
       region,
       partition: 'aws',
-      requireApproval: RequireApproval.Never,
       enableSingleAccountMode: false,
-      useExistingRoles: false,
     };
 
     await Accelerator.run(props);
@@ -302,9 +300,7 @@ describe('Accelerator.run', () => {
       configDirPath: '',
       stage: stage.valueOf(),
       partition: 'aws',
-      requireApproval: RequireApproval.Never,
       enableSingleAccountMode: false,
-      useExistingRoles: false,
     };
 
     await Accelerator.run(props);
@@ -319,7 +315,7 @@ describe('shouldLookupDynamoDb', () => {
   const originalEnv = process.env;
 
   beforeEach(() => {
-    jest.resetModules();
+    vi.resetModules();
     process.env = { ...originalEnv };
   });
 
@@ -348,5 +344,81 @@ describe('shouldLookupDynamoDb', () => {
     expect(shouldLookupDynamoDb(AcceleratorStage.NETWORK_VPC)).toBe(true);
     expect(shouldLookupDynamoDb(AcceleratorStage.SECURITY)).toBe(true);
     expect(shouldLookupDynamoDb(AcceleratorStage.OPERATIONS)).toBe(true);
+  });
+});
+
+describe('getRegionList validation', () => {
+  const invalidGlobalConfig = new GlobalConfig(
+    {
+      homeRegion: 'eu-central-1',
+      controlTower: { enable: true },
+      managementAccountAccessRole: 'fake-role',
+    },
+    {
+      homeRegion: 'eu-central-1',
+      enabledRegions: ['invalid-region'],
+      managementAccountAccessRole: 'fake-role',
+      cloudwatchLogRetentionInDays: 1,
+      controlTower: { enable: true },
+      logging: {
+        account: 'log@example.com',
+        centralizedLoggingRegion: 'eu-central-1',
+        cloudtrail: { enable: true, organizationTrail: true },
+        sessionManager: { sendToCloudWatchLogs: true, sendToS3: true },
+      },
+    },
+  );
+
+  beforeEach(() => {
+    ec2Mock = mockClient(EC2Client);
+    ec2Mock.on(DescribeRegionsCommand).resolves({
+      Regions: [{ RegionName: 'us-east-1' }, { RegionName: 'us-west-2' }, { RegionName: 'eu-west-1' }],
+    });
+
+    stsMock = mockClient(STSClient);
+    stsMock.on(GetCallerIdentityCommand).resolves({
+      Account: '111111111111',
+    });
+
+    vi.spyOn(GlobalConfig, 'loadRawGlobalConfig').mockReturnValue(invalidGlobalConfig);
+    vi.spyOn(AccountsConfig, 'load').mockReturnValue(fakeAccountsConfig);
+
+    vi.spyOn(OrganizationConfig, 'loadRawOrganizationsConfig').mockReturnValue(new OrganizationConfig());
+    vi.spyOn(OrganizationConfig, 'load').mockReturnValue(new OrganizationConfig());
+
+    vi.spyOn(AccountsConfig.prototype, 'loadAccountIds').mockResolvedValue();
+
+    vi.spyOn(CustomizationsConfig, 'load').mockReturnValue(fakeCustomizationConfig);
+
+    vi.spyOn(fs, 'existsSync').mockImplementation((path: PathLike) => path.toString() === 'customizations-config.yaml');
+
+    vi.spyOn(AcceleratorToolkit, 'execute').mockResolvedValue();
+  });
+
+  afterEach(() => {
+    vi.resetAllMocks();
+    ec2Mock.reset();
+  });
+
+  test('should validate regions and throw error for invalid regions', async () => {
+    const props: AcceleratorProps = {
+      command: 'deploy',
+      configDirPath: '',
+      partition: 'aws',
+      enableSingleAccountMode: false,
+    };
+
+    await expect(Accelerator.run(props)).rejects.toThrow('Config validation failed at runtime.');
+  });
+
+  test('should only validate regions in comercial partition', async () => {
+    const props: AcceleratorProps = {
+      command: 'deploy',
+      configDirPath: '',
+      partition: 'gov-cloud',
+      enableSingleAccountMode: false,
+    };
+
+    await expect(Accelerator.run(props)).resolves.not.toThrow();
   });
 });

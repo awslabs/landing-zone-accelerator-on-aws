@@ -14,7 +14,7 @@
 import * as cdk from 'aws-cdk-lib';
 import { Construct } from 'constructs';
 import { DEFAULT_LAMBDA_RUNTIME } from '../../../utils/lib/lambda';
-const path = require('path');
+import * as path from 'path';
 
 export interface ConfigServiceRecorderProps {
   /**

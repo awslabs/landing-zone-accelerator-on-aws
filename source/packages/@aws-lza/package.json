@@ -1,6 +1,7 @@
 {
   "name": "aws-lza",
   "version": "0.0.0",
+  "private": true,
   "description": "The package to manage various AWS service configurations.",
   "license": "Apache-2.0",
   "author": {
@@ -11,22 +12,21 @@
  "bin" : {
   "lza": "bin/lza"
  },
-  "private": true,
   "scripts": {
     "cleanup": "tsc --build ./ --clean && rm -rf node_modules && rm -rf dist",
     "cleanup:tsc": "tsc --build ./ --clean",
     "build": "tsc",
     "watch": "tsc -w",
-    "test:unit": "jest --ci --coverage --testMatch '**/*.test.unit.ts'",
-    "test:integration": "jest --ci --testMatch \"${INIT_CWD}/*.test.integration.ts\"",
+    "test:unit": "vitest run --coverage",
+    "test:integration": "vitest run --config vitest.integration.config.ts",
     "test:clean": "rm -f ./test-reports/*.xml",
-    "lint": "eslint --fix  --max-warnings 0 -c ../../.eslintrc.json 'lib/**/*.{ts,tsx}' 'bin/**/*.{ts,tsx}'",
-    "precommit": "eslint --max-warnings 0 -c ../../.eslintrc.json 'lib/**/*.{ts,tsx}' 'bin/**/*.{ts,tsx}'",
+    "lint": "eslint --fix  --max-warnings 0 -c ../../eslint.config.mjs 'lib/**/*.{ts,tsx}' 'bin/**/*.{ts,tsx}'",
+    "precommit": "eslint --max-warnings 0 -c ../../eslint.config.mjs 'lib/**/*.{ts,tsx}' 'bin/**/*.{ts,tsx}'",
     "prepare": "npm run build",
     "lza": "bin/lza"
   },
   "dependencies": {
-    "@aws-sdk/client-controltower": "3.835.0",
+    "@aws-sdk/client-controltower": "3.940.0",
     "@aws-sdk/client-iam": "3.835.0",
     "@aws-sdk/client-sso-admin": "3.835.0",
     "@aws-sdk/client-kms": "3.835.0",
@@ -44,32 +44,21 @@
   "devDependencies": {
     "aws-sdk-client-mock": "3.0.1",
     "@types/fs-extra": "11.0.1",
-    "@types/jest": "29.5.12",
     "@types/node": "18.19.50",
     "@types/promptly": "3.0.2",
     "@types/yargs": "17.0.33",
-    "@typescript-eslint/parser": "5.53.0",
-    "eslint": "8.34.0",
-    "eslint-config-prettier": "8.6.0",
-    "eslint-config-standard": "17.0.0",
-    "eslint-import-resolver-node": "0.3.7",
-    "eslint-import-resolver-typescript": "3.5.3",
-    "eslint-plugin-import": "2.27.5",
-    "eslint-plugin-license-header": "0.6.0",
-    "eslint-plugin-n": "15.6.1",
-    "eslint-plugin-node": "11.1.0",
-    "eslint-plugin-promise": "6.1.1",
-    "jest": "29.4.3",
-    "jest-sonar-reporter": "2.0.0",
-    "prettier": "2.8.4",
-    "ts-jest": "29.0.5",
+    "@typescript-eslint/parser": "8.45.0",
+    "eslint": "9.37.0",
+    "eslint-config-prettier": "10.1.8",
+    "eslint-import-resolver-typescript": "4.4.4",
+    "eslint-plugin-import": "2.32.0",
+    "eslint-plugin-license-header": "0.8.0",
+    "eslint-plugin-n": "17.23.1",
+    "eslint-plugin-promise": "7.2.1",
+    "prettier": "3.6.2",
+    "vitest": "3.2.4",
     "ts-node": "10.9.1",
     "typescript": "5.8.3"
-  },
-  "jestSonar": {
-    "reportPath": "coverage",
-    "reportFile": "test-report.xml",
-    "indent": 4
   },
   "resolutions": {
     "cross-spawn": "7.0.6",

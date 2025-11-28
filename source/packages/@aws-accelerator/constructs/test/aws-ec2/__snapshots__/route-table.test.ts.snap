@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`RouteTable Construct(RouteTable):  Snapshot Test 1`] = `
+exports[`RouteTable > Construct(RouteTable):  Snapshot Test 1`] = `
 {
   "Resources": {
     "CustomPrefixListRouteCustomResourceProviderHandler5B28D077": {
@@ -16,7 +16,7 @@ exports[`RouteTable Construct(RouteTable):  Snapshot Test 1`] = `
         },
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.14.1",
           },
         },
         "Handler": "__entrypoint__.handler",
@@ -447,6 +447,12 @@ exports[`RouteTable Construct(RouteTable):  Snapshot Test 1`] = `
         },
       },
       "Properties": {
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "Test",
+          },
+        ],
         "VpcId": {
           "Ref": "TestVpcE77CE678",
         },

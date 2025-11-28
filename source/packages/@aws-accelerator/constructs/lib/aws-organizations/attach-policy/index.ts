@@ -110,8 +110,7 @@ export async function handler(event: CloudFormationCustomResourceEvent): Promise
         // if no policy is found, no action should be taken
         (await isPolicyInOrg(policyId, type, organizationsClient))
       ) {
-        const attachedPolicies = await getListPoliciesForTarget(organizationsClient, type, targetId);
-        await detachPolicyFromSpecificTarget(attachedPolicies, targetId, organizationsClient, policyTagKey);
+        await detachSpecificPolicy(organizationsClient, policyId, targetId);
       }
 
       return {

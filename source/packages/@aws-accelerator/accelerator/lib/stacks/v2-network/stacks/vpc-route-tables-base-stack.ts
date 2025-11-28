@@ -17,12 +17,10 @@ import { Construct } from 'constructs';
 import { AcceleratorStack } from '../../accelerator-stack';
 import { V2NetworkStacksBaseProps } from '../utils/types';
 import { VpcDetails } from '../constructs/vpc-details';
-import { OutpostsConfig, RouteTableConfig } from '@aws-accelerator/config/lib/network-config';
-import { SsmResourceType } from '@aws-accelerator/utils/lib/ssm-parameter-path';
-import { GatewayRouteTableType } from '@aws-accelerator/config/lib/models/network-config';
+import { OutpostsConfig, RouteTableConfig, GatewayRouteTableType } from '@aws-accelerator/config';
+import { SsmResourceType, MetadataKeys } from '@aws-accelerator/utils';
 import { isV2Resource } from '../utils/functions';
 import { NetworkStackGeneration, V2StackComponentsList } from '../utils/enums';
-import { MetadataKeys } from '@aws-accelerator/utils/lib/common-types';
 
 type V2RouteTableDetailsType = { cfnRouteTable?: cdk.aws_ec2.CfnRouteTable; routeTableId?: string };
 export class VpcRouteTablesBaseStack extends AcceleratorStack {

@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`InstallerStack Stack(installer):  Snapshot Test 1`] = `
+exports[`InstallerStack > Stack(installer):  Snapshot Test 1`] = `
 {
   "Conditions": {
     "IsCommercialCondition": {
@@ -276,7 +276,7 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 1`] = `
     "RepositoryBranchName": {
       "AllowedPattern": ".+",
       "ConstraintDescription": "The repository branch name must not be empty",
-      "Default": "release/v1.13.0",
+      "Default": "release/v1.14.1",
       "Description": "The name of the git branch to use for installation. To determine the branch name, navigate to the Landing Zone Accelerator GitHub branches page and choose the release branch you would like to deploy. Release branch names will align with the semantic versioning of our GitHub releases. New release branches will be available as the open source project is updated with new features.",
       "Type": "String",
     },
@@ -1721,41 +1721,6 @@ phases:
     commands:
       - ENABLE_EXTERNAL_PIPELINE_ACCOUNT="no"
       - if [ ! -z "$MANAGEMENT_ACCOUNT_ID" ] && [ ! -z "$MANAGEMENT_ACCOUNT_ROLE_NAME" ]; then ENABLE_EXTERNAL_PIPELINE_ACCOUNT="yes"; fi
-      - set -e && if ! aws cloudformation describe-stacks --stack-name ",
-                {
-                  "Fn::GetAtt": [
-                    "ResourceNamePrefixesGetPrefixResource96A10E6E",
-                    "acceleratorPrefix",
-                  ],
-                },
-                "-CDKToolkit --region ",
-                {
-                  "Ref": "AWS::Region",
-                },
-                "; then BOOTSTRAPPED_HOME="no"; fi
-      - set -e && if ! aws cloudformation describe-stacks --stack-name ",
-                {
-                  "Fn::GetAtt": [
-                    "ResourceNamePrefixesGetPrefixResource96A10E6E",
-                    "acceleratorPrefix",
-                  ],
-                },
-                "-CDKToolkit --region ",
-                {
-                  "Fn::FindInMap": [
-                    "GlobalRegionMap",
-                    {
-                      "Ref": "AWS::Partition",
-                    },
-                    "regionName",
-                  ],
-                },
-                "; then BOOTSTRAPPED_GLOBAL="no"; fi
-      - ENABLE_DIAGNOSTICS_PACK=",
-                {
-                  "Ref": "EnableDiagnosticsPack",
-                },
-                "
   build:
     commands:
       - cd source
@@ -1771,34 +1736,22 @@ phases:
       - if [ -f .yarnrc ]; then yarn install --use-yarnrc .yarnrc; else yarn install; fi
       - yarn build
       - cd packages/@aws-accelerator/installer
-      - set -e && if [ "$BOOTSTRAPPED_HOME" = "no" ]; then yarn run cdk bootstrap --toolkitStackName ",
+      - set -e && ./lib/bash/bootstrap-management.sh ",
                 {
                   "Fn::GetAtt": [
                     "ResourceNamePrefixesGetPrefixResource96A10E6E",
                     "acceleratorPrefix",
                   ],
                 },
-                "-CDKToolkit aws://",
-                {
-                  "Ref": "AWS::AccountId",
-                },
-                "/",
+                " ",
                 {
                   "Ref": "AWS::Region",
                 },
-                " --qualifier accel; fi
-      - set -e &&  if [ "$BOOTSTRAPPED_GLOBAL" = "no" ]; then yarn run cdk bootstrap --toolkitStackName ",
-                {
-                  "Fn::GetAtt": [
-                    "ResourceNamePrefixesGetPrefixResource96A10E6E",
-                    "acceleratorPrefix",
-                  ],
-                },
-                "-CDKToolkit aws://",
+                " ",
                 {
                   "Ref": "AWS::AccountId",
                 },
-                "/",
+                " ",
                 {
                   "Fn::FindInMap": [
                     "GlobalRegionMap",
@@ -1808,7 +1761,7 @@ phases:
                     "regionName",
                   ],
                 },
-                " --qualifier accel; fi
+                " $FORCE_BOOTSTRAP
       - |-
         set -e && if [ $ENABLE_EXTERNAL_PIPELINE_ACCOUNT = "yes" ]; then
                           if ! MANAGEMENT_ACCOUNT_CREDENTIAL=$(aws sts assume-role --role-arn arn:",
@@ -1819,45 +1772,19 @@ phases:
                             echo "Failed to assume $MANAGEMENT_ACCOUNT_ROLE_NAME role in management account $MANAGEMENT_ACCOUNT_ID"
                             exit 1
                           fi
-                          # Force bootstrapping is to account for where the LZA framework has previously bootstrapped the account and therefore uses a custom template
-                          # which doesn't have the S3 bucket (as it using the management account bucket)
-                          yarn run cdk bootstrap --toolkitStackName ",
-                {
-                  "Fn::GetAtt": [
-                    "ResourceNamePrefixesGetPrefixResource96A10E6E",
-                    "acceleratorPrefix",
-                  ],
-                },
-                "-CDKToolkit aws://",
-                {
-                  "Ref": "AWS::AccountId",
-                },
-                "/",
-                {
-                  "Ref": "AWS::Region",
-                },
-                " --qualifier accel --force
                           export $(printf "AWS_ACCESS_KEY_ID=%s AWS_SECRET_ACCESS_KEY=%s AWS_SESSION_TOKEN=%s" $MANAGEMENT_ACCOUNT_CREDENTIAL);
-                          if ! aws cloudformation describe-stacks --stack-name ",
+                          set -e && ./lib/bash/bootstrap-management.sh ",
                 {
                   "Fn::GetAtt": [
                     "ResourceNamePrefixesGetPrefixResource96A10E6E",
                     "acceleratorPrefix",
                   ],
                 },
-                "-CDKToolkit --region ",
+                " ",
                 {
                   "Ref": "AWS::Region",
                 },
-                "; then MGMT_BOOTSTRAPPED_HOME="no"; fi;
-                          if ! aws cloudformation describe-stacks --stack-name ",
-                {
-                  "Fn::GetAtt": [
-                    "ResourceNamePrefixesGetPrefixResource96A10E6E",
-                    "acceleratorPrefix",
-                  ],
-                },
-                "-CDKToolkit --region ",
+                " $MANAGEMENT_ACCOUNT_ID ",
                 {
                   "Fn::FindInMap": [
                     "GlobalRegionMap",
@@ -1867,37 +1794,7 @@ phases:
                     "regionName",
                   ],
                 },
-                "; then MGMT_BOOTSTRAPPED_GLOBAL="no"; fi;
-                          if [ "$MGMT_BOOTSTRAPPED_HOME" = "no" ]; then yarn run cdk bootstrap --toolkitStackName ",
-                {
-                  "Fn::GetAtt": [
-                    "ResourceNamePrefixesGetPrefixResource96A10E6E",
-                    "acceleratorPrefix",
-                  ],
-                },
-                "-CDKToolkit aws://$MANAGEMENT_ACCOUNT_ID/",
-                {
-                  "Ref": "AWS::Region",
-                },
-                " --qualifier accel; fi;
-                          if [ "$MGMT_BOOTSTRAPPED_GLOBAL" = "no" ]; then yarn run cdk bootstrap --toolkitStackName ",
-                {
-                  "Fn::GetAtt": [
-                    "ResourceNamePrefixesGetPrefixResource96A10E6E",
-                    "acceleratorPrefix",
-                  ],
-                },
-                "-CDKToolkit aws://$MANAGEMENT_ACCOUNT_ID/",
-                {
-                  "Fn::FindInMap": [
-                    "GlobalRegionMap",
-                    {
-                      "Ref": "AWS::Partition",
-                    },
-                    "regionName",
-                  ],
-                },
-                " --qualifier accel; fi;
+                " $FORCE_BOOTSTRAP;
                           unset AWS_ACCESS_KEY_ID;
                           unset AWS_SECRET_ACCESS_KEY;
                           unset AWS_SESSION_TOKEN;
@@ -1915,7 +1812,20 @@ phases:
                           fi;
       - |-
         set -e && if [ $ENABLE_DIAGNOSTICS_PACK = "Yes" ]; then
-                        yarn run ts-node --transpile-only cdk.ts deploy --require-approval never --stage diagnostics-pack --account ",
+                        yarn run ts-node --transpile-only cdk.ts synth --stage diagnostics-pack --account ",
+                {
+                  "Ref": "AWS::AccountId",
+                },
+                " --region ",
+                {
+                  "Ref": "AWS::Region",
+                },
+                " --partition ",
+                {
+                  "Ref": "AWS::Partition",
+                },
+                "
+                        yarn run ts-node --transpile-only cdk.ts deploy --stage diagnostics-pack --account ",
                 {
                   "Ref": "AWS::AccountId",
                 },
@@ -1929,7 +1839,7 @@ phases:
                 },
                 "
                       fi
-      - set -e && yarn run ts-node --transpile-only cdk.ts deploy --require-approval never --stage pipeline --account ",
+      - set -e && yarn run ts-node --transpile-only cdk.ts synth --stage pipeline --account ",
                 {
                   "Ref": "AWS::AccountId",
                 },
@@ -1942,7 +1852,20 @@ phases:
                   "Ref": "AWS::Partition",
                 },
                 "
-      - set -e && if [ "$ENABLE_TESTER" = "true" ]; then yarn run ts-node --transpile-only cdk.ts deploy --require-approval never --stage tester-pipeline --account ",
+      - set -e && yarn run ts-node --transpile-only cdk.ts deploy --stage pipeline --account ",
+                {
+                  "Ref": "AWS::AccountId",
+                },
+                " --region ",
+                {
+                  "Ref": "AWS::Region",
+                },
+                " --partition ",
+                {
+                  "Ref": "AWS::Partition",
+                },
+                "
+      - set -e && if [ "$ENABLE_TESTER" = "true" ]; then yarn run ts-node --transpile-only cdk.ts deploy --stage tester-pipeline --account ",
                 {
                   "Ref": "AWS::AccountId",
                 },
@@ -1951,6 +1874,8 @@ phases:
                   "Ref": "AWS::Region",
                 },
                 "; fi
+      - chmod +x scripts/post_pipeline_s3_config_check.sh
+      - set -e && bash -e scripts/post_pipeline_s3_config_check.sh
       - set -e && cd ../../../../ && zip -rqy /tmp/lza.zip . && aws s3 cp /tmp/lza.zip s3://",
                 {
                   "Fn::GetAtt": [
@@ -1966,7 +1891,7 @@ phases:
                 {
                   "Ref": "AWS::Region",
                 },
-                "/lza/v1.13.0.zip --region ",
+                "/lza/v1.14.1.zip --region ",
                 {
                   "Ref": "AWS::Region",
                 },
@@ -2842,7 +2767,7 @@ phases:
           ],
         },
         "Type": "String",
-        "Value": "1.13.0",
+        "Value": "1.14.1",
       },
       "Type": "AWS::SSM::Parameter",
     },
@@ -3797,7 +3722,7 @@ exports.handler = async function (event, context) {
 }
 `;
 
-exports[`InstallerStack Stack(installer):  Snapshot Test 2`] = `
+exports[`InstallerStack > Stack(installer):  Snapshot Test 2`] = `
 {
   "Conditions": {
     "IsCommercialCondition": {
@@ -4073,7 +3998,7 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 2`] = `
     "RepositoryBranchName": {
       "AllowedPattern": ".+",
       "ConstraintDescription": "The repository branch name must not be empty",
-      "Default": "release/v1.13.0",
+      "Default": "release/v1.14.1",
       "Description": "The name of the git branch to use for installation. To determine the branch name, navigate to the Landing Zone Accelerator GitHub branches page and choose the release branch you would like to deploy. Release branch names will align with the semantic versioning of our GitHub releases. New release branches will be available as the open source project is updated with new features.",
       "Type": "String",
     },
@@ -5508,41 +5433,6 @@ phases:
     commands:
       - ENABLE_EXTERNAL_PIPELINE_ACCOUNT="no"
       - if [ ! -z "$MANAGEMENT_ACCOUNT_ID" ] && [ ! -z "$MANAGEMENT_ACCOUNT_ROLE_NAME" ]; then ENABLE_EXTERNAL_PIPELINE_ACCOUNT="yes"; fi
-      - set -e && if ! aws cloudformation describe-stacks --stack-name ",
-                {
-                  "Fn::GetAtt": [
-                    "ResourceNamePrefixesGetPrefixResource96A10E6E",
-                    "acceleratorPrefix",
-                  ],
-                },
-                "-CDKToolkit --region ",
-                {
-                  "Ref": "AWS::Region",
-                },
-                "; then BOOTSTRAPPED_HOME="no"; fi
-      - set -e && if ! aws cloudformation describe-stacks --stack-name ",
-                {
-                  "Fn::GetAtt": [
-                    "ResourceNamePrefixesGetPrefixResource96A10E6E",
-                    "acceleratorPrefix",
-                  ],
-                },
-                "-CDKToolkit --region ",
-                {
-                  "Fn::FindInMap": [
-                    "GlobalRegionMap",
-                    {
-                      "Ref": "AWS::Partition",
-                    },
-                    "regionName",
-                  ],
-                },
-                "; then BOOTSTRAPPED_GLOBAL="no"; fi
-      - ENABLE_DIAGNOSTICS_PACK=",
-                {
-                  "Ref": "EnableDiagnosticsPack",
-                },
-                "
   build:
     commands:
       - cd source
@@ -5558,34 +5448,22 @@ phases:
       - if [ -f .yarnrc ]; then yarn install --use-yarnrc .yarnrc; else yarn install; fi
       - yarn build
       - cd packages/@aws-accelerator/installer
-      - set -e && if [ "$BOOTSTRAPPED_HOME" = "no" ]; then yarn run cdk bootstrap --toolkitStackName ",
+      - set -e && ./lib/bash/bootstrap-management.sh ",
                 {
                   "Fn::GetAtt": [
                     "ResourceNamePrefixesGetPrefixResource96A10E6E",
                     "acceleratorPrefix",
                   ],
                 },
-                "-CDKToolkit aws://",
-                {
-                  "Ref": "AWS::AccountId",
-                },
-                "/",
+                " ",
                 {
                   "Ref": "AWS::Region",
                 },
-                " --qualifier accel; fi
-      - set -e &&  if [ "$BOOTSTRAPPED_GLOBAL" = "no" ]; then yarn run cdk bootstrap --toolkitStackName ",
-                {
-                  "Fn::GetAtt": [
-                    "ResourceNamePrefixesGetPrefixResource96A10E6E",
-                    "acceleratorPrefix",
-                  ],
-                },
-                "-CDKToolkit aws://",
+                " ",
                 {
                   "Ref": "AWS::AccountId",
                 },
-                "/",
+                " ",
                 {
                   "Fn::FindInMap": [
                     "GlobalRegionMap",
@@ -5595,7 +5473,7 @@ phases:
                     "regionName",
                   ],
                 },
-                " --qualifier accel; fi
+                " $FORCE_BOOTSTRAP
       - |-
         set -e && if [ $ENABLE_EXTERNAL_PIPELINE_ACCOUNT = "yes" ]; then
                           if ! MANAGEMENT_ACCOUNT_CREDENTIAL=$(aws sts assume-role --role-arn arn:",
@@ -5606,45 +5484,19 @@ phases:
                             echo "Failed to assume $MANAGEMENT_ACCOUNT_ROLE_NAME role in management account $MANAGEMENT_ACCOUNT_ID"
                             exit 1
                           fi
-                          # Force bootstrapping is to account for where the LZA framework has previously bootstrapped the account and therefore uses a custom template
-                          # which doesn't have the S3 bucket (as it using the management account bucket)
-                          yarn run cdk bootstrap --toolkitStackName ",
-                {
-                  "Fn::GetAtt": [
-                    "ResourceNamePrefixesGetPrefixResource96A10E6E",
-                    "acceleratorPrefix",
-                  ],
-                },
-                "-CDKToolkit aws://",
-                {
-                  "Ref": "AWS::AccountId",
-                },
-                "/",
-                {
-                  "Ref": "AWS::Region",
-                },
-                " --qualifier accel --force
                           export $(printf "AWS_ACCESS_KEY_ID=%s AWS_SECRET_ACCESS_KEY=%s AWS_SESSION_TOKEN=%s" $MANAGEMENT_ACCOUNT_CREDENTIAL);
-                          if ! aws cloudformation describe-stacks --stack-name ",
+                          set -e && ./lib/bash/bootstrap-management.sh ",
                 {
                   "Fn::GetAtt": [
                     "ResourceNamePrefixesGetPrefixResource96A10E6E",
                     "acceleratorPrefix",
                   ],
                 },
-                "-CDKToolkit --region ",
+                " ",
                 {
                   "Ref": "AWS::Region",
                 },
-                "; then MGMT_BOOTSTRAPPED_HOME="no"; fi;
-                          if ! aws cloudformation describe-stacks --stack-name ",
-                {
-                  "Fn::GetAtt": [
-                    "ResourceNamePrefixesGetPrefixResource96A10E6E",
-                    "acceleratorPrefix",
-                  ],
-                },
-                "-CDKToolkit --region ",
+                " $MANAGEMENT_ACCOUNT_ID ",
                 {
                   "Fn::FindInMap": [
                     "GlobalRegionMap",
@@ -5654,37 +5506,7 @@ phases:
                     "regionName",
                   ],
                 },
-                "; then MGMT_BOOTSTRAPPED_GLOBAL="no"; fi;
-                          if [ "$MGMT_BOOTSTRAPPED_HOME" = "no" ]; then yarn run cdk bootstrap --toolkitStackName ",
-                {
-                  "Fn::GetAtt": [
-                    "ResourceNamePrefixesGetPrefixResource96A10E6E",
-                    "acceleratorPrefix",
-                  ],
-                },
-                "-CDKToolkit aws://$MANAGEMENT_ACCOUNT_ID/",
-                {
-                  "Ref": "AWS::Region",
-                },
-                " --qualifier accel; fi;
-                          if [ "$MGMT_BOOTSTRAPPED_GLOBAL" = "no" ]; then yarn run cdk bootstrap --toolkitStackName ",
-                {
-                  "Fn::GetAtt": [
-                    "ResourceNamePrefixesGetPrefixResource96A10E6E",
-                    "acceleratorPrefix",
-                  ],
-                },
-                "-CDKToolkit aws://$MANAGEMENT_ACCOUNT_ID/",
-                {
-                  "Fn::FindInMap": [
-                    "GlobalRegionMap",
-                    {
-                      "Ref": "AWS::Partition",
-                    },
-                    "regionName",
-                  ],
-                },
-                " --qualifier accel; fi;
+                " $FORCE_BOOTSTRAP;
                           unset AWS_ACCESS_KEY_ID;
                           unset AWS_SECRET_ACCESS_KEY;
                           unset AWS_SESSION_TOKEN;
@@ -5702,7 +5524,20 @@ phases:
                           fi;
       - |-
         set -e && if [ $ENABLE_DIAGNOSTICS_PACK = "Yes" ]; then
-                        yarn run ts-node --transpile-only cdk.ts deploy --require-approval never --stage diagnostics-pack --account ",
+                        yarn run ts-node --transpile-only cdk.ts synth --stage diagnostics-pack --account ",
+                {
+                  "Ref": "AWS::AccountId",
+                },
+                " --region ",
+                {
+                  "Ref": "AWS::Region",
+                },
+                " --partition ",
+                {
+                  "Ref": "AWS::Partition",
+                },
+                "
+                        yarn run ts-node --transpile-only cdk.ts deploy --stage diagnostics-pack --account ",
                 {
                   "Ref": "AWS::AccountId",
                 },
@@ -5716,7 +5551,7 @@ phases:
                 },
                 "
                       fi
-      - set -e && yarn run ts-node --transpile-only cdk.ts deploy --require-approval never --stage pipeline --account ",
+      - set -e && yarn run ts-node --transpile-only cdk.ts synth --stage pipeline --account ",
                 {
                   "Ref": "AWS::AccountId",
                 },
@@ -5729,7 +5564,20 @@ phases:
                   "Ref": "AWS::Partition",
                 },
                 "
-      - set -e && if [ "$ENABLE_TESTER" = "true" ]; then yarn run ts-node --transpile-only cdk.ts deploy --require-approval never --stage tester-pipeline --account ",
+      - set -e && yarn run ts-node --transpile-only cdk.ts deploy --stage pipeline --account ",
+                {
+                  "Ref": "AWS::AccountId",
+                },
+                " --region ",
+                {
+                  "Ref": "AWS::Region",
+                },
+                " --partition ",
+                {
+                  "Ref": "AWS::Partition",
+                },
+                "
+      - set -e && if [ "$ENABLE_TESTER" = "true" ]; then yarn run ts-node --transpile-only cdk.ts deploy --stage tester-pipeline --account ",
                 {
                   "Ref": "AWS::AccountId",
                 },
@@ -5738,6 +5586,8 @@ phases:
                   "Ref": "AWS::Region",
                 },
                 "; fi
+      - chmod +x scripts/post_pipeline_s3_config_check.sh
+      - set -e && bash -e scripts/post_pipeline_s3_config_check.sh
       - set -e && cd ../../../../ && zip -rqy /tmp/lza.zip . && aws s3 cp /tmp/lza.zip s3://",
                 {
                   "Fn::GetAtt": [
@@ -5753,7 +5603,7 @@ phases:
                 {
                   "Ref": "AWS::Region",
                 },
-                "/lza/v1.13.0.zip --region ",
+                "/lza/v1.14.1.zip --region ",
                 {
                   "Ref": "AWS::Region",
                 },
@@ -6629,7 +6479,7 @@ phases:
           ],
         },
         "Type": "String",
-        "Value": "1.13.0",
+        "Value": "1.14.1",
       },
       "Type": "AWS::SSM::Parameter",
     },
@@ -7584,7 +7434,7 @@ exports.handler = async function (event, context) {
 }
 `;
 
-exports[`InstallerStack Stack(installer):  Snapshot Test 3`] = `
+exports[`InstallerStack > Stack(installer):  Snapshot Test 3`] = `
 {
   "Conditions": {
     "IsCommercialCondition": {
@@ -7893,7 +7743,7 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 3`] = `
     "RepositoryBranchName": {
       "AllowedPattern": ".+",
       "ConstraintDescription": "The repository branch name must not be empty",
-      "Default": "release/v1.13.0",
+      "Default": "release/v1.14.1",
       "Description": "The name of the git branch to use for installation. To determine the branch name, navigate to the Landing Zone Accelerator GitHub branches page and choose the release branch you would like to deploy. Release branch names will align with the semantic versioning of our GitHub releases. New release branches will be available as the open source project is updated with new features.",
       "Type": "String",
     },
@@ -9361,41 +9211,6 @@ phases:
     commands:
       - ENABLE_EXTERNAL_PIPELINE_ACCOUNT="no"
       - if [ ! -z "$MANAGEMENT_ACCOUNT_ID" ] && [ ! -z "$MANAGEMENT_ACCOUNT_ROLE_NAME" ]; then ENABLE_EXTERNAL_PIPELINE_ACCOUNT="yes"; fi
-      - set -e && if ! aws cloudformation describe-stacks --stack-name ",
-                {
-                  "Fn::GetAtt": [
-                    "ResourceNamePrefixesGetPrefixResource96A10E6E",
-                    "acceleratorPrefix",
-                  ],
-                },
-                "-CDKToolkit --region ",
-                {
-                  "Ref": "AWS::Region",
-                },
-                "; then BOOTSTRAPPED_HOME="no"; fi
-      - set -e && if ! aws cloudformation describe-stacks --stack-name ",
-                {
-                  "Fn::GetAtt": [
-                    "ResourceNamePrefixesGetPrefixResource96A10E6E",
-                    "acceleratorPrefix",
-                  ],
-                },
-                "-CDKToolkit --region ",
-                {
-                  "Fn::FindInMap": [
-                    "GlobalRegionMap",
-                    {
-                      "Ref": "AWS::Partition",
-                    },
-                    "regionName",
-                  ],
-                },
-                "; then BOOTSTRAPPED_GLOBAL="no"; fi
-      - ENABLE_DIAGNOSTICS_PACK=",
-                {
-                  "Ref": "EnableDiagnosticsPack",
-                },
-                "
   build:
     commands:
       - cd source
@@ -9411,34 +9226,22 @@ phases:
       - if [ -f .yarnrc ]; then yarn install --use-yarnrc .yarnrc; else yarn install; fi
       - yarn build
       - cd packages/@aws-accelerator/installer
-      - set -e && if [ "$BOOTSTRAPPED_HOME" = "no" ]; then yarn run cdk bootstrap --toolkitStackName ",
+      - set -e && ./lib/bash/bootstrap-management.sh ",
                 {
                   "Fn::GetAtt": [
                     "ResourceNamePrefixesGetPrefixResource96A10E6E",
                     "acceleratorPrefix",
                   ],
                 },
-                "-CDKToolkit aws://",
-                {
-                  "Ref": "AWS::AccountId",
-                },
-                "/",
+                " ",
                 {
                   "Ref": "AWS::Region",
                 },
-                " --qualifier accel; fi
-      - set -e &&  if [ "$BOOTSTRAPPED_GLOBAL" = "no" ]; then yarn run cdk bootstrap --toolkitStackName ",
-                {
-                  "Fn::GetAtt": [
-                    "ResourceNamePrefixesGetPrefixResource96A10E6E",
-                    "acceleratorPrefix",
-                  ],
-                },
-                "-CDKToolkit aws://",
+                " ",
                 {
                   "Ref": "AWS::AccountId",
                 },
-                "/",
+                " ",
                 {
                   "Fn::FindInMap": [
                     "GlobalRegionMap",
@@ -9448,7 +9251,7 @@ phases:
                     "regionName",
                   ],
                 },
-                " --qualifier accel; fi
+                " $FORCE_BOOTSTRAP
       - |-
         set -e && if [ $ENABLE_EXTERNAL_PIPELINE_ACCOUNT = "yes" ]; then
                           if ! MANAGEMENT_ACCOUNT_CREDENTIAL=$(aws sts assume-role --role-arn arn:",
@@ -9459,45 +9262,19 @@ phases:
                             echo "Failed to assume $MANAGEMENT_ACCOUNT_ROLE_NAME role in management account $MANAGEMENT_ACCOUNT_ID"
                             exit 1
                           fi
-                          # Force bootstrapping is to account for where the LZA framework has previously bootstrapped the account and therefore uses a custom template
-                          # which doesn't have the S3 bucket (as it using the management account bucket)
-                          yarn run cdk bootstrap --toolkitStackName ",
-                {
-                  "Fn::GetAtt": [
-                    "ResourceNamePrefixesGetPrefixResource96A10E6E",
-                    "acceleratorPrefix",
-                  ],
-                },
-                "-CDKToolkit aws://",
-                {
-                  "Ref": "AWS::AccountId",
-                },
-                "/",
-                {
-                  "Ref": "AWS::Region",
-                },
-                " --qualifier accel --force
                           export $(printf "AWS_ACCESS_KEY_ID=%s AWS_SECRET_ACCESS_KEY=%s AWS_SESSION_TOKEN=%s" $MANAGEMENT_ACCOUNT_CREDENTIAL);
-                          if ! aws cloudformation describe-stacks --stack-name ",
+                          set -e && ./lib/bash/bootstrap-management.sh ",
                 {
                   "Fn::GetAtt": [
                     "ResourceNamePrefixesGetPrefixResource96A10E6E",
                     "acceleratorPrefix",
                   ],
                 },
-                "-CDKToolkit --region ",
+                " ",
                 {
                   "Ref": "AWS::Region",
                 },
-                "; then MGMT_BOOTSTRAPPED_HOME="no"; fi;
-                          if ! aws cloudformation describe-stacks --stack-name ",
-                {
-                  "Fn::GetAtt": [
-                    "ResourceNamePrefixesGetPrefixResource96A10E6E",
-                    "acceleratorPrefix",
-                  ],
-                },
-                "-CDKToolkit --region ",
+                " $MANAGEMENT_ACCOUNT_ID ",
                 {
                   "Fn::FindInMap": [
                     "GlobalRegionMap",
@@ -9507,37 +9284,7 @@ phases:
                     "regionName",
                   ],
                 },
-                "; then MGMT_BOOTSTRAPPED_GLOBAL="no"; fi;
-                          if [ "$MGMT_BOOTSTRAPPED_HOME" = "no" ]; then yarn run cdk bootstrap --toolkitStackName ",
-                {
-                  "Fn::GetAtt": [
-                    "ResourceNamePrefixesGetPrefixResource96A10E6E",
-                    "acceleratorPrefix",
-                  ],
-                },
-                "-CDKToolkit aws://$MANAGEMENT_ACCOUNT_ID/",
-                {
-                  "Ref": "AWS::Region",
-                },
-                " --qualifier accel; fi;
-                          if [ "$MGMT_BOOTSTRAPPED_GLOBAL" = "no" ]; then yarn run cdk bootstrap --toolkitStackName ",
-                {
-                  "Fn::GetAtt": [
-                    "ResourceNamePrefixesGetPrefixResource96A10E6E",
-                    "acceleratorPrefix",
-                  ],
-                },
-                "-CDKToolkit aws://$MANAGEMENT_ACCOUNT_ID/",
-                {
-                  "Fn::FindInMap": [
-                    "GlobalRegionMap",
-                    {
-                      "Ref": "AWS::Partition",
-                    },
-                    "regionName",
-                  ],
-                },
-                " --qualifier accel; fi;
+                " $FORCE_BOOTSTRAP;
                           unset AWS_ACCESS_KEY_ID;
                           unset AWS_SECRET_ACCESS_KEY;
                           unset AWS_SESSION_TOKEN;
@@ -9555,7 +9302,20 @@ phases:
                           fi;
       - |-
         set -e && if [ $ENABLE_DIAGNOSTICS_PACK = "Yes" ]; then
-                        yarn run ts-node --transpile-only cdk.ts deploy --require-approval never --stage diagnostics-pack --account ",
+                        yarn run ts-node --transpile-only cdk.ts synth --stage diagnostics-pack --account ",
+                {
+                  "Ref": "AWS::AccountId",
+                },
+                " --region ",
+                {
+                  "Ref": "AWS::Region",
+                },
+                " --partition ",
+                {
+                  "Ref": "AWS::Partition",
+                },
+                "
+                        yarn run ts-node --transpile-only cdk.ts deploy --stage diagnostics-pack --account ",
                 {
                   "Ref": "AWS::AccountId",
                 },
@@ -9569,7 +9329,7 @@ phases:
                 },
                 "
                       fi
-      - set -e && yarn run ts-node --transpile-only cdk.ts deploy --require-approval never --stage pipeline --account ",
+      - set -e && yarn run ts-node --transpile-only cdk.ts synth --stage pipeline --account ",
                 {
                   "Ref": "AWS::AccountId",
                 },
@@ -9582,7 +9342,20 @@ phases:
                   "Ref": "AWS::Partition",
                 },
                 "
-      - set -e && if [ "$ENABLE_TESTER" = "true" ]; then yarn run ts-node --transpile-only cdk.ts deploy --require-approval never --stage tester-pipeline --account ",
+      - set -e && yarn run ts-node --transpile-only cdk.ts deploy --stage pipeline --account ",
+                {
+                  "Ref": "AWS::AccountId",
+                },
+                " --region ",
+                {
+                  "Ref": "AWS::Region",
+                },
+                " --partition ",
+                {
+                  "Ref": "AWS::Partition",
+                },
+                "
+      - set -e && if [ "$ENABLE_TESTER" = "true" ]; then yarn run ts-node --transpile-only cdk.ts deploy --stage tester-pipeline --account ",
                 {
                   "Ref": "AWS::AccountId",
                 },
@@ -9591,6 +9364,8 @@ phases:
                   "Ref": "AWS::Region",
                 },
                 "; fi
+      - chmod +x scripts/post_pipeline_s3_config_check.sh
+      - set -e && bash -e scripts/post_pipeline_s3_config_check.sh
       - set -e && cd ../../../../ && zip -rqy /tmp/lza.zip . && aws s3 cp /tmp/lza.zip s3://",
                 {
                   "Ref": "AcceleratorQualifier",
@@ -9603,7 +9378,7 @@ phases:
                 {
                   "Ref": "AWS::Region",
                 },
-                "/lza/v1.13.0.zip --region ",
+                "/lza/v1.14.1.zip --region ",
                 {
                   "Ref": "AWS::Region",
                 },
@@ -10482,7 +10257,7 @@ phases:
           ],
         },
         "Type": "String",
-        "Value": "1.13.0",
+        "Value": "1.14.1",
       },
       "Type": "AWS::SSM::Parameter",
     },
@@ -11420,7 +11195,7 @@ exports.handler = async function (event, context) {
 }
 `;
 
-exports[`InstallerStack Stack(installer):  Snapshot Test 4`] = `
+exports[`InstallerStack > Stack(installer):  Snapshot Test 4`] = `
 {
   "Conditions": {
     "IsCommercialCondition": {
@@ -11729,7 +11504,7 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 4`] = `
     "RepositoryBranchName": {
       "AllowedPattern": ".+",
       "ConstraintDescription": "The repository branch name must not be empty",
-      "Default": "release/v1.13.0",
+      "Default": "release/v1.14.1",
       "Description": "The name of the git branch to use for installation. To determine the branch name, navigate to the Landing Zone Accelerator GitHub branches page and choose the release branch you would like to deploy. Release branch names will align with the semantic versioning of our GitHub releases. New release branches will be available as the open source project is updated with new features.",
       "Type": "String",
     },
@@ -13187,41 +12962,6 @@ phases:
     commands:
       - ENABLE_EXTERNAL_PIPELINE_ACCOUNT="no"
       - if [ ! -z "$MANAGEMENT_ACCOUNT_ID" ] && [ ! -z "$MANAGEMENT_ACCOUNT_ROLE_NAME" ]; then ENABLE_EXTERNAL_PIPELINE_ACCOUNT="yes"; fi
-      - set -e && if ! aws cloudformation describe-stacks --stack-name ",
-                {
-                  "Fn::GetAtt": [
-                    "ResourceNamePrefixesGetPrefixResource96A10E6E",
-                    "acceleratorPrefix",
-                  ],
-                },
-                "-CDKToolkit --region ",
-                {
-                  "Ref": "AWS::Region",
-                },
-                "; then BOOTSTRAPPED_HOME="no"; fi
-      - set -e && if ! aws cloudformation describe-stacks --stack-name ",
-                {
-                  "Fn::GetAtt": [
-                    "ResourceNamePrefixesGetPrefixResource96A10E6E",
-                    "acceleratorPrefix",
-                  ],
-                },
-                "-CDKToolkit --region ",
-                {
-                  "Fn::FindInMap": [
-                    "GlobalRegionMap",
-                    {
-                      "Ref": "AWS::Partition",
-                    },
-                    "regionName",
-                  ],
-                },
-                "; then BOOTSTRAPPED_GLOBAL="no"; fi
-      - ENABLE_DIAGNOSTICS_PACK=",
-                {
-                  "Ref": "EnableDiagnosticsPack",
-                },
-                "
   build:
     commands:
       - cd source
@@ -13237,34 +12977,22 @@ phases:
       - if [ -f .yarnrc ]; then yarn install --use-yarnrc .yarnrc; else yarn install; fi
       - yarn build
       - cd packages/@aws-accelerator/installer
-      - set -e && if [ "$BOOTSTRAPPED_HOME" = "no" ]; then yarn run cdk bootstrap --toolkitStackName ",
+      - set -e && ./lib/bash/bootstrap-management.sh ",
                 {
                   "Fn::GetAtt": [
                     "ResourceNamePrefixesGetPrefixResource96A10E6E",
                     "acceleratorPrefix",
                   ],
                 },
-                "-CDKToolkit aws://",
-                {
-                  "Ref": "AWS::AccountId",
-                },
-                "/",
+                " ",
                 {
                   "Ref": "AWS::Region",
                 },
-                " --qualifier accel; fi
-      - set -e &&  if [ "$BOOTSTRAPPED_GLOBAL" = "no" ]; then yarn run cdk bootstrap --toolkitStackName ",
-                {
-                  "Fn::GetAtt": [
-                    "ResourceNamePrefixesGetPrefixResource96A10E6E",
-                    "acceleratorPrefix",
-                  ],
-                },
-                "-CDKToolkit aws://",
+                " ",
                 {
                   "Ref": "AWS::AccountId",
                 },
-                "/",
+                " ",
                 {
                   "Fn::FindInMap": [
                     "GlobalRegionMap",
@@ -13274,7 +13002,7 @@ phases:
                     "regionName",
                   ],
                 },
-                " --qualifier accel; fi
+                " $FORCE_BOOTSTRAP
       - |-
         set -e && if [ $ENABLE_EXTERNAL_PIPELINE_ACCOUNT = "yes" ]; then
                           if ! MANAGEMENT_ACCOUNT_CREDENTIAL=$(aws sts assume-role --role-arn arn:",
@@ -13285,45 +13013,19 @@ phases:
                             echo "Failed to assume $MANAGEMENT_ACCOUNT_ROLE_NAME role in management account $MANAGEMENT_ACCOUNT_ID"
                             exit 1
                           fi
-                          # Force bootstrapping is to account for where the LZA framework has previously bootstrapped the account and therefore uses a custom template
-                          # which doesn't have the S3 bucket (as it using the management account bucket)
-                          yarn run cdk bootstrap --toolkitStackName ",
-                {
-                  "Fn::GetAtt": [
-                    "ResourceNamePrefixesGetPrefixResource96A10E6E",
-                    "acceleratorPrefix",
-                  ],
-                },
-                "-CDKToolkit aws://",
-                {
-                  "Ref": "AWS::AccountId",
-                },
-                "/",
-                {
-                  "Ref": "AWS::Region",
-                },
-                " --qualifier accel --force
                           export $(printf "AWS_ACCESS_KEY_ID=%s AWS_SECRET_ACCESS_KEY=%s AWS_SESSION_TOKEN=%s" $MANAGEMENT_ACCOUNT_CREDENTIAL);
-                          if ! aws cloudformation describe-stacks --stack-name ",
+                          set -e && ./lib/bash/bootstrap-management.sh ",
                 {
                   "Fn::GetAtt": [
                     "ResourceNamePrefixesGetPrefixResource96A10E6E",
                     "acceleratorPrefix",
                   ],
                 },
-                "-CDKToolkit --region ",
+                " ",
                 {
                   "Ref": "AWS::Region",
                 },
-                "; then MGMT_BOOTSTRAPPED_HOME="no"; fi;
-                          if ! aws cloudformation describe-stacks --stack-name ",
-                {
-                  "Fn::GetAtt": [
-                    "ResourceNamePrefixesGetPrefixResource96A10E6E",
-                    "acceleratorPrefix",
-                  ],
-                },
-                "-CDKToolkit --region ",
+                " $MANAGEMENT_ACCOUNT_ID ",
                 {
                   "Fn::FindInMap": [
                     "GlobalRegionMap",
@@ -13333,37 +13035,7 @@ phases:
                     "regionName",
                   ],
                 },
-                "; then MGMT_BOOTSTRAPPED_GLOBAL="no"; fi;
-                          if [ "$MGMT_BOOTSTRAPPED_HOME" = "no" ]; then yarn run cdk bootstrap --toolkitStackName ",
-                {
-                  "Fn::GetAtt": [
-                    "ResourceNamePrefixesGetPrefixResource96A10E6E",
-                    "acceleratorPrefix",
-                  ],
-                },
-                "-CDKToolkit aws://$MANAGEMENT_ACCOUNT_ID/",
-                {
-                  "Ref": "AWS::Region",
-                },
-                " --qualifier accel; fi;
-                          if [ "$MGMT_BOOTSTRAPPED_GLOBAL" = "no" ]; then yarn run cdk bootstrap --toolkitStackName ",
-                {
-                  "Fn::GetAtt": [
-                    "ResourceNamePrefixesGetPrefixResource96A10E6E",
-                    "acceleratorPrefix",
-                  ],
-                },
-                "-CDKToolkit aws://$MANAGEMENT_ACCOUNT_ID/",
-                {
-                  "Fn::FindInMap": [
-                    "GlobalRegionMap",
-                    {
-                      "Ref": "AWS::Partition",
-                    },
-                    "regionName",
-                  ],
-                },
-                " --qualifier accel; fi;
+                " $FORCE_BOOTSTRAP;
                           unset AWS_ACCESS_KEY_ID;
                           unset AWS_SECRET_ACCESS_KEY;
                           unset AWS_SESSION_TOKEN;
@@ -13381,7 +13053,20 @@ phases:
                           fi;
       - |-
         set -e && if [ $ENABLE_DIAGNOSTICS_PACK = "Yes" ]; then
-                        yarn run ts-node --transpile-only cdk.ts deploy --require-approval never --stage diagnostics-pack --account ",
+                        yarn run ts-node --transpile-only cdk.ts synth --stage diagnostics-pack --account ",
+                {
+                  "Ref": "AWS::AccountId",
+                },
+                " --region ",
+                {
+                  "Ref": "AWS::Region",
+                },
+                " --partition ",
+                {
+                  "Ref": "AWS::Partition",
+                },
+                "
+                        yarn run ts-node --transpile-only cdk.ts deploy --stage diagnostics-pack --account ",
                 {
                   "Ref": "AWS::AccountId",
                 },
@@ -13395,7 +13080,7 @@ phases:
                 },
                 "
                       fi
-      - set -e && yarn run ts-node --transpile-only cdk.ts deploy --require-approval never --stage pipeline --account ",
+      - set -e && yarn run ts-node --transpile-only cdk.ts synth --stage pipeline --account ",
                 {
                   "Ref": "AWS::AccountId",
                 },
@@ -13408,7 +13093,20 @@ phases:
                   "Ref": "AWS::Partition",
                 },
                 "
-      - set -e && if [ "$ENABLE_TESTER" = "true" ]; then yarn run ts-node --transpile-only cdk.ts deploy --require-approval never --stage tester-pipeline --account ",
+      - set -e && yarn run ts-node --transpile-only cdk.ts deploy --stage pipeline --account ",
+                {
+                  "Ref": "AWS::AccountId",
+                },
+                " --region ",
+                {
+                  "Ref": "AWS::Region",
+                },
+                " --partition ",
+                {
+                  "Ref": "AWS::Partition",
+                },
+                "
+      - set -e && if [ "$ENABLE_TESTER" = "true" ]; then yarn run ts-node --transpile-only cdk.ts deploy --stage tester-pipeline --account ",
                 {
                   "Ref": "AWS::AccountId",
                 },
@@ -13417,6 +13115,8 @@ phases:
                   "Ref": "AWS::Region",
                 },
                 "; fi
+      - chmod +x scripts/post_pipeline_s3_config_check.sh
+      - set -e && bash -e scripts/post_pipeline_s3_config_check.sh
       - set -e && cd ../../../../ && zip -rqy /tmp/lza.zip . && aws s3 cp /tmp/lza.zip s3://",
                 {
                   "Ref": "AcceleratorQualifier",
@@ -13429,7 +13129,7 @@ phases:
                 {
                   "Ref": "AWS::Region",
                 },
-                "/lza/v1.13.0.zip --region ",
+                "/lza/v1.14.1.zip --region ",
                 {
                   "Ref": "AWS::Region",
                 },
@@ -14308,7 +14008,7 @@ phases:
           ],
         },
         "Type": "String",
-        "Value": "1.13.0",
+        "Value": "1.14.1",
       },
       "Type": "AWS::SSM::Parameter",
     },
@@ -15246,7 +14946,7 @@ exports.handler = async function (event, context) {
 }
 `;
 
-exports[`InstallerStack Stack(installer):  Snapshot Test 5`] = `
+exports[`InstallerStack > Stack(installer):  Snapshot Test 5`] = `
 {
   "Conditions": {
     "IsCommercialCondition": {
@@ -15555,7 +15255,7 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 5`] = `
     "RepositoryBranchName": {
       "AllowedPattern": ".+",
       "ConstraintDescription": "The repository branch name must not be empty",
-      "Default": "release/v1.13.0",
+      "Default": "release/v1.14.1",
       "Description": "The name of the git branch to use for installation. To determine the branch name, navigate to the Landing Zone Accelerator GitHub branches page and choose the release branch you would like to deploy. Release branch names will align with the semantic versioning of our GitHub releases. New release branches will be available as the open source project is updated with new features.",
       "Type": "String",
     },
@@ -17018,41 +16718,6 @@ phases:
     commands:
       - ENABLE_EXTERNAL_PIPELINE_ACCOUNT="no"
       - if [ ! -z "$MANAGEMENT_ACCOUNT_ID" ] && [ ! -z "$MANAGEMENT_ACCOUNT_ROLE_NAME" ]; then ENABLE_EXTERNAL_PIPELINE_ACCOUNT="yes"; fi
-      - set -e && if ! aws cloudformation describe-stacks --stack-name ",
-                {
-                  "Fn::GetAtt": [
-                    "ResourceNamePrefixesGetPrefixResource96A10E6E",
-                    "acceleratorPrefix",
-                  ],
-                },
-                "-CDKToolkit --region ",
-                {
-                  "Ref": "AWS::Region",
-                },
-                "; then BOOTSTRAPPED_HOME="no"; fi
-      - set -e && if ! aws cloudformation describe-stacks --stack-name ",
-                {
-                  "Fn::GetAtt": [
-                    "ResourceNamePrefixesGetPrefixResource96A10E6E",
-                    "acceleratorPrefix",
-                  ],
-                },
-                "-CDKToolkit --region ",
-                {
-                  "Fn::FindInMap": [
-                    "GlobalRegionMap",
-                    {
-                      "Ref": "AWS::Partition",
-                    },
-                    "regionName",
-                  ],
-                },
-                "; then BOOTSTRAPPED_GLOBAL="no"; fi
-      - ENABLE_DIAGNOSTICS_PACK=",
-                {
-                  "Ref": "EnableDiagnosticsPack",
-                },
-                "
   build:
     commands:
       - cd source
@@ -17068,34 +16733,22 @@ phases:
       - if [ -f .yarnrc ]; then yarn install --use-yarnrc .yarnrc; else yarn install; fi
       - yarn build
       - cd packages/@aws-accelerator/installer
-      - set -e && if [ "$BOOTSTRAPPED_HOME" = "no" ]; then yarn run cdk bootstrap --toolkitStackName ",
+      - set -e && ./lib/bash/bootstrap-management.sh ",
                 {
                   "Fn::GetAtt": [
                     "ResourceNamePrefixesGetPrefixResource96A10E6E",
                     "acceleratorPrefix",
                   ],
                 },
-                "-CDKToolkit aws://",
-                {
-                  "Ref": "AWS::AccountId",
-                },
-                "/",
+                " ",
                 {
                   "Ref": "AWS::Region",
                 },
-                " --qualifier accel; fi
-      - set -e &&  if [ "$BOOTSTRAPPED_GLOBAL" = "no" ]; then yarn run cdk bootstrap --toolkitStackName ",
-                {
-                  "Fn::GetAtt": [
-                    "ResourceNamePrefixesGetPrefixResource96A10E6E",
-                    "acceleratorPrefix",
-                  ],
-                },
-                "-CDKToolkit aws://",
+                " ",
                 {
                   "Ref": "AWS::AccountId",
                 },
-                "/",
+                " ",
                 {
                   "Fn::FindInMap": [
                     "GlobalRegionMap",
@@ -17105,7 +16758,7 @@ phases:
                     "regionName",
                   ],
                 },
-                " --qualifier accel; fi
+                " $FORCE_BOOTSTRAP
       - |-
         set -e && if [ $ENABLE_EXTERNAL_PIPELINE_ACCOUNT = "yes" ]; then
                           if ! MANAGEMENT_ACCOUNT_CREDENTIAL=$(aws sts assume-role --role-arn arn:",
@@ -17116,45 +16769,19 @@ phases:
                             echo "Failed to assume $MANAGEMENT_ACCOUNT_ROLE_NAME role in management account $MANAGEMENT_ACCOUNT_ID"
                             exit 1
                           fi
-                          # Force bootstrapping is to account for where the LZA framework has previously bootstrapped the account and therefore uses a custom template
-                          # which doesn't have the S3 bucket (as it using the management account bucket)
-                          yarn run cdk bootstrap --toolkitStackName ",
-                {
-                  "Fn::GetAtt": [
-                    "ResourceNamePrefixesGetPrefixResource96A10E6E",
-                    "acceleratorPrefix",
-                  ],
-                },
-                "-CDKToolkit aws://",
-                {
-                  "Ref": "AWS::AccountId",
-                },
-                "/",
-                {
-                  "Ref": "AWS::Region",
-                },
-                " --qualifier accel --force
                           export $(printf "AWS_ACCESS_KEY_ID=%s AWS_SECRET_ACCESS_KEY=%s AWS_SESSION_TOKEN=%s" $MANAGEMENT_ACCOUNT_CREDENTIAL);
-                          if ! aws cloudformation describe-stacks --stack-name ",
+                          set -e && ./lib/bash/bootstrap-management.sh ",
                 {
                   "Fn::GetAtt": [
                     "ResourceNamePrefixesGetPrefixResource96A10E6E",
                     "acceleratorPrefix",
                   ],
                 },
-                "-CDKToolkit --region ",
+                " ",
                 {
                   "Ref": "AWS::Region",
                 },
-                "; then MGMT_BOOTSTRAPPED_HOME="no"; fi;
-                          if ! aws cloudformation describe-stacks --stack-name ",
-                {
-                  "Fn::GetAtt": [
-                    "ResourceNamePrefixesGetPrefixResource96A10E6E",
-                    "acceleratorPrefix",
-                  ],
-                },
-                "-CDKToolkit --region ",
+                " $MANAGEMENT_ACCOUNT_ID ",
                 {
                   "Fn::FindInMap": [
                     "GlobalRegionMap",
@@ -17164,37 +16791,7 @@ phases:
                     "regionName",
                   ],
                 },
-                "; then MGMT_BOOTSTRAPPED_GLOBAL="no"; fi;
-                          if [ "$MGMT_BOOTSTRAPPED_HOME" = "no" ]; then yarn run cdk bootstrap --toolkitStackName ",
-                {
-                  "Fn::GetAtt": [
-                    "ResourceNamePrefixesGetPrefixResource96A10E6E",
-                    "acceleratorPrefix",
-                  ],
-                },
-                "-CDKToolkit aws://$MANAGEMENT_ACCOUNT_ID/",
-                {
-                  "Ref": "AWS::Region",
-                },
-                " --qualifier accel; fi;
-                          if [ "$MGMT_BOOTSTRAPPED_GLOBAL" = "no" ]; then yarn run cdk bootstrap --toolkitStackName ",
-                {
-                  "Fn::GetAtt": [
-                    "ResourceNamePrefixesGetPrefixResource96A10E6E",
-                    "acceleratorPrefix",
-                  ],
-                },
-                "-CDKToolkit aws://$MANAGEMENT_ACCOUNT_ID/",
-                {
-                  "Fn::FindInMap": [
-                    "GlobalRegionMap",
-                    {
-                      "Ref": "AWS::Partition",
-                    },
-                    "regionName",
-                  ],
-                },
-                " --qualifier accel; fi;
+                " $FORCE_BOOTSTRAP;
                           unset AWS_ACCESS_KEY_ID;
                           unset AWS_SECRET_ACCESS_KEY;
                           unset AWS_SESSION_TOKEN;
@@ -17212,7 +16809,20 @@ phases:
                           fi;
       - |-
         set -e && if [ $ENABLE_DIAGNOSTICS_PACK = "Yes" ]; then
-                        yarn run ts-node --transpile-only cdk.ts deploy --require-approval never --stage diagnostics-pack --account ",
+                        yarn run ts-node --transpile-only cdk.ts synth --stage diagnostics-pack --account ",
+                {
+                  "Ref": "AWS::AccountId",
+                },
+                " --region ",
+                {
+                  "Ref": "AWS::Region",
+                },
+                " --partition ",
+                {
+                  "Ref": "AWS::Partition",
+                },
+                "
+                        yarn run ts-node --transpile-only cdk.ts deploy --stage diagnostics-pack --account ",
                 {
                   "Ref": "AWS::AccountId",
                 },
@@ -17226,7 +16836,7 @@ phases:
                 },
                 "
                       fi
-      - set -e && yarn run ts-node --transpile-only cdk.ts deploy --require-approval never --stage pipeline --account ",
+      - set -e && yarn run ts-node --transpile-only cdk.ts synth --stage pipeline --account ",
                 {
                   "Ref": "AWS::AccountId",
                 },
@@ -17239,7 +16849,20 @@ phases:
                   "Ref": "AWS::Partition",
                 },
                 "
-      - set -e && if [ "$ENABLE_TESTER" = "true" ]; then yarn run ts-node --transpile-only cdk.ts deploy --require-approval never --stage tester-pipeline --account ",
+      - set -e && yarn run ts-node --transpile-only cdk.ts deploy --stage pipeline --account ",
+                {
+                  "Ref": "AWS::AccountId",
+                },
+                " --region ",
+                {
+                  "Ref": "AWS::Region",
+                },
+                " --partition ",
+                {
+                  "Ref": "AWS::Partition",
+                },
+                "
+      - set -e && if [ "$ENABLE_TESTER" = "true" ]; then yarn run ts-node --transpile-only cdk.ts deploy --stage tester-pipeline --account ",
                 {
                   "Ref": "AWS::AccountId",
                 },
@@ -17248,6 +16871,8 @@ phases:
                   "Ref": "AWS::Region",
                 },
                 "; fi
+      - chmod +x scripts/post_pipeline_s3_config_check.sh
+      - set -e && bash -e scripts/post_pipeline_s3_config_check.sh
       - set -e && cd ../../../../ && zip -rqy /tmp/lza.zip . && aws s3 cp /tmp/lza.zip s3://",
                 {
                   "Ref": "AcceleratorQualifier",
@@ -17260,7 +16885,7 @@ phases:
                 {
                   "Ref": "AWS::Region",
                 },
-                "/lza/v1.13.0.zip --region ",
+                "/lza/v1.14.1.zip --region ",
                 {
                   "Ref": "AWS::Region",
                 },
@@ -18139,7 +17764,7 @@ phases:
           ],
         },
         "Type": "String",
-        "Value": "1.13.0",
+        "Value": "1.14.1",
       },
       "Type": "AWS::SSM::Parameter",
     },
@@ -19077,7 +18702,7 @@ exports.handler = async function (event, context) {
 }
 `;
 
-exports[`InstallerStack Stack(installer):  Snapshot Test 6`] = `
+exports[`InstallerStack > Stack(installer):  Snapshot Test 6`] = `
 {
   "Conditions": {
     "IsCommercialCondition": {
@@ -19365,7 +18990,7 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 6`] = `
     "RepositoryBranchName": {
       "AllowedPattern": ".+",
       "ConstraintDescription": "The repository branch name must not be empty",
-      "Default": "release/v1.13.0",
+      "Default": "release/v1.14.1",
       "Description": "The name of the git branch to use for installation. To determine the branch name, navigate to the Landing Zone Accelerator GitHub branches page and choose the release branch you would like to deploy. Release branch names will align with the semantic versioning of our GitHub releases. New release branches will be available as the open source project is updated with new features.",
       "Type": "String",
     },
@@ -20807,41 +20432,6 @@ phases:
     commands:
       - ENABLE_EXTERNAL_PIPELINE_ACCOUNT="no"
       - if [ ! -z "$MANAGEMENT_ACCOUNT_ID" ] && [ ! -z "$MANAGEMENT_ACCOUNT_ROLE_NAME" ]; then ENABLE_EXTERNAL_PIPELINE_ACCOUNT="yes"; fi
-      - set -e && if ! aws cloudformation describe-stacks --stack-name ",
-                {
-                  "Fn::GetAtt": [
-                    "ResourceNamePrefixesGetPrefixResource96A10E6E",
-                    "acceleratorPrefix",
-                  ],
-                },
-                "-CDKToolkit --region ",
-                {
-                  "Ref": "AWS::Region",
-                },
-                "; then BOOTSTRAPPED_HOME="no"; fi
-      - set -e && if ! aws cloudformation describe-stacks --stack-name ",
-                {
-                  "Fn::GetAtt": [
-                    "ResourceNamePrefixesGetPrefixResource96A10E6E",
-                    "acceleratorPrefix",
-                  ],
-                },
-                "-CDKToolkit --region ",
-                {
-                  "Fn::FindInMap": [
-                    "GlobalRegionMap",
-                    {
-                      "Ref": "AWS::Partition",
-                    },
-                    "regionName",
-                  ],
-                },
-                "; then BOOTSTRAPPED_GLOBAL="no"; fi
-      - ENABLE_DIAGNOSTICS_PACK=",
-                {
-                  "Ref": "EnableDiagnosticsPack",
-                },
-                "
   build:
     commands:
       - cd source
@@ -20857,34 +20447,22 @@ phases:
       - if [ -f .yarnrc ]; then yarn install --use-yarnrc .yarnrc; else yarn install; fi
       - yarn build
       - cd packages/@aws-accelerator/installer
-      - set -e && if [ "$BOOTSTRAPPED_HOME" = "no" ]; then yarn run cdk bootstrap --toolkitStackName ",
+      - set -e && ./lib/bash/bootstrap-management.sh ",
                 {
                   "Fn::GetAtt": [
                     "ResourceNamePrefixesGetPrefixResource96A10E6E",
                     "acceleratorPrefix",
                   ],
                 },
-                "-CDKToolkit aws://",
-                {
-                  "Ref": "AWS::AccountId",
-                },
-                "/",
+                " ",
                 {
                   "Ref": "AWS::Region",
                 },
-                " --qualifier accel; fi
-      - set -e &&  if [ "$BOOTSTRAPPED_GLOBAL" = "no" ]; then yarn run cdk bootstrap --toolkitStackName ",
-                {
-                  "Fn::GetAtt": [
-                    "ResourceNamePrefixesGetPrefixResource96A10E6E",
-                    "acceleratorPrefix",
-                  ],
-                },
-                "-CDKToolkit aws://",
+                " ",
                 {
                   "Ref": "AWS::AccountId",
                 },
-                "/",
+                " ",
                 {
                   "Fn::FindInMap": [
                     "GlobalRegionMap",
@@ -20894,7 +20472,7 @@ phases:
                     "regionName",
                   ],
                 },
-                " --qualifier accel; fi
+                " $FORCE_BOOTSTRAP
       - |-
         set -e && if [ $ENABLE_EXTERNAL_PIPELINE_ACCOUNT = "yes" ]; then
                           if ! MANAGEMENT_ACCOUNT_CREDENTIAL=$(aws sts assume-role --role-arn arn:",
@@ -20905,45 +20483,19 @@ phases:
                             echo "Failed to assume $MANAGEMENT_ACCOUNT_ROLE_NAME role in management account $MANAGEMENT_ACCOUNT_ID"
                             exit 1
                           fi
-                          # Force bootstrapping is to account for where the LZA framework has previously bootstrapped the account and therefore uses a custom template
-                          # which doesn't have the S3 bucket (as it using the management account bucket)
-                          yarn run cdk bootstrap --toolkitStackName ",
-                {
-                  "Fn::GetAtt": [
-                    "ResourceNamePrefixesGetPrefixResource96A10E6E",
-                    "acceleratorPrefix",
-                  ],
-                },
-                "-CDKToolkit aws://",
-                {
-                  "Ref": "AWS::AccountId",
-                },
-                "/",
-                {
-                  "Ref": "AWS::Region",
-                },
-                " --qualifier accel --force
                           export $(printf "AWS_ACCESS_KEY_ID=%s AWS_SECRET_ACCESS_KEY=%s AWS_SESSION_TOKEN=%s" $MANAGEMENT_ACCOUNT_CREDENTIAL);
-                          if ! aws cloudformation describe-stacks --stack-name ",
+                          set -e && ./lib/bash/bootstrap-management.sh ",
                 {
                   "Fn::GetAtt": [
                     "ResourceNamePrefixesGetPrefixResource96A10E6E",
                     "acceleratorPrefix",
                   ],
                 },
-                "-CDKToolkit --region ",
+                " ",
                 {
                   "Ref": "AWS::Region",
                 },
-                "; then MGMT_BOOTSTRAPPED_HOME="no"; fi;
-                          if ! aws cloudformation describe-stacks --stack-name ",
-                {
-                  "Fn::GetAtt": [
-                    "ResourceNamePrefixesGetPrefixResource96A10E6E",
-                    "acceleratorPrefix",
-                  ],
-                },
-                "-CDKToolkit --region ",
+                " $MANAGEMENT_ACCOUNT_ID ",
                 {
                   "Fn::FindInMap": [
                     "GlobalRegionMap",
@@ -20953,37 +20505,7 @@ phases:
                     "regionName",
                   ],
                 },
-                "; then MGMT_BOOTSTRAPPED_GLOBAL="no"; fi;
-                          if [ "$MGMT_BOOTSTRAPPED_HOME" = "no" ]; then yarn run cdk bootstrap --toolkitStackName ",
-                {
-                  "Fn::GetAtt": [
-                    "ResourceNamePrefixesGetPrefixResource96A10E6E",
-                    "acceleratorPrefix",
-                  ],
-                },
-                "-CDKToolkit aws://$MANAGEMENT_ACCOUNT_ID/",
-                {
-                  "Ref": "AWS::Region",
-                },
-                " --qualifier accel; fi;
-                          if [ "$MGMT_BOOTSTRAPPED_GLOBAL" = "no" ]; then yarn run cdk bootstrap --toolkitStackName ",
-                {
-                  "Fn::GetAtt": [
-                    "ResourceNamePrefixesGetPrefixResource96A10E6E",
-                    "acceleratorPrefix",
-                  ],
-                },
-                "-CDKToolkit aws://$MANAGEMENT_ACCOUNT_ID/",
-                {
-                  "Fn::FindInMap": [
-                    "GlobalRegionMap",
-                    {
-                      "Ref": "AWS::Partition",
-                    },
-                    "regionName",
-                  ],
-                },
-                " --qualifier accel; fi;
+                " $FORCE_BOOTSTRAP;
                           unset AWS_ACCESS_KEY_ID;
                           unset AWS_SECRET_ACCESS_KEY;
                           unset AWS_SESSION_TOKEN;
@@ -21001,7 +20523,20 @@ phases:
                           fi;
       - |-
         set -e && if [ $ENABLE_DIAGNOSTICS_PACK = "Yes" ]; then
-                        yarn run ts-node --transpile-only cdk.ts deploy --require-approval never --stage diagnostics-pack --account ",
+                        yarn run ts-node --transpile-only cdk.ts synth --stage diagnostics-pack --account ",
+                {
+                  "Ref": "AWS::AccountId",
+                },
+                " --region ",
+                {
+                  "Ref": "AWS::Region",
+                },
+                " --partition ",
+                {
+                  "Ref": "AWS::Partition",
+                },
+                "
+                        yarn run ts-node --transpile-only cdk.ts deploy --stage diagnostics-pack --account ",
                 {
                   "Ref": "AWS::AccountId",
                 },
@@ -21015,7 +20550,7 @@ phases:
                 },
                 "
                       fi
-      - set -e && yarn run ts-node --transpile-only cdk.ts deploy --require-approval never --stage pipeline --account ",
+      - set -e && yarn run ts-node --transpile-only cdk.ts synth --stage pipeline --account ",
                 {
                   "Ref": "AWS::AccountId",
                 },
@@ -21028,7 +20563,20 @@ phases:
                   "Ref": "AWS::Partition",
                 },
                 "
-      - set -e && if [ "$ENABLE_TESTER" = "true" ]; then yarn run ts-node --transpile-only cdk.ts deploy --require-approval never --stage tester-pipeline --account ",
+      - set -e && yarn run ts-node --transpile-only cdk.ts deploy --stage pipeline --account ",
+                {
+                  "Ref": "AWS::AccountId",
+                },
+                " --region ",
+                {
+                  "Ref": "AWS::Region",
+                },
+                " --partition ",
+                {
+                  "Ref": "AWS::Partition",
+                },
+                "
+      - set -e && if [ "$ENABLE_TESTER" = "true" ]; then yarn run ts-node --transpile-only cdk.ts deploy --stage tester-pipeline --account ",
                 {
                   "Ref": "AWS::AccountId",
                 },
@@ -21037,6 +20585,8 @@ phases:
                   "Ref": "AWS::Region",
                 },
                 "; fi
+      - chmod +x scripts/post_pipeline_s3_config_check.sh
+      - set -e && bash -e scripts/post_pipeline_s3_config_check.sh
       - set -e && cd ../../../../ && zip -rqy /tmp/lza.zip . && aws s3 cp /tmp/lza.zip s3://",
                 {
                   "Fn::GetAtt": [
@@ -21052,7 +20602,7 @@ phases:
                 {
                   "Ref": "AWS::Region",
                 },
-                "/lza/v1.13.0.zip --region ",
+                "/lza/v1.14.1.zip --region ",
                 {
                   "Ref": "AWS::Region",
                 },
@@ -21928,7 +21478,7 @@ phases:
           ],
         },
         "Type": "String",
-        "Value": "1.13.0",
+        "Value": "1.14.1",
       },
       "Type": "AWS::SSM::Parameter",
     },
@@ -22883,7 +22433,7 @@ exports.handler = async function (event, context) {
 }
 `;
 
-exports[`InstallerStack Stack(installer):  Snapshot Test 7`] = `
+exports[`InstallerStack > Stack(installer):  Snapshot Test 7`] = `
 {
   "Conditions": {
     "IsCommercialCondition": {
@@ -23180,7 +22730,7 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 7`] = `
     "RepositoryBranchName": {
       "AllowedPattern": ".+",
       "ConstraintDescription": "The repository branch name must not be empty",
-      "Default": "release/v1.13.0",
+      "Default": "release/v1.14.1",
       "Description": "The name of the git branch to use for installation. To determine the branch name, navigate to the Landing Zone Accelerator GitHub branches page and choose the release branch you would like to deploy. Release branch names will align with the semantic versioning of our GitHub releases. New release branches will be available as the open source project is updated with new features.",
       "Type": "String",
     },
@@ -23194,7 +22744,7 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 7`] = `
       "Type": "String",
     },
     "RepositoryBucketObject": {
-      "Default": "release/v1.13.0.zip",
+      "Default": "release/v1.14.1.zip",
       "Description": "The full path to the accelerator code zip S3 Object. (S3 Only)",
       "Type": "String",
     },
@@ -24651,41 +24201,6 @@ phases:
     commands:
       - ENABLE_EXTERNAL_PIPELINE_ACCOUNT="no"
       - if [ ! -z "$MANAGEMENT_ACCOUNT_ID" ] && [ ! -z "$MANAGEMENT_ACCOUNT_ROLE_NAME" ]; then ENABLE_EXTERNAL_PIPELINE_ACCOUNT="yes"; fi
-      - set -e && if ! aws cloudformation describe-stacks --stack-name ",
-                {
-                  "Fn::GetAtt": [
-                    "ResourceNamePrefixesGetPrefixResource96A10E6E",
-                    "acceleratorPrefix",
-                  ],
-                },
-                "-CDKToolkit --region ",
-                {
-                  "Ref": "AWS::Region",
-                },
-                "; then BOOTSTRAPPED_HOME="no"; fi
-      - set -e && if ! aws cloudformation describe-stacks --stack-name ",
-                {
-                  "Fn::GetAtt": [
-                    "ResourceNamePrefixesGetPrefixResource96A10E6E",
-                    "acceleratorPrefix",
-                  ],
-                },
-                "-CDKToolkit --region ",
-                {
-                  "Fn::FindInMap": [
-                    "GlobalRegionMap",
-                    {
-                      "Ref": "AWS::Partition",
-                    },
-                    "regionName",
-                  ],
-                },
-                "; then BOOTSTRAPPED_GLOBAL="no"; fi
-      - ENABLE_DIAGNOSTICS_PACK=",
-                {
-                  "Ref": "EnableDiagnosticsPack",
-                },
-                "
   build:
     commands:
       - cd source
@@ -24701,34 +24216,22 @@ phases:
       - if [ -f .yarnrc ]; then yarn install --use-yarnrc .yarnrc; else yarn install; fi
       - yarn build
       - cd packages/@aws-accelerator/installer
-      - set -e && if [ "$BOOTSTRAPPED_HOME" = "no" ]; then yarn run cdk bootstrap --toolkitStackName ",
+      - set -e && ./lib/bash/bootstrap-management.sh ",
                 {
                   "Fn::GetAtt": [
                     "ResourceNamePrefixesGetPrefixResource96A10E6E",
                     "acceleratorPrefix",
                   ],
                 },
-                "-CDKToolkit aws://",
-                {
-                  "Ref": "AWS::AccountId",
-                },
-                "/",
+                " ",
                 {
                   "Ref": "AWS::Region",
                 },
-                " --qualifier accel; fi
-      - set -e &&  if [ "$BOOTSTRAPPED_GLOBAL" = "no" ]; then yarn run cdk bootstrap --toolkitStackName ",
-                {
-                  "Fn::GetAtt": [
-                    "ResourceNamePrefixesGetPrefixResource96A10E6E",
-                    "acceleratorPrefix",
-                  ],
-                },
-                "-CDKToolkit aws://",
+                " ",
                 {
                   "Ref": "AWS::AccountId",
                 },
-                "/",
+                " ",
                 {
                   "Fn::FindInMap": [
                     "GlobalRegionMap",
@@ -24738,7 +24241,7 @@ phases:
                     "regionName",
                   ],
                 },
-                " --qualifier accel; fi
+                " $FORCE_BOOTSTRAP
       - |-
         set -e && if [ $ENABLE_EXTERNAL_PIPELINE_ACCOUNT = "yes" ]; then
                           if ! MANAGEMENT_ACCOUNT_CREDENTIAL=$(aws sts assume-role --role-arn arn:",
@@ -24749,45 +24252,19 @@ phases:
                             echo "Failed to assume $MANAGEMENT_ACCOUNT_ROLE_NAME role in management account $MANAGEMENT_ACCOUNT_ID"
                             exit 1
                           fi
-                          # Force bootstrapping is to account for where the LZA framework has previously bootstrapped the account and therefore uses a custom template
-                          # which doesn't have the S3 bucket (as it using the management account bucket)
-                          yarn run cdk bootstrap --toolkitStackName ",
-                {
-                  "Fn::GetAtt": [
-                    "ResourceNamePrefixesGetPrefixResource96A10E6E",
-                    "acceleratorPrefix",
-                  ],
-                },
-                "-CDKToolkit aws://",
-                {
-                  "Ref": "AWS::AccountId",
-                },
-                "/",
-                {
-                  "Ref": "AWS::Region",
-                },
-                " --qualifier accel --force
                           export $(printf "AWS_ACCESS_KEY_ID=%s AWS_SECRET_ACCESS_KEY=%s AWS_SESSION_TOKEN=%s" $MANAGEMENT_ACCOUNT_CREDENTIAL);
-                          if ! aws cloudformation describe-stacks --stack-name ",
+                          set -e && ./lib/bash/bootstrap-management.sh ",
                 {
                   "Fn::GetAtt": [
                     "ResourceNamePrefixesGetPrefixResource96A10E6E",
                     "acceleratorPrefix",
                   ],
                 },
-                "-CDKToolkit --region ",
+                " ",
                 {
                   "Ref": "AWS::Region",
                 },
-                "; then MGMT_BOOTSTRAPPED_HOME="no"; fi;
-                          if ! aws cloudformation describe-stacks --stack-name ",
-                {
-                  "Fn::GetAtt": [
-                    "ResourceNamePrefixesGetPrefixResource96A10E6E",
-                    "acceleratorPrefix",
-                  ],
-                },
-                "-CDKToolkit --region ",
+                " $MANAGEMENT_ACCOUNT_ID ",
                 {
                   "Fn::FindInMap": [
                     "GlobalRegionMap",
@@ -24797,37 +24274,7 @@ phases:
                     "regionName",
                   ],
                 },
-                "; then MGMT_BOOTSTRAPPED_GLOBAL="no"; fi;
-                          if [ "$MGMT_BOOTSTRAPPED_HOME" = "no" ]; then yarn run cdk bootstrap --toolkitStackName ",
-                {
-                  "Fn::GetAtt": [
-                    "ResourceNamePrefixesGetPrefixResource96A10E6E",
-                    "acceleratorPrefix",
-                  ],
-                },
-                "-CDKToolkit aws://$MANAGEMENT_ACCOUNT_ID/",
-                {
-                  "Ref": "AWS::Region",
-                },
-                " --qualifier accel; fi;
-                          if [ "$MGMT_BOOTSTRAPPED_GLOBAL" = "no" ]; then yarn run cdk bootstrap --toolkitStackName ",
-                {
-                  "Fn::GetAtt": [
-                    "ResourceNamePrefixesGetPrefixResource96A10E6E",
-                    "acceleratorPrefix",
-                  ],
-                },
-                "-CDKToolkit aws://$MANAGEMENT_ACCOUNT_ID/",
-                {
-                  "Fn::FindInMap": [
-                    "GlobalRegionMap",
-                    {
-                      "Ref": "AWS::Partition",
-                    },
-                    "regionName",
-                  ],
-                },
-                " --qualifier accel; fi;
+                " $FORCE_BOOTSTRAP;
                           unset AWS_ACCESS_KEY_ID;
                           unset AWS_SECRET_ACCESS_KEY;
                           unset AWS_SESSION_TOKEN;
@@ -24845,7 +24292,20 @@ phases:
                           fi;
       - |-
         set -e && if [ $ENABLE_DIAGNOSTICS_PACK = "Yes" ]; then
-                        yarn run ts-node --transpile-only cdk.ts deploy --require-approval never --stage diagnostics-pack --account ",
+                        yarn run ts-node --transpile-only cdk.ts synth --stage diagnostics-pack --account ",
+                {
+                  "Ref": "AWS::AccountId",
+                },
+                " --region ",
+                {
+                  "Ref": "AWS::Region",
+                },
+                " --partition ",
+                {
+                  "Ref": "AWS::Partition",
+                },
+                "
+                        yarn run ts-node --transpile-only cdk.ts deploy --stage diagnostics-pack --account ",
                 {
                   "Ref": "AWS::AccountId",
                 },
@@ -24859,7 +24319,7 @@ phases:
                 },
                 "
                       fi
-      - set -e && yarn run ts-node --transpile-only cdk.ts deploy --require-approval never --stage pipeline --account ",
+      - set -e && yarn run ts-node --transpile-only cdk.ts synth --stage pipeline --account ",
                 {
                   "Ref": "AWS::AccountId",
                 },
@@ -24872,7 +24332,20 @@ phases:
                   "Ref": "AWS::Partition",
                 },
                 "
-      - set -e && if [ "$ENABLE_TESTER" = "true" ]; then yarn run ts-node --transpile-only cdk.ts deploy --require-approval never --stage tester-pipeline --account ",
+      - set -e && yarn run ts-node --transpile-only cdk.ts deploy --stage pipeline --account ",
+                {
+                  "Ref": "AWS::AccountId",
+                },
+                " --region ",
+                {
+                  "Ref": "AWS::Region",
+                },
+                " --partition ",
+                {
+                  "Ref": "AWS::Partition",
+                },
+                "
+      - set -e && if [ "$ENABLE_TESTER" = "true" ]; then yarn run ts-node --transpile-only cdk.ts deploy --stage tester-pipeline --account ",
                 {
                   "Ref": "AWS::AccountId",
                 },
@@ -24881,6 +24354,8 @@ phases:
                   "Ref": "AWS::Region",
                 },
                 "; fi
+      - chmod +x scripts/post_pipeline_s3_config_check.sh
+      - set -e && bash -e scripts/post_pipeline_s3_config_check.sh
       - set -e && cd ../../../../ && zip -rqy /tmp/lza.zip . && aws s3 cp /tmp/lza.zip s3://",
                 {
                   "Fn::GetAtt": [
@@ -24896,7 +24371,7 @@ phases:
                 {
                   "Ref": "AWS::Region",
                 },
-                "/lza/v1.13.0.zip --region ",
+                "/lza/v1.14.1.zip --region ",
                 {
                   "Ref": "AWS::Region",
                 },
@@ -26109,7 +25584,7 @@ phases:
           ],
         },
         "Type": "String",
-        "Value": "1.13.0",
+        "Value": "1.14.1",
       },
       "Type": "AWS::SSM::Parameter",
     },
@@ -27064,7 +26539,7 @@ exports.handler = async function (event, context) {
 }
 `;
 
-exports[`InstallerStack Stack(installer):  Snapshot Test 8`] = `
+exports[`InstallerStack > Stack(installer):  Snapshot Test 8`] = `
 {
   "Conditions": {
     "IsCommercialCondition": {
@@ -27376,7 +26851,7 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 8`] = `
     "RepositoryBranchName": {
       "AllowedPattern": ".+",
       "ConstraintDescription": "The repository branch name must not be empty",
-      "Default": "release/v1.13.0",
+      "Default": "release/v1.14.1",
       "Description": "The name of the git branch to use for installation. To determine the branch name, navigate to the Landing Zone Accelerator GitHub branches page and choose the release branch you would like to deploy. Release branch names will align with the semantic versioning of our GitHub releases. New release branches will be available as the open source project is updated with new features.",
       "Type": "String",
     },
@@ -27390,7 +26865,7 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 8`] = `
       "Type": "String",
     },
     "RepositoryBucketObject": {
-      "Default": "release/v1.13.0.zip",
+      "Default": "release/v1.14.1.zip",
       "Description": "The full path to the accelerator code zip S3 Object. (S3 Only)",
       "Type": "String",
     },
@@ -28854,41 +28329,6 @@ phases:
     commands:
       - ENABLE_EXTERNAL_PIPELINE_ACCOUNT="no"
       - if [ ! -z "$MANAGEMENT_ACCOUNT_ID" ] && [ ! -z "$MANAGEMENT_ACCOUNT_ROLE_NAME" ]; then ENABLE_EXTERNAL_PIPELINE_ACCOUNT="yes"; fi
-      - set -e && if ! aws cloudformation describe-stacks --stack-name ",
-                {
-                  "Fn::GetAtt": [
-                    "ResourceNamePrefixesGetPrefixResource96A10E6E",
-                    "acceleratorPrefix",
-                  ],
-                },
-                "-CDKToolkit --region ",
-                {
-                  "Ref": "AWS::Region",
-                },
-                "; then BOOTSTRAPPED_HOME="no"; fi
-      - set -e && if ! aws cloudformation describe-stacks --stack-name ",
-                {
-                  "Fn::GetAtt": [
-                    "ResourceNamePrefixesGetPrefixResource96A10E6E",
-                    "acceleratorPrefix",
-                  ],
-                },
-                "-CDKToolkit --region ",
-                {
-                  "Fn::FindInMap": [
-                    "GlobalRegionMap",
-                    {
-                      "Ref": "AWS::Partition",
-                    },
-                    "regionName",
-                  ],
-                },
-                "; then BOOTSTRAPPED_GLOBAL="no"; fi
-      - ENABLE_DIAGNOSTICS_PACK=",
-                {
-                  "Ref": "EnableDiagnosticsPack",
-                },
-                "
   build:
     commands:
       - cd source
@@ -28904,34 +28344,22 @@ phases:
       - if [ -f .yarnrc ]; then yarn install --use-yarnrc .yarnrc; else yarn install; fi
       - yarn build
       - cd packages/@aws-accelerator/installer
-      - set -e && if [ "$BOOTSTRAPPED_HOME" = "no" ]; then yarn run cdk bootstrap --toolkitStackName ",
+      - set -e && ./lib/bash/bootstrap-management.sh ",
                 {
                   "Fn::GetAtt": [
                     "ResourceNamePrefixesGetPrefixResource96A10E6E",
                     "acceleratorPrefix",
                   ],
                 },
-                "-CDKToolkit aws://",
-                {
-                  "Ref": "AWS::AccountId",
-                },
-                "/",
+                " ",
                 {
                   "Ref": "AWS::Region",
                 },
-                " --qualifier accel; fi
-      - set -e &&  if [ "$BOOTSTRAPPED_GLOBAL" = "no" ]; then yarn run cdk bootstrap --toolkitStackName ",
-                {
-                  "Fn::GetAtt": [
-                    "ResourceNamePrefixesGetPrefixResource96A10E6E",
-                    "acceleratorPrefix",
-                  ],
-                },
-                "-CDKToolkit aws://",
+                " ",
                 {
                   "Ref": "AWS::AccountId",
                 },
-                "/",
+                " ",
                 {
                   "Fn::FindInMap": [
                     "GlobalRegionMap",
@@ -28941,7 +28369,7 @@ phases:
                     "regionName",
                   ],
                 },
-                " --qualifier accel; fi
+                " $FORCE_BOOTSTRAP
       - |-
         set -e && if [ $ENABLE_EXTERNAL_PIPELINE_ACCOUNT = "yes" ]; then
                           if ! MANAGEMENT_ACCOUNT_CREDENTIAL=$(aws sts assume-role --role-arn arn:",
@@ -28952,45 +28380,19 @@ phases:
                             echo "Failed to assume $MANAGEMENT_ACCOUNT_ROLE_NAME role in management account $MANAGEMENT_ACCOUNT_ID"
                             exit 1
                           fi
-                          # Force bootstrapping is to account for where the LZA framework has previously bootstrapped the account and therefore uses a custom template
-                          # which doesn't have the S3 bucket (as it using the management account bucket)
-                          yarn run cdk bootstrap --toolkitStackName ",
-                {
-                  "Fn::GetAtt": [
-                    "ResourceNamePrefixesGetPrefixResource96A10E6E",
-                    "acceleratorPrefix",
-                  ],
-                },
-                "-CDKToolkit aws://",
-                {
-                  "Ref": "AWS::AccountId",
-                },
-                "/",
-                {
-                  "Ref": "AWS::Region",
-                },
-                " --qualifier accel --force
                           export $(printf "AWS_ACCESS_KEY_ID=%s AWS_SECRET_ACCESS_KEY=%s AWS_SESSION_TOKEN=%s" $MANAGEMENT_ACCOUNT_CREDENTIAL);
-                          if ! aws cloudformation describe-stacks --stack-name ",
+                          set -e && ./lib/bash/bootstrap-management.sh ",
                 {
                   "Fn::GetAtt": [
                     "ResourceNamePrefixesGetPrefixResource96A10E6E",
                     "acceleratorPrefix",
                   ],
                 },
-                "-CDKToolkit --region ",
+                " ",
                 {
                   "Ref": "AWS::Region",
                 },
-                "; then MGMT_BOOTSTRAPPED_HOME="no"; fi;
-                          if ! aws cloudformation describe-stacks --stack-name ",
-                {
-                  "Fn::GetAtt": [
-                    "ResourceNamePrefixesGetPrefixResource96A10E6E",
-                    "acceleratorPrefix",
-                  ],
-                },
-                "-CDKToolkit --region ",
+                " $MANAGEMENT_ACCOUNT_ID ",
                 {
                   "Fn::FindInMap": [
                     "GlobalRegionMap",
@@ -29000,37 +28402,7 @@ phases:
                     "regionName",
                   ],
                 },
-                "; then MGMT_BOOTSTRAPPED_GLOBAL="no"; fi;
-                          if [ "$MGMT_BOOTSTRAPPED_HOME" = "no" ]; then yarn run cdk bootstrap --toolkitStackName ",
-                {
-                  "Fn::GetAtt": [
-                    "ResourceNamePrefixesGetPrefixResource96A10E6E",
-                    "acceleratorPrefix",
-                  ],
-                },
-                "-CDKToolkit aws://$MANAGEMENT_ACCOUNT_ID/",
-                {
-                  "Ref": "AWS::Region",
-                },
-                " --qualifier accel; fi;
-                          if [ "$MGMT_BOOTSTRAPPED_GLOBAL" = "no" ]; then yarn run cdk bootstrap --toolkitStackName ",
-                {
-                  "Fn::GetAtt": [
-                    "ResourceNamePrefixesGetPrefixResource96A10E6E",
-                    "acceleratorPrefix",
-                  ],
-                },
-                "-CDKToolkit aws://$MANAGEMENT_ACCOUNT_ID/",
-                {
-                  "Fn::FindInMap": [
-                    "GlobalRegionMap",
-                    {
-                      "Ref": "AWS::Partition",
-                    },
-                    "regionName",
-                  ],
-                },
-                " --qualifier accel; fi;
+                " $FORCE_BOOTSTRAP;
                           unset AWS_ACCESS_KEY_ID;
                           unset AWS_SECRET_ACCESS_KEY;
                           unset AWS_SESSION_TOKEN;
@@ -29048,7 +28420,20 @@ phases:
                           fi;
       - |-
         set -e && if [ $ENABLE_DIAGNOSTICS_PACK = "Yes" ]; then
-                        yarn run ts-node --transpile-only cdk.ts deploy --require-approval never --stage diagnostics-pack --account ",
+                        yarn run ts-node --transpile-only cdk.ts synth --stage diagnostics-pack --account ",
+                {
+                  "Ref": "AWS::AccountId",
+                },
+                " --region ",
+                {
+                  "Ref": "AWS::Region",
+                },
+                " --partition ",
+                {
+                  "Ref": "AWS::Partition",
+                },
+                "
+                        yarn run ts-node --transpile-only cdk.ts deploy --stage diagnostics-pack --account ",
                 {
                   "Ref": "AWS::AccountId",
                 },
@@ -29062,7 +28447,7 @@ phases:
                 },
                 "
                       fi
-      - set -e && yarn run ts-node --transpile-only cdk.ts deploy --require-approval never --stage pipeline --account ",
+      - set -e && yarn run ts-node --transpile-only cdk.ts synth --stage pipeline --account ",
                 {
                   "Ref": "AWS::AccountId",
                 },
@@ -29075,7 +28460,20 @@ phases:
                   "Ref": "AWS::Partition",
                 },
                 "
-      - set -e && if [ "$ENABLE_TESTER" = "true" ]; then yarn run ts-node --transpile-only cdk.ts deploy --require-approval never --stage tester-pipeline --account ",
+      - set -e && yarn run ts-node --transpile-only cdk.ts deploy --stage pipeline --account ",
+                {
+                  "Ref": "AWS::AccountId",
+                },
+                " --region ",
+                {
+                  "Ref": "AWS::Region",
+                },
+                " --partition ",
+                {
+                  "Ref": "AWS::Partition",
+                },
+                "
+      - set -e && if [ "$ENABLE_TESTER" = "true" ]; then yarn run ts-node --transpile-only cdk.ts deploy --stage tester-pipeline --account ",
                 {
                   "Ref": "AWS::AccountId",
                 },
@@ -29084,6 +28482,8 @@ phases:
                   "Ref": "AWS::Region",
                 },
                 "; fi
+      - chmod +x scripts/post_pipeline_s3_config_check.sh
+      - set -e && bash -e scripts/post_pipeline_s3_config_check.sh
       - set -e && cd ../../../../ && zip -rqy /tmp/lza.zip . && aws s3 cp /tmp/lza.zip s3://",
                 {
                   "Fn::GetAtt": [
@@ -29099,7 +28499,7 @@ phases:
                 {
                   "Ref": "AWS::Region",
                 },
-                "/lza/v1.13.0.zip --region ",
+                "/lza/v1.14.1.zip --region ",
                 {
                   "Ref": "AWS::Region",
                 },
@@ -30312,7 +29712,7 @@ phases:
           ],
         },
         "Type": "String",
-        "Value": "1.13.0",
+        "Value": "1.14.1",
       },
       "Type": "AWS::SSM::Parameter",
     },
@@ -31294,7 +30694,7 @@ exports.handler = async function (event, context) {
 }
 `;
 
-exports[`InstallerStack Stack(installer):  Snapshot Test 9`] = `
+exports[`InstallerStack > Stack(installer):  Snapshot Test 9`] = `
 {
   "Conditions": {
     "IsCommercialCondition": {
@@ -31603,7 +31003,7 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 9`] = `
     "RepositoryBranchName": {
       "AllowedPattern": ".+",
       "ConstraintDescription": "The repository branch name must not be empty",
-      "Default": "release/v1.13.0",
+      "Default": "release/v1.14.1",
       "Description": "The name of the git branch to use for installation. To determine the branch name, navigate to the Landing Zone Accelerator GitHub branches page and choose the release branch you would like to deploy. Release branch names will align with the semantic versioning of our GitHub releases. New release branches will be available as the open source project is updated with new features.",
       "Type": "String",
     },
@@ -31617,7 +31017,7 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 9`] = `
       "Type": "String",
     },
     "RepositoryBucketObject": {
-      "Default": "release/v1.13.0.zip",
+      "Default": "release/v1.14.1.zip",
       "Description": "The full path to the accelerator code zip S3 Object. (S3 Only)",
       "Type": "String",
     },
@@ -33085,41 +32485,6 @@ phases:
     commands:
       - ENABLE_EXTERNAL_PIPELINE_ACCOUNT="no"
       - if [ ! -z "$MANAGEMENT_ACCOUNT_ID" ] && [ ! -z "$MANAGEMENT_ACCOUNT_ROLE_NAME" ]; then ENABLE_EXTERNAL_PIPELINE_ACCOUNT="yes"; fi
-      - set -e && if ! aws cloudformation describe-stacks --stack-name ",
-                {
-                  "Fn::GetAtt": [
-                    "ResourceNamePrefixesGetPrefixResource96A10E6E",
-                    "acceleratorPrefix",
-                  ],
-                },
-                "-CDKToolkit --region ",
-                {
-                  "Ref": "AWS::Region",
-                },
-                "; then BOOTSTRAPPED_HOME="no"; fi
-      - set -e && if ! aws cloudformation describe-stacks --stack-name ",
-                {
-                  "Fn::GetAtt": [
-                    "ResourceNamePrefixesGetPrefixResource96A10E6E",
-                    "acceleratorPrefix",
-                  ],
-                },
-                "-CDKToolkit --region ",
-                {
-                  "Fn::FindInMap": [
-                    "GlobalRegionMap",
-                    {
-                      "Ref": "AWS::Partition",
-                    },
-                    "regionName",
-                  ],
-                },
-                "; then BOOTSTRAPPED_GLOBAL="no"; fi
-      - ENABLE_DIAGNOSTICS_PACK=",
-                {
-                  "Ref": "EnableDiagnosticsPack",
-                },
-                "
   build:
     commands:
       - cd source
@@ -33135,34 +32500,22 @@ phases:
       - if [ -f .yarnrc ]; then yarn install --use-yarnrc .yarnrc; else yarn install; fi
       - yarn build
       - cd packages/@aws-accelerator/installer
-      - set -e && if [ "$BOOTSTRAPPED_HOME" = "no" ]; then yarn run cdk bootstrap --toolkitStackName ",
+      - set -e && ./lib/bash/bootstrap-management.sh ",
                 {
                   "Fn::GetAtt": [
                     "ResourceNamePrefixesGetPrefixResource96A10E6E",
                     "acceleratorPrefix",
                   ],
                 },
-                "-CDKToolkit aws://",
-                {
-                  "Ref": "AWS::AccountId",
-                },
-                "/",
+                " ",
                 {
                   "Ref": "AWS::Region",
                 },
-                " --qualifier accel; fi
-      - set -e &&  if [ "$BOOTSTRAPPED_GLOBAL" = "no" ]; then yarn run cdk bootstrap --toolkitStackName ",
-                {
-                  "Fn::GetAtt": [
-                    "ResourceNamePrefixesGetPrefixResource96A10E6E",
-                    "acceleratorPrefix",
-                  ],
-                },
-                "-CDKToolkit aws://",
+                " ",
                 {
                   "Ref": "AWS::AccountId",
                 },
-                "/",
+                " ",
                 {
                   "Fn::FindInMap": [
                     "GlobalRegionMap",
@@ -33172,7 +32525,7 @@ phases:
                     "regionName",
                   ],
                 },
-                " --qualifier accel; fi
+                " $FORCE_BOOTSTRAP
       - |-
         set -e && if [ $ENABLE_EXTERNAL_PIPELINE_ACCOUNT = "yes" ]; then
                           if ! MANAGEMENT_ACCOUNT_CREDENTIAL=$(aws sts assume-role --role-arn arn:",
@@ -33183,45 +32536,19 @@ phases:
                             echo "Failed to assume $MANAGEMENT_ACCOUNT_ROLE_NAME role in management account $MANAGEMENT_ACCOUNT_ID"
                             exit 1
                           fi
-                          # Force bootstrapping is to account for where the LZA framework has previously bootstrapped the account and therefore uses a custom template
-                          # which doesn't have the S3 bucket (as it using the management account bucket)
-                          yarn run cdk bootstrap --toolkitStackName ",
-                {
-                  "Fn::GetAtt": [
-                    "ResourceNamePrefixesGetPrefixResource96A10E6E",
-                    "acceleratorPrefix",
-                  ],
-                },
-                "-CDKToolkit aws://",
-                {
-                  "Ref": "AWS::AccountId",
-                },
-                "/",
-                {
-                  "Ref": "AWS::Region",
-                },
-                " --qualifier accel --force
                           export $(printf "AWS_ACCESS_KEY_ID=%s AWS_SECRET_ACCESS_KEY=%s AWS_SESSION_TOKEN=%s" $MANAGEMENT_ACCOUNT_CREDENTIAL);
-                          if ! aws cloudformation describe-stacks --stack-name ",
+                          set -e && ./lib/bash/bootstrap-management.sh ",
                 {
                   "Fn::GetAtt": [
                     "ResourceNamePrefixesGetPrefixResource96A10E6E",
                     "acceleratorPrefix",
                   ],
                 },
-                "-CDKToolkit --region ",
+                " ",
                 {
                   "Ref": "AWS::Region",
                 },
-                "; then MGMT_BOOTSTRAPPED_HOME="no"; fi;
-                          if ! aws cloudformation describe-stacks --stack-name ",
-                {
-                  "Fn::GetAtt": [
-                    "ResourceNamePrefixesGetPrefixResource96A10E6E",
-                    "acceleratorPrefix",
-                  ],
-                },
-                "-CDKToolkit --region ",
+                " $MANAGEMENT_ACCOUNT_ID ",
                 {
                   "Fn::FindInMap": [
                     "GlobalRegionMap",
@@ -33231,37 +32558,7 @@ phases:
                     "regionName",
                   ],
                 },
-                "; then MGMT_BOOTSTRAPPED_GLOBAL="no"; fi;
-                          if [ "$MGMT_BOOTSTRAPPED_HOME" = "no" ]; then yarn run cdk bootstrap --toolkitStackName ",
-                {
-                  "Fn::GetAtt": [
-                    "ResourceNamePrefixesGetPrefixResource96A10E6E",
-                    "acceleratorPrefix",
-                  ],
-                },
-                "-CDKToolkit aws://$MANAGEMENT_ACCOUNT_ID/",
-                {
-                  "Ref": "AWS::Region",
-                },
-                " --qualifier accel; fi;
-                          if [ "$MGMT_BOOTSTRAPPED_GLOBAL" = "no" ]; then yarn run cdk bootstrap --toolkitStackName ",
-                {
-                  "Fn::GetAtt": [
-                    "ResourceNamePrefixesGetPrefixResource96A10E6E",
-                    "acceleratorPrefix",
-                  ],
-                },
-                "-CDKToolkit aws://$MANAGEMENT_ACCOUNT_ID/",
-                {
-                  "Fn::FindInMap": [
-                    "GlobalRegionMap",
-                    {
-                      "Ref": "AWS::Partition",
-                    },
-                    "regionName",
-                  ],
-                },
-                " --qualifier accel; fi;
+                " $FORCE_BOOTSTRAP;
                           unset AWS_ACCESS_KEY_ID;
                           unset AWS_SECRET_ACCESS_KEY;
                           unset AWS_SESSION_TOKEN;
@@ -33279,7 +32576,20 @@ phases:
                           fi;
       - |-
         set -e && if [ $ENABLE_DIAGNOSTICS_PACK = "Yes" ]; then
-                        yarn run ts-node --transpile-only cdk.ts deploy --require-approval never --stage diagnostics-pack --account ",
+                        yarn run ts-node --transpile-only cdk.ts synth --stage diagnostics-pack --account ",
+                {
+                  "Ref": "AWS::AccountId",
+                },
+                " --region ",
+                {
+                  "Ref": "AWS::Region",
+                },
+                " --partition ",
+                {
+                  "Ref": "AWS::Partition",
+                },
+                "
+                        yarn run ts-node --transpile-only cdk.ts deploy --stage diagnostics-pack --account ",
                 {
                   "Ref": "AWS::AccountId",
                 },
@@ -33293,7 +32603,7 @@ phases:
                 },
                 "
                       fi
-      - set -e && yarn run ts-node --transpile-only cdk.ts deploy --require-approval never --stage pipeline --account ",
+      - set -e && yarn run ts-node --transpile-only cdk.ts synth --stage pipeline --account ",
                 {
                   "Ref": "AWS::AccountId",
                 },
@@ -33306,7 +32616,20 @@ phases:
                   "Ref": "AWS::Partition",
                 },
                 "
-      - set -e && if [ "$ENABLE_TESTER" = "true" ]; then yarn run ts-node --transpile-only cdk.ts deploy --require-approval never --stage tester-pipeline --account ",
+      - set -e && yarn run ts-node --transpile-only cdk.ts deploy --stage pipeline --account ",
+                {
+                  "Ref": "AWS::AccountId",
+                },
+                " --region ",
+                {
+                  "Ref": "AWS::Region",
+                },
+                " --partition ",
+                {
+                  "Ref": "AWS::Partition",
+                },
+                "
+      - set -e && if [ "$ENABLE_TESTER" = "true" ]; then yarn run ts-node --transpile-only cdk.ts deploy --stage tester-pipeline --account ",
                 {
                   "Ref": "AWS::AccountId",
                 },
@@ -33315,6 +32638,8 @@ phases:
                   "Ref": "AWS::Region",
                 },
                 "; fi
+      - chmod +x scripts/post_pipeline_s3_config_check.sh
+      - set -e && bash -e scripts/post_pipeline_s3_config_check.sh
       - set -e && cd ../../../../ && zip -rqy /tmp/lza.zip . && aws s3 cp /tmp/lza.zip s3://",
                 {
                   "Fn::GetAtt": [
@@ -33330,7 +32655,7 @@ phases:
                 {
                   "Ref": "AWS::Region",
                 },
-                "/lza/v1.13.0.zip --region ",
+                "/lza/v1.14.1.zip --region ",
                 {
                   "Ref": "AWS::Region",
                 },
@@ -34565,7 +33890,7 @@ phases:
           ],
         },
         "Type": "String",
-        "Value": "1.13.0",
+        "Value": "1.14.1",
       },
       "Type": "AWS::SSM::Parameter",
     },

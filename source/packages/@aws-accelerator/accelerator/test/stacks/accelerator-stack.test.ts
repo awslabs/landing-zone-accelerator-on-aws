@@ -12,12 +12,27 @@
  */
 /* eslint @typescript-eslint/no-explicit-any: 0 */
 
-import { describe, beforeEach, afterEach, it, jest } from '@jest/globals';
+import { describe, beforeEach, afterEach, it, vi, expect } from 'vitest';
 import { AcceleratorStack, AcceleratorStackProps } from '../../lib/stacks/accelerator-stack';
 import { createAcceleratorStackProps } from './stack-props-test-helper';
 import * as cdk from 'aws-cdk-lib';
 import { Construct } from 'constructs';
 import { DeploymentTargets } from '@aws-accelerator/config';
+
+// Mock all stack files to prevent circular dependencies
+vi.mock('../../lib/stacks/bootstrap-stack', () => ({}));
+vi.mock('../../lib/stacks/network-stacks/network-stack', () => ({}));
+vi.mock('../../lib/stacks/network-stacks/network-associations-stack/network-associations-stack', () => ({}));
+vi.mock('../../lib/stacks/network-stacks/network-prep-stack/network-prep-stack', () => ({}));
+vi.mock('../../lib/stacks/network-stacks/network-vpc-stack/network-vpc-stack', () => ({}));
+vi.mock('../../lib/stacks/operations-stack', () => ({}));
+vi.mock('../../lib/stacks/organizations-stack', () => ({}));
+vi.mock('../../lib/stacks/pipeline-stack', () => ({}));
+vi.mock('../../lib/stacks/prepare-stack', () => ({}));
+vi.mock('../../lib/stacks/finalize-stack', () => ({}));
+vi.mock('../../lib/stacks/security-audit-stack', () => ({}));
+vi.mock('../../lib/stacks/security-stack', () => ({}));
+vi.mock('../../lib/stacks/diagnostics-pack-stack', () => ({}));
 
 class TestStack extends AcceleratorStack {
   constructor(scope: Construct, id: string, props: AcceleratorStackProps) {
@@ -35,7 +50,7 @@ beforeEach(() => {
 });
 
 afterEach(() => {
-  jest.clearAllMocks();
+  vi.clearAllMocks();
 });
 
 describe('isIncluded', () => {
@@ -55,13 +70,13 @@ describe('isIncluded', () => {
 
   it('included account returns true', () => {
     const deploymentTargets = {} as DeploymentTargets;
-    jest.spyOn(AcceleratorStack.prototype as any, 'isAccountIncluded').mockImplementationOnce(() => true);
+    vi.spyOn(AcceleratorStack.prototype as any, 'isAccountIncluded').mockImplementationOnce(() => true);
     expect(testStack.isIncluded(deploymentTargets)).toBeTruthy();
   });
 
   it('included OU returns true', () => {
     const deploymentTargets = {} as DeploymentTargets;
-    jest.spyOn(AcceleratorStack.prototype as any, 'isOrganizationalUnitIncluded').mockImplementationOnce(() => true);
+    vi.spyOn(AcceleratorStack.prototype as any, 'isOrganizationalUnitIncluded').mockImplementationOnce(() => true);
     expect(testStack.isIncluded(deploymentTargets)).toBeTruthy();
   });
 

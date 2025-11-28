@@ -1,6 +1,7 @@
 import * as cdk from 'aws-cdk-lib';
 import { Template } from 'aws-cdk-lib/assertions';
 import { AcceleratorAspects, LambdaDefaultMemoryAspect, PermissionsBoundaryAspect } from '../lib/accelerator-aspects';
+import { afterAll, afterEach, beforeAll, beforeEach, describe, test } from 'vitest';
 
 describe('AcceleratorAspects', () => {
   let app: cdk.App;
@@ -222,9 +223,14 @@ describe('AcceleratorAspects', () => {
   });
 
   describe('PermissionsBoundaryAspect', () => {
-    beforeEach(() => {
+    beforeAll(() => {
       process.env['PIPELINE_ACCOUNT_ID'] = '123456789012';
       process.env['ACCELERATOR_PERMISSION_BOUNDARY'] = 'test-boundary';
+    });
+
+    afterAll(() => {
+      delete process.env['PIPELINE_ACCOUNT_ID'];
+      delete process.env['ACCELERATOR_PERMISSION_BOUNDARY'];
     });
 
     test('should add permissions boundary to IAM roles', () => {
@@ -654,8 +660,12 @@ describe('AcceleratorAspects', () => {
   });
 
   describe('ExistingRoleOverrides', () => {
-    beforeEach(() => {
+    beforeAll(() => {
       process.env['ACCELERATOR_PREFIX'] = 'AWSAccelerator';
+    });
+
+    afterAll(() => {
+      delete process.env['ACCELERATOR_PREFIX'];
     });
 
     test('should replace CloudTrail CloudWatch logs role', () => {

@@ -59,6 +59,7 @@ async function main(): Promise<string> {
       deleteAccelerator: { type: 'boolean', default: false },
       stageName: { type: 'string', default: 'all' },
       actionName: { type: 'string', default: 'all' },
+      configPath: { type: 'string', default: undefined },
     })
     .parseSync();
 
@@ -67,6 +68,7 @@ async function main(): Promise<string> {
   const partition = argv.partition;
   const debug = argv.debug;
   const ignoreTerminationProtection = true;
+  const configPath = argv.configPath;
 
   const fullDestroy = argv.fullDestroy;
   const deleteAccelerator = argv.deleteAccelerator;
@@ -103,6 +105,7 @@ async function main(): Promise<string> {
       keepBootstraps,
       stageName,
       actionName,
+      configPath,
     );
   }
 
@@ -123,6 +126,7 @@ async function main(): Promise<string> {
       keepBootstraps,
       stageName,
       actionName,
+      configPath,
     );
   }
 
@@ -143,6 +147,7 @@ async function main(): Promise<string> {
       keepBootstraps,
       stageName,
       actionName,
+      configPath,
     );
   }
 
@@ -161,6 +166,7 @@ async function main(): Promise<string> {
       keepBootstraps,
       stageName,
       actionName,
+      configPath,
     );
   }
 
@@ -235,6 +241,7 @@ async function uninstaller(
   keepBootstraps: boolean,
   stageName: string,
   actionName: string,
+  configPath?: string,
 ): Promise<string> {
   const start = new Date().getTime();
 
@@ -250,6 +257,7 @@ async function uninstaller(
     actionName,
     debug,
     ignoreTerminationProtection,
+    configPath,
   });
 
   const status = await acceleratorTool.uninstallAccelerator(installerStackName);

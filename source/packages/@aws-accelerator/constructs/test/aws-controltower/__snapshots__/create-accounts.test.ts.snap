@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`ConfigServiceTags Construct(ConfigServiceTags):  Snapshot Test 1`] = `
+exports[`ConfigServiceTags > Construct(ConfigServiceTags):  Snapshot Test 1`] = `
 {
   "Resources": {
     "CustomKey1E6D0D07": {
@@ -111,7 +111,7 @@ exports[`ConfigServiceTags Construct(ConfigServiceTags):  Snapshot Test 1`] = `
         "Description": "AWS CDK resource provider framework - isComplete (Stack/TestCreateCTAccounts/CreateControlTowerAcccountsProvider)",
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.14.1",
             "USER_IS_COMPLETE_FUNCTION_ARN": {
               "Fn::GetAtt": [
                 "TestCreateCTAccountsCreateControlTowerAccountStatus08A35AEC",
@@ -127,6 +127,10 @@ exports[`ConfigServiceTags Construct(ConfigServiceTags):  Snapshot Test 1`] = `
           },
         },
         "Handler": "framework.isComplete",
+        "LoggingConfig": {
+          "ApplicationLogLevel": "FATAL",
+          "LogFormat": "JSON",
+        },
         "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
@@ -201,6 +205,16 @@ exports[`ConfigServiceTags Construct(ConfigServiceTags):  Snapshot Test 1`] = `
               ],
             },
             {
+              "Action": "lambda:GetFunction",
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::GetAtt": [
+                  "TestCreateCTAccountsCreateControlTowerAccount8CC34F3C",
+                  "Arn",
+                ],
+              },
+            },
+            {
               "Action": "lambda:InvokeFunction",
               "Effect": "Allow",
               "Resource": [
@@ -225,6 +239,16 @@ exports[`ConfigServiceTags Construct(ConfigServiceTags):  Snapshot Test 1`] = `
                   ],
                 },
               ],
+            },
+            {
+              "Action": "lambda:GetFunction",
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::GetAtt": [
+                  "TestCreateCTAccountsCreateControlTowerAccountStatus08A35AEC",
+                  "Arn",
+                ],
+              },
             },
           ],
           "Version": "2012-10-17",
@@ -251,7 +275,7 @@ exports[`ConfigServiceTags Construct(ConfigServiceTags):  Snapshot Test 1`] = `
         "Description": "AWS CDK resource provider framework - onEvent (Stack/TestCreateCTAccounts/CreateControlTowerAcccountsProvider)",
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.14.1",
             "USER_IS_COMPLETE_FUNCTION_ARN": {
               "Fn::GetAtt": [
                 "TestCreateCTAccountsCreateControlTowerAccountStatus08A35AEC",
@@ -270,6 +294,10 @@ exports[`ConfigServiceTags Construct(ConfigServiceTags):  Snapshot Test 1`] = `
           },
         },
         "Handler": "framework.onEvent",
+        "LoggingConfig": {
+          "ApplicationLogLevel": "FATAL",
+          "LogFormat": "JSON",
+        },
         "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
@@ -313,6 +341,16 @@ exports[`ConfigServiceTags Construct(ConfigServiceTags):  Snapshot Test 1`] = `
               ],
             },
             {
+              "Action": "lambda:GetFunction",
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::GetAtt": [
+                  "TestCreateCTAccountsCreateControlTowerAccount8CC34F3C",
+                  "Arn",
+                ],
+              },
+            },
+            {
               "Action": "lambda:InvokeFunction",
               "Effect": "Allow",
               "Resource": [
@@ -337,6 +375,16 @@ exports[`ConfigServiceTags Construct(ConfigServiceTags):  Snapshot Test 1`] = `
                   ],
                 },
               ],
+            },
+            {
+              "Action": "lambda:GetFunction",
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::GetAtt": [
+                  "TestCreateCTAccountsCreateControlTowerAccountStatus08A35AEC",
+                  "Arn",
+                ],
+              },
             },
             {
               "Action": "states:StartExecution",
@@ -401,7 +449,7 @@ exports[`ConfigServiceTags Construct(ConfigServiceTags):  Snapshot Test 1`] = `
         "Description": "AWS CDK resource provider framework - onTimeout (Stack/TestCreateCTAccounts/CreateControlTowerAcccountsProvider)",
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.14.1",
             "USER_IS_COMPLETE_FUNCTION_ARN": {
               "Fn::GetAtt": [
                 "TestCreateCTAccountsCreateControlTowerAccountStatus08A35AEC",
@@ -417,6 +465,10 @@ exports[`ConfigServiceTags Construct(ConfigServiceTags):  Snapshot Test 1`] = `
           },
         },
         "Handler": "framework.onTimeout",
+        "LoggingConfig": {
+          "ApplicationLogLevel": "FATAL",
+          "LogFormat": "JSON",
+        },
         "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
@@ -491,6 +543,16 @@ exports[`ConfigServiceTags Construct(ConfigServiceTags):  Snapshot Test 1`] = `
               ],
             },
             {
+              "Action": "lambda:GetFunction",
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::GetAtt": [
+                  "TestCreateCTAccountsCreateControlTowerAccount8CC34F3C",
+                  "Arn",
+                ],
+              },
+            },
+            {
               "Action": "lambda:InvokeFunction",
               "Effect": "Allow",
               "Resource": [
@@ -515,6 +577,16 @@ exports[`ConfigServiceTags Construct(ConfigServiceTags):  Snapshot Test 1`] = `
                   ],
                 },
               ],
+            },
+            {
+              "Action": "lambda:GetFunction",
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::GetAtt": [
+                  "TestCreateCTAccountsCreateControlTowerAccountStatus08A35AEC",
+                  "Arn",
+                ],
+              },
             },
           ],
           "Version": "2012-10-17",
@@ -555,22 +627,6 @@ exports[`ConfigServiceTags Construct(ConfigServiceTags):  Snapshot Test 1`] = `
               ""}}}",
             ],
           ],
-        },
-        "LoggingConfiguration": {
-          "Destinations": [
-            {
-              "CloudWatchLogsLogGroup": {
-                "LogGroupArn": {
-                  "Fn::GetAtt": [
-                    "TestCreateCTAccountsCreateControlTowerAccountWaiterLogGroupB3F2D4BA",
-                    "Arn",
-                  ],
-                },
-              },
-            },
-          ],
-          "IncludeExecutionData": true,
-          "Level": "ERROR",
         },
         "RoleArn": {
           "Fn::GetAtt": [
@@ -654,22 +710,6 @@ exports[`ConfigServiceTags Construct(ConfigServiceTags):  Snapshot Test 1`] = `
                 },
               ],
             },
-            {
-              "Action": [
-                "logs:CreateLogDelivery",
-                "logs:CreateLogStream",
-                "logs:GetLogDelivery",
-                "logs:UpdateLogDelivery",
-                "logs:DeleteLogDelivery",
-                "logs:ListLogDeliveries",
-                "logs:PutLogEvents",
-                "logs:PutResourcePolicy",
-                "logs:DescribeResourcePolicies",
-                "logs:DescribeLogGroups",
-              ],
-              "Effect": "Allow",
-              "Resource": "*",
-            },
           ],
           "Version": "2012-10-17",
         },
@@ -694,7 +734,7 @@ exports[`ConfigServiceTags Construct(ConfigServiceTags):  Snapshot Test 1`] = `
         "Description": "Create Control Tower Account onEvent handler",
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.14.1",
           },
         },
         "Handler": "index.handler",
@@ -788,7 +828,7 @@ exports[`ConfigServiceTags Construct(ConfigServiceTags):  Snapshot Test 1`] = `
             "NewAccountsTableName": {
               "Ref": "NewCTAccountsE326CD07",
             },
-            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.14.1",
           },
         },
         "Handler": "index.handler",

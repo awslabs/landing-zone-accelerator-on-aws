@@ -12,18 +12,20 @@
  */
 
 import * as cdk from 'aws-cdk-lib';
+import { describe } from 'vitest';
 import { RevertScpChanges } from '../../lib/aws-events/revert-scp-changes';
 import { snapShotTest } from '../snapshot-test';
+import { ALL_ENABLED_CONFIG, SNAPSHOT_CONFIG } from '../../../config/test/config-test-helper';
 
 const testNamePrefix = 'Construct(RevertScpChanges): ';
 
 //Initialize stack for snapshot test and resource configuration test
 const stack = new cdk.Stack();
-const configDirPath = `${__dirname}/../../../accelerator/test/configs/all-enabled`;
+const configDirPath = ALL_ENABLED_CONFIG;
 
 new RevertScpChanges(stack, 'RevertScpChanges', {
   acceleratorPrefix: 'AWSAccelerator',
-  configDirPath: `${__dirname}/../../../accelerator/test/configs/snapshot-only`,
+  configDirPath: SNAPSHOT_CONFIG,
   homeRegion: 'us-west-2',
   kmsKeyCloudWatch: new cdk.aws_kms.Key(stack, 'CustomCloudWatchKey', {}),
   kmsKeyLambda: new cdk.aws_kms.Key(stack, 'CustomLambdaKey', {}),
@@ -48,7 +50,7 @@ new RevertScpChanges(stack, 'RevertScpChanges', {
 
 new RevertScpChanges(stack, 'RevertScpChanges2', {
   acceleratorPrefix: 'AWSAccelerator',
-  configDirPath: `${__dirname}/../../../accelerator/test/configs/snapshot-only`,
+  configDirPath: SNAPSHOT_CONFIG,
   homeRegion: 'us-west-2',
   kmsKeyCloudWatch: new cdk.aws_kms.Key(stack, 'CustomCloudWatchKey2', {}),
   kmsKeyLambda: new cdk.aws_kms.Key(stack, 'CustomLambdaKey2', {}),

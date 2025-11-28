@@ -15,7 +15,7 @@ import * as cdk from 'aws-cdk-lib';
 import { Construct } from 'constructs';
 import { NagSuppressions } from 'cdk-nag';
 import { pascalCase } from 'change-case';
-const path = require('path');
+import * as path from 'path';
 import { DEFAULT_LAMBDA_RUNTIME } from '../../../utils/lib/lambda';
 
 /**
@@ -58,6 +58,10 @@ export interface AcceleratorMetadataProps {
    * Config bucket name
    */
   readonly configBucketName: string;
+  /**
+   * Secure bucket name
+   */
+  readonly secureBucketName: string;
   /**
    * The Accelerator Organization Id
    */
@@ -117,6 +121,7 @@ export class AcceleratorMetadata extends Construct {
       region,
       props.metadataLogBucketName,
       props.configBucketName,
+      props.secureBucketName,
       configTableArn,
     );
     this.lambdaFunction = this.createLambdaFunction(functionName, stack, lambdaCode, this.role, props);
@@ -130,6 +135,7 @@ export class AcceleratorMetadata extends Construct {
     region: string,
     metadataLogBucketName: string,
     configBucketName: string,
+    secureBucketName: string,
     configTableArn: string,
   ) {
     const lambdaRole = new cdk.aws_iam.Role(this, 'MetadataLambda', {
@@ -182,6 +188,8 @@ export class AcceleratorMetadata extends Construct {
           `arn:${cdk.Stack.of(this).partition}:s3:::${metadataLogBucketName}/*`,
           `arn:${cdk.Stack.of(this).partition}:s3:::${configBucketName}`,
           `arn:${cdk.Stack.of(this).partition}:s3:::${configBucketName}/*`,
+          `arn:${cdk.Stack.of(this).partition}:s3:::${secureBucketName}`,
+          `arn:${cdk.Stack.of(this).partition}:s3:::${secureBucketName}/*`,
         ],
       }),
     );

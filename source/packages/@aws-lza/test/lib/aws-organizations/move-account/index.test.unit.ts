@@ -10,7 +10,7 @@
  *  OR CONDITIONS OF ANY KIND, express or implied. See the License for the specific language governing permissions
  *  and limitations under the License.
  */
-import { describe, beforeEach, expect, test } from '@jest/globals';
+import { describe, beforeEach, expect, test, vi } from 'vitest';
 
 import {
   ChildNotFoundException,
@@ -25,46 +25,42 @@ import { IMoveAccountHandlerParameter } from '../../../../interfaces/aws-organiz
 import { MODULE_EXCEPTIONS } from '../../../../common/enums';
 
 // Mock dependencies
-jest.mock('@aws-sdk/client-organizations', () => {
+vi.mock('@aws-sdk/client-organizations', () => {
   return {
-    OrganizationsClient: jest.fn(),
-    ListParentsCommand: jest.fn(),
-    MoveAccountCommand: jest.fn(),
-    ChildNotFoundException: jest.fn(),
+    OrganizationsClient: vi.fn(),
+    ListParentsCommand: vi.fn(),
+    MoveAccountCommand: vi.fn(),
+    ChildNotFoundException: vi.fn(),
   };
 });
 
-jest.mock('../../../../common/functions', () => {
+vi.mock('../../../../common/functions', async () => {
+  const actual = await vi.importActual('../../../../common/functions');
   return {
-    ...jest.requireActual('../../../../common/functions'),
-    delay: jest.fn().mockResolvedValue(undefined),
+    ...actual,
+    delay: vi.fn().mockResolvedValue(undefined),
   };
 });
 
 describe('MoveAccountModule', () => {
-  const mockSend = jest.fn();
-  let getAccountDetailsFromOrganizationsSpy: jest.SpyInstance;
-  let getOrganizationalUnitIdByPathSpy: jest.SpyInstance;
-  let getAccountIdSpy: jest.SpyInstance;
-  beforeEach(() => {
-    jest.clearAllMocks();
+  const mockSend = vi.fn();
+  let getAccountDetailsFromOrganizationsSpy: vi.SpyInstance;
+  let getOrganizationalUnitIdByPathSpy: vi.SpyInstance;
+  let getAccountIdSpy: vi.SpyInstance;
+  beforeEach(async () => {
+    vi.clearAllMocks();
 
-    (OrganizationsClient as jest.Mock).mockImplementation(() => ({
+    (OrganizationsClient as vi.Mock).mockImplementation(() => ({
       send: mockSend,
     }));
 
-    getAccountDetailsFromOrganizationsSpy = jest.spyOn(
-      require('../../../../common/functions'),
-      'getAccountDetailsFromOrganizationsByEmail',
-    );
+    const commonFunctions = await import('../../../../common/functions');
+    getAccountDetailsFromOrganizationsSpy = vi.spyOn(commonFunctions, 'getAccountDetailsFromOrganizationsByEmail');
     getAccountDetailsFromOrganizationsSpy.mockReturnValue(MOCK_CONSTANTS.MoveAccountModule.moveAccount);
 
-    getOrganizationalUnitIdByPathSpy = jest.spyOn(
-      require('../../../../common/functions'),
-      'getOrganizationalUnitIdByPath',
-    );
+    getOrganizationalUnitIdByPathSpy = vi.spyOn(commonFunctions, 'getOrganizationalUnitIdByPath');
 
-    getAccountIdSpy = jest.spyOn(require('../../../../common/functions'), 'getAccountId');
+    getAccountIdSpy = vi.spyOn(commonFunctions, 'getAccountId');
     getAccountIdSpy.mockReturnValue(MOCK_CONSTANTS.MoveAccountModule.moveAccount.Id);
   });
 
@@ -77,7 +73,7 @@ describe('MoveAccountModule', () => {
       ...MOCK_CONSTANTS.runnerParameters,
     };
     beforeEach(() => {
-      jest.clearAllMocks();
+      vi.clearAllMocks();
     });
 
     test('should be successful when account is already part of destination ou', async () => {
@@ -435,7 +431,7 @@ describe('MoveAccountModule', () => {
       dryRun: true,
     };
     beforeEach(() => {
-      jest.clearAllMocks();
+      vi.clearAllMocks();
     });
 
     test('should be successful move account to nested ou', async () => {

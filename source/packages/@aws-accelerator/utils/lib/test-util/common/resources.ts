@@ -24,6 +24,8 @@ import {
   waitUntilRoleExists,
 } from '@aws-sdk/client-iam';
 
+import { AwsCredentialIdentity } from '@aws-sdk/types';
+
 import { createLogger } from '../../logger';
 import { delay, throttlingBackOff } from '../../throttle';
 import { setRetryStrategy } from '../../common-functions';
@@ -33,16 +35,6 @@ import {
   CloudFormationCustomResourceDeleteEvent,
   CloudFormationCustomResourceUpdateEvent,
 } from '../../common-types';
-
-/**
- * STS Credentials type used for integration testing role chaining
- */
-export type AssumeCredentialType = {
-  accessKeyId: string;
-  secretAccessKey: string;
-  sessionToken: string;
-  expiration?: Date;
-};
 
 /**
  * Policy Document Type
@@ -175,7 +167,7 @@ export type TestEnvironmentType = {
   /**
    * Integration account STS credentials
    */
-  integrationAccountStsCredentials?: AssumeCredentialType;
+  integrationAccountStsCredentials?: AwsCredentialIdentity;
   /**
    * List of AWS Organizations account name and ids for the test environment
    */
@@ -212,7 +204,7 @@ export const Exception = {
 export abstract class AcceleratorIntegrationTestResources {
   private static logger = createLogger([path.parse(path.basename(__filename)).name]);
 
-  private static async getRole(roleName: string, region: string, credentials?: AssumeCredentialType): Promise<Role> {
+  private static async getRole(roleName: string, region: string, credentials?: AwsCredentialIdentity): Promise<Role> {
     this.logger.info(`Getting existing role ${roleName}`);
     const client: IAMClient = new IAMClient({
       region,
@@ -246,13 +238,13 @@ export abstract class AcceleratorIntegrationTestResources {
    * @param client {@link STSClient}
    * @param roleArn string
    * @param roleSessionName string
-   * @returns credentials {@link AssumeCredentialType}
+   * @returns credentials {@link AwsCredentialIdentity}
    */
   public static async getStsCredentials(
     client: STSClient,
     roleArn: string,
     roleSessionName: string,
-  ): Promise<AssumeCredentialType> {
+  ): Promise<AwsCredentialIdentity> {
     AcceleratorIntegrationTestResources.logger.info(`Getting STS credentials for ${roleArn} role`);
     const response = await throttlingBackOff(() =>
       client.send(
@@ -276,12 +268,12 @@ export abstract class AcceleratorIntegrationTestResources {
    * Function to get integration account sts Credentials
    * @param client {@link STSClient}
    * @param roleArn string
-   * @returns credentials {@link AssumeCredentialType}
+   * @returns credentials {@link AwsCredentialIdentity}
    */
   public static async getIntegrationAccountCredentials(
     client: STSClient,
     roleArn: string,
-  ): Promise<AssumeCredentialType> {
+  ): Promise<AwsCredentialIdentity> {
     AcceleratorIntegrationTestResources.logger.info(
       `Getting STS credentials for the integration account role ${roleArn}`,
     );
@@ -292,9 +284,9 @@ export abstract class AcceleratorIntegrationTestResources {
    *
    * @param client client {@link STSClient}
    * @param roleArn string
-   * @returns credentials {@link AssumeCredentialType} | undefined
+   * @returns credentials {@link AwsCredentialIdentity} | undefined
    */
-  public static async getCrStsCredentials(client: STSClient, roleArn: string): Promise<AssumeCredentialType> {
+  public static async getCrStsCredentials(client: STSClient, roleArn: string): Promise<AwsCredentialIdentity> {
     return await AcceleratorIntegrationTestResources.getStsCredentials(client, roleArn, 'CRRoleAssumeSession');
   }
 
@@ -305,7 +297,7 @@ export abstract class AcceleratorIntegrationTestResources {
     policyStatements: PolicyStatementType[];
     integrationAccountIamRoleArn: string;
     integrationAccountId: string;
-    credentials?: AssumeCredentialType;
+    credentials?: AwsCredentialIdentity;
   }): Promise<Role> {
     const iamClient = new IAMClient({
       region: props.region,

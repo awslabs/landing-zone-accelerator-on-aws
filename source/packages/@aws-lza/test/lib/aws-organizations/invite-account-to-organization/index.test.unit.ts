@@ -10,7 +10,7 @@
  *  OR CONDITIONS OF ANY KIND, express or implied. See the License for the specific language governing permissions
  *  and limitations under the License.
  */
-import { describe, beforeEach, expect, test } from '@jest/globals';
+import { describe, beforeEach, expect, test, vi } from 'vitest';
 
 import {
   AcceptHandshakeCommand,
@@ -27,12 +27,12 @@ import { MOCK_CONSTANTS } from '../../../mocked-resources';
 import { MODULE_EXCEPTIONS } from '../../../../common/enums';
 
 // Mock dependencies
-jest.mock('@aws-sdk/client-organizations', () => {
+vi.mock('@aws-sdk/client-organizations', () => {
   return {
-    OrganizationsClient: jest.fn(),
-    InviteAccountToOrganizationCommand: jest.fn(),
-    AcceptHandshakeCommand: jest.fn(),
-    ListHandshakesForAccountCommand: jest.fn(),
+    OrganizationsClient: vi.fn(),
+    InviteAccountToOrganizationCommand: vi.fn(),
+    AcceptHandshakeCommand: vi.fn(),
+    ListHandshakesForAccountCommand: vi.fn(),
     HandshakeState: {
       ACCEPTED: 'ACCEPTED',
       OPEN: 'OPEN',
@@ -44,38 +44,37 @@ jest.mock('@aws-sdk/client-organizations', () => {
       ACCOUNT: 'ACCOUNT',
       EMAIL: 'EMAIL',
     },
-    CancelHandshakeCommand: jest.fn(),
+    CancelHandshakeCommand: vi.fn(),
   };
 });
 
-jest.mock('../../../../common/functions', () => {
+vi.mock('../../../../common/functions', async () => {
+  const actual = await vi.importActual('../../../../common/functions');
   return {
-    ...jest.requireActual('../../../../common/functions'),
-    delay: jest.fn().mockResolvedValue(undefined),
+    ...actual,
+    delay: vi.fn().mockResolvedValue(undefined),
   };
 });
 
 describe('InviteAccountToOrganizationModule', () => {
-  const mockSend = jest.fn();
+  const mockSend = vi.fn();
   const invalidEmail = 'invalid-email';
-  let getAccountDetailsFromOrganizationsSpy: jest.SpyInstance;
-  let getCredentialsSpy: jest.SpyInstance;
-  beforeEach(() => {
-    jest.clearAllMocks();
+  let getAccountDetailsFromOrganizationsSpy: vi.SpyInstance;
+  let getCredentialsSpy: vi.SpyInstance;
+  beforeEach(async () => {
+    vi.clearAllMocks();
 
-    (OrganizationsClient as jest.Mock).mockImplementation(() => ({
+    (OrganizationsClient as vi.Mock).mockImplementation(() => ({
       send: mockSend,
     }));
 
-    getAccountDetailsFromOrganizationsSpy = jest.spyOn(
-      require('../../../../common/functions'),
-      'getAccountDetailsFromOrganizationsByEmail',
-    );
+    const commonFunctions = await import('../../../../common/functions');
+    getAccountDetailsFromOrganizationsSpy = vi.spyOn(commonFunctions, 'getAccountDetailsFromOrganizationsByEmail');
     getAccountDetailsFromOrganizationsSpy.mockReturnValue(
       MOCK_CONSTANTS.InviteAccountToOrganizationModule.invitingAccount,
     );
 
-    getCredentialsSpy = jest.spyOn(require('../../../../common/functions'), 'getCredentials');
+    getCredentialsSpy = vi.spyOn(commonFunctions, 'getCredentials');
     getCredentialsSpy.mockReturnValue(MOCK_CONSTANTS.credentials);
   });
 
@@ -85,7 +84,7 @@ describe('InviteAccountToOrganizationModule', () => {
       ...MOCK_CONSTANTS.runnerParameters,
     };
     beforeEach(() => {
-      jest.clearAllMocks();
+      vi.clearAllMocks();
     });
 
     test('should be successful when account exists in organizations', async () => {
@@ -700,7 +699,7 @@ describe('InviteAccountToOrganizationModule', () => {
       dryRun: true,
     };
     beforeEach(() => {
-      jest.clearAllMocks();
+      vi.clearAllMocks();
     });
 
     test('should be successful when account exists in organizations', async () => {

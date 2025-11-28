@@ -11,14 +11,14 @@
  *  and limitations under the License.
  */
 
-import { describe, expect, test, jest } from '@jest/globals';
+import { describe, expect, test, vi, beforeEach } from 'vitest';
 import { CustomResourceProviderRuntime } from 'aws-cdk-lib';
 import { Runtime, RuntimeFamily } from 'aws-cdk-lib/aws-lambda';
 import { DEFAULT_LAMBDA_RUNTIME, CUSTOM_RESOURCE_PROVIDER_RUNTIME } from '../lib/lambda';
 
 describe('Lambda Runtime and Custom Resource Provider Runtime', () => {
   beforeEach(() => {
-    jest.resetAllMocks();
+    vi.clearAllMocks();
   });
 
   test('DEFAULT_LAMBDA_RUNTIME is created correctly', () => {

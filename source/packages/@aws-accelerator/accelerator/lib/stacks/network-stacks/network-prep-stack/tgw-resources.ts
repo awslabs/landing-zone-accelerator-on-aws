@@ -18,14 +18,14 @@ import {
   TransitGateway,
   TransitGatewayRouteTable,
 } from '@aws-accelerator/constructs';
-import { SsmResourceType } from '@aws-accelerator/utils/lib/ssm-parameter-path';
+import { SsmResourceType } from '@aws-accelerator/utils';
 import * as cdk from 'aws-cdk-lib';
 import { NagSuppressions } from 'cdk-nag';
 import { pascalCase } from 'pascal-case';
 import { AcceleratorStackProps } from '../../accelerator-stack';
 import { LogLevel } from '../network-stack';
 import { getTgwConfig, getTgwRouteTableId, getTransitGatewayId } from '../utils/getter-utils';
-import { isIpv4 } from '../utils/validation-utils';
+import { isIpAddress } from '../utils/validation-utils';
 import { NetworkPrepStack } from './network-prep-stack';
 
 export class TgwResources {
@@ -256,7 +256,7 @@ export class TgwResources {
       ? customerGateways.filter(cgw => cgw.vpnConnections?.filter(vpn => tgwNames.includes(vpn.transitGateway ?? '')))
       : [];
     const crossAcctFirewallReferenceCgws = tgwVpnCustomerGateways.filter(
-      cgw => !isIpv4(cgw.ipAddress) && !this.stack.firewallVpcInScope(cgw),
+      cgw => !isIpAddress(cgw.ipAddress) && !this.stack.firewallVpcInScope(cgw),
     );
 
     for (const crossAcctCgw of crossAcctFirewallReferenceCgws) {

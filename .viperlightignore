@@ -15,6 +15,7 @@ dist/
 .snap
 
 yarn.lock
+.gitlab-ci.yml
 
 # Ignore typescript documentation
 
@@ -55,60 +56,43 @@ development
 #
 
 # ELB Root Account References https://docs.aws.amazon.com/elasticloadbalancing/latest/application/enable-access-logging.html#attach-bucket-policy
-
-source/packages/@aws-accelerator/utils/lib/regions.ts:67
-source/packages/@aws-accelerator/utils/lib/regions.ts:68
+source/packages/@aws-accelerator/utils/lib/regions.ts:28
+source/packages/@aws-accelerator/utils/lib/regions.ts:29
+source/packages/@aws-accelerator/utils/lib/regions.ts:31
+source/packages/@aws-accelerator/utils/lib/regions.ts:32
+source/packages/@aws-accelerator/utils/lib/regions.ts:33
+source/packages/@aws-accelerator/utils/lib/regions.ts:34
+source/packages/@aws-accelerator/utils/lib/regions.ts:36
+source/packages/@aws-accelerator/utils/lib/regions.ts:37
+source/packages/@aws-accelerator/utils/lib/regions.ts:38
+source/packages/@aws-accelerator/utils/lib/regions.ts:42
+source/packages/@aws-accelerator/utils/lib/regions.ts:44
+source/packages/@aws-accelerator/utils/lib/regions.ts:45
+source/packages/@aws-accelerator/utils/lib/regions.ts:46
+source/packages/@aws-accelerator/utils/lib/regions.ts:48
+source/packages/@aws-accelerator/utils/lib/regions.ts:49
+source/packages/@aws-accelerator/utils/lib/regions.ts:51
+source/packages/@aws-accelerator/utils/lib/regions.ts:52
+source/packages/@aws-accelerator/utils/lib/regions.ts:53
+source/packages/@aws-accelerator/utils/lib/regions.ts:57
+source/packages/@aws-accelerator/utils/lib/regions.ts:59
+source/packages/@aws-accelerator/utils/lib/regions.ts:60
+source/packages/@aws-accelerator/utils/lib/regions.ts:61
+source/packages/@aws-accelerator/utils/lib/regions.ts:62
+source/packages/@aws-accelerator/utils/lib/regions.ts:63
 source/packages/@aws-accelerator/utils/lib/regions.ts:69
 source/packages/@aws-accelerator/utils/lib/regions.ts:70
-source/packages/@aws-accelerator/utils/lib/regions.ts:71
-source/packages/@aws-accelerator/utils/lib/regions.ts:72
-source/packages/@aws-accelerator/utils/lib/regions.ts:73
-source/packages/@aws-accelerator/utils/lib/regions.ts:74
-source/packages/@aws-accelerator/utils/lib/regions.ts:75
-source/packages/@aws-accelerator/utils/lib/regions.ts:76
-source/packages/@aws-accelerator/utils/lib/regions.ts:77
-source/packages/@aws-accelerator/utils/lib/regions.ts:78
-source/packages/@aws-accelerator/utils/lib/regions.ts:79
-source/packages/@aws-accelerator/utils/lib/regions.ts:80
-source/packages/@aws-accelerator/utils/lib/regions.ts:81
-source/packages/@aws-accelerator/utils/lib/regions.ts:82
-source/packages/@aws-accelerator/utils/lib/regions.ts:83
-source/packages/@aws-accelerator/utils/lib/regions.ts:84
-source/packages/@aws-accelerator/utils/lib/regions.ts:85
-source/packages/@aws-accelerator/utils/lib/regions.ts:86
-source/packages/@aws-accelerator/utils/lib/regions.ts:87
-source/packages/@aws-accelerator/utils/lib/regions.ts:88
-source/packages/@aws-accelerator/utils/lib/regions.ts:89
-source/packages/@aws-accelerator/utils/lib/regions.ts:90
-source/packages/@aws-accelerator/utils/lib/regions.ts:91
-source/packages/@aws-accelerator/utils/lib/regions.ts:92
-source/packages/@aws-accelerator/utils/lib/regions.ts:93
-source/packages/@aws-accelerator/utils/lib/regions.ts:94
-source/packages/@aws-accelerator/utils/lib/regions.ts:95
-source/packages/@aws-accelerator/utils/lib/regions.ts:96
-source/packages/@aws-accelerator/utils/lib/regions.ts:97
-source/packages/@aws-accelerator/utils/lib/regions.ts:98
-source/packages/@aws-accelerator/utils/lib/regions.ts:99
-source/packages/@aws-accelerator/utils/lib/regions.ts:100
-source/packages/@aws-accelerator/utils/lib/regions.ts:101
-source/packages/@aws-accelerator/utils/lib/regions.ts:102
-source/packages/@aws-accelerator/utils/lib/regions.ts:103
-source/packages/@aws-accelerator/utils/lib/regions.ts:104
-source/packages/@aws-accelerator/utils/lib/regions.ts:105
-source/packages/@aws-accelerator/utils/lib/regions.ts:106
-source/packages/@aws-accelerator/utils/lib/regions.ts:112
-source/packages/@aws-accelerator/utils/lib/regions.ts:113
 
 # Accelerator specific assume role declaration
+source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:447
 source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:448
-source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:449
-source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:1345
-source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:1346
+source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:1170
+source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:1171
 
 # Accelerator specific assume role declaration
 
-source/packages/@aws-accelerator/config/lib/global-config.ts:1084
-source/packages/@aws-accelerator/config/lib/global-config.ts:1085
+source/packages/@aws-accelerator/config/lib/global-config.ts:1112
+source/packages/@aws-accelerator/config/lib/global-config.ts:1113
 
 # Accelerator specific assume role declaration
 
@@ -137,24 +121,24 @@ source/packages/@aws-accelerator/constructs/lib/aws-ssm/put-param-value/index.ts
 
 # Accelerator specific assume role declaration
 
-source/packages/@aws-accelerator/tools/lib/classes/accelerator-tool.ts:1389
-source/packages/@aws-accelerator/tools/lib/classes/accelerator-tool.ts:1390
-source/packages/@aws-accelerator/tools/lib/classes/accelerator-tool.ts:1498
-source/packages/@aws-accelerator/tools/lib/classes/accelerator-tool.ts:1499
+source/packages/@aws-accelerator/tools/lib/classes/accelerator-tool.ts:1397
+source/packages/@aws-accelerator/tools/lib/classes/accelerator-tool.ts:1398
+source/packages/@aws-accelerator/tools/lib/classes/accelerator-tool.ts:1506
 source/packages/@aws-accelerator/tools/lib/classes/accelerator-tool.ts:1507
-source/packages/@aws-accelerator/tools/lib/classes/accelerator-tool.ts:1508
+source/packages/@aws-accelerator/tools/lib/classes/accelerator-tool.ts:1515
 source/packages/@aws-accelerator/tools/lib/classes/accelerator-tool.ts:1516
-source/packages/@aws-accelerator/tools/lib/classes/accelerator-tool.ts:1517
+source/packages/@aws-accelerator/tools/lib/classes/accelerator-tool.ts:1524
 source/packages/@aws-accelerator/tools/lib/classes/accelerator-tool.ts:1525
-source/packages/@aws-accelerator/tools/lib/classes/accelerator-tool.ts:1526
+source/packages/@aws-accelerator/tools/lib/classes/accelerator-tool.ts:1533
 source/packages/@aws-accelerator/tools/lib/classes/accelerator-tool.ts:1534
-source/packages/@aws-accelerator/tools/lib/classes/accelerator-tool.ts:1535
+source/packages/@aws-accelerator/tools/lib/classes/accelerator-tool.ts:1542
 source/packages/@aws-accelerator/tools/lib/classes/accelerator-tool.ts:1543
-source/packages/@aws-accelerator/tools/lib/classes/accelerator-tool.ts:1544
-source/packages/@aws-accelerator/tools/lib/classes/accelerator-tool.ts:2266
-source/packages/@aws-accelerator/tools/lib/classes/accelerator-tool.ts:2267
-source/packages/@aws-accelerator/tools/lib/classes/accelerator-tool.ts:2349
-source/packages/@aws-accelerator/tools/lib/classes/accelerator-tool.ts:2350
+source/packages/@aws-accelerator/tools/lib/classes/accelerator-tool.ts:1551
+source/packages/@aws-accelerator/tools/lib/classes/accelerator-tool.ts:1552
+source/packages/@aws-accelerator/tools/lib/classes/accelerator-tool.ts:2274
+source/packages/@aws-accelerator/tools/lib/classes/accelerator-tool.ts:2275
+source/packages/@aws-accelerator/tools/lib/classes/accelerator-tool.ts:2359
+source/packages/@aws-accelerator/tools/lib/classes/accelerator-tool.ts:2360
 
 # Sample configuration READMEs
 
@@ -242,7 +226,7 @@ SECURITY.md:10
 # Lza Modules unit test files
 source/packages/@aws-accelerator/lza-modules/test/config/functions.test.ts:46
 source/packages/@aws-accelerator/lza-modules/test/config/functions.test.ts:73
-source/packages/@aws-accelerator/lza-modules/test/config/index.test.ts:47
+source/packages/@aws-accelerator/lza-modules/test/config/index.test.ts:66
 
 # LzaModules unit test mock constant file
 source/packages/@aws-lza/test/mocked-resources.ts:106
@@ -258,7 +242,21 @@ source/packages/@aws-accelerator/constructs/lib/aws-fms/enable-organization-admi
 # Stack Policy Unit tests and wrong credential warnings
 source/packages/@aws-lza/lib/aws-cloudformation/create-stack-policy/index.ts:107
 source/packages/@aws-lza/lib/aws-cloudformation/create-stack-policy/index.ts:108
-source/packages/@aws-lza/test/lib/aws-cloudformation/create-stack-policy/index.test.unit.ts:111
-source/packages/@aws-lza/test/lib/aws-cloudformation/create-stack-policy/index.test.unit.ts:136
-source/packages/@aws-lza/test/lib/aws-cloudformation/create-stack-policy/index.test.unit.ts:400
-source/packages/@aws-lza/test/lib/aws-cloudformation/create-stack-policy/index.test.unit.ts:405
+source/packages/@aws-lza/test/lib/aws-cloudformation/create-stack-policy/index.test.unit.ts:112
+source/packages/@aws-lza/test/lib/aws-cloudformation/create-stack-policy/index.test.unit.ts:138
+source/packages/@aws-lza/test/lib/aws-cloudformation/create-stack-policy/index.test.unit.ts:402
+source/packages/@aws-lza/test/lib/aws-cloudformation/create-stack-policy/index.test.unit.ts:407
+
+source/packages/@aws-accelerator/config/lib/accounts-config.ts:223
+source/packages/@aws-accelerator/config/lib/accounts-config.ts:224
+source/packages/@aws-accelerator/config/lib/organization-config.ts:208
+source/packages/@aws-accelerator/config/lib/organization-config.ts:209
+
+source/packages/@aws-accelerator/utils/lib/test-util/common/integration-test.ts:280
+source/packages/@aws-accelerator/utils/lib/test-util/common/integration-test.ts:281
+
+source/packages/@aws-accelerator/utils/lib/common-functions.ts:129
+source/packages/@aws-accelerator/utils/lib/common-functions.ts:130
+source/packages/@aws-accelerator/utils/lib/common-functions.ts:141
+source/packages/@aws-accelerator/utils/lib/common-functions.ts:142
+

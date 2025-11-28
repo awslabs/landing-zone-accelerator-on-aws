@@ -11,7 +11,9 @@
  *  and limitations under the License.
  */
 
-import { beforeEach, describe, test } from '@jest/globals';
+import { beforeEach, describe, test, vi, expect } from 'vitest';
+import * as functions from '../../lib/config/functions';
+import * as appUtils from '../../../accelerator/utils/app-utils';
 import * as fs from 'fs';
 import {
   AccountsConfig,
@@ -91,13 +93,13 @@ const MOCK_CONSTANTS = {
 // Mock Dependencies
 //
 // Mock the SSM client
-jest.mock('@aws-sdk/client-ssm', () => ({
-  SSMClient: jest.fn().mockImplementation(() => ({
-    send: jest.fn().mockResolvedValue({
+vi.mock('@aws-sdk/client-ssm', () => ({
+  SSMClient: vi.fn().mockImplementation(() => ({
+    send: vi.fn().mockResolvedValue({
       Parameter: MOCK_CONSTANTS.centralLogBucketCmkSsmParameter,
     }),
   })),
-  GetParameterCommand: jest.fn(),
+  GetParameterCommand: vi.fn(),
   ParameterNotFound: class ParameterNotFound extends Error {
     constructor() {
       super('Parameter not found');
@@ -106,32 +108,32 @@ jest.mock('@aws-sdk/client-ssm', () => ({
   },
 }));
 
-jest.mock('../../../accelerator/utils/app-utils', () => {
-  return { setResourcePrefixes: jest.fn() };
+vi.mock('../../../accelerator/utils/app-utils', () => {
+  return { setResourcePrefixes: vi.fn().mockReturnValue(undefined) };
 });
 
-jest.mock('fs', () => ({
-  ...jest.requireActual('fs'),
-  existsSync: jest.fn().mockReturnValue(true),
+vi.mock('fs', () => ({
+  ...vi.importActual('fs'),
+  existsSync: vi.fn().mockReturnValue(true),
 }));
 
-jest.mock('path', () => ({
-  ...jest.requireActual('path'),
-  basename: jest.fn().mockReturnValue(undefined),
-  parse: jest.fn().mockReturnValue({ name: 'mockName' }),
-  join: jest.fn().mockImplementation((...args) => args.join('/')),
+vi.mock('path', () => ({
+  ...vi.importActual('path'),
+  basename: vi.fn().mockReturnValue(undefined),
+  parse: vi.fn().mockReturnValue({ name: 'mockName' }),
+  join: vi.fn().mockImplementation((...args) => args.join('/')),
 }));
 
-jest.mock('@aws-accelerator/utils/lib/logger', () => ({
-  createLogger: jest.fn().mockReturnValue({ warn: jest.fn().mockReturnValue(undefined) }),
+vi.mock('@aws-accelerator/utils/lib/logger', () => ({
+  createLogger: vi.fn().mockReturnValue({ warn: vi.fn().mockReturnValue(undefined) }),
 }));
 
-jest.mock('../../lib/config/functions', () => ({
-  getCredentials: jest.fn(),
+vi.mock('../../lib/config/functions', () => ({
+  getCredentials: vi.fn(),
 }));
 
-jest.mock('../../../accelerator/lib/accelerator-resource-names', () => ({
-  AcceleratorResourceNames: jest.fn().mockImplementation(() => MOCK_CONSTANTS.resourceNames),
+vi.mock('../../../accelerator/lib/accelerator-resource-names', () => ({
+  AcceleratorResourceNames: vi.fn().mockImplementation(() => MOCK_CONSTANTS.resourceNames),
 }));
 
 const getMockGlobalConfig = () => ({
@@ -140,47 +142,47 @@ const getMockGlobalConfig = () => ({
   managementAccountAccessRole: MOCK_CONSTANTS.managementAccountAccessRole,
   logging: { centralizedLoggingRegion: MOCK_CONSTANTS.centralizedLoggingRegion },
   externalLandingZoneResources: undefined,
-  loadExternalMapping: jest.fn().mockReturnValue(undefined),
+  loadExternalMapping: vi.fn().mockReturnValue(undefined),
 });
 
-jest.mock('@aws-accelerator/config', () => {
+vi.mock('@aws-accelerator/config', () => {
   return {
     AccountsConfig: {
-      load: jest.fn().mockReturnValue({
-        getLogArchiveAccountId: jest.fn(),
-        getLogArchiveAccount: jest.fn(),
+      load: vi.fn().mockReturnValue({
+        getLogArchiveAccountId: vi.fn(),
+        getLogArchiveAccount: vi.fn(),
       } as unknown as AccountsConfig),
     },
     GlobalConfig: {
-      load: jest.fn().mockImplementation(() => getMockGlobalConfig()),
-      loadRawGlobalConfig: jest.fn(),
-      loadLzaResources: jest.fn().mockReturnValue(undefined),
+      load: vi.fn().mockImplementation(() => getMockGlobalConfig()),
+      loadRawGlobalConfig: vi.fn(),
+      loadLzaResources: vi.fn().mockReturnValue(undefined),
     },
     OrganizationConfig: {
-      load: jest.fn().mockReturnValue({
-        loadOrganizationalUnitIds: jest.fn().mockReturnValue({ organizationalUnitIds: [] }),
+      load: vi.fn().mockReturnValue({
+        loadOrganizationalUnitIds: vi.fn().mockReturnValue({ organizationalUnitIds: [] }),
       } as unknown as OrganizationConfig),
-      loadRawOrganizationsConfig: jest.fn(),
+      loadRawOrganizationsConfig: vi.fn(),
     },
     IamConfig: {
-      load: jest.fn().mockReturnValue({} as IamConfig),
+      load: vi.fn().mockReturnValue(undefined as unknown as IamConfig),
     },
     NetworkConfig: {
-      load: jest.fn().mockReturnValue({} as NetworkConfig),
+      load: vi.fn().mockReturnValue(undefined as unknown as NetworkConfig),
     },
     SecurityConfig: {
-      load: jest.fn().mockReturnValue({} as SecurityConfig),
+      load: vi.fn().mockReturnValue(undefined as unknown as SecurityConfig),
     },
     CustomizationsConfig: Object.assign(
-      jest.fn().mockImplementation(() => ({})),
+      vi.fn().mockImplementation(() => ({})),
       {
-        load: jest.fn().mockReturnValue({} as unknown as CustomizationsConfig),
+        load: vi.fn().mockReturnValue(undefined as unknown as CustomizationsConfig),
         FILENAME: 'customizations-config.yaml',
       },
     ),
     ReplacementsConfig: {
-      load: jest.fn().mockReturnValue({
-        loadDynamicReplacements: jest.fn().mockReturnValue(undefined),
+      load: vi.fn().mockReturnValue({
+        loadDynamicReplacements: vi.fn().mockReturnValue(undefined),
       } as unknown as ReplacementsConfig),
     },
   };
@@ -192,9 +194,9 @@ describe('AcceleratorConfigLoader', () => {
       // Setup
 
       const mockAccountsConfig = {
-        loadAccountIds: jest.fn().mockResolvedValue({ accountIds: MOCK_CONSTANTS.accountIds }),
+        loadAccountIds: vi.fn().mockResolvedValue({ accountIds: MOCK_CONSTANTS.accountIds }),
       };
-      (AccountsConfig.load as jest.Mock).mockReturnValue(mockAccountsConfig);
+      (AccountsConfig.load as vi.Mock).mockReturnValue(mockAccountsConfig);
 
       // Execute
 
@@ -225,9 +227,9 @@ describe('AcceleratorConfigLoader', () => {
       // Setup
 
       const mockAccountsConfig = {
-        loadAccountIds: jest.fn().mockResolvedValue(undefined),
+        loadAccountIds: vi.fn().mockResolvedValue(undefined),
       };
-      (AccountsConfig.load as jest.Mock).mockReturnValue(mockAccountsConfig);
+      (AccountsConfig.load as vi.Mock).mockReturnValue(mockAccountsConfig);
 
       // Execute
 
@@ -251,8 +253,8 @@ describe('AcceleratorConfigLoader', () => {
 
   describe('getAllConfig', () => {
     //
-    let mockReplacementsConfigInstance: { loadDynamicReplacements: jest.Mock };
-    let mockOrganizationConfigInstance: { loadOrganizationalUnitIds: jest.Mock };
+    let mockReplacementsConfigInstance: { loadDynamicReplacements: vi.Mock };
+    let mockOrganizationConfigInstance: { loadOrganizationalUnitIds: vi.Mock };
     let mockGlobalConfigInstance: {
       homeRegion: string;
       cdkOptions: { customDeploymentRole: string };
@@ -262,32 +264,32 @@ describe('AcceleratorConfigLoader', () => {
         centralLogBucket?: { importedBucket: { name: string; createAcceleratorManagedKey?: boolean } };
       };
       externalLandingZoneResources?: { importExternalLandingZoneResources: boolean };
-      loadExternalMapping: jest.Mock;
-      loadLzaResources?: jest.Mock;
+      loadExternalMapping: vi.Mock;
+      loadLzaResources?: vi.Mock;
     };
     let mockAccountsConfigInstance: {
-      loadAccountIds: jest.Mock;
-      getLogArchiveAccountId: jest.Mock;
-      getLogArchiveAccount: jest.Mock;
+      loadAccountIds: vi.Mock;
+      getLogArchiveAccountId: vi.Mock;
+      getLogArchiveAccount: vi.Mock;
     };
 
     let ssmMockClient: SSMClient;
-    let mockSend: jest.Mock;
+    let mockSend: vi.Mock;
 
     beforeEach(() => {
-      jest.clearAllMocks();
+      vi.clearAllMocks();
 
       // Prepare SSM ADK Client
-      mockSend = jest.fn().mockResolvedValue({
+      mockSend = vi.fn().mockResolvedValue({
         Parameter: MOCK_CONSTANTS.centralLogBucketCmkSsmParameter,
       });
-      (SSMClient as jest.Mock).mockImplementation(() => ({
+      (SSMClient as vi.Mock).mockImplementation(() => ({
         send: mockSend,
       }));
       ssmMockClient = new SSMClient({});
 
       // Mock fs.existsSync
-      (fs.existsSync as jest.Mock).mockReturnValue(true);
+      (fs.existsSync as vi.Mock).mockReturnValue(true);
 
       // Mock GlobalConfig instance
       mockGlobalConfigInstance = {
@@ -296,47 +298,47 @@ describe('AcceleratorConfigLoader', () => {
         managementAccountAccessRole: MOCK_CONSTANTS.managementAccountAccessRole,
         logging: { centralizedLoggingRegion: MOCK_CONSTANTS.centralizedLoggingRegion },
         externalLandingZoneResources: undefined,
-        loadExternalMapping: jest.fn().mockReturnValue(undefined),
+        loadExternalMapping: vi.fn().mockReturnValue(undefined),
       };
-      (GlobalConfig.load as jest.Mock).mockReturnValue(mockGlobalConfigInstance);
+      (GlobalConfig.load as vi.Mock).mockReturnValue(mockGlobalConfigInstance);
 
       // Mock ReplacementsConfig instance
       mockReplacementsConfigInstance = {
-        loadDynamicReplacements: jest.fn().mockReturnValue(undefined),
+        loadDynamicReplacements: vi.fn().mockReturnValue(undefined),
       };
-      (ReplacementsConfig.load as jest.Mock).mockReturnValue(mockReplacementsConfigInstance);
+      (ReplacementsConfig.load as vi.Mock).mockReturnValue(mockReplacementsConfigInstance);
 
       // Mock OrganizationConfig instance
       mockOrganizationConfigInstance = {
-        loadOrganizationalUnitIds: jest.fn().mockReturnValue({ organizationalUnitIds: [] }),
+        loadOrganizationalUnitIds: vi.fn().mockReturnValue({ organizationalUnitIds: [] }),
       };
-      (OrganizationConfig.load as jest.Mock).mockReturnValue(mockOrganizationConfigInstance);
+      (OrganizationConfig.load as vi.Mock).mockReturnValue(mockOrganizationConfigInstance);
 
       // Mock AccountsConfig instance
       mockAccountsConfigInstance = {
-        loadAccountIds: jest.fn().mockResolvedValue({ accountIds: MOCK_CONSTANTS.accountIds }),
-        getLogArchiveAccountId: jest.fn().mockReturnValue(MOCK_CONSTANTS.logArchiveAccountId),
-        getLogArchiveAccount: jest.fn().mockReturnValue({ name: MOCK_CONSTANTS.logArchiveAccountName }),
+        loadAccountIds: vi.fn().mockResolvedValue({ accountIds: MOCK_CONSTANTS.accountIds }),
+        getLogArchiveAccountId: vi.fn().mockReturnValue(MOCK_CONSTANTS.logArchiveAccountId),
+        getLogArchiveAccount: vi.fn().mockReturnValue({ name: MOCK_CONSTANTS.logArchiveAccountName }),
       };
-      (AccountsConfig.load as jest.Mock).mockReturnValue(mockAccountsConfigInstance);
+      (AccountsConfig.load as vi.Mock).mockReturnValue(mockAccountsConfigInstance);
 
       // Mock ResourceNames class
-      (AcceleratorResourceNames as jest.Mock).mockImplementation(() => MOCK_CONSTANTS.resourceNames);
+      (AcceleratorResourceNames as vi.Mock).mockImplementation(() => MOCK_CONSTANTS.resourceNames);
     });
 
     test('should load configs successfully', async () => {
       // Setup
 
-      jest.spyOn(require('../../lib/config/functions'), 'getCredentials').mockResolvedValue(undefined);
+      vi.spyOn(functions, 'getCredentials').mockResolvedValue(undefined);
 
-      jest
-        .spyOn(GlobalConfig, 'loadRawGlobalConfig')
-        .mockReturnValue({ homeRegion: MOCK_CONSTANTS.homeRegion } as GlobalConfig);
-      jest
-        .spyOn(OrganizationConfig, 'loadRawOrganizationsConfig')
-        .mockReturnValue({ enable: true } as OrganizationConfig);
+      vi.spyOn(GlobalConfig, 'loadRawGlobalConfig').mockReturnValue({
+        homeRegion: MOCK_CONSTANTS.homeRegion,
+      } as GlobalConfig);
+      vi.spyOn(OrganizationConfig, 'loadRawOrganizationsConfig').mockReturnValue({
+        enable: true,
+      } as OrganizationConfig);
 
-      (ssmMockClient.send as jest.Mock).mockReturnValue({
+      (ssmMockClient.send as vi.Mock).mockReturnValue({
         Parameter: MOCK_CONSTANTS.centralLogBucketCmkSsmParameter,
       });
 
@@ -382,20 +384,20 @@ describe('AcceleratorConfigLoader', () => {
           },
         },
         externalLandingZoneResources: undefined,
-        loadExternalMapping: jest.fn().mockReturnValue(undefined),
+        loadExternalMapping: vi.fn().mockReturnValue(undefined),
       };
-      (GlobalConfig.load as jest.Mock).mockReturnValue(mockGlobalConfigInstance);
+      (GlobalConfig.load as vi.Mock).mockReturnValue(mockGlobalConfigInstance);
 
-      jest.spyOn(require('../../lib/config/functions'), 'getCredentials').mockResolvedValue(undefined);
+      vi.spyOn(functions, 'getCredentials').mockResolvedValue(undefined);
 
-      jest.spyOn(GlobalConfig, 'loadRawGlobalConfig').mockReturnValue({
+      vi.spyOn(GlobalConfig, 'loadRawGlobalConfig').mockReturnValue({
         homeRegion: MOCK_CONSTANTS.homeRegion,
       } as GlobalConfig);
-      jest
-        .spyOn(OrganizationConfig, 'loadRawOrganizationsConfig')
-        .mockReturnValue({ enable: true } as OrganizationConfig);
+      vi.spyOn(OrganizationConfig, 'loadRawOrganizationsConfig').mockReturnValue({
+        enable: true,
+      } as OrganizationConfig);
 
-      (ssmMockClient.send as jest.Mock).mockReturnValue({
+      (ssmMockClient.send as vi.Mock).mockReturnValue({
         Parameter: MOCK_CONSTANTS.centralLogBucketCmkSsmParameter,
       });
 
@@ -435,16 +437,16 @@ describe('AcceleratorConfigLoader', () => {
     test('should fail to load configs when central log bucket cmk arn ssm parameter not found', async () => {
       // Setup
 
-      jest.spyOn(require('../../lib/config/functions'), 'getCredentials').mockResolvedValue(undefined);
+      vi.spyOn(functions, 'getCredentials').mockResolvedValue(undefined);
 
-      jest.spyOn(GlobalConfig, 'loadRawGlobalConfig').mockReturnValue({
+      vi.spyOn(GlobalConfig, 'loadRawGlobalConfig').mockReturnValue({
         homeRegion: MOCK_CONSTANTS.homeRegion,
       } as GlobalConfig);
-      jest
-        .spyOn(OrganizationConfig, 'loadRawOrganizationsConfig')
-        .mockReturnValue({ enable: true } as OrganizationConfig);
+      vi.spyOn(OrganizationConfig, 'loadRawOrganizationsConfig').mockReturnValue({
+        enable: true,
+      } as OrganizationConfig);
 
-      (ssmMockClient.send as jest.Mock).mockRejectedValue({
+      (ssmMockClient.send as vi.Mock).mockRejectedValue({
         name: 'ParameterNotFound',
         message: 'Parameter not found',
       });
@@ -471,16 +473,16 @@ describe('AcceleratorConfigLoader', () => {
     test('should fail to load configs with central log bucket cmk arn undefined when central log bucket cmk arn ssm parameter not found', async () => {
       // Setup
 
-      jest.spyOn(require('../../lib/config/functions'), 'getCredentials').mockResolvedValue(undefined);
+      vi.spyOn(functions, 'getCredentials').mockResolvedValue(undefined);
 
-      jest.spyOn(GlobalConfig, 'loadRawGlobalConfig').mockReturnValue({
+      vi.spyOn(GlobalConfig, 'loadRawGlobalConfig').mockReturnValue({
         homeRegion: MOCK_CONSTANTS.homeRegion,
       } as GlobalConfig);
-      jest
-        .spyOn(OrganizationConfig, 'loadRawOrganizationsConfig')
-        .mockReturnValue({ enable: true } as OrganizationConfig);
+      vi.spyOn(OrganizationConfig, 'loadRawOrganizationsConfig').mockReturnValue({
+        enable: true,
+      } as OrganizationConfig);
 
-      (ssmMockClient.send as jest.Mock).mockRejectedValue(
+      (ssmMockClient.send as vi.Mock).mockRejectedValue(
         new ParameterNotFound({
           message: 'Parameter not found',
           $metadata: {
@@ -529,26 +531,26 @@ describe('AcceleratorConfigLoader', () => {
           centralizedLoggingRegion: MOCK_CONSTANTS.centralizedLoggingRegion,
         },
         externalLandingZoneResources: { importExternalLandingZoneResources: true },
-        loadExternalMapping: jest.fn().mockReturnValue(undefined),
-        loadLzaResources: jest.fn().mockReturnValue(undefined),
+        loadExternalMapping: vi.fn().mockReturnValue(undefined),
+        loadLzaResources: vi.fn().mockReturnValue(undefined),
       };
-      (GlobalConfig.load as jest.Mock).mockReturnValue(mockGlobalConfigInstance);
+      (GlobalConfig.load as vi.Mock).mockReturnValue(mockGlobalConfigInstance);
 
-      jest.spyOn(require('../../lib/config/functions'), 'getCredentials').mockResolvedValue(undefined);
-      jest.spyOn(require('../../../accelerator/utils/app-utils'), 'setResourcePrefixes').mockReturnValue({
+      vi.spyOn(functions, 'getCredentials').mockResolvedValue(undefined);
+      vi.spyOn(appUtils, 'setResourcePrefixes').mockReturnValue({
         resourcePrefixes: {
           ssmParamName: MOCK_CONSTANTS.ssmParamNamePrefix,
         },
       });
 
-      jest.spyOn(GlobalConfig, 'loadRawGlobalConfig').mockReturnValue({
+      vi.spyOn(GlobalConfig, 'loadRawGlobalConfig').mockReturnValue({
         homeRegion: MOCK_CONSTANTS.homeRegion,
       } as GlobalConfig);
-      jest
-        .spyOn(OrganizationConfig, 'loadRawOrganizationsConfig')
-        .mockReturnValue({ enable: true } as OrganizationConfig);
+      vi.spyOn(OrganizationConfig, 'loadRawOrganizationsConfig').mockReturnValue({
+        enable: true,
+      } as OrganizationConfig);
 
-      (ssmMockClient.send as jest.Mock).mockReturnValue({
+      (ssmMockClient.send as vi.Mock).mockReturnValue({
         Parameter: MOCK_CONSTANTS.centralLogBucketCmkSsmParameter,
       });
 

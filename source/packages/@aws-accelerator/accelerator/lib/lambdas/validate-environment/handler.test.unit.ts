@@ -1,6 +1,6 @@
-import { describe, test, afterEach, beforeEach } from '@jest/globals';
+import { describe, test, afterEach, beforeEach } from 'vitest';
 import { handler } from './index';
-import { CloudFormationCustomResourceEvent } from '@aws-accelerator/utils/lib/common-types';
+import { CloudFormationCustomResourceEvent } from '@aws-accelerator/utils';
 import { mockClient, AwsClientStub } from 'aws-sdk-client-mock';
 import { CloudFormationClient, DescribeStacksCommand } from '@aws-sdk/client-cloudformation';
 import { DynamoDBClient, QueryCommand, ScanCommand } from '@aws-sdk/client-dynamodb';

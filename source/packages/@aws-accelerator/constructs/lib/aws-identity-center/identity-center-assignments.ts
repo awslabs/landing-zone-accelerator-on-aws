@@ -14,8 +14,7 @@
 import { CUSTOM_RESOURCE_PROVIDER_RUNTIME } from '@aws-accelerator/utils/lib/lambda';
 import * as cdk from 'aws-cdk-lib';
 import { Construct } from 'constructs';
-
-const path = require('path');
+import * as path from 'path';
 
 /**
  * Initialized IdentityCenterAssignmentsProps properties
@@ -82,8 +81,8 @@ export class IdentityCenterAssignments extends Construct {
           Action: [
             'iam:ListRoles',
             'iam:ListPolicies',
-            'identitystore:ListGroups',
-            'identitystore:ListUsers',
+            'identitystore:GetGroupId',
+            'identitystore:GetUserId',
             'sso:CreateAccountAssignment',
             'sso:DeleteAccountAssignment',
             'sso:ListAccountAssignments',

@@ -35,6 +35,7 @@ export const MOCK_CONSTANTS = {
     expiration: new Date('2024-12-31'),
   },
   accountId: 'mockAccountId',
+  roleArn: 'mockRoleArn',
   validCreateOuConfiguration: {
     name: 'mockOuName',
   },
@@ -308,7 +309,7 @@ export const MOCK_CONSTANTS = {
           status: 'SUCCEEDED',
         },
         targetIdentifier: 'mockTargetIdentifier1',
-        baselineVersion: '4.0',
+        baselineVersion: '5.0',
       },
       mockTarget2: {
         arn: 'mockEnabledBaselineArn1',
@@ -317,7 +318,7 @@ export const MOCK_CONSTANTS = {
           status: 'SUCCEEDED',
         },
         targetIdentifier: 'mockTargetIdentifier1',
-        baselineVersion: '4.0',
+        baselineVersion: '5.0',
       },
       mockOu: {
         arn: 'mockOuArn',
@@ -326,7 +327,7 @@ export const MOCK_CONSTANTS = {
           status: 'SUCCEEDED',
         },
         targetIdentifier: 'mockOuArn',
-        baselineVersion: '4.0',
+        baselineVersion: '5.0',
       },
       mockOuFailed: {
         arn: 'mockOuArn',
@@ -335,7 +336,7 @@ export const MOCK_CONSTANTS = {
           status: 'FAILED',
         },
         targetIdentifier: 'mockOuArn',
-        baselineVersion: '4.0',
+        baselineVersion: '5.0',
       },
       mockOuOldBaseLineVersion: {
         arn: 'mockOuArn',
@@ -344,7 +345,7 @@ export const MOCK_CONSTANTS = {
           status: 'SUCCEEDED',
         },
         targetIdentifier: 'mockOuArn',
-        baselineVersion: '3.0',
+        baselineVersion: '4.0',
       },
       mockIdentityCenterBaseline: {
         arn: 'mockIdentityCenterBaselineArn',
@@ -353,7 +354,7 @@ export const MOCK_CONSTANTS = {
           status: 'SUCCEEDED',
         },
         targetIdentifier: 'mockIdentityCenterBaselineArn',
-        baselineVersion: '4.0',
+        baselineVersion: '5.0',
       },
     },
     baselines: {
@@ -405,7 +406,7 @@ export const MOCK_CONSTANTS = {
         status: 'SUCCEEDED',
       },
       targetIdentifier: 'mockTargetIdentifier1',
-      baselineVersion: '4.0',
+      baselineVersion: '5.0',
     },
     {
       arn: 'mockEnabledBaselineArn2',
@@ -414,7 +415,7 @@ export const MOCK_CONSTANTS = {
         status: 'SUCCEEDED',
       },
       targetIdentifier: 'mockTargetIdentifier2',
-      baselineVersion: '4.0',
+      baselineVersion: '5.0',
     },
     {
       arn: 'mockEnabledBaselineArn3',
@@ -423,7 +424,7 @@ export const MOCK_CONSTANTS = {
         status: 'SUCCEEDED',
       },
       targetIdentifier: 'mockTargetIdentifier3',
-      baselineVersion: '4.0',
+      baselineVersion: '5.0',
     },
   ],
   ConfigureRootUserManagmentModule: {
@@ -435,6 +436,36 @@ export const MOCK_CONSTANTS = {
     configuration: {
       enable: true,
     },
+  },
+  GetSsmParametersValueModule: {
+    input: {
+      operation: 'get-parameters',
+      partition: 'aws',
+      region: 'us-east-1',
+      solutionId: 'test-solution',
+      configuration: [
+        {
+          name: '/test/param1',
+        },
+        {
+          name: '/test/param2',
+          accountId: '222222222222',
+          assumeRoleArn: 'arn:aws:iam::222222222222:role/CrossAccountRole',
+        },
+      ],
+    },
+    response: [
+      {
+        name: '/test/param1',
+        value: 'value1',
+        exists: true,
+      },
+      {
+        name: '/test/param2',
+        value: 'value2',
+        exists: true,
+      },
+    ],
   },
 };
 

@@ -10,7 +10,7 @@
  *  OR CONDITIONS OF ANY KIND, express or implied. See the License for the specific language governing permissions
  *  and limitations under the License.
  */
-import { describe, beforeEach, expect, test } from '@jest/globals';
+import { describe, beforeEach, expect, test, vi, afterEach } from 'vitest';
 import { CreateOrganizationalUnitModule } from '../../../lib/aws-organizations/create-organizational-unit';
 import { MOCK_CONSTANTS } from '../../mocked-resources';
 import { ICreateOrganizationalUnitHandlerParameter } from '../../../interfaces/aws-organizations/create-organizational-unit';
@@ -25,7 +25,7 @@ describe('CreateOrganizationalUnitModule Contract Compliance', () => {
   beforeEach(() => {
     module = new CreateOrganizationalUnitModule();
     // Mock the handler implementation
-    jest.spyOn(module, 'handler').mockImplementation(async () => 'mocked-response');
+    vi.spyOn(module, 'handler').mockImplementation(async () => 'mocked-response');
   });
 
   test('should implement all interface methods', () => {
@@ -44,7 +44,7 @@ describe('CreateOrganizationalUnitModule Contract Compliance', () => {
 
   test('should handle invalid inputs according to contract', async () => {
     // Reset mock to test error handling
-    jest.spyOn(module, 'handler').mockRejectedValue(new Error('Invalid input parameters'));
+    vi.spyOn(module, 'handler').mockRejectedValue(new Error('Invalid input parameters'));
 
     await expect(module.handler({} as ICreateOrganizationalUnitHandlerParameter)).rejects.toThrow(
       'Invalid input parameters',
@@ -58,6 +58,6 @@ describe('CreateOrganizationalUnitModule Contract Compliance', () => {
   });
 
   afterEach(() => {
-    jest.restoreAllMocks();
+    vi.restoreAllMocks();
   });
 });

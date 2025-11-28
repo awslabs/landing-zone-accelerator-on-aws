@@ -18,20 +18,17 @@ import { Construct } from 'constructs';
 import { AcceleratorKeyType, AcceleratorStack } from '../../accelerator-stack';
 import { V2NetworkStacksBaseProps } from '../utils/types';
 import { VpcDetails } from '../constructs/vpc-details';
-import { NetworkLoadBalancer } from '@aws-accelerator/constructs/lib/aws-elasticloadbalancingv2/network-load-balancer';
+import { ApplicationLoadBalancerConfig, NetworkLoadBalancerConfig, GwlbConfig } from '@aws-accelerator/config';
+import { MetadataKeys, SsmResourceType } from '@aws-accelerator/utils';
 import {
-  ApplicationLoadBalancerConfig,
-  NetworkLoadBalancerConfig,
-} from '@aws-accelerator/config/lib/customizations-config';
-import { SsmResourceType } from '@aws-accelerator/utils/lib/ssm-parameter-path';
-import { ApplicationLoadBalancer } from '@aws-accelerator/constructs/lib/aws-elasticloadbalancingv2/application-load-balancer';
-import { PutSsmParameter, SsmParameterProps } from '@aws-accelerator/constructs/lib/aws-ssm/put-ssm-parameter';
-import { GatewayLoadBalancer } from '@aws-accelerator/constructs/lib/aws-elasticloadbalancingv2/gateway-load-balancer';
-import { GwlbConfig } from '@aws-accelerator/config/lib/network-config';
+  NetworkLoadBalancer,
+  ApplicationLoadBalancer,
+  PutSsmParameter,
+  SsmParameterProps,
+  GatewayLoadBalancer,
+} from '@aws-accelerator/constructs';
 import { isV2Resource } from '../utils/functions';
 import { NetworkStackGeneration, V2StackComponentsList } from '../utils/enums';
-import { MetadataKeys } from '@aws-accelerator/utils/lib/common-types';
-
 export class VpcLoadBalancersBaseStack extends AcceleratorStack {
   private v2StackProps: V2NetworkStacksBaseProps;
   private vpcDetails: VpcDetails;
@@ -338,39 +335,6 @@ export class VpcLoadBalancersBaseStack extends AcceleratorStack {
   }
 
   /**
-   * Function to set Network load balancer principal Ids
-   * @returns
-   */
-  private setNetworkLoadBalancerPrincipalIds(): cdk.aws_iam.AccountPrincipal[] | void {
-    if (this.vpcDetails.networkLoadBalancers.length === 0) {
-      return;
-    }
-
-    const vpcItemsWithTargetGroups = this.props.networkConfig.vpcs.filter(
-      vpcItem => vpcItem.targetGroups && vpcItem.targetGroups.length > 0,
-    );
-
-    const vpcTemplatesWithTargetGroups =
-      this.props.networkConfig.vpcTemplates?.filter(
-        vpcItem => vpcItem.targetGroups && vpcItem.targetGroups.length > 0,
-      ) ?? [];
-
-    const accountIdTargetsForVpcs = vpcItemsWithTargetGroups.map(vpcItem =>
-      this.props.accountsConfig.getAccountId(vpcItem.account),
-    );
-
-    const accountIdTargetsForVpcTemplates =
-      vpcTemplatesWithTargetGroups?.map(vpcTemplate =>
-        this.getAccountIdsFromDeploymentTargets(vpcTemplate.deploymentTargets),
-      ) ?? [];
-
-    const principalAccountIds = [...accountIdTargetsForVpcs, ...accountIdTargetsForVpcTemplates];
-    principalAccountIds.push(cdk.Stack.of(this).account);
-    const principalIds = [...new Set(principalAccountIds)];
-    return principalIds.map(accountId => new cdk.aws_iam.AccountPrincipal(accountId)) ?? undefined;
-  }
-
-  /**
    * Function to create Network load balancers
    * @param accessLogsBucketName string
    */
@@ -397,50 +361,7 @@ export class VpcLoadBalancersBaseStack extends AcceleratorStack {
           `Configuration validation failed at runtime. Could not find subnets for NLB Item ${networkLoadBalancerItem.name}`,
         );
       }
-
       this.createNetworkLoadBalancer(networkLoadBalancerItem, subnetIds, accessLogsBucketName);
-    }
-
-    const roleName = `${this.props.prefixes.accelerator}-GetNLBIPAddressLookup`;
-    if (
-      cdk.Stack.of(this).region === this.props.globalConfig.homeRegion &&
-      this.vpcDetails.networkLoadBalancers.length > 0 &&
-      !isV2Resource(
-        this.v2StackProps.v2NetworkResources,
-        this.vpcDetails.name,
-        V2StackComponentsList.NETWORK_LOAD_BALANCER_ROLE,
-        `${roleName}|${cdk.Stack.of(this).account}`,
-      )
-    ) {
-      const principals = this.setNetworkLoadBalancerPrincipalIds();
-      const role = new cdk.aws_iam.Role(this, `GetNLBIPAddressLookup`, {
-        roleName,
-        assumedBy: new cdk.aws_iam.CompositePrincipal(...principals!),
-        inlinePolicies: {
-          default: new cdk.aws_iam.PolicyDocument({
-            statements: [
-              new cdk.aws_iam.PolicyStatement({
-                effect: cdk.aws_iam.Effect.ALLOW,
-                actions: ['ec2:DescribeNetworkInterfaces'],
-                resources: ['*'],
-              }),
-            ],
-          }),
-        },
-      });
-
-      NagSuppressions.addResourceSuppressionsByPath(this, `/${this.stackName}/GetNLBIPAddressLookup`, [
-        {
-          id: 'AwsSolutions-IAM5',
-          reason: 'Allows only specific role arns.',
-        },
-      ]);
-
-      (role.node.defaultChild as cdk.aws_iam.CfnRole).addMetadata(MetadataKeys.LZA_LOOKUP, {
-        resourceType: V2StackComponentsList.NETWORK_LOAD_BALANCER_ROLE,
-        roleDescription: 'GetNLBIPAddressLookup',
-        roleName,
-      });
     }
   }
 

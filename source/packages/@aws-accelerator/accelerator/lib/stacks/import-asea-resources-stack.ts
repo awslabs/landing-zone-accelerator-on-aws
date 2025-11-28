@@ -38,7 +38,7 @@ import { TransitGatewayRoutes } from '../asea-resources/transit-gateway-routes';
 import { VpcEndpoints } from '../asea-resources/vpc-endpoints';
 import { SsmInventory } from '../asea-resources/ssm-inventory';
 import { Lambda } from '../asea-resources/lambda';
-import { createLogger } from '@aws-accelerator/utils/lib/logger';
+import { createLogger } from '@aws-accelerator/utils';
 import { FirewallResources } from '../asea-resources/firewall-resources';
 import { Route53ResolverQueryLogging } from '../asea-resources/route-53-query-logging';
 import { Route53ResolverQueryLoggingAssociation } from '../asea-resources/route-53-query-logging-association';
@@ -262,6 +262,7 @@ export class ImportAseaResourcesStack extends NetworkStack {
           this.logger.debug(`Updating ${parameterItem.logicalId} ssm Parameter`);
           cfnParameter.addPropertyOverride('Name', parameterItem.parameterName);
           cfnParameter.addPropertyOverride('Value', parameterItem.stringValue);
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
         } catch (err) {
           this.logger.debug(`${parameterItem.logicalId} not found creating new ssm Parameter`);
           cfnParameter = new cdk.aws_ssm.CfnParameter(this, parameterItem.logicalId, {
@@ -316,6 +317,7 @@ export class ImportAseaResourcesStack extends NetworkStack {
           this.logger.debug(`Updating ${parameterItem.logicalId} ssm Parameter`);
           cfnParameter.addPropertyOverride('Name', parameterItem.parameterName);
           cfnParameter.addPropertyOverride('Value', parameterItem.stringValue);
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
         } catch (err) {
           this.logger.debug(`${parameterItem.logicalId} not found creating new ssm Parameter`);
           cfnParameter = new cdk.aws_ssm.CfnParameter(nestedStack.stack, parameterItem.logicalId, {

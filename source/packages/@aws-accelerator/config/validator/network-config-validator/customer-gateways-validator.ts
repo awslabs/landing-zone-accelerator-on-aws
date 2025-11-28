@@ -89,10 +89,10 @@ export class CustomerGatewaysValidator {
     errors: string[],
     customizationsConfig?: CustomizationsConfig,
   ) {
-    if (!helpers.isValidIpv4(cgw.ipAddress)) {
+    if (!helpers.isValidIpv4(cgw.ipAddress) && !helpers.isValidIpv6(cgw.ipAddress)) {
       if (!this.isValidFirewallReference(cgw, helpers, errors, customizationsConfig)) {
         errors.push(
-          `[Customer Gateway ${cgw.name}]: IP address must either be a valid IPv4 address or EC2 firewall reference variable. Value entered: ${cgw.ipAddress}`,
+          `[Customer Gateway ${cgw.name}]: IP address must either be a valid IPv4/IPv6 address or EC2 firewall reference variable. Value entered: ${cgw.ipAddress}`,
         );
       }
     }
@@ -114,7 +114,10 @@ export class CustomerGatewaysValidator {
   ): boolean {
     //
     // Match variable pattern
-    if (!helpers.matchesRegex(cgw.ipAddress, '^\\${ACCEL_LOOKUP::EC2:ENI_\\d:.+}$')) {
+    if (
+      !helpers.matchesRegex(cgw.ipAddress, '^\\${ACCEL_LOOKUP::EC2:ENI_\\d:.+}$') &&
+      !helpers.isValidIpv6(cgw.ipAddress)
+    ) {
       errors.push(
         `[Customer Gateway ${cgw.name}]: Incorrect EC2 firewall reference variable entered. Pattern accepted: "^\\$\{ACCEL_LOOKUP::EC2:ENI_\\d:.+}$" Value entered: ${cgw.ipAddress}`,
       );

@@ -11,6 +11,7 @@
  *  and limitations under the License.
  */
 
+import { vi } from 'vitest';
 import {
   AccountConfig,
   AccountsConfig,
@@ -113,6 +114,7 @@ export const mockImportedLoggingBucketGlobalConfig = {
 
 export const mockGlobalConfiguration = {
   homeRegion: 'mockHomeRegion',
+  managementAccountAccessRole: 'AWSControlTowerExecution',
   controlTower: {
     enable: true,
     landingZone: {
@@ -217,12 +219,14 @@ export const mockAccountsConfiguration: Partial<AccountsConfig> = {
       description: 'mockManagement',
       email: 'mockManagement@example.com',
       organizationalUnit: 'Root',
+      accountAlias: 'mock-management-account-alias',
     },
     {
       name: 'LogArchive',
       description: 'mockLogArchive',
       email: 'mockLogArchive@example.com',
       organizationalUnit: 'Security',
+      accountAlias: 'mock-log-archive-account-alias',
     },
     {
       name: 'Audit',
@@ -312,8 +316,8 @@ export const mockCustomizationsConfig: Partial<CustomizationsConfig> = {
   customizations: { cloudFormationStacks: [], cloudFormationStackSets: [], serviceCatalogPortfolios: [] },
   applications: [],
   firewalls: undefined,
-  getCustomStacks: jest.fn().mockReturnValue(undefined),
-  getAppStacks: jest.fn().mockReturnValue(undefined),
+  getCustomStacks: vi.fn().mockReturnValue(undefined),
+  getAppStacks: vi.fn().mockReturnValue(undefined),
 };
 
 export const mockIamConfig: Partial<IamConfig> = {

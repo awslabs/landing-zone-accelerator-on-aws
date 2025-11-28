@@ -10,13 +10,16 @@
  *  OR CONDITIONS OF ANY KIND, express or implied. See the License for the specific language governing permissions
  *  and limitations under the License.
  */
-import { describe, beforeEach, expect, test } from '@jest/globals';
+import { describe, beforeEach, expect, test, vi } from 'vitest';
 import { Organization } from '../../../../../lib/control-tower/setup-landing-zone/prerequisites/organization';
 import {
   AWSOrganizationsNotInUseException,
+  CreateOrganizationalUnitCommand,
   DescribeOrganizationCommand,
   EnableAllFeaturesCommand,
+  ListParentsCommand,
   ListRootsCommand,
+  MoveAccountCommand,
   OrganizationFeatureSet,
   OrganizationsClient,
   paginateListAccounts,
@@ -26,26 +29,37 @@ import {
 import { paginateListInstances } from '@aws-sdk/client-sso-admin';
 
 // Mock dependencies
-jest.mock('@aws-sdk/client-organizations', () => {
+vi.mock('@aws-sdk/client-organizations', () => {
   return {
-    AWSOrganizationsNotInUseException: jest.fn(),
-    EnableAllFeaturesCommand: jest.fn(),
-    DescribeOrganizationCommand: jest.fn(),
-    ListRootsCommand: jest.fn(),
-    OrganizationsClient: jest.fn(),
-    paginateListAccounts: jest.fn(),
-    paginateListAWSServiceAccessForOrganization: jest.fn(),
-    paginateListOrganizationalUnitsForParent: jest.fn(),
+    AWSOrganizationsNotInUseException: vi.fn(),
+    EnableAllFeaturesCommand: vi.fn(),
+    DescribeOrganizationCommand: vi.fn(),
+    ListRootsCommand: vi.fn(),
+    CreateOrganizationalUnitCommand: vi.fn(),
+    MoveAccountCommand: vi.fn(),
+    ListParentsCommand: vi.fn(),
+    OrganizationsClient: vi.fn(),
+    paginateListAccounts: vi.fn(),
+    paginateListAWSServiceAccessForOrganization: vi.fn(),
+    paginateListOrganizationalUnitsForParent: vi.fn(),
     OrganizationFeatureSet: {
       ALL: 'ALL',
       CONSOLIDATED_BILLING: 'CONSOLIDATED_BILLING',
     },
   };
 });
-jest.mock('@aws-sdk/client-sso-admin', () => {
+vi.mock('@aws-sdk/client-sso-admin', () => {
   return {
-    paginateListInstances: jest.fn(),
-    SSOAdminClient: jest.fn(),
+    paginateListInstances: vi.fn(),
+    SSOAdminClient: vi.fn(),
+  };
+});
+
+vi.mock('../../../../../common/functions', async () => {
+  const actual = await vi.importActual('../../../../../common/functions');
+  return {
+    ...actual,
+    getAccountId: vi.fn().mockReturnValue('fakeAccountId'),
   };
 });
 
@@ -109,16 +123,16 @@ const MOCK_CONSTANTS = {
 };
 
 describe('IAM Role Tests', () => {
-  const mockOrganizationsSend = jest.fn();
+  const mockOrganizationsSend = vi.fn();
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
 
-    (OrganizationsClient as jest.Mock).mockImplementation(() => ({
+    (OrganizationsClient as vi.Mock).mockImplementation(() => ({
       send: mockOrganizationsSend,
     }));
 
-    (paginateListInstances as jest.Mock).mockImplementation(() => ({
+    (paginateListInstances as vi.Mock).mockImplementation(() => ({
       [Symbol.asyncIterator]: async function* () {
         yield {
           Instances: [],
@@ -126,7 +140,7 @@ describe('IAM Role Tests', () => {
       },
     }));
 
-    (paginateListOrganizationalUnitsForParent as jest.Mock).mockImplementation(() => ({
+    (paginateListOrganizationalUnitsForParent as vi.Mock).mockImplementation(() => ({
       [Symbol.asyncIterator]: async function* () {
         yield {
           OrganizationalUnits: [],
@@ -134,7 +148,7 @@ describe('IAM Role Tests', () => {
       },
     }));
 
-    (paginateListAccounts as jest.Mock).mockImplementation(() => ({
+    (paginateListAccounts as vi.Mock).mockImplementation(() => ({
       [Symbol.asyncIterator]: async function* () {
         yield {
           Accounts: [],
@@ -142,13 +156,205 @@ describe('IAM Role Tests', () => {
       },
     }));
 
-    (paginateListAWSServiceAccessForOrganization as jest.Mock).mockImplementation(() => ({
+    (paginateListAWSServiceAccessForOrganization as vi.Mock).mockImplementation(() => ({
       [Symbol.asyncIterator]: async function* () {
         yield {
           EnabledServicePrincipals: [],
         };
       },
     }));
+  });
+
+  test('should successfully moveAccountToOu', async () => {
+    mockOrganizationsSend.mockImplementation(command => {
+      if (command instanceof ListParentsCommand) {
+        return Promise.resolve({ Parents: [{ Id: 'mockId' }] });
+      }
+      if (command instanceof MoveAccountCommand) {
+        return Promise.resolve(undefined);
+      }
+      return Promise.reject(MOCK_CONSTANTS.unknownError);
+    });
+
+    await Organization.moveAccounts('fakeRegion', 'mockId2', ['mockEmail']);
+
+    expect(MoveAccountCommand).toHaveBeenCalledWith(
+      expect.objectContaining({
+        AccountId: 'fakeAccountId',
+        DestinationParentId: 'mockId2',
+        SourceParentId: 'mockId',
+      }),
+    );
+  });
+
+  test('should skip moveAccountToOu if already in the same OU', async () => {
+    mockOrganizationsSend.mockImplementation(command => {
+      if (command instanceof ListParentsCommand) {
+        return Promise.resolve({ Parents: [{ Id: 'mockId' }] });
+      }
+      if (command instanceof MoveAccountCommand) {
+        return Promise.resolve(undefined);
+      }
+      return Promise.reject(MOCK_CONSTANTS.unknownError);
+    });
+
+    await Organization.moveAccounts('fakeRegion', 'mockId', ['mockEmail']);
+
+    expect(MoveAccountCommand).not.toHaveBeenCalled();
+  });
+
+  test('should fail moveAccountToOu if no returned parent', async () => {
+    mockOrganizationsSend.mockImplementation(command => {
+      if (command instanceof ListParentsCommand) {
+        return Promise.resolve({});
+      }
+      return Promise.reject(MOCK_CONSTANTS.unknownError);
+    });
+
+    expect(async () => {
+      await Organization.moveAccounts('fakeRegion', 'mockId2', ['mockEmail']);
+    }).rejects.toThrow('Account "mockEmail" does not have a parent OU.');
+  });
+
+  test('should fail moveAccountToOu if no Parents', async () => {
+    mockOrganizationsSend.mockImplementation(command => {
+      if (command instanceof ListParentsCommand) {
+        return Promise.resolve({ Parents: [] });
+      }
+      return Promise.reject(MOCK_CONSTANTS.unknownError);
+    });
+
+    expect(async () => {
+      await Organization.moveAccounts('fakeRegion', 'mockId2', ['mockEmail']);
+    }).rejects.toThrow('Account "mockEmail" does not have a parent OU.');
+  });
+
+  test('should successfully create OU', async () => {
+    mockOrganizationsSend.mockImplementation(command => {
+      if (command instanceof CreateOrganizationalUnitCommand) {
+        return Promise.resolve({
+          OrganizationalUnit: {
+            Id: 'mockId4',
+            Name: 'fakeNewOu',
+            Arn: 'mockArn4',
+          },
+        });
+      }
+
+      if (command instanceof ListRootsCommand) {
+        return Promise.resolve({ Roots: [MOCK_CONSTANTS.roots] });
+      }
+    });
+
+    (paginateListOrganizationalUnitsForParent as vi.Mock).mockImplementation(() => ({
+      [Symbol.asyncIterator]: async function* () {
+        yield {
+          OrganizationalUnits: [MOCK_CONSTANTS.organizationalUnit],
+        };
+      },
+    }));
+
+    const result = await Organization.createOu('fakeRegion', 'fakeNewOu', 'mockName');
+
+    expect(result).toBe('mockId4');
+  });
+
+  test('should fail to create OU if no parentOu', async () => {
+    mockOrganizationsSend.mockImplementation(command => {
+      if (command instanceof ListRootsCommand) {
+        return Promise.resolve({ Roots: [MOCK_CONSTANTS.roots] });
+      }
+    });
+
+    (paginateListOrganizationalUnitsForParent as vi.Mock).mockImplementation(() => ({
+      [Symbol.asyncIterator]: async function* () {
+        yield {
+          OrganizationalUnits: [MOCK_CONSTANTS.organizationalUnit],
+        };
+      },
+    }));
+
+    expect(async () => {
+      await Organization.createOu('fakeRegion', 'fakeNewOu', 'wrongOuName');
+    }).rejects.toThrow('InvalidInputException: Parent OU "wrongOuName" not found.');
+  });
+
+  test('should fail to create OU if SDK call returns no OU id', async () => {
+    mockOrganizationsSend.mockImplementation(command => {
+      if (command instanceof CreateOrganizationalUnitCommand) {
+        return Promise.resolve({
+          OrganizationalUnit: {
+            Name: 'fakeNewOu',
+            Arn: 'mockArn4',
+          },
+        });
+      }
+
+      if (command instanceof ListRootsCommand) {
+        return Promise.resolve({ Roots: [MOCK_CONSTANTS.roots] });
+      }
+    });
+
+    (paginateListOrganizationalUnitsForParent as vi.Mock).mockImplementation(() => ({
+      [Symbol.asyncIterator]: async function* () {
+        yield {
+          OrganizationalUnits: [MOCK_CONSTANTS.organizationalUnit],
+        };
+      },
+    }));
+
+    expect(async () => {
+      await Organization.createOu('fakeRegion', 'fakeNewOu', 'mockName');
+    }).rejects.toThrow(
+      'ServiceException: Organization unit "fakeNewOu" create organization unit api did not return OrganizationalUnit object with ID.',
+    );
+  });
+
+  test('should fail to create OU if SDK call fails', async () => {
+    mockOrganizationsSend.mockImplementation(command => {
+      if (command instanceof CreateOrganizationalUnitCommand) {
+        return Promise.resolve({});
+      }
+
+      if (command instanceof ListRootsCommand) {
+        return Promise.resolve({ Roots: [MOCK_CONSTANTS.roots] });
+      }
+    });
+
+    (paginateListOrganizationalUnitsForParent as vi.Mock).mockImplementation(() => ({
+      [Symbol.asyncIterator]: async function* () {
+        yield {
+          OrganizationalUnits: [MOCK_CONSTANTS.organizationalUnit],
+        };
+      },
+    }));
+
+    expect(async () => {
+      await Organization.createOu('fakeRegion', 'fakeNewOu', 'mockName');
+    }).rejects.toThrow(
+      'ServiceException: Organization unit "fakeNewOu" create organization unit api did not return OrganizationalUnit object with ID.',
+    );
+  });
+
+  test('should skip to create OU if OU already exists', async () => {
+    mockOrganizationsSend.mockImplementation(command => {
+      if (command instanceof ListRootsCommand) {
+        return Promise.resolve({ Roots: [MOCK_CONSTANTS.roots] });
+      }
+    });
+
+    (paginateListOrganizationalUnitsForParent as vi.Mock).mockImplementation(() => ({
+      [Symbol.asyncIterator]: async function* () {
+        yield {
+          OrganizationalUnits: [MOCK_CONSTANTS.organizationalUnit],
+        };
+      },
+    }));
+
+    const result = await Organization.createOu('fakeRegion', 'mockName', 'mockName');
+
+    expect(result).toBe('mockId');
+    expect(CreateOrganizationalUnitCommand).not.toHaveBeenCalled();
   });
 
   test('should successfully validated organizations', async () => {
@@ -184,7 +390,7 @@ describe('IAM Role Tests', () => {
 
   test('organizations validation failed becasue IdentityCenter already enabled', async () => {
     // Setup
-    (paginateListInstances as jest.Mock).mockImplementation(() => ({
+    (paginateListInstances as vi.Mock).mockImplementation(() => ({
       [Symbol.asyncIterator]: async function* () {
         yield {
           Instances: [MOCK_CONSTANTS.ssoInstances],
@@ -217,7 +423,7 @@ describe('IAM Role Tests', () => {
 
   test('should successfully validated organizations when IdentityCenter Instances undefined', async () => {
     // Setup
-    (paginateListInstances as jest.Mock).mockImplementation(() => ({
+    (paginateListInstances as vi.Mock).mockImplementation(() => ({
       [Symbol.asyncIterator]: async function* () {
         yield {
           Instances: undefined,
@@ -323,7 +529,7 @@ describe('IAM Role Tests', () => {
 
   test('organizations validation failed becasue Organizations have services enabled', async () => {
     // Setup
-    (paginateListAWSServiceAccessForOrganization as jest.Mock).mockImplementation(() => ({
+    (paginateListAWSServiceAccessForOrganization as vi.Mock).mockImplementation(() => ({
       [Symbol.asyncIterator]: async function* () {
         yield {
           EnabledServicePrincipals: MOCK_CONSTANTS.enabledServicePrincipals,
@@ -356,7 +562,7 @@ describe('IAM Role Tests', () => {
 
   test('should successfully validated organizations with EnabledServicePrincipals undefined', async () => {
     // Setup
-    (paginateListAWSServiceAccessForOrganization as jest.Mock).mockImplementation(() => ({
+    (paginateListAWSServiceAccessForOrganization as vi.Mock).mockImplementation(() => ({
       [Symbol.asyncIterator]: async function* () {
         yield {
           EnabledServicePrincipals: undefined,
@@ -394,7 +600,7 @@ describe('IAM Role Tests', () => {
 
   test('organizations validation failed becasue Organizations have other OUs', async () => {
     // Setup
-    (paginateListOrganizationalUnitsForParent as jest.Mock).mockImplementation(() => ({
+    (paginateListOrganizationalUnitsForParent as vi.Mock).mockImplementation(() => ({
       [Symbol.asyncIterator]: async function* () {
         yield {
           OrganizationalUnits: [MOCK_CONSTANTS.organizationalUnit],
@@ -427,7 +633,7 @@ describe('IAM Role Tests', () => {
 
   test('organizations validation failed becasue Organizations have other accounts', async () => {
     // Setup
-    (paginateListAccounts as jest.Mock).mockImplementation(() => ({
+    (paginateListAccounts as vi.Mock).mockImplementation(() => ({
       [Symbol.asyncIterator]: async function* () {
         yield {
           Accounts: MOCK_CONSTANTS.accounts,
@@ -460,7 +666,7 @@ describe('IAM Role Tests', () => {
 
   test('organizations validation failed becasue Organizations have other accounts and Accounts object undefined', async () => {
     // Setup
-    (paginateListAccounts as jest.Mock).mockImplementation(() => ({
+    (paginateListAccounts as vi.Mock).mockImplementation(() => ({
       [Symbol.asyncIterator]: async function* () {
         yield {
           Accounts: undefined,
@@ -498,7 +704,7 @@ describe('IAM Role Tests', () => {
 
   test('organizations validation failed becasue Organizations have other accounts for gov cloud partition', async () => {
     // Setup
-    (paginateListAccounts as jest.Mock).mockImplementation(() => ({
+    (paginateListAccounts as vi.Mock).mockImplementation(() => ({
       [Symbol.asyncIterator]: async function* () {
         yield {
           Accounts: MOCK_CONSTANTS.govCloudAccounts,
@@ -531,7 +737,7 @@ describe('IAM Role Tests', () => {
 
   test('should successfully validated organizations becasue Organizations have other accounts for gov cloud partition', async () => {
     // Setup
-    (paginateListAccounts as jest.Mock).mockImplementation(() => ({
+    (paginateListAccounts as vi.Mock).mockImplementation(() => ({
       [Symbol.asyncIterator]: async function* () {
         yield {
           Accounts: MOCK_CONSTANTS.govCloudAccounts.slice(0, -1),
@@ -633,7 +839,7 @@ describe('IAM Role Tests', () => {
     test('get accounts by email', async () => {
       // Setup
 
-      (paginateListAccounts as jest.Mock).mockImplementation(() => ({
+      (paginateListAccounts as vi.Mock).mockImplementation(() => ({
         [Symbol.asyncIterator]: async function* () {
           yield {
             Accounts: MOCK_CONSTANTS.govCloudAccounts,
@@ -656,7 +862,7 @@ describe('IAM Role Tests', () => {
       // Setup
       const dummyEmail = 'mock@example.com';
 
-      (paginateListAccounts as jest.Mock).mockImplementation(() => ({
+      (paginateListAccounts as vi.Mock).mockImplementation(() => ({
         [Symbol.asyncIterator]: async function* () {
           yield {
             Accounts: MOCK_CONSTANTS.govCloudAccounts,

@@ -42,7 +42,7 @@ This tabulated information presents a detailed overview of all packages and thei
 <table style="width: 600px;">
 <tr><th style="width: 300px;">Package</th><th style="width: 300px;">DependsOn Packages</th></tr>
 <tr>
-                  <td class="package-cell" rowspan="4">
+                  <td class="package-cell" rowspan="3">
                       <div style="display: flex; align-items: center; height: 100%;">
                           @aws-accelerator/accelerator
                       </div>
@@ -51,7 +51,6 @@ This tabulated information presents a detailed overview of all packages and thei
               </tr>
 <tr><td class="dependency-cell">@aws-accelerator/constructs</td></tr>
 <tr><td class="dependency-cell">@aws-accelerator/utils</td></tr>
-<tr><td class="dependency-cell">@aws-cdk-extensions/cdk-plugin-assume-role</td></tr>
 <tr>
                   <td class="package-cell" rowspan="2">
                       <div style="display: flex; align-items: center; height: 100%;">

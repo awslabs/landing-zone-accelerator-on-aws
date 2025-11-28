@@ -1,7 +1,7 @@
 import * as cdk from 'aws-cdk-lib';
 import { pascalCase } from 'pascal-case';
 import { IPv4CidrRange, IPv6CidrRange } from 'ip-num';
-import { isArn } from '@aws-accelerator/utils/lib/is-arn';
+import { isArn, getAseaConfigVpcName, SsmResourceType } from '@aws-accelerator/utils';
 
 import {
   CfnInternetGateway,
@@ -32,8 +32,6 @@ import {
   CfnResourceType,
   NetworkAclConfig,
 } from '@aws-accelerator/config';
-import { getAseaConfigVpcName } from '@aws-accelerator/utils';
-import { SsmResourceType } from '@aws-accelerator/utils/lib/ssm-parameter-path';
 import { ImportAseaResourcesStack, LogLevel } from '../stacks/import-asea-resources-stack';
 import { AseaResource, AseaResourceProps } from './resource';
 import { getSubnetConfig, getVpcConfig } from '../stacks/network-stacks/utils/getter-utils';
@@ -390,7 +388,7 @@ export class VpcResources extends AseaResource {
       let subnetId = subnets[natGatewayItem.subnet].ref;
       if (!subnetId) {
         subnetId = this.scope.getExternalResourceParameter(
-          this.scope.getSsmPath(SsmResourceType.SUBNET, [vpcItem.name, natGateway.subnetId]),
+          this.scope.getSsmPath(SsmResourceType.SUBNET, [vpcItem.name, natGateway.subnetId!]),
         );
       }
       if (subnetId) {
@@ -1347,6 +1345,7 @@ export class VpcResources extends AseaResource {
   private isValidIpv4Cidr(cidr: string): boolean {
     try {
       IPv4CidrRange.fromCidr(cidr);
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (e) {
       return false;
     }
@@ -1361,6 +1360,7 @@ export class VpcResources extends AseaResource {
   private isValidIpv6Cidr(cidr: string): boolean {
     try {
       IPv6CidrRange.fromCidr(cidr);
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (e) {
       return false;
     }
@@ -1509,6 +1509,7 @@ export class VpcResources extends AseaResource {
               ingressRule.logicalResourceId,
             );
           }
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
         } catch (error) {
           // continue the ref may not exits
         }
@@ -1524,6 +1525,7 @@ export class VpcResources extends AseaResource {
               ingressRule.logicalResourceId,
             );
           }
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
         } catch (error) {
           // the ref may not exist
         }
@@ -1535,6 +1537,7 @@ export class VpcResources extends AseaResource {
             this.scope.addLogs(LogLevel.WARN, `Deleting Egress Rule: ${egressRule.logicalResourceId}`);
             this.scope.addDeleteFlagForNestedResource(nestedStackResources.getStackKey(), egressRule.logicalResourceId);
           }
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
         } catch (error) {
           // continue the ref may not exist
         }
@@ -1546,6 +1549,7 @@ export class VpcResources extends AseaResource {
             this.scope.addLogs(LogLevel.WARN, `Deleting Egress Rule: ${egressRule.logicalResourceId}`);
             this.scope.addDeleteFlagForNestedResource(nestedStackResources.getStackKey(), egressRule.logicalResourceId);
           }
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
         } catch (error) {
           // continue the ref may not exist
         }

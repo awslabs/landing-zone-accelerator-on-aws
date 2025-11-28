@@ -11,21 +11,28 @@
  *  and limitations under the License.
  */
 
-import { describe, beforeEach, expect, test } from '@jest/globals';
+import { describe, beforeEach, expect, test, vi, afterEach } from 'vitest';
 import { GetCloudFormationTemplatesModule } from '../../lib/aws-cloudformation/get-cloudformation-templates';
 import { MOCK_CONSTANTS } from '../mocked-resources';
-import { IGetCloudFormationTemplatesHandlerParameter } from '../../../@aws-accelerator/modules/dist/packages/@aws-lza/interfaces/aws-cloudformation/get-cloudformation-templates';
-import { createStackPolicy, getCloudFormationTemplates } from '../../executors/accelerator-aws-cloudformation';
+import { IGetCloudFormationTemplatesHandlerParameter } from '../../interfaces/aws-cloudformation/get-cloudformation-templates';
+import {
+  createStackPolicy,
+  getCloudFormationTemplates,
+  customResourceTemplateModifier,
+} from '../../executors/accelerator-aws-cloudformation';
 import { StackPolicyModule } from '../../lib/aws-cloudformation/create-stack-policy';
 import { IStackPolicyHandlerParameter } from '../../interfaces/aws-cloudformation/create-stack-policy';
+import { ICustomResourceTemplateModifierHandlerParameter } from '../../interfaces/aws-cloudformation/custom-resource-template-modifier';
+import { CustomResourceTemplateModifierModule } from '../../lib/aws-cloudformation/custom-resource-template-modifier';
 
 // Mock dependencies
-jest.mock('../../lib/aws-cloudformation/get-cloudformation-templates');
-jest.mock('../../lib/aws-cloudformation/create-stack-policy');
+vi.mock('../../lib/aws-cloudformation/get-cloudformation-templates');
+vi.mock('../../lib/aws-cloudformation/create-stack-policy');
+vi.mock('../../lib/aws-cloudformation/custom-resource-template-modifier');
 
 describe('getCloudFormationTemplates', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   describe('GetCloudFormationTemplatesModule', () => {
@@ -35,9 +42,9 @@ describe('getCloudFormationTemplates', () => {
     };
     test('should successfully configure default encryption key', async () => {
       // Setup
-      const mockHandler = jest.fn().mockResolvedValue('SUCCESS');
+      const mockHandler = vi.fn().mockResolvedValue('SUCCESS');
 
-      (GetCloudFormationTemplatesModule as unknown as jest.Mock).mockImplementation(() => ({
+      (GetCloudFormationTemplatesModule as unknown as vi.Mock).mockImplementation(() => ({
         handler: mockHandler,
       }));
 
@@ -54,9 +61,9 @@ describe('getCloudFormationTemplates', () => {
       // Setup
 
       const errorMessage = 'Operation failed';
-      const mockHandler = jest.fn().mockRejectedValue(new Error(errorMessage));
+      const mockHandler = vi.fn().mockRejectedValue(new Error(errorMessage));
 
-      (GetCloudFormationTemplatesModule as unknown as jest.Mock).mockImplementation(() => ({
+      (GetCloudFormationTemplatesModule as unknown as vi.Mock).mockImplementation(() => ({
         handler: mockHandler,
       }));
 
@@ -75,28 +82,28 @@ describe('getCloudFormationTemplates', () => {
     beforeEach(() => {
       originalProcessOn = process.on;
 
-      process.on = jest.fn((event: string, listener: NodeJS.UncaughtExceptionListener) => {
+      process.on = vi.fn((event: string, listener: NodeJS.UncaughtExceptionListener) => {
         if (event === 'uncaughtException') {
           processOnCallback = listener;
         }
         return process;
       }) as unknown as typeof process.on;
 
-      jest.resetModules();
+      vi.resetModules();
     });
 
     afterEach(() => {
       process.on = originalProcessOn;
     });
 
-    test('should register uncaughtException handler', () => {
-      require('../../executors/accelerator-aws-cloudformation');
+    test('should register uncaughtException handler', async () => {
+      await import('../../executors/accelerator-aws-cloudformation');
 
       expect(process.on).toHaveBeenCalledWith('uncaughtException', expect.any(Function));
     });
 
-    test('should rethrow the error when uncaughtException occurs', () => {
-      require('../../executors/accelerator-aws-cloudformation');
+    test('should rethrow the error when uncaughtException occurs', async () => {
+      await import('../../executors/accelerator-aws-cloudformation');
 
       const testError = new Error('Test uncaught exception');
       const origin = 'uncaughtException';
@@ -112,14 +119,14 @@ describe('getCloudFormationTemplates', () => {
 
 describe('createStackPolicy', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   test('error rethrows exception', async () => {
     const errorMessage = 'Create Stack Policy test error';
-    const mockHandler = jest.fn().mockRejectedValue(new Error(errorMessage));
+    const mockHandler = vi.fn().mockRejectedValue(new Error(errorMessage));
 
-    (StackPolicyModule as unknown as jest.Mock).mockImplementation(() => ({
+    (StackPolicyModule as unknown as vi.Mock).mockImplementation(() => ({
       handler: mockHandler,
     }));
     const input = {} as IStackPolicyHandlerParameter;
@@ -129,9 +136,9 @@ describe('createStackPolicy', () => {
 
   test('success returns value', async () => {
     const resultMessage = 'Module success message';
-    const mockHandler = jest.fn().mockReturnValue(resultMessage);
+    const mockHandler = vi.fn().mockReturnValue(resultMessage);
 
-    (StackPolicyModule as unknown as jest.Mock).mockImplementation(() => ({
+    (StackPolicyModule as unknown as vi.Mock).mockImplementation(() => ({
       handler: mockHandler,
     }));
     const input = {} as IStackPolicyHandlerParameter;
@@ -141,6 +148,42 @@ describe('createStackPolicy', () => {
 
     // Verify
     expect(result).toBe(resultMessage);
+    expect(mockHandler).toHaveBeenCalledWith(input);
+    expect(mockHandler).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('customResourceTemplateModifier', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  test('error rethrows exception', async () => {
+    const errorMessage = 'mock error';
+    const mockHandler = vi.fn().mockRejectedValue(new Error(errorMessage));
+
+    (CustomResourceTemplateModifierModule as unknown as vi.Mock).mockImplementation(() => ({
+      handler: mockHandler,
+    }));
+    const input = {} as ICustomResourceTemplateModifierHandlerParameter;
+
+    await expect(customResourceTemplateModifier(input)).rejects.toThrow(errorMessage);
+  });
+
+  test('success returns value', async () => {
+    const result = { status: true, message: 'Module success message' };
+    const mockHandler = vi.fn().mockReturnValue(result);
+
+    (CustomResourceTemplateModifierModule as unknown as vi.Mock).mockImplementation(() => ({
+      handler: mockHandler,
+    }));
+    const input = {} as ICustomResourceTemplateModifierHandlerParameter;
+
+    // Execute
+    const response = await customResourceTemplateModifier(input);
+
+    // Verify
+    expect(response).toBe(result);
     expect(mockHandler).toHaveBeenCalledWith(input);
     expect(mockHandler).toHaveBeenCalledTimes(1);
   });

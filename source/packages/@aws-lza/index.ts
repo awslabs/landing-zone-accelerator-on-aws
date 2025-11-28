@@ -58,30 +58,87 @@ export { getOrganizationalUnitsDetail } from './executors/accelerator-aws-organi
 
 export { getOrganizationId } from './common/functions';
 
+export { IManageAccountAliasHandlerParameter } from './interfaces/aws-organizations/manage-account-alias';
+export { manageAccountAlias } from './executors/accelerator-aws-organizations';
+
+export { IManagePolicyHandlerParameter } from './interfaces/aws-organizations/manage-policy';
+export { managePolicy } from './executors/accelerator-aws-organizations';
+
 //
 // Amazon EC2 Module resources
 //
-
 export { IManageEbsDefaultEncryptionHandlerParameter } from './interfaces/amazon-ec2/manage-ebs-default-encryption';
 export { manageEbsDefaultEncryption } from './executors/accelerator-amazon-ec2';
 
+export { IDeleteDefaultVpcParameter } from './interfaces/amazon-ec2/delete-default-vpc';
+export { deleteDefaultVpc } from './executors/accelerator-amazon-ec2';
+
+//
+// AWS CloudFormation resources
+//
 export { IGetCloudFormationTemplatesHandlerParameter } from './interfaces/aws-cloudformation/get-cloudformation-templates';
 export { getCloudFormationTemplates } from './executors/accelerator-aws-cloudformation';
 
 export { IStackPolicyHandlerParameter } from './interfaces/aws-cloudformation/create-stack-policy';
 export { createStackPolicy } from './executors/accelerator-aws-cloudformation';
 
+export { IDeleteDefaultSecurityGroupRulesParameter } from './interfaces/amazon-ec2/delete-default-security-group-rules';
+export { deleteDefaultSecurityGroupRules } from './executors/accelerator-amazon-ec2';
+
+export { ICustomResourceTemplateModifierHandlerParameter } from './interfaces/aws-cloudformation/custom-resource-template-modifier';
+export { customResourceTemplateModifier } from './executors/accelerator-aws-cloudformation';
+
+//
+// AWS GuardDuty Module resources
+//
+export { IGuardDutyManageOrganizationAdminParameter } from './interfaces/aws-guardduty/manage-organization-admin';
+export { manageGuardDutyAdminAccount } from './executors/accelerator-aws-guardduty';
+
 // AWS IAM Module resources
 export { IRootUserManagementHandlerParameter } from './interfaces/aws-iam/root-user-management';
 export { configureRootUserManagment } from './executors/accelerator-aws-iam';
 
+//
+// Amazon Detective Module resources
+//
+export { IDetectiveManageOrganizationAdminParameter } from './interfaces/detective/manage-organization-admin';
+export { manageDetectiveOrganizationAdminAccount } from './executors/accelerator-detective';
 // AWS Macie Module resource
 
 export { IMacieManageOrganizationAdminParameter } from './interfaces/macie/manage-organization-admin';
 export { manageOrganizationAdmin } from './executors/accelerator-macie';
 
 //
+// AWS Lambda Module Resources
+//
+
+export { ICheckLambdaConcurrencyParameter } from './interfaces/aws-lambda/check-lambda-concurrency';
+export { checkLambdaConcurrency } from './executors/accelerator-aws-lambda';
+
+//
+// Service Quotas Module Resources
+//
+
+export { ICheckServiceQuotaParameter } from './interfaces/service-quotas/check-service-quota';
+export { checkServiceQuota } from './executors/accelerator-service-quotas';
+
+export { IGetServiceQuotaCodeParameter } from './interfaces/service-quotas/get-service-quota-code';
+export { getServiceQuotaCode } from './executors/accelerator-service-quotas';
+
+//
 // AWS SSM Module resources
 //
 export { IBlockPublicDocumentSharingHandlerParameter } from './interfaces/aws-ssm/manage-document-public-access-block';
 export { manageBlockPublicDocumentSharing } from './executors/accelerator-aws-ssm';
+export {
+  IGetSsmParametersValueHandlerParameter,
+  IGetSsmParametersValueConfiguration,
+  ISsmParameterValue,
+} from './interfaces/aws-ssm/get-parameters';
+export { getSsmParametersValue } from './executors/accelerator-aws-ssm';
+
+//
+// AWS Security Hub Module resources
+//
+export { ISecurityHubManageOrganizationAdminParameter } from './interfaces/security-hub/manage-organization-admin';
+export { manageSecurityHubOrganizationAdminAccount } from './executors/accelerator-security-hub';

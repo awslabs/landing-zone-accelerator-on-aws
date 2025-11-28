@@ -5,6 +5,114 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.14.1] - 2025-11-26
+
+### Fixed
+
+- fix(budgets): remove trailing slash in path
+- fix(networking): added lookup for tgw attachments using v2 stacks in govcloud
+- fix(typedocs): updated basePath for compatibility with latest version
+
+## [1.14.0] - 2025-11-24
+
+### Added
+
+- feat(cloudwatch): add config for cloud watch metric filter default value
+- feat(config): dynamic aws regions lookup
+- feat(config): support include in yaml files
+- feat(control-tower): add additional status logging
+- feat(control-tower): add support of control tower 4.0
+- feat(networking): add vpn connection ipv6 support
+- feat(networking): enable ip targets
+- feat(organizations): override default allowed scp attachment values
+- feat(securityhub): add support for CIS AWS Foundations Benchmark v5.0.0
+- feat(securityhub): add support for any future standard supported by securityhub
+- feat(ssm): implement ssm document block public access at account level
+- feat(toolkit): enable forceBootstrap with toolkit
+- feat(uninstaller): add support for local config directories when uninstalling LZA
+
+### Fixed
+
+- fix(account): improve error handling for org account creation
+- fix(asea): avoid re-processing custom resources deleted from ASEA stacks
+- fix(asea): fix conditional to delete custom resources with old naming convention
+- fix(cdk): fix external pipeline diagnostics
+- fix(cdk): updated cdk from 2.158 to 2.1027, disabled telemetry by default
+- fix(cdk): update customizations to use cdk dependency management
+- fix(config): fix issue where accountIds were not be added to list, update pitr config for dynamodb tables
+- fix(config): improve error logging in validation
+- fix(control-tower): landing zone operation fails on cmk permission
+- fix(control-tower): ou registration fails in CT with BadRequestException: Invalid request body
+- fix(control-tower): update operation to maintain existing unchanged manifests properties
+- fix(control-tower): upgrade check fails for missing configHubConfig object in manifest
+- fix(dependencies): update glob package version
+- fix(identity-center): removed deprecated filter option
+- fix(logging): ignore failed CreateLogGroup event
+- fix(logging): skipped tags for AWS::Lambda::EventSourceMapping resource in govcloud
+- fix(metadata): add s3 read permissions for config artifact bucket to accelerator metadata lambda service role
+- fix(metadata): changed ou lookups to only latest commit
+- fix(modules): fixed external credentials for account alias module
+- fix(modules): enable each module execution skip by environment variable
+- fix(networking): delete default vpc in accounts without a vpc
+- fix(networking): fix logic for nlb ip address role not provisioning
+- fix(networking): fix vpc stack dependencies
+- fix(networking): update lookup for tgw vpc attachment in govcloud
+- fix(organizations): updated detachment logic to target policy based on the event only
+- fix(pipeline): replace cdk s3 deploy with s3 api for s3 based config
+- fix(pipeline): removed cdk bucket deploy for config that has s3 as source
+- fix(prerequisites): updated service quota logic to continue if it encounters an error
+- fix(s3): add s3ResourcePolicyAttachments for access log bucket
+- fix(ssm): block public document sharing module fails to assume role in external pipeline account
+- fix(ssm): preserve ssm runAsEnabled setting and runAsDefaultUser
+- fix(tags): skip adding tags for events rule
+- fix(utility): fix aws arn validation to support partitions other than commercial
+- fix(validation): allow top-level domains in route53 resolver rules
+- fix(validation): updated regex validation for Route53 Resolver Rule DNS to pass TLD
+- fix: make email comparison case-insensitive in account validation
+
+### Changed
+
+- chore(cloudtrail): add documentation for cloudtrail data events behavior
+- chore(cdk): upgrade aws-cdk-lib and migrate stack management to toolkit-lib
+- chore(package): removes dependency of fs package
+- chore(package): upgrade lerna, nx, axios, eslint*, prettier packages
+- chore(pipeline): accelerator package version error obscures validation errors
+- chore(prerequisites): update lambda concurrency threshold
+- chore: add securityHub disable documentation
+- chore: changed tests to use vi-test instead of ts-jest
+- chore: removed AWS JS SDK V2 dependency
+- chore: update Config file to remove inaccessible link
+- chore: update documentation for controlTower controls
+- chore: update imports to reduce size of @aws-accelerator/constructs-aws-route53-associate-hosted-zones
+
+## [1.13.1] - 2025-10-01
+
+### Fixed
+
+- fix(asea): fix lambda role replacement for asea functions
+- fix(asea): remove deprecated asea phase5 lambdas
+- fix(config-service): create service linked role when orgs only [#834](https://github.com/awslabs/landing-zone-accelerator-on-aws/issues/834) [#857](https://github.com/awslabs/landing-zone-accelerator-on-aws/issues/857)
+- fix(macie): allow undefined value for excluded regions
+- fix(metadata): missing s3 read permissions on accelerator metadata lambda role [#864](https://github.com/awslabs/landing-zone-accelerator-on-aws/issues/864)
+- fix(networking): fix rql resource from being recreated
+- fix(networking): reverts bug disabling private dns for vpc interface endpoints
+- fix(organizations): don't add existing accounts to org account creation
+- fix(pipeline): add missing environment variable for validation
+- fix(stack-policy): fix error on new account creation
+- fix(validation): added partition env var to pipeline
+- fix(validation): add validation for imported access log bucket name
+
+### Changed
+
+- chore(configs): update sample configurations to lza universal config
+- chore(control-tower): updated default access logs retention to 365 days
+- chore(docs): add v2 mkdoc navigation
+- chore(docs): update documentation for maxPasswordAge
+- chore(docs): update service quota documentation
+- chore(docs): update security hub findings and universal configuration reference
+- chore(logging): updated default cloudwatch log retention to 1 year
+- Revert "fix(validation): query log without r53 resolver configured" [#876](https://github.com/awslabs/landing-zone-accelerator-on-aws/issues/876)
+
 ## [1.13.0] - 2025-08-29
 
 ### Added
@@ -34,7 +142,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - fix(asea): lookup tgw attachments using asea vpc names
 - fix(aspects): update CDK aspect to use lza default node version for custom resource Lambda functions by default [#761](https://github.com/awslabs/landing-zone-accelerator-on-aws/issues/761)
 - fix(bootstrap): lookup data with query command
-- fix(config): ISnsConfig functionality for snsTopics property [#700](https://github.com/awslabs/landing-zone-accelerator-on-aws/issues/700) 
+- fix(config): ISnsConfig functionality for snsTopics property [#700](https://github.com/awslabs/landing-zone-accelerator-on-aws/issues/700)
 - fix(diff): print output before approval [#723](https://github.com/awslabs/landing-zone-accelerator-on-aws/issues/723)
 - fix(documentation): fixed documentation for acceleratorMetadata [#498](https://github.com/awslabs/landing-zone-accelerator-on-aws/issues/498)
 - fix(kms): fix policy condition error
@@ -49,7 +157,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - fix(networking): subnet route table association lookup and creation
 - fix(pipeline): move account alias module run after account creation [#782](https://github.com/awslabs/landing-zone-accelerator-on-aws/issues/782)
 - fix(pipeline): update iam policy for github token change lambda to allow pipeline update [#739](https://github.com/awslabs/landing-zone-accelerator-on-aws/issues/739)
-- fix(pre-approval): add wrapper around deployment 
+- fix(pre-approval): add wrapper around deployment
 - fix(sample-config): extend preventative measures to roles
 - fix(security-audit): sns topic for controltower notifications
 - fix(securityhub): by default only send HIGH and CRITICAL SecurityHub events to CloudWatch. If other events are needed in CloudWatch update configuration
@@ -98,7 +206,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - fix(logging): add permissions to cloudwatch log creation for kms association
 - fix(networking): remove duplicates for gateway loadbalancer endpoints
 
-
 ## [1.12.3] - 2025-06-11
 
 ### Added
@@ -117,7 +224,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- feat(region): add support for mx-central-1 region 
+- feat(region): add support for mx-central-1 region
 - feat(securityhub): added PCI DSS v4.0.1 and AWS Resource Tagging Standard v1.0.0 standards
 
 ### Fixed
@@ -275,8 +382,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - fix: added missing imports to test file
-- fix: Disable management events for Lambda & S3 Cloudtrail event selectors 
-- fix: hosted zone DNS for Sagemaker VPC Endpoints 
+- fix: Disable management events for Lambda & S3 Cloudtrail event selectors
+- fix: hosted zone DNS for Sagemaker VPC Endpoints
 - fix: updated GitHub action target
 - fix(account): remove partition checks for account creation in prepare stack
 - fix(assets): add local account for ssm parameters to assets policy
@@ -337,7 +444,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - fix(metadata): accelerator metadata lambda times out without error
 - fix(docs): resolve broken links in mkdocs
-- fix(route53): fix hosted zone DNS for Sagemaker VPC Endpoints 
+- fix(route53): fix hosted zone DNS for Sagemaker VPC Endpoints
 - fix(route53): fix hosted zone DNS for EKS-Auth VPC Endpoints
 - fix(pipeline): bootstrap stage failed silently
 - fix(organizations): fix enabled controls cfn throttling
@@ -406,7 +513,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - chore(sample-config): update s3 service control policy
 - chore(sts): updated sts endpoints
 - chore(uninstaller): improved performance for deployments with many regions
-- chore(validation): extending validation on ENI lookups to allow for _ character
+- chore(validation): extending validation on ENI lookups to allow for \_ character
 
 ## [1.9.2] - 2024-08-26
 

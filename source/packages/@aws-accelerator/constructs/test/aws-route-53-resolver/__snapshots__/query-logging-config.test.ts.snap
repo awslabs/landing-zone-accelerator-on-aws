@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`QueryLoggingConfig Construct(QueryLoggingConfig):  Snapshot Test 1`] = `
+exports[`QueryLoggingConfig > Construct(QueryLoggingConfig):  Snapshot Test 1`] = `
 {
   "Resources": {
     "CustomQueryLoggingConfigAssociationCustomResourceProviderHandlerFDE723DC": {
@@ -16,7 +16,7 @@ exports[`QueryLoggingConfig Construct(QueryLoggingConfig):  Snapshot Test 1`] = 
         },
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.14.1",
           },
         },
         "Handler": "__entrypoint__.handler",
@@ -234,7 +234,7 @@ exports[`QueryLoggingConfig Construct(QueryLoggingConfig):  Snapshot Test 1`] = 
 }
 `;
 
-exports[`QueryLoggingConfig Construct(QueryLoggingConfig):  Snapshot Test 2`] = `
+exports[`QueryLoggingConfig > Construct(QueryLoggingConfig):  Snapshot Test 2`] = `
 {
   "Resources": {
     "CustomLogResourcePolicyCustomResourceProviderHandlerB58C0C34": {
@@ -250,7 +250,7 @@ exports[`QueryLoggingConfig Construct(QueryLoggingConfig):  Snapshot Test 2`] = 
         },
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.14.1",
           },
         },
         "Handler": "__entrypoint__.handler",
@@ -344,7 +344,7 @@ exports[`QueryLoggingConfig Construct(QueryLoggingConfig):  Snapshot Test 2`] = 
         },
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.14.1",
           },
         },
         "Handler": "__entrypoint__.handler",
@@ -456,7 +456,7 @@ exports[`QueryLoggingConfig Construct(QueryLoggingConfig):  Snapshot Test 2`] = 
         },
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.14.1",
           },
         },
         "Handler": "__entrypoint__.handler",

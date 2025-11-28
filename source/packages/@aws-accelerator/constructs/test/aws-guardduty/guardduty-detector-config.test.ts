@@ -12,6 +12,7 @@
  */
 
 import * as cdk from 'aws-cdk-lib';
+import { describe } from 'vitest';
 import { GuardDutyDetectorConfig } from '../../lib/aws-guardduty/guardduty-detector-config';
 import { snapShotTest } from '../snapshot-test';
 

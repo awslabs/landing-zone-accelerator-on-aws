@@ -12,6 +12,7 @@
  */
 
 import * as cdk from 'aws-cdk-lib';
+import { describe } from 'vitest';
 
 import { CustomerGateway } from '../../lib/aws-ec2/customer-gateway';
 import { snapShotTest } from '../snapshot-test';
@@ -33,6 +34,16 @@ new CustomerGateway(stack, 'TestCustomCgw', {
   bgpAsn: 65123,
   ipAddress: '1.2.3.4',
   customResourceHandler: cdk.aws_lambda.Function.fromFunctionName(stack, 'Function', 'TestFunction'),
+  owningAccountId: '111111111111',
+  owningRegion: 'us-west-2',
+  roleName: 'test-role',
+});
+
+new CustomerGateway(stack, 'TestIpv6CustomCgw', {
+  name: 'Custom-Ipv6-CGW',
+  bgpAsn: 65501,
+  ipAddress: '2803::f800',
+  customResourceHandler: cdk.aws_lambda.Function.fromFunctionName(stack, 'Ipv6Function', 'TestFunction'),
   owningAccountId: '111111111111',
   owningRegion: 'us-west-2',
   roleName: 'test-role',

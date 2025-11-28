@@ -11,7 +11,7 @@
  *  and limitations under the License.
  */
 
-import { AseaResourceType, CfnResourceType } from '@aws-accelerator/config/lib/common/types';
+import { AseaResourceType, CfnResourceType } from '@aws-accelerator/config';
 import { ImportAseaResourcesStack, LogLevel } from '../stacks/import-asea-resources-stack';
 import { AseaResource, AseaResourceProps } from './resource';
 import { pascalCase } from 'pascal-case';

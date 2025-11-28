@@ -24,14 +24,14 @@ export class NetworkValidatorFunctions {
   private accounts: (AccountConfig | GovCloudAccountConfig)[];
   private snsTopicNames: string[];
   private values: NetworkConfig;
-  private enabledRegions: t.Region[];
+  private enabledRegions: string[];
 
   constructor(
     values: NetworkConfig,
     ouIdNames: string[],
     accounts: (AccountConfig | GovCloudAccountConfig)[],
     snsTopicNames: string[],
-    enabledRegions: t.Region[],
+    enabledRegions: string[],
   ) {
     this.ouIdNames = ouIdNames;
     this.accounts = accounts;
@@ -47,8 +47,8 @@ export class NetworkValidatorFunctions {
    * @param targets
    * @returns
    */
-  public getRegionsFromDeploymentTarget(targets: t.DeploymentTargets): t.Region[] {
-    const enabledRegions: t.Region[] = this.enabledRegions;
+  public getRegionsFromDeploymentTarget(targets: t.DeploymentTargets): string[] {
+    const enabledRegions: string[] = this.enabledRegions;
 
     return enabledRegions.filter(region => !targets.excludedRegions?.includes(region));
   }
@@ -204,6 +204,7 @@ export class NetworkValidatorFunctions {
 
     try {
       IPv4CidrRange.fromCidr(cidr);
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (e) {
       return false;
     }
@@ -222,6 +223,7 @@ export class NetworkValidatorFunctions {
 
     try {
       IPv6CidrRange.fromCidr(cidr);
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (e) {
       return false;
     }
@@ -236,6 +238,7 @@ export class NetworkValidatorFunctions {
   public isValidIpv4(ip: string): boolean {
     try {
       IPv4.fromString(ip);
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (e) {
       return false;
     }
@@ -250,6 +253,7 @@ export class NetworkValidatorFunctions {
   public isValidIpv6(ip: string): boolean {
     try {
       IPv6.fromString(ip);
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (e) {
       return false;
     }
@@ -288,6 +292,6 @@ export class NetworkValidatorFunctions {
    * @returns
    */
   public isEnabledRegion(region: string): boolean {
-    return this.enabledRegions.includes(region as t.Region);
+    return this.enabledRegions.includes(region);
   }
 }

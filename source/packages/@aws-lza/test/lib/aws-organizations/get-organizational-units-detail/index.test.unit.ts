@@ -11,7 +11,7 @@
  *  and limitations under the License.
  */
 
-import { describe, beforeEach, expect, test } from '@jest/globals';
+import { describe, beforeEach, expect, test, vi } from 'vitest';
 import { ControlTowerClient, EnabledBaselineSummary } from '@aws-sdk/client-controltower';
 import { OrganizationalUnit, OrganizationsClient } from '@aws-sdk/client-organizations';
 
@@ -22,24 +22,24 @@ import { MODULE_EXCEPTIONS } from '../../../../common/enums';
 import { IGetOrganizationalUnitsDetailHandlerParameter } from '../../../../interfaces/aws-organizations/get-organizational-units-detail';
 
 // Mock dependencies
-jest.mock('@aws-sdk/client-controltower', () => ({
-  ControlTowerClient: jest.fn(),
+vi.mock('@aws-sdk/client-controltower', () => ({
+  ControlTowerClient: vi.fn(),
 }));
 
-jest.mock('@aws-sdk/client-organizations', () => ({
-  OrganizationsClient: jest.fn(),
+vi.mock('@aws-sdk/client-organizations', () => ({
+  OrganizationsClient: vi.fn(),
 }));
 
 describe('GetOrganizationalUnitsDetailModule', () => {
-  const mockControlTowerSend = jest.fn();
-  const mockOrganizationsSend = jest.fn();
+  const mockControlTowerSend = vi.fn();
+  const mockOrganizationsSend = vi.fn();
 
-  let isOrganizationsConfiguredSpy: jest.SpyInstance;
-  let getLandingZoneIdentifierSpy: jest.SpyInstance;
-  let getEnabledBaselinesSpy: jest.SpyInstance;
-  let getOrganizationIdSpy: jest.SpyInstance;
-  let getOrganizationRootIdSpy: jest.SpyInstance;
-  let getOrganizationalUnitsForParentSpy: jest.SpyInstance;
+  let isOrganizationsConfiguredSpy: vi.SpyInstance;
+  let getLandingZoneIdentifierSpy: vi.SpyInstance;
+  let getEnabledBaselinesSpy: vi.SpyInstance;
+  let getOrganizationIdSpy: vi.SpyInstance;
+  let getOrganizationRootIdSpy: vi.SpyInstance;
+  let getOrganizationalUnitsForParentSpy: vi.SpyInstance;
 
   const parameter: IGetOrganizationalUnitsDetailHandlerParameter = {
     ...MOCK_CONSTANTS.runnerParameters,
@@ -48,31 +48,29 @@ describe('GetOrganizationalUnitsDetailModule', () => {
     },
   };
 
-  beforeEach(() => {
-    jest.clearAllMocks();
+  beforeEach(async () => {
+    vi.clearAllMocks();
 
-    (ControlTowerClient as jest.Mock).mockImplementation(() => ({
+    (ControlTowerClient as vi.Mock).mockImplementation(() => ({
       send: mockControlTowerSend,
     }));
 
-    (OrganizationsClient as jest.Mock).mockImplementation(() => ({
+    (OrganizationsClient as vi.Mock).mockImplementation(() => ({
       send: mockOrganizationsSend,
     }));
 
-    isOrganizationsConfiguredSpy = jest.spyOn(require('../../../../common/functions'), 'isOrganizationsConfigured');
-    getLandingZoneIdentifierSpy = jest.spyOn(require('../../../../common/functions'), 'getLandingZoneIdentifier');
-    getEnabledBaselinesSpy = jest.spyOn(require('../../../../common/functions'), 'getEnabledBaselines');
-    getOrganizationIdSpy = jest.spyOn(require('../../../../common/functions'), 'getOrganizationId');
-    getOrganizationRootIdSpy = jest.spyOn(require('../../../../common/functions'), 'getOrganizationRootId');
-    getOrganizationalUnitsForParentSpy = jest.spyOn(
-      require('../../../../common/functions'),
-      'getOrganizationalUnitsForParent',
-    );
+    const commonFunctions = await import('../../../../common/functions');
+    isOrganizationsConfiguredSpy = vi.spyOn(commonFunctions, 'isOrganizationsConfigured');
+    getLandingZoneIdentifierSpy = vi.spyOn(commonFunctions, 'getLandingZoneIdentifier');
+    getEnabledBaselinesSpy = vi.spyOn(commonFunctions, 'getEnabledBaselines');
+    getOrganizationIdSpy = vi.spyOn(commonFunctions, 'getOrganizationId');
+    getOrganizationRootIdSpy = vi.spyOn(commonFunctions, 'getOrganizationRootId');
+    getOrganizationalUnitsForParentSpy = vi.spyOn(commonFunctions, 'getOrganizationalUnitsForParent');
   });
 
   describe('GetOrganizationalUnitsDetailModule', () => {
     beforeEach(() => {
-      jest.clearAllMocks();
+      vi.clearAllMocks();
     });
 
     test('should return empty array when organizations not configured', async () => {

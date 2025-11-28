@@ -18,7 +18,7 @@ import {
 } from '@aws-sdk/client-organizations';
 import { STSClient, GetCallerIdentityCommand, AssumeRoleCommand } from '@aws-sdk/client-sts';
 
-import { afterEach, beforeEach, describe, expect, test } from '@jest/globals';
+import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 import fs from 'fs';
 
 import {
@@ -111,23 +111,26 @@ const MOCK_CONSTANTS = {
 };
 
 // Mock the AWS SDK(s)
-jest.mock('@aws-sdk/client-sts');
-jest.mock('@aws-sdk/client-organizations', () => ({
-  ...jest.requireActual('@aws-sdk/client-organizations'),
-  paginateListAccounts: jest.fn(),
-  OrganizationsClient: jest.fn(),
-}));
+vi.mock('@aws-sdk/client-sts');
+vi.mock('@aws-sdk/client-organizations', async importOriginal => {
+  const actual = await importOriginal();
+  return {
+    ...actual,
+    paginateListAccounts: vi.fn(),
+    OrganizationsClient: vi.fn(),
+  };
+});
 
 describe('Functions', () => {
   describe('validateConfigDirPath', () => {
     afterEach(() => {
-      jest.restoreAllMocks();
+      vi.restoreAllMocks();
     });
 
     test('Should throw error when directory does not exist', () => {
       // Setup
 
-      jest.spyOn(fs, 'existsSync').mockReturnValue(false);
+      vi.spyOn(fs, 'existsSync').mockReturnValue(false);
 
       // Verify
 
@@ -139,9 +142,9 @@ describe('Functions', () => {
     test('Should throw error when mandatory configuration files are missing', () => {
       // Setup
 
-      jest.spyOn(fs, 'existsSync').mockReturnValue(true);
+      vi.spyOn(fs, 'existsSync').mockReturnValue(true);
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      jest.spyOn(fs, 'readdirSync').mockReturnValue([] as any);
+      vi.spyOn(fs, 'readdirSync').mockReturnValue([] as any);
 
       // Verify
 
@@ -153,9 +156,9 @@ describe('Functions', () => {
     test('Successfully validate the config directory path', () => {
       // Setup
 
-      jest.spyOn(fs, 'existsSync').mockReturnValue(true);
+      vi.spyOn(fs, 'existsSync').mockReturnValue(true);
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      jest.spyOn(fs, 'readdirSync').mockReturnValue(MOCK_CONSTANTS.mandatoryConfigFiles as any);
+      vi.spyOn(fs, 'readdirSync').mockReturnValue(MOCK_CONSTANTS.mandatoryConfigFiles as any);
 
       // Verify
 
@@ -165,13 +168,13 @@ describe('Functions', () => {
   });
 
   describe('getCredentials', () => {
-    const mockSend = jest.fn();
+    const mockSend = vi.fn();
 
     beforeEach(() => {
-      jest.clearAllMocks();
+      vi.clearAllMocks();
       mockSend.mockClear();
 
-      (STSClient as jest.Mock).mockImplementation(() => ({
+      (STSClient as vi.Mock).mockImplementation(() => ({
         send: mockSend,
       }));
     });
@@ -381,15 +384,15 @@ describe('Functions', () => {
   });
 
   describe('getManagementAccountCredentials', () => {
-    const mockSend = jest.fn();
+    const mockSend = vi.fn();
 
     beforeEach(() => {
-      jest.clearAllMocks();
+      vi.clearAllMocks();
 
       delete process.env['MANAGEMENT_ACCOUNT_ID'];
       delete process.env['MANAGEMENT_ACCOUNT_ROLE_NAME'];
 
-      (STSClient as jest.Mock).mockImplementation(() => ({
+      (STSClient as vi.Mock).mockImplementation(() => ({
         send: mockSend,
       }));
     });
@@ -480,11 +483,11 @@ describe('Functions', () => {
   });
 
   describe('getOrganizationDetails', () => {
-    const mockSend = jest.fn();
+    const mockSend = vi.fn();
 
     beforeEach(() => {
-      jest.clearAllMocks();
-      (OrganizationsClient as jest.Mock).mockImplementation(() => ({
+      vi.clearAllMocks();
+      (OrganizationsClient as vi.Mock).mockImplementation(() => ({
         send: mockSend,
       }));
     });
@@ -599,7 +602,7 @@ describe('Functions', () => {
       // Setup
 
       const mockPaginator = [{ Accounts: MOCK_CONSTANTS.accounts }];
-      (paginateListAccounts as jest.Mock).mockImplementation(() => mockPaginator);
+      (paginateListAccounts as vi.Mock).mockImplementation(() => mockPaginator);
 
       // Execute
 
@@ -622,7 +625,7 @@ describe('Functions', () => {
       // Setup
 
       const mockPaginator = [{ Accounts: MOCK_CONSTANTS.accounts }];
-      (paginateListAccounts as jest.Mock).mockImplementation(() => mockPaginator);
+      (paginateListAccounts as vi.Mock).mockImplementation(() => mockPaginator);
 
       // Execute
 
@@ -648,7 +651,7 @@ describe('Functions', () => {
       // Setup
 
       const mockPaginator = [{ Accounts: MOCK_CONSTANTS.accounts }];
-      (paginateListAccounts as jest.Mock).mockImplementation(() => mockPaginator);
+      (paginateListAccounts as vi.Mock).mockImplementation(() => mockPaginator);
 
       // Execute
 
@@ -674,7 +677,7 @@ describe('Functions', () => {
       // Setup
 
       const mockPaginator = [{ Accounts: [] }];
-      (paginateListAccounts as jest.Mock).mockImplementation(() => mockPaginator);
+      (paginateListAccounts as vi.Mock).mockImplementation(() => mockPaginator);
 
       // Execute
 
@@ -689,7 +692,7 @@ describe('Functions', () => {
       // Setup
 
       const mockPaginator = [{ Accounts: [MOCK_CONSTANTS.accounts[0]] }, { Accounts: [MOCK_CONSTANTS.accounts[1]] }];
-      (paginateListAccounts as jest.Mock).mockImplementation(() => mockPaginator);
+      (paginateListAccounts as vi.Mock).mockImplementation(() => mockPaginator);
 
       // Execute
 
@@ -704,7 +707,7 @@ describe('Functions', () => {
       // Setup
 
       const mockPaginator = [{ Accounts: undefined }];
-      (paginateListAccounts as jest.Mock).mockImplementation(() => mockPaginator);
+      (paginateListAccounts as vi.Mock).mockImplementation(() => mockPaginator);
 
       // Execute
 

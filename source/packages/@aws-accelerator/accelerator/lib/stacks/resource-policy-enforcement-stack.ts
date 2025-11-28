@@ -30,7 +30,7 @@ import {
   ResourcePolicySetConfig,
   ResourceTypeEnum,
 } from '@aws-accelerator/config';
-import { RESOURCE_TYPE_WITH_ALLOW_ONLY_POLICY, ResourceType } from '@aws-accelerator/utils/lib/common-resources';
+import { RESOURCE_TYPE_WITH_ALLOW_ONLY_POLICY, ResourceType } from '@aws-accelerator/utils';
 
 /**
  * Resource-based policy generated file path type
@@ -380,13 +380,16 @@ export class ResourcePolicyEnforcementStack extends AcceleratorStack {
     policySet: ResourcePolicySetConfig,
     defaultPolicies: ResourcePolicyConfig[],
   ): ResourcePolicyConfig[] {
-    const resourcePolicies = defaultPolicies.reduce((acc, policy) => {
-      acc[policy.resourceType] = {
-        resourceType: policy.resourceType,
-        document: policy.document,
-      };
-      return acc;
-    }, {} as { [key: string]: ResourcePolicyConfig });
+    const resourcePolicies = defaultPolicies.reduce(
+      (acc, policy) => {
+        acc[policy.resourceType] = {
+          resourceType: policy.resourceType,
+          document: policy.document,
+        };
+        return acc;
+      },
+      {} as { [key: string]: ResourcePolicyConfig },
+    );
 
     for (const policy of policySet.resourcePolicies) {
       resourcePolicies[policy.resourceType] = policy;

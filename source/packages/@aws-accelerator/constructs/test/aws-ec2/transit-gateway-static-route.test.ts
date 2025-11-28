@@ -12,6 +12,7 @@
  */
 
 import * as cdk from 'aws-cdk-lib';
+import { describe } from 'vitest';
 import { TransitGatewayStaticRoute } from '../../lib/aws-ec2/transit-gateway-static-route';
 import { snapShotTest } from '../snapshot-test';
 

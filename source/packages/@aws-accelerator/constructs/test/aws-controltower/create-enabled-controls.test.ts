@@ -17,6 +17,7 @@ import {
   EnabledControlProps,
 } from '../../lib/aws-controltower/create-enabled-controls';
 import { snapShotTest } from '../snapshot-test';
+import { describe } from 'vitest';
 
 const testNamePrefix = 'Construct(TestCreateCTControls): ';
 

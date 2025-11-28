@@ -11,21 +11,25 @@
  *  and limitations under the License.
  */
 
-import * as AWS from 'aws-sdk';
+import { STSClient, GetCallerIdentityCommand } from '@aws-sdk/client-sts';
+import { AwsCredentialIdentity } from '@aws-sdk/types';
+import { OrganizationsClient, ListAccountsCommand } from '@aws-sdk/client-organizations';
 import * as fs from 'fs';
 import * as yaml from 'js-yaml';
 import * as path from 'path';
 
-import { createLogger } from '@aws-accelerator/utils/lib/logger';
-import { throttlingBackOff } from '@aws-accelerator/utils/lib/throttle';
-
+import {
+  createLogger,
+  getGlobalRegion,
+  getSSMParameterValue,
+  queryConfigTable,
+  setRetryStrategy,
+  throttlingBackOff,
+} from '@aws-accelerator/utils';
+import { createSchema, DeploymentTargets, parseAccountsConfig } from './common';
 import * as i from './models/accounts-config';
-import { DeploymentTargets, parseAccountsConfig } from './common';
-import { getGlobalRegion } from '../../utils/lib/common-functions';
 import { OrganizationalUnitConfig } from './organization-config';
-import { getSSMParameterValue } from '../../utils/lib/get-value-from-ssm';
 import { Account } from '@aws-sdk/client-organizations';
-import { queryConfigTable } from '@aws-accelerator/utils/lib/query-config-table';
 
 const logger = createLogger(['accounts-config']);
 
@@ -160,19 +164,29 @@ export class AccountsConfig implements i.IAccountsConfig {
     }
 
     const buffer = fs.readFileSync(path.join(dir, AccountsConfig.FILENAME), 'utf8');
-    const values = parseAccountsConfig(yaml.load(buffer));
+    logger.debug('accounts loaded file');
+    // Create schema with custom !include tag
+    const schema = createSchema(dir);
+    // Load YAML with custom schema
+    let values: i.IAccountsConfig | undefined = undefined;
+    try {
+      values = parseAccountsConfig(yaml.load(buffer, { schema }));
+    } catch (e) {
+      logger.error('parsing accounts-config failed', e);
+      throw new Error('Could not parse accounts configuration');
+    }
     const managementAccountEmail =
-      (values.mandatoryAccounts as unknown as i.IBaseAccountConfig[])
+      (values!.mandatoryAccounts as unknown as i.IBaseAccountConfig[])
         .find(value => value.name == AccountsConfig.MANAGEMENT_ACCOUNT)
         ?.email.toLocaleLowerCase() || '<management-account>@example.com <----- UPDATE EMAIL ADDRESS';
     const logArchiveAccountEmail =
-      (values.mandatoryAccounts as unknown as i.IBaseAccountConfig[])
-        .find(value => value.name == AccountsConfig.MANAGEMENT_ACCOUNT)
-        ?.email.toLocaleLowerCase() || '<management-account>@example.com <----- UPDATE EMAIL ADDRESS';
+      (values!.mandatoryAccounts as unknown as i.IBaseAccountConfig[])
+        .find(value => value.name == AccountsConfig.LOG_ARCHIVE_ACCOUNT)
+        ?.email.toLocaleLowerCase() || '<log-archive-account>@example.com <----- UPDATE EMAIL ADDRESS';
     const auditAccountEmail =
-      (values.mandatoryAccounts as unknown as i.IBaseAccountConfig[])
-        .find(value => value.name == AccountsConfig.MANAGEMENT_ACCOUNT)
-        ?.email.toLocaleLowerCase() || '<management-account>@example.com <----- UPDATE EMAIL ADDRESS';
+      (values!.mandatoryAccounts as unknown as i.IBaseAccountConfig[])
+        .find(value => value.name == AccountsConfig.AUDIT_ACCOUNT)
+        ?.email.toLocaleLowerCase() || '<audit-account>@example.com <----- UPDATE EMAIL ADDRESS';
 
     return new AccountsConfig(
       {
@@ -196,114 +210,125 @@ export class AccountsConfig implements i.IAccountsConfig {
     /**
      * Management account credential when deployed from external account, otherwise this should remain undefined
      */
-    managementAccountCredentials?: AWS.Credentials,
+    managementAccountCredentials?: AwsCredentialIdentity,
     loadFromDynamoDbTable?: boolean,
   ): Promise<void> {
-    if (this.accountIds === undefined) {
-      this.accountIds = [];
-    }
-    if (this.accountIds.length == 0) {
-      if (enableSingleAccountMode) {
-        const stsClient = new AWS.STS({ region: process.env['AWS_REGION'] });
-        const stsCallerIdentity = await throttlingBackOff(() => stsClient.getCallerIdentity({}).promise());
-        const currentAccountId = stsCallerIdentity.Account!;
-        this.mandatoryAccounts.forEach(item => {
-          this.accountIds?.push({
-            email: item.email.toLocaleLowerCase(),
-            accountId: currentAccountId,
-          });
+    let envCredentials: AwsCredentialIdentity | undefined;
+    const retryStrategy = setRetryStrategy();
+    const solutionId: string = process.env['SOLUTION_ID'] ?? '';
+
+    // Priority: passed credentials > env credentials > undefined
+    const credentials = managementAccountCredentials ?? envCredentials;
+
+    if (enableSingleAccountMode) {
+      const stsClient = new STSClient({
+        region: process.env['AWS_REGION'],
+        customUserAgent: solutionId,
+        retryStrategy,
+      });
+      const stsCallerIdentity = await throttlingBackOff(() => stsClient.send(new GetCallerIdentityCommand({})));
+      const currentAccountId = stsCallerIdentity.Account!;
+      this.mandatoryAccounts.forEach(item => {
+        this.accountIds?.push({
+          email: item.email.toLocaleLowerCase(),
+          accountId: currentAccountId,
         });
-        // orgs is enabled and loadFromDynamoDBTable is true
-      } else if (isOrgsEnabled && loadFromDynamoDbTable) {
-        logger.debug(`Orgs is enabled, solution will query from dynamoDB table instead of AWS Organizations API`);
-        if (!process.env['ACCELERATOR_SSM_PARAM_NAME_PREFIX']) {
-          logger.warn(
-            'ACCELERATOR_SSM_PARAM_NAME_PREFIX environment variable is not defined, continuing with default value of /accelerator',
-          );
-        }
-        const ssmConfigTableNameParameter = `${
-          process.env['ACCELERATOR_SSM_PARAM_NAME_PREFIX'] ?? '/accelerator'
-        }/prepare-stack/configTable/name`;
+      });
+      return;
+    }
 
-        const configTableName = await getSSMParameterValue(ssmConfigTableNameParameter, managementAccountCredentials);
-        const [mandatoryAccountItems, workloadAccountItems] = await Promise.all([
-          queryConfigTable(
-            configTableName,
-            'mandatoryAccount',
-            'orgInfo',
-            managementAccountCredentials,
-            process.env['CONFIG_COMMIT_ID'],
-          ),
-          queryConfigTable(
-            configTableName,
-            'workloadAccount',
-            'orgInfo',
-            managementAccountCredentials,
-            process.env['CONFIG_COMMIT_ID'],
-          ),
-        ]);
+    if (!this.accountIds) this.accountIds = [];
 
-        const configAccountEmails = [
-          ...accountsConfig.mandatoryAccounts.map(account => account.email.toLowerCase()),
-          ...accountsConfig.workloadAccounts.map(account => account.email.toLowerCase()),
-        ];
+    if (isOrgsEnabled && loadFromDynamoDbTable) {
+      logger.debug(`Orgs is enabled, solution will query from dynamoDB table instead of AWS Organizations API`);
+      if (!process.env['ACCELERATOR_SSM_PARAM_NAME_PREFIX']) {
+        logger.warn(
+          'ACCELERATOR_SSM_PARAM_NAME_PREFIX environment variable is not defined, continuing with default value of /accelerator',
+        );
+      }
+      const ssmConfigTableNameParameter = `${
+        process.env['ACCELERATOR_SSM_PARAM_NAME_PREFIX'] ?? '/accelerator'
+      }/prepare-stack/configTable/name`;
 
-        const allAccounts = [
-          ...mandatoryAccountItems.map(item => JSON.parse(item['orgInfo'] as string) as AccountIdConfig),
-          ...workloadAccountItems.map(item => JSON.parse(item['orgInfo'] as string) as AccountIdConfig),
-        ];
+      const configTableName = await getSSMParameterValue(ssmConfigTableNameParameter, credentials);
+      const [mandatoryAccountItems, workloadAccountItems] = await Promise.all([
+        queryConfigTable(configTableName, 'mandatoryAccount', 'orgInfo', credentials, process.env['CONFIG_COMMIT_ID']),
+        queryConfigTable(configTableName, 'workloadAccount', 'orgInfo', credentials, process.env['CONFIG_COMMIT_ID']),
+      ]);
 
-        const filteredAccounts = allAccounts.filter(account =>
-          configAccountEmails.includes(account.email.toLowerCase()),
+      const configAccountEmails = [
+        ...accountsConfig.mandatoryAccounts.map(account => account.email.toLowerCase()),
+        ...accountsConfig.workloadAccounts.map(account => account.email.toLowerCase()),
+      ];
+
+      const allAccounts = [
+        ...mandatoryAccountItems.map(item => JSON.parse(item['orgInfo'] as string) as AccountIdConfig),
+        ...workloadAccountItems.map(item => JSON.parse(item['orgInfo'] as string) as AccountIdConfig),
+      ];
+
+      const filteredAccounts = allAccounts.filter(account => configAccountEmails.includes(account.email.toLowerCase()));
+
+      logger.debug(`Successfully retrieved accounts data from DynamoDB`);
+
+      this.accountIds.push(...filteredAccounts);
+      this.accountIds = this.removeDuplicates(this.accountIds, account => account.email);
+
+      // orgs are enabled but load from dynamoDB is false
+    } else if (isOrgsEnabled && !loadFromDynamoDbTable) {
+      logger.debug(`Orgs is enabled, solution will query from AWS Organizations API`);
+      const organizationsClient = new OrganizationsClient({
+        region: getGlobalRegion(partition),
+        credentials: credentials,
+        customUserAgent: solutionId,
+        retryStrategy,
+      });
+
+      let nextToken: string | undefined = undefined;
+
+      do {
+        const page = await throttlingBackOff(() =>
+          organizationsClient.send(new ListAccountsCommand({ NextToken: nextToken })),
         );
 
-        logger.debug(`Successfully retrieved accounts data from DynamoDB`);
-
-        this.accountIds.push(...filteredAccounts);
-
-        // orgs are enabled but load from dynamoDB is false
-      } else if (isOrgsEnabled && !loadFromDynamoDbTable) {
-        logger.debug(`Orgs is enabled, solution will query from AWS Organizations API`);
-        const organizationsClient = new AWS.Organizations({
-          region: getGlobalRegion(partition),
-          credentials: managementAccountCredentials,
+        page.Accounts?.forEach(item => {
+          if (item.Email && item.Id) {
+            this.accountIds?.push({
+              email: item.Email.toLocaleLowerCase(),
+              accountId: item.Id,
+              status: item.Status,
+              orgsApiResponse: item as Account,
+            });
+          }
         });
-
-        let nextToken: string | undefined = undefined;
-
-        do {
-          const page = await throttlingBackOff(() =>
-            organizationsClient.listAccounts({ NextToken: nextToken }).promise(),
-          );
-
-          page.Accounts?.forEach(item => {
-            if (item.Email && item.Id) {
-              this.accountIds?.push({
-                email: item.Email.toLocaleLowerCase(),
-                accountId: item.Id,
-                status: item.Status,
-                orgsApiResponse: item as Account,
-              });
-            }
-          });
-          nextToken = page.NextToken;
-        } while (nextToken);
-
-        // if orgs is disabled, the accountId is read from accounts config.
-        //There should be 3 or more accounts in accounts config.
-      } else if (!isOrgsEnabled && (accountsConfig.accountIds ?? []).length > 2) {
-        for (const account of accountsConfig.accountIds ?? []) {
-          this.accountIds?.push({
-            email: account.email.toLowerCase(),
-            accountId: account.accountId,
-          });
-        }
-        // if orgs is disabled, the accountId is read from accounts config.
-        //But less than 3 account Ids are provided then throw an error
-      } else if (!isOrgsEnabled && (accountsConfig.accountIds ?? []).length < 3) {
-        throw new Error(`Organization is disabled, but the number of accounts in the accounts config is less than 3.`);
+        nextToken = page.NextToken;
+      } while (nextToken);
+      this.accountIds = this.removeDuplicates(this.accountIds, account => account.email);
+    } else if (!isOrgsEnabled && accountsConfig.accountIds) {
+      for (const account of accountsConfig.accountIds ?? []) {
+        this.accountIds?.push({
+          email: account.email.toLowerCase(),
+          accountId: account.accountId,
+        });
       }
+      // if orgs is disabled, the accountId is read from accounts config.
+      //But less than 3 account Ids are provided then throw an error
+    } else if (!isOrgsEnabled && (accountsConfig.accountIds ?? []).length < 3) {
+      throw new Error(`Organization is disabled, but the number of accounts in the accounts config is less than 3.`);
     }
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  private removeDuplicates<T>(array: T[], keySelector: keyof T | ((item: T) => any)): T[] {
+    const seen = new Map();
+    return array.filter(item => {
+      const keyValue = typeof keySelector === 'function' ? keySelector(item) : item[keySelector];
+
+      if (seen.has(keyValue)) {
+        return false;
+      }
+      seen.set(keyValue, true);
+      return true;
+    });
   }
 
   public getAccountId(name: string): string {

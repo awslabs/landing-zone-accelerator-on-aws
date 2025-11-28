@@ -14,7 +14,7 @@
 import * as cdk from 'aws-cdk-lib';
 import { Certificate } from '../../lib/aws-certificate-manager/certificate';
 import { snapShotTest } from '../snapshot-test';
-import { describe } from '@jest/globals';
+import { describe } from 'vitest';
 
 const testNamePrefix = 'Construct(Certificate): ';
 //Initialize stack for snapshot test and resource configuration test

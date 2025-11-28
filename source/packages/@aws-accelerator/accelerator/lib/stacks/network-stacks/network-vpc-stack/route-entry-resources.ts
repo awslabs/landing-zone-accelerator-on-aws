@@ -31,7 +31,7 @@ import { pascalCase } from 'pascal-case';
 import { LogLevel } from '../network-stack';
 import { getPrefixList, getRouteTable, getSubnet, getTransitGatewayId } from '../utils/getter-utils';
 import { NetworkVpcStack } from './network-vpc-stack';
-import { MetadataKeys } from '@aws-accelerator/utils/lib/common-types';
+import { MetadataKeys } from '@aws-accelerator/utils';
 import { LZAResourceLookup, LZAResourceLookupType } from '../../../../utils/lza-resource-lookup';
 
 export class RouteEntryResources {

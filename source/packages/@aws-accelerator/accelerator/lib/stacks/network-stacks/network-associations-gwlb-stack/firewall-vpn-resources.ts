@@ -33,9 +33,10 @@ import {
   TransitGatewayStaticRoute,
   VpnConnection,
 } from '@aws-accelerator/constructs';
-import { SsmResourceType } from '@aws-accelerator/utils/lib/ssm-parameter-path';
+import { SsmResourceType } from '@aws-accelerator/utils';
 import * as cdk from 'aws-cdk-lib';
 import { pascalCase } from 'pascal-case';
+import * as path from 'path';
 import { AcceleratorStackProps, NagSuppressionRuleIds } from '../../accelerator-stack';
 import { LogLevel } from '../network-stack';
 import {
@@ -45,7 +46,7 @@ import {
   getVpcConfig,
   getVpnAttachmentId,
 } from '../utils/getter-utils';
-import { hasAdvancedVpnOptions, isIpv4 } from '../utils/validation-utils';
+import { hasAdvancedVpnOptions, isIpv4, isIpv6 } from '../utils/validation-utils';
 import { NetworkAssociationsGwlbStack } from './network-associations-gwlb-stack';
 
 export class FirewallVpnResources {
@@ -113,7 +114,7 @@ export class FirewallVpnResources {
   ): CustomerGatewayConfig[] {
     const customerGatewaysInScope: CustomerGatewayConfig[] = [];
     for (const cgw of props.networkConfig.customerGateways ?? []) {
-      if (!isIpv4(cgw.ipAddress) && this.cgwInScope(cgw, instanceMap)) {
+      if (!isIpv4(cgw.ipAddress) && !isIpv6(cgw.ipAddress) && this.cgwInScope(cgw, instanceMap)) {
         customerGatewaysInScope.push(cgw);
       }
     }
@@ -274,7 +275,7 @@ export class FirewallVpnResources {
     //
     // Create Lambda handler
     return new LzaLambda(this.stack, 'CgwOnEventHandler', {
-      assetPath: '../constructs/lib/aws-ec2/cross-account-customer-gateway/dist',
+      assetPath: path.resolve(__dirname, '../../../../../constructs/lib/aws-ec2/cross-account-customer-gateway/dist'),
       environmentEncryptionKmsKey: this.stack.lambdaKey,
       cloudWatchLogKmsKey: this.stack.cloudwatchKey,
       cloudWatchLogRetentionInDays: this.stack.logRetention,
@@ -594,7 +595,7 @@ export class FirewallVpnResources {
     //
     // Create Lambda handler
     return new LzaLambda(this.stack, 'TgwAssociationOnEventHandler', {
-      assetPath: '../constructs/lib/aws-ec2/transit-gateway-association/dist',
+      assetPath: path.resolve(__dirname, '../../../../../constructs/lib/aws-ec2/transit-gateway-association/dist'),
       environmentEncryptionKmsKey: this.stack.lambdaKey,
       cloudWatchLogKmsKey: this.stack.cloudwatchKey,
       cloudWatchLogRetentionInDays: this.stack.logRetention,
@@ -671,7 +672,7 @@ export class FirewallVpnResources {
     //
     // Create Lambda handler
     return new LzaLambda(this.stack, 'TgwPropagationOnEventHandler', {
-      assetPath: '../constructs/lib/aws-ec2/transit-gateway-propagation/dist',
+      assetPath: path.resolve(__dirname, '../../../../../constructs/lib/aws-ec2/transit-gateway-propagation/dist'),
       environmentEncryptionKmsKey: this.stack.lambdaKey,
       cloudWatchLogKmsKey: this.stack.cloudwatchKey,
       cloudWatchLogRetentionInDays: this.stack.logRetention,
@@ -745,7 +746,10 @@ export class FirewallVpnResources {
     //
     // Create Lambda handler
     return new LzaLambda(this.stack, 'TgwStaticRouteOnEventHandler', {
-      assetPath: '../constructs/lib/aws-ec2/cross-account-transit-gateway-route/dist',
+      assetPath: path.resolve(
+        __dirname,
+        '../../../../../constructs/lib/aws-ec2/cross-account-transit-gateway-route/dist',
+      ),
       environmentEncryptionKmsKey: this.stack.lambdaKey,
       cloudWatchLogKmsKey: this.stack.cloudwatchKey,
       cloudWatchLogRetentionInDays: this.stack.logRetention,

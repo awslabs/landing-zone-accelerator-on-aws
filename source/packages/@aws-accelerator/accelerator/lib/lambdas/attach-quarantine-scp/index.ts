@@ -42,7 +42,6 @@ export async function handler(event: any, context: Context): Promise<any> {
     retryStrategy: setRetryStrategy(),
   });
 
-  // eslint-disable-next-line prefer-const
   const policyName: string = process.env['SCP_POLICY_NAME'] ?? '';
 
   const createAccountStatus = JSON.parse(JSON.stringify(event.detail.responseElements.createAccountStatus));

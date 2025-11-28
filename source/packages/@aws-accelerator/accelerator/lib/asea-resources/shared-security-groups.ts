@@ -1,6 +1,5 @@
 import { AseaResourceType, VpcConfig, VpcTemplatesConfig } from '@aws-accelerator/config';
-import { getAseaVpcName } from '@aws-accelerator/utils';
-import { SsmResourceType } from '@aws-accelerator/utils/lib/ssm-parameter-path';
+import { getAseaVpcName, SsmResourceType } from '@aws-accelerator/utils';
 import { AseaResource, AseaResourceProps } from './resource';
 import { ImportAseaResourcesStack, LogLevel } from '../stacks/import-asea-resources-stack';
 import { AcceleratorStage } from '../accelerator-stage';
@@ -152,6 +151,7 @@ export class SharedSecurityGroups extends AseaResource {
                 ingressRule.logicalResourceId,
               );
             }
+            // eslint-disable-next-line @typescript-eslint/no-unused-vars
           } catch (error) {
             // continue the ref may not exits
           }
@@ -167,6 +167,7 @@ export class SharedSecurityGroups extends AseaResource {
                 ingressRule.logicalResourceId,
               );
             }
+            // eslint-disable-next-line @typescript-eslint/no-unused-vars
           } catch (error) {
             // the ref may not exist
           }
@@ -182,6 +183,7 @@ export class SharedSecurityGroups extends AseaResource {
                   egressRule.logicalResourceId,
                 );
               }
+              // eslint-disable-next-line @typescript-eslint/no-unused-vars
             } catch (error) {
               // continue the ref may not exist
             }
@@ -196,6 +198,7 @@ export class SharedSecurityGroups extends AseaResource {
                   egressRule.logicalResourceId,
                 );
               }
+              // eslint-disable-next-line @typescript-eslint/no-unused-vars
             } catch (error) {
               // continue the ref may not exist
             }

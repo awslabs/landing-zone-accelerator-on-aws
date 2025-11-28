@@ -23,6 +23,7 @@ import {
   ModifyVpnConnectionOptionsCommand,
   ModifyVpnTunnelOptionsCommand,
   Tag,
+  TunnelInsideIpVersion,
   VpnConnection,
   VpnTunnelOptionsSpecification,
 } from '@aws-sdk/client-ec2';
@@ -46,8 +47,10 @@ export async function handler(event: CloudFormationCustomResourceEvent): Promise
   const [ec2Client, secretsClient] = await setAwsClients(newVpnOptions, process.env['SOLUTION_ID']);
   //
   // Begin custom resource logic
+
   switch (event.RequestType) {
     case 'Create':
+      console.log('CREATE');
       //
       // Create VPN
       const vpnConnectionId = await createVpnConnection(ec2Client, await setVpnProps(secretsClient, newVpnOptions));
@@ -106,6 +109,9 @@ function setVpnOptions(resourceProperties: { [key: string]: any }, serviceToken:
     customerGatewayId: resourceProperties['customerGatewayId'] as string,
     amazonIpv4NetworkCidr: (resourceProperties['amazonIpv4NetworkCidr'] as string) ?? undefined,
     customerIpv4NetworkCidr: (resourceProperties['customerIpv4NetworkCidr'] as string) ?? undefined,
+    amazonIpv6NetworkCidr: (resourceProperties['amazonIpv6NetworkCidr'] as string) ?? undefined,
+    customerIpv6NetworkCidr: (resourceProperties['customerIpv6NetworkCidr'] as string) ?? undefined,
+    outsideIpAddressType: (resourceProperties['outsideIpAddressType'] as string) ?? undefined,
     enableVpnAcceleration: resourceProperties['enableVpnAcceleration'] === 'true',
     invokingAccountId: serviceToken.split(':')[4],
     invokingRegion: serviceToken.split(':')[3],
@@ -116,6 +122,7 @@ function setVpnOptions(resourceProperties: { [key: string]: any }, serviceToken:
     staticRoutesOnly: resourceProperties['staticRoutesOnly'] === 'true',
     tags: (resourceProperties['tags'] as Tag[]) ?? undefined,
     transitGatewayId: (resourceProperties['transitGatewayId'] as string) ?? undefined,
+    tunnelInsideIpVersion: (resourceProperties['tunnelInsideIpVersion'] as TunnelInsideIpVersion) ?? undefined,
     vpnGatewayId: (resourceProperties['vpnGatewayId'] as string) ?? undefined,
     vpnTunnelOptions: (resourceProperties['vpnTunnelOptions'] as VpnTunnelOptions[]) ?? undefined,
   };
@@ -223,7 +230,12 @@ async function setVpnProps(
       EnableAcceleration: vpnOptions.enableVpnAcceleration,
       LocalIpv4NetworkCidr: vpnOptions.customerIpv4NetworkCidr,
       RemoteIpv4NetworkCidr: vpnOptions.amazonIpv4NetworkCidr,
+      LocalIpv6NetworkCidr: vpnOptions.customerIpv6NetworkCidr,
+      RemoteIpv6NetworkCidr: vpnOptions.amazonIpv6NetworkCidr,
+      OutsideIpAddressType: vpnOptions.outsideIpAddressType,
       StaticRoutesOnly: vpnOptions.staticRoutesOnly,
+      TunnelInsideIpVersion: vpnOptions.tunnelInsideIpVersion as TunnelInsideIpVersion,
+      TransportTransitGatewayAttachmentId: vpnOptions.directConnectGateway,
       TunnelOptions: await setVpnTunnelProps(secretsClient, vpnOptions.vpnTunnelOptions),
     },
     TransitGatewayId: vpnOptions.transitGatewayId,
@@ -293,6 +305,7 @@ async function setVpnTunnelProps(
       ReplayWindowSize: tunnel.replayWindowSize,
       StartupAction: tunnel.startupAction,
       TunnelInsideCidr: tunnel.tunnelInsideCidr,
+      TunnelInsideIpv6Cidr: tunnel.tunnelInsideIpv6Cidr,
     });
   }
   return vpnTunnelOptions;
@@ -332,7 +345,6 @@ async function createVpnConnection(ec2Client: EC2Client, vpnProps: CreateVpnConn
     ? ` and transit gateway ${vpnProps.TransitGatewayId}...`
     : ` and virtual private gateway ${vpnProps.VpnGatewayId}...`;
   console.info(logMessage);
-
   try {
     const response = await throttlingBackOff(() => ec2Client.send(new CreateVpnConnectionCommand(vpnProps)));
 
@@ -461,6 +473,8 @@ async function modifyVpnOptions(ec2Client: EC2Client, vpnOptions: VpnOptions, vp
           VpnConnectionId: vpnConnectionId,
           LocalIpv4NetworkCidr: vpnOptions.customerIpv4NetworkCidr,
           RemoteIpv4NetworkCidr: vpnOptions.amazonIpv4NetworkCidr,
+          LocalIpv6NetworkCidr: vpnOptions.customerIpv6NetworkCidr,
+          RemoteIpv6NetworkCidr: vpnOptions.amazonIpv6NetworkCidr,
         }),
       ),
     );

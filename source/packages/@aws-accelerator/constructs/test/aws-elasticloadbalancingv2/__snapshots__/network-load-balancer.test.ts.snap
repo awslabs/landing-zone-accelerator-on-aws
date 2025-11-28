@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`NetworkLoadBalancer Construct(NetworkLoadBalancer):  Snapshot Test 1`] = `
+exports[`NetworkLoadBalancer > Construct(NetworkLoadBalancer):  Snapshot Test 1`] = `
 {
   "Parameters": {
     "SsmParameterValueacceleratorapplicationtargetGroupappAvpcAtargetgrouptest1arnC96584B6F00A464EAD1953AFF4B05118Parameter": {

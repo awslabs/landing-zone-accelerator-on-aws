@@ -55,7 +55,7 @@ export interface IDefaultVpcsConfig {
    * @remarks
    * Note: The regions included in the array must exist in the `enabledRegions` section of the global-config.yaml.
    */
-  readonly excludeRegions?: t.Region[];
+  readonly excludeRegions?: string[];
 }
 
 /**
@@ -341,7 +341,7 @@ export interface ITransitGatewayPeeringRequesterConfig {
    *
    * @see {@link TransitGatewayConfig}
    */
-  readonly region: t.Region;
+  readonly region: string;
   /**
    * The friendly name of TGW route table to associate with this peering attachment.
    *
@@ -401,7 +401,7 @@ export interface ITransitGatewayPeeringAccepterConfig {
    *
    * @see {@link TransitGatewayConfig}
    */
-  readonly region: t.Region;
+  readonly region: string;
   /**
    * The friendly name of TGW route table to associate with this peering attachment.
    *
@@ -553,7 +553,7 @@ export interface ITransitGatewayConfig {
   /**
    * The region name to deploy the Transit Gateway.
    */
-  readonly region: t.Region;
+  readonly region: string;
   /**
    * (OPTIONAL) Resource Access Manager (RAM) share targets.
    *
@@ -719,7 +719,7 @@ export interface IDxVirtualInterfaceConfig {
    * @remarks
    * Please note this region must match the region where the physical connection is hosted.
    */
-  readonly region: t.Region;
+  readonly region: string;
   /**
    * The type of the virtual interface
    *
@@ -1090,7 +1090,7 @@ export interface IIpamPoolConfig {
    * A base (top-level) pool does not require a locale.
    * A regional pool requires a locale.
    */
-  readonly locale?: t.Region;
+  readonly locale?: string;
   /**
    * An array of CIDR ranges to provision for the IPAM pool.
    *
@@ -1173,7 +1173,7 @@ export interface IIpamConfig {
    * Note that IPAMs must be deployed to a single region but may be used to manage allocations in multiple regions.
    * Configure the `operatingRegions` property to define multiple regions to manage.
    */
-  readonly region: t.Region;
+  readonly region: string;
   /**
    * (OPTIONAL) A description for the IPAM.
    */
@@ -1181,7 +1181,7 @@ export interface IIpamConfig {
   /**
    * (OPTIONAL) An array of regions that the IPAM will manage.
    */
-  readonly operatingRegions?: t.Region[];
+  readonly operatingRegions?: string[];
   /**
    * (OPTIONAL) An array of IPAM scope configurations to create under the IPAM.
    *
@@ -2145,10 +2145,8 @@ export interface IPrefixListConfig {
    *
    * @remarks
    * **NOTE**: This property is deprecated as of v1.4.0. It is recommended to use `deploymentTargets` instead.
-   *
-   * @see {@link Region}
    */
-  readonly regions?: t.Region[];
+  readonly regions?: string[];
   /**
    * Prefix List deployment targets
    *
@@ -2808,7 +2806,7 @@ export interface INetworkAclSubnetSelection {
    * This property only needs to be defined if targeting a subnet in a different region
    * than the one in which this VPC is deployed.
    */
-  readonly region?: t.Region;
+  readonly region?: string;
 }
 
 /**
@@ -3106,10 +3104,8 @@ export interface IDhcpOptsConfig {
   readonly accounts: t.NonEmptyString[];
   /**
    * An array of regions to deploy the options set.
-   *
-   * @see {@link Region}
    */
-  readonly regions: t.Region[];
+  readonly regions: string[];
   /**
    * (OPTIONAL) A domain name to assign to hosts using the options set.
    *
@@ -3350,6 +3346,7 @@ export type Phase2DhGroupType = 2 | 5 | 14 | 15 | 16 | 17 | 18 | 19 | 20 | 21 | 
 export type EncryptionAlgorithmType = 'AES128' | 'AES256' | 'AES128-GCM-16' | 'AES256-GCM-16';
 export type IntegrityAlgorithmType = 'SHA1' | 'SHA2-256' | 'SHA2-384' | 'SHA2-512';
 export type VpnLoggingOutputFormatType = 'json' | 'text';
+export type OutsideIpAddressType = 'PublicIpv4' | 'Ipv6';
 
 /**
  * *{@link NetworkConfig} / {@link CustomerGatewayConfig} / {@link VpnConnectionConfig} / {@link VpnTunnelOptionsSpecificationsConfig} / {@link Phase1Config}*
@@ -3789,6 +3786,17 @@ export interface IVpnTunnelOptionsSpecificationsConfig {
    */
   readonly tunnelInsideCidr?: t.NonEmptyString;
   /**
+   * (OPTIONAL): The range of inside IPv6 addresses for the tunnel. Any specified CIDR blocks must be unique across
+   * all VPN connections that use the same virtual private gateway.
+   *
+   * @remarks
+   * **CAUTION**: Changing this property value after initial deployment causes the VPN to be recreated.
+   * Please be aware that any downstream dependencies may cause this property update to fail.
+   *
+   * Constraints: from the local fd00::/8 range.
+   */
+  readonly tunnelInsideIpv6Cidr?: t.NonEmptyString;
+  /**
    * (OPTIONAL) Enable tunnel endpoint lifecycle control. This feature provides control over the schedule of endpoint replacements.
    * For more information, see {@link https://docs.aws.amazon.com/vpn/latest/s2svpn/tunnel-endpoint-lifecycle.html | Tunnel Endpoint Lifecycle Control}.
    *
@@ -3903,6 +3911,51 @@ export interface IVpnConnectionConfig {
    * Use CIDR notation, i.e. 10.0.0.0/16.
    */
   readonly customerIpv4NetworkCidr?: t.NonEmptyString;
+  /**
+   * (OPTIONAL) The Amazon-side IPv6 CIDR range that is allowed through the site-to-site VPN tunnel.
+   * Configuring this option restricts the Amazon-side CIDR range that can communicate with your
+   * local network.
+   *
+   * Default - `::/0`
+   *
+   * @remarks
+   * **CAUTION:** if you configure this property on a VPN connection that was deployed prior to v1.5.0, your VPN connection
+   * will be recreated. Please be aware that any downstream dependencies may cause this property update to fail. To ensure
+   * a clean replacement, we highly recommend deleting the original connection and its downstream dependencies prior to making this change.
+   *
+   * If you update this property after deployment, both of your VPN tunnel endpoints will become temporarily unavailable. Please see
+   * {@link https://docs.aws.amazon.com/vpn/latest/s2svpn/endpoint-replacements.html#endpoint-replacements-for-vpn-modifications | Customer initiated endpoint replacements} for
+   * additional details.
+   *
+   * Use CIDR notation, i.e. ::/128.
+   */
+  readonly amazonIpv6NetworkCidr?: t.NonEmptyString;
+  /**
+   * (OPTIONAL) The customer-side IPv6 CIDR range that is allowed through the site-to-site VPN tunnel.
+   * Configuring this option restricts the local CIDR range that can communicate with your AWS environment.
+   *
+   * Default - `::/0`
+   *
+   * @remarks
+   * **CAUTION:** if you configure this property on a VPN connection that was deployed prior to v1.5.0, your VPN connection
+   * will be recreated. Please be aware that any downstream dependencies may cause this property update to fail. To ensure
+   * a clean replacement, we highly recommend deleting the original connection and its downstream dependencies prior to making this change.
+   *
+   * If you update this property after deployment, both of your VPN tunnel endpoints will become temporarily unavailable. Please see
+   * {@link https://docs.aws.amazon.com/vpn/latest/s2svpn/endpoint-replacements.html#endpoint-replacements-for-vpn-modifications | Customer initiated endpoint replacements} for
+   * additional details.
+   *
+   * Use CIDR notation, i.e. ::/128.
+   */
+  readonly customerIpv6NetworkCidr?: t.NonEmptyString;
+  /**
+   * (OPTIONALThe type of IP address assigned to the outside interface of the customer gateway device.
+   * Valid values include `PublicIpv4` or `Ipv6`.
+   *
+   * @remarks
+   * *Note: If this property is not specified, this will default to `PublicIpv4`.
+   */
+  readonly outsideIpAddressType?: OutsideIpAddressType;
   /**
    * (OPTIONAL) Enable Site-to-Site VPN Acceleration.
    * For more information, see {@link https://docs.aws.amazon.com/vpn/latest/s2svpn/accelerated-vpn.html | Accelerated Site-to-Site VPN connections}.
@@ -4035,7 +4088,7 @@ export interface ICustomerGatewayConfig {
   /**
    * The AWS region to provision the customer gateway in
    */
-  readonly region: t.Region;
+  readonly region: string;
   /**
    * Defines the IP address of the Customer Gateway
    *
@@ -4282,7 +4335,7 @@ export interface IVpcConfig {
   /**
    * The AWS region to deploy the VPC to
    */
-  readonly region: t.Region;
+  readonly region: string;
   /**
    * (OPTIONAL) A list of IPv4 CIDRs to associate with the VPC.
    *
@@ -4644,7 +4697,7 @@ export interface IVpcTemplatesConfig {
   /**
    * The AWS region to deploy the VPCs to
    */
-  readonly region: t.Region;
+  readonly region: string;
   /**
    * VPC deployment targets.
    *
@@ -4961,7 +5014,7 @@ export interface IResolverRuleConfig {
    * Only define this property if creating a `SYSTEM` rule type.
    * This does not apply to rules of type `FORWARD`.
    */
-  readonly excludedRegions?: t.Region[];
+  readonly excludedRegions?: string[];
   /**
    * (OPTIONAL) The friendly name of an inbound endpoint to target.
    *
@@ -5214,7 +5267,7 @@ export interface IDnsQueryLogsConfig {
    * @see {@link ShareTargets}
    */
   readonly shareTargets?: t.IShareTargets;
-  readonly excludedRegions?: t.Region[];
+  readonly excludedRegions?: string[];
 }
 
 export type DnsFirewallRuleActionType = 'ALLOW' | 'ALERT' | 'BLOCK';
@@ -5367,10 +5420,8 @@ export interface IDnsFirewallRuleGroupConfig {
   readonly name: t.NonEmptyString;
   /**
    * The regions to deploy the rule group to.
-   *
-   * @see {@link Region}
    */
-  readonly regions: t.Region[];
+  readonly regions: string[];
   /**
    * An array of DNS firewall rule configurations.
    *
@@ -6427,10 +6478,8 @@ export interface INfwRuleGroupConfig {
   readonly name: t.NonEmptyString;
   /**
    * The regions to deploy the rule group to.
-   *
-   * @see {@link Region}
    */
-  readonly regions: t.Region[];
+  readonly regions: string[];
   /**
    * The capacity of the rule group.
    */
@@ -6649,10 +6698,8 @@ export interface INfwFirewallPolicyConfig {
   readonly firewallPolicy: INfwFirewallPolicyPolicyConfig;
   /**
    * The regions to deploy the policy to.
-   *
-   * @see {@link Region}
    */
-  readonly regions: t.Region[];
+  readonly regions: string[];
   /**
    * (OPTIONAL) A description for the policy.
    */
@@ -7326,7 +7373,7 @@ export interface INetworkConfig {
    * homeRegion: &HOME_REGION us-east-1
    * ```
    */
-  readonly homeRegion?: t.Region;
+  readonly homeRegion?: string;
   /**
    * A default VPC configuration.
    *

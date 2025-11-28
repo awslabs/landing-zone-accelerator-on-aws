@@ -16,16 +16,15 @@ import * as yaml from 'js-yaml';
 import * as path from 'path';
 
 import { createLogger } from '@aws-accelerator/utils/lib/logger';
-import { loadOrganizationalUnits } from '@aws-accelerator/utils/lib/load-organization-config';
+import { loadOrganizationalUnits } from '../../utils/lib/load-organization-config';
 import { OrganizationalUnit, Root } from '@aws-sdk/client-organizations';
+import { AwsCredentialIdentity } from '@aws-sdk/types';
 
+import { AccountsConfig } from './accounts-config';
 import * as t from './common';
 import * as i from './models/organization-config';
 import { ReplacementsConfig } from './replacements-config';
-import { AccountsConfig } from './accounts-config';
-import { getSSMParameterValue } from '../../utils/lib/get-value-from-ssm';
-import { queryConfigTable } from '@aws-accelerator/utils/lib/query-config-table';
-
+import { queryConfigTable, getSSMParameterValue } from '@aws-accelerator/utils';
 const logger = createLogger(['organization-config']);
 
 export abstract class OrganizationalUnitConfig implements i.IOrganizationalUnitConfig {
@@ -141,8 +140,16 @@ export class OrganizationConfig implements i.IOrganizationConfig {
   static load(dir: string, replacementsConfig: ReplacementsConfig): OrganizationConfig {
     const initialBuffer = fs.readFileSync(path.join(dir, OrganizationConfig.FILENAME), 'utf8');
     const buffer = replacementsConfig ? replacementsConfig.preProcessBuffer(initialBuffer) : initialBuffer;
-    const values = t.parseOrganizationConfig(yaml.load(buffer));
-    return new OrganizationConfig(values);
+    // Create schema with custom !include tag
+    const schema = t.createSchema(dir);
+    // Load YAML with custom schema
+    try {
+      const values = t.parseOrganizationConfig(yaml.load(buffer, { schema }));
+      return new OrganizationConfig(values);
+    } catch (e) {
+      logger.error('parsing organization-config failed', e);
+      throw new Error('Could not parse organization configuration');
+    }
   }
 
   /**
@@ -180,14 +187,16 @@ export class OrganizationConfig implements i.IOrganizationConfig {
   /**
    * Load from string content
    * @param partition string
-   * @param managementAccountCredentials {@link AWS.Credentials}
+   * @param managementAccountCredentials credential object with accessKeyId, secretAccessKey, and optional sessionToken
    * @returns
    */
   public async loadOrganizationalUnitIds(
     partition: string,
-    managementAccountCredentials?: AWS.Credentials,
+    managementAccountCredentials?: AwsCredentialIdentity,
     loadFromDynamoDbTable?: boolean,
   ): Promise<void> {
+    // Priority: passed credentials > env credentials > undefined
+    const credentials = managementAccountCredentials ?? undefined;
     if (!this.enable) {
       // do nothing
       return;
@@ -195,11 +204,7 @@ export class OrganizationConfig implements i.IOrganizationConfig {
       this.organizationalUnitIds = [];
     }
     if (this.organizationalUnitIds?.length === 0 && !loadFromDynamoDbTable) {
-      this.organizationalUnitIds = await loadOrganizationalUnits(
-        partition,
-        this.organizationalUnits,
-        managementAccountCredentials,
-      );
+      this.organizationalUnitIds = await loadOrganizationalUnits(partition, this.organizationalUnits, credentials);
     } else if (this.organizationalUnitIds?.length === 0 && loadFromDynamoDbTable) {
       logger.debug(`Orgs is enabled, solution will query from dynamoDB table instead of AWS Organizations API`);
       if (!process.env['ACCELERATOR_SSM_PARAM_NAME_PREFIX']) {
@@ -208,13 +213,13 @@ export class OrganizationConfig implements i.IOrganizationConfig {
       const ssmConfigTableNameParameter = `${
         process.env['ACCELERATOR_SSM_PARAM_NAME_PREFIX'] ?? '/accelerator'
       }/prepare-stack/configTable/name`;
-      const configTableName = await getSSMParameterValue(ssmConfigTableNameParameter, managementAccountCredentials);
+      const configTableName = await getSSMParameterValue(ssmConfigTableNameParameter, credentials);
 
       const organizationItems = await queryConfigTable(
         configTableName,
         'organization',
         'orgInfo',
-        managementAccountCredentials,
+        credentials,
         process.env['CONFIG_COMMIT_ID'],
       );
 

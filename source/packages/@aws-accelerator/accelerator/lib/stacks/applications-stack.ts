@@ -38,7 +38,7 @@ import {
   LaunchTemplate,
   AutoscalingGroup,
 } from '@aws-accelerator/constructs';
-import { SsmResourceType } from '@aws-accelerator/utils/lib/ssm-parameter-path';
+import { SsmResourceType } from '@aws-accelerator/utils';
 
 export type PrivateIpAddressConfig = {
   primary: boolean | undefined;
@@ -725,6 +725,7 @@ export class ApplicationsStack extends AcceleratorStack {
     }
     if (targetGroupsInput) {
       for (const targetGroup of targetGroupsInput) {
+        const targets = (targetGroup.targets as string[]) ?? undefined;
         const tg = new TargetGroup(this, pascalCase(`AppTargetGroup${appName}${targetGroup.name}`), {
           name: targetGroup.name,
           port: targetGroup.port,
@@ -735,6 +736,7 @@ export class ApplicationsStack extends AcceleratorStack {
           healthCheck: targetGroup.healthCheck ?? undefined,
           threshold: targetGroup.threshold ?? undefined,
           matcher: targetGroup.matcher ?? undefined,
+          targets: targets,
           vpc: vpcId,
         });
         const outputItem = { name: targetGroup.name, targetGroup: tg };

@@ -20,7 +20,7 @@ import {
   DeleteAccountPolicyCommand,
 } from '@aws-sdk/client-cloudwatch-logs';
 
-import { describe, beforeEach, expect, test } from '@jest/globals';
+import { describe, beforeEach, expect, test } from 'vitest';
 import { handler } from '../index';
 import { AcceleratorMockClient, EventType } from '../../../../test/unit-test/common/resources';
 

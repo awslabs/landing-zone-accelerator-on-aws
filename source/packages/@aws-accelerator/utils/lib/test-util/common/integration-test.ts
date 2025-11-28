@@ -13,7 +13,6 @@
 import path from 'path';
 import * as fs from 'fs';
 
-import * as AWS from 'aws-sdk';
 import * as uuid from 'uuid';
 
 import {
@@ -39,6 +38,7 @@ import {
 } from './resources';
 
 import { Assertion } from './assertion';
+import { fromNodeProviderChain } from '@aws-sdk/credential-providers';
 
 /**
  * Accelerator integration test props interface
@@ -230,7 +230,7 @@ export class IntegrationTest {
     });
 
     this.environment.integrationAccountStsCredentials = (await this.isInsideIntegrationAccount(client))
-      ? undefined
+      ? await fromNodeProviderChain()()
       : await AcceleratorIntegrationTestResources.getIntegrationAccountCredentials(
           client,
           this.environment.integrationAccountIamRoleArn,
@@ -271,7 +271,10 @@ export class IntegrationTest {
       throw new Error(`STS credentials for role ${executorRole.RoleName} not found, cannot assume.`);
     }
 
-    AWS.config.credentials = executorRoleStsCredentials;
+    process.env['AWS_ACCESS_KEY_ID'] = executorRoleStsCredentials.accessKeyId!;
+    process.env['AWS_SECRET_ACCESS_KEY'] = executorRoleStsCredentials.secretAccessKey!;
+    process.env['AWS_SESSION_TOKEN'] = executorRoleStsCredentials.sessionToken!;
+
     process.env['AWS_REGION'] = this.environment.region;
     process.env['SOLUTION_ID'] = AcceleratorIntegrationTestResources.solutionId;
   }

@@ -1,4 +1,4 @@
-import { describe, expect, test } from '@jest/globals';
+import { describe, expect, test } from 'vitest';
 import { isCIDRConfig, isCIDRConfigArray, isCidrOrderValid } from './index';
 
 describe('function validateCidrOrderForVpc', () => {

@@ -15,7 +15,7 @@ import { DEFAULT_LAMBDA_RUNTIME } from '@aws-accelerator/utils/lib/lambda';
 import * as cdk from 'aws-cdk-lib';
 import { NagSuppressions } from 'cdk-nag';
 import { Construct } from 'constructs';
-import path = require('path');
+import * as path from 'path';
 
 export interface WarmAccountProps {
   readonly cloudwatchKmsKey?: cdk.aws_kms.IKey;

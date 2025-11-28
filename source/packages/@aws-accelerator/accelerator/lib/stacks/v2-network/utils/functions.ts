@@ -18,11 +18,11 @@ import {
   V2NetworkResourceEnvironmentType,
   V2NetworkResourceListType,
 } from './types';
-import { createLogger } from '../../../../../../@aws-lza/index';
+import { createLogger } from '@aws-accelerator/utils/lib/logger';
 import path from 'path';
-import { OrganizationConfig } from '@aws-accelerator/config/lib/organization-config';
-import { AccountsConfig } from '@aws-accelerator/config/lib/accounts-config';
 import {
+  OrganizationConfig,
+  AccountsConfig,
   NetworkConfig,
   VpcConfig,
   VpcTemplatesConfig,
@@ -32,9 +32,10 @@ import {
   SecurityGroupSourceConfig,
   SecurityGroupRuleConfig,
   SecurityGroupConfig,
-} from '@aws-accelerator/config/lib/network-config';
-import { isNetworkType } from '@aws-accelerator/config/lib/common/parse';
-import { Region } from '@aws-accelerator/config/lib/common/types';
+  isNetworkType,
+  GlobalConfig,
+  SecurityGroupRuleType,
+} from '@aws-accelerator/config';
 import { AcceleratorStackProps } from '../../accelerator-stack';
 import { VpcSubnetsBaseStack } from '../stacks/vpc-subnets-base-stack';
 import { VpcRouteTablesBaseStack } from '../stacks/vpc-route-tables-base-stack';
@@ -45,17 +46,11 @@ import { VpcNaclsBaseStack } from '../stacks/vp-nacls-base-stack';
 import { VpcLoadBalancersBaseStack } from '../stacks/vpc-load-balancers-base-stack';
 import { VpcSubnetsShareBaseStack } from '../stacks/vpc-subnets-share-base-stack';
 import { AcceleratorStackNames, AcceleratorV2Stacks } from '../../../accelerator';
-import {
-  LookupValues,
-  LZAResourceLookup,
-  LZAResourceLookupType,
-} from '@aws-accelerator/accelerator/utils/lza-resource-lookup';
-import { GlobalConfig } from '@aws-accelerator/config/lib/global-config';
+import { LookupValues, LZAResourceLookup, LZAResourceLookupType } from '../../../../utils/lza-resource-lookup';
 import { SecurityGroupRules, V2StackComponentsList } from './enums';
 import { isIpv4 } from '../../network-stacks/utils/validation-utils';
 import { NetworkVpcStackRouteEntryTypes } from './constants';
 import { TCP_PROTOCOLS_PORT } from '../../network-stacks/utils/security-group-utils';
-import { SecurityGroupRuleType } from '@aws-accelerator/config/lib/models/network-config';
 
 const logger = createLogger([path.parse(path.basename(__filename)).name]);
 
@@ -77,7 +72,7 @@ export function getVpcsInScope(
   for (const vpcItem of vpcResources) {
     const vpcAccountIds = getVpcAccountIds(vpcItem, accountsConfig);
 
-    if (vpcAccountIds.includes(env.accountId) && [vpcItem.region].includes(env.region as Region)) {
+    if (vpcAccountIds.includes(env.accountId) && [vpcItem.region].includes(env.region)) {
       // Add condition on VPC lookup
       vpcsInScope.push(vpcItem);
     }
@@ -140,6 +135,7 @@ export function getV2NetworkResources(
   networkConfig: NetworkConfig,
   acceleratorPrefix: string,
   env: V2NetworkResourceEnvironmentType,
+  partition: string,
 ): V2NetworkResourceListType[] {
   const v2Components: V2NetworkResourceListType[] = [];
   const lzaLookup: LZAResourceLookup = new LZAResourceLookup({
@@ -190,7 +186,7 @@ export function getV2NetworkResources(
 
     getV2TgwVpcAttachmentRoleResources(accountsConfig, vpcItem, acceleratorPrefix, env, lzaLookup, v2Components);
 
-    getV2TgwVpcAttachmentResources(accountsConfig, vpcItem, lzaLookup, v2Components);
+    getV2TgwVpcAttachmentResources(accountsConfig, vpcItem, lzaLookup, v2Components, partition);
 
     getV2LoadBalancersResources(
       networkConfig,
@@ -1008,11 +1004,17 @@ function getV2TgwVpcAttachmentResources(
   vpcItem: VpcConfig | VpcTemplatesConfig,
   lzaLookup: LZAResourceLookup,
   v2Components: V2NetworkResourceListType[],
+  partition: string,
 ): void {
   for (const tgwAttachmentItem of vpcItem.transitGatewayAttachments ?? []) {
+    const resourceType =
+      partition === 'aws'
+        ? LZAResourceLookupType.TRANSIT_GATEWAY_VPC_ATTACHMENT
+        : LZAResourceLookupType.TRANSIT_GATEWAY_ATTACHMENT;
+
     if (
       !lzaLookup.resourceExists({
-        resourceType: LZAResourceLookupType.TRANSIT_GATEWAY_VPC_ATTACHMENT,
+        resourceType,
         lookupValues: {
           vpcName: vpcItem.name,
           transitGatewayName: tgwAttachmentItem.transitGateway.name,
@@ -1026,7 +1028,8 @@ function getV2TgwVpcAttachmentResources(
       const tgwAccountId = accountsConfig.getAccountId(tgwAttachmentItem.transitGateway.account);
       v2Components.push({
         vpcName: vpcItem.name,
-        resourceType: V2StackComponentsList.TGW_VPC_ATTACHMENT,
+        resourceType:
+          partition === 'aws' ? V2StackComponentsList.TGW_VPC_ATTACHMENT : V2StackComponentsList.TGW_ATTACHMENT,
         resourceName: `${tgwAttachmentItem.name}|${tgwAttachmentItem.transitGateway.name}|${tgwAccountId}`,
       });
     }
@@ -1178,7 +1181,7 @@ function getV2NetworkLoadBalancerRoleResources(
     vpcItem.loadBalancers?.networkLoadBalancers.length > 0 &&
     !lzaLookup.resourceExists({
       resourceType: LZAResourceLookupType.ROLE,
-      lookupValues: { roleName: `${acceleratorPrefix}-GetNLBIPAddressLookup` },
+      lookupValues: { roleName: `${acceleratorPrefix}-NetworkLoadBalancerIPAddress-Lookup` },
     })
   ) {
     logger.info(
@@ -1188,7 +1191,7 @@ function getV2NetworkLoadBalancerRoleResources(
     v2Components.push({
       vpcName: vpcItem.name,
       resourceType: V2StackComponentsList.NETWORK_LOAD_BALANCER_ROLE,
-      resourceName: `${acceleratorPrefix}-GetNLBIPAddressLookup|${env.accountId}`,
+      resourceName: `${acceleratorPrefix}-NetworkLoadBalancerIPAddress-Lookup|${env.accountId}`,
     });
   }
 }
@@ -1582,6 +1585,7 @@ export function createAndGetV2NetworkVpcDependencyStacks(options: {
       region: options.enabledRegion,
       stackName: options.dependencyStack.stackName,
     },
+    options.partition,
   );
 
   if (v2NetworkResources.length > 0 && vpcsInScope.length === 0) {

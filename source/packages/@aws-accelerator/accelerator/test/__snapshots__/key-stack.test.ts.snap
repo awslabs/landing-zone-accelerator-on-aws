@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`KeyStack Construct(KeyStack):  Snapshot Test 1`] = `
+exports[`KeyStack > Construct(KeyStack):  Snapshot Test 1`] = `
 {
   "Resources": {
     "AcceleratorKeyAlias692B87F4": {
@@ -394,7 +394,7 @@ exports[`KeyStack Construct(KeyStack):  Snapshot Test 1`] = `
       "Properties": {
         "Name": "/accelerator/AWSAccelerator-KeyStack-222222222222-us-east-1/version",
         "Type": "String",
-        "Value": "1.13.0",
+        "Value": "1.14.1",
       },
       "Type": "AWS::SSM::Parameter",
     },

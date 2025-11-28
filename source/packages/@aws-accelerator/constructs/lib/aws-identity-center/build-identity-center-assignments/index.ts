@@ -23,7 +23,7 @@ import {
   PrincipalType,
   CreateAccountAssignmentCommandInput,
 } from '@aws-sdk/client-sso-admin';
-import { Group, IdentitystoreClient, ListGroupsCommand, ListUsersCommand, User } from '@aws-sdk/client-identitystore';
+import { IdentitystoreClient, GetGroupIdCommand, GetUserIdCommand } from '@aws-sdk/client-identitystore';
 import { CloudFormationCustomResourceEvent } from '@aws-accelerator/utils/lib/common-types';
 
 /**
@@ -76,86 +76,113 @@ export async function handler(event: CloudFormationCustomResourceEvent): Promise
   }
 
   async function onCreate(event: AWSLambda.CloudFormationCustomResourceCreateEvent) {
-    // Build the account assignment creation
-    const assignmentCreationRequests = await buildCreateAssignmentsList(
-      accountIds,
-      principals,
-      identityStoreId,
-      instanceArn,
-      permissionSetArnValue,
-      principalType as PrincipalType,
-      principalId!,
-      idcClient,
-    );
+    try {
+      // Build the account assignment creation
+      const assignmentCreationRequests = await buildCreateAssignmentsList(
+        accountIds,
+        principals,
+        identityStoreId,
+        instanceArn,
+        permissionSetArnValue,
+        principalType as PrincipalType,
+        principalId!,
+        idcClient,
+      );
 
-    if (assignmentCreationRequests.length > 0) {
-      await createAssignment(assignmentCreationRequests, ssoAdminClient);
+      if (assignmentCreationRequests.length > 0) {
+        await createAssignment(assignmentCreationRequests, ssoAdminClient);
+      }
+      return {
+        PhysicalResourceId: event.LogicalResourceId,
+        Status: 'SUCCESS',
+      };
+    } catch (error) {
+      console.error('Error creating Identity Center assignments:', error);
+      return {
+        PhysicalResourceId: event.LogicalResourceId,
+        Status: 'FAILED',
+        Reason: String(error),
+      };
     }
-    return {
-      PhysicalResourceId: event.LogicalResourceId,
-      Status: 'SUCCESS',
-    };
   }
 
   async function onUpdate(event: AWSLambda.CloudFormationCustomResourceUpdateEvent) {
-    const previousAccountIdsList: string[] = event.OldResourceProperties['accountIds'] ?? [];
-    const deletionList = await retrieveAccountDeletions(previousAccountIdsList, accountIds);
-    // Build the account assignment creation
-    const assignmentCreationRequests = await buildCreateAssignmentsList(
-      accountIds,
-      principals,
-      identityStoreId,
-      instanceArn,
-      permissionSetArnValue,
-      principalType as PrincipalType,
-      principalId!,
-      idcClient,
-    );
+    try {
+      const previousAccountIdsList: string[] = event.OldResourceProperties['accountIds'] ?? [];
+      const deletionList = await retrieveAccountDeletions(previousAccountIdsList, accountIds);
+      // Build the account assignment creation
+      const assignmentCreationRequests = await buildCreateAssignmentsList(
+        accountIds,
+        principals,
+        identityStoreId,
+        instanceArn,
+        permissionSetArnValue,
+        principalType as PrincipalType,
+        principalId!,
+        idcClient,
+      );
 
-    if (assignmentCreationRequests.length > 0) {
-      await createAssignment(assignmentCreationRequests, ssoAdminClient);
+      if (assignmentCreationRequests.length > 0) {
+        await createAssignment(assignmentCreationRequests, ssoAdminClient);
+      }
+
+      const assignmentDeletionRequests = await buildDeleteAssignmentsList(
+        deletionList,
+        principals,
+        identityStoreId,
+        instanceArn,
+        permissionSetArnValue,
+        principalType as PrincipalType,
+        principalId!,
+        idcClient,
+      );
+
+      // Build the Delete Parameters
+      if (deletionList.length > 0) {
+        await deleteAssignment(assignmentDeletionRequests, ssoAdminClient);
+      }
+      return {
+        PhysicalResourceId: event.LogicalResourceId,
+        Status: 'SUCCESS',
+      };
+    } catch (error) {
+      console.error('Error updating Identity Center assignments:', error);
+      return {
+        PhysicalResourceId: event.LogicalResourceId,
+        Status: 'FAILED',
+        Reason: String(error),
+      };
     }
-
-    const assignmentDeletionRequests = await buildDeleteAssignmentsList(
-      deletionList,
-      principals,
-      identityStoreId,
-      instanceArn,
-      permissionSetArnValue,
-      principalType as PrincipalType,
-      principalId!,
-      idcClient,
-    );
-
-    // Build the Delete Parameters
-    if (deletionList.length > 0) {
-      await deleteAssignment(assignmentDeletionRequests, ssoAdminClient);
-    }
-    return {
-      PhysicalResourceId: event.LogicalResourceId,
-      Status: 'SUCCESS',
-    };
   }
 
   async function onDelete(event: AWSLambda.CloudFormationCustomResourceDeleteEvent) {
-    const assignmentDeletionRequests = await buildDeleteAssignmentsList(
-      accountIds,
-      principals,
-      identityStoreId,
-      instanceArn,
-      permissionSetArnValue,
-      principalType as PrincipalType,
-      principalId!,
-      idcClient,
-    );
+    try {
+      const assignmentDeletionRequests = await buildDeleteAssignmentsList(
+        accountIds,
+        principals,
+        identityStoreId,
+        instanceArn,
+        permissionSetArnValue,
+        principalType as PrincipalType,
+        principalId!,
+        idcClient,
+      );
 
-    // Call the delete account assignments method
-    await deleteAssignment(assignmentDeletionRequests, ssoAdminClient);
+      // Call the delete account assignments method
+      await deleteAssignment(assignmentDeletionRequests, ssoAdminClient);
 
-    return {
-      PhysicalResourceId: event.LogicalResourceId,
-      Status: 'SUCCESS',
-    };
+      return {
+        PhysicalResourceId: event.LogicalResourceId,
+        Status: 'SUCCESS',
+      };
+    } catch (error) {
+      console.error('Error deleting Identity Center assignments:', error);
+      return {
+        PhysicalResourceId: event.LogicalResourceId,
+        Status: 'FAILED',
+        Reason: String(error),
+      };
+    }
   }
 }
 
@@ -211,7 +238,7 @@ async function buildCreateAssignmentsList(
         else if (principal.type === 'GROUP') {
           const principalId = await throttlingBackOff(() => getGroupPrincipalId(principal, identityStoreId, idcClient));
           if (!principalId) {
-            throw new Error(`USER not found ${principal} ${identityStoreId} ${idcClient}`);
+            throw new Error(`GROUP not found ${principal} ${identityStoreId} ${idcClient}`);
           }
           assignmentCreationRequests.push({
             InstanceArn: instanceArn,
@@ -380,7 +407,7 @@ async function retrieveAccountDeletions(previousAccountIdsList: string[], accoun
 }
 
 /**
- * Retruns the principal ID of the User.
+ * Returns the principal ID of the User.
  * @param principal Incoming JSON object containing the name of the user/group as well as its type.
  * @param identityStoreId The Identity store id
  * @param idcClient
@@ -391,31 +418,28 @@ async function getUserPrincipalId(
   identityStoreId: string,
   idcClient: IdentitystoreClient,
 ) {
-  let principalId: string | undefined;
-  let nextToken: string | undefined = undefined;
-  do {
-    const page = await throttlingBackOff(() =>
+  try {
+    const response = await throttlingBackOff(() =>
       idcClient.send(
-        new ListUsersCommand({
+        new GetUserIdCommand({
           IdentityStoreId: identityStoreId,
-          Filters: [{ AttributePath: 'UserName', AttributeValue: principal.name }],
+          AlternateIdentifier: {
+            UniqueAttribute: {
+              AttributePath: 'userName',
+              AttributeValue: principal.name,
+            },
+          },
         }),
       ),
     );
-    // Going through results and retrieving the principal ID
-    for (const user of page.Users ?? []) {
-      principalId = user.UserId;
-    }
-    if (page.Users) {
-      validateNumberOfPrincipals(page.Users, principal.name, principal.type, identityStoreId, principalId);
-    }
-    nextToken = page.NextToken;
-  } while (nextToken);
-  return principalId;
+    return response.UserId;
+  } catch (error) {
+    throw new Error(`User '${principal.name}' not found in Identity Store '${identityStoreId}': ${error}`);
+  }
 }
 
 /**
- * Retruns the principal ID of the Group.
+ * Returns the principal ID of the Group.
  * @param principal Incoming JSON object containing the name of the user/group as well as its type.
  * @param identityStoreId The Identity store id
  * @param idcClient
@@ -426,52 +450,22 @@ async function getGroupPrincipalId(
   identityStoreId: string,
   idcClient: IdentitystoreClient,
 ) {
-  let principalId: string | undefined;
-  let nextToken: string | undefined = undefined;
-
-  do {
-    const page = await throttlingBackOff(() =>
+  try {
+    const response = await throttlingBackOff(() =>
       idcClient.send(
-        new ListGroupsCommand({
+        new GetGroupIdCommand({
           IdentityStoreId: identityStoreId,
-          Filters: [{ AttributePath: 'DisplayName', AttributeValue: principal.name }],
+          AlternateIdentifier: {
+            UniqueAttribute: {
+              AttributePath: 'displayName',
+              AttributeValue: principal.name,
+            },
+          },
         }),
       ),
     );
-    // Going through results and retrieving the principal ID
-    for (const group of page.Groups ?? []) {
-      principalId = group.GroupId;
-    }
-    if (page.Groups) {
-      validateNumberOfPrincipals(page.Groups, principal.name, principal.type, identityStoreId, principalId);
-    }
-    nextToken = page.NextToken;
-  } while (nextToken);
-  return principalId;
-}
-
-/**
- * Principal validation function
- * @param principalArray Users and Groups to validate
- * @param principalName Name of the principal
- * @param principalType Type of the principal (USER/GROUP)
- * @param identityStoreId
- * @param principalId
- * @returns boolean
- */
-function validateNumberOfPrincipals(
-  principalArray: User[] | Group[],
-  principalName: string,
-  principalType: string,
-  identityStoreId: string,
-  principalId: string | undefined,
-): { PhysicalResourceId: undefined; Status: string } | boolean {
-  if (principalArray.length > 1 && principalId) {
-    console.error(`Multiple ${principalName} of ${principalType} found in identity store ${identityStoreId}!!!!`);
-    return {
-      PhysicalResourceId: undefined,
-      Status: 'FAILURE',
-    };
+    return response.GroupId;
+  } catch (error) {
+    throw new Error(`Group '${principal.name}' not found in Identity Store '${identityStoreId}': ${error}`);
   }
-  return true;
 }

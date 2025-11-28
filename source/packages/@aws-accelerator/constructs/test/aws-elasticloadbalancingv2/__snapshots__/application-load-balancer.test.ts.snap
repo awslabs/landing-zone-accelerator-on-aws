@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`ApplicationLoadBalancer Construct(ApplicationLoadBalancer):  Snapshot Test 1`] = `
+exports[`ApplicationLoadBalancer > Construct(ApplicationLoadBalancer):  Snapshot Test 1`] = `
 {
   "Resources": {
     "Test7BFAF513": {

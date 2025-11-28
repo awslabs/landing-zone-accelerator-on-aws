@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`GuardDutyPublishingDestination Construct(GuardDutyPublishingDestination):  Snapshot Test 1`] = `
+exports[`GuardDutyPublishingDestination > Construct(GuardDutyPublishingDestination):  Snapshot Test 1`] = `
 {
   "Resources": {
     "CustomGuardDutyCreatePublishingDestinationCommandCustomResourceProviderHandlerB3AE4CE8": {
@@ -16,7 +16,7 @@ exports[`GuardDutyPublishingDestination Construct(GuardDutyPublishingDestination
         },
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.14.1",
           },
         },
         "Handler": "__entrypoint__.handler",

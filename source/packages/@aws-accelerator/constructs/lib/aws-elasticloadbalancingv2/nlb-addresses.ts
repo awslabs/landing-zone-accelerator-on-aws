@@ -16,8 +16,7 @@ import { Construct } from 'constructs';
 import { NagSuppressions } from 'cdk-nag';
 import { NlbTargetTypeConfig } from '@aws-accelerator/config';
 import { DEFAULT_LAMBDA_RUNTIME } from '@aws-accelerator/utils/lib/lambda';
-
-const path = require('path');
+import * as path from 'path';
 
 export interface INLBAddresses extends cdk.IResource {
   /**

@@ -14,7 +14,7 @@
 import * as cdk from 'aws-cdk-lib';
 import { PropagatePortfolioAssociations } from '../../lib/aws-servicecatalog/propagate-portfolio-associations';
 import { snapShotTest } from '../snapshot-test';
-import { describe } from '@jest/globals';
+import { describe } from 'vitest';
 import { PortfolioConfig } from '@aws-accelerator/config';
 
 const testNamePrefix = 'Construct(PropagatePortfolioAssociations): ';

@@ -14,6 +14,7 @@
 import * as cdk from 'aws-cdk-lib';
 import { DeleteDefaultVpc } from '../../lib/aws-ec2/delete-default-vpc';
 import { snapShotTest } from '../snapshot-test';
+import { describe } from 'vitest';
 
 const testNamePrefix = 'Construct(DeleteDefaultVpc): ';
 

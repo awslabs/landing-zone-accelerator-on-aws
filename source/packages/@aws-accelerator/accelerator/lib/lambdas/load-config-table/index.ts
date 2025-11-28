@@ -260,6 +260,24 @@ async function putAccountConfigInTable(
   }
 }
 
+async function putCommitIdInTable(configTableName: string, commitId: string): Promise<void> {
+  const params: UpdateCommandInput = {
+    TableName: configTableName,
+    Key: {
+      dataType: 'commitId',
+      acceleratorKey: 'current',
+    },
+    UpdateExpression: 'set #commitId = :v_commitId',
+    ExpressionAttributeNames: {
+      '#commitId': 'commitId',
+    },
+    ExpressionAttributeValues: {
+      ':v_commitId': commitId,
+    },
+  };
+  await throttlingBackOff(() => documentClient.send(new UpdateCommand(params)));
+}
+
 async function isStackInRollback(stackName: string): Promise<boolean> {
   const response = await throttlingBackOff(() =>
     cloudformationClient.send(new DescribeStacksCommand({ StackName: stackName })),
@@ -337,15 +355,15 @@ async function onCreateUpdateFunction(
   for (const account of accountsConfig.mandatoryAccounts) {
     switch (account.name) {
       case 'Management':
-        const managmentId = accountsConfig.getManagementAccountId();
+        const managementId = accountsConfig.getManagementAccountId();
         await putAccountConfigInTable(
           'mandatory',
           account,
           configTableName,
-          managmentId,
+          managementId,
           commitId,
           account.organizationalUnit,
-          getAccountIdConfigForAccount(accountsConfig, managmentId, account.email),
+          getAccountIdConfigForAccount(accountsConfig, managementId, account.email),
         );
         break;
       case 'LogArchive':
@@ -401,9 +419,9 @@ async function onCreateUpdateFunction(
       getAccountIdConfigForAccount(accountsConfig, accountId, account.email),
     );
   }
-
   // Delete accounts that are not in the config
   await cleanupNotInUseAccounts(configTableName, accountsConfig);
+  await putCommitIdInTable(configTableName, commitId);
 
   return {
     PhysicalResourceId: commitId,

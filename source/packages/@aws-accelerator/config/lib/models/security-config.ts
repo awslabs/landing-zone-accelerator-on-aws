@@ -259,7 +259,7 @@ export interface IMacieConfig {
   /**
    * List of AWS Region names to be excluded from configuring Amazon Macie
    */
-  readonly excludeRegions?: t.Region[];
+  readonly excludeRegions?: string[];
   /**
    * (OPTIONAL) Specifies how often to publish updates to policy findings for the account. This includes publishing updates to Security Hub and Amazon EventBridge (formerly called Amazon CloudWatch Events).
    * An enum value that specifies how frequently findings are published
@@ -303,7 +303,7 @@ export interface IGuardDutyS3ProtectionConfig {
   /**
    * (OPTIONAL) List of AWS Region names to be excluded from configuring Amazon GuardDuty S3 Protection
    */
-  readonly excludeRegions?: t.Region[];
+  readonly excludeRegions?: string[];
 }
 
 /**
@@ -321,7 +321,7 @@ export interface IGuardDutyEksProtectionConfig {
   /**
    * (OPTIONAL) List of AWS Region names to be excluded from configuring Amazon GuardDuty EKS Protection
    */
-  readonly excludeRegions?: t.Region[];
+  readonly excludeRegions?: string[];
 }
 
 /**
@@ -339,7 +339,7 @@ export interface IGuardDutyEc2ProtectionConfig {
   /**
    * (OPTIONAL) List of AWS Region names to be excluded from configuring Amazon GuardDuty EC2 Malware Protection
    */
-  readonly excludeRegions?: t.Region[];
+  readonly excludeRegions?: string[];
 }
 
 /**
@@ -353,7 +353,7 @@ export interface IGuardDutyRdsProtectionConfig {
   /**
    * (OPTIONAL) List of AWS Region names to be excluded from configuring Amazon GuardDuty RDS Malware Protection
    */
-  readonly excludeRegions?: t.Region[];
+  readonly excludeRegions?: string[];
 }
 
 /**
@@ -367,7 +367,7 @@ export interface IGuardDutyLambdaProtectionConfig {
   /**
    * (OPTIONAL) List of AWS Region names to be excluded from configuring Amazon GuardDuty Lambda Malware Protection
    */
-  readonly excludeRegions?: t.Region[];
+  readonly excludeRegions?: string[];
 }
 
 /**
@@ -463,7 +463,7 @@ export interface IGuardDutyConfig {
    * Please only specify one of the `excludeRegions` or `deploymentTargets` properties.
    *
    */
-  readonly excludeRegions?: t.Region[];
+  readonly excludeRegions?: string[];
   /**
    * (OPTIONAL) Deployment targets for GuardDuty
    *
@@ -572,7 +572,7 @@ export interface IAuditManagerConfig {
   /**
    * (OPTIONAL) List of AWS Region names to be excluded from configuring AWS Audit Manager. Please ensure any regions enabled in the global configuration that do not support Audit Manager are added to the excluded regions list. {@link https://aws.amazon.com/about-aws/global-infrastructure/regional-product-services/ | Supported services by region}.
    */
-  readonly excludeRegions?: t.Region[];
+  readonly excludeRegions?: string[];
   /**
    * AWS Audit Manager Default Reports configuration.
    * @type object
@@ -608,7 +608,7 @@ export interface IDetectiveConfig {
   /**
    * (OPTIONAL) List of AWS Region names to be excluded from configuring Amazon Detective. Please ensure any regions enabled in the global configuration that do not support Amazon Detective are added to the excluded regions list. {@link https://aws.amazon.com/about-aws/global-infrastructure/regional-product-services/ | Supported services by region}.
    */
-  readonly excludeRegions?: t.Region[];
+  readonly excludeRegions?: string[];
 }
 
 /**
@@ -636,26 +636,23 @@ export interface IDetectiveConfig {
  */
 export interface ISecurityHubStandardConfig {
   /**
-   * An enum value that specifies one of three security standards supported by Security Hub
-   * Possible values are 'AWS Foundational Security Best Practices v1.0.0',
-   * 'CIS AWS Foundations Benchmark v1.2.0',
-   * 'CIS AWS Foundations Benchmark v1.4.0',
-   * 'CIS AWS Foundations Benchmark v3.0.0',
-   * 'NIST Special Publication 800-53 Revision 5',
-   * 'AWS Resource Tagging Standard v1.0.0'
-   * 'PCI DSS v4.0.1',
-   * and 'PCI DSS v3.2.1'
+   * The name of the AWS Security Hub standard to enable or disable.
+   * This can be any valid Security Hub standard name supported by AWS.
+   *
+   * Common examples include:
+   * - 'AWS Foundational Security Best Practices v1.0.0'
+   * - 'CIS AWS Foundations Benchmark v1.2.0'
+   * - 'CIS AWS Foundations Benchmark v1.4.0'
+   * - 'CIS AWS Foundations Benchmark v3.0.0'
+   * - 'NIST Special Publication 800-53 Revision 5'
+   * - 'AWS Resource Tagging Standard v1.0.0'
+   * - 'PCI DSS v3.2.1'
+   * - 'PCI DSS v4.0.1'
+   *
+   * Note: AWS may add new standards over time. This field accepts any string
+   * to allow for future standards without requiring code changes.
    */
-  readonly name:
-    | 'AWS Foundational Security Best Practices v1.0.0'
-    | 'CIS AWS Foundations Benchmark v1.2.0'
-    | 'CIS AWS Foundations Benchmark v1.4.0'
-    | 'CIS AWS Foundations Benchmark v3.0.0'
-    | 'NIST Special Publication 800-53 Revision 5'
-    | 'AWS Resource Tagging Standard v1.0.0'
-    | 'PCI DSS v3.2.1'
-    | 'PCI DSS v4.0.1'
-    | '';
+  readonly name: t.NonEmptyString;
 
   /**
    * (OPTIONAL) Deployment targets for AWS Security Hub standard.
@@ -794,7 +791,7 @@ export interface ISecurityHubConfig {
   /**
    * (OPTIONAL) List of AWS Region names to be excluded from configuring Security Hub
    */
-  readonly excludeRegions?: t.Region[];
+  readonly excludeRegions?: string[];
   /**
    * (OPTIONAL) Deployment targets for SecurityHub
    *
@@ -882,7 +879,7 @@ export interface IEbsDefaultVolumeEncryptionConfig {
   /**
    * (OPTIONAL) List of AWS Region names to be excluded from configuring AWS EBS volume default encryption
    */
-  readonly excludeRegions?: t.Region[];
+  readonly excludeRegions?: string[];
 }
 
 /**
@@ -969,7 +966,7 @@ export interface ISsmAutomationConfig {
   /**
    * (OPTIONAL) List of AWS Region names to be excluded from configuring block S3 public access
    */
-  readonly excludeRegions?: t.Region[];
+  readonly excludeRegions?: string[];
   /**
    * List of documents for automation
    */
@@ -1041,6 +1038,8 @@ export interface ISsmAutomationConfig {
  *           - Control1
  *           - Control2
  *       - name: CIS AWS Foundations Benchmark v3.0.0
+ *         enable: true
+ *       - name: CIS AWS Foundations Benchmark v5.0.0
  *         enable: true
  *       - name: NIST Special Publication 800-53 Revision 5
  *         enable: true
@@ -1496,7 +1495,7 @@ export interface IIamPasswordPolicyConfig {
   /**
    * The number of days that an IAM user password is valid.
    *
-   * Note: If you do not specify a value for this parameter, then the operation uses the default value of 0. The result is that IAM user passwords never expire.
+   * Valid values are between 1 and 1095 days.
    *
    * @default 90
    */
@@ -1717,7 +1716,7 @@ export interface IConfigRuleRemediationType {
   /**
    * List of AWS Region names to be excluded from applying remediation
    */
-  readonly excludeRegions?: t.Region[];
+  readonly excludeRegions?: string[];
 }
 
 /**
@@ -2101,7 +2100,7 @@ export interface IMetricSetConfig {
   /**
    * (OPTIONAL) AWS region names to configure CloudWatch Metrics
    */
-  readonly regions?: t.Region[];
+  readonly regions?: string[];
   /**
    * Deployment targets for CloudWatch Metrics configuration
    */
@@ -2239,7 +2238,7 @@ export interface IAlarmSetConfig {
   /**
    * AWS region names to configure CloudWatch Alarms
    */
-  readonly regions?: t.Region[];
+  readonly regions?: string[];
   /**
    * Deployment targets for CloudWatch Alarms configuration
    */
@@ -2566,7 +2565,7 @@ export interface ISecurityConfig {
    * homeRegion: &HOME_REGION us-east-1
    * ```
    */
-  readonly homeRegion?: t.Region;
+  readonly homeRegion?: string;
   /**
    * Central security configuration
    */

@@ -13,13 +13,12 @@
 
 import { AseaResourceType, VpcConfig, VpcTemplatesConfig, isNetworkType } from '@aws-accelerator/config';
 import { RouteTable, Vpc } from '@aws-accelerator/constructs';
-import { SsmResourceType } from '@aws-accelerator/utils/lib/ssm-parameter-path';
+import { SsmResourceType, MetadataKeys } from '@aws-accelerator/utils';
 import * as cdk from 'aws-cdk-lib';
 import { pascalCase } from 'pascal-case';
 import { getVpc } from '../utils/getter-utils';
 import { NetworkVpcStack } from './network-vpc-stack';
-import { MetadataKeys } from '@aws-accelerator/utils/lib/common-types';
-import { LZAResourceLookup, LZAResourceLookupType } from '@aws-accelerator/accelerator/utils/lza-resource-lookup';
+import { LZAResourceLookup, LZAResourceLookupType } from '@aws-accelerator/accelerator';
 
 export class RouteTableResources {
   public readonly routeTableMap: Map<string, RouteTable>;

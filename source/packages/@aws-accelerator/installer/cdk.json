@@ -1,5 +1,7 @@
 {
   "app": "npx ts-node --prefer-ts-exts bin/installer.ts",
   "versionReporting": false,
-  "context": {}
+  "context": {
+    "cli-telemetry": "false"
+  }
 }

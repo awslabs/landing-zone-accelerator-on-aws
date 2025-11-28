@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`SecurityResourcesStack Construct(SecurityResourcesStack):  Snapshot Test 1`] = `
+exports[`SecurityResourcesStack > Construct(SecurityResourcesStack):  Snapshot Test 1`] = `
 {
   "Parameters": {
     "SsmParameterValueacceleratorkmscloudwatchkeyarnC96584B6F00A464EAD1953AFF4B05118Parameter": {
@@ -135,7 +135,7 @@ exports[`SecurityResourcesStack Construct(SecurityResourcesStack):  Snapshot Tes
         "Description": "AWS Config custom rule function used for "accelerator-attach-ec2-instance-profile" rule",
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.14.1",
           },
         },
         "Handler": "index.handler",
@@ -862,7 +862,7 @@ exports[`SecurityResourcesStack Construct(SecurityResourcesStack):  Snapshot Tes
         "Description": "AWS Config custom rule function used for "accelerator-ec2-instance-profile-permission" rule",
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.14.1",
           },
         },
         "Handler": "index.handler",
@@ -2000,7 +2000,7 @@ exports[`SecurityResourcesStack Construct(SecurityResourcesStack):  Snapshot Tes
         "Description": "AWS Config custom rule function used for "accelerator-target-document-01" rule",
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.14.1",
           },
         },
         "Handler": "index.handler",
@@ -2206,7 +2206,7 @@ exports[`SecurityResourcesStack Construct(SecurityResourcesStack):  Snapshot Tes
         "Description": "Function used in Attach-IAM-Instance-Profile SSM document for "accelerator-target-document-01" custom config rule to remediation",
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.14.1",
           },
         },
         "Handler": "index.handler",
@@ -2465,7 +2465,7 @@ exports[`SecurityResourcesStack Construct(SecurityResourcesStack):  Snapshot Tes
         "Description": "AWS Config custom rule function used for "accelerator-waf-logging-enabled" rule",
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.14.1",
           },
         },
         "Handler": "index.handler",
@@ -2741,7 +2741,7 @@ exports[`SecurityResourcesStack Construct(SecurityResourcesStack):  Snapshot Tes
         },
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.14.1",
           },
         },
         "Handler": "__entrypoint__.handler",
@@ -3511,7 +3511,7 @@ exports[`SecurityResourcesStack Construct(SecurityResourcesStack):  Snapshot Tes
         },
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.14.1",
           },
         },
         "Handler": "__entrypoint__.handler",
@@ -3600,7 +3600,7 @@ exports[`SecurityResourcesStack Construct(SecurityResourcesStack):  Snapshot Tes
         },
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.14.1",
           },
         },
         "Handler": "__entrypoint__.handler",
@@ -3663,8 +3663,8 @@ exports[`SecurityResourcesStack Construct(SecurityResourcesStack):  Snapshot Tes
               "Statement": [
                 {
                   "Action": [
-                    "ssm:DescribeDocument",
                     "ssm:CreateDocument",
+                    "ssm:GetDocument",
                     "ssm:UpdateDocument",
                   ],
                   "Effect": "Allow",
@@ -3690,7 +3690,7 @@ exports[`SecurityResourcesStack Construct(SecurityResourcesStack):  Snapshot Tes
         },
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.14.1",
           },
         },
         "Handler": "__entrypoint__.handler",
@@ -3943,11 +3943,27 @@ exports[`SecurityResourcesStack Construct(SecurityResourcesStack):  Snapshot Tes
         "AlarmName": "GenericMetricGreaterThanUpperThreshold",
         "ComparisonOperator": "GreaterThanUpperThreshold",
         "EvaluationPeriods": 1,
-        "MetricName": "GenericMetricForTestingGreaterThanUpperThreshold",
-        "Namespace": "LzaMetrics",
-        "Period": 300,
-        "Statistic": "Sum",
-        "Threshold": 1,
+        "Metrics": [
+          {
+            "Expression": "ANOMALY_DETECTION_BAND(m0, 2)",
+            "Id": "expr_1",
+            "Label": "Anomaly Detection Band",
+            "ReturnData": true,
+          },
+          {
+            "Id": "m0",
+            "MetricStat": {
+              "Metric": {
+                "MetricName": "GenericMetricForTestingGreaterThanUpperThreshold",
+                "Namespace": "LzaMetrics",
+              },
+              "Period": 300,
+              "Stat": "Sum",
+            },
+            "ReturnData": true,
+          },
+        ],
+        "ThresholdMetricId": "expr_1",
         "TreatMissingData": "notBreaching",
       },
       "Type": "AWS::CloudWatch::Alarm",
@@ -3972,11 +3988,27 @@ exports[`SecurityResourcesStack Construct(SecurityResourcesStack):  Snapshot Tes
         "AlarmName": "GenericMetricLessThanLowerOrGreaterThanUpperThreshold",
         "ComparisonOperator": "LessThanLowerOrGreaterThanUpperThreshold",
         "EvaluationPeriods": 1,
-        "MetricName": "GenericMetricForTestingLessThanLowerOrGreaterThanUpperThreshold",
-        "Namespace": "LzaMetrics",
-        "Period": 300,
-        "Statistic": "Sum",
-        "Threshold": 1,
+        "Metrics": [
+          {
+            "Expression": "ANOMALY_DETECTION_BAND(m0, 2)",
+            "Id": "expr_1",
+            "Label": "Anomaly Detection Band",
+            "ReturnData": true,
+          },
+          {
+            "Id": "m0",
+            "MetricStat": {
+              "Metric": {
+                "MetricName": "GenericMetricForTestingLessThanLowerOrGreaterThanUpperThreshold",
+                "Namespace": "LzaMetrics",
+              },
+              "Period": 300,
+              "Stat": "Sum",
+            },
+            "ReturnData": true,
+          },
+        ],
+        "ThresholdMetricId": "expr_1",
         "TreatMissingData": "notBreaching",
       },
       "Type": "AWS::CloudWatch::Alarm",
@@ -4001,11 +4033,27 @@ exports[`SecurityResourcesStack Construct(SecurityResourcesStack):  Snapshot Tes
         "AlarmName": "GenericMetricLessThanLowerThreshold",
         "ComparisonOperator": "LessThanLowerThreshold",
         "EvaluationPeriods": 1,
-        "MetricName": "GenericMetricForTestingLessThanLowerThreshold",
-        "Namespace": "LzaMetrics",
-        "Period": 300,
-        "Statistic": "Sum",
-        "Threshold": 1,
+        "Metrics": [
+          {
+            "Expression": "ANOMALY_DETECTION_BAND(m0, 2)",
+            "Id": "expr_1",
+            "Label": "Anomaly Detection Band",
+            "ReturnData": true,
+          },
+          {
+            "Id": "m0",
+            "MetricStat": {
+              "Metric": {
+                "MetricName": "GenericMetricForTestingLessThanLowerThreshold",
+                "Namespace": "LzaMetrics",
+              },
+              "Period": 300,
+              "Stat": "Sum",
+            },
+            "ReturnData": true,
+          },
+        ],
+        "ThresholdMetricId": "expr_1",
         "TreatMissingData": "notBreaching",
       },
       "Type": "AWS::CloudWatch::Alarm",
@@ -4217,7 +4265,7 @@ exports[`SecurityResourcesStack Construct(SecurityResourcesStack):  Snapshot Tes
         "Description": "Creates a CloudWatch Logs Group to store SecurityHub findings and updates CW Log Group resource policy",
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.14.1",
           },
         },
         "Handler": "index.handler",
@@ -4403,7 +4451,7 @@ exports[`SecurityResourcesStack Construct(SecurityResourcesStack):  Snapshot Tes
         "Description": "AWS CDK resource provider framework - onEvent (AWSAccelerator-SecurityResourcesStack-111111111111-us-east-1/SecurityHubEventsLog/SecurityHubEventsFunction/Resource)",
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.14.1",
             "USER_ON_EVENT_FUNCTION_ARN": {
               "Fn::GetAtt": [
                 "SecurityHubEventsLogSecurityHubEventsFunction6170C5C5",
@@ -4413,6 +4461,10 @@ exports[`SecurityResourcesStack Construct(SecurityResourcesStack):  Snapshot Tes
           },
         },
         "Handler": "framework.onEvent",
+        "LoggingConfig": {
+          "ApplicationLogLevel": "FATAL",
+          "LogFormat": "JSON",
+        },
         "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
@@ -4505,6 +4557,16 @@ exports[`SecurityResourcesStack Construct(SecurityResourcesStack):  Snapshot Tes
                   ],
                 },
               ],
+            },
+            {
+              "Action": "lambda:GetFunction",
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::GetAtt": [
+                  "SecurityHubEventsLogSecurityHubEventsFunction6170C5C5",
+                  "Arn",
+                ],
+              },
             },
           ],
           "Version": "2012-10-17",
@@ -4615,7 +4677,7 @@ exports[`SecurityResourcesStack Construct(SecurityResourcesStack):  Snapshot Tes
       "Properties": {
         "Name": "/accelerator/AWSAccelerator-SecurityResourcesStack-111111111111-us-east-1/version",
         "Type": "String",
-        "Value": "1.13.0",
+        "Value": "1.14.1",
       },
       "Type": "AWS::SSM::Parameter",
     },
@@ -4748,7 +4810,7 @@ exports[`SecurityResourcesStack Construct(SecurityResourcesStack):  Snapshot Tes
 }
 `;
 
-exports[`delegatedAdminStack Construct(SecurityResourcesStack):  Snapshot Test 1`] = `
+exports[`delegatedAdminStack > Construct(SecurityResourcesStack):  Snapshot Test 1`] = `
 {
   "Parameters": {
     "SsmParameterValueacceleratorkmscloudwatchkeyarnC96584B6F00A464EAD1953AFF4B05118Parameter": {
@@ -4883,7 +4945,7 @@ exports[`delegatedAdminStack Construct(SecurityResourcesStack):  Snapshot Test 1
         "Description": "AWS Config custom rule function used for "accelerator-attach-ec2-instance-profile" rule",
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.14.1",
           },
         },
         "Handler": "index.handler",
@@ -5393,7 +5455,7 @@ exports[`delegatedAdminStack Construct(SecurityResourcesStack):  Snapshot Test 1
         "Description": "AWS Config custom rule function used for "accelerator-ec2-instance-profile-permission" rule",
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.14.1",
           },
         },
         "Handler": "index.handler",
@@ -7099,7 +7161,7 @@ exports[`delegatedAdminStack Construct(SecurityResourcesStack):  Snapshot Test 1
         },
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.14.1",
           },
         },
         "Handler": "__entrypoint__.handler",
@@ -7162,8 +7224,8 @@ exports[`delegatedAdminStack Construct(SecurityResourcesStack):  Snapshot Test 1
               "Statement": [
                 {
                   "Action": [
-                    "ssm:DescribeDocument",
                     "ssm:CreateDocument",
+                    "ssm:GetDocument",
                     "ssm:UpdateDocument",
                   ],
                   "Effect": "Allow",
@@ -7189,7 +7251,7 @@ exports[`delegatedAdminStack Construct(SecurityResourcesStack):  Snapshot Test 1
         },
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.14.1",
           },
         },
         "Handler": "__entrypoint__.handler",
@@ -7431,7 +7493,7 @@ exports[`delegatedAdminStack Construct(SecurityResourcesStack):  Snapshot Test 1
         "Description": "Creates a CloudWatch Logs Group to store SecurityHub findings and updates CW Log Group resource policy",
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.14.1",
           },
         },
         "Handler": "index.handler",
@@ -7617,7 +7679,7 @@ exports[`delegatedAdminStack Construct(SecurityResourcesStack):  Snapshot Test 1
         "Description": "AWS CDK resource provider framework - onEvent (AWSAccelerator-SecurityResourcesStack-111111111111-us-east-1/SecurityHubEventsLog/SecurityHubEventsFunction/Resource)",
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.14.1",
             "USER_ON_EVENT_FUNCTION_ARN": {
               "Fn::GetAtt": [
                 "SecurityHubEventsLogSecurityHubEventsFunction6170C5C5",
@@ -7627,6 +7689,10 @@ exports[`delegatedAdminStack Construct(SecurityResourcesStack):  Snapshot Test 1
           },
         },
         "Handler": "framework.onEvent",
+        "LoggingConfig": {
+          "ApplicationLogLevel": "FATAL",
+          "LogFormat": "JSON",
+        },
         "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
@@ -7719,6 +7785,16 @@ exports[`delegatedAdminStack Construct(SecurityResourcesStack):  Snapshot Test 1
                   ],
                 },
               ],
+            },
+            {
+              "Action": "lambda:GetFunction",
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::GetAtt": [
+                  "SecurityHubEventsLogSecurityHubEventsFunction6170C5C5",
+                  "Arn",
+                ],
+              },
             },
           ],
           "Version": "2012-10-17",
@@ -7828,7 +7904,7 @@ exports[`delegatedAdminStack Construct(SecurityResourcesStack):  Snapshot Test 1
       "Properties": {
         "Name": "/accelerator/AWSAccelerator-SecurityResourcesStack-111111111111-us-east-1/version",
         "Type": "String",
-        "Value": "1.13.0",
+        "Value": "1.14.1",
       },
       "Type": "AWS::SSM::Parameter",
     },

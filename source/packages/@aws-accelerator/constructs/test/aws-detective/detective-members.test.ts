@@ -14,6 +14,7 @@
 import * as cdk from 'aws-cdk-lib';
 import { DetectiveMembers } from '../../lib/aws-detective/detective-members';
 import { snapShotTest } from '../snapshot-test';
+import { describe } from 'vitest';
 
 const testNamePrefix = 'Construct(DetectiveMembers): ';
 

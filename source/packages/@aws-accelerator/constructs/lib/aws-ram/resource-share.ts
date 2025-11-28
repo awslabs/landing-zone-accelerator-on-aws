@@ -17,8 +17,7 @@ import * as ram from 'aws-cdk-lib/aws-ram';
 import { pascalCase } from 'change-case';
 import { Construct } from 'constructs';
 import { v4 as uuidv4 } from 'uuid';
-
-const path = require('path');
+import * as path from 'path';
 
 export interface IResourceShare extends cdk.IResource {
   /**

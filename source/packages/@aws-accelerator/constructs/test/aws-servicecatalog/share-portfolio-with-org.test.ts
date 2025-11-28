@@ -14,7 +14,7 @@
 import * as cdk from 'aws-cdk-lib';
 import { SharePortfolioWithOrg } from '../../lib/aws-servicecatalog/share-portfolio-with-org';
 import { snapShotTest } from '../snapshot-test';
-import { describe } from '@jest/globals';
+import { describe } from 'vitest';
 
 const testNamePrefix = 'Construct(SharePortfolioWithOrg): ';
 

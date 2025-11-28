@@ -1,0 +1,5 @@
+name: GovCloudWorkloadAccount01
+description: Sample govCloud workload account
+email: all-enabled-govcloud-workload-account01@example.com
+organizationalUnit: GovCloud
+enableGovCloud: true

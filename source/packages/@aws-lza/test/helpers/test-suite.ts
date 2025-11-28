@@ -11,6 +11,13 @@
  *  and limitations under the License.
  */
 
+type DescribeFunction = {
+  (name: string, fn: () => void): void;
+  skip: (name: string, fn: () => void) => void;
+};
+
+const isTestEnvironment = process.env['VITEST'] === 'true';
+
 /**
  * Integration testing environment name
  *
@@ -32,8 +39,8 @@ const region = process.env['AWS_DEFAULT_REGION'];
  * Accelerator regional security environment test suite
  *
  */
-export const RegionalTestSuite =
-  typeof jest !== 'undefined' // Only export the RegionalTestSuite object if the file is being executed as part of a Jest test
+export const RegionalTestSuite = (describe: DescribeFunction) => {
+  return isTestEnvironment
     ? {
         ['sampleConfig:us-east-1']: {
           suite: environmentName === 'sampleConfig' && region === 'us-east-1' ? describe : describe.skip,
@@ -45,3 +52,4 @@ export const RegionalTestSuite =
         },
       }
     : {};
+};

@@ -130,6 +130,7 @@ export interface AcceleratorToolProps {
   readonly actionName: string;
   readonly debug: boolean;
   readonly ignoreTerminationProtection: boolean;
+  readonly configPath?: string;
 }
 
 /**
@@ -605,9 +606,8 @@ export class AcceleratorTool {
         : this.pipelineManagementAccount!.accountId
     }-${this.globalConfig?.homeRegion}`;
 
-    const acceleratorPipeline = await AcceleratorTool.getPipelineNameFromCloudFormationStack(
-      acceleratorPipelineStackName,
-    );
+    const acceleratorPipeline =
+      await AcceleratorTool.getPipelineNameFromCloudFormationStack(acceleratorPipelineStackName);
 
     if (
       acceleratorPipeline.status &&
@@ -796,6 +796,12 @@ export class AcceleratorTool {
    * @private
    */
   private async getGlobalConfig(): Promise<GlobalConfig> {
+    // If configPath is provided, use local files instead of downloading from repository
+    if (this.acceleratorToolProps.configPath) {
+      this.logger.info(`Using local config path: ${this.acceleratorToolProps.configPath}`);
+      return GlobalConfig.loadRawGlobalConfig(this.acceleratorToolProps.configPath);
+    }
+
     this.logger.info(`Config Repository Name:  ${this.pipelineConfigSourceRepo?.repositoryName}`);
     let fileContent: string;
     if (this.pipelineConfigSourceRepo?.provider.toLocaleLowerCase() === 'codecommit') {
@@ -1000,6 +1006,7 @@ export class AcceleratorTool {
       await throttlingBackOff(() =>
         cloudWatchLogsClient.send(new DeleteLogGroupCommand({ logGroupName: logGroupName })),
       );
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (ResourceNotFoundException) {
       this.debugLog(
         `Cloudwatch Log group delete Error Log Group NOT FOUND ${logGroupName} from ${stackName} stack`,
@@ -1094,6 +1101,7 @@ export class AcceleratorTool {
       await throttlingBackOff(() =>
         backupClient.send(new DeleteBackupVaultCommand({ BackupVaultName: backupVaultName })),
       );
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (ResourceNotFoundException) {
       this.debugLog(`AWS BackupVault NOT FOUND ${backupVaultName} from ${stackName} stack`, 'debug');
     }
@@ -2291,6 +2299,7 @@ Once it is resolved rerun uninstaller. Additional error details:\n\n\n\n\n\n`,
             }
             nextToken = page.nextToken;
           } while (nextToken);
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
         } catch (RepositoryNotFoundException) {
           this.debugLog(
             `Ecr delete Error, repository NOT FOUND cdk-accel-container-assets-${account.accountId}-${region} in region ${region} of account ${account.accountName}`,
@@ -2306,6 +2315,7 @@ Once it is resolved rerun uninstaller. Additional error details:\n\n\n\n\n\n`,
               `Ecr ${repository} in region ${region} of account ${account.accountName} deleted successfully`,
               'info',
             );
+            // eslint-disable-next-line @typescript-eslint/no-unused-vars
           } catch (RepositoryNotFoundException) {
             this.debugLog(
               `Ecr delete Error, repository NOT FOUND ${repository} in region ${region} of account ${account.accountName}`,
@@ -2403,6 +2413,7 @@ Once it is resolved rerun uninstaller. Additional error details:\n\n\n\n\n\n`,
             await throttlingBackOff(() =>
               cloudWatchLogsClient.send(new DeleteLogGroupCommand({ logGroupName: logGroupName })),
             );
+            // eslint-disable-next-line @typescript-eslint/no-unused-vars
           } catch (ResourceNotFoundException) {
             this.debugLog(
               `Cloudwatch Log group delete Error Log Group NOT FOUND ${logGroupName} in region ${region} of account ${account}`,

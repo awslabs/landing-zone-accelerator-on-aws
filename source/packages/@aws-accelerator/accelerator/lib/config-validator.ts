@@ -31,12 +31,17 @@ import {
   SecurityConfigValidator,
   ReplacementsConfigValidator,
 } from '@aws-accelerator/config';
-import { createLogger } from '@aws-accelerator/utils/lib/logger';
-import { Accelerator } from './accelerator';
+import { createLogger, setExternalManagementAccountCredentials } from '@aws-accelerator/utils';
 
 const logger = createLogger(['config-validator']);
 const configDirPath = process.argv[2];
-const homeRegion = GlobalConfig.loadRawGlobalConfig(configDirPath).homeRegion;
+let homeRegion: string;
+try {
+  homeRegion = GlobalConfig.loadRawGlobalConfig(configDirPath).homeRegion;
+  logger.info('homeRegion set to ', homeRegion);
+} catch (e) {
+  logger.error('Failed on loadRawGlobalConfig', e);
+}
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const initErrors: { file: string; message: any }[] = [];
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -118,14 +123,18 @@ async function validateConfig(props: {
   regionByRegionDeployOrder: string | undefined;
   stage: string | undefined;
 }) {
-  await Accelerator.getManagementAccountCredentials(props.partition);
-  const orgsEnabled = OrganizationConfig.loadRawOrganizationsConfig(configDirPath).enable;
-
+  let orgsEnabled: boolean;
+  try {
+    await setExternalManagementAccountCredentials(props.partition, homeRegion);
+    orgsEnabled = OrganizationConfig.loadRawOrganizationsConfig(configDirPath).enable;
+  } catch (e) {
+    logger.error('Failure in validationConfig', e);
+  }
   // Load accounts config
   let accountsConfig: AccountsConfig | undefined = undefined;
   try {
     accountsConfig = AccountsConfig.load(configDirPath);
-    await accountsConfig.loadAccountIds(props.partition, props.enableSingleAccountMode, orgsEnabled, accountsConfig);
+    await accountsConfig.loadAccountIds(props.partition, props.enableSingleAccountMode, orgsEnabled!, accountsConfig);
   } catch (e) {
     initErrors.push({ file: AccountsConfig.FILENAME, message: e });
   }

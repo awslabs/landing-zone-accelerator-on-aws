@@ -12,9 +12,11 @@
  */
 
 import * as cdk from 'aws-cdk-lib';
+import { describe } from 'vitest';
 
 import { VpnConnection } from '../../lib/aws-ec2/vpn-connection';
 import { snapShotTest } from '../snapshot-test';
+import { OutsideIpAddressType } from '../../lib/aws-ec2/vpn-connection';
 
 const testNamePrefix = 'Construct(VpnConnection): ';
 
@@ -34,6 +36,27 @@ new VpnConnection(stack, 'TestVpn', {
     {
       preSharedKey: 'test-key-1',
       tunnelInsideCidr: '169.254.100.0/30',
+    },
+  ],
+  tags: [{ key: 'Test-Key', value: 'Test-Value' }],
+});
+
+new VpnConnection(stack, 'TestIpv6Vpn', {
+  name: 'Test-Ipv6-Vpn',
+  customerGatewayId: 'Test-Ipv6-Cgw',
+  staticRoutesOnly: true,
+  transitGatewayId: 'Test-tgw',
+  amazonIpv6NetworkCidr: '::/128',
+  customerIpv6NetworkCidr: '::/128',
+  outsideIpAddressType: OutsideIpAddressType.Ipv6,
+  vpnTunnelOptionsSpecifications: [
+    {
+      preSharedKey: 'test-key-2',
+      tunnelInsideIpv6Cidr: 'fd12:3456:789a:1::/126',
+    },
+    {
+      preSharedKey: 'test-key-2',
+      tunnelInsideIpv6Cidr: 'fd98:abcd:4321:7::/126',
     },
   ],
   tags: [{ key: 'Test-Key', value: 'Test-Value' }],

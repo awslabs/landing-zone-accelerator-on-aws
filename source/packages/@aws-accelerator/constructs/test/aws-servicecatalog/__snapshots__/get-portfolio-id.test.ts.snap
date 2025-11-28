@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`GetPortfolioId Construct(GetPortfolioId):  Snapshot Test 1`] = `
+exports[`GetPortfolioId > Construct(GetPortfolioId):  Snapshot Test 1`] = `
 {
   "Resources": {
     "AssociateHostedZonesF0E2F0DA": {
@@ -35,7 +35,7 @@ exports[`GetPortfolioId Construct(GetPortfolioId):  Snapshot Test 1`] = `
         },
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.14.1",
           },
         },
         "Handler": "__entrypoint__.handler",

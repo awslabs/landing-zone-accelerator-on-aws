@@ -10,7 +10,7 @@
  *  OR CONDITIONS OF ANY KIND, express or implied. See the License for the specific language governing permissions
  *  and limitations under the License.
  */
-import { describe, beforeEach, expect, test } from '@jest/globals';
+import { describe, beforeEach, expect, test, vi, afterEach } from 'vitest';
 import { InviteAccountToOrganizationModule } from '../../../lib/aws-organizations/invite-account-to-organization';
 import { MOCK_CONSTANTS } from '../../mocked-resources';
 import {
@@ -29,7 +29,7 @@ describe('InviteAccountToOrganizationModule Contract Compliance', () => {
   beforeEach(() => {
     module = new InviteAccountToOrganizationModule();
     // Mock the handler implementation
-    jest.spyOn(module, 'handler').mockImplementation(async () => 'mocked-response');
+    vi.spyOn(module, 'handler').mockImplementation(async () => 'mocked-response');
   });
 
   test('should implement all interface methods', () => {
@@ -48,7 +48,7 @@ describe('InviteAccountToOrganizationModule Contract Compliance', () => {
 
   test('should handle invalid inputs according to contract', async () => {
     // Reset mock to test error handling
-    jest.spyOn(module, 'handler').mockRejectedValue(new Error('Invalid input parameters'));
+    vi.spyOn(module, 'handler').mockRejectedValue(new Error('Invalid input parameters'));
 
     await expect(module.handler({} as IInviteAccountToOrganizationHandlerParameter)).rejects.toThrow(
       'Invalid input parameters',
@@ -62,7 +62,7 @@ describe('InviteAccountToOrganizationModule Contract Compliance', () => {
   });
 
   afterEach(() => {
-    jest.restoreAllMocks();
+    vi.restoreAllMocks();
   });
 });
 
@@ -76,7 +76,7 @@ describe('InviteAccountsBatchToOrganizationModule Contract Compliance', () => {
   beforeEach(() => {
     module = new InviteAccountsBatchToOrganizationModule();
     // Mock the handler implementation
-    jest.spyOn(module, 'handler').mockImplementation(async () => 'mocked-response');
+    vi.spyOn(module, 'handler').mockImplementation(async () => 'mocked-response');
   });
 
   test('should implement all interface methods', () => {
@@ -95,7 +95,7 @@ describe('InviteAccountsBatchToOrganizationModule Contract Compliance', () => {
 
   test('should handle invalid inputs according to contract', async () => {
     // Reset mock to test error handling
-    jest.spyOn(module, 'handler').mockRejectedValue(new Error('Invalid input parameters'));
+    vi.spyOn(module, 'handler').mockRejectedValue(new Error('Invalid input parameters'));
 
     await expect(module.handler({} as IInviteAccountsBatchToOrganizationHandlerParameter)).rejects.toThrow(
       'Invalid input parameters',
@@ -109,6 +109,6 @@ describe('InviteAccountsBatchToOrganizationModule Contract Compliance', () => {
   });
 
   afterEach(() => {
-    jest.restoreAllMocks();
+    vi.restoreAllMocks();
   });
 });

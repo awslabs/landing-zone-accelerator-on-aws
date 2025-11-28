@@ -64,8 +64,7 @@ export abstract class CreateStackPolicyModule {
       return MESSAGES.SKIP_FINALIZE;
     }
 
-    const ignoredOus = params.moduleRunnerParameters.configs.organizationConfig.getIgnoredOus();
-    const accountIds = params.moduleRunnerParameters.configs.accountsConfig.getActiveAccountIds(ignoredOus);
+    const accountIds = params.moduleRunnerParameters.configs.accountsConfig.getAccountIds();
     const credentials = params.moduleRunnerParameters.managementAccountCredentials;
 
     CreateStackPolicyModule.logger.debug(`Active accounts for stack policy: ${accountIds.join(', ')}`);

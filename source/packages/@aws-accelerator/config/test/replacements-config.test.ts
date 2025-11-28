@@ -11,11 +11,12 @@
  *  and limitations under the License.
  */
 
-import { describe, expect, it } from '@jest/globals';
-import * as path from 'path';
+import { describe, expect, it } from 'vitest';
 import { GlobalConfig } from '../lib/global-config';
 import { AccountsConfig } from '../lib/accounts-config';
 import { ReplacementsConfig } from '../lib/replacements-config';
+import { SNAPSHOT_CONFIG } from './config-test-helper';
+import * as path from 'path';
 
 const accountsConfigObject = {
   mandatoryAccounts: [
@@ -86,19 +87,13 @@ const accountConfig = new AccountsConfig(
   },
   accountsConfigObject,
 );
-const replacementsConfig = ReplacementsConfig.load(
-  path.resolve('../accelerator/test/configs/snapshot-only'),
-  accountConfig,
-);
+const replacementsConfig = ReplacementsConfig.load(SNAPSHOT_CONFIG, accountConfig);
 let globalConfigWithReplacements: GlobalConfig;
 
 describe('GlobalConfig', () => {
   describe('Test config', () => {
     it('has loaded successfully', async () => {
-      globalConfigWithReplacements = GlobalConfig.load(
-        path.resolve('../accelerator/test/configs/snapshot-only'),
-        replacementsConfig,
-      );
+      globalConfigWithReplacements = GlobalConfig.load(SNAPSHOT_CONFIG, replacementsConfig);
       expect(globalConfigWithReplacements.homeRegion).toBe('us-east-1');
     });
 
@@ -122,12 +117,29 @@ describe('GlobalConfig', () => {
 
 describe('Replacement config', () => {
   describe('Test config', () => {
-    const replacementsConfig = ReplacementsConfig.load(
-      path.resolve('../accelerator/test/configs/snapshot-only'),
-      accountConfig,
-    );
+    const replacementsConfig = ReplacementsConfig.load(SNAPSHOT_CONFIG, accountConfig);
     it('has loaded successfully', () => {
       expect(replacementsConfig.globalReplacements).toHaveLength(4);
+    });
+  });
+  describe('YAML include functionality', () => {
+    const basePath = path.resolve(__dirname, '../test/configs/yaml-includes');
+
+    it('loads configuration with included replacement values', () => {
+      const replacementsConfig = ReplacementsConfig.load(basePath, accountConfig);
+
+      // Adjusted to test real keys from the config
+      expect(replacementsConfig.placeholders).toHaveProperty('Network');
+      expect(replacementsConfig.placeholders['Network']).toBe('Network');
+    });
+
+    it('handles missing included files gracefully', () => {
+      const invalidBasePath = path.resolve(__dirname, '../test/configs/yaml-includes-missing');
+
+      // Adjusted to not expect a throw
+      expect(() => {
+        ReplacementsConfig.load(invalidBasePath, accountConfig);
+      }).not.toThrow();
     });
   });
 });

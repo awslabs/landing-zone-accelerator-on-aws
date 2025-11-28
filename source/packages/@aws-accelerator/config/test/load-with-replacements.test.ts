@@ -15,16 +15,16 @@ import { CustomizationsConfigValidator } from '../validator/customizations-confi
 import { AccountsConfigValidator } from '../validator/accounts-config-validator';
 import { ReplacementsConfigValidator } from '../validator/replacements-config-validator';
 import { ReplacementsConfig } from '../lib/replacements-config';
-import { describe, it, expect } from '@jest/globals';
+import { describe, it, expect } from 'vitest';
 
-import * as path from 'path';
+import { REPLACEMENT_CONFIG } from './config-test-helper';
 
 /*
  * Test config making extensive use of replacements is in configDir folder.
  * This test will load the config and validate it.
  * We define constants with the value of replacements to confirm replacements are processed.
  */
-const configDir = path.resolve('../accelerator/test/configs/replacements');
+const configDir = REPLACEMENT_CONFIG;
 enum SecurityStandards {
   PCI_DSS = 'PCI DSS v3.2.1',
 }
@@ -56,202 +56,187 @@ const loadConfigs = async () => {
     securityConfig,
   };
 };
+describe('load-with-replacements', async () => {
+  const {
+    globalConfig,
+    accountsConfig,
+    iamConfig,
+    organizationConfig,
+    networkConfig,
+    securityConfig,
+    replacementsConfig,
+    customizationsConfig,
+  } = await loadConfigs();
 
-describe('Global Config', () => {
-  it('should load global', async () => {
-    const { globalConfig } = await loadConfigs();
-    expect(globalConfig).toBeDefined();
-  });
+  describe('Global Config', () => {
+    it('should load global', async () => {
+      expect(globalConfig).toBeDefined();
+    });
 
-  it('should be valid', async () => {
-    const { globalConfig, accountsConfig, iamConfig, organizationConfig, securityConfig } = await loadConfigs();
-    expect(() => {
-      new GlobalConfigValidator(globalConfig, accountsConfig, iamConfig, organizationConfig, securityConfig, configDir);
-    }).not.toThrow();
-  });
+    it('should be valid', async () => {
+      expect(() => {
+        new GlobalConfigValidator(
+          globalConfig,
+          accountsConfig,
+          iamConfig,
+          organizationConfig,
+          securityConfig,
+          configDir,
+        );
+      }).not.toThrow();
+    });
 
-  it('should process string list replacements', async () => {
-    // when a StringList replacement is used within a YAML list (i.e. [{{REPLACEMENT}}]), it should be rendered as a list
-    const { globalConfig } = await loadConfigs();
-    expect(globalConfig).toBeDefined();
-    expect(globalConfig.logging.cloudwatchLogs?.dataProtection?.deploymentTargets?.organizationalUnits).toEqual(
-      replacementsCoreOUs,
-    );
-    expect(globalConfig.homeRegion).toEqual(replacementsHomeRegion);
-    expect(globalConfig.enabledRegions).toEqual(replacementsAllEnabledRegions);
-  });
-
-  it('should process account replacement', async () => {
-    const { globalConfig } = await loadConfigs();
-    expect(globalConfig.tags.find(tag => tag.key === 'MgmtAccount')?.value).toEqual(replacementsManagementAccountId);
-  });
-
-  it('should process ssm replacement with placeholders', async () => {
-    // in validate mode, the replacement value for SSM parameter is not loaded
-    // we expect the value to equal the key
-    const { globalConfig } = await loadConfigs();
-    expect(globalConfig.tags.find(tag => tag.key === 'ssm-replacement')?.value).toEqual('ssmparam');
-  });
-
-  it('should process string list replacements provided as a string value', async () => {
-    // when a StringList replacement is used within a string value, it should be rendered as a comma-separated list
-    const { globalConfig } = await loadConfigs();
-    expect(globalConfig.tags.find(tag => tag.key === 'AllRegions')?.value).toEqual(
-      replacementsAllEnabledRegions.toString(),
-    );
-  });
-});
-
-describe('Iam Config', () => {
-  it('should load', async () => {
-    const { iamConfig } = await loadConfigs();
-    expect(iamConfig).toBeDefined();
-  });
-
-  it('should be valid', async () => {
-    const { iamConfig, accountsConfig, networkConfig, organizationConfig, securityConfig } = await loadConfigs();
-    expect(() => {
-      new IamConfigValidator(
-        iamConfig,
-        accountsConfig,
-        networkConfig,
-        organizationConfig,
-        securityConfig,
-        configDir,
-      ).validate();
-    }).not.toThrow();
-  });
-});
-
-describe('Organization Config', () => {
-  it('should load organization config with string list replacements', async () => {
-    const { organizationConfig } = await loadConfigs();
-    expect(organizationConfig).toBeDefined();
-    expect(organizationConfig.enable).toBeDefined();
-    expect(organizationConfig.chatbotPolicies?.[0].deploymentTargets.organizationalUnits).toEqual(replacementsCoreOUs);
-  });
-
-  it('should be valid', async () => {
-    const { organizationConfig, replacementsConfig } = await loadConfigs();
-    expect(() => {
-      new OrganizationConfigValidator(organizationConfig, replacementsConfig, configDir);
-    }).not.toThrow();
-  });
-});
-
-describe('Security Config', () => {
-  it('should load security config with string list replacements', async () => {
-    const { securityConfig } = await loadConfigs();
-    expect(securityConfig).toBeDefined();
-    expect(securityConfig.centralSecurityServices.securityHub.standards).toBeDefined();
-    const pciStandard = securityConfig.centralSecurityServices.securityHub.standards.find(
-      (standard: ISecurityHubStandardConfig) => standard.name === SecurityStandards.PCI_DSS,
-    );
-    expect(pciStandard?.controlsToDisable).toEqual(replacementsPciControlsToDisable);
-  });
-
-  it('should be valid', async () => {
-    const { accountsConfig, globalConfig, organizationConfig, securityConfig, replacementsConfig } =
-      await loadConfigs();
-    expect(() => {
-      new SecurityConfigValidator(
-        securityConfig,
-        accountsConfig,
-        globalConfig,
-        organizationConfig,
-        replacementsConfig,
-        configDir,
+    it('should process string list replacements', async () => {
+      // when a StringList replacement is used within a YAML list (i.e. [{{REPLACEMENT}}]), it should be rendered as a list
+      expect(globalConfig).toBeDefined();
+      expect(globalConfig.logging.cloudwatchLogs?.dataProtection?.deploymentTargets?.organizationalUnits).toEqual(
+        replacementsCoreOUs,
       );
-    }).not.toThrow();
-  });
-});
+      expect(globalConfig.homeRegion).toEqual(replacementsHomeRegion);
+      expect(globalConfig.enabledRegions).toEqual(replacementsAllEnabledRegions);
+    });
 
-describe('Network Config', () => {
-  it('should load', async () => {
-    const { networkConfig } = await loadConfigs();
-    expect(networkConfig).toBeDefined();
-  });
+    it('should process account replacement', async () => {
+      expect(globalConfig.tags.find(tag => tag.key === 'MgmtAccount')?.value).toEqual(replacementsManagementAccountId);
+    });
 
-  it('should be valid', async () => {
-    const {
-      networkConfig,
-      accountsConfig,
-      globalConfig,
-      organizationConfig,
-      securityConfig,
-      replacementsConfig,
-      customizationsConfig,
-    } = await loadConfigs();
-    expect(() => {
-      new NetworkConfigValidator(
-        networkConfig,
-        accountsConfig,
-        globalConfig,
-        organizationConfig,
-        securityConfig,
-        replacementsConfig,
-        configDir,
-        customizationsConfig,
+    it('should process ssm replacement with placeholders', async () => {
+      // in validate mode, the replacement value for SSM parameter is not loaded
+      // we expect the value to equal the key
+      expect(globalConfig.tags.find(tag => tag.key === 'ssm-replacement')?.value).toEqual('ssmparam');
+    });
+
+    it('should process string list replacements provided as a string value', async () => {
+      // when a StringList replacement is used within a string value, it should be rendered as a comma-separated list
+      expect(globalConfig.tags.find(tag => tag.key === 'AllRegions')?.value).toEqual(
+        replacementsAllEnabledRegions.toString(),
       );
-    }).not.toThrow();
-  });
-});
-
-describe('Customizations Config', () => {
-  it('should load', async () => {
-    const { customizationsConfig } = await loadConfigs();
-    expect(customizationsConfig).toBeDefined();
+    });
   });
 
-  it('should be valid', async () => {
-    const {
-      networkConfig,
-      accountsConfig,
-      globalConfig,
-      organizationConfig,
-      securityConfig,
-      iamConfig,
-      customizationsConfig,
-    } = await loadConfigs();
-    expect(() => {
-      new CustomizationsConfigValidator(
-        customizationsConfig,
-        accountsConfig,
-        globalConfig,
-        iamConfig,
-        networkConfig,
-        organizationConfig,
-        securityConfig,
-        configDir,
+  describe('Iam Config', () => {
+    it('should load', async () => {
+      expect(iamConfig).toBeDefined();
+    });
+
+    it('should be valid', async () => {
+      const { iamConfig, accountsConfig, networkConfig, organizationConfig, securityConfig } = await loadConfigs();
+      expect(() => {
+        new IamConfigValidator(
+          iamConfig,
+          accountsConfig,
+          networkConfig,
+          organizationConfig,
+          securityConfig,
+          configDir,
+        ).validate();
+      }).not.toThrow();
+    });
+  });
+
+  describe('Organization Config', () => {
+    it('should load organization config with string list replacements', async () => {
+      expect(organizationConfig).toBeDefined();
+      expect(organizationConfig.enable).toBeDefined();
+      expect(organizationConfig.chatbotPolicies?.[0].deploymentTargets.organizationalUnits).toEqual(
+        replacementsCoreOUs,
       );
-    }).not.toThrow();
-  });
-});
+    });
 
-describe('Accounts Config', () => {
-  it('should load', async () => {
-    const { accountsConfig } = await loadConfigs();
-    expect(accountsConfig).toBeDefined();
-  });
-
-  it('should be valid', async () => {
-    const { accountsConfig, organizationConfig } = await loadConfigs();
-    expect(() => {
-      new AccountsConfigValidator(accountsConfig, organizationConfig);
-    }).not.toThrow();
-  });
-});
-
-describe('Replacements Config', () => {
-  it('should load', async () => {
-    const { replacementsConfig } = await loadConfigs();
-    expect(replacementsConfig).toBeDefined();
+    it('should be valid', async () => {
+      expect(() => {
+        new OrganizationConfigValidator(organizationConfig, replacementsConfig, configDir);
+      }).not.toThrow();
+    });
   });
 
-  it('should be valid', async () => {
-    const { replacementsConfig } = await loadConfigs();
-    expect(() => {
-      new ReplacementsConfigValidator(replacementsConfig, configDir);
-    }).not.toThrow();
+  describe('Security Config', () => {
+    it('should load security config with string list replacements', async () => {
+      expect(securityConfig).toBeDefined();
+      expect(securityConfig.centralSecurityServices.securityHub.standards).toBeDefined();
+      const pciStandard = securityConfig.centralSecurityServices.securityHub.standards.find(
+        (standard: ISecurityHubStandardConfig) => standard.name === SecurityStandards.PCI_DSS,
+      );
+      expect(pciStandard?.controlsToDisable).toEqual(replacementsPciControlsToDisable);
+    });
+
+    it('should be valid', async () => {
+      expect(() => {
+        new SecurityConfigValidator(
+          securityConfig,
+          accountsConfig,
+          globalConfig,
+          organizationConfig,
+          replacementsConfig,
+          configDir,
+        );
+      }).not.toThrow();
+    });
+  });
+
+  describe('Network Config', () => {
+    it('should load', async () => {
+      expect(networkConfig).toBeDefined();
+    });
+
+    it('should be valid', async () => {
+      expect(() => {
+        new NetworkConfigValidator(
+          networkConfig,
+          accountsConfig,
+          globalConfig,
+          organizationConfig,
+          securityConfig,
+          replacementsConfig,
+          configDir,
+          customizationsConfig,
+        );
+      }).not.toThrow();
+    });
+  });
+
+  describe('Customizations Config', () => {
+    it('should load', async () => {
+      expect(customizationsConfig).toBeDefined();
+    });
+
+    it('should be valid', async () => {
+      expect(() => {
+        new CustomizationsConfigValidator(
+          customizationsConfig,
+          accountsConfig,
+          globalConfig,
+          iamConfig,
+          networkConfig,
+          organizationConfig,
+          securityConfig,
+          configDir,
+        );
+      }).not.toThrow();
+    });
+  });
+
+  describe('Accounts Config', () => {
+    it('should load', async () => {
+      expect(accountsConfig).toBeDefined();
+    });
+
+    it('should be valid', async () => {
+      expect(() => {
+        new AccountsConfigValidator(accountsConfig, organizationConfig);
+      }).not.toThrow();
+    });
+  });
+
+  describe('Replacements Config', () => {
+    it('should load', async () => {
+      expect(replacementsConfig).toBeDefined();
+    });
+
+    it('should be valid', async () => {
+      expect(() => {
+        new ReplacementsConfigValidator(replacementsConfig, configDir);
+      }).not.toThrow();
+    });
   });
 });

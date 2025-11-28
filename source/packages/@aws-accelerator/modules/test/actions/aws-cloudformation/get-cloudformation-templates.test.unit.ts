@@ -11,7 +11,7 @@
  *  and limitations under the License.
  */
 
-import { beforeEach, describe, test } from '@jest/globals';
+import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { AcceleratorModules, ModuleExecutionPhase } from '../../../models/enums';
 import { AcceleratorStage } from '../../../../accelerator';
 import { ModuleParams } from '../../../models/types';
@@ -31,20 +31,20 @@ describe('GetCloudFormationTemplatesModule', () => {
   let mockGlobalConfig: Partial<GlobalConfig>;
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
 
-    jest
-      .spyOn(awsLza, 'getCloudFormationTemplates')
-      .mockResolvedValue(`Module ${AcceleratorModules.GET_CLOUDFORMATION_TEMPLATES} executed successfully`);
+    vi.spyOn(awsLza, 'getCloudFormationTemplates').mockResolvedValue(
+      `Module ${AcceleratorModules.GET_CLOUDFORMATION_TEMPLATES} executed successfully`,
+    );
 
     mockOrgConfig = {
       ...mockOrganizationConfig,
-      getIgnoredOus: jest.fn().mockReturnValue([]),
+      getIgnoredOus: vi.fn().mockReturnValue([]),
     };
 
     mockAccountsConfig = {
-      getManagementAccountId: jest.fn().mockReturnValue('111111111111'),
-      getActiveAccountIds: jest.fn().mockReturnValue(['111111111111', '222222222222']),
+      getManagementAccountId: vi.fn().mockReturnValue('111111111111'),
+      getActiveAccountIds: vi.fn().mockReturnValue(['111111111111', '222222222222']),
       ...mockAccountsConfiguration,
     };
 
@@ -62,7 +62,7 @@ describe('GetCloudFormationTemplatesModule', () => {
         name: AcceleratorModules.GET_CLOUDFORMATION_TEMPLATES,
         description: '',
         runOrder: 1,
-        handler: jest.fn().mockResolvedValue(`Module 1 of ${AcceleratorStage.ACCOUNTS} stage executed`),
+        handler: vi.fn().mockResolvedValue(`Module 1 of ${AcceleratorStage.ACCOUNTS} stage executed`),
         executionPhase: ModuleExecutionPhase.DEPLOY,
       },
       runnerParameters: MOCK_CONSTANTS.runnerParameters,
@@ -108,7 +108,7 @@ describe('GetCloudFormationTemplatesModule', () => {
         name: AcceleratorModules.GET_CLOUDFORMATION_TEMPLATES,
         description: '',
         runOrder: 1,
-        handler: jest.fn().mockResolvedValue(`Module 1 of ${AcceleratorStage.ACCOUNTS} stage executed`),
+        handler: vi.fn().mockResolvedValue(`Module 1 of ${AcceleratorStage.ACCOUNTS} stage executed`),
         executionPhase: ModuleExecutionPhase.DEPLOY,
       },
       runnerParameters: MOCK_CONSTANTS.runnerParameters,
@@ -149,7 +149,7 @@ describe('GetCloudFormationTemplatesModule', () => {
         name: AcceleratorModules.GET_CLOUDFORMATION_TEMPLATES,
         description: '',
         runOrder: 1,
-        handler: jest.fn().mockResolvedValue(`Module 1 of ${AcceleratorStage.ACCOUNTS} stage executed`),
+        handler: vi.fn().mockResolvedValue(`Module 1 of ${AcceleratorStage.ACCOUNTS} stage executed`),
         executionPhase: ModuleExecutionPhase.DEPLOY,
       },
       runnerParameters: MOCK_CONSTANTS.runnerParameters,
@@ -184,6 +184,6 @@ describe('GetCloudFormationTemplatesModule', () => {
   });
 
   afterEach(() => {
-    jest.restoreAllMocks();
+    vi.restoreAllMocks();
   });
 });

@@ -12,7 +12,7 @@ Most stages of the [core pipeline](https://docs.aws.amazon.com/solutions/latest/
 yarn run ts-node --transpile-only cdk.ts synth --stage operations --config-dir /path/to/aws-accelerator-config/ --partition aws
 
 // Deploy CloudFormation templates
-yarn run ts-node --transpile-only cdk.ts deploy --stage network-vpc --require-approval any-change --config-dir /path/to/aws-accelerator-config/ --partition aws --app cdk.out
+yarn run ts-node --transpile-only cdk.ts deploy --stage network-vpc --config-dir /path/to/aws-accelerator-config/ --partition aws
 ```
 
 These commands execute the core logic of the CDK, contained in `source/packages/@aws-accelerator/accelerator`. Specifically, this command uses `cdk.ts` as an entrypoint to invoke `lib/accelerator.ts`, which executes parallel instances of `lib/toolkit.ts` to each synthesize or deploy a single CloudFormation stack for each unique pair of account and region in the deployment environment. The above command would synthesize a set of CloudFormation stacks with names following the pattern:

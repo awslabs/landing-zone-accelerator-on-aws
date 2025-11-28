@@ -39,8 +39,7 @@ import {
   VpcEndpoint,
   VpcEndpointType,
 } from '@aws-accelerator/constructs';
-import { getAvailabilityZoneMap } from '@aws-accelerator/utils/lib/regions';
-import { SsmResourceType } from '@aws-accelerator/utils/lib/ssm-parameter-path';
+import { getAvailabilityZoneMap, SsmResourceType } from '@aws-accelerator/utils';
 
 import { AcceleratorStackProps } from '../../accelerator-stack';
 import { NetworkStack } from '../network-stack';
@@ -726,7 +725,7 @@ export class NetworkVpcEndpointsStack extends NetworkStack {
 
     // Create the interface endpoint
     const securityGroupMap = new Map<string, SecurityGroup>();
-    const privateDnsValue = vpcItem.interfaceEndpoints?.central === false;
+    const privateDnsValue = !vpcItem.interfaceEndpoints?.central ? true : false;
 
     for (const endpointItem of vpcItem.interfaceEndpoints?.endpoints ?? []) {
       const globalRegion = getGlobalRegion(cdk.Stack.of(this).partition);

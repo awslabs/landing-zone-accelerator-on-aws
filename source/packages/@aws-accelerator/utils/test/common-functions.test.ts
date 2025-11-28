@@ -10,7 +10,7 @@
  *  OR CONDITIONS OF ANY KIND, express or implied. See the License for the specific language governing permissions
  *  and limitations under the License.
  */
-import { describe, it, beforeEach, expect, afterAll } from '@jest/globals';
+import { describe, it, beforeEach, expect, afterAll, beforeAll, test, vi, afterEach } from 'vitest';
 import {
   getNodeVersion,
   chunkArray,
@@ -76,7 +76,7 @@ describe('getNodeVersion', () => {
   const originalEnv = process.env;
 
   beforeEach(() => {
-    jest.resetModules();
+    vi.resetModules();
     process.env = { ...originalEnv };
   });
 

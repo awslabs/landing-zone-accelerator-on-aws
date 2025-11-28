@@ -7,7 +7,7 @@ import {
   UpdateMalwareScanSettingsCommand,
   UpdateMemberDetectorsCommand,
 } from '@aws-sdk/client-guardduty';
-import { beforeEach, describe, expect, jest, test } from '@jest/globals';
+import { beforeEach, describe, expect, vi, test } from 'vitest';
 import {
   createAdditionalConfiguration,
   createDetectorFeatures,
@@ -19,6 +19,20 @@ import {
   updateMemberDetectors,
 } from '../index';
 
+// Mock console output
+vi.spyOn(console, 'log').mockImplementation(() => {
+  /* mock implementation */
+});
+vi.spyOn(console, 'error').mockImplementation(() => {
+  /* mock implementation */
+});
+vi.spyOn(console, 'warn').mockImplementation(() => {
+  /* mock implementation */
+});
+vi.spyOn(console, 'info').mockImplementation(() => {
+  /* mock implementation */
+});
+
 describe('GuardDutyUpdateDetector - lambda handler', () => {
   let guardDutyClient: GuardDutyClient;
   let updateOptions: UpdateDetectorOptions;
@@ -26,7 +40,7 @@ describe('GuardDutyUpdateDetector - lambda handler', () => {
   const existingMemberAccountIds = ['1234567890'];
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     guardDutyClient = new GuardDutyClient();
     updateOptions = {
       enableEksProtection: true,
@@ -215,13 +229,13 @@ describe('GuardDutyUpdateDetector - lambda handler', () => {
 
   describe('removeDetectorFeatures', () => {
     test('calls commands', async () => {
-      jest.spyOn(guardDutyClient, 'send').mockImplementation(() => Promise.resolve(true));
+      vi.spyOn(guardDutyClient, 'send').mockImplementation(() => Promise.resolve(true));
       await removeDetectorFeatures(guardDutyClient, detectorId, existingMemberAccountIds, updateOptions);
       expect(guardDutyClient.send).toHaveBeenCalledTimes(2);
     });
 
     test('update fails commands', async () => {
-      jest.spyOn(guardDutyClient, 'send').mockImplementationOnce(() => {
+      vi.spyOn(guardDutyClient, 'send').mockImplementationOnce(() => {
         throw new Error();
       });
       await removeDetectorFeatures(guardDutyClient, detectorId, existingMemberAccountIds, updateOptions);
@@ -231,21 +245,21 @@ describe('GuardDutyUpdateDetector - lambda handler', () => {
 
   describe('updateMainDetector', () => {
     test('calls commands', async () => {
-      jest.spyOn(guardDutyClient, 'send').mockImplementation(() => Promise.resolve(true));
+      vi.spyOn(guardDutyClient, 'send').mockImplementation(() => Promise.resolve(true));
       await updateMainDetector(guardDutyClient, detectorId, updateOptions);
-      const updateDetectorCommand = (guardDutyClient.send as jest.Mock).mock.calls[0][0];
+      const updateDetectorCommand = (guardDutyClient.send as vi.Mock).mock.calls[0][0];
       expect(updateDetectorCommand instanceof UpdateDetectorCommand).toBeTruthy();
-      const updateMalwareCommand = (guardDutyClient.send as jest.Mock).mock.calls[1][0];
+      const updateMalwareCommand = (guardDutyClient.send as vi.Mock).mock.calls[1][0];
       expect(updateMalwareCommand instanceof UpdateMalwareScanSettingsCommand).toBeTruthy();
     });
 
     test('update fails commands', async () => {
-      jest.spyOn(guardDutyClient, 'send').mockImplementationOnce(() => {
+      vi.spyOn(guardDutyClient, 'send').mockImplementationOnce(() => {
         throw new Error();
       });
 
       await expect(async () => await updateMainDetector(guardDutyClient, detectorId, updateOptions)).rejects.toThrow();
-      const updateDetectorCommand = (guardDutyClient.send as jest.Mock).mock.calls[0][0];
+      const updateDetectorCommand = (guardDutyClient.send as vi.Mock).mock.calls[0][0];
       expect(updateDetectorCommand).not.toBeUndefined();
       expect(updateDetectorCommand instanceof UpdateDetectorCommand).toBeTruthy();
       expect(guardDutyClient.send).toHaveBeenCalledTimes(1);
@@ -254,23 +268,23 @@ describe('GuardDutyUpdateDetector - lambda handler', () => {
 
   describe('updateMemberDetectors', () => {
     test('calls commands', async () => {
-      jest.spyOn(guardDutyClient, 'send').mockImplementation(() => Promise.resolve(true));
+      vi.spyOn(guardDutyClient, 'send').mockImplementation(() => Promise.resolve(true));
       await updateMemberDetectors(guardDutyClient, detectorId, existingMemberAccountIds, updateOptions);
-      const updateDetectorCommand = (guardDutyClient.send as jest.Mock).mock.calls[0][0];
+      const updateDetectorCommand = (guardDutyClient.send as vi.Mock).mock.calls[0][0];
       expect(updateDetectorCommand instanceof UpdateMemberDetectorsCommand).toBeTruthy();
-      const updateMemberCommand = (guardDutyClient.send as jest.Mock).mock.calls[1][0];
+      const updateMemberCommand = (guardDutyClient.send as vi.Mock).mock.calls[1][0];
       expect(updateMemberCommand instanceof UpdateMalwareScanSettingsCommand).toBeTruthy();
     });
 
     test('update fails commands', async () => {
-      jest.spyOn(guardDutyClient, 'send').mockImplementationOnce(() => {
+      vi.spyOn(guardDutyClient, 'send').mockImplementationOnce(() => {
         throw new Error();
       });
       await expect(
         async () =>
           await await updateMemberDetectors(guardDutyClient, detectorId, existingMemberAccountIds, updateOptions),
       ).rejects.toThrow();
-      const updateDetectorCommand = (guardDutyClient.send as jest.Mock).mock.calls[0][0];
+      const updateDetectorCommand = (guardDutyClient.send as vi.Mock).mock.calls[0][0];
       expect(updateDetectorCommand).not.toBeUndefined();
       expect(updateDetectorCommand instanceof UpdateMemberDetectorsCommand).toBeTruthy();
       expect(guardDutyClient.send).toHaveBeenCalledTimes(1);

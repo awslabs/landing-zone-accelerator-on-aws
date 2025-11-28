@@ -20,7 +20,7 @@ import {
   AcceleratorModuleRunnerParametersType,
   RunnerParametersType,
 } from '../models/types';
-import { createLogger } from '../../../@aws-lza/common/logger';
+import { createLogger, createStatusLogger } from '../../../@aws-lza/common/logger';
 import { IAssumeRoleCredential } from '../../../@aws-lza/common/resources';
 import { getCredentials, setRetryStrategy } from '../../../@aws-lza/common/functions';
 import {
@@ -35,8 +35,7 @@ import { throttlingBackOff } from '../../../@aws-lza/common/throttle';
 import { AcceleratorResourcePrefixes } from '../../accelerator/utils/app-utils';
 import { AcceleratorResourceNames } from '../../accelerator/lib/accelerator-resource-names';
 import { getGlobalRegion } from '@aws-accelerator/utils/lib/common-functions';
-import { GlobalConfig } from '@aws-accelerator/config/lib/global-config';
-import { AccountsConfig } from '@aws-accelerator/config/lib/accounts-config';
+import { GlobalConfig, AccountsConfig } from '@aws-accelerator/config';
 import { GetParameterCommand, ParameterNotFound, SSMClient } from '@aws-sdk/client-ssm';
 import { ConfigLoader } from './config-loader';
 import {
@@ -47,6 +46,7 @@ import {
 import { ModuleExecutionPhase } from '../models/enums';
 
 const logger = createLogger([path.parse(path.basename(__filename)).name]);
+const statusLogger = createStatusLogger([path.parse(path.basename(__filename)).name]);
 
 /**
  * Module runner command with option to execute the command.
@@ -412,13 +412,13 @@ export function isModuleExecutionSkippedByEnvironment(moduleName: string): boole
   const environmentVariableName = pascalCase(`skip-${moduleName}`);
   const environmentSetting = process.env[pascalCase(environmentVariableName)]?.toLowerCase() === 'true';
   if (environmentSetting) {
-    logger.warn(
-      `Module ${moduleName} skipped by environment variable settings. To enable the module execution set the environment variable ${environmentVariableName} to true (case insensitive) for AWSAccelerator-ToolkitProject CodeBuild project.`,
+    statusLogger.warn(
+      `Module ${moduleName} skipped by environment variable settings. To enable the module execution set the environment variable ${environmentVariableName} to false (case insensitive) for AWSAccelerator-ToolkitProject CodeBuild project.`,
     );
     return true;
   }
-  logger.info(
-    `Module ${moduleName} will be executed, module execution can be skipped by setting environment variable ${environmentVariableName} to false (case insensitive) for AWSAccelerator-ToolkitProject CodeBuild project. Removing the variable will enable module execution. Contact AWS Support prior to making changes to the module's default settings.`,
+  statusLogger.info(
+    `Module ${moduleName} will be executed, module execution can be skipped by setting environment variable ${environmentVariableName} to true (case insensitive) for AWSAccelerator-ToolkitProject CodeBuild project. Removing the variable will enable module execution. Contact AWS Support prior to making changes to the module's default settings.`,
   );
   return false;
 }

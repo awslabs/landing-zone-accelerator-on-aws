@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`MacieOrganizationAdminAccount Construct(MacieOrganizationAdminAccount):  Snapshot Test 1`] = `
+exports[`MacieOrganizationAdminAccount > Construct(MacieOrganizationAdminAccount):  Snapshot Test 1`] = `
 {
   "Resources": {
     "CustomMacieEnableOrganizationAdminAccountCustomResourceProviderHandlerD7A9976A": {
@@ -16,7 +16,7 @@ exports[`MacieOrganizationAdminAccount Construct(MacieOrganizationAdminAccount):
         },
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.14.1",
           },
         },
         "Handler": "__entrypoint__.handler",

@@ -16,6 +16,8 @@ import { createLogger } from '../common/logger';
 import { IAssumeRoleCredential } from '../common/resources';
 import { IBlockPublicDocumentSharingHandlerParameter } from '../interfaces/aws-ssm/manage-document-public-access-block';
 import { BlockPublicDocumentSharingModule } from '../lib/aws-ssm/manage-document-public-access-block';
+import { IGetSsmParametersValueHandlerParameter, ISsmParameterValue } from '../interfaces/aws-ssm/get-parameters';
+import { GetSsmParametersValueModule } from '../lib/aws-ssm/get-parameters';
 
 process.on('uncaughtException', err => {
   throw err;
@@ -52,7 +54,7 @@ const logger = createLogger([path.parse(path.basename(__filename)).name]);
 export async function manageBlockPublicDocumentSharing(params: {
   accountId: string;
   region: string;
-  credentials: IAssumeRoleCredential;
+  credentials?: IAssumeRoleCredential;
   enable: boolean;
   solutionId: string;
 }): Promise<string> {
@@ -68,6 +70,48 @@ export async function manageBlockPublicDocumentSharing(params: {
       solutionId: params.solutionId,
     };
     return await new BlockPublicDocumentSharingModule().handler(input);
+  } catch (e: unknown) {
+    logger.error(e);
+    throw e;
+  }
+}
+
+/**
+ * Function to get String SSM parameters
+ * @param input {@link IGetSsmParametersValueHandlerParameter}
+ * @returns ISsmParameterResponse[]
+ *
+ * @description
+ * Use this function to retrieve String SSM parameter values, supports batch retrieval and cross-account access
+ *
+ * @example
+ * ```
+ * const param: IGetSsmParametersHandlerParameter = {
+ *   operation: 'get-parameters',
+ *   region: 'us-east-1',
+ *   partition: 'aws',
+ *   solutionId: 'test',
+ *   parameters: [
+ *     {
+ *       name: '/my/parameter/path',
+ *     },
+ *     {
+ *       name: '/my/parameter/path',
+ *       region: 'us-east-2'
+ *     },
+ *     {
+ *       name: '/my/parameter/path2',
+ *       assumeRoleArn: 'arn:aws:iam::2222222222222:role/CrossAccountRole'
+ *     }
+ *   ],
+ * };
+ * ```
+ */
+export async function getSsmParametersValue(
+  input: IGetSsmParametersValueHandlerParameter,
+): Promise<ISsmParameterValue[]> {
+  try {
+    return await new GetSsmParametersValueModule().handler(input);
   } catch (e: unknown) {
     logger.error(e);
     throw e;

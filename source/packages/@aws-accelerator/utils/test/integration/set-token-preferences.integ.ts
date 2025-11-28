@@ -14,7 +14,7 @@ import { setStsTokenPreferences } from '../../lib/set-token-preferences';
 import { IAMClient, SetSecurityTokenServicePreferencesCommand, GetAccountSummaryCommand } from '@aws-sdk/client-iam';
 import { throttlingBackOff } from '../../lib/throttle';
 import { setRetryStrategy } from '../../lib/common-functions';
-import { expect, it } from '@jest/globals';
+import { expect, it } from 'vitest';
 
 /**
  * Run the test to see if the function is working in a single account.

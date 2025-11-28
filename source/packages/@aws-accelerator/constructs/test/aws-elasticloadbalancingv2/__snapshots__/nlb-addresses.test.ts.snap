@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`ConfigServiceTags Construct(NLBAddresses):  Snapshot Test 1`] = `
+exports[`ConfigServiceTags > Construct(NLBAddresses):  Snapshot Test 1`] = `
 {
   "Resources": {
     "NLBAddresses5DBEA4ED": {
@@ -40,7 +40,7 @@ exports[`ConfigServiceTags Construct(NLBAddresses):  Snapshot Test 1`] = `
         },
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.14.1",
           },
         },
         "Handler": "index.handler",
@@ -178,7 +178,7 @@ exports[`ConfigServiceTags Construct(NLBAddresses):  Snapshot Test 1`] = `
         "Description": "AWS CDK resource provider framework - onEvent (Stack/NLBAddresses/NLBAddressesProvider)",
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.14.1",
             "USER_ON_EVENT_FUNCTION_ARN": {
               "Fn::GetAtt": [
                 "NLBAddressesNLBAddressesProviderLambdaA8F7BC9A",
@@ -188,6 +188,10 @@ exports[`ConfigServiceTags Construct(NLBAddresses):  Snapshot Test 1`] = `
           },
         },
         "Handler": "framework.onEvent",
+        "LoggingConfig": {
+          "ApplicationLogLevel": "FATAL",
+          "LogFormat": "JSON",
+        },
         "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
@@ -280,6 +284,16 @@ exports[`ConfigServiceTags Construct(NLBAddresses):  Snapshot Test 1`] = `
                   ],
                 },
               ],
+            },
+            {
+              "Action": "lambda:GetFunction",
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::GetAtt": [
+                  "NLBAddressesNLBAddressesProviderLambdaA8F7BC9A",
+                  "Arn",
+                ],
+              },
             },
           ],
           "Version": "2012-10-17",

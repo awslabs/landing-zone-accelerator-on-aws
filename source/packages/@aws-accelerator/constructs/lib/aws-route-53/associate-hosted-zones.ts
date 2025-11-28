@@ -16,8 +16,7 @@ import * as cdk from 'aws-cdk-lib';
 import { Size } from 'aws-cdk-lib';
 import { Construct } from 'constructs';
 import { v4 as uuidv4 } from 'uuid';
-
-const path = require('path');
+import * as path from 'path';
 
 export interface AssociateHostedZonesProps {
   readonly accountIds: string[];

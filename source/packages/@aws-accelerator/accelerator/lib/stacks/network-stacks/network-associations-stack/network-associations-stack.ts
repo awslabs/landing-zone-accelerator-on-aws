@@ -82,13 +82,13 @@ import {
   VpcPeering,
   albListenerActionProperty,
 } from '@aws-accelerator/constructs';
-import { SsmResourceType } from '@aws-accelerator/utils/lib/ssm-parameter-path';
+import { SsmResourceType } from '@aws-accelerator/utils';
 
 import path from 'path';
 import { AcceleratorStackProps, NagSuppressionRuleIds } from '../../accelerator-stack';
 import { NetworkStack } from '../network-stack';
 import { getPrefixList } from '../utils/getter-utils';
-import { isEc2FirewallVpnRoute, isIpv4 } from '../utils/validation-utils';
+import { isEc2FirewallVpnRoute, isIpAddress } from '../utils/validation-utils';
 import { SharedResources } from './shared-resources';
 
 interface Peering {
@@ -585,7 +585,7 @@ export class NetworkAssociationsStack extends NetworkStack {
         if (nlbTargetsWithAccountIds && nlbTargetsWithAccountIds.length > 0) {
           const nlbAddresses = new NLBAddresses(this, `${targetGroupItem.name}-ipLookup`, {
             targets: [...nlbTargetsWithAccountIds, ...staticIpTargets],
-            assumeRoleName: `${this.props.prefixes.accelerator}-GetNLBIPAddressLookup`,
+            assumeRoleName: `${this.props.prefixes.accelerator}-NetworkLoadBalancerIPAddress-Lookup`,
             partition: cdk.Stack.of(this).partition,
             kmsKey: this.cloudwatchKey,
             logRetentionInDays: this.logRetention,
@@ -619,6 +619,7 @@ export class NetworkAssociationsStack extends NetworkStack {
             vpc: vpcId,
           });
         }
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
       } catch (err) {
         this.logger.error(
           `Could not create target group for ${targetGroupItem.name} in vpc ${vpcItem.name}. Please review the target group configuration`,
@@ -963,7 +964,7 @@ export class NetworkAssociationsStack extends NetworkStack {
     // for VPN attachments
     //
     for (const cgwItem of props.networkConfig.customerGateways ?? []) {
-      if (isIpv4(cgwItem.ipAddress)) {
+      if (isIpAddress(cgwItem.ipAddress)) {
         for (const vpnItem of cgwItem.vpnConnections ?? []) {
           this.setTransitGatewayVpnAttachmentsMap(props, cgwItem, vpnItem);
           this.createVpnTransitGatewayAssociations(cgwItem, vpnItem);
@@ -2462,7 +2463,6 @@ export class NetworkAssociationsStack extends NetworkStack {
     if (this.isTargetStack([tgwAccountId], [tgw.region])) {
       const transitGatewayAttachmentId = this.transitGatewayAttachments.get(`${dxgwItem.name}_${tgw.name}`);
       const transitGatewayRouteTableId = this.transitGatewayRouteTables.get(`${tgw.name}_${tgwRouteTableName}`);
-
       if (!transitGatewayAttachmentId) {
         this.logger.error(
           `Create DX TGW route table associations: unable to locate attachment ${dxgwItem.name}_${tgw.name}`,

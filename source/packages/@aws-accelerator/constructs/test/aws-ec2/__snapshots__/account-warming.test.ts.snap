@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`AccountWarming Construct(WarmAccount):  Snapshot Test 1`] = `
+exports[`AccountWarming > Construct(WarmAccount):  Snapshot Test 1`] = `
 {
   "Resources": {
     "AccountWarmingWarmAccountFunctionAD0DA263": {
@@ -30,7 +30,7 @@ exports[`AccountWarming Construct(WarmAccount):  Snapshot Test 1`] = `
         "Description": "Account warming onEvent handler",
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.14.1",
           },
         },
         "Handler": "index.handler",
@@ -439,7 +439,7 @@ exports[`AccountWarming Construct(WarmAccount):  Snapshot Test 1`] = `
         "Description": "AWS CDK resource provider framework - isComplete (Stack/AccountWarming/WarmAccountProvider)",
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.14.1",
             "USER_IS_COMPLETE_FUNCTION_ARN": {
               "Fn::GetAtt": [
                 "AccountWarmingWarmAccountStatusFunction25E39087",
@@ -455,6 +455,10 @@ exports[`AccountWarming Construct(WarmAccount):  Snapshot Test 1`] = `
           },
         },
         "Handler": "framework.isComplete",
+        "LoggingConfig": {
+          "ApplicationLogLevel": "FATAL",
+          "LogFormat": "JSON",
+        },
         "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
@@ -573,6 +577,16 @@ exports[`AccountWarming Construct(WarmAccount):  Snapshot Test 1`] = `
               ],
             },
             {
+              "Action": "lambda:GetFunction",
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::GetAtt": [
+                  "AccountWarmingWarmAccountFunctionAD0DA263",
+                  "Arn",
+                ],
+              },
+            },
+            {
               "Action": "lambda:InvokeFunction",
               "Effect": "Allow",
               "Resource": [
@@ -597,6 +611,16 @@ exports[`AccountWarming Construct(WarmAccount):  Snapshot Test 1`] = `
                   ],
                 },
               ],
+            },
+            {
+              "Action": "lambda:GetFunction",
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::GetAtt": [
+                  "AccountWarmingWarmAccountStatusFunction25E39087",
+                  "Arn",
+                ],
+              },
             },
           ],
           "Version": "2012-10-17",
@@ -645,7 +669,7 @@ exports[`AccountWarming Construct(WarmAccount):  Snapshot Test 1`] = `
         "Description": "AWS CDK resource provider framework - onEvent (Stack/AccountWarming/WarmAccountProvider)",
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.14.1",
             "USER_IS_COMPLETE_FUNCTION_ARN": {
               "Fn::GetAtt": [
                 "AccountWarmingWarmAccountStatusFunction25E39087",
@@ -664,6 +688,10 @@ exports[`AccountWarming Construct(WarmAccount):  Snapshot Test 1`] = `
           },
         },
         "Handler": "framework.onEvent",
+        "LoggingConfig": {
+          "ApplicationLogLevel": "FATAL",
+          "LogFormat": "JSON",
+        },
         "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
@@ -782,6 +810,16 @@ exports[`AccountWarming Construct(WarmAccount):  Snapshot Test 1`] = `
               ],
             },
             {
+              "Action": "lambda:GetFunction",
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::GetAtt": [
+                  "AccountWarmingWarmAccountFunctionAD0DA263",
+                  "Arn",
+                ],
+              },
+            },
+            {
               "Action": "lambda:InvokeFunction",
               "Effect": "Allow",
               "Resource": [
@@ -806,6 +844,16 @@ exports[`AccountWarming Construct(WarmAccount):  Snapshot Test 1`] = `
                   ],
                 },
               ],
+            },
+            {
+              "Action": "lambda:GetFunction",
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::GetAtt": [
+                  "AccountWarmingWarmAccountStatusFunction25E39087",
+                  "Arn",
+                ],
+              },
             },
             {
               "Action": "states:StartExecution",
@@ -861,7 +909,7 @@ exports[`AccountWarming Construct(WarmAccount):  Snapshot Test 1`] = `
         "Description": "AWS CDK resource provider framework - onTimeout (Stack/AccountWarming/WarmAccountProvider)",
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.14.1",
             "USER_IS_COMPLETE_FUNCTION_ARN": {
               "Fn::GetAtt": [
                 "AccountWarmingWarmAccountStatusFunction25E39087",
@@ -877,6 +925,10 @@ exports[`AccountWarming Construct(WarmAccount):  Snapshot Test 1`] = `
           },
         },
         "Handler": "framework.onTimeout",
+        "LoggingConfig": {
+          "ApplicationLogLevel": "FATAL",
+          "LogFormat": "JSON",
+        },
         "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
@@ -995,6 +1047,16 @@ exports[`AccountWarming Construct(WarmAccount):  Snapshot Test 1`] = `
               ],
             },
             {
+              "Action": "lambda:GetFunction",
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::GetAtt": [
+                  "AccountWarmingWarmAccountFunctionAD0DA263",
+                  "Arn",
+                ],
+              },
+            },
+            {
               "Action": "lambda:InvokeFunction",
               "Effect": "Allow",
               "Resource": [
@@ -1019,6 +1081,16 @@ exports[`AccountWarming Construct(WarmAccount):  Snapshot Test 1`] = `
                   ],
                 },
               ],
+            },
+            {
+              "Action": "lambda:GetFunction",
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::GetAtt": [
+                  "AccountWarmingWarmAccountStatusFunction25E39087",
+                  "Arn",
+                ],
+              },
             },
           ],
           "Version": "2012-10-17",
@@ -1081,22 +1153,6 @@ exports[`AccountWarming Construct(WarmAccount):  Snapshot Test 1`] = `
               ""}}}",
             ],
           ],
-        },
-        "LoggingConfiguration": {
-          "Destinations": [
-            {
-              "CloudWatchLogsLogGroup": {
-                "LogGroupArn": {
-                  "Fn::GetAtt": [
-                    "AccountWarmingWarmAccountFunctionWaiterLogGroupFFD70AF4",
-                    "Arn",
-                  ],
-                },
-              },
-            },
-          ],
-          "IncludeExecutionData": true,
-          "Level": "ERROR",
         },
         "RoleArn": {
           "Fn::GetAtt": [
@@ -1224,22 +1280,6 @@ exports[`AccountWarming Construct(WarmAccount):  Snapshot Test 1`] = `
                 },
               ],
             },
-            {
-              "Action": [
-                "logs:CreateLogDelivery",
-                "logs:CreateLogStream",
-                "logs:GetLogDelivery",
-                "logs:UpdateLogDelivery",
-                "logs:DeleteLogDelivery",
-                "logs:ListLogDeliveries",
-                "logs:PutLogEvents",
-                "logs:PutResourcePolicy",
-                "logs:DescribeResourcePolicies",
-                "logs:DescribeLogGroups",
-              ],
-              "Effect": "Allow",
-              "Resource": "*",
-            },
           ],
           "Version": "2012-10-17",
         },
@@ -1298,7 +1338,7 @@ exports[`AccountWarming Construct(WarmAccount):  Snapshot Test 1`] = `
         "Description": "Account warming isComplete handler",
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.14.1",
           },
         },
         "Handler": "index.handler",

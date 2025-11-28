@@ -12,18 +12,16 @@
  */
 
 import { parseOrganizationConfig } from '../lib/common';
-import { describe, it, expect } from '@jest/globals';
+import { describe, it, expect } from 'vitest';
 import * as fs from 'fs';
 import * as yaml from 'js-yaml';
 import * as path from 'path';
+import { SNAPSHOT_CONFIG } from './config-test-helper';
 
 describe('parse method', () => {
   describe('parse a valid config', () => {
     it('should return an object', () => {
-      const buffer = fs.readFileSync(
-        path.resolve('../accelerator/test/configs/snapshot-only/organization-config.yaml'),
-        'utf8',
-      );
+      const buffer = fs.readFileSync(path.join(SNAPSHOT_CONFIG, 'organization-config.yaml'), 'utf8');
       const r = parseOrganizationConfig(yaml.load(buffer));
       expect(r && typeof r === 'object').toBe(true);
     });

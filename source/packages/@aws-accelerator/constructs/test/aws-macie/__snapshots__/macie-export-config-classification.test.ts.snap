@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`MacieExportConfigClassification Construct(MacieExportConfigClassification):  Snapshot Test 1`] = `
+exports[`MacieExportConfigClassification > Construct(MacieExportConfigClassification):  Snapshot Test 1`] = `
 {
   "Resources": {
     "AwsMacieUpdateExportConfigClassification832781E3": {
@@ -81,7 +81,7 @@ exports[`MacieExportConfigClassification Construct(MacieExportConfigClassificati
         },
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.14.1",
           },
         },
         "Handler": "__entrypoint__.handler",

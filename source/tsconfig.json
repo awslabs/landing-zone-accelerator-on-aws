@@ -17,12 +17,11 @@
     "preserveSymlinks": true,
     "sourceMap": true,
     "target": "ES2022",
-    "lib": ["es2023"],
+    "lib": ["es2022"],
     "composite": false,
-    "strictBuiltinIteratorReturn": false,
     "useDefineForClassFields": false,
     "skipLibCheck": true,
-    "assumeChangesOnlyAffectDirectDependencies": true,
+    "assumeChangesOnlyAffectDirectDependencies": true
   },
   "ts-node": { "swc": true }
 }

@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`CustomizationsStack Construct(CustomizationsStack):  Snapshot Test 1`] = `
+exports[`CustomizationsStack > Construct(CustomizationsStack):  Snapshot Test 1`] = `
 {
   "Parameters": {
     "SsmParameterValueacceleratorkmscloudwatchkeyarnC96584B6F00A464EAD1953AFF4B05118Parameter": {
@@ -54,7 +54,7 @@ exports[`CustomizationsStack Construct(CustomizationsStack):  Snapshot Test 1`] 
         },
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.14.1",
           },
         },
         "Handler": "index.handler",
@@ -155,7 +155,7 @@ exports[`CustomizationsStack Construct(CustomizationsStack):  Snapshot Test 1`] 
         "Description": "AWS CDK resource provider framework - onEvent (AWSAccelerator-CustomizationsStack-111111111111-us-east-1/Custom::PortfolioAssociationsRoleArnProvider/Resource)",
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.14.1",
             "USER_ON_EVENT_FUNCTION_ARN": {
               "Fn::GetAtt": [
                 "CustomPortfolioAssociationsRoleArnProviderCustomPortfolioAssociationsRoleArnProviderProviderLambda303083B3",
@@ -165,6 +165,10 @@ exports[`CustomizationsStack Construct(CustomizationsStack):  Snapshot Test 1`] 
           },
         },
         "Handler": "framework.onEvent",
+        "LoggingConfig": {
+          "ApplicationLogLevel": "FATAL",
+          "LogFormat": "JSON",
+        },
         "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
@@ -258,6 +262,16 @@ exports[`CustomizationsStack Construct(CustomizationsStack):  Snapshot Test 1`] 
                 },
               ],
             },
+            {
+              "Action": "lambda:GetFunction",
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::GetAtt": [
+                  "CustomPortfolioAssociationsRoleArnProviderCustomPortfolioAssociationsRoleArnProviderProviderLambda303083B3",
+                  "Arn",
+                ],
+              },
+            },
           ],
           "Version": "2012-10-17",
         },
@@ -281,7 +295,7 @@ exports[`CustomizationsStack Construct(CustomizationsStack):  Snapshot Test 1`] 
         },
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.14.1",
           },
         },
         "Handler": "__entrypoint__.handler",
@@ -370,7 +384,7 @@ exports[`CustomizationsStack Construct(CustomizationsStack):  Snapshot Test 1`] 
         },
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.14.1",
           },
         },
         "Handler": "__entrypoint__.handler",
@@ -672,7 +686,7 @@ exports[`CustomizationsStack Construct(CustomizationsStack):  Snapshot Test 1`] 
       "Properties": {
         "Name": "/accelerator/AWSAccelerator-CustomizationsStack-111111111111-us-east-1/version",
         "Type": "String",
-        "Value": "1.13.0",
+        "Value": "1.14.1",
       },
       "Type": "AWS::SSM::Parameter",
     },
@@ -690,7 +704,7 @@ exports[`CustomizationsStack Construct(CustomizationsStack):  Snapshot Test 1`] 
 }
 `;
 
-exports[`CustomizationsStack Construct(CustomizationsStack):  Snapshot Test 2`] = `
+exports[`CustomizationsStack > Construct(CustomizationsStack):  Snapshot Test 2`] = `
 {
   "Resources": {
     "CustomPortfolioAssociationsRoleArnProviderCustomPortfolioAssociationsRoleArnProviderProviderLambda303083B3": {
@@ -705,7 +719,7 @@ exports[`CustomizationsStack Construct(CustomizationsStack):  Snapshot Test 2`] 
         },
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.14.1",
           },
         },
         "Handler": "index.handler",
@@ -806,7 +820,7 @@ exports[`CustomizationsStack Construct(CustomizationsStack):  Snapshot Test 2`] 
         "Description": "AWS CDK resource provider framework - onEvent (AWSAccelerator-CustomizationsStack-444444444444-us-east-1/Custom::PortfolioAssociationsRoleArnProvider/Resource)",
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.14.1",
             "USER_ON_EVENT_FUNCTION_ARN": {
               "Fn::GetAtt": [
                 "CustomPortfolioAssociationsRoleArnProviderCustomPortfolioAssociationsRoleArnProviderProviderLambda303083B3",
@@ -816,6 +830,10 @@ exports[`CustomizationsStack Construct(CustomizationsStack):  Snapshot Test 2`] 
           },
         },
         "Handler": "framework.onEvent",
+        "LoggingConfig": {
+          "ApplicationLogLevel": "FATAL",
+          "LogFormat": "JSON",
+        },
         "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
@@ -909,6 +927,16 @@ exports[`CustomizationsStack Construct(CustomizationsStack):  Snapshot Test 2`] 
                 },
               ],
             },
+            {
+              "Action": "lambda:GetFunction",
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::GetAtt": [
+                  "CustomPortfolioAssociationsRoleArnProviderCustomPortfolioAssociationsRoleArnProviderProviderLambda303083B3",
+                  "Arn",
+                ],
+              },
+            },
           ],
           "Version": "2012-10-17",
         },
@@ -932,7 +960,7 @@ exports[`CustomizationsStack Construct(CustomizationsStack):  Snapshot Test 2`] 
         },
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.14.1",
           },
         },
         "Handler": "__entrypoint__.handler",
@@ -1143,7 +1171,7 @@ exports[`CustomizationsStack Construct(CustomizationsStack):  Snapshot Test 2`] 
       "Properties": {
         "Name": "/accelerator/AWSAccelerator-CustomizationsStack-444444444444-us-east-1/version",
         "Type": "String",
-        "Value": "1.13.0",
+        "Value": "1.14.1",
       },
       "Type": "AWS::SSM::Parameter",
     },
@@ -1161,7 +1189,7 @@ exports[`CustomizationsStack Construct(CustomizationsStack):  Snapshot Test 2`] 
 }
 `;
 
-exports[`CustomizationsStack Construct(CustomizationsStack):  Snapshot Test 3`] = `
+exports[`CustomizationsStack > Construct(CustomizationsStack):  Snapshot Test 3`] = `
 {
   "Parameters": {
     "SsmParameterValueacceleratorkmscloudwatchkeyarnC96584B6F00A464EAD1953AFF4B05118Parameter": {
@@ -1213,7 +1241,7 @@ exports[`CustomizationsStack Construct(CustomizationsStack):  Snapshot Test 3`] 
         },
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.14.1",
           },
         },
         "Handler": "index.handler",
@@ -1314,7 +1342,7 @@ exports[`CustomizationsStack Construct(CustomizationsStack):  Snapshot Test 3`] 
         "Description": "AWS CDK resource provider framework - onEvent (AWSAccelerator-CustomizationsStack-111111111111-us-east-1/Custom::PortfolioAssociationsRoleArnProvider/Resource)",
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.14.1",
             "USER_ON_EVENT_FUNCTION_ARN": {
               "Fn::GetAtt": [
                 "CustomPortfolioAssociationsRoleArnProviderCustomPortfolioAssociationsRoleArnProviderProviderLambda303083B3",
@@ -1324,6 +1352,10 @@ exports[`CustomizationsStack Construct(CustomizationsStack):  Snapshot Test 3`] 
           },
         },
         "Handler": "framework.onEvent",
+        "LoggingConfig": {
+          "ApplicationLogLevel": "FATAL",
+          "LogFormat": "JSON",
+        },
         "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
@@ -1417,6 +1449,16 @@ exports[`CustomizationsStack Construct(CustomizationsStack):  Snapshot Test 3`] 
                 },
               ],
             },
+            {
+              "Action": "lambda:GetFunction",
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::GetAtt": [
+                  "CustomPortfolioAssociationsRoleArnProviderCustomPortfolioAssociationsRoleArnProviderProviderLambda303083B3",
+                  "Arn",
+                ],
+              },
+            },
           ],
           "Version": "2012-10-17",
         },
@@ -1440,7 +1482,7 @@ exports[`CustomizationsStack Construct(CustomizationsStack):  Snapshot Test 3`] 
         },
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.14.1",
           },
         },
         "Handler": "__entrypoint__.handler",
@@ -1529,7 +1571,7 @@ exports[`CustomizationsStack Construct(CustomizationsStack):  Snapshot Test 3`] 
         },
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.14.1",
           },
         },
         "Handler": "__entrypoint__.handler",
@@ -1831,7 +1873,7 @@ exports[`CustomizationsStack Construct(CustomizationsStack):  Snapshot Test 3`] 
       "Properties": {
         "Name": "/accelerator/AWSAccelerator-CustomizationsStack-111111111111-us-east-1/version",
         "Type": "String",
-        "Value": "1.13.0",
+        "Value": "1.14.1",
       },
       "Type": "AWS::SSM::Parameter",
     },
@@ -1849,7 +1891,7 @@ exports[`CustomizationsStack Construct(CustomizationsStack):  Snapshot Test 3`] 
 }
 `;
 
-exports[`CustomizationsStack Construct(CustomizationsStack):  Snapshot Test 4`] = `
+exports[`CustomizationsStack > Construct(CustomizationsStack):  Snapshot Test 4`] = `
 {
   "Resources": {
     "CustomPortfolioAssociationsRoleArnProviderCustomPortfolioAssociationsRoleArnProviderProviderLambda303083B3": {
@@ -1864,7 +1906,7 @@ exports[`CustomizationsStack Construct(CustomizationsStack):  Snapshot Test 4`] 
         },
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.14.1",
           },
         },
         "Handler": "index.handler",
@@ -1965,7 +2007,7 @@ exports[`CustomizationsStack Construct(CustomizationsStack):  Snapshot Test 4`] 
         "Description": "AWS CDK resource provider framework - onEvent (AWSAccelerator-CustomizationsStack-444444444444-us-east-1/Custom::PortfolioAssociationsRoleArnProvider/Resource)",
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.14.1",
             "USER_ON_EVENT_FUNCTION_ARN": {
               "Fn::GetAtt": [
                 "CustomPortfolioAssociationsRoleArnProviderCustomPortfolioAssociationsRoleArnProviderProviderLambda303083B3",
@@ -1975,6 +2017,10 @@ exports[`CustomizationsStack Construct(CustomizationsStack):  Snapshot Test 4`] 
           },
         },
         "Handler": "framework.onEvent",
+        "LoggingConfig": {
+          "ApplicationLogLevel": "FATAL",
+          "LogFormat": "JSON",
+        },
         "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
@@ -2068,6 +2114,16 @@ exports[`CustomizationsStack Construct(CustomizationsStack):  Snapshot Test 4`] 
                 },
               ],
             },
+            {
+              "Action": "lambda:GetFunction",
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::GetAtt": [
+                  "CustomPortfolioAssociationsRoleArnProviderCustomPortfolioAssociationsRoleArnProviderProviderLambda303083B3",
+                  "Arn",
+                ],
+              },
+            },
           ],
           "Version": "2012-10-17",
         },
@@ -2084,7 +2140,7 @@ exports[`CustomizationsStack Construct(CustomizationsStack):  Snapshot Test 4`] 
       "Properties": {
         "Name": "/accelerator/AWSAccelerator-CustomizationsStack-444444444444-us-east-1/version",
         "Type": "String",
-        "Value": "1.13.0",
+        "Value": "1.14.1",
       },
       "Type": "AWS::SSM::Parameter",
     },

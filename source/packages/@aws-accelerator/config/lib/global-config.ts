@@ -11,17 +11,22 @@
  *  and limitations under the License.
  */
 
+import { StreamMode } from '@aws-sdk/client-kinesis';
+import { GetParametersByPathCommand, SSMClient } from '@aws-sdk/client-ssm';
+import { AssumeRoleCommandOutput } from '@aws-sdk/client-sts';
+import { S3Client, GetObjectCommand, NoSuchKey } from '@aws-sdk/client-s3';
 import * as fs from 'fs';
 import * as yaml from 'js-yaml';
 import * as path from 'path';
-import * as AWS from 'aws-sdk';
-import { AssumeRoleCommandOutput } from '@aws-sdk/client-sts';
-import { SSMClient, GetParametersByPathCommand } from '@aws-sdk/client-ssm';
-import { StreamMode } from '@aws-sdk/client-kinesis';
 
-import { createLogger } from '@aws-accelerator/utils/lib/logger';
-import { throttlingBackOff } from '@aws-accelerator/utils/lib/throttle';
-import { directoryExists, fileExists, getCrossAccountCredentials } from '@aws-accelerator/utils/lib/common-functions';
+import {
+  createLogger,
+  throttlingBackOff,
+  directoryExists,
+  fileExists,
+  getCrossAccountCredentials,
+  setRetryStrategy,
+} from '@aws-accelerator/utils';
 
 import * as t from './common';
 import * as i from './models/global-config';
@@ -98,7 +103,7 @@ export class AccountCloudTrailConfig implements i.IAccountCloudTrailConfig {
  * ```
  *   logging:
  *     loggingBucketRetentionDays: 365
- *     accessLoggingBucketRetentionDays: 3650
+ *     accessLoggingBucketRetentionDays: 365
  *     organizationTrail: true
  * ```
  */
@@ -114,9 +119,9 @@ export class ControlTowerLandingZoneLoggingConfig implements i.IControlTowerLand
    * Retention time of the logs for access to the bucket.
    *
    * @default
-   * 3650
+   * 365
    */
-  readonly accessLoggingBucketRetentionDays: number = 3650;
+  readonly accessLoggingBucketRetentionDays: number = 365;
   /**
    * Flag indicates Organizational-level AWS CloudTrail configuration is configured or not.
    *
@@ -173,7 +178,7 @@ export class ControlTowerLandingZoneSecurityConfig implements i.IControlTowerLan
  *   version: '3.3'
  *   logging:
  *     loggingBucketRetentionDays: 365
- *     accessLoggingBucketRetentionDays: 3650
+ *     accessLoggingBucketRetentionDays:
  *     organizationTrail: true
  *   security:
  *     enableIdentityCenterAccess: true
@@ -210,7 +215,7 @@ export abstract class ControlTowerControlConfig implements i.IControlTowerContro
   readonly identifier: string = '';
   readonly enable: boolean = true;
   readonly deploymentTargets: t.DeploymentTargets = new t.DeploymentTargets();
-  readonly regions: t.Region[] | undefined = undefined;
+  readonly regions: string[] | undefined = undefined;
 }
 
 /**
@@ -227,7 +232,7 @@ export abstract class ControlTowerControlConfig implements i.IControlTowerContro
  *     version: '3.3'
  *     logging:
  *       loggingBucketRetentionDays: 365
- *       accessLoggingBucketRetentionDays: 3650
+ *       accessLoggingBucketRetentionDays: 365
  *       organizationTrail: true
  *     security:
  *       enableIdentityCenterAccess: true
@@ -360,13 +365,13 @@ export class ServiceQuotaLimitsConfig implements i.IServiceQuotaLimitsConfig {
   readonly quotaCode = '';
   readonly desiredValue = 2000;
   readonly deploymentTargets: t.DeploymentTargets = new t.DeploymentTargets();
-  readonly regions?: t.Region[];
+  readonly regions?: string[];
 }
 
 export class SessionManagerConfig implements i.ISessionManagerConfig {
   readonly sendToCloudWatchLogs = false;
   readonly sendToS3 = false;
-  readonly excludeRegions: t.Region[] = [];
+  readonly excludeRegions: string[] = [];
   readonly excludeAccounts: string[] = [];
   readonly lifecycleRules: t.LifeCycleRule[] = [];
   readonly attachPolicyToIamRoles = [];
@@ -410,7 +415,7 @@ export class CloudWatchLogSkipBulkUpdateConfig implements i.ICloudWatchLogSkipBu
 
 export class CloudWatchLogsExclusionConfig implements i.ICloudWatchLogsExclusionConfig {
   readonly organizationalUnits: string[] | undefined = undefined;
-  readonly regions: t.Region[] | undefined = undefined;
+  readonly regions: string[] | undefined = undefined;
   readonly accounts: string[] | undefined = undefined;
   readonly excludeAll: boolean | undefined = undefined;
   readonly logGroupNames: string[] | undefined = undefined;
@@ -588,9 +593,9 @@ export class GlobalConfig implements i.IGlobalConfig {
   static readonly FILENAME = 'global-config.yaml';
   readonly homeRegion: string = '';
   readonly useV2Stacks: boolean | undefined = undefined;
-  readonly enabledRegions: t.Region[] = [];
+  readonly enabledRegions: string[] = [];
   readonly managementAccountAccessRole: string = '';
-  readonly cloudwatchLogRetentionInDays = 3653;
+  readonly cloudwatchLogRetentionInDays = 365;
   readonly centralizeCdkBuckets: centralizeCdkBucketsConfig | undefined = undefined;
   readonly cdkOptions = new cdkOptionsConfig();
   readonly terminationProtection = true;
@@ -641,7 +646,7 @@ export class GlobalConfig implements i.IGlobalConfig {
       Object.assign(this, values);
     } else {
       this.homeRegion = props.homeRegion;
-      this.enabledRegions = [props.homeRegion as t.Region];
+      this.enabledRegions = [props.homeRegion];
       this.controlTower = {
         enable: props.controlTower.enable,
         landingZone: props.controlTower.landingZone,
@@ -666,11 +671,20 @@ export class GlobalConfig implements i.IGlobalConfig {
   static load(dir: string, replacementsConfig: ReplacementsConfig): GlobalConfig {
     const initialBuffer = fs.readFileSync(path.join(dir, GlobalConfig.FILENAME), 'utf8');
     const buffer = replacementsConfig ? replacementsConfig.preProcessBuffer(initialBuffer) : initialBuffer;
-    const values = t.parseGlobalConfig(yaml.load(buffer));
+    // Create schema with custom !include tag
+    const schema = t.createSchema(dir);
+    // Load YAML with custom schema
+    let values: i.IGlobalConfig | undefined = undefined;
+    try {
+      values = t.parseGlobalConfig(yaml.load(buffer, { schema }));
+    } catch (e) {
+      logger.error('parsing global-config failed', e);
+      throw new Error('Could not parse global configuration');
+    }
 
-    const homeRegion = values.homeRegion;
-    const controlTower = values.controlTower;
-    const managementAccountAccessRole = values.managementAccountAccessRole;
+    const homeRegion = values!.homeRegion;
+    const controlTower = values!.controlTower;
+    const managementAccountAccessRole = values!.managementAccountAccessRole;
 
     return new GlobalConfig(
       {
@@ -718,7 +732,7 @@ export class GlobalConfig implements i.IGlobalConfig {
     } catch (e) {
       logger.error('Error parsing input, global config undefined');
       logger.error(`${e}`);
-      throw new Error('Could not load global configuration');
+      throw new Error('Could not parse global configuration');
     }
   }
 
@@ -751,7 +765,11 @@ export class GlobalConfig implements i.IGlobalConfig {
     if (!directoryExists('asea-assets')) {
       throw new Error(`Could not create temp directory ${aseaAssetPath} for asea assets`);
     }
-    const s3Client = new AWS.S3({ region: this.homeRegion });
+    const s3Client = new S3Client({
+      region: this.homeRegion,
+      customUserAgent: process.env['SOLUTION_ID'] ?? '',
+      retryStrategy: setRetryStrategy(),
+    });
     const mappingFile = await this.downloadFile({
       relativePath: 'mapping.json',
       tempDirectory: aseaAssetPath,
@@ -813,7 +831,7 @@ export class GlobalConfig implements i.IGlobalConfig {
   }
 
   private async downloadASEAStacksAndResources(props: {
-    s3Client: AWS.S3;
+    s3Client: S3Client;
     mappingBucket: string;
     tempDirectory: string;
     mapping: t.ASEAMappings;
@@ -862,7 +880,12 @@ export class GlobalConfig implements i.IGlobalConfig {
     return Promise.all(downloads);
   }
 
-  private async downloadFile(props: { relativePath: string; tempDirectory: string; bucket: string; s3Client: AWS.S3 }) {
+  private async downloadFile(props: {
+    relativePath: string;
+    tempDirectory: string;
+    bucket: string;
+    s3Client: S3Client;
+  }) {
     const filePath = path.join(props.tempDirectory, props.relativePath);
     const directory = filePath.split('/').slice(0, -1).join('/');
     if (!(await fileExists(filePath))) {
@@ -1039,26 +1062,31 @@ export class GlobalConfig implements i.IGlobalConfig {
   private async getS3Object(props: {
     bucket: string;
     objectKey: string;
-    s3Client?: AWS.S3;
+    s3Client?: S3Client;
   }): Promise<{ body: string; path: string } | undefined> {
     let s3Client = props.s3Client;
     if (!s3Client) {
-      s3Client = new AWS.S3({ region: this.homeRegion });
+      s3Client = new S3Client({
+        region: this.homeRegion,
+        customUserAgent: process.env['SOLUTION_ID'] ?? '',
+        retryStrategy: setRetryStrategy(),
+      });
     }
     try {
-      const response = await s3Client
-        .getObject({
+      const response = await s3Client.send(
+        new GetObjectCommand({
           Bucket: props.bucket,
           Key: props.objectKey,
-        })
-        .promise();
+        }),
+      );
       if (!response.Body) {
         logger.error(`Could not load file from path s3://${props.bucket}/${props.objectKey}`);
         return;
       }
-      return { body: response.Body.toString(), path: props.objectKey };
+      const bodyString = await response.Body.transformToString();
+      return { body: bodyString, path: props.objectKey };
     } catch (e) {
-      if ((e as AWS.AWSError).code === 'NoSuchKey') return;
+      if (e instanceof NoSuchKey) return;
       throw e;
     }
   }

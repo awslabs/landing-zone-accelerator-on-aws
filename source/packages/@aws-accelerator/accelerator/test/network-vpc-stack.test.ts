@@ -12,13 +12,33 @@
  */
 
 import { AcceleratorStage } from '../lib/accelerator-stage';
-import { describe } from '@jest/globals';
+import { describe, beforeEach, afterEach, vi } from 'vitest';
+import fs from 'fs';
+import path from 'path';
 import { snapShotTest } from './snapshot-test';
 import { Create } from './accelerator-test-helpers';
 
 const testNamePrefix = 'Construct(NetworkVpcStack): ';
 
 describe('NetworkVpcStack', () => {
+  let testDir: string;
+
+  beforeEach(() => {
+    testDir = path.join(__dirname, '..');
+    const originalReadFileSync = fs.readFileSync;
+    vi.spyOn(fs, 'readFileSync').mockImplementation((filePath, ...args) => {
+      if (typeof filePath === 'string' && filePath.startsWith('cfn-templates')) {
+        const correctedPath = path.join(testDir, filePath);
+        return originalReadFileSync(correctedPath, ...args);
+      }
+      return originalReadFileSync(filePath, ...args);
+    });
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
   snapShotTest(testNamePrefix, Create.stackProvider(`Network-us-east-1`, AcceleratorStage.NETWORK_VPC));
 });
 

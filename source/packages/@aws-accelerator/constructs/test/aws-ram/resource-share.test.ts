@@ -14,7 +14,7 @@
 import * as cdk from 'aws-cdk-lib';
 import { ResourceShare, ResourceShareOwner, ResourceShareItem } from '../../lib/aws-ram/resource-share';
 import { snapShotTest } from '../snapshot-test';
-import { describe } from '@jest/globals';
+import { describe } from 'vitest';
 
 const testNamePrefix = 'Construct(ResourceShare): ';
 

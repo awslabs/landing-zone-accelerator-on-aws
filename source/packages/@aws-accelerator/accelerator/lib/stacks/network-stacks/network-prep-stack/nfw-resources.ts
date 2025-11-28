@@ -20,7 +20,7 @@ import {
   NfwStatelessRuleGroupReferenceConfig,
 } from '@aws-accelerator/config';
 import { FirewallPolicyProperty, NetworkFirewallPolicy, NetworkFirewallRuleGroup } from '@aws-accelerator/constructs';
-import { SsmResourceType } from '@aws-accelerator/utils/lib/ssm-parameter-path';
+import { SsmResourceType } from '@aws-accelerator/utils';
 import fs from 'fs';
 import { pascalCase } from 'pascal-case';
 import path from 'path';

@@ -7,7 +7,7 @@ import {
   ProvisionProductCommand,
 } from '@aws-sdk/client-service-catalog';
 
-import { describe, beforeEach, expect, test } from '@jest/globals';
+import { describe, beforeEach, expect, test } from 'vitest';
 import { handler } from '../index';
 import { AcceleratorMockClient } from '../../../../test/unit-test/common/resources';
 

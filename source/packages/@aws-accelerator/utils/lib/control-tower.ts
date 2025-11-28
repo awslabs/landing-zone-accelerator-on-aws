@@ -5,7 +5,7 @@
  * Once Control Tower API support available for landing zone version, this hard coded constant will be removed.
  * When Control Tower Landing Zone gets new version, we need to update this constant.
  */
-export const CONTROL_TOWER_LANDING_ZONE_VERSION = '3.3';
+export const CONTROL_TOWER_LANDING_ZONE_VERSION = '4.0';
 
 /**
  * Function to get baseline version based on AWS Control Tower Landing Zone version

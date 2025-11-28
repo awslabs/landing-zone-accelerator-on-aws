@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`NetworkVpcStack tests Construct(NetworkVpcStack):  Snapshot Test 1`] = `
+exports[`NetworkVpcStack tests > Construct(NetworkVpcStack):  Snapshot Test 1`] = `
 {
   "Metadata": {
     "lzaLookup": {
@@ -65,106 +65,6 @@ exports[`NetworkVpcStack tests Construct(NetworkVpcStack):  Snapshot Test 1`] = 
       },
       "Type": "AWS::EC2::PrefixList",
     },
-    "CustomDeleteDefaultVpcCustomResourceProviderHandler87E89F35": {
-      "DependsOn": [
-        "CustomDeleteDefaultVpcCustomResourceProviderRole80963EEF",
-      ],
-      "Properties": {
-        "Code": {
-          "S3Bucket": "cdk-hnb659fds-assets-666666666666-us-east-1",
-          "S3Key": "REPLACED-GENERATED-NAME.zip",
-        },
-        "Environment": {
-          "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
-          },
-        },
-        "Handler": "__entrypoint__.handler",
-        "MemorySize": 512,
-        "Role": {
-          "Fn::GetAtt": [
-            "CustomDeleteDefaultVpcCustomResourceProviderRole80963EEF",
-            "Arn",
-          ],
-        },
-        "Runtime": "nodejs20.x",
-        "Timeout": 900,
-      },
-      "Type": "AWS::Lambda::Function",
-    },
-    "CustomDeleteDefaultVpcCustomResourceProviderLogGroup4113DA48": {
-      "DeletionPolicy": "Delete",
-      "Properties": {
-        "KmsKeyId": {
-          "Ref": "SsmParameterValueacceleratorkmscloudwatchkeyarnC96584B6F00A464EAD1953AFF4B05118Parameter",
-        },
-        "LogGroupName": {
-          "Fn::Join": [
-            "",
-            [
-              "/aws/lambda/",
-              {
-                "Ref": "CustomDeleteDefaultVpcCustomResourceProviderHandler87E89F35",
-              },
-            ],
-          ],
-        },
-        "RetentionInDays": 3653,
-      },
-      "Type": "AWS::Logs::LogGroup",
-      "UpdateReplacePolicy": "Delete",
-    },
-    "CustomDeleteDefaultVpcCustomResourceProviderRole80963EEF": {
-      "Properties": {
-        "AssumeRolePolicyDocument": {
-          "Statement": [
-            {
-              "Action": "sts:AssumeRole",
-              "Effect": "Allow",
-              "Principal": {
-                "Service": "lambda.amazonaws.com",
-              },
-            },
-          ],
-          "Version": "2012-10-17",
-        },
-        "ManagedPolicyArns": [
-          {
-            "Fn::Sub": "arn:\${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
-          },
-        ],
-        "Policies": [
-          {
-            "PolicyDocument": {
-              "Statement": [
-                {
-                  "Action": [
-                    "ec2:DeleteInternetGateway",
-                    "ec2:DetachInternetGateway",
-                    "ec2:DeleteNetworkAcl",
-                    "ec2:DeleteRoute",
-                    "ec2:DeleteSecurityGroup",
-                    "ec2:DeleteSubnet",
-                    "ec2:DeleteVpc",
-                    "ec2:DescribeInternetGateways",
-                    "ec2:DescribeNetworkAcls",
-                    "ec2:DescribeRouteTables",
-                    "ec2:DescribeSecurityGroups",
-                    "ec2:DescribeSubnets",
-                    "ec2:DescribeVpcs",
-                  ],
-                  "Effect": "Allow",
-                  "Resource": "*",
-                },
-              ],
-              "Version": "2012-10-17",
-            },
-            "PolicyName": "Inline",
-          },
-        ],
-      },
-      "Type": "AWS::IAM::Role",
-    },
     "CustomIpamSubnetCustomResourceProviderHandlerF7AF0D7A": {
       "DependsOn": [
         "CustomIpamSubnetCustomResourceProviderRoleA2FF4E6D",
@@ -176,7 +76,7 @@ exports[`NetworkVpcStack tests Construct(NetworkVpcStack):  Snapshot Test 1`] = 
         },
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.14.1",
           },
         },
         "Handler": "__entrypoint__.handler",
@@ -343,7 +243,7 @@ exports[`NetworkVpcStack tests Construct(NetworkVpcStack):  Snapshot Test 1`] = 
         "Description": "Custom resource provider to put cross-account ssm parameter value",
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.14.1",
           },
         },
         "Handler": "__entrypoint__.handler",
@@ -444,22 +344,6 @@ exports[`NetworkVpcStack tests Construct(NetworkVpcStack):  Snapshot Test 1`] = 
         ],
       },
       "Type": "AWS::IAM::Role",
-    },
-    "DeleteDefaultVpc4DBAE36C": {
-      "DeletionPolicy": "Delete",
-      "DependsOn": [
-        "CustomDeleteDefaultVpcCustomResourceProviderLogGroup4113DA48",
-      ],
-      "Properties": {
-        "ServiceToken": {
-          "Fn::GetAtt": [
-            "CustomDeleteDefaultVpcCustomResourceProviderHandler87E89F35",
-            "Arn",
-          ],
-        },
-      },
-      "Type": "Custom::DeleteDefaultVpc",
-      "UpdateReplacePolicy": "Delete",
     },
     "GetIpamCidrRole2DCCA945": {
       "Metadata": {
@@ -657,9 +541,6 @@ exports[`NetworkVpcStack tests Construct(NetworkVpcStack):  Snapshot Test 1`] = 
       "Type": "AWS::RAM::ResourceShare",
     },
     "NetworkEndpointsVpc619A1F01": {
-      "DependsOn": [
-        "DeleteDefaultVpc4DBAE36C",
-      ],
       "Metadata": {
         "lzaLookup": {
           "vpcName": "Network-Endpoints",
@@ -683,9 +564,6 @@ exports[`NetworkVpcStack tests Construct(NetworkVpcStack):  Snapshot Test 1`] = 
       "Type": "AWS::EC2::VPC",
     },
     "NetworkEndpointsVpcCloudWatchFlowLogEB41E61E": {
-      "DependsOn": [
-        "DeleteDefaultVpc4DBAE36C",
-      ],
       "Metadata": {
         "lzaLookup": {
           "flowLogDestinationType": "cloud-watch-logs",
@@ -722,9 +600,6 @@ exports[`NetworkVpcStack tests Construct(NetworkVpcStack):  Snapshot Test 1`] = 
       "Type": "AWS::EC2::FlowLog",
     },
     "NetworkEndpointsVpcDhcpOptionsAssociationC9A5CF5F": {
-      "DependsOn": [
-        "DeleteDefaultVpc4DBAE36C",
-      ],
       "Metadata": {
         "lzaLookup": {
           "dhcpOptionsName": "accelerator-dhcp-opts",
@@ -743,9 +618,6 @@ exports[`NetworkVpcStack tests Construct(NetworkVpcStack):  Snapshot Test 1`] = 
     },
     "NetworkEndpointsVpcFlowLogsGroupB21A3331": {
       "DeletionPolicy": "Retain",
-      "DependsOn": [
-        "DeleteDefaultVpc4DBAE36C",
-      ],
       "Properties": {
         "KmsKeyId": {
           "Ref": "SsmParameterValueacceleratorkmscloudwatchkeyarnC96584B6F00A464EAD1953AFF4B05118Parameter",
@@ -762,9 +634,6 @@ exports[`NetworkVpcStack tests Construct(NetworkVpcStack):  Snapshot Test 1`] = 
       "UpdateReplacePolicy": "Retain",
     },
     "NetworkEndpointsVpcFlowLogsRole2614AF13": {
-      "DependsOn": [
-        "DeleteDefaultVpc4DBAE36C",
-      ],
       "Properties": {
         "AssumeRolePolicyDocument": {
           "Statement": [
@@ -788,9 +657,6 @@ exports[`NetworkVpcStack tests Construct(NetworkVpcStack):  Snapshot Test 1`] = 
       "Type": "AWS::IAM::Role",
     },
     "NetworkEndpointsVpcFlowLogsRoleDefaultPolicyA9F3924A": {
-      "DependsOn": [
-        "DeleteDefaultVpc4DBAE36C",
-      ],
       "Properties": {
         "PolicyDocument": {
           "Statement": [
@@ -825,9 +691,6 @@ exports[`NetworkVpcStack tests Construct(NetworkVpcStack):  Snapshot Test 1`] = 
       "Type": "AWS::IAM::Policy",
     },
     "NetworkEndpointsVpcInternetGateway6505072B": {
-      "DependsOn": [
-        "DeleteDefaultVpc4DBAE36C",
-      ],
       "Metadata": {
         "lzaLookup": {
           "vpcName": "Network-Endpoints",
@@ -844,9 +707,6 @@ exports[`NetworkVpcStack tests Construct(NetworkVpcStack):  Snapshot Test 1`] = 
       "Type": "AWS::EC2::InternetGateway",
     },
     "NetworkEndpointsVpcInternetGatewayAttachment8B5DCF4D": {
-      "DependsOn": [
-        "DeleteDefaultVpc4DBAE36C",
-      ],
       "Properties": {
         "InternetGatewayId": {
           "Ref": "NetworkEndpointsVpcInternetGateway6505072B",
@@ -1574,9 +1434,6 @@ exports[`NetworkVpcStack tests Construct(NetworkVpcStack):  Snapshot Test 1`] = 
       "Type": "AWS::EC2::RouteTable",
     },
     "NetworkEndpointsVpcS3FlowLog1207DE15": {
-      "DependsOn": [
-        "DeleteDefaultVpc4DBAE36C",
-      ],
       "Metadata": {
         "lzaLookup": {
           "flowLogDestinationType": "s3",
@@ -1934,9 +1791,6 @@ exports[`NetworkVpcStack tests Construct(NetworkVpcStack):  Snapshot Test 1`] = 
       "Type": "AWS::EC2::NetworkAclEntry",
     },
     "NetworkEndpointsVpcVirtualPrivateGateway2CE2FFC3": {
-      "DependsOn": [
-        "DeleteDefaultVpc4DBAE36C",
-      ],
       "Metadata": {
         "lzaLookup": {
           "vpcName": "Network-Endpoints",
@@ -1955,9 +1809,6 @@ exports[`NetworkVpcStack tests Construct(NetworkVpcStack):  Snapshot Test 1`] = 
       "Type": "AWS::EC2::VPNGateway",
     },
     "NetworkEndpointsVpcVirtualPrivateGatewayAttachment01185FBA": {
-      "DependsOn": [
-        "DeleteDefaultVpc4DBAE36C",
-      ],
       "Properties": {
         "VpcId": {
           "Ref": "NetworkEndpointsVpc619A1F01",
@@ -2068,7 +1919,7 @@ exports[`NetworkVpcStack tests Construct(NetworkVpcStack):  Snapshot Test 1`] = 
       "Properties": {
         "Name": "/accelerator/AWSAccelerator-NetworkVpcStack-666666666666-us-east-1/version",
         "Type": "String",
-        "Value": "1.13.0",
+        "Value": "1.14.1",
       },
       "Type": "AWS::SSM::Parameter",
     },

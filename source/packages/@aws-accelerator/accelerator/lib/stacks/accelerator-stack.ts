@@ -19,8 +19,6 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { v4 as uuidv4 } from 'uuid';
 import * as winston from 'winston';
-import { PrincipalOrgIdConditionType } from '@aws-accelerator/utils/lib/common-resources';
-
 import {
   AccountConfig,
   AccountsConfig,
@@ -37,7 +35,6 @@ import {
   LifeCycleRule,
   NetworkConfig,
   OrganizationConfig,
-  Region,
   ReplacementsConfig,
   S3EncryptionConfig,
   SecurityConfig,
@@ -48,11 +45,16 @@ import {
   VpcTemplatesConfig,
 } from '@aws-accelerator/config';
 import { KeyLookup, S3LifeCycleRule, ServiceLinkedRole } from '@aws-accelerator/constructs';
-import { createLogger } from '@aws-accelerator/utils/lib/logger';
-import { policyReplacements } from '@aws-accelerator/utils/lib/policy-replacements';
-import { SsmParameterPath, SsmResourceType } from '@aws-accelerator/utils/lib/ssm-parameter-path';
-import { version } from '../../../../../package.json';
+import {
+  PrincipalOrgIdConditionType,
+  createLogger,
+  policyReplacements,
+  SsmParameterPath,
+  SsmResourceType,
+} from '@aws-accelerator/utils';
 import { AcceleratorResourcePrefixes } from '../../utils/app-utils';
+import { version } from '../../../../../package.json';
+
 import { AcceleratorResourceNames } from '../accelerator-resource-names';
 
 /**
@@ -371,10 +373,10 @@ export abstract class AcceleratorStack extends cdk.Stack {
     return (
       inputConfig.enable &&
       (inputConfig.excludeRegions
-        ? inputConfig.excludeRegions.indexOf(this.region as Region) === -1
+        ? inputConfig.excludeRegions.indexOf(this.region) === -1
         : inputConfig.deploymentTargets?.excludedRegions
-        ? inputConfig.deploymentTargets?.excludedRegions?.indexOf(this.region as Region) === -1
-        : true)
+          ? inputConfig.deploymentTargets?.excludedRegions?.indexOf(this.region) === -1
+          : true)
     );
   }
 
@@ -550,7 +552,7 @@ export abstract class AcceleratorStack extends cdk.Stack {
    */
   protected createConfigServiceLinkedRole(key: { cloudwatch?: cdk.aws_kms.IKey; lambda?: cdk.aws_kms.IKey }) {
     const isManagementAccount = cdk.Stack.of(this).account === this.props.accountsConfig.getManagementAccountId();
-    const isControlTowerEnabled = this.props.globalConfig.controlTower;
+    const isControlTowerEnabled = this.props.globalConfig.controlTower.enable;
     const isConfigRecorderEnabled = this.props.securityConfig.awsConfig.enableConfigurationRecorder;
     const isPartitionSupported = this.serviceLinkedRoleSupportedPartitionList.includes(this.props.partition);
     const isServiceLinkedRoleEnabled = this.props.securityConfig.awsConfig.useServiceLinkedRole === true;
@@ -560,7 +562,7 @@ export abstract class AcceleratorStack extends cdk.Stack {
 
     if (
       (!isControlTowerEnabled || // If Control Tower is Disabled OR
-        (this.props.globalConfig.controlTower && isManagementAccount)) && // Control Tower is Enabled, and this is the Mgmt Acct
+        (isControlTowerEnabled && isManagementAccount)) && // Control Tower is Enabled, and this is the Mgmt Acct
       isConfigRecorderEnabled &&
       isPartitionSupported &&
       isDeploymentTarget &&
@@ -1494,8 +1496,8 @@ export abstract class AcceleratorStack extends cdk.Stack {
     return accountIds;
   }
 
-  public getRegionsFromDeploymentTarget(deploymentTargets: DeploymentTargets): Region[] {
-    const regions: Region[] = [];
+  public getRegionsFromDeploymentTarget(deploymentTargets: DeploymentTargets): string[] {
+    const regions: string[] = [];
     const enabledRegions = this.props.globalConfig.enabledRegions;
     regions.push(
       ...enabledRegions.filter(region => {

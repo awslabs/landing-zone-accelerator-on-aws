@@ -12,6 +12,7 @@
  */
 
 import * as cdk from 'aws-cdk-lib';
+import { describe } from 'vitest';
 
 import { CrossAccountRoute, CrossAccountRouteFramework } from '../../lib/aws-ec2/cross-account-route';
 import { snapShotTest } from '../snapshot-test';

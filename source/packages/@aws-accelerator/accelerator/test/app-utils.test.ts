@@ -14,32 +14,24 @@
 import { AccountsConfig, OrganizationConfig } from '@aws-accelerator/config';
 import { mockClient } from 'aws-sdk-client-mock';
 import { EC2Client, DescribeVpcsCommand, DescribeVpcEndpointsCommand } from '@aws-sdk/client-ec2';
-import { STSClient, AssumeRoleCommand } from '@aws-sdk/client-sts';
-import {
-  AcceleratorResourcePrefixes,
-  getContext,
-  setResourcePrefixes,
-  isBeforeBootstrapStage,
-  setAcceleratorEnvironment,
-} from '../utils/app-utils';
-import { describe, expect, test, jest } from '@jest/globals';
-import * as cdk from 'aws-cdk-lib';
+import { STSClient, AssumeRoleCommand, GetCallerIdentityCommand } from '@aws-sdk/client-sts';
+import { AcceleratorResourcePrefixes, setResourcePrefixes, setAcceleratorEnvironment } from '../utils/app-utils';
+import { describe, expect, test, vi } from 'vitest';
 import * as path from 'path';
 import { AcceleratorStage } from '../lib/accelerator-stage';
 import { AcceleratorStackProps } from '../lib/stacks/accelerator-stack';
 
 function testAppUtils() {
-  const app = new cdk.App({
-    context: { 'config-dir': path.join(__dirname, `configs/snapshot-only`), partition: 'aws' },
-  });
-  // Read in context inputs
-  const context = getContext(app);
-
+  const context = {
+    configDirPath: path.join(__dirname, `configs/snapshot-only`),
+    partition: 'aws',
+    stage: AcceleratorStage.ACCOUNTS,
+  };
   // Set various resource name prefixes used in code base
   const resourcePrefixes = setResourcePrefixes(process.env['ACCELERATOR_PREFIX'] ?? 'AWSAccelerator');
 
   // Set accelerator environment variables
-  const acceleratorEnv = setAcceleratorEnvironment(process.env, resourcePrefixes, context.stage);
+  const acceleratorEnv = setAcceleratorEnvironment(process.env, resourcePrefixes);
   return { context, resourcePrefixes, acceleratorEnv };
 }
 
@@ -62,36 +54,6 @@ const prefixes: AcceleratorResourcePrefixes = {
   ssmLogName: 'aws-accelerator',
 };
 
-describe('getContext ideally', () => {
-  test('getContext default', () => {
-    const app = new cdk.App({
-      context: {
-        partition: 'aws',
-        'config-dir': '/path/to/config/dir',
-        stage: 'logging',
-        account: '123456789012',
-        region: 'us-east-1',
-      },
-    });
-    const context = getContext(app);
-    expect(context).toBeDefined();
-  });
-  test('getContext no partition', () => {
-    const app = new cdk.App({
-      context: {
-        'config-dir': '/path/to/config/dir',
-        stage: 'logging',
-        account: '123456789012',
-        region: 'us-east-1',
-      },
-    });
-    function getContextNoPartition() {
-      getContext(app);
-    }
-    expect(getContextNoPartition).toThrowError(new Error('Partition value must be specified in app context'));
-  });
-});
-
 describe('test setResourcePrefixes', () => {
   test('setResourcePrefixes default', () => {
     const prefixReturn = setResourcePrefixes(process.env['ACCELERATOR_PREFIX'] ?? 'AWSAccelerator');
@@ -103,25 +65,6 @@ describe('test setResourcePrefixes', () => {
   });
 });
 
-describe('test isBeforeBootstrapStage', () => {
-  test('isBeforeBootstrapStage default', () => {
-    const isBeforeBootstrapStageReturn = isBeforeBootstrapStage('synth', 'prepare');
-    expect(isBeforeBootstrapStageReturn).toBe(true);
-  });
-  test('isBeforeBootstrapStage post bootstrap', () => {
-    const isBeforeBootstrapStageReturn = isBeforeBootstrapStage('synth', 'logging');
-    expect(isBeforeBootstrapStageReturn).toBe(false);
-  });
-  test('isBeforeBootstrapStage bootstrap', () => {
-    const isBeforeBootstrapStageReturn = isBeforeBootstrapStage('bootstrap');
-    expect(isBeforeBootstrapStageReturn).toBe(true);
-  });
-  test('isBeforeBootstrapStage no stage', () => {
-    const isBeforeBootstrapStageReturn = isBeforeBootstrapStage('deploy');
-    expect(isBeforeBootstrapStageReturn).toBe(false);
-  });
-});
-
 describe('test setAcceleratorEnvironment', () => {
   test('setAcceleratorEnvironment default', () => {
     const setAcceleratorEnvironmentReturn = setAcceleratorEnvironment(
@@ -129,6 +72,7 @@ describe('test setAcceleratorEnvironment', () => {
       prefixes,
       'prepare',
     );
+    // eslint-disable-next-line @typescript-eslint/no-unused-expressions
     expect(setAcceleratorEnvironmentReturn.qualifier).toBeDefined;
   });
   test('setAcceleratorEnvironment config repo error', () => {
@@ -180,7 +124,7 @@ describe('test setAcceleratorEnvironment', () => {
 
 describe('test setAcceleratorStackProps', () => {
   function initializeMock() {
-    AccountsConfig.prototype.loadAccountIds = jest
+    AccountsConfig.prototype.loadAccountIds = vi
       .fn<
         (
           partition: string,
@@ -191,11 +135,11 @@ describe('test setAcceleratorStackProps', () => {
       >()
       .mockResolvedValue();
 
-    OrganizationConfig.prototype.loadOrganizationalUnitIds = jest
+    OrganizationConfig.prototype.loadOrganizationalUnitIds = vi
       .fn<
         (
           partition: string,
-          managementAccountCredentials?: AWS.Credentials,
+          managementAccountCredentials?: { accessKeyId: string; secretAccessKey: string; sessionToken?: string },
           loadFromDynamoDbTable?: boolean,
         ) => Promise<void>
       >()
@@ -210,6 +154,9 @@ describe('test setAcceleratorStackProps', () => {
         SessionToken: 'fake-cred',
         Expiration: new Date(),
       },
+    });
+    stsMock.on(GetCallerIdentityCommand).resolves({
+      Account: '123456789012',
     });
 
     // Mock EC2 Client
@@ -241,14 +188,16 @@ describe('test setAcceleratorStackProps', () => {
         VpcEndpoints: [{ VpcEndpointId: 'fake-vpce-id-2' }],
       });
 
-    const accelerator = require('../lib/accelerator.ts');
-    accelerator.getCentralLogBucketKmsKeyArn = jest.fn().mockReturnValue(Promise.resolve('fake-kms-arn'));
+    vi.doMock('../lib/accelerator.ts', () => ({
+      ...vi.importActual('../lib/accelerator.ts'),
+      getCentralLogBucketKmsKeyArn: vi.fn().mockReturnValue(Promise.resolve('fake-kms-arn')),
+    }));
   }
 
   test('should load VPC IDs and VPCE IDs in network config for Finalize Stage', async () => {
     initializeMock();
     const { context, resourcePrefixes, acceleratorEnv } = testAppUtils();
-    const { setAcceleratorStackProps } = require('../utils/app-utils');
+    const { setAcceleratorStackProps } = await import('../utils/app-utils');
 
     context.stage = AcceleratorStage.FINALIZE;
     const { networkConfig } = (await setAcceleratorStackProps(
@@ -272,7 +221,7 @@ describe('test setAcceleratorStackProps', () => {
 
   test('should not load VPC IDs and VPCE IDs in network config for other Stages except for finalize and account stage', async () => {
     initializeMock();
-    const { setAcceleratorStackProps } = require('../utils/app-utils');
+    const { setAcceleratorStackProps } = await import('../utils/app-utils');
 
     const { context, resourcePrefixes, acceleratorEnv } = testAppUtils();
 

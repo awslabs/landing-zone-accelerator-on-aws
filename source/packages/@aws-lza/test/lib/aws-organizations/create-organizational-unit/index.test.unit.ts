@@ -10,7 +10,7 @@
  *  OR CONDITIONS OF ANY KIND, express or implied. See the License for the specific language governing permissions
  *  and limitations under the License.
  */
-import { describe, beforeEach, expect, test } from '@jest/globals';
+import { describe, beforeEach, expect, test, vi } from 'vitest';
 
 import { CreateOrganizationalUnitCommand, OrganizationsClient } from '@aws-sdk/client-organizations';
 import { CreateOrganizationalUnitModule } from '../../../../lib/aws-organizations/create-organizational-unit';
@@ -19,33 +19,31 @@ import { MOCK_CONSTANTS } from '../../../mocked-resources';
 import { MODULE_EXCEPTIONS } from '../../../../common/enums';
 
 // Mock dependencies
-jest.mock('@aws-sdk/client-organizations', () => {
-  return { OrganizationsClient: jest.fn(), CreateOrganizationalUnitCommand: jest.fn() };
+vi.mock('@aws-sdk/client-organizations', () => {
+  return { OrganizationsClient: vi.fn(), CreateOrganizationalUnitCommand: vi.fn() };
 });
 
 describe('CreateOrganizationalUnitModule', () => {
-  const mockSend = jest.fn();
-  let getOrganizationalUnitsForParentSpy: jest.SpyInstance;
-  let getParentOuIdSpy: jest.SpyInstance;
-  beforeEach(() => {
-    jest.clearAllMocks();
+  const mockSend = vi.fn();
+  let getOrganizationalUnitsForParentSpy: vi.SpyInstance;
+  let getParentOuIdSpy: vi.SpyInstance;
+  beforeEach(async () => {
+    vi.clearAllMocks();
 
-    (OrganizationsClient as jest.Mock).mockImplementation(() => ({
+    (OrganizationsClient as vi.Mock).mockImplementation(() => ({
       send: mockSend,
     }));
 
-    getOrganizationalUnitsForParentSpy = jest.spyOn(
-      require('../../../../common/functions'),
-      'getOrganizationalUnitsForParent',
-    );
+    const commonFunctions = await import('../../../../common/functions');
+    getOrganizationalUnitsForParentSpy = vi.spyOn(commonFunctions, 'getOrganizationalUnitsForParent');
 
-    getParentOuIdSpy = jest.spyOn(require('../../../../common/functions'), 'getParentOuId');
+    getParentOuIdSpy = vi.spyOn(commonFunctions, 'getParentOuId');
     getParentOuIdSpy.mockReturnValue(MOCK_CONSTANTS.organizationRoot.Id);
   });
 
   describe('NO DRY-RUN CreateOrganizationalUnitModule', () => {
     beforeEach(() => {
-      jest.clearAllMocks();
+      vi.clearAllMocks();
     });
 
     test('should be successful when ou not exists', async () => {
@@ -181,7 +179,7 @@ describe('CreateOrganizationalUnitModule', () => {
 
   describe('DRY-RUN - CreateOrganizationalUnitModule', () => {
     beforeEach(() => {
-      jest.clearAllMocks();
+      vi.clearAllMocks();
     });
 
     test('should be successful when ou not exists', async () => {

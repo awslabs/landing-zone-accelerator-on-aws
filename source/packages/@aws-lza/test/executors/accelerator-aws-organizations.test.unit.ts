@@ -11,13 +11,15 @@
  *  and limitations under the License.
  */
 
-import { describe, beforeEach, expect, test } from '@jest/globals';
+import { describe, beforeEach, expect, test, vi, afterEach } from 'vitest';
 import {
   createAndRetrieveOrganizationalUnit,
   createOrganizationalUnit,
   getOrganizationalUnitsDetail,
   inviteAccountsBatchToOrganization,
   inviteAccountToOrganization,
+  manageAccountAlias,
+  managePolicy,
   moveAccount,
   moveAccountsBatch,
 } from '../../executors/accelerator-aws-organizations';
@@ -28,26 +30,32 @@ import { MoveAccountModule } from '../../lib/aws-organizations/move-account';
 import { InviteAccountsBatchToOrganizationModule } from '../../lib/aws-organizations/invite-accounts-batch-to-organization';
 import { MoveAccountsBatchModule } from '../../lib/aws-organizations/move-accounts-batch';
 import { GetOrganizationalUnitsDetailModule } from '../../lib/aws-organizations/get-organizational-units-detail';
+import { ManageAccountAlias } from '../../lib/aws-organizations/manage-account-alias/index';
+import { ManagePolicy } from '../../lib/aws-organizations/manage-policy/index';
+import { PolicyType } from '@aws-sdk/client-organizations';
+import { OperationFlag } from '../../interfaces/aws-organizations/manage-policy';
 
 // Mock dependencies
-jest.mock('../../lib/aws-organizations/create-organizational-unit/index');
-jest.mock('../../lib/aws-organizations/invite-account-to-organization/index');
-jest.mock('../../lib/aws-organizations/invite-accounts-batch-to-organization/index');
-jest.mock('../../lib/aws-organizations/move-account/index');
-jest.mock('../../lib/aws-organizations/move-accounts-batch/index');
-jest.mock('../../lib/aws-organizations/get-organizational-units-detail/index');
+vi.mock('../../lib/aws-organizations/create-organizational-unit/index');
+vi.mock('../../lib/aws-organizations/invite-account-to-organization/index');
+vi.mock('../../lib/aws-organizations/invite-accounts-batch-to-organization/index');
+vi.mock('../../lib/aws-organizations/move-account/index');
+vi.mock('../../lib/aws-organizations/move-accounts-batch/index');
+vi.mock('../../lib/aws-organizations/get-organizational-units-detail/index');
+vi.mock('../../lib/aws-organizations/manage-account-alias/index');
+vi.mock('../../lib/aws-organizations/manage-policy/index');
 
 describe('AWSOrganizationsExecutor', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   describe('createOrganizationalUnit', () => {
     test('should successfully create organizational unit', async () => {
       // Setup
-      const mockHandler = jest.fn().mockResolvedValue('SUCCESS');
+      const mockHandler = vi.fn().mockResolvedValue('SUCCESS');
 
-      (CreateOrganizationalUnitModule as unknown as jest.Mock).mockImplementation(() => ({
+      (CreateOrganizationalUnitModule as unknown as vi.Mock).mockImplementation(() => ({
         handler: mockHandler,
       }));
 
@@ -70,9 +78,9 @@ describe('AWSOrganizationsExecutor', () => {
       // Setup
 
       const errorMessage = 'Creation failed';
-      const mockHandler = jest.fn().mockRejectedValue(new Error(errorMessage));
+      const mockHandler = vi.fn().mockRejectedValue(new Error(errorMessage));
 
-      (CreateOrganizationalUnitModule as unknown as jest.Mock).mockImplementation(() => ({
+      (CreateOrganizationalUnitModule as unknown as vi.Mock).mockImplementation(() => ({
         handler: mockHandler,
       }));
 
@@ -95,9 +103,9 @@ describe('AWSOrganizationsExecutor', () => {
   describe('createAndRetrieveOrganizationalUnit', () => {
     test('should successfully create organizational unit', async () => {
       // Setup
-      const mockHandler = jest.fn().mockResolvedValue('SUCCESS');
+      const mockHandler = vi.fn().mockResolvedValue('SUCCESS');
 
-      (CreateOrganizationalUnitModule as unknown as jest.Mock).mockImplementation(() => ({
+      (CreateOrganizationalUnitModule as unknown as vi.Mock).mockImplementation(() => ({
         handler: mockHandler,
         createdOrganizationalUnit: MOCK_CONSTANTS.newOrganizationalUnit,
       }));
@@ -120,9 +128,9 @@ describe('AWSOrganizationsExecutor', () => {
     test('should throw error when create ou fails', async () => {
       // Setup
       const errorMessage = 'Creation failed';
-      const mockHandler = jest.fn().mockRejectedValue(new Error(errorMessage));
+      const mockHandler = vi.fn().mockRejectedValue(new Error(errorMessage));
 
-      (CreateOrganizationalUnitModule as unknown as jest.Mock).mockImplementation(() => ({
+      (CreateOrganizationalUnitModule as unknown as vi.Mock).mockImplementation(() => ({
         handler: mockHandler,
         createdOrganizationalUnit: undefined,
       }));
@@ -150,9 +158,9 @@ describe('AWSOrganizationsExecutor', () => {
     };
     test('should successfully invite organizational unit', async () => {
       // Setup
-      const mockHandler = jest.fn().mockResolvedValue('SUCCESS');
+      const mockHandler = vi.fn().mockResolvedValue('SUCCESS');
 
-      (InviteAccountToOrganizationModule as unknown as jest.Mock).mockImplementation(() => ({
+      (InviteAccountToOrganizationModule as unknown as vi.Mock).mockImplementation(() => ({
         handler: mockHandler,
       }));
 
@@ -169,9 +177,9 @@ describe('AWSOrganizationsExecutor', () => {
       // Setup
 
       const errorMessage = 'Creation failed';
-      const mockHandler = jest.fn().mockRejectedValue(new Error(errorMessage));
+      const mockHandler = vi.fn().mockRejectedValue(new Error(errorMessage));
 
-      (InviteAccountToOrganizationModule as unknown as jest.Mock).mockImplementation(() => ({
+      (InviteAccountToOrganizationModule as unknown as vi.Mock).mockImplementation(() => ({
         handler: mockHandler,
       }));
 
@@ -190,9 +198,9 @@ describe('AWSOrganizationsExecutor', () => {
     };
     test('should successfully move organizational unit', async () => {
       // Setup
-      const mockHandler = jest.fn().mockResolvedValue('SUCCESS');
+      const mockHandler = vi.fn().mockResolvedValue('SUCCESS');
 
-      (MoveAccountModule as unknown as jest.Mock).mockImplementation(() => ({
+      (MoveAccountModule as vi.Mock).mockImplementation(() => ({
         handler: mockHandler,
       }));
 
@@ -209,9 +217,9 @@ describe('AWSOrganizationsExecutor', () => {
       // Setup
 
       const errorMessage = 'Creation failed';
-      const mockHandler = jest.fn().mockRejectedValue(new Error(errorMessage));
+      const mockHandler = vi.fn().mockRejectedValue(new Error(errorMessage));
 
-      (MoveAccountModule as unknown as jest.Mock).mockImplementation(() => ({
+      (MoveAccountModule as vi.Mock).mockImplementation(() => ({
         handler: mockHandler,
       }));
 
@@ -230,9 +238,9 @@ describe('AWSOrganizationsExecutor', () => {
     };
     test('should successfully invite organizational units', async () => {
       // Setup
-      const mockHandler = jest.fn().mockResolvedValue('SUCCESS');
+      const mockHandler = vi.fn().mockResolvedValue('SUCCESS');
 
-      (InviteAccountsBatchToOrganizationModule as unknown as jest.Mock).mockImplementation(() => ({
+      (InviteAccountsBatchToOrganizationModule as unknown as vi.Mock).mockImplementation(() => ({
         handler: mockHandler,
       }));
 
@@ -249,9 +257,9 @@ describe('AWSOrganizationsExecutor', () => {
       // Setup
 
       const errorMessage = 'Creation failed';
-      const mockHandler = jest.fn().mockRejectedValue(new Error(errorMessage));
+      const mockHandler = vi.fn().mockRejectedValue(new Error(errorMessage));
 
-      (InviteAccountsBatchToOrganizationModule as unknown as jest.Mock).mockImplementation(() => ({
+      (InviteAccountsBatchToOrganizationModule as unknown as vi.Mock).mockImplementation(() => ({
         handler: mockHandler,
       }));
 
@@ -270,9 +278,9 @@ describe('AWSOrganizationsExecutor', () => {
     };
     test('should successfully move organizational unit', async () => {
       // Setup
-      const mockHandler = jest.fn().mockResolvedValue('SUCCESS');
+      const mockHandler = vi.fn().mockResolvedValue('SUCCESS');
 
-      (MoveAccountsBatchModule as unknown as jest.Mock).mockImplementation(() => ({
+      (MoveAccountsBatchModule as unknown as vi.Mock).mockImplementation(() => ({
         handler: mockHandler,
       }));
 
@@ -289,9 +297,9 @@ describe('AWSOrganizationsExecutor', () => {
       // Setup
 
       const errorMessage = 'Creation failed';
-      const mockHandler = jest.fn().mockRejectedValue(new Error(errorMessage));
+      const mockHandler = vi.fn().mockRejectedValue(new Error(errorMessage));
 
-      (MoveAccountsBatchModule as unknown as jest.Mock).mockImplementation(() => ({
+      (MoveAccountsBatchModule as unknown as vi.Mock).mockImplementation(() => ({
         handler: mockHandler,
       }));
 
@@ -312,9 +320,9 @@ describe('AWSOrganizationsExecutor', () => {
     };
     test('should successfully execute the module', async () => {
       // Setup
-      const mockHandler = jest.fn().mockResolvedValue('SUCCESS');
+      const mockHandler = vi.fn().mockResolvedValue('SUCCESS');
 
-      (GetOrganizationalUnitsDetailModule as unknown as jest.Mock).mockImplementation(() => ({
+      (GetOrganizationalUnitsDetailModule as unknown as vi.Mock).mockImplementation(() => ({
         handler: mockHandler,
       }));
 
@@ -331,14 +339,109 @@ describe('AWSOrganizationsExecutor', () => {
       // Setup
 
       const errorMessage = 'Module failed';
-      const mockHandler = jest.fn().mockRejectedValue(new Error(errorMessage));
+      const mockHandler = vi.fn().mockRejectedValue(new Error(errorMessage));
 
-      (GetOrganizationalUnitsDetailModule as unknown as jest.Mock).mockImplementation(() => ({
+      (GetOrganizationalUnitsDetailModule as unknown as vi.Mock).mockImplementation(() => ({
         handler: mockHandler,
       }));
 
       // Execute && Verify
       await expect(getOrganizationalUnitsDetail(input)).rejects.toThrow(errorMessage);
+
+      expect(mockHandler).toHaveBeenCalledWith(input);
+      expect(mockHandler).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe('manageAccountAlias', () => {
+    const input = {
+      ...MOCK_CONSTANTS.runnerParameters,
+      configuration: {
+        alias: 'mock-account-alias',
+      },
+    };
+    test('should successfully manage account alias', async () => {
+      // Setup
+      const mockHandler = vi.fn().mockResolvedValue('SUCCESS');
+
+      (ManageAccountAlias as vi.Mock).mockImplementation(() => ({
+        handler: mockHandler,
+      }));
+
+      // Execute
+      const result = await manageAccountAlias(input);
+
+      // Verify
+      expect(result).toEqual('SUCCESS');
+      expect(mockHandler).toHaveBeenCalledWith(input);
+      expect(mockHandler).toHaveBeenCalledTimes(1);
+    });
+
+    test('should throw error when manage account alias fails', async () => {
+      // Setup
+      const errorMessage = 'Manage account alias failed';
+      const mockHandler = vi.fn().mockRejectedValue(new Error(errorMessage));
+
+      (ManageAccountAlias as vi.Mock).mockImplementation(() => ({
+        handler: mockHandler,
+      }));
+
+      // Execute && Verify
+      await expect(manageAccountAlias(input)).rejects.toThrow(errorMessage);
+
+      expect(mockHandler).toHaveBeenCalledWith(input);
+      expect(mockHandler).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe('managePolicy', () => {
+    const input = {
+      ...MOCK_CONSTANTS.runnerParameters,
+      configuration: {
+        name: 'mock-policy',
+        type: PolicyType.SERVICE_CONTROL_POLICY,
+        operationFlag: OperationFlag.UPSERT,
+        content: JSON.stringify({
+          Version: '2012-10-17',
+          Statement: [
+            {
+              Effect: 'Allow',
+              Action: '*',
+              Resource: '*',
+            },
+          ],
+        }),
+      },
+    };
+
+    test('should successfully manage policy', async () => {
+      // Setup
+      const mockHandler = vi.fn().mockResolvedValue('SUCCESS');
+
+      (ManagePolicy as vi.Mock).mockImplementation(() => ({
+        handler: mockHandler,
+      }));
+
+      // Execute
+      const result = await managePolicy(input);
+
+      // Verify
+      expect(result).toEqual('SUCCESS');
+      expect(mockHandler).toHaveBeenCalledWith(input);
+      expect(mockHandler).toHaveBeenCalledTimes(1);
+    });
+
+    test('should throw error when manage policy fails', async () => {
+      // Setup
+      const errorMessage = 'Manage policy failed';
+      const mockHandler = vi.fn().mockRejectedValue(new Error(errorMessage));
+
+      (ManagePolicy as vi.Mock).mockImplementation(() => ({
+        handler: mockHandler,
+      }));
+
+      // Execute && Verify
+      await expect(managePolicy(input)).rejects.toThrow(errorMessage);
 
       expect(mockHandler).toHaveBeenCalledWith(input);
       expect(mockHandler).toHaveBeenCalledTimes(1);
@@ -352,28 +455,28 @@ describe('AWSOrganizationsExecutor', () => {
     beforeEach(() => {
       originalProcessOn = process.on;
 
-      process.on = jest.fn((event: string, listener: NodeJS.UncaughtExceptionListener) => {
+      process.on = vi.fn((event: string, listener: NodeJS.UncaughtExceptionListener) => {
         if (event === 'uncaughtException') {
           processOnCallback = listener;
         }
         return process;
       }) as unknown as typeof process.on;
 
-      jest.resetModules();
+      vi.resetModules();
     });
 
     afterEach(() => {
       process.on = originalProcessOn;
     });
 
-    test('should register uncaughtException handler', () => {
-      require('../../executors/accelerator-aws-organizations');
+    test('should register uncaughtException handler', async () => {
+      await import('../../executors/accelerator-aws-organizations');
 
       expect(process.on).toHaveBeenCalledWith('uncaughtException', expect.any(Function));
     });
 
-    test('should rethrow the error when uncaughtException occurs', () => {
-      require('../../executors/accelerator-aws-organizations');
+    test('should rethrow the error when uncaughtException occurs', async () => {
+      await import('../../executors/accelerator-aws-organizations');
 
       const testError = new Error('Test uncaught exception');
       const origin = 'uncaughtException';

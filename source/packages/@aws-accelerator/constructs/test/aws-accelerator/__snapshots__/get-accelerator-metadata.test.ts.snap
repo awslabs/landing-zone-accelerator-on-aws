@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`AcceleratorMetadata Construct(AcceleratorMetadata):  Snapshot Test 1`] = `
+exports[`AcceleratorMetadata > Construct(AcceleratorMetadata):  Snapshot Test 1`] = `
 {
   "Parameters": {
     "SsmParameterValuetestArnPathC96584B6F00A464EAD1953AFF4B05118Parameter": {
@@ -55,7 +55,7 @@ exports[`AcceleratorMetadata Construct(AcceleratorMetadata):  Snapshot Test 1`] 
             "PARTITION": {
               "Ref": "AWS::Partition",
             },
-            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.14.1",
           },
         },
         "FunctionName": "AWSAccelerator-metadata-collection",
@@ -277,6 +277,30 @@ exports[`AcceleratorMetadata Construct(AcceleratorMetadata):  Snapshot Test 1`] 
                         "Ref": "AWS::Partition",
                       },
                       ":s3:::aws-accelerator-config-111111111111-us-east-1/*",
+                    ],
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":s3:::aws-accelerator-pipeline-111111111111-us-east-1",
+                    ],
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":s3:::aws-accelerator-pipeline-111111111111-us-east-1/*",
                     ],
                   ],
                 },

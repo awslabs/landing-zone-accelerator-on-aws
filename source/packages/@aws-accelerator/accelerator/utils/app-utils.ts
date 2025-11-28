@@ -24,25 +24,30 @@ import {
   OrganizationConfig,
   ReplacementsConfig,
   SecurityConfig,
-  Region,
 } from '@aws-accelerator/config';
-import * as cdk from 'aws-cdk-lib';
 import fs from 'fs';
 import path from 'path';
-import { AcceleratorStage } from '../lib/accelerator-stage';
-import { AcceleratorStackProps } from '../lib/stacks/accelerator-stack';
-import { getCentralLogBucketKmsKeyArn, shouldLookupDynamoDb } from '../lib/accelerator';
+import {
+  AcceleratorStage,
+  AcceleratorStackProps,
+  getCentralLogBucketKmsKeyArn,
+  shouldLookupDynamoDb,
+} from '@aws-accelerator/accelerator';
 import { AcceleratorResourceNames } from '../lib/accelerator-resource-names';
 import {
   POLICY_LOOKUP_TYPE,
   POLICY_LOOKUP_SCOPE,
   ACCEL_POLICY_LOOKUP_REGEX,
-} from '@aws-accelerator/utils/lib/policy-replacements';
-import { createLogger } from '@aws-accelerator/utils/lib/logger';
-import { throttlingBackOff } from '@aws-accelerator/utils/lib/throttle';
+  createLogger,
+  throttlingBackOff,
+  setRetryStrategy,
+  getCrossAccountCredentials,
+  setExternalManagementAccountCredentials,
+} from '@aws-accelerator/utils';
 import { PutObjectCommand, S3Client } from '@aws-sdk/client-s3';
 import { DescribeVpcEndpointsCommand, DescribeVpcsCommand, EC2Client } from '@aws-sdk/client-ec2';
-import { AssumeRoleCommand, STSClient } from '@aws-sdk/client-sts';
+import { AssumeRoleCommandOutput, Credentials } from '@aws-sdk/client-sts';
+
 const logger = createLogger(['app-utils']);
 export interface AcceleratorContext {
   /**
@@ -262,29 +267,6 @@ export interface AcceleratorEnvironment {
 }
 
 /**
- * Get accelerator app context from CLI input
- * @param app
- * @returns
- */
-export function getContext(app: cdk.App): AcceleratorContext {
-  const partition = app.node.tryGetContext('partition');
-  const useExistingRoles = app.node.tryGetContext('useExistingRoles') === 'true';
-
-  if (!partition) {
-    throw new Error('Partition value must be specified in app context');
-  }
-
-  return {
-    partition,
-    configDirPath: app.node.tryGetContext('config-dir'),
-    stage: app.node.tryGetContext('stage'),
-    account: app.node.tryGetContext('account'),
-    region: app.node.tryGetContext('region'),
-    useExistingRoles,
-  };
-}
-
-/**
  * Set accelerator resource prefixes based on provided input
  * from installer stack parameters
  * @param prefix
@@ -459,144 +441,133 @@ export async function setAcceleratorStackProps(
   prefixes: AcceleratorResourcePrefixes,
   globalRegion: string,
 ): Promise<AcceleratorStackProps | undefined> {
-  if (!context.configDirPath) {
-    return;
-  }
-  const homeRegion = GlobalConfig.loadRawGlobalConfig(context.configDirPath).homeRegion;
-  const orgsEnabled = OrganizationConfig.loadRawOrganizationsConfig(context.configDirPath).enable;
+  try {
+    if (!context.configDirPath) {
+      logger.warn(`No configuration directory path provided, skipping accelerator stacks`);
+      return;
+    }
+    const homeRegion = GlobalConfig.loadRawGlobalConfig(context.configDirPath).homeRegion;
+    const orgsEnabled = OrganizationConfig.loadRawOrganizationsConfig(context.configDirPath).enable;
 
-  // Check to see if lookups for organization entities should be done in DynamoDB or native AWS Organizations API calls
-  const loadFromDynamoDbTable = shouldLookupDynamoDb(context.stage);
-  const accountsConfig = AccountsConfig.load(context.configDirPath);
-  await accountsConfig.loadAccountIds(
-    context.partition,
-    acceleratorEnv.enableSingleAccountMode,
-    orgsEnabled,
-    accountsConfig,
-    undefined,
-    loadFromDynamoDbTable,
-  );
-
-  const replacementsConfig = ReplacementsConfig.load(context.configDirPath, accountsConfig);
-  await replacementsConfig.loadDynamicReplacements(homeRegion);
-  const globalConfig = GlobalConfig.load(context.configDirPath, replacementsConfig);
-  const organizationConfig = OrganizationConfig.load(context.configDirPath, replacementsConfig);
-  await organizationConfig.loadOrganizationalUnitIds(context.partition, undefined, loadFromDynamoDbTable);
-
-  if (globalConfig.externalLandingZoneResources?.importExternalLandingZoneResources) {
-    await globalConfig.loadExternalMapping(accountsConfig);
-    await globalConfig.loadLzaResources(context.partition, prefixes.ssmParamName);
-  }
-  const centralizedLoggingRegion = globalConfig.logging.centralizedLoggingRegion ?? globalConfig.homeRegion;
-
-  const acceleratorResourceNames = new AcceleratorResourceNames({
-    prefixes: prefixes,
-    centralizedLoggingRegion,
-  });
-
-  let centralLogBucketCmkParameter: string = acceleratorResourceNames.parameters.centralLogBucketCmkArn;
-  if (globalConfig.logging.centralLogBucket?.importedBucket?.name) {
-    centralLogBucketCmkParameter = acceleratorResourceNames.parameters.importedCentralLogBucketCmkArn;
-  }
-
-  const centralLogsBucketKmsKeyArn = await getCentralLogBucketKmsKeyArn(
-    centralizedLoggingRegion,
-    context.partition,
-    accountsConfig.getLogArchiveAccountId(),
-    globalConfig.managementAccountAccessRole,
-    centralLogBucketCmkParameter,
-    orgsEnabled,
-  );
-  logger.debug(`Central logs bucket kms key arn: ${centralLogsBucketKmsKeyArn}`);
-
-  const networkConfig = NetworkConfig.load(context.configDirPath, replacementsConfig);
-  const securityConfig = SecurityConfig.load(context.configDirPath, replacementsConfig);
-  /**
-   * Load VPC/VPCE info for accounts, data perimeter and finalize stage only
-   */
-  if (
-    includeStage(context, {
-      stage: AcceleratorStage.FINALIZE,
-      account: accountsConfig.getManagementAccountId(),
-      region: globalRegion,
-    }) ||
-    includeStage(context, {
-      stage: AcceleratorStage.CUSTOMIZATIONS,
-      account: accountsConfig.getManagementAccountId(),
-      region: globalRegion,
-    }) ||
-    includeStage(context, {
-      stage: AcceleratorStage.ACCOUNTS,
-      account: accountsConfig.getManagementAccountId(),
-      region: globalRegion,
-    })
-  ) {
-    const lookupTypeAndAccountIdMap = getLookupTypeAndAccountIdMap(
-      organizationConfig,
-      securityConfig,
+    // Check to see if lookups for organization entities should be done in DynamoDB or native AWS Organizations API calls
+    const loadFromDynamoDbTable = shouldLookupDynamoDb(context.stage);
+    const accountsConfig = AccountsConfig.load(context.configDirPath);
+    await accountsConfig.loadAccountIds(
+      context.partition,
+      acceleratorEnv.enableSingleAccountMode,
+      orgsEnabled,
       accountsConfig,
-      context.configDirPath,
+      undefined,
+      loadFromDynamoDbTable,
     );
-    const accountVpcIds = await loadVpcIds(
+
+    const replacementsConfig = ReplacementsConfig.load(context.configDirPath, accountsConfig);
+    await replacementsConfig.loadDynamicReplacements(homeRegion);
+    const globalConfig = GlobalConfig.load(context.configDirPath, replacementsConfig);
+    const organizationConfig = OrganizationConfig.load(context.configDirPath, replacementsConfig);
+    await organizationConfig.loadOrganizationalUnitIds(context.partition, undefined, loadFromDynamoDbTable);
+
+    logger.info('Loaded all configs successfully');
+
+    if (globalConfig.externalLandingZoneResources?.importExternalLandingZoneResources) {
+      await globalConfig.loadExternalMapping(accountsConfig);
+      await globalConfig.loadLzaResources(context.partition, prefixes.ssmParamName);
+    }
+    const centralizedLoggingRegion = globalConfig.logging.centralizedLoggingRegion ?? globalConfig.homeRegion;
+
+    const acceleratorResourceNames = new AcceleratorResourceNames({
+      prefixes: prefixes,
+      centralizedLoggingRegion,
+    });
+    logger.info('GetResourceNames successfully');
+
+    let centralLogBucketCmkParameter: string = acceleratorResourceNames.parameters.centralLogBucketCmkArn;
+    if (globalConfig.logging.centralLogBucket?.importedBucket?.name) {
+      centralLogBucketCmkParameter = acceleratorResourceNames.parameters.importedCentralLogBucketCmkArn;
+    }
+    await setExternalManagementAccountCredentials(context.partition, globalConfig.homeRegion);
+    const centralLogsBucketKmsKeyArn = await getCentralLogBucketKmsKeyArn(
+      centralizedLoggingRegion,
+      context.partition,
+      accountsConfig.getLogArchiveAccountId(),
+      globalConfig.managementAccountAccessRole,
+      centralLogBucketCmkParameter,
+      orgsEnabled,
+    );
+    logger.debug(`Central logs bucket kms key arn: ${centralLogsBucketKmsKeyArn}`);
+
+    const networkConfig = NetworkConfig.load(context.configDirPath, replacementsConfig);
+    const securityConfig = SecurityConfig.load(context.configDirPath, replacementsConfig);
+    /**
+     * Load VPC/VPCE info for accounts, data perimeter and finalize stage only
+     */
+    if (
+      includeStage(context, {
+        stage: AcceleratorStage.FINALIZE,
+        account: accountsConfig.getManagementAccountId(),
+        region: globalRegion,
+      }) ||
+      includeStage(context, {
+        stage: AcceleratorStage.CUSTOMIZATIONS,
+        account: accountsConfig.getManagementAccountId(),
+        region: globalRegion,
+      }) ||
+      includeStage(context, {
+        stage: AcceleratorStage.ACCOUNTS,
+        account: accountsConfig.getManagementAccountId(),
+        region: globalRegion,
+      })
+    ) {
+      logger.debug('Loading VPC and VPC Endpoint info');
+      const lookupTypeAndAccountIdMap = getLookupTypeAndAccountIdMap(
+        organizationConfig,
+        securityConfig,
+        accountsConfig,
+        context.configDirPath,
+      );
+      const accountVpcIds = await loadVpcIds(
+        globalConfig,
+        accountsConfig,
+        networkConfig,
+        globalConfig.managementAccountAccessRole,
+        context.partition,
+        Array.from(lookupTypeAndAccountIdMap.get(POLICY_LOOKUP_TYPE.VPC_ID) || []),
+        securityConfig.resourcePolicyEnforcement?.networkPerimeter?.managedVpcOnly || false,
+      );
+      const accountVpcEndpointIds = await loadVpcEndpointIds(
+        globalConfig.managementAccountAccessRole,
+        context.partition,
+        Array.from(lookupTypeAndAccountIdMap.get(POLICY_LOOKUP_TYPE.VPCE_ID) || []),
+        globalConfig.enabledRegions,
+      );
+      networkConfig.accountVpcIds = accountVpcIds;
+      networkConfig.accountVpcEndpointIds = accountVpcEndpointIds;
+    }
+    logger.debug('Returning accelerator stack props');
+
+    return {
+      configDirPath: context.configDirPath,
+      accountsConfig: accountsConfig,
+      customizationsConfig: getCustomizationsConfig(context.configDirPath, replacementsConfig),
       globalConfig,
-      accountsConfig,
+      iamConfig: IamConfig.load(context.configDirPath, replacementsConfig),
       networkConfig,
-      globalConfig.managementAccountAccessRole,
-      context.partition,
-      Array.from(lookupTypeAndAccountIdMap.get(POLICY_LOOKUP_TYPE.VPC_ID) || []),
-      securityConfig.resourcePolicyEnforcement?.networkPerimeter?.managedVpcOnly || false,
-    );
-    const accountVpcEndpointIds = await loadVpcEndpointIds(
-      globalConfig.managementAccountAccessRole,
-      context.partition,
-      Array.from(lookupTypeAndAccountIdMap.get(POLICY_LOOKUP_TYPE.VPCE_ID) || []),
-      globalConfig.enabledRegions,
-    );
-    networkConfig.accountVpcIds = accountVpcIds;
-    networkConfig.accountVpcEndpointIds = accountVpcEndpointIds;
+      organizationConfig: organizationConfig,
+      securityConfig,
+      replacementsConfig: replacementsConfig,
+      partition: context.partition,
+      globalRegion,
+      centralizedLoggingRegion,
+      prefixes,
+      useExistingRoles: context.useExistingRoles,
+      centralLogsBucketKmsKeyArn,
+      ...acceleratorEnv,
+    };
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  } catch (error: any) {
+    logger.error(error.stack || error.toString());
+    throw error;
   }
-
-  return {
-    configDirPath: context.configDirPath,
-    accountsConfig: accountsConfig,
-    customizationsConfig: getCustomizationsConfig(context.configDirPath, replacementsConfig),
-    globalConfig,
-    iamConfig: IamConfig.load(context.configDirPath, replacementsConfig),
-    networkConfig,
-    organizationConfig: organizationConfig,
-    securityConfig,
-    replacementsConfig: replacementsConfig,
-    partition: context.partition,
-    globalRegion,
-    centralizedLoggingRegion,
-    prefixes,
-    useExistingRoles: context.useExistingRoles,
-    centralLogsBucketKmsKeyArn,
-    ...acceleratorEnv,
-  };
-}
-
-/**
- * Checks if the stage is at or before the bootstrap stage in the LZA pipeline
- * @param command
- * @param stage
- * @returns
- */
-
-export function isBeforeBootstrapStage(command: string, stage?: string): boolean {
-  const preBootstrapStages = [
-    AcceleratorStage.PREPARE,
-    AcceleratorStage.ACCOUNTS,
-    AcceleratorStage.BOOTSTRAP,
-  ] as string[];
-  if (command === 'bootstrap') {
-    return true;
-  }
-  if (!stage) {
-    return false;
-  }
-
-  return preBootstrapStages.includes(stage);
 }
 
 /**
@@ -640,13 +611,16 @@ async function loadVpcIds(
   const accountNameToVpcNameMap = getManagedVpcNamesByAccountNames(networkConfig);
 
   for (const accountId of accountIds) {
-    const regions = globalConfig.enabledRegions;
-    const ec2Clients = await getEc2ClientsByAccountAndRegions(
-      partition,
+    const stsClientRegion = globalConfig.enabledRegions[0];
+    const credentials = await getCrossAccountCredentials(
       accountId,
-      regions,
+      stsClientRegion,
+      partition,
       managementAccountAccessRole,
+      'load-vpc-ids',
     );
+    const regions = globalConfig.enabledRegions;
+    const ec2Clients = await getEc2ClientsByAccountAndRegions(regions, credentials);
 
     const accountName = accountConfig.getAccountNameById(accountId);
     const managedVpcNames: Set<string> = accountName ? new Set(accountNameToVpcNameMap.get(accountName)) : new Set();
@@ -676,7 +650,7 @@ async function getVpcIdsByAccount(
     // Get all VPC IDs under the region bound to the client
     let nextToken: string | undefined = undefined;
     do {
-      const params: AWS.EC2.DescribeVpcsRequest = {};
+      const params: { NextToken?: string } = {};
       if (nextToken) {
         params.NextToken = nextToken;
       }
@@ -711,7 +685,7 @@ async function getVpcEndpointIdsByAccount(ec2Clients: EC2Client[]): Promise<stri
     // List all VPC Endpoint IDs
     let nextToken: string | undefined = undefined;
     do {
-      const params: AWS.EC2.DescribeVpcsRequest = {};
+      const params: { NextToken?: string } = {};
       if (nextToken) {
         params.NextToken = nextToken;
       }
@@ -745,12 +719,15 @@ async function loadVpcEndpointIds(
   const accountVpcEndpointIdMap: { [key: string]: string[] } = {};
 
   for (const accountId of accountIds) {
-    const ec2Clients = await getEc2ClientsByAccountAndRegions(
-      partition,
+    const stsClientRegion = regions[0];
+    const credentials = await getCrossAccountCredentials(
       accountId,
-      regions,
+      stsClientRegion,
+      partition,
       managementAccountAccessRole,
+      'load-vpc-endpoint-ids',
     );
+    const ec2Clients = await getEc2ClientsByAccountAndRegions(regions, credentials);
 
     const vpcEndpointId = await getVpcEndpointIdsByAccount(ec2Clients);
     accountVpcEndpointIdMap[accountId] = vpcEndpointId;
@@ -783,7 +760,6 @@ function getLookupTypeAndAccountIdMap(
   securityConfig.resourcePolicyEnforcement?.policySets.forEach(policySet =>
     policySet.resourcePolicies.forEach(rcp => policyPathSet.add(rcp.document)),
   );
-
   // 2. Extra all the dynamic parameters from policy templates
   const dynamicParams = new Set<string>();
   for (const policyPath of policyPathSet) {
@@ -880,7 +856,10 @@ function getManagedVpcNamesByAccountNames(networkConfig: NetworkConfig) {
  * @param managedVpcNames
  * @returns
  */
-function isLzaManagedVpc(vpc: AWS.EC2.Vpc, managedVpcNames: Set<string>): boolean {
+function isLzaManagedVpc(
+  vpc: { Tags?: { Key?: string; Value?: string }[]; VpcId?: string },
+  managedVpcNames: Set<string>,
+): boolean {
   const tag = vpc.Tags?.find(tag => tag.Key === 'Name' && tag.Value && managedVpcNames.has(tag.Value));
   return !!tag;
 }
@@ -895,40 +874,26 @@ function isLzaManagedVpc(vpc: AWS.EC2.Vpc, managedVpcNames: Set<string>): boolea
  * @param managedResourceOnly
  * @returns
  */
-async function getEc2ClientsByAccountAndRegions(
-  partition: string,
-  accountId: string,
-  regions: string[],
-  managementAccountAccessRole: string,
-) {
-  const stsClient = new STSClient({ region: process.env['AWS_REGION'] });
-  const cred = await throttlingBackOff(() =>
-    stsClient.send(
-      new AssumeRoleCommand({
-        RoleArn: `arn:${partition}:iam::${accountId}:role/${managementAccountAccessRole}`,
-        RoleSessionName: 'cdk-build-time',
-      }),
-    ),
-  );
+async function getEc2ClientsByAccountAndRegions(regions: string[], credentials: AssumeRoleCommandOutput) {
   const ec2Clients: EC2Client[] = [];
-  regions.forEach(region =>
+  for (const region of regions) {
     ec2Clients.push(
       new EC2Client({
         region: region,
         credentials: {
-          accessKeyId: cred.Credentials!.AccessKeyId!,
-          secretAccessKey: cred.Credentials!.SecretAccessKey!,
-          sessionToken: cred.Credentials!.SessionToken,
+          accessKeyId: credentials.Credentials!.AccessKeyId!,
+          secretAccessKey: credentials.Credentials!.SecretAccessKey!,
+          sessionToken: credentials.Credentials!.SessionToken,
         },
+        retryStrategy: setRetryStrategy(),
       }),
-    ),
-  );
-
+    );
+  }
   return ec2Clients;
 }
 
 export async function writeImportResources(props: {
-  credentials: AWS.STS.Credentials | undefined;
+  credentials: Credentials | undefined;
   globalConfig: GlobalConfig;
   mapping: ASEAMappings;
   accountsConfig: AccountsConfig;
@@ -964,7 +929,7 @@ export async function writeImportResources(props: {
     if (!lzaAccountIds.includes(mapping.accountId)) {
       return acc;
     }
-    if (!lzaRegions.includes(mapping.region as Region)) {
+    if (!lzaRegions.includes(mapping.region)) {
       return acc;
     }
     acc[key] = mapping;
@@ -1075,7 +1040,6 @@ async function handleNestedStacksMapping(mapping: ASEAMapping) {
   return nestedStacks;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function addNewResourcesFromStack(resources: CfnResourceType[], stackResources: StackResources) {
   // Turn into a hash map for faster processing
   const resourceObj = resources.reduce((acc: { [key: string]: CfnResourceType }, resource) => {
@@ -1143,7 +1107,7 @@ async function writeMappingToS3(props: {
   return Promise.all(writePromises);
 }
 
-function setCredentials(stsCredentials: AWS.STS.Credentials | undefined) {
+function setCredentials(stsCredentials: Credentials | undefined) {
   let credentials;
   if (stsCredentials && stsCredentials.AccessKeyId && stsCredentials.SecretAccessKey && stsCredentials.SessionToken) {
     credentials = {

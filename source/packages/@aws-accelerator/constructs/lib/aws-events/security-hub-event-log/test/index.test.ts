@@ -4,12 +4,26 @@ import {
   ResourceAlreadyExistsException,
   PutResourcePolicyCommand,
 } from '@aws-sdk/client-cloudwatch-logs';
-import { describe, beforeEach, expect, test } from '@jest/globals';
+import { describe, beforeEach, expect, test, vi } from 'vitest';
 
 import { generateResourcePolicy, handler } from '../index';
 import { AcceleratorMockClient, EventType } from '../../../../test/unit-test/common/resources';
 import { AcceleratorUnitTest } from '../../../../test/unit-test/accelerator-unit-test';
 import { StaticInput } from './static-input';
+
+// Mock console output
+vi.spyOn(console, 'log').mockImplementation(() => {
+  /* mock implementation */
+});
+vi.spyOn(console, 'error').mockImplementation(() => {
+  /* mock implementation */
+});
+vi.spyOn(console, 'warn').mockImplementation(() => {
+  /* mock implementation */
+});
+vi.spyOn(console, 'info').mockImplementation(() => {
+  /* mock implementation */
+});
 
 const logsClient = AcceleratorMockClient(CloudWatchLogsClient);
 

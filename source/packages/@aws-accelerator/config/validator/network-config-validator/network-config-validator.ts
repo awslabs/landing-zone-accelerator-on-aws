@@ -11,7 +11,7 @@
  *  and limitations under the License.
  */
 
-import { createLogger } from '@aws-accelerator/utils/lib/logger';
+import { createLogger } from '@aws-accelerator/utils';
 
 import { AccountConfig, AccountsConfig, GovCloudAccountConfig } from '../../lib/accounts-config';
 import { CustomizationsConfig } from '../../lib/customizations-config';

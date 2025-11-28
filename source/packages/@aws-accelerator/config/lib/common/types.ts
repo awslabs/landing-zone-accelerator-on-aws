@@ -11,13 +11,6 @@
  *  and limitations under the License.
  */
 
-import { RegionName } from '@aws-accelerator/utils/lib/regions';
-
-/**
- * AWS Region
- */
-export type Region = keyof typeof RegionName;
-
 export interface IDeploymentTargets {
   organizationalUnits?: string[];
   accounts?: string[];
@@ -252,7 +245,7 @@ export class DeploymentTargets implements IDeploymentTargets {
    *   - ap-south-1
    * ```
    */
-  readonly excludedRegions: Region[] = [];
+  readonly excludedRegions: string[] = [];
   /**
    * List of AWS account names that should be excluded from deployment.
    *
@@ -580,7 +573,7 @@ class VpcFlowLogsCloudWatchLogsConfig implements IVpcFlowLogsCloudWatchLogsConfi
    * @optional
    * CloudWatchLogs retention days
    */
-  readonly retentionInDays = 3653;
+  readonly retentionInDays = 365;
   /**
    * @optional
    * CloudWatchLogs encryption key name
@@ -612,7 +605,7 @@ class VpcFlowLogsDestinationConfig implements IVpcFlowLogsDestinationConfig {
    * destinations:
    *     cloudWatchLogs:
    *       enable: true
-   *       retentionInDays: 3653
+   *       retentionInDays: 365
    * ```
    */
   readonly cloudWatchLogs: VpcFlowLogsCloudWatchLogsConfig = new VpcFlowLogsCloudWatchLogsConfig();

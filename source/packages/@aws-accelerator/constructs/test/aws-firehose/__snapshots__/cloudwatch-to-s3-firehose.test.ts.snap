@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`CloudWatchToS3Firehose Construct(CloudWatchToS3Firehose):  Snapshot Test 1`] = `
+exports[`CloudWatchToS3Firehose > Construct(CloudWatchToS3Firehose):  Snapshot Test 1`] = `
 {
   "Conditions": {
     "AwsCdkKinesisEncryptedStreamsUnsupportedRegions": {
@@ -145,7 +145,7 @@ exports[`CloudWatchToS3Firehose Construct(CloudWatchToS3Firehose):  Snapshot Tes
                 "Arn",
               ],
             },
-            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.14.1",
           },
         },
         "FunctionName": "test",
@@ -589,7 +589,7 @@ exports[`CloudWatchToS3Firehose Construct(CloudWatchToS3Firehose):  Snapshot Tes
                 "Arn",
               ],
             },
-            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.14.1",
           },
         },
         "FunctionName": "test",
@@ -955,7 +955,7 @@ exports[`CloudWatchToS3Firehose Construct(CloudWatchToS3Firehose):  Snapshot Tes
                 "Arn",
               ],
             },
-            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.14.1",
           },
         },
         "FunctionName": "test",
@@ -1825,7 +1825,7 @@ exports[`CloudWatchToS3Firehose Construct(CloudWatchToS3Firehose):  Snapshot Tes
 }
 `;
 
-exports[`CloudWatchToS3FirehoseBucketName Construct(CloudWatchToS3Firehose):  Snapshot Test 1`] = `
+exports[`CloudWatchToS3FirehoseBucketName > Construct(CloudWatchToS3Firehose):  Snapshot Test 1`] = `
 {
   "Conditions": {
     "AwsCdkKinesisEncryptedStreamsUnsupportedRegions": {
@@ -1970,7 +1970,7 @@ exports[`CloudWatchToS3FirehoseBucketName Construct(CloudWatchToS3Firehose):  Sn
                 "Arn",
               ],
             },
-            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.14.1",
           },
         },
         "FunctionName": "test",
@@ -2414,7 +2414,7 @@ exports[`CloudWatchToS3FirehoseBucketName Construct(CloudWatchToS3Firehose):  Sn
                 "Arn",
               ],
             },
-            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.14.1",
           },
         },
         "FunctionName": "test",
@@ -2780,7 +2780,7 @@ exports[`CloudWatchToS3FirehoseBucketName Construct(CloudWatchToS3Firehose):  Sn
                 "Arn",
               ],
             },
-            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.14.1",
           },
         },
         "FunctionName": "test",
@@ -3650,7 +3650,7 @@ exports[`CloudWatchToS3FirehoseBucketName Construct(CloudWatchToS3Firehose):  Sn
 }
 `;
 
-exports[`CloudWatchToS3FirehoseExistingIam Construct(CloudWatchToS3Firehose):  Snapshot Test 1`] = `
+exports[`CloudWatchToS3FirehoseExistingIam > Construct(CloudWatchToS3Firehose):  Snapshot Test 1`] = `
 {
   "Conditions": {
     "AwsCdkKinesisEncryptedStreamsUnsupportedRegions": {
@@ -3795,7 +3795,7 @@ exports[`CloudWatchToS3FirehoseExistingIam Construct(CloudWatchToS3Firehose):  S
                 "Arn",
               ],
             },
-            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.14.1",
           },
         },
         "FunctionName": "test",
@@ -4239,7 +4239,7 @@ exports[`CloudWatchToS3FirehoseExistingIam Construct(CloudWatchToS3Firehose):  S
                 "Arn",
               ],
             },
-            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.14.1",
           },
         },
         "FunctionName": "test",
@@ -4605,7 +4605,7 @@ exports[`CloudWatchToS3FirehoseExistingIam Construct(CloudWatchToS3Firehose):  S
                 "Arn",
               ],
             },
-            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.14.1",
           },
         },
         "FunctionName": "test",
@@ -5641,7 +5641,7 @@ exports[`CloudWatchToS3FirehoseExistingIam Construct(CloudWatchToS3Firehose):  S
 }
 `;
 
-exports[`DynamicPartitioningByAccountId Tests Undefined Account ID Partitioning Construct(CloudWatchToS3Firehose):  Snapshot Test 1`] = `
+exports[`DynamicPartitioningByAccountId Tests > Undefined Account ID Partitioning > Construct(CloudWatchToS3Firehose):  Snapshot Test 1`] = `
 {
   "Conditions": {
     "AwsCdkKinesisEncryptedStreamsUnsupportedRegions": {
@@ -5786,7 +5786,7 @@ exports[`DynamicPartitioningByAccountId Tests Undefined Account ID Partitioning 
                 "Arn",
               ],
             },
-            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.14.1",
           },
         },
         "FunctionName": "test",
@@ -6334,7 +6334,7 @@ exports[`DynamicPartitioningByAccountId Tests Undefined Account ID Partitioning 
 }
 `;
 
-exports[`DynamicPartitioningByAccountId Tests With Account ID Partitioning Construct(CloudWatchToS3Firehose):  Snapshot Test 1`] = `
+exports[`DynamicPartitioningByAccountId Tests > With Account ID Partitioning > Construct(CloudWatchToS3Firehose):  Snapshot Test 1`] = `
 {
   "Conditions": {
     "AwsCdkKinesisEncryptedStreamsUnsupportedRegions": {
@@ -6479,7 +6479,7 @@ exports[`DynamicPartitioningByAccountId Tests With Account ID Partitioning Const
                 "Arn",
               ],
             },
-            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.14.1",
           },
         },
         "FunctionName": "test",
@@ -7027,7 +7027,7 @@ exports[`DynamicPartitioningByAccountId Tests With Account ID Partitioning Const
 }
 `;
 
-exports[`DynamicPartitioningByAccountId Tests Without Account ID Partitioning Construct(CloudWatchToS3Firehose):  Snapshot Test 1`] = `
+exports[`DynamicPartitioningByAccountId Tests > Without Account ID Partitioning > Construct(CloudWatchToS3Firehose):  Snapshot Test 1`] = `
 {
   "Conditions": {
     "AwsCdkKinesisEncryptedStreamsUnsupportedRegions": {
@@ -7172,7 +7172,7 @@ exports[`DynamicPartitioningByAccountId Tests Without Account ID Partitioning Co
                 "Arn",
               ],
             },
-            "SOLUTION_ID": "AwsSolution/SO0199/1.13.0",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.14.1",
           },
         },
         "FunctionName": "test",

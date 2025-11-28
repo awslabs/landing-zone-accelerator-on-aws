@@ -14,7 +14,7 @@
 import * as cdk from 'aws-cdk-lib';
 import { InstallerStack } from '../lib/installer-stack';
 import { SynthUtils } from '@aws-cdk/assert';
-import { expect, test, describe } from '@jest/globals';
+import { expect, test, describe } from 'vitest';
 
 // Test prefix
 const testNamePrefix = 'Stack(installer): ';

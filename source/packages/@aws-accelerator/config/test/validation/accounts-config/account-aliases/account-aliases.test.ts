@@ -1,19 +1,13 @@
 import { AccountsConfigValidator } from '../../../../validator/accounts-config-validator';
 import { OrganizationConfig } from '../../../../lib/organization-config';
 import { AccountsConfig } from '../../../../lib/accounts-config';
-import { describe, it, expect } from '@jest/globals';
+import { describe, it, expect } from 'vitest';
 import * as path from 'path';
 
 describe('AccountsConfigValidator', () => {
-  const accountsDuplicateAliases = AccountsConfig.load(
-    path.resolve('./test/validation/accounts-config/account-aliases/duplicate-config'),
-  );
-  const accountsNoDuplicateAliases = AccountsConfig.load(
-    path.resolve('./test/validation/accounts-config/account-aliases/no-duplicate-config'),
-  );
-  const organization = OrganizationConfig.loadRawOrganizationsConfig(
-    path.resolve('./test/validation/accounts-config/account-aliases/duplicate-config'),
-  );
+  const accountsDuplicateAliases = AccountsConfig.load(path.resolve(__dirname, 'duplicate-config'));
+  const accountsNoDuplicateAliases = AccountsConfig.load(path.resolve(__dirname, 'no-duplicate-config'));
+  const organization = OrganizationConfig.loadRawOrganizationsConfig(path.resolve(__dirname, 'duplicate-config'));
 
   it('should throw error when duplicate aliases are found', () => {
     const errMsg = `Workload Account alias "tenant-alias" is duplicated. Account aliases must be unique across all accounts.`;

@@ -23,21 +23,19 @@ import {
 import { VpcFlowLogsConfig } from '@aws-accelerator/config';
 import {
   DeleteDefaultSecurityGroupRules,
-  DeleteDefaultVpc,
   PutSsmParameter,
   SsmParameterProps,
   Vpc,
   VpnConnection,
 } from '@aws-accelerator/constructs';
-import { SsmResourceType } from '@aws-accelerator/utils/lib/ssm-parameter-path';
+import { SsmResourceType, MetadataKeys } from '@aws-accelerator/utils';
 import * as cdk from 'aws-cdk-lib';
 import { NagSuppressions } from 'cdk-nag';
 import { pascalCase } from 'pascal-case';
 import { LogLevel, NetworkStack } from '../network-stack';
 import { getVpc, getVpcConfig } from '../utils/getter-utils';
-import { isIpv4 } from '../utils/validation-utils';
-import { MetadataKeys } from '../../../../../utils/lib/common-types';
-import { LZAResourceLookup, LZAResourceLookupType } from '@aws-accelerator/accelerator/utils/lza-resource-lookup';
+import { isIpAddress, isIpv4, isIpv6 } from '../utils/validation-utils';
+import { LZAResourceLookup, LZAResourceLookupType } from '@aws-accelerator/accelerator';
 
 type Ipv4VpcCidrBlock = { cidrBlock: string } | { ipv4IpamPoolId: string; ipv4NetmaskLength: number };
 type Ipv6VpcCidrBlock = {
@@ -49,7 +47,6 @@ type Ipv6VpcCidrBlock = {
 };
 
 export class VpcResources {
-  public readonly deleteDefaultVpc?: DeleteDefaultVpc;
   public readonly sharedParameterMap: Map<string, SsmParameterProps[]>;
   public readonly vpcMap: Map<string, Vpc>;
   public readonly vpnMap: Map<string, string>;
@@ -89,8 +86,6 @@ export class VpcResources {
         this.stack.props.globalConfig.externalLandingZoneResources?.importExternalLandingZoneResources,
       stackName: this.stack.stackName,
     });
-    // Delete default VPC
-    this.deleteDefaultVpc = this.deleteDefaultVpcMethod(configData.defaultVpcsConfig);
     // Create central endpoints role
     this.centralEndpointRole = this.createCentralEndpointRole(
       vpcResources,
@@ -98,7 +93,6 @@ export class VpcResources {
       acceleratorData.acceleratorPrefix,
     );
     // Create VPCs
-
     this.vpcMap = this.createVpcs(
       this.stack.vpcsInScope,
       ipamPoolMap,
@@ -131,25 +125,6 @@ export class VpcResources {
       this.vpcMap,
       configData.customerGatewayConfigs,
     );
-  }
-
-  /**
-   * Delete default VPC in the current account+region
-   * @param props
-   * @returns
-   */
-  private deleteDefaultVpcMethod(defaultVpc: DefaultVpcsConfig): DeleteDefaultVpc | undefined {
-    const accountExcluded = defaultVpc.excludeAccounts && this.stack.isAccountExcluded(defaultVpc.excludeAccounts);
-    const regionExcluded = defaultVpc.excludeRegions && this.stack.isRegionExcluded(defaultVpc.excludeRegions);
-
-    if (defaultVpc.delete && !accountExcluded && !regionExcluded) {
-      this.stack.addLogs(LogLevel.INFO, 'Add DeleteDefaultVpc');
-      return new DeleteDefaultVpc(this.stack, 'DeleteDefaultVpc', {
-        kmsKey: this.stack.cloudwatchKey,
-        logRetentionInDays: this.stack.logRetention,
-      });
-    }
-    return;
   }
 
   /**
@@ -512,10 +487,6 @@ export class VpcResources {
     // Delete default security group rules
     //
     this.deleteDefaultSgRules(vpc, vpcItem);
-    //
-    // Add dependency on default VPC deletion
-    //
-    this.addDefaultVpcDependency(vpc, vpcItem);
     return vpc;
   }
 
@@ -952,19 +923,6 @@ export class VpcResources {
   }
 
   /**
-   * Add dependency on deleting the default VPC to reduce risk of exceeding service limits
-   * @param vpc
-   * @param vpcItem
-   * @returns
-   */
-  private addDefaultVpcDependency(vpc: Vpc, vpcItem: VpcConfig | VpcTemplatesConfig): void {
-    if (this.deleteDefaultVpc) {
-      this.stack.addLogs(LogLevel.INFO, `Adding dependency on deletion of the default VPC for ${vpcItem.name}`);
-      vpc.node.addDependency(this.deleteDefaultVpc);
-    }
-  }
-
-  /**
    * Create a VPC connection for a given VPC
    * @param vpcMap Map<string, Vpc>
    * @param props AcceleratorStackProps
@@ -978,8 +936,9 @@ export class VpcResources {
   ): Map<string, string> {
     const vpnMap = new Map<string, string>();
     const ipv4Cgws = customerGatewayConfig?.filter(cgw => isIpv4(cgw.ipAddress));
+    const ipv6Cgws = customerGatewayConfig?.filter(cgw => isIpv6(cgw.ipAddress));
 
-    for (const cgw of ipv4Cgws ?? []) {
+    for (const cgw of [...(ipv4Cgws ?? []), ...(ipv6Cgws ?? [])]) {
       for (const vpnItem of cgw.vpnConnections ?? []) {
         if (vpnItem.vpc && vpcMap.has(vpnItem.vpc)) {
           if (
@@ -1068,7 +1027,7 @@ export class VpcResources {
       ? customerGateways.filter(cgw => cgw.vpnConnections?.filter(vpn => vpcNames.includes(vpn.vpc ?? '')))
       : [];
     const crossAcctFirewallReferenceCgws = vgwVpnCustomerGateways.filter(
-      cgw => !isIpv4(cgw.ipAddress) && !this.stack.firewallVpcInScope(cgw),
+      cgw => !isIpAddress(cgw.ipAddress) && !this.stack.firewallVpcInScope(cgw),
     );
 
     for (const crossAcctCgw of crossAcctFirewallReferenceCgws) {
@@ -1079,12 +1038,12 @@ export class VpcResources {
       if (parameters.length > 0) {
         this.stack.addLogs(
           LogLevel.INFO,
-          `Putting cross-account/cross-region SSM parameters for VPC ${firewallVpcConfig.name}`,
+          `Putting cross-account/cross-region SSM parameters for VPC ${firewallVpcConfig!.name}`,
         );
         // Put SSM parameters
         new PutSsmParameter(this.stack, pascalCase(`${crossAcctCgw.name}VgwVpnSharedParameters`), {
           accountIds,
-          region: firewallVpcConfig.region,
+          region: firewallVpcConfig!.region,
           roleName: this.stack.acceleratorResourceNames.roles.crossAccountSsmParameterShare,
           kmsKey: this.stack.cloudwatchKey,
           logRetentionInDays: this.stack.logRetention,

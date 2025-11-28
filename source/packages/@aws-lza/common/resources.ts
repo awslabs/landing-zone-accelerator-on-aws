@@ -40,9 +40,29 @@ export enum AcceleratorModuleName {
    */
   AWS_IAM = 'aws-iam',
   /**
+   * AWS Detective Module
+   */
+  AWS_DETECTIVE = 'aws-detective',
+  /**
+   * AWS GuardDuty Module
+   */
+  AWS_GUARDDUTY = 'aws-guardduty',
+  /**
+   * AWS Service Quotas Module
+   */
+  AWS_SERVICE_QUOTAS = 'aws-service-quotas',
+  /**
+   * AWS Lambda Module
+   */
+  AWS_LAMBDA = 'aws-lambda',
+  /**
    * AWS SSM Module
    */
   AWS_SSM = 'aws-ssm',
+  /**
+   * AWS Security Hub
+   */
+  AWS_SECURITY_HUB = 'aws-security-hub',
 }
 
 /**
@@ -148,6 +168,28 @@ export interface IModuleDefaultParameter {
 }
 
 /**
+ * AWS Control Tower Landing Zone Logging configuration type.
+ */
+export type ControlTowerLoggingConfigurationType = {
+  /**
+   * AWS Control Tower Landing Zone hub account id
+   */
+  accountId?: string;
+  /**
+   * AWS Control Tower Landing Zone logging bucket retention in days
+   */
+  loggingBucketRetentionDays?: number;
+  /**
+   * AWS Control Tower Landing Zone access logging bucket retention in days
+   */
+  accessLoggingBucketRetentionDays?: number;
+  /**
+   * AWS KMS CMK arn to encrypt AWS Control Tower Landing Zone bucket
+   */
+  kmsKeyArn?: string;
+};
+
+/**
  * AWS Control Tower Landing Zone details type.
  */
 export type ControlTowerLandingZoneDetailsType = {
@@ -200,17 +242,18 @@ export type ControlTowerLandingZoneDetailsType = {
    */
   enableIdentityCenterAccess?: boolean;
   /**
-   * AWS Control Tower Landing Zone central logging bucket retention in days
+   * Config hub configuration
    */
-  loggingBucketRetentionDays?: number;
+  configHubConfig?: ControlTowerLoggingConfigurationType;
   /**
-   * AWS Control Tower Landing Zone access logging bucket retention in days
+   * Centralized logging configuration
    */
-  accessLoggingBucketRetentionDays?: number;
+  centralizedLoggingConfig?: ControlTowerLoggingConfigurationType;
   /**
-   * AWS KMS CMK arn to encrypt AWS Control Tower Landing Zone resources
+   * The manifest document for the AWS Control Tower Landing Zone
    */
-  kmsKeyArn?: string;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  manifest?: any;
 };
 
 /**

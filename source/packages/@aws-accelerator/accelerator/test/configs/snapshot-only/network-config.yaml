@@ -717,6 +717,24 @@ vpcs:
         ipamAllocation:
           ipamPoolName: home-region-pool
           netmaskLength: 28
+    loadBalancers:
+      networkLoadBalancers:
+        - name: nlb-west-downstream
+          scheme: internal
+          crossZoneLoadBalancing: false
+          deletionProtection: true
+          subnets:
+            - SharedServices-B
+          listeners:
+            - name: http
+              port: 80
+              protocol: TCP
+              targetGroup: tg-downstream-http
+    targetGroups:
+      - name: tg-downstream-http
+        port: 80
+        protocol: TCP
+        type: instance
     gatewayEndpoints:
       defaultPolicy: Default
       endpoints:
@@ -772,6 +790,28 @@ vpcs:
         routes: []
       - name: Network-West-B-Rt
         routes: []
+    loadBalancers:
+      networkLoadBalancers:
+        - name: nlb-west-upstream
+          scheme: internal
+          crossZoneLoadBalancing: false
+          deletionProtection: true
+          subnets:
+            - Network-West-A
+          listeners:
+            - name: http
+              port: 80
+              protocol: TCP
+              targetGroup: tg-west-upstream
+    targetGroups:
+      - name: tg-west-upstream
+        port: 80
+        protocol: TCP
+        type: ip
+        targets:
+          - account: Network
+            region: us-west-2
+            nlbName: nlb-west-downstream
     subnets:
       - name: Network-West-A
         availabilityZone: a
@@ -1128,6 +1168,18 @@ vpcs:
             toPort: 3306
             protocol: 6
             source: 0.0.0.0/0
+    interfaceEndpoints:
+      defaultPolicy: Default
+      subnets:
+        - Network-Secondary-A
+        - Network-Secondary-B
+      endpoints:
+        - service: cloudformation
+        - service: application-autoscaling
+        - service: appmesh-envoy-management
+        - service: athena
+        - service: autoscaling
+        - service: autoscaling-plans
     gatewayEndpoints:
       defaultPolicy: Default
       endpoints:
@@ -1321,58 +1373,6 @@ vpcs:
           securityGroup: Network-Endpoints-CustomEndpointSg
         - service: access-analyzer
           securityGroup: Network-Endpoints-CustomEndpointSg
-        # - service: secretsmanager
-        # - service: cloudformation
-        # - service: application-autoscaling
-        # - service: appmesh-envoy-management
-        # - service: athena
-        # - service: autoscaling
-        # - service: autoscaling-plans
-        # - service: clouddirectory
-        # - service: cloudtrail
-        # - service: codebuild
-        # - service: codecommit
-        # - service: codepipeline
-        # - service: config
-        # - service: datasync
-        # - service: ecs
-        # - service: ecs-agent
-        # - service: ecs-telemetry
-        # - service: elasticfilesystem
-        # - service: elasticloadbalancing
-        # - service: elasticmapreduce
-        # - service: events
-        # - service: execute-api
-        # - service: git-codecommit
-        # - service: glue
-        # - service: kinesis-streams
-        # - service: kms
-        # - service: logs
-        # - service: monitoring
-        # - service: sagemaker.api
-        # - service: sagemaker.runtime
-        # - service: servicecatalog
-        # - service: sms
-        # - service: sns
-        # - service: sqs
-        # - service: storagegateway
-        # - service: sts
-        # - service: transfer
-        # - service: workspaces
-        # - service: awsconnector
-        # - service: kinesis-firehose
-        # - service: states
-        # - service: acm-pca
-        # - service: cassandra
-        # - service: ebs
-        # - service: elasticbeanstalk
-        # - service: elasticbeanstalk-health
-        # - service: email-smtp
-        # - service: license-manager
-        # - service: macie2
-        # - service: notebook
-        # - service: synthetics
-        # - service: transfer.server
     securityGroups:
       - name: 'Management'
         description: 'Management Security Group'
@@ -1740,6 +1740,19 @@ vpcs:
         localZone: atl-2a
         routeTable: Network-Inspection-Local-Rt-A
         ipv4CidrBlock: 10.3.0.0/24
+    loadBalancers:
+      networkLoadBalancers:
+        - name: new-sample-downstream
+          scheme: internal
+          crossZoneLoadBalancing: false
+          deletionProtection: true
+          subnets:
+            - Network-Inspection-A
+          listeners:
+            - name: http
+              port: 80
+              protocol: TCP
+              targetGroup: new-sample-downstream-http
     securityGroups:
       - name: Data
         description: Firewall data
@@ -1756,6 +1769,10 @@ vpcs:
             sources:
               - 0.0.0.0/0
     targetGroups:
+      - name: new-sample-downstream-http
+        port: 80
+        protocol: TCP
+        type: instance
       - name: deployed-tg-2
         port: 443
         protocol: HTTPS
@@ -2077,6 +2094,28 @@ vpcs:
         availabilityZone: b
         routeTable: SharedServices-appVpc-PrivRtB
         ipv4CidrBlock: 10.1.3.0/24
+    loadBalancers:
+      networkLoadBalancers:
+        - name: sample-upstream
+          scheme: internet-facing
+          crossZoneLoadBalancing: false
+          deletionProtection: true
+          subnets:
+            - SharedServices-appVpc-PublicSubnetA
+          listeners:
+            - name: http
+              port: 80
+              protocol: TCP
+              targetGroup: sample-upstream-http
+    targetGroups:
+      - name: sample-upstream-http
+        port: 80
+        protocol: TCP
+        type: ip
+        targets:
+          - account: Network
+            region: *HOME_REGION
+            nlbName: new-sample-downstream
     natGateways:
       - name: SharedServices-appVpc-NatGwA
         subnet: SharedServices-appVpc-PublicSubnetA
@@ -2956,6 +2995,23 @@ vpcPeering:
       - Security-Template-Full-Ipam-West
 
 customerGateways:
+  - name: accelerator-cgw-ipv6
+    account: Network
+    region: *HOME_REGION
+    ipAddress: "2803::f800"
+    asn: 65501
+    vpnConnections:
+      - name: accelerator-vpn-ipv6
+        amazonIpv6NetworkCidr: ::/128
+        customerIpv6NetworkCidr: ::/128
+        outsideIpAddressType: Ipv6
+        transitGateway: Network-Main
+        staticRoutesOnly: false
+        routeTableAssociations:
+          - Network-Main-Core
+        routeTablePropagations:
+          - Network-Main-Core
+          
   - name: accelerator-cgw
     account: Network
     region: *HOME_REGION

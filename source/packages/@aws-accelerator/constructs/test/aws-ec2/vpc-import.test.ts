@@ -12,6 +12,7 @@
  */
 
 import * as cdk from 'aws-cdk-lib';
+import { describe } from 'vitest';
 import {
   Vpc,
   Subnet,
@@ -22,7 +23,7 @@ import {
 } from '../../lib/aws-ec2/vpc';
 import { RouteTable } from '../../lib/aws-ec2/route-table';
 import { snapShotTest } from '../snapshot-test';
-import { LZAResourceLookup } from '@aws-accelerator/accelerator/utils/lza-resource-lookup';
+import { LZAResourceLookup } from '@aws-accelerator/accelerator';
 
 const testNamePrefix = 'Construct(Vpc): ';
 

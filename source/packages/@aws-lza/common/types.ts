@@ -18,3 +18,11 @@ export type AcceleratorEnvironment = {
   accountId: string;
   region: string;
 };
+
+/**
+ * Module handler return type
+ */
+export type ModuleHandlerReturnType = {
+  status: boolean;
+  message: string;
+};

@@ -1,18 +1,14 @@
 import { AccountsConfigValidator } from '../../../../validator/accounts-config-validator';
 import { OrganizationConfig } from '../../../../lib/organization-config';
 import { AccountsConfig } from '../../../../lib/accounts-config';
-import { describe, it, expect } from '@jest/globals';
+import { describe, it, expect } from 'vitest';
 import * as path from 'path';
 
 // it should throw error when duplicate emails are found
 describe('AccountsConfigValidator', () => {
   it('should throw error when duplicate emails are found', () => {
-    const loadedAccounts = AccountsConfig.load(
-      path.resolve('./test/validation/accounts-config/duplicate-emails/no-org-config'),
-    );
-    const loadedOus = OrganizationConfig.loadRawOrganizationsConfig(
-      path.resolve('./test/validation/accounts-config/duplicate-emails/no-org-config'),
-    );
+    const loadedAccounts = AccountsConfig.load(path.resolve(__dirname, 'no-org-config'));
+    const loadedOus = OrganizationConfig.loadRawOrganizationsConfig(path.resolve(__dirname, 'no-org-config'));
     function duplicateEmailError() {
       new AccountsConfigValidator(loadedAccounts, loadedOus);
     }

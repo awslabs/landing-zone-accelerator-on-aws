@@ -27,7 +27,7 @@ import {
   SsmParameterProps,
   Subnet,
 } from '@aws-accelerator/constructs';
-import { SsmResourceType } from '@aws-accelerator/utils/lib/ssm-parameter-path';
+import { SsmResourceType, MetadataKeys } from '@aws-accelerator/utils';
 import * as cdk from 'aws-cdk-lib';
 import { NagSuppressions } from 'cdk-nag';
 import { pascalCase } from 'pascal-case';
@@ -35,7 +35,6 @@ import { AcceleratorStackProps } from '../../accelerator-stack';
 import { LogLevel } from '../network-stack';
 import { getSubnet, getSecurityGroup } from '../utils/getter-utils';
 import { NetworkVpcStack } from './network-vpc-stack';
-import { MetadataKeys } from '@aws-accelerator/utils/lib/common-types';
 import { LZAResourceLookup, LZAResourceLookupType } from '../../../../utils/lza-resource-lookup';
 
 enum LoadBalancerType {
@@ -474,85 +473,11 @@ export class LoadBalancerResources {
     props: AcceleratorStackProps,
   ) {
     const nlbMap = new Map<string, NetworkLoadBalancer>();
-
     const accessLogsBucketName = this.stack.getElbAccessLogBucketName();
     for (const vpcItem of vpcResources) {
-      // Set account IDs
-      const principals = this.setNlbPrincipalIds(vpcItem, props);
-
       this.createNetworkLoadBalancer(vpcItem, accessLogsBucketName, nlbMap, subnetMap, props);
-
-      if (
-        cdk.Stack.of(this.stack).region === props.globalConfig.homeRegion &&
-        vpcItem.loadBalancers?.networkLoadBalancers &&
-        vpcItem.loadBalancers?.networkLoadBalancers.length > 0 &&
-        this.lzaLookup.resourceExists({
-          resourceType: LZAResourceLookupType.ROLE,
-          lookupValues: { roleName: `${props.prefixes.accelerator}-GetNLBIPAddressLookup` },
-        })
-      ) {
-        const role = new cdk.aws_iam.Role(this.stack, `GetNLBIPAddressLookup`, {
-          roleName: `${props.prefixes.accelerator}-GetNLBIPAddressLookup`,
-          assumedBy: new cdk.aws_iam.CompositePrincipal(...principals!),
-          inlinePolicies: {
-            default: new cdk.aws_iam.PolicyDocument({
-              statements: [
-                new cdk.aws_iam.PolicyStatement({
-                  effect: cdk.aws_iam.Effect.ALLOW,
-                  actions: ['ec2:DescribeNetworkInterfaces'],
-                  resources: ['*'],
-                }),
-              ],
-            }),
-          },
-        });
-
-        (role.node.defaultChild as cdk.aws_iam.CfnRole).addMetadata(MetadataKeys.LZA_LOOKUP, {
-          roleName: `${props.prefixes.accelerator}-GetNLBIPAddressLookup`,
-        });
-
-        NagSuppressions.addResourceSuppressionsByPath(this.stack, `/${this.stack.stackName}/GetNLBIPAddressLookup`, [
-          {
-            id: 'AwsSolutions-IAM5',
-            reason: 'Allows only specific role arns.',
-          },
-        ]);
-      }
     }
     return nlbMap;
-  }
-
-  /**
-   * Set principal account IDs for a given VPC item
-   * @param vpcItem
-   * @param props
-   * @returns
-   */
-  private setNlbPrincipalIds(
-    vpcItem: VpcConfig | VpcTemplatesConfig,
-    props: AcceleratorStackProps,
-  ): cdk.aws_iam.AccountPrincipal[] | void {
-    if (!vpcItem.loadBalancers?.networkLoadBalancers || vpcItem.loadBalancers.networkLoadBalancers.length === 0) {
-      return;
-    }
-    const vpcItemsWithTargetGroups = props.networkConfig.vpcs.filter(
-      vpcItem => vpcItem.targetGroups && vpcItem.targetGroups.length > 0,
-    );
-    const vpcTemplatesWithTargetGroups =
-      props.networkConfig.vpcTemplates?.filter(vpcItem => vpcItem.targetGroups && vpcItem.targetGroups.length > 0) ??
-      [];
-    const accountIdTargetsForVpcs = vpcItemsWithTargetGroups.map(vpcItem =>
-      props.accountsConfig.getAccountId(vpcItem.account),
-    );
-    const accountIdTargetsForVpcTemplates =
-      vpcTemplatesWithTargetGroups?.map(vpcTemplate =>
-        this.stack.getAccountIdsFromDeploymentTargets(vpcTemplate.deploymentTargets),
-      ) ?? [];
-    const principalAccountIds = [...accountIdTargetsForVpcs, ...accountIdTargetsForVpcTemplates];
-    principalAccountIds.push(cdk.Stack.of(this.stack).account);
-    const principalIds = [...new Set(principalAccountIds)];
-
-    return principalIds.map(accountId => new cdk.aws_iam.AccountPrincipal(accountId)) ?? undefined;
   }
 
   /**

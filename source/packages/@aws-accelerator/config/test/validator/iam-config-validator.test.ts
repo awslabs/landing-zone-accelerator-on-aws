@@ -1,4 +1,4 @@
-import { describe, test, expect, beforeEach } from '@jest/globals';
+import { describe, test, expect, beforeEach } from 'vitest';
 import { IamConfig } from '../../lib/iam-config';
 import { AccountsConfig } from '../../lib/accounts-config';
 import { NetworkConfig } from '../../lib/network-config';

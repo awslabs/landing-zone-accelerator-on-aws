@@ -26,6 +26,7 @@ import { setRetryStrategy } from '../../../../common/functions';
 import { createLogger } from '../../../../common/logger';
 import { IAssumeRoleCredential, PolicyDocument } from '../../../../common/resources';
 import { throttlingBackOff } from '../../../../common/throttle';
+import { IControlTowerKmsKeys } from '../resources';
 
 /**
  * KmsKey abstract class to create AWS Control Tower Landing Zone AWS KMS CMK to encrypt AWS Control Tower Landing Zone resources.
@@ -65,23 +66,62 @@ export abstract class KmsKey {
   }
 
   /**
-   * Function to create AWS Control Tower Landing Zone AWS KMS CMK
+   * Function to create AWS Control Tower Landing Zone AWS KMS CMKs
    * @param partition string
    * @param accountId string
    * @param region string
-   * @returns keyArn string
    * @param solutionId string | undefined
    * @param credentials {@link IAssumeRoleCredential} | undefined
-   * @returns keyArn string
+   * @returns keyArns IControlTowerKmsKeys
    */
-  public static async createControlTowerKey(
+  public static async createControlTowerKeys(
     partition: string,
     accountId: string,
     region: string,
     solutionId?: string,
     credentials?: IAssumeRoleCredential,
+  ): Promise<IControlTowerKmsKeys> {
+    const centralizedLoggingKeyAlias = `alias/aws-controltower/logging/key`;
+    const configLoggingKeyAlias = `alias/aws-controltower/config/key`;
+
+    return {
+      centralizedLoggingKeyArn: await KmsKey.createControlTowerKey(
+        partition,
+        accountId,
+        region,
+        centralizedLoggingKeyAlias,
+        solutionId,
+        credentials,
+      ),
+      configLoggingKeyArn: await KmsKey.createControlTowerKey(
+        partition,
+        accountId,
+        region,
+        configLoggingKeyAlias,
+        solutionId,
+        credentials,
+      ),
+    };
+  }
+
+  /**
+   * Function to create AWS Control Tower Landing Zone AWS KMS CMK
+   * @param partition string
+   * @param accountId string
+   * @param region string
+   * @param keyAlias string
+   * @param solutionId string | undefined
+   * @param credentials {@link IAssumeRoleCredential} | undefined
+   * @returns keyArn string
+   */
+  private static async createControlTowerKey(
+    partition: string,
+    accountId: string,
+    region: string,
+    keyAlias: string,
+    solutionId?: string,
+    credentials?: IAssumeRoleCredential,
   ): Promise<string> {
-    const keyAlias = `alias/aws-controltower/key`;
     const client: KMSClient = new KMSClient({
       region,
       customUserAgent: solutionId,
@@ -123,6 +163,15 @@ export abstract class KmsKey {
           },
           Action: 'kms:*',
           Resource: '*',
+        },
+        {
+          Sid: 'Allow Control Tower Admin Role',
+          Effect: 'Allow',
+          Principal: {
+            AWS: `arn:${partition}:iam::${accountId}:role/service-role/AWSControlTowerAdmin`,
+          },
+          Action: ['kms:DescribeKey', 'kms:GenerateDataKey*', 'kms:Decrypt'],
+          Resource: `${keyArn}`,
         },
         {
           Sid: 'Allow CloudTrail to encrypt/decrypt logs',

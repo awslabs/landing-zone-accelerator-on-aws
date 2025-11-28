@@ -15,7 +15,7 @@ import * as cdk from 'aws-cdk-lib';
 import { Construct } from 'constructs';
 
 import { V2NetworkStacksBaseProps } from '../utils/types';
-import { isNetworkType } from '@aws-accelerator/config/lib/common/parse';
+import { isNetworkType } from '@aws-accelerator/config';
 import {
   IpamAllocationConfig,
   IpamConfig,
@@ -32,7 +32,7 @@ import {
   VpcTemplatesConfig,
   VpnConnectionConfig,
 } from '@aws-accelerator/config/lib/network-config';
-import { SsmParameterPath, SsmResourceType } from '@aws-accelerator/utils/lib/ssm-parameter-path';
+import { SsmParameterPath, SsmResourceType } from '@aws-accelerator/utils';
 import { InstanceTenancyType } from '@aws-accelerator/config/lib/models/network-config';
 import { DeploymentTargets, VpcFlowLogsConfig } from '@aws-accelerator/config/lib/common';
 import { hasAdvancedVpnOptions, isIpv4 } from '../../network-stacks/utils/validation-utils';

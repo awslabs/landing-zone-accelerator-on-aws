@@ -336,11 +336,10 @@ export class LzaCustomResource extends Construct {
         [key: string]: any;
       }
     | undefined {
-    const resourcePropertyList:
-      | {
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          [key: string]: any;
-        }[] = props.resource.properties ?? [{ debug: props.resource.debug ?? false }];
+    const resourcePropertyList: {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      [key: string]: any;
+    }[] = props.resource.properties ?? [{ debug: props.resource.debug ?? false }];
 
     if (props.resource.forceUpdate) {
       resourcePropertyList.push({ uuid: uuidv4() });

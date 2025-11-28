@@ -9,6 +9,7 @@ import { IamConfig } from '../../lib/iam-config';
 import { NetworkConfig } from '../../lib/network-config';
 import { SecurityConfig } from '../../lib/security-config';
 import { CustomizationHelperMethods, FirewallValidator } from '../../validator/customizations-config-validator';
+import { describe, test, expect } from 'vitest';
 
 const defaultFirewall: Ec2FirewallInstanceConfig = {
   name: 'Default Firewall',
