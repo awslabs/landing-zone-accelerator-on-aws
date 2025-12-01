@@ -12,3 +12,4 @@
  */
 
 export * from './lib/installer-stack';
+export * from './lib/resource-name-prefixes';

@@ -9,6 +9,7 @@
     "packages/@aws-accelerator/constructs/lib/aws-*/*",
     "packages/@aws-accelerator/constructs/lib/data-perimeter/*",
     "packages/@aws-accelerator/installer",
+    "packages/@aws-accelerator/installer-container",
     "packages/@aws-accelerator/govcloud-account-vending",
     "packages/@aws-accelerator/govcloud-account-vending/lib/lambdas/*",
     "packages/@aws-accelerator/modules",

@@ -1,0 +1,7 @@
+{
+  "app": "npx ts-node --prefer-ts-exts bin/installer-container",
+  "versionReporting": false,
+  "context": {
+    "cli-telemetry": "false"
+  }
+}

@@ -1,0 +1,50 @@
+{
+  "name": "@aws-accelerator/installer-container",
+  "version": "0.0.0",
+  "private": true,
+  "description": "The installer package for the accelerator solution using containers.",
+  "license": "Apache-2.0",
+  "author": {
+    "name": "Amazon Web Services",
+    "url": "https://aws.amazon.com/solutions"
+  },
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "cdk": "cdk",
+    "cleanup": "tsc --build ./ --clean && rm -rf node_modules && rm -rf dist && rm -rf cdk.out",
+    "cleanup:tsc": "tsc --build ./ --clean",
+    "lint": "eslint --fix  --max-warnings 0 -c ../../../eslint.config.mjs 'lib/**/*.{ts,tsx}' 'test/**/*.{ts,tsx}' --ignore-pattern \"*.d.ts\" ",
+    "precommit": "eslint --max-warnings 0 -c ../../../eslint.config.mjs 'lib/**/*.{ts,tsx}' 'test/**/*.{ts,tsx}' --ignore-pattern \"*.d.ts\" ",
+    "test:unit": "vitest run --coverage --passWithNoTests",
+    "test:clean": "rm -f ./test-reports/*.xml",
+    "watch": "tsc -w",
+    "build-prod": "tsc"
+  },
+  "dependencies": {
+    "@aws-accelerator/accelerator": "^0.0.0",
+    "@aws-accelerator/installer": "^0.0.0",
+    "@aws-cdk-extensions/cdk-extensions": "^0.0.0",
+    "aws-cdk": "2.1029.4",
+    "aws-cdk-lib": "2.219.0",
+    "cdk-nag": "2.5.2"
+  },
+  "devDependencies": {
+    "@aws-cdk/assert": "2.68.0",
+    "@types/cfn-response": "1.0.8",
+    "@types/node": "18.19.50",
+    "cfn-response": "1.0.1",
+    "constructs": "10.0.12",
+    "eslint": "9.37.0",
+    "eslint-config-prettier": "10.1.8",
+    "eslint-plugin-import": "2.32.0",
+    "eslint-plugin-prettier": "5.5.4",
+    "lint-staged": "15.2.10",
+    "prettier": "3.6.2",
+    "vitest": "3.2.4",
+    "@vitest/coverage-v8": "3.2.4",
+    "ts-node": "10.9.1",
+    "typescript": "5.8.3"
+  }
+}
