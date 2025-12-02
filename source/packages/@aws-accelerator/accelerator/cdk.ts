@@ -104,7 +104,29 @@ import { AcceleratorToolkit } from './lib/toolkit';
   });
 
   // Run diff after synth if synth command was executed
-  if (commands[0] === 'synth' && stage) {
+  // Skip diff for stages that don't require config directory (pipeline, tester-pipeline, diagnostics-pack)
+  const allStages = [
+    AcceleratorStage.ORGANIZATIONS,
+    AcceleratorStage.KEY,
+    AcceleratorStage.CUSTOMIZATIONS,
+    AcceleratorStage.RESOURCE_POLICY_ENFORCEMENT,
+    AcceleratorStage.DEPENDENCIES,
+    AcceleratorStage.FINALIZE,
+    AcceleratorStage.IDENTITY_CENTER,
+    AcceleratorStage.LOGGING,
+    AcceleratorStage.NETWORK_ASSOCIATIONS,
+    AcceleratorStage.NETWORK_ASSOCIATIONS_GWLB,
+    AcceleratorStage.NETWORK_PREP,
+    AcceleratorStage.NETWORK_VPC,
+    AcceleratorStage.NETWORK_VPC_DNS,
+    AcceleratorStage.NETWORK_VPC_ENDPOINTS,
+    AcceleratorStage.OPERATIONS,
+    AcceleratorStage.SECURITY,
+    AcceleratorStage.SECURITY_AUDIT,
+    AcceleratorStage.SECURITY_RESOURCES,
+  ];
+
+  if (commands[0] === 'synth' && stage && allStages.includes(stage)) {
     await Accelerator.run({
       command: 'diff',
       configDirPath,
