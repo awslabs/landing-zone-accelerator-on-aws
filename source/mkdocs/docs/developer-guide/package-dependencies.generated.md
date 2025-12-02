@@ -72,15 +72,6 @@ This tabulated information presents a detailed overview of all packages and thei
 <tr>
                   <td class="package-cell" rowspan="2">
                       <div style="display: flex; align-items: center; height: 100%;">
-                          @aws-accelerator/lza-modules
-                      </div>
-                  </td>
-                  <td class="dependency-cell">@aws-accelerator/config</td>
-              </tr>
-<tr><td class="dependency-cell">@aws-accelerator/utils</td></tr>
-<tr>
-                  <td class="package-cell" rowspan="2">
-                      <div style="display: flex; align-items: center; height: 100%;">
                           @aws-accelerator/modules
                       </div>
                   </td>
@@ -121,10 +112,6 @@ This section presents visual dependency mappings for packages that rely on other
 #### @aws-accelerator/installer
 
 ![@aws-accelerator/installer Dependencies](img/dependency-diagrams/aws-acceleratorinstaller-dependency.generated.svg)
-
-#### @aws-accelerator/lza-modules
-
-![@aws-accelerator/lza-modules Dependencies](img/dependency-diagrams/aws-acceleratorlza-modules-dependency.generated.svg)
 
 #### @aws-accelerator/modules
 
