@@ -432,7 +432,7 @@ export interface IGlobalConfig {
    * **Example**
    * ```yaml
    * acceleratorSettings:
-   *  maxConcurrentStacks: 250
+   *  maxConcurrentStacks: 100
    * ```
    *
    * @see {@link IAcceleratorSettingsConfig} for accelerator settings configuration options
@@ -4158,7 +4158,7 @@ export interface IAcceleratorMetadataConfig {
  * ### Example
  * ```yaml
  * acceleratorSettings:
- *  maxConcurrentStacks: 250
+ *  maxConcurrentStacks: 100
  * ```
  *
  * @category Global Configuration
@@ -4169,7 +4169,7 @@ export interface IAcceleratorSettingsConfig {
    *
    * Set the maximum number of concurrent stacks that can be processed at a time while transpiling the application.
    *
-   * @default 250
+   * @default 100
    */
   readonly maxConcurrentStacks?: number;
 }
