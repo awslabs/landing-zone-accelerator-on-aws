@@ -72,16 +72,6 @@ This tabulated information presents a detailed overview of all packages and thei
 <tr>
                   <td class="package-cell" rowspan="3">
                       <div style="display: flex; align-items: center; height: 100%;">
-                          @aws-accelerator/installer-container
-                      </div>
-                  </td>
-                  <td class="dependency-cell">@aws-accelerator/accelerator</td>
-              </tr>
-<tr><td class="dependency-cell">@aws-accelerator/installer</td></tr>
-<tr><td class="dependency-cell">@aws-cdk-extensions/cdk-extensions</td></tr>
-<tr>
-                  <td class="package-cell" rowspan="2">
-                      <div style="display: flex; align-items: center; height: 100%;">
                           @aws-accelerator/modules
                       </div>
                   </td>
@@ -122,10 +112,6 @@ This section presents visual dependency mappings for packages that rely on other
 #### @aws-accelerator/installer
 
 ![@aws-accelerator/installer Dependencies](img/dependency-diagrams/aws-acceleratorinstaller-dependency.generated.svg)
-
-#### @aws-accelerator/installer-container
-
-![@aws-accelerator/installer-container Dependencies](img/dependency-diagrams/aws-acceleratorinstaller-container-dependency.generated.svg)
 
 #### @aws-accelerator/modules
 
