@@ -117,11 +117,13 @@ before_script:
   - apt-get install -y zip
   - apt-get install -y jq
 
-# include:
-#   - '.gitlab/jobs/ci-job-definitions.yml'
+include:
+  # - '.gitlab/jobs/ci-job-definitions.yml'
+  - '.gitlab/jobs/mirror-job.yaml'
 
 stages:
   - pipeline
+  - mirror
 accelerator:build:
   stage: pipeline
   tags:
@@ -211,8 +213,8 @@ accelerator:gitlab-ci-isolation:
     - changed_files=$(git diff --name-only upstream/integ..HEAD)
     - echo "Changed files:"
     - echo "$changed_files"
-    - file_count=$(echo "$changed_files" | grep -v '^$' | wc -l)
-    - 'echo "File count: $file_count"'
+    - file_count=$(echo "$changed_files" | grep -v '^$' | grep -v '^\.gitlab/jobs/' | wc -l)
+    - "echo \"File count: $file_count\""
     - |
       if echo "$changed_files" | grep -q "\.gitlab-ci\.yml$" && [ "$file_count" -gt 1 ]; then
         echo "ERROR: .gitlab-ci.yml changes must be isolated from other file changes"

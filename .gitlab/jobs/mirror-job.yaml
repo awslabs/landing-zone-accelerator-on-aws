@@ -1,0 +1,62 @@
+# GitLab Repo Mirror Jobs
+# ==============================
+
+variables:
+  GIT_STRATEGY: fetch
+  PARTITION: aws
+  CODECOMMIT_REPO_NAME: landing-zone-accelerator-on-aws-mirror
+  AWS_DEFAULT_REGION: "us-east-1"
+
+# Template for mirror jobs
+.mirror_template: &mirror_template
+  stage: mirror
+  before_script:
+    - rm -rf /var/lib/apt/lists/*
+    - apt-get update
+    - apt-cache gencaches
+    - wget --progress=dot:mega -O /tmp/awscliv2.zip https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip
+    - unzip -q /tmp/awscliv2.zip -d /tmp
+    - /tmp/aws/install
+    - git config --global credential.helper '!aws codecommit credential-helper $@'
+    - git config --global credential.UseHttpPath true
+  script:
+    - echo "Starting mirror to ${CODECOMMIT_REPO_NAME} in account ${ACCOUNT_ID}"
+    - git clone --mirror ${CI_REPOSITORY_URL} /tmp/repo-mirror
+    - cd /tmp/repo-mirror
+    - git remote add codecommit https://git-codecommit.${AWS_DEFAULT_REGION}.amazonaws.com/v1/repos/${CODECOMMIT_REPO_NAME}
+    - git push codecommit --mirror --force
+    - echo "Successfully mirrored to ${CODECOMMIT_REPO_NAME}"
+  rules:
+    - if: $CI_PROJECT_ID != "11925"
+      when: never
+    - if: $CI_MERGE_REQUEST_IID != null
+      when: never
+    - when: always
+
+# Account 1: LZA CICD Integ Replicator Account
+lza:cicd-integ-replicator:
+  <<: *mirror_template
+  variables:
+    ACCOUNT_ID: "${LZA_CICD_INTEG_REPLICATOR_ACCOUNT_ID}"    
+    AWS_CREDS_TARGET_ROLE: "arn:${PARTITION}:iam::${ACCOUNT_ID}:role/${GITLAB_RUNNER_ROLE_NAME}"
+
+# Account 2: LZA CICD Main Replicator Account
+lza:cicd-main-replicator:
+  <<: *mirror_template
+  variables:
+    ACCOUNT_ID: "${LZA_CICD_MAIN_REPLICATOR_ACCOUNT_ID}"
+    AWS_CREDS_TARGET_ROLE: "arn:${PARTITION}:iam::${ACCOUNT_ID}:role/${GITLAB_RUNNER_ROLE_NAME}"
+
+# Account 3: LZA Release Replicator Account
+lza:release-replicator:
+  <<: *mirror_template
+  variables:
+    ACCOUNT_ID: "${LZA_RELEASE_REPLICATOR_ACCOUNT_ID}"
+    AWS_CREDS_TARGET_ROLE: "arn:${PARTITION}:iam::${ACCOUNT_ID}:role/${GITLAB_RUNNER_ROLE_NAME}"
+
+# Account 4: LZA Development Team Replicator Account
+lza:dev-team-replicator:
+  <<: *mirror_template
+  variables:
+    ACCOUNT_ID: "${LZA_DEV_TEAM_REPLICATOR_ACCOUNT_ID}"
+    AWS_CREDS_TARGET_ROLE: "arn:${PARTITION}:iam::${ACCOUNT_ID}:role/${GITLAB_RUNNER_ROLE_NAME}"
