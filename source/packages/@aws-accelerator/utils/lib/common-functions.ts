@@ -292,6 +292,8 @@ export function getGlobalRegion(partition: string): string {
       return 'us-isof-south-1';
     case 'aws-cn':
       return 'cn-northwest-1';
+    case 'aws-eusc':
+      return 'eusc-de-east-1';
     default:
       return 'us-east-1';
   }

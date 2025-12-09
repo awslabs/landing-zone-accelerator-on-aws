@@ -1,0 +1,25 @@
+# Build output
+dist/
+*.js
+*.d.ts
+*.js.map
+
+# Dependencies
+node_modules/
+
+# Test output
+coverage/
+test-reports/
+
+# CDK output
+cdk.out/
+
+# IDE
+.idea/
+.vscode/
+
+# OS files
+.DS_Store
+
+# Do not ignore docs folder
+!docs/

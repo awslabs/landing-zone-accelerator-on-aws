@@ -267,8 +267,11 @@ export class AccountsConfig implements i.IAccountsConfig {
       return accountId;
     }
 
+    // Get installer stack name from environment variable for more specific error messages
+    const installerStackName = process.env['INSTALLER_STACK_NAME'] || 'AWSAccelerator-InstallerStack';
+
     throw new Error(
-      `Account Name not found for ${accountId}. Validate that the emails in the parameter ManagementAccountEmail of the AWSAccelerator-InstallerStack and account configs (accounts-config.yaml) match the correct account emails shown in AWS Organizations. Configuration validation failed.`,
+      `Account Name not found for ${name}. Validate that the emails in the parameter ManagementAccountEmail of the ${installerStackName} and account configs (accounts-config.yaml) match the correct account emails shown in AWS Organizations. Configuration validation failed.`,
     );
   }
 
@@ -281,8 +284,11 @@ export class AccountsConfig implements i.IAccountsConfig {
       return accountName;
     }
 
+    // Get installer stack name from environment variable for more specific error messages
+    const installerStackName = process.env['INSTALLER_STACK_NAME'] || 'AWSAccelerator-InstallerStack';
+
     throw new Error(
-      `Account Name not found for ${accountId}. Validate that the emails in the parameter ManagementAccountEmail of the AWSAccelerator-InstallerStack and account configs (accounts-config.yaml) match the correct account emails shown in AWS Organizations. Configuration validation failed.`,
+      `Account Name not found for ${accountId}. Validate that the emails in the parameter ManagementAccountEmail of the ${installerStackName} and account configs (accounts-config.yaml) match the correct account emails shown in AWS Organizations. Configuration validation failed.`,
     );
   }
 
@@ -322,8 +328,11 @@ export class AccountsConfig implements i.IAccountsConfig {
     if (value) {
       return value;
     }
+    // Get installer stack name from environment variable for more specific error messages
+    const installerStackName = process.env['INSTALLER_STACK_NAME'] || 'AWSAccelerator-InstallerStack';
+
     logger.error(
-      `Account name not found for ${name}. Validate that the emails in the parameter ManagementAccountEmail of the AWSAccelerator-InstallerStack and account configs (accounts-config.yaml) match the correct account emails shown in AWS Organizations.`,
+      `Account name not found for ${name}. Validate that the emails in the parameter ManagementAccountEmail of the ${installerStackName} and account configs (accounts-config.yaml) match the correct account emails shown in AWS Organizations.`,
     );
     throw new Error('configuration validation failed.');
   }

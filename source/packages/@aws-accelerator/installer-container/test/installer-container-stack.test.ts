@@ -163,4 +163,27 @@ describe('InstallerContainerStack', () => {
       setNodeVersion: false,
     });
   });
+
+  /**
+   * Test 6: Deployment Mode Compatibility - Combined Configuration
+   *
+   * Tests the stack with multiple deployment mode features enabled simultaneously
+   * to validate deployment mode compatibility and environment variable configuration.
+   *
+   * This test validates:
+   * - External pipeline account mode with permission boundary
+   * - Proper environment variable configuration for combined modes
+   * - Deployment mode consistency validation
+   * - No conflicts between different deployment modes
+   */
+  snapShotTest('Construct(InstallerContainerStack): Deployment Mode Compatibility', () => {
+    const app = new cdk.App();
+    return new InstallerContainerStack(app, 'TestInstallerContainerStackCombined', {
+      useExternalPipelineAccount: true,
+      useS3Source: false,
+      enableSingleAccountMode: false,
+      usePermissionBoundary: true,
+      setNodeVersion: false,
+    });
+  });
 });

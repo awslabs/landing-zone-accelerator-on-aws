@@ -1574,7 +1574,7 @@ describe('accounts-config', () => {
 
         expect(() => {
           config.getAccountId('Test');
-        }).toThrow('Account Name not found for undefined');
+        }).toThrow('Account Name not found for Test');
       });
     });
 

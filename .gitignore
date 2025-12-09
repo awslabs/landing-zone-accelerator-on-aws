@@ -28,3 +28,6 @@ viperlight*.zip
 
 ### Unit test
 source/packages/@aws-lza/custom-resource-templates/
+
+### kiro specs
+.kiro
