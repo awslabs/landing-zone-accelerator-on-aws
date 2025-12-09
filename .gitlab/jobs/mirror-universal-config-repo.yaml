@@ -1,16 +1,17 @@
 # GitLab Repo Mirror Jobs for LZA Universal Configuration
 # These jobs mirror the lza-universal-configuration repository to CodeCommit
-# Triggered by changes in the LZA repository
+# Triggered by changes in the LZA repository (cross-repo mirroring)
 # ==============================
 
 variables:
   PARTITION: aws
-  CODECOMMIT_REPO_NAME: lza-universal-configuration-mirror
   AWS_DEFAULT_REGION: "us-east-1"
 
 # Template for universal config mirror jobs
 .universal_config_mirror_template: &universal_config_mirror_template
   stage: mirror
+  variables:
+    UC_REPO_NAME: lza-universal-configuration-mirror
   before_script:
     - rm -rf /var/lib/apt/lists/*
     - apt-get update
@@ -21,12 +22,12 @@ variables:
     - git config --global credential.helper '!aws codecommit credential-helper $@'
     - git config --global credential.UseHttpPath true
   script:
-    - echo "Starting mirror of universal-config repo to ${CODECOMMIT_REPO_NAME} in account ${ACCOUNT_ID}"
-    - git clone --mirror git@${UNIVERSAL_CONFIG_REPO_HOST}:${UNIVERSAL_CONFIG_REPO_PATH} /tmp/universal-config-mirror
+    - echo "Starting mirror of universal-config repo to ${UC_REPO_NAME} in account ${ACCOUNT_ID}"
+    - git clone --mirror https://gitlab-ci-token:${CI_JOB_TOKEN}@${UNIVERSAL_CONFIG_REPO_HOST}/${UNIVERSAL_CONFIG_REPO_PATH} /tmp/universal-config-mirror
     - cd /tmp/universal-config-mirror
-    - git remote add codecommit https://git-codecommit.${AWS_DEFAULT_REGION}.amazonaws.com/v1/repos/${CODECOMMIT_REPO_NAME}
+    - git remote add codecommit https://git-codecommit.${AWS_DEFAULT_REGION}.amazonaws.com/v1/repos/${UC_REPO_NAME}
     - git push codecommit --mirror --force
-    - echo "Successfully mirrored universal-config repo to ${CODECOMMIT_REPO_NAME}"
+    - echo "Successfully mirrored universal-config repo to ${UC_REPO_NAME}"
 
 # Account 1: LZA CICD Integ Replicator Account
 universal-config:cicd-integ-replicator:

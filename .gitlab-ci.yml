@@ -119,6 +119,7 @@ before_script:
 
 include:
   # - '.gitlab/jobs/ci-job-definitions.yml'
+  # Mirror jobs for CodeCommit replication
   - '.gitlab/jobs/mirror-job.yaml'
   - '.gitlab/jobs/mirror-universal-config-repo.yaml'
 
@@ -225,6 +226,8 @@ accelerator:gitlab-ci-isolation:
         echo "Check passed: .gitlab-ci.yml changes are properly isolated"
       fi
   rules:
+    - if: $SKIP_GITLAB_CHANGE_CHECK == "yes"
+      when: never
     - if: $CI_COMMIT_BRANCH == "main"
       when: never
     - if: $CI_COMMIT_BRANCH == "integ"

@@ -1,15 +1,17 @@
 # GitLab Repo Mirror Jobs
+# Mirrors LZA repository to CodeCommit in replicator accounts
 # ==============================
 
 variables:
   GIT_STRATEGY: fetch
   PARTITION: aws
-  CODECOMMIT_REPO_NAME: landing-zone-accelerator-on-aws-mirror
   AWS_DEFAULT_REGION: "us-east-1"
 
 # Template for mirror jobs
 .mirror_template: &mirror_template
   stage: mirror
+  variables:
+    LZA_REPO_NAME: landing-zone-accelerator-on-aws-mirror
   before_script:
     - rm -rf /var/lib/apt/lists/*
     - apt-get update
@@ -20,12 +22,12 @@ variables:
     - git config --global credential.helper '!aws codecommit credential-helper $@'
     - git config --global credential.UseHttpPath true
   script:
-    - echo "Starting mirror to ${CODECOMMIT_REPO_NAME} in account ${ACCOUNT_ID}"
+    - echo "Starting mirror to ${LZA_REPO_NAME} in account ${ACCOUNT_ID}"
     - git clone --mirror ${CI_REPOSITORY_URL} /tmp/repo-mirror
     - cd /tmp/repo-mirror
-    - git remote add codecommit https://git-codecommit.${AWS_DEFAULT_REGION}.amazonaws.com/v1/repos/${CODECOMMIT_REPO_NAME}
+    - git remote add codecommit https://git-codecommit.${AWS_DEFAULT_REGION}.amazonaws.com/v1/repos/${LZA_REPO_NAME}
     - git push codecommit --mirror --force
-    - echo "Successfully mirrored to ${CODECOMMIT_REPO_NAME}"
+    - echo "Successfully mirrored to ${LZA_REPO_NAME}"
 
 # Account 1: LZA CICD Integ Replicator Account
 # Mirrors only when changes are merged to 'integ' branch
