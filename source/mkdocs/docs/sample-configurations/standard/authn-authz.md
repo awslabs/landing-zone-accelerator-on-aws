@@ -16,11 +16,11 @@ The vast majority of end-users of the AWS cloud within the organization will nev
 
 ## Break Glass Accounts
 
-The Management account is used to provide [break glass access](https://docs.aws.amazon.com/whitepapers/latest/organizing-your-aws-environment/break-glass-access.html) to AWS accounts within the organization. The details of the break glass usernames can be found within [iam-config.yaml](https://github.com/awslabs/landing-zone-accelerator-on-aws/blob/main/reference/sample-configurations/lza-sample-config/iam-config.yaml). The password details can be found in the Management account AWS Secrets Manager in the region LZA was deployed to. After the deployment of the sample configuration files is complete, multi-factor authentication (MFA) should be enabled on these accounts (please see the next section for more details).
+The Management account is used to provide [break glass access](https://docs.aws.amazon.com/whitepapers/latest/organizing-your-aws-environment/break-glass-access.html) to AWS accounts within the organization. The details of the break glass usernames can be found within [iam-config.yaml](https://github.com/aws/lza-universal-configuration/tree/main/modules/base/default/iam-config.yaml). The password details can be found in the Management account AWS Secrets Manager in the region LZA was deployed to. After the deployment of the sample configuration files is complete, multi-factor authentication (MFA) should be enabled on these accounts (please see the next section for more details).
 
 ## Multi-Factor Authentication (MFA)
 
-MFA should be used by all users regardless of privilege level with some [general guidelines](https://docs.aws.amazon.com/prescriptive-guidance/latest/aws-startup-security-baseline/acct-05.html). A number of commonly popular MFA mechanisms [are supported by AWS](https://docs.aws.amazon.com/IAM/latest/UserGuide/id_credentials_mfa.html) to help customers enable MFA on their accounts.
+MFA should be used by all users regardless of privilege level with some [general guidelines](https://docs.aws.amazon.com/IAM/latest/UserGuide/id_credentials_mfa.html#id_credentials_mfa-recommendations). A number of commonly popular MFA mechanisms [are supported by AWS](https://docs.aws.amazon.com/IAM/latest/UserGuide/id_credentials_mfa.html) to help customers enable MFA on their accounts.
 
 ## Root Authorization
 
@@ -42,7 +42,7 @@ The LZA leverages the following SCPs in the organization:
 
 ### Guardrails 1 and 2
 
-These guardrails apply across the organization and protect the resources deployed by the automation tooling. Note that this policy is split into two parts due to a current quota of SCP document sizing, but logically it should be considered a single policy: [part 1](https://github.com/awslabs/landing-zone-accelerator-on-aws/blob/main/reference/sample-configurations/lza-sample-config/service-control-policies/guardrails-1.json) and [part 2](https://github.com/awslabs/landing-zone-accelerator-on-aws/blob/main/reference/sample-configurations/lza-sample-config/service-control-policies/guardrails-2.json).
+These guardrails apply across the organization and protect the resources deployed by the automation tooling. Note that this policy is split into two parts due to a current quota of SCP document sizing, but logically it should be considered a single policy: [part 1](https://github.com/aws/lza-universal-configuration/tree/main/modules/base/default/service-control-policies/lza-core-guardrails-1.json) and [part 2](https://github.com/aws/lza-universal-configuration/tree/main/modules/base/default/service-control-policies/lza-core-guardrails-2.json).
 
 | Policy Statement ID (SID)              | Description                                                                                                 |
 | -------------------------------------- | ----------------------------------------------------------------------------------------------------------- |
@@ -63,7 +63,7 @@ These guardrails apply across the organization and protect the resources deploye
 
 ### Quarantine
 
-[The quarantine policy](https://github.com/awslabs/landing-zone-accelerator-on-aws/blob/main/reference/sample-configurations/lza-sample-config/service-control-policies/quarantine.json) is attached to an account to ‘quarantine’ it - to prevent any AWS operation from taking place. This is useful in the case of an account with credentials which are believed to have been compromised. This policy is also applied to new accounts upon creation. After the installation of guardrails by LZA, it is removed. In the meantime, it prevents all AWS control plane operations except by principals required to deploy guardrails.
+[The quarantine policy](https://github.com/aws/lza-universal-configuration/tree/main/modules/base/default/service-control-policies/lza-quarantine.json) is attached to an account to ‘quarantine’ it - to prevent any AWS operation from taking place. This is useful in the case of an account with credentials which are believed to have been compromised. This policy is also applied to new accounts upon creation. After the installation of guardrails by LZA, it is removed. In the meantime, it prevents all AWS control plane operations except by principals required to deploy guardrails.
 
 | Policy Statement ID (SID)               | Description                                                                     |
 | --------------------------------------- | ------------------------------------------------------------------------------- |
@@ -71,4 +71,4 @@ These guardrails apply across the organization and protect the resources deploye
 
 ### SCP Protection
 
-SCPs are protected from changes by enabling the **scpRevertChangesConfig** key in the [security-config.yaml](https://github.com/awslabs/landing-zone-accelerator-on-aws/blob/main/reference/sample-configurations/lza-sample-config/security-config.yaml) configuration file. [This configuration property](../../../typedocs/interfaces/___packages__aws_accelerator_config_lib_models_security_config.IScpRevertChangesConfig.html) will monitor for manual changes to SCPs and revert them. This is enabled by default in the sample configuration.
+SCPs are protected from changes by enabling the **scpRevertChangesConfig** key in the [security-config.yaml](https://github.com/aws/lza-universal-configuration/tree/main/modules/base/default/security-config.yaml) configuration file. [This configuration property](../../../typedocs/interfaces/packages__aws-accelerator_config_lib_models_security-config.IScpRevertChangesConfig.html) will monitor for manual changes to SCPs and revert them. This is enabled by default in the sample configuration.

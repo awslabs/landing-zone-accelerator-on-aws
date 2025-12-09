@@ -14,7 +14,7 @@ This guide describes architectural considerations, design, and configuration ste
 
 We recommend you familiarize yourself with the [best practices for for managing your configuration files](https://docs.aws.amazon.com/solutions/latest/landing-zone-accelerator-on-aws/configuration-file-best-practices.html) before making any chances to your environment.
 
-**Note:** This README is focused on the [general sample configuration](https://github.com/awslabs/landing-zone-accelerator-on-aws/tree/main/reference/sample-configurations/lza-sample-config), not the industry specific configuration files which can be found [here](https://github.com/awslabs/landing-zone-accelerator-on-aws/tree/main/reference/sample-configurations).
+**Note:** This README is focused on the [general sample configuration](https://github.com/aws/lza-universal-configuration/tree/main/modules/base/default), not the industry specific configuration files which can be found [here](https://github.com/awslabs/landing-zone-accelerator-on-aws/tree/main/reference/sample-configurations).
 
 ## Design Principles
 
@@ -61,7 +61,7 @@ The above is not valid JSON without first removing the comment on the fourth lin
 
 ### IP Addresses
 
-The sample [network configuration file](https://github.com/awslabs/landing-zone-accelerator-on-aws/blob/main/reference/sample-configurations/lza-sample-config/network-config.yaml) may make use of [RFC1918](https://tools.ietf.org/html/rfc1918) addresses (e.g. `10.1.0.0/16`) and [RFC6598](https://tools.ietf.org/html/rfc6598) (e.g. `100.96.250.0/23`) for various networks; these will be labeled accordingly. Any specific range or IP shown is purely for illustration purposes only.
+The sample [network configuration file](https://github.com/aws/lza-universal-configuration/tree/main/modules/network/hub-and-spoke/network-config.yaml) may make use of [RFC1918](https://tools.ietf.org/html/rfc1918) addresses (e.g. `10.1.0.0/16`) and [RFC6598](https://tools.ietf.org/html/rfc6598) (e.g. `100.96.250.0/23`) for various networks; these will be labeled accordingly. Any specific range or IP shown is purely for illustration purposes only.
 
 ### Preventative Controls
 

@@ -10,4 +10,4 @@ This section outlines the sample configuration intended for United States Federa
     - [Additional Considerations](./considerations.md)
 
 !!! note "See also"
-    - [GitHub - LZA GovCloud (US) Sample Configuration](https://github.com/awslabs/landing-zone-accelerator-on-aws/tree/main/reference/sample-configurations/lza-sample-config-govcloud-us)
+    - [GitHub - LZA GovCloud (US) Sample Configuration](https://github.com/aws/lza-universal-configuration/tree/main/modules/base/default)

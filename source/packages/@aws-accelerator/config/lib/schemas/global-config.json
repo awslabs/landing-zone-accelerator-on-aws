@@ -823,7 +823,7 @@
         },
         "security": {
           "$ref": "#/definitions/IControlTowerLandingZoneSecurityConfig",
-          "description": "**Security Configuration** *(Required)*\n\nManage Identity Center Acess for Control Tower Landing Zone."
+          "description": "**Security Configuration** *(Required)*\n\nManage Identity Center Access for Control Tower Landing Zone."
         },
         "version": {
           "description": "**Landing Zone Version** *(Required)*\n\n**Considerations**\n\n- Most recent version required for landing zone updates or resets\n- Updates or resets will occur when drift is detected or any configuration change\n- If the solution needs to perform an update or reset and the version is not the most recent, the solution will fail",

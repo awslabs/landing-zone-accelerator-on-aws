@@ -1,6 +1,6 @@
 # Configuration Replacement Variables
 
-The solution supports the definition of customer defined replacement variables in the [replacements-config.yaml](../typedocs/modules/___packages__aws_accelerator_config_lib_models_replacements_config.html) file.
+The solution supports the definition of customer defined replacement variables in the [replacements-config.yaml](../typedocs/modules/packages__aws-accelerator_config_lib_models_replacements-config.html) file.
 
 !!! note "See also"
     - [Implementation Guide - Working with solution-specific variables](https://docs.aws.amazon.com/solutions/latest/landing-zone-accelerator-on-aws/working-with-solution-specific-variables.html)
