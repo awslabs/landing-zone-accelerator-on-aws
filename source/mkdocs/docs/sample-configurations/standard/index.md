@@ -10,4 +10,4 @@ This section outlines the standard sample configuration intended for commercial 
     - [Networking](./networking.md)
 
 !!! note "See also"
-    - [GitHub - LZA Standard Sample Configuration](https://github.com/awslabs/landing-zone-accelerator-on-aws/tree/main/reference/sample-configurations/lza-sample-config)
+    - [GitHub - LZA Standard Sample Configuration](https://github.com/aws/lza-universal-configuration/tree/main/modules/base/default)

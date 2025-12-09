@@ -8,13 +8,13 @@ All of the LZA configuration files align with LZA sample configuration. The foll
 
 ## global-config.yaml
 
-The [global-config.yaml](https://github.com/awslabs/landing-zone-accelerator-on-aws/blob/main/reference/sample-configurations/lza-sample-config-govcloud-us/govcloud-us-config/global-config.yaml) file contains the settings that enable centralized logging using AWS CloudTrail and Amazon CloudWatch Logs. The configuration establishes the retention period for those logs to help you meet your specific auditing and monitoring needs.
+The [global-config.yaml](https://github.com/aws/lza-universal-configuration/tree/main/modules/base/default/global-config.yaml) file contains the settings that enable centralized logging using AWS CloudTrail and Amazon CloudWatch Logs. The configuration establishes the retention period for those logs to help you meet your specific auditing and monitoring needs.
 
 You are encouraged to review these settings to better understand what has already been configured and what needs to be altered for your specific requirements.
 
 ## organization-config.yaml
 
-Within the [organization-config.yaml](https://github.com/awslabs/landing-zone-accelerator-on-aws/blob/main/reference/sample-configurations/lza-sample-config-govcloud-us/govcloud-us-config/organization-config.yaml) file there are sections for declaring Service Control Policies (SCPs). SCPs are a type of organization policy that you can use to manage permissions in your organization. SCPs offer central control over the maximum available permissions for all accounts in your organization.
+Within the [organization-config.yaml]https://github.com/aws/lza-universal-configuration/tree/main/modules/base/default/organization-config.yaml) file there are sections for declaring Service Control Policies (SCPs). SCPs are a type of organization policy that you can use to manage permissions in your organization. SCPs offer central control over the maximum available permissions for all accounts in your organization.
 
 SCPs can be highly specific to an organization and its workloads. The SCPs should be reviewed and modified to meet your specific requirements. The following sample policies have been provided within the configuration.
 
@@ -28,7 +28,7 @@ It is important to note that SCPs are not automatically updated and that changes
 
 ## security-config.yaml
 
-The [security-config.yaml](https://github.com/awslabs/landing-zone-accelerator-on-aws/blob/main/reference/sample-configurations/lza-sample-config-govcloud-us/govcloud-us-config/security-config.yaml) is designed to deploy a number of preventative and detective measures that align with the Federal Risk and Authorization Management Program (FedRAMP), National Institute of Standards and Technology (NIST) 800-53(5), NIST 800-171 Rev.2, and Cybersecurity Maturity Model Certification (CMMC) Level 2 compliance framework control requirements. The security-config.yaml establishes the use of multiple security services and configurations such as AWS Config, Amazon GuardDuty, and AWS Security Hub.
+The [security-config.yaml](https://github.com/aws/lza-universal-configuration/tree/main/modules/base/default/security-config.yaml) is designed to deploy a number of preventative and detective measures that align with the Federal Risk and Authorization Management Program (FedRAMP), National Institute of Standards and Technology (NIST) 800-53(5), NIST 800-171 Rev.2, and Cybersecurity Maturity Model Certification (CMMC) Level 2 compliance framework control requirements. The security-config.yaml establishes the use of multiple security services and configurations such as AWS Config, Amazon GuardDuty, and AWS Security Hub.
 
 It establishes minimum AWS Identity and Access Management password requirements that are aligned with AWS best practices to set a password length of 14. This exceeds NIST’s 800-63B latest password guidance that establishes a minimum password length of 8. If you need to comply with this please change the IAM Password Policy appropriately as noted in the security-config.yaml file. Consider reviewing the configuration details to determine conformance with your organization’s compliance requirements if they extend beyond the control frameworks’ prescribed guidance
 

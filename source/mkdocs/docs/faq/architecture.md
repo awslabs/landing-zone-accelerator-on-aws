@@ -8,7 +8,7 @@ For further details on the Landing Zone Accelerator orchestration engine, see [A
 
 ## What does the AWS sample configuration deploy?
 
-The Landing Zone Accelerator provides opinionated configurations that are based on our years of building environments for customers with highly regulated workloads. By using the [standard sample configuration](https://github.com/awslabs/landing-zone-accelerator-on-aws/tree/main/reference/sample-configurations/lza-sample-config), you can expect the architecture in the solution’s [Architecture overview](https://docs.aws.amazon.com/solutions/latest/landing-zone-accelerator-on-aws/architecture-overview.html) to be deployed.
+The Landing Zone Accelerator provides opinionated configurations that are based on our years of building environments for customers with highly regulated workloads. By using the [standard sample configuration](https://github.com/aws/lza-universal-configuration/tree/main/modules/base/default), you can expect the architecture in the solution’s [Architecture overview](https://docs.aws.amazon.com/solutions/latest/landing-zone-accelerator-on-aws/architecture-overview.html) to be deployed.
 
 ## Is there a sample configuration for my industry?
 

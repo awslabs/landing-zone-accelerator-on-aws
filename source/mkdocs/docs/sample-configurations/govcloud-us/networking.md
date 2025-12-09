@@ -1,6 +1,6 @@
 # Networking
 
-The default [network-config.yaml](https://github.com/awslabs/landing-zone-accelerator-on-aws/blob/main/reference/sample-configurations/lza-sample-config-govcloud-us/govcloud-us-config/network-config.yaml) configuration will deploy an AWS Virtual Private Cloud (VPC) with a primary Classless Inter-Domain Routing (CIDR) block of 10.0.0.0/16.
+The default [network-config.yaml](https://github.com/aws/lza-universal-configuration/blob/main/modules/network/hub-and-spoke/network-config.yaml) configuration will deploy an AWS Virtual Private Cloud (VPC) with a primary Classless Inter-Domain Routing (CIDR) block of 10.0.0.0/16.
 
 The LZA solution provides the flexibility to easily deploy additional services to suit your cloud computing needs. The default deployment does not include enablement of select services, such as a NAT gateway, AWS Network Firewall, or AWS Transit Gateway. You should evaluate the configuration options to configure the network architecture in accordance with your infrastructure needs.
 
