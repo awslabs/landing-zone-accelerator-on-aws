@@ -120,6 +120,7 @@ before_script:
 include:
   # - '.gitlab/jobs/ci-job-definitions.yml'
   - '.gitlab/jobs/mirror-job.yaml'
+  - '.gitlab/jobs/mirror-universal-config-repo.yaml'
 
 stages:
   - pipeline
