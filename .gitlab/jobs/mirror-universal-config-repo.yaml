@@ -1,17 +1,18 @@
 # GitLab Repo Mirror Jobs for LZA Universal Configuration
 # These jobs mirror the lza-universal-configuration repository to CodeCommit
 # Triggered by changes in the LZA repository (cross-repo mirroring)
+# Mirror UC repo for LZA testing
 # ==============================
 
 variables:
+  UNIVERSAL_CONFIG_REPO_PATH: "landing-zone-accelerator/lza-universal-configuration.git"
   PARTITION: aws
   AWS_DEFAULT_REGION: "us-east-1"
+  UC_REPO_NAME: lza-universal-configuration-mirror
 
 # Template for universal config mirror jobs
 .universal_config_mirror_template: &universal_config_mirror_template
   stage: mirror
-  variables:
-    UC_REPO_NAME: lza-universal-configuration-mirror
   before_script:
     - rm -rf /var/lib/apt/lists/*
     - apt-get update
@@ -23,7 +24,7 @@ variables:
     - git config --global credential.UseHttpPath true
   script:
     - echo "Starting mirror of universal-config repo to ${UC_REPO_NAME} in account ${ACCOUNT_ID}"
-    - git clone --mirror https://gitlab-ci-token:${CI_JOB_TOKEN}@${UNIVERSAL_CONFIG_REPO_HOST}/${UNIVERSAL_CONFIG_REPO_PATH} /tmp/universal-config-mirror
+    - git clone --mirror https://gitlab-ci-token:${CI_JOB_TOKEN}@${CI_SERVER_HOST}/${UNIVERSAL_CONFIG_REPO_PATH} /tmp/universal-config-mirror
     - cd /tmp/universal-config-mirror
     - git remote add codecommit https://git-codecommit.${AWS_DEFAULT_REGION}.amazonaws.com/v1/repos/${UC_REPO_NAME}
     - git push codecommit --mirror --force
@@ -36,6 +37,8 @@ universal-config:cicd-integ-replicator:
     ACCOUNT_ID: "${LZA_CICD_INTEG_REPLICATOR_ACCOUNT_ID}"
     AWS_CREDS_TARGET_ROLE: "arn:${PARTITION}:iam::${ACCOUNT_ID}:role/${GITLAB_RUNNER_ROLE_NAME}"
   rules:
+    - if: $SKIP_MIRROR_JOBS == "yes"
+      when: never
     - if: $CI_PROJECT_ID == "11925" && $CI_COMMIT_BRANCH == "integ" && $CI_MERGE_REQUEST_IID == null
       when: always
     - when: never
@@ -47,6 +50,8 @@ universal-config:cicd-main-replicator:
     ACCOUNT_ID: "${LZA_CICD_MAIN_REPLICATOR_ACCOUNT_ID}"
     AWS_CREDS_TARGET_ROLE: "arn:${PARTITION}:iam::${ACCOUNT_ID}:role/${GITLAB_RUNNER_ROLE_NAME}"
   rules:
+    - if: $SKIP_MIRROR_JOBS == "yes"
+      when: never
     - if: $CI_PROJECT_ID == "11925" && $CI_COMMIT_BRANCH == "main" && $CI_MERGE_REQUEST_IID == null
       when: always
     - when: never
@@ -58,6 +63,8 @@ universal-config:release-replicator:
     ACCOUNT_ID: "${LZA_RELEASE_REPLICATOR_ACCOUNT_ID}"
     AWS_CREDS_TARGET_ROLE: "arn:${PARTITION}:iam::${ACCOUNT_ID}:role/${GITLAB_RUNNER_ROLE_NAME}"
   rules:
+    - if: $SKIP_MIRROR_JOBS == "yes"
+      when: never
     - if: $CI_PROJECT_ID == "11925" && $CI_COMMIT_TAG =~ /^v\d+\.\d+\.\d+$/
       when: always
     - when: never
@@ -69,6 +76,8 @@ universal-config:dev-team-replicator:
     ACCOUNT_ID: "${LZA_DEV_TEAM_REPLICATOR_ACCOUNT_ID}"
     AWS_CREDS_TARGET_ROLE: "arn:${PARTITION}:iam::${ACCOUNT_ID}:role/${GITLAB_RUNNER_ROLE_NAME}"
   rules:
+    - if: $SKIP_MIRROR_JOBS == "yes"
+      when: never
     - if: $CI_PROJECT_ID == "11925" && $CI_MERGE_REQUEST_IID == null
       when: always
     - when: never

@@ -6,12 +6,11 @@ variables:
   GIT_STRATEGY: fetch
   PARTITION: aws
   AWS_DEFAULT_REGION: "us-east-1"
+  LZA_REPO_NAME: landing-zone-accelerator-on-aws-mirror
 
 # Template for mirror jobs
 .mirror_template: &mirror_template
   stage: mirror
-  variables:
-    LZA_REPO_NAME: landing-zone-accelerator-on-aws-mirror
   before_script:
     - rm -rf /var/lib/apt/lists/*
     - apt-get update
@@ -37,6 +36,8 @@ lza:cicd-integ-replicator:
     ACCOUNT_ID: "${LZA_CICD_INTEG_REPLICATOR_ACCOUNT_ID}"    
     AWS_CREDS_TARGET_ROLE: "arn:${PARTITION}:iam::${ACCOUNT_ID}:role/${GITLAB_RUNNER_ROLE_NAME}"
   rules:
+    - if: $SKIP_MIRROR_JOBS == "yes"
+      when: never
     - if: $CI_PROJECT_ID == "11925" && $CI_COMMIT_BRANCH == "integ" && $CI_MERGE_REQUEST_IID == null
       when: always
     - when: never
@@ -49,6 +50,8 @@ lza:cicd-main-replicator:
     ACCOUNT_ID: "${LZA_CICD_MAIN_REPLICATOR_ACCOUNT_ID}"
     AWS_CREDS_TARGET_ROLE: "arn:${PARTITION}:iam::${ACCOUNT_ID}:role/${GITLAB_RUNNER_ROLE_NAME}"
   rules:
+    - if: $SKIP_MIRROR_JOBS == "yes"
+      when: never
     - if: $CI_PROJECT_ID == "11925" && $CI_COMMIT_BRANCH == "main" && $CI_MERGE_REQUEST_IID == null
       when: always
     - when: never
@@ -61,6 +64,8 @@ lza:release-replicator:
     ACCOUNT_ID: "${LZA_RELEASE_REPLICATOR_ACCOUNT_ID}"
     AWS_CREDS_TARGET_ROLE: "arn:${PARTITION}:iam::${ACCOUNT_ID}:role/${GITLAB_RUNNER_ROLE_NAME}"
   rules:
+    - if: $SKIP_MIRROR_JOBS == "yes"
+      when: never
     - if: $CI_PROJECT_ID == "11925" && $CI_COMMIT_TAG =~ /^v\d+\.\d+\.\d+$/
       when: always
     - when: never
@@ -73,6 +78,8 @@ lza:dev-team-replicator:
     ACCOUNT_ID: "${LZA_DEV_TEAM_REPLICATOR_ACCOUNT_ID}"
     AWS_CREDS_TARGET_ROLE: "arn:${PARTITION}:iam::${ACCOUNT_ID}:role/${GITLAB_RUNNER_ROLE_NAME}"
   rules:
+    - if: $SKIP_MIRROR_JOBS == "yes"
+      when: never
     - if: $CI_PROJECT_ID == "11925" && $CI_MERGE_REQUEST_IID == null
       when: always
     - when: never

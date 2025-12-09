@@ -215,9 +215,9 @@ accelerator:gitlab-ci-isolation:
     - changed_files=$(git diff --name-only upstream/integ..HEAD)
     - echo "Changed files:"
     - echo "$changed_files"
-    - file_count=$(echo "$changed_files" | grep -v '^$' | grep -v '^\.gitlab/jobs/' | wc -l)
-    - "echo \"File count: $file_count\""
     - |
+      file_count=$(echo "$changed_files" | grep -v '^$' | grep -v '^\.gitlab/jobs/' | wc -l)
+      echo "File count: $file_count"
       if echo "$changed_files" | grep -q "\.gitlab-ci\.yml$" && [ "$file_count" -gt 1 ]; then
         echo "ERROR: .gitlab-ci.yml changes must be isolated from other file changes"
         echo "If this merge request only includes changes to .gitlab-ci.yml, ensure the 'integ' branch of your forked repository is up-to-date"
