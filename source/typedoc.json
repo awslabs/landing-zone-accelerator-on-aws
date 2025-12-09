@@ -7,9 +7,12 @@
     "./packages/@aws-accelerator/config/lib/models/organization-config.ts",
     "./packages/@aws-accelerator/config/lib/models/security-config.ts",
     "./packages/@aws-accelerator/config/lib/models/customizations-config.ts",
-    "./packages/@aws-accelerator/config/lib/models/replacements-config.ts"
+    "./packages/@aws-accelerator/config/lib/models/replacements-config.ts",
+    "./packages/@aws-accelerator/config/lib/common/types.ts"
   ],
-  "exclude": ["**/test/**/*"],
+  "exclude": [
+    "**/test/**/*"
+  ],
   "basePath": ".",
   "excludeExternals": true,
   "excludeNotDocumented": true,
@@ -18,11 +21,13 @@
   "excludeInternal": true,
   "disableSources": true,
   "skipErrorChecking": true,
-  "sort": ["source-order"],
+  "sort": [
+    "source-order"
+  ],
   "categorizeByGroup": true,
   "defaultCategory": "Other Interfaces",
   "categoryOrder": [
-    "Accounts Configuration", 
+    "Accounts Configuration",
     "Organization Configuration",
     "Global Configuration",
     "IAM Configuration",

@@ -1026,7 +1026,7 @@ export interface IControlTowerLandingZoneConfig {
   /**
    * **Security Configuration** *(Required)*
    *
-   * Manage Identity Center Acess for Control Tower Landing Zone.
+   * Manage Identity Center Access for Control Tower Landing Zone.
    *
    * @see {@link IControlTowerLandingZoneSecurityConfig} for more information.
    */
