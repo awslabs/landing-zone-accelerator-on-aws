@@ -773,7 +773,8 @@ export class InstallerStack extends cdk.Stack {
     // Create Accelerator Installer KMS Key
     const installerKey = new cdk.aws_kms.Key(this, 'InstallerKey', {
       alias: installerKeyAliasName,
-      description: 'AWS Accelerator Management Account Kms Key',
+      description:
+        'KMS key for encrypting LZA installer S3 buckets, CodeBuild projects, and Lambda functions created by the template',
       enableKeyRotation: true,
       policy: undefined,
     });

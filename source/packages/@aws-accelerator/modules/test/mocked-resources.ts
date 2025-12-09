@@ -509,83 +509,88 @@ export const MOCK_CONSTANTS = {
     customerManagedKeys: {
       orgTrailLog: {
         alias: 'alias/accelerator/organizations-cloudtrail/log-group/',
-        description: 'CloudTrail Log Group CMK',
+        description: 'KMS key for encrypting CloudWatch Logs for organization-wide CloudTrail in management account',
       },
       centralLogsBucket: {
         alias: 'alias/accelerator/central-logs/s3',
-        description: 'AWS Accelerator Central Logs Bucket CMK',
+        description: 'KMS key for encrypting centralized S3 logging bucket in log archive account',
       },
       s3: {
         alias: 'alias/accelerator/kms/s3/key',
-        description: 'AWS Accelerator S3 Kms Key',
+        description: 'KMS key for encrypting general-purpose S3 buckets created by LZA',
       },
       cloudWatchLog: {
         alias: 'alias/accelerator/kms/cloudwatch/key',
-        description: 'AWS Accelerator CloudWatch Kms Key',
+        description: 'KMS key for encrypting CloudWatch Log Groups created by LZA',
       },
       cloudWatchLogReplication: {
         alias: 'alias/accelerator/kms/replication/cloudwatch/logs/key',
-        description: 'AWS Accelerator CloudWatch Logs Replication Kms Key',
+        description:
+          'KMS key for encrypting Kinesis Data Streams used for CloudWatch Logs replication in the log archive account',
       },
       awsBackup: {
         alias: 'alias/accelerator/kms/backup/key',
-        description: 'AWS Accelerator Backup Kms Key',
+        description: 'KMS key for encrypting AWS Backup vaults and recovery points',
       },
       sns: {
         alias: 'alias/accelerator/kms/sns/key',
-        description: 'AWS Accelerator SNS Kms Key',
+        description: 'KMS key for encrypting SNS topics in security audit account',
       },
       snsTopic: {
         alias: 'alias/accelerator/kms/snstopic/key',
-        description: 'AWS Accelerator SNS Topic Kms Key',
+        description: 'KMS key for encrypting SNS topics for notifications and alerts in the log archive account',
       },
       secretsManager: {
         alias: 'alias/accelerator/kms/secrets-manager/key',
-        description: 'AWS Accelerator Secrets Manager Kms Key',
+        description: 'KMS key for encrypting AWS Secrets Manager secrets created by LZA in the log archive account',
       },
       lambda: {
         alias: 'alias/accelerator/kms/lambda/key',
-        description: 'AWS Accelerator Lambda Kms Key',
+        description: 'KMS key for encrypting Lambda function environment variables',
       },
       acceleratorKey: {
         alias: 'alias/accelerator/kms/key',
-        description: 'AWS Accelerator Kms Key',
+        description:
+          'KMS key for encrypting cross-service resources (SNS, Lambda, CloudWatch, SQS, Macie, GuardDuty, Audit Manager) in the audit account',
       },
       managementKey: {
         alias: 'alias/accelerator/management/kms/key',
-        description: 'AWS Accelerator Management Account Kms Key',
+        description:
+          'KMS key for encrypting DynamoDB tables, CloudWatch Logs, and SNS topics in the management account',
       },
       importedAssetsBucketCmkArn: {
         alias: 'alias/accelerator/imported/assets/kms/key',
-        description: 'Key used to encrypt solution assets',
+        description: 'KMS key for encrypting imported S3 bucket containing solution assets in the log archive account',
       },
       assetsBucket: {
         alias: 'alias/accelerator/assets/kms/key',
-        description: 'Key used to encrypt solution assets',
+        description:
+          'KMS key for encrypting S3 bucket containing LZA solution assets and CDK artifacts in the management account',
       },
       ssmKey: {
         alias: 'alias/accelerator/sessionmanager-logs/session',
-        description: 'AWS Accelerator Session Manager Session Encryption',
+        description: 'KMS key for encrypting SSM Session Manager session logs and data',
       },
       sqs: {
         alias: 'alias/accelerator/kms/sqs/key',
-        description: 'AWS Accelerator SQS Kms Key',
+        description: 'KMS key for encrypting SQS queues created by LZA',
       },
       importedCentralLogsBucket: {
         alias: 'alias/accelerator/imported-bucket/central-logs/s3',
-        description: 'AWS Accelerator Imported Central Logs Bucket CMK',
+        description: 'KMS key for encrypting imported centralized S3 logging bucket in the log archive account',
       },
       importedAssetBucket: {
         alias: 'alias/accelerator/imported-bucket/assets/s3',
-        description: 'AWS Accelerator Imported Asset Bucket CMK',
+        description: 'KMS key for encrypting imported S3 assets bucket in the log archive account',
       },
       metadataBucket: {
         alias: 'alias/accelerator/kms/metadata/key',
-        description: 'The s3 bucket key for accelerator metadata collection',
+        description:
+          'KMS key for encrypting S3 bucket storing LZA metadata and configuration in the log archive account',
       },
       ebsDefault: {
         alias: 'alias/accelerator/ebs/default-encryption/key',
-        description: 'AWS Accelerator default EBS Volume Encryption key',
+        description: 'KMS key for default EBS volume encryption across all accounts',
       },
     },
     bucketPrefixes: {

@@ -4744,7 +4744,7 @@ exports[`SecurityResourcesStack > Construct(SecurityResourcesStack):  Snapshot T
     "SsmSessionManagerSettingsSessionManagerSessionKey23B7175C": {
       "DeletionPolicy": "Retain",
       "Properties": {
-        "Description": "AWS Accelerator Session Manager Session Encryption",
+        "Description": "KMS key for encrypting SSM Session Manager session logs and data",
         "EnableKeyRotation": true,
         "KeyPolicy": {
           "Statement": [
@@ -7971,7 +7971,7 @@ exports[`delegatedAdminStack > Construct(SecurityResourcesStack):  Snapshot Test
     "SsmSessionManagerSettingsSessionManagerSessionKey23B7175C": {
       "DeletionPolicy": "Retain",
       "Properties": {
-        "Description": "AWS Accelerator Session Manager Session Encryption",
+        "Description": "KMS key for encrypting SSM Session Manager session logs and data",
         "EnableKeyRotation": true,
         "KeyPolicy": {
           "Statement": [

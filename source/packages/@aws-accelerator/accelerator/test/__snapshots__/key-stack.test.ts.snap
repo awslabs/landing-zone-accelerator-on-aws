@@ -18,7 +18,7 @@ exports[`KeyStack > Construct(KeyStack):  Snapshot Test 1`] = `
     "AcceleratorKeyF6E5723B": {
       "DeletionPolicy": "Retain",
       "Properties": {
-        "Description": "AWS Accelerator Kms Key",
+        "Description": "KMS key for encrypting cross-service resources (SNS, Lambda, CloudWatch, SQS, Macie, GuardDuty, Audit Manager) in the audit account",
         "EnableKeyRotation": true,
         "KeyPolicy": {
           "Statement": [

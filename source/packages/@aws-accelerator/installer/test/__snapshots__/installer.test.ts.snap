@@ -1258,7 +1258,7 @@ exports[`InstallerStack > Stack(installer):  Snapshot Test 1`] = `
         },
       },
       "Properties": {
-        "Description": "AWS Accelerator Management Account Kms Key",
+        "Description": "KMS key for encrypting LZA installer S3 buckets, CodeBuild projects, and Lambda functions created by the template",
         "EnableKeyRotation": true,
         "KeyPolicy": {
           "Statement": [
@@ -4951,7 +4951,7 @@ exports[`InstallerStack > Stack(installer):  Snapshot Test 2`] = `
         },
       },
       "Properties": {
-        "Description": "AWS Accelerator Management Account Kms Key",
+        "Description": "KMS key for encrypting LZA installer S3 buckets, CodeBuild projects, and Lambda functions created by the template",
         "EnableKeyRotation": true,
         "KeyPolicy": {
           "Statement": [
@@ -8674,7 +8674,7 @@ exports[`InstallerStack > Stack(installer):  Snapshot Test 3`] = `
         },
       },
       "Properties": {
-        "Description": "AWS Accelerator Management Account Kms Key",
+        "Description": "KMS key for encrypting LZA installer S3 buckets, CodeBuild projects, and Lambda functions created by the template",
         "EnableKeyRotation": true,
         "KeyPolicy": {
           "Statement": [
@@ -12406,7 +12406,7 @@ exports[`InstallerStack > Stack(installer):  Snapshot Test 4`] = `
         },
       },
       "Properties": {
-        "Description": "AWS Accelerator Management Account Kms Key",
+        "Description": "KMS key for encrypting LZA installer S3 buckets, CodeBuild projects, and Lambda functions created by the template",
         "EnableKeyRotation": true,
         "KeyPolicy": {
           "Statement": [
@@ -16128,7 +16128,7 @@ exports[`InstallerStack > Stack(installer):  Snapshot Test 5`] = `
         },
       },
       "Properties": {
-        "Description": "AWS Accelerator Management Account Kms Key",
+        "Description": "KMS key for encrypting LZA installer S3 buckets, CodeBuild projects, and Lambda functions created by the template",
         "EnableKeyRotation": true,
         "KeyPolicy": {
           "Statement": [
@@ -19827,7 +19827,7 @@ exports[`InstallerStack > Stack(installer):  Snapshot Test 6`] = `
         },
       },
       "Properties": {
-        "Description": "AWS Accelerator Management Account Kms Key",
+        "Description": "KMS key for encrypting LZA installer S3 buckets, CodeBuild projects, and Lambda functions created by the template",
         "EnableKeyRotation": true,
         "KeyPolicy": {
           "Statement": [
@@ -23553,7 +23553,7 @@ exports[`InstallerStack > Stack(installer):  Snapshot Test 7`] = `
         },
       },
       "Properties": {
-        "Description": "AWS Accelerator Management Account Kms Key",
+        "Description": "KMS key for encrypting LZA installer S3 buckets, CodeBuild projects, and Lambda functions created by the template",
         "EnableKeyRotation": true,
         "KeyPolicy": {
           "Statement": [
@@ -27645,7 +27645,7 @@ exports[`InstallerStack > Stack(installer):  Snapshot Test 8`] = `
         },
       },
       "Properties": {
-        "Description": "AWS Accelerator Management Account Kms Key",
+        "Description": "KMS key for encrypting LZA installer S3 buckets, CodeBuild projects, and Lambda functions created by the template",
         "EnableKeyRotation": true,
         "KeyPolicy": {
           "Statement": [
@@ -31768,7 +31768,7 @@ exports[`InstallerStack > Stack(installer):  Snapshot Test 9`] = `
         },
       },
       "Properties": {
-        "Description": "AWS Accelerator Management Account Kms Key",
+        "Description": "KMS key for encrypting LZA installer S3 buckets, CodeBuild projects, and Lambda functions created by the template",
         "EnableKeyRotation": true,
         "KeyPolicy": {
           "Statement": [

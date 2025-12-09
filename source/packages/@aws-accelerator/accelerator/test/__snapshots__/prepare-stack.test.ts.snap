@@ -117,7 +117,7 @@ exports[`PrepareStack > Construct(PrepareStack):  Snapshot Test 1`] = `
     "AcceleratorManagementCloudWatchKeyE630915F": {
       "DeletionPolicy": "Retain",
       "Properties": {
-        "Description": "AWS Accelerator CloudWatch Kms Key",
+        "Description": "KMS key for encrypting CloudWatch Log Groups created by LZA",
         "EnableKeyRotation": true,
         "KeyPolicy": {
           "Statement": [
@@ -206,7 +206,7 @@ exports[`PrepareStack > Construct(PrepareStack):  Snapshot Test 1`] = `
     "AcceleratorManagementLambdaKeyEA4C7DBE": {
       "DeletionPolicy": "Retain",
       "Properties": {
-        "Description": "AWS Accelerator Lambda Kms Key",
+        "Description": "KMS key for encrypting Lambda function environment variables",
         "EnableKeyRotation": true,
         "KeyPolicy": {
           "Statement": [
@@ -4009,7 +4009,7 @@ exports[`PrepareStack > Construct(PrepareStack):  Snapshot Test 1`] = `
     "ManagementKey0813A4D9": {
       "DeletionPolicy": "Retain",
       "Properties": {
-        "Description": "AWS Accelerator Management Account Kms Key",
+        "Description": "KMS key for encrypting DynamoDB tables, CloudWatch Logs, and SNS topics in the management account",
         "EnableKeyRotation": true,
         "KeyPolicy": {
           "Statement": [

@@ -1062,7 +1062,7 @@ exports[`SecurityStack > Construct(SecurityStack):  Snapshot Test 1`] = `
     "EbsEncryptionKey9149E0DA": {
       "DeletionPolicy": "Retain",
       "Properties": {
-        "Description": "AWS Accelerator default EBS Volume Encryption key",
+        "Description": "KMS key for default EBS volume encryption across all accounts",
         "EnableKeyRotation": true,
         "KeyPolicy": {
           "Statement": [

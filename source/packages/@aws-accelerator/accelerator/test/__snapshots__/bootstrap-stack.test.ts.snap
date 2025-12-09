@@ -70,7 +70,7 @@ exports[`BootstrapStack > Construct(BootstrapStack):  Snapshot Test 1`] = `
     "AssetEncryptionKey49BA7B12": {
       "DeletionPolicy": "Retain",
       "Properties": {
-        "Description": "Key used to encrypt centralized CDK assets",
+        "Description": "KMS key used to encrypt centralized CDK bootstrap S3 bucket and assets",
         "EnableKeyRotation": true,
         "KeyPolicy": {
           "Statement": [

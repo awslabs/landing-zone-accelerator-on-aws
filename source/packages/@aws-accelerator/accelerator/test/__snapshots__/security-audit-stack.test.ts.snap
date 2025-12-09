@@ -62,7 +62,7 @@ exports[`SecurityAuditStack > Construct(SecurityAuditStack):  Snapshot Test 1`] 
     "AcceleratorSnsKeyDADF94B1": {
       "DeletionPolicy": "Retain",
       "Properties": {
-        "Description": "AWS Accelerator SNS Kms Key",
+        "Description": "KMS key for encrypting SNS topics in security audit account",
         "EnableKeyRotation": true,
         "KeyPolicy": {
           "Statement": [

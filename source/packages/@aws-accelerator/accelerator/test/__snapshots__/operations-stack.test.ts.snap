@@ -216,7 +216,7 @@ exports[`OperationsStack > Construct(OperationsStack):  Snapshot Test 1`] = `
     "BackupKey60B97760": {
       "DeletionPolicy": "Retain",
       "Properties": {
-        "Description": "AWS Accelerator Backup Kms Key",
+        "Description": "KMS key for encrypting AWS Backup vaults and recovery points",
         "EnableKeyRotation": true,
         "KeyPolicy": {
           "Statement": [

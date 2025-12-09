@@ -185,7 +185,7 @@ export class BootstrapStack extends AcceleratorStack {
     const principals = this.setBootstrapResourcePrincipals(this.props.organizationConfig.enable);
     const s3Key = new cdk.aws_kms.Key(this, 'AssetEncryptionKey', {
       alias: `${this.props.prefixes.kmsAlias}/kms/cdk/key`,
-      description: 'Key used to encrypt centralized CDK assets',
+      description: 'KMS key used to encrypt centralized CDK bootstrap S3 bucket and assets',
       enableKeyRotation: true,
       removalPolicy: cdk.RemovalPolicy.RETAIN,
     });

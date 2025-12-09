@@ -316,7 +316,7 @@ exports[`LoggingStack > Construct(LoggingStack):  Snapshot Test 1`] = `
     "Accelerator3KeyBF43FCD9": {
       "DeletionPolicy": "Retain",
       "Properties": {
-        "Description": "AWS Accelerator S3 Kms Key",
+        "Description": "KMS key for encrypting general-purpose S3 buckets created by LZA",
         "EnableKeyRotation": true,
         "KeyPolicy": {
           "Statement": [
@@ -744,7 +744,7 @@ exports[`LoggingStack > Construct(LoggingStack):  Snapshot Test 1`] = `
     "AcceleratorCloudWatchKeyF93B6E17": {
       "DeletionPolicy": "Retain",
       "Properties": {
-        "Description": "AWS Accelerator CloudWatch Kms Key",
+        "Description": "KMS key for encrypting CloudWatch Log Groups created by LZA",
         "EnableKeyRotation": true,
         "KeyPolicy": {
           "Statement": [
@@ -1062,7 +1062,7 @@ exports[`LoggingStack > Construct(LoggingStack):  Snapshot Test 1`] = `
     "AcceleratorLambdaKeyD279839E": {
       "DeletionPolicy": "Retain",
       "Properties": {
-        "Description": "AWS Accelerator Lambda Kms Key",
+        "Description": "KMS key for encrypting Lambda function environment variables",
         "EnableKeyRotation": true,
         "KeyPolicy": {
           "Statement": [
@@ -1191,7 +1191,7 @@ exports[`LoggingStack > Construct(LoggingStack):  Snapshot Test 1`] = `
     "AcceleratorMetadataBucketCmkC5190F6D": {
       "DeletionPolicy": "Retain",
       "Properties": {
-        "Description": "The s3 bucket key for accelerator metadata collection",
+        "Description": "KMS key for encrypting S3 bucket storing LZA metadata and configuration in the log archive account",
         "EnableKeyRotation": true,
         "KeyPolicy": {
           "Statement": [
@@ -1530,7 +1530,7 @@ exports[`LoggingStack > Construct(LoggingStack):  Snapshot Test 1`] = `
     "AcceleratorSnsTopicKey4E909F1D": {
       "DeletionPolicy": "Delete",
       "Properties": {
-        "Description": "AWS Accelerator SNS Topic Kms Key",
+        "Description": "KMS key for encrypting SNS topics for notifications and alerts in the log archive account",
         "EnableKeyRotation": true,
         "KeyPolicy": {
           "Statement": [
@@ -1704,7 +1704,7 @@ exports[`LoggingStack > Construct(LoggingStack):  Snapshot Test 1`] = `
     "AcceleratorSqsKeyB0193AC3": {
       "DeletionPolicy": "Delete",
       "Properties": {
-        "Description": "AWS Accelerator SQS Kms Key",
+        "Description": "KMS key for encrypting SQS queues created by LZA",
         "EnableKeyRotation": true,
         "KeyPolicy": {
           "Statement": [
@@ -4291,7 +4291,7 @@ exports[`LoggingStack > Construct(LoggingStack):  Snapshot Test 1`] = `
     "LogsReplicationKeyAE749486": {
       "DeletionPolicy": "Delete",
       "Properties": {
-        "Description": "AWS Accelerator CloudWatch Logs Replication Kms Key",
+        "Description": "KMS key for encrypting Kinesis Data Streams used for CloudWatch Logs replication in the log archive account",
         "EnableKeyRotation": true,
         "KeyPolicy": {
           "Statement": [
@@ -6180,7 +6180,7 @@ exports[`LoggingStack > Construct(LoggingStack):  Snapshot Test 2`] = `
     "AcceleratorSnsTopicKey4E909F1D": {
       "DeletionPolicy": "Delete",
       "Properties": {
-        "Description": "AWS Accelerator SNS Topic Kms Key",
+        "Description": "KMS key for encrypting SNS topics for notifications and alerts in the log archive account",
         "EnableKeyRotation": true,
         "KeyPolicy": {
           "Statement": [
@@ -6354,7 +6354,7 @@ exports[`LoggingStack > Construct(LoggingStack):  Snapshot Test 2`] = `
     "AcceleratorSqsKeyB0193AC3": {
       "DeletionPolicy": "Delete",
       "Properties": {
-        "Description": "AWS Accelerator SQS Kms Key",
+        "Description": "KMS key for encrypting SQS queues created by LZA",
         "EnableKeyRotation": true,
         "KeyPolicy": {
           "Statement": [
@@ -8768,7 +8768,7 @@ exports[`LoggingStack > Construct(LoggingStack):  Snapshot Test 2`] = `
     "ImportedcentralLogsBucketKey7AB36134": {
       "DeletionPolicy": "Retain",
       "Properties": {
-        "Description": "AWS Accelerator Imported Central Logs Bucket CMK",
+        "Description": "KMS key for encrypting imported centralized S3 logging bucket in the log archive account",
         "EnableKeyRotation": true,
         "KeyPolicy": {
           "Statement": [
@@ -9776,7 +9776,7 @@ exports[`LoggingStack > Construct(LoggingStack):  Snapshot Test 2`] = `
     "LogsReplicationKeyAE749486": {
       "DeletionPolicy": "Delete",
       "Properties": {
-        "Description": "AWS Accelerator CloudWatch Logs Replication Kms Key",
+        "Description": "KMS key for encrypting Kinesis Data Streams used for CloudWatch Logs replication in the log archive account",
         "EnableKeyRotation": true,
         "KeyPolicy": {
           "Statement": [
@@ -11744,7 +11744,7 @@ exports[`LoggingStackDelegatedAdmin > Construct(LoggingStacKDelegatedAdmin):  Sn
     "Accelerator3KeyBF43FCD9": {
       "DeletionPolicy": "Retain",
       "Properties": {
-        "Description": "AWS Accelerator S3 Kms Key",
+        "Description": "KMS key for encrypting general-purpose S3 buckets created by LZA",
         "EnableKeyRotation": true,
         "KeyPolicy": {
           "Statement": [
@@ -11842,7 +11842,7 @@ exports[`LoggingStackDelegatedAdmin > Construct(LoggingStacKDelegatedAdmin):  Sn
     "AcceleratorCloudWatchKeyF93B6E17": {
       "DeletionPolicy": "Retain",
       "Properties": {
-        "Description": "AWS Accelerator CloudWatch Kms Key",
+        "Description": "KMS key for encrypting CloudWatch Log Groups created by LZA",
         "EnableKeyRotation": true,
         "KeyPolicy": {
           "Statement": [
@@ -12022,7 +12022,7 @@ exports[`LoggingStackDelegatedAdmin > Construct(LoggingStacKDelegatedAdmin):  Sn
     "AcceleratorLambdaKeyD279839E": {
       "DeletionPolicy": "Retain",
       "Properties": {
-        "Description": "AWS Accelerator Lambda Kms Key",
+        "Description": "KMS key for encrypting Lambda function environment variables",
         "EnableKeyRotation": true,
         "KeyPolicy": {
           "Statement": [
@@ -12081,7 +12081,7 @@ exports[`LoggingStackDelegatedAdmin > Construct(LoggingStacKDelegatedAdmin):  Sn
     "AcceleratorSnsTopicKey4E909F1D": {
       "DeletionPolicy": "Delete",
       "Properties": {
-        "Description": "AWS Accelerator SNS Topic Kms Key",
+        "Description": "KMS key for encrypting SNS topics for notifications and alerts in the log archive account",
         "EnableKeyRotation": true,
         "KeyPolicy": {
           "Statement": [
@@ -12255,7 +12255,7 @@ exports[`LoggingStackDelegatedAdmin > Construct(LoggingStacKDelegatedAdmin):  Sn
     "AcceleratorSqsKeyB0193AC3": {
       "DeletionPolicy": "Delete",
       "Properties": {
-        "Description": "AWS Accelerator SQS Kms Key",
+        "Description": "KMS key for encrypting SQS queues created by LZA",
         "EnableKeyRotation": true,
         "KeyPolicy": {
           "Statement": [
@@ -12802,7 +12802,7 @@ exports[`LoggingStackDelegatedAdmin > Construct(LoggingStacKDelegatedAdmin):  Sn
     "CentralLogsBucketCmkBA0AB2FC": {
       "DeletionPolicy": "Retain",
       "Properties": {
-        "Description": "AWS Accelerator Central Logs Bucket CMK",
+        "Description": "KMS key for encrypting centralized S3 logging bucket in log archive account",
         "EnableKeyRotation": true,
         "KeyPolicy": {
           "Statement": [
@@ -15397,7 +15397,7 @@ exports[`LoggingStackDelegatedAdmin > Construct(LoggingStacKDelegatedAdmin):  Sn
     "LogsReplicationKeyAE749486": {
       "DeletionPolicy": "Delete",
       "Properties": {
-        "Description": "AWS Accelerator CloudWatch Logs Replication Kms Key",
+        "Description": "KMS key for encrypting Kinesis Data Streams used for CloudWatch Logs replication in the log archive account",
         "EnableKeyRotation": true,
         "KeyPolicy": {
           "Statement": [
@@ -16476,7 +16476,7 @@ exports[`LoggingStackOuTargets > Construct(LoggingStackOuTargets):  Snapshot Tes
     "Accelerator3KeyBF43FCD9": {
       "DeletionPolicy": "Retain",
       "Properties": {
-        "Description": "AWS Accelerator S3 Kms Key",
+        "Description": "KMS key for encrypting general-purpose S3 buckets created by LZA",
         "EnableKeyRotation": true,
         "KeyPolicy": {
           "Statement": [
@@ -16608,7 +16608,7 @@ exports[`LoggingStackOuTargets > Construct(LoggingStackOuTargets):  Snapshot Tes
     "AcceleratorCloudWatchKeyF93B6E17": {
       "DeletionPolicy": "Retain",
       "Properties": {
-        "Description": "AWS Accelerator CloudWatch Kms Key",
+        "Description": "KMS key for encrypting CloudWatch Log Groups created by LZA",
         "EnableKeyRotation": true,
         "KeyPolicy": {
           "Statement": [
@@ -16804,7 +16804,7 @@ exports[`LoggingStackOuTargets > Construct(LoggingStackOuTargets):  Snapshot Tes
     "AcceleratorLambdaKeyD279839E": {
       "DeletionPolicy": "Retain",
       "Properties": {
-        "Description": "AWS Accelerator Lambda Kms Key",
+        "Description": "KMS key for encrypting Lambda function environment variables",
         "EnableKeyRotation": true,
         "KeyPolicy": {
           "Statement": [
@@ -16935,7 +16935,7 @@ exports[`LoggingStackOuTargets > Construct(LoggingStackOuTargets):  Snapshot Tes
     "AcceleratorMetadataBucketCmkC5190F6D": {
       "DeletionPolicy": "Retain",
       "Properties": {
-        "Description": "The s3 bucket key for accelerator metadata collection",
+        "Description": "KMS key for encrypting S3 bucket storing LZA metadata and configuration in the log archive account",
         "EnableKeyRotation": true,
         "KeyPolicy": {
           "Statement": [
@@ -17274,7 +17274,7 @@ exports[`LoggingStackOuTargets > Construct(LoggingStackOuTargets):  Snapshot Tes
     "AcceleratorSnsTopicKey4E909F1D": {
       "DeletionPolicy": "Delete",
       "Properties": {
-        "Description": "AWS Accelerator SNS Topic Kms Key",
+        "Description": "KMS key for encrypting SNS topics for notifications and alerts in the log archive account",
         "EnableKeyRotation": true,
         "KeyPolicy": {
           "Statement": [
@@ -17448,7 +17448,7 @@ exports[`LoggingStackOuTargets > Construct(LoggingStackOuTargets):  Snapshot Tes
     "AcceleratorSqsKeyB0193AC3": {
       "DeletionPolicy": "Delete",
       "Properties": {
-        "Description": "AWS Accelerator SQS Kms Key",
+        "Description": "KMS key for encrypting SQS queues created by LZA",
         "EnableKeyRotation": true,
         "KeyPolicy": {
           "Statement": [
@@ -19560,7 +19560,7 @@ exports[`LoggingStackOuTargets > Construct(LoggingStackOuTargets):  Snapshot Tes
     "LogsReplicationKeyAE749486": {
       "DeletionPolicy": "Delete",
       "Properties": {
-        "Description": "AWS Accelerator CloudWatch Logs Replication Kms Key",
+        "Description": "KMS key for encrypting Kinesis Data Streams used for CloudWatch Logs replication in the log archive account",
         "EnableKeyRotation": true,
         "KeyPolicy": {
           "Statement": [
