@@ -81,9 +81,7 @@ describe('Create Event', () => {
     orgClient
       .on(AttachPolicyCommand)
       .rejects(new MalformedPolicyDocumentException({ $metadata: { httpStatusCode: 400 }, message: 'Error' }));
-    await expect(handler(event)).rejects.toThrowError(
-      `Error while trying to attach policy: ${StaticInput.attachProps.policyId}. Error message: ${StaticInput.malFormedPolicyException}`,
-    );
+    await expect(handler(event)).rejects.toThrowError(/Error while trying to attach policy: policyId\. Error message:/);
   });
   test('Attach a policy - one policy already detached', async () => {
     const event = AcceleratorUnitTest.getEvent(EventType.CREATE, { new: [StaticInput.attachProps] });

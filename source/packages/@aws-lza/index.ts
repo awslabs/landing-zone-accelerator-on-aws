@@ -14,8 +14,17 @@
 //
 // Common resources
 //
-export { MODULE_EXCEPTIONS } from './common/enums';
-export { createLogger, createStatusLogger } from './common/logger';
+export { DynamoDBFilterOperator, MODULE_EXCEPTIONS } from './lib/common/types';
+export { createLogger, createStatusLogger } from './lib/common/logger';
+export { IAssumeRoleCredential, IDynamoDBFilter, IModuleResponse } from './lib/common/interfaces';
+export { setRetryStrategy } from './lib/common/utility';
+export { getCredentials } from './lib/common/sts-functions';
+export { throttlingBackOff } from './lib/common/throttle';
+export { getCurrentSessionDetails } from './lib/common/sts-functions';
+export { ISessionContext } from './lib/common/interfaces';
+export { getParametersValue } from './lib/common/ssm-functions';
+export { MODULE_STATE_CODE } from './lib/common/types';
+export { putItemsBatch, queryDynamoDBTable } from './lib/common/dynamodb-table-functions';
 
 //
 // Control Tower Module resources
@@ -108,8 +117,11 @@ export { IDetectiveManageOrganizationAdminParameter } from './interfaces/detecti
 export { manageDetectiveOrganizationAdminAccount } from './executors/accelerator-detective';
 // AWS Macie Module resource
 
-export { IMacieManageOrganizationAdminParameter } from './interfaces/macie/manage-organization-admin';
-export { manageOrganizationAdmin } from './executors/accelerator-macie';
+//
+// AWS Macie Module resources
+//
+export { IMacieModuleDataSources, IMacieModuleRequest, IMacieModuleResponse } from './lib/amazon-macie/interfaces';
+export { configureMacie } from './lib/amazon-macie/macie';
 
 //
 // AWS Lambda Module Resources

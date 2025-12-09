@@ -16,38 +16,36 @@ import { describe, beforeEach, expect, test, vi, afterEach } from 'vitest';
 import { registerOrganizationalUnit, setupControlTowerLandingZone } from '../../executors/accelerator-control-tower';
 import { SetupLandingZoneModule } from '../../lib/control-tower/setup-landing-zone/index';
 import { RegisterOrganizationalUnitModule } from '../../lib/control-tower/register-organizational-unit/index';
-import { Modules } from '../../lib/cli/modules';
 import { MOCK_CONSTANTS as COMMON_MOCK_CONSTANTS } from '../mocked-resources';
+import { ISetupLandingZoneHandlerParameter } from '../../interfaces/control-tower/setup-landing-zone';
 
-const MOCK_CONSTANTS = {
-  input: {
-    operation: Object.keys(Modules.CONTROL_TOWER)[0],
-    partition: 'aws',
-    region: 'us-east-1',
-    configuration: {
-      version: '3.3',
-      enabledRegions: ['us-east-1', 'us-west-2'],
-      logging: {
-        organizationTrail: true,
-        retention: {
-          loggingBucket: 365,
-          accessLoggingBucket: 365,
-        },
+const input: ISetupLandingZoneHandlerParameter = {
+  operation: 'setup',
+  partition: 'aws',
+  region: 'us-east-1',
+  configuration: {
+    version: '3.3',
+    enabledRegions: ['us-east-1', 'us-west-2'],
+    logging: {
+      organizationTrail: true,
+      retention: {
+        loggingBucket: 365,
+        accessLoggingBucket: 365,
       },
-      security: { enableIdentityCenterAccess: true },
-      sharedAccounts: {
-        management: {
-          name: 'Management',
-          email: 'management@example.com',
-        },
-        logging: {
-          name: 'LogArchive',
-          email: 'logging@example.com',
-        },
-        audit: {
-          name: 'Audit',
-          email: 'audit@example.com',
-        },
+    },
+    security: { enableIdentityCenterAccess: true },
+    sharedAccounts: {
+      management: {
+        name: 'Management',
+        email: 'management@example.com',
+      },
+      logging: {
+        name: 'LogArchive',
+        email: 'logging@example.com',
+      },
+      audit: {
+        name: 'Audit',
+        email: 'audit@example.com',
       },
     },
   },
@@ -73,10 +71,10 @@ describe('ControlTowerExecutors', () => {
         handler: mockHandler,
       }));
 
-      const result = await setupControlTowerLandingZone(MOCK_CONSTANTS.input);
+      const result = await setupControlTowerLandingZone(input);
 
       expect(result).toBe('SUCCESS');
-      expect(mockHandler).toHaveBeenCalledWith(MOCK_CONSTANTS.input);
+      expect(mockHandler).toHaveBeenCalledWith(input);
       expect(mockHandler).toHaveBeenCalledTimes(1);
     });
 
@@ -87,9 +85,9 @@ describe('ControlTowerExecutors', () => {
         handler: mockHandler,
       }));
 
-      await expect(setupControlTowerLandingZone(MOCK_CONSTANTS.input)).rejects.toThrow(errorMessage);
+      await expect(setupControlTowerLandingZone(input)).rejects.toThrow(errorMessage);
 
-      expect(mockHandler).toHaveBeenCalledWith(MOCK_CONSTANTS.input);
+      expect(mockHandler).toHaveBeenCalledWith(input);
       expect(mockHandler).toHaveBeenCalledTimes(1);
     });
   });

@@ -1,17 +1,17 @@
 {
   "name": "aws-lza",
   "version": "0.0.0",
-  "private": true,
   "description": "The package to manage various AWS service configurations.",
   "license": "Apache-2.0",
   "author": {
     "name": "Amazon Web Services",
     "url": "https://aws.amazon.com/solutions"
   },
-  "main": "bin/lza.js",
-  "bin": {
-    "lza": "bin/lza"
-  },
+"main": "dist/index.js",
+"types": "dist/index.d.ts",
+ "bin" : {
+  "aws-lza": "bin/aws-lza"
+ },
   "scripts": {
     "cleanup": "tsc --build ./ --clean && rm -rf node_modules && rm -rf dist",
     "cleanup:tsc": "tsc --build ./ --clean",
@@ -23,8 +23,7 @@
     "lint": "eslint --fix  --max-warnings 0 -c ../../eslint.config.mjs 'lib/**/*.{ts,tsx}' 'bin/**/*.{ts,tsx}' 'test/**/*.{ts,tsx}'",
     "precommit": "eslint --max-warnings 0 -c ../../eslint.config.mjs 'lib/**/*.{ts,tsx}' 'bin/**/*.{ts,tsx}'",
     "prepare": "npm run build",
-    "lza": "bin/lza",
-    "build-prod": "tsc"
+    "aws-lza": "bin/aws-lza"
   },
   "dependencies": {
     "@aws-sdk/client-controltower": "3.940.0",
@@ -37,6 +36,9 @@
     "@aws-sdk/util-retry": "3.374.0",
     "@aws-sdk/client-ec2": "3.835.0",
     "@aws-sdk/client-s3": "3.835.0",
+    "@aws-sdk/client-dynamodb": "3.835.0",
+    "@aws-sdk/lib-dynamodb": "3.835.0",
+    "@aws-sdk/util-dynamodb": "3.835.0",
     "email-validator": "2.0.4",
     "fs-extra": "11.1.0",
     "winston": "3.8.2",

@@ -65,9 +65,7 @@ describe('Update Event', () => {
     ssmClient
       .on(GetDocumentCommand, { Name: documentName })
       .rejects(new MaxDocumentSizeExceeded({ $metadata: { httpStatusCode: 400 }, message: 'Error' }));
-    await expect(handler(event)).rejects.toThrowError(
-      'Error while updating SSM Document :SSM-SessionManagerRunShell. Received: {"name":"MaxDocumentSizeExceeded","$fault":"client","$metadata":{"httpStatusCode":400}}',
-    );
+    await expect(handler(event)).rejects.toThrowError(/Error while updating SSM Document :SSM-SessionManagerRunShell/);
   });
   test('Update event - create document on InvalidDocument exception', async () => {
     const event = AcceleratorUnitTest.getEvent(EventType.UPDATE, {

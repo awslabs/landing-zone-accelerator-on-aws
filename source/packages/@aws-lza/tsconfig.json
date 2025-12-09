@@ -7,7 +7,7 @@
   "include": [
     "lib/**/*",
     "bin/**/*",
-    "index.ts",
+    "index.ts"
   ],
   "exclude": [
     "test/**/*"

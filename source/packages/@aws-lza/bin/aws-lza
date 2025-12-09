@@ -1,0 +1,11 @@
+#!/usr/bin/env node
+
+// Set LOG_LEVEL based on verbose flag before requiring any modules
+const hasVerbose = process.argv.includes('--verbose') || process.argv.includes('-v');
+if (hasVerbose) {
+  process.env.LOG_LEVEL = 'info';
+} else {
+  process.env.LOG_LEVEL = 'error';
+}
+
+require('../dist/bin/aws-lza.js');

@@ -258,3 +258,6 @@ source/packages/@aws-accelerator/utils/lib/common-functions.ts:130
 source/packages/@aws-accelerator/utils/lib/common-functions.ts:141
 source/packages/@aws-accelerator/utils/lib/common-functions.ts:142
 
+### aws-lza Unit Test Files
+source/packages/@aws-lza/test/lib/amazon-macie/functions.test.unit.ts:154
+source/packages/@aws-lza/test/lib/amazon-macie/organizations-delegated-admin-account.test.unit.ts:189
