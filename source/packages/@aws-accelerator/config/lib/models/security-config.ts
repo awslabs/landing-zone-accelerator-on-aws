@@ -988,7 +988,7 @@ export interface ISecurityHubConfig {
    */
   readonly logging?: ISecurityHubLoggingConfig;
   /**
-   * (OPTIONAL) Security Hub automation rules configuration
+   * Configuration for Security Hub automation rules that automatically update findings based on specified criteria.
    */
   readonly automationRules?: ISecurityHubAutomationRuleConfig[];
 }
@@ -997,15 +997,38 @@ export interface ISecurityHubConfig {
  * *{@link SecurityConfig} / {@link CentralSecurityServicesConfig} / {@link SecurityHubConfig} / {@link SecurityHubAutomationRuleConfig} / {@link SecurityHubAutomationRulesStringFilter}*
  *
  * @description
- * Security Hub automation rule string filter configuration for filtering findings based on string values
+ * Configuration for string-based filtering criteria in Security Hub automation rules.
+ * This filter allows you to match findings based on text values in Security Hub finding fields,
+ * enabling precise automation rules that target specific types of findings based on their string attributes.
+ *
+ * @see https://docs.aws.amazon.com/securityhub/1.0/APIReference/API_StringFilter.html
+ *
+ * @example
+ * ```
+ * - value: "AwsS3Bucket"
+ *   comparison: "EQUALS"
+ * - value: "CRITICAL"
+ *   comparison: "EQUALS"
+ * - value: "prod"
+ *   comparison: "CONTAINS"
+ * ```
  */
 export interface ISecurityHubAutomationRulesStringFilter {
   /**
-   * The string value to filter on
+   * The string value to match against when filtering Security Hub findings.
    */
   readonly value: string;
   /**
-   * The comparison operator to use for filtering
+   * The comparison operator that defines how the filter value should be matched against finding field values.
+   * Different operators enable various matching strategies from exact matches to partial text searches.
+   *
+   * - EQUALS: Exact match
+   * - PREFIX: Starts with the specified value
+   * - NOT_EQUALS: Does not match exactly
+   * - PREFIX_NOT_EQUALS: Does not start with the specified value
+   * - CONTAINS: Contains the specified value anywhere
+   * - NOT_CONTAINS: Does not contain the specified value
+   * - CONTAINS_WORD: Contains the specified value as a complete word
    */
   readonly comparison:
     | 'EQUALS'
@@ -1021,27 +1044,52 @@ export interface ISecurityHubAutomationRulesStringFilter {
  * *{@link SecurityConfig} / {@link CentralSecurityServicesConfig} / {@link SecurityHubConfig} / {@link SecurityHubAutomationRuleConfig} / {@link SecurityHubAutomationRulesNumberFilter}*
  *
  * @description
- * Security Hub automation rule number filter configuration for filtering findings based on numeric values
+ * Configuration for numeric-based filtering criteria in Security Hub automation rules.
+ * This filter allows you to match findings based on numeric values in Security Hub finding fields.
+ *
+ * @see https://docs.aws.amazon.com/securityhub/1.0/APIReference/API_NumberFilter.html
+ *
+ * @example -
+ * ```
+ * # Filter for high severity scores (70 and above)
+ * gte: 70
+ *
+ * # Filter for findings with confidence between 50 and 90
+ * gte: 50
+ * lte: 90
+ *
+ * # Filter for exact criticality score
+ * eq: 85
+ * ```
  */
 export interface ISecurityHubAutomationRulesNumberFilter {
   /**
+   * Matches findings where the numeric field value is greater than or equal to this number.
+   * Use this to filter for findings above a certain threshold (e.g., high severity scores).
+   *
    * Greater than or equal to value
    */
   readonly gte?: number;
   /**
+   * Matches findings where the numeric field value is less than or equal to this number.
+   * Use this to filter for findings below a certain threshold (e.g., low confidence scores).
+   *
    * Less than or equal to value
    */
   readonly lte?: number;
   /**
-   * Greater than value
+   * Matches findings where the numeric field value is greater than this number.
+   * Use this for strict greater-than comparisons (excluding the boundary value).
    */
   readonly gt?: number;
   /**
-   * Less than value
+   * Matches findings where the numeric field value is less than this number.
+   * Use this for strict less-than comparisons (excluding the boundary value).
    */
   readonly lt?: number;
   /**
-   * Equal to value
+   * Matches findings where the numeric field value exactly equals this number.
+   * Use this to filter for findings with specific numeric values.
    */
   readonly eq?: number;
 }
@@ -1050,27 +1098,50 @@ export interface ISecurityHubAutomationRulesNumberFilter {
  * *{@link SecurityConfig} / {@link CentralSecurityServicesConfig} / {@link SecurityHubConfig} / {@link SecurityHubAutomationRuleConfig} / {@link SecurityHubAutomationRulesDateFilter}*
  *
  * @description
- * Security Hub automation rule date filter configuration for filtering findings based on date ranges
+ * Configuration for date-based filtering criteria in Security Hub automation rules.
+ * This filter allows you to match findings based on date and time values in Security Hub finding fields.
+ *
+ * @see https://docs.aws.amazon.com/securityhub/1.0/APIReference/API_DateFilter.html
+ *
+ * @example
+ * ```
+ * # Filter for findings from a specific date range
+ * start: "2024-01-01T00:00:00Z"
+ * end: "2024-01-31T23:59:59Z"
+ *
+ * # Filter for findings from the last 30 days
+ * dateRange:
+ *   value: 30
+ *   unit: "DAYS"
+ * ```
  */
 export interface ISecurityHubAutomationRulesDateFilter {
   /**
-   * Start date in ISO 8601 format
+   * The start date and time for the date range filter in ISO 8601 format.
+   * Findings with dates on or after this timestamp will match the filter.
+   * Use this to define the beginning of a specific time period for filtering.
    */
   readonly start?: string;
   /**
-   * End date in ISO 8601 format
+   * The end date and time for the date range filter in ISO 8601 format.
+   * Findings with dates on or before this timestamp will match the filter.
+   * Use this to define the end boundary of a specific time period for filtering.
    */
   readonly end?: string;
   /**
-   * Date range configuration
+   * Configuration for relative date range filtering based on a rolling time window.
+   * This provides a dynamic alternative to fixed start/end dates, automatically
+   * adjusting the filter criteria based on the current date and time.
    */
   readonly dateRange?: {
     /**
-     * Number of days
+     * The number of time units to look back from the current date.
+     * For example, a value of 30 with unit "DAYS" would match findings from the last 30 days.
      */
     value: number;
     /**
-     * Time unit (currently only DAYS is supported)
+     * The time unit for the date range calculation.
+     * Currently only "DAYS" is supported for relative date filtering.
      */
     unit: 'DAYS';
   };
@@ -1080,19 +1151,43 @@ export interface ISecurityHubAutomationRulesDateFilter {
  * *{@link SecurityConfig} / {@link CentralSecurityServicesConfig} / {@link SecurityHubConfig} / {@link SecurityHubAutomationRuleConfig} / {@link SecurityHubAutomationRulesKeyValueFilter}*
  *
  * @description
- * Security Hub automation rule key-value filter configuration for filtering findings based on key-value pairs
+ * Configuration for key-value pair filtering criteria in Security Hub automation rules.
+ * This filter allows you to match findings based on custom key-value pairs in Security Hub finding fields.
+ *
+ * @see https://docs.aws.amazon.com/AWSCloudFormation/latest/TemplateReference/aws-properties-securityhub-automationrule-mapfilter.html
+ *
+ * @example
+ * ```
+ * # Filter for findings with specific tag values
+ * key: "Environment"
+ * value: "Production"
+ * comparison: "EQUALS"
+ *
+ * # Filter for findings containing specific metadata
+ * key: "Department"
+ * value: "Finance"
+ * comparison: "CONTAINS"
+ * ```
  */
 export interface ISecurityHubAutomationRulesKeyValueFilter {
   /**
-   * The key to filter on
+   * The key name to filter on within key-value pair fields.
+   * This specifies which key within a structured field (like tags or user-defined fields) to examine.
    */
   readonly key: string;
   /**
-   * The value to filter on
+   * The value to match against for the specified key.
+   * This is the target value that will be compared against the actual value associated with the key.
    */
   readonly value: string;
   /**
-   * The comparison operator to use for filtering
+   * The comparison operator that defines how the filter value should be matched against the key's value.
+   * Different operators enable various matching strategies for key-value pair filtering.
+   *
+   * - EQUALS: Exact match of the value
+   * - NOT_EQUALS: Does not match the value exactly
+   * - CONTAINS: Value contains the specified text
+   * - NOT_CONTAINS: Value does not contain the specified text
    */
   readonly comparison: 'EQUALS' | 'NOT_EQUALS' | 'CONTAINS' | 'NOT_CONTAINS';
 }
@@ -1101,15 +1196,24 @@ export interface ISecurityHubAutomationRulesKeyValueFilter {
  * *{@link SecurityConfig} / {@link CentralSecurityServicesConfig} / {@link SecurityHubConfig} / {@link SecurityHubAutomationRuleConfig} / {@link SecurityHubAutomationRuleNote}*
  *
  * @description
- * Security Hub automation rule note configuration for updating finding notes
+ * Configuration for adding explanatory notes to Security Hub findings through automation rules.
+ * This allows automation rules to automatically document the reason for actions taken on findings,
+ * providing context and audit trails for security teams to understand automated decisions.
+ *
+ * @example
+ * ```
+ * text: "Automatically suppressed - low severity finding in development environment"
+ * updatedBy: "SecurityAutomation"
+ * ```
  */
 export interface ISecurityHubAutomationRuleNote {
   /**
-   * The note text content
+   * The descriptive text content of the note that will be added to the finding.
+   * This should explain the reason for the automation action
    */
   readonly text: string;
   /**
-   * The entity that updated the note
+   * The name or identifier of the entity responsible for adding this note.
    */
   readonly updatedBy: string;
 }
@@ -1118,15 +1222,23 @@ export interface ISecurityHubAutomationRuleNote {
  * *{@link SecurityConfig} / {@link CentralSecurityServicesConfig} / {@link SecurityHubConfig} / {@link SecurityHubAutomationRuleConfig} / {@link SecurityHubAutomationRuleRelatedFinding}*
  *
  * @description
- * Security Hub automation rule related finding configuration for linking related findings
+ * Configuration for linking related findings in Security Hub automation rules.
+ * This allows automation rules to establish relationships between findings.
+ *
+ * @example
+ * ```
+ * productArn: "arn:aws:securityhub:us-east-1:123456789012:product/aws/guardduty"
+ * id: "finding-12345"
+ * ```
  */
 export interface ISecurityHubAutomationRuleRelatedFinding {
   /**
-   * The product ARN of the related finding
+   * The Amazon Resource Name (ARN) of the security tool that generated the related finding.
+   * This identifies the source service or tool that created the finding you want to link to.
    */
   readonly productArn: string;
   /**
-   * The ID of the related finding
+   * The unique identifier of the related finding within the specified security tool.
    */
   readonly id: string;
 }
@@ -1135,7 +1247,10 @@ export interface ISecurityHubAutomationRuleRelatedFinding {
  * *{@link SecurityConfig} / {@link CentralSecurityServicesConfig} / {@link SecurityHubConfig} / {@link SecurityHubAutomationRuleConfig} / {@link SecurityHubAutomationRuleFindingFieldsUpdate}*
  *
  * @description
- * Security Hub automation rule finding fields update configuration for modifying finding attributes
+ * Configuration for updating specific fields within Security Hub findings through automation rules.
+ * Identifies the finding fields that the automation rule action updates when a finding matches the defined criteria.
+ *
+ * @see https://docs.aws.amazon.com/securityhub/1.0/APIReference/API_AutomationRulesFindingFieldsUpdate.html
  *
  * @example
  * ```
@@ -1148,39 +1263,41 @@ export interface ISecurityHubAutomationRuleRelatedFinding {
  */
 export interface ISecurityHubAutomationRuleFindingFieldsUpdate {
   /**
-   * (OPTIONAL) Note to add to the finding
+   * The updated note to add to the finding that documents the reason for the automated action.
    */
   readonly note?: ISecurityHubAutomationRuleNote;
   /**
-   * (OPTIONAL) Severity label to assign to the finding
+   * Severity label to assign to the finding
    */
   readonly severityLabel?: string;
   /**
-   * (OPTIONAL) Verification state to assign to the finding
+   * The verification state to assign to the finding, indicating the validation status of the security issue.
+   * Valid values: UNKNOWN, TRUE_POSITIVE, FALSE_POSITIVE, BENIGN_POSITIVE.
    */
   readonly verificationState?: string;
   /**
-   * (OPTIONAL) Confidence score to assign to the finding (0-100)
+   * The confidence score (0-100) indicating how certain the automation rule is about the finding's accuracy.
    */
   readonly confidence?: number;
   /**
-   * (OPTIONAL) Criticality score to assign to the finding (0-100)
+   * The criticality score (0-100) representing the business impact if this finding represents a real security issue.
    */
   readonly criticality?: number;
   /**
-   * (OPTIONAL) Types to assign to the finding
+   * Array of finding types to assign, categorizing the nature of the security issue.
    */
   readonly types?: string[];
   /**
-   * (OPTIONAL) User-defined fields to assign to the finding
+   * Custom key-value pairs to add to the finding for organization-specific metadata.
    */
   readonly userDefinedFields?: Record<string, string>;
   /**
-   * (OPTIONAL) Workflow status to assign to the finding
+   * Workflow status to assign to the finding to update information about the investigation.
+   * This controls the finding's state in your security workflow (e.g., NEW, NOTIFIED, RESOLVED, SUPPRESSED).
    */
   readonly workflowStatus?: string;
   /**
-   * (OPTIONAL) Related findings to link to this finding
+   * Array of related findings to link to this finding for correlation and context.
    */
   readonly relatedFindings?: ISecurityHubAutomationRuleRelatedFinding[];
 }
@@ -1189,7 +1306,9 @@ export interface ISecurityHubAutomationRuleFindingFieldsUpdate {
  * *{@link SecurityConfig} / {@link CentralSecurityServicesConfig} / {@link SecurityHubConfig} / {@link SecurityHubAutomationRuleConfig} / {@link SecurityHubAutomationRuleAction}*
  *
  * @description
- * Security Hub automation rule action configuration for defining what actions to take on matching findings
+ * Configuration for defining the specific actions that Security Hub automation rules will perform on findings
+ * that match the rule criteria.
+ * Actions determine what modifications will be made to findings, such as updating severity, suppressing findings, or adding notes.
  *
  * @example
  * ```
@@ -1203,11 +1322,13 @@ export interface ISecurityHubAutomationRuleFindingFieldsUpdate {
  */
 export interface ISecurityHubAutomationRuleAction {
   /**
-   * The type of action to perform
+   * The type of action to perform when findings match the automation rule criteria.
    */
   readonly type: string;
   /**
-   * (OPTIONAL) Finding fields to update when the action is triggered
+   * Configuration specifying which finding fields to update and their new values.
+   * This defines the specific modifications that will be applied to matching findings,
+   * such as changing severity, workflow status, or adding explanatory notes.
    */
   readonly findingFieldsUpdate?: ISecurityHubAutomationRuleFindingFieldsUpdate;
 }
@@ -1216,8 +1337,9 @@ export interface ISecurityHubAutomationRuleAction {
  * *{@link SecurityConfig} / {@link CentralSecurityServicesConfig} / {@link SecurityHubConfig} / {@link SecurityHubAutomationRuleConfig} / {@link SecurityHubAutomationRuleCriteria}*
  *
  * @description
- * Security Hub automation rule criteria configuration with dynamic keys for flexible filtering
- * Supports any valid SecurityHub finding field as a key with appropriate filter arrays as values
+ * Configuration for defining the filtering criteria that Security Hub findings must match to trigger automation rule actions.
+ * Each criteria specifies a finding field (key) and the filter conditions that determine whether a finding matches the rule.
+ * Supports any valid SecurityHub finding field as a key with appropriate filter arrays as values.
  *
  * @example
  * ```
@@ -1237,11 +1359,12 @@ export interface ISecurityHubAutomationRuleAction {
  */
 export interface ISecurityHubAutomationRuleCriteria {
   /**
-   * The criteria key/field name
+   * The name of the Security Hub finding field to filter on.
    */
   readonly key: string;
   /**
-   * The filter to apply for this criteria
+   * The filter conditions to apply to the specified finding field.
+   * The filter type (string, number, date, or key-value) must match the data type of the field being filtered.
    */
   readonly filter:
     | ISecurityHubAutomationRulesStringFilter[]
@@ -1251,13 +1374,13 @@ export interface ISecurityHubAutomationRuleCriteria {
 }
 
 /**
- * *{@link SecurityConfig} / {@link CentralSecurityServicesConfig} / {@link SecurityHubConfig} / {@link SecurityHubAutomationRuleConfig}*
- *
- * {@link https://docs.aws.amazon.com/securityhub/latest/userguide/automation-rules.html} | AWS Security Hub automation rule configuration
+ * *{@link SecurityConfig} / {@link CentralSecurityServicesConfig} / {@link SecurityHubConfig} / {@link SecurityHubAutomationRuleConfig}
  *
  * @description
- * Use this configuration to define Security Hub automation rules that automatically update findings based on specified criteria.
+ * Configuration for defining Security Hub automation rules that automatically update findings based on specified criteria.
  * Automation rules help streamline security operations by automatically suppressing, updating, or enriching findings.
+ *
+ * @see https://docs.aws.amazon.com/securityhub/latest/userguide/automation-rules.html
  *
  * @example
  * ```
@@ -1284,35 +1407,36 @@ export interface ISecurityHubAutomationRuleCriteria {
  */
 export interface ISecurityHubAutomationRuleConfig {
   /**
-   * The name of the automation rule
+   * The unique name identifier for the automation rule.
    */
   readonly name: string;
   /**
-   * A description of what the automation rule does
+   * A detailed description explaining what the automation rule does and when it applies.
    */
   readonly description: string;
   /**
-   * Whether the automation rule is enabled
+   * Controls whether the automation rule is enabled and will proccess findings.
    */
   readonly enabled: boolean;
   /**
-   * The action to take when findings match the criteria
+   * Array of actions to perform on findings that match the rule criteria.
    */
   readonly actions: ISecurityHubAutomationRuleAction[];
   /**
-   * The criteria that findings must match to trigger the action
+   * Array of criteria that findings must match to trigger the rule actions
    */
   readonly criteria: ISecurityHubAutomationRuleCriteria[];
   /**
-   * (OPTIONAL) An integer from 1 to 1000 that represents the order in which the rule action is applied to findings
+   * The execution order for this rule when multiple rules apply to the same finding.
+   * Rules with lower numbers execute first. Valid range: 1-1000.
    */
   readonly ruleOrder?: number;
   /**
-   * (OPTIONAL) Specifies whether a rule is the last to be applied with respect to a finding that matches the rule criteria
+   * Indiciates whether this rule should be the last rule applied to a matching finding.
    */
   readonly isTerminal?: boolean;
   /**
-   * (OPTIONAL) List of regions to be excluded from applying this automation rule
+   * List of AWS regions where this automation rule should not be applied.
    */
   readonly excludeRegions?: string[];
 }
@@ -3327,31 +3451,4 @@ export interface ICloudWatchConfig {
    * ```
    */
   readonly logGroups?: ILogGroupsConfig[];
-}
-
-/**
- * Accelerator security configuration
- *
- * @category Security Configuration
- */
-export interface ISecurityConfig {
-  /**
-   * Accelerator home region name.
-   *
-   * @example
-   * ```
-   * homeRegion: &HOME_REGION us-east-1
-   * ```
-   */
-  readonly homeRegion?: string;
-  /**
-   * Central security configuration
-   */
-  readonly centralSecurityServices: ICentralSecurityServicesConfig;
-  readonly accessAnalyzer: IAccessAnalyzerConfig;
-  readonly iamPasswordPolicy: IIamPasswordPolicyConfig;
-  readonly awsConfig: IAwsConfig;
-  readonly cloudWatch: ICloudWatchConfig;
-  readonly keyManagementService?: IKeyManagementServiceConfig;
-  readonly resourcePolicyEnforcement?: IResourcePolicyEnforcementConfig;
 }
