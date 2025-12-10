@@ -4,10 +4,10 @@
   "definitions": {
     "IAccessAnalyzerConfig": {
       "additionalProperties": false,
-      "description": "AWS AccessAnalyzer configuration",
+      "description": "Configuration for AWS Identity and Access Management (IAM) Access Analyzer that identifies resources with external access\nand helps implement least privilege by analyzing resource policies for security risks.",
       "properties": {
         "enable": {
-          "description": "Indicates whether AWS AccessAnalyzer enabled in your organization.",
+          "description": "Controls whether AWS IAM Access Analyzer is enabled across your organization.",
           "type": "boolean"
         }
       },
@@ -18,55 +18,56 @@
     },
     "IAlarmConfig": {
       "additionalProperties": false,
-      "description": "AWS CloudWatch Alarm configuration",
+      "description": "Configuration for CloudWatch alarms that monitor metrics and trigger notifications when thresholds are breached.",
       "properties": {
         "alarmDescription": {
           "$ref": "#/definitions/NonEmptyString",
-          "description": "Description for the alarm"
+          "description": "Human-readable description explaining what this alarm monitors and when it triggers."
         },
         "alarmName": {
           "$ref": "#/definitions/NonEmptyString",
-          "description": "Name of the alarm"
+          "description": "Unique name for the CloudWatch alarm"
         },
         "comparisonOperator": {
           "$ref": "#/definitions/NonEmptyString",
-          "description": "Comparison to use to check if metric is breaching"
+          "description": "The comparison operator used to evaluate the metric against the threshold. This determines the condition that must be met for the alarm to trigger."
         },
         "evaluationPeriods": {
-          "description": "The number of periods over which data is compared to the specified threshold.",
+          "description": "The number of consecutive periods over which the threshold must be breached for the alarm to trigger.",
           "type": "number"
         },
         "metricName": {
           "$ref": "#/definitions/NonEmptyString",
-          "description": "Name of the metric."
+          "description": "The name of the CloudWatch metric to monitor for threshold breaches."
         },
         "namespace": {
           "$ref": "#/definitions/NonEmptyString",
-          "description": "Namespace of the metric."
+          "description": "The CloudWatch namespace where the metric is located."
         },
         "period": {
-          "description": "The period over which the specified statistic is applied.",
+          "description": "The length of each evaluation period in seconds.",
           "type": "number"
         },
         "snsAlertLevel": {
           "$ref": "#/definitions/NonEmptyString",
-          "description": "Alert SNS notification level Deprecated"
+          "deprecated": "This parameter is deprecated.",
+          "description": "SNS notification level for alarm alerts."
         },
         "snsTopicName": {
           "$ref": "#/definitions/NonEmptyString",
-          "description": "(OPTIONAL) SNS Topic Name SNS Topic Name from global config"
+          "description": "The name of the SNS topic to send alarm notifications to when the alarm state changes. This topic name must be defined in the global configuration."
         },
         "statistic": {
           "$ref": "#/definitions/NonEmptyString",
-          "description": "What functions to use for aggregating.\n\nCan be one of the following:\n-  “Minimum” | “min”\n-  “Maximum” | “max”\n-  “Average” | “avg”\n-  “Sum” | “sum”\n-  “SampleCount | “n”\n-  “pNN.NN”"
+          "description": "The statistical function to apply to the metric data points within each period. This determines how multiple data points within a period are aggregated for threshold comparison."
         },
         "threshold": {
-          "description": "The value against which the specified statistic is compared.",
+          "description": "The threshold value that the metric statistic is compared against to determine alarm state. When the metric breaches this threshold according to the comparison operator, the alarm will transition to the ALARM state and trigger notifications.",
           "type": "number"
         },
         "treatMissingData": {
           "$ref": "#/definitions/NonEmptyString",
-          "description": "Sets how this alarm is to handle missing data points."
+          "description": "Defines how the alarm should behave when metric data is missing or is insufficient."
         }
       },
       "required": [
@@ -85,10 +86,10 @@
     },
     "IAlarmSetConfig": {
       "additionalProperties": false,
-      "description": "AWS CloudWatch Alarm sets",
+      "description": "Configuration for a set of CloudWatch alarms that will be deployed together to specific regions and organizational units.",
       "properties": {
         "alarms": {
-          "description": "List of AWS CloudWatch Alarms\n\nFollowing example will create CIS-1.1-RootAccountUsage alarm for RootAccountUsage metric with notification level low",
+          "description": "Array of CloudWatch alarm configurations to deploy as part of this alarm set.",
           "items": {
             "$ref": "#/definitions/IAlarmConfig"
           },
@@ -96,10 +97,10 @@
         },
         "deploymentTargets": {
           "$ref": "#/definitions/IDeploymentTargets",
-          "description": "Deployment targets for CloudWatch Alarms configuration"
+          "description": "Specifies the organizational units and accounts where this set of alarms will be deployed."
         },
         "regions": {
-          "description": "AWS region names to configure CloudWatch Alarms",
+          "description": "AWS regions where the CloudWatch alarms will be deployed.",
           "items": {
             "type": "string"
           },
@@ -114,25 +115,25 @@
     },
     "IAuditManagerConfig": {
       "additionalProperties": false,
-      "description": "Use this configuration to enable AWS Audit Manager for an AWS Organization.",
+      "description": "Configuration for AWS Audit Manager, a service that helps you continually audit your AWS usage to simplify how you manage risk and\ncompliance with regulations and industry standards.\nUse this configuration to enable AWS Audit Manager for an AWS Organization. Audit Manager automates evidence collection\nso you can more easily assess whether your policies, procedures, and activities are operating effectively.",
       "properties": {
         "defaultReportsConfiguration": {
           "$ref": "#/definitions/IAuditManagerDefaultReportsDestinationConfig",
-          "description": "AWS Audit Manager Default Reports configuration."
+          "description": "Configuration for where Audit Manager stores compliance assessment reports and audit-ready evidence."
         },
         "enable": {
-          "description": "Indicates whether AWS Audit Manager enabled.",
+          "description": "Controls whether AWS Audit Manager is enabled across your organization.",
           "type": "boolean"
         },
         "excludeRegions": {
-          "description": "(OPTIONAL) List of AWS Region names to be excluded from configuring AWS Audit Manager. Please ensure any regions enabled in the global configuration that do not support Audit Manager are added to the excluded regions list.  {@link  https://aws.amazon.com/about-aws/global-infrastructure/regional-product-services/ Supported services by region } .",
+          "description": "List of AWS regions where Audit Manager should not be enabled.",
           "items": {
             "type": "string"
           },
           "type": "array"
         },
         "lifecycleRules": {
-          "description": "(OPTIONAL) Declaration of a S3 Lifecycle rule.",
+          "description": "S3 lifecycle rules that automatically manage the retention and deletion of Audit Manager reports and evidence stored in S3.",
           "items": {
             "$ref": "#/definitions/ILifecycleRule"
           },
@@ -147,15 +148,15 @@
     },
     "IAuditManagerDefaultReportsDestinationConfig": {
       "additionalProperties": false,
-      "description": "AWS Audit Manager Default Reports Destination configuration.\nUse this configuration to enable a destination for reports generated by AWS Audit Manager.",
+      "description": "Configuration for specifying where AWS Audit Manager stores compliance assessment reports\nUse this configuration to enable a destination for reports generated by AWS Audit Manager.",
       "properties": {
         "destinationType": {
           "const": "S3",
-          "description": "The type of resource for the publishing destination. Currently only Amazon S3 buckets are supported.",
+          "description": "The type of resource for storing audit reports. Currently only Amazon S3 buckets are supported.",
           "type": "string"
         },
         "enable": {
-          "description": "Indicates whether AWS Audit Manager Default Reports enabled.",
+          "description": "Controls whether AWS Audit Manager Default Reports destination is enabled. When enabled, compliance reports are automatically saved to the specified destination for audit trail purposes.",
           "type": "boolean"
         }
       },
@@ -167,37 +168,38 @@
     },
     "IAwsConfig": {
       "additionalProperties": false,
-      "description": "AWS Config Recorder and Rules",
+      "description": "Configuration for AWS Config service that enables continuous monitoring and assessment of AWS resource configurations\nfor compliance, security, and governance. This service records configuration changes, evaluates resources against\ncompliance rules, and provides centralized visibility into your AWS environment's configuration state.",
       "properties": {
         "aggregation": {
           "$ref": "#/definitions/IAwsConfigAggregation",
-          "description": "Config Recorder Aggregation configuration"
+          "description": "Configuration for AWS Config aggregation that centralizes compliance data from multiple accounts and regions. This enables organization-wide compliance reporting and centralized governance oversight."
         },
         "deploymentTargets": {
           "$ref": "#/definitions/IDeploymentTargets",
-          "description": "(OPTIONAL) AWS Config deployment target.\n\nLeaving `deploymentTargets` undefined will enable AWS Config across all accounts and enabled regions.\n\nWe highly recommend enabling AWS Config across all accounts and enabled regions within your organization. `deploymentTargets` should only be used when more granular control is required, not as a default configuration.\n\nTo enable AWS Config into Infrastructure organizational unit, you need to provide below value for this parameter.\n\nNote: The delegated admin account defined in centralSecurityServices will always have AwsConfig enabled"
+          "description": "Specifies the organizational units and accounts where AWS Config will be deployed."
         },
         "enableConfigurationRecorder": {
-          "description": "Indicates whether AWS Config recorder enabled.\n\nTo enable AWS Config, you must create a configuration recorder\n\nConfigurationRecorder resource describes the AWS resource types for which AWS Config records configuration changes. The configuration recorder stores the configurations of the supported resources in your account as configuration items.",
+          "description": "Controls whether the AWS Config configuration recorder is enabled to track resource changes.",
           "type": "boolean"
         },
         "enableDeliveryChannel": {
-          "description": "Indicates whether delivery channel enabled.\n\nAWS Config uses the delivery channel to deliver the configuration changes to your Amazon S3 bucket. DEPRECATED",
+          "deprecated": "This parameter is deprecated.",
+          "description": "Controls whether the delivery channel is enabled for sending configuration changes to S3.",
           "type": "boolean"
         },
         "overrideExisting": {
-          "description": "Indicates whether or not to override existing config recorder settings Must be enabled if any account and region combination has an existing config recorder, even if config recording is turned off The Landing Zone Accelerator will override the settings in all configured accounts and regions\n** Do not enable this setting if you have deployed LZA\n** successfully with enableConfigurationRecorder set to true\n** and overrideExisting either unset or set to false\n** Doing so will cause a resource conflict When the overrideExisting property is enabled ensure that any scp's are not blocking the passRole iam permission for the iam role name {acceleratorPrefix}Config",
+          "description": "Controls whether to override existing Config recorder settings in accounts that already have Config enabled.",
           "type": "boolean"
         },
         "ruleSets": {
-          "description": "AWS Config rule sets",
+          "description": "Array of Config rule sets that define compliance checks to be deployed across your organization.",
           "items": {
             "$ref": "#/definitions/IAwsConfigRuleSet"
           },
           "type": "array"
         },
         "useServiceLinkedRole": {
-          "description": "Indicates whether to create the Configuration Recorder with a service linked role. If not specified, AWS Config will use a custom IAM role created by LZA. For new deployments, it is recommended to set this setting to true. For more information, see https://docs.aws.amazon.com/config/latest/developerguide/using-service-linked-roles.html",
+          "description": "Controls whether to use AWS service-linked roles for Config instead of custom IAM roles created by LZA.",
           "type": "boolean"
         }
       },
@@ -208,12 +210,14 @@
     },
     "IAwsConfigAggregation": {
       "additionalProperties": false,
-      "description": "AWS Config Aggregation Configuration\nNot used in Control Tower environment\nAggregation will be configured in all enabled regions\nunless specifically excluded\nIf the delegatedAdmin account is not provided\nconfig will be aggregated to the management account",
+      "description": "Configuration for AWS Config aggregation that centralizes compliance data from multiple accounts and regions\ninto a single location for organization-wide visibility and reporting. This enables centralized compliance\nmonitoring and simplifies governance oversight across your entire AWS Organization.",
       "properties": {
         "delegatedAdminAccount": {
-          "$ref": "#/definitions/NonEmptyString"
+          "$ref": "#/definitions/NonEmptyString",
+          "description": "The name of the account designated to collect and store aggregated Config data."
         },
         "enable": {
+          "description": "Controls whether AWS Config aggregation is enabled across your organization. When enabled, compliance data from all accounts and regions will be centralized for unified reporting and governance oversight.",
           "type": "boolean"
         }
       },
@@ -224,14 +228,14 @@
     },
     "IAwsConfigRuleSet": {
       "additionalProperties": false,
-      "description": "List of AWS Config rules",
+      "description": "Configuration for a set of AWS Config rules that will be deployed together to specific organizational units or accounts.",
       "properties": {
         "deploymentTargets": {
           "$ref": "#/definitions/IDeploymentTargets",
-          "description": "Config ruleset deployment target.\n\nTo configure AWS Config rules into Root and Infrastructure organizational units, you need to provide below value for this parameter."
+          "description": "Specifies the organizational units and accounts where this set of Config rules will be deployed."
         },
         "rules": {
-          "description": "AWS Config rule set\n\nFollowing example will create a custom rule named accelerator-attach-ec2-instance-profile with remediation and a managed rule named accelerator-iam-user-group-membership-check without remediation",
+          "description": "Array of AWS Config rules to deploy as part of this rule set.",
           "items": {
             "$ref": "#/definitions/IConfigRule"
           },
@@ -267,11 +271,11 @@
     },
     "ICentralSecurityServicesConfig": {
       "additionalProperties": false,
-      "description": "AWS Accelerator central security services configuration",
+      "description": "Configuration for centralized security services that provides organization-wide security controls and monitoring capabilities.\nThis configuration enables and manages core AWS security services including GuardDuty, Security Hub, Macie, Detective, and Audit Manager\nacross your entire AWS Organization. It establishes a centralized security posture with consistent policies, automated threat detection,\ncompliance monitoring, and unified security findings management to help organizations maintain strong security governance at scale.",
       "properties": {
         "auditManager": {
           "$ref": "#/definitions/IAuditManagerConfig",
-          "description": "(OPTIONAL) Amazon Audit Manager Configuration"
+          "description": "Configuration for AWS Audit Manager compliance automation service across your organization. Audit Manager helps automate evidence collection and assessment preparation for audits by continuously collecting and organizing evidence from your AWS services."
         },
         "delegatedAdminAccount": {
           "$ref": "#/definitions/NonEmptyString",
@@ -280,34 +284,35 @@
         },
         "detective": {
           "$ref": "#/definitions/IDetectiveConfig",
-          "description": "(OPTIONAL) Amazon Detective Configuration"
+          "description": "Configuration for Amazon Detective security investigation service across your organization. Detective helps analyze and investigate potential security issues by providing visualizations and context around security findings from GuardDuty, Security Hub, and VPC Flow Logs."
         },
         "ebsDefaultVolumeEncryption": {
           "$ref": "#/definitions/IEbsDefaultVolumeEncryptionConfig",
-          "description": "AWS Elastic Block Store default encryption configuration\n\nAccelerator use this parameter to configure EBS default encryption. Accelerator will create KMS key for every AWS environment (account and region), which will be used as default EBS encryption key.\n\nTo enable EBS default encryption in every region accelerator implemented, you need to provide below value for this parameter."
+          "description": "Configuration for automatically encrypting all new EBS volumes across your organization. This ensures data-at-rest protection and helps meet compliance requirements by enforcing encryption on all EBS volumes without requiring manual configuration.\n\nAWS Elastic Block Store default encryption configuration"
         },
         "guardduty": {
           "$ref": "#/definitions/IGuardDutyConfig",
-          "description": "Amazon GuardDuty Configuration"
+          "description": "Configuration for Amazon GuardDuty threat detection service across your organization. GuardDuty provides intelligent threat detection using machine learning to identify malicious activity and unauthorized behavior across your AWS environment."
         },
         "macie": {
           "$ref": "#/definitions/IMacieConfig",
-          "description": "Amazon Macie Configuration\n\nAccelerator use this parameter to define AWS Macie configuration.\n\nTo enable Macie in every region accelerator implemented and set fifteen minutes of frequency to publish updates to policy findings for the account with publishing sensitive data findings to Security Hub. you need to provide below value for this parameter."
+          "description": "Configuration for Amazon Macie data security and privacy service across you organization."
         },
         "s3PublicAccessBlock": {
           "$ref": "#/definitions/IS3PublicAccessBlockConfig",
-          "description": "AWS S3 public access block configuration\n\nAccelerator use this parameter to block AWS S3 public access\n\nTo enable S3 public access blocking in every region accelerator implemented, you need to provide below value for this parameter."
+          "description": "Configuration for blocking public access to S3 buckets across your organization. This security control prevents accidental data exposure by blocking public access at the account level, providing an additional layer of protection for sensitive data."
         },
         "scpRevertChangesConfig": {
           "$ref": "#/definitions/IScpRevertChangesConfig",
-          "description": "(OPTIONAL) AWS Service Control Policies Revert Manual Changes configuration"
+          "description": "Configuration for monitoring and reverting unauthorized changes to Service Control Policies. This helps maintain security governance by detecting and alerting on manual modifications to SCPs that could weaken your organization's security posture."
         },
         "securityHub": {
           "$ref": "#/definitions/ISecurityHubConfig",
-          "description": "AWS Security Hub configuration\n\nAccelerator use this parameter to define AWS Security Hub configuration.\n\nTo enable AWS Security Hub for all regions and enable \"AWS Foundational Security Best Practices v1.0.0\" security standard, deployment targets and disable controls you need provide below value for this parameter."
+          "description": "Configuration for AWS Security Hub centralized security findings management across your organization. Security Hub aggregates security alerts and findings from multiple AWS security services."
         },
         "snsSubscriptions": {
-          "description": "AWS SNS subscription configuration Deprecated\n\nNOTICE: The configuration of SNS topics is being moved to the Global Config. This block is deprecated and will be removed in a future release\n\nAccelerator use this parameter to define AWS SNS notification configuration.\n\nTo enable high, medium and low SNS notifications, you need to provide below value for this parameter.",
+          "deprecated": "This parameter is deprecated and will be removed in a future release.\nSNS topic configuration has been moved to the Global Config.",
+          "description": "Configuration for SNS notification subscriptions for security alerts (DEPRECATED).",
           "items": {
             "$ref": "#/definitions/ISnsSubscriptionConfig"
           },
@@ -315,11 +320,11 @@
         },
         "ssmAutomation": {
           "$ref": "#/definitions/ISsmAutomationConfig",
-          "description": "AWS Systems Manager Document configuration\n\nAccelerator use this parameter to define AWS Systems Manager documents configuration. SSM documents are created in designated administrator account for security services, i.e. Audit account.\n\nTo create a SSM document named as \"SSM-ELB-Enable-Logging\" in every region accelerator implemented and share this document with Root organizational unit(OU), you need to provide below value for this parameter. To share document to specific account uncomment accounts list. A valid SSM document template file ssm-documents/ssm-elb-enable-logging.yaml must be present in Accelerator config repository. Accelerator will use this template file to create the document."
+          "description": "Configuration for AWS Systems Manager automation documents across your organization. This enables centralized management and distribution of SSM documents for standardizing operational procedures and automating administrative tasks across all accounts."
         },
         "ssmSettings": {
           "$ref": "#/definitions/ISsmSettingsConfig",
-          "description": "(OPTIONAL) AWS Systems Manager settings configuration\n\nAccelerator use this parameter to configure SSM-related security settings\n\nTo enable SSM Block Public Document Sharing in every region accelerator implemented, you need to provide below value for this parameter. If not specified, SSM Block Public Document Sharing will be disabled by default."
+          "description": "Configuration for AWS Systems Manager security settinga across your organization."
         }
       },
       "required": [
@@ -335,24 +340,24 @@
     },
     "ICloudWatchConfig": {
       "additionalProperties": false,
-      "description": "AWS CloudWatch configuration",
+      "description": "Configuration for AWS CloudWatch monitoring and logging services across your organization.",
       "properties": {
         "alarmSets": {
-          "description": "List AWS CloudWatch Alarms configuration\n\nFollowing example will create CIS-1.1-RootAccountUsage alarm for RootAccountUsage metric with notification level low",
+          "description": "Array of alarm sets that monitor metrics and trigger notifications when thresholds are breached.",
           "items": {
             "$ref": "#/definitions/IAlarmSetConfig"
           },
           "type": "array"
         },
         "logGroups": {
-          "description": "(OPTIONAL) List CloudWatch Logs configuration\n\nThe Following is an example of deploying CloudWatch Logs to multiple regions",
+          "description": "Array of CloudWatch log group configurations for centralized log management.",
           "items": {
             "$ref": "#/definitions/ILogGroupsConfig"
           },
           "type": "array"
         },
         "metricSets": {
-          "description": "List AWS CloudWatch Metrics configuration\n\nFollowing example will create metric filter RootAccountMetricFilter for aws-controltower/CloudTrailLogs log group",
+          "description": "Array of metric filter sets that extract metrics from log data for monitoring and alerting.",
           "items": {
             "$ref": "#/definitions/IMetricSetConfig"
           },
@@ -367,10 +372,10 @@
     },
     "IConfigRule": {
       "additionalProperties": false,
-      "description": "AWS ConfigRule configuration",
+      "description": "Configuration for AWS Config rules that evaluate AWS resource compliance against organizational policies and best practices.\nConfig rules can be either AWS-managed rules (pre-built compliance checks) or custom rules (organization-specific logic)\nand can include automated remediation to restore compliance when violations are detected.",
       "properties": {
         "complianceResourceTypes": {
-          "description": "(OPTIONAL) Defines which resources trigger an evaluation for an AWS Config rule.",
+          "description": "Array of AWS resource types that this rule will evaluate for compliance.",
           "items": {
             "$ref": "#/definitions/NonEmptyString"
           },
@@ -378,15 +383,15 @@
         },
         "customRule": {
           "$ref": "#/definitions/ICustomRuleConfigType",
-          "description": "(OPTIONAL) A custom config rule is backed by AWS Lambda function. This is required when creating custom config rule."
+          "description": "Configuration for custom config rules backed by AWS Lambda functions. Required when type is set to \"Custom\" for organization-specific compliance logic."
         },
         "description": {
           "$ref": "#/definitions/NonEmptyString",
-          "description": "(OPTIONAL) A description about this AWS Config rule."
+          "description": "Human-readable description explaining what this Config rule evaluates."
         },
         "identifier": {
           "$ref": "#/definitions/NonEmptyString",
-          "description": "(OPTIONAL) The identifier of the AWS managed rule."
+          "description": "The identifier of the AWS-managed rule to use for compliance evaluation."
         },
         "inputParameters": {
           "anyOf": [
@@ -400,18 +405,18 @@
               "type": "null"
             }
           ],
-          "description": "(OPTIONAL) Input parameter values that are passed to the AWS Config rule."
+          "description": "Key-value pairs that provide configuration parameters to the Config rule."
         },
         "name": {
           "$ref": "#/definitions/NonEmptyString",
-          "description": "A name for the AWS Config rule."
+          "description": "Unique name for the AWS Config rule within your organization."
         },
         "remediation": {
           "$ref": "#/definitions/IConfigRuleRemediationType",
-          "description": "A remediation for the config rule, auto remediation to automatically remediate noncompliant resources."
+          "description": "Configuration for automated remediation actions when resources are found non-compliant. When configured, AWS Config can automatically fix compliance violations without manual intervention, ensuring continuous compliance across your AWS environment."
         },
         "tags": {
-          "description": "(OPTIONAL) Tags for the config rule",
+          "description": "Key-value pairs to assign as tags to the Config rule.",
           "items": {
             "$ref": "#/definitions/ITag"
           },
@@ -419,7 +424,7 @@
         },
         "type": {
           "$ref": "#/definitions/NonEmptyString",
-          "description": "(OPTIONAL) Config rule type Managed or Custom. For custom config rule, this parameter value is Custom, when creating managed config rule this parameter value can be undefined or empty string"
+          "description": "The type of Config rule being created."
         }
       },
       "required": [
@@ -429,52 +434,55 @@
     },
     "IConfigRuleRemediationType": {
       "additionalProperties": false,
+      "description": "Configuration for automated remediation actions that AWS Config executes when resources are found non-compliant.\nThis enables automatic correction of compliance violations using AWS Systems Manager automation documents,\nreducing manual intervention and ensuring continuous compliance across your AWS environment.",
       "properties": {
         "automatic": {
-          "description": "The remediation is triggered automatically.",
+          "description": "Controls whether remediation actions are triggered automatically when non-compliance is detected. When enabled, AWS Config will immediately attempt to remediate non-compliant resources without manual intervention.",
           "type": "boolean"
         },
         "excludeRegions": {
-          "description": "List of AWS Region names to be excluded from applying remediation",
+          "description": "List of AWS regions where this remediation should not be applied.",
           "items": {
             "type": "string"
           },
           "type": "array"
         },
         "maximumAutomaticAttempts": {
-          "description": "The maximum number of failed attempts for auto-remediation. If you do not select a number, the default is 5.\n\nFor example, if you specify MaximumAutomaticAttempts as 5 with RetryAttemptSeconds as 50 seconds, AWS Config will put a RemediationException on your behalf for the failing resource after the 5th failed attempt within 50 seconds.",
+          "default": "5 attempts",
+          "description": "The maximum number of remediation attempts for a single non-compliant resource. This prevents infinite retry loops while allowing for temporary failures to be resolved. After reaching this limit, manual intervention may be required.",
           "type": "number"
         },
         "parameters": {
-          "description": "List of remediation parameters",
+          "description": "Array of input parameters to pass to the remediation automation document. These parameters provide the necessary context and data for the automation document to perform the appropriate corrective actions on non-compliant resources.",
           "items": {
             "$ref": "#/definitions/IRemediationParametersConfigType"
           },
           "type": "array"
         },
         "retryAttemptSeconds": {
-          "description": "Maximum time in seconds that AWS Config runs auto-remediation. If you do not select a number, the default is 60 seconds.\n\nFor example, if you specify RetryAttemptSeconds as 50 seconds and MaximumAutomaticAttempts as 5, AWS Config will run auto-remediations 5 times within 50 seconds before throwing an exception.",
+          "default": "60 seconds",
+          "description": "Maximum time in seconds that AWS Config waits for each remediation attempt to complete. This prevents remediation actions from running indefinitely and ensures timely failure detection.",
           "type": "number"
         },
         "rolePolicyFile": {
           "$ref": "#/definitions/NonEmptyString",
-          "description": "Remediation assume role policy definition json file. This file must be present in config repository.\n\nCreate your own custom remediation actions using AWS Systems Manager Automation documents. When a role needed to be created to perform custom remediation actions, role permission needs to be defined in this file."
+          "description": "Path to the JSON file defining IAM policies for the remediation execution role. This file must be available in the configuration repository."
         },
         "targetAccountName": {
           "$ref": "#/definitions/NonEmptyString",
-          "description": "Name of the account owning the public document to perform custom remediation actions. Accelerator creates these documents in Audit account and shared with other accounts."
+          "description": "The name of the AWS account that owns the remediation automation document."
         },
         "targetDocumentLambda": {
           "$ref": "#/definitions/ICustomRuleLambdaType",
-          "description": "Target SSM document remediation lambda function"
+          "description": "Configuration for a Lambda function that supports the remediation automation document. This is used when the remediation requires custom logic that cannot be achieved through standard SSM automation document actions alone."
         },
         "targetId": {
           "$ref": "#/definitions/NonEmptyString",
-          "description": "Target ID is the name of the public document.\n\nThe name of the AWS SSM document to perform custom remediation actions."
+          "description": "The name of the AWS Systems Manager automation document that performs the remediation actions."
         },
         "targetVersion": {
           "$ref": "#/definitions/NonEmptyString",
-          "description": "Version of the target. For example, version of the SSM document.\n\nIf you make backward incompatible changes to the SSM document, you must call PutRemediationConfiguration API again to ensure the remediations can run."
+          "description": "The version of the target automation document to use for remediation."
         }
       },
       "required": [
@@ -486,28 +494,30 @@
     },
     "ICustomRuleConfigType": {
       "additionalProperties": false,
-      "description": "AWS CustomRule configuration",
+      "description": "Configuration for custom AWS Config rules that use Lambda functions to evaluate resource compliance.",
       "properties": {
         "configurationChanges": {
-          "description": "Whether to run the rule on configuration changes.\n\nDefault: false",
+          "default": false,
+          "description": "Controls whether the rule runs when AWS resource configurations change. When enabled, the rule will immediately evaluate affected resources whenever their configuration is modified.",
           "type": "boolean"
         },
         "lambda": {
           "$ref": "#/definitions/ICustomRuleLambdaType",
-          "description": "The Lambda function to run."
+          "description": "Configuration for the Lambda function that implements the custom compliance evaluation logic."
         },
         "maximumExecutionFrequency": {
-          "description": "The maximum frequency at which the AWS Config rule runs evaluations.\n\nDefault: MaximumExecutionFrequency.TWENTY_FOUR_HOURS",
+          "default": "MaximumExecutionFrequency.TWENTY_FOUR_HOURS",
+          "description": "The frequency at which periodic evaluations are performed.",
           "type": "string"
         },
         "periodic": {
           "default": true,
-          "description": "Whether to run the rule on a fixed frequency.",
+          "description": "Controls whether the rule runs on a scheduled basis at regular intervals. When enabled, the rule will evaluate resources according to the specified frequency.",
           "type": "boolean"
         },
         "triggeringResources": {
           "$ref": "#/definitions/ITriggeringResourceType",
-          "description": "Defines which resources trigger an evaluation for an AWS Config rule."
+          "description": "Specifies which AWS resources will trigger evaluations for this Config rule."
         }
       },
       "required": [
@@ -519,26 +529,26 @@
     },
     "ICustomRuleLambdaType": {
       "additionalProperties": false,
-      "description": "AWS CustomRuleLambda type",
+      "description": "Configuration for AWS Lambda functions that implement custom AWS Config rules for compliance monitoring.",
       "properties": {
         "handler": {
           "$ref": "#/definitions/NonEmptyString",
-          "description": "The name of the method within your code that Lambda calls to execute your function. The format includes the file name. It can also include namespaces and other qualifiers, depending on the runtime. For more information, see https://docs.aws.amazon.com/lambda/latest/dg/gettingstarted-features.html#gettingstarted-features-programmingmodel."
+          "description": "The entry point for your Lambda function that AWS Config will invoke. Specifies the method within your code that Lambda calls to execute the compliance evaluation. Format varies by runtime (e.g., \"index.handler\" for Node.js, \"lambda_function.lambda_handler\" for Python)."
         },
         "rolePolicyFile": {
           "$ref": "#/definitions/NonEmptyString",
-          "description": "Lambda execution role policy definition file"
+          "description": "Path to the JSON file defining IAM policies for the Lambda execution role. This file must be available in the accelerator configuration repository."
         },
         "runtime": {
           "$ref": "#/definitions/NonEmptyString",
-          "description": "The runtime environment for the Lambda function that you are uploading. For valid values, see the Runtime property in the AWS Lambda Developer Guide."
+          "description": "The runtime environment for executing your Lambda function. Must be compatible with your function's source code language and version requirements."
         },
         "sourceFilePath": {
           "$ref": "#/definitions/NonEmptyString",
-          "description": "The source code file path of your Lambda function. This is a zip file containing lambda function, this file must be available in config repository."
+          "description": "Path to the ZIP file containing your Lambda function source code. This file must be available in the accelerator configuration repository."
         },
         "timeout": {
-          "description": "Lambda function execution timeout in seconds",
+          "description": "Maximum execution time for the Lambda function in seconds.",
           "type": "number"
         }
       },
@@ -583,14 +593,14 @@
     },
     "IDetectiveConfig": {
       "additionalProperties": false,
-      "description": "Use this configuration to enable Amazon Detective for an AWS Organization that allows users to analyze, investigate, and\nquickly identify the root cause of security findings or suspicious activities.",
+      "description": "Configuration for Amazon Detective, a security service that helps you analyze, investigate, and quickly identify the\nroot cause of security findings. Use this configuration to enable Amazon Detective for an AWS Organization.",
       "properties": {
         "enable": {
-          "description": "Indicates whether Amazon Detective is enabled.",
+          "description": "Controls whether Amazon Detective is enabled across your organization.",
           "type": "boolean"
         },
         "excludeRegions": {
-          "description": "(OPTIONAL) List of AWS Region names to be excluded from configuring Amazon Detective. Please ensure any regions enabled in the global configuration that do not support Amazon Detective are added to the excluded regions list.  {@link  https://aws.amazon.com/about-aws/global-infrastructure/regional-product-services/ Supported services by region } .",
+          "description": "List of AWS regions where Detective should not be enabled.",
           "items": {
             "type": "string"
           },
@@ -604,19 +614,19 @@
     },
     "IDocumentConfig": {
       "additionalProperties": false,
-      "description": "Use this configuration to define AWS System Manager documents (SSM documents) that can be used on managed instances in an\nenvironment.",
+      "description": "Configuration for defining AWS Systems Manager documents (SSM documents) that can be used to automate tasks on managed instances.\nSSM documents contain the steps and parameters needed to perform specific administrative tasks or configurations.",
       "properties": {
         "name": {
           "$ref": "#/definitions/NonEmptyString",
-          "description": "Name of document to be created"
+          "description": "The unique identifier for the SSM document to be created."
         },
         "targetType": {
           "$ref": "#/definitions/NonEmptyString",
-          "description": "Specify a target type to define the kinds of resources the document can run on. For example, to run a document on EC2 instances, specify the following value: /AWS::EC2::Instance. If you specify a value of '/' the document can run on all types of resources. If you don't specify a value, the document can't run on any resources. For a list of valid resource types, see AWS resource and property types reference in the AWS CloudFormation User Guide. Ref: https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-template-resource-type-ref.html Length Constraints: Maximum length of 200. Pattern: ^\\/[\\w\\.\\-\\:\\/]*$"
+          "description": "The target resource type that defines which AWS resources this document can operate on."
         },
         "template": {
           "$ref": "#/definitions/NonEmptyString",
-          "description": "Document template file path. This file must be available in accelerator config repository."
+          "description": "The file path to the document template containing the SSM document definition. This file must be available in the accelerator configuration repository."
         }
       },
       "required": [
@@ -627,10 +637,10 @@
     },
     "IDocumentSetConfig": {
       "additionalProperties": false,
-      "description": "AWS Systems Manager document sharing configuration",
+      "description": "Configuration for sharing AWS Systems Manager documents across organizational units within your AWS Organization.",
       "properties": {
         "documents": {
-          "description": "List of the documents to be shared",
+          "description": "Array of SSM documents to be shared with the specified organizational units.",
           "items": {
             "$ref": "#/definitions/IDocumentConfig"
           },
@@ -638,7 +648,7 @@
         },
         "shareTargets": {
           "$ref": "#/definitions/IShareTargets",
-          "description": "Document share target, valid value should be any organizational unit. Document will be shared with every account within the given OU"
+          "description": "Specifies the organizational units (OUs) where the SSM documents will be shared."
         }
       },
       "required": [
@@ -649,18 +659,18 @@
     },
     "IEbsDefaultVolumeEncryptionConfig": {
       "additionalProperties": false,
-      "description": "Use this configuration to enable enforced encryption of new EBS volumes and snapshots created in an AWS environment.",
+      "description": "Configuration for enabling automatic encryption of all new EBS volumes and snapshots in your AWS environment..",
       "properties": {
         "deploymentTargets": {
           "$ref": "#/definitions/IDeploymentTargets",
-          "description": "(OPTIONAL) Deployment targets for EBS default volume encryption"
+          "description": "Specifies which organizational units (OUs) and accounts will have EBS default volume encryption enabled."
         },
         "enable": {
-          "description": "Indicates whether AWS EBS volume have default encryption enabled.",
+          "description": "Controls whether EBS default volume encryption is enabled. When enabled, all new EBS volumes created in the specified accounts and regions will be encrypted by default.",
           "type": "boolean"
         },
         "excludeRegions": {
-          "description": "(OPTIONAL) List of AWS Region names to be excluded from configuring AWS EBS volume default encryption",
+          "description": "List of AWS regions where EBS default volume encryption should not be enabled.",
           "items": {
             "type": "string"
           },
@@ -668,7 +678,7 @@
         },
         "kmsKey": {
           "$ref": "#/definitions/NonEmptyString",
-          "description": "(OPTIONAL) KMS key to encrypt EBS volume."
+          "description": "Name of the AWS Key Management Service (KMS) key to use for encrypting EBS volumes"
         }
       },
       "required": [
@@ -678,18 +688,18 @@
     },
     "IEncryptionConfig": {
       "additionalProperties": false,
-      "description": "Use this configuration to enable encryption for a log group.",
+      "description": "Configuration for encrypting CloudWatch log groups using AWS Key Management Service (KMS).",
       "properties": {
         "kmsKeyArn": {
           "$ref": "#/definitions/NonEmptyString",
-          "description": "(OPTIONAL) Reference the KMS Key Arn that is used to encrypt the AWS CloudWatch Logs Group. This should be a KMS Key that is not managed by Landing Zone Accelerator."
+          "description": "References a KMS key, not managed by LZA, for log group encryption."
         },
         "kmsKeyName": {
           "$ref": "#/definitions/NonEmptyString",
-          "description": "(OPTIONAL) Use this property to reference a KMS Key Name that is created by Landing Zone Accelerator."
+          "description": "References a KMS key created and managed by Landing Zone Accelerator for log group encryption."
         },
         "useLzaManagedKey": {
-          "description": "(OPTIONAL) Set this property to `true` if you would like to use the default CloudWatch Logs KMS CMK that is deployed by Landing Zone Accelerator.",
+          "description": "Uses the default CloudWatch Logs KMS key that is automatically deployed by Landing Zone Accelerator.",
           "type": "boolean"
         }
       },
@@ -697,31 +707,31 @@
     },
     "IGuardDutyConfig": {
       "additionalProperties": false,
-      "description": "AWS GuardDuty configuration\nUse this configuration to enable Amazon GuardDuty for an AWS Organization, as well as other modular\nfeature protections.",
+      "description": "Configuration for Amazon GuardDuty, a threat detection service that monitors your AWS environment for malicious activity.\nUse this configuration to enable Amazon GuardDuty for an AWS Organization and configure which AWS services should be\nmonitored for security threats.",
       "properties": {
         "autoEnableOrgMembers": {
           "default": true,
-          "description": "(OPTIONAL) Enables/disables the auto enabling of GuardDuty for any account including the new accounts joining the organization\n\nIt is recommended to set the value to `false` when using the `deploymentTargets` property to enable GuardDuty only on targeted accounts mentioned in the deploymentTargets. If you do not define or do not set it to `false` any new accounts joining the organization will automatically be enabled with GuardDuty.",
+          "description": "Controls whether GuardDuty is automatically enabled for new accounts joining the organization.",
           "type": "boolean"
         },
         "deploymentTargets": {
           "$ref": "#/definitions/IDeploymentTargets",
-          "description": "(OPTIONAL) Deployment targets for GuardDuty\n\nWe highly recommend enabling GuardDuty across all accounts and enabled regions within your organization. `deploymentTargets` should only be used when more granular control is required, not as a default configuration Please only specify one of the `deploymentTargets` or `excludeRegions` properties.\n\nNote: The delegated admin account defined in centralSecurityServices will always have GuardDuty enabled"
+          "description": "Specifies which organizational units and accounts should have GuardDuty enabled."
         },
         "ec2Protection": {
           "$ref": "#/definitions/IGuardDutyEc2ProtectionConfig",
-          "description": "(OPTIONAL) AWS GuardDuty EC2 Protection configuration."
+          "description": "Configuration for GuardDuty EC2 Malware Protection that scans your EC2 instances for malicious software."
         },
         "eksProtection": {
           "$ref": "#/definitions/IGuardDutyEksProtectionConfig",
-          "description": "(OPTIONAL) AWS GuardDuty EKS Protection configuration."
+          "description": "Configuration for GuardDuty EKS Protection that monitors your Kubernetes clusters for security threats."
         },
         "enable": {
-          "description": "Indicates whether AWS GuardDuty enabled.",
+          "description": "Controls whether GuardDuty is enabled across your organization to monitor for security threats.",
           "type": "boolean"
         },
         "excludeRegions": {
-          "description": "(OPTIONAL) List of AWS Region names to be excluded from configuring Amazon GuardDuty\n\nPlease only specify one of the `excludeRegions` or `deploymentTargets` properties.",
+          "description": "List of AWS regions where GuardDuty should not be enabled.",
           "items": {
             "type": "string"
           },
@@ -729,14 +739,14 @@
         },
         "exportConfiguration": {
           "$ref": "#/definitions/IGuardDutyExportFindingsConfig",
-          "description": "AWS GuardDuty Export Findings configuration."
+          "description": "Configuration for exporting GuardDuty findings to S3 for long-term storage and analysis."
         },
         "lambdaProtection": {
           "$ref": "#/definitions/IGuardDutyLambdaProtectionConfig",
-          "description": "(OPTIONAL) AWS GuardDuty Lambda Protection configuration."
+          "description": "Configuration for GuardDuty Lambda Protection that monitors your serverless functions for security threats."
         },
         "lifecycleRules": {
-          "description": "(OPTIONAL) Declaration of a S3 Lifecycle rule.",
+          "description": "S3 lifecycle rules that automatically manage the retention and deletion of GuardDuty findings stored in S3.",
           "items": {
             "$ref": "#/definitions/ILifecycleRule"
           },
@@ -744,11 +754,11 @@
         },
         "rdsProtection": {
           "$ref": "#/definitions/IGuardDutyRdsProtectionConfig",
-          "description": "(OPTIONAL) AWS GuardDuty RDS Protection configuration."
+          "description": "Configuration for GuardDuty RDS Protection that monitors your databases for security threats."
         },
         "s3Protection": {
           "$ref": "#/definitions/IGuardDutyS3ProtectionConfig",
-          "description": "AWS GuardDuty S3 Protection configuration."
+          "description": "Configuration for GuardDuty S3 Protection that monitors your S3 buckets for suspicious activity."
         }
       },
       "required": [
@@ -760,21 +770,21 @@
     },
     "IGuardDutyEc2ProtectionConfig": {
       "additionalProperties": false,
-      "description": "AWS GuardDuty EC2 Malware Protection configuration.",
+      "description": "Configuration for GuardDuty for EC2 malware protection that scans EC2 instances and EBS volumes for malicious software.\nEC2 Malware Protection helps you detect malware and other security threats on your EC2 instances.",
       "properties": {
         "enable": {
-          "description": "Indicates whether AWS GuardDuty EC2 Malware Protection is enabled.",
+          "description": "Controls whether GuardDuty EC2 Malware Protection is enabled to scan your EC2 instances for malware.",
           "type": "boolean"
         },
         "excludeRegions": {
-          "description": "(OPTIONAL) List of AWS Region names to be excluded from configuring Amazon GuardDuty EC2 Malware Protection",
+          "description": "List of AWS regions where GuardDuty EC2 Malware Protection should not be enabled.",
           "items": {
             "type": "string"
           },
           "type": "array"
         },
         "keepSnapshots": {
-          "description": "Indicates whether AWS GuardDuty EC2 Malware Protection should retain snapshots on findings.",
+          "description": "Controls whether EBS snapshots created during malware scanning are retained. When enables, snapshots are preserved.",
           "type": "boolean"
         }
       },
@@ -786,21 +796,21 @@
     },
     "IGuardDutyEksProtectionConfig": {
       "additionalProperties": false,
-      "description": "AWS GuardDuty EKS Protection configuration.",
+      "description": "Configuration for GuardDuty EKS (Elastic Kubernetes Service) protection that monitors Amazon Elastic Kubernetes Service clusters for security threats.\nEKS Protection helps you detect potential security risks in Amazon EKS clusters.",
       "properties": {
         "enable": {
-          "description": "Indicates whether AWS GuardDuty EKS Protection enabled.",
+          "description": "Controls whether GuardDuty EKS Protection is enabled  to monitor your EKS clusters for security threats.",
           "type": "boolean"
         },
         "excludeRegions": {
-          "description": "(OPTIONAL) List of AWS Region names to be excluded from configuring Amazon GuardDuty EKS Protection",
+          "description": "List of AWS regions where GuardDuty EKS protection should not be enabled.",
           "items": {
             "type": "string"
           },
           "type": "array"
         },
         "manageAgent": {
-          "description": "Indicates whether AWS GuardDuty EKS Agent is managed.",
+          "description": "Controls whether the GuardDuty EKS Agent is managed.",
           "type": "boolean"
         }
       },
@@ -811,7 +821,7 @@
     },
     "IGuardDutyExportFindingsConfig": {
       "additionalProperties": false,
-      "description": "Use this configuration to export Amazon GuardDuty findings to Amazon CloudWatch Events, and, optionally, to an Amazon S3 bucket.",
+      "description": "Configuration for exporting GuardDuty security findings to an Amazon S3 bucket for long-term storage and analysis.",
       "properties": {
         "destinationType": {
           "const": "S3",
@@ -819,11 +829,11 @@
           "type": "string"
         },
         "enable": {
-          "description": "Indicates whether AWS GuardDuty Export Findings enabled.",
+          "description": "Controls whether GuardDuty findings are automatically exported to an S3 bucket.",
           "type": "boolean"
         },
         "exportFrequency": {
-          "description": "An enum value that specifies how frequently findings are exported, such as to CloudWatch Events. Possible values FIFTEEN_MINUTES, ONE_HOUR, or SIX_HOURS",
+          "description": "An enum value that specifies how frequently findings are exported to the S3 bucket. Possible values FIFTEEN_MINUTES, ONE_HOUR, or SIX_HOURS",
           "enum": [
             "FIFTEEN_MINUTES",
             "ONE_HOUR",
@@ -832,12 +842,12 @@
           "type": "string"
         },
         "overrideExisting": {
-          "description": "(OPTIONAL) Indicates whether AWS GuardDuty Export Findings can be overwritten.",
+          "description": "Controls whether existing export configurations can be overwritten with new settings.",
           "type": "boolean"
         },
         "overrideGuardDutyPrefix": {
           "$ref": "#/definitions/IPrefixConfig",
-          "description": "(OPTIONAL) AWS GuardDuty Prefix for centralized logging path."
+          "description": "Custom prefix configuration for organizing GuardDuty findings in your centralized logging S3 bucket."
         }
       },
       "required": [
@@ -852,11 +862,11 @@
       "description": "AWS GuardDuty Lambda Malware Protection configuration.",
       "properties": {
         "enable": {
-          "description": "Indicates whether AWS GuardDuty Lambda Malware Protection is enabled.",
+          "description": "Controls whether GuardDuty Lambda Protection is enabled to monitor your Lambda functions for security threats.",
           "type": "boolean"
         },
         "excludeRegions": {
-          "description": "(OPTIONAL) List of AWS Region names to be excluded from configuring Amazon GuardDuty Lambda Malware Protection",
+          "description": "List of AWS regions where GuardDuty Lambda Protection should not be enabled.",
           "items": {
             "type": "string"
           },
@@ -870,14 +880,14 @@
     },
     "IGuardDutyRdsProtectionConfig": {
       "additionalProperties": false,
-      "description": "AWS GuardDuty RDS Malware Protection configuration.",
+      "description": "Configuration for GuardDuty RDS (Relational Database Service) protection that monitors Amazon RDS instances for security threats.\nRDS Protection helps you detect potential security risks in your RDS databases.",
       "properties": {
         "enable": {
-          "description": "Indicates whether AWS GuardDuty RDS Malware Protection is enabled.",
+          "description": "Controls whether GuardDuty RDS Protection is enabled to monitor your RDS databases for security threats..",
           "type": "boolean"
         },
         "excludeRegions": {
-          "description": "(OPTIONAL) List of AWS Region names to be excluded from configuring Amazon GuardDuty RDS Malware Protection",
+          "description": "List of AWS regions where GuardDuty RDS Protection should not be enabled.",
           "items": {
             "type": "string"
           },
@@ -891,14 +901,14 @@
     },
     "IGuardDutyS3ProtectionConfig": {
       "additionalProperties": false,
-      "description": "Use this configuration to enable S3 Protection with Amazon GuardDuty to monitor object-level API operations for potential\nsecurity risks for data within Amazon S3 buckets.",
+      "description": "Configuration for enabling S3 protection with Amazon GuardDuty to detect suspicious and malicious activity in your S3 buckets.\nUse this configuration to enable S3 Protection with Amazon GuardDuty to monitor object-level API operations for potential\nsecurity risks for data within Amazon S3 buckets.",
       "properties": {
         "enable": {
-          "description": "Indicates whether AWS GuardDuty S3 Protection enabled.",
+          "description": "Controls whether GuardDuty S3 protection is enabled to monitor your S3 buckets for suspicious activity.",
           "type": "boolean"
         },
         "excludeRegions": {
-          "description": "(OPTIONAL) List of AWS Region names to be excluded from configuring Amazon GuardDuty S3 Protection",
+          "description": "List of AWS regions where Amazon GuardDuty S3 protection should not be enabled.",
           "items": {
             "type": "string"
           },
@@ -912,51 +922,51 @@
     },
     "IIamPasswordPolicyConfig": {
       "additionalProperties": false,
-      "description": "IAM password policy configuration",
+      "description": "Configuration for AWS Identity and Access Management (IAM) password policy that enforces password complexity and security requirements\nfor IAM users across your organization.",
       "properties": {
         "allowUsersToChangePassword": {
           "default": true,
-          "description": "Allows all IAM users in your account to use the AWS Management Console to change their own passwords.",
+          "description": "Controls whether IAM users can change their own passwords through the AWS Management Console. When enabled, users can update their passwords without administrator intervention.",
           "type": "boolean"
         },
         "hardExpiry": {
           "default": true,
-          "description": "Prevents IAM users who are accessing the account via the AWS Management Console from setting a new console password after their password has expired. The IAM user cannot access the console until an administrator resets the password.",
+          "description": "Controls whether IAM users can set a new password after their current password expires. When enabled, users with expired passwords cannot access the console until an administrator resets their password.",
           "type": "boolean"
         },
         "maxPasswordAge": {
           "default": 90,
-          "description": "The number of days that an IAM user password is valid.\n\nValid values are between 1 and 1095 days.",
+          "description": "The maximum number of days a password remains valid before requiring a change.",
           "type": "number"
         },
         "minimumPasswordLength": {
           "default": 14,
-          "description": "The minimum number of characters allowed in an IAM user password.\n\nNote: If you do not specify a value for this parameter, then the operation uses the default value of 6.",
+          "description": "The minimum number of characters required for IAM user passwords.",
           "type": "number"
         },
         "passwordReusePrevention": {
           "default": 24,
-          "description": "Specifies the number of previous passwords that IAM users are prevented from reusing.\n\nNote: If you do not specify a value for this parameter, then the operation uses the default value of 0. The result is that IAM users are not prevented from reusing previous passwords.",
+          "description": "The number of previous passwords that users cannot reuse.",
           "type": "number"
         },
         "requireLowercaseCharacters": {
           "default": true,
-          "description": "Specifies whether IAM user passwords must contain at least one lowercase character from the ISO basic Latin alphabet (a to z).\n\nNote: If you do not specify a value for this parameter, then the operation uses the default value of false. The result is that passwords do not require at least one lowercase character.",
+          "description": "Requires passwords to contain at least one lowercase letter from the ISO basic Latin alphabet (a to z).",
           "type": "boolean"
         },
         "requireNumbers": {
           "default": true,
-          "description": "Specifies whether IAM user passwords must contain at least one numeric character (0 to 9).\n\nNote: If you do not specify a value for this parameter, then the operation uses the default value of false. The result is that passwords do not require at least one numeric character.",
+          "description": "Requires passwords to contain at least one numeric character (0-9).",
           "type": "boolean"
         },
         "requireSymbols": {
           "default": true,
-          "description": "Specifies whether IAM user passwords must contain at least one of the following non-alphanumeric characters:\n\n! @ # $ % ^ & * ( ) _ + - = [ ] { } | '\n\nNote: If you do not specify a value for this parameter, then the operation uses the default value of false. The result is that passwords do not require at least one symbol character.",
+          "description": "Requires passwords to contain at least one special character. Allowed symbols: ! @ # $ % ^ & * ( ) _ + - = [ ] { } | '",
           "type": "boolean"
         },
         "requireUppercaseCharacters": {
           "default": true,
-          "description": "Specifies whether IAM user passwords must contain at least one uppercase character from the ISO basic Latin alphabet (A to Z).\n\nNote: If you do not specify a value for this parameter, then the operation uses the default value of false. The result is that passwords do not require at least one uppercase character.",
+          "description": "Requires passwords to contain at least one uppercase letter from the ISO basic Latin alphabet (A to Z).",
           "type": "boolean"
         }
       },
@@ -975,41 +985,41 @@
     },
     "IKeyConfig": {
       "additionalProperties": false,
-      "description": "Use this configuration to define your customer managed key (CMK) and where it's deployed to along with\nit's management properties.",
+      "description": "Configuration for creating and managing customer-managed keys (CMKs.\nThese keys provide enhanced security control compared to AWS-managed keys, allowing you to define custom access policies,\nenable automatic key rotation, and maintain compliance with data protection regulations. Customer-managed keys are essential\nfor organizations that need granular control over encryption operations and key lifecycle management.",
       "properties": {
         "alias": {
           "$ref": "#/definitions/NonEmptyString",
-          "description": "(OPTIONAL) Initial alias to add to the key"
+          "description": "Human-readable alias that provides an easy way to identify and use the encryption key."
         },
         "deploymentTargets": {
           "$ref": "#/definitions/IDeploymentTargets",
-          "description": "This configuration determines which accounts and/or OUs the CMK is deployed to.\n\nTo deploy KMS key into Root and Infrastructure organizational units, you need to provide below value for this parameter."
+          "description": "Specifies which organizational units and accounts the customer-managed key is deployed to."
         },
         "description": {
           "$ref": "#/definitions/NonEmptyString",
-          "description": "(OPTIONAL) A description of the key."
+          "description": "Human-readable description explaining the purpose and intended use of this encryption key."
         },
         "enableKeyRotation": {
           "default": true,
-          "description": "(OPTIONAL) Indicates whether AWS KMS rotates the key.",
+          "description": "Controls whether AWS Key Management Service (KMS) automatially rotates the encryption key material.",
           "type": "boolean"
         },
         "enabled": {
-          "default": "- Key is enabled.",
-          "description": "(OPTIONAL) Indicates whether the key is available for use.",
+          "default": "true (key is enabled)",
+          "description": "Controls whether the encryption key is available to be used. Disabled keys cannot encrypt or decrypt data.",
           "type": "boolean"
         },
         "name": {
           "$ref": "#/definitions/NonEmptyString",
-          "description": "Unique Key name for logical reference"
+          "description": "Unique identifier for the customer-managed key."
         },
         "policy": {
           "$ref": "#/definitions/NonEmptyString",
-          "description": "(OPTIONAL)Key policy file path. This file must be available in accelerator config repository."
+          "description": "Path to the file containing the key policy. The policy file must exist in your configuration repository."
         },
         "removalPolicy": {
           "default": "retain",
-          "description": "(OPTIONAL) Whether the encryption key should be retained when it is removed from the Stack.",
+          "description": "Determines what happens to the encryption key when it's removed from the Stack. 'retain' preserves the key for data recovery, 'destroy' permanently deletes it, 'snapshot' creates a backup.",
           "enum": [
             "destroy",
             "retain",
@@ -1026,9 +1036,10 @@
     },
     "IKeyManagementServiceConfig": {
       "additionalProperties": false,
-      "description": " KMS key management service configuration",
+      "description": "Configuration for AWS Key Management Service (KMS) that enables centralized management of encryption keys\nacross your organization. This allows you to create, manage, and control customer-managed KMS keys\nfor encrypting data at rest and in transit, helping meet compliance requirements and security best practices.",
       "properties": {
         "keySets": {
+          "description": "Array of KMS key configurations to be created and managed across your organization.",
           "items": {
             "$ref": "#/definitions/IKeyConfig"
           },
@@ -1092,28 +1103,28 @@
     },
     "ILogGroupsConfig": {
       "additionalProperties": false,
-      "description": "Use this configuration to deploy CloudWatch log groups to your environment.\nYou can also import existing log groups into your accelerator configuration.\nLog groups define groups of log streams that share the same retention, monitoring, and access control settings.",
+      "description": "Configuration for deploying and managing CloudWatch log groups across your organization.\nYou can deploy new log groups or import existing ones into your accelerator configuration for centralized management.",
       "properties": {
         "deploymentTargets": {
           "$ref": "#/definitions/IDeploymentTargets",
-          "description": "Deployment targets for CloudWatch Logs"
+          "description": "Specifies the organizational units and accounts where this log group will be deployed."
         },
         "encryption": {
           "$ref": "#/definitions/IEncryptionConfig",
-          "description": "(OPTIONAL) The encryption configuration of the AWS CloudWatch Logs Group."
+          "description": "Configuration for encrypting log data at rest using AWS KMS."
         },
         "logGroupName": {
           "$ref": "#/definitions/NonEmptyString",
-          "description": "Name of the CloudWatch log group"
+          "description": "The name of the CLoudWatch log group to create or manage."
         },
         "logRetentionInDays": {
           "default": "undefined",
-          "description": "(OPTIONAL) How long, in days, the log contents will be retained.\n\nTo retain all logs, set this value to undefined.",
+          "description": "The number of days to retain log events in the log group.",
           "type": "number"
         },
         "terminationProtected": {
           "default": true,
-          "description": "(OPTIONAL) Set this property to `false` if you would like the log group to be deleted if it is removed from the solution configuration file.",
+          "description": "Controls whether the log group should be protected from accidental deletion.",
           "type": "boolean"
         }
       },
@@ -1126,28 +1137,28 @@
     },
     "IMacieConfig": {
       "additionalProperties": false,
-      "description": "Amazon Macie Configuration\nUse this configuration to enable Amazon Macie within your AWS Organization along with it's reporting configuration.",
+      "description": "Configuration for Amazon Macie, a data security service that discovers, classifies, and protects sensitive data.\nUse this configuration to enable Amazon Macie within your AWS Organization along with it's reporting configuration.",
       "properties": {
         "enable": {
-          "description": "Indicates whether AWS Macie enabled.",
+          "description": "Controls whether AWS Macie is enabled across your organization",
           "type": "boolean"
         },
         "excludeRegions": {
-          "description": "List of AWS Region names to be excluded from configuring Amazon Macie",
+          "description": "List of AWS Region names to be excluded from configuring Amazon Macie.",
           "items": {
             "type": "string"
           },
           "type": "array"
         },
         "lifecycleRules": {
-          "description": "(OPTIONAL) Declaration of a S3 Lifecycle rule.",
+          "description": "Declaration of S3 Lifecycle rules that automatically manage the retention and deletion for Macie findings reports stored in S3.",
           "items": {
             "$ref": "#/definitions/ILifecycleRule"
           },
           "type": "array"
         },
         "policyFindingsPublishingFrequency": {
-          "description": "(OPTIONAL) Specifies how often to publish updates to policy findings for the account. This includes publishing updates to Security Hub and Amazon EventBridge (formerly called Amazon CloudWatch Events). An enum value that specifies how frequently findings are published Possible values FIFTEEN_MINUTES, ONE_HOUR, or SIX_HOURS",
+          "description": "Specifies how frequently findings are published to Security Hub. Possible values: FIFTEEN_MINUTES, ONE_HOUR, or SIX_HOURS",
           "enum": [
             "FIFTEEN_MINUTES",
             "ONE_HOUR",
@@ -1156,11 +1167,11 @@
           "type": "string"
         },
         "publishPolicyFindings": {
-          "description": "Specifies whether to publish findings at all",
+          "description": "Specifies whether to publish findings to Security Hub and EventBridge",
           "type": "boolean"
         },
         "publishSensitiveDataFindings": {
-          "description": "Specifies whether to publish sensitive data findings to Security Hub. If you set this value to true, Amazon Macie automatically publishes all sensitive data findings that weren't suppressed by a findings filter. The default value is false.",
+          "description": "Specifies whether to publish sensitive data findings to Security Hub. If you set this value to true, Amazon Macie automatically publishes all sensitive data findings that weren't suppressed by a findings filter. Default value is false.",
           "type": "boolean"
         }
       },
@@ -1172,39 +1183,39 @@
     },
     "IMetricConfig": {
       "additionalProperties": false,
-      "description": "AWS CloudWatch Metric configuration",
+      "description": "Configuration for CloudWatch metric filters that extract metrics from log data for monitoring and alerting.\nMetric filters turn log data into numerical CloudWatch metrics that you can graph or set alarms on.",
       "properties": {
         "defaultValue": {
-          "description": "The value to emit when a filter pattern does not match a log event.",
+          "description": "Th value reported to the metric filter during a period when logs are ingested but no matching logs are found.",
           "type": "number"
         },
         "filterName": {
           "$ref": "#/definitions/NonEmptyString",
-          "description": "Metric filter name"
+          "description": "Unique name for the metric filter within the log group."
         },
         "filterPattern": {
           "$ref": "#/definitions/NonEmptyString",
-          "description": "Pattern to search for log events."
+          "description": "A symbolic description of how CloudWatch Logs should interpret the data in each log event. The pattern specifies what to look for in the log file, such as timestamps, IP addresses, strings, and so on."
         },
         "logGroupName": {
           "$ref": "#/definitions/NonEmptyString",
-          "description": "The log group to create the filter on."
+          "description": "The name of the CLoudWatch Logs log group to monitor for matching events. The metric filter will scan all log streams within this log group for events that match the specified filter pattern."
         },
         "metricName": {
           "$ref": "#/definitions/NonEmptyString",
-          "description": "The name of the metric to emit."
+          "description": "The name of the CloudWatch metric to which the monitored log information should be published."
         },
         "metricNamespace": {
           "$ref": "#/definitions/NonEmptyString",
-          "description": "The namespace of the metric to emit."
+          "description": "The destination namespace of the new CloudWatch metric."
         },
         "metricValue": {
           "$ref": "#/definitions/NonEmptyString",
-          "description": "The value to emit for the metric.\n\nCan either be a literal number (typically “1”), or the name of a field in the structure to take the value from the matched event. If you are using a field value, the field value must have been matched using the pattern."
+          "description": "The numerical value to publish to the metric each time a matching log is found. Can either be a literal number (typically “1”), or the name of a field in the structure to take the value from the matched event. If you are using a field value, the field value must have been matched using the pattern."
         },
         "treatMissingData": {
           "$ref": "#/definitions/NonEmptyString",
-          "description": "Sets how this alarm is to handle missing data points."
+          "description": "Defines how CloudWatch alarms should handle periods when no matching log events occur."
         }
       },
       "required": [
@@ -1219,21 +1230,21 @@
     },
     "IMetricSetConfig": {
       "additionalProperties": false,
-      "description": "AWS CloudWatch Metric set configuration",
+      "description": "Configuration for a set of CloudWatch metric filters that will be deployed together to specific regions and organizational units.",
       "properties": {
         "deploymentTargets": {
           "$ref": "#/definitions/IDeploymentTargets",
-          "description": "Deployment targets for CloudWatch Metrics configuration"
+          "description": "Specfies the organizational units and accounts where this set of metric filters will be deployed."
         },
         "metrics": {
-          "description": "AWS CloudWatch Metric list\n\nFollowing example will create metric filter RootAccountMetricFilter for aws-controltower/CloudTrailLogs log group",
+          "description": "Array of CloudWatch metric filter configurations to deploy as part of this metric set.",
           "items": {
             "$ref": "#/definitions/IMetricConfig"
           },
           "type": "array"
         },
         "regions": {
-          "description": "(OPTIONAL) AWS region names to configure CloudWatch Metrics",
+          "description": "AWS regions where the CloudWatch metric filters will be deployed.",
           "items": {
             "type": "string"
           },
@@ -1247,9 +1258,10 @@
     },
     "INetworkPerimeterConfig": {
       "additionalProperties": false,
-      "description": "Network Perimeter Config.\n\nIf managedVpcOnly is true, all the VPCs in accounts will be included while parameter `ACCEL_LOOKUP:VPC|VPC_ID:XX` is used.\nIf managedVpcOnly is false, only the VPC  created by LZA will be included while parameter `ACCEL_LOOKUP:VPC|VPC_ID:XX` is used.",
+      "description": "Configuration for defining the network perimeter scope when using VPC lookup parameters in resource policies.",
       "properties": {
         "managedVpcOnly": {
+          "description": "Controls which VPCs are included when using VPC lookup parameters in resource policy templates.",
           "type": "boolean"
         }
       },
@@ -1274,14 +1286,14 @@
     },
     "IRemediationParametersConfigType": {
       "additionalProperties": false,
-      "description": "Config rule remediation input parameter configuration type",
+      "description": "Configuration for input parameters passed to AWS Config rule remediation actions.\nThese parameters provide the necessary data and context for remediation automation documents\nto execute corrective actions on non-compliant resources, enabling automated compliance restoration.",
       "properties": {
         "name": {
           "$ref": "#/definitions/NonEmptyString",
-          "description": "Name of the parameter"
+          "description": "The name of the parameter as expected by the remediation automation document."
         },
         "type": {
-          "description": "Data type of the parameter, allowed value (StringList or String)",
+          "description": "The data type of the parameter value, determining how the remediation document interprets the input.",
           "enum": [
             "String",
             "StringList"
@@ -1290,7 +1302,7 @@
         },
         "value": {
           "$ref": "#/definitions/NonEmptyString",
-          "description": "Parameter value"
+          "description": "The value to pass for this parameter during remediation execution."
         }
       },
       "required": [
@@ -1302,11 +1314,14 @@
     },
     "IResourcePolicyConfig": {
       "additionalProperties": false,
+      "description": "Configuration for defining resource-based policies that will be automatically applied to specific AWS resource types.\nThis allows you to enforce consistent access controls and security policies across resources of the same type\nthroughout your organization using AWS Config rules for automated compliance monitoring and remediation.",
       "properties": {
         "document": {
-          "$ref": "#/definitions/NonEmptyString"
+          "$ref": "#/definitions/NonEmptyString",
+          "description": "Path to the JSON policy document file that defines the resource-based policy. This file must be available in the accelerator configuration repository."
         },
         "resourceType": {
+          "description": "The type of AWS resource that this policy will be applied to. This determines which AWS resources will be targeted for policy enforcement, such as S3 buckets, KMS keys, IAM roles, or other supported resource types.",
           "enum": [
             "S3_BUCKET",
             "KMS_KEY",
@@ -1336,22 +1351,26 @@
     },
     "IResourcePolicyEnforcementConfig": {
       "additionalProperties": false,
-      "description": "Resource Policy Enforcement Config. The configuration allows you to deploy AWS Config rules to\nautomatically apply resource-based policies to AWS resources including S3 buckets, IAM roles, and KMS keys etc.\nAWS Organization is required to support it.\n\nHere are a list of supported service {@link SecurityConfigTypes.resourceTypeEnum }",
+      "description": "Configuration for automated resource policy enforcement across your AWS Organization using AWS Config rules.",
       "properties": {
         "enable": {
+          "description": "Controls whether resource policy enforcement is enabled across your organization. When enabled, AWS Config rules will be deployed to monitor and enforce resource-based policies according to the configured policy sets and remediation settings.",
           "type": "boolean"
         },
         "networkPerimeter": {
-          "$ref": "#/definitions/INetworkPerimeterConfig"
+          "$ref": "#/definitions/INetworkPerimeterConfig",
+          "description": "Configuration for network perimeter controls when using VPC lookup parameters in resource policies. This optional setting controls which VPCs are included when resolving network references in policy templates."
         },
         "policySets": {
+          "description": "Array of policy sets that define which resource policies to enforce and where to deploy them.",
           "items": {
             "$ref": "#/definitions/IResourcePolicySetConfig"
           },
           "type": "array"
         },
         "remediation": {
-          "$ref": "#/definitions/IResourcePolicyRemediation"
+          "$ref": "#/definitions/IResourcePolicyRemediation",
+          "description": "Configuration for automated remediation when policy violations are detected. This defines how AWS Config should respond when resources are found to be non-compliant."
         }
       },
       "required": [
@@ -1363,17 +1382,20 @@
     },
     "IResourcePolicyRemediation": {
       "additionalProperties": false,
+      "description": "Configuration for automated remediation actions when AWS Config detects non-compliant resource policies.\nThis enables automatic correction of policy violations to maintain consistent security controls\nacross your organization without manual intervention, helping ensure continuous compliance.",
       "properties": {
         "automatic": {
-          "description": "The remediation is triggered automatically.",
+          "description": "Controls whether remediation actions are triggered automatically when policy violations are detected. When enabled, AWS Config will automatically attempt to correct non-compliant resource policies.",
           "type": "boolean"
         },
         "maximumAutomaticAttempts": {
-          "description": "The maximum number of failed attempts for auto-remediation. If you do not select a number, the default is 5.",
+          "default": "5 attempts",
+          "description": "Maximum number of times AWS Config will attempt to remediate a non-compliant resource. This prevents infinite retry loops while allowing for temporary failures to be resolved. After reaching this limit, manual intervention may be required.",
           "type": "number"
         },
         "retryAttemptSeconds": {
-          "description": "Maximum time in seconds that AWS Config runs auto-remediation. If you do not select a number, the default is 60 seconds.",
+          "default": "60 seconds",
+          "description": "Maximum time in seconds that AWS Config waits before timing out a remediation attempt. This prevents remediation actions from running indefinitely and ensures timely completion.",
           "type": "number"
         }
       },
@@ -1384,20 +1406,21 @@
     },
     "IResourcePolicySetConfig": {
       "additionalProperties": false,
+      "description": "Configuration for a set of resource policies that will be deployed together to specific organizational units or accounts.\nThis allows you to group related resource policies and deploy them as a cohesive security control package\nacross your organization, ensuring consistent policy enforcement for different environments or business units.",
       "properties": {
         "deploymentTargets": {
           "$ref": "#/definitions/IDeploymentTargets",
-          "description": "The deployment targets - accounts/OUs where the config rule and remediation action will be deployed to"
+          "description": "Specifies the organizational units and accounts where the AWS Config rules and remediation actions will be deployed."
         },
         "inputParameters": {
           "additionalProperties": {
             "type": "string"
           },
-          "description": "The input parameters which will be set as environment variable in Custom Config Rule Lambda and Remediation lambda\n\nMeanwhile, 'SourceAccount' is a reserved parameters for allow-only resource policy -- Lambda_Function and CERTIFICATE_AUTHORITY. For example, 'SourceAccount: 123456789012,987654321098' means requests from these two accounts can be allowed. Apart from these two, No other external accounts can access a lambda function or Certificate Authority.",
+          "description": "Custom parameters that will be passed as environment variables to the AWS Config rule and remediation Lambda functions.",
           "type": "object"
         },
         "resourcePolicies": {
-          "description": "A list of resource policy templates for different types of resources",
+          "description": "Array of resource policy configurations that define the specific policies to be enforced.",
           "items": {
             "$ref": "#/definitions/IResourcePolicyConfig"
           },
@@ -1412,14 +1435,14 @@
     },
     "IS3PublicAccessBlockConfig": {
       "additionalProperties": false,
-      "description": "This will create the Public Access Block configuration for the AWS account.",
+      "description": "Configuration for preventing accidental public exposure of S3 buckets and objects across your organization.\nWhen enabled, this setting applies organization-wide security guardrails that prevent users from accidentally making S3 buckets or objects publicly accessible.",
       "properties": {
         "enable": {
-          "description": "Indicates whether AWS S3 block public access is enabled.",
+          "description": "Indicates whether S3 public access blocking is enforced across all accounts in your organization.",
           "type": "boolean"
         },
         "excludeAccounts": {
-          "description": "List of AWS Account names to be excluded from configuring S3 PublicAccessBlock",
+          "description": "List of AWS account names that should be exempted from S3 public access blocking requirements.",
           "items": {
             "type": "string"
           },
@@ -1433,15 +1456,15 @@
     },
     "IScpRevertChangesConfig": {
       "additionalProperties": false,
-      "description": "AWS Service Control Policies Revert Manual Changes configuration",
+      "description": "Configuration for automatically detecting and reverting manual changes to Service Control Policies (SCPs).\nThis securty control helps maintain governance by ensuring that security policies cannot be modified\noutside of your approved change management process. When enabled, any manual changes to SCPs will be\nautomatically reverted and security teams will be notified of the attempted modification.",
       "properties": {
         "enable": {
-          "description": "Indicates whether manual changes to Service Control Policies are automatically reverted.",
+          "description": "Indicates whether manual changes to Service Control Policies are automatically detected and reverted.",
           "type": "boolean"
         },
         "snsTopicName": {
           "$ref": "#/definitions/NonEmptyString",
-          "description": "(OPTIONAL) The name of the SNS Topic to send alerts to when SCPs are changed manually"
+          "description": "Name of the SNS topic that will receive alerts when unauthorized SCP changes are detected and reverted."
         }
       },
       "required": [
@@ -1451,33 +1474,39 @@
     },
     "ISecurityConfig": {
       "additionalProperties": false,
-      "description": "Accelerator security configuration",
+      "description": "Root configuration for the Landing Zone Accelerator security services and controls.\nThis configuration enables comprehensive security governance across your AWS Organization through\ncentralized security services, compliance monitoring, access controls, encryption management,\nand automated monitoring and alerting capabilities.",
       "properties": {
         "accessAnalyzer": {
-          "$ref": "#/definitions/IAccessAnalyzerConfig"
+          "$ref": "#/definitions/IAccessAnalyzerConfig",
+          "description": "Configuration for AWS IAM Access Analyzer that identifies resources with external access and helps implement least privilege by analyzing resource policies for security risks."
         },
         "awsConfig": {
-          "$ref": "#/definitions/IAwsConfig"
+          "$ref": "#/definitions/IAwsConfig",
+          "description": "Configuration for AWS Config service that enables continuous monitoring and assessment of AWS resource configurations for compliance, security, and governance across your organization."
         },
         "centralSecurityServices": {
           "$ref": "#/definitions/ICentralSecurityServicesConfig",
-          "description": "Central security configuration"
+          "description": "Configuration for centralized security services that provide organization-wide security controls."
         },
         "cloudWatch": {
-          "$ref": "#/definitions/ICloudWatchConfig"
+          "$ref": "#/definitions/ICloudWatchConfig",
+          "description": "Configuration for AWS CloudWatch monitoring and logging services that provide comprehensive observability through metric filters, automated alerting, and centralized log management."
         },
         "homeRegion": {
-          "description": "Accelerator home region name.",
+          "description": "The primary AWS region where the Landing Zone Accelerator is deployed and managed.",
           "type": "string"
         },
         "iamPasswordPolicy": {
-          "$ref": "#/definitions/IIamPasswordPolicyConfig"
+          "$ref": "#/definitions/IIamPasswordPolicyConfig",
+          "description": "Configuration for organization-wide IAM password policy that enforces password complexity and security requirements for IAM users across all accounts in your organization."
         },
         "keyManagementService": {
-          "$ref": "#/definitions/IKeyManagementServiceConfig"
+          "$ref": "#/definitions/IKeyManagementServiceConfig",
+          "description": "Configuration for AWS Key Management Service (KMS) that enables centralized management of encryption keys across your organization for data protection and compliance requirements."
         },
         "resourcePolicyEnforcement": {
-          "$ref": "#/definitions/IResourcePolicyEnforcementConfig"
+          "$ref": "#/definitions/IResourcePolicyEnforcementConfig",
+          "description": "Configuration for automated resource policy enforcement that uses AWS Config rules to automatically apply and maintain consistent resource-based policies across your organization, ensuring continuous compliance with security standards."
         }
       },
       "required": [
@@ -1491,23 +1520,24 @@
     },
     "ISecurityHubConfig": {
       "additionalProperties": false,
-      "description": "Use this configuration to enable Amazon Security Hub for an AWS Organization along with it's auditing configuration.\nNote the default value for logLevel is HIGH if it is not provided in the configuration",
+      "default": "logLevel HIGH",
+      "description": "Configuration for Amazon Security Hub, a centralized security findings management service that aggregates security alerts\nfrom multiple AWS security services.\nUse this configuration to enable Amazon Security Hub for an AWS Organization along with it's auditing configuration.",
       "properties": {
         "autoEnableOrgMembers": {
           "default": true,
-          "description": "(OPTIONAL) Enables/disables the auto enabling of SecurityHub for any account including the new accounts joining the organization\n\nIt is recommended to set the value to `false` when using the `deploymentTargets` property to enable SecurityHub only on targeted accounts mentioned in the deploymentTargets. If you do not define or do not set it to `false` any new accounts joining the organization will automatically be enabled with SecurityHub.",
+          "description": "Controls whether Security Hub is automatically enabled for new accounts joining the organization.",
           "type": "boolean"
         },
         "deploymentTargets": {
           "$ref": "#/definitions/IDeploymentTargets",
-          "description": "(OPTIONAL) Deployment targets for SecurityHub\n\nWe highly recommend enabling SecurityHub across all accounts and enabled regions within your organization. `deploymentTargets` should only be used when more granular control is required, not as a default configuration Please only specify one of the `deploymentTargets` or `excludeRegions` properties.\n\nNote: The delegated admin account defined in centralSecurityServices will always have SecurityHub enabled."
+          "description": "Specifies which organizational units and accounts should have Security Hub enabled."
         },
         "enable": {
-          "description": "Indicates whether AWS Security Hub is enabled (AWSConfig is required for enabling SecurityHub)",
+          "description": "Controls whether AWS Security Hub is enabled across your organization",
           "type": "boolean"
         },
         "excludeRegions": {
-          "description": "(OPTIONAL) List of AWS Region names to be excluded from configuring Security Hub",
+          "description": "List of AWS regions where Security Hub should not be enabled.",
           "items": {
             "type": "string"
           },
@@ -1515,22 +1545,22 @@
         },
         "logging": {
           "$ref": "#/definitions/ISecurityHubLoggingConfig",
-          "description": "(OPTIONAL) Security Hub logs are sent to CloudWatch logs by default. This option can enable or disable the logging."
+          "description": "Configuration for forwarding Security Hub findings to CloudWatch Logs for centralized monitoring. When enabled, findings are automatically sent to CloudWatch for integration with your monitoring and alerting systems."
         },
         "notificationLevel": {
-          "description": "(OPTIONAL) Security Hub notification level",
+          "description": "Minimum severity level for findings that will trigger SNS notifications.",
           "type": "string"
         },
         "regionAggregation": {
-          "description": "(OPTIONAL) Indicates whether Security Hub results are aggregated in the Home Region.",
+          "description": "Controls whether Security Hub findings from all regions are aggregated in your organization's home region.",
           "type": "boolean"
         },
         "snsTopicName": {
-          "description": "(OPTIONAL) SNS Topic for Security Hub notifications.",
+          "description": "Name of the SNS topic that will receive Security Hub notifications.",
           "type": "string"
         },
         "standards": {
-          "description": "Security Hub standards configuration",
+          "description": "List of security and compliance standards that Security Hub will monitor across your organization.",
           "items": {
             "$ref": "#/definitions/ISecurityHubStandardConfig"
           },
@@ -1545,19 +1575,20 @@
     },
     "ISecurityHubLoggingCloudwatchConfig": {
       "additionalProperties": false,
-      "description": "Security Hub Logging CloudWatch Config\nThe default value for logLevel is HIGH if it is not provided in the configuration",
+      "default": "logLevel HIGH",
+      "description": "Configuration for forwarding Security Hub findings to CloudWatch for centralized monitoring and analysis.",
       "properties": {
         "enable": {
-          "description": "Security hub to cloudwatch logging is enabled by default.",
+          "description": "Controls whether Security Hub findings are automatically forwarded to CloudWatch Logs. When enabled, findings are sent to CloudWatch for integration with monitoring dashboards and alerting systems.",
           "type": "boolean"
         },
         "logGroupName": {
-          "description": "(OPTIONAL) CloudWatch Log Group Name",
+          "description": "Name of the CloudWatch Log Group where Security Hub findings will be stored.",
           "type": "string"
         },
         "logLevel": {
           "$ref": "#/definitions/SecurityHubSeverityLevel",
-          "description": "(OPTIONAL) Security Hub logging level"
+          "description": "Minimum severity level for findings that will be forwarded to CloudWatch Logs."
         }
       },
       "required": [
@@ -1567,21 +1598,21 @@
     },
     "ISecurityHubLoggingConfig": {
       "additionalProperties": false,
-      "description": "Security Hub Logging Config",
+      "description": "Configuration for Security Hub logging destinations that determines where security findings are stored for analysis.\nThis configuration allows you to centralize Security Hub findings in CloudWatch Logs for integration with your\nmonitoring and alerting infrastructure.",
       "properties": {
         "cloudWatch": {
           "$ref": "#/definitions/ISecurityHubLoggingCloudwatchConfig",
-          "description": "Data store to ship the Security Hub logs to."
+          "description": "Configuration for forwarding Security Hub findings to CloudWatch Logs."
         }
       },
       "type": "object"
     },
     "ISecurityHubStandardConfig": {
       "additionalProperties": false,
-      "description": "Use this configuration to define the security standard(s) that are enabled through Amazon Security Hub and which accounts and/or\norganization units that the controls are deployed to.",
+      "description": "Configuration for enabling specific compliance and security standards within Amazon Security Hub.\nUse this configuration to define the security standard(s) that are enabled through Amazon Security Hub and which accounts and/or\norganization units that the controls are deployed to.",
       "properties": {
         "controlsToDisable": {
-          "description": "(OPTIONAL) An array of control names to be disabled for the given security standards",
+          "description": "List of specific control names within the security standard that should be disabled.",
           "items": {
             "$ref": "#/definitions/NonEmptyString"
           },
@@ -1589,10 +1620,10 @@
         },
         "deploymentTargets": {
           "$ref": "#/definitions/IDeploymentTargets",
-          "description": "(OPTIONAL) Deployment targets for AWS Security Hub standard."
+          "description": "Specifies which organizational units and accounts this security standard will be applied to."
         },
         "enable": {
-          "description": "Indicates whether given AWS Security Hub standard enabled.",
+          "description": "Controls whether this Security Hub standard is enabled to monitor compliance across your specified deployment targets. When enabled, Security Hub continuously evaluates your resources against the standard's security controls.",
           "type": "boolean"
         },
         "name": {
@@ -1626,15 +1657,16 @@
     },
     "ISnsSubscriptionConfig": {
       "additionalProperties": false,
-      "description": "AWS SNS Notification subscription configuration\n***Deprecated***\nReplaced by snsTopics in global config",
+      "deprecated": true,
+      "description": "This interface is deprecated and has been replaced by the snsTopics configuration in the global config.\nOrganizations should migrate to the new SNS topic configuration.\n\nConfiguration for legacy SNS notification subscriptions that send security alerts to email addresses.",
       "properties": {
         "email": {
           "$ref": "#/definitions/NonEmptyString",
-          "description": "Subscribing email address"
+          "description": "Email address that will receive the security notifications for the specified severity level."
         },
         "level": {
           "$ref": "#/definitions/NonEmptyString",
-          "description": "Notification level high, medium or low"
+          "description": "Defines the severity level for security notifications that will trigger email alerts. Higher levels indicate more critical security events requiring immediate attention. Notification level can be high, medium or low."
         }
       },
       "required": [
@@ -1645,17 +1677,17 @@
     },
     "ISsmAutomationConfig": {
       "additionalProperties": false,
-      "description": "AWS Systems Manager automation configuration",
+      "description": "Configuration for AWS Systems Manager (SSM) automation that enables centralized management and distribution of SSM documents\nacross your AWS Organization.",
       "properties": {
         "documentSets": {
-          "description": "List of documents for automation",
+          "description": "Array of document sets that define which SSM documents to create and share across organizational units.",
           "items": {
             "$ref": "#/definitions/IDocumentSetConfig"
           },
           "type": "array"
         },
         "excludeRegions": {
-          "description": "(OPTIONAL) List of AWS Region names to be excluded from configuring block S3 public access",
+          "description": "List of AWS regions where SSM automation documents should not be deployed.",
           "items": {
             "type": "string"
           },
@@ -1669,11 +1701,11 @@
     },
     "ISsmSettingsConfig": {
       "additionalProperties": false,
-      "description": "AWS Systems Manager settings configuration wrapper interface.\nThis interface wraps SSM-related security configurations and provides a structured\napproach to managing SSM security features across the organization.",
+      "description": "Configuration for AWS Systems Manager (SSM) security settings and controls across your organization.\nThis enables centralized management of SSM security features to ensure secure and governed access\nto your managed resources while preventing unauthorized sharing of sensitive automation documents.",
       "properties": {
         "blockPublicDocumentSharing": {
           "$ref": "#/definitions/IBlockPublicDocumentSharingConfig",
-          "description": "Configuration for managing SSM Block Public Document Sharing across organization accounts.\nWhen not specified, the SSM Block Public Document Sharing feature is disabled by default.\nThis provides flexibility for organizations to opt-in to this security control as needed."
+          "description": "Configuration for preventing AWS Systems Manager documents from being shared publicly. This security control helps protect sensitive automation scripts and operational procedures from unauthorized access by blocking public document sharing across your organization."
         }
       },
       "type": "object"
@@ -1712,18 +1744,18 @@
     },
     "ITriggeringResourceType": {
       "additionalProperties": false,
-      "description": "AWS TriggeringResource type",
+      "description": "Configuration for defining which AWS resources trigger evaluations for custom AWS Config rules.",
       "properties": {
         "lookupKey": {
           "$ref": "#/definitions/NonEmptyString",
-          "description": "Resource lookup type, resource can be lookup by tag or types. When resource needs to lookup by tag, this field will have tag name."
+          "description": "The lookup key used to identify resources based on the specified lookup type."
         },
         "lookupType": {
-          "description": "An enum to identify triggering resource types. Possible values ResourceId, Tag, or ResourceTypes\n\nTriggering resource can be lookup by resource id, tags or resource types.",
+          "description": "The method used to identify which resources should trigger Config rule evaluations. This determines how the Config rule will find and evaluate AWS resources for compliance.",
           "type": "string"
         },
         "lookupValue": {
-          "description": "Resource lookup value, when resource lookup using tag, this field will have tag value to search resource.",
+          "description": "Array of values used to match resources based on the lookup type and key.",
           "items": {
             "$ref": "#/definitions/NonEmptyString"
           },
