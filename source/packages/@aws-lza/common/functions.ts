@@ -184,24 +184,24 @@ export async function getLandingZoneDetails(
             landingZoneDetails.enableIdentityCenterAccess = value['enabled'];
             break;
           case 'organizationStructure':
-            landingZoneDetails.securityOuName = value['security']['name'];
+            landingZoneDetails.securityOuName = value['security']?.['name'];
             if (value['sandbox']) {
-              landingZoneDetails.sandboxOuName = value['sandbox']['name'];
+              landingZoneDetails.sandboxOuName = value['sandbox']?.['name'];
             }
             break;
           case 'centralizedLogging':
             landingZoneDetails.centralizedLoggingConfig = {
-              loggingBucketRetentionDays: value['configurations']['loggingBucket']['retentionDays'],
-              accessLoggingBucketRetentionDays: value['configurations']['accessLoggingBucket']['retentionDays'],
-              kmsKeyArn: value['configurations']['kmsKeyArn'],
+              loggingBucketRetentionDays: value['configurations']?.['loggingBucket']?.['retentionDays'],
+              accessLoggingBucketRetentionDays: value['configurations']?.['accessLoggingBucket']?.['retentionDays'],
+              kmsKeyArn: value['configurations']?.['kmsKeyArn'],
               accountId: value['accountId'],
             };
             break;
           case 'config':
             landingZoneDetails.configHubConfig = {
-              loggingBucketRetentionDays: value['configurations']['loggingBucket']['retentionDays'],
-              accessLoggingBucketRetentionDays: value['configurations']['accessLoggingBucket']['retentionDays'],
-              kmsKeyArn: value['configurations']['kmsKeyArn'],
+              loggingBucketRetentionDays: value['configurations']?.['loggingBucket']?.['retentionDays'],
+              accessLoggingBucketRetentionDays: value['configurations']?.['accessLoggingBucket']?.['retentionDays'],
+              kmsKeyArn: value['configurations']?.['kmsKeyArn'],
               accountId: value['accountId'],
             };
             break;

@@ -381,6 +381,68 @@ describe('functions', () => {
         await getLandingZoneDetails(new ControlTowerClient({}), mockRegion, mockLandingZoneIdentifier);
       }).rejects.toThrowError(errorMessage);
     });
+
+    test('should handle undefined nested values in V3 response', async () => {
+      // Setup
+      const mockResponse = {
+        landingZone: {
+          arn: 'mockArn',
+          status: 'mockStatus',
+          version: 'mockVersion',
+          latestAvailableVersion: 'mockLatestAvailableVersion',
+          driftStatus: { status: 'mockDriftStatus' },
+          manifest: {
+            governedRegions: ['mockRegion1'],
+            accessManagement: { enabled: true },
+            organizationStructure: {
+              security: undefined,
+              sandbox: undefined,
+            },
+            centralizedLogging: {
+              configurations: undefined,
+            },
+            config: {
+              configurations: undefined,
+            },
+          },
+        },
+      };
+
+      mockSend.mockImplementation(command => {
+        if (command instanceof GetLandingZoneCommand) {
+          return Promise.resolve(mockResponse);
+        }
+        return Promise.reject(new Error('Unexpected command'));
+      });
+
+      // Execute
+      const result = await getLandingZoneDetails(new ControlTowerClient({}), mockRegion, mockLandingZoneIdentifier);
+
+      // Verify
+      expect(result).toEqual({
+        landingZoneIdentifier: mockResponse.landingZone.arn,
+        governedRegions: mockResponse.landingZone.manifest.governedRegions,
+        enableIdentityCenterAccess: mockResponse.landingZone.manifest.accessManagement.enabled,
+        securityOuName: undefined,
+        sandboxOuName: undefined,
+        centralizedLoggingConfig: {
+          loggingBucketRetentionDays: undefined,
+          accessLoggingBucketRetentionDays: undefined,
+          kmsKeyArn: undefined,
+        },
+        configHubConfig: {
+          loggingBucketRetentionDays: undefined,
+          accessLoggingBucketRetentionDays: undefined,
+          kmsKeyArn: undefined,
+        },
+        status: mockResponse.landingZone.status,
+        version: mockResponse.landingZone.version,
+        latestAvailableVersion: mockResponse.landingZone.latestAvailableVersion,
+        driftStatus: mockResponse.landingZone.driftStatus.status,
+        manifest: mockResponse.landingZone.manifest,
+      });
+      expect(GetLandingZoneCommand).toHaveBeenCalledTimes(1);
+    });
   });
 
   describe('getOrganizationalUnitsForParent', () => {
