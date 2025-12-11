@@ -1308,6 +1308,42 @@ exports[`OperationsStack > Construct(OperationsStack):  Snapshot Test 1`] = `
             },
             {
               "Action": [
+                "logs:CreateLogStream",
+                "logs:PutLogEvents",
+                "logs:DescribeLogStreams",
+                "logs:DescribeLogGroups",
+              ],
+              "Effect": "Allow",
+              "Resource": [
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":logs:us-east-1:111111111111:log-group:AWSAccelerator-sessionmanager-logs:*",
+                    ],
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":logs:us-west-2:111111111111:log-group:AWSAccelerator-sessionmanager-logs:*",
+                    ],
+                  ],
+                },
+              ],
+              "Sid": "CloudWatchLogs",
+            },
+            {
+              "Action": [
                 "s3:PutObject",
                 "s3:PutObjectAcl",
               ],

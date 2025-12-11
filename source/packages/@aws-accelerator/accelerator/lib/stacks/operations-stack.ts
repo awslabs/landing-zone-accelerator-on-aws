@@ -1385,30 +1385,23 @@ export class OperationsStack extends AcceleratorStack {
    * Function returns a list of CloudWatch Log Group Name ARNs
    */
   private getSessionManagerCloudWatchLogGroupList(): string[] {
-    const logGroupName = `${this.props.prefixes.ssmLogName}-sessionmanager-logs`;
+    const logGroupName = `${this.props.prefixes.accelerator}-sessionmanager-logs`;
     const cloudWatchLogGroupListResources: string[] = [];
+    const excludedRegions = this.props.globalConfig.logging.sessionManager.excludeRegions ?? [];
+
     for (const regionItem of this.props.globalConfig.enabledRegions ?? []) {
-      const logGroupItem = `arn:${cdk.Stack.of(this).partition}:logs:${regionItem}:${
-        cdk.Stack.of(this).account
-      }:log-group:${logGroupName}:*`;
-      // Already in the list, skip
-      if (cloudWatchLogGroupListResources.includes(logGroupItem)) {
+      if (excludedRegions.includes(regionItem)) {
         continue;
       }
 
-      // Exclude regions is not used
-      if (this.props.globalConfig.logging.sessionManager.excludeRegions) {
-        // If exclude regions is defined, ensure not excluded
-        if (!this.props.globalConfig.logging.sessionManager.excludeRegions.includes(regionItem)) {
-          cloudWatchLogGroupListResources.push(logGroupItem);
-        }
-      }
-      // Exclude regions is not being used, add logGroupItem
-      else {
-        cloudWatchLogGroupListResources.push(logGroupItem);
-      }
+      const logGroupItem = `arn:${cdk.Stack.of(this).partition}:logs:${regionItem}:${
+        cdk.Stack.of(this).account
+      }:log-group:${logGroupName}:*`;
+
+      cloudWatchLogGroupListResources.push(logGroupItem);
     }
-    return cloudWatchLogGroupListResources;
+    //remove duplicate entries
+    return [...new Set(cloudWatchLogGroupListResources)];
   }
 
   /**
