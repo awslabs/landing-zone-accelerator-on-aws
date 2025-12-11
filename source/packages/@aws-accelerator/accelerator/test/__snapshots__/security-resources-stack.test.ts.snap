@@ -4703,8 +4703,10 @@ exports[`SecurityResourcesStack > Construct(SecurityResourcesStack):  Snapshot T
             "Arn",
           ],
         },
-        "cloudWatchEncryptionEnabled": false,
-        "cloudWatchLogGroupName": "",
+        "cloudWatchEncryptionEnabled": true,
+        "cloudWatchLogGroupName": {
+          "Ref": "SsmSessionManagerSettingsSessionManagerCloudWatchLogGroup15AB5AE0",
+        },
         "kmsKeyId": {
           "Ref": "SsmSessionManagerSettingsSessionManagerSessionKey23B7175C",
         },
@@ -4726,6 +4728,18 @@ exports[`SecurityResourcesStack > Construct(SecurityResourcesStack):  Snapshot T
       },
       "Type": "Custom::SsmSessionManagerSettings",
       "UpdateReplacePolicy": "Delete",
+    },
+    "SsmSessionManagerSettingsSessionManagerCloudWatchLogGroup15AB5AE0": {
+      "DeletionPolicy": "Retain",
+      "Properties": {
+        "KmsKeyId": {
+          "Ref": "SsmParameterValueacceleratorkmscloudwatchkeyarnC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+        "LogGroupName": "AWSAccelerator-sessionmanager-logs",
+        "RetentionInDays": 3653,
+      },
+      "Type": "AWS::Logs::LogGroup",
+      "UpdateReplacePolicy": "Retain",
     },
     "SsmSessionManagerSettingsSessionManagerSessionKey23B7175C": {
       "DeletionPolicy": "Retain",

@@ -152,7 +152,7 @@ logging:
           apiCallRateInsight: false
 
   sessionManager:
-    sendToCloudWatchLogs: false
+    sendToCloudWatchLogs: true
     sendToS3: true
   cloudwatchLogs:
     encryption:
