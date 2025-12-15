@@ -1113,7 +1113,7 @@ export class NetworkAssociationsStack extends NetworkStack {
           owningAccountId,
           transitGatewayId,
           type: TransitGatewayAttachmentType.VPC,
-          roleName: `${this.props.prefixes.accelerator}-GetTgwAttachmentRole-${cdk.Stack.of(this).region}`,
+          roleName: `${this.props.prefixes.accelerator}-DescribeTgwAttachRole-${cdk.Stack.of(this).region}`,
         };
       }
     }
