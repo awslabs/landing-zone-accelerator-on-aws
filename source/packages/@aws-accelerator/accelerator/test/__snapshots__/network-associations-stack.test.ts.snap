@@ -348,7 +348,20 @@ exports[`NetworkAssociationsStack > Construct(NetworkAssociationsStack):  Snapsh
     "AcceleratorVpnIpv6NetworkMainCoreAssociationD8C8CC10": {
       "Properties": {
         "TransitGatewayAttachmentId": {
-          "Ref": "AcceleratorVpnIpv6VpnTransitGatewayAttachment334C0CDE",
+          "Fn::Select": [
+            1,
+            {
+              "Fn::Split": [
+                ",",
+                {
+                  "Fn::GetAtt": [
+                    "BatchTgwAttachmentLookup4DD094C3",
+                    "attachmentIds",
+                  ],
+                },
+              ],
+            },
+          ],
         },
         "TransitGatewayRouteTableId": {
           "Ref": "SsmParameterValueacceleratornetworktransitGatewaysNetworkMainrouteTablesNetworkMainCoreidC96584B6F00A464EAD1953AFF4B05118Parameter",
@@ -359,7 +372,20 @@ exports[`NetworkAssociationsStack > Construct(NetworkAssociationsStack):  Snapsh
     "AcceleratorVpnIpv6NetworkMainCorePropagation60BBB733": {
       "Properties": {
         "TransitGatewayAttachmentId": {
-          "Ref": "AcceleratorVpnIpv6VpnTransitGatewayAttachment334C0CDE",
+          "Fn::Select": [
+            1,
+            {
+              "Fn::Split": [
+                ",",
+                {
+                  "Fn::GetAtt": [
+                    "BatchTgwAttachmentLookup4DD094C3",
+                    "attachmentIds",
+                  ],
+                },
+              ],
+            },
+          ],
         },
         "TransitGatewayRouteTableId": {
           "Ref": "SsmParameterValueacceleratornetworktransitGatewaysNetworkMainrouteTablesNetworkMainCoreidC96584B6F00A464EAD1953AFF4B05118Parameter",
@@ -367,33 +393,23 @@ exports[`NetworkAssociationsStack > Construct(NetworkAssociationsStack):  Snapsh
       },
       "Type": "AWS::EC2::TransitGatewayRouteTablePropagation",
     },
-    "AcceleratorVpnIpv6VpnTransitGatewayAttachment334C0CDE": {
-      "DeletionPolicy": "Delete",
-      "DependsOn": [
-        "CustomGetTransitGatewayAttachmentCustomResourceProviderLogGroup41699CF3",
-      ],
-      "Properties": {
-        "ServiceToken": {
-          "Fn::GetAtt": [
-            "CustomGetTransitGatewayAttachmentCustomResourceProviderHandler7E079354",
-            "Arn",
-          ],
-        },
-        "name": "accelerator-vpn-ipv6",
-        "region": "us-east-1",
-        "transitGatewayId": {
-          "Ref": "SsmParameterValueacceleratornetworktransitGatewaysNetworkMainidC96584B6F00A464EAD1953AFF4B05118Parameter",
-        },
-        "type": "vpn",
-        "uuid": "REPLACED-UUID",
-      },
-      "Type": "Custom::GetTransitGatewayAttachment",
-      "UpdateReplacePolicy": "Delete",
-    },
     "AcceleratorVpnNetworkMainCoreAssociationEF397C51": {
       "Properties": {
         "TransitGatewayAttachmentId": {
-          "Ref": "AcceleratorVpnVpnTransitGatewayAttachmentFBF8EE77",
+          "Fn::Select": [
+            2,
+            {
+              "Fn::Split": [
+                ",",
+                {
+                  "Fn::GetAtt": [
+                    "BatchTgwAttachmentLookup4DD094C3",
+                    "attachmentIds",
+                  ],
+                },
+              ],
+            },
+          ],
         },
         "TransitGatewayRouteTableId": {
           "Ref": "SsmParameterValueacceleratornetworktransitGatewaysNetworkMainrouteTablesNetworkMainCoreidC96584B6F00A464EAD1953AFF4B05118Parameter",
@@ -404,36 +420,26 @@ exports[`NetworkAssociationsStack > Construct(NetworkAssociationsStack):  Snapsh
     "AcceleratorVpnNetworkMainCorePropagation585EB5AE": {
       "Properties": {
         "TransitGatewayAttachmentId": {
-          "Ref": "AcceleratorVpnVpnTransitGatewayAttachmentFBF8EE77",
+          "Fn::Select": [
+            2,
+            {
+              "Fn::Split": [
+                ",",
+                {
+                  "Fn::GetAtt": [
+                    "BatchTgwAttachmentLookup4DD094C3",
+                    "attachmentIds",
+                  ],
+                },
+              ],
+            },
+          ],
         },
         "TransitGatewayRouteTableId": {
           "Ref": "SsmParameterValueacceleratornetworktransitGatewaysNetworkMainrouteTablesNetworkMainCoreidC96584B6F00A464EAD1953AFF4B05118Parameter",
         },
       },
       "Type": "AWS::EC2::TransitGatewayRouteTablePropagation",
-    },
-    "AcceleratorVpnVpnTransitGatewayAttachmentFBF8EE77": {
-      "DeletionPolicy": "Delete",
-      "DependsOn": [
-        "CustomGetTransitGatewayAttachmentCustomResourceProviderLogGroup41699CF3",
-      ],
-      "Properties": {
-        "ServiceToken": {
-          "Fn::GetAtt": [
-            "CustomGetTransitGatewayAttachmentCustomResourceProviderHandler7E079354",
-            "Arn",
-          ],
-        },
-        "name": "accelerator-vpn",
-        "region": "us-east-1",
-        "transitGatewayId": {
-          "Ref": "SsmParameterValueacceleratornetworktransitGatewaysNetworkMainidC96584B6F00A464EAD1953AFF4B05118Parameter",
-        },
-        "type": "vpn",
-        "uuid": "REPLACED-UUID",
-      },
-      "Type": "Custom::GetTransitGatewayAttachment",
-      "UpdateReplacePolicy": "Delete",
     },
     "AssociateHostedZonesF0E2F0DA": {
       "DeletionPolicy": "Delete",
@@ -523,6 +529,87 @@ exports[`NetworkAssociationsStack > Construct(NetworkAssociationsStack):  Snapsh
         "uuid": "REPLACED-UUID",
       },
       "Type": "Custom::Route53AssociateHostedZones",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "BatchTgwAttachmentLookup4DD094C3": {
+      "DeletionPolicy": "Delete",
+      "DependsOn": [
+        "CustomGetTransitGatewayAttachmentCustomResourceProviderLogGroup41699CF3",
+      ],
+      "Properties": {
+        "ServiceToken": {
+          "Fn::GetAtt": [
+            "CustomGetTransitGatewayAttachmentCustomResourceProviderHandler7E079354",
+            "Arn",
+          ],
+        },
+        "attachments": [
+          {
+            "name": "SharedServices-Main",
+            "owningAccountId": "444444444444",
+            "roleArn": {
+              "Fn::Join": [
+                "",
+                [
+                  "arn:",
+                  {
+                    "Ref": "AWS::Partition",
+                  },
+                  ":iam::444444444444:role/AWSAccelerator-DescribeTgwAttachRole-us-east-1",
+                ],
+              ],
+            },
+            "transitGatewayId": {
+              "Ref": "SsmParameterValueacceleratornetworktransitGatewaysNetworkMainidC96584B6F00A464EAD1953AFF4B05118Parameter",
+            },
+            "type": "vpc",
+          },
+          {
+            "name": "accelerator-vpn-ipv6",
+            "owningAccountId": "555555555555",
+            "transitGatewayId": {
+              "Ref": "SsmParameterValueacceleratornetworktransitGatewaysNetworkMainidC96584B6F00A464EAD1953AFF4B05118Parameter",
+            },
+            "type": "vpn",
+          },
+          {
+            "name": "accelerator-vpn",
+            "owningAccountId": "555555555555",
+            "transitGatewayId": {
+              "Ref": "SsmParameterValueacceleratornetworktransitGatewaysNetworkMainidC96584B6F00A464EAD1953AFF4B05118Parameter",
+            },
+            "type": "vpn",
+          },
+          {
+            "name": "enhanced-vpn",
+            "owningAccountId": "555555555555",
+            "transitGatewayId": {
+              "Ref": "SsmParameterValueacceleratornetworktransitGatewaysNetworkMainidC96584B6F00A464EAD1953AFF4B05118Parameter",
+            },
+            "type": "vpn",
+          },
+          {
+            "isSameAccountRegionAccepter": false,
+            "name": "Network-Main-And-SharedServices-Main-Peering",
+            "owningAccountId": "555555555555",
+            "transitGatewayId": {
+              "Ref": "SsmParameterValueacceleratornetworktransitGatewaysNetworkMainidC96584B6F00A464EAD1953AFF4B05118Parameter",
+            },
+            "type": "peering",
+          },
+          {
+            "isSameAccountRegionAccepter": true,
+            "name": "Network-Main-And-Network-Main3-Peering",
+            "owningAccountId": "555555555555",
+            "transitGatewayId": {
+              "Ref": "SsmParameterValueacceleratornetworktransitGatewaysNetworkMain3idC96584B6F00A464EAD1953AFF4B05118Parameter",
+            },
+            "type": "peering",
+          },
+        ],
+        "uuid": "REPLACED-UUID",
+      },
+      "Type": "Custom::GetTransitGatewayAttachment",
       "UpdateReplacePolicy": "Delete",
     },
     "CrossAccountRouteFrameworkCrossAccountRouteFunctionAFDC4801": {
@@ -2097,7 +2184,20 @@ exports[`NetworkAssociationsStack > Construct(NetworkAssociationsStack):  Snapsh
     "EnhancedVpnNetworkMainCoreAssociation2D5BE78A": {
       "Properties": {
         "TransitGatewayAttachmentId": {
-          "Ref": "EnhancedVpnVpnTransitGatewayAttachment579ECAAD",
+          "Fn::Select": [
+            3,
+            {
+              "Fn::Split": [
+                ",",
+                {
+                  "Fn::GetAtt": [
+                    "BatchTgwAttachmentLookup4DD094C3",
+                    "attachmentIds",
+                  ],
+                },
+              ],
+            },
+          ],
         },
         "TransitGatewayRouteTableId": {
           "Ref": "SsmParameterValueacceleratornetworktransitGatewaysNetworkMainrouteTablesNetworkMainCoreidC96584B6F00A464EAD1953AFF4B05118Parameter",
@@ -2108,36 +2208,26 @@ exports[`NetworkAssociationsStack > Construct(NetworkAssociationsStack):  Snapsh
     "EnhancedVpnNetworkMainCorePropagation47AEEE67": {
       "Properties": {
         "TransitGatewayAttachmentId": {
-          "Ref": "EnhancedVpnVpnTransitGatewayAttachment579ECAAD",
+          "Fn::Select": [
+            3,
+            {
+              "Fn::Split": [
+                ",",
+                {
+                  "Fn::GetAtt": [
+                    "BatchTgwAttachmentLookup4DD094C3",
+                    "attachmentIds",
+                  ],
+                },
+              ],
+            },
+          ],
         },
         "TransitGatewayRouteTableId": {
           "Ref": "SsmParameterValueacceleratornetworktransitGatewaysNetworkMainrouteTablesNetworkMainCoreidC96584B6F00A464EAD1953AFF4B05118Parameter",
         },
       },
       "Type": "AWS::EC2::TransitGatewayRouteTablePropagation",
-    },
-    "EnhancedVpnVpnTransitGatewayAttachment579ECAAD": {
-      "DeletionPolicy": "Delete",
-      "DependsOn": [
-        "CustomGetTransitGatewayAttachmentCustomResourceProviderLogGroup41699CF3",
-      ],
-      "Properties": {
-        "ServiceToken": {
-          "Fn::GetAtt": [
-            "CustomGetTransitGatewayAttachmentCustomResourceProviderHandler7E079354",
-            "Arn",
-          ],
-        },
-        "name": "enhanced-vpn",
-        "region": "us-east-1",
-        "transitGatewayId": {
-          "Ref": "SsmParameterValueacceleratornetworktransitGatewaysNetworkMainidC96584B6F00A464EAD1953AFF4B05118Parameter",
-        },
-        "type": "vpn",
-        "uuid": "REPLACED-UUID",
-      },
-      "Type": "Custom::GetTransitGatewayAttachment",
-      "UpdateReplacePolicy": "Delete",
     },
     "ListenerNetworkEndpointsappAAlb01appAListener2": {
       "Properties": {
@@ -2749,7 +2839,20 @@ exports[`NetworkAssociationsStack > Construct(NetworkAssociationsStack):  Snapsh
       "Properties": {
         "DestinationCidrBlock": "10.150.0.0/28",
         "TransitGatewayAttachmentId": {
-          "Ref": "NetworkNetworkMainAndNetworkMain3Peering101500028TransitGatewayPeeringAttachment326B9914",
+          "Fn::Select": [
+            5,
+            {
+              "Fn::Split": [
+                ",",
+                {
+                  "Fn::GetAtt": [
+                    "BatchTgwAttachmentLookup4DD094C3",
+                    "attachmentIds",
+                  ],
+                },
+              ],
+            },
+          ],
         },
         "TransitGatewayRouteTableId": {
           "Ref": "SsmParameterValueacceleratornetworktransitGatewaysNetworkMain3routeTablesNetworkMain3CoreidC96584B6F00A464EAD1953AFF4B05118Parameter",
@@ -2761,7 +2864,20 @@ exports[`NetworkAssociationsStack > Construct(NetworkAssociationsStack):  Snapsh
       "Properties": {
         "DestinationCidrBlock": "10.155.0.0/28",
         "TransitGatewayAttachmentId": {
-          "Ref": "NetworkNetworkMainAndNetworkMain3Peering101550028TransitGatewayPeeringAttachment99DC89DB",
+          "Fn::Select": [
+            5,
+            {
+              "Fn::Split": [
+                ",",
+                {
+                  "Fn::GetAtt": [
+                    "BatchTgwAttachmentLookup4DD094C3",
+                    "attachmentIds",
+                  ],
+                },
+              ],
+            },
+          ],
         },
         "TransitGatewayRouteTableId": {
           "Ref": "SsmParameterValueacceleratornetworktransitGatewaysNetworkMain3routeTablesNetworkMain3CoreidC96584B6F00A464EAD1953AFF4B05118Parameter",
@@ -2812,7 +2928,20 @@ exports[`NetworkAssociationsStack > Construct(NetworkAssociationsStack):  Snapsh
       "Properties": {
         "DestinationCidrBlock": "10.30.0.0/16",
         "TransitGatewayAttachmentId": {
-          "Ref": "AcceleratorVpnVpnTransitGatewayAttachmentFBF8EE77",
+          "Fn::Select": [
+            2,
+            {
+              "Fn::Split": [
+                ",",
+                {
+                  "Fn::GetAtt": [
+                    "BatchTgwAttachmentLookup4DD094C3",
+                    "attachmentIds",
+                  ],
+                },
+              ],
+            },
+          ],
         },
         "TransitGatewayRouteTableId": {
           "Ref": "SsmParameterValueacceleratornetworktransitGatewaysNetworkMainrouteTablesNetworkMainCoreidC96584B6F00A464EAD1953AFF4B05118Parameter",
@@ -2871,85 +3000,26 @@ exports[`NetworkAssociationsStack > Construct(NetworkAssociationsStack):  Snapsh
       "Properties": {
         "DestinationCidrBlock": "10.200.0.0/16",
         "TransitGatewayAttachmentId": {
-          "Ref": "NetworkNetworkMainAndSharedServicesMainPeeringTransitGatewayPeeringAttachment6A5D4528",
+          "Fn::Select": [
+            4,
+            {
+              "Fn::Split": [
+                ",",
+                {
+                  "Fn::GetAtt": [
+                    "BatchTgwAttachmentLookup4DD094C3",
+                    "attachmentIds",
+                  ],
+                },
+              ],
+            },
+          ],
         },
         "TransitGatewayRouteTableId": {
           "Ref": "SsmParameterValueacceleratornetworktransitGatewaysNetworkMainrouteTablesNetworkMainSharedidC96584B6F00A464EAD1953AFF4B05118Parameter",
         },
       },
       "Type": "AWS::EC2::TransitGatewayRoute",
-    },
-    "NetworkNetworkMainAndNetworkMain3Peering101500028TransitGatewayPeeringAttachment326B9914": {
-      "DeletionPolicy": "Delete",
-      "DependsOn": [
-        "CustomGetTransitGatewayAttachmentCustomResourceProviderLogGroup41699CF3",
-      ],
-      "Properties": {
-        "ServiceToken": {
-          "Fn::GetAtt": [
-            "CustomGetTransitGatewayAttachmentCustomResourceProviderHandler7E079354",
-            "Arn",
-          ],
-        },
-        "isSameAccountRegionAccepter": true,
-        "name": "Network-Main-And-Network-Main3-Peering",
-        "region": "us-east-1",
-        "transitGatewayId": {
-          "Ref": "SsmParameterValueacceleratornetworktransitGatewaysNetworkMain3idC96584B6F00A464EAD1953AFF4B05118Parameter",
-        },
-        "type": "peering",
-        "uuid": "REPLACED-UUID",
-      },
-      "Type": "Custom::GetTransitGatewayAttachment",
-      "UpdateReplacePolicy": "Delete",
-    },
-    "NetworkNetworkMainAndNetworkMain3Peering101550028TransitGatewayPeeringAttachment99DC89DB": {
-      "DeletionPolicy": "Delete",
-      "DependsOn": [
-        "CustomGetTransitGatewayAttachmentCustomResourceProviderLogGroup41699CF3",
-      ],
-      "Properties": {
-        "ServiceToken": {
-          "Fn::GetAtt": [
-            "CustomGetTransitGatewayAttachmentCustomResourceProviderHandler7E079354",
-            "Arn",
-          ],
-        },
-        "isSameAccountRegionAccepter": true,
-        "name": "Network-Main-And-Network-Main3-Peering",
-        "region": "us-east-1",
-        "transitGatewayId": {
-          "Ref": "SsmParameterValueacceleratornetworktransitGatewaysNetworkMain3idC96584B6F00A464EAD1953AFF4B05118Parameter",
-        },
-        "type": "peering",
-        "uuid": "REPLACED-UUID",
-      },
-      "Type": "Custom::GetTransitGatewayAttachment",
-      "UpdateReplacePolicy": "Delete",
-    },
-    "NetworkNetworkMainAndSharedServicesMainPeeringTransitGatewayPeeringAttachment6A5D4528": {
-      "DeletionPolicy": "Delete",
-      "DependsOn": [
-        "CustomGetTransitGatewayAttachmentCustomResourceProviderLogGroup41699CF3",
-      ],
-      "Properties": {
-        "ServiceToken": {
-          "Fn::GetAtt": [
-            "CustomGetTransitGatewayAttachmentCustomResourceProviderHandler7E079354",
-            "Arn",
-          ],
-        },
-        "isSameAccountRegionAccepter": false,
-        "name": "Network-Main-And-SharedServices-Main-Peering",
-        "region": "us-east-1",
-        "transitGatewayId": {
-          "Ref": "SsmParameterValueacceleratornetworktransitGatewaysNetworkMainidC96584B6F00A464EAD1953AFF4B05118Parameter",
-        },
-        "type": "peering",
-        "uuid": "REPLACED-UUID",
-      },
-      "Type": "Custom::GetTransitGatewayAttachment",
-      "UpdateReplacePolicy": "Delete",
     },
     "NetworkSecondaryTestNacl105EgressNaclRuleA32FBE84": {
       "DeletionPolicy": "Delete",
@@ -3472,7 +3542,20 @@ exports[`NetworkAssociationsStack > Construct(NetworkAssociationsStack):  Snapsh
     "SharedServicesMainNetworkMainCorePropagationB8A9444B": {
       "Properties": {
         "TransitGatewayAttachmentId": {
-          "Ref": "SharedServicesMainSharedServicesVpcTransitGatewayAttachmentE1E0A8A8",
+          "Fn::Select": [
+            0,
+            {
+              "Fn::Split": [
+                ",",
+                {
+                  "Fn::GetAtt": [
+                    "BatchTgwAttachmentLookup4DD094C3",
+                    "attachmentIds",
+                  ],
+                },
+              ],
+            },
+          ],
         },
         "TransitGatewayRouteTableId": {
           "Ref": "SsmParameterValueacceleratornetworktransitGatewaysNetworkMainrouteTablesNetworkMainCoreidC96584B6F00A464EAD1953AFF4B05118Parameter",
@@ -3483,7 +3566,20 @@ exports[`NetworkAssociationsStack > Construct(NetworkAssociationsStack):  Snapsh
     "SharedServicesMainNetworkMainSegregatedPropagation1734E165": {
       "Properties": {
         "TransitGatewayAttachmentId": {
-          "Ref": "SharedServicesMainSharedServicesVpcTransitGatewayAttachmentE1E0A8A8",
+          "Fn::Select": [
+            0,
+            {
+              "Fn::Split": [
+                ",",
+                {
+                  "Fn::GetAtt": [
+                    "BatchTgwAttachmentLookup4DD094C3",
+                    "attachmentIds",
+                  ],
+                },
+              ],
+            },
+          ],
         },
         "TransitGatewayRouteTableId": {
           "Ref": "SsmParameterValueacceleratornetworktransitGatewaysNetworkMainrouteTablesNetworkMainSegregatedidC96584B6F00A464EAD1953AFF4B05118Parameter",
@@ -3494,7 +3590,20 @@ exports[`NetworkAssociationsStack > Construct(NetworkAssociationsStack):  Snapsh
     "SharedServicesMainNetworkMainSharedAssociationFE2C7420": {
       "Properties": {
         "TransitGatewayAttachmentId": {
-          "Ref": "SharedServicesMainSharedServicesVpcTransitGatewayAttachmentE1E0A8A8",
+          "Fn::Select": [
+            0,
+            {
+              "Fn::Split": [
+                ",",
+                {
+                  "Fn::GetAtt": [
+                    "BatchTgwAttachmentLookup4DD094C3",
+                    "attachmentIds",
+                  ],
+                },
+              ],
+            },
+          ],
         },
         "TransitGatewayRouteTableId": {
           "Ref": "SsmParameterValueacceleratornetworktransitGatewaysNetworkMainrouteTablesNetworkMainSharedidC96584B6F00A464EAD1953AFF4B05118Parameter",
@@ -3505,7 +3614,20 @@ exports[`NetworkAssociationsStack > Construct(NetworkAssociationsStack):  Snapsh
     "SharedServicesMainNetworkMainSharedPropagationA83F55E7": {
       "Properties": {
         "TransitGatewayAttachmentId": {
-          "Ref": "SharedServicesMainSharedServicesVpcTransitGatewayAttachmentE1E0A8A8",
+          "Fn::Select": [
+            0,
+            {
+              "Fn::Split": [
+                ",",
+                {
+                  "Fn::GetAtt": [
+                    "BatchTgwAttachmentLookup4DD094C3",
+                    "attachmentIds",
+                  ],
+                },
+              ],
+            },
+          ],
         },
         "TransitGatewayRouteTableId": {
           "Ref": "SsmParameterValueacceleratornetworktransitGatewaysNetworkMainrouteTablesNetworkMainSharedidC96584B6F00A464EAD1953AFF4B05118Parameter",
@@ -3562,41 +3684,6 @@ exports[`NetworkAssociationsStack > Construct(NetworkAssociationsStack):  Snapsh
         "uuid": "REPLACED-UUID",
       },
       "Type": "Custom::GetResourceShare",
-      "UpdateReplacePolicy": "Delete",
-    },
-    "SharedServicesMainSharedServicesVpcTransitGatewayAttachmentE1E0A8A8": {
-      "DeletionPolicy": "Delete",
-      "DependsOn": [
-        "CustomGetTransitGatewayAttachmentCustomResourceProviderLogGroup41699CF3",
-      ],
-      "Properties": {
-        "ServiceToken": {
-          "Fn::GetAtt": [
-            "CustomGetTransitGatewayAttachmentCustomResourceProviderHandler7E079354",
-            "Arn",
-          ],
-        },
-        "name": "SharedServices-Main",
-        "region": "us-east-1",
-        "roleArn": {
-          "Fn::Join": [
-            "",
-            [
-              "arn:",
-              {
-                "Ref": "AWS::Partition",
-              },
-              ":iam::444444444444:role/AWSAccelerator-DescribeTgwAttachRole-us-east-1",
-            ],
-          ],
-        },
-        "transitGatewayId": {
-          "Ref": "SsmParameterValueacceleratornetworktransitGatewaysNetworkMainidC96584B6F00A464EAD1953AFF4B05118Parameter",
-        },
-        "type": "vpc",
-        "uuid": "REPLACED-UUID",
-      },
-      "Type": "Custom::GetTransitGatewayAttachment",
       "UpdateReplacePolicy": "Delete",
     },
     "SsmParamAcceleratorVersionFF83282D": {
@@ -20271,7 +20358,20 @@ exports[`NoVpcFlowLogStack > Construct(NetworkAssociationsStack):  Snapshot Test
     "AcceleratorVpnNetworkMainCoreAssociationEF397C51": {
       "Properties": {
         "TransitGatewayAttachmentId": {
-          "Ref": "AcceleratorVpnVpnTransitGatewayAttachmentFBF8EE77",
+          "Fn::Select": [
+            1,
+            {
+              "Fn::Split": [
+                ",",
+                {
+                  "Fn::GetAtt": [
+                    "BatchTgwAttachmentLookup4DD094C3",
+                    "attachmentIds",
+                  ],
+                },
+              ],
+            },
+          ],
         },
         "TransitGatewayRouteTableId": {
           "Ref": "SsmParameterValueacceleratornetworktransitGatewaysNetworkMainrouteTablesNetworkMainCoreidC96584B6F00A464EAD1953AFF4B05118Parameter",
@@ -20282,36 +20382,26 @@ exports[`NoVpcFlowLogStack > Construct(NetworkAssociationsStack):  Snapshot Test
     "AcceleratorVpnNetworkMainCorePropagation585EB5AE": {
       "Properties": {
         "TransitGatewayAttachmentId": {
-          "Ref": "AcceleratorVpnVpnTransitGatewayAttachmentFBF8EE77",
+          "Fn::Select": [
+            1,
+            {
+              "Fn::Split": [
+                ",",
+                {
+                  "Fn::GetAtt": [
+                    "BatchTgwAttachmentLookup4DD094C3",
+                    "attachmentIds",
+                  ],
+                },
+              ],
+            },
+          ],
         },
         "TransitGatewayRouteTableId": {
           "Ref": "SsmParameterValueacceleratornetworktransitGatewaysNetworkMainrouteTablesNetworkMainCoreidC96584B6F00A464EAD1953AFF4B05118Parameter",
         },
       },
       "Type": "AWS::EC2::TransitGatewayRouteTablePropagation",
-    },
-    "AcceleratorVpnVpnTransitGatewayAttachmentFBF8EE77": {
-      "DeletionPolicy": "Delete",
-      "DependsOn": [
-        "CustomGetTransitGatewayAttachmentCustomResourceProviderLogGroup41699CF3",
-      ],
-      "Properties": {
-        "ServiceToken": {
-          "Fn::GetAtt": [
-            "CustomGetTransitGatewayAttachmentCustomResourceProviderHandler7E079354",
-            "Arn",
-          ],
-        },
-        "name": "accelerator-vpn",
-        "region": "us-east-1",
-        "transitGatewayId": {
-          "Ref": "SsmParameterValueacceleratornetworktransitGatewaysNetworkMainidC96584B6F00A464EAD1953AFF4B05118Parameter",
-        },
-        "type": "vpn",
-        "uuid": "REPLACED-UUID",
-      },
-      "Type": "Custom::GetTransitGatewayAttachment",
-      "UpdateReplacePolicy": "Delete",
     },
     "AssociateHostedZonesF0E2F0DA": {
       "DeletionPolicy": "Delete",
@@ -20368,6 +20458,62 @@ exports[`NoVpcFlowLogStack > Construct(NetworkAssociationsStack):  Snapshot Test
         "uuid": "REPLACED-UUID",
       },
       "Type": "Custom::Route53AssociateHostedZones",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "BatchTgwAttachmentLookup4DD094C3": {
+      "DeletionPolicy": "Delete",
+      "DependsOn": [
+        "CustomGetTransitGatewayAttachmentCustomResourceProviderLogGroup41699CF3",
+      ],
+      "Properties": {
+        "ServiceToken": {
+          "Fn::GetAtt": [
+            "CustomGetTransitGatewayAttachmentCustomResourceProviderHandler7E079354",
+            "Arn",
+          ],
+        },
+        "attachments": [
+          {
+            "name": "SharedServices-Main",
+            "owningAccountId": "444444444444",
+            "roleArn": {
+              "Fn::Join": [
+                "",
+                [
+                  "arn:",
+                  {
+                    "Ref": "AWS::Partition",
+                  },
+                  ":iam::444444444444:role/AWSAccelerator-DescribeTgwAttachRole-us-east-1",
+                ],
+              ],
+            },
+            "transitGatewayId": {
+              "Ref": "SsmParameterValueacceleratornetworktransitGatewaysNetworkMainidC96584B6F00A464EAD1953AFF4B05118Parameter",
+            },
+            "type": "vpc",
+          },
+          {
+            "name": "accelerator-vpn",
+            "owningAccountId": "555555555555",
+            "transitGatewayId": {
+              "Ref": "SsmParameterValueacceleratornetworktransitGatewaysNetworkMainidC96584B6F00A464EAD1953AFF4B05118Parameter",
+            },
+            "type": "vpn",
+          },
+          {
+            "isSameAccountRegionAccepter": false,
+            "name": "Network-Main-And-SharedServices-Main-Peering",
+            "owningAccountId": "555555555555",
+            "transitGatewayId": {
+              "Ref": "SsmParameterValueacceleratornetworktransitGatewaysNetworkMainidC96584B6F00A464EAD1953AFF4B05118Parameter",
+            },
+            "type": "peering",
+          },
+        ],
+        "uuid": "REPLACED-UUID",
+      },
+      "Type": "Custom::GetTransitGatewayAttachment",
       "UpdateReplacePolicy": "Delete",
     },
     "CrossAccountRouteFrameworkCrossAccountRouteFunctionAFDC4801": {
@@ -21761,7 +21907,20 @@ exports[`NoVpcFlowLogStack > Construct(NetworkAssociationsStack):  Snapshot Test
       "Properties": {
         "DestinationCidrBlock": "10.300.0.0/16",
         "TransitGatewayAttachmentId": {
-          "Ref": "AcceleratorVpnVpnTransitGatewayAttachmentFBF8EE77",
+          "Fn::Select": [
+            1,
+            {
+              "Fn::Split": [
+                ",",
+                {
+                  "Fn::GetAtt": [
+                    "BatchTgwAttachmentLookup4DD094C3",
+                    "attachmentIds",
+                  ],
+                },
+              ],
+            },
+          ],
         },
         "TransitGatewayRouteTableId": {
           "Ref": "SsmParameterValueacceleratornetworktransitGatewaysNetworkMainrouteTablesNetworkMainCoreidC96584B6F00A464EAD1953AFF4B05118Parameter",
@@ -21810,7 +21969,20 @@ exports[`NoVpcFlowLogStack > Construct(NetworkAssociationsStack):  Snapshot Test
       "Properties": {
         "DestinationCidrBlock": "10.200.0.0/16",
         "TransitGatewayAttachmentId": {
-          "Ref": "NetworkNetworkMainAndSharedServicesMainPeeringTransitGatewayPeeringAttachment6A5D4528",
+          "Fn::Select": [
+            2,
+            {
+              "Fn::Split": [
+                ",",
+                {
+                  "Fn::GetAtt": [
+                    "BatchTgwAttachmentLookup4DD094C3",
+                    "attachmentIds",
+                  ],
+                },
+              ],
+            },
+          ],
         },
         "TransitGatewayRouteTableId": {
           "Ref": "SsmParameterValueacceleratornetworktransitGatewaysNetworkMainrouteTablesNetworkMainSharedidC96584B6F00A464EAD1953AFF4B05118Parameter",
@@ -21818,34 +21990,23 @@ exports[`NoVpcFlowLogStack > Construct(NetworkAssociationsStack):  Snapshot Test
       },
       "Type": "AWS::EC2::TransitGatewayRoute",
     },
-    "NetworkNetworkMainAndSharedServicesMainPeeringTransitGatewayPeeringAttachment6A5D4528": {
-      "DeletionPolicy": "Delete",
-      "DependsOn": [
-        "CustomGetTransitGatewayAttachmentCustomResourceProviderLogGroup41699CF3",
-      ],
-      "Properties": {
-        "ServiceToken": {
-          "Fn::GetAtt": [
-            "CustomGetTransitGatewayAttachmentCustomResourceProviderHandler7E079354",
-            "Arn",
-          ],
-        },
-        "isSameAccountRegionAccepter": false,
-        "name": "Network-Main-And-SharedServices-Main-Peering",
-        "region": "us-east-1",
-        "transitGatewayId": {
-          "Ref": "SsmParameterValueacceleratornetworktransitGatewaysNetworkMainidC96584B6F00A464EAD1953AFF4B05118Parameter",
-        },
-        "type": "peering",
-        "uuid": "REPLACED-UUID",
-      },
-      "Type": "Custom::GetTransitGatewayAttachment",
-      "UpdateReplacePolicy": "Delete",
-    },
     "SharedServicesMainNetworkMainCorePropagationB8A9444B": {
       "Properties": {
         "TransitGatewayAttachmentId": {
-          "Ref": "SharedServicesMainSharedServicesVpcTransitGatewayAttachmentE1E0A8A8",
+          "Fn::Select": [
+            0,
+            {
+              "Fn::Split": [
+                ",",
+                {
+                  "Fn::GetAtt": [
+                    "BatchTgwAttachmentLookup4DD094C3",
+                    "attachmentIds",
+                  ],
+                },
+              ],
+            },
+          ],
         },
         "TransitGatewayRouteTableId": {
           "Ref": "SsmParameterValueacceleratornetworktransitGatewaysNetworkMainrouteTablesNetworkMainCoreidC96584B6F00A464EAD1953AFF4B05118Parameter",
@@ -21856,7 +22017,20 @@ exports[`NoVpcFlowLogStack > Construct(NetworkAssociationsStack):  Snapshot Test
     "SharedServicesMainNetworkMainSegregatedPropagation1734E165": {
       "Properties": {
         "TransitGatewayAttachmentId": {
-          "Ref": "SharedServicesMainSharedServicesVpcTransitGatewayAttachmentE1E0A8A8",
+          "Fn::Select": [
+            0,
+            {
+              "Fn::Split": [
+                ",",
+                {
+                  "Fn::GetAtt": [
+                    "BatchTgwAttachmentLookup4DD094C3",
+                    "attachmentIds",
+                  ],
+                },
+              ],
+            },
+          ],
         },
         "TransitGatewayRouteTableId": {
           "Ref": "SsmParameterValueacceleratornetworktransitGatewaysNetworkMainrouteTablesNetworkMainSegregatedidC96584B6F00A464EAD1953AFF4B05118Parameter",
@@ -21867,7 +22041,20 @@ exports[`NoVpcFlowLogStack > Construct(NetworkAssociationsStack):  Snapshot Test
     "SharedServicesMainNetworkMainSharedAssociationFE2C7420": {
       "Properties": {
         "TransitGatewayAttachmentId": {
-          "Ref": "SharedServicesMainSharedServicesVpcTransitGatewayAttachmentE1E0A8A8",
+          "Fn::Select": [
+            0,
+            {
+              "Fn::Split": [
+                ",",
+                {
+                  "Fn::GetAtt": [
+                    "BatchTgwAttachmentLookup4DD094C3",
+                    "attachmentIds",
+                  ],
+                },
+              ],
+            },
+          ],
         },
         "TransitGatewayRouteTableId": {
           "Ref": "SsmParameterValueacceleratornetworktransitGatewaysNetworkMainrouteTablesNetworkMainSharedidC96584B6F00A464EAD1953AFF4B05118Parameter",
@@ -21878,48 +22065,26 @@ exports[`NoVpcFlowLogStack > Construct(NetworkAssociationsStack):  Snapshot Test
     "SharedServicesMainNetworkMainSharedPropagationA83F55E7": {
       "Properties": {
         "TransitGatewayAttachmentId": {
-          "Ref": "SharedServicesMainSharedServicesVpcTransitGatewayAttachmentE1E0A8A8",
+          "Fn::Select": [
+            0,
+            {
+              "Fn::Split": [
+                ",",
+                {
+                  "Fn::GetAtt": [
+                    "BatchTgwAttachmentLookup4DD094C3",
+                    "attachmentIds",
+                  ],
+                },
+              ],
+            },
+          ],
         },
         "TransitGatewayRouteTableId": {
           "Ref": "SsmParameterValueacceleratornetworktransitGatewaysNetworkMainrouteTablesNetworkMainSharedidC96584B6F00A464EAD1953AFF4B05118Parameter",
         },
       },
       "Type": "AWS::EC2::TransitGatewayRouteTablePropagation",
-    },
-    "SharedServicesMainSharedServicesVpcTransitGatewayAttachmentE1E0A8A8": {
-      "DeletionPolicy": "Delete",
-      "DependsOn": [
-        "CustomGetTransitGatewayAttachmentCustomResourceProviderLogGroup41699CF3",
-      ],
-      "Properties": {
-        "ServiceToken": {
-          "Fn::GetAtt": [
-            "CustomGetTransitGatewayAttachmentCustomResourceProviderHandler7E079354",
-            "Arn",
-          ],
-        },
-        "name": "SharedServices-Main",
-        "region": "us-east-1",
-        "roleArn": {
-          "Fn::Join": [
-            "",
-            [
-              "arn:",
-              {
-                "Ref": "AWS::Partition",
-              },
-              ":iam::444444444444:role/AWSAccelerator-DescribeTgwAttachRole-us-east-1",
-            ],
-          ],
-        },
-        "transitGatewayId": {
-          "Ref": "SsmParameterValueacceleratornetworktransitGatewaysNetworkMainidC96584B6F00A464EAD1953AFF4B05118Parameter",
-        },
-        "type": "vpc",
-        "uuid": "REPLACED-UUID",
-      },
-      "Type": "Custom::GetTransitGatewayAttachment",
-      "UpdateReplacePolicy": "Delete",
     },
     "SsmParamAcceleratorVersionFF83282D": {
       "Properties": {

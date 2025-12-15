@@ -893,6 +893,34 @@ exports[`NetworkAssociationsGwlbStack > Construct(NetworkAssociationsGwlbStack):
       },
       "Type": "AWS::IAM::Role",
     },
+    "FirewallVpnBatchTgwAttachmentLookup7A8CED7B": {
+      "DeletionPolicy": "Delete",
+      "DependsOn": [
+        "CustomGetTransitGatewayAttachmentCustomResourceProviderLogGroup41699CF3",
+      ],
+      "Properties": {
+        "ServiceToken": {
+          "Fn::GetAtt": [
+            "CustomGetTransitGatewayAttachmentCustomResourceProviderHandler7E079354",
+            "Arn",
+          ],
+        },
+        "attachments": [
+          {
+            "crossAccountVpnOptions": {},
+            "name": "same-account-tgw-vpn",
+            "owningAccountId": "555555555555",
+            "transitGatewayId": {
+              "Ref": "SsmParameterValueacceleratornetworktransitGatewaysNetworkMainidC96584B6F00A464EAD1953AFF4B05118Parameter",
+            },
+            "type": "vpn",
+          },
+        ],
+        "uuid": "REPLACED-UUID",
+      },
+      "Type": "Custom::GetTransitGatewayAttachment",
+      "UpdateReplacePolicy": "Delete",
+    },
     "NetworkInspectionAcceleratorGwlbListener": {
       "Properties": {
         "DefaultActions": [
@@ -2422,7 +2450,20 @@ exports[`NetworkAssociationsGwlbStack > Construct(NetworkAssociationsGwlbStack):
       "Properties": {
         "DestinationCidrBlock": "10.40.0.0/16",
         "TransitGatewayAttachmentId": {
-          "Ref": "SameAccountTgwVpnVpnTransitGatewayAttachment33D92C61",
+          "Fn::Select": [
+            0,
+            {
+              "Fn::Split": [
+                ",",
+                {
+                  "Fn::GetAtt": [
+                    "FirewallVpnBatchTgwAttachmentLookup7A8CED7B",
+                    "attachmentIds",
+                  ],
+                },
+              ],
+            },
+          ],
         },
         "TransitGatewayRouteTableId": {
           "Ref": "SsmParameterValueacceleratornetworktransitGatewaysNetworkMainrouteTablesNetworkMainCoreidC96584B6F00A464EAD1953AFF4B05118Parameter",
@@ -2434,7 +2475,20 @@ exports[`NetworkAssociationsGwlbStack > Construct(NetworkAssociationsGwlbStack):
       "Properties": {
         "DestinationCidrBlock": "10.50.0.0/16",
         "TransitGatewayAttachmentId": {
-          "Ref": "SameAccountTgwVpnVpnTransitGatewayAttachment33D92C61",
+          "Fn::Select": [
+            0,
+            {
+              "Fn::Split": [
+                ",",
+                {
+                  "Fn::GetAtt": [
+                    "FirewallVpnBatchTgwAttachmentLookup7A8CED7B",
+                    "attachmentIds",
+                  ],
+                },
+              ],
+            },
+          ],
         },
         "TransitGatewayRouteTableId": {
           "Ref": "SsmParameterValueacceleratornetworktransitGatewaysNetworkMainrouteTablesNetworkMainCoreidC96584B6F00A464EAD1953AFF4B05118Parameter",
@@ -2459,7 +2513,20 @@ exports[`NetworkAssociationsGwlbStack > Construct(NetworkAssociationsGwlbStack):
             "Ref": "SsmParameterValueacceleratornetworkprefixListacceleratorprefixlistidC96584B6F00A464EAD1953AFF4B05118Parameter",
           },
           "TransitGatewayAttachmentId": {
-            "Ref": "SameAccountTgwVpnVpnTransitGatewayAttachment33D92C61",
+            "Fn::Select": [
+              0,
+              {
+                "Fn::Split": [
+                  ",",
+                  {
+                    "Fn::GetAtt": [
+                      "FirewallVpnBatchTgwAttachmentLookup7A8CED7B",
+                      "attachmentIds",
+                    ],
+                  },
+                ],
+              },
+            ],
           },
           "TransitGatewayRouteTableId": {
             "Ref": "SsmParameterValueacceleratornetworktransitGatewaysNetworkMainrouteTablesNetworkMainStandaloneidC96584B6F00A464EAD1953AFF4B05118Parameter",
@@ -2629,7 +2696,20 @@ exports[`NetworkAssociationsGwlbStack > Construct(NetworkAssociationsGwlbStack):
     "SameAccountTgwVpnNetworkMainCorePropagation9D8E7774": {
       "Properties": {
         "TransitGatewayAttachmentId": {
-          "Ref": "SameAccountTgwVpnVpnTransitGatewayAttachment33D92C61",
+          "Fn::Select": [
+            0,
+            {
+              "Fn::Split": [
+                ",",
+                {
+                  "Fn::GetAtt": [
+                    "FirewallVpnBatchTgwAttachmentLookup7A8CED7B",
+                    "attachmentIds",
+                  ],
+                },
+              ],
+            },
+          ],
         },
         "TransitGatewayRouteTableId": {
           "Ref": "SsmParameterValueacceleratornetworktransitGatewaysNetworkMainrouteTablesNetworkMainCoreidC96584B6F00A464EAD1953AFF4B05118Parameter",
@@ -2640,7 +2720,20 @@ exports[`NetworkAssociationsGwlbStack > Construct(NetworkAssociationsGwlbStack):
     "SameAccountTgwVpnNetworkMainSharedAssociationEED2CCFB": {
       "Properties": {
         "TransitGatewayAttachmentId": {
-          "Ref": "SameAccountTgwVpnVpnTransitGatewayAttachment33D92C61",
+          "Fn::Select": [
+            0,
+            {
+              "Fn::Split": [
+                ",",
+                {
+                  "Fn::GetAtt": [
+                    "FirewallVpnBatchTgwAttachmentLookup7A8CED7B",
+                    "attachmentIds",
+                  ],
+                },
+              ],
+            },
+          ],
         },
         "TransitGatewayRouteTableId": {
           "Ref": "SsmParameterValueacceleratornetworktransitGatewaysNetworkMainrouteTablesNetworkMainSharedidC96584B6F00A464EAD1953AFF4B05118Parameter",
@@ -2651,7 +2744,20 @@ exports[`NetworkAssociationsGwlbStack > Construct(NetworkAssociationsGwlbStack):
     "SameAccountTgwVpnNetworkMainSharedPropagation4D265167": {
       "Properties": {
         "TransitGatewayAttachmentId": {
-          "Ref": "SameAccountTgwVpnVpnTransitGatewayAttachment33D92C61",
+          "Fn::Select": [
+            0,
+            {
+              "Fn::Split": [
+                ",",
+                {
+                  "Fn::GetAtt": [
+                    "FirewallVpnBatchTgwAttachmentLookup7A8CED7B",
+                    "attachmentIds",
+                  ],
+                },
+              ],
+            },
+          ],
         },
         "TransitGatewayRouteTableId": {
           "Ref": "SsmParameterValueacceleratornetworktransitGatewaysNetworkMainrouteTablesNetworkMainSharedidC96584B6F00A464EAD1953AFF4B05118Parameter",
@@ -2676,31 +2782,6 @@ exports[`NetworkAssociationsGwlbStack > Construct(NetworkAssociationsGwlbStack):
         "Type": "ipsec.1",
       },
       "Type": "AWS::EC2::VPNConnection",
-    },
-    "SameAccountTgwVpnVpnTransitGatewayAttachment33D92C61": {
-      "DeletionPolicy": "Delete",
-      "DependsOn": [
-        "CustomGetTransitGatewayAttachmentCustomResourceProviderLogGroup41699CF3",
-        "SameAccountTgwVpnVpnConnection83EBF560",
-      ],
-      "Properties": {
-        "ServiceToken": {
-          "Fn::GetAtt": [
-            "CustomGetTransitGatewayAttachmentCustomResourceProviderHandler7E079354",
-            "Arn",
-          ],
-        },
-        "crossAccountVpnOptions": {},
-        "name": "same-account-tgw-vpn",
-        "region": "us-east-1",
-        "transitGatewayId": {
-          "Ref": "SsmParameterValueacceleratornetworktransitGatewaysNetworkMainidC96584B6F00A464EAD1953AFF4B05118Parameter",
-        },
-        "type": "vpn",
-        "uuid": "REPLACED-UUID",
-      },
-      "Type": "Custom::GetTransitGatewayAttachment",
-      "UpdateReplacePolicy": "Delete",
     },
     "SameAccountVgwVpnVpnConnectionD0DEB61E": {
       "Properties": {

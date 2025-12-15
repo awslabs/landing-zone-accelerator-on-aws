@@ -258,24 +258,26 @@ exports[`ImportTransitGateway > Construct(ImportTransitGateway):  Snapshot Test 
             "Arn",
           ],
         },
-        "name": "name",
-        "region": {
-          "Ref": "AWS::Region",
-        },
-        "roleArn": {
-          "Fn::Join": [
-            "",
-            [
-              "arn:",
-              {
-                "Ref": "AWS::Partition",
-              },
-              ":iam::owningAccountId:role/roleName",
-            ],
-          ],
-        },
-        "transitGatewayId": "transitGatewayId",
-        "type": "vpc",
+        "attachments": [
+          {
+            "name": "name",
+            "owningAccountId": "owningAccountId",
+            "roleArn": {
+              "Fn::Join": [
+                "",
+                [
+                  "arn:",
+                  {
+                    "Ref": "AWS::Partition",
+                  },
+                  ":iam::owningAccountId:role/roleName",
+                ],
+              ],
+            },
+            "transitGatewayId": "transitGatewayId",
+            "type": "vpc",
+          },
+        ],
         "uuid": "REPLACED-UUID",
       },
       "Type": "Custom::GetTransitGatewayAttachment",
@@ -1114,24 +1116,26 @@ exports[`TransitGateway > Construct(TransitGateway):  Snapshot Test 1`] = `
             "Arn",
           ],
         },
-        "name": "name",
-        "region": {
-          "Ref": "AWS::Region",
-        },
-        "roleArn": {
-          "Fn::Join": [
-            "",
-            [
-              "arn:",
-              {
-                "Ref": "AWS::Partition",
-              },
-              ":iam::owningAccountId:role/roleName",
-            ],
-          ],
-        },
-        "transitGatewayId": "transitGatewayId",
-        "type": "vpc",
+        "attachments": [
+          {
+            "name": "name",
+            "owningAccountId": "owningAccountId",
+            "roleArn": {
+              "Fn::Join": [
+                "",
+                [
+                  "arn:",
+                  {
+                    "Ref": "AWS::Partition",
+                  },
+                  ":iam::owningAccountId:role/roleName",
+                ],
+              ],
+            },
+            "transitGatewayId": "transitGatewayId",
+            "type": "vpc",
+          },
+        ],
         "uuid": "REPLACED-UUID",
       },
       "Type": "Custom::GetTransitGatewayAttachment",
@@ -1970,24 +1974,26 @@ exports[`TransitGatewayAttachment > Construct(TransitGatewayAttachment):  Snapsh
             "Arn",
           ],
         },
-        "name": "name",
-        "region": {
-          "Ref": "AWS::Region",
-        },
-        "roleArn": {
-          "Fn::Join": [
-            "",
-            [
-              "arn:",
-              {
-                "Ref": "AWS::Partition",
-              },
-              ":iam::owningAccountId:role/roleName",
-            ],
-          ],
-        },
-        "transitGatewayId": "transitGatewayId",
-        "type": "vpc",
+        "attachments": [
+          {
+            "name": "name",
+            "owningAccountId": "owningAccountId",
+            "roleArn": {
+              "Fn::Join": [
+                "",
+                [
+                  "arn:",
+                  {
+                    "Ref": "AWS::Partition",
+                  },
+                  ":iam::owningAccountId:role/roleName",
+                ],
+              ],
+            },
+            "transitGatewayId": "transitGatewayId",
+            "type": "vpc",
+          },
+        ],
         "uuid": "REPLACED-UUID",
       },
       "Type": "Custom::GetTransitGatewayAttachment",
@@ -3424,24 +3430,26 @@ exports[`TransitGatewayRouteTablePropagation > Construct(TransitGatewayRouteTabl
             "Arn",
           ],
         },
-        "name": "name",
-        "region": {
-          "Ref": "AWS::Region",
-        },
-        "roleArn": {
-          "Fn::Join": [
-            "",
-            [
-              "arn:",
-              {
-                "Ref": "AWS::Partition",
-              },
-              ":iam::owningAccountId:role/roleName",
-            ],
-          ],
-        },
-        "transitGatewayId": "transitGatewayId",
-        "type": "vpc",
+        "attachments": [
+          {
+            "name": "name",
+            "owningAccountId": "owningAccountId",
+            "roleArn": {
+              "Fn::Join": [
+                "",
+                [
+                  "arn:",
+                  {
+                    "Ref": "AWS::Partition",
+                  },
+                  ":iam::owningAccountId:role/roleName",
+                ],
+              ],
+            },
+            "transitGatewayId": "transitGatewayId",
+            "type": "vpc",
+          },
+        ],
         "uuid": "REPLACED-UUID",
       },
       "Type": "Custom::GetTransitGatewayAttachment",

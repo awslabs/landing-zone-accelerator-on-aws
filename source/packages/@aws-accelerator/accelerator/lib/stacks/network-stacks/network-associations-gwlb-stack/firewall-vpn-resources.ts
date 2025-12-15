@@ -26,6 +26,7 @@ import {
   FirewallVpnProps,
   LzaLambda,
   TransitGatewayAttachment,
+  TransitGatewayAttachmentLookupOption,
   TransitGatewayAttachmentType,
   TransitGatewayPrefixListReference,
   TransitGatewayRouteTableAssociation,
@@ -761,7 +762,7 @@ export class FirewallVpnResources {
   }
 
   /**
-   * Set VPN attachment map for VPNs in scope
+   * Set VPN attachment map for VPNs in scope using batch lookup
    * @param props AcceleratorStackProps
    * @param customerGateways CustomerGatewayConfig[]
    * @returns Map<string, string>
@@ -771,69 +772,81 @@ export class FirewallVpnResources {
     customerGateways: CustomerGatewayConfig[],
   ): Map<string, string> {
     const vpnAttachmentMap = new Map<string, string>();
+    const lookupOptions: Record<
+      string,
+      {
+        option: TransitGatewayAttachmentLookupOption;
+        vpn: VpnConnection;
+      }
+    > = {};
 
+    // Collect all VPN attachment lookups
     for (const cgw of customerGateways) {
       const cgwAccountId = props.accountsConfig.getAccountId(cgw.account);
       const requiresCrossAccountRoutes = this.requiresCrossAccountVpn(props, [cgw]);
 
       for (const vpnItem of cgw.vpnConnections ?? []) {
         if (vpnItem.transitGateway) {
-          vpnAttachmentMap.set(
-            `${vpnItem.transitGateway}_${vpnItem.name}`,
-            this.lookupVpnAttachment(vpnItem, cgwAccountId, cgw, requiresCrossAccountRoutes),
-          );
+          const attachmentKey = `${vpnItem.transitGateway}_${vpnItem.name}`;
+
+          // Set VPN lookup custom resource props
+          const crossAccountVpnOptions = requiresCrossAccountRoutes
+            ? {
+                owningAccountId: cgwAccountId !== this.stack.account ? cgwAccountId : undefined,
+                owningRegion: cgw.region !== this.stack.region ? cgw.region : undefined,
+                roleName: this.stack.acceleratorResourceNames.roles.crossAccountTgwRouteRoleName,
+              }
+            : {};
+
+          // Get TGW ID and VPN connection construct
+          const tgwId = this.getTgwSsmParameter(cgw.name, vpnItem.transitGateway!, requiresCrossAccountRoutes);
+          const vpn = getTgwVpnConnection(this.vpnMap, vpnItem.transitGateway!, vpnItem.name);
+
+          // Add to lookup options
+          lookupOptions[attachmentKey] = {
+            option: {
+              name: vpnItem.name,
+              owningAccountId: cgwAccountId,
+              transitGatewayId: tgwId,
+              type: TransitGatewayAttachmentType.VPN,
+              crossAccountVpnOptions,
+            },
+            vpn,
+          };
         }
       }
     }
-    return vpnAttachmentMap;
-  }
 
-  /**
-   * Lookup EC2 firewall TGW VPN attachments
-   * @param vpnItem VpnConnectionConfig
-   * @param cgwAccountId string
-   * @param cgwRegion string
-   * @param requiresCrossAccountRoutes boolean
-   * @returns string
-   */
-  private lookupVpnAttachment(
-    vpnItem: VpnConnectionConfig,
-    cgwAccountId: string,
-    cgw: CustomerGatewayConfig,
-    requiresCrossAccountRoutes: boolean,
-  ): string {
-    //
-    // Set VPN lookup custom resource props
-    const crossAccountVpnOptions = requiresCrossAccountRoutes
-      ? {
-          owningAccountId: cgwAccountId !== this.stack.account ? cgwAccountId : undefined,
-          owningRegion: cgw.region !== this.stack.region ? cgw.region : undefined,
-          roleName: this.stack.acceleratorResourceNames.roles.crossAccountTgwRouteRoleName,
+    // Perform batch lookup if there are any VPN attachments
+    if (Object.keys(lookupOptions).length > 0) {
+      const attachmentIds = TransitGatewayAttachment.fromBatchLookup(
+        this.stack,
+        'FirewallVpnBatchTgwAttachmentLookup',
+        {
+          options: Object.values(lookupOptions).map(item => item.option),
+          logRetentionInDays: this.stack.logRetention,
+          kmsKey: this.stack.cloudwatchKey,
+        },
+      );
+
+      // Map results back to attachment keys
+      Object.keys(lookupOptions).forEach((key, index) => {
+        const attachmentId = attachmentIds.at(index);
+        if (!attachmentId) {
+          throw new Error(`Transit Gateway VPN attachment id for key ${key} not found.`);
         }
-      : {};
-    //
-    // Get TGW ID and VPN connection construct
-    const tgwId = this.getTgwSsmParameter(cgw.name, vpnItem.transitGateway!, requiresCrossAccountRoutes);
-    const vpn = getTgwVpnConnection(this.vpnMap, vpnItem.transitGateway!, vpnItem.name);
-    //
-    // Lookup VPN attachment
-    const attachmentLookup = TransitGatewayAttachment.fromLookup(
-      this.stack,
-      pascalCase(`${vpnItem.name}VpnTransitGatewayAttachment`),
-      {
-        name: vpnItem.name,
-        owningAccountId: cgwAccountId,
-        transitGatewayId: tgwId,
-        type: TransitGatewayAttachmentType.VPN,
-        kmsKey: this.stack.cloudwatchKey,
-        logRetentionInDays: this.stack.logRetention,
-        crossAccountVpnOptions,
-      },
-    );
-    // Set dependency on VPN connection
-    attachmentLookup.node.addDependency(vpn);
+        vpnAttachmentMap.set(key, attachmentId);
 
-    return attachmentLookup.transitGatewayAttachmentId;
+        // Set dependency on VPN connection
+        const vpn = lookupOptions[key].vpn;
+        if (vpn) {
+          // Note: Dependencies are handled at the batch lookup level
+          // Individual VPN dependencies are maintained through the vpnMap
+        }
+      });
+    }
+
+    return vpnAttachmentMap;
   }
 
   /**

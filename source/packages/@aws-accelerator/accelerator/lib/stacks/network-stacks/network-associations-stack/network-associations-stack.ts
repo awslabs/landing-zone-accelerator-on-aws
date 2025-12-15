@@ -71,6 +71,7 @@ import {
   SubnetIdLookup,
   TargetGroup,
   TransitGatewayAttachment,
+  TransitGatewayAttachmentLookupOption,
   TransitGatewayAttachmentType,
   TransitGatewayConnect,
   TransitGatewayPrefixListReference,
@@ -953,25 +954,66 @@ export class NetworkAssociationsStack extends NetworkStack {
     // Create Transit Gateway route table associations and propagations
     // for VPC attachments
     //
+    const tgwAttachmentIdLookupMap: Record<string, TransitGatewayAttachmentLookupOption> = {};
+
+    // Collect VPC attachment lookups
     for (const vpcItem of this.vpcResources) {
-      this.setTransitGatewayVpcAttachmentsMap(vpcItem);
+      this.setTransitGatewayVpcAttachmentsMap(vpcItem, tgwAttachmentIdLookupMap);
+    }
+
+    // Collect VPN attachment lookups
+    for (const cgwItem of props.networkConfig.customerGateways ?? []) {
+      if (isIpAddress(cgwItem.ipAddress)) {
+        for (const vpnItem of cgwItem.vpnConnections ?? []) {
+          this.collectTransitGatewayVpnAttachmentLookups(props, cgwItem, vpnItem, tgwAttachmentIdLookupMap);
+        }
+      }
+    }
+
+    // Collect TGW Peering attachment lookups
+    this.collectTransitGatewayPeeringAttachmentLookups(props, tgwAttachmentIdLookupMap);
+
+    // Perform single batch lookup for all attachments
+    this.setBatchLookupTgwAttachmentId(tgwAttachmentIdLookupMap);
+
+    // Create associations and propagations
+    for (const vpcItem of this.vpcResources) {
       this.createVpcTransitGatewayAssociations(vpcItem);
       this.createVpcTransitGatewayPropagations(vpcItem);
     }
 
-    //
-    // Create Transit Gateway route table associations and propagations
-    // for VPN attachments
-    //
     for (const cgwItem of props.networkConfig.customerGateways ?? []) {
       if (isIpAddress(cgwItem.ipAddress)) {
         for (const vpnItem of cgwItem.vpnConnections ?? []) {
-          this.setTransitGatewayVpnAttachmentsMap(props, cgwItem, vpnItem);
           this.createVpnTransitGatewayAssociations(cgwItem, vpnItem);
           this.createVpnTransitGatewayPropagations(cgwItem, vpnItem);
         }
       }
     }
+  }
+
+  /**
+   * Set batch lookup transit gateways attachment map
+   * @param tgwAttachmentIdLookupMap Record<string, TransitGatewayAttachmentLookupOption>
+   */
+  private setBatchLookupTgwAttachmentId(
+    tgwAttachmentIdLookupMap: Record<string, TransitGatewayAttachmentLookupOption>,
+  ) {
+    const tgwAttachmentIds = TransitGatewayAttachment.fromBatchLookup(this, 'BatchTgwAttachmentLookup', {
+      options: Object.values(tgwAttachmentIdLookupMap),
+      logRetentionInDays: this.logRetention,
+      kmsKey: this.cloudwatchKey,
+    });
+
+    Object.keys(tgwAttachmentIdLookupMap).forEach((key, index) => {
+      const tgwAttachmentId = tgwAttachmentIds.at(index);
+
+      if (!tgwAttachmentId) {
+        throw Error(`Transit Gateway Attachment id for key ${key} not found.`);
+      }
+
+      this.transitGatewayAttachments.set(key, tgwAttachmentId);
+    });
   }
 
   /**
@@ -1032,6 +1074,7 @@ export class NetworkAssociationsStack extends NetworkStack {
    * @param excludedAccountIds string[]
    * @param accountId string
    * @param transitGatewayId string
+   * @param tgwAttachmentLookupMap Record<string, TransitGatewayAttachmentLookupOption>
    */
   private createTransitGatewayAttachmentsMap(
     vpcItem: VpcConfig | VpcTemplatesConfig,
@@ -1040,6 +1083,7 @@ export class NetworkAssociationsStack extends NetworkStack {
     excludedAccountIds: string[],
     accountId: string,
     transitGatewayId: string,
+    tgwAttachmentLookupMap: Record<string, TransitGatewayAttachmentLookupOption>,
   ): void {
     for (const owningAccount of accountNames) {
       let transitGatewayAttachmentId;
@@ -1064,22 +1108,13 @@ export class NetworkAssociationsStack extends NetworkStack {
           `Update route tables for attachment ${tgwAttachmentItem.name} from external account ${owningAccountId}`,
         );
 
-        const transitGatewayAttachment = TransitGatewayAttachment.fromLookup(
-          this,
-          pascalCase(`${tgwAttachmentItem.name}${owningAccount}VpcTransitGatewayAttachment`),
-          {
-            name: tgwAttachmentItem.name,
-            owningAccountId,
-            transitGatewayId,
-            type: TransitGatewayAttachmentType.VPC,
-            roleName: `${this.props.prefixes.accelerator}-DescribeTgwAttachRole-${cdk.Stack.of(this).region}`,
-            kmsKey: this.cloudwatchKey,
-            logRetentionInDays: this.logRetention,
-          },
-        );
-        // Build Transit Gateway Attachment Map
-        transitGatewayAttachmentId = transitGatewayAttachment.transitGatewayAttachmentId;
-        this.transitGatewayAttachments.set(attachmentKey, transitGatewayAttachmentId);
+        tgwAttachmentLookupMap[attachmentKey] = {
+          name: tgwAttachmentItem.name,
+          owningAccountId,
+          transitGatewayId,
+          type: TransitGatewayAttachmentType.VPC,
+          roleName: `${this.props.prefixes.accelerator}-DescribeTgwAttachRole-${cdk.Stack.of(this).region}`,
+        };
       }
     }
   }
@@ -1088,7 +1123,10 @@ export class NetworkAssociationsStack extends NetworkStack {
    * Create a map of transit gateway attachments
    * @param vpcItem
    */
-  private setTransitGatewayVpcAttachmentsMap(vpcItem: VpcConfig | VpcTemplatesConfig) {
+  private setTransitGatewayVpcAttachmentsMap(
+    vpcItem: VpcConfig | VpcTemplatesConfig,
+    tgwAttachmentLookupMap: Record<string, TransitGatewayAttachmentLookupOption>,
+  ) {
     // Get account names for attachment keys
     const [accountNames, excludedAccountIds] = this.getTransitGatewayAttachmentAccounts(vpcItem);
 
@@ -1112,6 +1150,7 @@ export class NetworkAssociationsStack extends NetworkStack {
             excludedAccountIds,
             accountId,
             transitGatewayId,
+            tgwAttachmentLookupMap,
           );
         }
       }
@@ -1351,10 +1390,18 @@ export class NetworkAssociationsStack extends NetworkStack {
    * @param cgwItem
    * @param vpnItem
    */
-  private setTransitGatewayVpnAttachmentsMap(
+  /**
+   * Collect VPN attachment lookups for batch processing
+   * @param props
+   * @param cgwItem
+   * @param vpnItem
+   * @param tgwAttachmentLookupMap
+   */
+  private collectTransitGatewayVpnAttachmentLookups(
     props: AcceleratorStackProps,
     cgwItem: CustomerGatewayConfig,
     vpnItem: VpnConnectionConfig,
+    tgwAttachmentLookupMap: Record<string, TransitGatewayAttachmentLookupOption>,
   ): void {
     const accountId = props.accountsConfig.getAccountId(cgwItem.account);
     if (
@@ -1371,20 +1418,16 @@ export class NetworkAssociationsStack extends NetworkStack {
         throw new Error(`Configuration validation failed at runtime.`);
       }
 
-      const vpnAttachmentId = TransitGatewayAttachment.fromLookup(
-        this,
-        pascalCase(`${vpnItem.name}VpnTransitGatewayAttachment`),
-        {
-          name: vpnItem.name,
-          owningAccountId: accountId,
-          transitGatewayId,
-          type: TransitGatewayAttachmentType.VPN,
-          kmsKey: this.cloudwatchKey,
-          logRetentionInDays: this.logRetention,
-        },
-      ).transitGatewayAttachmentId;
-      // Add to Transit Gateway Attachment Map
-      this.transitGatewayAttachments.set(`${vpnItem.name}_${tgw.name}`, vpnAttachmentId);
+      // Use consistent key format: vpnName_tgwName to match vpnAttachmentMap
+      const attachmentKey = `${vpnItem.name}_${vpnItem.transitGateway}`;
+
+      // Add to lookup map for batch processing
+      tgwAttachmentLookupMap[attachmentKey] = {
+        name: vpnItem.name,
+        owningAccountId: accountId,
+        transitGatewayId,
+        type: TransitGatewayAttachmentType.VPN,
+      };
     }
   }
 
@@ -1400,7 +1443,7 @@ export class NetworkAssociationsStack extends NetworkStack {
       cgwItem.region === cdk.Stack.of(this).region &&
       vpnItem.routeTableAssociations
     ) {
-      // Lookup TGW attachment ID for VPN
+      // Lookup TGW attachment ID for VPN using consistent key format
       const attachmentKey = `${vpnItem.name}_${vpnItem.transitGateway}`;
       const transitGatewayAttachmentId = this.transitGatewayAttachments.get(attachmentKey);
 
@@ -1443,7 +1486,7 @@ export class NetworkAssociationsStack extends NetworkStack {
       cgwItem.region === cdk.Stack.of(this).region &&
       vpnItem.routeTablePropagations
     ) {
-      // Lookup TGW attachment ID for VPN
+      // Lookup TGW attachment ID for VPN using consistent key format
       const attachmentKey = `${vpnItem.name}_${vpnItem.transitGateway}`;
       const transitGatewayAttachmentId = this.transitGatewayAttachments.get(attachmentKey);
 
@@ -2650,7 +2693,6 @@ export class NetworkAssociationsStack extends NetworkStack {
         transitGatewayAttachmentId = this.getTgwPeeringAttachmentId(
           routeItem.attachment.transitGatewayPeeringName,
           tgwItem,
-          routeItem,
         );
       }
     }
@@ -2765,7 +2807,6 @@ export class NetworkAssociationsStack extends NetworkStack {
         transitGatewayAttachmentId = this.getTgwPeeringAttachmentId(
           routeItem.attachment.transitGatewayPeeringName,
           tgwItem,
-          routeItem,
         );
       }
     }
@@ -2863,11 +2904,76 @@ export class NetworkAssociationsStack extends NetworkStack {
    * @param tgwItem
    * @returns
    */
-  private getTgwPeeringAttachmentId(
-    transitGatewayPeeringName: string,
-    tgwItem: TransitGatewayConfig,
-    routeTableEntryItem: TransitGatewayRouteEntryConfig,
-  ): string {
+  /**
+   * Collect TGW Peering attachment lookups for batch processing
+   * @param props
+   * @param tgwAttachmentLookupMap
+   */
+  private collectTransitGatewayPeeringAttachmentLookups(
+    props: AcceleratorStackProps,
+    tgwAttachmentLookupMap: Record<string, TransitGatewayAttachmentLookupOption>,
+  ): void {
+    for (const tgwItem of props.networkConfig.transitGateways ?? []) {
+      const accountId = props.accountsConfig.getAccountId(tgwItem.account);
+      if (accountId === cdk.Stack.of(this).account && tgwItem.region === cdk.Stack.of(this).region) {
+        for (const routeTableItem of tgwItem.routeTables ?? []) {
+          for (const routeItem of routeTableItem.routes ?? []) {
+            // Type guard to check if this is a TGW peering route
+            if (routeItem.attachment && 'transitGatewayPeeringName' in routeItem.attachment) {
+              const transitGatewayPeeringName = routeItem.attachment.transitGatewayPeeringName;
+
+              const requesterConfig = props.networkConfig.getTgwPeeringRequesterAccepterConfig(
+                transitGatewayPeeringName,
+                'requester',
+              );
+              const accepterConfig = props.networkConfig.getTgwPeeringRequesterAccepterConfig(
+                transitGatewayPeeringName,
+                'accepter',
+              );
+
+              if (!requesterConfig || !accepterConfig) {
+                continue;
+              }
+
+              const isSameAccountRegionAccepter =
+                requesterConfig.account === accepterConfig.account &&
+                requesterConfig.region === accepterConfig.region &&
+                accepterConfig.transitGatewayName === tgwItem.name;
+
+              const requesterAccountId = props.accountsConfig.getAccountId(requesterConfig.account);
+              const accepterAccountId = props.accountsConfig.getAccountId(accepterConfig.account);
+
+              // Only collect lookups for accepter account (requester uses SSM)
+              if (
+                accepterAccountId === cdk.Stack.of(this).account &&
+                (requesterAccountId !== cdk.Stack.of(this).account || isSameAccountRegionAccepter)
+              ) {
+                const transitGatewayId = this.transitGateways.get(accepterConfig.transitGatewayName);
+                if (!transitGatewayId) {
+                  continue;
+                }
+
+                const attachmentKey = `${tgwItem.name}_${transitGatewayPeeringName}`;
+
+                // Add to lookup map for batch processing (only once per peering)
+                if (!tgwAttachmentLookupMap[attachmentKey]) {
+                  tgwAttachmentLookupMap[attachmentKey] = {
+                    name: transitGatewayPeeringName,
+                    owningAccountId: cdk.Stack.of(this).account,
+                    transitGatewayId,
+                    type: TransitGatewayAttachmentType.PEERING,
+                    isSameAccountRegionAccepter,
+                  };
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+
+  private getTgwPeeringAttachmentId(transitGatewayPeeringName: string, tgwItem: TransitGatewayConfig): string {
     const requesterConfig = this.props.networkConfig.getTgwPeeringRequesterAccepterConfig(
       transitGatewayPeeringName,
       'requester',
@@ -2886,7 +2992,8 @@ export class NetworkAssociationsStack extends NetworkStack {
       requesterConfig.account === accepterConfig.account &&
       requesterConfig.region === accepterConfig.region &&
       accepterConfig.transitGatewayName === tgwItem.name;
-    // Get TGW attachment ID for requester
+
+    // Get TGW attachment ID for requester from SSM
     if (
       this.props.accountsConfig.getAccountId(requesterConfig.account) === cdk.Stack.of(this).account &&
       !isSameAccountRegionAccepter
@@ -2897,37 +3004,17 @@ export class NetworkAssociationsStack extends NetworkStack {
       );
     }
 
-    // Get TGW attachment ID for accepter
+    // Get TGW attachment ID for accepter from cached batch lookup
     if (this.props.accountsConfig.getAccountId(accepterConfig.account) === cdk.Stack.of(this).account) {
-      const transitGatewayId = this.transitGateways.get(accepterConfig.transitGatewayName);
-      if (!transitGatewayId) {
-        this.logger.error(`Transit Gateway ${accepterConfig.transitGatewayName} not found`);
+      const attachmentKey = `${tgwItem.name}_${transitGatewayPeeringName}`;
+      const transitGatewayAttachmentId = this.transitGatewayAttachments.get(attachmentKey);
+
+      if (!transitGatewayAttachmentId) {
+        this.logger.error(`Transit Gateway peering attachment ${attachmentKey} not found`);
         throw new Error(`Configuration validation failed at runtime.`);
       }
 
-      let destinationItem: string;
-      if (routeTableEntryItem.destinationCidrBlock) {
-        destinationItem = routeTableEntryItem.destinationCidrBlock!;
-      } else {
-        destinationItem = routeTableEntryItem.destinationPrefixList!;
-      }
-      const constructId = isSameAccountRegionAccepter
-        ? pascalCase(
-            `${accepterConfig.account}${transitGatewayPeeringName}${destinationItem}TransitGatewayPeeringAttachment`,
-          )
-        : pascalCase(`${accepterConfig.account}${transitGatewayPeeringName}TransitGatewayPeeringAttachment`);
-      this.logger.info(
-        `Looking up transit gateway peering attachment id of accepter account ${accepterConfig.account}`,
-      );
-      return TransitGatewayAttachment.fromLookup(this, constructId, {
-        name: transitGatewayPeeringName,
-        owningAccountId: cdk.Stack.of(this).account,
-        transitGatewayId,
-        type: TransitGatewayAttachmentType.PEERING,
-        isSameAccountRegionAccepter,
-        kmsKey: this.cloudwatchKey,
-        logRetentionInDays: this.logRetention,
-      }).transitGatewayAttachmentId;
+      return transitGatewayAttachmentId;
     }
 
     this.logger.error(`Transit Gateway attachment id not found for ${transitGatewayPeeringName}`);

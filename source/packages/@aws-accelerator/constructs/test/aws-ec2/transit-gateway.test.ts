@@ -79,12 +79,16 @@ describe('TransitGatewayAttachment', () => {
   });
 
   it('tgw lookup', () => {
-    TransitGatewayAttachment.fromLookup(stack, 'TgwAttachLookup', {
-      transitGatewayId: 'transitGatewayId',
-      name: 'name',
-      owningAccountId: 'owningAccountId',
-      type: TransitGatewayAttachmentType.VPC,
-      roleName: 'roleName',
+    TransitGatewayAttachment.fromBatchLookup(stack, 'TgwAttachLookup', {
+      options: [
+        {
+          transitGatewayId: 'transitGatewayId',
+          name: 'name',
+          owningAccountId: 'owningAccountId',
+          type: TransitGatewayAttachmentType.VPC,
+          roleName: 'roleName',
+        },
+      ],
       kmsKey: new cdk.aws_kms.Key(stack, 'TgwAttachLookupKms'),
       logRetentionInDays: 7,
     });
