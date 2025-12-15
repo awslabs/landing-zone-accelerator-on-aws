@@ -267,14 +267,17 @@ export abstract class Organization {
   /**
    * Function to retrieve AWS organizations accounts
    * @param client {@link OrganizationsClient}
-   * @returns accounts {@link Account}[]
+   * @returns accounts {@link Account}[] - Only returns accounts with ACTIVE state
    */
   public static async getOrganizationAccounts(client: OrganizationsClient): Promise<Account[]> {
     const organizationAccounts: Account[] = [];
     const paginator = paginateListAccounts({ client }, {});
     for await (const page of paginator) {
       for (const account of page.Accounts ?? []) {
-        organizationAccounts.push(account);
+        // Only include accounts that are in ACTIVE state (excludes SUSPENDED accounts)
+        if (account.Status === 'ACTIVE') {
+          organizationAccounts.push(account);
+        }
       }
     }
     return organizationAccounts;

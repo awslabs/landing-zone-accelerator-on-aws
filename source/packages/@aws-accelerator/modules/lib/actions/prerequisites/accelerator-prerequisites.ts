@@ -19,7 +19,37 @@ import { DefaultMinimumLambdaConcurrencyThreshold } from '../../../models/consta
 
 export abstract class AcceleratorPrerequisites {
   public static async execute(params: ModuleParams): Promise<string> {
-    const accountIds = params.moduleRunnerParameters.organizationAccounts.map(account => account.Id);
+    // Filter out suspended accounts and accounts in ignored OUs
+    const activeAccounts = params.moduleRunnerParameters.organizationAccounts.filter(account => {
+      // Skip suspended accounts
+      if (account.State !== 'ACTIVE') {
+        return false;
+      }
+
+      // Skip accounts in ignored OUs
+      const suspendedOuNames = params.moduleRunnerParameters.configs.organizationConfig.organizationalUnits
+        .filter(ou => ou.ignore)
+        .map(ou => ou.name);
+
+      // Find the account in the config to get its OU
+      const allConfigAccounts = [
+        ...params.moduleRunnerParameters.configs.accountsConfig.mandatoryAccounts,
+        ...params.moduleRunnerParameters.configs.accountsConfig.workloadAccounts,
+      ];
+
+      const configAccount = allConfigAccounts.find(
+        configAcc => configAcc.email.toLowerCase() === account.Email?.toLowerCase(),
+      );
+
+      // If account is not in config or is in a suspended OU, skip it
+      if (!configAccount || suspendedOuNames.includes(configAccount.organizationalUnit)) {
+        return false;
+      }
+
+      return true;
+    });
+
+    const accountIds = activeAccounts.map(account => account.Id);
     const regions = params.moduleRunnerParameters.configs.globalConfig.enabledRegions;
 
     // Check lambda concurrency in all accounts/regions

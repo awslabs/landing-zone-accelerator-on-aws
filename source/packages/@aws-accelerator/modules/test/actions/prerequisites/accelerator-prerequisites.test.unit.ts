@@ -35,6 +35,7 @@ import {
   ReplacementsConfig,
   SecurityConfig,
 } from '@aws-accelerator/config';
+import { AccountState } from '@aws-sdk/client-organizations';
 //
 // Mock Dependencies
 //
@@ -116,8 +117,18 @@ describe('AcceleratorPrerequisites', () => {
         logging: MOCK_CONSTANTS.logging,
         organizationDetails: MOCK_CONSTANTS.organizationDetails,
         organizationAccounts: [
-          { Id: MOCK_CONSTANTS.managementAccountId, Name: 'Management' },
-          { Id: '222222222222', Name: 'Account2' },
+          {
+            Id: MOCK_CONSTANTS.managementAccountId,
+            Name: 'Management',
+            Email: 'mockManagement@example.com',
+            State: AccountState.ACTIVE,
+          },
+          {
+            Id: '222222222222',
+            Name: 'LogArchive',
+            Email: 'mockLogArchive@example.com',
+            State: AccountState.ACTIVE,
+          },
         ],
         managementAccountCredentials: MOCK_CONSTANTS.credentials,
       },
@@ -197,6 +208,267 @@ describe('AcceleratorPrerequisites', () => {
 
       // Verify
       expect(result).toBe('Module "accelerator-prerequisites" completed successfully');
+    });
+
+    test('should filter out suspended accounts', async () => {
+      // Setup
+      mockCheckLambdaConcurrency.mockResolvedValue(true);
+      mockGetCredentials.mockResolvedValue(MOCK_CONSTANTS.credentials);
+
+      const paramsWithSuspendedAccount = {
+        ...mockParams,
+        moduleRunnerParameters: {
+          ...mockParams.moduleRunnerParameters,
+          organizationAccounts: [
+            {
+              Id: MOCK_CONSTANTS.managementAccountId,
+              Name: 'Management',
+              Email: 'mockManagement@example.com',
+              State: AccountState.ACTIVE,
+            },
+            {
+              Id: MOCK_CONSTANTS.testAccounts.suspended.id,
+              Name: MOCK_CONSTANTS.testAccounts.suspended.name,
+              Email: MOCK_CONSTANTS.testAccounts.suspended.email,
+              State: AccountState.SUSPENDED,
+            },
+          ],
+        },
+      };
+
+      // Execute
+      const result = await AcceleratorPrerequisites.execute(paramsWithSuspendedAccount);
+
+      // Verify - should only process the active management account
+      expect(result).toBe('Module "accelerator-prerequisites" completed successfully');
+      expect(mockCheckLambdaConcurrency).toHaveBeenCalledTimes(2); // 1 account × 2 regions
+    });
+
+    test('should validate account in suspended state is properly excluded', async () => {
+      // Setup
+      mockCheckLambdaConcurrency.mockResolvedValue(true);
+      mockGetCredentials.mockResolvedValue(MOCK_CONSTANTS.credentials);
+
+      const paramsWithSuspendedAccountInConfig = {
+        ...mockParams,
+        moduleRunnerParameters: {
+          ...mockParams.moduleRunnerParameters,
+          organizationAccounts: [
+            {
+              Id: MOCK_CONSTANTS.managementAccountId,
+              Name: 'Management',
+              Email: 'mockManagement@example.com',
+              State: AccountState.ACTIVE,
+            },
+            {
+              Id: MOCK_CONSTANTS.testAccounts.validSuspended.id,
+              Name: MOCK_CONSTANTS.testAccounts.validSuspended.name,
+              Email: MOCK_CONSTANTS.testAccounts.validSuspended.email,
+              State: AccountState.SUSPENDED,
+            },
+            {
+              Id: MOCK_CONSTANTS.testAccounts.activeWorkload.id,
+              Name: MOCK_CONSTANTS.testAccounts.activeWorkload.name,
+              Email: MOCK_CONSTANTS.testAccounts.activeWorkload.email,
+              State: AccountState.ACTIVE,
+            },
+          ],
+          configs: {
+            ...mockParams.moduleRunnerParameters.configs,
+            accountsConfig: {
+              ...mockAccountsConfig,
+              workloadAccounts: [
+                ...(mockAccountsConfig.workloadAccounts || []),
+                {
+                  name: MOCK_CONSTANTS.testAccounts.validSuspended.name,
+                  email: MOCK_CONSTANTS.testAccounts.validSuspended.email,
+                  organizationalUnit: 'Infrastructure', // Valid OU, but account is suspended
+                },
+                {
+                  name: MOCK_CONSTANTS.testAccounts.activeWorkload.name,
+                  email: MOCK_CONSTANTS.testAccounts.activeWorkload.email,
+                  organizationalUnit: 'Infrastructure', // Valid OU and account is active
+                },
+              ],
+            } as AccountsConfig,
+          },
+        },
+      };
+
+      // Execute
+      const result = await AcceleratorPrerequisites.execute(paramsWithSuspendedAccountInConfig);
+
+      // Verify - should process Management and ActiveWorkloadAccount (2 accounts × 2 regions = 4 calls)
+      // ValidSuspendedAccount should be filtered out due to SUSPENDED state
+      expect(result).toBe('Module "accelerator-prerequisites" completed successfully');
+      expect(mockCheckLambdaConcurrency).toHaveBeenCalledTimes(4);
+
+      // Verify that getCredentials was called for the non-management account
+      // but not for the suspended account
+      expect(mockGetCredentials).toHaveBeenCalledWith({
+        accountId: MOCK_CONSTANTS.testAccounts.activeWorkload.id,
+        region: 'us-east-1',
+        solutionId: MOCK_CONSTANTS.runnerParameters.solutionId,
+        partition: MOCK_CONSTANTS.runnerParameters.partition,
+        assumeRoleName: 'AWSAccelerator-PipelineRole',
+        credentials: MOCK_CONSTANTS.credentials,
+      });
+
+      // Verify that getCredentials was NOT called for the suspended account
+      const getCredentialsCalls = mockGetCredentials.mock.calls;
+      const suspendedAccountCalls = getCredentialsCalls.filter(
+        call => call[0].accountId === MOCK_CONSTANTS.testAccounts.validSuspended.id,
+      );
+      expect(suspendedAccountCalls).toHaveLength(0);
+    });
+
+    test('should filter out accounts in ignored organizational units', async () => {
+      // Setup
+      mockCheckLambdaConcurrency.mockResolvedValue(true);
+      mockGetCredentials.mockResolvedValue(MOCK_CONSTANTS.credentials);
+
+      const paramsWithIgnoredOuAccount = {
+        ...mockParams,
+        moduleRunnerParameters: {
+          ...mockParams.moduleRunnerParameters,
+          organizationAccounts: [
+            {
+              Id: MOCK_CONSTANTS.managementAccountId,
+              Name: 'Management',
+              Email: 'mockManagement@example.com',
+              State: AccountState.ACTIVE,
+            },
+            {
+              Id: MOCK_CONSTANTS.testAccounts.ignored.id,
+              Name: MOCK_CONSTANTS.testAccounts.ignored.name,
+              Email: MOCK_CONSTANTS.testAccounts.ignored.email,
+              State: AccountState.ACTIVE,
+            },
+          ],
+          configs: {
+            ...mockParams.moduleRunnerParameters.configs,
+            accountsConfig: {
+              ...mockAccountsConfig,
+              mandatoryAccounts: [...(mockAccountsConfig.mandatoryAccounts || [])],
+              workloadAccounts: [
+                ...(mockAccountsConfig.workloadAccounts || []),
+                {
+                  name: MOCK_CONSTANTS.testAccounts.ignored.name,
+                  email: MOCK_CONSTANTS.testAccounts.ignored.email,
+                  organizationalUnit: 'Suspended', // This OU has ignore: true
+                },
+              ],
+            } as AccountsConfig,
+          },
+        },
+      };
+
+      // Execute
+      const result = await AcceleratorPrerequisites.execute(paramsWithIgnoredOuAccount);
+
+      // Verify - should only process the management account (ignored account should be filtered out)
+      expect(result).toBe('Module "accelerator-prerequisites" completed successfully');
+      expect(mockCheckLambdaConcurrency).toHaveBeenCalledTimes(2); // 1 account × 2 regions
+    });
+
+    test('should filter out accounts not in accounts config', async () => {
+      // Setup
+      mockCheckLambdaConcurrency.mockResolvedValue(true);
+      mockGetCredentials.mockResolvedValue(MOCK_CONSTANTS.credentials);
+
+      const paramsWithUnknownAccount = {
+        ...mockParams,
+        moduleRunnerParameters: {
+          ...mockParams.moduleRunnerParameters,
+          organizationAccounts: [
+            {
+              Id: MOCK_CONSTANTS.managementAccountId,
+              Name: 'Management',
+              Email: 'mockManagement@example.com',
+              State: AccountState.ACTIVE,
+            },
+            {
+              Id: MOCK_CONSTANTS.testAccounts.unknown.id,
+              Name: MOCK_CONSTANTS.testAccounts.unknown.name,
+              Email: MOCK_CONSTANTS.testAccounts.unknown.email,
+              State: AccountState.ACTIVE,
+            },
+          ],
+        },
+      };
+
+      // Execute
+      const result = await AcceleratorPrerequisites.execute(paramsWithUnknownAccount);
+
+      // Verify - should only process the management account (unknown account should be filtered out)
+      expect(result).toBe('Module "accelerator-prerequisites" completed successfully');
+      expect(mockCheckLambdaConcurrency).toHaveBeenCalledTimes(2); // 1 account × 2 regions
+    });
+
+    test('should handle mixed filtering scenarios', async () => {
+      // Setup
+      mockCheckLambdaConcurrency.mockResolvedValue(true);
+      mockGetCredentials.mockResolvedValue(MOCK_CONSTANTS.credentials);
+
+      const paramsWithMixedAccounts = {
+        ...mockParams,
+        moduleRunnerParameters: {
+          ...mockParams.moduleRunnerParameters,
+          organizationAccounts: [
+            {
+              Id: MOCK_CONSTANTS.managementAccountId,
+              Name: 'Management',
+              Email: 'mockManagement@example.com',
+              State: AccountState.ACTIVE,
+            },
+            {
+              Id: '222222222222',
+              Name: 'LogArchive',
+              Email: 'mockLogArchive@example.com',
+              State: AccountState.ACTIVE,
+            },
+            {
+              Id: MOCK_CONSTANTS.testAccounts.suspended.id,
+              Name: MOCK_CONSTANTS.testAccounts.suspended.name,
+              Email: MOCK_CONSTANTS.testAccounts.suspended.email,
+              State: AccountState.SUSPENDED,
+            },
+            {
+              Id: MOCK_CONSTANTS.testAccounts.ignored.id,
+              Name: MOCK_CONSTANTS.testAccounts.ignored.name,
+              Email: MOCK_CONSTANTS.testAccounts.ignored.email,
+              State: AccountState.ACTIVE,
+            },
+            {
+              Id: MOCK_CONSTANTS.testAccounts.unknown.id,
+              Name: MOCK_CONSTANTS.testAccounts.unknown.name,
+              Email: MOCK_CONSTANTS.testAccounts.unknown.email,
+              State: AccountState.ACTIVE,
+            },
+          ],
+          configs: {
+            ...mockParams.moduleRunnerParameters.configs,
+            accountsConfig: {
+              ...mockAccountsConfig,
+              workloadAccounts: [
+                ...(mockAccountsConfig.workloadAccounts || []),
+                {
+                  name: MOCK_CONSTANTS.testAccounts.ignored.name,
+                  email: MOCK_CONSTANTS.testAccounts.ignored.email,
+                  organizationalUnit: 'Suspended', // This OU has ignore: true
+                },
+              ],
+            } as AccountsConfig,
+          },
+        },
+      };
+
+      // Execute
+      const result = await AcceleratorPrerequisites.execute(paramsWithMixedAccounts);
+
+      // Verify - should only process Management and LogArchive accounts (2 accounts × 2 regions = 4 calls)
+      expect(result).toBe('Module "accelerator-prerequisites" completed successfully');
+      expect(mockCheckLambdaConcurrency).toHaveBeenCalledTimes(4);
     });
   });
 
