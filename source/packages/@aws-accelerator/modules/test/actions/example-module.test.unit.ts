@@ -44,7 +44,7 @@ import * as lzaCommonFunctions from '../../../../@aws-lza/common/functions';
 //
 // Mock Dependencies
 //
-vi.mock('@aws-sdk/client-organizations', async importOriginal => {
+vi.mock('@aws-sdk/client-organizations', async (importOriginal) => {
   const actual = await importOriginal();
   return {
     ...actual,
