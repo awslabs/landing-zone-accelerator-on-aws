@@ -29,7 +29,7 @@ import {
   ReplacementsConfig,
   SecurityConfig,
 } from '@aws-accelerator/config';
-import { Account, Organization } from '@aws-sdk/client-organizations';
+import { Account, AccountState, Organization } from '@aws-sdk/client-organizations';
 
 const mockSecurityHubConfig: ISecurityHubConfig = {
   enable: true,
@@ -620,7 +620,7 @@ export const MOCK_CONSTANTS = {
       Arn: 'arn:aws:organizations::111111111111:account/o-exampleorgid/111111111111',
       Email: 'account1@example.com',
       Name: 'Account1',
-      Status: 'ACTIVE',
+      State: AccountState.ACTIVE,
       JoinedMethod: 'CREATED',
       JoinedTimestamp: new Date('2023-01-01'),
     },
@@ -629,7 +629,7 @@ export const MOCK_CONSTANTS = {
       Arn: 'arn:aws:organizations::111111111111:account/o-exampleorgid/222222222222',
       Email: 'account2@example.com',
       Name: 'Account2',
-      Status: 'ACTIVE',
+      State: AccountState.ACTIVE,
       JoinedMethod: 'INVITED',
       JoinedTimestamp: new Date('2023-01-02'),
     },
@@ -647,6 +647,35 @@ export const MOCK_CONSTANTS = {
   managementAccountId: 'mockManagementAccountID',
   auditAccountId: 'mockAuditAccountID',
   logArchiveAccountId: 'mockLogArchiveAccountID',
+
+  // Test account IDs for filtering scenarios
+  testAccounts: {
+    suspended: {
+      id: '333333333333',
+      name: 'SuspendedAccount',
+      email: 'suspended@example.com',
+    },
+    ignored: {
+      id: '444444444444',
+      name: 'IgnoredAccount',
+      email: 'ignored@example.com',
+    },
+    unknown: {
+      id: '555555555555',
+      name: 'UnknownAccount',
+      email: 'unknown@example.com',
+    },
+    validSuspended: {
+      id: '666666666666',
+      name: 'ValidSuspendedAccount',
+      email: 'validSuspended@example.com',
+    },
+    activeWorkload: {
+      id: '777777777777',
+      name: 'ActiveWorkloadAccount',
+      email: 'activeWorkload@example.com',
+    },
+  },
 
   unknownError: new Error('Unknown command'),
 

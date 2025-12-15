@@ -92,15 +92,15 @@ const MOCK_CONSTANTS = {
   roots: { Id: 'mockId', Arn: 'mockArn', Name: 'mockName' },
   organizationalUnit: { Id: 'mockId', Arn: 'mockArn', Name: 'mockName' },
   accounts: [
-    { Id: 'mockId1', Arn: 'mockArn1', Email: 'mockLogArchive@example.com', Name: 'mockName1' },
-    { Id: 'mockId2', Arn: 'mockArn2', Email: 'mockAudit@example.com', Name: 'mockName2' },
-    { Id: 'mockId3', Arn: 'mockArn3', Email: 'mockEmail3@example.com', Name: 'mockName3' },
+    { Id: 'mockId1', Arn: 'mockArn1', Email: 'mockLogArchive@example.com', Name: 'mockName1', Status: 'ACTIVE' },
+    { Id: 'mockId2', Arn: 'mockArn2', Email: 'mockAudit@example.com', Name: 'mockName2', Status: 'ACTIVE' },
+    { Id: 'mockId3', Arn: 'mockArn3', Email: 'mockEmail3@example.com', Name: 'mockName3', Status: 'ACTIVE' },
   ],
   govCloudAccounts: [
-    { Id: 'mockId1', Arn: 'mockArn1', Email: 'mockLogArchive@example.com', Name: 'mockName1' },
-    { Id: 'mockId2', Arn: 'mockArn2', Email: 'mockAudit@example.com', Name: 'mockName2' },
-    { Id: 'mockId3', Arn: 'mockArn3', Email: 'mockEmail3@example.com', Name: 'mockName3' },
-    { Id: 'mockId4', Arn: 'mockArn4', Email: 'mockEmail4@example.com', Name: 'mockName4' },
+    { Id: 'mockId1', Arn: 'mockArn1', Email: 'mockLogArchive@example.com', Name: 'mockName1', Status: 'ACTIVE' },
+    { Id: 'mockId2', Arn: 'mockArn2', Email: 'mockAudit@example.com', Name: 'mockName2', Status: 'ACTIVE' },
+    { Id: 'mockId3', Arn: 'mockArn3', Email: 'mockEmail3@example.com', Name: 'mockName3', Status: 'ACTIVE' },
+    { Id: 'mockId4', Arn: 'mockArn4', Email: 'mockEmail4@example.com', Name: 'mockName4', Status: 'ACTIVE' },
   ],
   identityCenterEnabledFailureError: new RegExp(
     `AWS Control Tower Landing Zone cannot deploy because IAM Identity Center is configured.`,

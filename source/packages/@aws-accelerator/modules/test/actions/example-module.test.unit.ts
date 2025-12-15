@@ -44,11 +44,14 @@ import * as lzaCommonFunctions from '../../../../@aws-lza/common/functions';
 //
 // Mock Dependencies
 //
-vi.mock('@aws-sdk/client-organizations', () => ({
-  ...vi.importActual('@aws-sdk/client-securityhub'),
-  ListMembersCommand: vi.fn(),
-  SecurityHubClient: vi.fn(),
-}));
+vi.mock('@aws-sdk/client-organizations', async importOriginal => {
+  const actual = await importOriginal();
+  return {
+    ...actual,
+    ListMembersCommand: vi.fn(),
+    SecurityHubClient: vi.fn(),
+  };
+});
 
 vi.mock('@aws-sdk/client-securityhub', () => ({
   ...vi.importActual('@aws-sdk/client-securityhub'),
