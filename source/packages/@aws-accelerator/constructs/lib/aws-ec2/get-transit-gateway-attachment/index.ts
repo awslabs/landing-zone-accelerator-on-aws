@@ -94,64 +94,45 @@ export async function handler(event: CloudFormationCustomResourceEvent): Promise
   | {
       PhysicalResourceId: string | undefined;
       Status: string;
+      Data?: {
+        attachmentIds: string;
+      };
     }
   | undefined
 > {
-  const options = setOptions(event.ResourceProperties, event.ServiceToken);
-  const ec2Client = await setEc2Client(options, process.env['SOLUTION_ID']);
-
   switch (event.RequestType) {
     case 'Create':
     case 'Update':
-      let nextToken: string | undefined = undefined;
-      do {
-        const page = await throttlingBackOff(() =>
-          ec2Client.send(
-            new DescribeTransitGatewayAttachmentsCommand({
-              Filters: [{ Name: 'resource-type', Values: [options.attachmentType] }],
-              NextToken: nextToken,
-            }),
-          ),
-        );
-        for (const attachment of page.TransitGatewayAttachments ?? []) {
-          if (
-            attachment.TransitGatewayId === options.transitGatewayId &&
-            attachment.State === 'available' &&
-            (await validateAttachment(
-              attachment,
-              options.name,
-              options.attachmentType,
-              options.transitGatewayId,
-              ec2Client,
-            ))
-          ) {
-            return {
-              PhysicalResourceId: attachment.TransitGatewayAttachmentId,
-              Status: 'SUCCESS',
-            };
-          }
-          // Logic for same region and account for TGW peering attachment as acceptor side attachment
-          // doesn't contain the Accelerator tag.
-          else if (options.isSameAccountRegionAccepter) {
-            if (
-              attachment.TransitGatewayId === options.transitGatewayId &&
-              attachment.State === 'available' &&
-              attachment.ResourceType === 'peering' &&
-              attachment.Tags &&
-              attachment.Tags.find(tag => tag.Key !== 'Accelerator')
-            ) {
-              return {
-                PhysicalResourceId: attachment.TransitGatewayAttachmentId,
-                Status: 'SUCCESS',
-              };
-            }
-          }
-        }
-        nextToken = page.NextToken;
-      } while (nextToken);
+      const attachments = event.ResourceProperties['attachments'].map(
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (props: { [key: string]: any }, index: number) => ({
+          options: setOptions(props, event.ServiceToken),
+          index,
+        }),
+      );
 
-      throw new Error(`Attachment ${options.name} for ${options.transitGatewayId} not found`);
+      // Group attachments by EC2 client configuration and attachment type to share STS sessions and API calls
+      const groupedAttachments = groupByClientConfigAndType(attachments);
 
+      // Process each group with shared EC2 client and batch API calls
+      const results = await Promise.all(
+        groupedAttachments.map(async group => {
+          const ec2Client = await setEc2Client(group.options, process.env['SOLUTION_ID']);
+          return getTgwAttachmentIdsForGroup(group.attachments, ec2Client);
+        }),
+      );
+
+      // Flatten and sort by original index to maintain order
+      const tgwAttachmentsId = results
+        .flat()
+        .sort((a, b) => a.index - b.index)
+        .map(r => r.id);
+
+      return {
+        PhysicalResourceId: event.LogicalResourceId,
+        Status: 'SUCCESS',
+        Data: { attachmentIds: tgwAttachmentsId.join(',') },
+      };
     case 'Delete':
       // Do Nothing
       return {
@@ -159,6 +140,133 @@ export async function handler(event: CloudFormationCustomResourceEvent): Promise
         Status: 'SUCCESS',
       };
   }
+}
+
+/**
+ * Group attachments by their environment type
+ * @param attachments
+ * @returns Array<{ options: TgwAttachmentOptions; attachments: Array<{ options: TgwAttachmentOptions; index: number }> }>
+ */
+function groupByClientConfigAndType(
+  attachments: Array<{ options: TgwAttachmentOptions; index: number }>,
+): Array<{ options: TgwAttachmentOptions; attachments: Array<{ options: TgwAttachmentOptions; index: number }> }> {
+  const groups = new Map<string, Array<{ options: TgwAttachmentOptions; index: number }>>();
+
+  for (const attachment of attachments) {
+    const key = getClientConfigAndTypeKey(attachment.options);
+    if (!groups.has(key)) {
+      groups.set(key, []);
+    }
+    groups.get(key)!.push(attachment);
+  }
+
+  return Array.from(groups.values()).map(group => ({
+    options: group[0].options,
+    attachments: group,
+  }));
+}
+
+/**
+ * Generates a unique key for EC2 client configuration and attachment type to group attachments
+ * @param options TgwAttachmentOptions
+ * @returns string
+ */
+function getClientConfigAndTypeKey(options: TgwAttachmentOptions): string {
+  const roleArn = options.vpcLookupRoleArn
+    ? options.vpcLookupRoleArn
+    : options.crossAccountVpnOptions?.owningAccountId
+      ? `arn:${options.partition}:iam::${options.crossAccountVpnOptions.owningAccountId}:role/${options.crossAccountVpnOptions.roleName}`
+      : 'local';
+
+  const region = options.crossAccountVpnOptions?.owningRegion ?? options.invokingRegion;
+
+  // Include crossAccountVpnOptions in the key to ensure proper grouping
+  const vpnOptionsKey = options.crossAccountVpnOptions
+    ? `${options.crossAccountVpnOptions.owningAccountId ?? 'none'}:${options.crossAccountVpnOptions.owningRegion ?? 'none'}:${options.crossAccountVpnOptions.roleName ?? 'none'}`
+    : 'none';
+
+  return `${roleArn}:${region}:${options.attachmentType}:${vpnOptionsKey}`;
+}
+
+/**
+ * Gets TGW attachment IDs for a group of attachments with the same client and type
+ * @param attachments Array of attachments with options and index
+ * @param ec2Client EC2Client
+ * @returns Promise<Array<{ id: string | undefined; index: number }>>
+ */
+async function getTgwAttachmentIdsForGroup(
+  attachments: Array<{ options: TgwAttachmentOptions; index: number }>,
+  ec2Client: EC2Client,
+): Promise<Array<{ id: string | undefined; index: number }>> {
+  const attachmentType = attachments[0].options.attachmentType;
+  const results = new Map<number, string>();
+  const pendingAttachments = new Set(attachments.map(a => a.index));
+  let nextToken: string | undefined = undefined;
+
+  do {
+    const page = await throttlingBackOff(() =>
+      ec2Client.send(
+        new DescribeTransitGatewayAttachmentsCommand({
+          Filters: [{ Name: 'resource-type', Values: [attachmentType] }],
+          NextToken: nextToken,
+        }),
+      ),
+    );
+
+    for (const attachment of page.TransitGatewayAttachments ?? []) {
+      for (const { options, index } of attachments) {
+        if (!pendingAttachments.has(index)) continue;
+
+        if (
+          attachment.TransitGatewayId === options.transitGatewayId &&
+          attachment.State === 'available' &&
+          (await validateAttachment(
+            attachment,
+            options.name,
+            options.attachmentType,
+            options.transitGatewayId,
+            ec2Client,
+          ))
+        ) {
+          results.set(index, attachment.TransitGatewayAttachmentId!);
+          pendingAttachments.delete(index);
+        }
+        // Logic for same region and account for TGW peering attachment as acceptor side attachment
+        // doesn't contain the Accelerator tag.
+        else if (options.isSameAccountRegionAccepter) {
+          if (
+            attachment.TransitGatewayId === options.transitGatewayId &&
+            attachment.State === 'available' &&
+            attachment.ResourceType === 'peering' &&
+            attachment.Tags &&
+            attachment.Tags.find(tag => tag.Key !== 'Accelerator')
+          ) {
+            results.set(index, attachment.TransitGatewayAttachmentId!);
+            pendingAttachments.delete(index);
+          }
+        }
+      }
+    }
+
+    if (pendingAttachments.size === 0) {
+      break;
+    }
+
+    nextToken = page.NextToken;
+  } while (nextToken);
+
+  if (pendingAttachments.size > 0) {
+    const notFoundAttachments = attachments
+      .filter(a => pendingAttachments.has(a.index))
+      .map(a => `${a.options.name} for ${a.options.transitGatewayId}`)
+      .join(', ');
+    throw new Error(`Tgw Attachments not found: ${notFoundAttachments}`);
+  }
+
+  return attachments.map(({ index }) => ({
+    id: results.get(index)!,
+    index,
+  }));
 }
 
 /**

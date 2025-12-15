@@ -14,11 +14,11 @@
 import * as cdk from 'aws-cdk-lib';
 import { Construct } from 'constructs';
 import { v4 as uuidv4 } from 'uuid';
+import * as path from 'path';
 
 import { TransitGatewayAttachmentOptionsConfig } from '@aws-accelerator/config';
 import { LzaCustomResource } from '../lza-custom-resource';
 import { CUSTOM_RESOURCE_PROVIDER_RUNTIME } from '@aws-accelerator/utils/lib/lambda';
-import * as path from 'path';
 
 export interface ITransitGatewayRouteTableAssociation extends cdk.IResource {
   readonly transitGatewayAttachmentId: string;
@@ -168,21 +168,14 @@ export enum TransitGatewayAttachmentType {
   VPN = 'vpn',
 }
 
-export interface TransitGatewayAttachmentLookupOptions {
+export interface TransitGatewayAttachmentLookupOption {
   readonly name: string;
   readonly owningAccountId: string;
   readonly transitGatewayId: string;
   readonly type: TransitGatewayAttachmentType;
   readonly roleName?: string;
   readonly isSameAccountRegionAccepter?: boolean;
-  /**
-   * Custom resource lambda log group encryption key, when undefined default AWS managed key will be used
-   */
-  readonly kmsKey?: cdk.aws_kms.IKey;
-  /**
-   * Custom resource lambda log retention in days
-   */
-  readonly logRetentionInDays: number;
+
   /**
    * Cross-account lookup options
    *
@@ -207,6 +200,19 @@ export interface TransitGatewayAttachmentLookupOptions {
   };
 }
 
+export interface BatchTransitGatewayAttachmentLookupOptions {
+  /**
+   * Custom resource lambda log group encryption key, when undefined default AWS managed key will be used
+   */
+  readonly kmsKey?: cdk.aws_kms.IKey;
+  /**
+   * Custom resource lambda log retention in days
+   */
+  readonly logRetentionInDays: number;
+
+  readonly options: TransitGatewayAttachmentLookupOption[];
+}
+
 abstract class TransitGatewayAttachmentBase extends cdk.Resource implements ITransitGatewayAttachment {
   public abstract readonly transitGatewayAttachmentId: string;
   public abstract readonly transitGatewayAttachmentName: string;
@@ -216,85 +222,106 @@ abstract class TransitGatewayAttachmentBase extends cdk.Resource implements ITra
   }
 }
 
-export class TransitGatewayAttachment extends TransitGatewayAttachmentBase {
-  public static fromLookup(
-    scope: Construct,
-    id: string,
-    options: TransitGatewayAttachmentLookupOptions,
-  ): ITransitGatewayAttachment {
-    class Import extends TransitGatewayAttachmentBase {
-      public readonly transitGatewayAttachmentId: string;
-      public readonly transitGatewayAttachmentName = options.name;
+class BatchTransitGatewayAttachmentLookup extends Construct {
+  public readonly transitGatewayAttachmentIds: string[];
 
-      constructor(scope: Construct, id: string) {
-        super(scope, id);
+  constructor(scope: Construct, id: string, props: BatchTransitGatewayAttachmentLookupOptions) {
+    super(scope, id);
 
-        const GET_TRANSIT_GATEWAY_ATTACHMENT = 'Custom::GetTransitGatewayAttachment';
+    const GET_TRANSIT_GATEWAY_ATTACHMENT = 'Custom::GetTransitGatewayAttachment';
 
-        const provider = cdk.CustomResourceProvider.getOrCreateProvider(this, GET_TRANSIT_GATEWAY_ATTACHMENT, {
-          codeDirectory: path.join(__dirname, 'get-transit-gateway-attachment/dist'),
-          runtime: CUSTOM_RESOURCE_PROVIDER_RUNTIME,
-          policyStatements: [
-            {
-              Effect: 'Allow',
-              Action: ['sts:AssumeRole'],
-              Resource: '*',
-            },
-            {
-              Effect: 'Allow',
-              Action: ['ec2:DescribeTransitGatewayAttachments', 'ec2:DescribeVpnConnections'],
-              Resource: '*',
-            },
-          ],
-        });
-
-        // Construct role arn if this is a cross-account lookup
-        let roleArn: string | undefined = undefined;
-        if (options.roleName) {
-          roleArn = cdk.Stack.of(this).formatArn({
+    const attachments = props.options.map(option => ({
+      name: option.name,
+      owningAccountId: option.owningAccountId,
+      transitGatewayId: option.transitGatewayId,
+      type: option.type,
+      roleArn: option.roleName
+        ? cdk.Stack.of(this).formatArn({
             service: 'iam',
             region: '',
-            account: options.owningAccountId,
+            account: option.owningAccountId,
             resource: 'role',
             arnFormat: cdk.ArnFormat.SLASH_RESOURCE_NAME,
-            resourceName: options.roleName,
-          });
-        }
+            resourceName: option.roleName,
+          })
+        : undefined,
+      isSameAccountRegionAccepter: option.isSameAccountRegionAccepter,
+      crossAccountVpnOptions: option.crossAccountVpnOptions,
+    }));
 
-        const resource = new cdk.CustomResource(this, 'Resource', {
-          resourceType: GET_TRANSIT_GATEWAY_ATTACHMENT,
-          serviceToken: provider.serviceToken,
-          properties: {
-            region: cdk.Stack.of(this).region,
-            name: options.name,
-            transitGatewayId: options.transitGatewayId,
-            type: options.type,
-            isSameAccountRegionAccepter: options.isSameAccountRegionAccepter,
-            roleArn,
-            uuid: uuidv4(), // Generates a new UUID to force the resource to update
-            crossAccountVpnOptions: options.crossAccountVpnOptions,
-          },
-        });
+    const provider = cdk.CustomResourceProvider.getOrCreateProvider(this, GET_TRANSIT_GATEWAY_ATTACHMENT, {
+      codeDirectory: path.join(__dirname, 'get-transit-gateway-attachment/dist'),
+      runtime: CUSTOM_RESOURCE_PROVIDER_RUNTIME,
+      policyStatements: [
+        {
+          Effect: 'Allow',
+          Action: ['sts:AssumeRole'],
+          Resource: '*',
+        },
+        {
+          Effect: 'Allow',
+          Action: ['ec2:DescribeTransitGatewayAttachments', 'ec2:DescribeVpnConnections'],
+          Resource: '*',
+        },
+      ],
+    });
 
-        /**
-         * Singleton pattern to define the log group for the singleton function
-         * in the stack
-         */
-        const stack = cdk.Stack.of(scope);
-        const logGroup =
-          (stack.node.tryFindChild(`${provider.node.id}LogGroup`) as cdk.aws_logs.LogGroup) ??
-          new cdk.aws_logs.LogGroup(stack, `${provider.node.id}LogGroup`, {
-            logGroupName: `/aws/lambda/${(provider.node.findChild('Handler') as cdk.aws_lambda.CfnFunction).ref}`,
-            retention: options.logRetentionInDays,
-            encryptionKey: options.kmsKey,
-            removalPolicy: cdk.RemovalPolicy.DESTROY,
-          });
-        resource.node.addDependency(logGroup);
+    const resource = new cdk.CustomResource(this, 'Resource', {
+      resourceType: GET_TRANSIT_GATEWAY_ATTACHMENT,
+      serviceToken: provider.serviceToken,
+      properties: {
+        uuid: uuidv4(),
+        attachments,
+      },
+    });
 
-        this.transitGatewayAttachmentId = resource.ref;
-      }
+    this.transitGatewayAttachmentIds = cdk.Fn.split(',', resource.getAttString('attachmentIds'), props.options.length);
+
+    /**
+     * Singleton pattern to define the log group for the singleton function
+     * in the stack
+     */
+    const stack = cdk.Stack.of(scope);
+    const logGroup =
+      (stack.node.tryFindChild(`${provider.node.id}LogGroup`) as cdk.aws_logs.LogGroup) ??
+      new cdk.aws_logs.LogGroup(stack, `${provider.node.id}LogGroup`, {
+        logGroupName: `/aws/lambda/${(provider.node.findChild('Handler') as cdk.aws_lambda.CfnFunction).ref}`,
+        retention: props.logRetentionInDays,
+        encryptionKey: props.kmsKey,
+        removalPolicy: cdk.RemovalPolicy.DESTROY,
+      });
+    resource.node.addDependency(logGroup);
+  }
+}
+
+export class TransitGatewayAttachment extends TransitGatewayAttachmentBase {
+  public static fromBatchLookup(
+    scope: Construct,
+    id: string,
+    options: BatchTransitGatewayAttachmentLookupOptions,
+  ): string[] {
+    const BATCH_SIZE = 90;
+    const attachments: string[] = [];
+
+    // Split options into batches of 90 to avoid CR response size limit of 4KB
+    const batches: BatchTransitGatewayAttachmentLookupOptions[] = [];
+    for (let i = 0; i < options.options.length; i += BATCH_SIZE) {
+      const batchOptions = options.options.slice(i, i + BATCH_SIZE);
+      batches.push({
+        kmsKey: options.kmsKey,
+        logRetentionInDays: options.logRetentionInDays,
+        options: batchOptions,
+      });
     }
-    return new Import(scope, id);
+
+    batches.forEach((batchOptions, batchIndex) => {
+      const batchId = batches.length > 1 ? `${id}-Batch${batchIndex}` : id;
+      const lookup = new BatchTransitGatewayAttachmentLookup(scope, batchId, batchOptions);
+
+      attachments.push(...lookup.transitGatewayAttachmentIds);
+    });
+
+    return attachments;
   }
 
   public static fromTransitGatewayAttachmentId(
