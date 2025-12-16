@@ -2515,7 +2515,7 @@ exports[`PipelineStack > Construct(PipelineStack):  Snapshot Test 1`] = `
 phases:
   install:
     runtime-versions:
-      nodejs: 20
+      nodejs: 22
   pre_build:
     commands:
       - "export WORK_DIR=$CODEBUILD_SRC_DIR/source/packages/@aws-accelerator/accelerator
@@ -5657,7 +5657,7 @@ exports[`PipelineStack > Construct(PipelineStack):  Snapshot Test 2`] = `
 phases:
   install:
     runtime-versions:
-      nodejs: 20
+      nodejs: 22
   pre_build:
     commands:
       - "export WORK_DIR=$CODEBUILD_SRC_DIR/source/packages/@aws-accelerator/accelerator
@@ -8305,7 +8305,7 @@ exports[`PipelineStack > Construct(PipelineStack):  Snapshot Test 3`] = `
 phases:
   install:
     runtime-versions:
-      nodejs: 20
+      nodejs: 22
   pre_build:
     commands:
       - "export WORK_DIR=$CODEBUILD_SRC_DIR/source/packages/@aws-accelerator/accelerator
@@ -11204,7 +11204,7 @@ exports[`PipelineStack > Construct(PipelineStack):  Snapshot Test 4`] = `
 phases:
   install:
     runtime-versions:
-      nodejs: 20
+      nodejs: 22
   pre_build:
     commands:
       - "export WORK_DIR=$CODEBUILD_SRC_DIR/source/packages/@aws-accelerator/accelerator
@@ -13852,7 +13852,7 @@ exports[`PipelineStack customS3Path > Construct(PipelineStack):  Snapshot Test 1
 phases:
   install:
     runtime-versions:
-      nodejs: 20
+      nodejs: 22
   pre_build:
     commands:
       - "export WORK_DIR=$CODEBUILD_SRC_DIR/source/packages/@aws-accelerator/accelerator

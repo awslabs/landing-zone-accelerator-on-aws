@@ -105,8 +105,8 @@
   "config": {
     "node": {
       "version": {
-        "default": 20,
-        "minimum": 18
+        "default": 22,
+        "minimum": 20
       }
     }
   },

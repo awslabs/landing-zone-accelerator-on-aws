@@ -67,7 +67,7 @@ describe('MacieExportConfigClassification', () => {
 
   test('Lambda function is created for custom resource provider', () => {
     template.hasResourceProperties('AWS::Lambda::Function', {
-      Runtime: 'nodejs20.x',
+      Runtime: 'nodejs22.x',
     });
   });
 

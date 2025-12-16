@@ -27,7 +27,7 @@ exports[`MacieOrganizationAdminAccount > Construct(MacieOrganizationAdminAccount
             "Arn",
           ],
         },
-        "Runtime": "nodejs20.x",
+        "Runtime": "nodejs22.x",
         "Timeout": 180,
       },
       "Type": "AWS::Lambda::Function",

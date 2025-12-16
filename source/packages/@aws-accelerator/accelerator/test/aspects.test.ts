@@ -18,7 +18,7 @@ describe('AcceleratorAspects', () => {
   });
 
   describe('LambdaRuntimeAspect', () => {
-    test('should upgrade nodejs14.x to nodejs20.x', () => {
+    test('should upgrade nodejs14.x to nodejs22.x', () => {
       // GIVEN
       new cdk.aws_lambda.Function(stack, 'TestFunction', {
         runtime: cdk.aws_lambda.Runtime.NODEJS_14_X,
@@ -34,11 +34,11 @@ describe('AcceleratorAspects', () => {
       template = Template.fromStack(stack);
 
       template.hasResourceProperties('AWS::Lambda::Function', {
-        Runtime: 'nodejs20.x',
+        Runtime: 'nodejs22.x',
       });
     });
 
-    test('should upgrade nodejs16.x to nodejs20.x', () => {
+    test('should upgrade nodejs16.x to nodejs22.x', () => {
       // GIVEN
       new cdk.aws_lambda.Function(stack, 'TestFunction', {
         runtime: cdk.aws_lambda.Runtime.NODEJS_16_X,
@@ -53,7 +53,7 @@ describe('AcceleratorAspects', () => {
       // THEN
       template = Template.fromStack(stack);
       template.hasResourceProperties('AWS::Lambda::Function', {
-        Runtime: 'nodejs20.x',
+        Runtime: 'nodejs22.x',
       });
     });
 
@@ -72,7 +72,7 @@ describe('AcceleratorAspects', () => {
       // THEN
       template = Template.fromStack(stack);
       template.hasResourceProperties('AWS::Lambda::Function', {
-        Runtime: 'nodejs20.x',
+        Runtime: 'nodejs22.x',
       });
     });
 
@@ -102,14 +102,14 @@ describe('AcceleratorAspects', () => {
         code: cdk.aws_lambda.Code.fromInline('exports.handler = function() { }'),
         description: 'AWS CDK resource provider framework test',
       });
-      process.env['ACCELERATOR_NODE_VERSION'] = '18';
+      process.env['ACCELERATOR_NODE_VERSION'] = '20';
       // WHEN
       new AcceleratorAspects(stack, 'aws', false);
 
       // THEN
       template = Template.fromStack(stack);
       template.hasResourceProperties('AWS::Lambda::Function', {
-        Runtime: 'nodejs18.x',
+        Runtime: 'nodejs20.x',
       });
     });
 
@@ -136,12 +136,12 @@ describe('AcceleratorAspects', () => {
       template = Template.fromStack(stack);
       template.resourceCountIs('AWS::Lambda::Function', 2);
       template.hasResourceProperties('AWS::Lambda::Function', {
-        Runtime: 'nodejs20.x',
+        Runtime: 'nodejs22.x',
         Handler: 'index.handler',
       });
 
       template.hasResourceProperties('AWS::Lambda::Function', {
-        Runtime: 'nodejs20.x',
+        Runtime: 'nodejs22.x',
         Handler: 'index.handler',
       });
     });
@@ -173,11 +173,11 @@ describe('AcceleratorAspects', () => {
       const childTemplate = Template.fromStack(childStack);
 
       parentTemplate.hasResourceProperties('AWS::Lambda::Function', {
-        Runtime: 'nodejs20.x',
+        Runtime: 'nodejs22.x',
       });
 
       childTemplate.hasResourceProperties('AWS::Lambda::Function', {
-        Runtime: 'nodejs20.x',
+        Runtime: 'nodejs22.x',
       });
     });
   });
