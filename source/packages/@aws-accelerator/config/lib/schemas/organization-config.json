@@ -91,27 +91,31 @@
     },
     "IDeploymentTargets": {
       "additionalProperties": false,
-      "description": "Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.\n\nLicensed under the Apache License, Version 2.0 (the \"License\"). You may not use this file except in compliance with the License. A copy of the License is located at\n\n    http://www.apache.org/licenses/LICENSE-2.0\n\nor in the 'license' file accompanying this file. This file is distributed on an 'AS IS' BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, express or implied. See the License for the specific language governing permissions and limitations under the License.",
+      "description": "## Deployment Targets Interface\n\nDefines where AWS resources should be deployed within your AWS organization. This interface provides flexible targeting options for resource deployment across accounts, organizational units, and regions.\n\n### Key Features\n\n- **Account-level targeting**: Deploy to specific AWS accounts\n- **OU-level targeting**: Deploy to all accounts within organizational units\n- **Regional exclusions**: Skip specific AWS regions for compliance or cost optimization\n- **Account exclusions**: Exclude specific accounts from broader deployments\n\n### Example\n\n```yaml deploymentTargets:   organizationalUnits:     - Production     - Development   excludedAccounts:     - Management   excludedRegions:     - us-west-1 ```",
       "properties": {
         "accounts": {
+          "description": "**Target Accounts** *(Optional)*\n\nList of specific account names where resources should be deployed. Use for precise account-level targeting.",
           "items": {
             "type": "string"
           },
           "type": "array"
         },
         "excludedAccounts": {
+          "description": "**Excluded Accounts** *(Optional)*\n\nList of account names to exclude from deployment. Takes precedence over organizational unit and account inclusions.",
           "items": {
             "type": "string"
           },
           "type": "array"
         },
         "excludedRegions": {
+          "description": "**Excluded Regions** *(Optional)*\n\nList of AWS regions to exclude from deployment. Useful for compliance requirements or cost optimization.",
           "items": {
             "type": "string"
           },
           "type": "array"
         },
         "organizationalUnits": {
+          "description": "**Organizational Units** *(Optional)*\n\nList of organizational unit names where resources should be deployed. When specified, resources will be created in all accounts within these OUs.",
           "items": {
             "type": "string"
           },
@@ -382,7 +386,7 @@
       "type": "object"
     },
     "NonEmptyString": {
-      "description": "A string that has at least 1 character",
+      "description": "## Non-Empty String Type\n\nRepresents a string that must contain at least one character. Used for required text fields throughout the Landing Zone Accelerator configuration where empty values are not permitted.\n\n```",
       "minLength": 1,
       "type": "string"
     },

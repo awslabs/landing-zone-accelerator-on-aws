@@ -83,11 +83,12 @@
       "type": "object"
     },
     "NonEmptyString": {
-      "description": "A string that has at least 1 character",
+      "description": "## Non-Empty String Type\n\nRepresents a string that must contain at least one character. Used for required text fields throughout the Landing Zone Accelerator configuration where empty values are not permitted.\n\n```",
       "minLength": 1,
       "type": "string"
     },
     "ParameterReplacementType": {
+      "description": "## Parameter Replacement Type\n\nDefines the types of parameter replacement mechanisms supported in configuration templates and CloudFormation deployments.\n\n### Values\n- **SSM**: AWS Systems Manager Parameter Store values\n- **String**: Simple string replacement\n- **StringList**: Comma-separated list of strings\n- **Number**: Numeric value replacement\n\n### Use Cases\n- **SSM**: Dynamic configuration values, secrets, cross-stack references\n- **String**: Static configuration values, environment names\n- **StringList**: Multiple values like subnet IDs, security group IDs\n- **Number**: Port numbers, counts, numeric thresholds",
       "enum": [
         "SSM",
         "String",

@@ -3,13 +3,13 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "definitions": {
     "AwsAccountId": {
-      "description": "AWS Account ID",
+      "description": "## AWS Account ID Type\n\nRepresents a valid AWS account identifier. AWS account IDs are unique 12-digit numbers assigned to each AWS account when it's created.",
       "maxLength": 12,
       "minLength": 12,
       "type": "string"
     },
     "EmailAddress": {
-      "description": "An email address",
+      "description": "## Email Address Type\n\nRepresents a valid email address with AWS-compatible formatting requirements. Used throughout the Landing Zone Accelerator for account creation, notifications, and contact information.\n\n### Format Requirements\n\n- **Length**: 6-64 characters\n- **Pattern**: Must match standard email format\n- **Domain**: Must contain at least one dot in the domain portion\n\n### Examples\n\n```typescript const email1: EmailAddress = \"admin@example.com\"; ```",
       "maxLength": 64,
       "minLength": 6,
       "pattern": "['^\\S+@\\S+\\.\\S+$', '^\\w+$']",
@@ -164,13 +164,13 @@
       "type": "object"
     },
     "NonEmptyNoSpaceString": {
-      "description": "A string that contains no spaces",
+      "description": "## Non-Empty No-Space String Type\n\nRepresents a string that must contain at least one character and cannot contain any whitespace characters.\n\n### Common Use Cases\n\n- AWS account names\n- Account aliases\n- Resource identifiers\n- Configuration keys\n- File names and paths",
       "minLength": 1,
       "pattern": "^[^\\s]*$",
       "type": "string"
     },
     "NonEmptyString": {
-      "description": "A string that has at least 1 character",
+      "description": "## Non-Empty String Type\n\nRepresents a string that must contain at least one character. Used for required text fields throughout the Landing Zone Accelerator configuration where empty values are not permitted.\n\n```",
       "minLength": 1,
       "type": "string"
     }
