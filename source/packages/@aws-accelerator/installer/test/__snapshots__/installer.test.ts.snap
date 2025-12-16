@@ -1687,7 +1687,7 @@ exports[`InstallerStack > Stack(installer):  Snapshot Test 1`] = `
 phases:
   install:
     runtime-versions:
-      nodejs: "20"
+      nodejs: "22"
   pre_build:
     commands:
       - ENABLE_EXTERNAL_PIPELINE_ACCOUNT="no"
@@ -2095,7 +2095,7 @@ phases:
             "Arn",
           ],
         },
-        "Runtime": "nodejs20.x",
+        "Runtime": "nodejs22.x",
       },
       "Type": "AWS::Lambda::Function",
     },
@@ -2622,7 +2622,7 @@ phases:
             "Arn",
           ],
         },
-        "Runtime": "nodejs20.x",
+        "Runtime": "nodejs22.x",
         "Timeout": 30,
       },
       "Type": "AWS::Lambda::Function",
@@ -2946,7 +2946,7 @@ async function updatePipelineDetailsForBothPipelines(secretValue) {
             "Arn",
           ],
         },
-        "Runtime": "nodejs20.x",
+        "Runtime": "nodejs22.x",
         "Timeout": 60,
       },
       "Type": "AWS::Lambda::Function",
@@ -3415,7 +3415,7 @@ exports.handler = async function (event, context) {
             "Arn",
           ],
         },
-        "Runtime": "nodejs20.x",
+        "Runtime": "nodejs22.x",
       },
       "Type": "AWS::Lambda::Function",
     },
@@ -5370,7 +5370,7 @@ exports[`InstallerStack > Stack(installer):  Snapshot Test 2`] = `
 phases:
   install:
     runtime-versions:
-      nodejs: "20"
+      nodejs: "22"
   pre_build:
     commands:
       - ENABLE_EXTERNAL_PIPELINE_ACCOUNT="no"
@@ -5778,7 +5778,7 @@ phases:
             "Arn",
           ],
         },
-        "Runtime": "nodejs20.x",
+        "Runtime": "nodejs22.x",
       },
       "Type": "AWS::Lambda::Function",
     },
@@ -6305,7 +6305,7 @@ phases:
             "Arn",
           ],
         },
-        "Runtime": "nodejs20.x",
+        "Runtime": "nodejs22.x",
         "Timeout": 30,
       },
       "Type": "AWS::Lambda::Function",
@@ -6629,7 +6629,7 @@ async function updatePipelineDetailsForBothPipelines(secretValue) {
             "Arn",
           ],
         },
-        "Runtime": "nodejs20.x",
+        "Runtime": "nodejs22.x",
         "Timeout": 60,
       },
       "Type": "AWS::Lambda::Function",
@@ -7098,7 +7098,7 @@ exports.handler = async function (event, context) {
             "Arn",
           ],
         },
-        "Runtime": "nodejs20.x",
+        "Runtime": "nodejs22.x",
       },
       "Type": "AWS::Lambda::Function",
     },
@@ -9119,7 +9119,7 @@ exports[`InstallerStack > Stack(installer):  Snapshot Test 3`] = `
 phases:
   install:
     runtime-versions:
-      nodejs: "20"
+      nodejs: "22"
   pre_build:
     commands:
       - ENABLE_EXTERNAL_PIPELINE_ACCOUNT="no"
@@ -9533,7 +9533,7 @@ phases:
             "Arn",
           ],
         },
-        "Runtime": "nodejs20.x",
+        "Runtime": "nodejs22.x",
       },
       "Type": "AWS::Lambda::Function",
     },
@@ -10050,7 +10050,7 @@ phases:
             "Arn",
           ],
         },
-        "Runtime": "nodejs20.x",
+        "Runtime": "nodejs22.x",
         "Timeout": 30,
       },
       "Type": "AWS::Lambda::Function",
@@ -10376,7 +10376,7 @@ async function updatePipelineDetailsForBothPipelines(secretValue) {
             "Arn",
           ],
         },
-        "Runtime": "nodejs20.x",
+        "Runtime": "nodejs22.x",
         "Timeout": 60,
       },
       "Type": "AWS::Lambda::Function",
@@ -10833,7 +10833,7 @@ exports.handler = async function (event, context) {
             "Arn",
           ],
         },
-        "Runtime": "nodejs20.x",
+        "Runtime": "nodejs22.x",
       },
       "Type": "AWS::Lambda::Function",
     },
@@ -12841,7 +12841,7 @@ exports[`InstallerStack > Stack(installer):  Snapshot Test 4`] = `
 phases:
   install:
     runtime-versions:
-      nodejs: "20"
+      nodejs: "22"
   pre_build:
     commands:
       - ENABLE_EXTERNAL_PIPELINE_ACCOUNT="no"
@@ -13255,7 +13255,7 @@ phases:
             "Arn",
           ],
         },
-        "Runtime": "nodejs20.x",
+        "Runtime": "nodejs22.x",
       },
       "Type": "AWS::Lambda::Function",
     },
@@ -13772,7 +13772,7 @@ phases:
             "Arn",
           ],
         },
-        "Runtime": "nodejs20.x",
+        "Runtime": "nodejs22.x",
         "Timeout": 30,
       },
       "Type": "AWS::Lambda::Function",
@@ -14098,7 +14098,7 @@ async function updatePipelineDetailsForBothPipelines(secretValue) {
             "Arn",
           ],
         },
-        "Runtime": "nodejs20.x",
+        "Runtime": "nodejs22.x",
         "Timeout": 60,
       },
       "Type": "AWS::Lambda::Function",
@@ -14555,7 +14555,7 @@ exports.handler = async function (event, context) {
             "Arn",
           ],
         },
-        "Runtime": "nodejs20.x",
+        "Runtime": "nodejs22.x",
       },
       "Type": "AWS::Lambda::Function",
     },
@@ -16568,7 +16568,7 @@ exports[`InstallerStack > Stack(installer):  Snapshot Test 5`] = `
 phases:
   install:
     runtime-versions:
-      nodejs: "20"
+      nodejs: "22"
   pre_build:
     commands:
       - ENABLE_EXTERNAL_PIPELINE_ACCOUNT="no"
@@ -16982,7 +16982,7 @@ phases:
             "Arn",
           ],
         },
-        "Runtime": "nodejs20.x",
+        "Runtime": "nodejs22.x",
       },
       "Type": "AWS::Lambda::Function",
     },
@@ -17499,7 +17499,7 @@ phases:
             "Arn",
           ],
         },
-        "Runtime": "nodejs20.x",
+        "Runtime": "nodejs22.x",
         "Timeout": 30,
       },
       "Type": "AWS::Lambda::Function",
@@ -17825,7 +17825,7 @@ async function updatePipelineDetailsForBothPipelines(secretValue) {
             "Arn",
           ],
         },
-        "Runtime": "nodejs20.x",
+        "Runtime": "nodejs22.x",
         "Timeout": 60,
       },
       "Type": "AWS::Lambda::Function",
@@ -18282,7 +18282,7 @@ exports.handler = async function (event, context) {
             "Arn",
           ],
         },
-        "Runtime": "nodejs20.x",
+        "Runtime": "nodejs22.x",
       },
       "Type": "AWS::Lambda::Function",
     },
@@ -20253,7 +20253,7 @@ exports[`InstallerStack > Stack(installer):  Snapshot Test 6`] = `
 phases:
   install:
     runtime-versions:
-      nodejs: "20"
+      nodejs: "22"
   pre_build:
     commands:
       - ENABLE_EXTERNAL_PIPELINE_ACCOUNT="no"
@@ -20661,7 +20661,7 @@ phases:
             "Arn",
           ],
         },
-        "Runtime": "nodejs20.x",
+        "Runtime": "nodejs22.x",
       },
       "Type": "AWS::Lambda::Function",
     },
@@ -21188,7 +21188,7 @@ phases:
             "Arn",
           ],
         },
-        "Runtime": "nodejs20.x",
+        "Runtime": "nodejs22.x",
         "Timeout": 30,
       },
       "Type": "AWS::Lambda::Function",
@@ -21512,7 +21512,7 @@ async function updatePipelineDetailsForBothPipelines(secretValue) {
             "Arn",
           ],
         },
-        "Runtime": "nodejs20.x",
+        "Runtime": "nodejs22.x",
         "Timeout": 60,
       },
       "Type": "AWS::Lambda::Function",
@@ -21981,7 +21981,7 @@ exports.handler = async function (event, context) {
             "Arn",
           ],
         },
-        "Runtime": "nodejs20.x",
+        "Runtime": "nodejs22.x",
       },
       "Type": "AWS::Lambda::Function",
     },
@@ -23993,7 +23993,7 @@ exports[`InstallerStack > Stack(installer):  Snapshot Test 7`] = `
 phases:
   install:
     runtime-versions:
-      nodejs: "20"
+      nodejs: "22"
   pre_build:
     commands:
       - ENABLE_EXTERNAL_PIPELINE_ACCOUNT="no"
@@ -24401,7 +24401,7 @@ phases:
             "Arn",
           ],
         },
-        "Runtime": "nodejs20.x",
+        "Runtime": "nodejs22.x",
       },
       "Type": "AWS::Lambda::Function",
     },
@@ -25265,7 +25265,7 @@ phases:
             "Arn",
           ],
         },
-        "Runtime": "nodejs20.x",
+        "Runtime": "nodejs22.x",
         "Timeout": 30,
       },
       "Type": "AWS::Lambda::Function",
@@ -25589,7 +25589,7 @@ async function updatePipelineDetailsForBothPipelines(secretValue) {
             "Arn",
           ],
         },
-        "Runtime": "nodejs20.x",
+        "Runtime": "nodejs22.x",
         "Timeout": 60,
       },
       "Type": "AWS::Lambda::Function",
@@ -26058,7 +26058,7 @@ exports.handler = async function (event, context) {
             "Arn",
           ],
         },
-        "Runtime": "nodejs20.x",
+        "Runtime": "nodejs22.x",
       },
       "Type": "AWS::Lambda::Function",
     },
@@ -28092,7 +28092,7 @@ exports[`InstallerStack > Stack(installer):  Snapshot Test 8`] = `
 phases:
   install:
     runtime-versions:
-      nodejs: "20"
+      nodejs: "22"
   pre_build:
     commands:
       - ENABLE_EXTERNAL_PIPELINE_ACCOUNT="no"
@@ -28500,7 +28500,7 @@ phases:
             "Arn",
           ],
         },
-        "Runtime": "nodejs20.x",
+        "Runtime": "nodejs22.x",
       },
       "Type": "AWS::Lambda::Function",
     },
@@ -29364,7 +29364,7 @@ phases:
             "Arn",
           ],
         },
-        "Runtime": "nodejs20.x",
+        "Runtime": "nodejs22.x",
         "Timeout": 30,
       },
       "Type": "AWS::Lambda::Function",
@@ -29688,7 +29688,7 @@ async function updatePipelineDetailsForBothPipelines(secretValue) {
             "Arn",
           ],
         },
-        "Runtime": "nodejs20.x",
+        "Runtime": "nodejs22.x",
         "Timeout": 60,
       },
       "Type": "AWS::Lambda::Function",
@@ -30157,7 +30157,7 @@ exports.handler = async function (event, context) {
             "Arn",
           ],
         },
-        "Runtime": "nodejs20.x",
+        "Runtime": "nodejs22.x",
       },
       "Type": "AWS::Lambda::Function",
     },

@@ -27,7 +27,7 @@ exports[`DetectiveGraphConfig > Construct(DetectiveGraphConfig):  Snapshot Test 
             "Arn",
           ],
         },
-        "Runtime": "nodejs20.x",
+        "Runtime": "nodejs22.x",
         "Timeout": 900,
       },
       "Type": "AWS::Lambda::Function",

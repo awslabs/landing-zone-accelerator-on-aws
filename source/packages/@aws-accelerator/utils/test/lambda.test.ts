@@ -23,11 +23,11 @@ describe('Lambda Runtime and Custom Resource Provider Runtime', () => {
 
   test('DEFAULT_LAMBDA_RUNTIME is created correctly', () => {
     expect(DEFAULT_LAMBDA_RUNTIME).toBeInstanceOf(Runtime);
-    expect(DEFAULT_LAMBDA_RUNTIME.name).toBe('nodejs20.x');
+    expect(DEFAULT_LAMBDA_RUNTIME.name).toBe('nodejs22.x');
     expect(DEFAULT_LAMBDA_RUNTIME.family).toBe(RuntimeFamily.NODEJS);
   });
 
   test('CUSTOM_RESOURCE_PROVIDER_RUNTIME is set correctly for supported version', () => {
-    expect(CUSTOM_RESOURCE_PROVIDER_RUNTIME).toBe(CustomResourceProviderRuntime.NODEJS_20_X);
+    expect(CUSTOM_RESOURCE_PROVIDER_RUNTIME).toBe(CustomResourceProviderRuntime.NODEJS_22_X);
   });
 });

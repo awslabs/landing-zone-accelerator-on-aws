@@ -62,7 +62,7 @@ exports[`Get Network Firewall endpoint > Construct(GetNetworkFirewallEndpoint): 
             "Arn",
           ],
         },
-        "Runtime": "nodejs20.x",
+        "Runtime": "nodejs22.x",
         "Timeout": 900,
       },
       "Type": "AWS::Lambda::Function",

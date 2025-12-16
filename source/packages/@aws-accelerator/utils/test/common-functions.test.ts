@@ -85,8 +85,8 @@ describe('getNodeVersion', () => {
   });
 
   it('should return the ACCELERATOR_NODE_VERSION when set and no input is provided', () => {
-    process.env['ACCELERATOR_NODE_VERSION'] = '19';
-    expect(getNodeVersion()).toBe(19);
+    process.env['ACCELERATOR_NODE_VERSION'] = '21';
+    expect(getNodeVersion()).toBe(21);
   });
 
   it('should return the default version when no input or env var is provided', () => {
@@ -108,8 +108,8 @@ describe('getNodeVersion', () => {
   });
 
   it('should prioritize input over environment variable', () => {
-    process.env['ACCELERATOR_NODE_VERSION'] = '19';
-    expect(getNodeVersion()).toBe(19);
+    process.env['ACCELERATOR_NODE_VERSION'] = '21';
+    expect(getNodeVersion()).toBe(21);
   });
 });
 
