@@ -562,27 +562,31 @@
     },
     "IDeploymentTargets": {
       "additionalProperties": false,
-      "description": "Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.\n\nLicensed under the Apache License, Version 2.0 (the \"License\"). You may not use this file except in compliance with the License. A copy of the License is located at\n\n    http://www.apache.org/licenses/LICENSE-2.0\n\nor in the 'license' file accompanying this file. This file is distributed on an 'AS IS' BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, express or implied. See the License for the specific language governing permissions and limitations under the License.",
+      "description": "## Deployment Targets Interface\n\nDefines where AWS resources should be deployed within your AWS organization. This interface provides flexible targeting options for resource deployment across accounts, organizational units, and regions.\n\n### Key Features\n\n- **Account-level targeting**: Deploy to specific AWS accounts\n- **OU-level targeting**: Deploy to all accounts within organizational units\n- **Regional exclusions**: Skip specific AWS regions for compliance or cost optimization\n- **Account exclusions**: Exclude specific accounts from broader deployments\n\n### Example\n\n```yaml deploymentTargets:   organizationalUnits:     - Production     - Development   excludedAccounts:     - Management   excludedRegions:     - us-west-1 ```",
       "properties": {
         "accounts": {
+          "description": "**Target Accounts** *(Optional)*\n\nList of specific account names where resources should be deployed. Use for precise account-level targeting.",
           "items": {
             "type": "string"
           },
           "type": "array"
         },
         "excludedAccounts": {
+          "description": "**Excluded Accounts** *(Optional)*\n\nList of account names to exclude from deployment. Takes precedence over organizational unit and account inclusions.",
           "items": {
             "type": "string"
           },
           "type": "array"
         },
         "excludedRegions": {
+          "description": "**Excluded Regions** *(Optional)*\n\nList of AWS regions to exclude from deployment. Useful for compliance requirements or cost optimization.",
           "items": {
             "type": "string"
           },
           "type": "array"
         },
         "organizationalUnits": {
+          "description": "**Organizational Units** *(Optional)*\n\nList of organizational unit names where resources should be deployed. When specified, resources will be created in all accounts within these OUs.",
           "items": {
             "type": "string"
           },
@@ -1053,34 +1057,36 @@
     },
     "ILifecycleRule": {
       "additionalProperties": false,
-      "description": "S3 bucket life cycle rules object.",
+      "description": "## S3 Bucket Lifecycle Rule Configuration\n\nDefines lifecycle management rules for S3 buckets to automatically transition objects between storage classes and manage object expiration. Lifecycle rules help optimize storage costs and manage data retention policies.\n\n### Key Features\n\n- **Cost Optimization**: Automatically transition objects to cheaper storage classes\n- **Data Management**: Set expiration policies for automatic cleanup\n- **Version Control**: Manage current and non-current object versions separately\n- **Prefix Filtering**: Apply rules to specific object prefixes or entire buckets\n\n### Usage Example\n\n```yaml lifecycleRules:   - enabled: true     id: LogsLifecycle     abortIncompleteMultipartUpload: 7     expiration: 2555  # ~7 years     expiredObjectDeleteMarker: false     noncurrentVersionExpiration: 365     transitions:       - storageClass: STANDARD_IA         transitionAfter: 30       - storageClass: GLACIER         transitionAfter: 365     prefix: logs/\n\n  - enabled: true     id: ArchiveLifecycle     expiredObjectDeleteMarker: true     noncurrentVersionExpiration: 90     transitions:       - storageClass: DEEP_ARCHIVE         transitionAfter: 180 ```",
       "properties": {
         "abortIncompleteMultipartUpload": {
-          "description": "Specifies a lifecycle rule that aborts incomplete multipart uploads to an Amazon S3 bucket.",
+          "description": "**Abort Incomplete Multipart Uploads** *(Optional)*\n\nNumber of days after which incomplete multipart uploads are automatically aborted and cleaned up. This helps prevent storage costs from abandoned multipart uploads.\n\n### Benefits\n\n- **Cost Control**: Prevents charges for incomplete upload parts\n- **Storage Cleanup**: Automatically removes orphaned multipart data\n- **Operational Hygiene**: Maintains clean bucket state\n\n### Considerations\n\n- Set based on your typical upload patterns and file sizes\n- Consider network reliability and upload duration requirements\n- Balance between cost control and operational flexibility",
           "type": "number"
         },
         "enabled": {
-          "description": "Whether this rule is enabled.",
+          "default": true,
+          "description": "**Rule Enabled** *(Optional)*\n\nControls whether this lifecycle rule is active and enforced. Allows you to temporarily disable rules without removing them from the configuration.",
           "type": "boolean"
         },
         "expiration": {
-          "description": "Indicates the number of days after creation when objects are deleted from Amazon S3 and Amazon Glacier.",
+          "description": "**Object Expiration** *(Optional)*\n\nNumber of days after object creation when objects are permanently deleted from the bucket. This implements automatic data retention policies and helps manage storage costs for time-sensitive data.\n\n### Use Cases\n\n- **Log Retention**: Automatically delete old log files\n- **Compliance**: Enforce data retention policies\n- **Cost Management**: Remove data that's no longer needed\n- **Regulatory Requirements**: Meet data disposal requirements\n\n### Important Considerations\n\n- **Irreversible**: Expired objects are permanently deleted\n- **Compliance**: Ensure retention periods meet regulatory requirements\n- **Business Needs**: Consider future data access requirements\n- **Backup Strategy**: Ensure critical data is backed up before expiration",
           "type": "number"
         },
         "expiredObjectDeleteMarker": {
-          "description": "Indicates whether Amazon S3 will remove a delete marker with no noncurrent versions. If set to true, the delete marker will be expired.",
+          "default": false,
+          "description": "**Expired Object Delete Marker Cleanup** *(Optional)*\n\nControls whether S3 automatically removes delete markers that have no non-current versions. This helps clean up versioned buckets and reduce storage costs from orphaned delete markers.\n\n### Benefits When Enabled\n\n- **Cost Reduction**: Eliminates charges for orphaned delete markers\n- **Storage Optimization**: Keeps bucket metadata clean\n- **Operational Efficiency**: Reduces clutter in versioned buckets",
           "type": "boolean"
         },
         "id": {
-          "description": "Friendly name for the rule. Rule name must be unique.",
+          "description": "**Rule Identifier** *(Optional)*\n\nUnique, human-readable name for the lifecycle rule within the bucket. Used for rule identification, management, and troubleshooting.",
           "type": "string"
         },
         "noncurrentVersionExpiration": {
-          "description": "Time between when a new version of the object is uploaded to the bucket and when old versions of the object expire.",
+          "description": "**Non-Current Version Expiration** *(Optional)*\n\nNumber of days after an object version becomes non-current when it should be permanently deleted. This manages storage costs for versioned buckets by cleaning up old object versions.\n\n### Considerations\n\n- **Recovery Needs**: Balance cost vs. ability to recover old versions\n- **Compliance**: Some regulations require version retention\n- **Storage Costs**: Non-current versions incur full storage charges\n- **Access Patterns**: Consider how often old versions are accessed",
           "type": "number"
         },
         "noncurrentVersionTransitions": {
-          "description": "One or more transition rules that specify when non-current objects transition to a specified storage class.",
+          "description": "**Non-Current Version Transitions** *(Optional)*\n\nArray of transition rules that specify when non-current object versions should move to different storage classes. This optimizes costs for versioned buckets by moving old versions to cheaper storage.\n\n### Storage Class Optimization\n\nNon-current versions are typically accessed less frequently than current versions, making them ideal candidates for cheaper storage classes.",
           "items": {
             "$ref": "#/definitions/ITransition"
           },
@@ -1088,11 +1094,11 @@
         },
         "prefix": {
           "$ref": "#/definitions/NonEmptyString",
-          "default": "- Rule applies to all objects",
-          "description": "Object key prefix that identifies one or more objects to which this rule applies."
+          "default": "undefined (applies to all objects in the bucket)",
+          "description": "**Object Key Prefix Filter** *(Optional)*\n\nObject key prefix that identifies which objects this lifecycle rule applies to. When specified, the rule only affects objects whose keys start with this prefix. When omitted, the rule applies to all objects in the bucket.\n\n\n### Best Practices\n\n- Use consistent prefix naming conventions\n- Design prefixes to support different lifecycle needs\n- Consider future organizational changes\n- Document prefix meanings and purposes"
         },
         "transitions": {
-          "description": "One or more transition rules that specify when an object transitions to a specified storage class.",
+          "description": "**Current Version Transitions** *(Optional)*\n\nArray of transition rules that specify when current objects should move to different storage classes. This implements cost optimization strategies based on data access patterns and age.\n\n### Cost Optimization Strategy\n\nDesign transitions based on your data access patterns:\n- **Frequently Accessed**: Keep in Standard storage\n- **Infrequently Accessed**: Transition to Standard-IA\n- **Archive Data**: Move to Glacier or Deep Archive\n- **Long-term Retention**: Use Deep Archive for lowest cost",
           "items": {
             "$ref": "#/definitions/ITransition"
           },
@@ -1269,13 +1275,15 @@
     },
     "IPrefixConfig": {
       "additionalProperties": false,
+      "description": "## Centralized Logging Prefix Configuration Interface\n\nConfiguration interface for customizing the S3 prefix structure used in centralized logging buckets. Allows organizations to override the default LZA logging path structure to meet specific organizational or compliance requirements.\n\n### Key Features\n\n- **Custom Prefixes**: Override default LZA logging path structure\n- **Organizational Alignment**: Align with existing logging conventions\n- **Compliance**: Meet specific regulatory path requirements\n- **Flexibility**: Maintain consistency across different log types\n\n### Example\n\n```yaml prefixConfig:   useCustomPrefix: true   customOverride: compliance/audit-logs ```",
       "properties": {
         "customOverride": {
           "$ref": "#/definitions/NonEmptyString",
-          "description": "(Optional) Prefix to be used for Centralized Logging Path"
+          "description": "**Custom Override** *(Optional)*\n\nPrefix to be used for Centralized Logging Path when useCustomPrefix is enabled. This prefix will be prepended to the default LZA logging structure."
         },
         "useCustomPrefix": {
-          "description": "Indicates whether or not to add a custom prefix to LZA Default Centralized Logging location. If useCustomPrefix is set to true, logs will be stored in the Centralized Logging Bucket prefix.",
+          "default": false,
+          "description": "**Use Custom Prefix** *(Required)*\n\nIndicates whether or not to add a custom prefix to LZA Default Centralized Logging location. If useCustomPrefix is set to true, logs will be stored in the Centralized Logging Bucket prefix.",
           "type": "boolean"
         }
       },
@@ -1639,14 +1647,17 @@
     },
     "IShareTargets": {
       "additionalProperties": false,
+      "description": "## Resource Access Manager (RAM) Share Targets Interface\n\nInterface for AWS Resource Access Manager (RAM) share targets, which defines where shared resources should be made available within your AWS organization. RAM enables secure sharing of resources between AWS accounts and organizational units without duplicating resources or compromising security.\n\n### Key Features\n\n- **Cross-Account Sharing**: Share resources across multiple AWS accounts\n- **OU-Level Sharing**: Share with entire organizational units at once\n- **Centralized Management**: Manage shared resources from a central account\n- **Cost Optimization**: Avoid resource duplication across accounts\n- **Security**: Maintain resource ownership while enabling controlled access\n\n### Example\n\n```yaml shareTargets:   organizationalUnits:     - Root ```\n\nLearn more about [AWS Resource Access Manager](https://docs.aws.amazon.com/ram/latest/userguide/what-is.html).",
       "properties": {
         "accounts": {
+          "description": "**Target Accounts** *(Optional)*\n\nList of specific account names that should receive access to the shared resource. Use this for precise, account-level control over resource sharing.",
           "items": {
             "type": "string"
           },
           "type": "array"
         },
         "organizationalUnits": {
+          "description": "**Organizational Units** *(Optional)*\n\nList of organizational unit names that should receive access to the shared resource. When specified, all accounts within these OUs will be able to consume the shared resource.",
           "items": {
             "type": "string"
           },
@@ -1712,11 +1723,14 @@
     },
     "ITag": {
       "additionalProperties": false,
+      "description": "## AWS Resource Tag Configuration\n\nDefines key-value pairs used for tagging AWS resources. Tags provide metadata for resource organization, cost allocation, access control, and automation.\n\n### Key Features\n\n- **Resource Organization**: Group and categorize resources logically\n- **Cost Allocation**: Track costs by project, department, or environment\n- **Access Control**: Use tags in IAM policies for conditional access\n- **Automation**: Trigger automated actions based on tag values\n- **Compliance**: Meet organizational and regulatory tagging requirements\n\n### Example\n\n```yaml tags:   - key: Environment     value: Production   - key: Project     value: WebApplication   - key: Owner     value: Platform-Team   - key: CostCenter     value: Engineering   - key: Backup     value: Daily ```",
       "properties": {
         "key": {
+          "description": "**Tag Key** *(Required)*\n\nThe tag key name that identifies the type of metadata being stored. Tag keys should follow consistent naming conventions across your organization.",
           "type": "string"
         },
         "value": {
+          "description": "**Tag Value** *(Required)*\n\nThe tag value that provides the actual metadata content for the tag key. Values should be meaningful and follow organizational standards.",
           "type": "string"
         }
       },
@@ -1728,11 +1742,14 @@
     },
     "ITransition": {
       "additionalProperties": false,
+      "description": "## S3 Storage Class Transition Configuration\n\nDefines when and how objects should transition from their current storage class to a different storage class. Used in S3 lifecycle rules to optimize storage costs based on data access patterns and retention requirements.\n\n### Key Components\n\n- **Storage Class**: Target storage class for the transition\n- **Transition Timing**: Number of days after object creation or version change\n\n### Example\n\n```yaml transitions:   - storageClass: STANDARD_IA     transitionAfter: 30   - storageClass: GLACIER     transitionAfter: 365   - storageClass: DEEP_ARCHIVE     transitionAfter: 2555 ```",
       "properties": {
         "storageClass": {
-          "$ref": "#/definitions/StorageClass"
+          "$ref": "#/definitions/StorageClass",
+          "description": "**Target Storage Class** *(Required)*\n\nThe S3 storage class that objects should transition to after the specified time period."
         },
         "transitionAfter": {
+          "description": "**Transition After (Days)** *(Required)*\n\nNumber of days after object creation (for current versions) or after becoming non-current (for non-current versions) when the transition should occur.",
           "type": "number"
         }
       },
@@ -1770,11 +1787,12 @@
       "type": "object"
     },
     "NonEmptyString": {
-      "description": "A string that has at least 1 character",
+      "description": "## Non-Empty String Type\n\nRepresents a string that must contain at least one character. Used for required text fields throughout the Landing Zone Accelerator configuration where empty values are not permitted.\n\n```",
       "minLength": 1,
       "type": "string"
     },
     "SecurityHubSeverityLevel": {
+      "description": "## Security Hub Severity Level Type\n\nDefines the severity levels used by AWS Security Hub for categorizing security findings and compliance issues.\n\n### Values (Highest to Lowest Severity)\n- **CRITICAL**: Immediate action required, severe security risk\n- **HIGH**: Urgent attention needed, significant security concern\n- **MEDIUM**: Important but not urgent, moderate security risk\n- **LOW**: Minor security concern, low priority\n- **INFORMATIONAL**: Informational findings, no immediate action needed",
       "enum": [
         "CRITICAL",
         "HIGH",
@@ -1785,6 +1803,7 @@
       "type": "string"
     },
     "StorageClass": {
+      "description": "## S3 Storage Class Type\n\nDefines the available Amazon S3 storage classes for lifecycle transitions. Each storage class is optimized for different access patterns, durability requirements, and cost considerations.",
       "enum": [
         "DEEP_ARCHIVE",
         "GLACIER",

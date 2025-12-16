@@ -33,6 +33,7 @@
       "type": "string"
     },
     "AllowDeny": {
+      "description": "## Allow/Deny Type\n\nRepresents permission states for access control and policy configurations. Used throughout the Landing Zone Accelerator for defining access permissions.\n\n### Values\n- **allow**: Grant permission or enable access\n- **deny**: Deny permission or block access",
       "enum": [
         "allow",
         "deny"
@@ -103,6 +104,7 @@
       "type": "string"
     },
     "EnableDisable": {
+      "description": "## Enable/Disable Type\n\nRepresents activation states for features and services throughout the Landing Zone Accelerator configuration.\n\n### Values\n- **enable**: Activate the feature or service\n- **disable**: Deactivate the feature or service",
       "enum": [
         "enable",
         "disable"
@@ -518,27 +520,31 @@
     },
     "IDeploymentTargets": {
       "additionalProperties": false,
-      "description": "Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.\n\nLicensed under the Apache License, Version 2.0 (the \"License\"). You may not use this file except in compliance with the License. A copy of the License is located at\n\n    http://www.apache.org/licenses/LICENSE-2.0\n\nor in the 'license' file accompanying this file. This file is distributed on an 'AS IS' BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, express or implied. See the License for the specific language governing permissions and limitations under the License.",
+      "description": "## Deployment Targets Interface\n\nDefines where AWS resources should be deployed within your AWS organization. This interface provides flexible targeting options for resource deployment across accounts, organizational units, and regions.\n\n### Key Features\n\n- **Account-level targeting**: Deploy to specific AWS accounts\n- **OU-level targeting**: Deploy to all accounts within organizational units\n- **Regional exclusions**: Skip specific AWS regions for compliance or cost optimization\n- **Account exclusions**: Exclude specific accounts from broader deployments\n\n### Example\n\n```yaml deploymentTargets:   organizationalUnits:     - Production     - Development   excludedAccounts:     - Management   excludedRegions:     - us-west-1 ```",
       "properties": {
         "accounts": {
+          "description": "**Target Accounts** *(Optional)*\n\nList of specific account names where resources should be deployed. Use for precise account-level targeting.",
           "items": {
             "type": "string"
           },
           "type": "array"
         },
         "excludedAccounts": {
+          "description": "**Excluded Accounts** *(Optional)*\n\nList of account names to exclude from deployment. Takes precedence over organizational unit and account inclusions.",
           "items": {
             "type": "string"
           },
           "type": "array"
         },
         "excludedRegions": {
+          "description": "**Excluded Regions** *(Optional)*\n\nList of AWS regions to exclude from deployment. Useful for compliance requirements or cost optimization.",
           "items": {
             "type": "string"
           },
           "type": "array"
         },
         "organizationalUnits": {
+          "description": "**Organizational Units** *(Optional)*\n\nList of organizational unit names where resources should be deployed. When specified, resources will be created in all accounts within these OUs.",
           "items": {
             "type": "string"
           },
@@ -1378,34 +1384,36 @@
     },
     "ILifecycleRule": {
       "additionalProperties": false,
-      "description": "S3 bucket life cycle rules object.",
+      "description": "## S3 Bucket Lifecycle Rule Configuration\n\nDefines lifecycle management rules for S3 buckets to automatically transition objects between storage classes and manage object expiration. Lifecycle rules help optimize storage costs and manage data retention policies.\n\n### Key Features\n\n- **Cost Optimization**: Automatically transition objects to cheaper storage classes\n- **Data Management**: Set expiration policies for automatic cleanup\n- **Version Control**: Manage current and non-current object versions separately\n- **Prefix Filtering**: Apply rules to specific object prefixes or entire buckets\n\n### Usage Example\n\n```yaml lifecycleRules:   - enabled: true     id: LogsLifecycle     abortIncompleteMultipartUpload: 7     expiration: 2555  # ~7 years     expiredObjectDeleteMarker: false     noncurrentVersionExpiration: 365     transitions:       - storageClass: STANDARD_IA         transitionAfter: 30       - storageClass: GLACIER         transitionAfter: 365     prefix: logs/\n\n  - enabled: true     id: ArchiveLifecycle     expiredObjectDeleteMarker: true     noncurrentVersionExpiration: 90     transitions:       - storageClass: DEEP_ARCHIVE         transitionAfter: 180 ```",
       "properties": {
         "abortIncompleteMultipartUpload": {
-          "description": "Specifies a lifecycle rule that aborts incomplete multipart uploads to an Amazon S3 bucket.",
+          "description": "**Abort Incomplete Multipart Uploads** *(Optional)*\n\nNumber of days after which incomplete multipart uploads are automatically aborted and cleaned up. This helps prevent storage costs from abandoned multipart uploads.\n\n### Benefits\n\n- **Cost Control**: Prevents charges for incomplete upload parts\n- **Storage Cleanup**: Automatically removes orphaned multipart data\n- **Operational Hygiene**: Maintains clean bucket state\n\n### Considerations\n\n- Set based on your typical upload patterns and file sizes\n- Consider network reliability and upload duration requirements\n- Balance between cost control and operational flexibility",
           "type": "number"
         },
         "enabled": {
-          "description": "Whether this rule is enabled.",
+          "default": true,
+          "description": "**Rule Enabled** *(Optional)*\n\nControls whether this lifecycle rule is active and enforced. Allows you to temporarily disable rules without removing them from the configuration.",
           "type": "boolean"
         },
         "expiration": {
-          "description": "Indicates the number of days after creation when objects are deleted from Amazon S3 and Amazon Glacier.",
+          "description": "**Object Expiration** *(Optional)*\n\nNumber of days after object creation when objects are permanently deleted from the bucket. This implements automatic data retention policies and helps manage storage costs for time-sensitive data.\n\n### Use Cases\n\n- **Log Retention**: Automatically delete old log files\n- **Compliance**: Enforce data retention policies\n- **Cost Management**: Remove data that's no longer needed\n- **Regulatory Requirements**: Meet data disposal requirements\n\n### Important Considerations\n\n- **Irreversible**: Expired objects are permanently deleted\n- **Compliance**: Ensure retention periods meet regulatory requirements\n- **Business Needs**: Consider future data access requirements\n- **Backup Strategy**: Ensure critical data is backed up before expiration",
           "type": "number"
         },
         "expiredObjectDeleteMarker": {
-          "description": "Indicates whether Amazon S3 will remove a delete marker with no noncurrent versions. If set to true, the delete marker will be expired.",
+          "default": false,
+          "description": "**Expired Object Delete Marker Cleanup** *(Optional)*\n\nControls whether S3 automatically removes delete markers that have no non-current versions. This helps clean up versioned buckets and reduce storage costs from orphaned delete markers.\n\n### Benefits When Enabled\n\n- **Cost Reduction**: Eliminates charges for orphaned delete markers\n- **Storage Optimization**: Keeps bucket metadata clean\n- **Operational Efficiency**: Reduces clutter in versioned buckets",
           "type": "boolean"
         },
         "id": {
-          "description": "Friendly name for the rule. Rule name must be unique.",
+          "description": "**Rule Identifier** *(Optional)*\n\nUnique, human-readable name for the lifecycle rule within the bucket. Used for rule identification, management, and troubleshooting.",
           "type": "string"
         },
         "noncurrentVersionExpiration": {
-          "description": "Time between when a new version of the object is uploaded to the bucket and when old versions of the object expire.",
+          "description": "**Non-Current Version Expiration** *(Optional)*\n\nNumber of days after an object version becomes non-current when it should be permanently deleted. This manages storage costs for versioned buckets by cleaning up old object versions.\n\n### Considerations\n\n- **Recovery Needs**: Balance cost vs. ability to recover old versions\n- **Compliance**: Some regulations require version retention\n- **Storage Costs**: Non-current versions incur full storage charges\n- **Access Patterns**: Consider how often old versions are accessed",
           "type": "number"
         },
         "noncurrentVersionTransitions": {
-          "description": "One or more transition rules that specify when non-current objects transition to a specified storage class.",
+          "description": "**Non-Current Version Transitions** *(Optional)*\n\nArray of transition rules that specify when non-current object versions should move to different storage classes. This optimizes costs for versioned buckets by moving old versions to cheaper storage.\n\n### Storage Class Optimization\n\nNon-current versions are typically accessed less frequently than current versions, making them ideal candidates for cheaper storage classes.",
           "items": {
             "$ref": "#/definitions/ITransition"
           },
@@ -1413,11 +1421,11 @@
         },
         "prefix": {
           "$ref": "#/definitions/NonEmptyString",
-          "default": "- Rule applies to all objects",
-          "description": "Object key prefix that identifies one or more objects to which this rule applies."
+          "default": "undefined (applies to all objects in the bucket)",
+          "description": "**Object Key Prefix Filter** *(Optional)*\n\nObject key prefix that identifies which objects this lifecycle rule applies to. When specified, the rule only affects objects whose keys start with this prefix. When omitted, the rule applies to all objects in the bucket.\n\n\n### Best Practices\n\n- Use consistent prefix naming conventions\n- Design prefixes to support different lifecycle needs\n- Consider future organizational changes\n- Document prefix meanings and purposes"
         },
         "transitions": {
-          "description": "One or more transition rules that specify when an object transitions to a specified storage class.",
+          "description": "**Current Version Transitions** *(Optional)*\n\nArray of transition rules that specify when current objects should move to different storage classes. This implements cost optimization strategies based on data access patterns and age.\n\n### Cost Optimization Strategy\n\nDesign transitions based on your data access patterns:\n- **Frequently Accessed**: Keep in Standard storage\n- **Infrequently Accessed**: Transition to Standard-IA\n- **Archive Data**: Move to Glacier or Deep Archive\n- **Long-term Retention**: Use Deep Archive for lowest cost",
           "items": {
             "$ref": "#/definitions/ITransition"
           },
@@ -3259,14 +3267,17 @@
     },
     "IShareTargets": {
       "additionalProperties": false,
+      "description": "## Resource Access Manager (RAM) Share Targets Interface\n\nInterface for AWS Resource Access Manager (RAM) share targets, which defines where shared resources should be made available within your AWS organization. RAM enables secure sharing of resources between AWS accounts and organizational units without duplicating resources or compromising security.\n\n### Key Features\n\n- **Cross-Account Sharing**: Share resources across multiple AWS accounts\n- **OU-Level Sharing**: Share with entire organizational units at once\n- **Centralized Management**: Manage shared resources from a central account\n- **Cost Optimization**: Avoid resource duplication across accounts\n- **Security**: Maintain resource ownership while enabling controlled access\n\n### Example\n\n```yaml shareTargets:   organizationalUnits:     - Root ```\n\nLearn more about [AWS Resource Access Manager](https://docs.aws.amazon.com/ram/latest/userguide/what-is.html).",
       "properties": {
         "accounts": {
+          "description": "**Target Accounts** *(Optional)*\n\nList of specific account names that should receive access to the shared resource. Use this for precise, account-level control over resource sharing.",
           "items": {
             "type": "string"
           },
           "type": "array"
         },
         "organizationalUnits": {
+          "description": "**Organizational Units** *(Optional)*\n\nList of organizational unit names that should receive access to the shared resource. When specified, all accounts within these OUs will be able to consume the shared resource.",
           "items": {
             "type": "string"
           },
@@ -3409,11 +3420,14 @@
     },
     "ITag": {
       "additionalProperties": false,
+      "description": "## AWS Resource Tag Configuration\n\nDefines key-value pairs used for tagging AWS resources. Tags provide metadata for resource organization, cost allocation, access control, and automation.\n\n### Key Features\n\n- **Resource Organization**: Group and categorize resources logically\n- **Cost Allocation**: Track costs by project, department, or environment\n- **Access Control**: Use tags in IAM policies for conditional access\n- **Automation**: Trigger automated actions based on tag values\n- **Compliance**: Meet organizational and regulatory tagging requirements\n\n### Example\n\n```yaml tags:   - key: Environment     value: Production   - key: Project     value: WebApplication   - key: Owner     value: Platform-Team   - key: CostCenter     value: Engineering   - key: Backup     value: Daily ```",
       "properties": {
         "key": {
+          "description": "**Tag Key** *(Required)*\n\nThe tag key name that identifies the type of metadata being stored. Tag keys should follow consistent naming conventions across your organization.",
           "type": "string"
         },
         "value": {
+          "description": "**Tag Value** *(Required)*\n\nThe tag value that provides the actual metadata content for the tag key. Values should be meaningful and follow organizational standards.",
           "type": "string"
         }
       },
@@ -4078,11 +4092,14 @@
     },
     "ITransition": {
       "additionalProperties": false,
+      "description": "## S3 Storage Class Transition Configuration\n\nDefines when and how objects should transition from their current storage class to a different storage class. Used in S3 lifecycle rules to optimize storage costs based on data access patterns and retention requirements.\n\n### Key Components\n\n- **Storage Class**: Target storage class for the transition\n- **Transition Timing**: Number of days after object creation or version change\n\n### Example\n\n```yaml transitions:   - storageClass: STANDARD_IA     transitionAfter: 30   - storageClass: GLACIER     transitionAfter: 365   - storageClass: DEEP_ARCHIVE     transitionAfter: 2555 ```",
       "properties": {
         "storageClass": {
-          "$ref": "#/definitions/StorageClass"
+          "$ref": "#/definitions/StorageClass",
+          "description": "**Target Storage Class** *(Required)*\n\nThe S3 storage class that objects should transition to after the specified time period."
         },
         "transitionAfter": {
+          "description": "**Transition After (Days)** *(Required)*\n\nNumber of days after object creation (for current versions) or after becoming non-current (for non-current versions) when the transition should occur.",
           "type": "number"
         }
       },
@@ -4323,11 +4340,15 @@
     },
     "IVpcFlowLogsCloudWatchLogsConfig": {
       "additionalProperties": false,
+      "description": "## VPC Flow Logs CloudWatch Logs Configuration Interface\n\nConfiguration interface for CloudWatch Logs destination settings when VPC Flow Logs are sent to Amazon CloudWatch Logs. Provides control over log retention and encryption for real-time monitoring capabilities.\n\n### Key Features\n\n- **Retention Management**: Control how long logs are kept in CloudWatch\n- **Encryption**: Secure logs with customer-managed KMS keys\n- **Real-time Analysis**: Enable immediate log analysis and alerting\n- **Cost Control**: Manage CloudWatch Logs storage costs through retention",
       "properties": {
         "kms": {
-          "$ref": "#/definitions/NonEmptyString"
+          "$ref": "#/definitions/NonEmptyString",
+          "description": "**KMS Key** *(Optional)*\n\nName of the KMS key to use for encrypting flow logs in CloudWatch Logs. Provides additional security for sensitive network traffic data."
         },
         "retentionInDays": {
+          "default": 365,
+          "description": "**Retention in Days** *(Optional)*\n\nNumber of days to retain flow logs in CloudWatch Logs. After this period, logs are automatically deleted to control costs.",
           "type": "number"
         }
       },
@@ -4335,30 +4356,37 @@
     },
     "IVpcFlowLogsConfig": {
       "additionalProperties": false,
+      "description": "## VPC Flow Logs Configuration Interface\n\nInterface for AWS VPC Flow Logs configuration, which captures information about IP traffic flowing to and from network interfaces in your VPCs. Flow logs provide visibility into network traffic patterns, security analysis, and troubleshooting capabilities.\n\n### Key Features\n\n- **Traffic Visibility**: Monitor all network traffic in your VPCs\n- **Security Analysis**: Detect suspicious traffic patterns and potential threats\n- **Compliance**: Meet regulatory requirements for network monitoring\n- **Troubleshooting**: Diagnose connectivity and performance issues\n- **Cost Optimization**: Analyze traffic patterns to optimize network costs\n\n### Supported Destinations\n\n- **Amazon S3**: Cost-effective long-term storage and analysis\n- **CloudWatch Logs**: Real-time monitoring and alerting capabilities\n- **Dual Destination**: Send logs to both S3 and CloudWatch simultaneously\n\nLearn more about [VPC Flow Logs](https://docs.aws.amazon.com/vpc/latest/userguide/flow-logs.html).",
       "properties": {
         "customFields": {
+          "description": "**Custom Fields** *(Required when defaultFormat is false)*\n\nArray of specific fields to include in flow log records when using custom format. This allows you to capture exactly the network information needed for your use cases.",
           "items": {
             "$ref": "#/definitions/NonEmptyString"
           },
           "type": "array"
         },
         "defaultFormat": {
+          "description": "**Use Default Format** *(Required)*\n\nControls whether to use the AWS default flow log format or a custom format with specific fields. When false, allows customization of logged fields.",
           "type": "boolean"
         },
         "destinations": {
+          "description": "**Log Destinations** *(Required)*\n\nArray of destination services where VPC flow logs should be delivered. You can send logs to one or both supported destinations simultaneously.",
           "items": {
             "$ref": "#/definitions/LogDestinationType"
           },
           "type": "array"
         },
         "destinationsConfig": {
-          "$ref": "#/definitions/IVpcFlowLogsDestinationConfig"
+          "$ref": "#/definitions/IVpcFlowLogsDestinationConfig",
+          "description": "**Destination Configuration** *(Optional)*\n\nAdvanced configuration options for flow log destinations, including S3 lifecycle policies and CloudWatch Logs retention settings."
         },
         "maxAggregationInterval": {
+          "description": "**Maximum Aggregation Interval** *(Required)*\n\nThe maximum interval in seconds for aggregating flow log records before they are captured and delivered to the destination.",
           "type": "number"
         },
         "trafficType": {
-          "$ref": "#/definitions/TrafficType"
+          "$ref": "#/definitions/TrafficType",
+          "description": "**Traffic Type** *(Required)*\n\nSpecifies the type of network traffic to capture in VPC flow logs. This determines which traffic flows will be recorded and available for analysis."
         }
       },
       "required": [
@@ -4372,27 +4400,33 @@
     },
     "IVpcFlowLogsDestinationConfig": {
       "additionalProperties": false,
+      "description": "## VPC Flow Logs Destination Configuration Interface\n\nConfiguration interface for VPC Flow Logs destination settings, supporting both S3 and CloudWatch Logs destinations. Allows fine-grained control over how flow logs are stored, retained, and processed.\n\n### Supported Destinations\n\n- **S3**: Cost-effective long-term storage with lifecycle management\n- **CloudWatch Logs**: Real-time monitoring with immediate alerting capabilities\n- **Dual Destination**: Send to both S3 and CloudWatch simultaneously\n\n### Example\n\n```yaml destinationsConfig:   s3:     lifecycleRules:       - enabled: true         expiration: 2555         transitions:           - storageClass: GLACIER             transitionAfter: 365   cloudWatchLogs:     retentionInDays: 365     kms: flow-logs-key ```",
       "properties": {
         "cloudWatchLogs": {
-          "$ref": "#/definitions/IVpcFlowLogsCloudWatchLogsConfig"
+          "$ref": "#/definitions/IVpcFlowLogsCloudWatchLogsConfig",
+          "description": "**CloudWatch Logs Configuration** *(Optional)*\n\nConfiguration for CloudWatch Logs destination including retention and encryption. Used when flow logs are sent to CloudWatch Logs for real-time monitoring."
         },
         "s3": {
-          "$ref": "#/definitions/IVpcFlowLogsS3BucketConfig"
+          "$ref": "#/definitions/IVpcFlowLogsS3BucketConfig",
+          "description": "**S3 Configuration** *(Optional)*\n\nConfiguration for S3 destination including lifecycle rules and custom paths. Used when flow logs are sent to Amazon S3 for long-term storage and analysis."
         }
       },
       "type": "object"
     },
     "IVpcFlowLogsS3BucketConfig": {
       "additionalProperties": false,
+      "description": "## VPC Flow Logs S3 Bucket Configuration Interface\n\nConfiguration interface for S3 destination settings when VPC Flow Logs are sent to Amazon S3. Provides control over lifecycle management and custom log path configurations for cost optimization and organization.\n\n### Key Features\n\n- **Lifecycle Management**: Automatic transition and expiration of log files\n- **Custom Paths**: Override default S3 log path structure\n- **Cost Optimization**: Reduce storage costs through intelligent tiering\n- **Retention Control**: Manage log retention periods automatically",
       "properties": {
         "lifecycleRules": {
+          "description": "**Lifecycle Rules** *(Optional)*\n\nS3 lifecycle rules to manage flow log files automatically. Controls when logs transition to cheaper storage classes and when they expire.",
           "items": {
             "$ref": "#/definitions/ILifecycleRule"
           },
           "type": "array"
         },
         "overrideS3LogPath": {
-          "$ref": "#/definitions/NonEmptyString"
+          "$ref": "#/definitions/NonEmptyString",
+          "description": "**Override S3 Log Path** *(Optional)*\n\nCustom S3 key prefix for organizing flow log files. Overrides the default LZA path structure for flow logs."
         }
       },
       "type": "object"
@@ -4832,6 +4866,7 @@
       "type": "string"
     },
     "LogDestinationType": {
+      "description": "## Log Destination Type\n\nDefines the supported destinations for storing and processing log data from various AWS services like VPC Flow Logs, CloudTrail, and other logging services.\n\n### Values\n- **s3**: Amazon S3 for cost-effective long-term storage and batch analysis\n- **cloud-watch-logs**: CloudWatch Logs for real-time monitoring and alerting",
       "enum": [
         "s3",
         "cloud-watch-logs"
@@ -4968,7 +5003,7 @@
       "type": "string"
     },
     "NonEmptyString": {
-      "description": "A string that has at least 1 character",
+      "description": "## Non-Empty String Type\n\nRepresents a string that must contain at least one character. Used for required text fields throughout the Landing Zone Accelerator configuration where empty values are not permitted.\n\n```",
       "minLength": 1,
       "type": "string"
     },
@@ -5150,6 +5185,7 @@
       "type": "string"
     },
     "StorageClass": {
+      "description": "## S3 Storage Class Type\n\nDefines the available Amazon S3 storage classes for lifecycle transitions. Each storage class is optimized for different access patterns, durability requirements, and cost considerations.",
       "enum": [
         "DEEP_ARCHIVE",
         "GLACIER",
@@ -5222,6 +5258,7 @@
       "type": "string"
     },
     "TrafficType": {
+      "description": "## VPC Flow Logs Traffic Type\n\nDefines which types of network traffic should be captured in VPC Flow Logs. This determines the scope of network visibility and the volume of log data generated.\n\n### Values\n- **ALL**: Capture all network traffic (both accepted and rejected)\n- **ACCEPT**: Capture only traffic that was allowed by security groups/NACLs\n- **REJECT**: Capture only traffic that was blocked by security groups/NACLs",
       "enum": [
         "ALL",
         "ACCEPT",

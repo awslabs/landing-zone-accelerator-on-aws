@@ -399,11 +399,14 @@
     },
     "ICfnParameter": {
       "additionalProperties": false,
+      "description": "## CloudFormation Parameter Interface\n\nInterface for AWS CloudFormation template parameters that can be passed to CloudFormation stacks during deployment. Parameters allow customization of stack resources without modifying the template.\n\n### Key Features\n\n- **Template Customization**: Modify stack behavior without changing templates\n- **Environment Flexibility**: Use different values across environments\n- **Reusability**: Make templates reusable across different contexts\n- **Security**: Pass sensitive values securely to stacks\n\n### Example\n\n```yaml parameters:   - name: InstanceType     value: t3.micro   - name: Environment     value: Production ```\n\nLearn more about [CloudFormation Parameters](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/parameters-section-structure.html).",
       "properties": {
         "name": {
+          "description": "**Parameter Name** *(Required)*\n\nThe name of the CloudFormation parameter as defined in the template. Must match exactly with the parameter name in the CloudFormation template.",
           "type": "string"
         },
         "value": {
+          "description": "**Parameter Value** *(Required)*\n\nThe value to pass to the CloudFormation parameter during stack deployment. The value must be compatible with the parameter type defined in the template.",
           "type": "string"
         }
       },
@@ -590,27 +593,31 @@
     },
     "IDeploymentTargets": {
       "additionalProperties": false,
-      "description": "Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.\n\nLicensed under the Apache License, Version 2.0 (the \"License\"). You may not use this file except in compliance with the License. A copy of the License is located at\n\n    http://www.apache.org/licenses/LICENSE-2.0\n\nor in the 'license' file accompanying this file. This file is distributed on an 'AS IS' BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, express or implied. See the License for the specific language governing permissions and limitations under the License.",
+      "description": "## Deployment Targets Interface\n\nDefines where AWS resources should be deployed within your AWS organization. This interface provides flexible targeting options for resource deployment across accounts, organizational units, and regions.\n\n### Key Features\n\n- **Account-level targeting**: Deploy to specific AWS accounts\n- **OU-level targeting**: Deploy to all accounts within organizational units\n- **Regional exclusions**: Skip specific AWS regions for compliance or cost optimization\n- **Account exclusions**: Exclude specific accounts from broader deployments\n\n### Example\n\n```yaml deploymentTargets:   organizationalUnits:     - Production     - Development   excludedAccounts:     - Management   excludedRegions:     - us-west-1 ```",
       "properties": {
         "accounts": {
+          "description": "**Target Accounts** *(Optional)*\n\nList of specific account names where resources should be deployed. Use for precise account-level targeting.",
           "items": {
             "type": "string"
           },
           "type": "array"
         },
         "excludedAccounts": {
+          "description": "**Excluded Accounts** *(Optional)*\n\nList of account names to exclude from deployment. Takes precedence over organizational unit and account inclusions.",
           "items": {
             "type": "string"
           },
           "type": "array"
         },
         "excludedRegions": {
+          "description": "**Excluded Regions** *(Optional)*\n\nList of AWS regions to exclude from deployment. Useful for compliance requirements or cost optimization.",
           "items": {
             "type": "string"
           },
           "type": "array"
         },
         "organizationalUnits": {
+          "description": "**Organizational Units** *(Optional)*\n\nList of organizational unit names where resources should be deployed. When specified, resources will be created in all accounts within these OUs.",
           "items": {
             "type": "string"
           },
@@ -1073,23 +1080,31 @@
     },
     "IOperationPreferences": {
       "additionalProperties": false,
+      "description": "## CloudFormation StackSet Operation Preferences Interface\n\nConfiguration interface for AWS CloudFormation StackSet operation preferences. These preferences control how StackSet operations are executed across multiple accounts and regions, including failure tolerance and concurrency settings.\n\n### Key Features\n\n- **Failure Tolerance**: Control how many failures are acceptable during deployment\n- **Concurrency Control**: Manage how many operations run simultaneously\n- **Regional Ordering**: Specify the order of region deployments\n- **Parallel Execution**: Configure parallel vs sequential deployment patterns\n\n### Example\n\n```yaml operationPreferences:   failureTolerancePercentage: 10   maxConcurrentPercentage: 50   regionConcurrencyType: PARALLEL   regionOrder:     - us-east-1     - us-west-2 ```\n\nLearn more about [StackSet Operation Preferences](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/stacksets-concepts.html#stacksets-concepts-ops).",
       "properties": {
         "failureToleranceCount": {
+          "description": "**Failure Tolerance Count** *(Optional)*\n\nThe absolute number of accounts in which stack operations can fail before the operation is stopped. Cannot be used with failureTolerancePercentage.",
           "type": "number"
         },
         "failureTolerancePercentage": {
+          "description": "**Failure Tolerance Percentage** *(Optional)*\n\nThe percentage of accounts in which stack operations can fail before the operation is stopped. Cannot be used with failureToleranceCount.",
           "type": "number"
         },
         "maxConcurrentCount": {
+          "description": "**Maximum Concurrent Count** *(Optional)*\n\nThe absolute maximum number of accounts in which stack operations can be performed concurrently. Cannot be used with maxConcurrentPercentage.",
           "type": "number"
         },
         "maxConcurrentPercentage": {
+          "description": "**Maximum Concurrent Percentage** *(Optional)*\n\nThe maximum percentage of accounts in which stack operations can be performed concurrently. Cannot be used with maxConcurrentCount.",
           "type": "number"
         },
         "regionConcurrencyType": {
+          "default": "PARALLEL",
+          "description": "**Region Concurrency Type** *(Optional)*\n\nThe concurrency type of deploying StackSets operations in regions. Valid values are SEQUENTIAL and PARALLEL.",
           "type": "string"
         },
         "regionOrder": {
+          "description": "**Region Order** *(Optional)*\n\nThe order of the regions where you want to perform the stack operation. Only applies when regionConcurrencyType is SEQUENTIAL.",
           "items": {
             "type": "string"
           },
@@ -1332,14 +1347,17 @@
     },
     "IShareTargets": {
       "additionalProperties": false,
+      "description": "## Resource Access Manager (RAM) Share Targets Interface\n\nInterface for AWS Resource Access Manager (RAM) share targets, which defines where shared resources should be made available within your AWS organization. RAM enables secure sharing of resources between AWS accounts and organizational units without duplicating resources or compromising security.\n\n### Key Features\n\n- **Cross-Account Sharing**: Share resources across multiple AWS accounts\n- **OU-Level Sharing**: Share with entire organizational units at once\n- **Centralized Management**: Manage shared resources from a central account\n- **Cost Optimization**: Avoid resource duplication across accounts\n- **Security**: Maintain resource ownership while enabling controlled access\n\n### Example\n\n```yaml shareTargets:   organizationalUnits:     - Root ```\n\nLearn more about [AWS Resource Access Manager](https://docs.aws.amazon.com/ram/latest/userguide/what-is.html).",
       "properties": {
         "accounts": {
+          "description": "**Target Accounts** *(Optional)*\n\nList of specific account names that should receive access to the shared resource. Use this for precise, account-level control over resource sharing.",
           "items": {
             "type": "string"
           },
           "type": "array"
         },
         "organizationalUnits": {
+          "description": "**Organizational Units** *(Optional)*\n\nList of organizational unit names that should receive access to the shared resource. When specified, all accounts within these OUs will be able to consume the shared resource.",
           "items": {
             "type": "string"
           },
@@ -1350,11 +1368,14 @@
     },
     "ITag": {
       "additionalProperties": false,
+      "description": "## AWS Resource Tag Configuration\n\nDefines key-value pairs used for tagging AWS resources. Tags provide metadata for resource organization, cost allocation, access control, and automation.\n\n### Key Features\n\n- **Resource Organization**: Group and categorize resources logically\n- **Cost Allocation**: Track costs by project, department, or environment\n- **Access Control**: Use tags in IAM policies for conditional access\n- **Automation**: Trigger automated actions based on tag values\n- **Compliance**: Meet organizational and regulatory tagging requirements\n\n### Example\n\n```yaml tags:   - key: Environment     value: Production   - key: Project     value: WebApplication   - key: Owner     value: Platform-Team   - key: CostCenter     value: Engineering   - key: Backup     value: Daily ```",
       "properties": {
         "key": {
+          "description": "**Tag Key** *(Required)*\n\nThe tag key name that identifies the type of metadata being stored. Tag keys should follow consistent naming conventions across your organization.",
           "type": "string"
         },
         "value": {
+          "description": "**Tag Value** *(Required)*\n\nThe tag value that provides the actual metadata content for the tag key. Values should be meaningful and follow organizational standards.",
           "type": "string"
         }
       },
@@ -1582,7 +1603,7 @@
       "type": "string"
     },
     "NonEmptyString": {
-      "description": "A string that has at least 1 character",
+      "description": "## Non-Empty String Type\n\nRepresents a string that must contain at least one character. Used for required text fields throughout the Landing Zone Accelerator configuration where empty values are not permitted.\n\n```",
       "minLength": 1,
       "type": "string"
     },
