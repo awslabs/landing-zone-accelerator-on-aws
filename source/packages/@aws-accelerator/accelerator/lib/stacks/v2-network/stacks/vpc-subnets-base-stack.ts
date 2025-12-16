@@ -13,7 +13,6 @@
 
 import { pascalCase } from 'pascal-case';
 import * as cdk from 'aws-cdk-lib';
-import { NagSuppressions } from 'cdk-nag';
 import { Construct } from 'constructs';
 import { AcceleratorKeyType, AcceleratorStack } from '../../accelerator-stack';
 import { V2NetworkStacksBaseProps } from '../utils/types';
@@ -74,11 +73,6 @@ export class VpcSubnetsBaseStack extends AcceleratorStack {
     // Create NAT gateways
     //
     this.createNatGateways();
-
-    //
-    // Create cross-account access role for TGW attachments, if applicable
-    //
-    this.createTgwAttachmentRole();
 
     //
     // Create TGW attachments
@@ -469,82 +463,6 @@ export class VpcSubnetsBaseStack extends AcceleratorStack {
         domain: 'vpc',
       }).attrAllocationId
     );
-  }
-
-  private getTgwOwningAccountIds(): string[] {
-    const transitGatewayAccountIds: string[] = [];
-
-    for (const attachment of this.vpcDetails.transitGatewayAttachments) {
-      const owningAccountId = this.props.accountsConfig.getAccountId(attachment.transitGateway.account);
-
-      if (owningAccountId !== cdk.Stack.of(this).account && !transitGatewayAccountIds.includes(owningAccountId)) {
-        transitGatewayAccountIds.push(owningAccountId);
-      }
-    }
-
-    return transitGatewayAccountIds;
-  }
-
-  private createTgwAttachmentRole(): void {
-    // Get account IDs of external accounts hosting TGWs
-    const transitGatewayAccountIds = this.getTgwOwningAccountIds();
-    const roleName = `${this.props.prefixes.accelerator}-DescribeTgwAttachRole-${cdk.Stack.of(this).region}`;
-    // Create cross account access role to read transit gateway attachments if
-    // there are other accounts in the list
-    if (
-      transitGatewayAccountIds.length > 0 &&
-      isV2Resource(
-        this.v2StackProps.v2NetworkResources,
-        this.vpcDetails.name,
-        V2StackComponentsList.TGW_VPC_ATTACHMENT_ROLE,
-        `${roleName}|${cdk.Stack.of(this).account}`,
-      )
-    ) {
-      this.logger.info(`Creating IAM role to access transit gateway attachments for VPC ${this.vpcDetails.name}`);
-
-      const principals: cdk.aws_iam.PrincipalBase[] = [];
-      transitGatewayAccountIds.forEach(accountId => {
-        principals.push(new cdk.aws_iam.AccountPrincipal(accountId));
-      });
-      const roleArns = [
-        `arn:${cdk.Stack.of(this).partition}:iam::*:role/${this.props.prefixes.accelerator}-*-CustomGetTransitGateway*`,
-      ];
-      const role = new cdk.aws_iam.Role(this, 'DescribeTgwAttachRole', {
-        roleName,
-        inlinePolicies: {
-          default: new cdk.aws_iam.PolicyDocument({
-            statements: [
-              new cdk.aws_iam.PolicyStatement({
-                effect: cdk.aws_iam.Effect.ALLOW,
-                actions: ['ec2:DescribeTransitGatewayAttachments'],
-                resources: ['*'],
-              }),
-            ],
-          }),
-        },
-        assumedBy: new cdk.aws_iam.PrincipalWithConditions(new cdk.aws_iam.CompositePrincipal(...principals), {
-          ArnLike: {
-            'aws:PrincipalArn': roleArns,
-          },
-          StringEquals: {
-            'aws:PrincipalOrgID': this.organizationId,
-          },
-        }),
-      });
-      // AwsSolutions-IAM5: The IAM entity contains wildcard permissions and does not have a cdk_nag rule suppression with evidence for those permission.
-      // rule suppression with evidence for this permission.
-      NagSuppressions.addResourceSuppressionsByPath(this, `${this.stackName}/DescribeTgwAttachRole/Resource`, [
-        {
-          id: 'AwsSolutions-IAM5',
-          reason: 'DescribeTgwAttachRole needs access to every describe each transit gateway attachment in the account',
-        },
-      ]);
-
-      (role.node.defaultChild as cdk.aws_iam.CfnRole).addMetadata(MetadataKeys.LZA_LOOKUP, {
-        resourceType: V2StackComponentsList.TGW_VPC_ATTACHMENT_ROLE,
-        roleName,
-      });
-    }
   }
 
   private getTgwAttachmentSubnetIds(tgwAttachmentItem: TransitGatewayAttachmentConfig) {

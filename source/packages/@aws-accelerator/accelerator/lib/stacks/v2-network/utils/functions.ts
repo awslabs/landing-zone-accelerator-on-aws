@@ -953,7 +953,7 @@ function getV2TgwVpcAttachmentRoleResources(
   lzaLookup: LZAResourceLookup,
   v2Components: V2NetworkResourceListType[],
 ): void {
-  const roleName = `${acceleratorPrefix}-DescribeTgwAttachRole-${env.region}`;
+  const roleName = `${acceleratorPrefix}-GetTgwAttachmentRole-${env.region}`;
   const tgwOwningAccountIds = getTgwOwningAccountIds(vpcItem, accountsConfig, env);
 
   for (const tgwAttachmentItem of vpcItem.transitGatewayAttachments ?? []) {

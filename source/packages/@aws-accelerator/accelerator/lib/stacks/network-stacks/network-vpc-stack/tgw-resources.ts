@@ -92,17 +92,11 @@ export class TgwResources {
     // Get account IDs of external accounts hosting TGWs
     const transitGatewayAccountIds = this.getTgwOwningAccountIds(vpcResources, props);
 
-    const roleName = `${props.prefixes.accelerator}-DescribeTgwAttachRole-${cdk.Stack.of(this.stack).region}`;
+    const roleName = `${props.prefixes.accelerator}-GetTgwAttachmentRole-${cdk.Stack.of(this.stack).region}`;
 
     // Create cross account access role to read transit gateway attachments if
     // there are other accounts in the list
-    if (
-      transitGatewayAccountIds.length > 0 &&
-      this.lzaLookup.resourceExists({
-        resourceType: LZAResourceLookupType.ROLE,
-        lookupValues: { roleName: roleName },
-      })
-    ) {
+    if (transitGatewayAccountIds.length > 0) {
       this.stack.addLogs(LogLevel.INFO, `Create IAM Cross Account Access Role for TGW attachments`);
 
       const principals: cdk.aws_iam.PrincipalBase[] = [];
@@ -114,7 +108,7 @@ export class TgwResources {
           props.prefixes.accelerator
         }-*-CustomGetTransitGateway*`,
       ];
-      const role = new cdk.aws_iam.Role(this.stack, 'DescribeTgwAttachRole', {
+      const role = new cdk.aws_iam.Role(this.stack, 'GetTgwAttachmentRole', {
         roleName: roleName,
         inlinePolicies: {
           default: new cdk.aws_iam.PolicyDocument({
@@ -143,12 +137,12 @@ export class TgwResources {
       // rule suppression with evidence for this permission.
       NagSuppressions.addResourceSuppressionsByPath(
         this.stack,
-        `${this.stack.stackName}/DescribeTgwAttachRole/Resource`,
+        `${this.stack.stackName}/GetTgwAttachmentRole/Resource`,
         [
           {
             id: 'AwsSolutions-IAM5',
             reason:
-              'DescribeTgwAttachRole needs access to every describe each transit gateway attachment in the account',
+              'GetTgwAttachmentRole needs access to every describe each transit gateway attachment in the account',
           },
         ],
       );
