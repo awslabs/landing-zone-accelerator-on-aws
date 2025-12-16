@@ -567,7 +567,7 @@ exports[`NetworkAssociationsStack > Construct(NetworkAssociationsStack):  Snapsh
                   {
                     "Ref": "AWS::Partition",
                   },
-                  ":iam::444444444444:role/AWSAccelerator-DescribeTgwAttachRole-us-east-1",
+                  ":iam::444444444444:role/AWSAccelerator-GetTgwAttachmentRole-us-east-1",
                 ],
               ],
             },
@@ -20520,7 +20520,7 @@ exports[`NoVpcFlowLogStack > Construct(NetworkAssociationsStack):  Snapshot Test
                   {
                     "Ref": "AWS::Partition",
                   },
-                  ":iam::444444444444:role/AWSAccelerator-DescribeTgwAttachRole-us-east-1",
+                  ":iam::444444444444:role/AWSAccelerator-GetTgwAttachmentRole-us-east-1",
                 ],
               ],
             },
