@@ -150,18 +150,7 @@ exports[`GuardDutyMembers > Construct(GuardDutyMembers):  Snapshot Test 1`] = `
                 {
                   "Action": "iam:GetRole",
                   "Effect": "Allow",
-                  "Resource": {
-                    "Fn::Join": [
-                      "",
-                      [
-                        "arn:",
-                        {
-                          "Ref": "AWS::Partition",
-                        },
-                        ":iam::*:role/*AWSServiceRoleForAmazonGuardDutyMalwareProtection",
-                      ],
-                    ],
-                  },
+                  "Resource": "arn:aws:iam::*:role/*AWSServiceRoleForAmazonGuardDutyMalwareProtection",
                   "Sid": "IamGetRoleSid1",
                 },
                 {
@@ -177,18 +166,7 @@ exports[`GuardDutyMembers > Construct(GuardDutyMembers):  Snapshot Test 1`] = `
                     },
                   },
                   "Effect": "Allow",
-                  "Resource": {
-                    "Fn::Join": [
-                      "",
-                      [
-                        "arn:",
-                        {
-                          "Ref": "AWS::Partition",
-                        },
-                        ":iam::*:role/*",
-                      ],
-                    ],
-                  },
+                  "Resource": "arn:aws:iam::*:role/*",
                   "Sid": "AllowPassRoleToMalwareProtection",
                 },
               ],

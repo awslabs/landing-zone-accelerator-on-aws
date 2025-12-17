@@ -140,13 +140,13 @@ export class GuardDutyMembers extends Construct {
           Sid: 'IamGetRoleSid1',
           Effect: 'Allow',
           Action: 'iam:GetRole',
-          Resource: `arn:${cdk.Aws.PARTITION}:iam::*:role/*AWSServiceRoleForAmazonGuardDutyMalwareProtection`,
+          Resource: `arn:aws:iam::*:role/*AWSServiceRoleForAmazonGuardDutyMalwareProtection`,
         },
         {
           Sid: 'AllowPassRoleToMalwareProtection',
           Effect: 'Allow',
           Action: ['iam:PassRole'],
-          Resource: `arn:${cdk.Aws.PARTITION}:iam::*:role/*`,
+          Resource: 'arn:aws:iam::*:role/*',
           Condition: {
             StringEquals: {
               'iam:PassedToService': [

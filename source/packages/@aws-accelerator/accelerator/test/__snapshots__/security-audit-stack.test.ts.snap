@@ -1212,18 +1212,7 @@ def script_handler(events, context):
                 {
                   "Action": "iam:GetRole",
                   "Effect": "Allow",
-                  "Resource": {
-                    "Fn::Join": [
-                      "",
-                      [
-                        "arn:",
-                        {
-                          "Ref": "AWS::Partition",
-                        },
-                        ":iam::*:role/*AWSServiceRoleForAmazonGuardDutyMalwareProtection",
-                      ],
-                    ],
-                  },
+                  "Resource": "arn:aws:iam::*:role/*AWSServiceRoleForAmazonGuardDutyMalwareProtection",
                   "Sid": "IamGetRoleSid1",
                 },
                 {
@@ -1239,18 +1228,7 @@ def script_handler(events, context):
                     },
                   },
                   "Effect": "Allow",
-                  "Resource": {
-                    "Fn::Join": [
-                      "",
-                      [
-                        "arn:",
-                        {
-                          "Ref": "AWS::Partition",
-                        },
-                        ":iam::*:role/*",
-                      ],
-                    ],
-                  },
+                  "Resource": "arn:aws:iam::*:role/*",
                   "Sid": "AllowPassRoleToMalwareProtection",
                 },
               ],
@@ -3884,18 +3862,7 @@ def script_handler(events, context):
                 {
                   "Action": "iam:GetRole",
                   "Effect": "Allow",
-                  "Resource": {
-                    "Fn::Join": [
-                      "",
-                      [
-                        "arn:",
-                        {
-                          "Ref": "AWS::Partition",
-                        },
-                        ":iam::*:role/*AWSServiceRoleForAmazonGuardDutyMalwareProtection",
-                      ],
-                    ],
-                  },
+                  "Resource": "arn:aws:iam::*:role/*AWSServiceRoleForAmazonGuardDutyMalwareProtection",
                   "Sid": "IamGetRoleSid1",
                 },
                 {
@@ -3911,18 +3878,7 @@ def script_handler(events, context):
                     },
                   },
                   "Effect": "Allow",
-                  "Resource": {
-                    "Fn::Join": [
-                      "",
-                      [
-                        "arn:",
-                        {
-                          "Ref": "AWS::Partition",
-                        },
-                        ":iam::*:role/*",
-                      ],
-                    ],
-                  },
+                  "Resource": "arn:aws:iam::*:role/*",
                   "Sid": "AllowPassRoleToMalwareProtection",
                 },
               ],
