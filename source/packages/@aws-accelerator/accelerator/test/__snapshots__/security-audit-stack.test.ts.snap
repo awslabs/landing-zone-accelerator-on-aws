@@ -1159,6 +1159,27 @@ def script_handler(events, context):
                 },
                 {
                   "Action": [
+                    "organizations:DeregisterDelegatedAdministrator",
+                    "organizations:DescribeOrganization",
+                    "organizations:EnableAWSServiceAccess",
+                    "organizations:ListAWSServiceAccessForOrganization",
+                    "organizations:ListAccounts",
+                    "organizations:ListDelegatedAdministrators",
+                    "organizations:RegisterDelegatedAdministrator",
+                  ],
+                  "Condition": {
+                    "StringLikeIfExists": {
+                      "organizations:ServicePrincipal": [
+                        "guardduty.amazonaws.com",
+                      ],
+                    },
+                  },
+                  "Effect": "Allow",
+                  "Resource": "*",
+                  "Sid": "GuardDutyEnableOrganizationAdminAccountTaskOrganizationActions",
+                },
+                {
+                  "Action": [
                     "guardDuty:ListDetectors",
                     "guardDuty:ListOrganizationAdminAccounts",
                     "guardDuty:UpdateOrganizationConfiguration",
@@ -1176,9 +1197,39 @@ def script_handler(events, context):
                   "Action": [
                     "iam:CreateServiceLinkedRole",
                   ],
+                  "Condition": {
+                    "StringEquals": {
+                      "iam:AWSServiceName": [
+                        "guardduty.amazonaws.com",
+                        "malware-protection.guardduty.amazonaws.com",
+                      ],
+                    },
+                  },
                   "Effect": "Allow",
                   "Resource": "*",
-                  "Sid": "ServiceLinkedRoleSecurityHub",
+                  "Sid": "ServiceLinkedRoleGuardDuty",
+                },
+                {
+                  "Action": "iam:GetRole",
+                  "Effect": "Allow",
+                  "Resource": "arn:aws:iam::*:role/*AWSServiceRoleForAmazonGuardDutyMalwareProtection",
+                  "Sid": "IamGetRoleSid1",
+                },
+                {
+                  "Action": [
+                    "iam:PassRole",
+                  ],
+                  "Condition": {
+                    "StringEquals": {
+                      "iam:PassedToService": [
+                        "malware-protection-plan.guardduty.amazonaws.com",
+                        "malware-protection.guardduty.amazonaws.com",
+                      ],
+                    },
+                  },
+                  "Effect": "Allow",
+                  "Resource": "arn:aws:iam::*:role/*",
+                  "Sid": "AllowPassRoleToMalwareProtection",
                 },
               ],
               "Version": "2012-10-17",
@@ -1978,7 +2029,11 @@ def script_handler(events, context):
           ],
         },
         "autoEnableOrgMembers": false,
+        "enableEc2MalwareProtection": false,
+        "enableEksAgent": false,
         "enableEksProtection": true,
+        "enableLambdaProtection": false,
+        "enableRdsProtection": false,
         "enableS3Protection": true,
         "guardDutyMemberAccountIds": [
           "111111111111",
@@ -3754,6 +3809,27 @@ def script_handler(events, context):
                 },
                 {
                   "Action": [
+                    "organizations:DeregisterDelegatedAdministrator",
+                    "organizations:DescribeOrganization",
+                    "organizations:EnableAWSServiceAccess",
+                    "organizations:ListAWSServiceAccessForOrganization",
+                    "organizations:ListAccounts",
+                    "organizations:ListDelegatedAdministrators",
+                    "organizations:RegisterDelegatedAdministrator",
+                  ],
+                  "Condition": {
+                    "StringLikeIfExists": {
+                      "organizations:ServicePrincipal": [
+                        "guardduty.amazonaws.com",
+                      ],
+                    },
+                  },
+                  "Effect": "Allow",
+                  "Resource": "*",
+                  "Sid": "GuardDutyEnableOrganizationAdminAccountTaskOrganizationActions",
+                },
+                {
+                  "Action": [
                     "guardDuty:ListDetectors",
                     "guardDuty:ListOrganizationAdminAccounts",
                     "guardDuty:UpdateOrganizationConfiguration",
@@ -3771,9 +3847,39 @@ def script_handler(events, context):
                   "Action": [
                     "iam:CreateServiceLinkedRole",
                   ],
+                  "Condition": {
+                    "StringEquals": {
+                      "iam:AWSServiceName": [
+                        "guardduty.amazonaws.com",
+                        "malware-protection.guardduty.amazonaws.com",
+                      ],
+                    },
+                  },
                   "Effect": "Allow",
                   "Resource": "*",
-                  "Sid": "ServiceLinkedRoleSecurityHub",
+                  "Sid": "ServiceLinkedRoleGuardDuty",
+                },
+                {
+                  "Action": "iam:GetRole",
+                  "Effect": "Allow",
+                  "Resource": "arn:aws:iam::*:role/*AWSServiceRoleForAmazonGuardDutyMalwareProtection",
+                  "Sid": "IamGetRoleSid1",
+                },
+                {
+                  "Action": [
+                    "iam:PassRole",
+                  ],
+                  "Condition": {
+                    "StringEquals": {
+                      "iam:PassedToService": [
+                        "malware-protection-plan.guardduty.amazonaws.com",
+                        "malware-protection.guardduty.amazonaws.com",
+                      ],
+                    },
+                  },
+                  "Effect": "Allow",
+                  "Resource": "arn:aws:iam::*:role/*",
+                  "Sid": "AllowPassRoleToMalwareProtection",
                 },
               ],
               "Version": "2012-10-17",
@@ -4573,7 +4679,11 @@ def script_handler(events, context):
           ],
         },
         "autoEnableOrgMembers": true,
+        "enableEc2MalwareProtection": false,
+        "enableEksAgent": false,
         "enableEksProtection": false,
+        "enableLambdaProtection": false,
+        "enableRdsProtection": false,
         "enableS3Protection": true,
         "guardDutyMemberAccountIds": [],
         "partition": {
