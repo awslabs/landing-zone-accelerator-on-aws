@@ -195,7 +195,7 @@ export class SecurityAuditStack extends AcceleratorStack {
         eksProtection,
         enableEksAgent,
         enableEc2MalwareProtection,
-        keepMalwareProtectionSnapshosts,
+        keepMalwareProtectionSnapshots,
         enableRdsProtection,
         enableLambdaProtection,
       ] = this.processRegionExclusions(guardDutyConfig);
@@ -203,6 +203,10 @@ export class SecurityAuditStack extends AcceleratorStack {
       const guardDutyMembers = new GuardDutyMembers(this, 'GuardDutyMembers', {
         enableS3Protection: s3Protection,
         enableEksProtection: eksProtection,
+        enableEksAgent: enableEksAgent,
+        enableEc2MalwareProtection: enableEc2MalwareProtection,
+        enableLambdaProtection: enableLambdaProtection,
+        enableRdsProtection: enableRdsProtection,
         kmsKey: this.cloudwatchKey,
         logRetentionInDays: this.props.globalConfig.cloudwatchLogRetentionInDays,
         guardDutyMemberAccountIds,
@@ -218,7 +222,7 @@ export class SecurityAuditStack extends AcceleratorStack {
         eksProtection ||
         enableEksAgent ||
         enableEc2MalwareProtection ||
-        keepMalwareProtectionSnapshosts ||
+        keepMalwareProtectionSnapshots ||
         enableRdsProtection ||
         enableLambdaProtection ||
         updateExportFrequency
@@ -228,7 +232,7 @@ export class SecurityAuditStack extends AcceleratorStack {
           enableS3Protection: s3Protection,
           enableEksProtection: eksProtection,
           enableEc2MalwareProtection: enableEc2MalwareProtection,
-          keepMalwareProtectionSnapshosts: keepMalwareProtectionSnapshosts,
+          keepMalwareProtectionSnapshots: keepMalwareProtectionSnapshots,
           enableEksAgent: enableEksAgent,
           enableRdsProtection: enableRdsProtection,
           enableLambdaProtection: enableLambdaProtection,
@@ -249,7 +253,7 @@ export class SecurityAuditStack extends AcceleratorStack {
     let eksProtection = guardDutyConfig.eksProtection?.enable ?? false;
     let enableEksAgent = guardDutyConfig.eksProtection?.manageAgent ?? false;
     let enableEc2MalwareProtection = guardDutyConfig.ec2Protection?.enable ?? false;
-    let keepMalwareProtectionSnapshosts = guardDutyConfig.ec2Protection?.keepSnapshots ?? false;
+    let keepMalwareProtectionSnapshots = guardDutyConfig.ec2Protection?.keepSnapshots ?? false;
     let enableRdsProtection = guardDutyConfig.rdsProtection?.enable ?? false;
     let enableLambdaProtection = guardDutyConfig.lambdaProtection?.enable ?? false;
 
@@ -260,7 +264,7 @@ export class SecurityAuditStack extends AcceleratorStack {
     }
     if (this.isRegionExcluded(guardDutyConfig.ec2Protection?.excludeRegions ?? [])) {
       enableEc2MalwareProtection = false;
-      keepMalwareProtectionSnapshosts = false;
+      keepMalwareProtectionSnapshots = false;
     }
     if (this.isRegionExcluded(guardDutyConfig.eksProtection?.excludeRegions ?? [])) enableRdsProtection = false;
     if (this.isRegionExcluded(guardDutyConfig.eksProtection?.excludeRegions ?? [])) enableLambdaProtection = false;
@@ -270,7 +274,7 @@ export class SecurityAuditStack extends AcceleratorStack {
       eksProtection,
       enableEksAgent,
       enableEc2MalwareProtection,
-      keepMalwareProtectionSnapshosts,
+      keepMalwareProtectionSnapshots,
       enableRdsProtection,
       enableLambdaProtection,
     ];

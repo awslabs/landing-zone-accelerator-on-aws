@@ -23,6 +23,7 @@ import {
   DeleteMembersCommand,
   ListDetectorsCommand,
   OrganizationFeatureConfiguration,
+  OrgFeatureStatus,
   BadRequestException,
 } from '@aws-sdk/client-guardduty';
 import { ListAccountsCommand, ListAccountsCommandOutput } from '@aws-sdk/client-organizations';
@@ -47,6 +48,10 @@ export async function handler(event: CloudFormationCustomResourceEvent): Promise
   const guardDutyMemberAccountIds: string[] = event.ResourceProperties['guardDutyMemberAccountIds'];
   const enableS3Protection: boolean = event.ResourceProperties['enableS3Protection'] === 'true';
   const enableEksProtection: boolean = event.ResourceProperties['enableEksProtection'] === 'true';
+  const enableEksAgent: boolean = event.ResourceProperties['enableEksAgent'] === 'true';
+  const enableEc2MalwareProtection: boolean = event.ResourceProperties['enableEc2MalwareProtection'] === 'true';
+  const enableRdsProtection: boolean = event.ResourceProperties['enableRdsProtection'] === 'true';
+  const enableLambdaProtection: boolean = event.ResourceProperties['enableLambdaProtection'] === 'true';
   const autoEnableOrgMembersFlag: boolean = event.ResourceProperties['autoEnableOrgMembers'] === 'true';
 
   const solutionId = process.env['SOLUTION_ID'];
@@ -65,27 +70,35 @@ export async function handler(event: CloudFormationCustomResourceEvent): Promise
 
   let existingMemberAccountIds: string[] = [];
 
-  let autoEnableOrgMembers: 'ALL' | 'NEW' | 'NONE' = 'ALL';
+  let autoEnableOrgMembers: OrgFeatureStatus = 'ALL';
   if (!autoEnableOrgMembersFlag) {
     autoEnableOrgMembers = 'NONE';
   }
 
   console.log(`EnableS3Protection: ${enableS3Protection}`);
   console.log(`EnableEksProtection: ${enableEksProtection}`);
+  console.log(`EnableEksAgent: ${enableEksAgent}`);
+  console.log(`EnableEc2Protection: ${enableEc2MalwareProtection}`);
+  console.log(`EnableRdsProtection: ${enableRdsProtection}`);
+  console.log(`EnableLambdaProtection: ${enableLambdaProtection}`);
   console.log(`autoEnableOrgMembers: ${autoEnableOrgMembers}`);
 
   switch (event.RequestType) {
     case 'Create':
     case 'Update':
-      const features = getOrganizationFeaturesEnabled(enableS3Protection, enableEksProtection);
+      const features = getOrganizationFeaturesEnabled(
+        enableS3Protection,
+        enableEksProtection,
+        enableEksAgent,
+        enableEc2MalwareProtection,
+        enableRdsProtection,
+        enableLambdaProtection,
+        autoEnableOrgMembers,
+      );
 
       console.log('starting - UpdateOrganizationConfiguration');
       try {
-        // eslint-disable-next-line @typescript-eslint/no-unused-expressions
-        autoEnableOrgMembersFlag
-          ? await updateOrganizationConfiguration(guardDutyClient, detectorId!, autoEnableOrgMembers, features)
-          : await updateOrganizationConfiguration(guardDutyClient, detectorId!, autoEnableOrgMembers);
-
+        await updateOrganizationConfiguration(guardDutyClient, detectorId!, autoEnableOrgMembers, features);
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
       } catch (e: any) {
         return { Status: 'Failure', StatusCode: e.statusCode };
@@ -133,7 +146,7 @@ export async function handler(event: CloudFormationCustomResourceEvent): Promise
       return { Status: 'Success', StatusCode: 200 };
 
     case 'Delete':
-      const disabledFeatures = getOrganizationFeaturesEnabled(false, false);
+      const disabledFeatures = getOrganizationFeaturesEnabled(false, false, false, false, false, false, 'NONE');
       try {
         await updateOrganizationConfiguration(guardDutyClient, detectorId!, 'NONE', disabledFeatures);
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -221,26 +234,64 @@ async function disassociateAndDeleteMembers(
   }
 }
 
-function convertBooleanToGuardDutyFormat(flag: boolean) {
-  if (flag) {
-    return 'NEW';
-  } else {
-    return 'NONE';
-  }
-}
-
-function getOrganizationFeaturesEnabled(s3DataEvents: boolean, eksAuditLogs: boolean) {
+function getOrganizationFeaturesEnabled(
+  s3DataEvents: boolean,
+  eksProtection: boolean,
+  eksAgent: boolean,
+  ec2Protection: boolean,
+  rdsProtection: boolean,
+  lambdaProtection: boolean,
+  autoEnableOrgMembers: OrgFeatureStatus,
+) {
   const featureList: OrganizationFeatureConfiguration[] = [];
 
-  featureList.push({
-    AutoEnable: convertBooleanToGuardDutyFormat(s3DataEvents),
-    Name: 'S3_DATA_EVENTS',
-  });
+  if (s3DataEvents) {
+    featureList.push({
+      AutoEnable: autoEnableOrgMembers,
+      Name: 'S3_DATA_EVENTS',
+    });
+  }
 
-  featureList.push({
-    AutoEnable: convertBooleanToGuardDutyFormat(eksAuditLogs),
-    Name: 'EKS_AUDIT_LOGS',
-  });
+  if (eksProtection) {
+    featureList.push({
+      AutoEnable: autoEnableOrgMembers,
+      Name: 'EKS_AUDIT_LOGS',
+    });
+  }
+
+  if (eksAgent) {
+    featureList.push({
+      AutoEnable: autoEnableOrgMembers,
+      Name: 'EKS_RUNTIME_MONITORING',
+      AdditionalConfiguration: [
+        {
+          Name: 'EKS_ADDON_MANAGEMENT',
+          AutoEnable: autoEnableOrgMembers,
+        },
+      ],
+    });
+  }
+
+  if (ec2Protection) {
+    featureList.push({
+      AutoEnable: autoEnableOrgMembers,
+      Name: 'EBS_MALWARE_PROTECTION',
+    });
+  }
+
+  if (rdsProtection) {
+    featureList.push({
+      AutoEnable: autoEnableOrgMembers,
+      Name: 'RDS_LOGIN_EVENTS',
+    });
+  }
+
+  if (lambdaProtection) {
+    featureList.push({
+      AutoEnable: autoEnableOrgMembers,
+      Name: 'LAMBDA_NETWORK_LOGS',
+    });
+  }
   return featureList;
 }
 
@@ -253,10 +304,12 @@ async function getDetectorId(guardDutyClient: GuardDutyClient): Promise<string |
 async function updateOrganizationConfiguration(
   guardDutyClient: GuardDutyClient,
   detectorId: string,
-  autoEnableOrgMembers: 'ALL' | 'NEW' | 'NONE',
+  autoEnableOrgMembers: OrgFeatureStatus,
   featureList?: OrganizationFeatureConfiguration[],
 ) {
   try {
+    console.log(detectorId);
+    console.log(JSON.stringify(featureList));
     await guardDutyClient.send(
       new UpdateOrganizationConfigurationCommand({
         AutoEnableOrganizationMembers: autoEnableOrgMembers,
@@ -266,6 +319,7 @@ async function updateOrganizationConfiguration(
     );
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } catch (e: any) {
+    console.log(e);
     if (e instanceof BadRequestException && featureList) {
       console.log('Retrying with only S3 protection');
       const featureListS3Only = featureList.filter(feat => feat.Name === 'S3_DATA_EVENTS');

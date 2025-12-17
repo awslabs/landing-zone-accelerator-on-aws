@@ -46,7 +46,7 @@ export interface GuardDutyDetectorConfigProps {
   /**
    * Malware Protection Snapshots retention
    */
-  readonly keepMalwareProtectionSnapshosts: boolean;
+  readonly keepMalwareProtectionSnapshots: boolean;
   /**
    * RDS Protection
    */

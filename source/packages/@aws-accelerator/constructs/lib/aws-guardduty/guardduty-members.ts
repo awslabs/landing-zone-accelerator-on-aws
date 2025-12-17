@@ -29,6 +29,22 @@ export interface GuardDutyMembersProps {
    */
   readonly enableEksProtection: boolean;
   /**
+   * EKS agent
+   */
+  readonly enableEksAgent: boolean;
+  /**
+   * Malware Protection
+   */
+  readonly enableEc2MalwareProtection: boolean;
+  /**
+   * RDS Protection
+   */
+  readonly enableRdsProtection: boolean;
+  /**
+   * Lambda Protection
+   */
+  readonly enableLambdaProtection: boolean;
+  /**
    * Custom resource lambda log group encryption key, when undefined default AWS managed key will be used
    */
   readonly kmsKey?: cdk.aws_kms.IKey;
@@ -76,6 +92,25 @@ export class GuardDutyMembers extends Construct {
           },
         },
         {
+          Sid: 'GuardDutyEnableOrganizationAdminAccountTaskOrganizationActions',
+          Effect: 'Allow',
+          Action: [
+            'organizations:DeregisterDelegatedAdministrator',
+            'organizations:DescribeOrganization',
+            'organizations:EnableAWSServiceAccess',
+            'organizations:ListAWSServiceAccessForOrganization',
+            'organizations:ListAccounts',
+            'organizations:ListDelegatedAdministrators',
+            'organizations:RegisterDelegatedAdministrator',
+          ],
+          Resource: '*',
+          Condition: {
+            StringLikeIfExists: {
+              'organizations:ServicePrincipal': ['guardduty.amazonaws.com'],
+            },
+          },
+        },
+        {
           Sid: 'GuardDutyCreateMembersTaskGuardDutyActions',
           Effect: 'Allow',
           Action: [
@@ -91,10 +126,35 @@ export class GuardDutyMembers extends Construct {
           Resource: '*',
         },
         {
-          Sid: 'ServiceLinkedRoleSecurityHub',
+          Sid: 'ServiceLinkedRoleGuardDuty',
           Effect: 'Allow',
           Action: ['iam:CreateServiceLinkedRole'],
           Resource: '*',
+          Condition: {
+            StringEquals: {
+              'iam:AWSServiceName': ['guardduty.amazonaws.com', 'malware-protection.guardduty.amazonaws.com'],
+            },
+          },
+        },
+        {
+          Sid: 'IamGetRoleSid1',
+          Effect: 'Allow',
+          Action: 'iam:GetRole',
+          Resource: `arn:aws:iam::*:role/*AWSServiceRoleForAmazonGuardDutyMalwareProtection`,
+        },
+        {
+          Sid: 'AllowPassRoleToMalwareProtection',
+          Effect: 'Allow',
+          Action: ['iam:PassRole'],
+          Resource: 'arn:aws:iam::*:role/*',
+          Condition: {
+            StringEquals: {
+              'iam:PassedToService': [
+                'malware-protection-plan.guardduty.amazonaws.com',
+                'malware-protection.guardduty.amazonaws.com',
+              ],
+            },
+          },
         },
       ],
     });
@@ -107,6 +167,10 @@ export class GuardDutyMembers extends Construct {
         partition: cdk.Aws.PARTITION,
         enableS3Protection: props.enableS3Protection,
         enableEksProtection: props.enableEksProtection,
+        enableEksAgent: props.enableEksAgent,
+        enableEc2MalwareProtection: props.enableEc2MalwareProtection,
+        enableRdsProtection: props.enableRdsProtection,
+        enableLambdaProtection: props.enableLambdaProtection,
         guardDutyMemberAccountIds: props.guardDutyMemberAccountIds,
         autoEnableOrgMembers: props.autoEnableOrgMembers,
       },
