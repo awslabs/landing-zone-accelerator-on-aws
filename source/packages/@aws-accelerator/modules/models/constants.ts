@@ -89,45 +89,18 @@ export const AcceleratorModuleStageDetails: AcceleratorModuleStageDetailsType[] 
         executionPhase: ModuleExecutionPhase.DEPLOY,
       },
       {
-        name: AcceleratorModules.SETUP_CONTROL_TOWER_LANDING_ZONE,
-        description: 'Manage AWS Control Tower Landing Zone',
-        runOrder: 2,
-        handler: async (params: ModuleParams) => {
-          return await SetupControlTowerLandingZoneModule.execute(params);
-        },
-        executionPhase: ModuleExecutionPhase.DEPLOY,
-      },
-      {
-        name: AcceleratorModules.CREATE_STACK_POLICY,
-        description: 'Setup Stack Policy in accounts',
-        runOrder: 2,
-        handler: async (params: ModuleParams) => {
-          return await CreateStackPolicyModule.execute(params);
-        },
-        executionPhase: ModuleExecutionPhase.DEPLOY,
-      },
-      {
         name: AcceleratorModules.CREATE_ORGANIZATIONAL_UNIT,
         description: 'Create AWS Organizations Organizational Unit (OU)',
-        runOrder: 3,
+        runOrder: 2,
         handler: async (params: ModuleParams) => {
           return await CreateOrganizationalUnitModule.execute(params);
         },
         executionPhase: ModuleExecutionPhase.DEPLOY,
       },
       {
-        name: AcceleratorModules.REGISTER_ORGANIZATIONAL_UNIT,
-        description: 'Register AWS Organizations Organizational Unit (OU) with AWS Control Tower',
-        runOrder: 4,
-        handler: async (params: ModuleParams) => {
-          return await RegisterOrganizationalUnitModule.execute(params);
-        },
-        executionPhase: ModuleExecutionPhase.DEPLOY,
-      },
-      {
         name: AcceleratorModules.INVITE_ACCOUNTS_TO_ORGANIZATIONS,
         description: 'Invite AWS Accounts to AWS Organizations',
-        runOrder: 5,
+        runOrder: 3,
         handler: async (params: ModuleParams) => {
           return await InviteAccountsToOrganizationsModule.execute(params);
         },
@@ -136,9 +109,27 @@ export const AcceleratorModuleStageDetails: AcceleratorModuleStageDetailsType[] 
       {
         name: AcceleratorModules.MOVE_ACCOUNTS,
         description: 'Move AWS Accounts to destination AWS Organizations Organizational Unit (OU)',
-        runOrder: 6,
+        runOrder: 4,
         handler: async (params: ModuleParams) => {
           return await MoveAccountModule.execute(params);
+        },
+        executionPhase: ModuleExecutionPhase.DEPLOY,
+      },
+      {
+        name: AcceleratorModules.SETUP_CONTROL_TOWER_LANDING_ZONE,
+        description: 'Manage AWS Control Tower Landing Zone',
+        runOrder: 5,
+        handler: async (params: ModuleParams) => {
+          return await SetupControlTowerLandingZoneModule.execute(params);
+        },
+        executionPhase: ModuleExecutionPhase.DEPLOY,
+      },
+      {
+        name: AcceleratorModules.REGISTER_ORGANIZATIONAL_UNIT,
+        description: 'Register AWS Organizations Organizational Unit (OU) with AWS Control Tower',
+        runOrder: 6,
+        handler: async (params: ModuleParams) => {
+          return await RegisterOrganizationalUnitModule.execute(params);
         },
         executionPhase: ModuleExecutionPhase.DEPLOY,
       },
@@ -148,6 +139,15 @@ export const AcceleratorModuleStageDetails: AcceleratorModuleStageDetailsType[] 
         runOrder: 7,
         handler: async (params: ModuleParams) => {
           return await ConfigureRootUserManagementModule.execute(params);
+        },
+        executionPhase: ModuleExecutionPhase.DEPLOY,
+      },
+      {
+        name: AcceleratorModules.CREATE_STACK_POLICY,
+        description: 'Setup Stack Policy in accounts',
+        runOrder: 8,
+        handler: async (params: ModuleParams) => {
+          return await CreateStackPolicyModule.execute(params);
         },
         executionPhase: ModuleExecutionPhase.DEPLOY,
       },
