@@ -17,7 +17,6 @@ import {
   DescribeOrganizationCommand,
   ListRootsCommand,
   OrganizationsClient,
-  OrganizationalUnit,
   paginateListAccounts,
   EnableAllFeaturesCommand,
   Account,
@@ -100,26 +99,6 @@ export abstract class Organization {
       Organization.logger.warn(
         `AWS Organizations have multiple services enabled "${enabledServicePrincipals
           .map(item => item.ServicePrincipal)
-          .join(',')}", the solution cannot deploy AWS Control Tower Landing Zone.`,
-      );
-      return true;
-    }
-
-    return false;
-  }
-
-  /**
-   * Function to check if AWS Organizations have any organizational units
-   * @param client {@link OrganizationsClient}
-   * @returns status boolean
-   */
-  private static async hasOrganizationalUnits(client: OrganizationsClient): Promise<boolean> {
-    const organizationalUnitsForRoot = await Organization.getOrganizationalUnitsForRoot(client);
-
-    if (organizationalUnitsForRoot.length !== 0) {
-      Organization.logger.warn(
-        `AWS Organizations have multiple organization units "${organizationalUnitsForRoot
-          .map(item => item.Name)
           .join(',')}", the solution cannot deploy AWS Control Tower Landing Zone.`,
       );
       return true;
@@ -225,16 +204,6 @@ export abstract class Organization {
       return true;
     }
     return false;
-  }
-
-  /**
-   * Function to get Organizational units for root
-   * @param client {@link OrganizationsClient}
-   * @returns ous {@link OrganizationalUnit}[]
-   */
-  private static async getOrganizationalUnitsForRoot(client: OrganizationsClient): Promise<OrganizationalUnit[]> {
-    const parentId = (await Organization.getOrganizationsRoot(client)).Id;
-    return getOrganizationalUnitsForParent(client, parentId);
   }
 
   /**
@@ -354,20 +323,10 @@ export abstract class Organization {
         );
       }
 
-      if (await Organization.hasOrganizationalUnits(client)) {
-        validationErrors.push(
-          `AWS Control Tower Landing Zone cannot deploy because there are multiple organizational units in AWS Organizations.`,
-        );
-      }
-
       if (await Organization.hasAdditionalAccounts(client, partition, sharedAccountEmail)) {
         if (partition === 'aws-us-gov') {
           validationErrors.push(
             `Either AWS Organizations does not have required shared accounts (LogArchive and Audit) or have other accounts.`,
-          );
-        } else {
-          validationErrors.push(
-            `AWS Control Tower Landing Zone cannot deploy because there are multiple accounts in AWS Organizations.`,
           );
         }
       }

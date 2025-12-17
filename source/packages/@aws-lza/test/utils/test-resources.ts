@@ -191,8 +191,6 @@ export const ExistingRoleFoundError = (roleNames: string[]) =>
 export enum OrganizationValidationError {
   ORG_NOT_FOUND = `AWS Control Tower Landing Zone cannot deploy because AWS Organizations have not been configured for the environment.`,
   SERVICE_ENABLED = `AWS Control Tower Landing Zone cannot deploy because AWS Organizations have services enabled.`,
-  OU_FOUND = `AWS Control Tower Landing Zone cannot deploy because there are multiple organizational units in AWS Organizations.`,
-  ACCOUNT_FOUND = `AWS Control Tower Landing Zone cannot deploy because there are multiple accounts in AWS Organizations.`,
   GOV_CLOUD_ACCOUNT_NOT_FOUND = `Either AWS Organizations does not have required shared accounts (LogArchive and Audit) or have other accounts.`,
   IDENTITY_CENTER_ENABLED = `AWS Control Tower Landing Zone cannot deploy because IAM Identity Center is configured.`,
 }
