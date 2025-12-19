@@ -5,6 +5,46 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.14.2] - 2025-12-19
+
+### Added
+
+- feat(networking): batch lookup tgw attachment id
+
+### Fixed
+
+- fix(asea): don't fail on tgw route lookup
+- fix(container): add accelerator stage on prepare stage for modules
+- fix(controltower): allow for values to be undefined in lz details
+- fix(controltower): remove unnecessary validation
+- fix(controltower): update module run order in prepare stage
+- fix(documentation): fix user guide links
+- fix(guardduty): enable features when new account is added
+- fix(guardduty): update partition in role
+- fix(networking): describe tgw attach role already exists
+- fix(networking): remove excessive ssm cfn parameters from vpc-endpoints stack
+- fix(prerequisites): skip suspended accounts in ignored OUs
+- fix(ssm): fixed session manager log group permissions
+
+
+### Changed
+
+- chore(typedocs): enriched security-config TypeDoc with added context and clarity
+- chore(typedocs): enriched global-config TypeDoc with added context and clarity
+- chore(typedocs): enriched iam-config TypeDoc with added context and clarity
+- chore(typedocs): enriched organizations-config TypeDoc with added context and clarity
+- chore(typedocs): simplified Typedocs for improved readability and enriched accounts-config
+- chore(typedocs): enriched common types in Typedocs
+
+## [1.14.1] - 2025-11-26
+
+### Fixed
+
+- fix(budgets): remove trailing slash in path
+- fix(networking): added lookup for tgw attachments using v2 stacks in govcloud
+- fix(typedocs): updated basePath for compatibility with latest version
+
+
 ## [1.14.0] - 2025-11-24
 
 ### Added
