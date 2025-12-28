@@ -1633,29 +1633,11 @@ export function createAndGetV2NetworkVpcDependencyStacks(options: {
       synthesizer: options.synthesizer,
     });
 
-    const vpcSecurityGroupsStack = createVpcSecurityGroupsStack({
-      sanitizedVpcName,
-      v2NetworkResources,
-      v2Stacks: options.v2Stacks,
-      dependencyStack: vpcRouteTablesStack,
-      app: options.app,
-      vpcItem,
-      props: options.props,
-      env: options.env,
-      partition: options.partition,
-      accountId: options.accountId,
-      enabledRegion: options.enabledRegion,
-      version: options.version,
-      synthesizer: options.synthesizer,
-    });
-
-    const parentStacksForSubnetsStack: cdk.Stack[] = [vpcRouteTablesStack, vpcSecurityGroupsStack];
-
     const vpcSubnetsStack = createVpcSubnetsStack({
       sanitizedVpcName,
       v2NetworkResources,
       v2Stacks: options.v2Stacks,
-      dependencyStacks: parentStacksForSubnetsStack,
+      dependencyStacks: [vpcRouteTablesStack],
       app: options.app,
       vpcItem,
       props: options.props,
@@ -1683,11 +1665,27 @@ export function createAndGetV2NetworkVpcDependencyStacks(options: {
       synthesizer: options.synthesizer,
     });
 
-    const vpcRouteEntriesStack = createVpcRouteEntriesStack({
+    const vpcSecurityGroupsStack = createVpcSecurityGroupsStack({
       sanitizedVpcName,
       v2NetworkResources,
       v2Stacks: options.v2Stacks,
       dependencyStack: vpcSubnetsShareStack,
+      app: options.app,
+      vpcItem,
+      props: options.props,
+      env: options.env,
+      partition: options.partition,
+      accountId: options.accountId,
+      enabledRegion: options.enabledRegion,
+      version: options.version,
+      synthesizer: options.synthesizer,
+    });
+
+    const vpcRouteEntriesStack = createVpcRouteEntriesStack({
+      sanitizedVpcName,
+      v2NetworkResources,
+      v2Stacks: options.v2Stacks,
+      dependencyStack: vpcSecurityGroupsStack,
       app: options.app,
       vpcItem,
       props: options.props,
