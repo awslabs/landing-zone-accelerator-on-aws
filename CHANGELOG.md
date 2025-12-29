@@ -5,6 +5,39 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.15.0] - 2025-01-09
+
+### Added
+
+- feat(securityHub): added support for AWS Security Hub automation rules
+- feat(config): added support for yaml anchors in json schema
+- feat(pipeline): replace codestar notification with EventBridge and SNS
+- feat(guardduty): added support for S3 Malware Protection
+
+### Fixed
+- fix(securityhub): fix invalid input exception on batch enabled standards call
+
+### Changed
+- feat(securityhub): add suppport for any future standard supported by securityhub
+- chore(cloudtrail): add documentation for cloudtrail data events behavior
+- chore(networking): update vpc route53 resolver configuration links 
+
+## [1.14.0] - 2025-10-27
+
+### Added
+
+- feat(networking): add vpn connection ipv6 support
+- feat(module): add control tower logging 
+- feat(networking): add multicast support for transit gateways
+
+### Fixed
+
+- fix(securityhub): fix invalid input exception on batch enabled standards call
+
+### Changed
+
+- chore(networking): update vpc route53 resolver configuration links 
+
 ## [1.14.2] - 2025-12-19
 
 ### Added

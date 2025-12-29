@@ -224,6 +224,7 @@ export class AcceleratorTool {
         { order: 5, name: 'Network_Associations', stackPrefix: '-NetworkAssociationsStack' },
         { order: 5, name: 'Network_Associations', stackPrefix: '-NetworkAssociationsGwlbStack' },
         { order: 2, name: 'Security_Resources', stackPrefix: '-SecurityResourcesStack' },
+        { order: 2, name: 'Security_Resources', stackPrefix: '-SecurityGuardDutyS3MalwareStack' },
         { order: 2, name: 'Identity_Center', stackPrefix: '-IdentityCenterStack' },
         { order: 4, name: 'Network_VPCs', stackPrefix: '-NetworkVpcDnsStack' },
         { order: 3, name: 'Network_VPCs', stackPrefix: '-NetworkVpcEndpointsStack' },

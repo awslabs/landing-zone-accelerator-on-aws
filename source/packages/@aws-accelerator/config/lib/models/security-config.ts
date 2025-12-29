@@ -516,6 +516,78 @@ export interface IGuardDutyLambdaProtectionConfig {
 }
 
 /**
+ * *{@link SecurityConfig} / {@link CentralSecurityServicesConfig} / {@link GuardDutyConfig} / {@link GuardDutyS3MalwareProtectionConfig}*
+ *
+ * {@link https://docs.aws.amazon.com/guardduty/latest/ug/gdu-malware-protection-s3.html} | AWS GuardDuty S3 Malware Protection configuration.
+ *
+ * @description
+ * Use this configuration to define an Amazon GuardDuty S3 Malware Protection Plan to an Amazon S3 bucket.
+ *
+ * @usecase
+ * **Scenario**: Your organization stores sensitive documents, application logs, and user uploads in Amazon S3 buckets.
+ * You need automated malware scanning to detect threats before they spread to other systems or compromise data integrity.
+ *
+ * **Implementation**: Configure GuardDuty S3 Malware Protection to automatically scan objects uploaded to critical buckets
+ * like document repositories, log archives, and file upload destinations. When malware is detected, Amazon GuardDuty generates
+ * findings and can automatically tag infected objects for quarantine or remediation workflows.
+ *
+ * **Benefits**: Provides real-time threat detection for Amazon S3 objects without impacting application performance,
+ * helps meet compliance requirements for data security, and enables automated response to malware threats.
+ * @example
+ * ```
+ * s3BucketName: aws-accelerator-vpc-531717405706-us-east-1
+ * account: LogArchive
+ * region: us-east-1
+ * objectPrefixes:
+ *   - "vpc-flow-logs/"
+ * enableMalwareProtectionTags: true
+ * tags:
+ *   - key: data-classification
+ *     value: low
+ * ```
+ */
+export interface IGuardDutyS3MalwareProtectionConfig {
+  /**
+   * Indicates whether AWS GuardDuty S3 Malware Protection is enabled.
+   */
+  readonly enable: boolean;
+  /**
+   * (OPTIONAL) The S3 Malware Protection Configuration. Provide this configuration when enabling this feature.
+   */
+  readonly s3Configurations?: IMalwareProtectionConfig[];
+}
+
+/**
+ * AWS GuardDuty S3 Malware Protection configuration.
+ */
+export interface IMalwareProtectionConfig {
+  /**
+   * Account that S3 bucket resides in
+   */
+  readonly account: string;
+  /**
+   * Region that S3 bucket resides in
+   */
+  readonly region: string;
+  /**
+   * Name of the S3 bucket.
+   */
+  readonly s3BucketName: string;
+  /**
+   * Information about the specified object prefixes. The S3 object will be scanned only if it belongs to any of the specified object prefixes.
+   */
+  readonly objectPrefixes?: string[];
+  /**
+   * Information about whether the tags will be added to the S3 object after scanning.
+   */
+  readonly enableMalwareProtectionTags?: boolean;
+  /**
+   * (OPTIONAL) Tags added to the Malware Protection plan resource.
+   */
+  readonly tags?: t.ITag[];
+}
+
+/**
  * *{@link SecurityConfig} / {@link CentralSecurityServicesConfig} / {@link GuardDutyConfig} / {@link GuardDutyExportFindingsConfig}*
  *
  * @description
@@ -637,7 +709,12 @@ export interface IGuardDutyConfig {
    */
   readonly s3Protection: IGuardDutyS3ProtectionConfig;
   /**
-   * Configuration for GuardDuty EKS Protection that monitors your Kubernetes clusters for security threats.
+   * (OPTIONAL) AWS GuardDuty S3 Malware Protection configuration.
+   * @type object
+   */
+  readonly s3MalwareProtection?: IGuardDutyS3MalwareProtectionConfig;
+  /**
+   * (OPTIONAL) AWS GuardDuty EKS Protection configuration.
    * @type object
    */
   readonly eksProtection?: IGuardDutyEksProtectionConfig;

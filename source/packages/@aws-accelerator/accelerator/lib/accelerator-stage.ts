@@ -36,6 +36,7 @@ export enum AcceleratorStage {
   DEPENDENCIES = 'dependencies',
   SECURITY = 'security',
   SECURITY_RESOURCES = 'security-resources',
+  SECURITY_GUARDDUTY_S3_MALWARE = 'security-guardduty-s3-malware',
   OPERATIONS = 'operations',
   IDENTITY_CENTER = 'identity-center',
   NETWORK_PREP = 'network-prep',

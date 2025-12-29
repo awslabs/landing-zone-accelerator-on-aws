@@ -54,6 +54,7 @@ import { AssumeRoleCommand, GetCallerIdentityCommand, STSClient } from '@aws-sdk
 import { ControlTowerClient, ListLandingZonesCommand } from '@aws-sdk/client-controltower';
 import { CfnResource } from 'aws-cdk-lib';
 import { createAndGetV2NetworkVpcDependencyStacks } from '../lib/stacks/v2-network/utils/functions';
+import { GuardDutyMalwareStack } from '../lib/stacks/security-guardduty-malware-stack';
 
 const logger = createLogger(['stack-utils']);
 /**
@@ -1060,6 +1061,9 @@ export function createSecurityResourcesStack(
     const securityResourcesStackName = `${
       AcceleratorStackNames[AcceleratorStage.SECURITY_RESOURCES]
     }-${accountId}-${enabledRegion}`;
+    const SecurityGuardDutyS3MalwareStackName = `${
+      AcceleratorStackNames[AcceleratorStage.SECURITY_GUARDDUTY_S3_MALWARE]
+    }-${accountId}-${enabledRegion}`;
     const app = new cdk.App({
       outdir: `cdk.out/${securityResourcesStackName}`,
     });
@@ -1073,6 +1077,23 @@ export function createSecurityResourcesStack(
     addAcceleratorTags(securityResourcesStack, context.partition, props.globalConfig, props.prefixes.accelerator);
     cdk.Aspects.of(securityResourcesStack).add(new AwsSolutionsChecks());
     cdk.Aspects.of(securityResourcesStack).add(new PermissionsBoundaryAspect(accountId, context.partition));
+
+    const securityGuardDutyMalwareStack = new GuardDutyMalwareStack(app, SecurityGuardDutyS3MalwareStackName, {
+      env,
+      description: `(SO0199-securityguarddutys3malware) Landing Zone Accelerator on AWS. Version ${version}.`,
+      synthesizer: getStackSynthesizer(props, accountId, enabledRegion),
+      terminationProtection: props.globalConfig.terminationProtection ?? true,
+      ...props,
+    });
+    addAcceleratorTags(
+      securityGuardDutyMalwareStack,
+      context.partition,
+      props.globalConfig,
+      props.prefixes.accelerator,
+    );
+    // As the Guard Duty S3 Malware
+    cdk.Aspects.of(securityGuardDutyMalwareStack).add(new AwsSolutionsChecks());
+    cdk.Aspects.of(securityGuardDutyMalwareStack).add(new PermissionsBoundaryAspect(accountId, context.partition));
     new AcceleratorAspects(app, context.partition, context.useExistingRoles ?? false);
     return app;
   }

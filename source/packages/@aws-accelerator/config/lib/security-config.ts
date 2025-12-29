@@ -132,12 +132,27 @@ export class GuardDutyExportFindingsConfig implements i.IGuardDutyExportFindings
   readonly overrideGuardDutyPrefix: t.PrefixConfig | undefined = undefined;
 }
 
+export class GuardDutyS3MalwareProtectionConfig implements i.IGuardDutyS3MalwareProtectionConfig {
+  readonly enable: boolean = false;
+  readonly s3Configurations: MalwareProtectionConfig[] | undefined = undefined;
+}
+
+export class MalwareProtectionConfig implements i.IMalwareProtectionConfig {
+  readonly account: string = '';
+  readonly region: string = '';
+  readonly s3BucketName: string = '';
+  readonly objectPrefixes: string[] | undefined = undefined;
+  readonly enableMalwareProtectionTags: boolean | undefined = false;
+  readonly tags = undefined;
+}
+
 export class GuardDutyConfig implements i.IGuardDutyConfig {
   readonly enable: boolean = false;
   readonly excludeRegions: string[] = [];
   readonly deploymentTargets: t.DeploymentTargets | undefined = undefined;
   readonly autoEnableOrgMembers: boolean | undefined = undefined;
   readonly s3Protection: GuardDutyS3ProtectionConfig = new GuardDutyS3ProtectionConfig();
+  readonly s3MalwareProtection: GuardDutyS3MalwareProtectionConfig | undefined = undefined;
   readonly eksProtection: GuardDutyEksProtectionConfig | undefined = undefined;
   readonly ec2Protection: GuardDutyEc2ProtectionConfig | undefined = undefined;
   readonly rdsProtection: GuardDutyRdsProtectionConfig | undefined = undefined;

@@ -728,7 +728,7 @@
         },
         "eksProtection": {
           "$ref": "#/definitions/IGuardDutyEksProtectionConfig",
-          "description": "Configuration for GuardDuty EKS Protection that monitors your Kubernetes clusters for security threats."
+          "description": "(OPTIONAL) AWS GuardDuty EKS Protection configuration."
         },
         "enable": {
           "description": "Controls whether GuardDuty is enabled across your organization to monitor for security threats.",
@@ -759,6 +759,10 @@
         "rdsProtection": {
           "$ref": "#/definitions/IGuardDutyRdsProtectionConfig",
           "description": "Configuration for GuardDuty RDS Protection that monitors your databases for security threats."
+        },
+        "s3MalwareProtection": {
+          "$ref": "#/definitions/IGuardDutyS3MalwareProtectionConfig",
+          "description": "(OPTIONAL) AWS GuardDuty S3 Malware Protection configuration."
         },
         "s3Protection": {
           "$ref": "#/definitions/IGuardDutyS3ProtectionConfig",
@@ -894,6 +898,27 @@
           "description": "List of AWS regions where GuardDuty RDS Protection should not be enabled.",
           "items": {
             "type": "string"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "enable"
+      ],
+      "type": "object"
+    },
+    "IGuardDutyS3MalwareProtectionConfig": {
+      "additionalProperties": false,
+      "description": "Use this configuration to define an Amazon GuardDuty S3 Malware Protection Plan to an Amazon S3 bucket.",
+      "properties": {
+        "enable": {
+          "description": "Indicates whether AWS GuardDuty S3 Malware Protection is enabled.",
+          "type": "boolean"
+        },
+        "s3Configurations": {
+          "description": "(OPTIONAL) The S3 Malware Protection Configuration. Provide this configuration when enabling this feature.",
+          "items": {
+            "$ref": "#/definitions/IMalwareProtectionConfig"
           },
           "type": "array"
         }
@@ -1184,6 +1209,48 @@
       "required": [
         "enable",
         "publishSensitiveDataFindings"
+      ],
+      "type": "object"
+    },
+    "IMalwareProtectionConfig": {
+      "additionalProperties": false,
+      "description": "AWS GuardDuty S3 Malware Protection configuration.",
+      "properties": {
+        "account": {
+          "description": "Account that S3 bucket resides in",
+          "type": "string"
+        },
+        "enableMalwareProtectionTags": {
+          "description": "Information about whether the tags will be added to the S3 object after scanning.",
+          "type": "boolean"
+        },
+        "objectPrefixes": {
+          "description": "Information about the specified object prefixes. The S3 object will be scanned only if it belongs to any of the specified object prefixes.",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "region": {
+          "description": "Region that S3 bucket resides in",
+          "type": "string"
+        },
+        "s3BucketName": {
+          "description": "Name of the S3 bucket.",
+          "type": "string"
+        },
+        "tags": {
+          "description": "(OPTIONAL) Tags added to the Malware Protection plan resource.",
+          "items": {
+            "$ref": "#/definitions/ITag"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "account",
+        "region",
+        "s3BucketName"
       ],
       "type": "object"
     },

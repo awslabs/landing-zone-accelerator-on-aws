@@ -124,6 +124,7 @@ import { AcceleratorToolkit } from './lib/toolkit';
     AcceleratorStage.SECURITY,
     AcceleratorStage.SECURITY_AUDIT,
     AcceleratorStage.SECURITY_RESOURCES,
+    AcceleratorStage.SECURITY_GUARDDUTY_S3_MALWARE,
   ];
 
   if (commands[0] === 'synth' && stage && allStages.includes(stage)) {

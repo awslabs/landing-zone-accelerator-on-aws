@@ -58,6 +58,39 @@ centralSecurityServices:
       excludedRegions:
         - us-west-2
     autoEnableOrgMembers: false
+    s3MalwareProtection:
+      enable: true
+      s3Configurations:
+        - s3BucketName: aws-accelerator-firewall-config-694700707723-us-east-1
+          account: Network
+          region: us-east-1
+          enableMalwareProtectionTags: true
+          tags:
+            - key: data-classification
+              value: high
+            - key: network
+              value: firewall
+        - s3BucketName: aws-accelerator-vpc-694700707723-us-west-2
+          account: Network
+          region: us-west-2
+          tags:
+            - key: data-classification
+              value: medium
+            - key: network
+              value: logging
+        - s3BucketName: aws-accelerator-central-logs-569963972486-us-west-2
+          account: LogArchive
+          region: us-west-2
+          objectPrefixes: 
+            - "vpc-flow-logs/"
+            - "elb/"
+            - "firewall/"
+          enableMalwareProtectionTags: true
+          tags:
+            - key: data-classification
+              value: medium
+            - key: logging
+              value: central
     s3Protection:
       enable: true
       excludeRegions:
@@ -837,7 +870,7 @@ cloudWatch:
           threshold: 1
           treatMissingData: notBreaching
         # CIS 3.8 – Ensure a log metric filter and alarm exist for S3 bucket policy changes
-        - alarmName: CIS-3.8-S3BucketPolicyChanges.
+        - alarmName: CIS-3.8-S3BucketPolicyChanges
           alarmDescription: Alarm for S3 bucket policy changes
           snsTopicName: Security
           metricName: S3BucketPolicyChanges

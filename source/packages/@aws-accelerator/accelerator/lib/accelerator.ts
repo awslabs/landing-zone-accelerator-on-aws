@@ -149,6 +149,7 @@ export const AcceleratorStackNames: Record<string, string> = {
   [AcceleratorStage.DEPENDENCIES]: `${stackPrefix}-DependenciesStack`,
   [AcceleratorStage.SECURITY]: `${stackPrefix}-SecurityStack`,
   [AcceleratorStage.SECURITY_RESOURCES]: `${stackPrefix}-SecurityResourcesStack`,
+  [AcceleratorStage.SECURITY_GUARDDUTY_S3_MALWARE]: `${stackPrefix}-SecurityGuardDutyS3MalwareStack`,
   [AcceleratorStage.RESOURCE_POLICY_ENFORCEMENT]: `${stackPrefix}-ResourcePolicyEnforcementStack`,
   [AcceleratorStage.OPERATIONS]: `${stackPrefix}-OperationsStack`,
   [AcceleratorStage.IDENTITY_CENTER]: `${stackPrefix}-IdentityCenterStack`,
@@ -1118,6 +1119,7 @@ export async function checkDiffStage(props: AcceleratorProps) {
     AcceleratorStage.SECURITY,
     AcceleratorStage.SECURITY_AUDIT,
     AcceleratorStage.SECURITY_RESOURCES,
+    AcceleratorStage.SECURITY_GUARDDUTY_S3_MALWARE,
   ];
 
   // if diff command is run and no stage is set then run all stages

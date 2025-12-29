@@ -797,6 +797,37 @@ exports[`PipelineStack > Construct(PipelineStack):  Snapshot Test 1`] = `
                   "Version": "1",
                 },
                 "Configuration": {
+                  "EnvironmentVariables": "[{"name":"CDK_OPTIONS","type":"PLAINTEXT","value":"bootstrap"},{"name":"CONFIG_COMMIT_ID","type":"PLAINTEXT","value":"#{Config-Vars.CommitId}"},{"name":"CODEPIPELINE_EXECUTION_ID","type":"PLAINTEXT","value":"#{codepipeline.PipelineExecutionId}"},{"name":"ACCELERATOR_STAGE","type":"PLAINTEXT","value":"security-guardduty-s3-malware"}]",
+                  "PrimarySource": "Source",
+                  "ProjectName": {
+                    "Ref": "PipelineToolkitProjectBCBD6910",
+                  },
+                },
+                "InputArtifacts": [
+                  {
+                    "Name": "Source",
+                  },
+                  {
+                    "Name": "Config",
+                  },
+                ],
+                "Name": "Security_Guardduty_S3_Malware",
+                "RoleArn": {
+                  "Fn::GetAtt": [
+                    "PipelinePipelineRole6D983AD5",
+                    "Arn",
+                  ],
+                },
+                "RunOrder": 1,
+              },
+              {
+                "ActionTypeId": {
+                  "Category": "Build",
+                  "Owner": "AWS",
+                  "Provider": "CodeBuild",
+                  "Version": "1",
+                },
+                "Configuration": {
                   "EnvironmentVariables": "[{"name":"CDK_OPTIONS","type":"PLAINTEXT","value":"bootstrap"},{"name":"CONFIG_COMMIT_ID","type":"PLAINTEXT","value":"#{Config-Vars.CommitId}"},{"name":"CODEPIPELINE_EXECUTION_ID","type":"PLAINTEXT","value":"#{codepipeline.PipelineExecutionId}"},{"name":"ACCELERATOR_STAGE","type":"PLAINTEXT","value":"identity-center"}]",
                   "PrimarySource": "Source",
                   "ProjectName": {
@@ -3276,6 +3307,37 @@ exports[`PipelineStack > Construct(PipelineStack):  Snapshot Test 2`] = `
                     "Name": "Security_Resources",
                   },
                 ],
+                "RoleArn": {
+                  "Fn::GetAtt": [
+                    "PipelinePipelineRole6D983AD5",
+                    "Arn",
+                  ],
+                },
+                "RunOrder": 1,
+              },
+              {
+                "ActionTypeId": {
+                  "Category": "Build",
+                  "Owner": "AWS",
+                  "Provider": "CodeBuild",
+                  "Version": "1",
+                },
+                "Configuration": {
+                  "EnvironmentVariables": "[{"name":"CDK_OPTIONS","type":"PLAINTEXT","value":"bootstrap"},{"name":"CONFIG_COMMIT_ID","type":"PLAINTEXT","value":"#{Config-Vars.CommitId}"},{"name":"CODEPIPELINE_EXECUTION_ID","type":"PLAINTEXT","value":"#{codepipeline.PipelineExecutionId}"},{"name":"ACCELERATOR_STAGE","type":"PLAINTEXT","value":"security-guardduty-s3-malware"}]",
+                  "PrimarySource": "Source",
+                  "ProjectName": {
+                    "Ref": "PipelineToolkitProjectBCBD6910",
+                  },
+                },
+                "InputArtifacts": [
+                  {
+                    "Name": "Source",
+                  },
+                  {
+                    "Name": "Config",
+                  },
+                ],
+                "Name": "Security_Guardduty_S3_Malware",
                 "RoleArn": {
                   "Fn::GetAtt": [
                     "PipelinePipelineRole6D983AD5",
@@ -6241,6 +6303,37 @@ exports[`PipelineStack > Construct(PipelineStack):  Snapshot Test 3`] = `
                   "Version": "1",
                 },
                 "Configuration": {
+                  "EnvironmentVariables": "[{"name":"CDK_OPTIONS","type":"PLAINTEXT","value":"bootstrap"},{"name":"CONFIG_COMMIT_ID","type":"PLAINTEXT","value":"#{Config-Vars.CommitId}"},{"name":"CODEPIPELINE_EXECUTION_ID","type":"PLAINTEXT","value":"#{codepipeline.PipelineExecutionId}"},{"name":"ACCELERATOR_STAGE","type":"PLAINTEXT","value":"security-guardduty-s3-malware"}]",
+                  "PrimarySource": "Source",
+                  "ProjectName": {
+                    "Ref": "PipelineToolkitProjectBCBD6910",
+                  },
+                },
+                "InputArtifacts": [
+                  {
+                    "Name": "Source",
+                  },
+                  {
+                    "Name": "Config",
+                  },
+                ],
+                "Name": "Security_Guardduty_S3_Malware",
+                "RoleArn": {
+                  "Fn::GetAtt": [
+                    "PipelinePipelineRole6D983AD5",
+                    "Arn",
+                  ],
+                },
+                "RunOrder": 1,
+              },
+              {
+                "ActionTypeId": {
+                  "Category": "Build",
+                  "Owner": "AWS",
+                  "Provider": "CodeBuild",
+                  "Version": "1",
+                },
+                "Configuration": {
                   "EnvironmentVariables": "[{"name":"CDK_OPTIONS","type":"PLAINTEXT","value":"bootstrap"},{"name":"CONFIG_COMMIT_ID","type":"PLAINTEXT","value":"#{Config-Vars.CommitId}"},{"name":"CODEPIPELINE_EXECUTION_ID","type":"PLAINTEXT","value":"#{codepipeline.PipelineExecutionId}"},{"name":"ACCELERATOR_STAGE","type":"PLAINTEXT","value":"identity-center"}]",
                   "PrimarySource": "Source",
                   "ProjectName": {
@@ -8749,6 +8842,37 @@ exports[`PipelineStack > Construct(PipelineStack):  Snapshot Test 4`] = `
                     "Name": "Security_Resources",
                   },
                 ],
+                "RoleArn": {
+                  "Fn::GetAtt": [
+                    "PipelinePipelineRole6D983AD5",
+                    "Arn",
+                  ],
+                },
+                "RunOrder": 1,
+              },
+              {
+                "ActionTypeId": {
+                  "Category": "Build",
+                  "Owner": "AWS",
+                  "Provider": "CodeBuild",
+                  "Version": "1",
+                },
+                "Configuration": {
+                  "EnvironmentVariables": "[{"name":"CDK_OPTIONS","type":"PLAINTEXT","value":"bootstrap"},{"name":"CONFIG_COMMIT_ID","type":"PLAINTEXT","value":"#{Config-Vars.VersionId}"},{"name":"CODEPIPELINE_EXECUTION_ID","type":"PLAINTEXT","value":"#{codepipeline.PipelineExecutionId}"},{"name":"ACCELERATOR_STAGE","type":"PLAINTEXT","value":"security-guardduty-s3-malware"}]",
+                  "PrimarySource": "Source",
+                  "ProjectName": {
+                    "Ref": "PipelineToolkitProjectBCBD6910",
+                  },
+                },
+                "InputArtifacts": [
+                  {
+                    "Name": "Source",
+                  },
+                  {
+                    "Name": "Config",
+                  },
+                ],
+                "Name": "Security_Guardduty_S3_Malware",
                 "RoleArn": {
                   "Fn::GetAtt": [
                     "PipelinePipelineRole6D983AD5",
@@ -11446,6 +11570,37 @@ exports[`PipelineStack customS3Path > Construct(PipelineStack):  Snapshot Test 1
                     "Name": "Security_Resources",
                   },
                 ],
+                "RoleArn": {
+                  "Fn::GetAtt": [
+                    "PipelinePipelineRole6D983AD5",
+                    "Arn",
+                  ],
+                },
+                "RunOrder": 1,
+              },
+              {
+                "ActionTypeId": {
+                  "Category": "Build",
+                  "Owner": "AWS",
+                  "Provider": "CodeBuild",
+                  "Version": "1",
+                },
+                "Configuration": {
+                  "EnvironmentVariables": "[{"name":"CDK_OPTIONS","type":"PLAINTEXT","value":"bootstrap"},{"name":"CONFIG_COMMIT_ID","type":"PLAINTEXT","value":"#{Config-Vars.CommitId}"},{"name":"CODEPIPELINE_EXECUTION_ID","type":"PLAINTEXT","value":"#{codepipeline.PipelineExecutionId}"},{"name":"ACCELERATOR_STAGE","type":"PLAINTEXT","value":"security-guardduty-s3-malware"}]",
+                  "PrimarySource": "Source",
+                  "ProjectName": {
+                    "Ref": "PipelineToolkitProjectBCBD6910",
+                  },
+                },
+                "InputArtifacts": [
+                  {
+                    "Name": "Source",
+                  },
+                  {
+                    "Name": "Config",
+                  },
+                ],
+                "Name": "Security_Guardduty_S3_Malware",
                 "RoleArn": {
                   "Fn::GetAtt": [
                     "PipelinePipelineRole6D983AD5",

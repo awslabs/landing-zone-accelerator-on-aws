@@ -164,6 +164,7 @@ const coreActions: [AcceleratorStage, string][] = [
   [AcceleratorStage.OPERATIONS, 'Operations'],
   [AcceleratorStage.NETWORK_VPC, 'Network_VPCs'],
   [AcceleratorStage.SECURITY_RESOURCES, 'Security_Resources'],
+  [AcceleratorStage.SECURITY_GUARDDUTY_S3_MALWARE, 'Security_Guardduty_S3_Malware'],
   [AcceleratorStage.IDENTITY_CENTER, 'Identity_Center'],
   [AcceleratorStage.NETWORK_ASSOCIATIONS, 'Network_Associations'],
   [AcceleratorStage.CUSTOMIZATIONS, 'Customizations'],

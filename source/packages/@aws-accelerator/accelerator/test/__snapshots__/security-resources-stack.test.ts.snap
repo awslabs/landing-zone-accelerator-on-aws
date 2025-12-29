@@ -3281,7 +3281,7 @@ exports[`SecurityResourcesStack > Construct(SecurityResourcesStack):  Snapshot T
           },
         ],
         "AlarmDescription": "Alarm for S3 bucket policy changes",
-        "AlarmName": "CIS-3.8-S3BucketPolicyChanges.",
+        "AlarmName": "CIS-3.8-S3BucketPolicyChanges",
         "ComparisonOperator": "GreaterThanOrEqualToThreshold",
         "EvaluationPeriods": 1,
         "MetricName": "S3BucketPolicyChanges",

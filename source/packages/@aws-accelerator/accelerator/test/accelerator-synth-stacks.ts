@@ -56,6 +56,7 @@ import { SecurityAuditStack } from '../lib/stacks/security-audit-stack';
 import { SecurityResourcesStack } from '../lib/stacks/security-resources-stack';
 import { SecurityStack } from '../lib/stacks/security-stack';
 import { ResourcePolicyEnforcementStack } from '../lib/stacks/resource-policy-enforcement-stack';
+import { GuardDutyMalwareStack } from '../lib/stacks/security-guardduty-malware-stack';
 import { getV2NetworkResources, getVpcsInScope } from '../lib/stacks/v2-network/utils/functions';
 import { VpcBaseStack } from '../lib/stacks/v2-network/stacks/vpc-base-stack';
 import { VpcRouteTablesBaseStack } from '../lib/stacks/v2-network/stacks/vpc-route-tables-base-stack';
@@ -233,6 +234,9 @@ export class AcceleratorSynthStacks {
         break;
       case AcceleratorStage.SECURITY_RESOURCES:
         this.synthSecurityResourcesStacks();
+        break;
+      case AcceleratorStage.SECURITY_GUARDDUTY_S3_MALWARE:
+        this.synthSecurityGuardDutyS3MalwareStacks();
         break;
       case AcceleratorStage.RESOURCE_POLICY_ENFORCEMENT:
         this.synthResourcePolicyEnforcementStacks();
@@ -944,6 +948,34 @@ export class AcceleratorSynthStacks {
       }
     }
   }
+  /**
+   * synth SecurityGuardDutyS3Malware stacks
+   */
+  private synthSecurityGuardDutyS3MalwareStacks() {
+    for (const region of this.props.globalConfig.enabledRegions) {
+      for (const account of [
+        ...this.props.accountsConfig.mandatoryAccounts,
+        ...this.props.accountsConfig.workloadAccounts,
+      ]) {
+        const accountId = this.props.accountsConfig.getAccountId(account.name);
+        this.stacks.set(
+          `${account.name}-${region}`,
+          new GuardDutyMalwareStack(
+            this.app,
+            `${AcceleratorStackNames[AcceleratorStage.SECURITY_GUARDDUTY_S3_MALWARE]}-${accountId}-${region}`,
+            {
+              env: {
+                account: accountId,
+                region: region,
+              },
+              ...this.props,
+            },
+          ),
+        );
+      }
+    }
+  }
+
   /**
    * synth ResourcePolicyEnforcementStack
    */
