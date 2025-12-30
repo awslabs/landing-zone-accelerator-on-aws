@@ -66,6 +66,13 @@ exports[`Network Firewall Policy > Construct(NetworkFirewallPolicy):  Snapshot T
               "Priority": 123,
               "ResourceArn": "arn:aws:network-firewall:us-east-1:222222222222:stateful-rulegroup/TestGroup",
             },
+            {
+              "Priority": 20,
+              "ResourceArn": "arn:aws:network-firewall:us-east-1:aws-managed:stateful-rulegroup/ThreatSignaturesBotnetStrictOrder",
+            },
+            {
+              "ResourceArn": "arn:aws:network-firewall:us-east-1:aws-managed:stateful-rulegroup/AbusedLegitBotNetCommandAndControlDomainsActionOrder",
+            },
           ],
           "StatelessDefaultActions": [
             "aws:forward_to_sfe",

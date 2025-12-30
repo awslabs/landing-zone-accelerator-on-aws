@@ -104,7 +104,10 @@ describe('NetworkConfig', () => {
       expect(nfwStatelessRuleGroupReferenceConfig.name).toEqual('');
 
       const nfwStatefulRuleGroupReferenceConfig = new NfwStatefulRuleGroupReferenceConfig();
-      expect(nfwStatefulRuleGroupReferenceConfig.name).toEqual('');
+      expect(
+        'name' in nfwStatefulRuleGroupReferenceConfig ||
+          'managedStatefulRuleGroupName' in nfwStatefulRuleGroupReferenceConfig,
+      ).toBe(true);
 
       const nfwRuleGroupConfig = new NfwRuleGroupConfig();
       expect(nfwRuleGroupConfig.name).toEqual('');

@@ -6538,21 +6538,35 @@ export interface INfwRuleGroupConfig {
  * ```
  * - name: accelerator-stateful-group
  * ```
+ *  Specifying an AWS Managed Rule Group
+ * ```
+ * - managedStatefulRuleGroups: AbusedLegitBotNetCommandAndControlDomainsActionOrder
+ * ```
  */
 export interface INfwStatefulRuleGroupReferenceConfig {
   /**
    * The friendly name of the rule group.
    *
    * @remarks
-   * This is the logical `name` property of the rule group as defined in network-config.yaml.
+   * (OPTIONAL) This is the logical `name` property of the rule group as defined in network-config.yaml.
+   *
+   * Note: For each entry, this or the `managedStatefulRuleGroupName` property must be provided.
    *
    * @see {@link NfwRuleGroupConfig}
    */
-  readonly name: t.NonEmptyString;
+  readonly name?: t.NonEmptyString;
   /**
    * (OPTIONAL) If using strict ordering, a priority number for the rule.
    */
   readonly priority?: number;
+  /**
+   * (OPTIONAL) Specifies the name of an AWS Managed Rule Group. AWS Managed Rule Groups are predefined, ready-to-use collections of rules that are written and maintained by AWS.
+   *
+   * Note: For each entry, you must specify either this property or the `name` property, which references a custom rule group defined in network-config.yaml.
+   *
+   * @see {@link https://docs.aws.amazon.com/network-firewall/latest/developerguide/nwfw-managed-rule-groups.html | Managed rule groups in AWS Network Firewall} for more information
+   */
+  readonly managedStatefulRuleGroupName?: t.NonEmptyString;
 }
 
 /**

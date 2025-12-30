@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - feat(config): added support for yaml anchors in json schema
 - feat(pipeline): replace codestar notification with EventBridge and SNS
 - feat(guardduty): added support for S3 Malware Protection
+- feat(networking): added support for AWS Managed Rule Groups for AWS Network Firewall
 
 ### Fixed
 - fix(securityhub): fix invalid input exception on batch enabled standards call

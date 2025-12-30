@@ -90,7 +90,6 @@ export class NfwResources {
             ruleGroup: this.getRuleGroupRuleConfig(ruleItem, props),
             tags: ruleItem.tags ?? [],
           });
-
           this.stack.addSsmParameter({
             logicalId: pascalCase(`SsmParam${ruleItem.name}NetworkFirewallRuleGroup`),
             parameterName: this.stack.getSsmPath(SsmResourceType.NFW_RULE_GROUP, [ruleItem.name]),
@@ -249,11 +248,15 @@ export class NfwResources {
     const references: { resourceArn: string; priority?: number }[] = [];
 
     for (const reference of ruleGroupReferences) {
-      if (!ruleGroupMap.get(reference.name)) {
+      if (reference.name && ruleGroupMap.get(reference.name)) {
+        references.push({ resourceArn: ruleGroupMap.get(reference.name)!, priority: reference.priority });
+      } else if (reference.managedStatefulRuleGroupName) {
+        const managedRuleArn = this.constructManagedRuleArn(reference.managedStatefulRuleGroupName);
+        references.push({ resourceArn: managedRuleArn, priority: reference.priority });
+      } else {
         this.stack.addLogs(LogLevel.ERROR, `Stateful rule group ${reference.name} not found in rule map`);
         throw new Error(`Configuration validation failed at runtime.`);
       }
-      references.push({ resourceArn: ruleGroupMap.get(reference.name)!, priority: reference.priority });
     }
     return references;
   }
@@ -278,5 +281,13 @@ export class NfwResources {
       references.push({ priority: reference.priority, resourceArn: ruleGroupMap.get(reference.name)! });
     }
     return references;
+  }
+  /**
+   * Construct managed rule ARN
+   * @param managedRuleItem
+   * @returns
+   */
+  private constructManagedRuleArn(managedRuleItem: string): string {
+    return `arn:${this.stack.partition}:network-firewall:${this.stack.region}:aws-managed:stateful-rulegroup/${managedRuleItem}`;
   }
 }

@@ -2612,6 +2612,10 @@
       "additionalProperties": false,
       "description": "Network Firewall stateful rule group reference configuration.\nUse this configuration to reference a stateful rule group in a Network Firewall policy.",
       "properties": {
+        "managedStatefulRuleGroupName": {
+          "$ref": "#/definitions/NonEmptyString",
+          "description": "(OPTIONAL) Specifies the name of an AWS Managed Rule Group. AWS Managed Rule Groups are predefined, ready-to-use collections of rules that are written and maintained by AWS.\n\nNote: For each entry, you must specify either this property or the `name` property, which references a custom rule group defined in network-config.yaml."
+        },
         "name": {
           "$ref": "#/definitions/NonEmptyString",
           "description": "The friendly name of the rule group."
@@ -2621,9 +2625,6 @@
           "type": "number"
         }
       },
-      "required": [
-        "name"
-      ],
       "type": "object"
     },
     "INfwStatelessRuleGroupReferenceConfig": {

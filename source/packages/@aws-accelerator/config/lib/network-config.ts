@@ -753,8 +753,9 @@ export class NfwRuleGroupConfig implements i.INfwRuleGroupConfig {
 }
 
 export class NfwStatefulRuleGroupReferenceConfig implements i.INfwStatefulRuleGroupReferenceConfig {
-  readonly name: string = '';
+  readonly name: string | undefined = undefined;
   readonly priority: number | undefined = undefined;
+  readonly managedStatefulRuleGroupName: string | undefined = undefined;
 }
 
 export class NfwStatelessRuleGroupReferenceConfig implements i.INfwStatelessRuleGroupReferenceConfig {

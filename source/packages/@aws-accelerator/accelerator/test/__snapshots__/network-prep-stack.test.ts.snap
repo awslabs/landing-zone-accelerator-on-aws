@@ -130,6 +130,34 @@ exports[`NetworkPrepStack > Construct(NetworkPrepStack):  Snapshot Test 1`] = `
                 "Ref": "DomainListGroupNetworkFirewallRuleGroup8FEBF91F",
               },
             },
+            {
+              "ResourceArn": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:",
+                    {
+                      "Ref": "AWS::Partition",
+                    },
+                    ":network-firewall:us-east-1:aws-managed:stateful-rulegroup/AbusedLegitBotNetCommandAndControlDomainsActionOrder",
+                  ],
+                ],
+              },
+            },
+            {
+              "ResourceArn": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:",
+                    {
+                      "Ref": "AWS::Partition",
+                    },
+                    ":network-firewall:us-east-1:aws-managed:stateful-rulegroup/AttackInfrastructureActionOrder",
+                  ],
+                ],
+              },
+            },
           ],
           "StatelessDefaultActions": [
             "aws:forward_to_sfe",

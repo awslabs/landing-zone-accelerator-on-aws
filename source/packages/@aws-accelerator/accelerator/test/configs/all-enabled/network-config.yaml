@@ -540,6 +540,8 @@ centralNetworkServices:
           statefulRuleGroups:
             - name: accelerator-rule-group
             - name: domain-list-group
+            - managedStatefulRuleGroupName: AbusedLegitBotNetCommandAndControlDomainsActionOrder
+            - managedStatefulRuleGroupName: AttackInfrastructureActionOrder
         shareTargets:
           organizationalUnits:
             - Infrastructure

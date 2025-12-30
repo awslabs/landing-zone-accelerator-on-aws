@@ -37,6 +37,15 @@ describe('Network Firewall Policy', () => {
           priority: 123,
           resourceArn: 'arn:aws:network-firewall:us-east-1:222222222222:stateful-rulegroup/TestGroup',
         },
+        {
+          priority: 20,
+          resourceArn:
+            'arn:aws:network-firewall:us-east-1:aws-managed:stateful-rulegroup/ThreatSignaturesBotnetStrictOrder',
+        },
+        {
+          resourceArn:
+            'arn:aws:network-firewall:us-east-1:aws-managed:stateful-rulegroup/AbusedLegitBotNetCommandAndControlDomainsActionOrder',
+        },
       ],
     };
 
