@@ -2170,8 +2170,7 @@
 <p><strong>Account customizations</strong> are deployed based on the <code>account_customizations_name</code> specified when you imported the account into AFT. Every account with the specified name will get the corresponding customizations deployed to them. Account customizations are added in the <code>aft-account-customizations</code> repository under the <code>[ACCOUNT_CUSTOMIZATION_NAME]/terraform/</code> directory.</p>
 </li>
 </ul>
-<p>When a new account is registered, a pipeline will be automatically created and triggered to deploy all applicable customizations to the account. For customizations added after the account registration process, the customizations pipelines must be manually invoked. The following architecture diagram shows how AFT deploys Terraform resources to an existing account:</p>
-<p><img alt="Architecture diagram showing the three-step process of deploying Terraform to existing AWS accounts" src="../assets/aft-architecture.png" /></p>
+<p>When a new account is registered, a pipeline will be automatically created and triggered to deploy all applicable customizations to the account. For customizations added after the account registration process, the customizations pipelines must be manually invoked.</p>
 <h3 id="deploying-custom-terraform-through-aft-to-existing-accounts">Deploying Custom Terraform through AFT to Existing Accounts<a class="headerlink" href="#deploying-custom-terraform-through-aft-to-existing-accounts" title="Permanent link">⚓︎</a></h3>
 <ol>
 <li>
