@@ -12,13 +12,13 @@
         <meta name="author" content="Amazon Web Services">
       
       
-        <link rel="canonical" href="https://awslabs.github.io/landing-zone-accelerator-on-aws/v1.14.2/faq/operations/">
+        <link rel="canonical" href="https://awslabs.github.io/landing-zone-accelerator-on-aws/v1.14.2/user-guide/aft-integration/">
       
       
-        <link rel="prev" href="../customizations/">
+        <link rel="prev" href="../v2-stacks/">
       
       
-        <link rel="next" href="../networking/general/">
+        <link rel="next" href="../../developer-guide/">
       
       
       <link rel="icon" href="../../assets/images/favicon.png">
@@ -26,7 +26,7 @@
     
     
       
-        <title>Operations - Landing Zone Accelerator on AWS</title>
+        <title>AFT Integration - Landing Zone Accelerator on AWS</title>
       
     
     
@@ -78,7 +78,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#operations-faq" class="md-skip">
+        <a href="#deploying-custom-terraform-to-lza-managed-accounts-with-aft" class="md-skip">
           Skip to content
         </a>
       
@@ -118,7 +118,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Operations
+              AFT Integration
             
           </span>
         </div>
@@ -298,6 +298,8 @@
       
   
   
+    
+  
   
   
     
@@ -327,17 +329,17 @@
     
     
     
-    <li class="md-nav__item md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
       
         
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" checked>
         
           
           
           <div class="md-nav__link md-nav__container">
-            <a href="../../user-guide/" class="md-nav__link ">
+            <a href="../" class="md-nav__link ">
               
   
   <span class="md-ellipsis">
@@ -354,7 +356,7 @@
             
           </div>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="true">
           <label class="md-nav__title" for="__nav_3">
             <span class="md-nav__icon md-icon"></span>
             User Guide
@@ -370,7 +372,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../user-guide/config/" class="md-nav__link">
+      <a href="../config/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -391,7 +393,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../user-guide/logging/" class="md-nav__link">
+      <a href="../logging/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -412,7 +414,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../user-guide/securityhub-findings/" class="md-nav__link">
+      <a href="../securityhub-findings/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -433,7 +435,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../user-guide/replacement-variables/" class="md-nav__link">
+      <a href="../replacement-variables/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -454,7 +456,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../user-guide/configuration-include/" class="md-nav__link">
+      <a href="../configuration-include/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -475,7 +477,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../user-guide/stack-policy/" class="md-nav__link">
+      <a href="../stack-policy/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -496,7 +498,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../user-guide/v2-stacks/" class="md-nav__link">
+      <a href="../v2-stacks/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -514,10 +516,30 @@
                 
   
   
+    
   
   
-    <li class="md-nav__item">
-      <a href="../../user-guide/aft-integration/" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  <span class="md-ellipsis">
+    AFT Integration
+  </span>
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
         
   
   <span class="md-ellipsis">
@@ -526,6 +548,176 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#overview-of-solution" class="md-nav__link">
+    <span class="md-ellipsis">
+      Overview of Solution
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#walkthrough" class="md-nav__link">
+    <span class="md-ellipsis">
+      Walkthrough
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#prerequisites" class="md-nav__link">
+    <span class="md-ellipsis">
+      Prerequisites
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#step-1-provision-the-aft-management-account" class="md-nav__link">
+    <span class="md-ellipsis">
+      Step 1: Provision the AFT Management Account
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#step-2-deploy-aft-to-an-lza-managed-environment" class="md-nav__link">
+    <span class="md-ellipsis">
+      Step 2: Deploy AFT to an LZA-managed Environment
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Step 2: Deploy AFT to an LZA-managed Environment">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#to-deploy-the-aft-terraform-module-in-your-environment" class="md-nav__link">
+    <span class="md-ellipsis">
+      To deploy the AFT Terraform module in your environment
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#step-3-new-account-creation" class="md-nav__link">
+    <span class="md-ellipsis">
+      Step 3: New Account Creation
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Step 3: New Account Creation">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#create-a-new-aws-account-with-lza-and-register-it-with-aft" class="md-nav__link">
+    <span class="md-ellipsis">
+      Create a new AWS Account with LZA and register it with AFT
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#step-4-deploy-custom-terraform" class="md-nav__link">
+    <span class="md-ellipsis">
+      Step 4: Deploy Custom Terraform
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Step 4: Deploy Custom Terraform">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#deploying-custom-terraform-through-aft-to-existing-accounts" class="md-nav__link">
+    <span class="md-ellipsis">
+      Deploying Custom Terraform through AFT to Existing Accounts
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#cleaning-up" class="md-nav__link">
+    <span class="md-ellipsis">
+      Cleaning up
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Cleaning up">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#removing-an-account-from-aft" class="md-nav__link">
+    <span class="md-ellipsis">
+      Removing an account from AFT
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#removing-an-account-from-lza" class="md-nav__link">
+    <span class="md-ellipsis">
+      Removing an account from LZA
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#conclusion" class="md-nav__link">
+    <span class="md-ellipsis">
+      Conclusion
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
     </li>
   
 
@@ -1204,8 +1396,6 @@
       
   
   
-    
-  
   
   
     
@@ -1235,17 +1425,17 @@
     
     
     
-    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--nested">
       
         
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" checked>
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" >
         
           
           
           <div class="md-nav__link md-nav__container">
-            <a href="../" class="md-nav__link ">
+            <a href="../../faq/" class="md-nav__link ">
               
   
   <span class="md-ellipsis">
@@ -1262,7 +1452,7 @@
             
           </div>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="true">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
           <label class="md-nav__title" for="__nav_6">
             <span class="md-nav__icon md-icon"></span>
             FAQ
@@ -1278,7 +1468,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../general/" class="md-nav__link">
+      <a href="../../faq/general/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1299,7 +1489,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../architecture/" class="md-nav__link">
+      <a href="../../faq/architecture/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1320,7 +1510,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../ct-cfct/" class="md-nav__link">
+      <a href="../../faq/ct-cfct/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1341,7 +1531,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../customizations/" class="md-nav__link">
+      <a href="../../faq/customizations/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1359,30 +1549,10 @@
                 
   
   
-    
   
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-        
-      
-      
-        <label class="md-nav__link md-nav__link--active" for="__toc">
-          
-  
-  <span class="md-ellipsis">
-    Operations
-  </span>
-  
-
-          <span class="md-nav__icon md-icon"></span>
-        </label>
-      
-      <a href="./" class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="../../faq/operations/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1391,104 +1561,6 @@
   
 
       </a>
-      
-        
-
-<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
-  
-  
-  
-    
-  
-  
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      Table of contents
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#how-do-i-manage-my-organizational-units-ous-when-using-ct-and-landing-zone-accelerator" class="md-nav__link">
-    <span class="md-ellipsis">
-      How do I manage my organizational units (OUs) when using CT and Landing Zone Accelerator?
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#how-do-i-create-additional-accounts-when-using-ct-and-landing-zone-accelerator" class="md-nav__link">
-    <span class="md-ellipsis">
-      How do I create additional accounts when using CT and Landing Zone Accelerator?
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#how-do-i-add-existing-accounts-when-using-ct-and-landing-zone-accelerator" class="md-nav__link">
-    <span class="md-ellipsis">
-      How do I add existing accounts when using CT and Landing Zone Accelerator?
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#how-do-i-remove-an-existing-aws-account" class="md-nav__link">
-    <span class="md-ellipsis">
-      How do I remove an existing AWS Account?
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#how-do-i-manage-my-scps-when-using-ct-and-landing-zone-accelerator" class="md-nav__link">
-    <span class="md-ellipsis">
-      How do I manage my SCPs when using CT and Landing Zone Accelerator?
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#how-do-i-troubleshoot-deployment-and-validation-errors" class="md-nav__link">
-    <span class="md-ellipsis">
-      How do I troubleshoot deployment and validation errors?
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#how-do-i-troubleshoot-aws-control-tower-landing-zone-deployment-and-validation-errors" class="md-nav__link">
-    <span class="md-ellipsis">
-      How do I troubleshoot AWS Control Tower Landing Zone deployment and validation errors?
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="How do I troubleshoot AWS Control Tower Landing Zone deployment and validation errors?">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#common-errors" class="md-nav__link">
-    <span class="md-ellipsis">
-      Common Errors
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-    </ul>
-  
-</nav>
-      
     </li>
   
 
@@ -1550,7 +1622,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../networking/general/" class="md-nav__link">
+      <a href="../../faq/networking/general/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1571,7 +1643,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../networking/dpi/" class="md-nav__link">
+      <a href="../../faq/networking/dpi/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1592,7 +1664,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../networking/direct-connect/" class="md-nav__link">
+      <a href="../../faq/networking/direct-connect/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1613,7 +1685,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../networking/network-firewall/" class="md-nav__link">
+      <a href="../../faq/networking/network-firewall/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1634,7 +1706,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../networking/gwlb/" class="md-nav__link">
+      <a href="../../faq/networking/gwlb/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1663,7 +1735,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../security/" class="md-nav__link">
+      <a href="../../faq/security/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1725,7 +1797,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../logging/cwl/" class="md-nav__link">
+      <a href="../../faq/logging/cwl/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1801,73 +1873,55 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#how-do-i-manage-my-organizational-units-ous-when-using-ct-and-landing-zone-accelerator" class="md-nav__link">
+  <a href="#overview-of-solution" class="md-nav__link">
     <span class="md-ellipsis">
-      How do I manage my organizational units (OUs) when using CT and Landing Zone Accelerator?
+      Overview of Solution
     </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#how-do-i-create-additional-accounts-when-using-ct-and-landing-zone-accelerator" class="md-nav__link">
+  <a href="#walkthrough" class="md-nav__link">
     <span class="md-ellipsis">
-      How do I create additional accounts when using CT and Landing Zone Accelerator?
+      Walkthrough
     </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#how-do-i-add-existing-accounts-when-using-ct-and-landing-zone-accelerator" class="md-nav__link">
+  <a href="#prerequisites" class="md-nav__link">
     <span class="md-ellipsis">
-      How do I add existing accounts when using CT and Landing Zone Accelerator?
+      Prerequisites
     </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#how-do-i-remove-an-existing-aws-account" class="md-nav__link">
+  <a href="#step-1-provision-the-aft-management-account" class="md-nav__link">
     <span class="md-ellipsis">
-      How do I remove an existing AWS Account?
+      Step 1: Provision the AFT Management Account
     </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#how-do-i-manage-my-scps-when-using-ct-and-landing-zone-accelerator" class="md-nav__link">
+  <a href="#step-2-deploy-aft-to-an-lza-managed-environment" class="md-nav__link">
     <span class="md-ellipsis">
-      How do I manage my SCPs when using CT and Landing Zone Accelerator?
+      Step 2: Deploy AFT to an LZA-managed Environment
     </span>
   </a>
   
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#how-do-i-troubleshoot-deployment-and-validation-errors" class="md-nav__link">
-    <span class="md-ellipsis">
-      How do I troubleshoot deployment and validation errors?
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#how-do-i-troubleshoot-aws-control-tower-landing-zone-deployment-and-validation-errors" class="md-nav__link">
-    <span class="md-ellipsis">
-      How do I troubleshoot AWS Control Tower Landing Zone deployment and validation errors?
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="How do I troubleshoot AWS Control Tower Landing Zone deployment and validation errors?">
+    <nav class="md-nav" aria-label="Step 2: Deploy AFT to an LZA-managed Environment">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#common-errors" class="md-nav__link">
+  <a href="#to-deploy-the-aft-terraform-module-in-your-environment" class="md-nav__link">
     <span class="md-ellipsis">
-      Common Errors
+      To deploy the AFT Terraform module in your environment
     </span>
   </a>
   
@@ -1875,6 +1929,96 @@
         
       </ul>
     </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#step-3-new-account-creation" class="md-nav__link">
+    <span class="md-ellipsis">
+      Step 3: New Account Creation
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Step 3: New Account Creation">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#create-a-new-aws-account-with-lza-and-register-it-with-aft" class="md-nav__link">
+    <span class="md-ellipsis">
+      Create a new AWS Account with LZA and register it with AFT
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#step-4-deploy-custom-terraform" class="md-nav__link">
+    <span class="md-ellipsis">
+      Step 4: Deploy Custom Terraform
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Step 4: Deploy Custom Terraform">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#deploying-custom-terraform-through-aft-to-existing-accounts" class="md-nav__link">
+    <span class="md-ellipsis">
+      Deploying Custom Terraform through AFT to Existing Accounts
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#cleaning-up" class="md-nav__link">
+    <span class="md-ellipsis">
+      Cleaning up
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Cleaning up">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#removing-an-account-from-aft" class="md-nav__link">
+    <span class="md-ellipsis">
+      Removing an account from AFT
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#removing-an-account-from-lza" class="md-nav__link">
+    <span class="md-ellipsis">
+      Removing an account from LZA
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#conclusion" class="md-nav__link">
+    <span class="md-ellipsis">
+      Conclusion
+    </span>
+  </a>
   
 </li>
       
@@ -1896,44 +2040,172 @@
   
 
 
-<h1 id="operations-faq">Operations FAQ<a class="headerlink" href="#operations-faq" title="Permanent link">⚓︎</a></h1>
-<h2 id="how-do-i-manage-my-organizational-units-ous-when-using-ct-and-landing-zone-accelerator">How do I manage my organizational units (OUs) when using CT and Landing Zone Accelerator?<a class="headerlink" href="#how-do-i-manage-my-organizational-units-ous-when-using-ct-and-landing-zone-accelerator" title="Permanent link">⚓︎</a></h2>
-<p>All OUs and accounts that you create in CT are governed automatically by CT. OUs that are generated outside of CT require you to manually enroll the OU with CT before it can be managed and governed by CT. When using CT and Landing Zone Accelerator together, Landing Zone Accelerator will not automate the creation of additional OUs, as there is currently not an automated mechanism to enroll the newly created OU with CT. This design decision minimizes opportunities for environment drift with CT.</p>
-<p>When using Landing Zone Accelerator without CT, this additional step is not required.</p>
-<p>For more information on enrolling OUs in Landing Zone Accelerator, please see <a href="https://docs.aws.amazon.com/solutions/latest/landing-zone-accelerator-on-aws/performing-administrator-tasks.html#adding-an-organizational-unit-ou">Adding an Organizational Unit (OU)</a> in the solution implementation guide.</p>
-<h2 id="how-do-i-create-additional-accounts-when-using-ct-and-landing-zone-accelerator">How do I create additional accounts when using CT and Landing Zone Accelerator?<a class="headerlink" href="#how-do-i-create-additional-accounts-when-using-ct-and-landing-zone-accelerator" title="Permanent link">⚓︎</a></h2>
-<p>When new account entries are added to the Landing Zone Accelerator <code>accounts-config.yaml</code> configuration file and the Core pipeline is released, Landing Zone Accelerator will utilize the CT Account Factory Service Catalog product to generate the new accounts. Similar to OUs, accounts that are generated outside of CT require you to enroll the account with CT before it can be managed and governed by CT. If you create an account outside of Control Tower (likely directly through the Organizations console or API), you can add the account information to the Landing Zone Accelerator configuration and the solution will automatically enroll the new account into CT using the CT Account Factory Service Catalog product.</p>
-<p>For more information on enrolling new accounts in Landing Zone Accelerator, please see <a href="https://docs.aws.amazon.com/solutions/latest/landing-zone-accelerator-on-aws/performing-administrator-tasks.html#adding-a-new-account">Adding a new account</a> in the solution implementation guide.</p>
-<h2 id="how-do-i-add-existing-accounts-when-using-ct-and-landing-zone-accelerator">How do I add existing accounts when using CT and Landing Zone Accelerator?<a class="headerlink" href="#how-do-i-add-existing-accounts-when-using-ct-and-landing-zone-accelerator" title="Permanent link">⚓︎</a></h2>
-<p>Please refer to <a href="https://docs.aws.amazon.com/solutions/latest/landing-zone-accelerator-on-aws/performing-administrator-tasks.html#adding-an-existing-account">Adding an existing account</a> in the solution implementation guide for guidance on adding an existing account to your Landing Zone Accelerator environment.</p>
-<h2 id="how-do-i-remove-an-existing-aws-account">How do I remove an existing AWS Account?<a class="headerlink" href="#how-do-i-remove-an-existing-aws-account" title="Permanent link">⚓︎</a></h2>
-<p>The account removal process requires several important steps to ensure a clean transition, please see <a href="https://docs.aws.amazon.com/solutions/latest/landing-zone-accelerator-on-aws/performing-administrator-tasks.html#closing-an-account">closing-an-account</a> in the solution implementation guide for guidance on closing an account from your Landing Zone Accelerator environment</p>
-<h2 id="how-do-i-manage-my-scps-when-using-ct-and-landing-zone-accelerator">How do I manage my SCPs when using CT and Landing Zone Accelerator?<a class="headerlink" href="#how-do-i-manage-my-scps-when-using-ct-and-landing-zone-accelerator" title="Permanent link">⚓︎</a></h2>
-<p>You can use Landing Zone Accelerator to deploy custom SCPs into your environment in addition to the SCPs that are deployed and managed by CT. Landing Zone Accelerator will only manage SCPs that are part of the accelerator configuration, and will not manage any SCPs that are deployed by CT. Note, Organizations sets a limit of 5 SCPs per OU and CT will consume up to 3 SCPs which will leave 2 additional SCPs that you can add. For finer grained SCPs, Landing Zone Accelerator also allows you to deploy custom SCPs to specific accounts.</p>
-<p>For more information on managing SCPs in Landing Zone Accelerator, please see <a href="https://docs.aws.amazon.com/solutions/latest/landing-zone-accelerator-on-aws/performing-administrator-tasks.html#adding-a-service-control-policy-scp">Adding a Service Control Policy (SCP)</a> in the solution implementation guide.</p>
-<h2 id="how-do-i-troubleshoot-deployment-and-validation-errors">How do I troubleshoot deployment and validation errors?<a class="headerlink" href="#how-do-i-troubleshoot-deployment-and-validation-errors" title="Permanent link">⚓︎</a></h2>
-<p>Common troubleshooting scenarios are documented in the <a href="https://docs.aws.amazon.com/solutions/latest/landing-zone-accelerator-on-aws/troubleshooting.html">Troubleshooting</a> section of the solution implementation guide. This section will continue to grow with additional scenarios as common deployment and environment validation error cases are reported.</p>
-<h2 id="how-do-i-troubleshoot-aws-control-tower-landing-zone-deployment-and-validation-errors">How do I troubleshoot AWS Control Tower Landing Zone deployment and validation errors?<a class="headerlink" href="#how-do-i-troubleshoot-aws-control-tower-landing-zone-deployment-and-validation-errors" title="Permanent link">⚓︎</a></h2>
-<p>It is recommended that you refer to the AWS Control Tower <a href="../ct-cfct/#can-i-deploy-or-manage-existing-aws-control-tower-in-landing-zone-accelerator-solution">pre-requisites</a> before troubleshooting any issues related to AWS Control Tower Landing Zone deployment.</p>
-<h5 id="common-errors">Common Errors<a class="headerlink" href="#common-errors" title="Permanent link">⚓︎</a></h5>
-<p><code>AWSOrganizationsNotInUseException: Your account is not a member of an organization. in accounts-config.yaml config file</code></p>
-<p>Landing Zone Accelerator may return an error during configuration validation if AWS Organizations is not configured. Please configure AWS Organizations before deploying the solution. In order to learn more about setting up an AWS organization, you may refer to this <a href="https://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_org_create.html">Creating an organization</a></p>
-<p><code>AWS Control Tower Landing Zone cannot deploy because AWS Organizations have not been configured for the environment.</code></p>
-<p>AWS Control Tower Landing Zone can be deployed using the Landing Zone Accelerator solution when AWS Organizations configured in the environment. AWS Organizations should be configured with all features enabled before Landing Zone Accelerator can be deployed. In order to learn more about setting up an AWS organization, you may refer to this <a href="https://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_org_create.html">Creating an organization</a>. After you create an organization and before you can deploy Landing Zone Accelerator solution, you must verify that you own the email address provided for the management account in the organization. </p>
-<p><code>AWS Control Tower Landing Zone cannot deploy because there are multiple organizational units in AWS Organizations.</code></p>
-<p>The Landing Zone Accelerator solution cannot deploy AWS Control Tower Landing Zone when there are organizational units in AWS Organizations. Prior to deploying the solution, it is necessary to clean up existing organizational units. When there are existing organizational units within the AWS Organizations, it is recommended that AWS Control Tower Landing Zone is manually deployed prior to the deployment of the solution. By adding <code>landingZone</code> <a href="/landing-zone-accelerator-on-aws/typedocs/interfaces/packages__aws-accelerator_config_lib_models_global-config.IControlTowerLandingZoneConfig.html">ControlTowerLandingZoneConfig</a> configuration, you can manage existing AWS Control Tower Landing Zone.</p>
-<p><code>AWS Control Tower Landing Zone cannot deploy because there are multiple accounts in AWS Organizations.</code></p>
-<p>The Landing Zone Accelerator solution cannot deploy AWS Control Tower Landing Zone when there are additional accounts in AWS Organizations. AWS Organizations can have only management account. When there are existing AWS accounts within the AWS Organizations, it is recommended that AWS Control Tower Landing Zone is manually deployed prior to the deployment of the solution. By adding <code>landingZone</code> <a href="/landing-zone-accelerator-on-aws/typedocs/interfaces/packages__aws-accelerator_config_lib_models_global-config.IControlTowerLandingZoneConfig.html">ControlTowerLandingZoneConfig</a> configuration, you can manage existing AWS Control Tower Landing Zone.</p>
-<p><code>AWS Control Tower Landing Zone cannot deploy because IAM Identity Center is configured.</code></p>
-<p>The Landing Zone Accelerator solution cannot deploy AWS Control Tower Landing Zone when there is existing IAM Identity Center configured. When there is existing IAM Identity Center configured, it is recommended that AWS Control Tower Landing Zone is manually deployed prior to the deployment of the solution. By adding <code>landingZone</code> <a href="/landing-zone-accelerator-on-aws/typedocs/interfaces/packages__aws-accelerator_config_lib_models_global-config.IControlTowerLandingZoneConfig.html">ControlTowerLandingZoneConfig</a> configuration, you can manage existing AWS Control Tower Landing Zone.</p>
-<p><code>AWS Control Tower Landing Zone cannot deploy because AWS Organizations have services enabled.</code></p>
-<p>The Landing Zone Accelerator solution cannot deploy AWS Control Tower Landing Zone when there are trusted access with any AWS service is enabled for AWS Organizations. When when there are trusted access with any AWS service is enabled for AWS Organizations, it is recommended that AWS Control Tower Landing Zone is manually deployed prior to the deployment of the solution. By adding <code>landingZone</code> [ControlTowerLandingZoneConfig](/landing-zone-accelerator-on-aws/typedocs/interfaces/packages__aws-accelerator_config_dist_packages__aws-accelerator_config_lib_models_global-config.IControlTowerLandingZoneConfig.html configuration, you can manage existing AWS Control Tower Landing Zone.</p>
-<p><code>The landing zone update operation failed with error - ConflictException - AWS Control Tower cannot begin landing zone setup while another execution is in progress.</code>,</p>
-<p>The Landing Zone Accelerator solution cannot update or reset AWS Control Tower Landing Zone when there is already an execution in progress. The current AWS Control Tower change operation must be completed before you can proceed.</p>
-<p><code>AWS Control Tower Landing Zone's most recent version is &lt;LATEST_VERSION&gt;, which is different from the version &lt;CONFIG_VERSION&gt; specified in global-config.yaml file.</code> </p>
-<p>Landing Zone Accelerator cannot update or reset AWS Control Tower Landing Zone if the Landing Zone version does not match the latest version of the AWS Control Tower Landing Zone. In order to resolve this issue, it is recommended that you review the <a href="https://docs.aws.amazon.com/controltower/latest/userguide/release-notes.html">AWS Control Tower release notes</a>, and update the version property of <code>landingZone</code> <a href="/landing-zone-accelerator-on-aws/typedocs/interfaces/packages__aws-accelerator_config_lib_models_global-config.IControlTowerLandingZoneConfig.html">ControlTowerLandingZoneConfig</a> configuration. Alternatively, you may rollback <a href="/landing-zone-accelerator-on-aws/typedocs/interfaces/packages__aws-accelerator_config_lib_models_global-config.IControlTowerLandingZoneConfig.html">ControlTowerLandingZoneConfig</a> configuration changes so that the solution does not attempt to update the AWS Control Tower Landing Zone. In the event the current AWS Control Tower Landing Zone drifts, the solution will attempt to reset the landing zone, which will require the latest version to be specified in the configuration.</p>
-<p><code>AWS Control Tower operation with identifier &lt;OPERATION_IDENTIFIER&gt; in FAILED state !!!!. Please investigate CT operation before executing pipeline</code></p>
-<p>Landing Zone Accelerator returns this error when creating a AWS Control Tower Landing Zone fails with any errors. Resolve the root cause of the AWS Control Tower setup failure before retrying the failed stage of the Landing Zone Accelerator pipeline. It may be possible to identify the root cause of the issue by reviewing AWS CloudTrail trails or AWS CloudFormation stacks. It should be noted that if the home region for the environment is different from the <a href="https://docs.aws.amazon.com/solutions/latest/landing-zone-accelerator-on-aws/prerequisites.html#ensure-your-global-region-is-accessible">global region</a>, you may need to review trails in the global region as well to identify the root cause.</p>
+<h1 id="deploying-custom-terraform-to-lza-managed-accounts-with-aft">Deploying Custom Terraform to LZA-Managed Accounts with AFT<a class="headerlink" href="#deploying-custom-terraform-to-lza-managed-accounts-with-aft" title="Permanent link">⚓︎</a></h1>
+<p>As organizations scale their AWS environments, managing infrastructure consistently while enabling team autonomy becomes increasingly challenging. Landing Zone Accelerator on AWS (LZA) and AWS Account Factory for Terraform (AFT) both extend AWS Control Tower to help customers manage AWS environments at scale, offering complementary strengths.</p>
+<p>Many AWS customers struggle to balance centralized security governance with the need for team autonomy when deploying infrastructure at scale. Teams want to use Terraform for infrastructure as code, but maintaining consistent security baselines across hundreds of accounts while enabling customization becomes increasingly complex.</p>
+<p>This guide builds upon our earlier post <a href="https://aws.amazon.com/blogs/mt/using-terraform-with-landing-zone-accelerator-on-aws/">Using Terraform with Landing Zone Accelerator on AWS</a> and extends it further to provide a solution for deploying Terraform in a managed, repeatable way. In this post, we'll show you how to integrate LZA with AFT within your Control Tower environment, creating a powerful solution that enhances your security posture while accelerating infrastructure deployment through automated Terraform workflows. This integration enables organizations to implement proven security baselines and governance controls through LZA while leveraging AFT's enterprise-ready Terraform deployment engine, providing teams with a robust, automated approach to infrastructure management.</p>
+<h2 id="overview-of-solution">Overview of Solution<a class="headerlink" href="#overview-of-solution" title="Permanent link">⚓︎</a></h2>
+<p>This solution integrates Landing Zone Accelerator on AWS with Account Factory for Terraform by deploying AFT within your LZA-managed environment. When you create new accounts through LZA, they can then be registered with AFT, enabling the deployment of custom Terraform modules while maintaining LZA's governance controls. The integration leverages LZA's existing account structure, with AFT deployed in a dedicated account that orchestrates Terraform deployments across your environment. </p>
+<p><strong>Key benefits include:</strong></p>
+<ul>
+<li>Centralized governance</li>
+<li>Automated account provisioning  </li>
+<li>Support for existing Terraform modules</li>
+</ul>
+<h2 id="walkthrough">Walkthrough<a class="headerlink" href="#walkthrough" title="Permanent link">⚓︎</a></h2>
+<p>This post will show you how to deploy Account Factory for Terraform to your existing Landing Zone Accelerator environment. Once deployed, we'll show you how to use the solutions together to create new AWS accounts and deploy your Terraform templates to them.</p>
+<p>This will take place over 4 steps:</p>
+<ol>
+<li><a href="#step-1-provision-the-aft-management-account">Provision the AFT Management Account</a></li>
+<li><a href="#step-2-deploy-aft-to-an-lza-managed-environment">Deploy AFT to an LZA-Managed Environment</a></li>
+<li><a href="#step-3-new-account-creation">Account Creation and Registration</a></li>
+<li><a href="#step-4-deploy-custom-terraform">Deploy Custom Terraform</a></li>
+</ol>
+<h2 id="prerequisites">Prerequisites<a class="headerlink" href="#prerequisites" title="Permanent link">⚓︎</a></h2>
+<p>When implementing this solution, consider that you'll need additional AWS resources to support AFT, including an AFT management account and associated pipeline infrastructure. The primary cost implications come from these AFT management resources, which typically include AWS CodePipeline, AWS CodeBuild, and Amazon S3 storage for Terraform state files. While the actual cost will vary based on your deployment frequency and scale, most organizations find the operational efficiency gains outweigh the minimal additional infrastructure costs.</p>
+<p>For this walkthrough, you should have the following prerequisites:</p>
+<ul>
+<li>An AWS environment with AWS Control Tower and LZA deployed. You can follow the <a href="https://docs.aws.amazon.com/solutions/latest/landing-zone-accelerator-on-aws/">implementation guide for LZA</a> to get started</li>
+<li>Ability to modify the LZA configuration files</li>
+<li>IAM role with <code>AdministratorAccess</code> policy attached for the AWS Control Tower management account</li>
+<li>Terraform version compatible with AFT</li>
+<li>AWS CodeCommit or other compatible version control system (VCS)</li>
+</ul>
+<h2 id="step-1-provision-the-aft-management-account">Step 1: Provision the AFT Management Account<a class="headerlink" href="#step-1-provision-the-aft-management-account" title="Permanent link">⚓︎</a></h2>
+<p>In alignment with AFT recommendations, create an organizational unit (OU) for hosting the AFT management account. We will use the LZA to create a new OU and AWS account by updating the LZA configuration files stored in AWS CodeCommit, Amazon S3, or AWS CodeConnections. Check the <code>ConfigurationRepositoryLocation</code> parameter of the LZA Installer Stack CloudFormation stack to find your LZA configuration files.</p>
+<ol>
+<li>
+<p><strong>Append a new OU</strong> to the <code>organizationalUnits</code> field of your <code>organizations-config.yaml</code> to create a new OU:</p>
+<div class="language-yaml highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nt">organizationalUnits</span><span class="p">:</span>
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Security</span>
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Infrastructure</span>
+</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">$OU_NAME</span>
+</span></code></pre></div>
+</li>
+<li>
+<p><strong>Append a new account</strong> to the <code>workloadAccounts</code> field of your <code>accounts-config.yaml</code> to create a new AWS account:</p>
+<div class="language-yaml highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="nt">workloadAccounts</span><span class="p">:</span>
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">AFT</span>
+</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="w">    </span><span class="nt">description</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">The management account for AFT</span>
+</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="w">    </span><span class="nt">email</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">$AFT_MANAGEMENT_ACCOUNT_EMAIL</span>
+</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="w">    </span><span class="nt">organizationalUnit</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">$OU_NAME</span>
+</span><span id="__span-1-6"><a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a><span class="w">    </span><span class="nt">warm</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">false</span>
+</span></code></pre></div>
+</li>
+<li>
+<p><strong>Commit and push</strong> your updated LZA configuration files to your AWS CodeCommit repository (or your configured version control system).</p>
+</li>
+<li>
+<p>In the AWS console, navigate to <strong>AWS CodePipeline</strong> and select the LZA pipeline (typically named <code>AWSAccelerator-Pipeline</code>).</p>
+</li>
+<li>
+<p>Click <strong>Release change</strong> to start the pipeline manually using the updated configuration files.</p>
+</li>
+</ol>
+<h2 id="step-2-deploy-aft-to-an-lza-managed-environment">Step 2: Deploy AFT to an LZA-managed Environment<a class="headerlink" href="#step-2-deploy-aft-to-an-lza-managed-environment" title="Permanent link">⚓︎</a></h2>
+<p>Start the AFT deployment process by following <a href="https://docs.aws.amazon.com/controltower/latest/userguide/aft-getting-started.html#aft-getting-started-vcs">these instructions on setting up your VCS for AFT</a>. Create a new Terraform project in your preferred location (this will be separate from your LZA configuration). In this project, create a <code>main.tf</code> file and add the following module configuration:</p>
+<div class="language-terraform highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="kr">module</span><span class="w"> </span><span class="nv">&quot;aft&quot;</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="w">  </span><span class="na">source</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;github.com/aws-ia/terraform-aws-control_tower_account_factory&quot;</span>
+</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>
+</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="w">  </span><span class="na">aft_management_account_id</span><span class="w">     </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="err">AFT_MANAGEMENT_ACCOUNT_ID</span><span class="p">]</span>
+</span><span id="__span-2-5"><a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a><span class="w">  </span><span class="na">audit_account_id</span><span class="w">              </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="err">AUDIT_ACCOUNT_ID</span><span class="p">]</span>
+</span><span id="__span-2-6"><a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a><span class="w">  </span><span class="na">log_archive_account_id</span><span class="w">        </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="err">LOG_ACCOUNT_ID</span><span class="p">]</span>
+</span><span id="__span-2-7"><a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a><span class="w">  </span><span class="na">ct_home_region</span><span class="w">               </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="err">HOME_REGION</span><span class="p">]</span>
+</span><span id="__span-2-8"><a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a><span class="w">  </span><span class="na">ct_management_account_id</span><span class="w">     </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="err">CONTROL_TOWER_MANAGEMENT_ACCOUNT_ID</span><span class="p">]</span>
+</span><span id="__span-2-9"><a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a><span class="p">}</span>
+</span></code></pre></div>
+<p>Here is a description of each of the fields referenced in the module:</p>
+<ul>
+<li><strong>AFT_MANAGEMENT_ACCOUNT_ID</strong>: The AWS Account ID for the AFT management account created in Step 1</li>
+<li><strong>AUDIT_ACCOUNT_ID</strong>: The AWS Account ID for the audit account created by the LZA deployment</li>
+<li><strong>LOG_ACCOUNT_ID</strong>: The AWS Account ID for the logging account created by the LZA deployment</li>
+<li><strong>HOME_REGION</strong>: The AWS region used as the home region for the LZA deployment</li>
+<li><strong>CONTROL_TOWER_MANAGEMENT_ACCOUNT_ID</strong>: The AWS Account ID for the Control Tower management account</li>
+</ul>
+<p>Replace the bracketed values with your actual account IDs and region. Make sure to add any parameters required by your chosen VCS.</p>
+<h3 id="to-deploy-the-aft-terraform-module-in-your-environment">To deploy the AFT Terraform module in your environment<a class="headerlink" href="#to-deploy-the-aft-terraform-module-in-your-environment" title="Permanent link">⚓︎</a></h3>
+<ol>
+<li>
+<p>Assume the IAM role with the <code>AdministratorAccess</code> policy for the Control Tower management account.</p>
+</li>
+<li>
+<p>Apply the terraform project using the command <code>terraform apply</code> to deploy the necessary resources for AFT in the Control Tower management account and the AFT management account.</p>
+</li>
+<li>
+<p>Wait for the pipelines created in the AFT management account to complete successfully.</p>
+</li>
+</ol>
+<p>Once these pipelines have completed successfully, you have completed the installation of AFT in your account.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>If you are using an external VCS, you need to complete the connection to your repository as noted in the instructions for setting up your VCS for AFT. If your pipelines fail, you may need to re-invoke these pipelines manually to finish the installation process.</p>
+</div>
+<h2 id="step-3-new-account-creation">Step 3: New Account Creation<a class="headerlink" href="#step-3-new-account-creation" title="Permanent link">⚓︎</a></h2>
+<p>Account creation is performed by updating the LZA configuration files the same way we would without AFT deployed. Update the <code>account-config.yaml</code> file to include the new accounts you need as we did in the <a href="#step-1-provision-the-aft-management-account">Provision the AFT Management Account</a> step and let the LZA deployment pipeline run.</p>
+<h3 id="create-a-new-aws-account-with-lza-and-register-it-with-aft">Create a new AWS Account with LZA and register it with AFT<a class="headerlink" href="#create-a-new-aws-account-with-lza-and-register-it-with-aft" title="Permanent link">⚓︎</a></h3>
+<ol>
+<li>
+<p><strong>Create a new account</strong> through Landing Zone Accelerator (LZA).</p>
+</li>
+<li>
+<p><strong>Register the account</strong> with Account Factory for Terraform (AFT). In the <code>aft-account-request</code> repository, create a new account request in the <code>terraform/</code> directory. Make sure to update the <code>AccountEmail</code>, <code>AccountName</code>, and the <code>account_customizations_name</code> parameters. The email and name should match what was added to the LZA configuration. The customizations name is used to determine what customizations will be deployed to this account. Save these changes and push them to the VCS provider.</p>
+</li>
+<li>
+<p>In the AFT Management account, open the <strong>AWS CodePipeline</strong> console and navigate to the <strong>Pipelines</strong> view.</p>
+</li>
+<li>
+<p>Monitor the <code>ct-aft-account-request</code> pipeline as it executes the account customization deployment.</p>
+</li>
+<li>
+<p>After the pipeline has completed successfully, verify that a new account-specific pipeline appears in the pipeline list to deploy the customizations.</p>
+</li>
+</ol>
+<h2 id="step-4-deploy-custom-terraform">Step 4: Deploy Custom Terraform<a class="headerlink" href="#step-4-deploy-custom-terraform" title="Permanent link">⚓︎</a></h2>
+<p>There are two ways to add customizations through AFT:</p>
+<ul>
+<li>
+<p><strong>Global customizations</strong> are deployed to all accounts registered with AFT. Global customizations are added in the <code>aft-global-customizations</code> repository under the <code>terraform/</code> directory.</p>
+</li>
+<li>
+<p><strong>Account customizations</strong> are deployed based on the <code>account_customizations_name</code> specified when you imported the account into AFT. Every account with the specified name will get the corresponding customizations deployed to them. Account customizations are added in the <code>aft-account-customizations</code> repository under the <code>[ACCOUNT_CUSTOMIZATION_NAME]/terraform/</code> directory.</p>
+</li>
+</ul>
+<p>When a new account is registered, a pipeline will be automatically created and triggered to deploy all applicable customizations to the account. For customizations added after the account registration process, the customizations pipelines must be manually invoked. The following architecture diagram shows how AFT deploys Terraform resources to an existing account:</p>
+<p><img alt="Architecture diagram showing the three-step process of deploying Terraform to existing AWS accounts" src="../assets/aft-architecture.png" /></p>
+<h3 id="deploying-custom-terraform-through-aft-to-existing-accounts">Deploying Custom Terraform through AFT to Existing Accounts<a class="headerlink" href="#deploying-custom-terraform-through-aft-to-existing-accounts" title="Permanent link">⚓︎</a></h3>
+<ol>
+<li>
+<p><strong>Update your AFT configuration</strong> with desired customizations.</p>
+</li>
+<li>
+<p>Navigate to the <code>aft-invoke-customizations</code> Step Function in the AFT management account.</p>
+</li>
+<li>
+<p><strong>Trigger the Step Function</strong> with the following input:</p>
+<div class="language-json highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="p">{</span>
+</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="w">  </span><span class="nt">&quot;include&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="w">    </span><span class="p">{</span>
+</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="w">      </span><span class="nt">&quot;type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;all&quot;</span>
+</span><span id="__span-3-5"><a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a><span class="w">    </span><span class="p">}</span>
+</span><span id="__span-3-6"><a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a><span class="w">  </span><span class="p">]</span>
+</span><span id="__span-3-7"><a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a><span class="p">}</span>
+</span></code></pre></div>
+</li>
+</ol>
+<p>AFT provides different parameters you can specify to determine which accounts are updated based on the invocation. To learn more, refer to <a href="https://docs.aws.amazon.com/controltower/latest/userguide/aft-account-customization-options.html">AFT's guide on re-invoking customizations</a>.</p>
+<h2 id="cleaning-up">Cleaning up<a class="headerlink" href="#cleaning-up" title="Permanent link">⚓︎</a></h2>
+<p>To remove an account from this environment, we will first remove the account from AFT and then from LZA.</p>
+<h3 id="removing-an-account-from-aft">Removing an account from AFT<a class="headerlink" href="#removing-an-account-from-aft" title="Permanent link">⚓︎</a></h3>
+<p>To remove an account from AFT, follow the <a href="https://docs.aws.amazon.com/controltower/latest/userguide/aft-remove-account.html">official AFT documentation on removing accounts</a>. This process involves removing the account request from the <code>aft-account-request</code> repository and allowing AFT to process the deletion through its automated pipeline.</p>
+<h3 id="removing-an-account-from-lza">Removing an account from LZA<a class="headerlink" href="#removing-an-account-from-lza" title="Permanent link">⚓︎</a></h3>
+<p>Once the account is successfully removed from AFT, you can proceed to close the account in LZA by following the <a href="https://docs.aws.amazon.com/solutions/latest/landing-zone-accelerator-on-aws/uninstall-the-solution.html">AWS documentation on closing accounts managed by LZA</a>. This ensures proper cleanup of all LZA-managed resources and configurations associated with the account.</p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>Always remove accounts from AFT before removing them from LZA to avoid orphaned resources and ensure proper cleanup of all Terraform-managed infrastructure.</p>
+</div>
+<h2 id="conclusion">Conclusion<a class="headerlink" href="#conclusion" title="Permanent link">⚓︎</a></h2>
+<p>By integrating Landing Zone Accelerator on AWS with Account Factory for Terraform, organizations can maintain robust governance while enabling teams to deploy custom Terraform modules across their AWS environment. This approach solves a common challenge for enterprises scaling their cloud operations: balancing centralized control with team flexibility. Through this integration, you can leverage LZA's strong governance foundation while taking advantage of AFT's Terraform deployment capabilities, giving your teams the freedom to use their preferred infrastructure-as-code tools. </p>
+<p>We encourage you to explore this solution further by starting with a test environment, and then gradually expanding to support more complex Terraform deployments as your comfort with the integration grows. For additional information, visit the <a href="https://docs.aws.amazon.com/solutions/latest/landing-zone-accelerator-on-aws/">Landing Zone Accelerator on AWS</a> and <a href="https://docs.aws.amazon.com/controltower/latest/userguide/aft-overview.html">Account Factory for Terraform</a> documentation, or engage with AWS Support for specific guidance on your implementation.</p>
 
 
 
