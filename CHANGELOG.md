@@ -23,33 +23,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - chore(cloudtrail): add documentation for cloudtrail data events behavior
 - chore(networking): update vpc route53 resolver configuration links 
 
-## [1.14.0] - 2025-10-27
-
-### Added
-
-- feat(networking): add vpn connection ipv6 support
-- feat(module): add control tower logging 
-- feat(networking): add multicast support for transit gateways
-
-### Fixed
-
-- fix(securityhub): fix invalid input exception on batch enabled standards call
-
-### Changed
-
-- chore(networking): update vpc route53 resolver configuration links 
-
 ## [1.14.2] - 2025-12-19
 
 ### Added
-- feat(ssm): preserve ssm runAsEnabled setting and runAsDefaultUser
-- feat(securityHub): added support for AWS Security Hub automation rules
-- feat(config): added support for yaml anchors in json schema
-- feat(controlTower): add support of control tower 4.0
-- feat(pipeline): replace codestar notification with EventBridge and SNS
+
+- feat(networking): batch lookup tgw attachment id
 
 ### Fixed
-- fix(securityhub): fix invalid input exception on batch enabled standards call
 
 - fix(asea): don't fail on tgw route lookup
 - fix(container): add accelerator stage on prepare stage for modules
@@ -65,9 +45,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - fix(ssm): fixed session manager log group permissions
 
 ### Changed
-- feat(securityhub): add suppport for any future standard supported by securityhub
-- chore(cloudtrail): add documentation for cloudtrail data events behavior
-- chore(networking): update vpc route53 resolver configuration links 
 
 - chore(typedocs): enriched security-config TypeDoc with added context and clarity
 - chore(typedocs): enriched global-config TypeDoc with added context and clarity
@@ -94,16 +71,67 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - feat(control-tower): add additional status logging
 - feat(control-tower): add support of control tower 4.0
 - feat(networking): add vpn connection ipv6 support
-- feat(module): add control tower logging 
-- feat(networking): add multicast support for transit gateways
+- feat(networking): enable ip targets
+- feat(organizations): override default allowed scp attachment values
+- feat(securityhub): add support for CIS AWS Foundations Benchmark v5.0.0
+- feat(securityhub): add support for any future standard supported by securityhub
+- feat(ssm): implement ssm document block public access at account level
+- feat(toolkit): enable forceBootstrap with toolkit
+- feat(uninstaller): add support for local config directories when uninstalling LZA
 
 ### Fixed
 
-- fix(validation): updated regex validation for Route53 Resover Rule DNS to pass TLD
-- fix(networking): fix logic for nlb ip address role not provisioning'
-- feat(uninstaller): add support for local config directories when uninstalling LZA
+- fix(account): improve error handling for org account creation
+- fix(asea): avoid re-processing custom resources deleted from ASEA stacks
+- fix(asea): fix conditional to delete custom resources with old naming convention
+- fix(cdk): fix external pipeline diagnostics
+- fix(cdk): updated cdk from 2.158 to 2.1027, disabled telemetry by default
+- fix(cdk): update customizations to use cdk dependency management
+- fix(config): fix issue where accountIds were not be added to list, update pitr config for dynamodb tables
+- fix(config): improve error logging in validation
+- fix(control-tower): landing zone operation fails on cmk permission
+- fix(control-tower): ou registration fails in CT with BadRequestException: Invalid request body
+- fix(control-tower): update operation to maintain existing unchanged manifests properties
+- fix(control-tower): upgrade check fails for missing configHubConfig object in manifest
+- fix(dependencies): update glob package version
+- fix(identity-center): removed deprecated filter option
+- fix(logging): ignore failed CreateLogGroup event
+- fix(logging): skipped tags for AWS::Lambda::EventSourceMapping resource in govcloud
+- fix(metadata): add s3 read permissions for config artifact bucket to accelerator metadata lambda service role
 - fix(metadata): changed ou lookups to only latest commit
+- fix(modules): fixed external credentials for account alias module
+- fix(modules): enable each module execution skip by environment variable
+- fix(networking): delete default vpc in accounts without a vpc
+- fix(networking): fix logic for nlb ip address role not provisioning
+- fix(networking): fix vpc stack dependencies
+- fix(networking): update lookup for tgw vpc attachment in govcloud
+- fix(organizations): updated detachment logic to target policy based on the event only
+- fix(pipeline): replace cdk s3 deploy with s3 api for s3 based config
+- fix(pipeline): removed cdk bucket deploy for config that has s3 as source
+- fix(prerequisites): updated service quota logic to continue if it encounters an error
+- fix(s3): add s3ResourcePolicyAttachments for access log bucket
 - fix(ssm): block public document sharing module fails to assume role in external pipeline account
+- fix(ssm): preserve ssm runAsEnabled setting and runAsDefaultUser
+- fix(tags): skip adding tags for events rule
+- fix(utility): fix aws arn validation to support partitions other than commercial
+- fix(validation): allow top-level domains in route53 resolver rules
+- fix(validation): updated regex validation for Route53 Resolver Rule DNS to pass TLD
+- fix: make email comparison case-insensitive in account validation
+
+### Changed
+
+- chore(cloudtrail): add documentation for cloudtrail data events behavior
+- chore(cdk): upgrade aws-cdk-lib and migrate stack management to toolkit-lib
+- chore(package): removes dependency of fs package
+- chore(package): upgrade lerna, nx, axios, eslint*, prettier packages
+- chore(pipeline): accelerator package version error obscures validation errors
+- chore(prerequisites): update lambda concurrency threshold
+- chore: add securityHub disable documentation
+- chore: changed tests to use vi-test instead of ts-jest
+- chore: removed AWS JS SDK V2 dependency
+- chore: update Config file to remove inaccessible link
+- chore: update documentation for controlTower controls
+- chore: update imports to reduce size of @aws-accelerator/constructs-aws-route53-associate-hosted-zones
 
 ## [1.13.1] - 2025-10-01
 
