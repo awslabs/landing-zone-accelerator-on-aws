@@ -78,7 +78,7 @@ exports[`AccountsStack us-east-1 > Construct(AccountsStack):  Snapshot Test 1`] 
         "Description": "Custom resource provider to create service linked role",
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.14.2",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.15.0",
           },
         },
         "Handler": "index.handler",
@@ -208,7 +208,7 @@ exports[`AccountsStack us-east-1 > Construct(AccountsStack):  Snapshot Test 1`] 
         "Description": "AWS CDK resource provider framework - onEvent (AWSAccelerator-AccountsStack-111111111111-us-east-1/AccessAnalyzerServiceLinkedRole/CreateServiceLinkedRoleProvider)",
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.14.2",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.15.0",
             "USER_ON_EVENT_FUNCTION_ARN": {
               "Fn::GetAtt": [
                 "AccessAnalyzerServiceLinkedRoleCreateServiceLinkedRoleFunctionA23D700D",
@@ -589,7 +589,7 @@ exports[`AccountsStack us-east-1 > Construct(AccountsStack):  Snapshot Test 1`] 
         "Environment": {
           "Variables": {
             "SCP_POLICY_NAME": "Quarantine",
-            "SOLUTION_ID": "AwsSolution/SO0199/1.14.2",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.15.0",
           },
         },
         "Handler": "index.handler",
@@ -862,7 +862,7 @@ exports[`AccountsStack us-east-1 > Construct(AccountsStack):  Snapshot Test 1`] 
         },
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.14.2",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.15.0",
           },
         },
         "Handler": "__entrypoint__.handler",
@@ -974,7 +974,7 @@ exports[`AccountsStack us-east-1 > Construct(AccountsStack):  Snapshot Test 1`] 
         },
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.14.2",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.15.0",
           },
         },
         "Handler": "__entrypoint__.handler",
@@ -1067,7 +1067,7 @@ exports[`AccountsStack us-east-1 > Construct(AccountsStack):  Snapshot Test 1`] 
         "Description": "Organizations create policy",
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.14.2",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.15.0",
           },
         },
         "Handler": "__entrypoint__.handler",
@@ -1259,7 +1259,7 @@ exports[`AccountsStack us-east-1 > Construct(AccountsStack):  Snapshot Test 1`] 
         "Description": "Custom resource provider to create service linked role",
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.14.2",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.15.0",
           },
         },
         "Handler": "index.handler",
@@ -1389,7 +1389,7 @@ exports[`AccountsStack us-east-1 > Construct(AccountsStack):  Snapshot Test 1`] 
         "Description": "AWS CDK resource provider framework - onEvent (AWSAccelerator-AccountsStack-111111111111-us-east-1/GuardDutyServiceLinkedRole/CreateServiceLinkedRoleProvider)",
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.14.2",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.15.0",
             "USER_ON_EVENT_FUNCTION_ARN": {
               "Fn::GetAtt": [
                 "GuardDutyServiceLinkedRoleCreateServiceLinkedRoleFunction151BCBCB",
@@ -1551,7 +1551,7 @@ exports[`AccountsStack us-east-1 > Construct(AccountsStack):  Snapshot Test 1`] 
         "Description": "Custom resource provider to create service linked role",
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.14.2",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.15.0",
           },
         },
         "Handler": "index.handler",
@@ -1681,7 +1681,7 @@ exports[`AccountsStack us-east-1 > Construct(AccountsStack):  Snapshot Test 1`] 
         "Description": "AWS CDK resource provider framework - onEvent (AWSAccelerator-AccountsStack-111111111111-us-east-1/MacieServiceLinkedRole/CreateServiceLinkedRoleProvider)",
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.14.2",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.15.0",
             "USER_ON_EVENT_FUNCTION_ARN": {
               "Fn::GetAtt": [
                 "MacieServiceLinkedRoleCreateServiceLinkedRoleFunction64213ACA",
@@ -1876,7 +1876,7 @@ exports[`AccountsStack us-east-1 > Construct(AccountsStack):  Snapshot Test 1`] 
         "Description": "Opt-in Regions isComplete handler",
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.14.2",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.15.0",
           },
         },
         "Handler": "index.handler",
@@ -2007,7 +2007,7 @@ exports[`AccountsStack us-east-1 > Construct(AccountsStack):  Snapshot Test 1`] 
         "Description": "Opt-in Regions onEvent handler",
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.14.2",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.15.0",
           },
         },
         "Handler": "index.handler",
@@ -2138,7 +2138,7 @@ exports[`AccountsStack us-east-1 > Construct(AccountsStack):  Snapshot Test 1`] 
         "Description": "AWS CDK resource provider framework - isComplete (AWSAccelerator-AccountsStack-111111111111-us-east-1/OptInRegions/OptInRegionsProvider)",
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.14.2",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.15.0",
             "USER_IS_COMPLETE_FUNCTION_ARN": {
               "Fn::GetAtt": [
                 "OptInRegionsOptInRegionsIsComplete20A899A2",
@@ -2322,7 +2322,7 @@ exports[`AccountsStack us-east-1 > Construct(AccountsStack):  Snapshot Test 1`] 
         "Description": "AWS CDK resource provider framework - onEvent (AWSAccelerator-AccountsStack-111111111111-us-east-1/OptInRegions/OptInRegionsProvider)",
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.14.2",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.15.0",
             "USER_IS_COMPLETE_FUNCTION_ARN": {
               "Fn::GetAtt": [
                 "OptInRegionsOptInRegionsIsComplete20A899A2",
@@ -2516,7 +2516,7 @@ exports[`AccountsStack us-east-1 > Construct(AccountsStack):  Snapshot Test 1`] 
         "Description": "AWS CDK resource provider framework - onTimeout (AWSAccelerator-AccountsStack-111111111111-us-east-1/OptInRegions/OptInRegionsProvider)",
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.14.2",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.15.0",
             "USER_IS_COMPLETE_FUNCTION_ARN": {
               "Fn::GetAtt": [
                 "OptInRegionsOptInRegionsIsComplete20A899A2",
@@ -2872,7 +2872,7 @@ exports[`AccountsStack us-east-1 > Construct(AccountsStack):  Snapshot Test 1`] 
         "Description": "Custom resource provider to create service linked role",
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.14.2",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.15.0",
           },
         },
         "Handler": "index.handler",
@@ -3002,7 +3002,7 @@ exports[`AccountsStack us-east-1 > Construct(AccountsStack):  Snapshot Test 1`] 
         "Description": "AWS CDK resource provider framework - onEvent (AWSAccelerator-AccountsStack-111111111111-us-east-1/SecurityHubServiceLinkedRole/CreateServiceLinkedRoleProvider)",
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.14.2",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.15.0",
             "USER_ON_EVENT_FUNCTION_ARN": {
               "Fn::GetAtt": [
                 "SecurityHubServiceLinkedRoleCreateServiceLinkedRoleFunction4EC1E85D",
@@ -3155,7 +3155,7 @@ exports[`AccountsStack us-east-1 > Construct(AccountsStack):  Snapshot Test 1`] 
       "Properties": {
         "Name": "/accelerator/AWSAccelerator-AccountsStack-111111111111-us-east-1/version",
         "Type": "String",
-        "Value": "1.14.2",
+        "Value": "1.15.0",
       },
       "Type": "AWS::SSM::Parameter",
     },
@@ -3293,7 +3293,7 @@ exports[`AccountsStack us-west-2 > Construct(AccountsStackUsWest2):  Snapshot Te
         "Description": "Opt-in Regions isComplete handler",
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.14.2",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.15.0",
           },
         },
         "Handler": "index.handler",
@@ -3418,7 +3418,7 @@ exports[`AccountsStack us-west-2 > Construct(AccountsStackUsWest2):  Snapshot Te
         "Description": "Opt-in Regions onEvent handler",
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.14.2",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.15.0",
           },
         },
         "Handler": "index.handler",
@@ -3543,7 +3543,7 @@ exports[`AccountsStack us-west-2 > Construct(AccountsStackUsWest2):  Snapshot Te
         "Description": "AWS CDK resource provider framework - isComplete (AWSAccelerator-AccountsStack-111111111111-us-west-2/OptInRegions/OptInRegionsProvider)",
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.14.2",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.15.0",
             "USER_IS_COMPLETE_FUNCTION_ARN": {
               "Fn::GetAtt": [
                 "OptInRegionsOptInRegionsIsComplete20A899A2",
@@ -3727,7 +3727,7 @@ exports[`AccountsStack us-west-2 > Construct(AccountsStackUsWest2):  Snapshot Te
         "Description": "AWS CDK resource provider framework - onEvent (AWSAccelerator-AccountsStack-111111111111-us-west-2/OptInRegions/OptInRegionsProvider)",
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.14.2",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.15.0",
             "USER_IS_COMPLETE_FUNCTION_ARN": {
               "Fn::GetAtt": [
                 "OptInRegionsOptInRegionsIsComplete20A899A2",
@@ -3921,7 +3921,7 @@ exports[`AccountsStack us-west-2 > Construct(AccountsStackUsWest2):  Snapshot Te
         "Description": "AWS CDK resource provider framework - onTimeout (AWSAccelerator-AccountsStack-111111111111-us-west-2/OptInRegions/OptInRegionsProvider)",
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.14.2",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.15.0",
             "USER_IS_COMPLETE_FUNCTION_ARN": {
               "Fn::GetAtt": [
                 "OptInRegionsOptInRegionsIsComplete20A899A2",
@@ -4242,7 +4242,7 @@ exports[`AccountsStack us-west-2 > Construct(AccountsStackUsWest2):  Snapshot Te
       "Properties": {
         "Name": "/accelerator/AWSAccelerator-AccountsStack-111111111111-us-west-2/version",
         "Type": "String",
-        "Value": "1.14.2",
+        "Value": "1.15.0",
       },
       "Type": "AWS::SSM::Parameter",
     },
