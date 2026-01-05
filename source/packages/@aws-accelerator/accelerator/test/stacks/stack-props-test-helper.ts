@@ -1,3 +1,5 @@
+/* eslint @typescript-eslint/no-explicit-any: 0 */
+
 import {
   AccountsConfig,
   AuditManagerConfig,
@@ -48,6 +50,7 @@ export function createAcceleratorStackProps(
     getLogArchiveAccountId: vi.fn(() => '345678901'),
     getAuditAccountId: vi.fn(() => auditAccountId ?? '456789012'),
     getAccountNameById: vi.fn(() => 'accountName'),
+    containsAccount: vi.fn(() => true),
     mandatoryAccounts: [],
     workloadAccounts: [],
   };
@@ -113,6 +116,7 @@ export function createAcceleratorStackProps(
     awsConfig: {
       aggregation,
     } as AwsConfig,
+    getDelegatedAccountName: vi.fn(() => 'Audit'),
   };
 
   const prefixes: AcceleratorResourcePrefixes = {
@@ -161,4 +165,23 @@ export function createAcceleratorStackProps(
   };
 
   return stackProps;
+}
+
+export function createSecurityStackProps(overrides?: Partial<AcceleratorStackProps>): AcceleratorStackProps {
+  const baseProps = createAcceleratorStackProps();
+  const props = {
+    ...baseProps,
+    configDirPath: './',
+    ...overrides,
+  } as AcceleratorStackProps;
+
+  // Ensure required properties are set
+  if (!props.securityConfig.awsConfig.ruleSets) {
+    (props.securityConfig.awsConfig as any).ruleSets = [];
+  }
+  if (!props.securityConfig.cloudWatch) {
+    (props.securityConfig as any).cloudWatch = { metricSets: [], alarmSets: [], logGroups: [] };
+  }
+
+  return props;
 }
