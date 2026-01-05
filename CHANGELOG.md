@@ -26,7 +26,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - fix(prerequisites): skip suspended accounts in ignored OUs
 - fix(ssm): fixed session manager log group permissions
 
-
 ### Changed
 
 - chore(typedocs): enriched security-config TypeDoc with added context and clarity
@@ -43,7 +42,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - fix(budgets): remove trailing slash in path
 - fix(networking): added lookup for tgw attachments using v2 stacks in govcloud
 - fix(typedocs): updated basePath for compatibility with latest version
-
 
 ## [1.14.0] - 2025-11-24
 
@@ -107,7 +105,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - chore(cloudtrail): add documentation for cloudtrail data events behavior
 - chore(cdk): upgrade aws-cdk-lib and migrate stack management to toolkit-lib
 - chore(package): removes dependency of fs package
-- chore(package): upgrade lerna, nx, axios, eslint*, prettier packages
+- chore(package): upgrade lerna, nx, axios, eslint\*, prettier packages
 - chore(pipeline): accelerator package version error obscures validation errors
 - chore(prerequisites): update lambda concurrency threshold
 - chore: add securityHub disable documentation

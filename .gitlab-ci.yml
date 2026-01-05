@@ -1,0 +1,749 @@
+# GitLab CI/CD Rules Documentation
+# ==============================
+#
+# Rule Patterns and Their Meanings
+# -----------------------------
+#
+# 1. Skip Main Branch Rule
+# ---------------------
+# if: $CI_COMMIT_BRANCH == "main"
+# when: never
+# Meaning: Skip the job when the pipeline runs on the main branch
+#
+# 2. Skip Version Branch Rule
+# ------------------------
+# if: $CI_COMMIT_BRANCH =~ /.*v(\d.+){2}\d$/
+# when: never
+# Meaning: Skip the job when the branch name ends with a version pattern
+# Example matches: release-v1.0.0, feature-v2.3.4, hotfix-v10.2.1
+#
+# 3. Skip Merge Request Rule
+# -----------------------
+# if: $CI_MERGE_REQUEST_IID != null
+# when: never
+# Meaning: Skip the job when the pipeline runs in context of a merge request
+#
+# 4. Integration Test Execution Rules
+# -------------------------------
+# Location: '.gitlab/jobs/ci-job-definitions.yml'
+#
+# if: $EXECUTE_INTEGRATION_TEST == "Yes"
+# when: always
+# Meaning: Execute the job when the EXECUTE_INTEGRATION_TEST variable is set to "Yes"
+#
+# 5. Integration Branch Rules
+# -----------------------
+# Location: '.gitlab/jobs/ci-job-definitions.yml'
+#
+# if: $CI_COMMIT_BRANCH == "integ"
+# when: always
+# Meaning: Execute the job when the pipeline runs on the "integ" branch
+#
+# 6. Version Tag Rules
+# -----------------
+# if: $CI_COMMIT_TAG =~ /v(\d.+){2}\d/
+# when: always
+# Meaning: Execute the job when the pipeline runs on a tag matching version pattern
+# Example matches: v1.0.0, v2.3.4, v10.2.1
+#
+# 7. Project-Specific Version Tag Rules
+# --------------------------------
+# if: $CI_PROJECT_ID == "11925" && $CI_COMMIT_TAG =~ /v(\d.+){2}\d/
+# when: always
+# Meaning: Execute the job only on specific project (11925) and when tag matches version pattern
+#
+# 8. Project-Specific Integration Branch Rules
+# ---------------------------------------
+# if: $CI_PROJECT_ID == "11925" && $CI_COMMIT_BRANCH == "integ"
+# when: always
+# Meaning: Execute the job only on specific project (11925) and on the "integ" branch
+#
+# 9. Default Skip Rule
+# -----------------
+# when: never
+# Meaning: Skip the job if none of the above conditions match
+#
+# Rule Keywords Explained
+# --------------------
+# - if: Condition that must be true for the rule to apply
+# - when: Defines job behavior
+#   * always: Run job when conditions match
+#   * never: Skip job (prevent execution)
+#   * manual: Require manual intervention to run
+#
+# Variables Used in Rules
+# --------------------
+# CI_MERGE_REQUEST_IID:
+#   - ID of the merge request if pipeline runs in MR context
+#   - null when pipeline runs in other contexts
+#
+# CI_PROJECT_ID:
+#   - GitLab's internal project identifier
+#   - "11925" represents specific project
+#
+# CI_COMMIT_TAG:
+#   - The tag name for which the pipeline is running
+#   - Pattern v(\d.+){2}\d matches semantic versioning
+#
+# CI_COMMIT_BRANCH:
+#   - The branch name for which the pipeline is running
+#   - Special values: "main", "integ"
+#   - Can match version pattern for release branches
+#
+# EXECUTE_INTEGRATION_TEST:
+#   - Custom variable to control integration test execution
+#   - "Yes" enables integration tests
+#
+# Regular Expression Patterns
+# ------------------------
+# 1. Version Tag Pattern: v(\d.+){2}\d
+#    - v: Literal 'v' at start
+#    - (\d.+){2}: Two groups of digits followed by any characters
+#    - \d: Final digit
+#    - Examples: v1.0.0, v2.3.4, v10.2.1
+#
+# 2. Version Branch Pattern: .*v(\d.+){2}\d$
+#    - .*: Any characters at start
+#    - v(\d.+){2}\d: Same version pattern as above
+#    - $: End of string
+#    - Examples: release-v1.0.0, feature-v2.3.4
+
+image: public.ecr.aws/docker/library/node:20
+
+before_script:
+  - rm -rf /var/lib/apt/lists/*
+  - apt-get update
+  - apt-cache gencaches
+  - apt-get install -y zip
+  - apt-get install -y jq
+
+# include:
+#   - '.gitlab/jobs/ci-job-definitions.yml'
+
+stages:
+  - pipeline
+accelerator:build:
+  stage: pipeline
+  tags:
+    - arch:amd64
+    - size:2xlarge
+  script:
+    - "export NODE_OPTIONS=--max_old_space_size=49152"
+    - "npm install yarn@1.22.22"
+    - "cd source"
+    - "yarn install"
+    - "yarn build"
+  artifacts:
+    name: solution-build
+    untracked: true
+    when: on_success
+    paths:
+      - source
+    expire_in: 3 hrs
+  rules:
+    - if: $CI_COMMIT_BRANCH == "main"
+      when: never
+    - if: $CI_COMMIT_BRANCH =~ /.*v(\d.+){2}\d$/
+      when: never
+    - if: $CI_MERGE_REQUEST_IID != null
+      when: never
+    - when: always
+accelerator:lint:
+  stage: pipeline
+  needs: ["accelerator:build"]
+  tags:
+    - arch:amd64
+    - size:xlarge
+  script:
+    - "export NODE_OPTIONS=--max_old_space_size=28672"
+    - "npm install yarn@1.22.22"
+    - "cd source"
+    - "yarn install"
+    - "yarn lint"
+    - "yarn lerna run precommit --stream"
+    - "export ACCELERATOR_PREFIX=AWSAccelerator"
+    # - "yarn validate-config packages/@aws-accelerator/accelerator/test/configs/all-enabled/" # Validate all enabled config files
+    # - "yarn validate-config packages/@aws-accelerator/accelerator/test/configs/no-org-config/" # Validate no-org config files"
+    - "yarn git-clean"
+    - "yarn run viper-scan"
+    # Check if build  has changed any of the
+    - git add -A
+    - |
+      if [[ -n $(git status --porcelain | grep -E 'source/packages/@aws-accelerator/config/lib/schemas/') ]]; then
+        echo "Uncommitted changes or untracked files detected in schema folder listed below. Please run yarn build-clean locally, then commit and push the updated schema file to resolve."
+        git status --porcelain | grep -E 'source/packages/@aws-accelerator/config/lib/schemas/'
+        exit 1
+      else
+        echo "No changes or untracked files detected in schema folder"
+      fi
+    - git reset
+  rules:
+    - if: $CI_COMMIT_BRANCH == "main"
+      when: never
+    - if: $CI_COMMIT_BRANCH =~ /.*v(\d.+){2}\d$/
+      when: never
+    - if: $CI_COMMIT_TAG =~ /v(\d.+){2}\d/
+      when: never
+    - if: $CI_MERGE_REQUEST_IID != null
+      when: never
+    - when: always
+accelerator:attribution-check:
+  stage: pipeline
+  tags:
+    - arch:amd64
+    - size:medium
+  script:
+    - echo "This merge request contains commits from an external author and is incorrectly configured to squash commits, which can erase author attribution. Please set \"Squash commits on merge\" to false and retry the pipeline."
+    - exit 1
+  rules:
+    - if: $CI_PROJECT_ID == "11925" && $CI_COMMIT_AUTHOR !~ /@amazon/ && $CI_MERGE_REQUEST_SQUASH_ON_MERGE == "true"
+      when: always
+    - when: never
+accelerator:gitlab-ci-isolation:
+  stage: pipeline
+  tags:
+    - arch:amd64
+    - size:medium
+  script:
+    - echo "Checking for .gitlab-ci.yml isolation..."
+    - git remote add upstream https://gitlab-ci-token:${CI_JOB_TOKEN}@${CI_SERVER_HOST}/landing-zone-accelerator/landing-zone-accelerator-on-aws.git
+    - git fetch upstream integ
+    - changed_files=$(git diff --name-only upstream/integ..HEAD)
+    - echo "Changed files:"
+    - echo "$changed_files"
+    - file_count=$(echo "$changed_files" | grep -v '^$' | wc -l)
+    - 'echo "File count: $file_count"'
+    - |
+      if echo "$changed_files" | grep -q "\.gitlab-ci\.yml$" && [ "$file_count" -gt 1 ]; then
+        echo "ERROR: .gitlab-ci.yml changes must be isolated from other file changes"
+        echo "If this merge request only includes changes to .gitlab-ci.yml, ensure the 'integ' branch of your forked repository is up-to-date"
+        exit 1
+      else
+        echo "Check passed: .gitlab-ci.yml changes are properly isolated"
+      fi
+  rules:
+    - if: $CI_COMMIT_BRANCH == "main"
+      when: never
+    - if: $CI_COMMIT_BRANCH == "integ"
+      when: never
+    - if: $CI_COMMIT_BRANCH =~ /.*v(\d.+){2}\d$/
+      when: never
+    - if: $CI_COMMIT_TAG =~ /v(\d.+){2}\d/
+      when: never
+    - if: $CI_MERGE_REQUEST_IID != null
+      when: never
+    - when: always
+unit-test:accelerator:
+  stage: pipeline
+  needs: ["accelerator:build"]
+  tags:
+    - arch:amd64
+    - size:2xlarge
+  script:
+    - "export NODE_OPTIONS=--max_old_space_size=49152"
+    - "cd source/packages/@aws-accelerator/accelerator"
+    - "yarn test:unit"
+  artifacts:
+    when: always
+    reports:
+      junit:
+        - source/packages/@aws-accelerator/accelerator/test-reports/*.xml
+    expire_in: 1 day
+  rules:
+    - if: $CI_COMMIT_BRANCH == "main"
+      when: never
+    - if: $CI_COMMIT_BRANCH =~ /.*v(\d.+){2}\d$/
+      when: never
+    - if: $CI_COMMIT_TAG =~ /v(\d.+){2}\d/
+      when: never
+    - if: $CI_MERGE_REQUEST_IID != null
+      when: never
+    - when: always
+unit-test:config:
+  stage: pipeline
+  needs: ["accelerator:build"]
+  tags:
+    - arch:amd64
+    - size:medium
+  script:
+    - "export NODE_OPTIONS=--max_old_space_size=6144"
+    - "cd source/packages/@aws-accelerator/config"
+    - "yarn test:unit"
+  artifacts:
+    when: always
+    reports:
+      junit:
+        - source/packages/@aws-accelerator/config/test-reports/*.xml
+    expire_in: 1 day
+  rules:
+    - if: $CI_COMMIT_BRANCH == "main"
+      when: never
+    - if: $CI_COMMIT_BRANCH =~ /.*v(\d.+){2}\d$/
+      when: never
+    - if: $CI_COMMIT_TAG =~ /v(\d.+){2}\d/
+      when: never
+    - if: $CI_MERGE_REQUEST_IID != null
+      when: never
+    - when: always
+unit-test:constructs:
+  stage: pipeline
+  needs: ["accelerator:build"]
+  tags:
+    - arch:amd64
+    - size:2xlarge
+  script:
+    - "export NODE_OPTIONS=--max_old_space_size=49152"
+    - "cd source/packages/@aws-accelerator/constructs"
+    - "yarn test:unit"
+  artifacts:
+    when: always
+    reports:
+      junit:
+        - source/packages/@aws-accelerator/constructs/test-reports/*.xml
+    expire_in: 1 day
+  rules:
+    - if: $CI_COMMIT_BRANCH == "main"
+      when: never
+    - if: $CI_COMMIT_BRANCH =~ /.*v(\d.+){2}\d$/
+      when: never
+    - if: $CI_COMMIT_TAG =~ /v(\d.+){2}\d/
+      when: never
+    - if: $CI_MERGE_REQUEST_IID != null
+      when: never
+    - when: always
+unit-test:govcloud-account-vending:
+  stage: pipeline
+  needs: ["accelerator:build"]
+  tags:
+    - arch:amd64
+    - size:medium
+  script:
+    - "export NODE_OPTIONS=--max_old_space_size=6144"
+    - "cd source/packages/@aws-accelerator/govcloud-account-vending"
+    - "yarn test:unit"
+  artifacts:
+    when: always
+    reports:
+      junit:
+        - source/packages/@aws-accelerator/govcloud-account-vending/test-reports/*.xml
+    expire_in: 1 day
+  rules:
+    - if: $CI_COMMIT_BRANCH == "main"
+      when: never
+    - if: $CI_COMMIT_BRANCH =~ /.*v(\d.+){2}\d$/
+      when: never
+    - if: $CI_COMMIT_TAG =~ /v(\d.+){2}\d/
+      when: never
+    - if: $CI_MERGE_REQUEST_IID != null
+      when: never
+    - when: always
+unit-test:installer:
+  stage: pipeline
+  needs: ["accelerator:build"]
+  tags:
+    - arch:amd64
+    - size:medium
+  script:
+    - "export NODE_OPTIONS=--max_old_space_size=6144"
+    - "cd source/packages/@aws-accelerator/installer"
+    - "yarn test:unit"
+  artifacts:
+    when: always
+    reports:
+      junit:
+        - source/packages/@aws-accelerator/installer/test-reports/*.xml
+    expire_in: 1 day
+  rules:
+    - if: $CI_COMMIT_BRANCH == "main"
+      when: never
+    - if: $CI_COMMIT_BRANCH =~ /.*v(\d.+){2}\d$/
+      when: never
+    - if: $CI_COMMIT_TAG =~ /v(\d.+){2}\d/
+      when: never
+    - if: $CI_MERGE_REQUEST_IID != null
+      when: never
+    - when: always
+unit-test:modules:
+  stage: pipeline
+  needs: ["accelerator:build"]
+  tags:
+    - arch:amd64
+    - size:medium
+  script:
+    - "export NODE_OPTIONS=--max_old_space_size=6144"
+    - "cd source/packages/@aws-accelerator/modules"
+    - "yarn test:unit"
+  artifacts:
+    when: always
+    reports:
+      junit:
+        - source/packages/@aws-accelerator/modules/test-reports/*.xml
+    expire_in: 1 day
+  rules:
+    - if: $CI_COMMIT_BRANCH == "main"
+      when: never
+    - if: $CI_COMMIT_BRANCH =~ /.*v(\d.+){2}\d$/
+      when: never
+    - if: $CI_COMMIT_TAG =~ /v(\d.+){2}\d/
+      when: never
+    - if: $CI_MERGE_REQUEST_IID != null
+      when: never
+    - when: always
+unit-test:tools:
+  stage: pipeline
+  needs: ["accelerator:build"]
+  tags:
+    - arch:amd64
+    - size:medium
+  script:
+    - "export NODE_OPTIONS=--max_old_space_size=6144"
+    - "cd source/packages/@aws-accelerator/tools"
+    - "yarn test:unit"
+  artifacts:
+    when: always
+    reports:
+      junit:
+        - source/packages/@aws-accelerator/tools/test-reports/*.xml
+    expire_in: 1 day
+  rules:
+    - if: $CI_COMMIT_BRANCH == "main"
+      when: never
+    - if: $CI_COMMIT_BRANCH =~ /.*v(\d.+){2}\d$/
+      when: never
+    - if: $CI_COMMIT_TAG =~ /v(\d.+){2}\d/
+      when: never
+    - if: $CI_MERGE_REQUEST_IID != null
+      when: never
+    - when: always
+unit-test:aws-lza:
+  stage: pipeline
+  needs: ["accelerator:build"]
+  tags:
+    - arch:amd64
+    - size:medium
+  script:
+    - "export NODE_OPTIONS=--max_old_space_size=6144"
+    - "cd source/packages/@aws-lza"
+    - "yarn test:unit"
+  artifacts:
+    when: always
+    reports:
+      junit:
+        - source/packages/@aws-lza/test-reports/*.xml
+    expire_in: 1 day
+  rules:
+    - if: $CI_COMMIT_BRANCH == "main"
+      when: never
+    - if: $CI_COMMIT_BRANCH =~ /.*v(\d.+){2}\d$/
+      when: never
+    - if: $CI_COMMIT_TAG =~ /v(\d.+){2}\d/
+      when: never
+    - if: $CI_MERGE_REQUEST_IID != null
+      when: never
+    - when: always
+installer:
+  stage: pipeline
+  needs: ["accelerator:build"]
+  tags:
+    - arch:amd64
+    - size:large
+  script:
+    - "cd source"
+    - "cd packages/@aws-accelerator/installer"
+    - "yarn cdk synth"
+    - "cp cdk.out/AWSAccelerator-InstallerStack.template.json $CI_PROJECT_DIR/AWSAccelerator-InstallerStack.template.json"
+  artifacts:
+    name: "installer-template"
+    when: on_success
+    paths:
+      - AWSAccelerator-InstallerStack.template.json
+  rules:
+    - if: $CI_COMMIT_BRANCH == "integ"
+      when: always
+    - if: $CI_COMMIT_TAG =~ /v(\d.+){2}\d/
+      when: always
+    - when: never
+workshop:
+  stage: pipeline
+  needs: ["accelerator:build"]
+  tags:
+    - arch:amd64
+    - size:large
+  when: manual
+  script:
+    - "cd source"
+    - "export version=$(cat package.json | jq -r '.version')"
+    - "cd packages/@aws-accelerator/installer"
+    - "yarn run cdk synth -c enable-single-account-mode=true --output $CI_PROJECT_DIR"
+    - "cd ../../../../deployment"
+    - "chmod +x ./build-open-source-dist.sh && ./build-open-source-dist.sh lza-on-aws-workshop"
+    - "cp ./open-source/lza-on-aws-workshop.zip $CI_PROJECT_DIR/lza-on-aws-workshop.zip"
+  artifacts:
+    name: "lza-on-aws-workshop"
+    when: on_success
+    paths:
+      - lza-on-aws-workshop.zip
+      - AWSAccelerator-InstallerStack-Workshop.template.json
+  rules:
+    - if: $CI_COMMIT_BRANCH == "integ"
+      when: always
+    - if: $CI_COMMIT_TAG =~ /v(\d.+){2}\d/
+      when: always
+    - when: never
+release:build-typedocs:
+  stage: pipeline
+  needs:
+    - job: accelerator:build
+      artifacts: true
+  tags:
+    - arch:amd64
+    - size:xlarge
+  variables:
+    AWS_DEFAULT_REGION: us-east-1
+    AWS_CREDS_TARGET_ROLE: "${GITLAB_S3_ROLE}"
+    BUILD_S3_PATH: s3://${BUCKET_NAME}/build-release/typedocs.zip
+    VERSIONED_S3_PATH: s3://${BUCKET_NAME}/${CI_COMMIT_TAG}/typedocs.zip
+    SITE_URL: "${GITLAB_SITE_URL}"
+  before_script:
+    # Install dependencies
+    - "rm -rf /var/lib/apt/lists/*"
+    - "apt-get update"
+    - "apt-cache gencaches"
+    - "apt-get install -y zip"
+    - "wget --progress=dot:mega -O /tmp/awscliv2.zip https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip"
+    - "unzip -q /tmp/awscliv2.zip -d /tmp"
+    - "/tmp/aws/install"
+  script:
+    # Generate docs
+    - "cd source"
+    - "mkdir -p mkdocs/docs/typedocs"
+    - "yarn docs"
+    # Move to generated typedocs dir
+    - "cd mkdocs/docs/typedocs"
+    # Archive and upload to S3
+    - "zip -rqy typedocs.zip *"
+    - "aws s3 cp ./typedocs.zip ${VERSIONED_S3_PATH}"
+    - "aws s3 cp ./typedocs.zip ${BUILD_S3_PATH}"
+    - "cp ./typedocs.zip ${CI_PROJECT_DIR}/typedocs.zip"
+  artifacts:
+    name: TypeDocs
+    when: on_success
+    paths:
+      - typedocs.zip
+  rules:
+    - if: $CI_PROJECT_ID == "11925" && $CI_COMMIT_TAG =~ /v(\d.+){2}\d/
+      when: always
+    - when: never
+
+# make a zip file upon commit tag
+release:artifact-al2023-prep:
+  stage: pipeline
+  tags:
+    - arch:amd64
+    - size:xlarge
+  before_script:
+    # package needed to unzip code archive
+    - "dnf install -y zip"
+    # empty context is needed for build or else everything is copied
+    - "mkdir -p $CI_PROJECT_DIR/deployment/build/context_dir"
+  image:
+    # name: gcr.io/kaniko-project/executor:v1.20.0-debug
+    name: public.ecr.aws/amazonlinux/amazonlinux:latest
+    entrypoint:
+      - ""
+  script:
+    # make the open source distributable code
+    - "cd $CI_PROJECT_DIR/deployment && ls -lart . && $CI_PROJECT_DIR/deployment/build-open-source-dist.sh lza"
+
+    # Move and unzip code archive in empty context
+    - "unzip -q $CI_PROJECT_DIR/deployment/open-source/lza.zip -d $CI_PROJECT_DIR/deployment/build/context_dir/"
+    # move build file into empty context
+    - "mv $CI_PROJECT_DIR/deployment/container/build/al2023 $CI_PROJECT_DIR/deployment/build/context_dir/"
+    # move scripts into empty context
+    - "mv $CI_PROJECT_DIR/deployment/container/scripts $CI_PROJECT_DIR/deployment/build/context_dir/"
+  artifacts:
+    name: al2023_Prepare
+    when: on_success
+    untracked: true
+    paths:
+      - $CI_PROJECT_DIR/deployment/build/context_dir/
+  rules:
+    - if: $CI_PROJECT_ID == "11925" && $CI_COMMIT_TAG =~ /v(\d.+){2}\d/
+      when: always
+    - when: never
+
+# use created context to build
+release:artifact-al2023-build:
+  stage: pipeline
+  needs: ["release:artifact-al2023-prep"]
+  tags:
+    - arch:amd64
+    - size:xlarge
+  before_script:
+    - mkdir -p /kaniko/.docker
+  image:
+    name: gcr.io/kaniko-project/executor:v1.23.2-debug
+    entrypoint: [""]
+  script:
+    - /kaniko/executor --context $CI_PROJECT_DIR/deployment/build/context_dir/ --destination lza-$CI_COMMIT_TAG-al2023 --dockerfile $CI_PROJECT_DIR/deployment/build/context_dir/al2023 --tarPath $CI_PROJECT_DIR/deployment/build/context_dir/lza-$CI_COMMIT_TAG-al2023.tar.gz --no-push
+  artifacts:
+    name: al2023_build
+    when: on_success
+    paths:
+      - $CI_PROJECT_DIR/deployment/build/context_dir/lza-$CI_COMMIT_TAG-al2023.tar.gz
+  rules:
+    - if: $CI_PROJECT_ID == "11925" && $CI_COMMIT_TAG =~ /v(\d.+){2}\d/
+      when: always
+    - when: never
+
+# upload artifact into package for release
+release:artifact-al2023-upload:
+  stage: pipeline
+  needs: ["release:artifact-al2023-build"]
+  tags:
+    - arch:amd64
+    - size:large
+  variables:
+    TOKEN:
+  before_script:
+    # ensure file exists before upload
+    - ls -lart $CI_PROJECT_DIR/deployment/build/context_dir/lza-$CI_COMMIT_TAG-al2023.tar.gz
+  script:
+    # uploads can only be to url/project/<project-id>/packages/generic/<package_name>/<version>/<package_file>
+    # in local testing it was found that package_file must match.
+    # For example, if the package file is named "test.tar.gz" then the upload url must be "url/project/<project-id>/packages/generic/<package_name>/<version>/test.tar.gz"
+    - |
+      curl --header "JOB-TOKEN: ${CI_JOB_TOKEN}" --upload-file $CI_PROJECT_DIR/deployment/build/context_dir/lza-$CI_COMMIT_TAG-al2023.tar.gz "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/generic/lza-container/${CI_COMMIT_TAG}/lza-${CI_COMMIT_TAG}-al2023.tar.gz"
+    # this echo will help in release and also allow downloads from logs directly
+    - echo "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/generic/lza-container/${CI_COMMIT_TAG}/lza-${CI_COMMIT_TAG}-al2023.tar.gz"
+    # get sha1sum and add that to a file
+    - sha1sum $CI_PROJECT_DIR/deployment/build/context_dir/lza-$CI_COMMIT_TAG-al2023.tar.gz >> $CI_PROJECT_DIR/lza-$CI_COMMIT_TAG-al2023.tar.gz.sha1sum
+    - |
+      curl --header "JOB-TOKEN: ${CI_JOB_TOKEN}" --upload-file $CI_PROJECT_DIR/lza-$CI_COMMIT_TAG-al2023.tar.gz.sha1sum "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/generic/lza-container/${CI_COMMIT_TAG}/lza-${CI_COMMIT_TAG}-al2023.tar.gz.sha1sum"
+  rules:
+    - if: $CI_PROJECT_ID == "11925" && $CI_COMMIT_TAG =~ /v(\d.+){2}\d/
+      when: always
+    - when: never
+
+# release based on commit tag
+release:artifact-al2023-release:
+  stage: pipeline
+  needs: ["release:artifact-al2023-upload"]
+  tags:
+    - arch:amd64
+    - size:large
+  image: registry.gitlab.com/gitlab-org/release-cli:latest
+  before_script:
+    # this script ensures before_script which is common to test/build will not run for this specific container
+    - echo "Releasing $CI_COMMIT_TAG"
+  script:
+    - |
+      release-cli create --name "$CI_COMMIT_TAG" --tag-name $CI_COMMIT_TAG \
+        --assets-link "{\"name\":\"lza-${CI_COMMIT_TAG}-al2023.tar.gz\",\"url\":\"${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/generic/lza-container/${CI_COMMIT_TAG}/lza-${CI_COMMIT_TAG}-al2023.tar.gz\"}" \
+        --assets-link "{\"name\":\"lza-${CI_COMMIT_TAG}-al2023.tar.gz.sha1sum\",\"url\":\"${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/generic/lza-container/${CI_COMMIT_TAG}/lza-${CI_COMMIT_TAG}-al2023.tar.gz.sha1sum\"}" \
+        --description "Landing Zone Accelerator on AWS container version $CI_COMMIT_TAG built on AL2023"
+  rules:
+    - if: $CI_PROJECT_ID == "11925" && $CI_COMMIT_TAG =~ /v(\d.+){2}\d/
+      when: always
+    - when: never
+
+release:run-tests:
+  stage: pipeline
+  tags:
+    - arch:amd64
+    - size:xlarge
+  before_script:
+    # Install dependencies
+    - "rm -rf /var/lib/apt/lists/*"
+    - "apt-get update"
+    - "apt-cache gencaches"
+  script:
+    # Run tests in the same way as the AWS Solutions pipeline
+    - "export NODE_OPTIONS=--max_old_space_size=28672"
+    - "cd source"
+    - "chmod +x ./run-all-tests.sh && ./run-all-tests.sh"
+  artifacts:
+    name: test-results
+    when: on_success
+    untracked: true
+  rules:
+    - if: $CI_PROJECT_ID == "11925" && $CI_COMMIT_TAG =~ /v(\d.+){2}\d/
+      when: always
+    - when: never
+
+release:build-distributions:
+  stage: pipeline
+  needs:
+    - job: release:run-tests
+      artifacts: true
+  tags:
+    - arch:amd64
+    - size:xlarge
+  before_script:
+    - "apt-get update && apt-get install -y jq"
+  script:
+    - "cd source"
+    - "export PUBLISHED_VERSION=$CI_COMMIT_TAG"
+    - "cd ../deployment"
+    - "source ./solution_config"
+    - "./build-s3-dist.sh temp-bucket $PUBLISHED_VERSION"
+    - "./build-open-source-dist.sh $SOLUTION_TRADEMARKEDNAME"
+  artifacts:
+    name: distributions
+    when: on_success
+    untracked: true
+  rules:
+    - if: $CI_PROJECT_ID == "11925" && $CI_COMMIT_TAG =~ /v(\d.+){2}\d/
+      when: always
+    - when: never
+
+release:package-artifact:
+  stage: pipeline
+  needs:
+    - job: release:build-distributions
+      artifacts: true
+  tags:
+    - arch:amd64
+    - size:large
+  before_script:
+    - "apt-get update && apt-get install -y zip"
+  script:
+    - "zip -r artifact.zip deployment/ source/ .gitignore README.md LICENSE.txt NOTICE.txt CODE_OF_CONDUCT.md CONTRIBUTING.md .github/ buildspec.yml CHANGELOG.md SECURITY.md .cfnnag_* .viperlightignore codescan-postbuild-custom.sh solution-manifest.yaml"
+  artifacts:
+    name: packaged-artifact
+    when: on_success
+    paths:
+      - artifact.zip
+  rules:
+    - if: $CI_PROJECT_ID == "11925" && $CI_COMMIT_TAG =~ /v(\d.+){2}\d/
+      when: always
+    - when: never
+
+release:upload-to-cornerstone:
+  stage: pipeline
+  needs:
+    - job: release:package-artifact
+      artifacts: true
+  tags:
+    - arch:amd64
+    - size:large
+  variables:
+    AWS_DEFAULT_REGION: us-east-1
+    AWS_CREDS_TARGET_ROLE: "${CORNERSTONE_ROLE_ARN}"
+    CORNERSTONE_PACKAGE_BUCKET: "${CORNERSTONE_PACKAGE_BUCKET}"
+  before_script:
+    - "apt-get update && apt-get install -y jq"
+    - "wget --progress=dot:mega -O /tmp/awscliv2.zip https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip"
+    - "unzip -q /tmp/awscliv2.zip -d /tmp"
+    - "/tmp/aws/install"
+  script:
+    - "cd source"
+    - "export PUBLISHED_VERSION=$CI_COMMIT_TAG"
+    - "cd .."
+    - 'export AUTHOR_EMAIL=$(echo "$CI_COMMIT_AUTHOR" | grep -oP ''(?<=<).*(?=>)'' || echo "unknown")'
+    - aws s3 cp artifact.zip s3://$CORNERSTONE_PACKAGE_BUCKET/SO0199/$PUBLISHED_VERSION/$CI_COMMIT_SHA/artifact.zip --metadata "package=Landing-zone-accelerator-on-aws,commitId=$CI_COMMIT_SHA,solutionId=SO0199,solutionVersion=$PUBLISHED_VERSION,solutionName=landing-zone-accelerator-on-aws,commitauthor=$AUTHOR_EMAIL,publishpublicecrimage=false,commitmessage=$CI_COMMIT_MESSAGE,committimestamp=$CI_COMMIT_TIMESTAMP,enablequicksight=No,branch=$CI_COMMIT_MESSAGE"
+    - 'echo "Published solution archive to s3://$CORNERSTONE_PACKAGE_BUCKET/SO0199/$PUBLISHED_VERSION/$CI_COMMIT_SHA/artifact.zip"'
+  rules:
+    - if: $CI_PROJECT_ID == "11925" && $CI_COMMIT_TAG =~ /v(\d.+){2}\d/
+      when: always
+    - when: never
