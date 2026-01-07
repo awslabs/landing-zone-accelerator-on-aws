@@ -633,6 +633,14 @@ export class AcceleratorPipeline extends Construct {
             type: codebuild.BuildEnvironmentVariableType.PLAINTEXT,
             value: 'yes',
           },
+          SkipPipelinePrerequisites: {
+            type: cdk.aws_codebuild.BuildEnvironmentVariableType.PLAINTEXT,
+            value: 'true',
+          },
+          SkipAcceleratorPrerequisites: {
+            type: cdk.aws_codebuild.BuildEnvironmentVariableType.PLAINTEXT,
+            value: 'true',
+          },
           ...enableSingleAccountModeEnvVariables,
           ...pipelineAccountEnvVariables,
           ...aseaMigrationModeEnvVariables,
