@@ -203,42 +203,7 @@ accelerator:attribution-check:
     - if: $CI_PROJECT_ID == "11925" && $CI_COMMIT_AUTHOR !~ /@amazon/ && $CI_MERGE_REQUEST_SQUASH_ON_MERGE == "true"
       when: always
     - when: never
-accelerator:gitlab-ci-isolation:
-  stage: pipeline
-  tags:
-    - arch:amd64
-    - size:medium
-  script:
-    - echo "Checking for .gitlab-ci.yml isolation..."
-    - git remote add upstream https://gitlab-ci-token:${CI_JOB_TOKEN}@${CI_SERVER_HOST}/landing-zone-accelerator/landing-zone-accelerator-on-aws.git
-    - git fetch upstream integ
-    - changed_files=$(git diff --name-only upstream/integ..HEAD)
-    - echo "Changed files:"
-    - echo "$changed_files"
-    - |
-      file_count=$(echo "$changed_files" | grep -v '^$' | grep -v '^\.gitlab/jobs/' | wc -l)
-      echo "File count: $file_count"
-      if echo "$changed_files" | grep -q "\.gitlab-ci\.yml$" && [ "$file_count" -gt 1 ]; then
-        echo "ERROR: .gitlab-ci.yml changes must be isolated from other file changes"
-        echo "If this merge request only includes changes to .gitlab-ci.yml, ensure the 'integ' branch of your forked repository is up-to-date"
-        exit 1
-      else
-        echo "Check passed: .gitlab-ci.yml changes are properly isolated"
-      fi
-  rules:
-    - if: $SKIP_GITLAB_CHANGE_CHECK == "yes"
-      when: never
-    - if: $CI_COMMIT_BRANCH == "main"
-      when: never
-    - if: $CI_COMMIT_BRANCH == "integ"
-      when: never
-    - if: $CI_COMMIT_BRANCH =~ /.*v(\d.+){2}\d$/
-      when: never
-    - if: $CI_COMMIT_TAG =~ /v(\d.+){2}\d/
-      when: never
-    - if: $CI_MERGE_REQUEST_IID != null
-      when: never
-    - when: always
+
 unit-test:accelerator:
   stage: pipeline
   needs: ["accelerator:build"]
