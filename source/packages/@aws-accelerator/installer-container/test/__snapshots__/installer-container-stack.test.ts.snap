@@ -463,6 +463,7 @@ exports[`InstallerContainerStack > Construct(InstallerContainerStack): Default C
                     "Ref": "AWS::Region",
                   },
                   "SecurityGroupId": "{{SecurityGroupId}}",
+                  "SolutionId": "AwsSolution/SO0199/1.15.0",
                   "SubnetId": "{{SubnetId}}",
                   "TaskDefinition": "{{TaskDefinition}}",
                 },
@@ -519,6 +520,98 @@ exports[`InstallerContainerStack > Construct(InstallerContainerStack): Default C
               ],
               "timeoutSeconds": 43200,
             },
+            {
+              "action": "aws:executeScript",
+              "description": "Verifies the container exit code after task completion and fails the automation if exit code is non-zero",
+              "inputs": {
+                "Handler": "handler",
+                "InputPayload": {
+                  "ClusterName": "{{RunTask.ClusterName}}",
+                  "LogGroupName": "{{RunTask.LogGroupName}}",
+                  "LogStreamName": "{{RunTask.LogStreamName}}",
+                  "Region": {
+                    "Ref": "AWS::Region",
+                  },
+                  "SolutionId": "AwsSolution/SO0199/1.15.0",
+                  "TaskArn": "{{RunTask.TaskArn}}",
+                },
+                "Runtime": "{{PythonRuntime}}",
+                "Script": "import boto3
+from botocore.config import Config
+
+def handler(event, context):
+    config = Config(user_agent_extra=event['SolutionId']) 
+    client = boto3.client('ecs', region_name=event['Region'], config=config)
+    
+    response = client.describe_tasks(
+        cluster=event['ClusterName'],
+        tasks=[event['TaskArn']]
+    )
+    
+    if not response['tasks']:
+        raise Exception(f"Task not found: {event['TaskArn']}")
+    
+    task = response['tasks'][0]
+    containers = task.get('containers', [])
+    
+    if not containers:
+        raise Exception(f"No containers found in task: {event['TaskArn']}")
+    
+    # Extract exit code from tasks[0].containers[0].exitCode
+    container = containers[0]
+    exit_code = container.get('exitCode')  # Can be 0, 1, 137, etc. or None if killed
+    
+    # Extract task-level stop information
+    stop_code = task.get('stopCode', 'Unknown')  # e.g., "EssentialContainerExited"
+    stop_reason = task.get('stoppedReason', 'Unknown')  # e.g., "Essential container in task exited"
+    task_status = task.get('lastStatus', 'Unknown')
+    
+    result = {
+        'ExitCode': exit_code if exit_code is not None else -1,
+        'StopCode': stop_code,
+        'StopReason': stop_reason,
+        'TaskStatus': task_status,
+        'LogStreamName': event['LogStreamName'],
+        'LogGroupName': event['LogGroupName']
+    }
+    
+    # Fail if exit code is non-zero or None (container was killed)
+    if exit_code is None or exit_code != 0:
+        error_msg = (
+            f"ECS task failed with exit code {exit_code}. "
+            f"Stop code: {stop_code}. "
+            f"Stop reason: {stop_reason}. "
+            f"Check CloudWatch logs: {event['LogGroupName']}/{event['LogStreamName']}"
+        )
+        raise Exception(error_msg)
+    
+    return result",
+              },
+              "name": "CheckTaskExitCode",
+              "outputs": [
+                {
+                  "Name": "ExitCode",
+                  "Selector": "$.Payload.ExitCode",
+                  "Type": "Integer",
+                },
+                {
+                  "Name": "StopCode",
+                  "Selector": "$.Payload.StopCode",
+                  "Type": "String",
+                },
+                {
+                  "Name": "StopReason",
+                  "Selector": "$.Payload.StopReason",
+                  "Type": "String",
+                },
+                {
+                  "Name": "TaskStatus",
+                  "Selector": "$.Payload.TaskStatus",
+                  "Type": "String",
+                },
+              ],
+              "timeoutSeconds": 600,
+            },
           ],
           "outputs": [
             "RunTask.TaskArn",
@@ -526,6 +619,9 @@ exports[`InstallerContainerStack > Construct(InstallerContainerStack): Default C
             "RunTask.LogGroupName",
             "RunTask.LogStreamName",
             "WaitForTaskCompletion.TaskStatus",
+            "CheckTaskExitCode.ExitCode",
+            "CheckTaskExitCode.StopCode",
+            "CheckTaskExitCode.StopReason",
           ],
           "parameters": {
             "AutomationAssumeRole": {
@@ -1548,7 +1644,7 @@ exports[`InstallerContainerStack > Construct(InstallerContainerStack): Default C
             "Arn",
           ],
         },
-        "Runtime": "nodejs20.x",
+        "Runtime": "nodejs22.x",
       },
       "Type": "AWS::Lambda::Function",
     },
@@ -2856,6 +2952,7 @@ exports[`InstallerContainerStack > Construct(InstallerContainerStack): Deploymen
                     "Ref": "AWS::Region",
                   },
                   "SecurityGroupId": "{{SecurityGroupId}}",
+                  "SolutionId": "AwsSolution/SO0199/1.15.0",
                   "SubnetId": "{{SubnetId}}",
                   "TaskDefinition": "{{TaskDefinition}}",
                 },
@@ -2912,6 +3009,98 @@ exports[`InstallerContainerStack > Construct(InstallerContainerStack): Deploymen
               ],
               "timeoutSeconds": 43200,
             },
+            {
+              "action": "aws:executeScript",
+              "description": "Verifies the container exit code after task completion and fails the automation if exit code is non-zero",
+              "inputs": {
+                "Handler": "handler",
+                "InputPayload": {
+                  "ClusterName": "{{RunTask.ClusterName}}",
+                  "LogGroupName": "{{RunTask.LogGroupName}}",
+                  "LogStreamName": "{{RunTask.LogStreamName}}",
+                  "Region": {
+                    "Ref": "AWS::Region",
+                  },
+                  "SolutionId": "AwsSolution/SO0199/1.15.0",
+                  "TaskArn": "{{RunTask.TaskArn}}",
+                },
+                "Runtime": "{{PythonRuntime}}",
+                "Script": "import boto3
+from botocore.config import Config
+
+def handler(event, context):
+    config = Config(user_agent_extra=event['SolutionId']) 
+    client = boto3.client('ecs', region_name=event['Region'], config=config)
+    
+    response = client.describe_tasks(
+        cluster=event['ClusterName'],
+        tasks=[event['TaskArn']]
+    )
+    
+    if not response['tasks']:
+        raise Exception(f"Task not found: {event['TaskArn']}")
+    
+    task = response['tasks'][0]
+    containers = task.get('containers', [])
+    
+    if not containers:
+        raise Exception(f"No containers found in task: {event['TaskArn']}")
+    
+    # Extract exit code from tasks[0].containers[0].exitCode
+    container = containers[0]
+    exit_code = container.get('exitCode')  # Can be 0, 1, 137, etc. or None if killed
+    
+    # Extract task-level stop information
+    stop_code = task.get('stopCode', 'Unknown')  # e.g., "EssentialContainerExited"
+    stop_reason = task.get('stoppedReason', 'Unknown')  # e.g., "Essential container in task exited"
+    task_status = task.get('lastStatus', 'Unknown')
+    
+    result = {
+        'ExitCode': exit_code if exit_code is not None else -1,
+        'StopCode': stop_code,
+        'StopReason': stop_reason,
+        'TaskStatus': task_status,
+        'LogStreamName': event['LogStreamName'],
+        'LogGroupName': event['LogGroupName']
+    }
+    
+    # Fail if exit code is non-zero or None (container was killed)
+    if exit_code is None or exit_code != 0:
+        error_msg = (
+            f"ECS task failed with exit code {exit_code}. "
+            f"Stop code: {stop_code}. "
+            f"Stop reason: {stop_reason}. "
+            f"Check CloudWatch logs: {event['LogGroupName']}/{event['LogStreamName']}"
+        )
+        raise Exception(error_msg)
+    
+    return result",
+              },
+              "name": "CheckTaskExitCode",
+              "outputs": [
+                {
+                  "Name": "ExitCode",
+                  "Selector": "$.Payload.ExitCode",
+                  "Type": "Integer",
+                },
+                {
+                  "Name": "StopCode",
+                  "Selector": "$.Payload.StopCode",
+                  "Type": "String",
+                },
+                {
+                  "Name": "StopReason",
+                  "Selector": "$.Payload.StopReason",
+                  "Type": "String",
+                },
+                {
+                  "Name": "TaskStatus",
+                  "Selector": "$.Payload.TaskStatus",
+                  "Type": "String",
+                },
+              ],
+              "timeoutSeconds": 600,
+            },
           ],
           "outputs": [
             "RunTask.TaskArn",
@@ -2919,6 +3108,9 @@ exports[`InstallerContainerStack > Construct(InstallerContainerStack): Deploymen
             "RunTask.LogGroupName",
             "RunTask.LogStreamName",
             "WaitForTaskCompletion.TaskStatus",
+            "CheckTaskExitCode.ExitCode",
+            "CheckTaskExitCode.StopCode",
+            "CheckTaskExitCode.StopReason",
           ],
           "parameters": {
             "AutomationAssumeRole": {
@@ -3946,7 +4138,7 @@ exports[`InstallerContainerStack > Construct(InstallerContainerStack): Deploymen
             "Arn",
           ],
         },
-        "Runtime": "nodejs20.x",
+        "Runtime": "nodejs22.x",
       },
       "Type": "AWS::Lambda::Function",
     },
@@ -5285,6 +5477,7 @@ exports[`InstallerContainerStack > Construct(InstallerContainerStack): Single Ac
                     "Ref": "AWS::Region",
                   },
                   "SecurityGroupId": "{{SecurityGroupId}}",
+                  "SolutionId": "AwsSolution/SO0199/1.15.0",
                   "SubnetId": "{{SubnetId}}",
                   "TaskDefinition": "{{TaskDefinition}}",
                 },
@@ -5341,6 +5534,98 @@ exports[`InstallerContainerStack > Construct(InstallerContainerStack): Single Ac
               ],
               "timeoutSeconds": 43200,
             },
+            {
+              "action": "aws:executeScript",
+              "description": "Verifies the container exit code after task completion and fails the automation if exit code is non-zero",
+              "inputs": {
+                "Handler": "handler",
+                "InputPayload": {
+                  "ClusterName": "{{RunTask.ClusterName}}",
+                  "LogGroupName": "{{RunTask.LogGroupName}}",
+                  "LogStreamName": "{{RunTask.LogStreamName}}",
+                  "Region": {
+                    "Ref": "AWS::Region",
+                  },
+                  "SolutionId": "AwsSolution/SO0199/1.15.0",
+                  "TaskArn": "{{RunTask.TaskArn}}",
+                },
+                "Runtime": "{{PythonRuntime}}",
+                "Script": "import boto3
+from botocore.config import Config
+
+def handler(event, context):
+    config = Config(user_agent_extra=event['SolutionId']) 
+    client = boto3.client('ecs', region_name=event['Region'], config=config)
+    
+    response = client.describe_tasks(
+        cluster=event['ClusterName'],
+        tasks=[event['TaskArn']]
+    )
+    
+    if not response['tasks']:
+        raise Exception(f"Task not found: {event['TaskArn']}")
+    
+    task = response['tasks'][0]
+    containers = task.get('containers', [])
+    
+    if not containers:
+        raise Exception(f"No containers found in task: {event['TaskArn']}")
+    
+    # Extract exit code from tasks[0].containers[0].exitCode
+    container = containers[0]
+    exit_code = container.get('exitCode')  # Can be 0, 1, 137, etc. or None if killed
+    
+    # Extract task-level stop information
+    stop_code = task.get('stopCode', 'Unknown')  # e.g., "EssentialContainerExited"
+    stop_reason = task.get('stoppedReason', 'Unknown')  # e.g., "Essential container in task exited"
+    task_status = task.get('lastStatus', 'Unknown')
+    
+    result = {
+        'ExitCode': exit_code if exit_code is not None else -1,
+        'StopCode': stop_code,
+        'StopReason': stop_reason,
+        'TaskStatus': task_status,
+        'LogStreamName': event['LogStreamName'],
+        'LogGroupName': event['LogGroupName']
+    }
+    
+    # Fail if exit code is non-zero or None (container was killed)
+    if exit_code is None or exit_code != 0:
+        error_msg = (
+            f"ECS task failed with exit code {exit_code}. "
+            f"Stop code: {stop_code}. "
+            f"Stop reason: {stop_reason}. "
+            f"Check CloudWatch logs: {event['LogGroupName']}/{event['LogStreamName']}"
+        )
+        raise Exception(error_msg)
+    
+    return result",
+              },
+              "name": "CheckTaskExitCode",
+              "outputs": [
+                {
+                  "Name": "ExitCode",
+                  "Selector": "$.Payload.ExitCode",
+                  "Type": "Integer",
+                },
+                {
+                  "Name": "StopCode",
+                  "Selector": "$.Payload.StopCode",
+                  "Type": "String",
+                },
+                {
+                  "Name": "StopReason",
+                  "Selector": "$.Payload.StopReason",
+                  "Type": "String",
+                },
+                {
+                  "Name": "TaskStatus",
+                  "Selector": "$.Payload.TaskStatus",
+                  "Type": "String",
+                },
+              ],
+              "timeoutSeconds": 600,
+            },
           ],
           "outputs": [
             "RunTask.TaskArn",
@@ -5348,6 +5633,9 @@ exports[`InstallerContainerStack > Construct(InstallerContainerStack): Single Ac
             "RunTask.LogGroupName",
             "RunTask.LogStreamName",
             "WaitForTaskCompletion.TaskStatus",
+            "CheckTaskExitCode.ExitCode",
+            "CheckTaskExitCode.StopCode",
+            "CheckTaskExitCode.StopReason",
           ],
           "parameters": {
             "AutomationAssumeRole": {
@@ -6370,7 +6658,7 @@ exports[`InstallerContainerStack > Construct(InstallerContainerStack): Single Ac
             "Arn",
           ],
         },
-        "Runtime": "nodejs20.x",
+        "Runtime": "nodejs22.x",
       },
       "Type": "AWS::Lambda::Function",
     },
@@ -7671,6 +7959,7 @@ exports[`InstallerContainerStack > Construct(InstallerContainerStack): With Exte
                     "Ref": "AWS::Region",
                   },
                   "SecurityGroupId": "{{SecurityGroupId}}",
+                  "SolutionId": "AwsSolution/SO0199/1.15.0",
                   "SubnetId": "{{SubnetId}}",
                   "TaskDefinition": "{{TaskDefinition}}",
                 },
@@ -7727,6 +8016,98 @@ exports[`InstallerContainerStack > Construct(InstallerContainerStack): With Exte
               ],
               "timeoutSeconds": 43200,
             },
+            {
+              "action": "aws:executeScript",
+              "description": "Verifies the container exit code after task completion and fails the automation if exit code is non-zero",
+              "inputs": {
+                "Handler": "handler",
+                "InputPayload": {
+                  "ClusterName": "{{RunTask.ClusterName}}",
+                  "LogGroupName": "{{RunTask.LogGroupName}}",
+                  "LogStreamName": "{{RunTask.LogStreamName}}",
+                  "Region": {
+                    "Ref": "AWS::Region",
+                  },
+                  "SolutionId": "AwsSolution/SO0199/1.15.0",
+                  "TaskArn": "{{RunTask.TaskArn}}",
+                },
+                "Runtime": "{{PythonRuntime}}",
+                "Script": "import boto3
+from botocore.config import Config
+
+def handler(event, context):
+    config = Config(user_agent_extra=event['SolutionId']) 
+    client = boto3.client('ecs', region_name=event['Region'], config=config)
+    
+    response = client.describe_tasks(
+        cluster=event['ClusterName'],
+        tasks=[event['TaskArn']]
+    )
+    
+    if not response['tasks']:
+        raise Exception(f"Task not found: {event['TaskArn']}")
+    
+    task = response['tasks'][0]
+    containers = task.get('containers', [])
+    
+    if not containers:
+        raise Exception(f"No containers found in task: {event['TaskArn']}")
+    
+    # Extract exit code from tasks[0].containers[0].exitCode
+    container = containers[0]
+    exit_code = container.get('exitCode')  # Can be 0, 1, 137, etc. or None if killed
+    
+    # Extract task-level stop information
+    stop_code = task.get('stopCode', 'Unknown')  # e.g., "EssentialContainerExited"
+    stop_reason = task.get('stoppedReason', 'Unknown')  # e.g., "Essential container in task exited"
+    task_status = task.get('lastStatus', 'Unknown')
+    
+    result = {
+        'ExitCode': exit_code if exit_code is not None else -1,
+        'StopCode': stop_code,
+        'StopReason': stop_reason,
+        'TaskStatus': task_status,
+        'LogStreamName': event['LogStreamName'],
+        'LogGroupName': event['LogGroupName']
+    }
+    
+    # Fail if exit code is non-zero or None (container was killed)
+    if exit_code is None or exit_code != 0:
+        error_msg = (
+            f"ECS task failed with exit code {exit_code}. "
+            f"Stop code: {stop_code}. "
+            f"Stop reason: {stop_reason}. "
+            f"Check CloudWatch logs: {event['LogGroupName']}/{event['LogStreamName']}"
+        )
+        raise Exception(error_msg)
+    
+    return result",
+              },
+              "name": "CheckTaskExitCode",
+              "outputs": [
+                {
+                  "Name": "ExitCode",
+                  "Selector": "$.Payload.ExitCode",
+                  "Type": "Integer",
+                },
+                {
+                  "Name": "StopCode",
+                  "Selector": "$.Payload.StopCode",
+                  "Type": "String",
+                },
+                {
+                  "Name": "StopReason",
+                  "Selector": "$.Payload.StopReason",
+                  "Type": "String",
+                },
+                {
+                  "Name": "TaskStatus",
+                  "Selector": "$.Payload.TaskStatus",
+                  "Type": "String",
+                },
+              ],
+              "timeoutSeconds": 600,
+            },
           ],
           "outputs": [
             "RunTask.TaskArn",
@@ -7734,6 +8115,9 @@ exports[`InstallerContainerStack > Construct(InstallerContainerStack): With Exte
             "RunTask.LogGroupName",
             "RunTask.LogStreamName",
             "WaitForTaskCompletion.TaskStatus",
+            "CheckTaskExitCode.ExitCode",
+            "CheckTaskExitCode.StopCode",
+            "CheckTaskExitCode.StopReason",
           ],
           "parameters": {
             "AutomationAssumeRole": {
@@ -8761,7 +9145,7 @@ exports[`InstallerContainerStack > Construct(InstallerContainerStack): With Exte
             "Arn",
           ],
         },
-        "Runtime": "nodejs20.x",
+        "Runtime": "nodejs22.x",
       },
       "Type": "AWS::Lambda::Function",
     },
@@ -10109,6 +10493,7 @@ exports[`InstallerContainerStack > Construct(InstallerContainerStack): With Perm
                     "Ref": "AWS::Region",
                   },
                   "SecurityGroupId": "{{SecurityGroupId}}",
+                  "SolutionId": "AwsSolution/SO0199/1.15.0",
                   "SubnetId": "{{SubnetId}}",
                   "TaskDefinition": "{{TaskDefinition}}",
                 },
@@ -10165,6 +10550,98 @@ exports[`InstallerContainerStack > Construct(InstallerContainerStack): With Perm
               ],
               "timeoutSeconds": 43200,
             },
+            {
+              "action": "aws:executeScript",
+              "description": "Verifies the container exit code after task completion and fails the automation if exit code is non-zero",
+              "inputs": {
+                "Handler": "handler",
+                "InputPayload": {
+                  "ClusterName": "{{RunTask.ClusterName}}",
+                  "LogGroupName": "{{RunTask.LogGroupName}}",
+                  "LogStreamName": "{{RunTask.LogStreamName}}",
+                  "Region": {
+                    "Ref": "AWS::Region",
+                  },
+                  "SolutionId": "AwsSolution/SO0199/1.15.0",
+                  "TaskArn": "{{RunTask.TaskArn}}",
+                },
+                "Runtime": "{{PythonRuntime}}",
+                "Script": "import boto3
+from botocore.config import Config
+
+def handler(event, context):
+    config = Config(user_agent_extra=event['SolutionId']) 
+    client = boto3.client('ecs', region_name=event['Region'], config=config)
+    
+    response = client.describe_tasks(
+        cluster=event['ClusterName'],
+        tasks=[event['TaskArn']]
+    )
+    
+    if not response['tasks']:
+        raise Exception(f"Task not found: {event['TaskArn']}")
+    
+    task = response['tasks'][0]
+    containers = task.get('containers', [])
+    
+    if not containers:
+        raise Exception(f"No containers found in task: {event['TaskArn']}")
+    
+    # Extract exit code from tasks[0].containers[0].exitCode
+    container = containers[0]
+    exit_code = container.get('exitCode')  # Can be 0, 1, 137, etc. or None if killed
+    
+    # Extract task-level stop information
+    stop_code = task.get('stopCode', 'Unknown')  # e.g., "EssentialContainerExited"
+    stop_reason = task.get('stoppedReason', 'Unknown')  # e.g., "Essential container in task exited"
+    task_status = task.get('lastStatus', 'Unknown')
+    
+    result = {
+        'ExitCode': exit_code if exit_code is not None else -1,
+        'StopCode': stop_code,
+        'StopReason': stop_reason,
+        'TaskStatus': task_status,
+        'LogStreamName': event['LogStreamName'],
+        'LogGroupName': event['LogGroupName']
+    }
+    
+    # Fail if exit code is non-zero or None (container was killed)
+    if exit_code is None or exit_code != 0:
+        error_msg = (
+            f"ECS task failed with exit code {exit_code}. "
+            f"Stop code: {stop_code}. "
+            f"Stop reason: {stop_reason}. "
+            f"Check CloudWatch logs: {event['LogGroupName']}/{event['LogStreamName']}"
+        )
+        raise Exception(error_msg)
+    
+    return result",
+              },
+              "name": "CheckTaskExitCode",
+              "outputs": [
+                {
+                  "Name": "ExitCode",
+                  "Selector": "$.Payload.ExitCode",
+                  "Type": "Integer",
+                },
+                {
+                  "Name": "StopCode",
+                  "Selector": "$.Payload.StopCode",
+                  "Type": "String",
+                },
+                {
+                  "Name": "StopReason",
+                  "Selector": "$.Payload.StopReason",
+                  "Type": "String",
+                },
+                {
+                  "Name": "TaskStatus",
+                  "Selector": "$.Payload.TaskStatus",
+                  "Type": "String",
+                },
+              ],
+              "timeoutSeconds": 600,
+            },
           ],
           "outputs": [
             "RunTask.TaskArn",
@@ -10172,6 +10649,9 @@ exports[`InstallerContainerStack > Construct(InstallerContainerStack): With Perm
             "RunTask.LogGroupName",
             "RunTask.LogStreamName",
             "WaitForTaskCompletion.TaskStatus",
+            "CheckTaskExitCode.ExitCode",
+            "CheckTaskExitCode.StopCode",
+            "CheckTaskExitCode.StopReason",
           ],
           "parameters": {
             "AutomationAssumeRole": {
@@ -11194,7 +11674,7 @@ exports[`InstallerContainerStack > Construct(InstallerContainerStack): With Perm
             "Arn",
           ],
         },
-        "Runtime": "nodejs20.x",
+        "Runtime": "nodejs22.x",
       },
       "Type": "AWS::Lambda::Function",
     },
@@ -12465,6 +12945,7 @@ exports[`InstallerContainerStack > Construct(InstallerContainerStack): With S3 S
                     "Ref": "AWS::Region",
                   },
                   "SecurityGroupId": "{{SecurityGroupId}}",
+                  "SolutionId": "AwsSolution/SO0199/1.15.0",
                   "SubnetId": "{{SubnetId}}",
                   "TaskDefinition": "{{TaskDefinition}}",
                 },
@@ -12521,6 +13002,98 @@ exports[`InstallerContainerStack > Construct(InstallerContainerStack): With S3 S
               ],
               "timeoutSeconds": 43200,
             },
+            {
+              "action": "aws:executeScript",
+              "description": "Verifies the container exit code after task completion and fails the automation if exit code is non-zero",
+              "inputs": {
+                "Handler": "handler",
+                "InputPayload": {
+                  "ClusterName": "{{RunTask.ClusterName}}",
+                  "LogGroupName": "{{RunTask.LogGroupName}}",
+                  "LogStreamName": "{{RunTask.LogStreamName}}",
+                  "Region": {
+                    "Ref": "AWS::Region",
+                  },
+                  "SolutionId": "AwsSolution/SO0199/1.15.0",
+                  "TaskArn": "{{RunTask.TaskArn}}",
+                },
+                "Runtime": "{{PythonRuntime}}",
+                "Script": "import boto3
+from botocore.config import Config
+
+def handler(event, context):
+    config = Config(user_agent_extra=event['SolutionId']) 
+    client = boto3.client('ecs', region_name=event['Region'], config=config)
+    
+    response = client.describe_tasks(
+        cluster=event['ClusterName'],
+        tasks=[event['TaskArn']]
+    )
+    
+    if not response['tasks']:
+        raise Exception(f"Task not found: {event['TaskArn']}")
+    
+    task = response['tasks'][0]
+    containers = task.get('containers', [])
+    
+    if not containers:
+        raise Exception(f"No containers found in task: {event['TaskArn']}")
+    
+    # Extract exit code from tasks[0].containers[0].exitCode
+    container = containers[0]
+    exit_code = container.get('exitCode')  # Can be 0, 1, 137, etc. or None if killed
+    
+    # Extract task-level stop information
+    stop_code = task.get('stopCode', 'Unknown')  # e.g., "EssentialContainerExited"
+    stop_reason = task.get('stoppedReason', 'Unknown')  # e.g., "Essential container in task exited"
+    task_status = task.get('lastStatus', 'Unknown')
+    
+    result = {
+        'ExitCode': exit_code if exit_code is not None else -1,
+        'StopCode': stop_code,
+        'StopReason': stop_reason,
+        'TaskStatus': task_status,
+        'LogStreamName': event['LogStreamName'],
+        'LogGroupName': event['LogGroupName']
+    }
+    
+    # Fail if exit code is non-zero or None (container was killed)
+    if exit_code is None or exit_code != 0:
+        error_msg = (
+            f"ECS task failed with exit code {exit_code}. "
+            f"Stop code: {stop_code}. "
+            f"Stop reason: {stop_reason}. "
+            f"Check CloudWatch logs: {event['LogGroupName']}/{event['LogStreamName']}"
+        )
+        raise Exception(error_msg)
+    
+    return result",
+              },
+              "name": "CheckTaskExitCode",
+              "outputs": [
+                {
+                  "Name": "ExitCode",
+                  "Selector": "$.Payload.ExitCode",
+                  "Type": "Integer",
+                },
+                {
+                  "Name": "StopCode",
+                  "Selector": "$.Payload.StopCode",
+                  "Type": "String",
+                },
+                {
+                  "Name": "StopReason",
+                  "Selector": "$.Payload.StopReason",
+                  "Type": "String",
+                },
+                {
+                  "Name": "TaskStatus",
+                  "Selector": "$.Payload.TaskStatus",
+                  "Type": "String",
+                },
+              ],
+              "timeoutSeconds": 600,
+            },
           ],
           "outputs": [
             "RunTask.TaskArn",
@@ -12528,6 +13101,9 @@ exports[`InstallerContainerStack > Construct(InstallerContainerStack): With S3 S
             "RunTask.LogGroupName",
             "RunTask.LogStreamName",
             "WaitForTaskCompletion.TaskStatus",
+            "CheckTaskExitCode.ExitCode",
+            "CheckTaskExitCode.StopCode",
+            "CheckTaskExitCode.StopReason",
           ],
           "parameters": {
             "AutomationAssumeRole": {
@@ -13550,7 +14126,7 @@ exports[`InstallerContainerStack > Construct(InstallerContainerStack): With S3 S
             "Arn",
           ],
         },
-        "Runtime": "nodejs20.x",
+        "Runtime": "nodejs22.x",
       },
       "Type": "AWS::Lambda::Function",
     },

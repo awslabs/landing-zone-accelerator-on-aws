@@ -1212,6 +1212,9 @@ export class InstallerContainerStack extends cdk.Stack {
           'RunTask.LogGroupName',
           'RunTask.LogStreamName',
           'WaitForTaskCompletion.TaskStatus',
+          'CheckTaskExitCode.ExitCode',
+          'CheckTaskExitCode.StopCode',
+          'CheckTaskExitCode.StopReason',
         ],
         mainSteps: [
           {
@@ -1229,10 +1232,12 @@ export class InstallerContainerStack extends cdk.Stack {
                 SecurityGroupId: '{{SecurityGroupId}}',
                 LogGroupName: logGroup.ref,
                 Region: cdk.Aws.REGION,
+                SolutionId: `AwsSolution/SO0199/${version}`,
               },
               Script: `import boto3
 import json
 import urllib.parse
+from botocore.config import Config
 
 def extract_value(event_value):
     if not event_value:
@@ -1242,7 +1247,8 @@ def extract_value(event_value):
     return event_value
 
 def handler(event, context):
-    client = boto3.client('ecs', region_name=event['Region'])
+    config = Config(user_agent_extra=event['SolutionId']) 
+    client = boto3.client('ecs', region_name=event['Region'], config=config)
     
     response = client.run_task(
         taskDefinition=extract_value(event['TaskDefinition']),
@@ -1293,6 +1299,81 @@ def handler(event, context):
               DesiredValues: ['STOPPED'],
             },
             outputs: [{ Name: 'TaskStatus', Selector: '$.tasks[0].lastStatus', Type: 'String' }],
+          },
+          {
+            name: 'CheckTaskExitCode',
+            action: 'aws:executeScript',
+            description:
+              'Verifies the container exit code after task completion and fails the automation if exit code is non-zero',
+            timeoutSeconds: 600,
+            inputs: {
+              Runtime: '{{PythonRuntime}}',
+              Handler: 'handler',
+              InputPayload: {
+                ClusterName: '{{RunTask.ClusterName}}',
+                TaskArn: '{{RunTask.TaskArn}}',
+                LogGroupName: '{{RunTask.LogGroupName}}',
+                LogStreamName: '{{RunTask.LogStreamName}}',
+                Region: cdk.Aws.REGION,
+                SolutionId: `AwsSolution/SO0199/${version}`,
+              },
+              Script: `import boto3
+from botocore.config import Config
+
+def handler(event, context):
+    config = Config(user_agent_extra=event['SolutionId']) 
+    client = boto3.client('ecs', region_name=event['Region'], config=config)
+    
+    response = client.describe_tasks(
+        cluster=event['ClusterName'],
+        tasks=[event['TaskArn']]
+    )
+    
+    if not response['tasks']:
+        raise Exception(f"Task not found: {event['TaskArn']}")
+    
+    task = response['tasks'][0]
+    containers = task.get('containers', [])
+    
+    if not containers:
+        raise Exception(f"No containers found in task: {event['TaskArn']}")
+    
+    # Extract exit code from tasks[0].containers[0].exitCode
+    container = containers[0]
+    exit_code = container.get('exitCode')  # Can be 0, 1, 137, etc. or None if killed
+    
+    # Extract task-level stop information
+    stop_code = task.get('stopCode', 'Unknown')  # e.g., "EssentialContainerExited"
+    stop_reason = task.get('stoppedReason', 'Unknown')  # e.g., "Essential container in task exited"
+    task_status = task.get('lastStatus', 'Unknown')
+    
+    result = {
+        'ExitCode': exit_code if exit_code is not None else -1,
+        'StopCode': stop_code,
+        'StopReason': stop_reason,
+        'TaskStatus': task_status,
+        'LogStreamName': event['LogStreamName'],
+        'LogGroupName': event['LogGroupName']
+    }
+    
+    # Fail if exit code is non-zero or None (container was killed)
+    if exit_code is None or exit_code != 0:
+        error_msg = (
+            f"ECS task failed with exit code {exit_code}. "
+            f"Stop code: {stop_code}. "
+            f"Stop reason: {stop_reason}. "
+            f"Check CloudWatch logs: {event['LogGroupName']}/{event['LogStreamName']}"
+        )
+        raise Exception(error_msg)
+    
+    return result`,
+            },
+            outputs: [
+              { Name: 'ExitCode', Selector: '$.Payload.ExitCode', Type: 'Integer' },
+              { Name: 'StopCode', Selector: '$.Payload.StopCode', Type: 'String' },
+              { Name: 'StopReason', Selector: '$.Payload.StopReason', Type: 'String' },
+              { Name: 'TaskStatus', Selector: '$.Payload.TaskStatus', Type: 'String' },
+            ],
           },
         ],
       },
