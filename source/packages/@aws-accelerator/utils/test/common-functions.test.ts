@@ -194,6 +194,10 @@ describe('getStsEndpoint', () => {
     const endpoint = getStsEndpoint('aws-iso-e', testRegion);
     expect(endpoint).toBe(`https://sts.${testRegion}.cloud.adc-e.uk`);
   });
+  it('should return correct endpoint for aws-eusc partition', () => {
+    const endpoint = getStsEndpoint('aws-eusc', testRegion);
+    expect(endpoint).toBe(`https://sts.${testRegion}.amazonaws.eu`);
+  });
 
   it('should return default endpoint for commercial AWS partition', () => {
     const endpoint = getStsEndpoint('aws', testRegion);
