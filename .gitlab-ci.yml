@@ -550,7 +550,7 @@ release:artifact-al2023-prep:
     # Move and unzip code archive in empty context
     - "unzip -q $CI_PROJECT_DIR/deployment/open-source/lza.zip -d $CI_PROJECT_DIR/deployment/build/context_dir/"
     # move build file into empty context
-    - "mv $CI_PROJECT_DIR/deployment/container/build/al2023 $CI_PROJECT_DIR/deployment/build/context_dir/"
+    - "mv $CI_PROJECT_DIR/deployment/container/build/al2023-prod $CI_PROJECT_DIR/deployment/build/context_dir/"
     # move scripts into empty context
     - "mv $CI_PROJECT_DIR/deployment/container/scripts $CI_PROJECT_DIR/deployment/build/context_dir/"
   artifacts:
