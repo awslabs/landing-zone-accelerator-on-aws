@@ -126,6 +126,27 @@ include:
 stages:
   - pipeline
   - mirror
+
+accelerator:scan-sensitive-content:
+  stage: pipeline
+  tags:
+    - arch:amd64
+    - size:small
+  variables:
+    # SENSITIVE_DOMAINS only needed in main repository
+    # Forks will use basic pattern scanning automatically
+    SCAN_EXCLUDE_DIRS: ".git node_modules build dist coverage"
+    SCAN_EXCLUDE_FILES: "*.log *.zip *.tar.gz *.tgz"
+  script:
+    - echo "Running security scan for sensitive URLs and content..."
+    - echo "Sensitive domains configured:" ${SENSITIVE_DOMAINS:-"(not set - will fail)"}
+    - chmod +x .gitlab/scripts/security-scan.sh
+    - ./.gitlab/scripts/security-scan.sh
+  rules:
+    - if: $CI_MERGE_REQUEST_IID != null
+      when: never
+    - when: always
+
 accelerator:build:
   stage: pipeline
   tags:
