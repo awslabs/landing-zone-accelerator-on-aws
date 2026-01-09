@@ -707,6 +707,9 @@ exports[`AccountsStack us-east-1 > Construct(AccountsStack):  Snapshot Test 1`] 
                         "Ref": "AWS::Partition",
                       },
                       ":organizations::111111111111:policy/o-*/service_control_policy/",
+                      {
+                        "Ref": "Quarantine23FF09FE",
+                      },
                     ],
                   ],
                 },

@@ -18,6 +18,8 @@ import * as cdk from 'aws-cdk-lib';
 import { AccountsStack, AccountsStackProps } from '../../lib/stacks/accounts-stack';
 import { createAcceleratorStackProps } from './stack-props-test-helper';
 import { Template } from 'aws-cdk-lib/assertions';
+import { Create } from '../accelerator-test-helpers';
+import { AcceleratorStage } from '../../lib/accelerator-stage';
 
 const LOG_RETENTION_DAYS = 123;
 const EVENT_RETRY_ATTEMPTS = 3;
@@ -32,11 +34,15 @@ function createTestAccountsStackProps(overrides?: Partial<AccountsStackProps>): 
 }
 
 function createGlobalRegionProps(overrides?: Partial<AccountsStackProps>): AccountsStackProps {
-  return createTestAccountsStackProps({
+  const baseProps = createTestAccountsStackProps({
     globalRegion: 'us-east-1',
     env: { region: 'us-east-1', account: '00000001' },
     ...overrides,
   });
+  return {
+    ...baseProps,
+    ...overrides,
+  };
 }
 
 function createMoveAccountRuleProps(overrides?: Partial<AccountsStackProps>): AccountsStackProps {
@@ -595,6 +601,57 @@ describe('AccountsStack - Configuration Value Mapping', () => {
 
     const moveAccountLambda = moveAccountLambdas[0] as any;
     expect(moveAccountLambda.Properties.Environment.Variables.STACK_PREFIX).toBe('custom-prefix');
+  });
+});
+
+describe('AccountsStack - Quarantine SCP Functionality', () => {
+  afterEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('should create quarantine Lambda function when quarantine is enabled', () => {
+    const stack = Create.stack('Management-us-east-1', AcceleratorStage.ACCOUNTS);
+    expect(stack).toBeDefined();
+    const template = Template.fromStack(stack!);
+
+    const lambdas = template.findResources('AWS::Lambda::Function');
+    const quarantineLambdas = Object.values(lambdas).filter((lambda: any) =>
+      lambda.Properties?.Description?.includes('quarantine scp'),
+    );
+    expect(quarantineLambdas.length).toBe(1);
+  });
+
+  it('should create EventBridge rule for CreateAccount events when quarantine is enabled', () => {
+    const stack = Create.stack('Management-us-east-1', AcceleratorStage.ACCOUNTS);
+    expect(stack).toBeDefined();
+    const template = Template.fromStack(stack!);
+
+    template.hasResourceProperties('AWS::Events::Rule', {
+      Description: 'Rule to notify when a new account is created.',
+      EventPattern: {
+        source: ['aws.organizations'],
+        'detail-type': ['AWS API Call via CloudTrail'],
+        detail: {
+          eventName: ['CreateAccount'],
+          eventSource: ['organizations.amazonaws.com'],
+        },
+      },
+    });
+  });
+
+  it('should configure Lambda with correct SCP_POLICY_NAME environment variable', () => {
+    const stack = Create.stack('Management-us-east-1', AcceleratorStage.ACCOUNTS);
+    expect(stack).toBeDefined();
+    const template = Template.fromStack(stack!);
+
+    const lambdas = template.findResources('AWS::Lambda::Function');
+    const quarantineLambdas = Object.values(lambdas).filter((lambda: any) =>
+      lambda.Properties?.Description?.includes('quarantine scp'),
+    );
+    expect(quarantineLambdas.length).toBe(1);
+
+    const quarantineLambda = quarantineLambdas[0] as any;
+    expect(quarantineLambda.Properties.Environment.Variables.SCP_POLICY_NAME).toBe('Quarantine');
   });
 });
 

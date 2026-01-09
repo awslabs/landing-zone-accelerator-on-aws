@@ -80,6 +80,7 @@ export function createAcceleratorStackProps(
   const organizationConfig: Partial<OrganizationConfig> = {
     getOrganizationId: vi.fn(() => 'o-1234567890'),
     getOrganizationalUnitArn: vi.fn(ouName => `arn:aws:organizations::123456789012:ou/o-a1b2c3d4e5/${ouName}`),
+    getOrganizationalUnitId: vi.fn(ouName => `ou-a1b2c3d4e5-${ouName}`),
     enable: true,
     backupPolicies: [],
     taggingPolicies: [],

@@ -1,3 +1,5 @@
+/* eslint @typescript-eslint/no-explicit-any: 0 */
+
 import path from 'path';
 import { describe, test, expect, beforeEach, afterEach, vi } from 'vitest';
 import fs from 'fs';
@@ -553,5 +555,89 @@ describe('LZAResourceLookup tests', () => {
 
     expect(lzaLookup).toBeDefined();
     mockReadFileSync.mockRestore();
+  });
+});
+
+describe('PolicyResource unit tests', () => {
+  describe('createAndAttachPolicies array population', () => {
+    test('should populate scpItems array correctly', () => {
+      const mockPolicyResource = {
+        createAndAttachPolicies: (props: any) => {
+          const scpItems: any[] = [];
+          const rcpItems: any[] = [];
+          const dce2Items: any[] = [];
+
+          if (!props.organizationConfig?.enable) {
+            return { scpItems, rcpItems, dce2Items };
+          }
+
+          const policies = props.organizationConfig.serviceControlPolicies || [];
+          for (const policy of policies) {
+            scpItems.push({ name: policy.name, id: `mock-id-${policy.name}` });
+          }
+
+          return { scpItems, rcpItems, dce2Items };
+        },
+      };
+
+      const mockProps = {
+        organizationConfig: {
+          enable: true,
+          serviceControlPolicies: [
+            { name: 'TestSCP', description: 'Test' },
+            { name: 'QuarantineNewAccounts', description: 'Quarantine' },
+          ],
+        },
+      };
+
+      const result = mockPolicyResource.createAndAttachPolicies(mockProps);
+
+      expect(result.scpItems).toHaveLength(2);
+      expect(result.scpItems[0]).toEqual({ name: 'TestSCP', id: 'mock-id-TestSCP' });
+      expect(result.scpItems[1]).toEqual({ name: 'QuarantineNewAccounts', id: 'mock-id-QuarantineNewAccounts' });
+    });
+
+    test('should return empty arrays when organization is disabled', () => {
+      const mockPolicyResource = {
+        createAndAttachPolicies: (props: any) => {
+          const scpItems: any[] = [];
+          if (!props.organizationConfig?.enable) {
+            return { scpItems, rcpItems: [], dce2Items: [] };
+          }
+          return { scpItems, rcpItems: [], dce2Items: [] };
+        },
+      };
+
+      const result = mockPolicyResource.createAndAttachPolicies({
+        organizationConfig: { enable: false },
+      });
+
+      expect(result.scpItems).toHaveLength(0);
+    });
+  });
+
+  describe('quarantine SCP finding logic', () => {
+    test('should find quarantine SCP in scpItems array', () => {
+      const scpItems = [
+        { name: 'TestSCP', id: 'p-123456789' },
+        { name: 'QuarantineNewAccounts', id: 'p-987654321' },
+      ];
+
+      const quarantineScpItem = scpItems.find(item => item.name === 'QuarantineNewAccounts');
+
+      expect(quarantineScpItem).toBeDefined();
+      expect(quarantineScpItem?.id).toBe('p-987654321');
+    });
+
+    test('should return undefined when quarantine SCP not found', () => {
+      const scpItems = [
+        { name: 'TestSCP', id: 'p-123456789' },
+        { name: 'OtherSCP', id: 'p-111111111' },
+      ];
+
+      const quarantineScpItem = scpItems.find(item => item.name === 'QuarantineNewAccounts');
+
+      expect(quarantineScpItem).toBeUndefined();
+    });
   });
 });

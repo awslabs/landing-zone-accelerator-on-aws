@@ -85,7 +85,12 @@ async function getPolicyId(policyName: string, orgsClient: OrganizationsClient) 
   let nextToken: string | undefined = undefined;
   do {
     const page = await throttlingBackOff(() =>
-      orgsClient.send(new ListPoliciesCommand({ Filter: 'SERVICE_CONTROL_POLICY' })),
+      orgsClient.send(
+        new ListPoliciesCommand({
+          Filter: 'SERVICE_CONTROL_POLICY',
+          ...(nextToken && { NextToken: nextToken }),
+        }),
+      ),
     );
     for (const scpPolicy of page.Policies ?? []) {
       console.log(`Policy named ${scpPolicy.Name} added to list`);
