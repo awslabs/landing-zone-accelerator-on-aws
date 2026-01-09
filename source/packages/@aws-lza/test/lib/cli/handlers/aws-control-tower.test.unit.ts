@@ -115,6 +115,7 @@ describe('ControlTowerCommand', () => {
         operation: 'setup',
         dryRun: false,
         configuration: validConfig,
+        ssmParamPrefix: '/accelerator/control-tower',
       });
     });
 

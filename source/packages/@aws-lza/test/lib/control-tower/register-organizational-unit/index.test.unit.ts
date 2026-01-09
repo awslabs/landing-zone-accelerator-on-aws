@@ -16,6 +16,8 @@ import {
   BaselineOperationStatus,
   ControlTowerClient,
   EnableBaselineCommand,
+  UpdateEnabledBaselineCommand,
+  ResetEnabledBaselineCommand,
   EnablementStatus,
   GetBaselineOperationCommand,
   LandingZoneStatus,
@@ -41,6 +43,8 @@ vi.mock('@aws-sdk/client-controltower', () => {
     paginateListBaselines: vi.fn(),
     paginateListEnabledBaselines: vi.fn(),
     EnableBaselineCommand: vi.fn(),
+    UpdateEnabledBaselineCommand: vi.fn(),
+    ResetEnabledBaselineCommand: vi.fn(),
     GetBaselineOperationCommand: vi.fn(),
     LandingZoneStatus: {
       ACTIVE: 'ACTIVE',
@@ -83,6 +87,16 @@ describe('RegisterOrganizationalUnitModule', () => {
 
     mockSend.mockImplementation(command => {
       if (command instanceof EnableBaselineCommand) {
+        return Promise.resolve({
+          operationIdentifier: MOCK_CONSTANTS.RegisterOrganizationalUnitModule.operationIdentifier,
+        });
+      }
+      if (command instanceof UpdateEnabledBaselineCommand) {
+        return Promise.resolve({
+          operationIdentifier: MOCK_CONSTANTS.RegisterOrganizationalUnitModule.operationIdentifier,
+        });
+      }
+      if (command instanceof ResetEnabledBaselineCommand) {
         return Promise.resolve({
           operationIdentifier: MOCK_CONSTANTS.RegisterOrganizationalUnitModule.operationIdentifier,
         });
@@ -290,9 +304,46 @@ describe('RegisterOrganizationalUnitModule', () => {
       expect(paginateListEnabledBaselines).toHaveBeenCalledTimes(1);
       expect(paginateListBaselines).toHaveBeenCalledTimes(1);
       expect(EnableBaselineCommand).toHaveBeenCalledTimes(0);
-      expect(GetBaselineOperationCommand).toHaveBeenCalledTimes(0);
+      expect(UpdateEnabledBaselineCommand).toHaveBeenCalledTimes(1);
+      expect(GetBaselineOperationCommand).toHaveBeenCalled();
       expect(response).toEqual(
-        `AWS Organizations organizational unit (OU) "${input.configuration.name}" is already registered with AWS Control Tower, but the baseline version is "${MOCK_CONSTANTS.RegisterOrganizationalUnitModule.enabledBaselines.mockOuOldBaseLineVersion.baselineVersion}" which is different from expected baseline version "${MOCK_CONSTANTS.RegisterOrganizationalUnitModule.enabledBaselines.mockOu.baselineVersion}" and registration status is "${MOCK_CONSTANTS.RegisterOrganizationalUnitModule.enabledBaselines.mockOuOldBaseLineVersion.statusSummary.status}", update baseline is required for OU, perform update baseline from console.`,
+        `Baseline update for AWS Organizations organizational unit (OU) "${input.configuration.name}" to version "${MOCK_CONSTANTS.RegisterOrganizationalUnitModule.enabledBaselines.mockOu.baselineVersion}" is successful.`,
+      );
+    });
+
+    test('should reset baseline when reregisterOu is enabled', async () => {
+      // Setup
+      const inputWithReregister = {
+        ...input,
+        configuration: {
+          ...input.configuration,
+          reregisterOu: true,
+        },
+      };
+
+      (paginateListEnabledBaselines as vi.Mock).mockImplementation(() => [
+        {
+          enabledBaselines: [
+            MOCK_CONSTANTS.RegisterOrganizationalUnitModule.enabledBaselines.mockOu,
+            MOCK_CONSTANTS.RegisterOrganizationalUnitModule.enabledBaselines.mockTarget2,
+            MOCK_CONSTANTS.RegisterOrganizationalUnitModule.enabledBaselines.mockIdentityCenterBaseline,
+          ],
+        },
+      ]);
+
+      // Execute
+      const response = await new RegisterOrganizationalUnitModule().handler(inputWithReregister);
+
+      // Verify
+      expect(ControlTowerClient).toHaveBeenCalledTimes(1);
+      expect(paginateListEnabledBaselines).toHaveBeenCalledTimes(1);
+      expect(paginateListBaselines).toHaveBeenCalledTimes(1);
+      expect(EnableBaselineCommand).toHaveBeenCalledTimes(0);
+      expect(UpdateEnabledBaselineCommand).toHaveBeenCalledTimes(0);
+      expect(ResetEnabledBaselineCommand).toHaveBeenCalledTimes(1);
+      expect(GetBaselineOperationCommand).toHaveBeenCalled();
+      expect(response).toEqual(
+        `Baseline reset for AWS Organizations organizational unit (OU) "${input.configuration.name}" to version "${MOCK_CONSTANTS.RegisterOrganizationalUnitModule.enabledBaselines.mockOu.baselineVersion}" is successful.`,
       );
     });
 

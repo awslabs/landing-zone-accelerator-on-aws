@@ -27,7 +27,14 @@
  */
 
 import path from 'path';
-import { SSMClient, GetParametersCommand, ParameterNotFound, Parameter } from '@aws-sdk/client-ssm';
+import {
+  SSMClient,
+  GetParametersCommand,
+  PutParameterCommand,
+  ParameterNotFound,
+  Parameter,
+  ParameterType,
+} from '@aws-sdk/client-ssm';
 import { createLogger } from './logger';
 import { executeApi, setRetryStrategy } from './utility';
 import { getCredentials } from './sts-functions';
@@ -131,4 +138,89 @@ export async function getParametersValue(
 
   logger.info(`Successfully retrieved ${results.length} parameters`, logPrefix);
   return results;
+}
+
+/**
+ * Puts SSM parameter values to current or target account and region
+ * @param parameters - Array of parameter objects to put (name, value, type, description)
+ * @param region - AWS region for SSM operations
+ * @param logPrefix - Prefix for logging messages
+ * @param targetAccount - Optional target account configuration for cross-account access
+ * @param solutionId - Optional solution identifier for user agent
+ * @param credentials - Optional existing credentials for the operation
+ * @param overwrite - Whether to overwrite existing parameters (default: true)
+ * @returns Promise resolving when all parameters are successfully put
+ * @throws Error if parameters cannot be created or access is denied
+ */
+export async function putParametersValue(
+  parameters: Array<{
+    name: string;
+    value: string;
+    type?: ParameterType;
+    description?: string;
+  }>,
+  region: string,
+  logPrefix: string,
+  targetAccount?: ITargetAccountConfig,
+  solutionId?: string,
+  credentials?: IAssumeRoleCredential,
+  overwrite: boolean = true,
+): Promise<void> {
+  let targetCredentials: IAssumeRoleCredential | undefined;
+  let targetRegion = region;
+
+  if (targetAccount) {
+    logger.info(
+      `Putting SSM parameters to account ${targetAccount.accountId} in region ${targetAccount.region}`,
+      logPrefix,
+    );
+    targetRegion = targetAccount.region;
+
+    // Get credentials for target account
+    targetCredentials = await getCredentials({
+      accountId: targetAccount.accountId,
+      region: targetAccount.region,
+      logPrefix,
+      solutionId,
+      partition: targetAccount.partition,
+      assumeRoleName: targetAccount.assumeRoleName,
+      credentials,
+    });
+  } else {
+    logger.info(`Putting SSM parameters to current account in region ${region}`, logPrefix);
+    targetCredentials = credentials;
+  }
+
+  // Create SSM client with appropriate credentials
+  const ssmClient = new SSMClient({
+    region: targetRegion,
+    customUserAgent: solutionId,
+    retryStrategy: setRetryStrategy(),
+    credentials: targetCredentials,
+  });
+
+  const commandName = 'PutParameterCommand';
+
+  // Put each parameter
+  for (const param of parameters) {
+    const commandParameters = {
+      Name: param.name,
+      Value: param.value,
+      Type: param.type || ParameterType.STRING,
+      Description: param.description,
+      Overwrite: overwrite,
+    };
+
+    await executeApi(
+      commandName,
+      commandParameters,
+      () => ssmClient.send(new PutParameterCommand(commandParameters)),
+      logger,
+      logPrefix,
+    );
+
+    logger.info(`Successfully put parameter: ${param.name}`, logPrefix);
+  }
+
+  logger.info(`Successfully put ${parameters.length} parameters`, logPrefix);
 }

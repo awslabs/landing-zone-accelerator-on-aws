@@ -25,6 +25,14 @@ import {
 import { AccountsConfig, OrganizationConfig } from '@aws-accelerator/config';
 import * as awsLza from '../../../../../@aws-lza/index';
 
+// Mock SSM Client
+vi.mock('@aws-sdk/client-ssm', () => ({
+  SSMClient: vi.fn().mockImplementation(() => ({
+    send: vi.fn().mockResolvedValue({}),
+  })),
+  PutParameterCommand: vi.fn(),
+}));
+
 describe('RegisterOrganizationalUnitModule', () => {
   const unregisteredOrganizationalUnits = MOCK_CONSTANTS.configs.organizationConfig.organizationalUnits.filter(
     item =>
@@ -41,6 +49,8 @@ describe('RegisterOrganizationalUnitModule', () => {
 
     vi.spyOn(awsLza, 'registerOrganizationalUnit').mockResolvedValue(`Successful`);
     vi.spyOn(awsLza, 'getOrganizationalUnitsDetail').mockResolvedValue(MOCK_CONSTANTS.organizationUnitsDetail);
+    // Mock getParametersValue to return parameter not found (default behavior)
+    vi.spyOn(awsLza, 'getParametersValue').mockRejectedValue(new Error('Parameter not found'));
 
     mockAccountsConfig = {
       getManagementAccount: vi.fn().mockReturnValue(MOCK_CONSTANTS.managementAccount),

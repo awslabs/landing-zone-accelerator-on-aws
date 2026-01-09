@@ -180,6 +180,13 @@ export interface ISetupLandingZoneHandlerParameter extends IModuleCommonParamete
    * ```
    */
   readonly configuration: ISetupLandingZoneConfiguration;
+  /**
+   * SSM parameter prefix for storing Control Tower state parameters
+   *
+   * @example
+   * '/accelerator/control-tower'
+   */
+  readonly ssmParamPrefix: string;
 }
 
 /**

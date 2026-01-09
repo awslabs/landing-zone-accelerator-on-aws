@@ -82,6 +82,7 @@ export abstract class ControlTowerCommand {
       operation: param.commandName,
       dryRun: param.args['dry-run'] as boolean,
       configuration: config,
+      ssmParamPrefix: '/accelerator/control-tower',
     };
   }
 

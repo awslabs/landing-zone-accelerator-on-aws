@@ -48,6 +48,7 @@ import {
   getModuleDefaultParameters,
   setRetryStrategy,
 } from '../../../common/functions';
+import { putParametersValue } from '../../common/ssm-functions';
 import { createLogger } from '../../../common/logger';
 import { throttlingBackOff } from '../../../common/throttle';
 import { AcceleratorModuleName, IModuleDefaultParameter } from '../../../common/resources';
@@ -246,6 +247,37 @@ export class SetupLandingZoneModule implements ISetupLandingZoneModule {
   }
 
   /**
+   * Function to set SSM parameter when governed regions are updated
+   * @param reason - The reason string from landingZoneUpdateOrResetStatus
+   * @param props {@link ISetupLandingZoneHandlerParameter}
+   * @returns Promise<void>
+   */
+  private async setGovernedRegionsUpdatedParameter(
+    reason: string,
+    props: ISetupLandingZoneHandlerParameter,
+  ): Promise<void> {
+    if (reason.includes('Changes made in governed regions')) {
+      const parameterName = `${props.ssmParamPrefix}/control-tower/govern-regions-updated`;
+
+      await putParametersValue(
+        [
+          {
+            name: parameterName,
+            value: 'true',
+            type: 'String',
+          },
+        ],
+        props.region,
+        'setGovernedRegionsUpdatedParameter',
+        undefined,
+        props.solutionId,
+        props.credentials,
+      );
+      logger.info(`Set SSM parameter ${parameterName} to true`);
+    }
+  }
+
+  /**
    * Function to handle update and reset operation
    * @param props {@link ISetupLandingZoneHandlerParameter}
    * @param defaultProps {@link IModuleDefaultParameter}
@@ -286,6 +318,8 @@ export class SetupLandingZoneModule implements ISetupLandingZoneModule {
     if (landingZoneUpdateOrResetStatus.updateRequired || landingZoneUpdateOrResetStatus.resetRequired) {
       logger.info(`The Landing Zone will be ${landingZoneUpdateOrResetStatus.resetRequired ? 'reset' : 'updated'}`);
       logger.info(`The reason(s) for the change is/are: ${landingZoneUpdateOrResetStatus.reason}`);
+
+      await this.setGovernedRegionsUpdatedParameter(landingZoneUpdateOrResetStatus.reason, props);
     }
     try {
       if (landingZoneUpdateOrResetStatus.updateRequired) {

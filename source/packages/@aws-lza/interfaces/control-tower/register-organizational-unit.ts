@@ -24,6 +24,7 @@ import { IModuleCommonParameter } from '../../common/resources';
  * ```
  * {
  *   name: 'OU1/OU2',
+ *   reregisterOu: false,
  * }
  * ```
  */
@@ -41,6 +42,12 @@ export interface IRegisterOrganizationalUnitConfiguration {
    * If this property is set to `Root`, program will try to register ou `Root/Root`. Organization Root is always registered with Control Tower.
    */
   readonly name: string;
+  /**
+   * Flag to force re-registration of an already registered OU
+   *
+   * @default false
+   */
+  readonly reregisterOu?: boolean;
 }
 
 /**
