@@ -46,6 +46,7 @@
     "build-prod": "yarn run prebuild && lerna run build-prod --stream",
     "build-clean-prod": "yarn run git-clean && yarn install && yarn run prebuild && yarn run build-prod",
     "build-clean": "yarn run git-clean && yarn install && yarn run build",
+    "build-container": "../deployment/create-container.sh",
     "cleanup": "lerna run cleanup --stream && rm -rf node_modules",
     "cleanup:tsc": "lerna run cleanup:tsc --stream",
     "docs": "yarn run typedoc && yarn generate-diagram @aws-accelerator,@aws-cdk-extensions",
