@@ -139,6 +139,28 @@ create_template_installer_json()
         mv -- "$f" "$newname"
     done
 }
+create_template_installer_container_json()
+{
+    # Run 'cdk synth' to generate raw solution outputs
+    do_cmd yarn run cdk synth --output=$staging_dist_dir --context use-external-pipeline-account=true
+    
+    # Remove unnecessary output files
+    do_cmd cd $staging_dist_dir
+    # ignore return code - can be non-zero if any of these does not exist
+    rm tree.json manifest.json cdk.out
+
+    # Move outputs from staging to template_dist_dir
+    echo "Move outputs from staging to template_dist_dir"
+    do_cmd mv $staging_dist_dir/*.template.json $template_dist_dir/
+
+    # Rename all *.template.json files to *.template
+    echo "Rename all *.template.json*.template.json to **.template"
+    echo "copy templates and rename"
+    for f in $template_dist_dir/*.template.json*.template.json; do
+        newname=$(echo "$f" | sed -E 's/\.template\.json-/-/; s/\.json$//')
+        mv -- "$f" "$newname"
+    done
+}
 
 create_template_yaml()
 {
@@ -267,6 +289,7 @@ template_dist_dir="$template_dir/global-s3-assets"
 build_dist_dir="$template_dir/regional-s3-assets"
 source_dir="$template_dir/../source"
 installer_dir="$source_dir/packages/@aws-accelerator/installer"
+installer_container_dir="$source_dir/packages/@aws-accelerator/installer-container"
 govcloud_vending_dir="$source_dir/packages/@aws-accelerator/govcloud-account-vending"
 
 echo "------------------------------------------------------------------------------"
@@ -311,6 +334,8 @@ echo "--------------------------------------------------------------------------
 if fn_exists create_template_${template_format}; then
     do_cmd cd $installer_dir
     create_template_installer_${template_format}
+    do_cmd cd $installer_container_dir
+    create_template_installer_container_${template_format}
     do_cmd cd $source_dir
     do_cmd cd $govcloud_vending_dir
     create_template_${template_format}
