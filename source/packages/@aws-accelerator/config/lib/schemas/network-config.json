@@ -3777,6 +3777,10 @@
           },
           "type": "array"
         },
+        "transitGatewayFlowLogs": {
+          "$ref": "#/definitions/ITransitGatewayFlowLogsConfig",
+          "description": "(OPTIONAL) Transit Gateway flow logs configuration."
+        },
         "transitGatewayIpv6CidrBlocks": {
           "description": "(OPTIONAL) A list of transit gateway IPv6 CIDR blocks.",
           "items": {
@@ -3874,6 +3878,45 @@
       "required": [
         "vpcName",
         "vpcAttachment"
+      ],
+      "type": "object"
+    },
+    "ITransitGatewayFlowLogsConfig": {
+      "additionalProperties": false,
+      "description": "## Transit Gateway Flow Logs Configuration Interface\n\nInterface for AWS Transit Gateway Flow Logs configuration, which captures information about IP traffic flowing to and from Transit Gateways . Flow logs provide visibility into network traffic patterns, security analysis, and troubleshooting capabilities.\n\n### Key Features\n\n- **Traffic Visibility**: Monitor all Transit Gateway network traffic\n- **Security Analysis**: Detect suspicious traffic patterns and potential threats\n- **Compliance**: Meet regulatory requirements for network monitoring\n- **Troubleshooting**: Diagnose connectivity and performance issues\n- **Cost Optimization**: Analyze traffic patterns to optimize network costs\n\n### Supported Destinations\n\n- **Amazon S3**: Cost-effective long-term storage and analysis\n- **CloudWatch Logs**: Real-time monitoring and alerting capabilities\n- **Dual Destination**: Send logs to both S3 and CloudWatch simultaneously\n\nLearn more about [Transit Gateway Flow Logs](https://docs.aws.amazon.com/vpc/latest/tgw/tgw-flow-logs.html).",
+      "properties": {
+        "customFields": {
+          "description": "**Custom Fields** *(Required when defaultFormat is false)*\n\nArray of specific fields to include in flow log records when using custom format. This allows you to capture exactly the network information needed for your use cases.",
+          "items": {
+            "$ref": "#/definitions/NonEmptyString"
+          },
+          "type": "array"
+        },
+        "defaultFormat": {
+          "description": "**Use Default Format** *(Required)*\n\nControls whether to use the AWS default flow log format or a custom format with specific fields. When false, allows customization of logged fields.",
+          "type": "boolean"
+        },
+        "destinations": {
+          "description": "**Log Destinations** *(Required)*\n\nArray of destination services where Transit Gateway flow logs should be delivered. You can send logs to one or both supported destinations simultaneously.",
+          "items": {
+            "$ref": "#/definitions/LogDestinationType"
+          },
+          "type": "array"
+        },
+        "destinationsConfig": {
+          "$ref": "#/definitions/IVpcFlowLogsDestinationConfig",
+          "description": "**Log Destinations** *(Required)*\n\nArray of destination services where VPC flow logs should be delivered. You can send logs to one or both supported destinations simultaneously."
+        },
+        "maxAggregationInterval": {
+          "description": "**Maximum Aggregation Interval** *(Required)*\n\nThe maximum interval in seconds for aggregating flow log records before they are captured and delivered to the destination. This value must be 60 for Transit Gateway Flow Logs",
+          "type": "number"
+        }
+      },
+      "required": [
+        "maxAggregationInterval",
+        "destinations",
+        "defaultFormat",
+        "customFields"
       ],
       "type": "object"
     },

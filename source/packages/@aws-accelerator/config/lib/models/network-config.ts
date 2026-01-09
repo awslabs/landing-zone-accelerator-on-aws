@@ -638,6 +638,16 @@ export interface ITransitGatewayConfig {
    */
   readonly routeTables: ITransitGatewayRouteTableConfig[];
   /**
+   * (OPTIONAL) Transit Gateway flow logs configuration.
+   *
+   * @remarks
+   * Use this configuration to enable flow logs for the Transit Gateway.
+   * Flow logs capture information about IP traffic going to and from Transit Gateway network interfaces.
+   *
+   * @see {@link t.ITransitGatewayFlowLogsConfig}
+   */
+  readonly transitGatewayFlowLogs?: t.ITransitGatewayFlowLogsConfig;
+  /**
    * (OPTIONAL) An array of tag objects for the Transit Gateway.
    */
   readonly tags?: t.ITag[];

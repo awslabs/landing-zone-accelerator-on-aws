@@ -1,0 +1,350 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`TransitGatewayFlowLogs > Construct(TransitGatewayFlowLogs):  Snapshot Test 1`] = `
+{
+  "Resources": {
+    "TestKmsKeyF793768B": {
+      "DeletionPolicy": "Retain",
+      "Properties": {
+        "Description": "Test KMS key for transit gateway flow logs",
+        "KeyPolicy": {
+          "Statement": [
+            {
+              "Action": "kms:*",
+              "Effect": "Allow",
+              "Principal": {
+                "AWS": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":iam::",
+                      {
+                        "Ref": "AWS::AccountId",
+                      },
+                      ":root",
+                    ],
+                  ],
+                },
+              },
+              "Resource": "*",
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+      },
+      "Type": "AWS::KMS::Key",
+      "UpdateReplacePolicy": "Retain",
+    },
+    "TransitGatewayFlowLogsCloudWatchC8432DC7": {
+      "Properties": {
+        "DeliverLogsPermissionArn": "arn:aws:iam::123456789012:role/flowlogsRole",
+        "LogDestination": "arn:aws:logs:us-east-1:123456789012:log-group:test-log-group",
+        "LogDestinationType": "cloud-watch-logs",
+        "MaxAggregationInterval": 60,
+        "ResourceId": "tgw-0123456789abcdef0",
+        "ResourceType": "TransitGateway",
+        "Tags": [
+          {
+            "Key": "Environment",
+            "Value": "test",
+          },
+          {
+            "Key": "Name",
+            "Value": "test-flow-logs",
+          },
+        ],
+      },
+      "Type": "AWS::EC2::FlowLog",
+    },
+    "TransitGatewayFlowLogsMinimal4D826F9B": {
+      "Properties": {
+        "LogDestinationType": "cloud-watch-logs",
+        "MaxAggregationInterval": 60,
+        "ResourceId": "tgw-0123456789abcdef2",
+        "ResourceType": "TransitGateway",
+      },
+      "Type": "AWS::EC2::FlowLog",
+    },
+    "TransitGatewayFlowLogsS3B377AEDF": {
+      "Properties": {
+        "LogDestinationType": "s3",
+        "LogFormat": "\${version} \${account-id} \${interface-id} \${srcaddr} \${dstaddr} \${srcport} \${dstport} \${protocol} \${packets} \${bytes} \${windowstart} \${windowend} \${action} \${flowlogstatus}",
+        "MaxAggregationInterval": 600,
+        "ResourceId": "tgw-0123456789abcdef1",
+        "ResourceType": "TransitGateway",
+      },
+      "Type": "AWS::EC2::FlowLog",
+    },
+  },
+}
+`;
+
+exports[`TransitGatewayFlowLogs.createCloudWatchLogsDestination > Construct(TransitGatewayFlowLogsCloudWatchDestination):  Snapshot Test 1`] = `
+{
+  "Resources": {
+    "TestCloudWatchDestinationEncryptedLogGroup46EBF2E1": {
+      "DeletionPolicy": "Retain",
+      "Properties": {
+        "KmsKeyId": {
+          "Fn::GetAtt": [
+            "TestKmsKeyF793768B",
+            "Arn",
+          ],
+        },
+        "LogGroupName": "/aws/transitgateway/test-tgw-encrypted",
+        "RetentionInDays": 90,
+      },
+      "Type": "AWS::Logs::LogGroup",
+      "UpdateReplacePolicy": "Retain",
+    },
+    "TestCloudWatchDestinationEncryptedRole116759DA": {
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "vpc-flow-logs.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "Description": "Transit Gateway flow logs role for test-tgw-encrypted",
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "TestCloudWatchDestinationEncryptedRoleDefaultPolicy2EE467A5": {
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": [
+                "logs:CreateLogGroup",
+                "logs:CreateLogStream",
+                "logs:PutLogEvents",
+                "logs:DescribeLogGroups",
+                "logs:DescribeLogStreams",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::GetAtt": [
+                  "TestCloudWatchDestinationEncryptedLogGroup46EBF2E1",
+                  "Arn",
+                ],
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "TestCloudWatchDestinationEncryptedRoleDefaultPolicy2EE467A5",
+        "Roles": [
+          {
+            "Ref": "TestCloudWatchDestinationEncryptedRole116759DA",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
+    },
+    "TestCloudWatchDestinationLogGroup8181E23B": {
+      "DeletionPolicy": "Retain",
+      "Properties": {
+        "LogGroupName": "/aws/transitgateway/test-tgw",
+        "RetentionInDays": 14,
+      },
+      "Type": "AWS::Logs::LogGroup",
+      "UpdateReplacePolicy": "Retain",
+    },
+    "TestCloudWatchDestinationRetentionLogGroup397958A4": {
+      "DeletionPolicy": "Retain",
+      "Properties": {
+        "LogGroupName": "/aws/transitgateway/test-tgw-retention",
+        "RetentionInDays": 365,
+      },
+      "Type": "AWS::Logs::LogGroup",
+      "UpdateReplacePolicy": "Retain",
+    },
+    "TestCloudWatchDestinationRetentionRole810B1534": {
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "vpc-flow-logs.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "Description": "Transit Gateway flow logs role for test-tgw-retention",
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "TestCloudWatchDestinationRetentionRoleDefaultPolicyB0C5B5A4": {
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": [
+                "logs:CreateLogGroup",
+                "logs:CreateLogStream",
+                "logs:PutLogEvents",
+                "logs:DescribeLogGroups",
+                "logs:DescribeLogStreams",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::GetAtt": [
+                  "TestCloudWatchDestinationRetentionLogGroup397958A4",
+                  "Arn",
+                ],
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "TestCloudWatchDestinationRetentionRoleDefaultPolicyB0C5B5A4",
+        "Roles": [
+          {
+            "Ref": "TestCloudWatchDestinationRetentionRole810B1534",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
+    },
+    "TestCloudWatchDestinationRoleB8ECE4E0": {
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "vpc-flow-logs.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "Description": "Transit Gateway flow logs role for test-tgw",
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "TestCloudWatchDestinationRoleDefaultPolicy747B4A2F": {
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": [
+                "logs:CreateLogGroup",
+                "logs:CreateLogStream",
+                "logs:PutLogEvents",
+                "logs:DescribeLogGroups",
+                "logs:DescribeLogStreams",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::GetAtt": [
+                  "TestCloudWatchDestinationLogGroup8181E23B",
+                  "Arn",
+                ],
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "TestCloudWatchDestinationRoleDefaultPolicy747B4A2F",
+        "Roles": [
+          {
+            "Ref": "TestCloudWatchDestinationRoleB8ECE4E0",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
+    },
+    "TestKmsKeyF793768B": {
+      "DeletionPolicy": "Retain",
+      "Properties": {
+        "Description": "Test KMS key for transit gateway flow logs",
+        "KeyPolicy": {
+          "Statement": [
+            {
+              "Action": "kms:*",
+              "Effect": "Allow",
+              "Principal": {
+                "AWS": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":iam::",
+                      {
+                        "Ref": "AWS::AccountId",
+                      },
+                      ":root",
+                    ],
+                  ],
+                },
+              },
+              "Resource": "*",
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+      },
+      "Type": "AWS::KMS::Key",
+      "UpdateReplacePolicy": "Retain",
+    },
+    "TransitGatewayFlowLogsCloudWatchC8432DC7": {
+      "Properties": {
+        "DeliverLogsPermissionArn": "arn:aws:iam::123456789012:role/flowlogsRole",
+        "LogDestination": "arn:aws:logs:us-east-1:123456789012:log-group:test-log-group",
+        "LogDestinationType": "cloud-watch-logs",
+        "MaxAggregationInterval": 60,
+        "ResourceId": "tgw-0123456789abcdef0",
+        "ResourceType": "TransitGateway",
+        "Tags": [
+          {
+            "Key": "Environment",
+            "Value": "test",
+          },
+          {
+            "Key": "Name",
+            "Value": "test-flow-logs",
+          },
+        ],
+      },
+      "Type": "AWS::EC2::FlowLog",
+    },
+    "TransitGatewayFlowLogsMinimal4D826F9B": {
+      "Properties": {
+        "LogDestinationType": "cloud-watch-logs",
+        "MaxAggregationInterval": 60,
+        "ResourceId": "tgw-0123456789abcdef2",
+        "ResourceType": "TransitGateway",
+      },
+      "Type": "AWS::EC2::FlowLog",
+    },
+    "TransitGatewayFlowLogsS3B377AEDF": {
+      "Properties": {
+        "LogDestinationType": "s3",
+        "LogFormat": "\${version} \${account-id} \${interface-id} \${srcaddr} \${dstaddr} \${srcport} \${dstport} \${protocol} \${packets} \${bytes} \${windowstart} \${windowend} \${action} \${flowlogstatus}",
+        "MaxAggregationInterval": 600,
+        "ResourceId": "tgw-0123456789abcdef1",
+        "ResourceType": "TransitGateway",
+      },
+      "Type": "AWS::EC2::FlowLog",
+    },
+  },
+}
+`;

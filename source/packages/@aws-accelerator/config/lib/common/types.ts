@@ -1735,6 +1735,74 @@ export interface IVpcFlowLogsConfig {
 }
 
 /**
+ * ## Transit Gateway Flow Logs Configuration Interface
+ *
+ * Interface for AWS Transit Gateway Flow Logs configuration, which captures information about
+ * IP traffic flowing to and from Transit Gateways . Flow logs provide
+ * visibility into network traffic patterns, security analysis, and troubleshooting capabilities.
+ *
+ * ### Key Features
+ *
+ * - **Traffic Visibility**: Monitor all Transit Gateway network traffic
+ * - **Security Analysis**: Detect suspicious traffic patterns and potential threats
+ * - **Compliance**: Meet regulatory requirements for network monitoring
+ * - **Troubleshooting**: Diagnose connectivity and performance issues
+ * - **Cost Optimization**: Analyze traffic patterns to optimize network costs
+ *
+ * ### Supported Destinations
+ *
+ * - **Amazon S3**: Cost-effective long-term storage and analysis
+ * - **CloudWatch Logs**: Real-time monitoring and alerting capabilities
+ * - **Dual Destination**: Send logs to both S3 and CloudWatch simultaneously
+ *
+ * Learn more about [Transit Gateway Flow Logs](https://docs.aws.amazon.com/vpc/latest/tgw/tgw-flow-logs.html).
+ *
+ * @category Network Configuration
+ */
+export interface ITransitGatewayFlowLogsConfig {
+  /**
+   * **Maximum Aggregation Interval** *(Required)*
+   *
+   * The maximum interval in seconds for aggregating flow log records before
+   * they are captured and delivered to the destination.
+   * This value must be 60 for Transit Gateway Flow Logs
+   */
+  maxAggregationInterval: number;
+
+  /**
+   * **Log Destinations** *(Required)*
+   *
+   * Array of destination services where Transit Gateway flow logs should be delivered.
+   * You can send logs to one or both supported destinations simultaneously.
+   */
+  destinations: LogDestinationType[];
+
+  /**
+   * **Log Destinations** *(Required)*
+   *
+   * Array of destination services where VPC flow logs should be delivered.
+   * You can send logs to one or both supported destinations simultaneously.
+   */
+  destinationsConfig?: IVpcFlowLogsDestinationConfig;
+
+  /**
+   * **Use Default Format** *(Required)*
+   *
+   * Controls whether to use the AWS default flow log format or a custom format
+   * with specific fields. When false, allows customization of logged fields.
+   */
+  defaultFormat: boolean;
+
+  /**
+   * **Custom Fields** *(Required when defaultFormat is false)*
+   *
+   * Array of specific fields to include in flow log records when using custom format.
+   * This allows you to capture exactly the network information needed for your use cases.
+   */
+  customFields: NonEmptyString[];
+}
+
+/**
  * ## Centralized Logging Prefix Configuration Interface
  *
  * Configuration interface for customizing the S3 prefix structure used in
@@ -2113,6 +2181,199 @@ export class VpcFlowLogsConfig implements IVpcFlowLogsConfig {
     'pkt-dst-aws-service',
     'flow-direction',
     'traffic-path',
+  ];
+}
+
+/**
+ * ## Transit Gateway Flow Logs Configuration
+ *
+ * Configuration for AWS Transit Gateway Flow Logs, which capture information about IP traffic
+ * flowing to and from Transit Gateways. Flow logs provide visibility
+ * into network traffic patterns, security analysis, and troubleshooting capabilities.
+ *
+ * ### Key Features
+ *
+ * - **Traffic Visibility**: Monitor all network traffic through your Transit Gateways
+ * - **Security Analysis**: Detect suspicious traffic patterns and potential threats
+ * - **Compliance**: Meet regulatory requirements for network monitoring
+ * - **Troubleshooting**: Diagnose connectivity and performance issues
+ * - **Cost Optimization**: Analyze traffic patterns to optimize network costs
+ *
+ * ### Supported Destinations
+ *
+ * - **Amazon S3**: Cost-effective long-term storage and analysis
+ * - **CloudWatch Logs**: Real-time monitoring and alerting capabilities
+ * - **Dual Destination**: Send logs to both S3 and CloudWatch simultaneously
+ *
+ * ### Example
+ *
+ * ```yaml
+ * transitGatewayFlowLogs:
+ *   maxAggregationInterval: 60
+ *   destinations:
+ *     - s3
+ *     - cloud-watch-logs
+ *   defaultFormat: false
+ *   customFields:
+ *     - version
+ *     - resource-type
+ *     - account-id
+ *     - tgw-id
+ *     - tgw-src-vpc-account-id
+ *     - tgw-dst-vpc-account-id
+ *     - tgw-src-vpc-id
+ *     - tgw-dst-vpc-id
+ *     - tgw-src-subnet-id
+ *     - tgw-dst-subnet-id
+ *     - tgw-src-eni
+ *     - tgw-dst-eni
+ *     - tgw-src-az-id
+ *     - tgw-dst-az-id
+ *     - srcaddr
+ *     - dstaddr
+ *     - srcport
+ *     - dstport
+ *     - protocol
+ *     - packets
+ *     - bytes
+ *     - start
+ *     - end
+ *     - log-status
+ *     - type
+ *     - packets-lost-no-route
+ *     - packets-lost-blackhole
+ *     - packets-lost-mtu-exceeded
+ *     - packets-lost-ttl-expired
+ *     - tcp-flogs
+ *     - region
+ *     - flow-direction
+ *     - pkt-src-aws-service
+ *     - pkt-dst-aws-service
+ * ```
+ *
+ * Learn more about [Transit Gateway Flow Logs](https://docs.aws.amazon.com/vpc/latest/tgw/tgw-flow-logs.html).
+ *
+ * @category Network Configuration
+ */
+export class TransitGatewayFlowLogsConfig implements ITransitGatewayFlowLogsConfig {
+  /**
+   * **Maximum Aggregation Interval** *(Required)*
+   *
+   * The maximum interval in seconds for aggregating flow log records before
+   * they are captured and delivered to the destination. This affects the
+   * granularity and frequency of flow log data.
+   * Transit Gateways only support the value of 60 for maxAggregationInterval
+   *
+   * @default 60
+   */
+  readonly maxAggregationInterval: number = 60;
+
+  /**
+   * **Log Destinations** *(Required)*
+   *
+   * Array of destination services where Transit Gateway flow logs should be delivered.
+   * You can send logs to one or both supported destinations simultaneously.
+   *
+   * ### Supported Destinations
+   *
+   * - **s3**: Amazon S3 for cost-effective long-term storage and batch analysis
+   * - **cloud-watch-logs**: CloudWatch Logs for real-time monitoring and alerting
+   *
+   * @default ['s3', 'cloud-watch-logs']
+   */
+  readonly destinations: LogDestinationType[] = ['s3', 'cloud-watch-logs'];
+
+  /**
+   * **Destination Configuration** *(Optional)*
+   *
+   * Advanced configuration options for flow log destinations, including
+   * S3 lifecycle policies and CloudWatch Logs retention settings.
+   *
+   * ### Configuration Options
+   *
+   * - **S3 Configuration**: Lifecycle rules, custom log paths, retention policies
+   * - **CloudWatch Configuration**: Log retention periods, encryption settings
+   *
+   * ### Example
+   *
+   * ```yaml
+   * destinationsConfig:
+   *   s3:
+   *     lifecycleRules:
+   *       - enabled: true
+   *         expiration: 2555  # 7 years
+   *         transitions:
+   *           - storageClass: GLACIER
+   *             transitionAfter: 365
+   *   cloudWatchLogs:
+   *     retentionInDays: 365
+   *     kms: flow-logs-key
+   * ```
+   *
+   * @see {@link VpcFlowLogsDestinationConfig} for detailed configuration options
+   */
+  readonly destinationsConfig: VpcFlowLogsDestinationConfig = new VpcFlowLogsDestinationConfig();
+
+  /**
+   * **Use Default Format** *(Required)*
+   *
+   * Controls whether to use the AWS default flow log format or a custom format
+   * with specific fields. When false, allows customization of logged fields.
+   *
+   * ### Default vs Custom Format
+   *
+   * - **Default Format**: Standard AWS fields, simpler configuration, limited visibility
+   * - **Custom Format**: Choose specific fields, enhanced analysis capabilities, flexible
+   *
+   * @default false
+   */
+  readonly defaultFormat = false;
+
+  /**
+   * **Custom Fields** *(Required when defaultFormat is false)*
+   *
+   * Array of specific fields to include in flow log records when using custom format.
+   * This allows you to capture exactly the network information needed for your use cases.
+   *
+   * @see {@link https://docs.aws.amazon.com/vpc/latest/tgw/tgw-flow-logs.html#flow-logs-custom | Flow logs custom format} for more information
+   *
+   * @default Comprehensive field set for security analysis
+   */
+  readonly customFields = [
+    'version',
+    'resource-type',
+    'account-id',
+    'tgw-id',
+    'tgw-src-vpc-account-id',
+    'tgw-dst-vpc-account-id',
+    'tgw-src-vpc-id',
+    'tgw-dst-vpc-id',
+    'tgw-src-subnet-id',
+    'tgw-dst-subnet-id',
+    'tgw-src-eni',
+    'tgw-dst-eni',
+    'tgw-src-az-id',
+    'tgw-dst-az-id',
+    'srcaddr',
+    'dstaddr',
+    'srcport',
+    'dstport',
+    'protocol',
+    'packets',
+    'bytes',
+    'start',
+    'end',
+    'log-status',
+    'type',
+    'packets-lost-no-route',
+    'packets-lost-blackhole',
+    'packets-lost-mtu-exceeded',
+    'packets-lost-ttl-expired',
+    'tcp-flogs',
+    'region',
+    'flow-direction',
+    'pkt-src-aws-service',
+    'pkt-dst-aws-service',
   ];
 }
 

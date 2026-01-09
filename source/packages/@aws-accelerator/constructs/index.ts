@@ -59,6 +59,7 @@ export * from './lib/aws-ec2/route-table';
 export * from './lib/aws-ec2/subnet-id-lookup';
 export * from './lib/aws-ec2/transit-gateway';
 export * from './lib/aws-ec2/transit-gateway-connect';
+export * from './lib/aws-ec2/transit-gateway-flow-logs';
 export * from './lib/aws-ec2/transit-gateway-peering';
 export * from './lib/aws-ec2/transit-gateway-prefix-list-reference';
 export * from './lib/aws-ec2/transit-gateway-route-table';

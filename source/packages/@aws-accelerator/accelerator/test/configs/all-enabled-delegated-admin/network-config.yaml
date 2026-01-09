@@ -43,6 +43,40 @@ transitGateways:
               transitGatewayPeeringName: Network-Main-And-SharedServices-Main-Peering
       - name: Network-Main-Standalone
         routes: []
+    transitGatewayFlowLogs:
+      maxAggregationInterval: 60
+      destinations:
+        - s3
+        - cloud-watch-logs
+      destinationsConfig:
+        s3:
+          lifecycleRules:
+            - enabled: true
+              id: TgwFlowLogsLifecycle
+              expiration: 365
+              transitions:
+                - storageClass: GLACIER
+                  transitionAfter: 90
+        cloudWatchLogs:
+          retentionInDays: 180
+      defaultFormat: false
+      customFields:
+        - version
+        - resource-type
+        - account-id
+        - tgw-id
+        - tgw-attachment-id
+        - tgw-src-vpc-account-id
+        - tgw-dst-vpc-account-id
+        - tgw-src-subnet-id
+        - tgw-dst-subnet-id
+        - protocol
+        - packets
+        - bytes
+        - start
+        - end
+        - log-status
+        - tcp-flags
   - name: SharedServices-Main
     account: SharedServices
     region: *HOME_REGION

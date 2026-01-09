@@ -103,6 +103,7 @@ export class TransitGatewayConfig implements i.ITransitGatewayConfig {
   readonly routeTables: TransitGatewayRouteTableConfig[] = [];
   readonly transitGatewayCidrBlocks: t.NonEmptyString[] | undefined = undefined;
   readonly transitGatewayIpv6CidrBlocks: t.NonEmptyString[] | undefined = undefined;
+  readonly transitGatewayFlowLogs: t.TransitGatewayFlowLogsConfig | undefined = undefined;
   readonly tags: t.Tag[] | undefined = undefined;
 }
 

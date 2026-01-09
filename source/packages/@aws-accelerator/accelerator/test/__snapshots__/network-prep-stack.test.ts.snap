@@ -2810,6 +2810,113 @@ drop http $HOME_NET any -> $EXTERNAL_NET any (http.host; content:"example.com"; 
       },
       "Type": "AWS::EC2::TransitGatewayRouteTable",
     },
+    "NetworkMainFlowLogsCwLogGroup9C99F182": {
+      "DeletionPolicy": "Retain",
+      "Properties": {
+        "LogGroupName": "/aws/transitgateway/Network-Main",
+        "RetentionInDays": 180,
+      },
+      "Type": "AWS::Logs::LogGroup",
+      "UpdateReplacePolicy": "Retain",
+    },
+    "NetworkMainFlowLogsCwResource2BE637B0": {
+      "Properties": {
+        "DeliverLogsPermissionArn": {
+          "Fn::GetAtt": [
+            "NetworkMainFlowLogsCwRole89A25649",
+            "Arn",
+          ],
+        },
+        "LogDestination": {
+          "Fn::GetAtt": [
+            "NetworkMainFlowLogsCwLogGroup9C99F182",
+            "Arn",
+          ],
+        },
+        "LogDestinationType": "cloud-watch-logs",
+        "LogFormat": "\${version} \${resource-type} \${account-id} \${tgw-id} \${tgw-attachment-id} \${tgw-src-vpc-account-id} \${tgw-dst-vpc-account-id} \${tgw-src-subnet-id} \${tgw-dst-subnet-id} \${protocol} \${packets} \${bytes} \${start} \${end} \${log-status} \${tcp-flags}",
+        "MaxAggregationInterval": 60,
+        "ResourceId": {
+          "Ref": "NetworkMainTransitGatewayF6473E53",
+        },
+        "ResourceType": "TransitGateway",
+      },
+      "Type": "AWS::EC2::FlowLog",
+    },
+    "NetworkMainFlowLogsCwRole89A25649": {
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "vpc-flow-logs.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "Description": "Transit Gateway flow logs role for Network-Main",
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "NetworkMainFlowLogsCwRoleDefaultPolicyE16F4B39": {
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": [
+                "logs:CreateLogGroup",
+                "logs:CreateLogStream",
+                "logs:PutLogEvents",
+                "logs:DescribeLogGroups",
+                "logs:DescribeLogStreams",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::GetAtt": [
+                  "NetworkMainFlowLogsCwLogGroup9C99F182",
+                  "Arn",
+                ],
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "NetworkMainFlowLogsCwRoleDefaultPolicyE16F4B39",
+        "Roles": [
+          {
+            "Ref": "NetworkMainFlowLogsCwRole89A25649",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
+    },
+    "NetworkMainFlowLogsS3ResourceED2205F4": {
+      "Properties": {
+        "LogDestination": {
+          "Fn::Join": [
+            "",
+            [
+              "arn:",
+              {
+                "Ref": "AWS::Partition",
+              },
+              ":s3:::existing-central-log-bucket/tgw-flow-logs/Network-Main",
+            ],
+          ],
+        },
+        "LogDestinationType": "s3",
+        "LogFormat": "\${version} \${resource-type} \${account-id} \${tgw-id} \${tgw-attachment-id} \${tgw-src-vpc-account-id} \${tgw-dst-vpc-account-id} \${tgw-src-subnet-id} \${tgw-dst-subnet-id} \${protocol} \${packets} \${bytes} \${start} \${end} \${log-status} \${tcp-flags}",
+        "MaxAggregationInterval": 60,
+        "ResourceId": {
+          "Ref": "NetworkMainTransitGatewayF6473E53",
+        },
+        "ResourceType": "TransitGateway",
+      },
+      "Type": "AWS::EC2::FlowLog",
+    },
     "NetworkMainSegregatedTransitGatewayRouteTableFD7A15B0": {
       "Properties": {
         "Tags": [

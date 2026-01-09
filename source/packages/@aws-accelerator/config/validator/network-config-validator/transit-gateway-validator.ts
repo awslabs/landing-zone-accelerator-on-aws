@@ -62,6 +62,10 @@ export class TransitGatewayValidator {
     // Validate TGW Connect attachment configurations
     //
     this.validateTgwConnectConfiguration(values, errors);
+    //
+    // Validate TGW flow logs configurations
+    //
+    this.validateTgwFlowLogsConfiguration(values, errors);
   }
 
   /**
@@ -693,6 +697,86 @@ export class TransitGatewayValidator {
           errors.push(
             `[Transit Gateway ${tgwName} route table ${routeTableName}]: VPN "${vpnAttachment.vpnConnectionName}" is not attached to this TGW`,
           );
+        }
+      }
+    }
+  }
+  /**
+   * Validate Transit Gateway flow logs configuration
+   * @param values NetworkConfig
+   * @param errors string[]
+   */
+  private validateTgwFlowLogsConfiguration(values: NetworkConfig, errors: string[]): void {
+    const supportedFields = [
+      'version',
+      'resource-type',
+      'account-id',
+      'tgw-id',
+      'tgw-attachment-id',
+      'tgw-src-vpc-account-id',
+      'tgw-dst-vpc-account-id',
+      'tgw-src-vpc-id',
+      'tgw-dst-vpc-id',
+      'tgw-src-subnet-id',
+      'tgw-dst-subnet-id',
+      'tgw-src-eni',
+      'tgw-dst-eni',
+      'tgw-src-az-id',
+      'tgw-dst-az-id',
+      'tgw-pair-attachment-id',
+      'srcaddr',
+      'dstaddr',
+      'srcport',
+      'dstport',
+      'protocol',
+      'packets',
+      'bytes',
+      'start',
+      'end',
+      'log-status',
+      'type',
+      'packets-lost-no-route',
+      'packets-lost-blackhole',
+      'packets-lost-mtu-exceeded',
+      'packets-lost-ttl-expired',
+      'tcp-flags',
+      'region',
+      'flow-direction',
+      'pkt-src-aws-service',
+      'pkt-dst-aws-service',
+    ];
+
+    for (const tgw of values.transitGateways) {
+      if (!tgw.transitGatewayFlowLogs) continue;
+
+      const flowLogs = tgw.transitGatewayFlowLogs;
+
+      // Validate aggregation interval - Transit Gateway only supports 60 seconds
+      if (flowLogs.maxAggregationInterval !== 60) {
+        errors.push(
+          `[Transit Gateway ${tgw.name}]: Invalid maxAggregationInterval "${flowLogs.maxAggregationInterval}". Transit Gateway flow logs only support 60 seconds.`,
+        );
+      }
+
+      // Validate destinations
+      if (!flowLogs.destinations || flowLogs.destinations.length === 0) {
+        errors.push(`[Transit Gateway ${tgw.name}]: At least one destination must be specified for flow logs.`);
+      }
+
+      for (const dest of flowLogs.destinations) {
+        if (!['s3', 'cloud-watch-logs'].includes(dest)) {
+          errors.push(`[Transit Gateway ${tgw.name}]: Invalid destination "${dest}". Must be s3 or cloud-watch-logs.`);
+        }
+      }
+
+      // Validate custom fields
+      if (!flowLogs.defaultFormat && flowLogs.customFields) {
+        for (const field of flowLogs.customFields) {
+          if (!supportedFields.includes(field)) {
+            errors.push(
+              `[Transit Gateway ${tgw.name}]: Unsupported custom field "${field}". Supported fields: ${supportedFields.join(', ')}`,
+            );
+          }
         }
       }
     }
