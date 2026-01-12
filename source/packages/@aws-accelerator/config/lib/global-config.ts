@@ -910,8 +910,23 @@ export class GlobalConfig implements i.IGlobalConfig {
     if (!this.externalLandingZoneResources.resourceParameters) {
       this.externalLandingZoneResources.resourceParameters = {};
     }
+    const aseaRegionsObject = Object.keys(this.externalLandingZoneResources.templateMap).reduce(
+      (acc, key) => {
+        const region = this.externalLandingZoneResources?.templateMap[key].region;
+        if (!region) {
+          return acc;
+        }
+        if (!acc[region]) {
+          acc[region] = true;
+        }
+        return acc;
+      },
+      {} as { [key: string]: boolean },
+    );
+    const aseaRegions = Object.keys(aseaRegionsObject).map(region => region);
+    const enabledAseaRegions = aseaRegions.filter(region => this.enabledRegions.includes(region));
     const lzaResourcesPromises = [];
-    for (const region of this.enabledRegions) {
+    for (const region of enabledAseaRegions) {
       lzaResourcesPromises.push(
         this.loadRegionLzaResources(
           region,
