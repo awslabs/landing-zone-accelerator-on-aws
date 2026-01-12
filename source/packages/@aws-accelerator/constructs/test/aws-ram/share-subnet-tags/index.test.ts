@@ -13,13 +13,7 @@
 
 import { handler } from '../../../lib/aws-ram/share-subnet-tags/index';
 import { mockClient, AwsClientStub } from 'aws-sdk-client-mock';
-import {
-  EC2Client,
-  DescribeTagsCommand,
-  CreateTagsCommand,
-  DescribeSubnetsCommand,
-  DeleteTagsCommand,
-} from '@aws-sdk/client-ec2';
+import { EC2Client, CreateTagsCommand, DescribeSubnetsCommand, DeleteTagsCommand } from '@aws-sdk/client-ec2';
 import {
   SSMClient,
   GetParameterCommand,
@@ -29,6 +23,7 @@ import {
 } from '@aws-sdk/client-ssm';
 import {
   CloudFormationCustomResourceCreateEvent,
+  CloudFormationCustomResourceUpdateEvent,
   CloudFormationCustomResourceDeleteEvent,
 } from '../../../lib/lza-custom-resource';
 import { expect, it, beforeEach, afterEach } from 'vitest';
@@ -46,47 +41,41 @@ afterEach(() => {
   ec2Mock.restore();
 });
 
-// Given
-const createEvent: CloudFormationCustomResourceCreateEvent = {
-  RequestType: 'Create',
-  ResponseURL: 'https://example.com',
-  ServiceToken: 'example-service-token',
-  StackId: 'example-stack-id',
-  RequestId: 'example-create-request-id',
-  ResourceType: 'Custom::ShareSubnetTags',
-  LogicalResourceId: 'example-logical-resource-id',
-  ResourceProperties: {
-    ServiceToken: 'example-service-token',
-    vpcTags: [
-      { key: 'subnetKey1', value: 'subnetValue1' },
-      { key: 'subnetKey2', value: 'subnetValue2' },
-    ],
-    subnetTags: [
-      { key: 'subnetKey1', value: 'subnetValue1' },
-      { key: 'subnetKey2', value: 'subnetValue2' },
-    ],
-    sharedSubnetName: 'sharedSubnet',
-    vpcName: 'vpcName',
-    acceleratorSsmParamPrefix: '/accel/prefix',
-  },
-};
-const sharedSubnetSsmPath = `${createEvent.ResourceProperties['acceleratorSsmParamPrefix']}/shared/network/vpc/${createEvent.ResourceProperties['vpcName']}/subnet/${createEvent.ResourceProperties['sharedSubnetName']}/id`;
-const vpcSsmPath = `${createEvent.ResourceProperties['acceleratorSsmParamPrefix']}/shared/network/vpc/${createEvent.ResourceProperties['vpcName']}/id`;
-
 // When
-it('@aws-accelerator/constructs-aws-ram-share-subnet-tags create event subnet and vpc needs no update', async () => {
+it('@aws-accelerator/constructs-aws-ram-share-subnet-tags create event when subnet and vpc does not need tags deletion', async () => {
+  // Given
+  const createEvent: CloudFormationCustomResourceCreateEvent = {
+    RequestType: 'Create',
+    ResponseURL: 'https://example.com',
+    ServiceToken: 'example-service-token',
+    StackId: 'example-stack-id',
+    RequestId: 'example-create-request-id',
+    ResourceType: 'Custom::ShareSubnetTags',
+    LogicalResourceId: 'example-logical-resource-id',
+    ResourceProperties: {
+      ServiceToken: 'example-service-token',
+      vpcTags: [
+        { key: 'vpcKey1', value: 'vpcValue1' },
+        { key: 'vpcKey2', value: 'vpcValue2' },
+      ],
+      subnetTags: [
+        { key: 'subnetKey1', value: 'subnetValue1' },
+        { key: 'subnetKey2', value: 'subnetValue2' },
+      ],
+      sharedSubnetId: 'subnet-1234',
+      sharedSubnetName: 'sharedSubnet',
+      vpcName: 'vpcName',
+      acceleratorSsmParamPrefix: '/accel/prefix',
+    },
+  };
+  const sharedSubnetSsmPath = `${createEvent.ResourceProperties['acceleratorSsmParamPrefix']}/shared/network/vpc/${createEvent.ResourceProperties['vpcName']}/subnet/${createEvent.ResourceProperties['sharedSubnetName']}/id`;
+  const vpcSsmPath = `${createEvent.ResourceProperties['acceleratorSsmParamPrefix']}/shared/network/vpc/${createEvent.ResourceProperties['vpcName']}/id`;
+
   // when - parameter already exists
   ssmMock
     .on(GetParameterCommand, { Name: sharedSubnetSsmPath })
     .resolves({ Parameter: { Name: sharedSubnetSsmPath, Value: 'subnet-1234' } });
-  // when - tags are same
-  ec2Mock.on(DescribeTagsCommand).resolves({
-    Tags: [
-      { Key: 'subnetKey1', Value: 'subnetValue1', ResourceId: 'subnet-1234', ResourceType: 'subnet' },
-      { Key: 'subnetKey2', Value: 'subnetValue2', ResourceId: 'subnet-1234', ResourceType: 'subnet' },
-    ],
-  });
-  // when - subnet is found with exact tags
+  // when - subnet is found with user-defined tags
   ec2Mock.on(DescribeSubnetsCommand).resolves({
     Subnets: [
       {
@@ -103,8 +92,8 @@ it('@aws-accelerator/constructs-aws-ram-share-subnet-tags create event subnet an
         AssignIpv6AddressOnCreation: false,
         Ipv6CidrBlockAssociationSet: [],
         Tags: [
-          { Key: 'subnetKey1', Value: 'subnetValue1' },
-          { Key: 'subnetKey2', Value: 'subnetValue2' },
+          { Key: 'userSubnetKey1', Value: 'userSubnetValue1' },
+          { Key: 'userSubnetKey2', Value: 'userSubnetValue2' },
         ],
       },
     ],
@@ -113,25 +102,83 @@ it('@aws-accelerator/constructs-aws-ram-share-subnet-tags create event subnet an
   ssmMock
     .on(GetParameterCommand, { Name: vpcSsmPath })
     .resolves({ Parameter: { Name: vpcSsmPath, Value: 'vpc-1234' } });
+  ec2Mock.on(CreateTagsCommand).resolves({});
   const response = await handler(createEvent);
+  // then - no tags (including user-defined) are deleted
+  expect(ec2Mock.commandCalls(DeleteTagsCommand).length).toBe(0);
+
+  // then - lza specific tags are created
+  expect(ec2Mock.commandCalls(CreateTagsCommand).length).toBe(2);
+  const createCalls = ec2Mock.commandCalls(CreateTagsCommand);
+  expect(createCalls[0].args[0].input).toMatchObject({
+    Resources: ['subnet-1234'],
+    Tags: [
+      { Key: 'subnetKey1', Value: 'subnetValue1' },
+      { Key: 'subnetKey2', Value: 'subnetValue2' },
+    ],
+  });
+  expect(createCalls[1].args[0].input).toMatchObject({
+    Resources: ['vpc-1234'],
+    Tags: [
+      { Key: 'vpcKey1', Value: 'vpcValue1' },
+      { Key: 'vpcKey2', Value: 'vpcValue2' },
+    ],
+  });
+
   // then - response Status is SUCCESS
   expect(response?.Status).toBe('SUCCESS');
 });
 
-it('@aws-accelerator/constructs-aws-ram-share-subnet-tags create event subnet and vpc exist but need update', async () => {
+it('@aws-accelerator/constructs-aws-ram-share-subnet-tags create event when subnet and vpc exist but need update', async () => {
+  // Given
+  const updateEvent: CloudFormationCustomResourceUpdateEvent = {
+    RequestType: 'Update',
+    ResponseURL: 'https://example.com',
+    ServiceToken: 'example-service-token',
+    StackId: 'example-stack-id',
+    RequestId: 'example-create-request-id',
+    ResourceType: 'Custom::ShareSubnetTags',
+    LogicalResourceId: 'example-logical-resource-id',
+    PhysicalResourceId: 'subnet-1234',
+    ResourceProperties: {
+      ServiceToken: 'example-service-token',
+      vpcTags: [
+        { key: 'vpcKey', value: 'vpcValue' },
+        { key: 'vpcKeyNew', value: 'vpcValueNew' },
+      ],
+      subnetTags: [
+        { key: 'subnetKey', value: 'subnetValue' },
+        { key: 'subnetKeyNew', value: 'subnetValueNew' },
+      ],
+      sharedSubnetId: 'subnet-1234',
+      sharedSubnetName: 'sharedSubnet',
+      vpcName: 'vpcName',
+      acceleratorSsmParamPrefix: '/accel/prefix',
+    },
+    OldResourceProperties: {
+      ServiceToken: 'example-service-token',
+      vpcTags: [
+        { key: 'vpcKey', value: 'vpcValue' },
+        { key: 'vpcKeyRemoved', value: 'vpcValueRemoved' },
+      ],
+      subnetTags: [
+        { key: 'subnetKey', value: 'subnetValue' },
+        { key: 'subnetKeyRemoved', value: 'subnetValueRemoved' },
+      ],
+      sharedSubnetId: 'subnet-1234',
+      sharedSubnetName: 'sharedSubnet',
+      vpcName: 'vpcName',
+      acceleratorSsmParamPrefix: '/accel/prefix',
+    },
+  };
+  const sharedSubnetSsmPath = `${updateEvent.ResourceProperties['acceleratorSsmParamPrefix']}/shared/network/vpc/${updateEvent.ResourceProperties['vpcName']}/subnet/${updateEvent.ResourceProperties['sharedSubnetName']}/id`;
+  const vpcSsmPath = `${updateEvent.ResourceProperties['acceleratorSsmParamPrefix']}/shared/network/vpc/${updateEvent.ResourceProperties['vpcName']}/id`;
+
   // when - parameter exist
   ssmMock
     .on(GetParameterCommand, { Name: sharedSubnetSsmPath })
     .resolves({ Parameter: { Name: sharedSubnetSsmPath, Value: 'subnet-1234' } });
-  // when - tags are same
-  ec2Mock.on(DescribeTagsCommand).resolves({
-    Tags: [{ Key: 'Key1', Value: 'Value1', ResourceId: 'subnet-1234', ResourceType: 'subnet' }],
-  });
-  // when - tags are same
-  ec2Mock.on(DescribeTagsCommand).resolves({
-    Tags: [{ Key: 'Key1', Value: 'Value1' }],
-  });
-  // when - subnet is found with different tags
+  // when - subnet is found with different lza tags
   ec2Mock.on(DescribeSubnetsCommand).resolves({
     Subnets: [
       {
@@ -147,7 +194,11 @@ it('@aws-accelerator/constructs-aws-ram-share-subnet-tags create event subnet an
         OwnerId: '123456789012',
         AssignIpv6AddressOnCreation: false,
         Ipv6CidrBlockAssociationSet: [],
-        Tags: [{ Key: 'Key1', Value: 'Value1' }],
+        Tags: [
+          { Key: 'subnetKey', Value: 'subnetValue' },
+          { Key: 'subnetKeyRemoved', Value: 'subnetValueRemoved' },
+          { Key: 'subnetKeyUser', Value: 'subnetValueUser' },
+        ],
       },
     ],
   });
@@ -157,46 +208,84 @@ it('@aws-accelerator/constructs-aws-ram-share-subnet-tags create event subnet an
     .resolves({ Parameter: { Name: vpcSsmPath, Value: 'vpc-1234' } });
   ec2Mock.on(DeleteTagsCommand).resolves({});
   ec2Mock.on(CreateTagsCommand).resolves({});
-  const response = await handler(createEvent);
+  const response = await handler(updateEvent);
+  // then - no user-defined or new lza specific tags are deleted
+  expect(ec2Mock.commandCalls(DeleteTagsCommand).length).toBe(2);
+  const deleteCalls = ec2Mock.commandCalls(DeleteTagsCommand);
+  expect(deleteCalls[0].args[0].input).toMatchObject({
+    Resources: ['subnet-1234'],
+    Tags: [{ Key: 'subnetKeyRemoved', Value: 'subnetValueRemoved' }],
+  });
+  expect(deleteCalls[1].args[0].input).toMatchObject({
+    Resources: ['vpc-1234'],
+    Tags: [{ Key: 'vpcKeyRemoved', Value: 'vpcValueRemoved' }],
+  });
+
+  // then - new lza specific tags are created
+  expect(ec2Mock.commandCalls(CreateTagsCommand).length).toBe(2);
+  const createCalls = ec2Mock.commandCalls(CreateTagsCommand);
+  expect(createCalls[0].args[0].input).toMatchObject({
+    Resources: ['subnet-1234'],
+    Tags: [{ Key: 'subnetKeyNew', Value: 'subnetValueNew' }],
+  });
+  expect(createCalls[1].args[0].input).toMatchObject({
+    Resources: ['vpc-1234'],
+    Tags: [{ Key: 'vpcKeyNew', Value: 'vpcValueNew' }],
+  });
+
   // then - response Status is SUCCESS
   expect(response?.Status).toBe('SUCCESS');
 });
 
-// Given
-const deleteEvent: CloudFormationCustomResourceDeleteEvent = {
-  RequestType: 'Delete',
-  ResponseURL: 'https://example.com',
-  ServiceToken: 'example-service-token',
-  StackId: 'example-stack-id',
-  RequestId: 'example-create-request-id',
-  ResourceType: 'Custom::ShareSubnetTags',
-  PhysicalResourceId: 'example-physical-resource-id',
-  LogicalResourceId: 'example-logical-resource-id',
-  ResourceProperties: {
-    ServiceToken: 'example-service-token',
-    vpcTags: [
-      { key: 'subnetKey1', value: 'subnetValue1' },
-      { key: 'subnetKey2', value: 'subnetValue2' },
-    ],
-    subnetTags: [
-      { key: 'subnetKey1', value: 'subnetValue1' },
-      { key: 'subnetKey2', value: 'subnetValue2' },
-    ],
-    sharedSubnetName: 'sharedSubnet',
-    vpcName: 'vpcName',
-    acceleratorSsmParamPrefix: '/accel/prefix',
-  },
-};
-const sharedSubnetSsmPathDelete = `${deleteEvent.ResourceProperties['acceleratorSsmParamPrefix']}/shared/network/vpc/${deleteEvent.ResourceProperties['vpcName']}/subnet/${deleteEvent.ResourceProperties['sharedSubnetName']}/id`;
-
 it('@aws-accelerator/constructs-aws-ram-share-subnet-tags delete event', async () => {
+  // Given
+  const deleteEvent: CloudFormationCustomResourceDeleteEvent = {
+    RequestType: 'Delete',
+    ResponseURL: 'https://example.com',
+    ServiceToken: 'example-service-token',
+    StackId: 'example-stack-id',
+    RequestId: 'example-create-request-id',
+    ResourceType: 'Custom::ShareSubnetTags',
+    PhysicalResourceId: 'example-physical-resource-id',
+    LogicalResourceId: 'example-logical-resource-id',
+    ResourceProperties: {
+      ServiceToken: 'example-service-token',
+      vpcTags: [
+        { key: 'vpcKey1', value: 'vpcValue1' },
+        { key: 'vpcKey2', value: 'vpcValue2' },
+      ],
+      subnetTags: [
+        { key: 'subnetKey1', value: 'subnetValue1' },
+        { key: 'subnetKey2', value: 'subnetValue2' },
+      ],
+      sharedSubnetId: 'subnet-1234',
+      sharedSubnetName: 'sharedSubnet',
+      vpcName: 'vpcName',
+      acceleratorSsmParamPrefix: '/accel/prefix',
+    },
+  };
+  const sharedSubnetSsmPath = `${deleteEvent.ResourceProperties['acceleratorSsmParamPrefix']}/shared/network/vpc/${deleteEvent.ResourceProperties['vpcName']}/subnet/${deleteEvent.ResourceProperties['sharedSubnetName']}/id`;
+
   // when
   ssmMock
     .on(GetParameterCommand, { Name: sharedSubnetSsmPath })
     .resolves({ Parameter: { Name: sharedSubnetSsmPath, Value: 'subnet-1234' } });
-  ssmMock.on(DeleteParameterCommand, { Name: sharedSubnetSsmPathDelete }).resolves({});
+  ssmMock.on(DeleteParameterCommand, { Name: sharedSubnetSsmPath }).resolves({});
   ec2Mock.on(DeleteTagsCommand).resolves({});
   const response = await handler(deleteEvent);
+  // then - only existing lza specific tags are deleted
+  expect(ec2Mock.commandCalls(DeleteTagsCommand).length).toBe(1);
+  const deleteCalls = ec2Mock.commandCalls(DeleteTagsCommand);
+  expect(deleteCalls[0].args[0].input).toMatchObject({
+    Resources: ['subnet-1234'],
+    Tags: [
+      { Key: 'vpcKey1', Value: 'vpcValue1' },
+      { Key: 'vpcKey2', Value: 'vpcValue2' },
+      { Key: 'subnetKey1', Value: 'subnetValue1' },
+      { Key: 'subnetKey2', Value: 'subnetValue2' },
+    ],
+  });
+
   // then - response Status is SUCCESS
   expect(response?.Status).toBe('SUCCESS');
 });

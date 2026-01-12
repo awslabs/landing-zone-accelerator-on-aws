@@ -22,12 +22,10 @@ import {
 } from '@aws-sdk/client-ssm';
 import {
   EC2Client,
-  DescribeTagsCommand,
   CreateTagsCommand,
   DeleteTagsCommand,
   DescribeSubnetsCommand,
   DeleteTagsCommandInput,
-  TagDescription,
 } from '@aws-sdk/client-ec2';
 import { CloudFormationCustomResourceEvent } from '../../lza-custom-resource';
 
@@ -62,6 +60,10 @@ export async function handler(event: CloudFormationCustomResourceEvent): Promise
   const sharedSubnetName: string = event.ResourceProperties['sharedSubnetName'];
   const vpcName: string = event.ResourceProperties['vpcName'];
   const ssmParamNamePrefix = event.ResourceProperties['acceleratorSsmParamPrefix'];
+  // OldResourceProperties only available on 'Update' custom resource events
+  const oldVpcTags = event.RequestType === 'Update' ? convertTags(event.OldResourceProperties['vpcTags'] || []) : [];
+  const oldSubnetTags =
+    event.RequestType === 'Update' ? convertTags(event.OldResourceProperties['subnetTags'] || []) : [];
 
   switch (event.RequestType) {
     case 'Create':
@@ -73,20 +75,19 @@ export async function handler(event: CloudFormationCustomResourceEvent): Promise
         'Shared subnet',
         sharedSubnetId,
       );
-      await updateSubnetTags(subnetTags, sharedSubnetId);
-      await updateVpcTags(vpcTags, sharedSubnetId, ssmClient, vpcName, ssmParamNamePrefix);
+      await updateSubnetTags(subnetTags, oldSubnetTags, sharedSubnetId);
+      await updateVpcTags(vpcTags, oldVpcTags, sharedSubnetId, ssmClient, vpcName, ssmParamNamePrefix);
       return {
         PhysicalResourceId: sharedSubnetId,
         Status: 'SUCCESS',
       };
-
     case 'Delete':
       // Delete Shared Subnet SSM parameter
       await deleteParameter(
         ssmClient,
         `${ssmParamNamePrefix}/shared/network/vpc/${vpcName}/subnet/${sharedSubnetName}/id`,
       );
-      await deleteTags(sharedSubnetId);
+      await deleteTags(sharedSubnetId, [...vpcTags, ...subnetTags]);
       return {
         PhysicalResourceId: event.PhysicalResourceId,
         Status: 'SUCCESS',
@@ -143,29 +144,29 @@ async function deleteParameter(ssmClient: SSMClient, name: string): Promise<void
   }
 }
 
-async function updateSubnetTags(newSubnetTags: Tag[], subnetId: string) {
+async function updateSubnetTags(newSubnetTags: Tag[], oldSubnetTags: Tag[], subnetId: string) {
   console.info('updateSubnetTags');
-  const existingSubnetTags = await getResourceTags(subnetId);
+  const existingSubnetTags = oldSubnetTags;
   const tagsToDelete = getTagsToDelete(existingSubnetTags, newSubnetTags);
   const tagsToAdd = getTagsToAdd(existingSubnetTags, newSubnetTags);
   const tagsToUpdate = getTagsToUpdate(existingSubnetTags, newSubnetTags);
+
   const tagsToCreateAndUpdate = [...tagsToAdd, ...tagsToUpdate];
 
   if (tagsToDelete.length > 0) {
     console.info(`Deleting subnet tags for subnet ${subnetId}`);
-    console.info(JSON.stringify(tagsToDelete, null, 2));
     await deleteTags(subnetId, tagsToDelete);
   }
 
   if (tagsToCreateAndUpdate.length > 0) {
     console.info(`Adding and updating subnet tags for subnet ${subnetId}`);
-    console.info(JSON.stringify(tagsToCreateAndUpdate, null, 2));
     await createTags(subnetId, tagsToCreateAndUpdate);
   }
 }
 
 async function updateVpcTags(
   newVpcTags: Tag[],
+  oldVpcTags: Tag[],
   subnetId: string,
   ssmClient: SSMClient,
   vpcName: string,
@@ -194,7 +195,7 @@ async function updateVpcTags(
     return;
   }
 
-  const existingVpcTags = await getResourceTags(vpcId);
+  const existingVpcTags = oldVpcTags;
   const tagsToDelete = getTagsToDelete(existingVpcTags, newVpcTags);
   const tagsToAdd = getTagsToAdd(existingVpcTags, newVpcTags);
   const tagsToUpdate = getTagsToUpdate(existingVpcTags, newVpcTags);
@@ -202,18 +203,17 @@ async function updateVpcTags(
 
   if (tagsToDelete.length > 0) {
     console.info(`Deleting vpc tags for vpc ${vpcId}`);
-    console.info(JSON.stringify(tagsToDelete, null, 2));
     await deleteTags(vpcId, tagsToDelete);
   }
 
   if (tagsToCreateAndUpdate.length > 0) {
     console.log(`Adding and updating vpc tags for VPC ${vpcId}`);
-    console.log(JSON.stringify(tagsToCreateAndUpdate, null, 2));
     await createTags(vpcId, tagsToCreateAndUpdate);
   }
 }
 
 async function deleteTags(itemId: string, tagsToDelete?: Tag[]) {
+  console.info(JSON.stringify(tagsToDelete, null, 2));
   const deleteTagRequest: DeleteTagsCommandInput = {
     Resources: [itemId],
     Tags: tagsToDelete,
@@ -223,6 +223,7 @@ async function deleteTags(itemId: string, tagsToDelete?: Tag[]) {
 }
 
 async function createTags(itemId: string, tags: Tag[]) {
+  console.info(JSON.stringify(tags, null, 2));
   const createTagsResponse = await throttlingBackOff(() =>
     ec2Client.send(new CreateTagsCommand({ Resources: [itemId], Tags: tags })),
   );
@@ -235,30 +236,6 @@ function convertTags(tags: []): Tag[] {
     convertedTags.push({ Key: tag['key'], Value: tag['value'] });
   }
   return convertedTags;
-}
-
-async function getResourceTags(resourceId: string): Promise<Tag[]> {
-  const tags: Tag[] = [];
-  let nextToken: string | undefined = undefined;
-  do {
-    const describeTagsResponse = await throttlingBackOff(() =>
-      ec2Client.send(
-        new DescribeTagsCommand({ Filters: [{ Name: 'resource-id', Values: [resourceId] }], NextToken: nextToken }),
-      ),
-    );
-    console.log(describeTagsResponse);
-    if (describeTagsResponse.Tags) {
-      const tagKeyValueList = describeTagsResponse.Tags.map((tag: TagDescription) => {
-        return {
-          Key: tag.Key,
-          Value: tag.Value,
-        };
-      });
-      tags.push(...tagKeyValueList);
-    }
-    nextToken = describeTagsResponse.NextToken! ?? undefined;
-  } while (nextToken);
-  return tags;
 }
 
 function getTagsToDelete(currentTags: Tag[], newTags: Tag[]): Tag[] {
@@ -287,7 +264,7 @@ function getTagsToUpdate(currentTags: Tag[], newTags: Tag[]): Tag[] {
   const tagsToUpdate: Tag[] = [];
   for (const newTag of newTags) {
     const foundTag = currentTags.find(currentTag => currentTag.Key === newTag.Key);
-    if (foundTag?.Value !== newTag.Value) {
+    if (foundTag && foundTag.Value !== newTag.Value) {
       tagsToUpdate.push(newTag);
     }
   }

@@ -17,6 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 - fix(securityhub): fix invalid input exception on batch enabled standards call
+- fix(network): fix share-subnet-tags custom Resource removes tags not managed by the accelerator
 
 ### Changed
 - feat(securityhub): add suppport for any future standard supported by securityhub
