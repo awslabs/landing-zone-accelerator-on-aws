@@ -577,7 +577,7 @@ release:artifact-al2023-build:
     name: gcr.io/kaniko-project/executor:v1.23.2-debug
     entrypoint: [""]
   script:
-    - /kaniko/executor --context $CI_PROJECT_DIR/deployment/build/context_dir/ --destination lza-$CI_COMMIT_TAG-al2023 --dockerfile $CI_PROJECT_DIR/deployment/build/context_dir/al2023 --tarPath $CI_PROJECT_DIR/deployment/build/context_dir/lza-$CI_COMMIT_TAG-al2023.tar.gz --no-push
+    - /kaniko/executor --context $CI_PROJECT_DIR/deployment/build/context_dir/ --destination lza-$CI_COMMIT_TAG-al2023 --dockerfile $CI_PROJECT_DIR/deployment/build/context_dir/al2023-prod --tarPath $CI_PROJECT_DIR/deployment/build/context_dir/lza-$CI_COMMIT_TAG-al2023.tar.gz --no-push
   artifacts:
     name: al2023_build
     when: on_success
