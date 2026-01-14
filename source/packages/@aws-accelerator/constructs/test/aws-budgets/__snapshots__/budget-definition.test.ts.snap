@@ -196,7 +196,7 @@ exports[`BudgetDefinitionCrossRegion > Construct(BudgetDefinition):  Snapshot Te
         },
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.15.0",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.15.0-rc.2",
           },
         },
         "Handler": "__entrypoint__.handler",

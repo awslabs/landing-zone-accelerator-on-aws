@@ -247,7 +247,7 @@ exports[`VpcIdLookup > Construct(VpcIdLookup):  Snapshot Test 1`] = `
         "Description": "Lookup vpc id from account",
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.15.0",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.15.0-rc.2",
           },
         },
         "Handler": "index.handler",
@@ -362,7 +362,7 @@ exports[`VpcIdLookup > Construct(VpcIdLookup):  Snapshot Test 1`] = `
         "Description": "AWS CDK resource provider framework - onEvent (Default/VpcIdLookup/VpcIdLookupProvider)",
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.15.0",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.15.0-rc.2",
             "USER_ON_EVENT_FUNCTION_ARN": {
               "Fn::GetAtt": [
                 "VpcIdLookupVpcIdLookupFunctionCE747608",

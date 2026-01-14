@@ -230,7 +230,7 @@ exports[`LaunchTemplate > Construct(FirewallAutoScalingGroup):  Snapshot Test 1`
         "Description": "Custom resource provider to create service linked role",
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.15.0",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.15.0-rc.2",
           },
         },
         "Handler": "index.handler",
@@ -348,7 +348,7 @@ exports[`LaunchTemplate > Construct(FirewallAutoScalingGroup):  Snapshot Test 1`
         "Description": "AWS CDK resource provider framework - onEvent (Default/TestFirewall/Resource/AutoScalingServiceLinkedRole/CreateServiceLinkedRoleProvider)",
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.15.0",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.15.0-rc.2",
             "USER_ON_EVENT_FUNCTION_ARN": {
               "Fn::GetAtt": [
                 "TestFirewallAutoScalingServiceLinkedRoleCreateServiceLinkedRoleFunction4263CA84",
