@@ -65,7 +65,7 @@ universal-config:release-replicator:
   rules:
     - if: $SKIP_MIRROR_JOBS == "yes"
       when: never
-    - if: $CI_PROJECT_ID == "11925" && $CI_COMMIT_TAG =~ /^v\d+\.\d+\.\d+$/
+    - if: $CI_PROJECT_ID == "11925" && $CI_COMMIT_TAG =~ /v(\d.+){2}\d/
       when: always
     - when: never
 
