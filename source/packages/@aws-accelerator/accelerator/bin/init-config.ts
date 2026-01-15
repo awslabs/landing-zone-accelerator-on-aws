@@ -29,6 +29,7 @@ import * as path from 'path';
 import { generateConfigFiles, createConfigZipArchive } from '../lib/config-repository';
 import { S3ConfigManager } from '../lib/s3-config-manager';
 import { createLogger } from '@aws-accelerator/utils';
+import { ControlTowerLandingZoneConfig } from '@aws-accelerator/config';
 
 const logger = createLogger([path.parse(path.basename(__filename)).name]);
 
@@ -194,6 +195,7 @@ async function main(): Promise<void> {
       auditAccountEmail: config.auditEmail,
       homeRegion: config.region,
       controlTowerEnabled: config.controlTowerEnabled,
+      controlTowerLandingZoneConfig: config.controlTowerEnabled ? new ControlTowerLandingZoneConfig() : undefined,
       enableSingleAccountMode: config.singleAccountMode,
       installerStackName: installerStackName,
     });

@@ -186,7 +186,7 @@ export class ControlTowerLandingZoneSecurityConfig implements i.IControlTowerLan
  */
 export class ControlTowerLandingZoneConfig implements i.IControlTowerLandingZoneConfig {
   /**
-   * The landing zone version, for example, 4.0.
+   * The landing zone version, for example, 3.3.
    *
    * @remarks
    * Most AWS Control Tower Landing Zone operation needs the version to latest available version.
@@ -196,7 +196,7 @@ export class ControlTowerLandingZoneConfig implements i.IControlTowerLandingZone
    * If you wish to update or reset the AWS Control Tower Landing Zone, you will need to update this property to match the latest available version.
    *
    */
-  readonly version: string = '4.0';
+  readonly version: string = '3.3';
   /**
    * AWS Control Tower Landing Zone logging configuration
    *
