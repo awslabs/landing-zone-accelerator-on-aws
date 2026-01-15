@@ -2122,6 +2122,14 @@ def handler(event, context):
                   "Ref": "LogLevel",
                 },
               },
+              {
+                "Name": "NODE_EXTRA_CA_CERTS",
+                "Value": "/etc/pki/ca-trust/extracted/pem/tls-ca-bundle.pem",
+              },
+              {
+                "Name": "AWS_CA_BUNDLE",
+                "Value": "/etc/pki/ca-trust/extracted/pem/tls-ca-bundle.pem",
+              },
             ],
             "Image": {
               "Ref": "EcrUri",
@@ -4622,6 +4630,14 @@ def handler(event, context):
                 "Value": {
                   "Ref": "LogLevel",
                 },
+              },
+              {
+                "Name": "NODE_EXTRA_CA_CERTS",
+                "Value": "/etc/pki/ca-trust/extracted/pem/tls-ca-bundle.pem",
+              },
+              {
+                "Name": "AWS_CA_BUNDLE",
+                "Value": "/etc/pki/ca-trust/extracted/pem/tls-ca-bundle.pem",
               },
               {
                 "Name": "MANAGEMENT_ACCOUNT_ID",
@@ -7137,6 +7153,14 @@ def handler(event, context):
                 },
               },
               {
+                "Name": "NODE_EXTRA_CA_CERTS",
+                "Value": "/etc/pki/ca-trust/extracted/pem/tls-ca-bundle.pem",
+              },
+              {
+                "Name": "AWS_CA_BUNDLE",
+                "Value": "/etc/pki/ca-trust/extracted/pem/tls-ca-bundle.pem",
+              },
+              {
                 "Name": "ACCELERATOR_ENABLE_SINGLE_ACCOUNT_MODE",
                 "Value": "true",
               },
@@ -9629,6 +9653,14 @@ def handler(event, context):
                 "Value": {
                   "Ref": "LogLevel",
                 },
+              },
+              {
+                "Name": "NODE_EXTRA_CA_CERTS",
+                "Value": "/etc/pki/ca-trust/extracted/pem/tls-ca-bundle.pem",
+              },
+              {
+                "Name": "AWS_CA_BUNDLE",
+                "Value": "/etc/pki/ca-trust/extracted/pem/tls-ca-bundle.pem",
               },
               {
                 "Name": "MANAGEMENT_ACCOUNT_ID",
@@ -12153,6 +12185,14 @@ def handler(event, context):
                 },
               },
               {
+                "Name": "NODE_EXTRA_CA_CERTS",
+                "Value": "/etc/pki/ca-trust/extracted/pem/tls-ca-bundle.pem",
+              },
+              {
+                "Name": "AWS_CA_BUNDLE",
+                "Value": "/etc/pki/ca-trust/extracted/pem/tls-ca-bundle.pem",
+              },
+              {
                 "Name": "ACCELERATOR_PERMISSION_BOUNDARY",
                 "Value": {
                   "Ref": "PermissionBoundaryPolicyName",
@@ -14603,6 +14643,14 @@ def handler(event, context):
                 "Value": {
                   "Ref": "LogLevel",
                 },
+              },
+              {
+                "Name": "NODE_EXTRA_CA_CERTS",
+                "Value": "/etc/pki/ca-trust/extracted/pem/tls-ca-bundle.pem",
+              },
+              {
+                "Name": "AWS_CA_BUNDLE",
+                "Value": "/etc/pki/ca-trust/extracted/pem/tls-ca-bundle.pem",
               },
             ],
             "Image": {

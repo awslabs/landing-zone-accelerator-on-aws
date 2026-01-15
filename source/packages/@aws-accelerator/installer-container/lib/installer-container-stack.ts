@@ -1430,6 +1430,9 @@ def handler(event, context):
       { name: 'PIPELINE_ACCOUNT_ID', value: cdk.Stack.of(this).account },
       // Log level configuration
       { name: 'LOG_LEVEL', value: this.logLevel.valueAsString },
+      // add cert path for node and sdk
+      { name: 'NODE_EXTRA_CA_CERTS', value: '/etc/pki/ca-trust/extracted/pem/tls-ca-bundle.pem' },
+      { name: 'AWS_CA_BUNDLE', value: '/etc/pki/ca-trust/extracted/pem/tls-ca-bundle.pem' },
     ];
 
     // Validate deployment mode consistency
