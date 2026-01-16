@@ -550,9 +550,9 @@ release:artifact-al2023-prep:
     # Move and unzip code archive in empty context
     - "unzip -q $CI_PROJECT_DIR/deployment/open-source/lza.zip -d $CI_PROJECT_DIR/deployment/build/context_dir/"
     # move build file into empty context
-    - "mv $CI_PROJECT_DIR/deployment/container/build/al2023-prod $CI_PROJECT_DIR/deployment/build/context_dir/"
+    - "mv $CI_PROJECT_DIR/container/build/Dockerfile $CI_PROJECT_DIR/deployment/build/context_dir/"
     # move scripts into empty context
-    - "mv $CI_PROJECT_DIR/deployment/container/scripts $CI_PROJECT_DIR/deployment/build/context_dir/"
+    - "mv $CI_PROJECT_DIR/container/scripts $CI_PROJECT_DIR/deployment/build/context_dir/"
   artifacts:
     name: al2023_Prepare
     when: on_success
@@ -577,7 +577,7 @@ release:artifact-al2023-build:
     name: gcr.io/kaniko-project/executor:v1.23.2-debug
     entrypoint: [""]
   script:
-    - /kaniko/executor --context $CI_PROJECT_DIR/deployment/build/context_dir/ --destination lza-$CI_COMMIT_TAG-al2023 --dockerfile $CI_PROJECT_DIR/deployment/build/context_dir/al2023-prod --tarPath $CI_PROJECT_DIR/deployment/build/context_dir/lza-$CI_COMMIT_TAG-al2023.tar.gz --no-push
+    - /kaniko/executor --context $CI_PROJECT_DIR/deployment/build/context_dir/ --destination lza-$CI_COMMIT_TAG-al2023 --dockerfile $CI_PROJECT_DIR/deployment/build/context_dir/Dockerfile --tarPath $CI_PROJECT_DIR/deployment/build/context_dir/lza-$CI_COMMIT_TAG-al2023.tar.gz --no-push
   artifacts:
     name: al2023_build
     when: on_success

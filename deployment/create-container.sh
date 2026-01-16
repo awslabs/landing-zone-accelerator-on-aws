@@ -29,12 +29,12 @@ unzip -q "${working_directory}/deployment/open-source/lza.zip" -d "${working_dir
 
 # Copy build file into empty context (only if not already present from zip)
 if [ ! -f "${working_directory}/deployment/build/context_dir/Dockerfile" ]; then
-    cp "${working_directory}/deployment/container/build/al2023-prod" "${working_directory}/deployment/build/context_dir/Dockerfile"
+    cp "${working_directory}/container/build/Dockerfile" "${working_directory}/deployment/build/context_dir/Dockerfile"
 fi
 
 # Copy any .sh files from root to scripts directory (from the zip)
-cp "${working_directory}/deployment/container/scripts/"run-lza.sh "${working_directory}/deployment/build/context_dir/scripts/" 2>/dev/null || true
-cp "${working_directory}/deployment/container/scripts/"run-pipeline.sh "${working_directory}/deployment/build/context_dir/scripts/" 2>/dev/null || true
+cp "${working_directory}/container/scripts/"run-lza.sh "${working_directory}/deployment/build/context_dir/scripts/" 2>/dev/null || true
+cp "${working_directory}/container/scripts/"run-pipeline.sh "${working_directory}/deployment/build/context_dir/scripts/" 2>/dev/null || true
 
 # Change to docker context dir
 cd "${working_directory}/deployment/build/context_dir/"
