@@ -230,7 +230,7 @@ exports[`ServiceLinkedRole > Construct(ServiceLinkedRole):  Snapshot Test 1`] = 
         "Description": "Custom resource provider to create service linked role",
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.15.0-rc.2",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.15.0-rc.3",
           },
         },
         "Handler": "index.handler",
@@ -348,7 +348,7 @@ exports[`ServiceLinkedRole > Construct(ServiceLinkedRole):  Snapshot Test 1`] = 
         "Description": "AWS CDK resource provider framework - onEvent (Default/ServiceLinkedRole/CreateServiceLinkedRoleProvider)",
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.15.0-rc.2",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.15.0-rc.3",
             "USER_ON_EVENT_FUNCTION_ARN": {
               "Fn::GetAtt": [
                 "ServiceLinkedRoleCreateServiceLinkedRoleFunction76F68A8A",

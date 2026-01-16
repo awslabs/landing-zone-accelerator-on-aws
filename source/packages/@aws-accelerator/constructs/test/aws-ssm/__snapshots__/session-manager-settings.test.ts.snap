@@ -16,7 +16,7 @@ exports[`SsmSessionManagerSettings > Construct(SsmSessionManagerSettings):  Snap
         },
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.15.0-rc.2",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.15.0-rc.3",
           },
         },
         "Handler": "__entrypoint__.handler",
