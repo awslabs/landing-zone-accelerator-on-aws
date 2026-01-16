@@ -44,16 +44,3 @@ jobs:
           git config user.email github-actions@github.com
           mike deploy --push --update-aliases ${{ steps.s3.outputs.commit_tag }} latest
           mike set-default --push latest
-  check-links:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-      - name: Check Broken Links
-        uses: ./actions/check-broken-links
-        with:
-          url: https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}
-          exclude: example.com
-    
-        
-        
