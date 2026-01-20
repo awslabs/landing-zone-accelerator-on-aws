@@ -16,7 +16,7 @@ exports[`DirectConnectGatewayAssociation > Construct(DirectConnectGateway):  Sna
         },
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.15.0-rc.4",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.15.0-rc.5",
           },
         },
         "Handler": "__entrypoint__.handler",
@@ -141,7 +141,7 @@ exports[`DirectConnectGatewayAssociation > Construct(DirectConnectGateway):  Sna
         },
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.15.0-rc.4",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.15.0-rc.5",
           },
         },
         "Handler": "__entrypoint__.handler",

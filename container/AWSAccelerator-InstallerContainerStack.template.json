@@ -1,5 +1,5 @@
 {
- "Description": "(SO0199) Landing Zone Accelerator on AWS. Version 1.15.0-rc.4.",
+ "Description": "(SO0199) Landing Zone Accelerator on AWS. Version 1.15.0-rc.5.",
  "Metadata": {
   "AWS::CloudFormation::Interface": {
    "ParameterGroups": [
@@ -545,7 +545,7 @@
      ]
     },
     "Type": "String",
-    "Value": "1.15.0-rc.4"
+    "Value": "1.15.0-rc.5"
    },
    "Metadata": {
     "aws:cdk:path": "AWSAccelerator-InstallerContainerStack/SsmParamAcceleratorVersion/Resource"
@@ -2154,7 +2154,7 @@
          "Region": {
           "Ref": "AWS::Region"
          },
-         "SolutionId": "AwsSolution/SO0199/1.15.0-rc.4"
+         "SolutionId": "AwsSolution/SO0199/1.15.0-rc.5"
         },
         "Script": "import boto3\nimport json\nimport urllib.parse\nfrom botocore.config import Config\n\ndef extract_value(event_value):\n    if not event_value:\n        return None\n    if isinstance(event_value, str):\n        return event_value.strip()\n    return event_value\n\ndef handler(event, context):\n    config = Config(user_agent_extra=event['SolutionId']) \n    client = boto3.client('ecs', region_name=event['Region'], config=config)\n    \n    response = client.run_task(\n        taskDefinition=extract_value(event['TaskDefinition']),\n        cluster=extract_value(event['Cluster']),\n        launchType='FARGATE',\n        networkConfiguration={\n            'awsvpcConfiguration': {\n                'subnets': [extract_value(event['SubnetId'])],\n                'securityGroups': [extract_value(event['SecurityGroupId'])],\n                'assignPublicIp': 'DISABLED'\n            }\n        }\n    )\n    \n    task_arn = response['tasks'][0]['taskArn']\n    task_id = task_arn.split('/')[-1]\n    log_group = extract_value(event['LogGroupName'])\n    log_stream = f\"ecs/lza-deployment-container/{task_id}\"\n    \n    results = {\n        'TaskArn': task_arn,\n        'ClusterName': extract_value(event['Cluster']),\n        'LogGroupName': log_group,\n        'LogStreamName': log_stream,\n        'RunTaskResponse': json.dumps(response, indent=4, default=str)\n    }\n    \n    return results"
        },
@@ -2222,7 +2222,7 @@
          "Region": {
           "Ref": "AWS::Region"
          },
-         "SolutionId": "AwsSolution/SO0199/1.15.0-rc.4"
+         "SolutionId": "AwsSolution/SO0199/1.15.0-rc.5"
         },
         "Script": "import boto3\nfrom botocore.config import Config\n\ndef handler(event, context):\n    config = Config(user_agent_extra=event['SolutionId']) \n    client = boto3.client('ecs', region_name=event['Region'], config=config)\n    \n    response = client.describe_tasks(\n        cluster=event['ClusterName'],\n        tasks=[event['TaskArn']]\n    )\n    \n    if not response['tasks']:\n        raise Exception(f\"Task not found: {event['TaskArn']}\")\n    \n    task = response['tasks'][0]\n    containers = task.get('containers', [])\n    \n    if not containers:\n        raise Exception(f\"No containers found in task: {event['TaskArn']}\")\n    \n    # Extract exit code from tasks[0].containers[0].exitCode\n    container = containers[0]\n    exit_code = container.get('exitCode')  # Can be 0, 1, 137, etc. or None if killed\n    \n    # Extract task-level stop information\n    stop_code = task.get('stopCode', 'Unknown')  # e.g., \"EssentialContainerExited\"\n    stop_reason = task.get('stoppedReason', 'Unknown')  # e.g., \"Essential container in task exited\"\n    task_status = task.get('lastStatus', 'Unknown')\n    \n    result = {\n        'ExitCode': exit_code if exit_code is not None else -1,\n        'StopCode': stop_code,\n        'StopReason': stop_reason,\n        'TaskStatus': task_status,\n        'LogStreamName': event['LogStreamName'],\n        'LogGroupName': event['LogGroupName']\n    }\n    \n    # Fail if exit code is non-zero or None (container was killed)\n    if exit_code is None or exit_code != 0:\n        error_msg = (\n            f\"ECS task failed with exit code {exit_code}. \"\n            f\"Stop code: {stop_code}. \"\n            f\"Stop reason: {stop_reason}. \"\n            f\"Check CloudWatch logs: {event['LogGroupName']}/{event['LogStreamName']}\"\n        )\n        raise Exception(error_msg)\n    \n    return result"
        },
