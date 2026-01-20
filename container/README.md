@@ -11,7 +11,21 @@ Landing Zone Accelerator on AWS (LZA) depends on services like AWS CodeBuild and
 #### ECR Image
 
 1. Create an [Amazon ECR](https://docs.aws.amazon.com/AmazonECR/latest/userguide/repository-create.html) repository in the orchestration account. We recommend it be named `landing-zone-accelerator-on-aws`
-2. Download the tar file from the [GitHub repository](https://github.com/awslabs/landing-zone-accelerator-on-aws) `docker load < lza-vx.x.x-al2023.tar.gz` and [push the image to ECR in the orchestration account](https://docs.aws.amazon.com/AmazonECR/latest/userguide/docker-push-ecr-image.html) 
+2. Download the tar file from the [GitHub repository](https://github.com/awslabs/landing-zone-accelerator-on-aws/archive/refs/tags/experimental-v1.15.0-rc.4/lza-v1.15.0-rc.4-al2023.tar.gz).
+3. Authenticate your Docker client to the Amazon ECR registry to which you intend to push your image. Authentication tokens must be obtained for each registry used, and the tokens are valid for 12 hours. For more information, see [Private registry authentication in Amazon ECR](https://docs.aws.amazon.com/AmazonECR/latest/userguide/registry_auth.html).
+```
+aws ecr get-login-password --region <region> | docker login --username AWS --password-stdin <aws_account_id>.dkr.ecr.<region>.amazonaws.com
+```
+4. Load the docker image from Step 2.
+```
+docker load < lza-v1.15.0-rc.4-al2023.tar.gz
+```
+5. Tag the image
+`docker tag lza-v1.15.0-rc.4-al2023:latest <aws_account_id>.dkr.ecr.<region>.amazonaws.com/landing-zone-accelerator-on-aws:latest`
+6. [Push the image](https://docs.aws.amazon.com/AmazonECR/latest/userguide/docker-push-ecr-image.html)
+```
+docker push <aws_account_id>.dkr.ecr.<region>.amazonaws.com/landing-zone-accelerator-on-aws:latest
+```
 
 
 #### Cross-Account Setup
