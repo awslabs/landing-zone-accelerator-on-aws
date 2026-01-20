@@ -55,7 +55,7 @@ exports[`AcceleratorMetadata > Construct(AcceleratorMetadata):  Snapshot Test 1`
             "PARTITION": {
               "Ref": "AWS::Partition",
             },
-            "SOLUTION_ID": "AwsSolution/SO0199/1.15.0-rc.4",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.15.0-rc.5",
           },
         },
         "FunctionName": "AWSAccelerator-metadata-collection",
