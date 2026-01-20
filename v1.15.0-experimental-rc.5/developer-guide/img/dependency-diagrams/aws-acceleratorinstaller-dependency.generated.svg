@@ -1,0 +1,40 @@
+
+      <svg width="400" height="400" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+              <marker id="arrowhead-_aws-accelerator_installer" markerWidth="10" markerHeight="7" 
+              refX="9" refY="3.5" orient="auto">
+                  <polygon points="0 0, 10 3.5, 0 7" fill="#000"/>
+              </marker>
+          </defs>
+          <g>
+  
+      <circle cx="200" cy="100" r="60" fill="#ADD8E6" stroke="#000"/>
+      <text x="200" y="92.5"
+                 text-anchor="middle" font-family="Arial" font-size="12">@aws-accelerator</text><text x="200" y="107.5"
+                 text-anchor="middle" font-family="Arial" font-size="12">/installer</text>
+  
+          <circle cx="100" cy="260" r="60" fill="#90EE90" stroke="#000"/>
+          <text x="100" y="252.5"
+                     text-anchor="middle" font-family="Arial" font-size="12">@aws-accelerator</text><text x="100" y="267.5"
+                     text-anchor="middle" font-family="Arial" font-size="12">/accelerator</text>
+          
+          <!-- Add curved arrow -->
+          <path d="M200 160 
+                   Q200 180,
+                     100 200"
+                fill="none" stroke="#000" stroke-width="2" 
+                marker-end="url(#arrowhead-_aws-accelerator_installer)"/>
+      
+          <circle cx="300" cy="260" r="60" fill="#90EE90" stroke="#000"/>
+          <text x="300" y="245"
+                     text-anchor="middle" font-family="Arial" font-size="12">@aws-cdk-extensi</text><text x="300" y="260"
+                     text-anchor="middle" font-family="Arial" font-size="12">ons/cdk-extensio</text><text x="300" y="275"
+                     text-anchor="middle" font-family="Arial" font-size="12">ns</text>
+          
+          <!-- Add curved arrow -->
+          <path d="M200 160 
+                   Q200 180,
+                     300 200"
+                fill="none" stroke="#000" stroke-width="2" 
+                marker-end="url(#arrowhead-_aws-accelerator_installer)"/>
+      </g></svg>
