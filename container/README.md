@@ -10,14 +10,39 @@ Landing Zone Accelerator on AWS (LZA) depends on services like AWS CodeBuild and
 
 #### ECR Image
 
-1. Create an [Amazon ECR](https://docs.aws.amazon.com/AmazonECR/latest/userguide/repository-create.html) repository in the orchestration account
-2. Download the tar file from the [GitHub repository](https://github.com/awslabs/landing-zone-accelerator-on-aws) `docker load < lza.tar.gz` and [push the image to ECR in the orchestration account](https://docs.aws.amazon.com/AmazonECR/latest/userguide/docker-push-ecr-image.html) 
+1. Create an [Amazon ECR](https://docs.aws.amazon.com/AmazonECR/latest/userguide/repository-create.html) repository in the orchestration account. We recommend it be named `landing-zone-accelerator-on-aws`
+2. Download the tar file from the [GitHub repository](https://github.com/awslabs/landing-zone-accelerator-on-aws) `docker load < lza-vx.x.x-al2023.tar.gz` and [push the image to ECR in the orchestration account](https://docs.aws.amazon.com/AmazonECR/latest/userguide/docker-push-ecr-image.html) 
 
 
 #### Cross-Account Setup
 
 1. Enable [AWS Organizations](https://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_org.html) in the management account
-2. Create an [IAM role](https://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles.html) that allows the orchestration account to assume a role in the management account
+2. Select an AWS account for the container deployment account. We recommend having the account as a member of the AWS Organizations environment.
+3. Create a new IAM role in the AWS Organizations management account that allows access from the orchestration account. AWSAccelerator-ContainerDeploymentRole is the preferred name for this role.
+4. Update the trust policy of the AWSAccelerator-ContainerDeploymentRole to allow access from the orchestration account:
+```
+ {
+  "Version": "2012-10-17",		 	 	 
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Principal": {
+        "AWS": "arn:${PARTITION}:iam::${ORCHESTRATION_ACCOUNT_ID}:root"
+      },
+      "Action": "sts:AssumeRole",
+      "Condition": {
+        "StringLike": {
+          "aws:PrincipalArn": "arn:${PARTITION}:iam::${ORCHESTRATION_ACCOUNT_ID}:role/${AcceleratorQualifier}-*"
+        }
+      }
+    }
+  ]
+}
+```
+5. Attach the AdministratorAccess AWS managed IAM policy to the role.
+
+> Note: By default, AWS IAM roles with prefix AcceleratorQualifier in the pipeline account are used by AWS CodeBuild to assume role in the management account and deploy resources. To protect these roles, you should implement additional security measures, such as Service control policies (SCPs).
+
 
 ### Deploy Infrastructure
 

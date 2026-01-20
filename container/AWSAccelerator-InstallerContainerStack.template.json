@@ -1,0 +1,2504 @@
+{
+ "Description": "(SO0199) Landing Zone Accelerator on AWS. Version 1.15.0-rc.3.",
+ "Metadata": {
+  "AWS::CloudFormation::Interface": {
+   "ParameterGroups": [
+    {
+     "Label": {
+      "default": "Source Configuration"
+     },
+     "Parameters": [
+      "EcrUri"
+     ]
+    },
+    {
+     "Label": {
+      "default": "Mandatory Accounts Configuration"
+     },
+     "Parameters": [
+      "ManagementAccountEmail",
+      "LogArchiveAccountEmail",
+      "AuditAccountEmail"
+     ]
+    },
+    {
+     "Label": {
+      "default": "Environment Configuration"
+     },
+     "Parameters": [
+      "ControlTowerEnabled",
+      "AcceleratorPrefix",
+      "PythonRuntimeVersion",
+      "LogLevel"
+     ]
+    },
+    {
+     "Label": {
+      "default": "Config Bucket Configuration"
+     },
+     "Parameters": [
+      "UseExistingConfig",
+      "ExistingConfigBucketName",
+      "ExistingConfigBucketKey"
+     ]
+    },
+    {
+     "Label": {
+      "default": "Network Configuration"
+     },
+     "Parameters": [
+      "VpcCidr",
+      "UseExistingVpc",
+      "ExistingVpcId",
+      "ExistingSubnetId",
+      "ExistingSecurityGroupId"
+     ]
+    },
+    {
+     "Label": {
+      "default": "Target Environment Configuration"
+     },
+     "Parameters": [
+      "AcceleratorQualifier",
+      "ManagementAccountId",
+      "ManagementAccountRoleName"
+     ]
+    }
+   ],
+   "ParameterLabels": {
+    "EcrUri": {
+     "default": "ECR URI"
+    },
+    "ManagementAccountEmail": {
+     "default": "Management Account Email"
+    },
+    "LogArchiveAccountEmail": {
+     "default": "Log Archive Account Email"
+    },
+    "AuditAccountEmail": {
+     "default": "Audit Account Email"
+    },
+    "ControlTowerEnabled": {
+     "default": "Control Tower Environment"
+    },
+    "AcceleratorPrefix": {
+     "default": "Accelerator Resource name prefix"
+    },
+    "PythonRuntimeVersion": {
+     "default": "Python Runtime Version (for SSM aws:executeScript)"
+    },
+    "LogLevel": {
+     "default": "Log Level"
+    },
+    "UseExistingVpc": {
+     "default": "Use Existing VPC"
+    },
+    "ExistingVpcId": {
+     "default": "Existing VPC ID"
+    },
+    "ExistingSubnetId": {
+     "default": "Existing Subnet ID"
+    },
+    "ExistingSecurityGroupId": {
+     "default": "Existing Security Group ID"
+    },
+    "VpcCidr": {
+     "default": "VPC CIDR Block"
+    },
+    "AcceleratorQualifier": {
+     "default": "Accelerator Qualifier"
+    },
+    "ManagementAccountId": {
+     "default": "Management Account ID"
+    },
+    "ManagementAccountRoleName": {
+     "default": "Management Account Role Name"
+    }
+   }
+  }
+ },
+ "Parameters": {
+  "EcrUri": {
+   "Type": "String",
+   "Description": "The Amazon Elastic Container Registry (Amazon ECR) repository, where Landing Zone Accelerator on AWS code is present."
+  },
+  "ManagementAccountEmail": {
+   "Type": "String",
+   "AllowedPattern": "[^\\s@]+@[^\\s@]+\\.[^\\s@]+",
+   "ConstraintDescription": "Must be a valid email address matching \"[^\\s@]+@[^\\s@]+\\.[^\\s@]+\"",
+   "Description": "The management (primary) account email - NOTE: This must match the address of the management account email as listed in AWS Organizations > AWS accounts."
+  },
+  "LogArchiveAccountEmail": {
+   "Type": "String",
+   "AllowedPattern": "[^\\s@]+@[^\\s@]+\\.[^\\s@]+",
+   "ConstraintDescription": "Must be a valid email address matching \"[^\\s@]+@[^\\s@]+\\.[^\\s@]+\"",
+   "Description": "The log archive account email"
+  },
+  "AuditAccountEmail": {
+   "Type": "String",
+   "AllowedPattern": "[^\\s@]+@[^\\s@]+\\.[^\\s@]+",
+   "ConstraintDescription": "Must be a valid email address matching \"[^\\s@]+@[^\\s@]+\\.[^\\s@]+\"",
+   "Description": "The security audit account (also referred to as the audit account)"
+  },
+  "ControlTowerEnabled": {
+   "Type": "String",
+   "Default": "Yes",
+   "AllowedValues": [
+    "Yes",
+    "No"
+   ],
+   "Description": "Select yes if deploying to a Control Tower environment.  Select no if using just Organizations. If no, you must first set up mandatory accounts."
+  },
+  "AcceleratorPrefix": {
+   "Type": "String",
+   "Default": "AWSAccelerator",
+   "AllowedPattern": "[A-Za-z0-9-]+",
+   "Description": "The prefix value for accelerator deployed resources. Leave the default value if using solution defined resource name prefix, the solution will use AWSAccelerator as resource name prefix. Note: Updating this value after initial installation will cause stack failure. Non-default value can not start with keyword \"aws\" or \"ssm\". Trailing dash (-) in non-default value will be ignored.",
+   "MaxLength": 15
+  },
+  "PythonRuntimeVersion": {
+   "Type": "String",
+   "Default": "python3.11",
+   "Description": "The Python runtime version for SSM Document aws:executeScript actions. Must match SSM supported runtimes (e.g., python3.8, python3.9, python3.10, python3.11)."
+  },
+  "LogLevel": {
+   "Type": "String",
+   "Default": "error",
+   "AllowedValues": [
+    "error",
+    "info",
+    "debug"
+   ],
+   "Description": "The log level for LZA engine. Controls the verbosity of logs generated during deployment."
+  },
+  "UseExistingConfig": {
+   "Type": "String",
+   "Default": "No",
+   "AllowedValues": [
+    "Yes",
+    "No"
+   ],
+   "Description": "Select Yes if deploying the solution with an existing configuration. Leave the default value if using the solution-deployed bucket. If the AcceleratorPrefix parameter is set to the default value, the solution will deploy a bucket named \"aws-accelerator-config-$account-$region.\" Otherwise, the solution-deployed bucket will be named \"AcceleratorPrefix-config-$account-$region.\" Note: Updating this value after initial installation may cause adverse affects."
+  },
+  "ExistingConfigBucketName": {
+   "Type": "String",
+   "Default": "",
+   "Description": "The name of an existing LZA configuration bucket hosting the accelerator configuration."
+  },
+  "ExistingConfigBucketKey": {
+   "Type": "String",
+   "Default": "",
+   "Description": "Specify the branch name of the existing LZA configuration bucket key to pull the accelerator configuration from."
+  },
+  "UseExistingVpc": {
+   "Type": "String",
+   "Default": "No",
+   "AllowedValues": [
+    "Yes",
+    "No"
+   ],
+   "Description": "Select Yes to use an existing VPC. If Yes, provide existing subnet and security group IDs."
+  },
+  "ExistingVpcId": {
+   "Type": "String",
+   "Default": "",
+   "Description": "The ID of an existing VPC (required when UseExistingVpc is Yes)"
+  },
+  "ExistingSubnetId": {
+   "Type": "String",
+   "Default": "",
+   "Description": "The ID of an existing subnet (required when UseExistingVpc is Yes)"
+  },
+  "ExistingSecurityGroupId": {
+   "Type": "String",
+   "Default": "",
+   "Description": "The ID of an existing security group (required when UseExistingVpc is Yes)"
+  },
+  "VpcCidr": {
+   "Type": "String",
+   "Default": "10.0.0.0/16",
+   "AllowedPattern": "^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\\/(1[6-9]|2[0-8]))$",
+   "Description": "The CIDR block for the VPC (used when UseExistingVpc is No)"
+  },
+  "AcceleratorQualifier": {
+   "Type": "String",
+   "AllowedPattern": "^[a-z]+[a-z0-9-]{1,61}[a-z0-9]+$",
+   "ConstraintDescription": "Qualifier must include lowercase letters and numbers only and cannot be aws-accelerator",
+   "Description": "Names the resources in the external deployment account. This must be unique for each LZA pipeline created in a single external deployment account, for example \"env2\" or \"app1.\" Do not use \"aws-accelerator\" or a similar value that could be confused with the prefix.\""
+  },
+  "ManagementAccountId": {
+   "Type": "String",
+   "Description": "Target management account id"
+  },
+  "ManagementAccountRoleName": {
+   "Type": "String",
+   "Description": "Target management account role name"
+  }
+ },
+ "Resources": {
+  "ResourceNamePrefixesResourceNamePrefixesFunctionServiceRole17DDBBF2": {
+   "Type": "AWS::IAM::Role",
+   "Properties": {
+    "AssumeRolePolicyDocument": {
+     "Statement": [
+      {
+       "Action": "sts:AssumeRole",
+       "Effect": "Allow",
+       "Principal": {
+        "Service": "lambda.amazonaws.com"
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "ManagedPolicyArns": [
+     {
+      "Fn::Join": [
+       "",
+       [
+        "arn:",
+        {
+         "Ref": "AWS::Partition"
+        },
+        ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+       ]
+      ]
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "AWSAccelerator-InstallerContainerStack/ResourceNamePrefixes/ResourceNamePrefixesFunction/ServiceRole/Resource",
+    "cdk_nag": {
+     "rules_to_suppress": [
+      {
+       "id": "AwsSolutions-IAM4",
+       "reason": "Needed to write to CWL group"
+      },
+      {
+       "id": "AwsSolutions-IAM5",
+       "reason": "Needed to create SSM parameter for prefix"
+      }
+     ]
+    }
+   }
+  },
+  "ResourceNamePrefixesResourceNamePrefixesFunctionServiceRoleDefaultPolicyDC1CC159": {
+   "Type": "AWS::IAM::Policy",
+   "Properties": {
+    "PolicyDocument": {
+     "Statement": [
+      {
+       "Action": [
+        "ssm:GetParameters",
+        "ssm:GetParameter",
+        "ssm:PutParameter",
+        "ssm:DeleteParameter"
+       ],
+       "Condition": {
+        "StringEquals": {
+         "aws:PrincipalAccount": {
+          "Ref": "AWS::AccountId"
+         }
+        }
+       },
+       "Effect": "Allow",
+       "Resource": [
+        {
+         "Fn::Join": [
+          "",
+          [
+           "arn:",
+           {
+            "Ref": "AWS::Partition"
+           },
+           ":ssm:",
+           {
+            "Ref": "AWS::Region"
+           },
+           ":",
+           {
+            "Ref": "AWS::AccountId"
+           },
+           ":parameter/accelerator/",
+           {
+            "Ref": "AcceleratorQualifier"
+           },
+           "/lza-prefix"
+          ]
+         ]
+        },
+        {
+         "Fn::Join": [
+          "",
+          [
+           "arn:",
+           {
+            "Ref": "AWS::Partition"
+           },
+           ":ssm:",
+           {
+            "Ref": "AWS::Region"
+           },
+           ":",
+           {
+            "Ref": "AWS::AccountId"
+           },
+           ":parameter/accelerator/",
+           {
+            "Ref": "AcceleratorQualifier"
+           },
+           "-pipeline-stack-",
+           {
+            "Ref": "AWS::AccountId"
+           },
+           "-",
+           {
+            "Ref": "AWS::Region"
+           },
+           "/version"
+          ]
+         ]
+        }
+       ],
+       "Sid": "SsmReadParameterAccess"
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "PolicyName": "ResourceNamePrefixesResourceNamePrefixesFunctionServiceRoleDefaultPolicyDC1CC159",
+    "Roles": [
+     {
+      "Ref": "ResourceNamePrefixesResourceNamePrefixesFunctionServiceRole17DDBBF2"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "AWSAccelerator-InstallerContainerStack/ResourceNamePrefixes/ResourceNamePrefixesFunction/ServiceRole/DefaultPolicy/Resource",
+    "cdk_nag": {
+     "rules_to_suppress": [
+      {
+       "id": "AwsSolutions-IAM4",
+       "reason": "Needed to write to CWL group"
+      },
+      {
+       "id": "AwsSolutions-IAM5",
+       "reason": "Needed to create SSM parameter for prefix"
+      }
+     ]
+    }
+   }
+  },
+  "ResourceNamePrefixesResourceNamePrefixesFunction138C66F1": {
+   "Type": "AWS::Lambda::Function",
+   "Properties": {
+    "Code": {
+     "ZipFile": "\n          const response = require('cfn-response'); \n          const { SSMClient, DeleteParameterCommand, GetParameterCommand, ParameterNotFound, PutParameterCommand } = require(\"@aws-sdk/client-ssm\");\n          const { ConfiguredRetryStrategy } = require(\"@aws-sdk/util-retry\");\n          exports.handler = async function (event, context) { \n          console.log(JSON.stringify(event, null, 4)); \n          const prefix=event.ResourceProperties.prefix;\n          const pipelineStackVersionSsmParamName=event.ResourceProperties.pipelineStackVersionSsmParamName;\n          const lowerCasePrefix=prefix.toLowerCase();\n          \n          const ssm = new SSMClient({retryStrategy: new ConfiguredRetryStrategy(10, (attempt) => 100 + attempt * 1000)});\n          \n          let data = {};\n          \n          let paramName = event.ResourceProperties.prefixParameterName;\n          \n          if (lowerCasePrefix === 'awsaccelerator') {\n              data['acceleratorPrefix'] = 'AWSAccelerator';\n              data['lowerCasePrefix'] = 'aws-accelerator'; \n              data['oneWordPrefix'] = 'accelerator';               \n          } else {\n              data['acceleratorPrefix'] = prefix;\n              data['lowerCasePrefix'] = lowerCasePrefix; \n              data['oneWordPrefix'] = prefix; \n          }\n                  \n\n          if (event.RequestType === 'Update'){\n\n              var params = {\n                Name: paramName,\n              };\n              try {\n                  const ssmResponse = await ssm.send(new GetParameterCommand(params));\n                  // Fail stack if prefix was changed during update\n                  if (ssmResponse.Parameter.Value !== prefix) {\n                      await response.send(event, context, response.FAILED, {'FailureReason': 'LZA does not allow changing AcceleratorPrefix parameter value after initial deploy !!! Existing prefix: ' + event.OldResourceProperties.prefix + ' New prefix: ' + prefix + '.' }, event.PhysicalResourceId);\n                      return;\n                  }\n                  await response.send(event, context, response.SUCCESS, data, event.PhysicalResourceId);\n              } catch (error) {\n                  console.log(error);\n                  if (error instanceof ParameterNotFound){\n                      await response.send(event, context, response.FAILED, {'FailureReason': 'LZA prefix ssm parameter ' + paramName + ' not found!!! Recreate the parameter with existing AcceleratorPrefix parameter value to fix the issue'}, event.PhysicalResourceId);\n                      return;\n                  }\n                  else {\n                      await response.send(event, context, response.FAILED, {'FailureReason': error.code + ' error occurred while accessing LZA prefix ssm parameter ' + paramName }, event.PhysicalResourceId);\n                      return;\n                  }\n              }          \n          } \n          \n          if (event.RequestType === 'Create') {\n          \n              if (lowerCasePrefix !== 'awsaccelerator') {\n                  // Fail stack if prefix starts with aws or ssm\n                  if (lowerCasePrefix.startsWith('aws') || lowerCasePrefix.startsWith('ssm')) { \n                      await response.send(event, context, response.FAILED, {'FailureReason': 'Accelerator prefix ' + prefix + ' can not be started with aws or ssm !!!'}, event.PhysicalResourceId);\n                      return;\n                  }\n\n                  // Check if this is an existing deployment and prefix changed with initial deployment of custom resource\n                  var versionParams = {\n                    Name: pipelineStackVersionSsmParamName,\n                  };\n                  try {\n                    await ssm.send(new GetParameterCommand(versionParams));\n                    await response.send(event, context, response.FAILED, {'FailureReason': 'Can not change AcceleratorPrefix parameter for existing deployment, existing prefix value is AWSAccelerator, keep AcceleratorPrefix parameter value to default value for successfully stack update !!!'}, event.PhysicalResourceId);\n                    return;\n                  }\n                  catch (error) {\n                    console.log(error);\n                    if (!(error instanceof ParameterNotFound)){\n                      await response.send(event, context, response.FAILED, {'FailureReason': error.code + ' error occurred while accessing LZA ssm parameter ' + pipelineStackVersionSsmParamName }, event.PhysicalResourceId);\n                      return;\n                    }\n                  }\n              }\n          \n              // Create /accelerator/lza-prefix SSM parameter to store prefix value to protect updating prefix\n              try {\n                  var newParams = {\n                        Name: paramName,\n                        Value: prefix,\n                        Description: 'LZA created SSM parameter for Accelerator prefix value, DO NOT MODIFY/DELETE this parameter',\n                        Type: 'String',\n                      };\n                  await ssm.send(new PutParameterCommand(newParams));\n                  await response.send(event, context, response.SUCCESS, data, event.PhysicalResourceId);\n              }\n              catch (error) {\n                  console.log(error);\n                  await response.send(event, context, response.FAILED, {'FailureReason': error.code + ' error occurred while creating LZA prefix ssm parameter ' + paramName }, event.PhysicalResourceId);\n                  return;\n              }\n          }\n          if (event.RequestType === 'Delete') {\n\n            var deleteParams = {\n              Name: paramName,\n            };\n            try {\n              await ssm.send(new DeleteParameterCommand(deleteParams));\n            }\n            catch (error) {\n              console.log(error);\n              if (!(error instanceof ParameterNotFound)){\n                await response.send(event, context, response.FAILED, {'FailureReason': error.code + ' error occurred while deleting LZA ssm parameter ' + paramName }, event.PhysicalResourceId);\n                return;\n              }\n            }\n            await response.send(event, context, response.SUCCESS, {'Status': 'Custom resource deleted successfully' }, event.PhysicalResourceId);\n          }\n          \n          return;\n      }"
+    },
+    "Description": "This function converts accelerator prefix parameter to lower case to name s3 buckets in installer stack",
+    "Handler": "index.handler",
+    "Role": {
+     "Fn::GetAtt": [
+      "ResourceNamePrefixesResourceNamePrefixesFunctionServiceRole17DDBBF2",
+      "Arn"
+     ]
+    },
+    "Runtime": "nodejs22.x"
+   },
+   "DependsOn": [
+    "ResourceNamePrefixesResourceNamePrefixesFunctionServiceRoleDefaultPolicyDC1CC159",
+    "ResourceNamePrefixesResourceNamePrefixesFunctionServiceRole17DDBBF2"
+   ],
+   "Metadata": {
+    "aws:cdk:path": "AWSAccelerator-InstallerContainerStack/ResourceNamePrefixes/ResourceNamePrefixesFunction/Resource",
+    "cdk_nag": {
+     "rules_to_suppress": [
+      {
+       "id": "AwsSolutions-IAM4",
+       "reason": "Needed to write to CWL group"
+      },
+      {
+       "id": "AwsSolutions-IAM5",
+       "reason": "Needed to create SSM parameter for prefix"
+      }
+     ]
+    },
+    "cfn_nag": {
+     "rules_to_suppress": [
+      {
+       "id": "W58",
+       "reason": "CloudWatch Logs are enabled in AWSLambdaBasicExecutionRole"
+      },
+      {
+       "id": "W89",
+       "reason": "This function supports infrastructure deployment and is not deployed inside a VPC."
+      },
+      {
+       "id": "W92",
+       "reason": "This function supports infrastructure deployment and does not require setting ReservedConcurrentExecutions."
+      }
+     ]
+    }
+   }
+  },
+  "ResourceNamePrefixesGetPrefixResource96A10E6E": {
+   "Type": "Custom::GetPrefixes",
+   "Properties": {
+    "ServiceToken": {
+     "Fn::GetAtt": [
+      "ResourceNamePrefixesResourceNamePrefixesFunction138C66F1",
+      "Arn"
+     ]
+    },
+    "prefix": {
+     "Ref": "AcceleratorPrefix"
+    },
+    "pipelineStackVersionSsmParamName": {
+     "Fn::Join": [
+      "",
+      [
+       "/accelerator/",
+       {
+        "Ref": "AcceleratorQualifier"
+       },
+       "-pipeline-stack-",
+       {
+        "Ref": "AWS::AccountId"
+       },
+       "-",
+       {
+        "Ref": "AWS::Region"
+       },
+       "/version"
+      ]
+     ]
+    },
+    "prefixParameterName": {
+     "Fn::Join": [
+      "",
+      [
+       "/accelerator/",
+       {
+        "Ref": "AcceleratorQualifier"
+       },
+       "/lza-prefix"
+      ]
+     ]
+    }
+   },
+   "UpdateReplacePolicy": "Delete",
+   "DeletionPolicy": "Delete",
+   "Metadata": {
+    "aws:cdk:path": "AWSAccelerator-InstallerContainerStack/ResourceNamePrefixes/GetPrefixResource/Default"
+   }
+  },
+  "SsmParamStackId521A78D3": {
+   "Type": "AWS::SSM::Parameter",
+   "Properties": {
+    "Name": {
+     "Fn::Join": [
+      "",
+      [
+       "/",
+       {
+        "Fn::GetAtt": [
+         "ResourceNamePrefixesGetPrefixResource96A10E6E",
+         "oneWordPrefix"
+        ]
+       },
+       "/",
+       {
+        "Ref": "AcceleratorQualifier"
+       },
+       "/AWSAccelerator-InstallerContainerStack/stack-id"
+      ]
+     ]
+    },
+    "Type": "String",
+    "Value": {
+     "Ref": "AWS::StackId"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "AWSAccelerator-InstallerContainerStack/SsmParamStackId/Resource"
+   }
+  },
+  "SsmParamAcceleratorVersionFF83282D": {
+   "Type": "AWS::SSM::Parameter",
+   "Properties": {
+    "Name": {
+     "Fn::Join": [
+      "",
+      [
+       "/",
+       {
+        "Fn::GetAtt": [
+         "ResourceNamePrefixesGetPrefixResource96A10E6E",
+         "oneWordPrefix"
+        ]
+       },
+       "/",
+       {
+        "Ref": "AcceleratorQualifier"
+       },
+       "/AWSAccelerator-InstallerContainerStack/version"
+      ]
+     ]
+    },
+    "Type": "String",
+    "Value": "1.15.0-rc.3"
+   },
+   "Metadata": {
+    "aws:cdk:path": "AWSAccelerator-InstallerContainerStack/SsmParamAcceleratorVersion/Resource"
+   }
+  },
+  "InstallerKey2A6A8C6D": {
+   "Type": "AWS::KMS::Key",
+   "Properties": {
+    "Description": "KMS key for encrypting LZA installer S3 configuration bucket in the management account",
+    "EnableKeyRotation": true,
+    "KeyPolicy": {
+     "Statement": [
+      {
+       "Effect": "Allow",
+       "Principal": {
+        "AWS": {
+         "Fn::Join": [
+          "",
+          [
+           "arn:",
+           {
+            "Ref": "AWS::Partition"
+           },
+           ":iam::",
+           {
+            "Ref": "AWS::AccountId"
+           },
+           ":root"
+          ]
+         ]
+        }
+       },
+       "Action": "kms:*",
+       "Resource": "*"
+      },
+      {
+       "Sid": "Allow Accelerator Role to use the encryption key",
+       "Effect": "Allow",
+       "Principal": {
+        "AWS": "*"
+       },
+       "Action": [
+        "kms:Encrypt",
+        "kms:Decrypt",
+        "kms:ReEncrypt*",
+        "kms:GenerateDataKey*",
+        "kms:DescribeKey"
+       ],
+       "Resource": "*",
+       "Condition": {
+        "ArnLike": {
+         "aws:PrincipalARN": {
+          "Fn::Join": [
+           "",
+           [
+            "arn:",
+            {
+             "Ref": "AWS::Partition"
+            },
+            ":iam::",
+            {
+             "Ref": "AWS::AccountId"
+            },
+            ":role/",
+            {
+             "Ref": "AcceleratorQualifier"
+            },
+            "-*"
+           ]
+          ]
+         }
+        }
+       }
+      },
+      {
+       "Sid": "Allow SNS service to use the encryption key",
+       "Effect": "Allow",
+       "Principal": {
+        "Service": "sns.amazonaws.com"
+       },
+       "Action": [
+        "kms:Encrypt",
+        "kms:Decrypt",
+        "kms:ReEncrypt*",
+        "kms:GenerateDataKey*",
+        "kms:DescribeKey"
+       ],
+       "Resource": "*"
+      },
+      {
+       "Sid": "Allow Cloudwatch Logs service to use the encryption key",
+       "Effect": "Allow",
+       "Principal": {
+        "Service": {
+         "Fn::Join": [
+          "",
+          [
+           "logs.",
+           {
+            "Ref": "AWS::Region"
+           },
+           ".amazonaws.com"
+          ]
+         ]
+        }
+       },
+       "Action": [
+        "kms:Encrypt",
+        "kms:Decrypt",
+        "kms:ReEncrypt*",
+        "kms:GenerateDataKey*",
+        "kms:DescribeKey"
+       ],
+       "Resource": "*",
+       "Condition": {
+        "ArnLike": {
+         "kms:EncryptionContext:aws:logs:arn": {
+          "Fn::Join": [
+           "",
+           [
+            "arn:",
+            {
+             "Ref": "AWS::Partition"
+            },
+            ":logs:",
+            {
+             "Ref": "AWS::Region"
+            },
+            ":",
+            {
+             "Ref": "AWS::AccountId"
+            },
+            ":log-group:*"
+           ]
+          ]
+         }
+        }
+       }
+      }
+     ]
+    }
+   },
+   "UpdateReplacePolicy": "Retain",
+   "DeletionPolicy": "Retain",
+   "Metadata": {
+    "cfn_nag": {
+     "rules_to_suppress": [
+      {
+       "id": "F76",
+       "reason": "KMS key using * principal with added arn condition"
+      }
+     ]
+    }
+   }
+  },
+  "InstallerKeyAliasD5C174F0": {
+   "Type": "AWS::KMS::Alias",
+   "Properties": {
+    "AliasName": {
+     "Fn::Join": [
+      "",
+      [
+       "alias/",
+       {
+        "Fn::GetAtt": [
+         "ResourceNamePrefixesGetPrefixResource96A10E6E",
+         "oneWordPrefix"
+        ]
+       },
+       "/",
+       {
+        "Ref": "AcceleratorQualifier"
+       },
+       "/installer/kms/key"
+      ]
+     ]
+    },
+    "TargetKeyId": {
+     "Fn::GetAtt": [
+      "InstallerKey2A6A8C6D",
+      "Arn"
+     ]
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "AWSAccelerator-InstallerContainerStack/InstallerKey/Alias/Resource"
+   }
+  },
+  "AcceleratorManagementKmsArnParameter1E6975BF": {
+   "Type": "AWS::SSM::Parameter",
+   "Properties": {
+    "Name": {
+     "Fn::Join": [
+      "",
+      [
+       "/",
+       {
+        "Fn::GetAtt": [
+         "ResourceNamePrefixesGetPrefixResource96A10E6E",
+         "oneWordPrefix"
+        ]
+       },
+       "/",
+       {
+        "Ref": "AcceleratorQualifier"
+       },
+       "/installer/kms/key-arn"
+      ]
+     ]
+    },
+    "Type": "String",
+    "Value": {
+     "Fn::GetAtt": [
+      "InstallerKey2A6A8C6D",
+      "Arn"
+     ]
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "AWSAccelerator-InstallerContainerStack/AcceleratorManagementKmsArnParameter/Resource"
+   }
+  },
+  "InstallerAccessLogsBucket647700E9": {
+   "Type": "AWS::S3::Bucket",
+   "Properties": {
+    "BucketEncryption": {
+     "ServerSideEncryptionConfiguration": [
+      {
+       "ServerSideEncryptionByDefault": {
+        "SSEAlgorithm": "AES256"
+       }
+      }
+     ]
+    },
+    "BucketName": {
+     "Fn::Join": [
+      "",
+      [
+       {
+        "Ref": "AcceleratorQualifier"
+       },
+       "-s3-logs-",
+       {
+        "Ref": "AWS::AccountId"
+       },
+       "-",
+       {
+        "Ref": "AWS::Region"
+       }
+      ]
+     ]
+    },
+    "LifecycleConfiguration": {
+     "Rules": [
+      {
+       "AbortIncompleteMultipartUpload": {
+        "DaysAfterInitiation": 1
+       },
+       "ExpirationInDays": 1825,
+       "ExpiredObjectDeleteMarker": false,
+       "Id": {
+        "Fn::Join": [
+         "",
+         [
+          "LifecycleRule",
+          {
+           "Ref": "AcceleratorQualifier"
+          },
+          "-s3-logs-",
+          {
+           "Ref": "AWS::AccountId"
+          },
+          "-",
+          {
+           "Ref": "AWS::Region"
+          }
+         ]
+        ]
+       },
+       "NoncurrentVersionExpiration": {
+        "NoncurrentDays": 1825
+       },
+       "NoncurrentVersionTransitions": [
+        {
+         "StorageClass": "DEEP_ARCHIVE",
+         "TransitionInDays": 366
+        }
+       ],
+       "Status": "Enabled",
+       "Transitions": [
+        {
+         "StorageClass": "DEEP_ARCHIVE",
+         "TransitionInDays": 365
+        }
+       ]
+      }
+     ]
+    },
+    "OwnershipControls": {
+     "Rules": [
+      {
+       "ObjectOwnership": "BucketOwnerPreferred"
+      }
+     ]
+    },
+    "PublicAccessBlockConfiguration": {
+     "BlockPublicAcls": true,
+     "BlockPublicPolicy": true,
+     "IgnorePublicAcls": true,
+     "RestrictPublicBuckets": true
+    },
+    "VersioningConfiguration": {
+     "Status": "Enabled"
+    }
+   },
+   "UpdateReplacePolicy": "Retain",
+   "DeletionPolicy": "Retain",
+   "Metadata": {
+    "cfn_nag": {
+     "rules_to_suppress": [
+      {
+       "id": "W35",
+       "reason": "This is an access logging bucket."
+      }
+     ]
+    },
+    "cdk_nag": {
+     "rules_to_suppress": [
+      {
+       "id": "AwsSolutions-S1",
+       "reason": "AccessLogsBucket has server access logs disabled till the task for access logging completed."
+      }
+     ]
+    }
+   }
+  },
+  "InstallerAccessLogsBucketPolicy20D4E285": {
+   "Type": "AWS::S3::BucketPolicy",
+   "Properties": {
+    "Bucket": {
+     "Ref": "InstallerAccessLogsBucket647700E9"
+    },
+    "PolicyDocument": {
+     "Statement": [
+      {
+       "Action": "s3:*",
+       "Condition": {
+        "Bool": {
+         "aws:SecureTransport": "false"
+        }
+       },
+       "Effect": "Deny",
+       "Principal": {
+        "AWS": "*"
+       },
+       "Resource": [
+        {
+         "Fn::GetAtt": [
+          "InstallerAccessLogsBucket647700E9",
+          "Arn"
+         ]
+        },
+        {
+         "Fn::Join": [
+          "",
+          [
+           {
+            "Fn::GetAtt": [
+             "InstallerAccessLogsBucket647700E9",
+             "Arn"
+            ]
+           },
+           "/*"
+          ]
+         ]
+        }
+       ],
+       "Sid": "deny-insecure-connections"
+      }
+     ],
+     "Version": "2012-10-17"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "AWSAccelerator-InstallerContainerStack/InstallerAccessLogsBucket/Resource/Policy/Resource"
+   }
+  },
+  "InstallerAccessLogsBucketName4F700F48": {
+   "Type": "AWS::SSM::Parameter",
+   "Properties": {
+    "Name": {
+     "Fn::Join": [
+      "",
+      [
+       "/",
+       {
+        "Fn::GetAtt": [
+         "ResourceNamePrefixesGetPrefixResource96A10E6E",
+         "oneWordPrefix"
+        ]
+       },
+       "/",
+       {
+        "Ref": "AcceleratorQualifier"
+       },
+       "/installer-access-logs-bucket-name"
+      ]
+     ]
+    },
+    "Type": "String",
+    "Value": {
+     "Ref": "InstallerAccessLogsBucket647700E9"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "AWSAccelerator-InstallerContainerStack/InstallerAccessLogsBucketName/Resource"
+   }
+  },
+  "ConfigBucket": {
+   "Type": "AWS::S3::Bucket",
+   "Properties": {
+    "BucketEncryption": {
+     "ServerSideEncryptionConfiguration": [
+      {
+       "ServerSideEncryptionByDefault": {
+        "KMSMasterKeyID": {
+         "Fn::GetAtt": [
+          "InstallerKey2A6A8C6D",
+          "Arn"
+         ]
+        },
+        "SSEAlgorithm": "aws:kms"
+       }
+      }
+     ]
+    },
+    "BucketName": {
+     "Fn::Join": [
+      "",
+      [
+       {
+        "Ref": "AcceleratorQualifier"
+       },
+       "-config-",
+       {
+        "Ref": "AWS::AccountId"
+       },
+       "-",
+       {
+        "Ref": "AWS::Region"
+       }
+      ]
+     ]
+    },
+    "LifecycleConfiguration": {
+     "Rules": [
+      {
+       "AbortIncompleteMultipartUpload": {
+        "DaysAfterInitiation": 1
+       },
+       "ExpirationInDays": 1825,
+       "ExpiredObjectDeleteMarker": false,
+       "Id": {
+        "Fn::Join": [
+         "",
+         [
+          "LifecycleRule",
+          {
+           "Ref": "AcceleratorQualifier"
+          },
+          "-config-",
+          {
+           "Ref": "AWS::AccountId"
+          },
+          "-",
+          {
+           "Ref": "AWS::Region"
+          }
+         ]
+        ]
+       },
+       "NoncurrentVersionExpiration": {
+        "NoncurrentDays": 1825
+       },
+       "NoncurrentVersionTransitions": [
+        {
+         "StorageClass": "DEEP_ARCHIVE",
+         "TransitionInDays": 366
+        }
+       ],
+       "Status": "Enabled",
+       "Transitions": [
+        {
+         "StorageClass": "DEEP_ARCHIVE",
+         "TransitionInDays": 365
+        }
+       ]
+      }
+     ]
+    },
+    "LoggingConfiguration": {
+     "DestinationBucketName": {
+      "Ref": "InstallerAccessLogsBucket647700E9"
+     },
+     "LogFilePrefix": {
+      "Fn::Join": [
+       "",
+       [
+        {
+         "Ref": "AcceleratorQualifier"
+        },
+        "-config-",
+        {
+         "Ref": "AWS::AccountId"
+        },
+        "-",
+        {
+         "Ref": "AWS::Region"
+        },
+        "/"
+       ]
+      ]
+     }
+    },
+    "OwnershipControls": {
+     "Rules": [
+      {
+       "ObjectOwnership": "BucketOwnerPreferred"
+      }
+     ]
+    },
+    "PublicAccessBlockConfiguration": {
+     "BlockPublicAcls": true,
+     "BlockPublicPolicy": true,
+     "IgnorePublicAcls": true,
+     "RestrictPublicBuckets": true
+    },
+    "VersioningConfiguration": {
+     "Status": "Enabled"
+    }
+   },
+   "UpdateReplacePolicy": "Retain",
+   "DeletionPolicy": "Retain",
+   "Metadata": {
+    "aws:cdk:path": "AWSAccelerator-InstallerContainerStack/ConfigBucket"
+   },
+   "Condition": "CreateConfigCondition"
+  },
+  "ConfigBucketPolicy": {
+   "Type": "AWS::S3::BucketPolicy",
+   "Properties": {
+    "Bucket": {
+     "Ref": "ConfigBucket"
+    },
+    "PolicyDocument": {
+     "Version": "2012-10-17",
+     "Statement": [
+      {
+       "Sid": "deny-insecure-connections",
+       "Effect": "Deny",
+       "Principal": {
+        "AWS": "*"
+       },
+       "Action": "s3:*",
+       "Resource": [
+        {
+         "Fn::GetAtt": [
+          "ConfigBucket",
+          "Arn"
+         ]
+        },
+        {
+         "Fn::Join": [
+          "",
+          [
+           {
+            "Fn::GetAtt": [
+             "ConfigBucket",
+             "Arn"
+            ]
+           },
+           "/*"
+          ]
+         ]
+        }
+       ],
+       "Condition": {
+        "Bool": {
+         "aws:SecureTransport": "false"
+        }
+       }
+      }
+     ]
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "AWSAccelerator-InstallerContainerStack/ConfigBucketPolicy"
+   },
+   "Condition": "CreateConfigCondition"
+  },
+  "Vpc": {
+   "Type": "AWS::EC2::VPC",
+   "Properties": {
+    "CidrBlock": {
+     "Ref": "VpcCidr"
+    },
+    "EnableDnsHostnames": true,
+    "EnableDnsSupport": true,
+    "InstanceTenancy": "default"
+   },
+   "Metadata": {
+    "aws:cdk:path": "AWSAccelerator-InstallerContainerStack/Vpc"
+   },
+   "Condition": "CreateVpcCondition"
+  },
+  "PublicSubnet0": {
+   "Type": "AWS::EC2::Subnet",
+   "Properties": {
+    "AvailabilityZone": {
+     "Fn::Select": [
+      0,
+      {
+       "Fn::GetAZs": ""
+      }
+     ]
+    },
+    "CidrBlock": "10.0.0.0/24",
+    "VpcId": {
+     "Ref": "Vpc"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "AWSAccelerator-InstallerContainerStack/PublicSubnet0"
+   },
+   "Condition": "CreateVpcCondition"
+  },
+  "PrivateSubnet0": {
+   "Type": "AWS::EC2::Subnet",
+   "Properties": {
+    "AvailabilityZone": {
+     "Fn::Select": [
+      0,
+      {
+       "Fn::GetAZs": ""
+      }
+     ]
+    },
+    "CidrBlock": "10.0.10.0/24",
+    "VpcId": {
+     "Ref": "Vpc"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "AWSAccelerator-InstallerContainerStack/PrivateSubnet0"
+   },
+   "Condition": "CreateVpcCondition"
+  },
+  "NatEip0": {
+   "Type": "AWS::EC2::EIP",
+   "Properties": {
+    "Domain": "vpc"
+   },
+   "Metadata": {
+    "aws:cdk:path": "AWSAccelerator-InstallerContainerStack/NatEip0"
+   },
+   "Condition": "CreateVpcCondition"
+  },
+  "NatGateway0": {
+   "Type": "AWS::EC2::NatGateway",
+   "Properties": {
+    "AllocationId": {
+     "Fn::GetAtt": [
+      "NatEip0",
+      "AllocationId"
+     ]
+    },
+    "SubnetId": {
+     "Ref": "PublicSubnet0"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "AWSAccelerator-InstallerContainerStack/NatGateway0"
+   },
+   "Condition": "CreateVpcCondition"
+  },
+  "PrivateRouteTable0": {
+   "Type": "AWS::EC2::RouteTable",
+   "Properties": {
+    "VpcId": {
+     "Ref": "Vpc"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "AWSAccelerator-InstallerContainerStack/PrivateRouteTable0"
+   },
+   "Condition": "CreateVpcCondition"
+  },
+  "PrivateRoute0": {
+   "Type": "AWS::EC2::Route",
+   "Properties": {
+    "DestinationCidrBlock": "0.0.0.0/0",
+    "NatGatewayId": {
+     "Ref": "NatGateway0"
+    },
+    "RouteTableId": {
+     "Ref": "PrivateRouteTable0"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "AWSAccelerator-InstallerContainerStack/PrivateRoute0"
+   },
+   "Condition": "CreateVpcCondition"
+  },
+  "PrivateSubnetRouteTableAssociation0": {
+   "Type": "AWS::EC2::SubnetRouteTableAssociation",
+   "Properties": {
+    "RouteTableId": {
+     "Ref": "PrivateRouteTable0"
+    },
+    "SubnetId": {
+     "Ref": "PrivateSubnet0"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "AWSAccelerator-InstallerContainerStack/PrivateSubnetRouteTableAssociation0"
+   },
+   "Condition": "CreateVpcCondition"
+  },
+  "PublicSubnet1": {
+   "Type": "AWS::EC2::Subnet",
+   "Properties": {
+    "AvailabilityZone": {
+     "Fn::Select": [
+      1,
+      {
+       "Fn::GetAZs": ""
+      }
+     ]
+    },
+    "CidrBlock": "10.0.1.0/24",
+    "VpcId": {
+     "Ref": "Vpc"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "AWSAccelerator-InstallerContainerStack/PublicSubnet1"
+   },
+   "Condition": "CreateVpcCondition"
+  },
+  "PrivateSubnet1": {
+   "Type": "AWS::EC2::Subnet",
+   "Properties": {
+    "AvailabilityZone": {
+     "Fn::Select": [
+      1,
+      {
+       "Fn::GetAZs": ""
+      }
+     ]
+    },
+    "CidrBlock": "10.0.11.0/24",
+    "VpcId": {
+     "Ref": "Vpc"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "AWSAccelerator-InstallerContainerStack/PrivateSubnet1"
+   },
+   "Condition": "CreateVpcCondition"
+  },
+  "NatEip1": {
+   "Type": "AWS::EC2::EIP",
+   "Properties": {
+    "Domain": "vpc"
+   },
+   "Metadata": {
+    "aws:cdk:path": "AWSAccelerator-InstallerContainerStack/NatEip1"
+   },
+   "Condition": "CreateVpcCondition"
+  },
+  "NatGateway1": {
+   "Type": "AWS::EC2::NatGateway",
+   "Properties": {
+    "AllocationId": {
+     "Fn::GetAtt": [
+      "NatEip1",
+      "AllocationId"
+     ]
+    },
+    "SubnetId": {
+     "Ref": "PublicSubnet1"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "AWSAccelerator-InstallerContainerStack/NatGateway1"
+   },
+   "Condition": "CreateVpcCondition"
+  },
+  "PrivateRouteTable1": {
+   "Type": "AWS::EC2::RouteTable",
+   "Properties": {
+    "VpcId": {
+     "Ref": "Vpc"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "AWSAccelerator-InstallerContainerStack/PrivateRouteTable1"
+   },
+   "Condition": "CreateVpcCondition"
+  },
+  "PrivateRoute1": {
+   "Type": "AWS::EC2::Route",
+   "Properties": {
+    "DestinationCidrBlock": "0.0.0.0/0",
+    "NatGatewayId": {
+     "Ref": "NatGateway1"
+    },
+    "RouteTableId": {
+     "Ref": "PrivateRouteTable1"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "AWSAccelerator-InstallerContainerStack/PrivateRoute1"
+   },
+   "Condition": "CreateVpcCondition"
+  },
+  "PrivateSubnetRouteTableAssociation1": {
+   "Type": "AWS::EC2::SubnetRouteTableAssociation",
+   "Properties": {
+    "RouteTableId": {
+     "Ref": "PrivateRouteTable1"
+    },
+    "SubnetId": {
+     "Ref": "PrivateSubnet1"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "AWSAccelerator-InstallerContainerStack/PrivateSubnetRouteTableAssociation1"
+   },
+   "Condition": "CreateVpcCondition"
+  },
+  "InternetGateway": {
+   "Type": "AWS::EC2::InternetGateway",
+   "Metadata": {
+    "aws:cdk:path": "AWSAccelerator-InstallerContainerStack/InternetGateway"
+   },
+   "Condition": "CreateVpcCondition"
+  },
+  "VpcGatewayAttachment": {
+   "Type": "AWS::EC2::VPCGatewayAttachment",
+   "Properties": {
+    "InternetGatewayId": {
+     "Ref": "InternetGateway"
+    },
+    "VpcId": {
+     "Ref": "Vpc"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "AWSAccelerator-InstallerContainerStack/VpcGatewayAttachment"
+   },
+   "Condition": "CreateVpcCondition"
+  },
+  "PublicRouteTable": {
+   "Type": "AWS::EC2::RouteTable",
+   "Properties": {
+    "VpcId": {
+     "Ref": "Vpc"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "AWSAccelerator-InstallerContainerStack/PublicRouteTable"
+   },
+   "Condition": "CreateVpcCondition"
+  },
+  "PublicRoute": {
+   "Type": "AWS::EC2::Route",
+   "Properties": {
+    "DestinationCidrBlock": "0.0.0.0/0",
+    "GatewayId": {
+     "Ref": "InternetGateway"
+    },
+    "RouteTableId": {
+     "Ref": "PublicRouteTable"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "AWSAccelerator-InstallerContainerStack/PublicRoute"
+   },
+   "Condition": "CreateVpcCondition"
+  },
+  "PublicSubnetRouteTableAssociation0": {
+   "Type": "AWS::EC2::SubnetRouteTableAssociation",
+   "Properties": {
+    "RouteTableId": {
+     "Ref": "PublicRouteTable"
+    },
+    "SubnetId": {
+     "Ref": "PublicSubnet0"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "AWSAccelerator-InstallerContainerStack/PublicSubnetRouteTableAssociation0"
+   },
+   "Condition": "CreateVpcCondition"
+  },
+  "PublicSubnetRouteTableAssociation1": {
+   "Type": "AWS::EC2::SubnetRouteTableAssociation",
+   "Properties": {
+    "RouteTableId": {
+     "Ref": "PublicRouteTable"
+    },
+    "SubnetId": {
+     "Ref": "PublicSubnet1"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "AWSAccelerator-InstallerContainerStack/PublicSubnetRouteTableAssociation1"
+   },
+   "Condition": "CreateVpcCondition"
+  },
+  "SecurityGroup": {
+   "Type": "AWS::EC2::SecurityGroup",
+   "Properties": {
+    "GroupDescription": "Security group for VPC",
+    "VpcId": {
+     "Ref": "Vpc"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "AWSAccelerator-InstallerContainerStack/SecurityGroup"
+   },
+   "Condition": "CreateVpcCondition"
+  },
+  "VpcFlowLogGroup": {
+   "Type": "AWS::Logs::LogGroup",
+   "Properties": {
+    "LogGroupName": {
+     "Fn::Join": [
+      "",
+      [
+       "/aws/vpc/flowlogs/",
+       {
+        "Ref": "AcceleratorQualifier"
+       }
+      ]
+     ]
+    },
+    "RetentionInDays": 365
+   },
+   "Metadata": {
+    "aws:cdk:path": "AWSAccelerator-InstallerContainerStack/VpcFlowLogGroup"
+   },
+   "Condition": "CreateVpcCondition"
+  },
+  "VpcFlowLogRole": {
+   "Type": "AWS::IAM::Role",
+   "Properties": {
+    "AssumeRolePolicyDocument": {
+     "Version": "2012-10-17",
+     "Statement": [
+      {
+       "Effect": "Allow",
+       "Principal": {
+        "Service": "vpc-flow-logs.amazonaws.com"
+       },
+       "Action": "sts:AssumeRole"
+      }
+     ]
+    },
+    "Policies": [
+     {
+      "PolicyDocument": {
+       "Version": "2012-10-17",
+       "Statement": [
+        {
+         "Effect": "Allow",
+         "Action": [
+          "logs:CreateLogStream",
+          "logs:PutLogEvents",
+          "logs:DescribeLogGroups",
+          "logs:DescribeLogStreams"
+         ],
+         "Resource": {
+          "Fn::GetAtt": [
+           "VpcFlowLogGroup",
+           "Arn"
+          ]
+         }
+        }
+       ]
+      },
+      "PolicyName": "CloudWatchLogPolicy"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "AWSAccelerator-InstallerContainerStack/VpcFlowLogRole"
+   },
+   "Condition": "CreateVpcCondition"
+  },
+  "VpcFlowLog": {
+   "Type": "AWS::EC2::FlowLog",
+   "Properties": {
+    "DeliverLogsPermissionArn": {
+     "Fn::GetAtt": [
+      "VpcFlowLogRole",
+      "Arn"
+     ]
+    },
+    "LogDestinationType": "cloud-watch-logs",
+    "LogGroupName": {
+     "Ref": "VpcFlowLogGroup"
+    },
+    "ResourceId": {
+     "Ref": "Vpc"
+    },
+    "ResourceType": "VPC",
+    "TrafficType": "ALL"
+   },
+   "Metadata": {
+    "aws:cdk:path": "AWSAccelerator-InstallerContainerStack/VpcFlowLog"
+   },
+   "Condition": "CreateVpcCondition"
+  },
+  "EcsCluster": {
+   "Type": "AWS::ECS::Cluster",
+   "Properties": {
+    "ClusterName": {
+     "Fn::Join": [
+      "",
+      [
+       {
+        "Ref": "AcceleratorQualifier"
+       },
+       "-ecs-cluster"
+      ]
+     ]
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "AWSAccelerator-InstallerContainerStack/EcsCluster",
+    "cdk_nag": {
+     "rules_to_suppress": [
+      {
+       "id": "AwsSolutions-ECS4",
+       "reason": "The ECS Cluster has CloudWatch Container Insights are not present in all partitions."
+      },
+      {
+       "id": "AwsSolutions-ECS7",
+       "reason": "The ECS task definition used has logging enabled to CloudWatch logs."
+      }
+     ]
+    }
+   }
+  },
+  "EcsTaskRole": {
+   "Type": "AWS::IAM::Role",
+   "Properties": {
+    "AssumeRolePolicyDocument": {
+     "Version": "2012-10-17",
+     "Statement": [
+      {
+       "Effect": "Allow",
+       "Principal": {
+        "Service": "ecs-tasks.amazonaws.com"
+       },
+       "Action": "sts:AssumeRole"
+      }
+     ]
+    },
+    "ManagedPolicyArns": [
+     {
+      "Fn::Join": [
+       "",
+       [
+        "arn:",
+        {
+         "Ref": "AWS::Partition"
+        },
+        ":iam::aws:policy/AdministratorAccess"
+       ]
+      ]
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "AWSAccelerator-InstallerContainerStack/EcsTaskRole",
+    "cdk_nag": {
+     "rules_to_suppress": [
+      {
+       "id": "AwsSolutions-IAM4",
+       "reason": "The ECS task needs admin access to orchestrate LZA deployment and manage AWS resources."
+      }
+     ]
+    }
+   }
+  },
+  "EcsExecutionRole": {
+   "Type": "AWS::IAM::Role",
+   "Properties": {
+    "AssumeRolePolicyDocument": {
+     "Version": "2012-10-17",
+     "Statement": [
+      {
+       "Effect": "Allow",
+       "Principal": {
+        "Service": "ecs-tasks.amazonaws.com"
+       },
+       "Action": "sts:AssumeRole"
+      }
+     ]
+    },
+    "ManagedPolicyArns": [
+     {
+      "Fn::Join": [
+       "",
+       [
+        "arn:",
+        {
+         "Ref": "AWS::Partition"
+        },
+        ":iam::aws:policy/AdministratorAccess"
+       ]
+      ]
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "AWSAccelerator-InstallerContainerStack/EcsExecutionRole",
+    "cdk_nag": {
+     "rules_to_suppress": [
+      {
+       "id": "AwsSolutions-IAM4",
+       "reason": "The ECS task needs admin access to orchestrate the engine."
+      }
+     ]
+    }
+   }
+  },
+  "LogGroup": {
+   "Type": "AWS::Logs::LogGroup",
+   "Properties": {
+    "LogGroupName": {
+     "Fn::Join": [
+      "",
+      [
+       "/ecs/",
+       {
+        "Ref": "AcceleratorQualifier"
+       },
+       "-lza-deployment"
+      ]
+     ]
+    },
+    "RetentionInDays": 365
+   },
+   "Metadata": {
+    "aws:cdk:path": "AWSAccelerator-InstallerContainerStack/LogGroup"
+   }
+  },
+  "TaskDefinition": {
+   "Type": "AWS::ECS::TaskDefinition",
+   "Properties": {
+    "ContainerDefinitions": [
+     {
+      "Command": [
+       "/landing-zone-accelerator-on-aws/scripts/run-lza.sh deploy"
+      ],
+      "EntryPoint": [
+       "sh",
+       "-c"
+      ],
+      "Environment": [
+       {
+        "Name": "ENABLE_DIAGNOSTICS_PACK",
+        "Value": "No"
+       },
+       {
+        "Name": "SkipPipelinePrerequisites",
+        "Value": "true"
+       },
+       {
+        "Name": "SkipAcceleratorPrerequisites",
+        "Value": "true"
+       },
+       {
+        "Name": "AWS_REGION",
+        "Value": {
+         "Ref": "AWS::Region"
+        }
+       },
+       {
+        "Name": "CONFIG_S3_PATH",
+        "Value": {
+         "Fn::If": [
+          "CreateConfigCondition",
+          {
+           "Fn::Join": [
+            "",
+            [
+             "s3://",
+             {
+              "Ref": "AcceleratorQualifier"
+             },
+             "-config-",
+             {
+              "Ref": "AWS::AccountId"
+             },
+             "-",
+             {
+              "Ref": "AWS::Region"
+             },
+             "/lza/aws-accelerator-config.zip"
+            ]
+           ]
+          },
+          {
+           "Fn::Join": [
+            "",
+            [
+             "s3://",
+             {
+              "Ref": "ExistingConfigBucketName"
+             },
+             "/",
+             {
+              "Ref": "ExistingConfigBucketKey"
+             }
+            ]
+           ]
+          }
+         ]
+        }
+       },
+       {
+        "Name": "CONFIG_S3_BUCKET",
+        "Value": {
+         "Fn::If": [
+          "CreateConfigCondition",
+          {
+           "Fn::Join": [
+            "",
+            [
+             {
+              "Ref": "AcceleratorQualifier"
+             },
+             "-config-",
+             {
+              "Ref": "AWS::AccountId"
+             },
+             "-",
+             {
+              "Ref": "AWS::Region"
+             }
+            ]
+           ]
+          },
+          {
+           "Ref": "ExistingConfigBucketName"
+          }
+         ]
+        }
+       },
+       {
+        "Name": "CONFIG_S3_KEY",
+        "Value": {
+         "Fn::If": [
+          "CreateConfigCondition",
+          "lza/aws-accelerator-config.zip",
+          {
+           "Ref": "ExistingConfigBucketKey"
+          }
+         ]
+        }
+       },
+       {
+        "Name": "CONFIG_BUCKET_NAME",
+        "Value": {
+         "Fn::Join": [
+          "",
+          [
+           {
+            "Ref": "AcceleratorQualifier"
+           },
+           "-config-",
+           {
+            "Ref": "AWS::AccountId"
+           },
+           "-",
+           {
+            "Ref": "AWS::Region"
+           }
+          ]
+         ]
+        }
+       },
+       {
+        "Name": "MANAGEMENT_ACCOUNT_EMAIL",
+        "Value": {
+         "Ref": "ManagementAccountEmail"
+        }
+       },
+       {
+        "Name": "LOG_ARCHIVE_ACCOUNT_EMAIL",
+        "Value": {
+         "Ref": "LogArchiveAccountEmail"
+        }
+       },
+       {
+        "Name": "AUDIT_ACCOUNT_EMAIL",
+        "Value": {
+         "Ref": "AuditAccountEmail"
+        }
+       },
+       {
+        "Name": "CONTROL_TOWER_ENABLED",
+        "Value": {
+         "Ref": "ControlTowerEnabled"
+        }
+       },
+       {
+        "Name": "ACCELERATOR_PREFIX",
+        "Value": {
+         "Fn::GetAtt": [
+          "ResourceNamePrefixesGetPrefixResource96A10E6E",
+          "acceleratorPrefix"
+         ]
+        }
+       },
+       {
+        "Name": "INSTALLER_STACK_NAME",
+        "Value": {
+         "Fn::Sub": "${AWS::StackName}"
+        }
+       },
+       {
+        "Name": "PARTITION",
+        "Value": {
+         "Fn::Sub": "${AWS::Partition}"
+        }
+       },
+       {
+        "Name": "PIPELINE_ACCOUNT_ID",
+        "Value": {
+         "Ref": "AWS::AccountId"
+        }
+       },
+       {
+        "Name": "LOG_LEVEL",
+        "Value": {
+         "Ref": "LogLevel"
+        }
+       },
+       {
+        "Name": "NODE_EXTRA_CA_CERTS",
+        "Value": "/etc/pki/ca-trust/extracted/pem/tls-ca-bundle.pem"
+       },
+       {
+        "Name": "AWS_CA_BUNDLE",
+        "Value": "/etc/pki/ca-trust/extracted/pem/tls-ca-bundle.pem"
+       },
+       {
+        "Name": "MANAGEMENT_ACCOUNT_ID",
+        "Value": {
+         "Ref": "ManagementAccountId"
+        }
+       },
+       {
+        "Name": "MANAGEMENT_ACCOUNT_ROLE_NAME",
+        "Value": {
+         "Ref": "ManagementAccountRoleName"
+        }
+       },
+       {
+        "Name": "ACCELERATOR_QUALIFIER",
+        "Value": {
+         "Ref": "AcceleratorQualifier"
+        }
+       }
+      ],
+      "Image": {
+       "Ref": "EcrUri"
+      },
+      "LogConfiguration": {
+       "LogDriver": "awslogs",
+       "Options": {
+        "awslogs-region": {
+         "Ref": "AWS::Region"
+        },
+        "awslogs-group": {
+         "Ref": "LogGroup"
+        },
+        "awslogs-stream-prefix": "ecs"
+       }
+      },
+      "Name": "lza-deployment-container"
+     }
+    ],
+    "Cpu": "8192",
+    "ExecutionRoleArn": {
+     "Fn::GetAtt": [
+      "EcsExecutionRole",
+      "Arn"
+     ]
+    },
+    "Family": {
+     "Fn::Join": [
+      "",
+      [
+       {
+        "Ref": "AcceleratorQualifier"
+       },
+       "-lza-deployment-task"
+      ]
+     ]
+    },
+    "Memory": "32768",
+    "NetworkMode": "awsvpc",
+    "RequiresCompatibilities": [
+     "EC2",
+     "FARGATE"
+    ],
+    "TaskRoleArn": {
+     "Fn::GetAtt": [
+      "EcsTaskRole",
+      "Arn"
+     ]
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "AWSAccelerator-InstallerContainerStack/TaskDefinition",
+    "cdk_nag": {
+     "rules_to_suppress": [
+      {
+       "id": "AwsSolutions-ECS2",
+       "reason": "Environment variables are needed to turn off features made for services relying on CodePipeline and CodeBuild"
+      }
+     ]
+    }
+   }
+  },
+  "SsmAutomationRole": {
+   "Type": "AWS::IAM::Role",
+   "Properties": {
+    "AssumeRolePolicyDocument": {
+     "Version": "2012-10-17",
+     "Statement": [
+      {
+       "Effect": "Allow",
+       "Principal": {
+        "Service": "ssm.amazonaws.com"
+       },
+       "Action": "sts:AssumeRole"
+      }
+     ]
+    },
+    "Policies": [
+     {
+      "PolicyDocument": {
+       "Version": "2012-10-17",
+       "Statement": [
+        {
+         "Effect": "Allow",
+         "Action": [
+          "ecs:RunTask",
+          "ecs:DescribeTasks"
+         ],
+         "Resource": "*"
+        },
+        {
+         "Effect": "Allow",
+         "Action": [
+          "iam:PassRole"
+         ],
+         "Resource": [
+          {
+           "Fn::GetAtt": [
+            "EcsExecutionRole",
+            "Arn"
+           ]
+          },
+          {
+           "Fn::GetAtt": [
+            "EcsTaskRole",
+            "Arn"
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      "PolicyName": "EcsRunTaskPolicy"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "AWSAccelerator-InstallerContainerStack/SsmAutomationRole",
+    "cdk_nag": {
+     "rules_to_suppress": [
+      {
+       "id": "AwsSolutions-IAM5",
+       "reason": "Wild card permissions are needed on describe and run task calls."
+      }
+     ]
+    }
+   }
+  },
+  "DeploySolutionDocument": {
+   "Type": "AWS::SSM::Document",
+   "Properties": {
+    "Content": {
+     "schemaVersion": "0.3",
+     "description": "Automation document to deploy Landing Zone Accelerator on AWS (LZA) solution by running ECS Fargate tasks in a private subnet",
+     "assumeRole": "{{AutomationAssumeRole}}",
+     "parameters": {
+      "AutomationAssumeRole": {
+       "type": "String",
+       "description": "The ARN of the IAM role that allows Systems Manager Automation to perform actions",
+       "default": {
+        "Fn::GetAtt": [
+         "SsmAutomationRole",
+         "Arn"
+        ]
+       }
+      },
+      "TaskDefinition": {
+       "type": "String",
+       "description": "The family and revision or full ARN of the task definition to run",
+       "default": {
+        "Ref": "TaskDefinition"
+       }
+      },
+      "Cluster": {
+       "type": "String",
+       "description": "The short name or full ARN of the cluster to run your task on",
+       "default": {
+        "Ref": "EcsCluster"
+       }
+      },
+      "SubnetId": {
+       "type": "String",
+       "description": "The subnet where the ECS task will be placed",
+       "default": {
+        "Fn::If": [
+         "CreateVpcCondition",
+         {
+          "Ref": "PrivateSubnet0"
+         },
+         {
+          "Ref": "ExistingSubnetId"
+         }
+        ]
+       }
+      },
+      "SecurityGroupId": {
+       "type": "String",
+       "description": "The security group used by the ECS task",
+       "default": {
+        "Fn::If": [
+         "CreateVpcCondition",
+         {
+          "Ref": "SecurityGroup"
+         },
+         {
+          "Ref": "ExistingSecurityGroupId"
+         }
+        ]
+       }
+      },
+      "PythonRuntime": {
+       "type": "String",
+       "description": "The Python runtime version for aws:executeScript actions",
+       "default": {
+        "Ref": "PythonRuntimeVersion"
+       }
+      }
+     },
+     "outputs": [
+      "RunTask.TaskArn",
+      "RunTask.ClusterName",
+      "RunTask.LogGroupName",
+      "RunTask.LogStreamName",
+      "WaitForTaskCompletion.TaskStatus",
+      "CheckTaskExitCode.ExitCode",
+      "CheckTaskExitCode.StopCode",
+      "CheckTaskExitCode.StopReason"
+     ],
+     "mainSteps": [
+      {
+       "name": "RunTask",
+       "action": "aws:executeScript",
+       "description": "Starts a new ECS task and returns task details with CloudWatch log URL",
+       "timeoutSeconds": 600,
+       "inputs": {
+        "Runtime": "{{PythonRuntime}}",
+        "Handler": "handler",
+        "InputPayload": {
+         "TaskDefinition": "{{TaskDefinition}}",
+         "Cluster": "{{Cluster}}",
+         "SubnetId": "{{SubnetId}}",
+         "SecurityGroupId": "{{SecurityGroupId}}",
+         "LogGroupName": {
+          "Ref": "LogGroup"
+         },
+         "Region": {
+          "Ref": "AWS::Region"
+         },
+         "SolutionId": "AwsSolution/SO0199/1.15.0-rc.3"
+        },
+        "Script": "import boto3\nimport json\nimport urllib.parse\nfrom botocore.config import Config\n\ndef extract_value(event_value):\n    if not event_value:\n        return None\n    if isinstance(event_value, str):\n        return event_value.strip()\n    return event_value\n\ndef handler(event, context):\n    config = Config(user_agent_extra=event['SolutionId']) \n    client = boto3.client('ecs', region_name=event['Region'], config=config)\n    \n    response = client.run_task(\n        taskDefinition=extract_value(event['TaskDefinition']),\n        cluster=extract_value(event['Cluster']),\n        launchType='FARGATE',\n        networkConfiguration={\n            'awsvpcConfiguration': {\n                'subnets': [extract_value(event['SubnetId'])],\n                'securityGroups': [extract_value(event['SecurityGroupId'])],\n                'assignPublicIp': 'DISABLED'\n            }\n        }\n    )\n    \n    task_arn = response['tasks'][0]['taskArn']\n    task_id = task_arn.split('/')[-1]\n    log_group = extract_value(event['LogGroupName'])\n    log_stream = f\"ecs/lza-deployment-container/{task_id}\"\n    \n    results = {\n        'TaskArn': task_arn,\n        'ClusterName': extract_value(event['Cluster']),\n        'LogGroupName': log_group,\n        'LogStreamName': log_stream,\n        'RunTaskResponse': json.dumps(response, indent=4, default=str)\n    }\n    \n    return results"
+       },
+       "outputs": [
+        {
+         "Name": "ClusterName",
+         "Selector": "$.Payload.ClusterName",
+         "Type": "String"
+        },
+        {
+         "Name": "TaskArn",
+         "Selector": "$.Payload.TaskArn",
+         "Type": "String"
+        },
+        {
+         "Name": "LogGroupName",
+         "Selector": "$.Payload.LogGroupName",
+         "Type": "String"
+        },
+        {
+         "Name": "LogStreamName",
+         "Selector": "$.Payload.LogStreamName",
+         "Type": "String"
+        }
+       ]
+      },
+      {
+       "name": "WaitForTaskCompletion",
+       "action": "aws:waitForAwsResourceProperty",
+       "description": "Wait for ECS task to complete",
+       "timeoutSeconds": 43200,
+       "inputs": {
+        "Service": "ecs",
+        "Api": "DescribeTasks",
+        "cluster": "{{RunTask.ClusterName}}",
+        "tasks": [
+         "{{RunTask.TaskArn}}"
+        ],
+        "PropertySelector": "$.tasks[0].lastStatus",
+        "DesiredValues": [
+         "STOPPED"
+        ]
+       },
+       "outputs": [
+        {
+         "Name": "TaskStatus",
+         "Selector": "$.tasks[0].lastStatus",
+         "Type": "String"
+        }
+       ]
+      },
+      {
+       "name": "CheckTaskExitCode",
+       "action": "aws:executeScript",
+       "description": "Verifies the container exit code after task completion and fails the automation if exit code is non-zero",
+       "timeoutSeconds": 600,
+       "inputs": {
+        "Runtime": "{{PythonRuntime}}",
+        "Handler": "handler",
+        "InputPayload": {
+         "ClusterName": "{{RunTask.ClusterName}}",
+         "TaskArn": "{{RunTask.TaskArn}}",
+         "LogGroupName": "{{RunTask.LogGroupName}}",
+         "LogStreamName": "{{RunTask.LogStreamName}}",
+         "Region": {
+          "Ref": "AWS::Region"
+         },
+         "SolutionId": "AwsSolution/SO0199/1.15.0-rc.3"
+        },
+        "Script": "import boto3\nfrom botocore.config import Config\n\ndef handler(event, context):\n    config = Config(user_agent_extra=event['SolutionId']) \n    client = boto3.client('ecs', region_name=event['Region'], config=config)\n    \n    response = client.describe_tasks(\n        cluster=event['ClusterName'],\n        tasks=[event['TaskArn']]\n    )\n    \n    if not response['tasks']:\n        raise Exception(f\"Task not found: {event['TaskArn']}\")\n    \n    task = response['tasks'][0]\n    containers = task.get('containers', [])\n    \n    if not containers:\n        raise Exception(f\"No containers found in task: {event['TaskArn']}\")\n    \n    # Extract exit code from tasks[0].containers[0].exitCode\n    container = containers[0]\n    exit_code = container.get('exitCode')  # Can be 0, 1, 137, etc. or None if killed\n    \n    # Extract task-level stop information\n    stop_code = task.get('stopCode', 'Unknown')  # e.g., \"EssentialContainerExited\"\n    stop_reason = task.get('stoppedReason', 'Unknown')  # e.g., \"Essential container in task exited\"\n    task_status = task.get('lastStatus', 'Unknown')\n    \n    result = {\n        'ExitCode': exit_code if exit_code is not None else -1,\n        'StopCode': stop_code,\n        'StopReason': stop_reason,\n        'TaskStatus': task_status,\n        'LogStreamName': event['LogStreamName'],\n        'LogGroupName': event['LogGroupName']\n    }\n    \n    # Fail if exit code is non-zero or None (container was killed)\n    if exit_code is None or exit_code != 0:\n        error_msg = (\n            f\"ECS task failed with exit code {exit_code}. \"\n            f\"Stop code: {stop_code}. \"\n            f\"Stop reason: {stop_reason}. \"\n            f\"Check CloudWatch logs: {event['LogGroupName']}/{event['LogStreamName']}\"\n        )\n        raise Exception(error_msg)\n    \n    return result"
+       },
+       "outputs": [
+        {
+         "Name": "ExitCode",
+         "Selector": "$.Payload.ExitCode",
+         "Type": "Integer"
+        },
+        {
+         "Name": "StopCode",
+         "Selector": "$.Payload.StopCode",
+         "Type": "String"
+        },
+        {
+         "Name": "StopReason",
+         "Selector": "$.Payload.StopReason",
+         "Type": "String"
+        },
+        {
+         "Name": "TaskStatus",
+         "Selector": "$.Payload.TaskStatus",
+         "Type": "String"
+        }
+       ]
+      }
+     ]
+    },
+    "DocumentType": "Automation",
+    "Name": {
+     "Fn::Join": [
+      "",
+      [
+       {
+        "Ref": "AcceleratorQualifier"
+       },
+       "-RunEngine"
+      ]
+     ]
+    },
+    "UpdateMethod": "NewVersion"
+   },
+   "Metadata": {
+    "aws:cdk:path": "AWSAccelerator-InstallerContainerStack/DeploySolutionDocument"
+   }
+  }
+ },
+ "Rules": {
+  "RequiredParametersForExistingRepo": {
+   "RuleCondition": {
+    "Fn::Equals": [
+     "Yes",
+     {
+      "Ref": "UseExistingConfig"
+     }
+    ]
+   },
+   "Assertions": [
+    {
+     "Assert": {
+      "Fn::Not": [
+       {
+        "Fn::Equals": [
+         "",
+         {
+          "Ref": "ExistingConfigBucketKey"
+         }
+        ]
+       }
+      ]
+     },
+     "AssertDescription": "existingConfigBucketKey parameter must be provided when useExistingConfig is set to Yes"
+    },
+    {
+     "Assert": {
+      "Fn::Not": [
+       {
+        "Fn::Equals": [
+         "",
+         {
+          "Ref": "ExistingConfigBucketName"
+         }
+        ]
+       }
+      ]
+     },
+     "AssertDescription": "existingConfigBucketName parameter must be provided when useExistingRepository is set to Yes"
+    }
+   ]
+  },
+  "RequiredParametersForExistingVpc": {
+   "RuleCondition": {
+    "Fn::Equals": [
+     "Yes",
+     {
+      "Ref": "UseExistingVpc"
+     }
+    ]
+   },
+   "Assertions": [
+    {
+     "Assert": {
+      "Fn::Not": [
+       {
+        "Fn::Equals": [
+         "",
+         {
+          "Ref": "ExistingVpcId"
+         }
+        ]
+       }
+      ]
+     },
+     "AssertDescription": "ExistingVpcId parameter must be provided when UseExistingVpc is set to Yes"
+    },
+    {
+     "Assert": {
+      "Fn::Not": [
+       {
+        "Fn::Equals": [
+         "",
+         {
+          "Ref": "ExistingSubnetId"
+         }
+        ]
+       }
+      ]
+     },
+     "AssertDescription": "ExistingSubnetId parameter must be provided when UseExistingVpc is set to Yes"
+    },
+    {
+     "Assert": {
+      "Fn::Not": [
+       {
+        "Fn::Equals": [
+         "",
+         {
+          "Ref": "ExistingSecurityGroupId"
+         }
+        ]
+       }
+      ]
+     },
+     "AssertDescription": "ExistingSecurityGroupId parameter must be provided when UseExistingVpc is set to Yes"
+    }
+   ]
+  },
+  "UniqueAccountEmails": {
+   "Assertions": [
+    {
+     "Assert": {
+      "Fn::Not": [
+       {
+        "Fn::Equals": [
+         {
+          "Ref": "ManagementAccountEmail"
+         },
+         {
+          "Ref": "LogArchiveAccountEmail"
+         }
+        ]
+       }
+      ]
+     },
+     "AssertDescription": "Management Account Email and Log Archive Account Email must be different"
+    },
+    {
+     "Assert": {
+      "Fn::Not": [
+       {
+        "Fn::Equals": [
+         {
+          "Ref": "ManagementAccountEmail"
+         },
+         {
+          "Ref": "AuditAccountEmail"
+         }
+        ]
+       }
+      ]
+     },
+     "AssertDescription": "Management Account Email and Audit Account Email must be different"
+    },
+    {
+     "Assert": {
+      "Fn::Not": [
+       {
+        "Fn::Equals": [
+         {
+          "Ref": "LogArchiveAccountEmail"
+         },
+         {
+          "Ref": "AuditAccountEmail"
+         }
+        ]
+       }
+      ]
+     },
+     "AssertDescription": "Log Archive Account Email and Audit Account Email must be different"
+    }
+   ]
+  },
+  "ExternalPipelineParameterValidation": {
+   "Assertions": [
+    {
+     "Assert": {
+      "Fn::Not": [
+       {
+        "Fn::Equals": [
+         "",
+         {
+          "Ref": "AcceleratorQualifier"
+         }
+        ]
+       }
+      ]
+     },
+     "AssertDescription": "AcceleratorQualifier parameter must not be empty when using external pipeline account"
+    },
+    {
+     "Assert": {
+      "Fn::Not": [
+       {
+        "Fn::Equals": [
+         "",
+         {
+          "Ref": "ManagementAccountId"
+         }
+        ]
+       }
+      ]
+     },
+     "AssertDescription": "ManagementAccountId parameter must not be empty when using external pipeline account"
+    },
+    {
+     "Assert": {
+      "Fn::Not": [
+       {
+        "Fn::Equals": [
+         "",
+         {
+          "Ref": "ManagementAccountRoleName"
+         }
+        ]
+       }
+      ]
+     },
+     "AssertDescription": "ManagementAccountRoleName parameter must not be empty when using external pipeline account"
+    }
+   ]
+  }
+ },
+ "Conditions": {
+  "CreateConfigCondition": {
+   "Fn::Equals": [
+    "No",
+    {
+     "Ref": "UseExistingConfig"
+    }
+   ]
+  },
+  "CreateVpcCondition": {
+   "Fn::Equals": [
+    "No",
+    {
+     "Ref": "UseExistingVpc"
+    }
+   ]
+  }
+ },
+ "Outputs": {
+  "DeploySolutionDocumentOutput": {
+   "Description": "SSM Document name that will be used to trigger automation for LZA engine using container",
+   "Value": {
+    "Ref": "DeploySolutionDocument"
+   }
+  }
+ }
+}
