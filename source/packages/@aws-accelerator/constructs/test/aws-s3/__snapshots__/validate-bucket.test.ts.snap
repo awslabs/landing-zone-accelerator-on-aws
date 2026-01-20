@@ -310,7 +310,7 @@ exports[`ValidateBucketKmsEncryption > Construct(ValidateBucketS3Encryption):  S
         "Description": "Accelerator deployed ValidateBucket custom resource lambda function.",
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.15.0-rc.3",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.15.0-rc.4",
           },
         },
         "Handler": "index.handler",
@@ -473,7 +473,7 @@ exports[`ValidateBucketKmsEncryption > Construct(ValidateBucketS3Encryption):  S
         "Description": "AWS CDK resource provider framework - onEvent (Default/ValidateBucketKmsEncryption/ValidateBucket/Resource)",
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.15.0-rc.3",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.15.0-rc.4",
             "USER_ON_EVENT_FUNCTION_ARN": {
               "Fn::GetAtt": [
                 "ValidateBucketKmsEncryptionValidateBucketFunctionD829E216",
@@ -617,7 +617,7 @@ exports[`ValidateBucketKmsEncryption > Construct(ValidateBucketS3Encryption):  S
         "Description": "Accelerator deployed ValidateBucket custom resource lambda function.",
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.15.0-rc.3",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.15.0-rc.4",
           },
         },
         "Handler": "index.handler",
@@ -780,7 +780,7 @@ exports[`ValidateBucketKmsEncryption > Construct(ValidateBucketS3Encryption):  S
         "Description": "AWS CDK resource provider framework - onEvent (Default/ValidateBucketS3Encryption/ValidateBucket/Resource)",
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.15.0-rc.3",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.15.0-rc.4",
             "USER_ON_EVENT_FUNCTION_ARN": {
               "Fn::GetAtt": [
                 "ValidateBucketS3EncryptionValidateBucketFunction1943C2CE",
@@ -1223,7 +1223,7 @@ exports[`ValidateBucketS3Encryption > Construct(ValidateBucketS3Encryption):  Sn
         "Description": "Accelerator deployed ValidateBucket custom resource lambda function.",
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.15.0-rc.3",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.15.0-rc.4",
           },
         },
         "Handler": "index.handler",
@@ -1386,7 +1386,7 @@ exports[`ValidateBucketS3Encryption > Construct(ValidateBucketS3Encryption):  Sn
         "Description": "AWS CDK resource provider framework - onEvent (Default/ValidateBucketKmsEncryption/ValidateBucket/Resource)",
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.15.0-rc.3",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.15.0-rc.4",
             "USER_ON_EVENT_FUNCTION_ARN": {
               "Fn::GetAtt": [
                 "ValidateBucketKmsEncryptionValidateBucketFunctionD829E216",
@@ -1530,7 +1530,7 @@ exports[`ValidateBucketS3Encryption > Construct(ValidateBucketS3Encryption):  Sn
         "Description": "Accelerator deployed ValidateBucket custom resource lambda function.",
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.15.0-rc.3",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.15.0-rc.4",
           },
         },
         "Handler": "index.handler",
@@ -1693,7 +1693,7 @@ exports[`ValidateBucketS3Encryption > Construct(ValidateBucketS3Encryption):  Sn
         "Description": "AWS CDK resource provider framework - onEvent (Default/ValidateBucketS3Encryption/ValidateBucket/Resource)",
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.15.0-rc.3",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.15.0-rc.4",
             "USER_ON_EVENT_FUNCTION_ARN": {
               "Fn::GetAtt": [
                 "ValidateBucketS3EncryptionValidateBucketFunction1943C2CE",

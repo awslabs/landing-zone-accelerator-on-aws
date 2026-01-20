@@ -5,24 +5,43 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [1.15.0] - 2025-01-09
+## [1.15.0] - 2026-02-03
 
 ### Added
 
-- feat(securityHub): added support for AWS Security Hub automation rules
 - feat(config): added support for yaml anchors in json schema
-- feat(pipeline): replace codestar notification with EventBridge and SNS
+- feat(container): add installer and deployment support
+- feat(control-tower): auto register OU after manifest changes
 - feat(guardduty): added support for S3 Malware Protection
+- feat(networking): add multicast support for transit gateways
 - feat(networking): added support for AWS Managed Rule Groups for AWS Network Firewall
+- feat(networking): add support for transit gateway flow logs
+- feat(pipeline): replace codestar notification with EventBridge and SNS
+- feat(security-hub): added support for AWS Security Hub automation rules
 
 ### Fixed
+
+- fix(asea): fix sts assume role error with opt-in regions
+- fix(container): add cert path for aws sdk, nodejs calls
+- fix(control-tower): change default ct version to 4.0
+- fix(installer-container): detect ECS task failures by checking container exit code
+- fix(metadata): lookup ous by latest commit
+- fix(networking): fix share-subnet-tags custom Resource removes tags not managed by the accelerator
+- fix(networking): adjust logic for nlb ip address role creation
+- fix(prerequisites): remove checks for concurrency
+- fix(scp): quarantine policy pagination
 - fix(securityhub): fix invalid input exception on batch enabled standards call
-- fix(network): fix share-subnet-tags custom Resource removes tags not managed by the accelerator
+- fix(ssm): apply tags to cross account ssm params
+- fix(ssm): missing iam policy for put same account ssm param
+- fix(sts): add endpoint for eusc
+- fix(v2-networking): reorder VPC stack dependencies to create subnet before security groups
 
 ### Changed
-- feat(securityhub): add suppport for any future standard supported by securityhub
-- chore(cloudtrail): add documentation for cloudtrail data events behavior
-- chore(networking): update vpc route53 resolver configuration links 
+
+- chore(kms): update KMS key descriptions
+- chore(networking): update vpc route53 resolver configuration links
+- chore: add documentation for container deployment
+- chore: set default nodejs to 22
 
 ## [1.14.2] - 2025-12-19
 

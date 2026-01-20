@@ -160,7 +160,7 @@ exports[`CrossAccountRoute > Construct(CrossAccountRoute):  Snapshot Test 1`] = 
         "Description": "Cross account EC2 route OnEvent handler",
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.15.0-rc.3",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.15.0-rc.4",
           },
         },
         "Handler": "index.handler",
@@ -289,7 +289,7 @@ exports[`CrossAccountRoute > Construct(CrossAccountRoute):  Snapshot Test 1`] = 
         "Description": "AWS CDK resource provider framework - onEvent (Default/Framework/CrossAccountRouteProvider)",
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.15.0-rc.3",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.15.0-rc.4",
             "USER_ON_EVENT_FUNCTION_ARN": {
               "Fn::GetAtt": [
                 "FrameworkCrossAccountRouteFunction7BE199E2",
