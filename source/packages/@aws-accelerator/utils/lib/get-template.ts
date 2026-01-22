@@ -63,7 +63,7 @@ async function getCloudFormationClient(
   roleName: string,
   currentAccountId: string,
 ): Promise<CloudFormationClient> {
-  if (currentAccountId === accountId || currentAccountId === process.env['MANAGEMENT_ACCOUNT_ID']) {
+  if (currentAccountId === accountId) {
     return new CloudFormationClient({ retryStrategy, region });
   } else {
     const crossAccountCredentials = await getCrossAccountCredentials(accountId, region, partition, roleName);
