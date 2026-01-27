@@ -35,7 +35,7 @@ import {
 } from '../../../common/functions';
 import { IAssumeRoleCredential } from '../../../common/resources';
 import { STSClient } from '@aws-sdk/client-sts';
-import { throttlingBackOff } from '../../common/throttle';
+import { throttlingBackOff } from '../../../common/throttle';
 
 const STATUS_STACK_FILTER: StackStatus[] = [
   StackStatus.CREATE_COMPLETE,

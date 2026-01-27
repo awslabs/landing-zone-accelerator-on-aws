@@ -25,7 +25,7 @@
     "@aws-sdk/client-secrets-manager": "3.835.0",
     "@aws-sdk/client-sts": "3.835.0",
     "@types/diff": "^5.0.3",
-    "diff": "^5.1.0"
+    "diff": "^5.2.2"
   },
   "devDependencies": {
     "@types/node": "18.19.50",

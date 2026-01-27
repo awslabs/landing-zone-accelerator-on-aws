@@ -114,7 +114,12 @@
     "cross-spawn": "7.0.6",
     "nx": "21.6.3",
     "form-data": "4.0.4",
-    "js-yaml": "4.1.1"
+    "tar": "7.5.4",
+    "lodash": "4.17.23",
+    "@smithy/config-resolver": "4.4.0",
+    "diff": "5.2.2",
+    "ts-node/diff": "4.0.4",
+    "@aws-cdk/cloudformation-diff/diff": "8.0.3"
   },
   "packageManager": "yarn@1.22.22+sha512.a6b2f7906b721bba3d67d4aff083df04dad64c399707841b7acf00f6b133b7ac24255f2652fa22ae3534329dc6180534e98d17432037ff6fd140556e2bb3137e"
 }
