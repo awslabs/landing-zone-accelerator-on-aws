@@ -842,10 +842,10 @@ describe('accounts-config', () => {
       });
 
       it('should handle empty solution ID from environment variable', async () => {
-        const config = createAccountsConfig();
-
         delete process.env['SOLUTION_ID'];
+        delete process.env['VALENCE_VERSION_UUID'];
         process.env['AWS_REGION'] = TEST_ENV_VALUES.REGION;
+        const config = createAccountsConfig();
 
         mockSTSClient.send.mockResolvedValue({
           Account: TEST_ACCOUNT_IDS.SINGLE_ACCOUNT,
@@ -1330,10 +1330,10 @@ describe('accounts-config', () => {
       });
 
       it('should handle empty string environment variables correctly', async () => {
-        const config = createAccountsConfig();
-
         process.env['AWS_REGION'] = '';
         process.env['SOLUTION_ID'] = '';
+
+        const config = createAccountsConfig();
         config.accountIds = [];
 
         mockSTSClient.send.mockResolvedValue({

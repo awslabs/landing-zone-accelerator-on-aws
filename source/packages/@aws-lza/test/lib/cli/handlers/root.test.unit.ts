@@ -168,10 +168,11 @@ describe('root handlers', () => {
         commandName: 'setup',
         args: { region: 123 },
       };
+      const expectedRegion = process.env['AWS_REGION'] ?? 'us-east-1';
 
       await getSessionDetailsFromArgs(param);
 
-      expect(mockGetCurrentSessionDetails).toHaveBeenCalledWith({ region: 'us-east-1' });
+      expect(mockGetCurrentSessionDetails).toHaveBeenCalledWith({ region: expectedRegion });
     });
   });
 
