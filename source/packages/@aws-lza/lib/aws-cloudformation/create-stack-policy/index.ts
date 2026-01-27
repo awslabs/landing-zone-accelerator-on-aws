@@ -35,6 +35,7 @@ import {
 } from '../../../common/functions';
 import { IAssumeRoleCredential } from '../../../common/resources';
 import { STSClient } from '@aws-sdk/client-sts';
+import { throttlingBackOff } from '../../common/throttle';
 
 const STATUS_STACK_FILTER: StackStatus[] = [
   StackStatus.CREATE_COMPLETE,
@@ -92,10 +93,17 @@ export class StackPolicyModule implements IStackPolicyModule {
           return this.executeDryRun(stacksInRegion, region, props);
         }
 
+        this.logger.info(`Processing ${stacksInRegion?.length ?? 0} stacks in account ${accountId}, region ${region}`);
+
         const stackPromises = (stacksInRegion ?? []).map(stackName => {
           return this.setStackPolicy(client, stackName, policy, region, props.enabled);
         });
+
         await Promise.all(stackPromises);
+
+        this.logger.info(
+          `Completed processing ${stacksInRegion?.length ?? 0} stacks in account ${accountId}, region ${region}`,
+        );
       }
     }
 
@@ -142,7 +150,12 @@ export class StackPolicyModule implements IStackPolicyModule {
     enabled: boolean,
   ): Promise<void> {
     try {
-      const response = await client.send(new SetStackPolicyCommand({ StackName: stackName, StackPolicyBody: policy }));
+      this.logger.debug(`Setting stack policy for ${stackName} in region ${region}`);
+
+      const response = await throttlingBackOff(() =>
+        client.send(new SetStackPolicyCommand({ StackName: stackName, StackPolicyBody: policy })),
+      );
+
       if (response.$metadata.httpStatusCode === 200) {
         this.logger.info(`Set Stack Policy for stack ${stackName} in region ${region} to ${enabled}`);
       } else {

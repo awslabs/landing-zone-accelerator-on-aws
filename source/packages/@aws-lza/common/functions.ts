@@ -83,7 +83,6 @@ export function setRetryStrategy() {
   const numberOfRetries = Number(process.env['ACCELERATOR_SDK_MAX_ATTEMPTS'] ?? 800);
   return new ConfiguredRetryStrategy(numberOfRetries, (attempt: number) => 100 + attempt * 1000);
 }
-
 /**
  * Function to get list of organization for given parent
  * @param client {@link OrganizationsClient}
