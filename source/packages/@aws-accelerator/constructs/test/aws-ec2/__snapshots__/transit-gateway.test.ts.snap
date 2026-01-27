@@ -364,6 +364,7 @@ exports[`ImportTransitGateway > Construct(ImportTransitGateway):  Snapshot Test 
           "ApplianceModeSupport": "enable",
           "DnsSupport": "disable",
           "Ipv6Support": "enable",
+          "SecurityGroupReferencingSupport": "disable",
         },
         "SubnetIds": [
           "one",
@@ -387,6 +388,7 @@ exports[`ImportTransitGateway > Construct(ImportTransitGateway):  Snapshot Test 
           "ApplianceModeSupport": "disable",
           "DnsSupport": "enable",
           "Ipv6Support": "disable",
+          "SecurityGroupReferencingSupport": "disable",
         },
         "SubnetIds": [
           "one",
@@ -410,6 +412,7 @@ exports[`ImportTransitGateway > Construct(ImportTransitGateway):  Snapshot Test 
           "ApplianceModeSupport": "enable",
           "DnsSupport": "enable",
           "Ipv6Support": "disable",
+          "SecurityGroupReferencingSupport": "disable",
         },
         "SubnetIds": [
           "one",
@@ -426,6 +429,30 @@ exports[`ImportTransitGateway > Construct(ImportTransitGateway):  Snapshot Test 
         "VpcId": "vpcId",
       },
       "Type": "AWS::EC2::TransitGatewayAttachment",
+    },
+    "TransitGatewayAttachmentWithSgRef3271DAD0": {
+      "Properties": {
+        "Options": {
+          "ApplianceModeSupport": "disable",
+          "DnsSupport": "enable",
+          "Ipv6Support": "disable",
+          "SecurityGroupReferencingSupport": "enable",
+        },
+        "SubnetIds": [
+          "one",
+          "two",
+          "three",
+        ],
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "name-with-sg-ref",
+          },
+        ],
+        "TransitGatewayId": "transitGatewayId",
+        "VpcId": "vpcId",
+      },
+      "Type": "AWS::EC2::TransitGatewayVpcAttachment",
     },
     "TransitGatewayRouteTableAssociation19E386E4": {
       "Properties": {
@@ -854,6 +881,24 @@ exports[`ImportTransitGateway > Construct(ImportTransitGateway):  Snapshot Test 
         ],
       },
       "Type": "AWS::IAM::Policy",
+    },
+    "TransitGatewayWithSgRefE01FEDAF": {
+      "Properties": {
+        "AmazonSideAsn": 1234,
+        "AutoAcceptSharedAttachments": "enable",
+        "DefaultRouteTableAssociation": "enable",
+        "DefaultRouteTablePropagation": "enable",
+        "DnsSupport": "enable",
+        "SecurityGroupReferencingSupport": "enable",
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "name-with-sg-ref",
+          },
+        ],
+        "VpnEcmpSupport": "enable",
+      },
+      "Type": "AWS::EC2::TransitGateway",
     },
   },
 }
@@ -1223,6 +1268,7 @@ exports[`TransitGateway > Construct(TransitGateway):  Snapshot Test 1`] = `
           "ApplianceModeSupport": "enable",
           "DnsSupport": "disable",
           "Ipv6Support": "enable",
+          "SecurityGroupReferencingSupport": "disable",
         },
         "SubnetIds": [
           "one",
@@ -1246,6 +1292,7 @@ exports[`TransitGateway > Construct(TransitGateway):  Snapshot Test 1`] = `
           "ApplianceModeSupport": "disable",
           "DnsSupport": "enable",
           "Ipv6Support": "disable",
+          "SecurityGroupReferencingSupport": "disable",
         },
         "SubnetIds": [
           "one",
@@ -1269,6 +1316,7 @@ exports[`TransitGateway > Construct(TransitGateway):  Snapshot Test 1`] = `
           "ApplianceModeSupport": "enable",
           "DnsSupport": "enable",
           "Ipv6Support": "disable",
+          "SecurityGroupReferencingSupport": "disable",
         },
         "SubnetIds": [
           "one",
@@ -1285,6 +1333,30 @@ exports[`TransitGateway > Construct(TransitGateway):  Snapshot Test 1`] = `
         "VpcId": "vpcId",
       },
       "Type": "AWS::EC2::TransitGatewayAttachment",
+    },
+    "TransitGatewayAttachmentWithSgRef3271DAD0": {
+      "Properties": {
+        "Options": {
+          "ApplianceModeSupport": "disable",
+          "DnsSupport": "enable",
+          "Ipv6Support": "disable",
+          "SecurityGroupReferencingSupport": "enable",
+        },
+        "SubnetIds": [
+          "one",
+          "two",
+          "three",
+        ],
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "name-with-sg-ref",
+          },
+        ],
+        "TransitGatewayId": "transitGatewayId",
+        "VpcId": "vpcId",
+      },
+      "Type": "AWS::EC2::TransitGatewayVpcAttachment",
     },
     "TransitGatewayRouteTableAssociation19E386E4": {
       "Properties": {
@@ -1714,6 +1786,24 @@ exports[`TransitGateway > Construct(TransitGateway):  Snapshot Test 1`] = `
       },
       "Type": "AWS::IAM::Policy",
     },
+    "TransitGatewayWithSgRefE01FEDAF": {
+      "Properties": {
+        "AmazonSideAsn": 1234,
+        "AutoAcceptSharedAttachments": "enable",
+        "DefaultRouteTableAssociation": "enable",
+        "DefaultRouteTablePropagation": "enable",
+        "DnsSupport": "enable",
+        "SecurityGroupReferencingSupport": "enable",
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "name-with-sg-ref",
+          },
+        ],
+        "VpnEcmpSupport": "enable",
+      },
+      "Type": "AWS::EC2::TransitGateway",
+    },
   },
 }
 `;
@@ -2082,6 +2172,7 @@ exports[`TransitGatewayAttachment > Construct(TransitGatewayAttachment):  Snapsh
           "ApplianceModeSupport": "enable",
           "DnsSupport": "disable",
           "Ipv6Support": "enable",
+          "SecurityGroupReferencingSupport": "disable",
         },
         "SubnetIds": [
           "one",
@@ -2105,6 +2196,7 @@ exports[`TransitGatewayAttachment > Construct(TransitGatewayAttachment):  Snapsh
           "ApplianceModeSupport": "disable",
           "DnsSupport": "enable",
           "Ipv6Support": "disable",
+          "SecurityGroupReferencingSupport": "disable",
         },
         "SubnetIds": [
           "one",
@@ -2128,6 +2220,7 @@ exports[`TransitGatewayAttachment > Construct(TransitGatewayAttachment):  Snapsh
           "ApplianceModeSupport": "enable",
           "DnsSupport": "enable",
           "Ipv6Support": "disable",
+          "SecurityGroupReferencingSupport": "disable",
         },
         "SubnetIds": [
           "one",
@@ -2144,6 +2237,30 @@ exports[`TransitGatewayAttachment > Construct(TransitGatewayAttachment):  Snapsh
         "VpcId": "vpcId",
       },
       "Type": "AWS::EC2::TransitGatewayAttachment",
+    },
+    "TransitGatewayAttachmentWithSgRef3271DAD0": {
+      "Properties": {
+        "Options": {
+          "ApplianceModeSupport": "disable",
+          "DnsSupport": "enable",
+          "Ipv6Support": "disable",
+          "SecurityGroupReferencingSupport": "enable",
+        },
+        "SubnetIds": [
+          "one",
+          "two",
+          "three",
+        ],
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "name-with-sg-ref",
+          },
+        ],
+        "TransitGatewayId": "transitGatewayId",
+        "VpcId": "vpcId",
+      },
+      "Type": "AWS::EC2::TransitGatewayVpcAttachment",
     },
     "TransitGatewayRouteTableAssociation19E386E4": {
       "Properties": {
@@ -3540,6 +3657,7 @@ exports[`TransitGatewayRouteTablePropagation > Construct(TransitGatewayRouteTabl
           "ApplianceModeSupport": "enable",
           "DnsSupport": "disable",
           "Ipv6Support": "enable",
+          "SecurityGroupReferencingSupport": "disable",
         },
         "SubnetIds": [
           "one",
@@ -3563,6 +3681,7 @@ exports[`TransitGatewayRouteTablePropagation > Construct(TransitGatewayRouteTabl
           "ApplianceModeSupport": "disable",
           "DnsSupport": "enable",
           "Ipv6Support": "disable",
+          "SecurityGroupReferencingSupport": "disable",
         },
         "SubnetIds": [
           "one",
@@ -3586,6 +3705,7 @@ exports[`TransitGatewayRouteTablePropagation > Construct(TransitGatewayRouteTabl
           "ApplianceModeSupport": "enable",
           "DnsSupport": "enable",
           "Ipv6Support": "disable",
+          "SecurityGroupReferencingSupport": "disable",
         },
         "SubnetIds": [
           "one",
@@ -3602,6 +3722,30 @@ exports[`TransitGatewayRouteTablePropagation > Construct(TransitGatewayRouteTabl
         "VpcId": "vpcId",
       },
       "Type": "AWS::EC2::TransitGatewayAttachment",
+    },
+    "TransitGatewayAttachmentWithSgRef3271DAD0": {
+      "Properties": {
+        "Options": {
+          "ApplianceModeSupport": "disable",
+          "DnsSupport": "enable",
+          "Ipv6Support": "disable",
+          "SecurityGroupReferencingSupport": "enable",
+        },
+        "SubnetIds": [
+          "one",
+          "two",
+          "three",
+        ],
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "name-with-sg-ref",
+          },
+        ],
+        "TransitGatewayId": "transitGatewayId",
+        "VpcId": "vpcId",
+      },
+      "Type": "AWS::EC2::TransitGatewayVpcAttachment",
     },
     "TransitGatewayRouteTableAssociation19E386E4": {
       "Properties": {

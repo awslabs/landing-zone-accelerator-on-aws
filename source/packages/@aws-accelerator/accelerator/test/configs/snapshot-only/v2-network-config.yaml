@@ -60,6 +60,7 @@ transitGateways:
     defaultRouteTableAssociation: disable
     defaultRouteTablePropagation: disable
     autoAcceptSharingAttachments: enable
+    securityGroupReferencingSupport: enable
     routeTables:
       - name: Network-Main-Core
         routes:
@@ -620,6 +621,8 @@ centralNetworkServices:
         subnets:
           - Network-Endpoints-A
           - Network-Endpoints-B
+        options:
+          securityGroupReferencingSupport: enable
       - name: accelerator-inbound-fips
         type: INBOUND
         vpc: Network-Endpoints
@@ -1347,6 +1350,8 @@ vpcs:
         subnets:
           - Network-EndpointsTgwAttach-A
           - Network-EndpointsTgwAttach-B
+        options:
+          securityGroupReferencingSupport: enable
       - name: Network-Endpoints-2
         transitGateway:
           name: Network-Main-2
@@ -1866,6 +1871,7 @@ vpcs:
           name: Network-Main
           account: Network
         options:
+          securityGroupReferencingSupport: enable
           applianceModeSupport: enable
         routeTableAssociations:
           - Network-Main-Shared
@@ -2017,6 +2023,8 @@ vpcs:
         subnets:
           - SharedServices-MainTgwAttach-A
           - SharedServices-MainTgwAttach-B
+        options:
+          securityGroupReferencingSupport: enable
     gatewayEndpoints:
       defaultPolicy: Default
       endpoints:
@@ -3051,6 +3059,7 @@ vpcs:
           name: Network-Main
           account: Network
         options:
+          securityGroupReferencingSupport: enable
           applianceModeSupport: enable
         routeTableAssociations:
           - Network-Main-Shared
@@ -3361,6 +3370,8 @@ vpcs:
         subnets:
           - Network-EndpointsTgwAttach-A
           - Network-EndpointsTgwAttach-B
+        options:
+          securityGroupReferencingSupport: enable
       - name: Network-Endpoints-2
         transitGateway:
           name: Network-Main-2
@@ -3841,6 +3852,8 @@ vpcs:
         subnets:
           - SharedServices-MainTgwAttach-A
           - SharedServices-MainTgwAttach-B
+        options:
+          securityGroupReferencingSupport: enable
     gatewayEndpoints:
       defaultPolicy: Default
       endpoints:

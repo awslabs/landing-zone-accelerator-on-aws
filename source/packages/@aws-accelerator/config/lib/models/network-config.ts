@@ -632,6 +632,16 @@ export interface ITransitGatewayConfig {
    */
   readonly multicastSupport?: t.EnableDisable;
   /**
+   * (OPTIONAL) Enable security group referencing support for the Transit Gateway.
+   *
+   * @remarks
+   * Allows security groups in VPCs attached to this Transit Gateway to reference
+   * security groups in other attached VPCs, eliminating the need to manage CIDR blocks.
+   *
+   * Default - disable
+   */
+  readonly securityGroupReferencingSupport?: t.EnableDisable;
+  /**
    * An array of Transit Gateway route table configuration objects.
    *
    * @see {@link TransitGatewayRouteTableConfig}
@@ -1901,6 +1911,14 @@ export interface ITransitGatewayAttachmentOptionsConfig {
    * @see {@link https://docs.aws.amazon.com/vpc/latest/tgw/transit-gateway-appliance-scenario.html}
    */
   readonly applianceModeSupport?: t.EnableDisable;
+  /**
+   * (OPTIONAL) Enable security group referencing support for the attachment. This option is disabled by default.
+   *
+   * @remarks
+   * Allows security groups in this VPC to reference security groups in other VPCs attached to the same Transit Gateway.
+   * The Transit Gateway must also have securityGroupReferencingSupport enabled.
+   */
+  readonly securityGroupReferencingSupport?: t.EnableDisable;
 }
 
 /**

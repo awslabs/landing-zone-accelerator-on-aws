@@ -360,6 +360,7 @@ export class TransitGatewayAttachment extends TransitGatewayAttachmentBase {
             ApplianceModeSupport: props.options?.applianceModeSupport ?? 'disable',
             DnsSupport: props.options?.dnsSupport ?? 'enable',
             Ipv6Support: props.options?.ipv6Support ?? 'disable',
+            SecurityGroupReferencingSupport: props.options?.securityGroupReferencingSupport ?? 'disable',
           },
           tags: props.tags,
         });
@@ -373,6 +374,7 @@ export class TransitGatewayAttachment extends TransitGatewayAttachmentBase {
             ApplianceModeSupport: props.options?.applianceModeSupport ?? 'disable',
             DnsSupport: props.options?.dnsSupport ?? 'enable',
             Ipv6Support: props.options?.ipv6Support ?? 'disable',
+            SecurityGroupReferencingSupport: props.options?.securityGroupReferencingSupport ?? 'disable',
           },
           tags: props.tags,
         });
@@ -462,6 +464,11 @@ export interface TransitGatewayProps {
   readonly multicastSupport?: string;
 
   /**
+   * Enable or disable security group referencing support. Disabled by default.
+   */
+  readonly securityGroupReferencingSupport?: string;
+
+  /**
    * Enable or disable Equal Cost Multipath Protocol support. Enabled by default.
    */
   readonly vpnEcmpSupport?: string;
@@ -538,6 +545,7 @@ export class TransitGateway extends TransitGatewayBase {
       transitGatewayCidrBlocks: props.transitGatewayCidrBlocks,
       vpnEcmpSupport: props.vpnEcmpSupport,
       multicastSupport: props.multicastSupport,
+      securityGroupReferencingSupport: props.securityGroupReferencingSupport,
       tags: props.tags,
     });
     cdk.Tags.of(this).add('Name', props.name);

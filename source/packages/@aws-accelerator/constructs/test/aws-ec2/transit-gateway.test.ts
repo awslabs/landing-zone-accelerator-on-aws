@@ -122,6 +122,18 @@ describe('TransitGatewayAttachment', () => {
       attachmentName: 'name',
     });
   });
+  it('tgw attachment with security group referencing', () => {
+    new TransitGatewayAttachment(stack, 'TransitGatewayAttachmentWithSgRef', {
+      name: 'name-with-sg-ref',
+      partition: 'aws',
+      transitGatewayId: 'transitGatewayId',
+      subnetIds: ['one', 'two', 'three'],
+      vpcId: 'vpcId',
+      options: {
+        securityGroupReferencingSupport: 'enable',
+      },
+    });
+  });
   snapShotTest('Construct(TransitGatewayAttachment): ', stack);
 });
 
@@ -156,6 +168,18 @@ describe('TransitGateway', () => {
     multicastSupport: 'enable',
     vpnEcmpSupport: 'enable',
     tags: [{ key: 'key', value: 'value' }],
+  });
+  it('tgw with security group referencing', () => {
+    new TransitGateway(stack, 'TransitGatewayWithSgRef', {
+      name: 'name-with-sg-ref',
+      amazonSideAsn: 1234,
+      autoAcceptSharedAttachments: 'enable',
+      defaultRouteTableAssociation: 'enable',
+      defaultRouteTablePropagation: 'enable',
+      dnsSupport: 'enable',
+      securityGroupReferencingSupport: 'enable',
+      vpnEcmpSupport: 'enable',
+    });
   });
   snapShotTest('Construct(TransitGateway): ', stack);
 });

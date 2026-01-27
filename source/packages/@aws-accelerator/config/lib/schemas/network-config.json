@@ -3689,6 +3689,10 @@
         "ipv6Support": {
           "$ref": "#/definitions/EnableDisable",
           "description": "(OPTIONAL) Enable to configure IPv6 support for the attachment. This option is disabled by default."
+        },
+        "securityGroupReferencingSupport": {
+          "$ref": "#/definitions/EnableDisable",
+          "description": "(OPTIONAL) Enable security group referencing support for the attachment. This option is disabled by default."
         }
       },
       "type": "object"
@@ -3758,6 +3762,10 @@
             "$ref": "#/definitions/ITransitGatewayRouteTableConfig"
           },
           "type": "array"
+        },
+        "securityGroupReferencingSupport": {
+          "$ref": "#/definitions/EnableDisable",
+          "description": "(OPTIONAL) Enable security group referencing support for the Transit Gateway."
         },
         "shareTargets": {
           "$ref": "#/definitions/IShareTargets",

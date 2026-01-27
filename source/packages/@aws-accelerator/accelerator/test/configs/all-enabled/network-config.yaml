@@ -55,6 +55,7 @@ transitGateways:
     defaultRouteTableAssociation: disable
     defaultRouteTablePropagation: disable
     autoAcceptSharingAttachments: enable
+    securityGroupReferencingSupport: enable
     routeTables:
       - name: Network-Main-Core
         routes:
@@ -1406,6 +1407,8 @@ vpcs:
         subnets:
           - Network-EndpointsTgwAttach-A
           - Network-EndpointsTgwAttach-B
+        options:
+          securityGroupReferencingSupport: enable
       - name: Network-Endpoints-2
         transitGateway:
           name: Network-Main-2

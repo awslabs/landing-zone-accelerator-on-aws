@@ -104,6 +104,7 @@ export class TgwResources {
         dnsSupport: tgwItem.dnsSupport,
         vpnEcmpSupport: tgwItem.vpnEcmpSupport,
         multicastSupport: tgwItem.multicastSupport,
+        securityGroupReferencingSupport: tgwItem.securityGroupReferencingSupport,
         transitGatewayCidrBlocks: transitGatewayCidrBlocks,
         tags: tgwItem.tags,
       });

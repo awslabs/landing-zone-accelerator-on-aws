@@ -100,6 +100,7 @@ export class TransitGatewayConfig implements i.ITransitGatewayConfig {
   readonly defaultRouteTablePropagation: t.EnableDisable = 'enable';
   readonly autoAcceptSharingAttachments: t.EnableDisable = 'disable';
   readonly multicastSupport: t.EnableDisable = 'disable';
+  readonly securityGroupReferencingSupport: t.EnableDisable = 'disable';
   readonly routeTables: TransitGatewayRouteTableConfig[] = [];
   readonly transitGatewayCidrBlocks: t.NonEmptyString[] | undefined = undefined;
   readonly transitGatewayIpv6CidrBlocks: t.NonEmptyString[] | undefined = undefined;
@@ -233,6 +234,7 @@ export class TransitGatewayAttachmentOptionsConfig implements i.ITransitGatewayA
   readonly applianceModeSupport: t.EnableDisable | undefined = undefined;
   readonly dnsSupport: t.EnableDisable | undefined = undefined;
   readonly ipv6Support: t.EnableDisable | undefined = undefined;
+  readonly securityGroupReferencingSupport: t.EnableDisable | undefined = undefined;
 }
 
 export class LocalGatewayRouteTableConfig implements i.ILocalGatewayRouteTableConfig {
