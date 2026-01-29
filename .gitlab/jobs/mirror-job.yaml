@@ -42,9 +42,9 @@ lza:cicd-integ-replicator:
       when: always
     - when: never
 
-# Account 2: LZA CICD Main Replicator Account
-# Mirrors only when changes are merged to 'main' branch
-lza:cicd-main-replicator:
+# Account 2: LZA CICD Release Config Change Replicator Account
+# Mirrors only when new release tags are created (e.g., v1.0.0)
+lza:cicd-release-config-change-replicator:
   <<: *mirror_template
   variables:
     ACCOUNT_ID: "${LZA_CICD_MAIN_REPLICATOR_ACCOUNT_ID}"
@@ -52,7 +52,7 @@ lza:cicd-main-replicator:
   rules:
     - if: $SKIP_MIRROR_JOBS == "yes"
       when: never
-    - if: $CI_PROJECT_ID == "11925" && $CI_COMMIT_BRANCH == "main" && $CI_MERGE_REQUEST_IID == null
+    - if: $CI_PROJECT_ID == "11925" && $CI_COMMIT_TAG =~ /v(\d.+){2}\d/
       when: always
     - when: never
 
