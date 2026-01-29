@@ -391,14 +391,14 @@ export class CentralLogBucketConfig implements i.ICentralLogBucketConfig {
   readonly s3ResourcePolicyAttachments: t.IResourcePolicyStatement[] | undefined = undefined;
   readonly kmsResourcePolicyAttachments: t.IResourcePolicyStatement[] | undefined = undefined;
   readonly importedBucket: t.ImportedCustomerManagedEncryptionKeyBucketConfig | undefined = undefined;
-  readonly customPolicyOverrides: t.CustomS3ResourceAndKmsPolicyOverridesConfig | undefined = undefined;
+  readonly customPolicyOverrides: t.ICustomS3ResourceAndKmsPolicyOverridesConfig | undefined = undefined;
 }
 
 export class AssetBucketConfig implements i.IAssetBucketConfig {
   readonly s3ResourcePolicyAttachments: t.IResourcePolicyStatement[] | undefined = undefined;
   readonly kmsResourcePolicyAttachments: t.IResourcePolicyStatement[] | undefined = undefined;
   readonly importedBucket: t.IImportedCustomerManagedEncryptionKeyBucketConfig | undefined = undefined;
-  readonly customPolicyOverrides?: t.CustomS3ResourceAndKmsPolicyOverridesConfig | undefined = undefined;
+  readonly customPolicyOverrides?: t.ICustomS3ResourceAndKmsPolicyOverridesConfig | undefined = undefined;
 }
 
 export class ElbLogBucketConfig implements i.IElbLogBucketConfig {

@@ -11,21 +11,6 @@
       ],
       "type": "string"
     },
-    "CustomS3ResourceAndKmsPolicyOverridesConfig": {
-      "additionalProperties": false,
-      "description": "## Custom S3 Resource and KMS Policy Overrides Implementation\n\nImplementation class for custom S3 and KMS policy overrides configuration. Provides default values and structure for policy file specifications.\n\n### Usage\n\nUse this configuration when you need to provide custom policy files that override both the S3 bucket resource policy and the KMS key policy. This ensures coordinated access control across both the storage and encryption layers.\n\n### Best Practices\n\n- **Policy Coordination**: Ensure S3 and KMS policies work together seamlessly\n- **Service Integration**: Include permissions for all enabled AWS services\n- **Testing**: Validate policies in non-production environments first\n- **Documentation**: Document custom policy requirements and rationale",
-      "properties": {
-        "kmsPolicy": {
-          "description": "**KMS Key Policy File** *(Optional)*\n\nPath to a JSON file containing custom KMS key policy statements for the bucket's encryption key. When provided, the accelerator will use this policy instead of generating its own key policy.",
-          "type": "string"
-        },
-        "s3Policy": {
-          "description": "**S3 Resource Policy File** *(Optional)*\n\nPath to a JSON file containing custom S3 bucket resource policy statements. When provided, the accelerator will use this policy instead of generating its own bucket resource policy.",
-          "type": "string"
-        }
-      },
-      "type": "object"
-    },
     "EmailAddress": {
       "description": "## Email Address Type\n\nRepresents a valid email address with AWS-compatible formatting requirements. Used throughout the Landing Zone Accelerator for account creation, notifications, and contact information.\n\n### Format Requirements\n\n- **Length**: 6-64 characters\n- **Pattern**: Must match standard email format\n- **Domain**: Must contain at least one dot in the domain portion\n\n### Examples\n\n```typescript const email1: EmailAddress = \"admin@example.com\"; ```",
       "maxLength": 64,
@@ -150,7 +135,7 @@
       "description": "## Asset Bucket Configuration\n\nConfiguration for the asset bucket.\n\n### Key Features\n- **Resource Policies**: Attach resource policies to the bucket\n- **KMS Policy**: Apply KMS policy to the bucket encryption key\n- **Imported Bucket**: Import existing bucket and apply resource policies and encryption key policies\n\n### Example ```yaml assetBucket:   s3ResourcePolicyAttachments:     - policy: s3-policies/policy1.json   importedBucket:     name: aws-accelerator-assets     applyAcceleratorManagedBucketPolicy: true ```",
       "properties": {
         "customPolicyOverrides": {
-          "$ref": "#/definitions/CustomS3ResourceAndKmsPolicyOverridesConfig",
+          "$ref": "#/definitions/ICustomS3ResourceAndKmsPolicyOverridesConfig",
           "default": "undefined",
           "description": "**Custom Policy Overrides Configuration** *(Optional)*\n\nProvide policy overrides. Policy files must contain a complete policy document.\n\n**Conflicts**\n- When s3Policy is defined, importedBucket.applyAcceleratorManagedBucketPolicy cannot be true\n- When s3Policy is defined, seResourcePolicyAttachments cannot be defined\n- When kmsPolicy is defined, importedBucket.createAcceleratorManagedKey cannot be true\n- When kmsPolicy is defined, kmsResourcePolicyAttachments cannot be defined\n\n**Example** ```yaml customPolicyOverrides:   s3Policy: path/to/policy.json   kmsPolicy: kms/full-central-logs-bucket-key-policy.json ```"
         },

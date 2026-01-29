@@ -1971,7 +1971,7 @@ export interface IAssetBucketConfig {
    * @default
    * undefined
    */
-  readonly customPolicyOverrides?: t.CustomS3ResourceAndKmsPolicyOverridesConfig;
+  readonly customPolicyOverrides?: t.ICustomS3ResourceAndKmsPolicyOverridesConfig;
 }
 
 /**
