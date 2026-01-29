@@ -1118,7 +1118,7 @@ export interface IControlTowerLandingZoneSecurityConfig {
    * When enabled, AWS Control Tower sets up AWS account access with IAM Identity Center.
    *
    * @default
-   * true
+   * false
    */
   readonly enableIdentityCenterAccess: boolean;
 }

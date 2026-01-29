@@ -157,9 +157,9 @@ export class ControlTowerLandingZoneSecurityConfig implements i.IControlTowerLan
    * When this property is to true, AWS Control Tower sets up AWS account access with IAM Identity Center. Otherwise, please use self-managed AWS account access with IAM Identity Center or another method.
    *
    * @default
-   * true
+   * false
    */
-  readonly enableIdentityCenterAccess: boolean = true;
+  readonly enableIdentityCenterAccess: boolean = false;
 }
 
 /**

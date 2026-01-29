@@ -870,7 +870,7 @@
       "description": "## Control Tower Landing Zone Security Configuration\n\nConfigure security settings and access controls for the AWS Control Tower Landing Zone deployment. This configuration manages identity and access management integration with AWS services. ### Important Considerations\n\n- Identity Center access affects how users authenticate to AWS accounts in the organization\n- When enabled, Control Tower automatically configures permission sets and account assignments\n- Disabling may impact existing user access patterns and require manual IAM configuration\n- Changes to this configuration may trigger a Control Tower Landing Zone update\n\n### Usage Example\n\n```yaml security:   enableIdentityCenterAccess: true ```",
       "properties": {
         "enableIdentityCenterAccess": {
-          "default": true,
+          "default": false,
           "description": "**Identity Center Access** *(Required)*\n\nWhen enabled, AWS Control Tower sets up AWS account access with IAM Identity Center.",
           "type": "boolean"
         }
