@@ -19,6 +19,7 @@ import {
   OrganizationConfig,
   SecurityConfig,
   ControlTowerLandingZoneConfig,
+  CloudWatchLogsConfig,
 } from '@aws-accelerator/config';
 import * as fs from 'fs';
 import * as yaml from 'js-yaml';
@@ -150,13 +151,20 @@ export class ConfigGenerator {
       managementAccountAccessRole: managementAccountAccessRole,
       useV2Stacks: true,
     });
+
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { iamRoleSsmParameters, ...globalConfigWithoutInternals } = globalConfig;
-    fs.writeFileSync(
-      path.join(this.tempDirPath, GlobalConfig.FILENAME),
-      yaml.dump(globalConfigWithoutInternals),
-      'utf8',
-    );
+
+    // Disable CloudWatch logs for all partitions
+    const modifiedGlobalConfig = {
+      ...globalConfigWithoutInternals,
+      logging: {
+        ...globalConfigWithoutInternals.logging,
+        cloudwatchLogs: { enable: false } as CloudWatchLogsConfig,
+      },
+    };
+
+    fs.writeFileSync(path.join(this.tempDirPath, GlobalConfig.FILENAME), yaml.dump(modifiedGlobalConfig), 'utf8');
 
     // Generate accounts-config.yaml
     // Extract only the config properties to avoid serializing internal class properties
