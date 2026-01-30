@@ -1129,7 +1129,7 @@ export class AcceleratorPipeline extends Construct {
         accessLoggingBucketRetentionDays: 365,
         organizationTrail: true,
       },
-      security: { enableIdentityCenterAccess: true },
+      security: { enableIdentityCenterAccess: false },
     };
   }
   private getConsoleUrlSuffixForPartition(partition: string): string {
