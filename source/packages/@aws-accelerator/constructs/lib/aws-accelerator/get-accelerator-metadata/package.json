@@ -30,7 +30,7 @@
   "devDependencies": {
     "@types/node": "18.19.50",
     "esbuild": "0.25.0",
-    "eslint": "9.37.0",
+    "eslint": "9.26.0",
     "eslint-config-prettier": "10.1.8",
     "eslint-import-resolver-typescript": "4.4.4",
     "eslint-plugin-import": "2.32.0",
