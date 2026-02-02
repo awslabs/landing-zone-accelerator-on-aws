@@ -21,7 +21,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- fix(asea): delete outputs with vpc endpoint references
 - fix(asea): fix sts assume role error with opt-in regions
+- fix(config): disable cw log for initial config
+- fix(config): disable identity center for initial config
+- fix(config): disable identity center for pipeline env
 - fix(container): add cert path for aws sdk, nodejs calls
 - fix(control-tower): change default ct version to 4.0
 - fix(installer-container): detect ECS task failures by checking container exit code
@@ -33,6 +37,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - fix(securityhub): fix invalid input exception on batch enabled standards call
 - fix(ssm): apply tags to cross account ssm params
 - fix(ssm): missing iam policy for put same account ssm param
+- fix(stack-policy): adds retries
 - fix(sts): add endpoint for eusc
 - fix(v2-networking): reorder VPC stack dependencies to create subnet before security groups
 
@@ -42,6 +47,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - chore(networking): update vpc route53 resolver configuration links
 - chore: add documentation for container deployment
 - chore: set default nodejs to 22
+- chore: updated dependencies tar, lodash and diff
 
 ## [1.14.2] - 2025-12-19
 
