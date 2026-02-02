@@ -30,15 +30,15 @@ export class LoadBalancerResources {
    * @returns
    */
   private createNetworkLoadBalancerRole(props: AcceleratorStackProps): cdk.aws_iam.Role | undefined {
-    const nlbAccountIds = this.getNlbAccountIds();
+    const trustAccountIds = this.getAllNlbRoleTrustAccounts();
     if (
       cdk.Stack.of(this.stack).region === props.globalConfig.homeRegion &&
-      nlbAccountIds.includes(cdk.Stack.of(this.stack).account)
+      trustAccountIds.includes(cdk.Stack.of(this.stack).account)
     ) {
       const nlbIpAddressRole = new cdk.aws_iam.Role(this.stack, `NetworkLoadBalancerIPAddressLookup`, {
         roleName: `${props.prefixes.accelerator}-NetworkLoadBalancerIPAddressLookup`,
         assumedBy: new cdk.aws_iam.CompositePrincipal(
-          ...nlbAccountIds.map(accountId => new cdk.aws_iam.AccountPrincipal(accountId)),
+          ...trustAccountIds.map(accountId => new cdk.aws_iam.AccountPrincipal(accountId)),
         ),
         inlinePolicies: {
           default: new cdk.aws_iam.PolicyDocument({
@@ -73,6 +73,7 @@ export class LoadBalancerResources {
    */
   private getNlbAccountIds(): string[] {
     let nlbAccountIds: string[] = [];
+    // Add accounts that own NLBs
     for (const vpcItem of this.stack.props.networkConfig.vpcs) {
       if (vpcItem.loadBalancers?.networkLoadBalancers && vpcItem.loadBalancers?.networkLoadBalancers?.length > 0) {
         nlbAccountIds.push(this.stack.props.accountsConfig.getAccountId(vpcItem.account));
@@ -89,5 +90,80 @@ export class LoadBalancerResources {
     }
     nlbAccountIds = [...new Set(nlbAccountIds)];
     return nlbAccountIds;
+  }
+
+  /**
+   * Function to get all account IDs that need to be in the role trust policy
+   * This includes accounts that own NLBs and accounts that have target groups with cross-account NLB targets
+   * @returns
+   */
+  private getAllNlbRoleTrustAccounts(): string[] {
+    const accountIds = [...this.getNlbAccountIds(), ...this.getAccountsWithCrossAccountNlbTargets()];
+    return [...new Set(accountIds)];
+  }
+
+  /**
+   * Function to get accounts that have target groups with cross-account NLB targets
+   * @returns
+   */
+  private getAccountsWithCrossAccountNlbTargets(): string[] {
+    return [
+      ...this.getAccountsFromVpcs(),
+      ...this.getAccountsFromVpcTemplates(),
+      ...this.getAccountsFromApplications(),
+    ];
+  }
+
+  /**
+   * Get accounts from VPCs with target groups that have NLB targets
+   * @returns
+   */
+  private getAccountsFromVpcs(): string[] {
+    return this.stack.props.networkConfig.vpcs
+      .filter(vpc => this.hasNlbTargets(vpc.targetGroups))
+      .map(vpc => this.stack.props.accountsConfig.getAccountId(vpc.account));
+  }
+
+  /**
+   * Get accounts from VPC templates with target groups that have NLB targets
+   * @returns
+   */
+  private getAccountsFromVpcTemplates(): string[] {
+    const accountIds: string[] = [];
+    for (const vpcItem of this.stack.props.networkConfig.vpcTemplates ?? []) {
+      if (this.hasNlbTargets(vpcItem.targetGroups)) {
+        accountIds.push(
+          ...this.stack.props.accountsConfig.getAccountIdsFromDeploymentTarget(vpcItem.deploymentTargets),
+        );
+      }
+    }
+    return accountIds;
+  }
+
+  /**
+   * Get accounts from applications with target groups that have NLB targets
+   * @returns
+   */
+  private getAccountsFromApplications(): string[] {
+    const accountIds: string[] = [];
+    for (const appItem of this.stack.props.customizationsConfig.applications ?? []) {
+      if (this.hasNlbTargets(appItem.targetGroups)) {
+        accountIds.push(
+          ...this.stack.props.accountsConfig.getAccountIdsFromDeploymentTarget(appItem.deploymentTargets),
+        );
+      }
+    }
+    return accountIds;
+  }
+
+  /**
+   * Helper function to check if any target group in the list references an NLB
+   * @param targetGroups
+   * @returns
+   */
+  private hasNlbTargets(targetGroups?: Array<{ targets?: unknown[] }>): boolean {
+    return (
+      targetGroups?.some(tg => tg.targets?.some(t => typeof t === 'object' && t !== null && 'nlbName' in t)) ?? false
+    );
   }
 }

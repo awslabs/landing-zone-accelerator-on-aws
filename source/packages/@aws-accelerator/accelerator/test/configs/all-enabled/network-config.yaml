@@ -891,9 +891,24 @@ vpcs:
               port: 80
               protocol: TCP
               targetGroup: tg-downstream-http
+        - name: nlb-west-downstream-2
+          scheme: internal
+          crossZoneLoadBalancing: true
+          deletionProtection: false
+          subnets:
+            - SharedServices-A
+          listeners:
+            - name: https
+              port: 443
+              protocol: TCP
+              targetGroup: tg-downstream-https
     targetGroups:
       - name: tg-downstream-http
         port: 80
+        protocol: TCP
+        type: instance
+      - name: tg-downstream-https
+        port: 443
         protocol: TCP
         type: instance
     gatewayEndpoints:
@@ -955,15 +970,34 @@ vpcs:
               port: 80
               protocol: TCP
               targetGroup: tg-west-upstream
+        - name: nlb-west-upstream-2
+          scheme: internal
+          crossZoneLoadBalancing: true
+          deletionProtection: false
+          subnets:
+            - Network-West-B
+          listeners:
+            - name: tcp
+              port: 8080
+              protocol: TCP
+              targetGroup: tg-west-upstream-2
     targetGroups:
       - name: tg-west-upstream
         port: 80
         protocol: TCP
         type: ip
         targets:
-          - account: Network
+          - account: SharedServices
             region: us-west-2
             nlbName: nlb-west-downstream
+      - name: tg-west-upstream-2
+        port: 8080
+        protocol: TCP
+        type: ip
+        targets:
+          - account: SharedServices
+            region: us-west-2
+            nlbName: nlb-west-downstream-2
     gatewayEndpoints:
       defaultPolicy: Default
       endpoints:
