@@ -29,15 +29,43 @@ The `!include` directive is supported in all Landing Zone Accelerator configurat
 - `customizations-config.yaml`
 - `replacements-config.yaml`
 
+## How It Works
+
+The `!include` directive is a custom YAML tag that instructs the configuration parser to:
+
+1. Read the specified file from disk
+2. Parse its YAML content
+3. Replace the `!include` directive with the parsed content
+4. Continue processing the merged configuration
+
+This process occurs during configuration loading, before validation. The result is equivalent to having written all content directly in the main file.
+
+The included file's content replaces the `!include` directive at its exact location. This means:
+
+- When `key: !include file.yaml` is specified, the file's content becomes the value of `key`
+- When `- !include file.yaml` is specified in a list, the file's content becomes that list item
+- If the included file contains an array (starts with `-`), and it is included as a list item, a nested array results
+
+!!! info "Technical Note"
+    The `!include` directive is implemented as a YAML custom tag using the `js-yaml` library. It follows standard YAML syntax rules and must be used in valid YAML contexts (as a scalar value, array item, or mapping value).
+
 ## Basic Usage
 
 ### Syntax
 
+The `!include` directive must follow YAML syntax rules. Valid usage patterns:
+
 ```yaml
+# As a mapping value (most common)
 configurationSection: !include relative/path/to/file.yaml
+
+# As an array item
+items:
+  - !include path/to/item1.yaml
+  - !include path/to/item2.yaml
 ```
 
-The path must be relative to the main configuration file and should point to a valid YAML file containing the configuration data for that section.
+The path must be relative to the main configuration file and must point to a valid YAML file containing the configuration data for that section.
 
 ### Simple Include Example
 
@@ -74,6 +102,63 @@ workloadAccounts: !include include/account-config-workloads.yaml
 
 ## Advanced Usage
 
+### Multiple Includes in Arrays
+
+When including multiple files as array items, the structure depends on what each included file contains:
+
+**Option 1: Include a file that contains an entire array**
+
+If your included file contains a complete array (with `-` markers), use it as a mapping value:
+
+**accounts-config.yaml:**
+```yaml
+workloadAccounts: !include include/all-workload-accounts.yaml
+```
+
+**include/all-workload-accounts.yaml:**
+```yaml
+- name: SharedServices
+  description: The SharedServices account
+  email: shared-services@example.com
+  organizationalUnit: Infrastructure
+- name: Network
+  description: The Network account
+  email: network@example.com
+  organizationalUnit: Infrastructure
+```
+
+**Option 2: Include multiple files, each containing a single object**
+
+If each included file contains a single object (no `-` markers), include them as list items:
+
+**accounts-config.yaml:**
+```yaml
+workloadAccounts:
+  - !include include/shared-services-account.yaml
+  - !include include/network-account.yaml
+  - !include include/dev-account.yaml
+```
+
+**include/shared-services-account.yaml:**
+```yaml
+name: SharedServices
+description: The SharedServices account
+email: shared-services@example.com
+organizationalUnit: Infrastructure
+```
+
+**Incorrect usage - nested arrays:**
+```yaml
+# This pattern creates nested arrays when included files contain arrays
+workloadAccounts:
+  - !include include/dev-accounts.yaml    # File contains an array
+  - !include include/prod-accounts.yaml   # File contains an array
+# Result: workloadAccounts[0] is an array, not an object
+```
+
+!!! warning "Common Mistake"
+    Including a file that contains an array as a list item results in nested arrays and causes parse errors.
+
 ### Nested Includes
 
 You can use `!include` directives within included files to create a hierarchical structure:
@@ -83,10 +168,6 @@ You can use `!include` directives within included files to create a hierarchical
 - name: SharedServices
   description: The SharedServices account
   email: shared-services@example.com
-  organizationalUnit: Infrastructure
-- name: Network
-  description: The Network account
-  email: network@example.com
   organizationalUnit: Infrastructure
 - !include account-config-workload-nested.yaml
 ```
@@ -100,78 +181,18 @@ organizationalUnit: GovCloud
 enableGovCloud: true
 ```
 
-### Including Configuration Arrays
+### Mixing Inline and Included Content
 
-The `!include` directive works seamlessly with YAML arrays and objects:
+You can combine inline configuration with included files:
 
-**customizations-config.yaml:**
 ```yaml
-customizations:
-  cloudFormationStacks: !include include/customization-config-targets.yaml
-  cloudFormationStackSets:
-    - name: Custom-StackSet
-      template: templates/example.yaml
-      # ... other stackset configuration
-```
-
-**include/customization-config-targets.yaml:**
-```yaml
-- deploymentTargets:
-    accounts:
-      - Management
-  description: Sample stack description
-  name: Custom-S3-Stack
-  regions:
-    - us-east-1
-  runOrder: 1
-  template: cloudformation-templates/custom-s3-bucket.yaml
-  terminationProtection: false
-- deploymentTargets:
-    organizationalUnits:
-      - Security
-  description: Second sample stack description
-  name: Custom-S3-Stack-2
-  regions:
-    - us-east-1
-    - us-west-2
-  runOrder: 2
-  template: cloudformation-templates/custom-s3-bucket.yaml
-  terminationProtection: true
-```
-
-### Including Complex Objects
-
-**global-config.yaml:**
-```yaml
-homeRegion: us-east-1
-enabledRegions:
-  - us-east-1
-  - us-west-2
-
-controlTower: !include include/global-config-control-tower.yaml
-
-logging:
-  account: LogArchive
-  # ... other logging configuration
-```
-
-**include/global-config-control-tower.yaml:**
-```yaml
-enable: true
-landingZone:
-  version: '3.3'
-  logging:
-    loggingBucketRetentionDays: 365
-    accessLoggingBucketRetentionDays: 365
-    organizationTrail: true
-  security:
-    enableIdentityCenterAccess: true
-controls:
-  - identifier: AWS-GR_RESTRICT_ROOT_USER_ACCESS_KEYS
-    enable: true
-    deploymentTargets:
-      organizationalUnits:
-        - SecureWorkloads
+workloadAccounts:
+  - name: InlineAccount
+    description: Defined directly in main file
+    email: inline@example.com
+    organizationalUnit: Infrastructure
+  - !include include/dev-account.yaml
+  - !include include/prod-account.yaml
 ```
 
 ## Best Practices
@@ -233,32 +254,94 @@ config/
 
 - Included files must contain valid YAML syntax
 - The combined configuration (main file + included files) must pass all schema validation
-- Circular includes are not supported and will cause processing errors
 
 ## Troubleshooting
 
 ### Common Issues
 
 **File Not Found Error:**
+```
+Failed to include file /path/to/config/include/missing-file.yaml: ENOENT: no such file or directory
+```
 - Verify the relative path is correct
 - Ensure the included file exists in the specified location
 - Check file permissions
+- Remember paths are relative to the main config file, not the current working directory
 
 **YAML Syntax Error:**
+```
+Could not parse content in accounts-config: YAMLException: bad indentation
+```
 - Validate YAML syntax in both main and included files
-- Ensure proper indentation in included files
+- Ensure proper indentation in included files (use spaces, not tabs)
 - Verify that included content matches the expected structure for that configuration section
+- Check that the included file contains valid YAML (not just plain text)
+
+**Multiple Includes Not Working:**
+```
+# If you see unexpected behavior with multiple includes
+```
+- Ensure you're using proper YAML list syntax with `-` markers
+- Each `!include` must be a separate list item or array element
+- Don't write consecutive `!include` directives without list markers
 
 **Schema Validation Error:**
+```
+Could not parse content in accounts-config: * /workloadAccounts/0 => must have required property 'name'
+```
 - Ensure the included content conforms to the expected schema
 - Check that required fields are present in included files
 - Validate that the combined configuration is complete and valid
+- The included file's content must match what would be valid in that position
+
+**Circular Include Error:**
+```
+Circular include detected: file-a.yaml -> file-b.yaml -> file-a.yaml
+```
+- Review your include chain to find the circular reference
+- Restructure your includes to avoid circular dependencies
+- Consider consolidating files if they need to reference each other
 
 ### Debugging Tips
 
-- Use a YAML validator to check syntax before deployment
-- Test configurations in a development environment first
-- Review the Landing Zone Accelerator logs for specific error messages related to file processing
+1. **Validate YAML syntax separately**: Use a YAML validator (like `yamllint` or online tools) to check syntax before deployment
+2. **Test the merged result**: Mentally (or actually) merge the included content into the main file to verify it makes sense
+3. **Check file paths**: Use `ls` or `tree` commands to verify your include paths are correct
+4. **Start simple**: Begin with a single include and add more incrementally
+5. **Review logs**: Check the Landing Zone Accelerator logs for specific error messages related to file processing
+6. **Test in development**: Always test configurations in a development environment first
+
+### Example Debugging Process
+
+If you encounter an error:
+
+1. **Verify the included file exists and is readable:**
+   ```bash
+   cat config/include/your-file.yaml
+   ```
+
+2. **Check YAML syntax:**
+   ```bash
+   yamllint config/include/your-file.yaml
+   ```
+
+3. **Manually merge and validate:**
+   - Copy the content from the included file
+   - Paste it where the `!include` directive is
+   - Validate the merged configuration
+
+4. **Check for proper list syntax:**
+   ```yaml
+   # Make sure you have this:
+   items:
+     - !include file1.yaml
+     - !include file2.yaml
+   
+   # Not this:
+   items:
+     !include file1.yaml
+     !include file2.yaml
+   ```
 
 !!! warning "Important"
     Always validate your complete configuration after adding or modifying `!include` directives to ensure the resulting merged configuration is valid and complete.
