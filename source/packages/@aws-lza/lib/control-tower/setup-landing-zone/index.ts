@@ -628,7 +628,6 @@ abstract class ControlTowerPreRequisites {
     if (!landingZoneIdentifier) {
       await Organization.validate(
         globalRegion,
-        props.region,
         props.partition,
         {
           logArchive: props.configuration.sharedAccounts.logging.email,

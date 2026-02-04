@@ -28,7 +28,6 @@ import {
   MoveAccountCommand,
   ListParentsCommand,
 } from '@aws-sdk/client-organizations';
-import { InstanceMetadata, paginateListInstances, SSOAdminClient } from '@aws-sdk/client-sso-admin';
 
 import {
   getOrganizationalUnitsForParent,
@@ -154,59 +153,6 @@ export abstract class Organization {
   }
 
   /**
-   * Function to get list of the AWS IAM Identity Center instances
-   * @param region string
-   * @param solutionId string | undefined
-   * @param credentials {@link IAssumeRoleCredential} | undefined
-   * @returns instances {@link InstanceMetadata}[]
-   */
-  private static async getIdentityCenterInstances(
-    region: string,
-    solutionId?: string,
-    credentials?: IAssumeRoleCredential,
-  ): Promise<InstanceMetadata[]> {
-    const client = new SSOAdminClient({
-      region,
-      customUserAgent: solutionId,
-      retryStrategy: setRetryStrategy(),
-      credentials: credentials,
-    });
-    const instances: InstanceMetadata[] = [];
-
-    const paginator = paginateListInstances({ client }, {});
-    for await (const page of paginator) {
-      for (const instance of page.Instances ?? []) {
-        instances.push(instance);
-      }
-    }
-    return instances;
-  }
-
-  /**
-   * Function to check if IAM Identity Center is enabled
-   * @param region string
-   * @param solutionId string | undefined
-   * @param credentials {@link IAssumeRoleCredential} | undefined
-   * @returns status boolean
-   */
-  private static async identityCenterEnabled(
-    region: string,
-    solutionId?: string,
-    credentials?: IAssumeRoleCredential,
-  ): Promise<boolean> {
-    const instances = await Organization.getIdentityCenterInstances(region, solutionId, credentials);
-    if (instances.length > 0) {
-      Organization.logger.warn(
-        `AWS Organizations have IAM Identity Center enabled "${instances
-          .map(instance => instance.IdentityStoreId)
-          .join(',')}", the solution cannot deploy AWS Control Tower Landing Zone.`,
-      );
-      return true;
-    }
-    return false;
-  }
-
-  /**
    * Function to get AWS Organizations Root details
    *
    * @param client {@link OrganizationsClient}
@@ -286,14 +232,12 @@ export abstract class Organization {
    * Function to validate AWS Organizations
    *
    * @param globalRegion string
-   * @param region string
    * @param solutionId string
    * @param sharedAccountEmail
    * @param credentials {@link IAssumeRoleCredential} | undefined
    */
   public static async validate(
     globalRegion: string,
-    region: string,
     partition: string,
     sharedAccountEmail: { logArchive: string; audit: string },
     credentials?: IAssumeRoleCredential,
@@ -307,10 +251,6 @@ export abstract class Organization {
     });
 
     const validationErrors: string[] = [];
-
-    if (await Organization.identityCenterEnabled(region, solutionId, credentials)) {
-      validationErrors.push(`AWS Control Tower Landing Zone cannot deploy because IAM Identity Center is configured.`);
-    }
 
     if (!(await Organization.configured(client))) {
       validationErrors.push(

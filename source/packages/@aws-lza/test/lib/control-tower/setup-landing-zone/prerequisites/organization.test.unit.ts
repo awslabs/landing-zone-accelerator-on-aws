@@ -102,9 +102,6 @@ const MOCK_CONSTANTS = {
     { Id: 'mockId3', Arn: 'mockArn3', Email: 'mockEmail3@example.com', Name: 'mockName3', Status: 'ACTIVE' },
     { Id: 'mockId4', Arn: 'mockArn4', Email: 'mockEmail4@example.com', Name: 'mockName4', Status: 'ACTIVE' },
   ],
-  identityCenterEnabledFailureError: new RegExp(
-    `AWS Control Tower Landing Zone cannot deploy because IAM Identity Center is configured.`,
-  ),
   organizationsNotEnabledFailureError: new RegExp(
     `AWS Control Tower Landing Zone cannot deploy because AWS Organizations have not been configured for the environment.`,
   ),
@@ -380,39 +377,6 @@ describe('IAM Role Tests', () => {
     expect(response).toBeUndefined();
     expect(DescribeOrganizationCommand).toHaveBeenCalledTimes(2);
     expect(EnableAllFeaturesCommand).toHaveBeenCalledTimes(0);
-  });
-
-  test('organizations validation failed becasue IdentityCenter already enabled', async () => {
-    // Setup
-    (paginateListInstances as vi.Mock).mockImplementation(() => ({
-      [Symbol.asyncIterator]: async function* () {
-        yield {
-          Instances: [MOCK_CONSTANTS.ssoInstances],
-        };
-      },
-    }));
-
-    mockOrganizationsSend.mockImplementation(command => {
-      if (command instanceof DescribeOrganizationCommand) {
-        return Promise.resolve({ Organization: MOCK_CONSTANTS.allEnabledOrganization });
-      }
-      if (command instanceof ListRootsCommand) {
-        return Promise.resolve({ Roots: [MOCK_CONSTANTS.roots] });
-      }
-      return Promise.reject(MOCK_CONSTANTS.unknownError);
-    });
-
-    // Execute & Verify
-    await expect(async () => {
-      await Organization.validate(
-        MOCK_CONSTANTS.globalRegion,
-        MOCK_CONSTANTS.region,
-        MOCK_CONSTANTS.partition,
-        MOCK_CONSTANTS.sharedAccountEmail,
-        MOCK_CONSTANTS.credentials,
-        MOCK_CONSTANTS.solutionId,
-      );
-    }).rejects.toThrow(MOCK_CONSTANTS.identityCenterEnabledFailureError);
   });
 
   test('should successfully validated organizations when IdentityCenter Instances undefined', async () => {
