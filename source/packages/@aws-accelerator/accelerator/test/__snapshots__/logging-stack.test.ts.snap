@@ -742,7 +742,7 @@ exports[`LoggingStack > Construct(LoggingStack):  Snapshot Test 1`] = `
       "Type": "AWS::KMS::Alias",
     },
     "AcceleratorCloudWatchKeyF93B6E17": {
-      "DeletionPolicy": "Retain",
+      "DeletionPolicy": "RetainExceptOnCreate",
       "Properties": {
         "Description": "KMS key for encrypting CloudWatch Log Groups created by LZA",
         "EnableKeyRotation": true,
@@ -1060,7 +1060,7 @@ exports[`LoggingStack > Construct(LoggingStack):  Snapshot Test 1`] = `
       "Type": "AWS::KMS::Alias",
     },
     "AcceleratorLambdaKeyD279839E": {
-      "DeletionPolicy": "Retain",
+      "DeletionPolicy": "RetainExceptOnCreate",
       "Properties": {
         "Description": "KMS key for encrypting Lambda function environment variables",
         "EnableKeyRotation": true,
@@ -1106,7 +1106,7 @@ exports[`LoggingStack > Construct(LoggingStack):  Snapshot Test 1`] = `
       "Type": "AWS::SSM::Parameter",
     },
     "AcceleratorMetadataBucket1A53514B": {
-      "DeletionPolicy": "Retain",
+      "DeletionPolicy": "RetainExceptOnCreate",
       "Properties": {
         "BucketEncryption": {
           "ServerSideEncryptionConfiguration": [
@@ -1942,7 +1942,7 @@ exports[`LoggingStack > Construct(LoggingStack):  Snapshot Test 1`] = `
       "Type": "AWS::SSM::Parameter",
     },
     "AcceleratorVpcFlowLogsBucketC222BC85": {
-      "DeletionPolicy": "Retain",
+      "DeletionPolicy": "RetainExceptOnCreate",
       "Properties": {
         "BucketEncryption": {
           "ServerSideEncryptionConfiguration": [
@@ -6585,7 +6585,7 @@ exports[`LoggingStack > Construct(LoggingStack):  Snapshot Test 2`] = `
       "Type": "AWS::SSM::Parameter",
     },
     "AcceleratorVpcFlowLogsBucketC222BC85": {
-      "DeletionPolicy": "Retain",
+      "DeletionPolicy": "RetainExceptOnCreate",
       "Properties": {
         "BucketEncryption": {
           "ServerSideEncryptionConfiguration": [
@@ -11840,7 +11840,7 @@ exports[`LoggingStackDelegatedAdmin > Construct(LoggingStacKDelegatedAdmin):  Sn
       "Type": "AWS::KMS::Alias",
     },
     "AcceleratorCloudWatchKeyF93B6E17": {
-      "DeletionPolicy": "Retain",
+      "DeletionPolicy": "RetainExceptOnCreate",
       "Properties": {
         "Description": "KMS key for encrypting CloudWatch Log Groups created by LZA",
         "EnableKeyRotation": true,
@@ -12020,7 +12020,7 @@ exports[`LoggingStackDelegatedAdmin > Construct(LoggingStacKDelegatedAdmin):  Sn
       "Type": "AWS::KMS::Alias",
     },
     "AcceleratorLambdaKeyD279839E": {
-      "DeletionPolicy": "Retain",
+      "DeletionPolicy": "RetainExceptOnCreate",
       "Properties": {
         "Description": "KMS key for encrypting Lambda function environment variables",
         "EnableKeyRotation": true,
@@ -14149,7 +14149,7 @@ exports[`LoggingStackDelegatedAdmin > Construct(LoggingStacKDelegatedAdmin):  Sn
       "Type": "AWS::IAM::Role",
     },
     "ElbAccessLogsBucketD6CD6A5D": {
-      "DeletionPolicy": "Retain",
+      "DeletionPolicy": "RetainExceptOnCreate",
       "DependsOn": [
         "CentralLogsBucketCrossAccountCentralBucketKMSArnSsmParamAccessRole83E55C59",
         "CentralLogsBucketCmkAlias286EB783",
@@ -16606,7 +16606,7 @@ exports[`LoggingStackOuTargets > Construct(LoggingStackOuTargets):  Snapshot Tes
       "Type": "AWS::KMS::Alias",
     },
     "AcceleratorCloudWatchKeyF93B6E17": {
-      "DeletionPolicy": "Retain",
+      "DeletionPolicy": "RetainExceptOnCreate",
       "Properties": {
         "Description": "KMS key for encrypting CloudWatch Log Groups created by LZA",
         "EnableKeyRotation": true,
@@ -16802,7 +16802,7 @@ exports[`LoggingStackOuTargets > Construct(LoggingStackOuTargets):  Snapshot Tes
       "Type": "AWS::KMS::Alias",
     },
     "AcceleratorLambdaKeyD279839E": {
-      "DeletionPolicy": "Retain",
+      "DeletionPolicy": "RetainExceptOnCreate",
       "Properties": {
         "Description": "KMS key for encrypting Lambda function environment variables",
         "EnableKeyRotation": true,
@@ -16848,7 +16848,7 @@ exports[`LoggingStackOuTargets > Construct(LoggingStackOuTargets):  Snapshot Tes
       "Type": "AWS::SSM::Parameter",
     },
     "AcceleratorMetadataBucket1A53514B": {
-      "DeletionPolicy": "Retain",
+      "DeletionPolicy": "RetainExceptOnCreate",
       "Properties": {
         "BucketEncryption": {
           "ServerSideEncryptionConfiguration": [
@@ -18529,7 +18529,7 @@ exports[`LoggingStackOuTargets > Construct(LoggingStackOuTargets):  Snapshot Tes
       "Type": "AWS::IAM::Role",
     },
     "ElbAccessLogsBucketD6CD6A5D": {
-      "DeletionPolicy": "Retain",
+      "DeletionPolicy": "RetainExceptOnCreate",
       "Metadata": {
         "cdk_nag": {
           "rules_to_suppress": [

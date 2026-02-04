@@ -1459,6 +1459,7 @@ export abstract class NetworkStack extends AcceleratorStack {
         logGroupName: logGroupName ? `${this.acceleratorPrefix}${logGroupName}` : undefined,
         encryptionKey: this.cloudwatchKey,
         retention: this.logRetention,
+        removalPolicy: cdk.RemovalPolicy.RETAIN_ON_UPDATE_OR_DELETE,
       }).logGroupArn;
     }
   }

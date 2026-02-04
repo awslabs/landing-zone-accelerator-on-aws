@@ -59,6 +59,7 @@ export class SsmSessionManagerSettings extends Construct {
         retention: props.logRetentionInDays,
         logGroupName: logGroupName,
         encryptionKey: props.cloudWatchEncryptionKey,
+        removalPolicy: cdk.RemovalPolicy.RETAIN_ON_UPDATE_OR_DELETE,
       });
       sessionManagerLogGroupName = sessionManagerLogGroup.logGroupName;
     }

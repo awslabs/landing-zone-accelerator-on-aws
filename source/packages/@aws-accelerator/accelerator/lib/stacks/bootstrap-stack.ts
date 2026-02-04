@@ -187,7 +187,7 @@ export class BootstrapStack extends AcceleratorStack {
       alias: `${this.props.prefixes.kmsAlias}/kms/cdk/key`,
       description: 'KMS key used to encrypt centralized CDK bootstrap S3 bucket and assets',
       enableKeyRotation: true,
-      removalPolicy: cdk.RemovalPolicy.RETAIN,
+      removalPolicy: cdk.RemovalPolicy.RETAIN_ON_UPDATE_OR_DELETE,
     });
 
     // Allow management account access
@@ -263,7 +263,7 @@ export class BootstrapStack extends AcceleratorStack {
       encryptionKey: props.kmsKey,
       lifecycleRules: lifecycleRules,
       objectOwnership: cdk.aws_s3.ObjectOwnership.BUCKET_OWNER_PREFERRED,
-      removalPolicy: cdk.RemovalPolicy.RETAIN,
+      removalPolicy: cdk.RemovalPolicy.RETAIN_ON_UPDATE_OR_DELETE,
       versioned: true,
     });
     const principals = this.setBootstrapResourcePrincipals(this.props.organizationConfig.enable);

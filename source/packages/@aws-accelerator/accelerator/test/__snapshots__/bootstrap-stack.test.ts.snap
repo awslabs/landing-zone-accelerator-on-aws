@@ -68,7 +68,7 @@ exports[`BootstrapStack > Construct(BootstrapStack):  Snapshot Test 1`] = `
   },
   "Resources": {
     "AssetEncryptionKey49BA7B12": {
-      "DeletionPolicy": "Retain",
+      "DeletionPolicy": "RetainExceptOnCreate",
       "Properties": {
         "Description": "KMS key used to encrypt centralized CDK bootstrap S3 bucket and assets",
         "EnableKeyRotation": true,
@@ -490,7 +490,7 @@ exports[`BootstrapStack > Construct(BootstrapStack):  Snapshot Test 1`] = `
       "Type": "AWS::SSM::Parameter",
     },
     "StagingBucket": {
-      "DeletionPolicy": "Retain",
+      "DeletionPolicy": "RetainExceptOnCreate",
       "Metadata": {
         "cdk_nag": {
           "rules_to_suppress": [

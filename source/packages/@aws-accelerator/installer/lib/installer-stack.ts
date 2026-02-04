@@ -777,6 +777,7 @@ export class InstallerStack extends cdk.Stack {
         'KMS key for encrypting LZA installer S3 buckets, CodeBuild projects, and Lambda functions created by the template',
       enableKeyRotation: true,
       policy: undefined,
+      removalPolicy: cdk.RemovalPolicy.RETAIN_ON_UPDATE_OR_DELETE,
     });
 
     //
@@ -948,6 +949,7 @@ export class InstallerStack extends cdk.Stack {
       kmsKey: installerKey,
       serverAccessLogsBucket: installerServerAccessLogsBucket.getS3Bucket(),
       s3LifeCycleRules: secureBucketLifecycleRule,
+      s3RemovalPolicy: cdk.RemovalPolicy.RETAIN_ON_UPDATE_OR_DELETE,
     });
 
     let roleName: string | undefined = undefined;

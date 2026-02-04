@@ -529,7 +529,7 @@ export class SecurityAuditStack extends AcceleratorStack {
         alias: this.acceleratorResourceNames.customerManagedKeys.sns.alias,
         description: this.acceleratorResourceNames.customerManagedKeys.sns.description,
         enableKeyRotation: true,
-        removalPolicy: cdk.RemovalPolicy.RETAIN,
+        removalPolicy: cdk.RemovalPolicy.RETAIN_ON_UPDATE_OR_DELETE,
       });
       if (this.props.organizationConfig.enable) {
         snsKey.addToResourcePolicy(

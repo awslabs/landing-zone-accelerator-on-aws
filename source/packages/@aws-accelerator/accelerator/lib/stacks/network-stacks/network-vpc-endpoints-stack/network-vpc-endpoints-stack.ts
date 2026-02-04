@@ -441,6 +441,7 @@ export class NetworkVpcEndpointsStack extends NetworkStack {
         const logGroup = new cdk.aws_logs.LogGroup(this, pascalCase(`${firewallItem.name}${logItem.type}LogGroup`), {
           encryptionKey: this.cloudwatchKey,
           retention: this.logRetention,
+          removalPolicy: cdk.RemovalPolicy.RETAIN_ON_UPDATE_OR_DELETE,
         });
         destinationConfigs.push({
           logDestination: {

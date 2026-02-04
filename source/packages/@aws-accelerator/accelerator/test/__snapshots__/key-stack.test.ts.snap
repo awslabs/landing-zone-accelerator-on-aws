@@ -16,7 +16,7 @@ exports[`KeyStack > Construct(KeyStack):  Snapshot Test 1`] = `
       "Type": "AWS::KMS::Alias",
     },
     "AcceleratorKeyF6E5723B": {
-      "DeletionPolicy": "Retain",
+      "DeletionPolicy": "RetainExceptOnCreate",
       "Properties": {
         "Description": "KMS key for encrypting cross-service resources (SNS, Lambda, CloudWatch, SQS, Macie, GuardDuty, Audit Manager) in the audit account",
         "EnableKeyRotation": true,

@@ -393,6 +393,7 @@ export class PrepareStack extends AcceleratorStack {
         pointInTimeRecoverySpecification: {
           pointInTimeRecoveryEnabled: true,
         },
+        removalPolicy: cdk.RemovalPolicy.RETAIN_ON_UPDATE_OR_DELETE,
       });
 
       this.ssmParameters.push({

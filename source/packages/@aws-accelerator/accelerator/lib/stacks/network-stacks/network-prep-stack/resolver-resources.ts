@@ -250,6 +250,7 @@ export class ResolverResources {
         const logGroup = new cdk.aws_logs.LogGroup(this.stack, 'QueryLogsLogGroup', {
           encryptionKey: this.stack.cloudwatchKey,
           retention: this.stack.logRetention,
+          removalPolicy: cdk.RemovalPolicy.RETAIN_ON_UPDATE_OR_DELETE,
         });
 
         const cwlQueryLogConfig = this.createQueryLogItem(logItem, logGroup, props.partition, orgId);
@@ -285,6 +286,7 @@ export class ResolverResources {
           const logGroup = new cdk.aws_logs.LogGroup(this.stack, pascalCase(`${queryLogName}QueryLogsLogGroup`), {
             encryptionKey: this.stack.cloudwatchKey,
             retention: this.stack.logRetention,
+            removalPolicy: cdk.RemovalPolicy.RETAIN_ON_UPDATE_OR_DELETE,
           });
 
           const cwlQueryLogConfig = this.createQueryLogItem(

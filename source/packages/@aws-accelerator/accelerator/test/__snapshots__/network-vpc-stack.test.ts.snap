@@ -391,7 +391,7 @@ exports[`NetworkVpcStack > Construct(NetworkVpcStack):  Snapshot Test 1`] = `
       "Type": "AWS::Lambda::Function",
     },
     "CustomTransitGatewayAcceptPeeringCustomResourceProviderLogGroupB843F457": {
-      "DeletionPolicy": "Retain",
+      "DeletionPolicy": "RetainExceptOnCreate",
       "Properties": {
         "LogGroupName": {
           "Fn::Join": [

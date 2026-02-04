@@ -620,7 +620,7 @@ exports[`NetworkVpcStack tests > Construct(NetworkVpcStack):  Snapshot Test 1`] 
       "Type": "AWS::EC2::VPCDHCPOptionsAssociation",
     },
     "NetworkEndpointsVpcFlowLogsGroupB21A3331": {
-      "DeletionPolicy": "Retain",
+      "DeletionPolicy": "RetainExceptOnCreate",
       "Properties": {
         "KmsKeyId": {
           "Ref": "SsmParameterValueacceleratorkmscloudwatchkeyarnC96584B6F00A464EAD1953AFF4B05118Parameter",

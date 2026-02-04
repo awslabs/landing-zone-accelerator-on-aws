@@ -194,7 +194,7 @@ export class TransitGatewayPeering extends Construct {
         logGroupName: `/aws/lambda/${(provider.node.findChild('Handler') as cdk.aws_lambda.CfnFunction).ref}`,
         retention: props.logRetentionInDays,
         encryptionKey: props.customLambdaLogKmsKey,
-        removalPolicy: cdk.RemovalPolicy.RETAIN,
+        removalPolicy: cdk.RemovalPolicy.RETAIN_ON_UPDATE_OR_DELETE,
       });
     resource.node.addDependency(logGroup);
   }

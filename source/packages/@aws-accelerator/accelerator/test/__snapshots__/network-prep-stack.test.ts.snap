@@ -1793,7 +1793,7 @@ drop http $HOME_NET any -> $EXTERNAL_NET any (http.host; content:"example.com"; 
       "Type": "AWS::NetworkFirewall::RuleGroup",
     },
     "EnhancedVpnTunnel0LogGroup9B6D89BD": {
-      "DeletionPolicy": "Retain",
+      "DeletionPolicy": "RetainExceptOnCreate",
       "Properties": {
         "RetentionInDays": 3653,
       },
@@ -1801,7 +1801,7 @@ drop http $HOME_NET any -> $EXTERNAL_NET any (http.host; content:"example.com"; 
       "UpdateReplacePolicy": "Retain",
     },
     "EnhancedVpnTunnel1LogGroup3967C793": {
-      "DeletionPolicy": "Retain",
+      "DeletionPolicy": "RetainExceptOnCreate",
       "Properties": {
         "RetentionInDays": 3653,
       },
@@ -2592,7 +2592,7 @@ drop http $HOME_NET any -> $EXTERNAL_NET any (http.host; content:"example.com"; 
       "Type": "AWS::Route53Resolver::ResolverQueryLoggingConfig",
     },
     "NetworkLocalEndpointQueryLogsQueryLogsLogGroup931180D2": {
-      "DeletionPolicy": "Retain",
+      "DeletionPolicy": "RetainExceptOnCreate",
       "Properties": {
         "RetentionInDays": 3653,
       },
@@ -2811,7 +2811,7 @@ drop http $HOME_NET any -> $EXTERNAL_NET any (http.host; content:"example.com"; 
       "Type": "AWS::EC2::TransitGatewayRouteTable",
     },
     "NetworkMainFlowLogsCwLogGroup9C99F182": {
-      "DeletionPolicy": "Retain",
+      "DeletionPolicy": "RetainExceptOnCreate",
       "Properties": {
         "LogGroupName": "/aws/transitgateway/Network-Main",
         "RetentionInDays": 180,
@@ -3008,7 +3008,7 @@ drop http $HOME_NET any -> $EXTERNAL_NET any (http.host; content:"example.com"; 
       "Type": "AWS::RAM::ResourceShare",
     },
     "QueryLogsLogGroup9D69754D": {
-      "DeletionPolicy": "Retain",
+      "DeletionPolicy": "RetainExceptOnCreate",
       "Properties": {
         "RetentionInDays": 3653,
       },

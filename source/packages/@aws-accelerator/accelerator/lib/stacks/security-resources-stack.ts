@@ -224,7 +224,7 @@ export class SecurityResourcesStack extends AcceleratorStack {
             },
             secretName,
             encryptionKey: key,
-            removalPolicy: cdk.RemovalPolicy.RETAIN,
+            removalPolicy: cdk.RemovalPolicy.RETAIN_ON_UPDATE_OR_DELETE,
           },
         );
 

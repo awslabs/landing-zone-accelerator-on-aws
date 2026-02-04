@@ -4730,7 +4730,7 @@ exports[`SecurityResourcesStack > Construct(SecurityResourcesStack):  Snapshot T
       "UpdateReplacePolicy": "Delete",
     },
     "SsmSessionManagerSettingsSessionManagerCloudWatchLogGroup15AB5AE0": {
-      "DeletionPolicy": "Retain",
+      "DeletionPolicy": "RetainExceptOnCreate",
       "Properties": {
         "KmsKeyId": {
           "Ref": "SsmParameterValueacceleratorkmscloudwatchkeyarnC96584B6F00A464EAD1953AFF4B05118Parameter",

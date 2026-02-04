@@ -336,6 +336,7 @@ export class OrganizationsStack extends AcceleratorStack {
           this.stackProperties.globalConfig.reports.costAndUsageReport.lifecycleRules,
         ),
         replicationProps: this.bucketReplicationProps,
+        s3RemovalPolicy: cdk.RemovalPolicy.RETAIN_ON_UPDATE_OR_DELETE,
       });
 
       // AwsSolutions-IAM5: The IAM entity contains wildcard permissions and does not have a cdk_nag rule suppression with evidence for those permission.
@@ -875,6 +876,7 @@ export class OrganizationsStack extends AcceleratorStack {
       retention: this.stackProperties.globalConfig.cloudwatchLogRetentionInDays,
       encryptionKey: cloudTrailCloudWatchCmk,
       logGroupName: `${this.props.prefixes.trailLogName}-cloudtrail-logs`,
+      removalPolicy: cdk.RemovalPolicy.RETAIN_ON_UPDATE_OR_DELETE,
     });
 
     let managementEventType = cdk.aws_cloudtrail.ReadWriteType.ALL;

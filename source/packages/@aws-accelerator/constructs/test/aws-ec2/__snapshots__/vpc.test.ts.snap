@@ -527,7 +527,7 @@ exports[`Vpc > Construct(Vpc):  Snapshot Test 1`] = `
       "Type": "AWS::EC2::VPCDHCPOptionsAssociation",
     },
     "TestVpcExistingIamFlowLogsGroupD35F5586": {
-      "DeletionPolicy": "Retain",
+      "DeletionPolicy": "RetainExceptOnCreate",
       "Properties": {
         "KmsKeyId": {
           "Fn::GetAtt": [
@@ -628,7 +628,7 @@ exports[`Vpc > Construct(Vpc):  Snapshot Test 1`] = `
       "Type": "AWS::EC2::VPCGatewayAttachment",
     },
     "TestVpcFlowLogsGroup63B469E8": {
-      "DeletionPolicy": "Retain",
+      "DeletionPolicy": "RetainExceptOnCreate",
       "Properties": {
         "KmsKeyId": {
           "Fn::GetAtt": [

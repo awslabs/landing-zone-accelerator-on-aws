@@ -1060,7 +1060,7 @@ exports[`SecurityStack > Construct(SecurityStack):  Snapshot Test 1`] = `
       "Type": "AWS::SSM::Parameter",
     },
     "EbsEncryptionKey9149E0DA": {
-      "DeletionPolicy": "Retain",
+      "DeletionPolicy": "RetainExceptOnCreate",
       "Properties": {
         "Description": "KMS key for default EBS volume encryption across all accounts",
         "EnableKeyRotation": true,

@@ -293,7 +293,7 @@ export class SecurityStack extends AcceleratorStack {
       ebsEncryptionKey = new cdk.aws_kms.Key(this, 'EbsEncryptionKey', {
         alias: this.acceleratorResourceNames.customerManagedKeys.ebsDefault.alias,
         description: this.acceleratorResourceNames.customerManagedKeys.ebsDefault.description,
-        removalPolicy: cdk.RemovalPolicy.RETAIN,
+        removalPolicy: cdk.RemovalPolicy.RETAIN_ON_UPDATE_OR_DELETE,
         enableKeyRotation: true,
       });
       ebsEncryptionKey.addToResourcePolicy(

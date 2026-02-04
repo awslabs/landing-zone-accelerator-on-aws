@@ -126,14 +126,17 @@ export class NewCloudWatchLogEventDemoStack extends cdk.Stack {
 
     const includedGroup = new cdk.aws_logs.LogGroup(this, 'IncludedGroup', {
       logGroupName: 'includedGroup',
+      removalPolicy: cdk.RemovalPolicy.RETAIN_ON_UPDATE_OR_DELETE,
     });
 
     const excludedGroup = new cdk.aws_logs.LogGroup(this, 'ExcludedGroup', {
       logGroupName: 'demoGroup',
+      removalPolicy: cdk.RemovalPolicy.RETAIN_ON_UPDATE_OR_DELETE,
     });
 
     const excludedWildcardGroup = new cdk.aws_logs.LogGroup(this, 'ExcludedWildcardGroup', {
       logGroupName: 'testerGroup',
+      removalPolicy: cdk.RemovalPolicy.RETAIN_ON_UPDATE_OR_DELETE,
     });
 
     includedGroup.node.addDependency(newCwLogEvent);

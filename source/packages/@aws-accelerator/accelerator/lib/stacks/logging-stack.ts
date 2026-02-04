@@ -347,6 +347,7 @@ export class LoggingStack extends AcceleratorStack {
       s3BucketName: this.getElbLogsBucketName(),
       replicationProps,
       s3LifeCycleRules: this.getS3LifeCycleRules(this.props.globalConfig.logging.elbLogBucket?.lifecycleRules),
+      s3RemovalPolicy: cdk.RemovalPolicy.RETAIN_ON_UPDATE_OR_DELETE,
     });
 
     // To make sure central log bucket created before elb access log bucket, this is required when logging stack executes in home region
@@ -594,7 +595,7 @@ export class LoggingStack extends AcceleratorStack {
         alias: this.acceleratorResourceNames.customerManagedKeys.cloudWatchLog.alias,
         description: this.acceleratorResourceNames.customerManagedKeys.cloudWatchLog.description,
         enableKeyRotation: true,
-        removalPolicy: cdk.RemovalPolicy.RETAIN,
+        removalPolicy: cdk.RemovalPolicy.RETAIN_ON_UPDATE_OR_DELETE,
       });
 
       cloudwatchKey.addToResourcePolicy(
@@ -665,7 +666,7 @@ export class LoggingStack extends AcceleratorStack {
         alias: this.acceleratorResourceNames.customerManagedKeys.lambda.alias,
         description: this.acceleratorResourceNames.customerManagedKeys.lambda.description,
         enableKeyRotation: true,
-        removalPolicy: cdk.RemovalPolicy.RETAIN,
+        removalPolicy: cdk.RemovalPolicy.RETAIN_ON_UPDATE_OR_DELETE,
       });
 
       this.ssmParameters.push({
@@ -992,6 +993,7 @@ export class LoggingStack extends AcceleratorStack {
         serverAccessLogsBucket,
         s3LifeCycleRules: this.getS3LifeCycleRules(vpcFlowLogsConfig.destinationsConfig?.s3?.lifecycleRules),
         replicationProps: replicationProps,
+        s3RemovalPolicy: cdk.RemovalPolicy.RETAIN_ON_UPDATE_OR_DELETE,
       });
 
       if (!serverAccessLogsBucket) {
@@ -2783,7 +2785,7 @@ export class LoggingStack extends AcceleratorStack {
           alias: this.acceleratorResourceNames.customerManagedKeys.assetsBucket.alias,
           description: this.acceleratorResourceNames.customerManagedKeys.assetsBucket.description,
           enableKeyRotation: true,
-          removalPolicy: cdk.RemovalPolicy.RETAIN,
+          removalPolicy: cdk.RemovalPolicy.RETAIN_ON_UPDATE_OR_DELETE,
         });
         // Allow management account access
         assetsKmsKey.addToResourcePolicy(
@@ -2978,6 +2980,7 @@ export class LoggingStack extends AcceleratorStack {
       }`,
       kmsKey: assetsKmsKey,
       serverAccessLogsBucketName: serverAccessLogsBucket.getS3Bucket().bucketName,
+      s3RemovalPolicy: cdk.RemovalPolicy.RETAIN_ON_UPDATE_OR_DELETE,
     });
 
     assetsBucket.getS3Bucket().addToResourcePolicy(
@@ -3047,6 +3050,7 @@ export class LoggingStack extends AcceleratorStack {
             cdk.Stack.of(this).region
           }`,
           serverAccessLogsBucket,
+          s3RemovalPolicy: cdk.RemovalPolicy.RETAIN_ON_UPDATE_OR_DELETE,
         });
 
         const bucket = metadataBucket.getS3Bucket();

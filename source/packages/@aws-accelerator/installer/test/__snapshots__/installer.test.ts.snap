@@ -1246,7 +1246,7 @@ exports[`InstallerStack > Stack(installer):  Snapshot Test 1`] = `
       "Type": "AWS::IAM::Policy",
     },
     "InstallerKey2A6A8C6D": {
-      "DeletionPolicy": "Retain",
+      "DeletionPolicy": "RetainExceptOnCreate",
       "Metadata": {
         "cfn_nag": {
           "rules_to_suppress": [
@@ -2242,7 +2242,7 @@ phases:
       "Type": "AWS::IAM::Policy",
     },
     "SecureBucket747CD8C0": {
-      "DeletionPolicy": "Retain",
+      "DeletionPolicy": "RetainExceptOnCreate",
       "Properties": {
         "BucketEncryption": {
           "ServerSideEncryptionConfiguration": [
@@ -4939,7 +4939,7 @@ exports[`InstallerStack > Stack(installer):  Snapshot Test 2`] = `
       "Type": "AWS::IAM::Policy",
     },
     "InstallerKey2A6A8C6D": {
-      "DeletionPolicy": "Retain",
+      "DeletionPolicy": "RetainExceptOnCreate",
       "Metadata": {
         "cfn_nag": {
           "rules_to_suppress": [
@@ -5925,7 +5925,7 @@ phases:
       "Type": "AWS::IAM::Policy",
     },
     "SecureBucket747CD8C0": {
-      "DeletionPolicy": "Retain",
+      "DeletionPolicy": "RetainExceptOnCreate",
       "Properties": {
         "BucketEncryption": {
           "ServerSideEncryptionConfiguration": [
@@ -8662,7 +8662,7 @@ exports[`InstallerStack > Stack(installer):  Snapshot Test 3`] = `
       "Type": "AWS::IAM::Policy",
     },
     "InstallerKey2A6A8C6D": {
-      "DeletionPolicy": "Retain",
+      "DeletionPolicy": "RetainExceptOnCreate",
       "Metadata": {
         "cfn_nag": {
           "rules_to_suppress": [
@@ -9688,7 +9688,7 @@ phases:
       "Type": "AWS::IAM::Policy",
     },
     "SecureBucket747CD8C0": {
-      "DeletionPolicy": "Retain",
+      "DeletionPolicy": "RetainExceptOnCreate",
       "Properties": {
         "BucketEncryption": {
           "ServerSideEncryptionConfiguration": [
@@ -12394,7 +12394,7 @@ exports[`InstallerStack > Stack(installer):  Snapshot Test 4`] = `
       "Type": "AWS::IAM::Policy",
     },
     "InstallerKey2A6A8C6D": {
-      "DeletionPolicy": "Retain",
+      "DeletionPolicy": "RetainExceptOnCreate",
       "Metadata": {
         "cfn_nag": {
           "rules_to_suppress": [
@@ -13410,7 +13410,7 @@ phases:
       "Type": "AWS::IAM::Policy",
     },
     "SecureBucket747CD8C0": {
-      "DeletionPolicy": "Retain",
+      "DeletionPolicy": "RetainExceptOnCreate",
       "Properties": {
         "BucketEncryption": {
           "ServerSideEncryptionConfiguration": [
@@ -16116,7 +16116,7 @@ exports[`InstallerStack > Stack(installer):  Snapshot Test 5`] = `
       "Type": "AWS::IAM::Policy",
     },
     "InstallerKey2A6A8C6D": {
-      "DeletionPolicy": "Retain",
+      "DeletionPolicy": "RetainExceptOnCreate",
       "Metadata": {
         "cfn_nag": {
           "rules_to_suppress": [
@@ -17137,7 +17137,7 @@ phases:
       "Type": "AWS::IAM::Policy",
     },
     "SecureBucket747CD8C0": {
-      "DeletionPolicy": "Retain",
+      "DeletionPolicy": "RetainExceptOnCreate",
       "Properties": {
         "BucketEncryption": {
           "ServerSideEncryptionConfiguration": [
@@ -19815,7 +19815,7 @@ exports[`InstallerStack > Stack(installer):  Snapshot Test 6`] = `
       "Type": "AWS::IAM::Policy",
     },
     "InstallerKey2A6A8C6D": {
-      "DeletionPolicy": "Retain",
+      "DeletionPolicy": "RetainExceptOnCreate",
       "Metadata": {
         "cfn_nag": {
           "rules_to_suppress": [
@@ -20808,7 +20808,7 @@ phases:
       "Type": "AWS::IAM::Policy",
     },
     "SecureBucket747CD8C0": {
-      "DeletionPolicy": "Retain",
+      "DeletionPolicy": "RetainExceptOnCreate",
       "Properties": {
         "BucketEncryption": {
           "ServerSideEncryptionConfiguration": [
@@ -23541,7 +23541,7 @@ exports[`InstallerStack > Stack(installer):  Snapshot Test 7`] = `
       "Type": "AWS::IAM::Policy",
     },
     "InstallerKey2A6A8C6D": {
-      "DeletionPolicy": "Retain",
+      "DeletionPolicy": "RetainExceptOnCreate",
       "Metadata": {
         "cfn_nag": {
           "rules_to_suppress": [
@@ -24885,7 +24885,7 @@ phases:
       "Type": "AWS::IAM::Policy",
     },
     "SecureBucket747CD8C0": {
-      "DeletionPolicy": "Retain",
+      "DeletionPolicy": "RetainExceptOnCreate",
       "Properties": {
         "BucketEncryption": {
           "ServerSideEncryptionConfiguration": [
@@ -27633,7 +27633,7 @@ exports[`InstallerStack > Stack(installer):  Snapshot Test 8`] = `
       "Type": "AWS::IAM::Policy",
     },
     "InstallerKey2A6A8C6D": {
-      "DeletionPolicy": "Retain",
+      "DeletionPolicy": "RetainExceptOnCreate",
       "Metadata": {
         "cfn_nag": {
           "rules_to_suppress": [
@@ -28984,7 +28984,7 @@ phases:
       "Type": "AWS::IAM::Policy",
     },
     "SecureBucket747CD8C0": {
-      "DeletionPolicy": "Retain",
+      "DeletionPolicy": "RetainExceptOnCreate",
       "Properties": {
         "BucketEncryption": {
           "ServerSideEncryptionConfiguration": [
@@ -31756,7 +31756,7 @@ exports[`InstallerStack > Stack(installer):  Snapshot Test 9`] = `
       "Type": "AWS::IAM::Policy",
     },
     "InstallerKey2A6A8C6D": {
-      "DeletionPolicy": "Retain",
+      "DeletionPolicy": "RetainExceptOnCreate",
       "Metadata": {
         "cfn_nag": {
           "rules_to_suppress": [
@@ -33122,7 +33122,7 @@ phases:
       "Type": "AWS::IAM::Policy",
     },
     "SecureBucket747CD8C0": {
-      "DeletionPolicy": "Retain",
+      "DeletionPolicy": "RetainExceptOnCreate",
       "Properties": {
         "BucketEncryption": {
           "ServerSideEncryptionConfiguration": [

@@ -87,7 +87,7 @@ exports[`TransitGatewayFlowLogs.createCloudWatchLogsDestination > Construct(Tran
 {
   "Resources": {
     "TestCloudWatchDestinationEncryptedLogGroup46EBF2E1": {
-      "DeletionPolicy": "Retain",
+      "DeletionPolicy": "RetainExceptOnCreate",
       "Properties": {
         "KmsKeyId": {
           "Fn::GetAtt": [
@@ -152,7 +152,7 @@ exports[`TransitGatewayFlowLogs.createCloudWatchLogsDestination > Construct(Tran
       "Type": "AWS::IAM::Policy",
     },
     "TestCloudWatchDestinationLogGroup8181E23B": {
-      "DeletionPolicy": "Retain",
+      "DeletionPolicy": "RetainExceptOnCreate",
       "Properties": {
         "LogGroupName": "/aws/transitgateway/test-tgw",
         "RetentionInDays": 14,
@@ -161,7 +161,7 @@ exports[`TransitGatewayFlowLogs.createCloudWatchLogsDestination > Construct(Tran
       "UpdateReplacePolicy": "Retain",
     },
     "TestCloudWatchDestinationRetentionLogGroup397958A4": {
-      "DeletionPolicy": "Retain",
+      "DeletionPolicy": "RetainExceptOnCreate",
       "Properties": {
         "LogGroupName": "/aws/transitgateway/test-tgw-retention",
         "RetentionInDays": 365,

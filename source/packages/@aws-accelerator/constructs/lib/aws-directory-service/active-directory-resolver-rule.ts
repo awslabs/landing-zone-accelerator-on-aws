@@ -80,7 +80,7 @@ export class ActiveDirectoryResolverRule extends Construct {
       logGroupName: `/aws/lambda/${providerLambda.functionName}`,
       retention: props.cloudWatchLogRetentionInDays,
       encryptionKey: props.cloudWatchLogsKmsKey,
-      removalPolicy: cdk.RemovalPolicy.RETAIN,
+      removalPolicy: cdk.RemovalPolicy.RETAIN_ON_UPDATE_OR_DELETE,
     });
 
     const provider = new cdk.custom_resources.Provider(this, 'UpdateResolverRuleProvider', {

@@ -54,6 +54,7 @@ export class SecurityHubEventsLogDemoStack extends cdk.Stack {
       const existingLogGroupName = `/${testingPrefix}-SecurityHub`;
       new cdk.aws_logs.LogGroup(this, 'ExistingLogGroup', {
         logGroupName: existingLogGroupName,
+        removalPolicy: cdk.RemovalPolicy.RETAIN_ON_UPDATE_OR_DELETE,
       });
     }
 

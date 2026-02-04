@@ -33,7 +33,7 @@ exports[`TransitGatewayPeering > Construct(TransitGatewayPrefixListReference):  
       "Type": "AWS::Lambda::Function",
     },
     "CustomTransitGatewayAcceptPeeringCustomResourceProviderLogGroupB843F457": {
-      "DeletionPolicy": "Retain",
+      "DeletionPolicy": "RetainExceptOnCreate",
       "Properties": {
         "KmsKeyId": {
           "Fn::GetAtt": [

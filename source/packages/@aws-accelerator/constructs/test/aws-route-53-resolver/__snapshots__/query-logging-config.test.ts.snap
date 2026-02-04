@@ -179,7 +179,7 @@ exports[`QueryLoggingConfig > Construct(QueryLoggingConfig):  Snapshot Test 1`] 
       "Type": "AWS::Route53Resolver::ResolverQueryLoggingConfig",
     },
     "TestLogGroup4EEF7AD4": {
-      "DeletionPolicy": "Retain",
+      "DeletionPolicy": "RetainExceptOnCreate",
       "Properties": {
         "RetentionInDays": 731,
       },
@@ -688,7 +688,7 @@ exports[`QueryLoggingConfig > Construct(QueryLoggingConfig):  Snapshot Test 2`] 
       "UpdateReplacePolicy": "Delete",
     },
     "TestLogGroup4EEF7AD4": {
-      "DeletionPolicy": "Retain",
+      "DeletionPolicy": "RetainExceptOnCreate",
       "Properties": {
         "RetentionInDays": 731,
       },

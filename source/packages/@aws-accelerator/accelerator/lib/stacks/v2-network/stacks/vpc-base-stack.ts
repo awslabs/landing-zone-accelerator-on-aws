@@ -946,6 +946,7 @@ export class VpcBaseStack extends AcceleratorStack {
         logGroupName: logGroupName ? `${this.props.prefixes.accelerator}${logGroupName}` : undefined,
         encryptionKey: this.cloudwatchKey,
         retention: this.logRetentionInDays,
+        removalPolicy: cdk.RemovalPolicy.RETAIN_ON_UPDATE_OR_DELETE,
       }).logGroupArn;
     }
   }
@@ -1039,6 +1040,7 @@ export class VpcBaseStack extends AcceleratorStack {
     const logGroup = new cdk.aws_logs.LogGroup(this, 'FlowLogsGroup', {
       encryptionKey: this.cloudwatchKey,
       retention: this.logRetentionInDays,
+      removalPolicy: cdk.RemovalPolicy.RETAIN_ON_UPDATE_OR_DELETE,
     });
 
     this.logger.info(`Creating CWL destination flow-logs for VPC ${this.vpcDetails.name}`);

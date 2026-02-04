@@ -95,7 +95,7 @@ export class DetectiveMembers extends Construct {
         logGroupName: `/aws/lambda/${(provider.node.findChild('Handler') as cdk.aws_lambda.CfnFunction).ref}`,
         retention: props.logRetentionInDays,
         encryptionKey: props.kmsKey,
-        removalPolicy: cdk.RemovalPolicy.RETAIN,
+        removalPolicy: cdk.RemovalPolicy.RETAIN_ON_UPDATE_OR_DELETE,
       });
     resource.node.addDependency(logGroup);
 

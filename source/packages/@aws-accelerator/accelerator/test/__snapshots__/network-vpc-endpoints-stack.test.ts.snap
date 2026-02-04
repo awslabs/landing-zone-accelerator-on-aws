@@ -98,7 +98,7 @@ exports[`NetworkVpcEndpointsStack > Construct(NetworkVpcEndpointsStack):  Snapsh
   },
   "Resources": {
     "AcceleratorFirewallFlowLogGroupC8720B1F": {
-      "DeletionPolicy": "Retain",
+      "DeletionPolicy": "RetainExceptOnCreate",
       "Properties": {
         "RetentionInDays": 3653,
       },
@@ -407,7 +407,7 @@ exports[`NetworkVpcEndpointsStack > Construct(NetworkVpcEndpointsStack):  Snapsh
       "Type": "AWS::Route53Resolver::ResolverEndpoint",
     },
     "AzIdFirewallFlowLogGroup1F60EDC3": {
-      "DeletionPolicy": "Retain",
+      "DeletionPolicy": "RetainExceptOnCreate",
       "Properties": {
         "RetentionInDays": 3653,
       },

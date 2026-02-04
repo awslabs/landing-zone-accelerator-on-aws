@@ -25,7 +25,9 @@ const stack = new cdk.Stack();
 
 // Instantiate resources required for construct
 const bucket = cdk.aws_s3.Bucket.fromBucketName(stack, 'TestBucket', 'testbucket');
-const logGroup = new cdk.aws_logs.LogGroup(stack, 'TestLogGroup');
+const logGroup = new cdk.aws_logs.LogGroup(stack, 'TestLogGroup', {
+  removalPolicy: cdk.RemovalPolicy.RETAIN_ON_UPDATE_OR_DELETE,
+});
 const kmsKey = new cdk.aws_kms.Key(stack, 'Key', {});
 
 // S3 query logging config
@@ -59,7 +61,9 @@ new QueryLoggingConfigAssociation(stack, 'TestQueryLoggingAssoc', {
 // Test for China region.
 const cnStack = new cdk.Stack();
 const cnBucket = cdk.aws_s3.Bucket.fromBucketName(cnStack, 'TestBucket', 'testbucket');
-const cnLogGroup = new cdk.aws_logs.LogGroup(cnStack, 'TestLogGroup');
+const cnLogGroup = new cdk.aws_logs.LogGroup(cnStack, 'TestLogGroup', {
+  removalPolicy: cdk.RemovalPolicy.RETAIN_ON_UPDATE_OR_DELETE,
+});
 const cnKmsKey = new cdk.aws_kms.Key(cnStack, 'Key', {});
 
 const cnS3Config = new QueryLoggingConfig(cnStack, 'S3QueryLoggingTest', {

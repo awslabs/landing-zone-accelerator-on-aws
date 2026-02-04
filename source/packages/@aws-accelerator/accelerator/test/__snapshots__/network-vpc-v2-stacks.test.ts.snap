@@ -5747,7 +5747,7 @@ exports[`NetworkVpcV2Stacks > Construct(VpcStack-Network-us-east-1-Network-Secon
       "Type": "AWS::EC2::FlowLog",
     },
     "FlowLogsGroup9B5A57FD": {
-      "DeletionPolicy": "Retain",
+      "DeletionPolicy": "RetainExceptOnCreate",
       "Properties": {
         "RetentionInDays": 3653,
       },
@@ -6035,7 +6035,7 @@ exports[`NetworkVpcV2Stacks > Construct(VpcStack-Network-us-east-1-Network-Secon
       "Type": "AWS::EC2::FlowLog",
     },
     "FlowLogsGroup9B5A57FD": {
-      "DeletionPolicy": "Retain",
+      "DeletionPolicy": "RetainExceptOnCreate",
       "Properties": {
         "RetentionInDays": 3653,
       },

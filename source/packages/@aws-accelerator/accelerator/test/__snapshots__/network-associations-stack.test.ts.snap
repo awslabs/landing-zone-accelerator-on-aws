@@ -6749,7 +6749,7 @@ catch {
       "Type": "AWS::Lambda::Function",
     },
     "AcceleratorManagedActiveDirectoryResolverRuleUpdateResolverRuleFunctionLogGroup814E23CB": {
-      "DeletionPolicy": "Retain",
+      "DeletionPolicy": "RetainExceptOnCreate",
       "Properties": {
         "LogGroupName": {
           "Fn::Join": [
@@ -7507,7 +7507,7 @@ catch {
       "Type": "AWS::Lambda::Function",
     },
     "AcceleratorManagedActiveDirectorySharedServicesAppASubnetLookupSubnetIdLookupFunctionLogGroupC866019A": {
-      "DeletionPolicy": "Retain",
+      "DeletionPolicy": "RetainExceptOnCreate",
       "Properties": {
         "LogGroupName": {
           "Fn::Join": [
@@ -7790,7 +7790,7 @@ catch {
       "Type": "AWS::Lambda::Function",
     },
     "AcceleratorManagedActiveDirectorySharedServicesAppBSubnetLookupSubnetIdLookupFunctionLogGroup705D6238": {
-      "DeletionPolicy": "Retain",
+      "DeletionPolicy": "RetainExceptOnCreate",
       "Properties": {
         "LogGroupName": {
           "Fn::Join": [

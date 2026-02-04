@@ -47,7 +47,7 @@ exports[`AccountWarming > Construct(WarmAccount):  Snapshot Test 1`] = `
       "Type": "AWS::Lambda::Function",
     },
     "AccountWarmingWarmAccountFunctionLogGroupF216C336": {
-      "DeletionPolicy": "Retain",
+      "DeletionPolicy": "RetainExceptOnCreate",
       "Properties": {
         "KmsKeyId": {
           "Fn::GetAtt": [
@@ -1355,7 +1355,7 @@ exports[`AccountWarming > Construct(WarmAccount):  Snapshot Test 1`] = `
       "Type": "AWS::Lambda::Function",
     },
     "AccountWarmingWarmAccountStatusFunctionLogGroupBD74C59F": {
-      "DeletionPolicy": "Retain",
+      "DeletionPolicy": "RetainExceptOnCreate",
       "Properties": {
         "KmsKeyId": {
           "Fn::GetAtt": [

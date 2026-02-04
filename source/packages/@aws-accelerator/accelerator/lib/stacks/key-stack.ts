@@ -47,7 +47,7 @@ export class KeyStack extends AcceleratorStack {
       alias: this.acceleratorResourceNames.customerManagedKeys.acceleratorKey.alias,
       description: this.acceleratorResourceNames.customerManagedKeys.acceleratorKey.description,
       enableKeyRotation: true,
-      removalPolicy: cdk.RemovalPolicy.RETAIN,
+      removalPolicy: cdk.RemovalPolicy.RETAIN_ON_UPDATE_OR_DELETE,
     });
 
     if (props.organizationConfig.enable) {

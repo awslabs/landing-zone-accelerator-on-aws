@@ -170,7 +170,7 @@ export class Bucket extends Construct {
     this.bucket = new s3.Bucket(this, 'Resource', {
       encryption: this.encryptionType,
       encryptionKey: this.cmk,
-      removalPolicy: cdk.RemovalPolicy.RETAIN,
+      removalPolicy: props.s3RemovalPolicy ?? cdk.RemovalPolicy.RETAIN,
       blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
       bucketName: props.s3BucketName,
       versioned: true,

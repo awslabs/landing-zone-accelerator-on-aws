@@ -62,7 +62,7 @@ export class TransitGatewayFlowLogs extends Construct {
       logGroupName: `/aws/transitgateway/${props.transitGatewayName}`,
       retention: props.logRetentionInDays,
       encryptionKey: props.encryptionKey,
-      removalPolicy: cdk.RemovalPolicy.RETAIN,
+      removalPolicy: cdk.RemovalPolicy.RETAIN_ON_UPDATE_OR_DELETE,
     });
 
     const role = new cdk.aws_iam.Role(scope, `${id}Role`, {

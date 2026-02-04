@@ -1140,6 +1140,7 @@ export class OperationsStack extends AcceleratorStack {
         encryptionType: this.isS3CMKEnabled ? BucketEncryptionType.SSE_KMS : BucketEncryptionType.SSE_S3,
         kmsKey: this.isS3CMKEnabled ? this.getAcceleratorKey(AcceleratorKeyType.S3_KEY)! : undefined,
         serverAccessLogsBucketName,
+        s3RemovalPolicy: cdk.RemovalPolicy.RETAIN_ON_UPDATE_OR_DELETE,
       });
 
       if (!serverAccessLogsBucketName) {

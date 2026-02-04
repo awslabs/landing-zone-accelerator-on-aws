@@ -215,7 +215,7 @@ exports[`ActiveDirectoryResolverRule > Construct(ActiveDirectoryResolverRule):  
       "Type": "AWS::Lambda::Function",
     },
     "ActiveDirectoryResolverRuleUpdateResolverRuleFunctionLogGroupDA0FD002": {
-      "DeletionPolicy": "Retain",
+      "DeletionPolicy": "RetainExceptOnCreate",
       "Properties": {
         "KmsKeyId": {
           "Fn::GetAtt": [

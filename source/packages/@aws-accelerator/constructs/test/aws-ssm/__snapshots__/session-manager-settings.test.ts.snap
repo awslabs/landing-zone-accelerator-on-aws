@@ -161,7 +161,7 @@ exports[`SsmSessionManagerSettings > Construct(SsmSessionManagerSettings):  Snap
       "UpdateReplacePolicy": "Delete",
     },
     "SsmSessionManagerSettingsSessionManagerCloudWatchLogGroup15AB5AE0": {
-      "DeletionPolicy": "Retain",
+      "DeletionPolicy": "RetainExceptOnCreate",
       "Properties": {
         "KmsKeyId": {
           "Fn::GetAtt": [

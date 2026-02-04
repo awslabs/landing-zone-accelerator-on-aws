@@ -747,6 +747,7 @@ abstract class VpcBase extends cdk.Resource implements IVpc {
       const logGroup = new cdk.aws_logs.LogGroup(this, 'FlowLogsGroup', {
         encryptionKey: options.encryptionKey,
         retention: options.logRetentionInDays,
+        removalPolicy: cdk.RemovalPolicy.RETAIN_ON_UPDATE_OR_DELETE,
       });
 
       const cfnFlowLog = new cdk.aws_ec2.CfnFlowLog(this, 'CloudWatchFlowLog', {
