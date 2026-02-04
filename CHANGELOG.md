@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - feat(control-tower): auto register OU after manifest changes
 - feat(guardduty): added support for S3 Malware Protection
 - feat(networking): add multicast support for transit gateways
+- feat(networking): add optional SG referencing to TGW
 - feat(networking): added support for AWS Managed Rule Groups for AWS Network Firewall
 - feat(networking): add support for transit gateway flow logs
 - feat(pipeline): replace codestar notification with EventBridge and SNS
@@ -28,11 +29,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - fix(config): disable identity center for pipeline env
 - fix(container): add cert path for aws sdk, nodejs calls
 - fix(control-tower): change default ct version to 4.0
+- fix(control-tower): remove organization validation for sso
 - fix(installer-container): detect ECS task failures by checking container exit code
 - fix(metadata): lookup ous by latest commit
 - fix(networking): fix share-subnet-tags custom Resource removes tags not managed by the accelerator
 - fix(networking): adjust logic for nlb ip address role creation
 - fix(prerequisites): remove checks for concurrency
+- fix(schema): use interface type not class in global config, add test
 - fix(scp): quarantine policy pagination
 - fix(securityhub): fix invalid input exception on batch enabled standards call
 - fix(ssm): apply tags to cross account ssm params
@@ -43,6 +46,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- chore(docs): update !include documentation with samples
+- chore(installer): update deletion policy of some resources to RetainExceptOnCreate
 - chore(kms): update KMS key descriptions
 - chore(networking): update vpc route53 resolver configuration links
 - chore: add documentation for container deployment
