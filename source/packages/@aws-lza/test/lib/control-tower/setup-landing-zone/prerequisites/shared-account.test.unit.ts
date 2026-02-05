@@ -38,6 +38,7 @@ vi.mock('@aws-sdk/client-organizations', () => {
 vi.mock('../../../../../common/functions', () => ({
   delay: vi.fn().mockResolvedValue(undefined),
   setRetryStrategy: vi.fn().mockResolvedValue(undefined),
+  getOrganizationAccounts: vi.fn().mockResolvedValue([]),
 }));
 
 const MOCK_CONSTANTS = {
@@ -233,5 +234,159 @@ describe('IAM Role Tests', () => {
     );
     expect(CreateAccountCommand).toHaveBeenCalledTimes(2);
     expect(DescribeCreateAccountStatusCommand).toHaveBeenCalledTimes(2);
+  });
+
+  test('should skip creating LogArchive account when it already exists', async () => {
+    // Setup - Mock getOrganizationAccounts to return existing LogArchive account
+    const { getOrganizationAccounts } = await import('../../../../../common/functions');
+    vi.mocked(getOrganizationAccounts).mockResolvedValueOnce([
+      {
+        Id: '111111111111',
+        Arn: 'arn:aws:organizations::123456789012:account/o-exampleorgid/111111111111',
+        Email: 'mockLogArchive@example.com',
+        Name: 'LogArchive',
+        Status: 'ACTIVE',
+        JoinedMethod: 'CREATED',
+        JoinedTimestamp: new Date('2024-01-01'),
+      },
+    ]);
+
+    mockSend.mockImplementation(command => {
+      if (command instanceof CreateAccountCommand) {
+        return Promise.resolve(MOCK_CONSTANTS.createAccountStatusSuccessResponse);
+      }
+      return Promise.reject(MOCK_CONSTANTS.unknownError);
+    });
+
+    // Execute
+    const response = await SharedAccount.createAccounts(
+      MOCK_CONSTANTS.logArchiveAccountItem,
+      MOCK_CONSTANTS.auditAccountItem,
+      MOCK_CONSTANTS.globalRegion,
+      MOCK_CONSTANTS.solutionId,
+      MOCK_CONSTANTS.credentials,
+    );
+
+    // Verify - Only Audit account should be created
+    expect(response).toBeUndefined();
+    expect(CreateAccountCommand).toHaveBeenCalledTimes(1);
+    expect(getOrganizationAccounts).toHaveBeenCalledTimes(1);
+  });
+
+  test('should skip creating Audit account when it already exists', async () => {
+    // Setup - Mock getOrganizationAccounts to return existing Audit account
+    const { getOrganizationAccounts } = await import('../../../../../common/functions');
+    vi.mocked(getOrganizationAccounts).mockResolvedValueOnce([
+      {
+        Id: '222222222222',
+        Arn: 'arn:aws:organizations::123456789012:account/o-exampleorgid/222222222222',
+        Email: 'mockAudit@example.com',
+        Name: 'Audit',
+        Status: 'ACTIVE',
+        JoinedMethod: 'CREATED',
+        JoinedTimestamp: new Date('2024-01-01'),
+      },
+    ]);
+
+    mockSend.mockImplementation(command => {
+      if (command instanceof CreateAccountCommand) {
+        return Promise.resolve(MOCK_CONSTANTS.createAccountStatusSuccessResponse);
+      }
+      return Promise.reject(MOCK_CONSTANTS.unknownError);
+    });
+
+    // Execute
+    const response = await SharedAccount.createAccounts(
+      MOCK_CONSTANTS.logArchiveAccountItem,
+      MOCK_CONSTANTS.auditAccountItem,
+      MOCK_CONSTANTS.globalRegion,
+      MOCK_CONSTANTS.solutionId,
+      MOCK_CONSTANTS.credentials,
+    );
+
+    // Verify - Only LogArchive account should be created
+    expect(response).toBeUndefined();
+    expect(CreateAccountCommand).toHaveBeenCalledTimes(1);
+    expect(getOrganizationAccounts).toHaveBeenCalledTimes(1);
+  });
+
+  test('should skip creating both accounts when they already exist', async () => {
+    // Setup - Mock getOrganizationAccounts to return both existing accounts
+    const { getOrganizationAccounts } = await import('../../../../../common/functions');
+    vi.mocked(getOrganizationAccounts).mockResolvedValueOnce([
+      {
+        Id: '111111111111',
+        Arn: 'arn:aws:organizations::123456789012:account/o-exampleorgid/111111111111',
+        Email: 'mockLogArchive@example.com',
+        Name: 'LogArchive',
+        Status: 'ACTIVE',
+        JoinedMethod: 'CREATED',
+        JoinedTimestamp: new Date('2024-01-01'),
+      },
+      {
+        Id: '222222222222',
+        Arn: 'arn:aws:organizations::123456789012:account/o-exampleorgid/222222222222',
+        Email: 'mockAudit@example.com',
+        Name: 'Audit',
+        Status: 'ACTIVE',
+        JoinedMethod: 'CREATED',
+        JoinedTimestamp: new Date('2024-01-01'),
+      },
+    ]);
+
+    mockSend.mockImplementation(() => {
+      return Promise.reject(MOCK_CONSTANTS.unknownError);
+    });
+
+    // Execute
+    const response = await SharedAccount.createAccounts(
+      MOCK_CONSTANTS.logArchiveAccountItem,
+      MOCK_CONSTANTS.auditAccountItem,
+      MOCK_CONSTANTS.globalRegion,
+      MOCK_CONSTANTS.solutionId,
+      MOCK_CONSTANTS.credentials,
+    );
+
+    // Verify - No accounts should be created
+    expect(response).toBeUndefined();
+    expect(CreateAccountCommand).toHaveBeenCalledTimes(0);
+    expect(getOrganizationAccounts).toHaveBeenCalledTimes(1);
+  });
+
+  test('should create accounts when existing accounts have different emails', async () => {
+    // Setup - Mock getOrganizationAccounts with different email accounts
+    const { getOrganizationAccounts } = await import('../../../../../common/functions');
+    vi.mocked(getOrganizationAccounts).mockResolvedValueOnce([
+      {
+        Id: '333333333333',
+        Arn: 'arn:aws:organizations::123456789012:account/o-exampleorgid/333333333333',
+        Email: 'different@example.com',
+        Name: 'DifferentAccount',
+        Status: 'ACTIVE',
+        JoinedMethod: 'CREATED',
+        JoinedTimestamp: new Date('2024-01-01'),
+      },
+    ]);
+
+    mockSend.mockImplementation(command => {
+      if (command instanceof CreateAccountCommand) {
+        return Promise.resolve(MOCK_CONSTANTS.createAccountStatusSuccessResponse);
+      }
+      return Promise.reject(MOCK_CONSTANTS.unknownError);
+    });
+
+    // Execute
+    const response = await SharedAccount.createAccounts(
+      MOCK_CONSTANTS.logArchiveAccountItem,
+      MOCK_CONSTANTS.auditAccountItem,
+      MOCK_CONSTANTS.globalRegion,
+      MOCK_CONSTANTS.solutionId,
+      MOCK_CONSTANTS.credentials,
+    );
+
+    // Verify - Both accounts should be created since existing account has different email
+    expect(response).toBeUndefined();
+    expect(CreateAccountCommand).toHaveBeenCalledTimes(2);
+    expect(getOrganizationAccounts).toHaveBeenCalledTimes(1);
   });
 });

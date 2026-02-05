@@ -128,27 +128,18 @@ export abstract class Organization {
         const logArchiveAccount = accounts.find(item => item.Email === sharedAccountEmail.logArchive);
         const auditAccount = accounts.find(item => item.Email === sharedAccountEmail.audit);
 
-        if (accounts.length === 3 && logArchiveAccount && auditAccount) {
+        if (logArchiveAccount && auditAccount) {
           return false;
         } else {
           Organization.logger.warn(
-            `Either AWS Organizations does not have required shared accounts (LogArchive and Audit) or have other accounts. Existing AWS Organizations accounts are - "${accounts
+            `AWS Organizations does not have required shared accounts (LogArchive and Audit). Existing AWS Organizations accounts are - "${accounts
               .map(account => account.Name + ' -> ' + account.Email)
               .join(',')}", the solution cannot deploy AWS Control Tower Landing Zone.`,
           );
           return true;
         }
       default:
-        if (accounts.length > 1) {
-          Organization.logger.warn(
-            `AWS Organizations have multiple accounts "${accounts
-              .map(account => account.Name + ' -> ' + account.Email)
-              .join(',')}", the solution cannot deploy AWS Control Tower Landing Zone.`,
-          );
-          return true;
-        } else {
-          return false;
-        }
+        return false;
     }
   }
 
