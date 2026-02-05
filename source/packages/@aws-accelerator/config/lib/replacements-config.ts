@@ -194,7 +194,16 @@ export class ReplacementsConfig implements i.IReplacementsConfig {
         // Get the account ID by calling the 'getAccountId' method on 'accountsConfig'
         // with the provided 'accountName' if 'accountName' is truthy
         // Otherwise, 'accountId' will be falsy (undefined)
-        const accountId = accountName && this.accountsConfig?.getAccountId(accountName);
+        let accountId: string | undefined;
+        try {
+          accountId = accountName && this.accountsConfig?.getAccountId(accountName);
+        } catch (error) {
+          if (process.env['ACCELERATOR_STAGE'] === 'prepare') {
+            logger.warn(`Failed to gett account ID for "${accountName}" during prepare stage.`);
+            return '';
+          }
+          throw error;
+        }
         if (!accountId) {
           logger.warn(`Account "${accountName}" wasn't found while processing replacements`);
         }

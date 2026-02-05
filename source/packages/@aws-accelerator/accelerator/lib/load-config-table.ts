@@ -77,6 +77,9 @@ export class LoadAcceleratorConfigTable extends Construct {
       runtime: CUSTOM_RESOURCE_PROVIDER_RUNTIME,
       timeout: cdk.Duration.minutes(15),
       memorySize: cdk.Size.mebibytes(1024),
+      environment: {
+        ACCELERATOR_STAGE: 'prepare',
+      },
       policyStatements: [
         {
           Sid: 'organizations',

@@ -267,6 +267,11 @@ export class AccountsConfig implements i.IAccountsConfig {
       return accountId;
     }
 
+    if (process.env['ACCELERATOR_STAGE'] === 'prepare') {
+      logger.warn(`Error getting account ID for "${name}" during prepare stage`);
+      return '';
+    }
+
     // Get installer stack name from environment variable for more specific error messages
     const installerStackName = process.env['INSTALLER_STACK_NAME'] || 'AWSAccelerator-InstallerStack';
 
