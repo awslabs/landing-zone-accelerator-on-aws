@@ -12,7 +12,7 @@ This package creates infrastructure to run LZA deployment via an ECS Fargate tas
 
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
-| `EcrUri` | String | Yes | ECR repository URI containing LZA container image |
+| `ImageUri` | String | Yes | Full ECR image URI (including tag) containing LZA container image. |
 | `ManagementAccountEmail` | String | Yes | Management account email (must match AWS Organizations) |
 | `LogArchiveAccountEmail` | String | Yes | Log archive account email |
 | `AuditAccountEmail` | String | Yes | Security audit account email |

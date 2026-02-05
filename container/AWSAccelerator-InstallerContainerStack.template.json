@@ -8,7 +8,7 @@
       "default": "Source Configuration"
      },
      "Parameters": [
-      "EcrUri"
+      "ImageUri"
      ]
     },
     {
@@ -66,8 +66,8 @@
     }
    ],
    "ParameterLabels": {
-    "EcrUri": {
-     "default": "ECR URI"
+    "ImageUri": {
+     "default": "Image URI"
     },
     "ManagementAccountEmail": {
      "default": "Management Account Email"
@@ -118,9 +118,10 @@
   }
  },
  "Parameters": {
-  "EcrUri": {
+  "ImageUri": {
    "Type": "String",
-   "Description": "The Amazon Elastic Container Registry (Amazon ECR) repository, where Landing Zone Accelerator on AWS code is present."
+   "Default": "public.ecr.aws/aws-solutions/landing-zone-accelerator-on-aws:1.15.0-rc.7",
+   "Description": "The full Amazon Elastic Container Registry (Amazon ECR) image URI (including tag) where the Landing Zone Accelerator container image is stored. Example: 123456789012.dkr.ecr.us-east-1.amazonaws.com/lza:v1.15.0. Defaults to the public ECR image for this version."
   },
   "ManagementAccountEmail": {
    "Type": "String",
@@ -1928,7 +1929,7 @@
        }
       ],
       "Image": {
-       "Ref": "EcrUri"
+       "Ref": "ImageUri"
       },
       "LogConfiguration": {
        "LogDriver": "awslogs",

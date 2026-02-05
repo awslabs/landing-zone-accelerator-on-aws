@@ -66,6 +66,8 @@
   },
   "resolutions": {
     "cross-spawn": "7.0.6",
-    "@babel/helpers": "7.26.10"
+    "@babel/helpers": "7.26.10",
+    "@aws-cdk/cloudformation-diff/diff": "8.0.3",
+    "fast-xml-parser": "5.3.4"
   }
 }

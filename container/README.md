@@ -8,25 +8,28 @@ Landing Zone Accelerator on AWS (LZA) depends on services like AWS CodeBuild and
 
 ### Prerequisites
 
-#### ECR Image
+#### Container Image
 
-1. Create an [Amazon ECR](https://docs.aws.amazon.com/AmazonECR/latest/userguide/repository-create.html) repository in the orchestration account. We recommend it be named `landing-zone-accelerator-on-aws`
-2. Download the tar file from the [GitHub repository](https://github.com/awslabs/landing-zone-accelerator-on-aws/archive/refs/tags/experimental-v1.15.0-rc.7/lza-v1.15.0-rc.7-al2023.tar.gz).
-3. Authenticate your Docker client to the Amazon ECR registry to which you intend to push your image. Authentication tokens must be obtained for each registry used, and the tokens are valid for 12 hours. For more information, see [Private registry authentication in Amazon ECR](https://docs.aws.amazon.com/AmazonECR/latest/userguide/registry_auth.html).
-```
-aws ecr get-login-password --region <region> | docker login --username AWS --password-stdin <aws_account_id>.dkr.ecr.<region>.amazonaws.com
-```
-4. Load the docker image from Step 2.
-```
-docker load < lza-v1.15.0-rc.7-al2023.tar.gz
-```
-5. Tag the image
-`docker tag lza-v1.15.0-rc.7-al2023:latest <aws_account_id>.dkr.ecr.<region>.amazonaws.com/landing-zone-accelerator-on-aws:latest`
-6. [Push the image](https://docs.aws.amazon.com/AmazonECR/latest/userguide/docker-push-ecr-image.html)
-```
-docker push <aws_account_id>.dkr.ecr.<region>.amazonaws.com/landing-zone-accelerator-on-aws:latest
-```
+The LZA container image is publicly available in the [AWS Solutions Public ECR Gallery](https://gallery.ecr.aws/aws-solutions/landing-zone-accelerator-on-aws). The CloudFormation template is pre-configured to use the correct public image for the solution version.
 
+**Public ECR Repository:** `public.ecr.aws/aws-solutions/landing-zone-accelerator-on-aws`
+
+**Using the Default Public Image:**
+
+When deploying the CloudFormation template, you can use the default value for the `ImageUri` parameter to automatically use the public image for this version.
+
+**Container Image Customization:**
+
+If you need to customize the container image, you can build and host it in your own ECR repository:
+
+1. The container resources are located in `container/build/`
+2. Build the Docker image using the Dockerfile in that directory
+3. Push the image to your private or public ECR repository
+4. When deploying the CloudFormation template, provide your full image URI (including tag) in the `ImageUri` parameter
+
+For more information on Amazon ECR:
+- [Private repositories and images](https://docs.aws.amazon.com/AmazonECR/latest/userguide/Repositories.html)
+- [Public repositories and images](https://docs.aws.amazon.com/AmazonECR/latest/public/public-repositories.html)
 
 #### Cross-Account Setup
 
@@ -67,7 +70,7 @@ Launch the CloudFormation template (`AWSAccelerator-InstallerContainerStack.temp
 | Parameter | Description | Default | Required |
 |-----------|-------------|---------|----------|
 | **Source Configuration** ||||
-| EcrUri | The Amazon ECR repository URI where the LZA container image is stored | - | Yes |
+| ImageUri | The full Amazon ECR image URI (including tag) where the LZA container image is stored. Example: `123456789012.dkr.ecr.us-east-1.amazonaws.com/lza:v1.15.0`. Defaults to the public ECR image for this version. | - | Yes |
 | **Mandatory Accounts Configuration** ||||
 | ManagementAccountEmail | The management (primary) account email. Must match the address in AWS Organizations | - | Yes |
 | LogArchiveAccountEmail | The log archive account email | - | Yes |

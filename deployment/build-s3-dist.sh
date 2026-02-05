@@ -83,7 +83,7 @@ sedi()
 # ex. do_replace myfile.json %%VERSION%% v1.1.1
 do_replace()
 {
-    replace="s/$2/$3/g"
+    replace="s|$2|$3|g"
     file=$1
     do_cmd sedi $replace $file
 }
@@ -174,6 +174,43 @@ create_template_yaml()
             maxrc=$?
         fi
     done
+}
+
+## Copy files to the deployment dir for container building
+copy_container_files()
+{
+    IMAGE_PATH=$template_dir/ecr/landing-zone-accelerator-on-aws
+    do_cmd mkdir -p $IMAGE_PATH
+    do_cmd cp -r $container_dir/build/* $IMAGE_PATH/
+    do_cmd cp -r $container_dir/images/* $IMAGE_PATH/
+    do_cmd cp -r $container_dir/scripts $IMAGE_PATH/
+    do_cmd cp $container_dir/AWSAccelerator-InstallerContainerStack.template.json $IMAGE_PATH/
+    do_cmd cp $container_dir/README.md $IMAGE_PATH/
+
+    
+    # Create source tarball to avoid SBOM scanner OOM issues
+    # The tarball is a single file, so cdxgen won't scan thousands of source files
+    echo "Creating source tarball (excluding build artifacts and test files)"
+    (cd $source_dir && tar \
+        --exclude='node_modules' \
+        --exclude='dist' \
+        --exclude='cdk.out' \
+        --exclude='test-reports' \
+        --exclude='coverage' \
+        --exclude='mkdocs/site' \
+        --exclude='*.test.ts' \
+        --exclude='*.test.js' \
+        --exclude='__snapshots__' \
+        --exclude='.vitest-cache' \
+        --exclude='*.tar' \
+        --exclude='*.tar.gz' \
+        --exclude='*.js.map' \
+        -czf $IMAGE_PATH/source.tar.gz .)
+    if [ $? -ne 0 ]; then
+        echo "ERROR: Failed to create source tarball"
+        exit 1
+    fi
+    echo "Source tarball created: $(ls -lh $IMAGE_PATH/source.tar.gz)"
 }
 
 cleanup_temporary_generted_files()
@@ -288,6 +325,7 @@ staging_dist_dir="$template_dir/staging"
 template_dist_dir="$template_dir/global-s3-assets"
 build_dist_dir="$template_dir/regional-s3-assets"
 source_dir="$template_dir/../source"
+container_dir="$template_dir/../container"
 installer_dir="$source_dir/packages/@aws-accelerator/installer"
 installer_container_dir="$source_dir/packages/@aws-accelerator/installer-container"
 govcloud_vending_dir="$source_dir/packages/@aws-accelerator/govcloud-account-vending"
@@ -310,6 +348,12 @@ echo "--------------------------------------------------------------------------
 
 do_cmd cd $template_dir/cdk-solution-helper
 do_cmd npm install
+
+echo "------------------------------------------------------------------------------"
+echo "${bold}[Prep] Copy container files to deployment directory${normal}"
+echo "------------------------------------------------------------------------------"
+
+copy_container_files
 
 echo "------------------------------------------------------------------------------"
 echo "${bold}[Synth] CDK Project${normal}"
@@ -367,6 +411,8 @@ do_replace "*.template" %%BUCKET_NAME%% ${SOLUTION_BUCKET}
 do_replace "*.template" %%SOLUTION_NAME%% ${SOLUTION_TRADEMARKEDNAME}
 do_replace "*.template" %%VERSION%% ${SOLUTION_VERSION}
 do_replace "*.template" %%PRODUCT_BUCKET%% ${TEMPLATE_OUTPUT_BUCKET}
+do_replace "*.template" %%PUBLIC_ECR_REGISTRY%% ${PUBLIC_ECR_REGISTRY}
+do_replace "*.template" %%PUBLIC_ECR_TAG%% ${PUBLIC_ECR_TAG}
 
 echo "------------------------------------------------------------------------------"
 echo "${bold}[Packing] Source code artifacts${normal}"

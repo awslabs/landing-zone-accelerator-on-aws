@@ -38,10 +38,11 @@ export interface InstallerContainerStackProps extends cdk.StackProps {
 }
 
 export class InstallerContainerStack extends cdk.Stack {
-  private readonly ecrUri = new cdk.CfnParameter(this, 'EcrUri', {
+  private readonly imageUri = new cdk.CfnParameter(this, 'ImageUri', {
     type: 'String',
     description:
       'The Amazon Elastic Container Registry (Amazon ECR) repository, where Landing Zone Accelerator on AWS code is present.',
+    default: 'public.ecr.aws/aws-solutions/landing-zone-accelerator-on-aws:1.15.0-rc.7',
   });
   private readonly managementAccountEmail = new cdk.CfnParameter(this, 'ManagementAccountEmail', {
     type: 'String',
@@ -225,7 +226,7 @@ export class InstallerContainerStack extends cdk.Stack {
     const parameterGroups: { Label: { default: string }; Parameters: string[] }[] = [
       {
         Label: { default: 'Source Configuration' },
-        Parameters: [this.ecrUri.logicalId],
+        Parameters: [this.imageUri.logicalId],
       },
       {
         Label: { default: 'Mandatory Accounts Configuration' },
@@ -264,7 +265,7 @@ export class InstallerContainerStack extends cdk.Stack {
       },
     ];
     const repositoryParameterLabels: { [p: string]: { default: string } } = {
-      [this.ecrUri.logicalId]: { default: 'ECR URI' },
+      [this.imageUri.logicalId]: { default: 'Image URI' },
       [this.managementAccountEmail.logicalId]: { default: 'Management Account Email' },
       [this.logArchiveAccountEmail.logicalId]: { default: 'Log Archive Account Email' },
       [this.auditAccountEmail.logicalId]: { default: 'Audit Account Email' },
@@ -1076,7 +1077,7 @@ export class InstallerContainerStack extends cdk.Stack {
       containerDefinitions: [
         {
           name: 'lza-deployment-container',
-          image: this.ecrUri.valueAsString,
+          image: this.imageUri.valueAsString,
           entryPoint: ['sh', '-c'],
           command: [`/landing-zone-accelerator-on-aws/scripts/run-lza.sh deploy`],
           logConfiguration: {

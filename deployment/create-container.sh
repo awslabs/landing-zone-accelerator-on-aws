@@ -10,8 +10,6 @@ fi
 
 origin_directory=$(pwd)
 
-yarn git-clean;
-
 # Change into root dir
 cd ".."
 working_directory=$(pwd)

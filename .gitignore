@@ -19,6 +19,9 @@ source/lerna-debug.log
 development
 .vscode
 
+### Deployment artifacts
+deployment/ecr/
+
 ### Viperlight
 viperlight*.zip
 /.idea/

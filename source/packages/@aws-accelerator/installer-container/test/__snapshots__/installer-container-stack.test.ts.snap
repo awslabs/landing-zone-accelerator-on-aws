@@ -28,7 +28,7 @@ exports[`InstallerContainerStack > Construct(InstallerContainerStack): Default C
             "default": "Source Configuration",
           },
           "Parameters": [
-            "EcrUri",
+            "ImageUri",
           ],
         },
         {
@@ -85,9 +85,6 @@ exports[`InstallerContainerStack > Construct(InstallerContainerStack): Default C
         "ControlTowerEnabled": {
           "default": "Control Tower Environment",
         },
-        "EcrUri": {
-          "default": "ECR URI",
-        },
         "ExistingSecurityGroupId": {
           "default": "Existing Security Group ID",
         },
@@ -96,6 +93,9 @@ exports[`InstallerContainerStack > Construct(InstallerContainerStack): Default C
         },
         "ExistingVpcId": {
           "default": "Existing VPC ID",
+        },
+        "ImageUri": {
+          "default": "Image URI",
         },
         "LogArchiveAccountEmail": {
           "default": "Log Archive Account Email",
@@ -149,10 +149,6 @@ exports[`InstallerContainerStack > Construct(InstallerContainerStack): Default C
       "Description": "Select yes if deploying to a Control Tower environment.  Select no if using just Organizations. If no, you must first set up mandatory accounts.",
       "Type": "String",
     },
-    "EcrUri": {
-      "Description": "The Amazon Elastic Container Registry (Amazon ECR) repository, where Landing Zone Accelerator on AWS code is present.",
-      "Type": "String",
-    },
     "ExistingConfigBucketKey": {
       "Default": "",
       "Description": "Specify the branch name of the existing LZA configuration bucket key to pull the accelerator configuration from.",
@@ -176,6 +172,11 @@ exports[`InstallerContainerStack > Construct(InstallerContainerStack): Default C
     "ExistingVpcId": {
       "Default": "",
       "Description": "The ID of an existing VPC (required when UseExistingVpc is Yes)",
+      "Type": "String",
+    },
+    "ImageUri": {
+      "Default": "public.ecr.aws/aws-solutions/landing-zone-accelerator-on-aws:1.15.0-rc.7",
+      "Description": "The Amazon Elastic Container Registry (Amazon ECR) repository, where Landing Zone Accelerator on AWS code is present.",
       "Type": "String",
     },
     "LogArchiveAccountEmail": {
@@ -2132,7 +2133,7 @@ def handler(event, context):
               },
             ],
             "Image": {
-              "Ref": "EcrUri",
+              "Ref": "ImageUri",
             },
             "LogConfiguration": {
               "LogDriver": "awslogs",
@@ -2482,7 +2483,7 @@ exports[`InstallerContainerStack > Construct(InstallerContainerStack): Deploymen
             "default": "Source Configuration",
           },
           "Parameters": [
-            "EcrUri",
+            "ImageUri",
           ],
         },
         {
@@ -2560,9 +2561,6 @@ exports[`InstallerContainerStack > Construct(InstallerContainerStack): Deploymen
         "ControlTowerEnabled": {
           "default": "Control Tower Environment",
         },
-        "EcrUri": {
-          "default": "ECR URI",
-        },
         "ExistingSecurityGroupId": {
           "default": "Existing Security Group ID",
         },
@@ -2571,6 +2569,9 @@ exports[`InstallerContainerStack > Construct(InstallerContainerStack): Deploymen
         },
         "ExistingVpcId": {
           "default": "Existing VPC ID",
+        },
+        "ImageUri": {
+          "default": "Image URI",
         },
         "LogArchiveAccountEmail": {
           "default": "Log Archive Account Email",
@@ -2639,10 +2640,6 @@ exports[`InstallerContainerStack > Construct(InstallerContainerStack): Deploymen
       "Description": "Select yes if deploying to a Control Tower environment.  Select no if using just Organizations. If no, you must first set up mandatory accounts.",
       "Type": "String",
     },
-    "EcrUri": {
-      "Description": "The Amazon Elastic Container Registry (Amazon ECR) repository, where Landing Zone Accelerator on AWS code is present.",
-      "Type": "String",
-    },
     "ExistingConfigBucketKey": {
       "Default": "",
       "Description": "Specify the branch name of the existing LZA configuration bucket key to pull the accelerator configuration from.",
@@ -2666,6 +2663,11 @@ exports[`InstallerContainerStack > Construct(InstallerContainerStack): Deploymen
     "ExistingVpcId": {
       "Default": "",
       "Description": "The ID of an existing VPC (required when UseExistingVpc is Yes)",
+      "Type": "String",
+    },
+    "ImageUri": {
+      "Default": "public.ecr.aws/aws-solutions/landing-zone-accelerator-on-aws:1.15.0-rc.7",
+      "Description": "The Amazon Elastic Container Registry (Amazon ECR) repository, where Landing Zone Accelerator on AWS code is present.",
       "Type": "String",
     },
     "LogArchiveAccountEmail": {
@@ -4665,7 +4667,7 @@ def handler(event, context):
               },
             ],
             "Image": {
-              "Ref": "EcrUri",
+              "Ref": "ImageUri",
             },
             "LogConfiguration": {
               "LogDriver": "awslogs",
@@ -5058,7 +5060,7 @@ exports[`InstallerContainerStack > Construct(InstallerContainerStack): Single Ac
             "default": "Source Configuration",
           },
           "Parameters": [
-            "EcrUri",
+            "ImageUri",
           ],
         },
         {
@@ -5115,9 +5117,6 @@ exports[`InstallerContainerStack > Construct(InstallerContainerStack): Single Ac
         "ControlTowerEnabled": {
           "default": "Control Tower Environment",
         },
-        "EcrUri": {
-          "default": "ECR URI",
-        },
         "ExistingSecurityGroupId": {
           "default": "Existing Security Group ID",
         },
@@ -5126,6 +5125,9 @@ exports[`InstallerContainerStack > Construct(InstallerContainerStack): Single Ac
         },
         "ExistingVpcId": {
           "default": "Existing VPC ID",
+        },
+        "ImageUri": {
+          "default": "Image URI",
         },
         "LogArchiveAccountEmail": {
           "default": "Log Archive Account Email",
@@ -5179,10 +5181,6 @@ exports[`InstallerContainerStack > Construct(InstallerContainerStack): Single Ac
       "Description": "Select yes if deploying to a Control Tower environment.  Select no if using just Organizations. If no, you must first set up mandatory accounts.",
       "Type": "String",
     },
-    "EcrUri": {
-      "Description": "The Amazon Elastic Container Registry (Amazon ECR) repository, where Landing Zone Accelerator on AWS code is present.",
-      "Type": "String",
-    },
     "ExistingConfigBucketKey": {
       "Default": "",
       "Description": "Specify the branch name of the existing LZA configuration bucket key to pull the accelerator configuration from.",
@@ -5206,6 +5204,11 @@ exports[`InstallerContainerStack > Construct(InstallerContainerStack): Single Ac
     "ExistingVpcId": {
       "Default": "",
       "Description": "The ID of an existing VPC (required when UseExistingVpc is Yes)",
+      "Type": "String",
+    },
+    "ImageUri": {
+      "Default": "public.ecr.aws/aws-solutions/landing-zone-accelerator-on-aws:1.15.0-rc.7",
+      "Description": "The Amazon Elastic Container Registry (Amazon ECR) repository, where Landing Zone Accelerator on AWS code is present.",
       "Type": "String",
     },
     "LogArchiveAccountEmail": {
@@ -7170,7 +7173,7 @@ def handler(event, context):
               },
             ],
             "Image": {
-              "Ref": "EcrUri",
+              "Ref": "ImageUri",
             },
             "LogConfiguration": {
               "LogDriver": "awslogs",
@@ -7520,7 +7523,7 @@ exports[`InstallerContainerStack > Construct(InstallerContainerStack): With Exte
             "default": "Source Configuration",
           },
           "Parameters": [
-            "EcrUri",
+            "ImageUri",
           ],
         },
         {
@@ -7590,9 +7593,6 @@ exports[`InstallerContainerStack > Construct(InstallerContainerStack): With Exte
         "ControlTowerEnabled": {
           "default": "Control Tower Environment",
         },
-        "EcrUri": {
-          "default": "ECR URI",
-        },
         "ExistingSecurityGroupId": {
           "default": "Existing Security Group ID",
         },
@@ -7601,6 +7601,9 @@ exports[`InstallerContainerStack > Construct(InstallerContainerStack): With Exte
         },
         "ExistingVpcId": {
           "default": "Existing VPC ID",
+        },
+        "ImageUri": {
+          "default": "Image URI",
         },
         "LogArchiveAccountEmail": {
           "default": "Log Archive Account Email",
@@ -7666,10 +7669,6 @@ exports[`InstallerContainerStack > Construct(InstallerContainerStack): With Exte
       "Description": "Select yes if deploying to a Control Tower environment.  Select no if using just Organizations. If no, you must first set up mandatory accounts.",
       "Type": "String",
     },
-    "EcrUri": {
-      "Description": "The Amazon Elastic Container Registry (Amazon ECR) repository, where Landing Zone Accelerator on AWS code is present.",
-      "Type": "String",
-    },
     "ExistingConfigBucketKey": {
       "Default": "",
       "Description": "Specify the branch name of the existing LZA configuration bucket key to pull the accelerator configuration from.",
@@ -7693,6 +7692,11 @@ exports[`InstallerContainerStack > Construct(InstallerContainerStack): With Exte
     "ExistingVpcId": {
       "Default": "",
       "Description": "The ID of an existing VPC (required when UseExistingVpc is Yes)",
+      "Type": "String",
+    },
+    "ImageUri": {
+      "Default": "public.ecr.aws/aws-solutions/landing-zone-accelerator-on-aws:1.15.0-rc.7",
+      "Description": "The Amazon Elastic Container Registry (Amazon ECR) repository, where Landing Zone Accelerator on AWS code is present.",
       "Type": "String",
     },
     "LogArchiveAccountEmail": {
@@ -9682,7 +9686,7 @@ def handler(event, context):
               },
             ],
             "Image": {
-              "Ref": "EcrUri",
+              "Ref": "ImageUri",
             },
             "LogConfiguration": {
               "LogDriver": "awslogs",
@@ -10075,7 +10079,7 @@ exports[`InstallerContainerStack > Construct(InstallerContainerStack): With Perm
             "default": "Source Configuration",
           },
           "Parameters": [
-            "EcrUri",
+            "ImageUri",
           ],
         },
         {
@@ -10140,9 +10144,6 @@ exports[`InstallerContainerStack > Construct(InstallerContainerStack): With Perm
         "ControlTowerEnabled": {
           "default": "Control Tower Environment",
         },
-        "EcrUri": {
-          "default": "ECR URI",
-        },
         "ExistingSecurityGroupId": {
           "default": "Existing Security Group ID",
         },
@@ -10151,6 +10152,9 @@ exports[`InstallerContainerStack > Construct(InstallerContainerStack): With Perm
         },
         "ExistingVpcId": {
           "default": "Existing VPC ID",
+        },
+        "ImageUri": {
+          "default": "Image URI",
         },
         "LogArchiveAccountEmail": {
           "default": "Log Archive Account Email",
@@ -10207,10 +10211,6 @@ exports[`InstallerContainerStack > Construct(InstallerContainerStack): With Perm
       "Description": "Select yes if deploying to a Control Tower environment.  Select no if using just Organizations. If no, you must first set up mandatory accounts.",
       "Type": "String",
     },
-    "EcrUri": {
-      "Description": "The Amazon Elastic Container Registry (Amazon ECR) repository, where Landing Zone Accelerator on AWS code is present.",
-      "Type": "String",
-    },
     "ExistingConfigBucketKey": {
       "Default": "",
       "Description": "Specify the branch name of the existing LZA configuration bucket key to pull the accelerator configuration from.",
@@ -10234,6 +10234,11 @@ exports[`InstallerContainerStack > Construct(InstallerContainerStack): With Perm
     "ExistingVpcId": {
       "Default": "",
       "Description": "The ID of an existing VPC (required when UseExistingVpc is Yes)",
+      "Type": "String",
+    },
+    "ImageUri": {
+      "Default": "public.ecr.aws/aws-solutions/landing-zone-accelerator-on-aws:1.15.0-rc.7",
+      "Description": "The Amazon Elastic Container Registry (Amazon ECR) repository, where Landing Zone Accelerator on AWS code is present.",
       "Type": "String",
     },
     "LogArchiveAccountEmail": {
@@ -12200,7 +12205,7 @@ def handler(event, context):
               },
             ],
             "Image": {
-              "Ref": "EcrUri",
+              "Ref": "ImageUri",
             },
             "LogConfiguration": {
               "LogDriver": "awslogs",
@@ -12550,7 +12555,7 @@ exports[`InstallerContainerStack > Construct(InstallerContainerStack): With S3 S
             "default": "Source Configuration",
           },
           "Parameters": [
-            "EcrUri",
+            "ImageUri",
           ],
         },
         {
@@ -12607,9 +12612,6 @@ exports[`InstallerContainerStack > Construct(InstallerContainerStack): With S3 S
         "ControlTowerEnabled": {
           "default": "Control Tower Environment",
         },
-        "EcrUri": {
-          "default": "ECR URI",
-        },
         "ExistingSecurityGroupId": {
           "default": "Existing Security Group ID",
         },
@@ -12618,6 +12620,9 @@ exports[`InstallerContainerStack > Construct(InstallerContainerStack): With S3 S
         },
         "ExistingVpcId": {
           "default": "Existing VPC ID",
+        },
+        "ImageUri": {
+          "default": "Image URI",
         },
         "LogArchiveAccountEmail": {
           "default": "Log Archive Account Email",
@@ -12671,10 +12676,6 @@ exports[`InstallerContainerStack > Construct(InstallerContainerStack): With S3 S
       "Description": "Select yes if deploying to a Control Tower environment.  Select no if using just Organizations. If no, you must first set up mandatory accounts.",
       "Type": "String",
     },
-    "EcrUri": {
-      "Description": "The Amazon Elastic Container Registry (Amazon ECR) repository, where Landing Zone Accelerator on AWS code is present.",
-      "Type": "String",
-    },
     "ExistingConfigBucketKey": {
       "Default": "",
       "Description": "Specify the branch name of the existing LZA configuration bucket key to pull the accelerator configuration from.",
@@ -12698,6 +12699,11 @@ exports[`InstallerContainerStack > Construct(InstallerContainerStack): With S3 S
     "ExistingVpcId": {
       "Default": "",
       "Description": "The ID of an existing VPC (required when UseExistingVpc is Yes)",
+      "Type": "String",
+    },
+    "ImageUri": {
+      "Default": "public.ecr.aws/aws-solutions/landing-zone-accelerator-on-aws:1.15.0-rc.7",
+      "Description": "The Amazon Elastic Container Registry (Amazon ECR) repository, where Landing Zone Accelerator on AWS code is present.",
       "Type": "String",
     },
     "LogArchiveAccountEmail": {
@@ -14654,7 +14660,7 @@ def handler(event, context):
               },
             ],
             "Image": {
-              "Ref": "EcrUri",
+              "Ref": "ImageUri",
             },
             "LogConfiguration": {
               "LogDriver": "awslogs",
