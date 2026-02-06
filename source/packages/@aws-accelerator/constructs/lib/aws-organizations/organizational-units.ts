@@ -23,7 +23,6 @@ import * as path from 'path';
 export interface OrganizationalUnitsProps {
   readonly acceleratorConfigTable: cdk.aws_dynamodb.Table;
   readonly commitId: string;
-  readonly controlTowerEnabled: boolean;
   readonly organizationsEnabled: boolean;
   /**
    * Custom resource lambda log group encryption key, when undefined default AWS managed key will be used
@@ -78,7 +77,6 @@ export class OrganizationalUnits extends Construct {
       properties: {
         configTableName: props.acceleratorConfigTable.tableName,
         commitId: props.commitId,
-        controlTowerEnabled: props.controlTowerEnabled,
         organizationsEnabled: props.organizationsEnabled,
         partition: cdk.Aws.PARTITION,
         uuid: uuidv4(),

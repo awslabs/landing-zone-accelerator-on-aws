@@ -23,7 +23,6 @@ import {
 } from '@aws-sdk/lib-dynamodb';
 import { CloudFormationClient, DescribeStacksCommand } from '@aws-sdk/client-cloudformation';
 import { SSMClient, GetParameterCommand, ParameterNotFound, PutParameterCommand } from '@aws-sdk/client-ssm';
-import { SearchProvisionedProductsCommand, ServiceCatalogClient } from '@aws-sdk/client-service-catalog';
 import {
   Account,
   ListAccountsForParentCommand,
@@ -31,7 +30,6 @@ import {
   ListOrganizationalUnitsForParentCommand,
   ListParentsCommand,
   ListPoliciesCommand,
-  ListPoliciesForTargetCommand,
   ListRootsCommand,
   ListTagsForResourceCommand,
   OrganizationsClient,
@@ -50,11 +48,6 @@ type serviceControlPolicyType = {
   targets: { name: string; id: string }[];
 };
 
-type provisionedProductStatus = {
-  status: string;
-  statusMessage: string;
-};
-
 const marshallOptions = {
   convertEmptyValues: false,
   //overriding default value of false
@@ -68,7 +61,6 @@ const translateConfig = { marshallOptions, unmarshallOptions };
 let paginationConfig: DynamoDBDocumentPaginationConfiguration;
 let dynamodbClient: DynamoDBClient;
 let documentClient: DynamoDBDocumentClient;
-let serviceCatalogClient: ServiceCatalogClient;
 let cloudformationClient: CloudFormationClient;
 let ssmClient: SSMClient;
 let organizationsClient: OrganizationsClient;
@@ -100,7 +92,6 @@ type DDBItem = {
 type DDBItems = Array<DDBItem>;
 
 const validationErrors: string[] = [];
-const ctAccountsToAdd: DDBItems = [];
 const orgAccountsToAdd: DDBItems = [];
 let mandatoryAccounts: DDBItems = [];
 let workloadAccounts: DDBItems = [];
@@ -125,8 +116,6 @@ export async function handler(event: CloudFormationCustomResourceEvent): Promise
   const partition = event.ResourceProperties['partition'];
   const configTableName = event.ResourceProperties['configTableName'];
   const newOrgAccountsTableName = event.ResourceProperties['newOrgAccountsTableName'];
-  const newCTAccountsTableName = event.ResourceProperties['newCTAccountsTableName'];
-  const controlTowerEnabled = event.ResourceProperties['controlTowerEnabled'];
   const organizationsEnabled = event.ResourceProperties['organizationsEnabled'];
   const policyTagKey = event.ResourceProperties['policyTagKey'];
   const commitId = event.ResourceProperties['commitId'];
@@ -141,10 +130,6 @@ export async function handler(event: CloudFormationCustomResourceEvent): Promise
   const v2StacksParamName = event.ResourceProperties['v2StacksParamName'];
   dynamodbClient = new DynamoDBClient({ customUserAgent: solutionId });
   documentClient = DynamoDBDocumentClient.from(dynamodbClient, translateConfig);
-  serviceCatalogClient = new ServiceCatalogClient({
-    customUserAgent: solutionId,
-    retryStrategy: setRetryStrategy(),
-  });
   cloudformationClient = new CloudFormationClient({ customUserAgent: solutionId });
   const globalRegion = getGlobalRegion(partition);
   // Move to setOrganizationsClient method after refactoring to SDK v3
@@ -191,10 +176,6 @@ export async function handler(event: CloudFormationCustomResourceEvent): Promise
       mandatoryAccounts = await getConfigFromTableForCommit(configTableName, 'mandatoryAccount', commitId);
       workloadAccounts = await getConfigFromTableForCommit(configTableName, 'workloadAccount', commitId);
 
-      if (controlTowerEnabled === 'true') {
-        await validateControlTower();
-      }
-
       if (isCIDRConfigArray(vpcCidrs)) {
         await validateCidrOrder(vpcCidrs, validationErrors);
       } else {
@@ -217,8 +198,7 @@ export async function handler(event: CloudFormationCustomResourceEvent): Promise
       validationErrors.push(...validateAllAwsAccountsAreInConfig);
 
       // find organization accounts that need to be created
-      console.log(`controlTowerEnabled value: ${controlTowerEnabled}`);
-      if (controlTowerEnabled === 'false' && mandatoryAccounts) {
+      if (mandatoryAccounts) {
         for (const mandatoryAccount of mandatoryAccounts) {
           const awsOuKey = configAllOuKeys.find(ouKeyItem => ouKeyItem.acceleratorKey === mandatoryAccount['ouName']);
           if (awsOuKey?.ignore === false) {
@@ -251,11 +231,7 @@ export async function handler(event: CloudFormationCustomResourceEvent): Promise
                 );
               }
             } else {
-              const accountConfig = JSON.parse(workloadAccount['dataBag']);
-              if (controlTowerEnabled === 'false' || accountConfig['enableGovCloud']) {
-                // check against ignored
-                orgAccountsToAdd.push(workloadAccount);
-              }
+              orgAccountsToAdd.push(workloadAccount);
             }
           }
         }
@@ -263,18 +239,7 @@ export async function handler(event: CloudFormationCustomResourceEvent): Promise
 
       // add orgaccounts to table
       const allAccountsToAdd: DDBItems = [...orgAccountsToAdd];
-      // add ctaccounts that don't exist
-      if (ctAccountsToAdd) {
-        for (const account of ctAccountsToAdd) {
-          if (
-            organizationAccounts.find(
-              item => item.Email?.toLocaleLowerCase() == account['acceleratorKey'].toLocaleLowerCase(),
-            )
-          )
-            continue;
-          allAccountsToAdd.push(account);
-        }
-      }
+
       console.log(`Org Accounts to add: ${JSON.stringify(allAccountsToAdd)}`);
       for (const account of allAccountsToAdd) {
         const accountOu = configActiveOuKeys.find(item => item.acceleratorKey === account['ouName']);
@@ -290,35 +255,6 @@ export async function handler(event: CloudFormationCustomResourceEvent): Promise
           };
           const params: PutCommandInput = {
             TableName: newOrgAccountsTableName,
-            Item: {
-              accountEmail: accountConfig.email,
-              accountConfig: JSON.stringify(accountConfig),
-            },
-          };
-          await throttlingBackOff(() => documentClient.send(new PutCommand(params)));
-        } else {
-          // should not get here we just created and validated all of the ou's.
-          validationErrors.push(
-            `Unable to find Organizational Unit ${account['ouName']} in configuration or OU ignore property is set to true`,
-          );
-        }
-      }
-
-      console.log(`CT Accounts to add: ${JSON.stringify(ctAccountsToAdd)}`);
-      for (const account of ctAccountsToAdd) {
-        const accountOu = configActiveOuKeys.find(item => item.acceleratorKey === account['ouName']);
-        const parsedDataBag = JSON.parse(account['dataBag']);
-        let accountConfig: AccountToAdd;
-        if (accountOu?.awsKey) {
-          accountConfig = {
-            name: parsedDataBag['name'],
-            email: account['acceleratorKey'],
-            description: parsedDataBag['description'],
-            // formatting for CT requirements to support nested ou's
-            organizationalUnitId: (await getOuName(account['ouName'])) + ` (${accountOu.awsKey})`,
-          };
-          const params: PutCommandInput = {
-            TableName: newCTAccountsTableName,
             Item: {
               accountEmail: accountConfig.email,
               accountConfig: JSON.stringify(accountConfig),
@@ -590,106 +526,6 @@ function getNewScps(
   return [configScps.filter(x => existingScps.indexOf(x) === -1), allowListStrategyFlag];
 }
 
-async function validateControlTower() {
-  // confirm mandatory accounts exist in aws
-  for (const mandatoryAccount of mandatoryAccounts) {
-    const existingAccount = organizationAccounts.find(
-      item => item.Email?.toLocaleLowerCase() == mandatoryAccount['acceleratorKey'].toLocaleLowerCase(),
-    );
-    if (existingAccount?.Status == 'ACTIVE') {
-      console.log(`Mandatory Account ${mandatoryAccount['acceleratorKey']} exists.`);
-    } else {
-      validationErrors.push(
-        `Mandatory account ${mandatoryAccount['acceleratorKey']} does not exist in AWS or is suspended`,
-      );
-    }
-  }
-
-  // validate that no ou's are deregistered
-  const validateOrganizationalUnitsRegistered = await validateOrganizationalUnitsAreRegistered(configActiveOuKeys);
-  validationErrors.push(...validateOrganizationalUnitsRegistered);
-
-  if (workloadAccounts) {
-    for (const workloadAccount of workloadAccounts) {
-      const accountConfig = JSON.parse(workloadAccount['dataBag']);
-      const accountName = accountConfig['name'];
-      const account = organizationAccounts.find(
-        oa => oa.Email?.toLocaleLowerCase() == workloadAccount['acceleratorKey'].toLocaleLowerCase(),
-      );
-
-      if (!account) {
-        console.log(`push to ctAccountsToAdd does not exist ${accountName}`);
-        ctAccountsToAdd.push(workloadAccount);
-        continue;
-      }
-
-      const provisionedProductStatus = await getControlTowerProvisionedProductStatus(account.Id!);
-      if (!provisionedProductStatus) {
-        console.log(`push to ctAccountsToAdd not enrolled in CT ${accountName}`);
-        ctAccountsToAdd.push(workloadAccount);
-        continue;
-      }
-      console.log(`Found provisioned account ${accountName}`);
-      switch (provisionedProductStatus.status) {
-        case 'AVAILABLE':
-          break;
-        case 'TAINTED':
-          validationErrors.push(
-            `AWS Account ${workloadAccount['acceleratorKey']} is TAINTED state. Message: ${provisionedProductStatus.statusMessage}. Check Service Catalog`,
-          );
-          break;
-        case 'ERROR':
-          validationErrors.push(
-            `AWS Account ${workloadAccount['acceleratorKey']} is in ERROR state. Message: ${provisionedProductStatus.statusMessage}. Check Service Catalog`,
-          );
-          break;
-        case 'UNDER_CHANGE':
-          break;
-        case 'PLAN_IN_PROGRESS':
-          break;
-      }
-    }
-  }
-}
-
-async function getOuName(name: string): Promise<string> {
-  const result = name.split('/').pop();
-  if (result === undefined) {
-    return name;
-  }
-  return result;
-}
-
-async function getControlTowerProvisionedProductStatus(
-  accountId: string,
-): Promise<provisionedProductStatus | undefined> {
-  const provisionedProduct = await throttlingBackOff(() =>
-    serviceCatalogClient.send(
-      new SearchProvisionedProductsCommand({
-        Filters: {
-          SearchQuery: [`physicalId: ${accountId}`],
-        },
-        AccessLevelFilter: {
-          Key: 'Account',
-          Value: 'self',
-        },
-      }),
-    ),
-  );
-
-  if (provisionedProduct === undefined || provisionedProduct.ProvisionedProducts === undefined) {
-    return undefined;
-  }
-
-  for (const product of provisionedProduct.ProvisionedProducts) {
-    if (product.Type === 'CONTROL_TOWER_ACCOUNT') {
-      return { status: product.Status, statusMessage: product.StatusMessage } as provisionedProductStatus;
-    }
-  }
-
-  return undefined;
-}
-
 async function getOrganizationAccounts(organizationalUnitKeys: ConfigOrganizationalUnitKeys[]): Promise<Account[]> {
   const organizationAccounts: Account[] = [];
   for (const ouKey of organizationalUnitKeys) {
@@ -748,39 +584,6 @@ async function validateOrganizationalUnitsExist(
       console.log(`Organizational Unit ${item.acceleratorKey} does not exist in AWS`);
       errors.push(
         `Organizational Unit ${item.acceleratorKey} does not exist in AWS. Either remove from configuration or add OU via console.`,
-      );
-    }
-  }
-  return errors;
-}
-
-async function validateOrganizationalUnitsAreRegistered(
-  organizationalUnitKeys: ConfigOrganizationalUnitKeys[],
-): Promise<string[]> {
-  const errors: string[] = [];
-  const deregisteredOrganizationalUnits = organizationalUnitKeys.filter(item => item.registered === false);
-  if (deregisteredOrganizationalUnits.length > 0) {
-    for (const item of deregisteredOrganizationalUnits) {
-      console.log(`Organizational Unit ${item.acceleratorKey} may not be registered in Control Tower`);
-      errors.push(
-        `Organizational Unit ${item.acceleratorKey} may not be registered in Control Tower. Re-register OU in Control Tower to resolve.`,
-      );
-    }
-  }
-  // look for ou's that don't have a registration status
-  // confirm top level ou's have at least one guardrail attached
-  for (const ouKey of organizationalUnitKeys) {
-    if (ouKey.registered || !ouKey.awsKey || ouKey.acceleratorKey.split('/').length >>> 1) {
-      continue;
-    }
-    console.log('OU without registration status in config table, checking guardrails', ouKey);
-    const isGuardRailAttached = await isGuardRailAttachedToOu(ouKey.awsKey);
-    if (!isGuardRailAttached) {
-      console.log(
-        `Organizational Unit ${ouKey.acceleratorKey} may not be registered in Control Tower. No guardrail attached and may not be registered.`,
-      );
-      errors.push(
-        `Organizational Unit ${ouKey.acceleratorKey} may not be registered in Control Tower. No guardrail is attached and registration status is not available.`,
       );
     }
   }
@@ -915,18 +718,6 @@ async function getConfigOuKeys(configTableName: string, commitId: string): Promi
     ignore: false,
   });
   return ouKeys;
-}
-
-async function isGuardRailAttachedToOu(ouId: string): Promise<boolean> {
-  const response = await throttlingBackOff(() =>
-    organizationsClient.send(new ListPoliciesForTargetCommand({ TargetId: ouId, Filter: 'SERVICE_CONTROL_POLICY' })),
-  );
-  for (const policy of response.Policies ?? []) {
-    if (policy.Name?.startsWith('aws-guardrails-') && policy.AwsManaged === false) {
-      return true;
-    }
-  }
-  return false;
 }
 
 async function isStackInRollback(stackName: string): Promise<boolean> {

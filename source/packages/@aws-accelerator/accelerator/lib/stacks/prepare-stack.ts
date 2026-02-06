@@ -16,14 +16,7 @@ import { Construct } from 'constructs';
 import * as fs from 'fs';
 import path from 'path';
 
-import {
-  Account,
-  CreateControlTowerAccounts,
-  CreateOrganizationAccounts,
-  GetPortfolioId,
-  MoveAccounts,
-  OrganizationalUnits,
-} from '@aws-accelerator/constructs';
+import { Account, CreateOrganizationAccounts, MoveAccounts, OrganizationalUnits } from '@aws-accelerator/constructs';
 
 import { LoadAcceleratorConfigTable } from '../load-config-table';
 import { ValidateEnvironmentConfig } from '../validate-environment-config';
@@ -54,7 +47,6 @@ export class PrepareStack extends AcceleratorStack {
     super(scope, id, props);
 
     let organizationAccounts: CreateOrganizationAccounts | undefined;
-    let controlTowerAccounts: CreateControlTowerAccounts | undefined;
 
     if (
       cdk.Stack.of(this).region === props.globalConfig.homeRegion &&
@@ -195,7 +187,6 @@ export class PrepareStack extends AcceleratorStack {
         const createOrganizationalUnits = new OrganizationalUnits(this, 'CreateOrganizationalUnits', {
           acceleratorConfigTable: configTable,
           commitId,
-          controlTowerEnabled: props.globalConfig.controlTower.enable,
           organizationsEnabled: props.organizationConfig.enable,
           kmsKey: cloudwatchKey,
           logRetentionInDays: props.globalConfig.cloudwatchLogRetentionInDays,
@@ -278,7 +269,6 @@ export class PrepareStack extends AcceleratorStack {
           configTable,
           loadAcceleratorConfigTable,
           organizationAccounts,
-          controlTowerAccounts,
           moveAccounts,
           managementAccountKey,
           cloudwatchKey,
@@ -321,7 +311,6 @@ export class PrepareStack extends AcceleratorStack {
     configTable: cdk.aws_dynamodb.Table;
     loadAcceleratorConfigTable: LoadAcceleratorConfigTable;
     organizationAccounts?: CreateOrganizationAccounts;
-    controlTowerAccounts?: CreateControlTowerAccounts;
     moveAccounts: MoveAccounts;
     managementAccountKey: cdk.aws_kms.IKey;
     cloudwatchKey?: cdk.aws_kms.IKey;
@@ -351,36 +340,6 @@ export class PrepareStack extends AcceleratorStack {
           reason: 'NewOrgAccounts DynamoDB table do not need point in time recovery, data can be re-created',
         },
       ],
-    });
-
-    this.logger.info(`newControlTowerAccountsTable`);
-    const newCTAccountsTable = new cdk.aws_dynamodb.Table(this, 'NewCTAccounts', {
-      partitionKey: { name: 'accountEmail', type: cdk.aws_dynamodb.AttributeType.STRING },
-      billingMode: cdk.aws_dynamodb.BillingMode.PAY_PER_REQUEST,
-      encryption: cdk.aws_dynamodb.TableEncryption.CUSTOMER_MANAGED,
-      encryptionKey: options.managementAccountKey,
-      removalPolicy: cdk.RemovalPolicy.DESTROY,
-      pointInTimeRecoverySpecification: {
-        pointInTimeRecoveryEnabled: true,
-      },
-    });
-
-    // AwsSolutions-DDB3: The DynamoDB table does not have Point-in-time Recovery enabled.
-    this.nagSuppressionInputs.push({
-      id: NagSuppressionRuleIds.DDB3,
-      details: [
-        {
-          path: `${this.stackName}/NewCTAccounts/Resource`,
-          reason: 'NewCTAccounts DynamoDB table do not need point in time recovery, data can be re-created',
-        },
-      ],
-    });
-
-    this.logger.info(`Table Parameter`);
-    this.ssmParameters.push({
-      logicalId: 'NewCTAccountsTableNameParameter',
-      parameterName: `${options.props.prefixes.ssmParamName}/prepare-stack/NewCTAccountsTableName`,
-      stringValue: newCTAccountsTable.tableName,
     });
 
     if (options.props.partition === 'aws' && options.props.accountsConfig.anyGovCloudAccounts()) {
@@ -422,8 +381,6 @@ export class PrepareStack extends AcceleratorStack {
     const validation = new ValidateEnvironmentConfig(this, 'ValidateEnvironmentConfig', {
       acceleratorConfigTable: options.configTable,
       newOrgAccountsTable: newOrgAccountsTable,
-      newCTAccountsTable: newCTAccountsTable,
-      controlTowerEnabled: options.props.globalConfig.controlTower.enable,
       organizationsEnabled: options.props.organizationConfig.enable,
       commitId: options.loadAcceleratorConfigTable.id,
       stackName: cdk.Stack.of(this).stackName,
@@ -502,55 +459,6 @@ export class PrepareStack extends AcceleratorStack {
           resources: ['*'],
         }),
       );
-
-      this.logger.info(`Get Portfolio Id`);
-      const portfolioResults = new GetPortfolioId(this, 'GetPortFolioId', {
-        displayName: 'AWS Control Tower Account Factory Portfolio',
-        providerName: 'AWS Control Tower',
-        kmsKey: options.cloudwatchKey,
-        logRetentionInDays: options.props.globalConfig.cloudwatchLogRetentionInDays,
-      });
-      this.logger.info(`Create new control tower accounts`);
-      options.controlTowerAccounts = new CreateControlTowerAccounts(this, 'CreateCTAccounts', {
-        table: newCTAccountsTable,
-        portfolioId: portfolioResults.portfolioId,
-        kmsKey: options.cloudwatchKey,
-        logRetentionInDays: options.props.globalConfig.cloudwatchLogRetentionInDays,
-      });
-      options.controlTowerAccounts.node.addDependency(validation);
-      options.controlTowerAccounts.node.addDependency(options.organizationAccounts);
-
-      // cdk-nag suppressions
-      const ctAccountsIam4SuppressionPaths = [
-        'CreateCTAccounts/CreateControlTowerAcccountsProvider/framework-onTimeout/ServiceRole/Resource',
-        'CreateCTAccounts/CreateControlTowerAcccountsProvider/framework-isComplete/ServiceRole/Resource',
-        'CreateCTAccounts/CreateControlTowerAcccountsProvider/framework-onEvent/ServiceRole/Resource',
-        'CreateCTAccounts/CreateControlTowerAccountStatus/ServiceRole/Resource',
-        'CreateCTAccounts/CreateControlTowerAccount/ServiceRole/Resource',
-      ];
-
-      const ctAccountsIam5SuppressionPaths = [
-        'CreateCTAccounts/CreateControlTowerAccountStatus/ServiceRole/DefaultPolicy/Resource',
-        'CreateCTAccounts/CreateControlTowerAcccountsProvider/framework-onEvent/ServiceRole/DefaultPolicy/Resource',
-        'CreateCTAccounts/CreateControlTowerAcccountsProvider/framework-isComplete/ServiceRole/DefaultPolicy/Resource',
-        'CreateCTAccounts/CreateControlTowerAcccountsProvider/framework-onTimeout/ServiceRole/DefaultPolicy/Resource',
-        'CreateCTAccounts/CreateControlTowerAcccountsProvider/waiter-state-machine/Role/DefaultPolicy/Resource',
-      ];
-      const ctAccountsSfSuppressionPaths = [
-        'CreateCTAccounts/CreateControlTowerAcccountsProvider/waiter-state-machine/Resource',
-      ];
-
-      // AwsSolutions-IAM4: The IAM user, role, or group uses AWS managed policies
-      this.createNagSuppressionsInputs(NagSuppressionRuleIds.IAM4, ctAccountsIam4SuppressionPaths);
-
-      // AwsSolutions-IAM5: The IAM entity contains wildcard permissions and does not have a cdk_nag rule suppression with evidence for those permission
-      this.createNagSuppressionsInputs(NagSuppressionRuleIds.IAM5, ctAccountsIam5SuppressionPaths);
-
-      // AwsSolutions-SF1: The Step Function does not log "ALL" events to CloudWatch Logs.
-      this.createNagSuppressionsInputs(NagSuppressionRuleIds.SF1, ctAccountsSfSuppressionPaths);
-
-      // AwsSolutions-SF2: The Step Function does not have X-Ray tracing enabled.
-      this.createNagSuppressionsInputs(NagSuppressionRuleIds.SF2, ctAccountsSfSuppressionPaths);
     }
   }
 

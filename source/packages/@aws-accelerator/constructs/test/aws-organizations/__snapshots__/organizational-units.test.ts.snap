@@ -190,7 +190,6 @@ exports[`OrganizationalUnits > Construct(OrganizationalUnit):  Snapshot Test 1`]
         "configTableName": {
           "Ref": "ConfigTable5CD72349",
         },
-        "controlTowerEnabled": true,
         "organizationsEnabled": true,
         "partition": {
           "Ref": "AWS::Partition",
