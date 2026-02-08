@@ -76,7 +76,7 @@ exports[`NetworkVpcStack tests > Construct(NetworkVpcStack):  Snapshot Test 1`] 
         },
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.14.2",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.14.3",
           },
         },
         "Handler": "__entrypoint__.handler",
@@ -243,7 +243,7 @@ exports[`NetworkVpcStack tests > Construct(NetworkVpcStack):  Snapshot Test 1`] 
         "Description": "Custom resource provider to put cross-account ssm parameter value",
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.14.2",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.14.3",
           },
         },
         "Handler": "__entrypoint__.handler",
@@ -1919,7 +1919,7 @@ exports[`NetworkVpcStack tests > Construct(NetworkVpcStack):  Snapshot Test 1`] 
       "Properties": {
         "Name": "/accelerator/AWSAccelerator-NetworkVpcStack-666666666666-us-east-1/version",
         "Type": "String",
-        "Value": "1.14.2",
+        "Value": "1.14.3",
       },
       "Type": "AWS::SSM::Parameter",
     },

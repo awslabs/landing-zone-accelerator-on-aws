@@ -92,7 +92,7 @@ exports[`AuditManagerDefaultReportsDestination > Construct(AuditManagerDefaultRe
         },
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.14.2",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.14.3",
           },
         },
         "Handler": "__entrypoint__.handler",

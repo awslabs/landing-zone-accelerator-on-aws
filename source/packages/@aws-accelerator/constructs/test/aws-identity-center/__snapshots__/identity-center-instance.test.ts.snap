@@ -195,7 +195,7 @@ exports[`IdentityCenterInstance > Construct(IdentityCenterGetInstanceId):  Snaps
         "Description": "Accelerator deployed IdentityCenterGetInstanceId custom resource lambda function.",
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.14.2",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.14.3",
           },
         },
         "Handler": "index.handler",
@@ -346,7 +346,7 @@ exports[`IdentityCenterInstance > Construct(IdentityCenterGetInstanceId):  Snaps
         "Description": "AWS CDK resource provider framework - onEvent (Default/IdentityCenterInstance/IdentityCenterGetInstanceId/Resource)",
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.14.2",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.14.3",
             "USER_ON_EVENT_FUNCTION_ARN": {
               "Fn::GetAtt": [
                 "IdentityCenterInstanceIdentityCenterGetInstanceIdFunctionE59FDB54",
