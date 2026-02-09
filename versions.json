@@ -2,6 +2,11 @@
   {
     "version": "v1.15.0-experimental-rc.5",
     "title": "v1.15.0-experimental-rc.5",
+    "aliases": []
+  },
+  {
+    "version": "v1.14.3",
+    "title": "v1.14.3",
     "aliases": [
       "latest"
     ]
