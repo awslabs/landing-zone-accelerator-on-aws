@@ -13,6 +13,7 @@
 
 import {
   AccountsConfig,
+  AccountConfig,
   GlobalConfig,
   IamConfig,
   NetworkConfig,
@@ -173,14 +174,39 @@ export class ConfigGenerator {
       logArchiveAccountEmail: this.options.logArchiveAccountEmail,
       auditAccountEmail: this.options.auditAccountEmail,
     });
-    fs.writeFileSync(
-      path.join(this.tempDirPath, AccountsConfig.FILENAME),
-      yaml.dump({
-        mandatoryAccounts: accountsConfig.mandatoryAccounts,
-        workloadAccounts: accountsConfig.workloadAccounts,
-      }),
-      'utf8',
-    );
+
+    const lzaManagementAccountEmail = process.env['LZA_MANAGEMENT_ACCOUNT_EMAIL'];
+    const pipelineAccountId = process.env['PIPELINE_ACCOUNT_ID'];
+
+    const workloadAccounts: AccountConfig[] = [...accountsConfig.workloadAccounts] as AccountConfig[];
+    if (lzaManagementAccountEmail) {
+      workloadAccounts.push({
+        name: 'LzaManagementAccount',
+        description: 'Account to access and manage Landing Zone Accelerator on AWS',
+        email: lzaManagementAccountEmail,
+        organizationalUnit: 'LZA Management',
+      } as AccountConfig);
+    }
+
+    const accountsConfigDump: {
+      mandatoryAccounts: typeof accountsConfig.mandatoryAccounts;
+      workloadAccounts: typeof workloadAccounts;
+      accountIds?: { email: string; accountId: string }[];
+    } = {
+      mandatoryAccounts: accountsConfig.mandatoryAccounts,
+      workloadAccounts,
+    };
+
+    if (lzaManagementAccountEmail && pipelineAccountId) {
+      accountsConfigDump.accountIds = [
+        {
+          email: lzaManagementAccountEmail,
+          accountId: pipelineAccountId,
+        },
+      ];
+    }
+
+    fs.writeFileSync(path.join(this.tempDirPath, AccountsConfig.FILENAME), yaml.dump(accountsConfigDump), 'utf8');
 
     // Generate iam-config.yaml
     fs.writeFileSync(path.join(this.tempDirPath, IamConfig.FILENAME), yaml.dump(new IamConfig()), 'utf8');
@@ -204,11 +230,11 @@ export class ConfigGenerator {
       });
       fs.writeFileSync(path.join(this.tempDirPath, OrganizationConfig.FILENAME), yaml.dump(orgConfig), 'utf8');
     } else {
-      fs.writeFileSync(
-        path.join(this.tempDirPath, OrganizationConfig.FILENAME),
-        yaml.dump(new OrganizationConfig()),
-        'utf8',
-      );
+      const orgConfig = new OrganizationConfig();
+      if (process.env['LZA_MANAGEMENT_ACCOUNT_EMAIL']) {
+        orgConfig.organizationalUnits.push({ name: 'LZA Management', ignore: undefined });
+      }
+      fs.writeFileSync(path.join(this.tempDirPath, OrganizationConfig.FILENAME), yaml.dump(orgConfig), 'utf8');
     }
 
     // Generate security-config.yaml

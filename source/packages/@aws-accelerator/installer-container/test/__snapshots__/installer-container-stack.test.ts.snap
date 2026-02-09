@@ -39,6 +39,7 @@ exports[`InstallerContainerStack > Construct(InstallerContainerStack): Default C
             "ManagementAccountEmail",
             "LogArchiveAccountEmail",
             "AuditAccountEmail",
+            "LzaManagementAccountEmail",
           ],
         },
         {
@@ -102,6 +103,9 @@ exports[`InstallerContainerStack > Construct(InstallerContainerStack): Default C
         },
         "LogLevel": {
           "default": "Log Level",
+        },
+        "LzaManagementAccountEmail": {
+          "default": "LZA Management Account Email",
         },
         "ManagementAccountEmail": {
           "default": "Management Account Email",
@@ -193,6 +197,12 @@ exports[`InstallerContainerStack > Construct(InstallerContainerStack): Default C
       ],
       "Default": "error",
       "Description": "The log level for LZA engine. Controls the verbosity of logs generated during deployment.",
+      "Type": "String",
+    },
+    "LzaManagementAccountEmail": {
+      "AllowedPattern": "[^\\s@]+@[^\\s@]+\\.[^\\s@]+",
+      "ConstraintDescription": "Must be a valid email address matching "[^\\s@]+@[^\\s@]+\\.[^\\s@]+"",
+      "Description": "Landing Zone Accelerator on AWS Management account email - NOTE: This must match the address of the account email that you are deploying from.",
       "Type": "String",
     },
     "ManagementAccountEmail": {
@@ -2131,6 +2141,12 @@ def handler(event, context):
                 "Name": "AWS_CA_BUNDLE",
                 "Value": "/etc/pki/ca-trust/extracted/pem/tls-ca-bundle.pem",
               },
+              {
+                "Name": "LZA_MANAGEMENT_ACCOUNT_EMAIL",
+                "Value": {
+                  "Ref": "LzaManagementAccountEmail",
+                },
+              },
             ],
             "Image": {
               "Ref": "ImageUri",
@@ -2494,6 +2510,7 @@ exports[`InstallerContainerStack > Construct(InstallerContainerStack): Deploymen
             "ManagementAccountEmail",
             "LogArchiveAccountEmail",
             "AuditAccountEmail",
+            "LzaManagementAccountEmail",
           ],
         },
         {
@@ -2578,6 +2595,9 @@ exports[`InstallerContainerStack > Construct(InstallerContainerStack): Deploymen
         },
         "LogLevel": {
           "default": "Log Level",
+        },
+        "LzaManagementAccountEmail": {
+          "default": "LZA Management Account Email",
         },
         "ManagementAccountEmail": {
           "default": "Management Account Email",
@@ -2684,6 +2704,12 @@ exports[`InstallerContainerStack > Construct(InstallerContainerStack): Deploymen
       ],
       "Default": "error",
       "Description": "The log level for LZA engine. Controls the verbosity of logs generated during deployment.",
+      "Type": "String",
+    },
+    "LzaManagementAccountEmail": {
+      "AllowedPattern": "[^\\s@]+@[^\\s@]+\\.[^\\s@]+",
+      "ConstraintDescription": "Must be a valid email address matching "[^\\s@]+@[^\\s@]+\\.[^\\s@]+"",
+      "Description": "Landing Zone Accelerator on AWS Management account email - NOTE: This must match the address of the account email that you are deploying from.",
       "Type": "String",
     },
     "ManagementAccountEmail": {
@@ -4642,6 +4668,12 @@ def handler(event, context):
                 "Value": "/etc/pki/ca-trust/extracted/pem/tls-ca-bundle.pem",
               },
               {
+                "Name": "LZA_MANAGEMENT_ACCOUNT_EMAIL",
+                "Value": {
+                  "Ref": "LzaManagementAccountEmail",
+                },
+              },
+              {
                 "Name": "MANAGEMENT_ACCOUNT_ID",
                 "Value": {
                   "Ref": "ManagementAccountId",
@@ -5071,6 +5103,7 @@ exports[`InstallerContainerStack > Construct(InstallerContainerStack): Single Ac
             "ManagementAccountEmail",
             "LogArchiveAccountEmail",
             "AuditAccountEmail",
+            "LzaManagementAccountEmail",
           ],
         },
         {
@@ -5134,6 +5167,9 @@ exports[`InstallerContainerStack > Construct(InstallerContainerStack): Single Ac
         },
         "LogLevel": {
           "default": "Log Level",
+        },
+        "LzaManagementAccountEmail": {
+          "default": "LZA Management Account Email",
         },
         "ManagementAccountEmail": {
           "default": "Management Account Email",
@@ -5225,6 +5261,12 @@ exports[`InstallerContainerStack > Construct(InstallerContainerStack): Single Ac
       ],
       "Default": "error",
       "Description": "The log level for LZA engine. Controls the verbosity of logs generated during deployment.",
+      "Type": "String",
+    },
+    "LzaManagementAccountEmail": {
+      "AllowedPattern": "[^\\s@]+@[^\\s@]+\\.[^\\s@]+",
+      "ConstraintDescription": "Must be a valid email address matching "[^\\s@]+@[^\\s@]+\\.[^\\s@]+"",
+      "Description": "Landing Zone Accelerator on AWS Management account email - NOTE: This must match the address of the account email that you are deploying from.",
       "Type": "String",
     },
     "ManagementAccountEmail": {
@@ -7164,6 +7206,12 @@ def handler(event, context):
                 "Value": "/etc/pki/ca-trust/extracted/pem/tls-ca-bundle.pem",
               },
               {
+                "Name": "LZA_MANAGEMENT_ACCOUNT_EMAIL",
+                "Value": {
+                  "Ref": "LzaManagementAccountEmail",
+                },
+              },
+              {
                 "Name": "ACCELERATOR_ENABLE_SINGLE_ACCOUNT_MODE",
                 "Value": "true",
               },
@@ -7534,6 +7582,7 @@ exports[`InstallerContainerStack > Construct(InstallerContainerStack): With Exte
             "ManagementAccountEmail",
             "LogArchiveAccountEmail",
             "AuditAccountEmail",
+            "LzaManagementAccountEmail",
           ],
         },
         {
@@ -7610,6 +7659,9 @@ exports[`InstallerContainerStack > Construct(InstallerContainerStack): With Exte
         },
         "LogLevel": {
           "default": "Log Level",
+        },
+        "LzaManagementAccountEmail": {
+          "default": "LZA Management Account Email",
         },
         "ManagementAccountEmail": {
           "default": "Management Account Email",
@@ -7713,6 +7765,12 @@ exports[`InstallerContainerStack > Construct(InstallerContainerStack): With Exte
       ],
       "Default": "error",
       "Description": "The log level for LZA engine. Controls the verbosity of logs generated during deployment.",
+      "Type": "String",
+    },
+    "LzaManagementAccountEmail": {
+      "AllowedPattern": "[^\\s@]+@[^\\s@]+\\.[^\\s@]+",
+      "ConstraintDescription": "Must be a valid email address matching "[^\\s@]+@[^\\s@]+\\.[^\\s@]+"",
+      "Description": "Landing Zone Accelerator on AWS Management account email - NOTE: This must match the address of the account email that you are deploying from.",
       "Type": "String",
     },
     "ManagementAccountEmail": {
@@ -9667,6 +9725,12 @@ def handler(event, context):
                 "Value": "/etc/pki/ca-trust/extracted/pem/tls-ca-bundle.pem",
               },
               {
+                "Name": "LZA_MANAGEMENT_ACCOUNT_EMAIL",
+                "Value": {
+                  "Ref": "LzaManagementAccountEmail",
+                },
+              },
+              {
                 "Name": "MANAGEMENT_ACCOUNT_ID",
                 "Value": {
                   "Ref": "ManagementAccountId",
@@ -10090,6 +10154,7 @@ exports[`InstallerContainerStack > Construct(InstallerContainerStack): With Perm
             "ManagementAccountEmail",
             "LogArchiveAccountEmail",
             "AuditAccountEmail",
+            "LzaManagementAccountEmail",
           ],
         },
         {
@@ -10161,6 +10226,9 @@ exports[`InstallerContainerStack > Construct(InstallerContainerStack): With Perm
         },
         "LogLevel": {
           "default": "Log Level",
+        },
+        "LzaManagementAccountEmail": {
+          "default": "LZA Management Account Email",
         },
         "ManagementAccountEmail": {
           "default": "Management Account Email",
@@ -10255,6 +10323,12 @@ exports[`InstallerContainerStack > Construct(InstallerContainerStack): With Perm
       ],
       "Default": "error",
       "Description": "The log level for LZA engine. Controls the verbosity of logs generated during deployment.",
+      "Type": "String",
+    },
+    "LzaManagementAccountEmail": {
+      "AllowedPattern": "[^\\s@]+@[^\\s@]+\\.[^\\s@]+",
+      "ConstraintDescription": "Must be a valid email address matching "[^\\s@]+@[^\\s@]+\\.[^\\s@]+"",
+      "Description": "Landing Zone Accelerator on AWS Management account email - NOTE: This must match the address of the account email that you are deploying from.",
       "Type": "String",
     },
     "ManagementAccountEmail": {
@@ -12198,6 +12272,12 @@ def handler(event, context):
                 "Value": "/etc/pki/ca-trust/extracted/pem/tls-ca-bundle.pem",
               },
               {
+                "Name": "LZA_MANAGEMENT_ACCOUNT_EMAIL",
+                "Value": {
+                  "Ref": "LzaManagementAccountEmail",
+                },
+              },
+              {
                 "Name": "ACCELERATOR_PERMISSION_BOUNDARY",
                 "Value": {
                   "Ref": "PermissionBoundaryPolicyName",
@@ -12566,6 +12646,7 @@ exports[`InstallerContainerStack > Construct(InstallerContainerStack): With S3 S
             "ManagementAccountEmail",
             "LogArchiveAccountEmail",
             "AuditAccountEmail",
+            "LzaManagementAccountEmail",
           ],
         },
         {
@@ -12629,6 +12710,9 @@ exports[`InstallerContainerStack > Construct(InstallerContainerStack): With S3 S
         },
         "LogLevel": {
           "default": "Log Level",
+        },
+        "LzaManagementAccountEmail": {
+          "default": "LZA Management Account Email",
         },
         "ManagementAccountEmail": {
           "default": "Management Account Email",
@@ -12720,6 +12804,12 @@ exports[`InstallerContainerStack > Construct(InstallerContainerStack): With S3 S
       ],
       "Default": "error",
       "Description": "The log level for LZA engine. Controls the verbosity of logs generated during deployment.",
+      "Type": "String",
+    },
+    "LzaManagementAccountEmail": {
+      "AllowedPattern": "[^\\s@]+@[^\\s@]+\\.[^\\s@]+",
+      "ConstraintDescription": "Must be a valid email address matching "[^\\s@]+@[^\\s@]+\\.[^\\s@]+"",
+      "Description": "Landing Zone Accelerator on AWS Management account email - NOTE: This must match the address of the account email that you are deploying from.",
       "Type": "String",
     },
     "ManagementAccountEmail": {
@@ -14657,6 +14747,12 @@ def handler(event, context):
               {
                 "Name": "AWS_CA_BUNDLE",
                 "Value": "/etc/pki/ca-trust/extracted/pem/tls-ca-bundle.pem",
+              },
+              {
+                "Name": "LZA_MANAGEMENT_ACCOUNT_EMAIL",
+                "Value": {
+                  "Ref": "LzaManagementAccountEmail",
+                },
               },
             ],
             "Image": {
