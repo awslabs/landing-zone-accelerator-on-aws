@@ -447,7 +447,17 @@ export class OperationsStack extends AcceleratorStack {
 
     for (const policyItem of roleItem.policies?.awsManaged ?? []) {
       this.logger.info(`Role - aws managed policy ${policyItem}`);
-      managedPolicies.push(cdk.aws_iam.ManagedPolicy.fromAwsManagedPolicyName(policyItem));
+      if (policyItem.startsWith('arn:')) {
+        managedPolicies.push(
+          cdk.aws_iam.ManagedPolicy.fromManagedPolicyArn(
+            this,
+            `${pascalCase(roleItem.name)}-${pascalCase(policyItem.split('/').pop() || policyItem)}`,
+            policyItem,
+          ),
+        );
+      } else {
+        managedPolicies.push(cdk.aws_iam.ManagedPolicy.fromAwsManagedPolicyName(policyItem));
+      }
     }
     for (const policyItem of roleItem.policies?.customerManaged ?? []) {
       this.logger.info(`Role - customer managed policy ${policyItem}`);
@@ -633,7 +643,17 @@ export class OperationsStack extends AcceleratorStack {
         const managedPolicies: cdk.aws_iam.IManagedPolicy[] = [];
         for (const policyItem of groupItem.policies?.awsManaged ?? []) {
           this.logger.info(`Group - aws managed policy ${policyItem}`);
-          managedPolicies.push(cdk.aws_iam.ManagedPolicy.fromAwsManagedPolicyName(policyItem));
+          if (policyItem.startsWith('arn:')) {
+            managedPolicies.push(
+              cdk.aws_iam.ManagedPolicy.fromManagedPolicyArn(
+                this,
+                `${pascalCase(groupItem.name)}-${pascalCase(policyItem.split('/').pop() || policyItem)}`,
+                policyItem,
+              ),
+            );
+          } else {
+            managedPolicies.push(cdk.aws_iam.ManagedPolicy.fromAwsManagedPolicyName(policyItem));
+          }
         }
         for (const policyItem of groupItem.policies?.customerManaged ?? []) {
           this.logger.info(`Group - customer managed policy ${policyItem}`);
