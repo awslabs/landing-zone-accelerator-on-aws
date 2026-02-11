@@ -671,8 +671,8 @@ export class GlobalConfig implements i.IGlobalConfig {
   static load(dir: string, replacementsConfig: ReplacementsConfig): GlobalConfig {
     const initialBuffer = fs.readFileSync(path.join(dir, GlobalConfig.FILENAME), 'utf8');
     const buffer = replacementsConfig ? replacementsConfig.preProcessBuffer(initialBuffer) : initialBuffer;
-    // Create schema with custom !include tag
-    const schema = t.createSchema(dir);
+    // Create schema with custom !include tag that supports replacement tokens
+    const schema = t.createSchema(dir, replacementsConfig);
     // Load YAML with custom schema
     let values: i.IGlobalConfig | undefined = undefined;
     try {

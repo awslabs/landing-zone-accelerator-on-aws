@@ -140,8 +140,8 @@ export class OrganizationConfig implements i.IOrganizationConfig {
   static load(dir: string, replacementsConfig: ReplacementsConfig): OrganizationConfig {
     const initialBuffer = fs.readFileSync(path.join(dir, OrganizationConfig.FILENAME), 'utf8');
     const buffer = replacementsConfig ? replacementsConfig.preProcessBuffer(initialBuffer) : initialBuffer;
-    // Create schema with custom !include tag
-    const schema = t.createSchema(dir);
+    // Create schema with custom !include tag that supports replacement tokens
+    const schema = t.createSchema(dir, replacementsConfig);
     // Load YAML with custom schema
     try {
       const values = t.parseOrganizationConfig(yaml.load(buffer, { schema }));

@@ -951,9 +951,7 @@ export class NetworkConfig implements i.INetworkConfig {
   static load(dir: string, replacementsConfig: ReplacementsConfig): NetworkConfig {
     const initialBuffer = fs.readFileSync(path.join(dir, NetworkConfig.FILENAME), 'utf8');
     const buffer = replacementsConfig ? replacementsConfig.preProcessBuffer(initialBuffer) : initialBuffer;
-    // Create schema with custom !include tag
-    const schema = t.createSchema(dir);
-    // Load YAML with custom schema
+    const schema = t.createSchema(dir, replacementsConfig);
     try {
       const values = t.parseNetworkConfig(yaml.load(buffer, { schema }));
       return new NetworkConfig(values);

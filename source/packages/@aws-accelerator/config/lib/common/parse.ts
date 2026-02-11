@@ -249,7 +249,11 @@ export function isNetworkType<T>(
   return is(networkSchema, interfaceName, content);
 }
 
-function createIncludeTag(baseDir: string, includeStack: string[] = []): yaml.Type {
+function createIncludeTag(
+  baseDir: string,
+  includeStack: string[],
+  replacementsConfig?: { preProcessBuffer: (buffer: string) => string },
+): yaml.Type {
   return new yaml.Type('!include', {
     kind: 'scalar',
     construct: (filePath: string) => {
@@ -259,8 +263,9 @@ function createIncludeTag(baseDir: string, includeStack: string[] = []): yaml.Ty
       const fullPath = path.resolve(baseDir, filePath);
       try {
         const content = fs.readFileSync(fullPath, 'utf8');
-        return yaml.load(content, {
-          schema: createSchema(path.dirname(fullPath), [...includeStack, filePath]),
+        const processedContent = replacementsConfig ? replacementsConfig.preProcessBuffer(content) : content;
+        return yaml.load(processedContent, {
+          schema: createSchemaInternal(path.dirname(fullPath), [...includeStack, filePath], replacementsConfig),
         });
       } catch (e) {
         logger.error(`${e}`);
@@ -270,6 +275,17 @@ function createIncludeTag(baseDir: string, includeStack: string[] = []): yaml.Ty
   });
 }
 
-export function createSchema(baseDir: string, includeStack: string[] = []): yaml.Schema {
-  return yaml.DEFAULT_SCHEMA.extend([createIncludeTag(baseDir, includeStack)]);
+function createSchemaInternal(
+  baseDir: string,
+  includeStack: string[],
+  replacementsConfig?: { preProcessBuffer: (buffer: string) => string },
+): yaml.Schema {
+  return yaml.DEFAULT_SCHEMA.extend([createIncludeTag(baseDir, includeStack, replacementsConfig)]);
+}
+
+export function createSchema(
+  baseDir: string,
+  replacementsConfig?: { preProcessBuffer: (buffer: string) => string },
+): yaml.Schema {
+  return createSchemaInternal(baseDir, [], replacementsConfig);
 }
