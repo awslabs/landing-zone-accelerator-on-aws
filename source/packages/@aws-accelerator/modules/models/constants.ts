@@ -26,6 +26,7 @@ import { ManageAccountsAliasModule } from '../lib/actions/aws-organizations/mana
 import { AcceleratorPrerequisites } from '../lib/actions/prerequisites/accelerator-prerequisites';
 import { PipelinePrerequisites } from '../lib/actions/prerequisites/pipeline-prerequisites';
 import { ManageAutomationRulesModule } from '../lib/actions/aws-security-hub/manage-automation-rules';
+import { EnrollAccountsModule } from '../lib/actions/control-tower/enroll-accounts';
 
 /**
  * Execution order for the Accelerator module stages
@@ -161,9 +162,18 @@ export const AcceleratorModuleStageDetails: AcceleratorModuleStageDetailsType[] 
     },
     modules: [
       {
+        name: AcceleratorModules.ENROLL_ACCOUNTS,
+        description: 'Enroll new accounts with AWS Control Tower',
+        runOrder: 1,
+        handler: async (params: ModuleParams) => {
+          return await EnrollAccountsModule.execute(params);
+        },
+        executionPhase: ModuleExecutionPhase.DEPLOY,
+      },
+      {
         name: AcceleratorModules.MANAGE_ACCOUNTS_ALIAS,
         description: 'Manage the alias of accounts',
-        runOrder: 1,
+        runOrder: 2,
         handler: async (params: ModuleParams) => {
           return await ManageAccountsAliasModule.execute(params);
         },

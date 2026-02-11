@@ -72,7 +72,7 @@ export class GetOrganizationalUnitsDetailModule implements IGetOrganizationalUni
       return [];
     }
 
-    this.setControlTowerResources(props);
+    await this.setControlTowerResources(props);
 
     return await this.getAllOrganizationalUnits(organizationClient);
   }

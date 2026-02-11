@@ -35,6 +35,9 @@ export { setupControlTowerLandingZone } from './executors/accelerator-control-to
 export { IRegisterOrganizationalUnitHandlerParameter } from './interfaces/control-tower/register-organizational-unit';
 export { registerOrganizationalUnit } from './executors/accelerator-control-tower';
 
+export { IEnrollAccountsHandlerParameter } from './interfaces/control-tower/enroll-accounts';
+export { enrollAccounts } from './executors/accelerator-control-tower';
+
 //
 // AWS Organizations Module resources
 //

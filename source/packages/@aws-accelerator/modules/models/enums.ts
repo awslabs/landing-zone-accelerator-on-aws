@@ -119,6 +119,11 @@ export enum AcceleratorModules {
   MANAGE_AUTOMATION_RULES = 'manage-automation-rules',
 
   /**
+   * Manage Control Tower accounts enrollment
+   */
+  ENROLL_ACCOUNTS = 'enroll-accounts',
+
+  /**
    * An Example module which is executed in `PREPARE` stage
    */
   EXAMPLE_MODULE = 'example-module',
