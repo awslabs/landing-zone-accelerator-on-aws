@@ -212,6 +212,10 @@ export async function getLandingZoneDetails(
       landingZoneDetails.latestAvailableVersion = response.landingZone.latestAvailableVersion!;
       landingZoneDetails.driftStatus = response.landingZone.driftStatus!.status!;
       landingZoneDetails.manifest = response.landingZone.manifest;
+
+      if (response.landingZone.remediationTypes?.includes('INHERITANCE_DRIFT')) {
+        landingZoneDetails.accountAutoEnrollment = true;
+      }
     }
   } catch (e: unknown) {
     if (e instanceof ResourceNotFoundException) {

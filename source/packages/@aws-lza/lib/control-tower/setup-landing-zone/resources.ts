@@ -75,6 +75,10 @@ export interface ControlTowerLandingZoneConfigType {
    * Flag indicating Organization level CloudTrail is enable or not.
    */
   readonly enableOrganizationTrail: boolean;
+  /**
+   * Flag indicating whether account auto-enrollment is enabled.
+   */
+  readonly accountAutoEnrollment?: boolean;
 }
 
 /**
@@ -164,6 +168,10 @@ export type ControlTowerLandingZoneDetailsType = {
    */
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   manifest?: any;
+  /**
+   * Flag indicating whether account auto-enrollment is enabled or not
+   */
+  accountAutoEnrollment?: boolean;
 };
 
 /**

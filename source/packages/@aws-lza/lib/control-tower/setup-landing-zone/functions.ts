@@ -234,13 +234,24 @@ export function landingZoneUpdateOrResetRequired(
     );
   }
 
-  if (reasons.length > 0) {
-    validateLandingZoneVersion(
-      landingZoneConfiguration.version,
-      landingZoneDetails.latestAvailableVersion!,
-      reasons.join('. '),
-      'update',
+  if (landingZoneDetails.accountAutoEnrollment !== landingZoneConfiguration.accountAutoEnrollment) {
+    reasons.push(
+      `Changes made in account auto-enrollment from ${!!landingZoneDetails.accountAutoEnrollment} to ${!!landingZoneConfiguration.accountAutoEnrollment}`,
     );
+  }
+
+  if (reasons.length > 0) {
+    // Skip version validation for account auto-enrollment only changes
+    const isOnlyAccountAutoEnrollmentChange = reasons.length === 1 && reasons[0].includes('account auto-enrollment');
+
+    if (!isOnlyAccountAutoEnrollmentChange) {
+      validateLandingZoneVersion(
+        landingZoneConfiguration.version,
+        landingZoneDetails.latestAvailableVersion!,
+        reasons.join('. '),
+        'update',
+      );
+    }
 
     return {
       updateRequired: true,

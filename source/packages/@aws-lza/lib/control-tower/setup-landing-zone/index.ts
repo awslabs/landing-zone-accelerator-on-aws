@@ -207,6 +207,7 @@ export class SetupLandingZoneModule implements ISetupLandingZoneModule {
       loggingBucketRetentionDays: landingZoneConfig.logging.retention.loggingBucket,
       accessLoggingBucketRetentionDays: landingZoneConfig.logging.retention.accessLoggingBucket,
       enableOrganizationTrail: landingZoneConfig.logging.organizationTrail,
+      accountAutoEnrollment: landingZoneConfig.accountAutoEnrollment,
     };
   }
 
@@ -404,6 +405,7 @@ abstract class LandingZoneOperation {
     const param: CreateLandingZoneCommandInput = {
       version: landingZoneConfiguration.version,
       manifest: manifestDocument,
+      remediationTypes: landingZoneConfiguration.accountAutoEnrollment ? ['INHERITANCE_DRIFT'] : undefined,
     };
 
     const response = await throttlingBackOff(() => client.send(new CreateLandingZoneCommand(param)));
@@ -501,6 +503,7 @@ abstract class LandingZoneOperation {
         new UpdateLandingZoneCommand({
           version: targetVersion,
           landingZoneIdentifier: landingZoneDetails.landingZoneIdentifier,
+          remediationTypes: landingZoneConfiguration.accountAutoEnrollment ? ['INHERITANCE_DRIFT'] : undefined,
           manifest: manifestDocument,
         }),
       ),

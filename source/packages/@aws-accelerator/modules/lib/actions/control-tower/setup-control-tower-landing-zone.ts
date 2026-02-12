@@ -53,6 +53,7 @@ export abstract class SetupControlTowerLandingZoneModule {
       ssmParamPrefix: params.moduleRunnerParameters.resourcePrefixes.ssmParamName,
       configuration: {
         version: landingZoneConfiguration.version,
+        accountAutoEnrollment: landingZoneConfiguration.accountAutoEnrollment,
         enabledRegions: params.moduleRunnerParameters.configs.globalConfig.enabledRegions,
         logging: {
           organizationTrail: landingZoneConfiguration.logging.organizationTrail,

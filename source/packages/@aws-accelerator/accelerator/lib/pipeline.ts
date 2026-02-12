@@ -1124,6 +1124,7 @@ export class AcceleratorPipeline extends Construct {
 
     return {
       version: CONTROL_TOWER_LANDING_ZONE_VERSION,
+      accountAutoEnrollment: true,
       logging: {
         loggingBucketRetentionDays: 365,
         accessLoggingBucketRetentionDays: 365,

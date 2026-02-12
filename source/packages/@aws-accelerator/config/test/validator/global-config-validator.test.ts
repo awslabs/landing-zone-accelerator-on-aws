@@ -234,6 +234,209 @@ describe('SecurityConfigValidator', () => {
       expect(result).toBeFalsy();
     });
   });
+
+  describe('validateControlTowerAccountAutoEnrollment', () => {
+    it('should pass when accountAutoEnrollment is enabled with version 3.1', () => {
+      const globalConfig = {
+        ...createGlobalConfig(),
+        controlTower: {
+          enable: true,
+          landingZone: {
+            version: '3.1',
+            accountAutoEnrollment: true,
+            logging: {
+              loggingBucketRetentionDays: 365,
+              accessLoggingBucketRetentionDays: 365,
+              organizationTrail: true,
+            },
+            security: {
+              enableIdentityCenterAccess: true,
+            },
+          },
+        },
+      } as GlobalConfig;
+
+      expect(
+        () =>
+          new GlobalConfigValidator(
+            globalConfig,
+            mockAccountsConfig,
+            mockIamConfig,
+            mockOrganizationConfig,
+            mockSecurityConfig,
+            mockConfigDir,
+          ),
+      ).toBeDefined();
+    });
+
+    it('should pass when accountAutoEnrollment is enabled with version 3.3', () => {
+      const globalConfig = {
+        ...createGlobalConfig(),
+        controlTower: {
+          enable: true,
+          landingZone: {
+            version: '3.3',
+            accountAutoEnrollment: true,
+            logging: {
+              loggingBucketRetentionDays: 365,
+              accessLoggingBucketRetentionDays: 365,
+              organizationTrail: true,
+            },
+            security: {
+              enableIdentityCenterAccess: true,
+            },
+          },
+        },
+      } as GlobalConfig;
+
+      expect(
+        () =>
+          new GlobalConfigValidator(
+            globalConfig,
+            mockAccountsConfig,
+            mockIamConfig,
+            mockOrganizationConfig,
+            mockSecurityConfig,
+            mockConfigDir,
+          ),
+      ).toBeDefined();
+    });
+
+    it('should fail when accountAutoEnrollment is enabled with version 3.0', () => {
+      const globalConfig = {
+        ...createGlobalConfig(),
+        controlTower: {
+          enable: true,
+          landingZone: {
+            version: '3.0',
+            accountAutoEnrollment: true,
+            logging: {
+              loggingBucketRetentionDays: 365,
+              accessLoggingBucketRetentionDays: 365,
+              organizationTrail: true,
+            },
+            security: {
+              enableIdentityCenterAccess: true,
+            },
+          },
+        },
+      } as GlobalConfig;
+
+      expect(
+        () =>
+          new GlobalConfigValidator(
+            globalConfig,
+            mockAccountsConfig,
+            mockIamConfig,
+            mockOrganizationConfig,
+            mockSecurityConfig,
+            mockConfigDir,
+          ),
+      ).toThrow(
+        'Account auto-enrollment requires AWS Control Tower Landing Zone version 3.1 or above. Current version: 3.0',
+      );
+    });
+
+    it('should fail when accountAutoEnrollment is enabled with version 2.9', () => {
+      const globalConfig = {
+        ...createGlobalConfig(),
+        controlTower: {
+          enable: true,
+          landingZone: {
+            version: '2.9',
+            accountAutoEnrollment: true,
+            logging: {
+              loggingBucketRetentionDays: 365,
+              accessLoggingBucketRetentionDays: 365,
+              organizationTrail: true,
+            },
+            security: {
+              enableIdentityCenterAccess: true,
+            },
+          },
+        },
+      } as GlobalConfig;
+
+      expect(
+        () =>
+          new GlobalConfigValidator(
+            globalConfig,
+            mockAccountsConfig,
+            mockIamConfig,
+            mockOrganizationConfig,
+            mockSecurityConfig,
+            mockConfigDir,
+          ),
+      ).toThrow(
+        'Account auto-enrollment requires AWS Control Tower Landing Zone version 3.1 or above. Current version: 2.9',
+      );
+    });
+
+    it('should pass when accountAutoEnrollment is not enabled with version 3.0', () => {
+      const globalConfig = {
+        ...createGlobalConfig(),
+        controlTower: {
+          enable: true,
+          landingZone: {
+            version: '3.0',
+            accountAutoEnrollment: false,
+            logging: {
+              loggingBucketRetentionDays: 365,
+              accessLoggingBucketRetentionDays: 365,
+              organizationTrail: true,
+            },
+            security: {
+              enableIdentityCenterAccess: true,
+            },
+          },
+        },
+      } as GlobalConfig;
+
+      expect(
+        () =>
+          new GlobalConfigValidator(
+            globalConfig,
+            mockAccountsConfig,
+            mockIamConfig,
+            mockOrganizationConfig,
+            mockSecurityConfig,
+            mockConfigDir,
+          ),
+      ).toBeDefined();
+    });
+
+    it('should pass when accountAutoEnrollment is undefined with version 3.0', () => {
+      const globalConfig = {
+        ...createGlobalConfig(),
+        controlTower: {
+          enable: true,
+          landingZone: {
+            version: '3.0',
+            logging: {
+              loggingBucketRetentionDays: 365,
+              accessLoggingBucketRetentionDays: 365,
+              organizationTrail: true,
+            },
+            security: {
+              enableIdentityCenterAccess: true,
+            },
+          },
+        },
+      } as GlobalConfig;
+
+      expect(
+        () =>
+          new GlobalConfigValidator(
+            globalConfig,
+            mockAccountsConfig,
+            mockIamConfig,
+            mockOrganizationConfig,
+            mockSecurityConfig,
+            mockConfigDir,
+          ),
+      ).toBeDefined();
+    });
+  });
 });
 
 function createSecurityConfig(delegatedAdminAccount = 'Audit'): Partial<SecurityConfig> {

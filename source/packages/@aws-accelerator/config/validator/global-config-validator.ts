@@ -1225,6 +1225,17 @@ export class GlobalConfigValidator {
         'The AWS ControlTower LandingZone configuration cannot be provided when the Organization enable property is set to false in organization-config.yaml file.',
       );
     }
+
+    // Validate account auto-enrollment version requirement
+    if (values.controlTower.landingZone?.accountAutoEnrollment) {
+      const version = parseFloat(values.controlTower.landingZone.version);
+      if (version < 3.1) {
+        errors.push(
+          `Account auto-enrollment requires AWS Control Tower Landing Zone version 3.1 or above. Current version: ${values.controlTower.landingZone.version}`,
+        );
+      }
+    }
+
     this.validateControlTowerControls(values, errors);
   }
 

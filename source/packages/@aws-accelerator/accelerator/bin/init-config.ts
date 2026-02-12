@@ -188,6 +188,11 @@ async function main(): Promise<void> {
 
     logger.info(`Using installer stack name for error reporting: ${installerStackName}`);
 
+    const controlTowerLandingZoneConfig: ControlTowerLandingZoneConfig = {
+      ...new ControlTowerLandingZoneConfig(),
+      accountAutoEnrollment: true,
+    };
+
     // Generate configs using shared function
     const result = generateConfigFiles({
       managementAccountEmail: config.managementEmail,
@@ -195,7 +200,7 @@ async function main(): Promise<void> {
       auditAccountEmail: config.auditEmail,
       homeRegion: config.region,
       controlTowerEnabled: config.controlTowerEnabled,
-      controlTowerLandingZoneConfig: config.controlTowerEnabled ? new ControlTowerLandingZoneConfig() : undefined,
+      controlTowerLandingZoneConfig: config.controlTowerEnabled ? controlTowerLandingZoneConfig : undefined,
       enableSingleAccountMode: config.singleAccountMode,
       installerStackName: installerStackName,
     });

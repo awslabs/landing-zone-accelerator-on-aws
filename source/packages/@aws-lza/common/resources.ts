@@ -215,6 +215,10 @@ export type ControlTowerLandingZoneDetailsType = {
    */
   version?: string;
   /**
+   *  Account Auto Enrollment of AWS Control Tower Landing Zone.
+   */
+  accountAutoEnrollment?: boolean;
+  /**
    *  The latest available version of AWS Control Tower Landing Zone.
    */
   latestAvailableVersion?: string;

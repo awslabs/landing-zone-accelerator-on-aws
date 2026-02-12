@@ -803,6 +803,11 @@
       "additionalProperties": false,
       "description": "## Control Tower Landing Zone Configuration\n\nConfigure the Control Tower Landing Zone's settings.\n\n**Key Features**\n- Specify the Landing Zone Version\n- Customize log retention to meet regulatory compliance\n- Manage Identity Center Access for Control Tower Landing Zone\n\n## Example ```yaml landingZone:   version: '3.3'   logging:     loggingBucketRetentionDays: 365     accessLoggingBucketRetentionDays: 365     organizationTrail: true   security:     enableIdentityCenterAccess: true ```",
       "properties": {
+        "accountAutoEnrollment": {
+          "default": false,
+          "description": "**Account Auto-Enrollment** *(Optional)*\n\nEnables automatic enrollment of accounts when moved between organizational units (OUs). When enabled, accounts moved into or between registered OUs automatically receive baseline resources and control configurations from the destination OU without creating inheritance drift.",
+          "type": "boolean"
+        },
         "logging": {
           "$ref": "#/definitions/IControlTowerLandingZoneLoggingConfig",
           "description": "**Logging Configuration** *(Required)*\n\n\n- **Retention Policies**: Configure log retention periods for compliance\n- **Organization Trail**: Enable organization-wide CloudTrail logging\n- **Access Logging**: Configure access log retention for audit trails"

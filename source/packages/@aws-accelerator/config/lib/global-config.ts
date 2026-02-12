@@ -197,6 +197,13 @@ export class ControlTowerLandingZoneConfig implements i.IControlTowerLandingZone
    *
    */
   readonly version: string = '4.0';
+
+  /**
+   * Account Auto-Enrollment configuration.
+   *
+   * @see {@link https://docs.aws.amazon.com/controltower/latest/userguide/account-auto-enrollment.html}
+   */
+  readonly accountAutoEnrollment?: boolean | undefined = undefined;
   /**
    * AWS Control Tower Landing Zone logging configuration
    *

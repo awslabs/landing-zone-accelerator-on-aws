@@ -1013,6 +1013,22 @@ export interface IControlTowerLandingZoneConfig {
   readonly version: string;
 
   /**
+   * **Account Auto-Enrollment** *(Optional)*
+   *
+   * Enables automatic enrollment of accounts when moved between organizational units (OUs).
+   * When enabled, accounts moved into or between registered OUs automatically receive baseline
+   * resources and control configurations from the destination OU without creating inheritance drift.
+   *
+   * @remarks
+   * The account auto-enrollment feature is available for landing zones of version 3.1 and above.
+   *
+   * @default false
+   *
+   * @see {@link https://docs.aws.amazon.com/controltower/latest/userguide/account-auto-enrollment.html}
+   */
+  readonly accountAutoEnrollment?: boolean | undefined;
+
+  /**
    * **Logging Configuration** *(Required)*
    *
    *
