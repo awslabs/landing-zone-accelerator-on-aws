@@ -534,10 +534,8 @@ release:artifact-al2023-prep:
     - arch:amd64
     - size:xlarge
   before_script:
-    # package needed to unzip code archive
-    - "dnf install -y zip"
-    # empty context is needed for build or else everything is copied
-    - "mkdir -p $CI_PROJECT_DIR/deployment/build/context_dir"
+    - dnf install nodejs22 tar gzip findutils -y
+    - npm install -g yarn
   image:
     # name: gcr.io/kaniko-project/executor:v1.20.0-debug
     name: public.ecr.aws/amazonlinux/amazonlinux:latest
@@ -545,20 +543,15 @@ release:artifact-al2023-prep:
       - ""
   script:
     # make the open source distributable code
-    - "cd $CI_PROJECT_DIR/deployment && ls -lart . && $CI_PROJECT_DIR/deployment/build-open-source-dist.sh lza"
+    - "export NODE_OPTIONS=--max_old_space_size=28672"
+    - "cd $CI_PROJECT_DIR/deployment && ls -lart . && $CI_PROJECT_DIR/deployment/build-s3-dist.sh lza $CI_COMMIT_TAG"
 
-    # Move and unzip code archive in empty context
-    - "unzip -q $CI_PROJECT_DIR/deployment/open-source/lza.zip -d $CI_PROJECT_DIR/deployment/build/context_dir/"
-    # move build file into empty context
-    - "mv $CI_PROJECT_DIR/container/build/Dockerfile $CI_PROJECT_DIR/deployment/build/context_dir/"
-    # move scripts into empty context
-    - "mv $CI_PROJECT_DIR/container/scripts $CI_PROJECT_DIR/deployment/build/context_dir/"
   artifacts:
     name: al2023_Prepare
     when: on_success
     untracked: true
     paths:
-      - $CI_PROJECT_DIR/deployment/build/context_dir/
+      - $CI_PROJECT_DIR/deployment/ecr/
   rules:
     - if: $CI_PROJECT_ID == "11925" && $CI_COMMIT_TAG =~ /v(\d.+){2}\d/
       when: always
@@ -577,12 +570,12 @@ release:artifact-al2023-build:
     name: gcr.io/kaniko-project/executor:v1.23.2-debug
     entrypoint: [""]
   script:
-    - /kaniko/executor --context $CI_PROJECT_DIR/deployment/build/context_dir/ --destination lza-$CI_COMMIT_TAG-al2023 --dockerfile $CI_PROJECT_DIR/deployment/build/context_dir/Dockerfile --tarPath $CI_PROJECT_DIR/deployment/build/context_dir/lza-$CI_COMMIT_TAG-al2023.tar.gz --no-push
+    - /kaniko/executor --context $CI_PROJECT_DIR/deployment/ecr/landing-zone-accelerator-on-aws/ --destination lza-$CI_COMMIT_TAG-al2023 --dockerfile $CI_PROJECT_DIR/deployment/ecr/landing-zone-accelerator-on-aws/Dockerfile --tarPath $CI_PROJECT_DIR/deployment/ecr/lza-$CI_COMMIT_TAG-al2023.tar.gz --no-push
   artifacts:
     name: al2023_build
     when: on_success
     paths:
-      - $CI_PROJECT_DIR/deployment/build/context_dir/lza-$CI_COMMIT_TAG-al2023.tar.gz
+      - $CI_PROJECT_DIR/deployment/ecr/lza-$CI_COMMIT_TAG-al2023.tar.gz
   rules:
     - if: $CI_PROJECT_ID == "11925" && $CI_COMMIT_TAG =~ /v(\d.+){2}\d/
       when: always
@@ -599,17 +592,17 @@ release:artifact-al2023-upload:
     TOKEN:
   before_script:
     # ensure file exists before upload
-    - ls -lart $CI_PROJECT_DIR/deployment/build/context_dir/lza-$CI_COMMIT_TAG-al2023.tar.gz
+    - ls -lart $CI_PROJECT_DIR/deployment/ecr/lza-$CI_COMMIT_TAG-al2023.tar.gz
   script:
     # uploads can only be to url/project/<project-id>/packages/generic/<package_name>/<version>/<package_file>
     # in local testing it was found that package_file must match.
     # For example, if the package file is named "test.tar.gz" then the upload url must be "url/project/<project-id>/packages/generic/<package_name>/<version>/test.tar.gz"
     - |
-      curl --header "JOB-TOKEN: ${CI_JOB_TOKEN}" --upload-file $CI_PROJECT_DIR/deployment/build/context_dir/lza-$CI_COMMIT_TAG-al2023.tar.gz "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/generic/lza-container/${CI_COMMIT_TAG}/lza-${CI_COMMIT_TAG}-al2023.tar.gz"
+      curl --header "JOB-TOKEN: ${CI_JOB_TOKEN}" --upload-file $CI_PROJECT_DIR/deployment/ecr/lza-$CI_COMMIT_TAG-al2023.tar.gz "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/generic/lza-container/${CI_COMMIT_TAG}/lza-${CI_COMMIT_TAG}-al2023.tar.gz"
     # this echo will help in release and also allow downloads from logs directly
     - echo "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/generic/lza-container/${CI_COMMIT_TAG}/lza-${CI_COMMIT_TAG}-al2023.tar.gz"
     # get sha1sum and add that to a file
-    - sha1sum $CI_PROJECT_DIR/deployment/build/context_dir/lza-$CI_COMMIT_TAG-al2023.tar.gz >> $CI_PROJECT_DIR/lza-$CI_COMMIT_TAG-al2023.tar.gz.sha1sum
+    - sha1sum $CI_PROJECT_DIR/deployment/ecr/lza-$CI_COMMIT_TAG-al2023.tar.gz >> $CI_PROJECT_DIR/lza-$CI_COMMIT_TAG-al2023.tar.gz.sha1sum
     - |
       curl --header "JOB-TOKEN: ${CI_JOB_TOKEN}" --upload-file $CI_PROJECT_DIR/lza-$CI_COMMIT_TAG-al2023.tar.gz.sha1sum "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/generic/lza-container/${CI_COMMIT_TAG}/lza-${CI_COMMIT_TAG}-al2023.tar.gz.sha1sum"
   rules:
