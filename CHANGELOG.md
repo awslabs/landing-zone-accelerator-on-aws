@@ -11,16 +11,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - feat(config): added support for yaml anchors in json schema
 - feat(container): add installer and deployment support
+- feat(container): add lza management account and organization unit to initial config
 - feat(control-tower): auto register OU after manifest changes
+- feat(control-tower): stop enrolling accounts with Service Catalog
+- feat(control-tower): support auto account enrollment
 - feat(guardduty): added support for S3 Malware Protection
+- feat(install): skip account id lookup for prepare
 - feat(networking): add multicast support for transit gateways
 - feat(networking): add optional SG referencing to TGW
 - feat(networking): added support for AWS Managed Rule Groups for AWS Network Firewall
 - feat(networking): add support for transit gateway flow logs
 - feat(pipeline): replace codestar notification with EventBridge and SNS
 - feat(security-hub): added support for AWS Security Hub automation rules
-- feat(control-tower): stop enrolling accounts with Service Catalog
-- feat(control-tower): support auto account enrollment
 
 ### Fixed
 
@@ -30,6 +32,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - fix(config): disable identity center for initial config
 - fix(config): disable identity center for pipeline env
 - fix(container): add cert path for aws sdk, nodejs calls
+- fix(container): prevent qualifier to be aws or ssm
+- fix(control-tower): allow setup landing zone with existing org account
 - fix(control-tower): change default ct version to 4.0
 - fix(control-tower): remove organization validation for sso
 - fix(installer-container): detect ECS task failures by checking container exit code
@@ -44,6 +48,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - fix(ssm): missing iam policy for put same account ssm param
 - fix(stack-policy): adds retries
 - fix(sts): add endpoint for eusc
+- fix(tagging): non config dependent stacks are missing accelerator tags
 - fix(v2-networking): reorder VPC stack dependencies to create subnet before security groups
 
 ### Changed
