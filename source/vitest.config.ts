@@ -21,6 +21,7 @@ export default defineConfig({
       'packages/@aws-accelerator/modules',
       'packages/@aws-accelerator/tools',
       'packages/@aws-accelerator/utils',
+      'packages/@aws-accelerator/cdk-utils',
       'packages/@aws-cdk-extensions/cdk-extensions',
       'packages/@aws-lza',
     ],

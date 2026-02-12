@@ -259,6 +259,11 @@ exports[`InstallerContainerStack > Construct(InstallerContainerStack): Default C
             ],
           ],
         },
+        "Tags": {
+          "Accelerator": {
+            "Ref": "AcceleratorPrefix",
+          },
+        },
         "Type": "String",
         "Value": {
           "Fn::GetAtt": [
@@ -398,6 +403,14 @@ exports[`InstallerContainerStack > Construct(InstallerContainerStack): Default C
           "IgnorePublicAcls": true,
           "RestrictPublicBuckets": true,
         },
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
         "VersioningConfiguration": {
           "Status": "Enabled",
         },
@@ -714,6 +727,14 @@ def handler(event, context):
             ],
           ],
         },
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
         "UpdateMethod": "NewVersion",
       },
       "Type": "AWS::SSM::Document",
@@ -748,6 +769,14 @@ def handler(event, context):
             ],
           ],
         },
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
       },
       "Type": "AWS::ECS::Cluster",
     },
@@ -789,6 +818,14 @@ def handler(event, context):
             ],
           },
         ],
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
       },
       "Type": "AWS::IAM::Role",
     },
@@ -828,6 +865,14 @@ def handler(event, context):
                 ":iam::aws:policy/AdministratorAccess",
               ],
             ],
+          },
+        ],
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
           },
         ],
       },
@@ -946,6 +991,14 @@ def handler(event, context):
           "IgnorePublicAcls": true,
           "RestrictPublicBuckets": true,
         },
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
         "VersioningConfiguration": {
           "Status": "Enabled",
         },
@@ -969,6 +1022,11 @@ def handler(event, context):
               "/installer-access-logs-bucket-name",
             ],
           ],
+        },
+        "Tags": {
+          "Accelerator": {
+            "Ref": "AcceleratorPrefix",
+          },
         },
         "Type": "String",
         "Value": {
@@ -1174,6 +1232,14 @@ def handler(event, context):
             },
           ],
         },
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
       },
       "Type": "AWS::KMS::Key",
       "UpdateReplacePolicy": "Retain",
@@ -1206,6 +1272,16 @@ def handler(event, context):
     },
     "InternetGateway": {
       "Condition": "CreateVpcCondition",
+      "Properties": {
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
+      },
       "Type": "AWS::EC2::InternetGateway",
     },
     "LogGroup": {
@@ -1226,6 +1302,14 @@ def handler(event, context):
           ],
         },
         "RetentionInDays": 365,
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
       },
       "Type": "AWS::Logs::LogGroup",
     },
@@ -1233,6 +1317,14 @@ def handler(event, context):
       "Condition": "CreateVpcCondition",
       "Properties": {
         "Domain": "vpc",
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
       },
       "Type": "AWS::EC2::EIP",
     },
@@ -1240,6 +1332,14 @@ def handler(event, context):
       "Condition": "CreateVpcCondition",
       "Properties": {
         "Domain": "vpc",
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
       },
       "Type": "AWS::EC2::EIP",
     },
@@ -1255,6 +1355,14 @@ def handler(event, context):
         "SubnetId": {
           "Ref": "PublicSubnet0",
         },
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
       },
       "Type": "AWS::EC2::NatGateway",
     },
@@ -1270,6 +1378,14 @@ def handler(event, context):
         "SubnetId": {
           "Ref": "PublicSubnet1",
         },
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
       },
       "Type": "AWS::EC2::NatGateway",
     },
@@ -1302,6 +1418,14 @@ def handler(event, context):
     "PrivateRouteTable0": {
       "Condition": "CreateVpcCondition",
       "Properties": {
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
         "VpcId": {
           "Ref": "Vpc",
         },
@@ -1311,6 +1435,14 @@ def handler(event, context):
     "PrivateRouteTable1": {
       "Condition": "CreateVpcCondition",
       "Properties": {
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
         "VpcId": {
           "Ref": "Vpc",
         },
@@ -1329,6 +1461,14 @@ def handler(event, context):
           ],
         },
         "CidrBlock": "10.0.10.0/24",
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
         "VpcId": {
           "Ref": "Vpc",
         },
@@ -1347,6 +1487,14 @@ def handler(event, context):
           ],
         },
         "CidrBlock": "10.0.11.0/24",
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
         "VpcId": {
           "Ref": "Vpc",
         },
@@ -1393,6 +1541,14 @@ def handler(event, context):
     "PublicRouteTable": {
       "Condition": "CreateVpcCondition",
       "Properties": {
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
         "VpcId": {
           "Ref": "Vpc",
         },
@@ -1411,6 +1567,14 @@ def handler(event, context):
           ],
         },
         "CidrBlock": "10.0.0.0/24",
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
         "VpcId": {
           "Ref": "Vpc",
         },
@@ -1429,6 +1593,14 @@ def handler(event, context):
           ],
         },
         "CidrBlock": "10.0.1.0/24",
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
         "VpcId": {
           "Ref": "Vpc",
         },
@@ -1656,6 +1828,14 @@ def handler(event, context):
           ],
         },
         "Runtime": "nodejs22.x",
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
       },
       "Type": "AWS::Lambda::Function",
     },
@@ -1699,6 +1879,14 @@ def handler(event, context):
                 ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
               ],
             ],
+          },
+        ],
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
           },
         ],
       },
@@ -1805,6 +1993,20 @@ def handler(event, context):
       "Condition": "CreateVpcCondition",
       "Properties": {
         "GroupDescription": "Security group for VPC",
+        "Tags": [
+          {
+            "Key": "Accel-P",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
         "VpcId": {
           "Ref": "Vpc",
         },
@@ -1873,6 +2075,14 @@ def handler(event, context):
             "PolicyName": "EcsRunTaskPolicy",
           },
         ],
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
       },
       "Type": "AWS::IAM::Role",
     },
@@ -1892,6 +2102,11 @@ def handler(event, context):
               "/TestInstallerContainerStack/version",
             ],
           ],
+        },
+        "Tags": {
+          "Accelerator": {
+            "Ref": "AcceleratorPrefix",
+          },
         },
         "Type": "String",
         "Value": "1.15.0-rc.7",
@@ -1914,6 +2129,11 @@ def handler(event, context):
               "/TestInstallerContainerStack/stack-id",
             ],
           ],
+        },
+        "Tags": {
+          "Accelerator": {
+            "Ref": "AcceleratorPrefix",
+          },
         },
         "Type": "String",
         "Value": {
@@ -2193,6 +2413,14 @@ def handler(event, context):
           "EC2",
           "FARGATE",
         ],
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
         "TaskRoleArn": {
           "Fn::GetAtt": [
             "EcsTaskRole",
@@ -2211,6 +2439,14 @@ def handler(event, context):
         "EnableDnsHostnames": true,
         "EnableDnsSupport": true,
         "InstanceTenancy": "default",
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
       },
       "Type": "AWS::EC2::VPC",
     },
@@ -2231,6 +2467,14 @@ def handler(event, context):
           "Ref": "Vpc",
         },
         "ResourceType": "VPC",
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
         "TrafficType": "ALL",
       },
       "Type": "AWS::EC2::FlowLog",
@@ -2253,6 +2497,14 @@ def handler(event, context):
           ],
         },
         "RetentionInDays": 365,
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
       },
       "Type": "AWS::Logs::LogGroup",
     },
@@ -2294,6 +2546,14 @@ def handler(event, context):
               "Version": "2012-10-17",
             },
             "PolicyName": "CloudWatchLogPolicy",
+          },
+        ],
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
           },
         ],
       },
@@ -2833,6 +3093,11 @@ exports[`InstallerContainerStack > Construct(InstallerContainerStack): Deploymen
             ],
           ],
         },
+        "Tags": {
+          "Accelerator": {
+            "Ref": "AcceleratorPrefix",
+          },
+        },
         "Type": "String",
         "Value": {
           "Fn::GetAtt": [
@@ -2963,6 +3228,14 @@ exports[`InstallerContainerStack > Construct(InstallerContainerStack): Deploymen
           "IgnorePublicAcls": true,
           "RestrictPublicBuckets": true,
         },
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
         "VersioningConfiguration": {
           "Status": "Enabled",
         },
@@ -3276,6 +3549,14 @@ def handler(event, context):
             ],
           ],
         },
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
         "UpdateMethod": "NewVersion",
       },
       "Type": "AWS::SSM::Document",
@@ -3307,6 +3588,14 @@ def handler(event, context):
             ],
           ],
         },
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
       },
       "Type": "AWS::ECS::Cluster",
     },
@@ -3348,6 +3637,14 @@ def handler(event, context):
             ],
           },
         ],
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
       },
       "Type": "AWS::IAM::Role",
     },
@@ -3387,6 +3684,14 @@ def handler(event, context):
                 ":iam::aws:policy/AdministratorAccess",
               ],
             ],
+          },
+        ],
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
           },
         ],
       },
@@ -3499,6 +3804,14 @@ def handler(event, context):
           "IgnorePublicAcls": true,
           "RestrictPublicBuckets": true,
         },
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
         "VersioningConfiguration": {
           "Status": "Enabled",
         },
@@ -3526,6 +3839,11 @@ def handler(event, context):
               "/installer-access-logs-bucket-name",
             ],
           ],
+        },
+        "Tags": {
+          "Accelerator": {
+            "Ref": "AcceleratorPrefix",
+          },
         },
         "Type": "String",
         "Value": {
@@ -3728,6 +4046,14 @@ def handler(event, context):
             },
           ],
         },
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
       },
       "Type": "AWS::KMS::Key",
       "UpdateReplacePolicy": "Retain",
@@ -3764,6 +4090,16 @@ def handler(event, context):
     },
     "InternetGateway": {
       "Condition": "CreateVpcCondition",
+      "Properties": {
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
+      },
       "Type": "AWS::EC2::InternetGateway",
     },
     "LogGroup": {
@@ -3781,6 +4117,14 @@ def handler(event, context):
           ],
         },
         "RetentionInDays": 365,
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
       },
       "Type": "AWS::Logs::LogGroup",
     },
@@ -3788,6 +4132,14 @@ def handler(event, context):
       "Condition": "CreateVpcCondition",
       "Properties": {
         "Domain": "vpc",
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
       },
       "Type": "AWS::EC2::EIP",
     },
@@ -3795,6 +4147,14 @@ def handler(event, context):
       "Condition": "CreateVpcCondition",
       "Properties": {
         "Domain": "vpc",
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
       },
       "Type": "AWS::EC2::EIP",
     },
@@ -3810,6 +4170,14 @@ def handler(event, context):
         "SubnetId": {
           "Ref": "PublicSubnet0",
         },
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
       },
       "Type": "AWS::EC2::NatGateway",
     },
@@ -3825,6 +4193,14 @@ def handler(event, context):
         "SubnetId": {
           "Ref": "PublicSubnet1",
         },
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
       },
       "Type": "AWS::EC2::NatGateway",
     },
@@ -3857,6 +4233,14 @@ def handler(event, context):
     "PrivateRouteTable0": {
       "Condition": "CreateVpcCondition",
       "Properties": {
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
         "VpcId": {
           "Ref": "Vpc",
         },
@@ -3866,6 +4250,14 @@ def handler(event, context):
     "PrivateRouteTable1": {
       "Condition": "CreateVpcCondition",
       "Properties": {
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
         "VpcId": {
           "Ref": "Vpc",
         },
@@ -3884,6 +4276,14 @@ def handler(event, context):
           ],
         },
         "CidrBlock": "10.0.10.0/24",
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
         "VpcId": {
           "Ref": "Vpc",
         },
@@ -3902,6 +4302,14 @@ def handler(event, context):
           ],
         },
         "CidrBlock": "10.0.11.0/24",
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
         "VpcId": {
           "Ref": "Vpc",
         },
@@ -3948,6 +4356,14 @@ def handler(event, context):
     "PublicRouteTable": {
       "Condition": "CreateVpcCondition",
       "Properties": {
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
         "VpcId": {
           "Ref": "Vpc",
         },
@@ -3966,6 +4382,14 @@ def handler(event, context):
           ],
         },
         "CidrBlock": "10.0.0.0/24",
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
         "VpcId": {
           "Ref": "Vpc",
         },
@@ -3984,6 +4408,14 @@ def handler(event, context):
           ],
         },
         "CidrBlock": "10.0.1.0/24",
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
         "VpcId": {
           "Ref": "Vpc",
         },
@@ -4226,6 +4658,14 @@ def handler(event, context):
           ],
         },
         "Runtime": "nodejs22.x",
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
       },
       "Type": "AWS::Lambda::Function",
     },
@@ -4269,6 +4709,14 @@ def handler(event, context):
                 ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
               ],
             ],
+          },
+        ],
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
           },
         ],
       },
@@ -4383,6 +4831,20 @@ def handler(event, context):
       "Condition": "CreateVpcCondition",
       "Properties": {
         "GroupDescription": "Security group for VPC",
+        "Tags": [
+          {
+            "Key": "Accel-P",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
         "VpcId": {
           "Ref": "Vpc",
         },
@@ -4451,6 +4913,14 @@ def handler(event, context):
             "PolicyName": "EcsRunTaskPolicy",
           },
         ],
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
       },
       "Type": "AWS::IAM::Role",
     },
@@ -4474,6 +4944,11 @@ def handler(event, context):
               "/TestInstallerContainerStackCombined/version",
             ],
           ],
+        },
+        "Tags": {
+          "Accelerator": {
+            "Ref": "AcceleratorPrefix",
+          },
         },
         "Type": "String",
         "Value": "1.15.0-rc.7",
@@ -4500,6 +4975,11 @@ def handler(event, context):
               "/TestInstallerContainerStackCombined/stack-id",
             ],
           ],
+        },
+        "Tags": {
+          "Accelerator": {
+            "Ref": "AcceleratorPrefix",
+          },
         },
         "Type": "String",
         "Value": {
@@ -4791,6 +5271,14 @@ def handler(event, context):
           "EC2",
           "FARGATE",
         ],
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
         "TaskRoleArn": {
           "Fn::GetAtt": [
             "EcsTaskRole",
@@ -4809,6 +5297,14 @@ def handler(event, context):
         "EnableDnsHostnames": true,
         "EnableDnsSupport": true,
         "InstanceTenancy": "default",
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
       },
       "Type": "AWS::EC2::VPC",
     },
@@ -4829,6 +5325,14 @@ def handler(event, context):
           "Ref": "Vpc",
         },
         "ResourceType": "VPC",
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
         "TrafficType": "ALL",
       },
       "Type": "AWS::EC2::FlowLog",
@@ -4848,6 +5352,14 @@ def handler(event, context):
           ],
         },
         "RetentionInDays": 365,
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
       },
       "Type": "AWS::Logs::LogGroup",
     },
@@ -4889,6 +5401,14 @@ def handler(event, context):
               "Version": "2012-10-17",
             },
             "PolicyName": "CloudWatchLogPolicy",
+          },
+        ],
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
           },
         ],
       },
@@ -5475,6 +5995,11 @@ exports[`InstallerContainerStack > Construct(InstallerContainerStack): Single Ac
             ],
           ],
         },
+        "Tags": {
+          "Accelerator": {
+            "Ref": "AcceleratorPrefix",
+          },
+        },
         "Type": "String",
         "Value": {
           "Fn::GetAtt": [
@@ -5614,6 +6139,14 @@ exports[`InstallerContainerStack > Construct(InstallerContainerStack): Single Ac
           "IgnorePublicAcls": true,
           "RestrictPublicBuckets": true,
         },
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
         "VersioningConfiguration": {
           "Status": "Enabled",
         },
@@ -5930,6 +6463,14 @@ def handler(event, context):
             ],
           ],
         },
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
         "UpdateMethod": "NewVersion",
       },
       "Type": "AWS::SSM::Document",
@@ -5964,6 +6505,14 @@ def handler(event, context):
             ],
           ],
         },
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
       },
       "Type": "AWS::ECS::Cluster",
     },
@@ -6005,6 +6554,14 @@ def handler(event, context):
             ],
           },
         ],
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
       },
       "Type": "AWS::IAM::Role",
     },
@@ -6044,6 +6601,14 @@ def handler(event, context):
                 ":iam::aws:policy/AdministratorAccess",
               ],
             ],
+          },
+        ],
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
           },
         ],
       },
@@ -6162,6 +6727,14 @@ def handler(event, context):
           "IgnorePublicAcls": true,
           "RestrictPublicBuckets": true,
         },
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
         "VersioningConfiguration": {
           "Status": "Enabled",
         },
@@ -6185,6 +6758,11 @@ def handler(event, context):
               "/installer-access-logs-bucket-name",
             ],
           ],
+        },
+        "Tags": {
+          "Accelerator": {
+            "Ref": "AcceleratorPrefix",
+          },
         },
         "Type": "String",
         "Value": {
@@ -6390,6 +6968,14 @@ def handler(event, context):
             },
           ],
         },
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
       },
       "Type": "AWS::KMS::Key",
       "UpdateReplacePolicy": "Retain",
@@ -6422,6 +7008,16 @@ def handler(event, context):
     },
     "InternetGateway": {
       "Condition": "CreateVpcCondition",
+      "Properties": {
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
+      },
       "Type": "AWS::EC2::InternetGateway",
     },
     "LogGroup": {
@@ -6442,6 +7038,14 @@ def handler(event, context):
           ],
         },
         "RetentionInDays": 365,
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
       },
       "Type": "AWS::Logs::LogGroup",
     },
@@ -6449,6 +7053,14 @@ def handler(event, context):
       "Condition": "CreateVpcCondition",
       "Properties": {
         "Domain": "vpc",
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
       },
       "Type": "AWS::EC2::EIP",
     },
@@ -6456,6 +7068,14 @@ def handler(event, context):
       "Condition": "CreateVpcCondition",
       "Properties": {
         "Domain": "vpc",
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
       },
       "Type": "AWS::EC2::EIP",
     },
@@ -6471,6 +7091,14 @@ def handler(event, context):
         "SubnetId": {
           "Ref": "PublicSubnet0",
         },
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
       },
       "Type": "AWS::EC2::NatGateway",
     },
@@ -6486,6 +7114,14 @@ def handler(event, context):
         "SubnetId": {
           "Ref": "PublicSubnet1",
         },
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
       },
       "Type": "AWS::EC2::NatGateway",
     },
@@ -6518,6 +7154,14 @@ def handler(event, context):
     "PrivateRouteTable0": {
       "Condition": "CreateVpcCondition",
       "Properties": {
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
         "VpcId": {
           "Ref": "Vpc",
         },
@@ -6527,6 +7171,14 @@ def handler(event, context):
     "PrivateRouteTable1": {
       "Condition": "CreateVpcCondition",
       "Properties": {
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
         "VpcId": {
           "Ref": "Vpc",
         },
@@ -6545,6 +7197,14 @@ def handler(event, context):
           ],
         },
         "CidrBlock": "10.0.10.0/24",
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
         "VpcId": {
           "Ref": "Vpc",
         },
@@ -6563,6 +7223,14 @@ def handler(event, context):
           ],
         },
         "CidrBlock": "10.0.11.0/24",
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
         "VpcId": {
           "Ref": "Vpc",
         },
@@ -6609,6 +7277,14 @@ def handler(event, context):
     "PublicRouteTable": {
       "Condition": "CreateVpcCondition",
       "Properties": {
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
         "VpcId": {
           "Ref": "Vpc",
         },
@@ -6627,6 +7303,14 @@ def handler(event, context):
           ],
         },
         "CidrBlock": "10.0.0.0/24",
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
         "VpcId": {
           "Ref": "Vpc",
         },
@@ -6645,6 +7329,14 @@ def handler(event, context):
           ],
         },
         "CidrBlock": "10.0.1.0/24",
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
         "VpcId": {
           "Ref": "Vpc",
         },
@@ -6872,6 +7564,14 @@ def handler(event, context):
           ],
         },
         "Runtime": "nodejs22.x",
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
       },
       "Type": "AWS::Lambda::Function",
     },
@@ -6915,6 +7615,14 @@ def handler(event, context):
                 ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
               ],
             ],
+          },
+        ],
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
           },
         ],
       },
@@ -7021,6 +7729,20 @@ def handler(event, context):
       "Condition": "CreateVpcCondition",
       "Properties": {
         "GroupDescription": "Security group for VPC",
+        "Tags": [
+          {
+            "Key": "Accel-P",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
         "VpcId": {
           "Ref": "Vpc",
         },
@@ -7089,6 +7811,14 @@ def handler(event, context):
             "PolicyName": "EcsRunTaskPolicy",
           },
         ],
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
       },
       "Type": "AWS::IAM::Role",
     },
@@ -7108,6 +7838,11 @@ def handler(event, context):
               "/TestInstallerContainerStackSingleAccount/version",
             ],
           ],
+        },
+        "Tags": {
+          "Accelerator": {
+            "Ref": "AcceleratorPrefix",
+          },
         },
         "Type": "String",
         "Value": "1.15.0-rc.7",
@@ -7130,6 +7865,11 @@ def handler(event, context):
               "/TestInstallerContainerStackSingleAccount/stack-id",
             ],
           ],
+        },
+        "Tags": {
+          "Accelerator": {
+            "Ref": "AcceleratorPrefix",
+          },
         },
         "Type": "String",
         "Value": {
@@ -7417,6 +8157,14 @@ def handler(event, context):
           "EC2",
           "FARGATE",
         ],
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
         "TaskRoleArn": {
           "Fn::GetAtt": [
             "EcsTaskRole",
@@ -7435,6 +8183,14 @@ def handler(event, context):
         "EnableDnsHostnames": true,
         "EnableDnsSupport": true,
         "InstanceTenancy": "default",
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
       },
       "Type": "AWS::EC2::VPC",
     },
@@ -7455,6 +8211,14 @@ def handler(event, context):
           "Ref": "Vpc",
         },
         "ResourceType": "VPC",
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
         "TrafficType": "ALL",
       },
       "Type": "AWS::EC2::FlowLog",
@@ -7477,6 +8241,14 @@ def handler(event, context):
           ],
         },
         "RetentionInDays": 365,
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
       },
       "Type": "AWS::Logs::LogGroup",
     },
@@ -7518,6 +8290,14 @@ def handler(event, context):
               "Version": "2012-10-17",
             },
             "PolicyName": "CloudWatchLogPolicy",
+          },
+        ],
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
           },
         ],
       },
@@ -8042,6 +8822,11 @@ exports[`InstallerContainerStack > Construct(InstallerContainerStack): With Exte
             ],
           ],
         },
+        "Tags": {
+          "Accelerator": {
+            "Ref": "AcceleratorPrefix",
+          },
+        },
         "Type": "String",
         "Value": {
           "Fn::GetAtt": [
@@ -8172,6 +8957,14 @@ exports[`InstallerContainerStack > Construct(InstallerContainerStack): With Exte
           "IgnorePublicAcls": true,
           "RestrictPublicBuckets": true,
         },
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
         "VersioningConfiguration": {
           "Status": "Enabled",
         },
@@ -8485,6 +9278,14 @@ def handler(event, context):
             ],
           ],
         },
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
         "UpdateMethod": "NewVersion",
       },
       "Type": "AWS::SSM::Document",
@@ -8516,6 +9317,14 @@ def handler(event, context):
             ],
           ],
         },
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
       },
       "Type": "AWS::ECS::Cluster",
     },
@@ -8557,6 +9366,14 @@ def handler(event, context):
             ],
           },
         ],
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
       },
       "Type": "AWS::IAM::Role",
     },
@@ -8596,6 +9413,14 @@ def handler(event, context):
                 ":iam::aws:policy/AdministratorAccess",
               ],
             ],
+          },
+        ],
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
           },
         ],
       },
@@ -8708,6 +9533,14 @@ def handler(event, context):
           "IgnorePublicAcls": true,
           "RestrictPublicBuckets": true,
         },
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
         "VersioningConfiguration": {
           "Status": "Enabled",
         },
@@ -8735,6 +9568,11 @@ def handler(event, context):
               "/installer-access-logs-bucket-name",
             ],
           ],
+        },
+        "Tags": {
+          "Accelerator": {
+            "Ref": "AcceleratorPrefix",
+          },
         },
         "Type": "String",
         "Value": {
@@ -8937,6 +9775,14 @@ def handler(event, context):
             },
           ],
         },
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
       },
       "Type": "AWS::KMS::Key",
       "UpdateReplacePolicy": "Retain",
@@ -8973,6 +9819,16 @@ def handler(event, context):
     },
     "InternetGateway": {
       "Condition": "CreateVpcCondition",
+      "Properties": {
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
+      },
       "Type": "AWS::EC2::InternetGateway",
     },
     "LogGroup": {
@@ -8990,6 +9846,14 @@ def handler(event, context):
           ],
         },
         "RetentionInDays": 365,
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
       },
       "Type": "AWS::Logs::LogGroup",
     },
@@ -8997,6 +9861,14 @@ def handler(event, context):
       "Condition": "CreateVpcCondition",
       "Properties": {
         "Domain": "vpc",
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
       },
       "Type": "AWS::EC2::EIP",
     },
@@ -9004,6 +9876,14 @@ def handler(event, context):
       "Condition": "CreateVpcCondition",
       "Properties": {
         "Domain": "vpc",
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
       },
       "Type": "AWS::EC2::EIP",
     },
@@ -9019,6 +9899,14 @@ def handler(event, context):
         "SubnetId": {
           "Ref": "PublicSubnet0",
         },
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
       },
       "Type": "AWS::EC2::NatGateway",
     },
@@ -9034,6 +9922,14 @@ def handler(event, context):
         "SubnetId": {
           "Ref": "PublicSubnet1",
         },
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
       },
       "Type": "AWS::EC2::NatGateway",
     },
@@ -9066,6 +9962,14 @@ def handler(event, context):
     "PrivateRouteTable0": {
       "Condition": "CreateVpcCondition",
       "Properties": {
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
         "VpcId": {
           "Ref": "Vpc",
         },
@@ -9075,6 +9979,14 @@ def handler(event, context):
     "PrivateRouteTable1": {
       "Condition": "CreateVpcCondition",
       "Properties": {
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
         "VpcId": {
           "Ref": "Vpc",
         },
@@ -9093,6 +10005,14 @@ def handler(event, context):
           ],
         },
         "CidrBlock": "10.0.10.0/24",
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
         "VpcId": {
           "Ref": "Vpc",
         },
@@ -9111,6 +10031,14 @@ def handler(event, context):
           ],
         },
         "CidrBlock": "10.0.11.0/24",
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
         "VpcId": {
           "Ref": "Vpc",
         },
@@ -9157,6 +10085,14 @@ def handler(event, context):
     "PublicRouteTable": {
       "Condition": "CreateVpcCondition",
       "Properties": {
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
         "VpcId": {
           "Ref": "Vpc",
         },
@@ -9175,6 +10111,14 @@ def handler(event, context):
           ],
         },
         "CidrBlock": "10.0.0.0/24",
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
         "VpcId": {
           "Ref": "Vpc",
         },
@@ -9193,6 +10137,14 @@ def handler(event, context):
           ],
         },
         "CidrBlock": "10.0.1.0/24",
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
         "VpcId": {
           "Ref": "Vpc",
         },
@@ -9435,6 +10387,14 @@ def handler(event, context):
           ],
         },
         "Runtime": "nodejs22.x",
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
       },
       "Type": "AWS::Lambda::Function",
     },
@@ -9478,6 +10438,14 @@ def handler(event, context):
                 ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
               ],
             ],
+          },
+        ],
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
           },
         ],
       },
@@ -9592,6 +10560,20 @@ def handler(event, context):
       "Condition": "CreateVpcCondition",
       "Properties": {
         "GroupDescription": "Security group for VPC",
+        "Tags": [
+          {
+            "Key": "Accel-P",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
         "VpcId": {
           "Ref": "Vpc",
         },
@@ -9660,6 +10642,14 @@ def handler(event, context):
             "PolicyName": "EcsRunTaskPolicy",
           },
         ],
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
       },
       "Type": "AWS::IAM::Role",
     },
@@ -9683,6 +10673,11 @@ def handler(event, context):
               "/TestInstallerContainerStackExternal/version",
             ],
           ],
+        },
+        "Tags": {
+          "Accelerator": {
+            "Ref": "AcceleratorPrefix",
+          },
         },
         "Type": "String",
         "Value": "1.15.0-rc.7",
@@ -9709,6 +10704,11 @@ def handler(event, context):
               "/TestInstallerContainerStackExternal/stack-id",
             ],
           ],
+        },
+        "Tags": {
+          "Accelerator": {
+            "Ref": "AcceleratorPrefix",
+          },
         },
         "Type": "String",
         "Value": {
@@ -9994,6 +10994,14 @@ def handler(event, context):
           "EC2",
           "FARGATE",
         ],
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
         "TaskRoleArn": {
           "Fn::GetAtt": [
             "EcsTaskRole",
@@ -10012,6 +11020,14 @@ def handler(event, context):
         "EnableDnsHostnames": true,
         "EnableDnsSupport": true,
         "InstanceTenancy": "default",
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
       },
       "Type": "AWS::EC2::VPC",
     },
@@ -10032,6 +11048,14 @@ def handler(event, context):
           "Ref": "Vpc",
         },
         "ResourceType": "VPC",
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
         "TrafficType": "ALL",
       },
       "Type": "AWS::EC2::FlowLog",
@@ -10051,6 +11075,14 @@ def handler(event, context):
           ],
         },
         "RetentionInDays": 365,
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
       },
       "Type": "AWS::Logs::LogGroup",
     },
@@ -10092,6 +11124,14 @@ def handler(event, context):
               "Version": "2012-10-17",
             },
             "PolicyName": "CloudWatchLogPolicy",
+          },
+        ],
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
           },
         ],
       },
@@ -10693,6 +11733,11 @@ exports[`InstallerContainerStack > Construct(InstallerContainerStack): With Perm
             ],
           ],
         },
+        "Tags": {
+          "Accelerator": {
+            "Ref": "AcceleratorPrefix",
+          },
+        },
         "Type": "String",
         "Value": {
           "Fn::GetAtt": [
@@ -10832,6 +11877,14 @@ exports[`InstallerContainerStack > Construct(InstallerContainerStack): With Perm
           "IgnorePublicAcls": true,
           "RestrictPublicBuckets": true,
         },
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
         "VersioningConfiguration": {
           "Status": "Enabled",
         },
@@ -11148,6 +12201,14 @@ def handler(event, context):
             ],
           ],
         },
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
         "UpdateMethod": "NewVersion",
       },
       "Type": "AWS::SSM::Document",
@@ -11182,6 +12243,14 @@ def handler(event, context):
             ],
           ],
         },
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
       },
       "Type": "AWS::ECS::Cluster",
     },
@@ -11223,6 +12292,14 @@ def handler(event, context):
             ],
           },
         ],
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
       },
       "Type": "AWS::IAM::Role",
     },
@@ -11262,6 +12339,14 @@ def handler(event, context):
                 ":iam::aws:policy/AdministratorAccess",
               ],
             ],
+          },
+        ],
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
           },
         ],
       },
@@ -11380,6 +12465,14 @@ def handler(event, context):
           "IgnorePublicAcls": true,
           "RestrictPublicBuckets": true,
         },
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
         "VersioningConfiguration": {
           "Status": "Enabled",
         },
@@ -11403,6 +12496,11 @@ def handler(event, context):
               "/installer-access-logs-bucket-name",
             ],
           ],
+        },
+        "Tags": {
+          "Accelerator": {
+            "Ref": "AcceleratorPrefix",
+          },
         },
         "Type": "String",
         "Value": {
@@ -11608,6 +12706,14 @@ def handler(event, context):
             },
           ],
         },
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
       },
       "Type": "AWS::KMS::Key",
       "UpdateReplacePolicy": "Retain",
@@ -11640,6 +12746,16 @@ def handler(event, context):
     },
     "InternetGateway": {
       "Condition": "CreateVpcCondition",
+      "Properties": {
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
+      },
       "Type": "AWS::EC2::InternetGateway",
     },
     "LogGroup": {
@@ -11660,6 +12776,14 @@ def handler(event, context):
           ],
         },
         "RetentionInDays": 365,
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
       },
       "Type": "AWS::Logs::LogGroup",
     },
@@ -11667,6 +12791,14 @@ def handler(event, context):
       "Condition": "CreateVpcCondition",
       "Properties": {
         "Domain": "vpc",
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
       },
       "Type": "AWS::EC2::EIP",
     },
@@ -11674,6 +12806,14 @@ def handler(event, context):
       "Condition": "CreateVpcCondition",
       "Properties": {
         "Domain": "vpc",
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
       },
       "Type": "AWS::EC2::EIP",
     },
@@ -11689,6 +12829,14 @@ def handler(event, context):
         "SubnetId": {
           "Ref": "PublicSubnet0",
         },
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
       },
       "Type": "AWS::EC2::NatGateway",
     },
@@ -11704,6 +12852,14 @@ def handler(event, context):
         "SubnetId": {
           "Ref": "PublicSubnet1",
         },
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
       },
       "Type": "AWS::EC2::NatGateway",
     },
@@ -11736,6 +12892,14 @@ def handler(event, context):
     "PrivateRouteTable0": {
       "Condition": "CreateVpcCondition",
       "Properties": {
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
         "VpcId": {
           "Ref": "Vpc",
         },
@@ -11745,6 +12909,14 @@ def handler(event, context):
     "PrivateRouteTable1": {
       "Condition": "CreateVpcCondition",
       "Properties": {
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
         "VpcId": {
           "Ref": "Vpc",
         },
@@ -11763,6 +12935,14 @@ def handler(event, context):
           ],
         },
         "CidrBlock": "10.0.10.0/24",
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
         "VpcId": {
           "Ref": "Vpc",
         },
@@ -11781,6 +12961,14 @@ def handler(event, context):
           ],
         },
         "CidrBlock": "10.0.11.0/24",
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
         "VpcId": {
           "Ref": "Vpc",
         },
@@ -11827,6 +13015,14 @@ def handler(event, context):
     "PublicRouteTable": {
       "Condition": "CreateVpcCondition",
       "Properties": {
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
         "VpcId": {
           "Ref": "Vpc",
         },
@@ -11845,6 +13041,14 @@ def handler(event, context):
           ],
         },
         "CidrBlock": "10.0.0.0/24",
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
         "VpcId": {
           "Ref": "Vpc",
         },
@@ -11863,6 +13067,14 @@ def handler(event, context):
           ],
         },
         "CidrBlock": "10.0.1.0/24",
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
         "VpcId": {
           "Ref": "Vpc",
         },
@@ -12090,6 +13302,14 @@ def handler(event, context):
           ],
         },
         "Runtime": "nodejs22.x",
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
       },
       "Type": "AWS::Lambda::Function",
     },
@@ -12133,6 +13353,14 @@ def handler(event, context):
                 ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
               ],
             ],
+          },
+        ],
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
           },
         ],
       },
@@ -12239,6 +13467,20 @@ def handler(event, context):
       "Condition": "CreateVpcCondition",
       "Properties": {
         "GroupDescription": "Security group for VPC",
+        "Tags": [
+          {
+            "Key": "Accel-P",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
         "VpcId": {
           "Ref": "Vpc",
         },
@@ -12307,6 +13549,14 @@ def handler(event, context):
             "PolicyName": "EcsRunTaskPolicy",
           },
         ],
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
       },
       "Type": "AWS::IAM::Role",
     },
@@ -12326,6 +13576,11 @@ def handler(event, context):
               "/TestInstallerContainerStackPermBoundary/version",
             ],
           ],
+        },
+        "Tags": {
+          "Accelerator": {
+            "Ref": "AcceleratorPrefix",
+          },
         },
         "Type": "String",
         "Value": "1.15.0-rc.7",
@@ -12348,6 +13603,11 @@ def handler(event, context):
               "/TestInstallerContainerStackPermBoundary/stack-id",
             ],
           ],
+        },
+        "Tags": {
+          "Accelerator": {
+            "Ref": "AcceleratorPrefix",
+          },
         },
         "Type": "String",
         "Value": {
@@ -12633,6 +13893,14 @@ def handler(event, context):
           "EC2",
           "FARGATE",
         ],
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
         "TaskRoleArn": {
           "Fn::GetAtt": [
             "EcsTaskRole",
@@ -12651,6 +13919,14 @@ def handler(event, context):
         "EnableDnsHostnames": true,
         "EnableDnsSupport": true,
         "InstanceTenancy": "default",
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
       },
       "Type": "AWS::EC2::VPC",
     },
@@ -12671,6 +13947,14 @@ def handler(event, context):
           "Ref": "Vpc",
         },
         "ResourceType": "VPC",
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
         "TrafficType": "ALL",
       },
       "Type": "AWS::EC2::FlowLog",
@@ -12693,6 +13977,14 @@ def handler(event, context):
           ],
         },
         "RetentionInDays": 365,
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
       },
       "Type": "AWS::Logs::LogGroup",
     },
@@ -12734,6 +14026,14 @@ def handler(event, context):
               "Version": "2012-10-17",
             },
             "PolicyName": "CloudWatchLogPolicy",
+          },
+        ],
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
           },
         ],
       },
@@ -13221,6 +14521,11 @@ exports[`InstallerContainerStack > Construct(InstallerContainerStack): With S3 S
             ],
           ],
         },
+        "Tags": {
+          "Accelerator": {
+            "Ref": "AcceleratorPrefix",
+          },
+        },
         "Type": "String",
         "Value": {
           "Fn::GetAtt": [
@@ -13360,6 +14665,14 @@ exports[`InstallerContainerStack > Construct(InstallerContainerStack): With S3 S
           "IgnorePublicAcls": true,
           "RestrictPublicBuckets": true,
         },
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
         "VersioningConfiguration": {
           "Status": "Enabled",
         },
@@ -13676,6 +14989,14 @@ def handler(event, context):
             ],
           ],
         },
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
         "UpdateMethod": "NewVersion",
       },
       "Type": "AWS::SSM::Document",
@@ -13710,6 +15031,14 @@ def handler(event, context):
             ],
           ],
         },
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
       },
       "Type": "AWS::ECS::Cluster",
     },
@@ -13751,6 +15080,14 @@ def handler(event, context):
             ],
           },
         ],
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
       },
       "Type": "AWS::IAM::Role",
     },
@@ -13790,6 +15127,14 @@ def handler(event, context):
                 ":iam::aws:policy/AdministratorAccess",
               ],
             ],
+          },
+        ],
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
           },
         ],
       },
@@ -13908,6 +15253,14 @@ def handler(event, context):
           "IgnorePublicAcls": true,
           "RestrictPublicBuckets": true,
         },
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
         "VersioningConfiguration": {
           "Status": "Enabled",
         },
@@ -13931,6 +15284,11 @@ def handler(event, context):
               "/installer-access-logs-bucket-name",
             ],
           ],
+        },
+        "Tags": {
+          "Accelerator": {
+            "Ref": "AcceleratorPrefix",
+          },
         },
         "Type": "String",
         "Value": {
@@ -14136,6 +15494,14 @@ def handler(event, context):
             },
           ],
         },
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
       },
       "Type": "AWS::KMS::Key",
       "UpdateReplacePolicy": "Retain",
@@ -14168,6 +15534,16 @@ def handler(event, context):
     },
     "InternetGateway": {
       "Condition": "CreateVpcCondition",
+      "Properties": {
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
+      },
       "Type": "AWS::EC2::InternetGateway",
     },
     "LogGroup": {
@@ -14188,6 +15564,14 @@ def handler(event, context):
           ],
         },
         "RetentionInDays": 365,
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
       },
       "Type": "AWS::Logs::LogGroup",
     },
@@ -14195,6 +15579,14 @@ def handler(event, context):
       "Condition": "CreateVpcCondition",
       "Properties": {
         "Domain": "vpc",
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
       },
       "Type": "AWS::EC2::EIP",
     },
@@ -14202,6 +15594,14 @@ def handler(event, context):
       "Condition": "CreateVpcCondition",
       "Properties": {
         "Domain": "vpc",
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
       },
       "Type": "AWS::EC2::EIP",
     },
@@ -14217,6 +15617,14 @@ def handler(event, context):
         "SubnetId": {
           "Ref": "PublicSubnet0",
         },
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
       },
       "Type": "AWS::EC2::NatGateway",
     },
@@ -14232,6 +15640,14 @@ def handler(event, context):
         "SubnetId": {
           "Ref": "PublicSubnet1",
         },
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
       },
       "Type": "AWS::EC2::NatGateway",
     },
@@ -14264,6 +15680,14 @@ def handler(event, context):
     "PrivateRouteTable0": {
       "Condition": "CreateVpcCondition",
       "Properties": {
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
         "VpcId": {
           "Ref": "Vpc",
         },
@@ -14273,6 +15697,14 @@ def handler(event, context):
     "PrivateRouteTable1": {
       "Condition": "CreateVpcCondition",
       "Properties": {
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
         "VpcId": {
           "Ref": "Vpc",
         },
@@ -14291,6 +15723,14 @@ def handler(event, context):
           ],
         },
         "CidrBlock": "10.0.10.0/24",
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
         "VpcId": {
           "Ref": "Vpc",
         },
@@ -14309,6 +15749,14 @@ def handler(event, context):
           ],
         },
         "CidrBlock": "10.0.11.0/24",
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
         "VpcId": {
           "Ref": "Vpc",
         },
@@ -14355,6 +15803,14 @@ def handler(event, context):
     "PublicRouteTable": {
       "Condition": "CreateVpcCondition",
       "Properties": {
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
         "VpcId": {
           "Ref": "Vpc",
         },
@@ -14373,6 +15829,14 @@ def handler(event, context):
           ],
         },
         "CidrBlock": "10.0.0.0/24",
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
         "VpcId": {
           "Ref": "Vpc",
         },
@@ -14391,6 +15855,14 @@ def handler(event, context):
           ],
         },
         "CidrBlock": "10.0.1.0/24",
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
         "VpcId": {
           "Ref": "Vpc",
         },
@@ -14618,6 +16090,14 @@ def handler(event, context):
           ],
         },
         "Runtime": "nodejs22.x",
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
       },
       "Type": "AWS::Lambda::Function",
     },
@@ -14661,6 +16141,14 @@ def handler(event, context):
                 ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
               ],
             ],
+          },
+        ],
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
           },
         ],
       },
@@ -14767,6 +16255,20 @@ def handler(event, context):
       "Condition": "CreateVpcCondition",
       "Properties": {
         "GroupDescription": "Security group for VPC",
+        "Tags": [
+          {
+            "Key": "Accel-P",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
         "VpcId": {
           "Ref": "Vpc",
         },
@@ -14835,6 +16337,14 @@ def handler(event, context):
             "PolicyName": "EcsRunTaskPolicy",
           },
         ],
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
       },
       "Type": "AWS::IAM::Role",
     },
@@ -14854,6 +16364,11 @@ def handler(event, context):
               "/TestInstallerContainerStackS3/version",
             ],
           ],
+        },
+        "Tags": {
+          "Accelerator": {
+            "Ref": "AcceleratorPrefix",
+          },
         },
         "Type": "String",
         "Value": "1.15.0-rc.7",
@@ -14876,6 +16391,11 @@ def handler(event, context):
               "/TestInstallerContainerStackS3/stack-id",
             ],
           ],
+        },
+        "Tags": {
+          "Accelerator": {
+            "Ref": "AcceleratorPrefix",
+          },
         },
         "Type": "String",
         "Value": {
@@ -15155,6 +16675,14 @@ def handler(event, context):
           "EC2",
           "FARGATE",
         ],
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
         "TaskRoleArn": {
           "Fn::GetAtt": [
             "EcsTaskRole",
@@ -15173,6 +16701,14 @@ def handler(event, context):
         "EnableDnsHostnames": true,
         "EnableDnsSupport": true,
         "InstanceTenancy": "default",
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
       },
       "Type": "AWS::EC2::VPC",
     },
@@ -15193,6 +16729,14 @@ def handler(event, context):
           "Ref": "Vpc",
         },
         "ResourceType": "VPC",
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
         "TrafficType": "ALL",
       },
       "Type": "AWS::EC2::FlowLog",
@@ -15215,6 +16759,14 @@ def handler(event, context):
           ],
         },
         "RetentionInDays": 365,
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
       },
       "Type": "AWS::Logs::LogGroup",
     },
@@ -15256,6 +16808,14 @@ def handler(event, context):
               "Version": "2012-10-17",
             },
             "PolicyName": "CloudWatchLogPolicy",
+          },
+        ],
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
           },
         ],
       },

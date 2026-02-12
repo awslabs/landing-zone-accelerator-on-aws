@@ -24,6 +24,7 @@ import { ResourceNamePrefixes } from './resource-name-prefixes';
 import { SolutionHelper } from './solutions-helper';
 import { Validate } from './validate';
 import { LzaLambdaRuntime } from '@aws-accelerator/utils/lib/lambda';
+import { addAcceleratorTags } from '@aws-accelerator/cdk-utils';
 
 export enum RepositorySources {
   GITHUB = 'github',
@@ -1553,6 +1554,8 @@ export class InstallerStack extends cdk.Stack {
         },
       ]);
     }
+
+    addAcceleratorTags(this, cdk.Stack.of(this).partition, [], this.acceleratorPrefix.valueAsString);
   }
 
   /**

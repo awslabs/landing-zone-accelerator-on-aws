@@ -17,15 +17,18 @@ import 'source-map-support/register';
 import { version } from '../../../../package.json';
 import * as cdk from 'aws-cdk-lib';
 import { GovCloudAccountVendingStack } from '../lib/govcloud-avm-stack';
+import { addAcceleratorTags } from '@aws-accelerator/cdk-utils';
 
 // Set accelerator prefix environment variable
 const acceleratorPrefix = process.env['ACCELERATOR_PREFIX'] ?? 'AWSAccelerator';
 
 const app = new cdk.App();
-new GovCloudAccountVendingStack(app, `${acceleratorPrefix}-GovCloudAccountVending`, {
+const stack = new GovCloudAccountVendingStack(app, `${acceleratorPrefix}-GovCloudAccountVending`, {
   description: `(SO0199-govcloudavm) Landing Zone Accelerator on AWS. Version ${version}.`,
   synthesizer: new cdk.DefaultStackSynthesizer({
     generateBootstrapVersionRule: false,
   }),
   acceleratorPrefix: acceleratorPrefix,
 });
+
+addAcceleratorTags(stack, cdk.Stack.of(stack).partition, [], acceleratorPrefix);

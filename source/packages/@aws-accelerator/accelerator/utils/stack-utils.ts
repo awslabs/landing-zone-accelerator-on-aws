@@ -11,11 +11,10 @@
  *  and limitations under the License.
  */
 
-import { ASEAMapping, AseaResourceMapping, GlobalConfig } from '@aws-accelerator/config';
+import { ASEAMapping, AseaResourceMapping } from '@aws-accelerator/config';
 import { createLogger, setRetryStrategy, throttlingBackOff } from '@aws-accelerator/utils';
 import * as cdk from 'aws-cdk-lib';
 import { AwsSolutionsChecks, NagSuppressions } from 'cdk-nag';
-import { IConstruct } from 'constructs';
 import { version } from '../../../../package.json';
 import { AcceleratorStackNames } from '../lib/accelerator';
 import { AcceleratorStage } from '../lib/accelerator-stage';
@@ -52,9 +51,9 @@ import { DiagnosticsPackStack } from '../lib/stacks/diagnostics-pack-stack';
 import { AcceleratorToolkit } from '../lib/toolkit';
 import { AssumeRoleCommand, GetCallerIdentityCommand, STSClient } from '@aws-sdk/client-sts';
 import { ControlTowerClient, ListLandingZonesCommand } from '@aws-sdk/client-controltower';
-import { CfnResource } from 'aws-cdk-lib';
 import { createAndGetV2NetworkVpcDependencyStacks } from '../lib/stacks/v2-network/utils/functions';
 import { GuardDutyMalwareStack } from '../lib/stacks/security-guardduty-malware-stack';
+import { addAcceleratorTags } from '@aws-accelerator/cdk-utils';
 
 const logger = createLogger(['stack-utils']);
 /**
@@ -114,168 +113,6 @@ function getInstallerSynthesizer(partition: string, accountId: string, prefix: s
     fileAssetPublishingRoleArn: deploymentRoleArn,
     qualifier: 'accel',
   });
-}
-/**
- * This function is required rather than using an Aspect class for two reasons:
- * 1. Some resources do not support tag updates
- * 2. Using Aspects for stacks that use the fs.writeFileSync() operation
- * causes the application to quit during stack synthesis
- * @param node
- * @param partition
- * @param globalConfig
- * @param acceleratorPrefix
- */
-export function addAcceleratorTags(
-  node: IConstruct,
-  partition: string,
-  globalConfig: GlobalConfig,
-  acceleratorPrefix: string,
-): void {
-  if (partition === 'aws-iso' || partition === 'aws-iso-b') {
-    return;
-  }
-  // Resource types that do not support tag updates
-  const excludeResourceTypes = [
-    'AWS::EC2::TransitGatewayRouteTable',
-    'AWS::Route53Resolver::FirewallDomainList',
-    'AWS::Route53Resolver::ResolverEndpoint',
-    'AWS::Route53Resolver::ResolverRule',
-    'AWS::Route53Resolver::ResolverQueryLoggingConfig',
-    'AWS::Events::Rule',
-    'AWS::Lambda::EventSourceMapping',
-  ];
-
-  const tagsWithPrefix = globalConfig.tags;
-  const acceleratorTag = tagsWithPrefix.find(tag => tag.key === 'Accelerator');
-  if (!acceleratorTag) {
-    tagsWithPrefix.push({
-      key: 'Accelerator',
-      value: acceleratorPrefix,
-    });
-  }
-
-  for (const resource of node.node.findAll()) {
-    if (resource instanceof cdk.CfnResource && !excludeResourceTypes.includes(resource.cfnResourceType)) {
-      if (resource instanceof cdk.aws_ec2.CfnTransitGateway && partition !== 'aws') {
-        continue;
-      }
-      if (resource.cfnResourceType === 'AWS::EC2::SecurityGroup') {
-        new cdk.Tag('Accel-P', acceleratorPrefix).visit(resource);
-      }
-      new cdk.Tag('Accelerator', acceleratorPrefix).visit(resource);
-
-      if (globalConfig?.tags) {
-        globalConfig.tags.forEach(t => {
-          new cdk.Tag(t.key, t.value).visit(resource);
-        });
-      }
-
-      if (resource.cfnResourceType === 'Custom::SsmPutParameterValue') {
-        addTagsToPutSsmParameterResource(resource, tagsWithPrefix);
-      }
-    }
-
-    if (resource instanceof cdk.CustomResourceProvider) {
-      tagCustomResourceLambda(resource, tagsWithPrefix);
-      tagCustomResourceRole(resource, tagsWithPrefix);
-    }
-  }
-}
-
-/**
- * Tags the IAM Role associated with a custom resource provider.
- * @param customResource - The custom resource provider whose role needs to be tagged
- * @param tags - Array of key-value pairs to be applied as tags to the role
- * @returns void
- */
-export function tagCustomResourceRole(
-  customResource: cdk.CustomResourceProvider,
-  tags: { key: string; value: string }[],
-): void {
-  try {
-    const customResourceRole = customResource.node.findChild('Role') as CfnResource;
-    if (customResourceRole) {
-      setTagsForChildResources(customResourceRole, tags);
-    }
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  } catch (e) {
-    logger.info(`No child node for role associated with ${tagCustomResourceRole.name}`);
-    return;
-  }
-}
-
-/**
- * Tags the Lambda function associated with a custom resource provider.
- * @param customResource - The custom resource provider whose Lambda function needs to be tagged
- * @param tags - Array of key-value pairs to be applied as tags to the Lambda function
- * @returns void
- */
-export function tagCustomResourceLambda(
-  customResource: cdk.CustomResourceProvider,
-  tags: { key: string; value: string }[],
-): void {
-  try {
-    const lambdaHandler = customResource.node.findChild('Handler') as CfnResource;
-    if (lambdaHandler) {
-      setTagsForChildResources(lambdaHandler, tags);
-    }
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  } catch (e) {
-    logger.info(`No child node for lambda associated with ${tagCustomResourceLambda.name}`);
-  }
-}
-
-/**
- * Adds tags to a CloudFormation resource, applying alphabetical ordering.
- * @param resource - The CloudFormation resource to tag
- * @param tags - Array of key-value pairs to be applied as tags
- */
-export function setTagsForChildResources(resource: CfnResource, tags: { key: string; value: string }[]): void {
-  if (!tags || tags.length === 0) {
-    return;
-  }
-
-  // Convert tags to CloudFormation format and sort by key
-  const formattedTags = tags
-    .map(tag => ({
-      Key: tag.key,
-      Value: tag.value,
-    }))
-    .sort((a, b) => a.Key.localeCompare(b.Key));
-
-  resource.addPropertyOverride('Tags', formattedTags);
-}
-
-/**
- * Adds tags to PutSsmParameter custom resource parameters
- * @param resource - The PutSsmParameter custom resource
- * @param tags - Array of key-value pairs to be applied as tags
- */
-export function addTagsToPutSsmParameterResource(resource: CfnResource, tags: { key: string; value: string }[]): void {
-  if (!tags || tags.length === 0) {
-    return;
-  }
-
-  // Convert tags to Record<string, string> format
-  const tagsRecord: Record<string, string> = {};
-  tags.forEach(tag => {
-    tagsRecord[tag.key] = tag.value;
-  });
-
-  // Get the existing parameters from the custom resource properties
-  try {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const existingParameters = (resource as any)._cfnProperties?.parameters;
-
-    if (Array.isArray(existingParameters)) {
-      existingParameters.forEach((param: { tags?: Record<string, string> }, index: number) => {
-        const existingTags = param.tags || {};
-        resource.addPropertyOverride(`parameters.${index}.tags`, { ...tagsRecord, ...existingTags });
-      });
-    }
-  } catch (e) {
-    logger.warn(`Could not add tags to PutSsmParameter parameters: ${e}`);
-  }
 }
 
 /**
@@ -362,6 +199,7 @@ export async function createPipelineStack(
         context.region!,
       ),
     });
+    addAcceleratorTags(pipelineStack, context.partition, [], resourcePrefixes.accelerator);
     cdk.Aspects.of(pipelineStack).add(new AwsSolutionsChecks());
     cdk.Aspects.of(pipelineStack).add(new PermissionsBoundaryAspect(context.account!, context.partition));
     new AcceleratorAspects(app, context.partition, context.useExistingRoles ?? false);
@@ -417,6 +255,7 @@ export function createTesterStack(
         ),
         ...acceleratorEnv,
       });
+      addAcceleratorTags(testerPipelineStack, context.partition, [], resourcePrefixes.accelerator);
       cdk.Aspects.of(testerPipelineStack).add(new AwsSolutionsChecks());
       new AcceleratorAspects(app, context.partition, context.useExistingRoles ?? false);
       return app;
@@ -472,6 +311,7 @@ export function createDiagnosticsPackStack(
         context.region!,
       ),
     });
+    addAcceleratorTags(diagnosticsPackStack, context.partition, [], resourcePrefixes.accelerator);
     cdk.Aspects.of(diagnosticsPackStack).add(new AwsSolutionsChecks());
     cdk.Aspects.of(diagnosticsPackStack).add(new PermissionsBoundaryAspect(context.account!, context.partition));
     new AcceleratorAspects(app, context.partition, context.useExistingRoles ?? false);
@@ -520,7 +360,7 @@ export function createPrepareStack(
       terminationProtection: props.globalConfig.terminationProtection ?? true,
       ...props,
     });
-    addAcceleratorTags(prepareStack, context.partition, props.globalConfig, props.prefixes.accelerator);
+    addAcceleratorTags(prepareStack, context.partition, props.globalConfig.tags ?? [], props.prefixes.accelerator);
     cdk.Aspects.of(prepareStack).add(new AwsSolutionsChecks());
     cdk.Aspects.of(prepareStack).add(new PermissionsBoundaryAspect(managementAccountId, context.partition));
     new AcceleratorAspects(app, context.partition, context.useExistingRoles ?? false);
@@ -565,7 +405,7 @@ export function createFinalizeStack(
       terminationProtection: props.globalConfig.terminationProtection ?? true,
       ...props,
     });
-    addAcceleratorTags(finalizeStack, context.partition, props.globalConfig, props.prefixes.accelerator);
+    addAcceleratorTags(finalizeStack, context.partition, props.globalConfig.tags ?? [], props.prefixes.accelerator);
     cdk.Aspects.of(finalizeStack).add(new AwsSolutionsChecks());
     cdk.Aspects.of(finalizeStack).add(new PermissionsBoundaryAspect(managementAccountId, context.partition));
     new AcceleratorAspects(app, context.partition, context.useExistingRoles ?? false);
@@ -615,7 +455,7 @@ export function createAccountsStack(
       terminationProtection: props.globalConfig.terminationProtection ?? true,
       ...props,
     });
-    addAcceleratorTags(accountsStack, context.partition, props.globalConfig, props.prefixes.accelerator);
+    addAcceleratorTags(accountsStack, context.partition, props.globalConfig.tags ?? [], props.prefixes.accelerator);
     cdk.Aspects.of(accountsStack).add(new AwsSolutionsChecks());
     cdk.Aspects.of(accountsStack).add(new PermissionsBoundaryAspect(managementAccountId, context.partition));
     new AcceleratorAspects(app, context.partition, context.useExistingRoles ?? false);
@@ -660,7 +500,7 @@ export function createOrganizationsStack(
       terminationProtection: props.globalConfig.terminationProtection ?? true,
       ...props,
     });
-    addAcceleratorTags(organizationStack, context.partition, props.globalConfig, props.prefixes.accelerator);
+    addAcceleratorTags(organizationStack, context.partition, props.globalConfig.tags ?? [], props.prefixes.accelerator);
     cdk.Aspects.of(organizationStack).add(new AwsSolutionsChecks());
     cdk.Aspects.of(organizationStack).add(new PermissionsBoundaryAspect(managementAccountId, context.partition));
     new AcceleratorAspects(app, context.partition, context.useExistingRoles ?? false);
@@ -705,7 +545,12 @@ export function createSecurityAuditStack(
       terminationProtection: props.globalConfig.terminationProtection ?? true,
       ...props,
     });
-    addAcceleratorTags(auditStack, context.partition, props.globalConfig, props.prefixes.accelerator);
+    addAcceleratorTags(
+      auditStack,
+      context.partition,
+      props.globalConfig ? props.globalConfig.tags : [],
+      props.prefixes.accelerator,
+    );
     cdk.Aspects.of(auditStack).add(new AwsSolutionsChecks());
     cdk.Aspects.of(auditStack).add(new PermissionsBoundaryAspect(auditAccountId, context.partition));
     new AcceleratorAspects(app, context.partition, context.useExistingRoles ?? false);
@@ -747,7 +592,7 @@ export function createKeyDependencyStacks(
       terminationProtection: props.globalConfig.terminationProtection ?? true,
       ...props,
     });
-    addAcceleratorTags(keyStack, context.partition, props.globalConfig, props.prefixes.accelerator);
+    addAcceleratorTags(keyStack, context.partition, props.globalConfig.tags ?? [], props.prefixes.accelerator);
     cdk.Aspects.of(keyStack).add(new AwsSolutionsChecks());
     cdk.Aspects.of(keyStack).add(new PermissionsBoundaryAspect(accountId, context.partition));
     new AcceleratorAspects(app, context.partition, context.useExistingRoles ?? false);
@@ -763,7 +608,7 @@ export function createKeyDependencyStacks(
       terminationProtection: props.globalConfig.terminationProtection ?? true,
       ...props,
     });
-    addAcceleratorTags(dependencyStack, context.partition, props.globalConfig, props.prefixes.accelerator);
+    addAcceleratorTags(dependencyStack, context.partition, props.globalConfig.tags ?? [], props.prefixes.accelerator);
     cdk.Aspects.of(dependencyStack).add(new AwsSolutionsChecks());
     cdk.Aspects.of(dependencyStack).add(new PermissionsBoundaryAspect(accountId, context.partition));
     new AcceleratorAspects(appDependency, context.partition, context.useExistingRoles ?? false);
@@ -805,7 +650,7 @@ export function createBootstrapStack(
       terminationProtection: props.globalConfig.terminationProtection ?? true,
       ...props,
     });
-    addAcceleratorTags(bootstrapStack, context.partition, props.globalConfig, props.prefixes.accelerator);
+    addAcceleratorTags(bootstrapStack, context.partition, props.globalConfig.tags ?? [], props.prefixes.accelerator);
     cdk.Aspects.of(bootstrapStack).add(new AwsSolutionsChecks());
     cdk.Aspects.of(bootstrapStack).add(new PermissionsBoundaryAspect(accountId, context.partition));
     new AcceleratorAspects(app, context.partition, context.useExistingRoles ?? false);
@@ -847,7 +692,7 @@ export function createLoggingStack(
       terminationProtection: props.globalConfig.terminationProtection ?? true,
       ...props,
     });
-    addAcceleratorTags(loggingStack, context.partition, props.globalConfig, props.prefixes.accelerator);
+    addAcceleratorTags(loggingStack, context.partition, props.globalConfig.tags ?? [], props.prefixes.accelerator);
     cdk.Aspects.of(loggingStack).add(new AwsSolutionsChecks());
     cdk.Aspects.of(loggingStack).add(new PermissionsBoundaryAspect(accountId, context.partition));
     new AcceleratorAspects(app, context.partition, context.useExistingRoles ?? false);
@@ -889,7 +734,7 @@ export function createSecurityStack(
       terminationProtection: props.globalConfig.terminationProtection ?? true,
       ...props,
     });
-    addAcceleratorTags(securityStack, context.partition, props.globalConfig, props.prefixes.accelerator);
+    addAcceleratorTags(securityStack, context.partition, props.globalConfig.tags ?? [], props.prefixes.accelerator);
     cdk.Aspects.of(securityStack).add(new AwsSolutionsChecks());
     cdk.Aspects.of(securityStack).add(new PermissionsBoundaryAspect(accountId, context.partition));
     new AcceleratorAspects(app, context.partition, context.useExistingRoles ?? false);
@@ -934,7 +779,7 @@ export function createOperationsStack(
       ...props,
       accountWarming,
     });
-    addAcceleratorTags(operationsStack, context.partition, props.globalConfig, props.prefixes.accelerator);
+    addAcceleratorTags(operationsStack, context.partition, props.globalConfig.tags ?? [], props.prefixes.accelerator);
     cdk.Aspects.of(operationsStack).add(new AwsSolutionsChecks());
     cdk.Aspects.of(operationsStack).add(new PermissionsBoundaryAspect(accountId, context.partition));
     new AcceleratorAspects(app, context.partition, context.useExistingRoles ?? false);
@@ -981,7 +826,12 @@ export function createIdentityCenterStack(
       terminationProtection: props.globalConfig.terminationProtection ?? true,
       ...props,
     });
-    addAcceleratorTags(identityCenterStack, context.partition, props.globalConfig, props.prefixes.accelerator);
+    addAcceleratorTags(
+      identityCenterStack,
+      context.partition,
+      props.globalConfig.tags ?? [],
+      props.prefixes.accelerator,
+    );
     cdk.Aspects.of(identityCenterStack).add(new AwsSolutionsChecks());
     cdk.Aspects.of(identityCenterStack).add(new PermissionsBoundaryAspect(accountId, context.partition));
     new AcceleratorAspects(app, context.partition, context.useExistingRoles ?? false);
@@ -1026,7 +876,7 @@ export function createNetworkPrepStack(
       terminationProtection: props.globalConfig.terminationProtection ?? true,
       ...props,
     });
-    addAcceleratorTags(networkPrepStack, context.partition, props.globalConfig, props.prefixes.accelerator);
+    addAcceleratorTags(networkPrepStack, context.partition, props.globalConfig.tags ?? [], props.prefixes.accelerator);
     cdk.Aspects.of(networkPrepStack).add(new AwsSolutionsChecks());
     cdk.Aspects.of(networkPrepStack).add(new PermissionsBoundaryAspect(accountId, context.partition));
     new AcceleratorAspects(app, context.partition, context.useExistingRoles ?? false);
@@ -1074,7 +924,12 @@ export function createSecurityResourcesStack(
       terminationProtection: props.globalConfig.terminationProtection ?? true,
       ...props,
     });
-    addAcceleratorTags(securityResourcesStack, context.partition, props.globalConfig, props.prefixes.accelerator);
+    addAcceleratorTags(
+      securityResourcesStack,
+      context.partition,
+      props.globalConfig.tags ?? [],
+      props.prefixes.accelerator,
+    );
     cdk.Aspects.of(securityResourcesStack).add(new AwsSolutionsChecks());
     cdk.Aspects.of(securityResourcesStack).add(new PermissionsBoundaryAspect(accountId, context.partition));
 
@@ -1088,7 +943,7 @@ export function createSecurityResourcesStack(
     addAcceleratorTags(
       securityGuardDutyMalwareStack,
       context.partition,
-      props.globalConfig,
+      props.globalConfig.tags ?? [],
       props.prefixes.accelerator,
     );
     // As the Guard Duty S3 Malware
@@ -1138,7 +993,7 @@ export function createNetworkVpcStacks(
         ...props,
       },
     );
-    addAcceleratorTags(vpcStack, context.partition, props.globalConfig, props.prefixes.accelerator);
+    addAcceleratorTags(vpcStack, context.partition, props.globalConfig.tags ?? [], props.prefixes.accelerator);
     cdk.Aspects.of(vpcStack).add(new AwsSolutionsChecks());
     cdk.Aspects.of(vpcStack).add(new PermissionsBoundaryAspect(accountId, context.partition));
 
@@ -1172,7 +1027,7 @@ export function createNetworkVpcStacks(
         ...props,
       },
     );
-    addAcceleratorTags(endpointsStack, context.partition, props.globalConfig, props.prefixes.accelerator);
+    addAcceleratorTags(endpointsStack, context.partition, props.globalConfig.tags ?? [], props.prefixes.accelerator);
 
     for (const v2DependencyStack of v2DependencyStacks) {
       endpointsStack.addDependency(v2DependencyStack);
@@ -1186,7 +1041,7 @@ export function createNetworkVpcStacks(
       terminationProtection: props.globalConfig.terminationProtection ?? true,
       ...props,
     });
-    addAcceleratorTags(dnsStack, context.partition, props.globalConfig, props.prefixes.accelerator);
+    addAcceleratorTags(dnsStack, context.partition, props.globalConfig.tags ?? [], props.prefixes.accelerator);
     for (const v2DependencyStack of v2DependencyStacks) {
       dnsStack.addDependency(v2DependencyStack);
     }
@@ -1233,7 +1088,12 @@ function getV2NetworkVpcDependencyStacks(options: {
   });
 
   for (const v2Stack of v2Stacks) {
-    addAcceleratorTags(v2Stack, options.partition, options.props.globalConfig, options.props.prefixes.accelerator);
+    addAcceleratorTags(
+      v2Stack,
+      options.partition,
+      options.props.globalConfig.tags ?? [],
+      options.props.prefixes.accelerator,
+    );
     cdk.Aspects.of(v2Stack).add(new AwsSolutionsChecks());
     cdk.Aspects.of(v2Stack).add(new PermissionsBoundaryAspect(options.accountId, options.partition));
     new AcceleratorAspects(v2Stack, options.context.partition, options.context.useExistingRoles ?? false);
@@ -1281,7 +1141,12 @@ export function createNetworkAssociationsStacks(
       terminationProtection: props.globalConfig.terminationProtection ?? true,
       ...props,
     });
-    addAcceleratorTags(networkAssociationsStack, context.partition, props.globalConfig, props.prefixes.accelerator);
+    addAcceleratorTags(
+      networkAssociationsStack,
+      context.partition,
+      props.globalConfig.tags ?? [],
+      props.prefixes.accelerator,
+    );
     cdk.Aspects.of(networkAssociationsStack).add(new AwsSolutionsChecks());
     cdk.Aspects.of(networkAssociationsStack).add(new PermissionsBoundaryAspect(accountId, context.partition));
 
@@ -1292,7 +1157,7 @@ export function createNetworkAssociationsStacks(
       terminationProtection: props.globalConfig.terminationProtection ?? true,
       ...props,
     });
-    addAcceleratorTags(networkGwlbStack, context.partition, props.globalConfig, props.prefixes.accelerator);
+    addAcceleratorTags(networkGwlbStack, context.partition, props.globalConfig.tags ?? [], props.prefixes.accelerator);
     // Since shared security groups are created in networkAssociations. NetworkGwlbStack depends on NetworkAssociationsStack
     networkGwlbStack.addDependency(networkAssociationsStack);
     cdk.Aspects.of(networkGwlbStack).add(new AwsSolutionsChecks());
@@ -1365,7 +1230,7 @@ export function createCustomizationsStacks(
     addAcceleratorTags(
       resourcePolicyEnforcementStack,
       context.partition,
-      props.globalConfig,
+      props.globalConfig.tags ?? [],
       props.prefixes.accelerator,
     );
     cdk.Aspects.of(resourcePolicyEnforcementStack).add(new AwsSolutionsChecks());

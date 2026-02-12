@@ -287,11 +287,21 @@ export class AcceleratorToolkit {
       },
     };
 
+    const tags = options.tags ?? [];
+    const acceleratorTag = tags.find(tag => tag.Key === 'Accelerator');
+    if (!acceleratorTag) {
+      tags.push({
+        Key: 'Accelerator',
+        Value: options.stackPrefix,
+      });
+    }
+
     const bootstrapOptions: BootstrapOptions = {
       parameters: bootstrapStackParameters,
       source,
       terminationProtection: true,
       forceDeployment: options.cdkOptions?.forceBootstrap ?? false,
+      tags: tags,
     };
 
     try {

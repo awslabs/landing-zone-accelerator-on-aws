@@ -5,6 +5,7 @@ import { ResourceNamePrefixes } from '@aws-accelerator/installer';
 import { LzaLambdaRuntime } from '@aws-accelerator/utils/lib/lambda';
 import { NagSuppressions } from 'cdk-nag';
 import { Bucket, BucketEncryptionType } from '@aws-accelerator/constructs';
+import { addAcceleratorTags } from '@aws-accelerator/cdk-utils';
 
 export interface InstallerContainerStackProps extends cdk.StackProps {
   /**
@@ -1434,6 +1435,8 @@ def handler(event, context):
       value: deploySolutionDocument.ref,
       description: 'SSM Document name that will be used to trigger automation for LZA engine using container',
     });
+
+    addAcceleratorTags(this, cdk.Stack.of(this).partition, [], this.acceleratorPrefix.valueAsString);
   }
   /**
    * Build environment variables based on deployment mode compatibility

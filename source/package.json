@@ -25,6 +25,7 @@
       "./packages/@aws-accelerator/tester/lambdas",
       "./packages/@aws-accelerator/tools",
       "./packages/@aws-accelerator/utils",
+      "./packages/@aws-accelerator/cdk-utils",
       "./packages/@aws-cdk-extensions/cdk-extensions"
     ],
     "nohoist": [

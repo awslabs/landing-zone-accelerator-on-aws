@@ -319,6 +319,11 @@ exports[`InstallerStack > Stack(installer):  Snapshot Test 1`] = `
             ],
           ],
         },
+        "Tags": {
+          "Accelerator": {
+            "Ref": "AcceleratorPrefix",
+          },
+        },
         "Type": "String",
         "Value": {
           "Fn::GetAtt": [
@@ -440,6 +445,14 @@ exports[`InstallerStack > Stack(installer):  Snapshot Test 1`] = `
             "Name": "Install",
           },
         ],
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
       },
       "Type": "AWS::CodePipeline::Pipeline",
     },
@@ -458,6 +471,14 @@ exports[`InstallerStack > Stack(installer):  Snapshot Test 1`] = `
           ],
           "Version": "2012-10-17",
         },
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
       },
       "Type": "AWS::IAM::Role",
     },
@@ -707,6 +728,14 @@ exports[`InstallerStack > Stack(installer):  Snapshot Test 1`] = `
             "Name": "Install",
           },
         ],
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
       },
       "Type": "AWS::CodePipeline::Pipeline",
     },
@@ -725,6 +754,14 @@ exports[`InstallerStack > Stack(installer):  Snapshot Test 1`] = `
           ],
           "Version": "2012-10-17",
         },
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
       },
       "Type": "AWS::IAM::Role",
     },
@@ -946,6 +983,14 @@ exports[`InstallerStack > Stack(installer):  Snapshot Test 1`] = `
           "IgnorePublicAcls": true,
           "RestrictPublicBuckets": true,
         },
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
         "VersioningConfiguration": {
           "Status": "Enabled",
         },
@@ -969,6 +1014,11 @@ exports[`InstallerStack > Stack(installer):  Snapshot Test 1`] = `
               "/installer-access-logs-bucket-name",
             ],
           ],
+        },
+        "Tags": {
+          "Accelerator": {
+            "Ref": "AcceleratorPrefix",
+          },
         },
         "Type": "String",
         "Value": {
@@ -1061,6 +1111,14 @@ exports[`InstallerStack > Stack(installer):  Snapshot Test 1`] = `
                 ":iam::aws:policy/AdministratorAccess",
               ],
             ],
+          },
+        ],
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
           },
         ],
       },
@@ -1409,6 +1467,14 @@ exports[`InstallerStack > Stack(installer):  Snapshot Test 1`] = `
             },
           ],
         },
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
       },
       "Type": "AWS::KMS::Key",
       "UpdateReplacePolicy": "Retain",
@@ -1896,6 +1962,14 @@ phases:
           },
           "Type": "CODEPIPELINE",
         },
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
       },
       "Type": "AWS::CodeBuild::Project",
     },
@@ -2096,6 +2170,14 @@ phases:
           ],
         },
         "Runtime": "nodejs22.x",
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
       },
       "Type": "AWS::Lambda::Function",
     },
@@ -2139,6 +2221,14 @@ phases:
                 ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
               ],
             ],
+          },
+        ],
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
           },
         ],
       },
@@ -2439,6 +2529,14 @@ phases:
           "IgnorePublicAcls": true,
           "RestrictPublicBuckets": true,
         },
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
         "VersioningConfiguration": {
           "Status": "Enabled",
         },
@@ -2623,6 +2721,14 @@ phases:
           ],
         },
         "Runtime": "nodejs22.x",
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
         "Timeout": 30,
       },
       "Type": "AWS::Lambda::Function",
@@ -2663,6 +2769,14 @@ phases:
                 ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
               ],
             ],
+          },
+        ],
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
           },
         ],
       },
@@ -2737,6 +2851,11 @@ phases:
             ],
           ],
         },
+        "Tags": {
+          "Accelerator": {
+            "Ref": "AcceleratorPrefix",
+          },
+        },
         "Type": "String",
         "Value": "1.15.0-rc.7",
       },
@@ -2758,6 +2877,11 @@ phases:
               "/AWSAccelerator-Test-InstallerStack/stack-id",
             ],
           ],
+        },
+        "Tags": {
+          "Accelerator": {
+            "Ref": "AcceleratorPrefix",
+          },
         },
         "Type": "String",
         "Value": {
@@ -2947,6 +3071,14 @@ async function updatePipelineDetailsForBothPipelines(secretValue) {
           ],
         },
         "Runtime": "nodejs22.x",
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
         "Timeout": 60,
       },
       "Type": "AWS::Lambda::Function",
@@ -2977,6 +3109,14 @@ async function updatePipelineDetailsForBothPipelines(secretValue) {
           ],
         },
         "RetentionInDays": 731,
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
       },
       "Type": "AWS::Logs::LogGroup",
       "UpdateReplacePolicy": "Delete",
@@ -3292,6 +3432,14 @@ async function updatePipelineDetailsForBothPipelines(secretValue) {
           ],
           "Version": "2012-10-17",
         },
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
       },
       "Type": "AWS::IAM::Role",
     },
@@ -3416,6 +3564,14 @@ exports.handler = async function (event, context) {
           ],
         },
         "Runtime": "nodejs22.x",
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
       },
       "Type": "AWS::Lambda::Function",
     },
@@ -3513,6 +3669,14 @@ exports.handler = async function (event, context) {
                 ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
               ],
             ],
+          },
+        ],
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
           },
         ],
       },
@@ -4012,6 +4176,11 @@ exports[`InstallerStack > Stack(installer):  Snapshot Test 2`] = `
             ],
           ],
         },
+        "Tags": {
+          "Accelerator": {
+            "Ref": "AcceleratorPrefix",
+          },
+        },
         "Type": "String",
         "Value": {
           "Fn::GetAtt": [
@@ -4133,6 +4302,14 @@ exports[`InstallerStack > Stack(installer):  Snapshot Test 2`] = `
             "Name": "Install",
           },
         ],
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
       },
       "Type": "AWS::CodePipeline::Pipeline",
     },
@@ -4151,6 +4328,14 @@ exports[`InstallerStack > Stack(installer):  Snapshot Test 2`] = `
           ],
           "Version": "2012-10-17",
         },
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
       },
       "Type": "AWS::IAM::Role",
     },
@@ -4400,6 +4585,14 @@ exports[`InstallerStack > Stack(installer):  Snapshot Test 2`] = `
             "Name": "Install",
           },
         ],
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
       },
       "Type": "AWS::CodePipeline::Pipeline",
     },
@@ -4418,6 +4611,14 @@ exports[`InstallerStack > Stack(installer):  Snapshot Test 2`] = `
           ],
           "Version": "2012-10-17",
         },
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
       },
       "Type": "AWS::IAM::Role",
     },
@@ -4639,6 +4840,14 @@ exports[`InstallerStack > Stack(installer):  Snapshot Test 2`] = `
           "IgnorePublicAcls": true,
           "RestrictPublicBuckets": true,
         },
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
         "VersioningConfiguration": {
           "Status": "Enabled",
         },
@@ -4662,6 +4871,11 @@ exports[`InstallerStack > Stack(installer):  Snapshot Test 2`] = `
               "/installer-access-logs-bucket-name",
             ],
           ],
+        },
+        "Tags": {
+          "Accelerator": {
+            "Ref": "AcceleratorPrefix",
+          },
         },
         "Type": "String",
         "Value": {
@@ -4754,6 +4968,14 @@ exports[`InstallerStack > Stack(installer):  Snapshot Test 2`] = `
                 ":iam::aws:policy/AdministratorAccess",
               ],
             ],
+          },
+        ],
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
           },
         ],
       },
@@ -5102,6 +5324,14 @@ exports[`InstallerStack > Stack(installer):  Snapshot Test 2`] = `
             },
           ],
         },
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
       },
       "Type": "AWS::KMS::Key",
       "UpdateReplacePolicy": "Retain",
@@ -5579,6 +5809,14 @@ phases:
           },
           "Type": "CODEPIPELINE",
         },
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
       },
       "Type": "AWS::CodeBuild::Project",
     },
@@ -5779,6 +6017,14 @@ phases:
           ],
         },
         "Runtime": "nodejs22.x",
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
       },
       "Type": "AWS::Lambda::Function",
     },
@@ -5822,6 +6068,14 @@ phases:
                 ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
               ],
             ],
+          },
+        ],
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
           },
         ],
       },
@@ -6122,6 +6376,14 @@ phases:
           "IgnorePublicAcls": true,
           "RestrictPublicBuckets": true,
         },
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
         "VersioningConfiguration": {
           "Status": "Enabled",
         },
@@ -6306,6 +6568,14 @@ phases:
           ],
         },
         "Runtime": "nodejs22.x",
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
         "Timeout": 30,
       },
       "Type": "AWS::Lambda::Function",
@@ -6346,6 +6616,14 @@ phases:
                 ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
               ],
             ],
+          },
+        ],
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
           },
         ],
       },
@@ -6420,6 +6698,11 @@ phases:
             ],
           ],
         },
+        "Tags": {
+          "Accelerator": {
+            "Ref": "AcceleratorPrefix",
+          },
+        },
         "Type": "String",
         "Value": "1.15.0-rc.7",
       },
@@ -6441,6 +6724,11 @@ phases:
               "/AWSAccelerator-Test-InstallerStack/stack-id",
             ],
           ],
+        },
+        "Tags": {
+          "Accelerator": {
+            "Ref": "AcceleratorPrefix",
+          },
         },
         "Type": "String",
         "Value": {
@@ -6630,6 +6918,14 @@ async function updatePipelineDetailsForBothPipelines(secretValue) {
           ],
         },
         "Runtime": "nodejs22.x",
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
         "Timeout": 60,
       },
       "Type": "AWS::Lambda::Function",
@@ -6660,6 +6956,14 @@ async function updatePipelineDetailsForBothPipelines(secretValue) {
           ],
         },
         "RetentionInDays": 731,
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
       },
       "Type": "AWS::Logs::LogGroup",
       "UpdateReplacePolicy": "Delete",
@@ -6975,6 +7279,14 @@ async function updatePipelineDetailsForBothPipelines(secretValue) {
           ],
           "Version": "2012-10-17",
         },
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
       },
       "Type": "AWS::IAM::Role",
     },
@@ -7099,6 +7411,14 @@ exports.handler = async function (event, context) {
           ],
         },
         "Runtime": "nodejs22.x",
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
       },
       "Type": "AWS::Lambda::Function",
     },
@@ -7196,6 +7516,14 @@ exports.handler = async function (event, context) {
                 ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
               ],
             ],
+          },
+        ],
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
           },
         ],
       },
@@ -7732,6 +8060,11 @@ exports[`InstallerStack > Stack(installer):  Snapshot Test 3`] = `
             ],
           ],
         },
+        "Tags": {
+          "Accelerator": {
+            "Ref": "AcceleratorPrefix",
+          },
+        },
         "Type": "String",
         "Value": {
           "Fn::GetAtt": [
@@ -7850,6 +8183,14 @@ exports[`InstallerStack > Stack(installer):  Snapshot Test 3`] = `
             "Name": "Install",
           },
         ],
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
       },
       "Type": "AWS::CodePipeline::Pipeline",
     },
@@ -7868,6 +8209,14 @@ exports[`InstallerStack > Stack(installer):  Snapshot Test 3`] = `
           ],
           "Version": "2012-10-17",
         },
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
       },
       "Type": "AWS::IAM::Role",
     },
@@ -8114,6 +8463,14 @@ exports[`InstallerStack > Stack(installer):  Snapshot Test 3`] = `
             "Name": "Install",
           },
         ],
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
       },
       "Type": "AWS::CodePipeline::Pipeline",
     },
@@ -8132,6 +8489,14 @@ exports[`InstallerStack > Stack(installer):  Snapshot Test 3`] = `
           ],
           "Version": "2012-10-17",
         },
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
       },
       "Type": "AWS::IAM::Role",
     },
@@ -8347,6 +8712,14 @@ exports[`InstallerStack > Stack(installer):  Snapshot Test 3`] = `
           "IgnorePublicAcls": true,
           "RestrictPublicBuckets": true,
         },
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
         "VersioningConfiguration": {
           "Status": "Enabled",
         },
@@ -8374,6 +8747,11 @@ exports[`InstallerStack > Stack(installer):  Snapshot Test 3`] = `
               "/installer-access-logs-bucket-name",
             ],
           ],
+        },
+        "Tags": {
+          "Accelerator": {
+            "Ref": "AcceleratorPrefix",
+          },
         },
         "Type": "String",
         "Value": {
@@ -8479,6 +8857,14 @@ exports[`InstallerStack > Stack(installer):  Snapshot Test 3`] = `
             ],
           ],
         },
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
       },
       "Type": "AWS::IAM::Role",
     },
@@ -8822,6 +9208,14 @@ exports[`InstallerStack > Stack(installer):  Snapshot Test 3`] = `
             },
           ],
         },
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
       },
       "Type": "AWS::KMS::Key",
       "UpdateReplacePolicy": "Retain",
@@ -9319,6 +9713,14 @@ phases:
           },
           "Type": "CODEPIPELINE",
         },
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
       },
       "Type": "AWS::CodeBuild::Project",
     },
@@ -9534,6 +9936,14 @@ phases:
           ],
         },
         "Runtime": "nodejs22.x",
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
       },
       "Type": "AWS::Lambda::Function",
     },
@@ -9577,6 +9987,14 @@ phases:
                 ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
               ],
             ],
+          },
+        ],
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
           },
         ],
       },
@@ -9867,6 +10285,14 @@ phases:
           "IgnorePublicAcls": true,
           "RestrictPublicBuckets": true,
         },
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
         "VersioningConfiguration": {
           "Status": "Enabled",
         },
@@ -10051,6 +10477,14 @@ phases:
           ],
         },
         "Runtime": "nodejs22.x",
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
         "Timeout": 30,
       },
       "Type": "AWS::Lambda::Function",
@@ -10091,6 +10525,14 @@ phases:
                 ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
               ],
             ],
+          },
+        ],
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
           },
         ],
       },
@@ -10169,6 +10611,11 @@ phases:
             ],
           ],
         },
+        "Tags": {
+          "Accelerator": {
+            "Ref": "AcceleratorPrefix",
+          },
+        },
         "Type": "String",
         "Value": "1.15.0-rc.7",
       },
@@ -10194,6 +10641,11 @@ phases:
               "/AWSAccelerator-Test-InstallerStack/stack-id",
             ],
           ],
+        },
+        "Tags": {
+          "Accelerator": {
+            "Ref": "AcceleratorPrefix",
+          },
         },
         "Type": "String",
         "Value": {
@@ -10377,6 +10829,14 @@ async function updatePipelineDetailsForBothPipelines(secretValue) {
           ],
         },
         "Runtime": "nodejs22.x",
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
         "Timeout": 60,
       },
       "Type": "AWS::Lambda::Function",
@@ -10407,6 +10867,14 @@ async function updatePipelineDetailsForBothPipelines(secretValue) {
           ],
         },
         "RetentionInDays": 731,
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
       },
       "Type": "AWS::Logs::LogGroup",
       "UpdateReplacePolicy": "Delete",
@@ -10713,6 +11181,14 @@ async function updatePipelineDetailsForBothPipelines(secretValue) {
           ],
           "Version": "2012-10-17",
         },
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
       },
       "Type": "AWS::IAM::Role",
     },
@@ -10834,6 +11310,14 @@ exports.handler = async function (event, context) {
           ],
         },
         "Runtime": "nodejs22.x",
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
       },
       "Type": "AWS::Lambda::Function",
     },
@@ -10928,6 +11412,14 @@ exports.handler = async function (event, context) {
                 ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
               ],
             ],
+          },
+        ],
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
           },
         ],
       },
@@ -11464,6 +11956,11 @@ exports[`InstallerStack > Stack(installer):  Snapshot Test 4`] = `
             ],
           ],
         },
+        "Tags": {
+          "Accelerator": {
+            "Ref": "AcceleratorPrefix",
+          },
+        },
         "Type": "String",
         "Value": {
           "Fn::GetAtt": [
@@ -11582,6 +12079,14 @@ exports[`InstallerStack > Stack(installer):  Snapshot Test 4`] = `
             "Name": "Install",
           },
         ],
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
       },
       "Type": "AWS::CodePipeline::Pipeline",
     },
@@ -11600,6 +12105,14 @@ exports[`InstallerStack > Stack(installer):  Snapshot Test 4`] = `
           ],
           "Version": "2012-10-17",
         },
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
       },
       "Type": "AWS::IAM::Role",
     },
@@ -11846,6 +12359,14 @@ exports[`InstallerStack > Stack(installer):  Snapshot Test 4`] = `
             "Name": "Install",
           },
         ],
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
       },
       "Type": "AWS::CodePipeline::Pipeline",
     },
@@ -11864,6 +12385,14 @@ exports[`InstallerStack > Stack(installer):  Snapshot Test 4`] = `
           ],
           "Version": "2012-10-17",
         },
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
       },
       "Type": "AWS::IAM::Role",
     },
@@ -12079,6 +12608,14 @@ exports[`InstallerStack > Stack(installer):  Snapshot Test 4`] = `
           "IgnorePublicAcls": true,
           "RestrictPublicBuckets": true,
         },
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
         "VersioningConfiguration": {
           "Status": "Enabled",
         },
@@ -12106,6 +12643,11 @@ exports[`InstallerStack > Stack(installer):  Snapshot Test 4`] = `
               "/installer-access-logs-bucket-name",
             ],
           ],
+        },
+        "Tags": {
+          "Accelerator": {
+            "Ref": "AcceleratorPrefix",
+          },
         },
         "Type": "String",
         "Value": {
@@ -12211,6 +12753,14 @@ exports[`InstallerStack > Stack(installer):  Snapshot Test 4`] = `
             ],
           ],
         },
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
       },
       "Type": "AWS::IAM::Role",
     },
@@ -12554,6 +13104,14 @@ exports[`InstallerStack > Stack(installer):  Snapshot Test 4`] = `
             },
           ],
         },
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
       },
       "Type": "AWS::KMS::Key",
       "UpdateReplacePolicy": "Retain",
@@ -13041,6 +13599,14 @@ phases:
           },
           "Type": "CODEPIPELINE",
         },
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
       },
       "Type": "AWS::CodeBuild::Project",
     },
@@ -13256,6 +13822,14 @@ phases:
           ],
         },
         "Runtime": "nodejs22.x",
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
       },
       "Type": "AWS::Lambda::Function",
     },
@@ -13299,6 +13873,14 @@ phases:
                 ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
               ],
             ],
+          },
+        ],
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
           },
         ],
       },
@@ -13589,6 +14171,14 @@ phases:
           "IgnorePublicAcls": true,
           "RestrictPublicBuckets": true,
         },
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
         "VersioningConfiguration": {
           "Status": "Enabled",
         },
@@ -13773,6 +14363,14 @@ phases:
           ],
         },
         "Runtime": "nodejs22.x",
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
         "Timeout": 30,
       },
       "Type": "AWS::Lambda::Function",
@@ -13813,6 +14411,14 @@ phases:
                 ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
               ],
             ],
+          },
+        ],
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
           },
         ],
       },
@@ -13891,6 +14497,11 @@ phases:
             ],
           ],
         },
+        "Tags": {
+          "Accelerator": {
+            "Ref": "AcceleratorPrefix",
+          },
+        },
         "Type": "String",
         "Value": "1.15.0-rc.7",
       },
@@ -13916,6 +14527,11 @@ phases:
               "/AWSAccelerator-Test-InstallerStack/stack-id",
             ],
           ],
+        },
+        "Tags": {
+          "Accelerator": {
+            "Ref": "AcceleratorPrefix",
+          },
         },
         "Type": "String",
         "Value": {
@@ -14099,6 +14715,14 @@ async function updatePipelineDetailsForBothPipelines(secretValue) {
           ],
         },
         "Runtime": "nodejs22.x",
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
         "Timeout": 60,
       },
       "Type": "AWS::Lambda::Function",
@@ -14129,6 +14753,14 @@ async function updatePipelineDetailsForBothPipelines(secretValue) {
           ],
         },
         "RetentionInDays": 731,
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
       },
       "Type": "AWS::Logs::LogGroup",
       "UpdateReplacePolicy": "Delete",
@@ -14435,6 +15067,14 @@ async function updatePipelineDetailsForBothPipelines(secretValue) {
           ],
           "Version": "2012-10-17",
         },
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
       },
       "Type": "AWS::IAM::Role",
     },
@@ -14556,6 +15196,14 @@ exports.handler = async function (event, context) {
           ],
         },
         "Runtime": "nodejs22.x",
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
       },
       "Type": "AWS::Lambda::Function",
     },
@@ -14650,6 +15298,14 @@ exports.handler = async function (event, context) {
                 ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
               ],
             ],
+          },
+        ],
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
           },
         ],
       },
@@ -15186,6 +15842,11 @@ exports[`InstallerStack > Stack(installer):  Snapshot Test 5`] = `
             ],
           ],
         },
+        "Tags": {
+          "Accelerator": {
+            "Ref": "AcceleratorPrefix",
+          },
+        },
         "Type": "String",
         "Value": {
           "Fn::GetAtt": [
@@ -15304,6 +15965,14 @@ exports[`InstallerStack > Stack(installer):  Snapshot Test 5`] = `
             "Name": "Install",
           },
         ],
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
       },
       "Type": "AWS::CodePipeline::Pipeline",
     },
@@ -15322,6 +15991,14 @@ exports[`InstallerStack > Stack(installer):  Snapshot Test 5`] = `
           ],
           "Version": "2012-10-17",
         },
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
       },
       "Type": "AWS::IAM::Role",
     },
@@ -15568,6 +16245,14 @@ exports[`InstallerStack > Stack(installer):  Snapshot Test 5`] = `
             "Name": "Install",
           },
         ],
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
       },
       "Type": "AWS::CodePipeline::Pipeline",
     },
@@ -15586,6 +16271,14 @@ exports[`InstallerStack > Stack(installer):  Snapshot Test 5`] = `
           ],
           "Version": "2012-10-17",
         },
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
       },
       "Type": "AWS::IAM::Role",
     },
@@ -15801,6 +16494,14 @@ exports[`InstallerStack > Stack(installer):  Snapshot Test 5`] = `
           "IgnorePublicAcls": true,
           "RestrictPublicBuckets": true,
         },
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
         "VersioningConfiguration": {
           "Status": "Enabled",
         },
@@ -15828,6 +16529,11 @@ exports[`InstallerStack > Stack(installer):  Snapshot Test 5`] = `
               "/installer-access-logs-bucket-name",
             ],
           ],
+        },
+        "Tags": {
+          "Accelerator": {
+            "Ref": "AcceleratorPrefix",
+          },
         },
         "Type": "String",
         "Value": {
@@ -15933,6 +16639,14 @@ exports[`InstallerStack > Stack(installer):  Snapshot Test 5`] = `
             ],
           ],
         },
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
       },
       "Type": "AWS::IAM::Role",
     },
@@ -16276,6 +16990,14 @@ exports[`InstallerStack > Stack(installer):  Snapshot Test 5`] = `
             },
           ],
         },
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
       },
       "Type": "AWS::KMS::Key",
       "UpdateReplacePolicy": "Retain",
@@ -16768,6 +17490,14 @@ phases:
           },
           "Type": "CODEPIPELINE",
         },
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
       },
       "Type": "AWS::CodeBuild::Project",
     },
@@ -16983,6 +17713,14 @@ phases:
           ],
         },
         "Runtime": "nodejs22.x",
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
       },
       "Type": "AWS::Lambda::Function",
     },
@@ -17026,6 +17764,14 @@ phases:
                 ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
               ],
             ],
+          },
+        ],
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
           },
         ],
       },
@@ -17316,6 +18062,14 @@ phases:
           "IgnorePublicAcls": true,
           "RestrictPublicBuckets": true,
         },
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
         "VersioningConfiguration": {
           "Status": "Enabled",
         },
@@ -17500,6 +18254,14 @@ phases:
           ],
         },
         "Runtime": "nodejs22.x",
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
         "Timeout": 30,
       },
       "Type": "AWS::Lambda::Function",
@@ -17540,6 +18302,14 @@ phases:
                 ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
               ],
             ],
+          },
+        ],
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
           },
         ],
       },
@@ -17618,6 +18388,11 @@ phases:
             ],
           ],
         },
+        "Tags": {
+          "Accelerator": {
+            "Ref": "AcceleratorPrefix",
+          },
+        },
         "Type": "String",
         "Value": "1.15.0-rc.7",
       },
@@ -17643,6 +18418,11 @@ phases:
               "/AWSAccelerator-Test-InstallerStack/stack-id",
             ],
           ],
+        },
+        "Tags": {
+          "Accelerator": {
+            "Ref": "AcceleratorPrefix",
+          },
         },
         "Type": "String",
         "Value": {
@@ -17826,6 +18606,14 @@ async function updatePipelineDetailsForBothPipelines(secretValue) {
           ],
         },
         "Runtime": "nodejs22.x",
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
         "Timeout": 60,
       },
       "Type": "AWS::Lambda::Function",
@@ -17856,6 +18644,14 @@ async function updatePipelineDetailsForBothPipelines(secretValue) {
           ],
         },
         "RetentionInDays": 731,
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
       },
       "Type": "AWS::Logs::LogGroup",
       "UpdateReplacePolicy": "Delete",
@@ -18162,6 +18958,14 @@ async function updatePipelineDetailsForBothPipelines(secretValue) {
           ],
           "Version": "2012-10-17",
         },
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
       },
       "Type": "AWS::IAM::Role",
     },
@@ -18283,6 +19087,14 @@ exports.handler = async function (event, context) {
           ],
         },
         "Runtime": "nodejs22.x",
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
       },
       "Type": "AWS::Lambda::Function",
     },
@@ -18377,6 +19189,14 @@ exports.handler = async function (event, context) {
                 ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
               ],
             ],
+          },
+        ],
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
           },
         ],
       },
@@ -18888,6 +19708,11 @@ exports[`InstallerStack > Stack(installer):  Snapshot Test 6`] = `
             ],
           ],
         },
+        "Tags": {
+          "Accelerator": {
+            "Ref": "AcceleratorPrefix",
+          },
+        },
         "Type": "String",
         "Value": {
           "Fn::GetAtt": [
@@ -19009,6 +19834,14 @@ exports[`InstallerStack > Stack(installer):  Snapshot Test 6`] = `
             "Name": "Install",
           },
         ],
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
       },
       "Type": "AWS::CodePipeline::Pipeline",
     },
@@ -19027,6 +19860,14 @@ exports[`InstallerStack > Stack(installer):  Snapshot Test 6`] = `
           ],
           "Version": "2012-10-17",
         },
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
       },
       "Type": "AWS::IAM::Role",
     },
@@ -19276,6 +20117,14 @@ exports[`InstallerStack > Stack(installer):  Snapshot Test 6`] = `
             "Name": "Install",
           },
         ],
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
       },
       "Type": "AWS::CodePipeline::Pipeline",
     },
@@ -19294,6 +20143,14 @@ exports[`InstallerStack > Stack(installer):  Snapshot Test 6`] = `
           ],
           "Version": "2012-10-17",
         },
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
       },
       "Type": "AWS::IAM::Role",
     },
@@ -19515,6 +20372,14 @@ exports[`InstallerStack > Stack(installer):  Snapshot Test 6`] = `
           "IgnorePublicAcls": true,
           "RestrictPublicBuckets": true,
         },
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
         "VersioningConfiguration": {
           "Status": "Enabled",
         },
@@ -19538,6 +20403,11 @@ exports[`InstallerStack > Stack(installer):  Snapshot Test 6`] = `
               "/installer-access-logs-bucket-name",
             ],
           ],
+        },
+        "Tags": {
+          "Accelerator": {
+            "Ref": "AcceleratorPrefix",
+          },
         },
         "Type": "String",
         "Value": {
@@ -19630,6 +20500,14 @@ exports[`InstallerStack > Stack(installer):  Snapshot Test 6`] = `
                 ":iam::aws:policy/AdministratorAccess",
               ],
             ],
+          },
+        ],
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
           },
         ],
       },
@@ -19978,6 +20856,14 @@ exports[`InstallerStack > Stack(installer):  Snapshot Test 6`] = `
             },
           ],
         },
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
       },
       "Type": "AWS::KMS::Key",
       "UpdateReplacePolicy": "Retain",
@@ -20462,6 +21348,14 @@ phases:
           },
           "Type": "CODEPIPELINE",
         },
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
       },
       "Type": "AWS::CodeBuild::Project",
     },
@@ -20662,6 +21556,14 @@ phases:
           ],
         },
         "Runtime": "nodejs22.x",
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
       },
       "Type": "AWS::Lambda::Function",
     },
@@ -20705,6 +21607,14 @@ phases:
                 ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
               ],
             ],
+          },
+        ],
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
           },
         ],
       },
@@ -21005,6 +21915,14 @@ phases:
           "IgnorePublicAcls": true,
           "RestrictPublicBuckets": true,
         },
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
         "VersioningConfiguration": {
           "Status": "Enabled",
         },
@@ -21189,6 +22107,14 @@ phases:
           ],
         },
         "Runtime": "nodejs22.x",
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
         "Timeout": 30,
       },
       "Type": "AWS::Lambda::Function",
@@ -21229,6 +22155,14 @@ phases:
                 ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
               ],
             ],
+          },
+        ],
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
           },
         ],
       },
@@ -21303,6 +22237,11 @@ phases:
             ],
           ],
         },
+        "Tags": {
+          "Accelerator": {
+            "Ref": "AcceleratorPrefix",
+          },
+        },
         "Type": "String",
         "Value": "1.15.0-rc.7",
       },
@@ -21324,6 +22263,11 @@ phases:
               "/AWSAccelerator-Test-InstallerStack/stack-id",
             ],
           ],
+        },
+        "Tags": {
+          "Accelerator": {
+            "Ref": "AcceleratorPrefix",
+          },
         },
         "Type": "String",
         "Value": {
@@ -21513,6 +22457,14 @@ async function updatePipelineDetailsForBothPipelines(secretValue) {
           ],
         },
         "Runtime": "nodejs22.x",
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
         "Timeout": 60,
       },
       "Type": "AWS::Lambda::Function",
@@ -21543,6 +22495,14 @@ async function updatePipelineDetailsForBothPipelines(secretValue) {
           ],
         },
         "RetentionInDays": 731,
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
       },
       "Type": "AWS::Logs::LogGroup",
       "UpdateReplacePolicy": "Delete",
@@ -21858,6 +22818,14 @@ async function updatePipelineDetailsForBothPipelines(secretValue) {
           ],
           "Version": "2012-10-17",
         },
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
       },
       "Type": "AWS::IAM::Role",
     },
@@ -21982,6 +22950,14 @@ exports.handler = async function (event, context) {
           ],
         },
         "Runtime": "nodejs22.x",
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
       },
       "Type": "AWS::Lambda::Function",
     },
@@ -22079,6 +23055,14 @@ exports.handler = async function (event, context) {
                 ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
               ],
             ],
+          },
+        ],
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
           },
         ],
       },
@@ -22614,6 +23598,11 @@ exports[`InstallerStack > Stack(installer):  Snapshot Test 7`] = `
             ],
           ],
         },
+        "Tags": {
+          "Accelerator": {
+            "Ref": "AcceleratorPrefix",
+          },
+        },
         "Type": "String",
         "Value": {
           "Fn::GetAtt": [
@@ -22735,6 +23724,14 @@ exports[`InstallerStack > Stack(installer):  Snapshot Test 7`] = `
             "Name": "Install",
           },
         ],
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
       },
       "Type": "AWS::CodePipeline::Pipeline",
     },
@@ -22753,6 +23750,14 @@ exports[`InstallerStack > Stack(installer):  Snapshot Test 7`] = `
           ],
           "Version": "2012-10-17",
         },
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
       },
       "Type": "AWS::IAM::Role",
     },
@@ -23002,6 +24007,14 @@ exports[`InstallerStack > Stack(installer):  Snapshot Test 7`] = `
             "Name": "Install",
           },
         ],
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
       },
       "Type": "AWS::CodePipeline::Pipeline",
     },
@@ -23020,6 +24033,14 @@ exports[`InstallerStack > Stack(installer):  Snapshot Test 7`] = `
           ],
           "Version": "2012-10-17",
         },
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
       },
       "Type": "AWS::IAM::Role",
     },
@@ -23241,6 +24262,14 @@ exports[`InstallerStack > Stack(installer):  Snapshot Test 7`] = `
           "IgnorePublicAcls": true,
           "RestrictPublicBuckets": true,
         },
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
         "VersioningConfiguration": {
           "Status": "Enabled",
         },
@@ -23264,6 +24293,11 @@ exports[`InstallerStack > Stack(installer):  Snapshot Test 7`] = `
               "/installer-access-logs-bucket-name",
             ],
           ],
+        },
+        "Tags": {
+          "Accelerator": {
+            "Ref": "AcceleratorPrefix",
+          },
         },
         "Type": "String",
         "Value": {
@@ -23356,6 +24390,14 @@ exports[`InstallerStack > Stack(installer):  Snapshot Test 7`] = `
                 ":iam::aws:policy/AdministratorAccess",
               ],
             ],
+          },
+        ],
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
           },
         ],
       },
@@ -23704,6 +24746,14 @@ exports[`InstallerStack > Stack(installer):  Snapshot Test 7`] = `
             },
           ],
         },
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
       },
       "Type": "AWS::KMS::Key",
       "UpdateReplacePolicy": "Retain",
@@ -24202,6 +25252,14 @@ phases:
           },
           "Type": "CODEPIPELINE",
         },
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
       },
       "Type": "AWS::CodeBuild::Project",
     },
@@ -24402,6 +25460,14 @@ phases:
           ],
         },
         "Runtime": "nodejs22.x",
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
       },
       "Type": "AWS::Lambda::Function",
     },
@@ -24445,6 +25511,14 @@ phases:
                 ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
               ],
             ],
+          },
+        ],
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
           },
         ],
       },
@@ -24658,6 +25732,14 @@ phases:
             "Name": "Install",
           },
         ],
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
       },
       "Type": "AWS::CodePipeline::Pipeline",
     },
@@ -24676,6 +25758,14 @@ phases:
           ],
           "Version": "2012-10-17",
         },
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
       },
       "Type": "AWS::IAM::Role",
     },
@@ -25082,6 +26172,14 @@ phases:
           "IgnorePublicAcls": true,
           "RestrictPublicBuckets": true,
         },
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
         "VersioningConfiguration": {
           "Status": "Enabled",
         },
@@ -25266,6 +26364,14 @@ phases:
           ],
         },
         "Runtime": "nodejs22.x",
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
         "Timeout": 30,
       },
       "Type": "AWS::Lambda::Function",
@@ -25306,6 +26412,14 @@ phases:
                 ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
               ],
             ],
+          },
+        ],
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
           },
         ],
       },
@@ -25380,6 +26494,11 @@ phases:
             ],
           ],
         },
+        "Tags": {
+          "Accelerator": {
+            "Ref": "AcceleratorPrefix",
+          },
+        },
         "Type": "String",
         "Value": "1.15.0-rc.7",
       },
@@ -25401,6 +26520,11 @@ phases:
               "/AWSAccelerator-Test-InstallerStack/stack-id",
             ],
           ],
+        },
+        "Tags": {
+          "Accelerator": {
+            "Ref": "AcceleratorPrefix",
+          },
         },
         "Type": "String",
         "Value": {
@@ -25590,6 +26714,14 @@ async function updatePipelineDetailsForBothPipelines(secretValue) {
           ],
         },
         "Runtime": "nodejs22.x",
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
         "Timeout": 60,
       },
       "Type": "AWS::Lambda::Function",
@@ -25620,6 +26752,14 @@ async function updatePipelineDetailsForBothPipelines(secretValue) {
           ],
         },
         "RetentionInDays": 731,
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
       },
       "Type": "AWS::Logs::LogGroup",
       "UpdateReplacePolicy": "Delete",
@@ -25935,6 +27075,14 @@ async function updatePipelineDetailsForBothPipelines(secretValue) {
           ],
           "Version": "2012-10-17",
         },
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
       },
       "Type": "AWS::IAM::Role",
     },
@@ -26059,6 +27207,14 @@ exports.handler = async function (event, context) {
           ],
         },
         "Runtime": "nodejs22.x",
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
       },
       "Type": "AWS::Lambda::Function",
     },
@@ -26156,6 +27312,14 @@ exports.handler = async function (event, context) {
                 ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
               ],
             ],
+          },
+        ],
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
           },
         ],
       },
@@ -26706,6 +27870,11 @@ exports[`InstallerStack > Stack(installer):  Snapshot Test 8`] = `
             ],
           ],
         },
+        "Tags": {
+          "Accelerator": {
+            "Ref": "AcceleratorPrefix",
+          },
+        },
         "Type": "String",
         "Value": {
           "Fn::GetAtt": [
@@ -26827,6 +27996,14 @@ exports[`InstallerStack > Stack(installer):  Snapshot Test 8`] = `
             "Name": "Install",
           },
         ],
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
       },
       "Type": "AWS::CodePipeline::Pipeline",
     },
@@ -26845,6 +28022,14 @@ exports[`InstallerStack > Stack(installer):  Snapshot Test 8`] = `
           ],
           "Version": "2012-10-17",
         },
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
       },
       "Type": "AWS::IAM::Role",
     },
@@ -27094,6 +28279,14 @@ exports[`InstallerStack > Stack(installer):  Snapshot Test 8`] = `
             "Name": "Install",
           },
         ],
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
       },
       "Type": "AWS::CodePipeline::Pipeline",
     },
@@ -27112,6 +28305,14 @@ exports[`InstallerStack > Stack(installer):  Snapshot Test 8`] = `
           ],
           "Version": "2012-10-17",
         },
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
       },
       "Type": "AWS::IAM::Role",
     },
@@ -27333,6 +28534,14 @@ exports[`InstallerStack > Stack(installer):  Snapshot Test 8`] = `
           "IgnorePublicAcls": true,
           "RestrictPublicBuckets": true,
         },
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
         "VersioningConfiguration": {
           "Status": "Enabled",
         },
@@ -27356,6 +28565,11 @@ exports[`InstallerStack > Stack(installer):  Snapshot Test 8`] = `
               "/installer-access-logs-bucket-name",
             ],
           ],
+        },
+        "Tags": {
+          "Accelerator": {
+            "Ref": "AcceleratorPrefix",
+          },
         },
         "Type": "String",
         "Value": {
@@ -27448,6 +28662,14 @@ exports[`InstallerStack > Stack(installer):  Snapshot Test 8`] = `
                 ":iam::aws:policy/AdministratorAccess",
               ],
             ],
+          },
+        ],
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
           },
         ],
       },
@@ -27796,6 +29018,14 @@ exports[`InstallerStack > Stack(installer):  Snapshot Test 8`] = `
             },
           ],
         },
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
       },
       "Type": "AWS::KMS::Key",
       "UpdateReplacePolicy": "Retain",
@@ -28301,6 +29531,14 @@ phases:
           },
           "Type": "CODEPIPELINE",
         },
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
       },
       "Type": "AWS::CodeBuild::Project",
     },
@@ -28501,6 +29739,14 @@ phases:
           ],
         },
         "Runtime": "nodejs22.x",
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
       },
       "Type": "AWS::Lambda::Function",
     },
@@ -28544,6 +29790,14 @@ phases:
                 ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
               ],
             ],
+          },
+        ],
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
           },
         ],
       },
@@ -28757,6 +30011,14 @@ phases:
             "Name": "Install",
           },
         ],
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
       },
       "Type": "AWS::CodePipeline::Pipeline",
     },
@@ -28775,6 +30037,14 @@ phases:
           ],
           "Version": "2012-10-17",
         },
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
       },
       "Type": "AWS::IAM::Role",
     },
@@ -29181,6 +30451,14 @@ phases:
           "IgnorePublicAcls": true,
           "RestrictPublicBuckets": true,
         },
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
         "VersioningConfiguration": {
           "Status": "Enabled",
         },
@@ -29365,6 +30643,14 @@ phases:
           ],
         },
         "Runtime": "nodejs22.x",
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
         "Timeout": 30,
       },
       "Type": "AWS::Lambda::Function",
@@ -29405,6 +30691,14 @@ phases:
                 ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
               ],
             ],
+          },
+        ],
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
           },
         ],
       },
@@ -29479,6 +30773,11 @@ phases:
             ],
           ],
         },
+        "Tags": {
+          "Accelerator": {
+            "Ref": "AcceleratorPrefix",
+          },
+        },
         "Type": "String",
         "Value": "1.15.0-rc.7",
       },
@@ -29500,6 +30799,11 @@ phases:
               "/AWSAccelerator-Test-InstallerStack/stack-id",
             ],
           ],
+        },
+        "Tags": {
+          "Accelerator": {
+            "Ref": "AcceleratorPrefix",
+          },
         },
         "Type": "String",
         "Value": {
@@ -29689,6 +30993,14 @@ async function updatePipelineDetailsForBothPipelines(secretValue) {
           ],
         },
         "Runtime": "nodejs22.x",
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
         "Timeout": 60,
       },
       "Type": "AWS::Lambda::Function",
@@ -29719,6 +31031,14 @@ async function updatePipelineDetailsForBothPipelines(secretValue) {
           ],
         },
         "RetentionInDays": 731,
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
       },
       "Type": "AWS::Logs::LogGroup",
       "UpdateReplacePolicy": "Delete",
@@ -30034,6 +31354,14 @@ async function updatePipelineDetailsForBothPipelines(secretValue) {
           ],
           "Version": "2012-10-17",
         },
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
       },
       "Type": "AWS::IAM::Role",
     },
@@ -30158,6 +31486,14 @@ exports.handler = async function (event, context) {
           ],
         },
         "Runtime": "nodejs22.x",
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
       },
       "Type": "AWS::Lambda::Function",
     },
@@ -30255,6 +31591,14 @@ exports.handler = async function (event, context) {
                 ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
               ],
             ],
+          },
+        ],
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
           },
         ],
       },
@@ -30829,6 +32173,11 @@ exports[`InstallerStack > Stack(installer):  Snapshot Test 9`] = `
             ],
           ],
         },
+        "Tags": {
+          "Accelerator": {
+            "Ref": "AcceleratorPrefix",
+          },
+        },
         "Type": "String",
         "Value": {
           "Fn::GetAtt": [
@@ -30950,6 +32299,14 @@ exports[`InstallerStack > Stack(installer):  Snapshot Test 9`] = `
             "Name": "Install",
           },
         ],
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
       },
       "Type": "AWS::CodePipeline::Pipeline",
     },
@@ -30968,6 +32325,14 @@ exports[`InstallerStack > Stack(installer):  Snapshot Test 9`] = `
           ],
           "Version": "2012-10-17",
         },
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
       },
       "Type": "AWS::IAM::Role",
     },
@@ -31217,6 +32582,14 @@ exports[`InstallerStack > Stack(installer):  Snapshot Test 9`] = `
             "Name": "Install",
           },
         ],
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
       },
       "Type": "AWS::CodePipeline::Pipeline",
     },
@@ -31235,6 +32608,14 @@ exports[`InstallerStack > Stack(installer):  Snapshot Test 9`] = `
           ],
           "Version": "2012-10-17",
         },
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
       },
       "Type": "AWS::IAM::Role",
     },
@@ -31456,6 +32837,14 @@ exports[`InstallerStack > Stack(installer):  Snapshot Test 9`] = `
           "IgnorePublicAcls": true,
           "RestrictPublicBuckets": true,
         },
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
         "VersioningConfiguration": {
           "Status": "Enabled",
         },
@@ -31479,6 +32868,11 @@ exports[`InstallerStack > Stack(installer):  Snapshot Test 9`] = `
               "/installer-access-logs-bucket-name",
             ],
           ],
+        },
+        "Tags": {
+          "Accelerator": {
+            "Ref": "AcceleratorPrefix",
+          },
         },
         "Type": "String",
         "Value": {
@@ -31571,6 +32965,14 @@ exports[`InstallerStack > Stack(installer):  Snapshot Test 9`] = `
                 ":iam::aws:policy/AdministratorAccess",
               ],
             ],
+          },
+        ],
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
           },
         ],
       },
@@ -31919,6 +33321,14 @@ exports[`InstallerStack > Stack(installer):  Snapshot Test 9`] = `
             },
           ],
         },
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
       },
       "Type": "AWS::KMS::Key",
       "UpdateReplacePolicy": "Retain",
@@ -32428,6 +33838,14 @@ phases:
           },
           "Type": "CODEPIPELINE",
         },
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
       },
       "Type": "AWS::CodeBuild::Project",
     },
@@ -32639,6 +34057,14 @@ phases:
             ],
           ],
         },
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
       },
       "Type": "AWS::Lambda::Function",
     },
@@ -32682,6 +34108,14 @@ phases:
                 ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
               ],
             ],
+          },
+        ],
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
           },
         ],
       },
@@ -32895,6 +34329,14 @@ phases:
             "Name": "Install",
           },
         ],
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
       },
       "Type": "AWS::CodePipeline::Pipeline",
     },
@@ -32913,6 +34355,14 @@ phases:
           ],
           "Version": "2012-10-17",
         },
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
       },
       "Type": "AWS::IAM::Role",
     },
@@ -33319,6 +34769,14 @@ phases:
           "IgnorePublicAcls": true,
           "RestrictPublicBuckets": true,
         },
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
         "VersioningConfiguration": {
           "Status": "Enabled",
         },
@@ -33514,6 +34972,14 @@ phases:
             ],
           ],
         },
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
         "Timeout": 30,
       },
       "Type": "AWS::Lambda::Function",
@@ -33554,6 +35020,14 @@ phases:
                 ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
               ],
             ],
+          },
+        ],
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
           },
         ],
       },
@@ -33628,6 +35102,11 @@ phases:
             ],
           ],
         },
+        "Tags": {
+          "Accelerator": {
+            "Ref": "AcceleratorPrefix",
+          },
+        },
         "Type": "String",
         "Value": "1.15.0-rc.7",
       },
@@ -33649,6 +35128,11 @@ phases:
               "/AWSAccelerator-Test-InstallerStack/stack-id",
             ],
           ],
+        },
+        "Tags": {
+          "Accelerator": {
+            "Ref": "AcceleratorPrefix",
+          },
         },
         "Type": "String",
         "Value": {
@@ -33849,6 +35333,14 @@ async function updatePipelineDetailsForBothPipelines(secretValue) {
             ],
           ],
         },
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
         "Timeout": 60,
       },
       "Type": "AWS::Lambda::Function",
@@ -33879,6 +35371,14 @@ async function updatePipelineDetailsForBothPipelines(secretValue) {
           ],
         },
         "RetentionInDays": 731,
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
       },
       "Type": "AWS::Logs::LogGroup",
       "UpdateReplacePolicy": "Delete",
@@ -34194,6 +35694,14 @@ async function updatePipelineDetailsForBothPipelines(secretValue) {
           ],
           "Version": "2012-10-17",
         },
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
       },
       "Type": "AWS::IAM::Role",
     },
@@ -34329,6 +35837,14 @@ exports.handler = async function (event, context) {
             ],
           ],
         },
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
+          },
+        ],
       },
       "Type": "AWS::Lambda::Function",
     },
@@ -34426,6 +35942,14 @@ exports.handler = async function (event, context) {
                 ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
               ],
             ],
+          },
+        ],
+        "Tags": [
+          {
+            "Key": "Accelerator",
+            "Value": {
+              "Ref": "AcceleratorPrefix",
+            },
           },
         ],
       },

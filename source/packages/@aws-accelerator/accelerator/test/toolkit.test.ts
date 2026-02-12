@@ -168,6 +168,7 @@ describe('AcceleratorToolkit', () => {
         'environments',
         expect.objectContaining({
           forceDeployment: true,
+          tags: expect.arrayContaining([expect.objectContaining({ Key: 'Accelerator', Value: 'AWSAccelerator' })]),
         }),
       );
     });
@@ -196,6 +197,7 @@ describe('AcceleratorToolkit', () => {
         'environments',
         expect.objectContaining({
           forceDeployment: false,
+          tags: expect.arrayContaining([expect.objectContaining({ Key: 'Accelerator', Value: 'AWSAccelerator' })]),
         }),
       );
     });

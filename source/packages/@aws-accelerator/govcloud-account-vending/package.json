@@ -23,6 +23,7 @@
     "build-prod": "tsc"
   },
   "dependencies": {
+    "@aws-accelerator/cdk-utils": "^0.0.0",
     "aws-cdk": "2.1029.4",
     "aws-cdk-lib": "2.219.0"
   },
