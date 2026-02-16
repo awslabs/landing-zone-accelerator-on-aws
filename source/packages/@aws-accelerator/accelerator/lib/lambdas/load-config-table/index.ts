@@ -23,7 +23,8 @@ import {
 import { CloudFormationClient, DescribeStacksCommand } from '@aws-sdk/client-cloudformation';
 import { S3Client, GetObjectCommand } from '@aws-sdk/client-s3';
 import { throttlingBackOff } from '@aws-accelerator/utils/lib/throttle';
-import * as yaml from 'js-yaml';
+import * as fs from 'fs';
+import AdmZip from 'adm-zip';
 import {
   AccountConfig,
   AccountsConfig,
@@ -31,8 +32,6 @@ import {
   OrganizationalUnitConfig,
   OrganizationalUnitIdConfig,
   OrganizationConfig,
-  parseAccountsConfig,
-  parseReplacementsConfig,
   ReplacementsConfig,
 } from '@aws-accelerator/config';
 import { Readable } from 'stream';
@@ -71,10 +70,8 @@ export async function handler(event: CloudFormationCustomResourceEvent): Promise
   console.log(event);
   const configTableName: string = event.ResourceProperties['configTableName'];
   const configRepositoryName: string = event.ResourceProperties['configRepositoryName'];
-  const managementAccountEmail: string = event.ResourceProperties['managementAccountEmail'];
-  const auditAccountEmail: string = event.ResourceProperties['auditAccountEmail'];
-  const logArchiveAccountEmail: string = event.ResourceProperties['logArchiveAccountEmail'];
   const configS3Bucket: string = event.ResourceProperties['configS3Bucket'];
+  const configDirS3Key: string = event.ResourceProperties['configDirS3Key'];
   const organizationsConfigS3Key: string = event.ResourceProperties['organizationsConfigS3Key'];
   const accountConfigS3Key: string = event.ResourceProperties['accountConfigS3Key'];
   const replacementsConfigS3Key: string = event.ResourceProperties['replacementsConfigS3Key'];
@@ -113,12 +110,7 @@ export async function handler(event: CloudFormationCustomResourceEvent): Promise
         partition,
         configTableName,
         commitId,
-        { name: configS3Bucket, organizationsConfigS3Key, accountConfigS3Key, replacementsConfigS3Key },
-        {
-          managementAccount: managementAccountEmail,
-          auditAccount: auditAccountEmail,
-          logArchiveAccount: logArchiveAccountEmail,
-        },
+        { name: configS3Bucket, configDirS3Key, organizationsConfigS3Key, accountConfigS3Key, replacementsConfigS3Key },
         isOrgsEnabled,
       );
 
@@ -130,20 +122,32 @@ export async function handler(event: CloudFormationCustomResourceEvent): Promise
   }
 }
 
-async function getConfigFileContents(configFileS3Bucket: string, configFileS3Key: string): Promise<string> {
+async function downloadConfigFiles(
+  bucket: string,
+  localDir: string,
+  configKeys: { configDirS3Key: string },
+): Promise<void> {
+  console.log(`Downloading and extracting config directory from ${configKeys.configDirS3Key}`);
   const response = await throttlingBackOff(() =>
-    s3Client.send(new GetObjectCommand({ Bucket: configFileS3Bucket, Key: configFileS3Key })),
+    s3Client.send(new GetObjectCommand({ Bucket: bucket, Key: configKeys.configDirS3Key })),
   );
-  const stream = response.Body as Readable;
-  return streamToString(stream);
+
+  const zipBuffer = await streamToBuffer(response.Body as Readable);
+
+  try {
+    const zip = new AdmZip(zipBuffer);
+    zip.extractAllTo(localDir, true);
+  } catch (error) {
+    throw new Error(`Failed to extract config directory from ${configKeys.configDirS3Key}: ${error}`);
+  }
 }
 
-async function streamToString(stream: Readable): Promise<string> {
+async function streamToBuffer(stream: Readable): Promise<Buffer> {
   return new Promise((resolve, reject) => {
     const chunks: Uint8Array[] = [];
     stream.on('data', chunk => chunks.push(chunk));
     stream.on('error', reject);
-    stream.on('end', () => resolve(Buffer.concat(chunks).toString('utf-8')));
+    stream.on('end', () => resolve(Buffer.concat(chunks)));
   });
 }
 
@@ -295,42 +299,32 @@ async function onCreateUpdateFunction(
   commitId: string,
   bucket: {
     name: string;
+    configDirS3Key: string;
     organizationsConfigS3Key: string;
     accountConfigS3Key: string;
     replacementsConfigS3Key: string;
-  },
-  emails: {
-    managementAccount: string;
-    auditAccount: string;
-    logArchiveAccount: string;
   },
   isOrgsEnabled: boolean,
 ): Promise<{
   PhysicalResourceId: string | undefined;
   Status: string;
 }> {
-  const accountsConfigContent = await getConfigFileContents(bucket.name, bucket.accountConfigS3Key);
-  const accountsValues = parseAccountsConfig(yaml.load(accountsConfigContent));
-  const accountsConfig = new AccountsConfig(
-    {
-      managementAccountEmail: emails.managementAccount,
-      auditAccountEmail: emails.auditAccount,
-      logArchiveAccountEmail: emails.logArchiveAccount,
-    },
-    accountsValues,
-  );
+  const configDir = '/tmp/config';
+  fs.rmSync(configDir, { recursive: true, force: true });
+  fs.mkdirSync(configDir, { recursive: true });
 
-  let replacementsConfig = undefined;
-  if (bucket.replacementsConfigS3Key) {
-    const replacementsConfigContent = await getConfigFileContents(bucket.name, bucket.replacementsConfigS3Key);
-    const replacementsValues = parseReplacementsConfig(yaml.load(replacementsConfigContent));
+  await downloadConfigFiles(bucket.name, configDir, {
+    configDirS3Key: bucket.configDirS3Key,
+  });
 
-    // edge-case: loading without looking up SSM replacements
-    replacementsConfig = new ReplacementsConfig(replacementsValues, accountsConfig);
-  }
+  const accountsConfig = AccountsConfig.load(configDir);
+  const replacementsConfig = bucket.replacementsConfigS3Key
+    ? ReplacementsConfig.load(configDir, accountsConfig)
+    : undefined;
 
-  const organizationConfigContent = await getConfigFileContents(bucket.name, bucket.organizationsConfigS3Key);
-  const organizationConfig = OrganizationConfig.loadFromString(organizationConfigContent, replacementsConfig);
+  const organizationConfig = replacementsConfig
+    ? OrganizationConfig.load(configDir, replacementsConfig)
+    : OrganizationConfig.loadRawOrganizationsConfig(configDir);
   await organizationConfig.loadOrganizationalUnitIds(partition);
 
   await putAllOrganizationConfigInTable(organizationConfig, configTableName, commitId);

@@ -24,6 +24,7 @@ export interface LoadAcceleratorConfigTableProps {
   readonly logArchiveAccountEmail: string;
   readonly auditAccountEmail: string;
   readonly configS3Bucket: string;
+  readonly configDirS3Key: string;
   readonly organizationsConfigS3Key: string;
   readonly accountConfigS3Key: string;
   readonly replacementsConfigS3Key?: string;
@@ -112,8 +113,11 @@ export class LoadAcceleratorConfigTable extends Construct {
         {
           Sid: 's3',
           Effect: 'Allow',
-          Action: ['s3:GetObject'],
+          Action: ['s3:GetObject', 's3:ListBucket'],
           Resource: [
+            `arn:${cdk.Stack.of(this).partition}:s3:::cdk-accel-assets-${cdk.Stack.of(this).account}-${
+              cdk.Stack.of(this).region
+            }`,
             `arn:${cdk.Stack.of(this).partition}:s3:::cdk-accel-assets-${cdk.Stack.of(this).account}-${
               cdk.Stack.of(this).region
             }/*`,
@@ -145,6 +149,7 @@ export class LoadAcceleratorConfigTable extends Construct {
         auditAccountEmail: props.auditAccountEmail,
         logArchiveAccountEmail: props.logArchiveAccountEmail,
         configS3Bucket: props.configS3Bucket,
+        configDirS3Key: props.configDirS3Key,
         organizationsConfigS3Key: props.organizationsConfigS3Key,
         accountConfigS3Key: props.accountConfigS3Key,
         replacementsConfigS3Key: props.replacementsConfigS3Key,

@@ -78,6 +78,12 @@ export class PrepareStack extends AcceleratorStack {
 
       // Make assets from the configuration directory
       this.logger.info(`Configuration assets creation`);
+
+      // Upload entire config directory to support !include tags
+      const configDirAsset = new cdk.aws_s3_assets.Asset(this, 'ConfigDirectoryAsset', {
+        path: props.configDirPath,
+      });
+
       const accountConfigAsset = new cdk.aws_s3_assets.Asset(this, 'AccountConfigAsset', {
         path: path.join(props.configDirPath, AccountsConfig.FILENAME),
       });
@@ -168,7 +174,8 @@ export class PrepareStack extends AcceleratorStack {
           managementAccountEmail: props.accountsConfig.getManagementAccount().email,
           auditAccountEmail: props.accountsConfig.getAuditAccount().email,
           logArchiveAccountEmail: props.accountsConfig.getLogArchiveAccount().email,
-          configS3Bucket: organizationsConfigAsset.s3BucketName,
+          configS3Bucket: configDirAsset.s3BucketName,
+          configDirS3Key: configDirAsset.s3ObjectKey,
           organizationsConfigS3Key: organizationsConfigAsset.s3ObjectKey,
           accountConfigS3Key: accountConfigAsset.s3ObjectKey,
           replacementsConfigS3Key: replacementsConfigAsset?.s3ObjectKey,
