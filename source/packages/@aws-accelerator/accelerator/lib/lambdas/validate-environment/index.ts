@@ -125,6 +125,7 @@ export async function handler(event: CloudFormationCustomResourceEvent): Promise
   const maxOuAttachedScps = event.ResourceProperties['maxOuAttachedScps'] ?? 5;
   const maxAccountAttachedScps = event.ResourceProperties['maxAccountAttachedScps'] ?? 5;
   const vpcCidrs = event.ResourceProperties['vpcCidrs'];
+  const transitGateways = event.ResourceProperties['transitGateways'];
   const solutionId = process.env['SOLUTION_ID'];
   const useV2StacksValue = event.ResourceProperties['useV2StacksValue'];
   const v2StacksParamName = event.ResourceProperties['v2StacksParamName'];
@@ -184,6 +185,10 @@ export async function handler(event: CloudFormationCustomResourceEvent): Promise
 
       const useV2StacksErrors = await validateUseV2StacksFlag(useV2StacksValue, v2StacksParamName);
       validationErrors.push(...useV2StacksErrors);
+
+      if (isTransitGatewayConfigArray(transitGateways)) {
+        await validateTransitGatewayMulticastSupport(transitGateways);
+      }
 
       const allOuInConfigErrors = await validateAllOuInConfig();
       validationErrors.push(...allOuInConfigErrors);
@@ -802,12 +807,66 @@ async function getRootId(): Promise<string> {
   return rootId;
 }
 
-type CIDRConfig = {
-  vpcName: string;
-  cidrs: string[];
+type transitGatewayConfig = {
+  transitGatewayName: string;
   logicalId: string;
+  multicastSupport: string | undefined;
   parameterName: string;
 };
+
+export function isTransitGatewayConfigArray(value: unknown): value is transitGatewayConfig[] {
+  return isArrayOfType(value, isTransitGatewayConfig);
+}
+
+export function isTransitGatewayConfig(value: unknown): value is transitGatewayConfig {
+  return (
+    typeof value === 'object' &&
+    typeof (value as transitGatewayConfig).transitGatewayName === 'string' &&
+    typeof (value as transitGatewayConfig).logicalId === 'string' &&
+    typeof (value as transitGatewayConfig).parameterName === 'string'
+  );
+}
+
+async function validateTransitGatewayMulticastSupport(tgwConfigs: transitGatewayConfig[]) {
+  for (const config of tgwConfigs) {
+    const configValue = config.multicastSupport ?? 'disable';
+    const existingValue = await getOrCreateMulticastSupportParameter(config);
+
+    if (existingValue !== configValue) {
+      validationErrors.push(
+        `Transit Gateway ${config.transitGatewayName} multicast support cannot be changed from '${existingValue}' to '${config.multicastSupport}'. This would require recreating the Transit Gateway.`,
+      );
+      break;
+    }
+  }
+}
+
+async function getOrCreateMulticastSupportParameter(config: transitGatewayConfig): Promise<string> {
+  const configValue = config.multicastSupport ?? 'disable';
+  try {
+    const response = await throttlingBackOff(() =>
+      ssmClient.send(new GetParameterCommand({ Name: config.parameterName })),
+    );
+    return response.Parameter?.Value ?? configValue;
+  } catch (error) {
+    // Parameter doesn't exist - create it with the config value
+    console.error('Unable to retrieve to ssm parameter store, attempting to create it.', error);
+    try {
+      await throttlingBackOff(() =>
+        ssmClient.send(
+          new PutParameterCommand({
+            Name: config.parameterName,
+            Type: 'String',
+            Value: configValue,
+          }),
+        ),
+      );
+    } catch (error) {
+      console.error('Unable to write to ssm parameter store', error);
+    }
+    return configValue;
+  }
+}
 
 function isArrayOfType<TItem>(value: unknown, guard: (value: unknown) => value is TItem): value is TItem[] {
   if (!Array.isArray(value)) return false;
@@ -900,6 +959,12 @@ async function getLastDeployedCIDRsFor(config: CIDRConfig): Promise<string[]> {
   }
 }
 
+type CIDRConfig = {
+  vpcName: string;
+  cidrs: string[];
+  logicalId: string;
+  parameterName: string;
+};
 /**
  * Function to validate if v1 stacks are enabled after switched to v2 stacks
  * @param configValue

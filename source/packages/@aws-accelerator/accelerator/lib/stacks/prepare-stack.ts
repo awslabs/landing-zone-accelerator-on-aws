@@ -377,6 +377,16 @@ export class PrepareStack extends AcceleratorStack {
         logicalId: pascalCase(`SsmParam${pascalCase(vpc.account)}Vpc${pascalCase(vpc.name)}DeployedCidrs`),
       }));
 
+    // Define the Transit Gateways from the network-config to pass for validation
+    const transitGateways = this.props.networkConfig.transitGateways
+      ?.filter(tgw => tgw.name !== undefined)
+      .map(tgw => ({
+        transitGatewayName: `${tgw.account}/${tgw.name}`,
+        parameterName: this.getSsmPath(SsmResourceType.VALIDATION_TGW_MULTICAST, [tgw.account, tgw.name]),
+        multicastSupport: tgw.multicastSupport!,
+        logicalId: pascalCase(`SsmParam${pascalCase(tgw.account)}Tgw${tgw.name}MulticastOptionValue`),
+      }));
+
     this.logger.info(`Validate Environment`);
     const validation = new ValidateEnvironmentConfig(this, 'ValidateEnvironmentConfig', {
       acceleratorConfigTable: options.configTable,
@@ -393,6 +403,7 @@ export class PrepareStack extends AcceleratorStack {
       logRetentionInDays: options.props.globalConfig.cloudwatchLogRetentionInDays,
       prefixes: this.props.prefixes,
       vpcsCidrs,
+      transitGateways,
       useV2StacksValue: this.props.globalConfig.useV2Stacks ?? false,
       v2StacksParamName: this.getSsmPath(SsmResourceType.USE_V2_STACKS_FLAG, ['network-stacks']),
     });

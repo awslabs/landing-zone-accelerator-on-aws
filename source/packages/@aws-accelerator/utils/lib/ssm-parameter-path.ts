@@ -147,6 +147,13 @@ export enum SsmResourceType {
    */
   VALIDATION_VPC_CIDRS = '/validation/${0}/network/vpc/${1}/deployedCidrs',
   /**
+   * TGWs that have been deployed.
+   *
+   * `${0}` is replaced with the account name
+   * `${1}` is replaced with the tgw name
+   */
+  VALIDATION_TGW_MULTICAST = '/validation/${0}/network/tgw/${1}/multicastSupport',
+  /**
    * Internet gateway ID
    *
    * `${0}` is replaced with the VPC name

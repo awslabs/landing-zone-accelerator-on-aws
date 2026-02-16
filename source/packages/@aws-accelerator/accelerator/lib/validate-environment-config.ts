@@ -44,6 +44,7 @@ export interface ValidateEnvironmentConfigProps {
   readonly logRetentionInDays: number;
   readonly prefixes: AcceleratorResourcePrefixes;
   readonly vpcsCidrs: { vpcName: string; logicalId: string; cidrs: string[]; parameterName: string }[];
+  readonly transitGateways: { transitGatewayName: string; logicalId: string; multicastSupport: string | undefined }[];
   readonly useV2StacksValue: boolean;
   readonly v2StacksParamName: string;
 }
@@ -110,6 +111,7 @@ export class ValidateEnvironmentConfig extends Construct {
       resources: [
         `arn:${props.partition}:ssm:${props.region}:${props.managementAccountId}:parameter${props.prefixes.ssmParamName}/validation/*/network/vpc/*/deployedCidrs`,
         `arn:${props.partition}:ssm:${props.region}:${props.managementAccountId}:parameter${props.v2StacksParamName}`,
+        `arn:${props.partition}:ssm:${props.region}:${props.managementAccountId}:parameter${props.prefixes.ssmParamName}/validation/*/network/tgw/*/multicastSupport`,
       ],
     });
     const ssmCreateParamPolicy = new cdk.aws_iam.PolicyStatement({
@@ -118,6 +120,7 @@ export class ValidateEnvironmentConfig extends Construct {
       actions: ['ssm:PutParameter'],
       resources: [
         `arn:${props.partition}:ssm:${props.region}:${props.managementAccountId}:parameter${props.v2StacksParamName}`,
+        `arn:${props.partition}:ssm:${props.region}:${props.managementAccountId}:parameter${props.prefixes.ssmParamName}/validation/*/network/tgw/*/multicastSupport`,
       ],
     });
 
@@ -166,6 +169,7 @@ export class ValidateEnvironmentConfig extends Construct {
         policyTagKey: props.policyTagKey,
         uuid: uuidv4(), // Generates a new UUID to force the resource to update,
         vpcCidrs: props.vpcsCidrs,
+        transitGateways: props.transitGateways,
         useV2StacksValue: props.useV2StacksValue,
         v2StacksParamName: props.v2StacksParamName,
       },
