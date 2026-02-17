@@ -333,7 +333,7 @@ export class InstallerContainerStack extends cdk.Stack {
         type: 'String',
         description:
           'Names the resources in the external deployment account. This must be unique for each LZA pipeline created in a single external deployment account, for example "env2" or "app1." Do not use "aws-accelerator" or a similar value that could be confused with the prefix."',
-        allowedPattern: '^[a-z]+[a-z0-9-]{1,61}[a-z0-9]+$',
+        allowedPattern: '^(?!aws-|ssm-)[a-z]+[a-z0-9-]{1,61}[a-z0-9]+$',
         constraintDescription:
           'Qualifier must be 3-63 characters, include only lowercase letters, numbers, and hyphens, start with a letter, end with a letter or number, and must not start with "aws-" or "ssm-"',
       });
@@ -528,24 +528,6 @@ export class InstallerContainerStack extends cdk.Stack {
         externalPipelineValidation.addAssertion(
           cdk.Fn.conditionNot(cdk.Fn.conditionEquals('', this.acceleratorQualifier.valueAsString)),
           'AcceleratorQualifier parameter must not be empty when using external pipeline account',
-        );
-
-        // Validate that AcceleratorQualifier does not start with 'aws-' or 'ssm-'
-        // The allowedPattern enforces lowercase-only, so we only need to check lowercase variants.
-        // CloudFormation allowedPattern regex does not support negative lookaheads,
-        // so we use a CfnRule to reject reserved prefixes that cause SSM document creation failures.
-        externalPipelineValidation.addAssertion(
-          cdk.Fn.conditionNot(
-            cdk.Fn.conditionEquals(cdk.Fn.select(0, cdk.Fn.split('-', this.acceleratorQualifier.valueAsString)), 'aws'),
-          ),
-          'AcceleratorQualifier parameter must not start with "aws-". This prefix is reserved and will cause SSM document creation failures.',
-        );
-
-        externalPipelineValidation.addAssertion(
-          cdk.Fn.conditionNot(
-            cdk.Fn.conditionEquals(cdk.Fn.select(0, cdk.Fn.split('-', this.acceleratorQualifier.valueAsString)), 'ssm'),
-          ),
-          'AcceleratorQualifier parameter must not start with "ssm-". This prefix is reserved and will cause SSM document creation failures.',
         );
       }
 

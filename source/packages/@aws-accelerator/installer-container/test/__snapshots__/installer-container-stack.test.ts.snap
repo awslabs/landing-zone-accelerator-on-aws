@@ -2951,7 +2951,7 @@ exports[`InstallerContainerStack > Construct(InstallerContainerStack): Deploymen
       "Type": "String",
     },
     "AcceleratorQualifier": {
-      "AllowedPattern": "^[a-z]+[a-z0-9-]{1,61}[a-z0-9]+$",
+      "AllowedPattern": "^(?!aws-|ssm-)[a-z]+[a-z0-9-]{1,61}[a-z0-9]+$",
       "ConstraintDescription": "Qualifier must be 3-63 characters, include only lowercase letters, numbers, and hyphens, start with a letter, end with a letter or number, and must not start with "aws-" or "ssm-"",
       "Description": "Names the resources in the external deployment account. This must be unique for each LZA pipeline created in a single external deployment account, for example "env2" or "app1." Do not use "aws-accelerator" or a similar value that could be confused with the prefix."",
       "Type": "String",
@@ -5444,56 +5444,6 @@ def handler(event, context):
             ],
           },
           "AssertDescription": "AcceleratorQualifier parameter must not be empty when using external pipeline account",
-        },
-        {
-          "Assert": {
-            "Fn::Not": [
-              {
-                "Fn::Equals": [
-                  {
-                    "Fn::Select": [
-                      0,
-                      {
-                        "Fn::Split": [
-                          "-",
-                          {
-                            "Ref": "AcceleratorQualifier",
-                          },
-                        ],
-                      },
-                    ],
-                  },
-                  "aws",
-                ],
-              },
-            ],
-          },
-          "AssertDescription": "AcceleratorQualifier parameter must not start with "aws-". This prefix is reserved and will cause SSM document creation failures.",
-        },
-        {
-          "Assert": {
-            "Fn::Not": [
-              {
-                "Fn::Equals": [
-                  {
-                    "Fn::Select": [
-                      0,
-                      {
-                        "Fn::Split": [
-                          "-",
-                          {
-                            "Ref": "AcceleratorQualifier",
-                          },
-                        ],
-                      },
-                    ],
-                  },
-                  "ssm",
-                ],
-              },
-            ],
-          },
-          "AssertDescription": "AcceleratorQualifier parameter must not start with "ssm-". This prefix is reserved and will cause SSM document creation failures.",
         },
         {
           "Assert": {
@@ -8684,7 +8634,7 @@ exports[`InstallerContainerStack > Construct(InstallerContainerStack): With Exte
       "Type": "String",
     },
     "AcceleratorQualifier": {
-      "AllowedPattern": "^[a-z]+[a-z0-9-]{1,61}[a-z0-9]+$",
+      "AllowedPattern": "^(?!aws-|ssm-)[a-z]+[a-z0-9-]{1,61}[a-z0-9]+$",
       "ConstraintDescription": "Qualifier must be 3-63 characters, include only lowercase letters, numbers, and hyphens, start with a letter, end with a letter or number, and must not start with "aws-" or "ssm-"",
       "Description": "Names the resources in the external deployment account. This must be unique for each LZA pipeline created in a single external deployment account, for example "env2" or "app1." Do not use "aws-accelerator" or a similar value that could be confused with the prefix."",
       "Type": "String",
@@ -11167,56 +11117,6 @@ def handler(event, context):
             ],
           },
           "AssertDescription": "AcceleratorQualifier parameter must not be empty when using external pipeline account",
-        },
-        {
-          "Assert": {
-            "Fn::Not": [
-              {
-                "Fn::Equals": [
-                  {
-                    "Fn::Select": [
-                      0,
-                      {
-                        "Fn::Split": [
-                          "-",
-                          {
-                            "Ref": "AcceleratorQualifier",
-                          },
-                        ],
-                      },
-                    ],
-                  },
-                  "aws",
-                ],
-              },
-            ],
-          },
-          "AssertDescription": "AcceleratorQualifier parameter must not start with "aws-". This prefix is reserved and will cause SSM document creation failures.",
-        },
-        {
-          "Assert": {
-            "Fn::Not": [
-              {
-                "Fn::Equals": [
-                  {
-                    "Fn::Select": [
-                      0,
-                      {
-                        "Fn::Split": [
-                          "-",
-                          {
-                            "Ref": "AcceleratorQualifier",
-                          },
-                        ],
-                      },
-                    ],
-                  },
-                  "ssm",
-                ],
-              },
-            ],
-          },
-          "AssertDescription": "AcceleratorQualifier parameter must not start with "ssm-". This prefix is reserved and will cause SSM document creation failures.",
         },
         {
           "Assert": {
