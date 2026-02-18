@@ -25,6 +25,8 @@ import {
 import { AccountsConfig, OrganizationConfig } from '@aws-accelerator/config';
 import * as awsLza from '../../../../../@aws-lza/index';
 
+import { SSMClient } from '@aws-sdk/client-ssm';
+
 // Mock SSM Client
 vi.mock('@aws-sdk/client-ssm', () => ({
   SSMClient: vi.fn().mockImplementation(() => ({
@@ -47,10 +49,17 @@ describe('RegisterOrganizationalUnitModule', () => {
   beforeEach(() => {
     vi.clearAllMocks();
 
+    // Re-establish SSMClient mock after clearAllMocks
+    (SSMClient as unknown as ReturnType<typeof vi.fn>).mockImplementation(() => ({
+      send: vi.fn().mockResolvedValue({}),
+    }));
+
     vi.spyOn(awsLza, 'registerOrganizationalUnit').mockResolvedValue(`Successful`);
     vi.spyOn(awsLza, 'getOrganizationalUnitsDetail').mockResolvedValue(MOCK_CONSTANTS.organizationUnitsDetail);
-    // Mock getParametersValue to return parameter not found (default behavior)
-    vi.spyOn(awsLza, 'getParametersValue').mockRejectedValue(new Error('Parameter not found'));
+    // Mock getParametersValue to return default value (parameter not found, falls back to default)
+    vi.spyOn(awsLza, 'getParametersValue').mockResolvedValue([
+      { Name: '/accelerator/control-tower/govern-regions-updated', Value: 'false' },
+    ]);
 
     mockAccountsConfig = {
       getManagementAccount: vi.fn().mockReturnValue(MOCK_CONSTANTS.managementAccount),
@@ -187,6 +196,96 @@ describe('RegisterOrganizationalUnitModule', () => {
     expect(awsLza.registerOrganizationalUnit).toHaveBeenCalledTimes(0);
     expect(response).toBe(
       `Skipping "${AcceleratorModules.REGISTER_ORGANIZATIONAL_UNIT}" because all organizational units found in configuration file are already registered with AWS ControlTower.`,
+    );
+  });
+
+  test('should re-register all OUs when governed regions were updated', async () => {
+    // Setup - SSM parameter returns 'true' indicating governed regions were updated
+    vi.spyOn(awsLza, 'getParametersValue').mockResolvedValue([
+      { Name: '/accelerator/control-tower/govern-regions-updated', Value: 'true' },
+    ]);
+
+    // Note: securityOuName comes from getLogArchiveAccount().organizationalUnit
+    // which is undefined in the mock, so Security OU is NOT excluded from re-registration.
+    // All non-ignored OUs are re-registered when governed regions are updated.
+    const allNonIgnoredOus = MOCK_CONSTANTS.configs.organizationConfig.organizationalUnits.filter(ou => !ou.ignore);
+
+    const param: ModuleParams = {
+      moduleItem: {
+        name: AcceleratorModules.REGISTER_ORGANIZATIONAL_UNIT,
+        description: '',
+        runOrder: 1,
+        handler: vi.fn().mockResolvedValue(`Module 1 of ${AcceleratorStage.ACCOUNTS} stage executed`),
+        executionPhase: ModuleExecutionPhase.DEPLOY,
+      },
+      runnerParameters: MOCK_CONSTANTS.runnerParameters,
+      moduleRunnerParameters: {
+        configs: {
+          ...MOCK_CONSTANTS.configs,
+          accountsConfig: mockAccountsConfig as AccountsConfig,
+          globalConfig: mockGlobalConfiguration,
+        },
+        globalRegion: MOCK_CONSTANTS.globalRegion,
+        resourcePrefixes: MOCK_CONSTANTS.resourcePrefixes,
+        acceleratorResourceNames: MOCK_CONSTANTS.acceleratorResourceNames,
+        logging: MOCK_CONSTANTS.logging,
+        organizationDetails: MOCK_CONSTANTS.organizationDetails,
+        organizationAccounts: MOCK_CONSTANTS.organizationAccounts,
+        managementAccountCredentials: MOCK_CONSTANTS.credentials,
+      },
+    };
+
+    // Execute
+    const response = await RegisterOrganizationalUnitModule.execute(param);
+
+    // Verify - all non-Security, non-ignored OUs should be re-registered
+    expect(awsLza.registerOrganizationalUnit).toHaveBeenCalledTimes(allNonIgnoredOus.length);
+    expect(response).toContain('completed successfully');
+  });
+
+  test('should pass defaultValues map to getParametersValue', async () => {
+    // Setup
+    const getParametersValueSpy = vi
+      .spyOn(awsLza, 'getParametersValue')
+      .mockResolvedValue([{ Name: '/accelerator/control-tower/govern-regions-updated', Value: 'false' }]);
+
+    const param: ModuleParams = {
+      moduleItem: {
+        name: AcceleratorModules.REGISTER_ORGANIZATIONAL_UNIT,
+        description: '',
+        runOrder: 1,
+        handler: vi.fn().mockResolvedValue(`Module 1 of ${AcceleratorStage.ACCOUNTS} stage executed`),
+        executionPhase: ModuleExecutionPhase.DEPLOY,
+      },
+      runnerParameters: MOCK_CONSTANTS.runnerParameters,
+      moduleRunnerParameters: {
+        configs: {
+          ...MOCK_CONSTANTS.configs,
+          accountsConfig: mockAccountsConfig as AccountsConfig,
+          globalConfig: mockGlobalConfiguration,
+        },
+        globalRegion: MOCK_CONSTANTS.globalRegion,
+        resourcePrefixes: MOCK_CONSTANTS.resourcePrefixes,
+        acceleratorResourceNames: MOCK_CONSTANTS.acceleratorResourceNames,
+        logging: MOCK_CONSTANTS.logging,
+        organizationDetails: MOCK_CONSTANTS.organizationDetails,
+        organizationAccounts: MOCK_CONSTANTS.organizationAccounts,
+        managementAccountCredentials: MOCK_CONSTANTS.credentials,
+      },
+    };
+
+    // Execute
+    await RegisterOrganizationalUnitModule.execute(param);
+
+    // Verify - getParametersValue should be called with defaultValues map
+    expect(getParametersValueSpy).toHaveBeenCalledWith(
+      ['/accelerator/control-tower/govern-regions-updated'],
+      'mockHomeRegion',
+      'RegisterOrganizationalUnitModule',
+      undefined,
+      'mockSolutionId',
+      MOCK_CONSTANTS.credentials,
+      { '/accelerator/control-tower/govern-regions-updated': 'false' },
     );
   });
 

@@ -65,8 +65,9 @@ export interface ITargetAccountConfig {
  * @param targetAccount - Optional target account configuration for cross-account access
  * @param solutionId - Optional solution identifier for user agent
  * @param credentials - Optional existing credentials for the operation
+ * @param defaultValues - Optional map of parameter name to default value. When a parameter is not found and has a default, the default is returned instead of throwing.
  * @returns Promise resolving to array of parameter objects
- * @throws Error if parameters are not found or access is denied
+ * @throws Error if parameters are not found (when no default provided) or access is denied
  */
 export async function getParametersValue(
   parameterNames: string[],
@@ -75,6 +76,7 @@ export async function getParametersValue(
   targetAccount?: ITargetAccountConfig,
   solutionId?: string,
   credentials?: IAssumeRoleCredential,
+  defaultValues?: Record<string, string>,
 ): Promise<Parameter[]> {
   let targetCredentials: IAssumeRoleCredential | undefined;
   let targetRegion = region;
@@ -121,23 +123,33 @@ export async function getParametersValue(
     [ParameterNotFound],
   );
 
-  // Check if all parameters were found
-  if (response.InvalidParameters && response.InvalidParameters.length > 0) {
-    const message = `${MODULE_EXCEPTIONS.INVALID_INPUT}: Parameters not found: ${response.InvalidParameters.join(', ')}`;
-    logger.error(message, logPrefix);
-    throw new Error(message);
+  const found: Parameter[] = response.Parameters ?? [];
+  const missingNames: string[] = response.InvalidParameters ?? [];
+
+  // Resolve missing parameters: use defaults where available, throw for the rest
+  if (missingNames.length > 0) {
+    const withDefaults = missingNames.filter(name => defaultValues?.[name] !== undefined);
+    const withoutDefaults = missingNames.filter(name => defaultValues?.[name] === undefined);
+
+    if (withoutDefaults.length > 0) {
+      const message = `${MODULE_EXCEPTIONS.INVALID_INPUT}: Parameters not found: ${withoutDefaults.join(', ')}`;
+      logger.error(message, logPrefix);
+      throw new Error(message);
+    }
+
+    const defaultResults: Parameter[] = withDefaults.map(name => {
+      logger.info(
+        `[${logPrefix}] SSM parameter ${name} not found, using default value ${defaultValues![name]}`,
+        logPrefix,
+      );
+      return { Name: name, Value: defaultValues![name] };
+    });
+
+    return [...found, ...defaultResults];
   }
 
-  if (!response.Parameters || response.Parameters.length === 0) {
-    const message = `${MODULE_EXCEPTIONS.SERVICE_EXCEPTION}: GetParametersCommand api returned undefined for Parameters or returned no values, for parameter names: ${parameterNames.join(', ')}`;
-    logger.error(message, logPrefix);
-    throw new Error(message);
-  }
-
-  const results: Parameter[] = [...response.Parameters];
-
-  logger.info(`Successfully retrieved ${results.length} parameters`, logPrefix);
-  return results;
+  logger.info(`Successfully retrieved ${found.length} parameters`, logPrefix);
+  return found;
 }
 
 /**

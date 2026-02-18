@@ -53,17 +53,19 @@ export abstract class RegisterOrganizationalUnitModule {
         undefined,
         params.runnerParameters.solutionId,
         params.moduleRunnerParameters.managementAccountCredentials,
+        { [governRegionsUpdatedParamName]: 'false' }, // Default when parameter doesn't exist yet — expected on first run
       );
 
       const governRegionsUpdatedParam = ssmParameters.find(p => p.Name === governRegionsUpdatedParamName);
       if (governRegionsUpdatedParam?.Value === 'true') {
         statusLogger.info('Governed regions were updated, will re-register organizational units.');
         reregisterOu = true;
+      } else {
+        statusLogger.info('No governed regions update detected, skipping OU re-registration.');
       }
-    } catch {
-      // Parameter might not exist yet, which is fine - default to false
-      statusLogger.info(
-        `SSM parameter ${governRegionsUpdatedParamName} not found or error reading it, defaulting reregisterOu to false.`,
+    } catch (error) {
+      statusLogger.warn(
+        `Failed to read SSM parameter ${governRegionsUpdatedParamName}. Defaulting reregisterOu to false. This is a non-critical error and will not affect core functionality. Error: ${error}`,
       );
     }
 

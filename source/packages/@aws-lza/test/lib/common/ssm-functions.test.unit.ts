@@ -188,30 +188,32 @@ describe('ssm-functions', () => {
       ).rejects.toThrow('InvalidInput: Parameters not found: /test/param1');
     });
 
-    test('should throw error when no parameters returned', async () => {
+    test('should return empty array when no parameters returned', async () => {
       mockExecuteApi.mockResolvedValue({
         Parameters: undefined,
         InvalidParameters: [],
       });
 
-      await expect(
-        getParametersValue(MOCK_CONSTANTS.parameterNames, MOCK_CONSTANTS.region, MOCK_CONSTANTS.logPrefix),
-      ).rejects.toThrow(
-        'ServiceException: GetParametersCommand api returned undefined for Parameters or returned no values',
+      const result = await getParametersValue(
+        MOCK_CONSTANTS.parameterNames,
+        MOCK_CONSTANTS.region,
+        MOCK_CONSTANTS.logPrefix,
       );
+      expect(result).toEqual([]);
     });
 
-    test('should throw error when empty parameters array returned', async () => {
+    test('should return empty array when empty parameters array returned', async () => {
       mockExecuteApi.mockResolvedValue({
         Parameters: [],
         InvalidParameters: [],
       });
 
-      await expect(
-        getParametersValue(MOCK_CONSTANTS.parameterNames, MOCK_CONSTANTS.region, MOCK_CONSTANTS.logPrefix),
-      ).rejects.toThrow(
-        'ServiceException: GetParametersCommand api returned undefined for Parameters or returned no values',
+      const result = await getParametersValue(
+        MOCK_CONSTANTS.parameterNames,
+        MOCK_CONSTANTS.region,
+        MOCK_CONSTANTS.logPrefix,
       );
+      expect(result).toEqual([]);
     });
 
     test('should handle single parameter retrieval', async () => {
