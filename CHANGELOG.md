@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- chore(networking): add precheck for TGW multicast protection
+
 
 ## [1.15.0] - 2026-02-03
 
@@ -37,12 +37,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - fix(config): disable cw log for initial config
 - fix(config): disable identity center for initial config
 - fix(config): disable identity center for pipeline env
+- fix(config): include directive in prepare stack
 - fix(container): add cert path for aws sdk, nodejs calls
 - fix(container): prevent qualifier to be aws or ssm
 - fix(control-tower): allow setup landing zone with existing org account
 - fix(control-tower): change default ct version to 4.0
 - fix(control-tower): remove organization validation for sso
 - fix(installer-container): detect ECS task failures by checking container exit code
+- fix(installer-container): do not allow ssm reserved prefix in qualifier
 - fix(metadata): lookup ous by latest commit
 - fix(networking): fix share-subnet-tags custom Resource removes tags not managed by the accelerator
 - fix(networking): adjust logic for nlb ip address role creation
@@ -62,6 +64,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - chore(docs): update !include documentation with samples
 - chore(installer): update deletion policy of some resources to RetainExceptOnCreate
 - chore(kms): update KMS key descriptions
+- chore(networking): add precheck for TGW multicast protection
 - chore(networking): update vpc route53 resolver configuration links
 - chore: add documentation for container deployment
 - chore: set default nodejs to 22
