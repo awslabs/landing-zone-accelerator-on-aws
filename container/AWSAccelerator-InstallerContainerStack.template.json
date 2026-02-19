@@ -18,7 +18,8 @@
      "Parameters": [
       "ManagementAccountEmail",
       "LogArchiveAccountEmail",
-      "AuditAccountEmail"
+      "AuditAccountEmail",
+      "LzaManagementAccountEmail"
      ]
     },
     {
@@ -78,6 +79,9 @@
     "AuditAccountEmail": {
      "default": "Audit Account Email"
     },
+    "LzaManagementAccountEmail": {
+     "default": "LZA Management Account Email"
+    },
     "ControlTowerEnabled": {
      "default": "Control Tower Environment"
     },
@@ -121,7 +125,7 @@
   "ImageUri": {
    "Type": "String",
    "Default": "public.ecr.aws/aws-solutions/landing-zone-accelerator-on-aws:1.15.0-rc.9",
-   "Description": "The full Amazon Elastic Container Registry (Amazon ECR) image URI (including tag) where the Landing Zone Accelerator container image is stored. Example: 123456789012.dkr.ecr.us-east-1.amazonaws.com/lza:v1.15.0. Defaults to the public ECR image for this version."
+   "Description": "The Amazon Elastic Container Registry (Amazon ECR) repository, where Landing Zone Accelerator on AWS code is present."
   },
   "ManagementAccountEmail": {
    "Type": "String",
@@ -140,6 +144,12 @@
    "AllowedPattern": "[^\\s@]+@[^\\s@]+\\.[^\\s@]+",
    "ConstraintDescription": "Must be a valid email address matching \"[^\\s@]+@[^\\s@]+\\.[^\\s@]+\"",
    "Description": "The security audit account (also referred to as the audit account)"
+  },
+  "LzaManagementAccountEmail": {
+   "Type": "String",
+   "AllowedPattern": "[^\\s@]+@[^\\s@]+\\.[^\\s@]+",
+   "ConstraintDescription": "Must be a valid email address matching \"[^\\s@]+@[^\\s@]+\\.[^\\s@]+\"",
+   "Description": "Landing Zone Accelerator on AWS Management account email - NOTE: This must match the address of the account email that you are deploying from."
   },
   "ControlTowerEnabled": {
    "Type": "String",
@@ -223,8 +233,8 @@
   },
   "AcceleratorQualifier": {
    "Type": "String",
-   "AllowedPattern": "^[a-z]+[a-z0-9-]{1,61}[a-z0-9]+$",
-   "ConstraintDescription": "Qualifier must include lowercase letters and numbers only and cannot be aws-accelerator",
+   "AllowedPattern": "^(?!aws-|ssm-)[a-z]+[a-z0-9-]{1,61}[a-z0-9]+$",
+   "ConstraintDescription": "Qualifier must be 3-63 characters, include only lowercase letters, numbers, and hyphens, start with a letter, end with a letter or number, and must not start with \"aws-\" or \"ssm-\"",
    "Description": "Names the resources in the external deployment account. This must be unique for each LZA pipeline created in a single external deployment account, for example \"env2\" or \"app1.\" Do not use \"aws-accelerator\" or a similar value that could be confused with the prefix.\""
   },
   "ManagementAccountId": {
@@ -264,6 +274,14 @@
         ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
        ]
       ]
+     }
+    ],
+    "Tags": [
+     {
+      "Key": "Accelerator",
+      "Value": {
+       "Ref": "AcceleratorPrefix"
+      }
      }
     ]
    },
@@ -403,7 +421,15 @@
       "Arn"
      ]
     },
-    "Runtime": "nodejs22.x"
+    "Runtime": "nodejs22.x",
+    "Tags": [
+     {
+      "Key": "Accelerator",
+      "Value": {
+       "Ref": "AcceleratorPrefix"
+      }
+     }
+    ]
    },
    "DependsOn": [
     "ResourceNamePrefixesResourceNamePrefixesFunctionServiceRoleDefaultPolicyDC1CC159",
@@ -514,6 +540,11 @@
       ]
      ]
     },
+    "Tags": {
+     "Accelerator": {
+      "Ref": "AcceleratorPrefix"
+     }
+    },
     "Type": "String",
     "Value": {
      "Ref": "AWS::StackId"
@@ -544,6 +575,11 @@
        "/AWSAccelerator-InstallerContainerStack/version"
       ]
      ]
+    },
+    "Tags": {
+     "Accelerator": {
+      "Ref": "AcceleratorPrefix"
+     }
     },
     "Type": "String",
     "Value": "1.15.0-rc.9"
@@ -687,7 +723,15 @@
        }
       }
      ]
-    }
+    },
+    "Tags": [
+     {
+      "Key": "Accelerator",
+      "Value": {
+       "Ref": "AcceleratorPrefix"
+      }
+     }
+    ]
    },
    "UpdateReplacePolicy": "Retain",
    "DeletionPolicy": "Retain",
@@ -756,6 +800,11 @@
        "/installer/kms/key-arn"
       ]
      ]
+    },
+    "Tags": {
+     "Accelerator": {
+      "Ref": "AcceleratorPrefix"
+     }
     },
     "Type": "String",
     "Value": {
@@ -858,6 +907,14 @@
      "IgnorePublicAcls": true,
      "RestrictPublicBuckets": true
     },
+    "Tags": [
+     {
+      "Key": "Accelerator",
+      "Value": {
+       "Ref": "AcceleratorPrefix"
+      }
+     }
+    ],
     "VersioningConfiguration": {
      "Status": "Enabled"
     }
@@ -955,6 +1012,11 @@
        "/installer-access-logs-bucket-name"
       ]
      ]
+    },
+    "Tags": {
+     "Accelerator": {
+      "Ref": "AcceleratorPrefix"
+     }
     },
     "Type": "String",
     "Value": {
@@ -1084,6 +1146,14 @@
      "IgnorePublicAcls": true,
      "RestrictPublicBuckets": true
     },
+    "Tags": [
+     {
+      "Key": "Accelerator",
+      "Value": {
+       "Ref": "AcceleratorPrefix"
+      }
+     }
+    ],
     "VersioningConfiguration": {
      "Status": "Enabled"
     }
@@ -1155,7 +1225,15 @@
     },
     "EnableDnsHostnames": true,
     "EnableDnsSupport": true,
-    "InstanceTenancy": "default"
+    "InstanceTenancy": "default",
+    "Tags": [
+     {
+      "Key": "Accelerator",
+      "Value": {
+       "Ref": "AcceleratorPrefix"
+      }
+     }
+    ]
    },
    "Metadata": {
     "aws:cdk:path": "AWSAccelerator-InstallerContainerStack/Vpc"
@@ -1174,6 +1252,14 @@
      ]
     },
     "CidrBlock": "10.0.0.0/24",
+    "Tags": [
+     {
+      "Key": "Accelerator",
+      "Value": {
+       "Ref": "AcceleratorPrefix"
+      }
+     }
+    ],
     "VpcId": {
      "Ref": "Vpc"
     }
@@ -1195,6 +1281,14 @@
      ]
     },
     "CidrBlock": "10.0.10.0/24",
+    "Tags": [
+     {
+      "Key": "Accelerator",
+      "Value": {
+       "Ref": "AcceleratorPrefix"
+      }
+     }
+    ],
     "VpcId": {
      "Ref": "Vpc"
     }
@@ -1207,7 +1301,15 @@
   "NatEip0": {
    "Type": "AWS::EC2::EIP",
    "Properties": {
-    "Domain": "vpc"
+    "Domain": "vpc",
+    "Tags": [
+     {
+      "Key": "Accelerator",
+      "Value": {
+       "Ref": "AcceleratorPrefix"
+      }
+     }
+    ]
    },
    "Metadata": {
     "aws:cdk:path": "AWSAccelerator-InstallerContainerStack/NatEip0"
@@ -1225,7 +1327,15 @@
     },
     "SubnetId": {
      "Ref": "PublicSubnet0"
-    }
+    },
+    "Tags": [
+     {
+      "Key": "Accelerator",
+      "Value": {
+       "Ref": "AcceleratorPrefix"
+      }
+     }
+    ]
    },
    "Metadata": {
     "aws:cdk:path": "AWSAccelerator-InstallerContainerStack/NatGateway0"
@@ -1235,6 +1345,14 @@
   "PrivateRouteTable0": {
    "Type": "AWS::EC2::RouteTable",
    "Properties": {
+    "Tags": [
+     {
+      "Key": "Accelerator",
+      "Value": {
+       "Ref": "AcceleratorPrefix"
+      }
+     }
+    ],
     "VpcId": {
      "Ref": "Vpc"
     }
@@ -1287,6 +1405,14 @@
      ]
     },
     "CidrBlock": "10.0.1.0/24",
+    "Tags": [
+     {
+      "Key": "Accelerator",
+      "Value": {
+       "Ref": "AcceleratorPrefix"
+      }
+     }
+    ],
     "VpcId": {
      "Ref": "Vpc"
     }
@@ -1308,6 +1434,14 @@
      ]
     },
     "CidrBlock": "10.0.11.0/24",
+    "Tags": [
+     {
+      "Key": "Accelerator",
+      "Value": {
+       "Ref": "AcceleratorPrefix"
+      }
+     }
+    ],
     "VpcId": {
      "Ref": "Vpc"
     }
@@ -1320,7 +1454,15 @@
   "NatEip1": {
    "Type": "AWS::EC2::EIP",
    "Properties": {
-    "Domain": "vpc"
+    "Domain": "vpc",
+    "Tags": [
+     {
+      "Key": "Accelerator",
+      "Value": {
+       "Ref": "AcceleratorPrefix"
+      }
+     }
+    ]
    },
    "Metadata": {
     "aws:cdk:path": "AWSAccelerator-InstallerContainerStack/NatEip1"
@@ -1338,7 +1480,15 @@
     },
     "SubnetId": {
      "Ref": "PublicSubnet1"
-    }
+    },
+    "Tags": [
+     {
+      "Key": "Accelerator",
+      "Value": {
+       "Ref": "AcceleratorPrefix"
+      }
+     }
+    ]
    },
    "Metadata": {
     "aws:cdk:path": "AWSAccelerator-InstallerContainerStack/NatGateway1"
@@ -1348,6 +1498,14 @@
   "PrivateRouteTable1": {
    "Type": "AWS::EC2::RouteTable",
    "Properties": {
+    "Tags": [
+     {
+      "Key": "Accelerator",
+      "Value": {
+       "Ref": "AcceleratorPrefix"
+      }
+     }
+    ],
     "VpcId": {
      "Ref": "Vpc"
     }
@@ -1390,6 +1548,16 @@
   },
   "InternetGateway": {
    "Type": "AWS::EC2::InternetGateway",
+   "Properties": {
+    "Tags": [
+     {
+      "Key": "Accelerator",
+      "Value": {
+       "Ref": "AcceleratorPrefix"
+      }
+     }
+    ]
+   },
    "Metadata": {
     "aws:cdk:path": "AWSAccelerator-InstallerContainerStack/InternetGateway"
    },
@@ -1413,6 +1581,14 @@
   "PublicRouteTable": {
    "Type": "AWS::EC2::RouteTable",
    "Properties": {
+    "Tags": [
+     {
+      "Key": "Accelerator",
+      "Value": {
+       "Ref": "AcceleratorPrefix"
+      }
+     }
+    ],
     "VpcId": {
      "Ref": "Vpc"
     }
@@ -1472,6 +1648,20 @@
    "Type": "AWS::EC2::SecurityGroup",
    "Properties": {
     "GroupDescription": "Security group for VPC",
+    "Tags": [
+     {
+      "Key": "Accel-P",
+      "Value": {
+       "Ref": "AcceleratorPrefix"
+      }
+     },
+     {
+      "Key": "Accelerator",
+      "Value": {
+       "Ref": "AcceleratorPrefix"
+      }
+     }
+    ],
     "VpcId": {
      "Ref": "Vpc"
     }
@@ -1495,7 +1685,15 @@
       ]
      ]
     },
-    "RetentionInDays": 365
+    "RetentionInDays": 365,
+    "Tags": [
+     {
+      "Key": "Accelerator",
+      "Value": {
+       "Ref": "AcceleratorPrefix"
+      }
+     }
+    ]
    },
    "Metadata": {
     "aws:cdk:path": "AWSAccelerator-InstallerContainerStack/VpcFlowLogGroup"
@@ -1541,6 +1739,14 @@
       },
       "PolicyName": "CloudWatchLogPolicy"
      }
+    ],
+    "Tags": [
+     {
+      "Key": "Accelerator",
+      "Value": {
+       "Ref": "AcceleratorPrefix"
+      }
+     }
     ]
    },
    "Metadata": {
@@ -1565,6 +1771,14 @@
      "Ref": "Vpc"
     },
     "ResourceType": "VPC",
+    "Tags": [
+     {
+      "Key": "Accelerator",
+      "Value": {
+       "Ref": "AcceleratorPrefix"
+      }
+     }
+    ],
     "TrafficType": "ALL"
    },
    "Metadata": {
@@ -1585,7 +1799,15 @@
        "-ecs-cluster"
       ]
      ]
-    }
+    },
+    "Tags": [
+     {
+      "Key": "Accelerator",
+      "Value": {
+       "Ref": "AcceleratorPrefix"
+      }
+     }
+    ]
    },
    "Metadata": {
     "aws:cdk:path": "AWSAccelerator-InstallerContainerStack/EcsCluster",
@@ -1631,6 +1853,14 @@
        ]
       ]
      }
+    ],
+    "Tags": [
+     {
+      "Key": "Accelerator",
+      "Value": {
+       "Ref": "AcceleratorPrefix"
+      }
+     }
     ]
    },
    "Metadata": {
@@ -1673,6 +1903,14 @@
        ]
       ]
      }
+    ],
+    "Tags": [
+     {
+      "Key": "Accelerator",
+      "Value": {
+       "Ref": "AcceleratorPrefix"
+      }
+     }
     ]
    },
    "Metadata": {
@@ -1702,7 +1940,15 @@
       ]
      ]
     },
-    "RetentionInDays": 365
+    "RetentionInDays": 365,
+    "Tags": [
+     {
+      "Key": "Accelerator",
+      "Value": {
+       "Ref": "AcceleratorPrefix"
+      }
+     }
+    ]
    },
    "Metadata": {
     "aws:cdk:path": "AWSAccelerator-InstallerContainerStack/LogGroup"
@@ -1910,6 +2156,12 @@
         "Value": "/etc/pki/ca-trust/extracted/pem/tls-ca-bundle.pem"
        },
        {
+        "Name": "LZA_MANAGEMENT_ACCOUNT_EMAIL",
+        "Value": {
+         "Ref": "LzaManagementAccountEmail"
+        }
+       },
+       {
         "Name": "MANAGEMENT_ACCOUNT_ID",
         "Value": {
          "Ref": "ManagementAccountId"
@@ -1969,6 +2221,14 @@
     "RequiresCompatibilities": [
      "EC2",
      "FARGATE"
+    ],
+    "Tags": [
+     {
+      "Key": "Accelerator",
+      "Value": {
+       "Ref": "AcceleratorPrefix"
+      }
+     }
     ],
     "TaskRoleArn": {
      "Fn::GetAtt": [
@@ -2040,6 +2300,14 @@
        ]
       },
       "PolicyName": "EcsRunTaskPolicy"
+     }
+    ],
+    "Tags": [
+     {
+      "Key": "Accelerator",
+      "Value": {
+       "Ref": "AcceleratorPrefix"
+      }
      }
     ]
    },
@@ -2264,6 +2532,14 @@
       ]
      ]
     },
+    "Tags": [
+     {
+      "Key": "Accelerator",
+      "Value": {
+       "Ref": "AcceleratorPrefix"
+      }
+     }
+    ],
     "UpdateMethod": "NewVersion"
    },
    "Metadata": {
@@ -2423,6 +2699,57 @@
       ]
      },
      "AssertDescription": "Log Archive Account Email and Audit Account Email must be different"
+    },
+    {
+     "Assert": {
+      "Fn::Not": [
+       {
+        "Fn::Equals": [
+         {
+          "Ref": "LzaManagementAccountEmail"
+         },
+         {
+          "Ref": "ManagementAccountEmail"
+         }
+        ]
+       }
+      ]
+     },
+     "AssertDescription": "LZA Management Account Email and Management Account Email must be different"
+    },
+    {
+     "Assert": {
+      "Fn::Not": [
+       {
+        "Fn::Equals": [
+         {
+          "Ref": "LzaManagementAccountEmail"
+         },
+         {
+          "Ref": "LogArchiveAccountEmail"
+         }
+        ]
+       }
+      ]
+     },
+     "AssertDescription": "LZA Management Account Email and Log Archive Account Email must be different"
+    },
+    {
+     "Assert": {
+      "Fn::Not": [
+       {
+        "Fn::Equals": [
+         {
+          "Ref": "LzaManagementAccountEmail"
+         },
+         {
+          "Ref": "AuditAccountEmail"
+         }
+        ]
+       }
+      ]
+     },
+     "AssertDescription": "LZA Management Account Email and Audit Account Email must be different"
     }
    ]
   },

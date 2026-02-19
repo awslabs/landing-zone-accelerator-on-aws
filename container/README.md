@@ -70,36 +70,38 @@ Launch the CloudFormation template (`AWSAccelerator-InstallerContainerStack.temp
 | Parameter | Description | Default | Required |
 |-----------|-------------|---------|----------|
 | **Source Configuration** ||||
-| ImageUri | The full Amazon ECR image URI (including tag) where the LZA container image is stored. Example: `123456789012.dkr.ecr.us-east-1.amazonaws.com/lza:v1.15.0`. Defaults to the public ECR image for this version. | - | Yes |
+| ImageUri | The Amazon ECR repository URI where the LZA container image is stored. Defaults to the public ECR image for this version. | `public.ecr.aws/aws-solutions/landing-zone-accelerator-on-aws:<version>` | No |
 | **Mandatory Accounts Configuration** ||||
-| ManagementAccountEmail | The management (primary) account email. Must match the address in AWS Organizations | - | Yes |
+| ManagementAccountEmail | The management (primary) account email. Must match the address of the management account as listed in AWS Organizations. | - | Yes |
 | LogArchiveAccountEmail | The log archive account email | - | Yes |
 | AuditAccountEmail | The security audit account email | - | Yes |
+| LzaManagementAccountEmail | The LZA management account email. Must match the address of the account you are deploying from. | - | Yes |
 | **Environment Configuration** ||||
-| ControlTowerEnabled | Select `Yes` if deploying to a Control Tower environment | `Yes` | No |
-| AcceleratorPrefix | The prefix value for accelerator deployed resources. Cannot start with `aws` or `ssm`. Max 15 characters | `AWSAccelerator` | No |
-| PythonRuntimeVersion | The Python runtime version for SSM Document `aws:executeScript` actions | `python3.11` | No |
+| ControlTowerEnabled | Select `Yes` if deploying to a Control Tower environment. Select `No` if using just Organizations (you must first set up mandatory accounts). | `Yes` | No |
+| AcceleratorPrefix | The prefix value for accelerator deployed resources. Cannot start with `aws` or `ssm`. Updating this value after initial installation will cause stack failure. Max 15 characters. | `AWSAccelerator` | No |
+| PythonRuntimeVersion | The Python runtime version for SSM Document `aws:executeScript` actions (e.g., `python3.8`, `python3.9`, `python3.10`, `python3.11`) | `python3.11` | No |
 | LogLevel | The log level for LZA engine (`error`, `info`, `debug`) | `error` | No |
 | **Config Bucket Configuration** ||||
-| UseExistingConfig | Select `Yes` to use an existing configuration bucket | `No` | No |
+| UseExistingConfig | Select `Yes` to use an existing configuration bucket. Updating this value after initial installation may cause adverse effects. | `No` | No |
 | ExistingConfigBucketName | Name of an existing LZA configuration bucket (required if `UseExistingConfig` is `Yes`) | - | Conditional |
 | ExistingConfigBucketKey | Branch name of the existing configuration bucket key (required if `UseExistingConfig` is `Yes`) | - | Conditional |
 | **Network Configuration** ||||
-| UseExistingVpc | Select `Yes` to use an existing VPC | `No` | No |
-| VpcCidr | The CIDR block for the VPC (used when `UseExistingVpc` is `No`) | `10.0.0.0/16` | No |
+| VpcCidr | The CIDR block for the VPC (used when `UseExistingVpc` is `No`). Must be a valid CIDR with prefix length /16-/28. | `10.0.0.0/16` | No |
+| UseExistingVpc | Select `Yes` to use an existing VPC. If `Yes`, provide existing subnet and security group IDs. | `No` | No |
 | ExistingVpcId | The ID of an existing VPC (required when `UseExistingVpc` is `Yes`) | - | Conditional |
 | ExistingSubnetId | The ID of an existing subnet (required when `UseExistingVpc` is `Yes`) | - | Conditional |
 | ExistingSecurityGroupId | The ID of an existing security group (required when `UseExistingVpc` is `Yes`) | - | Conditional |
 | **Target Environment Configuration** ||||
-| AcceleratorQualifier | Unique identifier for resources in the external deployment account. Must be lowercase alphanumeric with hyphens. Cannot be `aws-accelerator` | - | Yes |
+| AcceleratorQualifier | Unique identifier for resources in the external deployment account. Must be 3-63 characters, lowercase alphanumeric with hyphens, start with a letter, end with a letter or number. Cannot start with `aws-` or `ssm-`. | - | Yes |
 | ManagementAccountId | Target management account ID | - | Yes |
 | ManagementAccountRoleName | Target management account role name | - | Yes |
 
 #### Validation Rules
 
-- All three account emails (Management, Log Archive, Audit) must be unique
+- All four account emails (Management, Log Archive, Audit, LZA Management) must be unique
 - When `UseExistingConfig` is `Yes`, both `ExistingConfigBucketName` and `ExistingConfigBucketKey` are required
 - When `UseExistingVpc` is `Yes`, `ExistingVpcId`, `ExistingSubnetId`, and `ExistingSecurityGroupId` are required
+- `AcceleratorQualifier`, `ManagementAccountId`, and `ManagementAccountRoleName` must not be empty
 
 #### Stack Outputs
 
