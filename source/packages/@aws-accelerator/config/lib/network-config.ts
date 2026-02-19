@@ -747,6 +747,7 @@ export class NfwRuleGroupConfig implements i.INfwRuleGroupConfig {
   readonly regions: string[] = [];
   readonly capacity: number = 123;
   readonly type: i.NfwRuleType = 'STATEFUL';
+  readonly account: string | undefined = undefined;
   readonly description: string | undefined = undefined;
   readonly ruleGroup: NfwRuleGroupRuleConfig | undefined = undefined;
   readonly shareTargets: t.ShareTargets | undefined = undefined;
@@ -777,6 +778,7 @@ export class NfwFirewallPolicyConfig implements i.INfwFirewallPolicyConfig {
   readonly name: string = '';
   readonly firewallPolicy: NfwFirewallPolicyPolicyConfig = new NfwFirewallPolicyPolicyConfig();
   readonly regions: string[] = [];
+  readonly account: string | undefined = undefined;
   readonly description: string | undefined = undefined;
   readonly shareTargets: t.ShareTargets | undefined = undefined;
   readonly tags: t.Tag[] | undefined = undefined;
