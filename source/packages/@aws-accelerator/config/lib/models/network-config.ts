@@ -6489,6 +6489,15 @@ export interface INfwRuleGroupConfig {
    */
   readonly type: NfwRuleType;
   /**
+   * (OPTIONAL) The logical name of the account to deploy the rule group to.
+   *
+   * @remarks
+   * This is the logical `name` property of the account as defined in accounts-config.yaml.
+   * If not specified, the rule group will be deployed to the delegated admin account
+   * for centralNetworkServices as defined in network-config.yaml.
+   */
+  readonly account?: t.NonEmptyString;
+  /**
    * (OPTIONAL) A description for the rule group.
    */
   readonly description?: t.NonEmptyString;
@@ -6700,6 +6709,15 @@ export interface INfwFirewallPolicyConfig {
    * The regions to deploy the policy to.
    */
   readonly regions: string[];
+  /**
+   * (OPTIONAL) The logical name of the account to deploy the policy to.
+   *
+   * @remarks
+   * This is the logical `name` property of the account as defined in accounts-config.yaml.
+   * If not specified, the policy will be deployed to the delegated admin account
+   * for centralNetworkServices as defined in network-config.yaml.
+   */
+  readonly account?: t.NonEmptyString;
   /**
    * (OPTIONAL) A description for the policy.
    */
