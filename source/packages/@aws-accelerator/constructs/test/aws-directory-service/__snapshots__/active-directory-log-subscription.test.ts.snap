@@ -234,7 +234,7 @@ exports[`ActiveDirectoryLogSubscription > Construct(ActiveDirectoryLogSubscripti
         "Description": "Manage active directory log subscription handler",
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.14.3",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.14.4",
           },
         },
         "Handler": "index.handler",
@@ -353,7 +353,7 @@ exports[`ActiveDirectoryLogSubscription > Construct(ActiveDirectoryLogSubscripti
         "Description": "AWS CDK resource provider framework - onEvent (Default/ActiveDirectoryLogSubscription/ManageActiveDirectoryLogSubscriptionProvider)",
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.14.3",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.14.4",
             "USER_ON_EVENT_FUNCTION_ARN": {
               "Fn::GetAtt": [
                 "ActiveDirectoryLogSubscriptionManageActiveDirectoryLogSubscriptionFunction8B7A6975",
