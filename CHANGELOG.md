@@ -29,6 +29,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - feat(networking): add support for transit gateway flow logs
 - feat(pipeline): replace codestar notification with EventBridge and SNS
 - feat(security-hub): added support for AWS Security Hub automation rules
+- feat(iam): add accelerator tags to customer managed iam policies
 
 ### Fixed
 

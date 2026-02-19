@@ -49,4 +49,29 @@ describe('addAcceleratorTags', () => {
       expect(tgws[logicalId]['Properties']?.Tags).toBeUndefined();
     }
   });
+
+  it('adds Accelerator tag to IAM ManagedPolicy', () => {
+    const app = new cdk.App();
+    const stack = new cdk.Stack(app, 'TestStack');
+
+    new cdk.aws_iam.ManagedPolicy(stack, 'TestPolicy', {
+      managedPolicyName: 'AWSAccelerator-TestPolicy',
+      document: new cdk.aws_iam.PolicyDocument({
+        statements: [
+          new cdk.aws_iam.PolicyStatement({
+            effect: cdk.aws_iam.Effect.ALLOW,
+            actions: ['s3:GetObject'],
+            resources: ['*'],
+          }),
+        ],
+      }),
+    });
+
+    addAcceleratorTags(stack, 'aws', [], 'AWSAccelerator');
+
+    const template = Template.fromStack(stack);
+    template.hasResourceProperties('AWS::IAM::ManagedPolicy', {
+      Tags: Match.arrayWith([Match.objectLike({ Key: 'Accelerator', Value: 'AWSAccelerator' })]),
+    });
+  });
 });
