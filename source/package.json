@@ -71,7 +71,7 @@
     "fs-extra": "11.1.0",
     "jsii": "1.75.0",
     "jsii-pacmak": "1.75.0",
-    "minimatch": "9.0.0"
+    "minimatch": "10.2.1"
   },
   "devDependencies": {
     "@aws-cdk/integ-runner": "2.190.8",
