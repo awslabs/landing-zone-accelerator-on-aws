@@ -63,8 +63,13 @@ export class NfwResources {
         return item.toString();
       });
 
-      // Create regional rule groups in the delegated admin account
-      if (this.stack.isTargetStack([accountId], regions)) {
+      // Determine target account: use specified account or default to delegated admin
+      const targetAccountId = ruleItem.account
+        ? props.accountsConfig.getAccountId(ruleItem.account)
+        : accountId;
+
+      // Create regional rule groups in the target account
+      if (this.stack.isTargetStack([targetAccountId], regions)) {
         this.stack.addLogs(LogLevel.INFO, `Create network firewall rule group ${ruleItem.name}`);
         let rule;
         if (this.stack.isManagedByAsea(AseaResourceType.NFW_RULE_GROUP, ruleItem.name)) {
@@ -97,7 +102,7 @@ export class NfwResources {
             stringValue: rule.groupArn,
           });
 
-          if (ruleItem.shareTargets) {
+          if (ruleItem.shareTargets && !ruleItem.account) {
             this.stack.addLogs(LogLevel.INFO, `Share Network Firewall rule group ${ruleItem.name}`);
             this.stack.addResourceShare(ruleItem, `${ruleItem.name}_NetworkFirewallRuleGroupShare`, [rule.groupArn]);
           }
@@ -179,8 +184,13 @@ export class NfwResources {
         return item.toString();
       });
 
-      // Create regional rule groups in the delegated admin account
-      if (this.stack.isTargetStack([accountId], regions)) {
+      // Determine target account: use specified account or default to delegated admin
+      const targetAccountId = policyItem.account
+        ? this.stack.props.accountsConfig.getAccountId(policyItem.account)
+        : accountId;
+
+      // Create regional policies in the target account
+      if (this.stack.isTargetStack([targetAccountId], regions)) {
         // Instantiate firewall policy construct
         this.stack.addLogs(LogLevel.INFO, `Create network firewall policy ${policyItem.name}`);
         let policy;
@@ -223,7 +233,7 @@ export class NfwResources {
             stringValue: policy.policyArn,
           });
 
-          if (policyItem.shareTargets) {
+          if (policyItem.shareTargets && !policyItem.account) {
             this.stack.addLogs(LogLevel.INFO, `Share Network Firewall policy ${policyItem.name}`);
             this.stack.addResourceShare(policyItem, `${policyItem.name}_NetworkFirewallPolicyShare`, [
               policy.policyArn,
