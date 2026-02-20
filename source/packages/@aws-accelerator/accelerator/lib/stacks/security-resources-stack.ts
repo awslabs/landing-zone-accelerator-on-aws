@@ -947,6 +947,7 @@ export class SecurityResourcesStack extends AcceleratorStack {
    * @param ruleSet
    */
   private createAwsConfigRules(ruleSet: AwsConfigRuleSet) {
+    const configRules = [];
     for (const rule of ruleSet.rules) {
       let configRule: CustomConfigRuleType;
 
@@ -970,21 +971,30 @@ export class SecurityResourcesStack extends AcceleratorStack {
         if (this.configServiceUpdater) {
           configRule.node.addDependency(this.configServiceUpdater);
         }
+        configRules.push(configRule);
       }
     }
+    return configRules;
   }
 
   /**
    * Function to setup AWS Config rules
    */
   private setupAwsConfigRules() {
+    const allConfigRules: cdk.CfnResource[] = [];
     for (const ruleSet of this.props.securityConfig.awsConfig.ruleSets) {
       if (!this.isIncluded(ruleSet.deploymentTargets)) {
         continue;
       }
 
-      this.createAwsConfigRules(ruleSet);
+      const cfnRules = this.createAwsConfigRules(ruleSet)
+        .filter((rule): rule is NonNullable<CustomConfigRuleType> => rule !== undefined)
+        .map(rule => rule.node.tryFindChild('Resource'))
+        .filter((cfn): cfn is cdk.CfnResource => cfn instanceof cdk.CfnResource);
+
+      allConfigRules.push(...cfnRules);
     }
+    this.setCfnResourceDependencies(allConfigRules, 2);
   }
 
   private getComparisonOperator(comparisonOperator: string): cdk.aws_cloudwatch.ComparisonOperator {
@@ -1570,6 +1580,29 @@ export class SecurityResourcesStack extends AcceleratorStack {
 
       // Configure Account CloudTrail
       this.configureAccountCloudTrail(accountTrail);
+    }
+  }
+
+  private setCfnResourceDependencies(cfnResources: cdk.CfnResource[], dependencyFrequency: number) {
+    if (cfnResources.length === 0) {
+      return;
+    }
+
+    if (dependencyFrequency === 0) {
+      return;
+    }
+
+    let dependency: cdk.CfnResource = cfnResources[0];
+    for (let i = 0; i < cfnResources.length; i++) {
+      if (i === 0) {
+        continue;
+      }
+      if (i % dependencyFrequency === 0) {
+        cfnResources[i].addDependency(dependency);
+        dependency = cfnResources[i];
+      } else {
+        cfnResources[i].addDependency(dependency);
+      }
     }
   }
 }

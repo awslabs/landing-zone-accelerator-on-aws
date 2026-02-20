@@ -19,6 +19,7 @@ import { SecurityResourcesStack } from '../../lib/stacks/security-resources-stac
 import { createAcceleratorStackProps, createSecurityStackProps } from './stack-props-test-helper';
 import { Template } from 'aws-cdk-lib/assertions';
 import { AcceleratorStackProps } from '../../lib/stacks/accelerator-stack';
+import path from 'path';
 
 describe('SecurityResourcesStack - Config Recorder', () => {
   afterEach(() => vi.clearAllMocks());
@@ -224,6 +225,82 @@ describe('SecurityResourcesStack - Account IDs', () => {
   });
 });
 
+describe('SecurityResourcesStack - Config Rule Dependencies', () => {
+  afterEach(() => vi.clearAllMocks());
+
+  it('should add DependsOn between managed config rules', () => {
+    const props = createConfigRulesProps({ managedRuleCount: 4 });
+    const { template } = createSecurityResourcesStackWithTemplate('test-deps-managed', props);
+    const configRules = template.findResources('AWS::Config::ConfigRule');
+    const ruleIds = Object.keys(configRules);
+
+    expect(ruleIds.length).toBe(4);
+
+    const rulesWithDependsOn = ruleIds.filter(id => {
+      const resource = configRules[id];
+      return resource.DependsOn && resource.DependsOn.some((dep: string) => ruleIds.includes(dep));
+    });
+
+    expect(rulesWithDependsOn.length).toBeGreaterThan(0);
+  });
+
+  it('should add DependsOn between custom config rules', () => {
+    const props = createConfigRulesProps({ customRuleCount: 4 });
+    const { template } = createSecurityResourcesStackWithTemplate('test-deps-custom', props);
+    const configRules = template.findResources('AWS::Config::ConfigRule');
+    const ruleIds = Object.keys(configRules);
+
+    expect(ruleIds.length).toBe(4);
+
+    const rulesWithCrossRuleDeps = ruleIds.filter(id => {
+      const resource = configRules[id];
+      return resource.DependsOn && resource.DependsOn.some((dep: string) => ruleIds.includes(dep));
+    });
+
+    expect(rulesWithCrossRuleDeps.length).toBeGreaterThan(0);
+  });
+
+  it('should add DependsOn across mixed managed and custom config rules', () => {
+    const props = createConfigRulesProps({ managedRuleCount: 2, customRuleCount: 2 });
+    const { template } = createSecurityResourcesStackWithTemplate('test-deps-mixed', props);
+    const configRules = template.findResources('AWS::Config::ConfigRule');
+    const ruleIds = Object.keys(configRules);
+
+    expect(ruleIds.length).toBe(4);
+
+    const rulesWithCrossRuleDeps = ruleIds.filter(id => {
+      const resource = configRules[id];
+      return resource.DependsOn && resource.DependsOn.some((dep: string) => ruleIds.includes(dep));
+    });
+
+    expect(rulesWithCrossRuleDeps.length).toBeGreaterThan(0);
+  });
+
+  it('should not add DependsOn when there is only 1 config rule', () => {
+    const props = createConfigRulesProps({ managedRuleCount: 1 });
+    const { template } = createSecurityResourcesStackWithTemplate('test-deps-single', props);
+    const configRules = template.findResources('AWS::Config::ConfigRule');
+    const ruleIds = Object.keys(configRules);
+
+    expect(ruleIds.length).toBe(1);
+
+    const rulesWithCrossRuleDeps = ruleIds.filter(id => {
+      const resource = configRules[id];
+      return resource.DependsOn && resource.DependsOn.some((dep: string) => ruleIds.includes(dep));
+    });
+
+    expect(rulesWithCrossRuleDeps.length).toBe(0);
+  });
+
+  it('should create no config rules when ruleSets is empty', () => {
+    const props = createConfigRulesProps({});
+    const { template } = createSecurityResourcesStackWithTemplate('test-deps-empty', props);
+    const configRules = template.findResources('AWS::Config::ConfigRule');
+
+    expect(Object.keys(configRules).length).toBe(0);
+  });
+});
+
 // Helper functions
 function createConfigRecorderProps(options: { controlTowerEnabled?: boolean; isManagementAccount?: boolean }) {
   const accountId = options.isManagementAccount ? '234567890' : '00000001';
@@ -425,4 +502,95 @@ function createSecurityResourcesStackWithTemplate(
   const stack = new SecurityResourcesStack(new cdk.App(), stackName, props);
   const template = Template.fromStack(stack);
   return { stack, template };
+}
+
+function createConfigRulesProps(options: {
+  managedRuleCount?: number;
+  customRuleCount?: number;
+}): AcceleratorStackProps {
+  const baseProps = createAcceleratorStackProps();
+  const managedCount = options.managedRuleCount ?? 0;
+  const customCount = options.customRuleCount ?? 0;
+
+  const testAccountId = '00000001';
+  const testAccountName = 'TestAccount';
+
+  const managedRules = Array.from({ length: managedCount }, (_, i) => ({
+    name: `test-managed-rule-${i}`,
+    description: `Test managed rule ${i}`,
+    identifier: 'IAM_USER_GROUP_MEMBERSHIP_CHECK',
+    inputParameters: {},
+    complianceResourceTypes: ['AWS::IAM::User'],
+    type: 'Managed',
+    tags: [],
+    remediation: undefined,
+  }));
+
+  const customRules = Array.from({ length: customCount }, (_, i) => ({
+    name: `test-custom-rule-${i}`,
+    description: `Test custom rule ${i}`,
+    identifier: '',
+    inputParameters: {},
+    complianceResourceTypes: [],
+    type: 'Custom',
+    tags: [],
+    remediation: undefined,
+    customRule: {
+      lambda: {
+        sourceFilePath: 'custom-config-rules/attach-ec2-instance-profile.zip',
+        handler: 'index.handler',
+        runtime: 'nodejs18.x',
+        rolePolicyFile: 'custom-config-rules/attach-ec2-instance-profile-detection-role.json',
+        timeout: 3,
+      },
+      periodic: true,
+      maximumExecutionFrequency: 'Six_Hours',
+      configurationChanges: false,
+      triggeringResources: {
+        lookupType: 'ResourceTypes',
+        lookupKey: '',
+        lookupValue: ['AWS::EC2::Instance'],
+      },
+    },
+  }));
+
+  const rules = [...managedRules, ...customRules];
+
+  return createSecurityStackProps({
+    configDirPath: path.join(__dirname, '../configs/snapshot-only'),
+    accountsConfig: {
+      ...baseProps.accountsConfig,
+      getAccountId: vi.fn((name: string) => (name === testAccountName ? testAccountId : '123456789' + name)),
+      getAccount: vi.fn(() => ({ name: testAccountName, organizationalUnit: 'Root' })),
+      getManagementAccountId: vi.fn(() => '234567890'),
+      getLogArchiveAccountId: vi.fn(() => '345678901'),
+      getAuditAccountId: vi.fn(() => '456789012'),
+      getAccountNameById: vi.fn(() => testAccountName),
+      containsAccount: vi.fn(() => true),
+      mandatoryAccounts: [{ name: testAccountName, organizationalUnit: 'Root' }],
+      workloadAccounts: [],
+    } as any,
+    organizationConfig: {
+      ...baseProps.organizationConfig,
+      isIgnored: vi.fn(() => false),
+    } as any,
+    securityConfig: {
+      ...baseProps.securityConfig,
+      awsConfig: {
+        ...baseProps.securityConfig.awsConfig,
+        enableConfigurationRecorder: false,
+        ruleSets:
+          rules.length > 0
+            ? [
+                {
+                  deploymentTargets: { accounts: [testAccountName], organizationalUnits: [] },
+                  rules,
+                },
+              ]
+            : [],
+      },
+      cloudWatch: { metricSets: [], alarmSets: [], logGroups: [] },
+    },
+    env: { region: 'us-east-1', account: testAccountId },
+  });
 }
