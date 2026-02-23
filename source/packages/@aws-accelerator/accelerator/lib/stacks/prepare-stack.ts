@@ -678,7 +678,15 @@ export class PrepareStack extends AcceleratorStack {
 
       scpItem.deploymentTargets.accounts.forEach(item => {
         try {
-          targets.push({ name: item, id: this.props.accountsConfig.getAccountId(item) });
+          const accountId = this.props.accountsConfig.getAccountId(item);
+
+          if (accountId === '') {
+            this.logger.warn(
+              `Account not created yet for ${item}. Scp count validation skipped for the account ${item}.`,
+            );
+          } else {
+            targets.push({ name: item, id: accountId });
+          }
         } catch {
           this.logger.warn(`Account ID not found for ${item}. Scp count validation skipped for the account ${item}.`);
         }
