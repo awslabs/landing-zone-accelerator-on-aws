@@ -404,6 +404,9 @@ echo "Run the helper to clean-up the templates and remove unnecessary CDK elemen
     fi
 } || echo "${bold}Solution Helper skipped: ${normal}run_helper=false"
 
+# Set the target bucket_name for the templates if its not in env
+TEMPLATE_OUTPUT_BUCKET="${TEMPLATE_OUTPUT_BUCKET:-solutions-reference}"
+
 # Find and replace bucket_name, solution_name, and version
 echo "Find and replace bucket_name, solution_name, and version"
 cd $template_dist_dir

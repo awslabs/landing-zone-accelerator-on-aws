@@ -664,6 +664,8 @@ release:build-distributions:
   tags:
     - arch:amd64
     - size:xlarge
+  variables:
+    TEMPLATE_OUTPUT_BUCKET: "solutions-reference"
   before_script:
     - "apt-get update && apt-get install -y jq zip"
   script:
