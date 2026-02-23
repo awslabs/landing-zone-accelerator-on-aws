@@ -816,8 +816,8 @@ export abstract class Accelerator {
       nonLogArchiveAccounts = [accountsConfig.mandatoryAccounts[0]];
     }
 
-    for (const region of enabledRegions) {
-      for (const account of nonLogArchiveAccounts) {
+    for (const account of nonLogArchiveAccounts) {
+      for (const region of enabledRegions) {
         if (
           !(
             account.name === logArchiveAccountDetails.name &&
@@ -986,9 +986,8 @@ export abstract class Accelerator {
     if (toolkitProps.enableSingleAccountMode) {
       nonManagementAccounts = [accountsConfig.mandatoryAccounts[0]];
     }
-
-    for (const region of enabledRegions) {
-      for (const account of nonManagementAccounts) {
+    for (const account of nonManagementAccounts) {
+      for (const region of enabledRegions) {
         const accountId = accountsConfig.getAccountId(account.name);
         logger.info(`Executing ${toolkitProps.stage} for ${account.name} account in ${region} region.`);
         promises.push(
@@ -1038,8 +1037,8 @@ export abstract class Accelerator {
         });
         previousPhase = phase;
       }
-      for (const region of globalConfig.enabledRegions) {
-        for (const account of [...accountsConfig.mandatoryAccounts, ...accountsConfig.workloadAccounts]) {
+      for (const account of [...accountsConfig.mandatoryAccounts, ...accountsConfig.workloadAccounts]) {
+        for (const region of globalConfig.enabledRegions) {
           const accountId = accountsConfig.getAccountId(account.name);
           const phaseExists = Object.keys(mapping).find(key => {
             return (
