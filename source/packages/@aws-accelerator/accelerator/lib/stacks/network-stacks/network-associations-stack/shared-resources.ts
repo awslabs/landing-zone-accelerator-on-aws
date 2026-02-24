@@ -45,7 +45,7 @@ export class SharedResources {
     const ipamSubnets = setIpamSubnetSourceArray(this.stack.vpcResources, this.stack.sharedVpcs);
     const ipamSubnetMap = this.lookupIpamSubnets(ipamSubnets, props);
 
-    this.sharedSecurityGroupMap = this.stack.createSecurityGroups(
+    this.sharedSecurityGroupMap = this.stack.createSecurityGroupsForSharedVpcs(
       this.stack.sharedVpcs,
       vpcMap,
       ipamSubnetMap,

@@ -919,6 +919,65 @@ export abstract class NetworkStack extends AcceleratorStack {
   }
 
   /**
+   * Create security groups for shared VPCs in NetworkAssociationsStack.
+   * This method does not use lzaLookup since NetworkAssociationsStack templates are not downloaded.
+   */
+  public createSecurityGroupsForSharedVpcs(
+    vpcResources: (VpcConfig | VpcTemplatesConfig)[],
+    vpcMap: Map<string, Vpc> | Map<string, string>,
+    subnetMap: Map<string, Subnet> | Map<string, IIpamSubnet>,
+    prefixListMap: Map<string, PrefixList> | Map<string, string>,
+  ): Map<string, SecurityGroup> {
+    const securityGroupMap = new Map<string, SecurityGroup>();
+
+    for (const vpcItem of vpcResources) {
+      for (const securityGroupItem of vpcItem.securityGroups ?? []) {
+        this.logger.info(`Processing rules for ${securityGroupItem.name} in VPC ${vpcItem.name}`);
+
+        // Process configured rules
+        const processedIngressRules = processSecurityGroupIngressRules(
+          this.vpcResources,
+          securityGroupItem,
+          subnetMap,
+          prefixListMap,
+        );
+
+        const allIngressRule = containsAllIngressRule(processedIngressRules);
+        const processedEgressRules = processSecurityGroupEgressRules(
+          this.vpcResources,
+          securityGroupItem,
+          subnetMap,
+          prefixListMap,
+        );
+
+        // Get VPC
+        const vpc = getVpc(vpcMap, vpcItem.name);
+        if (!vpc) {
+          continue;
+        }
+
+        // Create security group
+        const securityGroup = this.createSecurityGroupItem(
+          vpcItem,
+          vpc,
+          securityGroupItem,
+          processedIngressRules,
+          processedEgressRules,
+          allIngressRule,
+        );
+
+        if (securityGroup) {
+          securityGroupMap.set(`${vpcItem.name}_${securityGroupItem.name}`, securityGroup);
+        }
+      }
+      // Create security group rules that reference other security groups
+      this.createSecurityGroupSgSourcesForSharedVpcs(vpcItem, subnetMap, prefixListMap, securityGroupMap);
+    }
+
+    return securityGroupMap;
+  }
+
+  /**
    * Create security group rules that reference other security groups
    * @param vpcItem
    * @param subnetMap
@@ -1003,6 +1062,69 @@ export abstract class NetworkStack extends AcceleratorStack {
           });
           this.addMetadataToSecurityGroupRule(rule, { rule: egressRule.rule, ...baseMetadata });
         });
+    }
+  }
+
+  /**
+   * Create security group rules that reference other security groups for shared VPCs.
+   * This method does not use lzaLookup since NetworkAssociationsStack templates are not downloaded.
+   */
+  private createSecurityGroupSgSourcesForSharedVpcs(
+    vpcItem: VpcConfig | VpcTemplatesConfig,
+    subnetMap: Map<string, Subnet> | Map<string, IIpamSubnet>,
+    prefixListMap: Map<string, PrefixList> | Map<string, string>,
+    securityGroupMap: Map<string, SecurityGroup>,
+  ) {
+    for (const securityGroupItem of vpcItem.securityGroups ?? []) {
+      // skip if managed by asea
+      if (this.isManagedByAsea(AseaResourceType.EC2_SECURITY_GROUP, `${vpcItem.name}/${securityGroupItem.name}`)) {
+        this.logger.info(`Skipping security group ${securityGroupItem.name} in VPC ${vpcItem.name}`);
+        continue;
+      }
+      const securityGroup = getSecurityGroup(securityGroupMap, vpcItem.name, securityGroupItem.name) as SecurityGroup;
+      const ingressRules = processSecurityGroupSgIngressSources(
+        this.vpcResources,
+        vpcItem,
+        securityGroupItem,
+        subnetMap,
+        prefixListMap,
+        securityGroupMap,
+        this.lzaLookup,
+      );
+      const egressRules = processSecurityGroupSgEgressSources(
+        this.vpcResources,
+        vpcItem,
+        securityGroupItem,
+        subnetMap,
+        prefixListMap,
+        securityGroupMap,
+        this.lzaLookup,
+      );
+
+      const baseMetadata = {
+        vpcName: vpcItem.name,
+        sourceSecurityGroupName: securityGroupItem.name,
+        account: this.account,
+        region: this.region,
+      };
+
+      // Create ingress rules
+      ingressRules.forEach(ingressRule => {
+        const rule = securityGroup.addIngressRule(ingressRule.logicalId, {
+          sourceSecurityGroup: ingressRule.rule.targetSecurityGroup,
+          ...ingressRule.rule,
+        });
+        this.addMetadataToSecurityGroupRule(rule, { rule: ingressRule.rule, ...baseMetadata });
+      });
+
+      // Create egress rules
+      egressRules.forEach(egressRule => {
+        const rule = securityGroup.addEgressRule(egressRule.logicalId, {
+          destinationSecurityGroup: egressRule.rule.targetSecurityGroup,
+          ...egressRule.rule,
+        });
+        this.addMetadataToSecurityGroupRule(rule, { rule: egressRule.rule, ...baseMetadata });
+      });
     }
   }
 
