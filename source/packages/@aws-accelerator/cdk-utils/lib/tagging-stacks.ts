@@ -62,10 +62,6 @@ export function addAcceleratorTags(node: IConstruct, partition: string, tags: IT
       if (resource.cfnResourceType === 'Custom::SsmPutParameterValue') {
         addTagsToPutSsmParameterResource(resource, tagsWithPrefix);
       }
-
-      if (resource.cfnResourceType === 'AWS::IAM::ManagedPolicy') {
-        setTagsForChildResources(resource, tagsWithPrefix);
-      }
     }
 
     if (resource instanceof cdk.CustomResourceProvider) {
