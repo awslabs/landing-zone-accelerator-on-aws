@@ -41,6 +41,6 @@
     "typescript": "5.8.3"
   },
   "resolutions": {
-    "fast-xml-parser": "5.3.4"
+    "fast-xml-parser": "5.3.6"
   }
 }
