@@ -665,7 +665,7 @@ release:build-distributions:
     - arch:amd64
     - size:xlarge
   before_script:
-    - "apt-get update && apt-get install -y jq"
+    - "apt-get update && apt-get install -y jq zip"
   script:
     - "cd source"
     - "export PUBLISHED_VERSION=$CI_COMMIT_TAG"
