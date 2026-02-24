@@ -175,16 +175,16 @@ export class ConfigGenerator {
       auditAccountEmail: this.options.auditAccountEmail,
     });
 
-    const lzaManagementAccountEmail = process.env['LZA_MANAGEMENT_ACCOUNT_EMAIL'];
+    const lzaDeploymentAccountEmail = process.env['LZA_DEPLOYMENT_ACCOUNT_EMAIL'];
     const pipelineAccountId = process.env['PIPELINE_ACCOUNT_ID'];
 
     const workloadAccounts: AccountConfig[] = [...accountsConfig.workloadAccounts] as AccountConfig[];
-    if (lzaManagementAccountEmail) {
+    if (lzaDeploymentAccountEmail) {
       workloadAccounts.push({
-        name: 'LzaManagementAccount',
+        name: 'LzaDeploymentAccount',
         description: 'Account to access and manage Landing Zone Accelerator on AWS',
-        email: lzaManagementAccountEmail,
-        organizationalUnit: 'LZA Management',
+        email: lzaDeploymentAccountEmail,
+        organizationalUnit: 'LZADeployment',
       } as AccountConfig);
     }
 
@@ -197,10 +197,10 @@ export class ConfigGenerator {
       workloadAccounts,
     };
 
-    if (lzaManagementAccountEmail && pipelineAccountId) {
+    if (lzaDeploymentAccountEmail && pipelineAccountId) {
       accountsConfigDump.accountIds = [
         {
-          email: lzaManagementAccountEmail,
+          email: lzaDeploymentAccountEmail,
           accountId: pipelineAccountId,
         },
       ];
@@ -231,8 +231,8 @@ export class ConfigGenerator {
       fs.writeFileSync(path.join(this.tempDirPath, OrganizationConfig.FILENAME), yaml.dump(orgConfig), 'utf8');
     } else {
       const orgConfig = new OrganizationConfig();
-      if (process.env['LZA_MANAGEMENT_ACCOUNT_EMAIL']) {
-        orgConfig.organizationalUnits.push({ name: 'LZA Management', ignore: undefined });
+      if (process.env['LZA_DEPLOYMENT_ACCOUNT_EMAIL']) {
+        orgConfig.organizationalUnits.push({ name: 'LZADeployment', ignore: undefined });
       }
       fs.writeFileSync(path.join(this.tempDirPath, OrganizationConfig.FILENAME), yaml.dump(orgConfig), 'utf8');
     }

@@ -67,10 +67,10 @@ export class InstallerContainerStack extends cdk.Stack {
     constraintDescription: 'Must be a valid email address matching "[^\\s@]+@[^\\s@]+\\.[^\\s@]+"',
   });
 
-  private readonly lzaManagementAccountEmail = new cdk.CfnParameter(this, 'LzaManagementAccountEmail', {
+  private readonly lzaDeploymentAccountEmail = new cdk.CfnParameter(this, 'lzaDeploymentAccountEmail', {
     type: 'String',
     description:
-      'Landing Zone Accelerator on AWS Management account email - NOTE: This must match the address of the account email that you are deploying from.',
+      'Landing Zone Accelerator on AWS Deployment account email - NOTE: This must match the address of the account email that you are deploying from.',
     allowedPattern: '[^\\s@]+@[^\\s@]+\\.[^\\s@]+',
     constraintDescription: 'Must be a valid email address matching "[^\\s@]+@[^\\s@]+\\.[^\\s@]+"',
   });
@@ -243,7 +243,7 @@ export class InstallerContainerStack extends cdk.Stack {
           this.managementAccountEmail.logicalId,
           this.logArchiveAccountEmail.logicalId,
           this.auditAccountEmail.logicalId,
-          this.lzaManagementAccountEmail.logicalId,
+          this.lzaDeploymentAccountEmail.logicalId,
         ],
       },
       {
@@ -279,7 +279,7 @@ export class InstallerContainerStack extends cdk.Stack {
       [this.managementAccountEmail.logicalId]: { default: 'Management Account Email' },
       [this.logArchiveAccountEmail.logicalId]: { default: 'Log Archive Account Email' },
       [this.auditAccountEmail.logicalId]: { default: 'Audit Account Email' },
-      [this.lzaManagementAccountEmail.logicalId]: { default: 'LZA Management Account Email' },
+      [this.lzaDeploymentAccountEmail.logicalId]: { default: 'LZA Deployment Account Email' },
       [this.controlTowerEnabled.logicalId]: { default: 'Control Tower Environment' },
       [this.acceleratorPrefix.logicalId]: { default: 'Accelerator Resource name prefix' },
       [this.pythonRuntimeVersion.logicalId]: { default: 'Python Runtime Version (for SSM aws:executeScript)' },
@@ -500,23 +500,23 @@ export class InstallerContainerStack extends cdk.Stack {
 
     uniqueAccountEmails.addAssertion(
       cdk.Fn.conditionNot(
-        cdk.Fn.conditionEquals(this.lzaManagementAccountEmail.valueAsString, this.managementAccountEmail.valueAsString),
+        cdk.Fn.conditionEquals(this.lzaDeploymentAccountEmail.valueAsString, this.managementAccountEmail.valueAsString),
       ),
-      'LZA Management Account Email and Management Account Email must be different',
+      'LZA Deployment Account Email and Management Account Email must be different',
     );
 
     uniqueAccountEmails.addAssertion(
       cdk.Fn.conditionNot(
-        cdk.Fn.conditionEquals(this.lzaManagementAccountEmail.valueAsString, this.logArchiveAccountEmail.valueAsString),
+        cdk.Fn.conditionEquals(this.lzaDeploymentAccountEmail.valueAsString, this.logArchiveAccountEmail.valueAsString),
       ),
-      'LZA Management Account Email and Log Archive Account Email must be different',
+      'LZA Deployment Account Email and Log Archive Account Email must be different',
     );
 
     uniqueAccountEmails.addAssertion(
       cdk.Fn.conditionNot(
-        cdk.Fn.conditionEquals(this.lzaManagementAccountEmail.valueAsString, this.auditAccountEmail.valueAsString),
+        cdk.Fn.conditionEquals(this.lzaDeploymentAccountEmail.valueAsString, this.auditAccountEmail.valueAsString),
       ),
-      'LZA Management Account Email and Audit Account Email must be different',
+      'LZA Deployment Account Email and Audit Account Email must be different',
     );
 
     // Add validation rules for external pipeline parameters when enabled
@@ -1468,8 +1468,8 @@ def handler(event, context):
       // add cert path for node and sdk
       { name: 'NODE_EXTRA_CA_CERTS', value: '/etc/pki/ca-trust/extracted/pem/tls-ca-bundle.pem' },
       { name: 'AWS_CA_BUNDLE', value: '/etc/pki/ca-trust/extracted/pem/tls-ca-bundle.pem' },
-      // add a deployment variable so entrypoint knows to add lza management account
-      { name: 'LZA_MANAGEMENT_ACCOUNT_EMAIL', value: this.lzaManagementAccountEmail.valueAsString },
+      // add a deployment variable so entrypoint knows to add LZA Deployment account
+      { name: 'LZA_DEPLOYMENT_ACCOUNT_EMAIL', value: this.lzaDeploymentAccountEmail.valueAsString },
     ];
 
     // Validate deployment mode consistency
