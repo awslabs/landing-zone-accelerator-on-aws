@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, afterEach } from 'vitest';
 import * as cdk from 'aws-cdk-lib';
 import * as s3 from 'aws-cdk-lib/aws-s3';
 import * as ec2 from 'aws-cdk-lib/aws-ec2';
@@ -48,5 +48,96 @@ describe('addAcceleratorTags', () => {
     for (const logicalId of Object.keys(tgws)) {
       expect(tgws[logicalId]['Properties']?.Tags).toBeUndefined();
     }
+  });
+});
+
+describe('ACCELERATOR_ENABLE_TAG env variable', () => {
+  const originalEnv = process.env['ACCELERATOR_ENABLE_TAG'];
+
+  afterEach(() => {
+    if (originalEnv === undefined) {
+      delete process.env['ACCELERATOR_ENABLE_TAG'];
+    } else {
+      process.env['ACCELERATOR_ENABLE_TAG'] = originalEnv;
+    }
+  });
+
+  it('skips tagging for aws-iso partition when env var is not set', () => {
+    delete process.env['ACCELERATOR_ENABLE_TAG'];
+    const app = new cdk.App();
+    const stack = new cdk.Stack(app, 'IsoStack');
+    new s3.Bucket(stack, 'Bucket');
+
+    addAcceleratorTags(stack, 'aws-iso', [], 'AWSAccelerator');
+
+    const template = Template.fromStack(stack);
+    template.hasResourceProperties(
+      'AWS::S3::Bucket',
+      Match.objectLike({
+        Tags: Match.absent(),
+      }),
+    );
+  });
+
+  it('skips tagging for aws-iso-b partition when env var is not set', () => {
+    delete process.env['ACCELERATOR_ENABLE_TAG'];
+    const app = new cdk.App();
+    const stack = new cdk.Stack(app, 'IsoBStack');
+    new s3.Bucket(stack, 'Bucket');
+
+    addAcceleratorTags(stack, 'aws-iso-b', [], 'AWSAccelerator');
+
+    const template = Template.fromStack(stack);
+    template.hasResourceProperties(
+      'AWS::S3::Bucket',
+      Match.objectLike({
+        Tags: Match.absent(),
+      }),
+    );
+  });
+
+  it('applies tags for aws-iso partition when ACCELERATOR_ENABLE_TAG is true', () => {
+    process.env['ACCELERATOR_ENABLE_TAG'] = 'true';
+    const app = new cdk.App();
+    const stack = new cdk.Stack(app, 'IsoEnabledStack');
+    new s3.Bucket(stack, 'Bucket');
+
+    addAcceleratorTags(stack, 'aws-iso', [], 'AWSAccelerator');
+
+    const template = Template.fromStack(stack);
+    template.hasResourceProperties('AWS::S3::Bucket', {
+      Tags: Match.arrayWith([Match.objectLike({ Key: 'Accelerator', Value: 'AWSAccelerator' })]),
+    });
+  });
+
+  it('applies tags for aws-iso-b partition when ACCELERATOR_ENABLE_TAG is true', () => {
+    process.env['ACCELERATOR_ENABLE_TAG'] = 'true';
+    const app = new cdk.App();
+    const stack = new cdk.Stack(app, 'IsoBEnabledStack');
+    new s3.Bucket(stack, 'Bucket');
+
+    addAcceleratorTags(stack, 'aws-iso-b', [], 'AWSAccelerator');
+
+    const template = Template.fromStack(stack);
+    template.hasResourceProperties('AWS::S3::Bucket', {
+      Tags: Match.arrayWith([Match.objectLike({ Key: 'Accelerator', Value: 'AWSAccelerator' })]),
+    });
+  });
+
+  it('does not override partition check when ACCELERATOR_ENABLE_TAG is not "true"', () => {
+    process.env['ACCELERATOR_ENABLE_TAG'] = 'false';
+    const app = new cdk.App();
+    const stack = new cdk.Stack(app, 'IsoFalseStack');
+    new s3.Bucket(stack, 'Bucket');
+
+    addAcceleratorTags(stack, 'aws-iso', [], 'AWSAccelerator');
+
+    const template = Template.fromStack(stack);
+    template.hasResourceProperties(
+      'AWS::S3::Bucket',
+      Match.objectLike({
+        Tags: Match.absent(),
+      }),
+    );
   });
 });

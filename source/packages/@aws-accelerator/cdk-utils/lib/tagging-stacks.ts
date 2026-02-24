@@ -18,7 +18,8 @@ const logger = createLogger(['tagging-utils']);
  * @param acceleratorPrefix
  */
 export function addAcceleratorTags(node: IConstruct, partition: string, tags: ITag[], acceleratorPrefix: string): void {
-  if (partition === 'aws-iso' || partition === 'aws-iso-b') {
+  const enableTag = process.env['ACCELERATOR_ENABLE_TAG'] === 'true';
+  if (!enableTag && (partition === 'aws-iso' || partition === 'aws-iso-b')) {
     return;
   }
 
