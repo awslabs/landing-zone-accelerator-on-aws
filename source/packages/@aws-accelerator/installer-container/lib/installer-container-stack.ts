@@ -67,7 +67,7 @@ export class InstallerContainerStack extends cdk.Stack {
     constraintDescription: 'Must be a valid email address matching "[^\\s@]+@[^\\s@]+\\.[^\\s@]+"',
   });
 
-  private readonly lzaDeploymentAccountEmail = new cdk.CfnParameter(this, 'lzaDeploymentAccountEmail', {
+  private readonly lzaDeploymentAccountEmail = new cdk.CfnParameter(this, 'LzaDeploymentAccountEmail', {
     type: 'String',
     description:
       'Landing Zone Accelerator on AWS Deployment account email - NOTE: This must match the address of the account email that you are deploying from.',
