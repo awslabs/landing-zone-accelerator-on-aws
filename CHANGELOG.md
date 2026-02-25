@@ -5,6 +5,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.14.5] - 2025-02-25
+
+### Fixed
+
+- fix(installer): updated template output bucket for govCloud account vending product
+- fix(v2-stacks): fix security group behaviors in network-associations stack for v2 sgs
+
+### Changed 
+
+- chore(documentation): update !include documentation with samples
+- chore(dependencies): fix fast-xml-parser dependency issue, tar, and ajv
+
 ## [1.14.4] - 2025-02-19
 
 ### Added
