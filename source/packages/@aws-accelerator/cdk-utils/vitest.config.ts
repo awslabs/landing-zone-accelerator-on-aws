@@ -8,8 +8,6 @@ export default defineConfig({
     reporters: ['default', 'junit'],
     outputFile: './test-reports/test-results.xml',
     coverage: {
-      include: ['index.ts', 'lib/**/*.ts'],
-      exclude: ['test/**', '**/*.test.ts', '**/*.d.ts'],
       thresholds: {
         branches: 70,
         functions: 70,

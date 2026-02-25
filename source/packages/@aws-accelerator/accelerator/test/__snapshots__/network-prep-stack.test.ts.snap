@@ -2235,6 +2235,9 @@ drop http $HOME_NET any -> $EXTERNAL_NET any (http.host; content:"example.com"; 
       "Type": "AWS::RAM::ResourceShare",
     },
     "HomeRegionProdPoolPool04473C66": {
+      "DependsOn": [
+        "HomeRegionPoolPool16097CF6",
+      ],
       "Properties": {
         "AddressFamily": "ipv4",
         "AllocationResourceTags": [
@@ -3850,6 +3853,9 @@ drop http $HOME_NET any -> $EXTERNAL_NET any (http.host; content:"example.com"; 
       "Type": "AWS::RAM::ResourceShare",
     },
     "WestRegionPoolPoolB2DED4AA": {
+      "DependsOn": [
+        "HomeRegionProdPoolPool04473C66",
+      ],
       "Properties": {
         "AddressFamily": "ipv4",
         "Description": "Pool for us-west-2",
