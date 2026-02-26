@@ -127,8 +127,6 @@ To deploy the solution, complete the following steps:
 
 3. On the **Create stack** page, verify that the correct template URL is in the **Amazon S3 URL** text box and choose **Next**.
 
-> **Note:** The template URL will be updated with the S3 bucket link hosting the container installer stack before release. For testing purposes, navigate to [Tags](https://gitlab.aws.dev/landing-zone-accelerator/landing-zone-accelerator-on-aws/-/tags), select the tag ID, select Pipelines, choose container-installer, download the stack template, and upload the template file to CloudFormation.
-
 4. On the **Specify stack details** page, assign a name to your solution stack (recommended: `AWSAccelerator-InstallerContainerStack`)
 
 5. Under **Parameters**, review and modify the following values:
