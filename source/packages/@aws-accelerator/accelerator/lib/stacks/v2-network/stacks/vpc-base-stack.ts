@@ -204,11 +204,11 @@ export class VpcBaseStack extends AcceleratorStack {
         stringValue: cfnVPC.ref,
       });
 
-      if (this.vpcDetails.primaryCidr) {
+      if (this.vpcDetails.primaryCidr || ipv4IpamPoolId) {
         this.addSsmParameter({
           logicalId: pascalCase(`SsmParam${pascalCase(this.vpcDetails.name)}VpcIpv4CidrBlock`),
           parameterName: this.getSsmPath(SsmResourceType.VPC_IPV4_CIDR_BLOCK, [this.vpcDetails.name]),
-          stringValue: this.vpcDetails.primaryCidr,
+          stringValue: cfnVPC.attrCidrBlock,
         });
       }
 

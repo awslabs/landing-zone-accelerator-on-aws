@@ -5964,6 +5964,19 @@ exports[`NetworkVpcV2Stacks > Construct(VpcStack-Network-us-east-1-Network-Secon
       },
       "Type": "AWS::SSM::Parameter",
     },
+    "SsmParamNetworkSecondaryVpcIpv4CidrBlock2CF87CAD": {
+      "Properties": {
+        "Name": "/accelerator/network/vpc/Network-Secondary/cidr/ipv4",
+        "Type": "String",
+        "Value": {
+          "Fn::GetAtt": [
+            "NetworkSecondaryVpc",
+            "CidrBlock",
+          ],
+        },
+      },
+      "Type": "AWS::SSM::Parameter",
+    },
     "SsmParamStackId521A78D3": {
       "Properties": {
         "Name": "/accelerator/AWSAccelerator-VpcStack-Network-Secondary-555555555555-us-east-1/stack-id",
@@ -6256,6 +6269,19 @@ exports[`NetworkVpcV2Stacks > Construct(VpcStack-Network-us-east-1-Network-Secon
         "Type": "String",
         "Value": {
           "Ref": "NetworkSecondaryV2Vpc",
+        },
+      },
+      "Type": "AWS::SSM::Parameter",
+    },
+    "SsmParamNetworkSecondaryV2VpcIpv4CidrBlockCDFD77A9": {
+      "Properties": {
+        "Name": "/accelerator/network/vpc/Network-Secondary-V2/cidr/ipv4",
+        "Type": "String",
+        "Value": {
+          "Fn::GetAtt": [
+            "NetworkSecondaryV2Vpc",
+            "CidrBlock",
+          ],
         },
       },
       "Type": "AWS::SSM::Parameter",
