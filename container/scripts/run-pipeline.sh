@@ -266,6 +266,6 @@ fi
 
 # Backup final CloudFormation templates to S3
 aws s3 sync --quiet /landing-zone-accelerator-on-aws/source/packages/\@aws-accelerator/accelerator/cdk.out/ \
-    s3://$CONFIG_BUCKET_NAME/lza/cdk.out/$(date +"%Y-%m-%d_%H-%M-%S")/
+    s3://$CONFIG_S3_BUCKET/lza/cdk.out/$(date +"%Y-%m-%d_%H-%M-%S")/
 
 echo "DEPLOYMENT COMPLETE"

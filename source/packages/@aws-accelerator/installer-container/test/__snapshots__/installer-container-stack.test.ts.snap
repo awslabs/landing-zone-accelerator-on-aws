@@ -2273,30 +2273,6 @@ def handler(event, context):
                 },
               },
               {
-                "Name": "CONFIG_BUCKET_NAME",
-                "Value": {
-                  "Fn::Join": [
-                    "",
-                    [
-                      {
-                        "Fn::GetAtt": [
-                          "ResourceNamePrefixesGetPrefixResource96A10E6E",
-                          "lowerCasePrefix",
-                        ],
-                      },
-                      "-config-",
-                      {
-                        "Ref": "AWS::AccountId",
-                      },
-                      "-",
-                      {
-                        "Ref": "AWS::Region",
-                      },
-                    ],
-                  ],
-                },
-              },
-              {
                 "Name": "MANAGEMENT_ACCOUNT_EMAIL",
                 "Value": {
                   "Ref": "ManagementAccountEmail",
@@ -5109,27 +5085,6 @@ def handler(event, context):
                     {
                       "Ref": "ExistingConfigBucketKey",
                     },
-                  ],
-                },
-              },
-              {
-                "Name": "CONFIG_BUCKET_NAME",
-                "Value": {
-                  "Fn::Join": [
-                    "",
-                    [
-                      {
-                        "Ref": "AcceleratorQualifier",
-                      },
-                      "-config-",
-                      {
-                        "Ref": "AWS::AccountId",
-                      },
-                      "-",
-                      {
-                        "Ref": "AWS::Region",
-                      },
-                    ],
                   ],
                 },
               },
@@ -7959,30 +7914,6 @@ def handler(event, context):
                 },
               },
               {
-                "Name": "CONFIG_BUCKET_NAME",
-                "Value": {
-                  "Fn::Join": [
-                    "",
-                    [
-                      {
-                        "Fn::GetAtt": [
-                          "ResourceNamePrefixesGetPrefixResource96A10E6E",
-                          "lowerCasePrefix",
-                        ],
-                      },
-                      "-config-",
-                      {
-                        "Ref": "AWS::AccountId",
-                      },
-                      "-",
-                      {
-                        "Ref": "AWS::Region",
-                      },
-                    ],
-                  ],
-                },
-              },
-              {
                 "Name": "MANAGEMENT_ACCOUNT_EMAIL",
                 "Value": {
                   "Ref": "ManagementAccountEmail",
@@ -10788,27 +10719,6 @@ def handler(event, context):
                     {
                       "Ref": "ExistingConfigBucketKey",
                     },
-                  ],
-                },
-              },
-              {
-                "Name": "CONFIG_BUCKET_NAME",
-                "Value": {
-                  "Fn::Join": [
-                    "",
-                    [
-                      {
-                        "Ref": "AcceleratorQualifier",
-                      },
-                      "-config-",
-                      {
-                        "Ref": "AWS::AccountId",
-                      },
-                      "-",
-                      {
-                        "Ref": "AWS::Region",
-                      },
-                    ],
                   ],
                 },
               },
@@ -13647,30 +13557,6 @@ def handler(event, context):
                 },
               },
               {
-                "Name": "CONFIG_BUCKET_NAME",
-                "Value": {
-                  "Fn::Join": [
-                    "",
-                    [
-                      {
-                        "Fn::GetAtt": [
-                          "ResourceNamePrefixesGetPrefixResource96A10E6E",
-                          "lowerCasePrefix",
-                        ],
-                      },
-                      "-config-",
-                      {
-                        "Ref": "AWS::AccountId",
-                      },
-                      "-",
-                      {
-                        "Ref": "AWS::Region",
-                      },
-                    ],
-                  ],
-                },
-              },
-              {
                 "Name": "MANAGEMENT_ACCOUNT_EMAIL",
                 "Value": {
                   "Ref": "ManagementAccountEmail",
@@ -16431,30 +16317,6 @@ def handler(event, context):
                     {
                       "Ref": "ExistingConfigBucketKey",
                     },
-                  ],
-                },
-              },
-              {
-                "Name": "CONFIG_BUCKET_NAME",
-                "Value": {
-                  "Fn::Join": [
-                    "",
-                    [
-                      {
-                        "Fn::GetAtt": [
-                          "ResourceNamePrefixesGetPrefixResource96A10E6E",
-                          "lowerCasePrefix",
-                        ],
-                      },
-                      "-config-",
-                      {
-                        "Ref": "AWS::AccountId",
-                      },
-                      "-",
-                      {
-                        "Ref": "AWS::Region",
-                      },
-                    ],
                   ],
                 },
               },

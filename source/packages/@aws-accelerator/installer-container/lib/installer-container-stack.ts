@@ -1124,7 +1124,6 @@ export class InstallerContainerStack extends cdk.Stack {
             props,
             configS3Path,
             acceleratorPrefix,
-            configBucketName,
             configS3Bucket,
             configS3Key,
           ),
@@ -1433,7 +1432,6 @@ def handler(event, context):
     props: InstallerContainerStackProps | undefined,
     configS3Path: cdk.ICfnConditionExpression,
     acceleratorPrefix: string,
-    configBucketName: string,
     configS3Bucket: cdk.ICfnConditionExpression,
     configS3Key: cdk.ICfnConditionExpression,
   ): Array<{ name: string; value: string }> {
@@ -1450,8 +1448,6 @@ def handler(event, context):
       // Bucket name and key for reliable S3 operations (conditional based on useExistingConfig)
       { name: 'CONFIG_S3_BUCKET', value: configS3Bucket.toString() },
       { name: 'CONFIG_S3_KEY', value: configS3Key.toString() },
-      // Original bucket name for CDK output backup (always solution-created bucket)
-      { name: 'CONFIG_BUCKET_NAME', value: configBucketName },
       // Account email addresses for config generation
       { name: 'MANAGEMENT_ACCOUNT_EMAIL', value: this.managementAccountEmail.valueAsString },
       { name: 'LOG_ARCHIVE_ACCOUNT_EMAIL', value: this.logArchiveAccountEmail.valueAsString },
