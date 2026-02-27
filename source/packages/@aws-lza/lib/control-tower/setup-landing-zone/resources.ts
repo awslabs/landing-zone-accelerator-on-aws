@@ -152,6 +152,10 @@ export type ControlTowerLandingZoneDetailsType = {
    */
   enableIdentityCenterAccess?: boolean;
   /**
+   * Flag indicating Organization level CloudTrail is enabled or not.
+   */
+  enableOrganizationTrail?: boolean;
+  /**
    * Config hub configuration
    */
   configHubConfig?: ControlTowerLoggingConfigurationType;
