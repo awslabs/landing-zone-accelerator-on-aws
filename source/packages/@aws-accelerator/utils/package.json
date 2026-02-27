@@ -9,7 +9,17 @@
     "url": "https://aws.amazon.com/solutions"
   },
   "main": "dist/packages/@aws-accelerator/utils/index.js",
-  "types": "dist/index.d.ts",
+  "types": "dist/packages/@aws-accelerator/utils/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/packages/@aws-accelerator/utils/index.d.ts",
+      "default": "./dist/packages/@aws-accelerator/utils/index.js"
+    },
+    "./lib/*": {
+      "types": "./dist/packages/@aws-accelerator/utils/lib/*.d.ts",
+      "default": "./dist/packages/@aws-accelerator/utils/lib/*.js"
+    }
+  },
   "scripts": {
     "build": "tsc",
     "cleanup": "tsc --build ./ --clean && rm -rf node_modules && rm -rf dist && rm -rf cdk.out",

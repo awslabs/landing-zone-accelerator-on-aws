@@ -38,7 +38,7 @@ export abstract class RegisterOrganizationalUnitModule {
 
     statusLogger.info(`Executing "${params.moduleItem.name}" module.`);
     const securityOuName =
-      params.moduleRunnerParameters.configs.accountsConfig.getLogArchiveAccount().organizationalUnit;
+      params.moduleRunnerParameters.configs.accountsConfig.getAuditAccount().organizationalUnit;
 
     const organizationalUnitsDetail = await getOrganizationalUnitsDetail({
       moduleName: params.moduleItem.name,

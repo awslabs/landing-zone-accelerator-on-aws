@@ -195,6 +195,7 @@ export async function getLandingZoneDetails(
               kmsKeyArn: value['configurations']?.['kmsKeyArn'],
               accountId: value['accountId'],
             };
+            landingZoneDetails.enableOrganizationTrail = value['enabled'];
             break;
           case 'config':
             landingZoneDetails.configHubConfig = {

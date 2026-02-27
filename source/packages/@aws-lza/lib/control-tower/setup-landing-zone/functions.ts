@@ -19,6 +19,10 @@ import {
   LandingZoneUpdateOrResetRequiredType,
 } from './resources';
 
+import { createLogger } from '../../../common/logger';
+
+const logger = createLogger(['setup-landing-zone-functions']);
+
 /**
  * Function to make manifest document for CT API
  * @param landingZoneConfiguration {@link ControlTowerLandingZoneConfigType}
@@ -177,49 +181,93 @@ export function landingZoneUpdateOrResetRequired(
   // find reasons to update
   const reasons: string[] = [];
 
+  // Use Number() coercion for all retention day comparisons to prevent
+  // false positives from type mismatches (e.g., string "5" vs number 5)
+  const existingCentralizedAccessRetention = Number(
+    landingZoneDetails.centralizedLoggingConfig?.accessLoggingBucketRetentionDays,
+  );
+  const existingCentralizedLoggingRetention = Number(
+    landingZoneDetails.centralizedLoggingConfig?.loggingBucketRetentionDays,
+  );
+  const configAccessRetention = Number(landingZoneConfiguration.accessLoggingBucketRetentionDays);
+  const configLoggingRetention = Number(landingZoneConfiguration.loggingBucketRetentionDays);
+
+  logger.info(
+    `Comparing CT Landing Zone config — centralizedLogging: accessRetention=${existingCentralizedAccessRetention} vs ${configAccessRetention}, loggingRetention=${existingCentralizedLoggingRetention} vs ${configLoggingRetention}`,
+  );
+
   if (
-    landingZoneDetails.centralizedLoggingConfig?.accessLoggingBucketRetentionDays !==
-    landingZoneConfiguration.accessLoggingBucketRetentionDays
+    !isNaN(existingCentralizedAccessRetention) &&
+    existingCentralizedAccessRetention !== configAccessRetention
   ) {
     reasons.push(
-      `Changes made in Centralized Logging AccessLoggingBucketRetentionDays from ${landingZoneDetails.centralizedLoggingConfig?.accessLoggingBucketRetentionDays} to ${landingZoneConfiguration.accessLoggingBucketRetentionDays}`,
+      `Changes made in Centralized Logging AccessLoggingBucketRetentionDays from ${existingCentralizedAccessRetention} to ${configAccessRetention}`,
     );
   }
   if (
-    landingZoneDetails.centralizedLoggingConfig?.loggingBucketRetentionDays !==
-    landingZoneConfiguration.loggingBucketRetentionDays
+    !isNaN(existingCentralizedLoggingRetention) &&
+    existingCentralizedLoggingRetention !== configLoggingRetention
   ) {
     reasons.push(
-      `Changes made in Centralized Logging LoggingBucketRetentionDays from ${landingZoneDetails.centralizedLoggingConfig?.loggingBucketRetentionDays} to ${landingZoneConfiguration.loggingBucketRetentionDays}`,
+      `Changes made in Centralized Logging LoggingBucketRetentionDays from ${existingCentralizedLoggingRetention} to ${configLoggingRetention}`,
     );
   }
 
   // During upgrade from 3.3 to 4.0 configHubConfig will be undefined
   if (landingZoneDetails.configHubConfig) {
+    const existingConfigAccessRetention = Number(
+      landingZoneDetails.configHubConfig.accessLoggingBucketRetentionDays,
+    );
+    const existingConfigLoggingRetention = Number(
+      landingZoneDetails.configHubConfig.loggingBucketRetentionDays,
+    );
+
+    logger.info(
+      `Comparing CT Landing Zone config — configHub: accessRetention=${existingConfigAccessRetention} vs ${configAccessRetention}, loggingRetention=${existingConfigLoggingRetention} vs ${configLoggingRetention}`,
+    );
+
     if (
-      landingZoneDetails.configHubConfig.accessLoggingBucketRetentionDays !==
-      landingZoneConfiguration.accessLoggingBucketRetentionDays
+      !isNaN(existingConfigAccessRetention) &&
+      existingConfigAccessRetention !== configAccessRetention
     ) {
       reasons.push(
-        `Changes made in Config AccessLoggingBucketRetentionDays from ${landingZoneDetails.configHubConfig.accessLoggingBucketRetentionDays} to ${landingZoneConfiguration.accessLoggingBucketRetentionDays}`,
+        `Changes made in Config AccessLoggingBucketRetentionDays from ${existingConfigAccessRetention} to ${configAccessRetention}`,
       );
     }
     if (
-      landingZoneDetails.configHubConfig.loggingBucketRetentionDays !==
-      landingZoneConfiguration.loggingBucketRetentionDays
+      !isNaN(existingConfigLoggingRetention) &&
+      existingConfigLoggingRetention !== configLoggingRetention
     ) {
       reasons.push(
-        `Changes made in Config LoggingBucketRetentionDays from ${landingZoneDetails.configHubConfig.loggingBucketRetentionDays} to ${landingZoneConfiguration.loggingBucketRetentionDays}`,
+        `Changes made in Config LoggingBucketRetentionDays from ${existingConfigLoggingRetention} to ${configLoggingRetention}`,
       );
     }
   }
 
+  logger.info(
+    `Comparing CT Landing Zone config — enableIdentityCenterAccess: existing=${landingZoneDetails.enableIdentityCenterAccess} vs config=${landingZoneConfiguration.enableIdentityCenterAccess}`,
+  );
   if (landingZoneDetails.enableIdentityCenterAccess !== landingZoneConfiguration.enableIdentityCenterAccess) {
     reasons.push(
       `Changes made in EnableIdentityCenterAccess from ${landingZoneDetails.enableIdentityCenterAccess} to ${landingZoneConfiguration.enableIdentityCenterAccess}`,
     );
   }
 
+  logger.info(
+    `Comparing CT Landing Zone config — enableOrganizationTrail: existing=${landingZoneDetails.enableOrganizationTrail} vs config=${landingZoneConfiguration.enableOrganizationTrail}`,
+  );
+  if (
+    landingZoneDetails.enableOrganizationTrail !== undefined &&
+    landingZoneDetails.enableOrganizationTrail !== landingZoneConfiguration.enableOrganizationTrail
+  ) {
+    reasons.push(
+      `Changes made in EnableOrganizationTrail from ${landingZoneDetails.enableOrganizationTrail} to ${landingZoneConfiguration.enableOrganizationTrail}`,
+    );
+  }
+
+  logger.info(
+    `Comparing CT Landing Zone config — governedRegions: existing=[${landingZoneDetails.governedRegions?.join(',')}] vs config=[${landingZoneConfiguration.governedRegions.join(',')}]`,
+  );
   if (governedRegionsChanged(landingZoneDetails.governedRegions ?? [], landingZoneConfiguration.governedRegions)) {
     reasons.push(
       `Changes made in governed regions from [${landingZoneDetails.governedRegions?.join(
@@ -228,6 +276,9 @@ export function landingZoneUpdateOrResetRequired(
     );
   }
 
+  logger.info(
+    `Comparing CT Landing Zone config — version: existing=${landingZoneDetails.version} vs config=${landingZoneConfiguration.version}`,
+  );
   if (landingZoneDetails.version !== landingZoneConfiguration.version) {
     reasons.push(
       `Changes made in control tower version from ${landingZoneDetails.version} to ${landingZoneConfiguration.version}`,
@@ -250,6 +301,7 @@ export function landingZoneUpdateOrResetRequired(
     };
   }
 
+  logger.info('No CT Landing Zone configuration changes detected — skipping update.');
   return {
     updateRequired: false,
     targetVersion: landingZoneDetails.latestAvailableVersion!,

@@ -880,7 +880,7 @@ describe('functions', () => {
 
     test('should return correct parameters when organization is enabled', async () => {
       // Setup
-      vi.spyOn(await import('../../utils/lib/common-functions'), 'getGlobalRegion').mockReturnValue(
+      vi.spyOn(await import('@aws-accelerator/utils/lib/common-functions'), 'getGlobalRegion').mockReturnValue(
         MOCK_CONSTANTS.globalRegion,
       );
 
@@ -901,6 +901,8 @@ describe('functions', () => {
         acceleratorResourceNames: MOCK_CONSTANTS.acceleratorResourceNames,
         logging: {
           centralizedRegion: MOCK_CONSTANTS.logging.centralizedRegion,
+          bucketName: undefined,
+          bucketKeyArn: undefined,
         },
         organizationAccounts: MOCK_CONSTANTS.organizationAccounts,
         organizationDetails: MOCK_CONSTANTS.organizationDetails,
