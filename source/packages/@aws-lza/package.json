@@ -68,6 +68,9 @@
     "cross-spawn": "7.0.6",
     "@babel/helpers": "7.26.10",
     "@aws-cdk/cloudformation-diff/diff": "8.0.3",
-    "fast-xml-parser": "5.3.4"
+    "fast-xml-parser": "5.3.8",
+    "rollup": "4.59.0",
+    "diff": "5.2.2",
+    "sinon/**/diff": "5.2.2"
   }
 }

@@ -68,6 +68,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - chore(networking): update vpc route53 resolver configuration links
 - chore: add documentation for container deployment
 - chore: set default nodejs to 22
+- chore: update dependency resolutions to remediate CVE findings
 - chore: updated dependencies tar, lodash and diff
 
 ## [1.14.2] - 2025-12-19
