@@ -27,7 +27,7 @@
 
 import path from 'path';
 import { EC2Client, DescribeRegionsCommand } from '@aws-sdk/client-ec2';
-import { IAssumeRoleCredential, IModuleRegionFilters } from './interfaces';
+import { AssumeRoleCredentialType, IModuleRegionFilters } from './interfaces';
 import { executeApi, setRetryStrategy } from './utility';
 import { createLogger } from './logger';
 
@@ -67,7 +67,7 @@ export interface BoundaryContext {
   /** Optional solution identifier for user agent */
   solutionId?: string;
   /** Optional credentials for cross-account operations */
-  credentials?: IAssumeRoleCredential;
+  credentials?: AssumeRoleCredentialType;
   /** Optional AWS Organizations root ID */
   organizationRootId?: string;
 }

@@ -72,7 +72,7 @@ export abstract class ModuleRunner {
     //
     // Get Management account credentials
     //
-    const managementAccountCredentials = await getManagementAccountCredentials(
+    const managementAccountCredentials = getManagementAccountCredentials(
       params.partition,
       params.region,
       params.solutionId,

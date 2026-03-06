@@ -33,11 +33,13 @@ import {
 } from '@aws-sdk/client-controltower';
 import { AssumeRoleCommand, GetCallerIdentityCommand, STSClient } from '@aws-sdk/client-sts';
 import { ConfiguredRetryStrategy } from '@aws-sdk/util-retry';
+
 import { MODULE_EXCEPTIONS } from '../common/enums';
 import path from 'path';
 
 import {
   IAssumeRoleCredential,
+  AssumeRoleCredentialType,
   ControlTowerLandingZoneDetailsType,
   IModuleDefaultParameter,
   IModuleCommonParameter,
@@ -253,7 +255,7 @@ export async function getCredentials(options: {
   assumeRoleName?: string;
   assumeRoleArn?: string;
   sessionName?: string;
-  credentials?: IAssumeRoleCredential;
+  credentials?: AssumeRoleCredentialType;
 }): Promise<IAssumeRoleCredential | undefined> {
   if (options.assumeRoleName && options.assumeRoleArn) {
     throw new Error(`Either assumeRoleName or assumeRoleArn can be provided not both`);

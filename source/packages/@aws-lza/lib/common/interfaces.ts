@@ -27,6 +27,7 @@
  */
 
 import { DynamoDBFilterOperator, DynamoDBLogicalOperator, MODULE_STATE_CODE } from './types';
+import type { AwsCredentialIdentityProvider } from '@aws-sdk/types';
 /**
  * Represents an AWS environment (account-region combination) for accelerator operations
  */
@@ -49,6 +50,11 @@ export interface IAssumeRoleCredential {
   /** Optional credential expiration timestamp */
   expiration?: Date;
 }
+
+/**
+ * Credential type that accepts both static credentials and credential providers
+ */
+export type AssumeRoleCredentialType = IAssumeRoleCredential | AwsCredentialIdentityProvider;
 
 /**
  * Regional filtering configuration for module operations
@@ -141,7 +147,7 @@ export interface IModuleRequest extends ISessionContext {
   /** Solution identifier for tracking */
   readonly solutionId?: string;
   /** Optional credentials for cross-account operations */
-  credentials?: IAssumeRoleCredential;
+  credentials?: AssumeRoleCredentialType;
   /** Whether to perform dry run */
   dryRun?: boolean;
 }

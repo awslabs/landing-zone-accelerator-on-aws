@@ -33,7 +33,7 @@ import {
   getCurrentAccountId,
   setRetryStrategy,
 } from '../../../common/functions';
-import { IAssumeRoleCredential } from '../../../common/resources';
+import { AssumeRoleCredentialType } from '../../../common/resources';
 import { STSClient } from '@aws-sdk/client-sts';
 import { throttlingBackOff } from '../../common/throttle';
 
@@ -124,7 +124,7 @@ export class StackPolicyModule implements IStackPolicyModule {
     currentAccountId: string,
     region: string,
     props: IStackPolicyHandlerParameter,
-  ): Promise<IAssumeRoleCredential | undefined> {
+  ): Promise<AssumeRoleCredentialType | undefined> {
     if (currentAccountId === accountId) {
       this.logger.info(`Using existing credentials for account ${accountId} in region ${region}`);
       return props.credentials;

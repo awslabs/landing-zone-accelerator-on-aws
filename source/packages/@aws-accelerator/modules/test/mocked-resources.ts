@@ -639,12 +639,12 @@ export const MOCK_CONSTANTS = {
       JoinedTimestamp: new Date('2023-01-02'),
     },
   ] as Account[],
-  credentials: {
+  credentials: async () => ({
     accessKeyId: 'mockAccessKeyId',
     secretAccessKey: 'mockSecretAccessKey',
     sessionToken: 'mockSessionToken',
     expiration: new Date('2024-12-31'),
-  },
+  }),
   managementAccount: { name: 'management', email: 'management@example.com' },
   auditAccount: { name: 'audit', email: 'audit@example.com' },
   logArchiveAccount: { name: 'logArchive', email: 'logArchive@example.com' },

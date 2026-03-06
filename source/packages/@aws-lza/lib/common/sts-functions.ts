@@ -47,7 +47,7 @@
 
 import path from 'path';
 import { AssumeRoleCommand, GetCallerIdentityCommand, STSClient } from '@aws-sdk/client-sts';
-import { IAssumeRoleCredential, ISessionContext } from './interfaces';
+import { IAssumeRoleCredential, AssumeRoleCredentialType, ISessionContext } from './interfaces';
 import { executeApi, setRetryStrategy } from './utility';
 import { MODULE_EXCEPTIONS } from './types';
 import { createLogger } from './logger';
@@ -154,7 +154,7 @@ export async function getCredentials(options: {
   assumeRoleName?: string;
   assumeRoleArn?: string;
   sessionName?: string;
-  credentials?: IAssumeRoleCredential;
+  credentials?: AssumeRoleCredentialType;
 }): Promise<IAssumeRoleCredential | undefined> {
   if (options.assumeRoleName && options.assumeRoleArn) {
     throw new Error(`Either assumeRoleName or assumeRoleArn can be provided not both`);
@@ -291,7 +291,7 @@ export async function getCurrentSessionDetails(props: {
   logPrefix?: string;
   region?: string;
   solutionId?: string;
-  credentials?: IAssumeRoleCredential;
+  credentials?: AssumeRoleCredentialType;
 }): Promise<ISessionContext> {
   const client: STSClient = new STSClient({
     region: props.region,

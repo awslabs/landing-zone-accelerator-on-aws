@@ -23,7 +23,7 @@ import { createLogger } from '../../../common/logger';
 import { throttlingBackOff } from '../../../common/throttle';
 import { setRetryStrategy, getCredentials, getCurrentAccountDetails } from '../../../common/functions';
 import { MODULE_EXCEPTIONS } from '../../../common/enums';
-import { IAssumeRoleCredential } from '../../../common/resources';
+import { AssumeRoleCredentialType } from '../../../common/resources';
 
 /**
  * SsmGetParameterModule retrieves AWS Systems Manager parameter values.
@@ -275,7 +275,7 @@ export class GetSsmParametersValueModule implements IGetSsmParametersValueModule
     currentRoleArn: string,
     assumeRoleArn?: string,
     solutionId?: string,
-    credentials?: IAssumeRoleCredential,
+    credentials?: AssumeRoleCredentialType,
   ): Promise<SSMClient | undefined> {
     let assumedCredentials;
 

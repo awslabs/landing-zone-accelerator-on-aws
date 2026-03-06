@@ -15,7 +15,7 @@ import path from 'path';
 import { createStatusLogger } from '../../../../../@aws-lza/common/logger';
 import { ModuleParams } from '../../../models/types';
 import { Account } from '@aws-sdk/client-organizations';
-import { IAssumeRoleCredential } from '../../../../../@aws-lza/common/resources';
+import { IAssumeRoleCredential, AssumeRoleCredentialType } from '../../../../../@aws-lza/common/resources';
 import { getCredentials } from '../../../../../@aws-lza/common/functions';
 import { AccountsConfig } from '@aws-accelerator/config';
 
@@ -347,7 +347,7 @@ export abstract class SsmBlockPublicDocumentSharingModule {
     accountName: string,
     region: string,
     partition: string,
-    managementCredentials: IAssumeRoleCredential,
+    managementCredentials: AssumeRoleCredentialType,
     enable: boolean,
     solutionId: string,
     managementAccountAccessRole: string,
@@ -360,9 +360,12 @@ export abstract class SsmBlockPublicDocumentSharingModule {
       );
 
       // Get credentials for the target account
+      const resolvedManagementCredentials =
+        typeof managementCredentials === 'function' ? await managementCredentials() : managementCredentials;
+
       const targetAccountCredentials =
         accountName === AccountsConfig.MANAGEMENT_ACCOUNT
-          ? managementCredentials
+          ? resolvedManagementCredentials
           : await getCredentials({
               accountId,
               region,
@@ -378,7 +381,7 @@ export abstract class SsmBlockPublicDocumentSharingModule {
       const result = await manageBlockPublicDocumentSharing({
         accountId,
         region,
-        credentials: targetAccountCredentials,
+        credentials: targetAccountCredentials as IAssumeRoleCredential | undefined,
         enable,
         solutionId,
       });

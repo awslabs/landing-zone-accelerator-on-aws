@@ -27,6 +27,8 @@
     "@aws-sdk/client-organizations": "3.950.0",
     "@aws-sdk/client-securityhub": "3.835.0",
     "@aws-sdk/client-ssm": "3.835.0",
+    "@aws-sdk/credential-providers": "3.835.0",
+    "@aws-sdk/types": "3.609.0",
     "@types/js-yaml": "4.0.9",
     "change-case": "4.1.2",
     "fp-ts": "2.13.1",

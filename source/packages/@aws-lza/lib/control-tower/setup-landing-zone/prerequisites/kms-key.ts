@@ -24,7 +24,7 @@ import {
 
 import { setRetryStrategy } from '../../../../common/functions';
 import { createLogger } from '../../../../common/logger';
-import { IAssumeRoleCredential, PolicyDocument } from '../../../../common/resources';
+import { AssumeRoleCredentialType, PolicyDocument } from '../../../../common/resources';
 import { throttlingBackOff } from '../../../../common/throttle';
 import { IControlTowerKmsKeys } from '../resources';
 
@@ -79,7 +79,7 @@ export abstract class KmsKey {
     accountId: string,
     region: string,
     solutionId?: string,
-    credentials?: IAssumeRoleCredential,
+    credentials?: AssumeRoleCredentialType,
   ): Promise<IControlTowerKmsKeys> {
     const centralizedLoggingKeyAlias = `alias/aws-controltower/logging/key`;
     const configLoggingKeyAlias = `alias/aws-controltower/config/key`;
@@ -120,7 +120,7 @@ export abstract class KmsKey {
     region: string,
     keyAlias: string,
     solutionId?: string,
-    credentials?: IAssumeRoleCredential,
+    credentials?: AssumeRoleCredentialType,
   ): Promise<string> {
     const client: KMSClient = new KMSClient({
       region,

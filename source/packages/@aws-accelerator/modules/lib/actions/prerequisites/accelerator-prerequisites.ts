@@ -13,6 +13,7 @@
 
 import { checkLambdaConcurrency, ICheckLambdaConcurrencyParameter } from '../../../../../@aws-lza/index';
 import { getCredentials } from '../../../../../@aws-lza/common/functions';
+import { AssumeRoleCredentialType } from '../../../../../@aws-lza/common/resources';
 import { ModuleParams } from '../../../models/types';
 import { AcceleratorEnvironment } from '../../../../../@aws-lza/common/types';
 import { DefaultMinimumLambdaConcurrencyThreshold } from '../../../models/constants';
@@ -96,7 +97,7 @@ export abstract class AcceleratorPrerequisites {
     accountId: string,
     region: string,
   ): Promise<boolean> {
-    let credentials = params.moduleRunnerParameters.managementAccountCredentials;
+    let credentials: AssumeRoleCredentialType | undefined = params.moduleRunnerParameters.managementAccountCredentials;
 
     if (accountId !== params.moduleRunnerParameters.configs.accountsConfig.getManagementAccountId()) {
       credentials = await getCredentials({

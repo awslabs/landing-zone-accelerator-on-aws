@@ -113,7 +113,7 @@ describe('SsmBlockPublicDocumentSharingModule', () => {
     } as AccountsConfig;
 
     // Setup default mocks
-    mockGetCredentials.mockResolvedValue(MOCK_CONSTANTS.credentials);
+    mockGetCredentials.mockResolvedValue(await MOCK_CONSTANTS.credentials());
     mockManageBlockPublicDocumentSharing.mockResolvedValue('SSM Block Public Document Sharing enabled successfully');
 
     // Mock the import wrapper function
@@ -327,7 +327,7 @@ describe('SsmBlockPublicDocumentSharingModule', () => {
       expect(mockManageBlockPublicDocumentSharing).toHaveBeenCalledWith({
         accountId: '111111111111',
         region: 'us-east-1',
-        credentials: MOCK_CONSTANTS.credentials,
+        credentials: await MOCK_CONSTANTS.credentials(),
         enable: true,
         solutionId: MOCK_CONSTANTS.runnerParameters.solutionId,
       });
@@ -336,7 +336,7 @@ describe('SsmBlockPublicDocumentSharingModule', () => {
       expect(mockManageBlockPublicDocumentSharing).toHaveBeenCalledWith({
         accountId: '111111111111',
         region: 'us-west-2',
-        credentials: MOCK_CONSTANTS.credentials,
+        credentials: await MOCK_CONSTANTS.credentials(),
         enable: true,
         solutionId: MOCK_CONSTANTS.runnerParameters.solutionId,
       });
@@ -365,7 +365,7 @@ describe('SsmBlockPublicDocumentSharingModule', () => {
       expect(mockManageBlockPublicDocumentSharing).toHaveBeenCalledWith({
         accountId: '111111111111',
         region: 'us-east-1',
-        credentials: MOCK_CONSTANTS.credentials,
+        credentials: await MOCK_CONSTANTS.credentials(),
         enable: true,
         solutionId: MOCK_CONSTANTS.runnerParameters.solutionId,
       });
@@ -373,7 +373,7 @@ describe('SsmBlockPublicDocumentSharingModule', () => {
       expect(mockManageBlockPublicDocumentSharing).toHaveBeenCalledWith({
         accountId: '111111111111',
         region: 'us-west-2',
-        credentials: MOCK_CONSTANTS.credentials,
+        credentials: await MOCK_CONSTANTS.credentials(),
         enable: true,
         solutionId: MOCK_CONSTANTS.runnerParameters.solutionId,
       });
@@ -381,7 +381,7 @@ describe('SsmBlockPublicDocumentSharingModule', () => {
       expect(mockManageBlockPublicDocumentSharing).toHaveBeenCalledWith({
         accountId: '111111111111',
         region: 'eu-west-1',
-        credentials: MOCK_CONSTANTS.credentials,
+        credentials: await MOCK_CONSTANTS.credentials(),
         enable: true,
         solutionId: MOCK_CONSTANTS.runnerParameters.solutionId,
       });
@@ -410,7 +410,7 @@ describe('SsmBlockPublicDocumentSharingModule', () => {
       expect(mockManageBlockPublicDocumentSharing).toHaveBeenCalledWith({
         accountId: '111111111111',
         region: 'us-east-1',
-        credentials: MOCK_CONSTANTS.credentials,
+        credentials: await MOCK_CONSTANTS.credentials(),
         enable: true,
         solutionId: MOCK_CONSTANTS.runnerParameters.solutionId,
       });
@@ -438,14 +438,14 @@ describe('SsmBlockPublicDocumentSharingModule', () => {
       expect(mockManageBlockPublicDocumentSharing).toHaveBeenCalledWith({
         accountId: '111111111111',
         region: 'us-east-1',
-        credentials: MOCK_CONSTANTS.credentials,
+        credentials: await MOCK_CONSTANTS.credentials(),
         enable: true,
         solutionId: MOCK_CONSTANTS.runnerParameters.solutionId,
       });
       expect(mockManageBlockPublicDocumentSharing).toHaveBeenCalledWith({
         accountId: '111111111111',
         region: 'us-west-2',
-        credentials: MOCK_CONSTANTS.credentials,
+        credentials: await MOCK_CONSTANTS.credentials(),
         enable: true,
         solutionId: MOCK_CONSTANTS.runnerParameters.solutionId,
       });
@@ -474,14 +474,14 @@ describe('SsmBlockPublicDocumentSharingModule', () => {
       expect(mockManageBlockPublicDocumentSharing).toHaveBeenCalledWith({
         accountId: '111111111111',
         region: 'us-east-1',
-        credentials: MOCK_CONSTANTS.credentials,
+        credentials: await MOCK_CONSTANTS.credentials(),
         enable: true,
         solutionId: MOCK_CONSTANTS.runnerParameters.solutionId,
       });
       expect(mockManageBlockPublicDocumentSharing).toHaveBeenCalledWith({
         accountId: '111111111111',
         region: 'us-west-2',
-        credentials: MOCK_CONSTANTS.credentials,
+        credentials: await MOCK_CONSTANTS.credentials(),
         enable: true,
         solutionId: MOCK_CONSTANTS.runnerParameters.solutionId,
       });
@@ -506,7 +506,7 @@ describe('SsmBlockPublicDocumentSharingModule', () => {
       expect(mockManageBlockPublicDocumentSharing).toHaveBeenCalledWith({
         accountId: '111111111111',
         region: 'us-east-1',
-        credentials: MOCK_CONSTANTS.credentials,
+        credentials: await MOCK_CONSTANTS.credentials(),
         enable: true,
         solutionId: MOCK_CONSTANTS.runnerParameters.solutionId,
       });
@@ -580,7 +580,7 @@ describe('SsmBlockPublicDocumentSharingModule', () => {
         expect(mockManageBlockPublicDocumentSharing).toHaveBeenCalledWith({
           accountId: account.Id,
           region: 'us-east-1',
-          credentials: MOCK_CONSTANTS.credentials,
+          credentials: await MOCK_CONSTANTS.credentials(),
           enable: true,
           solutionId: MOCK_CONSTANTS.runnerParameters.solutionId,
         });
@@ -606,7 +606,7 @@ describe('SsmBlockPublicDocumentSharingModule', () => {
       expect(mockManageBlockPublicDocumentSharing).toHaveBeenCalledWith({
         accountId: '111111111111',
         region: 'us-east-1',
-        credentials: MOCK_CONSTANTS.credentials,
+        credentials: await MOCK_CONSTANTS.credentials(),
         enable: true,
         solutionId: MOCK_CONSTANTS.runnerParameters.solutionId,
       });
@@ -615,7 +615,7 @@ describe('SsmBlockPublicDocumentSharingModule', () => {
       expect(mockManageBlockPublicDocumentSharing).toHaveBeenCalledWith({
         accountId: '444444444444',
         region: 'us-east-1',
-        credentials: MOCK_CONSTANTS.credentials,
+        credentials: await MOCK_CONSTANTS.credentials(),
         enable: false,
         solutionId: MOCK_CONSTANTS.runnerParameters.solutionId,
       });
@@ -643,7 +643,7 @@ describe('SsmBlockPublicDocumentSharingModule', () => {
         expect(mockManageBlockPublicDocumentSharing).toHaveBeenCalledWith({
           accountId: account.Id,
           region: 'us-east-1',
-          credentials: MOCK_CONSTANTS.credentials,
+          credentials: await MOCK_CONSTANTS.credentials(),
           enable: false,
           solutionId: MOCK_CONSTANTS.runnerParameters.solutionId,
         });
@@ -670,7 +670,7 @@ describe('SsmBlockPublicDocumentSharingModule', () => {
         expect(mockManageBlockPublicDocumentSharing).toHaveBeenCalledWith({
           accountId: account.Id,
           region: 'us-east-1',
-          credentials: MOCK_CONSTANTS.credentials,
+          credentials: await MOCK_CONSTANTS.credentials(),
           enable: true,
           solutionId: MOCK_CONSTANTS.runnerParameters.solutionId,
         });
@@ -700,7 +700,7 @@ describe('SsmBlockPublicDocumentSharingModule', () => {
         expect(mockManageBlockPublicDocumentSharing).toHaveBeenCalledWith({
           accountId: account.Id,
           region: 'us-east-1',
-          credentials: MOCK_CONSTANTS.credentials,
+          credentials: await MOCK_CONSTANTS.credentials(),
           enable: true,
           solutionId: MOCK_CONSTANTS.runnerParameters.solutionId,
         });
@@ -984,7 +984,7 @@ describe('SsmBlockPublicDocumentSharingModule', () => {
       expect(mockManageBlockPublicDocumentSharing).toHaveBeenCalledWith({
         accountId: '666666666666',
         region: 'us-east-1',
-        credentials: MOCK_CONSTANTS.credentials,
+        credentials: await MOCK_CONSTANTS.credentials(),
         enable: true,
         solutionId: MOCK_CONSTANTS.runnerParameters.solutionId,
       });
@@ -1009,7 +1009,7 @@ describe('SsmBlockPublicDocumentSharingModule', () => {
       expect(mockManageBlockPublicDocumentSharing).toHaveBeenCalledWith({
         accountId: '444444444444',
         region: 'us-east-1',
-        credentials: MOCK_CONSTANTS.credentials,
+        credentials: await MOCK_CONSTANTS.credentials(),
         enable: false,
         solutionId: MOCK_CONSTANTS.runnerParameters.solutionId,
       });
@@ -1017,7 +1017,7 @@ describe('SsmBlockPublicDocumentSharingModule', () => {
       expect(mockManageBlockPublicDocumentSharing).toHaveBeenCalledWith({
         accountId: '555555555555',
         region: 'us-east-1',
-        credentials: MOCK_CONSTANTS.credentials,
+        credentials: await MOCK_CONSTANTS.credentials(),
         enable: false,
         solutionId: MOCK_CONSTANTS.runnerParameters.solutionId,
       });
@@ -1042,7 +1042,7 @@ describe('SsmBlockPublicDocumentSharingModule', () => {
       expect(mockManageBlockPublicDocumentSharing).toHaveBeenCalledWith({
         accountId: '444444444444',
         region: 'us-east-1',
-        credentials: MOCK_CONSTANTS.credentials,
+        credentials: await MOCK_CONSTANTS.credentials(),
         enable: false,
         solutionId: MOCK_CONSTANTS.runnerParameters.solutionId,
       });
@@ -1051,7 +1051,7 @@ describe('SsmBlockPublicDocumentSharingModule', () => {
       expect(mockManageBlockPublicDocumentSharing).toHaveBeenCalledWith({
         accountId: '111111111111',
         region: 'us-east-1',
-        credentials: MOCK_CONSTANTS.credentials,
+        credentials: await MOCK_CONSTANTS.credentials(),
         enable: true,
         solutionId: MOCK_CONSTANTS.runnerParameters.solutionId,
       });
@@ -1179,7 +1179,7 @@ describe('SsmBlockPublicDocumentSharingModule', () => {
       expect(mockManageBlockPublicDocumentSharing).toHaveBeenCalledWith({
         accountId: '111111111111',
         region: 'us-east-1',
-        credentials: MOCK_CONSTANTS.credentials,
+        credentials: await MOCK_CONSTANTS.credentials(),
         enable: true,
         solutionId: MOCK_CONSTANTS.runnerParameters.solutionId,
       });
@@ -1283,7 +1283,7 @@ describe('SsmBlockPublicDocumentSharingModule', () => {
       expect(mockManageBlockPublicDocumentSharing).toHaveBeenCalledWith({
         accountId: '111111111111',
         region: 'eu-west-1',
-        credentials: MOCK_CONSTANTS.credentials,
+        credentials: await MOCK_CONSTANTS.credentials(),
         enable: true,
         solutionId: MOCK_CONSTANTS.runnerParameters.solutionId,
       });
@@ -1311,7 +1311,7 @@ describe('SsmBlockPublicDocumentSharingModule', () => {
       expect(mockManageBlockPublicDocumentSharing).toHaveBeenCalledWith({
         accountId: '111111111111',
         region: 'ap-southeast-1',
-        credentials: MOCK_CONSTANTS.credentials,
+        credentials: await MOCK_CONSTANTS.credentials(),
         enable: true,
         solutionId: MOCK_CONSTANTS.runnerParameters.solutionId,
       });

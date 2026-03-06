@@ -21,7 +21,7 @@ import {
 } from '@aws-sdk/client-organizations';
 
 import { delay, getOrganizationAccounts, setRetryStrategy } from '../../../../common/functions';
-import { IAssumeRoleCredential } from '../../../../common/resources';
+import { AssumeRoleCredentialType } from '../../../../common/resources';
 import { createLogger } from '../../../../common/logger';
 import { throttlingBackOff } from '../../../../common/throttle';
 import { ISharedAccountDetails } from '../resources';
@@ -148,7 +148,7 @@ export abstract class SharedAccount {
     auditAccountItem: ISharedAccountDetails,
     globalRegion: string,
     solutionId?: string,
-    credentials?: IAssumeRoleCredential,
+    credentials?: AssumeRoleCredentialType,
   ): Promise<void> {
     const client: OrganizationsClient = new OrganizationsClient({
       region: globalRegion,

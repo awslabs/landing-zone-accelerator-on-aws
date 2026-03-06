@@ -22,7 +22,7 @@ import path from 'path';
 import { promises as fs } from 'fs';
 import { generateDryRunResponse, getCredentials, getModuleDefaultParameters } from '../../../common/functions';
 
-import { AcceleratorModuleName, IAssumeRoleCredential, IModuleDefaultParameter } from '../../../common/resources';
+import { AcceleratorModuleName, AssumeRoleCredentialType, IModuleDefaultParameter } from '../../../common/resources';
 import { AcceleratorEnvironment } from '../../../common/types';
 import { CloudFormationClient, GetTemplateCommand } from '@aws-sdk/client-cloudformation';
 import { MODULE_EXCEPTIONS } from '../../../common/enums';
@@ -92,15 +92,15 @@ export class GetCloudFormationTemplatesModule implements IGetCloudFormationTempl
   private async getEnvironmentsCredentials(props: {
     centralAccountId: string;
     environments: AcceleratorEnvironment[];
-    assumeRoleCredentials?: IAssumeRoleCredential;
+    assumeRoleCredentials?: AssumeRoleCredentialType;
     roleNameToAssume: string;
     solutionId?: string;
     partition?: string;
     batchSize: number;
-  }): Promise<{ environment: AcceleratorEnvironment; credentials: IAssumeRoleCredential | undefined }[]> {
+  }): Promise<{ environment: AcceleratorEnvironment; credentials: AssumeRoleCredentialType | undefined }[]> {
     const credentialPromises: Promise<{
       environment: AcceleratorEnvironment;
-      credentials: IAssumeRoleCredential | undefined;
+      credentials: AssumeRoleCredentialType | undefined;
     }>[] = [];
     const credentials = [];
     for (const environment of props.environments) {
@@ -151,8 +151,8 @@ export class GetCloudFormationTemplatesModule implements IGetCloudFormationTempl
     solutionId?: string;
     partition?: string;
     crossAccountRoleName: string;
-    managementCredentials?: IAssumeRoleCredential;
-  }): Promise<{ environment: AcceleratorEnvironment; credentials: IAssumeRoleCredential | undefined }> {
+    managementCredentials?: AssumeRoleCredentialType;
+  }): Promise<{ environment: AcceleratorEnvironment; credentials: AssumeRoleCredentialType | undefined }> {
     if (props.centralAccountId === props.accountId) {
       return {
         environment: {
@@ -200,7 +200,7 @@ export class GetCloudFormationTemplatesModule implements IGetCloudFormationTempl
     basePath: string;
     environmentCredentials: {
       environment: { accountId: string; region: string };
-      credentials: IAssumeRoleCredential | undefined;
+      credentials: AssumeRoleCredentialType | undefined;
     }[];
     stackPrefix?: string;
     stackName?: string;
@@ -244,7 +244,7 @@ export class GetCloudFormationTemplatesModule implements IGetCloudFormationTempl
    */
   private async processCloudFormationTemplate(props: {
     environment: AcceleratorEnvironment;
-    credentials: IAssumeRoleCredential | undefined;
+    credentials: AssumeRoleCredentialType | undefined;
     basePath: string;
     stackPrefix?: string;
     stackName?: string;

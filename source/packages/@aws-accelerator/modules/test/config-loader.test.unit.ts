@@ -206,7 +206,7 @@ describe('ConfigLoader', () => {
         MOCK_CONSTANTS.enableSingleAccountMode,
         MOCK_CONSTANTS.orgEnabled,
         mockAccountsConfig,
-        MOCK_CONSTANTS.credentials,
+        await MOCK_CONSTANTS.credentials(),
         true,
       );
       expect(result).toBe(mockAccountsConfig);

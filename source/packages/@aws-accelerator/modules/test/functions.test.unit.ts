@@ -291,10 +291,10 @@ describe('functions', () => {
       delete process.env['MANAGEMENT_ACCOUNT_ROLE_NAME'];
     });
 
-    test('should return undefined when environment variables are not set', async () => {
+    test('should return undefined when environment variables are not set', () => {
       // Verify
 
-      const result = await getManagementAccountCredentials(
+      const result = getManagementAccountCredentials(
         MOCK_CONSTANTS.runnerParameters.partition,
         MOCK_CONSTANTS.runnerParameters.region,
         MOCK_CONSTANTS.runnerParameters.solutionId,
@@ -303,17 +303,15 @@ describe('functions', () => {
       expect(result).toBeUndefined();
     });
 
-    test('should return credentials when environment variables are properly set', async () => {
+    test('should return a credential provider when environment variables are properly set', () => {
       // Setup
 
       process.env['MANAGEMENT_ACCOUNT_ID'] = MOCK_CONSTANTS.managementAccountId;
       process.env['MANAGEMENT_ACCOUNT_ROLE_NAME'] = MOCK_CONSTANTS.managementAccountAccessRole;
 
-      vi.spyOn(lzaCommonFunctions, 'getCredentials').mockResolvedValue(MOCK_CONSTANTS.credentials);
-
       // Execute
 
-      const result = await getManagementAccountCredentials(
+      const result = getManagementAccountCredentials(
         MOCK_CONSTANTS.runnerParameters.partition,
         MOCK_CONSTANTS.runnerParameters.region,
         MOCK_CONSTANTS.runnerParameters.solutionId,
@@ -321,17 +319,18 @@ describe('functions', () => {
 
       // Verify
 
-      expect(result).toEqual(MOCK_CONSTANTS.credentials);
+      expect(result).toBeDefined();
+      expect(typeof result).toBe('function');
     });
 
-    test('should handle partial environment variable configuration', async () => {
+    test('should handle partial environment variable configuration', () => {
       // Setup
 
       process.env['MANAGEMENT_ACCOUNT_ID'] = MOCK_CONSTANTS.managementAccountId;
 
       // Execute
 
-      const result = await getManagementAccountCredentials(
+      const result = getManagementAccountCredentials(
         MOCK_CONSTANTS.runnerParameters.partition,
         MOCK_CONSTANTS.runnerParameters.region,
         MOCK_CONSTANTS.runnerParameters.solutionId,

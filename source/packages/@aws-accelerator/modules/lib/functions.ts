@@ -21,8 +21,8 @@ import {
   RunnerParametersType,
 } from '../models/types';
 import { createLogger, createStatusLogger } from '../../../@aws-lza/common/logger';
-import { IAssumeRoleCredential } from '../../../@aws-lza/common/resources';
 import { getCredentials, setRetryStrategy } from '../../../@aws-lza/common/functions';
+import { AwsCredentialIdentityProvider } from '@aws-sdk/types';
 import {
   Account,
   AWSOrganizationsNotInUseException,
@@ -44,6 +44,7 @@ import {
   MaxConcurrentModuleExecutionLimit,
 } from '../models/constants';
 import { ModuleExecutionPhase } from '../models/enums';
+import { fromTemporaryCredentials } from '@aws-sdk/credential-providers';
 
 const logger = createLogger([path.parse(path.basename(__filename)).name]);
 const statusLogger = createStatusLogger([path.parse(path.basename(__filename)).name]);
@@ -99,13 +100,13 @@ export function validateAndGetRunnerParameters(): RunnerParametersType {
  * @param partition string
  * @param region string
  * @param solutionId string
- * @returns credential {@IAssumeRoleCredential} | undefined
+ * @returns credential {@link AwsCredentialIdentityProvider} | undefined
  */
-export async function getManagementAccountCredentials(
+export function getManagementAccountCredentials(
   partition: string,
   region: string,
   solutionId: string,
-): Promise<IAssumeRoleCredential | undefined> {
+): AwsCredentialIdentityProvider | undefined {
   if (process.env['MANAGEMENT_ACCOUNT_ID'] && process.env['MANAGEMENT_ACCOUNT_ROLE_NAME']) {
     logger.info('set management account credentials');
     logger.info(`managementAccountId => ${process.env['MANAGEMENT_ACCOUNT_ID']}`);
@@ -113,12 +114,12 @@ export async function getManagementAccountCredentials(
 
     const assumeRoleArn = `arn:${partition}:iam::${process.env['MANAGEMENT_ACCOUNT_ID']}:role/${process.env['MANAGEMENT_ACCOUNT_ROLE_NAME']}`;
 
-    return getCredentials({
-      accountId: process.env['MANAGEMENT_ACCOUNT_ID'],
-      region,
-      solutionId,
-      assumeRoleArn,
-      sessionName: 'ManagementAccountCredentials',
+    return fromTemporaryCredentials({
+      params: {
+        RoleArn: assumeRoleArn,
+        RoleSessionName: 'ManagementAccountCredentials',
+      },
+      clientConfig: { region, customUserAgent: solutionId, retryStrategy: setRetryStrategy() },
     });
   }
 
@@ -129,13 +130,13 @@ export async function getManagementAccountCredentials(
  * Function to retrieve AWS organizations accounts
  * @param globalRegion string
  * @param solutionId string
- * @param managementAccountCredentials {@link IAssumeRoleCredential}
+ * @param managementAccountCredentials {@link AwsCredentialIdentityProvider}
  * @returns accounts {@link Account}[]
  */
 export async function getOrganizationAccounts(
   globalRegion: string,
   solutionId: string,
-  managementAccountCredentials?: IAssumeRoleCredential,
+  managementAccountCredentials?: AwsCredentialIdentityProvider,
 ): Promise<Account[]> {
   const client = new OrganizationsClient({
     region: globalRegion,
@@ -155,13 +156,13 @@ export async function getOrganizationAccounts(
  * Function to retrieve AWS organizations details
  * @param globalRegion string
  * @param solutionId string
- * @param managementAccountCredentials {@link IAssumeRoleCredential}
+ * @param managementAccountCredentials {@link AwsCredentialIdentityProvider}
  * @returns accounts {@link Account}[]
  */
 export async function getOrganizationDetails(
   globalRegion: string,
   solutionId: string,
-  managementAccountCredentials?: IAssumeRoleCredential,
+  managementAccountCredentials?: AwsCredentialIdentityProvider,
 ): Promise<Organization | undefined> {
   const client = new OrganizationsClient({
     region: globalRegion,
@@ -194,7 +195,7 @@ export async function getOrganizationDetails(
  * @param partition string
  * @param resourcePrefixes {@link AcceleratorResourcePrefixes}
  * @param solutionId string
- * @param managementAccountCredentials {@link IAssumeRoleCredential} | undefined
+ * @param managementAccountCredentials {@link AwsCredentialIdentityProvider} | undefined
  * @returns configs {@link AcceleratorModuleRunnerParametersType}
  */
 export async function getAcceleratorModuleRunnerParameters(
@@ -202,7 +203,7 @@ export async function getAcceleratorModuleRunnerParameters(
   partition: string,
   resourcePrefixes: AcceleratorResourcePrefixes,
   solutionId: string,
-  managementAccountCredentials?: IAssumeRoleCredential,
+  managementAccountCredentials?: AwsCredentialIdentityProvider,
 ): Promise<AcceleratorModuleRunnerParametersType> {
   const acceleratorConfigurations = await ConfigLoader.getAcceleratorConfigurations(
     partition,
@@ -273,7 +274,7 @@ export async function getAcceleratorModuleRunnerParameters(
  * @param globalConfig {@link GlobalConfig }
  * @param accountsConfig {@link AccountsConfig}
  * @param stage
- * @param managementAccountCredentials {@link IAssumeRoleCredential} | undefined
+ * @param managementAccountCredentials {@link AwsCredentialIdentityProvider} | undefined
  * @returns
  */
 export async function getCentralLoggingResources(
@@ -291,7 +292,7 @@ export async function getCentralLoggingResources(
       executionPhase: ModuleExecutionPhase;
     };
   },
-  managementAccountCredentials?: IAssumeRoleCredential,
+  managementAccountCredentials?: AwsCredentialIdentityProvider,
 ): Promise<{ bucketName: string; keyArn: string } | undefined> {
   if (stage.runOrder <= AcceleratorModuleStageOrders.logging.runOrder) {
     logger.info(

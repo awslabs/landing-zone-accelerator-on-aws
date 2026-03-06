@@ -26,7 +26,7 @@ import * as fs from 'fs';
 
 import { AcceleratorResourcePrefixes } from '../../accelerator/utils/app-utils';
 
-import { IAssumeRoleCredential } from '../../../@aws-lza/common/resources';
+import { AwsCredentialIdentityProvider } from '@aws-sdk/types';
 import { AcceleratorConfigurationsType } from '../models/types';
 
 /**
@@ -66,25 +66,27 @@ export abstract class ConfigLoader {
    * @param configDirPath
    * @param partition
    * @param orgsEnabled
-   * @param managementAccountCredentials {@link IAssumeRoleCredential} | undefined
+   * @param managementAccountCredentials {@link AwsCredentialIdentityProvider} | undefined
    * @returns accountConfig {@link AccountsConfig}
    */
   public static async getAccountsConfigWithAccountIds(
     configDirPath: string,
     partition: string,
     orgsEnabled: boolean,
-    managementAccountCredentials?: IAssumeRoleCredential,
+    managementAccountCredentials?: AwsCredentialIdentityProvider,
   ): Promise<AccountsConfig> {
     const accountsConfig = AccountsConfig.load(configDirPath);
     const shouldSkipDynamoDbLookup =
       process.env['ACCELERATOR_SKIP_DYNAMODB_LOOKUP'] === 'true' || process.env['ACCELERATOR_STAGE'] === 'prepare';
+
+    const resolvedCredentials = managementAccountCredentials ? await managementAccountCredentials() : undefined;
 
     await accountsConfig.loadAccountIds(
       partition,
       false,
       orgsEnabled,
       accountsConfig,
-      managementAccountCredentials,
+      resolvedCredentials,
       !shouldSkipDynamoDbLookup,
     );
 
@@ -107,14 +109,14 @@ export abstract class ConfigLoader {
    * @param partition string
    * @param configDirPath string
    * @param resourcePrefixes {@link AcceleratorResourcePrefixes}
-   * @param managementAccountCredentials {@link IAssumeRoleCredential} | undefined
+   * @param managementAccountCredentials {@link AwsCredentialIdentityProvider} | undefined
    * @returns configs {@link AcceleratorConfigurationsType}
    */
   public static async getAcceleratorConfigurations(
     partition: string,
     configDirPath: string,
     resourcePrefixes: AcceleratorResourcePrefixes,
-    managementAccountCredentials?: IAssumeRoleCredential,
+    managementAccountCredentials?: AwsCredentialIdentityProvider,
   ): Promise<AcceleratorConfigurationsType> {
     //
     // Validate config directory path
@@ -142,10 +144,15 @@ export abstract class ConfigLoader {
     );
 
     //
+    // Resolve credentials for config loaders that expect static credentials
+    //
+    const resolvedCredentials = managementAccountCredentials ? await managementAccountCredentials() : undefined;
+
+    //
     // Get replacement config
     //
     const replacementsConfig = ReplacementsConfig.load(configDirPath, accountsConfig);
-    await replacementsConfig.loadDynamicReplacements(homeRegion, managementAccountCredentials);
+    await replacementsConfig.loadDynamicReplacements(homeRegion, resolvedCredentials);
 
     //
     // Get Global config
@@ -156,7 +163,7 @@ export abstract class ConfigLoader {
     // Get Organization config
     //
     const organizationConfig = OrganizationConfig.load(configDirPath, replacementsConfig);
-    await organizationConfig.loadOrganizationalUnitIds(partition, managementAccountCredentials);
+    await organizationConfig.loadOrganizationalUnitIds(partition, resolvedCredentials);
 
     //
     // Load global config external mapping details

@@ -24,7 +24,7 @@ import {
 import { AcceleratorResourcePrefixes } from '../../accelerator/utils/app-utils';
 import { AcceleratorResourceNames } from '../../accelerator/lib/accelerator-resource-names';
 import { Account, Organization } from '@aws-sdk/client-organizations';
-import { IAssumeRoleCredential } from '../../../@aws-lza/common/resources';
+import { AwsCredentialIdentityProvider } from '@aws-sdk/types';
 import { AcceleratorModules, AcceleratorModuleStages, ModuleExecutionPhase } from './enums';
 
 /**
@@ -195,7 +195,7 @@ export type AcceleratorModuleRunnerParametersType = {
   /**
    * Management account credential, only available when solution deployed from external account
    */
-  readonly managementAccountCredentials?: IAssumeRoleCredential;
+  readonly managementAccountCredentials?: AwsCredentialIdentityProvider;
 };
 
 /**

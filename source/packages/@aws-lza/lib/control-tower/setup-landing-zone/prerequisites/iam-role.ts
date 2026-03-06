@@ -27,7 +27,7 @@ import {
 
 import { setRetryStrategy } from '../../../../common/functions';
 import { createLogger } from '../../../../common/logger';
-import { IAssumeRoleCredential } from '../../../../common/resources';
+import { AssumeRoleCredentialType } from '../../../../common/resources';
 import { throttlingBackOff } from '../../../../common/throttle';
 import { MODULE_EXCEPTIONS } from '../../../../common/enums';
 
@@ -211,7 +211,7 @@ export abstract class IamRole {
     partition: string,
     region: string,
     solutionId?: string,
-    credentials?: IAssumeRoleCredential,
+    credentials?: AssumeRoleCredentialType,
   ): Promise<void> {
     const roleName = 'AWSControlTowerCloudTrailRole';
     const managedPolicyArn = `arn:${partition}:iam::aws:policy/service-role/AWSControlTowerCloudTrailRolePolicy`;
@@ -302,7 +302,7 @@ export abstract class IamRole {
     partition: string,
     region: string,
     solutionId?: string,
-    credentials?: IAssumeRoleCredential,
+    credentials?: AssumeRoleCredentialType,
   ): Promise<void> {
     const client: IAMClient = new IAMClient({
       region: region,

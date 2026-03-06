@@ -38,7 +38,7 @@ import {
 import { createLogger } from './logger';
 import { executeApi, setRetryStrategy } from './utility';
 import { getCredentials } from './sts-functions';
-import { IAssumeRoleCredential } from './interfaces';
+import { AssumeRoleCredentialType } from './interfaces';
 import { MODULE_EXCEPTIONS } from './types';
 
 const logger = createLogger([path.parse(path.basename(__filename)).name]);
@@ -75,10 +75,10 @@ export async function getParametersValue(
   logPrefix: string,
   targetAccount?: ITargetAccountConfig,
   solutionId?: string,
-  credentials?: IAssumeRoleCredential,
+  credentials?: AssumeRoleCredentialType,
   defaultValues?: Record<string, string>,
 ): Promise<Parameter[]> {
-  let targetCredentials: IAssumeRoleCredential | undefined;
+  let targetCredentials: AssumeRoleCredentialType | undefined;
   let targetRegion = region;
 
   if (targetAccount) {
@@ -175,10 +175,10 @@ export async function putParametersValue(
   logPrefix: string,
   targetAccount?: ITargetAccountConfig,
   solutionId?: string,
-  credentials?: IAssumeRoleCredential,
+  credentials?: AssumeRoleCredentialType,
   overwrite: boolean = true,
 ): Promise<void> {
-  let targetCredentials: IAssumeRoleCredential | undefined;
+  let targetCredentials: AssumeRoleCredentialType | undefined;
   let targetRegion = region;
 
   if (targetAccount) {

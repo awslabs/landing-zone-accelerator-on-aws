@@ -36,7 +36,7 @@ import {
   getAccountId,
 } from '../../../../common/functions';
 import { createLogger } from '../../../../common/logger';
-import { IAssumeRoleCredential, OrganizationRootType } from '../../../../common/resources';
+import { AssumeRoleCredentialType, OrganizationRootType } from '../../../../common/resources';
 import { throttlingBackOff } from '../../../../common/throttle';
 import { MODULE_EXCEPTIONS } from '../../../../common/enums';
 
@@ -200,7 +200,7 @@ export abstract class Organization {
   public static async getOrganizationAccountDetailsByEmail(
     globalRegion: string,
     email: string,
-    credentials?: IAssumeRoleCredential,
+    credentials?: AssumeRoleCredentialType,
     solutionId?: string,
   ): Promise<Account> {
     const client: OrganizationsClient = new OrganizationsClient({
@@ -231,7 +231,7 @@ export abstract class Organization {
     globalRegion: string,
     partition: string,
     sharedAccountEmail: { logArchive: string; audit: string },
-    credentials?: IAssumeRoleCredential,
+    credentials?: AssumeRoleCredentialType,
     solutionId?: string,
   ): Promise<void> {
     const client: OrganizationsClient = new OrganizationsClient({
@@ -286,7 +286,7 @@ export abstract class Organization {
     globalRegion: string,
     ouName: string,
     parentOuName: string = 'Root',
-    credentials?: IAssumeRoleCredential,
+    credentials?: AssumeRoleCredentialType,
     solutionId?: string,
   ): Promise<string> {
     Organization.logger.info(`Creating Organizational Unit "${ouName}" under "${parentOuName}"`);
@@ -348,7 +348,7 @@ export abstract class Organization {
     globalRegion: string,
     destinationOuId: string,
     accountEmails: string[],
-    credentials?: IAssumeRoleCredential,
+    credentials?: AssumeRoleCredentialType,
     solutionId?: string,
   ): Promise<void> {
     Organization.logger.info(`Moving ${accountEmails.length} account(s) to OU "${destinationOuId}"`);

@@ -11,6 +11,8 @@
  *  and limitations under the License.
  */
 
+import type { AwsCredentialIdentityProvider } from '@aws-sdk/types';
+
 /**
  * Accelerator solution supported module names
  */
@@ -76,6 +78,11 @@ export interface IAssumeRoleCredential {
 }
 
 /**
+ * Credential type that accepts both static credentials and credential providers
+ */
+export type AssumeRoleCredentialType = IAssumeRoleCredential | AwsCredentialIdentityProvider;
+
+/**
  * Accelerator module common parameter
  *
  * @description
@@ -125,7 +132,7 @@ export interface IModuleCommonParameter {
    * @default
    * undefined
    */
-  credentials?: IAssumeRoleCredential;
+  credentials?: AssumeRoleCredentialType;
   /**
    *  Flag indicating if the module should perform a dry run
    *
