@@ -434,7 +434,7 @@ exports[`PrepareStack > Construct(PrepareStack):  Snapshot Test 1`] = `
             "NewOrgAccountsTableName": {
               "Ref": "NewOrgAccountsE5BA262F",
             },
-            "SOLUTION_ID": "AwsSolution/SO0199/1.15.0-rc.10",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.15.0-rc.13",
           },
         },
         "Handler": "index.handler",
@@ -723,7 +723,7 @@ exports[`PrepareStack > Construct(PrepareStack):  Snapshot Test 1`] = `
         "Description": "AWS CDK resource provider framework - isComplete (AWSAccelerator-PrepareStack-111111111111-us-east-1/CreateOrganizationAccounts/CreateOrganizationAccountsProvider)",
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.15.0-rc.10",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.15.0-rc.13",
             "USER_IS_COMPLETE_FUNCTION_ARN": {
               "Fn::GetAtt": [
                 "CreateOrganizationAccountsCreateOrganizationAccountStatusBBDEFDFE",
@@ -935,7 +935,7 @@ exports[`PrepareStack > Construct(PrepareStack):  Snapshot Test 1`] = `
         "Description": "AWS CDK resource provider framework - onEvent (AWSAccelerator-PrepareStack-111111111111-us-east-1/CreateOrganizationAccounts/CreateOrganizationAccountsProvider)",
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.15.0-rc.10",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.15.0-rc.13",
             "USER_IS_COMPLETE_FUNCTION_ARN": {
               "Fn::GetAtt": [
                 "CreateOrganizationAccountsCreateOrganizationAccountStatusBBDEFDFE",
@@ -1157,7 +1157,7 @@ exports[`PrepareStack > Construct(PrepareStack):  Snapshot Test 1`] = `
         "Description": "AWS CDK resource provider framework - onTimeout (AWSAccelerator-PrepareStack-111111111111-us-east-1/CreateOrganizationAccounts/CreateOrganizationAccountsProvider)",
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.15.0-rc.10",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.15.0-rc.13",
             "USER_IS_COMPLETE_FUNCTION_ARN": {
               "Fn::GetAtt": [
                 "CreateOrganizationAccountsCreateOrganizationAccountStatusBBDEFDFE",
@@ -1567,7 +1567,7 @@ exports[`PrepareStack > Construct(PrepareStack):  Snapshot Test 1`] = `
         "Description": "Create Organization Accounts OnEvent handler",
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.15.0-rc.10",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.15.0-rc.13",
           },
         },
         "Handler": "index.handler",
@@ -1677,7 +1677,7 @@ exports[`PrepareStack > Construct(PrepareStack):  Snapshot Test 1`] = `
         },
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.15.0-rc.10",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.15.0-rc.13",
           },
         },
         "Handler": "__entrypoint__.handler",
@@ -1808,7 +1808,7 @@ exports[`PrepareStack > Construct(PrepareStack):  Snapshot Test 1`] = `
           "Variables": {
             "ACCELERATOR_STAGE": "prepare",
             "AWS_STS_REGIONAL_ENDPOINTS": "regional",
-            "SOLUTION_ID": "AwsSolution/SO0199/1.15.0-rc.10",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.15.0-rc.13",
           },
         },
         "Handler": "__entrypoint__.handler",
@@ -1990,7 +1990,7 @@ exports[`PrepareStack > Construct(PrepareStack):  Snapshot Test 1`] = `
         },
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.15.0-rc.10",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.15.0-rc.13",
           },
         },
         "Handler": "__entrypoint__.handler",
@@ -2383,7 +2383,7 @@ exports[`PrepareStack > Construct(PrepareStack):  Snapshot Test 1`] = `
       "Properties": {
         "Name": "/accelerator/AWSAccelerator-PrepareStack-111111111111-us-east-1/version",
         "Type": "String",
-        "Value": "1.15.0-rc.10",
+        "Value": "1.15.0-rc.13",
       },
       "Type": "AWS::SSM::Parameter",
     },
@@ -2554,7 +2554,7 @@ exports[`PrepareStack > Construct(PrepareStack):  Snapshot Test 1`] = `
         "Description": "AWS CDK resource provider framework - onEvent (AWSAccelerator-PrepareStack-111111111111-us-east-1/ValidateEnvironmentConfig/Custom::ValidateEnvironmentConfiguration)",
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.15.0-rc.10",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.15.0-rc.13",
             "USER_ON_EVENT_FUNCTION_ARN": {
               "Fn::GetAtt": [
                 "ValidateEnvironmentConfigValidateEnvironmentFunction13F94F77",
@@ -2696,7 +2696,7 @@ exports[`PrepareStack > Construct(PrepareStack):  Snapshot Test 1`] = `
         "Description": "Validate Environment Configuration",
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.15.0-rc.10",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.15.0-rc.13",
           },
         },
         "Handler": "index.handler",

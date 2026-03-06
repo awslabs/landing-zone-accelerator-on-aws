@@ -51,7 +51,7 @@ exports[`SecurityHubOrganizationAdminAccount > Construct(SecurityHubOrganization
         },
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.15.0-rc.10",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.15.0-rc.13",
           },
         },
         "Handler": "__entrypoint__.handler",

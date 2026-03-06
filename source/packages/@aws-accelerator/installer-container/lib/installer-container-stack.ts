@@ -43,7 +43,7 @@ export class InstallerContainerStack extends cdk.Stack {
     type: 'String',
     description:
       'The Amazon Elastic Container Registry (Amazon ECR) repository, where Landing Zone Accelerator on AWS code is present.',
-    default: 'public.ecr.aws/aws-solutions/landing-zone-accelerator-on-aws:1.15.0-rc.10',
+    default: 'public.ecr.aws/aws-solutions/landing-zone-accelerator-on-aws:1.15.0-rc.13',
   });
   private readonly managementAccountEmail = new cdk.CfnParameter(this, 'ManagementAccountEmail', {
     type: 'String',

@@ -5,13 +5,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [1.16.0]
-
-### Changed
-
-
-
-## [1.15.0] - 2026-02-03
+## [1.15.0] - 2026-03-10
 
 ### Added
 
@@ -46,8 +40,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - fix(installer-container): detect ECS task failures by checking container exit code
 - fix(installer-container): do not allow ssm reserved prefix in qualifier
 - fix(metadata): lookup ous by latest commit
-- fix(networking): fix share-subnet-tags custom Resource removes tags not managed by the accelerator
+- fix(networking): add cfn depends on for ipam pools
 - fix(networking): adjust logic for nlb ip address role creation
+- fix(networking): fix share-subnet-tags custom Resource removes tags not managed by the accelerator
 - fix(prerequisites): remove checks for concurrency
 - fix(schema): use interface type not class in global config, add test
 - fix(scp): quarantine policy pagination
