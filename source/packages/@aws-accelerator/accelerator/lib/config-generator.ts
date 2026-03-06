@@ -184,7 +184,7 @@ export class ConfigGenerator {
         name: 'LzaDeploymentAccount',
         description: 'Account to access and manage Landing Zone Accelerator on AWS',
         email: lzaDeploymentAccountEmail,
-        organizationalUnit: 'LZADeployment',
+        organizationalUnit: 'LzaDeployment',
       } as AccountConfig);
     }
 
@@ -232,7 +232,7 @@ export class ConfigGenerator {
     } else {
       const orgConfig = new OrganizationConfig();
       if (process.env['LZA_DEPLOYMENT_ACCOUNT_EMAIL']) {
-        orgConfig.organizationalUnits.push({ name: 'LZADeployment', ignore: undefined });
+        orgConfig.organizationalUnits.push({ name: 'LzaDeployment', ignore: undefined });
       }
       fs.writeFileSync(path.join(this.tempDirPath, OrganizationConfig.FILENAME), yaml.dump(orgConfig), 'utf8');
     }
