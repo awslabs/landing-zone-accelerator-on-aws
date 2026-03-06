@@ -92,6 +92,12 @@ export function makeManifestDocument(
       existingManifest.securityRoles.enabled = true;
     }
 
+    if (existingManifest.config?.enabled === false) {
+      manifestJsonDocument['config'] = {
+        enabled: false,
+      };
+    }
+
     return {
       ...existingManifest,
       ...manifestJsonDocument,
@@ -177,25 +183,34 @@ export function landingZoneUpdateOrResetRequired(
   // find reasons to update
   const reasons: string[] = [];
 
-  if (
-    landingZoneDetails.centralizedLoggingConfig?.accessLoggingBucketRetentionDays !==
-    landingZoneConfiguration.accessLoggingBucketRetentionDays
-  ) {
+  if (landingZoneDetails.centralizedLoggingConfig?.enabled !== landingZoneConfiguration.enableOrganizationTrail) {
     reasons.push(
-      `Changes made in Centralized Logging AccessLoggingBucketRetentionDays from ${landingZoneDetails.centralizedLoggingConfig?.accessLoggingBucketRetentionDays} to ${landingZoneConfiguration.accessLoggingBucketRetentionDays}`,
-    );
-  }
-  if (
-    landingZoneDetails.centralizedLoggingConfig?.loggingBucketRetentionDays !==
-    landingZoneConfiguration.loggingBucketRetentionDays
-  ) {
-    reasons.push(
-      `Changes made in Centralized Logging LoggingBucketRetentionDays from ${landingZoneDetails.centralizedLoggingConfig?.loggingBucketRetentionDays} to ${landingZoneConfiguration.loggingBucketRetentionDays}`,
+      `Changes made in Centralized Logging enabled from ${landingZoneDetails.centralizedLoggingConfig?.enabled} to ${landingZoneConfiguration.enableOrganizationTrail}`,
     );
   }
 
+  if (landingZoneConfiguration.enableOrganizationTrail === true) {
+    if (
+      landingZoneDetails.centralizedLoggingConfig?.accessLoggingBucketRetentionDays !==
+      landingZoneConfiguration.accessLoggingBucketRetentionDays
+    ) {
+      reasons.push(
+        `Changes made in Centralized Logging AccessLoggingBucketRetentionDays from ${landingZoneDetails.centralizedLoggingConfig?.accessLoggingBucketRetentionDays} to ${landingZoneConfiguration.accessLoggingBucketRetentionDays}`,
+      );
+    }
+    if (
+      landingZoneDetails.centralizedLoggingConfig?.loggingBucketRetentionDays !==
+      landingZoneConfiguration.loggingBucketRetentionDays
+    ) {
+      reasons.push(
+        `Changes made in Centralized Logging LoggingBucketRetentionDays from ${landingZoneDetails.centralizedLoggingConfig?.loggingBucketRetentionDays} to ${landingZoneConfiguration.loggingBucketRetentionDays}`,
+      );
+    }
+  }
+
   // During upgrade from 3.3 to 4.0 configHubConfig will be undefined
-  if (landingZoneDetails.configHubConfig) {
+  // If config logging is disabled already, we shouldn't overwrite that
+  if (landingZoneDetails.configHubConfig && landingZoneDetails.configHubConfig.enabled) {
     if (
       landingZoneDetails.configHubConfig.accessLoggingBucketRetentionDays !==
       landingZoneConfiguration.accessLoggingBucketRetentionDays

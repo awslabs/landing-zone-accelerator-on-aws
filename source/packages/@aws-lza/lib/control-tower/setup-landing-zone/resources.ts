@@ -86,6 +86,10 @@ export interface ControlTowerLandingZoneConfigType {
  */
 export type ControlTowerLoggingConfigurationType = {
   /**
+   * AWS Control Tower Landing Zone logging enabled
+   */
+  enabled?: boolean | undefined;
+  /**
    * AWS Control Tower Landing Zone hub account id
    */
   accountId?: string;

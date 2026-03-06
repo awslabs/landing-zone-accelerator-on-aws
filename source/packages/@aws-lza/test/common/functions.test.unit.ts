@@ -270,6 +270,7 @@ describe('functions', () => {
             mockResponse.landingZone.manifest.centralizedLogging.configurations.accessLoggingBucket.retentionDays,
           kmsKeyArn: mockResponse.landingZone.manifest.centralizedLogging.configurations.kmsKeyArn,
           accountId: mockResponse.landingZone.manifest.centralizedLogging.accountId,
+          enabled: undefined,
         },
         configHubConfig: {
           loggingBucketRetentionDays:
@@ -278,6 +279,7 @@ describe('functions', () => {
             mockResponse.landingZone.manifest.config.configurations.accessLoggingBucket.retentionDays,
           kmsKeyArn: mockResponse.landingZone.manifest.config.configurations.kmsKeyArn,
           accountId: mockResponse.landingZone.manifest.config.accountId,
+          enabled: undefined,
         },
         status: mockResponse.landingZone.status,
         version: mockResponse.landingZone.version,
@@ -338,6 +340,7 @@ describe('functions', () => {
           accessLoggingBucketRetentionDays:
             mockResponse.landingZone.manifest.centralizedLogging.configurations.accessLoggingBucket.retentionDays,
           kmsKeyArn: mockResponse.landingZone.manifest.centralizedLogging.configurations.kmsKeyArn,
+          enabled: undefined,
         },
         status: mockResponse.landingZone.status,
         version: mockResponse.landingZone.version,
@@ -429,11 +432,13 @@ describe('functions', () => {
           loggingBucketRetentionDays: undefined,
           accessLoggingBucketRetentionDays: undefined,
           kmsKeyArn: undefined,
+          enabled: undefined,
         },
         configHubConfig: {
           loggingBucketRetentionDays: undefined,
           accessLoggingBucketRetentionDays: undefined,
           kmsKeyArn: undefined,
+          enabled: undefined,
         },
         status: mockResponse.landingZone.status,
         version: mockResponse.landingZone.version,

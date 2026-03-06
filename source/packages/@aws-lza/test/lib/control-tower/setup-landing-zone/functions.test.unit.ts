@@ -464,11 +464,13 @@ describe('resources utility functions', () => {
         securityOuName: 'Security',
         enableIdentityCenterAccess: true,
         centralizedLoggingConfig: {
+          enabled: true,
           loggingBucketRetentionDays: 30,
           accessLoggingBucketRetentionDays: 30,
           kmsKeyArn: 'mockKmsKeyArn',
         },
         configHubConfig: {
+          enabled: true,
           loggingBucketRetentionDays: 30,
           accessLoggingBucketRetentionDays: 30,
           kmsKeyArn: 'mockConfigKmsKeyArn',
@@ -529,11 +531,13 @@ describe('resources utility functions', () => {
         securityOuName: 'Security',
         enableIdentityCenterAccess: false,
         centralizedLoggingConfig: {
+          enabled: true,
           loggingBucketRetentionDays: 90,
           accessLoggingBucketRetentionDays: 90,
           kmsKeyArn: 'mockKmsKeyArn',
         },
         configHubConfig: {
+          enabled: true,
           loggingBucketRetentionDays: 90,
           accessLoggingBucketRetentionDays: 90,
           kmsKeyArn: 'mockConfigKmsKeyArn',
@@ -573,11 +577,13 @@ describe('resources utility functions', () => {
         securityOuName: 'Security',
         enableIdentityCenterAccess: true,
         centralizedLoggingConfig: {
+          enabled: true,
           loggingBucketRetentionDays: 30,
           accessLoggingBucketRetentionDays: 30,
           kmsKeyArn: 'mockKmsKeyArn',
         },
         configHubConfig: {
+          enabled: true,
           loggingBucketRetentionDays: 30,
           accessLoggingBucketRetentionDays: 30,
           kmsKeyArn: 'mockConfigKmsKeyArn',
@@ -613,11 +619,13 @@ describe('resources utility functions', () => {
         securityOuName: 'Security',
         enableIdentityCenterAccess: true,
         centralizedLoggingConfig: {
+          enabled: true,
           loggingBucketRetentionDays: 30,
           accessLoggingBucketRetentionDays: 30,
           kmsKeyArn: 'mockKmsKeyArn',
         },
         configHubConfig: {
+          enabled: true,
           loggingBucketRetentionDays: 60,
           accessLoggingBucketRetentionDays: 60,
           kmsKeyArn: 'mockConfigKmsKeyArn',
@@ -652,11 +660,13 @@ describe('resources utility functions', () => {
         securityOuName: 'Security',
         enableIdentityCenterAccess: true,
         centralizedLoggingConfig: {
+          enabled: true,
           loggingBucketRetentionDays: 60,
           accessLoggingBucketRetentionDays: 60,
           kmsKeyArn: 'mockKmsKeyArn',
         },
         configHubConfig: {
+          enabled: true,
           loggingBucketRetentionDays: 30,
           accessLoggingBucketRetentionDays: 30,
           kmsKeyArn: 'mockConfigKmsKeyArn',
@@ -691,11 +701,13 @@ describe('resources utility functions', () => {
         securityOuName: 'Security',
         enableIdentityCenterAccess: true,
         centralizedLoggingConfig: {
+          enabled: true,
           loggingBucketRetentionDays: 30,
           accessLoggingBucketRetentionDays: 30,
           kmsKeyArn: 'mockKmsKeyArn',
         },
         configHubConfig: {
+          enabled: true,
           loggingBucketRetentionDays: 30,
           accessLoggingBucketRetentionDays: 30,
           kmsKeyArn: 'mockConfigKmsKeyArn',
@@ -712,6 +724,190 @@ describe('resources utility functions', () => {
         resetRequired: false,
         reason: 'There were no changes found to update or reset the Landing Zone.',
       });
+    });
+
+    test('should skip centralized logging retention checks when organizationTrail is disabled', () => {
+      // Setup - organizationTrail disabled, centralized logging has undefined retention (no configurations block)
+      const configWithTrailDisabled: ControlTowerLandingZoneConfigType = {
+        ...mockLandingZoneConfig,
+        enableOrganizationTrail: false,
+        loggingBucketRetentionDays: 365,
+        accessLoggingBucketRetentionDays: 3650,
+      };
+      const mockLandingZoneDetails: ControlTowerLandingZoneDetailsType = {
+        landingZoneIdentifier: 'mockLandingZoneIdentifier',
+        status: 'ACTIVE',
+        version: '4.0',
+        latestAvailableVersion: '4.0',
+        driftStatus: 'IN_SYNC',
+        governedRegions: configWithTrailDisabled.governedRegions,
+        enableIdentityCenterAccess: true,
+        centralizedLoggingConfig: {
+          enabled: false,
+          loggingBucketRetentionDays: undefined,
+          accessLoggingBucketRetentionDays: undefined,
+        },
+        configHubConfig: {
+          enabled: true,
+          loggingBucketRetentionDays: 365,
+          accessLoggingBucketRetentionDays: 3650,
+        },
+      };
+
+      // Act
+      const result = landingZoneUpdateOrResetRequired(configWithTrailDisabled, mockLandingZoneDetails);
+
+      // Assert - should NOT trigger update despite undefined centralized logging retention days
+      expect(result).toEqual({
+        updateRequired: false,
+        targetVersion: '4.0',
+        resetRequired: false,
+        reason: 'There were no changes found to update or reset the Landing Zone.',
+      });
+    });
+
+    test('should skip config hub retention checks when configHubConfig is disabled', () => {
+      // Setup - config hub disabled with mismatched retention days
+      const mockLandingZoneDetails: ControlTowerLandingZoneDetailsType = {
+        landingZoneIdentifier: 'mockLandingZoneIdentifier',
+        status: 'ACTIVE',
+        version: '4.0',
+        latestAvailableVersion: '4.0',
+        driftStatus: 'IN_SYNC',
+        governedRegions: mockLandingZoneConfig.governedRegions,
+        enableIdentityCenterAccess: true,
+        centralizedLoggingConfig: {
+          enabled: true,
+          loggingBucketRetentionDays: 30,
+          accessLoggingBucketRetentionDays: 30,
+        },
+        configHubConfig: {
+          enabled: false,
+          loggingBucketRetentionDays: 90,
+          accessLoggingBucketRetentionDays: 90,
+        },
+      };
+
+      // Act
+      const result = landingZoneUpdateOrResetRequired(mockLandingZoneConfig, mockLandingZoneDetails);
+
+      // Assert - should NOT trigger update for config hub retention mismatch when disabled
+      expect(result).toEqual({
+        updateRequired: false,
+        targetVersion: '4.0',
+        resetRequired: false,
+        reason: 'There were no changes found to update or reset the Landing Zone.',
+      });
+    });
+
+    test('should still detect centralized logging changes when organizationTrail is enabled', () => {
+      // Setup - organizationTrail enabled, centralized logging has undefined retention
+      const configWithTrailEnabled: ControlTowerLandingZoneConfigType = {
+        ...mockLandingZoneConfig,
+        enableOrganizationTrail: true,
+        loggingBucketRetentionDays: 365,
+        accessLoggingBucketRetentionDays: 3650,
+      };
+      const mockLandingZoneDetails: ControlTowerLandingZoneDetailsType = {
+        landingZoneIdentifier: 'mockLandingZoneIdentifier',
+        status: 'ACTIVE',
+        version: '4.0',
+        latestAvailableVersion: '4.0',
+        driftStatus: 'IN_SYNC',
+        governedRegions: configWithTrailEnabled.governedRegions,
+        enableIdentityCenterAccess: true,
+        centralizedLoggingConfig: {
+          enabled: false,
+          loggingBucketRetentionDays: undefined,
+          accessLoggingBucketRetentionDays: undefined,
+        },
+        configHubConfig: {
+          enabled: true,
+          loggingBucketRetentionDays: 365,
+          accessLoggingBucketRetentionDays: 3650,
+        },
+      };
+
+      // Act
+      const result = landingZoneUpdateOrResetRequired(configWithTrailEnabled, mockLandingZoneDetails);
+
+      // Assert - SHOULD trigger update because organizationTrail is true and retention days differ
+      expect(result.updateRequired).toBe(true);
+      expect(result.reason).toContain(
+        'Changes made in Centralized Logging AccessLoggingBucketRetentionDays from undefined to 3650',
+      );
+      expect(result.reason).toContain(
+        'Changes made in Centralized Logging LoggingBucketRetentionDays from undefined to 365',
+      );
+    });
+  });
+
+  describe('makeManifestDocument - config.enabled preservation', () => {
+    test('should preserve config.enabled false during UPDATE when existing manifest has config disabled', () => {
+      const kmsKeyArns = {
+        centralizedLoggingKeyArn: 'arn:aws:kms:region:account:key/12345',
+        configLoggingKeyArn: 'arn:aws:kms:region:account:key/67890',
+      };
+      const existingManifest = {
+        accessManagement: { enabled: true },
+        centralizedLogging: {
+          accountId: '111122223333',
+          configurations: {
+            loggingBucket: { retentionDays: 365 },
+            accessLoggingBucket: { retentionDays: 3650 },
+          },
+          enabled: false,
+        },
+        config: {
+          accountId: '444455556666',
+          configurations: {
+            loggingBucket: { retentionDays: 365 },
+            accessLoggingBucket: { retentionDays: 3650 },
+          },
+          enabled: false,
+        },
+        governedRegions: ['us-east-1', 'us-west-2'],
+        securityRoles: { enabled: true, accountId: '444455556666' },
+      };
+
+      const result = makeManifestDocument(mockLandingZoneConfig, 'UPDATE', kmsKeyArns, existingManifest);
+
+      // config should remain disabled, not overwritten with enabled: true
+      expect(result.config).toEqual({ enabled: false });
+    });
+
+    test('should set config.enabled true during UPDATE when existing manifest has config enabled', () => {
+      const kmsKeyArns = {
+        centralizedLoggingKeyArn: 'arn:aws:kms:region:account:key/12345',
+        configLoggingKeyArn: 'arn:aws:kms:region:account:key/67890',
+      };
+      const existingManifest = {
+        accessManagement: { enabled: true },
+        centralizedLogging: {
+          accountId: '111122223333',
+          configurations: {
+            loggingBucket: { retentionDays: 30 },
+            accessLoggingBucket: { retentionDays: 30 },
+          },
+          enabled: true,
+        },
+        config: {
+          accountId: '444455556666',
+          configurations: {
+            loggingBucket: { retentionDays: 30 },
+            accessLoggingBucket: { retentionDays: 30 },
+          },
+          enabled: true,
+        },
+        governedRegions: ['mockRegion1', 'mockRegion2'],
+        securityRoles: { enabled: true, accountId: '444455556666' },
+      };
+
+      const result = makeManifestDocument(mockLandingZoneConfig, 'UPDATE', kmsKeyArns, existingManifest);
+
+      // config should remain enabled with full configuration
+      expect(result.config.enabled).toBe(true);
+      expect(result.config.configurations).toBeDefined();
     });
   });
 });

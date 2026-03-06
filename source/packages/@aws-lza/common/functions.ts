@@ -190,6 +190,7 @@ export async function getLandingZoneDetails(
             break;
           case 'centralizedLogging':
             landingZoneDetails.centralizedLoggingConfig = {
+              enabled: value['enabled'],
               loggingBucketRetentionDays: value['configurations']?.['loggingBucket']?.['retentionDays'],
               accessLoggingBucketRetentionDays: value['configurations']?.['accessLoggingBucket']?.['retentionDays'],
               kmsKeyArn: value['configurations']?.['kmsKeyArn'],
@@ -198,6 +199,7 @@ export async function getLandingZoneDetails(
             break;
           case 'config':
             landingZoneDetails.configHubConfig = {
+              enabled: value['enabled'],
               loggingBucketRetentionDays: value['configurations']?.['loggingBucket']?.['retentionDays'],
               accessLoggingBucketRetentionDays: value['configurations']?.['accessLoggingBucket']?.['retentionDays'],
               kmsKeyArn: value['configurations']?.['kmsKeyArn'],
