@@ -37,6 +37,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - fix(control-tower): allow setup landing zone with existing org account
 - fix(control-tower): change default ct version to 4.0
 - fix(control-tower): remove organization validation for sso
+- fix(control-tower): update detected for disabled centralized logging or config logging
 - fix(installer-container): detect ECS task failures by checking container exit code
 - fix(installer-container): do not allow ssm reserved prefix in qualifier
 - fix(metadata): lookup ous by latest commit
