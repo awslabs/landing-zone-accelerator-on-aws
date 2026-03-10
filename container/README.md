@@ -77,7 +77,7 @@ To set up the LZA deployment account, choose one of the following options:
       "Action": "sts:AssumeRole",
       "Condition": {
         "StringLike": {
-          "aws:PrincipalArn": "arn:${PARTITION}:iam::${LZA_DEPLOYMENT_ACCOUNT_ID}:role/${AcceleratorQualifier}-*"
+          "aws:PrincipalArn": "arn:${PARTITION}:iam::${LZA_DEPLOYMENT_ACCOUNT_ID}:role/${STACK_NAME}-*"
         }
       }
     }
@@ -85,11 +85,14 @@ To set up the LZA deployment account, choose one of the following options:
 }
 ```
 
-Replace `${PARTITION}` with your AWS partition (for example, `aws`, `aws-us-gov`, `aws-cn`, `aws-eusc`), `${LZA_DEPLOYMENT_ACCOUNT_ID}` with your LZA deployment account ID, and `${AcceleratorQualifier}` with your chosen accelerator qualifier.
+Replace the following placeholders:
+   - `${PARTITION}` with your AWS partition (for example, `aws`, `aws-us-gov`, `aws-cn`, `aws-eusc`)
+   - `${LZA_DEPLOYMENT_ACCOUNT_ID}` with your LZA deployment account ID
+   - `${STACK_NAME}` with the CloudFormation installer stack name (for example, `AWSAccelerator-InstallerContainerStack`)
 
 4. Attach the `AdministratorAccess` AWS managed IAM policy to the role
 
-> **Note:** By default, IAM roles with the `AcceleratorQualifier` prefix in the LZA deployment account are used by ECS tasks to assume the role in the management account and deploy resources. To protect these roles, you should implement additional security measures, such as AWS Organizations service control policies (SCPs).
+> **Note:** By default, IAM roles with the stack name as prefix (for example, `AWSAccelerator-InstallerContainerStack-*`) in the LZA deployment account are used by ECS tasks to assume the role in the management account and deploy resources. To protect these roles, you should implement additional security measures, such as AWS Organizations service control policies (SCPs).
 
 ---
 
@@ -119,17 +122,29 @@ For more information on Amazon ECR:
 
 ### Deploy the Solution
 
+#### AWS CloudFormation template
+
+You can download the CloudFormation template for this solution before deploying it.
+
+[AWSAccelerator-InstallerContainerStack.template](https://s3.amazonaws.com/solutions-reference/landing-zone-accelerator-on-aws/latest/AWSAccelerator-InstallerContainerStack.template) - Use this template to launch the container-based solution and all associated components. The default configuration deploys the ECS-based deployment infrastructure found in the Architecture overview. Manual changes to the template are strongly discouraged.
+
+Before you launch the solution, review the cost, architecture, network security, and other considerations discussed earlier in this guide.
+
+#### Launch the solution
+
 To deploy the solution, complete the following steps:
 
-1. Sign in to the **AWS Management Console** in the LZA deployment account
+1. Sign in to the **AWS Management Console** in the LZA deployment account.
 
-2. Navigate to the AWS CloudFormation console
+2. Select the button to launch the AWSAccelerator-InstallerContainerStack CloudFormation template:
+
+   [![Launch Stack](https://s3.amazonaws.com/cloudformation-examples/cloudformation-launch-stack.png)](https://console.aws.amazon.com/cloudformation/home?region=us-east-1#/stacks/new?templateURL=https:%2F%2Fsolutions-reference.s3.amazonaws.com%2Flanding-zone-accelerator-on-aws%2Flatest%2FAWSAccelerator-InstallerContainerStack.template&redirectId=ImplementationGuide)
 
 3. On the **Create stack** page, verify that the correct template URL is in the **Amazon S3 URL** text box and choose **Next**.
 
-4. On the **Specify stack details** page, assign a name to your solution stack (recommended: `AWSAccelerator-InstallerContainerStack`)
+4. On the **Specify stack details** page, assign a name to your solution stack (recommended: `AWSAccelerator-InstallerContainerStack`).
 
-5. Under **Parameters**, review and modify the following values:
+5. Under **Parameters**, review and modify the following values.
 
 #### Template Parameters
 
@@ -139,8 +154,8 @@ To deploy the solution, complete the following steps:
 | ImageUri | `public.ecr.aws/aws-solutions/landing-zone-accelerator-on-aws:1.15.0-rc.14` | The Amazon Elastic Container Registry (Amazon ECR) repository, where Landing Zone Accelerator on AWS code is present. |
 | **Mandatory Accounts Configuration** |||
 | ManagementAccountEmail | `<requires input>` | The management (primary) account email - NOTE: This must match the address of the management account email as listed in AWS Organizations > AWS accounts. |
-| LogArchiveAccountEmail | `<requires input>` | The log archive account email |
-| AuditAccountEmail | `<requires input>` | The security audit account (also referred to as the audit account) |
+| LogArchiveAccountEmail | `<requires input>` | The log archive account email. |
+| AuditAccountEmail | `<requires input>` | The security audit account (also referred to as the audit account). |
 | LzaDeploymentAccountEmail | `<requires input>` | Landing Zone Accelerator on AWS Deployment account email - NOTE: This must match the address of the account email that you are deploying from. |
 | **Environment Configuration** |||
 | ControlTowerEnabled | `Yes` | Select yes if deploying to a Control Tower environment. Select no if using just Organizations. If no, you must first set up mandatory accounts. |
@@ -152,15 +167,15 @@ To deploy the solution, complete the following steps:
 | ExistingConfigBucketName | `<optional input>` | The name of an existing LZA configuration bucket hosting the accelerator configuration. |
 | ExistingConfigBucketKey | `<optional input>` | Specify the branch name of the existing LZA configuration bucket key to pull the accelerator configuration from. |
 | **Network Configuration** |||
-| VpcCidr | `10.0.0.0/16` | The CIDR block for the VPC (used when UseExistingVpc is No) |
+| VpcCidr | `10.0.0.0/16` | The CIDR block for the VPC (used when UseExistingVpc is No). |
 | UseExistingVpc | `No` | Select Yes to use an existing VPC. If Yes, provide existing subnet and security group IDs. |
-| ExistingVpcId | `<optional input>` | The ID of an existing VPC (required when UseExistingVpc is Yes) |
-| ExistingSubnetId | `<optional input>` | The ID of an existing subnet (required when UseExistingVpc is Yes) |
-| ExistingSecurityGroupId | `<optional input>` | The ID of an existing security group (required when UseExistingVpc is Yes) |
+| ExistingVpcId | `<optional input>` | The ID of an existing VPC (required when UseExistingVpc is Yes). |
+| ExistingSubnetId | `<optional input>` | The ID of an existing subnet (required when UseExistingVpc is Yes). |
+| ExistingSecurityGroupId | `<optional input>` | The ID of an existing security group (required when UseExistingVpc is Yes). |
 | **Target Environment Configuration** |||
 | AcceleratorQualifier | `<requires input>` | Names the resources in the external deployment account. This must be unique for each LZA pipeline created in a single external deployment account, for example "env2" or "app1." Do not use "aws-accelerator" or a similar value that could be confused with the prefix. |
-| ManagementAccountId | `<requires input>` | Target management account id |
-| ManagementAccountRoleName | `<requires input>` | Target management account role name |
+| ManagementAccountId | `<requires input>` | Target management account id. |
+| ManagementAccountRoleName | `<requires input>` | Target management account role name. |
 
 6. Choose **Next**.
 
@@ -269,6 +284,14 @@ Before deployment, ensure the appropriate IAM role exists in each account with a
 - For Control Tower deployments: `AWSControlTowerExecution`
 - For Organizations-only deployments: `OrganizationAccountAccessRole`
 
+#### What is the solution-created VPC used for?
+
+When you don't provide an existing VPC, the solution creates a dedicated VPC in the LZA deployment account specifically for running the ECS container tasks that orchestrate LZA deployments. This is NOT a shared services VPC for your workloads - it's exclusively for the LZA deployment infrastructure.
+
+**Recommended approach:** Keep this VPC isolated from your workload networks. Connecting it to your broader network (via VPC peering, Transit Gateway, etc.) may expose your deployment infrastructure to other environments. Isolation provides better security by separating deployment infrastructure from application environments.
+
+If you use an existing VPC, ensure it has appropriate network segmentation and security controls to protect the ECS deployment tasks.
+
 
 ### Known issues
 
@@ -316,7 +339,7 @@ Bucket named 'cdk-accel-assets-<MANAGEMENT_ACCOUNT_ID>-<REGION>' exists, but we 
 
 ##### Cause
 
-This occurs due to IAM/S3 eventual consistency when cross-account permissions are first established. During initial bootstrap, member account deployment roles are created and the management account's S3 bucket policy is updated to allow cross-account access. Occasionally, these permissions aren't immediately effective when subsequent deployment stages attempt to publish assets.
+This occurs when cross-account permissions are first established. During initial bootstrap, member account deployment roles are created and the management account's S3 bucket policy is updated to allow cross-account access. Occasionally, these permissions aren't immediately effective when subsequent deployment stages attempt to publish assets. This may be related to IAM permission propagation delays.
 
 ##### Resolution
 
