@@ -725,7 +725,7 @@ release:package-artifact:
   before_script:
     - "apt-get update && apt-get install -y zip"
   script:
-    - "zip -r artifact.zip deployment/ source/ .gitignore README.md LICENSE.txt NOTICE.txt CODE_OF_CONDUCT.md CONTRIBUTING.md .github/ buildspec.yml CHANGELOG.md SECURITY.md .cfnnag_* .viperlightignore codescan-postbuild-custom.sh solution-manifest.yaml"
+    - "zip -r artifact.zip deployment/ source/ .gitignore README.md LICENSE.txt NOTICE.txt CODE_OF_CONDUCT.md CONTRIBUTING.md .github/ buildspec.yml CHANGELOG.md SECURITY.md .cfnnag_* .viperlightignore codescan-postbuild-custom.sh solution-manifest.yaml sonar-project.properties"
   artifacts:
     name: packaged-artifact
     when: on_success

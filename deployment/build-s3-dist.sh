@@ -176,7 +176,7 @@ create_template_yaml()
     done
 }
 
-## Copy files to the deployment dir for container building
+## Copy static files to the deployment dir for container building
 copy_container_files()
 {
     IMAGE_PATH=$template_dir/ecr/landing-zone-accelerator-on-aws
@@ -184,10 +184,8 @@ copy_container_files()
     do_cmd cp -r $container_dir/build/* $IMAGE_PATH/
     do_cmd cp -r $container_dir/images/* $IMAGE_PATH/
     do_cmd cp -r $container_dir/scripts $IMAGE_PATH/
-    do_cmd cp $container_dir/AWSAccelerator-InstallerContainerStack.template.json $IMAGE_PATH/
     do_cmd cp $container_dir/README.md $IMAGE_PATH/
 
-    
     # Create source tarball to avoid SBOM scanner OOM issues
     # The tarball is a single file, so cdxgen won't scan thousands of source files
     echo "Creating source tarball (excluding build artifacts and test files)"
@@ -211,6 +209,23 @@ copy_container_files()
         exit 1
     fi
     echo "Source tarball created: $(ls -lh $IMAGE_PATH/source.tar.gz)"
+}
+
+## Copy the synthesized container template after CDK synth has produced it
+copy_container_template()
+{
+    IMAGE_PATH=$template_dir/ecr/landing-zone-accelerator-on-aws
+    echo "Copying synthesized InstallerContainerStack template to container image path"
+    # The template may have been renamed from .template.json to .template
+    # by a preceding create_template_* function, so check both names
+    if [ -f "$template_dist_dir/AWSAccelerator-InstallerContainerStack.template.json" ]; then
+        do_cmd cp $template_dist_dir/AWSAccelerator-InstallerContainerStack.template.json $IMAGE_PATH/
+    elif [ -f "$template_dist_dir/AWSAccelerator-InstallerContainerStack.template" ]; then
+        do_cmd cp $template_dist_dir/AWSAccelerator-InstallerContainerStack.template $IMAGE_PATH/
+    else
+        echo "ERROR: InstallerContainerStack template not found in $template_dist_dir"
+        exit 1
+    fi
 }
 
 cleanup_temporary_generted_files()
@@ -388,6 +403,12 @@ else
     echo "Invalid setting for \$template_format: $template_format"
     exit 255
 fi
+
+echo "------------------------------------------------------------------------------"
+echo "${bold}[Post-Synth] Copy synthesized container template${normal}"
+echo "------------------------------------------------------------------------------"
+
+copy_container_template
 
 echo "------------------------------------------------------------------------------"
 echo "${bold}[Packing] Template artifacts${normal}"
