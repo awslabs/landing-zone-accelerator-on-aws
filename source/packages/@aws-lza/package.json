@@ -71,6 +71,7 @@
     "fast-xml-parser": "5.3.8",
     "rollup": "4.59.0",
     "diff": "5.2.2",
-    "sinon/**/diff": "5.2.2"
+    "sinon/**/diff": "5.2.2",
+    "minimatch": "9.0.7"
   }
 }
