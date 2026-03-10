@@ -35,7 +35,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - fix(container): add cert path for aws sdk, nodejs calls
 - fix(container): prevent qualifier to be aws or ssm
 - fix(control-tower): allow setup landing zone with existing org account
-- fix(control-tower): change default ct version to 4.0
 - fix(control-tower): remove organization validation for sso
 - fix(control-tower): update detected for disabled centralized logging or config logging
 - fix(installer-container): detect ECS task failures by checking container exit code
@@ -44,27 +43,57 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - fix(networking): add cfn depends on for ipam pools
 - fix(networking): adjust logic for nlb ip address role creation
 - fix(networking): fix share-subnet-tags custom Resource removes tags not managed by the accelerator
-- fix(prerequisites): remove checks for concurrency
 - fix(schema): use interface type not class in global config, add test
 - fix(scp): quarantine policy pagination
 - fix(securityhub): fix invalid input exception on batch enabled standards call
 - fix(ssm): apply tags to cross account ssm params
 - fix(ssm): missing iam policy for put same account ssm param
-- fix(stack-policy): adds retries
 - fix(sts): add endpoint for eusc
 - fix(tagging): non config dependent stacks are missing accelerator tags
 - fix(v2-networking): reorder VPC stack dependencies to create subnet before security groups
 
 ### Changed
 
-- chore(docs): update !include documentation with samples
 - chore(installer): update deletion policy of some resources to RetainExceptOnCreate
 - chore(kms): update KMS key descriptions
 - chore(networking): add precheck for TGW multicast protection
 - chore(networking): update vpc route53 resolver configuration links
 - chore: add documentation for container deployment
-- chore: set default nodejs to 22
 - chore: update dependency resolutions to remediate CVE findings
+
+## [1.14.5] - 2026-02-25
+
+### Fixed
+
+- fix(installer): updated template output bucket for govCloud account vending product
+- fix(v2-stacks): fix security group behaviors in network-associations stack for v2 sgs
+
+### Changed 
+
+- chore(documentation): update !include documentation with samples
+- chore(dependencies): fix fast-xml-parser dependency issue, tar, and ajv
+
+## [1.14.4] - 2026-02-19
+
+### Added
+
+- feat(github): add configuration for github dependabot security scans
+
+### Changed 
+
+- chore: upgrade mkdocs-material to 9.5.32 (security fix for XSS)
+
+## [1.14.3] - 2026-02-09
+
+### Fixed
+
+- fix(pre-reqs): remove checks for concurrency
+- fix(stack-policy): adds retries
+
+### Changed
+
+- chore(control-tower): upgrade default control tower version to 4.0
+- chore: set default nodejs version to 22 
 - chore: updated dependencies tar, lodash and diff
 
 ## [1.14.2] - 2025-12-19

@@ -151,7 +151,7 @@ To deploy the solution, complete the following steps:
 | Parameter | Default | Description |
 |-----------|---------|-------------|
 | **Source Configuration** |||
-| ImageUri | `public.ecr.aws/aws-solutions/landing-zone-accelerator-on-aws:1.15.0-rc.14` | The Amazon Elastic Container Registry (Amazon ECR) repository, where Landing Zone Accelerator on AWS code is present. |
+| ImageUri | `public.ecr.aws/aws-solutions/landing-zone-accelerator-on-aws:1.15.0` | The Amazon Elastic Container Registry (Amazon ECR) repository, where Landing Zone Accelerator on AWS code is present. |
 | **Mandatory Accounts Configuration** |||
 | ManagementAccountEmail | `<requires input>` | The management (primary) account email - NOTE: This must match the address of the management account email as listed in AWS Organizations > AWS accounts. |
 | LogArchiveAccountEmail | `<requires input>` | The log archive account email. |
