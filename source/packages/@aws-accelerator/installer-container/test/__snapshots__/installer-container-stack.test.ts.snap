@@ -179,7 +179,7 @@ exports[`InstallerContainerStack > Construct(InstallerContainerStack): Default C
       "Type": "String",
     },
     "ImageUri": {
-      "Default": "public.ecr.aws/aws-solutions/landing-zone-accelerator-on-aws:1.15.0",
+      "Default": "public.ecr.aws/aws-solutions/landing-zone-accelerator-on-aws:v1.15.0",
       "Description": "The Amazon Elastic Container Registry (Amazon ECR) repository, where Landing Zone Accelerator on AWS code is present.",
       "Type": "String",
     },
@@ -2973,7 +2973,7 @@ exports[`InstallerContainerStack > Construct(InstallerContainerStack): Deploymen
       "Type": "String",
     },
     "ImageUri": {
-      "Default": "public.ecr.aws/aws-solutions/landing-zone-accelerator-on-aws:1.15.0",
+      "Default": "public.ecr.aws/aws-solutions/landing-zone-accelerator-on-aws:v1.15.0",
       "Description": "The Amazon Elastic Container Registry (Amazon ECR) repository, where Landing Zone Accelerator on AWS code is present.",
       "Type": "String",
     },
@@ -5820,7 +5820,7 @@ exports[`InstallerContainerStack > Construct(InstallerContainerStack): Single Ac
       "Type": "String",
     },
     "ImageUri": {
-      "Default": "public.ecr.aws/aws-solutions/landing-zone-accelerator-on-aws:1.15.0",
+      "Default": "public.ecr.aws/aws-solutions/landing-zone-accelerator-on-aws:v1.15.0",
       "Description": "The Amazon Elastic Container Registry (Amazon ECR) repository, where Landing Zone Accelerator on AWS code is present.",
       "Type": "String",
     },
@@ -8611,7 +8611,7 @@ exports[`InstallerContainerStack > Construct(InstallerContainerStack): With Exte
       "Type": "String",
     },
     "ImageUri": {
-      "Default": "public.ecr.aws/aws-solutions/landing-zone-accelerator-on-aws:1.15.0",
+      "Default": "public.ecr.aws/aws-solutions/landing-zone-accelerator-on-aws:v1.15.0",
       "Description": "The Amazon Elastic Container Registry (Amazon ECR) repository, where Landing Zone Accelerator on AWS code is present.",
       "Type": "String",
     },
@@ -11459,7 +11459,7 @@ exports[`InstallerContainerStack > Construct(InstallerContainerStack): With Perm
       "Type": "String",
     },
     "ImageUri": {
-      "Default": "public.ecr.aws/aws-solutions/landing-zone-accelerator-on-aws:1.15.0",
+      "Default": "public.ecr.aws/aws-solutions/landing-zone-accelerator-on-aws:v1.15.0",
       "Description": "The Amazon Elastic Container Registry (Amazon ECR) repository, where Landing Zone Accelerator on AWS code is present.",
       "Type": "String",
     },
@@ -14227,7 +14227,7 @@ exports[`InstallerContainerStack > Construct(InstallerContainerStack): With S3 S
       "Type": "String",
     },
     "ImageUri": {
-      "Default": "public.ecr.aws/aws-solutions/landing-zone-accelerator-on-aws:1.15.0",
+      "Default": "public.ecr.aws/aws-solutions/landing-zone-accelerator-on-aws:v1.15.0",
       "Description": "The Amazon Elastic Container Registry (Amazon ECR) repository, where Landing Zone Accelerator on AWS code is present.",
       "Type": "String",
     },
