@@ -167,8 +167,7 @@ To deploy the solution, complete the following steps:
 | ExistingConfigBucketName | `<optional input>` | The name of an existing LZA configuration bucket hosting the accelerator configuration. |
 | ExistingConfigBucketKey | `<optional input>` | Specify the branch name of the existing LZA configuration bucket key to pull the accelerator configuration from. |
 | **Network Configuration** |||
-| VpcCidr | `10.0.0.0/16` | The CIDR block for the VPC (used when UseExistingVpc is No). |
-| UseExistingVpc | `No` | Select Yes to use an existing VPC. If Yes, provide existing subnet and security group IDs. |
+| UseExistingVpc | `No` | Select Yes to use an existing VPC. If Yes, provide existing subnet and security group ID. If No, a VPC with CIDR `10.0.0.0/16` will be created across 2 availability zones. |
 | ExistingVpcId | `<optional input>` | The ID of an existing VPC (required when UseExistingVpc is Yes). |
 | ExistingSubnetId | `<optional input>` | The ID of an existing subnet (required when UseExistingVpc is Yes). |
 | ExistingSecurityGroupId | `<optional input>` | The ID of an existing security group (required when UseExistingVpc is Yes). |

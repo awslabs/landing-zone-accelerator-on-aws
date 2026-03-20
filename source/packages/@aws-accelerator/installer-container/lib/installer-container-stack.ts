@@ -222,13 +222,11 @@ export class InstallerContainerStack extends cdk.Stack {
     default: '',
   });
 
-  private readonly vpcCidr = new cdk.CfnParameter(this, 'VpcCidr', {
-    type: 'String',
-    description: 'The CIDR block for the VPC (used when UseExistingVpc is No)',
-    default: '10.0.0.0/16',
-    allowedPattern:
-      '^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\\/(1[6-9]|2[0-8]))$',
-  });
+  /**
+   * Default VPC CIDR block used when UseExistingVpc is set to No.
+   * When a new VPC is created, it uses 10.0.0.0/16 across 2 availability zones.
+   */
+  private readonly vpcCidr = '10.0.0.0/16';
 
   constructor(scope: Construct, id: string, props?: InstallerContainerStackProps) {
     super(scope, id, props);
@@ -266,7 +264,6 @@ export class InstallerContainerStack extends cdk.Stack {
       {
         Label: { default: 'Network Configuration' },
         Parameters: [
-          this.vpcCidr.logicalId,
           this.useExistingVpc.logicalId,
           this.existingVpcId.logicalId,
           this.existingSubnetId.logicalId,
@@ -288,7 +285,6 @@ export class InstallerContainerStack extends cdk.Stack {
       [this.existingVpcId.logicalId]: { default: 'Existing VPC ID' },
       [this.existingSubnetId.logicalId]: { default: 'Existing Subnet ID' },
       [this.existingSecurityGroupId.logicalId]: { default: 'Existing Security Group ID' },
-      [this.vpcCidr.logicalId]: { default: 'VPC CIDR Block' },
     };
 
     let targetAcceleratorParameterLabels: { [p: string]: { default: string } } = {};
@@ -796,7 +792,7 @@ export class InstallerContainerStack extends cdk.Stack {
      * All subsequent VPC-related resources also have this condition applied
      */
     const vpc = new cdk.aws_ec2.CfnVPC(this, 'Vpc', {
-      cidrBlock: this.vpcCidr.valueAsString,
+      cidrBlock: this.vpcCidr,
       enableDnsHostnames: true,
       enableDnsSupport: true,
       instanceTenancy: 'default',
