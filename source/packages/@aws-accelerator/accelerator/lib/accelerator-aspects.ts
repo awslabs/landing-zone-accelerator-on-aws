@@ -88,7 +88,6 @@ class IsobOverrides implements cdk.IAspect {
     }
     if (node instanceof cdk.aws_cloudtrail.CfnTrail) {
       node.addPropertyDeletionOverride('InsightSelectors');
-      node.addPropertyDeletionOverride('IsOrganizationTrail');
     }
     if (node instanceof cdk.aws_ecr.CfnRepository) {
       node.addPropertyDeletionOverride('ImageTagMutability');
