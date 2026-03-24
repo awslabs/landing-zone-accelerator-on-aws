@@ -18,11 +18,18 @@ import { AcceleratorTool } from './lib/classes/accelerator-tool';
 
 /**
  * AWS Accelerator Uninstaller tool entry point.
+ * Supports both CodePipeline-based and container-based (ECS/Fargate) LZA deployments.
+ * The uninstaller auto-detects the deployment type by inspecting the installer stack resources.
+ *
  * Script Options:
  * <ul>
- * <li>--installer-stack-name The name of the installer cloudformation stack
+ * <li>--installer-stack-name The name of the installer cloudformation stack.
+ *     For CodePipeline deployments: 'AWSAccelerator-InstallerStack' (default).
+ *     For container deployments: 'AWSAccelerator-InstallerContainerStack'.
+ * <li>--container-build When set, defaults --installer-stack-name to 'AWSAccelerator-InstallerContainerStack'.
  * <li>--partition AWS partition
  * <li>--debug Display debug logs
+ * <li>--config-path Path to local LZA config directory (recommended for container deployments)
  * <li>--full-destroy When used, uninstaller will delete everything, including installer stack and pipeline and LZA pipeline stack and pipeline.
  * Any other flags used with full-destroy will be disregarded.
  * <li>--delete-accelerator
@@ -41,18 +48,26 @@ import { AcceleratorTool } from './lib/classes/accelerator-tool';
  * <li>--action-name When used, delete every CFN stacks and resources from the pipeline stage action to the end of the pipeline. If keep-data is used S3 and CW logs will not be deleted.
  * </ul>
  * @example
- * ts-node uninstaller.ts --installer-stack-name <value> --partition <value> --full-destroy
+ * // CodePipeline deployment:
+ * ts-node uninstaller.ts --installer-stack-name AWSAccelerator-InstallerStack --partition aws --full-destroy
+ * @example
+ * // Container deployment:
+ * ts-node uninstaller.ts --container-build --partition aws --full-destroy --config-path /path/to/config
+ * @example
+ * // Container deployment with explicit stack name:
+ * ts-node uninstaller.ts --installer-stack-name AWSAccelerator-InstallerContainerStack --partition aws --full-destroy --config-path /path/to/config
  */
 
 const logger = createLogger(['uninstaller']);
 const scriptUsage =
-  'Usage: yarn run ts-node --transpile-only uninstaller.ts --installer-stack-name <INSTALLER_STACK_NAME> --partition <PARTITION> [--debug] [--full-destroy] [--delete-accelerator] [--keep-pipeline] [--keep-data] [--keep-bootstraps] [--stage-name] <STAGE_NAME> [--action-name] <ACTION_NAME>';
+  'Usage: yarn run ts-node --transpile-only uninstaller.ts [--container-build | --installer-stack-name <INSTALLER_STACK_NAME>] --partition <PARTITION> [--config-path <CONFIG_PATH>] [--debug] [--full-destroy] [--delete-accelerator] [--keep-pipeline] [--keep-data] [--keep-bootstraps] [--stage-name] <STAGE_NAME> [--action-name] <ACTION_NAME>';
 async function main(): Promise<string> {
   const usage = `** Script Usage ** ${scriptUsage}`;
 
   const argv = yargs(process.argv.slice(2))
     .options({
-      installerStackName: { type: 'string', default: 'AWSAccelerator-InstallerStack' },
+      installerStackName: { type: 'string', default: undefined },
+      containerBuild: { type: 'boolean', default: false },
       partition: { type: 'string', default: 'aws' },
       debug: { type: 'boolean', default: false },
       fullDestroy: { type: 'boolean', default: false },
@@ -63,7 +78,11 @@ async function main(): Promise<string> {
     })
     .parseSync();
 
-  const installerStackName = argv.installerStackName;
+  // When --container-build is set, default the installer stack name to the container stack.
+  // An explicit --installer-stack-name always takes precedence.
+  const installerStackName =
+    argv.installerStackName ??
+    (argv.containerBuild ? 'AWSAccelerator-InstallerContainerStack' : 'AWSAccelerator-InstallerStack');
 
   const partition = argv.partition;
   const debug = argv.debug;
@@ -176,7 +195,7 @@ async function main(): Promise<string> {
 
 process.on('unhandledRejection', reason => {
   console.error(reason);
-  // eslint-disable-next-line no-process-exit
+
   process.exit(1);
 });
 

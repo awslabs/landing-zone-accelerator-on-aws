@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - feat(iam): add maxSessionDuration to roleSets.roles[]
 - feat(iam): add support for IAM role trust policy conditions in iam-config.yaml
+- feat(uninstaller): add support for container deployment
 
 ### Fixed
 
@@ -24,7 +25,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - fix(networking): add validation for modifying IPAM allocations at VPC level
 - fix(networking): cross account NLB targets
 - fix(networking): ssm parameter race condition when sharing multiple subnets from the same vpc with v2 stacks
--  fix(ssm): add back overwrite to put ssm param
+- fix(ssm): add back overwrite to put ssm param
 - fix(uninstaller): add support for accounts and OUs that are ignored
 
 ### Changed

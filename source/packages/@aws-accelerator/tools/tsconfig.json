@@ -4,5 +4,5 @@
     "outDir": "dist",
     "lib": ["dom"]
   },
-  "include": ["lib/**/*", "index.ts", "uninstaller.ts"]
+  "include": ["lib/**/*", "index.ts", "uninstaller.ts", "test/**/*"]
 }

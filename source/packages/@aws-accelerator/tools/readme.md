@@ -60,6 +60,94 @@ After script execution, some resources require manual cleanup:
 3. GuardDuty:
    - Disable delegated administration account in your Home Region
 
+## Running the Uninstaller Directly
+
+The uninstaller can be invoked directly from the command line in two modes.
+
+### Pipeline Mode (standard deployment)
+
+Use this when LZA was deployed via the installer CloudFormation stack and CodePipeline:
+
+```bash
+yarn run ts-node --transpile-only uninstaller.ts \
+  --installer-stack-name <INSTALLER_STACK_NAME> \
+  --partition aws \
+  --full-destroy
+```
+
+### Container Build Mode (manual / local deployment)
+
+Use this when LZA was deployed via the installer Cloudformation stack for Fargate and ECS:
+
+```bash
+yarn run ts-node --transpile-only uninstaller.ts \
+  --container-build \
+  --config-path <PATH_TO_LZA_CONFIG_DIR> \
+  --partition aws \
+  --full-destroy
+```
+
+In container build mode the tool reads the accelerator prefix and qualifier directly from CLI parameters instead of discovering them from CodeBuild environment variables.
+
+#### Container Build Mode Parameters
+
+| Parameter | Required | Default | Description |
+|-----------|----------|---------|-------------|
+| `--container-build` | Yes | `false` | Enables container build mode. Mutually exclusive with `--installer-stack-name`. |
+| `--config-path` | Yes | — | Path to the local LZA configuration directory containing `global-config.yaml`. |
+| `--accelerator-prefix` | No | `AWSAccelerator` | The prefix used when LZA stacks were deployed. Only needed if a custom prefix was used. |
+| `--accelerator-qualifier` | No | — | The qualifier used when LZA was deployed with a custom qualifier. Only needed if a qualifier was used. |
+| `--management-account-id` | No | — | The management account ID. Only needed when running from a separate pipeline account. Must be used together with `--management-account-role-name`. |
+| `--management-account-role-name` | No | — | The IAM role name to assume in the management account. Required when `--management-account-id` is provided. |
+
+#### Common Parameters (both modes)
+
+| Parameter | Description |
+|-----------|-------------|
+| `--partition` | AWS partition (e.g. `aws`, `aws-cn`, `aws-us-gov`). Default: `aws`. |
+| `--full-destroy` | Delete everything including bootstrap stacks and perform final cleanup. |
+| `--delete-accelerator` | Delete all accelerator-deployed stacks and resources. |
+| `--keep-pipeline` | Used with `--delete-accelerator`. Preserves the LZA pipeline and config repo. |
+| `--keep-data` | Used with `--delete-accelerator`. Preserves S3 buckets and CloudWatch log groups. |
+| `--keep-bootstraps` | Used with `--delete-accelerator`. Preserves CDK bootstrap stacks. |
+| `--stage-name` | Delete stacks from the specified pipeline stage to the end. |
+| `--action-name` | Delete stacks from the specified pipeline action to the end. |
+| `--debug` | Enable verbose debug logging. |
+
+#### Examples
+
+Full destroy with a custom qualifier:
+```bash
+yarn run ts-node --transpile-only uninstaller.ts \
+  --container-build \
+  --config-path /path/to/lza-config \
+  --accelerator-qualifier myorg \
+  --partition aws \
+  --full-destroy
+```
+
+Delete accelerator stacks only, preserving pipeline and data:
+```bash
+yarn run ts-node --transpile-only uninstaller.ts \
+  --container-build \
+  --config-path /path/to/lza-config \
+  --partition aws \
+  --delete-accelerator \
+  --keep-pipeline \
+  --keep-data
+```
+
+Running from a separate pipeline account:
+```bash
+yarn run ts-node --transpile-only uninstaller.ts \
+  --container-build \
+  --config-path /path/to/lza-config \
+  --management-account-id 111122223333 \
+  --management-account-role-name AWSControlTowerExecution \
+  --partition aws \
+  --full-destroy
+```
+
 ## Troubleshooting
 
 If the uninstallation fails, you can:
@@ -70,10 +158,10 @@ If the uninstallation fails, you can:
 ```bash
 sudo -i
 cd /landing-zone-accelerator-on-aws/source/packages/@aws-accelerator/tools/
-yarn run --verbose ts-node --transpile-only uninstaller.ts --installer-stack-name <REPLACE_WITH_YOUR_INSTALLER_STACK_NAME> \
---ignore-termination-protection true --full-destroy true --installer-delete <REPLACE_WITH_true_OR_false> \
---delete-config-repo <REPLACE_WITH_true_OR_false> --partition aws --delete-data \
---ignore-termination-protection --delete-bootstraps true --delete-pipelines
+yarn run ts-node --transpile-only uninstaller.ts \
+  --installer-stack-name <INSTALLER_STACK_NAME> \
+  --partition aws \
+  --full-destroy
 ```
 
 ### Helpful Commands

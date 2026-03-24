@@ -15,7 +15,7 @@ import * as os from 'os';
 import * as path from 'path';
 import * as winston from 'winston';
 
-import { GlobalConfig } from '@aws-accelerator/config';
+import { GlobalConfig, OrganizationConfig, AccountsConfig } from '@aws-accelerator/config';
 import { createLogger } from '@aws-accelerator/utils/lib/logger';
 import { throttlingBackOff } from '@aws-accelerator/utils/lib/throttle';
 import { getGlobalRegion } from '@aws-accelerator/utils/lib/common-functions';
@@ -40,6 +40,7 @@ import {
 import { CodeCommitClient, DeleteRepositoryCommand, GetFileCommand } from '@aws-sdk/client-codecommit';
 import { CodePipelineClient, GetPipelineCommand, StageDeclaration } from '@aws-sdk/client-codepipeline';
 import { DeleteRepositoryCommand as DeleteEcr, DescribeRepositoriesCommand, ECRClient } from '@aws-sdk/client-ecr';
+import { DeregisterTaskDefinitionCommand, ECSClient, ListTasksCommand, StopTaskCommand } from '@aws-sdk/client-ecs';
 import {
   DetachRolePolicyCommand,
   IAMClient,
@@ -53,7 +54,13 @@ import {
   KMSClient,
   ScheduleKeyDeletionCommand,
 } from '@aws-sdk/client-kms';
-import { AccountStatus, ListAccountsCommand, OrganizationsClient } from '@aws-sdk/client-organizations';
+import {
+  AccountStatus,
+  ListAccountsCommand,
+  ListParentsCommand,
+  DescribeOrganizationalUnitCommand,
+  OrganizationsClient,
+} from '@aws-sdk/client-organizations';
 import {
   DeleteBucketCommand,
   DeleteObjectsCommand,
@@ -71,9 +78,49 @@ import {
   STSClient,
 } from '@aws-sdk/client-sts';
 import { ConfigServiceClient, DescribeConfigRulesCommand } from '@aws-sdk/client-config-service';
+import { DeleteParameterCommand, SSMClient } from '@aws-sdk/client-ssm';
 import AdmZip, { IZipEntry } from 'adm-zip';
 
 import { AcceleratorV2Stacks } from '../../../accelerator/lib/accelerator';
+
+/**
+ * Enum to identify the type of installer stack deployment
+ */
+enum InstallerStackType {
+  CODEPIPELINE = 'codepipeline',
+  CONTAINER = 'container',
+}
+
+/**
+ * Container deployment configuration extracted from the InstallerContainerStack
+ */
+interface ContainerDeploymentConfig {
+  /**
+   * Qualifier used for resource naming in external pipeline deployments.
+   * Empty string when running in single-account (non-external) mode.
+   */
+  acceleratorQualifier: string;
+  acceleratorPrefix: string;
+  /**
+   * The oneWordPrefix derived from acceleratorPrefix, matching the logic in
+   * the installer-container-stack's ResourceNamePrefixes custom resource.
+   * e.g. 'AWSAccelerator' -> 'accelerator', custom prefix -> as-is.
+   */
+  oneWordPrefix: string;
+  /**
+   * Management account ID. Empty when running in single-account mode
+   * (i.e. the executing account IS the management account).
+   */
+  managementAccountId: string;
+  managementAccountRoleName: string;
+  /**
+   * Whether this is an external pipeline deployment (qualifier-based).
+   */
+  isExternalPipeline: boolean;
+  ecsClusterArn: string | undefined;
+  taskDefinitionArn: string | undefined;
+}
+
 /**
  * Type for pipeline stage action information with order and action name
  */
@@ -329,6 +376,13 @@ export class AcceleratorTool {
   };
 
   /**
+   * Saved AWS_PROFILE value, stored before clearing it during management account
+   * credential assumption so it can be restored when credentials are reset.
+   * @private
+   */
+  private savedAwsProfile: string | undefined;
+
+  /**
    * acceleratorCloudFormationStacks
    * @private
    */
@@ -365,6 +419,13 @@ export class AcceleratorTool {
     const response = await throttlingBackOff(() => new STSClient({}).send(new GetCallerIdentityCommand({})));
     this.executingAccountId = response.Account;
 
+    // Detect installer stack type (CodePipeline vs Container)
+    const stackType = await AcceleratorTool.detectInstallerStackType(installerStackName);
+    if (stackType === InstallerStackType.CONTAINER) {
+      return this.uninstallContainerAccelerator(installerStackName);
+    }
+
+    // CodePipeline-based deployment path (existing behavior)
     // Get installer pipeline
     const installerPipeline = await AcceleratorTool.getPipelineNameFromCloudFormationStack(installerStackName);
     if (!installerPipeline.status) {
@@ -425,7 +486,7 @@ export class AcceleratorTool {
     if (this.acceleratorToolProps.fullDestroy || this.acceleratorToolProps.deleteAccelerator) {
       if (this.externalPipelineAccount.isUsed) {
         // Installer and Tester stack resource cleanup takes place in pipeline or management account, so reset the credential settings
-        AcceleratorTool.resetCredentialEnvironment();
+        this.resetCredentialEnvironment();
       }
 
       // Delete tester stack
@@ -453,7 +514,6 @@ export class AcceleratorTool {
 
         // Delete bootstrap stack only when pipeline not executed from external account
         if (!this.externalPipelineAccount.isUsed) {
-          // AcceleratorTool.resetCredentialEnvironment();
           await this.deleteStack(new CloudFormationClient({}), `${acceleratorPrefix}-CDKToolkit`);
         }
         //start final resource cleanup, CWL logs are re-created post CFN stack deletion so these needs to be clean
@@ -485,13 +545,19 @@ export class AcceleratorTool {
    * Clears credential environment variables
    * @private
    */
-  private static resetCredentialEnvironment() {
+  private resetCredentialEnvironment() {
     //reset credential variables
     delete process.env['AWS_ACCESS_KEY_ID'];
     delete process.env['AWS_ACCESS_KEY'];
     delete process.env['AWS_SECRET_KEY'];
     delete process.env['AWS_SECRET_ACCESS_KEY'];
     delete process.env['AWS_SESSION_TOKEN'];
+
+    // Restore the original AWS_PROFILE so the SDK can authenticate
+    // as the original caller (e.g. orchestration account) for local operations
+    if (this.savedAwsProfile) {
+      process.env['AWS_PROFILE'] = this.savedAwsProfile;
+    }
   }
 
   /**
@@ -693,6 +759,35 @@ export class AcceleratorTool {
    * @private
    */
   private async getOrganizationAccountList(): Promise<{ accountName: string; accountId: string }[]> {
+    // Build ignored OU set and account-to-OU map when configPath is available
+    let ignoredOuNames: Set<string> = new Set();
+    let accountOuMap: Map<string, string> = new Map();
+
+    if (this.acceleratorToolProps.configPath) {
+      try {
+        this.logger.info(`Loading OU-ignore configuration from ${this.acceleratorToolProps.configPath}`);
+        const orgConfig = OrganizationConfig.loadRawOrganizationsConfig(this.acceleratorToolProps.configPath);
+        const accountsConfig = AccountsConfig.load(this.acceleratorToolProps.configPath);
+
+        const ignoredOus = orgConfig.getIgnoredOus();
+        ignoredOuNames = new Set(ignoredOus.map(ou => ou.name));
+        // Key by email (lowercased) since config logical names may differ from AWS account display names
+        accountOuMap = new Map(accountsConfig.getAccounts().map(a => [a.email.toLowerCase(), a.organizationalUnit]));
+        this.logger.info(
+          `OU-ignore filtering active: ${ignoredOuNames.size} ignored OU(s) [${[...ignoredOuNames].join(', ')}], ${accountOuMap.size} account(s) mapped`,
+        );
+      } catch (
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        e: any
+      ) {
+        this.logger.error(`Failed to load config for OU-ignore filtering, falling back to no filtering: ${e.message}`);
+        ignoredOuNames = new Set();
+        accountOuMap = new Map();
+      }
+    } else {
+      this.logger.warn('OU-ignore filtering is unavailable because configPath is not defined');
+    }
+
     let organizationsClient: OrganizationsClient;
     if (this.pipelineManagementAccount!.credentials) {
       organizationsClient = new OrganizationsClient({
@@ -719,11 +814,47 @@ export class AcceleratorTool {
           continue;
         }
         if (account.Id && account.Name) {
+          // OU-ignore filtering
+          if (ignoredOuNames.size > 0) {
+            let accountOu = accountOuMap.get(account.Email?.toLowerCase() ?? '');
+            // If account is not in AccountsConfig, query Organizations API for its parent OU
+            if (!accountOu) {
+              try {
+                const parentsResponse = await throttlingBackOff(() =>
+                  organizationsClient.send(new ListParentsCommand({ ChildId: account.Id })),
+                );
+                const parentId = parentsResponse.Parents?.[0]?.Id;
+                if (parentId && parentId.startsWith('ou-')) {
+                  const ouResponse = await throttlingBackOff(() =>
+                    organizationsClient.send(new DescribeOrganizationalUnitCommand({ OrganizationalUnitId: parentId })),
+                  );
+                  accountOu = ouResponse.OrganizationalUnit?.Name;
+                }
+              } catch (
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                e: any
+              ) {
+                this.logger.debug(
+                  `Could not resolve OU for account ${account.Name} (${account.Id}) via Organizations API: ${e.message}`,
+                );
+              }
+            }
+            if (accountOu && ignoredOuNames.has(accountOu)) {
+              this.logger.warn(
+                `Skipping account ${account.Name} (${account.Id}) because its OU '${accountOu}' is marked as ignored`,
+              );
+              continue;
+            }
+          }
           accountIds.push({ accountName: account.Name, accountId: account.Id });
         }
       }
       nextToken = page.NextToken;
     } while (nextToken);
+
+    this.logger.info(
+      `Organization account list built: ${accountIds.length} account(s) after filtering [${accountIds.map(a => `${a.accountName}(${a.accountId})`).join(', ')}]`,
+    );
     return accountIds;
   }
 
@@ -788,6 +919,12 @@ export class AcceleratorTool {
     process.env['AWS_SECRET_ACCESS_KEY'] = assumeRoleCredential.Credentials!.SecretAccessKey!;
 
     process.env['AWS_SESSION_TOKEN'] = assumeRoleCredential.Credentials!.SessionToken;
+
+    // Remove AWS_PROFILE so the SDK uses the explicit credentials above
+    // instead of the profile, which would resolve back to the original caller identity
+    this.savedAwsProfile = process.env['AWS_PROFILE'];
+    delete process.env['AWS_PROFILE'];
+    delete process.env['AWS_DEFAULT_PROFILE'];
 
     return assumeRoleCredential.Credentials;
   }
@@ -1179,6 +1316,518 @@ export class AcceleratorTool {
     } catch (error) {
       return { status: false, pipelineName: `${error}` };
     }
+  }
+
+  /**
+   * Detect whether the installer stack is a CodePipeline-based or container-based deployment
+   * by inspecting the stack's resources.
+   * @param stackName
+   * @private
+   */
+  private static async detectInstallerStackType(stackName: string): Promise<InstallerStackType> {
+    try {
+      const cloudformationClient = new CloudFormationClient({});
+      let nextToken: string | undefined = undefined;
+      do {
+        const page = await throttlingBackOff(() =>
+          cloudformationClient.send(new ListStackResourcesCommand({ StackName: stackName, NextToken: nextToken })),
+        );
+        for (const resource of page.StackResourceSummaries ?? []) {
+          if (resource.ResourceType === 'AWS::CodePipeline::Pipeline') {
+            return InstallerStackType.CODEPIPELINE;
+          }
+          if (resource.ResourceType === 'AWS::ECS::Cluster') {
+            return InstallerStackType.CONTAINER;
+          }
+        }
+        nextToken = page.NextToken;
+      } while (nextToken);
+    } catch (error) {
+      throw new Error(`[uninstaller] Failed to detect installer stack type for ${stackName}: ${error}`);
+    }
+    throw new Error(
+      `[uninstaller] Unable to determine installer stack type for ${stackName}. ` +
+        `Stack does not contain AWS::CodePipeline::Pipeline or AWS::ECS::Cluster resources.`,
+    );
+  }
+
+  /**
+   * Extract container deployment configuration from the InstallerContainerStack.
+   * Reads SSM parameters and stack parameters to determine the qualifier, prefix,
+   * and management account details.
+   * @param stackName
+   * @private
+   */
+  private async getContainerDeploymentConfig(stackName: string): Promise<ContainerDeploymentConfig> {
+    const cloudformationClient = new CloudFormationClient({});
+
+    // Get stack parameters
+    const describeResponse = await throttlingBackOff(() =>
+      cloudformationClient.send(new DescribeStacksCommand({ StackName: stackName })),
+    );
+    const stack = describeResponse.Stacks?.[0];
+    if (!stack) {
+      throw new Error(`[uninstaller] Container installer stack ${stackName} not found`);
+    }
+
+    let acceleratorQualifier = '';
+    let acceleratorPrefix = 'AWSAccelerator';
+    let managementAccountId = '';
+    let managementAccountRoleName = '';
+
+    for (const param of stack.Parameters ?? []) {
+      switch (param.ParameterKey) {
+        case 'AcceleratorQualifier':
+          acceleratorQualifier = param.ParameterValue ?? '';
+          break;
+        case 'AcceleratorPrefix':
+          acceleratorPrefix = param.ParameterValue ?? 'AWSAccelerator';
+          break;
+        case 'ManagementAccountId':
+          managementAccountId = param.ParameterValue ?? '';
+          break;
+        case 'ManagementAccountRoleName':
+          managementAccountRoleName = param.ParameterValue ?? '';
+          break;
+      }
+    }
+
+    // Derive oneWordPrefix using the same logic as the installer-container-stack's
+    // ResourceNamePrefixes custom resource: AWSAccelerator -> accelerator, else as-is
+    const lowerCasePrefix = acceleratorPrefix.toLowerCase();
+    const oneWordPrefix = lowerCasePrefix === 'awsaccelerator' ? 'accelerator' : acceleratorPrefix;
+
+    // AcceleratorQualifier is only present for external pipeline deployments.
+    // For single-account deployments, the qualifier is empty and SSM paths
+    // use /{oneWordPrefix}/{stackName}/... instead of /{oneWordPrefix}/{qualifier}/...
+    const isExternalPipeline = !!acceleratorQualifier;
+
+    // Get ECS cluster and task definition ARNs from stack resources
+    let ecsClusterArn: string | undefined;
+    let taskDefinitionArn: string | undefined;
+    let nextToken: string | undefined = undefined;
+    do {
+      const page = await throttlingBackOff(() =>
+        cloudformationClient.send(new ListStackResourcesCommand({ StackName: stackName, NextToken: nextToken })),
+      );
+      for (const resource of page.StackResourceSummaries ?? []) {
+        if (resource.ResourceType === 'AWS::ECS::Cluster') {
+          ecsClusterArn = resource.PhysicalResourceId;
+        }
+        if (resource.ResourceType === 'AWS::ECS::TaskDefinition') {
+          taskDefinitionArn = resource.PhysicalResourceId;
+        }
+      }
+      nextToken = page.NextToken;
+    } while (nextToken);
+
+    return {
+      acceleratorQualifier,
+      acceleratorPrefix,
+      oneWordPrefix,
+      managementAccountId,
+      managementAccountRoleName,
+      isExternalPipeline,
+      ecsClusterArn,
+      taskDefinitionArn,
+    };
+  }
+
+  /**
+   * Stop all running ECS tasks in the container deployment cluster and
+   * deregister the task definition.
+   * @param config Container deployment configuration
+   * @private
+   */
+  private async cleanupEcsResources(config: ContainerDeploymentConfig): Promise<void> {
+    if (!config.ecsClusterArn) {
+      this.debugLog('No ECS cluster found in container stack, skipping ECS cleanup', 'info');
+      return;
+    }
+
+    const ecsClient = new ECSClient({});
+
+    // Stop any running tasks
+    this.debugLog(`Stopping running ECS tasks in cluster ${config.ecsClusterArn}`, 'display');
+    try {
+      let nextToken: string | undefined = undefined;
+      do {
+        const listResponse = await throttlingBackOff(() =>
+          ecsClient.send(
+            new ListTasksCommand({
+              cluster: config.ecsClusterArn,
+              desiredStatus: 'RUNNING',
+              nextToken: nextToken,
+            }),
+          ),
+        );
+        for (const taskArn of listResponse.taskArns ?? []) {
+          this.debugLog(`Stopping ECS task ${taskArn}`, 'info');
+          await throttlingBackOff(() =>
+            ecsClient.send(
+              new StopTaskCommand({
+                cluster: config.ecsClusterArn,
+                task: taskArn,
+                reason: 'LZA uninstaller cleanup',
+              }),
+            ),
+          );
+        }
+        nextToken = listResponse.nextToken;
+      } while (nextToken);
+    } catch (error) {
+      this.debugLog(`Error stopping ECS tasks: ${error}`, 'warn');
+    }
+
+    // Wait for tasks to stop
+    if (config.ecsClusterArn) {
+      this.debugLog('Waiting for ECS tasks to stop...', 'info');
+      await this.waitForEcsTasksToStop(ecsClient, config.ecsClusterArn);
+    }
+
+    // Deregister task definition
+    if (config.taskDefinitionArn) {
+      this.debugLog(`Deregistering task definition ${config.taskDefinitionArn}`, 'info');
+      try {
+        await throttlingBackOff(() =>
+          ecsClient.send(
+            new DeregisterTaskDefinitionCommand({
+              taskDefinition: config.taskDefinitionArn,
+            }),
+          ),
+        );
+      } catch (error) {
+        this.debugLog(`Error deregistering task definition: ${error}`, 'warn');
+      }
+    }
+  }
+
+  /**
+   * Wait for all tasks in an ECS cluster to reach STOPPED status.
+   * @param ecsClient
+   * @param clusterArn
+   * @private
+   */
+  private async waitForEcsTasksToStop(ecsClient: ECSClient, clusterArn: string): Promise<void> {
+    const maxWaitTimeMs = 5 * 60 * 1000; // 5 minutes
+    const pollIntervalMs = 10 * 1000; // 10 seconds
+    const startTime = Date.now();
+
+    while (Date.now() - startTime < maxWaitTimeMs) {
+      const listResponse = await throttlingBackOff(() =>
+        ecsClient.send(
+          new ListTasksCommand({
+            cluster: clusterArn,
+            desiredStatus: 'RUNNING',
+          }),
+        ),
+      );
+
+      if (!listResponse.taskArns || listResponse.taskArns.length === 0) {
+        this.debugLog('All ECS tasks have stopped', 'info');
+        return;
+      }
+
+      this.debugLog(`Waiting for ${listResponse.taskArns.length} ECS task(s) to stop...`, 'info');
+      await this.delay(pollIntervalMs);
+    }
+
+    this.logger.warn('[uninstaller] Timed out waiting for ECS tasks to stop, proceeding with cleanup');
+  }
+
+  /**
+   * Delete SSM parameters created by the container deployment stack.
+   * These parameters use the qualifier-based naming convention.
+   * @param config Container deployment configuration
+   * @param installerStackName
+   * @private
+   */
+  private async cleanupContainerSsmParameters(
+    config: ContainerDeploymentConfig,
+    installerStackName: string,
+  ): Promise<void> {
+    const ssmClient = new SSMClient({});
+
+    const owp = config.oneWordPrefix;
+
+    // SSM parameter paths differ based on whether this is an external pipeline deployment.
+    // External pipeline: /{oneWordPrefix}/{qualifier}/{stackName}/...
+    // Single-account:    /{oneWordPrefix}/{stackName}/...
+    const parameterPaths: string[] = [];
+    if (config.isExternalPipeline) {
+      const q = config.acceleratorQualifier;
+      parameterPaths.push(
+        `/${owp}/${q}/${installerStackName}/stack-id`,
+        `/${owp}/${q}/${installerStackName}/version`,
+        `/${owp}/${q}/installer/kms/key-arn`,
+        `/${owp}/${q}/installer-access-logs-bucket-name`,
+        `/${owp}/${q}/lza-prefix`,
+      );
+    } else {
+      parameterPaths.push(
+        `/${owp}/${installerStackName}/stack-id`,
+        `/${owp}/${installerStackName}/version`,
+        `/${owp}/installer/kms/key-arn`,
+        `/${owp}/installer-access-logs-bucket-name`,
+      );
+    }
+
+    // Also try the lza-prefix parameter which may exist at a different path
+    parameterPaths.push(`/${owp}/lza-prefix`);
+
+    for (const paramName of parameterPaths) {
+      this.debugLog(`Deleting SSM parameter: ${paramName}`, 'info');
+      try {
+        await throttlingBackOff(() => ssmClient.send(new DeleteParameterCommand({ Name: paramName })));
+      } catch (error) {
+        // Parameter may not exist, that's fine
+        this.debugLog(`SSM parameter ${paramName} not found or already deleted: ${error}`, 'info');
+      }
+    }
+  }
+
+  /**
+   * Main entry point for uninstalling a container-based LZA deployment.
+   * This handles the full teardown of the InstallerContainerStack and all
+   * LZA-deployed resources across accounts and regions.
+   * @param installerStackName
+   * @private
+   */
+  private async uninstallContainerAccelerator(installerStackName: string): Promise<boolean> {
+    this.logger.info(`[uninstaller] Detected container-based deployment: ${installerStackName}`);
+
+    // Extract configuration from the container stack
+    const containerConfig = await this.getContainerDeploymentConfig(installerStackName);
+    this.logger.info(`[uninstaller] Accelerator Prefix: ${containerConfig.acceleratorPrefix}`);
+    this.logger.info(`[uninstaller] One-word Prefix: ${containerConfig.oneWordPrefix}`);
+    this.logger.info(`[uninstaller] External Pipeline: ${containerConfig.isExternalPipeline}`);
+    if (containerConfig.isExternalPipeline) {
+      this.logger.info(`[uninstaller] Accelerator Qualifier: ${containerConfig.acceleratorQualifier}`);
+      this.logger.info(`[uninstaller] Management Account ID: ${containerConfig.managementAccountId}`);
+    }
+
+    const acceleratorPrefix = containerConfig.acceleratorPrefix;
+
+    // For external pipeline deployments, resources are named with the qualifier.
+    // For single-account deployments, resources use the prefix (same as CodePipeline path).
+    const isQualifierUsed = containerConfig.isExternalPipeline;
+    const acceleratorQualifier = isQualifierUsed ? containerConfig.acceleratorQualifier : acceleratorPrefix;
+
+    let acceleratorPipelineStackNamePrefix: string;
+    if (isQualifierUsed) {
+      acceleratorPipelineStackNamePrefix = `${containerConfig.acceleratorQualifier}-pipeline-stack`;
+    } else {
+      acceleratorPipelineStackNamePrefix = `${acceleratorPrefix}-PipelineStack`;
+    }
+
+    // Set up account context based on deployment type
+    if (
+      containerConfig.isExternalPipeline &&
+      containerConfig.managementAccountId &&
+      containerConfig.managementAccountRoleName
+    ) {
+      // External pipeline: orchestration account differs from management account
+      if (this.executingAccountId !== containerConfig.managementAccountId) {
+        this.externalPipelineAccount = { isUsed: true, accountId: this.executingAccountId };
+
+        // Get management account credentials for cross-account operations
+        this.pipelineManagementAccount = {
+          accountId: containerConfig.managementAccountId,
+          assumeRoleName: containerConfig.managementAccountRoleName,
+          credentials: await this.getManagementAccountCredentials(
+            containerConfig.managementAccountId,
+            containerConfig.managementAccountRoleName,
+          ),
+        };
+      } else {
+        this.externalPipelineAccount = { isUsed: false, accountId: containerConfig.managementAccountId };
+        this.pipelineManagementAccount = {
+          accountId: this.executingAccountId!,
+          assumeRoleName: undefined,
+          credentials: undefined,
+        };
+      }
+    } else {
+      // Single-account deployment: executing account IS the management account
+      this.externalPipelineAccount = { isUsed: false, accountId: this.executingAccountId };
+      this.pipelineManagementAccount = {
+        accountId: this.executingAccountId!,
+        assumeRoleName: undefined,
+        credentials: undefined,
+      };
+    }
+
+    // Load global config for region and account discovery
+    // Container deployments store config in S3, so configPath must be provided
+    if (this.acceleratorToolProps.configPath) {
+      this.globalConfig = await this.getGlobalConfig();
+    } else {
+      // Attempt to find the config bucket from the stack resources
+      this.logger.info(
+        '[uninstaller] No --config-path provided. Attempting to discover config from container stack resources.',
+      );
+      const configBucketName = await this.getContainerConfigBucketName(installerStackName, containerConfig);
+      if (configBucketName) {
+        // For external pipeline, config zip is stored under qualifier prefix.
+        // For single-account, it is stored under 'lza/' prefix.
+        const objectKey = isQualifierUsed
+          ? `${containerConfig.acceleratorQualifier}/aws-accelerator-config.zip`
+          : 'lza/aws-accelerator-config.zip';
+        this.pipelineConfigSourceRepo = {
+          provider: 's3',
+          bucketName: configBucketName,
+          objectKey,
+        };
+        try {
+          this.globalConfig = await this.getGlobalConfig();
+        } catch (error) {
+          this.logger.warn(
+            `[uninstaller] Failed to load global config from S3 bucket ${configBucketName}: ${error}. ` +
+              'The config bucket may have been deleted by a previous run. Continuing with default region settings.',
+          );
+        }
+      } else {
+        this.logger.warn(
+          '[uninstaller] Could not discover config bucket. Using default region settings. ' +
+            'Provide --config-path for complete cleanup across all regions.',
+        );
+      }
+    }
+
+    // Get organization accounts for cross-account cleanup
+    this.organizationAccounts = await this.getOrganizationAccountList();
+
+    // Build the list of LZA CloudFormation stacks to delete
+    this.acceleratorCloudFormationStacks = this.getPipelineCloudFormationStacks(acceleratorPrefix);
+
+    // Query account stacks across all accounts and regions
+    await this.queryAccountStacks(acceleratorPrefix);
+
+    // Delete LZA-deployed CloudFormation stacks across all accounts
+    for (const stack of this.acceleratorCloudFormationStacks) {
+      await this.deleteStacks(acceleratorPrefix, stack.stackName, stack.hasV2Stacks);
+    }
+
+    // Remaining cleanup for fullDestroy or deleteAccelerator
+    if (this.acceleratorToolProps.fullDestroy || this.acceleratorToolProps.deleteAccelerator) {
+      if (this.externalPipelineAccount.isUsed) {
+        this.resetCredentialEnvironment();
+      }
+
+      // Delete pipeline stack if it exists (container deployments may still have one)
+      if (!this.acceleratorToolProps.keepPipelineAndConfig) {
+        await this.deleteAcceleratorPipelineStack(acceleratorPipelineStackNamePrefix);
+      }
+
+      // Full destroy: clean up the container installer stack and all associated resources
+      if (this.acceleratorToolProps.fullDestroy) {
+        // Stop running ECS tasks and deregister task definitions before stack deletion
+        await this.cleanupEcsResources(containerConfig);
+
+        // Prepare retained resources (S3 buckets, KMS keys) for deletion
+        await this.prepareContainerStackForDelete(installerStackName);
+
+        // Delete the container installer CloudFormation stack
+        await this.deleteStack(new CloudFormationClient({}), installerStackName);
+
+        // Clean up SSM parameters created by the stack's custom resource
+        await this.cleanupContainerSsmParameters(containerConfig, installerStackName);
+
+        // Delete bootstrap stack only when not running from external account
+        if (!this.externalPipelineAccount.isUsed) {
+          await this.deleteStack(new CloudFormationClient({}), `${acceleratorPrefix}-CDKToolkit`);
+        }
+
+        // Final cleanup: CWL logs and ECRs that get recreated post-stack deletion
+        try {
+          await this.finalCleanup(acceleratorPrefix, acceleratorQualifier);
+        } catch (error) {
+          this.logger.warn(
+            `[uninstaller] Final cleanup partially failed: ${error}. ` +
+              'Cross-account roles may have been deleted. Local account cleanup completed.',
+          );
+        }
+      }
+    }
+
+    return true;
+  }
+
+  /**
+   * Get the config S3 bucket name from the container stack resources.
+   * @param stackName
+   * @param config
+   * @private
+   */
+  private async getContainerConfigBucketName(
+    stackName: string,
+    config: ContainerDeploymentConfig,
+  ): Promise<string | undefined> {
+    const cloudformationClient = new CloudFormationClient({});
+    let nextToken: string | undefined = undefined;
+    do {
+      const page = await throttlingBackOff(() =>
+        cloudformationClient.send(new ListStackResourcesCommand({ StackName: stackName, NextToken: nextToken })),
+      );
+      for (const resource of page.StackResourceSummaries ?? []) {
+        if (resource.LogicalResourceId === 'ConfigBucket' && resource.ResourceType === 'AWS::S3::Bucket') {
+          return resource.PhysicalResourceId;
+        }
+      }
+      nextToken = page.NextToken;
+    } while (nextToken);
+
+    // Fallback: construct the expected bucket name
+    // External pipeline: {qualifier}-config-{account}-{region}
+    // Single-account: {lowerCasePrefix}-config-{account}-{region}
+    const region = process.env['AWS_REGION'] || process.env['AWS_DEFAULT_REGION'];
+    if (!region) {
+      this.logger.warn('[uninstaller] AWS_REGION not set, defaulting to us-east-1 for config bucket name construction');
+    }
+    const fallbackRegion = region || 'us-east-1';
+    if (config.isExternalPipeline) {
+      return `${config.acceleratorQualifier}-config-${this.executingAccountId}-${fallbackRegion}`;
+    }
+    const lowerCasePrefix = config.acceleratorPrefix.toLowerCase();
+    const bucketPrefix = lowerCasePrefix === 'awsaccelerator' ? 'aws-accelerator' : lowerCasePrefix;
+    return `${bucketPrefix}-config-${this.executingAccountId}-${fallbackRegion}`;
+  }
+
+  /**
+   * Prepare container stack resources with Retain deletion policy for deletion.
+   * This handles S3 buckets and KMS keys that have DeletionPolicy: Retain.
+   * @param stackName
+   * @private
+   */
+  private async prepareContainerStackForDelete(stackName: string): Promise<void> {
+    const cloudformationClient = new CloudFormationClient({});
+    const s3Client = new S3Client({});
+    const kmsClient = new KMSClient({});
+
+    let nextToken: string | undefined = undefined;
+    do {
+      const page = await throttlingBackOff(() =>
+        cloudformationClient.send(new ListStackResourcesCommand({ StackName: stackName, NextToken: nextToken })),
+      );
+      for (const resource of page.StackResourceSummaries ?? []) {
+        // Empty and delete S3 buckets (unless keep-data is set)
+        if (resource.ResourceType === 'AWS::S3::Bucket' && resource.PhysicalResourceId) {
+          if (!this.acceleratorToolProps.keepData) {
+            this.debugLog(`Preparing S3 bucket for deletion: ${resource.PhysicalResourceId}`, 'info');
+            await this.deleteBucket(s3Client, stackName, resource.PhysicalResourceId);
+          } else {
+            this.debugLog(`Keeping S3 bucket (--keep-data): ${resource.PhysicalResourceId}`, 'info');
+          }
+        }
+
+        // Schedule KMS key deletion
+        if (resource.ResourceType === 'AWS::KMS::Key' && resource.PhysicalResourceId) {
+          this.debugLog(`Scheduling KMS key deletion: ${resource.PhysicalResourceId}`, 'info');
+          await this.scheduleKeyDeletion(kmsClient, stackName, resource.PhysicalResourceId);
+        }
+      }
+      nextToken = page.NextToken;
+    } while (nextToken);
   }
 
   /**
@@ -2404,6 +3053,49 @@ Once it is resolved rerun uninstaller. Additional error details:\n\n\n\n\n\n`,
 
         // Add /AWSAccelerator-SecurityHub log groups for deletion
         logGroupNames.push(`/${acceleratorPrefix}-SecurityHub`);
+
+        // Add ECS log groups for container deployments
+        // External pipeline: /ecs/{qualifier}-lza-deployment
+        // Single-account: /ecs/{lowerCasePrefix}-lza-deployment
+        nextToken = undefined;
+        do {
+          const page = await throttlingBackOff(() =>
+            cloudWatchLogsClient.send(
+              new DescribeLogGroupsCommand({
+                logGroupNamePrefix: `/ecs/${acceleratorQualifier}`,
+                nextToken: nextToken,
+              }),
+            ),
+          );
+          for (const logGroup of page.logGroups ?? []) {
+            logGroupNames.push(logGroup.logGroupName!);
+          }
+          nextToken = page.nextToken;
+        } while (nextToken);
+
+        // Also search for ECS log groups using the lowercase prefix pattern
+        // (covers single-account container deployments where qualifier == prefix)
+        if (acceleratorPrefix.toLowerCase() !== acceleratorQualifier.toLowerCase()) {
+          const lowerPrefix =
+            acceleratorPrefix.toLowerCase() === 'awsaccelerator' ? 'aws-accelerator' : acceleratorPrefix.toLowerCase();
+          nextToken = undefined;
+          do {
+            const page = await throttlingBackOff(() =>
+              cloudWatchLogsClient.send(
+                new DescribeLogGroupsCommand({
+                  logGroupNamePrefix: `/ecs/${lowerPrefix}`,
+                  nextToken: nextToken,
+                }),
+              ),
+            );
+            for (const logGroup of page.logGroups ?? []) {
+              if (!logGroupNames.includes(logGroup.logGroupName!)) {
+                logGroupNames.push(logGroup.logGroupName!);
+              }
+            }
+            nextToken = page.nextToken;
+          } while (nextToken);
+        }
 
         for (const logGroupName of logGroupNames) {
           this.debugLog(
