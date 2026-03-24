@@ -311,6 +311,7 @@ exports[`NetworkVpcStack tests > Construct(NetworkVpcStack):  Snapshot Test 1`] 
                     "ssm:GetParameters",
                     "ssm:AddTagsToResource",
                     "ssm:RemoveTagsFromResource",
+                    "ssm:ListTagsForResource",
                   ],
                   "Effect": "Allow",
                   "Resource": [

@@ -228,6 +228,7 @@ exports[`NetworkVpcV2Stacks > Construct(LbStack-Network-us-east-1-Network-Second
                     "ssm:GetParameters",
                     "ssm:AddTagsToResource",
                     "ssm:RemoveTagsFromResource",
+                    "ssm:ListTagsForResource",
                   ],
                   "Effect": "Allow",
                   "Resource": [
@@ -3217,6 +3218,7 @@ exports[`NetworkVpcV2Stacks > Construct(SubnetShareStack-Network-us-east-1-Netwo
                     "ssm:GetParameters",
                     "ssm:AddTagsToResource",
                     "ssm:RemoveTagsFromResource",
+                    "ssm:ListTagsForResource",
                   ],
                   "Effect": "Allow",
                   "Resource": [

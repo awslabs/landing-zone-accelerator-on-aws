@@ -52,6 +52,27 @@ export abstract class StaticInput {
     parameterAccountIds: genAccArray(2),
     roleName: 'roleName',
   };
+  public static readonly crossAccountWithTagsProps = {
+    region: 'region',
+    invokingAccountId: 'invokingAccountId',
+    parameterAccountIds: genAccArray(1),
+    roleName: 'roleName',
+    parameters: [{ name: 'name1', value: 'value1', tags: { Accelerator: 'AWSAccelerator' } }],
+  };
+  public static readonly crossAccountTagUpdateNewProps = {
+    region: 'region',
+    invokingAccountId: 'invokingAccountId',
+    parameterAccountIds: genAccArray(1),
+    roleName: 'roleName',
+    parameters: [{ name: 'name1', value: 'value1', tags: { Accelerator: 'AWSAccelerator', NewTag: 'new-value' } }],
+  };
+  public static readonly crossAccountTagUpdateOldProps = {
+    region: 'region',
+    invokingAccountId: 'invokingAccountId',
+    parameterAccountIds: genAccArray(1),
+    roleName: 'roleName',
+    parameters: [{ name: 'name1', value: 'value1', tags: { Accelerator: 'AWSAccelerator', OldTag: 'old-value' } }],
+  };
 }
 // function to generate an array of strings based on length of array as input
 function genAccArray(length: number) {

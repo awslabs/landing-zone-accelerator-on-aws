@@ -17,6 +17,7 @@ import {
   DeleteParameterCommand,
   AddTagsToResourceCommand,
   RemoveTagsFromResourceCommand,
+  ListTagsForResourceCommand,
 } from '@aws-sdk/client-ssm';
 import { STSClient } from '@aws-sdk/client-sts';
 import { setRetryStrategy, getStsCredentials } from '@aws-accelerator/utils/lib/common-functions';
@@ -274,16 +275,38 @@ async function createParameters(ssmClient: SSMClient, parameterAccountId: string
   for (const parameter of parameters) {
     console.log(`Put SSM parameter ${parameter.name} to account ${parameterAccountId}`);
 
-    await throttlingBackOff(() =>
+    const putResponse = await throttlingBackOff(() =>
       ssmClient.send(
         new PutParameterCommand({
           Name: parameter.name,
           Value: parameter.value,
           Type: 'String',
-          Tags: parameter.tags && Object.entries(parameter.tags).map(([Key, Value]) => ({ Key, Value })),
+          Overwrite: true,
         }),
       ),
     );
+
+    // If version > 1, parameter already existed — fetch existing tags to diff against
+    const existingTags: Record<string, string> = {};
+    if (putResponse.Version && putResponse.Version > 1) {
+      const tagResponse = await throttlingBackOff(() =>
+        ssmClient.send(
+          new ListTagsForResourceCommand({
+            ResourceType: 'Parameter',
+            ResourceId: parameter.name,
+          }),
+        ),
+      );
+      for (const tag of tagResponse.TagList ?? []) {
+        if (tag.Key && tag.Value !== undefined) {
+          existingTags[tag.Key] = tag.Value;
+        }
+      }
+    }
+
+    // Update tags using shared tagging logic, passing existing tags as old state
+    const oldParameter: SsmParameterProps = { name: parameter.name, value: parameter.value, tags: existingTags };
+    await updateParameterTags(ssmClient, parameterAccountId, parameter, oldParameter);
   }
 }
 

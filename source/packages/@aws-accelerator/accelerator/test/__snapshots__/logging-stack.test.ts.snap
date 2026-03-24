@@ -7166,6 +7166,7 @@ exports[`LoggingStack > Construct(LoggingStack):  Snapshot Test 2`] = `
                     "ssm:GetParameters",
                     "ssm:AddTagsToResource",
                     "ssm:RemoveTagsFromResource",
+                    "ssm:ListTagsForResource",
                   ],
                   "Effect": "Allow",
                   "Resource": [

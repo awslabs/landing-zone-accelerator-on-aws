@@ -97,6 +97,7 @@ export class DependenciesStack extends AcceleratorStack {
                 'ssm:GetParameters',
                 'ssm:AddTagsToResource',
                 'ssm:RemoveTagsFromResource',
+                'ssm:ListTagsForResource',
               ],
               resources: [`arn:${partition}:ssm:*:*:parameter${ssmPrefix}*`],
             }),

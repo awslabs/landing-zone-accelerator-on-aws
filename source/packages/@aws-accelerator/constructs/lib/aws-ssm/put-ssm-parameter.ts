@@ -92,6 +92,7 @@ export class PutSsmParameter extends Construct {
         'ssm:GetParameters',
         'ssm:AddTagsToResource',
         'ssm:RemoveTagsFromResource',
+        'ssm:ListTagsForResource',
       ],
       Resource: ['*'],
     });
