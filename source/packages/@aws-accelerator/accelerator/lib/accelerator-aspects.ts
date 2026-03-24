@@ -60,6 +60,9 @@ class IsoeOverrides implements cdk.IAspect {
  */
 class IsofOverrides implements cdk.IAspect {
   public visit(node: IConstruct): void {
+    if (node instanceof cdk.aws_kinesisfirehose.CfnDeliveryStream) {
+      node.addPropertyDeletionOverride('ExtendedS3DestinationConfiguration.DataFormatConversionConfiguration');
+    }
     if (node instanceof cdk.aws_iam.CfnRole) {
       const trustPolicyDoc = node.assumeRolePolicyDocument as cdk.aws_iam.SamlConsolePrincipal;
       if (JSON.stringify(trustPolicyDoc).includes('signin.aws.amazon.com')) {
