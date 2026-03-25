@@ -42,7 +42,7 @@ Native toolkit commands and options can be found in the [AWS CDK Toolkit referen
 
 ## Configuration Validator
 
-The accelerator has a helper script that runs config validation on a provided configuration directory. This script is run during the Build stage of the pipeline, but may also be run locally if the development toolchain is installed.
+The accelerator has a helper script that runs config validation on a provided configuration directory. This script is run during the Build stage of the pipeline, but may also be run locally if the development toolchain is installed. Assume management account credentials when run locally.
 
 **Example usage of the CLI:**
 ```
@@ -52,6 +52,14 @@ yarn run ts-node --transpile-only config-validator.ts /path/to/aws-accelerator-c
 ??? info "Alternative syntax"
     ```
     yarn validate-config /path/to/aws-accelerator-config/
+    ```
+
+??? info "External pipeline deployment"
+    Export the following environment variables before running validation locally for external pipeline.
+    ```bash
+    export MANAGEMENT_ACCOUNT_ID="<management-account-id>"
+    export MANAGEMENT_ACCOUNT_ROLE_NAME="<management-account-role-name>"
+    export PIPELINE_ACCOUNT_ID="<external-pipeline-account-id>"
     ```
 
 ## Helper Scripts
