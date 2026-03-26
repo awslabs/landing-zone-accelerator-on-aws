@@ -63,6 +63,9 @@ export class VpcSubnetsShareBaseStack extends AcceleratorStack {
    * Function to share subnets
    */
   private shareSubnets(): void {
+    const allShareTargetAccountIds: string[] = [];
+    const resourceShares: ResourceShare[] = [];
+
     for (const subnetConfig of this.vpcDetails.subnets) {
       if (
         isV2Resource(
@@ -72,89 +75,125 @@ export class VpcSubnetsShareBaseStack extends AcceleratorStack {
           subnetConfig.name,
         )
       ) {
-        this.sharedSubnet(subnetConfig);
+        const resourceShare = this.shareSubnet(subnetConfig, allShareTargetAccountIds);
+        if (resourceShare) {
+          resourceShares.push(resourceShare);
+        }
+      }
+    }
+
+    // Create a single PutSsmParameter for the VPC ID across all share target accounts
+    if (allShareTargetAccountIds.length > 0) {
+      const vpcIdParameter = new PutSsmParameter(this, pascalCase(`${this.vpcDetails.name}VpcSharedParameters`), {
+        accountIds: allShareTargetAccountIds,
+        region: cdk.Stack.of(this).region,
+        roleName: this.acceleratorResourceNames.roles.crossAccountSsmParameterShare,
+        kmsKey: this.cloudwatchKey,
+        logRetentionInDays: this.props.globalConfig.cloudwatchLogRetentionInDays,
+        parameters: [
+          {
+            name: this.getSsmPath(SsmResourceType.VPC, [this.vpcDetails.name]),
+            value: this.vpcId,
+          },
+        ],
+        invokingAccountId: cdk.Stack.of(this).account,
+        acceleratorPrefix: this.props.prefixes.accelerator,
+      });
+      for (const resourceShare of resourceShares) {
+        vpcIdParameter.node.addDependency(resourceShare);
       }
     }
   }
 
   /**
-   * Function to share subnet
+   * Function to share a subnet and create per-subnet SSM parameters
    * @param subnetConfig {@link SubnetConfig}
+   * @param allShareTargetAccountIds Accumulator for de-duped account IDs across all shared subnets
+   * @returns The ResourceShare if created, undefined otherwise
    */
-  private sharedSubnet(subnetConfig: SubnetConfig): void {
-    if (subnetConfig.shareTargets) {
-      const resourceShareName = `${subnetConfig.name}_SubnetShare`;
-      const principals = getResourceSharePrincipals(
-        subnetConfig,
-        resourceShareName,
-        this.props.accountsConfig,
-        this.props.organizationConfig,
-      );
-
-      this.logger.info(`Share subnet ${subnetConfig.name}`);
-      const subnetId = cdk.aws_ssm.StringParameter.valueForStringParameter(
-        this,
-        this.getSsmPath(SsmResourceType.SUBNET, [this.vpcDetails.name, subnetConfig.name]),
-      );
-      const subnetArn = cdk.Stack.of(this).formatArn({
-        service: 'ec2',
-        resource: 'subnet',
-        arnFormat: cdk.ArnFormat.SLASH_RESOURCE_NAME,
-        resourceName: subnetId,
-      });
-      // Create the Resource Share
-      const resourceShareLogicalId = `${pascalCase(resourceShareName)}ResourceShare`;
-      const resourceShare = new ResourceShare(this, resourceShareLogicalId, {
-        name: resourceShareName,
-        principals,
-        resourceArns: [subnetArn],
-      });
-
-      const cfnResource = resourceShare.node.findChild(resourceShareLogicalId) as cdk.CfnResource;
-
-      cfnResource.addMetadata(MetadataKeys.LZA_LOOKUP, {
-        resourceType: V2StackComponentsList.SUBNET_SHARE,
-        vpcName: this.vpcDetails.name,
-        subnetName: subnetConfig.name,
-      });
-
-      const shareTargetAccountIds = this.getAccountIdsFromShareTarget(subnetConfig.shareTargets).filter(
-        item => item !== cdk.Stack.of(this).account,
-      );
-      const sharedSubnetParameters: SsmParameterProps[] = [
-        {
-          name: this.getSsmPath(SsmResourceType.VPC, [this.vpcDetails.name]),
-          value: this.vpcId,
-        },
-        {
-          name: this.getSsmPath(SsmResourceType.SUBNET, [this.vpcDetails.name, subnetConfig.name]),
-          value: subnetId,
-        },
-      ];
-
-      if (subnetConfig.ipv4CidrBlock) {
-        sharedSubnetParameters.push({
-          name: this.getSsmPath(SsmResourceType.SUBNET_IPV4_CIDR_BLOCK, [this.vpcDetails.name, subnetConfig.name]),
-          value: subnetConfig.ipv4CidrBlock,
-        });
-      }
-
-      // Put SSM parameters for share target accounts
-      const putSsmParameter = new PutSsmParameter(
-        this,
-        pascalCase(`${this.vpcDetails.name}${subnetConfig.name}VpcSharedSubnetParameters`),
-        {
-          accountIds: shareTargetAccountIds,
-          region: cdk.Stack.of(this).region,
-          roleName: this.acceleratorResourceNames.roles.crossAccountSsmParameterShare,
-          kmsKey: this.cloudwatchKey,
-          logRetentionInDays: this.props.globalConfig.cloudwatchLogRetentionInDays,
-          parameters: sharedSubnetParameters,
-          invokingAccountId: cdk.Stack.of(this).account,
-          acceleratorPrefix: this.props.prefixes.accelerator,
-        },
-      );
-      putSsmParameter.node.addDependency(resourceShare);
+  private shareSubnet(subnetConfig: SubnetConfig, allShareTargetAccountIds: string[]): ResourceShare | undefined {
+    if (!subnetConfig.shareTargets) {
+      return undefined;
     }
+
+    const resourceShareName = `${subnetConfig.name}_SubnetShare`;
+    const principals = getResourceSharePrincipals(
+      subnetConfig,
+      resourceShareName,
+      this.props.accountsConfig,
+      this.props.organizationConfig,
+    );
+
+    this.logger.info(`Share subnet ${subnetConfig.name}`);
+    const subnetId = cdk.aws_ssm.StringParameter.valueForStringParameter(
+      this,
+      this.getSsmPath(SsmResourceType.SUBNET, [this.vpcDetails.name, subnetConfig.name]),
+    );
+    const subnetArn = cdk.Stack.of(this).formatArn({
+      service: 'ec2',
+      resource: 'subnet',
+      arnFormat: cdk.ArnFormat.SLASH_RESOURCE_NAME,
+      resourceName: subnetId,
+    });
+    // Create the Resource Share
+    const resourceShareLogicalId = `${pascalCase(resourceShareName)}ResourceShare`;
+    const resourceShare = new ResourceShare(this, resourceShareLogicalId, {
+      name: resourceShareName,
+      principals,
+      resourceArns: [subnetArn],
+    });
+
+    const cfnResource = resourceShare.node.findChild(resourceShareLogicalId) as cdk.CfnResource;
+
+    cfnResource.addMetadata(MetadataKeys.LZA_LOOKUP, {
+      resourceType: V2StackComponentsList.SUBNET_SHARE,
+      vpcName: this.vpcDetails.name,
+      subnetName: subnetConfig.name,
+    });
+
+    const shareTargetAccountIds = this.getAccountIdsFromShareTarget(subnetConfig.shareTargets).filter(
+      item => item !== cdk.Stack.of(this).account,
+    );
+
+    // Accumulate unique account IDs for the VPC ID parameter
+    for (const accountId of shareTargetAccountIds) {
+      if (!allShareTargetAccountIds.includes(accountId)) {
+        allShareTargetAccountIds.push(accountId);
+      }
+    }
+
+    // Per-subnet SSM parameters (without VPC ID)
+    const subnetParameters: SsmParameterProps[] = [
+      {
+        name: this.getSsmPath(SsmResourceType.SUBNET, [this.vpcDetails.name, subnetConfig.name]),
+        value: subnetId,
+      },
+    ];
+
+    if (subnetConfig.ipv4CidrBlock) {
+      subnetParameters.push({
+        name: this.getSsmPath(SsmResourceType.SUBNET_IPV4_CIDR_BLOCK, [this.vpcDetails.name, subnetConfig.name]),
+        value: subnetConfig.ipv4CidrBlock,
+      });
+    }
+
+    // Put per-subnet SSM parameters for share target accounts
+    const putSsmParameter = new PutSsmParameter(
+      this,
+      pascalCase(`${this.vpcDetails.name}${subnetConfig.name}VpcSharedSubnetParameters`),
+      {
+        accountIds: shareTargetAccountIds,
+        region: cdk.Stack.of(this).region,
+        roleName: this.acceleratorResourceNames.roles.crossAccountSsmParameterShare,
+        kmsKey: this.cloudwatchKey,
+        logRetentionInDays: this.props.globalConfig.cloudwatchLogRetentionInDays,
+        parameters: subnetParameters,
+        invokingAccountId: cdk.Stack.of(this).account,
+        acceleratorPrefix: this.props.prefixes.accelerator,
+      },
+    );
+    putSsmParameter.node.addDependency(resourceShare);
+
+    return resourceShare;
   }
 }

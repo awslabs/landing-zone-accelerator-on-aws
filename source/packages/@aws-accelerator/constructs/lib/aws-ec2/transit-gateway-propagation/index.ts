@@ -206,7 +206,13 @@ async function createTgwPropagation(ec2Client: EC2Client, options: TgwPropagatio
         }),
       ),
     );
-  } catch (e) {
+  } catch (e: unknown) {
+    if (e instanceof Error && e.message.includes('AlreadyEnabled')) {
+      console.log(
+        `Propagation for attachment ${options.transitGatewayAttachmentId} to route table ${options.transitGatewayRouteTableId} already exists, skipping.`,
+      );
+      return;
+    }
     throw new Error(`Could not complete AssociateTransitGateway command: ${e}`);
   }
 }

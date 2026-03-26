@@ -38,6 +38,11 @@ export class TgwCrossAccountResources extends AseaResource {
 
     this.propagationResources = this.scope.importStackResources.getResourcesByType(RESOURCE_TYPE.TGW_PROPAGATION);
     this.associationResources = this.scope.importStackResources.getResourcesByType(RESOURCE_TYPE.TGW_ASSOCIATION);
+    // Also collect from nested stacks (ASEA puts VPC resources including TGW propagations in nested stacks)
+    for (const [, nestedStackInfo] of Object.entries(this.scope.nestedStackResources ?? {})) {
+      this.propagationResources.push(...nestedStackInfo.getResourcesByType(RESOURCE_TYPE.TGW_PROPAGATION));
+      this.associationResources.push(...nestedStackInfo.getResourcesByType(RESOURCE_TYPE.TGW_ASSOCIATION));
+    }
     for (const vpcItem of this.scope.vpcResources) {
       const [accountNames] = this.scope.getTransitGatewayAttachmentAccounts(vpcItem);
       this.createTransitGatewayRouteTableAssociationPropagations(vpcItem, accountNames, props.mapping);
@@ -74,7 +79,6 @@ export class TgwCrossAccountResources extends AseaResource {
   ) {
     // Loop through attachment owner accounts
     for (const owningAccount of accountNames) {
-      const attachmentKey = `${tgwAttachmentItem.transitGateway.name}_${owningAccount}_${vpcItem.name}`;
       const tgwAttachmentId = this.getTgwAttachmentId(
         vpcItem.name,
         tgwAttachmentItem.name,
@@ -82,7 +86,7 @@ export class TgwCrossAccountResources extends AseaResource {
         owningAccount,
         vpcItem.region,
       );
-      if (tgwAttachmentId) transitGatewayAttachments[attachmentKey] = tgwAttachmentId;
+      if (tgwAttachmentId) transitGatewayAttachments[tgwAttachmentItem.name] = tgwAttachmentId;
     }
   }
 
@@ -169,6 +173,13 @@ export class TgwCrossAccountResources extends AseaResource {
     }
   }
 
+  private matchesAttachmentId(propertyValue: { Ref?: string } | string, attachmentId: string): boolean {
+    if (typeof propertyValue === 'string') {
+      return propertyValue === attachmentId;
+    }
+    return propertyValue?.Ref === attachmentId;
+  }
+
   private createTgwAssociation(
     accountName: string,
     mapping: ASEAMappings,
@@ -176,10 +187,14 @@ export class TgwCrossAccountResources extends AseaResource {
     transitGatewayAttachments: { [name: string]: string },
   ) {
     for (const routeTableItem of tgwAttachmentItem.routeTableAssociations ?? []) {
+      const attachmentId = transitGatewayAttachments[tgwAttachmentItem.name];
+      if (!attachmentId) continue;
       const tgwAssociationRes = this.associationResources.find(
         association =>
-          association.resourceMetadata['Properties'].TransitGatewayAttachmentId.Ref ===
-            transitGatewayAttachments[tgwAttachmentItem.name] &&
+          this.matchesAttachmentId(
+            association.resourceMetadata['Properties'].TransitGatewayAttachmentId,
+            attachmentId,
+          ) &&
           association.resourceMetadata['Properties'].TransitGatewayRouteTableId ===
             this.getTgwRouteTableId(routeTableItem, mapping),
       );
@@ -208,10 +223,14 @@ export class TgwCrossAccountResources extends AseaResource {
     transitGatewayAttachments: { [name: string]: string },
   ) {
     for (const routeTableItem of tgwAttachmentItem.routeTablePropagations ?? []) {
+      const attachmentId = transitGatewayAttachments[tgwAttachmentItem.name];
+      if (!attachmentId) continue;
       const tgwPropagationRes = this.propagationResources.find(
         propagation =>
-          propagation.resourceMetadata['Properties'].TransitGatewayAttachmentId.Ref ===
-            transitGatewayAttachments[tgwAttachmentItem.name] &&
+          this.matchesAttachmentId(
+            propagation.resourceMetadata['Properties'].TransitGatewayAttachmentId,
+            attachmentId,
+          ) &&
           propagation.resourceMetadata['Properties'].TransitGatewayRouteTableId ===
             this.getTgwRouteTableId(routeTableItem, mapping),
       );

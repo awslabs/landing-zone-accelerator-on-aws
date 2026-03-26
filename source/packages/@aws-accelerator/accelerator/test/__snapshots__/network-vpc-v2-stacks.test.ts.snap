@@ -3309,15 +3309,41 @@ exports[`NetworkVpcV2Stacks > Construct(SubnetShareStack-Network-us-east-1-Netwo
         ],
         "parameters": [
           {
-            "name": "/accelerator/network/vpc/Network-Secondary-V2/id",
-            "value": {
-              "Ref": "SsmParameterValueacceleratornetworkvpcNetworkSecondaryV2idC96584B6F00A464EAD1953AFF4B05118Parameter",
-            },
-          },
-          {
             "name": "/accelerator/network/vpc/Network-Secondary-V2/subnet/Network-Secondary-Share/id",
             "value": {
               "Ref": "SsmParameterValueacceleratornetworkvpcNetworkSecondaryV2subnetNetworkSecondaryShareidC96584B6F00A464EAD1953AFF4B05118Parameter",
+            },
+          },
+        ],
+        "region": "us-east-1",
+        "roleName": "AWSAccelerator-CrossAccountSsmParameterShare",
+        "uuid": "REPLACED-UUID",
+      },
+      "Type": "Custom::SsmPutParameterValue",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "NetworkSecondaryV2VpcSharedParameters8F28811A": {
+      "DeletionPolicy": "Delete",
+      "DependsOn": [
+        "CustomSsmPutParameterValueCustomResourceProviderLogGroupB0109C68",
+        "NetworkSecondaryShareSubnetShareResourceShare7960C54A",
+      ],
+      "Properties": {
+        "ServiceToken": {
+          "Fn::GetAtt": [
+            "CustomSsmPutParameterValueCustomResourceProviderHandler2A0BDE7F",
+            "Arn",
+          ],
+        },
+        "invokingAccountId": "555555555555",
+        "parameterAccountIds": [
+          "444444444444",
+        ],
+        "parameters": [
+          {
+            "name": "/accelerator/network/vpc/Network-Secondary-V2/id",
+            "value": {
+              "Ref": "SsmParameterValueacceleratornetworkvpcNetworkSecondaryV2idC96584B6F00A464EAD1953AFF4B05118Parameter",
             },
           },
         ],

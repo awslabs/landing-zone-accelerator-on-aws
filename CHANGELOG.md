@@ -13,6 +13,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 - fix(networking): add validation for modifying IPAM allocations at VPC level
+- fix(uninstaller): add support for accounts and OUs that are ignored
+- fix(asea): tgw route propagation failure when adding a new vpc
+- fix(networking): ssm parameter race condition when sharing multiple subnets from the same vpc with v2 stacks
 
 ### Changed
 

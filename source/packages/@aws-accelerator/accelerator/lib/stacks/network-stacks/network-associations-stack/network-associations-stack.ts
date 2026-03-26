@@ -1176,6 +1176,12 @@ export class NetworkAssociationsStack extends NetworkStack {
       this.logger.error(`Transit Gateway attachment ${attachmentKey} not found`);
       throw new Error(`Configuration validation failed at runtime.`);
     }
+    // Skip if the TGW attachment is managed by an ASEA import stack
+    const attachmentResourceId = `${vpcItem.name}/${tgwAttachmentItem.name}`;
+    if (this.isManagedByAseaGlobal(AseaResourceType.TRANSIT_GATEWAY_ATTACHMENT, attachmentResourceId)) {
+      this.logger.info(`TGW Attachment "${attachmentResourceId}" is managed by ASEA. Skipping associations.`);
+      return;
+    }
     for (const routeTableItem of tgwAttachmentItem.routeTableAssociations ?? []) {
       const tgwAssociationLookupId = `${owningAccount}/${tgwAttachmentItem.transitGateway.name}/${tgwAttachmentItem.name}/${routeTableItem}`;
       if (this.isManagedByAsea(AseaResourceType.TRANSIT_GATEWAY_ASSOCIATION, tgwAssociationLookupId)) {
@@ -1273,6 +1279,12 @@ export class NetworkAssociationsStack extends NetworkStack {
     if (!transitGatewayAttachmentId) {
       this.logger.error(`Transit Gateway attachment ${attachmentKey} not found`);
       throw new Error(`Configuration validation failed at runtime.`);
+    }
+    // Skip if the TGW attachment is managed by an ASEA import stack
+    const attachmentResourceId = `${vpcItem.name}/${tgwAttachmentItem.name}`;
+    if (this.isManagedByAseaGlobal(AseaResourceType.TRANSIT_GATEWAY_ATTACHMENT, attachmentResourceId)) {
+      this.logger.info(`TGW Attachment "${attachmentResourceId}" is managed by ASEA. Skipping propagations.`);
+      return;
     }
     for (const routeTableItem of tgwAttachmentItem.routeTablePropagations ?? []) {
       const propagationLookupId = `${owningAccount}/${tgwAttachmentItem.transitGateway.name}/${tgwAttachmentItem.name}/${routeTableItem}`;
