@@ -26,6 +26,7 @@ roleSets:
     roles:
       - name: EC2-Default-SSM-AD-Role
         instanceProfile: true
+        maxSessionDuration: 7200
         assumedBy:
           - type: service
             principal: ec2.amazonaws.com

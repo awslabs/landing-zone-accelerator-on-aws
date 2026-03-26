@@ -147,6 +147,7 @@ export class RoleConfig implements i.IRoleConfig {
   readonly boundaryPolicy: string = '';
   readonly name: string = '';
   readonly policies: PoliciesConfig | undefined = undefined;
+  readonly maxSessionDuration: number | undefined = undefined;
 }
 
 export class IdentityCenterConfig implements i.IIdentityCenterConfig {

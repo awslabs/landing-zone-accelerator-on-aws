@@ -252,7 +252,7 @@ export class IamConfigValidator {
     //
     // Validate role names
     //
-    return this.validateRoleNames();
+    return [...this.validateRoleNames(), ...this.validateRoleMaxSessionDuration()];
   }
 
   /**
@@ -291,6 +291,32 @@ export class IamConfigValidator {
         });
       });
     });
+    return errors;
+  }
+
+  /**
+   * Validate maxSessionDuration values on roles
+   * @returns Array of validation errors
+   */
+  private validateRoleMaxSessionDuration(): string[] {
+    const errors: string[] = [];
+    for (const roleSet of this.iamConfig.roleSets ?? []) {
+      for (const role of roleSet.roles ?? []) {
+        if (role.maxSessionDuration !== undefined) {
+          if (!Number.isInteger(role.maxSessionDuration)) {
+            errors.push(`Role ${role.name} maxSessionDuration must be an integer, got ${role.maxSessionDuration}.`);
+          } else if (role.maxSessionDuration < 3600) {
+            errors.push(
+              `Role ${role.name} maxSessionDuration must be at least 3600 seconds, got ${role.maxSessionDuration}.`,
+            );
+          } else if (role.maxSessionDuration > 43200) {
+            errors.push(
+              `Role ${role.name} maxSessionDuration must be at most 43200 seconds, got ${role.maxSessionDuration}.`,
+            );
+          }
+        }
+      }
+    }
     return errors;
   }
 
