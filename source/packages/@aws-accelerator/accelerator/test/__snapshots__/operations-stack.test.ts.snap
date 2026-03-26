@@ -903,6 +903,7 @@ exports[`OperationsStack > Construct(OperationsStack):  Snapshot Test 1`] = `
             ],
           },
         ],
+        "MaxSessionDuration": 7200,
         "PermissionsBoundary": {
           "Ref": "DefaultBoundaryPolicy489A8D26",
         },

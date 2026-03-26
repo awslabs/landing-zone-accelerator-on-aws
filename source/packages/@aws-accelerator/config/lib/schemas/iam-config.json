@@ -817,6 +817,10 @@
           "description": "Specifies whether to create an EC2 instance profile for this role.",
           "type": "boolean"
         },
+        "maxSessionDuration": {
+          "description": "The maximum session duration (in seconds) that you want to set for the role.",
+          "type": "number"
+        },
         "name": {
           "$ref": "#/definitions/NonEmptyString",
           "description": "The logical name for this IAM role. This name will be used as the role name in AWS IAM and can be referenced by other AWS resources and services."

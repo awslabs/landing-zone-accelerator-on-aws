@@ -901,6 +901,17 @@ export interface IRoleConfig {
    * @see {@link https://docs.aws.amazon.com/IAM/latest/UserGuide/access_policies_boundaries.html | Permissions Boundaries}
    */
   readonly boundaryPolicy?: t.NonEmptyString;
+  /**
+   * The maximum session duration (in seconds) that you want to set for the role.
+   *
+   * @remarks
+   * This setting determines the maximum length of a session when assuming the role.
+   * Valid values range from 3600 seconds (1 hour) to 43200 seconds (12 hours).
+   * If not specified, AWS defaults to 3600 seconds.
+   *
+   * @see {@link https://docs.aws.amazon.com/IAM/latest/APIReference/API_CreateRole.html | CreateRole API}
+   */
+  readonly maxSessionDuration?: number;
 }
 
 /**

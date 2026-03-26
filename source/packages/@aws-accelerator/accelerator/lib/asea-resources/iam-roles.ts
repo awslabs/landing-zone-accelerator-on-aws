@@ -253,6 +253,9 @@ export class Roles extends AseaResource {
       resource.assumeRolePolicyDocument = this.getAssumeRolePolicy(roleItem);
       this.setResourceBoundaryPolicy(roleItem, resource);
       this.setInstanceProfile(roleItem, resource);
+      if (roleItem.maxSessionDuration !== undefined) {
+        resource.maxSessionDuration = roleItem.maxSessionDuration;
+      }
       this.scope.addSsmParameter({
         logicalId: pascalCase(`SsmParam${pascalCase(roleItem.name)}RoleArn`),
         parameterName: this.scope.getSsmPath(SsmResourceType.IAM_ROLE, [roleItem.name]),

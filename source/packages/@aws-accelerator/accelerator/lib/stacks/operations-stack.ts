@@ -486,6 +486,7 @@ export class OperationsStack extends AcceleratorStack {
       managedPolicies,
       path: roleSetItem.path,
       permissionsBoundary: this.policies[roleItem.boundaryPolicy],
+      maxSessionDuration: roleItem.maxSessionDuration ? cdk.Duration.seconds(roleItem.maxSessionDuration) : undefined,
     });
 
     // AwsSolutions-IAM4: The IAM user, role, or group uses AWS managed policies
