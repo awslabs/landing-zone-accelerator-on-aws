@@ -5,19 +5,31 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [1.15.1] - 
+## [1.15.1] - 3/31/26
 
 ### Added
 
+- feat(iam): add maxSessionDuration to roleSets.roles[]
 - feat(iam): add support for IAM role trust policy conditions in iam-config.yaml
 
 ### Fixed
-- fix(networking): add validation for modifying IPAM allocations at VPC level
-- fix(uninstaller): add support for accounts and OUs that are ignored
+
 - fix(asea): tgw route propagation failure when adding a new vpc
+- fix(aspects): enabling organization trail in isob overrides
+- fix(aspects): add delivery stream overrides for iso-f
+- fix(container): updated default imageUri to contain v
+- fix(control-tower): modify exclusion logic for CT Security OU #1008
+- fix(installer-container): remove VpcCidr
+- fix(modules): pass in credential provider as mgmt credential to avoid session timeout
+- fix(networking): add validation for modifying IPAM allocations at VPC level
+- fix(networking): cross account NLB targets
 - fix(networking): ssm parameter race condition when sharing multiple subnets from the same vpc with v2 stacks
+-  fix(ssm): add back overwrite to put ssm param
+- fix(uninstaller): add support for accounts and OUs that are ignored
 
 ### Changed
+
+- docs(validation): add validate-config instructions for external pipeline
 
 ## [1.15.0] - 2026-03-10
 
