@@ -483,6 +483,7 @@ export abstract class AcceleratorStack extends cdk.Stack {
     'aws-iso',
     'aws-iso-b',
     'aws-iso-f',
+    'aws-eusc',
   ];
 
   /**

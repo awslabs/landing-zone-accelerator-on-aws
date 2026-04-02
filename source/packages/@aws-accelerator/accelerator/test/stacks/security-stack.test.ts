@@ -547,6 +547,32 @@ describe('SecurityStack - Partition-Specific Behavior', () => {
     );
     expect(cloud9Keys.length).toBe(1);
   });
+
+  it('should not include Cloud9 policies in aws-eusc partition', () => {
+    const props = createSecurityServicesProps(
+      { ebsEncryption: true },
+      { partition: 'aws-eusc', env: { region: 'eusc-de-east-1', account: '00000001' } },
+    );
+    const { template } = createSecurityStackWithTemplate('test-security-stack-eusc-no-cloud9', props);
+    const kmsKeys = template.findResources('AWS::KMS::Key');
+    const cloud9Keys = Object.values(kmsKeys).filter((key: any) =>
+      JSON.stringify(key).includes('cloud9.amazonaws.com'),
+    );
+    expect(cloud9Keys.length).toBe(0);
+  });
+
+  it('should create EBS encryption KMS key in aws-eusc partition', () => {
+    const props = createSecurityServicesProps(
+      { ebsEncryption: true },
+      { partition: 'aws-eusc', env: { region: 'eusc-de-east-1', account: '00000001' } },
+    );
+    const { template } = createSecurityStackWithTemplate('test-security-stack-eusc-ebs', props);
+    const kmsKeys = template.findResources('AWS::KMS::Key');
+    expect(Object.keys(kmsKeys).length).toBe(1);
+    const keyPolicies = Object.values(kmsKeys).map((key: any) => JSON.stringify(key));
+    const hasAutoscalingPolicy = keyPolicies.some(policy => policy.includes('autoscaling.amazonaws.com'));
+    expect(hasAutoscalingPolicy).toBe(true);
+  });
 });
 
 describe('SecurityStack - Resource Count Validation', () => {
