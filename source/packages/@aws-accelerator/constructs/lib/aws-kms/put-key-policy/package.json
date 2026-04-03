@@ -22,7 +22,7 @@
   },
   "dependencies": {
     "@aws-accelerator/utils": "^0.0.0",
-    "@aws-sdk/client-kms": "3.835.0"
+    "@aws-sdk/client-kms": "3.1018.0"
   },
   "devDependencies": {
     "@types/node": "18.19.50",

@@ -7,11 +7,11 @@
     "name": "Amazon Web Services",
     "url": "https://aws.amazon.com/solutions"
   },
-"main": "dist/index.js",
-"types": "dist/index.d.ts",
- "bin" : {
-  "aws-lza": "bin/aws-lza"
- },
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "bin": {
+    "aws-lza": "bin/aws-lza"
+  },
   "scripts": {
     "cleanup": "tsc --build ./ --clean && rm -rf node_modules && rm -rf dist",
     "cleanup:tsc": "tsc --build ./ --clean",
@@ -20,25 +20,33 @@
     "test:unit": "vitest run --coverage",
     "test:integration": "vitest run --config vitest.integration.config.ts",
     "test:clean": "rm -f ./test-reports/*.xml",
-    "lint": "eslint --fix  --max-warnings 0 -c ../../eslint.config.mjs 'lib/**/*.{ts,tsx}' 'bin/**/*.{ts,tsx}' 'test/**/*.{ts,tsx}'",
-    "precommit": "eslint --max-warnings 0 -c ../../eslint.config.mjs 'lib/**/*.{ts,tsx}' 'bin/**/*.{ts,tsx}'",
+    "lint": "eslint --fix  --max-warnings 0 -c ../../eslint.config.mjs lib/ bin/ test/",
+    "precommit": "eslint --max-warnings 0 -c ../../eslint.config.mjs lib/ bin/",
     "prepare": "npm run build",
     "aws-lza": "bin/aws-lza"
   },
   "dependencies": {
-    "@aws-sdk/client-controltower": "3.940.0",
-    "@aws-sdk/client-iam": "3.835.0",
-    "@aws-sdk/client-sso-admin": "3.835.0",
-    "@aws-sdk/client-kms": "3.835.0",
-    "@aws-sdk/client-ssm": "3.835.0",
-    "@aws-sdk/client-organizations": "3.835.0",
-    "@aws-sdk/client-sts": "3.835.0",
+    "@aws-sdk/client-cloudformation": "3.1018.0",
+    "@aws-sdk/client-macie2": "3.1018.0",
+    "@aws-sdk/client-lambda": "3.1018.0",
+    "@aws-sdk/client-detective": "3.1018.0",
+    "@aws-sdk/client-guardduty": "3.1018.0",
+    "@aws-sdk/client-securityhub": "3.1018.0",
+    "@aws-sdk/client-service-quotas": "3.1018.0",
+    "@aws-sdk/client-cloudwatch-logs": "3.1018.0",
+    "@aws-sdk/client-controltower": "3.1018.0",
+    "@aws-sdk/client-iam": "3.1018.0",
+    "@aws-sdk/client-sso-admin": "3.1018.0",
+    "@aws-sdk/client-kms": "3.1018.0",
+    "@aws-sdk/client-ssm": "3.1018.0",
+    "@aws-sdk/client-organizations": "3.1018.0",
+    "@aws-sdk/client-sts": "3.1018.0",
     "@aws-sdk/util-retry": "3.374.0",
-    "@aws-sdk/client-ec2": "3.835.0",
-    "@aws-sdk/client-s3": "3.835.0",
-    "@aws-sdk/client-dynamodb": "3.835.0",
-    "@aws-sdk/lib-dynamodb": "3.835.0",
-    "@aws-sdk/util-dynamodb": "3.835.0",
+    "@aws-sdk/client-ec2": "3.1018.0",
+    "@aws-sdk/client-s3": "3.1018.0",
+    "@aws-sdk/client-dynamodb": "3.1018.0",
+    "@aws-sdk/lib-dynamodb": "3.1018.0",
+    "@aws-sdk/util-dynamodb": "3.996.2",
     "email-validator": "2.0.4",
     "fs-extra": "11.1.0",
     "winston": "3.8.2",
@@ -63,17 +71,5 @@
     "vitest": "3.2.4",
     "ts-node": "10.9.1",
     "typescript": "5.8.3"
-  },
-  "resolutions": {
-    "cross-spawn": "7.0.6",
-    "@babel/helpers": "7.26.10",
-    "@aws-cdk/cloudformation-diff/diff": "8.0.3",
-    "fast-xml-parser": "5.3.8",
-    "rollup": "4.59.0",
-    "diff": "5.2.2",
-    "sinon/**/diff": "5.2.2",
-    "minimatch": "9.0.7",
-    "picomatch": "4.0.4",
-    "flatted": "3.4.2"
   }
 }

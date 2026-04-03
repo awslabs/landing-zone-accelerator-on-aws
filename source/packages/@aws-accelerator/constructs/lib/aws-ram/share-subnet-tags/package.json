@@ -21,8 +21,8 @@
     "build-prod": "esbuild --minify --bundle --outfile=./dist/index.js --platform=node index.ts"
   },
   "dependencies": {
-    "@aws-sdk/client-ec2": "3.835.0",
-    "@aws-sdk/client-ssm": "3.835.0"
+    "@aws-sdk/client-ec2": "3.1018.0",
+    "@aws-sdk/client-ssm": "3.1018.0"
   },
   "devDependencies": {
     "@types/node": "18.19.50",

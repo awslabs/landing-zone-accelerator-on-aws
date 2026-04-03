@@ -1,4 +1,5 @@
 import { describe, it, expect, afterEach } from 'vitest';
+import * as path from 'path';
 import * as cdk from 'aws-cdk-lib';
 import * as s3 from 'aws-cdk-lib/aws-s3';
 import * as ec2 from 'aws-cdk-lib/aws-ec2';
@@ -139,5 +140,91 @@ describe('ACCELERATOR_ENABLE_TAG env variable', () => {
         Tags: Match.absent(),
       }),
     );
+  });
+});
+
+describe('CustomResourceProvider tagging', () => {
+  const handlerDir = path.join(__dirname, 'handler');
+
+  it('tags CustomResourceProvider Lambda handler and Role', () => {
+    const app = new cdk.App();
+    const stack = new cdk.Stack(app, 'CrpStack');
+
+    cdk.CustomResourceProvider.getOrCreateProvider(stack, 'Custom::TestResource', {
+      codeDirectory: handlerDir,
+      runtime: cdk.CustomResourceProviderRuntime.NODEJS_22_X,
+    });
+
+    addAcceleratorTags(stack, 'aws', [{ key: 'Env', value: 'Test' }], 'AWSAccelerator');
+
+    const template = Template.fromStack(stack);
+
+    // Verify the Lambda handler gets tag overrides
+    template.hasResource('AWS::Lambda::Function', {
+      Properties: Match.objectLike({
+        Tags: Match.arrayWith([
+          Match.objectLike({ Key: 'Accelerator', Value: 'AWSAccelerator' }),
+          Match.objectLike({ Key: 'Env', Value: 'Test' }),
+        ]),
+      }),
+    });
+
+    // Verify the IAM Role gets tag overrides
+    template.hasResource('AWS::IAM::Role', {
+      Properties: Match.objectLike({
+        Tags: Match.arrayWith([
+          Match.objectLike({ Key: 'Accelerator', Value: 'AWSAccelerator' }),
+          Match.objectLike({ Key: 'Env', Value: 'Test' }),
+        ]),
+      }),
+    });
+  });
+});
+
+describe('SecurityGroup tagging', () => {
+  it('adds Accel-P tag to SecurityGroup resources', () => {
+    const app = new cdk.App();
+    const stack = new cdk.Stack(app, 'SgStack');
+
+    const vpc = new ec2.Vpc(stack, 'Vpc', { natGateways: 0 });
+    new ec2.SecurityGroup(stack, 'Sg', { vpc });
+
+    addAcceleratorTags(stack, 'aws', [], 'AWSAccelerator');
+
+    const template = Template.fromStack(stack);
+    template.hasResourceProperties('AWS::EC2::SecurityGroup', {
+      Tags: Match.arrayWith([
+        Match.objectLike({ Key: 'Accel-P', Value: 'AWSAccelerator' }),
+        Match.objectLike({ Key: 'Accelerator', Value: 'AWSAccelerator' }),
+      ]),
+    });
+  });
+});
+
+describe('SsmPutParameterValue tagging', () => {
+  it('does not throw when tagging Custom::SsmPutParameterValue resource', () => {
+    const app = new cdk.App();
+    const stack = new cdk.Stack(app, 'SsmStack');
+
+    new cdk.CfnResource(stack, 'SsmParam', {
+      type: 'Custom::SsmPutParameterValue',
+      properties: {
+        ServiceToken: 'arn:aws:lambda:us-east-1:123456789012:function:test',
+        parameters: [
+          { name: '/test/param1', value: 'value1' },
+          { name: '/test/param2', value: 'value2', tags: { ExistingTag: 'keep' } },
+        ],
+      },
+    });
+
+    // Should not throw and should still apply standard tags
+    expect(() => addAcceleratorTags(stack, 'aws', [{ key: 'Env', value: 'Test' }], 'AWSAccelerator')).not.toThrow();
+
+    const template = Template.fromStack(stack);
+    template.hasResource('Custom::SsmPutParameterValue', {
+      Properties: Match.objectLike({
+        ServiceToken: Match.anyValue(),
+      }),
+    });
   });
 });

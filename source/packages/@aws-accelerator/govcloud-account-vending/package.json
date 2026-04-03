@@ -24,8 +24,8 @@
   },
   "dependencies": {
     "@aws-accelerator/cdk-utils": "^0.0.0",
-    "aws-cdk": "2.1029.4",
-    "aws-cdk-lib": "2.219.0"
+    "aws-cdk": "2.1116.0",
+    "aws-cdk-lib": "2.246.0"
   },
   "devDependencies": {
     "@types/fs-extra": "11.0.1",
@@ -33,7 +33,7 @@
     "@types/node": "18.19.50",
     "@types/promptly": "3.0.2",
     "chokidar": "3.5.3",
-    "constructs": "10.0.12",
+    "constructs": "10.5.0",
     "eslint": "9.37.0",
     "eslint-config-prettier": "10.1.8",
     "eslint-import-resolver-typescript": "4.4.4",

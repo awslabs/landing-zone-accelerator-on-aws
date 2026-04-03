@@ -20,7 +20,7 @@
   "dependencies": {
     "@aws-accelerator/config": "^0.0.0",
     "@aws-accelerator/utils": "^0.0.0",
-    "aws-cdk-lib": "2.219.0"
+    "aws-cdk-lib": "2.246.0"
   },
   "devDependencies": {
     "@types/node": "18.19.50",

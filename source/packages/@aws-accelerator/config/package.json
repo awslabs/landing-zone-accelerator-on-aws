@@ -33,7 +33,7 @@
     "@types/node": "18.19.50",
     "@typescript-eslint/eslint-plugin": "8.45.0",
     "@typescript-eslint/parser": "8.45.0",
-    "aws-cdk-lib": "2.219.0",
+    "aws-cdk-lib": "2.246.0",
     "email-validator": "2.0.4",
     "eslint": "9.37.0",
     "eslint-config-prettier": "10.1.8",
@@ -44,7 +44,7 @@
     "prettier": "3.6.2",
     "vitest": "3.2.4",
     "@vitest/coverage-v8": "3.2.4",
-    "ts-json-schema-generator": "1.4.1",
+    "ts-json-schema-generator": "2.9.0",
     "ts-node": "10.9.1",
     "typescript": "5.8.3"
   },

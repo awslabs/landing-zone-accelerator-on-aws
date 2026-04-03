@@ -22,15 +22,15 @@
   },
   "dependencies": {
     "@types/fs-extra": "11.0.1",
-    "aws-cdk": "2.1029.4",
-    "aws-cdk-lib": "2.219.0",
+    "aws-cdk": "2.1116.0",
+    "aws-cdk-lib": "2.246.0",
     "ts-node": "10.9.1"
   },
   "devDependencies": {
     "@types/node": "18.19.50",
     "@typescript-eslint/eslint-plugin": "8.45.0",
     "@typescript-eslint/parser": "8.45.0",
-    "constructs": "10.0.12",
+    "constructs": "10.5.0",
     "eslint": "9.37.0",
     "eslint-config-prettier": "10.1.8",
     "eslint-import-resolver-typescript": "4.4.4",

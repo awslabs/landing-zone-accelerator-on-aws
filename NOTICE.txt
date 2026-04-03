@@ -112,11 +112,8 @@ jest - MIT
 jest-junit - Apache-2.0
 jest-sonar-reporter - Apache-2.0
 js-yaml - MIT
-jsii - Apache-2.0
-jsii-pacmak - Apache-2.0
 lerna - MIT
 lint-staged - MIT
-minimatch - ISC
 monocle-ts - MIT
 mri - MIT
 newtype-ts - MIT

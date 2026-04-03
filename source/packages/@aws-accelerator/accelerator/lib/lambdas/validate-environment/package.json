@@ -22,15 +22,15 @@
   },
   "dependencies": {
     "@aws-accelerator/utils": "^0.0.0",
-    "@aws-sdk/client-cloudformation": "3.835.0",
-    "@aws-sdk/client-dynamodb": "3.835.0",
-    "@aws-sdk/client-ssm": "3.835.0",
-    "@aws-sdk/lib-dynamodb": "3.835.0",
-    "@aws-sdk/client-organizations": "3.835.0",
-    "@aws-sdk/client-service-catalog": "3.835.0"
+    "@aws-sdk/client-cloudformation": "3.1018.0",
+    "@aws-sdk/client-dynamodb": "3.1018.0",
+    "@aws-sdk/client-ssm": "3.1018.0",
+    "@aws-sdk/lib-dynamodb": "3.1018.0",
+    "@aws-sdk/client-organizations": "3.1018.0",
+    "@aws-sdk/client-service-catalog": "3.1018.0"
   },
   "devDependencies": {
-    "@aws-sdk/types": "3.609.0",
+    "@aws-sdk/types": "3.973.6",
     "@types/node": "18.19.50",
     "esbuild": "0.25.0",
     "eslint": "9.37.0",

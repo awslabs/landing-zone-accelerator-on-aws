@@ -701,6 +701,7 @@
           "default": "Credentials",
           "description": "**Categories** *(Required)*\n\nList of categories to protect.",
           "items": {
+            "const": "Credentials",
             "type": "string"
           },
           "type": "array"
