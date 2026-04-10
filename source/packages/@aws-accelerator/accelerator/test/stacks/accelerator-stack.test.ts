@@ -38,6 +38,14 @@ class TestStack extends AcceleratorStack {
   constructor(scope: Construct, id: string, props: AcceleratorStackProps) {
     super(scope, id, props);
   }
+
+  public getServiceLinkedRoleSupportedPartitionList(): string[] {
+    return this.serviceLinkedRoleSupportedPartitionList;
+  }
+
+  public testIsOrganizationalUnitIncluded(organizationalUnits: string[]): boolean {
+    return this.isOrganizationalUnitIncluded(organizationalUnits);
+  }
 }
 
 let app: cdk.App;
@@ -83,5 +91,72 @@ describe('isIncluded', () => {
   it('implicit deny', () => {
     const deploymentTargets = {} as DeploymentTargets;
     expect(testStack.isIncluded(deploymentTargets)).toBeFalsy();
+  });
+});
+
+describe('isOrganizationalUnitIncluded', () => {
+  it('should return false when account is in an ignored OU', () => {
+    const ignoredOuProps = createAcceleratorStackProps();
+    // Set up an account in the Suspended OU
+    (ignoredOuProps.accountsConfig as any).mandatoryAccounts = [];
+    (ignoredOuProps.accountsConfig as any).workloadAccounts = [
+      { name: 'SuspendedAccount', email: 'suspended@example.com', organizationalUnit: 'Suspended' },
+    ];
+    (ignoredOuProps.accountsConfig as any).getAccountId = vi.fn((name: string) => {
+      if (name === 'SuspendedAccount') return '00000001';
+      return '123456789' + name;
+    });
+    // Configure the organization config to mark Suspended OU as ignored
+    (ignoredOuProps.organizationConfig as any).organizationalUnits = [
+      { name: 'Security', ignore: false },
+      { name: 'Suspended', ignore: true },
+    ];
+    (ignoredOuProps.organizationConfig as any).isIgnored = vi.fn((name: string) => name === 'Suspended');
+
+    const ignoredApp = new cdk.App();
+    const ignoredStack = new TestStack(ignoredApp, 'ignored-ou-test-stack', ignoredOuProps);
+
+    // Account 00000001 is in the Suspended OU which is ignored
+    // When targeting 'Root' (all OUs), the ignored OU account should NOT be included
+    const result = ignoredStack.testIsOrganizationalUnitIncluded(['Root']);
+    expect(result).toBe(false);
+  });
+
+  it('should return true when account is in a non-ignored OU', () => {
+    const activeOuProps = createAcceleratorStackProps();
+    (activeOuProps.accountsConfig as any).mandatoryAccounts = [];
+    (activeOuProps.accountsConfig as any).workloadAccounts = [
+      { name: 'ActiveAccount', email: 'active@example.com', organizationalUnit: 'Production' },
+    ];
+    (activeOuProps.accountsConfig as any).getAccountId = vi.fn((name: string) => {
+      if (name === 'ActiveAccount') return '00000001';
+      return '123456789' + name;
+    });
+    (activeOuProps.organizationConfig as any).organizationalUnits = [{ name: 'Production', ignore: false }];
+    (activeOuProps.organizationConfig as any).isIgnored = vi.fn(() => false);
+
+    const activeApp = new cdk.App();
+    const activeStack = new TestStack(activeApp, 'active-ou-test-stack', activeOuProps);
+
+    const result = activeStack.testIsOrganizationalUnitIncluded(['Root']);
+    expect(result).toBe(true);
+  });
+});
+
+describe('serviceLinkedRoleSupportedPartitionList', () => {
+  it('should include aws-eusc partition', () => {
+    const partitions = testStack.getServiceLinkedRoleSupportedPartitionList();
+    expect(partitions).toContain('aws-eusc');
+  });
+
+  it('should include all standard partitions', () => {
+    const partitions = testStack.getServiceLinkedRoleSupportedPartitionList();
+    expect(partitions).toContain('aws');
+    expect(partitions).toContain('aws-cn');
+    expect(partitions).toContain('aws-us-gov');
+    expect(partitions).toContain('aws-iso');
+    expect(partitions).toContain('aws-iso-b');
+    expect(partitions).toContain('aws-iso-f');
+    expect(partitions).toContain('aws-eusc');
   });
 });

@@ -86,13 +86,13 @@ source/packages/@aws-accelerator/utils/lib/regions.ts:70
 # Accelerator specific assume role declaration
 source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:447
 source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:448
-source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:1171
-source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:1172
+source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:1177
+source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:1178
 
 # Accelerator specific assume role declaration
 
-source/packages/@aws-accelerator/config/lib/global-config.ts:1134
-source/packages/@aws-accelerator/config/lib/global-config.ts:1135
+source/packages/@aws-accelerator/config/lib/global-config.ts:1132
+source/packages/@aws-accelerator/config/lib/global-config.ts:1133
 
 # Accelerator specific assume role declaration
 
@@ -201,8 +201,8 @@ source/packages/@aws-accelerator/constructs/test/aws-iam/password-policy.test.ts
 
 # Assume role declaration for cross account
 
-source/packages/@aws-accelerator/utils/lib/get-template.ts:74
-source/packages/@aws-accelerator/utils/lib/get-template.ts:75
+source/packages/@aws-accelerator/utils/lib/get-template.ts:65
+source/packages/@aws-accelerator/utils/lib/get-template.ts:66
 
 # Masked email address
 

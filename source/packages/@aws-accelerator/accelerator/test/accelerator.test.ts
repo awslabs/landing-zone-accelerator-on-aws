@@ -309,6 +309,71 @@ describe('Accelerator.run', () => {
 
     fakeGlobalConfig.enabledRegions.forEach(r => expect(deployRegions).toContain(r));
   });
+
+  test('Bootstrap should not bootstrap accounts in ignored OUs', async () => {
+    // Create accounts config with a workload account in an ignored OU
+    const bootstrapAccountsConfig = new AccountsConfig(
+      {
+        managementAccountEmail: 'mangement@example.com',
+        logArchiveAccountEmail: 'log@example.com',
+        auditAccountEmail: 'audit@example.com',
+      },
+      {
+        mandatoryAccounts: [
+          { name: 'Management', email: 'mangement@example.com', organizationalUnit: 'Root' },
+          { name: 'LogArchive', email: 'log@example.com', organizationalUnit: 'Security' },
+          { name: 'Audit', email: 'audit@example.com', organizationalUnit: 'Security' },
+        ],
+        workloadAccounts: [
+          { name: 'SuspendedAccount', email: 'suspended@example.com', organizationalUnit: 'Suspended' },
+          { name: 'ProductionAccount', email: 'production@example.com', organizationalUnit: 'Production' },
+        ],
+      },
+    );
+
+    bootstrapAccountsConfig.accountIds = [
+      { email: 'mangement@example.com', accountId: '111111111111' },
+      { email: 'log@example.com', accountId: '222222222222' },
+      { email: 'audit@example.com', accountId: '333333333333' },
+      { email: 'suspended@example.com', accountId: '444444444444' },
+      { email: 'production@example.com', accountId: '555555555555' },
+    ];
+
+    // Create org config with Suspended OU marked as ignored
+    const bootstrapOrgConfig = new OrganizationConfig({
+      organizationalUnits: [
+        { name: 'Security', ignore: false },
+        { name: 'Production', ignore: false },
+        { name: 'Suspended', ignore: true },
+      ],
+    });
+
+    vi.spyOn(AccountsConfig, 'load').mockReturnValue(bootstrapAccountsConfig);
+    vi.spyOn(AccountsConfig.prototype, 'loadAccountIds').mockResolvedValue();
+    vi.spyOn(OrganizationConfig, 'loadRawOrganizationsConfig').mockReturnValue(bootstrapOrgConfig);
+    vi.spyOn(OrganizationConfig, 'load').mockReturnValue(bootstrapOrgConfig);
+
+    const props: AcceleratorProps = {
+      command: 'bootstrap',
+      configDirPath: '',
+      partition: 'aws',
+      enableSingleAccountMode: false,
+    };
+
+    await Accelerator.run(props);
+
+    // Collect all account IDs that were bootstrapped
+    const bootstrappedAccountIds = executeSpy.mock.calls.map(call => call[0].accountId);
+
+    // The suspended account (444444444444) should NOT have been bootstrapped
+    expect(bootstrappedAccountIds).not.toContain('444444444444');
+
+    // The production account (555555555555) SHOULD have been bootstrapped
+    expect(bootstrappedAccountIds).toContain('555555555555');
+
+    // Management account (111111111111) SHOULD have been bootstrapped
+    expect(bootstrappedAccountIds).toContain('111111111111');
+  });
 });
 
 describe('shouldLookupDynamoDb', () => {

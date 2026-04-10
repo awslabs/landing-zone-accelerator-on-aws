@@ -162,6 +162,7 @@ export function isOrganizationalUnitIncluded(
         const ignored = organizationConfig.isIgnored(account.organizationalUnit);
         if (ignored) {
           logger.info(`${account.organizationalUnit} is ignored and not included`);
+          return false;
         }
         logger.info(`${account.organizationalUnit} organizational unit included`);
         return true;

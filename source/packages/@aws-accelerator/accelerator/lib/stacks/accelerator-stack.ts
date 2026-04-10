@@ -1617,6 +1617,7 @@ export abstract class AcceleratorStack extends cdk.Stack {
           const ignored = this.props.organizationConfig.isIgnored(account.organizationalUnit);
           if (ignored) {
             this.logger.info(`${account.organizationalUnit} is ignored and not included`);
+            return false;
           }
           this.logger.info(`${account.organizationalUnit} organizational unit included`);
           return true;
