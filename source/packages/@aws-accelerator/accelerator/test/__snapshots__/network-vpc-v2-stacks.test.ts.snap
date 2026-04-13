@@ -3327,6 +3327,7 @@ exports[`NetworkVpcV2Stacks > Construct(SubnetShareStack-Network-us-east-1-Netwo
       "DependsOn": [
         "CustomSsmPutParameterValueCustomResourceProviderLogGroupB0109C68",
         "NetworkSecondaryShareSubnetShareResourceShare7960C54A",
+        "NetworkSecondaryV2NetworkSecondaryShareVpcSharedSubnetParameters0AE0C402",
       ],
       "Properties": {
         "ServiceToken": {

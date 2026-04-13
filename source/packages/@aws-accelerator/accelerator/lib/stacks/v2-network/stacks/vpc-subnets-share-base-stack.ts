@@ -65,6 +65,7 @@ export class VpcSubnetsShareBaseStack extends AcceleratorStack {
   private shareSubnets(): void {
     const allShareTargetAccountIds: string[] = [];
     const resourceShares: ResourceShare[] = [];
+    const subnetSsmParameters: PutSsmParameter[] = [];
 
     for (const subnetConfig of this.vpcDetails.subnets) {
       if (
@@ -75,9 +76,10 @@ export class VpcSubnetsShareBaseStack extends AcceleratorStack {
           subnetConfig.name,
         )
       ) {
-        const resourceShare = this.shareSubnet(subnetConfig, allShareTargetAccountIds);
-        if (resourceShare) {
-          resourceShares.push(resourceShare);
+        const result = this.shareSubnet(subnetConfig, allShareTargetAccountIds);
+        if (result) {
+          resourceShares.push(result.resourceShare);
+          subnetSsmParameters.push(result.putSsmParameter);
         }
       }
     }
@@ -102,6 +104,9 @@ export class VpcSubnetsShareBaseStack extends AcceleratorStack {
       for (const resourceShare of resourceShares) {
         vpcIdParameter.node.addDependency(resourceShare);
       }
+      for (const subnetSsmParam of subnetSsmParameters) {
+        vpcIdParameter.node.addDependency(subnetSsmParam);
+      }
     }
   }
 
@@ -111,7 +116,10 @@ export class VpcSubnetsShareBaseStack extends AcceleratorStack {
    * @param allShareTargetAccountIds Accumulator for de-duped account IDs across all shared subnets
    * @returns The ResourceShare if created, undefined otherwise
    */
-  private shareSubnet(subnetConfig: SubnetConfig, allShareTargetAccountIds: string[]): ResourceShare | undefined {
+  private shareSubnet(
+    subnetConfig: SubnetConfig,
+    allShareTargetAccountIds: string[],
+  ): { resourceShare: ResourceShare; putSsmParameter: PutSsmParameter } | undefined {
     if (!subnetConfig.shareTargets) {
       return undefined;
     }
@@ -194,6 +202,6 @@ export class VpcSubnetsShareBaseStack extends AcceleratorStack {
     );
     putSsmParameter.node.addDependency(resourceShare);
 
-    return resourceShare;
+    return { resourceShare, putSsmParameter };
   }
 }
