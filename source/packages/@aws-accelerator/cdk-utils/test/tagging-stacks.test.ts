@@ -1,5 +1,6 @@
-import { describe, it, expect, afterEach } from 'vitest';
+import { describe, it, expect, afterEach, beforeAll, afterAll } from 'vitest';
 import * as path from 'path';
+import * as fs from 'fs';
 import * as cdk from 'aws-cdk-lib';
 import * as s3 from 'aws-cdk-lib/aws-s3';
 import * as ec2 from 'aws-cdk-lib/aws-ec2';
@@ -145,6 +146,15 @@ describe('ACCELERATOR_ENABLE_TAG env variable', () => {
 
 describe('CustomResourceProvider tagging', () => {
   const handlerDir = path.join(__dirname, 'handler');
+
+  beforeAll(() => {
+    fs.mkdirSync(handlerDir, { recursive: true });
+    fs.writeFileSync(path.join(handlerDir, 'index.js'), 'exports.handler = async () => ({});');
+  });
+
+  afterAll(() => {
+    fs.rmSync(handlerDir, { recursive: true, force: true });
+  });
 
   it('tags CustomResourceProvider Lambda handler and Role', () => {
     const app = new cdk.App();

@@ -80,6 +80,18 @@ describe('NetworkAssociationsStack', () => {
       GroupName: 'SharedServices-Main-Rsyslog-sg',
     });
   });
+
+  test('Security group ingress rules referencing other security groups are created for shared VPCs', () => {
+    const stack = acceleratorTestStacks.stacks.get('Audit-us-east-1')!;
+    const template = Template.fromStack(stack);
+
+    template.hasResourceProperties('AWS::EC2::SecurityGroupIngress', {
+      IpProtocol: '-1',
+      Description: 'allow from app sg',
+      GroupId: Match.anyValue(),
+      SourceSecurityGroupId: Match.anyValue(),
+    });
+  });
 });
 
 const testVpcPeeringConfig = (

@@ -2044,6 +2044,26 @@ vpcs:
               - 514
             sources:
               - 10.0.0.0/8
+          - description: allow from app sg
+            types:
+              - ALL
+            sources:
+              - securityGroups:
+                  - SharedServices-Main-App-sg
+        outboundRules:
+          - description: All Outbound
+            types:
+              - ALL
+            sources:
+              - 0.0.0.0/0
+      - name: SharedServices-Main-App-sg
+        description: Security Group for application tier
+        inboundRules:
+          - description: allow inbound https
+            tcpPorts:
+              - 443
+            sources:
+              - 10.0.0.0/8
         outboundRules:
           - description: All Outbound
             types:
@@ -3871,6 +3891,26 @@ vpcs:
               - 514
             tcpPorts:
               - 514
+            sources:
+              - 10.0.0.0/8
+          - description: allow from app sg
+            types:
+              - ALL
+            sources:
+              - securityGroups:
+                  - SharedServices-Main-App-sg
+        outboundRules:
+          - description: All Outbound
+            types:
+              - ALL
+            sources:
+              - 0.0.0.0/0
+      - name: SharedServices-Main-App-sg
+        description: Security Group for application tier
+        inboundRules:
+          - description: allow inbound https
+            tcpPorts:
+              - 443
             sources:
               - 10.0.0.0/8
         outboundRules:

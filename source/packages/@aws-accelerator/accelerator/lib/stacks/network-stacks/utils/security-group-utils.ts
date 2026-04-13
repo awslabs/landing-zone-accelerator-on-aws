@@ -699,7 +699,7 @@ function prepareSecurityGroupRuleProps(
     //
     // Security Group Source
     //
-    if (isNetworkType<SecurityGroupSourceConfig>('ISecurityGroupSourceConfig', source) && vpcName && lzaLookup) {
+    if (isNetworkType<SecurityGroupSourceConfig>('ISecurityGroupSourceConfig', source) && vpcName) {
       rules.push(...processSecurityGroupSource(maps.securityGroups, vpcName, source, props, lzaLookup));
     }
   }
@@ -854,13 +854,14 @@ function processSecurityGroupSource(
     toPort?: number;
     description?: string;
   },
-  lzaLookup: LZAResourceLookup,
+  lzaLookup?: LZAResourceLookup,
 ): SecurityGroupRuleProps[] {
   const sgRules: SecurityGroupRuleProps[] = [];
   logger.info(`Evaluate Security Group Source securityGroups:[${source.securityGroups}]`);
 
   for (const securityGroup of source.securityGroups ?? []) {
     if (
+      lzaLookup &&
       !lzaLookup.resourceExists({
         resourceType: LZAResourceLookupType.SECURITY_GROUP,
         lookupValues: {

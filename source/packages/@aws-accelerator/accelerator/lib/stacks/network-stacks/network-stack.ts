@@ -1089,7 +1089,6 @@ export abstract class NetworkStack extends AcceleratorStack {
         subnetMap,
         prefixListMap,
         securityGroupMap,
-        this.lzaLookup,
       );
       const egressRules = processSecurityGroupSgEgressSources(
         this.vpcResources,
@@ -1098,7 +1097,6 @@ export abstract class NetworkStack extends AcceleratorStack {
         subnetMap,
         prefixListMap,
         securityGroupMap,
-        this.lzaLookup,
       );
 
       const baseMetadata = {

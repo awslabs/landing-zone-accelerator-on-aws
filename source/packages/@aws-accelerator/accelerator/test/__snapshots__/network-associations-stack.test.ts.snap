@@ -3702,6 +3702,44 @@ exports[`NetworkAssociationsStack > Construct(NetworkAssociationsStack):  Snapsh
       "Type": "Custom::GetResourceShare",
       "UpdateReplacePolicy": "Delete",
     },
+    "SharedServicesMainVpcSharedServicesMainAppSgSgDF79E313": {
+      "Metadata": {
+        "lzaLookup": {
+          "securityGroupName": "SharedServices-Main-App-sg",
+          "vpcName": "SharedServices-Main",
+        },
+      },
+      "Properties": {
+        "GroupDescription": "Security Group for application tier",
+        "GroupName": "SharedServices-Main-App-sg",
+        "SecurityGroupEgress": [
+          {
+            "CidrIp": "0.0.0.0/0",
+            "Description": "All Outbound",
+            "IpProtocol": "-1",
+          },
+        ],
+        "SecurityGroupIngress": [
+          {
+            "CidrIp": "10.0.0.0/8",
+            "Description": "allow inbound https",
+            "FromPort": 443,
+            "IpProtocol": "tcp",
+            "ToPort": 443,
+          },
+        ],
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "SharedServices-Main-App-sg",
+          },
+        ],
+        "VpcId": {
+          "Ref": "SsmParameterValueacceleratornetworkvpcSharedServicesMainidC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+      },
+      "Type": "AWS::EC2::SecurityGroup",
+    },
     "SharedServicesMainVpcSharedServicesMainRsyslogSgSg82BD8A5A": {
       "Metadata": {
         "lzaLookup": {
@@ -3746,6 +3784,29 @@ exports[`NetworkAssociationsStack > Construct(NetworkAssociationsStack):  Snapsh
         },
       },
       "Type": "AWS::EC2::SecurityGroup",
+    },
+    "SharedServicesMainVpcSharedServicesMainRsyslogSgSgSharedServicesMainRsyslogsgIngress1025E52475": {
+      "Metadata": {
+        "lzaLookup": {
+          "ipProtocol": "-1",
+          "sourceSecurityGroupName": "SharedServices-Main-Rsyslog-sg",
+          "targetSecurityGroupName": "SharedServices-Main-App-sg",
+          "vpcAccount": "555555555555",
+          "vpcName": "SharedServices-Main",
+          "vpcRegion": "us-east-1",
+        },
+      },
+      "Properties": {
+        "Description": "allow from app sg",
+        "GroupId": {
+          "Ref": "SharedServicesMainVpcSharedServicesMainRsyslogSgSg82BD8A5A",
+        },
+        "IpProtocol": "-1",
+        "SourceSecurityGroupId": {
+          "Ref": "SharedServicesMainVpcSharedServicesMainAppSgSgDF79E313",
+        },
+      },
+      "Type": "AWS::EC2::SecurityGroupIngress",
     },
     "SsmParamAcceleratorVersionFF83282D": {
       "Properties": {
@@ -4429,6 +4490,19 @@ exports[`NetworkAssociationsStack > Construct(NetworkAssociationsStack):  Snapsh
         "Type": "String",
         "Value": {
           "Ref": "NonTemplateStaticSameRegionCrossAccountVpcPeering55F5C86E",
+        },
+      },
+      "Type": "AWS::SSM::Parameter",
+    },
+    "SsmParamSharedServicesMainSharedServicesMainAppSgSecurityGroup903EB0F2": {
+      "DependsOn": [
+        "SsmParamTemplateRequesterSameOuHalfCrossRegionIpamVpcPeering8DEF3C15",
+      ],
+      "Properties": {
+        "Name": "/accelerator/network/vpc/SharedServices-Main/securityGroup/SharedServices-Main-App-sg/id",
+        "Type": "String",
+        "Value": {
+          "Ref": "SharedServicesMainVpcSharedServicesMainAppSgSgDF79E313",
         },
       },
       "Type": "AWS::SSM::Parameter",
@@ -10293,6 +10367,110 @@ catch {
         },
       },
       "Type": "AWS::EC2::SecurityGroup",
+    },
+    "NetworkEndpointsVpcManagementSgManagementEgress00D58058BF": {
+      "Metadata": {
+        "lzaLookup": {
+          "ipProtocol": "-1",
+          "sourceSecurityGroupName": "Management",
+          "targetSecurityGroupName": "Management",
+          "vpcAccount": "444444444444",
+          "vpcName": "Network-Endpoints",
+          "vpcRegion": "us-east-1",
+        },
+      },
+      "Properties": {
+        "Description": "All Outbound",
+        "DestinationSecurityGroupId": {
+          "Ref": "NetworkEndpointsVpcManagementSg2B8F9418",
+        },
+        "GroupId": {
+          "Ref": "NetworkEndpointsVpcManagementSg2B8F9418",
+        },
+        "IpProtocol": "-1",
+      },
+      "Type": "AWS::EC2::SecurityGroupEgress",
+    },
+    "NetworkEndpointsVpcManagementSgManagementIngress008FD972B5": {
+      "Metadata": {
+        "lzaLookup": {
+          "fromPort": 3389,
+          "ipProtocol": "tcp",
+          "sourceSecurityGroupName": "Management",
+          "targetSecurityGroupName": "Management",
+          "toPort": 3389,
+          "vpcAccount": "444444444444",
+          "vpcName": "Network-Endpoints",
+          "vpcRegion": "us-east-1",
+        },
+      },
+      "Properties": {
+        "Description": "Management RDP Traffic Inbound",
+        "FromPort": 3389,
+        "GroupId": {
+          "Ref": "NetworkEndpointsVpcManagementSg2B8F9418",
+        },
+        "IpProtocol": "tcp",
+        "SourceSecurityGroupId": {
+          "Ref": "NetworkEndpointsVpcManagementSg2B8F9418",
+        },
+        "ToPort": 3389,
+      },
+      "Type": "AWS::EC2::SecurityGroupIngress",
+    },
+    "NetworkEndpointsVpcManagementSgManagementIngress105119E927": {
+      "Metadata": {
+        "lzaLookup": {
+          "fromPort": 22,
+          "ipProtocol": "tcp",
+          "sourceSecurityGroupName": "Management",
+          "targetSecurityGroupName": "Management",
+          "toPort": 22,
+          "vpcAccount": "444444444444",
+          "vpcName": "Network-Endpoints",
+          "vpcRegion": "us-east-1",
+        },
+      },
+      "Properties": {
+        "Description": "Management SSH Traffic Inbound",
+        "FromPort": 22,
+        "GroupId": {
+          "Ref": "NetworkEndpointsVpcManagementSg2B8F9418",
+        },
+        "IpProtocol": "tcp",
+        "SourceSecurityGroupId": {
+          "Ref": "NetworkEndpointsVpcManagementSg2B8F9418",
+        },
+        "ToPort": 22,
+      },
+      "Type": "AWS::EC2::SecurityGroupIngress",
+    },
+    "NetworkEndpointsVpcManagementSgManagementIngress1135D6C2DD": {
+      "Metadata": {
+        "lzaLookup": {
+          "fromPort": 22,
+          "ipProtocol": "udp",
+          "sourceSecurityGroupName": "Management",
+          "targetSecurityGroupName": "Management",
+          "toPort": 22,
+          "vpcAccount": "444444444444",
+          "vpcName": "Network-Endpoints",
+          "vpcRegion": "us-east-1",
+        },
+      },
+      "Properties": {
+        "Description": "Management SSH Traffic Inbound",
+        "FromPort": 22,
+        "GroupId": {
+          "Ref": "NetworkEndpointsVpcManagementSg2B8F9418",
+        },
+        "IpProtocol": "udp",
+        "SourceSecurityGroupId": {
+          "Ref": "NetworkEndpointsVpcManagementSg2B8F9418",
+        },
+        "ToPort": 22,
+      },
+      "Type": "AWS::EC2::SecurityGroupIngress",
     },
     "NetworkEndpointsVpcNetworkEndpointsCustomEndpointSgSg4BB9279D": {
       "Metadata": {
@@ -17283,6 +17461,44 @@ exports[`NetworkAssociationsStack > Construct(NetworkAssociationsStack):  Snapsh
       "Type": "Custom::GetResourceShare",
       "UpdateReplacePolicy": "Delete",
     },
+    "SharedServicesMainVpcSharedServicesMainAppSgSgDF79E313": {
+      "Metadata": {
+        "lzaLookup": {
+          "securityGroupName": "SharedServices-Main-App-sg",
+          "vpcName": "SharedServices-Main",
+        },
+      },
+      "Properties": {
+        "GroupDescription": "Security Group for application tier",
+        "GroupName": "SharedServices-Main-App-sg",
+        "SecurityGroupEgress": [
+          {
+            "CidrIp": "0.0.0.0/0",
+            "Description": "All Outbound",
+            "IpProtocol": "-1",
+          },
+        ],
+        "SecurityGroupIngress": [
+          {
+            "CidrIp": "10.0.0.0/8",
+            "Description": "allow inbound https",
+            "FromPort": 443,
+            "IpProtocol": "tcp",
+            "ToPort": 443,
+          },
+        ],
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "SharedServices-Main-App-sg",
+          },
+        ],
+        "VpcId": {
+          "Ref": "SsmParameterValueacceleratornetworkvpcSharedServicesMainidC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+      },
+      "Type": "AWS::EC2::SecurityGroup",
+    },
     "SharedServicesMainVpcSharedServicesMainRsyslogSgSg82BD8A5A": {
       "Metadata": {
         "lzaLookup": {
@@ -17327,6 +17543,29 @@ exports[`NetworkAssociationsStack > Construct(NetworkAssociationsStack):  Snapsh
         },
       },
       "Type": "AWS::EC2::SecurityGroup",
+    },
+    "SharedServicesMainVpcSharedServicesMainRsyslogSgSgSharedServicesMainRsyslogsgIngress1025E52475": {
+      "Metadata": {
+        "lzaLookup": {
+          "ipProtocol": "-1",
+          "sourceSecurityGroupName": "SharedServices-Main-Rsyslog-sg",
+          "targetSecurityGroupName": "SharedServices-Main-App-sg",
+          "vpcAccount": "222222222222",
+          "vpcName": "SharedServices-Main",
+          "vpcRegion": "us-east-1",
+        },
+      },
+      "Properties": {
+        "Description": "allow from app sg",
+        "GroupId": {
+          "Ref": "SharedServicesMainVpcSharedServicesMainRsyslogSgSg82BD8A5A",
+        },
+        "IpProtocol": "-1",
+        "SourceSecurityGroupId": {
+          "Ref": "SharedServicesMainVpcSharedServicesMainAppSgSgDF79E313",
+        },
+      },
+      "Type": "AWS::EC2::SecurityGroupIngress",
     },
     "SsmParamAcceleratorVersionFF83282D": {
       "Properties": {
@@ -17471,6 +17710,16 @@ exports[`NetworkAssociationsStack > Construct(NetworkAssociationsStack):  Snapsh
       },
       "Type": "Custom::SsmGetParameterValue",
       "UpdateReplacePolicy": "Delete",
+    },
+    "SsmParamSharedServicesMainSharedServicesMainAppSgSecurityGroup903EB0F2": {
+      "Properties": {
+        "Name": "/accelerator/network/vpc/SharedServices-Main/securityGroup/SharedServices-Main-App-sg/id",
+        "Type": "String",
+        "Value": {
+          "Ref": "SharedServicesMainVpcSharedServicesMainAppSgSgDF79E313",
+        },
+      },
+      "Type": "AWS::SSM::Parameter",
     },
     "SsmParamSharedServicesMainSharedServicesMainRsyslogSgSecurityGroupFCDC7FBA": {
       "Properties": {
@@ -19540,6 +19789,44 @@ exports[`NetworkAssociationsStack > Construct(NetworkAssociationsStack):  Snapsh
       "Type": "Custom::GetResourceShare",
       "UpdateReplacePolicy": "Delete",
     },
+    "SharedServicesMainVpcSharedServicesMainAppSgSgDF79E313": {
+      "Metadata": {
+        "lzaLookup": {
+          "securityGroupName": "SharedServices-Main-App-sg",
+          "vpcName": "SharedServices-Main",
+        },
+      },
+      "Properties": {
+        "GroupDescription": "Security Group for application tier",
+        "GroupName": "SharedServices-Main-App-sg",
+        "SecurityGroupEgress": [
+          {
+            "CidrIp": "0.0.0.0/0",
+            "Description": "All Outbound",
+            "IpProtocol": "-1",
+          },
+        ],
+        "SecurityGroupIngress": [
+          {
+            "CidrIp": "10.0.0.0/8",
+            "Description": "allow inbound https",
+            "FromPort": 443,
+            "IpProtocol": "tcp",
+            "ToPort": 443,
+          },
+        ],
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "SharedServices-Main-App-sg",
+          },
+        ],
+        "VpcId": {
+          "Ref": "SsmParameterValueacceleratornetworkvpcSharedServicesMainidC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+      },
+      "Type": "AWS::EC2::SecurityGroup",
+    },
     "SharedServicesMainVpcSharedServicesMainRsyslogSgSg82BD8A5A": {
       "Metadata": {
         "lzaLookup": {
@@ -19584,6 +19871,29 @@ exports[`NetworkAssociationsStack > Construct(NetworkAssociationsStack):  Snapsh
         },
       },
       "Type": "AWS::EC2::SecurityGroup",
+    },
+    "SharedServicesMainVpcSharedServicesMainRsyslogSgSgSharedServicesMainRsyslogsgIngress1025E52475": {
+      "Metadata": {
+        "lzaLookup": {
+          "ipProtocol": "-1",
+          "sourceSecurityGroupName": "SharedServices-Main-Rsyslog-sg",
+          "targetSecurityGroupName": "SharedServices-Main-App-sg",
+          "vpcAccount": "333333333333",
+          "vpcName": "SharedServices-Main",
+          "vpcRegion": "us-east-1",
+        },
+      },
+      "Properties": {
+        "Description": "allow from app sg",
+        "GroupId": {
+          "Ref": "SharedServicesMainVpcSharedServicesMainRsyslogSgSg82BD8A5A",
+        },
+        "IpProtocol": "-1",
+        "SourceSecurityGroupId": {
+          "Ref": "SharedServicesMainVpcSharedServicesMainAppSgSgDF79E313",
+        },
+      },
+      "Type": "AWS::EC2::SecurityGroupIngress",
     },
     "SsmParamAcceleratorVersionFF83282D": {
       "Properties": {
@@ -19728,6 +20038,16 @@ exports[`NetworkAssociationsStack > Construct(NetworkAssociationsStack):  Snapsh
       },
       "Type": "Custom::SsmGetParameterValue",
       "UpdateReplacePolicy": "Delete",
+    },
+    "SsmParamSharedServicesMainSharedServicesMainAppSgSecurityGroup903EB0F2": {
+      "Properties": {
+        "Name": "/accelerator/network/vpc/SharedServices-Main/securityGroup/SharedServices-Main-App-sg/id",
+        "Type": "String",
+        "Value": {
+          "Ref": "SharedServicesMainVpcSharedServicesMainAppSgSgDF79E313",
+        },
+      },
+      "Type": "AWS::SSM::Parameter",
     },
     "SsmParamSharedServicesMainSharedServicesMainRsyslogSgSecurityGroupFCDC7FBA": {
       "Properties": {
