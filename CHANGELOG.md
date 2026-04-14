@@ -5,7 +5,24 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [1.15.1] - 3/31/26
+## [1.15.2] - 2026-04-16
+
+### Added
+
+- feat(uninstaller): add container build mode and OU-ignore filtering to uninstaller
+
+### Fixed
+
+- fix(accelerator): exclude ignored ou accounts from bootstrap and stack deployment
+- fix(ssm): use PutParameter with Overwrite for cross-account SSM params
+
+### Changed
+
+- chore(accelerator): bump AWS SDK to 3.1018.0, CDK to 2.246.0, and update tooling
+- chore(dependencies): updated proxy-agent
+- chore: added resolutions for axios and basic-ftp
+
+## [1.15.1] - 2026-03-31
 
 ### Added
 

@@ -56,7 +56,7 @@ exports[`ActiveDirectory > Construct(ActiveDirectory):  Snapshot Test 1`] = `
         "Description": "Manage active directory log subscription handler",
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.15.1",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.15.2",
           },
         },
         "Handler": "index.handler",
@@ -175,7 +175,7 @@ exports[`ActiveDirectory > Construct(ActiveDirectory):  Snapshot Test 1`] = `
         "Description": "AWS CDK resource provider framework - onEvent (Default/ActiveDirectory/AcceleratorManagedActiveDirectoryLogSubscription/ManageActiveDirectoryLogSubscriptionProvider)",
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.15.1",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.15.2",
             "USER_ON_EVENT_FUNCTION_ARN": {
               "Fn::GetAtt": [
                 "ActiveDirectoryAcceleratorManagedActiveDirectoryLogSubscriptionManageActiveDirectoryLogSubscriptionFunction68D4A3D7",

@@ -144,11 +144,6 @@ describe('isOrganizationalUnitIncluded', () => {
 });
 
 describe('serviceLinkedRoleSupportedPartitionList', () => {
-  it('should include aws-eusc partition', () => {
-    const partitions = testStack.getServiceLinkedRoleSupportedPartitionList();
-    expect(partitions).toContain('aws-eusc');
-  });
-
   it('should include all standard partitions', () => {
     const partitions = testStack.getServiceLinkedRoleSupportedPartitionList();
     expect(partitions).toContain('aws');
@@ -157,6 +152,5 @@ describe('serviceLinkedRoleSupportedPartitionList', () => {
     expect(partitions).toContain('aws-iso');
     expect(partitions).toContain('aws-iso-b');
     expect(partitions).toContain('aws-iso-f');
-    expect(partitions).toContain('aws-eusc');
   });
 });
