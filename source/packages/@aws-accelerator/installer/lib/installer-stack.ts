@@ -1223,6 +1223,19 @@ export class InstallerStack extends cdk.Stack {
      */
     const gitHubPipelineRole = new cdk.aws_iam.Role(this, 'GitHubPipelineRole', {
       assumedBy: new cdk.aws_iam.ServicePrincipal('codepipeline.amazonaws.com'),
+      inlinePolicies: {
+        connectionPolicy: new cdk.aws_iam.PolicyDocument({
+          statements: [
+            new cdk.aws_iam.PolicyStatement({
+              actions: ['codestar-connections:UseConnection', 'codeconnections:UseConnection'],
+              resources: [
+                `arn:${cdk.Stack.of(this).partition}:codestar-connections:${cdk.Stack.of(this).region}:${cdk.Stack.of(this).account}:connection/*`,
+                `arn:${cdk.Stack.of(this).partition}:codeconnections:${cdk.Stack.of(this).region}:${cdk.Stack.of(this).account}:connection/*`,
+              ],
+            }),
+          ],
+        }),
+      },
     });
 
     const gitHubPipeline = new cdk.aws_codepipeline.Pipeline(this, 'GitHubPipeline', {
@@ -1317,8 +1330,16 @@ export class InstallerStack extends cdk.Stack {
           resources: [acceleratorPrincipalArn, gitHubPipelineRole.roleArn],
         }),
         new cdk.aws_iam.PolicyStatement({
-          actions: ['codestar-connections:PassConnection', 'codestar-connections:UseConnection'],
+          actions: [
+            'codestar-connections:PassConnection',
+            'codestar-connections:UseConnection',
+            'codeconnections:PassConnection',
+            'codeconnections:UseConnection',
+          ],
           resources: [
+            `arn:${cdk.Stack.of(this).partition}:codestar-connections:${cdk.Stack.of(this).region}:${
+              cdk.Stack.of(this).account
+            }:connection/*`,
             `arn:${cdk.Stack.of(this).partition}:codeconnections:${cdk.Stack.of(this).region}:${
               cdk.Stack.of(this).account
             }:connection/*`,
