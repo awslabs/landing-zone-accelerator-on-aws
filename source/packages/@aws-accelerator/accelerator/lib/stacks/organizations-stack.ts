@@ -790,6 +790,10 @@ export class OrganizationsStack extends AcceleratorStack {
    * @param adminAccountId
    */
   private enableIdentityCenterDelegatedAdminAccount(adminAccountId: string) {
+    if (!this.props.iamConfig.identityCenter) {
+      return;
+    }
+
     let lzaManagedPermissionSets: IdentityCenterPermissionSetConfig[] = [];
     let lzaManagedAssignments: IdentityCenterAssignmentConfig[] = [];
     let assignmentList: { [x: string]: string[] }[] = [];
