@@ -69,8 +69,7 @@ export abstract class RegisterOrganizationalUnitModule {
       );
     }
 
-    const securityOuName =
-      params.moduleRunnerParameters.configs.accountsConfig.getAuditAccount().organizationalUnit;
+    const securityOuName = params.moduleRunnerParameters.configs.accountsConfig.getAuditAccount().organizationalUnit;
 
     const organizationalUnitsDetail = await getOrganizationalUnitsDetail({
       moduleName: params.moduleItem.name,
