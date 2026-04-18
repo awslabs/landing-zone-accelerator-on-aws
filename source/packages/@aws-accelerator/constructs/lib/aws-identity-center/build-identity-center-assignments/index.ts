@@ -76,113 +76,85 @@ export async function handler(event: CloudFormationCustomResourceEvent): Promise
   }
 
   async function onCreate(event: AWSLambda.CloudFormationCustomResourceCreateEvent) {
-    try {
-      // Build the account assignment creation
-      const assignmentCreationRequests = await buildCreateAssignmentsList(
-        accountIds,
-        principals,
-        identityStoreId,
-        instanceArn,
-        permissionSetArnValue,
-        principalType as PrincipalType,
-        principalId!,
-        idcClient,
-      );
+    // Errors must propagate so the CDK CustomResourceProvider runtime
+    // reports FAILED to CloudFormation. Returning { Status: 'FAILED' }
+    // here is silently ignored by the framework and surfaces as SUCCESS.
+    const assignmentCreationRequests = await buildCreateAssignmentsList(
+      accountIds,
+      principals,
+      identityStoreId,
+      instanceArn,
+      permissionSetArnValue,
+      principalType as PrincipalType,
+      principalId!,
+      idcClient,
+    );
 
-      if (assignmentCreationRequests.length > 0) {
-        await createAssignment(assignmentCreationRequests, ssoAdminClient);
-      }
-      return {
-        PhysicalResourceId: event.LogicalResourceId,
-        Status: 'SUCCESS',
-      };
-    } catch (error) {
-      console.error('Error creating Identity Center assignments:', error);
-      return {
-        PhysicalResourceId: event.LogicalResourceId,
-        Status: 'FAILED',
-        Reason: String(error),
-      };
+    if (assignmentCreationRequests.length > 0) {
+      await createAssignment(assignmentCreationRequests, ssoAdminClient);
     }
+    return {
+      PhysicalResourceId: event.LogicalResourceId,
+      Status: 'SUCCESS',
+    };
   }
 
   async function onUpdate(event: AWSLambda.CloudFormationCustomResourceUpdateEvent) {
-    try {
-      const previousAccountIdsList: string[] = event.OldResourceProperties['accountIds'] ?? [];
-      const deletionList = await retrieveAccountDeletions(previousAccountIdsList, accountIds);
-      // Build the account assignment creation
-      const assignmentCreationRequests = await buildCreateAssignmentsList(
-        accountIds,
-        principals,
-        identityStoreId,
-        instanceArn,
-        permissionSetArnValue,
-        principalType as PrincipalType,
-        principalId!,
-        idcClient,
-      );
+    const previousAccountIdsList: string[] = event.OldResourceProperties['accountIds'] ?? [];
+    const deletionList = await retrieveAccountDeletions(previousAccountIdsList, accountIds);
+    const assignmentCreationRequests = await buildCreateAssignmentsList(
+      accountIds,
+      principals,
+      identityStoreId,
+      instanceArn,
+      permissionSetArnValue,
+      principalType as PrincipalType,
+      principalId!,
+      idcClient,
+    );
 
-      if (assignmentCreationRequests.length > 0) {
-        await createAssignment(assignmentCreationRequests, ssoAdminClient);
-      }
-
-      const assignmentDeletionRequests = await buildDeleteAssignmentsList(
-        deletionList,
-        principals,
-        identityStoreId,
-        instanceArn,
-        permissionSetArnValue,
-        principalType as PrincipalType,
-        principalId!,
-        idcClient,
-      );
-
-      // Build the Delete Parameters
-      if (deletionList.length > 0) {
-        await deleteAssignment(assignmentDeletionRequests, ssoAdminClient);
-      }
-      return {
-        PhysicalResourceId: event.LogicalResourceId,
-        Status: 'SUCCESS',
-      };
-    } catch (error) {
-      console.error('Error updating Identity Center assignments:', error);
-      return {
-        PhysicalResourceId: event.LogicalResourceId,
-        Status: 'FAILED',
-        Reason: String(error),
-      };
+    if (assignmentCreationRequests.length > 0) {
+      await createAssignment(assignmentCreationRequests, ssoAdminClient);
     }
+
+    const assignmentDeletionRequests = await buildDeleteAssignmentsList(
+      deletionList,
+      principals,
+      identityStoreId,
+      instanceArn,
+      permissionSetArnValue,
+      principalType as PrincipalType,
+      principalId!,
+      idcClient,
+    );
+
+    if (deletionList.length > 0) {
+      await deleteAssignment(assignmentDeletionRequests, ssoAdminClient);
+    }
+    return {
+      PhysicalResourceId: event.LogicalResourceId,
+      Status: 'SUCCESS',
+    };
   }
 
   async function onDelete(event: AWSLambda.CloudFormationCustomResourceDeleteEvent) {
-    try {
-      const assignmentDeletionRequests = await buildDeleteAssignmentsList(
-        accountIds,
-        principals,
-        identityStoreId,
-        instanceArn,
-        permissionSetArnValue,
-        principalType as PrincipalType,
-        principalId!,
-        idcClient,
-      );
+    const assignmentDeletionRequests = await buildDeleteAssignmentsList(
+      accountIds,
+      principals,
+      identityStoreId,
+      instanceArn,
+      permissionSetArnValue,
+      principalType as PrincipalType,
+      principalId!,
+      idcClient,
+    );
 
-      // Call the delete account assignments method
-      await deleteAssignment(assignmentDeletionRequests, ssoAdminClient);
+    await deleteAssignment(assignmentDeletionRequests, ssoAdminClient);
 
-      return {
-        PhysicalResourceId: event.LogicalResourceId,
-        Status: 'SUCCESS',
-      };
-    } catch (error) {
-      console.error('Error deleting Identity Center assignments:', error);
-      return {
-        PhysicalResourceId: event.LogicalResourceId,
-        Status: 'FAILED',
-        Reason: String(error),
-      };
-    }
+    return {
+      PhysicalResourceId: event.LogicalResourceId,
+      Status: 'SUCCESS',
+    };
   }
 }
 
