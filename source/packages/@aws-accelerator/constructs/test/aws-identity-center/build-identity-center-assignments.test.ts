@@ -151,7 +151,7 @@ describe('Build Identity Center Assignments - Principal ID Lookup', () => {
     expect(mockIdentityStoreClient.send).toHaveBeenCalledTimes(2);
   });
 
-  it('should return FAILED status when user lookup fails', async () => {
+  it('should reject when user lookup fails so the framework reports FAILED to CFN', async () => {
     mockIdentityStoreClient.send.mockRejectedValueOnce(new Error('ResourceNotFoundException'));
 
     const { handler } = await import('../../lib/aws-identity-center/build-identity-center-assignments/index.ts');
@@ -173,13 +173,12 @@ describe('Build Identity Center Assignments - Principal ID Lookup', () => {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } as any;
 
-    const result = await handler(mockEvent);
-
-    expect(result?.Status).toBe('FAILED');
-    expect(result?.Reason).toContain("User 'nonexistent-user' not found in Identity Store 'd-906751796e'");
+    await expect(handler(mockEvent)).rejects.toThrow(
+      "User 'nonexistent-user' not found in Identity Store 'd-906751796e'",
+    );
   });
 
-  it('should return FAILED status when group lookup fails', async () => {
+  it('should reject when group lookup fails so the framework reports FAILED to CFN', async () => {
     mockIdentityStoreClient.send.mockRejectedValueOnce(new Error('ResourceNotFoundException'));
 
     const { handler } = await import('../../lib/aws-identity-center/build-identity-center-assignments/index.ts');
@@ -201,13 +200,12 @@ describe('Build Identity Center Assignments - Principal ID Lookup', () => {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } as any;
 
-    const result = await handler(mockEvent);
-
-    expect(result?.Status).toBe('FAILED');
-    expect(result?.Reason).toContain("Group 'nonexistent-group' not found in Identity Store 'd-906751796e'");
+    await expect(handler(mockEvent)).rejects.toThrow(
+      "Group 'nonexistent-group' not found in Identity Store 'd-906751796e'",
+    );
   });
 
-  it('should return FAILED status for Update operations when principal lookup fails', async () => {
+  it('should reject on Update when principal lookup fails so the framework reports FAILED to CFN', async () => {
     mockIdentityStoreClient.send.mockRejectedValueOnce(new Error('ResourceNotFoundException'));
 
     const { handler } = await import('../../lib/aws-identity-center/build-identity-center-assignments/index.ts');
@@ -232,9 +230,6 @@ describe('Build Identity Center Assignments - Principal ID Lookup', () => {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } as any;
 
-    const result = await handler(mockEvent);
-
-    expect(result?.Status).toBe('FAILED');
-    expect(result?.Reason).toContain("User 'invalid-user' not found in Identity Store 'd-906751796e'");
+    await expect(handler(mockEvent)).rejects.toThrow("User 'invalid-user' not found in Identity Store 'd-906751796e'");
   });
 });
