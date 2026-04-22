@@ -108,6 +108,9 @@ export class VpcEndpoint extends VpcEndpointBase {
       if (this.service === 'iam') {
         serviceName = `com.amazonaws.${props.service}`;
       }
+      if (this.service === 'route53') {
+        serviceName = `com.amazonaws.${props.service}`;
+      }
       // Add the ability against China region to override serviceName due to the prefix of
       // serviceName is inconsistent (com.amazonaws vs cn.com.amazonaws) for VPC interface
       // endpoints in that region.
