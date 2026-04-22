@@ -1547,6 +1547,7 @@ export class InstallerStack extends cdk.Stack {
       'CodeCommitPipeline/Source/Source/CodePipelineActionRole/DefaultPolicy/Resource',
       'UpdatePipelineLambdaPolicy/Resource',
       'GitHubPipelineRole/DefaultPolicy/Resource',
+      'GitHubPipelineRole/Resource',
       ...s3PipelinePaths,
     ];
 
