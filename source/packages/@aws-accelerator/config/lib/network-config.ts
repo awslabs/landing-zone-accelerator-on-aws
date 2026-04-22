@@ -869,6 +869,24 @@ export class FirewallManagerConfig implements i.IFirewallManagerServiceConfig {
   readonly notificationChannels: FirewallManagerNotificationChannelConfig[] | undefined = undefined;
 }
 
+export class ServiceNetworkConfig implements i.IServiceNetworkConfig {
+  readonly name: string = '';
+  readonly account: string = '';
+  readonly authType: 'IAM' | 'NONE' = 'IAM';
+  readonly shareTargets: t.ShareTargets | undefined = undefined;
+}
+
+export class ServiceAssociationConfig implements i.IServiceAssociationConfig {
+  readonly vpc: string = '';
+  readonly serviceNetwork: string = '';
+  readonly securityGroupPolicy: 'Enabled' | 'Disabled' | undefined = undefined;
+}
+
+export class VpcLatticeConfig implements i.IVpcLatticeConfig {
+  readonly serviceNetworks: ServiceNetworkConfig[] = [];
+  readonly serviceAssociations: ServiceAssociationConfig[] | undefined = undefined;
+}
+
 export class NetworkConfig implements i.INetworkConfig {
   /**
    * The name of the network configuration file.
@@ -894,6 +912,7 @@ export class NetworkConfig implements i.INetworkConfig {
   readonly certificates: CertificateConfig[] | undefined = undefined;
   public accountVpcIds: Record<string, string[]> | undefined = undefined;
   public accountVpcEndpointIds: Record<string, string[]> | undefined = undefined;
+  readonly vpcLattice: VpcLatticeConfig | undefined = undefined;
 
   /**
    *

@@ -46,6 +46,9 @@ import {
   ResolverEndpointConfig,
   ResolverRuleConfig,
   VpcTemplatesConfig,
+  VpcLatticeConfig,
+  ServiceNetworkConfig,
+  ServiceAssociationConfig,
 } from '../lib/network-config';
 import { ReplacementsConfig } from '../lib/replacements-config';
 
@@ -186,6 +189,15 @@ describe('NetworkConfig', () => {
 
       const vpcTemplatesConfig = new VpcTemplatesConfig();
       expect(vpcTemplatesConfig.name).toEqual('');
+
+      const vpcLatticeConfig = new VpcLatticeConfig();
+      expect(vpcLatticeConfig.serviceNetworks).toEqual([]);
+
+      const serviceNetworkConfig = new ServiceNetworkConfig();
+      expect(serviceNetworkConfig.name).toEqual('');
+
+      const serviceAssociationConfig = new ServiceAssociationConfig();
+      expect(serviceAssociationConfig.vpc).toEqual('');
     });
   });
 });

@@ -1833,6 +1833,10 @@
           "$ref": "#/definitions/IVpcFlowLogsConfig",
           "description": "A VPC flow logs configuration."
         },
+        "vpcLattice": {
+          "$ref": "#/definitions/IVpcLatticeConfig",
+          "description": "Configuration for VPC Lattice."
+        },
         "vpcPeering": {
           "description": "An optional list of VPC peering configurations",
           "items": {
@@ -3271,6 +3275,58 @@
       ],
       "type": "object"
     },
+    "IServiceAssociationConfig": {
+      "additionalProperties": false,
+      "description": "Configuration for an AWS VPC Lattice Service Association.",
+      "properties": {
+        "securityGroupPolicy": {
+          "enum": [
+            "Enabled",
+            "Disabled"
+          ],
+          "type": "string"
+        },
+        "serviceNetwork": {
+          "type": "string"
+        },
+        "vpc": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "vpc",
+        "serviceNetwork"
+      ],
+      "type": "object"
+    },
+    "IServiceNetworkConfig": {
+      "additionalProperties": false,
+      "description": "Configuration for an AWS VPC Lattice Service Network.",
+      "properties": {
+        "account": {
+          "type": "string"
+        },
+        "authType": {
+          "enum": [
+            "IAM",
+            "NONE"
+          ],
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "shareTargets": {
+          "$ref": "#/definitions/IShareTargets"
+        }
+      },
+      "required": [
+        "name",
+        "account",
+        "authType"
+      ],
+      "type": "object"
+    },
     "IShareTargets": {
       "additionalProperties": false,
       "description": "## Resource Access Manager (RAM) Share Targets Interface\n\nInterface for AWS Resource Access Manager (RAM) share targets, which defines where shared resources should be made available within your AWS organization. RAM enables secure sharing of resources between AWS accounts and organizational units without duplicating resources or compromising security.\n\n### Key Features\n\n- **Cross-Account Sharing**: Share resources across multiple AWS accounts\n- **OU-Level Sharing**: Share with entire organizational units at once\n- **Centralized Management**: Manage shared resources from a central account\n- **Cost Optimization**: Avoid resource duplication across accounts\n- **Security**: Maintain resource ownership while enabling controlled access\n\n### Example\n\n```yaml shareTargets:   organizationalUnits:     - Root ```\n\nLearn more about [AWS Resource Access Manager](https://docs.aws.amazon.com/ram/latest/userguide/what-is.html).",
@@ -4509,6 +4565,28 @@
           "description": "(OPTIONAL) Associate an IPv6 CIDR block with your VPC."
         }
       },
+      "type": "object"
+    },
+    "IVpcLatticeConfig": {
+      "additionalProperties": false,
+      "description": "Use this configuration to define VPC Lattice configurations for your landing zone.",
+      "properties": {
+        "serviceAssociations": {
+          "items": {
+            "$ref": "#/definitions/IServiceAssociationConfig"
+          },
+          "type": "array"
+        },
+        "serviceNetworks": {
+          "items": {
+            "$ref": "#/definitions/IServiceNetworkConfig"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "serviceNetworks"
+      ],
       "type": "object"
     },
     "IVpcPeeringConfig": {

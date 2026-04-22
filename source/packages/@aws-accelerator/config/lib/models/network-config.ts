@@ -7412,6 +7412,73 @@ export interface ICertificateConfig {
 }
 
 /**
+ * *{@link NetworkConfig} / {@link VpcLatticeConfig} / {@link ServiceNetworkConfig}*
+ *
+ * @description
+ * Configuration for an AWS VPC Lattice Service Network.
+ *
+ * @example
+ * ```
+ *   serviceNetworks:
+ *     - name: EnterpriseServiceMesh
+ *       account: SharedServices
+ *       authType: IAM
+ *       shareTargets:
+ *         organizationalUnits:
+ *           - Root
+ * ```
+ */
+export interface IServiceNetworkConfig {
+  readonly name: string;
+  readonly account: string;
+  readonly authType: 'IAM' | 'NONE';
+  readonly shareTargets?: t.IShareTargets;
+}
+
+/**
+ * *{@link NetworkConfig} / {@link VpcLatticeConfig} / {@link ServiceAssociationConfig}*
+ *
+ * @description
+ * Configuration for an AWS VPC Lattice Service Association.
+ *
+ * @example
+ * ```
+ *   serviceAssociations:
+ *     - vpc: ProductionVPC
+ *       serviceNetwork: EnterpriseServiceMesh
+ *       securityGroupPolicy: Enabled
+ * ```
+ */
+export interface IServiceAssociationConfig {
+  readonly vpc: string;
+  readonly serviceNetwork: string;
+  readonly securityGroupPolicy?: 'Enabled' | 'Disabled';
+}
+
+/**
+ * *{@link NetworkConfig} / {@link VpcLatticeConfig}*
+ *
+ * @description
+ * Use this configuration to define VPC Lattice configurations for your landing zone.
+ *
+ * @example
+ * ```
+ * vpcLattice:
+ *   serviceNetworks:
+ *     - name: EnterpriseServiceMesh
+ *       account: SharedServices
+ *       authType: IAM
+ *   serviceAssociations:
+ *     - vpc: ProductionVPC
+ *       serviceNetwork: EnterpriseServiceMesh
+ * ```
+ */
+export interface IVpcLatticeConfig {
+  readonly serviceNetworks: IServiceNetworkConfig[];
+  readonly serviceAssociations?: IServiceAssociationConfig[];
+}
+
+/**
  * Network Configuration.
  * Used to define a network configuration for the accelerator.
  *
@@ -7546,4 +7613,9 @@ export interface INetworkConfig {
    * Only the account VPC Endpoints referred by ACCEL_LOOKUP in SCPs will be loaded.
    */
   readonly accountVpcEndpointIds?: { [key: t.NonEmptyString]: t.NonEmptyString[] };
+  /**
+   * Configuration for VPC Lattice.
+   */
+  readonly vpcLattice?: IVpcLatticeConfig;
 }
+
