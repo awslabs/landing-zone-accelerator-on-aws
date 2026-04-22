@@ -1112,7 +1112,6 @@ export class SecurityResourcesStack extends AcceleratorStack {
     assumeRoleArn?: string[],
     configFunctionName?: string,
   ): RemediationParameters | undefined {
-
     const returnParams: RemediationParameters = {};
     if (assumeRoleArn) {
       returnParams['AutomationAssumeRole'] = {
