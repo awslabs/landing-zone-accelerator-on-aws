@@ -7618,4 +7618,3 @@ export interface INetworkConfig {
    */
   readonly vpcLattice?: IVpcLatticeConfig;
 }
-

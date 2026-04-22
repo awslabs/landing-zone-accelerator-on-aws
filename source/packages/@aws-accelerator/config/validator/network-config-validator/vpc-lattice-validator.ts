@@ -24,8 +24,20 @@ export class VpcLatticeValidator {
     }
 
     // 1. Validate unique Service Networks
-    if (helpers.hasDuplicates(values.vpcLattice.serviceNetworks.map(sn => sn.name))) {
-      errors.push(`[VPC Lattice]: serviceNetworks contain duplicate names.`);
+    const seenSnNames = new Set<string>();
+    const duplicateSnNames = new Set<string>();
+    
+    for (const sn of values.vpcLattice.serviceNetworks) {
+      if (seenSnNames.has(sn.name)) {
+        duplicateSnNames.add(sn.name);
+      }
+      seenSnNames.add(sn.name);
+    }
+
+    if (duplicateSnNames.size > 0) {
+      errors.push(
+        `[VPC Lattice]: serviceNetworks contain duplicate names: ${Array.from(duplicateSnNames).join(', ')}.`,
+      );
     }
 
     // 2. Validate Service Networks accounts
@@ -39,31 +51,37 @@ export class VpcLatticeValidator {
 
     // 3. Validate Service Associations
     if (values.vpcLattice.serviceAssociations) {
-      const associationPairs: string[] = [];
+      const associationPairs = new Set<string>();
+      const duplicatePairs = new Set<string>();
 
       for (const sa of values.vpcLattice.serviceAssociations) {
         // Validate vpc exists
         if (!helpers.getVpc(sa.vpc)) {
           errors.push(
-            `[VPC Lattice Service Association]: Target VPC ${sa.vpc} does not exist in network-config.yaml file`,
+            `[VPC Lattice Service Association ${sa.vpc} -> ${sa.serviceNetwork}]: Target VPC ${sa.vpc} does not exist in network-config.yaml file`,
           );
         }
 
-        // Validate serviceNetwork points to declared SN
-        const snExists = values.vpcLattice.serviceNetworks.find(sn => sn.name === sa.serviceNetwork);
-        if (!snExists) {
+        // Validate serviceNetwork points to declared SN via precomputed Set
+        if (!seenSnNames.has(sa.serviceNetwork)) {
           errors.push(
-            `[VPC Lattice Service Association]: Target Service Network ${sa.serviceNetwork} is not declared in vpcLattice.serviceNetworks`,
+            `[VPC Lattice Service Association ${sa.vpc} -> ${sa.serviceNetwork}]: Target Service Network ${sa.serviceNetwork} is not declared in vpcLattice.serviceNetworks`,
           );
         }
 
-        // Push tuple for uniqueness check
-        associationPairs.push(`${sa.vpc}-${sa.serviceNetwork}`);
+        // Push tuple for uniqueness check using safe delimiter
+        const associationKey = `${sa.vpc}::${sa.serviceNetwork}`;
+        if (associationPairs.has(associationKey)) {
+          duplicatePairs.add(`${sa.vpc} -> ${sa.serviceNetwork}`);
+        }
+        associationPairs.add(associationKey);
       }
 
       // Check unique (vpc, serviceNetwork) pairs
-      if (helpers.hasDuplicates(associationPairs)) {
-        errors.push(`[VPC Lattice]: serviceAssociations contain duplicate (vpc, serviceNetwork) pairs.`);
+      if (duplicatePairs.size > 0) {
+        errors.push(
+          `[VPC Lattice]: serviceAssociations contain duplicate (vpc, serviceNetwork) pairs: ${Array.from(duplicatePairs).join(', ')}.`,
+        );
       }
     }
   }

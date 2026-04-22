@@ -105,13 +105,12 @@ describe('VpcLatticeValidator', () => {
 
     expect(errors.length).toBe(1);
     expect(errors).toContain(
-      '[VPC Lattice Service Association]: Target VPC Ghost-VPC does not exist in network-config.yaml file',
+      '[VPC Lattice Service Association Ghost-VPC -> main-service-network]: Target VPC Ghost-VPC does not exist in network-config.yaml file',
     );
   });
 
   test('resolves VPC template reference handling regression', () => {
     const errors: string[] = [];
-    // The beforeEach setup includes a valid association to 'Template-VPC' which is a vpcTemplate.
     new VpcLatticeValidator(networkConfig as NetworkConfig, helpers, errors);
     expect(errors.length).toBe(0);
   });
@@ -124,11 +123,27 @@ describe('VpcLatticeValidator', () => {
 
     expect(errors.length).toBe(1);
     expect(errors).toContain(
-      '[VPC Lattice Service Association]: Target Service Network Ghost-Network is not declared in vpcLattice.serviceNetworks',
+      '[VPC Lattice Service Association Main-VPC -> Ghost-Network]: Target Service Network Ghost-Network is not declared in vpcLattice.serviceNetworks',
     );
   });
 
-  test('rejects duplicate service network names', () => {
+  test('rejects combined unknown VPC and unknown network', () => {
+    const errors: string[] = [];
+    networkConfig.vpcLattice!.serviceAssociations![0].vpc = 'Ghost-VPC';
+    networkConfig.vpcLattice!.serviceAssociations![0].serviceNetwork = 'Ghost-Network';
+
+    new VpcLatticeValidator(networkConfig as NetworkConfig, helpers, errors);
+
+    expect(errors.length).toBe(2);
+    expect(errors).toContain(
+      '[VPC Lattice Service Association Ghost-VPC -> Ghost-Network]: Target VPC Ghost-VPC does not exist in network-config.yaml file',
+    );
+    expect(errors).toContain(
+      '[VPC Lattice Service Association Ghost-VPC -> Ghost-Network]: Target Service Network Ghost-Network is not declared in vpcLattice.serviceNetworks',
+    );
+  });
+
+  test('rejects duplicate service network names and lists them', () => {
     const errors: string[] = [];
     networkConfig.vpcLattice!.serviceNetworks.push({
       name: 'main-service-network',
@@ -139,10 +154,10 @@ describe('VpcLatticeValidator', () => {
     new VpcLatticeValidator(networkConfig as NetworkConfig, helpers, errors);
 
     expect(errors.length).toBe(1);
-    expect(errors).toContain('[VPC Lattice]: serviceNetworks contain duplicate names.');
+    expect(errors).toContain('[VPC Lattice]: serviceNetworks contain duplicate names: main-service-network.');
   });
 
-  test('rejects duplicate association pairs', () => {
+  test('rejects duplicate association pairs and lists them', () => {
     const errors: string[] = [];
     networkConfig.vpcLattice!.serviceAssociations!.push({
       vpc: 'Main-VPC',
@@ -152,7 +167,9 @@ describe('VpcLatticeValidator', () => {
     new VpcLatticeValidator(networkConfig as NetworkConfig, helpers, errors);
 
     expect(errors.length).toBe(1);
-    expect(errors).toContain('[VPC Lattice]: serviceAssociations contain duplicate (vpc, serviceNetwork) pairs.');
+    expect(errors).toContain(
+      '[VPC Lattice]: serviceAssociations contain duplicate (vpc, serviceNetwork) pairs: Main-VPC -> main-service-network.',
+    );
   });
 
   test('skips if no vpcLattice config', () => {
