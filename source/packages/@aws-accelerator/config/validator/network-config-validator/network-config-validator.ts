@@ -30,6 +30,7 @@ import { NetworkValidatorFunctions } from './network-validator-functions';
 import { PrefixListValidator } from './prefix-list-validator';
 import { TransitGatewayValidator } from './transit-gateway-validator';
 import { VpcValidator } from './vpc-validator';
+import { VpcLatticeValidator } from './vpc-lattice-validator';
 import { ReplacementsConfig } from '../../lib/replacements-config';
 
 /**
@@ -88,6 +89,7 @@ export class NetworkConfigValidator {
     new DirectConnectGatewaysValidator(values, errors);
     new FirewallManagerValidator(values, helpers, errors);
     new CertificatesValidator(values, errors);
+    new VpcLatticeValidator(values, helpers, errors);
 
     if (errors.length) {
       throw new Error(`${NetworkConfig.FILENAME} has ${errors.length} issues:\n${errors.join('\n')}`);
