@@ -1112,9 +1112,6 @@ export class SecurityResourcesStack extends AcceleratorStack {
     assumeRoleArn?: string[],
     configFunctionName?: string,
   ): RemediationParameters | undefined {
-    if (!params) {
-      return undefined;
-    }
 
     const returnParams: RemediationParameters = {};
     if (assumeRoleArn) {
@@ -1123,6 +1120,10 @@ export class SecurityResourcesStack extends AcceleratorStack {
           Values: assumeRoleArn,
         },
       };
+    }
+
+    if (!params) {
+      return returnParams;
     }
 
     for (const param of params) {
