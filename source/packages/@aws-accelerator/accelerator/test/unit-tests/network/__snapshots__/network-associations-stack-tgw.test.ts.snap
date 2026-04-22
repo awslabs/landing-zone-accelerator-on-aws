@@ -1,0 +1,85 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`NetworkAssociationsStack TGW association/propagation guards > createTransitGatewayRouteTableAssociation method body snapshot 1`] = `
+"{
+    // Get transit gateway attachment ID
+    const transitGatewayAttachmentId = this.transitGatewayAttachments.get(attachmentKey);
+    if (!transitGatewayAttachmentId) {
+      this.logger.error(\`Transit Gateway attachment \${attachmentKey} not found\`);
+      throw new Error(\`Configuration validation failed at runtime.\`);
+    }
+    // Do not early-return when the attachment is ASEA-managed. The inner per-item
+    // \`isManagedByAsea(TRANSIT_GATEWAY_ASSOCIATION, ...)\` check already skips items ASEA owns;
+    // skipping the whole attachment caused deletion of LZA-created route table
+    // associations (e.g. \`Main_tgw_dev_rt\`) on upgrade.
+    for (const routeTableItem of tgwAttachmentItem.routeTableAssociations ?? []) {
+      const tgwAssociationLookupId = \`\${owningAccount}/\${tgwAttachmentItem.transitGateway.name}/\${tgwAttachmentItem.name}/\${routeTableItem}\`;
+      if (this.isManagedByAsea(AseaResourceType.TRANSIT_GATEWAY_ASSOCIATION, tgwAssociationLookupId)) {
+        this.logger.info(\`TGW Association "\${tgwAssociationLookupId}" is managed externally.\`);
+        continue;
+      }
+      const associationsKey = \`\${tgwAttachmentItem.transitGateway.name}_\${routeTableItem}\`;
+      let associationId: string;
+      if (isNetworkType<VpcConfig>('IVpcConfig', vpcItem)) {
+        associationId = \`\${pascalCase(tgwAttachmentItem.name)}\${pascalCase(routeTableItem)}Association\`;
+      } else {
+        associationId = \`\${pascalCase(tgwAttachmentItem.name)}\${pascalCase(routeTableItem)}\${pascalCase(
+          owningAccount,
+        )}Association\`;
+      }
+
+      const transitGatewayRouteTableId = this.transitGatewayRouteTables.get(associationsKey);
+      if (transitGatewayRouteTableId === undefined) {
+        this.logger.error(\`Transit Gateway Route Table \${associationsKey} not found\`);
+        throw new Error(\`Configuration validation failed at runtime.\`);
+      }
+
+      new TransitGatewayRouteTableAssociation(this, associationId, {
+        transitGatewayAttachmentId,
+        transitGatewayRouteTableId,
+      });
+    }
+  }"
+`;
+
+exports[`NetworkAssociationsStack TGW association/propagation guards > createTransitGatewayRouteTablePropagation method body snapshot 1`] = `
+"{
+    // Get transit gateway attachment ID
+    const transitGatewayAttachmentId = this.transitGatewayAttachments.get(attachmentKey);
+    if (!transitGatewayAttachmentId) {
+      this.logger.error(\`Transit Gateway attachment \${attachmentKey} not found\`);
+      throw new Error(\`Configuration validation failed at runtime.\`);
+    }
+    // Do not early-return when the attachment is ASEA-managed. The inner per-item
+    // \`isManagedByAsea(TRANSIT_GATEWAY_PROPAGATION, ...)\` check already skips items ASEA owns;
+    // skipping the whole attachment caused deletion of LZA-created route table
+    // propagations (e.g. \`Main_tgw_dev_rt\`) on upgrade.
+    for (const routeTableItem of tgwAttachmentItem.routeTablePropagations ?? []) {
+      const propagationLookupId = \`\${owningAccount}/\${tgwAttachmentItem.transitGateway.name}/\${tgwAttachmentItem.name}/\${routeTableItem}\`;
+      if (this.isManagedByAsea(AseaResourceType.TRANSIT_GATEWAY_PROPAGATION, propagationLookupId)) {
+        this.logger.info(\`TGW Propagation "\${propagationLookupId}" is managed externally.\`);
+        continue;
+      }
+      const propagationsKey = \`\${tgwAttachmentItem.transitGateway.name}_\${routeTableItem}\`;
+      let propagationId: string;
+      if (isNetworkType('IVpcConfig', vpcItem)) {
+        propagationId = \`\${pascalCase(tgwAttachmentItem.name)}\${pascalCase(routeTableItem)}Propagation\`;
+      } else {
+        propagationId = \`\${pascalCase(tgwAttachmentItem.name)}\${pascalCase(routeTableItem)}\${pascalCase(
+          owningAccount,
+        )}Propagation\`;
+      }
+
+      const transitGatewayRouteTableId = this.transitGatewayRouteTables.get(propagationsKey);
+      if (!transitGatewayRouteTableId) {
+        this.logger.error(\`Transit Gateway Route Table \${propagationsKey} not found\`);
+        throw new Error(\`Configuration validation failed at runtime.\`);
+      }
+
+      new TransitGatewayRouteTablePropagation(this, propagationId, {
+        transitGatewayAttachmentId,
+        transitGatewayRouteTableId,
+      });
+    }
+  }"
+`;

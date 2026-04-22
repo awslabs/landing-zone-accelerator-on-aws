@@ -173,7 +173,7 @@ export class TgwCrossAccountResources extends AseaResource {
     }
   }
 
-  private matchesAttachmentId(propertyValue: { Ref?: string } | string, attachmentId: string): boolean {
+  public matchesAttachmentId(propertyValue: { Ref?: string } | string | undefined, attachmentId: string): boolean {
     if (typeof propertyValue === 'string') {
       return propertyValue === attachmentId;
     }

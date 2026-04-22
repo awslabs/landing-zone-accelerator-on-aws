@@ -1,0 +1,83 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`TgwCrossAccountResources ghost-entry regression guards > createTgwAssociation method body snapshot 1`] = `
+"{
+    for (const routeTableItem of tgwAttachmentItem.routeTableAssociations ?? []) {
+      const attachmentId = transitGatewayAttachments[tgwAttachmentItem.name];
+      if (!attachmentId) continue;
+      const tgwAssociationRes = this.associationResources.find(
+        association =>
+          this.matchesAttachmentId(
+            association.resourceMetadata['Properties'].TransitGatewayAttachmentId,
+            attachmentId,
+          ) &&
+          association.resourceMetadata['Properties'].TransitGatewayRouteTableId ===
+            this.getTgwRouteTableId(routeTableItem, mapping),
+      );
+      if (!tgwAssociationRes) continue;
+      const association = this.scope.getResource(
+        tgwAssociationRes.logicalResourceId,
+      ) as cdk.aws_ec2.CfnTransitGatewayRouteTableAssociation;
+      if (!association) {
+        this.scope.addLogs(
+          LogLevel.WARN,
+          \`TGW Association for "\${tgwAttachmentItem.name}/\${routeTableItem}" exists in Mapping but not found in resources\`,
+        );
+      }
+      // Propagation resourceId is not used anywhere in LZA. No need of SSM Parameter.
+      this.scope.addAseaResource(
+        AseaResourceType.TRANSIT_GATEWAY_ASSOCIATION,
+        \`\${accountName}/\${tgwAttachmentItem.transitGateway.name}/\${tgwAttachmentItem.name}/\${routeTableItem}\`,
+      );
+    }
+  }"
+`;
+
+exports[`TgwCrossAccountResources ghost-entry regression guards > createTgwPropagations method body snapshot 1`] = `
+"{
+    for (const routeTableItem of tgwAttachmentItem.routeTablePropagations ?? []) {
+      const attachmentId = transitGatewayAttachments[tgwAttachmentItem.name];
+      if (!attachmentId) continue;
+      const tgwPropagationRes = this.propagationResources.find(
+        propagation =>
+          this.matchesAttachmentId(
+            propagation.resourceMetadata['Properties'].TransitGatewayAttachmentId,
+            attachmentId,
+          ) &&
+          propagation.resourceMetadata['Properties'].TransitGatewayRouteTableId ===
+            this.getTgwRouteTableId(routeTableItem, mapping),
+      );
+      if (!tgwPropagationRes) continue;
+      const propagation = this.stack.getResource(
+        tgwPropagationRes.logicalResourceId,
+      ) as cdk.aws_ec2.CfnTransitGatewayRouteTablePropagation;
+      if (!propagation) {
+        this.scope.addLogs(
+          LogLevel.WARN,
+          \`TGW Propagation for "\${tgwAttachmentItem.name}/\${routeTableItem}" exists in Mapping but not found in resources\`,
+        );
+      }
+      // Propagation resourceId is not used anywhere in LZA. No need of SSM Parameter.
+      this.scope.addAseaResource(
+        AseaResourceType.TRANSIT_GATEWAY_PROPAGATION,
+        \`\${accountName}/\${tgwAttachmentItem.transitGateway.name}/\${tgwAttachmentItem.name}/\${routeTableItem}\`,
+      );
+    }
+  }"
+`;
+
+exports[`TgwCrossAccountResources ghost-entry regression guards > setTransitGatewayIds method body snapshot 1`] = `
+"{
+    // Loop through attachment owner accounts
+    for (const owningAccount of accountNames) {
+      const tgwAttachmentId = this.getTgwAttachmentId(
+        vpcItem.name,
+        tgwAttachmentItem.name,
+        this.props.mapping,
+        owningAccount,
+        vpcItem.region,
+      );
+      if (tgwAttachmentId) transitGatewayAttachments[tgwAttachmentItem.name] = tgwAttachmentId;
+    }
+  }"
+`;
