@@ -3,14 +3,12 @@ ENV NODE_OPTIONS=--max-old-space-size=16384
 
 ADD ./ /landing-zone-accelerator-on-aws-staging
 RUN dnf update -y
-RUN dnf install -y nodejs22 awscli zip tar gzip
+RUN dnf install -y nodejs22 awscli zip
 RUN npm -g install yarn
 
-# Extract source if provided as tarball
-RUN mkdir -p /landing-zone-accelerator-on-aws/source && \
-    if [ -f /landing-zone-accelerator-on-aws-staging/source.tar.gz ]; then \
-      tar -xzf /landing-zone-accelerator-on-aws-staging/source.tar.gz -C /landing-zone-accelerator-on-aws/source/; \
-    fi && \
+# Copy source and scripts from staging
+RUN mkdir -p /landing-zone-accelerator-on-aws && \
+    cp -r /landing-zone-accelerator-on-aws-staging/source /landing-zone-accelerator-on-aws/source && \
     cp -r /landing-zone-accelerator-on-aws-staging/scripts /landing-zone-accelerator-on-aws/
 
 # Build the source
