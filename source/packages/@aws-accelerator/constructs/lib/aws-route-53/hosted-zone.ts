@@ -114,6 +114,9 @@ export class HostedZone extends cdk.Resource implements IHostedZone {
       case 'sagemaker.featurestore-runtime':
         hostedZoneName = `featurestore-runtime.sagemaker.${region}.amazonaws.com`;
         break;
+      case 'route53':
+        hostedZoneName = `${service}.amazonaws.com`;
+        break;
     }
     return hostedZoneName;
   }
