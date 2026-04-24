@@ -123,6 +123,10 @@ export enum ServiceLinkedRoleType {
    * AWS Firewall Manager SLR
    */
   FMS = 'fms',
+  /**
+   * AWS Backup SLR
+   */ 
+  AWS_BACKUP = 'backup',
 }
 
 /**
@@ -1108,6 +1112,16 @@ export abstract class AcceleratorStack extends cdk.Stack {
           cloudWatchLogKmsKey: key.cloudwatch,
           cloudWatchLogRetentionInDays: this.props.globalConfig.cloudwatchLogRetentionInDays,
           roleName: 'AWSServiceRoleForFMS',
+        });
+        break;
+      case ServiceLinkedRoleType.AWS_BACKUP:
+        this.logger.debug('Create BackupServiceLinkedRole');
+        serviceLinkedRole = new ServiceLinkedRole(this, 'BackupServiceLinkedRole', {
+          awsServiceName: 'backup.amazonaws.com',
+          environmentEncryptionKmsKey: key.lambda,
+          cloudWatchLogKmsKey: key.cloudwatch,
+          cloudWatchLogRetentionInDays: this.props.globalConfig.cloudwatchLogRetentionInDays,
+          roleName: 'AWSBackupDefaultServiceRole',
         });
         break;
       default:
