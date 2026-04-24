@@ -81,6 +81,11 @@ export class OperationsStack extends AcceleratorStack {
   private cloudwatchKey: cdk.aws_kms.IKey | undefined;
 
   /**
+   * KMS Key used to encrypt custom resource Lambda environment variables, when undefined default AWS managed key will be used
+   */
+  private lambdaKey: cdk.aws_kms.IKey | undefined;
+
+  /**
    * KMS Key for central S3 Bucket
    */
   private centralLogsBucketKey: cdk.aws_kms.IKey;
@@ -98,6 +103,8 @@ export class OperationsStack extends AcceleratorStack {
     this.cloudwatchKey = this.getAcceleratorKey(AcceleratorKeyType.CLOUDWATCH_KEY);
 
     this.centralLogsBucketKey = this.getCentralLogsBucketKey(this.cloudwatchKey);
+
+    this.lambdaKey = this.getAcceleratorKey(AcceleratorKeyType.LAMBDA_KEY);
 
     //
     // Look up asset bucket KMS key
@@ -147,7 +154,7 @@ export class OperationsStack extends AcceleratorStack {
     //
     // Backup Vaults
     //
-    this.addBackupVaults();
+    this.addBackupVaults({ cloudwatch: this.cloudwatchKey, lambda: this.lambdaKey });
 
     if (
       this.props.globalConfig.ssmInventory?.enable &&
@@ -775,10 +782,17 @@ export class OperationsStack extends AcceleratorStack {
    * Adds Backup Vaults as defined in the global-config.yaml. These Vaults can
    * be referenced in AWS Organizations Backup Policies
    */
-  private addBackupVaults() {
+  private addBackupVaults(key: { cloudwatch?: cdk.aws_kms.IKey; lambda?: cdk.aws_kms.IKey }) {
     let backupKey: cdk.aws_kms.IKey | undefined = undefined;
     for (const vault of this.props.globalConfig.backup?.vaults ?? []) {
       if (this.isIncluded(vault.deploymentTargets)) {
+
+        // Create backup service linked role in the event of cross account backups
+        this.createBackupServiceLinkedRole({
+          cloudwatch: key.cloudwatch,
+          lambda: key.lambda,
+        });
+
         // Only create the key if a vault is defined for this account
         if (backupKey === undefined) {
           backupKey = new cdk.aws_kms.Key(this, 'BackupKey', {

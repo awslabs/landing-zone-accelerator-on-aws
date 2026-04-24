@@ -549,6 +549,65 @@ export abstract class AcceleratorStack extends cdk.Stack {
     }
   }
 
+   /**
+   * Create Backup Service Linked role
+   *
+   * @remarks
+   * Backup Service linked role is created when a backup vault is created, it is needed for cross account backups.
+   */
+  protected createBackupServiceLinkedRole(key: { cloudwatch?: cdk.aws_kms.IKey; lambda?: cdk.aws_kms.IKey }) {
+    if (
+      this.props.globalConfig.backup &&
+      this.serviceLinkedRoleSupportedPartitionList.includes(this.props.partition)
+    ) {
+      this.createServiceLinkedRole(ServiceLinkedRoleType.BACKUP, {
+        cloudwatch: key.cloudwatch,
+        lambda: key.lambda,
+      });
+
+      this.nagSuppressionInputs.push({
+        id: NagSuppressionRuleIds.IAM4,
+        details: [
+          {
+            path: `${this.stackName}/BackupServiceLinkedRole/CreateServiceLinkedRoleFunction/ServiceRole/Resource`,
+            reason: 'Custom resource Lambda role policy.',
+          },
+        ],
+      });
+
+      this.nagSuppressionInputs.push({
+        id: NagSuppressionRuleIds.IAM5,
+        details: [
+          {
+            path: `${this.stackName}/BackupServiceLinkedRole/CreateServiceLinkedRoleFunction/ServiceRole/DefaultPolicy/Resource`,
+            reason: 'Custom resource Lambda role policy.',
+          },
+        ],
+      });
+
+      this.nagSuppressionInputs.push({
+        id: NagSuppressionRuleIds.IAM4,
+        details: [
+          {
+            path: `${this.stackName}/BackupServiceLinkedRole/CreateServiceLinkedRoleProvider/framework-onEvent/ServiceRole/Resource`,
+            reason: 'Custom resource Lambda role policy.',
+          },
+        ],
+      });
+
+      this.nagSuppressionInputs.push({
+        id: NagSuppressionRuleIds.IAM5,
+        details: [
+          {
+            path: `${this.stackName}/BackupServiceLinkedRole/CreateServiceLinkedRoleProvider/framework-onEvent/ServiceRole/DefaultPolicy/Resource`,
+            reason: 'Custom resource Lambda role policy.',
+          },
+        ],
+      });
+    }
+  }
+
+
   /**
    * Create Config Service Linked role
    *
