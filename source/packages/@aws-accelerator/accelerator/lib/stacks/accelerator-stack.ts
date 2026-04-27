@@ -125,7 +125,7 @@ export enum ServiceLinkedRoleType {
   FMS = 'fms',
   /**
    * AWS Backup SLR
-   */ 
+   */
   AWS_BACKUP = 'backup',
 }
 
@@ -549,18 +549,15 @@ export abstract class AcceleratorStack extends cdk.Stack {
     }
   }
 
-   /**
+  /**
    * Create Backup Service Linked role
    *
    * @remarks
    * Backup Service linked role is created when a backup vault is created, it is needed for cross account backups.
    */
   protected createBackupServiceLinkedRole(key: { cloudwatch?: cdk.aws_kms.IKey; lambda?: cdk.aws_kms.IKey }) {
-    if (
-      this.props.globalConfig.backup &&
-      this.serviceLinkedRoleSupportedPartitionList.includes(this.props.partition)
-    ) {
-      this.createServiceLinkedRole(ServiceLinkedRoleType.BACKUP, {
+    if (this.props.globalConfig.backup && this.serviceLinkedRoleSupportedPartitionList.includes(this.props.partition)) {
+      this.createServiceLinkedRole(ServiceLinkedRoleType.AWS_BACKUP, {
         cloudwatch: key.cloudwatch,
         lambda: key.lambda,
       });
@@ -606,7 +603,6 @@ export abstract class AcceleratorStack extends cdk.Stack {
       });
     }
   }
-
 
   /**
    * Create Config Service Linked role

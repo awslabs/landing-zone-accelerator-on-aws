@@ -784,15 +784,15 @@ export class OperationsStack extends AcceleratorStack {
    */
   private addBackupVaults(key: { cloudwatch?: cdk.aws_kms.IKey; lambda?: cdk.aws_kms.IKey }) {
     let backupKey: cdk.aws_kms.IKey | undefined = undefined;
+
+    // Create backup service linked role in the event of cross account backups
+    this.createBackupServiceLinkedRole({
+      cloudwatch: key.cloudwatch,
+      lambda: key.lambda,
+    });
+
     for (const vault of this.props.globalConfig.backup?.vaults ?? []) {
       if (this.isIncluded(vault.deploymentTargets)) {
-
-        // Create backup service linked role in the event of cross account backups
-        this.createBackupServiceLinkedRole({
-          cloudwatch: key.cloudwatch,
-          lambda: key.lambda,
-        });
-
         // Only create the key if a vault is defined for this account
         if (backupKey === undefined) {
           backupKey = new cdk.aws_kms.Key(this, 'BackupKey', {
