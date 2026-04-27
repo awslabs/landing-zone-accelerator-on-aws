@@ -154,7 +154,7 @@ export class OperationsStack extends AcceleratorStack {
     //
     // Backup Vaults
     //
-    this.addBackupVaults({ cloudwatch: this.cloudwatchKey, lambda: this.lambdaKey });
+    this.addBackupVaults();
 
     if (
       this.props.globalConfig.ssmInventory?.enable &&
@@ -782,12 +782,12 @@ export class OperationsStack extends AcceleratorStack {
    * Adds Backup Vaults as defined in the global-config.yaml. These Vaults can
    * be referenced in AWS Organizations Backup Policies
    */
-  private addBackupVaults(key: { cloudwatch?: cdk.aws_kms.IKey; lambda?: cdk.aws_kms.IKey }) {
+  private addBackupVaults() {
     let backupKey: cdk.aws_kms.IKey | undefined = undefined;
     // Create backup service linked role
     this.createBackupServiceLinkedRole({
-      cloudwatch: key.cloudwatch,
-      lambda: key.lambda,
+      cloudwatch: this.cloudwatchKey,
+      lambda: this.lambdaKey,
     });
 
     for (const vault of this.props.globalConfig.backup?.vaults ?? []) {
