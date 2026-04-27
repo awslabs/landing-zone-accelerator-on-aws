@@ -123,6 +123,10 @@ export enum ServiceLinkedRoleType {
    * AWS Firewall Manager SLR
    */
   FMS = 'fms',
+  /**
+   * AWS Backup SLR
+   */
+  AWS_BACKUP = 'backup',
 }
 
 /**
@@ -538,6 +542,61 @@ export abstract class AcceleratorStack extends cdk.Stack {
         details: [
           {
             path: `${this.stackName}/AccessAnalyzerServiceLinkedRole/CreateServiceLinkedRoleProvider/framework-onEvent/ServiceRole/DefaultPolicy/Resource`,
+            reason: 'Custom resource Lambda role policy.',
+          },
+        ],
+      });
+    }
+  }
+
+  /**
+   * Create Backup Service Linked role
+   *
+   * @remarks
+   * Backup Service linked role is created when a backup vault is created, it is needed for cross account backups.
+   */
+  protected createBackupServiceLinkedRole(key: { cloudwatch?: cdk.aws_kms.IKey; lambda?: cdk.aws_kms.IKey }) {
+    if (this.props.globalConfig.backup && this.serviceLinkedRoleSupportedPartitionList.includes(this.props.partition)) {
+      this.createServiceLinkedRole(ServiceLinkedRoleType.AWS_BACKUP, {
+        cloudwatch: key.cloudwatch,
+        lambda: key.lambda,
+      });
+
+      this.nagSuppressionInputs.push({
+        id: NagSuppressionRuleIds.IAM4,
+        details: [
+          {
+            path: `${this.stackName}/BackupServiceLinkedRole/CreateServiceLinkedRoleFunction/ServiceRole/Resource`,
+            reason: 'Custom resource Lambda role policy.',
+          },
+        ],
+      });
+
+      this.nagSuppressionInputs.push({
+        id: NagSuppressionRuleIds.IAM5,
+        details: [
+          {
+            path: `${this.stackName}/BackupServiceLinkedRole/CreateServiceLinkedRoleFunction/ServiceRole/DefaultPolicy/Resource`,
+            reason: 'Custom resource Lambda role policy.',
+          },
+        ],
+      });
+
+      this.nagSuppressionInputs.push({
+        id: NagSuppressionRuleIds.IAM4,
+        details: [
+          {
+            path: `${this.stackName}/BackupServiceLinkedRole/CreateServiceLinkedRoleProvider/framework-onEvent/ServiceRole/Resource`,
+            reason: 'Custom resource Lambda role policy.',
+          },
+        ],
+      });
+
+      this.nagSuppressionInputs.push({
+        id: NagSuppressionRuleIds.IAM5,
+        details: [
+          {
+            path: `${this.stackName}/BackupServiceLinkedRole/CreateServiceLinkedRoleProvider/framework-onEvent/ServiceRole/DefaultPolicy/Resource`,
             reason: 'Custom resource Lambda role policy.',
           },
         ],
@@ -1108,6 +1167,16 @@ export abstract class AcceleratorStack extends cdk.Stack {
           cloudWatchLogKmsKey: key.cloudwatch,
           cloudWatchLogRetentionInDays: this.props.globalConfig.cloudwatchLogRetentionInDays,
           roleName: 'AWSServiceRoleForFMS',
+        });
+        break;
+      case ServiceLinkedRoleType.AWS_BACKUP:
+        this.logger.debug('Create BackupServiceLinkedRole');
+        serviceLinkedRole = new ServiceLinkedRole(this, 'BackupServiceLinkedRole', {
+          awsServiceName: 'backup.amazonaws.com',
+          environmentEncryptionKmsKey: key.lambda,
+          cloudWatchLogKmsKey: key.cloudwatch,
+          cloudWatchLogRetentionInDays: this.props.globalConfig.cloudwatchLogRetentionInDays,
+          roleName: 'AWSBackupDefaultServiceRole',
         });
         break;
       default:
