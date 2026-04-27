@@ -1120,19 +1120,19 @@
     },
     "IPortfolioAssociatoinConfig": {
       "additionalProperties": false,
-      "description": "Portfolio Associations configuration",
+      "description": "Gives an IAM user, group, role, or IAM Identity Center permission set access to a Service Catalog portfolio. A principal must be associated with a portfolio before it can view or launch any of the products inside.",
       "properties": {
         "name": {
           "$ref": "#/definitions/NonEmptyString",
-          "description": "Indicates the name of the principal to associate the portfolio with."
+          "description": "The name of the IAM group, user, role, or permission set you are granting access to. The principal must already exist in the account where the portfolio is deployed. If `propagateAssociation` is enabled, it must also exist in every account the portfolio is shared with."
         },
         "propagateAssociation": {
-          "description": "Indicates whether the principal association should be created in accounts the portfolio is shared with. Verify the IAM principal exists in all accounts the portfolio is shared with before enabling.",
+          "description": "Also create the association in every account the portfolio is shared with, so principals with the same `name` in those accounts get access too. Defaults to `false`.",
           "type": "boolean"
         },
         "type": {
           "$ref": "#/definitions/PortfolioAssociationType",
-          "description": "Indicates the type of portfolio association, valid values are: Group, User, and Role."
+          "description": "What kind of principal `name` refers to. Use `Group`, `User`, or `Role` for an IAM group, user, or role in the account where the portfolio lives. Use `PermissionSet` to reference an IAM Identity Center permission set, which LZA resolves to the IAM role that Identity Center provisions in each target account."
         }
       },
       "required": [
@@ -1143,25 +1143,25 @@
     },
     "IPortfolioConfig": {
       "additionalProperties": false,
-      "description": "Service Catalog Portfolios configuration",
+      "description": "A Service Catalog portfolio — a collection of products that you share with IAM principals or organizational units, so the people in those accounts can launch the products.\n\nPortfolios are listed under `customizations.serviceCatalogPortfolios` in the customizations config file.",
       "properties": {
         "account": {
           "$ref": "#/definitions/NonEmptyString",
-          "description": "The name of the account to deploy the portfolio."
+          "description": "The LZA friendly name of the account where the portfolio is created. Must match an entry in `accounts-config.yaml`."
         },
         "name": {
           "$ref": "#/definitions/NonEmptyString",
-          "description": "The name of the portfolio"
+          "description": "The portfolio name users see in the Service Catalog console. 1 to 100 characters."
         },
         "portfolioAssociations": {
-          "description": "Configuration of portfolio associations to give access to IAM principals.",
+          "description": "IAM principals that should have access to view and launch the products in this portfolio. See  {@link  PortfolioAssociationConfig  } .",
           "items": {
             "$ref": "#/definitions/IPortfolioAssociatoinConfig"
           },
           "type": "array"
         },
         "products": {
-          "description": "Product Configuration",
+          "description": "The products to create inside this portfolio. See  {@link  ProductConfig  } .",
           "items": {
             "$ref": "#/definitions/IProductConfig"
           },
@@ -1169,25 +1169,25 @@
         },
         "provider": {
           "$ref": "#/definitions/NonEmptyString",
-          "description": "The provider of the portfolio"
+          "description": "The team or organization that owns the portfolio. Shown in the Service Catalog console so users know who's behind it. 1 to 50 characters."
         },
         "regions": {
-          "description": "The region names to deploy the portfolio.",
+          "description": "The regions to create the portfolio in (for example, `us-east-1`). The portfolio and its products are deployed independently in each region.",
           "items": {
             "type": "string"
           },
           "type": "array"
         },
         "shareTagOptions": {
-          "description": "Whether or not to share TagOptions with other account(s)/OU(s)",
+          "description": "Set to `true` to also share this portfolio's TagOptions with every shared-to account. Has no effect unless `shareTargets` is set. Defaults to `false`.",
           "type": "boolean"
         },
         "shareTargets": {
           "$ref": "#/definitions/IShareTargets",
-          "description": "Portfolio share target. Sharing portfolios to Organizational Units is only supported for portfolios in the Management account."
+          "description": "The accounts and organizational units you want to share this portfolio with. Once shared, admins in each recipient account can give their own users access. See  {@link  IShareTargets  } ."
         },
         "tagOptions": {
-          "description": "Portfolio TagOptions configuration",
+          "description": "TagOptions attached to the portfolio itself. Every product in the portfolio picks these up. See  {@link  TagOptionsConfig  } .",
           "items": {
             "$ref": "#/definitions/ITagOptionsConfig"
           },
@@ -1219,41 +1219,41 @@
     },
     "IProductConfig": {
       "additionalProperties": false,
-      "description": "Service Catalog Products configuration",
+      "description": "A Service Catalog product — a CloudFormation template (one or more versions of it) that users can launch through Service Catalog. The remaining fields describe the product and how it behaves. Every product needs at least one version.",
       "properties": {
         "constraints": {
           "$ref": "#/definitions/IProductConstraintConfig",
-          "description": "Product Constraint configuration"
+          "description": "Launch role, tag-update, and notification rules for this product. See  {@link  ProductConstraintConfig  } ."
         },
         "description": {
           "$ref": "#/definitions/NonEmptyString",
-          "description": "Product description"
+          "description": "What the product is and what it deploys. Shown on the details page. Maximum 8,191 characters."
         },
         "distributor": {
           "$ref": "#/definitions/NonEmptyString",
-          "description": "The name of the product's publisher."
+          "description": "Who publishes the product (for example, a vendor or internal team name). Shown on the details page. Maximum 8,191 characters."
         },
         "name": {
           "$ref": "#/definitions/NonEmptyString",
-          "description": "The name of the product"
+          "description": "The product name users see in the Service Catalog console. Maximum 8,191 characters."
         },
         "owner": {
           "$ref": "#/definitions/NonEmptyString",
-          "description": "The owner of the product"
+          "description": "The team or person responsible for the product. Shown on the product's details page. Maximum 8,191 characters."
         },
         "support": {
           "$ref": "#/definitions/IProductSupportConfig",
-          "description": "Product support details."
+          "description": "How users can get help with the product. See  {@link  ProductSupportConfig  } ."
         },
         "tagOptions": {
-          "description": "Product TagOptions configuration",
+          "description": "Managed tags that Service Catalog applies to resources launched from this product. See  {@link  TagOptionsConfig  } .",
           "items": {
             "$ref": "#/definitions/ITagOptionsConfig"
           },
           "type": "array"
         },
         "versions": {
-          "description": "Product version configuration",
+          "description": "The versions of this product. You need at least one. See  {@link  ProductVersionConfig  } .",
           "items": {
             "$ref": "#/definitions/IProductVersionConfig"
           },
@@ -1269,21 +1269,21 @@
     },
     "IProductConstraintConfig": {
       "additionalProperties": false,
-      "description": "Service Catalog Product Constraint configuration. For more information see https://docs.aws.amazon.com/servicecatalog/latest/adminguide/constraints.html",
+      "description": "Rules that control how a product behaves when users launch it — which role to use, whether they can change tags, and where to send notifications. All fields are optional.",
       "properties": {
         "launch": {
           "$ref": "#/definitions/IProductLaunchConstraintConfig",
-          "description": "Launch constraint role name and type, supports LocalRole or Role."
+          "description": "The IAM role Service Catalog assumes when launching the product. See  {@link  ProductLaunchConstraintConfig  } ."
         },
         "notifications": {
-          "description": "A list of SNS topic names to stream product notifications to",
+          "description": "Names of SNS topics that should receive stack events when the product is launched, updated, or terminated. Use topic names, not ARNs.",
           "items": {
             "$ref": "#/definitions/NonEmptyString"
           },
           "type": "array"
         },
         "tagUpdate": {
-          "description": "Determines if Service Catalog Tag Update constraint is enabled",
+          "description": "Set to `true` to let users update tags on resources created from this product after launch. When `false` or omitted, tags are locked once the product is launched.",
           "type": "boolean"
         }
       },
@@ -1291,15 +1291,15 @@
     },
     "IProductLaunchConstraintConfig": {
       "additionalProperties": false,
-      "description": "Service Catalog Product Constraint configuration. For more information see https://docs.aws.amazon.com/servicecatalog/latest/adminguide/constraints.html",
+      "description": "The IAM role Service Catalog uses when someone launches a product. This lets users deploy products that create AWS resources they wouldn't normally have permission to create themselves — Service Catalog assumes the role on their behalf. Each product can have one launch constraint per portfolio.",
       "properties": {
         "role": {
           "$ref": "#/definitions/NonEmptyString",
-          "description": "The name of the IAM Role."
+          "description": "The name of the IAM role Service Catalog assumes to launch, update, or terminate the product. The role's trust policy needs to let `servicecatalog.amazonaws.com` assume it, and the role needs permissions for CloudFormation plus every AWS service the product's template uses."
         },
         "type": {
           "$ref": "#/definitions/ProductLaunchConstraintType",
-          "description": "The type of launch constraint, either Role or LocalRole. For more information, see https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-servicecatalog-launchroleconstraint.html"
+          "description": "How to look up the role:\n\n- `Role` – `role` is an IAM role in the account where the portfolio lives. Service Catalog always assumes this specific role, even when the product is launched from an account the portfolio is shared with.\n- `LocalRole` – `role` is an IAM role name that must exist with the same name in every account the product is launched from. Use this when you share a portfolio across accounts and each account owns its own copy of the role."
         }
       },
       "required": [
@@ -1310,38 +1310,38 @@
     },
     "IProductSupportConfig": {
       "additionalProperties": false,
-      "description": "Product Support configuration",
+      "description": "How users can get help with a product. Shown on the product details page in the Service Catalog console.",
       "properties": {
         "description": {
           "$ref": "#/definitions/NonEmptyString",
-          "description": "Support description of how users should use email contact and support link."
+          "description": "A short note telling users when to use the email versus the URL, or anything else they should know about getting support. Maximum 8,191 characters."
         },
         "email": {
           "$ref": "#/definitions/NonEmptyString",
-          "description": "The email address to report issues with the product"
+          "description": "Email address users can write to for help with the product. Maximum 254 characters."
         },
         "url": {
           "$ref": "#/definitions/NonEmptyString",
-          "description": "The url to the site where users can find support information or file tickets."
+          "description": "Link to a support site where users can read docs or open tickets. Must start with `http://` or `https://`. Maximum 2,083 characters."
         }
       },
       "type": "object"
     },
     "IProductVersionConfig": {
       "additionalProperties": false,
-      "description": "Product Versions configuration",
+      "description": "A single version of a Service Catalog product. Each version points at a CloudFormation template that gets deployed when a user launches that version. Every product needs at least one version.",
       "properties": {
         "description": {
           "$ref": "#/definitions/NonEmptyString",
-          "description": "The version description"
+          "description": "What's in this version, or what changed since the last one. Shown to users next to the version label. Maximum 8,192 characters."
         },
         "name": {
           "$ref": "#/definitions/NonEmptyString",
-          "description": "Name of the version of the product"
+          "description": "A label for this version, shown to users in the Service Catalog console. Use something short like `v1` or `v2-beta`. Spaces are not allowed. Maximum 8,192 characters."
         },
         "template": {
           "$ref": "#/definitions/NonEmptyString",
-          "description": "The product template."
+          "description": "Path (relative to your LZA configuration directory) to the CloudFormation template for this version. LZA uploads the template and attaches it to the product as this version."
         }
       },
       "required": [
@@ -1392,14 +1392,14 @@
     },
     "ITagOptionsConfig": {
       "additionalProperties": false,
-      "description": "Service Catalog TagOptions configuration.",
+      "description": "A managed tag that Service Catalog applies to resources when a product is launched. Unlike regular tags, TagOptions are controlled by the portfolio admin and users cannot edit them at launch time. Attach TagOptions to a portfolio or a product; products inherit any TagOptions from the portfolio they belong to.\n\nEach entry here defines one tag key with one or more allowed values. If you list multiple values, the user picks one when they launch the product.",
       "properties": {
         "key": {
           "$ref": "#/definitions/NonEmptyString",
-          "description": "The tag key"
+          "description": "The tag key that will appear on launched resources. 1 to 128 characters."
         },
         "values": {
-          "description": "An array of values that can be used for the tag key",
+          "description": "The values allowed for this key. If you list more than one, the user chooses one at launch. Each value must be 1 to 256 characters.",
           "items": {
             "$ref": "#/definitions/NonEmptyString"
           },

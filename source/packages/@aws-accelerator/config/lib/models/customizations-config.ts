@@ -1613,35 +1613,38 @@ export type PortfolioAssociationType = 'User' | 'Group' | 'Role' | 'PermissionSe
  * *{@link CustomizationsConfig} / {@link CustomizationConfig} / {@link PortfolioConfig} / {@link PortfolioAssociationConfig}*
  *
  * @description
- * Portfolio Associations configuration
+ * Gives an IAM user, group, role, or IAM Identity Center permission set access to a Service Catalog portfolio. A principal must be associated with a portfolio before it can view or launch any of the products inside.
  *
  * @example
  * ```
- * - type: Group
- *   name: Administrators
- * - type: Role
- *   name: EC2-Default-SSM-AD-Role
- *   propagateAssociation: true
- * - type: User
- *   name: breakGlassUser01
- * - type: PermissionSet
- *   name: AWSPowerUserAccess
+ * portfolioAssociations:
+ *   - type: Group
+ *     name: Administrators
+ *   - type: Role
+ *     name: EC2-Default-SSM-AD-Role
+ *     propagateAssociation: true
+ *   - type: User
+ *     name: breakGlassUser01
+ *   - type: PermissionSet
+ *     name: AWSPowerUserAccess
  * ```
+ *
+ * @see {@link https://docs.aws.amazon.com/servicecatalog/latest/adminguide/catalogs_portfolios_users.html | Granting access to users}
  */
 export interface IPortfolioAssociatoinConfig {
   /**
-   * Indicates the type of portfolio association, valid values are: Group, User, and Role.
+   * What kind of principal `name` refers to. Use `Group`, `User`, or `Role` for an IAM group, user, or role in the account where the portfolio lives. Use `PermissionSet` to reference an IAM Identity Center permission set, which LZA resolves to the IAM role that Identity Center provisions in each target account.
    */
   readonly type: PortfolioAssociationType;
   /**
-   * Indicates the name of the principal to associate the portfolio with.
+   * The name of the IAM group, user, role, or permission set you are granting access to. The principal must already exist in the account where the portfolio is deployed. If `propagateAssociation` is enabled, it must also exist in every account the portfolio is shared with.
    */
   readonly name: t.NonEmptyString;
   /**
-   * Indicates whether the principal association should be created in accounts the portfolio is shared with. Verify the IAM principal exists in all accounts the portfolio is shared with before enabling.
+   * Also create the association in every account the portfolio is shared with, so principals with the same `name` in those accounts get access too. Defaults to `false`.
    *
    * @remarks
-   * When you propagate a principal association, a potential privilege escalation path may occur. For a user in a recipient account who is not a Service Catalog Admin, but still has the ability to create Principals (Users/Roles), that user could create an IAM Principal that matches a principal name association for the portfolio. Although this user may not know which principal names are associated through Service Catalog, they may be able to guess the user. If this potential escalation path is a concern, then LZA recommends disabling propagation.
+   * Because propagation matches on principal name, a user in a shared-to account who can create IAM principals could grant themselves access by creating a principal with a matching name. If that is a concern, leave this off and set up explicit associations per account.
    */
   readonly propagateAssociation?: boolean;
 }
@@ -1650,26 +1653,32 @@ export interface IPortfolioAssociatoinConfig {
  * *{@link CustomizationsConfig} / {@link CustomizationConfig} / {@link PortfolioConfig} / {@link ProductConfig} / {@link ProductVersionConfig}*
  *
  * @description
- * Product Versions configuration
+ * A single version of a Service Catalog product. Each version points at a CloudFormation template that gets deployed when a user launches that version. Every product needs at least one version.
  *
  * @example
  * ```
- * - name: v1
- *   description: Product version 1
- *   template: path/to/template.json
+ * versions:
+ *   - name: v1
+ *     description: Initial release
+ *     template: path/to/template.json
+ *   - name: v2
+ *     description: Adds KMS encryption
+ *     template: path/to/template-v2.yaml
  * ```
+ *
+ * @see {@link https://docs.aws.amazon.com/servicecatalog/latest/dg/API_ProvisioningArtifactProperties.html | ProvisioningArtifactProperties}
  */
 export interface IProductVersionConfig {
   /**
-   * Name of the version of the product
+   * A label for this version, shown to users in the Service Catalog console. Use something short like `v1` or `v2-beta`. Spaces are not allowed. Maximum 8,192 characters.
    */
   readonly name: t.NonEmptyString;
   /**
-   * The product template.
+   * Path (relative to your LZA configuration directory) to the CloudFormation template for this version. LZA uploads the template and attaches it to the product as this version.
    */
   readonly template: t.NonEmptyString;
   /**
-   * The version description
+   * What's in this version, or what changed since the last one. Shown to users next to the version label. Maximum 8,192 characters.
    */
   readonly description?: t.NonEmptyString;
 }
@@ -1678,26 +1687,29 @@ export interface IProductVersionConfig {
  * *{@link CustomizationsConfig} / {@link CustomizationConfig} / {@link PortfolioConfig} / {@link ProductConfig} / {@link ProductSupportConfig}*
  *
  * @description
- * Product Support configuration
+ * How users can get help with a product. Shown on the product details page in the Service Catalog console.
  *
  * @example
  * ```
- * description: Product support details
- * email: support@example.com
- * url: support.example.com
+ * support:
+ *   description: Contact the Cloud Platform team with any questions.
+ *   email: support@example.com
+ *   url: https://support.example.com
  * ```
+ *
+ * @see {@link https://docs.aws.amazon.com/servicecatalog/latest/dg/API_CreateProduct.html | CreateProduct}
  */
 export interface IProductSupportConfig {
   /**
-   * The email address to report issues with the product
+   * Email address users can write to for help with the product. Maximum 254 characters.
    */
   readonly email?: t.NonEmptyString;
   /**
-   * The url to the site where users can find support information or file tickets.
+   * Link to a support site where users can read docs or open tickets. Must start with `http://` or `https://`. Maximum 2,083 characters.
    */
   readonly url?: t.NonEmptyString;
   /**
-   * Support description of how users should use email contact and support link.
+   * A short note telling users when to use the email versus the URL, or anything else they should know about getting support. Maximum 8,191 characters.
    */
   readonly description?: t.NonEmptyString;
 }
@@ -1706,21 +1718,28 @@ export interface IProductSupportConfig {
  * *{@link CustomizationsConfig} / {@link CustomizationConfig} / {@link PortfolioConfig} | {@link ProductConfig} / {@link TagOptionsConfig}*
  *
  * @description
- * Service Catalog TagOptions configuration.
+ * A managed tag that Service Catalog applies to resources when a product is launched. Unlike regular tags, TagOptions are controlled by the portfolio admin and users cannot edit them at launch time. Attach TagOptions to a portfolio or a product; products inherit any TagOptions from the portfolio they belong to.
+ *
+ * Each entry here defines one tag key with one or more allowed values. If you list multiple values, the user picks one when they launch the product.
  *
  * @example
  * ```
- * - key: Environment
- *   values: [Dev, Test, Prod]
+ * tagOptions:
+ *   - key: Environment
+ *     values: [Dev, Test, Prod]
+ *   - key: CostCenter
+ *     values: ['1234']
  * ```
+ *
+ * @see {@link https://docs.aws.amazon.com/servicecatalog/latest/adminguide/tagoptions.html | TagOptions library}
  */
 export interface ITagOptionsConfig {
   /**
-   * The tag key
+   * The tag key that will appear on launched resources. 1 to 128 characters.
    */
   readonly key: t.NonEmptyString;
   /**
-   * An array of values that can be used for the tag key
+   * The values allowed for this key. If you list more than one, the user chooses one at launch. Each value must be 1 to 256 characters.
    */
   readonly values: t.NonEmptyString[];
 }
@@ -1731,26 +1750,27 @@ export type ProductLaunchConstraintType = 'Role' | 'LocalRole';
  * *{@link CustomizationsConfig} / {@link CustomizationConfig} / {@link PortfolioConfig} | {@link ProductConfig} / {@link ProductConstraintConfig} / {@link ProductLaunchConstraintConfig}*
  *
  * @description
- * Service Catalog Product Constraint configuration. For more information see https://docs.aws.amazon.com/servicecatalog/latest/adminguide/constraints.html
+ * The IAM role Service Catalog uses when someone launches a product. This lets users deploy products that create AWS resources they wouldn't normally have permission to create themselves — Service Catalog assumes the role on their behalf. Each product can have one launch constraint per portfolio.
  *
  * @example
  * ```
- * constraints:
- *   launch:
- *    type: localRole | Role
- *    role: string
- *   tagUpdate: true | false
- *   notifications:
- *     - topicName
+ * launch:
+ *   type: Role
+ *   role: ServiceCatalogLaunchRole
  * ```
+ *
+ * @see {@link https://docs.aws.amazon.com/servicecatalog/latest/adminguide/constraints-launch.html | AWS Service Catalog launch constraints}
  */
 export interface IProductLaunchConstraintConfig {
   /**
-   * The type of launch constraint, either Role or LocalRole. For more information, see https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-servicecatalog-launchroleconstraint.html
+   * How to look up the role:
+   *
+   * - `Role` – `role` is an IAM role in the account where the portfolio lives. Service Catalog always assumes this specific role, even when the product is launched from an account the portfolio is shared with.
+   * - `LocalRole` – `role` is an IAM role name that must exist with the same name in every account the product is launched from. Use this when you share a portfolio across accounts and each account owns its own copy of the role.
    */
   readonly type: ProductLaunchConstraintType;
   /**
-   * The name of the IAM Role.
+   * The name of the IAM role Service Catalog assumes to launch, update, or terminate the product. The role's trust policy needs to let `servicecatalog.amazonaws.com` assume it, and the role needs permissions for CloudFormation plus every AWS service the product's template uses.
    */
   readonly role: t.NonEmptyString;
 }
@@ -1759,33 +1779,35 @@ export interface IProductLaunchConstraintConfig {
  * *{@link CustomizationsConfig} / {@link CustomizationConfig} / {@link PortfolioConfig} | {@link ProductConfig} / {@link ProductConstraintConfig}*
  *
  * @description
- * Service Catalog Product Constraint configuration. For more information see https://docs.aws.amazon.com/servicecatalog/latest/adminguide/constraints.html
+ * Rules that control how a product behaves when users launch it — which role to use, whether they can change tags, and where to send notifications. All fields are optional.
  *
  * @example
  * ```
  * constraints:
  *   launch:
- *    type: localRole | Role
- *    role: string
- *   tagUpdate: true | false
+ *     type: Role
+ *     role: ServiceCatalogLaunchRole
+ *   tagUpdate: true
  *   notifications:
- *     - topicName
+ *     - ProductLaunchNotifications
  * ```
+ *
+ * @see {@link https://docs.aws.amazon.com/servicecatalog/latest/adminguide/constraints.html | AWS Service Catalog constraints}
  */
 export interface IProductConstraintConfig {
   /**
-   * Launch constraint role name and type, supports LocalRole or Role.
+   * The IAM role Service Catalog assumes when launching the product. See {@link ProductLaunchConstraintConfig}.
    */
   readonly launch?: IProductLaunchConstraintConfig;
   /**
-   * Determines if Service Catalog Tag Update constraint is enabled
+   * Set to `true` to let users update tags on resources created from this product after launch. When `false` or omitted, tags are locked once the product is launched.
    */
   readonly tagUpdate?: boolean;
   /**
-   * A list of SNS topic names to stream product notifications to
+   * Names of SNS topics that should receive stack events when the product is launched, updated, or terminated. Use topic names, not ARNs.
    *
    * @remarks
-   * The SNS Topic must exist in the same account and region. SNS Topic names are not validated, please ensure the SNS Topic exists in the account.
+   * Each topic must already exist in the same account and region as the portfolio. LZA does not check this for you — if a topic is missing, deployment fails when Service Catalog tries to set up the notification.
    */
   readonly notifications?: t.NonEmptyString[];
 }
@@ -1794,57 +1816,66 @@ export interface IProductConstraintConfig {
  * *{@link CustomizationsConfig} / {@link CustomizationConfig} / {@link PortfolioConfig} / {@link ProductConfig}*
  *
  * @description
- * Service Catalog Products configuration
+ * A Service Catalog product — a CloudFormation template (one or more versions of it) that users can launch through Service Catalog. The remaining fields describe the product and how it behaves. Every product needs at least one version.
  *
  * @example
  * ```
- * - name: Product01
- *   description: Example product
- *   owner: Product-Owner
- *   versions:
- *     - name: v1
- *       description: Product version 1
- *       template: path/to/template.json
- *   constraints:
- *     launch:
- *       type: localRole | Role
- *       role: string
- *     tagUpdate: true | false
- *     notifications:
- *       - topicName
+ * products:
+ *   - name: EncryptedS3Bucket
+ *     owner: Cloud-Platform-Team
+ *     description: Deploys an S3 bucket with SSE-KMS encryption enabled.
+ *     distributor: Example Corp
+ *     support:
+ *       email: support@example.com
+ *       url: https://support.example.com
+ *       description: Contact the Cloud Platform team for assistance.
+ *     versions:
+ *       - name: v1
+ *         description: Initial release
+ *         template: service-catalog/templates/encrypted-s3-bucket.yaml
+ *     constraints:
+ *       launch:
+ *         type: Role
+ *         role: ServiceCatalogLaunchRole
+ *       tagUpdate: true
+ *     tagOptions:
+ *       - key: Environment
+ *         values: [Dev, Test, Prod]
  * ```
+ *
+ * @see {@link https://docs.aws.amazon.com/servicecatalog/latest/dg/API_CreateProduct.html | CreateProduct}
  */
 export interface IProductConfig {
   /**
-   * The name of the product
+   * The product name users see in the Service Catalog console. Maximum 8,191 characters.
    */
   readonly name: t.NonEmptyString;
   /**
-   * The owner of the product
+   * The team or person responsible for the product. Shown on the product's details page. Maximum 8,191 characters.
    */
   readonly owner: t.NonEmptyString;
   /**
-   * Product version configuration
+   * The versions of this product. You need at least one. See {@link ProductVersionConfig}.
    */
   readonly versions: IProductVersionConfig[];
   /**
-   * Product description
+   * What the product is and what it deploys. Shown on the details page. Maximum 8,191 characters.
    */
   readonly description?: t.NonEmptyString;
   /**
-   * The name of the product's publisher.
+   * Who publishes the product (for example, a vendor or internal team name). Shown on the details page. Maximum 8,191 characters.
    */
   readonly distributor?: t.NonEmptyString;
   /**
-   * Product support details.
+   * How users can get help with the product. See {@link ProductSupportConfig}.
    */
   readonly support?: IProductSupportConfig;
   /**
-   * Product TagOptions configuration
+   * Managed tags that Service Catalog applies to resources launched from this product. See {@link TagOptionsConfig}.
    */
   readonly tagOptions?: ITagOptionsConfig[];
   /**
-   * Product Constraint configuration
+   * Launch role, tag-update, and notification rules for this product. See {@link ProductConstraintConfig}.
    */
   readonly constraints?: IProductConstraintConfig;
 }
@@ -1853,90 +1884,99 @@ export interface IProductConfig {
  * *{@link CustomizationsConfig} / {@link CustomizationConfig} / {@link PortfolioConfig}*
  *
  * @description
- * Service Catalog Portfolios configuration
+ * A Service Catalog portfolio — a collection of products that you share with IAM principals or organizational units, so the people in those accounts can launch the products.
+ *
+ * Portfolios are listed under `customizations.serviceCatalogPortfolios` in the customizations config file.
  *
  * @example
  * ```
- * - name: accelerator-portfolio
- *   provider: landing-zone-accelerator
- *   account: Management
- *   regions:
- *     - us-east-1
- *   shareTargets:
- *     organizationalUnits:
- *       - Root
- *   shareTagOptions: true
- *   portfolioAssociations:
- *     - type: Group
- *       name: Administrators
- *   products:
- *     - name: Product01
- *       description: Example product
- *       owner: Product-Owner
- *       constraints:
- *         launch:
- *          type: localRole | Role
- *          role: roleName
- *         tagUpdate: true | false
- *         notifications:
- *           - topicName
- *       versions:
- *         - name: v1
- *           description: Product version 1
- *           template: path/to/template.json
- *   tagOptions:
- *     - key: Environment
- *       values: [Dev, Test, Prod]
+ * customizations:
+ *   serviceCatalogPortfolios:
+ *     - name: accelerator-portfolio
+ *       provider: landing-zone-accelerator
+ *       account: Management
+ *       regions:
+ *         - us-east-1
+ *       shareTargets:
+ *         organizationalUnits:
+ *           - Root
+ *       shareTagOptions: true
+ *       portfolioAssociations:
+ *         - type: Group
+ *           name: Administrators
+ *       products:
+ *         - name: EncryptedS3Bucket
+ *           description: Deploys an S3 bucket with SSE-KMS encryption enabled.
+ *           owner: Cloud-Platform-Team
+ *           constraints:
+ *             launch:
+ *               type: Role
+ *               role: ServiceCatalogLaunchRole
+ *             tagUpdate: true
+ *             notifications:
+ *               - ProductLaunchNotifications
+ *           versions:
+ *             - name: v1
+ *               description: Initial release
+ *               template: service-catalog/templates/encrypted-s3-bucket.yaml
+ *       tagOptions:
+ *         - key: Environment
+ *           values: [Dev, Test, Prod]
  * ```
  *
+ * @see {@link https://docs.aws.amazon.com/servicecatalog/latest/dg/API_CreatePortfolio.html | CreatePortfolio}
+ * @see {@link https://docs.aws.amazon.com/servicecatalog/latest/adminguide/catalogs_portfolios.html | Portfolios}
  */
 export interface IPortfolioConfig {
   /**
-   * The name of the portfolio
+   * The portfolio name users see in the Service Catalog console. 1 to 100 characters.
    */
   readonly name: t.NonEmptyString;
   /**
-   * The name of the account to deploy the portfolio.
+   * The LZA friendly name of the account where the portfolio is created. Must match an entry in `accounts-config.yaml`.
    */
   readonly account: t.NonEmptyString;
   /**
-   * The region names to deploy the portfolio.
+   * The regions to create the portfolio in (for example, `us-east-1`). The portfolio and its products are deployed independently in each region.
    */
   readonly regions: string[];
   /**
-   * The provider of the portfolio
+   * The team or organization that owns the portfolio. Shown in the Service Catalog console so users know who's behind it. 1 to 50 characters.
    */
   readonly provider: t.NonEmptyString;
   /**
-   * Configuration of portfolio associations to give access to IAM principals.
+   * IAM principals that should have access to view and launch the products in this portfolio. See {@link PortfolioAssociationConfig}.
    */
   readonly portfolioAssociations?: IPortfolioAssociatoinConfig[];
   /**
-   * Product Configuration
+   * The products to create inside this portfolio. See {@link ProductConfig}.
    */
   readonly products?: IProductConfig[];
   /**
-   * Portfolio share target. Sharing portfolios to Organizational Units is only supported for portfolios in the Management account.
+   * The accounts and organizational units you want to share this portfolio with. Once shared, admins in each recipient account can give their own users access. See {@link IShareTargets}.
    *
    * @remarks
-   * Valid values are the friendly names of organizational unit(s) and/or account(s).
-   *
+   * Sharing with organizational units only works when the portfolio lives in the Management account. Use LZA friendly names, not AWS account IDs or OU IDs.
    */
   readonly shareTargets?: t.IShareTargets;
   /**
-   * Whether or not to share TagOptions with other account(s)/OU(s)
-   *
-   * @remarks
-   * This property is only applicable if the `shareTargets` property is defined
+   * Set to `true` to also share this portfolio's TagOptions with every shared-to account. Has no effect unless `shareTargets` is set. Defaults to `false`.
    */
   readonly shareTagOptions?: boolean;
   /**
-   * Portfolio TagOptions configuration
+   * TagOptions attached to the portfolio itself. Every product in the portfolio picks these up. See {@link TagOptionsConfig}.
    */
   readonly tagOptions?: ITagOptionsConfig[];
 }
 
+/**
+ * @description
+ * Service Catalog portfolios to create. Portfolios group products together and are shared with IAM principals or organizational units. In practice, you declare portfolios directly under `customizations.serviceCatalogPortfolios` in the customizations config; see {@link PortfolioConfig} for the fields and a full example.
+ */
 export interface IServiceCatalogConfig {
+  /**
+   * The portfolios to create. See {@link PortfolioConfig}.
+   */
   readonly portfolios: IPortfolioConfig[];
 }
 
