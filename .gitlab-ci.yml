@@ -489,6 +489,27 @@ installer:
     - if: $CI_COMMIT_TAG =~ /v(\d.+){2}\d/
       when: always
     - when: never
+installer-container:
+  stage: pipeline
+  needs: ["accelerator:build"]
+  tags:
+    - arch:amd64
+    - size:large
+  script:
+    - "cd source/packages/@aws-accelerator/installer-container"
+    - "yarn cdk synth --context use-external-pipeline-account=true"
+    - "cp cdk.out/AWSAccelerator-InstallerContainerStack.template.json $CI_PROJECT_DIR/AWSAccelerator-InstallerContainerStack.template.json"
+  artifacts:
+    name: "installer-template"
+    when: on_success
+    paths:
+      - AWSAccelerator-InstallerContainerStack.template.json
+  rules:
+    - if: $CI_COMMIT_BRANCH == "integ"
+      when: always
+    - if: $CI_COMMIT_TAG =~ /v(\d.+){2}\d/
+      when: always
+    - when: never
 workshop:
   stage: pipeline
   needs: ["accelerator:build"]
