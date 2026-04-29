@@ -12,6 +12,7 @@ This section contains guidance about installing Landing Zone Accelerator package
     - [Documentation Guidelines](./doc-guidelines.md)
     - [Using JSON Schema](./json-schema.md)
     - [Module Development](./module-development/index.md)
+    - [Building the Container Image Locally](./container-build.md)
 
 !!! note "See also"
     - [Implementation Guide - Developer Guide](https://docs.aws.amazon.com/solutions/latest/landing-zone-accelerator-on-aws/developer-guide.html)

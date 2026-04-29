@@ -28,6 +28,7 @@ nav:
       - Documentation Guidelines: developer-guide/doc-guidelines.md
       - JSON Schema: developer-guide/json-schema.md
       - Module Development: developer-guide/module-development/index.md
+      - Building the Container Image Locally: developer-guide/container-build.md
   - Sample Configurations:
       - sample-configurations/index.md
       - Standard:

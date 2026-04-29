@@ -34,3 +34,7 @@ source/packages/@aws-lza/custom-resource-templates/
 
 ### kiro specs
 .kiro
+
+### adding this to prevent git from losing track of 1000s of files during container build
+deployment/build/
+deployment/open-source/

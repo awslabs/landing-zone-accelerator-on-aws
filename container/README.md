@@ -119,6 +119,10 @@ For more information on Amazon ECR:
 - [Private repositories and images](https://docs.aws.amazon.com/AmazonECR/latest/userguide/Repositories.html)
 - [Public repositories and images](https://docs.aws.amazon.com/AmazonECR/latest/public/public-repositories.html)
 
+**Building the image locally for development:**
+
+If you are contributing to the solution and need to build the image from source, see [Building the Container Image Locally](https://awslabs.github.io/landing-zone-accelerator-on-aws/latest/developer-guide/container-build/) in the Developer Guide. Locally built images are for development and testing only and are not suitable for running in Amazon ECS — use the public image referenced above for deployments.
+
 
 ### Deploy the Solution
 
