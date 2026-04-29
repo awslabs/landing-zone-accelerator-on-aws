@@ -339,11 +339,15 @@ unit-test:installer:
     - "export NODE_OPTIONS=--max_old_space_size=6144"
     - "cd source/packages/@aws-accelerator/installer"
     - "yarn test:unit"
+    - "yarn cdk synth"
+    - "cp cdk.out/AWSAccelerator-InstallerStack.template.json $CI_PROJECT_DIR/AWSAccelerator-InstallerStack.template.json"
   artifacts:
     when: always
     reports:
       junit:
         - source/packages/@aws-accelerator/installer/test-reports/*.xml
+    paths:
+      - AWSAccelerator-InstallerStack.template.json
     expire_in: 1 day
   rules:
     - if: $CI_COMMIT_BRANCH == "main"
