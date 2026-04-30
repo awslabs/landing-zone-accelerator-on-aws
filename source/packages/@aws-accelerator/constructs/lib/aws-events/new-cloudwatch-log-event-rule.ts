@@ -215,7 +215,7 @@ export class NewCloudWatchLogEvent extends Construct {
       const kmsPolicy = new cdk.aws_iam.PolicyStatement({
         effect: cdk.aws_iam.Effect.ALLOW,
         sid: 'Kms',
-        actions: ['kms:Encrypt', 'kms:Decrypt', 'kms:GenerateDataKey'],
+        actions: ['kms:Encrypt', 'kms:Decrypt', 'kms:GenerateDataKey', 'kms:DescribeKey'],
         resources: [props.logsKmsKey.keyArn],
       });
       setLogRetentionSubscriptionFunction.addToRolePolicy(kmsPolicy);

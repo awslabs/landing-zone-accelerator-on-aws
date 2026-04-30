@@ -562,6 +562,7 @@ exports[`NewCloudWatchLogEvent > Construct(NewCloudWatchLogEvent):  Snapshot Tes
                 "kms:Encrypt",
                 "kms:Decrypt",
                 "kms:GenerateDataKey",
+                "kms:DescribeKey",
               ],
               "Effect": "Allow",
               "Resource": {
@@ -1078,6 +1079,7 @@ exports[`NewCloudWatchLogEvent > Construct(NewCloudWatchLogEvent):  Snapshot Tes
                 "kms:Encrypt",
                 "kms:Decrypt",
                 "kms:GenerateDataKey",
+                "kms:DescribeKey",
               ],
               "Effect": "Allow",
               "Resource": {
