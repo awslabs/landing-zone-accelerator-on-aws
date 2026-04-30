@@ -1,6 +1,7 @@
 {
   "name": "aws-lza",
   "version": "0.0.0",
+  "private": true,
   "description": "The package to manage various AWS service configurations.",
   "license": "Apache-2.0",
   "author": {
