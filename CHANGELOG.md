@@ -5,6 +5,32 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.15.3] - 2026-05-04
+
+### Fixed
+
+- fix(asea): fix cross account propagations regression
+- fix(aspects): enabling organization trail in iso overrides
+- fix(cloudwatch): add DescribeKey permissions to new cloudwatch log event function
+- fix(container): copy source folder instead of tar
+- fix(container): handle both source/ directory and source.tar.gz in staging copy
+- fix(deps): resolve basic-ftp HIGH vulnerability (5.2.2 → 5.3.0)
+- fix(gitlab): synth and produce installer stack with unit tests
+- fix(iam): support full ARN format for AWS managed policies
+- fix(installer): add codeConnections apis to github pipeline role
+- fix(organizations): skip Identity Center delegated admin setup when not configured
+
+### Changed
+
+- chore: update cfn-nag for GitHubPipelineRole to allow codeconnections
+- chore(gitlab): add installer-container step in release
+- chore(lza): make aws-lza package private
+- docs: change example on awsConfig to Audit account
+- enhance: rework create-container.sh for local dev use and document it
+- enhance: service catalog documentation in customizations config
+- fix: bump @aws-sdk packages to 3.1041.0 and remove fast-xml-parser resolution
+- fix: resolve HIGH and MODERATE dev dependency vulnerabilities
+
 ## [1.15.2] - 2026-04-16
 
 ### Added
