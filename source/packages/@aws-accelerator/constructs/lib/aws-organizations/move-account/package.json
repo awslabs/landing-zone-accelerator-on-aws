@@ -22,10 +22,10 @@
   },
   "dependencies": {
     "@aws-accelerator/utils": "^0.0.0",
-    "@aws-sdk/client-organizations": "3.1018.0",
-    "@aws-sdk/client-dynamodb": "3.1018.0",
-    "@aws-sdk/lib-dynamodb": "3.1018.0",
-    "@aws-sdk/client-cloudformation": "3.1018.0"
+    "@aws-sdk/client-organizations": "3.1041.0",
+    "@aws-sdk/client-dynamodb": "3.1041.0",
+    "@aws-sdk/lib-dynamodb": "3.1041.0",
+    "@aws-sdk/client-cloudformation": "3.1041.0"
   },
   "devDependencies": {
     "@types/node": "18.19.50",

@@ -410,6 +410,10 @@
         "Name": {
           "description": "<p>The friendly name of this OU.</p>          <p>The <a href=\"http://wikipedia.org/wiki/regex\">regex pattern</a>     that is used to validate this parameter is a string of any of the characters in the ASCII     character range.</p>",
           "type": "string"
+        },
+        "Path": {
+          "description": "<p>The path in the organization where this OU exists.</p>",
+          "type": "string"
         }
       },
       "type": "object"

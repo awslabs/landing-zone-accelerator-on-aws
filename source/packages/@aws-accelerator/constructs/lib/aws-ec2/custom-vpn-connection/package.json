@@ -22,9 +22,9 @@
   },
   "dependencies": {
     "@aws-accelerator/utils": "^0.0.0",
-    "@aws-sdk/client-ec2": "3.1018.0",
-    "@aws-sdk/client-secrets-manager": "3.1018.0",
-    "@aws-sdk/client-sts": "3.1018.0",
+    "@aws-sdk/client-ec2": "3.1041.0",
+    "@aws-sdk/client-secrets-manager": "3.1041.0",
+    "@aws-sdk/client-sts": "3.1041.0",
     "@types/diff": "^5.0.3",
     "diff": "^5.2.2"
   },
