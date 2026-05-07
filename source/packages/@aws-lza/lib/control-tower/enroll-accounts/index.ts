@@ -130,8 +130,10 @@ export class EnrollAccountsModule implements IEnrollAccountsModule {
       );
     }
 
-    // Get all enabled baselines including children (accounts)
-    const enabledBaselines = await this.getEnabledBaselines(client);
+    const ignoredOuArns = new Set(props.configuration.ignoredOuArns.map(ouArn => ouArn.toLowerCase()));
+
+    // Get all enabled baselines including children (accounts), then remove ignored OU subtrees
+    const enabledBaselines = this.filterIgnoredOuBaselines(await this.getEnabledBaselines(client), ignoredOuArns);
 
     // Build change set
     const changeSet = this.buildChangeSet(enabledBaselines);
@@ -213,6 +215,64 @@ export class EnrollAccountsModule implements IEnrollAccountsModule {
     }
 
     return { driftedOus, enrollingBaselines };
+  }
+
+  /**
+   * Filters Control Tower enabled baselines that belong to explicitly ignored OUs.
+   *
+   * @description
+   * LZA does not treat `ignore: true` as inherited. A baseline is skipped when:
+   *  1. Its `targetIdentifier` is an explicitly ignored OU ARN
+   *  2. It is an account baseline whose `parentIdentifier` is the baseline ARN of an
+   *     explicitly ignored OU (a direct account under an ignored OU)
+   *
+   * Child OU baselines under an ignored OU are NOT skipped unless they are themselves
+   * explicitly marked `ignore: true`.
+   *
+   * @param enabledBaselines {@link EnabledBaselineSummary}[]
+   * @param ignoredOuArns Set of lowercased AWS Organizations OU ARNs to ignore
+   * @returns filtered enabledBaselines {@link EnabledBaselineSummary}[]
+   */
+  private filterIgnoredOuBaselines(
+    enabledBaselines: EnabledBaselineSummary[],
+    ignoredOuArns: Set<string>,
+  ): EnabledBaselineSummary[] {
+    if (ignoredOuArns.size === 0) {
+      return enabledBaselines;
+    }
+
+    const ignoredOuBaselineArns = new Set<string>();
+    for (const baseline of enabledBaselines) {
+      const targetIdentifier = baseline.targetIdentifier?.toLowerCase();
+      if (targetIdentifier && ignoredOuArns.has(targetIdentifier) && baseline.arn) {
+        ignoredOuBaselineArns.add(baseline.arn.toLowerCase());
+      }
+    }
+
+    const filteredBaselines = enabledBaselines.filter(baseline => {
+      const targetIdentifier = baseline.targetIdentifier?.toLowerCase();
+      const parentIdentifier = baseline.parentIdentifier?.toLowerCase();
+
+      const isIgnoredOuBaseline = targetIdentifier !== undefined && ignoredOuArns.has(targetIdentifier);
+      const isDirectAccountBaselineUnderIgnoredOu =
+        parentIdentifier !== undefined &&
+        ignoredOuBaselineArns.has(parentIdentifier) &&
+        targetIdentifier !== undefined &&
+        targetIdentifier.includes(':account/');
+
+      if (isIgnoredOuBaseline || isDirectAccountBaselineUnderIgnoredOu) {
+        this.logger.info(`Skipping baseline for ignored OU target "${baseline.targetIdentifier ?? 'unknown'}".`);
+        return false;
+      }
+      return true;
+    });
+
+    const skippedCount = enabledBaselines.length - filteredBaselines.length;
+    if (skippedCount > 0) {
+      this.logger.info(`Filtered ${skippedCount} enabled baseline(s) for ignored OU(s).`);
+    }
+
+    return filteredBaselines;
   }
 
   /**

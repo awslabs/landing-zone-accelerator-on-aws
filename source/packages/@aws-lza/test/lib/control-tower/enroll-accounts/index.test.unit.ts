@@ -63,6 +63,10 @@ vi.mock('../../../../common/functions', async () => {
 // Test ARNs with realistic format so getIdFromArn can extract IDs
 const OU_TARGET_ARN = 'arn:aws:organizations::123456789012:ou/o-abc123/ou-g2dm-6xseqdih';
 const OU_BASELINE_ARN = 'arn:aws:controltower:us-east-1:123456789012:enabledbaseline/XONE9V7UZYD6NNTYW';
+const IGNORED_OU_TARGET_ARN = 'arn:aws:organizations::123456789012:ou/o-abc123/ou-ignore-11111111';
+const IGNORED_OU_BASELINE_ARN = 'arn:aws:controltower:us-east-1:123456789012:enabledbaseline/XIGNOREDOU';
+const IGNORED_ACCOUNT_TARGET_ARN = 'arn:aws:organizations::123456789012:account/o-abc123/333333333333';
+const IGNORED_ACCOUNT_BASELINE_ARN = 'arn:aws:controltower:us-east-1:123456789012:enabledbaseline/XIGNOREDACCOUNT';
 const ACCOUNT_TARGET_ARN_1 = 'arn:aws:organizations::123456789012:account/o-abc123/111111111111';
 const ACCOUNT_TARGET_ARN_2 = 'arn:aws:organizations::123456789012:account/o-abc123/222222222222';
 const ACCOUNT_BASELINE_ARN_1 = 'arn:aws:controltower:us-east-1:123456789012:enabledbaseline/XAE8ALI9U7D6NNYX7';
@@ -99,12 +103,24 @@ describe('EnrollAccountsModule', () => {
   let getLandingZoneIdentifierSpy: vi.SpyInstance;
 
   const input: IEnrollAccountsHandlerParameter = {
-    configuration: {},
+    configuration: { ignoredOuArns: [] },
     ...MOCK_CONSTANTS.runnerParameters,
   };
 
   const dryRunInput: IEnrollAccountsHandlerParameter = {
     ...input,
+    dryRun: true,
+  };
+
+  const inputWithIgnoredOu: IEnrollAccountsHandlerParameter = {
+    ...input,
+    configuration: {
+      ignoredOuArns: [IGNORED_OU_TARGET_ARN],
+    },
+  };
+
+  const dryRunInputWithIgnoredOu: IEnrollAccountsHandlerParameter = {
+    ...inputWithIgnoredOu,
     dryRun: true,
   };
 
@@ -309,6 +325,91 @@ describe('EnrollAccountsModule', () => {
       );
     });
 
+    test('should skip drifted ignored OU baseline and accounts directly under it', async () => {
+      (paginateListEnabledBaselines as vi.Mock).mockImplementation(() => [
+        {
+          enabledBaselines: [
+            makeAccountBaseline(IGNORED_ACCOUNT_TARGET_ARN, IGNORED_ACCOUNT_BASELINE_ARN, {
+              parentIdentifier: IGNORED_OU_BASELINE_ARN,
+              statusSummary: {
+                status: EnablementStatus.UNDER_CHANGE,
+                lastOperationIdentifier: MOCK_ACCOUNT_OPERATION_ID,
+              },
+            }),
+            makeOuBaseline({
+              arn: IGNORED_OU_BASELINE_ARN,
+              targetIdentifier: IGNORED_OU_TARGET_ARN,
+              driftStatusSummary: { types: { inheritance: { status: EnabledBaselineDriftStatus.DRIFTED } } },
+            }),
+          ],
+        },
+      ]);
+
+      const response = await new EnrollAccountsModule().handler(inputWithIgnoredOu);
+
+      expect(response).toContain('No action needed');
+      expect(ResetEnabledBaselineCommand).toHaveBeenCalledTimes(0);
+      expect(GetBaselineOperationCommand).toHaveBeenCalledTimes(0);
+    });
+
+    test('should not skip child OU baseline under an ignored OU unless that child is also ignored', async () => {
+      const CHILD_OU_TARGET_ARN = 'arn:aws:organizations::123456789012:ou/o-abc123/ou-child-22222222';
+      const CHILD_OU_BASELINE_ARN = 'arn:aws:controltower:us-east-1:123456789012:enabledbaseline/XCHILDOU';
+
+      (paginateListEnabledBaselines as vi.Mock).mockImplementation(() => [
+        {
+          enabledBaselines: [
+            makeOuBaseline({
+              arn: IGNORED_OU_BASELINE_ARN,
+              targetIdentifier: IGNORED_OU_TARGET_ARN,
+              driftStatusSummary: { types: { inheritance: { status: EnabledBaselineDriftStatus.DRIFTED } } },
+            }),
+            makeOuBaseline({
+              arn: CHILD_OU_BASELINE_ARN,
+              targetIdentifier: CHILD_OU_TARGET_ARN,
+              parentIdentifier: IGNORED_OU_BASELINE_ARN,
+              driftStatusSummary: { types: { inheritance: { status: EnabledBaselineDriftStatus.DRIFTED } } },
+            }),
+          ],
+        },
+      ]);
+
+      const response = await new EnrollAccountsModule().handler(inputWithIgnoredOu);
+
+      // Child OU is not explicitly ignored, so its drifted baseline must still be reset.
+      expect(response).toContain('Enroll accounts completed successfully');
+      expect(ResetEnabledBaselineCommand).toHaveBeenCalledTimes(1);
+      expect(ResetEnabledBaselineCommand).toHaveBeenCalledWith(
+        expect.objectContaining({ enabledBaselineIdentifier: CHILD_OU_BASELINE_ARN }),
+      );
+    });
+
+    test('should continue failing failed baseline operations for non-ignored OUs', async () => {
+      (paginateListEnabledBaselines as vi.Mock).mockImplementation(() => [
+        {
+          enabledBaselines: [
+            makeOuBaseline({
+              driftStatusSummary: { types: { inheritance: { status: EnabledBaselineDriftStatus.DRIFTED } } },
+            }),
+          ],
+        },
+      ]);
+
+      mockSend.mockImplementation(command => {
+        if (command instanceof ResetEnabledBaselineCommand) {
+          return Promise.resolve({ operationIdentifier: MOCK_OPERATION_ID });
+        }
+        if (command instanceof GetBaselineOperationCommand) {
+          return Promise.resolve({ baselineOperation: { status: BaselineOperationStatus.FAILED } });
+        }
+        return Promise.reject(MOCK_CONSTANTS.unknownError);
+      });
+
+      await expect(new EnrollAccountsModule().handler(inputWithIgnoredOu)).rejects.toThrow(
+        'Investigate baseline operation before executing pipeline',
+      );
+    });
+
     test('should skip accounts with UNDER_CHANGE but no lastOperationIdentifier', async () => {
       (paginateListEnabledBaselines as vi.Mock).mockImplementation(() => [
         {
@@ -392,6 +493,34 @@ describe('EnrollAccountsModule', () => {
       expect(response).toMatch('enrolling into Control Tower');
       expect(response).toMatch('111111111111');
       expect(response).toMatch('Will wait for enrollment to complete');
+      expect(ResetEnabledBaselineCommand).toHaveBeenCalledTimes(0);
+    });
+
+    test('should not report ignored OU baseline or direct accounts under it in dry run', async () => {
+      (paginateListEnabledBaselines as vi.Mock).mockImplementation(() => [
+        {
+          enabledBaselines: [
+            makeOuBaseline({
+              arn: IGNORED_OU_BASELINE_ARN,
+              targetIdentifier: IGNORED_OU_TARGET_ARN,
+              driftStatusSummary: { types: { inheritance: { status: EnabledBaselineDriftStatus.DRIFTED } } },
+            }),
+            makeAccountBaseline(IGNORED_ACCOUNT_TARGET_ARN, IGNORED_ACCOUNT_BASELINE_ARN, {
+              parentIdentifier: IGNORED_OU_BASELINE_ARN,
+              statusSummary: {
+                status: EnablementStatus.UNDER_CHANGE,
+                lastOperationIdentifier: MOCK_ACCOUNT_OPERATION_ID,
+              },
+            }),
+          ],
+        },
+      ]);
+
+      const response = await new EnrollAccountsModule().handler(dryRunInputWithIgnoredOu);
+
+      expect(response).toMatch('No action needed');
+      expect(response).not.toMatch('OUs have drifted');
+      expect(response).not.toMatch('enrolling into Control Tower');
       expect(ResetEnabledBaselineCommand).toHaveBeenCalledTimes(0);
     });
 

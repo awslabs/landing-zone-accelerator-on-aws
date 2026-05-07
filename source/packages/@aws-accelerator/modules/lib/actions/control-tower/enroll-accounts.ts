@@ -33,6 +33,18 @@ export abstract class EnrollAccountsModule {
 
     statusLogger.info(`Executing "${params.moduleItem.name}" module for the entire Control Tower organization.`);
 
+    const orgConfig = params.moduleRunnerParameters.configs.organizationConfig;
+    const ignoredOuArns = orgConfig
+      .getIgnoredOus()
+      .map(ou => {
+        const organizationalUnit = orgConfig.organizationalUnitIds?.find(item => item.name === ou.name);
+        if (!organizationalUnit?.arn) {
+          statusLogger.warn(`Ignored organizational unit "${ou.name}" was not found in organizationalUnitIds.`);
+        }
+        return organizationalUnit?.arn;
+      })
+      .filter((arn): arn is string => !!arn);
+
     const param: IEnrollAccountsHandlerParameter = {
       moduleName: params.moduleItem.name,
       operation: 'enroll-accounts',
@@ -42,6 +54,9 @@ export abstract class EnrollAccountsModule {
       solutionId: params.runnerParameters.solutionId,
       credentials: params.moduleRunnerParameters.managementAccountCredentials,
       dryRun: params.runnerParameters.dryRun,
+      configuration: {
+        ignoredOuArns,
+      },
     };
 
     const status = await enrollAccounts(param);

@@ -14,13 +14,38 @@
 import { IModuleCommonParameter } from '../../common/resources';
 
 /**
+ * Enroll Accounts configuration
+ */
+export interface IEnrollAccountsConfiguration {
+  /**
+   * AWS Organizations OU ARNs that are explicitly marked to be ignored by enroll-accounts.
+   *
+   * @description
+   * Skipping is not inherited:
+   * - A baseline whose `targetIdentifier` matches an ARN in this list is skipped.
+   * - An account baseline whose `parentIdentifier` points to the baseline ARN of an explicitly
+   *   ignored OU is skipped (accounts directly under an ignored OU).
+   * - Child OU baselines under an ignored OU are NOT skipped unless that child OU is itself
+   *   explicitly ignored (i.e. its ARN also appears in this list).
+   *
+   * Provide an empty array when there are no OUs to ignore.
+   *
+   * @example
+   * ```
+   * ['arn:aws:organizations::123456789012:ou/o-abc123/ou-abcd-12345678']
+   * ```
+   */
+  readonly ignoredOuArns: string[];
+}
+
+/**
  * Enroll Accounts handler parameter
  */
 export interface IEnrollAccountsHandlerParameter extends IModuleCommonParameter {
   /**
    * Enroll Accounts configuration
    */
-  configuration?: void;
+  configuration: IEnrollAccountsConfiguration;
 }
 
 /**
