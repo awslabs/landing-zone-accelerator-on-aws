@@ -86,7 +86,6 @@ class IsobOverrides implements cdk.IAspect {
       node.addPropertyDeletionOverride('MaxAggregationInterval');
     }
     if (node instanceof cdk.aws_logs.CfnLogGroup) {
-      node.addPropertyDeletionOverride('KmsKeyId');
       node.addPropertyDeletionOverride('Tags');
     }
     if (node instanceof cdk.aws_cloudtrail.CfnTrail) {
@@ -121,7 +120,6 @@ class IsoOverrides implements cdk.IAspect {
       node.addPropertyDeletionOverride('MaxAggregationInterval');
     }
     if (node instanceof cdk.aws_logs.CfnLogGroup) {
-      node.addPropertyDeletionOverride('KmsKeyId');
       node.addPropertyDeletionOverride('Tags');
     }
     if (node instanceof cdk.aws_cloudtrail.CfnTrail) {
