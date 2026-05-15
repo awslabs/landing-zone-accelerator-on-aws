@@ -17,7 +17,7 @@ exports[`IdentityCenterGetPermissionRoleArn > Construct(IdentityCenterGetPermiss
         },
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.15.3",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.15.4",
           },
         },
         "Handler": "index.handler",
@@ -120,7 +120,7 @@ exports[`IdentityCenterGetPermissionRoleArn > Construct(IdentityCenterGetPermiss
         "Description": "AWS CDK resource provider framework - onEvent (Default/IdentityCenterGetPermissionRoleArnProvider/Resource)",
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.15.3",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.15.4",
             "USER_ON_EVENT_FUNCTION_ARN": {
               "Fn::GetAtt": [
                 "IdentityCenterGetPermissionRoleArnProviderIdentityCenterGetPermissionRoleArnProviderProviderLambda87CD5EC8",

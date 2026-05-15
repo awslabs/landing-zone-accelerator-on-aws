@@ -5,6 +5,23 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.15.4] - 2026-05-18
+
+### Fixed
+
+- fix(control-tower): enroll-accounts module filters ignored OUs from baseline status checks
+- fix(deps): remediate CVE-2026-42338 in ip-address
+- fix(deps): remediate CVE-2026-42264 in axios
+- fix(deps): remediate CVE-2026-41907 in uuid
+- fix(deps): remediate CVE-2026-44665 in fast-xml-builder
+- fix(deps): remediate CVE-2026-44240 in basic-ftp
+- fix(deps): remediate CVE-2026-6322 in fast-uri
+- fix(deps): remediate CVE-2026-33750 in brace-expansion
+
+### Changed
+
+- chore: removed kmskey from iso and isob aspect
+
 ## [1.15.3] - 2026-05-04
 
 ### Fixed
