@@ -116,7 +116,7 @@
   "resolutions": {
     "@aws-cdk/asset-awscli-v1": "2.2.274",
     "axios": "1.15.2",
-    "basic-ftp": "5.3.0",
+    "basic-ftp": "5.3.1",
     "postcss": "8.5.12",
     "vite": "7.3.2"
   },
