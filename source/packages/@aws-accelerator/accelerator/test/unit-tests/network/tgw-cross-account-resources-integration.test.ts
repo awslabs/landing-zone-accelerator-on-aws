@@ -35,7 +35,13 @@ const propagation = (logicalId: string, attId: unknown, rtId: string): CfnRes =>
   resourceMetadata: { Properties: { TransitGatewayAttachmentId: attId, TransitGatewayRouteTableId: rtId } },
 });
 
-const buildScope = (propagations: CfnRes[], vpcs: any[]) => ({
+const association = (logicalId: string, attId: unknown, rtId: string): CfnRes => ({
+  logicalResourceId: logicalId,
+  resourceType: 'AWS::EC2::TransitGatewayRouteTableAssociation',
+  resourceMetadata: { Properties: { TransitGatewayAttachmentId: attId, TransitGatewayRouteTableId: rtId } },
+});
+
+const buildScope = (propagations: CfnRes[], vpcs: any[], associations: CfnRes[] = []) => ({
   account: '111111111111',
   region: 'ca-central-1',
   includedStack: { getResource: () => ({}) },
@@ -43,7 +49,11 @@ const buildScope = (propagations: CfnRes[], vpcs: any[]) => ({
   getResource: () => ({}),
   importStackResources: {
     getResourcesByType: (type: string) =>
-      type === 'AWS::EC2::TransitGatewayRouteTablePropagation' ? propagations : [],
+      type === 'AWS::EC2::TransitGatewayRouteTablePropagation'
+        ? propagations
+        : type === 'AWS::EC2::TransitGatewayRouteTableAssociation'
+          ? associations
+          : [],
   },
   nestedStackResources: {},
   vpcResources: vpcs,
@@ -157,5 +167,210 @@ describe('TgwCrossAccountResources — ghost-entry regression', () => {
       AseaResourceType.TRANSIT_GATEWAY_PROPAGATION,
       'shared-network/Main_tgw/DevWorkspaces_vpc_Main_att/Main_tgw_core_rt',
     );
+  });
+});
+
+/**
+ * Tests for the Phase-2 fallback (P400420849 fix): inferCrossAccountAttachmentIdFromPhase2.
+ * Validates that cross-account TGW propagations/associations are registered when the
+ * primary Phase-1 lookup fails but Phase-2 resources contain the attachment.
+ */
+describe('TgwCrossAccountResources — Phase-2 cross-account fallback (P400420849)', () => {
+  beforeEach(() => {
+    addAseaResource.mockClear();
+    addLogs.mockClear();
+    vi.spyOn(AseaResource.prototype as any, 'loadResourcesFromFile').mockReturnValue([]);
+  });
+
+  afterEach(() => vi.restoreAllMocks());
+
+  const RT_CORE = 'tgw-rtb-core-FAKE';
+  const RT_SEGREGATED = 'tgw-rtb-segregated-FAKE';
+  const RT_SHARED = 'tgw-rtb-shared-FAKE';
+  const RT_STANDALONE = 'tgw-rtb-standalone-FAKE';
+  const FAKE_ATTACH = 'tgw-attach-FAKEperimeter';
+
+  const rtMap: Record<string, string> = {
+    Main_tgw_core_rt: RT_CORE,
+    Main_tgw_segregated_rt: RT_SEGREGATED,
+    Main_tgw_shared_rt: RT_SHARED,
+    Main_tgw_standalone_rt: RT_STANDALONE,
+  };
+
+  const perimeterVpc = {
+    name: 'Perimeter_vpc',
+    account: 'perimeter',
+    region: 'ca-central-1',
+    transitGatewayAttachments: [
+      {
+        name: 'Perimeter_Main_att',
+        transitGateway: { name: 'Main_tgw', account: 'shared-network' },
+        subnets: [],
+        routeTableAssociations: ['Main_tgw_core_rt'],
+        routeTablePropagations: [
+          'Main_tgw_core_rt',
+          'Main_tgw_segregated_rt',
+          'Main_tgw_shared_rt',
+          'Main_tgw_standalone_rt',
+        ],
+      },
+    ],
+  };
+
+  const buildPropsWithGate = (hasVpcInResourceList: boolean): any => ({
+    stackInfo: { phase: '2', accountKey: 'shared-network', region: 'ca-central-1', stackName: 'Phase2' },
+    mapping: {},
+    globalConfig: {
+      externalLandingZoneResources: {
+        resourceParameters: {},
+        resourceList: hasVpcInResourceList
+          ? [
+              {
+                accountId: '222222222222',
+                region: 'ca-central-1',
+                resourceType: 'EC2_VPC',
+                resourceIdentifier: 'Perimeter_vpc',
+              },
+            ]
+          : [],
+      },
+    },
+  });
+
+  const fakePropagations = (): CfnRes[] => [
+    propagation('FakeCoreProp', FAKE_ATTACH, RT_CORE),
+    propagation('FakeSegregatedProp', FAKE_ATTACH, RT_SEGREGATED),
+    propagation('FakeSharedProp', FAKE_ATTACH, RT_SHARED),
+    propagation('FakeStandaloneProp', FAKE_ATTACH, RT_STANDALONE),
+  ];
+
+  const fakeAssociations = (): CfnRes[] => [association('FakeCoreAssoc', FAKE_ATTACH, RT_CORE)];
+
+  test('fallback registers propagations/associations when Phase-1 lookup fails but Phase-2 resources match', () => {
+    vi.spyOn(TgwCrossAccountResources.prototype as any, 'getTgwAttachmentId').mockReturnValue(undefined);
+    vi.spyOn(TgwCrossAccountResources.prototype as any, 'getTgwRouteTableId').mockImplementation(
+      ((rt: string) => rtMap[rt]) as any,
+    );
+
+    const scope = buildScope(fakePropagations(), [perimeterVpc], fakeAssociations());
+    new TgwCrossAccountResources(scope as any, buildPropsWithGate(true));
+
+    expect(addAseaResource).toHaveBeenCalledWith(
+      AseaResourceType.TRANSIT_GATEWAY_ASSOCIATION,
+      'shared-network/Main_tgw/Perimeter_Main_att/Main_tgw_core_rt',
+    );
+    expect(addAseaResource).toHaveBeenCalledWith(
+      AseaResourceType.TRANSIT_GATEWAY_PROPAGATION,
+      'shared-network/Main_tgw/Perimeter_Main_att/Main_tgw_core_rt',
+    );
+    expect(addAseaResource).toHaveBeenCalledWith(
+      AseaResourceType.TRANSIT_GATEWAY_PROPAGATION,
+      'shared-network/Main_tgw/Perimeter_Main_att/Main_tgw_segregated_rt',
+    );
+    expect(addAseaResource).toHaveBeenCalledWith(
+      AseaResourceType.TRANSIT_GATEWAY_PROPAGATION,
+      'shared-network/Main_tgw/Perimeter_Main_att/Main_tgw_shared_rt',
+    );
+    expect(addAseaResource).toHaveBeenCalledWith(
+      AseaResourceType.TRANSIT_GATEWAY_PROPAGATION,
+      'shared-network/Main_tgw/Perimeter_Main_att/Main_tgw_standalone_rt',
+    );
+  });
+
+  test('fallback does NOT fire when VPC is not in aseaResources.json (gate fails)', () => {
+    vi.spyOn(TgwCrossAccountResources.prototype as any, 'getTgwAttachmentId').mockReturnValue(undefined);
+    vi.spyOn(TgwCrossAccountResources.prototype as any, 'getTgwRouteTableId').mockImplementation(
+      ((rt: string) => rtMap[rt]) as any,
+    );
+
+    const scope = buildScope(fakePropagations(), [perimeterVpc], fakeAssociations());
+    new TgwCrossAccountResources(scope as any, buildPropsWithGate(false));
+
+    // No propagation/association should be registered for Perimeter
+    const perimeterCalls = addAseaResource.mock.calls.filter(([, id]: [string, string]) =>
+      id.includes('Perimeter_Main_att'),
+    );
+    expect(perimeterCalls).toHaveLength(0);
+  });
+
+  test('fallback does NOT fire when primary Phase-1 lookup succeeds', () => {
+    vi.spyOn(TgwCrossAccountResources.prototype as any, 'getTgwAttachmentId').mockReturnValue('tgw-attach-real-phase1');
+    vi.spyOn(TgwCrossAccountResources.prototype as any, 'getTgwRouteTableId').mockImplementation(
+      ((rt: string) => rtMap[rt]) as any,
+    );
+
+    // Propagation resources use the REAL Phase-1 attachment id so matchesAttachmentId succeeds
+    const realProps = [
+      propagation('RealCoreProp', 'tgw-attach-real-phase1', RT_CORE),
+      propagation('RealSegProp', 'tgw-attach-real-phase1', RT_SEGREGATED),
+      propagation('RealSharedProp', 'tgw-attach-real-phase1', RT_SHARED),
+      propagation('RealStandaloneProp', 'tgw-attach-real-phase1', RT_STANDALONE),
+    ];
+    const realAssocs = [association('RealCoreAssoc', 'tgw-attach-real-phase1', RT_CORE)];
+
+    const scope = buildScope(realProps, [perimeterVpc], realAssocs);
+    new TgwCrossAccountResources(scope as any, buildPropsWithGate(true));
+
+    // Should register via the primary path (Phase-1 attachment id resolved)
+    const calls = addAseaResource.mock.calls.filter(([, id]: [string, string]) => id.includes('Perimeter_Main_att'));
+    expect(calls.length).toBeGreaterThan(0);
+  });
+
+  test('fallback returns undefined when multiple attachments match (ambiguity guard)', () => {
+    vi.spyOn(TgwCrossAccountResources.prototype as any, 'getTgwAttachmentId').mockReturnValue(undefined);
+    vi.spyOn(TgwCrossAccountResources.prototype as any, 'getTgwRouteTableId').mockImplementation(
+      ((rt: string) => rtMap[rt]) as any,
+    );
+
+    // Two different attachment IDs both have RTs that are subsets of configRtIds
+    const ambiguousProps = [
+      propagation('Attach1Core', 'tgw-attach-AAA', RT_CORE),
+      propagation('Attach2Core', 'tgw-attach-BBB', RT_CORE),
+    ];
+
+    const vpcWithOneRt = {
+      ...perimeterVpc,
+      transitGatewayAttachments: [
+        {
+          ...perimeterVpc.transitGatewayAttachments[0],
+          routeTableAssociations: ['Main_tgw_core_rt'],
+          routeTablePropagations: ['Main_tgw_core_rt'],
+        },
+      ],
+    };
+
+    const scope = buildScope(ambiguousProps, [vpcWithOneRt]);
+    new TgwCrossAccountResources(scope as any, buildPropsWithGate(true));
+
+    const perimeterCalls = addAseaResource.mock.calls.filter(([, id]: [string, string]) =>
+      id.includes('Perimeter_Main_att'),
+    );
+    expect(perimeterCalls).toHaveLength(0);
+  });
+
+  test('fallback ignores resources with Ref-style attachment ids (same-account resources)', () => {
+    vi.spyOn(TgwCrossAccountResources.prototype as any, 'getTgwAttachmentId').mockReturnValue(undefined);
+    vi.spyOn(TgwCrossAccountResources.prototype as any, 'getTgwRouteTableId').mockImplementation(
+      ((rt: string) => rtMap[rt]) as any,
+    );
+
+    // Same-account resources use { Ref: "LogicalId" } not a string
+    const refStyleResources: CfnRes[] = [
+      {
+        logicalResourceId: 'SameAccountProp',
+        resourceType: 'AWS::EC2::TransitGatewayRouteTablePropagation',
+        resourceMetadata: {
+          Properties: { TransitGatewayAttachmentId: { Ref: 'SomeLogicalId' }, TransitGatewayRouteTableId: RT_CORE },
+        },
+      } as any,
+    ];
+
+    const scope = buildScope(refStyleResources, [perimeterVpc]);
+    new TgwCrossAccountResources(scope as any, buildPropsWithGate(true));
+
+    const perimeterCalls = addAseaResource.mock.calls.filter(([, id]: [string, string]) =>
+      id.includes('Perimeter_Main_att'),
+    );
+    expect(perimeterCalls).toHaveLength(0);
   });
 });

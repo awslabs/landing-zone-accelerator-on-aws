@@ -62,6 +62,12 @@ export class TgwCrossAccountResources extends AseaResource {
     for (const tgwAttachmentItem of vpcItem.transitGatewayAttachments ?? []) {
       const transitGatewayAttachments: { [name: string]: string } = {};
       this.setTransitGatewayIds(vpcItem, tgwAttachmentItem, accountNames, transitGatewayAttachments);
+      if (!transitGatewayAttachments[tgwAttachmentItem.name]) {
+        const inferredAttachmentId = this.inferCrossAccountAttachmentIdFromPhase2(vpcItem, tgwAttachmentItem, mapping);
+        if (inferredAttachmentId) {
+          transitGatewayAttachments[tgwAttachmentItem.name] = inferredAttachmentId;
+        }
+      }
       this.createTransitGatewayRouteTableAssociationPropagation(
         accountNames,
         mapping,
@@ -250,5 +256,65 @@ export class TgwCrossAccountResources extends AseaResource {
         `${accountName}/${tgwAttachmentItem.transitGateway.name}/${tgwAttachmentItem.name}/${routeTableItem}`,
       );
     }
+  }
+
+  /**
+   * Phase-2-only fallback for resolving a cross-account TGW attachment's physical id
+   * (P400420849). Inspects propagation/association resources already collected from
+   * the current Phase-2 import stack, buckets them by attachment id, and matches
+   * against the configured route-table set. Returns the unique match or undefined.
+   */
+  private inferCrossAccountAttachmentIdFromPhase2(
+    vpcItem: VpcConfig | VpcTemplatesConfig,
+    tgwAttachmentItem: TransitGatewayAttachmentConfig,
+    mapping: ASEAMappings,
+  ): string | undefined {
+    if (!this.isVpcAseaManaged(vpcItem)) return undefined;
+
+    const configRtIds = new Set<string>();
+    for (const routeTableName of [
+      ...(tgwAttachmentItem.routeTableAssociations ?? []),
+      ...(tgwAttachmentItem.routeTablePropagations ?? []),
+    ]) {
+      const id = this.getTgwRouteTableId(routeTableName, mapping);
+      if (id) configRtIds.add(id);
+    }
+    if (configRtIds.size === 0) return undefined;
+
+    const buckets = new Map<string, Set<string>>();
+    const phaseTwoCrossAccountResources = [...this.propagationResources, ...this.associationResources].filter(
+      resource => typeof resource.resourceMetadata['Properties'].TransitGatewayAttachmentId === 'string',
+    );
+    for (const resource of phaseTwoCrossAccountResources) {
+      const attachmentId = resource.resourceMetadata['Properties'].TransitGatewayAttachmentId as string;
+      const routeTableId = resource.resourceMetadata['Properties'].TransitGatewayRouteTableId;
+      if (typeof routeTableId !== 'string') continue;
+      if (!buckets.has(attachmentId)) buckets.set(attachmentId, new Set());
+      buckets.get(attachmentId)!.add(routeTableId);
+    }
+
+    const matches: string[] = [];
+    for (const [attachmentId, bucketRtIds] of buckets) {
+      if (bucketRtIds.size === 0) continue;
+      if ([...bucketRtIds].every(id => configRtIds.has(id))) matches.push(attachmentId);
+    }
+
+    return matches.length === 1 ? matches[0] : undefined;
+  }
+
+  /**
+   * Read-only check against the pre-loaded aseaResources.json. True iff the VPC
+   * is already registered as EC2_VPC — prevents ghost entries for new LZA-only VPCs.
+   */
+  private isVpcAseaManaged(vpcItem: VpcConfig | VpcTemplatesConfig): boolean {
+    const resourceList = this.props.globalConfig.externalLandingZoneResources?.resourceList;
+    if (!resourceList) return false;
+    return resourceList.some(
+      r =>
+        r.resourceType === AseaResourceType.EC2_VPC &&
+        r.resourceIdentifier === vpcItem.name &&
+        r.region === vpcItem.region &&
+        !r.isDeleted,
+    );
   }
 }
