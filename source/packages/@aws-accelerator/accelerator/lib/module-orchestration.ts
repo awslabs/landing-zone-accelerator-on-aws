@@ -116,6 +116,7 @@ import { SetupControlTowerLandingZoneModule } from '../../modules/lib/actions/co
 import { EnrollAccountsModule } from '../../modules/lib/actions/control-tower/enroll-accounts';
 import { ConfigureRootUserManagementModule } from '../../modules/lib/actions/aws-iam/root-user-management';
 import { SsmBlockPublicDocumentSharingModule } from '../../modules/lib/actions/aws-ssm/ssm-block-public-document-sharing';
+import { Ec2BlockPublicAmiModule } from '../../modules/lib/actions/aws-ec2/ec2-block-public-ami';
 import { ManageAutomationRulesModule } from '../../modules/lib/actions/aws-security-hub/manage-automation-rules';
 import { AcceleratorPrerequisites } from '../../modules/lib/actions/prerequisites/accelerator-prerequisites';
 import { PipelinePrerequisites } from '../../modules/lib/actions/prerequisites/pipeline-prerequisites';
@@ -565,6 +566,13 @@ export const AcceleratorModuleStageDetails: AcceleratorModuleStageDetailsType[] 
         description: 'Manage SSM Block Public Document Sharing across organization accounts',
         runOrder: 1,
         handler: legacyHandler(SsmBlockPublicDocumentSharingModule.execute),
+        executionPhase: ModuleExecutionPhase.DEPLOY,
+      },
+      {
+        name: AcceleratorModules.EC2_BLOCK_PUBLIC_AMI,
+        description: 'Manage EC2 Image Block Public Access across organization accounts',
+        runOrder: 1,
+        handler: legacyHandler(Ec2BlockPublicAmiModule.execute),
         executionPhase: ModuleExecutionPhase.DEPLOY,
       },
       {

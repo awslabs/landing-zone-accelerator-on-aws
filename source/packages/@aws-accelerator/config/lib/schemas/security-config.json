@@ -248,6 +248,27 @@
       ],
       "type": "object"
     },
+    "IBlockPublicAmiConfig": {
+      "additionalProperties": false,
+      "description": "Configuration for blocking public access to Amazon Machine Images (AMIs) across your organization.\nWhen enabled, this prevents accounts from publicly sharing AMIs, reducing the risk of accidental data exposure.",
+      "properties": {
+        "enable": {
+          "description": "Indicates whether EC2 image block public access is enforced across all accounts in your organization.",
+          "type": "boolean"
+        },
+        "excludeAccounts": {
+          "description": "List of AWS account names that should be exempted from EC2 image block public access.",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "enable"
+      ],
+      "type": "object"
+    },
     "IBlockPublicDocumentSharingConfig": {
       "additionalProperties": false,
       "description": "This interface defines the SSM Block Public Document Sharing configuration for organization accounts.\nSSM Block Public Document Sharing prevents AWS Systems Manager documents from being shared publicly,\nproviding an additional layer of security for organizations. The feature operates on a per-region basis\nand is applied across all enabled regions for comprehensive protection.",
@@ -276,6 +297,10 @@
         "auditManager": {
           "$ref": "#/definitions/IAuditManagerConfig",
           "description": "Configuration for AWS Audit Manager compliance automation service across your organization. Audit Manager helps automate evidence collection and assessment preparation for audits by continuously collecting and organizing evidence from your AWS services."
+        },
+        "blockPublicAmi": {
+          "$ref": "#/definitions/IBlockPublicAmiConfig",
+          "description": "Configuration for blocking public access to Amazon Machine Images (AMIs) across your organization."
         },
         "delegatedAdminAccount": {
           "$ref": "#/definitions/NonEmptyString",

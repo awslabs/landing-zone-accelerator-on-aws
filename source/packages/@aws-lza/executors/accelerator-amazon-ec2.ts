@@ -20,6 +20,8 @@ import { DeleteDefaultVpcModule } from '../lib/amazon-ec2/delete-default-vpc';
 
 import { IDeleteDefaultSecurityGroupRulesParameter } from '../interfaces/amazon-ec2/delete-default-security-group-rules';
 import { DeleteDefaultSecurityGroupRulesModule } from '../lib/amazon-ec2/delete-default-security-group-rules';
+import { IManageImageBlockPublicAccessHandlerParameter } from '../interfaces/amazon-ec2/manage-image-block-public-access';
+import { ManageImageBlockPublicAccessModule } from '../lib/amazon-ec2/manage-image-block-public-access';
 
 process.on('uncaughtException', err => {
   throw err;
@@ -101,6 +103,22 @@ export async function deleteDefaultSecurityGroupRules(
 export async function deleteDefaultVpc(input: IDeleteDefaultVpcParameter): Promise<string> {
   try {
     return await new DeleteDefaultVpcModule().handler(input);
+  } catch (e: unknown) {
+    logger.error(e);
+    throw e;
+  }
+}
+
+/**
+ * Function to manage EC2 Image Block Public Access
+ * @param input {@link IManageImageBlockPublicAccessHandlerParameter}
+ * @returns string
+ */
+export async function manageImageBlockPublicAccess(
+  input: IManageImageBlockPublicAccessHandlerParameter,
+): Promise<string> {
+  try {
+    return await new ManageImageBlockPublicAccessModule().handler(input);
   } catch (e: unknown) {
     logger.error(e);
     throw e;

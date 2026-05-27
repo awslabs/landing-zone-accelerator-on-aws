@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [1.17.0] - 
 
+### Added
+
+- feat(ec2): add blockPublicAmi configuration to block public access to AMIs across organization accounts
+
 ### Fixed
 
 - fix(networking): make ALB listener targetGroup optional for redirect and fixed-response, and reject it where not allowed

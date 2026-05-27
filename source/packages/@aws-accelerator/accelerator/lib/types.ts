@@ -161,6 +161,15 @@ export enum AcceleratorModules {
   SSM_BLOCK_PUBLIC_DOCUMENT_SHARING = 'ssm-block-public-document-sharing',
 
   /**
+   * EC2 Block Public AMI module.
+   *
+   * @description
+   * For more information on EC2 Image Block Public Access, please refer the
+   * [document](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/sharingamis-intro.html#block-public-access-to-amis)
+   */
+  EC2_BLOCK_PUBLIC_AMI = 'ec2-block-public-ami',
+
+  /**
    * Sets an account alias.
    */
   MANAGE_ACCOUNTS_ALIAS = 'manage-accounts-alias',

@@ -114,6 +114,9 @@ export { IManageEbsDefaultEncryptionHandlerParameter } from './interfaces/amazon
 export { deleteDefaultVpc } from './executors/accelerator-amazon-ec2';
 export { IDeleteDefaultVpcParameter } from './interfaces/amazon-ec2/delete-default-vpc';
 
+export { manageImageBlockPublicAccess } from './executors/accelerator-amazon-ec2';
+export { IManageImageBlockPublicAccessHandlerParameter } from './interfaces/amazon-ec2/manage-image-block-public-access';
+
 //
 // AWS CloudFormation resources
 //

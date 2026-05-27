@@ -146,4 +146,26 @@ describe('SecurityConfigValidator', () => {
       }
     });
   });
+
+  describe('validateBlockPublicAmi', () => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const validateBlockPublicAmi = (SecurityConfigValidator.prototype as any)['validateBlockPublicAmi'].bind({});
+
+    it('should emit exactly one error for an invalid excludeAccounts entry', () => {
+      const errors: string[] = [];
+      validateBlockPublicAmi(
+        { enable: true, excludeAccounts: ['NonExistentAccount'] },
+        ['Management', 'Audit'],
+        errors,
+      );
+      const matchingErrors = errors.filter(e => e.includes('NonExistentAccount'));
+      expect(matchingErrors).toHaveLength(1);
+    });
+
+    it('should not emit errors when excludeAccounts are valid', () => {
+      const errors: string[] = [];
+      validateBlockPublicAmi({ enable: true, excludeAccounts: ['Management'] }, ['Management', 'Audit'], errors);
+      expect(errors).toHaveLength(0);
+    });
+  });
 });

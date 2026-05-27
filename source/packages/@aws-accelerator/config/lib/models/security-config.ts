@@ -178,6 +178,42 @@ export interface IS3PublicAccessBlockConfig {
 }
 
 /**
+ * *{@link SecurityConfig} / {@link CentralSecurityServicesConfig} / {@link BlockPublicAmiConfig}*
+ *
+ * @description
+ * Configuration for blocking public access to Amazon Machine Images (AMIs) across your organization.
+ * When enabled, this prevents accounts from publicly sharing AMIs, reducing the risk of accidental data exposure.
+ *
+ * @see https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/sharingamis-intro.html#block-public-access-to-amis
+ *
+ * @example
+ * ```
+ * blockPublicAmi:
+ *     enable: true
+ *     excludeAccounts: []
+ * ```
+ */
+export interface IBlockPublicAmiConfig {
+  /**
+   * Indicates whether EC2 image block public access is enforced across all accounts in your organization.
+   *
+   * @remarks
+   * Setting this to `false` does not just stop managing the control: on every run LZA actively calls
+   * DisableImageBlockPublicAccess in every account and enabled region, turning off any block that was
+   * previously enabled (including one set outside LZA). To leave the control unmanaged, omit `blockPublicAmi`.
+   */
+  readonly enable: boolean;
+  /**
+   * List of AWS account names that should be exempted from EC2 image block public access.
+   *
+   * @remarks
+   * LZA actively disables Image Block Public Access on excluded accounts on each run.
+   * Moving an account into this list will turn off the control for that account.
+   */
+  readonly excludeAccounts?: string[];
+}
+
+/**
  * *{@link SecurityConfig} / {@link CentralSecurityServicesConfig} / {@link SsmSettingsConfig} / {@link BlockPublicDocumentSharingConfig}*
  *
  * @description
@@ -1987,6 +2023,21 @@ export interface ICentralSecurityServicesConfig {
    * ```
    */
   readonly s3PublicAccessBlock: IS3PublicAccessBlockConfig;
+  /**
+   * Configuration for blocking public access to Amazon Machine Images (AMIs) across your organization.
+   *
+   * @remarks
+   * When enabled, this iterates through every account and region managed by LZA, enabling EC2 image block public access.
+   * Accounts listed in excludeAccounts have the control actively disabled on each run, rather than simply being skipped.
+   *
+   * @example
+   * ```
+   * blockPublicAmi:
+   *     enable: true
+   *     excludeAccounts: []
+   * ```
+   */
+  readonly blockPublicAmi?: IBlockPublicAmiConfig;
   /**
    * Configuration for AWS Systems Manager security settinga across your organization.
    *

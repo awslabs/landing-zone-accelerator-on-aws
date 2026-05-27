@@ -28,6 +28,7 @@ import { OrganizationConfig } from '../lib/organization-config';
 import { ReplacementsConfig } from '../lib/replacements-config';
 import {
   AwsConfigRuleSet,
+  BlockPublicAmiConfig,
   BlockPublicDocumentSharingConfig,
   ConfigRule,
   EbsDefaultVolumeEncryptionConfig,
@@ -97,6 +98,9 @@ export class SecurityConfigValidator {
       accountNames,
       errors,
     );
+
+    // Validate Block Public AMI configuration
+    this.validateBlockPublicAmi(securityConfig.centralSecurityServices.blockPublicAmi, accountNames, errors);
 
     // Validate delegated admin account
     // Validate deployment targets against organization config file
@@ -409,6 +413,30 @@ export class SecurityConfigValidator {
           if (accountNames.indexOf(account) === -1) {
             errors.push(
               `Excluded account "${account}" for SSM Block Public Document Sharing does not exist in accounts-config.yaml file. Account names must match those defined in the accounts configuration.`,
+            );
+          }
+        }
+      }
+    }
+  }
+
+  /**
+   * Validate Block Public AMI configuration
+   */
+  private validateBlockPublicAmi(
+    blockPublicAmiConfig: BlockPublicAmiConfig | undefined,
+    accountNames: string[],
+    errors: string[],
+  ) {
+    if (blockPublicAmiConfig) {
+      if (typeof blockPublicAmiConfig.enable !== 'boolean') {
+        errors.push(`Block Public AMI configuration "enable" property must be a boolean value.`);
+      }
+      if (blockPublicAmiConfig.excludeAccounts) {
+        for (const account of blockPublicAmiConfig.excludeAccounts) {
+          if (accountNames.indexOf(account) === -1) {
+            errors.push(
+              `Excluded account "${account}" for Block Public AMI does not exist in accounts-config.yaml file.`,
             );
           }
         }
