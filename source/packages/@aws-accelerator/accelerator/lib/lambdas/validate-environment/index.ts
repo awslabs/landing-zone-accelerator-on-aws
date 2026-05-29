@@ -122,8 +122,8 @@ export async function handler(event: CloudFormationCustomResourceEvent): Promise
   const stackName = event.ResourceProperties['stackName'];
   const serviceControlPolicies: serviceControlPolicyType[] = event.ResourceProperties['serviceControlPolicies'];
   const skipScpValidation = event.ResourceProperties['skipScpValidation'];
-  const maxOuAttachedScps = event.ResourceProperties['maxOuAttachedScps'] ?? 5;
-  const maxAccountAttachedScps = event.ResourceProperties['maxAccountAttachedScps'] ?? 5;
+  const maxOuAttachedScps = event.ResourceProperties['maxOuAttachedScps'] ?? 10;
+  const maxAccountAttachedScps = event.ResourceProperties['maxAccountAttachedScps'] ?? 10;
   const vpcCidrs = event.ResourceProperties['vpcCidrs'];
   const transitGateways = event.ResourceProperties['transitGateways'];
   const solutionId = process.env['SOLUTION_ID'];
@@ -323,7 +323,7 @@ function exceedsMaxScpLimit(
 }
 
 /**
- * Function to validate number of SCPs attached to ou and account is not more than 5
+ * Function to validate number of SCPs attached to ou and account does not exceed the maximum allowed quota
  * @param organizationsClient
  * @param serviceControlPolicies
  */
