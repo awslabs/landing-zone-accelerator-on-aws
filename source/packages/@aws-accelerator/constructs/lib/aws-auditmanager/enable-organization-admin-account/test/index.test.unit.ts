@@ -73,27 +73,23 @@ describe('enable-organization-admin-account', () => {
       EnabledServicePrincipals: [],
     };
 
-    (AuditManagerClient as any).mockImplementation(function () {
-      return {
-        send: vi.fn().mockImplementation(command => {
-          if (command instanceof GetAccountStatusCommand) {
-            return Promise.resolve(mockGetAccountStatus);
-          }
-          return Promise.resolve({});
-        }),
-      };
-    });
+    (AuditManagerClient as any).mockImplementation(function() { return {
+      send: vi.fn().mockImplementation(command => {
+        if (command instanceof GetAccountStatusCommand) {
+          return Promise.resolve(mockGetAccountStatus);
+        }
+        return Promise.resolve({});
+      }),
+    }; });
 
-    (OrganizationsClient as any).mockImplementation(function () {
-      return {
-        send: vi.fn().mockImplementation(command => {
-          if (command instanceof ListAWSServiceAccessForOrganizationCommand) {
-            return Promise.resolve(mockListServiceAccess);
-          }
-          return Promise.resolve({});
-        }),
-      };
-    });
+    (OrganizationsClient as any).mockImplementation(function() { return {
+      send: vi.fn().mockImplementation(command => {
+        if (command instanceof ListAWSServiceAccessForOrganizationCommand) {
+          return Promise.resolve(mockListServiceAccess);
+        }
+        return Promise.resolve({});
+      }),
+    }; });
 
     // Execute
 
@@ -129,22 +125,20 @@ describe('enable-organization-admin-account', () => {
       },
     };
 
-    (AuditManagerClient as any).mockImplementation(function () {
-      return {
-        send: vi.fn().mockImplementation(command => {
-          if (command instanceof GetAccountStatusCommand) {
-            return Promise.resolve(mockGetAccountStatus);
-          }
-          if (command instanceof GetOrganizationAdminAccountCommand) {
-            return Promise.resolve(mockGetOrgAdminAccount);
-          }
-          if (command instanceof GetSettingsCommand) {
-            return Promise.resolve(mockGetSettings);
-          }
-          return Promise.resolve({});
-        }),
-      };
-    });
+    (AuditManagerClient as any).mockImplementation(function() { return {
+      send: vi.fn().mockImplementation(command => {
+        if (command instanceof GetAccountStatusCommand) {
+          return Promise.resolve(mockGetAccountStatus);
+        }
+        if (command instanceof GetOrganizationAdminAccountCommand) {
+          return Promise.resolve(mockGetOrgAdminAccount);
+        }
+        if (command instanceof GetSettingsCommand) {
+          return Promise.resolve(mockGetSettings);
+        }
+        return Promise.resolve({});
+      }),
+    }; });
 
     // Execute
 
@@ -167,19 +161,17 @@ describe('enable-organization-admin-account', () => {
 
     const existingAdminId = '222222222222';
 
-    (AuditManagerClient as any).mockImplementation(function () {
-      return {
-        send: vi.fn().mockImplementation(command => {
-          if (command instanceof GetAccountStatusCommand) {
-            return Promise.resolve({ status: AccountStatus.ACTIVE });
-          }
-          if (command instanceof GetOrganizationAdminAccountCommand) {
-            return Promise.resolve({ adminAccountId: existingAdminId });
-          }
-          return Promise.resolve({});
-        }),
-      };
-    });
+    (AuditManagerClient as any).mockImplementation(function() { return {
+      send: vi.fn().mockImplementation(command => {
+        if (command instanceof GetAccountStatusCommand) {
+          return Promise.resolve({ status: AccountStatus.ACTIVE });
+        }
+        if (command instanceof GetOrganizationAdminAccountCommand) {
+          return Promise.resolve({ adminAccountId: existingAdminId });
+        }
+        return Promise.resolve({});
+      }),
+    }; });
 
     // Execute
 
@@ -224,19 +216,17 @@ describe('enable-organization-admin-account', () => {
 
     mockEvent.ResourceProperties.adminAccountId = mockEvent.ResourceProperties.managementAccountId;
 
-    (AuditManagerClient as any).mockImplementation(function () {
-      return {
-        send: vi.fn().mockImplementation(command => {
-          if (command instanceof GetAccountStatusCommand) {
-            return Promise.resolve({ status: AccountStatus.ACTIVE });
-          }
-          if (command instanceof GetOrganizationAdminAccountCommand) {
-            return Promise.resolve({ adminAccountId: undefined });
-          }
-          return Promise.resolve({});
-        }),
-      };
-    });
+    (AuditManagerClient as any).mockImplementation(function() { return {
+      send: vi.fn().mockImplementation(command => {
+        if (command instanceof GetAccountStatusCommand) {
+          return Promise.resolve({ status: AccountStatus.ACTIVE });
+        }
+        if (command instanceof GetOrganizationAdminAccountCommand) {
+          return Promise.resolve({ adminAccountId: undefined });
+        }
+        return Promise.resolve({});
+      }),
+    }; });
 
     // Execute & Verify
 
@@ -250,19 +240,17 @@ describe('enable-organization-admin-account', () => {
 
     const existingAdminId = '333333333333';
 
-    (AuditManagerClient as any).mockImplementation(function () {
-      return {
-        send: vi.fn().mockImplementation(command => {
-          if (command instanceof GetAccountStatusCommand) {
-            return Promise.resolve({ status: AccountStatus.ACTIVE });
-          }
-          if (command instanceof GetOrganizationAdminAccountCommand) {
-            return Promise.resolve({ adminAccountId: existingAdminId });
-          }
-          return Promise.resolve({});
-        }),
-      };
-    });
+    (AuditManagerClient as any).mockImplementation(function() { return {
+      send: vi.fn().mockImplementation(command => {
+        if (command instanceof GetAccountStatusCommand) {
+          return Promise.resolve({ status: AccountStatus.ACTIVE });
+        }
+        if (command instanceof GetOrganizationAdminAccountCommand) {
+          return Promise.resolve({ adminAccountId: existingAdminId });
+        }
+        return Promise.resolve({});
+      }),
+    }; });
 
     // Execute
 
@@ -283,23 +271,21 @@ describe('enable-organization-admin-account', () => {
 
     const existingKmsKey = 'arn:aws:kms:us-east-1:111111111111:key/1234abcd'; // Same as mockEvent.ResourceProperties.kmsKeyArn
 
-    (AuditManagerClient as any).mockImplementation(function () {
-      return {
-        send: vi.fn().mockImplementation(command => {
-          if (command instanceof GetAccountStatusCommand) {
-            return Promise.resolve({ status: AccountStatus.ACTIVE });
-          }
-          if (command instanceof GetSettingsCommand) {
-            return Promise.resolve({
-              settings: {
-                kmsKey: existingKmsKey,
-              },
-            });
-          }
-          return Promise.resolve({});
-        }),
-      };
-    });
+    (AuditManagerClient as any).mockImplementation(function() { return {
+      send: vi.fn().mockImplementation(command => {
+        if (command instanceof GetAccountStatusCommand) {
+          return Promise.resolve({ status: AccountStatus.ACTIVE });
+        }
+        if (command instanceof GetSettingsCommand) {
+          return Promise.resolve({
+            settings: {
+              kmsKey: existingKmsKey,
+            },
+          });
+        }
+        return Promise.resolve({});
+      }),
+    }; });
 
     // Execute
 
@@ -326,23 +312,21 @@ describe('enable-organization-admin-account', () => {
 
     const existingKmsKey = 'arn:aws:kms:us-east-1:111111111111:key/different-key';
 
-    (AuditManagerClient as any).mockImplementation(function () {
-      return {
-        send: vi.fn().mockImplementation(command => {
-          if (command instanceof GetAccountStatusCommand) {
-            return Promise.resolve({ status: AccountStatus.ACTIVE });
-          }
-          if (command instanceof GetSettingsCommand) {
-            return Promise.resolve({
-              settings: {
-                kmsKey: existingKmsKey,
-              },
-            });
-          }
-          return Promise.resolve({});
-        }),
-      };
-    });
+    (AuditManagerClient as any).mockImplementation(function() { return {
+      send: vi.fn().mockImplementation(command => {
+        if (command instanceof GetAccountStatusCommand) {
+          return Promise.resolve({ status: AccountStatus.ACTIVE });
+        }
+        if (command instanceof GetSettingsCommand) {
+          return Promise.resolve({
+            settings: {
+              kmsKey: existingKmsKey,
+            },
+          });
+        }
+        return Promise.resolve({});
+      }),
+    }; });
 
     // Execute
 
@@ -376,16 +360,14 @@ describe('enable-organization-admin-account', () => {
       ],
     };
 
-    (OrganizationsClient as any).mockImplementation(function () {
-      return {
-        send: vi.fn().mockImplementation(command => {
-          if (command instanceof ListAWSServiceAccessForOrganizationCommand) {
-            return Promise.resolve(mockListServiceAccess);
-          }
-          return Promise.resolve({});
-        }),
-      };
-    });
+    (OrganizationsClient as any).mockImplementation(function() { return {
+      send: vi.fn().mockImplementation(command => {
+        if (command instanceof ListAWSServiceAccessForOrganizationCommand) {
+          return Promise.resolve(mockListServiceAccess);
+        }
+        return Promise.resolve({});
+      }),
+    }; });
 
     // Execute
 
@@ -408,16 +390,14 @@ describe('enable-organization-admin-account', () => {
       ],
     };
 
-    (OrganizationsClient as any).mockImplementation(function () {
-      return {
-        send: vi.fn().mockImplementation(command => {
-          if (command instanceof ListAWSServiceAccessForOrganizationCommand) {
-            return Promise.resolve(mockListServiceAccess);
-          }
-          return Promise.resolve({});
-        }),
-      };
-    });
+    (OrganizationsClient as any).mockImplementation(function() { return {
+      send: vi.fn().mockImplementation(command => {
+        if (command instanceof ListAWSServiceAccessForOrganizationCommand) {
+          return Promise.resolve(mockListServiceAccess);
+        }
+        return Promise.resolve({});
+      }),
+    }; });
 
     // Execute
 
@@ -437,16 +417,14 @@ describe('enable-organization-admin-account', () => {
       EnabledServicePrincipals: [],
     };
 
-    (OrganizationsClient as any).mockImplementation(function () {
-      return {
-        send: vi.fn().mockImplementation(command => {
-          if (command instanceof ListAWSServiceAccessForOrganizationCommand) {
-            return Promise.resolve(mockListServiceAccess);
-          }
-          return Promise.resolve({});
-        }),
-      };
-    });
+    (OrganizationsClient as any).mockImplementation(function() { return {
+      send: vi.fn().mockImplementation(command => {
+        if (command instanceof ListAWSServiceAccessForOrganizationCommand) {
+          return Promise.resolve(mockListServiceAccess);
+        }
+        return Promise.resolve({});
+      }),
+    }; });
 
     // Execute
 
@@ -466,16 +444,14 @@ describe('enable-organization-admin-account', () => {
       EnabledServicePrincipals: undefined,
     };
 
-    (OrganizationsClient as any).mockImplementation(function () {
-      return {
-        send: vi.fn().mockImplementation(command => {
-          if (command instanceof ListAWSServiceAccessForOrganizationCommand) {
-            return Promise.resolve(mockListServiceAccess);
-          }
-          return Promise.resolve({});
-        }),
-      };
-    });
+    (OrganizationsClient as any).mockImplementation(function() { return {
+      send: vi.fn().mockImplementation(command => {
+        if (command instanceof ListAWSServiceAccessForOrganizationCommand) {
+          return Promise.resolve(mockListServiceAccess);
+        }
+        return Promise.resolve({});
+      }),
+    }; });
 
     // Execute
 
@@ -492,23 +468,21 @@ describe('enable-organization-admin-account', () => {
     // When
     delete mockEvent.ResourceProperties.kmsKeyArn;
 
-    (AuditManagerClient as any).mockImplementation(function () {
-      return {
-        send: vi.fn().mockImplementation(command => {
-          if (command instanceof GetAccountStatusCommand) {
-            return Promise.resolve({ status: AccountStatus.ACTIVE });
-          }
-          if (command instanceof GetSettingsCommand) {
-            return Promise.resolve({
-              settings: {
-                kmsKey: 'DEFAULT',
-              },
-            });
-          }
-          return Promise.resolve({});
-        }),
-      };
-    });
+    (AuditManagerClient as any).mockImplementation(function() { return {
+      send: vi.fn().mockImplementation(command => {
+        if (command instanceof GetAccountStatusCommand) {
+          return Promise.resolve({ status: AccountStatus.ACTIVE });
+        }
+        if (command instanceof GetSettingsCommand) {
+          return Promise.resolve({
+            settings: {
+              kmsKey: 'DEFAULT',
+            },
+          });
+        }
+        return Promise.resolve({});
+      }),
+    }; });
 
     // Execute
     const response = await handler(mockEvent);
@@ -524,23 +498,21 @@ describe('enable-organization-admin-account', () => {
     // When
     mockEvent.ResourceProperties.kmsKeyArn = undefined;
 
-    (AuditManagerClient as any).mockImplementation(function () {
-      return {
-        send: vi.fn().mockImplementation(command => {
-          if (command instanceof GetAccountStatusCommand) {
-            return Promise.resolve({ status: AccountStatus.ACTIVE });
-          }
-          if (command instanceof GetSettingsCommand) {
-            return Promise.resolve({
-              settings: {
-                kmsKey: 'DEFAULT',
-              },
-            });
-          }
-          return Promise.resolve({});
-        }),
-      };
-    });
+    (AuditManagerClient as any).mockImplementation(function() { return {
+      send: vi.fn().mockImplementation(command => {
+        if (command instanceof GetAccountStatusCommand) {
+          return Promise.resolve({ status: AccountStatus.ACTIVE });
+        }
+        if (command instanceof GetSettingsCommand) {
+          return Promise.resolve({
+            settings: {
+              kmsKey: 'DEFAULT',
+            },
+          });
+        }
+        return Promise.resolve({});
+      }),
+    }; });
 
     // Execute
     const response = await handler(mockEvent);
@@ -556,23 +528,21 @@ describe('enable-organization-admin-account', () => {
     // When
     mockEvent.ResourceProperties.kmsKeyArn = null;
 
-    (AuditManagerClient as any).mockImplementation(function () {
-      return {
-        send: vi.fn().mockImplementation(command => {
-          if (command instanceof GetAccountStatusCommand) {
-            return Promise.resolve({ status: AccountStatus.ACTIVE });
-          }
-          if (command instanceof GetSettingsCommand) {
-            return Promise.resolve({
-              settings: {
-                kmsKey: 'DEFAULT',
-              },
-            });
-          }
-          return Promise.resolve({});
-        }),
-      };
-    });
+    (AuditManagerClient as any).mockImplementation(function() { return {
+      send: vi.fn().mockImplementation(command => {
+        if (command instanceof GetAccountStatusCommand) {
+          return Promise.resolve({ status: AccountStatus.ACTIVE });
+        }
+        if (command instanceof GetSettingsCommand) {
+          return Promise.resolve({
+            settings: {
+              kmsKey: 'DEFAULT',
+            },
+          });
+        }
+        return Promise.resolve({});
+      }),
+    }; });
 
     // Execute
     const response = await handler(mockEvent);
@@ -583,114 +553,4 @@ describe('enable-organization-admin-account', () => {
       StatusCode: 200,
     });
   });
-<<<<<<< HEAD
-=======
-
-  test('should return success when Audit Manager is not available in the region (AccessDeniedException)', async () => {
-    // When - Audit Manager is not available in the region, GetAccountStatus throws AccessDeniedException
-    const accessDeniedError = new AccessDeniedException({
-      message: 'AWS Audit Manager is not available in this region',
-      $metadata: {},
-    });
-
-    (AuditManagerClient as any).mockImplementation(function () {
-      return {
-        send: vi.fn().mockImplementation(command => {
-          if (command instanceof GetAccountStatusCommand) {
-            return Promise.reject(accessDeniedError);
-          }
-          return Promise.resolve({});
-        }),
-      };
-    });
-
-    // Execute
-    const response = await handler(mockEvent);
-
-    // Verify - should gracefully return success, not throw/timeout
-    expect(response).toEqual({
-      Status: 'Success',
-      StatusCode: 200,
-    });
-  });
-
-  test('should return success when Audit Manager throws AccessDeniedException on Update', async () => {
-    // When - same scenario but on Update event
-    mockEvent.RequestType = 'Update';
-
-    const accessDeniedError = new AccessDeniedException({
-      message: 'AWS Audit Manager is not available in this region',
-      $metadata: {},
-    });
-
-    (AuditManagerClient as any).mockImplementation(function () {
-      return {
-        send: vi.fn().mockImplementation(command => {
-          if (command instanceof GetAccountStatusCommand) {
-            return Promise.reject(accessDeniedError);
-          }
-          return Promise.resolve({});
-        }),
-      };
-    });
-
-    // Execute
-    const response = await handler(mockEvent);
-
-    // Verify
-    expect(response).toEqual({
-      Status: 'Success',
-      StatusCode: 200,
-    });
-  });
-
-  test('should return success when Audit Manager throws AccessDeniedException on Delete', async () => {
-    // When - service unavailable during a Delete event
-    mockEvent.RequestType = 'Delete';
-
-    const accessDeniedError = new AccessDeniedException({
-      message: 'AWS Audit Manager is not available in this region',
-      $metadata: {},
-    });
-
-    (AuditManagerClient as any).mockImplementation(function () {
-      return {
-        send: vi.fn().mockImplementation(command => {
-          if (command instanceof GetAccountStatusCommand) {
-            return Promise.reject(accessDeniedError);
-          }
-          return Promise.resolve({});
-        }),
-      };
-    });
-
-    // Execute
-    const response = await handler(mockEvent);
-
-    // Verify
-    expect(response).toEqual({
-      Status: 'Success',
-      StatusCode: 200,
-    });
-  });
-
-  test('should rethrow non-AccessDeniedException errors from GetAccountStatus', async () => {
-    // When - a different error occurs (not service unavailability)
-    const internalError = new Error('Internal server error');
-
-    (AuditManagerClient as any).mockImplementation(function () {
-      return {
-        send: vi.fn().mockImplementation(command => {
-          if (command instanceof GetAccountStatusCommand) {
-            return Promise.reject(internalError);
-          }
-          return Promise.resolve({});
-        }),
-      };
-    });
-
-    // Execute & Verify - should throw for non-AccessDeniedException errors
-    await expect(handler(mockEvent)).rejects.toThrow('Internal server error');
-  });
->>>>>>> b943486b5 (chore(deps): upgrade vitest 3.2.4 to 4.1.8)
 });

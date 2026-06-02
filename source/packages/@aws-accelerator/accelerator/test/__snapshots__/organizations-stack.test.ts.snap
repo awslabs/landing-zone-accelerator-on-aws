@@ -229,7 +229,7 @@ exports[`MultiOuOrganizationsStack > Construct(OrganizationsStack):  Snapshot Te
         },
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.15.4",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.15.5",
           },
         },
         "Handler": "__entrypoint__.handler",
@@ -384,7 +384,7 @@ exports[`MultiOuOrganizationsStack > Construct(OrganizationsStack):  Snapshot Te
         },
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.15.4",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.15.5",
           },
         },
         "Handler": "__entrypoint__.handler",
@@ -534,7 +534,7 @@ exports[`MultiOuOrganizationsStack > Construct(OrganizationsStack):  Snapshot Te
         },
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.15.4",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.15.5",
           },
         },
         "Handler": "__entrypoint__.handler",
@@ -655,7 +655,7 @@ exports[`MultiOuOrganizationsStack > Construct(OrganizationsStack):  Snapshot Te
         },
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.15.4",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.15.5",
           },
         },
         "Handler": "__entrypoint__.handler",
@@ -767,7 +767,7 @@ exports[`MultiOuOrganizationsStack > Construct(OrganizationsStack):  Snapshot Te
         },
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.15.4",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.15.5",
           },
         },
         "Handler": "__entrypoint__.handler",
@@ -859,7 +859,7 @@ exports[`MultiOuOrganizationsStack > Construct(OrganizationsStack):  Snapshot Te
         },
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.15.4",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.15.5",
           },
         },
         "Handler": "__entrypoint__.handler",
@@ -971,7 +971,7 @@ exports[`MultiOuOrganizationsStack > Construct(OrganizationsStack):  Snapshot Te
         },
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.15.4",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.15.5",
           },
         },
         "Handler": "__entrypoint__.handler",
@@ -1110,7 +1110,7 @@ exports[`MultiOuOrganizationsStack > Construct(OrganizationsStack):  Snapshot Te
         },
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.15.4",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.15.5",
           },
         },
         "Handler": "__entrypoint__.handler",
@@ -1203,7 +1203,7 @@ exports[`MultiOuOrganizationsStack > Construct(OrganizationsStack):  Snapshot Te
         "Description": "Organizations create policy",
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.15.4",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.15.5",
           },
         },
         "Handler": "__entrypoint__.handler",
@@ -1315,7 +1315,7 @@ exports[`MultiOuOrganizationsStack > Construct(OrganizationsStack):  Snapshot Te
         },
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.15.4",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.15.5",
           },
         },
         "Handler": "__entrypoint__.handler",
@@ -1404,7 +1404,7 @@ exports[`MultiOuOrganizationsStack > Construct(OrganizationsStack):  Snapshot Te
         },
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.15.4",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.15.5",
           },
         },
         "Handler": "__entrypoint__.handler",
@@ -1493,7 +1493,7 @@ exports[`MultiOuOrganizationsStack > Construct(OrganizationsStack):  Snapshot Te
         },
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.15.4",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.15.5",
           },
         },
         "Handler": "__entrypoint__.handler",
@@ -1585,7 +1585,7 @@ exports[`MultiOuOrganizationsStack > Construct(OrganizationsStack):  Snapshot Te
         },
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.15.4",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.15.5",
           },
         },
         "Handler": "__entrypoint__.handler",
@@ -1736,7 +1736,7 @@ exports[`MultiOuOrganizationsStack > Construct(OrganizationsStack):  Snapshot Te
         },
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.15.4",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.15.5",
           },
         },
         "Handler": "__entrypoint__.handler",
@@ -1933,7 +1933,7 @@ exports[`MultiOuOrganizationsStack > Construct(OrganizationsStack):  Snapshot Te
         },
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.15.4",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.15.5",
           },
         },
         "Handler": "index.handler",
@@ -2126,7 +2126,7 @@ exports[`MultiOuOrganizationsStack > Construct(OrganizationsStack):  Snapshot Te
         "Description": "AWS CDK resource provider framework - onEvent (AWSAccelerator-OrganizationsStack-111111111111-us-east-1/FMSOrganizationAdminAccount/Resource)",
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.15.4",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.15.5",
             "USER_ON_EVENT_FUNCTION_ARN": {
               "Fn::GetAtt": [
                 "FMSOrganizationAdminAccountFMSOrganizationAdminAccountProviderLambda2D69B84E",
@@ -2288,7 +2288,7 @@ exports[`MultiOuOrganizationsStack > Construct(OrganizationsStack):  Snapshot Te
         "Description": "Custom resource provider to create service linked role",
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.15.4",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.15.5",
           },
         },
         "Handler": "index.handler",
@@ -2418,7 +2418,7 @@ exports[`MultiOuOrganizationsStack > Construct(OrganizationsStack):  Snapshot Te
         "Description": "AWS CDK resource provider framework - onEvent (AWSAccelerator-OrganizationsStack-111111111111-us-east-1/FirewallManagerServiceLinkedRole/CreateServiceLinkedRoleProvider)",
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.15.4",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.15.5",
             "USER_ON_EVENT_FUNCTION_ARN": {
               "Fn::GetAtt": [
                 "FirewallManagerServiceLinkedRoleCreateServiceLinkedRoleFunctionA541DABF",
@@ -3022,7 +3022,7 @@ exports[`MultiOuOrganizationsStack > Construct(OrganizationsStack):  Snapshot Te
       "Properties": {
         "Name": "/accelerator/AWSAccelerator-OrganizationsStack-111111111111-us-east-1/version",
         "Type": "String",
-        "Value": "1.15.4",
+        "Value": "1.15.5",
       },
       "Type": "AWS::SSM::Parameter",
     },
@@ -3503,7 +3503,7 @@ exports[`OrganizationsStack > Construct(OrganizationsStack):  Snapshot Test 1`] 
         },
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.15.4",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.15.5",
           },
         },
         "Handler": "__entrypoint__.handler",
@@ -3658,7 +3658,7 @@ exports[`OrganizationsStack > Construct(OrganizationsStack):  Snapshot Test 1`] 
         },
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.15.4",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.15.5",
           },
         },
         "Handler": "__entrypoint__.handler",
@@ -3808,7 +3808,7 @@ exports[`OrganizationsStack > Construct(OrganizationsStack):  Snapshot Test 1`] 
         },
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.15.4",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.15.5",
           },
         },
         "Handler": "__entrypoint__.handler",
@@ -3929,7 +3929,7 @@ exports[`OrganizationsStack > Construct(OrganizationsStack):  Snapshot Test 1`] 
         },
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.15.4",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.15.5",
           },
         },
         "Handler": "__entrypoint__.handler",
@@ -4041,7 +4041,7 @@ exports[`OrganizationsStack > Construct(OrganizationsStack):  Snapshot Test 1`] 
         },
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.15.4",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.15.5",
           },
         },
         "Handler": "__entrypoint__.handler",
@@ -4133,7 +4133,7 @@ exports[`OrganizationsStack > Construct(OrganizationsStack):  Snapshot Test 1`] 
         },
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.15.4",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.15.5",
           },
         },
         "Handler": "__entrypoint__.handler",
@@ -4245,7 +4245,7 @@ exports[`OrganizationsStack > Construct(OrganizationsStack):  Snapshot Test 1`] 
         },
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.15.4",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.15.5",
           },
         },
         "Handler": "__entrypoint__.handler",
@@ -4384,7 +4384,7 @@ exports[`OrganizationsStack > Construct(OrganizationsStack):  Snapshot Test 1`] 
         },
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.15.4",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.15.5",
           },
         },
         "Handler": "__entrypoint__.handler",
@@ -4477,7 +4477,7 @@ exports[`OrganizationsStack > Construct(OrganizationsStack):  Snapshot Test 1`] 
         "Description": "Organizations create policy",
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.15.4",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.15.5",
           },
         },
         "Handler": "__entrypoint__.handler",
@@ -4589,7 +4589,7 @@ exports[`OrganizationsStack > Construct(OrganizationsStack):  Snapshot Test 1`] 
         },
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.15.4",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.15.5",
           },
         },
         "Handler": "__entrypoint__.handler",
@@ -4678,7 +4678,7 @@ exports[`OrganizationsStack > Construct(OrganizationsStack):  Snapshot Test 1`] 
         },
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.15.4",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.15.5",
           },
         },
         "Handler": "__entrypoint__.handler",
@@ -4767,7 +4767,7 @@ exports[`OrganizationsStack > Construct(OrganizationsStack):  Snapshot Test 1`] 
         },
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.15.4",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.15.5",
           },
         },
         "Handler": "__entrypoint__.handler",
@@ -4859,7 +4859,7 @@ exports[`OrganizationsStack > Construct(OrganizationsStack):  Snapshot Test 1`] 
         },
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.15.4",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.15.5",
           },
         },
         "Handler": "__entrypoint__.handler",
@@ -5010,7 +5010,7 @@ exports[`OrganizationsStack > Construct(OrganizationsStack):  Snapshot Test 1`] 
         },
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.15.4",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.15.5",
           },
         },
         "Handler": "__entrypoint__.handler",
@@ -5207,7 +5207,7 @@ exports[`OrganizationsStack > Construct(OrganizationsStack):  Snapshot Test 1`] 
         },
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.15.4",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.15.5",
           },
         },
         "Handler": "index.handler",
@@ -5400,7 +5400,7 @@ exports[`OrganizationsStack > Construct(OrganizationsStack):  Snapshot Test 1`] 
         "Description": "AWS CDK resource provider framework - onEvent (AWSAccelerator-OrganizationsStack-111111111111-us-east-1/FMSOrganizationAdminAccount/Resource)",
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.15.4",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.15.5",
             "USER_ON_EVENT_FUNCTION_ARN": {
               "Fn::GetAtt": [
                 "FMSOrganizationAdminAccountFMSOrganizationAdminAccountProviderLambda2D69B84E",
@@ -5562,7 +5562,7 @@ exports[`OrganizationsStack > Construct(OrganizationsStack):  Snapshot Test 1`] 
         "Description": "Custom resource provider to create service linked role",
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.15.4",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.15.5",
           },
         },
         "Handler": "index.handler",
@@ -5692,7 +5692,7 @@ exports[`OrganizationsStack > Construct(OrganizationsStack):  Snapshot Test 1`] 
         "Description": "AWS CDK resource provider framework - onEvent (AWSAccelerator-OrganizationsStack-111111111111-us-east-1/FirewallManagerServiceLinkedRole/CreateServiceLinkedRoleProvider)",
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.15.4",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.15.5",
             "USER_ON_EVENT_FUNCTION_ARN": {
               "Fn::GetAtt": [
                 "FirewallManagerServiceLinkedRoleCreateServiceLinkedRoleFunctionA541DABF",
@@ -5870,7 +5870,7 @@ exports[`OrganizationsStack > Construct(OrganizationsStack):  Snapshot Test 1`] 
         },
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.15.4",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.15.5",
           },
         },
         "Handler": "index.handler",
@@ -5986,7 +5986,7 @@ exports[`OrganizationsStack > Construct(OrganizationsStack):  Snapshot Test 1`] 
         "Description": "AWS CDK resource provider framework - onEvent (AWSAccelerator-OrganizationsStack-111111111111-us-east-1/IdentityCenterAdmin/Resource)",
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.15.4",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.15.5",
             "USER_ON_EVENT_FUNCTION_ARN": {
               "Fn::GetAtt": [
                 "IdentityCenterAdminIdentityCenterAdminProviderLambdaE457A029",
@@ -6648,7 +6648,7 @@ exports[`OrganizationsStack > Construct(OrganizationsStack):  Snapshot Test 1`] 
       "Properties": {
         "Name": "/accelerator/AWSAccelerator-OrganizationsStack-111111111111-us-east-1/version",
         "Type": "String",
-        "Value": "1.15.4",
+        "Value": "1.15.5",
       },
       "Type": "AWS::SSM::Parameter",
     },
@@ -6941,7 +6941,7 @@ exports[`delegatedAdminStack > Construct(OrganizationsStack):  Snapshot Test 1`]
         },
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.15.4",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.15.5",
           },
         },
         "Handler": "__entrypoint__.handler",
@@ -7096,7 +7096,7 @@ exports[`delegatedAdminStack > Construct(OrganizationsStack):  Snapshot Test 1`]
         },
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.15.4",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.15.5",
           },
         },
         "Handler": "__entrypoint__.handler",
@@ -7246,7 +7246,7 @@ exports[`delegatedAdminStack > Construct(OrganizationsStack):  Snapshot Test 1`]
         },
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.15.4",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.15.5",
           },
         },
         "Handler": "__entrypoint__.handler",
@@ -7367,7 +7367,7 @@ exports[`delegatedAdminStack > Construct(OrganizationsStack):  Snapshot Test 1`]
         },
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.15.4",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.15.5",
           },
         },
         "Handler": "__entrypoint__.handler",
@@ -7479,7 +7479,7 @@ exports[`delegatedAdminStack > Construct(OrganizationsStack):  Snapshot Test 1`]
         },
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.15.4",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.15.5",
           },
         },
         "Handler": "__entrypoint__.handler",
@@ -7571,7 +7571,7 @@ exports[`delegatedAdminStack > Construct(OrganizationsStack):  Snapshot Test 1`]
         },
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.15.4",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.15.5",
           },
         },
         "Handler": "__entrypoint__.handler",
@@ -7683,7 +7683,7 @@ exports[`delegatedAdminStack > Construct(OrganizationsStack):  Snapshot Test 1`]
         },
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.15.4",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.15.5",
           },
         },
         "Handler": "__entrypoint__.handler",
@@ -7822,7 +7822,7 @@ exports[`delegatedAdminStack > Construct(OrganizationsStack):  Snapshot Test 1`]
         },
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.15.4",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.15.5",
           },
         },
         "Handler": "__entrypoint__.handler",
@@ -7915,7 +7915,7 @@ exports[`delegatedAdminStack > Construct(OrganizationsStack):  Snapshot Test 1`]
         "Description": "Organizations create policy",
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.15.4",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.15.5",
           },
         },
         "Handler": "__entrypoint__.handler",
@@ -8027,7 +8027,7 @@ exports[`delegatedAdminStack > Construct(OrganizationsStack):  Snapshot Test 1`]
         },
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.15.4",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.15.5",
           },
         },
         "Handler": "__entrypoint__.handler",
@@ -8116,7 +8116,7 @@ exports[`delegatedAdminStack > Construct(OrganizationsStack):  Snapshot Test 1`]
         },
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.15.4",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.15.5",
           },
         },
         "Handler": "__entrypoint__.handler",
@@ -8205,7 +8205,7 @@ exports[`delegatedAdminStack > Construct(OrganizationsStack):  Snapshot Test 1`]
         },
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.15.4",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.15.5",
           },
         },
         "Handler": "__entrypoint__.handler",
@@ -8297,7 +8297,7 @@ exports[`delegatedAdminStack > Construct(OrganizationsStack):  Snapshot Test 1`]
         },
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.15.4",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.15.5",
           },
         },
         "Handler": "__entrypoint__.handler",
@@ -8448,7 +8448,7 @@ exports[`delegatedAdminStack > Construct(OrganizationsStack):  Snapshot Test 1`]
         },
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.15.4",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.15.5",
           },
         },
         "Handler": "__entrypoint__.handler",
@@ -8645,7 +8645,7 @@ exports[`delegatedAdminStack > Construct(OrganizationsStack):  Snapshot Test 1`]
         },
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.15.4",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.15.5",
           },
         },
         "Handler": "index.handler",
@@ -8838,7 +8838,7 @@ exports[`delegatedAdminStack > Construct(OrganizationsStack):  Snapshot Test 1`]
         "Description": "AWS CDK resource provider framework - onEvent (AWSAccelerator-OrganizationsStack-111111111111-us-east-1/FMSOrganizationAdminAccount/Resource)",
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.15.4",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.15.5",
             "USER_ON_EVENT_FUNCTION_ARN": {
               "Fn::GetAtt": [
                 "FMSOrganizationAdminAccountFMSOrganizationAdminAccountProviderLambda2D69B84E",
@@ -9000,7 +9000,7 @@ exports[`delegatedAdminStack > Construct(OrganizationsStack):  Snapshot Test 1`]
         "Description": "Custom resource provider to create service linked role",
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.15.4",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.15.5",
           },
         },
         "Handler": "index.handler",
@@ -9130,7 +9130,7 @@ exports[`delegatedAdminStack > Construct(OrganizationsStack):  Snapshot Test 1`]
         "Description": "AWS CDK resource provider framework - onEvent (AWSAccelerator-OrganizationsStack-111111111111-us-east-1/FirewallManagerServiceLinkedRole/CreateServiceLinkedRoleProvider)",
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.15.4",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.15.5",
             "USER_ON_EVENT_FUNCTION_ARN": {
               "Fn::GetAtt": [
                 "FirewallManagerServiceLinkedRoleCreateServiceLinkedRoleFunctionA541DABF",
@@ -9308,7 +9308,7 @@ exports[`delegatedAdminStack > Construct(OrganizationsStack):  Snapshot Test 1`]
         },
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.15.4",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.15.5",
           },
         },
         "Handler": "index.handler",
@@ -9424,7 +9424,7 @@ exports[`delegatedAdminStack > Construct(OrganizationsStack):  Snapshot Test 1`]
         "Description": "AWS CDK resource provider framework - onEvent (AWSAccelerator-OrganizationsStack-111111111111-us-east-1/IdentityCenterAdmin/Resource)",
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.15.4",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.15.5",
             "USER_ON_EVENT_FUNCTION_ARN": {
               "Fn::GetAtt": [
                 "IdentityCenterAdminIdentityCenterAdminProviderLambdaE457A029",
@@ -10036,7 +10036,7 @@ exports[`delegatedAdminStack > Construct(OrganizationsStack):  Snapshot Test 1`]
       "Properties": {
         "Name": "/accelerator/AWSAccelerator-OrganizationsStack-111111111111-us-east-1/version",
         "Type": "String",
-        "Value": "1.15.4",
+        "Value": "1.15.5",
       },
       "Type": "AWS::SSM::Parameter",
     },

@@ -5,6 +5,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.15.5] - 2026-06-02
+
+### Fixed
+
+- fix(asea): fix route table propagation lookup
+- fix(deps): remediate CVE-2026-44705 in tmp [Tier 2]
+- fix(deps): remediate CVE-2025-62718 in axios
+
+### Changed
+
+- chore(deps): upgrade vitest 3.2.4 to 4.1.8 (resolves CVE advisory 1120011)
+- chore(deps): upgrade vite 7.3.2 to 8.0.16
+
 ## [1.15.4] - 2026-05-18
 
 ### Fixed
