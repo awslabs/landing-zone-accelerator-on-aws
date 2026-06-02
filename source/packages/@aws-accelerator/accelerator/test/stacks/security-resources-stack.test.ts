@@ -561,7 +561,7 @@ function createConfigRulesProps(options: {
     accountsConfig: {
       ...baseProps.accountsConfig,
       getAccountId: vi.fn((name: string) => (name === testAccountName ? testAccountId : '123456789' + name)),
-      getAccount: vi.fn(() => ({ name: testAccountName, organizationalUnit: 'Root' })),
+      getAccount: vi.fn(function() { return { name: testAccountName, organizationalUnit: 'Root' }; }),
       getManagementAccountId: vi.fn(() => '234567890'),
       getLogArchiveAccountId: vi.fn(() => '345678901'),
       getAuditAccountId: vi.fn(() => '456789012'),

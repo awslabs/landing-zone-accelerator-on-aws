@@ -74,9 +74,9 @@ describe('DeployStackModule', () => {
   beforeEach(async () => {
     vi.clearAllMocks();
 
-    (CloudFormationClient as unknown as ReturnType<typeof vi.fn>).mockImplementation(() => ({
+    (CloudFormationClient as unknown as ReturnType<typeof vi.fn>).mockImplementation(function() { return {
       send: mockSend,
-    }));
+    }; });
 
     const cfnFunctions = await import('../../../../common/cloudformation-functions');
     isStackExistsSpy = vi.mocked(cfnFunctions.isStackExists);

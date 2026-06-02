@@ -45,9 +45,11 @@ describe('DetectiveExecutors', () => {
 
     test('should successfully set organization admin', async () => {
       const mockHandler = vi.fn().mockResolvedValue('SUCCESS');
-      (DetectiveManageOrganizationAdminModule as vi.Mock).mockImplementation(() => ({
-        handler: mockHandler,
-      }));
+      (DetectiveManageOrganizationAdminModule as vi.Mock).mockImplementation(function () {
+        return {
+          handler: mockHandler,
+        };
+      });
 
       const result = await manageDetectiveOrganizationAdminAccount(MOCK_CONSTANTS.input);
 
@@ -58,9 +60,11 @@ describe('DetectiveExecutors', () => {
 
     test('should successfully disable organization admin', async () => {
       const mockHandler = vi.fn().mockResolvedValue('SUCCESS');
-      (DetectiveManageOrganizationAdminModule as vi.Mock).mockImplementation(() => ({
-        handler: mockHandler,
-      }));
+      (DetectiveManageOrganizationAdminModule as vi.Mock).mockImplementation(function () {
+        return {
+          handler: mockHandler,
+        };
+      });
 
       const inputWithDisable = {
         ...MOCK_CONSTANTS.input,
@@ -79,9 +83,11 @@ describe('DetectiveExecutors', () => {
 
     test('should handle dry run mode', async () => {
       const mockHandler = vi.fn().mockResolvedValue('DRY_RUN_SUCCESS');
-      (DetectiveManageOrganizationAdminModule as vi.Mock).mockImplementation(() => ({
-        handler: mockHandler,
-      }));
+      (DetectiveManageOrganizationAdminModule as vi.Mock).mockImplementation(function () {
+        return {
+          handler: mockHandler,
+        };
+      });
 
       const inputWithDryRun = {
         ...MOCK_CONSTANTS.input,
@@ -98,9 +104,11 @@ describe('DetectiveExecutors', () => {
     test('should throw error when setup fails', async () => {
       const errorMessage = 'failed to manage detective organization admin';
       const mockHandler = vi.fn().mockRejectedValue(new Error(errorMessage));
-      (DetectiveManageOrganizationAdminModule as vi.Mock).mockImplementation(() => ({
-        handler: mockHandler,
-      }));
+      (DetectiveManageOrganizationAdminModule as vi.Mock).mockImplementation(function () {
+        return {
+          handler: mockHandler,
+        };
+      });
 
       await expect(manageDetectiveOrganizationAdminAccount(MOCK_CONSTANTS.input)).rejects.toThrow(errorMessage);
 
@@ -111,9 +119,11 @@ describe('DetectiveExecutors', () => {
     test('should throw error when handler throws unknown error', async () => {
       const errorMessage = 'unknown error occurred';
       const mockHandler = vi.fn().mockRejectedValue(errorMessage);
-      (DetectiveManageOrganizationAdminModule as vi.Mock).mockImplementation(() => ({
-        handler: mockHandler,
-      }));
+      (DetectiveManageOrganizationAdminModule as vi.Mock).mockImplementation(function () {
+        return {
+          handler: mockHandler,
+        };
+      });
 
       await expect(manageDetectiveOrganizationAdminAccount(MOCK_CONSTANTS.input)).rejects.toBe(errorMessage);
 
@@ -123,9 +133,11 @@ describe('DetectiveExecutors', () => {
 
     test('should handle different partition', async () => {
       const mockHandler = vi.fn().mockResolvedValue('SUCCESS');
-      (DetectiveManageOrganizationAdminModule as vi.Mock).mockImplementation(() => ({
-        handler: mockHandler,
-      }));
+      (DetectiveManageOrganizationAdminModule as vi.Mock).mockImplementation(function () {
+        return {
+          handler: mockHandler,
+        };
+      });
 
       const inputWithGovCloud = {
         ...MOCK_CONSTANTS.input,
@@ -141,9 +153,11 @@ describe('DetectiveExecutors', () => {
 
     test('should handle different region', async () => {
       const mockHandler = vi.fn().mockResolvedValue('SUCCESS');
-      (DetectiveManageOrganizationAdminModule as vi.Mock).mockImplementation(() => ({
-        handler: mockHandler,
-      }));
+      (DetectiveManageOrganizationAdminModule as vi.Mock).mockImplementation(function () {
+        return {
+          handler: mockHandler,
+        };
+      });
 
       const inputWithDifferentRegion = {
         ...MOCK_CONSTANTS.input,
@@ -165,7 +179,7 @@ describe('DetectiveExecutors', () => {
     beforeEach(() => {
       originalProcessOn = process.on;
 
-      process.on = vi.fn((event: string, listener: NodeJS.UncaughtExceptionListener) => {
+      process.on = vi.fn(function (event: string, listener: NodeJS.UncaughtExceptionListener) {
         if (event === 'uncaughtException') {
           processOnCallback = listener;
         }

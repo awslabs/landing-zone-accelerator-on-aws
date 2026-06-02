@@ -29,9 +29,11 @@ describe('TgwResources - Transit Gateway Peering', () => {
     vi.spyOn(NetworkVpcStack.prototype, 'getAcceleratorKey').mockImplementation(() => cloudWatchKey as IKey);
 
     vi.mock('aws-sdk', () => ({
-      Bucket: vi.fn(() => ({
-        fromBucketName: vi.fn(),
-      })),
+      Bucket: vi.fn(function () {
+        return {
+          fromBucketName: vi.fn(),
+        };
+      }),
     }));
   });
 

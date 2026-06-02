@@ -43,9 +43,11 @@ describe('ManageEbsDefaultEncryptionModule', () => {
   beforeEach(() => {
     vi.clearAllMocks();
 
-    (EC2Client as vi.Mock).mockImplementation(() => ({
-      send: mockSend,
-    }));
+    (EC2Client as vi.Mock).mockImplementation(function () {
+      return {
+        send: mockSend,
+      };
+    });
   });
 
   describe('Live Execution Operations', () => {

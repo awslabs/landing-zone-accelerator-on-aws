@@ -119,41 +119,51 @@ describe('IAM Role Tests', () => {
   beforeEach(() => {
     vi.clearAllMocks();
 
-    (OrganizationsClient as vi.Mock).mockImplementation(() => ({
-      send: mockOrganizationsSend,
-    }));
+    (OrganizationsClient as vi.Mock).mockImplementation(function () {
+      return {
+        send: mockOrganizationsSend,
+      };
+    });
 
-    (paginateListInstances as vi.Mock).mockImplementation(() => ({
-      [Symbol.asyncIterator]: async function* () {
-        yield {
-          Instances: [],
-        };
-      },
-    }));
+    (paginateListInstances as vi.Mock).mockImplementation(function () {
+      return {
+        [Symbol.asyncIterator]: async function* () {
+          yield {
+            Instances: [],
+          };
+        },
+      };
+    });
 
-    (paginateListOrganizationalUnitsForParent as vi.Mock).mockImplementation(() => ({
-      [Symbol.asyncIterator]: async function* () {
-        yield {
-          OrganizationalUnits: [],
-        };
-      },
-    }));
+    (paginateListOrganizationalUnitsForParent as vi.Mock).mockImplementation(function () {
+      return {
+        [Symbol.asyncIterator]: async function* () {
+          yield {
+            OrganizationalUnits: [],
+          };
+        },
+      };
+    });
 
-    (paginateListAccounts as vi.Mock).mockImplementation(() => ({
-      [Symbol.asyncIterator]: async function* () {
-        yield {
-          Accounts: [],
-        };
-      },
-    }));
+    (paginateListAccounts as vi.Mock).mockImplementation(function () {
+      return {
+        [Symbol.asyncIterator]: async function* () {
+          yield {
+            Accounts: [],
+          };
+        },
+      };
+    });
 
-    (paginateListAWSServiceAccessForOrganization as vi.Mock).mockImplementation(() => ({
-      [Symbol.asyncIterator]: async function* () {
-        yield {
-          EnabledServicePrincipals: [],
-        };
-      },
-    }));
+    (paginateListAWSServiceAccessForOrganization as vi.Mock).mockImplementation(function () {
+      return {
+        [Symbol.asyncIterator]: async function* () {
+          yield {
+            EnabledServicePrincipals: [],
+          };
+        },
+      };
+    });
   });
 
   test('should successfully moveAccountToOu', async () => {
@@ -237,13 +247,15 @@ describe('IAM Role Tests', () => {
       }
     });
 
-    (paginateListOrganizationalUnitsForParent as vi.Mock).mockImplementation(() => ({
-      [Symbol.asyncIterator]: async function* () {
-        yield {
-          OrganizationalUnits: [MOCK_CONSTANTS.organizationalUnit],
-        };
-      },
-    }));
+    (paginateListOrganizationalUnitsForParent as vi.Mock).mockImplementation(function () {
+      return {
+        [Symbol.asyncIterator]: async function* () {
+          yield {
+            OrganizationalUnits: [MOCK_CONSTANTS.organizationalUnit],
+          };
+        },
+      };
+    });
 
     const result = await Organization.createOu('fakeRegion', 'fakeNewOu', 'mockName');
 
@@ -257,13 +269,15 @@ describe('IAM Role Tests', () => {
       }
     });
 
-    (paginateListOrganizationalUnitsForParent as vi.Mock).mockImplementation(() => ({
-      [Symbol.asyncIterator]: async function* () {
-        yield {
-          OrganizationalUnits: [MOCK_CONSTANTS.organizationalUnit],
-        };
-      },
-    }));
+    (paginateListOrganizationalUnitsForParent as vi.Mock).mockImplementation(function () {
+      return {
+        [Symbol.asyncIterator]: async function* () {
+          yield {
+            OrganizationalUnits: [MOCK_CONSTANTS.organizationalUnit],
+          };
+        },
+      };
+    });
 
     expect(async () => {
       await Organization.createOu('fakeRegion', 'fakeNewOu', 'wrongOuName');
@@ -286,13 +300,15 @@ describe('IAM Role Tests', () => {
       }
     });
 
-    (paginateListOrganizationalUnitsForParent as vi.Mock).mockImplementation(() => ({
-      [Symbol.asyncIterator]: async function* () {
-        yield {
-          OrganizationalUnits: [MOCK_CONSTANTS.organizationalUnit],
-        };
-      },
-    }));
+    (paginateListOrganizationalUnitsForParent as vi.Mock).mockImplementation(function () {
+      return {
+        [Symbol.asyncIterator]: async function* () {
+          yield {
+            OrganizationalUnits: [MOCK_CONSTANTS.organizationalUnit],
+          };
+        },
+      };
+    });
 
     expect(async () => {
       await Organization.createOu('fakeRegion', 'fakeNewOu', 'mockName');
@@ -312,13 +328,15 @@ describe('IAM Role Tests', () => {
       }
     });
 
-    (paginateListOrganizationalUnitsForParent as vi.Mock).mockImplementation(() => ({
-      [Symbol.asyncIterator]: async function* () {
-        yield {
-          OrganizationalUnits: [MOCK_CONSTANTS.organizationalUnit],
-        };
-      },
-    }));
+    (paginateListOrganizationalUnitsForParent as vi.Mock).mockImplementation(function () {
+      return {
+        [Symbol.asyncIterator]: async function* () {
+          yield {
+            OrganizationalUnits: [MOCK_CONSTANTS.organizationalUnit],
+          };
+        },
+      };
+    });
 
     expect(async () => {
       await Organization.createOu('fakeRegion', 'fakeNewOu', 'mockName');
@@ -334,13 +352,15 @@ describe('IAM Role Tests', () => {
       }
     });
 
-    (paginateListOrganizationalUnitsForParent as vi.Mock).mockImplementation(() => ({
-      [Symbol.asyncIterator]: async function* () {
-        yield {
-          OrganizationalUnits: [MOCK_CONSTANTS.organizationalUnit],
-        };
-      },
-    }));
+    (paginateListOrganizationalUnitsForParent as vi.Mock).mockImplementation(function () {
+      return {
+        [Symbol.asyncIterator]: async function* () {
+          yield {
+            OrganizationalUnits: [MOCK_CONSTANTS.organizationalUnit],
+          };
+        },
+      };
+    });
 
     const result = await Organization.createOu('fakeRegion', 'mockName', 'mockName');
 
@@ -381,13 +401,15 @@ describe('IAM Role Tests', () => {
 
   test('should successfully validated organizations when IdentityCenter Instances undefined', async () => {
     // Setup
-    (paginateListInstances as vi.Mock).mockImplementation(() => ({
-      [Symbol.asyncIterator]: async function* () {
-        yield {
-          Instances: undefined,
-        };
-      },
-    }));
+    (paginateListInstances as vi.Mock).mockImplementation(function () {
+      return {
+        [Symbol.asyncIterator]: async function* () {
+          yield {
+            Instances: undefined,
+          };
+        },
+      };
+    });
 
     mockOrganizationsSend.mockImplementation(command => {
       if (command instanceof DescribeOrganizationCommand) {
@@ -487,13 +509,15 @@ describe('IAM Role Tests', () => {
 
   test('organizations validation failed becasue Organizations have services enabled', async () => {
     // Setup
-    (paginateListAWSServiceAccessForOrganization as vi.Mock).mockImplementation(() => ({
-      [Symbol.asyncIterator]: async function* () {
-        yield {
-          EnabledServicePrincipals: MOCK_CONSTANTS.enabledServicePrincipals,
-        };
-      },
-    }));
+    (paginateListAWSServiceAccessForOrganization as vi.Mock).mockImplementation(function () {
+      return {
+        [Symbol.asyncIterator]: async function* () {
+          yield {
+            EnabledServicePrincipals: MOCK_CONSTANTS.enabledServicePrincipals,
+          };
+        },
+      };
+    });
 
     mockOrganizationsSend.mockImplementation(command => {
       if (command instanceof DescribeOrganizationCommand) {
@@ -520,13 +544,15 @@ describe('IAM Role Tests', () => {
 
   test('should successfully validated organizations with EnabledServicePrincipals undefined', async () => {
     // Setup
-    (paginateListAWSServiceAccessForOrganization as vi.Mock).mockImplementation(() => ({
-      [Symbol.asyncIterator]: async function* () {
-        yield {
-          EnabledServicePrincipals: undefined,
-        };
-      },
-    }));
+    (paginateListAWSServiceAccessForOrganization as vi.Mock).mockImplementation(function () {
+      return {
+        [Symbol.asyncIterator]: async function* () {
+          yield {
+            EnabledServicePrincipals: undefined,
+          };
+        },
+      };
+    });
 
     mockOrganizationsSend.mockImplementation(command => {
       if (command instanceof DescribeOrganizationCommand) {
@@ -622,13 +648,15 @@ describe('IAM Role Tests', () => {
     test('get accounts by email', async () => {
       // Setup
 
-      (paginateListAccounts as vi.Mock).mockImplementation(() => ({
-        [Symbol.asyncIterator]: async function* () {
-          yield {
-            Accounts: MOCK_CONSTANTS.govCloudAccounts,
-          };
-        },
-      }));
+      (paginateListAccounts as vi.Mock).mockImplementation(function () {
+        return {
+          [Symbol.asyncIterator]: async function* () {
+            yield {
+              Accounts: MOCK_CONSTANTS.govCloudAccounts,
+            };
+          },
+        };
+      });
 
       // Execute
       const response = await Organization.getOrganizationAccountDetailsByEmail(
@@ -645,13 +673,15 @@ describe('IAM Role Tests', () => {
       // Setup
       const dummyEmail = 'mock@example.com';
 
-      (paginateListAccounts as vi.Mock).mockImplementation(() => ({
-        [Symbol.asyncIterator]: async function* () {
-          yield {
-            Accounts: MOCK_CONSTANTS.govCloudAccounts,
-          };
-        },
-      }));
+      (paginateListAccounts as vi.Mock).mockImplementation(function () {
+        return {
+          [Symbol.asyncIterator]: async function* () {
+            yield {
+              Accounts: MOCK_CONSTANTS.govCloudAccounts,
+            };
+          },
+        };
+      });
 
       // Execute & Verify
       await expect(async () => {

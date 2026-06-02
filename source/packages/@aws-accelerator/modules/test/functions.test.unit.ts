@@ -77,11 +77,11 @@ vi.mock('@aws-sdk/client-organizations', async () => ({
 }));
 
 vi.mock('@aws-sdk/client-ssm', () => ({
-  SSMClient: vi.fn().mockImplementation(() => ({
+  SSMClient: vi.fn().mockImplementation(function() { return {
     send: vi.fn().mockResolvedValue({
       Parameter: MOCK_CONSTANTS.centralLogBucketCmkSsmParameter,
     }),
-  })),
+  }; }),
   GetParameterCommand: vi.fn(),
   ParameterNotFound: class ParameterNotFound extends Error {
     constructor() {
@@ -484,9 +484,9 @@ describe('functions', () => {
 
     beforeEach(() => {
       vi.clearAllMocks();
-      (OrganizationsClient as any).mockImplementation(() => ({
+      (OrganizationsClient as any).mockImplementation(function() { return {
         send: mockSend,
-      }));
+      }; });
     });
 
     test('should return organization details when successful', async () => {
@@ -612,9 +612,9 @@ describe('functions', () => {
 
     beforeEach(() => {
       vi.clearAllMocks();
-      (SSMClient as any).mockImplementation(() => ({
+      (SSMClient as any).mockImplementation(function() { return {
         send: mockSend,
-      }));
+      }; });
       ssmMockClient = new SSMClient({});
       mockAccountsConfig = {
         getLogArchiveAccount: vi.fn().mockReturnValue(MOCK_CONSTANTS.logArchiveAccount),
@@ -835,13 +835,13 @@ describe('functions', () => {
     beforeEach(() => {
       vi.clearAllMocks();
 
-      (OrganizationsClient as any).mockImplementation(() => ({
+      (OrganizationsClient as any).mockImplementation(function() { return {
         send: mockOrgSend,
-      }));
+      }; });
 
-      (SSMClient as any).mockImplementation(() => ({
+      (SSMClient as any).mockImplementation(function() { return {
         send: mockSsmSend,
-      }));
+      }; });
 
       ssmMockClient = new SSMClient({});
       orgMockClient = new OrganizationsClient({});

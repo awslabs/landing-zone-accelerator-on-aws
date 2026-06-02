@@ -8,7 +8,7 @@ export default defineConfig({
     outputFile: './test-reports/test-results.xml',
     coverage: {
       include: ['lib/**', 'common/**', 'executors/**'],
-      exclude: ['**/*.test.*', '**/node_modules/**', '**/test/**'],
+      exclude: ['**/*.d.ts', '**/dist/**', '**/*.test.*', '**/node_modules/**', '**/test/**', '**/interfaces.ts'],
       thresholds: {
         branches: 70,
         functions: 70,

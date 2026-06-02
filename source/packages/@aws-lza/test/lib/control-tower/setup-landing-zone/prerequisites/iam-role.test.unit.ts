@@ -73,9 +73,11 @@ describe('IAM Role Tests', () => {
     // Clear all mocks before each test
     vi.clearAllMocks();
 
-    (IAMClient as vi.Mock).mockImplementation(() => ({
-      send: mockSend,
-    }));
+    (IAMClient as vi.Mock).mockImplementation(function () {
+      return {
+        send: mockSend,
+      };
+    });
   });
 
   test('should check if roles exist and throw error if they do', async () => {

@@ -128,9 +128,11 @@ describe('EnrollAccountsModule', () => {
     vi.clearAllMocks();
     delete process.env['ENROLL_ACCOUNTS_TIMEOUT_IN_MINUTES'];
 
-    (ControlTowerClient as vi.Mock).mockImplementation(() => ({
-      send: mockSend,
-    }));
+    (ControlTowerClient as vi.Mock).mockImplementation(function () {
+      return {
+        send: mockSend,
+      };
+    });
 
     mockSend.mockImplementation(command => {
       if (command instanceof ResetEnabledBaselineCommand) {

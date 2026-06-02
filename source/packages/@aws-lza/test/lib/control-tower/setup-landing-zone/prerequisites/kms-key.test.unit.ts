@@ -50,20 +50,24 @@ describe('KmsKey', () => {
   beforeEach(() => {
     vi.clearAllMocks();
 
-    (KMSClient as vi.Mock).mockImplementation(() => mockKmsClient);
+    (KMSClient as vi.Mock).mockImplementation(function () {
+      return mockKmsClient;
+    });
   });
 
   describe('createControlTowerKeys', () => {
     test('should create new KMS keys when aliases do not exist', async () => {
       // Setup
       const { paginateListAliases } = await import('@aws-sdk/client-kms');
-      (paginateListAliases as vi.Mock).mockImplementation(() => ({
-        async *[Symbol.asyncIterator]() {
-          yield {
-            Aliases: [MOCK_CONSTANTS.differentKeyAlias],
-          };
-        },
-      }));
+      (paginateListAliases as vi.Mock).mockImplementation(function () {
+        return {
+          async *[Symbol.asyncIterator]() {
+            yield {
+              Aliases: [MOCK_CONSTANTS.differentKeyAlias],
+            };
+          },
+        };
+      });
 
       mockKmsClient.send.mockImplementation(command => {
         if (command instanceof CreateKeyCommand) {
@@ -97,13 +101,15 @@ describe('KmsKey', () => {
     test('should create new KMS keys when aliases undefined', async () => {
       // Setup
       const { paginateListAliases } = await import('@aws-sdk/client-kms');
-      (paginateListAliases as vi.Mock).mockImplementation(() => ({
-        async *[Symbol.asyncIterator]() {
-          yield {
-            Aliases: undefined,
-          };
-        },
-      }));
+      (paginateListAliases as vi.Mock).mockImplementation(function () {
+        return {
+          async *[Symbol.asyncIterator]() {
+            yield {
+              Aliases: undefined,
+            };
+          },
+        };
+      });
 
       mockKmsClient.send.mockImplementation(command => {
         if (command instanceof CreateKeyCommand) {
@@ -137,13 +143,15 @@ describe('KmsKey', () => {
     test('should throw error when alias already exists', async () => {
       // Setup
       const { paginateListAliases } = await import('@aws-sdk/client-kms');
-      (paginateListAliases as vi.Mock).mockImplementation(() => ({
-        async *[Symbol.asyncIterator]() {
-          yield {
-            Aliases: [MOCK_CONSTANTS.controlTowerKeyAlias],
-          };
-        },
-      }));
+      (paginateListAliases as vi.Mock).mockImplementation(function () {
+        return {
+          async *[Symbol.asyncIterator]() {
+            yield {
+              Aliases: [MOCK_CONSTANTS.controlTowerKeyAlias],
+            };
+          },
+        };
+      });
 
       // Don't set up mockKmsClient.send to return anything - it shouldn't be called
       mockKmsClient.send.mockRejectedValue(MOCK_CONSTANTS.unknownError);
@@ -164,13 +172,15 @@ describe('KmsKey', () => {
     test('should handle empty aliases response', async () => {
       // Setup
       const { paginateListAliases } = await import('@aws-sdk/client-kms');
-      (paginateListAliases as vi.Mock).mockImplementation(() => ({
-        async *[Symbol.asyncIterator]() {
-          yield {
-            Aliases: [],
-          };
-        },
-      }));
+      (paginateListAliases as vi.Mock).mockImplementation(function () {
+        return {
+          async *[Symbol.asyncIterator]() {
+            yield {
+              Aliases: [],
+            };
+          },
+        };
+      });
 
       mockKmsClient.send.mockImplementation(command => {
         if (command instanceof CreateKeyCommand) {

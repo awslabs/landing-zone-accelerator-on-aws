@@ -65,7 +65,9 @@ describe('AcceleratorToolkit', () => {
     };
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (Toolkit as any).mockImplementation(() => mockToolkit);
+    (Toolkit as any).mockImplementation(function () {
+      return mockToolkit;
+    });
   });
 
   describe('runDeployStackCli', () => {

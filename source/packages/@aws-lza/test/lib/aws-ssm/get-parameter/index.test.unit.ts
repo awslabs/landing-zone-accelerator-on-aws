@@ -96,12 +96,16 @@ describe('SsmGetParameterModule', () => {
 
   beforeEach(async () => {
     vi.clearAllMocks();
-    (SSMClient as vi.Mock).mockImplementation(() => ({
-      send: mockSend,
-    }));
-    (STSClient as vi.Mock).mockImplementation(() => ({
-      send: mockSTSSend,
-    }));
+    (SSMClient as vi.Mock).mockImplementation(function () {
+      return {
+        send: mockSend,
+      };
+    });
+    (STSClient as vi.Mock).mockImplementation(function () {
+      return {
+        send: mockSTSSend,
+      };
+    });
     mockSTSSend.mockResolvedValue({ Account: '111111111111', Arn: 'mock-role-arn' });
 
     // Ensure getCurrentAccountDetails mock is properly set

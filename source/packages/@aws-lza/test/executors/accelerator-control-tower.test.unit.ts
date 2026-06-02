@@ -67,9 +67,11 @@ describe('ControlTowerExecutors', () => {
 
     test('should successfully setup Control Tower landing zone', async () => {
       const mockHandler = vi.fn().mockResolvedValue('SUCCESS');
-      (SetupLandingZoneModule as vi.Mock).mockImplementation(() => ({
-        handler: mockHandler,
-      }));
+      (SetupLandingZoneModule as vi.Mock).mockImplementation(function () {
+        return {
+          handler: mockHandler,
+        };
+      });
 
       const result = await setupControlTowerLandingZone(input);
 
@@ -81,9 +83,11 @@ describe('ControlTowerExecutors', () => {
     test('should throw error when setup fails', async () => {
       const errorMessage = 'Setup failed';
       const mockHandler = vi.fn().mockRejectedValue(new Error(errorMessage));
-      (SetupLandingZoneModule as vi.Mock).mockImplementation(() => ({
-        handler: mockHandler,
-      }));
+      (SetupLandingZoneModule as vi.Mock).mockImplementation(function () {
+        return {
+          handler: mockHandler,
+        };
+      });
 
       await expect(setupControlTowerLandingZone(input)).rejects.toThrow(errorMessage);
 
@@ -103,9 +107,11 @@ describe('ControlTowerExecutors', () => {
 
     test('should successfully register organizational unit', async () => {
       const mockHandler = vi.fn().mockResolvedValue('SUCCESS');
-      (RegisterOrganizationalUnitModule as unknown as vi.Mock).mockImplementation(() => ({
-        handler: mockHandler,
-      }));
+      (RegisterOrganizationalUnitModule as unknown as vi.Mock).mockImplementation(function () {
+        return {
+          handler: mockHandler,
+        };
+      });
 
       const result = await registerOrganizationalUnit(input);
 
@@ -117,9 +123,11 @@ describe('ControlTowerExecutors', () => {
     test('should throw error when setup fails', async () => {
       const errorMessage = 'Setup failed';
       const mockHandler = vi.fn().mockRejectedValue(new Error(errorMessage));
-      (RegisterOrganizationalUnitModule as unknown as vi.Mock).mockImplementation(() => ({
-        handler: mockHandler,
-      }));
+      (RegisterOrganizationalUnitModule as unknown as vi.Mock).mockImplementation(function () {
+        return {
+          handler: mockHandler,
+        };
+      });
 
       await expect(registerOrganizationalUnit(input)).rejects.toThrow(errorMessage);
 
@@ -135,7 +143,7 @@ describe('ControlTowerExecutors', () => {
     beforeEach(() => {
       originalProcessOn = process.on;
 
-      process.on = vi.fn((event: string, listener: NodeJS.UncaughtExceptionListener) => {
+      process.on = vi.fn(function (event: string, listener: NodeJS.UncaughtExceptionListener) {
         if (event === 'uncaughtException') {
           processOnCallback = listener;
         }

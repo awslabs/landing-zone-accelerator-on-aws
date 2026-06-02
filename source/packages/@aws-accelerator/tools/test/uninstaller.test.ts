@@ -18,9 +18,11 @@ vi.mock('@aws-sdk/client-cloudformation', async importOriginal => {
   const actual = await importOriginal<typeof import('@aws-sdk/client-cloudformation')>();
   return {
     ...actual,
-    CloudFormationClient: vi.fn().mockImplementation(() => ({
-      send: vi.fn(),
-    })),
+    CloudFormationClient: vi.fn().mockImplementation(function () {
+      return {
+        send: vi.fn(),
+      };
+    }),
   };
 });
 
@@ -29,11 +31,13 @@ vi.mock('@aws-sdk/client-sts', async importOriginal => {
   const actual = await importOriginal<typeof import('@aws-sdk/client-sts')>();
   return {
     ...actual,
-    STSClient: vi.fn().mockImplementation(() => ({
-      send: vi.fn().mockResolvedValue({
-        Account: '111122223333',
-      }),
-    })),
+    STSClient: vi.fn().mockImplementation(function () {
+      return {
+        send: vi.fn().mockResolvedValue({
+          Account: '111122223333',
+        }),
+      };
+    }),
   };
 });
 
@@ -161,8 +165,11 @@ describe('detectInstallerStackType', () => {
       ],
       NextToken: undefined,
     });
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    vi.mocked(CloudFormationClient).mockImplementation(() => ({ send: mockSend }) as any);
+
+    vi.mocked(CloudFormationClient).mockImplementation(function () {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      return { send: mockSend } as any;
+    });
 
     // When
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -179,8 +186,11 @@ describe('detectInstallerStackType', () => {
       StackResourceSummaries: [{ ResourceType: 'AWS::CodePipeline::Pipeline', PhysicalResourceId: 'test-pipeline' }],
       NextToken: undefined,
     });
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    vi.mocked(CloudFormationClient).mockImplementation(() => ({ send: mockSend }) as any);
+
+    vi.mocked(CloudFormationClient).mockImplementation(function () {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      return { send: mockSend } as any;
+    });
 
     // When
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -197,8 +207,11 @@ describe('detectInstallerStackType', () => {
       StackResourceSummaries: [{ ResourceType: 'AWS::S3::Bucket', PhysicalResourceId: 'amzn-s3-demo-bucket' }],
       NextToken: undefined,
     });
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    vi.mocked(CloudFormationClient).mockImplementation(() => ({ send: mockSend }) as any);
+
+    vi.mocked(CloudFormationClient).mockImplementation(function () {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      return { send: mockSend } as any;
+    });
 
     // When / Then
     await expect(
@@ -211,8 +224,11 @@ describe('detectInstallerStackType', () => {
     // Given
     const { CloudFormationClient } = await import('@aws-sdk/client-cloudformation');
     const mockSend = vi.fn().mockRejectedValue(new Error('Stack not found'));
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    vi.mocked(CloudFormationClient).mockImplementation(() => ({ send: mockSend }) as any);
+
+    vi.mocked(CloudFormationClient).mockImplementation(function () {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      return { send: mockSend } as any;
+    });
 
     // When / Then
     await expect(
@@ -250,8 +266,11 @@ describe('getContainerDeploymentConfig', () => {
         ],
         NextToken: undefined,
       });
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    vi.mocked(CloudFormationClient).mockImplementation(() => ({ send: mockSend }) as any);
+
+    vi.mocked(CloudFormationClient).mockImplementation(function () {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      return { send: mockSend } as any;
+    });
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const tool = new AcceleratorTool(makeProps()) as any;
@@ -289,8 +308,11 @@ describe('getContainerDeploymentConfig', () => {
         StackResourceSummaries: [],
         NextToken: undefined,
       });
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    vi.mocked(CloudFormationClient).mockImplementation(() => ({ send: mockSend }) as any);
+
+    vi.mocked(CloudFormationClient).mockImplementation(function () {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      return { send: mockSend } as any;
+    });
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const tool = new AcceleratorTool(makeProps()) as any;
@@ -319,8 +341,11 @@ describe('getContainerDeploymentConfig', () => {
         StackResourceSummaries: [],
         NextToken: undefined,
       });
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    vi.mocked(CloudFormationClient).mockImplementation(() => ({ send: mockSend }) as any);
+
+    vi.mocked(CloudFormationClient).mockImplementation(function () {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      return { send: mockSend } as any;
+    });
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const tool = new AcceleratorTool(makeProps()) as any;
@@ -336,8 +361,11 @@ describe('getContainerDeploymentConfig', () => {
     // Given
     const { CloudFormationClient } = await import('@aws-sdk/client-cloudformation');
     const mockSend = vi.fn().mockResolvedValue({ Stacks: [] });
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    vi.mocked(CloudFormationClient).mockImplementation(() => ({ send: mockSend }) as any);
+
+    vi.mocked(CloudFormationClient).mockImplementation(function () {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      return { send: mockSend } as any;
+    });
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const tool = new AcceleratorTool(makeProps()) as any;

@@ -29,9 +29,9 @@ import { SSMClient } from '@aws-sdk/client-ssm';
 
 // Mock SSM Client
 vi.mock('@aws-sdk/client-ssm', () => ({
-  SSMClient: vi.fn().mockImplementation(() => ({
+  SSMClient: vi.fn().mockImplementation(function() { return {
     send: vi.fn().mockResolvedValue({}),
-  })),
+  }; }),
   PutParameterCommand: vi.fn(),
 }));
 
@@ -50,9 +50,9 @@ describe('RegisterOrganizationalUnitModule', () => {
     vi.clearAllMocks();
 
     // Re-establish SSMClient mock after clearAllMocks
-    (SSMClient as unknown as ReturnType<typeof vi.fn>).mockImplementation(() => ({
+    (SSMClient as unknown as ReturnType<typeof vi.fn>).mockImplementation(function() { return {
       send: vi.fn().mockResolvedValue({}),
-    }));
+    }; });
 
     vi.spyOn(awsLza, 'registerOrganizationalUnit').mockResolvedValue(`Successful`);
     vi.spyOn(awsLza, 'getOrganizationalUnitsDetail').mockResolvedValue(MOCK_CONSTANTS.organizationUnitsDetail);

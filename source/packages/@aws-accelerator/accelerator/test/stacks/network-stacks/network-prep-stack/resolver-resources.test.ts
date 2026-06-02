@@ -39,9 +39,11 @@ describe('ResolverResources', () => {
     vi.spyOn(ResolverResources.prototype as any, 'createResolverQueryLogs').mockReturnValue(new Map<string, string>());
     vi.spyOn(ResolverFirewallDomainList.prototype as any, 'getAssetUrl').mockReturnValue('');
     vi.mock('aws-sdk', () => ({
-      Bucket: vi.fn(() => ({
-        fromBucketName: vi.fn(),
-      })),
+      Bucket: vi.fn(function () {
+        return {
+          fromBucketName: vi.fn(),
+        };
+      }),
     }));
 
     app = new cdk.App();

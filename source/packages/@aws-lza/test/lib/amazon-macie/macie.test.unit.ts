@@ -1,16 +1,16 @@
 import { vi, describe, it, expect, beforeEach } from 'vitest';
 
 vi.mock('../../../lib/common/logger', () => ({
-  createLogger: vi.fn(() => ({
+  createLogger: vi.fn(function() { return {
     processStart: vi.fn(),
     processEnd: vi.fn(),
     info: vi.fn(),
     error: vi.fn(),
-  })),
+  }; }),
 }));
 
 vi.mock('../../../lib/common/utility', () => ({
-  setRetryStrategy: vi.fn(() => ({})),
+  setRetryStrategy: vi.fn(function() { return {}; }),
   validateRegionFilters: vi.fn(),
 }));
 
@@ -80,7 +80,7 @@ vi.mock('@aws-sdk/client-dynamodb', () => ({
 
 vi.mock('path', () => ({
   default: {
-    parse: vi.fn(() => ({ name: 'macie' })),
+    parse: vi.fn(function() { return { name: 'macie' }; }),
     basename: vi.fn(() => 'macie.ts'),
   },
 }));

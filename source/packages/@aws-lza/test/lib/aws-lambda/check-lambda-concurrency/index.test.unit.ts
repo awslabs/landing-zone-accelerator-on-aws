@@ -62,8 +62,12 @@ describe('CheckLambdaConcurrencyModule', () => {
     } as unknown as vi.Mocked<LambdaClient>;
 
     // Mock the client constructors
-    (STSClient as vi.MockedClass<typeof STSClient>).mockImplementation(() => mockSTSClient);
-    (LambdaClient as vi.MockedClass<typeof LambdaClient>).mockImplementation(() => mockLambdaClient);
+    (STSClient as vi.MockedClass<typeof STSClient>).mockImplementation(function () {
+      return mockSTSClient;
+    });
+    (LambdaClient as vi.MockedClass<typeof LambdaClient>).mockImplementation(function () {
+      return mockLambdaClient;
+    });
 
     // Mock functions from common module
     vi.spyOn(commonFunctions, 'getCurrentAccountId').mockResolvedValue(testCurrentAccountId);

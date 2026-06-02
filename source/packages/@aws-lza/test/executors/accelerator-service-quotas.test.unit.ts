@@ -20,9 +20,11 @@ import { IGetServiceQuotaCodeParameter } from '../../interfaces/service-quotas/g
 vi.mock('../../lib/service-quotas/check-service-quota');
 vi.mock('../../lib/service-quotas/get-service-quota-code');
 vi.mock('../../common/logger', () => ({
-  createLogger: vi.fn(() => ({
-    error: vi.fn(),
-  })),
+  createLogger: vi.fn(function () {
+    return {
+      error: vi.fn(),
+    };
+  }),
 }));
 
 const mockCheckHandler = vi.fn();
@@ -56,13 +58,17 @@ describe('accelerator-service-quotas.ts', () => {
     vi.clearAllMocks();
 
     // Setup mocks
-    (CheckServiceQuota as vi.MockedClass<typeof CheckServiceQuota>).mockImplementation(() => ({
-      handler: mockCheckHandler,
-    }));
+    (CheckServiceQuota as vi.MockedClass<typeof CheckServiceQuota>).mockImplementation(function () {
+      return {
+        handler: mockCheckHandler,
+      };
+    });
 
-    (GetServiceQuotaCode as vi.MockedClass<typeof GetServiceQuotaCode>).mockImplementation(() => ({
-      handler: mockGetCodeHandler,
-    }));
+    (GetServiceQuotaCode as vi.MockedClass<typeof GetServiceQuotaCode>).mockImplementation(function () {
+      return {
+        handler: mockGetCodeHandler,
+      };
+    });
   });
 
   describe('uncaughtException handler', () => {

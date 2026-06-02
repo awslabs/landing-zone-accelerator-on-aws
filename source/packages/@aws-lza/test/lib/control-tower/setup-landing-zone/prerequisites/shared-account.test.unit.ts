@@ -75,9 +75,11 @@ describe('IAM Role Tests', () => {
   beforeEach(() => {
     vi.clearAllMocks();
 
-    (OrganizationsClient as vi.Mock).mockImplementation(() => ({
-      send: mockSend,
-    }));
+    (OrganizationsClient as vi.Mock).mockImplementation(function () {
+      return {
+        send: mockSend,
+      };
+    });
   });
 
   test('should create both the shared accounts', async () => {

@@ -33,11 +33,11 @@ import { MOCK_CONSTANTS } from './mocked-resources';
 // Mock Dependencies
 //
 vi.mock('@aws-sdk/client-ssm', () => ({
-  SSMClient: vi.fn().mockImplementation(() => ({
+  SSMClient: vi.fn().mockImplementation(function() { return {
     send: vi.fn().mockResolvedValue({
       Parameter: MOCK_CONSTANTS.centralLogBucketCmkSsmParameter,
     }),
-  })),
+  }; }),
   GetParameterCommand: vi.fn(),
   ParameterNotFound: class ParameterNotFound extends Error {
     constructor() {
@@ -366,9 +366,9 @@ describe('ConfigLoader', () => {
       mockSend = vi.fn().mockResolvedValue({
         Parameter: MOCK_CONSTANTS.centralLogBucketCmkSsmParameter,
       });
-      (SSMClient as any).mockImplementation(() => ({
+      (SSMClient as any).mockImplementation(function() { return {
         send: mockSend,
-      }));
+      }; });
       ssmMockClient = new SSMClient({});
 
       // Mock fs functions

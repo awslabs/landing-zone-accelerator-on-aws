@@ -91,9 +91,11 @@ describe('SecurityHubExecutors', () => {
 
     test('should successfully set organization admin', async () => {
       const mockHandler = vi.fn().mockResolvedValue('SUCCESS');
-      (SecurityHubManageOrganizationAdminModule as vi.Mock).mockImplementation(() => ({
-        handler: mockHandler,
-      }));
+      (SecurityHubManageOrganizationAdminModule as vi.Mock).mockImplementation(function () {
+        return {
+          handler: mockHandler,
+        };
+      });
 
       const result = await manageSecurityHubOrganizationAdminAccount(MOCK_CONSTANTS.organizationAdminInput);
 
@@ -104,9 +106,11 @@ describe('SecurityHubExecutors', () => {
 
     test('should successfully disable organization admin', async () => {
       const mockHandler = vi.fn().mockResolvedValue('SUCCESS');
-      (SecurityHubManageOrganizationAdminModule as vi.Mock).mockImplementation(() => ({
-        handler: mockHandler,
-      }));
+      (SecurityHubManageOrganizationAdminModule as vi.Mock).mockImplementation(function () {
+        return {
+          handler: mockHandler,
+        };
+      });
 
       const inputWithDisable = {
         ...MOCK_CONSTANTS.organizationAdminInput,
@@ -125,9 +129,11 @@ describe('SecurityHubExecutors', () => {
 
     test('should handle dry run mode', async () => {
       const mockHandler = vi.fn().mockResolvedValue('DRY_RUN_SUCCESS');
-      (SecurityHubManageOrganizationAdminModule as vi.Mock).mockImplementation(() => ({
-        handler: mockHandler,
-      }));
+      (SecurityHubManageOrganizationAdminModule as vi.Mock).mockImplementation(function () {
+        return {
+          handler: mockHandler,
+        };
+      });
 
       const inputWithDryRun = {
         ...MOCK_CONSTANTS.organizationAdminInput,
@@ -144,9 +150,11 @@ describe('SecurityHubExecutors', () => {
     test('should throw error when setup fails', async () => {
       const errorMessage = 'failed to manage security hub organization admin';
       const mockHandler = vi.fn().mockRejectedValue(new Error(errorMessage));
-      (SecurityHubManageOrganizationAdminModule as vi.Mock).mockImplementation(() => ({
-        handler: mockHandler,
-      }));
+      (SecurityHubManageOrganizationAdminModule as vi.Mock).mockImplementation(function () {
+        return {
+          handler: mockHandler,
+        };
+      });
 
       await expect(manageSecurityHubOrganizationAdminAccount(MOCK_CONSTANTS.organizationAdminInput)).rejects.toThrow(
         errorMessage,
@@ -159,9 +167,11 @@ describe('SecurityHubExecutors', () => {
     test('should throw error when handler throws unknown error', async () => {
       const errorMessage = 'unknown error occurred';
       const mockHandler = vi.fn().mockRejectedValue(errorMessage);
-      (SecurityHubManageOrganizationAdminModule as vi.Mock).mockImplementation(() => ({
-        handler: mockHandler,
-      }));
+      (SecurityHubManageOrganizationAdminModule as vi.Mock).mockImplementation(function () {
+        return {
+          handler: mockHandler,
+        };
+      });
 
       await expect(manageSecurityHubOrganizationAdminAccount(MOCK_CONSTANTS.organizationAdminInput)).rejects.toBe(
         errorMessage,
@@ -173,9 +183,11 @@ describe('SecurityHubExecutors', () => {
 
     test('should handle different partition', async () => {
       const mockHandler = vi.fn().mockResolvedValue('SUCCESS');
-      (SecurityHubManageOrganizationAdminModule as vi.Mock).mockImplementation(() => ({
-        handler: mockHandler,
-      }));
+      (SecurityHubManageOrganizationAdminModule as vi.Mock).mockImplementation(function () {
+        return {
+          handler: mockHandler,
+        };
+      });
 
       const inputWithGovCloud = {
         ...MOCK_CONSTANTS.organizationAdminInput,
@@ -191,9 +203,11 @@ describe('SecurityHubExecutors', () => {
 
     test('should handle different region', async () => {
       const mockHandler = vi.fn().mockResolvedValue('SUCCESS');
-      (SecurityHubManageOrganizationAdminModule as vi.Mock).mockImplementation(() => ({
-        handler: mockHandler,
-      }));
+      (SecurityHubManageOrganizationAdminModule as vi.Mock).mockImplementation(function () {
+        return {
+          handler: mockHandler,
+        };
+      });
 
       const inputWithDifferentRegion = {
         ...MOCK_CONSTANTS.organizationAdminInput,
@@ -214,7 +228,7 @@ describe('SecurityHubExecutors', () => {
       beforeEach(() => {
         originalProcessOn = process.on;
 
-        process.on = vi.fn((event: string, listener: NodeJS.UncaughtExceptionListener) => {
+        process.on = vi.fn(function (event: string, listener: NodeJS.UncaughtExceptionListener) {
           if (event === 'uncaughtException') {
             processOnCallback = listener;
           }
@@ -259,9 +273,11 @@ describe('SecurityHubExecutors', () => {
         status: true,
         message: 'Successfully created automation rules: SuppressLowSeverityFindings',
       });
-      (SecurityHubManageAutomationRulesModule as vi.Mock).mockImplementation(() => ({
-        handler: mockHandler,
-      }));
+      (SecurityHubManageAutomationRulesModule as vi.Mock).mockImplementation(function () {
+        return {
+          handler: mockHandler,
+        };
+      });
 
       const result = await manageSecurityHubAutomationRules(MOCK_CONSTANTS.automationRulesInput);
 
@@ -275,9 +291,11 @@ describe('SecurityHubExecutors', () => {
         status: true,
         message: 'DRY_RUN: SuppressLowSeverityFindings will be created',
       });
-      (SecurityHubManageAutomationRulesModule as vi.Mock).mockImplementation(() => ({
-        handler: mockHandler,
-      }));
+      (SecurityHubManageAutomationRulesModule as vi.Mock).mockImplementation(function () {
+        return {
+          handler: mockHandler,
+        };
+      });
 
       const inputWithDryRun = {
         ...MOCK_CONSTANTS.automationRulesInput,
@@ -293,9 +311,11 @@ describe('SecurityHubExecutors', () => {
 
     test('should handle error in executor', async () => {
       const mockHandler = vi.fn().mockRejectedValue(new Error('Error'));
-      (SecurityHubManageAutomationRulesModule as vi.Mock).mockImplementation(() => ({
-        handler: mockHandler,
-      }));
+      (SecurityHubManageAutomationRulesModule as vi.Mock).mockImplementation(function () {
+        return {
+          handler: mockHandler,
+        };
+      });
 
       const inputWithDryRun = {
         ...MOCK_CONSTANTS.automationRulesInput,

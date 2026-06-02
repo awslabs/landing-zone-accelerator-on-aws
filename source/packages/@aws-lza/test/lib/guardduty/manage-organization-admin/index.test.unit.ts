@@ -60,9 +60,11 @@ describe('GuardDutyManageOrganizationAdminModule', () => {
 
   beforeEach(async () => {
     vi.clearAllMocks();
-    (GuardDutyClient as vi.Mock).mockImplementation(() => ({
-      send: mockSend,
-    }));
+    (GuardDutyClient as vi.Mock).mockImplementation(function () {
+      return {
+        send: mockSend,
+      };
+    });
 
     // Set up default waitUntil mock implementation
     const { waitUntil } = await import('../../../../common/functions');

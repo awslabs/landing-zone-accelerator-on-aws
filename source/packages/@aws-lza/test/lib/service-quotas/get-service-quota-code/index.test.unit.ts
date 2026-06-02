@@ -54,9 +54,9 @@ describe('GetServiceQuotaCode', () => {
     } as unknown as vi.Mocked<ServiceQuotasClient>;
 
     // Mock the client constructor
-    (ServiceQuotasClient as vi.MockedClass<typeof ServiceQuotasClient>).mockImplementation(
-      () => mockServiceQuotasClient,
-    );
+    (ServiceQuotasClient as vi.MockedClass<typeof ServiceQuotasClient>).mockImplementation(function () {
+      return mockServiceQuotasClient;
+    });
 
     // Mock functions from common module
     vi.spyOn(commonFunctions, 'setRetryStrategy').mockReturnValue(

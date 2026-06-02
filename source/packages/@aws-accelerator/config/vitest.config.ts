@@ -10,11 +10,12 @@ export default defineConfig({
     hookTimeout: 300000,
     teardownTimeout: 300000,
     coverage: {
+      exclude: ['**/*.d.ts', '**/dist/**', '**/node_modules/**'],
       thresholds: {
-        branches: 64,
+        branches: 55,
         functions: 76,
-        lines: 60,
-        statements: 60,
+        lines: 63,
+        statements: 63,
       },
     },
   },

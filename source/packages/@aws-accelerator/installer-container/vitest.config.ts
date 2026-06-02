@@ -48,6 +48,7 @@ export default defineConfig({
     outputFile: './test-reports/test-results.xml',
     testTimeout: 120000, // CDK synthesis can take time, especially for complex stacks
     coverage: {
+      exclude: ['**/*.d.ts', '**/dist/**', '**/node_modules/**'],
       thresholds: {
         branches: 70,
         functions: 75, // Adjusted from 88% to account for bin/ files not covered by unit tests

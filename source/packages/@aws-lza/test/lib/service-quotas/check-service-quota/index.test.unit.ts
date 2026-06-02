@@ -67,10 +67,12 @@ describe('CheckServiceQuota', () => {
     } as unknown as vi.Mocked<ServiceQuotasClient>;
 
     // Mock the client constructors
-    (STSClient as vi.MockedClass<typeof STSClient>).mockImplementation(() => mockSTSClient);
-    (ServiceQuotasClient as vi.MockedClass<typeof ServiceQuotasClient>).mockImplementation(
-      () => mockServiceQuotasClient,
-    );
+    (STSClient as vi.MockedClass<typeof STSClient>).mockImplementation(function () {
+      return mockSTSClient;
+    });
+    (ServiceQuotasClient as vi.MockedClass<typeof ServiceQuotasClient>).mockImplementation(function () {
+      return mockServiceQuotasClient;
+    });
 
     // Mock functions from common module
     vi.spyOn(commonFunctions, 'getCurrentAccountId').mockResolvedValue(testCurrentAccountId);

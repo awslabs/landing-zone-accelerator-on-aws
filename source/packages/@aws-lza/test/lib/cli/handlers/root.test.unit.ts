@@ -24,7 +24,9 @@ import {
 vi.mock('fs');
 vi.mock('../../../../lib/common/sts-functions');
 vi.mock('../../../../lib/common/logger', () => ({
-  createLogger: vi.fn(() => ({ info: vi.fn() })),
+  createLogger: vi.fn(function () {
+    return { info: vi.fn() };
+  }),
 }));
 
 const mockExistsSync = vi.mocked(fs.existsSync);

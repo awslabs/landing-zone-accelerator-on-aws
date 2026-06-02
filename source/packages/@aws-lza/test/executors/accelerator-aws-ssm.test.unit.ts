@@ -39,9 +39,11 @@ describe('AwsSsmExecutor', () => {
       // Setup
       const mockHandler = vi.fn().mockResolvedValue('SUCCESS');
 
-      (BlockPublicDocumentSharingModule as unknown as vi.Mock).mockImplementation(() => ({
-        handler: mockHandler,
-      }));
+      (BlockPublicDocumentSharingModule as unknown as vi.Mock).mockImplementation(function () {
+        return {
+          handler: mockHandler,
+        };
+      });
 
       // Execute
       const result = await manageBlockPublicDocumentSharing(input);
@@ -66,9 +68,11 @@ describe('AwsSsmExecutor', () => {
       const errorMessage = 'Module operation failed';
       const mockHandler = vi.fn().mockRejectedValue(new Error(errorMessage));
 
-      (BlockPublicDocumentSharingModule as unknown as vi.Mock).mockImplementation(() => ({
-        handler: mockHandler,
-      }));
+      (BlockPublicDocumentSharingModule as unknown as vi.Mock).mockImplementation(function () {
+        return {
+          handler: mockHandler,
+        };
+      });
 
       // Execute && Verify
       await expect(manageBlockPublicDocumentSharing(input)).rejects.toThrow(errorMessage);
@@ -90,9 +94,11 @@ describe('AwsSsmExecutor', () => {
   describe('getSsmParameters', () => {
     test('should successfully retrieve parameters', async () => {
       const mockHandler = vi.fn().mockResolvedValue(MOCK_CONSTANTS.GetSsmParametersValueModule.response);
-      (GetSsmParametersValueModule as vi.Mock).mockImplementation(() => ({
-        handler: mockHandler,
-      }));
+      (GetSsmParametersValueModule as vi.Mock).mockImplementation(function () {
+        return {
+          handler: mockHandler,
+        };
+      });
 
       const result = await getSsmParametersValue(MOCK_CONSTANTS.GetSsmParametersValueModule.input);
 
@@ -111,9 +117,11 @@ describe('AwsSsmExecutor', () => {
       ];
 
       const mockHandler = vi.fn().mockResolvedValue(notFoundResponse);
-      (GetSsmParametersValueModule as vi.Mock).mockImplementation(() => ({
-        handler: mockHandler,
-      }));
+      (GetSsmParametersValueModule as vi.Mock).mockImplementation(function () {
+        return {
+          handler: mockHandler,
+        };
+      });
 
       const result = await getSsmParametersValue(MOCK_CONSTANTS.GetSsmParametersValueModule.input);
 
@@ -125,9 +133,11 @@ describe('AwsSsmExecutor', () => {
     test('should throw error when parameter retrieval fails', async () => {
       const errorMessage = 'failed to get SSM parameters';
       const mockHandler = vi.fn().mockRejectedValue(new Error(errorMessage));
-      (GetSsmParametersValueModule as vi.Mock).mockImplementation(() => ({
-        handler: mockHandler,
-      }));
+      (GetSsmParametersValueModule as vi.Mock).mockImplementation(function () {
+        return {
+          handler: mockHandler,
+        };
+      });
 
       await expect(getSsmParametersValue(MOCK_CONSTANTS.GetSsmParametersValueModule.input)).rejects.toThrow(
         errorMessage,
@@ -140,9 +150,11 @@ describe('AwsSsmExecutor', () => {
     test('should throw error when handler throws unknown error', async () => {
       const errorMessage = 'unknown error occurred';
       const mockHandler = vi.fn().mockRejectedValue(new Error(errorMessage));
-      (GetSsmParametersValueModule as vi.Mock).mockImplementation(() => ({
-        handler: mockHandler,
-      }));
+      (GetSsmParametersValueModule as vi.Mock).mockImplementation(function () {
+        return {
+          handler: mockHandler,
+        };
+      });
 
       await expect(getSsmParametersValue(MOCK_CONSTANTS.GetSsmParametersValueModule.input)).rejects.toThrow(
         errorMessage,
@@ -154,9 +166,11 @@ describe('AwsSsmExecutor', () => {
 
     test('should handle different partition', async () => {
       const mockHandler = vi.fn().mockResolvedValue(MOCK_CONSTANTS.GetSsmParametersValueModule.response);
-      (GetSsmParametersValueModule as vi.Mock).mockImplementation(() => ({
-        handler: mockHandler,
-      }));
+      (GetSsmParametersValueModule as vi.Mock).mockImplementation(function () {
+        return {
+          handler: mockHandler,
+        };
+      });
 
       const inputWithGovCloud = {
         ...MOCK_CONSTANTS.GetSsmParametersValueModule.input,
@@ -172,9 +186,11 @@ describe('AwsSsmExecutor', () => {
 
     test('should handle different region', async () => {
       const mockHandler = vi.fn().mockResolvedValue(MOCK_CONSTANTS.GetSsmParametersValueModule.response);
-      (GetSsmParametersValueModule as vi.Mock).mockImplementation(() => ({
-        handler: mockHandler,
-      }));
+      (GetSsmParametersValueModule as vi.Mock).mockImplementation(function () {
+        return {
+          handler: mockHandler,
+        };
+      });
 
       const inputWithDifferentRegion = {
         ...MOCK_CONSTANTS.GetSsmParametersValueModule.input,
@@ -196,7 +212,7 @@ describe('AwsSsmExecutor', () => {
     beforeEach(() => {
       originalProcessOn = process.on;
 
-      process.on = vi.fn((event: string, listener: NodeJS.UncaughtExceptionListener) => {
+      process.on = vi.fn(function (event: string, listener: NodeJS.UncaughtExceptionListener) {
         if (event === 'uncaughtException') {
           processOnCallback = listener;
         }

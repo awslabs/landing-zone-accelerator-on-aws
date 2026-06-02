@@ -20,11 +20,13 @@ vi.mock('../../common/throttle', () => ({
 }));
 
 vi.mock('../../common/logger', () => ({
-  createLogger: vi.fn(() => ({
-    info: vi.fn(),
-    error: vi.fn(),
-    warn: vi.fn(),
-  })),
+  createLogger: vi.fn(function () {
+    return {
+      info: vi.fn(),
+      error: vi.fn(),
+      warn: vi.fn(),
+    };
+  }),
 }));
 
 vi.mock('@aws-sdk/client-s3', () => ({

@@ -24,14 +24,18 @@ vi.mock('@aws-sdk/client-ssm', () => ({
 
 vi.mock('../../../lib/common/utility', () => ({
   executeApi: vi.fn(),
-  setRetryStrategy: vi.fn(() => ({})),
+  setRetryStrategy: vi.fn(function () {
+    return {};
+  }),
 }));
 
 vi.mock('../../../lib/common/logger', () => ({
-  createLogger: vi.fn(() => ({
-    info: vi.fn(),
-    error: vi.fn(),
-  })),
+  createLogger: vi.fn(function () {
+    return {
+      info: vi.fn(),
+      error: vi.fn(),
+    };
+  }),
 }));
 
 vi.mock('../../../lib/common/sts-functions', () => ({

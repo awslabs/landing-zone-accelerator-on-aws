@@ -51,9 +51,11 @@ describe('SecurityHubManageAutomationRulesModule', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    (SecurityHubClient as vi.Mock).mockImplementation(() => ({
-      send: mockSend,
-    }));
+    (SecurityHubClient as vi.Mock).mockImplementation(function () {
+      return {
+        send: mockSend,
+      };
+    });
   });
 
   const mockAutomationRule: ISecurityHubAutomationRuleConfig = {

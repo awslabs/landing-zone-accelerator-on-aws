@@ -222,9 +222,11 @@ describe('Accelerator ControlTower Landing Zone Module', () => {
   beforeEach(async () => {
     vi.clearAllMocks();
 
-    (ControlTowerClient as vi.Mock).mockImplementation(() => ({
-      send: mockSend,
-    }));
+    (ControlTowerClient as vi.Mock).mockImplementation(function () {
+      return {
+        send: mockSend,
+      };
+    });
 
     const {
       OrganizationsClient,
@@ -293,9 +295,11 @@ describe('Accelerator ControlTower Landing Zone Module', () => {
       return Promise.resolve({});
     });
 
-    (OrganizationsClient as vi.Mock).mockImplementation(() => ({
-      send: mockOrganizationsSend,
-    }));
+    (OrganizationsClient as vi.Mock).mockImplementation(function () {
+      return {
+        send: mockOrganizationsSend,
+      };
+    });
 
     // Mock paginators to return mock accounts
     (paginateListAccounts as vi.Mock).mockReturnValue({

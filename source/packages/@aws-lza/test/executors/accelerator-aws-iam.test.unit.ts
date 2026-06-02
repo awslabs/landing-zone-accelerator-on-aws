@@ -33,9 +33,11 @@ describe('configureRootUserManagement', () => {
     const errorMessage = 'Configure Root User Management Error';
     const mockHandler = vi.fn().mockRejectedValue(new Error(errorMessage));
 
-    (RootUserManagementModule as unknown as vi.Mock).mockImplementation(() => ({
-      handler: mockHandler,
-    }));
+    (RootUserManagementModule as unknown as vi.Mock).mockImplementation(function () {
+      return {
+        handler: mockHandler,
+      };
+    });
 
     await expect(configureRootUserManagment(input)).rejects.toThrow(errorMessage);
   });
@@ -44,9 +46,11 @@ describe('configureRootUserManagement', () => {
     const resultMessage = 'Module success message';
     const mockHandler = vi.fn().mockReturnValue(resultMessage);
 
-    (RootUserManagementModule as unknown as vi.Mock).mockImplementation(() => ({
-      handler: mockHandler,
-    }));
+    (RootUserManagementModule as unknown as vi.Mock).mockImplementation(function () {
+      return {
+        handler: mockHandler,
+      };
+    });
 
     // Execute
     const result = await configureRootUserManagment(input);
@@ -64,7 +68,7 @@ describe('configureRootUserManagement', () => {
     beforeEach(() => {
       originalProcessOn = process.on;
 
-      process.on = vi.fn((event: string, listener: NodeJS.UncaughtExceptionListener) => {
+      process.on = vi.fn(function (event: string, listener: NodeJS.UncaughtExceptionListener) {
         if (event === 'uncaughtException') {
           processOnCallback = listener;
         }

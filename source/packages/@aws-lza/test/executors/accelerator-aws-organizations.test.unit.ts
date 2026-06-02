@@ -55,9 +55,11 @@ describe('AWSOrganizationsExecutor', () => {
       // Setup
       const mockHandler = vi.fn().mockResolvedValue('SUCCESS');
 
-      (CreateOrganizationalUnitModule as unknown as vi.Mock).mockImplementation(() => ({
-        handler: mockHandler,
-      }));
+      (CreateOrganizationalUnitModule as unknown as vi.Mock).mockImplementation(function () {
+        return {
+          handler: mockHandler,
+        };
+      });
 
       // Execute
       const result = await createOrganizationalUnit({
@@ -80,9 +82,11 @@ describe('AWSOrganizationsExecutor', () => {
       const errorMessage = 'Creation failed';
       const mockHandler = vi.fn().mockRejectedValue(new Error(errorMessage));
 
-      (CreateOrganizationalUnitModule as unknown as vi.Mock).mockImplementation(() => ({
-        handler: mockHandler,
-      }));
+      (CreateOrganizationalUnitModule as unknown as vi.Mock).mockImplementation(function () {
+        return {
+          handler: mockHandler,
+        };
+      });
 
       // Execute && Verify
       await expect(
@@ -105,10 +109,12 @@ describe('AWSOrganizationsExecutor', () => {
       // Setup
       const mockHandler = vi.fn().mockResolvedValue('SUCCESS');
 
-      (CreateOrganizationalUnitModule as unknown as vi.Mock).mockImplementation(() => ({
-        handler: mockHandler,
-        createdOrganizationalUnit: MOCK_CONSTANTS.newOrganizationalUnit,
-      }));
+      (CreateOrganizationalUnitModule as unknown as vi.Mock).mockImplementation(function () {
+        return {
+          handler: mockHandler,
+          createdOrganizationalUnit: MOCK_CONSTANTS.newOrganizationalUnit,
+        };
+      });
 
       // Execute
       const result = await createAndRetrieveOrganizationalUnit({
@@ -130,10 +136,12 @@ describe('AWSOrganizationsExecutor', () => {
       const errorMessage = 'Creation failed';
       const mockHandler = vi.fn().mockRejectedValue(new Error(errorMessage));
 
-      (CreateOrganizationalUnitModule as unknown as vi.Mock).mockImplementation(() => ({
-        handler: mockHandler,
-        createdOrganizationalUnit: undefined,
-      }));
+      (CreateOrganizationalUnitModule as unknown as vi.Mock).mockImplementation(function () {
+        return {
+          handler: mockHandler,
+          createdOrganizationalUnit: undefined,
+        };
+      });
 
       // Execute & Verify
       await expect(
@@ -160,9 +168,11 @@ describe('AWSOrganizationsExecutor', () => {
       // Setup
       const mockHandler = vi.fn().mockResolvedValue('SUCCESS');
 
-      (InviteAccountToOrganizationModule as unknown as vi.Mock).mockImplementation(() => ({
-        handler: mockHandler,
-      }));
+      (InviteAccountToOrganizationModule as unknown as vi.Mock).mockImplementation(function () {
+        return {
+          handler: mockHandler,
+        };
+      });
 
       // Execute
       const result = await inviteAccountToOrganization(input);
@@ -179,9 +189,11 @@ describe('AWSOrganizationsExecutor', () => {
       const errorMessage = 'Creation failed';
       const mockHandler = vi.fn().mockRejectedValue(new Error(errorMessage));
 
-      (InviteAccountToOrganizationModule as unknown as vi.Mock).mockImplementation(() => ({
-        handler: mockHandler,
-      }));
+      (InviteAccountToOrganizationModule as unknown as vi.Mock).mockImplementation(function () {
+        return {
+          handler: mockHandler,
+        };
+      });
 
       // Execute && Verify
       await expect(inviteAccountToOrganization(input)).rejects.toThrow(errorMessage);
@@ -200,9 +212,11 @@ describe('AWSOrganizationsExecutor', () => {
       // Setup
       const mockHandler = vi.fn().mockResolvedValue('SUCCESS');
 
-      (MoveAccountModule as vi.Mock).mockImplementation(() => ({
-        handler: mockHandler,
-      }));
+      (MoveAccountModule as vi.Mock).mockImplementation(function () {
+        return {
+          handler: mockHandler,
+        };
+      });
 
       // Execute
       const result = await moveAccount(input);
@@ -219,9 +233,11 @@ describe('AWSOrganizationsExecutor', () => {
       const errorMessage = 'Creation failed';
       const mockHandler = vi.fn().mockRejectedValue(new Error(errorMessage));
 
-      (MoveAccountModule as vi.Mock).mockImplementation(() => ({
-        handler: mockHandler,
-      }));
+      (MoveAccountModule as vi.Mock).mockImplementation(function () {
+        return {
+          handler: mockHandler,
+        };
+      });
 
       // Execute && Verify
       await expect(moveAccount(input)).rejects.toThrow(errorMessage);
@@ -240,9 +256,11 @@ describe('AWSOrganizationsExecutor', () => {
       // Setup
       const mockHandler = vi.fn().mockResolvedValue('SUCCESS');
 
-      (InviteAccountsBatchToOrganizationModule as unknown as vi.Mock).mockImplementation(() => ({
-        handler: mockHandler,
-      }));
+      (InviteAccountsBatchToOrganizationModule as unknown as vi.Mock).mockImplementation(function () {
+        return {
+          handler: mockHandler,
+        };
+      });
 
       // Execute
       const result = await inviteAccountsBatchToOrganization(input);
@@ -259,9 +277,11 @@ describe('AWSOrganizationsExecutor', () => {
       const errorMessage = 'Creation failed';
       const mockHandler = vi.fn().mockRejectedValue(new Error(errorMessage));
 
-      (InviteAccountsBatchToOrganizationModule as unknown as vi.Mock).mockImplementation(() => ({
-        handler: mockHandler,
-      }));
+      (InviteAccountsBatchToOrganizationModule as unknown as vi.Mock).mockImplementation(function () {
+        return {
+          handler: mockHandler,
+        };
+      });
 
       // Execute && Verify
       await expect(inviteAccountsBatchToOrganization(input)).rejects.toThrow(errorMessage);
@@ -280,9 +300,11 @@ describe('AWSOrganizationsExecutor', () => {
       // Setup
       const mockHandler = vi.fn().mockResolvedValue('SUCCESS');
 
-      (MoveAccountsBatchModule as unknown as vi.Mock).mockImplementation(() => ({
-        handler: mockHandler,
-      }));
+      (MoveAccountsBatchModule as unknown as vi.Mock).mockImplementation(function () {
+        return {
+          handler: mockHandler,
+        };
+      });
 
       // Execute
       const result = await moveAccountsBatch(input);
@@ -299,9 +321,11 @@ describe('AWSOrganizationsExecutor', () => {
       const errorMessage = 'Creation failed';
       const mockHandler = vi.fn().mockRejectedValue(new Error(errorMessage));
 
-      (MoveAccountsBatchModule as unknown as vi.Mock).mockImplementation(() => ({
-        handler: mockHandler,
-      }));
+      (MoveAccountsBatchModule as unknown as vi.Mock).mockImplementation(function () {
+        return {
+          handler: mockHandler,
+        };
+      });
 
       // Execute && Verify
       await expect(moveAccountsBatch(input)).rejects.toThrow(errorMessage);
@@ -322,9 +346,11 @@ describe('AWSOrganizationsExecutor', () => {
       // Setup
       const mockHandler = vi.fn().mockResolvedValue('SUCCESS');
 
-      (GetOrganizationalUnitsDetailModule as unknown as vi.Mock).mockImplementation(() => ({
-        handler: mockHandler,
-      }));
+      (GetOrganizationalUnitsDetailModule as unknown as vi.Mock).mockImplementation(function () {
+        return {
+          handler: mockHandler,
+        };
+      });
 
       // Execute
       const result = await getOrganizationalUnitsDetail(input);
@@ -341,9 +367,11 @@ describe('AWSOrganizationsExecutor', () => {
       const errorMessage = 'Module failed';
       const mockHandler = vi.fn().mockRejectedValue(new Error(errorMessage));
 
-      (GetOrganizationalUnitsDetailModule as unknown as vi.Mock).mockImplementation(() => ({
-        handler: mockHandler,
-      }));
+      (GetOrganizationalUnitsDetailModule as unknown as vi.Mock).mockImplementation(function () {
+        return {
+          handler: mockHandler,
+        };
+      });
 
       // Execute && Verify
       await expect(getOrganizationalUnitsDetail(input)).rejects.toThrow(errorMessage);
@@ -364,9 +392,11 @@ describe('AWSOrganizationsExecutor', () => {
       // Setup
       const mockHandler = vi.fn().mockResolvedValue('SUCCESS');
 
-      (ManageAccountAlias as vi.Mock).mockImplementation(() => ({
-        handler: mockHandler,
-      }));
+      (ManageAccountAlias as vi.Mock).mockImplementation(function () {
+        return {
+          handler: mockHandler,
+        };
+      });
 
       // Execute
       const result = await manageAccountAlias(input);
@@ -382,9 +412,11 @@ describe('AWSOrganizationsExecutor', () => {
       const errorMessage = 'Manage account alias failed';
       const mockHandler = vi.fn().mockRejectedValue(new Error(errorMessage));
 
-      (ManageAccountAlias as vi.Mock).mockImplementation(() => ({
-        handler: mockHandler,
-      }));
+      (ManageAccountAlias as vi.Mock).mockImplementation(function () {
+        return {
+          handler: mockHandler,
+        };
+      });
 
       // Execute && Verify
       await expect(manageAccountAlias(input)).rejects.toThrow(errorMessage);
@@ -418,9 +450,11 @@ describe('AWSOrganizationsExecutor', () => {
       // Setup
       const mockHandler = vi.fn().mockResolvedValue('SUCCESS');
 
-      (ManagePolicy as vi.Mock).mockImplementation(() => ({
-        handler: mockHandler,
-      }));
+      (ManagePolicy as vi.Mock).mockImplementation(function () {
+        return {
+          handler: mockHandler,
+        };
+      });
 
       // Execute
       const result = await managePolicy(input);
@@ -436,9 +470,11 @@ describe('AWSOrganizationsExecutor', () => {
       const errorMessage = 'Manage policy failed';
       const mockHandler = vi.fn().mockRejectedValue(new Error(errorMessage));
 
-      (ManagePolicy as vi.Mock).mockImplementation(() => ({
-        handler: mockHandler,
-      }));
+      (ManagePolicy as vi.Mock).mockImplementation(function () {
+        return {
+          handler: mockHandler,
+        };
+      });
 
       // Execute && Verify
       await expect(managePolicy(input)).rejects.toThrow(errorMessage);
@@ -455,7 +491,7 @@ describe('AWSOrganizationsExecutor', () => {
     beforeEach(() => {
       originalProcessOn = process.on;
 
-      process.on = vi.fn((event: string, listener: NodeJS.UncaughtExceptionListener) => {
+      process.on = vi.fn(function (event: string, listener: NodeJS.UncaughtExceptionListener) {
         if (event === 'uncaughtException') {
           processOnCallback = listener;
         }

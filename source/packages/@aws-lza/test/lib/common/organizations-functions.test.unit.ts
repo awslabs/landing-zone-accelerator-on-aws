@@ -42,12 +42,12 @@ vi.mock('../../../lib/common/utility', () => ({
 }));
 
 vi.mock('../../../lib/common/logger', () => ({
-  createLogger: vi.fn(() => ({
+  createLogger: vi.fn(function() { return {
     info: vi.fn(),
     error: vi.fn(),
     commandExecution: vi.fn(),
     commandSuccess: vi.fn(),
-  })),
+  }; }),
 }));
 
 vi.mock('../../../lib/common/dynamodb-table-functions', () => ({

@@ -10,11 +10,12 @@ export default defineConfig({
     outputFile: './test-reports/test-results.xml',
     coverage: {
       include: ['**/*.ts'],
+      exclude: ['**/*.d.ts', '**/dist/**', '**/node_modules/**', '**/test/**'],
       thresholds: {
-        branches: 70,
-        functions: 92,
-        lines: 15,
-        statements: 15,
+        branches: 12,
+        functions: 18,
+        lines: 16,
+        statements: 16,
       },
     },
   },

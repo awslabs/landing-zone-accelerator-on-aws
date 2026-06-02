@@ -65,8 +65,12 @@ describe('ManagePolicy', () => {
     managePolicy = new ManagePolicy();
     mockOrganizationsClient = { send: vi.fn() };
     mockS3Client = { send: vi.fn() };
-    vi.mocked(OrganizationsClient).mockImplementation(() => mockOrganizationsClient as unknown as OrganizationsClient);
-    vi.mocked(S3Client).mockImplementation(() => mockS3Client as unknown as S3Client);
+    vi.mocked(OrganizationsClient).mockImplementation(function () {
+      return mockOrganizationsClient as unknown as OrganizationsClient;
+    });
+    vi.mocked(S3Client).mockImplementation(function () {
+      return mockS3Client as unknown as S3Client;
+    });
     vi.mocked(paginateListPolicies).mockImplementation(() => mockAsyncIterable({ Policies: [], $metadata: {} }));
     vi.mocked(paginateListTargetsForPolicy).mockImplementation(() => mockAsyncIterable({ Targets: [], $metadata: {} }));
   });

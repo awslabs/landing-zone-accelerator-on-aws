@@ -51,13 +51,17 @@ describe('GetOrganizationalUnitsDetailModule', () => {
   beforeEach(async () => {
     vi.clearAllMocks();
 
-    (ControlTowerClient as vi.Mock).mockImplementation(() => ({
-      send: mockControlTowerSend,
-    }));
+    (ControlTowerClient as vi.Mock).mockImplementation(function () {
+      return {
+        send: mockControlTowerSend,
+      };
+    });
 
-    (OrganizationsClient as vi.Mock).mockImplementation(() => ({
-      send: mockOrganizationsSend,
-    }));
+    (OrganizationsClient as vi.Mock).mockImplementation(function () {
+      return {
+        send: mockOrganizationsSend,
+      };
+    });
 
     const commonFunctions = await import('../../../../common/functions');
     isOrganizationsConfiguredSpy = vi.spyOn(commonFunctions, 'isOrganizationsConfigured');

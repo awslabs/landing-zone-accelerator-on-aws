@@ -75,9 +75,9 @@ describe('ExampleModule', () => {
   beforeEach(() => {
     vi.clearAllMocks();
 
-    (SecurityHubClient as vi.Mock).mockImplementation(() => ({
+    (SecurityHubClient as vi.Mock).mockImplementation(function() { return {
       send: mockSend,
-    }));
+    }; });
 
     mockAccountsConfig = {
       getManagementAccount: vi.fn().mockReturnValue(MOCK_CONSTANTS.managementAccount),

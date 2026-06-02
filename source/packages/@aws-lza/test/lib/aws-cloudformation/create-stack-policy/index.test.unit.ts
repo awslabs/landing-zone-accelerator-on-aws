@@ -24,7 +24,7 @@ import * as throttle from '../../../../common/throttle';
 vi.mock('@aws-sdk/client-cloudformation', () => ({
   CloudFormationClient: vi.fn(),
   paginateListStacks: vi.fn(),
-  SetStackPolicyCommand: vi.fn().mockImplementation(params => {
+  SetStackPolicyCommand: vi.fn().mockImplementation(function (params) {
     return { params };
   }),
   StackStatus: {

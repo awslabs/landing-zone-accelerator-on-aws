@@ -81,9 +81,11 @@ describe('RegisterOrganizationalUnitModule', () => {
   beforeEach(async () => {
     vi.clearAllMocks();
 
-    (ControlTowerClient as vi.Mock).mockImplementation(() => ({
-      send: mockSend,
-    }));
+    (ControlTowerClient as vi.Mock).mockImplementation(function () {
+      return {
+        send: mockSend,
+      };
+    });
 
     mockSend.mockImplementation(command => {
       if (command instanceof EnableBaselineCommand) {

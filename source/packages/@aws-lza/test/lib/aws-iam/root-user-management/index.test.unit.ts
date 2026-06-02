@@ -63,12 +63,16 @@ describe('CentralRootUserManagementModule', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    (OrganizationsClient as vi.Mock).mockImplementation(() => ({
-      send: mockSend,
-    }));
-    (IAMClient as vi.Mock).mockImplementation(() => ({
-      send: mockSend,
-    }));
+    (OrganizationsClient as vi.Mock).mockImplementation(function () {
+      return {
+        send: mockSend,
+      };
+    });
+    (IAMClient as vi.Mock).mockImplementation(function () {
+      return {
+        send: mockSend,
+      };
+    });
   });
 
   describe('handler', () => {
@@ -269,12 +273,16 @@ describe('CentralRootUserManagementModule DryRun', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    (OrganizationsClient as vi.Mock).mockImplementation(() => ({
-      send: mockSend,
-    }));
-    (IAMClient as vi.Mock).mockImplementation(() => ({
-      send: mockSend,
-    }));
+    (OrganizationsClient as vi.Mock).mockImplementation(function () {
+      return {
+        send: mockSend,
+      };
+    });
+    (IAMClient as vi.Mock).mockImplementation(function () {
+      return {
+        send: mockSend,
+      };
+    });
   });
 
   describe('handler', () => {
@@ -629,12 +637,16 @@ describe('CentralRootUserManagementModule Failures', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    (OrganizationsClient as vi.Mock).mockImplementation(() => ({
-      send: mockSend,
-    }));
-    (IAMClient as vi.Mock).mockImplementation(() => ({
-      send: mockSend,
-    }));
+    (OrganizationsClient as vi.Mock).mockImplementation(function () {
+      return {
+        send: mockSend,
+      };
+    });
+    (IAMClient as vi.Mock).mockImplementation(function () {
+      return {
+        send: mockSend,
+      };
+    });
   });
 
   const mockPropsAllEnabled: IRootUserManagementHandlerParameter = {

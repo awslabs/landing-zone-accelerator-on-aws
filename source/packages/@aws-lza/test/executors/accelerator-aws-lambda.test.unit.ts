@@ -18,9 +18,11 @@ import { ICheckLambdaConcurrencyParameter } from '../../interfaces/aws-lambda/ch
 // Mock modules
 vi.mock('../../lib/aws-lambda/check-lambda-concurrency');
 vi.mock('../../common/logger', () => ({
-  createLogger: vi.fn(() => ({
-    error: vi.fn(),
-  })),
+  createLogger: vi.fn(function () {
+    return {
+      error: vi.fn(),
+    };
+  }),
 }));
 
 const mockHandler = vi.fn();
@@ -39,9 +41,11 @@ describe('accelerator-aws-lambda.ts', () => {
     vi.clearAllMocks();
 
     // Setup mocks
-    (CheckLambdaConcurrencyModule as vi.Mock).mockImplementation(() => ({
-      handler: mockHandler,
-    }));
+    (CheckLambdaConcurrencyModule as vi.Mock).mockImplementation(function () {
+      return {
+        handler: mockHandler,
+      };
+    });
   });
 
   describe('uncaughtException handler', () => {

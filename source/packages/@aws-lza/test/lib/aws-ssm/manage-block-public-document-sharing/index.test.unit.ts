@@ -44,9 +44,11 @@ describe('BlockPublicDocumentSharingModule', () => {
   beforeEach(() => {
     vi.clearAllMocks();
 
-    (SSMClient as vi.Mock).mockImplementation(() => ({
-      send: mockSend,
-    }));
+    (SSMClient as vi.Mock).mockImplementation(function () {
+      return {
+        send: mockSend,
+      };
+    });
   });
 
   describe('Live Execution Operations', () => {

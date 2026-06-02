@@ -22,7 +22,7 @@ vi.mock('@aws-accelerator/utils/lib/throttle', () => ({
   throttlingBackOff: vi.fn(fn => fn()),
 }));
 vi.mock('@aws-accelerator/utils/lib/common-functions', () => ({
-  setRetryStrategy: vi.fn(() => ({})),
+  setRetryStrategy: vi.fn(function() { return {}; }),
 }));
 
 describe('Build Identity Center Assignments - Principal ID Lookup', () => {
@@ -47,9 +47,9 @@ describe('Build Identity Center Assignments - Principal ID Lookup', () => {
       }),
     };
 
-    vi.mocked(IdentitystoreClient).mockImplementation(() => mockIdentityStoreClient);
-    vi.mocked(SSOAdminClient).mockImplementation(() => mockSSOAdminClient);
-    vi.mocked(CreateAccountAssignmentCommand).mockImplementation(input => ({ input }));
+    vi.mocked(IdentitystoreClient).mockImplementation(function() { return mockIdentityStoreClient; });
+    vi.mocked(SSOAdminClient).mockImplementation(function() { return mockSSOAdminClient; });
+    vi.mocked(CreateAccountAssignmentCommand).mockImplementation(function(input) { return { input }; });
   });
 
   it('should use GetUserIdCommand with correct parameters for user lookup', async () => {

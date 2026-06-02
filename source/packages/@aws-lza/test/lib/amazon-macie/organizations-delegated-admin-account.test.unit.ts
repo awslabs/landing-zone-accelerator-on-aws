@@ -32,10 +32,12 @@ vi.mock('../../../lib/amazon-macie/functions', () => ({
 }));
 
 vi.mock('../../../lib/common/logger', () => ({
-  createLogger: vi.fn(() => ({
-    info: vi.fn(),
-    dryRun: vi.fn(),
-  })),
+  createLogger: vi.fn(function () {
+    return {
+      info: vi.fn(),
+      dryRun: vi.fn(),
+    };
+  }),
 }));
 
 describe('OrganizationsDelegatedAdminAccount', () => {

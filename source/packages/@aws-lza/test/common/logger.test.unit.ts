@@ -48,9 +48,11 @@ describe('LoggerUtil', () => {
     // Get the mocked winston module
     const winston = await import('winston');
 
-    mockCreateLogger = vi.fn(() => ({
-      child: vi.fn(),
-    }));
+    mockCreateLogger = vi.fn(function () {
+      return {
+        child: vi.fn(),
+      };
+    });
 
     mockAdd = vi.fn();
 

@@ -63,9 +63,11 @@ describe('InviteAccountToOrganizationModule', () => {
   beforeEach(async () => {
     vi.clearAllMocks();
 
-    (OrganizationsClient as vi.Mock).mockImplementation(() => ({
-      send: mockSend,
-    }));
+    (OrganizationsClient as vi.Mock).mockImplementation(function () {
+      return {
+        send: mockSend,
+      };
+    });
 
     const commonFunctions = await import('../../../../common/functions');
     getOrganizationAccountsSpy = vi.spyOn(commonFunctions, 'getOrganizationAccounts');

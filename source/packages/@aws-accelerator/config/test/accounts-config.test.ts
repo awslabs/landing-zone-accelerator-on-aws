@@ -345,15 +345,21 @@ describe('accounts-config', () => {
         mockSTSClient = {
           send: vi.fn(),
         };
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        vi.mocked(STSClient).mockImplementation(() => mockSTSClient as any);
+
+        vi.mocked(STSClient).mockImplementation(function () {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          return mockSTSClient as any;
+        });
 
         // Mock Organizations Client
         mockOrganizationsClient = {
           send: vi.fn(),
         };
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        vi.mocked(OrganizationsClient).mockImplementation(() => mockOrganizationsClient as any);
+
+        vi.mocked(OrganizationsClient).mockImplementation(function () {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          return mockOrganizationsClient as any;
+        });
 
         // Mock utility functions
         mockGetSSMParameterValue = vi.fn();

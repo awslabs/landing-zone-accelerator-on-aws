@@ -24,14 +24,14 @@ vi.mock('@aws-sdk/client-sts', () => ({
 
 vi.mock('../../../lib/common/utility', () => ({
   executeApi: vi.fn(),
-  setRetryStrategy: vi.fn(() => ({})),
+  setRetryStrategy: vi.fn(function() { return {}; }),
 }));
 
 vi.mock('../../../lib/common/logger', () => ({
-  createLogger: vi.fn(() => ({
+  createLogger: vi.fn(function() { return {
     info: vi.fn(),
     error: vi.fn(),
-  })),
+  }; }),
 }));
 
 vi.mock('../../../lib/common/types', () => ({
@@ -285,7 +285,7 @@ describe('sts-functions', () => {
           region: vi.fn().mockResolvedValue('us-west-2'),
         },
       };
-      vi.mocked(STSClient).mockReturnValue(mockClient as STSClient);
+      vi.mocked(STSClient).mockImplementation(function() { return mockClient as STSClient; });
 
       mockExecuteApi.mockResolvedValue({
         Account: MOCK_CONSTANTS.accountId,
@@ -308,7 +308,7 @@ describe('sts-functions', () => {
           region: vi.fn().mockResolvedValue('us-west-2'),
         },
       };
-      vi.mocked(STSClient).mockReturnValue(mockClient as STSClient);
+      vi.mocked(STSClient).mockImplementation(function() { return mockClient as STSClient; });
 
       mockExecuteApi.mockResolvedValue({
         Account: MOCK_CONSTANTS.accountId,
@@ -332,7 +332,7 @@ describe('sts-functions', () => {
           region: vi.fn().mockResolvedValue('us-west-2'),
         },
       };
-      vi.mocked(STSClient).mockReturnValue(mockClient as STSClient);
+      vi.mocked(STSClient).mockImplementation(function() { return mockClient as STSClient; });
 
       mockExecuteApi.mockResolvedValue({
         Arn: 'arn:aws:iam::123456789012:role/TestRole',
@@ -349,7 +349,7 @@ describe('sts-functions', () => {
           region: vi.fn().mockResolvedValue('us-west-2'),
         },
       };
-      vi.mocked(STSClient).mockReturnValue(mockClient as STSClient);
+      vi.mocked(STSClient).mockImplementation(function() { return mockClient as STSClient; });
 
       mockExecuteApi.mockResolvedValue({
         Account: MOCK_CONSTANTS.accountId,
@@ -366,7 +366,7 @@ describe('sts-functions', () => {
           region: vi.fn().mockResolvedValue('us-west-2'),
         },
       };
-      vi.mocked(STSClient).mockReturnValue(mockClient as STSClient);
+      vi.mocked(STSClient).mockImplementation(function() { return mockClient as STSClient; });
 
       mockExecuteApi.mockResolvedValue({
         Account: MOCK_CONSTANTS.accountId,
@@ -385,7 +385,7 @@ describe('sts-functions', () => {
           region: vi.fn().mockResolvedValue('eu-west-1'),
         },
       };
-      vi.mocked(STSClient).mockReturnValue(mockClient as STSClient);
+      vi.mocked(STSClient).mockImplementation(function() { return mockClient as STSClient; });
 
       mockExecuteApi.mockResolvedValue({
         Account: MOCK_CONSTANTS.accountId,
@@ -404,7 +404,7 @@ describe('sts-functions', () => {
           region: vi.fn().mockResolvedValue(undefined),
         },
       };
-      vi.mocked(STSClient).mockReturnValue(mockClient as STSClient);
+      vi.mocked(STSClient).mockImplementation(function() { return mockClient as STSClient; });
 
       mockExecuteApi.mockResolvedValue({
         Account: MOCK_CONSTANTS.accountId,

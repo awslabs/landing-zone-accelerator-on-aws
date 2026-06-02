@@ -31,12 +31,14 @@ vi.mock('../../../lib/common/utility', () => ({
 }));
 
 vi.mock('../../../lib/common/logger', () => ({
-  createLogger: vi.fn(() => ({
-    info: vi.fn(),
-    dryRun: vi.fn(),
-    commandExecution: vi.fn(),
-    commandSuccess: vi.fn(),
-  })),
+  createLogger: vi.fn(function () {
+    return {
+      info: vi.fn(),
+      dryRun: vi.fn(),
+      commandExecution: vi.fn(),
+      commandSuccess: vi.fn(),
+    };
+  }),
 }));
 
 describe('amazon-macie functions', () => {

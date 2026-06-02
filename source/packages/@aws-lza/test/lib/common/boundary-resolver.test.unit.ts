@@ -27,7 +27,9 @@ vi.mock('../../../lib/common/utility', () => ({
 }));
 
 vi.mock('../../../lib/common/logger', () => ({
-  createLogger: vi.fn(() => ({ info: vi.fn() })),
+  createLogger: vi.fn(function () {
+    return { info: vi.fn() };
+  }),
 }));
 
 // Mock constants

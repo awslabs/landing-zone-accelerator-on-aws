@@ -40,9 +40,11 @@ describe('GetCloudFormationTemplatesModule', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    (CloudFormationClient as vi.Mock).mockImplementation(() => ({
-      send: mockCfnClientSend,
-    }));
+    (CloudFormationClient as vi.Mock).mockImplementation(function () {
+      return {
+        send: mockCfnClientSend,
+      };
+    });
     (functions.getCredentials as vi.Mock).mockReturnValue(Promise.resolve(MOCK_CONSTANTS.credentials));
     cfnModule = new GetCloudFormationTemplatesModule();
   });

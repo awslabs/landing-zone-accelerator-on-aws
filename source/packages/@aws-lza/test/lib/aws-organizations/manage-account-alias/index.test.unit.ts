@@ -40,7 +40,9 @@ vi.mock('../../../../common/throttle', () => ({
 vi.mock('../../../../common/functions', async () => {
   return {
     ...(await vi.importActual('../../../../common/functions')),
-    setRetryStrategy: vi.fn(() => ({})),
+    setRetryStrategy: vi.fn(function () {
+      return {};
+    }),
   };
 });
 
@@ -59,9 +61,11 @@ describe('ManageAccountAlias', () => {
   beforeEach(() => {
     vi.clearAllMocks();
 
-    (IAMClient as vi.Mock).mockImplementation(() => ({
-      send: mockSend,
-    }));
+    (IAMClient as vi.Mock).mockImplementation(function () {
+      return {
+        send: mockSend,
+      };
+    });
   });
 
   describe('handler', () => {

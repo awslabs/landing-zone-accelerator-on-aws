@@ -70,13 +70,10 @@ describe('SecurityHubManageOrganizationAdminModule', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     module = new SecurityHubManageOrganizationAdminModule();
-    vi.mocked(SecurityHubClient).mockImplementation(
-      () =>
-        ({
-          send: mockSend,
-          // eslint-disable-next-line
-        } as any),
-    );
+    vi.mocked(SecurityHubClient).mockImplementation(function () {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      return { send: mockSend } as any;
+    });
   });
 
   describe('handler', () => {

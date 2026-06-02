@@ -128,9 +128,9 @@ describe('CustomResourceTemplateModifierModule', () => {
   beforeEach(() => {
     vi.clearAllMocks();
 
-    (CloudFormationClient as unknown as ReturnType<typeof vi.fn>).mockImplementation(() => ({
+    (CloudFormationClient as unknown as ReturnType<typeof vi.fn>).mockImplementation(function() { return {
       send: mockSend,
-    }));
+    }; });
   });
 
   describe('Live Execution Operations', () => {

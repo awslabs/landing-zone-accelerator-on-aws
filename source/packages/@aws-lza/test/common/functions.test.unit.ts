@@ -203,9 +203,11 @@ describe('functions', () => {
     beforeEach(() => {
       vi.clearAllMocks();
 
-      (ControlTowerClient as vi.Mock).mockImplementation(() => ({
-        send: mockSend,
-      }));
+      (ControlTowerClient as vi.Mock).mockImplementation(function () {
+        return {
+          send: mockSend,
+        };
+      });
     });
 
     test('should return undefined when landingZoneIdentifier is not provided', async () => {
@@ -456,20 +458,24 @@ describe('functions', () => {
     beforeEach(() => {
       vi.clearAllMocks();
 
-      (OrganizationsClient as vi.Mock).mockImplementation(() => ({
-        send: mockSend,
-      }));
+      (OrganizationsClient as vi.Mock).mockImplementation(function () {
+        return {
+          send: mockSend,
+        };
+      });
     });
 
     test('should return an empty array when no organizational units are found', async () => {
       // Setup
-      (paginateListOrganizationalUnitsForParent as vi.Mock).mockImplementation(() => ({
-        [Symbol.asyncIterator]: async function* () {
-          yield {
-            OrganizationalUnits: [],
-          };
-        },
-      }));
+      (paginateListOrganizationalUnitsForParent as vi.Mock).mockImplementation(function () {
+        return {
+          [Symbol.asyncIterator]: async function* () {
+            yield {
+              OrganizationalUnits: [],
+            };
+          },
+        };
+      });
 
       // Execute
       const result = await getOrganizationalUnitsForParent(new OrganizationsClient({}), parentId);
@@ -484,13 +490,15 @@ describe('functions', () => {
         { Id: 'mockId1', Name: 'mockName1', Arn: 'mockArn1' },
         { Id: 'mockId2', Name: 'mockName2', Arn: 'mockArn2' },
       ];
-      (paginateListOrganizationalUnitsForParent as vi.Mock).mockImplementation(() => ({
-        [Symbol.asyncIterator]: async function* () {
-          yield {
-            OrganizationalUnits: mockOUs,
-          };
-        },
-      }));
+      (paginateListOrganizationalUnitsForParent as vi.Mock).mockImplementation(function () {
+        return {
+          [Symbol.asyncIterator]: async function* () {
+            yield {
+              OrganizationalUnits: mockOUs,
+            };
+          },
+        };
+      });
 
       // Execute
       const result = await getOrganizationalUnitsForParent(new OrganizationsClient({}), parentId);
@@ -507,12 +515,14 @@ describe('functions', () => {
       ];
       const mockOUs2: OrganizationalUnit[] = [{ Id: 'mockId3', Name: 'mockName3', Arn: 'mockArn3' }];
 
-      (paginateListOrganizationalUnitsForParent as vi.Mock).mockImplementation(() => ({
-        [Symbol.asyncIterator]: async function* () {
-          yield { OrganizationalUnits: mockOUs1 };
-          yield { OrganizationalUnits: mockOUs2 };
-        },
-      }));
+      (paginateListOrganizationalUnitsForParent as vi.Mock).mockImplementation(function () {
+        return {
+          [Symbol.asyncIterator]: async function* () {
+            yield { OrganizationalUnits: mockOUs1 };
+            yield { OrganizationalUnits: mockOUs2 };
+          },
+        };
+      });
 
       // Execute
       const result = await getOrganizationalUnitsForParent(new OrganizationsClient({}), parentId);
@@ -561,12 +571,14 @@ describe('functions', () => {
         { Id: 'mockId2', Name: 'mockName2', Arn: 'mockArn2' },
       ];
 
-      (paginateListOrganizationalUnitsForParent as vi.Mock).mockImplementation(() => ({
-        [Symbol.asyncIterator]: async function* () {
-          yield { OrganizationalUnits: undefined };
-          yield { OrganizationalUnits: mockOUs };
-        },
-      }));
+      (paginateListOrganizationalUnitsForParent as vi.Mock).mockImplementation(function () {
+        return {
+          [Symbol.asyncIterator]: async function* () {
+            yield { OrganizationalUnits: undefined };
+            yield { OrganizationalUnits: mockOUs };
+          },
+        };
+      });
 
       // Execute
       const result = await getOrganizationalUnitsForParent(new OrganizationsClient({}), parentId);
@@ -580,9 +592,11 @@ describe('functions', () => {
     beforeEach(() => {
       vi.clearAllMocks();
 
-      (ControlTowerClient as vi.Mock).mockImplementation(() => ({
-        send: mockSend,
-      }));
+      (ControlTowerClient as vi.Mock).mockImplementation(function () {
+        return {
+          send: mockSend,
+        };
+      });
     });
 
     test('should return undefined when no landing zones are found', async () => {
@@ -678,9 +692,11 @@ describe('functions', () => {
     beforeEach(() => {
       vi.clearAllMocks();
 
-      (STSClient as vi.Mock).mockImplementation(() => ({
-        send: mockSend,
-      }));
+      (STSClient as vi.Mock).mockImplementation(function () {
+        return {
+          send: mockSend,
+        };
+      });
     });
 
     const MOCK_CONSTANTS = {
@@ -916,9 +932,11 @@ describe('functions', () => {
     beforeEach(() => {
       vi.clearAllMocks();
 
-      (OrganizationsClient as vi.Mock).mockImplementation(() => ({
-        send: mockSend,
-      }));
+      (OrganizationsClient as vi.Mock).mockImplementation(function () {
+        return {
+          send: mockSend,
+        };
+      });
     });
 
     test('should return root id when valid response is received', async () => {
@@ -999,9 +1017,11 @@ describe('functions', () => {
     beforeEach(() => {
       vi.clearAllMocks();
 
-      (OrganizationsClient as vi.Mock).mockImplementation(() => ({
-        send: mockSend,
-      }));
+      (OrganizationsClient as vi.Mock).mockImplementation(function () {
+        return {
+          send: mockSend,
+        };
+      });
     });
 
     test('should return OU id for valid path with root id provided', async () => {
@@ -1081,13 +1101,15 @@ describe('functions', () => {
         return Promise.reject(MOCK_CONSTANTS.unknownError);
       });
 
-      (paginateListOrganizationalUnitsForParent as vi.Mock).mockImplementation(() => ({
-        [Symbol.asyncIterator]: async function* () {
-          yield {
-            OrganizationalUnits: [],
-          };
-        },
-      }));
+      (paginateListOrganizationalUnitsForParent as vi.Mock).mockImplementation(function () {
+        return {
+          [Symbol.asyncIterator]: async function* () {
+            yield {
+              OrganizationalUnits: [],
+            };
+          },
+        };
+      });
 
       // Execute
       const result = await getOrganizationalUnitIdByPath(new OrganizationsClient({}), MOCK_CONSTANTS.invalidOuPath);
@@ -1107,13 +1129,15 @@ describe('functions', () => {
         return Promise.reject(MOCK_CONSTANTS.unknownError);
       });
 
-      (paginateListOrganizationalUnitsForParent as vi.Mock).mockImplementation(() => ({
-        [Symbol.asyncIterator]: async function* () {
-          yield {
-            OrganizationalUnits: [],
-          };
-        },
-      }));
+      (paginateListOrganizationalUnitsForParent as vi.Mock).mockImplementation(function () {
+        return {
+          [Symbol.asyncIterator]: async function* () {
+            yield {
+              OrganizationalUnits: [],
+            };
+          },
+        };
+      });
 
       // Execute
       const result = await getOrganizationalUnitIdByPath(
@@ -1136,13 +1160,15 @@ describe('functions', () => {
         return Promise.reject(MOCK_CONSTANTS.unknownError);
       });
 
-      (paginateListOrganizationalUnitsForParent as vi.Mock).mockImplementation(() => ({
-        [Symbol.asyncIterator]: async function* () {
-          yield {
-            OrganizationalUnits: [MOCK_CONSTANTS.organizationRoot],
-          };
-        },
-      }));
+      (paginateListOrganizationalUnitsForParent as vi.Mock).mockImplementation(function () {
+        return {
+          [Symbol.asyncIterator]: async function* () {
+            yield {
+              OrganizationalUnits: [MOCK_CONSTANTS.organizationRoot],
+            };
+          },
+        };
+      });
 
       // Execute
       const result = await getOrganizationalUnitIdByPath(
@@ -1250,13 +1276,15 @@ describe('functions', () => {
     test('returns non root id', async () => {
       // Setup
 
-      (paginateListOrganizationalUnitsForParent as vi.Mock).mockImplementation(() => ({
-        [Symbol.asyncIterator]: async function* () {
-          yield {
-            OrganizationalUnits: [MOCK_CONSTANTS.existingOrganizationalUnits[0]],
-          };
-        },
-      }));
+      (paginateListOrganizationalUnitsForParent as vi.Mock).mockImplementation(function () {
+        return {
+          [Symbol.asyncIterator]: async function* () {
+            yield {
+              OrganizationalUnits: [MOCK_CONSTANTS.existingOrganizationalUnits[0]],
+            };
+          },
+        };
+      });
 
       // Execute
       const result = await getParentOuId(
@@ -1279,13 +1307,15 @@ describe('functions', () => {
         { Id: 'mockId1', Name: 'mockName1', Arn: 'mockArn1', Email: 'mockEmail1@example.com' },
         { Id: 'mockId2', Name: 'mockName2', Arn: 'mockArn2', Email: 'mockEmail2@example.com' },
       ];
-      (paginateListAccounts as vi.Mock).mockImplementation(() => ({
-        [Symbol.asyncIterator]: async function* () {
-          yield {
-            Accounts: mockAccounts,
-          };
-        },
-      }));
+      (paginateListAccounts as vi.Mock).mockImplementation(function () {
+        return {
+          [Symbol.asyncIterator]: async function* () {
+            yield {
+              Accounts: mockAccounts,
+            };
+          },
+        };
+      });
 
       // Execute
       const result = await getOrganizationAccounts(new OrganizationsClient({}));
@@ -1296,13 +1326,15 @@ describe('functions', () => {
 
     test('returns organizations accounts when Accounts object undefined', async () => {
       // Setup
-      (paginateListAccounts as vi.Mock).mockImplementation(() => ({
-        [Symbol.asyncIterator]: async function* () {
-          yield {
-            Accounts: undefined,
-          };
-        },
-      }));
+      (paginateListAccounts as vi.Mock).mockImplementation(function () {
+        return {
+          [Symbol.asyncIterator]: async function* () {
+            yield {
+              Accounts: undefined,
+            };
+          },
+        };
+      });
 
       // Execute
       const result = await getOrganizationAccounts(new OrganizationsClient({}));
@@ -1321,21 +1353,25 @@ describe('functions', () => {
         { Id: 'mockId1', Name: 'mockName1', Arn: 'mockArn1', Email: 'mockEmail1@example.com' },
         { Id: 'mockId2', Name: 'mockName2', Arn: 'mockArn2', Email: 'mockEmail2@example.com' },
       ];
-      (paginateListAccounts as vi.Mock).mockImplementation(() => ({
-        [Symbol.asyncIterator]: async function* () {
-          yield {
-            Accounts: mockAccounts,
-          };
-        },
-      }));
+      (paginateListAccounts as vi.Mock).mockImplementation(function () {
+        return {
+          [Symbol.asyncIterator]: async function* () {
+            yield {
+              Accounts: mockAccounts,
+            };
+          },
+        };
+      });
       const email = 'mock-email@example.com';
-      (paginateListAccounts as vi.Mock).mockImplementation(() => ({
-        [Symbol.asyncIterator]: async function* () {
-          yield {
-            Accounts: mockAccounts,
-          };
-        },
-      }));
+      (paginateListAccounts as vi.Mock).mockImplementation(function () {
+        return {
+          [Symbol.asyncIterator]: async function* () {
+            yield {
+              Accounts: mockAccounts,
+            };
+          },
+        };
+      });
 
       // Execute
       const result = await getAccountDetailsFromOrganizationsByEmail(new OrganizationsClient({}), email);
@@ -1363,21 +1399,25 @@ describe('functions', () => {
         { Id: 'mockId1', Name: 'mockName1', Arn: 'mockArn1' },
         { Id: 'mockId2', Name: 'mockName2', Arn: 'mockArn2' },
       ];
-      (paginateListAccounts as vi.Mock).mockImplementation(() => ({
-        [Symbol.asyncIterator]: async function* () {
-          yield {
-            Accounts: mockAccounts,
-          };
-        },
-      }));
+      (paginateListAccounts as vi.Mock).mockImplementation(function () {
+        return {
+          [Symbol.asyncIterator]: async function* () {
+            yield {
+              Accounts: mockAccounts,
+            };
+          },
+        };
+      });
       const email = 'mock-email@example.com';
-      (paginateListAccounts as vi.Mock).mockImplementation(() => ({
-        [Symbol.asyncIterator]: async function* () {
-          yield {
-            Accounts: mockAccounts,
-          };
-        },
-      }));
+      (paginateListAccounts as vi.Mock).mockImplementation(function () {
+        return {
+          [Symbol.asyncIterator]: async function* () {
+            yield {
+              Accounts: mockAccounts,
+            };
+          },
+        };
+      });
 
       // Execute
       const result = await getAccountDetailsFromOrganizationsByEmail(new OrganizationsClient({}), email, mockAccounts);
@@ -1391,21 +1431,25 @@ describe('functions', () => {
         { Id: 'mockId1', Name: 'mockName1', Arn: 'mockArn1', Email: 'mockEmail1@example.com' },
         { Id: 'mockId2', Name: 'mockName2', Arn: 'mockArn2', Email: 'mockEmail2@example.com' },
       ];
-      (paginateListAccounts as vi.Mock).mockImplementation(() => ({
-        [Symbol.asyncIterator]: async function* () {
-          yield {
-            Accounts: mockAccounts,
-          };
-        },
-      }));
+      (paginateListAccounts as vi.Mock).mockImplementation(function () {
+        return {
+          [Symbol.asyncIterator]: async function* () {
+            yield {
+              Accounts: mockAccounts,
+            };
+          },
+        };
+      });
 
-      (paginateListAccounts as vi.Mock).mockImplementation(() => ({
-        [Symbol.asyncIterator]: async function* () {
-          yield {
-            Accounts: mockAccounts,
-          };
-        },
-      }));
+      (paginateListAccounts as vi.Mock).mockImplementation(function () {
+        return {
+          [Symbol.asyncIterator]: async function* () {
+            yield {
+              Accounts: mockAccounts,
+            };
+          },
+        };
+      });
 
       // Execute
       const result = await getAccountDetailsFromOrganizationsByEmail(
@@ -1422,21 +1466,25 @@ describe('functions', () => {
         { Id: 'mockId1', Name: 'mockName1', Arn: 'mockArn1', Email: 'mockEmail1@example.com' },
         { Id: 'mockId2', Name: 'mockName2', Arn: 'mockArn2', Email: 'mockEmail2@example.com' },
       ];
-      (paginateListAccounts as vi.Mock).mockImplementation(() => ({
-        [Symbol.asyncIterator]: async function* () {
-          yield {
-            Accounts: mockAccounts,
-          };
-        },
-      }));
+      (paginateListAccounts as vi.Mock).mockImplementation(function () {
+        return {
+          [Symbol.asyncIterator]: async function* () {
+            yield {
+              Accounts: mockAccounts,
+            };
+          },
+        };
+      });
 
-      (paginateListAccounts as vi.Mock).mockImplementation(() => ({
-        [Symbol.asyncIterator]: async function* () {
-          yield {
-            Accounts: mockAccounts,
-          };
-        },
-      }));
+      (paginateListAccounts as vi.Mock).mockImplementation(function () {
+        return {
+          [Symbol.asyncIterator]: async function* () {
+            yield {
+              Accounts: mockAccounts,
+            };
+          },
+        };
+      });
 
       // Execute
       const result = await getAccountDetailsFromOrganizationsByEmail(
@@ -1458,21 +1506,25 @@ describe('functions', () => {
         { Id: 'mockId1', Name: 'mockName1', Arn: 'mockArn1', Email: 'mockEmail1@example.com' },
         { Id: 'mockId2', Name: 'mockName2', Arn: 'mockArn2', Email: 'mockEmail2@example.com' },
       ];
-      (paginateListAccounts as vi.Mock).mockImplementation(() => ({
-        [Symbol.asyncIterator]: async function* () {
-          yield {
-            Accounts: mockAccounts,
-          };
-        },
-      }));
+      (paginateListAccounts as vi.Mock).mockImplementation(function () {
+        return {
+          [Symbol.asyncIterator]: async function* () {
+            yield {
+              Accounts: mockAccounts,
+            };
+          },
+        };
+      });
       const email = 'mock-email@example.com';
-      (paginateListAccounts as vi.Mock).mockImplementation(() => ({
-        [Symbol.asyncIterator]: async function* () {
-          yield {
-            Accounts: mockAccounts,
-          };
-        },
-      }));
+      (paginateListAccounts as vi.Mock).mockImplementation(function () {
+        return {
+          [Symbol.asyncIterator]: async function* () {
+            yield {
+              Accounts: mockAccounts,
+            };
+          },
+        };
+      });
 
       await expect(async () => {
         await getAccountId(new OrganizationsClient({}), email);
@@ -1487,20 +1539,24 @@ describe('functions', () => {
         { Name: 'mockName1', Arn: 'mockArn1', Email: 'mockEmail1@example.com' },
         { Id: 'mockId2', Name: 'mockName2', Arn: 'mockArn2', Email: 'mockEmail2@example.com' },
       ];
-      (paginateListAccounts as vi.Mock).mockImplementation(() => ({
-        [Symbol.asyncIterator]: async function* () {
-          yield {
-            Accounts: mockAccounts,
-          };
-        },
-      }));
-      (paginateListAccounts as vi.Mock).mockImplementation(() => ({
-        [Symbol.asyncIterator]: async function* () {
-          yield {
-            Accounts: mockAccounts,
-          };
-        },
-      }));
+      (paginateListAccounts as vi.Mock).mockImplementation(function () {
+        return {
+          [Symbol.asyncIterator]: async function* () {
+            yield {
+              Accounts: mockAccounts,
+            };
+          },
+        };
+      });
+      (paginateListAccounts as vi.Mock).mockImplementation(function () {
+        return {
+          [Symbol.asyncIterator]: async function* () {
+            yield {
+              Accounts: mockAccounts,
+            };
+          },
+        };
+      });
 
       await expect(async () => {
         await getAccountId(new OrganizationsClient({}), mockAccounts[0].Email!);
@@ -1515,20 +1571,24 @@ describe('functions', () => {
         { Name: 'mockName1', Arn: 'mockArn1', Email: 'mockEmail1@example.com' },
         { Id: 'mockId2', Name: 'mockName2', Arn: 'mockArn2', Email: 'mockEmail2@example.com' },
       ];
-      (paginateListAccounts as vi.Mock).mockImplementation(() => ({
-        [Symbol.asyncIterator]: async function* () {
-          yield {
-            Accounts: mockAccounts,
-          };
-        },
-      }));
-      (paginateListAccounts as vi.Mock).mockImplementation(() => ({
-        [Symbol.asyncIterator]: async function* () {
-          yield {
-            Accounts: mockAccounts,
-          };
-        },
-      }));
+      (paginateListAccounts as vi.Mock).mockImplementation(function () {
+        return {
+          [Symbol.asyncIterator]: async function* () {
+            yield {
+              Accounts: mockAccounts,
+            };
+          },
+        };
+      });
+      (paginateListAccounts as vi.Mock).mockImplementation(function () {
+        return {
+          [Symbol.asyncIterator]: async function* () {
+            yield {
+              Accounts: mockAccounts,
+            };
+          },
+        };
+      });
 
       const response = await getAccountId(new OrganizationsClient({}), mockAccounts[1].Email!);
       expect(response).toBe(mockAccounts[1].Id);
@@ -1540,9 +1600,11 @@ describe('functions', () => {
     beforeEach(() => {
       vi.clearAllMocks();
 
-      (OrganizationsClient as vi.Mock).mockImplementation(() => ({
-        send: mockSend,
-      }));
+      (OrganizationsClient as vi.Mock).mockImplementation(function () {
+        return {
+          send: mockSend,
+        };
+      });
     });
 
     test('should return organization id', async () => {
@@ -1603,9 +1665,11 @@ describe('functions', () => {
     beforeEach(() => {
       vi.clearAllMocks();
 
-      (STSClient as vi.Mock).mockImplementation(() => ({
-        send: mockSend,
-      }));
+      (STSClient as vi.Mock).mockImplementation(function () {
+        return {
+          send: mockSend,
+        };
+      });
     });
 
     test('should return account id', async () => {
@@ -1651,13 +1715,17 @@ describe('functions', () => {
     beforeEach(() => {
       vi.clearAllMocks();
 
-      (OrganizationsClient as vi.Mock).mockImplementation(() => ({
-        send: mockOrgSend,
-      }));
+      (OrganizationsClient as vi.Mock).mockImplementation(function () {
+        return {
+          send: mockOrgSend,
+        };
+      });
 
-      (STSClient as vi.Mock).mockImplementation(() => ({
-        send: mockStsSend,
-      }));
+      (STSClient as vi.Mock).mockImplementation(function () {
+        return {
+          send: mockStsSend,
+        };
+      });
     });
 
     test('should return organizational unit id when organization id provided', async () => {
@@ -1797,9 +1865,11 @@ describe('functions', () => {
     beforeEach(() => {
       vi.clearAllMocks();
 
-      (OrganizationsClient as vi.Mock).mockImplementation(() => ({
-        send: mockSend,
-      }));
+      (OrganizationsClient as vi.Mock).mockImplementation(function () {
+        return {
+          send: mockSend,
+        };
+      });
     });
 
     test('should return true when organization configured', async () => {
@@ -1878,20 +1948,24 @@ describe('functions', () => {
     beforeEach(() => {
       vi.clearAllMocks();
 
-      (ControlTowerClient as vi.Mock).mockImplementation(() => ({
-        send: mockSend,
-      }));
+      (ControlTowerClient as vi.Mock).mockImplementation(function () {
+        return {
+          send: mockSend,
+        };
+      });
     });
 
     test('should return list of enabled baselines', async () => {
       // Setup
-      (paginateListEnabledBaselines as vi.Mock).mockImplementation(() => ({
-        [Symbol.asyncIterator]: async function* () {
-          yield {
-            enabledBaselines: MOCK_CONSTANTS.controlTowerEnabledBaselines,
-          };
-        },
-      }));
+      (paginateListEnabledBaselines as vi.Mock).mockImplementation(function () {
+        return {
+          [Symbol.asyncIterator]: async function* () {
+            yield {
+              enabledBaselines: MOCK_CONSTANTS.controlTowerEnabledBaselines,
+            };
+          },
+        };
+      });
 
       // Execute
       const response = await getEnabledBaselines(new ControlTowerClient({}));
@@ -1903,13 +1977,15 @@ describe('functions', () => {
 
     test('should return empty list of enabled baselines when enabledBaselines object is undefined', async () => {
       // Setup
-      (paginateListEnabledBaselines as vi.Mock).mockImplementation(() => ({
-        [Symbol.asyncIterator]: async function* () {
-          yield {
-            enabledBaselines: undefined,
-          };
-        },
-      }));
+      (paginateListEnabledBaselines as vi.Mock).mockImplementation(function () {
+        return {
+          [Symbol.asyncIterator]: async function* () {
+            yield {
+              enabledBaselines: undefined,
+            };
+          },
+        };
+      });
 
       // Execute
       const response = await getEnabledBaselines(new ControlTowerClient({}));
@@ -2020,9 +2096,11 @@ describe('functions', () => {
     beforeEach(() => {
       vi.clearAllMocks();
 
-      (STSClient as vi.Mock).mockImplementation(() => ({
-        send: mockSend,
-      }));
+      (STSClient as vi.Mock).mockImplementation(function () {
+        return {
+          send: mockSend,
+        };
+      });
     });
 
     test('should return account details', async () => {

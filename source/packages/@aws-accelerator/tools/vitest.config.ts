@@ -12,6 +12,7 @@ export default defineConfig({
     reporters: ['default', 'junit'],
     outputFile: './test-reports/test-results.xml',
     coverage: {
+      exclude: ['**/*.d.ts', '**/dist/**', '**/node_modules/**'],
       provider: 'v8',
       reporter: ['text', 'lcov'],
     },

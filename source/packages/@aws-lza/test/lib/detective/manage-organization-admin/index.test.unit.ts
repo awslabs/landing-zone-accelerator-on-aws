@@ -45,12 +45,14 @@ vi.mock('../../../../common/functions', () => {
   return {
     ...vi.importActual('../../../../common/functions'),
     delay: vi.fn().mockResolvedValue(undefined),
-    getModuleDefaultParameters: vi.fn((moduleName, props) => ({
-      moduleName: props?.moduleName ?? moduleName,
-      globalRegion: props?.globalRegion ?? props?.region ?? 'us-east-1',
-      useExistingRole: props?.useExistingRole ?? false,
-      dryRun: props?.dryRun ?? false,
-    })),
+    getModuleDefaultParameters: vi.fn(function (moduleName, props) {
+      return {
+        moduleName: props?.moduleName ?? moduleName,
+        globalRegion: props?.globalRegion ?? props?.region ?? 'us-east-1',
+        useExistingRole: props?.useExistingRole ?? false,
+        dryRun: props?.dryRun ?? false,
+      };
+    }),
     setRetryStrategy: vi.fn().mockReturnValue({}),
     generateDryRunResponse: vi.fn(
       (moduleName, operation, message) =>
@@ -120,9 +122,11 @@ describe('DetectiveManageOrganizationAdminModule', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    (DetectiveClient as vi.Mock).mockImplementation(() => ({
-      send: mockSend,
-    }));
+    (DetectiveClient as vi.Mock).mockImplementation(function () {
+      return {
+        send: mockSend,
+      };
+    });
   });
 
   const setupSend = (...adminAccounts: Administrator[][]) => {

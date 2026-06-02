@@ -1345,7 +1345,7 @@ describe('SsmBlockPublicDocumentSharingModule', () => {
       // Mock Date to ensure consistent formatting
       const mockDate = new Date('2023-01-01T12:00:00.000Z');
       const originalDate = global.Date;
-      global.Date = vi.fn(() => mockDate) as unknown as DateConstructor;
+      global.Date = vi.fn(function() { return mockDate; }) as unknown as DateConstructor;
       global.Date.now = originalDate.now;
 
       const result = await SsmBlockPublicDocumentSharingModule.execute(params);
