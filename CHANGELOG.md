@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - fix(networking): make ALB listener targetGroup optional for redirect and fixed-response, and reject it where not allowed
 - fix(idc): missing org id for Identity Center dependency policy replacement
 - fix(networking): validate transit gateway and IPAM pool shareTargets cover VPC deployment-target accounts (issue #831)
+- fix(lambda): correct misleading SCP references in organization policy remediation lambda. SNS notification Subject lines changed from `Service Control Policy Remediation Failure/Success` to `Organization Policy Remediation Failure/Success`. Customers with email rules or automation matching the old Subject strings should update them after upgrade.
 
 ## [1.16.0] - 
 

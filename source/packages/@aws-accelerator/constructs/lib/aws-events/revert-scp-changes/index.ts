@@ -59,7 +59,15 @@ export async function handler(event: ScheduledEvent): Promise<{ statusCode: numb
     };
   }
 
-  const policyDetail: Policy = await getPolicyDetails(policyId);
+  const policyDetail = await getPolicyDetails(policyId);
+
+  if (!policyDetail) {
+    console.log(`Policy ${policyId} no longer exists. No remediation required.`);
+    return {
+      statusCode: 200,
+    };
+  }
+
   const organizationConfig = await getOrganizationConfig();
   const accountsConfig = await getAccountConfig();
 
@@ -122,7 +130,7 @@ async function reattachScp(policyId: string, target: string): Promise<void> {
   const attachPolicyParams = { PolicyId: policyId, TargetId: target };
   await throttlingBackOff(() => organizationsClient.send(new AttachPolicyCommand(attachPolicyParams)));
   await publishSuccessToSns(
-    `A manual SCP modification was automatically reverted by the Landing Zone Accelerator. Policy ${policyId} was reattached to ${target}.`,
+    `A manual organization policy modification was automatically reverted by the Landing Zone Accelerator. Policy ${policyId} was reattached to ${target}.`,
   );
 }
 
@@ -131,7 +139,7 @@ async function detachScp(policyId: string, target: string): Promise<void> {
   const detachPolicyParams = { PolicyId: policyId, TargetId: target };
   await throttlingBackOff(() => organizationsClient.send(new DetachPolicyCommand(detachPolicyParams)));
   await publishSuccessToSns(
-    `A manual SCP modification was automatically reverted by the Landing Zone Accelerator. Policy ${policyId} was detached from ${target}.`,
+    `A manual organization policy modification was automatically reverted by the Landing Zone Accelerator. Policy ${policyId} was detached from ${target}.`,
   );
 }
 
@@ -139,8 +147,10 @@ async function revertScpModification(policyDetail: Policy, orgConfig: Organizati
   const policyName = policyDetail.PolicySummary?.Name;
   const policyId = policyDetail.PolicySummary?.Id;
   if (!policyName || !policyId) {
-    await publishErrorToSns(`Error automatically remediating SCP modification. Investigate recent changes to SCPs.`);
-    throw Error(`SCP ${policyId} not found, exiting`);
+    await publishErrorToSns(
+      `Error automatically remediating organizational policy modification.${policyId ? ` Policy ID: ${policyId}.` : ''} Investigate recent changes to organizational policies.`,
+    );
+    throw Error(`Policy details incomplete (name: ${policyName}, id: ${policyId}), exiting`);
   }
 
   const originalPolicy = await getOriginalPolicyDocument(policyName, orgConfig);
@@ -149,12 +159,12 @@ async function revertScpModification(policyDetail: Policy, orgConfig: Organizati
   const updatePolicyParams = { Content: originalPolicy, PolicyId: policyId };
   await throttlingBackOff(() => organizationsClient.send(new UpdatePolicyCommand(updatePolicyParams)));
   await publishSuccessToSns(
-    `A manual SCP modification was automatically reverted by the Landing Zone Accelerator. Policy ${policyId} was updated to match the configuration provided in the aws-accelerator-config repository.`,
+    `A manual organization policy modification was automatically reverted by the Landing Zone Accelerator. Policy ${policyId} was updated to match the configuration provided in the aws-accelerator-config repository.`,
   );
   console.log('Policy update successful');
 }
 
-async function getPolicyDetails(policyId: string): Promise<Policy> {
+async function getPolicyDetails(policyId: string): Promise<Policy | undefined> {
   const getPolicyParams = { PolicyId: policyId };
 
   try {
@@ -163,8 +173,14 @@ async function getPolicyDetails(policyId: string): Promise<Policy> {
     );
     return response.Policy!;
   } catch (e) {
+    if (e instanceof Error && e.name === 'PolicyNotFoundException') {
+      console.log(`Policy ${policyId} not found - it may have been deleted. Skipping remediation.`);
+      return undefined;
+    }
     console.error(e);
-    await publishErrorToSns(`Error automatically remediating SCP modification. Investigate recent changes to SCPs.`);
+    await publishErrorToSns(
+      `Error automatically remediating organizational policy modification. Policy ID: ${policyId}. Investigate recent changes to organizational policies.`,
+    );
     throw Error(`Error fetching policy details for policy ${policyId} , exiting`);
   }
 }
@@ -196,7 +212,9 @@ async function getAccountConfig(): Promise<AccountsConfig> {
   const accountsConfig = AccountsConfig.load(path.join(__dirname, '/config'));
   await accountsConfig.loadAccountIds(partition, singleAccountMode, isOrgsEnabled, accountsConfig);
   if (!accountsConfig) {
-    await publishErrorToSns(`Error automatically remediating SCP modification. Investigate recent changes to SCPs.`);
+    await publishErrorToSns(
+      `Error automatically remediating organizational policy modification. Investigate recent changes to organizational policies.`,
+    );
     throw Error('Error parsing account-config file, object undefined');
   }
   return accountsConfig;
@@ -258,7 +276,7 @@ async function isTargetManagedByAccelerator(
 async function publishErrorToSns(errorMessage: string): Promise<void> {
   const publishParams = {
     Message: errorMessage,
-    Subject: 'Service Control Policy Remediation Failure',
+    Subject: 'Organization Policy Remediation Failure',
     TopicArn: snsTopicArn,
   };
   if (!snsTopicArn) {
@@ -277,7 +295,7 @@ async function publishErrorToSns(errorMessage: string): Promise<void> {
 async function publishSuccessToSns(successMessage: string): Promise<void> {
   const publishParams = {
     Message: successMessage,
-    Subject: 'Service Control Policy Remediation Success',
+    Subject: 'Organization Policy Remediation Success',
     TopicArn: snsTopicArn,
   };
   if (!snsTopicArn) {
