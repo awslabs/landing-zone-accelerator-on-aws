@@ -1,6 +1,19 @@
 import * as cdk from 'aws-cdk-lib';
-import { Template } from 'aws-cdk-lib/assertions';
+import { Match, Template } from 'aws-cdk-lib/assertions';
+import * as fs from 'fs';
+import * as os from 'os';
+import * as path from 'path';
+import {
+  AccountsConfig,
+  CustomizationsConfig,
+  GlobalConfig,
+  IamConfig,
+  NetworkConfig,
+  OrganizationConfig,
+  SecurityConfig,
+} from '@aws-accelerator/config';
 import { AcceleratorAspects, LambdaDefaultMemoryAspect, PermissionsBoundaryAspect } from '../lib/accelerator-aspects';
+import { CustomStack } from '../lib/stacks/custom-stack';
 import { afterAll, afterEach, beforeAll, beforeEach, describe, test } from 'vitest';
 
 describe('AcceleratorAspects', () => {
@@ -219,6 +232,93 @@ describe('AcceleratorAspects', () => {
       template.hasResourceProperties('AWS::Lambda::Function', {
         MemorySize: 1024,
       });
+    });
+  });
+
+  describe('AwsSolutionAspect', () => {
+    test('should add SOLUTION_ID environment variable to LZA-managed Lambda functions', () => {
+      // GIVEN
+      new cdk.aws_lambda.Function(stack, 'TestFunction', {
+        runtime: cdk.aws_lambda.Runtime.NODEJS_20_X,
+        handler: 'index.handler',
+        code: cdk.aws_lambda.Code.fromInline('exports.handler = function() { }'),
+      });
+
+      // WHEN
+      new AcceleratorAspects(app, 'aws', false);
+
+      // THEN
+      template = Template.fromStack(stack);
+      template.hasResourceProperties('AWS::Lambda::Function', {
+        Environment: {
+          Variables: {
+            SOLUTION_ID: Match.stringLikeRegexp('AwsSolution/SO0199/.*'),
+          },
+        },
+      });
+    });
+
+    test('should not modify Lambda functions defined in a customization CustomStack (issue #643)', () => {
+      // GIVEN - a customer customization template imported verbatim via CfnInclude
+      const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'lza-aspect-test-'));
+      const templateFile = 'lambda-edge.yaml';
+      fs.writeFileSync(
+        path.join(tmpDir, templateFile),
+        [
+          "AWSTemplateFormatVersion: '2010-09-09'",
+          'Resources:',
+          '  HelloWorldLambdaFunction:',
+          '    Type: AWS::Lambda::Function',
+          '    Properties:',
+          '      Handler: index.lambda_handler',
+          '      Role: arn:aws:iam::111111111111:role/edge-role',
+          '      Runtime: python3.12',
+          '      Code:',
+          '        ZipFile: |',
+          '          def lambda_handler(event, context):',
+          "              return 'Hello, World!'",
+          '',
+        ].join('\n'),
+      );
+
+      const customStack = new CustomStack(app, 'TestCustomStack', {
+        env: { account: '111111111111', region: 'us-east-1' },
+        configDirPath: tmpDir,
+        accountsConfig: new AccountsConfig({
+          managementAccountEmail: 'management@example.com',
+          logArchiveAccountEmail: 'logArchive@example.com',
+          auditAccountEmail: 'audit@example.com',
+        }),
+        globalConfig: new GlobalConfig({
+          homeRegion: 'us-east-1',
+          controlTower: { enable: false },
+          managementAccountAccessRole: 'AWSControlTowerExecution',
+        }),
+        iamConfig: new IamConfig(),
+        networkConfig: new NetworkConfig(),
+        organizationConfig: new OrganizationConfig(),
+        securityConfig: new SecurityConfig(),
+        customizationsConfig: new CustomizationsConfig(),
+        partition: 'aws',
+        centralizedLoggingRegion: 'us-east-1',
+        runOrder: 1,
+        stackName: 'TestCustomStack',
+        templateFile,
+        terminationProtection: false,
+        ssmParamNamePrefix: '/accelerator',
+      });
+
+      // WHEN
+      new AcceleratorAspects(app, 'aws', false);
+
+      // THEN - the customer Lambda must be left untouched (no Environment/SOLUTION_ID injected)
+      const customTemplate = Template.fromStack(customStack);
+      customTemplate.hasResourceProperties('AWS::Lambda::Function', {
+        Handler: 'index.lambda_handler',
+        Environment: Match.absent(),
+      });
+
+      fs.rmSync(tmpDir, { recursive: true, force: true });
     });
   });
 

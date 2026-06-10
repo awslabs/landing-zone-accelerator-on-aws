@@ -15,6 +15,7 @@ import * as cdk from 'aws-cdk-lib';
 import { IConstruct } from 'constructs';
 import { version } from '../../../../package.json';
 import { createLogger, getGlobalRegion, getNodeVersion } from '@aws-accelerator/utils';
+import { CustomStack } from './stacks/custom-stack';
 
 const logger = createLogger(['accelerator-aspects']);
 /**
@@ -198,6 +199,14 @@ class AwsSolutionAspect implements cdk.IAspect {
   visit(node: IConstruct): void {
     if (node instanceof cdk.CfnResource) {
       if (node.cfnResourceType === 'AWS::Lambda::Function') {
+        // Skip Lambda functions defined in customer-provided customization templates.
+        // These are imported verbatim via CfnInclude in CustomStack, and injecting the
+        // SOLUTION_ID environment variable would modify customer code. It also breaks
+        // Lambda@Edge functions, which do not support environment variables.
+        // See https://github.com/awslabs/landing-zone-accelerator-on-aws/issues/643
+        if (cdk.Stack.of(node) instanceof CustomStack) {
+          return;
+        }
         node.addPropertyOverride('Environment.Variables.SOLUTION_ID', `AwsSolution/SO0199/${version}`);
       }
     }
