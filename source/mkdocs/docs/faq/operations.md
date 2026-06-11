@@ -35,6 +35,53 @@ Updating the `AWSAccelerator-InstallerStack` with `ConfigurationRepositoryLocati
 7. Release a change on `AWSAccelerator-Pipeline` to deploy the migrated configuration.
 8. Delete the temporary bucket from step 2.
 
+## Why doesn't my updated GitHub token take effect?
+
+This applies only when **all** of the following are true: you deploy from a GitHub source, CloudTrail is **not** enabled in the management account, and you have updated the `accelerator/github-token` secret after deployment. In that case the installer pipeline keeps using the old token and fails at the `Source` stage once it expires. If CloudTrail is enabled (AWS Control Tower enables it for you), token updates sync automatically and this issue does not occur.
+
+The personal access token is stored in the `accelerator/github-token` secret in Secrets Manager. When the installer stack is deployed, CloudFormation resolves the secret once and writes its value directly into the installer pipeline's GitHub `Source` action. The pipeline does **not** re-read the secret afterward, so updating the secret on its own leaves the pipeline using the value captured at deploy time.
+
+To keep the pipeline in sync, the installer deploys an `update-pipeline-github-token` Lambda that rewrites the token in the pipeline whenever the secret changes. That Lambda is triggered by an EventBridge rule which matches the Secrets Manager `PutSecretValue` API call **in CloudTrail**. Without CloudTrail in the management account, the API call is never recorded, the rule never fires, and the pipeline keeps using the old token. After the old token expires, the pipeline fails at the `Source` stage with an error similar to:
+
+```
+Could not access the GitHub repository: "landing-zone-accelerator-on-aws".
+The access token might be invalid or has been revoked.
+```
+
+You have two ways to address this.
+
+**Option A - Enable CloudTrail (recommended).** Enable a CloudTrail trail in the management account so Secrets Manager API calls are recorded. Future token updates then sync to the pipeline automatically with no further action.
+
+**Option B - Update the token manually.** Use this if you cannot enable CloudTrail, or to recover immediately after a rotation.
+
+1. Update the secret value. Follow [Update the value for an AWS Secrets Manager secret](https://docs.aws.amazon.com/secretsmanager/latest/userguide/manage_update-secret-value.html) and set the new token as the plaintext value of the `accelerator/github-token` secret.
+
+2. Find the installer pipeline name. The GitHub token lives only on the **installer** pipeline (the core `*-Pipeline` deploys from your configuration repository, not GitHub). The name depends on your deployment: it is `AWSAccelerator-Installer` by default, `<AcceleratorPrefix>-Installer` if you set a custom prefix, or `<AcceleratorQualifier>-installer` for external-pipeline deployments. To list the exact name (replace `<profile>` with your AWS CLI profile):
+
+    ```bash
+    aws codepipeline list-pipelines --profile <profile> \
+      --query "pipelines[?contains(name, 'nstaller')].name"
+    ```
+
+3. Export the current pipeline definition to a file. This returns the full structure, including the GitHub `Source` action whose `OAuthToken` needs refreshing. See [get-pipeline](https://docs.aws.amazon.com/cli/latest/reference/codepipeline/get-pipeline.html).
+
+    ```bash
+    aws codepipeline get-pipeline --name <installer-pipeline-name> --profile <profile> \
+      > pipeline.json
+    ```
+
+4. Edit `pipeline.json`:
+    - In the `Source` stage's `Source` action, set `configuration.OAuthToken` to your new token value (the exported file shows it masked as `****`).
+    - Remove the top-level `metadata` block (the `pipelineArn`, `created`, and `updated` fields). `update-pipeline` rejects the file if it is present.
+
+5. Apply the updated definition. Each successful update increments the pipeline version. See [update-pipeline](https://docs.aws.amazon.com/cli/latest/reference/codepipeline/update-pipeline.html).
+
+    ```bash
+    aws codepipeline update-pipeline --cli-input-json file://pipeline.json --profile <profile>
+    ```
+
+6. Release a change to confirm the `Source` stage now succeeds.
+
 ## How do I manage my SCPs when using CT and Landing Zone Accelerator?
 
 You can use Landing Zone Accelerator to deploy custom SCPs into your environment in addition to the SCPs that are deployed and managed by CT. Landing Zone Accelerator will only manage SCPs that are part of the accelerator configuration, and will not manage any SCPs that are deployed by CT. Note, Organizations sets a limit of 5 SCPs per OU and CT will consume up to 3 SCPs which will leave 2 additional SCPs that you can add. For finer grained SCPs, Landing Zone Accelerator also allows you to deploy custom SCPs to specific accounts.

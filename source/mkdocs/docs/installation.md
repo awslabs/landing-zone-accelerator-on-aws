@@ -53,6 +53,9 @@ You must store the personal access token in Secrets Manager in the account and r
 9. On the Configure rotation step, click Next
 10. On the Review step, click Store
 
+!!! note
+    If you later update the `accelerator/github-token` secret in an environment where CloudTrail is **not** enabled in the management account, the installer pipeline will keep using the old token and fail at the `Source` stage once it expires. This only affects deployments without CloudTrail (AWS Control Tower enables it for you); when CloudTrail is enabled, token updates sync to the pipeline automatically. To recover without CloudTrail, see [Why doesn't my updated GitHub token take effect?](./faq/operations.md#why-doesnt-my-updated-github-token-take-effect) in the Operations FAQ for how to sync the token manually.
+
 ### 4. Deploy the Installer stack
 
 1. Configure the AWS CLI CloudFormation command for the Installer stack
