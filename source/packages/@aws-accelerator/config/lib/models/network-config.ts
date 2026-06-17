@@ -6210,6 +6210,7 @@ export interface INfwRuleSourceStatelessRuleDefinitionConfig {
  *   ruleDefinition:
  *     actions: ['aws:pass']
  *     matchAttributes:
+ *       protocols: [6]
  *       sources:
  *         - 10.1.0.0/16
  *       sourcePorts:
@@ -6257,6 +6258,7 @@ export interface INfwRuleSourceStatelessRuleConfig {
  *     ruleDefinition:
  *       actions: ['aws:pass']
  *       matchAttributes:
+ *         protocols: [6]
  *         sources:
  *           - 10.1.0.0/16
  *         sourcePorts:
@@ -6347,6 +6349,7 @@ export interface INfwStatelessRulesAndCustomActionsConfig {
  *       ruleDefinition:
  *         actions: ['aws:pass']
  *         matchAttributes:
+ *           protocols: [6]
  *           sources:
  *             - 10.1.0.0/16
  *           sourcePorts:
@@ -6604,6 +6607,7 @@ export interface INfwRuleGroupRuleConfig {
  *             ruleDefinition:
  *               actions: ['aws:pass']
  *               matchAttributes:
+ *                 protocols: [6]
  *                 sources:
  *                   - 10.1.0.0/16
  *                 sourcePorts:
