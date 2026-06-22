@@ -36,11 +36,14 @@ universal-config:cicd-integ-replicator:
   variables:
     ACCOUNT_ID: "${LZA_CICD_INTEG_REPLICATOR_ACCOUNT_ID}"
     AWS_CREDS_TARGET_ROLE: "arn:${PARTITION}:iam::${ACCOUNT_ID}:role/${GITLAB_RUNNER_ROLE_NAME}"
+  # Temporarily disabled: the universal-config source repo is unavailable, so the clone
+  # step fails. To re-enable, restore the commented "when: always" rule below and set
+  # UNIVERSAL_CONFIG_REPO_PATH at the top of this file to the correct source path.
   rules:
     - if: $SKIP_MIRROR_JOBS == "yes"
       when: never
-    - if: $CI_PROJECT_ID == "21753" && $CI_COMMIT_BRANCH == "integ" && $CI_MERGE_REQUEST_IID == null
-      when: always
+    # - if: $CI_PROJECT_ID == "21753" && $CI_COMMIT_BRANCH == "integ" && $CI_MERGE_REQUEST_IID == null
+    #   when: always
     - when: never
 
 # Account 2: LZA CICD Main Replicator Account
@@ -75,9 +78,12 @@ universal-config:dev-team-replicator:
   variables:
     ACCOUNT_ID: "${LZA_DEV_TEAM_REPLICATOR_ACCOUNT_ID}"
     AWS_CREDS_TARGET_ROLE: "arn:${PARTITION}:iam::${ACCOUNT_ID}:role/${GITLAB_RUNNER_ROLE_NAME}"
+  # Temporarily disabled: the universal-config source repo is unavailable, so the clone
+  # step fails. To re-enable, restore the commented "when: always" rule below and set
+  # UNIVERSAL_CONFIG_REPO_PATH at the top of this file to the correct source path.
   rules:
     - if: $SKIP_MIRROR_JOBS == "yes"
       when: never
-    - if: $CI_PROJECT_ID == "21753" && $CI_MERGE_REQUEST_IID == null
-      when: always
+    # - if: $CI_PROJECT_ID == "21753" && $CI_MERGE_REQUEST_IID == null
+    #   when: always
     - when: never
