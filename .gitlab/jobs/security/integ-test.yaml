@@ -20,7 +20,7 @@
 #
 # Prereq job (integ:prereq):
 #   1. EXECUTE_INTEGRATION_TEST=No  → never run (explicit kill switch)
-#   2. Remote repo (CI_PROJECT_ID=11925) + not integ branch → never run
+#   2. Remote repo (CI_PROJECT_ID=21753) + not integ branch → never run
 #   3. EXECUTE_INTEGRATION_TEST=Yes → always run
 #   4. Otherwise → never
 #   Uses --no-fail-on-empty-changeset so it's a no-op when infra is unchanged.
@@ -28,7 +28,7 @@
 #
 # Module test jobs (e.g., integ:macie):
 #   1. EXECUTE_INTEGRATION_TEST=No  → never run (explicit kill switch)
-#   2. Remote repo (CI_PROJECT_ID=11925) + not integ branch → never run
+#   2. Remote repo (CI_PROJECT_ID=21753) + not integ branch → never run
 #      (prevents running on main, release, or MR pipelines in the remote)
 #   3. EXECUTE_INTEGRATION_TEST=Yes + module files changed → run
 #   4. Otherwise → never
@@ -44,6 +44,10 @@ integ:prereq:aws:us-east-1:
   stage: pipeline
   needs: ["accelerator:build"]
   variables:
+    KUBERNETES_CPU_REQUEST: "4"
+    KUBERNETES_CPU_LIMIT: "4"
+    KUBERNETES_MEMORY_REQUEST: "16Gi"
+    KUBERNETES_MEMORY_LIMIT: "16Gi"
     ENV_NAME: sampleConfig
     ACCOUNT_ID: "${SAMPLE_CONFIG_ENV_MANAGEMENT_ACCOUNT_ID}"
     LOGARCHIVE_ACCOUNT_ID: "${SAMPLE_CONFIG_ENV_LOGARCHIVE_ACCOUNT_ID}"
@@ -52,7 +56,6 @@ integ:prereq:aws:us-east-1:
     AWS_CREDS_TARGET_ROLE: "arn:${PARTITION}:iam::${ACCOUNT_ID}:role/${INTEGRATION_TEST_ROLE_NAME}"
   tags:
     - arch:amd64
-    - size:large
   script:
     - wget --progress=dot:mega -O /tmp/awscliv2.zip https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip
     - unzip -q /tmp/awscliv2.zip -d /tmp
@@ -67,7 +70,7 @@ integ:prereq:aws:us-east-1:
     - if: $EXECUTE_INTEGRATION_TEST == "No"
       when: never
     # Remote repo: only integ branch
-    - if: $CI_PROJECT_ID == "11925" && $CI_COMMIT_BRANCH != "integ"
+    - if: $CI_PROJECT_ID == "21753" && $CI_COMMIT_BRANCH != "integ"
       when: never
     - if: $EXECUTE_INTEGRATION_TEST == "Yes"
       when: always
@@ -84,6 +87,10 @@ integ:macie:aws:us-east-1:
     - job: integ:prereq:aws:us-east-1
       artifacts: true
   variables:
+    KUBERNETES_CPU_REQUEST: "4"
+    KUBERNETES_CPU_LIMIT: "4"
+    KUBERNETES_MEMORY_REQUEST: "16Gi"
+    KUBERNETES_MEMORY_LIMIT: "16Gi"
     ENV_NAME: sampleConfig
     ACCOUNT_ID: "${SAMPLE_CONFIG_ENV_MANAGEMENT_ACCOUNT_ID}"
     PARTITION: aws
@@ -98,7 +105,6 @@ integ:macie:aws:us-east-1:
     # the prereq job's dotenv artifact (actual KMS key ARN, not alias).
   tags:
     - arch:amd64
-    - size:large
   script:
     - "cd source/packages/@aws-accelerator/accelerator"
     - "yarn test:integration test/integration/modules/macie/index.test.integration.ts"
@@ -112,7 +118,7 @@ integ:macie:aws:us-east-1:
     - if: $EXECUTE_INTEGRATION_TEST == "No"
       when: never
     # Remote repo: only integ branch
-    - if: $CI_PROJECT_ID == "11925" && $CI_COMMIT_BRANCH != "integ"
+    - if: $CI_PROJECT_ID == "21753" && $CI_COMMIT_BRANCH != "integ"
       when: never
     - if: $EXECUTE_INTEGRATION_TEST == "Yes"
       changes:
@@ -137,6 +143,10 @@ integ:tgw:aws:us-east-1:
     - job: integ:prereq:aws:us-east-1
       artifacts: true
   variables:
+    KUBERNETES_CPU_REQUEST: "4"
+    KUBERNETES_CPU_LIMIT: "4"
+    KUBERNETES_MEMORY_REQUEST: "16Gi"
+    KUBERNETES_MEMORY_LIMIT: "16Gi"
     ENV_NAME: sampleConfig
     ACCOUNT_ID: "${SAMPLE_CONFIG_ENV_MANAGEMENT_ACCOUNT_ID}"
     PARTITION: aws
@@ -154,7 +164,6 @@ integ:tgw:aws:us-east-1:
     # are injected from the prereq job's dotenv (set by tgw-prereqs.sh).
   tags:
     - arch:amd64
-    - size:large
   script:
     - "cd source/packages/@aws-accelerator/accelerator"
     - "yarn test:integration test/integration/modules/tgw/index.test.integration.ts"
@@ -168,7 +177,7 @@ integ:tgw:aws:us-east-1:
     - if: $EXECUTE_INTEGRATION_TEST == "No"
       when: never
     # Remote repo: only integ branch
-    - if: $CI_PROJECT_ID == "11925" && $CI_COMMIT_BRANCH != "integ"
+    - if: $CI_PROJECT_ID == "21753" && $CI_COMMIT_BRANCH != "integ"
       when: never
     - if: $EXECUTE_INTEGRATION_TEST == "Yes"
       changes:

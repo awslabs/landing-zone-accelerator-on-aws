@@ -5,6 +5,10 @@ integ:detective:enable-organization-admin:aws:us-east-1:
   stage: pipeline
   needs: ["accelerator:build"]
   variables:
+    KUBERNETES_CPU_REQUEST: "4"
+    KUBERNETES_CPU_LIMIT: "4"
+    KUBERNETES_MEMORY_REQUEST: "16Gi"
+    KUBERNETES_MEMORY_LIMIT: "16Gi"
     ENV_NAME: sampleConfig
     ACCOUNT_ID: "${SAMPLE_CONFIG_ENV_MANAGEMENT_ACCOUNT_ID}"
     PARTITION: aws
@@ -12,7 +16,6 @@ integ:detective:enable-organization-admin:aws:us-east-1:
     AWS_CREDS_TARGET_ROLE: "arn:${PARTITION}:iam::${ACCOUNT_ID}:role/${INTEGRATION_TEST_ROLE_NAME}"
   tags:
     - arch:amd64
-    - size:large
   script:
     - "cd source/packages/@aws-accelerator/constructs/lib/aws-detective/enable-organization-admin-account"
     - "yarn test:unit"
@@ -33,6 +36,10 @@ integ:detective:enable-organization-admin:aws:us-west-2:
   stage: pipeline
   needs: ["accelerator:build"]
   variables:
+    KUBERNETES_CPU_REQUEST: "4"
+    KUBERNETES_CPU_LIMIT: "4"
+    KUBERNETES_MEMORY_REQUEST: "16Gi"
+    KUBERNETES_MEMORY_LIMIT: "16Gi"
     ENV_NAME: sampleConfig
     ACCOUNT_ID: "${SAMPLE_CONFIG_ENV_MANAGEMENT_ACCOUNT_ID}"
     PARTITION: aws
@@ -40,7 +47,6 @@ integ:detective:enable-organization-admin:aws:us-west-2:
     AWS_CREDS_TARGET_ROLE: "arn:${PARTITION}:iam::${ACCOUNT_ID}:role/${INTEGRATION_TEST_ROLE_NAME}"
   tags:
     - arch:amd64
-    - size:large
   script:
     - "cd source/packages/@aws-accelerator/constructs/lib/aws-detective/enable-organization-admin-account"
     - "yarn test:unit"
@@ -61,6 +67,10 @@ integ:direct-connect-gateway:aws:us-east-1:
   stage: pipeline
   needs: ["accelerator:build"]
   variables:
+    KUBERNETES_CPU_REQUEST: "4"
+    KUBERNETES_CPU_LIMIT: "4"
+    KUBERNETES_MEMORY_REQUEST: "16Gi"
+    KUBERNETES_MEMORY_LIMIT: "16Gi"
     ENV_NAME: sampleConfig
     ACCOUNT_ID: "${SAMPLE_CONFIG_ENV_NETWORK_ACCOUNT_ID}"
     PARTITION: aws
@@ -68,7 +78,6 @@ integ:direct-connect-gateway:aws:us-east-1:
     AWS_CREDS_TARGET_ROLE: "arn:${PARTITION}:iam::${ACCOUNT_ID}:role/${INTEGRATION_TEST_ROLE_NAME}"
   tags:
     - arch:amd64
-    - size:large
   script:
     - "cd source/packages/@aws-accelerator/constructs/lib/aws-directconnect/direct-connect-gateway"
     - "yarn test:unit"
@@ -89,6 +98,10 @@ integ:macie:enable-organization-admin:aws:us-east-1:
   stage: pipeline
   needs: ["accelerator:build"]
   variables:
+    KUBERNETES_CPU_REQUEST: "4"
+    KUBERNETES_CPU_LIMIT: "4"
+    KUBERNETES_MEMORY_REQUEST: "16Gi"
+    KUBERNETES_MEMORY_LIMIT: "16Gi"
     ENV_NAME: sampleConfig
     ACCOUNT_ID: "${SAMPLE_CONFIG_ENV_MANAGEMENT_ACCOUNT_ID}"
     PARTITION: aws
@@ -96,7 +109,6 @@ integ:macie:enable-organization-admin:aws:us-east-1:
     AWS_CREDS_TARGET_ROLE: "arn:${PARTITION}:iam::${ACCOUNT_ID}:role/${INTEGRATION_TEST_ROLE_NAME}"
   tags:
     - arch:amd64
-    - size:large
   script:
     - "env"
     - "cd source/packages/@aws-accelerator/constructs/lib/aws-macie/enable-organization-admin-account"
@@ -118,6 +130,10 @@ integ:macie:enable-organization-admin:aws:us-west-2:
   stage: pipeline
   needs: ["accelerator:build"]
   variables:
+    KUBERNETES_CPU_REQUEST: "4"
+    KUBERNETES_CPU_LIMIT: "4"
+    KUBERNETES_MEMORY_REQUEST: "16Gi"
+    KUBERNETES_MEMORY_LIMIT: "16Gi"
     ENV_NAME: sampleConfig
     ACCOUNT_ID: "${SAMPLE_CONFIG_ENV_MANAGEMENT_ACCOUNT_ID}"
     PARTITION: aws
@@ -125,7 +141,6 @@ integ:macie:enable-organization-admin:aws:us-west-2:
     AWS_CREDS_TARGET_ROLE: "arn:${PARTITION}:iam::${ACCOUNT_ID}:role/${INTEGRATION_TEST_ROLE_NAME}"
   tags:
     - arch:amd64
-    - size:large
   script:
     - "cd source/packages/@aws-accelerator/constructs/lib/aws-macie/enable-organization-admin-account"
     - "yarn test:unit"
@@ -146,6 +161,10 @@ integ:guardduty:enable-organization-admin:aws:us-east-1:
   stage: pipeline
   needs: ["accelerator:build"]
   variables:
+    KUBERNETES_CPU_REQUEST: "4"
+    KUBERNETES_CPU_LIMIT: "4"
+    KUBERNETES_MEMORY_REQUEST: "16Gi"
+    KUBERNETES_MEMORY_LIMIT: "16Gi"
     ENV_NAME: sampleConfig
     ACCOUNT_ID: "${SAMPLE_CONFIG_ENV_MANAGEMENT_ACCOUNT_ID}"
     PARTITION: aws
@@ -153,7 +172,6 @@ integ:guardduty:enable-organization-admin:aws:us-east-1:
     AWS_CREDS_TARGET_ROLE: "arn:${PARTITION}:iam::${ACCOUNT_ID}:role/${INTEGRATION_TEST_ROLE_NAME}"
   tags:
     - arch:amd64
-    - size:large
   script:
     - "cd source/packages/@aws-accelerator/constructs/lib/aws-guardduty/enable-organization-admin-account"
     - "yarn test:unit"
@@ -174,6 +192,10 @@ integ:guardduty:enable-organization-admin:aws:us-west-2:
   stage: pipeline
   needs: ["accelerator:build"]
   variables:
+    KUBERNETES_CPU_REQUEST: "4"
+    KUBERNETES_CPU_LIMIT: "4"
+    KUBERNETES_MEMORY_REQUEST: "16Gi"
+    KUBERNETES_MEMORY_LIMIT: "16Gi"
     ENV_NAME: sampleConfig
     ACCOUNT_ID: "${SAMPLE_CONFIG_ENV_MANAGEMENT_ACCOUNT_ID}"
     PARTITION: aws
@@ -181,7 +203,6 @@ integ:guardduty:enable-organization-admin:aws:us-west-2:
     AWS_CREDS_TARGET_ROLE: "arn:${PARTITION}:iam::${ACCOUNT_ID}:role/${INTEGRATION_TEST_ROLE_NAME}"
   tags:
     - arch:amd64
-    - size:large
   script:
     - "cd source/packages/@aws-accelerator/constructs/lib/aws-guardduty/enable-organization-admin-account"
     - "yarn test:unit"
@@ -202,6 +223,10 @@ integ:audit-manager:enable-organization-admin:aws:us-east-1:
   stage: pipeline
   needs: ["accelerator:build"]
   variables:
+    KUBERNETES_CPU_REQUEST: "4"
+    KUBERNETES_CPU_LIMIT: "4"
+    KUBERNETES_MEMORY_REQUEST: "16Gi"
+    KUBERNETES_MEMORY_LIMIT: "16Gi"
     ENV_NAME: sampleConfig
     ACCOUNT_ID: "${SAMPLE_CONFIG_ENV_MANAGEMENT_ACCOUNT_ID}"
     PARTITION: aws
@@ -209,7 +234,6 @@ integ:audit-manager:enable-organization-admin:aws:us-east-1:
     AWS_CREDS_TARGET_ROLE: "arn:${PARTITION}:iam::${ACCOUNT_ID}:role/${INTEGRATION_TEST_ROLE_NAME}"
   tags:
     - arch:amd64
-    - size:large
   script:
     - "cd source/packages/@aws-accelerator/constructs/lib/aws-auditmanager/enable-organization-admin-account"
     - "yarn test:unit"
@@ -230,6 +254,10 @@ integ:audit-manager:enable-organization-admin:aws:us-west-2:
   stage: pipeline
   needs: ["accelerator:build"]
   variables:
+    KUBERNETES_CPU_REQUEST: "4"
+    KUBERNETES_CPU_LIMIT: "4"
+    KUBERNETES_MEMORY_REQUEST: "16Gi"
+    KUBERNETES_MEMORY_LIMIT: "16Gi"
     ENV_NAME: sampleConfig
     ACCOUNT_ID: "${SAMPLE_CONFIG_ENV_MANAGEMENT_ACCOUNT_ID}"
     PARTITION: aws
@@ -237,7 +265,6 @@ integ:audit-manager:enable-organization-admin:aws:us-west-2:
     AWS_CREDS_TARGET_ROLE: "arn:${PARTITION}:iam::${ACCOUNT_ID}:role/${INTEGRATION_TEST_ROLE_NAME}"
   tags:
     - arch:amd64
-    - size:large
   script:
     - "cd source/packages/@aws-accelerator/constructs/lib/aws-auditmanager/enable-organization-admin-account"
     - "yarn test:unit"
@@ -258,6 +285,10 @@ integ:register-organizational-unit:aws:us-east-1:
   stage: pipeline
   needs: ["accelerator:build"]
   variables:
+    KUBERNETES_CPU_REQUEST: "4"
+    KUBERNETES_CPU_LIMIT: "4"
+    KUBERNETES_MEMORY_REQUEST: "16Gi"
+    KUBERNETES_MEMORY_LIMIT: "16Gi"
     ENV_NAME: sampleConfig
     ACCOUNT_ID: "${SAMPLE_CONFIG_ENV_MANAGEMENT_ACCOUNT_ID}"
     PARTITION: aws
@@ -265,7 +296,6 @@ integ:register-organizational-unit:aws:us-east-1:
     AWS_CREDS_TARGET_ROLE: "arn:${PARTITION}:iam::${ACCOUNT_ID}:role/${INTEGRATION_TEST_ROLE_NAME}"
   tags:
     - arch:amd64
-    - size:large
   script:
     - "cd source/packages/@aws-lza/test/lib/control-tower/register-organizational-unit"
     - "yarn test:integration"

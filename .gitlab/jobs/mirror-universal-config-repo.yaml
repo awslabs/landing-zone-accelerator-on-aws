@@ -39,7 +39,7 @@ universal-config:cicd-integ-replicator:
   rules:
     - if: $SKIP_MIRROR_JOBS == "yes"
       when: never
-    - if: $CI_PROJECT_ID == "11925" && $CI_COMMIT_BRANCH == "integ" && $CI_MERGE_REQUEST_IID == null
+    - if: $CI_PROJECT_ID == "21753" && $CI_COMMIT_BRANCH == "integ" && $CI_MERGE_REQUEST_IID == null
       when: always
     - when: never
 
@@ -52,7 +52,7 @@ universal-config:cicd-main-replicator:
   rules:
     - if: $SKIP_MIRROR_JOBS == "yes"
       when: never
-    - if: $CI_PROJECT_ID == "11925" && $CI_COMMIT_BRANCH == "main" && $CI_MERGE_REQUEST_IID == null
+    - if: $CI_PROJECT_ID == "21753" && $CI_COMMIT_BRANCH == "main" && $CI_MERGE_REQUEST_IID == null
       when: always
     - when: never
 
@@ -65,7 +65,7 @@ universal-config:release-replicator:
   rules:
     - if: $SKIP_MIRROR_JOBS == "yes"
       when: never
-    - if: $CI_PROJECT_ID == "11925" && $CI_COMMIT_TAG =~ /v(\d.+){2}\d/
+    - if: $CI_PROJECT_ID == "21753" && $CI_COMMIT_TAG =~ /v(\d.+){2}\d/
       when: always
     - when: never
 
@@ -78,6 +78,6 @@ universal-config:dev-team-replicator:
   rules:
     - if: $SKIP_MIRROR_JOBS == "yes"
       when: never
-    - if: $CI_PROJECT_ID == "11925" && $CI_MERGE_REQUEST_IID == null
+    - if: $CI_PROJECT_ID == "21753" && $CI_MERGE_REQUEST_IID == null
       when: always
     - when: never
