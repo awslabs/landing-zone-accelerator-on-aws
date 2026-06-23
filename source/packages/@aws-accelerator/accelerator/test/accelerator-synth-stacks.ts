@@ -606,8 +606,13 @@ export class AcceleratorSynthStacks {
       return;
     }
 
-    this.saveStackTemplate(`${AcceleratorStackNames[AcceleratorStage.NETWORK_VPC]}`);
-    this.copySynthesizedTemplates();
+    // V2 network stacks use LzaResourceLookup, which reads pre-synthesized V1
+    // NetworkVpc templates from cfn-templates/{account}/{region}/{stack}.json to
+    // perform the V1->V2 migration lookup. In tests this read is redirected (via a
+    // fs.readFileSync spy in each V2 test) to the committed test/cfn-templates
+    // fixtures, which are the source of truth. There is intentionally no on-disk
+    // template generation here: regenerate the fixtures manually when V1 stack
+    // output changes (synthesize the NetworkVpc stacks and update test/cfn-templates).
 
     // Create separate CDK app for V2 synthesis
     const v2App = new cdk.App({
@@ -1099,42 +1104,6 @@ export class AcceleratorSynthStacks {
             },
           ),
         );
-      }
-    }
-  }
-
-  private async copySynthesizedTemplates() {
-    const sourcePath = path.join(__dirname, `configs/${this.configFolderName}/synthesized-cfn-templates`);
-    const destinationPath = path.join(__dirname, '../cfn-templates');
-    console.log(`Copying synthesized templates from ${sourcePath} into ${destinationPath} path.`);
-    const sourcePathExists = fs.existsSync(sourcePath);
-    if (sourcePathExists) {
-      fs.cpSync(sourcePath, destinationPath, { recursive: true });
-      fs.rmSync(sourcePath, { recursive: true, force: true });
-    }
-  }
-
-  /**
-   * Function to save the templates for V2 stack snapshot test
-   *
-   * @description
-   * Use this function during development to generate template to be used for future V2 stack snapshot test
-   * @param stackPrefix string
-   */
-  public async saveStackTemplate(stackPrefix: string) {
-    for (const [key, stack] of this.stacks) {
-      if (stack.stackName.startsWith(stackPrefix)) {
-        console.log(`Saving stack ${stack.stackName} template. Stack key is ${key}`);
-        const outputDir = `${this.configDirPath}/synthesized-cfn-templates/${stack.account}/${stack.region}`;
-        console.log(`Getting template for stack ${stack.stackName}`);
-        const template = this.app.synth().getStackByName(stack.stackName).template;
-        if (!fs.existsSync(outputDir)) {
-          fs.mkdirSync(outputDir, { recursive: true });
-        }
-
-        fs.writeFileSync(path.join(outputDir, `${stack.stackName}.json`), JSON.stringify(template, null, 2));
-        // eslint-disable-next-line @typescript-eslint/no-unused-expressions
-        this.app.synth().getStackByName(stack.stackName).template;
       }
     }
   }
