@@ -12,13 +12,43 @@
  */
 
 import { AcceleratorStage } from '../lib/accelerator-stage';
-import { describe } from 'vitest';
+import { describe, test } from 'vitest';
+import { Match, Template } from 'aws-cdk-lib/assertions';
+import * as cdk from 'aws-cdk-lib';
 import { snapShotTest } from './snapshot-test';
-import { Create } from './accelerator-test-helpers';
+import { Create, memoize } from './accelerator-test-helpers';
+
+const getStacks = memoize(Create.stacksProvider(AcceleratorStage.CUSTOMIZATIONS));
 
 describe('ApplicationsStack', () => {
-  snapShotTest(
-    'Construct(ApplicationsStack): ',
-    Create.stackProvider(`SharedServices-us-east-1`, AcceleratorStage.CUSTOMIZATIONS),
-  );
+  snapShotTest('Construct(ApplicationsStack): ', Create.stackProviderFromStacks(`SharedServices-us-east-1`, getStacks));
+});
+
+describe('ApplicationsStack ALB with no targetGroup', () => {
+  const getTemplate = () =>
+    Template.fromStack(getStacks().stacks.get('App-appAlbNoTargetGroup-us-east-1')! as cdk.Stack);
+
+  test('redirect/fixed-response listeners synthesize without a target group', () => {
+    const template = getTemplate();
+    // an ALB whose only listeners are redirect/fixed-response defines no target groups,
+    // but its listeners must still synthesize (regression: previously dropped to undefined)
+    template.resourceCountIs('AWS::ElasticLoadBalancingV2::Listener', 2);
+    template.hasResourceProperties('AWS::ElasticLoadBalancingV2::Listener', {
+      DefaultActions: [
+        Match.objectLike({ Type: 'redirect', RedirectConfig: Match.objectLike({ StatusCode: 'HTTP_301' }) }),
+      ],
+    });
+    template.hasResourceProperties('AWS::ElasticLoadBalancingV2::Listener', {
+      DefaultActions: [
+        Match.objectLike({ Type: 'fixed-response', FixedResponseConfig: Match.objectLike({ StatusCode: '200' }) }),
+      ],
+    });
+  });
+
+  test('listeners with no target group omit TargetGroupArn', () => {
+    const template = getTemplate();
+    template.hasResourceProperties('AWS::ElasticLoadBalancingV2::Listener', {
+      DefaultActions: [Match.objectLike({ TargetGroupArn: Match.absent() })],
+    });
+  });
 });

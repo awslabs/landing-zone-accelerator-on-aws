@@ -1135,8 +1135,11 @@ export interface IAlbListenerConfig {
   readonly sslPolicy?: SslPolicyAlbEnum;
   /**
    * Target Group name to which traffic will be forwarded to. This name should be same as {@link ApplicationLoadBalancerTargetGroupConfig | targetGroup} name.
+   *
+   * @remarks
+   * Required when `type` is `forward`. Omit for `redirect` and `fixed-response` listeners.
    */
-  readonly targetGroup: t.NonEmptyString;
+  readonly targetGroup?: t.NonEmptyString;
   /**
    *  Information for creating an action that returns a custom HTTP response. Specify only when type is `fixed-response`.
    */

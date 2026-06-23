@@ -69,7 +69,7 @@ export type albListenerActionProperty = {
     protocol?: string;
     query?: string;
   };
-  targetGroupArn: string;
+  targetGroupArn?: string;
 };
 
 export interface ApplicationLoadBalancerProps {
@@ -156,14 +156,17 @@ export class ApplicationLoadBalancer extends cdk.Resource implements IApplicatio
   private getListenerAction(
     listener: ApplicationLoadBalancerListenerConfig,
   ): cdk.aws_elasticloadbalancingv2.CfnListener.ActionProperty {
-    const listenerTargetGroupArn = listener.targetGroup;
     const actionValues: albListenerActionProperty = {
       type: listener.type,
       order: listener.order,
-      targetGroupArn: listenerTargetGroupArn,
     };
     switch (listener.type) {
       case 'forward':
+        if (!listener.targetGroup) {
+          throw new Error(`Listener ${listener.name} is set to forward but targetGroup is not defined`);
+        }
+        // targetGroupArn is only valid for forward actions; CFN rejects it on redirect/fixed-response
+        actionValues.targetGroupArn = listener.targetGroup;
         actionValues.forwardConfig = {
           targetGroups: [{ targetGroupArn: listener.targetGroup }],
           targetGroupStickinessConfig: listener.forwardConfig?.targetGroupStickinessConfig ?? undefined,

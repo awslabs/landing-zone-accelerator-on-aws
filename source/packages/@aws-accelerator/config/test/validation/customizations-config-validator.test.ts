@@ -8,7 +8,12 @@ import { GlobalConfig } from '../../lib/global-config';
 import { IamConfig } from '../../lib/iam-config';
 import { NetworkConfig } from '../../lib/network-config';
 import { SecurityConfig } from '../../lib/security-config';
-import { CustomizationHelperMethods, FirewallValidator } from '../../validator/customizations-config-validator';
+import { OrganizationConfig } from '../../lib/organization-config';
+import {
+  CustomizationHelperMethods,
+  CustomizationsConfigValidator,
+  FirewallValidator,
+} from '../../validator/customizations-config-validator';
 import { describe, test, expect } from 'vitest';
 
 const defaultFirewall: Ec2FirewallInstanceConfig = {
@@ -331,3 +336,131 @@ function createFirewallValidator(
   const helpers: CustomizationHelperMethods = new CustomizationHelperMethods(accountsConfig, iamConfig, globalConfig);
   return new FirewallValidator(values, networkConfig, securityConfig, accountsConfig, configDir, helpers, errors);
 }
+
+describe('CustomizationsConfigValidator - ALB listener targetGroup requirements', () => {
+  function runValidator(listeners: unknown[]) {
+    const values: CustomizationsConfig = {
+      applications: [
+        {
+          name: 'app-alb-test',
+          vpc: 'alb-vpc',
+          deploymentTargets: { accounts: ['Network'], organizationalUnits: [] },
+          targetGroups: [{ name: 'tg-1', port: 80, protocol: 'HTTP', type: 'instance' }],
+          applicationLoadBalancer: {
+            name: 'test-alb',
+            subnets: ['SubnetA', 'SubnetB'],
+            securityGroups: ['sg'],
+            listeners,
+          },
+        },
+      ],
+      // eslint-disable-next-line  @typescript-eslint/no-explicit-any
+    } as any;
+    const accountsConfig: AccountsConfig = {
+      mandatoryAccounts: [{ name: 'Network' }],
+      workloadAccounts: [],
+      getManagementAccount: () => ({}),
+      // eslint-disable-next-line  @typescript-eslint/no-explicit-any
+    } as any;
+    // eslint-disable-next-line  @typescript-eslint/no-explicit-any
+    const networkConfig: NetworkConfig = { vpcs: [{ name: 'alb-vpc' }] } as any;
+    // eslint-disable-next-line  @typescript-eslint/no-explicit-any
+    const globalConfig: GlobalConfig = { homeRegion: 'us-east-1', enabledRegions: ['us-east-1'] } as any;
+    // eslint-disable-next-line  @typescript-eslint/no-explicit-any
+    const iamConfig: IamConfig = {} as any;
+    // eslint-disable-next-line  @typescript-eslint/no-explicit-any
+    const securityConfig: SecurityConfig = {} as any;
+    // eslint-disable-next-line  @typescript-eslint/no-explicit-any
+    const organizationConfig: OrganizationConfig = { organizationalUnits: [] } as any;
+    return () =>
+      new CustomizationsConfigValidator(
+        values,
+        accountsConfig,
+        globalConfig,
+        iamConfig,
+        networkConfig,
+        organizationConfig,
+        securityConfig,
+        '',
+      );
+  }
+
+  test('forward listener without targetGroup throws a targetGroup error', () => {
+    expect(runValidator([{ name: 'fwd', port: 80, protocol: 'HTTP', type: 'forward' }])).toThrow(
+      /listener fwd is type 'forward' but has no targetGroup/,
+    );
+  });
+
+  test('redirect listener without targetGroup does not throw a targetGroup error', () => {
+    try {
+      runValidator([
+        {
+          name: 'redir',
+          port: 80,
+          protocol: 'HTTP',
+          type: 'redirect',
+          redirectConfig: { statusCode: 'HTTP_301', protocol: 'HTTPS', port: 443 },
+        },
+      ])();
+    } catch (e) {
+      expect((e as Error).message).not.toMatch(/has no targetGroup/);
+      expect((e as Error).message).not.toMatch(/target groups that are not defined/);
+    }
+  });
+
+  test('fixed-response listener without targetGroup does not throw a targetGroup error', () => {
+    try {
+      runValidator([
+        {
+          name: 'fixed',
+          port: 80,
+          protocol: 'HTTP',
+          type: 'fixed-response',
+          fixedResponseConfig: { statusCode: '200', contentType: 'text/plain', messageBody: 'OK' },
+        },
+      ])();
+    } catch (e) {
+      expect((e as Error).message).not.toMatch(/has no targetGroup/);
+      expect((e as Error).message).not.toMatch(/target groups that are not defined/);
+    }
+  });
+
+  test('forward listener with targetGroup does not throw a targetGroup error', () => {
+    try {
+      runValidator([{ name: 'fwd', port: 80, protocol: 'HTTP', type: 'forward', targetGroup: 'tg-1' }])();
+    } catch (e) {
+      expect((e as Error).message).not.toMatch(/has a targetGroup/);
+      expect((e as Error).message).not.toMatch(/has no targetGroup/);
+    }
+  });
+
+  test('redirect listener with targetGroup throws a targetGroup error', () => {
+    expect(
+      runValidator([
+        {
+          name: 'redir',
+          port: 80,
+          protocol: 'HTTP',
+          type: 'redirect',
+          targetGroup: 'tg-1',
+          redirectConfig: { statusCode: 'HTTP_301', protocol: 'HTTPS', port: 443 },
+        },
+      ]),
+    ).toThrow(/listener redir is type 'redirect' but has a targetGroup/);
+  });
+
+  test('fixed-response listener with targetGroup throws a targetGroup error', () => {
+    expect(
+      runValidator([
+        {
+          name: 'fixed',
+          port: 80,
+          protocol: 'HTTP',
+          type: 'fixed-response',
+          targetGroup: 'tg-1',
+          fixedResponseConfig: { statusCode: '200', contentType: 'text/plain', messageBody: 'OK' },
+        },
+      ]),
+    ).toThrow(/listener fixed is type 'fixed-response' but has a targetGroup/);
+  });
+});

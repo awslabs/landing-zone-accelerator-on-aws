@@ -22025,6 +22025,55 @@ exports[`NoVpcFlowLogStack > Construct(NetworkAssociationsStack):  Snapshot Test
       },
       "Type": "AWS::ElasticLoadBalancingV2::Listener",
     },
+    "ListenerNetworkEndpointsappAAlb01appAListenerFixed": {
+      "Properties": {
+        "Certificates": [
+          {},
+        ],
+        "DefaultActions": [
+          {
+            "FixedResponseConfig": {
+              "ContentType": "text/plain",
+              "MessageBody": "OK",
+              "StatusCode": "200",
+            },
+            "Type": "fixed-response",
+          },
+        ],
+        "LoadBalancerArn": {
+          "Ref": "SsmParameterValueacceleratornetworkvpcNetworkEndpointsalbappAalb01idC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+        "Port": 8081,
+        "Protocol": "HTTP",
+      },
+      "Type": "AWS::ElasticLoadBalancingV2::Listener",
+    },
+    "ListenerNetworkEndpointsappAAlb01appAListenerRedirect": {
+      "Properties": {
+        "Certificates": [
+          {},
+        ],
+        "DefaultActions": [
+          {
+            "RedirectConfig": {
+              "Host": "#{host}",
+              "Path": "/#{path}",
+              "Port": "443",
+              "Protocol": "HTTPS",
+              "Query": "#{query}",
+              "StatusCode": "HTTP_301",
+            },
+            "Type": "redirect",
+          },
+        ],
+        "LoadBalancerArn": {
+          "Ref": "SsmParameterValueacceleratornetworkvpcNetworkEndpointsalbappAalb01idC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+        "Port": 8080,
+        "Protocol": "HTTP",
+      },
+      "Type": "AWS::ElasticLoadBalancingV2::Listener",
+    },
     "ListenerNetworkEndpointsappANlb01appAListener1": {
       "Properties": {
         "AlpnPolicy": [],

@@ -432,16 +432,21 @@ export class NetworkAssociationsStack extends NetworkStack {
         this.logger.info(`Application Load Balancer ${albItem.name} is managed externally.`);
         continue;
       }
-      const targetGroup = targetGroupMap.get(`${vpcItem.name}-${listener.targetGroup}`);
-      if (!targetGroup) {
-        this.logger.error(
-          `The Listener ${listener.name} contains an invalid target group name ${listener.targetGroup} please ensure that the the target group name references a valid target group`,
-        );
-        throw new Error(`Configuration validation failed at runtime.`);
+      // redirect/fixed-response listeners have no targetGroup; pass an empty ARN that getListenerAction ignores
+      let targetGroupArn = '';
+      if (listener.targetGroup) {
+        const targetGroup = targetGroupMap.get(`${vpcItem.name}-${listener.targetGroup}`);
+        if (!targetGroup) {
+          this.logger.error(
+            `The Listener ${listener.name} contains an invalid target group name ${listener.targetGroup} please ensure that the the target group name references a valid target group`,
+          );
+          throw new Error(`Configuration validation failed at runtime.`);
+        }
+        targetGroupArn = targetGroup.targetGroupArn;
       }
       const listenerAction: cdk.aws_elasticloadbalancingv2.CfnListener.ActionProperty = this.getListenerAction(
         listener,
-        targetGroup.targetGroupArn,
+        targetGroupArn,
       );
 
       const listenerResource = new cdk.aws_elasticloadbalancingv2.CfnListener(
@@ -501,13 +506,17 @@ export class NetworkAssociationsStack extends NetworkStack {
     listener: ApplicationLoadBalancerListenerConfig,
     targetGroupArn: string,
   ): cdk.aws_elasticloadbalancingv2.CfnListener.ActionProperty {
-    const listenerTargetGroupArn = targetGroupArn;
     const actionValues: albListenerActionProperty = {
       type: listener.type,
       order: listener.order,
-      targetGroupArn: listenerTargetGroupArn,
     };
     if (listener.type === 'forward') {
+      if (!targetGroupArn) {
+        this.logger.error(`Listener ${listener.name} is set to forward but targetGroup is not defined`);
+        throw new Error(`Configuration validation failed at runtime.`);
+      }
+      // targetGroupArn is only valid for forward actions; CFN rejects it on redirect/fixed-response
+      actionValues.targetGroupArn = targetGroupArn;
       actionValues.forwardConfig = {
         targetGroups: [{ targetGroupArn: targetGroupArn }],
         targetGroupStickinessConfig: listener.forwardConfig?.targetGroupStickinessConfig,

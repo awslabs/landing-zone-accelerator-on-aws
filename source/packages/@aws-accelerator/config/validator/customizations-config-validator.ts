@@ -796,8 +796,21 @@ class CustomizationValidator {
     ) {
       errors.push(`Application Load Balancer ${alb.name} have invalid subnets configuration`);
     }
+    // forward listeners must reference a target group; redirect/fixed-response must not
+    for (const listener of alb.listeners ?? []) {
+      if (listener.type === 'forward' && !listener.targetGroup) {
+        errors.push(
+          `Application Load Balancer ${alb.name} listener ${listener.name} is type 'forward' but has no targetGroup. A target group is required for forward listeners.`,
+        );
+      }
+      if (listener.type !== 'forward' && listener.targetGroup) {
+        errors.push(
+          `Application Load Balancer ${alb.name} listener ${listener.name} is type '${listener.type}' but has a targetGroup. A target group is only valid for forward listeners.`,
+        );
+      }
+    }
     const allTargetGroupNames = appInfo.appTargetGroups?.map(tg => tg.name);
-    const albTargetGroupNames = alb.listeners?.map(tg => tg.targetGroup);
+    const albTargetGroupNames = alb.listeners?.map(tg => tg.targetGroup).filter((tg): tg is string => !!tg);
     const compareTargetGroupNames = helpers.compareArrays(albTargetGroupNames ?? [], allTargetGroupNames ?? []);
     if (compareTargetGroupNames.length > 0) {
       errors.push(

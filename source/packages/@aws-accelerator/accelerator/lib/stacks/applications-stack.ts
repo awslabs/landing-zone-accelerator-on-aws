@@ -88,7 +88,7 @@ export type AlbListenerConfig = {
   type: 'fixed-response' | 'forward' | 'redirect';
   certificate: string | undefined;
   sslPolicy?: string;
-  targetGroup: string;
+  targetGroup?: string;
   fixedResponseConfig?: {
     messageBody?: string;
     contentType?: string;
@@ -375,25 +375,28 @@ export class ApplicationsStack extends AcceleratorStack {
     listeners: AlbListenerConfig[] | undefined,
     targetGroups: TargetGroupItem[] | undefined,
   ) {
-    const output = [];
-    // if listener is provided look up target group arn
-    // if no target group is provided return undefined
-    if (listeners && targetGroups) {
-      for (const listener of listeners) {
-        const targetGroupValues = targetGroups ?? [];
-
-        const filteredTargetGroup = targetGroupValues.find(element => {
-          return element.name === listener.targetGroup;
-        });
-        if (!filteredTargetGroup) {
-          this.logger.error(`ALB Listener ${listener.name} does not have a valid target group ${listener.targetGroup}`);
-          throw new Error(`Configuration validation failed at runtime.`);
-        }
-        listener.targetGroup = filteredTargetGroup.targetGroup.targetGroupArn;
-        output.push(listener as ApplicationLoadBalancerListenerConfig);
-      }
-    } else {
+    // if no listeners are provided return undefined
+    if (!listeners) {
       return undefined;
+    }
+    // an ALB with only redirect/fixed-response listeners has no target groups, so default to an empty list
+    const targetGroupValues = targetGroups ?? [];
+    const output = [];
+    for (const listener of listeners) {
+      // redirect/fixed-response listeners have no targetGroup to resolve
+      if (!listener.targetGroup) {
+        output.push(listener as ApplicationLoadBalancerListenerConfig);
+        continue;
+      }
+      const filteredTargetGroup = targetGroupValues.find(element => {
+        return element.name === listener.targetGroup;
+      });
+      if (!filteredTargetGroup) {
+        this.logger.error(`ALB Listener ${listener.name} does not have a valid target group ${listener.targetGroup}`);
+        throw new Error(`Configuration validation failed at runtime.`);
+      }
+      listener.targetGroup = filteredTargetGroup.targetGroup.targetGroupArn;
+      output.push(listener as ApplicationLoadBalancerListenerConfig);
     }
 
     return output;

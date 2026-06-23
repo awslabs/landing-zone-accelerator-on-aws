@@ -2603,6 +2603,8 @@ export class VpcValidator {
     this.validateAlbConfigForExistingSubnets(vpcItem, helpers, errors);
     // Validate that Application Load Balancer that is using shared targets is using subnets that are using shared target.
     this.validateSharedAlbSubnets(vpcItem, helpers, errors);
+    // Validate Application Load Balancer listener targetGroup requirements per listener type
+    this.validateAlbListeners(vpcItem, errors);
     // Validate subnet share target ou names
     this.validateVpcSubnetShareTargetOUs(vpcItem, helpers, errors);
     // Validate subnet share target account names
@@ -2787,6 +2789,28 @@ export class VpcValidator {
         if (!helpers.getSubnet(vpcItem, subnetItem)) {
           errors.push(
             `The Application Load Balancer: ${albItem.name} for VPC ${vpcItem.name} is using subnet ${subnetItem} that doesn't exist`,
+          );
+        }
+      }
+    }
+  }
+
+  /**
+   * Validate that forward listeners reference a target group; redirect/fixed-response must not require one
+   * @param vpcItem
+   * @param errors
+   */
+  private validateAlbListeners(vpcItem: VpcConfig | VpcTemplatesConfig, errors: string[]) {
+    for (const albItem of vpcItem.loadBalancers?.applicationLoadBalancers ?? []) {
+      for (const listener of albItem.listeners ?? []) {
+        if (listener.type === 'forward' && !listener.targetGroup) {
+          errors.push(
+            `The Application Load Balancer ${albItem.name} listener ${listener.name} is type 'forward' but has no targetGroup. A target group is required for forward listeners.`,
+          );
+        }
+        if (listener.type !== 'forward' && listener.targetGroup) {
+          errors.push(
+            `The Application Load Balancer ${albItem.name} listener ${listener.name} is type '${listener.type}' but has a targetGroup. A target group is only valid for forward listeners.`,
           );
         }
       }

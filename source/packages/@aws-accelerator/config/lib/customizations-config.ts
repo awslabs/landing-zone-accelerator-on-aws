@@ -116,7 +116,7 @@ export class ApplicationLoadBalancerListenerConfig implements i.IAlbListenerConf
   readonly type: i.AlbListenerTypeEnum = 'forward';
   readonly certificate: string | undefined = undefined;
   readonly sslPolicy: i.SslPolicyAlbEnum | undefined = undefined;
-  readonly targetGroup: string = '';
+  readonly targetGroup: string | undefined = undefined;
   readonly fixedResponseConfig: AlbListenerFixedResponseConfig | undefined = undefined;
   readonly forwardConfig: AlbListenerForwardConfig | undefined = undefined;
   readonly order: number | undefined = undefined;

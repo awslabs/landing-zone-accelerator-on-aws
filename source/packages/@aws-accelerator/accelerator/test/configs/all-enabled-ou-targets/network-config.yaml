@@ -763,6 +763,25 @@ vpcs:
               protocol: HTTP
               targetGroup: appA-alb-tg-1
               type: forward
+            - name: appA-listener-redirect
+              port: 8080
+              protocol: HTTP
+              type: redirect
+              redirectConfig:
+                statusCode: HTTP_301
+                host: '#{host}'
+                path: '/#{path}'
+                port: 443
+                protocol: HTTPS
+                query: '#{query}'
+            - name: appA-listener-fixed
+              port: 8081
+              protocol: HTTP
+              type: fixed-response
+              fixedResponseConfig:
+                statusCode: '200'
+                contentType: text/plain
+                messageBody: 'OK'
         - name: appA-alb-02
           subnets:
             - 'Network-EndpointsTgwAttach-A'

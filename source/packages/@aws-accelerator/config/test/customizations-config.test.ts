@@ -51,7 +51,7 @@ describe('CustomizationsConfig', () => {
       expect(customizationsConfigFromFile.customizations.cloudFormationStacks.length).toBe(3);
       expect(customizationsConfig.customizations.cloudFormationStacks.length).toBe(0);
       if (customizationsConfigFromFile.applications) {
-        expect(customizationsConfigFromFile.applications.length).toBe(8);
+        expect(customizationsConfigFromFile.applications.length).toBe(9);
         expect(customizationsConfig.applications.length).toBe(0);
       }
     });
@@ -76,6 +76,7 @@ describe('CustomizationsConfig', () => {
 
     const applicationLoadBalancerListenerConfig = new ApplicationLoadBalancerListenerConfig();
     expect(applicationLoadBalancerListenerConfig.name).toEqual('');
+    expect(applicationLoadBalancerListenerConfig.targetGroup).toEqual(undefined);
 
     const applicationLoadBalancerAttributesConfig = new ApplicationLoadBalancerAttributesConfig();
     expect(applicationLoadBalancerAttributesConfig.deletionProtection).toEqual(undefined);

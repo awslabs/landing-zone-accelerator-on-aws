@@ -420,11 +420,14 @@ export class AcceleratorSynthStacks {
         region: 'us-east-1',
       };
 
-      new ApplicationsStack(this.app, applicationStackName, {
-        env,
-        ...this.props,
-        appConfigItem: application,
-      });
+      this.stacks.set(
+        `App-${application.name}-us-east-1`,
+        new ApplicationsStack(this.app, applicationStackName, {
+          env,
+          ...this.props,
+          appConfigItem: application,
+        }),
+      );
     }
   }
   /**

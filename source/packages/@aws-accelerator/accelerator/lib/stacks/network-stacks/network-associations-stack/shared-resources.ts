@@ -200,16 +200,21 @@ export class SharedResources {
       if (albItem.shareTargets) {
         const sharedAlb = this.stack.checkResourceShare(albItem.shareTargets);
         if (sharedAlb && vpcItem.region === cdk.Stack.of(this.stack).region) {
-          const targetGroup = targetGroupMap.get(`${vpcItem.name}-${listener.targetGroup}`);
-          if (!targetGroup) {
-            this.stack.addLogs(
-              LogLevel.ERROR,
-              `The Listener ${listener.name} contains an invalid target group name ${listener.targetGroup} please ensure that the the target group name references a valid target group`,
-            );
-            throw new Error(`Configuration validation failed at runtime.`);
+          // redirect/fixed-response listeners have no targetGroup; pass an empty ARN that getListenerAction ignores
+          let targetGroupArn = '';
+          if (listener.targetGroup) {
+            const targetGroup = targetGroupMap.get(`${vpcItem.name}-${listener.targetGroup}`);
+            if (!targetGroup) {
+              this.stack.addLogs(
+                LogLevel.ERROR,
+                `The Listener ${listener.name} contains an invalid target group name ${listener.targetGroup} please ensure that the the target group name references a valid target group`,
+              );
+              throw new Error(`Configuration validation failed at runtime.`);
+            }
+            targetGroupArn = targetGroup.targetGroupArn;
           }
           const listenerAction: cdk.aws_elasticloadbalancingv2.CfnListener.ActionProperty =
-            this.stack.getListenerAction(listener, targetGroup.targetGroupArn);
+            this.stack.getListenerAction(listener, targetGroupArn);
 
           const albValue = albMap.get(`${vpcItem.name}_${albItem.name}`);
 

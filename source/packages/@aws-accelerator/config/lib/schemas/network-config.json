@@ -230,8 +230,7 @@
         "name",
         "port",
         "protocol",
-        "type",
-        "targetGroup"
+        "type"
       ],
       "type": "object"
     },

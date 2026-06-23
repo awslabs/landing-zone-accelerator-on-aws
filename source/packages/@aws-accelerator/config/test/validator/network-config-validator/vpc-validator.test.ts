@@ -239,6 +239,50 @@ function buildGatewayEndpointRouteFixture(params: {
   return { networkConfig: networkConfig as NetworkConfig, helpers };
 }
 
+/**
+ * Build a minimal NetworkConfig fixture carrying a single VPC with one ALB
+ * whose listeners are provided by the caller. Static CIDR so validateVpcStructure
+ * passes and the ALB listener validation runs.
+ */
+function buildAlbFixture(listeners: unknown[]): { networkConfig: NetworkConfig; helpers: NetworkValidatorFunctions } {
+  const vpc: Partial<VpcConfig> = {
+    name: 'alb-vpc',
+    account: 'Network',
+    region: 'us-east-1',
+    cidrs: ['10.0.0.0/16'],
+    loadBalancers: {
+      applicationLoadBalancers: [{ name: 'test-alb', subnets: [], securityGroups: [], listeners }],
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } as any,
+  };
+
+  const networkConfig: Partial<NetworkConfig> = {
+    defaultVpc: { delete: false, excludeAccounts: [], excludeRegions: [] },
+    transitGateways: [],
+    endpointPolicies: [],
+    vpcs: [vpc as VpcConfig],
+  };
+
+  const helpers = new NetworkValidatorFunctions(
+    networkConfig as NetworkConfig,
+    ['Root'],
+    [
+      {
+        name: 'Network',
+        description: '',
+        email: 'network@example.com',
+        organizationalUnit: 'Infrastructure',
+        warm: true,
+        accountAlias: undefined,
+      },
+    ],
+    [],
+    ['us-east-1'],
+  );
+
+  return { networkConfig: networkConfig as NetworkConfig, helpers };
+}
+
 describe('VpcValidator - gateway endpoint route target existence (issue #1063)', () => {
   test('rejects a gatewayEndpoint route whose target service is not defined on the VPC', () => {
     const errors: string[] = [];
@@ -275,6 +319,126 @@ describe('VpcValidator - gateway endpoint route target existence (issue #1063)',
       throw new Error(
         `Expected no 'does not exist' error for a defined gatewayEndpoint service. errors=${JSON.stringify(targetErrors)}`,
       );
+    }
+  });
+});
+
+describe('VpcValidator - ALB listener targetGroup requirements', () => {
+  test('forward listener without targetGroup produces an error', () => {
+    const errors: string[] = [];
+    const { networkConfig, helpers } = buildAlbFixture([{ name: 'fwd', port: 80, protocol: 'HTTP', type: 'forward' }]);
+
+    new VpcValidator(networkConfig, helpers, errors);
+
+    const albErrors = errors.filter(
+      e => e.includes('test-alb') && e.includes("type 'forward'") && e.includes('targetGroup'),
+    );
+    if (albErrors.length === 0) {
+      throw new Error(`Expected a forward-without-targetGroup error. errors=${JSON.stringify(errors)}`);
+    }
+  });
+
+  test('redirect listener without targetGroup produces no targetGroup error', () => {
+    const errors: string[] = [];
+    const { networkConfig, helpers } = buildAlbFixture([
+      {
+        name: 'redir',
+        port: 80,
+        protocol: 'HTTP',
+        type: 'redirect',
+        redirectConfig: { statusCode: 'HTTP_301', protocol: 'HTTPS', port: 443 },
+      },
+    ]);
+
+    new VpcValidator(networkConfig, helpers, errors);
+
+    const albErrors = errors.filter(e => e.includes('test-alb') && e.includes('targetGroup'));
+    if (albErrors.length !== 0) {
+      throw new Error(`Expected no targetGroup error for a redirect listener. errors=${JSON.stringify(albErrors)}`);
+    }
+  });
+
+  test('fixed-response listener without targetGroup produces no targetGroup error', () => {
+    const errors: string[] = [];
+    const { networkConfig, helpers } = buildAlbFixture([
+      {
+        name: 'fixed',
+        port: 80,
+        protocol: 'HTTP',
+        type: 'fixed-response',
+        fixedResponseConfig: { statusCode: '200', contentType: 'text/plain', messageBody: 'OK' },
+      },
+    ]);
+
+    new VpcValidator(networkConfig, helpers, errors);
+
+    const albErrors = errors.filter(e => e.includes('test-alb') && e.includes('targetGroup'));
+    if (albErrors.length !== 0) {
+      throw new Error(
+        `Expected no targetGroup error for a fixed-response listener. errors=${JSON.stringify(albErrors)}`,
+      );
+    }
+  });
+
+  test('forward listener with targetGroup produces no targetGroup error', () => {
+    const errors: string[] = [];
+    const { networkConfig, helpers } = buildAlbFixture([
+      { name: 'fwd', port: 80, protocol: 'HTTP', type: 'forward', targetGroup: 'tg-1' },
+    ]);
+
+    new VpcValidator(networkConfig, helpers, errors);
+
+    const albErrors = errors.filter(e => e.includes('test-alb') && e.includes('targetGroup'));
+    if (albErrors.length !== 0) {
+      throw new Error(
+        `Expected no targetGroup error for a forward listener with a tg. errors=${JSON.stringify(albErrors)}`,
+      );
+    }
+  });
+
+  test('redirect listener with targetGroup produces an error', () => {
+    const errors: string[] = [];
+    const { networkConfig, helpers } = buildAlbFixture([
+      {
+        name: 'redir',
+        port: 80,
+        protocol: 'HTTP',
+        type: 'redirect',
+        targetGroup: 'tg-1',
+        redirectConfig: { statusCode: 'HTTP_301', protocol: 'HTTPS', port: 443 },
+      },
+    ]);
+
+    new VpcValidator(networkConfig, helpers, errors);
+
+    const albErrors = errors.filter(
+      e => e.includes('test-alb') && e.includes("type 'redirect'") && e.includes('targetGroup'),
+    );
+    if (albErrors.length === 0) {
+      throw new Error(`Expected a redirect-with-targetGroup error. errors=${JSON.stringify(errors)}`);
+    }
+  });
+
+  test('fixed-response listener with targetGroup produces an error', () => {
+    const errors: string[] = [];
+    const { networkConfig, helpers } = buildAlbFixture([
+      {
+        name: 'fixed',
+        port: 80,
+        protocol: 'HTTP',
+        type: 'fixed-response',
+        targetGroup: 'tg-1',
+        fixedResponseConfig: { statusCode: '200', contentType: 'text/plain', messageBody: 'OK' },
+      },
+    ]);
+
+    new VpcValidator(networkConfig, helpers, errors);
+
+    const albErrors = errors.filter(
+      e => e.includes('test-alb') && e.includes("type 'fixed-response'") && e.includes('targetGroup'),
+    );
+    if (albErrors.length === 0) {
+      throw new Error(`Expected a fixed-response-with-targetGroup error. errors=${JSON.stringify(errors)}`);
     }
   });
 });

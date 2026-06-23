@@ -198,6 +198,41 @@ applications:
           protocol: HTTP
           targetGroup: appA-alb-tg-1
           type: forward
+  - name: appAlbNoTargetGroup
+    vpc: SharedServices-appVpc
+    deploymentTargets:
+      accounts:
+        - SharedServices
+      excludedRegions:
+        - us-west-2
+    applicationLoadBalancer:
+      name: appAlbNoTg-alb-01
+      scheme: internet-facing
+      subnets:
+        - SharedServices-appVpc-PrivateSubnetA
+        - SharedServices-appVpc-PrivateSubnetB
+      securityGroups:
+        - SharedServices-appVpc-appSecurityGroup
+      listeners:
+        - name: appAlbNoTg-listener-redirect
+          port: 8080
+          protocol: HTTP
+          type: redirect
+          redirectConfig:
+            statusCode: HTTP_301
+            host: '#{host}'
+            path: '/#{path}'
+            port: 443
+            protocol: HTTPS
+            query: '#{query}'
+        - name: appAlbNoTg-listener-fixed
+          port: 8081
+          protocol: HTTP
+          type: fixed-response
+          fixedResponseConfig:
+            statusCode: '200'
+            contentType: text/plain
+            messageBody: 'OK'
   - name: appB
     # vpc name is taken from network-config.yaml under vpcs
     vpc: SharedServices-appVpc
