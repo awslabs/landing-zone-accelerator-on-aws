@@ -39,6 +39,7 @@ import path from 'node:path';
 import { TgwAssociationsAndPropagations } from '../../../../lib/actions/network/tgw-associations-and-propagations';
 import { AcceleratorModules, ModuleParams } from '../../../../lib/types';
 import { buildBaseModuleParams } from '../../framework/base-params-builder';
+import { getModuleTestRoleName } from '../../framework/permissions-boundary';
 import { AssertionResult, ModuleTestPlugin, ResolvedEnvironment, TestManifest } from '../../framework/types';
 import { runTgwAssertions, capturePreExecutionTimestamp } from './assertions';
 
@@ -81,7 +82,7 @@ export const tgwPlugin: ModuleTestPlugin = {
   async buildParams(manifest: TestManifest, environment: ResolvedEnvironment): Promise<ModuleParams> {
     const tgwConfig = manifest.moduleConfig as unknown as TgwManifestConfig;
 
-    const accessRole = process.env['MANAGEMENT_ACCOUNT_ACCESS_ROLE'] ?? 'AWSControlTowerExecution';
+    const accessRole = getModuleTestRoleName(SERVICE_NAME);
 
     const params = buildBaseModuleParams({
       moduleName: AcceleratorModules.TGW_ASSOCIATIONS_AND_PROPAGATIONS,
@@ -220,7 +221,7 @@ async function waitForTerminalStates(environment: ResolvedEnvironment): Promise<
     return;
   }
 
-  const accessRole = process.env['MANAGEMENT_ACCOUNT_ACCESS_ROLE'] ?? 'AWSControlTowerExecution';
+  const accessRole = getModuleTestRoleName(SERVICE_NAME);
   let credentials: { accessKeyId: string; secretAccessKey: string; sessionToken?: string } | undefined;
   try {
     const creds = await getCredentials({
@@ -351,7 +352,7 @@ async function cleanTgwRouteTablesInAws(environment: ResolvedEnvironment): Promi
   }
 
   // Get credentials for the Network account
-  const accessRole = process.env['MANAGEMENT_ACCOUNT_ACCESS_ROLE'] ?? 'AWSControlTowerExecution';
+  const accessRole = getModuleTestRoleName(SERVICE_NAME);
   let credentials: { accessKeyId: string; secretAccessKey: string; sessionToken?: string } | undefined;
   try {
     const creds = await getCredentials({
@@ -577,7 +578,7 @@ async function cleanSingleDxGateway(
 async function cleanDxGatewayAssociationsInAws(environment: ResolvedEnvironment): Promise<void> {
   logger.info('Cleaning DX Gateway associations in AWS (network-dxgw + shared-dxgw)');
 
-  const accessRole = process.env['MANAGEMENT_ACCOUNT_ACCESS_ROLE'] ?? 'AWSControlTowerExecution';
+  const accessRole = getModuleTestRoleName(SERVICE_NAME);
   const ssmPrefix = process.env['TGW_INTEG_SSM_PREFIX'] ?? environment.resourcePrefixes.ssmParamName;
 
   // --- Clean network-dxgw in Network account (same-account DX GW) ---

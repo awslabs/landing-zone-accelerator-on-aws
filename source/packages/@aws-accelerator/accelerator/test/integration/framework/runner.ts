@@ -12,8 +12,9 @@
  */
 
 import path from 'node:path';
-import { createLogger } from 'aws-lza';
+import { createLogger, getCredentials, getModuleSessionPolicy } from 'aws-lza';
 import { loadManifests } from './manifest-loader';
+import { ensureModuleTestRole } from './permissions-boundary';
 import { ManifestExecutionResult, ModuleTestPlugin, ResolvedEnvironment, TestManifest } from './types';
 
 const logger = createLogger([path.parse(path.basename(__filename)).name]);
@@ -37,6 +38,10 @@ const DEFAULT_OPTIONS: Required<RunnerOptions> = {
  * Executes all manifests for a module plugin serially through the
  * prepare → execute → assert → cleanup lifecycle.
  *
+ * Before execution, sets up module-specific IAM roles with permissions boundaries
+ * in all member accounts to enforce least-privilege (replacing session policies
+ * that conflict with GitLab runner's transitive session tags).
+ *
  * @param plugin - Module test plugin providing handler, assertions, and lifecycle hooks
  * @param manifestDir - Path to the directory containing *.manifest.json files
  * @param environment - Resolved test environment
@@ -55,6 +60,10 @@ export async function runModuleIntegrationTests(
 
   logger.info(`Starting integration tests for module: ${plugin.moduleName}`);
   logger.info(`Executing ${manifests.length} manifest(s) serially`);
+
+  // Set up module-specific roles with permissions boundaries in member accounts.
+  // Uses LzaGitlabRole (admin) credentials to create/update roles and boundaries.
+  await setupModuleTestRoles(plugin.moduleName, environment);
 
   for (const manifest of manifests) {
     const result = await executeManifest(plugin, manifest, environment);
@@ -164,4 +173,62 @@ function summarizeAssertions(result: ManifestExecutionResult): string {
   }
   const passed = result.assertions.filter(a => a.passed).length;
   return `${passed}/${result.assertions.length} passed`;
+}
+
+/**
+ * Sets up module-specific IAM roles with permissions boundaries in all member accounts.
+ *
+ * Uses LzaGitlabRole (admin) to assume into each member account and create/update
+ * the module test role + boundary. Skips management account.
+ */
+async function setupModuleTestRoles(moduleName: string, environment: ResolvedEnvironment): Promise<void> {
+  const sessionPolicy = getModuleSessionPolicy(moduleName);
+  if (!sessionPolicy) {
+    logger.info(`No session policy for module "${moduleName}" — skipping role setup`);
+    return;
+  }
+
+  const adminRoleName = process.env['LZA_GITLAB_ROLE_NAME'] ?? 'LzaGitlabRole';
+
+  logger.info(`Setting up module test roles using admin role "${adminRoleName}"`);
+
+  for (const [accountName, accountId] of environment.accounts.entries()) {
+    if (accountId === environment.managementAccountId) {
+      continue;
+    }
+
+    logger.info(`Setting up "${moduleName}" role in ${accountName} (${accountId})`);
+
+    try {
+      // Assume admin role in target account
+      const adminCredentials = await getCredentials({
+        accountId,
+        region: environment.region,
+        partition: environment.partition,
+        assumeRoleName: adminRoleName,
+        sessionName: 'ModuleRoleSetup',
+        credentials: environment.managementAccountCredentials,
+        logPrefix: `${accountId}:${environment.region}`,
+      });
+
+      if (!adminCredentials) {
+        logger.warn(`Could not obtain admin credentials for ${accountName} (${accountId}) — skipping`);
+        continue;
+      }
+
+      await ensureModuleTestRole({
+        moduleName,
+        accountId,
+        managementAccountId: environment.managementAccountId,
+        partition: environment.partition,
+        region: environment.region,
+        adminCredentials,
+      });
+    } catch (error: unknown) {
+      const msg = error instanceof Error ? error.message : String(error);
+      logger.warn(`Failed to set up role in ${accountName} (${accountId}): ${msg} — continuing`);
+    }
+  }
+
+  logger.info(`Module test role setup complete for "${moduleName}"`);
 }

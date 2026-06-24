@@ -1,41 +1,42 @@
 # Module Integration Test Jobs
 # ==============================
 #
-# Prerequisites job deploys shared infrastructure (DynamoDB tables in management account,
-# S3 bucket + CMK in log archive account). Module test jobs depend on it via `needs`.
+# Architecture:
+#   - LzaGitlabRole (admin): Used by GitLab runner for prereq infrastructure and
+#     module role/boundary management. Has AdministratorAccess.
+#   - LzaIntegTest-{Module}-Role: Per-module role created by the framework at runtime.
+#     Has AdministratorAccess + permissions boundary matching the module's session policy.
+#     Used by the module for cross-account operations (replaces session policies).
 #
-# All jobs assume role into the management account via AWS_CREDS_TARGET_ROLE.
-# Cross-account access (e.g., log archive) uses the same INTEGRATION_TEST_ROLE_NAME
+# Why not session policies?
+#   GitLab credential vendor attaches 8 transitive session tags that persist through
+#   the AssumeRole chain. Combined with a session policy, they exceed the STS 2048-byte
+#   packed policy limit. Permissions boundaries achieve the same restriction without
+#   this constraint.
+#
+# All jobs assume role into the management account via AWS_CREDS_TARGET_ROLE (LzaGitlabRole).
+# Cross-account admin access (for role/boundary setup) uses the same LzaGitlabRole
 # which exists in every account with a trust policy allowing the management account role.
 #
 # Required GitLab CI variables (project/group level):
-#   ACCELERATOR_PREFIX          - e.g. AWSAccelerator
-#   INTEGRATION_TEST_ROLE_NAME  - e.g. LzaIntegrationTestRole
-#   EXECUTE_INTEGRATION_TEST    - "Yes" to enable, "No" to disable
+#   ACCELERATOR_PREFIX          - e.g. LzaIntegTest
+#   LZA_GITLAB_ROLE_NAME        - e.g. LzaGitlabRole (admin role in all accounts)
+#   EXECUTE_INTEGRATION_TEST    - "Yes" to force all tests, "No" to disable all
 #   SAMPLE_CONFIG_ENV_MANAGEMENT_ACCOUNT_ID
 #   SAMPLE_CONFIG_ENV_LOGARCHIVE_ACCOUNT_ID
 #
 # Rule Logic
 # ----------
 #
-# Prereq job (integ:prereq):
+# All jobs:
 #   1. EXECUTE_INTEGRATION_TEST=No  → never run (explicit kill switch)
-#   2. Remote repo (CI_PROJECT_ID=21753) + not integ branch → never run
-#   3. EXECUTE_INTEGRATION_TEST=Yes → always run
-#   4. Otherwise → never
-#   Uses --no-fail-on-empty-changeset so it's a no-op when infra is unchanged.
-#   Always runs when any module job could run, since all module jobs depend on it.
-#
-# Module test jobs (e.g., integ:macie):
-#   1. EXECUTE_INTEGRATION_TEST=No  → never run (explicit kill switch)
-#   2. Remote repo (CI_PROJECT_ID=21753) + not integ branch → never run
-#      (prevents running on main, release, or MR pipelines in the remote)
-#   3. EXECUTE_INTEGRATION_TEST=Yes + module files changed → run
+#   2. EXECUTE_INTEGRATION_TEST=Yes → always run (force all, no file-change check)
+#   3. Remote repo (CI_PROJECT_ID=21753) + integ branch + module files changed → run
 #   4. Otherwise → never
 #
-#   In forks (different project ID), rule 2 is skipped, so any branch
-#   with EXECUTE_INTEGRATION_TEST=Yes and file changes will trigger the job.
-#   In the remote repo, only the integ branch passes rule 2.
+# When EXECUTE_INTEGRATION_TEST is not set, jobs only run on the integ branch
+# in the upstream repo when relevant module files have changed.
+# Prereq job always runs when any module job runs (idempotent infrastructure).
 
 # ============================================================
 # Prerequisites: deploy shared test infrastructure (once)
@@ -44,16 +45,12 @@ integ:prereq:aws:us-east-1:
   stage: pipeline
   needs: ["accelerator:build"]
   variables:
-    KUBERNETES_CPU_REQUEST: "4"
-    KUBERNETES_CPU_LIMIT: "4"
-    KUBERNETES_MEMORY_REQUEST: "16Gi"
-    KUBERNETES_MEMORY_LIMIT: "16Gi"
     ENV_NAME: sampleConfig
     ACCOUNT_ID: "${SAMPLE_CONFIG_ENV_MANAGEMENT_ACCOUNT_ID}"
     LOGARCHIVE_ACCOUNT_ID: "${SAMPLE_CONFIG_ENV_LOGARCHIVE_ACCOUNT_ID}"
     PARTITION: aws
     AWS_DEFAULT_REGION: us-east-1
-    AWS_CREDS_TARGET_ROLE: "arn:${PARTITION}:iam::${ACCOUNT_ID}:role/${INTEGRATION_TEST_ROLE_NAME}"
+    AWS_CREDS_TARGET_ROLE: "arn:${PARTITION}:iam::${ACCOUNT_ID}:role/${LZA_GITLAB_ROLE_NAME}"
   tags:
     - arch:amd64
   script:
@@ -61,7 +58,7 @@ integ:prereq:aws:us-east-1:
     - unzip -q /tmp/awscliv2.zip -d /tmp
     - /tmp/aws/install
     - "cd source/packages/@aws-accelerator/accelerator/test/integration/infrastructure"
-    - "bash deploy-integ-prereqs.sh ${ACCELERATOR_PREFIX} ${AWS_DEFAULT_REGION} ${ACCOUNT_ID} ${LOGARCHIVE_ACCOUNT_ID} ${PARTITION} ${INTEGRATION_TEST_ROLE_NAME}"
+    - "bash deploy-integ-prereqs.sh ${ACCELERATOR_PREFIX} ${AWS_DEFAULT_REGION} ${ACCOUNT_ID} ${LOGARCHIVE_ACCOUNT_ID} ${PARTITION} ${LZA_GITLAB_ROLE_NAME}"
   artifacts:
     reports:
       dotenv: "source/packages/@aws-accelerator/accelerator/test/integration/infrastructure/integ-prereqs.env"
@@ -69,10 +66,9 @@ integ:prereq:aws:us-east-1:
   rules:
     - if: $EXECUTE_INTEGRATION_TEST == "No"
       when: never
-    # Remote repo: only integ branch
-    - if: $CI_PROJECT_ID == "21753" && $CI_COMMIT_BRANCH != "integ"
-      when: never
     - if: $EXECUTE_INTEGRATION_TEST == "Yes"
+      when: always
+    - if: $CI_PROJECT_ID == "21753" && $CI_COMMIT_BRANCH == "integ"
       when: always
     - when: never
 
@@ -87,16 +83,11 @@ integ:macie:aws:us-east-1:
     - job: integ:prereq:aws:us-east-1
       artifacts: true
   variables:
-    KUBERNETES_CPU_REQUEST: "4"
-    KUBERNETES_CPU_LIMIT: "4"
-    KUBERNETES_MEMORY_REQUEST: "16Gi"
-    KUBERNETES_MEMORY_LIMIT: "16Gi"
     ENV_NAME: sampleConfig
     ACCOUNT_ID: "${SAMPLE_CONFIG_ENV_MANAGEMENT_ACCOUNT_ID}"
     PARTITION: aws
     AWS_DEFAULT_REGION: us-east-1
-    AWS_CREDS_TARGET_ROLE: "arn:${PARTITION}:iam::${ACCOUNT_ID}:role/${INTEGRATION_TEST_ROLE_NAME}"
-    MANAGEMENT_ACCOUNT_ACCESS_ROLE: "${INTEGRATION_TEST_ROLE_NAME}"
+    AWS_CREDS_TARGET_ROLE: "arn:${PARTITION}:iam::${ACCOUNT_ID}:role/${LZA_GITLAB_ROLE_NAME}"
     # Enable CloudWatch verbose logging — log group created by prereq infrastructure
     VERBOSE_LOG_GROUP_NAME: "${ACCELERATOR_PREFIX}-Module-Verbose-Logs"
     PIPELINE_ACCOUNT_ID: "${SAMPLE_CONFIG_ENV_MANAGEMENT_ACCOUNT_ID}"
@@ -117,19 +108,14 @@ integ:macie:aws:us-east-1:
   rules:
     - if: $EXECUTE_INTEGRATION_TEST == "No"
       when: never
-    # Remote repo: only integ branch
-    - if: $CI_PROJECT_ID == "21753" && $CI_COMMIT_BRANCH != "integ"
-      when: never
     - if: $EXECUTE_INTEGRATION_TEST == "Yes"
+      when: always
+    - if: $CI_PROJECT_ID == "21753" && $CI_COMMIT_BRANCH == "integ"
       changes:
         - source/packages/@aws-lza/lib/amazon-macie/**/*
         - source/packages/@aws-accelerator/accelerator/lib/actions/security/amazon-macie*
         - source/packages/@aws-accelerator/accelerator/test/integration/modules/macie/**/*
       when: always
-    # Manual trigger when EXECUTE_INTEGRATION_TEST=Yes but no file changes matched
-    - if: $EXECUTE_INTEGRATION_TEST == "Yes"
-      when: manual
-      allow_failure: true
     - when: never
 
 # ============================================================
@@ -143,16 +129,11 @@ integ:tgw:aws:us-east-1:
     - job: integ:prereq:aws:us-east-1
       artifacts: true
   variables:
-    KUBERNETES_CPU_REQUEST: "4"
-    KUBERNETES_CPU_LIMIT: "4"
-    KUBERNETES_MEMORY_REQUEST: "16Gi"
-    KUBERNETES_MEMORY_LIMIT: "16Gi"
     ENV_NAME: sampleConfig
     ACCOUNT_ID: "${SAMPLE_CONFIG_ENV_MANAGEMENT_ACCOUNT_ID}"
     PARTITION: aws
     AWS_DEFAULT_REGION: us-east-1
-    AWS_CREDS_TARGET_ROLE: "arn:${PARTITION}:iam::${ACCOUNT_ID}:role/${INTEGRATION_TEST_ROLE_NAME}"
-    MANAGEMENT_ACCOUNT_ACCESS_ROLE: "${INTEGRATION_TEST_ROLE_NAME}"
+    AWS_CREDS_TARGET_ROLE: "arn:${PARTITION}:iam::${ACCOUNT_ID}:role/${LZA_GITLAB_ROLE_NAME}"
     # Enable CloudWatch verbose logging — log group created by prereq infrastructure
     VERBOSE_LOG_GROUP_NAME: "${ACCELERATOR_PREFIX}-Module-Verbose-Logs"
     PIPELINE_ACCOUNT_ID: "${SAMPLE_CONFIG_ENV_MANAGEMENT_ACCOUNT_ID}"
@@ -176,17 +157,12 @@ integ:tgw:aws:us-east-1:
   rules:
     - if: $EXECUTE_INTEGRATION_TEST == "No"
       when: never
-    # Remote repo: only integ branch
-    - if: $CI_PROJECT_ID == "21753" && $CI_COMMIT_BRANCH != "integ"
-      when: never
     - if: $EXECUTE_INTEGRATION_TEST == "Yes"
+      when: always
+    - if: $CI_PROJECT_ID == "21753" && $CI_COMMIT_BRANCH == "integ"
       changes:
         - source/packages/@aws-lza/lib/transit-gateway/**/*
         - source/packages/@aws-accelerator/accelerator/lib/actions/network/tgw-associations-and-propagations*
         - source/packages/@aws-accelerator/accelerator/test/integration/modules/tgw/**/*
       when: always
-    # Manual trigger when EXECUTE_INTEGRATION_TEST=Yes but no file changes matched
-    - if: $EXECUTE_INTEGRATION_TEST == "Yes"
-      when: manual
-      allow_failure: true
     - when: never

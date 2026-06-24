@@ -31,7 +31,7 @@ import {
 } from '@aws-accelerator/config';
 import { AcceleratorResourceNames } from '../../../lib/accelerator-resource-names';
 import { ModuleExecutionPhase, ModuleParams } from '../../../lib/types';
-import { getModuleSessionPolicy } from 'aws-lza';
+import { getModuleTestRoleName } from './permissions-boundary';
 import { ResolvedEnvironment, TestManifest } from './types';
 
 /**
@@ -138,7 +138,11 @@ export function buildBaseModuleParams(options: BaseParamsOptions): ModuleParams 
   const { moduleName, handler, manifest, environment, configOverrides } = options;
 
   const accountsConfig = buildAccountsConfig(environment);
-  const accessRole = process.env['MANAGEMENT_ACCOUNT_ACCESS_ROLE'] ?? 'AWSControlTowerExecution';
+
+  // Use module-specific test role for cross-account operations.
+  // This role has a permissions boundary matching the module's session policy.
+  // Falls back to MANAGEMENT_ACCOUNT_ACCESS_ROLE for backward compatibility.
+  const accessRole = getModuleTestRoleName(moduleName);
 
   const acceleratorResourceNames = new AcceleratorResourceNames({
     prefixes: environment.resourcePrefixes,
@@ -189,7 +193,11 @@ export function buildBaseModuleParams(options: BaseParamsOptions): ModuleParams 
       },
       organizationAccounts: buildOrganizationAccounts(environment),
       managementAccountCredentials: environment.managementAccountCredentials,
-      sessionPolicy: getModuleSessionPolicy(moduleName)?.policy,
+      // Session policy is NOT passed here. Instead, the equivalent restriction is enforced
+      // via IAM permissions boundaries on the target account roles (managed by
+      // permissions-boundary.ts). This avoids the STS PackedPolicyTooLargeException caused
+      // by GitLab runner's 8 transitive session tags consuming packed policy space.
+      sessionPolicy: undefined,
     },
   };
 }
