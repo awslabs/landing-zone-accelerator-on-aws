@@ -64,6 +64,8 @@ integ:prereq:aws:us-east-1:
       dotenv: "source/packages/@aws-accelerator/accelerator/test/integration/infrastructure/integ-prereqs.env"
     expire_in: 1 day
   rules:
+    - if: $CI_MERGE_REQUEST_IID != null
+      when: never
     - if: $EXECUTE_INTEGRATION_TEST == "No"
       when: never
     - if: $EXECUTE_INTEGRATION_TEST == "Yes"
@@ -106,6 +108,8 @@ integ:macie:aws:us-east-1:
     expire_in: 7 days
   timeout: 15m
   rules:
+    - if: $CI_MERGE_REQUEST_IID != null
+      when: never
     - if: $EXECUTE_INTEGRATION_TEST == "No"
       when: never
     - if: $EXECUTE_INTEGRATION_TEST == "Yes"
@@ -155,6 +159,8 @@ integ:tgw:aws:us-east-1:
     expire_in: 7 days
   timeout: 30m
   rules:
+    - if: $CI_MERGE_REQUEST_IID != null
+      when: never
     - if: $EXECUTE_INTEGRATION_TEST == "No"
       when: never
     - if: $EXECUTE_INTEGRATION_TEST == "Yes"
