@@ -31,7 +31,12 @@
                 "config:ListDiscoveredResources",
                 "config:BatchGetResourceConfig"
             ],
-            "Resource": "*"
+            "Resource": "*",
+            "Condition": {
+                "StringEquals": {
+                    "aws:ResourceOrgID": "${ORG_ID}"
+                }
+            }
         },
         {
             "Effect": "Allow",

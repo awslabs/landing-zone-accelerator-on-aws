@@ -37,7 +37,11 @@ export class IdentityCenter {
 
         // Read in the policy document which should be properly formatted json
         const policyDocument = JSON.parse(
-          this.stack.generatePolicyReplacements(path.join(props.configDirPath, policyItem.policy), false),
+          this.stack.generatePolicyReplacements(
+            path.join(props.configDirPath, policyItem.policy),
+            false,
+            this.stack.organizationId,
+          ),
         );
 
         // Create a statements list using the PolicyStatement factory

@@ -154,6 +154,11 @@ exports[`DependenciesStack > Construct(DependenciesStack):  Snapshot Test 1`] = 
                 "config:ListDiscoveredResources",
                 "config:BatchGetResourceConfig",
               ],
+              "Condition": {
+                "StringEquals": {
+                  "aws:ResourceOrgID": "o-asdf123456",
+                },
+              },
               "Effect": "Allow",
               "Resource": "*",
             },
@@ -218,6 +223,11 @@ exports[`DependenciesStack > Construct(DependenciesStack):  Snapshot Test 1`] = 
                 "config:ListDiscoveredResources",
                 "config:BatchGetResourceConfig",
               ],
+              "Condition": {
+                "StringEquals": {
+                  "aws:ResourceOrgID": "o-asdf123456",
+                },
+              },
               "Effect": "Allow",
               "Resource": "*",
             },
