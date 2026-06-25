@@ -11,7 +11,7 @@
  *  and limitations under the License.
  */
 
-import { describe, test } from 'vitest';
+import { describe, expect, test } from 'vitest';
 import * as fc from 'fast-check';
 import {
   GatewayEndpointConfig,
@@ -22,6 +22,7 @@ import {
   RouteTableConfig,
   RouteTableEntryConfig,
   VpcConfig,
+  VpcTemplatesConfig,
 } from '../../../lib/network-config';
 import { VpcValidator } from '../../../validator/network-config-validator/vpc-validator';
 import { NetworkValidatorFunctions } from '../../../validator/network-config-validator/network-validator-functions';
@@ -440,5 +441,698 @@ describe('VpcValidator - ALB listener targetGroup requirements', () => {
     if (albErrors.length === 0) {
       throw new Error(`Expected a fixed-response-with-targetGroup error. errors=${JSON.stringify(errors)}`);
     }
+  });
+});
+
+/**
+ * Shared account/OU topology for the share-target tests below.
+ *
+ * Strict-OU: a resource shared to OU X is consumable only by accounts directly in X.
+ * Network → Infrastructure (also delegated admin); LogArchive, Audit → Security;
+ * WorkloadA → Workload; WorkloadB → Workload/NestedW (child OU); Management → Root.
+ */
+function buildAccounts(): AccountConfig[] {
+  return [
+    {
+      name: 'Management',
+      description: '',
+      email: 'mgmt@example.com',
+      organizationalUnit: 'Root',
+      warm: true,
+      accountAlias: undefined,
+    },
+    {
+      name: 'Network',
+      description: '',
+      email: 'network@example.com',
+      organizationalUnit: 'Infrastructure',
+      warm: true,
+      accountAlias: undefined,
+    },
+    {
+      name: 'LogArchive',
+      description: '',
+      email: 'log@example.com',
+      organizationalUnit: 'Security',
+      warm: true,
+      accountAlias: undefined,
+    },
+    {
+      name: 'Audit',
+      description: '',
+      email: 'audit@example.com',
+      organizationalUnit: 'Security',
+      warm: true,
+      accountAlias: undefined,
+    },
+    {
+      name: 'WorkloadA',
+      description: '',
+      email: 'wkA@example.com',
+      organizationalUnit: 'Workload',
+      warm: true,
+      accountAlias: undefined,
+    },
+    {
+      name: 'WorkloadB',
+      description: '',
+      email: 'wkB@example.com',
+      organizationalUnit: 'Workload/NestedW',
+      warm: true,
+      accountAlias: undefined,
+    },
+  ];
+}
+
+const OU_NAMES = ['Root', 'Security', 'Infrastructure', 'Workload', 'Workload/NestedW'];
+
+/**
+ * Build a NetworkConfig + helpers pair for share-target tests.
+ * One VPC owned by `vpcAccount`; the caller seeds the shared resources and the VPC's
+ * consumer references.
+ */
+function buildShareFixture(params: {
+  vpcAccount: string;
+  delegatedAdminAccount?: string;
+  transitGateways?: TransitGatewayConfig[];
+  ipams?: IpamConfig[];
+  resolver?: ResolverConfig;
+  vpcConsumers?: {
+    transitGatewayAttachments?: TransitGatewayAttachmentConfig[];
+    ipamAllocations?: IpamAllocationConfig[];
+    dnsFirewallRuleGroups?: { name: string; priority: number }[];
+    queryLogs?: string[];
+    resolverRules?: string[];
+  };
+  subnets?: VpcConfig['subnets'];
+  loadBalancers?: VpcConfig['loadBalancers'];
+}): { networkConfig: NetworkConfig; helpers: NetworkValidatorFunctions } {
+  const {
+    vpcAccount,
+    delegatedAdminAccount = 'Network',
+    transitGateways = [],
+    ipams,
+    resolver,
+    vpcConsumers = {},
+    subnets,
+    loadBalancers,
+  } = params;
+
+  // validateVpcStructure rejects (and short-circuits all per-VPC checks) when both `cidrs` and
+  // `ipamAllocations` are set — pick exactly one for the fixture so the share-target validators
+  // we are exercising actually run.
+  const useIpam = (vpcConsumers.ipamAllocations?.length ?? 0) > 0;
+
+  const vpc: Partial<VpcConfig & VpcTemplatesConfig> = {
+    name: 'TestVpc',
+    account: vpcAccount,
+    region: 'us-east-1',
+    cidrs: useIpam ? undefined : ['10.0.0.0/16'],
+    transitGatewayAttachments: vpcConsumers.transitGatewayAttachments,
+    ipamAllocations: vpcConsumers.ipamAllocations,
+    dnsFirewallRuleGroups: vpcConsumers.dnsFirewallRuleGroups as VpcConfig['dnsFirewallRuleGroups'],
+    queryLogs: vpcConsumers.queryLogs,
+    resolverRules: vpcConsumers.resolverRules,
+    subnets,
+    loadBalancers,
+    deploymentTargets: { accounts: [], organizationalUnits: [], excludedAccounts: [], excludedRegions: [] },
+  };
+
+  const centralNetworkServices: Partial<CentralNetworkServicesConfig> = {
+    delegatedAdminAccount,
+    ipams,
+    route53Resolver: resolver,
+  };
+
+  const networkConfig: Partial<NetworkConfig> = {
+    defaultVpc: { delete: false, excludeAccounts: [], excludeRegions: [] },
+    transitGateways,
+    endpointPolicies: [{ name: 'Default', document: 'path/to/policy.json' }],
+    centralNetworkServices: centralNetworkServices as CentralNetworkServicesConfig,
+    vpcs: [vpc as VpcConfig],
+  };
+
+  const helpers = new NetworkValidatorFunctions(
+    networkConfig as NetworkConfig,
+    OU_NAMES,
+    buildAccounts(),
+    [],
+    ['us-east-1'],
+  );
+
+  return { networkConfig: networkConfig as NetworkConfig, helpers };
+}
+
+/**
+ * Build a TGW with the given share targets.
+ */
+function buildTgw(params: {
+  name?: string;
+  account: string;
+  shareOus?: string[];
+  shareAccounts?: string[];
+}): TransitGatewayConfig {
+  const tgw: Partial<TransitGatewayConfig> = {
+    name: params.name ?? 'TestTgw',
+    account: params.account,
+    region: 'us-east-1',
+    asn: 65521,
+    dnsSupport: 'enable',
+    vpnEcmpSupport: 'enable',
+    defaultRouteTableAssociation: 'enable',
+    defaultRouteTablePropagation: 'enable',
+    autoAcceptSharingAttachments: 'disable',
+    routeTables: [],
+    shareTargets:
+      params.shareOus || params.shareAccounts
+        ? ({
+            organizationalUnits: params.shareOus ?? [],
+            accounts: params.shareAccounts ?? [],
+          } as ShareTargets)
+        : undefined,
+  };
+  return tgw as TransitGatewayConfig;
+}
+
+/**
+ * Build a TGW attachment referencing a TGW by name and owner account.
+ */
+function buildTgwAttachment(name: string, tgwName: string, tgwAccount: string): TransitGatewayAttachmentConfig {
+  const attach: Partial<TransitGatewayAttachmentConfig> = {
+    name,
+    transitGateway: { name: tgwName, account: tgwAccount },
+    subnets: ['SubnetA'],
+    routeTableAssociations: [],
+    routeTablePropagations: [],
+  };
+  return attach as TransitGatewayAttachmentConfig;
+}
+
+/**
+ * Build an IPAM with one pool with the given share targets.
+ */
+function buildIpam(params: { poolName?: string; shareOus?: string[]; shareAccounts?: string[] }): IpamConfig {
+  const pool: Partial<IpamPoolConfig> = {
+    name: params.poolName ?? 'TestPool',
+    provisionedCidrs: ['10.20.0.0/16'],
+    shareTargets: {
+      organizationalUnits: params.shareOus ?? [],
+      accounts: params.shareAccounts ?? [],
+    } as ShareTargets,
+  };
+  const ipam: Partial<IpamConfig> = {
+    name: 'TestIpam',
+    region: 'us-east-1',
+    operatingRegions: ['us-east-1'],
+    pools: [pool as IpamPoolConfig],
+  };
+  return ipam as IpamConfig;
+}
+
+// TGW share-target consumer check — validateTgwShareTargets
+
+describe('VpcValidator - TGW share targets', () => {
+  test('FAIL: VPC account not in tgw.shareTargets emits "Missing accounts" error', () => {
+    // TGW shared only to Security; consumer VPC in WorkloadA is not covered.
+    const errors: string[] = [];
+    const { networkConfig, helpers } = buildShareFixture({
+      vpcAccount: 'WorkloadA',
+      transitGateways: [buildTgw({ account: 'Network', shareOus: ['Security'] })],
+      vpcConsumers: {
+        transitGatewayAttachments: [buildTgwAttachment('Attach1', 'TestTgw', 'Network')],
+      },
+    });
+
+    new VpcValidator(networkConfig, helpers, errors);
+
+    expect(
+      errors.filter(
+        e =>
+          e.includes('TGW "TestTgw" is not shared to one or more VPC deployment target accounts') &&
+          e.includes('Missing accounts: WorkloadA'),
+      ),
+    ).toHaveLength(1);
+  });
+
+  test('PASS: same-account attachment is exempt (TGW owner == VPC account)', () => {
+    const errors: string[] = [];
+    const { networkConfig, helpers } = buildShareFixture({
+      vpcAccount: 'Network',
+      transitGateways: [buildTgw({ account: 'Network' })], // no shareTargets at all
+      vpcConsumers: {
+        transitGatewayAttachments: [buildTgwAttachment('Attach1', 'TestTgw', 'Network')],
+      },
+    });
+
+    new VpcValidator(networkConfig, helpers, errors);
+
+    expect(errors.filter(e => e.includes('TGW "TestTgw" is not shared'))).toHaveLength(0);
+  });
+
+  test('PASS: VPC account explicitly listed in tgw.shareTargets.accounts', () => {
+    const errors: string[] = [];
+    const { networkConfig, helpers } = buildShareFixture({
+      vpcAccount: 'WorkloadA',
+      transitGateways: [buildTgw({ account: 'Network', shareAccounts: ['WorkloadA'] })],
+      vpcConsumers: {
+        transitGatewayAttachments: [buildTgwAttachment('Attach1', 'TestTgw', 'Network')],
+      },
+    });
+
+    new VpcValidator(networkConfig, helpers, errors);
+
+    expect(errors.filter(e => e.includes('TGW "TestTgw" is not shared'))).toHaveLength(0);
+  });
+
+  test('PASS: VPC account in OU listed in tgw.shareTargets.organizationalUnits', () => {
+    const errors: string[] = [];
+    const { networkConfig, helpers } = buildShareFixture({
+      vpcAccount: 'WorkloadA',
+      transitGateways: [buildTgw({ account: 'Network', shareOus: ['Workload'] })],
+      vpcConsumers: {
+        transitGatewayAttachments: [buildTgwAttachment('Attach1', 'TestTgw', 'Network')],
+      },
+    });
+
+    new VpcValidator(networkConfig, helpers, errors);
+
+    expect(errors.filter(e => e.includes('TGW "TestTgw" is not shared'))).toHaveLength(0);
+  });
+
+  test('SHORT-CIRCUIT: missing TGW does not emit a duplicate share-check error', () => {
+    // Referenced TGW is not declared; the share check skips so only the existence error fires.
+    const errors: string[] = [];
+    const { networkConfig, helpers } = buildShareFixture({
+      vpcAccount: 'WorkloadA',
+      transitGateways: [], // no TGWs declared
+      vpcConsumers: {
+        transitGatewayAttachments: [buildTgwAttachment('Attach1', 'GhostTgw', 'Network')],
+      },
+    });
+
+    new VpcValidator(networkConfig, helpers, errors);
+
+    expect(errors.filter(e => e.includes('TGW "GhostTgw" is not shared'))).toHaveLength(0);
+  });
+
+  test('STRICT-OU: TGW shared to parent OU only is NOT consumable from child OU', () => {
+    // TGW shared to Workload; consumer WorkloadB is in the child OU Workload/NestedW, so it fails.
+    const errors: string[] = [];
+    const { networkConfig, helpers } = buildShareFixture({
+      vpcAccount: 'WorkloadB',
+      transitGateways: [buildTgw({ account: 'Network', shareOus: ['Workload'] })],
+      vpcConsumers: {
+        transitGatewayAttachments: [buildTgwAttachment('Attach1', 'TestTgw', 'Network')],
+      },
+    });
+
+    new VpcValidator(networkConfig, helpers, errors);
+
+    expect(
+      errors.filter(
+        e =>
+          e.includes('TGW "TestTgw" is not shared to one or more VPC deployment target accounts') &&
+          e.includes('Missing accounts: WorkloadB'),
+      ),
+    ).toHaveLength(1);
+  });
+});
+
+// IPAM pool share-target consumer check — validateIpamPoolShareTargets
+
+describe('VpcValidator - IPAM pool share targets', () => {
+  test('FAIL: VPC account not in pool.shareTargets and not delegatedAdmin emits error', () => {
+    const errors: string[] = [];
+    const { networkConfig, helpers } = buildShareFixture({
+      vpcAccount: 'WorkloadA',
+      delegatedAdminAccount: 'Network',
+      ipams: [buildIpam({ shareOus: ['Security'] })],
+      vpcConsumers: {
+        ipamAllocations: [{ ipamPoolName: 'TestPool', netmaskLength: 24 } as IpamAllocationConfig],
+      },
+    });
+
+    new VpcValidator(networkConfig, helpers, errors);
+
+    expect(
+      errors.filter(
+        e =>
+          e.includes('IPAM pool "TestPool" is not shared to one or more VPC deployment target accounts') &&
+          e.includes('Missing accounts: WorkloadA'),
+      ),
+    ).toHaveLength(1);
+  });
+
+  test('PASS: VPC in delegatedAdminAccount is implicitly allowed', () => {
+    const errors: string[] = [];
+    const { networkConfig, helpers } = buildShareFixture({
+      vpcAccount: 'Network',
+      delegatedAdminAccount: 'Network',
+      ipams: [buildIpam({})], // no shareTargets at all
+      vpcConsumers: {
+        ipamAllocations: [{ ipamPoolName: 'TestPool', netmaskLength: 24 } as IpamAllocationConfig],
+      },
+    });
+
+    new VpcValidator(networkConfig, helpers, errors);
+
+    expect(errors.filter(e => e.includes('IPAM pool "TestPool" is not shared'))).toHaveLength(0);
+  });
+
+  test('PASS: VPC account explicitly listed in pool.shareTargets.accounts', () => {
+    const errors: string[] = [];
+    const { networkConfig, helpers } = buildShareFixture({
+      vpcAccount: 'WorkloadA',
+      ipams: [buildIpam({ shareAccounts: ['WorkloadA'] })],
+      vpcConsumers: {
+        ipamAllocations: [{ ipamPoolName: 'TestPool', netmaskLength: 24 } as IpamAllocationConfig],
+      },
+    });
+
+    new VpcValidator(networkConfig, helpers, errors);
+
+    expect(errors.filter(e => e.includes('IPAM pool "TestPool" is not shared'))).toHaveLength(0);
+  });
+
+  test('PASS: VPC account in OU listed in pool.shareTargets.organizationalUnits', () => {
+    const errors: string[] = [];
+    const { networkConfig, helpers } = buildShareFixture({
+      vpcAccount: 'WorkloadA',
+      ipams: [buildIpam({ shareOus: ['Workload'] })],
+      vpcConsumers: {
+        ipamAllocations: [{ ipamPoolName: 'TestPool', netmaskLength: 24 } as IpamAllocationConfig],
+      },
+    });
+
+    new VpcValidator(networkConfig, helpers, errors);
+
+    expect(errors.filter(e => e.includes('IPAM pool "TestPool" is not shared'))).toHaveLength(0);
+  });
+
+  test('SHORT-CIRCUIT: missing pool does not emit a duplicate share-check error', () => {
+    const errors: string[] = [];
+    const { networkConfig, helpers } = buildShareFixture({
+      vpcAccount: 'WorkloadA',
+      ipams: [], // no IPAMs declared
+      vpcConsumers: {
+        ipamAllocations: [{ ipamPoolName: 'GhostPool', netmaskLength: 24 } as IpamAllocationConfig],
+      },
+    });
+
+    new VpcValidator(networkConfig, helpers, errors);
+
+    expect(errors.filter(e => e.includes('IPAM pool "GhostPool" is not shared'))).toHaveLength(0);
+  });
+
+  test('STRICT-OU: pool shared to parent OU only is NOT consumable from child OU', () => {
+    const errors: string[] = [];
+    const { networkConfig, helpers } = buildShareFixture({
+      vpcAccount: 'WorkloadB',
+      ipams: [buildIpam({ shareOus: ['Workload'] })],
+      vpcConsumers: {
+        ipamAllocations: [{ ipamPoolName: 'TestPool', netmaskLength: 24 } as IpamAllocationConfig],
+      },
+    });
+
+    new VpcValidator(networkConfig, helpers, errors);
+
+    expect(
+      errors.filter(
+        e =>
+          e.includes('IPAM pool "TestPool" is not shared to one or more VPC deployment target accounts') &&
+          e.includes('Missing accounts: WorkloadB'),
+      ),
+    ).toHaveLength(1);
+  });
+});
+
+// The checks below confirm each shared resource rejects a consuming VPC account
+// that falls outside its shareTargets (strict-OU: no child-OU cascade).
+
+describe('VpcValidator - DNS firewall rule group share targets', () => {
+  /**
+   * Build a DNS firewall rule group with the given share targets.
+   */
+  function buildRuleGroup(shareOus?: string[]): DnsFirewallRuleGroupConfig {
+    return {
+      name: 'TestRuleGroup',
+      regions: ['us-east-1'],
+      rules: [],
+      shareTargets: shareOus ? ({ organizationalUnits: shareOus, accounts: [] } as ShareTargets) : undefined,
+      tags: undefined,
+    } as DnsFirewallRuleGroupConfig;
+  }
+
+  test('PASS: VPC in delegatedAdminAccount allowed regardless of shareTargets', () => {
+    const errors: string[] = [];
+    const { networkConfig, helpers } = buildShareFixture({
+      vpcAccount: 'Network',
+      delegatedAdminAccount: 'Network',
+      resolver: { firewallRuleGroups: [buildRuleGroup()] } as ResolverConfig,
+      vpcConsumers: { dnsFirewallRuleGroups: [{ name: 'TestRuleGroup', priority: 100 }] },
+    });
+
+    new VpcValidator(networkConfig, helpers, errors);
+
+    expect(errors.filter(e => e.includes('DNS firewall rule group "TestRuleGroup" is not shared'))).toHaveLength(0);
+  });
+
+  test('FAIL: VPC in OU not in shareTargets emits "Missing accounts"', () => {
+    const errors: string[] = [];
+    const { networkConfig, helpers } = buildShareFixture({
+      vpcAccount: 'WorkloadA',
+      resolver: { firewallRuleGroups: [buildRuleGroup(['Security'])] } as ResolverConfig,
+      vpcConsumers: { dnsFirewallRuleGroups: [{ name: 'TestRuleGroup', priority: 100 }] },
+    });
+
+    new VpcValidator(networkConfig, helpers, errors);
+
+    expect(
+      errors.filter(
+        e =>
+          e.includes('DNS firewall rule group "TestRuleGroup" is not shared') &&
+          e.includes('Missing accounts: WorkloadA'),
+      ),
+    ).toHaveLength(1);
+  });
+
+  test('STRICT-OU: parent-OU share is not consumable from child OU', () => {
+    const errors: string[] = [];
+    const { networkConfig, helpers } = buildShareFixture({
+      vpcAccount: 'WorkloadB',
+      resolver: { firewallRuleGroups: [buildRuleGroup(['Workload'])] } as ResolverConfig,
+      vpcConsumers: { dnsFirewallRuleGroups: [{ name: 'TestRuleGroup', priority: 100 }] },
+    });
+
+    new VpcValidator(networkConfig, helpers, errors);
+
+    expect(
+      errors.filter(
+        e =>
+          e.includes('DNS firewall rule group "TestRuleGroup" is not shared') &&
+          e.includes('Missing accounts: WorkloadB'),
+      ),
+    ).toHaveLength(1);
+  });
+});
+
+describe('VpcValidator - DNS query log share targets', () => {
+  /**
+   * Build a DNS query logging config with the given share targets.
+   */
+  function buildQueryLogs(shareOus?: string[]): DnsQueryLogsConfig {
+    return {
+      name: 'TestQueryLog',
+      destinations: ['s3'],
+      shareTargets: shareOus ? ({ organizationalUnits: shareOus, accounts: [] } as ShareTargets) : undefined,
+      excludedRegions: undefined,
+    } as DnsQueryLogsConfig;
+  }
+
+  test('PASS: VPC in delegatedAdminAccount allowed', () => {
+    const errors: string[] = [];
+    const { networkConfig, helpers } = buildShareFixture({
+      vpcAccount: 'Network',
+      delegatedAdminAccount: 'Network',
+      resolver: { queryLogs: buildQueryLogs() } as ResolverConfig,
+      vpcConsumers: { queryLogs: ['TestQueryLog'] },
+    });
+
+    new VpcValidator(networkConfig, helpers, errors);
+
+    expect(errors.filter(e => e.includes('DNS query logging configuration "TestQueryLog" is not shared'))).toHaveLength(
+      0,
+    );
+  });
+
+  test('FAIL: VPC in OU not in shareTargets emits "Missing accounts"', () => {
+    const errors: string[] = [];
+    const { networkConfig, helpers } = buildShareFixture({
+      vpcAccount: 'WorkloadA',
+      resolver: { queryLogs: buildQueryLogs(['Security']) } as ResolverConfig,
+      vpcConsumers: { queryLogs: ['TestQueryLog'] },
+    });
+
+    new VpcValidator(networkConfig, helpers, errors);
+
+    expect(
+      errors.filter(
+        e =>
+          e.includes('DNS query logging configuration "TestQueryLog" is not shared') &&
+          e.includes('Missing accounts: WorkloadA'),
+      ),
+    ).toHaveLength(1);
+  });
+
+  test('STRICT-OU: parent-OU share is not consumable from child OU', () => {
+    const errors: string[] = [];
+    const { networkConfig, helpers } = buildShareFixture({
+      vpcAccount: 'WorkloadB',
+      resolver: { queryLogs: buildQueryLogs(['Workload']) } as ResolverConfig,
+      vpcConsumers: { queryLogs: ['TestQueryLog'] },
+    });
+
+    new VpcValidator(networkConfig, helpers, errors);
+
+    expect(
+      errors.filter(
+        e =>
+          e.includes('DNS query logging configuration "TestQueryLog" is not shared') &&
+          e.includes('Missing accounts: WorkloadB'),
+      ),
+    ).toHaveLength(1);
+  });
+});
+
+describe('VpcValidator - resolver rule share targets', () => {
+  /**
+   * Build a resolver rule with the given share targets.
+   */
+  function buildResolverRule(shareOus?: string[]): ResolverRuleConfig {
+    return {
+      name: 'TestResolverRule',
+      domainName: 'example.com',
+      excludedRegions: undefined,
+      ruleType: 'SYSTEM',
+      shareTargets: shareOus ? ({ organizationalUnits: shareOus, accounts: [] } as ShareTargets) : undefined,
+      tags: undefined,
+      targetIps: undefined,
+      inboundEndpointTarget: undefined,
+    } as ResolverRuleConfig;
+  }
+
+  test('PASS: VPC in delegatedAdminAccount allowed', () => {
+    const errors: string[] = [];
+    const { networkConfig, helpers } = buildShareFixture({
+      vpcAccount: 'Network',
+      delegatedAdminAccount: 'Network',
+      resolver: { rules: [buildResolverRule()] } as ResolverConfig,
+      vpcConsumers: { resolverRules: ['TestResolverRule'] },
+    });
+
+    new VpcValidator(networkConfig, helpers, errors);
+
+    expect(errors.filter(e => e.includes('Resolver rule "TestResolverRule" is not shared'))).toHaveLength(0);
+  });
+
+  test('FAIL: VPC in OU not in shareTargets emits "Missing accounts"', () => {
+    const errors: string[] = [];
+    const { networkConfig, helpers } = buildShareFixture({
+      vpcAccount: 'WorkloadA',
+      resolver: { rules: [buildResolverRule(['Security'])] } as ResolverConfig,
+      vpcConsumers: { resolverRules: ['TestResolverRule'] },
+    });
+
+    new VpcValidator(networkConfig, helpers, errors);
+
+    expect(
+      errors.filter(
+        e => e.includes('Resolver rule "TestResolverRule" is not shared') && e.includes('Missing accounts: WorkloadA'),
+      ),
+    ).toHaveLength(1);
+  });
+
+  test('STRICT-OU: parent-OU share is not consumable from child OU', () => {
+    const errors: string[] = [];
+    const { networkConfig, helpers } = buildShareFixture({
+      vpcAccount: 'WorkloadB',
+      resolver: { rules: [buildResolverRule(['Workload'])] } as ResolverConfig,
+      vpcConsumers: { resolverRules: ['TestResolverRule'] },
+    });
+
+    new VpcValidator(networkConfig, helpers, errors);
+
+    expect(
+      errors.filter(
+        e => e.includes('Resolver rule "TestResolverRule" is not shared') && e.includes('Missing accounts: WorkloadB'),
+      ),
+    ).toHaveLength(1);
+  });
+});
+
+// subnet → ALB share-target consistency — validateSubnetSharesToAlbShares
+// A shared ALB's target accounts must be a subset of each of its subnets' share targets.
+describe('VpcValidator - subnet to ALB share targets', () => {
+  /**
+   * Build a fixture with one subnet and one shared ALB referencing it.
+   */
+  function buildAlbFixture(albShareOus: string[], subnetShareOus: string[]) {
+    const subnets = [
+      {
+        name: 'SubnetA',
+        availabilityZone: 'a',
+        ipv4CidrBlock: '10.0.1.0/24',
+        shareTargets: { organizationalUnits: subnetShareOus, accounts: [] } as ShareTargets,
+      },
+    ] as unknown as VpcConfig['subnets'];
+
+    const loadBalancers = {
+      applicationLoadBalancers: [
+        {
+          name: 'AlbA',
+          subnets: ['SubnetA'],
+          shareTargets: { organizationalUnits: albShareOus, accounts: [] } as ShareTargets,
+        },
+      ],
+    } as unknown as VpcConfig['loadBalancers'];
+
+    return buildShareFixture({ vpcAccount: 'Network', subnets, loadBalancers });
+  }
+
+  const ALB_SHARE_ERROR = "is deployed to multiple accounts and using subnets that aren't available";
+
+  test('PASS: ALB share targets are a subset of the subnet share targets', () => {
+    const errors: string[] = [];
+    const { networkConfig, helpers } = buildAlbFixture(['Workload'], ['Workload']);
+
+    new VpcValidator(networkConfig, helpers, errors);
+
+    expect(
+      errors.filter(e => e.includes('Application Load Balancer AlbA') && e.includes(ALB_SHARE_ERROR)),
+    ).toHaveLength(0);
+  });
+
+  test('FAIL: ALB shared to an account the subnet is not shared to', () => {
+    // ALB -> Workload (WorkloadA); subnet -> Security (LogArchive, Audit). WorkloadA missing.
+    const errors: string[] = [];
+    const { networkConfig, helpers } = buildAlbFixture(['Workload'], ['Security']);
+
+    new VpcValidator(networkConfig, helpers, errors);
+
+    expect(
+      errors.filter(e => e.includes('Application Load Balancer AlbA') && e.includes(ALB_SHARE_ERROR)),
+    ).toHaveLength(1);
+  });
+
+  test('STRICT-OU: ALB targeting child OU is NOT covered by subnet shared to parent OU', () => {
+    // ALB -> Workload/NestedW (WorkloadB); subnet -> Workload (WorkloadA). WorkloadB missing.
+    const errors: string[] = [];
+    const { networkConfig, helpers } = buildAlbFixture(['Workload/NestedW'], ['Workload']);
+
+    new VpcValidator(networkConfig, helpers, errors);
+
+    expect(
+      errors.filter(e => e.includes('Application Load Balancer AlbA') && e.includes(ALB_SHARE_ERROR)),
+    ).toHaveLength(1);
   });
 });

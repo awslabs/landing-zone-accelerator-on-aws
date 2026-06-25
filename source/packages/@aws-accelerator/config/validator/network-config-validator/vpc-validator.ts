@@ -908,6 +908,38 @@ export class VpcValidator {
   }
 
   /**
+   * Validate that the consuming VPC's deployment-target accounts are covered by
+   * the referenced IPAM pool's shareTargets.
+   * @param values
+   * @param vpcItem
+   * @param helpers
+   * @param errors
+   */
+  private validateIpamPoolShareTargets(
+    values: NetworkConfig,
+    vpcItem: VpcConfig | VpcTemplatesConfig,
+    helpers: NetworkValidatorFunctions,
+    errors: string[],
+  ) {
+    const ipams = values.centralNetworkServices?.ipams;
+    vpcItem.ipamAllocations?.forEach(alloc => {
+      const pool = ipams?.flatMap(ipam => ipam.pools ?? []).find(p => p.name === alloc.ipamPoolName);
+      if (!pool) {
+        // Existence error already raised in validateIpamAllocations — short-circuit.
+        return;
+      }
+      const vpcAccountNames = helpers.getVpcAccountNames(vpcItem);
+      const poolAccountNames = helpers.getDelegatedAdminShareTargets(pool.shareTargets);
+      const targetComparison = helpers.compareTargetAccounts(vpcAccountNames, poolAccountNames);
+      if (targetComparison.length > 0) {
+        errors.push(
+          `[VPC ${vpcItem.name}]: IPAM pool "${alloc.ipamPoolName}" is not shared to one or more VPC deployment target accounts. Missing accounts: ${targetComparison}`,
+        );
+      }
+    });
+  }
+
+  /**
    * Function to validate conditional dependencies for Outpost and Local Gateway configurations.
    * @param values
    */
@@ -972,6 +1004,10 @@ export class VpcValidator {
         //
         this.validateIpamAllocations(vpcItem, values, errors);
         //
+        // Validate IPAM pool share targets
+        //
+        this.validateIpamPoolShareTargets(values, vpcItem, helpers, errors);
+        //
         // Validate NAT gateways
         //
         this.validateNatGateways(vpcItem, helpers, errors);
@@ -1003,6 +1039,10 @@ export class VpcValidator {
         // Validate transit gateway attachments
         //
         this.validateTgwAttachments(values, vpcItem, helpers, errors);
+        //
+        // Validate transit gateway share targets
+        //
+        this.validateTgwShareTargets(values, vpcItem, helpers, errors);
         //
         // Validate ACM shared targets
         //
@@ -3095,6 +3135,45 @@ export class VpcValidator {
         `[VPC ${vpcItem.name}]: duplicate TGW attachment targets defined. Target TGWs must be unique. Attachment target TGWs configured: ${tgwNames}`,
       );
     }
+  }
+
+  /**
+   * Validate that the consuming VPC's deployment-target accounts are covered by
+   * the referenced TGW's shareTargets. The TGW owner account is always allowed
+   * (RAM is not involved for same-account attachments). Strict-OU semantics
+   * (no child-OU cascade) — a TGW shared to OU X is consumable only by accounts
+   * directly in X.
+   * @param values
+   * @param vpcItem
+   * @param helpers
+   * @param errors
+   */
+  private validateTgwShareTargets(
+    values: NetworkConfig,
+    vpcItem: VpcConfig | VpcTemplatesConfig,
+    helpers: NetworkValidatorFunctions,
+    errors: string[],
+  ) {
+    vpcItem.transitGatewayAttachments?.forEach(attach => {
+      const tgw = this.getTransitGateway(values, attach.transitGateway.name, attach.transitGateway.account);
+      if (!tgw) {
+        // Existence error already raised in validateTgwAttachments — short-circuit.
+        return;
+      }
+      const vpcAccountNames = helpers.getVpcAccountNames(vpcItem);
+      // The TGW owner attaches natively (no RAM share needed), so exempt it from the consumer set.
+      const consumerAccounts = vpcAccountNames.filter(name => name !== tgw.account);
+      if (consumerAccounts.length === 0) {
+        return;
+      }
+      const tgwShareAccountNames = helpers.getAccountNamesFromTarget(tgw.shareTargets ?? ({} as ShareTargets));
+      const targetComparison = helpers.compareTargetAccounts(consumerAccounts, tgwShareAccountNames);
+      if (targetComparison.length > 0) {
+        errors.push(
+          `[VPC ${vpcItem.name} TGW attachment ${attach.name}]: TGW "${attach.transitGateway.name}" is not shared to one or more VPC deployment target accounts. Missing accounts: ${targetComparison}`,
+        );
+      }
+    });
   }
 
   /**

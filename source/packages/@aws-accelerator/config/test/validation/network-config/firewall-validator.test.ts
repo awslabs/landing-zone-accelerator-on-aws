@@ -130,6 +130,102 @@ describe('NetworkFirewallValidator', () => {
   });
 });
 
+/**
+ * Verify a Network Firewall is rejected when its VPC account is not covered by the
+ * firewall policy's shareTargets (strict-OU: no child-OU cascade); the delegated admin is exempt.
+ */
+describe('NetworkFirewallValidator - firewall policy share targets', () => {
+  // Network = delegated admin (OU=Infrastructure); WorkloadA = OU=Workload; WorkloadB = OU=Workload/NestedW (child).
+  const accounts: AccountConfig[] = [
+    {
+      name: 'Network',
+      email: 'net@example.com',
+      description: '',
+      organizationalUnit: 'Infrastructure',
+      warm: false,
+      accountAlias: undefined,
+    },
+    {
+      name: 'WorkloadA',
+      email: 'wkA@example.com',
+      description: '',
+      organizationalUnit: 'Workload',
+      warm: false,
+      accountAlias: undefined,
+    },
+    {
+      name: 'WorkloadB',
+      email: 'wkB@example.com',
+      description: '',
+      organizationalUnit: 'Workload/NestedW',
+      warm: false,
+      accountAlias: undefined,
+    },
+  ];
+  const ouIdNames = ['Root', 'Security', 'Infrastructure', 'Workload', 'Workload/NestedW'];
+
+  function buildFirewallConfig(
+    vpcAccount: string,
+    policyShareTargets: { organizationalUnits?: string[]; accounts?: string[] },
+  ) {
+    return (config: Writable<INetworkConfig>): INetworkConfig => {
+      config.vpcs = [{ name: 'vpc-a', account: vpcAccount, region: 'us-east-1' }];
+      config.centralNetworkServices = {
+        delegatedAdminAccount: 'Network',
+        networkFirewall: {
+          firewalls: [{ firewallPolicy: 'pol-a', name: 'fw-a', subnets: [], vpc: 'vpc-a' }],
+          policies: [
+            {
+              name: 'pol-a',
+              regions: ['us-east-1'],
+              shareTargets: policyShareTargets,
+              firewallPolicy: { statelessDefaultActions: [], statelessFragmentDefaultActions: [] },
+            },
+          ],
+          rules: [],
+        },
+      };
+      return config;
+    };
+  }
+
+  test('PASS: VPC account explicitly listed in policy.shareTargets.accounts', () => {
+    const { errors } = validate({
+      updateHelperProps: props => ({ ...props, accounts, ouIdNames }),
+      updateNetworkConfig: buildFirewallConfig('WorkloadA', { accounts: ['WorkloadA'] }),
+    });
+    expect(errors.filter(e => e.includes('firewall policy "pol-a" is not shared'))).toHaveLength(0);
+  });
+
+  test('FAIL: VPC account whose OU is not in shareTargets emits "Missing accounts"', () => {
+    const { errors } = validate({
+      updateHelperProps: props => ({ ...props, accounts, ouIdNames }),
+      updateNetworkConfig: buildFirewallConfig('WorkloadA', { organizationalUnits: ['Security'] }),
+    });
+    expect(
+      errors.filter(
+        e =>
+          e.includes(
+            'firewall policy "pol-a" is not shared with one or more target OU(s)/account(s) for VPC "vpc-a."',
+          ) && e.includes('Missing accounts: WorkloadA'),
+      ),
+    ).toHaveLength(1);
+  });
+
+  test('STRICT-OU: policy shared to parent OU only is NOT consumable from child OU', () => {
+    // Policy shared to Workload; firewall VPC owned by WorkloadB in child OU Workload/NestedW, so it fails.
+    const { errors } = validate({
+      updateHelperProps: props => ({ ...props, accounts, ouIdNames }),
+      updateNetworkConfig: buildFirewallConfig('WorkloadB', { organizationalUnits: ['Workload'] }),
+    });
+    expect(
+      errors.filter(
+        e => e.includes('firewall policy "pol-a" is not shared') && e.includes('Missing accounts: WorkloadB'),
+      ),
+    ).toHaveLength(1);
+  });
+});
+
 type HelperProps = {
   //values
   config: NetworkConfig;
