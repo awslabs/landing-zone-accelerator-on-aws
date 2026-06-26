@@ -73,6 +73,33 @@ if [ "$TOTAL_FINDINGS" -eq 0 ]; then
   echo "No active vulnerabilities found"
 fi
 
+echo "Fetching all open CVE issues for deduplication..."
+ALL_OPEN_CVE_ISSUES="[]"
+PAGE=1
+while true; do
+  PAGE_RESULT=$(gitlab_api "${GITLAB_API}/issues?labels=CVE&state=opened&per_page=100&page=$PAGE") || {
+    echo "ERROR: Failed to fetch issues (page $PAGE)" >&2
+    break
+  }
+  PAGE_COUNT=$(echo "$PAGE_RESULT" | jq -r 'length // 0')
+  [ "$PAGE_COUNT" -eq 0 ] && break
+  ALL_OPEN_CVE_ISSUES=$(echo "$ALL_OPEN_CVE_ISSUES" "$PAGE_RESULT" | jq -s '.[0] + .[1]')
+  [ "$PAGE_COUNT" -lt 100 ] && break
+  PAGE=$((PAGE + 1))
+done
+echo "  Found $(echo "$ALL_OPEN_CVE_ISSUES" | jq 'length') open CVE issues"
+if [ "$PAGE_COUNT" -ge 100 ] && [ "$PAGE_COUNT" -ne 0 ]; then
+  echo "  WARNING: Issue fetch may be incomplete — deduplication could miss existing issues" >&2
+fi
+
+# Helper: find existing open issue by CVE+Package using contains() match on title
+# Uses "$pkg:" to avoid false-positive prefix matches (e.g. "foo" matching "foobar")
+find_existing_issue() {
+  local cve="$1" pkg="$2"
+  echo "$ALL_OPEN_CVE_ISSUES" | jq -r --arg cve "$cve" --arg pkg "$pkg" \
+    '[.[] | select(.title | contains($cve) and contains($pkg + ":"))] | first | .iid // empty'
+}
+
 # Process each unique CVE+Package combination
 jq -c '.[]' "$FINDINGS_FILE" | while read -r vuln; do
   CVE_ID=$(echo "$vuln" | jq -r '.cve')
@@ -85,18 +112,7 @@ jq -c '.[]' "$FINDINGS_FILE" | while read -r vuln; do
   echo "Processing: $CVE_ID - $PKG_NAME"
 
   # Search for existing open issue with this CVE+Package
-  SEARCH_RESPONSE=$(gitlab_api \
-    "${GITLAB_API}/issues?labels=CVE&state=opened&search=${CVE_ID}")
-
-  echo "  Search response type: $(echo "$SEARCH_RESPONSE" | jq -r 'type')"
-
-  # Check if response is an array and find matching issue
-  EXISTING_ISSUE=""
-  if echo "$SEARCH_RESPONSE" | jq -e 'type == "array"' > /dev/null 2>&1; then
-    EXISTING_ISSUE=$(echo "$SEARCH_RESPONSE" | jq -r --arg cve "$CVE_ID" --arg pkg "$PKG_NAME" '[.[] | select(.title | test("\\b" + $cve + "\\b") and test("\\b" + $pkg + "\\b"))] | first | .iid // empty')
-  else
-    echo "  WARNING: Unexpected API response: $(echo "$SEARCH_RESPONSE" | head -c 200)"
-  fi
+  EXISTING_ISSUE=$(find_existing_issue "$CVE_ID" "$PKG_NAME")
 
   if [ -n "$EXISTING_ISSUE" ]; then
     echo "  Found existing issue #$EXISTING_ISSUE, adding comment..."
@@ -161,14 +177,7 @@ if [ -f "$MASKED_FILE" ] && [ "$(jq 'length' "$MASKED_FILE")" -gt 0 ]; then
 
     echo "Processing masked: $CVE_ID - $PKG_NAME"
 
-    SEARCH_RESPONSE=$(gitlab_api \
-      "${GITLAB_API}/issues?labels=CVE&state=opened&search=${CVE_ID}")
-
-    EXISTING_ISSUE=""
-    if echo "$SEARCH_RESPONSE" | jq -e 'type == "array"' > /dev/null 2>&1; then
-      EXISTING_ISSUE=$(echo "$SEARCH_RESPONSE" | jq -r --arg cve "$CVE_ID" --arg pkg "$PKG_NAME" \
-        '[.[] | select(.title | test("\\b" + $cve + "\\b") and test("\\b" + $pkg + "\\b"))] | first | .iid // empty')
-    fi
+    EXISTING_ISSUE=$(find_existing_issue "$CVE_ID" "$PKG_NAME")
 
     if [ -n "$EXISTING_ISSUE" ]; then
       echo "  Found existing issue #$EXISTING_ISSUE, adding comment..."
