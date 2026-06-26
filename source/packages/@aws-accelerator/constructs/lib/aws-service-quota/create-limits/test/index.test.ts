@@ -35,6 +35,21 @@ describe('Create Event', () => {
       .resolves({});
     expect(await handler(event)).toEqual({ PhysicalResourceId: 'service-quota-limits', Status: 'SUCCESS' });
   });
+  test('Create service quota - ResourceAlreadyExistsException is tolerated', async () => {
+    const event = AcceleratorUnitTest.getEvent(EventType.CREATE, { new: [StaticInput.newProps] });
+
+    sqClient
+      .on(GetServiceQuotaCommand, {
+        ServiceCode: StaticInput.newProps.serviceCode,
+        QuotaCode: StaticInput.newProps.quotaCode,
+      })
+      .resolves({ Quota: { Adjustable: true, Value: 1 } });
+    // An open increase request from a prior run already exists; AWS allows only one per quota
+    const alreadyExistsError = new Error('Only one open service quota increase request is allowed per quota.');
+    alreadyExistsError.name = 'ResourceAlreadyExistsException';
+    sqClient.on(RequestServiceQuotaIncreaseCommand).rejects(alreadyExistsError);
+    expect(await handler(event)).toEqual({ PhysicalResourceId: 'service-quota-limits', Status: 'SUCCESS' });
+  });
   test('Create service quota - non-adjustable service', async () => {
     const event = AcceleratorUnitTest.getEvent(EventType.CREATE, { new: [StaticInput.newProps] });
 

@@ -78,12 +78,19 @@ export async function handler(event: CloudFormationCustomResourceEvent): Promise
           );
         }
       } catch (error) {
-        console.error(error);
-        throw new Error(
-          `[service-quota-limits-config] Error increasing service quota ${quotaCode} for service ${serviceCode} in account ${accountId} region ${region}. Error: ${JSON.stringify(
-            error,
-          )}`,
-        );
+        // Service Quotas allows only one open increase request per quota.
+        if (error instanceof Error && error.name === 'ResourceAlreadyExistsException') {
+          console.warn(
+            `A service quota increase request already exists for ${serviceCode} quota ${quotaCode} in account ${accountId} region ${region}, skipping`,
+          );
+        } else {
+          console.error(error);
+          throw new Error(
+            `[service-quota-limits-config] Error increasing service quota ${quotaCode} for service ${serviceCode} in account ${accountId} region ${region}. Error: ${JSON.stringify(
+              error,
+            )}`,
+          );
+        }
       }
 
       return {
