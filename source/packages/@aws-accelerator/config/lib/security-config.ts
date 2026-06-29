@@ -473,7 +473,6 @@ export class ConfigRuleRemediation implements i.IConfigRuleRemediationType {
     sourceFilePath: '',
     handler: '',
     runtime: '',
-    rolePolicyFile: '',
     timeout: 3,
   };
   readonly retryAttemptSeconds = 0;

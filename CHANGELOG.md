@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- fix(lambda): remove unused rolePolicyFile from targetDocumentLambda remediation config
 - fix(networking): make ALB listener targetGroup optional for redirect and fixed-response, and reject it where not allowed
 - fix(idc): missing org id for Identity Center dependency policy replacement
 - fix(networking): validate transit gateway and IPAM pool shareTargets cover VPC deployment-target accounts (issue #831)

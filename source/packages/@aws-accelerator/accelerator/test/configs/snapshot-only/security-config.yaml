@@ -261,7 +261,6 @@ awsConfig:
               sourceFilePath: custom-config-rules/targetDocumentLambda.zip
               handler: index.handler
               runtime: nodejs18.x
-              rolePolicyFile: custom-config-rules/attach-ec2-instance-profile-remediation-role.json
             retryAttemptSeconds: 60
             maximumAutomaticAttempts: 5
             parameters:

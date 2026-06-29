@@ -519,7 +519,7 @@
           "description": "The name of the AWS account that owns the remediation automation document."
         },
         "targetDocumentLambda": {
-          "$ref": "#/definitions/ICustomRuleLambdaType",
+          "$ref": "#/definitions/IRemediationTargetDocumentLambdaType",
           "description": "Configuration for a Lambda function that supports the remediation automation document. This is used when the remediation requires custom logic that cannot be achieved through standard SSM automation document actions alone."
         },
         "targetId": {
@@ -1453,6 +1453,34 @@
         "name",
         "value",
         "type"
+      ],
+      "type": "object"
+    },
+    "IRemediationTargetDocumentLambdaType": {
+      "additionalProperties": false,
+      "description": "Configuration for the AWS Lambda function backing an AWS Config remediation SSM document\n(used when the remediation document action is `aws:invokeLambdaFunction`).",
+      "properties": {
+        "handler": {
+          "$ref": "#/definitions/NonEmptyString",
+          "description": "The entry point for your Lambda function that the remediation document invokes."
+        },
+        "runtime": {
+          "$ref": "#/definitions/NonEmptyString",
+          "description": "The runtime environment for executing your Lambda function."
+        },
+        "sourceFilePath": {
+          "$ref": "#/definitions/NonEmptyString",
+          "description": "Path to the ZIP file containing your Lambda function source code. This file must be available in the accelerator configuration repository."
+        },
+        "timeout": {
+          "description": "Maximum execution time for the Lambda function in seconds.",
+          "type": "number"
+        }
+      },
+      "required": [
+        "sourceFilePath",
+        "handler",
+        "runtime"
       ],
       "type": "object"
     },

@@ -2800,6 +2800,49 @@ export interface IRemediationParametersConfigType {
 // }
 
 /**
+ * *{@link SecurityConfig} / {@link AwsConfig} / {@link AwsConfigRuleSet} / {@link ConfigRule} / {@link ConfigRuleRemediation} / {@link RemediationTargetDocumentLambda}*
+ *
+ * @description
+ * Configuration for the AWS Lambda function backing an AWS Config remediation SSM document
+ * (used when the remediation document action is `aws:invokeLambdaFunction`).
+ *
+ * @remarks
+ * The remediation Lambda executes with the IAM role built from the parent
+ * `remediation.rolePolicyFile`. There is no separate execution role for this Lambda; place all
+ * permissions the Lambda needs in `remediation.rolePolicyFile`.
+ *
+ * @example
+ * ```
+ * targetDocumentLambda:
+ *   sourceFilePath: path/to/function.zip
+ *   handler: index.handler
+ *   runtime: nodejsXX.x
+ *   timeout: 3
+ * ```
+ */
+export interface IRemediationTargetDocumentLambdaType {
+  /**
+   * Path to the ZIP file containing your Lambda function source code.
+   * This file must be available in the accelerator configuration repository.
+   */
+  readonly sourceFilePath: t.NonEmptyString;
+  /**
+   * The entry point for your Lambda function that the remediation document invokes.
+   */
+  readonly handler: t.NonEmptyString;
+  /**
+   * The runtime environment for executing your Lambda function.
+   *
+   * @example "nodejs18.x", "python3.9", "java11"
+   */
+  readonly runtime: t.NonEmptyString;
+  /**
+   * Maximum execution time for the Lambda function in seconds.
+   */
+  readonly timeout?: number;
+}
+
+/**
  * *{@link SecurityConfig} / {@link AwsConfig} / {@link AwsConfigRuleSet} / {@link ConfigRule} / {@link ConfigRuleRemediation}*
  *
  * @description
@@ -2866,8 +2909,12 @@ export interface IConfigRuleRemediationType {
    * Configuration for a Lambda function that supports the remediation automation document.
    * This is used when the remediation requires custom logic that cannot be achieved
    * through standard SSM automation document actions alone.
+   *
+   * @remarks
+   * The Lambda function runs with the IAM role built from the parent `rolePolicyFile`.
+   * Place all permissions the Lambda needs in that file.
    */
-  readonly targetDocumentLambda?: ICustomRuleLambdaType;
+  readonly targetDocumentLambda?: IRemediationTargetDocumentLambdaType;
   /**
    * Maximum time in seconds that AWS Config waits for each remediation attempt to complete.
    * This prevents remediation actions from running indefinitely and ensures timely failure detection.

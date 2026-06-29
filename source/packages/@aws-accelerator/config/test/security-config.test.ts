@@ -17,6 +17,7 @@ import * as path from 'path';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { AccountsConfig } from '../lib/accounts-config';
 import { ReplacementsConfig } from '../lib/replacements-config';
+import { parseSecurityConfig } from '../lib/common/parse';
 import {
   AlarmConfig,
   AlarmSetConfig,
@@ -797,5 +798,86 @@ mainSteps:
     expect(() => {
       SecurityConfig.load(testConfigDir, replacementsConfig);
     }).toThrow();
+  });
+});
+
+describe('targetDocumentLambda backward compatibility', () => {
+  it('should still parse when rolePolicyFile is present under targetDocumentLambda', () => {
+    const configWithLegacyField = `
+centralSecurityServices:
+  delegatedAdminAccount: Audit
+  ebsDefaultVolumeEncryption:
+    enable: false
+  s3PublicAccessBlock:
+    enable: false
+  macie:
+    enable: false
+    publishSensitiveDataFindings: false
+  guardduty:
+    enable: false
+    s3Protection:
+      enable: false
+    exportConfiguration:
+      enable: false
+      destinationType: S3
+      exportFrequency: FIFTEEN_MINUTES
+  securityHub:
+    enable: false
+    standards: []
+  ssmAutomation:
+    documentSets: []
+accessAnalyzer:
+  enable: false
+iamPasswordPolicy:
+  allowUsersToChangePassword: true
+  hardExpiry: false
+  requireUppercaseCharacters: true
+  requireLowercaseCharacters: true
+  requireSymbols: true
+  requireNumbers: true
+  minimumPasswordLength: 14
+  passwordReusePrevention: 24
+  maxPasswordAge: 90
+awsConfig:
+  enableConfigurationRecorder: true
+  ruleSets:
+    - deploymentTargets:
+        organizationalUnits:
+          - Root
+      rules:
+        - name: test-rule
+          type: Custom
+          customRule:
+            lambda:
+              sourceFilePath: custom-config-rules/test.zip
+              handler: index.handler
+              runtime: nodejs18.x
+              rolePolicyFile: custom-config-rules/detection-role.json
+            periodic: true
+            maximumExecutionFrequency: Six_Hours
+            configurationChanges: true
+            triggeringResources:
+              lookupType: ResourceTypes
+              lookupKey: ResourceTypes
+              lookupValue:
+                - AWS::EC2::Instance
+          remediation:
+            rolePolicyFile: custom-config-rules/remediation-role.json
+            automatic: true
+            targetId: My-SSM-Document
+            targetDocumentLambda:
+              sourceFilePath: custom-config-rules/remediation.zip
+              handler: index.handler
+              runtime: nodejs18.x
+              rolePolicyFile: custom-config-rules/old-unused-role.json
+            retryAttemptSeconds: 60
+            maximumAutomaticAttempts: 5
+cloudWatch:
+  metricSets: []
+  alarmSets: []
+keyManagementService:
+  keySets: []
+`;
+    expect(() => parseSecurityConfig(yaml.load(configWithLegacyField))).not.toThrow();
   });
 });
