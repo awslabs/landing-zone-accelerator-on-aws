@@ -1445,6 +1445,16 @@ export interface ICfnParameter {
    * The value must be compatible with the parameter type defined in the template.
    */
   value: string;
+
+  /**
+   * **Parameter Type** *(Optional)*
+   *
+   * The CloudFormation parameter type. Used to convert the string value to the
+   * appropriate type when passing to CfnInclude. Defaults to 'String'.
+   *
+   * @see https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/parameters-section-structure.html#parameters-section-structure-properties-type
+   */
+  type?: 'String' | 'Number' | 'List<Number>' | 'CommaDelimitedList';
 }
 
 /**
@@ -1476,6 +1486,13 @@ export class CfnParameter implements ICfnParameter {
    * value to pass to the CloudFormation parameter.
    */
   readonly value: string = '';
+
+  /**
+   * **Parameter Type**
+   *
+   * The CloudFormation parameter type. Defaults to 'String'.
+   */
+  readonly type: ICfnParameter['type'] = 'String';
 }
 
 /**

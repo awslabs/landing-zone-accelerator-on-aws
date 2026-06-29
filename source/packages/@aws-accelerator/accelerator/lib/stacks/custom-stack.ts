@@ -267,15 +267,82 @@ export function getStackDependencies(stackMappings: customStackMapping[]): custo
   return sortedMappings;
 }
 
+/**
+ * The value types `CfnInclude` accepts for a CloudFormation parameter, mirroring the
+ * `String` / `Number` / `List<Number>` / `CommaDelimitedList` parameter types.
+ */
+type CfnParameterValue = string | number | number[] | string[];
+
+/**
+ * Converts the configured `CfnParameter[]` into the `{ name: value }` map expected by
+ * `CfnInclude`, coercing each value to the JS type implied by its CloudFormation `type`.
+ * A missing `type` (the common case) is treated as `String`, preserving the raw value.
+ */
 function transformCfnParametersArrayToObject(
   parameters?: CfnParameter[],
-): { [parameterName: string]: string } | undefined {
-  if (parameters) {
-    const parameterObject: { [key: string]: string } = {};
-    for (const parameter of parameters) {
-      parameterObject[parameter.name] = parameter.value;
-    }
-    return parameterObject;
+): { [parameterName: string]: CfnParameterValue } | undefined {
+  if (!parameters) {
+    return undefined;
   }
-  return undefined;
+
+  const parameterObject: { [parameterName: string]: CfnParameterValue } = {};
+  for (const parameter of parameters) {
+    parameterObject[parameter.name] = coerceCfnParameterValue(parameter);
+  }
+  return parameterObject;
+}
+
+/**
+ * Coerces a single parameter's string `value` to the JS type implied by its `type`.
+ */
+function coerceCfnParameterValue(parameter: CfnParameter): CfnParameterValue {
+  switch (parameter.type ?? 'String') {
+    case 'String':
+      return parameter.value;
+    case 'Number':
+      return toNumber(parameter.name, parameter.value);
+    case 'List<Number>':
+      return splitList(parameter.value).map(element => toNumber(parameter.name, element));
+    case 'CommaDelimitedList':
+      return splitList(parameter.value);
+    default:
+      // The `type` field is constrained to the supported set by the config schema and the
+      // `CfnParameter` type, so this is unreachable for valid config. Guard anyway: config is
+      // parsed from YAML at runtime, so an unsupported `type` must fail fast with a clear
+      // message rather than silently fall through and pass the raw string to `CfnInclude`.
+      throw new Error(
+        `CFN parameter "${parameter.name}" has unsupported type "${parameter.type}". ` +
+          `Supported types: String, Number, List<Number>, CommaDelimitedList`,
+      );
+  }
+}
+
+/**
+ * Splits a comma-delimited parameter value into trimmed, non-empty elements.
+ * Empty/whitespace-only entries (e.g. from an empty value or trailing/double commas)
+ * are dropped so list parameters never carry blank elements into the template.
+ */
+function splitList(value: string): string[] {
+  return value
+    .split(',')
+    .map(element => element.trim())
+    .filter(element => element.length > 0);
+}
+
+/**
+ * Converts a parameter value to a number, throwing a clear error when the value is
+ * not numeric. Without this guard a non-numeric value becomes `NaN`, which
+ * `JSON.stringify` serializes as `null` in the synthesized template — silently
+ * producing a malformed template instead of a deterministic, actionable failure.
+ *
+ * Empty/whitespace-only values are rejected explicitly: `Number('')` and
+ * `Number('   ')` evaluate to `0` rather than `NaN`, so without this check a blank
+ * value would silently coerce to `0` instead of failing.
+ */
+function toNumber(parameterName: string, value: string): number {
+  const numericValue = value.trim() === '' ? NaN : Number(value);
+  if (Number.isNaN(numericValue)) {
+    throw new Error(`CFN parameter "${parameterName}" has a numeric type but value "${value}" is not a valid number`);
+  }
+  return numericValue;
 }

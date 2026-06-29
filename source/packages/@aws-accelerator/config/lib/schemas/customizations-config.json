@@ -404,6 +404,16 @@
           "description": "**Parameter Name** *(Required)*\n\nThe name of the CloudFormation parameter as defined in the template. Must match exactly with the parameter name in the CloudFormation template.",
           "type": "string"
         },
+        "type": {
+          "description": "**Parameter Type** *(Optional)*\n\nThe CloudFormation parameter type. Used to convert the string value to the appropriate type when passing to CfnInclude. Defaults to 'String'.",
+          "enum": [
+            "String",
+            "Number",
+            "List<Number>",
+            "CommaDelimitedList"
+          ],
+          "type": "string"
+        },
         "value": {
           "description": "**Parameter Value** *(Required)*\n\nThe value to pass to the CloudFormation parameter during stack deployment. The value must be compatible with the parameter type defined in the template.",
           "type": "string"
