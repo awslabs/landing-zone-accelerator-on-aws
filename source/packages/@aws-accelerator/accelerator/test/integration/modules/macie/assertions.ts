@@ -28,7 +28,6 @@ import {
 } from '@aws-sdk/client-macie2';
 import { createLogger, executeApi, getCredentials } from 'aws-lza';
 import path from 'node:path';
-import { getModuleTestRoleName } from '../../framework/permissions-boundary';
 import { assertStateTableEntry } from '../../framework/state-table-assertion';
 import { AssertionResult, ResolvedEnvironment, TestManifest } from '../../framework/types';
 
@@ -426,7 +425,7 @@ async function createDelegatedAdminMacieClient(
     );
   }
 
-  const accessRole = getModuleTestRoleName('macie');
+  const accessRole = process.env['LZA_GITLAB_ROLE_NAME'] ?? 'LzaGitlabRole';
 
   const credentials = await getCredentials({
     accountId: delegatedAdminAccountId,

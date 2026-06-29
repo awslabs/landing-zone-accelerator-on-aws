@@ -221,14 +221,14 @@ async function waitForTerminalStates(environment: ResolvedEnvironment): Promise<
     return;
   }
 
-  const accessRole = getModuleTestRoleName(SERVICE_NAME);
+  const adminRole = process.env['LZA_GITLAB_ROLE_NAME'] ?? 'LzaGitlabRole';
   let credentials: { accessKeyId: string; secretAccessKey: string; sessionToken?: string } | undefined;
   try {
     const creds = await getCredentials({
       accountId: networkAccountId,
       region: environment.region,
       partition: environment.partition,
-      assumeRoleName: accessRole,
+      assumeRoleName: adminRole,
       solutionId: 'LzaIntegTest',
       logPrefix: 'TgwPlugin',
       credentials: environment.managementAccountCredentials,
@@ -352,14 +352,14 @@ async function cleanTgwRouteTablesInAws(environment: ResolvedEnvironment): Promi
   }
 
   // Get credentials for the Network account
-  const accessRole = getModuleTestRoleName(SERVICE_NAME);
+  const adminRole = process.env['LZA_GITLAB_ROLE_NAME'] ?? 'LzaGitlabRole';
   let credentials: { accessKeyId: string; secretAccessKey: string; sessionToken?: string } | undefined;
   try {
     const creds = await getCredentials({
       accountId: networkAccountId,
       region: environment.region,
       partition: environment.partition,
-      assumeRoleName: accessRole,
+      assumeRoleName: adminRole,
       solutionId: 'LzaIntegTest',
       logPrefix: 'TgwPlugin',
       credentials: environment.managementAccountCredentials,
@@ -578,7 +578,7 @@ async function cleanSingleDxGateway(
 async function cleanDxGatewayAssociationsInAws(environment: ResolvedEnvironment): Promise<void> {
   logger.info('Cleaning DX Gateway associations in AWS (network-dxgw + shared-dxgw)');
 
-  const accessRole = getModuleTestRoleName(SERVICE_NAME);
+  const adminRole = process.env['LZA_GITLAB_ROLE_NAME'] ?? 'LzaGitlabRole';
   const ssmPrefix = process.env['TGW_INTEG_SSM_PREFIX'] ?? environment.resourcePrefixes.ssmParamName;
 
   // --- Clean network-dxgw in Network account (same-account DX GW) ---
@@ -589,7 +589,7 @@ async function cleanDxGatewayAssociationsInAws(environment: ResolvedEnvironment)
         accountId: networkAccountId,
         region: environment.region,
         partition: environment.partition,
-        assumeRoleName: accessRole,
+        assumeRoleName: adminRole,
         solutionId: 'LzaIntegTest',
         logPrefix: 'TgwPlugin',
         credentials: environment.managementAccountCredentials,
@@ -621,7 +621,7 @@ async function cleanDxGatewayAssociationsInAws(environment: ResolvedEnvironment)
         accountId: sharedServicesAccountId,
         region: environment.region,
         partition: environment.partition,
-        assumeRoleName: accessRole,
+        assumeRoleName: adminRole,
         solutionId: 'LzaIntegTest',
         logPrefix: 'TgwPlugin',
         credentials: environment.managementAccountCredentials,

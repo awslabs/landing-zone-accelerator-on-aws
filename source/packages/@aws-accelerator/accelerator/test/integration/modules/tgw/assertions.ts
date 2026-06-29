@@ -37,7 +37,6 @@ import { GetParameterCommand, SSMClient } from '@aws-sdk/client-ssm';
 import { IAssumeRoleCredential, createLogger, executeApi, getCredentials, queryDynamoDBTable } from 'aws-lza';
 import path from 'node:path';
 import { assertStateTableEntry } from '../../framework/state-table-assertion';
-import { getModuleTestRoleName } from '../../framework/permissions-boundary';
 import { AssertionResult, ResolvedEnvironment, TestManifest } from '../../framework/types';
 
 const logger = createLogger([path.parse(path.basename(__filename)).name]);
@@ -399,7 +398,7 @@ async function getNetworkCredentials(environment: ResolvedEnvironment): Promise<
     accountId: resolveNetworkAccountId(environment),
     region: environment.region,
     partition: environment.partition,
-    assumeRoleName: getModuleTestRoleName('tgw-associations-and-propagations'),
+    assumeRoleName: process.env['LZA_GITLAB_ROLE_NAME'] ?? 'LzaGitlabRole',
     solutionId: 'LzaIntegTest',
     logPrefix: LOG_PREFIX,
     credentials: environment.managementAccountCredentials,
@@ -438,7 +437,7 @@ async function getSharedServicesCredentials(
     accountId: resolveSharedServicesAccountId(environment),
     region: environment.region,
     partition: environment.partition,
-    assumeRoleName: getModuleTestRoleName('tgw-associations-and-propagations'),
+    assumeRoleName: process.env['LZA_GITLAB_ROLE_NAME'] ?? 'LzaGitlabRole',
     solutionId: 'LzaIntegTest',
     logPrefix: LOG_PREFIX,
     credentials: environment.managementAccountCredentials,
