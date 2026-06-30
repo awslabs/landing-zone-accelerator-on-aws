@@ -414,11 +414,12 @@ export function getCentralLogBucketName(
 /**
  * Function to get runner target regions by comparing enabled regions and excluded regions
  * @param enabledRegions string[]
- * @param excludedRegions string[]
+ * @param excludedRegions string[] | undefined
  * @returns includedRegions string[]
  */
-export function getRunnerTargetRegions(enabledRegions: string[], excludedRegions: string[]): string[] {
-  const includedRegions = enabledRegions.filter(item => !excludedRegions.includes(item));
+export function getRunnerTargetRegions(enabledRegions: string[], excludedRegions?: string[]): string[] {
+  const regionsToExclude = excludedRegions ?? [];
+  const includedRegions = enabledRegions.filter(item => !regionsToExclude.includes(item));
   return includedRegions;
 }
 

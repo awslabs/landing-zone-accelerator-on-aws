@@ -1105,6 +1105,14 @@ describe('functions', () => {
       // Verify
       expect(result).toEqual(enabledRegions);
     });
+
+    test('should return all enabled regions when excluded regions is undefined', () => {
+      // Execute
+      const result = getRunnerTargetRegions(MOCK_CONSTANTS.enabledRegions, undefined);
+
+      // Verify
+      expect(result).toEqual(MOCK_CONSTANTS.enabledRegions);
+    });
   });
 
   describe('isModuleExecutionSkippedByEnvironment', () => {
