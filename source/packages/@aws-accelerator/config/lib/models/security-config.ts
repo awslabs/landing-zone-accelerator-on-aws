@@ -339,9 +339,10 @@ export interface IKeyConfig {
   readonly name: t.NonEmptyString;
   /**
    * Human-readable alias that provides an easy way to identify and use the encryption key.
-   *
-   * @remarks
-   * Note: If changing this value, a new CMK with the new alias will be created.
+   * Changing this value updates only the alias, it does not create a new CMK: the existing alias
+   * is removed and a new one is created pointing to the same underlying key, so the CMK (and its
+   * key material) is retained. A new CMK is created only when the key `name` is changed, since the
+   * key's logical identifier is derived from `name`.
    */
   readonly alias?: t.NonEmptyString;
   /**
