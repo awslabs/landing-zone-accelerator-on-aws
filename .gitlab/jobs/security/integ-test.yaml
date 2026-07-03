@@ -79,6 +79,7 @@ integ:prereq:aws:us-east-1:
 # ============================================================
 integ:macie:aws:us-east-1:
   stage: pipeline
+  resource_group: integ-macie-us-east-1
   needs:
     - job: accelerator:build
       artifacts: true
@@ -127,6 +128,7 @@ integ:macie:aws:us-east-1:
 # ============================================================
 integ:tgw:aws:us-east-1:
   stage: pipeline
+  resource_group: integ-tgw-us-east-1
   needs:
     - job: accelerator:build
       artifacts: true
