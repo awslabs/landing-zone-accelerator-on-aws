@@ -615,6 +615,7 @@ export class CustomizationsStack extends AcceleratorStack {
     this.logger.info(`Propagating portfolio associations for portfolio ${portfolioItem.name}`);
     const propagateAssociations = new PropagatePortfolioAssociations(this, `${portfolioItem.name}-Propagation`, {
       shareAccountIds: this.getAccountIdsFromShareTarget(portfolioItem.shareTargets),
+      acceleratorPrefix: this.props.prefixes.accelerator,
       crossAccountRole: this.acceleratorResourceNames.roles.crossAccountServiceCatalogPropagation,
       portfolioId: portfolio.portfolioId,
       portfolioDefinition: portfolioItem,

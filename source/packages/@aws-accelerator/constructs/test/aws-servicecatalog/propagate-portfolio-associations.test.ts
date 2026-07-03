@@ -26,6 +26,7 @@ const portfolioItem = new PortfolioConfig();
 new PropagatePortfolioAssociations(stack, 'PropagatePortfolioAssociations', {
   portfolioId: 'portfolioId',
   shareAccountIds: ['222222222222', '333333333333'],
+  acceleratorPrefix: 'AWSAccelerator',
   crossAccountRole: 'AWSAccelerator-CrossAccount-ServiceCatalog-Role',
   portfolioDefinition: portfolioItem,
   logRetentionInDays: 3653,

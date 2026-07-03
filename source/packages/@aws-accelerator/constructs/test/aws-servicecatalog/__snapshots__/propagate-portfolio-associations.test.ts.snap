@@ -94,6 +94,17 @@ exports[`PropagatePortfolioAssociations > Construct(PropagatePortfolioAssociatio
             "PolicyName": "Inline",
           },
         ],
+        "RoleName": {
+          "Fn::Join": [
+            "",
+            [
+              "AWSAccelerator-ServiceCatalogPropagationRole-",
+              {
+                "Ref": "AWS::Region",
+              },
+            ],
+          ],
+        },
       },
       "Type": "AWS::IAM::Role",
     },

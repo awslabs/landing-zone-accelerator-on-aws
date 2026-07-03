@@ -18,6 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - fix(networking): validate transit gateway and IPAM pool shareTargets cover VPC deployment-target accounts (issue #831)
 - fix(lambda): correct misleading SCP references in organization policy remediation lambda. SNS notification Subject lines changed from `Service Control Policy Remediation Failure/Success` to `Organization Policy Remediation Failure/Success`. Customers with email rules or automation matching the old Subject strings should update them after upgrade.
 - fix(service-quotas): tolerate existing request on quota reapply
+- fix(service-catalog): prefix portfolio propagation role to satisfy cross-account trust policy
 
 ## [1.16.0] - 
 

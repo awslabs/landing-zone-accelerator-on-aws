@@ -328,6 +328,7 @@ exports[`ApplicationsStack > Construct(ApplicationsStack):  Snapshot Test 1`] = 
             "PolicyName": "Inline",
           },
         ],
+        "RoleName": "AWSAccelerator-ServiceCatalogPropagationRole-us-east-1",
       },
       "Type": "AWS::IAM::Role",
     },

@@ -27,6 +27,11 @@ export interface PropagatePortfolioAssociationsProps {
    */
   readonly shareAccountIds: string[];
   /**
+   * The Accelerator prefix, used to name the custom resource provider execution role so it
+   * satisfies the cross account role's trust policy principal ARN condition
+   */
+  readonly acceleratorPrefix: string;
+  /**
    * The name of the role to assume from the account containing the portfolio
    */
   readonly crossAccountRole: string;
@@ -66,6 +71,23 @@ export class PropagatePortfolioAssociations extends Construct {
         },
       ],
     });
+
+    // The custom resource provider execution role must carry the Accelerator prefix so it satisfies
+    // the `aws:PrincipalArn` ArnLike condition on the cross account ServiceCatalog role's trust
+    // policy (see OperationsStack.createServiceCatalogPropagationRole). By default the low level
+    // CustomResourceProvider lets CloudFormation auto-generate the role name, which does not match
+    // the prefix and causes sts:AssumeRole to be denied. The role name is suffixed with the region
+    // because IAM role names are account global and this construct is deployed per region.
+    const providerRole = provider.node.tryFindChild('Role') as cdk.CfnResource | undefined;
+    if (!providerRole) {
+      throw new Error(
+        `Unable to find the '${RESOURCE_TYPE}' custom resource provider execution role to apply the Accelerator prefixed name`,
+      );
+    }
+    providerRole.addPropertyOverride(
+      'RoleName',
+      `${props.acceleratorPrefix}-ServiceCatalogPropagationRole-${cdk.Stack.of(this).region}`,
+    );
 
     const customResourceObjects = [];
     customResourceObjects.push(
