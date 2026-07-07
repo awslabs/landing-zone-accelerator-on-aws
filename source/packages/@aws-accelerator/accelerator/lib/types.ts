@@ -170,9 +170,9 @@ export enum AcceleratorModules {
   EC2_BLOCK_PUBLIC_AMI = 'ec2-block-public-ami',
 
   /**
-   * Sets an account alias.
+   * Unified accounts module — manages alias and tags in a single pass.
    */
-  MANAGE_ACCOUNTS_ALIAS = 'manage-accounts-alias',
+  ACCOUNTS = 'accounts',
 
   /**
    * Accelerator prerequisites module.

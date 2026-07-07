@@ -110,7 +110,7 @@ import { GetCloudFormationTemplatesModule } from '../../modules/lib/actions/aws-
 import { CreateOrganizationalUnitModule } from '../../modules/lib/actions/aws-organizations/create-organizational-unit';
 import { InviteAccountsToOrganizationsModule } from '../../modules/lib/actions/aws-organizations/invite-accounts-to-organizations';
 import { MoveAccountModule } from '../../modules/lib/actions/aws-organizations/move-accounts';
-import { ManageAccountsAliasModule } from '../../modules/lib/actions/aws-organizations/manage-accounts-alias';
+import { Accounts } from './actions/aws-organizations/accounts';
 import { RegisterOrganizationalUnitModule } from '../../modules/lib/actions/control-tower/register-organizational-unit';
 import { SetupControlTowerLandingZoneModule } from '../../modules/lib/actions/control-tower/setup-control-tower-landing-zone';
 import { EnrollAccountsModule } from '../../modules/lib/actions/control-tower/enroll-accounts';
@@ -487,10 +487,12 @@ export const AcceleratorModuleStageDetails: AcceleratorModuleStageDetailsType[] 
         executionPhase: ModuleExecutionPhase.DEPLOY,
       },
       {
-        name: AcceleratorModules.MANAGE_ACCOUNTS_ALIAS,
-        description: 'Manage the alias of accounts',
+        name: AcceleratorModules.ACCOUNTS,
+        description: 'Manage account alias and tags',
         runOrder: 2,
-        handler: legacyHandler(ManageAccountsAliasModule.execute),
+        handler: async (params: ModuleParams) => {
+          return await Accounts.configure(params);
+        },
         executionPhase: ModuleExecutionPhase.DEPLOY,
       },
     ],

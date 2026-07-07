@@ -102,11 +102,6 @@ export enum AcceleratorModules {
    */
   EC2_BLOCK_PUBLIC_AMI = 'ec2-block-public-ami',
   /**
-   * Sets an account alias
-   */
-  MANAGE_ACCOUNTS_ALIAS = 'manage-accounts-alias',
-
-  /**
    * Accelerator prerequisites module
    */
   ACCELERATOR_PREREQUISITES = 'accelerator-prerequisites',

@@ -18,7 +18,6 @@ import {
   getOrganizationalUnitsDetail,
   inviteAccountsBatchToOrganization,
   inviteAccountToOrganization,
-  manageAccountAlias,
   managePolicy,
   moveAccount,
   moveAccountsBatch,
@@ -30,7 +29,6 @@ import { MoveAccountModule } from '../../lib/aws-organizations/move-account';
 import { InviteAccountsBatchToOrganizationModule } from '../../lib/aws-organizations/invite-accounts-batch-to-organization';
 import { MoveAccountsBatchModule } from '../../lib/aws-organizations/move-accounts-batch';
 import { GetOrganizationalUnitsDetailModule } from '../../lib/aws-organizations/get-organizational-units-detail';
-import { ManageAccountAlias } from '../../lib/aws-organizations/manage-account-alias/index';
 import { ManagePolicy } from '../../lib/aws-organizations/manage-policy/index';
 import { PolicyType } from '@aws-sdk/client-organizations';
 import { OperationFlag } from '../../interfaces/aws-organizations/manage-policy';
@@ -42,7 +40,6 @@ vi.mock('../../lib/aws-organizations/invite-accounts-batch-to-organization/index
 vi.mock('../../lib/aws-organizations/move-account/index');
 vi.mock('../../lib/aws-organizations/move-accounts-batch/index');
 vi.mock('../../lib/aws-organizations/get-organizational-units-detail/index');
-vi.mock('../../lib/aws-organizations/manage-account-alias/index');
 vi.mock('../../lib/aws-organizations/manage-policy/index');
 
 describe('AWSOrganizationsExecutor', () => {
@@ -375,51 +372,6 @@ describe('AWSOrganizationsExecutor', () => {
 
       // Execute && Verify
       await expect(getOrganizationalUnitsDetail(input)).rejects.toThrow(errorMessage);
-
-      expect(mockHandler).toHaveBeenCalledWith(input);
-      expect(mockHandler).toHaveBeenCalledTimes(1);
-    });
-  });
-
-  describe('manageAccountAlias', () => {
-    const input = {
-      ...MOCK_CONSTANTS.runnerParameters,
-      configuration: {
-        alias: 'mock-account-alias',
-      },
-    };
-    test('should successfully manage account alias', async () => {
-      // Setup
-      const mockHandler = vi.fn().mockResolvedValue('SUCCESS');
-
-      (ManageAccountAlias as vi.Mock).mockImplementation(function () {
-        return {
-          handler: mockHandler,
-        };
-      });
-
-      // Execute
-      const result = await manageAccountAlias(input);
-
-      // Verify
-      expect(result).toEqual('SUCCESS');
-      expect(mockHandler).toHaveBeenCalledWith(input);
-      expect(mockHandler).toHaveBeenCalledTimes(1);
-    });
-
-    test('should throw error when manage account alias fails', async () => {
-      // Setup
-      const errorMessage = 'Manage account alias failed';
-      const mockHandler = vi.fn().mockRejectedValue(new Error(errorMessage));
-
-      (ManageAccountAlias as vi.Mock).mockImplementation(function () {
-        return {
-          handler: mockHandler,
-        };
-      });
-
-      // Execute && Verify
-      await expect(manageAccountAlias(input)).rejects.toThrow(errorMessage);
 
       expect(mockHandler).toHaveBeenCalledWith(input);
       expect(mockHandler).toHaveBeenCalledTimes(1);

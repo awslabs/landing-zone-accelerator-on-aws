@@ -39,6 +39,13 @@
           "$ref": "#/definitions/NonEmptyString",
           "description": "**Organizational Unit** *(Optional)*\n\nName of the Organizational Unit (OU) where this account will be placed within AWS Organizations. The OU determines which Service Control Policies (SCPs) and governance controls apply to the account.\n\n### Requirements\n\n- Must match an OU name defined in `organization-config.yaml`\n- OU must exist or be created before account placement\n- Affects policy inheritance and governance controls\n\n### Common Organizational Unit Patterns\n\n```yaml # By environment organizationalUnit: Production organizationalUnit: Development organizationalUnit: Sandbox\n\n# By function organizationalUnit: Workloads organizationalUnit: Security organizationalUnit: Infrastructure organizationalUnit: Shared-Services\n\n# By business unit organizationalUnit: Engineering organizationalUnit: Marketing organizationalUnit: Finance ```\n\n### Security Considerations\n\n- Production accounts should be in OUs with restrictive SCPs\n- Development accounts may have more permissive policies\n- Security accounts often have specialized compliance policies\n- Consider data classification and compliance requirements"
         },
+        "tags": {
+          "description": "**Account Tags** *(Optional)*\n\nKey-value pairs applied to the account via the AWS Organizations API. Additive only: creates missing tags and updates changed values. Tags not defined here are left unchanged (external tags are preserved).\n\n- Maximum 50 tags per account (including tags added outside LZA)\n- Key: 1–128 characters, must not start with `aws:`\n- Value: 0–256 characters\n\n```yaml tags:   - key: Environment     value: Production   - key: CostCenter     value: \"12345\" ```",
+          "items": {
+            "$ref": "#/definitions/ITag"
+          },
+          "type": "array"
+        },
         "warm": {
           "default": false,
           "description": "**Account Warming** *(Optional)*\n\nPre-provision the account by creating a temporary EC2 instance that runs for 15 minutes. This prepares the account's EC2 service for immediate production workload deployment.\n\n### When to Enable\n\n- **Enable** for accounts that will immediately deploy EC2-based workloads\n- **Enable** for production accounts requiring rapid deployment capabilities\n- **Disable** for accounts primarily using serverless or managed services\n- **Disable** for cost-sensitive development/testing environments\n\n### Process Details\n\n- Warming occurs during the operations stack deployment phase\n- Creates a minimal EC2 instance in the default VPC\n- Instance automatically terminates after 15 minutes\n- No additional charges beyond the brief EC2 usage\n- Can be safely removed from configuration after initial deployment\n\n### Best Practices\n\n```yaml # Production accounts - enable warming warm: true\n\n# Development/testing - typically disable warm: false\n\n# Serverless-only accounts - disable warm: false ```",
@@ -129,7 +136,7 @@
     },
     "IGovCloudAccountConfig": {
       "additionalProperties": false,
-      "description": "## GovCloud Account Configuration\n\nSpecialized account configuration for AWS GovCloud partition accounts. Used when deploying Landing Zone Accelerator in AWS GovCloud regions that require compliance with government security and regulatory requirements.\n\n### Key Features\n\n- **GovCloud Partition Support**: Creates accounts in the isolated AWS GovCloud partition\n- **Linked Account Creation**: Automatically creates paired commercial partition accounts\n- **Compliance Ready**: Designed for government and regulated workloads\n- **Account Warming**: Optional EC2 pre-provisioning for immediate readiness\n\n### Usage Example\n\n```yaml # GovCloud production workload account\n- name: GovCloud-Production   description: GovCloud production environment for regulated workloads   email: aws+govcloud-prod@agency.gov   organizationalUnit: GovCloud-Workloads   enableGovCloud: true   warm: true   accountAlias: agency-govcloud-prod\n\n# GovCloud development account\n- name: GovCloud-Development   description: GovCloud development and testing environment   email: aws+govcloud-dev@agency.gov   organizationalUnit: GovCloud-Workloads   enableGovCloud: true   warm: false ```\n\n### GovCloud Considerations\n\n- GovCloud accounts require separate email addresses from commercial accounts\n- Account creation process involves additional verification steps\n- Some AWS services have different availability in GovCloud\n- Enhanced logging and monitoring requirements typically apply",
+      "description": "## GovCloud Account Configuration\n\nSpecialized account configuration for AWS GovCloud partition accounts. Used when deploying Landing Zone Accelerator in AWS GovCloud regions that require compliance with government security and regulatory requirements.\n\n### Key Features\n\n- **GovCloud Partition Support**: Creates accounts in the isolated AWS GovCloud partition\n- **Linked Account Creation**: Automatically creates paired commercial partition accounts\n- **Compliance Ready**: Designed for government and regulated workloads\n- **Account Warming**: Optional EC2 pre-provisioning for immediate readiness\n\n### Usage Example\n\n```yaml # GovCloud production workload account\n- name: GovCloud-Production   description: GovCloud production environment for regulated workloads   email: aws+govcloud-prod@example.com   organizationalUnit: GovCloud-Workloads   enableGovCloud: true   warm: true   accountAlias: agency-govcloud-prod\n\n# GovCloud development account\n- name: GovCloud-Development   description: GovCloud development and testing environment   email: aws+govcloud-dev@example.com   organizationalUnit: GovCloud-Workloads   enableGovCloud: true   warm: false ```\n\n### GovCloud Considerations\n\n- GovCloud accounts require separate email addresses from commercial accounts\n- Account creation process involves additional verification steps\n- Some AWS services have different availability in GovCloud\n- Enhanced logging and monitoring requirements typically apply",
       "properties": {
         "accountAlias": {
           "$ref": "#/definitions/NonEmptyNoSpaceString",
@@ -156,6 +163,13 @@
           "$ref": "#/definitions/NonEmptyString",
           "description": "**Organizational Unit** *(Optional)*\n\nName of the Organizational Unit (OU) where this account will be placed within AWS Organizations. The OU determines which Service Control Policies (SCPs) and governance controls apply to the account.\n\n### Requirements\n\n- Must match an OU name defined in `organization-config.yaml`\n- OU must exist or be created before account placement\n- Affects policy inheritance and governance controls\n\n### Common Organizational Unit Patterns\n\n```yaml # By environment organizationalUnit: Production organizationalUnit: Development organizationalUnit: Sandbox\n\n# By function organizationalUnit: Workloads organizationalUnit: Security organizationalUnit: Infrastructure organizationalUnit: Shared-Services\n\n# By business unit organizationalUnit: Engineering organizationalUnit: Marketing organizationalUnit: Finance ```\n\n### Security Considerations\n\n- Production accounts should be in OUs with restrictive SCPs\n- Development accounts may have more permissive policies\n- Security accounts often have specialized compliance policies\n- Consider data classification and compliance requirements"
         },
+        "tags": {
+          "description": "**Account Tags** *(Optional)*\n\nKey-value pairs applied to the account via the AWS Organizations API. Additive only: creates missing tags and updates changed values. Tags not defined here are left unchanged (external tags are preserved).\n\n- Maximum 50 tags per account (including tags added outside LZA)\n- Key: 1–128 characters, must not start with `aws:`\n- Value: 0–256 characters\n\n```yaml tags:   - key: Environment     value: Production   - key: CostCenter     value: \"12345\" ```",
+          "items": {
+            "$ref": "#/definitions/ITag"
+          },
+          "type": "array"
+        },
         "warm": {
           "default": false,
           "description": "**Account Warming** *(Optional)*\n\nPre-provision the account by creating a temporary EC2 instance that runs for 15 minutes. This prepares the account's EC2 service for immediate production workload deployment in the GovCloud partition.\n\n### GovCloud Warming Considerations\n\n- Warming occurs in the GovCloud partition specifically\n- May take longer due to additional GovCloud provisioning requirements\n- Helps establish baseline EC2 service readiness for compliance workloads\n- Particularly beneficial for time-sensitive government deployments\n\n### Best Practices\n\n```yaml # Critical government workloads - enable warming warm: true\n\n# Development/testing in GovCloud - typically disable warm: false\n\n# Serverless-only GovCloud accounts - disable warm: false ```",
@@ -165,6 +179,25 @@
       "required": [
         "email",
         "name"
+      ],
+      "type": "object"
+    },
+    "ITag": {
+      "additionalProperties": false,
+      "description": "## AWS Resource Tag Configuration\n\nDefines key-value pairs used for tagging AWS resources. Tags provide metadata for resource organization, cost allocation, access control, and automation.\n\n### Key Features\n\n- **Resource Organization**: Group and categorize resources logically\n- **Cost Allocation**: Track costs by project, department, or environment\n- **Access Control**: Use tags in IAM policies for conditional access\n- **Automation**: Trigger automated actions based on tag values\n- **Compliance**: Meet organizational and regulatory tagging requirements\n\n### Example\n\n```yaml tags:   - key: Environment     value: Production   - key: Project     value: WebApplication   - key: Owner     value: Platform-Team   - key: CostCenter     value: Engineering   - key: Backup     value: Daily ```",
+      "properties": {
+        "key": {
+          "description": "**Tag Key** *(Required)*\n\nThe tag key name that identifies the type of metadata being stored. Tag keys should follow consistent naming conventions across your organization.",
+          "type": "string"
+        },
+        "value": {
+          "description": "**Tag Value** *(Required)*\n\nThe tag value that provides the actual metadata content for the tag key. Values should be meaningful and follow organizational standards.",
+          "type": "string"
+        }
+      },
+      "required": [
+        "key",
+        "value"
       ],
       "type": "object"
     },

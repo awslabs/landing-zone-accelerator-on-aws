@@ -404,6 +404,27 @@ export interface IBaseAccountConfig {
    * **Note:** Account aliases cannot be changed after creation, so choose carefully.
    */
   accountAlias?: t.NonEmptyNoSpaceString;
+
+  /**
+   * **Account Tags** *(Optional)*
+   *
+   * Key-value pairs applied to the account via the AWS Organizations API.
+   * Additive only: creates missing tags and updates changed values.
+   * Tags not defined here are left unchanged (external tags are preserved).
+   *
+   * - Maximum 50 tags per account (including tags added outside LZA)
+   * - Key: 1–128 characters, must not start with `aws:`
+   * - Value: 0–256 characters
+   *
+   * ```yaml
+   * tags:
+   *   - key: Environment
+   *     value: Production
+   *   - key: CostCenter
+   *     value: "12345"
+   * ```
+   */
+  tags?: t.ITag[];
 }
 
 /**
@@ -500,7 +521,7 @@ export interface IAccountConfig extends IBaseAccountConfig {
  * # GovCloud production workload account
  * - name: GovCloud-Production
  *   description: GovCloud production environment for regulated workloads
- *   email: aws+govcloud-prod@agency.gov
+ *   email: aws+govcloud-prod@example.com
  *   organizationalUnit: GovCloud-Workloads
  *   enableGovCloud: true
  *   warm: true
@@ -509,7 +530,7 @@ export interface IAccountConfig extends IBaseAccountConfig {
  * # GovCloud development account
  * - name: GovCloud-Development
  *   description: GovCloud development and testing environment
- *   email: aws+govcloud-dev@agency.gov
+ *   email: aws+govcloud-dev@example.com
  *   organizationalUnit: GovCloud-Workloads
  *   enableGovCloud: true
  *   warm: false

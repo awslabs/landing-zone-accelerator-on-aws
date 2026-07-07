@@ -184,6 +184,15 @@ const TGW_ASSOCIATIONS_AND_PROPAGATIONS = createModulePolicy('tgw-associations-a
   'directconnect:DeleteDirectConnectGatewayAssociation',
 ]);
 
+const ACCOUNTS = createModulePolicy('accounts', [
+  // Validated: source/packages/@aws-lza/lib/aws-organizations/manage-account-alias.ts
+  // Only the alias sub-operation makes cross-account calls; tags use the
+  // Organizations API from the management account (no AssumeRole).
+  'iam:CreateAccountAlias',
+  'iam:DeleteAccountAlias',
+  'iam:ListAccountAliases',
+]);
+
 /**
  * Registry of session policies for modules that make cross-account AssumeRole calls.
  *
@@ -200,6 +209,7 @@ export const MODULE_SESSION_POLICIES: Record<string, IModuleSessionPolicy> = {
   macie: MACIE,
   'get-cloudformation-templates': GET_CLOUDFORMATION_TEMPLATES,
   'tgw-associations-and-propagations': TGW_ASSOCIATIONS_AND_PROPAGATIONS,
+  accounts: ACCOUNTS,
 };
 
 /**

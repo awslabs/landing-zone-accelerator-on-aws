@@ -51,6 +51,10 @@ export class AccountsConfigValidator {
     // Account Alias validation
     //
     errors.push(...this.validateAccountAliases());
+    //
+    // Account Tags validation
+    //
+    errors.push(...this.validateAccountTags());
 
     if (errors.length) {
       throw new Error(`${AccountsConfig.FILENAME} has ${errors.length} issues:\n${errors.join('\n')}`);
@@ -289,5 +293,43 @@ export class AccountsConfigValidator {
       ouIdNames.push(organizationalUnit.name);
     }
     return ouIdNames;
+  }
+
+  /**
+   * Function to validate account tags against AWS Organizations constraints
+   * @returns Array of validation errors
+   */
+  private validateAccountTags(): string[] {
+    const errors: string[] = [];
+    const allAccounts = [...this.accountsConfig.mandatoryAccounts, ...this.accountsConfig.workloadAccounts];
+
+    for (const account of allAccounts) {
+      const tags = account.tags ?? [];
+
+      if (tags.length > 50) {
+        errors.push(`Account "${account.name}" has ${tags.length} tags, exceeding the AWS limit of 50.`);
+      }
+
+      const seenKeys = new Set<string>();
+      for (const tag of tags) {
+        if (tag.key.length === 0) {
+          errors.push(`Account "${account.name}" has a tag with an empty key.`);
+        }
+        if (tag.key.startsWith('aws:')) {
+          errors.push(`Account "${account.name}" has tag key "${tag.key}" with reserved "aws:" prefix.`);
+        }
+        if (tag.key.length > 128) {
+          errors.push(`Account "${account.name}" has tag key "${tag.key}" exceeding 128 characters.`);
+        }
+        if (tag.value.length > 256) {
+          errors.push(`Account "${account.name}" has tag value for key "${tag.key}" exceeding 256 characters.`);
+        }
+        if (seenKeys.has(tag.key)) {
+          errors.push(`Account "${account.name}" has duplicate tag key "${tag.key}".`);
+        }
+        seenKeys.add(tag.key);
+      }
+    }
+    return errors;
   }
 }

@@ -27,6 +27,7 @@ import {
   AwsClientFactory,
 } from '@aws-accelerator/utils';
 import { createSchema, DeploymentTargets, parseAccountsConfig } from './common';
+import { Tag } from './common/types';
 import * as i from './models/accounts-config';
 import { OrganizationalUnitConfig } from './organization-config';
 import { Account } from '@aws-sdk/client-organizations';
@@ -48,6 +49,7 @@ export class AccountConfig implements i.IAccountConfig {
   readonly organizationalUnit: string = '';
   readonly warm: boolean | undefined = undefined;
   readonly accountAlias?: string | undefined = undefined;
+  readonly tags?: Tag[] | undefined = undefined;
 }
 
 export class GovCloudAccountConfig implements i.IGovCloudAccountConfig {
@@ -59,6 +61,7 @@ export class GovCloudAccountConfig implements i.IGovCloudAccountConfig {
   readonly warm: boolean | undefined = undefined;
   readonly enableGovCloud: boolean | undefined = undefined;
   readonly accountAlias?: string | undefined = undefined;
+  readonly tags?: Tag[] | undefined = undefined;
 }
 
 export class AccountsConfig implements i.IAccountsConfig {
@@ -328,6 +331,17 @@ export class AccountsConfig implements i.IAccountsConfig {
     const accountIds = this.getAccountIds();
     return accountIds.filter(accountId => activeAccountIds.includes(accountId));
   }
+
+  public getActiveAccountsWithTags(
+    suspendedOus: OrganizationalUnitConfig[],
+  ): (AccountConfig | GovCloudAccountConfig)[] {
+    const activeAccountIds = this.getActiveAccountIds(suspendedOus);
+    const allAccounts = [...this.mandatoryAccounts, ...this.workloadAccounts];
+    return allAccounts
+      .filter(account => activeAccountIds.includes(this.getAccountId(account.name)))
+      .filter(account => Array.isArray(account.tags) && account.tags.length > 0);
+  }
+
   public getAccount(name: string): AccountConfig {
     const value = [...this.mandatoryAccounts, ...this.workloadAccounts].find(item => item.name == name);
     if (value) {

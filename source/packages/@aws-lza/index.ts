@@ -99,11 +99,37 @@ export {
 
 export { getOrganizationId } from './common/functions';
 
-export { manageAccountAlias } from './executors/accelerator-aws-organizations';
-export { IManageAccountAliasHandlerParameter } from './interfaces/aws-organizations/manage-account-alias';
+export {
+  IAccountAliasConfig,
+  IManageAccountAliasConfiguration,
+  IManageAccountAliasModuleRequest,
+  IManageAccountAliasModuleResponse,
+  IManageAccountAliasPerAccountResult,
+  ManageAccountAliasPerAccountStatus,
+} from './lib/aws-organizations/interfaces';
+export { manageAccountAlias } from './lib/aws-organizations/manage-account-alias';
 
 export { managePolicy } from './executors/accelerator-aws-organizations';
 export { IManagePolicyHandlerParameter } from './interfaces/aws-organizations/manage-policy';
+
+export {
+  IAccountTagsConfig,
+  IManageAccountTagsConfiguration,
+  IManageAccountTagsModuleRequest,
+  IManageAccountTagsModuleResponse,
+  IManageAccountTagsPerAccountResult,
+  ManageAccountTagsPerAccountStatus,
+} from './lib/aws-organizations/interfaces';
+export { manageAccountTags } from './lib/aws-organizations/manage-account-tags';
+
+export {
+  IAccountConfig,
+  IAccountsConfiguration,
+  IAccountsModuleRequest,
+  IAccountsModuleResponse,
+  IAccountsPerAccountResult,
+} from './lib/aws-organizations/interfaces';
+export { configureAccounts } from './lib/aws-organizations/accounts';
 
 //
 // Amazon EC2 Module resources

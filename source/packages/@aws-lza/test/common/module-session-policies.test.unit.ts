@@ -16,7 +16,7 @@ import { MODULE_SESSION_POLICIES, getModuleSessionPolicy } from '../../lib/commo
 
 describe('ModuleSessionPolicies', () => {
   describe('Registry completeness', () => {
-    it('should have policies for all 6 cross-account modules', () => {
+    it('should have policies for all 7 cross-account modules', () => {
       const expectedModules = [
         'stack-resources-retention',
         'invite-accounts-to-organizations',
@@ -24,6 +24,7 @@ describe('ModuleSessionPolicies', () => {
         'macie',
         'get-cloudformation-templates',
         'tgw-associations-and-propagations',
+        'accounts',
       ];
 
       for (const moduleName of expectedModules) {

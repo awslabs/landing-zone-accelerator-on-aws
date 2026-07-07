@@ -215,6 +215,8 @@ export interface IRequiredBatchOperationSettings {
 export enum AcceleratorModuleName {
   /** Amazon Macie security module */
   AMAZON_MACIE = 'amazon-macie',
+  /** Unified accounts module — manages alias and tags */
+  ACCOUNTS = 'accounts',
 }
 
 /**

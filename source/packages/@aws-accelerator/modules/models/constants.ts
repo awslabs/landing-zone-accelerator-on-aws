@@ -22,7 +22,6 @@ import { ConfigureRootUserManagementModule } from '../lib/actions/aws-iam/root-u
 import { SsmBlockPublicDocumentSharingModule } from '../lib/actions/aws-ssm/ssm-block-public-document-sharing';
 import { AcceleratorModules, AcceleratorModuleStages, ModuleExecutionPhase } from './enums';
 import { AcceleratorModuleStageDetailsType, AcceleratorModuleStageOrdersType, ModuleParams } from './types';
-import { ManageAccountsAliasModule } from '../lib/actions/aws-organizations/manage-accounts-alias';
 import { AcceleratorPrerequisites } from '../lib/actions/prerequisites/accelerator-prerequisites';
 import { PipelinePrerequisites } from '../lib/actions/prerequisites/pipeline-prerequisites';
 import { ManageAutomationRulesModule } from '../lib/actions/aws-security-hub/manage-automation-rules';
@@ -167,15 +166,6 @@ export const AcceleratorModuleStageDetails: AcceleratorModuleStageDetailsType[] 
         runOrder: 1,
         handler: async (params: ModuleParams) => {
           return await EnrollAccountsModule.execute(params);
-        },
-        executionPhase: ModuleExecutionPhase.DEPLOY,
-      },
-      {
-        name: AcceleratorModules.MANAGE_ACCOUNTS_ALIAS,
-        description: 'Manage the alias of accounts',
-        runOrder: 2,
-        handler: async (params: ModuleParams) => {
-          return await ManageAccountsAliasModule.execute(params);
         },
         executionPhase: ModuleExecutionPhase.DEPLOY,
       },
