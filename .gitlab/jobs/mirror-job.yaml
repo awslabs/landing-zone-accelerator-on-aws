@@ -83,3 +83,17 @@ lza:dev-team-replicator:
     - if: $CI_PROJECT_ID == "21753" && $CI_MERGE_REQUEST_IID == null
       when: always
     - when: never
+
+# Account 5: LZA All-Enabled Config Test Account
+# Mirrors only when changes are merged to 'integ' branch
+lza:all-enable-mirror:
+  <<: *mirror_template
+  variables:
+    ACCOUNT_ID: "${LZA_ALL_ENABLE_ACCOUNT_ID}"
+    AWS_CREDS_TARGET_ROLE: "arn:${PARTITION}:iam::${ACCOUNT_ID}:role/${GITLAB_RUNNER_ROLE_NAME}"
+  rules:
+    - if: $SKIP_MIRROR_JOBS == "yes"
+      when: never
+    - if: $CI_PROJECT_ID == "21753" && $CI_COMMIT_BRANCH == "integ" && $CI_MERGE_REQUEST_IID == null
+      when: always
+    - when: never
