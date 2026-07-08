@@ -60,6 +60,11 @@ The process for adding a new region depends on your deployment type. Choose the 
 
 ### With AWS Control Tower
 
+!!! info "How LZA handles this for you"
+    When you add a Region to a Control Tower-governed landing zone, Control Tower starts governing that Region at the OU level, but each member account's AWS Config configuration recorder is only created once the account's baseline is updated. Until that happens the accounts are in a **mixed governance** state (the OU is governed in the new Region, but the accounts are not yet updated), and deploying resources into the new Region would fail in the `Security_Resources` (or later) stage with a `NoAvailableConfigurationRecorder` error.
+
+    LZA handles this for you. When it detects that the governed Region list changed, it automatically re-registers (resets the baseline of) every governed OU during the `Prepare` stage, which updates all member accounts and provisions their Config recorders in the new Region before later stages deploy resources. You no longer need to update accounts manually or split the change across two commits. For background, see the AWS Control Tower documentation on [About landing zone updates](https://docs.aws.amazon.com/controltower/latest/userguide/about-updates.html) and [Avoid mixed governance when configuring Regions](https://docs.aws.amazon.com/controltower/latest/userguide/mixed-governance.html).
+
 **Prerequisites:**
 
 1. For opt-in regions: Ensure STS Global Endpoints are set to be valid in all regions (IAM Settings in the Management account)
@@ -68,24 +73,35 @@ The process for adding a new region depends on your deployment type. Choose the 
 4. In `security-config.yaml`, configure proper exclusions for security services or Config Rules that are not available in the target region (e.g., Amazon Macie is not supported in ca-west-1)
 5. Optionally, ensure AWS Config is enabled: Add `enableConfigurationRecorder: true` under `awsConfig` in `security-config.yaml`
 
-**Configuration Steps:**
+**Steps:**
 
-1. Add the new region to `enabledRegions` in `global-config.yaml`
-2. Deploy the LZA pipeline - it will call the UpdateLandingZone API with the new regions during the Prepare stage
-3. Once the operation completes, all accounts outside the Security OU will show as "Update Available" in Control Tower
-4. **Critical Step:** Manually update all accounts in Control Tower (5 at a time) to activate the region and deploy AWS Config recorders
-5. Verify all accounts show "Enrolled" status before proceeding
+1. Add the new region to `enabledRegions` in `global-config.yaml`. You can add resources that target the new Region (for example, VPCs in `network-config.yaml`, or security services in `security-config.yaml`) in the same commit.
+2. Deploy the LZA pipeline. During the `Prepare` stage LZA calls the Control Tower `UpdateLandingZone` API with the new Region, detects the governed-region change, and automatically re-registers each governed OU (resetting its baseline). This updates all member accounts in those OUs and provisions their AWS Config recorders in the new Region. LZA waits for these baseline operations to complete before continuing.
+3. Later stages (`Security_Resources` and downstream) then deploy into the new Region against the now-present Config recorders.
+
+!!! note "Timing in large environments"
+    Baseline re-registration runs per OU and can take significant time in organizations with many accounts. The `Prepare` stage waits for the operations to complete, but they are bounded by a timeout. If a baseline operation exceeds it, the pipeline aborts and asks you to confirm completion in the Control Tower console, after which you can re-run the pipeline. You can monitor progress in the Control Tower console (see "Confirming mixed governance" below). Note that the Security / Log Archive OU baseline is managed separately and is not part of this automatic re-registration.
+
+**What is a mixed governance state?**
+
+Mixed governance occurs when the controls governing an OU do not match the controls actually applied to every account within that OU. It happens when Control Tower extends (or removes) governance for a Region but the member accounts have not yet been updated. In this state, Control Tower cannot reliably enable detective controls (which are backed by AWS Config rules), so you may see `FAILED_TO_ENABLE` in Control Tower and `NoAvailableConfigurationRecorder` in the LZA pipeline. Note that mixed governance is **not** the same as drift and is not reported as drift.
+
+**Confirming mixed governance (console and CLI):**
+
+- **Console:** In the AWS Control Tower console, open **Organization**. Accounts that still need updating show **Update available** (rather than **Enrolled** / current). An OU in mixed governance also surfaces an alert banner, and opt-in Regions can show **Not governed** for accounts that have not been updated.
+- **CLI:** There is no single API that returns "mixed governance" directly. You can inspect per-account baseline currency with `aws controltower list-enabled-baselines` and `aws controltower get-enabled-baseline --enabled-baseline-identifier <arn>` (check the baseline version and operation status per target), and enumerate accounts with `aws organizations list-accounts`. If baseline versions differ across accounts in the same OU, or an OU shows accounts pending update, you are in a mixed governance state.
 
 **Troubleshooting:**
 
-- **"NoAvailableConfigurationRecorder" Error:** This occurs when AWS Config is not properly set up in the new region. You must update accounts in Control Tower before retrying the LZA pipeline.
+- **"NoAvailableConfigurationRecorder" Error:** AWS Config is not yet set up in the new Region for one or more accounts, meaning the automatic OU re-registration did not update them (for example, a baseline operation timed out, or the account is in the separately managed Security / Log Archive OU). Confirm all accounts show **Enrolled** / up to date in the Control Tower console, update any that are still pending, then retry the LZA pipeline.
 - **Failed Security_Resources Stacks:** If stacks fail during initial deployment:
-  1. Disable termination protection on failed stacks
-  2. Manually delete the orphaned CloudFormation stacks in the new region
-  3. Retry the Deploy stage in the LZA pipeline
-- **Mixed Governance State:** Ensure all accounts show as "Enrolled" (not "Update Available") in Control Tower before proceeding
+    1. Disable termination protection on failed stacks
+    2. Manually delete the orphaned CloudFormation stacks in the new region
+    3. Retry the Deploy stage in the LZA pipeline
+- **Mixed Governance State:** Ensure all accounts show as **Enrolled** (not **Update available**) in Control Tower before proceeding. See "Confirming mixed governance" above.
 
 **Important Notes for Control Tower Deployments:**
-- Simply adding a region to `global-config.yaml` is not sufficient - manual Control Tower account updates are required
-- The process may take significant time for environments with many accounts
-- Always update Control Tower accounts before retrying failed LZA pipeline actions
+
+- Adding a Region to `global-config.yaml` triggers automatic OU re-registration during the `Prepare` stage. You do not need to update Control Tower accounts manually or split enabling and using the Region across two commits.
+- Baseline re-registration can take significant time in environments with many accounts. Monitor the `Prepare` stage and the Control Tower console; if operations exceed the pipeline timeout, confirm completion in the console and re-run.
+- If an account is not updated automatically (for example, a timed-out baseline operation or the separately managed Security / Log Archive OU), update it in Control Tower before retrying failed LZA pipeline actions.
