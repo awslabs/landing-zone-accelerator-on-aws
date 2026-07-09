@@ -24,7 +24,7 @@ The account removal process requires several important steps to ensure a clean t
 
 ## How do I manage my SCPs when using CT and Landing Zone Accelerator?
 
-You can use Landing Zone Accelerator to deploy custom SCPs into your environment in addition to the SCPs that are deployed and managed by CT. Landing Zone Accelerator will only manage SCPs that are part of the accelerator configuration, and will not manage any SCPs that are deployed by CT. Note, Organizations sets a limit of 5 SCPs per OU and CT will consume up to 3 SCPs which will leave 2 additional SCPs that you can add. For finer grained SCPs, Landing Zone Accelerator also allows you to deploy custom SCPs to specific accounts.
+You can use Landing Zone Accelerator to deploy custom SCPs into your environment in addition to the SCPs that are deployed and managed by CT. Landing Zone Accelerator will only manage SCPs that are part of the accelerator configuration, and will not manage any SCPs that are deployed by CT. Note, Organizations sets a limit of 10 SCPs attached per root, OU, or account and CT will consume up to 3 SCPs which will leave 7 additional SCPs that you can add. For finer grained SCPs, Landing Zone Accelerator also allows you to deploy custom SCPs to specific accounts.
 
 For more information on managing SCPs in Landing Zone Accelerator, please see [Adding a Service Control Policy (SCP)](https://docs.aws.amazon.com/solutions/latest/landing-zone-accelerator-on-aws/performing-administrator-tasks.html#adding-a-service-control-policy-scp) in the solution implementation guide.
 

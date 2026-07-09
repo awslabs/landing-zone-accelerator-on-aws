@@ -52,8 +52,8 @@ export async function handler(event: CloudFormationCustomResourceEvent): Promise
   const organizationUnits: orgItem[] = event.ResourceProperties['organizationUnits'];
   const accounts: accountItem[] = event.ResourceProperties['accounts'];
   const scps: validateScpItem[] = event.ResourceProperties['scps'];
-  const maxOuAttachedScps = event.ResourceProperties['maxOuAttachedScps'] ?? 5;
-  const maxAccountAttachedScps = event.ResourceProperties['maxAccountAttachedScps'] ?? 5;
+  const maxOuAttachedScps = event.ResourceProperties['maxOuAttachedScps'] ?? 10;
+  const maxAccountAttachedScps = event.ResourceProperties['maxAccountAttachedScps'] ?? 10;
   const globalRegion = getGlobalRegion(partition);
   const organizationsClient = new OrganizationsClient({
     region: globalRegion,

@@ -18,8 +18,10 @@ import { ReplacementsConfig } from '../lib/replacements-config';
 import { CommonValidatorFunctions } from './common/common-validator-functions';
 
 export class OrganizationConfigValidator {
-  private readonly ouScpLimit = Number(process.env['ORGANIZATIONAL_UNIT_SCP_LIMIT']) || 5;
-  private readonly accountScpLimit = Number(process.env['ACCOUNT_SCP_LIMIT']) || 5;
+  // AWS Organizations allows a maximum of 10 SCPs attached to a root, OU, or account
+  // https://docs.aws.amazon.com/organizations/latest/userguide/orgs_reference_limits.html
+  private readonly ouScpLimit = Number(process.env['ORGANIZATIONAL_UNIT_SCP_LIMIT']) || 10;
+  private readonly accountScpLimit = Number(process.env['ACCOUNT_SCP_LIMIT']) || 10;
 
   constructor(values: OrganizationConfig, replacementsConfig: ReplacementsConfig | undefined, configDir: string) {
     const errors: string[] = [];
@@ -45,6 +47,9 @@ export class OrganizationConfigValidator {
 
     // Validate definition of static parameter in policy file
     this.validateSCPParameters(configDir, values, replacementsConfig, errors);
+
+    // Validate policy description length
+    this.validatePolicyDescriptions(values, errors);
 
     if (errors.length) {
       throw new Error(`${OrganizationConfig.FILENAME} has ${errors.length} issues:\n${errors.join('\n')}`);
@@ -169,6 +174,33 @@ export class OrganizationConfigValidator {
     for (const backupPolicy of values.backupPolicies ?? []) {
       if (!fs.existsSync(path.join(configDir, backupPolicy.policy))) {
         errors.push(`Invalid policy file ${backupPolicy.policy} for backup policy ${backupPolicy.name}!`);
+      }
+    }
+  }
+
+  /**
+   * Function to validate organization policy description length does not exceed the AWS Organizations limit
+   * @param values
+   * @param errors
+   */
+  private validatePolicyDescriptions(values: OrganizationConfig, errors: string[]) {
+    // AWS Organizations CreatePolicy allows a maximum description length of 512 characters
+    const maxDescriptionLength = 512;
+
+    const policies = [
+      ...(values.serviceControlPolicies ?? []).map(item => ({ policyType: 'service control policy', ...item })),
+      ...(values.resourceControlPolicies ?? []).map(item => ({ policyType: 'resource control policy', ...item })),
+      ...(values.declarativePolicies ?? []).map(item => ({ policyType: 'declarative policy', ...item })),
+      ...(values.taggingPolicies ?? []).map(item => ({ policyType: 'tagging policy', ...item })),
+      ...(values.chatbotPolicies ?? []).map(item => ({ policyType: 'chatbot policy', ...item })),
+      ...(values.backupPolicies ?? []).map(item => ({ policyType: 'backup policy', ...item })),
+    ];
+
+    for (const policy of policies) {
+      if (policy.description.length > maxDescriptionLength) {
+        errors.push(
+          `Description for ${policy.policyType} ${policy.name} exceeds the maximum length of ${maxDescriptionLength} characters, found ${policy.description.length} characters !!!`,
+        );
       }
     }
   }

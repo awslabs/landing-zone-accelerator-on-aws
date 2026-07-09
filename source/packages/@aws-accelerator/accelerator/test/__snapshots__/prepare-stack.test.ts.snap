@@ -2905,8 +2905,8 @@ exports[`PrepareStack > Construct(PrepareStack):  Snapshot Test 1`] = `
         "configTableName": {
           "Ref": "AcceleratorConfigTable590367C4",
         },
-        "maxAccountAttachedScps": 5,
-        "maxOuAttachedScps": 5,
+        "maxAccountAttachedScps": 10,
+        "maxOuAttachedScps": 10,
         "newOrgAccountsTableName": {
           "Ref": "NewOrgAccountsE5BA262F",
         },
