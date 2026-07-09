@@ -192,6 +192,7 @@ async function setupModuleTestRoles(moduleName: string, environment: ResolvedEnv
 
   logger.info(`Setting up module test roles using admin role "${adminRoleName}"`);
 
+  let trustPolicyChanged = false;
   for (const [accountName, accountId] of environment.accounts.entries()) {
     if (accountId === environment.managementAccountId) {
       continue;
@@ -216,7 +217,7 @@ async function setupModuleTestRoles(moduleName: string, environment: ResolvedEnv
         continue;
       }
 
-      await ensureModuleTestRole({
+      const changed = await ensureModuleTestRole({
         moduleName,
         accountId,
         managementAccountId: environment.managementAccountId,
@@ -224,10 +225,23 @@ async function setupModuleTestRoles(moduleName: string, environment: ResolvedEnv
         region: environment.region,
         adminCredentials,
       });
+      if (changed) {
+        trustPolicyChanged = true;
+      }
     } catch (error: unknown) {
       const msg = error instanceof Error ? error.message : String(error);
       logger.warn(`Failed to set up role in ${accountName} (${accountId}): ${msg} — continuing`);
     }
+  }
+
+  // Allow IAM trust policy changes to propagate globally before module execution.
+  // Without this, AssumeRole can fail with AccessDenied if the trust principal was just updated.
+  if (trustPolicyChanged) {
+    const IAM_PROPAGATION_DELAY_MS = 60_000;
+    logger.info(`Trust policy changed — waiting ${IAM_PROPAGATION_DELAY_MS / 1000}s for IAM propagation...`);
+    await new Promise(resolve => setTimeout(resolve, IAM_PROPAGATION_DELAY_MS));
+  } else {
+    logger.info('Trust policy unchanged — no propagation delay needed');
   }
 
   logger.info(`Module test role setup complete for "${moduleName}"`);

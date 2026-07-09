@@ -147,14 +147,14 @@ export async function ensureModuleTestRole(options: {
   partition: string;
   region: string;
   adminCredentials: IAssumeRoleCredential;
-}): Promise<void> {
+}): Promise<boolean> {
   const { moduleName, accountId, managementAccountId, partition, region, adminCredentials } = options;
   const logPrefix = `${accountId}:${region}`;
 
   const sessionPolicy = getModuleSessionPolicy(moduleName);
   if (!sessionPolicy) {
     logger.info(`No session policy defined for module "${moduleName}" — skipping role setup`, logPrefix);
-    return;
+    return false;
   }
 
   const roleName = getModuleTestRoleName(moduleName);
@@ -189,11 +189,20 @@ export async function ensureModuleTestRole(options: {
     ],
   });
 
+  let trustChanged = false;
+
   try {
-    await iamClient.send(new GetRoleCommand({ RoleName: roleName }));
-    // Role exists — update trust policy to ensure it's current
-    logger.info(`Role "${roleName}" already exists — updating trust policy`, logPrefix);
-    await iamClient.send(new UpdateAssumeRolePolicyCommand({ RoleName: roleName, PolicyDocument: trustPolicy }));
+    const existingRole = await iamClient.send(new GetRoleCommand({ RoleName: roleName }));
+    // Role exists — check if trust policy needs updating
+    const existingTrust = JSON.stringify(existingRole.Role?.AssumeRolePolicyDocument);
+    const needsUpdate = !existingTrust.includes(`${managementAccountId}:role/${adminRoleName}`);
+    if (needsUpdate) {
+      logger.info(`Role "${roleName}" trust policy needs update — updating`, logPrefix);
+      await iamClient.send(new UpdateAssumeRolePolicyCommand({ RoleName: roleName, PolicyDocument: trustPolicy }));
+      trustChanged = true;
+    } else {
+      logger.info(`Role "${roleName}" trust policy already correct — no update needed`, logPrefix);
+    }
   } catch (error: unknown) {
     if ((error as Error).name === 'NoSuchEntityException') {
       logger.info(`Creating role "${roleName}"`, logPrefix);
@@ -219,6 +228,7 @@ export async function ensureModuleTestRole(options: {
       );
 
       logger.info(`Role "${roleName}" created with AdministratorAccess`, logPrefix);
+      trustChanged = true;
     } else {
       throw error;
     }
@@ -275,4 +285,5 @@ export async function ensureModuleTestRole(options: {
   );
 
   logger.info(`Module role "${roleName}" ready with boundary in account ${accountId}`, logPrefix);
+  return trustChanged;
 }

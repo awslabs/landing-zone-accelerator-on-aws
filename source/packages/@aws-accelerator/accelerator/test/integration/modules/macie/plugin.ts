@@ -102,4 +102,143 @@ export const maciePlugin: ModuleTestPlugin = {
   async assert(manifest: TestManifest, environment: ResolvedEnvironment): Promise<AssertionResult[]> {
     return runMacieAssertions(manifest, environment);
   },
+
+  /**
+   * Prepare hook — waits for Macie to reach a stable state before each manifest.
+   * Prevents ConflictException when [enable] runs immediately after [disable].
+   * Macie's disable operation is asynchronous — the API accepts the request but
+   * takes 10-30s to fully remove the delegated admin.
+   */
+  async prepare(_manifest: TestManifest, environment: ResolvedEnvironment): Promise<void> {
+    await waitForMacieStateStabilization(environment);
+  },
 };
+
+// ─── Macie State Stabilization ──────────────────────────────────────────────
+
+const MACIE_STABILIZATION_TIMEOUT_MS = 60_000;
+const MACIE_STABILIZATION_POLL_INTERVAL_MS = 5_000;
+const RETRIABLE_ERRORS = new Set(['ThrottlingException', 'TooManyRequestsException', 'ServiceUnavailableException']);
+
+/**
+ * Polls Macie state until it reaches a stable condition (enabled with admin, paused, or not enabled).
+ * Throws on timeout or fatal errors.
+ */
+async function waitForMacieStateStabilization(environment: ResolvedEnvironment): Promise<void> {
+  const { Macie2Client, GetMacieSessionCommand } = await import('@aws-sdk/client-macie2');
+  const { OrganizationsClient, paginateListDelegatedAdministrators } = await import('@aws-sdk/client-organizations');
+
+  const credentials = environment.managementAccountCredentials
+    ? {
+        accessKeyId: environment.managementAccountCredentials.accessKeyId,
+        secretAccessKey: environment.managementAccountCredentials.secretAccessKey,
+        sessionToken: environment.managementAccountCredentials.sessionToken,
+      }
+    : undefined;
+
+  const orgClient = new OrganizationsClient({ region: environment.region, credentials });
+  const macieClient = new Macie2Client({ region: environment.region, credentials });
+  const startTime = Date.now();
+
+  logger.info('Waiting for Macie delegated admin state to stabilize...');
+
+  while (Date.now() - startTime < MACIE_STABILIZATION_TIMEOUT_MS) {
+    const result = await checkMacieState(
+      macieClient,
+      GetMacieSessionCommand,
+      orgClient,
+      paginateListDelegatedAdministrators,
+    );
+    if (result === 'stable') {
+      return;
+    }
+    if (result === 'cooldown') {
+      // Macie API shows admin removed, but internal state needs extra time
+      const COOLDOWN_MS = 15_000;
+      logger.info(`Applying ${COOLDOWN_MS / 1000}s cooldown for Macie internal state finalization...`);
+      await new Promise(resolve => setTimeout(resolve, COOLDOWN_MS));
+      return;
+    }
+    await new Promise(resolve => setTimeout(resolve, MACIE_STABILIZATION_POLL_INTERVAL_MS));
+  }
+
+  logger.warn('Macie state stabilization timed out after 60s — environment may not be ready');
+  throw new Error('Macie state stabilization timed out after 60s. Delegated admin may still be in transition.');
+}
+
+/**
+ * Single check of Macie state. Returns 'stable' if ready to proceed, 'waiting' if still in transition.
+ * Throws on fatal errors.
+ */
+async function checkMacieState(
+  macieClient: InstanceType<typeof import('@aws-sdk/client-macie2').Macie2Client>,
+  GetMacieSessionCommand: typeof import('@aws-sdk/client-macie2').GetMacieSessionCommand,
+  orgClient: InstanceType<typeof import('@aws-sdk/client-organizations').OrganizationsClient>,
+  paginateListDelegatedAdministrators: typeof import('@aws-sdk/client-organizations').paginateListDelegatedAdministrators,
+): Promise<'stable' | 'waiting' | 'cooldown'> {
+  try {
+    const session = await macieClient.send(new GetMacieSessionCommand({}));
+
+    if (session.status === 'PAUSED') {
+      logger.info('Macie is PAUSED — disable complete, safe to proceed');
+      return 'stable';
+    }
+
+    const admins = await listMacieDelegatedAdmins(orgClient, paginateListDelegatedAdministrators);
+
+    if (session.status === 'ENABLED' && admins.length > 0) {
+      logger.info(`Macie is ENABLED with ${admins.length} admin(s) — stable, proceeding`);
+      return 'stable';
+    }
+
+    // ENABLED with no admins — delegated admin removed but Macie may still be finalizing internally
+    logger.info('Macie ENABLED with no delegated admin — adding cooldown for internal state transition');
+    return 'cooldown';
+  } catch (error: unknown) {
+    return handleMacieStateError(error);
+  }
+}
+
+/**
+ * Lists Macie delegated administrator account IDs.
+ */
+async function listMacieDelegatedAdmins(
+  orgClient: InstanceType<typeof import('@aws-sdk/client-organizations').OrganizationsClient>,
+  paginateListDelegatedAdministrators: typeof import('@aws-sdk/client-organizations').paginateListDelegatedAdministrators,
+): Promise<string[]> {
+  const admins: string[] = [];
+  const paginator = paginateListDelegatedAdministrators(
+    { client: orgClient },
+    { ServicePrincipal: 'macie.amazonaws.com' },
+  );
+  for await (const page of paginator) {
+    for (const admin of page.DelegatedAdministrators ?? []) {
+      if (admin.Id) {
+        admins.push(admin.Id);
+      }
+    }
+  }
+  return admins;
+}
+
+/**
+ * Handles errors during Macie state check. Returns 'stable' for expected non-enabled states,
+ * 'waiting' for retriable errors, and throws for fatal errors.
+ */
+function handleMacieStateError(error: unknown): 'stable' | 'waiting' | 'cooldown' {
+  const errorName = (error as { name?: string }).name;
+
+  if (errorName === 'AccessDeniedException') {
+    logger.info('Macie not enabled (AccessDenied) — stable, proceeding');
+    return 'stable';
+  }
+
+  const msg = error instanceof Error ? error.message : JSON.stringify(error);
+
+  if (errorName && RETRIABLE_ERRORS.has(errorName)) {
+    logger.warn(`Retriable error checking Macie state: ${msg} — retrying...`);
+    return 'waiting';
+  }
+
+  throw new Error(`Fatal error while waiting for Macie state stabilization: ${errorName ?? 'Unknown'}: ${msg}`);
+}
