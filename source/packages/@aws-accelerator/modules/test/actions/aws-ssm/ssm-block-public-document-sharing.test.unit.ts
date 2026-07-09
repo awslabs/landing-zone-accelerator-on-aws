@@ -40,9 +40,13 @@ import {
 import { SsmBlockPublicDocumentSharingModule } from '../../../lib/actions/aws-ssm/ssm-block-public-document-sharing';
 import { IAssumeRoleCredential } from '../../../../../@aws-lza/common/resources';
 
-// Mock the getCredentials function
+// Mock the getCredentials and processModulePromises functions
 vi.mock('../../../../../@aws-lza/common/functions', () => ({
   getCredentials: vi.fn(),
+  processModulePromises: vi.fn(async (_moduleName: string, promises: Promise<string>[], statuses: string[]) => {
+    const results = await Promise.all(promises);
+    statuses.push(...results);
+  }),
 }));
 
 // Mock the manageBlockPublicDocumentSharing function
@@ -805,15 +809,14 @@ describe('SsmBlockPublicDocumentSharingModule', () => {
       expect(result).toContain('Account Audit failed');
     });
 
-    test('should handle promise rejection in Promise.allSettled', async () => {
+    test('should handle promise rejection when account method unexpectedly throws', async () => {
       const ssmConfig = createSsmConfig(true, []);
       const securityConfig = createMockSecurityConfig(ssmConfig);
       const globalConfig = createMockGlobalConfig('us-east-1');
       Object.defineProperty(globalConfig, 'enabledRegions', { value: ['us-east-1'], writable: false });
       const params = createModuleParams(securityConfig, globalConfig, 'us-east-1', [testAccounts[0]]);
 
-      // Create a promise that will be rejected at the Promise.allSettled level
-      // This simulates a scenario where the promise itself is rejected, not just the function call
+      // Create a promise that will be rejected
       const rejectedPromise = Promise.reject(new Error('Promise settlement error'));
 
       // Mock the private method to return a rejected promise
@@ -824,10 +827,12 @@ describe('SsmBlockPublicDocumentSharingModule', () => {
         .fn()
         .mockReturnValue(rejectedPromise);
 
+      // With processModulePromises using Promise.all, a rejection will propagate
+      // but the outer try/catch in executeAccountActions (via the region loop) handles it
       const result = await SsmBlockPublicDocumentSharingModule.execute(params);
 
       expect(result).toContain('Region us-east-1:');
-      expect(result).toContain('Promise rejected');
+      expect(result).toContain('ERROR');
       expect(result).toContain('Promise settlement error');
 
       // Restore the original method
@@ -1345,7 +1350,9 @@ describe('SsmBlockPublicDocumentSharingModule', () => {
       // Mock Date to ensure consistent formatting
       const mockDate = new Date('2023-01-01T12:00:00.000Z');
       const originalDate = global.Date;
-      global.Date = vi.fn(function() { return mockDate; }) as unknown as DateConstructor;
+      global.Date = vi.fn(function () {
+        return mockDate;
+      }) as unknown as DateConstructor;
       global.Date.now = originalDate.now;
 
       const result = await SsmBlockPublicDocumentSharingModule.execute(params);

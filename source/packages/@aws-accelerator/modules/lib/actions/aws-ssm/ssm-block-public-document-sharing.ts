@@ -16,7 +16,7 @@ import { createStatusLogger } from '../../../../../@aws-lza/common/logger';
 import { ModuleParams } from '../../../models/types';
 import { Account } from '@aws-sdk/client-organizations';
 import { IAssumeRoleCredential, AssumeRoleCredentialType } from '../../../../../@aws-lza/common/resources';
-import { getCredentials } from '../../../../../@aws-lza/common/functions';
+import { getCredentials, processModulePromises } from '../../../../../@aws-lza/common/functions';
 import { AccountsConfig } from '@aws-accelerator/config';
 
 /**
@@ -204,6 +204,9 @@ export abstract class SsmBlockPublicDocumentSharingModule {
           true,
           params.runnerParameters.solutionId,
           managementAccountAccessRole,
+        ).catch(
+          error =>
+            `Account ${account.Name} (${account.Id}) in region ${params.runnerParameters.region}: ERROR - ${error}`,
         ),
       );
     }
@@ -220,35 +223,19 @@ export abstract class SsmBlockPublicDocumentSharingModule {
           false,
           params.runnerParameters.solutionId,
           managementAccountAccessRole,
+        ).catch(
+          error =>
+            `Account ${account.Name} (${account.Id}) in region ${params.runnerParameters.region}: ERROR - ${error}`,
         ),
       );
     }
 
-    // Execute all promises in parallel with error handling
-    // Using Promise.allSettled to continue processing even if some accounts fail
-    const results = await Promise.allSettled(promises);
-
     const statuses: string[] = [];
-    let successCount = 0;
-    let errorCount = 0;
+    await processModulePromises('SsmBlockPublicDocumentSharing', promises, statuses);
 
-    for (const result of results) {
-      if (result.status === 'fulfilled') {
-        statuses.push(result.value);
-        if (!result.value.includes('ERROR')) {
-          successCount++;
-        } else {
-          errorCount++;
-        }
-      } else {
-        const errorMessage = `Promise rejected: ${result.reason}`;
-        statuses.push(errorMessage);
-        errorCount++;
-        SsmBlockPublicDocumentSharingModule.statusLogger.error(errorMessage);
-      }
-    }
-
-    // Log summary
+    // Log per-region account-level summary
+    const errorCount = statuses.filter(s => s.includes('ERROR')).length;
+    const successCount = statuses.length - errorCount;
     SsmBlockPublicDocumentSharingModule.statusLogger.info(
       `SSM Block Public Document Sharing management completed in region ${params.runnerParameters.region}: ${successCount} successful, ${errorCount} failed`,
     );

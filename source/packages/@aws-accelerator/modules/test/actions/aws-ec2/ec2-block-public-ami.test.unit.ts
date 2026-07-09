@@ -38,9 +38,13 @@ import {
 } from '@aws-accelerator/config';
 import { Ec2BlockPublicAmiModule } from '../../../lib/actions/aws-ec2/ec2-block-public-ami';
 
-// Mock the getCredentials function
+// Mock the getCredentials and processModulePromises functions
 vi.mock('../../../../../@aws-lza/common/functions', () => ({
   getCredentials: vi.fn(),
+  processModulePromises: vi.fn(async (_moduleName: string, promises: Promise<string>[], statuses: string[]) => {
+    const results = await Promise.all(promises);
+    statuses.push(...results);
+  }),
 }));
 
 // Mock the manageImageBlockPublicAccess executor

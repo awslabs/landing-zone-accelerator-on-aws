@@ -18,7 +18,7 @@ import { IManageImageBlockPublicAccessHandlerParameter } from '../../../../../@a
 import { ModuleParams } from '../../../models/types';
 import { Account } from '@aws-sdk/client-organizations';
 import { IAssumeRoleCredential, AssumeRoleCredentialType } from '../../../../../@aws-lza/common/resources';
-import { getCredentials } from '../../../../../@aws-lza/common/functions';
+import { getCredentials, processModulePromises } from '../../../../../@aws-lza/common/functions';
 import { AccountsConfig } from '@aws-accelerator/config';
 
 /**
@@ -95,6 +95,8 @@ export abstract class Ec2BlockPublicAmiModule {
           params.runnerParameters.solutionId,
           managementAccountAccessRole,
           dryRun,
+        ).catch(
+          error => `Account ${account.Name} (${account.Id}) in ${params.runnerParameters.region}: ERROR - ${error}`,
         ),
       );
     }
@@ -109,12 +111,14 @@ export abstract class Ec2BlockPublicAmiModule {
           params.runnerParameters.solutionId,
           managementAccountAccessRole,
           dryRun,
+        ).catch(
+          error => `Account ${account.Name} (${account.Id}) in ${params.runnerParameters.region}: ERROR - ${error}`,
         ),
       );
     }
 
-    const results = await Promise.allSettled(promises);
-    const statuses = results.map(r => (r.status === 'fulfilled' ? r.value : `ERROR - ${r.reason}`));
+    const statuses: string[] = [];
+    await processModulePromises('Ec2BlockPublicAmi', promises, statuses);
     return statuses.join('\n');
   }
 
