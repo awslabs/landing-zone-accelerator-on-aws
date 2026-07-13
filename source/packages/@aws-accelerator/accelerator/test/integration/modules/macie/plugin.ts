@@ -96,7 +96,39 @@ export const maciePlugin: ModuleTestPlugin = {
 
   async execute(params: ModuleParams): Promise<IModuleResponse> {
     logger.info('Executing AmazonMacie.configure()');
-    return AmazonMacie.configure(params);
+
+    const MAX_RETRIES = 5;
+    const RETRY_DELAY_MS = 30_000;
+
+    for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
+      const response = await AmazonMacie.configure(params);
+
+      // Check if the failure is a ConflictException (Macie still processing previous operation)
+      const hasConflict =
+        response.status === 'failed' &&
+        'error' in response &&
+        (response as { error?: { name?: string } }).error?.name === 'ConflictException';
+
+      if (!hasConflict) {
+        return response;
+      }
+
+      if (attempt === MAX_RETRIES) {
+        logger.warn(
+          `ConflictException persisted after ${MAX_RETRIES} attempts (${(MAX_RETRIES * RETRY_DELAY_MS) / 1000}s total). Returning failed response.`,
+        );
+        return response;
+      }
+
+      logger.info(
+        `ConflictException on attempt ${attempt}/${MAX_RETRIES} — ` +
+          `Macie still processing previous operation. Retrying in ${RETRY_DELAY_MS / 1000}s...`,
+      );
+      await new Promise(resolve => setTimeout(resolve, RETRY_DELAY_MS));
+    }
+
+    // Unreachable — loop always returns. Satisfies TypeScript.
+    throw new Error('Unexpected: retry loop exited without returning');
   },
 
   async assert(manifest: TestManifest, environment: ResolvedEnvironment): Promise<AssertionResult[]> {
@@ -104,15 +136,9 @@ export const maciePlugin: ModuleTestPlugin = {
   },
 
   /**
-   * Prepare hook — fixed delay between Macie manifests.
-   *
-   * Macie's async operations (delegated admin removal, service enablement/disablement)
-   * take 10-30s to finalize internally, even after the API returns success. Without this
-   * delay, back-to-back manifests (e.g., [disable] → [enable]) hit ConflictException.
+   * Prepare hook — no-op. ConflictException retry is handled in execute().
    */
   async prepare(): Promise<void> {
-    const INTER_MANIFEST_DELAY_MS = 60_000;
-    logger.info(`Waiting ${INTER_MANIFEST_DELAY_MS / 1000}s for Macie service stabilization...`);
-    await new Promise(resolve => setTimeout(resolve, INTER_MANIFEST_DELAY_MS));
+    // Intentionally empty — retry logic in execute() handles Macie async timing
   },
 };
