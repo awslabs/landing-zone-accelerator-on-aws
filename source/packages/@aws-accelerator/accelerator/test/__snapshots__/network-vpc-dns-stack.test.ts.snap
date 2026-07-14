@@ -463,6 +463,9 @@ exports[`NetworkVpcDnsStack > Construct(NetworkVpcDnsStack):  Snapshot Test 1`] 
       "Type": "AWS::RAM::ResourceShare",
     },
     "NetworkEndpointsVpcAccessAnalyzerEpHostedZone51F8537E": {
+      "DependsOn": [
+        "NetworkEndpointsVpcSagemakerFeaturestoreRuntimeEpRecordSet6D27AFCA",
+      ],
       "Properties": {
         "HostedZoneTags": [
           {
@@ -483,6 +486,9 @@ exports[`NetworkVpcDnsStack > Construct(NetworkVpcDnsStack):  Snapshot Test 1`] 
       "Type": "AWS::Route53::HostedZone",
     },
     "NetworkEndpointsVpcAccessAnalyzerEpRecordSetCE96E911": {
+      "DependsOn": [
+        "NetworkEndpointsVpcEksEpHostedZoneB3A66C5D",
+      ],
       "Properties": {
         "AliasTarget": {
           "DNSName": {
@@ -501,6 +507,9 @@ exports[`NetworkVpcDnsStack > Construct(NetworkVpcDnsStack):  Snapshot Test 1`] 
       "Type": "AWS::Route53::RecordSet",
     },
     "NetworkEndpointsVpcCodeartifactApiEpHostedZoneF2395ADF": {
+      "DependsOn": [
+        "NetworkEndpointsVpcS3GlobalAccesspointEpRecordSet12FE0B73",
+      ],
       "Properties": {
         "HostedZoneTags": [
           {
@@ -521,6 +530,9 @@ exports[`NetworkVpcDnsStack > Construct(NetworkVpcDnsStack):  Snapshot Test 1`] 
       "Type": "AWS::Route53::HostedZone",
     },
     "NetworkEndpointsVpcCodeartifactApiEpRecordSetC1C8C062": {
+      "DependsOn": [
+        "NetworkEndpointsVpcS3GlobalAccesspointEpRecordSetNonWildcardE857AB8F",
+      ],
       "Properties": {
         "AliasTarget": {
           "DNSName": {
@@ -539,6 +551,9 @@ exports[`NetworkVpcDnsStack > Construct(NetworkVpcDnsStack):  Snapshot Test 1`] 
       "Type": "AWS::Route53::RecordSet",
     },
     "NetworkEndpointsVpcCodeartifactRepositoriesEpHostedZoneA4A53667": {
+      "DependsOn": [
+        "NetworkEndpointsVpcEcrDkrEpRecordSet2DE2B6CB",
+      ],
       "Properties": {
         "HostedZoneTags": [
           {
@@ -559,6 +574,9 @@ exports[`NetworkVpcDnsStack > Construct(NetworkVpcDnsStack):  Snapshot Test 1`] 
       "Type": "AWS::Route53::HostedZone",
     },
     "NetworkEndpointsVpcCodeartifactRepositoriesEpRecordSet4E3BFCE2": {
+      "DependsOn": [
+        "NetworkEndpointsVpcEcrDkrEpRecordSetNonWildcard056D21B7",
+      ],
       "Properties": {
         "AliasTarget": {
           "DNSName": {
@@ -577,6 +595,9 @@ exports[`NetworkVpcDnsStack > Construct(NetworkVpcDnsStack):  Snapshot Test 1`] 
       "Type": "AWS::Route53::RecordSet",
     },
     "NetworkEndpointsVpcCodeartifactRepositoriesEpRecordSetNonWildcard8523F774": {
+      "DependsOn": [
+        "NetworkEndpointsVpcS3GlobalAccesspointEpHostedZone763F0212",
+      ],
       "Properties": {
         "AliasTarget": {
           "DNSName": {
@@ -671,6 +692,9 @@ exports[`NetworkVpcDnsStack > Construct(NetworkVpcDnsStack):  Snapshot Test 1`] 
       "Type": "AWS::Route53::RecordSet",
     },
     "NetworkEndpointsVpcEcrDkrEpHostedZoneE4E1EA3F": {
+      "DependsOn": [
+        "NetworkEndpointsVpcS3ControlEpRecordWildcard5A5F40A0",
+      ],
       "Properties": {
         "HostedZoneTags": [
           {
@@ -691,6 +715,9 @@ exports[`NetworkVpcDnsStack > Construct(NetworkVpcDnsStack):  Snapshot Test 1`] 
       "Type": "AWS::Route53::HostedZone",
     },
     "NetworkEndpointsVpcEcrDkrEpRecordSet2DE2B6CB": {
+      "DependsOn": [
+        "NetworkEndpointsVpcS3ControlEpRecordSetNonWildcard7D6FFE39",
+      ],
       "Properties": {
         "AliasTarget": {
           "DNSName": {
@@ -709,6 +736,9 @@ exports[`NetworkVpcDnsStack > Construct(NetworkVpcDnsStack):  Snapshot Test 1`] 
       "Type": "AWS::Route53::RecordSet",
     },
     "NetworkEndpointsVpcEcrDkrEpRecordSetNonWildcard056D21B7": {
+      "DependsOn": [
+        "NetworkEndpointsVpcS3AccesspointEpHostedZone075BACF0",
+      ],
       "Properties": {
         "AliasTarget": {
           "DNSName": {
@@ -727,6 +757,9 @@ exports[`NetworkVpcDnsStack > Construct(NetworkVpcDnsStack):  Snapshot Test 1`] 
       "Type": "AWS::Route53::RecordSet",
     },
     "NetworkEndpointsVpcEksEpHostedZoneB3A66C5D": {
+      "DependsOn": [
+        "NetworkEndpointsVpcSagemakerRuntimeEpRecordSet52E68E37",
+      ],
       "Properties": {
         "HostedZoneTags": [
           {
@@ -747,6 +780,9 @@ exports[`NetworkVpcDnsStack > Construct(NetworkVpcDnsStack):  Snapshot Test 1`] 
       "Type": "AWS::Route53::HostedZone",
     },
     "NetworkEndpointsVpcEksEpRecordSet48754069": {
+      "DependsOn": [
+        "NetworkEndpointsVpcSagemakerApiEpHostedZone208FDE5E",
+      ],
       "Properties": {
         "AliasTarget": {
           "DNSName": {
@@ -765,6 +801,9 @@ exports[`NetworkVpcDnsStack > Construct(NetworkVpcDnsStack):  Snapshot Test 1`] 
       "Type": "AWS::Route53::RecordSet",
     },
     "NetworkEndpointsVpcKmsEpHostedZoneC9CFEF9D": {
+      "DependsOn": [
+        "NetworkEndpointsVpcEc2messagesEpRecordSet605BEA6A",
+      ],
       "Properties": {
         "HostedZoneTags": [
           {
@@ -785,6 +824,9 @@ exports[`NetworkVpcDnsStack > Construct(NetworkVpcDnsStack):  Snapshot Test 1`] 
       "Type": "AWS::Route53::HostedZone",
     },
     "NetworkEndpointsVpcKmsEpRecordSet5C869506": {
+      "DependsOn": [
+        "NetworkEndpointsVpcSsmEpHostedZoneE400276D",
+      ],
       "Properties": {
         "AliasTarget": {
           "DNSName": {
@@ -803,6 +845,9 @@ exports[`NetworkVpcDnsStack > Construct(NetworkVpcDnsStack):  Snapshot Test 1`] 
       "Type": "AWS::Route53::RecordSet",
     },
     "NetworkEndpointsVpcLogsEpHostedZoneDBA51FD8": {
+      "DependsOn": [
+        "NetworkEndpointsVpcSsmEpRecordSetE72544F4",
+      ],
       "Properties": {
         "HostedZoneTags": [
           {
@@ -823,6 +868,9 @@ exports[`NetworkVpcDnsStack > Construct(NetworkVpcDnsStack):  Snapshot Test 1`] 
       "Type": "AWS::Route53::HostedZone",
     },
     "NetworkEndpointsVpcLogsEpRecordSet0B536BC1": {
+      "DependsOn": [
+        "NetworkEndpointsVpcSsmmessagesEpHostedZone19BD15F2",
+      ],
       "Properties": {
         "AliasTarget": {
           "DNSName": {
@@ -841,6 +889,9 @@ exports[`NetworkVpcDnsStack > Construct(NetworkVpcDnsStack):  Snapshot Test 1`] 
       "Type": "AWS::Route53::RecordSet",
     },
     "NetworkEndpointsVpcRoute53EpHostedZone7A7B468E": {
+      "DependsOn": [
+        "NetworkEndpointsVpcEksEpRecordSet48754069",
+      ],
       "Properties": {
         "HostedZoneTags": [
           {
@@ -861,6 +912,9 @@ exports[`NetworkVpcDnsStack > Construct(NetworkVpcDnsStack):  Snapshot Test 1`] 
       "Type": "AWS::Route53::HostedZone",
     },
     "NetworkEndpointsVpcRoute53EpRecordSetB5594C97": {
+      "DependsOn": [
+        "NetworkEndpointsVpcSecretsmanagerEpHostedZoneE5742A7A",
+      ],
       "Properties": {
         "AliasTarget": {
           "DNSName": {
@@ -879,6 +933,9 @@ exports[`NetworkVpcDnsStack > Construct(NetworkVpcDnsStack):  Snapshot Test 1`] 
       "Type": "AWS::Route53::RecordSet",
     },
     "NetworkEndpointsVpcS3AccesspointEpHostedZone075BACF0": {
+      "DependsOn": [
+        "NetworkEndpointsVpcS3EpRecordSet90C07F24",
+      ],
       "Properties": {
         "Name": "s3-accesspoint.us-east-1.amazonaws.com",
         "VPCs": [
@@ -893,6 +950,9 @@ exports[`NetworkVpcDnsStack > Construct(NetworkVpcDnsStack):  Snapshot Test 1`] 
       "Type": "AWS::Route53::HostedZone",
     },
     "NetworkEndpointsVpcS3AccesspointEpRecordSetNonWildcard3AAEFEE8": {
+      "DependsOn": [
+        "NetworkEndpointsVpcS3ControlEpHostedZoneCF8C699D",
+      ],
       "Properties": {
         "AliasTarget": {
           "DNSName": {
@@ -911,6 +971,9 @@ exports[`NetworkVpcDnsStack > Construct(NetworkVpcDnsStack):  Snapshot Test 1`] 
       "Type": "AWS::Route53::RecordSet",
     },
     "NetworkEndpointsVpcS3AccesspointEpRecordWildcard0BBAEB36": {
+      "DependsOn": [
+        "NetworkEndpointsVpcS3EpRecordSetNonWildcard7EEE9166",
+      ],
       "Properties": {
         "AliasTarget": {
           "DNSName": {
@@ -929,6 +992,9 @@ exports[`NetworkVpcDnsStack > Construct(NetworkVpcDnsStack):  Snapshot Test 1`] 
       "Type": "AWS::Route53::RecordSet",
     },
     "NetworkEndpointsVpcS3ControlEpHostedZoneCF8C699D": {
+      "DependsOn": [
+        "NetworkEndpointsVpcLogsEpHostedZoneDBA51FD8",
+      ],
       "Properties": {
         "Name": "s3-control.us-east-1.amazonaws.com",
         "VPCs": [
@@ -943,6 +1009,9 @@ exports[`NetworkVpcDnsStack > Construct(NetworkVpcDnsStack):  Snapshot Test 1`] 
       "Type": "AWS::Route53::HostedZone",
     },
     "NetworkEndpointsVpcS3ControlEpRecordSetNonWildcard7D6FFE39": {
+      "DependsOn": [
+        "NetworkEndpointsVpcS3EpHostedZoneD27476BE",
+      ],
       "Properties": {
         "AliasTarget": {
           "DNSName": {
@@ -961,6 +1030,9 @@ exports[`NetworkVpcDnsStack > Construct(NetworkVpcDnsStack):  Snapshot Test 1`] 
       "Type": "AWS::Route53::RecordSet",
     },
     "NetworkEndpointsVpcS3ControlEpRecordWildcard5A5F40A0": {
+      "DependsOn": [
+        "NetworkEndpointsVpcLogsEpRecordSet0B536BC1",
+      ],
       "Properties": {
         "AliasTarget": {
           "DNSName": {
@@ -979,6 +1051,9 @@ exports[`NetworkVpcDnsStack > Construct(NetworkVpcDnsStack):  Snapshot Test 1`] 
       "Type": "AWS::Route53::RecordSet",
     },
     "NetworkEndpointsVpcS3EpHostedZoneD27476BE": {
+      "DependsOn": [
+        "NetworkEndpointsVpcSsmmessagesEpRecordSet491A807C",
+      ],
       "Properties": {
         "HostedZoneTags": [
           {
@@ -999,6 +1074,9 @@ exports[`NetworkVpcDnsStack > Construct(NetworkVpcDnsStack):  Snapshot Test 1`] 
       "Type": "AWS::Route53::HostedZone",
     },
     "NetworkEndpointsVpcS3EpRecordSet90C07F24": {
+      "DependsOn": [
+        "NetworkEndpointsVpcKmsEpHostedZoneC9CFEF9D",
+      ],
       "Properties": {
         "AliasTarget": {
           "DNSName": {
@@ -1017,6 +1095,9 @@ exports[`NetworkVpcDnsStack > Construct(NetworkVpcDnsStack):  Snapshot Test 1`] 
       "Type": "AWS::Route53::RecordSet",
     },
     "NetworkEndpointsVpcS3EpRecordSetNonWildcard7EEE9166": {
+      "DependsOn": [
+        "NetworkEndpointsVpcKmsEpRecordSet5C869506",
+      ],
       "Properties": {
         "AliasTarget": {
           "DNSName": {
@@ -1035,6 +1116,9 @@ exports[`NetworkVpcDnsStack > Construct(NetworkVpcDnsStack):  Snapshot Test 1`] 
       "Type": "AWS::Route53::RecordSet",
     },
     "NetworkEndpointsVpcS3GlobalAccesspointEpHostedZone763F0212": {
+      "DependsOn": [
+        "NetworkEndpointsVpcS3AccesspointEpRecordWildcard0BBAEB36",
+      ],
       "Properties": {
         "HostedZoneTags": [
           {
@@ -1055,6 +1139,9 @@ exports[`NetworkVpcDnsStack > Construct(NetworkVpcDnsStack):  Snapshot Test 1`] 
       "Type": "AWS::Route53::HostedZone",
     },
     "NetworkEndpointsVpcS3GlobalAccesspointEpRecordSet12FE0B73": {
+      "DependsOn": [
+        "NetworkEndpointsVpcS3AccesspointEpRecordSetNonWildcard3AAEFEE8",
+      ],
       "Properties": {
         "AliasTarget": {
           "DNSName": {
@@ -1073,6 +1160,9 @@ exports[`NetworkVpcDnsStack > Construct(NetworkVpcDnsStack):  Snapshot Test 1`] 
       "Type": "AWS::Route53::RecordSet",
     },
     "NetworkEndpointsVpcS3GlobalAccesspointEpRecordSetNonWildcardE857AB8F": {
+      "DependsOn": [
+        "NetworkEndpointsVpcEcrDkrEpHostedZoneE4E1EA3F",
+      ],
       "Properties": {
         "AliasTarget": {
           "DNSName": {
@@ -1091,6 +1181,9 @@ exports[`NetworkVpcDnsStack > Construct(NetworkVpcDnsStack):  Snapshot Test 1`] 
       "Type": "AWS::Route53::RecordSet",
     },
     "NetworkEndpointsVpcSagemakerApiEpHostedZone208FDE5E": {
+      "DependsOn": [
+        "NetworkEndpointsVpcCodeartifactRepositoriesEpRecordSetNonWildcard8523F774",
+      ],
       "Properties": {
         "HostedZoneTags": [
           {
@@ -1111,6 +1204,9 @@ exports[`NetworkVpcDnsStack > Construct(NetworkVpcDnsStack):  Snapshot Test 1`] 
       "Type": "AWS::Route53::HostedZone",
     },
     "NetworkEndpointsVpcSagemakerApiEpRecordSetA8C29C28": {
+      "DependsOn": [
+        "NetworkEndpointsVpcCodeartifactApiEpHostedZoneF2395ADF",
+      ],
       "Properties": {
         "AliasTarget": {
           "DNSName": {
@@ -1129,6 +1225,9 @@ exports[`NetworkVpcDnsStack > Construct(NetworkVpcDnsStack):  Snapshot Test 1`] 
       "Type": "AWS::Route53::RecordSet",
     },
     "NetworkEndpointsVpcSagemakerFeaturestoreRuntimeEpHostedZone414CC894": {
+      "DependsOn": [
+        "NetworkEndpointsVpcCodeartifactApiEpRecordSetC1C8C062",
+      ],
       "Properties": {
         "HostedZoneTags": [
           {
@@ -1149,6 +1248,9 @@ exports[`NetworkVpcDnsStack > Construct(NetworkVpcDnsStack):  Snapshot Test 1`] 
       "Type": "AWS::Route53::HostedZone",
     },
     "NetworkEndpointsVpcSagemakerFeaturestoreRuntimeEpRecordSet6D27AFCA": {
+      "DependsOn": [
+        "NetworkEndpointsVpcSagemakerRuntimeEpHostedZoneACFFBD17",
+      ],
       "Properties": {
         "AliasTarget": {
           "DNSName": {
@@ -1167,6 +1269,9 @@ exports[`NetworkVpcDnsStack > Construct(NetworkVpcDnsStack):  Snapshot Test 1`] 
       "Type": "AWS::Route53::RecordSet",
     },
     "NetworkEndpointsVpcSagemakerRuntimeEpHostedZoneACFFBD17": {
+      "DependsOn": [
+        "NetworkEndpointsVpcCodeartifactRepositoriesEpHostedZoneA4A53667",
+      ],
       "Properties": {
         "HostedZoneTags": [
           {
@@ -1187,6 +1292,9 @@ exports[`NetworkVpcDnsStack > Construct(NetworkVpcDnsStack):  Snapshot Test 1`] 
       "Type": "AWS::Route53::HostedZone",
     },
     "NetworkEndpointsVpcSagemakerRuntimeEpRecordSet52E68E37": {
+      "DependsOn": [
+        "NetworkEndpointsVpcCodeartifactRepositoriesEpRecordSet4E3BFCE2",
+      ],
       "Properties": {
         "AliasTarget": {
           "DNSName": {
@@ -1205,6 +1313,9 @@ exports[`NetworkVpcDnsStack > Construct(NetworkVpcDnsStack):  Snapshot Test 1`] 
       "Type": "AWS::Route53::RecordSet",
     },
     "NetworkEndpointsVpcSecretsmanagerEpHostedZoneE5742A7A": {
+      "DependsOn": [
+        "NetworkEndpointsVpcSagemakerApiEpRecordSetA8C29C28",
+      ],
       "Properties": {
         "HostedZoneTags": [
           {
@@ -1225,6 +1336,9 @@ exports[`NetworkVpcDnsStack > Construct(NetworkVpcDnsStack):  Snapshot Test 1`] 
       "Type": "AWS::Route53::HostedZone",
     },
     "NetworkEndpointsVpcSecretsmanagerEpRecordSet4FD8850B": {
+      "DependsOn": [
+        "NetworkEndpointsVpcSagemakerFeaturestoreRuntimeEpHostedZone414CC894",
+      ],
       "Properties": {
         "AliasTarget": {
           "DNSName": {
@@ -1263,6 +1377,9 @@ exports[`NetworkVpcDnsStack > Construct(NetworkVpcDnsStack):  Snapshot Test 1`] 
       "Type": "AWS::Route53::HostedZone",
     },
     "NetworkEndpointsVpcSsmEpRecordSetE72544F4": {
+      "DependsOn": [
+        "NetworkEndpointsVpcEc2EpHostedZone3457AFDE",
+      ],
       "Properties": {
         "AliasTarget": {
           "DNSName": {
@@ -1281,6 +1398,9 @@ exports[`NetworkVpcDnsStack > Construct(NetworkVpcDnsStack):  Snapshot Test 1`] 
       "Type": "AWS::Route53::RecordSet",
     },
     "NetworkEndpointsVpcSsmmessagesEpHostedZone19BD15F2": {
+      "DependsOn": [
+        "NetworkEndpointsVpcEc2EpRecordSetB8C5464A",
+      ],
       "Properties": {
         "HostedZoneTags": [
           {
@@ -1301,6 +1421,9 @@ exports[`NetworkVpcDnsStack > Construct(NetworkVpcDnsStack):  Snapshot Test 1`] 
       "Type": "AWS::Route53::HostedZone",
     },
     "NetworkEndpointsVpcSsmmessagesEpRecordSet491A807C": {
+      "DependsOn": [
+        "NetworkEndpointsVpcEc2messagesEpHostedZoneD74E6E18",
+      ],
       "Properties": {
         "AliasTarget": {
           "DNSName": {

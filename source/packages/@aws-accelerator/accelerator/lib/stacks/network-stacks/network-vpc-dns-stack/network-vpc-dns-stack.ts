@@ -30,7 +30,31 @@ import { SsmResourceType } from '@aws-accelerator/utils';
 import { AcceleratorStackProps } from '../../accelerator-stack';
 import { NetworkStack } from '../network-stack';
 
+/**
+ * Number of Route 53 resources allowed to create concurrently.
+ *
+ * Route 53 enforces a hard limit of five API requests per second per AWS account across all
+ * of its APIs; exceeding it returns `Route53Exception - Rate exceeded`. CloudFormation native
+ * Route 53 resources do not expose request backoff controls, so resources are batched at the
+ * documented ceiling and later resources are gated behind earlier batches.
+ *
+ * @see https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/DNSLimitations.html
+ */
+const ROUTE53_RESOURCE_BATCH_SIZE = 5;
+
+export function addBatchedRoute53Dependencies(route53Resources: Construct[]): void {
+  for (let i = ROUTE53_RESOURCE_BATCH_SIZE; i < route53Resources.length; i++) {
+    route53Resources[i].node.addDependency(route53Resources[i - ROUTE53_RESOURCE_BATCH_SIZE]);
+  }
+}
+
 export class NetworkVpcDnsStack extends NetworkStack {
+  /**
+   * Route 53 hosted zones and record sets created in this stack, in creation order.
+   * Used to avoid CloudFormation submitting Route 53 API requests in parallel bursts.
+   */
+  private readonly route53Resources: Construct[] = [];
+
   constructor(scope: Construct, id: string, props: AcceleratorStackProps) {
     super(scope, id, props);
     //
@@ -44,6 +68,11 @@ export class NetworkVpcDnsStack extends NetworkStack {
     // Create Private Hosted Zones
     //
     this.createPrivateHostedZones({ vpc: vpcMap, endpoint: endpointMap, zone: zoneMap, resolver: resolverMap }, props);
+
+    //
+    // Batch Route 53 resources to avoid API rate throttling
+    //
+    addBatchedRoute53Dependencies(this.route53Resources);
 
     //
     // configure SYSTEM rules
@@ -164,6 +193,7 @@ export class NetworkVpcDnsStack extends NetworkStack {
             tags,
           },
         );
+        this.route53Resources.push(hostedZone);
         this.ssmParameters.push({
           logicalId: `SsmParam${pascalCase(vpcItem.name)}Vpc${pascalCase(endpointItem.service)}EpHostedZone`,
           parameterName: this.getSsmPath(SsmResourceType.PHZ_ID, [vpcItem.name, endpointItem.service]),
@@ -231,24 +261,34 @@ export class NetworkVpcDnsStack extends NetworkStack {
 
     // Create alias record for hosted zone
     this.logger.info(`Creating alias record for VPC:${vpcItem.name} endpoint:${endpointItem.service}`);
-    new RecordSet(this, `${pascalCase(vpcItem.name)}Vpc${pascalCase(endpointItem.service)}EpRecordSet`, {
-      type: 'A',
-      name: recordSetName,
-      hostedZone: hostedZone,
-      dnsName: dnsName,
-      hostedZoneId: zoneId,
-    });
+    const recordSet = new RecordSet(
+      this,
+      `${pascalCase(vpcItem.name)}Vpc${pascalCase(endpointItem.service)}EpRecordSet`,
+      {
+        type: 'A',
+        name: recordSetName,
+        hostedZone: hostedZone,
+        dnsName: dnsName,
+        hostedZoneId: zoneId,
+      },
+    );
+    this.route53Resources.push(recordSet);
 
     // Create additional record for wildcard services endpoints
     if (wildcardServices.includes(endpointItem.service)) {
       this.logger.info(`Creating additional record for VPC:${vpcItem.name} endpoint:${endpointItem.service}`);
-      new RecordSet(this, `${pascalCase(vpcItem.name)}Vpc${pascalCase(endpointItem.service)}EpRecordSetNonWildcard`, {
-        type: 'A',
-        name: hostedZoneName,
-        hostedZone: hostedZone,
-        dnsName: dnsName,
-        hostedZoneId: zoneId,
-      });
+      const nonWildcardRecordSet = new RecordSet(
+        this,
+        `${pascalCase(vpcItem.name)}Vpc${pascalCase(endpointItem.service)}EpRecordSetNonWildcard`,
+        {
+          type: 'A',
+          name: hostedZoneName,
+          hostedZone: hostedZone,
+          dnsName: dnsName,
+          hostedZoneId: zoneId,
+        },
+      );
+      this.route53Resources.push(nonWildcardRecordSet);
     }
   }
 
@@ -280,27 +320,38 @@ export class NetworkVpcDnsStack extends NetworkStack {
         hostedZoneName: `${endpoint}.${cdk.Stack.of(this).region}.amazonaws.com`,
         vpcId,
       });
+      this.route53Resources.push(hostedZone);
       this.ssmParameters.push({
         logicalId: `SsmParam${pascalCase(vpcItem.name)}Vpc${pascalCase(endpoint)}EpHostedZone`,
         parameterName: this.getSsmPath(SsmResourceType.PHZ_ID, [vpcItem.name, endpoint]),
         stringValue: hostedZone.hostedZoneId,
       });
       this.logger.info(`Creating additional record for VPC:${vpcItem.name} endpoint:${endpoint}`);
-      new RecordSet(this, `${pascalCase(vpcItem.name)}Vpc${pascalCase(endpoint)}EpRecordWildcard`, {
-        type: 'A',
-        name: `*.${hostedZone.hostedZoneName}`,
-        hostedZone: hostedZone,
-        dnsName: dnsName,
-        hostedZoneId: zoneId,
-      });
+      const wildcardRecordSet = new RecordSet(
+        this,
+        `${pascalCase(vpcItem.name)}Vpc${pascalCase(endpoint)}EpRecordWildcard`,
+        {
+          type: 'A',
+          name: `*.${hostedZone.hostedZoneName}`,
+          hostedZone: hostedZone,
+          dnsName: dnsName,
+          hostedZoneId: zoneId,
+        },
+      );
+      this.route53Resources.push(wildcardRecordSet);
 
-      new RecordSet(this, `${pascalCase(vpcItem.name)}Vpc${pascalCase(endpoint)}EpRecordSetNonWildcard`, {
-        type: 'A',
-        name: hostedZone.hostedZoneName,
-        hostedZone: hostedZone,
-        dnsName: dnsName,
-        hostedZoneId: zoneId,
-      });
+      const nonWildcardRecordSet = new RecordSet(
+        this,
+        `${pascalCase(vpcItem.name)}Vpc${pascalCase(endpoint)}EpRecordSetNonWildcard`,
+        {
+          type: 'A',
+          name: hostedZone.hostedZoneName,
+          hostedZone: hostedZone,
+          dnsName: dnsName,
+          hostedZoneId: zoneId,
+        },
+      );
+      this.route53Resources.push(nonWildcardRecordSet);
     });
   }
 
