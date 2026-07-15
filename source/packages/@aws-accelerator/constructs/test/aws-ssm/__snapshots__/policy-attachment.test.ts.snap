@@ -37,7 +37,6 @@ exports[`SsmSessionManagerPolicy > Construct(SsmSessionManagerPolicy):  Snapshot
                 "logs:CreateLogStream",
                 "logs:PutLogEvents",
                 "logs:DescribeLogStreams",
-                "logs:DescribeLogGroups",
               ],
               "Effect": "Allow",
               "Resource": [
@@ -45,6 +44,12 @@ exports[`SsmSessionManagerPolicy > Construct(SsmSessionManagerPolicy):  Snapshot
                 "arn:aws:logs:us-west-2:111111111111:log-group:aws-accelerator-sessionmanager-logs:*",
               ],
               "Sid": "CloudWatchLogs",
+            },
+            {
+              "Action": "logs:DescribeLogGroups",
+              "Effect": "Allow",
+              "Resource": "*",
+              "Sid": "CloudWatchLogsDescribe",
             },
             {
               "Action": [
@@ -88,6 +93,7 @@ exports[`SsmSessionManagerPolicy > Construct(SsmSessionManagerPolicy):  Snapshot
             {
               "Action": [
                 "kms:Decrypt",
+                "kms:GenerateDataKey",
                 "kms:DescribeKey",
               ],
               "Condition": {

@@ -80,8 +80,15 @@ export class SsmSessionManagerPolicy extends Construct {
         new cdk.aws_iam.PolicyStatement({
           sid: 'CloudWatchLogs',
           effect: cdk.aws_iam.Effect.ALLOW,
-          actions: ['logs:CreateLogStream', 'logs:PutLogEvents', 'logs:DescribeLogStreams', 'logs:DescribeLogGroups'],
+          actions: ['logs:CreateLogStream', 'logs:PutLogEvents', 'logs:DescribeLogStreams'],
           resources: props.sessionManagerCloudWatchLogGroupList,
+        }),
+        // logs:DescribeLogGroups has no resource type in IAM, so it requires Resource: '*' to authorize
+        new cdk.aws_iam.PolicyStatement({
+          sid: 'CloudWatchLogsDescribe',
+          effect: cdk.aws_iam.Effect.ALLOW,
+          actions: ['logs:DescribeLogGroups'],
+          resources: ['*'],
         }),
       );
     }
@@ -119,7 +126,7 @@ export class SsmSessionManagerPolicy extends Construct {
       new cdk.aws_iam.PolicyStatement({
         sid: 'SessionManagerSessionKey',
         effect: cdk.aws_iam.Effect.ALLOW,
-        actions: ['kms:Decrypt', 'kms:DescribeKey'],
+        actions: ['kms:Decrypt', 'kms:GenerateDataKey', 'kms:DescribeKey'],
         resources: props.enabledRegions.map(
           region => `arn:${cdk.Stack.of(this).partition}:kms:${region}:${cdk.Stack.of(this).account}:key/*`,
         ),

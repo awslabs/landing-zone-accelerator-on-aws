@@ -12,7 +12,8 @@
  */
 
 import * as cdk from 'aws-cdk-lib';
-import { describe } from 'vitest';
+import { Match, Template } from 'aws-cdk-lib/assertions';
+import { describe, test } from 'vitest';
 import { SsmSessionManagerPolicy } from '../../index';
 import { snapShotTest } from '../snapshot-test';
 
@@ -50,4 +51,50 @@ new SsmSessionManagerPolicy(stack, 'SsmSessionManagerPolicy', {
  */
 describe('SsmSessionManagerPolicy', () => {
   snapShotTest(testNamePrefix, stack);
+
+  const template = Template.fromStack(stack);
+
+  // DescribeLogGroups must be its own statement scoped to '*', since the action
+  // has no resource type in IAM and only authorizes when Resource is '*'.
+  test('DescribeLogGroups is split into its own statement scoped to *', () => {
+    template.hasResourceProperties('AWS::IAM::ManagedPolicy', {
+      PolicyDocument: {
+        Statement: Match.arrayWith([
+          Match.objectLike({
+            Sid: 'CloudWatchLogsDescribe',
+            Action: 'logs:DescribeLogGroups',
+            Resource: '*',
+          }),
+        ]),
+      },
+    });
+  });
+
+  // The scoped write statement keeps the stream actions but must not carry DescribeLogGroups.
+  test('CloudWatchLogs write statement does not include DescribeLogGroups', () => {
+    template.hasResourceProperties('AWS::IAM::ManagedPolicy', {
+      PolicyDocument: {
+        Statement: Match.arrayWith([
+          Match.objectLike({
+            Sid: 'CloudWatchLogs',
+            Action: ['logs:CreateLogStream', 'logs:PutLogEvents', 'logs:DescribeLogStreams'],
+          }),
+        ]),
+      },
+    });
+  });
+
+  // Session key encryption requires GenerateDataKey for principals that start sessions.
+  test('SessionManagerSessionKey statement grants kms:GenerateDataKey', () => {
+    template.hasResourceProperties('AWS::IAM::ManagedPolicy', {
+      PolicyDocument: {
+        Statement: Match.arrayWith([
+          Match.objectLike({
+            Sid: 'SessionManagerSessionKey',
+            Action: ['kms:Decrypt', 'kms:GenerateDataKey', 'kms:DescribeKey'],
+          }),
+        ]),
+      },
+    });
+  });
 });

@@ -1379,7 +1379,6 @@ exports[`OperationsStack > Construct(OperationsStack):  Snapshot Test 1`] = `
                 "logs:CreateLogStream",
                 "logs:PutLogEvents",
                 "logs:DescribeLogStreams",
-                "logs:DescribeLogGroups",
               ],
               "Effect": "Allow",
               "Resource": [
@@ -1409,6 +1408,12 @@ exports[`OperationsStack > Construct(OperationsStack):  Snapshot Test 1`] = `
                 },
               ],
               "Sid": "CloudWatchLogs",
+            },
+            {
+              "Action": "logs:DescribeLogGroups",
+              "Effect": "Allow",
+              "Resource": "*",
+              "Sid": "CloudWatchLogsDescribe",
             },
             {
               "Action": [
@@ -1476,6 +1481,7 @@ exports[`OperationsStack > Construct(OperationsStack):  Snapshot Test 1`] = `
             {
               "Action": [
                 "kms:Decrypt",
+                "kms:GenerateDataKey",
                 "kms:DescribeKey",
               ],
               "Condition": {
