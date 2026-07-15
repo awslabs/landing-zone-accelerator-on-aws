@@ -2558,7 +2558,7 @@
     },
     "INfwRuleVariableConfig": {
       "additionalProperties": false,
-      "description": "Use this configuration to define rule variable definitions for Network Firewall.\nRule variables can be used in Suricata-compatible and domain list rule definitions.\nThey are not supported in stateful rule IP header definitions.\n\n`ipSets` hold IP addresses and CIDR ranges; `portSets` hold individual TCP/UDP\nports and/or port ranges. Port ranges use colon notation (`'<fromPort>:<toPort>'`,\nfor example `'1024:2048'`) and can be combined with single ports in the same array.",
+      "description": "Use this configuration to define rule variable definitions for Network Firewall.\nRule variables can be used in Suricata-compatible rule strings, domain list rule\ndefinitions, and stateful rule IP header `source`/`destination` fields (for example\n`$HOME_NET` or `[$HOME_NET]`).\n\n`ipSets` hold IP addresses and CIDR ranges; `portSets` hold individual TCP/UDP\nports and/or port ranges. Port ranges use colon notation (`'<fromPort>:<toPort>'`,\nfor example `'1024:2048'`) and can be combined with single ports in the same array.",
       "properties": {
         "ipSets": {
           "anyOf": [
@@ -2597,7 +2597,7 @@
     },
     "INfwRuleVariableDefinitionConfig": {
       "additionalProperties": false,
-      "description": "Use this configuration to define rule variable definitions for Network Firewall.\nRule variables can be used in Suricata-compatible and domain list rule definitions.\nThey are not supported in stateful rule IP header definitions.",
+      "description": "Use this configuration to define rule variable definitions for Network Firewall.\nRule variables can be used in Suricata-compatible rule strings, domain list rule\ndefinitions, and stateful rule IP header `source`/`destination` fields (for example\n`$HOME_NET` or `[$HOME_NET]`).",
       "properties": {
         "definition": {
           "description": "An array of values for the rule variable.\n\nThe accepted value syntax depends on the rule variable type that this definition belongs to. For `ipSets`, each value is an IPv4 address or CIDR range, for example `'10.0.0.0/16'`. For `portSets`, each value is either a single TCP/UDP port (a number between `0` and `65535`, for example `'443'`) or a port range. A port range is two numbers separated by a colon (`:`) in the form `'<fromPort>:<toPort>'`, for example `'1024:2048'`, where the colon denotes an inclusive range from `fromPort` through `toPort`. Both ends must be between `0` and `65535`, and `fromPort` must be less than or equal to `toPort` (`'1024:2048'` is valid; `'2048:1024'` is rejected). Single ports and ranges can be combined in the same array, for example `['80', '443', '1024:2048']`. The colon range notation matches the syntax accepted by the AWS Network Firewall API and console.",

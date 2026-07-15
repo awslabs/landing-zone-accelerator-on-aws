@@ -35,6 +35,47 @@ import { isArn } from '../../../utils/lib/is-arn';
  * Class to validate network firewall
  */
 export class NetworkFirewallValidator {
+  /**
+   * Suricata/Network Firewall built-in rule variable names that are always valid
+   * in a stateful rule header source/destination, even if not declared under a
+   * rule group's ruleVariables.ipSets.
+   *
+   * `HOME_NET` defaults to the CIDR of the firewall's inspection VPC (or a policy-level
+   * override) and `EXTERNAL_NET` always defaults to the negation of `HOME_NET`. Network
+   * Firewall provides both automatically, so requiring a local ipSets declaration for
+   * them would reject valid, commonly used configurations.
+   *
+   * @see {@link https://docs.aws.amazon.com/network-firewall/latest/developerguide/troubleshooting-rules.html}
+   */
+  private static readonly BUILT_IN_RULE_VARIABLE_NAMES = ['HOME_NET', 'EXTERNAL_NET'];
+
+  /**
+   * Grammar for a rule variable name, aligned with the AWS Network Firewall API
+   * key pattern for RuleVariables ipSets/portSets (`^[A-Za-z][A-Za-z0-9_]*$`).
+   * Shared by the reference and list-segment regexes below so the name grammar
+   * is defined in exactly one place.
+   *
+   * @see {@link https://docs.aws.amazon.com/network-firewall/latest/APIReference/API_RuleVariables.html}
+   */
+  private static readonly RULE_VARIABLE_NAME_PATTERN = '[a-zA-Z][a-zA-Z0-9_]*';
+
+  /**
+   * Matches a single rule variable reference in a stateful rule header
+   * source/destination: `$NAME` or `[$NAME]` (brackets must balance).
+   * Capture group 1 or 2 holds the variable name.
+   */
+  private static readonly RULE_VARIABLE_REFERENCE_REGEX = new RegExp(
+    `^(?:\\$(${NetworkFirewallValidator.RULE_VARIABLE_NAME_PATTERN})|\\[\\$(${NetworkFirewallValidator.RULE_VARIABLE_NAME_PATTERN})\\])$`,
+  );
+
+  /**
+   * Matches a single `$NAME` rule variable reference as one comma-separated
+   * segment inside a bracketed list (no surrounding brackets).
+   */
+  private static readonly RULE_VARIABLE_LIST_SEGMENT_REGEX = new RegExp(
+    `^\\$${NetworkFirewallValidator.RULE_VARIABLE_NAME_PATTERN}$`,
+  );
+
   constructor(values: NetworkConfig, configDir: string, helpers: NetworkValidatorFunctions, errors: string[]) {
     //
     // Validate rule groups
@@ -519,9 +560,16 @@ export class NetworkFirewallValidator {
 
     // Validate rule definitions
     if (allValid) {
+      // Names of rule variables declared under this rule group's ruleVariables.ipSets.
+      // Computed once per rule group (not per rule) since it does not vary across the
+      // rule group's stateful rules. A header source/destination may reference one of
+      // these (e.g. "$HOME_NET" or "[$HOME_NET]") instead of a literal CIDR.
+      const declaredIpSetNames = this.getRuleVariableDefinitions(rule.ruleGroup?.ruleVariables?.ipSets ?? []).map(
+        ipSet => ipSet.name,
+      );
       for (const ruleItem of statefulRules) {
         // Validate rule header
-        this.validateStatefulRuleHeader(rule, ruleItem, helpers, errors);
+        this.validateStatefulRuleHeader(rule, ruleItem, declaredIpSetNames, helpers, errors);
         // Validate rule options
         this.validateStatefulRuleOptions(rule, ruleItem, helpers, errors);
       }
@@ -628,23 +676,24 @@ export class NetworkFirewallValidator {
    * Validate stateful rule header object
    * @param rule
    * @param statefulRule
+   * @param declaredIpSetNames names declared under this rule group's ruleVariables.ipSets
    * @param helpers
    * @param errors
    */
   private validateStatefulRuleHeader(
     rule: NfwRuleGroupConfig,
     statefulRule: NfwRuleSourceStatefulRuleConfig,
+    declaredIpSetNames: string[],
     helpers: NetworkValidatorFunctions,
     errors: string[],
   ) {
     const anyArray = ['any', 'ANY'];
     // Validate IP addresses
-    [statefulRule.header.destination, statefulRule.header.source].forEach(cidr => {
-      if (!anyArray.includes(cidr) && !helpers.isValidIpv4Cidr(cidr)) {
-        errors.push(
-          `[Network Firewall rule group ${rule.name}]: stateful rule header IP source/destination "${cidr}" is invalid. Valid values are a CIDR range or the string "ANY"`,
-        );
+    [statefulRule.header.destination, statefulRule.header.source].forEach(value => {
+      if (anyArray.includes(value) || helpers.isValidIpv4Cidr(value)) {
+        return;
       }
+      this.validateStatefulRuleHeaderRuleVariable(rule, value, declaredIpSetNames, helpers, errors);
     });
     // Validate port ranges
     [statefulRule.header.destinationPort, statefulRule.header.sourcePort].forEach(port => {
@@ -678,6 +727,105 @@ export class NetworkFirewallValidator {
         }
       }
     });
+  }
+
+  /**
+   * Validate a stateful rule header source/destination that is neither a CIDR
+   * nor "ANY". The only accepted form is a single rule variable reference,
+   * written as `$NAME` or `[$NAME]` (Suricata variable syntax). Bracketed
+   * lists of CIDRs/variables (e.g. `[10.0.0.0/8,$HOME_NET]`) are recognized
+   * and rejected with a list-specific error. The referenced name in a single
+   * reference must either be one of Network Firewall's built-in variables
+   * (`HOME_NET`, `EXTERNAL_NET`), which are always valid, or be declared under
+   * this rule group's ruleVariables.ipSets.
+   * @param rule
+   * @param value
+   * @param declaredIpSetNames
+   * @param helpers
+   * @param errors
+   */
+  private validateStatefulRuleHeaderRuleVariable(
+    rule: NfwRuleGroupConfig,
+    value: string,
+    declaredIpSetNames: string[],
+    helpers: NetworkValidatorFunctions,
+    errors: string[],
+  ) {
+    // Accept `$NAME` or `[$NAME]` (brackets must balance); capture the variable
+    // name for cross-checking against the declared ipSets.
+    const match = value.match(NetworkFirewallValidator.RULE_VARIABLE_REFERENCE_REGEX);
+    if (!match) {
+      if (this.looksLikeStatefulRuleHeaderList(value, helpers)) {
+        // A bracketed, comma-separated value where every segment is itself a CIDR
+        // and/or a "$NAME" variable reference (e.g. "[10.0.0.0/8,$HOME_NET]") is a
+        // Suricata-style list. Lists are not currently supported here, call that out
+        // explicitly rather than reporting a generic syntax error.
+        errors.push(
+          `[Network Firewall rule group ${rule.name}]: stateful rule header IP source/destination "${value}" is invalid. Bracketed lists mixing multiple CIDRs and/or rule variables are not supported here; use a single CIDR, the string "ANY", or a single rule variable reference instead`,
+        );
+        return;
+      }
+      errors.push(
+        `[Network Firewall rule group ${rule.name}]: stateful rule header IP source/destination "${value}" is invalid. ${this.getValidStatefulRuleHeaderValuesText()}`,
+      );
+      return;
+    }
+
+    const variableName = match[1] ?? match[2];
+    if (
+      !NetworkFirewallValidator.BUILT_IN_RULE_VARIABLE_NAMES.includes(variableName) &&
+      !declaredIpSetNames.includes(variableName)
+    ) {
+      errors.push(
+        `[Network Firewall rule group ${rule.name}]: stateful rule header IP source/destination "${value}" references rule variable "${variableName}", which is not declared under this rule group's ruleVariables.ipSets. Declared ipSets: ${
+          declaredIpSetNames.length > 0 ? declaredIpSetNames.join(', ') : '(none)'
+        }. Built-in variables (${NetworkFirewallValidator.BUILT_IN_RULE_VARIABLE_NAMES.join(
+          ', ',
+        )}) do not need to be declared`,
+      );
+    }
+  }
+
+  /**
+   * Checks whether a value looks like a Suricata-style bracketed list of CIDRs
+   * and/or rule variable references (e.g. `[10.0.0.0/8,$HOME_NET]`), which this
+   * validator does not currently parse or accept.
+   *
+   * This is deliberately conservative: it only classifies `value` as a list if
+   * it is wrapped in a single balanced pair of brackets AND every comma-separated
+   * segment inside is itself individually a valid CIDR or a `$NAME` reference.
+   * Otherwise unrelated malformed input (for example stray brackets around
+   * garbage text) falls through to the generic invalid-value error instead of
+   * being misdiagnosed as an unsupported list.
+   * @param value
+   * @param helpers
+   * @returns
+   */
+  private looksLikeStatefulRuleHeaderList(value: string, helpers: NetworkValidatorFunctions): boolean {
+    if (!value.startsWith('[') || !value.endsWith(']') || !value.includes(',')) {
+      return false;
+    }
+    const segments = value.slice(1, -1).split(',');
+    return segments.every(segment => {
+      const trimmed = segment.trim();
+      return (
+        trimmed.length > 0 &&
+        (helpers.isValidIpv4Cidr(trimmed) || NetworkFirewallValidator.RULE_VARIABLE_LIST_SEGMENT_REGEX.test(trimmed))
+      );
+    });
+  }
+
+  /**
+   * Returns a description of the valid stateful rule header source/destination
+   * values, used in validation error messages. Extracted so the "what's valid"
+   * explanation is defined in one place as built-in variables or accepted forms
+   * change.
+   * @returns
+   */
+  private getValidStatefulRuleHeaderValuesText(): string {
+    return `Valid values are a CIDR range, the string "ANY", or a rule variable reference such as "$HOME_NET" or "[$HOME_NET]" (built-in variables ${NetworkFirewallValidator.BUILT_IN_RULE_VARIABLE_NAMES.join(
+      ', ',
+    )} are always valid; other names must be declared under this rule group's ruleVariables.ipSets)`;
   }
 
   /**

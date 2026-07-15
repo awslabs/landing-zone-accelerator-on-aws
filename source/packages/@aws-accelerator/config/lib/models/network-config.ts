@@ -5810,7 +5810,9 @@ export interface INfwRuleSourceStatefulRuleHeaderConfig {
    * The destination CIDR range to inspect for.
    *
    * @remarks
-   * Use CIDR notation, i.e. 10.0.0.0/16
+   * Use CIDR notation, i.e. 10.0.0.0/16. You may also use `ANY` to match any
+   * address, or reference a rule variable declared under this rule group's
+   * `ruleVariables.ipSets`, for example `$HOME_NET` or `[$HOME_NET]`.
    */
   readonly destination: t.NonEmptyString;
   /**
@@ -5841,7 +5843,9 @@ export interface INfwRuleSourceStatefulRuleHeaderConfig {
    * The source CIDR range to inspect for.
    *
    * @remarks
-   * Use CIDR notation, i.e. 10.0.0.0/16
+   * Use CIDR notation, i.e. 10.0.0.0/16. You may also use `ANY` to match any
+   * address, or reference a rule variable declared under this rule group's
+   * `ruleVariables.ipSets`, for example `$HOME_NET` or `[$HOME_NET]`.
    */
   readonly source: t.NonEmptyString;
   /**
@@ -6429,8 +6433,9 @@ export interface INfwRuleSourceConfig {
  *
  * @description
  * Use this configuration to define rule variable definitions for Network Firewall.
- * Rule variables can be used in Suricata-compatible and domain list rule definitions.
- * They are not supported in stateful rule IP header definitions.
+ * Rule variables can be used in Suricata-compatible rule strings, domain list rule
+ * definitions, and stateful rule IP header `source`/`destination` fields (for example
+ * `$HOME_NET` or `[$HOME_NET]`).
  *
  * @see {@link https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-networkfirewall-rulegroup-rulevariables.html}
  *
@@ -6472,12 +6477,20 @@ export interface INfwRuleVariableDefinitionConfig {
  *
  * @description
  * Use this configuration to define rule variable definitions for Network Firewall.
- * Rule variables can be used in Suricata-compatible and domain list rule definitions.
- * They are not supported in stateful rule IP header definitions.
+ * Rule variables can be used in Suricata-compatible rule strings, domain list rule
+ * definitions, and stateful rule IP header `source`/`destination` fields (for example
+ * `$HOME_NET` or `[$HOME_NET]`).
  *
  * `ipSets` hold IP addresses and CIDR ranges; `portSets` hold individual TCP/UDP
  * ports and/or port ranges. Port ranges use colon notation (`'<fromPort>:<toPort>'`,
  * for example `'1024:2048'`) and can be combined with single ports in the same array.
+ *
+ * @remarks
+ * `HOME_NET` and `EXTERNAL_NET` are Suricata/Network Firewall built-in variables and
+ * do not need to be declared here. `HOME_NET` defaults to the CIDR of the inspection
+ * VPC (or a policy-level override), and `EXTERNAL_NET` always defaults to the negation
+ * of `HOME_NET`. Declare `ipSets`/`portSets` here only for custom variable names or to
+ * override the built-in `HOME_NET`/`EXTERNAL_NET` values at the rule group level.
  *
  * @see {@link https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-networkfirewall-rulegroup-rulevariables.html}
  * @see {@link https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-networkfirewall-rulegroup-portset.html | CloudFormation PortSet reference}
