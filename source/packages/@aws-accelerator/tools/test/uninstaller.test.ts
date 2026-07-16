@@ -376,3 +376,132 @@ describe('getContainerDeploymentConfig', () => {
     );
   });
 });
+
+describe('cleanupStack retained resource scoping', () => {
+  /**
+   * Retained resources (log groups, buckets, KMS keys, backup vaults) are queued in
+   * shared instance arrays across all accounts/regions before stacks are deleted in
+   * parallel.
+   * Cleanup must therefore only operate on resources belonging to the completed stack.
+   */
+  it('should only delete post-stack resources belonging to the completed stack', async () => {
+    // Given
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const tool = new AcceleratorTool(makeProps()) as any;
+
+    const stackAClient = { send: vi.fn() };
+    const stackBClient = { send: vi.fn() };
+    tool.logGroups = [
+      { client: stackAClient, stackName: 'stack-a', logGroup: 'stack-a-log-group' },
+      { client: stackBClient, stackName: 'stack-b', logGroup: 'stack-b-log-group' },
+    ];
+
+    vi.spyOn(tool, 'deletePreStackDeleteResources').mockResolvedValue(undefined);
+    vi.spyOn(tool, 'completeStackDeletion').mockResolvedValue(undefined);
+    vi.spyOn(tool, 'deleteBackupVaults').mockResolvedValue(undefined);
+    vi.spyOn(tool, 'deleteBuckets').mockResolvedValue(undefined);
+    vi.spyOn(tool, 'deleteKmsKeys').mockResolvedValue(undefined);
+    const deleteCloudWatchLogs = vi.spyOn(tool, 'deleteCloudWatchLogs').mockResolvedValue(true);
+
+    // When
+    await tool.cleanupStack({ send: vi.fn() }, 'stack-a');
+
+    // Then - only stack-a's log group is deleted
+    expect(deleteCloudWatchLogs).toHaveBeenCalledTimes(1);
+    expect(deleteCloudWatchLogs).toHaveBeenCalledWith(stackAClient, 'stack-a', 'stack-a-log-group');
+
+    // And - stack-b's log group remains queued for its own cleanup
+    expect(tool.logGroups).toEqual([{ client: stackBClient, stackName: 'stack-b', logGroup: 'stack-b-log-group' }]);
+  });
+
+  it('should preserve other stacks retained resources across all resource types', async () => {
+    // Given
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const tool = new AcceleratorTool(makeProps()) as any;
+
+    tool.logGroups = [
+      { client: {}, stackName: 'stack-a', logGroup: 'a-lg' },
+      { client: {}, stackName: 'stack-b', logGroup: 'b-lg' },
+    ];
+    tool.buckets = [
+      { client: {}, stackName: 'stack-a', bucket: 'a-bucket' },
+      { client: {}, stackName: 'stack-b', bucket: 'b-bucket' },
+    ];
+    tool.kmsKeys = [
+      { client: {}, stackName: 'stack-a', key: 'a-key' },
+      { client: {}, stackName: 'stack-b', key: 'b-key' },
+    ];
+    tool.backupVaults = [
+      { client: {}, stackName: 'stack-a', backup: 'a-vault' },
+      { client: {}, stackName: 'stack-b', backup: 'b-vault' },
+    ];
+
+    vi.spyOn(tool, 'deletePreStackDeleteResources').mockResolvedValue(undefined);
+    vi.spyOn(tool, 'completeStackDeletion').mockResolvedValue(undefined);
+    const deleteCloudWatchLogs = vi.spyOn(tool, 'deleteCloudWatchLogs').mockResolvedValue(true);
+    const deleteBucket = vi.spyOn(tool, 'deleteBucket').mockResolvedValue(undefined);
+    const scheduleKeyDeletion = vi.spyOn(tool, 'scheduleKeyDeletion').mockResolvedValue(undefined);
+    const deleteBackupVault = vi.spyOn(tool, 'deleteBackupVault').mockResolvedValue(undefined);
+
+    // When
+    await tool.cleanupStack({ send: vi.fn() }, 'stack-a');
+
+    // Then - only stack-a's resource is passed to each leaf delete (loop filter),
+    // guarding against an inverted loop predicate acting on the wrong stack
+    expect(deleteCloudWatchLogs).toHaveBeenCalledTimes(1);
+    expect(deleteCloudWatchLogs).toHaveBeenCalledWith(expect.anything(), 'stack-a', 'a-lg');
+    expect(deleteBucket).toHaveBeenCalledTimes(1);
+    expect(deleteBucket).toHaveBeenCalledWith(expect.anything(), 'stack-a', 'a-bucket');
+    expect(scheduleKeyDeletion).toHaveBeenCalledTimes(1);
+    expect(scheduleKeyDeletion).toHaveBeenCalledWith(expect.anything(), 'stack-a', 'a-key');
+    expect(deleteBackupVault).toHaveBeenCalledTimes(1);
+    expect(deleteBackupVault).toHaveBeenCalledWith(expect.anything(), 'stack-a', 'a-vault');
+
+    // And - all stack-b resources remain queued (clearing filter)
+    expect(tool.logGroups).toEqual([{ client: {}, stackName: 'stack-b', logGroup: 'b-lg' }]);
+    expect(tool.buckets).toEqual([{ client: {}, stackName: 'stack-b', bucket: 'b-bucket' }]);
+    expect(tool.kmsKeys).toEqual([{ client: {}, stackName: 'stack-b', key: 'b-key' }]);
+    expect(tool.backupVaults).toEqual([{ client: {}, stackName: 'stack-b', backup: 'b-vault' }]);
+  });
+
+  it('should only detach/clear IAM roles and policies belonging to the completed stack', async () => {
+    // Given - iamRoles/iamPolicies are cleaned up by removeSsmManagedPolicies and
+    // detachPoliciesFromRole, whose sole caller is deletePreStackDeleteResources. That
+    // caller is deliberately NOT mocked here so the pre-stack IAM scoping filters are
+    // actually exercised (an inverted ===/!== predicate would otherwise go uncaught).
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const tool = new AcceleratorTool(makeProps()) as any;
+
+    const stackARoleClient = { send: vi.fn().mockResolvedValue({ AttachedPolicies: [] }) };
+    const stackBRoleClient = { send: vi.fn().mockResolvedValue({ AttachedPolicies: [] }) };
+    const stackAPolicyClient = { send: vi.fn().mockResolvedValue({ PolicyRoles: [] }) };
+    const stackBPolicyClient = { send: vi.fn().mockResolvedValue({ PolicyRoles: [] }) };
+
+    tool.iamRoles = [
+      { client: stackARoleClient, stackName: 'stack-a', roleName: 'stack-a-role' },
+      { client: stackBRoleClient, stackName: 'stack-b', roleName: 'stack-b-role' },
+    ];
+    tool.iamPolicies = [
+      { client: stackAPolicyClient, stackName: 'stack-a', policyName: 'stack-a-policy' },
+      { client: stackBPolicyClient, stackName: 'stack-b', policyName: 'stack-b-policy' },
+    ];
+
+    // Avoid a live SSM lookup for managed policy names
+    vi.spyOn(tool, 'getSsmManagedPolicies').mockResolvedValue([]);
+
+    // When - run the real pre-stack IAM cleanup for stack-a only
+    await tool.deletePreStackDeleteResources('stack-a');
+
+    // Then - only stack-a's role/policy clients are acted on
+    expect(stackARoleClient.send).toHaveBeenCalled();
+    expect(stackBRoleClient.send).not.toHaveBeenCalled();
+    expect(stackAPolicyClient.send).toHaveBeenCalled();
+    expect(stackBPolicyClient.send).not.toHaveBeenCalled();
+
+    // And - stack-b's entries remain queued for their own stack's cleanup
+    expect(tool.iamRoles).toEqual([{ client: stackBRoleClient, stackName: 'stack-b', roleName: 'stack-b-role' }]);
+    expect(tool.iamPolicies).toEqual([
+      { client: stackBPolicyClient, stackName: 'stack-b', policyName: 'stack-b-policy' },
+    ]);
+  });
+});

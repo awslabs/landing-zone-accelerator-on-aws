@@ -1154,11 +1154,11 @@ export class AcceleratorTool {
     return true;
   }
 
-  private async removeSsmManagedPolicies(): Promise<void> {
+  private async removeSsmManagedPolicies(stackName: string): Promise<void> {
     // get SsmManagedPolicies onces
     const ssmManagedPolicies = await this.getSsmManagedPolicies();
 
-    for (const item of this.iamRoles) {
+    for (const item of this.iamRoles.filter(role => role.stackName === stackName)) {
       this.debugLog(`Deleting IAM Role ${item.roleName} from ${item.stackName} stack`, 'info');
       try {
         // Get managed policies
@@ -1187,11 +1187,11 @@ export class AcceleratorTool {
         }
       }
     }
-    this.iamRoles = [];
+    this.iamRoles = this.iamRoles.filter(role => role.stackName !== stackName);
   }
 
-  private async detachPoliciesFromRole(): Promise<void> {
-    for (const item of this.iamPolicies) {
+  private async detachPoliciesFromRole(stackName: string): Promise<void> {
+    for (const item of this.iamPolicies.filter(policy => policy.stackName === stackName)) {
       this.debugLog(`Detaching IAM policy ${item.policyName} from ${item.stackName} stack`, 'info');
 
       try {
@@ -1218,7 +1218,7 @@ export class AcceleratorTool {
         }
       }
     }
-    this.iamPolicies = [];
+    this.iamPolicies = this.iamPolicies.filter(policy => policy.stackName !== stackName);
   }
 
   /**
@@ -2398,12 +2398,12 @@ Once it is resolved rerun uninstaller. Additional error details:\n\n\n\n\n\n`,
     );
 
     // Delete resource before stack deletion
-    await this.deletePreStackDeleteResources();
+    await this.deletePreStackDeleteResources(stackName);
 
     await this.completeStackDeletion(cloudFormationClient, stackName);
 
     // Delete resource after stack deletion
-    await this.deletePostStackDeleteResources();
+    await this.deletePostStackDeleteResources(stackName);
   }
 
   /**
@@ -2581,53 +2581,53 @@ Once it is resolved rerun uninstaller. Additional error details:\n\n\n\n\n\n`,
   /**
    * Function to schedule deletion of ksm keys post stack deletion
    */
-  private async deleteKmsKeys() {
+  private async deleteKmsKeys(stackName: string) {
     if (!this.acceleratorToolProps.keepData) {
-      for (const item of this.kmsKeys) {
+      for (const item of this.kmsKeys.filter(key => key.stackName === stackName)) {
         this.debugLog(`Scheduling deletion of KMS key ${item.stackName} ${item.key}`, 'info');
         await this.scheduleKeyDeletion(item.client, item.stackName, item.key);
       }
     }
-    this.kmsKeys = [];
+    this.kmsKeys = this.kmsKeys.filter(key => key.stackName !== stackName);
   }
 
   /**
    * Function to delete backup vaults
    */
-  private async deleteBackupVaults() {
+  private async deleteBackupVaults(stackName: string) {
     if (!this.acceleratorToolProps.keepData) {
-      for (const item of this.backupVaults) {
+      for (const item of this.backupVaults.filter(vault => vault.stackName === stackName)) {
         this.debugLog(`Deleting backup vault', ${item.stackName} ${item.backup}`, 'display');
         await this.deleteBackupVault(item.client, item.stackName, item.backup);
       }
     }
-    this.backupVaults = [];
+    this.backupVaults = this.backupVaults.filter(vault => vault.stackName !== stackName);
   }
 
   /**
    * Function to delete log groups
    */
-  private async deleteLogGroups() {
+  private async deleteLogGroups(stackName: string) {
     if (!this.acceleratorToolProps.keepData) {
-      for (const item of this.logGroups) {
+      for (const item of this.logGroups.filter(logGroup => logGroup.stackName === stackName)) {
         this.debugLog(`Deleting log group', ${item.stackName} ${item.logGroup}`, 'display');
         await this.deleteCloudWatchLogs(item.client, item.stackName, item.logGroup);
       }
     }
-    this.logGroups = [];
+    this.logGroups = this.logGroups.filter(logGroup => logGroup.stackName !== stackName);
   }
 
   /**
    * Function to delete buckets post stack deletion, if buckets deleted before stack replication custom resource will fail
    */
-  private async deleteBuckets() {
+  private async deleteBuckets(stackName: string) {
     if (!this.acceleratorToolProps.keepData) {
-      for (const item of this.buckets) {
+      for (const item of this.buckets.filter(bucket => bucket.stackName === stackName)) {
         this.debugLog(`Deleting bucket', ${item.stackName} ${item.bucket}`, 'display');
         await this.deleteBucket(item.client, item.stackName, item.bucket);
       }
     }
-    this.buckets = [];
+    this.buckets = this.buckets.filter(bucket => bucket.stackName !== stackName);
   }
 
   /**
@@ -2793,36 +2793,36 @@ Once it is resolved rerun uninstaller. Additional error details:\n\n\n\n\n\n`,
    * @param stackName
    */
   private async cleanupStack(cloudFormationClient: CloudFormationClient, stackName: string) {
-    await this.deletePreStackDeleteResources();
+    await this.deletePreStackDeleteResources(stackName);
     await this.completeStackDeletion(cloudFormationClient, stackName);
-    await this.deletePostStackDeleteResources();
+    await this.deletePostStackDeleteResources(stackName);
   }
 
   /**
    * Function to delete resources before stack deletion
    */
-  private async deletePreStackDeleteResources(): Promise<void> {
+  private async deletePreStackDeleteResources(stackName: string): Promise<void> {
     // 1. For roles in this stack, remove SsmManagedPolicies that would prevent role deletion
-    await this.removeSsmManagedPolicies();
+    await this.removeSsmManagedPolicies(stackName);
     // 2. For policies in this stack, detach from any roles that would prevent policy deletion
-    await this.detachPoliciesFromRole();
+    await this.detachPoliciesFromRole(stackName);
   }
 
   /**
    * Function to delete resources after stack deletion
    */
-  private async deletePostStackDeleteResources(): Promise<void> {
+  private async deletePostStackDeleteResources(stackName: string): Promise<void> {
     // Delete cloudwatch log groups
-    await this.deleteLogGroups();
+    await this.deleteLogGroups(stackName);
 
     // Delete backup vaults
-    await this.deleteBackupVaults();
+    await this.deleteBackupVaults(stackName);
 
     // Delete buckets
-    await this.deleteBuckets();
+    await this.deleteBuckets(stackName);
 
     // Delete KMS keys
-    await this.deleteKmsKeys();
+    await this.deleteKmsKeys(stackName);
   }
 
   private async completeStackDeletion(cloudFormationClient: CloudFormationClient, stackName: string): Promise<void> {
