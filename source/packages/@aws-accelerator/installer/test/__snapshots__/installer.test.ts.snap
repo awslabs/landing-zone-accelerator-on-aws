@@ -1842,6 +1842,7 @@ phases:
       - if [ -f .yarnrc ]; then yarn install --use-yarnrc .yarnrc; else yarn install; fi
       - yarn build-prod
       - cd packages/@aws-accelerator/installer
+      - chmod +x lib/bash/*.sh ../accelerator/scripts/*.sh
       - set -e && ./lib/bash/bootstrap-management.sh ",
                 {
                   "Fn::GetAtt": [
@@ -5801,6 +5802,7 @@ phases:
       - if [ -f .yarnrc ]; then yarn install --use-yarnrc .yarnrc; else yarn install; fi
       - yarn build-prod
       - cd packages/@aws-accelerator/installer
+      - chmod +x lib/bash/*.sh ../accelerator/scripts/*.sh
       - set -e && ./lib/bash/bootstrap-management.sh ",
                 {
                   "Fn::GetAtt": [
@@ -9826,6 +9828,7 @@ phases:
       - if [ -f .yarnrc ]; then yarn install --use-yarnrc .yarnrc; else yarn install; fi
       - yarn build-prod
       - cd packages/@aws-accelerator/installer
+      - chmod +x lib/bash/*.sh ../accelerator/scripts/*.sh
       - set -e && ./lib/bash/bootstrap-management.sh ",
                 {
                   "Fn::GetAtt": [
@@ -13824,6 +13827,7 @@ phases:
       - if [ -f .yarnrc ]; then yarn install --use-yarnrc .yarnrc; else yarn install; fi
       - yarn build-prod
       - cd packages/@aws-accelerator/installer
+      - chmod +x lib/bash/*.sh ../accelerator/scripts/*.sh
       - set -e && ./lib/bash/bootstrap-management.sh ",
                 {
                   "Fn::GetAtt": [
@@ -17827,6 +17831,7 @@ phases:
       - if [ -f .yarnrc ]; then yarn install --use-yarnrc .yarnrc; else yarn install; fi
       - yarn build-prod
       - cd packages/@aws-accelerator/installer
+      - chmod +x lib/bash/*.sh ../accelerator/scripts/*.sh
       - set -e && ./lib/bash/bootstrap-management.sh ",
                 {
                   "Fn::GetAtt": [
@@ -21788,6 +21793,7 @@ phases:
       - if [ -f .yarnrc ]; then yarn install --use-yarnrc .yarnrc; else yarn install; fi
       - yarn build-prod
       - cd packages/@aws-accelerator/installer
+      - chmod +x lib/bash/*.sh ../accelerator/scripts/*.sh
       - set -e && ./lib/bash/bootstrap-management.sh ",
                 {
                   "Fn::GetAtt": [
@@ -25804,6 +25810,7 @@ phases:
       - if [ -f .yarnrc ]; then yarn install --use-yarnrc .yarnrc; else yarn install; fi
       - yarn build-prod
       - cd packages/@aws-accelerator/installer
+      - chmod +x lib/bash/*.sh ../accelerator/scripts/*.sh
       - set -e && ./lib/bash/bootstrap-management.sh ",
                 {
                   "Fn::GetAtt": [
@@ -30196,6 +30203,7 @@ phases:
       - if [ -f .yarnrc ]; then yarn install --use-yarnrc .yarnrc; else yarn install; fi
       - yarn build-prod
       - cd packages/@aws-accelerator/installer
+      - chmod +x lib/bash/*.sh ../accelerator/scripts/*.sh
       - set -e && ./lib/bash/bootstrap-management.sh ",
                 {
                   "Fn::GetAtt": [
@@ -34620,6 +34628,7 @@ phases:
       - if [ -f .yarnrc ]; then yarn install --use-yarnrc .yarnrc; else yarn install; fi
       - yarn build-prod
       - cd packages/@aws-accelerator/installer
+      - chmod +x lib/bash/*.sh ../accelerator/scripts/*.sh
       - set -e && ./lib/bash/bootstrap-management.sh ",
                 {
                   "Fn::GetAtt": [

@@ -1003,6 +1003,7 @@ export class InstallerStack extends cdk.Stack {
               'if [ -f .yarnrc ]; then yarn install --use-yarnrc .yarnrc; else yarn install; fi',
               'yarn build-prod',
               'cd packages/@aws-accelerator/installer',
+              'chmod +x lib/bash/*.sh ../accelerator/scripts/*.sh',
               `set -e && ./lib/bash/bootstrap-management.sh ${acceleratorPrefix} ${cdk.Aws.REGION} ${cdk.Aws.ACCOUNT_ID} ${globalRegion} $FORCE_BOOTSTRAP`,
               `set -e && ./lib/bash/create-module-infrastructure.sh ${acceleratorPrefix} ${cdk.Aws.REGION} ${cdk.Aws.ACCOUNT_ID} $ENABLE_EXTERNAL_PIPELINE_ACCOUNT $ACCELERATOR_QUALIFIER`,
               `set -e && if [ $ENABLE_EXTERNAL_PIPELINE_ACCOUNT = "yes" ]; then
