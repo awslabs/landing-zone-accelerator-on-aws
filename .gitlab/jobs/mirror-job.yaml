@@ -97,3 +97,18 @@ lza:all-enable-mirror:
     - if: $CI_PROJECT_ID == "21753" && $CI_COMMIT_BRANCH == "integ" && $CI_MERGE_REQUEST_IID == null
       when: always
     - when: never
+
+# Account 6: LZA CCCS Pipeline Test Account (ca-central-1)
+# Mirrors only when changes are merged to 'integ' branch
+lza:cccs-mirror:
+  <<: *mirror_template
+  variables:
+    ACCOUNT_ID: "${LZA_CCCS_ACCOUNT_ID}"
+    AWS_DEFAULT_REGION: "ca-central-1"
+    AWS_CREDS_TARGET_ROLE: "arn:${PARTITION}:iam::${ACCOUNT_ID}:role/${GITLAB_RUNNER_ROLE_NAME}"
+  rules:
+    - if: $SKIP_MIRROR_JOBS == "yes"
+      when: never
+    - if: $CI_PROJECT_ID == "21753" && $CI_COMMIT_BRANCH == "integ" && $CI_MERGE_REQUEST_IID == null
+      when: always
+    - when: never
