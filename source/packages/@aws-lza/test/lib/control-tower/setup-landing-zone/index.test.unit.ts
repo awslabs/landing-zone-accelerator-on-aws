@@ -28,6 +28,18 @@ import { IamRole } from '../../../../lib/control-tower/setup-landing-zone/prereq
 import { KmsKey } from '../../../../lib/control-tower/setup-landing-zone/prerequisites/kms-key';
 import { SharedAccount } from '../../../../lib/control-tower/setup-landing-zone/prerequisites/shared-account';
 import { MODULE_EXCEPTIONS } from '../../../../common/enums';
+import { ControlTowerLogAccess } from '../../../../lib/control-tower/setup-landing-zone/prerequisites/control-tower-log-access';
+
+const mockLogger = vi.hoisted(() => ({
+  info: vi.fn(),
+  warn: vi.fn(),
+  error: vi.fn(),
+  processStart: vi.fn(),
+  processEnd: vi.fn(),
+  dryRun: vi.fn(),
+  commandExecution: vi.fn(),
+  commandSuccess: vi.fn(),
+}));
 
 // Mock dependencies
 vi.mock('@aws-sdk/client-controltower', () => {
@@ -94,6 +106,22 @@ vi.mock('../../../../lib/control-tower/setup-landing-zone/prerequisites/kms-key'
     },
   };
 });
+
+vi.mock('../../../../lib/control-tower/setup-landing-zone/prerequisites/control-tower-log-access', async () => {
+  const actual = await vi.importActual(
+    '../../../../lib/control-tower/setup-landing-zone/prerequisites/control-tower-log-access',
+  );
+  return {
+    ...actual,
+    ControlTowerLogAccess: {
+      configure: vi.fn(),
+    },
+  };
+});
+
+vi.mock('../../../../common/logger', () => ({
+  createLogger: vi.fn(() => mockLogger),
+}));
 
 const MOCK_CONSTANTS = {
   unknownError: new Error('Unknown command'),
@@ -198,6 +226,14 @@ const MOCK_CONSTANTS = {
   operationIdentifier: 'mockUpdateOperationIdentifier',
   existingLandingZoneIdentifier: 'mockLandingZoneIdentifier',
 };
+
+function createDeferred<T>(): { promise: Promise<T>; resolve: (value: T) => void } {
+  let resolve!: (value: T) => void;
+  const promise = new Promise<T>(promiseResolve => {
+    resolve = promiseResolve;
+  });
+  return { promise, resolve };
+}
 
 describe('Accelerator ControlTower Landing Zone Module', () => {
   const mockSend = vi.fn();
@@ -381,10 +417,12 @@ describe('Accelerator ControlTower Landing Zone Module', () => {
 
       // Verify
       expect(response).toMatch(/\[DRY-RUN\]: mockModuleName mockOperation \(no actual changes were made\)/);
+      expect(ControlTowerLogAccess.configure).not.toHaveBeenCalled();
     });
 
     test('should be successful without rechecking of operation status', async () => {
       // Setup
+      const operation = createDeferred<{ operationDetails: { status: string } }>();
       mockSend.mockImplementation(command => {
         if (command instanceof CreateLandingZoneCommand) {
           return Promise.resolve({
@@ -392,19 +430,24 @@ describe('Accelerator ControlTower Landing Zone Module', () => {
           });
         }
         if (command instanceof GetLandingZoneOperationCommand) {
-          return Promise.resolve({
-            operationDetails: { status: LandingZoneOperationStatus.SUCCEEDED },
-          });
+          return operation.promise;
         }
         return Promise.reject(new Error('Unexpected command'));
       });
 
       // Execute
-      const response = await new SetupLandingZoneModule().handler({
+      const handlerPromise = new SetupLandingZoneModule().handler({
         ...MOCK_CONSTANTS.moduleCommonParameter,
         useExistingRole: false,
         configuration: MOCK_CONSTANTS.controlTowerLandingZoneConfiguration,
       });
+      await vi.waitFor(() => expect(GetLandingZoneOperationCommand).toHaveBeenCalledTimes(1));
+      expect(ControlTowerLogAccess.configure).not.toHaveBeenCalled();
+
+      operation.resolve({
+        operationDetails: { status: LandingZoneOperationStatus.SUCCEEDED },
+      });
+      const response = await handlerPromise;
 
       // Verify
       expect(response).toMatch(/AWS Control Tower landing zone deployed successfully./);
@@ -414,6 +457,14 @@ describe('Accelerator ControlTower Landing Zone Module', () => {
         centralizedLoggingKeyArn: MOCK_CONSTANTS.ctKmsKeyArn,
         configLoggingKeyArn: MOCK_CONSTANTS.ctConfigKmsKeyArn,
       });
+      expect(ControlTowerLogAccess.configure).toHaveBeenCalledWith(
+        MOCK_CONSTANTS.moduleCommonParameter.partition,
+        MOCK_CONSTANTS.moduleCommonParameter.region,
+        MOCK_CONSTANTS.logArchiveAccountItem.Id,
+        MOCK_CONSTANTS.ctKmsKeyArn,
+        undefined,
+        MOCK_CONSTANTS.moduleCommonParameter.credentials,
+      );
     });
 
     test('should be successful while rechecking of operation status', async () => {
@@ -634,6 +685,9 @@ describe('Accelerator ControlTower Landing Zone Module', () => {
         landingZoneIdentifier: MOCK_CONSTANTS.existingLandingZoneIdentifier,
         status: LandingZoneStatus.ACTIVE,
         securityOuName: 'Security',
+        centralizedLoggingConfig: {
+          kmsKeyArn: MOCK_CONSTANTS.ctKmsKeyArn,
+        },
       });
 
       landingZoneUpdateOrResetRequiredSpy.mockReturnValue({
@@ -712,6 +766,94 @@ describe('Accelerator ControlTower Landing Zone Module', () => {
       expect(UpdateLandingZoneCommand).toHaveBeenCalledTimes(0);
       expect(ResetLandingZoneCommand).toHaveBeenCalledTimes(0);
       expect(GetLandingZoneOperationCommand).toHaveBeenCalledTimes(0);
+      expect(ControlTowerLogAccess.configure).not.toHaveBeenCalled();
+    });
+
+    test('should configure log access for an existing landing zone when no changes are required', async () => {
+      getLandingZoneDetailsSpy.mockResolvedValue({
+        landingZoneIdentifier: MOCK_CONSTANTS.existingLandingZoneIdentifier,
+        status: LandingZoneStatus.ACTIVE,
+        securityOuName: 'Security',
+        centralizedLoggingConfig: {
+          kmsKeyArn: MOCK_CONSTANTS.ctKmsKeyArn,
+        },
+      });
+      landingZoneUpdateOrResetRequiredSpy.mockReturnValue({
+        updateRequired: false,
+        targetVersion: '3.3',
+        resetRequired: false,
+        reason: 'No changes required',
+      });
+
+      await new SetupLandingZoneModule().handler({
+        ...MOCK_CONSTANTS.moduleCommonParameter,
+        useExistingRole: false,
+        configuration: MOCK_CONSTANTS.controlTowerLandingZoneConfiguration,
+      });
+
+      expect(ControlTowerLogAccess.configure).toHaveBeenCalledWith(
+        MOCK_CONSTANTS.moduleCommonParameter.partition,
+        MOCK_CONSTANTS.moduleCommonParameter.region,
+        MOCK_CONSTANTS.logArchiveAccountItem.Id,
+        MOCK_CONSTANTS.ctKmsKeyArn,
+        undefined,
+        MOCK_CONSTANTS.moduleCommonParameter.credentials,
+      );
+    });
+
+    test('should warn and succeed when log access configuration fails', async () => {
+      getLandingZoneDetailsSpy.mockResolvedValue({
+        landingZoneIdentifier: MOCK_CONSTANTS.existingLandingZoneIdentifier,
+        status: LandingZoneStatus.ACTIVE,
+        securityOuName: 'Security',
+        centralizedLoggingConfig: {
+          kmsKeyArn: MOCK_CONSTANTS.ctKmsKeyArn,
+        },
+      });
+      landingZoneUpdateOrResetRequiredSpy.mockReturnValue({
+        updateRequired: false,
+        targetVersion: '3.3',
+        resetRequired: false,
+        reason: 'No changes required',
+      });
+      vi.mocked(ControlTowerLogAccess.configure).mockRejectedValueOnce(new Error('Access denied'));
+
+      const response = await new SetupLandingZoneModule().handler({
+        ...MOCK_CONSTANTS.moduleCommonParameter,
+        useExistingRole: false,
+        configuration: MOCK_CONSTANTS.controlTowerLandingZoneConfiguration,
+      });
+
+      expect(response).toMatch(/No changes required/);
+      expect(ControlTowerLogAccess.configure).toHaveBeenCalledOnce();
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        'Unable to configure AWS Control Tower centralized log access: Access denied',
+      );
+    });
+
+    test('should skip log access when no centralized logging key is configured', async () => {
+      getLandingZoneDetailsSpy.mockResolvedValue({
+        landingZoneIdentifier: MOCK_CONSTANTS.existingLandingZoneIdentifier,
+        status: LandingZoneStatus.ACTIVE,
+        securityOuName: 'Security',
+        configHubConfig: {
+          kmsKeyArn: MOCK_CONSTANTS.ctConfigKmsKeyArn,
+        },
+      });
+      landingZoneUpdateOrResetRequiredSpy.mockReturnValue({
+        updateRequired: false,
+        targetVersion: '4.0',
+        resetRequired: false,
+        reason: 'No changes required',
+      });
+
+      await new SetupLandingZoneModule().handler({
+        ...MOCK_CONSTANTS.moduleCommonParameter,
+        useExistingRole: false,
+        configuration: MOCK_CONSTANTS.controlTowerLandingZoneConfiguration,
+      });
+
+      expect(ControlTowerLogAccess.configure).not.toHaveBeenCalled();
     });
 
     test('should be successful of dry run changes required but LZ not in stable state', async () => {
@@ -789,6 +931,7 @@ describe('Accelerator ControlTower Landing Zone Module', () => {
 
     test('should be successful without rechecking of operation status', async () => {
       // Setup
+      const operation = createDeferred<{ operationDetails: { status: string } }>();
       mockSend.mockImplementation(command => {
         if (command instanceof UpdateLandingZoneCommand) {
           return Promise.resolve({
@@ -796,19 +939,24 @@ describe('Accelerator ControlTower Landing Zone Module', () => {
           });
         }
         if (command instanceof GetLandingZoneOperationCommand) {
-          return Promise.resolve({
-            operationDetails: { status: LandingZoneOperationStatus.SUCCEEDED },
-          });
+          return operation.promise;
         }
         return Promise.reject(new Error('Unexpected command'));
       });
 
       // Execute
-      const response = await new SetupLandingZoneModule().handler({
+      const handlerPromise = new SetupLandingZoneModule().handler({
         ...MOCK_CONSTANTS.moduleCommonParameter,
         useExistingRole: false,
         configuration: MOCK_CONSTANTS.controlTowerLandingZoneConfiguration,
       });
+      await vi.waitFor(() => expect(GetLandingZoneOperationCommand).toHaveBeenCalledTimes(1));
+      expect(ControlTowerLogAccess.configure).not.toHaveBeenCalled();
+
+      operation.resolve({
+        operationDetails: { status: LandingZoneOperationStatus.SUCCEEDED },
+      });
+      const response = await handlerPromise;
 
       // Verify
       expect(response).toMatch(
@@ -816,6 +964,14 @@ describe('Accelerator ControlTower Landing Zone Module', () => {
       );
       expect(UpdateLandingZoneCommand).toHaveBeenCalledTimes(1);
       expect(GetLandingZoneOperationCommand).toHaveBeenCalledTimes(1);
+      expect(ControlTowerLogAccess.configure).toHaveBeenCalledWith(
+        MOCK_CONSTANTS.moduleCommonParameter.partition,
+        MOCK_CONSTANTS.moduleCommonParameter.region,
+        MOCK_CONSTANTS.logArchiveAccountItem.Id,
+        MOCK_CONSTANTS.ctKmsKeyArn,
+        undefined,
+        MOCK_CONSTANTS.moduleCommonParameter.credentials,
+      );
     });
 
     test('should be successful while rechecking of operation status', async () => {
@@ -888,6 +1044,7 @@ describe('Accelerator ControlTower Landing Zone Module', () => {
 
       expect(UpdateLandingZoneCommand).toHaveBeenCalledTimes(1);
       expect(GetLandingZoneOperationCommand).toHaveBeenCalledTimes(1);
+      expect(ControlTowerLogAccess.configure).not.toHaveBeenCalled();
     });
 
     test('should successfully handle failure while rechecking of operation status', async () => {
@@ -1077,6 +1234,22 @@ describe('Accelerator ControlTower Landing Zone Module', () => {
         },
         MOCK_CONSTANTS.existingLandingZoneDetails.manifest,
       );
+      expect(ControlTowerLogAccess.configure).toHaveBeenCalledWith(
+        MOCK_CONSTANTS.moduleCommonParameter.partition,
+        MOCK_CONSTANTS.moduleCommonParameter.region,
+        MOCK_CONSTANTS.logArchiveAccountItem.Id,
+        mockCentralizedLoggingKeyArn,
+        undefined,
+        MOCK_CONSTANTS.moduleCommonParameter.credentials,
+      );
+      expect(ControlTowerLogAccess.configure).not.toHaveBeenCalledWith(
+        MOCK_CONSTANTS.moduleCommonParameter.partition,
+        MOCK_CONSTANTS.moduleCommonParameter.region,
+        MOCK_CONSTANTS.logArchiveAccountItem.Id,
+        mockConfigHubKeyArn,
+        undefined,
+        MOCK_CONSTANTS.moduleCommonParameter.credentials,
+      );
     });
 
     test('should call makeManifestDocument with correct KMS keys for existing v3 LZ', async () => {
@@ -1190,6 +1363,9 @@ describe('Accelerator ControlTower Landing Zone Module', () => {
         landingZoneIdentifier: MOCK_CONSTANTS.existingLandingZoneIdentifier,
         status: LandingZoneStatus.ACTIVE,
         securityOuName: 'Security',
+        centralizedLoggingConfig: {
+          kmsKeyArn: MOCK_CONSTANTS.ctKmsKeyArn,
+        },
       });
 
       landingZoneUpdateOrResetRequiredSpy.mockReturnValue({
@@ -1248,6 +1424,7 @@ describe('Accelerator ControlTower Landing Zone Module', () => {
 
     test('should be successful without rechecking of operation status', async () => {
       // Setup
+      const operation = createDeferred<{ operationDetails: { status: string } }>();
       mockSend.mockImplementation(command => {
         if (command instanceof ResetLandingZoneCommand) {
           return Promise.resolve({
@@ -1255,19 +1432,24 @@ describe('Accelerator ControlTower Landing Zone Module', () => {
           });
         }
         if (command instanceof GetLandingZoneOperationCommand) {
-          return Promise.resolve({
-            operationDetails: { status: LandingZoneOperationStatus.SUCCEEDED },
-          });
+          return operation.promise;
         }
         return Promise.reject(new Error('Unexpected command'));
       });
 
       // Execute
-      const response = await new SetupLandingZoneModule().handler({
+      const handlerPromise = new SetupLandingZoneModule().handler({
         ...MOCK_CONSTANTS.moduleCommonParameter,
         useExistingRole: false,
         configuration: MOCK_CONSTANTS.controlTowerLandingZoneConfiguration,
       });
+      await vi.waitFor(() => expect(GetLandingZoneOperationCommand).toHaveBeenCalledTimes(1));
+      expect(ControlTowerLogAccess.configure).not.toHaveBeenCalled();
+
+      operation.resolve({
+        operationDetails: { status: LandingZoneOperationStatus.SUCCEEDED },
+      });
+      const response = await handlerPromise;
 
       // Verify
       expect(response).toMatch(
@@ -1275,6 +1457,14 @@ describe('Accelerator ControlTower Landing Zone Module', () => {
       );
       expect(ResetLandingZoneCommand).toHaveBeenCalledTimes(1);
       expect(GetLandingZoneOperationCommand).toHaveBeenCalledTimes(1);
+      expect(ControlTowerLogAccess.configure).toHaveBeenCalledWith(
+        MOCK_CONSTANTS.moduleCommonParameter.partition,
+        MOCK_CONSTANTS.moduleCommonParameter.region,
+        MOCK_CONSTANTS.logArchiveAccountItem.Id,
+        MOCK_CONSTANTS.ctKmsKeyArn,
+        undefined,
+        MOCK_CONSTANTS.moduleCommonParameter.credentials,
+      );
     });
 
     test('should be successful while rechecking of operation status', async () => {
@@ -1347,6 +1537,7 @@ describe('Accelerator ControlTower Landing Zone Module', () => {
 
       expect(ResetLandingZoneCommand).toHaveBeenCalledTimes(1);
       expect(GetLandingZoneOperationCommand).toHaveBeenCalledTimes(1);
+      expect(ControlTowerLogAccess.configure).not.toHaveBeenCalled();
     });
 
     test('should successfully handle failure while rechecking of operation status', async () => {

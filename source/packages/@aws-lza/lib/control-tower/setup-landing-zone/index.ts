@@ -35,6 +35,7 @@ import {
 
 import { landingZoneUpdateOrResetRequired, makeManifestDocument } from './functions';
 
+import { ControlTowerLogAccess } from './prerequisites/control-tower-log-access';
 import { IamRole } from './prerequisites/iam-role';
 import { KmsKey } from './prerequisites/kms-key';
 import { Organization } from './prerequisites/organization';
@@ -161,8 +162,10 @@ export class SetupLandingZoneModule implements ISetupLandingZoneModule {
     );
 
     const landingZoneDetails = await getLandingZoneDetails(client, props.region, landingZoneIdentifier);
+    let response: string;
+    let centralizedLoggingKeyArn: string | undefined;
     if (landingZoneDetails) {
-      return await this.handleUpdateResetOperation(
+      response = await this.handleUpdateResetOperation(
         props,
         defaultProps,
         client,
@@ -170,9 +173,34 @@ export class SetupLandingZoneModule implements ISetupLandingZoneModule {
         landingZoneDetails,
         landingZoneIdentifier,
       );
+      centralizedLoggingKeyArn = landingZoneDetails.centralizedLoggingConfig?.kmsKeyArn;
     } else {
-      return await LandingZoneOperation.createLandingZone(client, landingZoneConfiguration, preRequisitesResources!);
+      response = await LandingZoneOperation.createLandingZone(
+        client,
+        landingZoneConfiguration,
+        preRequisitesResources!,
+      );
+      centralizedLoggingKeyArn = preRequisitesResources?.centralizedLoggingKeyArn;
     }
+
+    if (!defaultProps.dryRun && centralizedLoggingKeyArn) {
+      // Reconcile on every run so a Control Tower repair that recreates its managed role restores this inline policy.
+      try {
+        await ControlTowerLogAccess.configure(
+          props.partition,
+          props.region,
+          logArchiveAccount!.Id!,
+          centralizedLoggingKeyArn,
+          props.solutionId,
+          props.credentials,
+        );
+      } catch (error: unknown) {
+        const errorMessage = error instanceof Error ? error.message : String(error);
+        logger.warn(`Unable to configure AWS Control Tower centralized log access: ${errorMessage}`);
+      }
+    }
+
+    return response;
   }
 
   /**
