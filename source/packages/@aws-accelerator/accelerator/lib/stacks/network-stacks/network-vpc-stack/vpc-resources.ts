@@ -828,12 +828,25 @@ export class VpcResources {
     }
 
     if (vpcFlowLogs) {
-      this.createVpcFlowLogs(vpc, vpcFlowLogs, useExistingRoles, acceleratorPrefix);
-    } else {
-      NagSuppressions.addResourceSuppressions(vpc, [
-        { id: 'AwsSolutions-VPC7', reason: 'VPC does not have flow logs configured' },
-      ]);
+      const flowLogManagedByV1Stack = vpcFlowLogs.destinations.some(flowLogDestinationType =>
+        this.lzaLookup.resourceExists({
+          resourceType: LZAResourceLookupType.FLOW_LOG,
+          lookupValues: {
+            vpcName: vpcItem.name,
+            flowLogDestinationType,
+          },
+        }),
+      );
+
+      if (flowLogManagedByV1Stack) {
+        this.createVpcFlowLogs(vpc, vpcFlowLogs, useExistingRoles, acceleratorPrefix);
+        return;
+      }
     }
+
+    NagSuppressions.addResourceSuppressions(vpc, [
+      { id: 'AwsSolutions-VPC7', reason: 'VPC does not have flow logs configured' },
+    ]);
   }
 
   /**
