@@ -389,11 +389,10 @@ export interface IOrganizationConfig {
    * @example
    * ```
    * declarativePolicies:
-   *   - name: ResrictHttpsConnection
+   *   - name: RestrictHttpsConnection
    *     description: >
    *       This policy restricts making AMIs public and enable serial console access
    *     policy: declarative-policies/ec2-settings.json
-   *     type: customerManaged
    *     deploymentTargets:
    *       organizationalUnits:
    *         - Infrastructure
@@ -445,11 +444,10 @@ export interface IOrganizationConfig {
    * @example
    * ```
    * resourceControlPolicies:
-   *   - name: ResrictHttpsConnection
+   *   - name: RestrictHttpsConnection
    *     description: >
    *       This RCP restricts access to only HTTPS connections to your resources.
    *     policy: resource-control-policies/restrict-https-connections.json
-   *     type: customerManaged
    *     strategy: deny-list # defines RCP strategy - deny-list or allow-list. See https://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_policies_rcps_evaluation.html#how_rcps_deny
    *     deploymentTargets:
    *       organizationalUnits:
