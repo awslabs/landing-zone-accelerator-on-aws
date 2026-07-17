@@ -740,6 +740,24 @@ exports[`ImportTransitGateway > Construct(ImportTransitGateway):  Snapshot Test 
       },
       "Type": "AWS::IAM::Policy",
     },
+    "TransitGatewayWithEncryptionDD237071": {
+      "Properties": {
+        "AmazonSideAsn": 1234,
+        "AutoAcceptSharedAttachments": "enable",
+        "DefaultRouteTableAssociation": "enable",
+        "DefaultRouteTablePropagation": "enable",
+        "DnsSupport": "enable",
+        "EncryptionSupport": "enable",
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "name-with-encryption",
+          },
+        ],
+        "VpnEcmpSupport": "enable",
+      },
+      "Type": "AWS::EC2::TransitGateway",
+    },
     "TransitGatewayWithSgRefE01FEDAF": {
       "Properties": {
         "AmazonSideAsn": 1234,
@@ -1501,6 +1519,24 @@ exports[`TransitGateway > Construct(TransitGateway):  Snapshot Test 1`] = `
         ],
       },
       "Type": "AWS::IAM::Policy",
+    },
+    "TransitGatewayWithEncryptionDD237071": {
+      "Properties": {
+        "AmazonSideAsn": 1234,
+        "AutoAcceptSharedAttachments": "enable",
+        "DefaultRouteTableAssociation": "enable",
+        "DefaultRouteTablePropagation": "enable",
+        "DnsSupport": "enable",
+        "EncryptionSupport": "enable",
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "name-with-encryption",
+          },
+        ],
+        "VpnEcmpSupport": "enable",
+      },
+      "Type": "AWS::EC2::TransitGateway",
     },
     "TransitGatewayWithSgRefE01FEDAF": {
       "Properties": {

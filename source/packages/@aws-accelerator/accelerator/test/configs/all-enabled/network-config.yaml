@@ -80,6 +80,7 @@ transitGateways:
     defaultRouteTablePropagation: disable
     autoAcceptSharingAttachments: enable
     securityGroupReferencingSupport: enable
+    encryptionSupport: enable
     routeTables:
       - name: Network-Main-Core
         routes:

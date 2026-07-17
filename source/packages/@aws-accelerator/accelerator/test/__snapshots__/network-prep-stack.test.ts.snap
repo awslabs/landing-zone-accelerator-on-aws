@@ -2973,6 +2973,7 @@ drop http $HOME_NET any -> $EXTERNAL_NET any (http.host; content:"example.com"; 
         "DefaultRouteTableAssociation": "disable",
         "DefaultRouteTablePropagation": "disable",
         "DnsSupport": "enable",
+        "EncryptionSupport": "enable",
         "Tags": [
           {
             "Key": "Name",

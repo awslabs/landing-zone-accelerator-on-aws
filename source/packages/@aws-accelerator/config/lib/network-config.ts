@@ -101,6 +101,7 @@ export class TransitGatewayConfig implements i.ITransitGatewayConfig {
   readonly autoAcceptSharingAttachments: t.EnableDisable = 'disable';
   readonly multicastSupport: t.EnableDisable = 'disable';
   readonly securityGroupReferencingSupport: t.EnableDisable = 'disable';
+  readonly encryptionSupport: t.EnableDisable = 'disable';
   readonly routeTables: TransitGatewayRouteTableConfig[] = [];
   readonly transitGatewayCidrBlocks: t.NonEmptyString[] | undefined = undefined;
   readonly transitGatewayIpv6CidrBlocks: t.NonEmptyString[] | undefined = undefined;

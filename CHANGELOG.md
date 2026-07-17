@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - feat(ec2): add blockPublicAmi configuration to block public access to AMIs across organization accounts
+- feat(networking): add encryptionSupport option to transit gateway config to enable VPC Encryption Controls support
 
 ### Fixed
 

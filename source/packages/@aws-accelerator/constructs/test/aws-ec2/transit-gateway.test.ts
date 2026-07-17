@@ -181,6 +181,18 @@ describe('TransitGateway', () => {
       vpnEcmpSupport: 'enable',
     });
   });
+  it('tgw with encryption support', () => {
+    new TransitGateway(stack, 'TransitGatewayWithEncryption', {
+      name: 'name-with-encryption',
+      amazonSideAsn: 1234,
+      autoAcceptSharedAttachments: 'enable',
+      defaultRouteTableAssociation: 'enable',
+      defaultRouteTablePropagation: 'enable',
+      dnsSupport: 'enable',
+      encryptionSupport: 'enable',
+      vpnEcmpSupport: 'enable',
+    });
+  });
   snapShotTest('Construct(TransitGateway): ', stack);
 });
 /**

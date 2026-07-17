@@ -642,6 +642,22 @@ export interface ITransitGatewayConfig {
    */
   readonly securityGroupReferencingSupport?: t.EnableDisable;
   /**
+   * (OPTIONAL) Enable VPC Encryption Controls support on the Transit Gateway.
+   *
+   * @remarks
+   * When enabled, traffic between attached VPCs that have VPC Encryption Controls
+   * turned on is carried over encrypted lanes through the Transit Gateway. Enabling
+   * encryption support on an existing Transit Gateway is non-disruptive, but the
+   * enabling process can take up to 14 days to complete. All attached VPCs must be
+   * in the same Region. Note that standard VPC Encryption Controls charges apply to
+   * all VPCs attached to a Transit Gateway with encryption support enabled.
+   *
+   * @see https://docs.aws.amazon.com/vpc/latest/tgw/tgw-encryption-support.html
+   *
+   * Default - disable
+   */
+  readonly encryptionSupport?: t.EnableDisable;
+  /**
    * An array of Transit Gateway route table configuration objects.
    *
    * @see {@link TransitGatewayRouteTableConfig}

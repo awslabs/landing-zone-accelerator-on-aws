@@ -469,6 +469,11 @@ export interface TransitGatewayProps {
   readonly securityGroupReferencingSupport?: string;
 
   /**
+   * Enable or disable VPC Encryption Controls support. Disabled by default.
+   */
+  readonly encryptionSupport?: string;
+
+  /**
    * Enable or disable Equal Cost Multipath Protocol support. Enabled by default.
    */
   readonly vpnEcmpSupport?: string;
@@ -546,6 +551,7 @@ export class TransitGateway extends TransitGatewayBase {
       vpnEcmpSupport: props.vpnEcmpSupport,
       multicastSupport: props.multicastSupport,
       securityGroupReferencingSupport: props.securityGroupReferencingSupport,
+      encryptionSupport: props.encryptionSupport,
       tags: props.tags,
     });
     cdk.Tags.of(this).add('Name', props.name);
