@@ -632,17 +632,19 @@ export interface ITransitGatewayConfig {
    */
   readonly multicastSupport?: t.EnableDisable;
   /**
-   * (OPTIONAL) Enable security group referencing support for the Transit Gateway.
+   * (OPTIONAL) Enable security group referencing support for the Transit Gateway. Cannot be enabled together with encryptionSupport on the same Transit Gateway; enable only one.
    *
    * @remarks
    * Allows security groups in VPCs attached to this Transit Gateway to reference
    * security groups in other attached VPCs, eliminating the need to manage CIDR blocks.
    *
+   * Note: Cannot be enabled together with `encryptionSupport` on the same Transit Gateway. Enable only one.
+   *
    * Default - disable
    */
   readonly securityGroupReferencingSupport?: t.EnableDisable;
   /**
-   * (OPTIONAL) Enable VPC Encryption Controls support on the Transit Gateway.
+   * (OPTIONAL) Enable VPC Encryption Controls support on the Transit Gateway. Cannot be enabled together with securityGroupReferencingSupport or multicastSupport, or on a Transit Gateway that has Connect or Peering attachments.
    *
    * @remarks
    * When enabled, traffic between attached VPCs that have VPC Encryption Controls
@@ -651,6 +653,10 @@ export interface ITransitGatewayConfig {
    * enabling process can take up to 14 days to complete. All attached VPCs must be
    * in the same Region. Note that standard VPC Encryption Controls charges apply to
    * all VPCs attached to a Transit Gateway with encryption support enabled.
+   *
+   * Note: Cannot be enabled together with `securityGroupReferencingSupport` or `multicastSupport`,
+   * or on a Transit Gateway that has Connect or Peering attachments. (AWS also disallows Network Firewall,
+   * VPN Concentrator, and Client VPN attachments, none of which are modelable as TGW attachments in LZA.)
    *
    * @see https://docs.aws.amazon.com/vpc/latest/tgw/tgw-encryption-support.html
    *

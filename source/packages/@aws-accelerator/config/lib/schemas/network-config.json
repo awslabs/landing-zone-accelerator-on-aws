@@ -3759,7 +3759,7 @@
         },
         "encryptionSupport": {
           "$ref": "#/definitions/EnableDisable",
-          "description": "(OPTIONAL) Enable VPC Encryption Controls support on the Transit Gateway."
+          "description": "(OPTIONAL) Enable VPC Encryption Controls support on the Transit Gateway. Cannot be enabled together with securityGroupReferencingSupport or multicastSupport, or on a Transit Gateway that has Connect or Peering attachments."
         },
         "multicastSupport": {
           "$ref": "#/definitions/EnableDisable",
@@ -3782,7 +3782,7 @@
         },
         "securityGroupReferencingSupport": {
           "$ref": "#/definitions/EnableDisable",
-          "description": "(OPTIONAL) Enable security group referencing support for the Transit Gateway."
+          "description": "(OPTIONAL) Enable security group referencing support for the Transit Gateway. Cannot be enabled together with encryptionSupport on the same Transit Gateway; enable only one."
         },
         "shareTargets": {
           "$ref": "#/definitions/IShareTargets",

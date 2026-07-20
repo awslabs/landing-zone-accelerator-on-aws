@@ -3151,6 +3151,11 @@ exports[`PrepareStack > Construct(PrepareStack):  Snapshot Test 1`] = `
             "transitGatewayName": "Network/MutlicastTgw",
           },
           {
+            "logicalId": "SsmParamNetworkTgwNetworkEncryptionMulticastOptionValue",
+            "parameterName": "/accelerator/validation/Network/network/tgw/Network-Encryption/multicastSupport",
+            "transitGatewayName": "Network/Network-Encryption",
+          },
+          {
             "logicalId": "SsmParamNetworkTgwNetworkMainMulticastOptionValue",
             "parameterName": "/accelerator/validation/Network/network/tgw/Network-Main/multicastSupport",
             "transitGatewayName": "Network/Network-Main",

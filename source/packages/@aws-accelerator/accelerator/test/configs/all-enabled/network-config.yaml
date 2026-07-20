@@ -62,6 +62,25 @@ transitGateways:
         routes: []
       - name: Multicast-Isolated
         routes: []
+  # Encryption support (VPC Encryption Controls) is mutually exclusive with security group
+  # referencing, multicast, and Connect/Peering attachments, so it is demonstrated on its own
+  # dedicated Transit Gateway. See https://docs.aws.amazon.com/vpc/latest/tgw/tgw-encryption-support.html
+  - name: Network-Encryption
+    account: Network
+    region: *HOME_REGION
+    shareTargets:
+      organizationalUnits:
+        - Infrastructure
+    asn: 65523
+    dnsSupport: enable
+    vpnEcmpSupport: enable
+    defaultRouteTableAssociation: disable
+    defaultRouteTablePropagation: disable
+    autoAcceptSharingAttachments: enable
+    encryptionSupport: enable
+    routeTables:
+      - name: Network-Encryption-Core
+        routes: []
   - name: Network-Main
     account: Network
     region: *HOME_REGION
@@ -80,7 +99,6 @@ transitGateways:
     defaultRouteTablePropagation: disable
     autoAcceptSharingAttachments: enable
     securityGroupReferencingSupport: enable
-    encryptionSupport: enable
     routeTables:
       - name: Network-Main-Core
         routes:

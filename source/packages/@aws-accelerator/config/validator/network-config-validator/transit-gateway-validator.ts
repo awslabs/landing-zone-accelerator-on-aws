@@ -241,6 +241,10 @@ export class TransitGatewayValidator {
     //
     this.validateTgwCidrs(values, helpers, errors);
     //
+    // Validate transit gateway encryption support prerequisites
+    //
+    this.validateTgwEncryptionSupport(values, errors);
+    //
     // Validate transit gateway route table structure
     //
     const allValid = this.validateTransitGatewayRouteStructure(values, errors);
@@ -464,6 +468,57 @@ export class TransitGatewayValidator {
       const totalCidrBlocks = [...(tgw.transitGatewayCidrBlocks ?? []), ...(tgw.transitGatewayIpv6CidrBlocks ?? [])];
       if (totalCidrBlocks.length > 5) {
         errors.push(`[Transit gateway ${tgw.name}]: cannot have more than 5 static CIDRs. `);
+      }
+    });
+  }
+
+  /**
+   * Validate transit gateway encryption support prerequisites.
+   *
+   * @remarks
+   * Encryption support (VPC Encryption Controls) cannot be enabled on a transit gateway
+   * that also has security group referencing or multicast enabled, or that has Connect or
+   * Peering attachments. These are mutually exclusive AWS constraints.
+   *
+   * AWS additionally disallows Network Firewall, VPN Concentrator, and Client VPN attachments,
+   * but none of those are modelable as TGW attachments in the LZA network config, so there is
+   * nothing to validate. Note: plain Site-to-Site VPN attachments (customerGateways[].vpnConnections[])
+   * ARE compatible with encryption support and are intentionally NOT checked here.
+   * @see https://docs.aws.amazon.com/vpc/latest/tgw/tgw-encryption-support.html
+   * @param values
+   * @param errors
+   */
+  private validateTgwEncryptionSupport(values: NetworkConfig, errors: string[]) {
+    values.transitGateways.forEach(tgw => {
+      if (tgw.encryptionSupport !== 'enable') {
+        return;
+      }
+      if (tgw.securityGroupReferencingSupport === 'enable') {
+        errors.push(
+          `[Transit gateway ${tgw.name}]: encryptionSupport and securityGroupReferencingSupport cannot both be enabled on the same transit gateway. Enable only one`,
+        );
+      }
+      if (tgw.multicastSupport === 'enable') {
+        errors.push(
+          `[Transit gateway ${tgw.name}]: encryptionSupport cannot be enabled when multicastSupport is enabled on the same transit gateway`,
+        );
+      }
+      const hasConnectAttachment = (values.transitGatewayConnects ?? []).some(
+        connect => connect.transitGateway.name === tgw.name,
+      );
+      if (hasConnectAttachment) {
+        errors.push(
+          `[Transit gateway ${tgw.name}]: encryptionSupport cannot be enabled on a transit gateway that has Connect attachments`,
+        );
+      }
+      const hasPeeringAttachment = (values.transitGatewayPeering ?? []).some(
+        peering =>
+          peering.requester.transitGatewayName === tgw.name || peering.accepter.transitGatewayName === tgw.name,
+      );
+      if (hasPeeringAttachment) {
+        errors.push(
+          `[Transit gateway ${tgw.name}]: encryptionSupport cannot be enabled on a transit gateway that has Peering attachments`,
+        );
       }
     });
   }

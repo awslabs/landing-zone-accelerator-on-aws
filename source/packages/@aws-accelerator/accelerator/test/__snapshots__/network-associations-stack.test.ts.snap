@@ -55,6 +55,14 @@ exports[`NetworkAssociationsStack > Construct(NetworkAssociationsStack):  Snapsh
       "Default": "/accelerator/network/transitGateways/MutlicastTgw/routeTables/Multicast-Isolated/id",
       "Type": "AWS::SSM::Parameter::Value<String>",
     },
+    "SsmParameterValueacceleratornetworktransitGatewaysNetworkEncryptionidC96584B6F00A464EAD1953AFF4B05118Parameter": {
+      "Default": "/accelerator/network/transitGateways/Network-Encryption/id",
+      "Type": "AWS::SSM::Parameter::Value<String>",
+    },
+    "SsmParameterValueacceleratornetworktransitGatewaysNetworkEncryptionrouteTablesNetworkEncryptionCoreidC96584B6F00A464EAD1953AFF4B05118Parameter": {
+      "Default": "/accelerator/network/transitGateways/Network-Encryption/routeTables/Network-Encryption-Core/id",
+      "Type": "AWS::SSM::Parameter::Value<String>",
+    },
     "SsmParameterValueacceleratornetworktransitGatewaysNetworkMain2idC96584B6F00A464EAD1953AFF4B05118Parameter": {
       "Default": "/accelerator/network/transitGateways/Network-Main-2/id",
       "Type": "AWS::SSM::Parameter::Value<String>",
