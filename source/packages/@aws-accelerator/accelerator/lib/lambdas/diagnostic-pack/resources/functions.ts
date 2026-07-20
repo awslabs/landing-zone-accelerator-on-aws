@@ -9,14 +9,16 @@ import { ListAccountsCommand, OrganizationsClient } from '@aws-sdk/client-organi
 import { CodeCommitClient, GetFileCommand } from '@aws-sdk/client-codecommit';
 import { ActionExecution, CodePipelineClient, GetPipelineStateCommand } from '@aws-sdk/client-codepipeline';
 import { CloudWatchLogsClient, FilterLogEventsCommand } from '@aws-sdk/client-cloudwatch-logs';
-import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
+import { S3Client, PutObjectCommand, GetObjectCommand } from '@aws-sdk/client-s3';
 
 import * as yaml from 'js-yaml';
 import * as fs from 'fs';
 import * as path from 'path';
+import AdmZip from 'adm-zip';
 
 import {
   AccountDetailsType,
+  ConfigSourceType,
   DiagnosticAccountsConfigType,
   InstallerStackMetadataType,
   LzaAccountsConfigType,
@@ -274,54 +276,151 @@ export async function getOrgAccountDetails(
   return accountDetails;
 }
 
-export async function getLzaGlobalConfigMetadata(
-  homeRegion: string,
-  repositoryName: string,
-): Promise<LzaGlobalConfigType> {
-  const enabledRegions: string[] = [];
+/**
+ * S3 object key of the zipped LZA configuration files within the configuration bucket.
+ */
+const S3_CONFIG_OBJECT_KEY = 'zipped/aws-accelerator-config.zip';
 
-  const codeCommitClient = new CodeCommitClient({ region: homeRegion });
+/**
+ * Local directory the S3 configuration zip is extracted to.
+ */
+const S3_CONFIG_EXTRACT_DIR = '/tmp/lza-source-config';
 
+/**
+ * Prepares the LZA configuration source for reading.
+ *
+ * When the configuration is stored in CodeCommit, individual files are read on
+ * demand via the CodeCommit API. When it is stored in S3 (`s3`), the
+ * configuration zip is downloaded once and extracted to a local temp directory
+ * so subsequent reads happen from disk. This mirrors the approach used by the
+ * get-accelerator-metadata custom resource and fixes the
+ * `RepositoryDoesNotExistException` seen on S3-based deployments where no
+ * CodeCommit repository exists.
+ *
+ * The `codeconnection` location is not yet supported: its configuration is not
+ * stored in the config bucket but in the pipeline artifact bucket, so it
+ * requires a distinct retrieval path (tracked as a separate follow-up).
+ *
+ * @param options config source options
+ * @returns {@link ConfigSourceType}
+ */
+export async function prepareLzaConfigSource(options: {
+  homeRegion: string;
+  configRepositoryLocation: string;
+  repositoryName: string;
+  configBucketName?: string;
+}): Promise<ConfigSourceType> {
+  const configSource: ConfigSourceType = { ...options };
+
+  if (options.configRepositoryLocation === 'codeconnection') {
+    throw new Error(
+      'The "codeconnection" configuration source is not yet supported by the diagnostics pack. ' +
+        'Its configuration is stored in the pipeline artifact bucket rather than the config bucket and requires a separate retrieval path.',
+    );
+  }
+
+  if (options.configRepositoryLocation !== 'codecommit') {
+    if (!options.configBucketName) {
+      throw new Error(
+        `CONFIG_BUCKET_NAME environment variable is required when config repository location is "${options.configRepositoryLocation}"`,
+      );
+    }
+    configSource.localConfigDirPath = await downloadAndExtractS3Config(options.homeRegion, options.configBucketName);
+  }
+
+  return configSource;
+}
+
+/**
+ * Downloads the configuration zip from S3 and extracts it to a local directory.
+ * @param homeRegion home region
+ * @param configBucketName configuration bucket name
+ * @returns local directory path the configuration files were extracted to
+ */
+async function downloadAndExtractS3Config(homeRegion: string, configBucketName: string): Promise<string> {
+  const s3Client = new S3Client({ region: homeRegion });
   const response = await throttlingBackOff(() =>
-    codeCommitClient.send(
-      new GetFileCommand({
-        repositoryName: repositoryName,
-        filePath: 'global-config.yaml',
-      }),
-    ),
+    s3Client.send(new GetObjectCommand({ Bucket: configBucketName, Key: S3_CONFIG_OBJECT_KEY })),
   );
 
-  if (response.fileContent) {
-    const textContent = new TextDecoder().decode(response.fileContent);
+  if (!response.Body) {
+    throw new Error(`Unable to download configuration from s3://${configBucketName}/${S3_CONFIG_OBJECT_KEY}`);
+  }
+
+  const tempZipPath = path.join('/tmp', S3_CONFIG_OBJECT_KEY.split('/').pop()!);
+  await fs.promises.writeFile(tempZipPath, await response.Body.transformToByteArray());
+
+  if (fs.existsSync(S3_CONFIG_EXTRACT_DIR)) {
+    fs.rmSync(S3_CONFIG_EXTRACT_DIR, { recursive: true });
+  }
+  fs.mkdirSync(S3_CONFIG_EXTRACT_DIR, { recursive: true });
+
+  try {
+    const admZip = new AdmZip(tempZipPath);
+    admZip.extractAllTo(S3_CONFIG_EXTRACT_DIR, true);
+  } finally {
+    if (fs.existsSync(tempZipPath)) {
+      fs.rmSync(tempZipPath, { force: true });
+    }
+  }
+
+  return S3_CONFIG_EXTRACT_DIR;
+}
+
+/**
+ * Reads a single configuration file from the prepared configuration source.
+ * @param configSource {@link ConfigSourceType}
+ * @param fileName configuration file name, e.g. `global-config.yaml`
+ * @returns file content as a string, or `undefined` when the file does not exist
+ */
+async function getConfigFileContent(configSource: ConfigSourceType, fileName: string): Promise<string | undefined> {
+  if (configSource.configRepositoryLocation === 'codecommit') {
+    const codeCommitClient = new CodeCommitClient({ region: configSource.homeRegion });
+    const response = await throttlingBackOff(() =>
+      codeCommitClient.send(
+        new GetFileCommand({
+          repositoryName: configSource.repositoryName,
+          filePath: fileName,
+        }),
+      ),
+    );
+
+    return response.fileContent ? new TextDecoder().decode(response.fileContent) : undefined;
+  }
+
+  const configFilePath = path.join(configSource.localConfigDirPath!, fileName);
+  if (!fs.existsSync(configFilePath)) {
+    return undefined;
+  }
+
+  return fs.readFileSync(configFilePath, 'utf8');
+}
+
+export async function getLzaGlobalConfigMetadata(configSource: ConfigSourceType): Promise<LzaGlobalConfigType> {
+  const enabledRegions: string[] = [];
+
+  const textContent = await getConfigFileContent(configSource, 'global-config.yaml');
+
+  if (textContent) {
     const config = yaml.load(textContent) as LzaGlobalConfigType;
     enabledRegions.push(...config.enabledRegions);
   }
 
   return {
     enabledRegions: enabledRegions,
-    homeRegion: homeRegion,
+    homeRegion: configSource.homeRegion,
   };
 }
 
 export async function getEnabledAccounts(
-  homeRegion: string,
-  repositoryName: string,
+  configSource: ConfigSourceType,
   accountDetails: AccountDetailsType[],
 ): Promise<DiagnosticAccountsConfigType[]> {
-  const codeCommitClient = new CodeCommitClient({ region: homeRegion });
   const diagnosticsAccountList: DiagnosticAccountsConfigType[] = [];
 
-  const response = await throttlingBackOff(() =>
-    codeCommitClient.send(
-      new GetFileCommand({
-        repositoryName: repositoryName,
-        filePath: 'accounts-config.yaml',
-      }),
-    ),
-  );
+  const textContent = await getConfigFileContent(configSource, 'accounts-config.yaml');
 
-  if (response.fileContent) {
-    const textContent = new TextDecoder().decode(response.fileContent);
+  if (textContent) {
     const config = yaml.load(textContent) as LzaAccountsConfigType;
     for (const account of [...config.mandatoryAccounts, ...config.workloadAccounts]) {
       const accountId = getAccountId(account.email, accountDetails);
@@ -607,9 +706,8 @@ function maskConfigContent(fileName: string, textContent: string, accountDetails
 }
 
 export async function getLzaConfigFiles(
-  homeRegion: string,
+  configSource: ConfigSourceType,
   accountDetails: AccountDetailsType[],
-  repositoryName: string,
   tempConfigDirPath: string,
 ): Promise<void> {
   const requiredConfigFileNames: string[] = [
@@ -623,22 +721,16 @@ export async function getLzaConfigFiles(
     'security-config.yaml',
   ];
 
-  const codeCommitClient = new CodeCommitClient({ region: homeRegion });
-
   for (const requiredConfigFileName of requiredConfigFileNames) {
     try {
-      const response = await codeCommitClient.send(
-        new GetFileCommand({
-          repositoryName: repositoryName,
-          filePath: requiredConfigFileName,
-        }),
-      );
+      const textContent = await getConfigFileContent(configSource, requiredConfigFileName);
 
-      if (response.fileContent) {
+      if (textContent) {
         const configFilePath = path.join(tempConfigDirPath, requiredConfigFileName);
-        const textContent = new TextDecoder().decode(response.fileContent);
         const maskedContent = maskConfigContent(requiredConfigFileName, textContent, accountDetails);
         fs.writeFileSync(configFilePath, maskedContent, 'utf8');
+      } else {
+        console.warn(`Config file ${requiredConfigFileName} not found !!!!`);
       }
     } catch (
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -646,6 +738,8 @@ export async function getLzaConfigFiles(
     ) {
       if (error.name === 'FileDoesNotExistException') {
         console.warn(`Config file ${requiredConfigFileName} not found !!!!`);
+      } else {
+        console.warn(`Error reading config file ${requiredConfigFileName}, skipping: ${error}`);
       }
     }
   }

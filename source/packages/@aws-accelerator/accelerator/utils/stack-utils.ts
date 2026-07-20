@@ -295,6 +295,9 @@ export function createDiagnosticsPackStack(
       },
     );
     const app = new cdk.App({ outdir: `cdk.out/${diagnosticsPackStackName}` });
+    const configBucketName = acceleratorEnv.qualifier
+      ? `${acceleratorEnv.qualifier}-config-${context.account}-${context.region}`
+      : `${resourcePrefixes.bucketName}-config-${context.account}-${context.region}`;
     const diagnosticsPackStack = new DiagnosticsPackStack(app, diagnosticsPackStackName, {
       env: { account: context.account, region: context.region },
       description: `(SO0199-pipeline) Landing Zone Accelerator on AWS. Version ${version}.`,
@@ -304,6 +307,8 @@ export function createDiagnosticsPackStack(
       bucketNamePrefix: resourcePrefixes.bucketName,
       installerStackName: acceleratorEnv.installerStackName,
       configRepositoryName: acceleratorEnv.configRepositoryName,
+      configRepositoryLocation: acceleratorEnv.configRepositoryLocation,
+      configBucketName,
       qualifier: acceleratorEnv.qualifier,
       synthesizer: getInstallerSynthesizer(
         context.partition,

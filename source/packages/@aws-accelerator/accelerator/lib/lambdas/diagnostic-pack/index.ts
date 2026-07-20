@@ -8,6 +8,7 @@ import {
   getLzaConfigFiles,
   formatTableCellValue,
   uploadReports,
+  prepareLzaConfigSource,
 } from './resources/functions';
 import * as fs from 'fs';
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -34,9 +35,23 @@ export async function handler(event: any): Promise<void> {
   const daysSincePipelineFailed = process.env['DAYS_SINCE_FAILURE'] ?? '3';
   const managementAccountRoleName = process.env['MANAGEMENT_ACCOUNT_ROLE_NAME'];
   const configRepoName = process.env['CONFIG_REPO_NAME'] ?? 'aws-accelerator-config';
+  const configRepositoryLocation = process.env['CONFIG_REPOSITORY_LOCATION'] ?? 'codecommit';
+  const configBucketName = process.env['CONFIG_BUCKET_NAME'];
 
   // Get installer metadata
   const installerStackMetadata = await getInstallerStackMetadata(homeRegion, installerStackName);
+
+  //
+  // Prepare the LZA configuration source. For S3-based deployments (where no
+  // CodeCommit repository exists) this downloads and extracts the configuration
+  // zip so the report can still be generated.
+  //
+  const configSource = await prepareLzaConfigSource({
+    homeRegion,
+    configRepositoryLocation,
+    repositoryName: configRepoName,
+    configBucketName,
+  });
 
   // Set resource names
   let pipelineStackName = `${installerStackMetadata.prefix}-PipelineStack-${pipelineAccountId}-${homeRegion}`;
@@ -63,11 +78,11 @@ export async function handler(event: any): Promise<void> {
   //
   // Get LZA Global config metadata
   //
-  const lzaGlobalConfigMetadata = await getLzaGlobalConfigMetadata(homeRegion, configRepoName);
+  const lzaGlobalConfigMetadata = await getLzaGlobalConfigMetadata(configSource);
 
   //
   // Get LZA enabled account details
-  const lzaEnabledAccounts = await getEnabledAccounts(homeRegion, configRepoName, accountDetails);
+  const lzaEnabledAccounts = await getEnabledAccounts(configSource, accountDetails);
 
   //
   // Get Installer Stack Status
@@ -271,7 +286,7 @@ export async function handler(event: any): Promise<void> {
   // Get LZA config files only when config is failed
   //
   if (lzaFailed) {
-    await getLzaConfigFiles(homeRegion, accountDetails, configRepoName, tempConfigDirPath);
+    await getLzaConfigFiles(configSource, accountDetails, tempConfigDirPath);
   }
 
   //

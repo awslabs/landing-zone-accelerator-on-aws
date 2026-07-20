@@ -10,6 +10,15 @@ export interface DiagnosticsPackStackProps extends cdk.StackProps {
   readonly bucketNamePrefix: string;
   readonly installerStackName: string;
   readonly configRepositoryName: string;
+  /**
+   * Location of the LZA configuration files: `codecommit`, `s3`, or `codeconnection`.
+   */
+  readonly configRepositoryLocation: string;
+  /**
+   * Name of the S3 bucket that holds the configuration zip. Used when the
+   * configuration is not stored in CodeCommit.
+   */
+  readonly configBucketName: string;
   readonly qualifier?: string;
 }
 
@@ -96,6 +105,31 @@ export class DiagnosticsPackStack extends cdk.Stack {
       }),
     );
 
+    // Read access to the LZA configuration zip in S3, used when the configuration is
+    // stored in S3 (`s3`) rather than CodeCommit. The `codeconnection` source stores its
+    // configuration in the pipeline artifact bucket and is not yet supported here.
+    diagnosticsPackLambdaRole.addToPrincipalPolicy(
+      new cdk.aws_iam.PolicyStatement({
+        sid: 'ConfigBucketReadAccess',
+        effect: cdk.aws_iam.Effect.ALLOW,
+        actions: ['s3:GetObject'],
+        resources: [
+          `arn:${cdk.Stack.of(this).partition}:s3:::${props.configBucketName}/zipped/aws-accelerator-config.zip`,
+        ],
+      }),
+    );
+
+    // The configuration bucket is encrypted with the installer/accelerator KMS
+    // key, so decrypt permission is required to read the configuration zip.
+    diagnosticsPackLambdaRole.addToPrincipalPolicy(
+      new cdk.aws_iam.PolicyStatement({
+        sid: 'ConfigBucketKmsDecryptAccess',
+        effect: cdk.aws_iam.Effect.ALLOW,
+        actions: ['kms:Decrypt'],
+        resources: [cdk.aws_ssm.StringParameter.valueForStringParameter(this, keyParameterName)],
+      }),
+    );
+
     diagnosticsPackLambdaRole.addToPrincipalPolicy(
       new cdk.aws_iam.PolicyStatement({
         sid: 'CodepipelineAccess',
@@ -178,6 +212,8 @@ export class DiagnosticsPackStack extends cdk.Stack {
         DAYS_PIPELINE_IN_FAILED_STATUS: '1',
         REPORT_BUCKET_NAME: destinationBucket.bucketName,
         CONFIG_REPO_NAME: props.configRepositoryName,
+        CONFIG_REPOSITORY_LOCATION: props.configRepositoryLocation,
+        CONFIG_BUCKET_NAME: props.configBucketName,
         MANAGEMENT_ACCOUNT_ROLE_NAME: diagnosticsPackAccessRole,
       },
     });
@@ -212,8 +248,10 @@ export class DiagnosticsPackStack extends cdk.Stack {
                 cdk.Stack.of(this).partition
               },DAYS_PIPELINE_IN_FAILED_STATUS=$DAYS_PIPELINE_IN_FAILED_STATUS,REPORT_BUCKET_NAME=${
                 destinationBucket.bucketName
-              },CONFIG_REPO_NAME=${
-                props.configRepositoryName
+              },CONFIG_REPO_NAME=${props.configRepositoryName},CONFIG_REPOSITORY_LOCATION=${
+                props.configRepositoryLocation
+              },CONFIG_BUCKET_NAME=${
+                props.configBucketName
               },MANAGEMENT_ACCOUNT_ROLE_NAME=${diagnosticsPackAccessRole}}" --output text`,
               `aws lambda wait function-updated --function-name ${diagnosticFunction.functionArn} --region ${
                 cdk.Stack.of(this).region

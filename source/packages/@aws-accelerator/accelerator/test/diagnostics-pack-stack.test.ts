@@ -30,7 +30,30 @@ const getStack = () => {
     bucketNamePrefix: 'aws-accelerator',
     installerStackName: 'AWSAccelerator-InstallerStack',
     configRepositoryName: 'aws-accelerator-config',
+    configRepositoryLocation: 'codecommit',
+    configBucketName: 'aws-accelerator-config-000000000000-us-east-1',
     qualifier: 'aws-accelerator',
+    env: {
+      account: '000000000000',
+      region: 'us-east-1',
+    },
+  });
+  return stack;
+};
+
+/**
+ * DiagnosticsPack Stack with S3 configuration source
+ */
+const getS3ConfigStack = () => {
+  const app = new cdk.App();
+  const stack = new DiagnosticsPackStack(app, 'DiagnosticsPackStackS3Config', {
+    acceleratorPrefix: 'AWSAccelerator',
+    ssmParamPrefix: '/accelerator',
+    bucketNamePrefix: 'aws-accelerator',
+    installerStackName: 'AWSAccelerator-InstallerStack',
+    configRepositoryName: 'aws-accelerator-config',
+    configRepositoryLocation: 's3',
+    configBucketName: 'aws-accelerator-config-000000000000-us-east-1',
     env: {
       account: '000000000000',
       region: 'us-east-1',
@@ -40,4 +63,8 @@ const getStack = () => {
 };
 describe('DiagnosticsPackStack', () => {
   snapShotTest(testNamePrefix, getStack);
+});
+
+describe('DiagnosticsPackStackS3Config', () => {
+  snapShotTest(testNamePrefix, getS3ConfigStack);
 });

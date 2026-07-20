@@ -209,9 +209,9 @@ source/packages/@aws-accelerator/utils/lib/get-template.ts:66
 
 # Masked email address
 
-source/packages/@aws-accelerator/accelerator/lib/lambdas/diagnostic-pack/resources/functions.ts:91
-source/packages/@aws-accelerator/accelerator/lib/lambdas/diagnostic-pack/resources/functions.ts:269
-source/packages/@aws-accelerator/accelerator/lib/lambdas/diagnostic-pack/resources/functions.ts:594
+source/packages/@aws-accelerator/accelerator/lib/lambdas/diagnostic-pack/resources/functions.ts:93
+source/packages/@aws-accelerator/accelerator/lib/lambdas/diagnostic-pack/resources/functions.ts:271
+source/packages/@aws-accelerator/accelerator/lib/lambdas/diagnostic-pack/resources/functions.ts:693
 
 
 # Assume role declaration for cross account
