@@ -4,6 +4,7 @@ import {
   Ec2FirewallInstanceConfig,
   TargetGroupItemConfig,
 } from '../../lib/customizations-config';
+import { ICloudFormationStackSet } from '../../lib/models/customizations-config';
 import { GlobalConfig } from '../../lib/global-config';
 import { IamConfig } from '../../lib/iam-config';
 import { NetworkConfig } from '../../lib/network-config';
@@ -15,6 +16,7 @@ import {
   FirewallValidator,
 } from '../../validator/customizations-config-validator';
 import { describe, test, expect } from 'vitest';
+import path from 'path';
 
 const defaultFirewall: Ec2FirewallInstanceConfig = {
   name: 'Default Firewall',
@@ -336,6 +338,93 @@ function createFirewallValidator(
   const helpers: CustomizationHelperMethods = new CustomizationHelperMethods(accountsConfig, iamConfig, globalConfig);
   return new FirewallValidator(values, networkConfig, securityConfig, accountsConfig, configDir, helpers, errors);
 }
+
+describe('CustomizationsConfigValidator - StackSet deployment targets', () => {
+  function createStackSet(
+    name: string,
+    deploymentTargets: ICloudFormationStackSet['deploymentTargets'],
+  ): ICloudFormationStackSet {
+    return {
+      name,
+      deploymentTargets,
+      regions: ['us-east-1'],
+      template: path.basename(__filename),
+    };
+  }
+
+  function runValidator(stackSets: ICloudFormationStackSet[]) {
+    const values = {
+      customizations: {
+        cloudFormationStackSets: stackSets,
+      },
+    } as unknown as CustomizationsConfig;
+    const accountsConfig = {
+      mandatoryAccounts: [{ name: 'Management', organizationalUnit: 'Root' }],
+      workloadAccounts: [{ name: 'Workload', organizationalUnit: 'PopulatedOU' }],
+      getManagementAccount: () => ({ name: 'Management', organizationalUnit: 'Root' }),
+    } as unknown as AccountsConfig;
+    const globalConfig = {
+      homeRegion: 'us-east-1',
+      enabledRegions: ['us-east-1'],
+    } as unknown as GlobalConfig;
+    const organizationConfig = {
+      organizationalUnits: [{ name: 'EmptyOU' }, { name: 'PopulatedOU' }],
+    } as unknown as OrganizationConfig;
+
+    return () =>
+      new CustomizationsConfigValidator(
+        values,
+        accountsConfig,
+        globalConfig,
+        {} as IamConfig,
+        { vpcs: [] } as unknown as NetworkConfig,
+        organizationConfig,
+        {} as SecurityConfig,
+        __dirname,
+      );
+  }
+
+  test('rejects a StackSet targeting an OU with no accounts', () => {
+    const validate = runValidator([
+      createStackSet('Empty-OU-StackSet', {
+        organizationalUnits: ['EmptyOU'],
+      }),
+    ]);
+
+    expect(validate).toThrow(
+      'Deployment targets for CloudFormation StackSet Empty-OU-StackSet resolve to no active accounts. LZA supports only SELF_MANAGED StackSets, which require at least one active target account.',
+    );
+  });
+
+  test('rejects a StackSet when exclusions remove every resolved account', () => {
+    const validate = runValidator([
+      createStackSet('Excluded-Accounts-StackSet', {
+        organizationalUnits: ['PopulatedOU'],
+        excludedAccounts: ['Workload'],
+      }),
+    ]);
+
+    expect(validate).toThrow(
+      'Deployment targets for CloudFormation StackSet Excluded-Accounts-StackSet resolve to no active accounts. LZA supports only SELF_MANAGED StackSets, which require at least one active target account.',
+    );
+  });
+
+  test('accepts StackSets targeting a populated OU, explicit account, or Root', () => {
+    const validate = runValidator([
+      createStackSet('Populated-OU-StackSet', {
+        organizationalUnits: ['PopulatedOU'],
+      }),
+      createStackSet('Explicit-Account-StackSet', {
+        accounts: ['Management'],
+      }),
+      createStackSet('Root-StackSet', {
+        organizationalUnits: ['Root'],
+      }),
+    ]);
+
+    expect(validate).not.toThrow();
+  });
+});
 
 describe('CustomizationsConfigValidator - ALB listener targetGroup requirements', () => {
   function runValidator(listeners: unknown[]) {

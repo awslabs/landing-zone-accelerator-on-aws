@@ -22,6 +22,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - fix(service-quotas): tolerate existing request on quota reapply
 - fix(service-catalog): prefix portfolio propagation role to satisfy cross-account trust policy
 - fix(ssm): correct SessionManagerLogging policy so logs:DescribeLogGroups is scoped to '*' and session-key encryption allows kms:GenerateDataKey
+- fix(stacksets): reject deployment targets with no active accounts
 
 ## [1.16.0] - 
 

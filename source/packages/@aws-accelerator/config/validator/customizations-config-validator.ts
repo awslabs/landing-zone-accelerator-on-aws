@@ -151,6 +151,9 @@ class CustomizationValidator {
     // Validate deployment target Organizational Unit Names
     this.validateDeploymentTargetOUs(values, ouIdNames, errors);
 
+    // Validate StackSet deployment targets resolve to at least one account
+    this.validateStackSetDeploymentTargetAccounts(values, accountsConfig, errors);
+
     // Validate stack name lengths
     this.validateStackNameLength(values, errors);
 
@@ -459,6 +462,31 @@ class CustomizationValidator {
             `Deployment target account ${account} for CloudFormation StackSet does not exists in accounts-config.yaml file.`,
           );
         }
+      }
+    }
+  }
+
+  /**
+   * Function to validate StackSet deployment targets resolve to at least one account
+   * @param values
+   * @param accountsConfig
+   * @param errors
+   */
+  private validateStackSetDeploymentTargetAccounts(
+    values: ICustomizationsConfig,
+    accountsConfig: AccountsConfig,
+    errors: string[],
+  ) {
+    for (const stackSet of values.customizations?.cloudFormationStackSets ?? []) {
+      const deploymentTargetAccounts = CommonValidatorFunctions.getAccountNamesFromDeploymentTargets(
+        accountsConfig,
+        stackSet.deploymentTargets as DeploymentTargets,
+      );
+
+      if (deploymentTargetAccounts.length === 0) {
+        errors.push(
+          `Deployment targets for CloudFormation StackSet ${stackSet.name} resolve to no active accounts. LZA supports only SELF_MANAGED StackSets, which require at least one active target account. Add an account or target an OU containing an active account.`,
+        );
       }
     }
   }
