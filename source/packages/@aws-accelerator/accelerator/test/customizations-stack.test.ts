@@ -12,7 +12,8 @@
  */
 
 import { AcceleratorStage } from '../lib/accelerator-stage';
-import { describe } from 'vitest';
+import { Template } from 'aws-cdk-lib/assertions';
+import { describe, expect, test } from 'vitest';
 import { snapShotTest } from './snapshot-test';
 import { Create, memoize } from './accelerator-test-helpers';
 
@@ -22,6 +23,21 @@ const getStacks = memoize(Create.stacksProvider(AcceleratorStage.CUSTOMIZATIONS)
 
 describe('CustomizationsStack', () => {
   snapShotTest(testNamePrefix, Create.stackProviderFromStacks(`Management-us-east-1`, getStacks));
+
+  test(`${testNamePrefix} launch constraint depends on portfolio product association`, () => {
+    const stack = Create.stackProviderFromStacks(`Management-us-east-1`, getStacks)();
+
+    expect(stack).toBeDefined();
+    if (!stack) return;
+
+    const template = Template.fromStack(stack);
+    const associations = template.findResources('AWS::ServiceCatalog::PortfolioProductAssociation');
+    const launchConstraints = template.findResources('AWS::ServiceCatalog::LaunchRoleConstraint');
+
+    expect(Object.keys(associations)).toHaveLength(1);
+    expect(Object.values(launchConstraints)).toHaveLength(1);
+    expect(Object.values(launchConstraints)[0].DependsOn).toContain(Object.keys(associations)[0]);
+  });
 });
 describe('CustomizationsStack', () => {
   snapShotTest(testNamePrefix, Create.stackProviderFromStacks(`SharedServices-us-east-1`, getStacks));

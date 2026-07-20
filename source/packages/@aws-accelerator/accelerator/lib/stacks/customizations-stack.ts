@@ -296,34 +296,70 @@ export class CustomizationsStack extends AcceleratorStack {
         },
       );
 
-      //Associate Portfolio with the Product.
-      portfolio.addProduct(product);
+      // Associate portfolio with the product.
+      const productAssociation = this.addProductToPortfolio(portfolio, product);
 
-      //Add Constraints to Product.
+      // Add constraints to product.
 
       if (productItem.constraints) {
-        this.createProductConstraints(portfolio, product, portfolioItem, productItem);
+        this.createProductConstraints(portfolio, product, productAssociation, portfolioItem, productItem);
       }
     }
+  }
+
+  /**
+   * Associate a product with a portfolio and return the generated L1 association.
+   * CDK's Portfolio.addProduct method does not expose the association it creates.
+   */
+  private addProductToPortfolio(
+    portfolio: cdk.aws_servicecatalog.Portfolio,
+    product: cdk.aws_servicecatalog.CloudFormationProduct,
+  ): cdk.aws_servicecatalog.CfnPortfolioProductAssociation {
+    const existingAssociations = new Set(
+      portfolio.node.children.filter(child =>
+        cdk.aws_servicecatalog.CfnPortfolioProductAssociation.isCfnPortfolioProductAssociation(child),
+      ),
+    );
+
+    portfolio.addProduct(product);
+
+    const productAssociation = portfolio.node.children.find(
+      child =>
+        cdk.aws_servicecatalog.CfnPortfolioProductAssociation.isCfnPortfolioProductAssociation(child) &&
+        !existingAssociations.has(child),
+    );
+    if (!cdk.aws_servicecatalog.CfnPortfolioProductAssociation.isCfnPortfolioProductAssociation(productAssociation)) {
+      throw new Error(`Unable to find Service Catalog association for product ${product.productId}`);
+    }
+    return productAssociation;
   }
 
   /**
    * Create Service Catalog Product Constraints
    * @param portfolio
    * @param product
+   * @param productAssociation
    * @param portfolioItem
    * @param productItem
    */
   private createProductConstraints(
     portfolio: cdk.aws_servicecatalog.Portfolio,
     product: cdk.aws_servicecatalog.CloudFormationProduct,
+    productAssociation: cdk.aws_servicecatalog.CfnPortfolioProductAssociation,
     portfolioItem: PortfolioConfig,
     productItem: ProductConfig,
   ) {
     const constraints: ProductConstraintConfig = productItem.constraints!;
 
     if (constraints.launch) {
-      this.getProductLaunchConstraint(portfolio, product, portfolioItem.name, productItem.name, constraints.launch);
+      this.getProductLaunchConstraint(
+        portfolio,
+        product,
+        productAssociation,
+        portfolioItem.name,
+        productItem.name,
+        constraints.launch,
+      );
     }
 
     if (constraints.tagUpdate !== undefined) {
@@ -408,6 +444,7 @@ export class CustomizationsStack extends AcceleratorStack {
    *
    * @param portfolio
    * @param product
+   * @param productAssociation
    * @param portfolioName
    * @param productName
    * @param launchConstraint
@@ -415,6 +452,7 @@ export class CustomizationsStack extends AcceleratorStack {
   private getProductLaunchConstraint(
     portfolio: cdk.aws_servicecatalog.Portfolio,
     product: cdk.aws_servicecatalog.CloudFormationProduct,
+    productAssociation: cdk.aws_servicecatalog.CfnPortfolioProductAssociation,
     portfolioName: string,
     productName: string,
     launchConstraint: { type: 'Role' | 'LocalRole'; role: string },
@@ -425,10 +463,8 @@ export class CustomizationsStack extends AcceleratorStack {
     this.logger.info(`Creating launch constraint on product ${product.productId}`);
 
     if (launchConstraint.type === 'Role') {
-      //specific role only
-
       const launchRoleArn = `arn:${partition}:iam::${account}:role/${launchConstraint.role}`;
-      new cdk.aws_servicecatalog.CfnLaunchRoleConstraint(
+      const launchRoleConstraint = new cdk.aws_servicecatalog.CfnLaunchRoleConstraint(
         this,
         pascalCase(`${portfolioName}Portfolio${productName}ProductLaunchConstraint`),
         {
@@ -437,10 +473,11 @@ export class CustomizationsStack extends AcceleratorStack {
           roleArn: launchRoleArn,
         },
       );
+      launchRoleConstraint.addDependency(productAssociation);
     }
 
     if (launchConstraint.type === 'LocalRole') {
-      new cdk.aws_servicecatalog.CfnLaunchRoleConstraint(
+      const launchRoleConstraint = new cdk.aws_servicecatalog.CfnLaunchRoleConstraint(
         this,
         pascalCase(`${portfolioName}Portfolio${productName}ProductLaunchConstraint`),
         {
@@ -449,6 +486,7 @@ export class CustomizationsStack extends AcceleratorStack {
           localRoleName: launchConstraint.role,
         },
       );
+      launchRoleConstraint.addDependency(productAssociation);
     }
   }
 

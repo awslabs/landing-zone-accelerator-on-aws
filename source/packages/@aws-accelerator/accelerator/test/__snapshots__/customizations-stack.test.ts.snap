@@ -571,6 +571,9 @@ exports[`CustomizationsStack > Construct(CustomizationsStack):  Snapshot Test 1`
       "Type": "AWS::ServiceCatalog::CloudFormationProduct",
     },
     "MyPortfolioPortfolioMyProductProductLaunchConstraint": {
+      "DependsOn": [
+        "MyPortfolioPortfolioPortfolioProductAssociation72040103f9e35F6E6349",
+      ],
       "Properties": {
         "LocalRoleName": "testRole",
         "PortfolioId": {
@@ -1760,6 +1763,9 @@ exports[`CustomizationsStack > Construct(CustomizationsStack):  Snapshot Test 3`
       "Type": "AWS::ServiceCatalog::CloudFormationProduct",
     },
     "MyPortfolioPortfolioMyProductProductLaunchConstraint": {
+      "DependsOn": [
+        "MyPortfolioPortfolioPortfolioProductAssociation72040103f9e35F6E6349",
+      ],
       "Properties": {
         "LocalRoleName": "testRole",
         "PortfolioId": {
