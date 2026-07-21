@@ -73,7 +73,7 @@
   },
   "dependencies": {
     "@swc/core": "1.10.12",
-    "adm-zip": "^0.5.14",
+    "adm-zip": "^0.6.0",
     "aws-cdk": "2.1116.0",
     "fs-extra": "11.1.0"
   },
@@ -91,6 +91,7 @@
     "cdk-from-cfn": "0.162.0",
     "constructs": "10.5.0",
     "esbuild": "0.28.1",
+    "fast-xml-parser": "5.7.2",
     "eslint": "9.37.0",
     "eslint-config-prettier": "10.1.8",
     "eslint-plugin-prettier": "5.5.4",
@@ -115,9 +116,12 @@
   },
   "resolutions": {
     "@aws-cdk/asset-awscli-v1": "2.2.274",
-    "axios": "1.16.1",
+    "axios": "1.18.0",
     "esbuild": "0.28.1",
-    "form-data": "4.0.6"
+    "fast-xml-parser": "5.7.2",
+    "form-data": "4.0.6",
+    "lerna/js-yaml": "4.3.0",
+    "tar": "7.5.19"
   },
   "packageManager": "yarn@1.22.22+sha512.a6b2f7906b721bba3d67d4aff083df04dad64c399707841b7acf00f6b133b7ac24255f2652fa22ae3534329dc6180534e98d17432037ff6fd140556e2bb3137e"
 }
