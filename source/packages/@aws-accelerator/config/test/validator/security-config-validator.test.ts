@@ -25,26 +25,36 @@ function createCustomRule(overrides: {
   lookupType?: string;
   lookupKey?: string;
   lookupValue?: string[];
+  periodic?: boolean;
+  configurationChanges?: boolean;
+  includeMaximumExecutionFrequency?: boolean;
+  includeTriggeringResources?: boolean;
 }): IConfigRule {
+  const customRule: ICustomRuleConfigType = {
+    lambda: {
+      sourceFilePath: 'lambda/custom-rule.zip',
+      handler: 'index.handler',
+      runtime: 'nodejs18.x',
+      rolePolicyFile: 'lambda/custom-rule-policy.json',
+    },
+    periodic: overrides.periodic ?? true,
+    configurationChanges: overrides.configurationChanges ?? true,
+    ...(overrides.includeMaximumExecutionFrequency === false ? {} : { maximumExecutionFrequency: 'Six_Hours' }),
+    ...(overrides.includeTriggeringResources === false
+      ? {}
+      : {
+          triggeringResources: {
+            lookupType: overrides.lookupType ?? 'ResourceTypes',
+            lookupKey: overrides.lookupKey,
+            lookupValue: overrides.lookupValue ?? ['AWS::EC2::Instance'],
+          },
+        }),
+  };
+
   return {
     name: overrides.name ?? 'test-custom-rule',
     type: 'Custom',
-    customRule: {
-      lambda: {
-        sourceFilePath: 'lambda/custom-rule.zip',
-        handler: 'index.handler',
-        runtime: 'nodejs18.x',
-        rolePolicyFile: 'lambda/custom-rule-policy.json',
-      },
-      maximumExecutionFrequency: 'Six_Hours',
-      periodic: true,
-      configurationChanges: true,
-      triggeringResources: {
-        lookupType: overrides.lookupType ?? 'ResourceTypes',
-        lookupKey: overrides.lookupKey,
-        lookupValue: overrides.lookupValue ?? ['AWS::EC2::Instance'],
-      },
-    } as ICustomRuleConfigType,
+    customRule,
   };
 }
 
@@ -144,6 +154,50 @@ describe('SecurityConfigValidator', () => {
       for (const error of errors) {
         expect(error).toContain('my-specific-rule');
       }
+    });
+
+    it('should allow a periodic-only rule without triggeringResources', () => {
+      const errors: string[] = [];
+      validateConfigRuleAssets(
+        configDir,
+        createRuleSet([
+          createCustomRule({
+            periodic: true,
+            configurationChanges: false,
+            includeTriggeringResources: false,
+          }),
+        ]),
+        errors,
+      );
+      expect(errors).toHaveLength(0);
+    });
+
+    it('should allow a configuration-change-only rule without maximumExecutionFrequency', () => {
+      const errors: string[] = [];
+      validateConfigRuleAssets(
+        configDir,
+        createRuleSet([
+          createCustomRule({
+            periodic: false,
+            configurationChanges: true,
+            includeMaximumExecutionFrequency: false,
+          }),
+        ]),
+        errors,
+      );
+      expect(errors).toHaveLength(0);
+    });
+
+    it('should reject a rule with no enabled evaluation mode', () => {
+      const errors: string[] = [];
+      validateConfigRuleAssets(
+        configDir,
+        createRuleSet([createCustomRule({ periodic: false, configurationChanges: false })]),
+        errors,
+      );
+      expect(errors).toEqual([
+        'Custom rule: test-custom-rule must enable at least one evaluation mode: periodic or configurationChanges',
+      ]);
     });
   });
 

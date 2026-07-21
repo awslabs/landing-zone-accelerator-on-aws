@@ -1140,16 +1140,25 @@ export class SecurityConfigValidator {
             `Custom rule: ${rule.name} lambda function role policy file ${rule.customRule.lambda.rolePolicyFile} not found`,
           );
         }
-        // Validate lookupType is a supported value and lookupKey is provided when required
-        const lookupType = rule.customRule.triggeringResources.lookupType;
-        const validLookupTypes = ['ResourceId', 'Tag', 'ResourceTypes'];
-
-        if (!validLookupTypes.includes(lookupType)) {
+        if (!rule.customRule.periodic && !rule.customRule.configurationChanges) {
           errors.push(
-            `Custom rule: ${rule.name} has unsupported lookupType '${lookupType}'. Valid values are: ${validLookupTypes.join(', ')}`,
+            `Custom rule: ${rule.name} must enable at least one evaluation mode: periodic or configurationChanges`,
           );
-        } else if (lookupType !== 'ResourceTypes' && !rule.customRule.triggeringResources.lookupKey) {
-          errors.push(`Custom rule: ${rule.name} with lookupType '${lookupType}' requires a lookupKey value`);
+        }
+
+        const triggeringResources = rule.customRule.triggeringResources;
+        if (triggeringResources) {
+          // Validate lookupType is a supported value and lookupKey is provided when required
+          const lookupType = triggeringResources.lookupType;
+          const validLookupTypes = ['ResourceId', 'Tag', 'ResourceTypes'];
+
+          if (!validLookupTypes.includes(lookupType)) {
+            errors.push(
+              `Custom rule: ${rule.name} has unsupported lookupType '${lookupType}'. Valid values are: ${validLookupTypes.join(', ')}`,
+            );
+          } else if (lookupType !== 'ResourceTypes' && !triggeringResources.lookupKey) {
+            errors.push(`Custom rule: ${rule.name} with lookupType '${lookupType}' requires a lookupKey value`);
+          }
         }
       }
     }

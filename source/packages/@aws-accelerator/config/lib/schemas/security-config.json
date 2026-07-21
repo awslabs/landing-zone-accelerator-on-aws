@@ -557,7 +557,7 @@
           "type": "string"
         },
         "periodic": {
-          "default": true,
+          "default": false,
           "description": "Controls whether the rule runs on a scheduled basis at regular intervals. When enabled, the rule will evaluate resources according to the specified frequency.",
           "type": "boolean"
         },
@@ -567,9 +567,7 @@
         }
       },
       "required": [
-        "lambda",
-        "maximumExecutionFrequency",
-        "triggeringResources"
+        "lambda"
       ],
       "type": "object"
     },

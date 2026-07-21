@@ -738,26 +738,25 @@ export class SecurityResourcesStack extends AcceleratorStack {
       return;
     }
 
-    if (rule.customRule.triggeringResources.lookupType == 'ResourceTypes') {
+    const triggeringResources = rule.customRule.triggeringResources;
+
+    if (triggeringResources?.lookupType == 'ResourceTypes') {
       const ruleScopeResources: cdk.aws_config.ResourceType[] = [];
-      for (const item of rule.customRule.triggeringResources.lookupValue) {
+      for (const item of triggeringResources.lookupValue) {
         ruleScopeResources.push(cdk.aws_config.ResourceType.of(item));
       }
       ruleScope = cdk.aws_config.RuleScope.fromResources(ruleScopeResources);
     }
 
-    if (rule.customRule.triggeringResources.lookupType == 'ResourceId') {
+    if (triggeringResources?.lookupType == 'ResourceId') {
       ruleScope = cdk.aws_config.RuleScope.fromResource(
-        cdk.aws_config.ResourceType.of(rule.customRule.triggeringResources.lookupKey!),
-        rule.customRule.triggeringResources.lookupValue[0],
+        cdk.aws_config.ResourceType.of(triggeringResources.lookupKey!),
+        triggeringResources.lookupValue[0],
       );
     }
 
-    if (rule.customRule.triggeringResources.lookupType == 'Tag') {
-      ruleScope = cdk.aws_config.RuleScope.fromTag(
-        rule.customRule.triggeringResources.lookupKey!,
-        rule.customRule.triggeringResources.lookupValue[0],
-      );
+    if (triggeringResources?.lookupType == 'Tag') {
+      ruleScope = cdk.aws_config.RuleScope.fromTag(triggeringResources.lookupKey!, triggeringResources.lookupValue[0]);
     }
 
     /**

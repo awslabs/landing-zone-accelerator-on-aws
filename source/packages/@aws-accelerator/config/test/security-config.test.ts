@@ -881,3 +881,81 @@ keyManagementService:
     expect(() => parseSecurityConfig(yaml.load(configWithLegacyField))).not.toThrow();
   });
 });
+
+describe('custom Config rule evaluation modes', () => {
+  const customRuleLambda = {
+    sourceFilePath: 'custom-config-rules/test.zip',
+    handler: 'index.handler',
+    runtime: 'nodejs18.x',
+    rolePolicyFile: 'custom-config-rules/detection-role.json',
+  };
+
+  function createSecurityConfig(customRule: Record<string, unknown>) {
+    return {
+      centralSecurityServices: {
+        delegatedAdminAccount: 'Audit',
+        ebsDefaultVolumeEncryption: { enable: false },
+        s3PublicAccessBlock: { enable: false },
+        macie: { enable: false, publishSensitiveDataFindings: false },
+        guardduty: {
+          enable: false,
+          s3Protection: { enable: false },
+          exportConfiguration: {
+            enable: false,
+            destinationType: 'S3',
+            exportFrequency: 'FIFTEEN_MINUTES',
+          },
+        },
+        securityHub: { enable: false, standards: [] },
+        ssmAutomation: { documentSets: [] },
+      },
+      accessAnalyzer: { enable: false },
+      iamPasswordPolicy: {
+        allowUsersToChangePassword: true,
+        hardExpiry: false,
+        requireUppercaseCharacters: true,
+        requireLowercaseCharacters: true,
+        requireSymbols: true,
+        requireNumbers: true,
+        minimumPasswordLength: 14,
+        passwordReusePrevention: 24,
+        maxPasswordAge: 90,
+      },
+      awsConfig: {
+        enableConfigurationRecorder: true,
+        ruleSets: [
+          {
+            deploymentTargets: { organizationalUnits: ['Root'] },
+            rules: [{ name: 'test-rule', type: 'Custom', customRule }],
+          },
+        ],
+      },
+      cloudWatch: { metricSets: [], alarmSets: [] },
+      keyManagementService: { keySets: [] },
+    };
+  }
+
+  it('should parse a periodic-only rule without triggeringResources', () => {
+    const config = createSecurityConfig({
+      lambda: customRuleLambda,
+      periodic: true,
+      configurationChanges: false,
+    });
+
+    expect(() => parseSecurityConfig(config)).not.toThrow();
+  });
+
+  it('should parse a configuration-change-only rule without maximumExecutionFrequency', () => {
+    const config = createSecurityConfig({
+      lambda: customRuleLambda,
+      periodic: false,
+      configurationChanges: true,
+      triggeringResources: {
+        lookupType: 'ResourceTypes',
+        lookupValue: ['AWS::EC2::Instance'],
+      },
+    });
+
+    expect(() => parseSecurityConfig(config)).not.toThrow();
+  });
+});

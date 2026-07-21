@@ -2723,7 +2723,7 @@ export interface ICustomRuleConfigType {
    * Controls whether the rule runs on a scheduled basis at regular intervals.
    * When enabled, the rule will evaluate resources according to the specified frequency.
    *
-   * @default true
+   * @default false
    */
   readonly periodic?: boolean;
   /**
@@ -2731,7 +2731,7 @@ export interface ICustomRuleConfigType {
    *
    * @default MaximumExecutionFrequency.TWENTY_FOUR_HOURS
    */
-  readonly maximumExecutionFrequency:
+  readonly maximumExecutionFrequency?:
     | 'One_Hour'
     | 'Three_Hours'
     | 'Six_Hours'
@@ -2748,8 +2748,11 @@ export interface ICustomRuleConfigType {
   readonly configurationChanges?: boolean;
   /**
    * Specifies which AWS resources will trigger evaluations for this Config rule.
+   *
+   * @remarks
+   * When omitted, configuration changes to all recorded resource types trigger evaluation.
    */
-  readonly triggeringResources: ITriggeringResourceType;
+  readonly triggeringResources?: ITriggeringResourceType;
 }
 
 /**

@@ -301,6 +301,60 @@ describe('SecurityResourcesStack - Config Rule Dependencies', () => {
   });
 });
 
+describe('SecurityResourcesStack - Custom Config Rule Evaluation Modes', () => {
+  afterEach(() => vi.clearAllMocks());
+
+  it('should synthesize a periodic-only rule without triggeringResources or maximumExecutionFrequency', () => {
+    const props = createConfigRulesProps({
+      customRuleCount: 1,
+      customRuleOverrides: {
+        periodic: true,
+        configurationChanges: false,
+        maximumExecutionFrequency: undefined,
+        triggeringResources: undefined,
+      },
+    });
+    const { template } = createSecurityResourcesStackWithTemplate('test-periodic-only-rule', props);
+    const configRule = Object.values(template.findResources('AWS::Config::ConfigRule'))[0] as any;
+
+    expect(configRule.Properties.MaximumExecutionFrequency).toBeUndefined();
+    expect(configRule.Properties.Scope).toBeUndefined();
+    expect(configRule.Properties.Source.SourceDetails).toEqual([
+      {
+        EventSource: 'aws.config',
+        MessageType: 'ScheduledNotification',
+      },
+    ]);
+  });
+
+  it('should synthesize a configuration-change-only rule without triggeringResources', () => {
+    const props = createConfigRulesProps({
+      customRuleCount: 1,
+      customRuleOverrides: {
+        periodic: false,
+        configurationChanges: true,
+        maximumExecutionFrequency: undefined,
+        triggeringResources: undefined,
+      },
+    });
+    const { template } = createSecurityResourcesStackWithTemplate('test-configuration-change-only-rule', props);
+    const configRule = Object.values(template.findResources('AWS::Config::ConfigRule'))[0] as any;
+
+    expect(configRule.Properties.MaximumExecutionFrequency).toBeUndefined();
+    expect(configRule.Properties.Scope).toBeUndefined();
+    expect(configRule.Properties.Source.SourceDetails).toEqual([
+      {
+        EventSource: 'aws.config',
+        MessageType: 'ConfigurationItemChangeNotification',
+      },
+      {
+        EventSource: 'aws.config',
+        MessageType: 'OversizedConfigurationItemChangeNotification',
+      },
+    ]);
+  });
+});
+
 describe('SecurityResourcesStack - Policy Replacement Variables', () => {
   afterEach(() => vi.clearAllMocks());
 
@@ -629,6 +683,7 @@ function createSecurityResourcesStackWithTemplate(
 function createConfigRulesProps(options: {
   managedRuleCount?: number;
   customRuleCount?: number;
+  customRuleOverrides?: Record<string, unknown>;
 }): AcceleratorStackProps {
   const baseProps = createAcceleratorStackProps();
   const managedCount = options.managedRuleCount ?? 0;
@@ -673,6 +728,7 @@ function createConfigRulesProps(options: {
         lookupKey: '',
         lookupValue: ['AWS::EC2::Instance'],
       },
+      ...options.customRuleOverrides,
     },
   }));
 

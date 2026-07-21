@@ -498,9 +498,9 @@ export class TriggeringResource implements i.ITriggeringResourceType {
 export class CustomRuleConfig implements i.ICustomRuleConfigType {
   readonly lambda: i.ICustomRuleLambdaType = new CustomRuleLambda();
   readonly periodic?: boolean;
-  readonly maximumExecutionFrequency: string = 'TwentyFour_Hours';
+  readonly maximumExecutionFrequency?: string = undefined;
   readonly configurationChanges?: boolean;
-  readonly triggeringResources: i.ITriggeringResourceType = new TriggeringResource();
+  readonly triggeringResources?: i.ITriggeringResourceType = undefined;
 }
 
 export class ConfigRule implements i.IConfigRule {
