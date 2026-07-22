@@ -24,6 +24,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - fix(ssm): correct SessionManagerLogging policy so logs:DescribeLogGroups is scoped to '*' and session-key encryption allows kms:GenerateDataKey
 - fix(stacksets): reject deployment targets with no active accounts
 - fix(service-catalog): ensure launch constraints wait for portfolio-product associations
+- fix(constructs): retry RAM resource share invitation fetch on UnauthorizedException to handle eventual consistency
 
 ## [1.16.0] - 
 

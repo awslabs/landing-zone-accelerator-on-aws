@@ -12,7 +12,7 @@
  */
 
 import { setRetryStrategy } from '@aws-accelerator/utils/lib/common-functions';
-import { throttlingBackOff } from '@aws-accelerator/utils/lib/throttle';
+import { delay, throttlingBackOff } from '@aws-accelerator/utils/lib/throttle';
 import {
   AcceptResourceShareInvitationCommand,
   GetResourceShareInvitationsCommand,
@@ -22,6 +22,22 @@ import {
   ResourceShareInvitationStatus,
 } from '@aws-sdk/client-ram';
 import { CloudFormationCustomResourceEvent } from '@aws-accelerator/utils/lib/common-types';
+
+const MAX_ATTEMPTS = 6;
+
+/**
+ * Determines whether an error is the transient `UnauthorizedException` that RAM
+ * raises while a freshly created resource share is still propagating to the
+ * target account (eventual consistency), as opposed to a genuine IAM/config error.
+ *
+ * @param e error thrown by a RAM API call
+ * @returns true if the error is a RAM `UnauthorizedException`
+ */
+function isUnauthorizedException(e: unknown): boolean {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const err = e as any;
+  return err?.name === 'UnauthorizedException' || err?.code === 'UnauthorizedException';
+}
 
 /**
  * get-resource-share - lambda handler
@@ -48,36 +64,38 @@ export async function handler(event: CloudFormationCustomResourceEvent): Promise
       const owningAccountId = event.ResourceProperties['owningAccountId'];
       const name = event.ResourceProperties['name'];
 
-      let nextToken: string | undefined = undefined;
-      do {
-        const page = await throttlingBackOff(() =>
-          ramClient.send(new GetResourceShareInvitationsCommand({ nextToken })),
-        );
-        for (const resourceShareInvitation of page.resourceShareInvitations ?? []) {
-          if (
-            resourceShareInvitation.status == ResourceShareInvitationStatus.PENDING &&
-            resourceShareInvitation.senderAccountId == owningAccountId &&
-            resourceShareInvitation.resourceShareName === name
-          ) {
-            console.log(resourceShareInvitation);
-            await throttlingBackOff(() =>
-              ramClient.send(
-                new AcceptResourceShareInvitationCommand({
-                  resourceShareInvitationArn: resourceShareInvitation.resourceShareInvitationArn!,
-                }),
-              ),
-            );
-
-            const found = await validateResourceShare(ramClient, owningAccountId, name, resourceOwner);
-
-            if (found == false) {
-              throw new Error(`Resource share ${name} not accepted successfully`); //share not found after multiple attempts
-            }
+      // RAM resource shares are eventually consistent: a freshly created share may
+      // not yet have propagated to the target account, and the first invitation
+      // fetch can fail with a transient `UnauthorizedException` (a timing signal
+      // from RAM, not an IAM problem). Retry the invitation fetch/accept flow with
+      // a bounded quadratic backoff (0, 1, 4, 9, 16, 25 s) before giving up, mirroring
+      // the sibling get-resource-share-item Lambda. Non-transient errors are not
+      // retried, and a persistent UnauthorizedException still surfaces after the
+      // retry window so genuine errors are never masked.
+      let lastError: unknown = undefined;
+      for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
+        await delay(attempt ** 2 * 1000);
+        try {
+          await fetchAndAcceptInvitations(ramClient, owningAccountId, name, resourceOwner);
+          lastError = undefined;
+          break;
+        } catch (e) {
+          if (!isUnauthorizedException(e)) {
+            throw e;
           }
-          nextToken = page.nextToken;
+          lastError = e;
+          console.log(
+            `RAM resource share not yet propagated (UnauthorizedException) on attempt ${
+              attempt + 1
+            }/${MAX_ATTEMPTS}, retrying`,
+          );
         }
-      } while (nextToken);
-      nextToken = undefined;
+      }
+      if (lastError) {
+        throw lastError;
+      }
+
+      let nextToken: string | undefined = undefined;
       do {
         const page = await throttlingBackOff(() =>
           ramClient.send(new GetResourceSharesCommand({ resourceOwner, nextToken: nextToken })),
@@ -105,6 +123,50 @@ export async function handler(event: CloudFormationCustomResourceEvent): Promise
         Status: 'SUCCESS',
       };
   }
+}
+
+/**
+ * Fetches pending resource share invitations and accepts any that match the
+ * owning account and share name, validating each accepted share.
+ *
+ * @param ramClient RAM client
+ * @param owningAccountId account that owns (shared) the resource share
+ * @param name resource share name
+ * @param resourceOwner resource owner filter for share lookups
+ */
+async function fetchAndAcceptInvitations(
+  ramClient: RAMClient,
+  owningAccountId: string,
+  name: string,
+  resourceOwner?: ResourceOwner,
+): Promise<void> {
+  let nextToken: string | undefined = undefined;
+  do {
+    const page = await throttlingBackOff(() => ramClient.send(new GetResourceShareInvitationsCommand({ nextToken })));
+    for (const resourceShareInvitation of page.resourceShareInvitations ?? []) {
+      if (
+        resourceShareInvitation.status == ResourceShareInvitationStatus.PENDING &&
+        resourceShareInvitation.senderAccountId == owningAccountId &&
+        resourceShareInvitation.resourceShareName === name
+      ) {
+        console.log(resourceShareInvitation);
+        await throttlingBackOff(() =>
+          ramClient.send(
+            new AcceptResourceShareInvitationCommand({
+              resourceShareInvitationArn: resourceShareInvitation.resourceShareInvitationArn!,
+            }),
+          ),
+        );
+
+        const found = await validateResourceShare(ramClient, owningAccountId, name, resourceOwner);
+
+        if (found == false) {
+          throw new Error(`Resource share ${name} not accepted successfully`); //share not found after multiple attempts
+        }
+      }
+      nextToken = page.nextToken;
+    }
+  } while (nextToken);
 }
 
 async function validateResourceShare(
@@ -139,8 +201,4 @@ async function validateResourceShare(
   } while (found == false && counter >= 0);
 
   return found;
-}
-
-async function delay(ms: number) {
-  return new Promise(resolve => setTimeout(resolve, ms));
 }
