@@ -101,6 +101,13 @@ export async function handler(event: ScheduledEvent): Promise<{ statusCode: numb
     }
   } else if (['DetachPolicy', 'AttachPolicy'].includes(eventName)) {
     const targetId: string = event.detail.requestParameters.targetId;
+    // OUs flagged with ignore: true are left entirely untouched, even for accelerator-managed policies
+    if (await isTargetIgnoredOu(targetId, organizationConfig)) {
+      console.log(`Target OU ${targetId} is flagged ignore: true; leaving SCP change alone`);
+      return {
+        statusCode: 200,
+      };
+    }
     const targetManagedByAccelerator: boolean = await isTargetManagedByAccelerator(
       targetId,
       organizationConfig,
@@ -250,14 +257,26 @@ async function isPolicyManagedByAccelerator(policyName: string, orgConfig: Organ
   return false;
 }
 
+async function isTargetIgnoredOu(targetId: string, orgConfig: OrganizationConfig): Promise<boolean> {
+  if (targetId.startsWith('ou-')) {
+    const organizationalUnit = orgConfig.organizationalUnitIds?.find(a => a.id === targetId);
+    // OUs flagged with ignore: true are left untouched by the accelerator, so their SCP changes are left alone
+    if (organizationalUnit && orgConfig.isIgnored(organizationalUnit.name)) {
+      return true;
+    }
+  }
+  return false;
+}
+
 async function isTargetManagedByAccelerator(
   targetId: string,
   orgConfig: OrganizationConfig,
   acctConfig: AccountsConfig,
 ): Promise<boolean> {
   if (targetId.startsWith('ou-')) {
-    const organizationUnitIds = orgConfig.organizationalUnitIds?.map(a => a.id);
-    if (organizationUnitIds?.includes(targetId)) {
+    const organizationalUnit = orgConfig.organizationalUnitIds?.find(a => a.id === targetId);
+    // OUs flagged with ignore: true are not managed by the accelerator, so their SCP changes are left alone
+    if (organizationalUnit && !(await isTargetIgnoredOu(targetId, orgConfig))) {
       return true;
     } else {
       return false;

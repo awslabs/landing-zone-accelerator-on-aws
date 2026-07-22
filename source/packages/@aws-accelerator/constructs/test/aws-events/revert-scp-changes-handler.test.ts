@@ -13,7 +13,13 @@
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { mockClient, AwsClientStub } from 'aws-sdk-client-mock';
-import { OrganizationsClient, DescribePolicyCommand, AttachPolicyCommand } from '@aws-sdk/client-organizations';
+import {
+  OrganizationsClient,
+  DescribePolicyCommand,
+  AttachPolicyCommand,
+  DetachPolicyCommand,
+  UpdatePolicyCommand,
+} from '@aws-sdk/client-organizations';
 import { SNSClient, PublishCommand } from '@aws-sdk/client-sns';
 
 // Mock config loaders before importing the handler
@@ -26,12 +32,18 @@ vi.mock('@aws-accelerator/config/lib/accounts-config', () => ({
   },
 }));
 
+const ignoredOuNames = new Set<string>(['IgnoredOu']);
+
 vi.mock('@aws-accelerator/config/lib/organization-config', () => ({
   OrganizationConfig: {
     loadRawOrganizationsConfig: vi.fn().mockReturnValue({
       loadOrganizationalUnitIds: vi.fn(),
-      serviceControlPolicies: [{ name: 'TestPolicy', policy: 'test-policy.json' }],
-      organizationalUnitIds: [{ id: 'ou-1234-abcdef' }],
+      serviceControlPolicies: [{ name: 'TestPolicy', policy: '../../../../test/aws-events/fixtures/test-policy.json' }],
+      organizationalUnitIds: [
+        { id: 'ou-1234-abcdef', name: 'ManagedOu' },
+        { id: 'ou-1234-ignored', name: 'IgnoredOu' },
+      ],
+      isIgnored: (name: string) => ignoredOuNames.has(name),
     }),
   },
 }));
@@ -231,6 +243,117 @@ describe('revert-scp-changes handler', () => {
     expect(snsCalls).toHaveLength(1);
     expect(snsCalls[0].args[0].input.Subject).toBe('Organization Policy Remediation Success');
     expect(snsCalls[0].args[0].input.Message).toContain('p-scp789');
+  });
+
+  it('should not reattach an SCP detached from an OU flagged ignore: true', async () => {
+    // Policy is not managed by accelerator and the target OU is ignored, so the change is left alone
+    orgsMock.on(DescribePolicyCommand).resolves({
+      Policy: {
+        PolicySummary: { Id: 'p-unmanaged1', Name: 'UnmanagedPolicy', Type: 'SERVICE_CONTROL_POLICY' },
+        Content: '{}',
+      },
+    });
+    orgsMock.on(AttachPolicyCommand).resolves({});
+
+    const event = makeEvent(
+      'DetachPolicy',
+      'p-unmanaged1',
+      'arn:aws:iam::111111111111:role/ManualRole',
+      'ou-1234-ignored',
+    );
+    const result = await handler(event);
+
+    expect(result).toEqual({ statusCode: 200 });
+    expect(orgsMock.commandCalls(AttachPolicyCommand)).toHaveLength(0);
+    expect(snsMock.commandCalls(PublishCommand)).toHaveLength(0);
+  });
+
+  it('should not reattach an accelerator-managed SCP detached from an OU flagged ignore: true', async () => {
+    // Policy is managed by accelerator but the target OU is ignored, so the change is left alone
+    orgsMock.on(DescribePolicyCommand).resolves({
+      Policy: {
+        PolicySummary: { Id: 'p-scp-ignored', Name: 'TestPolicy', Type: 'SERVICE_CONTROL_POLICY' },
+        Content: '{}',
+      },
+    });
+    orgsMock.on(AttachPolicyCommand).resolves({});
+
+    const event = makeEvent(
+      'DetachPolicy',
+      'p-scp-ignored',
+      'arn:aws:iam::111111111111:role/ManualRole',
+      'ou-1234-ignored',
+    );
+    const result = await handler(event);
+
+    expect(result).toEqual({ statusCode: 200 });
+    expect(orgsMock.commandCalls(AttachPolicyCommand)).toHaveLength(0);
+    expect(snsMock.commandCalls(PublishCommand)).toHaveLength(0);
+  });
+
+  it('should not detach an accelerator-managed SCP attached to an OU flagged ignore: true', async () => {
+    orgsMock.on(DescribePolicyCommand).resolves({
+      Policy: {
+        PolicySummary: { Id: 'p-scp-ignored', Name: 'TestPolicy', Type: 'SERVICE_CONTROL_POLICY' },
+        Content: '{}',
+      },
+    });
+    orgsMock.on(DetachPolicyCommand).resolves({});
+
+    const event = makeEvent(
+      'AttachPolicy',
+      'p-scp-ignored',
+      'arn:aws:iam::111111111111:role/ManualRole',
+      'ou-1234-ignored',
+    );
+    const result = await handler(event);
+
+    expect(result).toEqual({ statusCode: 200 });
+    expect(orgsMock.commandCalls(DetachPolicyCommand)).toHaveLength(0);
+    expect(snsMock.commandCalls(PublishCommand)).toHaveLength(0);
+  });
+
+  it('should reattach an SCP detached from a managed (non-ignored) OU', async () => {
+    // Policy is not managed by accelerator but the target OU is managed, so the change is reverted
+    orgsMock.on(DescribePolicyCommand).resolves({
+      Policy: {
+        PolicySummary: { Id: 'p-unmanaged2', Name: 'UnmanagedPolicy', Type: 'SERVICE_CONTROL_POLICY' },
+        Content: '{}',
+      },
+    });
+    orgsMock.on(AttachPolicyCommand).resolves({});
+
+    const event = makeEvent(
+      'DetachPolicy',
+      'p-unmanaged2',
+      'arn:aws:iam::111111111111:role/ManualRole',
+      'ou-1234-abcdef',
+    );
+    const result = await handler(event);
+
+    expect(result).toEqual({ statusCode: 200 });
+    expect(orgsMock.commandCalls(AttachPolicyCommand)).toHaveLength(1);
+  });
+
+  it('should revert updates to an accelerator-managed SCP', async () => {
+    orgsMock.on(DescribePolicyCommand).resolves({
+      Policy: {
+        PolicySummary: { Id: 'p-scp-update', Name: 'TestPolicy', Type: 'SERVICE_CONTROL_POLICY' },
+        Content: '{"Version":"modified"}',
+      },
+    });
+    orgsMock.on(UpdatePolicyCommand).resolves({});
+
+    const event = makeEvent('UpdatePolicy', 'p-scp-update', 'arn:aws:iam::111111111111:role/ManualRole');
+    const result = await handler(event);
+
+    expect(result).toEqual({ statusCode: 200 });
+    expect(orgsMock.commandCalls(UpdatePolicyCommand)).toHaveLength(1);
+    expect(orgsMock.commandCalls(UpdatePolicyCommand)[0].args[0].input).toEqual({
+      Content: JSON.stringify({ Version: '2012-10-17', Statement: [] }),
+      PolicyId: 'p-scp-update',
+    });
+    expect(snsMock.commandCalls(PublishCommand)).toHaveLength(1);
   });
 
   it('should exit when policy type is not SERVICE_CONTROL_POLICY', async () => {
