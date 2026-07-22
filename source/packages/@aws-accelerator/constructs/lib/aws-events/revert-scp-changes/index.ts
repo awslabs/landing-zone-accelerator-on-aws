@@ -231,16 +231,15 @@ async function getOriginalPolicyDocumentPath(policyName: string, orgConfig: Orga
 
 async function isChangeMadeByAccelerator(principalArn: string): Promise<boolean> {
   console.log(`SCP modification performed by ${principalArn}`);
-  const principalArr = principalArn.split(':');
-  const principal = principalArr[principalArr.length - 1];
-  const roleNameArr = principal.split('/');
-  const roleName = roleNameArr[roleNameArr.length - 1];
-
-  if (roleName?.startsWith(acceleratorRolePrefix)) {
-    return true;
-  } else {
-    return false;
-  }
+  // Extract the role name from the assumed-role or direct IAM role ARN and match it against the
+  // accelerator prefix. Matching the trailing session/name segment instead would let a spoofed
+  // principal (e.g. an SSO session or IAM user named AWSAccelerator-*) bypass the revert.
+  const roleNameRegex = new RegExp(
+    `^arn:${partition}:(?:sts::\\d{12}:assumed-role/([^/]+)/|iam::\\d{12}:role/(?:.*/)?([^/]+)$)`,
+  );
+  const match = roleNameRegex.exec(principalArn);
+  const roleName = match?.[1] ?? match?.[2];
+  return roleName?.startsWith(acceleratorRolePrefix) ?? false;
 }
 
 async function isPolicyManagedByAccelerator(policyName: string, orgConfig: OrganizationConfig): Promise<boolean> {

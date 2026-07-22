@@ -112,8 +112,100 @@ describe('revert-scp-changes handler', () => {
     expect(message).not.toContain('SCP');
   });
 
-  it('should exit early when change is made by accelerator role', async () => {
-    const event = makeEvent('UpdatePolicy', 'p-abc123', 'arn:aws:iam::111111111111:role/AWSAccelerator-OrgRole');
+  it('should exit early when change is made by an accelerator assumed-role session', async () => {
+    // CloudTrail emits the assumed-role form for role-based callers (Lambda/CodeBuild/pipeline).
+    // This is the shape the accelerator's own revert Lambda call surfaces as, so it MUST be
+    // recognized as accelerator-made to avoid reverting legitimate changes and to guard the
+    // revert Lambda's own UpdatePolicy from re-triggering the EventBridge rule (revert loop).
+    const event = makeEvent(
+      'UpdatePolicy',
+      'p-abc123',
+      'arn:aws:sts::111111111111:assumed-role/AWSAccelerator-SomeRole/AWSCodeBuild-1234567890',
+    );
+    const result = await handler(event);
+
+    expect(result).toEqual({ statusCode: 200 });
+    expect(orgsMock.commandCalls(DescribePolicyCommand)).toHaveLength(0);
+  });
+
+  it('should exit early when change is made by a direct accelerator IAM role ARN', async () => {
+    const event = makeEvent('UpdatePolicy', 'p-abc123', 'arn:aws:iam::111111111111:role/AWSAccelerator-SomeRole');
+    const result = await handler(event);
+
+    expect(result).toEqual({ statusCode: 200 });
+    expect(orgsMock.commandCalls(DescribePolicyCommand)).toHaveLength(0);
+  });
+
+  it('should NOT exit early when an IAM user name merely starts with the accelerator prefix', async () => {
+    // Regression test for the weak principal check: an IAM user (not a role) whose name starts
+    // with "AWSAccelerator" must not be treated as an accelerator-made change.
+    orgsMock.on(DescribePolicyCommand).resolves({
+      Policy: {
+        PolicySummary: { Id: 'p-spoof1', Name: 'BackupPolicy', Type: 'BACKUP_POLICY' },
+        Content: '{}',
+      },
+    });
+
+    const event = makeEvent('UpdatePolicy', 'p-spoof1', 'arn:aws:iam::111111111111:user/AWSAccelerator-imposter');
+    const result = await handler(event);
+
+    expect(result).toEqual({ statusCode: 200 });
+    // Handler must have proceeded past the accelerator check and fetched policy details.
+    expect(orgsMock.commandCalls(DescribePolicyCommand)).toHaveLength(1);
+  });
+
+  it('should NOT exit early when an SSO assumed-role session name starts with the accelerator prefix', async () => {
+    // An IAM Identity Center principal whose session name starts with "AWSAccelerator" must not
+    // bypass the revert - the extracted role name (AWSReservedSSO_Admin_abc123) does not start
+    // with the accelerator prefix, so only a genuine accelerator role name qualifies.
+    orgsMock.on(DescribePolicyCommand).resolves({
+      Policy: {
+        PolicySummary: { Id: 'p-spoof2', Name: 'BackupPolicy', Type: 'BACKUP_POLICY' },
+        Content: '{}',
+      },
+    });
+
+    const event = makeEvent(
+      'UpdatePolicy',
+      'p-spoof2',
+      'arn:aws:sts::111111111111:assumed-role/AWSReservedSSO_Admin_abc123/AWSAccelerator-imposter',
+    );
+    const result = await handler(event);
+
+    expect(result).toEqual({ statusCode: 200 });
+    expect(orgsMock.commandCalls(DescribePolicyCommand)).toHaveLength(1);
+  });
+
+  it('should NOT exit early when a direct IAM role ARN uses a path segment that starts with the accelerator prefix', async () => {
+    // A role created under a path whose first segment starts with "AWSAccelerator" must not bypass
+    // the revert. The role name is the final ARN segment (AttackerRole), not the path prefix, so
+    // the extracted role name does not start with the accelerator prefix.
+    orgsMock.on(DescribePolicyCommand).resolves({
+      Policy: {
+        PolicySummary: { Id: 'p-spoof3', Name: 'BackupPolicy', Type: 'BACKUP_POLICY' },
+        Content: '{}',
+      },
+    });
+
+    const event = makeEvent(
+      'UpdatePolicy',
+      'p-spoof3',
+      'arn:aws:iam::111111111111:role/AWSAccelerator-Admin/AttackerRole',
+    );
+    const result = await handler(event);
+
+    expect(result).toEqual({ statusCode: 200 });
+    expect(orgsMock.commandCalls(DescribePolicyCommand)).toHaveLength(1);
+  });
+
+  it('should exit early when a direct accelerator IAM role ARN uses a path', async () => {
+    // The role name is the final segment after any path, so a genuine accelerator role deployed
+    // under a path is still recognized as accelerator-made.
+    const event = makeEvent(
+      'UpdatePolicy',
+      'p-abc123',
+      'arn:aws:iam::111111111111:role/some/path/AWSAccelerator-SomeRole',
+    );
     const result = await handler(event);
 
     expect(result).toEqual({ statusCode: 200 });
