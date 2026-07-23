@@ -517,6 +517,9 @@ abstract class LandingZoneOperation {
   ): Promise<string> {
     logger.info(`The Landing Zone update operation will begin, because "${reason}"`);
 
+    // In-place updates reuse the deployed manifest so the schema always matches the target version
+    const inPlaceUpdate = targetVersion === landingZoneDetails.version;
+
     const manifestDocument = makeManifestDocument(
       landingZoneConfiguration,
       'UPDATE',
@@ -529,6 +532,7 @@ abstract class LandingZoneOperation {
             : undefined),
       },
       landingZoneDetails.manifest,
+      inPlaceUpdate,
     );
 
     const response = await throttlingBackOff(() =>

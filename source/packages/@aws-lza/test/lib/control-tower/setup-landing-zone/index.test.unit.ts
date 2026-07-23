@@ -1233,6 +1233,7 @@ describe('Accelerator ControlTower Landing Zone Module', () => {
           configLoggingKeyArn: mockConfigHubKeyArn,
         },
         MOCK_CONSTANTS.existingLandingZoneDetails.manifest,
+        false,
       );
       expect(ControlTowerLogAccess.configure).toHaveBeenCalledWith(
         MOCK_CONSTANTS.moduleCommonParameter.partition,
@@ -1288,7 +1289,7 @@ describe('Accelerator ControlTower Landing Zone Module', () => {
         configuration: MOCK_CONSTANTS.controlTowerLandingZoneConfiguration,
       });
 
-      // Verify
+      // Verify - deployed version 3.3 matches the mocked targetVersion 3.3, so this is in-place
       expect(makeManifestDocumentSpy).toHaveBeenCalledWith(
         expect.any(Object),
         'UPDATE',
@@ -1297,6 +1298,7 @@ describe('Accelerator ControlTower Landing Zone Module', () => {
           configLoggingKeyArn: mockCentralizedLoggingKeyArn,
         },
         MOCK_CONSTANTS.existingLandingZoneDetails.manifest,
+        true,
       );
     });
 
@@ -1345,6 +1347,7 @@ describe('Accelerator ControlTower Landing Zone Module', () => {
           configLoggingKeyArn: undefined,
         },
         MOCK_CONSTANTS.existingLandingZoneDetails.manifest,
+        false,
       );
     });
   });

@@ -43,7 +43,8 @@ export interface ControlTowerLandingZoneConfigType {
    * AWS Control Tower Landing Zone version, this must be latest version for creating any new AWS Control Tower Landing Zone
    *
    * @remarks
-   * AWS Control Tower Landing Zone version value must be latest version of the AWS Control Tower Landing Zone.
+   * For an existing AWS Control Tower Landing Zone, the version must match either the deployed landing zone version
+   * (in-place update or reset, supported from landing zone version 3.1 onward) or the latest available version (upgrade).
    * You can refer [AWS Control Tower release notes](https://docs.aws.amazon.com/controltower/latest/userguide/release-notes.html) for more information.
    */
   readonly version: string;

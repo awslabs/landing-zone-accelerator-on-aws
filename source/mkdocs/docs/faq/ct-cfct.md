@@ -43,7 +43,7 @@ You can use both Landing Zone Accelerator and CfCT to deploy additional customiz
 ## Can I deploy or manage existing AWS Control Tower in Landing Zone Accelerator solution?
 
 Using the Landing Zone Accelerator on AWS solution, you can create, update, or reset an AWS Control Tower Landing Zone.
-It is possible to maintain the AWS Control Tower Landing Zone using the Landing Zone Accelerator solution. When the installer stack of the solution is deployed with the `ControlTowerEnabled` parameter set to `Yes`, then the Landing Zone Accelerator can deploy the AWS Control Tower Landing Zone for you. The solution will deploy the AWS Control Tower Landing Zone with the most recent version available.  
+It is possible to maintain the AWS Control Tower Landing Zone using the Landing Zone Accelerator solution. When the installer stack of the solution is deployed with the `ControlTowerEnabled` parameter set to `Yes`, then the Landing Zone Accelerator can deploy the AWS Control Tower Landing Zone for you. The solution will deploy the AWS Control Tower Landing Zone with the most recent version available. For an existing AWS Control Tower Landing Zone, the solution can perform configuration changes in-place at the deployed landing zone version (supported for landing zone version 3.1 and above) or upgrade the landing zone when the latest available version is specified in the configuration.  
 
 The Landing Zone Accelerator solution can deploy AWS Control Tower Landing Zone when following pre-requisites are met.
 

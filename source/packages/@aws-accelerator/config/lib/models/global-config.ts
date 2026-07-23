@@ -624,7 +624,7 @@ export interface IGlobalConfig {
  *
  * ### Best Practices
  *
- * 1. **Version Management**: Always specify the latest available Landing Zone version
+ * 1. **Version Management**: Specify the deployed Landing Zone version (for in-place changes, version 3.1 and above) or the latest available version (to upgrade)
  * 2. **Control Deployment**: Enable controls in batches of 10 or fewer to avoid throttling
  * 3. **Organizational Units**: Align control deployment with your OU structure
  * 4. **Logging Retention**: Set appropriate retention periods based on compliance requirements
@@ -635,7 +635,7 @@ export interface IGlobalConfig {
  * - Control Tower requires the three mandatory accounts: Management, Audit, and Log Archive
  * - Some controls cannot be deployed to the Security OU
  * - Control Tower operations are limited to 10 concurrent operations
- * - Landing Zone updates require the latest available version
+ * - Landing Zone updates require the version to match either the deployed version (in-place, 3.1 and above) or the latest available version (upgrade)
  *
  * @category Global Configuration
  */
@@ -750,7 +750,7 @@ export interface IControlTowerConfig {
    *
    * ```yaml
    * landingZone:
-   *   version: '3.3'  # Must be latest available version
+   *   version: '3.3'  # Deployed version (in-place changes) or latest available version (upgrade)
    *   logging:
    *     loggingBucketRetentionDays: 365      # 1 year retention
    *     accessLoggingBucketRetentionDays: 90  # 90 day access logs
@@ -761,7 +761,7 @@ export interface IControlTowerConfig {
    *
    * **Update Considerations**
    *
-   * - Landing Zone updates require the latest version number
+   * - Landing Zone updates require the version to match either the deployed version (in-place, 3.1 and above) or the latest available version (upgrade)
    * - Configuration changes trigger Landing Zone reset/update
    * - Updates may take 60-90 minutes to complete
    * - Existing resources and configurations are preserved
@@ -1055,9 +1055,9 @@ export interface IControlTowerLandingZoneConfig {
    *
    * **Considerations**
    *
-   * - Most recent version required for landing zone updates or resets
+   * - Version must match either the deployed landing zone version (in-place update or reset, supported for landing zone version 3.1 and above) or the latest available version (upgrade)
    * - Updates or resets will occur when drift is detected or any configuration change
-   * - If the solution needs to perform an update or reset and the version is not the most recent, the solution will fail
+   * - If the solution needs to perform an update or reset and the version matches neither the deployed nor the latest available version, the solution will fail
    *
    */
   readonly version: string;

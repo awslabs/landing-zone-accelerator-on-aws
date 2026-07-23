@@ -18,6 +18,7 @@ import {
 import {
   makeManifestDocument,
   governedRegionsChanged,
+  supportsInPlaceOperation,
   validateLandingZoneVersion,
   landingZoneUpdateOrResetRequired,
 } from '../../../../lib/control-tower/setup-landing-zone/functions';
@@ -321,6 +322,155 @@ describe('resources utility functions', () => {
         },
       });
     });
+
+    test('should reuse the deployed manifest verbatim for in-place UPDATE, overlaying only managed fields', () => {
+      // Setup - deployed 3.3 manifest, as returned by GetLandingZone
+      const pinnedConfig: ControlTowerLandingZoneConfigType = {
+        ...mockLandingZoneConfig,
+        version: '3.3',
+        governedRegions: ['mockRegion1'],
+      };
+      const kmsKeyArns = {
+        centralizedLoggingKeyArn: 'arn:aws:kms:region:account:key/12345',
+        configLoggingKeyArn: 'arn:aws:kms:region:account:key/12345',
+      };
+      const existingV33Manifest = {
+        accessManagement: {
+          enabled: true,
+        },
+        securityRoles: {
+          accountId: '444455556666',
+        },
+        backup: {
+          enabled: false,
+        },
+        governedRegions: ['mockRegion1', 'mockRegion2'],
+        organizationStructure: {
+          sandbox: { name: 'Sandbox' },
+          security: { name: 'Security' },
+        },
+        centralizedLogging: {
+          accountId: '111122223333',
+          configurations: {
+            loggingBucket: {
+              retentionDays: 30,
+            },
+            accessLoggingBucket: {
+              retentionDays: 30,
+            },
+            kmsKeyArn: 'arn:aws:kms:region:account:key/12345',
+          },
+          enabled: true,
+        },
+        futureUnmodeledField: {
+          nested: 'value',
+        },
+      };
+
+      // Act
+      const result = makeManifestDocument(pinnedConfig, 'UPDATE', kmsKeyArns, existingV33Manifest, true);
+
+      // Assert - only managed fields are overlaid; everything else passes through untouched
+      expect(result.governedRegions).toEqual(['mockRegion1']);
+      expect(result.accessManagement).toEqual({ enabled: pinnedConfig.enableIdentityCenterAccess });
+      expect(result.centralizedLogging).toEqual({
+        accountId: '111122223333',
+        configurations: {
+          loggingBucket: {
+            retentionDays: pinnedConfig.loggingBucketRetentionDays,
+          },
+          accessLoggingBucket: {
+            retentionDays: pinnedConfig.accessLoggingBucketRetentionDays,
+          },
+          kmsKeyArn: 'arn:aws:kms:region:account:key/12345',
+        },
+        enabled: pinnedConfig.enableOrganizationTrail,
+      });
+      expect(result.config).toBeUndefined();
+      expect(result.securityRoles).toEqual({ accountId: '444455556666' });
+      expect(result.organizationStructure).toEqual({
+        sandbox: { name: 'Sandbox' },
+        security: { name: 'Security' },
+      });
+      expect(result.backup).toEqual({ enabled: false });
+      expect(result.futureUnmodeledField).toEqual({ nested: 'value' });
+      // Source manifest must not be mutated
+      expect(existingV33Manifest.governedRegions).toEqual(['mockRegion1', 'mockRegion2']);
+      expect(existingV33Manifest.organizationStructure).toBeDefined();
+    });
+
+    test('should overlay config retention days for in-place UPDATE on a 4.0 landing zone', () => {
+      const pinnedConfig: ControlTowerLandingZoneConfigType = {
+        ...mockLandingZoneConfig,
+        loggingBucketRetentionDays: 400,
+        accessLoggingBucketRetentionDays: 400,
+      };
+      const existingV4Manifest = {
+        accessManagement: { enabled: true },
+        securityRoles: { accountId: '444455556666', enabled: true },
+        governedRegions: ['mockRegion1', 'mockRegion2'],
+        centralizedLogging: {
+          accountId: '111122223333',
+          configurations: {
+            loggingBucket: { retentionDays: 30 },
+            accessLoggingBucket: { retentionDays: 30 },
+            kmsKeyArn: 'arn:aws:kms:region:account:key/12345',
+          },
+          enabled: true,
+        },
+        config: {
+          accountId: '444455556666',
+          configurations: {
+            loggingBucket: { retentionDays: 30 },
+            accessLoggingBucket: { retentionDays: 30 },
+            kmsKeyArn: 'arn:aws:kms:region:account:key/67890',
+          },
+          enabled: true,
+        },
+      };
+
+      const result = makeManifestDocument(pinnedConfig, 'UPDATE', undefined, existingV4Manifest, true);
+
+      expect(result.config).toEqual({
+        accountId: '444455556666',
+        configurations: {
+          loggingBucket: { retentionDays: 400 },
+          accessLoggingBucket: { retentionDays: 400 },
+          kmsKeyArn: 'arn:aws:kms:region:account:key/67890',
+        },
+        enabled: true,
+      });
+      expect(result.centralizedLogging.configurations.loggingBucket.retentionDays).toBe(400);
+      expect(result.securityRoles).toEqual({ accountId: '444455556666', enabled: true });
+    });
+
+    test('should preserve disabled config and skip trail retention overlay for in-place UPDATE', () => {
+      const configWithTrailDisabled: ControlTowerLandingZoneConfigType = {
+        ...mockLandingZoneConfig,
+        enableOrganizationTrail: false,
+      };
+      const existingV4Manifest = {
+        accessManagement: { enabled: true },
+        securityRoles: { accountId: '444455556666', enabled: true },
+        governedRegions: mockLandingZoneConfig.governedRegions,
+        centralizedLogging: {
+          accountId: '111122223333',
+          enabled: false,
+        },
+        config: {
+          enabled: false,
+        },
+      };
+
+      const result = makeManifestDocument(configWithTrailDisabled, 'UPDATE', undefined, existingV4Manifest, true);
+
+      // Disabled centralized logging has no configurations block; overlay must not invent one
+      expect(result.centralizedLogging).toEqual({
+        accountId: '111122223333',
+        enabled: false,
+      });
+      expect(result.config).toEqual({ enabled: false });
+    });
   });
 
   describe('governedRegionsChanged', () => {
@@ -367,6 +517,25 @@ describe('resources utility functions', () => {
     });
   });
 
+  describe('supportsInPlaceOperation', () => {
+    test('should return true at and above the 3.1 floor', () => {
+      expect(supportsInPlaceOperation('3.1')).toBe(true);
+      expect(supportsInPlaceOperation('3.3')).toBe(true);
+      expect(supportsInPlaceOperation('4.0')).toBe(true);
+      expect(supportsInPlaceOperation('3.10')).toBe(true);
+    });
+
+    test('should return false below the 3.1 floor', () => {
+      expect(supportsInPlaceOperation('3.0')).toBe(false);
+      expect(supportsInPlaceOperation('2.9')).toBe(false);
+    });
+
+    test('should return false for malformed versions', () => {
+      expect(supportsInPlaceOperation('')).toBe(false);
+      expect(supportsInPlaceOperation('abc')).toBe(false);
+    });
+  });
+
   describe('validateLandingZoneVersion', () => {
     test('should not throw error when versions match', () => {
       const configVersion = '3.0';
@@ -391,30 +560,64 @@ describe('resources utility functions', () => {
     test('should throw error with custom message when versions do not match and reason/operationType provided', () => {
       const configVersion = '2.9';
       const latestVersion = '3.0';
+      const currentVersion = '2.8';
       const reason = 'new features available';
       const operationType = 'update';
 
       expect(() => {
-        validateLandingZoneVersion(configVersion, latestVersion, reason, operationType);
+        validateLandingZoneVersion(configVersion, latestVersion, currentVersion, reason, operationType);
       }).toThrow(
         'It is necessary to update the AWS Control Tower Landing Zone because "new features available". ' +
-          "AWS Control Tower Landing Zone's most recent version is 3.0, which is different from the version 2.9 provided. " +
-          'AWS Control Tower Landing Zone can be updated when you specify the latest version in the configuration.',
+          'The version 2.9 provided in the configuration must match either the deployed AWS Control Tower Landing Zone version 2.8 for in-place update or the latest available version 3.0 to upgrade. ' +
+          'AWS Control Tower Landing Zone can be updated when you specify one of these versions in the configuration.',
       );
     });
 
     test('should handle non-update operationType correctly', () => {
       const configVersion = '2.9';
       const latestVersion = '3.0';
+      const currentVersion = '2.8';
       const reason = 'configuration drift detected';
       const operationType = 'reset';
 
       expect(() => {
-        validateLandingZoneVersion(configVersion, latestVersion, reason, operationType);
+        validateLandingZoneVersion(configVersion, latestVersion, currentVersion, reason, operationType);
       }).toThrow(
         'It is necessary to reset the AWS Control Tower Landing Zone because "configuration drift detected". ' +
-          "AWS Control Tower Landing Zone's most recent version is 3.0, which is different from the version 2.9 provided. " +
-          'AWS Control Tower Landing Zone can be reset when you specify the latest version in the configuration.',
+          'The version 2.9 provided in the configuration must match either the deployed AWS Control Tower Landing Zone version 2.8 for in-place reset or the latest available version 3.0 to upgrade. ' +
+          'AWS Control Tower Landing Zone can be reset when you specify one of these versions in the configuration.',
+      );
+    });
+
+    test('should not throw when config version matches deployed version at or above the in-place floor', () => {
+      expect(() => {
+        validateLandingZoneVersion('3.3', '4.0', '3.3', 'governed regions changed', 'update');
+      }).not.toThrow();
+    });
+
+    test('should not throw for in-place reset when config version matches deployed version', () => {
+      expect(() => {
+        validateLandingZoneVersion('3.3', '4.0', '3.3', 'drift detected', 'reset');
+      }).not.toThrow();
+    });
+
+    test('should throw when config version matches deployed version below the in-place floor', () => {
+      expect(() => {
+        validateLandingZoneVersion('3.0', '4.0', '3.0', 'governed regions changed', 'update');
+      }).toThrow(
+        'It is necessary to update the AWS Control Tower Landing Zone because "governed regions changed". ' +
+          'In-place update is not supported for AWS Control Tower Landing Zone version 3.0, it requires version 3.1 or above. ' +
+          'AWS Control Tower Landing Zone can be updated when you specify the latest version 4.0 in the configuration.',
+      );
+    });
+
+    test('should throw when config version matches neither deployed nor latest version', () => {
+      expect(() => {
+        validateLandingZoneVersion('3.2', '4.0', '3.3', 'governed regions changed', 'update');
+      }).toThrow(
+        'It is necessary to update the AWS Control Tower Landing Zone because "governed regions changed". ' +
+          'The version 3.2 provided in the configuration must match either the deployed AWS Control Tower Landing Zone version 3.3 for in-place update or the latest available version 4.0 to upgrade. ' +
+          'AWS Control Tower Landing Zone can be updated when you specify one of these versions in the configuration.',
       );
     });
 
@@ -446,7 +649,7 @@ describe('resources utility functions', () => {
       const reason = 'new features available';
 
       expect(() => {
-        validateLandingZoneVersion(configVersion, latestVersion, reason);
+        validateLandingZoneVersion(configVersion, latestVersion, undefined, reason);
       }).toThrow(
         "AWS Control Tower Landing Zone's most recent version is 3.0, which is different from the version 2.9 provided, execution terminated.",
       );
@@ -458,7 +661,7 @@ describe('resources utility functions', () => {
       const operationType = 'update';
 
       expect(() => {
-        validateLandingZoneVersion(configVersion, latestVersion, undefined, operationType);
+        validateLandingZoneVersion(configVersion, latestVersion, undefined, undefined, operationType);
       }).toThrow(
         "AWS Control Tower Landing Zone's most recent version is 3.0, which is different from the version 2.9 provided, execution terminated.",
       );
@@ -853,6 +1056,166 @@ describe('resources utility functions', () => {
       expect(result.reason).toContain(
         'Changes made in Centralized Logging LoggingBucketRetentionDays from undefined to 365',
       );
+    });
+
+    test('should allow in-place update when config version matches deployed version below latest', () => {
+      // Setup - customer pinned at 3.3 removes a governed region while 4.0 is available
+      const pinnedConfig: ControlTowerLandingZoneConfigType = {
+        ...mockLandingZoneConfig,
+        version: '3.3',
+        governedRegions: ['mockRegion1'],
+      };
+      const mockLandingZoneDetails: ControlTowerLandingZoneDetailsType = {
+        landingZoneIdentifier: 'mockLandingZoneIdentifier',
+        status: 'ACTIVE',
+        version: '3.3',
+        latestAvailableVersion: '4.0',
+        driftStatus: 'IN_SYNC',
+        governedRegions: ['mockRegion1', 'mockRegion2'],
+        enableIdentityCenterAccess: true,
+        centralizedLoggingConfig: {
+          enabled: true,
+          loggingBucketRetentionDays: 30,
+          accessLoggingBucketRetentionDays: 30,
+          kmsKeyArn: 'mockKmsKeyArn',
+        },
+      };
+
+      // Act
+      const result = landingZoneUpdateOrResetRequired(pinnedConfig, mockLandingZoneDetails);
+
+      // Assert - update proceeds in-place at the deployed version, not forced to latest
+      expect(result).toEqual({
+        updateRequired: true,
+        targetVersion: '3.3',
+        resetRequired: false,
+        reason: 'Changes made in governed regions from [mockRegion1,mockRegion2] to [mockRegion1]',
+      });
+    });
+
+    test('should target the config version when upgrading to latest', () => {
+      // Setup - deployed 3.3, config explicitly requests latest 4.0
+      const upgradeConfig: ControlTowerLandingZoneConfigType = {
+        ...mockLandingZoneConfig,
+        version: '4.0',
+      };
+      const mockLandingZoneDetails: ControlTowerLandingZoneDetailsType = {
+        landingZoneIdentifier: 'mockLandingZoneIdentifier',
+        status: 'ACTIVE',
+        version: '3.3',
+        latestAvailableVersion: '4.0',
+        driftStatus: 'IN_SYNC',
+        governedRegions: upgradeConfig.governedRegions,
+        enableIdentityCenterAccess: true,
+        centralizedLoggingConfig: {
+          enabled: true,
+          loggingBucketRetentionDays: 30,
+          accessLoggingBucketRetentionDays: 30,
+          kmsKeyArn: 'mockKmsKeyArn',
+        },
+      };
+
+      // Act
+      const result = landingZoneUpdateOrResetRequired(upgradeConfig, mockLandingZoneDetails);
+
+      // Assert
+      expect(result).toEqual({
+        updateRequired: true,
+        targetVersion: '4.0',
+        resetRequired: false,
+        reason: 'Changes made in control tower version from 3.3 to 4.0',
+      });
+    });
+
+    test('should throw when config version matches neither deployed nor latest version', () => {
+      // Setup - deployed 3.3, latest 4.0, config requests 3.2
+      const invalidConfig: ControlTowerLandingZoneConfigType = {
+        ...mockLandingZoneConfig,
+        version: '3.2',
+      };
+      const mockLandingZoneDetails: ControlTowerLandingZoneDetailsType = {
+        landingZoneIdentifier: 'mockLandingZoneIdentifier',
+        status: 'ACTIVE',
+        version: '3.3',
+        latestAvailableVersion: '4.0',
+        driftStatus: 'IN_SYNC',
+        governedRegions: invalidConfig.governedRegions,
+        enableIdentityCenterAccess: true,
+        centralizedLoggingConfig: {
+          enabled: true,
+          loggingBucketRetentionDays: 30,
+          accessLoggingBucketRetentionDays: 30,
+          kmsKeyArn: 'mockKmsKeyArn',
+        },
+      };
+
+      // Act & Assert
+      expect(() => landingZoneUpdateOrResetRequired(invalidConfig, mockLandingZoneDetails)).toThrow(
+        'The version 3.2 provided in the configuration must match either the deployed AWS Control Tower Landing Zone version 3.3 for in-place update or the latest available version 4.0 to upgrade',
+      );
+    });
+
+    test('should throw when deployed version is below the in-place update floor', () => {
+      // Setup - deployed 3.0 does not support in-place update, config pinned at 3.0
+      const pinnedConfig: ControlTowerLandingZoneConfigType = {
+        ...mockLandingZoneConfig,
+        version: '3.0',
+        governedRegions: ['mockRegion1'],
+      };
+      const mockLandingZoneDetails: ControlTowerLandingZoneDetailsType = {
+        landingZoneIdentifier: 'mockLandingZoneIdentifier',
+        status: 'ACTIVE',
+        version: '3.0',
+        latestAvailableVersion: '4.0',
+        driftStatus: 'IN_SYNC',
+        governedRegions: ['mockRegion1', 'mockRegion2'],
+        enableIdentityCenterAccess: true,
+        centralizedLoggingConfig: {
+          enabled: true,
+          loggingBucketRetentionDays: 30,
+          accessLoggingBucketRetentionDays: 30,
+          kmsKeyArn: 'mockKmsKeyArn',
+        },
+      };
+
+      // Act & Assert
+      expect(() => landingZoneUpdateOrResetRequired(pinnedConfig, mockLandingZoneDetails)).toThrow(
+        'In-place update is not supported for AWS Control Tower Landing Zone version 3.0, it requires version 3.1 or above',
+      );
+    });
+
+    test('should allow in-place reset when drifted landing zone is pinned below latest', () => {
+      // Setup - deployed 3.3 drifted, latest 4.0, config pinned at 3.3
+      const pinnedConfig: ControlTowerLandingZoneConfigType = {
+        ...mockLandingZoneConfig,
+        version: '3.3',
+      };
+      const mockLandingZoneDetails: ControlTowerLandingZoneDetailsType = {
+        landingZoneIdentifier: 'mockLandingZoneIdentifier',
+        status: 'ACTIVE',
+        version: '3.3',
+        latestAvailableVersion: '4.0',
+        driftStatus: 'DRIFTED',
+        governedRegions: pinnedConfig.governedRegions,
+        enableIdentityCenterAccess: true,
+        centralizedLoggingConfig: {
+          enabled: true,
+          loggingBucketRetentionDays: 30,
+          accessLoggingBucketRetentionDays: 30,
+          kmsKeyArn: 'mockKmsKeyArn',
+        },
+      };
+
+      // Act
+      const result = landingZoneUpdateOrResetRequired(pinnedConfig, mockLandingZoneDetails);
+
+      // Assert - reset proceeds without forcing a version bump
+      expect(result).toEqual({
+        updateRequired: false,
+        targetVersion: '3.3',
+        resetRequired: true,
+        reason: 'The Landing Zone has drifted or failed, resetting',
+      });
     });
   });
 
