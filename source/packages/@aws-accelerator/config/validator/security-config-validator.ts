@@ -356,6 +356,13 @@ export class SecurityConfigValidator {
         `"autoEnableOrgMembers" should be set to "false" when using "deploymentTargets" property in guardDuty configuration`,
       );
     }
+
+    // RUNTIME_MONITORING supersedes the legacy EKS_RUNTIME_MONITORING; GuardDuty rejects both enabled, so disallow the ambiguous config.
+    if (guardDutyConfig.runtimeMonitoring?.enable && guardDutyConfig.eksProtection?.manageAgent) {
+      errors.push(
+        `GuardDuty configuration cannot enable both "runtimeMonitoring" and "eksProtection.manageAgent". Runtime Monitoring supersedes the legacy EKS Runtime Monitoring agent; set "eksProtection.manageAgent" to false and use "runtimeMonitoring.manageEksAgent" instead.`,
+      );
+    }
   }
 
   /**

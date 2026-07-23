@@ -760,6 +760,10 @@
           "$ref": "#/definitions/IGuardDutyRdsProtectionConfig",
           "description": "Configuration for GuardDuty RDS Protection that monitors your databases for security threats."
         },
+        "runtimeMonitoring": {
+          "$ref": "#/definitions/IGuardDutyRuntimeMonitoringConfig",
+          "description": "(OPTIONAL) AWS GuardDuty Runtime Monitoring configuration (`RUNTIME_MONITORING` feature covering EKS, ECS/Fargate, and EC2)."
+        },
         "s3MalwareProtection": {
           "$ref": "#/definitions/IGuardDutyS3MalwareProtectionConfig",
           "description": "(OPTIONAL) AWS GuardDuty S3 Malware Protection configuration."
@@ -900,6 +904,39 @@
             "type": "string"
           },
           "type": "array"
+        }
+      },
+      "required": [
+        "enable"
+      ],
+      "type": "object"
+    },
+    "IGuardDutyRuntimeMonitoringConfig": {
+      "additionalProperties": false,
+      "description": "Configuration for GuardDuty Runtime Monitoring, the runtime protection feature that observes on-host\noperating-system-level behaviour for EKS, ECS (including Fargate), and EC2 workloads. Enabling this feature and its\nagent-management sub-configurations lets GuardDuty deploy and manage the runtime security agent on your behalf.",
+      "properties": {
+        "enable": {
+          "description": "Controls whether GuardDuty Runtime Monitoring is enabled to monitor your EKS, ECS, and EC2 workloads for security threats.",
+          "type": "boolean"
+        },
+        "excludeRegions": {
+          "description": "List of AWS regions where GuardDuty Runtime Monitoring should not be enabled.",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "manageEc2Agent": {
+          "description": "Controls whether the GuardDuty runtime security agent is managed for Amazon EC2 instances.",
+          "type": "boolean"
+        },
+        "manageEcsFargateAgent": {
+          "description": "Controls whether the GuardDuty runtime security agent is managed for Amazon ECS clusters running on AWS Fargate.",
+          "type": "boolean"
+        },
+        "manageEksAgent": {
+          "description": "Controls whether the GuardDuty runtime security agent is managed for Amazon EKS clusters.",
+          "type": "boolean"
         }
       },
       "required": [

@@ -49,6 +49,10 @@ describe('GuardDutyUpdateDetector - lambda handler', () => {
       enableEc2Protection: true,
       enableRdsProtection: true,
       enableLambdaProtection: true,
+      enableRuntimeMonitoring: false,
+      manageRuntimeEksAgent: false,
+      manageRuntimeEcsFargateAgent: false,
+      manageRuntimeEc2Agent: false,
       enableKeepMalwareSnapshots: true,
     };
   });
@@ -98,6 +102,10 @@ describe('GuardDutyUpdateDetector - lambda handler', () => {
         enableEc2Protection: false,
         enableRdsProtection: false,
         enableLambdaProtection: false,
+        enableRuntimeMonitoring: false,
+        manageRuntimeEksAgent: false,
+        manageRuntimeEcsFargateAgent: false,
+        manageRuntimeEc2Agent: false,
         enableKeepMalwareSnapshots: false,
       };
       const result = createDetectorFeatures(options);
@@ -118,6 +126,10 @@ describe('GuardDutyUpdateDetector - lambda handler', () => {
         enableEc2Protection: false,
         enableRdsProtection: false,
         enableLambdaProtection: false,
+        enableRuntimeMonitoring: false,
+        manageRuntimeEksAgent: false,
+        manageRuntimeEcsFargateAgent: false,
+        manageRuntimeEc2Agent: false,
         enableKeepMalwareSnapshots: false,
       };
       const result = createDetectorFeatures(options);
@@ -127,6 +139,54 @@ describe('GuardDutyUpdateDetector - lambda handler', () => {
         expect(element.Status).toBe('DISABLED');
         expect(element.AdditionalConfiguration).toBeUndefined();
       });
+    });
+
+    test('Runtime Monitoring with all agents', () => {
+      const options: UpdateDetectorOptions = {
+        enableEksProtection: true,
+        enableEksAgent: false,
+        enableS3Protection: false,
+        enableEc2Protection: false,
+        enableRdsProtection: false,
+        enableLambdaProtection: false,
+        enableRuntimeMonitoring: true,
+        manageRuntimeEksAgent: true,
+        manageRuntimeEcsFargateAgent: true,
+        manageRuntimeEc2Agent: true,
+        enableKeepMalwareSnapshots: false,
+      };
+      const result = createDetectorFeatures(options);
+      // RUNTIME_MONITORING replaces the legacy EKS_RUNTIME_MONITORING feature.
+      expect(result.find(element => element.Name === DetectorFeature.EKS_RUNTIME_MONITORING)).toBeUndefined();
+      const runtimeResult = result.find(element => element.Name === DetectorFeature.RUNTIME_MONITORING);
+      expect(runtimeResult).not.toBeUndefined();
+      expect(runtimeResult!.Status).toBe('ENABLED');
+      expect(runtimeResult!.AdditionalConfiguration).toHaveLength(3);
+      const additionalNames = runtimeResult!.AdditionalConfiguration!.map(config => config.Name);
+      expect(additionalNames).toContain(FeatureAdditionalConfiguration.EKS_ADDON_MANAGEMENT);
+      expect(additionalNames).toContain(FeatureAdditionalConfiguration.ECS_FARGATE_AGENT_MANAGEMENT);
+      expect(additionalNames).toContain(FeatureAdditionalConfiguration.EC2_AGENT_MANAGEMENT);
+    });
+
+    test('Runtime Monitoring without agent management', () => {
+      const options: UpdateDetectorOptions = {
+        enableEksProtection: false,
+        enableEksAgent: false,
+        enableS3Protection: false,
+        enableEc2Protection: false,
+        enableRdsProtection: false,
+        enableLambdaProtection: false,
+        enableRuntimeMonitoring: true,
+        manageRuntimeEksAgent: false,
+        manageRuntimeEcsFargateAgent: false,
+        manageRuntimeEc2Agent: false,
+        enableKeepMalwareSnapshots: false,
+      };
+      const result = createDetectorFeatures(options);
+      const runtimeResult = result.find(element => element.Name === DetectorFeature.RUNTIME_MONITORING);
+      expect(runtimeResult).not.toBeUndefined();
+      expect(runtimeResult!.Status).toBe('ENABLED');
+      expect(runtimeResult!.AdditionalConfiguration).toBeUndefined();
     });
 
     test('All detector options enabled', () => {
@@ -224,6 +284,32 @@ describe('GuardDutyUpdateDetector - lambda handler', () => {
       expect(result.enableKeepMalwareSnapshots).toBeFalsy();
       expect(result.enableRdsProtection).toBeFalsy();
       expect(result.enableLambdaProtection).toBeFalsy();
+    });
+
+    test('runtime monitoring options enabled', () => {
+      const map = {
+        enableRuntimeMonitoring: 'true',
+        manageRuntimeEksAgent: 'true',
+        manageRuntimeEcsFargateAgent: 'true',
+        manageRuntimeEc2Agent: 'true',
+        exportFrequency: 'FIFTEEN_MINUTES',
+      };
+      const result = setOptions(map);
+      expect(result.enableRuntimeMonitoring).toBeTruthy();
+      expect(result.manageRuntimeEksAgent).toBeTruthy();
+      expect(result.manageRuntimeEcsFargateAgent).toBeTruthy();
+      expect(result.manageRuntimeEc2Agent).toBeTruthy();
+    });
+
+    test('runtime monitoring options default to false', () => {
+      const map = {
+        exportFrequency: 'FIFTEEN_MINUTES',
+      };
+      const result = setOptions(map);
+      expect(result.enableRuntimeMonitoring).toBeFalsy();
+      expect(result.manageRuntimeEksAgent).toBeFalsy();
+      expect(result.manageRuntimeEcsFargateAgent).toBeFalsy();
+      expect(result.manageRuntimeEc2Agent).toBeFalsy();
     });
   });
 

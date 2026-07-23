@@ -30,7 +30,7 @@ describe('unit tests', () => {
 
     const config = createConfig(true, []);
     const result = stack['processRegionExclusions'](config);
-    expect(result).toHaveLength(7);
+    expect(result).toHaveLength(11);
     expect(result[0]).toBeTruthy();
     expect(result[1]).toBeTruthy();
   });
@@ -41,7 +41,7 @@ describe('unit tests', () => {
 
     const config = createConfig(false, []);
     const result = stack['processRegionExclusions'](config);
-    expect(result).toHaveLength(7);
+    expect(result).toHaveLength(11);
     expect(result[0]).toBeFalsy();
     expect(result[1]).toBeFalsy();
   });
@@ -52,7 +52,7 @@ describe('unit tests', () => {
 
     const config = createConfig(true, ['us-east-1']);
     const result = stack['processRegionExclusions'](config);
-    expect(result).toHaveLength(7);
+    expect(result).toHaveLength(11);
     expect(result[0]).toBeFalsy();
     expect(result[1]).toBeFalsy();
   });
@@ -69,6 +69,13 @@ function createConfig(enable: boolean, excludedRegions: string[]): GuardDutyConf
     eksProtection: {
       enable: enable,
       manageAgent: enable,
+      excludeRegions: excludedRegions,
+    },
+    runtimeMonitoring: {
+      enable: enable,
+      manageEksAgent: enable,
+      manageEcsFargateAgent: enable,
+      manageEc2Agent: enable,
       excludeRegions: excludedRegions,
     },
     ec2Protection: {

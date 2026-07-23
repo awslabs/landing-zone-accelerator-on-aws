@@ -198,6 +198,10 @@ export class SecurityAuditStack extends AcceleratorStack {
         keepMalwareProtectionSnapshots,
         enableRdsProtection,
         enableLambdaProtection,
+        runtimeMonitoring,
+        manageRuntimeEksAgent,
+        manageRuntimeEcsFargateAgent,
+        manageRuntimeEc2Agent,
       ] = this.processRegionExclusions(guardDutyConfig);
 
       const guardDutyMembers = new GuardDutyMembers(this, 'GuardDutyMembers', {
@@ -207,6 +211,10 @@ export class SecurityAuditStack extends AcceleratorStack {
         enableEc2MalwareProtection: enableEc2MalwareProtection,
         enableLambdaProtection: enableLambdaProtection,
         enableRdsProtection: enableRdsProtection,
+        enableRuntimeMonitoring: runtimeMonitoring,
+        manageRuntimeEksAgent: manageRuntimeEksAgent,
+        manageRuntimeEcsFargateAgent: manageRuntimeEcsFargateAgent,
+        manageRuntimeEc2Agent: manageRuntimeEc2Agent,
         kmsKey: this.cloudwatchKey,
         logRetentionInDays: this.props.globalConfig.cloudwatchLogRetentionInDays,
         guardDutyMemberAccountIds,
@@ -225,6 +233,7 @@ export class SecurityAuditStack extends AcceleratorStack {
         keepMalwareProtectionSnapshots ||
         enableRdsProtection ||
         enableLambdaProtection ||
+        runtimeMonitoring ||
         updateExportFrequency
       ) {
         new GuardDutyDetectorConfig(this, 'GuardDutyDetectorConfig', {
@@ -236,6 +245,10 @@ export class SecurityAuditStack extends AcceleratorStack {
           enableEksAgent: enableEksAgent,
           enableRdsProtection: enableRdsProtection,
           enableLambdaProtection: enableLambdaProtection,
+          enableRuntimeMonitoring: runtimeMonitoring,
+          manageRuntimeEksAgent: manageRuntimeEksAgent,
+          manageRuntimeEcsFargateAgent: manageRuntimeEcsFargateAgent,
+          manageRuntimeEc2Agent: manageRuntimeEc2Agent,
           kmsKey: this.cloudwatchKey,
           logRetentionInDays: this.props.globalConfig.cloudwatchLogRetentionInDays,
         }).node.addDependency(guardDutyMembers);
@@ -256,6 +269,10 @@ export class SecurityAuditStack extends AcceleratorStack {
     let keepMalwareProtectionSnapshots = guardDutyConfig.ec2Protection?.keepSnapshots ?? false;
     let enableRdsProtection = guardDutyConfig.rdsProtection?.enable ?? false;
     let enableLambdaProtection = guardDutyConfig.lambdaProtection?.enable ?? false;
+    let runtimeMonitoring = guardDutyConfig.runtimeMonitoring?.enable ?? false;
+    let manageRuntimeEksAgent = guardDutyConfig.runtimeMonitoring?.manageEksAgent ?? false;
+    let manageRuntimeEcsFargateAgent = guardDutyConfig.runtimeMonitoring?.manageEcsFargateAgent ?? false;
+    let manageRuntimeEc2Agent = guardDutyConfig.runtimeMonitoring?.manageEc2Agent ?? false;
 
     if (this.isRegionExcluded(guardDutyConfig.s3Protection.excludeRegions)) s3Protection = false;
     if (this.isRegionExcluded(guardDutyConfig.eksProtection?.excludeRegions ?? [])) {
@@ -268,6 +285,12 @@ export class SecurityAuditStack extends AcceleratorStack {
     }
     if (this.isRegionExcluded(guardDutyConfig.eksProtection?.excludeRegions ?? [])) enableRdsProtection = false;
     if (this.isRegionExcluded(guardDutyConfig.eksProtection?.excludeRegions ?? [])) enableLambdaProtection = false;
+    if (this.isRegionExcluded(guardDutyConfig.runtimeMonitoring?.excludeRegions ?? [])) {
+      runtimeMonitoring = false;
+      manageRuntimeEksAgent = false;
+      manageRuntimeEcsFargateAgent = false;
+      manageRuntimeEc2Agent = false;
+    }
 
     return [
       s3Protection,
@@ -277,6 +300,10 @@ export class SecurityAuditStack extends AcceleratorStack {
       keepMalwareProtectionSnapshots,
       enableRdsProtection,
       enableLambdaProtection,
+      runtimeMonitoring,
+      manageRuntimeEksAgent,
+      manageRuntimeEcsFargateAgent,
+      manageRuntimeEc2Agent,
     ];
   }
 
