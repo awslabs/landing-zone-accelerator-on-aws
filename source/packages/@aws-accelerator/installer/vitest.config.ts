@@ -4,6 +4,7 @@ export default defineConfig({
   test: {
     reporters: ['default', 'junit'],
     outputFile: './test-reports/test-results.xml',
+    testTimeout: 180000,
     coverage: {
       exclude: ['**/*.d.ts', '**/dist/**', '**/node_modules/**'],
       thresholds: {

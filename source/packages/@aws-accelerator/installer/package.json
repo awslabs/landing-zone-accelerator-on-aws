@@ -26,8 +26,8 @@
     "@aws-accelerator/accelerator": "^0.0.0",
     "@aws-accelerator/cdk-utils": "^0.0.0",
     "@aws-cdk-extensions/cdk-extensions": "^0.0.0",
-    "aws-cdk": "2.1116.0",
-    "aws-cdk-lib": "2.246.0",
+    "aws-cdk": "2.1132.1",
+    "aws-cdk-lib": "2.262.0",
     "cdk-nag": "2.5.2"
   },
   "devDependencies": {

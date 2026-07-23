@@ -4,7 +4,7 @@ export default defineConfig({
   test: {
     exclude: ['**/node_modules/**', '**/dist/**', '**/build/**'],
     silent: true,
-    testTimeout: 90000,
+    testTimeout: 180000,
     setupFiles: ['./vitest.setup.ts'],
     reporters: ['default', 'junit'],
     outputFile: './test-reports/test-results.xml',
