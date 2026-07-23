@@ -1551,16 +1551,43 @@ export class SecurityResourcesStack extends AcceleratorStack {
       trailName: trailName,
     });
 
+    // Use Advanced Event Selectors to support excluding the central logs bucket
+    // from S3 data events, preventing a feedback loop where CloudTrail logs its own
+    // writes to the destination bucket.
+    const advancedSelectors: cdk_extensions.AdvancedEventSelector[] = [];
+
+    // Management events selector
+    if (accountTrail.settings.managementEvents) {
+      advancedSelectors.push({
+        name: 'Management events',
+        fieldSelectors: [{ field: 'eventCategory', equals: ['Management'] }],
+      });
+    }
+
     if (accountTrail.settings.s3DataEvents) {
-      accountCloudTrailLog.addEventSelector(cdk.aws_cloudtrail.DataResourceType.S3_OBJECT, [
-        `arn:${cdk.Stack.of(this).partition}:s3:::`,
-      ]);
+      const centralLogsBucketArn = `arn:${cdk.Stack.of(this).partition}:s3:::${this.centralLogsBucketName}/`;
+      advancedSelectors.push({
+        name: 'S3 data events excluding central logs bucket',
+        fieldSelectors: [
+          { field: 'eventCategory', equals: ['Data'] },
+          { field: 'resources.type', equals: ['AWS::S3::Object'] },
+          { field: 'resources.ARN', notStartsWith: [centralLogsBucketArn] },
+        ],
+      });
     }
 
     if (accountTrail.settings.lambdaDataEvents) {
-      accountCloudTrailLog.addEventSelector(cdk.aws_cloudtrail.DataResourceType.LAMBDA_FUNCTION, [
-        `arn:${cdk.Stack.of(this).partition}:lambda`,
-      ]);
+      advancedSelectors.push({
+        name: 'Lambda data events',
+        fieldSelectors: [
+          { field: 'eventCategory', equals: ['Data'] },
+          { field: 'resources.type', equals: ['AWS::Lambda::Function'] },
+        ],
+      });
+    }
+
+    if (advancedSelectors.length > 0) {
+      accountCloudTrailLog.setAdvancedEventSelectors(advancedSelectors);
     }
   }
 

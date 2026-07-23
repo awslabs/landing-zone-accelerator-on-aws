@@ -21,7 +21,30 @@ export interface TrailProps extends cloudtrail.TrailProps {
   readonly apiErrorRateInsight: boolean;
 }
 
+/**
+ * Represents a single field selector condition for an Advanced Event Selector.
+ */
+export interface AdvancedFieldSelector {
+  readonly field: string;
+  readonly equals?: string[];
+  readonly notEquals?: string[];
+  readonly startsWith?: string[];
+  readonly notStartsWith?: string[];
+  readonly endsWith?: string[];
+  readonly notEndsWith?: string[];
+}
+
+/**
+ * Represents an Advanced Event Selector for CloudTrail.
+ */
+export interface AdvancedEventSelector {
+  readonly name: string;
+  readonly fieldSelectors: AdvancedFieldSelector[];
+}
+
 export class Trail extends cloudtrail.Trail {
+  private readonly cfnTrail: cloudtrail.CfnTrail;
+
   constructor(scope: Construct, id: string, props: TrailProps) {
     super(scope, id, props);
 
@@ -35,8 +58,39 @@ export class Trail extends cloudtrail.Trail {
       insights.push({ insightType: 'ApiErrorRateInsight' });
     }
 
-    const cfnRepository = this.node.defaultChild as cloudtrail.CfnTrail;
-    cfnRepository.isOrganizationTrail = props.isOrganizationTrail;
-    cfnRepository.insightSelectors = insights;
+    this.cfnTrail = this.node.defaultChild as cloudtrail.CfnTrail;
+    this.cfnTrail.isOrganizationTrail = props.isOrganizationTrail;
+    this.cfnTrail.insightSelectors = insights;
+  }
+
+  /**
+   * Sets Advanced Event Selectors on the trail, replacing any basic Event Selectors.
+   *
+   * Advanced Event Selectors support fine-grained filtering including exclusion of
+   * specific S3 buckets from data event logging, which is not possible with basic
+   * Event Selectors.
+   *
+   * Note: EventSelectors and AdvancedEventSelectors are mutually exclusive in CloudFormation.
+   * This method clears any basic EventSelectors that were previously set.
+   *
+   * @param selectors - Array of Advanced Event Selectors to apply to the trail
+   */
+  public setAdvancedEventSelectors(selectors: AdvancedEventSelector[]): void {
+    // Clear basic event selectors - they are mutually exclusive with advanced selectors
+    this.cfnTrail.eventSelectors = undefined;
+
+    // Map to CfnTrail.AdvancedFieldSelectorProperty format
+    this.cfnTrail.advancedEventSelectors = selectors.map(selector => ({
+      name: selector.name,
+      fieldSelectors: selector.fieldSelectors.map(fs => ({
+        field: fs.field,
+        equalTo: fs.equals,
+        notEquals: fs.notEquals,
+        startsWith: fs.startsWith,
+        notStartsWith: fs.notStartsWith,
+        endsWith: fs.endsWith,
+        notEndsWith: fs.notEndsWith,
+      })),
+    }));
   }
 }
