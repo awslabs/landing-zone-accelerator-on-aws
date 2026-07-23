@@ -56,6 +56,32 @@ describe('unit tests', () => {
     expect(result[0]).toBeFalsy();
     expect(result[1]).toBeFalsy();
   });
+
+  test('processRegionExclusions with per-service region exclusions', () => {
+    const props = createAcceleratorStackProps();
+    const stack = new SecurityAuditStack(app, 'unit-test-stack', props);
+
+    // All protections enabled, but only RDS and Lambda exclude the stack region; EKS is not excluded.
+    const config: GuardDutyConfig = {
+      enable: true,
+      excludeRegions: [],
+      s3Protection: { enable: true, excludeRegions: [] },
+      eksProtection: { enable: true, manageAgent: true, excludeRegions: [] },
+      ec2Protection: { enable: true, excludeRegions: [], keepSnapshots: true },
+      rdsProtection: { enable: true, excludeRegions: ['us-east-1'] },
+      lambdaProtection: { enable: true, excludeRegions: ['us-east-1'] },
+      deploymentTargets: undefined,
+      autoEnableOrgMembers: undefined,
+      exportConfiguration: new GuardDutyExportFindingsConfig(),
+      lifecycleRules: undefined,
+    };
+    const result = stack['processRegionExclusions'](config);
+    expect(result).toHaveLength(7);
+    // Return array order: [1] EKS stays enabled, [5] RDS and [6] Lambda are excluded via their own excludeRegions
+    expect(result[1]).toBeTruthy();
+    expect(result[5]).toBeFalsy();
+    expect(result[6]).toBeFalsy();
+  });
 });
 
 function createConfig(enable: boolean, excludedRegions: string[]): GuardDutyConfig {

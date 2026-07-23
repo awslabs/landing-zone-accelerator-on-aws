@@ -266,8 +266,8 @@ export class SecurityAuditStack extends AcceleratorStack {
       enableEc2MalwareProtection = false;
       keepMalwareProtectionSnapshots = false;
     }
-    if (this.isRegionExcluded(guardDutyConfig.eksProtection?.excludeRegions ?? [])) enableRdsProtection = false;
-    if (this.isRegionExcluded(guardDutyConfig.eksProtection?.excludeRegions ?? [])) enableLambdaProtection = false;
+    if (this.isRegionExcluded(guardDutyConfig.rdsProtection?.excludeRegions ?? [])) enableRdsProtection = false;
+    if (this.isRegionExcluded(guardDutyConfig.lambdaProtection?.excludeRegions ?? [])) enableLambdaProtection = false;
 
     return [
       s3Protection,
