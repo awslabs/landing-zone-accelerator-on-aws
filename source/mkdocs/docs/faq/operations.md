@@ -20,7 +20,22 @@ Please refer to [Adding an existing account](https://docs.aws.amazon.com/solutio
 
 ## How do I remove an existing AWS Account?
 
-The account removal process requires several important steps to ensure a clean transition, please see [closing-an-account](https://docs.aws.amazon.com/solutions/latest/landing-zone-accelerator-on-aws/performing-administrator-tasks.html#closing-an-account) in the solution implementation guide for guidance on closing an account from your Landing Zone Accelerator environment
+The account removal process requires several ordered steps to ensure a clean transition. The order matters: the account must first be removed from solution management and its resources de-provisioned by a pipeline run **before** you close it. Closing an account that the pipeline still manages, or releasing the pipeline before the prerequisite steps are complete, can leave orphaned resources or fail the pipeline.
+
+**For AWS Control Tower deployments:**
+
+1. [Unmanage](https://docs.aws.amazon.com/controltower/latest/userguide/unmanage-account.html) the account in AWS Control Tower.
+2. Move the unmanaged account under an [ignored OU](https://docs.aws.amazon.com/solutions/latest/landing-zone-accelerator-on-aws/performing-administrator-tasks.html#ignoring-an-account-from-resource-provisioning), following the steps in that section (including updating `organization-config.yaml` and `accounts-config.yaml`).
+3. Release changes to run the Core pipeline. **Only release the pipeline after steps 1-2 are complete.**
+4. Once the pipeline run is successful, [close the account](https://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_accounts_close.html). **Only close the account after the pipeline run in step 3 succeeds.**
+
+**For AWS Organizations-only deployments:**
+
+1. Move the account under an [ignored OU](https://docs.aws.amazon.com/solutions/latest/landing-zone-accelerator-on-aws/performing-administrator-tasks.html#ignoring-an-account-from-resource-provisioning), following the steps in that section (including updating `organization-config.yaml` and `accounts-config.yaml`).
+2. Release changes to run the Core pipeline. **Only release the pipeline after step 1 is complete.**
+3. Once the pipeline run is successful, [close the account](https://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_accounts_close.html). **Only close the account after the pipeline run in step 2 succeeds.**
+
+For the full reference, see [Closing an account](https://docs.aws.amazon.com/solutions/latest/landing-zone-accelerator-on-aws/performing-administrator-tasks.html#closing-an-account) in the solution implementation guide.
 
 ## How do I migrate my configuration repository from CodeCommit to S3?
 
