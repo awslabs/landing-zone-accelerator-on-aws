@@ -22,6 +22,7 @@ import {
   DisassociateMembersCommand,
   DeleteMembersCommand,
   ListDetectorsCommand,
+  OrganizationAdditionalConfiguration,
   OrganizationFeatureConfiguration,
   OrgFeatureStatus,
   BadRequestException,
@@ -52,6 +53,10 @@ export async function handler(event: CloudFormationCustomResourceEvent): Promise
   const enableEc2MalwareProtection: boolean = event.ResourceProperties['enableEc2MalwareProtection'] === 'true';
   const enableRdsProtection: boolean = event.ResourceProperties['enableRdsProtection'] === 'true';
   const enableLambdaProtection: boolean = event.ResourceProperties['enableLambdaProtection'] === 'true';
+  const enableRuntimeMonitoring: boolean = event.ResourceProperties['enableRuntimeMonitoring'] === 'true';
+  const manageRuntimeEksAgent: boolean = event.ResourceProperties['manageRuntimeEksAgent'] === 'true';
+  const manageRuntimeEcsFargateAgent: boolean = event.ResourceProperties['manageRuntimeEcsFargateAgent'] === 'true';
+  const manageRuntimeEc2Agent: boolean = event.ResourceProperties['manageRuntimeEc2Agent'] === 'true';
   const autoEnableOrgMembersFlag: boolean = event.ResourceProperties['autoEnableOrgMembers'] === 'true';
 
   const solutionId = process.env['SOLUTION_ID'];
@@ -81,6 +86,10 @@ export async function handler(event: CloudFormationCustomResourceEvent): Promise
   console.log(`EnableEc2Protection: ${enableEc2MalwareProtection}`);
   console.log(`EnableRdsProtection: ${enableRdsProtection}`);
   console.log(`EnableLambdaProtection: ${enableLambdaProtection}`);
+  console.log(`EnableRuntimeMonitoring: ${enableRuntimeMonitoring}`);
+  console.log(`ManageRuntimeEksAgent: ${manageRuntimeEksAgent}`);
+  console.log(`ManageRuntimeEcsFargateAgent: ${manageRuntimeEcsFargateAgent}`);
+  console.log(`ManageRuntimeEc2Agent: ${manageRuntimeEc2Agent}`);
   console.log(`autoEnableOrgMembers: ${autoEnableOrgMembers}`);
 
   switch (event.RequestType) {
@@ -93,6 +102,10 @@ export async function handler(event: CloudFormationCustomResourceEvent): Promise
         enableEc2MalwareProtection,
         enableRdsProtection,
         enableLambdaProtection,
+        enableRuntimeMonitoring,
+        manageRuntimeEksAgent,
+        manageRuntimeEcsFargateAgent,
+        manageRuntimeEc2Agent,
         autoEnableOrgMembers,
       );
 
@@ -146,7 +159,19 @@ export async function handler(event: CloudFormationCustomResourceEvent): Promise
       return { Status: 'Success', StatusCode: 200 };
 
     case 'Delete':
-      const disabledFeatures = getOrganizationFeaturesEnabled(false, false, false, false, false, false, 'NONE');
+      const disabledFeatures = getOrganizationFeaturesEnabled(
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        'NONE',
+      );
       try {
         await updateOrganizationConfiguration(guardDutyClient, detectorId!, 'NONE', disabledFeatures);
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -234,13 +259,17 @@ async function disassociateAndDeleteMembers(
   }
 }
 
-function getOrganizationFeaturesEnabled(
+export function getOrganizationFeaturesEnabled(
   s3DataEvents: boolean,
   eksProtection: boolean,
   eksAgent: boolean,
   ec2Protection: boolean,
   rdsProtection: boolean,
   lambdaProtection: boolean,
+  runtimeMonitoring: boolean,
+  manageRuntimeEksAgent: boolean,
+  manageRuntimeEcsFargateAgent: boolean,
+  manageRuntimeEc2Agent: boolean,
   autoEnableOrgMembers: OrgFeatureStatus,
 ) {
   const featureList: OrganizationFeatureConfiguration[] = [];
@@ -259,7 +288,8 @@ function getOrganizationFeaturesEnabled(
     });
   }
 
-  if (eksAgent) {
+  // RUNTIME_MONITORING supersedes EKS_RUNTIME_MONITORING; when it's requested, don't also emit the legacy feature (mirrors update-detector-config).
+  if (eksAgent && !runtimeMonitoring) {
     featureList.push({
       AutoEnable: autoEnableOrgMembers,
       Name: 'EKS_RUNTIME_MONITORING',
@@ -290,6 +320,25 @@ function getOrganizationFeaturesEnabled(
     featureList.push({
       AutoEnable: autoEnableOrgMembers,
       Name: 'LAMBDA_NETWORK_LOGS',
+    });
+  }
+
+  if (runtimeMonitoring) {
+    // Enable RUNTIME_MONITORING; agent management is expressed via AdditionalConfiguration.
+    const additionalConfiguration: OrganizationAdditionalConfiguration[] = [];
+    if (manageRuntimeEksAgent) {
+      additionalConfiguration.push({ Name: 'EKS_ADDON_MANAGEMENT', AutoEnable: autoEnableOrgMembers });
+    }
+    if (manageRuntimeEcsFargateAgent) {
+      additionalConfiguration.push({ Name: 'ECS_FARGATE_AGENT_MANAGEMENT', AutoEnable: autoEnableOrgMembers });
+    }
+    if (manageRuntimeEc2Agent) {
+      additionalConfiguration.push({ Name: 'EC2_AGENT_MANAGEMENT', AutoEnable: autoEnableOrgMembers });
+    }
+    featureList.push({
+      AutoEnable: autoEnableOrgMembers,
+      Name: 'RUNTIME_MONITORING',
+      ...(additionalConfiguration.length > 0 ? { AdditionalConfiguration: additionalConfiguration } : {}),
     });
   }
   return featureList;

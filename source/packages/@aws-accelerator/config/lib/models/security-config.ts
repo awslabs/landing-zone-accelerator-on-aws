@@ -448,6 +448,54 @@ export interface IGuardDutyEksProtectionConfig {
 }
 
 /**
+ * *{@link SecurityConfig} / {@link CentralSecurityServicesConfig} / {@link GuardDutyConfig} / {@link GuardDutyRuntimeMonitoringConfig}*
+ *
+ * @description
+ * Configuration for GuardDuty Runtime Monitoring, the runtime protection feature that observes on-host
+ * operating-system-level behaviour for EKS, ECS (including Fargate), and EC2 workloads. Enabling this feature and its
+ * agent-management sub-configurations lets GuardDuty deploy and manage the runtime security agent on your behalf.
+ *
+ * @remarks
+ * Runtime Monitoring supersedes the legacy standalone EKS Runtime Monitoring feature. Do not enable both
+ * `runtimeMonitoring` and `eksProtection.manageAgent` at the same time — GuardDuty does not allow the legacy
+ * `EKS_RUNTIME_MONITORING` feature to coexist with the `RUNTIME_MONITORING` feature. When migrating, move EKS
+ * agent management to `runtimeMonitoring.manageEksAgent`.
+ *
+ * @see https://docs.aws.amazon.com/guardduty/latest/ug/runtime-monitoring.html
+ *
+ * @example
+ * ```
+ * enable: true
+ * manageEksAgent: true
+ * manageEcsFargateAgent: true
+ * manageEc2Agent: true
+ * excludeRegions: []
+ * ```
+ */
+export interface IGuardDutyRuntimeMonitoringConfig {
+  /**
+   * Controls whether GuardDuty Runtime Monitoring is enabled to monitor your EKS, ECS, and EC2 workloads for security threats.
+   */
+  readonly enable: boolean;
+  /**
+   * Controls whether the GuardDuty runtime security agent is managed for Amazon EKS clusters.
+   */
+  readonly manageEksAgent?: boolean;
+  /**
+   * Controls whether the GuardDuty runtime security agent is managed for Amazon ECS clusters running on AWS Fargate.
+   */
+  readonly manageEcsFargateAgent?: boolean;
+  /**
+   * Controls whether the GuardDuty runtime security agent is managed for Amazon EC2 instances.
+   */
+  readonly manageEc2Agent?: boolean;
+  /**
+   * List of AWS regions where GuardDuty Runtime Monitoring should not be enabled.
+   */
+  readonly excludeRegions?: string[];
+}
+
+/**
  * *{@link SecurityConfig} / {@link CentralSecurityServicesConfig} / {@link GuardDutyConfig} / {@link GuardDutyEc2ProtectionConfig}*
  *
  * @description
@@ -646,6 +694,12 @@ export interface IGuardDutyExportFindingsConfig {
  *   eksProtection:
  *     enable: true
  *     excludeRegions: []
+ *   runtimeMonitoring:
+ *     enable: true
+ *     manageEksAgent: true
+ *     manageEcsFargateAgent: true
+ *     manageEc2Agent: true
+ *     excludeRegions: []
  *   ec2Protection:
  *     enable: true
  *     keepSnapshots: true
@@ -718,6 +772,14 @@ export interface IGuardDutyConfig {
    * @type object
    */
   readonly eksProtection?: IGuardDutyEksProtectionConfig;
+  /**
+   * (OPTIONAL) AWS GuardDuty Runtime Monitoring configuration (`RUNTIME_MONITORING` feature covering EKS, ECS/Fargate, and EC2).
+   *
+   * @remarks
+   * Mutually exclusive with `eksProtection.manageAgent` — see {@link IGuardDutyRuntimeMonitoringConfig}.
+   * @type object
+   */
+  readonly runtimeMonitoring?: IGuardDutyRuntimeMonitoringConfig;
   /**
    * Configuration for GuardDuty EC2 Malware Protection that scans your EC2 instances for malicious software.
    * @type object

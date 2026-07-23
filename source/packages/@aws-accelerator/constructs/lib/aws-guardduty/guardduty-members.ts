@@ -45,6 +45,22 @@ export interface GuardDutyMembersProps {
    */
   readonly enableLambdaProtection: boolean;
   /**
+   * Runtime Monitoring enable flag
+   */
+  readonly enableRuntimeMonitoring: boolean;
+  /**
+   * Runtime Monitoring EKS agent management
+   */
+  readonly manageRuntimeEksAgent: boolean;
+  /**
+   * Runtime Monitoring ECS Fargate agent management
+   */
+  readonly manageRuntimeEcsFargateAgent: boolean;
+  /**
+   * Runtime Monitoring EC2 agent management
+   */
+  readonly manageRuntimeEc2Agent: boolean;
+  /**
    * Custom resource lambda log group encryption key, when undefined default AWS managed key will be used
    */
   readonly kmsKey?: cdk.aws_kms.IKey;
@@ -171,6 +187,10 @@ export class GuardDutyMembers extends Construct {
         enableEc2MalwareProtection: props.enableEc2MalwareProtection,
         enableRdsProtection: props.enableRdsProtection,
         enableLambdaProtection: props.enableLambdaProtection,
+        enableRuntimeMonitoring: props.enableRuntimeMonitoring,
+        manageRuntimeEksAgent: props.manageRuntimeEksAgent,
+        manageRuntimeEcsFargateAgent: props.manageRuntimeEcsFargateAgent,
+        manageRuntimeEc2Agent: props.manageRuntimeEc2Agent,
         guardDutyMemberAccountIds: props.guardDutyMemberAccountIds,
         autoEnableOrgMembers: props.autoEnableOrgMembers,
       },

@@ -108,6 +108,14 @@ export class GuardDutyEksProtectionConfig implements i.IGuardDutyEksProtectionCo
   readonly excludeRegions: string[] = [];
 }
 
+export class GuardDutyRuntimeMonitoringConfig implements i.IGuardDutyRuntimeMonitoringConfig {
+  readonly enable: boolean = false;
+  readonly manageEksAgent?: boolean | undefined = false;
+  readonly manageEcsFargateAgent?: boolean | undefined = false;
+  readonly manageEc2Agent?: boolean | undefined = false;
+  readonly excludeRegions: string[] = [];
+}
+
 export class GuardDutyEc2ProtectionConfig implements i.IGuardDutyEc2ProtectionConfig {
   readonly enable: boolean = false;
   readonly keepSnapshots: boolean = false;
@@ -154,6 +162,7 @@ export class GuardDutyConfig implements i.IGuardDutyConfig {
   readonly s3Protection: GuardDutyS3ProtectionConfig = new GuardDutyS3ProtectionConfig();
   readonly s3MalwareProtection: GuardDutyS3MalwareProtectionConfig | undefined = undefined;
   readonly eksProtection: GuardDutyEksProtectionConfig | undefined = undefined;
+  readonly runtimeMonitoring: GuardDutyRuntimeMonitoringConfig | undefined = undefined;
   readonly ec2Protection: GuardDutyEc2ProtectionConfig | undefined = undefined;
   readonly rdsProtection: GuardDutyRdsProtectionConfig | undefined = undefined;
   readonly lambdaProtection: GuardDutyLambdaProtectionConfig | undefined = undefined;

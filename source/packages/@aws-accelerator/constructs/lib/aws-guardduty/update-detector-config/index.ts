@@ -56,6 +56,22 @@ export interface UpdateDetectorOptions {
    */
   readonly enableLambdaProtection: boolean;
   /**
+   * Enable Runtime Monitoring
+   */
+  readonly enableRuntimeMonitoring: boolean;
+  /**
+   * Manage Runtime Monitoring EKS agent
+   */
+  readonly manageRuntimeEksAgent: boolean;
+  /**
+   * Manage Runtime Monitoring ECS Fargate agent
+   */
+  readonly manageRuntimeEcsFargateAgent: boolean;
+  /**
+   * Manage Runtime Monitoring EC2 agent
+   */
+  readonly manageRuntimeEc2Agent: boolean;
+  /**
    * Finding export frequency
    */
   readonly exportFrequency?: FindingPublishingFrequency | undefined;
@@ -93,6 +109,10 @@ export async function handler(event: CloudFormationCustomResourceEvent): Promise
   console.log(`EC2 Protection Enable: ${options.enableEc2Protection}`);
   console.log(`RDS Protection Enable: ${options.enableRdsProtection}`);
   console.log(`Lambda Protection Enable: ${options.enableLambdaProtection}`);
+  console.log(`Runtime Monitoring Enable: ${options.enableRuntimeMonitoring}`);
+  console.log(`Runtime Monitoring EKS Agent: ${options.manageRuntimeEksAgent}`);
+  console.log(`Runtime Monitoring ECS Fargate Agent: ${options.manageRuntimeEcsFargateAgent}`);
+  console.log(`Runtime Monitoring EC2 Agent: ${options.manageRuntimeEc2Agent}`);
 
   switch (event.RequestType) {
     case 'Create':
@@ -265,7 +285,11 @@ export async function removeDetectorFeatures(
   console.log('starting - Delete');
   try {
     const removeFeatures: DetectorFeatureConfiguration[] = [];
-    removeFeatures.push(createFeature(DetectorFeature.EKS_RUNTIME_MONITORING, options.enableEksProtection));
+    if (options.enableRuntimeMonitoring) {
+      removeFeatures.push(createFeature(DetectorFeature.RUNTIME_MONITORING, options.enableRuntimeMonitoring));
+    } else {
+      removeFeatures.push(createFeature(DetectorFeature.EKS_RUNTIME_MONITORING, options.enableEksProtection));
+    }
     removeFeatures.push(createFeature(DetectorFeature.EKS_AUDIT_LOGS, options.enableEksProtection));
     removeFeatures.push(createFeature(DetectorFeature.S3_DATA_EVENTS, options.enableS3Protection));
     removeFeatures.push(createFeature(DetectorFeature.EBS_MALWARE_PROTECTION, options.enableEc2Protection));
@@ -333,6 +357,10 @@ export function setOptions(resourceProperties: { [key: string]: any }): UpdateDe
     enableKeepMalwareSnapshots: resourceProperties['enableKeepMalwareSnapshots'] === 'true',
     enableRdsProtection: resourceProperties['enableRdsProtection'] === 'true',
     enableLambdaProtection: resourceProperties['enableLambdaProtection'] === 'true',
+    enableRuntimeMonitoring: resourceProperties['enableRuntimeMonitoring'] === 'true',
+    manageRuntimeEksAgent: resourceProperties['manageRuntimeEksAgent'] === 'true',
+    manageRuntimeEcsFargateAgent: resourceProperties['manageRuntimeEcsFargateAgent'] === 'true',
+    manageRuntimeEc2Agent: resourceProperties['manageRuntimeEc2Agent'] === 'true',
     exportFrequency: exportFrequency,
   };
 }
@@ -344,14 +372,40 @@ export function setOptions(resourceProperties: { [key: string]: any }): UpdateDe
  */
 export function createDetectorFeatures(options: UpdateDetectorOptions): DetectorFeatureConfiguration[] {
   const addFeatures: DetectorFeatureConfiguration[] = [];
-  const eksFeature = createFeature(DetectorFeature.EKS_RUNTIME_MONITORING, options.enableEksProtection);
-  addFeatures.push(eksFeature);
-  if (options.enableEksAgent) {
-    const featureConfiguration = createAdditionalConfiguration(
-      FeatureAdditionalConfiguration.EKS_ADDON_MANAGEMENT,
-      options.enableEksAgent,
-    );
-    eksFeature.AdditionalConfiguration = [featureConfiguration];
+
+  if (options.enableRuntimeMonitoring) {
+    // Emit only RUNTIME_MONITORING; it supersedes the legacy EKS_RUNTIME_MONITORING and cannot be enabled alongside it.
+    const runtimeFeature = createFeature(DetectorFeature.RUNTIME_MONITORING, true);
+    const additionalConfiguration: DetectorAdditionalConfiguration[] = [];
+    if (options.manageRuntimeEksAgent) {
+      additionalConfiguration.push(
+        createAdditionalConfiguration(FeatureAdditionalConfiguration.EKS_ADDON_MANAGEMENT, true),
+      );
+    }
+    if (options.manageRuntimeEcsFargateAgent) {
+      additionalConfiguration.push(
+        createAdditionalConfiguration(FeatureAdditionalConfiguration.ECS_FARGATE_AGENT_MANAGEMENT, true),
+      );
+    }
+    if (options.manageRuntimeEc2Agent) {
+      additionalConfiguration.push(
+        createAdditionalConfiguration(FeatureAdditionalConfiguration.EC2_AGENT_MANAGEMENT, true),
+      );
+    }
+    if (additionalConfiguration.length > 0) {
+      runtimeFeature.AdditionalConfiguration = additionalConfiguration;
+    }
+    addFeatures.push(runtimeFeature);
+  } else {
+    const eksFeature = createFeature(DetectorFeature.EKS_RUNTIME_MONITORING, options.enableEksProtection);
+    addFeatures.push(eksFeature);
+    if (options.enableEksAgent) {
+      const featureConfiguration = createAdditionalConfiguration(
+        FeatureAdditionalConfiguration.EKS_ADDON_MANAGEMENT,
+        options.enableEksAgent,
+      );
+      eksFeature.AdditionalConfiguration = [featureConfiguration];
+    }
   }
 
   addFeatures.push(createFeature(DetectorFeature.EKS_AUDIT_LOGS, options.enableEksProtection));
