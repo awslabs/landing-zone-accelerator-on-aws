@@ -24,7 +24,7 @@ export function snapShotTest(testNamePrefix: string, stackProvider: () => cdk.St
     configureSnapshotSeriliazers();
 
     expect(SynthUtils.toCloudFormation(stack)).toMatchSnapshot();
-  }, 1200000);
+  }, 120000);
 }
 
 const uuidRegex = /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/;
