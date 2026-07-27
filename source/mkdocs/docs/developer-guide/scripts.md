@@ -40,6 +40,19 @@ Native toolkit commands and options can be found in the [AWS CDK Toolkit referen
     yarn run ts-node --transpile-only cdk.ts deploy --stage network-vpc --config-dir /path/to/aws-accelerator-config/ --partition aws --region <region> --account <REDACTED>
     ```
 
+!!! note "Using the CLI with an external (standalone) deployment account"
+    When the solution is installed using the [External pipeline deployment](https://docs.aws.amazon.com/solutions/latest/landing-zone-accelerator-on-aws/external-pipeline-deployment.html) method, the pipeline runs from a standalone deployment account that is **separate** from the accelerator management account. To use the CLI in this configuration you must additionally export all three of the following environment variables so the toolkit knows to assume into the management account rather than treating your local credentials as the management account:
+
+    ```bash
+    export MANAGEMENT_ACCOUNT_ID="<management-account-id>"
+    export MANAGEMENT_ACCOUNT_ROLE_NAME="<management-account-role-name>"
+    export PIPELINE_ACCOUNT_ID="<external-pipeline-account-id>"
+    ```
+
+    If these are not set, the CLI assumes the account you are authenticated to is the management account and cross-account/organization lookups fail with an error such as `You don't have permissions to access this resource.`
+
+    The role named by `MANAGEMENT_ACCOUNT_ROLE_NAME` must also trust the IAM principal you run the CLI with. For details on this role and its trust relationship, see [External pipeline deployment](https://docs.aws.amazon.com/solutions/latest/landing-zone-accelerator-on-aws/external-pipeline-deployment.html).
+
 ## Configuration Validator
 
 The accelerator has a helper script that runs config validation on a provided configuration directory. This script is run during the Build stage of the pipeline, but may also be run locally if the development toolchain is installed. Assume management account credentials when run locally.
