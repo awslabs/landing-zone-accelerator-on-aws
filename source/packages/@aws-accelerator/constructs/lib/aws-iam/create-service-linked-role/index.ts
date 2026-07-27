@@ -17,8 +17,14 @@ import {
   CreateServiceLinkedRoleCommand,
   NoSuchEntityException,
   InvalidInputException,
+  type CreateServiceLinkedRoleCommandOutput,
 } from '@aws-sdk/client-iam';
 import { CloudFormationCustomResourceEvent } from '@aws-accelerator/utils/lib/common-types';
+import { throttlingBackOff } from '@aws-accelerator/utils/lib/throttle';
+import { setRetryStrategy } from '@aws-accelerator/utils/lib/common-functions';
+
+const ROLE_STATUS_MAX_ATTEMPTS = 10;
+const ROLE_STATUS_POLL_INTERVAL_MS = 15000;
 
 /**
  * create-service-linked-role - lambda handler
@@ -37,7 +43,10 @@ export async function handler(event: CloudFormationCustomResourceEvent): Promise
   switch (event.RequestType) {
     case 'Create':
     case 'Update':
-      const iamClient = new IAMClient({ customUserAgent: process.env['SOLUTION_ID'] });
+      const iamClient = new IAMClient({
+        customUserAgent: process.env['SOLUTION_ID'],
+        retryStrategy: setRetryStrategy(),
+      });
       //check if role exists if it does return success
       if (!(await isRoleExists(iamClient, event.ResourceProperties['roleName']))) {
         // role needs to be created
@@ -82,23 +91,10 @@ export async function createServiceLinkedRole(
     }
   | undefined
 > {
+  let resp: CreateServiceLinkedRoleCommandOutput;
   try {
     const command = new CreateServiceLinkedRoleCommand({ AWSServiceName: serviceName, Description: description });
-    const resp = await iamClient.send(command);
-    // wait for role to be created
-    await delay(15000);
-    // check if role is created
-    if (resp.Role) {
-      // this function will try 10 times for 15 attempts before going to the next step
-      await checkRoleStatus(iamClient, resp.Role.RoleName!);
-
-      return {
-        Status: 'SUCCESS',
-        Data: { roleArn: resp.Role.Arn!, roleName: resp.Role.RoleName! },
-      };
-    } else {
-      throw new Error(`Response did not have Role. ${JSON.stringify(resp)}`);
-    }
+    resp = await throttlingBackOff(() => iamClient.send(command));
   } catch (error) {
     if (error instanceof InvalidInputException && error.message.includes('has been taken in this account')) {
       //role does not need to be created
@@ -107,13 +103,28 @@ export async function createServiceLinkedRole(
         Data: undefined,
       };
     }
-    throw new Error(`There was an error in service linked role creation: ${JSON.stringify(error)}`);
+    console.error(error);
+    throw new Error(`There was an error in service linked role creation: ${describeError(error)}`, { cause: error });
   }
+
+  if (!resp.Role?.RoleName || !resp.Role.Arn) {
+    throw new Error(`Response did not have Role. ${JSON.stringify(resp)}`);
+  }
+
+  // wait for the role to become visible to GetRole before reporting success
+  await checkRoleStatus(iamClient, resp.Role.RoleName);
+
+  return {
+    Status: 'SUCCESS',
+    Data: { roleArn: resp.Role.Arn, roleName: resp.Role.RoleName },
+  };
 }
 
 export async function isRoleExists(iamClient: IAMClient, roleName: string): Promise<boolean> {
   try {
-    await iamClient.send(new GetRoleCommand({ RoleName: roleName }));
+    // throttlingBackOff retries transient errors (throttling, internal, network) but not NoSuchEntityException,
+    // so an intermittent status-retrieval failure is retried before it is surfaced to CloudFormation
+    await throttlingBackOff(() => iamClient.send(new GetRoleCommand({ RoleName: roleName })));
     return true;
   } catch (error) {
     // if role does not exist, create one
@@ -122,33 +133,50 @@ export async function isRoleExists(iamClient: IAMClient, roleName: string): Prom
       return false;
     } else {
       // throwing error so it will be sent back to cloudformation stack and message will help troubleshoot
+      console.error(error);
       throw new Error(
-        `Encountered an error when attempting to retrieve the status of service-linked role ${roleName}.`,
+        `Encountered an error when attempting to retrieve the status of service-linked role ${roleName}: ${describeError(
+          error,
+        )}`,
+        { cause: error },
       );
     }
   }
 }
 
-export async function checkRoleStatus(iamClient: IAMClient, roleName: string) {
-  let attempts = 0;
-
-  while (attempts < 10) {
+export async function checkRoleStatus(iamClient: IAMClient, roleName: string): Promise<void> {
+  for (let attempt = 1; attempt <= ROLE_STATUS_MAX_ATTEMPTS; attempt++) {
     try {
-      const command = new GetRoleCommand({ RoleName: roleName });
-      // if this api passes, it means role exists
-      await iamClient.send(command);
-      break;
+      // if this api passes, it means role exists. throttlingBackOff retries transient errors but not
+      // NoSuchEntityException, which is still handled below to keep polling while the role propagates
+      await throttlingBackOff(() => iamClient.send(new GetRoleCommand({ RoleName: roleName })));
+      return;
     } catch (error) {
-      // this is the only exception to look for. If its not this error then break and throw exception
-      if (error instanceof NoSuchEntityException) {
-        attempts = attempts + 1;
-      } else {
-        const msg = `There was an error in checking status of role: ${roleName}`;
-        throw new Error(msg);
+      // this is the only exception to look for. If its not this error then throw exception
+      if (!(error instanceof NoSuchEntityException)) {
+        console.error(error);
+        throw new Error(`There was an error in checking status of role: ${roleName}: ${describeError(error)}`, {
+          cause: error,
+        });
+      }
+      if (attempt < ROLE_STATUS_MAX_ATTEMPTS) {
+        await delay(ROLE_STATUS_POLL_INTERVAL_MS);
       }
     }
   }
+
+  // CreateServiceLinkedRole already succeeded and the handler waits further for propagation, so an unconfirmed
+  // status is logged rather than thrown to avoid failing a deployment that is still likely to converge
+  console.warn(`Role ${roleName} was not visible to GetRole after ${ROLE_STATUS_MAX_ATTEMPTS} attempts.`);
 }
+
+/**
+ * JSON.stringify drops name and message from SDK exceptions because they are non-enumerable.
+ */
+function describeError(error: unknown): string {
+  return error instanceof Error ? `${error.name}: ${error.message}` : String(error);
+}
+
 function delay(ms: number) {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
