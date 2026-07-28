@@ -31,6 +31,9 @@ import {
   SecurityConfig,
   SecurityConfigValidator,
   ReplacementsConfigValidator,
+  setConfigValidationMode,
+  getConfigValidationMode,
+  warnOnUnrecognizedKeys,
 } from '@aws-accelerator/config';
 import { createLogger, setExternalManagementAccountCredentials } from '@aws-accelerator/utils';
 
@@ -38,7 +41,11 @@ const logger = createLogger(['config-validator']);
 const configDirPath = process.argv[2];
 let homeRegion: string;
 try {
-  homeRegion = GlobalConfig.loadRawGlobalConfig(configDirPath).homeRegion;
+  const rawGlobalConfig = GlobalConfig.loadRawGlobalConfig(configDirPath);
+  homeRegion = rawGlobalConfig.homeRegion;
+  // Apply the configuration validation mode (off | warn | strict) read from the
+  // raw global config before any configuration files are strictly validated.
+  setConfigValidationMode(rawGlobalConfig.configurationValidationMode ?? 'off');
   logger.info('homeRegion set to ', homeRegion);
 } catch (e) {
   logger.error('Failed on loadRawGlobalConfig', e);
@@ -147,6 +154,22 @@ async function validateConfig(props: {
     await replacementsConfig.loadDynamicReplacements(homeRegion);
   } catch (e) {
     initErrors.push({ file: ReplacementsConfig.FILENAME, message: e });
+  }
+
+  //
+  // When validation mode is `warn` or `strict`, surface all unrecognized
+  // configuration keys up front (before the individual config files are loaded)
+  // so problems are reported together at config-validation time rather than
+  // piecemeal mid-run. This is a non-blocking advisory pass; in `strict` mode
+  // the same keys are additionally enforced as errors by the loaders below.
+  // In `off` mode this does not run, preserving the legacy silent behavior.
+  //
+  if (getConfigValidationMode() !== 'off') {
+    try {
+      warnOnUnrecognizedKeys(configDirPath, replacementsConfig);
+    } catch (e) {
+      logger.warn(`Unrecognized-key diagnostic could not be run: ${e}`);
+    }
   }
 
   // Load global config

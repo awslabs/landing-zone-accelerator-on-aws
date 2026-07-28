@@ -79,6 +79,7 @@ import {
   OrganizationConfig,
   ReplacementsConfig,
   SecurityConfig,
+  setConfigValidationMode,
 } from '@aws-accelerator/config';
 
 import { IAssumeRoleCredential } from 'aws-lza';
@@ -439,7 +440,14 @@ export abstract class ConfigLoader {
     //
     // Get home region
     //
-    const homeRegion = GlobalConfig.loadRawGlobalConfig(configDirPath).homeRegion;
+    const rawGlobalConfig = GlobalConfig.loadRawGlobalConfig(configDirPath);
+    const homeRegion = rawGlobalConfig.homeRegion;
+
+    //
+    // Apply the configuration validation mode (off | warn | strict) before
+    // loading and validating the remaining configuration files.
+    //
+    setConfigValidationMode(rawGlobalConfig.configurationValidationMode ?? 'off');
 
     //
     // Get Org enable flag

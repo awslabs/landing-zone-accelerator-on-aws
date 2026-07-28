@@ -110,6 +110,28 @@ export interface IGlobalConfig {
    */
   readonly homeRegion: t.NonEmptyString;
   /**
+   * **Configuration Validation Mode** *(Optional)*
+   *
+   * Controls how the configuration validator treats unrecognized keys (keys not
+   * defined in the configuration schema) across all configuration files.
+   *
+   * - `off` *(default)*: unrecognized keys are silently ignored, preserving
+   *   legacy behavior.
+   * - `warn`: a warning is logged for each unrecognized key, but the pipeline
+   *   continues.
+   * - `strict`: the pipeline fails when an unrecognized key is encountered, with
+   *   an error naming the key and a suggested correction for likely typos.
+   *
+   * **Example**
+   *
+   * ```yaml
+   * configurationValidationMode: strict
+   * ```
+   *
+   * @default off
+   */
+  readonly configurationValidationMode?: 'off' | 'warn' | 'strict';
+  /**
    *
    * **V2 Stacks** *(Optional)*
    *
@@ -2312,7 +2334,7 @@ export interface ICentralLogBucketConfig {
    * @default
    * undefined
    */
-  readonly importedBucket?: t.IImportedS3ManagedEncryptionKeyBucketConfig;
+  readonly importedBucket?: t.IImportedCustomerManagedEncryptionKeyBucketConfig;
   /**
    * **Custom Policy Overrides Configuration** *(Optional)*
    *

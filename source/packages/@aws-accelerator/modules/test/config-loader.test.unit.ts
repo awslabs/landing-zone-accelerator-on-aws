@@ -23,6 +23,7 @@ import {
   OrganizationConfig,
   ReplacementsConfig,
   SecurityConfig,
+  setConfigValidationMode,
 } from '@aws-accelerator/config';
 import { ParameterNotFound, SSMClient } from '@aws-sdk/client-ssm';
 import { AcceleratorConfigurationsType } from '../models/types';
@@ -33,11 +34,13 @@ import { MOCK_CONSTANTS } from './mocked-resources';
 // Mock Dependencies
 //
 vi.mock('@aws-sdk/client-ssm', () => ({
-  SSMClient: vi.fn().mockImplementation(function() { return {
-    send: vi.fn().mockResolvedValue({
-      Parameter: MOCK_CONSTANTS.centralLogBucketCmkSsmParameter,
-    }),
-  }; }),
+  SSMClient: vi.fn().mockImplementation(function () {
+    return {
+      send: vi.fn().mockResolvedValue({
+        Parameter: MOCK_CONSTANTS.centralLogBucketCmkSsmParameter,
+      }),
+    };
+  }),
   GetParameterCommand: vi.fn(),
   ParameterNotFound: class ParameterNotFound extends Error {
     constructor() {
@@ -103,6 +106,7 @@ vi.mock('@aws-accelerator/config', () => {
         getLogArchiveAccount: vi.fn(),
       } as unknown as AccountsConfig),
     },
+    setConfigValidationMode: vi.fn(),
     GlobalConfig: {
       load: vi.fn().mockImplementation(() => getMockGlobalConfig()),
       loadRawGlobalConfig: vi.fn(),
@@ -366,9 +370,11 @@ describe('ConfigLoader', () => {
       mockSend = vi.fn().mockResolvedValue({
         Parameter: MOCK_CONSTANTS.centralLogBucketCmkSsmParameter,
       });
-      (SSMClient as any).mockImplementation(function() { return {
-        send: mockSend,
-      }; });
+      (SSMClient as any).mockImplementation(function () {
+        return {
+          send: mockSend,
+        };
+      });
       ssmMockClient = new SSMClient({});
 
       // Mock fs functions
@@ -681,6 +687,66 @@ describe('ConfigLoader', () => {
           },
         }),
       );
+    });
+
+    test('should apply the configuration validation mode from the raw global config', async () => {
+      // Setup
+      mockGlobalConfigInstance = {
+        homeRegion: MOCK_CONSTANTS.homeRegion,
+        cdkOptions: MOCK_CONSTANTS.cdkOptions,
+        managementAccountAccessRole: MOCK_CONSTANTS.managementAccountAccessRole,
+        logging: { centralizedLoggingRegion: MOCK_CONSTANTS.centralizedLoggingRegion },
+      };
+      (GlobalConfig.load as any).mockReturnValue(mockGlobalConfigInstance);
+
+      vi.spyOn(GlobalConfig, 'loadRawGlobalConfig').mockReturnValue({
+        homeRegion: MOCK_CONSTANTS.homeRegion,
+        configurationValidationMode: 'strict',
+      } as GlobalConfig);
+      vi.spyOn(OrganizationConfig, 'loadRawOrganizationsConfig').mockReturnValue({
+        enable: true,
+      } as OrganizationConfig);
+
+      // Execute
+      await ConfigLoader.getAcceleratorConfigurations(
+        MOCK_CONSTANTS.runnerParameters.partition,
+        MOCK_CONSTANTS.runnerParameters.configDirPath,
+        MOCK_CONSTANTS.resourcePrefixes,
+        MOCK_CONSTANTS.credentials,
+      );
+
+      // Verify
+      expect(setConfigValidationMode).toHaveBeenCalledWith('strict');
+    });
+
+    test('should default the validation mode to off when not set in the global config', async () => {
+      // Setup
+      mockGlobalConfigInstance = {
+        homeRegion: MOCK_CONSTANTS.homeRegion,
+        cdkOptions: MOCK_CONSTANTS.cdkOptions,
+        managementAccountAccessRole: MOCK_CONSTANTS.managementAccountAccessRole,
+        logging: { centralizedLoggingRegion: MOCK_CONSTANTS.centralizedLoggingRegion },
+      };
+      (GlobalConfig.load as any).mockReturnValue(mockGlobalConfigInstance);
+
+      (setConfigValidationMode as any).mockClear();
+      vi.spyOn(GlobalConfig, 'loadRawGlobalConfig').mockReturnValue({
+        homeRegion: MOCK_CONSTANTS.homeRegion,
+      } as GlobalConfig);
+      vi.spyOn(OrganizationConfig, 'loadRawOrganizationsConfig').mockReturnValue({
+        enable: true,
+      } as OrganizationConfig);
+
+      // Execute
+      await ConfigLoader.getAcceleratorConfigurations(
+        MOCK_CONSTANTS.runnerParameters.partition,
+        MOCK_CONSTANTS.runnerParameters.configDirPath,
+        MOCK_CONSTANTS.resourcePrefixes,
+        MOCK_CONSTANTS.credentials,
+      );
+
+      // Verify
+      expect(setConfigValidationMode).toHaveBeenCalledWith('off');
     });
   });
 });

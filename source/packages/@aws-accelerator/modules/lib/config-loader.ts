@@ -20,6 +20,7 @@ import {
   OrganizationConfig,
   ReplacementsConfig,
   SecurityConfig,
+  setConfigValidationMode,
 } from '@aws-accelerator/config';
 
 import * as fs from 'fs';
@@ -126,7 +127,15 @@ export abstract class ConfigLoader {
     //
     // Get home region
     //
-    const homeRegion = GlobalConfig.loadRawGlobalConfig(configDirPath).homeRegion;
+    const rawGlobalConfig = GlobalConfig.loadRawGlobalConfig(configDirPath);
+    const homeRegion = rawGlobalConfig.homeRegion;
+
+    //
+    // Set the configuration validation mode (off | warn | strict) from the raw
+    // global config before validating any other configuration files. Read via
+    // the raw load so the mode is known before strict parsing begins.
+    //
+    setConfigValidationMode(rawGlobalConfig.configurationValidationMode ?? 'off');
 
     //
     // Get Org enable flag

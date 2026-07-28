@@ -22,6 +22,7 @@ import {
   OrganizationConfig,
   ReplacementsConfig,
   SecurityConfig,
+  setConfigValidationMode,
 } from '@aws-accelerator/config';
 import { IAssumeRoleCredential } from 'aws-lza';
 import * as fs from 'fs';
@@ -50,6 +51,7 @@ vi.mock('@aws-accelerator/config', () => {
         loadAccountIds: mockLoadAccountIds,
       }),
     },
+    setConfigValidationMode: vi.fn(),
     CustomizationsConfig: class MockCustomizationsConfig {
       static FILENAME = 'customizations-config.yaml';
       static load = vi.fn().mockReturnValue({});
@@ -340,6 +342,47 @@ describe('ConfigLoader', () => {
       expect(SecurityConfig.load).toHaveBeenCalledWith(mockConfigDirPath, result.replacementsConfig);
       expect(IamConfig.load).toHaveBeenCalledWith(mockConfigDirPath, result.replacementsConfig);
       expect(CustomizationsConfig.load).toHaveBeenCalledWith(mockConfigDirPath, result.replacementsConfig);
+    });
+
+    it('should apply the configuration validation mode from the raw global config', async () => {
+      // Setup
+      vi.mocked(setConfigValidationMode).mockClear();
+      vi.spyOn(GlobalConfig, 'loadRawGlobalConfig').mockReturnValue({
+        homeRegion: 'us-east-1',
+        configurationValidationMode: 'strict',
+      } as any);
+
+      // Execute
+      await ConfigLoader.getAcceleratorConfigurations(
+        mockPartition,
+        mockConfigDirPath,
+        mockResourcePrefixes,
+        true,
+        mockCredentials,
+      );
+
+      // Verify
+      expect(setConfigValidationMode).toHaveBeenCalledWith('strict');
+    });
+
+    it('should default the validation mode to off when not set in the global config', async () => {
+      // Setup
+      vi.mocked(setConfigValidationMode).mockClear();
+      vi.spyOn(GlobalConfig, 'loadRawGlobalConfig').mockReturnValue({
+        homeRegion: 'us-east-1',
+      } as any);
+
+      // Execute
+      await ConfigLoader.getAcceleratorConfigurations(
+        mockPartition,
+        mockConfigDirPath,
+        mockResourcePrefixes,
+        true,
+        mockCredentials,
+      );
+
+      // Verify
+      expect(setConfigValidationMode).toHaveBeenCalledWith('off');
     });
 
     it('should load configurations without credentials', async () => {

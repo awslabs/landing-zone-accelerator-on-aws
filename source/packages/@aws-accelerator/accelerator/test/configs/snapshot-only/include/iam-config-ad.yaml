@@ -1,5 +1,4 @@
 - name: AcceleratorManagedActiveDirectory
-  type: AWS Managed Microsoft AD
   account: SharedServices
   region: us-east-1
   dnsName: example.com

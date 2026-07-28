@@ -52,6 +52,7 @@ development
 # Ignore kiro and .idea
 .kiro
 .idea
+.claude
 
 # Line level file ignores (keep in alphabetical order)
 

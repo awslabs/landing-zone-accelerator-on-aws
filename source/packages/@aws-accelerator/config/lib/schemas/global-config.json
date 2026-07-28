@@ -340,7 +340,7 @@
           "description": "**Custom Policy Overrides Configuration** *(Optional)*\n\nProvide policy overrides. Policy files must contain a complete policy document.\n\n**Conflicts**\n- When s3Policy is defined, importedBucket.applyAcceleratorManagedBucketPolicy cannot be true\n- When s3Policy is defined, s3ResourcePolicyAttachments cannot be defined\n- When kmsPolicy is defined, importedBucket.createAcceleratorManagedKey cannot be true\n- When kmsPolicy is defined, kmsResourcePolicyAttachments cannot be defined\n\n**Example** ```yaml customPolicyOverrides:   s3Policy: path/to/policy.json   kmsPolicy: kms/full-central-logs-bucket-key-policy.json ```"
         },
         "importedBucket": {
-          "$ref": "#/definitions/IImportedS3ManagedEncryptionKeyBucketConfig",
+          "$ref": "#/definitions/IImportedCustomerManagedEncryptionKeyBucketConfig",
           "default": "undefined",
           "description": "**Imported Bucket Configuration** *(Optional)*\n\nWhen set, the accelerator will import an existing central logs bucket.\n\nUse this configuration to import an existing central logs bucket, manage bucket resource policy and KMS policy through the solution.\n\n**Example** ```yaml importedBucket:   name: existing-central-log-bucket   applyAcceleratorManagedBucketPolicy: true   createAcceleratorManagedKey: true ```"
         },
@@ -1152,6 +1152,16 @@
         "cloudwatchLogRetentionInDays": {
           "description": "**CloudWatch Log Retention** *(Required)*\n\nThe retention period, specified in days, is applied to all CloudWatch log groups created by the LZA. Additionally, this retention period will be applied to any pre-existing CloudWatch log group with a shorter retention period.\n\n**Example Scenarios**\n\nScenario 1: If `cloudWatchRetentionInDays` is set to 365, and create a new CloudWatch log group with a 730-day retention period, the LZA will update the log group to have a 365-day retention period.\n\nScenario 2: If `cloudWatchRetentionInDays` is set to 365, and there is an existing CloudWatch log group with a 730-day retention period, the log group will not be updated by the LZA.\n\nScenario 3: If `cloudWatchRetentionInDays` is set to 365, and there is an existing CloudWatch log group with a 30-day retention period, the LZA will update the log group to have a 365-day retention period.",
           "type": "number"
+        },
+        "configurationValidationMode": {
+          "default": "off",
+          "description": "**Configuration Validation Mode** *(Optional)*\n\nControls how the configuration validator treats unrecognized keys (keys not defined in the configuration schema) across all configuration files.\n\n- `off` *(default)*: unrecognized keys are silently ignored, preserving   legacy behavior.\n- `warn`: a warning is logged for each unrecognized key, but the pipeline   continues.\n- `strict`: the pipeline fails when an unrecognized key is encountered, with   an error naming the key and a suggested correction for likely typos.\n\n**Example**\n\n```yaml configurationValidationMode: strict ```",
+          "enum": [
+            "off",
+            "warn",
+            "strict"
+          ],
+          "type": "string"
         },
         "controlTower": {
           "$ref": "#/definitions/IControlTowerConfig",

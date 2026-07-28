@@ -599,6 +599,7 @@ export class GlobalConfig implements i.IGlobalConfig {
    */
   static readonly FILENAME = 'global-config.yaml';
   readonly homeRegion: string = '';
+  readonly configurationValidationMode: 'off' | 'warn' | 'strict' | undefined = undefined;
   readonly useV2Stacks: boolean | undefined = undefined;
   readonly enabledRegions: string[] = [];
   readonly managementAccountAccessRole: string = '';

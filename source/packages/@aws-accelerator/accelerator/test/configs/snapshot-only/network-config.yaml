@@ -325,7 +325,6 @@ transitGatewayPeering:
       autoAccept: true
       applyTags: true
   - name: Network-Main-2-And-SharedServices-Main-Peering
-    autoAccept: false
     requester:
       transitGatewayName: SharedServices-Main
       account: SharedServices
@@ -1674,22 +1673,22 @@ vpcs:
         port: 80
         protocol: TCP
         type: instance
-        connectionTermination: true
-        preserveClientIp: true
-        proxyProtocolV2: true
+        attributes:
+          connectionTermination: true
+          preserveClientIp: true
+          proxyProtocolV2: true
         healthCheck:
-          enabled: true
           port: 80
           protocol: TCP
       - name: appA-alb-tg-1
         port: 80
         protocol: HTTP
         type: instance
-        connectionTermination: true
-        preserveClientIp: true
-        proxyProtocolV2: true
+        attributes:
+          connectionTermination: true
+          preserveClientIp: true
+          proxyProtocolV2: true
         healthCheck:
-          enabled: true
           port: 80
           protocol: HTTP
       - name: deployed-tg-2
@@ -1707,11 +1706,11 @@ vpcs:
           - account: Network
             region: *HOME_REGION
             nlbName: appA-nlb-01
-        connectionTermination: true
-        preserveClientIp: true
-        proxyProtocolV2: true
+        attributes:
+          connectionTermination: true
+          preserveClientIp: true
+          proxyProtocolV2: true
         healthCheck:
-          enabled: true
           port: 80
           protocol: TCP
     tags:
@@ -1890,7 +1889,6 @@ vpcs:
         protocolVersion: HTTP1
         type: ip
         healthCheck:
-          enabled: true
           port: 80
           protocol: HTTP
         targets:
@@ -1901,7 +1899,6 @@ vpcs:
         protocolVersion: HTTP1
         type: ip
         healthCheck:
-          enabled: true
           port: 80
           protocol: HTTP
     transitGatewayAttachments:
@@ -2146,27 +2143,6 @@ vpcs:
         - pkt-dst-aws-service
         - flow-direction
         - traffic-path
-      loadBalancers:
-        applicationLoadBalancers:
-          - name: appA-alb-test-01
-            scheme: internal
-            subnets:
-              - SharedServices-App-A
-              - SharedServices-App-B
-            securityGroups:
-              - InternalHTTP-SG
-            listeners:
-              - name: appA-listener-3
-                port: 443
-                protocol: HTTPS
-                targetGroup: deployed-tg-2
-                order: 3
-                type: forward
-                certificate: cert1
-                sslPolicy: ELBSecurityPolicy-2016-08
-            shareTargets:
-              organizationalUnits:
-                - Security
   - name: SharedServices-appVpc
     account: SharedServices
     region: us-east-1

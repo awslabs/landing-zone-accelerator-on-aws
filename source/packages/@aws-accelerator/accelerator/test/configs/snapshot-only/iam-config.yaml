@@ -177,22 +177,4 @@ userSets:
         group: Administrators
         boundaryPolicy: Default-Boundary-Policy
         disableConsoleAccess: true
-secretSets:
-  - deploymentTargets:
-      accounts:
-        - SharedServices
-    secrets:
-      - name: managedActiveDirectoryAdminUserSecret
-        description: Managed AD admin user secret
-        # kmsKeyName: Key1
-        userName: Admin
-        passwordPolicy:
-          excludeUppercase: false
-          excludeLowercase: false
-          excludeNumbers: false
-          requireEachIncludedType: true
-          includeSpace: false
-          passwordLength: 32
-          excludePunctuation: false
-          excludeCharacters: '@#'
 managedActiveDirectories: !include include/iam-config-ad.yaml

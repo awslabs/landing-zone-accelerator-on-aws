@@ -1,7 +1,4 @@
 homeRegion: &HOME_REGION us-east-1
-snsSubscriptionConfig:
-  - level: High
-    email: foo@example.com
 keyManagementService:
   keySets:
     - name: key1
@@ -740,30 +737,6 @@ cloudWatch:
           filterPattern: '{$.eventType !="AwsServiceEvent"}'
           metricNamespace: LzaMetrics
           metricName: GenericMetricForTestingLessThanLowerThreshold
-          metricValue: '1'
-    - regions:
-        - *HOME_REGION
-      deploymentTargets:
-        account:
-          - SharedServices
-      metrics:
-        - filterName: GenericMetricFilterGreaterThanOrEqualToThreshold
-          logGroupName: /generic/log/group
-          filterPattern: '{$.eventType !="AwsServiceEvent"}'
-          metricNamespace: LzaMetrics
-          metricName: GenericMetricForTestingGreaterThanOrEqualToThreshold
-          metricValue: '1'
-        - filterName: GenericMetricFilterGreaterThanThreshold
-          logGroupName: /generic/log/group
-          filterPattern: '{$.eventType !="AwsServiceEvent"}'
-          metricNamespace: LzaMetrics
-          metricName: GenericMetricForTestingGreaterThanThreshold
-          metricValue: '1'
-        - filterName: GenericMetricFilterLessThanThreshold
-          logGroupName: /generic/log/group
-          filterPattern: '{$.eventType !="AwsServiceEvent"}'
-          metricNamespace: LzaMetrics
-          metricName: GenericMetricForTestingLessThanThreshold
           metricValue: '1'
   alarmSets:
     - regions:

@@ -11,7 +11,6 @@ customizations:
       name: Custom-S3-Stackset
       regions:
         - us-east-1
-      runOrder: 1
       template: cloudformation-templates/custom-s3-bucket.yaml
       administrationRoleArn: arn:aws:iam::12345678:role/CustomStackSetsAdminRole
       executionRoleName: CustomStackSetsExecutionRole
@@ -44,7 +43,6 @@ customizations:
             - name: v1
               description: product version is v1
               template: cloudformation-templates/custom-s3-bucket.yaml
-              deprecated: false
           constraints:
             launch:
               type: LocalRole
@@ -79,7 +77,6 @@ customizations:
             - name: v1
               description: product version is v1
               template: cloudformation-templates/custom-s3-bucket.yaml
-              deprecated: false
           support:
             description: Please include account ID and provisioned product ID.
             email: support@example.com
@@ -165,7 +162,6 @@ applications:
           appCookieDuration: 4800
           lbCookieDuration: 4800
         healthCheck:
-          enabled: true
           port: 80
           protocol: HTTP
     networkLoadBalancer:
@@ -283,8 +279,8 @@ applications:
         port: 80
         protocol: TCP
         type: instance
+        protocolVersion: HTTP1
         attributes:
-          protocolVersion: HTTP1
           connectionTermination: true
           preserveClientIp: true
           proxyProtocolV2: true
@@ -322,7 +318,6 @@ applications:
           preserveClientIp: true
           proxyProtocolV2: true
         healthCheck:
-          enabled: true
           port: 80
           protocol: TCP
   # target group and launch template created
@@ -344,7 +339,6 @@ applications:
           preserveClientIp: true
           proxyProtocolV2: true
         healthCheck:
-          enabled: true
           port: 80
           protocol: TCP
     launchTemplate:
@@ -388,7 +382,6 @@ applications:
           preserveClientIp: true
           proxyProtocolV2: true
         healthCheck:
-          enabled: true
           port: 80
           protocol: TCP
     launchTemplate:
@@ -445,7 +438,6 @@ applications:
           preserveClientIp: true
           proxyProtocolV2: true
         healthCheck:
-          enabled: true
           port: 80
           protocol: TCP
     launchTemplate:
@@ -488,7 +480,6 @@ applications:
           preserveClientIp: true
           proxyProtocolV2: true
         healthCheck:
-          enabled: true
           port: 80
           protocol: TCP
       - name: appG-nlb-tg-2
@@ -500,7 +491,6 @@ applications:
           preserveClientIp: true
           proxyProtocolV2: true
         healthCheck:
-          enabled: true
           port: 443
           protocol: TCP
       - name: appG-alb-tg-1
@@ -508,18 +498,16 @@ applications:
         protocol: HTTP
         type: instance
         healthCheck:
-          enabled: true
           port: 80
           protocol: HTTP
       - name: appG-alb-tg-2
         port: 443
         protocol: HTTPS
         type: instance
-        algorithm: round_robin
         attributes:
+          algorithm: round_robin
           slowStart: 120
         healthCheck:
-          enabled: true
           port: 443
           protocol: HTTPS
     networkLoadBalancer:
@@ -603,12 +591,6 @@ applications:
       # this path is relative to the config repository and the content should be in regular text.
       # Its encoded in base64 before passing in to launch Template
       userData: appConfigs/appA/launchTemplate/userData.sh
-      metadataOptions:
-        httpTokens: required
-        httpPutResponseHopLimit: 2
-        httpEndpoint: enabled
-        httpProtocolIpv6: disabled
-        instanceMetadataTags: disabled
 firewalls:
   instances:
     - name: accelerator-firewall
