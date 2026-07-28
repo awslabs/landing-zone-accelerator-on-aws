@@ -22,11 +22,29 @@ import {
   DeleteAccountAssignmentCommand,
   DescribeAccountAssignmentCreationStatusCommand,
   DescribeAccountAssignmentDeletionStatusCommand,
+  ListAccountAssignmentsCommand,
   PrincipalType,
   CreateAccountAssignmentCommandInput,
 } from '@aws-sdk/client-sso-admin';
 import { IdentitystoreClient, GetGroupIdCommand, GetUserIdCommand } from '@aws-sdk/client-identitystore';
 import { CloudFormationCustomResourceEvent } from '@aws-accelerator/utils/lib/common-types';
+
+type AssignmentPrincipal = {
+  name: string;
+  type: string;
+};
+
+type AssignmentPrincipals = AssignmentPrincipal[] | undefined;
+
+interface AssignmentResourceProperties {
+  accountIds: string[];
+  identityStoreId: string;
+  instanceArn: string;
+  permissionSetArn: string | undefined;
+  principalId: string | undefined;
+  principalType: string | undefined;
+  principals: AssignmentPrincipals;
+}
 
 /**
  * build-identity-center-assignments - lambda handler
@@ -55,14 +73,7 @@ export async function handler(event: CloudFormationCustomResourceEvent): Promise
   const identityStoreId: string = event.ResourceProperties['identityStoreId'];
   const principalType: string | undefined = event.ResourceProperties['principalType'];
   const principalId: string | undefined = event.ResourceProperties['principalId'];
-  const principals:
-    | [
-        {
-          name: string;
-          type: string;
-        },
-      ]
-    | [] = event.ResourceProperties['principals'];
+  const principals: AssignmentPrincipals = event.ResourceProperties['principals'];
   const permissionSetArnValue: string = event.ResourceProperties['permissionSetArn'];
   const accountIds: string[] = event.ResourceProperties['accountIds'];
   // const assignmentCreationRequests: CreateAccountAssignmentRequest[] = [];
@@ -102,8 +113,19 @@ export async function handler(event: CloudFormationCustomResourceEvent): Promise
   }
 
   async function onUpdate(event: AWSLambda.CloudFormationCustomResourceUpdateEvent) {
-    const previousAccountIdsList: string[] = event.OldResourceProperties['accountIds'] ?? [];
-    const deletionList = await retrieveAccountDeletions(previousAccountIdsList, accountIds);
+    const previousProperties: AssignmentResourceProperties = {
+      accountIds: event.OldResourceProperties['accountIds'] ?? [],
+      identityStoreId: event.OldResourceProperties['identityStoreId'],
+      instanceArn: event.OldResourceProperties['instanceArn'],
+      permissionSetArn: event.OldResourceProperties['permissionSetArn'],
+      principalId: event.OldResourceProperties['principalId'],
+      principalType: event.OldResourceProperties['principalType'],
+      principals: event.OldResourceProperties['principals'],
+    };
+    // Clean up assignments from the replaced permission set.
+    const permissionSetReplaced =
+      !!previousProperties.permissionSetArn && previousProperties.permissionSetArn !== permissionSetArnValue;
+
     const assignmentCreationRequests = await buildCreateAssignmentsList(
       accountIds,
       principals,
@@ -116,22 +138,40 @@ export async function handler(event: CloudFormationCustomResourceEvent): Promise
     );
 
     if (assignmentCreationRequests.length > 0) {
-      await createAssignment(assignmentCreationRequests, ssoAdminClient);
+      await createMissingAssignments(assignmentCreationRequests, ssoAdminClient);
     }
 
-    const assignmentDeletionRequests = await buildDeleteAssignmentsList(
-      deletionList,
-      principals,
-      identityStoreId,
-      instanceArn,
-      permissionSetArnValue,
-      principalType as PrincipalType,
-      principalId!,
-      idcClient,
-    );
+    if (permissionSetReplaced) {
+      const oldPermissionSetDeletionRequests = await buildDeleteAssignmentsList(
+        previousProperties.accountIds,
+        previousProperties.principals,
+        previousProperties.identityStoreId,
+        previousProperties.instanceArn,
+        previousProperties.permissionSetArn!,
+        previousProperties.principalType as PrincipalType,
+        previousProperties.principalId!,
+        idcClient,
+      );
 
-    if (deletionList.length > 0) {
-      await deleteAssignment(assignmentDeletionRequests, ssoAdminClient);
+      if (oldPermissionSetDeletionRequests.length > 0) {
+        await deleteExistingAssignments(oldPermissionSetDeletionRequests, ssoAdminClient);
+      }
+    } else {
+      const deletionList = await retrieveAccountDeletions(previousProperties.accountIds, accountIds);
+      const assignmentDeletionRequests = await buildDeleteAssignmentsList(
+        deletionList,
+        principals,
+        identityStoreId,
+        instanceArn,
+        permissionSetArnValue,
+        principalType as PrincipalType,
+        principalId!,
+        idcClient,
+      );
+
+      if (deletionList.length > 0) {
+        await deleteExistingAssignments(assignmentDeletionRequests, ssoAdminClient);
+      }
     }
     return {
       PhysicalResourceId: event.LogicalResourceId,
@@ -174,14 +214,7 @@ export async function handler(event: CloudFormationCustomResourceEvent): Promise
  */
 async function buildCreateAssignmentsList(
   accountIds: string[],
-  principals:
-    | [
-        {
-          name: string;
-          type: string;
-        },
-      ]
-    | [],
+  principals: AssignmentPrincipals,
   identityStoreId: string,
   instanceArn: string,
   permissionSetArnValue: string,
@@ -252,14 +285,7 @@ async function buildCreateAssignmentsList(
  */
 async function buildDeleteAssignmentsList(
   accountIds: string[],
-  principals:
-    | [
-        {
-          name: string;
-          type: string;
-        },
-      ]
-    | [],
+  principals: AssignmentPrincipals,
   identityStoreId: string,
   instanceArn: string,
   permissionSetArnValue: string,
@@ -317,6 +343,109 @@ async function buildDeleteAssignmentsList(
 const POLL_MAX_ATTEMPTS = 10;
 const POLL_BASE_DELAY_MS = 2000;
 const POLL_MAX_DELAY_MS = 30000;
+
+/**
+ * Checks whether an error is a ResourceNotFoundException.
+ * @param error Error to inspect
+ * @returns Whether the error is a ResourceNotFoundException
+ */
+function isResourceNotFoundException(error: unknown): boolean {
+  if (!error || typeof error !== 'object') {
+    return false;
+  }
+  const serviceError = error as { code?: string; name?: string };
+  return serviceError.name === 'ResourceNotFoundException' || serviceError.code === 'ResourceNotFoundException';
+}
+
+/**
+ * Checks whether an account assignment exists.
+ * @param parameters Account assignment parameters
+ * @param ssoAdminClient SSO Admin client
+ * @returns Whether the account assignment exists
+ */
+async function accountAssignmentExists(
+  parameters: CreateAccountAssignmentRequest,
+  ssoAdminClient: SSOAdminClient,
+): Promise<boolean> {
+  let nextToken: string | undefined;
+  try {
+    do {
+      const response = await throttlingBackOff(() =>
+        ssoAdminClient.send(
+          new ListAccountAssignmentsCommand({
+            InstanceArn: parameters.InstanceArn,
+            AccountId: parameters.TargetId,
+            PermissionSetArn: parameters.PermissionSetArn,
+            NextToken: nextToken,
+          }),
+        ),
+      );
+
+      if (
+        (response.AccountAssignments ?? []).some(
+          assignment =>
+            assignment.PrincipalId === parameters.PrincipalId && assignment.PrincipalType === parameters.PrincipalType,
+        )
+      ) {
+        return true;
+      }
+      nextToken = response.NextToken;
+    } while (nextToken);
+  } catch (error) {
+    if (isResourceNotFoundException(error)) {
+      return false;
+    }
+    throw error;
+  }
+
+  return false;
+}
+
+/**
+ * Creates account assignments that do not exist.
+ * @param assignmentRequests Account assignments to create
+ * @param ssoAdminClient SSO Admin client
+ */
+async function createMissingAssignments(
+  assignmentRequests: CreateAccountAssignmentCommandInput[],
+  ssoAdminClient: SSOAdminClient,
+): Promise<void> {
+  for (const assignmentRequest of assignmentRequests) {
+    if (await accountAssignmentExists(assignmentRequest, ssoAdminClient)) {
+      console.log(
+        `Skipping existing account assignment for Principal ID ${assignmentRequest.PrincipalId} and account ${assignmentRequest.TargetId}`,
+      );
+      continue;
+    }
+    await createAssignment([assignmentRequest], ssoAdminClient);
+  }
+}
+
+/**
+ * Deletes account assignments that exist.
+ * @param assignmentRequests Account assignments to delete
+ * @param ssoAdminClient SSO Admin client
+ */
+async function deleteExistingAssignments(
+  assignmentRequests: DeleteAccountAssignmentRequest[],
+  ssoAdminClient: SSOAdminClient,
+): Promise<void> {
+  for (const assignmentRequest of assignmentRequests) {
+    if (!(await accountAssignmentExists(assignmentRequest, ssoAdminClient))) {
+      console.log(
+        `Skipping missing account assignment for Principal ID ${assignmentRequest.PrincipalId} and account ${assignmentRequest.TargetId}`,
+      );
+      continue;
+    }
+    try {
+      await deleteAssignment([assignmentRequest], ssoAdminClient);
+    } catch (error) {
+      if (!isResourceNotFoundException(error)) {
+        throw error;
+      }
+    }
+  }
+}
 
 /**
  * Returns a delay with exponential backoff and jitter.
