@@ -20,3 +20,19 @@ The update automatically triggers the core pipeline with the new version.
 
 !!! warning
     Always review the release notes for breaking changes before updating. Some version upgrades may require configuration file changes.
+
+## Configuration Changes That Replace Resources
+
+Some configuration properties map to CloudFormation properties that require the underlying resource to be **replaced (recreated)** when they change. For these properties, CloudFormation treats *first adding the property* (absent → present) as a change, so declaring the field on a pre-existing resource can trigger a replacement **even if the value you set matches the current default behavior**. Replacement can be disruptive and, if the resource has dependencies that are not managed by LZA, may fail and leave the old resource orphaned.
+
+### Transit Gateway `multicastSupport`
+
+Adding or changing `multicastSupport` on an existing Transit Gateway in `network-config.yaml` recreates the Transit Gateway, because `MulticastSupport` on `AWS::EC2::TransitGateway` is a replacement-triggering property. This happens for **any** value — including `disable` — the first time the field is declared on a Transit Gateway that was created by an LZA version that did not emit the property.
+
+A Transit Gateway replacement disrupts all attachments (VPC, VPN, Direct Connect, peering, and Connect) and their route tables. If any attachments are managed outside LZA, deletion of the old Transit Gateway can fail and leave it orphaned alongside the new one.
+
+- If you do not need multicast, do **not** add `multicastSupport` to a pre-existing Transit Gateway.
+- If you do need it, plan the change as a controlled migration and consider protecting critical resources with a [stack policy](./stack-policy.md).
+
+!!! tip
+    Before an upgrade — especially one that crosses a version where new properties are introduced — generate a CloudFormation change set with `--no-execute` on the affected stacks (for example, `AWSAccelerator-NetworkPrepStack`) and scan for `"Replacement": "True"` to catch unintended resource replacements before running the pipeline.

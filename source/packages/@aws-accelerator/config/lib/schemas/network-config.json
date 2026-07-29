@@ -3763,7 +3763,7 @@
         },
         "multicastSupport": {
           "$ref": "#/definitions/EnableDisable",
-          "description": "(OPTIONAL) Enable this option to turn on multicast on the Transit Gateway."
+          "description": "(OPTIONAL) Enable this option to turn on multicast on the Transit Gateway. CAUTION: adding or changing this property on an existing Transit Gateway replaces (recreates) the Transit Gateway, even when set to `disable`. See remarks before adding it to a pre-existing Transit Gateway."
         },
         "name": {
           "$ref": "#/definitions/NonEmptyString",

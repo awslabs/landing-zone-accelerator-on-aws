@@ -623,10 +623,26 @@ export interface ITransitGatewayConfig {
    */
   readonly autoAcceptSharingAttachments: t.EnableDisable;
   /**
-   * (OPTIONAL) Enable this option to turn on multicast on the Transit Gateway.
+   * (OPTIONAL) Enable this option to turn on multicast on the Transit Gateway. CAUTION: adding or changing
+   * this property on an existing Transit Gateway replaces (recreates) the Transit Gateway, even when set to
+   * `disable`. See remarks before adding it to a pre-existing Transit Gateway.
    *
    * @remarks
-   * Note: Changing the value on an existing Transit Gateway will result in a replacement of the resource.
+   * **CAUTION**: Adding or changing this property on an existing Transit Gateway will cause the Transit
+   * Gateway to be **replaced (recreated)**. On `AWS::EC2::TransitGateway`, `MulticastSupport` is a
+   * replacement-triggering property, and CloudFormation treats first adding the property (absent to
+   * present) as a change that requires replacement — even when the value is `disable` and the effective
+   * runtime behavior does not change.
+   *
+   * As a result, a Transit Gateway created by an LZA version that did not emit this property will be
+   * recreated the first time `multicastSupport` is declared in its configuration, regardless of the value
+   * you set. A replacement disrupts all attachments (VPC, VPN, Direct Connect, peering, and Connect) and
+   * their route tables. If the Transit Gateway has attachments that are not managed by LZA, deletion of the
+   * old Transit Gateway may fail and leave it orphaned alongside the newly created one.
+   *
+   * If you do not need multicast, do not declare `multicastSupport` on a pre-existing Transit Gateway. If
+   * you do need it, plan the change as a controlled migration and consider protecting critical resources
+   * with a stack policy.
    *
    * Default - disable
    */
