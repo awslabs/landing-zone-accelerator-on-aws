@@ -93,7 +93,7 @@ export class IdentityCenterAssignments extends Construct {
         },
         {
           Effect: 'Allow',
-          Action: ['iam:GetSAMLProvider', 'iam:UpdateSAMLProvider'],
+          Action: ['iam:CreateSAMLProvider', 'iam:GetSAMLProvider', 'iam:UpdateSAMLProvider'],
           Resource: `arn:${partition}:iam::${cdk.Stack.of(this).account}:saml-provider/AWSSSO_*_DO_NOT_DELETE`,
         },
         {

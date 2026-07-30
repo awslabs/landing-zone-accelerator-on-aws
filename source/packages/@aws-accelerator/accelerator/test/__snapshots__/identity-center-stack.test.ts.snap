@@ -102,6 +102,7 @@ exports[`IdentityCenterStack > Construct(IdentityCenterStack):  Snapshot Test 1`
                 },
                 {
                   "Action": [
+                    "iam:CreateSAMLProvider",
                     "iam:GetSAMLProvider",
                     "iam:UpdateSAMLProvider",
                   ],

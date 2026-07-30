@@ -28,6 +28,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - fix(constructs): retry RAM resource share invitation fetch on UnauthorizedException to handle eventual consistency
 - fix(config): make custom Config rule frequency and triggering resources optional
 - fix(scp): honor OU ignore flag when reverting SCP changes
+- fix(identity-center): grant iam:CreateSAMLProvider to the assignment custom resource so management account assignments succeed with an external IdP (issue #2357)
 
 ## [1.16.0] - 
 

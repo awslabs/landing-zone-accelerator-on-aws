@@ -132,6 +132,7 @@ exports[`IdentityCenterAssignments > Construct(IdentityCenterGetInstanceId):  Sn
                 },
                 {
                   "Action": [
+                    "iam:CreateSAMLProvider",
                     "iam:GetSAMLProvider",
                     "iam:UpdateSAMLProvider",
                   ],
