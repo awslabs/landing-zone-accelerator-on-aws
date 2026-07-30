@@ -29,6 +29,77 @@ Additionally, to utilize these central endpoints from other VPCs and VPC templat
 !!!note "See also"
     For additional information on this design pattern, refer to [Centralized access to VPC private endpoints](https://docs.aws.amazon.com/whitepapers/latest/building-scalable-secure-multi-vpc-network-infrastructure/centralized-access-to-vpc-private-endpoints.html) from the AWS Whitepaper _Building a Scalable and Secure Multi-VPC AWS Network Infrastructure_
 
+## How do I remove a route table that a gateway endpoint (S3 or DynamoDB) routes into?
+
+Gateway endpoints for `s3` and `dynamodb` associate directly with route tables through the `RouteTableIds` property of the underlying `AWS::EC2::VPCEndpoint` resource. Landing Zone Accelerator builds that association list from any route entry in the VPC whose `type` is `gatewayEndpoint` and whose `target` is `s3` or `dynamodb`.
+
+If you remove such a route table (or the subnet and route table together) in a single pipeline run, the deployment fails in the `AWSAccelerator-NetworkVpcEndpointsStack` with an error similar to:
+
+```
+Resource handler returned message: "The Route Table Id 'rtb-xxxxxxxxxxxxxxxxx' does not exist.
+(Service: Ec2, Status Code: 400, ...)" ... HandlerErrorCode: GeneralServiceException
+```
+
+This happens because of the fixed stack deployment order. The `Network-Vpc` stack runs first and deletes the route table. The `Network-VpcEndpoints` stack runs next and attempts to update the gateway endpoint to drop the (now deleted) route table from its associations. Amazon EC2 rejects any endpoint update that still references a route table ID that no longer exists, so the endpoint update fails and the stack rolls back.
+
+To remove the route table safely, split the change across **two pipeline runs**:
+
+**Run 1 — remove the gateway endpoint route entries, keep the route table.** Delete only the `s3`/`dynamodb` routes from the route table's `routes` list. This lets the endpoint drop the association while the route table still exists, so the update succeeds.
+
+Before:
+
+```yaml
+routeTables:
+  - name: Network-Endpoints-A
+    routes:
+      - name: S3Gateway
+        type: gatewayEndpoint
+        target: s3
+      - name: DynamoDBGateway
+        type: gatewayEndpoint
+        target: dynamodb
+```
+
+After (Run 1):
+
+```yaml
+routeTables:
+  - name: Network-Endpoints-A
+    routes: []
+```
+
+**Run 2 — delete the route table (and any associated subnet).** With no gateway endpoint referencing it, the route table can now be removed from `network-config.yaml` without the endpoint stack attempting an update against a deleted ID.
+
+**Notes:**
+
+1. The same two-pass approach applies whether you are removing a single route table or a subnet-and-route-table pair.
+2. If you only need to stop routing S3/DynamoDB traffic through a route table but intend to keep the route table itself, only Run 1 is required.
+3. As an alternative architecture, S3 and DynamoDB also offer interface endpoints, which associate with subnets rather than route tables and are not subject to this ordering constraint.
+
+### Recovering a stack that already failed
+
+If you already ran the deletion in a single pass, the `AWSAccelerator-NetworkVpcEndpointsStack` is left in the `UPDATE_ROLLBACK_FAILED` state. In this state the stack cannot accept new updates, so the pipeline cannot self-recover and you must first return the stack to a stable state manually.
+
+1. **Identify the stuck stack and the failed endpoint resources.** In the account and Region reported in the pipeline error, open the `AWSAccelerator-NetworkVpcEndpointsStack-<account>-<region>` stack. On the **Resources** tab, note the logical IDs of the `AWS::EC2::VPCEndpoint` resources in `UPDATE_FAILED` state (the S3 and/or DynamoDB gateway endpoints, for example `CentralVpcS3...` and `CentralVpcDynamodb...`).
+
+2. **Continue the rollback, skipping the failed endpoints.** Roll the stack back to `UPDATE_ROLLBACK_COMPLETE`, skipping the endpoint resources that cannot roll back because their route table no longer exists:
+
+    ```bash
+    aws cloudformation continue-update-rollback \
+      --stack-name AWSAccelerator-NetworkVpcEndpointsStack-<account>-<region> \
+      --resources-to-skip <S3EndpointLogicalId> <DynamodbEndpointLogicalId> \
+      --region <region>
+    ```
+
+    Run this with credentials for the account that owns the stack, using the same Region as the stack.
+
+3. **Reconcile config with the deployed state.** Skipping a resource leaves it inconsistent with the template, so before the next deployment your `network-config.yaml` must match reality: remove the deleted route table's `s3`/`dynamodb` route entries (as in Run 1 above). This ensures the next pipeline run computes a valid endpoint association list rather than reintroducing the deleted route table ID.
+
+4. **Re-run the pipeline.** Release the `AWSAccelerator-Pipeline`. With the stack back in a stable state and the config reconciled, the endpoint update reconciles the associations, after which you can proceed to remove the route table itself on a subsequent run (Run 2 above).
+
+!!!warning
+    `continue-update-rollback --resources-to-skip` returns the specified resources to a stable stack state but leaves them inconsistent with the template. Always reconcile `network-config.yaml` before the next deployment; skipping this step can cause subsequent updates to fail. Skip only the minimum set of resources required to roll the stack back.
+
 ## Why do I see default VPCs in some regions when the `delete` parameter in `defaultVpc` is enabled?
 
 Landing Zone Accelerator provisions AWS CloudFormation stacks in regions that are specified in the `global-config.yaml` configuration file. In these regions, networking resources are deployed via the CloudFormation stacks. The deletion of the [Default Amazon Virtual Private Cloud (VPC)](https://docs.aws.amazon.com/vpc/latest/userguide/default-vpc.html) are handled through a custom resource provisioned in the Network-Vpc stack. This custom resource invokes an AWS Lambda function to delete common VPC resources that are attached to the default VPC, then delete the VPC itself. At the time of this writing, the Landing Zone Accelerator only deletes the default VPCs from regions designated as `enabledRegions` in `global-config.yaml`.

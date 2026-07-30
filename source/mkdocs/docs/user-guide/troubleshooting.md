@@ -24,6 +24,11 @@ These errors occur during the Prepare stage when the `validate-environment` Lamb
 | `Resource limit exceeded` | Network VPC | Enable V2 stacks (`useV2Stacks: true`) |
 | `NoAvailableConfigurationRecorder` | Security Resources | Ensure AWS Config is enabled; for Control Tower, update accounts first |
 | `Export with name already exists` | Any | Check for stack name collisions from previous deployments |
+| `The Route Table Id 'rtb-...' does not exist` | Network VPC Endpoints | Removed a route table used by an S3/DynamoDB gateway endpoint in one run. Remove the gateway endpoint routes first, then delete the route table on a second run (see below) |
+
+### Removing a route table used by a gateway endpoint
+
+Deleting a route table (or subnet and route table) that an S3 or DynamoDB gateway endpoint routes into causes the `Network-VpcEndpoints` stack to fail, because the `Network-Vpc` stack deletes the route table before the endpoint can drop the association. Split the change across two pipeline runs: first remove the `s3`/`dynamodb` route entries, then delete the route table. If a stack is already stuck in `UPDATE_ROLLBACK_FAILED` from a single-pass attempt, recover it with `continue-update-rollback` before re-running the pipeline. See [Removing a route table that a gateway endpoint routes into](../faq/networking/general.md#how-do-i-remove-a-route-table-that-a-gateway-endpoint-s3-or-dynamodb-routes-into) in the Networking FAQ for the full procedure and recovery steps.
 
 ### Control Tower Specific
 
