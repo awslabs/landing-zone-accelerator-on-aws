@@ -41,18 +41,6 @@ export async function handler(event: any): Promise<void> {
   // Get installer metadata
   const installerStackMetadata = await getInstallerStackMetadata(homeRegion, installerStackName);
 
-  //
-  // Prepare the LZA configuration source. For S3-based deployments (where no
-  // CodeCommit repository exists) this downloads and extracts the configuration
-  // zip so the report can still be generated.
-  //
-  const configSource = await prepareLzaConfigSource({
-    homeRegion,
-    configRepositoryLocation,
-    repositoryName: configRepoName,
-    configBucketName,
-  });
-
   // Set resource names
   let pipelineStackName = `${installerStackMetadata.prefix}-PipelineStack-${pipelineAccountId}-${homeRegion}`;
   let installerPipelineName = `${installerStackMetadata.prefix}-Installer`;
@@ -63,6 +51,19 @@ export async function handler(event: any): Promise<void> {
     installerPipelineName = `${installerStackMetadata.qualifier}-installer`;
     lzaPipelineName = `${installerStackMetadata.qualifier}-pipeline`;
   }
+
+  //
+  // Prepare the LZA configuration source. For S3-based and codeconnection
+  // deployments (where no CodeCommit repository exists) this downloads and
+  // extracts the configuration zip so the report can still be generated.
+  //
+  const configSource = await prepareLzaConfigSource({
+    homeRegion,
+    configRepositoryLocation,
+    repositoryName: configRepoName,
+    configBucketName,
+    pipelineName: lzaPipelineName,
+  });
 
   //
   // Get Organization account details
@@ -149,6 +150,17 @@ export async function handler(event: any): Promise<void> {
   }
   regionString += '</ul>';
   htmlBodyMessage = htmlBodyMessage + '<tr><td>Enabled regions</td><td>' + regionString + '</td></tr>';
+
+  if (configSource.configUnavailableReason) {
+    htmlBodyMessage =
+      htmlBodyMessage +
+      '<tr><td>Configuration</td>' +
+      formatTableCellValue('Failed') +
+      '</tr>' +
+      '<tr><td>Configuration details</td><td>' +
+      configSource.configUnavailableReason +
+      '</td></tr>';
+  }
 
   //
   // Print Installer Stack Status

@@ -12,14 +12,12 @@ export type LzaGlobalConfigType = { homeRegion: string; enabledRegions: string[]
 /**
  * Describes where the LZA configuration files are sourced from.
  *
- * LZA supports storing the configuration in a CodeCommit repository or in an S3
- * bucket (`configRepositoryLocation` of `codecommit` or `s3`). When the
- * configuration is in S3, the diagnostics Lambda downloads and extracts the
- * configuration zip from S3 to `localConfigDirPath` and reads the files from
- * disk.
- *
- * Note: the `codeconnection` location is not yet supported here (its
- * configuration lives in the pipeline artifact bucket, not the config bucket).
+ * LZA supports storing the configuration in a CodeCommit repository, an S3
+ * bucket, or an external repository accessed through AWS CodeConnections
+ * (`configRepositoryLocation` of `codecommit`, `s3`, or `codeconnection`). For
+ * `s3` and `codeconnection` the diagnostics Lambda downloads and extracts the
+ * configuration zip to `localConfigDirPath` and reads the files from disk; for
+ * `codeconnection` the zip is sourced from the pipeline artifact bucket.
  */
 export type ConfigSourceType = {
   /**
@@ -27,7 +25,7 @@ export type ConfigSourceType = {
    */
   homeRegion: string;
   /**
-   * Location of the LZA configuration files: `codecommit` or `s3`.
+   * Location of the LZA configuration files: `codecommit`, `s3`, or `codeconnection`.
    */
   configRepositoryLocation: string;
   /**
@@ -39,9 +37,17 @@ export type ConfigSourceType = {
    */
   configBucketName?: string;
   /**
-   * Local directory the S3 configuration zip has been extracted to (set when location is `s3`).
+   * LZA pipeline name (used to resolve the configuration location when location is `codeconnection`).
+   */
+  pipelineName?: string;
+  /**
+   * Local directory the configuration zip has been extracted to (set when location is `s3` or `codeconnection`).
    */
   localConfigDirPath?: string;
+  /**
+   * Human-readable reason the configuration could not be prepared.
+   */
+  configUnavailableReason?: string;
 };
 
 export type LzaAccountsConfigType = {

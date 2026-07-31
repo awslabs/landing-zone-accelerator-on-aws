@@ -7,7 +7,15 @@ import {
 } from '@aws-sdk/client-cloudformation';
 import { ListAccountsCommand, OrganizationsClient } from '@aws-sdk/client-organizations';
 import { CodeCommitClient, GetFileCommand } from '@aws-sdk/client-codecommit';
-import { ActionExecution, CodePipelineClient, GetPipelineStateCommand } from '@aws-sdk/client-codepipeline';
+import {
+  ActionExecution,
+  ArtifactDetail,
+  CodePipelineClient,
+  GetPipelineStateCommand,
+  ListActionExecutionsCommand,
+  ListPipelineExecutionsCommand,
+  PipelineExecutionSummary,
+} from '@aws-sdk/client-codepipeline';
 import { CloudWatchLogsClient, FilterLogEventsCommand } from '@aws-sdk/client-cloudwatch-logs';
 import { S3Client, PutObjectCommand, GetObjectCommand } from '@aws-sdk/client-s3';
 
@@ -291,15 +299,14 @@ const S3_CONFIG_EXTRACT_DIR = '/tmp/lza-source-config';
  *
  * When the configuration is stored in CodeCommit, individual files are read on
  * demand via the CodeCommit API. When it is stored in S3 (`s3`), the
- * configuration zip is downloaded once and extracted to a local temp directory
- * so subsequent reads happen from disk. This mirrors the approach used by the
- * get-accelerator-metadata custom resource and fixes the
- * `RepositoryDoesNotExistException` seen on S3-based deployments where no
- * CodeCommit repository exists.
- *
- * The `codeconnection` location is not yet supported: its configuration is not
- * stored in the config bucket but in the pipeline artifact bucket, so it
- * requires a distinct retrieval path (tracked as a separate follow-up).
+ * configuration zip is downloaded once from the config bucket and extracted to a
+ * local temp directory so subsequent reads happen from disk. When it is stored
+ * in an external repository accessed via `codeconnection`, the configuration is
+ * delivered to the pipeline artifact bucket; its location is resolved from the
+ * pipeline's last successful execution and the zip is downloaded and extracted
+ * the same way. This mirrors the approach used by the get-accelerator-metadata
+ * custom resource and fixes the `RepositoryDoesNotExistException` seen on
+ * deployments where no CodeCommit repository exists.
  *
  * @param options config source options
  * @returns {@link ConfigSourceType}
@@ -309,45 +316,125 @@ export async function prepareLzaConfigSource(options: {
   configRepositoryLocation: string;
   repositoryName: string;
   configBucketName?: string;
+  pipelineName?: string;
 }): Promise<ConfigSourceType> {
   const configSource: ConfigSourceType = { ...options };
 
-  if (options.configRepositoryLocation === 'codeconnection') {
-    throw new Error(
-      'The "codeconnection" configuration source is not yet supported by the diagnostics pack. ' +
-        'Its configuration is stored in the pipeline artifact bucket rather than the config bucket and requires a separate retrieval path.',
-    );
-  }
-
-  if (options.configRepositoryLocation !== 'codecommit') {
+  if (options.configRepositoryLocation === 's3') {
     if (!options.configBucketName) {
-      throw new Error(
-        `CONFIG_BUCKET_NAME environment variable is required when config repository location is "${options.configRepositoryLocation}"`,
-      );
+      throw new Error('CONFIG_BUCKET_NAME environment variable is required when config repository location is "s3"');
     }
-    configSource.localConfigDirPath = await downloadAndExtractS3Config(options.homeRegion, options.configBucketName);
+    configSource.localConfigDirPath = await downloadAndExtractS3Config(
+      options.homeRegion,
+      options.configBucketName,
+      S3_CONFIG_OBJECT_KEY,
+    );
+  } else if (options.configRepositoryLocation === 'codeconnection') {
+    if (!options.pipelineName) {
+      throw new Error('pipelineName is required when config repository location is "codeconnection"');
+    }
+    try {
+      const { bucket, key } = await getCodeConnectionConfigLocation(options.homeRegion, options.pipelineName);
+      configSource.localConfigDirPath = await downloadAndExtractS3Config(options.homeRegion, bucket, key);
+    } catch (error) {
+      console.warn(
+        `Unable to resolve codeconnection configuration for pipeline "${options.pipelineName}"; ` +
+          `continuing without configuration files. Reason: ${error}`,
+      );
+      configSource.configUnavailableReason =
+        'Configuration could not be read from the CodeConnection source. The LZA pipeline may not have a ' +
+        'successful execution yet, or its configuration artifact was unavailable. See the diagnostics ' +
+        'Lambda CloudWatch logs for details.';
+    }
   }
 
   return configSource;
 }
 
 /**
- * Downloads the configuration zip from S3 and extracts it to a local directory.
+ * Resolves the S3 location of the LZA configuration for `codeconnection`
+ * deployments. The configuration is delivered to the pipeline artifact bucket
+ * rather than the config bucket, so the bucket and key are read from the `Config`
+ * input artifact of the pipeline's last successful execution. Mirrors the
+ * get-accelerator-metadata custom resource.
  * @param homeRegion home region
- * @param configBucketName configuration bucket name
+ * @param pipelineName LZA pipeline name
+ * @returns the artifact bucket name and object key of the configuration zip
+ */
+async function getCodeConnectionConfigLocation(
+  homeRegion: string,
+  pipelineName: string,
+): Promise<{ bucket: string; key: string }> {
+  const codePipelineClient = new CodePipelineClient({ region: homeRegion });
+
+  // Find the most recent successful execution. ListPipelineExecutions returns
+  // executions newest-first; paginate manually with backoff (rather than the SDK
+  // paginator) so throttling is handled consistently with the rest of this file.
+  let lastSuccessfulExecution: PipelineExecutionSummary | undefined;
+  let executionsNextToken: string | undefined = undefined;
+  do {
+    const page = await throttlingBackOff(() =>
+      codePipelineClient.send(new ListPipelineExecutionsCommand({ pipelineName, nextToken: executionsNextToken })),
+    );
+    lastSuccessfulExecution = (page.pipelineExecutionSummaries ?? []).find(
+      execution => execution.status === 'Succeeded',
+    );
+    executionsNextToken = page.nextToken;
+  } while (!lastSuccessfulExecution && executionsNextToken);
+
+  if (!lastSuccessfulExecution?.pipelineExecutionId) {
+    throw new Error(`No successful execution found for pipeline ${pipelineName}`);
+  }
+
+  // Locate the `Config` input artifact, paginating action executions with backoff
+  // so the artifact is still found on pipelines whose actions span multiple pages.
+  let configArtifact: ArtifactDetail | undefined;
+  let actionsNextToken: string | undefined = undefined;
+  do {
+    const actionExecutions = await throttlingBackOff(() =>
+      codePipelineClient.send(
+        new ListActionExecutionsCommand({
+          pipelineName,
+          filter: { pipelineExecutionId: lastSuccessfulExecution!.pipelineExecutionId },
+          nextToken: actionsNextToken,
+        }),
+      ),
+    );
+    configArtifact = (actionExecutions.actionExecutionDetails ?? [])
+      .flatMap(detail => detail.input?.inputArtifacts ?? [])
+      .find(artifact => artifact.name === 'Config');
+    actionsNextToken = actionExecutions.nextToken;
+  } while (!configArtifact && actionsNextToken);
+
+  if (!configArtifact?.s3location?.bucket || !configArtifact.s3location.key) {
+    throw new Error(`Config artifact S3 location not found for pipeline ${pipelineName}`);
+  }
+
+  return { bucket: configArtifact.s3location.bucket, key: configArtifact.s3location.key };
+}
+
+/**
+ * Downloads a configuration zip from S3 and extracts it to a local directory.
+ * @param homeRegion home region
+ * @param bucketName bucket holding the configuration zip
+ * @param objectKey object key of the configuration zip
  * @returns local directory path the configuration files were extracted to
  */
-async function downloadAndExtractS3Config(homeRegion: string, configBucketName: string): Promise<string> {
+async function downloadAndExtractS3Config(homeRegion: string, bucketName: string, objectKey: string): Promise<string> {
   const s3Client = new S3Client({ region: homeRegion });
   const response = await throttlingBackOff(() =>
-    s3Client.send(new GetObjectCommand({ Bucket: configBucketName, Key: S3_CONFIG_OBJECT_KEY })),
+    s3Client.send(new GetObjectCommand({ Bucket: bucketName, Key: objectKey })),
   );
 
   if (!response.Body) {
-    throw new Error(`Unable to download configuration from s3://${configBucketName}/${S3_CONFIG_OBJECT_KEY}`);
+    throw new Error(`Unable to download configuration from s3://${bucketName}/${objectKey}`);
   }
 
-  const tempZipPath = path.join('/tmp', S3_CONFIG_OBJECT_KEY.split('/').pop()!);
+  const zipFileName = objectKey.split('/').pop();
+  if (!zipFileName) {
+    throw new Error(`Invalid S3 object key: ${objectKey}`);
+  }
+  const tempZipPath = path.join('/tmp', zipFileName);
   await fs.promises.writeFile(tempZipPath, await response.Body.transformToByteArray());
 
   if (fs.existsSync(S3_CONFIG_EXTRACT_DIR)) {
@@ -388,12 +475,58 @@ async function getConfigFileContent(configSource: ConfigSourceType, fileName: st
     return response.fileContent ? new TextDecoder().decode(response.fileContent) : undefined;
   }
 
-  const configFilePath = path.join(configSource.localConfigDirPath!, fileName);
-  if (!fs.existsSync(configFilePath)) {
+  if (!configSource.localConfigDirPath) {
+    // No local configuration was prepared.
+    // Treat every file as absent so the report degrades gracefully.
+    return undefined;
+  }
+
+  const configFilePath = resolveConfigFilePath(configSource.localConfigDirPath, fileName);
+  if (!configFilePath) {
     return undefined;
   }
 
   return fs.readFileSync(configFilePath, 'utf8');
+}
+
+/**
+ * Resolves the on-disk path of a configuration file within an extracted config
+ * directory. Checks the directory root first (the expected layout), then falls
+ * back to a breadth-first search so configuration archives that nest the YAML
+ * files under a subdirectory are still read rather than silently skipped (which
+ * would otherwise produce an empty report with no error).
+ * @param rootDir extracted configuration directory
+ * @param fileName configuration file name, e.g. `global-config.yaml`
+ * @returns absolute path to the shallowest matching file, or `undefined` when not present
+ */
+function resolveConfigFilePath(rootDir: string, fileName: string): string | undefined {
+  const rootCandidate = path.join(rootDir, fileName);
+  if (fs.existsSync(rootCandidate)) {
+    return rootCandidate;
+  }
+
+  // Breadth-first search returns the shallowest match, avoiding accidental
+  // matches deeper in the tree when a root-level file is absent.
+  const queue: string[] = [rootDir];
+  while (queue.length > 0) {
+    const dir = queue.shift()!;
+    let entries: fs.Dirent[];
+    try {
+      entries = fs.readdirSync(dir, { withFileTypes: true });
+    } catch {
+      continue;
+    }
+    for (const entry of entries) {
+      const entryPath = path.join(dir, entry.name);
+      if (entry.isDirectory()) {
+        queue.push(entryPath);
+      } else if (entry.isFile() && entry.name === fileName) {
+        return entryPath;
+      }
+    }
+  }
+
+  return undefined;
 }
 
 export async function getLzaGlobalConfigMetadata(configSource: ConfigSourceType): Promise<LzaGlobalConfigType> {

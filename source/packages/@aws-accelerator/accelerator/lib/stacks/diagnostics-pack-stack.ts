@@ -30,6 +30,9 @@ export class DiagnosticsPackStack extends cdk.Stack {
     let reportDestinationBucketName = `${props.bucketNamePrefix}-installer-${cdk.Stack.of(this).account}-${
       cdk.Stack.of(this).region
     }`;
+    let pipelineBucketName = `${props.bucketNamePrefix}-pipeline-${cdk.Stack.of(this).account}-${
+      cdk.Stack.of(this).region
+    }`;
     let pipelineAccountResourcesPrefix = props.acceleratorPrefix;
     let diagnosticsPackLambdaRoleNamePrefix = props.acceleratorPrefix;
 
@@ -38,6 +41,7 @@ export class DiagnosticsPackStack extends cdk.Stack {
       reportDestinationBucketName = `${props.qualifier}-installer-${cdk.Stack.of(this).account}-${
         cdk.Stack.of(this).region
       }`;
+      pipelineBucketName = `${props.qualifier}-pipeline-${cdk.Stack.of(this).account}-${cdk.Stack.of(this).region}`;
       pipelineAccountResourcesPrefix = props.qualifier;
       diagnosticsPackLambdaRoleNamePrefix = props.qualifier;
     }
@@ -106,8 +110,7 @@ export class DiagnosticsPackStack extends cdk.Stack {
     );
 
     // Read access to the LZA configuration zip in S3, used when the configuration is
-    // stored in S3 (`s3`) rather than CodeCommit. The `codeconnection` source stores its
-    // configuration in the pipeline artifact bucket and is not yet supported here.
+    // stored in S3 (`s3`) rather than CodeCommit.
     diagnosticsPackLambdaRole.addToPrincipalPolicy(
       new cdk.aws_iam.PolicyStatement({
         sid: 'ConfigBucketReadAccess',
@@ -116,6 +119,18 @@ export class DiagnosticsPackStack extends cdk.Stack {
         resources: [
           `arn:${cdk.Stack.of(this).partition}:s3:::${props.configBucketName}/zipped/aws-accelerator-config.zip`,
         ],
+      }),
+    );
+
+    // Read access to the pipeline artifact bucket, used when the configuration is
+    // sourced from an external repository via `codeconnection` (the config zip is
+    // delivered to the pipeline artifact bucket under a dynamic key).
+    diagnosticsPackLambdaRole.addToPrincipalPolicy(
+      new cdk.aws_iam.PolicyStatement({
+        sid: 'PipelineArtifactBucketReadAccess',
+        effect: cdk.aws_iam.Effect.ALLOW,
+        actions: ['s3:GetObject'],
+        resources: [`arn:${cdk.Stack.of(this).partition}:s3:::${pipelineBucketName}/*`],
       }),
     );
 
@@ -134,7 +149,11 @@ export class DiagnosticsPackStack extends cdk.Stack {
       new cdk.aws_iam.PolicyStatement({
         sid: 'CodepipelineAccess',
         effect: cdk.aws_iam.Effect.ALLOW,
-        actions: ['codepipeline:GetPipelineState'],
+        actions: [
+          'codepipeline:GetPipelineState',
+          'codepipeline:ListPipelineExecutions',
+          'codepipeline:ListActionExecutions',
+        ],
         resources: [
           `arn:${cdk.Stack.of(this).partition}:codepipeline:${cdk.Stack.of(this).region}:${
             cdk.Stack.of(this).account
