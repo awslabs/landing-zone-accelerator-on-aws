@@ -427,6 +427,10 @@
           },
           "type": "array"
         },
+        "customPolicyRule": {
+          "$ref": "#/definitions/ICustomPolicyRuleConfigType",
+          "description": "Configuration for Guard-based custom policy rules (no Lambda required). Required when type is set to \"CustomPolicy\"."
+        },
         "customRule": {
           "$ref": "#/definitions/ICustomRuleConfigType",
           "description": "Configuration for custom config rules backed by AWS Lambda functions. Required when type is set to \"Custom\" for organization-specific compliance logic."
@@ -535,6 +539,25 @@
         "rolePolicyFile",
         "automatic",
         "targetId"
+      ],
+      "type": "object"
+    },
+    "ICustomPolicyRuleConfigType": {
+      "additionalProperties": false,
+      "description": "Configuration for AWS Config Custom Policy rules that use CloudFormation Guard\nto evaluate resource compliance without requiring a Lambda function.",
+      "properties": {
+        "enableDebugLog": {
+          "default": false,
+          "description": "Enable debug logging for the Guard rule evaluation. When enabled, debug logs are delivered to CloudWatch Logs.",
+          "type": "boolean"
+        },
+        "policyText": {
+          "$ref": "#/definitions/NonEmptyString",
+          "description": "The Guard policy definition or a path to a .guard file in the config repository. If the value is a path to a file that exists in the config directory, the file contents will be used. Otherwise, the value is treated as inline Guard policy text."
+        }
+      },
+      "required": [
+        "policyText"
       ],
       "type": "object"
     },

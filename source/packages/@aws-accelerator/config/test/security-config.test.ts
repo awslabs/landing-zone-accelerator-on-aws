@@ -27,6 +27,7 @@ import {
   AwsConfigRuleSet,
   BlockPublicDocumentSharingConfig,
   ConfigRule,
+  CustomPolicyRuleConfig,
   DetectiveConfig,
   DocumentConfig,
   DocumentSetConfig,
@@ -95,6 +96,15 @@ describe('SecurityConfig', () => {
     expect(new AwsConfigAggregation().enable).toBe(true);
 
     expect(new ConfigRule().name).toBe('');
+
+    // CustomPolicyRuleConfig defaults
+    const customPolicyRuleConfig = new CustomPolicyRuleConfig();
+    expect(customPolicyRuleConfig.policyText).toBe('');
+    expect(customPolicyRuleConfig.enableDebugLog).toBeUndefined();
+
+    // ConfigRule should have customPolicyRule as undefined by default
+    const configRule = new ConfigRule();
+    expect(configRule.customPolicyRule).toBeUndefined();
 
     expect(new AwsConfigRuleSet().rules).toStrictEqual([]);
 

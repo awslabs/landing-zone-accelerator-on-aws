@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - feat(config): add configurationValidationMode (off/warn/strict) to detect unrecognized keys in config files
 - feat(ec2): add blockPublicAmi configuration to block public access to AMIs across organization accounts
 - feat(networking): add encryptionSupport option to transit gateway config to enable VPC Encryption Controls support
+- feat(config): add support for AWS Config Custom Policy (Guard-based) rules via `awsConfig.ruleSets[].rules[].type: CustomPolicy`
 
 ### Fixed
 

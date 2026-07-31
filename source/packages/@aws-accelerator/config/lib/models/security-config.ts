@@ -2756,6 +2756,54 @@ export interface ICustomRuleConfigType {
 }
 
 /**
+ * *{@link SecurityConfig} / {@link AwsConfig} / {@link AwsConfigRuleSet} / {@link ConfigRule} / {@link CustomPolicyRuleConfig}*
+ *
+ * @description
+ * Configuration for AWS Config Custom Policy rules that use CloudFormation Guard
+ * to evaluate resource compliance without requiring a Lambda function.
+ *
+ * @see https://docs.aws.amazon.com/config/latest/developerguide/evaluate-config_develop-rules_cfn-guard.html
+ *
+ * @example
+ * Inline Guard policy:
+ * ```
+ * customPolicyRule:
+ *   policyText: |
+ *     rule checkcompliance when
+ *         resourceType == "AWS::DynamoDB::Table" {
+ *         let pitr = supplementaryConfiguration.ContinuousBackupsDescription.pointInTimeRecoveryDescription.pointInTimeRecoveryStatus
+ *         %pitr == "ENABLED"
+ *     }
+ *   enableDebugLog: false
+ * ```
+ *
+ * Guard policy from file:
+ * ```
+ * customPolicyRule:
+ *   policyText: custom-config-rules/my-guard-rule.guard
+ *   enableDebugLog: true
+ * ```
+ */
+export interface ICustomPolicyRuleConfigType {
+  /**
+   * The Guard policy definition or a path to a .guard file in the config repository.
+   * If the value is a path to a file that exists in the config directory, the file contents will be used.
+   * Otherwise, the value is treated as inline Guard policy text.
+   *
+   * @remarks Maximum 10,000 characters for the policy text.
+   * @see https://docs.aws.amazon.com/config/latest/developerguide/evaluate-config_develop-rules_cfn-guard.html
+   */
+  readonly policyText: t.NonEmptyString;
+  /**
+   * Enable debug logging for the Guard rule evaluation.
+   * When enabled, debug logs are delivered to CloudWatch Logs.
+   *
+   * @default false
+   */
+  readonly enableDebugLog?: boolean;
+}
+
+/**
  * *{@link SecurityConfig} / {@link AwsConfig} / {@link AwsConfigRuleSet} / {@link ConfigRule} / {@link ConfigRuleRemediation} / {@link RemediationParameters}*
  *
  * @description
@@ -3045,6 +3093,13 @@ export interface IConfigRule {
    * Required when type is set to "Custom" for organization-specific compliance logic.
    */
   readonly customRule?: ICustomRuleConfigType;
+  /**
+   * Configuration for Guard-based custom policy rules (no Lambda required).
+   * Required when type is set to "CustomPolicy".
+   *
+   * @see https://docs.aws.amazon.com/config/latest/developerguide/evaluate-config_develop-rules_cfn-guard.html
+   */
+  readonly customPolicyRule?: ICustomPolicyRuleConfigType;
   /**
    * Configuration for automated remediation actions when resources are found non-compliant.
    * When configured, AWS Config can automatically fix compliance violations without manual intervention,

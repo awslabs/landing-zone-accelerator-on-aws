@@ -24,6 +24,7 @@ import * as cdk from 'aws-cdk-lib';
 import { NagSuppressions } from 'cdk-nag';
 import { pascalCase } from 'change-case';
 import { Construct } from 'constructs';
+import fs from 'fs';
 import path from 'path';
 
 import {
@@ -63,7 +64,11 @@ interface RemediationParameters {
   };
 }
 
-type CustomConfigRuleType = cdk.aws_config.ManagedRule | cdk.aws_config.CustomRule | undefined;
+type CustomConfigRuleType =
+  | cdk.aws_config.ManagedRule
+  | cdk.aws_config.CustomRule
+  | cdk.aws_config.CustomPolicy
+  | undefined;
 
 /**
  * Security Stack, configures local account security services
@@ -844,13 +849,54 @@ export class SecurityResourcesStack extends AcceleratorStack {
   }
 
   /**
+   * Function to create AWS Config Custom Policy rule (Guard-based, no Lambda)
+   * @param rule
+   * @returns
+   */
+  private createCustomPolicyConfigRule(rule: ConfigRule): CustomConfigRuleType {
+    if (rule.customPolicyRule === undefined) {
+      this.logger.info(`Custom policy rule config for Config rule ${rule.name} is undefined`);
+      return;
+    }
+
+    // Build rule scope from complianceResourceTypes
+    const resourceTypes: cdk.aws_config.ResourceType[] = [];
+    for (const resourceType of rule.complianceResourceTypes ?? []) {
+      resourceTypes.push(cdk.aws_config.ResourceType.of(resourceType));
+    }
+
+    let ruleScope: cdk.aws_config.RuleScope | undefined;
+    if (resourceTypes.length > 0) {
+      ruleScope = cdk.aws_config.RuleScope.fromResources(resourceTypes);
+    }
+
+    // Resolve policyText: if it's a file path that exists, read the file
+    let policyText = rule.customPolicyRule.policyText;
+    const potentialFilePath = path.join(this.props.configDirPath, policyText);
+    if (fs.existsSync(potentialFilePath)) {
+      policyText = fs.readFileSync(potentialFilePath, 'utf8');
+    }
+
+    const customPolicyRule = new cdk.aws_config.CustomPolicy(this, pascalCase(rule.name), {
+      configRuleName: rule.name,
+      description: rule.description,
+      policyText,
+      enableDebugLog: rule.customPolicyRule.enableDebugLog ?? false,
+      inputParameters: this.getRuleParameters(rule.name, rule.inputParameters),
+      ruleScope,
+    });
+
+    return customPolicyRule;
+  }
+
+  /**
    * Function to setup AWS Config rule remediation
    * @param rule
    * @param configRule
    */
   private setupConfigRuleRemediation(
     rule: ConfigRule,
-    configRule: cdk.aws_config.ManagedRule | cdk.aws_config.CustomRule,
+    configRule: cdk.aws_config.ManagedRule | cdk.aws_config.CustomRule | cdk.aws_config.CustomPolicy,
   ) {
     const remediationRole = this.createRemediationRole(
       rule.name,
@@ -931,7 +977,7 @@ export class SecurityResourcesStack extends AcceleratorStack {
    */
   private setupConfigServicesTagging(
     rule: ConfigRule,
-    configRule: cdk.aws_config.ManagedRule | cdk.aws_config.CustomRule,
+    configRule: cdk.aws_config.ManagedRule | cdk.aws_config.CustomRule | cdk.aws_config.CustomPolicy,
   ) {
     if (rule.tags) {
       const configRuleTags = this.convertAcceleratorTags(rule.tags);
@@ -955,7 +1001,9 @@ export class SecurityResourcesStack extends AcceleratorStack {
     for (const rule of ruleSet.rules) {
       let configRule: CustomConfigRuleType;
 
-      if (rule.type && rule.type === 'Custom') {
+      if (rule.type && rule.type === 'CustomPolicy') {
+        configRule = this.createCustomPolicyConfigRule(rule);
+      } else if (rule.type && rule.type === 'Custom') {
         configRule = this.createCustomConfigRule(rule);
       } else {
         configRule = this.createManagedConfigRule(rule);

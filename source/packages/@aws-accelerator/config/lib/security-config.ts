@@ -503,6 +503,11 @@ export class CustomRuleConfig implements i.ICustomRuleConfigType {
   readonly triggeringResources?: i.ITriggeringResourceType = undefined;
 }
 
+export class CustomPolicyRuleConfig implements i.ICustomPolicyRuleConfigType {
+  readonly policyText: t.NonEmptyString = '';
+  readonly enableDebugLog?: boolean;
+}
+
 export class ConfigRule implements i.IConfigRule {
   readonly name = '';
   readonly description = '';
@@ -512,6 +517,7 @@ export class ConfigRule implements i.IConfigRule {
   readonly type = '';
   readonly tags = [];
   readonly customRule: CustomRuleConfig | undefined;
+  readonly customPolicyRule: CustomPolicyRuleConfig | undefined;
   readonly remediation: ConfigRuleRemediation = new ConfigRuleRemediation();
 }
 

@@ -1161,6 +1161,35 @@ export class SecurityConfigValidator {
           }
         }
       }
+
+      if (rule.type === 'CustomPolicy') {
+        if (!rule.customPolicyRule) {
+          errors.push(
+            `CustomPolicy rule: ${rule.name} has type "CustomPolicy" but no customPolicyRule configuration provided`,
+          );
+        } else {
+          if (!rule.customPolicyRule.policyText) {
+            errors.push(`CustomPolicy rule: ${rule.name} must have policyText defined`);
+          } else {
+            // If policyText is a file path that exists, validate the file content length
+            const potentialFilePath = path.join(configDir, rule.customPolicyRule.policyText);
+            if (fs.existsSync(potentialFilePath)) {
+              const fileContent = fs.readFileSync(potentialFilePath, 'utf8');
+              if (fileContent.length > 10000) {
+                errors.push(`CustomPolicy rule: ${rule.name} guard policy file content exceeds 10,000 character limit`);
+              }
+            } else if (rule.customPolicyRule.policyText.length > 10000) {
+              // Inline policy text length check
+              errors.push(`CustomPolicy rule: ${rule.name} inline policyText exceeds 10,000 character limit`);
+            }
+          }
+        }
+      }
+
+      // Validate type and config consistency
+      if (rule.type === 'Custom' && !rule.customRule) {
+        errors.push(`Custom rule: ${rule.name} has type "Custom" but no customRule configuration provided`);
+      }
     }
   }
 
