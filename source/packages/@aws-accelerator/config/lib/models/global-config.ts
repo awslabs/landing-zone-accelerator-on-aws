@@ -1021,7 +1021,7 @@ export interface IControlTowerControlParameter {
    * Parameter value. Control Tower accepts JSON-compatible scalars or arrays;
    * `AllowedRegions`, in particular, requires an array of region strings.
    */
-  readonly value: string | number | boolean | (string | number | boolean)[];
+  readonly value: string | number | boolean | string[] | number[] | boolean[];
 }
 
 /**
