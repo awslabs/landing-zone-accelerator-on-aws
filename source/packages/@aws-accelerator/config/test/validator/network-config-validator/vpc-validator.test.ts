@@ -11,8 +11,21 @@
  *  and limitations under the License.
  */
 
-import { describe, expect, test } from 'vitest';
+import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import * as fc from 'fast-check';
+
+// Capture non-blocking findings logged by the network-config validator logger.
+const { errorSpy } = vi.hoisted(() => ({ errorSpy: vi.fn() }));
+vi.mock('@aws-accelerator/utils', async importOriginal => ({
+  ...((await importOriginal()) as object),
+  createLogger: () => ({
+    info: () => {},
+    debug: () => {},
+    warn: () => {},
+    error: errorSpy,
+  }),
+}));
+
 import {
   GatewayEndpointConfig,
   GatewayEndpointServiceConfig,
@@ -24,6 +37,7 @@ import {
   VpcConfig,
   VpcTemplatesConfig,
 } from '../../../lib/network-config';
+import { GlobalConfig } from '../../../lib/global-config';
 import { VpcValidator } from '../../../validator/network-config-validator/vpc-validator';
 import { NetworkValidatorFunctions } from '../../../validator/network-config-validator/network-validator-functions';
 
@@ -508,11 +522,11 @@ const OU_NAMES = ['Root', 'Security', 'Infrastructure', 'Workload', 'Workload/Ne
 
 /**
  * Build a NetworkConfig + helpers pair for share-target tests.
- * One VPC owned by `vpcAccount`; the caller seeds the shared resources and the VPC's
- * consumer references.
+ * The caller selects a direct VPC or VPC template and seeds its consumer references.
  */
 function buildShareFixture(params: {
   vpcAccount: string;
+  consumerType?: 'vpc' | 'vpcTemplate';
   delegatedAdminAccount?: string;
   transitGateways?: TransitGatewayConfig[];
   ipams?: IpamConfig[];
@@ -526,9 +540,11 @@ function buildShareFixture(params: {
   };
   subnets?: VpcConfig['subnets'];
   loadBalancers?: VpcConfig['loadBalancers'];
+  vpcTags?: VpcConfig['tags'];
 }): { networkConfig: NetworkConfig; helpers: NetworkValidatorFunctions } {
   const {
     vpcAccount,
+    consumerType = 'vpc',
     delegatedAdminAccount = 'Network',
     transitGateways = [],
     ipams,
@@ -536,6 +552,7 @@ function buildShareFixture(params: {
     vpcConsumers = {},
     subnets,
     loadBalancers,
+    vpcTags,
   } = params;
 
   // validateVpcStructure rejects (and short-circuits all per-VPC checks) when both `cidrs` and
@@ -545,7 +562,6 @@ function buildShareFixture(params: {
 
   const vpc: Partial<VpcConfig & VpcTemplatesConfig> = {
     name: 'TestVpc',
-    account: vpcAccount,
     region: 'us-east-1',
     cidrs: useIpam ? undefined : ['10.0.0.0/16'],
     transitGatewayAttachments: vpcConsumers.transitGatewayAttachments,
@@ -555,7 +571,14 @@ function buildShareFixture(params: {
     resolverRules: vpcConsumers.resolverRules,
     subnets,
     loadBalancers,
-    deploymentTargets: { accounts: [], organizationalUnits: [], excludedAccounts: [], excludedRegions: [] },
+    tags: vpcTags,
+    deploymentTargets: {
+      accounts: consumerType === 'vpcTemplate' ? [vpcAccount] : [],
+      organizationalUnits: [],
+      excludedAccounts: [],
+      excludedRegions: [],
+    },
+    ...(consumerType === 'vpc' ? { account: vpcAccount } : {}),
   };
 
   const centralNetworkServices: Partial<CentralNetworkServicesConfig> = {
@@ -569,7 +592,8 @@ function buildShareFixture(params: {
     transitGateways,
     endpointPolicies: [{ name: 'Default', document: 'path/to/policy.json' }],
     centralNetworkServices: centralNetworkServices as CentralNetworkServicesConfig,
-    vpcs: [vpc as VpcConfig],
+    vpcs: consumerType === 'vpc' ? [vpc as VpcConfig] : [],
+    vpcTemplates: consumerType === 'vpcTemplate' ? [vpc as VpcTemplatesConfig] : undefined,
   };
 
   const helpers = new NetworkValidatorFunctions(
@@ -631,10 +655,16 @@ function buildTgwAttachment(name: string, tgwName: string, tgwAccount: string): 
 /**
  * Build an IPAM with one pool with the given share targets.
  */
-function buildIpam(params: { poolName?: string; shareOus?: string[]; shareAccounts?: string[] }): IpamConfig {
+function buildIpam(params: {
+  poolName?: string;
+  shareOus?: string[];
+  shareAccounts?: string[];
+  allocationResourceTags?: { key: string; value: string }[];
+}): IpamConfig {
   const pool: Partial<IpamPoolConfig> = {
     name: params.poolName ?? 'TestPool',
     provisionedCidrs: ['10.20.0.0/16'],
+    allocationResourceTags: params.allocationResourceTags,
     shareTargets: {
       organizationalUnits: params.shareOus ?? [],
       accounts: params.shareAccounts ?? [],
@@ -863,6 +893,379 @@ describe('VpcValidator - IPAM pool share targets', () => {
           e.includes('Missing accounts: WorkloadB'),
       ),
     ).toHaveLength(1);
+  });
+});
+
+// IPAM pool allocationResourceTags requirement check — validateIpamAllocationResourceTags (issue #955)
+
+describe('VpcValidator - IPAM pool allocationResourceTags requirement', () => {
+  const REQUIRED_TAGS_MESSAGE = 'allocationResourceTags not satisfied';
+
+  beforeEach(() => {
+    errorSpy.mockClear();
+    vi.stubEnv('PARTITION', 'aws');
+    vi.stubEnv('ACCELERATOR_ENABLE_TAG', 'false');
+    vi.stubEnv('ACCELERATOR_PREFIX', 'AWSAccelerator');
+  });
+
+  afterEach(() => {
+    vi.unstubAllEnvs();
+  });
+
+  function buildGlobalConfig(tags: { key: string; value: string }[] = [], useV2Stacks = false): GlobalConfig {
+    return { tags, useV2Stacks } as unknown as GlobalConfig;
+  }
+
+  /**
+   * Collect the allocationResourceTags findings logged through the validator logger.
+   */
+  function loggedFindings(): string[] {
+    return errorSpy.mock.calls.map(call => String(call[0])).filter(message => message.includes(REQUIRED_TAGS_MESSAGE));
+  }
+
+  test('REPORT: VPC allocating from a pool with allocationResourceTags but carrying no tags is logged', () => {
+    const errors: string[] = [];
+    const { networkConfig, helpers } = buildShareFixture({
+      vpcAccount: 'Network',
+      ipams: [buildIpam({ allocationResourceTags: [{ key: 'env', value: 'prod' }] })],
+      vpcConsumers: {
+        ipamAllocations: [{ ipamPoolName: 'TestPool', netmaskLength: 24 } as IpamAllocationConfig],
+      },
+      // No vpcTags supplied — the required env=prod tag is missing.
+    });
+
+    new VpcValidator(networkConfig, helpers, errors);
+
+    const findings = loggedFindings().filter(message => message.includes('IPAM pool "TestPool"'));
+    expect(findings).toHaveLength(1);
+    expect(findings[0]).toContain('Missing: env=prod.');
+    // The finding must not block network validation.
+    expect(errors.filter(e => e.includes(REQUIRED_TAGS_MESSAGE))).toHaveLength(0);
+  });
+
+  test('REPORT: VPC missing one of several required allocationResourceTags is flagged with only the missing tag', () => {
+    const errors: string[] = [];
+    const { networkConfig, helpers } = buildShareFixture({
+      vpcAccount: 'Network',
+      ipams: [
+        buildIpam({
+          allocationResourceTags: [
+            { key: 'env', value: 'prod' },
+            { key: 'team', value: 'network' },
+          ],
+        }),
+      ],
+      vpcConsumers: {
+        ipamAllocations: [{ ipamPoolName: 'TestPool', netmaskLength: 24 } as IpamAllocationConfig],
+      },
+      vpcTags: [{ key: 'env', value: 'prod' }],
+    });
+
+    new VpcValidator(networkConfig, helpers, errors);
+
+    const findings = loggedFindings().filter(message => message.includes('IPAM pool "TestPool"'));
+    expect(findings).toHaveLength(1);
+    // Only the missing tag is reported; the satisfied env=prod tag is not.
+    expect(findings[0]).toContain('Missing: team=network.');
+    expect(findings[0]).not.toContain('env=prod');
+  });
+
+  test('REPORT: value mismatch reports the required and actual values', () => {
+    const errors: string[] = [];
+    const { networkConfig, helpers } = buildShareFixture({
+      vpcAccount: 'Network',
+      ipams: [buildIpam({ allocationResourceTags: [{ key: 'env', value: 'prod' }] })],
+      vpcConsumers: {
+        ipamAllocations: [{ ipamPoolName: 'TestPool', netmaskLength: 24 } as IpamAllocationConfig],
+      },
+      vpcTags: [{ key: 'env', value: 'dev' }],
+    });
+
+    new VpcValidator(networkConfig, helpers, errors);
+
+    const findings = loggedFindings().filter(message => message.includes('IPAM pool "TestPool"'));
+    expect(findings).toHaveLength(1);
+    expect(findings[0]).toContain('Mismatched: env (required prod, actual dev).');
+    expect(findings[0]).not.toContain('Missing:');
+  });
+
+  test('PASS: VPC carrying all required allocationResourceTags logs no finding', () => {
+    const errors: string[] = [];
+    const { networkConfig, helpers } = buildShareFixture({
+      vpcAccount: 'Network',
+      ipams: [buildIpam({ allocationResourceTags: [{ key: 'env', value: 'prod' }] })],
+      vpcConsumers: {
+        ipamAllocations: [{ ipamPoolName: 'TestPool', netmaskLength: 24 } as IpamAllocationConfig],
+      },
+      vpcTags: [{ key: 'env', value: 'prod' }],
+    });
+
+    new VpcValidator(networkConfig, helpers, errors);
+
+    expect(loggedFindings()).toHaveLength(0);
+  });
+
+  test.each([undefined, []])(
+    'PASS: undefined or empty pool allocationResourceTags do not require VPC tags',
+    allocationResourceTags => {
+      const errors: string[] = [];
+      const { networkConfig, helpers } = buildShareFixture({
+        vpcAccount: 'Network',
+        ipams: [buildIpam({ allocationResourceTags })],
+        vpcConsumers: {
+          ipamAllocations: [{ ipamPoolName: 'TestPool', netmaskLength: 24 } as IpamAllocationConfig],
+        },
+      });
+
+      new VpcValidator(networkConfig, helpers, errors);
+
+      expect(loggedFindings()).toHaveLength(0);
+    },
+  );
+
+  test('PASS: required tag supplied only by global config tags satisfies the pool requirement', () => {
+    const errors: string[] = [];
+    const { networkConfig, helpers } = buildShareFixture({
+      vpcAccount: 'Network',
+      ipams: [buildIpam({ allocationResourceTags: [{ key: 'env', value: 'prod' }] })],
+      vpcConsumers: {
+        ipamAllocations: [{ ipamPoolName: 'TestPool', netmaskLength: 24 } as IpamAllocationConfig],
+      },
+    });
+
+    new VpcValidator(networkConfig, helpers, errors, undefined, buildGlobalConfig([{ key: 'env', value: 'prod' }]));
+
+    expect(loggedFindings()).toHaveLength(0);
+  });
+
+  test('REPORT: global config tag overrides a satisfying VPC-local tag', () => {
+    const errors: string[] = [];
+    const { networkConfig, helpers } = buildShareFixture({
+      vpcAccount: 'Network',
+      ipams: [buildIpam({ allocationResourceTags: [{ key: 'env', value: 'prod' }] })],
+      vpcConsumers: {
+        ipamAllocations: [{ ipamPoolName: 'TestPool', netmaskLength: 24 } as IpamAllocationConfig],
+      },
+      vpcTags: [{ key: 'env', value: 'prod' }],
+    });
+
+    new VpcValidator(networkConfig, helpers, errors, undefined, buildGlobalConfig([{ key: 'env', value: 'dev' }]));
+
+    const findings = loggedFindings();
+    expect(findings).toHaveLength(1);
+    expect(findings[0]).toContain('env (required prod, actual dev)');
+  });
+
+  test('PASS: duplicate VPC tag keys use the last configured value', () => {
+    const errors: string[] = [];
+    const { networkConfig, helpers } = buildShareFixture({
+      vpcAccount: 'Network',
+      ipams: [buildIpam({ allocationResourceTags: [{ key: 'env', value: 'prod' }] })],
+      vpcConsumers: {
+        ipamAllocations: [{ ipamPoolName: 'TestPool', netmaskLength: 24 } as IpamAllocationConfig],
+      },
+      vpcTags: [
+        { key: 'env', value: 'dev' },
+        { key: 'env', value: 'prod' },
+      ],
+    });
+
+    new VpcValidator(networkConfig, helpers, errors);
+
+    expect(loggedFindings()).toHaveLength(0);
+  });
+
+  test('PASS: duplicate pool requirement keys use the last configured value', () => {
+    const errors: string[] = [];
+    const { networkConfig, helpers } = buildShareFixture({
+      vpcAccount: 'Network',
+      ipams: [
+        buildIpam({
+          allocationResourceTags: [
+            { key: 'env', value: 'dev' },
+            { key: 'env', value: 'prod' },
+          ],
+        }),
+      ],
+      vpcConsumers: {
+        ipamAllocations: [{ ipamPoolName: 'TestPool', netmaskLength: 24 } as IpamAllocationConfig],
+      },
+      vpcTags: [{ key: 'env', value: 'prod' }],
+    });
+
+    new VpcValidator(networkConfig, helpers, errors);
+
+    expect(loggedFindings()).toHaveLength(0);
+  });
+
+  test('PASS: V1 generated Name overrides VPC-local and global Name tags', () => {
+    const errors: string[] = [];
+    const { networkConfig, helpers } = buildShareFixture({
+      vpcAccount: 'Network',
+      ipams: [buildIpam({ allocationResourceTags: [{ key: 'Name', value: 'TestVpc' }] })],
+      vpcConsumers: {
+        ipamAllocations: [{ ipamPoolName: 'TestPool', netmaskLength: 24 } as IpamAllocationConfig],
+      },
+      vpcTags: [{ key: 'Name', value: 'local-name' }],
+    });
+
+    new VpcValidator(
+      networkConfig,
+      helpers,
+      errors,
+      undefined,
+      buildGlobalConfig([{ key: 'Name', value: 'global-name' }]),
+    );
+
+    expect(loggedFindings()).toHaveLength(0);
+  });
+
+  test('REPORT: generated VPC Name takes precedence for validation when V2 stacks are enabled', () => {
+    const errors: string[] = [];
+    const { networkConfig, helpers } = buildShareFixture({
+      vpcAccount: 'Network',
+      ipams: [buildIpam({ allocationResourceTags: [{ key: 'Name', value: 'global-name' }] })],
+      vpcConsumers: {
+        ipamAllocations: [{ ipamPoolName: 'TestPool', netmaskLength: 24 } as IpamAllocationConfig],
+      },
+      vpcTags: [{ key: 'Name', value: 'local-name' }],
+    });
+
+    new VpcValidator(
+      networkConfig,
+      helpers,
+      errors,
+      undefined,
+      buildGlobalConfig([{ key: 'Name', value: 'global-name' }], true),
+    );
+
+    const findings = loggedFindings();
+    expect(findings).toHaveLength(1);
+    expect(findings[0]).toContain('Name (required global-name, actual TestVpc)');
+  });
+
+  test('PASS: enabling V2 stacks accepts a Name tag when V1 and V2 values agree', () => {
+    const errors: string[] = [];
+    const { networkConfig, helpers } = buildShareFixture({
+      vpcAccount: 'Network',
+      ipams: [buildIpam({ allocationResourceTags: [{ key: 'Name', value: 'TestVpc' }] })],
+      vpcConsumers: {
+        ipamAllocations: [{ ipamPoolName: 'TestPool', netmaskLength: 24 } as IpamAllocationConfig],
+      },
+      vpcTags: [{ key: 'Name', value: 'local-name' }],
+    });
+
+    new VpcValidator(
+      networkConfig,
+      helpers,
+      errors,
+      undefined,
+      buildGlobalConfig([{ key: 'Name', value: 'TestVpc' }], true),
+    );
+
+    expect(loggedFindings()).toHaveLength(0);
+  });
+
+  test('PASS: generated Accelerator tag uses the configured accelerator prefix', () => {
+    vi.stubEnv('ACCELERATOR_PREFIX', 'CustomAccelerator');
+    const errors: string[] = [];
+    const { networkConfig, helpers } = buildShareFixture({
+      vpcAccount: 'Network',
+      ipams: [buildIpam({ allocationResourceTags: [{ key: 'Accelerator', value: 'CustomAccelerator' }] })],
+      vpcConsumers: {
+        ipamAllocations: [{ ipamPoolName: 'TestPool', netmaskLength: 24 } as IpamAllocationConfig],
+      },
+    });
+
+    new VpcValidator(networkConfig, helpers, errors);
+
+    expect(loggedFindings()).toHaveLength(0);
+  });
+
+  test('REPORT: ISO partitions do not inherit generated or global tags when accelerator tagging is disabled', () => {
+    vi.stubEnv('PARTITION', 'aws-iso');
+    const errors: string[] = [];
+    const { networkConfig, helpers } = buildShareFixture({
+      vpcAccount: 'Network',
+      ipams: [buildIpam({ allocationResourceTags: [{ key: 'env', value: 'prod' }] })],
+      vpcConsumers: {
+        ipamAllocations: [{ ipamPoolName: 'TestPool', netmaskLength: 24 } as IpamAllocationConfig],
+      },
+    });
+
+    new VpcValidator(networkConfig, helpers, errors, undefined, buildGlobalConfig([{ key: 'env', value: 'prod' }]));
+
+    const findings = loggedFindings();
+    expect(findings).toHaveLength(1);
+    expect(findings[0]).toContain('Missing: env=prod.');
+  });
+
+  test('PASS: ISO partitions inherit global tags when ACCELERATOR_ENABLE_TAG overrides the partition gate', () => {
+    vi.stubEnv('PARTITION', 'aws-iso');
+    vi.stubEnv('ACCELERATOR_ENABLE_TAG', 'true');
+    const errors: string[] = [];
+    const { networkConfig, helpers } = buildShareFixture({
+      vpcAccount: 'Network',
+      ipams: [buildIpam({ allocationResourceTags: [{ key: 'env', value: 'prod' }] })],
+      vpcConsumers: {
+        ipamAllocations: [{ ipamPoolName: 'TestPool', netmaskLength: 24 } as IpamAllocationConfig],
+      },
+      // The required tag is supplied only through global config, so it is applied
+      // solely because the flag force-enables tagging on this restricted partition.
+    });
+
+    new VpcValidator(networkConfig, helpers, errors, undefined, buildGlobalConfig([{ key: 'env', value: 'prod' }]));
+
+    expect(loggedFindings()).toHaveLength(0);
+  });
+
+  test('REPORT: VPC template consuming a restricted pool is validated', () => {
+    const errors: string[] = [];
+    const { networkConfig, helpers } = buildShareFixture({
+      vpcAccount: 'Network',
+      consumerType: 'vpcTemplate',
+      ipams: [buildIpam({ allocationResourceTags: [{ key: 'env', value: 'prod' }] })],
+      vpcConsumers: {
+        ipamAllocations: [{ ipamPoolName: 'TestPool', netmaskLength: 24 } as IpamAllocationConfig],
+      },
+    });
+
+    new VpcValidator(networkConfig, helpers, errors);
+
+    expect(loggedFindings()).toHaveLength(1);
+  });
+
+  test('REPORT: repeated allocations from one pool log one required-tags finding', () => {
+    const errors: string[] = [];
+    const { networkConfig, helpers } = buildShareFixture({
+      vpcAccount: 'Network',
+      ipams: [buildIpam({ allocationResourceTags: [{ key: 'env', value: 'prod' }] })],
+      vpcConsumers: {
+        ipamAllocations: [
+          { ipamPoolName: 'TestPool', netmaskLength: 24 } as IpamAllocationConfig,
+          { ipamPoolName: 'TestPool', netmaskLength: 25 } as IpamAllocationConfig,
+        ],
+      },
+    });
+
+    new VpcValidator(networkConfig, helpers, errors);
+
+    expect(loggedFindings()).toHaveLength(1);
+  });
+
+  test('SHORT-CIRCUIT: missing pool logs no required-tags finding', () => {
+    const errors: string[] = [];
+    const { networkConfig, helpers } = buildShareFixture({
+      vpcAccount: 'Network',
+      ipams: [], // no IPAMs declared
+      vpcConsumers: {
+        ipamAllocations: [{ ipamPoolName: 'GhostPool', netmaskLength: 24 } as IpamAllocationConfig],
+      },
+    });
+
+    new VpcValidator(networkConfig, helpers, errors);
+
+    expect(loggedFindings()).toHaveLength(0);
   });
 });
 

@@ -11,6 +11,7 @@
  *  and limitations under the License.
  */
 
+export * from './lib/accelerator-tagging';
 export * from './lib/aws-client-factory';
 export * from './lib/check-stack-diffs';
 export * from './lib/common-functions';

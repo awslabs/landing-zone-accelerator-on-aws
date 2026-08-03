@@ -39,7 +39,7 @@ import {
   VpcTemplatesConfig,
 } from '../../lib/network-config';
 import { NetworkValidatorFunctions } from './network-validator-functions';
-import { createLogger } from '@aws-accelerator/utils';
+import { createLogger, resolveAcceleratorTags } from '@aws-accelerator/utils';
 import * as cdk from 'aws-cdk-lib';
 
 /**
@@ -81,7 +81,7 @@ export class VpcValidator {
     //
     // Validate VPC configurations
     //
-    this.validateVpcConfiguration(values, helpers, errors);
+    this.validateVpcConfiguration(values, helpers, errors, globalConfig);
     //
     // Validate Outpost and Local Gateway (LGW) configurations
     //
@@ -940,6 +940,106 @@ export class VpcValidator {
   }
 
   /**
+   * Report when a VPC drawing its CIDR from an IPAM pool does not carry every tag
+   * the pool requires via `allocationResourceTags`. IPAM only allows resources that
+   * have all of the pool's allocation resource tags to allocate space from it, so a
+   * missing tag would otherwise surface as a late CloudFormation failure.
+   *
+   * This check does not push into the errors accumulator, so it never blocks
+   * validation. Configuration validation has no allocation history: when a pool's
+   * requirements change after a CIDR was already allocated, AWS can retain that
+   * allocation as noncompliant and the environment keeps deploying. Failing hard
+   * would block an existing environment's pipeline — including for unrelated
+   * changes — so the mismatch is only reported.
+   *
+   * It is logged at error level rather than warn so it stays visible: the pipeline
+   * Build stage, where config validation runs, pins `LOG_LEVEL` to `error`, which
+   * would filter a warn-level message out of the build log entirely.
+   * @param values
+   * @param vpcItem
+   * @param globalConfig
+   */
+  private validateIpamAllocationResourceTags(
+    values: NetworkConfig,
+    vpcItem: VpcConfig | VpcTemplatesConfig,
+    globalConfig?: GlobalConfig,
+  ) {
+    const logger = createLogger(['network-config-validator']);
+    const ipams = values.centralNetworkServices?.ipams;
+    const vpcTags = this.getVpcTags(vpcItem, globalConfig);
+    const allocatedPoolNames = new Set(vpcItem.ipamAllocations?.map(allocation => allocation.ipamPoolName) ?? []);
+
+    for (const poolName of allocatedPoolNames) {
+      const pool = ipams?.flatMap(ipam => ipam.pools ?? []).find(item => item.name === poolName);
+      if (!pool || !pool.allocationResourceTags || pool.allocationResourceTags.length === 0) {
+        // Pool existence error (if any) is raised in validateIpamAllocations, and
+        // there are no required tags to report on.
+        continue;
+      }
+
+      // Treat allocation resource tags as a key/value set and resolve duplicate
+      // configured keys deterministically with the last value.
+      const requiredTags = new Map<string, string>();
+      pool.allocationResourceTags.forEach(tag => requiredTags.set(tag.key, tag.value));
+
+      const missingTags: { key: string; requiredValue: string }[] = [];
+      const mismatchedTags: { key: string; requiredValue: string; actualValue: string }[] = [];
+      for (const [key, requiredValue] of [...requiredTags.entries()].sort(([left], [right]) =>
+        left.localeCompare(right),
+      )) {
+        if (!vpcTags.has(key)) {
+          missingTags.push({ key, requiredValue });
+        } else {
+          const actualValue = vpcTags.get(key)!;
+          if (actualValue !== requiredValue) {
+            mismatchedTags.push({ key, requiredValue, actualValue });
+          }
+        }
+      }
+
+      if (missingTags.length > 0 || mismatchedTags.length > 0) {
+        const details: string[] = [];
+        if (missingTags.length > 0) {
+          details.push(`Missing: ${missingTags.map(tag => `${tag.key}=${tag.requiredValue}`).join(', ')}.`);
+        }
+        if (mismatchedTags.length > 0) {
+          details.push(
+            `Mismatched: ${mismatchedTags
+              .map(tag => `${tag.key} (required ${tag.requiredValue}, actual ${tag.actualValue})`)
+              .join(', ')}.`,
+          );
+        }
+        logger.error(
+          `[VPC ${vpcItem.name}]: IPAM pool "${poolName}" allocationResourceTags not satisfied. ${details.join(' ')} ` +
+            `A new allocation from this pool will fail unless the VPC carries these tags (set them via the VPC tags or global config tags). ` +
+            `An allocation made before the pool requirements changed may be retained by IPAM as noncompliant.`,
+        );
+      }
+    }
+  }
+
+  /**
+   * Resolve the tags emitted for a VPC.
+   *
+   * The Accelerator tagging gate and tag precedence are owned by resolveAcceleratorTags in
+   * @aws-accelerator/utils, which addAcceleratorTags in @aws-accelerator/cdk-utils also uses,
+   * so this prediction cannot drift from the tags the deployed VPC actually carries.
+   */
+  private getVpcTags(vpcItem: VpcConfig | VpcTemplatesConfig, globalConfig?: GlobalConfig): Map<string, string> {
+    const vpcTags = resolveAcceleratorTags({
+      resourceTags: vpcItem.tags,
+      globalTags: globalConfig?.tags,
+      partition: process.env['PARTITION'] ?? 'aws',
+      acceleratorPrefix: process.env['ACCELERATOR_PREFIX'] ?? 'AWSAccelerator',
+    });
+
+    // VPCs receive a generated Name tag in both stack implementations.
+    vpcTags.set('Name', vpcItem.name);
+
+    return vpcTags;
+  }
+
+  /**
    * Function to validate conditional dependencies for Outpost and Local Gateway configurations.
    * @param values
    */
@@ -967,7 +1067,12 @@ export class VpcValidator {
    * Function to validate conditional dependencies for VPC configurations.
    * @param values
    */
-  private validateVpcConfiguration(values: NetworkConfig, helpers: NetworkValidatorFunctions, errors: string[]) {
+  private validateVpcConfiguration(
+    values: NetworkConfig,
+    helpers: NetworkValidatorFunctions,
+    errors: string[],
+    globalConfig?: GlobalConfig,
+  ) {
     const vpcs = [...values.vpcs, ...(values.vpcTemplates ?? [])];
     vpcs.forEach(vpcItem => {
       //
@@ -1007,6 +1112,10 @@ export class VpcValidator {
         // Validate IPAM pool share targets
         //
         this.validateIpamPoolShareTargets(values, vpcItem, helpers, errors);
+        //
+        // Report unsatisfied IPAM pool allocation resource tags (non-blocking)
+        //
+        this.validateIpamAllocationResourceTags(values, vpcItem, globalConfig);
         //
         // Validate NAT gateways
         //

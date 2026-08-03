@@ -1,7 +1,7 @@
 import * as cdk from 'aws-cdk-lib';
 import { CfnResource } from 'aws-cdk-lib';
 import { IConstruct } from 'constructs';
-import { createLogger } from '@aws-accelerator/utils';
+import { createLogger, isAcceleratorTaggingEnabled } from '@aws-accelerator/utils';
 import { ITag } from '@aws-accelerator/config';
 const logger = createLogger(['tagging-utils']);
 
@@ -18,8 +18,7 @@ const logger = createLogger(['tagging-utils']);
  * @param acceleratorPrefix
  */
 export function addAcceleratorTags(node: IConstruct, partition: string, tags: ITag[], acceleratorPrefix: string): void {
-  const enableTag = process.env['ACCELERATOR_ENABLE_TAG'] === 'true';
-  if (!enableTag && (partition === 'aws-iso' || partition === 'aws-iso-b')) {
+  if (!isAcceleratorTaggingEnabled(partition)) {
     return;
   }
 
