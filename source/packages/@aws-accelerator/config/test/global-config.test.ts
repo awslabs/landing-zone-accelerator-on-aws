@@ -144,6 +144,7 @@ describe('GlobalConfig', () => {
       expect(new AcceleratorSettingsConfig().maxConcurrentStacks).toBeUndefined;
       // eslint-disable-next-line @typescript-eslint/no-unused-expressions
       expect(new AcceleratorMetadataConfig().enable).toBeFalsy;
+      expect(new AcceleratorMetadataConfig().readOnlyAccessRoleArns).toEqual([]);
       expect(new SnsConfig().topics).toEqual([]);
       expect(new SnsTopicConfig().emailAddresses).toEqual([]);
       expect(new BackupConfig().vaults).toEqual([]);

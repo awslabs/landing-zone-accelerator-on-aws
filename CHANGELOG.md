@@ -34,6 +34,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - fix(uninstaller): scope retained resources cleanup to owner stack
 - fix(networking): validate IPAM pool allocationResourceTags are satisfied by consuming VPCs (issue #955)
 - fix(service-quotas): retry quota increase requests on active-request capacity exhaustion
+- fix(config): make acceleratorMetadata readOnlyAccessRoleArns optional so it can be removed once added
 
 ## [1.16.0] - 2026-07-24
 

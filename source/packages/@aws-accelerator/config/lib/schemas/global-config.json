@@ -31,7 +31,7 @@
           "type": "boolean"
         },
         "readOnlyAccessRoleArns": {
-          "description": "**Read-Only Access Role ARNs** *(Required)*\n\nList of role arns that should have read-only access to the logs.",
+          "description": "**Read-Only Access Role ARNs** *(Optional)*\n\nList of role arns that should have read-only access to the logs.",
           "items": {
             "type": "string"
           },
@@ -40,8 +40,7 @@
       },
       "required": [
         "enable",
-        "account",
-        "readOnlyAccessRoleArns"
+        "account"
       ],
       "type": "object"
     },

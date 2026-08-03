@@ -550,7 +550,7 @@ export class SnsConfig implements i.ISnsConfig {
 export class AcceleratorMetadataConfig implements i.IAcceleratorMetadataConfig {
   readonly enable = false;
   readonly account = '';
-  readonly readOnlyAccessRoleArns: string[] = [];
+  readonly readOnlyAccessRoleArns?: string[] = [];
 }
 
 export class AcceleratorSettingsConfig implements i.IAcceleratorSettingsConfig {

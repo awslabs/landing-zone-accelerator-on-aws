@@ -4259,11 +4259,11 @@ export interface IAcceleratorMetadataConfig {
    */
   readonly account: string;
   /**
-   * **Read-Only Access Role ARNs** *(Required)*
+   * **Read-Only Access Role ARNs** *(Optional)*
    *
    * List of role arns that should have read-only access to the logs.
    */
-  readonly readOnlyAccessRoleArns: string[];
+  readonly readOnlyAccessRoleArns?: string[];
 }
 
 /**

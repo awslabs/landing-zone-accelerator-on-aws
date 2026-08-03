@@ -248,6 +248,54 @@ describe('createElbAccessLogsBucket', () => {
   });
 });
 
+describe('accelerator metadata read-only access grants', () => {
+  const roleArn = 'arn:aws:iam::111111111111:role/test-access-role';
+
+  function synthesizeMetadataTemplate(readOnlyAccessRoleArns?: string[]) {
+    const props = createAcceleratorStackProps();
+    vi.mocked(props.accountsConfig.getAccountId).mockReturnValue(props.env!.account!);
+    (props.globalConfig as any).acceleratorMetadata = {
+      enable: true,
+      account: 'LogArchive',
+      ...(readOnlyAccessRoleArns === undefined ? {} : { readOnlyAccessRoleArns }),
+    };
+
+    const stack = new LoggingStack(new cdk.App(), `metadata-${readOnlyAccessRoleArns?.length ?? 'omitted'}`, props);
+    return cdk.assertions.Template.fromStack(stack).toJSON();
+  }
+
+  function getMetadataLogicalIds(template: any): string[] {
+    return Object.keys(template.Resources)
+      .filter(logicalId => logicalId.startsWith('AcceleratorMetadata'))
+      .sort();
+  }
+
+  function getRoleGrantResources(template: any): { logicalId: string; type: string }[] {
+    return Object.entries(template.Resources)
+      .filter(([, resource]) => JSON.stringify(resource).includes(roleArn))
+      .map(([logicalId, resource]: [string, any]) => ({ logicalId, type: resource.Type }))
+      .sort((a, b) => a.logicalId.localeCompare(b.logicalId));
+  }
+
+  it('removes obsolete KMS and S3 grants without replacing metadata resources', () => {
+    const populatedTemplate = synthesizeMetadataTemplate([roleArn]);
+    const omittedTemplate = synthesizeMetadataTemplate();
+    const emptyTemplate = synthesizeMetadataTemplate([]);
+
+    expect(getRoleGrantResources(populatedTemplate).map(resource => resource.type)).toEqual([
+      'AWS::KMS::Key',
+      'AWS::S3::BucketPolicy',
+    ]);
+    expect(getRoleGrantResources(omittedTemplate)).toEqual([]);
+    expect(getRoleGrantResources(emptyTemplate)).toEqual([]);
+
+    const populatedLogicalIds = getMetadataLogicalIds(populatedTemplate);
+    expect(populatedLogicalIds).toHaveLength(4);
+    expect(getMetadataLogicalIds(omittedTemplate)).toEqual(populatedLogicalIds);
+    expect(getMetadataLogicalIds(emptyTemplate)).toEqual(populatedLogicalIds);
+  });
+});
+
 function createBucketConfig(name: string, bucketType: AcceleratorImportedBucketType): any {
   const importedBucket = {
     name: name,
