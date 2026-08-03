@@ -4898,7 +4898,7 @@
         },
         "preSharedKey": {
           "$ref": "#/definitions/NonEmptyString",
-          "description": "(OPTIONAL): The Secrets Manager name that stores the pre-shared key (PSK), that exists in the same account and region that the VPN Connection will be created in."
+          "description": "(OPTIONAL): The Secrets Manager name that stores the pre-shared key (PSK), that exists in the same account and region that the VPN Connection will be created in.\n\nUse the full name that follows `secret:` in the secret ARN, i.e. the console display name plus the random hash suffix that Secrets Manager appends (for example, `vpn-psk1-twpe7g-aWFiXE`). The console display name alone will not resolve."
         },
         "rekeyFuzzPercentage": {
           "description": "(OPTIONAL) The percentage of the rekey window (determined by the rekey margin time) within which the rekey time is randomly selected.\n\nDefault - `100`",

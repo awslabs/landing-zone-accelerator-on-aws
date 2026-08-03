@@ -3819,6 +3819,10 @@ export interface IVpnTunnelOptionsSpecificationsConfig {
    * (OPTIONAL): The Secrets Manager name that stores the pre-shared key (PSK), that exists in the
    * same account and region that the VPN Connection will be created in.
    *
+   * Use the full name that follows `secret:` in the secret ARN, i.e. the console display name plus
+   * the random hash suffix that Secrets Manager appends (for example, `vpn-psk1-twpe7g-aWFiXE`). The
+   * console display name alone will not resolve.
+   *
    * @remarks
    * **CAUTION**: Changing this property value after initial deployment causes the VPN to be recreated.
    * Please be aware that any downstream dependencies may cause this property update to fail.

@@ -147,7 +147,12 @@ export interface VpnTunnelOptionsSpecifications {
     readonly lifetimeSeconds?: number;
   };
   /**
-   * A Secrets Manager secret name
+   * The Secrets Manager secret name that stores the pre-shared key (PSK).
+   *
+   * Use the full name that follows `secret:` in the secret ARN, i.e. the console display name plus
+   * the random hash suffix that Secrets Manager appends (for example, `vpn-psk1-twpe7g-aWFiXE`). The
+   * console display name alone will not resolve. The secret must exist in the same account and region
+   * as the VPN connection.
    */
   readonly preSharedKey?: string;
   /**
