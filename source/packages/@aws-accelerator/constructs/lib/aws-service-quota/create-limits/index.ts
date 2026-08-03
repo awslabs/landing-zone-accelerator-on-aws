@@ -14,10 +14,45 @@ import {
   ServiceQuotasClient,
   GetServiceQuotaCommand,
   RequestServiceQuotaIncreaseCommand,
+  type RequestServiceQuotaIncreaseCommandInput,
+  type RequestServiceQuotaIncreaseCommandOutput,
 } from '@aws-sdk/client-service-quotas';
+import { backOff } from 'exponential-backoff';
 import { throttlingBackOff } from '@aws-accelerator/utils/lib/throttle';
 import { setRetryStrategy } from '@aws-accelerator/utils/lib/common-functions';
 import { CloudFormationCustomResourceEvent } from '@aws-accelerator/utils/lib/common-types';
+
+// Service Quotas caps active increase requests per account and Region (20, or 2 in opt-in Regions).
+// Requests hold a slot only while PENDING or CASE_OPENED, so capacity usually frees up within minutes.
+const CAPACITY_RETRY_ATTEMPTS = 12;
+const CAPACITY_RETRY_STARTING_DELAY_MS = 5_000;
+const CAPACITY_RETRY_MAX_DELAY_MS = 30_000;
+
+/**
+ * Submits a quota increase request, retrying while the account's active-request capacity is
+ * exhausted.
+ *
+ * `QuotaExceededException` means the account has hit its cap on concurrently active increase
+ * requests, not that the call was rate limited. Request-rate throttling stays with
+ * `throttlingBackOff`, whose signature fixes `retry` to `isThrottlingError` and so cannot carry
+ * this predicate.
+ *
+ * @param serviceQuotas the Service Quotas client
+ * @param increaseRequest the increase request to submit
+ * @returns the API response
+ */
+export async function requestServiceQuotaIncrease(
+  serviceQuotas: ServiceQuotasClient,
+  increaseRequest: RequestServiceQuotaIncreaseCommandInput,
+): Promise<RequestServiceQuotaIncreaseCommandOutput> {
+  return backOff(() => serviceQuotas.send(new RequestServiceQuotaIncreaseCommand(increaseRequest)), {
+    startingDelay: CAPACITY_RETRY_STARTING_DELAY_MS,
+    maxDelay: CAPACITY_RETRY_MAX_DELAY_MS,
+    numOfAttempts: CAPACITY_RETRY_ATTEMPTS,
+    jitter: 'full',
+    retry: (error: Error) => error.name === 'QuotaExceededException',
+  });
+}
 
 /**
  * service-quota-limits - lambda handler
@@ -67,9 +102,7 @@ export async function handler(event: CloudFormationCustomResourceEvent): Promise
               QuotaCode: quotaCode,
               DesiredValue: desiredValue,
             };
-            const quotaIncreaseResponse = await throttlingBackOff(() =>
-              servicequotas.send(new RequestServiceQuotaIncreaseCommand(increaseLimitParams)),
-            );
+            const quotaIncreaseResponse = await requestServiceQuotaIncrease(servicequotas, increaseLimitParams);
             console.log(quotaIncreaseResponse.RequestedQuota);
           }
         } else {

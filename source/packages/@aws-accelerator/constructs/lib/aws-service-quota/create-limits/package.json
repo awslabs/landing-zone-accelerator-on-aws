@@ -22,7 +22,8 @@
   },
   "dependencies": {
     "@aws-accelerator/utils": "^0.0.0",
-    "@aws-sdk/client-service-quotas": "3.1041.0"
+    "@aws-sdk/client-service-quotas": "3.1041.0",
+    "exponential-backoff": "3.1.1"
   },
   "devDependencies": {
     "@types/node": "18.19.50",

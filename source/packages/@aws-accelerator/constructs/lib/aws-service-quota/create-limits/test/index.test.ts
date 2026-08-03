@@ -3,8 +3,8 @@ import {
   GetServiceQuotaCommand,
   RequestServiceQuotaIncreaseCommand,
 } from '@aws-sdk/client-service-quotas';
-import { describe, beforeEach, expect, test } from 'vitest';
-import { handler } from '../index';
+import { afterEach, describe, beforeEach, expect, test, vi } from 'vitest';
+import { handler, requestServiceQuotaIncrease } from '../index';
 import { AcceleratorMockClient, EventType } from '../../../../test/unit-test/common/resources';
 
 import { StaticInput } from './static-input';
@@ -88,5 +88,68 @@ describe('Delete Event', () => {
     const event = AcceleratorUnitTest.getEvent(EventType.DELETE, { new: [StaticInput.newProps] });
     const response = await handler(event);
     expect(response?.Status).toBe('SUCCESS');
+  });
+});
+
+describe('requestServiceQuotaIncrease', () => {
+  const increaseRequest = {
+    ServiceCode: StaticInput.newProps.serviceCode,
+    QuotaCode: StaticInput.newProps.quotaCode,
+    DesiredValue: parseInt(StaticInput.newProps.desiredValue),
+  };
+
+  function namedError(name: string, message: string) {
+    const error = new Error(message);
+    error.name = name;
+    return error;
+  }
+
+  // Signals that the account has hit its cap on concurrently active increase requests.
+  const capacityError = () => namedError('QuotaExceededException', 'You have exceeded your maximum quota requests.');
+
+  beforeEach(() => {
+    sqClient.reset();
+    // Run the capacity backoff delays immediately instead of waiting seconds.
+    vi.spyOn(global, 'setTimeout').mockImplementation((callback: () => void) => {
+      callback();
+      return 0 as unknown as NodeJS.Timeout;
+    });
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  test('retries until active-request capacity becomes available', async () => {
+    sqClient.on(RequestServiceQuotaIncreaseCommand).rejectsOnce(capacityError()).resolves({});
+
+    await expect(requestServiceQuotaIncrease(new ServiceQuotasClient({}), increaseRequest)).resolves.toEqual({});
+    expect(sqClient.commandCalls(RequestServiceQuotaIncreaseCommand)).toHaveLength(2);
+  });
+
+  test('rethrows the capacity error after bounded retries', async () => {
+    const error = capacityError();
+    sqClient.on(RequestServiceQuotaIncreaseCommand).rejects(error);
+
+    await expect(requestServiceQuotaIncrease(new ServiceQuotasClient({}), increaseRequest)).rejects.toBe(error);
+    expect(sqClient.commandCalls(RequestServiceQuotaIncreaseCommand)).toHaveLength(12);
+  });
+
+  test('does not retry unrelated errors', async () => {
+    const error = namedError('AccessDeniedException', 'Not authorized');
+    sqClient.on(RequestServiceQuotaIncreaseCommand).rejects(error);
+
+    await expect(requestServiceQuotaIncrease(new ServiceQuotasClient({}), increaseRequest)).rejects.toBe(error);
+    expect(sqClient.commandCalls(RequestServiceQuotaIncreaseCommand)).toHaveLength(1);
+  });
+
+  test('does not retry an existing open request, leaving it to the handler', async () => {
+    // ResourceAlreadyExistsException is terminal here; the handler tolerates it as an idempotent
+    // re-apply, so retrying would only add latency.
+    const error = namedError('ResourceAlreadyExistsException', 'Only one open request is allowed per quota.');
+    sqClient.on(RequestServiceQuotaIncreaseCommand).rejects(error);
+
+    await expect(requestServiceQuotaIncrease(new ServiceQuotasClient({}), increaseRequest)).rejects.toBe(error);
+    expect(sqClient.commandCalls(RequestServiceQuotaIncreaseCommand)).toHaveLength(1);
   });
 });

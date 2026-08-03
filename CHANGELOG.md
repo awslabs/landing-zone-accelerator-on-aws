@@ -33,6 +33,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - fix(diagnostics): read configuration from S3 source for the diagnostics pack report
 - fix(uninstaller): scope retained resources cleanup to owner stack
 - fix(networking): validate IPAM pool allocationResourceTags are satisfied by consuming VPCs (issue #955)
+- fix(service-quotas): retry quota increase requests on active-request capacity exhaustion
 
 ## [1.16.0] - 2026-07-24
 
