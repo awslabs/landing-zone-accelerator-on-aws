@@ -96,6 +96,9 @@ export class GetSsmParametersValueModule implements IGetSsmParametersValueModule
     if (!parameter.name) {
       return `${MODULE_EXCEPTIONS.INVALID_INPUT}: Parameter name is required;`;
     }
+    if (parameter.key !== undefined && !parameter.key) {
+      return `${MODULE_EXCEPTIONS.INVALID_INPUT}: Parameter "${parameter.name}" - Parameter key must not be empty;`;
+    }
     return undefined;
   }
 
@@ -236,7 +239,7 @@ export class GetSsmParametersValueModule implements IGetSsmParametersValueModule
       const { Name: name, Value: value } = response.Parameter ?? {};
 
       if (name && value) {
-        return { name, value, exists: true };
+        return { name: parameter.key ?? name, value, exists: true };
       }
 
       errors.push(
@@ -246,7 +249,7 @@ export class GetSsmParametersValueModule implements IGetSsmParametersValueModule
       return undefined;
     } catch (error) {
       if (error instanceof Error && error.name === 'ParameterNotFound') {
-        return { name: parameter.name, exists: false };
+        return { name: parameter.key ?? parameter.name, exists: false };
       }
 
       errors.push(

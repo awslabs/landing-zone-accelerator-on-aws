@@ -116,6 +116,12 @@ export class TgwCrossAccountResources extends AseaResource {
       if (stack.accountKey === accountKey && stack.phase === '1' && stack.region === region) {
         stack.cfnResources = this.loadResourcesFromFile(stack);
         vpcStacksInfo.push(stack);
+        if (stack.nestedStacks) {
+          for (const nestedStack of Object.values(stack.nestedStacks)) {
+            nestedStack.cfnResources = this.loadResourcesFromFile(nestedStack);
+            vpcStacksInfo.push(nestedStack);
+          }
+        }
       }
     });
 

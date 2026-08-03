@@ -94,9 +94,6 @@ if [ -n "$MANAGEMENT_ACCOUNT_ID" ] && [ -n "$MANAGEMENT_ACCOUNT_ROLE_NAME" ]; th
     ENABLE_EXTERNAL_PIPELINE_ACCOUNT="yes"
 fi
 
-# Create module infrastructure (DynamoDB tables, CloudWatch log group) in the pipeline account
-set -e && ./lib/bash/create-module-infrastructure.sh $ACCELERATOR_PREFIX $AWS_REGION $PIPELINE_ACCOUNT_ID $ENABLE_EXTERNAL_PIPELINE_ACCOUNT $ACCELERATOR_QUALIFIER
-
 # Set MODULE_RESOURCE_PREFIX for naming module infrastructure resources (tables, log groups).
 # External deployments use the qualifier; internal deployments use the accelerator prefix.
 if [ "$ENABLE_EXTERNAL_PIPELINE_ACCOUNT" = "yes" ] && [ -n "$ACCELERATOR_QUALIFIER" ]; then

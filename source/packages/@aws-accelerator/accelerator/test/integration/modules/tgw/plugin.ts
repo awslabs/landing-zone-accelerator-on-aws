@@ -63,6 +63,7 @@ let stateTableReset = false;
 export interface TgwManifestConfig {
   transitGateways?: unknown[];
   vpcs?: unknown[];
+  vpcTemplates?: unknown[];
   customerGateways?: unknown[];
   directConnectGateways?: unknown[];
   homeRegion?: string;
@@ -98,6 +99,7 @@ export const tgwPlugin: ModuleTestPlugin = {
         networkConfig: {
           transitGateways: tgwConfig.transitGateways ?? [],
           vpcs: tgwConfig.vpcs ?? [],
+          vpcTemplates: tgwConfig.vpcTemplates ?? [],
           customerGateways: tgwConfig.customerGateways ?? [],
           directConnectGateways: tgwConfig.directConnectGateways ?? [],
         },

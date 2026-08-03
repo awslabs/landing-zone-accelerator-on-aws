@@ -171,6 +171,178 @@ describe('TgwCrossAccountResources — ghost-entry regression', () => {
 });
 
 /**
+ * Regression test for LZA-1553 / D487044572: getTgwAttachmentId must traverse
+ * nested stacks in mapping.json. ASEA places VPCs and TGW attachments in nested
+ * CloudFormation stacks — only parent stacks appear as top-level keys in
+ * mapping.json. The v1.15.0 refactoring (commit 363b53db2) broke this by
+ * iterating `Object.keys(mapping)` without descending into `nestedStacks`.
+ */
+describe('TgwCrossAccountResources — nested stack traversal (LZA-1553)', () => {
+  beforeEach(() => {
+    addAseaResource.mockClear();
+    addLogs.mockClear();
+  });
+
+  afterEach(() => vi.restoreAllMocks());
+
+  test('getTgwAttachmentId finds attachment in nested stack', () => {
+    const ATTACH_PHYSICAL_ID = 'tgw-attach-0nestedstack123';
+    const VPC_NAME = 'Production_vpc';
+    const TGW_ATTACH_NAME = 'Production_Main_att';
+    const ACCOUNT_KEY = 'workload-prod';
+    const REGION = 'ca-central-1';
+
+    const nestedStackResources = [
+      {
+        resourceType: 'AWS::EC2::VPC',
+        logicalResourceId: 'VpcProduction',
+        physicalResourceId: 'vpc-0nested123',
+        resourceMetadata: { Properties: { Tags: [{ Key: 'Name', Value: VPC_NAME }] } },
+      },
+      {
+        resourceType: 'AWS::EC2::TransitGatewayAttachment',
+        logicalResourceId: 'TgwAttachProduction',
+        physicalResourceId: ATTACH_PHYSICAL_ID,
+        resourceMetadata: { Properties: { Tags: [{ Key: 'Name', Value: TGW_ATTACH_NAME }] } },
+      },
+    ];
+
+    const parentStackResources: any[] = [];
+
+    const mapping = {
+      'PALZ-WorkloadProd-Phase1': {
+        accountKey: ACCOUNT_KEY,
+        phase: '1',
+        region: REGION,
+        cfnResources: parentStackResources,
+        nestedStacks: {
+          'PALZ-WorkloadProd-Phase1-VpcNested': {
+            accountKey: ACCOUNT_KEY,
+            phase: '1',
+            region: REGION,
+            cfnResources: nestedStackResources,
+          },
+        },
+      },
+    };
+
+    vi.spyOn(AseaResource.prototype as any, 'loadResourcesFromFile').mockImplementation((stack: any) => {
+      return stack.cfnResources ?? [];
+    });
+
+    const getTgwAttachmentId = (TgwCrossAccountResources.prototype as any).getTgwAttachmentId;
+    const boundFn = getTgwAttachmentId.bind({
+      scope: { addLogs },
+      loadResourcesFromFile: (stack: any) => stack.cfnResources ?? [],
+      findResourceByTypeAndTag: (resources: any[], type: string, name: string) =>
+        resources.find(
+          (r: any) =>
+            r.resourceType === type &&
+            r.resourceMetadata.Properties.Tags?.some((t: any) => t.Key === 'Name' && t.Value === name),
+        ),
+      filterResourcesByType: (resources: any[], type: string) => resources.filter((r: any) => r.resourceType === type),
+    });
+
+    const result = boundFn(VPC_NAME, TGW_ATTACH_NAME, mapping, ACCOUNT_KEY, REGION);
+    expect(result).toBe(ATTACH_PHYSICAL_ID);
+  });
+
+  test('getTgwAttachmentId returns undefined when VPC is not in any nested stack', () => {
+    const mapping = {
+      'PALZ-WorkloadProd-Phase1': {
+        accountKey: 'workload-prod',
+        phase: '1',
+        region: 'ca-central-1',
+        cfnResources: [],
+        nestedStacks: {
+          'PALZ-WorkloadProd-Phase1-VpcNested': {
+            accountKey: 'workload-prod',
+            phase: '1',
+            region: 'ca-central-1',
+            cfnResources: [
+              {
+                resourceType: 'AWS::EC2::VPC',
+                logicalResourceId: 'VpcOther',
+                physicalResourceId: 'vpc-other',
+                resourceMetadata: { Properties: { Tags: [{ Key: 'Name', Value: 'Other_vpc' }] } },
+              },
+            ],
+          },
+        },
+      },
+    };
+
+    vi.spyOn(AseaResource.prototype as any, 'loadResourcesFromFile').mockImplementation((stack: any) => {
+      return stack.cfnResources ?? [];
+    });
+
+    const getTgwAttachmentId = (TgwCrossAccountResources.prototype as any).getTgwAttachmentId;
+    const logFn = vi.fn();
+    const boundFn = getTgwAttachmentId.bind({
+      scope: { addLogs: logFn },
+      loadResourcesFromFile: (stack: any) => stack.cfnResources ?? [],
+      findResourceByTypeAndTag: (resources: any[], type: string, name: string) =>
+        resources.find(
+          (r: any) =>
+            r.resourceType === type &&
+            r.resourceMetadata.Properties.Tags?.some((t: any) => t.Key === 'Name' && t.Value === name),
+        ),
+      filterResourcesByType: (resources: any[], type: string) => resources.filter((r: any) => r.resourceType === type),
+    });
+
+    const result = boundFn('Production_vpc', 'Production_Main_att', mapping, 'workload-prod', 'ca-central-1');
+    expect(result).toBeUndefined();
+    expect(logFn).toHaveBeenCalled();
+  });
+
+  test('getTgwAttachmentId finds attachment in root stack when no nested stacks exist', () => {
+    const ATTACH_PHYSICAL_ID = 'tgw-attach-0rootstack456';
+
+    const mapping = {
+      'PALZ-WorkloadProd-Phase1': {
+        accountKey: 'workload-prod',
+        phase: '1',
+        region: 'ca-central-1',
+        cfnResources: [
+          {
+            resourceType: 'AWS::EC2::VPC',
+            logicalResourceId: 'VpcProd',
+            physicalResourceId: 'vpc-root',
+            resourceMetadata: { Properties: { Tags: [{ Key: 'Name', Value: 'Production_vpc' }] } },
+          },
+          {
+            resourceType: 'AWS::EC2::TransitGatewayAttachment',
+            logicalResourceId: 'TgwAttach',
+            physicalResourceId: ATTACH_PHYSICAL_ID,
+            resourceMetadata: { Properties: { Tags: [{ Key: 'Name', Value: 'Production_Main_att' }] } },
+          },
+        ],
+      },
+    };
+
+    vi.spyOn(AseaResource.prototype as any, 'loadResourcesFromFile').mockImplementation((stack: any) => {
+      return stack.cfnResources ?? [];
+    });
+
+    const getTgwAttachmentId = (TgwCrossAccountResources.prototype as any).getTgwAttachmentId;
+    const boundFn = getTgwAttachmentId.bind({
+      scope: { addLogs },
+      loadResourcesFromFile: (stack: any) => stack.cfnResources ?? [],
+      findResourceByTypeAndTag: (resources: any[], type: string, name: string) =>
+        resources.find(
+          (r: any) =>
+            r.resourceType === type &&
+            r.resourceMetadata.Properties.Tags?.some((t: any) => t.Key === 'Name' && t.Value === name),
+        ),
+      filterResourcesByType: (resources: any[], type: string) => resources.filter((r: any) => r.resourceType === type),
+    });
+
+    const result = boundFn('Production_vpc', 'Production_Main_att', mapping, 'workload-prod', 'ca-central-1');
+    expect(result).toBe(ATTACH_PHYSICAL_ID);
+  });
+});
+
+/**
  * Tests for the Phase-2 fallback (P400420849 fix): inferCrossAccountAttachmentIdFromPhase2.
  * Validates that cross-account TGW propagations/associations are registered when the
  * primary Phase-1 lookup fails but Phase-2 resources contain the attachment.

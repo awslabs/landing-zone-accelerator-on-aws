@@ -46,458 +46,286 @@ vi.mock('@aws-sdk/client-ec2', () => ({
   }),
   AssociateTransitGatewayRouteTableCommand: vi.fn(),
   DisassociateTransitGatewayRouteTableCommand: vi.fn(),
-  GetTransitGatewayRouteTableAssociationsCommand: vi.fn(),
+  DescribeTransitGatewayAttachmentsCommand: vi.fn(),
 }));
 
-import { TgwAssociations } from '../../../lib/transit-gateway/tgw-associations';
 import { EC2Client } from '@aws-sdk/client-ec2';
+import { waitUntil } from '../../../common/functions';
+import { TgwAssociations } from '../../../lib/transit-gateway/tgw-associations';
 import { IDesiredAttachment } from '../../../lib/transit-gateway/interfaces';
 
 const ec2 = new EC2Client({});
-const RT_ID = 'tgw-rtb-core';
-const RT_NAME = 'core-rt';
+const TGW_ID = 'tgw-0abc';
 const TGW_NAME = 'main-tgw';
 const REGION = 'us-east-1';
 const LOG_PREFIX = 'test';
+const CORE_RT = { routeTableId: 'tgw-rtb-core', routeTableName: 'core-rt' };
+const SHARED_RT = { routeTableId: 'tgw-rtb-shared', routeTableName: 'shared-rt' };
 
 function desiredAttachment(overrides: Partial<IDesiredAttachment> = {}): IDesiredAttachment {
   return { attachmentId: 'tgw-attach-a', attachmentName: 'vpc-a', attachmentType: 'vpc', ...overrides };
 }
 
+function currentAttachment(attachmentId: string, routeTableId?: string, state = 'associated') {
+  return {
+    TransitGatewayAttachmentId: attachmentId,
+    Association: routeTableId ? { TransitGatewayRouteTableId: routeTableId, State: state } : undefined,
+  };
+}
+
+function desiredByRouteTable(entries: [string, IDesiredAttachment[]][]) {
+  return new Map(entries);
+}
+
+interface CommandParams {
+  TransitGatewayAttachmentId?: string;
+  TransitGatewayAttachmentIds?: string[];
+  TransitGatewayRouteTableId?: string;
+}
+
+async function process(
+  desired: Map<string, IDesiredAttachment[]>,
+  knownAttachmentIds = new Set(['tgw-attach-a']),
+  dryRun = false,
+) {
+  return TgwAssociations.processTransitGateway(
+    ec2,
+    TGW_ID,
+    TGW_NAME,
+    REGION,
+    [CORE_RT, SHARED_RT],
+    desired,
+    knownAttachmentIds,
+    dryRun,
+    LOG_PREFIX,
+  );
+}
+
 describe('TgwAssociations', () => {
   let mockExecuteApi: ReturnType<typeof vi.fn>;
   let mockLogger: {
-    info: ReturnType<typeof vi.fn>;
     warn: ReturnType<typeof vi.fn>;
     dryRun: ReturnType<typeof vi.fn>;
   };
 
   beforeEach(async () => {
-    vi.resetAllMocks();
+    vi.clearAllMocks();
     const utility = await import('../../../lib/common/utility');
     const logger = await import('../../../lib/common/logger');
     mockExecuteApi = vi.mocked(utility.executeApi);
     mockExecuteApi.mockImplementation((_name: string, _params: unknown, fn: () => Promise<unknown>) => fn());
     mockLogger = (logger as unknown as { mockLogger: typeof mockLogger }).mockLogger;
-    mockSend.mockResolvedValue({ Associations: [] });
+    mockSend.mockResolvedValue({ TransitGatewayAttachments: [] });
   });
 
-  describe('create', () => {
-    test('should create association when none exists', async () => {
-      const desired = [desiredAttachment()];
-      const result = await TgwAssociations.process(
-        ec2,
-        RT_ID,
-        RT_NAME,
-        TGW_NAME,
-        REGION,
-        desired,
-        new Set(['tgw-attach-a']),
-        false,
-        LOG_PREFIX,
-      );
-      expect(result).toHaveLength(1);
-      expect(result[0]).toEqual(
-        expect.objectContaining({ operation: 'created', attachmentName: 'vpc-a', routeTableName: RT_NAME }),
-      );
+  test('should create association when none exists', async () => {
+    const result = await process(desiredByRouteTable([[CORE_RT.routeTableId, [desiredAttachment()]]]));
+
+    expect(result).toContainEqual(
+      expect.objectContaining({ operation: 'created', attachmentName: 'vpc-a', routeTableName: 'core-rt' }),
+    );
+  });
+
+  test('should report exists when desired association already exists', async () => {
+    mockSend.mockResolvedValue({
+      TransitGatewayAttachments: [currentAttachment('tgw-attach-a', CORE_RT.routeTableId)],
     });
 
-    test('should handle Resource.AlreadyAssociated as exists', async () => {
-      mockExecuteApi.mockImplementation(async (name: string, _p: unknown, fn: () => Promise<unknown>) => {
-        if (name === 'AssociateTransitGatewayRouteTableCommand') {
+    const result = await process(desiredByRouteTable([[CORE_RT.routeTableId, [desiredAttachment()]]]));
+
+    expect(result).toEqual([
+      expect.objectContaining({ operation: 'exists', attachmentName: 'vpc-a', routeTableName: 'core-rt' }),
+    ]);
+  });
+
+  test('should delete managed association that is no longer desired', async () => {
+    mockSend.mockResolvedValue({
+      TransitGatewayAttachments: [currentAttachment('tgw-attach-a', CORE_RT.routeTableId)],
+    });
+
+    const result = await process(desiredByRouteTable([]));
+
+    expect(result).toContainEqual(
+      expect.objectContaining({ operation: 'deleted', attachmentName: 'tgw-attach-a', routeTableName: 'core-rt' }),
+    );
+  });
+
+  test('should never touch unmanaged associations', async () => {
+    mockSend.mockResolvedValue({
+      TransitGatewayAttachments: [currentAttachment('tgw-attach-external', CORE_RT.routeTableId)],
+    });
+
+    const result = await process(desiredByRouteTable([]));
+
+    expect(result).toHaveLength(0);
+  });
+
+  test('should not wait for unmanaged associations in transitional state', async () => {
+    mockSend.mockResolvedValue({
+      TransitGatewayAttachments: [currentAttachment('tgw-attach-external', CORE_RT.routeTableId, 'disassociating')],
+    });
+
+    const result = await process(desiredByRouteTable([]));
+
+    expect(result).toHaveLength(0);
+    expect(waitUntil).not.toHaveBeenCalled();
+  });
+
+  test('should release all changed associations before acquiring any new associations', async () => {
+    const calls: string[] = [];
+    const current = new Map([
+      ['tgw-attach-a', CORE_RT.routeTableId],
+      ['tgw-attach-b', SHARED_RT.routeTableId],
+    ]);
+    mockExecuteApi.mockImplementation(
+      async (commandName: string, params: CommandParams, fn: () => Promise<unknown>) => {
+        if (commandName === 'DescribeTransitGatewayAttachmentsCommand') {
+          return {
+            TransitGatewayAttachments: [...current].map(([attachmentId, routeTableId]) =>
+              currentAttachment(attachmentId, routeTableId),
+            ),
+          };
+        }
+        if (commandName === 'DisassociateTransitGatewayRouteTableCommand') {
+          calls.push(`${commandName}:${params.TransitGatewayAttachmentId}`);
+          current.delete(params.TransitGatewayAttachmentId);
+        }
+        if (commandName === 'AssociateTransitGatewayRouteTableCommand') {
+          calls.push(`${commandName}:${params.TransitGatewayAttachmentId}`);
+          current.set(params.TransitGatewayAttachmentId, params.TransitGatewayRouteTableId);
+        }
+        return fn();
+      },
+    );
+
+    const result = await process(
+      desiredByRouteTable([
+        [SHARED_RT.routeTableId, [desiredAttachment()]],
+        [CORE_RT.routeTableId, [desiredAttachment({ attachmentId: 'tgw-attach-b', attachmentName: 'vpc-b' })]],
+      ]),
+      new Set(['tgw-attach-a', 'tgw-attach-b']),
+    );
+
+    expect(result.filter(r => r.operation === 'deleted')).toHaveLength(2);
+    expect(result.filter(r => r.operation === 'created')).toHaveLength(2);
+    const firstAssociate = calls.findIndex(call => call.startsWith('AssociateTransitGatewayRouteTableCommand'));
+    const lastDisassociate = calls.findLastIndex(call =>
+      call.startsWith('DisassociateTransitGatewayRouteTableCommand'),
+    );
+    expect(firstAssociate).toBeGreaterThan(lastDisassociate);
+  });
+
+  test('should handle InvalidAssociation.NotFound as already deleted', async () => {
+    mockSend.mockResolvedValue({
+      TransitGatewayAttachments: [currentAttachment('tgw-attach-a', CORE_RT.routeTableId)],
+    });
+    mockExecuteApi.mockImplementation(async (commandName: string, _params: unknown, fn: () => Promise<unknown>) => {
+      if (commandName === 'DisassociateTransitGatewayRouteTableCommand') {
+        const err = new Error('InvalidAssociation.NotFound');
+        err.name = 'InvalidAssociation.NotFound';
+        throw err;
+      }
+      return fn();
+    });
+
+    const result = await process(desiredByRouteTable([]));
+
+    expect(result).toContainEqual(expect.objectContaining({ operation: 'deleted' }));
+    expect(mockLogger.warn).toHaveBeenCalled();
+  });
+
+  test('should report per-item failure when association create fails', async () => {
+    mockExecuteApi.mockImplementation(async (commandName: string, _params: unknown, fn: () => Promise<unknown>) => {
+      if (commandName === 'AssociateTransitGatewayRouteTableCommand') {
+        throw new Error('Throttling');
+      }
+      return fn();
+    });
+
+    const result = await process(desiredByRouteTable([[CORE_RT.routeTableId, [desiredAttachment()]]]));
+
+    expect(result).toEqual([
+      expect.objectContaining({ operation: 'failed', errorMessage: 'Throttling', routeTableName: 'core-rt' }),
+    ]);
+  });
+
+  test('should handle Resource.AlreadyAssociated on target as exists', async () => {
+    mockExecuteApi.mockImplementation(
+      async (commandName: string, params: CommandParams, fn: () => Promise<unknown>) => {
+        if (commandName === 'AssociateTransitGatewayRouteTableCommand') {
           const err = new Error('Resource.AlreadyAssociated');
           err.name = 'Resource.AlreadyAssociated';
           throw err;
         }
-        return fn();
-      });
-      const result = await TgwAssociations.process(
-        ec2,
-        RT_ID,
-        RT_NAME,
-        TGW_NAME,
-        REGION,
-        [desiredAttachment()],
-        new Set(['tgw-attach-a']),
-        false,
-        LOG_PREFIX,
-      );
-      expect(result[0].operation).toBe('exists');
-    });
-
-    test('should rethrow unknown errors on create', async () => {
-      mockExecuteApi.mockImplementation(async (name: string, _p: unknown, fn: () => Promise<unknown>) => {
-        if (name === 'AssociateTransitGatewayRouteTableCommand') {
-          throw new Error('Throttling');
+        if (commandName === 'DescribeTransitGatewayAttachmentsCommand' && params.TransitGatewayAttachmentIds) {
+          return { TransitGatewayAttachments: [currentAttachment('tgw-attach-a', CORE_RT.routeTableId)] };
         }
         return fn();
-      });
-      await expect(
-        TgwAssociations.process(
-          ec2,
-          RT_ID,
-          RT_NAME,
-          TGW_NAME,
-          REGION,
-          [desiredAttachment()],
-          new Set(['tgw-attach-a']),
-          false,
-          LOG_PREFIX,
-        ),
-      ).rejects.toThrow('Throttling');
-    });
+      },
+    );
+
+    const result = await process(desiredByRouteTable([[CORE_RT.routeTableId, [desiredAttachment()]]]));
+
+    expect(result).toEqual([
+      expect.objectContaining({ operation: 'exists', attachmentName: 'vpc-a', routeTableName: 'core-rt' }),
+    ]);
   });
 
-  describe('exists', () => {
-    test('should report exists when association already present', async () => {
-      mockSend.mockResolvedValue({
-        Associations: [{ TransitGatewayAttachmentId: 'tgw-attach-a', State: 'associated' }],
-      });
-      const result = await TgwAssociations.process(
-        ec2,
-        RT_ID,
-        RT_NAME,
-        TGW_NAME,
-        REGION,
-        [desiredAttachment()],
-        new Set(['tgw-attach-a']),
-        false,
-        LOG_PREFIX,
-      );
-      expect(result).toHaveLength(1);
-      expect(result[0].operation).toBe('exists');
-    });
-  });
-
-  describe('delete', () => {
-    test('should delete managed association not in desired config', async () => {
-      mockSend.mockResolvedValue({
-        Associations: [{ TransitGatewayAttachmentId: 'tgw-attach-a', State: 'associated' }],
-      });
-      const result = await TgwAssociations.process(
-        ec2,
-        RT_ID,
-        RT_NAME,
-        TGW_NAME,
-        REGION,
-        [],
-        new Set(['tgw-attach-a']),
-        false,
-        LOG_PREFIX,
-      );
-      expect(result).toHaveLength(1);
-      expect(result[0].operation).toBe('deleted');
-    });
-
-    test('should never touch external (unmanaged) attachments', async () => {
-      mockSend.mockResolvedValue({
-        Associations: [{ TransitGatewayAttachmentId: 'tgw-attach-external', State: 'associated' }],
-      });
-      const result = await TgwAssociations.process(
-        ec2,
-        RT_ID,
-        RT_NAME,
-        TGW_NAME,
-        REGION,
-        [],
-        new Set(['tgw-attach-a']),
-        false,
-        LOG_PREFIX,
-      );
-      expect(result.filter(r => r.operation === 'deleted')).toHaveLength(0);
-    });
-
-    test('should handle InvalidAssociation.NotFound as deleted', async () => {
-      mockSend.mockResolvedValue({
-        Associations: [{ TransitGatewayAttachmentId: 'tgw-attach-a', State: 'associated' }],
-      });
-      mockExecuteApi.mockImplementation(async (name: string, _p: unknown, fn: () => Promise<unknown>) => {
-        if (name === 'DisassociateTransitGatewayRouteTableCommand') {
-          const err = new Error('InvalidAssociation.NotFound');
-          err.name = 'InvalidAssociation.NotFound';
+  test('should report failed when AlreadyAssociated verification fails', async () => {
+    mockExecuteApi.mockImplementation(
+      async (commandName: string, params: CommandParams, fn: () => Promise<unknown>) => {
+        if (commandName === 'AssociateTransitGatewayRouteTableCommand') {
+          const err = new Error('Resource.AlreadyAssociated');
+          err.name = 'Resource.AlreadyAssociated';
           throw err;
         }
-        return fn();
-      });
-      const result = await TgwAssociations.process(
-        ec2,
-        RT_ID,
-        RT_NAME,
-        TGW_NAME,
-        REGION,
-        [],
-        new Set(['tgw-attach-a']),
-        false,
-        LOG_PREFIX,
-      );
-      expect(result).toHaveLength(1);
-      expect(result[0].operation).toBe('deleted');
-    });
-
-    test('should rethrow unknown errors on disassociate', async () => {
-      mockSend.mockResolvedValue({
-        Associations: [{ TransitGatewayAttachmentId: 'tgw-attach-a', State: 'associated' }],
-      });
-      const { executeApi } = await import('../../../lib/common/utility');
-      const localMockExecuteApi = vi.mocked(executeApi);
-      localMockExecuteApi.mockImplementation(async (name: string, _p: unknown, fn: () => Promise<unknown>) => {
-        if (name === 'DisassociateTransitGatewayRouteTableCommand') {
-          throw new Error('Throttling');
+        if (commandName === 'DescribeTransitGatewayAttachmentsCommand' && params.TransitGatewayAttachmentIds) {
+          throw new Error('Describe failed');
         }
         return fn();
-      });
-      await expect(
-        TgwAssociations.process(
-          ec2,
-          RT_ID,
-          RT_NAME,
-          TGW_NAME,
-          REGION,
-          [],
-          new Set(['tgw-attach-a']),
-          false,
-          LOG_PREFIX,
-        ),
-      ).rejects.toThrow('Throttling');
-      localMockExecuteApi.mockImplementation((_name: string, _p: unknown, fn: () => Promise<unknown>) => fn());
-    });
+      },
+    );
 
-    test('should skip associations not in associated state', async () => {
-      mockSend.mockResolvedValue({
-        Associations: [{ TransitGatewayAttachmentId: 'tgw-attach-a', State: 'disassociating' }],
-      });
-      const result = await TgwAssociations.process(
-        ec2,
-        RT_ID,
-        RT_NAME,
-        TGW_NAME,
-        REGION,
-        [],
-        new Set(['tgw-attach-a']),
-        false,
-        LOG_PREFIX,
-      );
-      expect(result.filter(r => r.operation === 'deleted')).toHaveLength(0);
-    });
+    const result = await process(desiredByRouteTable([[CORE_RT.routeTableId, [desiredAttachment()]]]));
 
-    test('should handle Resource.NotFound as already disassociated', async () => {
-      mockSend.mockResolvedValue({
-        Associations: [{ TransitGatewayAttachmentId: 'tgw-attach-a', State: 'associated' }],
-      });
-      mockExecuteApi.mockImplementation(async (name: string, _p: unknown, fn: () => Promise<unknown>) => {
-        if (name === 'DisassociateTransitGatewayRouteTableCommand') {
-          const err = new Error('Resource.NotFound');
-          err.name = 'Resource.NotFound';
-          throw err;
-        }
-        return fn();
-      });
-      const result = await TgwAssociations.process(
-        ec2,
-        RT_ID,
-        RT_NAME,
-        TGW_NAME,
-        REGION,
-        [],
-        new Set(['tgw-attach-a']),
-        false,
-        LOG_PREFIX,
-      );
-      expect(result[0].operation).toBe('deleted');
-      expect(mockLogger.warn).toHaveBeenCalled();
-    });
-
-    test('should handle InvalidAssociation.NotFound as already disassociated', async () => {
-      mockSend.mockResolvedValue({
-        Associations: [{ TransitGatewayAttachmentId: 'tgw-attach-a', State: 'associated' }],
-      });
-      mockExecuteApi.mockImplementation(async (name: string, _p: unknown, fn: () => Promise<unknown>) => {
-        if (name === 'DisassociateTransitGatewayRouteTableCommand') {
-          const err = new Error('InvalidAssociation.NotFound');
-          err.name = 'InvalidAssociation.NotFound';
-          throw err;
-        }
-        return fn();
-      });
-      const result = await TgwAssociations.process(
-        ec2,
-        RT_ID,
-        RT_NAME,
-        TGW_NAME,
-        REGION,
-        [],
-        new Set(['tgw-attach-a']),
-        false,
-        LOG_PREFIX,
-      );
-      expect(result[0].operation).toBe('deleted');
-      expect(mockLogger.warn).toHaveBeenCalled();
-    });
-
-    test('should rethrow unknown errors on disassociate', async () => {
-      mockSend.mockResolvedValue({
-        Associations: [{ TransitGatewayAttachmentId: 'tgw-attach-a', State: 'associated' }],
-      });
-      mockExecuteApi.mockImplementation(async (name: string, _p: unknown, fn: () => Promise<unknown>) => {
-        if (name === 'DisassociateTransitGatewayRouteTableCommand') {
-          throw new Error('Throttling');
-        }
-        return fn();
-      });
-      await expect(
-        TgwAssociations.process(
-          ec2,
-          RT_ID,
-          RT_NAME,
-          TGW_NAME,
-          REGION,
-          [],
-          new Set(['tgw-attach-a']),
-          false,
-          LOG_PREFIX,
-        ),
-      ).rejects.toThrow('Throttling');
-    });
+    expect(result).toEqual([
+      expect.objectContaining({ operation: 'failed', errorMessage: 'Describe failed', routeTableName: 'core-rt' }),
+    ]);
   });
 
-  describe('dry run', () => {
-    test('should not call create API in dry run mode', async () => {
-      const result = await TgwAssociations.process(
-        ec2,
-        RT_ID,
-        RT_NAME,
-        TGW_NAME,
-        REGION,
-        [desiredAttachment()],
-        new Set(['tgw-attach-a']),
-        true,
-        LOG_PREFIX,
-      );
-      expect(result[0].operation).toBe('created');
-      expect(mockLogger.dryRun).toHaveBeenCalledWith(
-        'AssociateTransitGatewayRouteTableCommand',
-        expect.objectContaining({ TransitGatewayRouteTableId: RT_ID, TransitGatewayAttachmentId: 'tgw-attach-a' }),
-        LOG_PREFIX,
-      );
-    });
-
-    test('should not call delete API in dry run mode', async () => {
-      mockSend.mockResolvedValue({
-        Associations: [{ TransitGatewayAttachmentId: 'tgw-attach-a', State: 'associated' }],
-      });
-      const result = await TgwAssociations.process(
-        ec2,
-        RT_ID,
-        RT_NAME,
-        TGW_NAME,
-        REGION,
-        [],
-        new Set(['tgw-attach-a']),
-        true,
-        LOG_PREFIX,
-      );
-      expect(result[0].operation).toBe('deleted');
-      expect(mockLogger.dryRun).toHaveBeenCalledWith(
-        'DisassociateTransitGatewayRouteTableCommand',
-        expect.objectContaining({ TransitGatewayRouteTableId: RT_ID, TransitGatewayAttachmentId: 'tgw-attach-a' }),
-        LOG_PREFIX,
-      );
-    });
+  test('should reject duplicate desired route table associations for one attachment', async () => {
+    await expect(
+      process(
+        desiredByRouteTable([
+          [CORE_RT.routeTableId, [desiredAttachment()]],
+          [SHARED_RT.routeTableId, [desiredAttachment()]],
+        ]),
+      ),
+    ).rejects.toThrow('is associated with multiple route tables');
   });
 
-  describe('pagination', () => {
-    test('should paginate getCurrent via NextToken', async () => {
-      mockSend
-        .mockResolvedValueOnce({
-          Associations: [{ TransitGatewayAttachmentId: 'tgw-attach-a', State: 'associated' }],
-          NextToken: 'page2',
-        })
-        .mockResolvedValueOnce({
-          Associations: [{ TransitGatewayAttachmentId: 'tgw-attach-b', State: 'associated' }],
-        });
-      // Both are managed and in current but not desired → both deleted
-      const result = await TgwAssociations.process(
-        ec2,
-        RT_ID,
-        RT_NAME,
-        TGW_NAME,
-        REGION,
-        [],
-        new Set(['tgw-attach-a', 'tgw-attach-b']),
-        false,
-        LOG_PREFIX,
-      );
-      expect(result.filter(r => r.operation === 'deleted')).toHaveLength(2);
-    });
-  });
-
-  describe('empty state', () => {
-    test('should return empty results when no current and no desired', async () => {
-      const result = await TgwAssociations.process(
-        ec2,
-        RT_ID,
-        RT_NAME,
-        TGW_NAME,
-        REGION,
-        [],
-        new Set(),
-        false,
-        LOG_PREFIX,
-      );
-      expect(result).toHaveLength(0);
-    });
-  });
-
-  describe('transitional state polling', () => {
-    test('should poll until associating state resolves then proceed normally', async () => {
-      mockSend
-        .mockResolvedValueOnce({ Associations: [{ TransitGatewayAttachmentId: 'tgw-attach-a', State: 'associating' }] })
-        .mockResolvedValueOnce({ Associations: [{ TransitGatewayAttachmentId: 'tgw-attach-a', State: 'associated' }] })
-        .mockResolvedValueOnce({ Associations: [{ TransitGatewayAttachmentId: 'tgw-attach-a', State: 'associated' }] });
-
-      const desired = [desiredAttachment()];
-      const result = await TgwAssociations.process(
-        ec2,
-        RT_ID,
-        RT_NAME,
-        TGW_NAME,
-        REGION,
-        desired,
-        new Set(),
-        false,
-        LOG_PREFIX,
-      );
-      expect(result.filter(r => r.operation === 'exists')).toHaveLength(1);
-      expect(mockSend).toHaveBeenCalledTimes(3);
+  test('should log both release and acquire in dry run for moves', async () => {
+    mockSend.mockResolvedValue({
+      TransitGatewayAttachments: [currentAttachment('tgw-attach-a', CORE_RT.routeTableId)],
     });
 
-    test('should poll until disassociating state resolves then create', async () => {
-      mockSend
-        .mockResolvedValueOnce({
-          Associations: [{ TransitGatewayAttachmentId: 'tgw-attach-stale', State: 'disassociating' }],
-        })
-        .mockResolvedValueOnce({
-          Associations: [{ TransitGatewayAttachmentId: 'tgw-attach-stale', State: 'disassociated' }],
-        })
-        .mockResolvedValueOnce({
-          Associations: [{ TransitGatewayAttachmentId: 'tgw-attach-stale', State: 'disassociated' }],
-        })
-        .mockResolvedValueOnce({});
+    const result = await process(
+      desiredByRouteTable([[SHARED_RT.routeTableId, [desiredAttachment()]]]),
+      undefined,
+      true,
+    );
 
-      const desired = [desiredAttachment()];
-      const result = await TgwAssociations.process(
-        ec2,
-        RT_ID,
-        RT_NAME,
-        TGW_NAME,
-        REGION,
-        desired,
-        new Set(),
-        false,
-        LOG_PREFIX,
-      );
-      expect(result.filter(r => r.operation === 'created')).toHaveLength(1);
-      expect(mockSend).toHaveBeenCalledTimes(4);
-    });
+    expect(result).toContainEqual(expect.objectContaining({ operation: 'deleted', routeTableName: 'core-rt' }));
+    expect(result).toContainEqual(expect.objectContaining({ operation: 'created', routeTableName: 'shared-rt' }));
+    expect(mockLogger.dryRun).toHaveBeenCalledWith(
+      'DisassociateTransitGatewayRouteTableCommand',
+      expect.objectContaining({ TransitGatewayAttachmentId: 'tgw-attach-a' }),
+      LOG_PREFIX,
+    );
+    expect(mockLogger.dryRun).toHaveBeenCalledWith(
+      'AssociateTransitGatewayRouteTableCommand',
+      expect.objectContaining({ TransitGatewayAttachmentId: 'tgw-attach-a' }),
+      LOG_PREFIX,
+    );
   });
 });

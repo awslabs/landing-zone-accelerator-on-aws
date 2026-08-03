@@ -1,14 +1,11 @@
 {
   "name": "disable-flag",
-  "description": "Empty transitGateways triggers wrapper SKIPPED path (no TGWs configured)",
-  "order": 15,
+  "description": "No transitGateways configured so wrapper should skip before module execution",
+  "order": 9,
   "moduleConfig": {
     "homeRegion": "${ENV:TGW_INTEG_HOME_REGION}",
     "enabledRegions": ["${ENV:TGW_INTEG_HOME_REGION}"],
-    "transitGateways": [],
-    "vpcs": [],
-    "customerGateways": [],
-    "directConnectGateways": []
+    "transitGateways": []
   },
   "expectedAssertions": {
     "moduleResponseStatus": "skipped",

@@ -355,6 +355,7 @@ describe('TgwAssociationsAndPropagations', () => {
           {
             name: 'workload-vpc',
             deploymentTargets: { accounts: ['WorkloadA', 'WorkloadB'] },
+            region: 'us-east-1',
             transitGatewayAttachments: [
               {
                 name: 'workload-tgw-attach',
@@ -385,6 +386,168 @@ describe('TgwAssociationsAndPropagations', () => {
           }),
         }),
       );
+    });
+
+    it('should expand VPC template attachments per account in state config', async () => {
+      const { hasModuleConfigChanged } = await import('../../../../lib/actions/utils/module-state.js');
+      vi.mocked(hasModuleConfigChanged).mockResolvedValue(true);
+
+      const params = createMockParams({
+        transitGateways: [
+          { name: 'main-tgw', account: 'Network', region: 'us-east-1', routeTables: [{ name: 'core-rt' }] },
+        ],
+        vpcTemplates: [
+          {
+            name: 'workload-vpc',
+            deploymentTargets: { accounts: ['WorkloadA', 'WorkloadB'] },
+            region: 'us-east-1',
+            transitGatewayAttachments: [
+              {
+                name: 'workload-tgw-attach',
+                transitGateway: { name: 'main-tgw' },
+                routeTableAssociations: ['core-rt'],
+                routeTablePropagations: ['shared-rt'],
+              },
+            ],
+          },
+        ],
+      });
+
+      vi.mocked(params.moduleRunnerParameters.configs.accountsConfig.getAccountIdsFromDeploymentTarget).mockReturnValue(
+        ['222222222222', '111111111111'],
+      );
+
+      await TgwAssociationsAndPropagations.configure(params);
+
+      const currentConfig = vi.mocked(hasModuleConfigChanged).mock.calls[0][0].currentConfig as any;
+      expect(currentConfig.vpcAttachments).toEqual([
+        {
+          vpcName: 'workload-vpc',
+          accountId: '111111111111',
+          region: 'us-east-1',
+          transitGatewayName: 'main-tgw',
+          routeTableAssociations: ['core-rt'],
+          routeTablePropagations: ['shared-rt'],
+        },
+        {
+          vpcName: 'workload-vpc',
+          accountId: '222222222222',
+          region: 'us-east-1',
+          transitGatewayName: 'main-tgw',
+          routeTableAssociations: ['core-rt'],
+          routeTablePropagations: ['shared-rt'],
+        },
+      ]);
+    });
+
+    it('should include VPC accountId changes in state config', async () => {
+      const { hasModuleConfigChanged } = await import('../../../../lib/actions/utils/module-state.js');
+      vi.mocked(hasModuleConfigChanged).mockResolvedValue(true);
+
+      const baseNetworkConfig = {
+        transitGateways: [
+          { name: 'main-tgw', account: 'Network', region: 'us-east-1', routeTables: [{ name: 'core-rt' }] },
+        ],
+        vpcTemplates: [
+          {
+            name: 'workload-vpc',
+            deploymentTargets: { accounts: ['WorkloadA'] },
+            transitGatewayAttachments: [
+              {
+                name: 'workload-tgw-attach',
+                transitGateway: { name: 'main-tgw' },
+                routeTableAssociations: ['core-rt'],
+                routeTablePropagations: [],
+              },
+            ],
+          },
+        ],
+      };
+
+      const params1 = createMockParams(baseNetworkConfig);
+      vi.mocked(
+        params1.moduleRunnerParameters.configs.accountsConfig.getAccountIdsFromDeploymentTarget,
+      ).mockReturnValue(['111111111111']);
+
+      await TgwAssociationsAndPropagations.configure(params1);
+      const config1 = vi.mocked(hasModuleConfigChanged).mock.calls[0][0].currentConfig as any;
+
+      const params2 = createMockParams({
+        ...baseNetworkConfig,
+        vpcTemplates: [
+          {
+            ...baseNetworkConfig.vpcTemplates[0],
+            deploymentTargets: { accounts: ['WorkloadA', 'WorkloadB'] },
+          },
+        ],
+      });
+      vi.mocked(
+        params2.moduleRunnerParameters.configs.accountsConfig.getAccountIdsFromDeploymentTarget,
+      ).mockReturnValue(['111111111111', '222222222222']);
+
+      await TgwAssociationsAndPropagations.configure(params2);
+      const config2 = vi.mocked(hasModuleConfigChanged).mock.calls[1][0].currentConfig as any;
+
+      expect(config1).not.toEqual(config2);
+      expect(config1.vpcAttachments.map((attachment: any) => attachment.accountId)).toEqual(['111111111111']);
+      expect(config2.vpcAttachments.map((attachment: any) => attachment.accountId)).toEqual([
+        '111111111111',
+        '222222222222',
+      ]);
+    });
+
+    it('should include VPC template region in state config', async () => {
+      const { hasModuleConfigChanged } = await import('../../../../lib/actions/utils/module-state.js');
+      vi.mocked(hasModuleConfigChanged).mockResolvedValue(true);
+
+      const baseNetworkConfig = {
+        transitGateways: [
+          { name: 'main-tgw', account: 'Network', region: 'us-east-1', routeTables: [{ name: 'core-rt' }] },
+        ],
+        vpcTemplates: [
+          {
+            name: 'workload-vpc',
+            deploymentTargets: { accounts: ['WorkloadA'] },
+            region: 'us-east-1',
+            transitGatewayAttachments: [
+              {
+                name: 'workload-tgw-attach',
+                transitGateway: { name: 'main-tgw' },
+                routeTableAssociations: ['core-rt'],
+                routeTablePropagations: [],
+              },
+            ],
+          },
+        ],
+      };
+
+      const params1 = createMockParams(baseNetworkConfig);
+      vi.mocked(
+        params1.moduleRunnerParameters.configs.accountsConfig.getAccountIdsFromDeploymentTarget,
+      ).mockReturnValue(['111111111111']);
+
+      await TgwAssociationsAndPropagations.configure(params1);
+      const config1 = vi.mocked(hasModuleConfigChanged).mock.calls[0][0].currentConfig as any;
+
+      const params2 = createMockParams({
+        ...baseNetworkConfig,
+        vpcTemplates: [
+          {
+            ...baseNetworkConfig.vpcTemplates[0],
+            region: 'us-west-2',
+          },
+        ],
+      });
+      vi.mocked(
+        params2.moduleRunnerParameters.configs.accountsConfig.getAccountIdsFromDeploymentTarget,
+      ).mockReturnValue(['111111111111']);
+
+      await TgwAssociationsAndPropagations.configure(params2);
+      const config2 = vi.mocked(hasModuleConfigChanged).mock.calls[1][0].currentConfig as any;
+
+      expect(config1).not.toEqual(config2);
+      expect(config1.vpcAttachments[0].region).toBe('us-east-1');
+      expect(config2.vpcAttachments[0].region).toBe('us-west-2');
     });
   });
 

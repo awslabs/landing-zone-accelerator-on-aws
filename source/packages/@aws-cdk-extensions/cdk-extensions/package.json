@@ -21,7 +21,7 @@
     "build-prod": "tsc"
   },
   "dependencies": {
-    "aws-cdk-lib": "2.246.0"
+    "aws-cdk-lib": "2.262.0"
   },
   "devDependencies": {
     "@aws-cdk/assert": "2.68.0",

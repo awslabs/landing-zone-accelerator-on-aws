@@ -318,8 +318,10 @@ class ExistingRoleOverrides implements cdk.IAspect {
         construct.cfnResourceType === 'AWS::IAM::InstanceProfile' ||
         construct.cfnResourceType === 'AWS::IAM::ManagedPolicy')
     ) {
-      for (const x of construct.obtainResourceDependencies()) {
-        construct.removeDependency(x);
+      for (const x of construct.obtainDependencies()) {
+        if (x instanceof cdk.CfnResource) {
+          construct.removeResourceDependency(x);
+        }
       }
       construct.node.scope?.node.tryRemoveChild(construct.node.id);
     }
@@ -339,10 +341,12 @@ class ExistingRoleOverrides implements cdk.IAspect {
     }
   }
   private replaceLambdaFunctionRole(construct: cdk.CfnResource, acceleratorPrefix: string) {
-    for (const x of construct.obtainResourceDependencies()) {
-      construct.removeDependency(x);
-      const parentConstruct = construct.node.scope;
-      parentConstruct?.node.tryRemoveChild(x.node.id);
+    for (const x of construct.obtainDependencies()) {
+      if (x instanceof cdk.CfnResource) {
+        construct.removeResourceDependency(x);
+        const parentConstruct = construct.node.scope;
+        parentConstruct?.node.tryRemoveChild(x.node.id);
+      }
     }
     construct.addPropertyDeletionOverride('Role');
     construct.addPropertyOverride(

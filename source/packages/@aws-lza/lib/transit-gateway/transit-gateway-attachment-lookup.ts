@@ -158,10 +158,10 @@ export abstract class TransitGatewayAttachmentLookup {
       configuration: tgwEntries,
     });
 
-    // Map results back by parameter name → logical key
+    // Map results back by caller-provided logical key.
     const resultByName = new Map(ssmResults.map(r => [r.name, r]));
     for (const entry of tgwEntries) {
-      const result = resultByName.get(entry.name);
+      const result = resultByName.get(entry.key) ?? resultByName.get(entry.name);
       if (!result?.exists || !result.value) {
         throw new Error(`SSM parameter not found: ${entry.name}`);
       }

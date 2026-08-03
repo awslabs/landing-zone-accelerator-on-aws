@@ -628,6 +628,13 @@ export class InstallerStack extends cdk.Stack {
       cdk.Stack.of(this).account
     }:role/${acceleratorPrefix}-*`;
 
+    // Module infrastructure resource names (DynamoDB tables + log group)
+    // Uses qualifier for external pipeline, acceleratorPrefix for standard
+    let moduleResourcePrefix = acceleratorPrefix;
+    let moduleStateTableName = `${moduleResourcePrefix}-Module-State-${cdk.Aws.ACCOUNT_ID}-${cdk.Aws.REGION}`;
+    let resourceRetentionTableName = `${moduleResourcePrefix}-Resource-Retention-${cdk.Aws.ACCOUNT_ID}-${cdk.Aws.REGION}`;
+    let moduleVerboseLogsGroupName = `${moduleResourcePrefix}-Module-Verbose-Logs`;
+
     if (props.useExternalPipelineAccount) {
       //
       // Change the variable to use qualifier
@@ -656,6 +663,10 @@ export class InstallerStack extends cdk.Stack {
       acceleratorPrincipalArn = `arn:${cdk.Stack.of(this).partition}:iam::${cdk.Stack.of(this).account}:role/${
         this.acceleratorQualifier!.valueAsString
       }-*`;
+      moduleResourcePrefix = this.acceleratorQualifier!.valueAsString;
+      moduleStateTableName = `${moduleResourcePrefix}-Module-State-${cdk.Aws.ACCOUNT_ID}-${cdk.Aws.REGION}`;
+      resourceRetentionTableName = `${moduleResourcePrefix}-Resource-Retention-${cdk.Aws.ACCOUNT_ID}-${cdk.Aws.REGION}`;
+      moduleVerboseLogsGroupName = `${moduleResourcePrefix}-Module-Verbose-Logs`;
     }
 
     // Validate Installer Parameters with CFN Rule Assertions
@@ -866,6 +877,44 @@ export class InstallerStack extends cdk.Stack {
       simpleName: false,
     });
 
+    // =========================================================================
+    // Module Infrastructure Resources (DynamoDB tables + CloudWatch log group)
+    // These support module execution state tracking and verbose logging.
+    // =========================================================================
+
+    // Module State Table — tracks module execution state (config hash, status, timestamp)
+    const moduleStateTable = new cdk.aws_dynamodb.Table(this, 'ModuleStateTable', {
+      tableName: moduleStateTableName,
+      partitionKey: { name: 'PK', type: cdk.aws_dynamodb.AttributeType.STRING },
+      sortKey: { name: 'SK', type: cdk.aws_dynamodb.AttributeType.STRING },
+      billingMode: cdk.aws_dynamodb.BillingMode.PAY_PER_REQUEST,
+      encryption: cdk.aws_dynamodb.TableEncryption.AWS_MANAGED,
+      pointInTimeRecovery: true,
+      timeToLiveAttribute: 'ttl',
+      removalPolicy: cdk.RemovalPolicy.RETAIN,
+    });
+    cdk.Tags.of(moduleStateTable).add('Accelerator', moduleResourcePrefix);
+
+    // Resource Retention Table — tracks retained CloudFormation custom resources
+    const resourceRetentionTable = new cdk.aws_dynamodb.Table(this, 'ResourceRetentionTable', {
+      tableName: resourceRetentionTableName,
+      partitionKey: { name: 'PK', type: cdk.aws_dynamodb.AttributeType.STRING },
+      sortKey: { name: 'SK', type: cdk.aws_dynamodb.AttributeType.STRING },
+      billingMode: cdk.aws_dynamodb.BillingMode.PAY_PER_REQUEST,
+      encryption: cdk.aws_dynamodb.TableEncryption.AWS_MANAGED,
+      pointInTimeRecovery: true,
+      removalPolicy: cdk.RemovalPolicy.RETAIN,
+    });
+    cdk.Tags.of(resourceRetentionTable).add('Accelerator', moduleResourcePrefix);
+
+    // Verbose Logs Group — detailed module execution logs for troubleshooting
+    const moduleVerboseLogsGroup = new cdk.aws_logs.LogGroup(this, 'ModuleVerboseLogsGroup', {
+      logGroupName: moduleVerboseLogsGroupName,
+      retention: cdk.aws_logs.RetentionDays.ONE_MONTH,
+      removalPolicy: cdk.RemovalPolicy.RETAIN,
+    });
+    cdk.Tags.of(moduleVerboseLogsGroup).add('Accelerator', moduleResourcePrefix);
+
     const installerServerAccessLogsBucket = new Bucket(this, 'InstallerAccessLogsBucket', {
       encryptionType: BucketEncryptionType.SSE_S3, // Server access logging does not support SSE-KMS
       s3BucketName: installerAccessLogsBucketName,
@@ -1005,7 +1054,6 @@ export class InstallerStack extends cdk.Stack {
               'cd packages/@aws-accelerator/installer',
               'chmod +x lib/bash/*.sh ../accelerator/scripts/*.sh',
               `set -e && ./lib/bash/bootstrap-management.sh ${acceleratorPrefix} ${cdk.Aws.REGION} ${cdk.Aws.ACCOUNT_ID} ${globalRegion} $FORCE_BOOTSTRAP`,
-              `set -e && ./lib/bash/create-module-infrastructure.sh ${acceleratorPrefix} ${cdk.Aws.REGION} ${cdk.Aws.ACCOUNT_ID} $ENABLE_EXTERNAL_PIPELINE_ACCOUNT $ACCELERATOR_QUALIFIER`,
               `set -e && if [ $ENABLE_EXTERNAL_PIPELINE_ACCOUNT = "yes" ]; then
                   if ! MANAGEMENT_ACCOUNT_CREDENTIAL=$(aws sts assume-role --role-arn arn:${
                     cdk.Stack.of(this).partition

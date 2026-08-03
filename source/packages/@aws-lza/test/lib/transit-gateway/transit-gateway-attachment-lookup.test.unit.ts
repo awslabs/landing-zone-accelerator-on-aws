@@ -15,7 +15,7 @@ import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { TransitGatewayAttachmentLookup } from '../../../lib/transit-gateway/transit-gateway-attachment-lookup';
 import { ITgwModuleRequest, ITgwModuleConfiguration } from '../../../lib/transit-gateway/interfaces';
 import { IAssumeRoleCredential } from '../../../lib/common/interfaces';
-import { ISsmParameterValue } from '../../../interfaces/aws-ssm/get-parameters';
+import { IGetSsmParametersValueHandlerParameter, ISsmParameterValue } from '../../../interfaces/aws-ssm/get-parameters';
 
 vi.mock('@aws-sdk/client-ec2', () => ({
   EC2Client: vi.fn(),
@@ -701,6 +701,49 @@ describe('TransitGatewayAttachmentLookup', () => {
       const config = mockSsmHandler.mock.calls[0][0].configuration;
       const westEntry = config.find((c: { name: string }) => c.name.includes('tgw-west'));
       expect(westEntry.assumeRoleArn).toContain('999999999999');
+    });
+
+    test('should resolve duplicate VPC attachment parameter names by logical key', async () => {
+      const props = buildProps({
+        transitGateways: [
+          { name: 'main', accountId: MOCK_CONSTANTS.invokingAccountId, region: MOCK_CONSTANTS.region, routeTables: [] },
+        ],
+        attachments: [
+          {
+            type: 'vpc',
+            name: 'SharedVpc',
+            accountId: '222222222222',
+            transitGateway: 'main',
+            routeTableAssociations: [],
+            routeTablePropagations: [],
+          },
+          {
+            type: 'vpc',
+            name: 'SharedVpc',
+            accountId: '333333333333',
+            transitGateway: 'main',
+            routeTableAssociations: [],
+            routeTablePropagations: [],
+          },
+        ],
+      });
+
+      mockSsmHandler.mockImplementation(async (input: IGetSsmParametersValueHandlerParameter) =>
+        input.configuration.map(entry => {
+          if (entry.name.includes('/transitGateways/main/id')) {
+            return { name: entry.key ?? entry.name, value: 'tgw-111', exists: true };
+          }
+          if (entry.assumeRoleArn?.includes('222222222222')) {
+            return { name: entry.key ?? entry.name, value: 'tgw-attach-acct222', exists: true };
+          }
+          return { name: entry.key ?? entry.name, value: 'tgw-attach-acct333', exists: true };
+        }),
+      );
+
+      const result = await TransitGatewayAttachmentLookup.resolveAttachments(props, MOCK_CONSTANTS.logPrefix);
+
+      expect(result.attachmentIds.get('main_222222222222_SharedVpc')).toBe('tgw-attach-acct222');
+      expect(result.attachmentIds.get('main_333333333333_SharedVpc')).toBe('tgw-attach-acct333');
     });
   });
 });

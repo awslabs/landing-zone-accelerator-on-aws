@@ -43,7 +43,7 @@ export class InstallerContainerStack extends cdk.Stack {
     type: 'String',
     description:
       'The Amazon Elastic Container Registry (Amazon ECR) repository, where Landing Zone Accelerator on AWS code is present.',
-    default: 'public.ecr.aws/aws-solutions/landing-zone-accelerator-on-aws:v1.16.0-rc.5',
+    default: 'public.ecr.aws/aws-solutions/landing-zone-accelerator-on-aws:v1.16.0',
   });
   private readonly managementAccountEmail = new cdk.CfnParameter(this, 'ManagementAccountEmail', {
     type: 'String',
@@ -426,10 +426,20 @@ export class InstallerContainerStack extends cdk.Stack {
       cdk.Stack.of(this).account
     }:role/${acceleratorPrefix}-*`;
 
+    // Module infrastructure resource names (DynamoDB tables + log group)
+    let moduleResourcePrefix = acceleratorPrefix;
+    let moduleStateTableName = `${moduleResourcePrefix}-Module-State-${cdk.Aws.ACCOUNT_ID}-${cdk.Aws.REGION}`;
+    let resourceRetentionTableName = `${moduleResourcePrefix}-Resource-Retention-${cdk.Aws.ACCOUNT_ID}-${cdk.Aws.REGION}`;
+    let moduleVerboseLogsGroupName = `${moduleResourcePrefix}-Module-Verbose-Logs`;
+
     if (props?.useExternalPipelineAccount) {
       acceleratorPrincipalArn = `arn:${cdk.Stack.of(this).partition}:iam::${cdk.Stack.of(this).account}:role/${
         this.acceleratorQualifier!.valueAsString
       }-*`;
+      moduleResourcePrefix = this.acceleratorQualifier!.valueAsString;
+      moduleStateTableName = `${moduleResourcePrefix}-Module-State-${cdk.Aws.ACCOUNT_ID}-${cdk.Aws.REGION}`;
+      resourceRetentionTableName = `${moduleResourcePrefix}-Resource-Retention-${cdk.Aws.ACCOUNT_ID}-${cdk.Aws.REGION}`;
+      moduleVerboseLogsGroupName = `${moduleResourcePrefix}-Module-Verbose-Logs`;
     }
 
     // Add assertions for customers using a pre-existing config repo
@@ -644,6 +654,44 @@ export class InstallerContainerStack extends cdk.Stack {
       stringValue: installerKey.keyArn,
       simpleName: false,
     });
+
+    // =========================================================================
+    // Module Infrastructure Resources (DynamoDB tables + CloudWatch log group)
+    // These support module execution state tracking and verbose logging.
+    // =========================================================================
+
+    // Module State Table — tracks module execution state (config hash, status, timestamp)
+    const moduleStateTable = new cdk.aws_dynamodb.Table(this, 'ModuleStateTable', {
+      tableName: moduleStateTableName,
+      partitionKey: { name: 'PK', type: cdk.aws_dynamodb.AttributeType.STRING },
+      sortKey: { name: 'SK', type: cdk.aws_dynamodb.AttributeType.STRING },
+      billingMode: cdk.aws_dynamodb.BillingMode.PAY_PER_REQUEST,
+      encryption: cdk.aws_dynamodb.TableEncryption.AWS_MANAGED,
+      pointInTimeRecovery: true,
+      timeToLiveAttribute: 'ttl',
+      removalPolicy: cdk.RemovalPolicy.RETAIN,
+    });
+    cdk.Tags.of(moduleStateTable).add('Accelerator', moduleResourcePrefix);
+
+    // Resource Retention Table — tracks retained CloudFormation custom resources
+    const resourceRetentionTable = new cdk.aws_dynamodb.Table(this, 'ResourceRetentionTable', {
+      tableName: resourceRetentionTableName,
+      partitionKey: { name: 'PK', type: cdk.aws_dynamodb.AttributeType.STRING },
+      sortKey: { name: 'SK', type: cdk.aws_dynamodb.AttributeType.STRING },
+      billingMode: cdk.aws_dynamodb.BillingMode.PAY_PER_REQUEST,
+      encryption: cdk.aws_dynamodb.TableEncryption.AWS_MANAGED,
+      pointInTimeRecovery: true,
+      removalPolicy: cdk.RemovalPolicy.RETAIN,
+    });
+    cdk.Tags.of(resourceRetentionTable).add('Accelerator', moduleResourcePrefix);
+
+    // Verbose Logs Group — detailed module execution logs for troubleshooting
+    const moduleVerboseLogsGroup = new cdk.aws_logs.LogGroup(this, 'ModuleVerboseLogsGroup', {
+      logGroupName: moduleVerboseLogsGroupName,
+      retention: cdk.aws_logs.RetentionDays.ONE_MONTH,
+      removalPolicy: cdk.RemovalPolicy.RETAIN,
+    });
+    cdk.Tags.of(moduleVerboseLogsGroup).add('Accelerator', moduleResourcePrefix);
 
     const installerServerAccessLogsBucket = new Bucket(this, 'InstallerAccessLogsBucket', {
       encryptionType: BucketEncryptionType.SSE_S3, // Server access logging does not support SSE-KMS

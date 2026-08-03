@@ -1,7 +1,7 @@
 {
-  "name": "xacct-dx-gw-proposal",
-  "description": "Cross-account DX-GW path: shared-dxgw account=SharedServices, tgw owner=Network triggers proposal flow",
-  "order": 26,
+  "name": "dx-gw-create-associations",
+  "description": "Create same-account direct and cross-account proposal DX Gateway associations in one pass",
+  "order": 5,
   "moduleConfig": {
     "homeRegion": "${ENV:TGW_INTEG_HOME_REGION}",
     "enabledRegions": ["${ENV:TGW_INTEG_HOME_REGION}"],
@@ -36,28 +36,44 @@
             "subnets": [],
             "options": { "applianceModeSupport": "disable", "dnsSupport": "enable", "ipv6Support": "disable" },
             "routeTableAssociations": ["segregated-rt"],
-            "routeTablePropagations": ["core-rt"]
+            "routeTablePropagations": ["segregated-rt"]
           }
         ]
-      },
+      }
+    ],
+    "customerGateways": [
       {
-        "name": "shared-vpc",
-        "account": "Shared Services",
+        "name": "network-cgw",
+        "account": "Network",
         "region": "${ENV:TGW_INTEG_HOME_REGION}",
-        "cidrs": ["10.101.0.0/16"],
-        "transitGatewayAttachments": [
+        "ipAddress": "203.0.113.12",
+        "asn": 65000,
+        "vpnConnections": [
           {
-            "name": "shared-vpc-attach",
-            "transitGateway": { "name": "main-tgw", "account": "Network" },
-            "subnets": [],
-            "options": { "applianceModeSupport": "disable", "dnsSupport": "enable", "ipv6Support": "disable" },
-            "routeTableAssociations": [],
-            "routeTablePropagations": []
+            "name": "network-vpn",
+            "transitGateway": "main-tgw",
+            "staticRoutesOnly": true,
+            "routeTableAssociations": ["segregated-rt"],
+            "routeTablePropagations": ["core-rt"]
           }
         ]
       }
     ],
     "directConnectGateways": [
+      {
+        "name": "network-dxgw",
+        "account": "Network",
+        "asn": 64512,
+        "transitGatewayAssociations": [
+          {
+            "name": "main-tgw",
+            "account": "Network",
+            "allowedPrefixes": ["10.0.0.0/8"],
+            "routeTableAssociations": ["core-rt"],
+            "routeTablePropagations": ["core-rt"]
+          }
+        ]
+      },
       {
         "name": "shared-dxgw",
         "account": "Shared Services",
@@ -76,12 +92,19 @@
   },
   "expectedAssertions": {
     "moduleResponseStatus": "completed",
-    "dxGatewayAssociationState": {
-      "name": "shared-dxgw",
-      "account": "Shared Services",
-      "associationType": "proposal",
-      "allowedPrefixes": ["10.0.0.0/8"]
-    },
+    "dxGatewayAssociationState": [
+      {
+        "name": "network-dxgw",
+        "account": "Network",
+        "associationType": "direct",
+        "allowedPrefixes": ["10.0.0.0/8"]
+      },
+      {
+        "name": "shared-dxgw",
+        "account": "Shared Services",
+        "associationType": "proposal"
+      }
+    ],
     "stateTableEntry": {}
   },
   "skipCleanup": true

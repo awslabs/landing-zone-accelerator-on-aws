@@ -560,6 +560,37 @@ describe('configureTgw', () => {
     expect(result.error?.message).toBe('Route table ID not resolved');
   });
 
+  it('should return FAILED with partial response when an association item fails', async () => {
+    vi.mocked(configureAssociationsAndPropagations).mockResolvedValue({
+      associations: [
+        {
+          operation: 'deleted',
+          region: 'us-east-1',
+          tgwName: 'main-tgw',
+          routeTableName: 'old-rt',
+          attachmentType: 'vpc',
+          attachmentName: 'shared-vpc',
+        },
+        {
+          operation: 'failed',
+          region: 'us-east-1',
+          tgwName: 'main-tgw',
+          routeTableName: 'core-rt',
+          attachmentType: 'vpc',
+          attachmentName: 'shared-vpc',
+          errorMessage: 'Attachment did not associate to core-rt',
+        },
+      ],
+      propagations: [],
+    });
+
+    const result = await configureTgw(baseRequest);
+
+    expect(result.status).toBe('failed');
+    expect(result.response?.associations).toHaveLength(2);
+    expect(result.error?.message).toContain('1 TGW route table association operation(s) failed');
+  });
+
   it('should pass dryRun through to response', async () => {
     const request = { ...baseRequest, dryRun: true };
     const result = await configureTgw(request);

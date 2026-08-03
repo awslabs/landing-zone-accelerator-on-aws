@@ -1,7 +1,7 @@
 {
-  "name": "steady-state-empty",
-  "description": "Baseline: TGW configured with empty VPC attachment; no associations or propagations",
-  "order": 1,
+  "name": "error-missing-dx-ssm",
+  "description": "Reference a non-existent DX Gateway SSM parameter and expect failure",
+  "order": 11,
   "moduleConfig": {
     "homeRegion": "${ENV:TGW_INTEG_HOME_REGION}",
     "enabledRegions": ["${ENV:TGW_INTEG_HOME_REGION}"],
@@ -11,16 +11,7 @@
         "account": "Network",
         "region": "${ENV:TGW_INTEG_HOME_REGION}",
         "asn": 64513,
-        "dnsSupport": "enable",
-        "vpnEcmpSupport": "enable",
-        "defaultRouteTableAssociation": "disable",
-        "defaultRouteTablePropagation": "disable",
-        "autoAcceptSharingAttachments": "enable",
-        "routeTables": [
-          { "name": "core-rt", "routes": [] },
-          { "name": "segregated-rt", "routes": [] }
-        ],
-        "shareTargets": { "organizationalUnits": [], "accounts": ["Shared Services"] }
+        "routeTables": [{ "name": "core-rt", "routes": [] }]
       }
     ],
     "vpcs": [
@@ -40,17 +31,30 @@
           }
         ]
       }
+    ],
+    "directConnectGateways": [
+      {
+        "name": "missing-dxgw",
+        "account": "Network",
+        "asn": 64512,
+        "transitGatewayAssociations": [
+          {
+            "name": "main-tgw",
+            "account": "Network",
+            "allowedPrefixes": ["10.0.0.0/8"],
+            "routeTableAssociations": ["core-rt"],
+            "routeTablePropagations": []
+          }
+        ]
+      }
     ]
   },
   "expectedAssertions": {
-    "moduleResponseStatus": "completed",
-    "moduleResponseOperationCounts": {
-      "associations": {},
-      "propagations": {},
-      "dxAssociations": {}
+    "moduleResponseStatus": "failed",
+    "moduleResponseFailed": {
+      "errorNameRegex": "TgwModuleError|Error",
+      "messageRegex": "missing-dxgw|SSM|not found"
     },
-    "tgwRouteTableAssociations": { "core-rt": [], "segregated-rt": [] },
-    "tgwRouteTablePropagations": { "core-rt": [], "segregated-rt": [] },
     "stateTableEntry": {}
   },
   "skipCleanup": true

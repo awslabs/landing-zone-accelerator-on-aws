@@ -1,7 +1,7 @@
 {
-  "name": "dx-gw-idempotent-rerun",
-  "description": "Re-run DX Gateway association config unchanged; should short-circuit to skipped",
-  "order": 12,
+  "name": "idempotent-association-matrix",
+  "description": "Re-run the full association matrix and confirm config-hash short-circuiting",
+  "order": 2,
   "moduleConfig": {
     "homeRegion": "${ENV:TGW_INTEG_HOME_REGION}",
     "enabledRegions": ["${ENV:TGW_INTEG_HOME_REGION}"],
@@ -35,8 +35,42 @@
             "transitGateway": { "name": "main-tgw", "account": "Network" },
             "subnets": [],
             "options": { "applianceModeSupport": "disable", "dnsSupport": "enable", "ipv6Support": "disable" },
-            "routeTableAssociations": [],
-            "routeTablePropagations": ["segregated-rt"]
+            "routeTableAssociations": ["core-rt"],
+            "routeTablePropagations": ["core-rt"]
+          }
+        ]
+      },
+      {
+        "name": "shared-vpc",
+        "account": "Shared Services",
+        "region": "${ENV:TGW_INTEG_HOME_REGION}",
+        "cidrs": ["10.101.0.0/16"],
+        "transitGatewayAttachments": [
+          {
+            "name": "shared-vpc-attach",
+            "transitGateway": { "name": "main-tgw", "account": "Network" },
+            "subnets": [],
+            "options": { "applianceModeSupport": "disable", "dnsSupport": "enable", "ipv6Support": "disable" },
+            "routeTableAssociations": ["segregated-rt"],
+            "routeTablePropagations": ["core-rt"]
+          }
+        ]
+      }
+    ],
+    "vpcTemplates": [
+      {
+        "name": "template-vpc",
+        "deploymentTargets": { "accounts": ["Network", "Shared Services"] },
+        "region": "${ENV:TGW_INTEG_HOME_REGION}",
+        "cidrs": ["10.200.0.0/16"],
+        "transitGatewayAttachments": [
+          {
+            "name": "template-vpc-attach",
+            "transitGateway": { "name": "main-tgw", "account": "Network" },
+            "subnets": [],
+            "options": { "applianceModeSupport": "disable", "dnsSupport": "enable", "ipv6Support": "disable" },
+            "routeTableAssociations": ["core-rt"],
+            "routeTablePropagations": []
           }
         ]
       }
@@ -53,22 +87,6 @@
             "name": "network-vpn",
             "transitGateway": "main-tgw",
             "staticRoutesOnly": true,
-            "routeTableAssociations": [],
-            "routeTablePropagations": ["core-rt"]
-          }
-        ]
-      }
-    ],
-    "directConnectGateways": [
-      {
-        "name": "network-dxgw",
-        "account": "Network",
-        "asn": 64512,
-        "transitGatewayAssociations": [
-          {
-            "name": "main-tgw",
-            "account": "Network",
-            "allowedPrefixes": ["10.0.0.0/8"],
             "routeTableAssociations": ["core-rt"],
             "routeTablePropagations": ["core-rt"]
           }

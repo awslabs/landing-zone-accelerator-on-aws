@@ -1,7 +1,7 @@
 {
   "name": "final-restore-empty",
-  "description": "Final same-account restore: clear all remaining associations and propagations",
-  "order": 18,
+  "description": "Restore route-table associations, propagations, and DX Gateway associations to the empty baseline",
+  "order": 13,
   "moduleConfig": {
     "homeRegion": "${ENV:TGW_INTEG_HOME_REGION}",
     "enabledRegions": ["${ENV:TGW_INTEG_HOME_REGION}"],
@@ -57,6 +57,24 @@
         ]
       }
     ],
+    "vpcTemplates": [
+      {
+        "name": "template-vpc",
+        "deploymentTargets": { "accounts": ["Network", "Shared Services"] },
+        "region": "${ENV:TGW_INTEG_HOME_REGION}",
+        "cidrs": ["10.200.0.0/16"],
+        "transitGatewayAttachments": [
+          {
+            "name": "template-vpc-attach",
+            "transitGateway": { "name": "main-tgw", "account": "Network" },
+            "subnets": [],
+            "options": { "applianceModeSupport": "disable", "dnsSupport": "enable", "ipv6Support": "disable" },
+            "routeTableAssociations": [],
+            "routeTablePropagations": []
+          }
+        ]
+      }
+    ],
     "customerGateways": [
       {
         "name": "network-cgw",
@@ -76,18 +94,48 @@
       }
     ],
     "directConnectGateways": [
-      {
-        "name": "network-dxgw",
-        "account": "Network",
-        "asn": 64512,
-        "transitGatewayAssociations": []
-      }
+      { "name": "network-dxgw", "account": "Network", "asn": 64512, "transitGatewayAssociations": [] },
+      { "name": "shared-dxgw", "account": "Shared Services", "asn": 64512, "transitGatewayAssociations": [] }
     ]
   },
   "expectedAssertions": {
     "moduleResponseStatus": "completed",
     "tgwRouteTableAssociations": { "core-rt": [], "segregated-rt": [] },
     "tgwRouteTablePropagations": { "core-rt": [], "segregated-rt": [] },
+    "stateTableLastConfigVpcAttachments": [
+      {
+        "vpcName": "network-vpc",
+        "accountId": "${ENV:TGW_INTEG_NETWORK_ACCOUNT_ID}",
+        "region": "${ENV:TGW_INTEG_HOME_REGION}",
+        "transitGatewayName": "main-tgw",
+        "routeTableAssociations": [],
+        "routeTablePropagations": []
+      },
+      {
+        "vpcName": "shared-vpc",
+        "accountId": "${ENV:TGW_INTEG_SHARED_SERVICES_ACCOUNT_ID}",
+        "region": "${ENV:TGW_INTEG_HOME_REGION}",
+        "transitGatewayName": "main-tgw",
+        "routeTableAssociations": [],
+        "routeTablePropagations": []
+      },
+      {
+        "vpcName": "template-vpc",
+        "accountId": "${ENV:TGW_INTEG_NETWORK_ACCOUNT_ID}",
+        "region": "${ENV:TGW_INTEG_HOME_REGION}",
+        "transitGatewayName": "main-tgw",
+        "routeTableAssociations": [],
+        "routeTablePropagations": []
+      },
+      {
+        "vpcName": "template-vpc",
+        "accountId": "${ENV:TGW_INTEG_SHARED_SERVICES_ACCOUNT_ID}",
+        "region": "${ENV:TGW_INTEG_HOME_REGION}",
+        "transitGatewayName": "main-tgw",
+        "routeTableAssociations": [],
+        "routeTablePropagations": []
+      }
+    ],
     "stateTableEntry": {}
   }
 }

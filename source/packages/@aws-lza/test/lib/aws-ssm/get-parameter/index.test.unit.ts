@@ -173,6 +173,42 @@ describe('SsmGetParameterModule', () => {
       );
     });
 
+    test('should rewrite returned names to caller-provided keys when provided', async () => {
+      mockSend
+        .mockResolvedValueOnce({
+          Parameter: { Name: '/shared/param', Value: 'account-1-value' },
+        })
+        .mockResolvedValueOnce({
+          Parameter: { Name: '/shared/param', Value: 'account-2-value' },
+        });
+
+      const input = getInput([
+        { name: '/shared/param', key: '111111111111:/shared/param' },
+        { name: '/shared/param', key: '222222222222:/shared/param' },
+      ]);
+
+      const result = await new GetSsmParametersValueModule().handler(input);
+
+      expect(GetParameterCommand).toHaveBeenCalledWith({ Name: '/shared/param' });
+      expect(GetParameterCommand).toHaveBeenCalledTimes(2);
+      expect(result).toEqual([
+        { name: '111111111111:/shared/param', value: 'account-1-value', exists: true },
+        { name: '222222222222:/shared/param', value: 'account-2-value', exists: true },
+      ]);
+    });
+
+    test('should rewrite not-found result names to caller-provided keys when provided', async () => {
+      const parameterNotFoundError = new Error('Parameter /shared/param not found');
+      parameterNotFoundError.name = 'ParameterNotFound';
+      mockSend.mockRejectedValueOnce(parameterNotFoundError);
+
+      const input = getInput([{ name: '/shared/param', key: '111111111111:/shared/param' }]);
+
+      const result = await new GetSsmParametersValueModule().handler(input);
+
+      expect(result).toEqual([{ name: '111111111111:/shared/param', exists: false }]);
+    });
+
     test('should throw error for parameters with missing required properties', async () => {
       mockSend
         .mockResolvedValueOnce({
@@ -345,6 +381,19 @@ describe('SsmGetParameterModule', () => {
       ]);
 
       await expect(new GetSsmParametersValueModule().handler(input)).rejects.toThrow('Parameter name is required');
+    });
+
+    test('should throw error for empty parameter key', async () => {
+      const input = getInput([
+        {
+          name: '/test/param1',
+          key: '',
+        },
+      ]);
+
+      await expect(new GetSsmParametersValueModule().handler(input)).rejects.toThrow(
+        'Parameter "/test/param1" - Parameter key must not be empty',
+      );
     });
   });
 

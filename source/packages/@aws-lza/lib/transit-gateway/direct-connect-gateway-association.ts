@@ -305,7 +305,7 @@ export abstract class DirectConnectGatewayAssociation {
     const resultByName = new Map(ssmResults.map(r => [r.name, r]));
     const result = new Map<string, string>();
     for (const entry of entries) {
-      const param = resultByName.get(entry.name);
+      const param = resultByName.get(entry.key) ?? resultByName.get(entry.name);
       if (!param?.exists || !param.value) {
         throw new Error(`SSM parameter not found: ${entry.name}`);
       }

@@ -1,8 +1,9 @@
 {
-  "name": "xacct-idempotent-rerun",
-  "description": "Re-run xacct config unchanged; wrapper reports skipped",
-  "order": 22,
+  "name": "dry-run-noop",
+  "description": "Plan drift from the moved association matrix without mutating AWS or the state table",
+  "order": 4,
   "moduleConfig": {
+    "dryRun": true,
     "homeRegion": "${ENV:TGW_INTEG_HOME_REGION}",
     "enabledRegions": ["${ENV:TGW_INTEG_HOME_REGION}"],
     "transitGateways": [
@@ -51,7 +52,25 @@
             "transitGateway": { "name": "main-tgw", "account": "Network" },
             "subnets": [],
             "options": { "applianceModeSupport": "disable", "dnsSupport": "enable", "ipv6Support": "disable" },
-            "routeTableAssociations": [],
+            "routeTableAssociations": ["segregated-rt"],
+            "routeTablePropagations": []
+          }
+        ]
+      }
+    ],
+    "customerGateways": [
+      {
+        "name": "network-cgw",
+        "account": "Network",
+        "region": "${ENV:TGW_INTEG_HOME_REGION}",
+        "ipAddress": "203.0.113.12",
+        "asn": 65000,
+        "vpnConnections": [
+          {
+            "name": "network-vpn",
+            "transitGateway": "main-tgw",
+            "staticRoutesOnly": true,
+            "routeTableAssociations": ["core-rt"],
             "routeTablePropagations": []
           }
         ]
@@ -59,8 +78,16 @@
     ]
   },
   "expectedAssertions": {
-    "moduleResponseStatus": "skipped",
-    "moduleResponseSkipped": true,
+    "moduleResponseStatus": "completed",
+    "moduleResponseUnchanged": true,
+    "tgwRouteTableAssociations": {
+      "core-rt": [],
+      "segregated-rt": ["network-vpc-attach", "network-vpn"]
+    },
+    "tgwRouteTablePropagations": {
+      "core-rt": ["network-vpn"],
+      "segregated-rt": ["network-vpc-attach"]
+    },
     "stateTableEntry": {}
   },
   "skipCleanup": true

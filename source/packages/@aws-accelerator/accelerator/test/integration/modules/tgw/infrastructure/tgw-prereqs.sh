@@ -88,6 +88,12 @@ SHARED_VPC_NAME="shared-vpc"
 SHARED_VPC_CIDR="10.101.0.0/16"
 SHARED_SUBNET_CIDR="10.101.1.0/24"
 SHARED_VPC_ATTACH_NAME="shared-vpc-attach"
+TEMPLATE_VPC_NAME="template-vpc"
+TEMPLATE_NETWORK_VPC_CIDR="10.102.0.0/16"
+TEMPLATE_NETWORK_SUBNET_CIDR="10.102.1.0/24"
+TEMPLATE_SHARED_VPC_CIDR="10.103.0.0/16"
+TEMPLATE_SHARED_SUBNET_CIDR="10.103.1.0/24"
+TEMPLATE_VPC_ATTACH_NAME="template-vpc-attach"
 
 # ------------------------------------------------------------------
 # Helpers
@@ -287,6 +293,66 @@ else
   echo "[TGW Prereqs]   Network VPC attachment exists: ${NETWORK_VPC_ATTACH_ID}"
 fi
 
+# Network-side VPC template fixture: same VPC/attachment name as SharedServices,
+# but physically separate resources in the Network account.
+TEMPLATE_NETWORK_VPC_ID=$(aws ec2 describe-vpcs \
+  --filters "Name=tag:${TAG_KEY},Values=${TAG_VALUE}" "Name=tag:Name,Values=${TEMPLATE_VPC_NAME}" \
+  --region "${region}" --query 'Vpcs[?State==`available`]|[0].VpcId' --output text 2>/dev/null | head -1)
+if [ -z "${TEMPLATE_NETWORK_VPC_ID}" ] || [ "${TEMPLATE_NETWORK_VPC_ID}" = "None" ]; then
+  echo "[TGW Prereqs]   Creating Network template VPC ${TEMPLATE_VPC_NAME}..."
+  TEMPLATE_NETWORK_VPC_ID=$(aws ec2 create-vpc \
+    --cidr-block "${TEMPLATE_NETWORK_VPC_CIDR}" \
+    --tag-specifications "$(tag_spec vpc "${TEMPLATE_VPC_NAME}")" \
+    --region "${region}" \
+    --query 'Vpc.VpcId' --output text)
+  aws ec2 wait vpc-available --vpc-ids "${TEMPLATE_NETWORK_VPC_ID}" --region "${region}"
+else
+  echo "[TGW Prereqs]   Network template VPC ${TEMPLATE_VPC_NAME} already exists: ${TEMPLATE_NETWORK_VPC_ID}"
+fi
+
+TEMPLATE_NETWORK_SUBNET_ID=$(aws ec2 describe-subnets \
+  --filters "Name=tag:${TAG_KEY},Values=${TAG_VALUE}" "Name=vpc-id,Values=${TEMPLATE_NETWORK_VPC_ID}" \
+  --region "${region}" --query 'Subnets[0].SubnetId' --output text 2>/dev/null | head -1)
+if [ -z "${TEMPLATE_NETWORK_SUBNET_ID}" ] || [ "${TEMPLATE_NETWORK_SUBNET_ID}" = "None" ]; then
+  echo "[TGW Prereqs]   Creating subnet for Network template VPC..."
+  TEMPLATE_NETWORK_SUBNET_ID=$(aws ec2 create-subnet \
+    --vpc-id "${TEMPLATE_NETWORK_VPC_ID}" \
+    --cidr-block "${TEMPLATE_NETWORK_SUBNET_CIDR}" \
+    --tag-specifications "$(tag_spec subnet "${TEMPLATE_VPC_NAME}-subnet")" \
+    --region "${region}" \
+    --query 'Subnet.SubnetId' --output text)
+else
+  echo "[TGW Prereqs]   Network template subnet already exists: ${TEMPLATE_NETWORK_SUBNET_ID}"
+fi
+
+TEMPLATE_NETWORK_VPC_ATTACH_ID=$(aws ec2 describe-transit-gateway-vpc-attachments \
+  --filters "Name=tag:${TAG_KEY},Values=${TAG_VALUE}" "Name=tag:Name,Values=${TEMPLATE_VPC_ATTACH_NAME}" \
+    "Name=transit-gateway-id,Values=${TGW_ID}" \
+  --region "${region}" \
+  --query 'TransitGatewayVpcAttachments[?State!=`deleted` && State!=`deleting`]|[0].TransitGatewayAttachmentId' \
+  --output text 2>/dev/null | head -1)
+if [ -z "${TEMPLATE_NETWORK_VPC_ATTACH_ID}" ] || [ "${TEMPLATE_NETWORK_VPC_ATTACH_ID}" = "None" ]; then
+  echo "[TGW Prereqs]   Creating Network template VPC attachment..."
+  TEMPLATE_NETWORK_VPC_ATTACH_ID=$(aws ec2 create-transit-gateway-vpc-attachment \
+    --transit-gateway-id "${TGW_ID}" \
+    --vpc-id "${TEMPLATE_NETWORK_VPC_ID}" \
+    --subnet-ids "${TEMPLATE_NETWORK_SUBNET_ID}" \
+    --tag-specifications "$(tag_spec transit-gateway-attachment "${TEMPLATE_VPC_ATTACH_NAME}")" \
+    --region "${region}" \
+    --query 'TransitGatewayVpcAttachment.TransitGatewayAttachmentId' --output text)
+  echo "[TGW Prereqs]   Waiting for template attachment ${TEMPLATE_NETWORK_VPC_ATTACH_ID}..."
+  while true; do
+    state=$(aws ec2 describe-transit-gateway-vpc-attachments \
+      --transit-gateway-attachment-ids "${TEMPLATE_NETWORK_VPC_ATTACH_ID}" \
+      --region "${region}" \
+      --query 'TransitGatewayVpcAttachments[0].State' --output text)
+    [ "${state}" = "available" ] && break
+    sleep 10
+  done
+else
+  echo "[TGW Prereqs]   Network template VPC attachment exists: ${TEMPLATE_NETWORK_VPC_ATTACH_ID}"
+fi
+
 # Customer Gateway + VPN (dummy) + VPN TGW attachment discovery
 NETWORK_CGW_NAME="network-cgw"
 CGW_ID=$(aws ec2 describe-customer-gateways \
@@ -392,6 +458,7 @@ put_ssm_param "${SSM_PREFIX}/network/transitGateways/${TGW_NAME}/id" "${TGW_ID}"
 put_ssm_param "${SSM_PREFIX}/network/transitGateways/${TGW_NAME}/routeTables/${CORE_RT_NAME}/id" "${CORE_RT_ID}"
 put_ssm_param "${SSM_PREFIX}/network/transitGateways/${TGW_NAME}/routeTables/${SEGREGATED_RT_NAME}/id" "${SEGREGATED_RT_ID}"
 put_ssm_param "${SSM_PREFIX}/network/vpc/${NETWORK_VPC_NAME}/transitGatewayAttachment/${NETWORK_VPC_ATTACH_NAME}/id" "${NETWORK_VPC_ATTACH_ID}"
+put_ssm_param "${SSM_PREFIX}/network/vpc/${TEMPLATE_VPC_NAME}/transitGatewayAttachment/${TEMPLATE_VPC_ATTACH_NAME}/id" "${TEMPLATE_NETWORK_VPC_ATTACH_ID}"
 # VPN attachments are resolved by @aws-lza via EC2 Describe (tag:Name + tgw-id);
 # publishing SSM copies for downstream tooling / debugging visibility only.
 if [ -n "${NETWORK_VPN_ATTACH_ID}" ]; then
@@ -499,8 +566,69 @@ else
   echo "[TGW Prereqs]   SharedServices VPC attachment exists: ${SHARED_VPC_ATTACH_ID}"
 fi
 
+# SharedServices-side VPC template fixture: same VPC/attachment name as Network,
+# but physically separate resources in the SharedServices account.
+TEMPLATE_SHARED_VPC_ID=$(aws ec2 describe-vpcs \
+  --filters "Name=tag:${TAG_KEY},Values=${TAG_VALUE}" "Name=tag:Name,Values=${TEMPLATE_VPC_NAME}" \
+  --region "${region}" --query 'Vpcs[?State==`available`]|[0].VpcId' --output text 2>/dev/null | head -1)
+if [ -z "${TEMPLATE_SHARED_VPC_ID}" ] || [ "${TEMPLATE_SHARED_VPC_ID}" = "None" ]; then
+  echo "[TGW Prereqs]   Creating SharedServices template VPC ${TEMPLATE_VPC_NAME}..."
+  TEMPLATE_SHARED_VPC_ID=$(aws ec2 create-vpc \
+    --cidr-block "${TEMPLATE_SHARED_VPC_CIDR}" \
+    --tag-specifications "$(tag_spec vpc "${TEMPLATE_VPC_NAME}")" \
+    --region "${region}" \
+    --query 'Vpc.VpcId' --output text)
+  aws ec2 wait vpc-available --vpc-ids "${TEMPLATE_SHARED_VPC_ID}" --region "${region}"
+else
+  echo "[TGW Prereqs]   SharedServices template VPC ${TEMPLATE_VPC_NAME} already exists: ${TEMPLATE_SHARED_VPC_ID}"
+fi
+
+TEMPLATE_SHARED_SUBNET_ID=$(aws ec2 describe-subnets \
+  --filters "Name=tag:${TAG_KEY},Values=${TAG_VALUE}" "Name=vpc-id,Values=${TEMPLATE_SHARED_VPC_ID}" \
+  --region "${region}" --query 'Subnets[0].SubnetId' --output text 2>/dev/null | head -1)
+if [ -z "${TEMPLATE_SHARED_SUBNET_ID}" ] || [ "${TEMPLATE_SHARED_SUBNET_ID}" = "None" ]; then
+  echo "[TGW Prereqs]   Creating subnet for SharedServices template VPC..."
+  TEMPLATE_SHARED_SUBNET_ID=$(aws ec2 create-subnet \
+    --vpc-id "${TEMPLATE_SHARED_VPC_ID}" \
+    --cidr-block "${TEMPLATE_SHARED_SUBNET_CIDR}" \
+    --tag-specifications "$(tag_spec subnet "${TEMPLATE_VPC_NAME}-subnet")" \
+    --region "${region}" \
+    --query 'Subnet.SubnetId' --output text)
+else
+  echo "[TGW Prereqs]   SharedServices template subnet already exists: ${TEMPLATE_SHARED_SUBNET_ID}"
+fi
+
+TEMPLATE_SHARED_VPC_ATTACH_ID=$(aws ec2 describe-transit-gateway-vpc-attachments \
+  --filters "Name=tag:${TAG_KEY},Values=${TAG_VALUE}" "Name=tag:Name,Values=${TEMPLATE_VPC_ATTACH_NAME}" \
+    "Name=transit-gateway-id,Values=${TGW_ID}" \
+  --region "${region}" \
+  --query 'TransitGatewayVpcAttachments[?State!=`deleted` && State!=`deleting`]|[0].TransitGatewayAttachmentId' \
+  --output text 2>/dev/null | head -1)
+if [ -z "${TEMPLATE_SHARED_VPC_ATTACH_ID}" ] || [ "${TEMPLATE_SHARED_VPC_ATTACH_ID}" = "None" ]; then
+  echo "[TGW Prereqs]   Creating SharedServices template VPC attachment..."
+  TEMPLATE_SHARED_VPC_ATTACH_ID=$(aws ec2 create-transit-gateway-vpc-attachment \
+    --transit-gateway-id "${TGW_ID}" \
+    --vpc-id "${TEMPLATE_SHARED_VPC_ID}" \
+    --subnet-ids "${TEMPLATE_SHARED_SUBNET_ID}" \
+    --tag-specifications "$(tag_spec transit-gateway-attachment "${TEMPLATE_VPC_ATTACH_NAME}")" \
+    --region "${region}" \
+    --query 'TransitGatewayVpcAttachment.TransitGatewayAttachmentId' --output text)
+  echo "[TGW Prereqs]   Waiting for template attachment ${TEMPLATE_SHARED_VPC_ATTACH_ID}..."
+  while true; do
+    state=$(aws ec2 describe-transit-gateway-vpc-attachments \
+      --transit-gateway-attachment-ids "${TEMPLATE_SHARED_VPC_ATTACH_ID}" \
+      --region "${region}" \
+      --query 'TransitGatewayVpcAttachments[0].State' --output text)
+    [ "${state}" = "available" ] && break
+    sleep 10
+  done
+else
+  echo "[TGW Prereqs]   SharedServices template VPC attachment exists: ${TEMPLATE_SHARED_VPC_ATTACH_ID}"
+fi
+
 # SSM parameter for SharedServices attachment
 put_ssm_param "${SSM_PREFIX}/network/vpc/${SHARED_VPC_NAME}/transitGatewayAttachment/${SHARED_VPC_ATTACH_NAME}/id" "${SHARED_VPC_ATTACH_ID}"
+put_ssm_param "${SSM_PREFIX}/network/vpc/${TEMPLATE_VPC_NAME}/transitGatewayAttachment/${TEMPLATE_VPC_ATTACH_NAME}/id" "${TEMPLATE_SHARED_VPC_ATTACH_ID}"
 
 # SSM parameter for DX Gateway (owned by SharedServices)
 put_ssm_param "${SSM_PREFIX}/network/directConnectGateways/${SHARED_DXGW_NAME}/id" "${SHARED_DXGW_ID}"
@@ -529,9 +657,11 @@ echo "[TGW Prereqs]   TGW:                  ${TGW_ID}"
 echo "[TGW Prereqs]   Core RT:              ${CORE_RT_ID}"
 echo "[TGW Prereqs]   Segregated RT:        ${SEGREGATED_RT_ID}"
 echo "[TGW Prereqs]   Network VPC attach:   ${NETWORK_VPC_ATTACH_ID}"
+echo "[TGW Prereqs]   Network template attach:${TEMPLATE_NETWORK_VPC_ATTACH_ID}"
 echo "[TGW Prereqs]   Network VPN attach:   ${NETWORK_VPN_ATTACH_ID:-<pending>}"
 echo "[TGW Prereqs]   Network DX Gateway:   ${NETWORK_DXGW_ID}"
 echo "[TGW Prereqs]   Shared DX Gateway:    ${SHARED_DXGW_ID}"
 echo "[TGW Prereqs]   RAM share:            ${RAM_SHARE_ARN}"
 echo "[TGW Prereqs]   Shared VPC attach:    ${SHARED_VPC_ATTACH_ID}"
+echo "[TGW Prereqs]   Shared template attach:${TEMPLATE_SHARED_VPC_ATTACH_ID}"
 echo "[TGW Prereqs] ============================================"

@@ -23,6 +23,7 @@ import { IModuleCommonParameter } from '../../common/resources';
  * ```
  * {
  *   name: '/my/parameter/path',
+ *   key: 'logical-result-key',
  *   region: 'us-east-2'
  *   assumeRoleArn: 'arn:aws:iam::222222222222:role/CrossAccountRole'
  * }
@@ -33,6 +34,13 @@ export interface IGetSsmParametersValueConfiguration {
    * SSM parameter name to retrieve
    */
   readonly name: string;
+  /**
+   * Optional logical key to use as the returned result name.
+   *
+   * Use this when multiple account/region scopes can contain the same SSM
+   * parameter name and the caller needs a unique response key.
+   */
+  readonly key?: string;
   /**
    * IAM role ARN to assume for cross-account access
    */
@@ -53,7 +61,7 @@ export interface IGetSsmParametersValueConfiguration {
  * ```
  * // Successful parameter retrieval
  * {
- *   name: '/my/parameter/path',
+ *   name: '/my/parameter/path', // or the request key, when provided
  *   value: 'my-parameter-value',
  *   exists: true
  * }
@@ -68,7 +76,7 @@ export interface IGetSsmParametersValueConfiguration {
  */
 export interface ISsmParameterValue {
   /**
-   * SSM parameter name
+   * SSM parameter name, or the caller-provided request key when present
    */
   readonly name: string;
   /**
@@ -93,6 +101,11 @@ export interface IGetSsmParametersValueHandlerParameter extends IModuleCommonPar
    * [
    *   {
    *     name: '/my/parameter/path'
+   *   },
+   *   {
+   *     name: '/shared/path',
+   *     key: 'account-a-/shared/path',
+   *     assumeRoleArn: 'arn:aws:iam::111111111111:role/CrossAccountRole'
    *   },
    *   {
    *     name: '/my/parameter/path2',

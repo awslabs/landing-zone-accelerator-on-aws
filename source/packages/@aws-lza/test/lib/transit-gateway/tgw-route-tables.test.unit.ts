@@ -38,6 +38,16 @@ vi.mock('../../../lib/common/sts-functions', () => ({
   getCredentials: vi.fn().mockResolvedValue({ accessKeyId: 'mock', secretAccessKey: 'mock', sessionToken: 'mock' }),
 }));
 
+vi.mock('../../../common/functions', () => ({
+  waitUntil: vi.fn(async (predicate: () => Promise<boolean>) => {
+    for (let attempt = 0; attempt < 5; attempt++) {
+      if (await predicate()) {
+        return;
+      }
+    }
+  }),
+}));
+
 vi.mock('@aws-sdk/client-ec2', () => ({
   EC2Client: vi.fn(function () {
     return { send: mockSend };
@@ -48,6 +58,7 @@ vi.mock('@aws-sdk/client-ec2', () => ({
   DisableTransitGatewayRouteTablePropagationCommand: vi.fn(),
   GetTransitGatewayRouteTableAssociationsCommand: vi.fn(),
   GetTransitGatewayRouteTablePropagationsCommand: vi.fn(),
+  DescribeTransitGatewayAttachmentsCommand: vi.fn(),
 }));
 
 import { configureAssociationsAndPropagations } from '../../../lib/transit-gateway/tgw-route-tables';
@@ -100,6 +111,22 @@ function makeContext(): ITgwResolvedContext {
   };
 }
 
+function tgwAttachmentAssociation(
+  attachmentId: string,
+  routeTableId?: string,
+  state = 'associated',
+): { TransitGatewayAttachmentId: string; Association?: { TransitGatewayRouteTableId: string; State: string } } {
+  return {
+    TransitGatewayAttachmentId: attachmentId,
+    Association: routeTableId ? { TransitGatewayRouteTableId: routeTableId, State: state } : undefined,
+  };
+}
+
+interface CommandParams {
+  TransitGatewayAttachmentId?: string;
+  TransitGatewayRouteTableId?: string;
+}
+
 describe('configureAssociationsAndPropagations', () => {
   let mockExecuteApi: ReturnType<typeof vi.fn>;
   let mockLogger: {
@@ -115,6 +142,7 @@ describe('configureAssociationsAndPropagations', () => {
     const utility = await import('../../../lib/common/utility');
     const logger = await import('../../../lib/common/logger');
     mockExecuteApi = vi.mocked(utility.executeApi);
+    mockExecuteApi.mockImplementation((_commandName: string, _params: unknown, fn: () => Promise<unknown>) => fn());
     mockLogger = (logger as unknown as { mockLogger: typeof mockLogger }).mockLogger;
     mockSend.mockResolvedValue({ Associations: [], TransitGatewayRouteTablePropagations: [] });
   });
@@ -129,24 +157,24 @@ describe('configureAssociationsAndPropagations', () => {
     });
 
     test('should report exists when association already present', async () => {
-      mockSend.mockImplementation(() =>
-        Promise.resolve({
-          Associations: [{ TransitGatewayAttachmentId: 'tgw-attach-a', State: 'associated' }],
-          TransitGatewayRouteTablePropagations: [],
-        }),
-      );
+      mockExecuteApi.mockImplementation(async (commandName: string, _params: unknown, fn: () => Promise<unknown>) => {
+        if (commandName === 'DescribeTransitGatewayAttachmentsCommand') {
+          return { TransitGatewayAttachments: [tgwAttachmentAssociation('tgw-attach-a', 'tgw-rtb-core')] };
+        }
+        return fn();
+      });
       const result = await configureAssociationsAndPropagations(makeRequest(), makeContext(), 'test');
       const coreAssoc = result.associations.find(a => a.routeTableName === 'core-rt');
       expect(coreAssoc?.operation).toBe('exists');
     });
 
     test('should delete managed associations not in desired config', async () => {
-      mockSend.mockImplementation(() =>
-        Promise.resolve({
-          Associations: [{ TransitGatewayAttachmentId: 'tgw-attach-a', State: 'associated' }],
-          TransitGatewayRouteTablePropagations: [],
-        }),
-      );
+      mockExecuteApi.mockImplementation(async (commandName: string, _params: unknown, fn: () => Promise<unknown>) => {
+        if (commandName === 'DescribeTransitGatewayAttachmentsCommand') {
+          return { TransitGatewayAttachments: [tgwAttachmentAssociation('tgw-attach-a', 'tgw-rtb-core')] };
+        }
+        return fn();
+      });
       const request = makeRequest({
         attachments: [
           {
@@ -161,34 +189,53 @@ describe('configureAssociationsAndPropagations', () => {
       });
       const result = await configureAssociationsAndPropagations(request, makeContext(), 'test');
       const deleted = result.associations.filter(a => a.operation === 'deleted');
-      expect(deleted).toHaveLength(2);
-      expect(deleted.map(d => d.routeTableName).sort()).toEqual(['core-rt', 'shared-rt']);
+      expect(deleted).toHaveLength(1);
+      expect(deleted.map(d => d.routeTableName)).toEqual(['core-rt']);
     });
 
     test('should never touch external attachments', async () => {
-      mockSend.mockImplementation(() =>
-        Promise.resolve({
-          Associations: [{ TransitGatewayAttachmentId: 'tgw-attach-external', State: 'associated' }],
-          TransitGatewayRouteTablePropagations: [],
-        }),
-      );
+      mockExecuteApi.mockImplementation(async (commandName: string, _params: unknown, fn: () => Promise<unknown>) => {
+        if (commandName === 'DescribeTransitGatewayAttachmentsCommand') {
+          return {
+            TransitGatewayAttachments: [tgwAttachmentAssociation('tgw-attach-external', 'tgw-rtb-core')],
+          };
+        }
+        return fn();
+      });
       const request = makeRequest({ attachments: [] });
       const result = await configureAssociationsAndPropagations(request, makeContext(), 'test');
       expect(result.associations.filter(a => a.operation === 'deleted')).toHaveLength(0);
     });
 
     test('should handle 1:1 constraint — move attachment from one route table to another', async () => {
-      let callCount = 0;
-      mockSend.mockImplementation(() => {
-        callCount++;
-        if (callCount <= 2) {
-          return Promise.resolve({
-            Associations: [{ TransitGatewayAttachmentId: 'tgw-attach-a', State: 'associated' }],
-            TransitGatewayRouteTablePropagations: [],
-          });
-        }
-        return Promise.resolve({ Associations: [], TransitGatewayRouteTablePropagations: [] });
-      });
+      let describeCount = 0;
+      let currentRouteTableId: string | undefined = 'tgw-rtb-core';
+      let pendingRouteTableId: string | undefined;
+      let pendingRouteTableUpdate = false;
+      let pendingDescribeCount = 0;
+      mockExecuteApi.mockImplementation(
+        async (commandName: string, params: CommandParams, fn: () => Promise<unknown>) => {
+          if (commandName === 'DescribeTransitGatewayAttachmentsCommand') {
+            describeCount++;
+            if (pendingRouteTableUpdate && pendingDescribeCount++ > 0) {
+              currentRouteTableId = pendingRouteTableId;
+              pendingRouteTableUpdate = false;
+            }
+            return { TransitGatewayAttachments: [tgwAttachmentAssociation('tgw-attach-a', currentRouteTableId)] };
+          }
+          if (commandName === 'DisassociateTransitGatewayRouteTableCommand') {
+            pendingRouteTableId = undefined;
+            pendingRouteTableUpdate = true;
+            pendingDescribeCount = 0;
+          }
+          if (commandName === 'AssociateTransitGatewayRouteTableCommand') {
+            pendingRouteTableId = params.TransitGatewayRouteTableId;
+            pendingRouteTableUpdate = true;
+            pendingDescribeCount = 0;
+          }
+          return fn();
+        },
+      );
       const request = makeRequest({
         attachments: [
           {
@@ -208,6 +255,76 @@ describe('configureAssociationsAndPropagations', () => {
         a => a.routeTableName === 'shared-rt' && a.operation === 'created',
       );
       expect(sharedCreated).toBeDefined();
+      expect(describeCount).toBeGreaterThanOrEqual(5);
+    });
+
+    test('should release all changed associations before acquiring any new associations', async () => {
+      const request = makeRequest({
+        attachments: [
+          {
+            type: 'vpc',
+            name: 'vpc-a',
+            accountId: '222222222222',
+            transitGateway: 'main-tgw',
+            routeTableAssociations: ['shared-rt'],
+            routeTablePropagations: [],
+          },
+          {
+            type: 'vpc',
+            name: 'vpc-b',
+            accountId: '333333333333',
+            transitGateway: 'main-tgw',
+            routeTableAssociations: ['core-rt'],
+            routeTablePropagations: [],
+          },
+        ],
+      });
+      const context: ITgwResolvedContext = {
+        ...makeContext(),
+        attachmentIds: new Map([
+          ['main-tgw_222222222222_vpc-a', 'tgw-attach-a'],
+          ['main-tgw_333333333333_vpc-b', 'tgw-attach-b'],
+        ]),
+      };
+      const calls: string[] = [];
+      const currentRouteTableIdsByAttachmentId = new Map([
+        ['tgw-attach-a', 'tgw-rtb-core'],
+        ['tgw-attach-b', 'tgw-rtb-shared'],
+      ]);
+      mockExecuteApi.mockImplementation(
+        async (commandName: string, params: CommandParams, fn: () => Promise<unknown>) => {
+          if (commandName === 'DescribeTransitGatewayAttachmentsCommand') {
+            return {
+              TransitGatewayAttachments: [
+                tgwAttachmentAssociation('tgw-attach-a', currentRouteTableIdsByAttachmentId.get('tgw-attach-a')),
+                tgwAttachmentAssociation('tgw-attach-b', currentRouteTableIdsByAttachmentId.get('tgw-attach-b')),
+              ],
+            };
+          }
+          if (commandName === 'DisassociateTransitGatewayRouteTableCommand') {
+            currentRouteTableIdsByAttachmentId.delete(params.TransitGatewayAttachmentId!);
+            calls.push(`${commandName}:${params.TransitGatewayAttachmentId}`);
+          }
+          if (commandName === 'AssociateTransitGatewayRouteTableCommand') {
+            currentRouteTableIdsByAttachmentId.set(
+              params.TransitGatewayAttachmentId!,
+              params.TransitGatewayRouteTableId!,
+            );
+            calls.push(`${commandName}:${params.TransitGatewayAttachmentId}`);
+          }
+          return fn();
+        },
+      );
+
+      const result = await configureAssociationsAndPropagations(request, context, 'test');
+
+      expect(result.associations.filter(a => a.operation === 'deleted')).toHaveLength(2);
+      expect(result.associations.filter(a => a.operation === 'created')).toHaveLength(2);
+      const firstAssociate = calls.findIndex(call => call.startsWith('AssociateTransitGatewayRouteTableCommand'));
+      const lastDisassociate = calls.findLastIndex(call =>
+        call.startsWith('DisassociateTransitGatewayRouteTableCommand'),
+      );
+      expect(firstAssociate).toBeGreaterThan(lastDisassociate);
     });
 
     test('should handle Resource.AlreadyAssociated as exists', async () => {
@@ -216,6 +333,9 @@ describe('configureAssociationsAndPropagations', () => {
           const err = new Error('Resource.AlreadyAssociated');
           err.name = 'Resource.AlreadyAssociated';
           throw err;
+        }
+        if (commandName === 'DescribeTransitGatewayAttachmentsCommand') {
+          return { TransitGatewayAttachments: [tgwAttachmentAssociation('tgw-attach-a', 'tgw-rtb-core')] };
         }
         return fn();
       });
@@ -241,6 +361,26 @@ describe('configureAssociationsAndPropagations', () => {
       };
       const result = await configureAssociationsAndPropagations(request, context, 'test');
       expect(result.associations.find(a => a.routeTableName === 'core-rt')?.operation).toBe('exists');
+    });
+
+    test('should report per-item failure instead of throwing when association create fails', async () => {
+      mockExecuteApi.mockImplementation(async (commandName: string, _params: unknown, fn: () => Promise<unknown>) => {
+        if (commandName === 'AssociateTransitGatewayRouteTableCommand') {
+          throw new Error('Throttling');
+        }
+        return fn();
+      });
+
+      const result = await configureAssociationsAndPropagations(makeRequest(), makeContext(), 'test');
+
+      expect(result.associations).toContainEqual(
+        expect.objectContaining({
+          operation: 'failed',
+          attachmentName: 'vpc-a',
+          routeTableName: 'core-rt',
+          errorMessage: 'Throttling',
+        }),
+      );
     });
   });
 
@@ -359,12 +499,12 @@ describe('configureAssociationsAndPropagations', () => {
     });
 
     test('should call logger.dryRun for disassociation in dry run mode', async () => {
-      mockSend.mockImplementation(() =>
-        Promise.resolve({
-          Associations: [{ TransitGatewayAttachmentId: 'tgw-attach-a', State: 'associated' }],
-          TransitGatewayRouteTablePropagations: [],
-        }),
-      );
+      mockExecuteApi.mockImplementation(async (commandName: string, _params: unknown, fn: () => Promise<unknown>) => {
+        if (commandName === 'DescribeTransitGatewayAttachmentsCommand') {
+          return { TransitGatewayAttachments: [tgwAttachmentAssociation('tgw-attach-a', 'tgw-rtb-core')] };
+        }
+        return fn();
+      });
       const request = makeRequest({
         attachments: [
           {

@@ -110,7 +110,7 @@ export interface ITgwConnectConfig {
 
 // ─── Response Interfaces ────────────────────────────────────────────────────
 
-export type TgwOperationResult = 'created' | 'updated' | 'exists' | 'deleted' | 'skipped';
+export type TgwOperationResult = 'created' | 'updated' | 'exists' | 'deleted' | 'skipped' | 'failed';
 
 export enum DxAssociationState {
   ASSOCIATED = 'associated',
@@ -134,6 +134,7 @@ export interface ITgwAssociationResponse extends ITgwBaseResponse {
   routeTableName: string;
   attachmentType: TgwAttachmentType;
   attachmentName: string;
+  errorMessage?: string;
 }
 
 export interface ITgwPropagationResponse extends ITgwBaseResponse {

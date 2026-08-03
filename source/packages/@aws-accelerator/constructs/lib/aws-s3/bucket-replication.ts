@@ -223,7 +223,7 @@ export class BucketReplication extends Construct {
       replicationRolePolicies.push(
         new cdk.aws_iam.PolicyStatement({
           resources: [destinationKeyArn],
-          actions: ['kms:Encrypt', 'kms:DescribeKey'],
+          actions: ['kms:Encrypt', 'kms:GenerateDataKey', 'kms:DescribeKey'],
         }),
       );
     }

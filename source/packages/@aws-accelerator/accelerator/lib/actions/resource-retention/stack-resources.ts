@@ -938,7 +938,9 @@ export abstract class StackResources {
       const managementAccountId = params.moduleRunnerParameters.configs.accountsConfig.getManagementAccountId();
       const auditAccountId = params.moduleRunnerParameters.configs.accountsConfig.getAuditAccountId();
       const enabledRegions = params.moduleRunnerParameters.configs.globalConfig.enabledRegions;
-      const allAccountIds = params.moduleRunnerParameters.organizationAccounts.map(account => account.Id!);
+      // Exclude accounts in ignored OUs - they have no LZA stacks deployed, so role assumption will fail
+      const ignoredOus = params.moduleRunnerParameters.configs.organizationConfig.getIgnoredOus();
+      const allAccountIds = params.moduleRunnerParameters.configs.accountsConfig.getActiveAccountIds(ignoredOus);
       const accountAccessRoleName = params.moduleRunnerParameters.configs.globalConfig.managementAccountAccessRole;
       const s3BucketName = getCfnRetentionBucketName(params);
       const bucketRegion = params.runnerParameters.sessionContext.globalRegion;

@@ -26,7 +26,7 @@
     "@aws-accelerator/utils": "^0.0.0",
     "@aws-sdk/client-config-service": "3.1041.0",
     "@types/uuid": "9.0.0",
-    "aws-cdk-lib": "2.246.0"
+    "aws-cdk-lib": "2.262.0"
   },
   "devDependencies": {
     "@types/node": "18.19.50",

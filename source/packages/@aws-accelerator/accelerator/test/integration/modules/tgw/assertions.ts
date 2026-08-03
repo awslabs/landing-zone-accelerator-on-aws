@@ -68,8 +68,17 @@ const ASSERTION_REGISTRY: Record<string, AssertionFn> = {
   tgwRouteTableAssociations: assertTgwRouteTableAssociations,
   tgwRouteTablePropagations: assertTgwRouteTablePropagations,
   dxGatewayAssociationState: assertDxGatewayAssociationState,
+  stateTableLastConfigVpcAttachments: assertStateTableLastConfigVpcAttachments,
   stateTableEntry: assertStateTableEntryPassthrough,
 };
+
+interface DxGatewayAssociationExpectation {
+  name: string;
+  account?: string;
+  associationType: 'direct' | 'proposal';
+  state?: string;
+  allowedPrefixes?: string[];
+}
 
 /**
  * Run all assertions for a TGW manifest.
@@ -77,6 +86,9 @@ const ASSERTION_REGISTRY: Record<string, AssertionFn> = {
  * Iterates over `expectedAssertions` keys, dispatches to registered assertion functions,
  * and appends the shared state-table assertion (status derived from `moduleResponseStatus`
  * when present, defaulting to `'completed'`).
+ * @param manifest - Test manifest containing expected assertions
+ * @param environment - Resolved integration test environment
+ * @returns Promise resolving to assertion results
  */
 export async function runTgwAssertions(
   manifest: TestManifest,
@@ -120,6 +132,8 @@ export async function runTgwAssertions(
  * Capture the current `lastExecutionTime` from the state table BEFORE a manifest runs.
  * Called from the plugin's prepare hook so that skipped/idempotent assertions can
  * compare against a known baseline instead of relying on wall-clock staleness.
+ * @param environment - Resolved integration test environment
+ * @returns Promise that resolves when the timestamp is captured
  */
 export async function capturePreExecutionTimestamp(environment: ResolvedEnvironment): Promise<void> {
   const item = await fetchStateItem(environment);
@@ -129,6 +143,8 @@ export async function capturePreExecutionTimestamp(environment: ResolvedEnvironm
 
 /**
  * Fetch the latest state row for this module.
+ * @param environment - Resolved integration test environment
+ * @returns Promise resolving to the state table item, if present
  */
 async function fetchStateItem(environment: ResolvedEnvironment): Promise<{ [key: string]: unknown } | undefined> {
   const client = new DynamoDBClient({
@@ -150,6 +166,8 @@ async function fetchStateItem(environment: ResolvedEnvironment): Promise<{ [key:
 
 /**
  * Parse the stored `lastResponse` JSON into an IModuleResponse-shaped object.
+ * @param item - State table item containing the serialized response
+ * @returns Parsed response object, or undefined when missing or invalid
  */
 function parseLastResponse(item: { [key: string]: unknown } | undefined): Record<string, unknown> | undefined {
   const raw = item?.['lastResponse'] as string | undefined;
@@ -158,6 +176,22 @@ function parseLastResponse(item: { [key: string]: unknown } | undefined): Record
     return JSON.parse(raw) as Record<string, unknown>;
   } catch (error) {
     logger.warn(`Failed to parse lastResponse as JSON: ${error instanceof Error ? error.message : String(error)}`);
+    return undefined;
+  }
+}
+
+/**
+ * Parse the stored `lastConfig` JSON into an object.
+ * @param item - State table item containing the serialized config
+ * @returns Parsed config object, or undefined when missing or invalid
+ */
+function parseLastConfig(item: { [key: string]: unknown } | undefined): Record<string, unknown> | undefined {
+  const raw = item?.['lastConfig'] as string | undefined;
+  if (!raw) return undefined;
+  try {
+    return JSON.parse(raw) as Record<string, unknown>;
+  } catch (error) {
+    logger.warn(`Failed to parse lastConfig as JSON: ${error instanceof Error ? error.message : String(error)}`);
     return undefined;
   }
 }
@@ -216,14 +250,19 @@ async function assertModuleResponseOperationCounts(
   const parsed = parseLastResponse(item);
   const summary = (parsed?.['summary'] as string | undefined) ?? '';
 
-  // Parse counts from summary string: "associations(+N -M =K), propagations(+N -M =K)".
+  // Parse counts from summary string: "associations(+N -M =K !F), propagations(+N -M =K !F)".
   // The wrapper reports actions taken (created/deleted) + terminal state (exists).
   // dxAssociations aren't in the summary string — fall back to response array tally for those.
   const parseGroup = (group: string): Record<string, number> => {
-    const re = new RegExp(`${group}\\(\\+(\\d+) -(\\d+) =(\\d+)\\)`);
+    const re = new RegExp(`${group}\\(\\+(\\d+) -(\\d+) =(\\d+)(?: !(\\d+))?\\)`);
     const match = summary.match(re);
-    if (!match) return { created: 0, deleted: 0, exists: 0 };
-    return { created: Number(match[1]), deleted: Number(match[2]), exists: Number(match[3]) };
+    if (!match) return { created: 0, deleted: 0, exists: 0, failed: 0 };
+    return {
+      created: Number(match[1]),
+      deleted: Number(match[2]),
+      exists: Number(match[3]),
+      failed: Number(match[4] ?? 0),
+    };
   };
 
   const dxResponse =
@@ -306,6 +345,57 @@ async function assertModuleResponseFailed(
   return results;
 }
 
+async function assertStateTableLastConfigVpcAttachments(
+  manifest: TestManifest,
+  environment: ResolvedEnvironment,
+): Promise<AssertionResult[]> {
+  const expected = manifest.expectedAssertions['stateTableLastConfigVpcAttachments'] as Array<Record<string, unknown>>;
+  const item = await fetchStateItem(environment);
+  const lastConfig = parseLastConfig(item);
+  const actual = ((lastConfig?.['vpcAttachments'] as Array<Record<string, unknown>> | undefined) ?? []).map(
+    attachment => ({
+      vpcName: attachment['vpcName'],
+      accountId: attachment['accountId'],
+      region: attachment['region'],
+      transitGatewayName: attachment['transitGatewayName'],
+      routeTableAssociations: attachment['routeTableAssociations'] ?? [],
+      routeTablePropagations: attachment['routeTablePropagations'] ?? [],
+    }),
+  );
+
+  const normalize = (attachments: Array<Record<string, unknown>>) =>
+    attachments
+      .map(attachment => ({
+        vpcName: attachment['vpcName'],
+        accountId: attachment['accountId'],
+        region: attachment['region'],
+        transitGatewayName: attachment['transitGatewayName'],
+        routeTableAssociations: attachment['routeTableAssociations'] ?? [],
+        routeTablePropagations: attachment['routeTablePropagations'] ?? [],
+      }))
+      .sort((a, b) =>
+        `${a.vpcName}:${a.accountId}:${a.region}:${a.transitGatewayName}`.localeCompare(
+          `${b.vpcName}:${b.accountId}:${b.region}:${b.transitGatewayName}`,
+        ),
+      );
+
+  const normalizedActual = normalize(actual);
+  const normalizedExpected = normalize(expected);
+  const passed = JSON.stringify(normalizedActual) === JSON.stringify(normalizedExpected);
+
+  return [
+    {
+      name: 'stateTableLastConfigVpcAttachments',
+      passed,
+      actual: JSON.stringify(normalizedActual),
+      expected: JSON.stringify(normalizedExpected),
+      message: passed
+        ? 'State-table lastConfig vpcAttachments match expected account/region entries'
+        : 'State-table lastConfig vpcAttachments differ from expected account/region entries',
+    },
+  ];
+}
+
 async function assertModuleResponseSkipped(
   _manifest: TestManifest,
   environment: ResolvedEnvironment,
@@ -367,6 +457,8 @@ async function assertModuleResponseUnchanged(
 
 /**
  * Convert an IAssumeRoleCredential into an SDK credentials object.
+ * @param credentials - Assume-role credentials to convert
+ * @returns SDK credentials object, or undefined when credentials are not provided
  */
 function toSdkCreds(
   credentials: IAssumeRoleCredential | undefined,
@@ -456,6 +548,9 @@ async function createSharedServicesDxClient(environment: ResolvedEnvironment): P
 
 /**
  * Resolve an SSM parameter value in the Network account.
+ * @param ssm - SSM client for the target account
+ * @param name - Parameter name to read
+ * @returns Promise resolving to the parameter value, if present
  */
 async function readSsm(ssm: SSMClient, name: string): Promise<string | undefined> {
   const response = await executeApi(
@@ -485,8 +580,11 @@ async function assertTgwRouteTablePropagations(
 }
 
 /**
- * Shared implementation for RT associations and propagations — both take a route-table-id
- * and return an attachment list keyed by TransitGatewayAttachmentId.
+ * Shared implementation for RT associations and propagations.
+ * @param environment - Resolved integration test environment
+ * @param expected - Expected attachment names keyed by route table name
+ * @param kind - Route table member type to assert
+ * @returns Promise resolving to assertion results
  */
 async function assertRouteTableMembers(
   environment: ResolvedEnvironment,
@@ -523,9 +621,10 @@ async function assertRouteTableMembers(
 
     try {
       const actualIds = kind === 'associations' ? await listAssociations(ec2, rtId) : await listPropagations(ec2, rtId);
+      const expectedIds = await resolveExpectedAttachmentIds(environment, expectedAttachments);
 
       const sortedActual = [...actualIds].sort();
-      const sortedExpected = [...expectedAttachments].sort();
+      const sortedExpected = [...expectedIds].sort();
       const passed =
         sortedActual.length === sortedExpected.length &&
         sortedActual.every(id => sortedExpected.includes(id)) &&
@@ -551,6 +650,86 @@ async function assertRouteTableMembers(
   }
 
   return results;
+}
+
+async function resolveExpectedAttachmentIds(
+  environment: ResolvedEnvironment,
+  expectedAttachments: string[],
+): Promise<string[]> {
+  const ssmPrefix = resolveSsmPrefix(environment);
+  const networkSsm = await createNetworkSsmClient(environment);
+  let sharedServicesSsm: SSMClient | undefined;
+  const resolved: string[] = [];
+
+  for (const expected of expectedAttachments) {
+    if (expected.startsWith('tgw-attach-')) {
+      resolved.push(expected);
+      continue;
+    }
+
+    const networkPaths = getNetworkAttachmentSsmPaths(ssmPrefix, expected);
+    let resolvedId = await readFirstExistingSsm(networkSsm, networkPaths);
+
+    if (!resolvedId && expected === 'template-vpc-attach') {
+      sharedServicesSsm = sharedServicesSsm ?? (await createSharedServicesSsmClient(environment));
+      const templateAttachmentIds = (
+        await Promise.all([
+          readFirstExistingSsm(networkSsm, [
+            `${ssmPrefix}/network/vpc/template-vpc/transitGatewayAttachment/template-vpc-attach/id`,
+          ]),
+          readFirstExistingSsm(sharedServicesSsm, [
+            `${ssmPrefix}/network/vpc/template-vpc/transitGatewayAttachment/template-vpc-attach/id`,
+          ]),
+        ])
+      ).filter((value): value is string => !!value);
+
+      if (templateAttachmentIds.length > 0) {
+        resolved.push(...templateAttachmentIds);
+        continue;
+      }
+    }
+
+    if (!resolvedId && expected === 'shared-vpc-attach') {
+      sharedServicesSsm = sharedServicesSsm ?? (await createSharedServicesSsmClient(environment));
+      resolvedId = await readFirstExistingSsm(sharedServicesSsm, [
+        `${ssmPrefix}/network/vpc/shared-vpc/transitGatewayAttachment/shared-vpc-attach/id`,
+      ]);
+    }
+
+    resolved.push(resolvedId ?? expected);
+  }
+
+  return resolved;
+}
+
+function getNetworkAttachmentSsmPaths(ssmPrefix: string, attachmentName: string): string[] {
+  switch (attachmentName) {
+    case 'network-vpc-attach':
+      return [`${ssmPrefix}/network/vpc/network-vpc/transitGatewayAttachment/network-vpc-attach/id`];
+    case 'network-vpn':
+      return [
+        `${ssmPrefix}/network/vpn/network-vpn/transitGatewayAttachment/network-vpn/id`,
+        `${ssmPrefix}/network/customerGateways/network-cgw/vpnConnection/network-vpn/transitGatewayAttachmentId`,
+      ];
+    default:
+      return [];
+  }
+}
+
+async function readFirstExistingSsm(ssm: SSMClient, names: string[]): Promise<string | undefined> {
+  for (const name of names) {
+    try {
+      const value = await readSsm(ssm, name);
+      if (value) {
+        return value;
+      }
+    } catch (error: unknown) {
+      logger.info(
+        `Expected attachment lookup skipped ${name}: ${error instanceof Error ? error.message : String(error)}`,
+      );
+    }
+  }
+  return undefined;
 }
 
 async function listAssociations(ec2: EC2Client, rtId: string): Promise<string[]> {
@@ -602,13 +781,23 @@ async function assertDxGatewayAssociationState(
   manifest: TestManifest,
   environment: ResolvedEnvironment,
 ): Promise<AssertionResult[]> {
-  const expected = manifest.expectedAssertions['dxGatewayAssociationState'] as {
-    name: string;
-    account?: string;
-    associationType: 'direct' | 'proposal';
-    state?: string;
-    allowedPrefixes?: string[];
-  };
+  const expected = manifest.expectedAssertions['dxGatewayAssociationState'] as
+    | DxGatewayAssociationExpectation
+    | DxGatewayAssociationExpectation[];
+  const expectations = Array.isArray(expected) ? expected : [expected];
+  const results: AssertionResult[] = [];
+
+  for (const expectation of expectations) {
+    results.push(...(await assertSingleDxGatewayAssociationState(expectation, environment)));
+  }
+
+  return results;
+}
+
+async function assertSingleDxGatewayAssociationState(
+  expected: DxGatewayAssociationExpectation,
+  environment: ResolvedEnvironment,
+): Promise<AssertionResult[]> {
   const ssmPrefix = resolveSsmPrefix(environment);
 
   // For proposals, the DX GW ID lives in the DX GW owner's account (Shared Services),
@@ -778,9 +967,12 @@ async function assertDxGatewayAssociationState(
 }
 
 /**
- * Pass-through delegator for `stateTableEntry` manifest key — the primary state-table
- * assertion is appended unconditionally by `runTgwAssertions`, so this registration just
- * prevents the unregistered-key warning when manifest authors opt in explicitly.
+ * Pass-through delegator for `stateTableEntry` manifest key.
+ * The primary state-table assertion is appended unconditionally by `runTgwAssertions`,
+ * so this registration just prevents the unregistered-key warning when manifest authors opt in explicitly.
+ * @param _manifest - Test manifest containing expected assertions
+ * @param _environment - Resolved integration test environment
+ * @returns Empty assertion result list
  */
 async function assertStateTableEntryPassthrough(
   _manifest: TestManifest,

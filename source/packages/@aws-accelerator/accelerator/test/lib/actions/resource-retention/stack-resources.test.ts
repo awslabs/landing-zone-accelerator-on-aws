@@ -55,11 +55,27 @@ describe('StackResources', () => {
         accountsConfig: {
           getManagementAccountId: vi.fn(() => '111111111111'),
           getAuditAccountId: vi.fn(() => '222222222222'),
+          getActiveAccountIds: vi.fn(() => ['111111111111', '222222222222', '333333333333']),
+          mandatoryAccounts: [
+            { name: 'Management', email: 'mgmt@example.com', organizationalUnit: 'Root' },
+            { name: 'LogArchive', email: 'log@example.com', organizationalUnit: 'Security' },
+            { name: 'Audit', email: 'audit@example.com', organizationalUnit: 'Security' },
+          ],
+          workloadAccounts: [{ name: 'Workload', email: 'workload@example.com', organizationalUnit: 'Workloads' }],
+          accountIds: [
+            { accountId: '111111111111', email: 'mgmt@example.com' },
+            { accountId: '222222222222', email: 'audit@example.com' },
+            { accountId: '333333333333', email: 'workload@example.com' },
+          ],
         } as unknown as never,
         globalConfig: {
           enabledRegions: ['us-east-1', 'us-west-2'],
           homeRegion: 'us-east-1',
           managementAccountAccessRole: 'AWSControlTowerExecution',
+        } as unknown as never,
+        organizationConfig: {
+          isIgnored: vi.fn(() => false),
+          getIgnoredOus: vi.fn(() => []),
         } as unknown as never,
       } as unknown as never,
       organizationAccounts: [
@@ -1232,6 +1248,64 @@ describe('StackResources', () => {
       // NetworkAssociationsStack: 3 accounts × 2 regions = 6
       // Total: 8 stacks
       expect(cfnRetention.retainResources).toHaveBeenCalledTimes(8);
+    });
+
+    it('should exclude accounts in ignored OUs from retention', async () => {
+      // Create params with an ignored OU containing the workload account
+      const ignoredOuParams: ModuleParams = {
+        ...mockParams,
+        moduleRunnerParameters: {
+          ...mockParams.moduleRunnerParameters,
+          configs: {
+            ...(mockParams.moduleRunnerParameters as unknown as { configs: object }).configs,
+            accountsConfig: {
+              ...(
+                mockParams.moduleRunnerParameters as unknown as {
+                  configs: { accountsConfig: object };
+                }
+              ).configs.accountsConfig,
+              getActiveAccountIds: vi.fn(() => ['111111111111', '222222222222']),
+            } as unknown as never,
+            organizationConfig: {
+              isIgnored: vi.fn((ouName: string) => ouName === 'Workloads'),
+              getIgnoredOus: vi.fn(() => [{ name: 'Workloads', ignore: true }]),
+            } as unknown as never,
+          } as unknown as never,
+        } as unknown as never,
+      };
+
+      vi.mocked(registry).RESOURCE_RETENTION_REGISTRY = {
+        'AWSAccelerator-SecurityStack': [
+          {
+            serviceName: AcceleratorModules.MACIE,
+            resourceTypes: ['Custom::MacieExportConfigClassification'],
+          },
+        ],
+      };
+
+      const allStates = new Map();
+      vi.mocked(retentionState.getAllRetentionStates).mockResolvedValue(allStates);
+      vi.mocked(retentionState.getRetentionState).mockResolvedValue(undefined);
+      vi.mocked(retentionState.saveRetentionState).mockResolvedValue(undefined);
+      vi.mocked(retentionState.updateRetentionStatus).mockResolvedValue(undefined);
+      vi.mocked(cfnRetention.retainResources).mockResolvedValue({
+        message: 'Resources retained successfully',
+        requestedResourceTypes: ['Custom::MacieExportConfigClassification'],
+        resourceRetentionStatus: {
+          stackName: 'test-stack',
+          stackModificationStatus: 'SUCCEEDED',
+          modifiedResources: [],
+          notFoundResources: [],
+          totalModifiedResources: 1,
+        },
+      });
+
+      const result = await StackResources.retain(ignoredOuParams);
+
+      expect(result.status).toBe(MODULE_STATE_CODE.COMPLETED);
+      // SecurityStack targets all accounts, but account 333333333333 (Workloads OU) should be excluded
+      // Remaining: 2 accounts (mgmt + audit) × 2 regions = 4 stacks
+      expect(cfnRetention.retainResources).toHaveBeenCalledTimes(4);
     });
   });
 });

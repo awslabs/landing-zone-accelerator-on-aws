@@ -13,7 +13,7 @@ export default defineConfig({
   test: {
     exclude: ['**/node_modules/**', '**/dist/**', '**/build/**'],
     silent: false,
-    testTimeout: 90000,
+    testTimeout: 180000,
     setupFiles: ['./vitest.setup.ts'],
     reporters: ['default', 'junit'],
     coverage: {

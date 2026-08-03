@@ -66,6 +66,51 @@ exports[`TgwCrossAccountResources ghost-entry regression guards > createTgwPropa
   }"
 `;
 
+exports[`TgwCrossAccountResources ghost-entry regression guards > getTgwAttachmentId method body snapshot 1`] = `
+"{
+    const vpcStacksInfo: ASEAMapping[] = [];
+    Object.keys(mapping).forEach(key => {
+      const stack = mapping[key];
+      if (stack.accountKey === accountKey && stack.phase === '1' && stack.region === region) {
+        stack.cfnResources = this.loadResourcesFromFile(stack);
+        vpcStacksInfo.push(stack);
+        if (stack.nestedStacks) {
+          for (const nestedStack of Object.values(stack.nestedStacks)) {
+            nestedStack.cfnResources = this.loadResourcesFromFile(nestedStack);
+            vpcStacksInfo.push(nestedStack);
+          }
+        }
+      }
+    });
+
+    let vpcStack: ASEAMapping | undefined;
+    for (const vpcStackInfo of vpcStacksInfo) {
+      const vpcResource = this.findResourceByTypeAndTag(
+        vpcStackInfo.cfnResources,
+        RESOURCE_TYPE.VPC,
+        getAseaConfigVpcName(vpcName),
+      );
+      if (vpcResource) {
+        vpcStack = vpcStackInfo;
+        break;
+      }
+    }
+    if (!vpcStack) {
+      this.scope.addLogs(LogLevel.INFO, \`VPC "\${vpcName}" didn't find in ASEA Resource mapping\`);
+      return;
+    }
+    const tgwAttachmentResources = this.filterResourcesByType(vpcStack.cfnResources, RESOURCE_TYPE.TGW_ATTACHMENT);
+    if (tgwAttachmentResources.length === 0) return;
+    const tgwAttachment = tgwAttachmentResources.find(tgwAttachResource =>
+      tgwAttachResource.resourceMetadata['Properties'].Tags.find(
+        (tag: { Key: string; Value: string }) => tag.Key === 'Name' && tag.Value === tgwAttachmentName,
+      ),
+    );
+    if (!tgwAttachment) return;
+    return tgwAttachment.physicalResourceId;
+  }"
+`;
+
 exports[`TgwCrossAccountResources ghost-entry regression guards > setTransitGatewayIds method body snapshot 1`] = `
 "{
     // Loop through attachment owner accounts

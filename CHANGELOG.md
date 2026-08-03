@@ -31,9 +31,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - fix(scp): honor OU ignore flag when reverting SCP changes
 - fix(identity-center): grant iam:CreateSAMLProvider to the assignment custom resource so management account assignments succeed with an external IdP (issue #2357)
 
-## [1.16.0] - 
+## [1.16.0] - 2026-07-24
 
 ### Added
+- enhance(macie): migrate Amazon Macie to SDK module with organization-wide orchestration
 - feat(accelerator): add diff viewer features
 - feat(controltower): support parameters on enabled controls
 - feat(diff): static html diff
@@ -134,6 +135,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - fix(ssm): add back overwrite to put ssm param
 - fix(ssm): forward credentials in GetSsmParametersValueModule for cross-account role chaining
 - fix(ssm): use PutParameter with Overwrite for cross-account SSM params
+- fix(transit-gateway): complete association move on Resource.AlreadyAssociated
 - fix(triage): #1089 CloudWatch VPC flow logs should be optional
 - fix(validate): revert passing management account credentials for external deployment
 - fix(validation): external pipeline deployment config validation to use passed mgmt creds
@@ -147,6 +149,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - chore(accelerator): bump AWS SDK to 3.1018.0, CDK to 2.246.0, and update tooling
+- chore(dependencies): bump toolkit-lib to 1.36.0 and aws-cdk-lib to 2.262.0
 - chore(dependencies): bump follow-redirects to 1.16.0 to resolve auth header leak
 - chore(kms): add missing kms:DescribeKey permission to identity/resource policies
 - chore(logging): add sourceOrgId condition to central s3 bucket policy

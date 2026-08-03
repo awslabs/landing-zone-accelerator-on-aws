@@ -50,6 +50,8 @@ interface ITgwAssociationsConfigForState {
   }[];
   readonly vpcAttachments: {
     readonly vpcName: string;
+    readonly accountId: string;
+    readonly region: string;
     readonly transitGatewayName: string;
     readonly routeTableAssociations: string[];
     readonly routeTablePropagations: string[];
@@ -88,7 +90,7 @@ export abstract class TgwAssociationsAndPropagations {
    * Extracts TGW associations/propagations configuration for state comparison.
    */
   private static extractConfig(params: ModuleParams): ITgwAssociationsConfigForState {
-    const networkConfig = params.moduleRunnerParameters.configs.networkConfig;
+    const { networkConfig, accountsConfig } = params.moduleRunnerParameters.configs;
 
     const transitGateways = (networkConfig.transitGateways ?? []).map(tgw => ({
       name: tgw.name,
@@ -99,13 +101,22 @@ export abstract class TgwAssociationsAndPropagations {
 
     const vpcAttachments: ITgwAssociationsConfigForState['vpcAttachments'] = [];
     for (const vpc of [...(networkConfig.vpcs ?? []), ...(networkConfig.vpcTemplates ?? [])]) {
+      const accountIds =
+        'account' in vpc
+          ? [accountsConfig.getAccountId(vpc.account)]
+          : [...accountsConfig.getAccountIdsFromDeploymentTarget(vpc.deploymentTargets)].sort();
+
       for (const attachment of vpc.transitGatewayAttachments ?? []) {
-        vpcAttachments.push({
-          vpcName: vpc.name,
-          transitGatewayName: attachment.transitGateway.name,
-          routeTableAssociations: attachment.routeTableAssociations ?? [],
-          routeTablePropagations: attachment.routeTablePropagations ?? [],
-        });
+        for (const accountId of accountIds) {
+          vpcAttachments.push({
+            vpcName: vpc.name,
+            accountId,
+            region: vpc.region,
+            transitGatewayName: attachment.transitGateway.name,
+            routeTableAssociations: attachment.routeTableAssociations ?? [],
+            routeTablePropagations: attachment.routeTablePropagations ?? [],
+          });
+        }
       }
     }
 

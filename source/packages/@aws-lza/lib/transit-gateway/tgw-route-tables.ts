@@ -40,6 +40,10 @@ const logger = createLogger([path.parse(path.basename(__filename)).name]);
 /**
  * Backward-compatible entry point called by tgw.ts.
  * Delegates to TgwRouteTables.configure().
+ * @param props - TGW module request containing configuration and credentials
+ * @param context - Resolved TGW/RT/attachment IDs
+ * @param logPrefix - Prefix for logging messages
+ * @returns Promise resolving to association and propagation results
  */
 export async function configureAssociationsAndPropagations(
   props: ITgwModuleRequest,
@@ -85,21 +89,54 @@ export abstract class TgwRouteTables {
 
       for (const tgwName of group.tgwNames) {
         const tgwConfig = config.transitGateways.find(t => t.name === tgwName)!;
+        const tgwId = context.transitGatewayIds.get(tgwName);
+        if (!tgwId) {
+          throw new Error(`Transit gateway ID not resolved for ${tgwName}`);
+        }
 
-        for (const rt of tgwConfig.routeTables) {
-          const { associations, propagations } = await this.processRouteTable(
+        const routeTables = tgwConfig.routeTables.map(rt => {
+          const routeTableId = context.routeTableIds.get(`${tgwName}_${rt.name}`);
+          if (!routeTableId) {
+            throw new Error(`Route table ID not resolved for ${tgwName}_${rt.name}`);
+          }
+          return { routeTableId, routeTableName: rt.name };
+        });
+        const desiredAssociationsByRouteTableId = new Map<string, IDesiredAttachment[]>();
+        for (const rt of routeTables) {
+          desiredAssociationsByRouteTableId.set(
+            rt.routeTableId,
+            this.getDesiredAttachments(config.attachments, tgwName, rt.routeTableName, 'association', context),
+          );
+        }
+
+        results.associations.push(
+          ...(await TgwAssociations.processTransitGateway(
             ec2Client,
-            config.attachments,
-            context,
-            knownAttachmentIds,
+            tgwId,
             tgwName,
-            rt.name,
             group.region,
+            routeTables,
+            desiredAssociationsByRouteTableId,
+            knownAttachmentIds,
             dryRun,
             logPrefix,
+          )),
+        );
+
+        for (const rt of routeTables) {
+          results.propagations.push(
+            ...(await this.processRouteTablePropagations(
+              ec2Client,
+              config.attachments,
+              context,
+              knownAttachmentIds,
+              tgwName,
+              rt.routeTableName,
+              group.region,
+              dryRun,
+              logPrefix,
+            )),
           );
-          results.associations.push(...associations);
-          results.propagations.push(...propagations);
         }
       }
     }
@@ -126,6 +163,8 @@ export abstract class TgwRouteTables {
   /**
    * Validates that all route table names referenced by attachments exist on their target TGW.
    * Throws an error listing the invalid name and available route tables.
+   * @param transitGateways - Transit gateway configurations
+   * @param attachments - Attachment configurations to validate
    */
   private static validateRouteTableReferences(
     transitGateways: ITgwConfig[],
@@ -159,7 +198,7 @@ export abstract class TgwRouteTables {
   }
 
   /**
-   * Processes associations and propagations for a single route table
+   * Processes propagations for a single route table
    * @param ec2 - EC2 client for the TGW owner account
    * @param attachments - All attachment configurations from the request
    * @param context - Resolved TGW/RT/attachment IDs
@@ -169,9 +208,9 @@ export abstract class TgwRouteTables {
    * @param region - Region for response building
    * @param dryRun - Whether to perform dry run without making changes
    * @param logPrefix - Prefix for logging messages
-   * @returns Promise resolving to association and propagation results for this route table
+   * @returns Promise resolving to propagation results for this route table
    */
-  private static async processRouteTable(
+  private static async processRouteTablePropagations(
     ec2: EC2Client,
     attachments: ITgwAttachmentConfig[],
     context: ITgwResolvedContext,
@@ -181,21 +220,12 @@ export abstract class TgwRouteTables {
     region: string,
     dryRun: boolean,
     logPrefix: string,
-  ): Promise<{ associations: ITgwAssociationResponse[]; propagations: ITgwPropagationResponse[] }> {
+  ): Promise<ITgwPropagationResponse[]> {
     const rtId = context.routeTableIds.get(`${tgwName}_${routeTableName}`);
     if (!rtId) {
       throw new Error(`Route table ID not resolved for ${tgwName}_${routeTableName}`);
     }
 
-    logger.info(`Processing route table: ${tgwName} / ${routeTableName} (${rtId})`, logPrefix);
-
-    const desiredAssociations = this.getDesiredAttachments(
-      attachments,
-      tgwName,
-      routeTableName,
-      'association',
-      context,
-    );
     const desiredPropagations = this.getDesiredAttachments(
       attachments,
       tgwName,
@@ -204,23 +234,10 @@ export abstract class TgwRouteTables {
       context,
     );
 
-    logger.info(
-      `  Desired: ${desiredAssociations.length} associations, ${desiredPropagations.length} propagations`,
-      logPrefix,
-    );
+    logger.info(`Processing propagations: ${tgwName} / ${routeTableName} (${rtId})`, logPrefix);
+    logger.info(`  Desired: ${desiredPropagations.length} propagations`, logPrefix);
 
-    const associations = await TgwAssociations.process(
-      ec2,
-      rtId,
-      routeTableName,
-      tgwName,
-      region,
-      desiredAssociations,
-      knownAttachmentIds,
-      dryRun,
-      logPrefix,
-    );
-    const propagations = await TgwPropagations.process(
+    return TgwPropagations.process(
       ec2,
       rtId,
       routeTableName,
@@ -231,8 +248,6 @@ export abstract class TgwRouteTables {
       dryRun,
       logPrefix,
     );
-
-    return { associations, propagations };
   }
 
   /**

@@ -1,7 +1,7 @@
 {
-  "name": "create-vpc-assoc-core",
-  "description": "Create association for network-vpc-attach on core-rt",
-  "order": 2,
+  "name": "error-missing-tgw",
+  "description": "Reference a non-existent TGW SSM parameter and expect failure",
+  "order": 10,
   "moduleConfig": {
     "homeRegion": "${ENV:TGW_INTEG_HOME_REGION}",
     "enabledRegions": ["${ENV:TGW_INTEG_HOME_REGION}"],
@@ -11,16 +11,14 @@
         "account": "Network",
         "region": "${ENV:TGW_INTEG_HOME_REGION}",
         "asn": 64513,
-        "dnsSupport": "enable",
-        "vpnEcmpSupport": "enable",
-        "defaultRouteTableAssociation": "disable",
-        "defaultRouteTablePropagation": "disable",
-        "autoAcceptSharingAttachments": "enable",
-        "routeTables": [
-          { "name": "core-rt", "routes": [] },
-          { "name": "segregated-rt", "routes": [] }
-        ],
-        "shareTargets": { "organizationalUnits": [], "accounts": ["Shared Services"] }
+        "routeTables": [{ "name": "core-rt", "routes": [] }]
+      },
+      {
+        "name": "nonexistent-tgw",
+        "account": "Network",
+        "region": "${ENV:TGW_INTEG_HOME_REGION}",
+        "asn": 64513,
+        "routeTables": [{ "name": "core-rt", "routes": [] }]
       }
     ],
     "vpcs": [
@@ -32,7 +30,7 @@
         "transitGatewayAttachments": [
           {
             "name": "network-vpc-attach",
-            "transitGateway": { "name": "main-tgw", "account": "Network" },
+            "transitGateway": { "name": "nonexistent-tgw", "account": "Network" },
             "subnets": [],
             "options": { "applianceModeSupport": "disable", "dnsSupport": "enable", "ipv6Support": "disable" },
             "routeTableAssociations": ["core-rt"],
@@ -43,11 +41,10 @@
     ]
   },
   "expectedAssertions": {
-    "moduleResponseStatus": "completed",
-    "moduleResponseOperationCounts": {
-      "associations": { "created": 1 },
-      "propagations": {},
-      "dxAssociations": {}
+    "moduleResponseStatus": "failed",
+    "moduleResponseFailed": {
+      "errorNameRegex": "TgwModuleError|Error",
+      "messageRegex": "nonexistent-tgw|SSM|not found"
     },
     "stateTableEntry": {}
   },

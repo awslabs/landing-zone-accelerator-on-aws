@@ -132,6 +132,17 @@ describe('TgwCrossAccountResources ghost-entry regression guards', () => {
     expect(body).toMatch(/transitGatewayAttachments\[tgwAttachmentItem\.name\]\s*=/);
     expect(body).not.toMatch(/\$\{tgwAttachmentItem\.transitGateway\.name\}_\$\{owningAccount\}_\$\{vpcItem\.name\}/);
   });
+
+  test('getTgwAttachmentId method body snapshot', () => {
+    expect(extractMethod(src, 'getTgwAttachmentId')).toMatchSnapshot();
+  });
+
+  test('getTgwAttachmentId traverses nested stacks (LZA-1553 regression guard)', () => {
+    const body = extractMethod(src, 'getTgwAttachmentId');
+    expect(body).toMatch(/stack\.nestedStacks/);
+    expect(body).toMatch(/Object\.values\(stack\.nestedStacks\)/);
+    expect(body).toMatch(/vpcStacksInfo\.push\(nestedStack\)/);
+  });
 });
 
 function extractMethod(source: string, methodName: string): string {

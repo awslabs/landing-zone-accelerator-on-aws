@@ -147,6 +147,21 @@ export async function configureTgw(props: ITgwModuleRequest): Promise<IModuleRes
     };
 
     logSummary(response, dryRun, logPrefix);
+    const failedAssociations = response.associations.filter(a => a.operation === 'failed');
+    if (failedAssociations.length > 0) {
+      return {
+        status: MODULE_STATE_CODE.FAILED,
+        summary: buildSummaryText(response, dryRun),
+        timestamp: new Date().toISOString(),
+        moduleName,
+        dryRun,
+        response,
+        error: {
+          name: 'TgwAssociationError',
+          message: `${failedAssociations.length} TGW route table association operation(s) failed`,
+        },
+      };
+    }
 
     return {
       status: MODULE_STATE_CODE.COMPLETED,
@@ -206,18 +221,26 @@ function logSummary(response: ITgwModuleResponse, dryRun: boolean, logPrefix: st
   const assocCreated = response.associations.filter(a => a.operation === 'created');
   const assocDeleted = response.associations.filter(a => a.operation === 'deleted');
   const assocExists = response.associations.filter(a => a.operation === 'exists');
+  const assocFailed = response.associations.filter(a => a.operation === 'failed');
 
   statusLogger.info('', logPrefix);
   statusLogger.info('  ROUTE TABLE ASSOCIATIONS', logPrefix);
   statusLogger.info(`    Already in place:  ${assocExists.length}`, logPrefix);
   statusLogger.info(`    ${dryRun ? 'Would create' : 'Created'}:       ${assocCreated.length}`, logPrefix);
   statusLogger.info(`    ${dryRun ? 'Would remove' : 'Removed'}:       ${assocDeleted.length}`, logPrefix);
+  statusLogger.info(`    Failed:        ${assocFailed.length}`, logPrefix);
 
   for (const a of assocCreated) {
     statusLogger.info(`      + ${a.attachmentName} → ${a.routeTableName} (${a.attachmentType})`, logPrefix);
   }
   for (const a of assocDeleted) {
     statusLogger.info(`      - ${a.attachmentName} x ${a.routeTableName} (${a.attachmentType})`, logPrefix);
+  }
+  for (const a of assocFailed) {
+    statusLogger.error(
+      `      ! ${a.attachmentName} → ${a.routeTableName}: ${a.errorMessage ?? 'Unknown error'}`,
+      logPrefix,
+    );
   }
 
   // Propagations
@@ -337,6 +360,7 @@ function buildSummaryText(response: ITgwModuleResponse, dryRun: boolean): string
   const ac = response.associations.filter(a => a.operation === 'created').length;
   const ad = response.associations.filter(a => a.operation === 'deleted').length;
   const ae = response.associations.filter(a => a.operation === 'exists').length;
+  const af = response.associations.filter(a => a.operation === 'failed').length;
   const pc = response.propagations.filter(p => p.operation === 'created').length;
   const pd = response.propagations.filter(p => p.operation === 'deleted').length;
   const pe = response.propagations.filter(p => p.operation === 'exists').length;
@@ -348,5 +372,5 @@ function buildSummaryText(response: ITgwModuleResponse, dryRun: boolean): string
   const cd = response.connectAttachments.filter(c => c.operation === 'deleted').length;
   const ce = response.connectAttachments.filter(c => c.operation === 'exists').length;
   const verb = dryRun ? 'Dry run' : 'Completed';
-  return `${verb}: associations(+${ac} -${ad} =${ae}), propagations(+${pc} -${pd} =${pe}), dxAssociations(+${dc} ~${du} -${dd} =${de_}), connects(+${cc} -${cd} =${ce})`;
+  return `${verb}: associations(+${ac} -${ad} =${ae} !${af}), propagations(+${pc} -${pd} =${pe}), dxAssociations(+${dc} ~${du} -${dd} =${de_}), connects(+${cc} -${cd} =${ce})`;
 }
