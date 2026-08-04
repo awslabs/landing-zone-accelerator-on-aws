@@ -35,6 +35,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - fix(networking): validate IPAM pool allocationResourceTags are satisfied by consuming VPCs (issue #955)
 - fix(service-quotas): retry quota increase requests on active-request capacity exhaustion
 - fix(config): make acceleratorMetadata readOnlyAccessRoleArns optional so it can be removed once added
+- fix(identity-center): retry account assignment create and delete on ConflictException so concurrent assignments no longer fail the deployment (issue #2437)
 
 ## [1.16.0] - 2026-07-24
 

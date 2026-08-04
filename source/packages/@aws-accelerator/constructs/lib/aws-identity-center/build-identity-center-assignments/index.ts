@@ -11,7 +11,7 @@
  *  and limitations under the License.
  */
 
-import { throttlingBackOff } from '@aws-accelerator/utils/lib/throttle';
+import { isThrottlingError, throttlingBackOff } from '@aws-accelerator/utils/lib/throttle';
 import { setRetryStrategy } from '@aws-accelerator/utils/lib/common-functions';
 
 import {
@@ -345,16 +345,27 @@ const POLL_BASE_DELAY_MS = 2000;
 const POLL_MAX_DELAY_MS = 30000;
 
 /**
+ * Checks whether an error is the named service exception, in either the SDK v3 (`name`) or
+ * SDK v2 (`code`) shape.
+ * @param error Error to inspect
+ * @param exception Service exception name to match
+ * @returns Whether the error matches
+ */
+function isServiceException(error: unknown, exception: string): boolean {
+  if (!error || typeof error !== 'object') {
+    return false;
+  }
+  const serviceError = error as { code?: string; name?: string };
+  return serviceError.name === exception || serviceError.code === exception;
+}
+
+/**
  * Checks whether an error is a ResourceNotFoundException.
  * @param error Error to inspect
  * @returns Whether the error is a ResourceNotFoundException
  */
 function isResourceNotFoundException(error: unknown): boolean {
-  if (!error || typeof error !== 'object') {
-    return false;
-  }
-  const serviceError = error as { code?: string; name?: string };
-  return serviceError.name === 'ResourceNotFoundException' || serviceError.code === 'ResourceNotFoundException';
+  return isServiceException(error, 'ResourceNotFoundException');
 }
 
 /**
@@ -552,8 +563,11 @@ async function createAssignment(
     console.log(
       `Creating account assignment for Principal ID ${createParameter.PrincipalId} for ${createParameter.TargetId}`,
     );
-    const createEvent = await throttlingBackOff(() =>
-      ssoAdminClient.send(new CreateAccountAssignmentCommand(createParameter)),
+    // Identity Center serializes assignment operations per instance, so concurrent
+    // creates throw ConflictException. Retry it alongside throttling errors.
+    const createEvent = await throttlingBackOff(
+      () => ssoAdminClient.send(new CreateAccountAssignmentCommand(createParameter)),
+      { retry: error => isServiceException(error, 'ConflictException') || isThrottlingError(error) },
     );
 
     const requestId = createEvent.AccountAssignmentCreationStatus?.RequestId;
@@ -584,8 +598,10 @@ async function deleteAssignment(
     console.log(
       `Deleting account assignment for Principal ID ${deleteParameter.PrincipalId} for ${deleteParameter.TargetId}`,
     );
-    const deleteEvent = await throttlingBackOff(() =>
-      ssoAdminClient.send(new DeleteAccountAssignmentCommand(deleteParameter)),
+    // See createAssignment: concurrent deletes hit the same per-instance conflict.
+    const deleteEvent = await throttlingBackOff(
+      () => ssoAdminClient.send(new DeleteAccountAssignmentCommand(deleteParameter)),
+      { retry: error => isServiceException(error, 'ConflictException') || isThrottlingError(error) },
     );
 
     const requestId = deleteEvent.AccountAssignmentDeletionStatus?.RequestId;

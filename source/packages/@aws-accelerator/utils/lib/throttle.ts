@@ -19,10 +19,7 @@ const numberOfRetries = Number(process.env['NUMBER_OF_RETRIES'] ?? 12);
 /**
  * Auxiliary function to retry AWS SDK calls when a throttling error occurs.
  */
-export function throttlingBackOff<T>(
-  request: () => Promise<T>,
-  options?: Partial<Omit<IBackOffOptions, 'retry'>>,
-): Promise<T> {
+export function throttlingBackOff<T>(request: () => Promise<T>, options?: Partial<IBackOffOptions>): Promise<T> {
   return backOff(request, {
     startingDelay,
     numOfAttempts: numberOfRetries,
