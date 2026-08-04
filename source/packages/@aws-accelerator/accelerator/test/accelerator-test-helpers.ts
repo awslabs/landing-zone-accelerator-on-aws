@@ -1,5 +1,6 @@
 import { AcceleratorStage } from '../lib/accelerator-stage';
 import { AcceleratorSynthStacks } from './accelerator-synth-stacks';
+import { Template } from 'aws-cdk-lib/assertions';
 import * as cdk from 'aws-cdk-lib';
 
 /**
@@ -137,4 +138,41 @@ export class Create {
   ): () => cdk.Stack | undefined {
     return () => stacksProvider().stacks.get(stackName);
   }
+}
+
+/**
+ * Returns the SSM-typed CloudFormation parameters in a stack's template that resolve the given SSM
+ * parameter path.
+ *
+ * CloudFormation resolves every `AWS::SSM::Parameter::Value` parameter in a template on create and
+ * update, whether or not a resource references it, so an unresolvable one fails the whole stack.
+ * Use this to assert that a stack only looks up the SSM parameters it genuinely needs.
+ *
+ * @param stack the stack to inspect
+ * @param ssmPath the SSM parameter path to match against the parameter's Default
+ * @returns the matching template parameter entries
+ */
+export function findSsmParameters(stack: cdk.Stack, ssmPath: string): [string, { Type?: string; Default?: string }][] {
+  const parameters = Template.fromStack(stack).toJSON().Parameters ?? {};
+  return Object.entries(parameters as Record<string, { Type?: string; Default?: string }>).filter(
+    ([, value]) => value.Type?.startsWith('AWS::SSM::Parameter::Value') && value.Default === ssmPath,
+  );
+}
+
+/**
+ * Clones an object, preserving its prototype, with the given property overrides applied.
+ *
+ * Config objects are class instances whose getters the stacks rely on, so a spread copy is not
+ * equivalent. Use this to vary a config for a single test without mutating the config shared by the
+ * other tests in the file.
+ *
+ * @param source the object to clone
+ * @param overrides the properties to replace on the clone
+ * @returns a clone of source with overrides applied
+ */
+export function cloneWithOverrides<T extends object>(source: T, overrides: Partial<T>): T {
+  return Object.create(Object.getPrototypeOf(source), {
+    ...Object.getOwnPropertyDescriptors(source),
+    ...Object.getOwnPropertyDescriptors(overrides),
+  }) as T;
 }

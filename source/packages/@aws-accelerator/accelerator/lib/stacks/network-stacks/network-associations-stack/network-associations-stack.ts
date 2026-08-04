@@ -223,7 +223,7 @@ export class NetworkAssociationsStack extends NetworkStack {
       //
       // Create resources for RAM shared subnets
       //
-      const sharedVpcMap = this.setVpcMap(this.sharedVpcs);
+      const sharedVpcMap = this.setVpcMap(this.getSharedVpcsWithSecurityGroups());
       new SharedResources(this, sharedVpcMap, this.prefixListMap, targetGroupMap, props);
 
       //
@@ -251,6 +251,26 @@ export class NetworkAssociationsStack extends NetworkStack {
       this.logger.error(`${err}`);
       throw err;
     }
+  }
+
+  /**
+   * Returns the RAM-shared VPCs whose VPC ID is actually consumed by this stack.
+   *
+   * The VPC ID of a shared VPC lives in an SSM parameter that is pushed into this account by the
+   * owning account's NetworkVpcStack (via the PutSsmParameter custom resource). Looking it up with
+   * `StringParameter.valueForStringParameter` emits an `AWS::SSM::Parameter::Value<String>` CFN
+   * parameter, and CloudFormation resolves every such parameter on create/update - even ones that
+   * no resource references. An unresolvable parameter therefore fails the whole stack with
+   * `Unable to fetch parameters [...] from parameter store for this account`.
+   *
+   * The only consumer of the shared VPC map is `createSecurityGroupsForSharedVpcs`, which needs the
+   * ID solely to create security groups. Restricting the lookup to VPCs that declare security
+   * groups avoids emitting dead parameters for share targets that need nothing from the VPC itself.
+   *
+   * @returns (VpcConfig | VpcTemplatesConfig)[]
+   */
+  private getSharedVpcsWithSecurityGroups(): (VpcConfig | VpcTemplatesConfig)[] {
+    return this.sharedVpcs.filter(vpcItem => (vpcItem.securityGroups ?? []).length > 0);
   }
 
   /**

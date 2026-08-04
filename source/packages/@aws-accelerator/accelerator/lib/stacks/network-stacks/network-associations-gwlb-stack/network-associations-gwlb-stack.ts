@@ -126,7 +126,7 @@ export class NetworkAssociationsGwlbStack extends NetworkStack {
     // Set initial private properties
     // Since VPC names are unique there is only one VPC in the list which is either shared or native to account with name
     this.ssmPrefix = this.props.prefixes.ssmParamName;
-    const vpcs = [...this.vpcsInScope, ...this.sharedVpcs];
+    const vpcs = [...this.vpcsInScope, ...this.getSharedVpcsWithFirewalls()];
     this.vpcMap = this.setVpcMap(vpcs);
     this.vpcsInScopeMap = this.setVpcMap(this.vpcsInScope);
     this.subnetMap = new SubnetReferences(this, this.ssmPrefix, this.vpcsInScope);
@@ -185,6 +185,46 @@ export class NetworkAssociationsGwlbStack extends NetworkStack {
     this.addResourceSuppressionsByPath();
 
     this.logger.info('Completed stack synthesis');
+  }
+
+  /**
+   * Returns the RAM-shared VPCs whose VPC ID is actually consumed by this stack.
+   *
+   * The VPC ID of a shared VPC lives in an SSM parameter that is pushed into this account by the
+   * owning account's NetworkVpcStack (via the PutSsmParameter custom resource). Looking it up with
+   * `StringParameter.valueForStringParameter` emits an `AWS::SSM::Parameter::Value<String>` CFN
+   * parameter, and CloudFormation resolves every such parameter on create/update - even ones that
+   * no resource references. An unresolvable parameter therefore fails the whole stack with
+   * `Unable to fetch parameters [...] from parameter store for this account`.
+   *
+   * This stack only needs the ID of a shared VPC when a firewall resource is deployed into it, so
+   * the lookup is restricted to VPCs referenced by the firewall customizations config. Every VPC
+   * name that reaches `isInScope`, `createTargetGroup` or `createFirewallInstance` originates from
+   * one of these configs, so membership checks against `vpcMap` are unaffected.
+   *
+   * The returned list is also used to build `ipamSubnetArray` and `securityGroupMap`, and narrowing
+   * it is safe for both:
+   * - `setIpamSubnetRouteTableEntryArray` keys entries as `<owningVpcName>_<routeDestination>`, and
+   *   the only consumer is `createGwlbRouteTableEntryItem`, reached solely from
+   *   `createGwlbEndpointResources`, which iterates `vpcsInScope`. A lookup key is therefore always
+   *   built from an in-scope VPC name, so keys contributed by a shared VPC were never matched. The
+   *   network interface route path does not use `ipamSubnetArray` at all.
+   * - `SecurityGroupReferences` only records parameter paths in its constructor; the CFN parameter
+   *   is emitted lazily by `getCfnSSMParameter`, whose only caller is `processSecurityGroups`. The
+   *   VPC name it receives always comes from a firewall config, and a launch template can only
+   *   reference security groups in its own VPC.
+   *
+   * @returns (VpcConfig | VpcTemplatesConfig)[]
+   */
+  private getSharedVpcsWithFirewalls(): (VpcConfig | VpcTemplatesConfig)[] {
+    const firewalls = this.props.customizationsConfig.firewalls;
+    const firewallVpcNames = new Set<string>([
+      ...(firewalls?.instances ?? []).map(item => item.vpc),
+      ...(firewalls?.managerInstances ?? []).map(item => item.vpc),
+      ...(firewalls?.autoscalingGroups ?? []).map(item => item.vpc),
+    ]);
+
+    return this.sharedVpcs.filter(vpcItem => firewallVpcNames.has(vpcItem.name));
   }
 
   /**

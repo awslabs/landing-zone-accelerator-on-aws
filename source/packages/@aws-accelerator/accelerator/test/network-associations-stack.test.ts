@@ -12,10 +12,13 @@
  */
 
 import { describe, test, it, expect } from 'vitest';
+import * as cdk from 'aws-cdk-lib';
+import { SecurityGroupConfig } from '@aws-accelerator/config';
 import { AcceleratorStage } from '../lib/accelerator-stage';
 import { snapShotTest } from './snapshot-test';
-import { Create } from './accelerator-test-helpers';
+import { Create, cloneWithOverrides, findSsmParameters } from './accelerator-test-helpers';
 import { NetworkAssociationsStack } from '../lib/stacks/network-stacks/network-associations-stack/network-associations-stack';
+import { AcceleratorStackProps } from '../lib/stacks/accelerator-stack';
 import { Match, Template } from 'aws-cdk-lib/assertions';
 import { AcceleratorSynthStacks } from './accelerator-synth-stacks';
 const testNamePrefix = 'Construct(NetworkAssociationsStack): ';
@@ -90,6 +93,66 @@ describe('NetworkAssociationsStack', () => {
       Description: 'allow from app sg',
       GroupId: Match.anyValue(),
       SourceSecurityGroupId: Match.anyValue(),
+    });
+  });
+
+  /**
+   * The VPC ID of a RAM-shared VPC is only available in a share target account because the owning
+   * account's NetworkVpcStack pushes it there with the PutSsmParameter custom resource. Looking it
+   * up emits an `AWS::SSM::Parameter::Value<String>` CFN parameter, and CloudFormation resolves
+   * every one of those on create/update even when no resource references it - so a share target
+   * that needs nothing from the VPC itself would fail with
+   * `Unable to fetch parameters [...] from parameter store for this account`.
+   *
+   * See GitHub issue #930.
+   */
+  describe('Shared VPC ID lookups', () => {
+    const sharedVpcName = 'SharedServices-Main';
+    const sharedVpcIdSsmPath = `/accelerator/network/vpc/${sharedVpcName}/id`;
+
+    /**
+     * Synthesizes a NetworkAssociationsStack for the Audit account, which is a share target of the
+     * SharedServices-Main subnets, with the security groups of that VPC replaced.
+     */
+    const synthAuditStackWithSharedVpcSecurityGroups = (securityGroups: SecurityGroupConfig[]) => {
+      const props = acceleratorTestStacks['props'] as AcceleratorStackProps;
+      const networkConfig = cloneWithOverrides(props.networkConfig, {
+        vpcs: props.networkConfig.vpcs.map(vpcItem =>
+          vpcItem.name === sharedVpcName ? cloneWithOverrides(vpcItem, { securityGroups }) : vpcItem,
+        ),
+      });
+
+      const app = new cdk.App();
+      return new NetworkAssociationsStack(app, 'NetworkAssociationsStackSharedVpcTest', {
+        ...props,
+        networkConfig,
+        env: { account: props.accountsConfig.getAuditAccountId(), region: 'us-east-1' },
+      });
+    };
+
+    test('are emitted for a shared VPC that declares security groups', () => {
+      // Baseline: the Audit account creates security groups in SharedServices-Main, so it genuinely
+      // needs the VPC ID and the lookup must still be emitted.
+      const stack = acceleratorTestStacks.stacks.get('Audit-us-east-1')!;
+      expect(findSsmParameters(stack, sharedVpcIdSsmPath)).toHaveLength(1);
+    });
+
+    test('are not emitted for a shared VPC with no security groups', () => {
+      const stack = synthAuditStackWithSharedVpcSecurityGroups([]);
+
+      // Nothing in this stack consumes the shared VPC ID, so no dead SSM parameter should be
+      // emitted for it. Before this fix the parameter was always emitted and CloudFormation failed
+      // to resolve it in every share target account.
+      expect(findSsmParameters(stack, sharedVpcIdSsmPath)).toHaveLength(0);
+    });
+
+    test('do not prevent shared subnet resources from being created', () => {
+      const stack = synthAuditStackWithSharedVpcSecurityGroups([]);
+      const template = Template.fromStack(stack);
+
+      // Dropping the VPC ID lookup must not drop the shared subnet handling: the stack still tags
+      // the shared subnets it receives.
+      template.resourceCountIs('Custom::ShareSubnetTags', 1);
     });
   });
 });

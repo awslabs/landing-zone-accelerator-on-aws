@@ -11,7 +11,7 @@
  *  and limitations under the License.
  */
 
-import { SSMClient, PutParameterCommand, DeleteParameterCommand } from '@aws-sdk/client-ssm';
+import { SSMClient, PutParameterCommand, DeleteParameterCommand, GetParametersCommand } from '@aws-sdk/client-ssm';
 import { STSClient } from '@aws-sdk/client-sts';
 import { setRetryStrategy, getStsCredentials } from '@aws-accelerator/utils/lib/common-functions';
 import { throttlingBackOff } from '@aws-accelerator/utils/lib/throttle';
@@ -254,33 +254,57 @@ async function deleteParameters(
 }
 
 /**
- * Modify existing parameters if their values have changed.
- * Uses Overwrite: true which preserves existing tags.
+ * Returns the configured parameters that are absent from the target account or whose stored value
+ * differs from the configured value.
+ *
+ * The previous implementation decided what to write by diffing the CloudFormation resource
+ * properties (old vs new), which describes what this custom resource wrote last time rather than
+ * what the target account currently holds. A parameter that went missing after being written -
+ * deleted manually, lost while an account was suspended, or never written because an earlier
+ * invocation failed part way - was therefore never rewritten, leaving share target accounts
+ * permanently unable to deploy with
+ * `Unable to fetch parameters [...] from parameter store for this account`.
+ *
+ * Reading the live state fixes that, and in the steady state issues no writes at all, so it avoids
+ * churning parameter versions. That matters because Parameter Store keeps only the 100 most recent
+ * versions of a parameter and cannot evict the oldest one if it carries a label, which would fail
+ * the deployment with ParameterMaxVersionLimitExceeded.
+ *
+ * @param ssmClient SSMClient for the target account
+ * @param parameters the configured parameters
+ * @returns the subset of parameters that need to be written
  */
-async function modifyParameters(
+async function getParametersRequiringWrite(
   ssmClient: SSMClient,
-  parameterAccountId: string,
-  newParameters: SsmParameterProps[],
-  oldParameters: SsmParameterProps[],
-): Promise<void> {
-  for (const newParameter of newParameters) {
-    const oldParameter = oldParameters.find(item => item.name === newParameter.name);
-    if (oldParameter && oldParameter.value !== newParameter.value) {
-      console.log(`Modify SSM parameter ${newParameter.name} in account ${parameterAccountId}`);
-      await throttlingBackOff(() =>
-        ssmClient.send(
-          new PutParameterCommand({
-            Name: newParameter.name,
-            Value: newParameter.value,
-            Type: 'String',
-            Overwrite: true,
-          }),
-        ),
-      );
+  parameters: SsmParameterProps[],
+): Promise<SsmParameterProps[]> {
+  // GetParameters accepts a maximum of 10 names per request
+  const getParametersBatchSize = 10;
+  const storedValues = new Map<string, string>();
+
+  for (let index = 0; index < parameters.length; index += getParametersBatchSize) {
+    const batch = parameters.slice(index, index + getParametersBatchSize);
+    const response = await throttlingBackOff(() =>
+      ssmClient.send(new GetParametersCommand({ Names: batch.map(parameter => parameter.name) })),
+    );
+    // Names that do not exist are returned under InvalidParameters and are absent from Parameters,
+    // so they fall through as requiring a write
+    for (const storedParameter of response.Parameters ?? []) {
+      if (storedParameter.Name) {
+        storedValues.set(storedParameter.Name, storedParameter.Value ?? '');
+      }
     }
   }
+
+  // Only values are compared. Tags are deliberately excluded because createParameters does not
+  // apply them either - tags on these parameters are owned by the tagging stacks.
+  return parameters.filter(parameter => storedValues.get(parameter.name) !== parameter.value);
 }
 
+/**
+ * Reconcile the parameters in every target account with the configured parameters.
+ * Deletes parameters that are no longer configured and writes the ones that are missing or stale.
+ */
 async function processParameterUpdates(
   stsClient: { invokingAccountId: string; roleName: string; region: string; partition: string; solutionId?: string },
   parameterAccountIds: string[],
@@ -308,15 +332,15 @@ async function processParameterUpdates(
     const newParameterNames = newParameters.map(newParam => newParam.name);
 
     const removedParameterNames = oldParameterNames.filter(name => !newParameterNames.includes(name));
-    const addedParameters = newParameters.filter(param => !oldParameterNames.includes(param.name));
 
-    // Remove parameters
+    // Remove parameters that are no longer configured
     await deleteParameters(ssmClient, parameterAccountId, removedParameterNames);
 
-    // Create new parameters
-    await createParameters(ssmClient, parameterAccountId, addedParameters);
-
-    // Modify existing parameters if their values have changed
-    await modifyParameters(ssmClient, parameterAccountId, newParameters, oldParameters);
+    // Write the parameters that the target account is actually missing or holds a stale value for
+    const parametersRequiringWrite = await getParametersRequiringWrite(ssmClient, newParameters);
+    if (parametersRequiringWrite.length === 0) {
+      console.log(`SSM parameters in account ${parameterAccountId} are up to date`);
+    }
+    await createParameters(ssmClient, parameterAccountId, parametersRequiringWrite);
   }
 }
