@@ -24,14 +24,15 @@
     "@aws-accelerator/utils": "^0.0.0",
     "@aws-sdk/client-cloudformation": "3.1041.0",
     "@aws-sdk/client-dynamodb": "3.1041.0",
-    "@aws-sdk/client-ssm": "3.1041.0",
-    "@aws-sdk/lib-dynamodb": "3.1041.0",
     "@aws-sdk/client-organizations": "3.1041.0",
-    "@aws-sdk/client-service-catalog": "3.1041.0"
+    "@aws-sdk/client-service-catalog": "3.1041.0",
+    "@aws-sdk/client-ssm": "3.1041.0",
+    "@aws-sdk/lib-dynamodb": "3.1041.0"
   },
   "devDependencies": {
     "@aws-sdk/types": "3.973.6",
     "@types/node": "18.19.50",
+    "@vitest/coverage-v8": "4.1.8",
     "esbuild": "0.28.1",
     "eslint": "9.37.0",
     "eslint-config-prettier": "10.1.8",
@@ -39,10 +40,9 @@
     "eslint-plugin-import": "2.32.0",
     "eslint-plugin-license-header": "0.8.0",
     "eslint-plugin-prettier": "5.5.4",
-    "@vitest/coverage-v8": "4.1.8",
     "prettier": "3.6.2",
-    "vitest": "4.1.8",
     "ts-node": "10.9.1",
-    "typescript": "5.8.3"
+    "typescript": "5.8.3",
+    "vitest": "4.1.8"
   }
 }

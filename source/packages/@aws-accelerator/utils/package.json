@@ -24,14 +24,16 @@
   "dependencies": {
     "@aws-sdk/client-sts": "3.1041.0",
     "@smithy/node-http-handler": "^4.0.0",
-    "@smithy/types": "^3.0.0",
+    "@smithy/types": "^4.14.1",
     "exponential-backoff": "3.1.1",
-    "lodash": "4.18.1"
+    "lodash": "4.18.1",
+    "uuid": "14.0.1"
   },
   "devDependencies": {
+    "@aws-cdk/cloudformation-diff": "2.158.0",
     "@types/lodash": "4.17.24",
     "@types/node": "18.19.50",
-    "@aws-cdk/cloudformation-diff": "2.158.0",
+    "@vitest/coverage-v8": "4.1.8",
     "eslint": "9.37.0",
     "eslint-config-prettier": "10.1.8",
     "eslint-import-resolver-typescript": "4.4.4",
@@ -40,14 +42,8 @@
     "eslint-plugin-prettier": "5.5.4",
     "glob": "13.0.0",
     "prettier": "3.6.2",
-    "vitest": "4.1.8",
-    "@vitest/coverage-v8": "4.1.8",
     "typescript": "5.8.3",
-    "uuid": "14.0.1",
+    "vitest": "4.1.8",
     "winston": "3.8.2"
-  },
-  "nohoist": [
-    "**/exponential-backoff",
-    "**/exponential-backoff/**"
-  ]
+  }
 }

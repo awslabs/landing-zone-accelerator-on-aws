@@ -8,8 +8,8 @@ set -e
 cd source
 # lint staged files only, command defined in package.json
 npx lint-staged
-# ensure package.json and yarn.lock are in sync
-yarn check --integrity
+# ensure package.json and yarn.lock are in sync (Berry replacement for `yarn check --integrity`)
+yarn install --immutable
 
 # Display Console logs from changed files
 yarn run scan-logging

@@ -157,12 +157,14 @@ run_package_tests() {
     echo "[Test] Running tests for: $package_name"
     echo "=============================================================================="
     
-    # Run tests for specific package using lerna with memory constraints
+    # Run tests for specific package using yarn workspaces with memory constraints
     NODE_OPTIONS="--max-old-space-size=$MEMORY_LIMIT" \
-    yarn lerna run test:unit \
-        --scope="$package_name" \
-        --stream \
-        --concurrency=1
+    yarn workspaces foreach \
+        --all \
+        --include="$package_name" \
+        --interlaced \
+        --jobs=1 \
+        run test:unit
     
     local exit_code=$?
     
@@ -226,7 +228,7 @@ run_all_package_tests() {
         fi
     done
     
-    # Test @aws-lza separately since it's not in lerna packages
+    # Test @aws-lza separately since it maintains its own isolated dependency tree
     echo ""
     echo "Progress: [Extra] Testing aws-lza (standalone package)"
     echo ""

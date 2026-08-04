@@ -24,7 +24,7 @@ yarn install
  - **eslint** - used to provide rules for code quality
  - **jest** - unit testing framework
  - **jsii** - allows code in any language to naturally interact with JavaScript classes
- - **lerna** - used to manage the multiple packages in the project
+ - **Yarn workspaces** - native Yarn 4 (Berry) workspaces manage and orchestrate the multiple packages in the project (`yarn workspaces foreach`)
  - **ts-node** - execution environment for TypeScript
  - **typedoc** - used to document libraries built for the accelerator
  - **typescript** - project is written in TypeScript

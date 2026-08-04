@@ -291,11 +291,14 @@ accelerator:lint:
     - "cd source"
     - "yarn install"
     - "yarn lint"
-    - "yarn lerna run precommit --stream"
+    - "yarn workspaces foreach --all run precommit"
     - "export ACCELERATOR_PREFIX=AWSAccelerator"
     # - "yarn validate-config packages/@aws-accelerator/accelerator/test/configs/all-enabled/" # Validate all enabled config files
     # - "yarn validate-config packages/@aws-accelerator/accelerator/test/configs/no-org-config/" # Validate no-org config files"
     - "yarn git-clean"
+    # git-clean removes node_modules (and Yarn 4's node_modules/.yarn-state.yml with it),
+    # so reinstall before the next 'yarn run' can resolve scripts.
+    - "yarn install"
     - "yarn run viper-scan"
     # Check if build  has changed any of the
     - git add -A

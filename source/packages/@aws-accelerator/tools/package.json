@@ -39,10 +39,11 @@
     "yargs": "17.7.1"
   },
   "devDependencies": {
-    "@types/yargs": "17.0.32",
     "@types/node": "18.19.50",
+    "@types/yargs": "17.0.32",
     "@typescript-eslint/eslint-plugin": "8.45.0",
     "@typescript-eslint/parser": "8.45.0",
+    "@vitest/coverage-v8": "4.1.8",
     "eslint": "9.37.0",
     "eslint-config-prettier": "10.1.8",
     "eslint-import-resolver-typescript": "4.4.4",
@@ -50,9 +51,8 @@
     "eslint-plugin-license-header": "0.8.0",
     "eslint-plugin-prettier": "5.5.4",
     "prettier": "3.6.2",
-    "vitest": "4.1.8",
-    "@vitest/coverage-v8": "4.1.8",
     "ts-node": "10.9.1",
-    "typescript": "5.8.3"
+    "typescript": "5.8.3",
+    "vitest": "4.1.8"
   }
 }

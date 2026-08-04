@@ -24,8 +24,8 @@
   },
   "dependencies": {
     "@aws-accelerator/accelerator": "^0.0.0",
-    "@aws-accelerator/installer": "^0.0.0",
     "@aws-accelerator/cdk-utils": "^0.0.0",
+    "@aws-accelerator/installer": "^0.0.0",
     "@aws-cdk-extensions/cdk-extensions": "^0.0.0",
     "aws-cdk": "2.1132.1",
     "aws-cdk-lib": "2.262.0",
@@ -35,6 +35,7 @@
     "@aws-cdk/assert": "2.68.0",
     "@types/cfn-response": "1.0.8",
     "@types/node": "18.19.50",
+    "@vitest/coverage-v8": "4.1.8",
     "cfn-response": "1.0.1",
     "constructs": "10.5.0",
     "eslint": "9.37.0",
@@ -43,9 +44,8 @@
     "eslint-plugin-prettier": "5.5.4",
     "lint-staged": "16.4.0",
     "prettier": "3.6.2",
-    "vitest": "4.1.8",
-    "@vitest/coverage-v8": "4.1.8",
     "ts-node": "10.9.1",
-    "typescript": "5.8.3"
+    "typescript": "5.8.3",
+    "vitest": "4.1.8"
   }
 }

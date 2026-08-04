@@ -22,11 +22,11 @@
   "dependencies": {
     "@aws-sdk/client-codecommit": "3.1041.0",
     "@aws-sdk/client-codepipeline": "3.1041.0",
-    "@aws-sdk/client-s3": "3.1041.0",
-    "@aws-sdk/client-sts": "3.1041.0",
     "@aws-sdk/client-kms": "3.1041.0",
+    "@aws-sdk/client-organizations": "3.1041.0",
+    "@aws-sdk/client-s3": "3.1041.0",
     "@aws-sdk/client-ssm": "3.1041.0",
-    "@aws-sdk/client-organizations": "3.1041.0"
+    "@aws-sdk/client-sts": "3.1041.0"
   },
   "devDependencies": {
     "@types/node": "18.19.50",
@@ -38,7 +38,7 @@
     "eslint-plugin-license-header": "0.8.0",
     "eslint-plugin-prettier": "5.5.4",
     "prettier": "3.6.2",
-    "vitest": "4.1.8",
-    "typescript": "5.8.3"
+    "typescript": "5.8.3",
+    "vitest": "4.1.8"
   }
 }

@@ -39,6 +39,16 @@ temp/
 ### yarn files
 yarn-error.log
 
+### Yarn (Berry) — node-modules linker. Ignore transient state but keep the
+### vendored release binary (.yarn/releases), patches, and plugins committed.
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/sdks
+!.yarn/versions
+.pnp.*
+
 ### jest coverage folder
 coverage/
 
@@ -60,7 +70,6 @@ mkdocs/site
 
 ### Exclude Jest test report directory
 test-reports
-source/lerna-debug.log
 
 ### Debugging
 development

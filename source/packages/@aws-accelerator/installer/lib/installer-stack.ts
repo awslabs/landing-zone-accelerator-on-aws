@@ -1046,10 +1046,9 @@ export class InstallerStack extends cdk.Stack {
             commands: [
               'cd source',
               `if [ "${cdk.Stack.of(this).partition}" = "aws-cn" ]; then
-                  sed -i "s#registry.yarnpkg.com#registry.npmmirror.com#g" yarn.lock;
-                  set -e && yarn config set registry https://registry.npmmirror.com
+                  set -e && yarn config set npmRegistryServer https://registry.npmmirror.com
                fi`,
-              'if [ -f .yarnrc ]; then yarn install --use-yarnrc .yarnrc; else yarn install; fi',
+              'yarn install --immutable',
               'yarn build-prod',
               'cd packages/@aws-accelerator/installer',
               'chmod +x lib/bash/*.sh ../accelerator/scripts/*.sh',

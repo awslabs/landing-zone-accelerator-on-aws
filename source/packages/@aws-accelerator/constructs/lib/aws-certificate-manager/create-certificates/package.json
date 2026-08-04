@@ -21,8 +21,8 @@
   },
   "dependencies": {
     "@aws-accelerator/utils": "^0.0.0",
-    "@aws-sdk/client-s3": "3.1041.0",
     "@aws-sdk/client-acm": "3.1041.0",
+    "@aws-sdk/client-s3": "3.1041.0",
     "@aws-sdk/client-ssm": "3.1041.0"
   },
   "devDependencies": {
@@ -35,7 +35,7 @@
     "eslint-plugin-license-header": "0.8.0",
     "eslint-plugin-prettier": "5.5.4",
     "prettier": "3.6.2",
-    "vitest": "4.1.8",
-    "typescript": "5.8.3"
+    "typescript": "5.8.3",
+    "vitest": "4.1.8"
   }
 }

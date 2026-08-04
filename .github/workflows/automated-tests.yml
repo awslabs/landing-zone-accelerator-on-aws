@@ -28,7 +28,7 @@ jobs:
         run: |
           cd source
           yarn install
-          yarn lerna run precommit --stream
+          yarn workspaces foreach --all run precommit
           yarn build
           yarn test:unit
         env:
