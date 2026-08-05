@@ -20,6 +20,32 @@ import { DeploymentTargets } from '../../lib/common';
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const validateConfigRuleAssets = (SecurityConfigValidator.prototype as any)['validateConfigRuleAssets'].bind({});
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const validateSecurityHubStandardDeploymentTargets = (SecurityConfigValidator.prototype as any)[
+  'validateSecurityHubStandardDeploymentTargetsInSecurityHubDeploymentTargets'
+].bind({});
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function buildSecurityHubValues(securityHub: any) {
+  return {
+    centralSecurityServices: {
+      securityHub,
+    },
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  } as any;
+}
+
+const mockAccountsConfig = {
+  mandatoryAccounts: [{ name: 'Audit', organizationalUnit: 'Security' }],
+  workloadAccounts: [{ name: 'Workload01', organizationalUnit: 'Workloads' }],
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+} as any;
+
+const mockGlobalConfig = {
+  enabledRegions: ['us-east-1', 'us-west-2'],
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+} as any;
+
 function createCustomRule(overrides: {
   name?: string;
   lookupType?: string;
@@ -220,6 +246,140 @@ describe('SecurityConfigValidator', () => {
       const errors: string[] = [];
       validateBlockPublicAmi({ enable: true, excludeAccounts: ['Management'] }, ['Management', 'Audit'], errors);
       expect(errors).toHaveLength(0);
+    });
+  });
+
+  describe('validateSecurityHubStandardDeploymentTargets', () => {
+    it('should return early when securityHub deploymentTargets is not defined', () => {
+      const errors: string[] = [];
+      const values = buildSecurityHubValues({
+        deploymentTargets: undefined,
+        standards: [{ name: 'AWS Foundational Security Best Practices v1.0.0', enable: true }],
+      });
+      validateSecurityHubStandardDeploymentTargets(values, mockAccountsConfig, mockGlobalConfig, errors);
+      expect(errors).toHaveLength(0);
+    });
+
+    it('should return early when securityHub deploymentTargets include Root', () => {
+      const errors: string[] = [];
+      const values = buildSecurityHubValues({
+        deploymentTargets: { organizationalUnits: ['Root'] },
+        standards: [{ name: 'AWS Foundational Security Best Practices v1.0.0', enable: true }],
+      });
+      validateSecurityHubStandardDeploymentTargets(values, mockAccountsConfig, mockGlobalConfig, errors);
+      expect(errors).toHaveLength(0);
+    });
+
+    it('should require deploymentTargets for an enabled standard when securityHub deploymentTargets is defined', () => {
+      const errors: string[] = [];
+      const values = buildSecurityHubValues({
+        deploymentTargets: { accounts: ['Workload01'] },
+        standards: [{ name: 'CIS AWS Foundations Benchmark v1.2.0', enable: true }],
+      });
+      validateSecurityHubStandardDeploymentTargets(values, mockAccountsConfig, mockGlobalConfig, errors);
+      expect(errors).toHaveLength(1);
+      expect(errors[0]).toContain(
+        '"deploymentTargets" is required for enabled standards when "deploymentTargets" for securityHub is defined',
+      );
+    });
+
+    it('should NOT require deploymentTargets for a disabled standard', () => {
+      const errors: string[] = [];
+      const values = buildSecurityHubValues({
+        deploymentTargets: { accounts: ['Workload01'] },
+        standards: [{ name: 'CIS AWS Foundations Benchmark v1.2.0', enable: false }],
+      });
+      validateSecurityHubStandardDeploymentTargets(values, mockAccountsConfig, mockGlobalConfig, errors);
+      expect(errors).toHaveLength(0);
+    });
+
+    it('should NOT validate subset targets for a disabled standard targeting an account outside securityHub targets', () => {
+      const errors: string[] = [];
+      // securityHub targets only Workload01; the disabled standard points at Audit, which is
+      // outside the securityHub targets. Because the standard is disabled it must be skipped entirely.
+      const values = buildSecurityHubValues({
+        deploymentTargets: { accounts: ['Workload01'] },
+        standards: [
+          {
+            name: 'AWS Foundational Security Best Practices v1.0.0',
+            enable: false,
+            deploymentTargets: { accounts: ['Audit'] },
+          },
+        ],
+      });
+      validateSecurityHubStandardDeploymentTargets(values, mockAccountsConfig, mockGlobalConfig, errors);
+      expect(errors).toHaveLength(0);
+    });
+
+    it('should NOT validate subset targets for a disabled standard targeting a region outside securityHub targets', () => {
+      const errors: string[] = [];
+      // securityHub excludes us-west-2 (regions = [us-east-1]); the disabled standard excludes nothing
+      // (regions = [us-east-1, us-west-2]), so us-west-2 falls outside the securityHub regions.
+      // Because the standard is disabled it must be skipped entirely.
+      const values = buildSecurityHubValues({
+        deploymentTargets: { accounts: ['Workload01'], excludedRegions: ['us-west-2'] },
+        standards: [
+          {
+            name: 'AWS Foundational Security Best Practices v1.0.0',
+            enable: false,
+            deploymentTargets: { accounts: ['Workload01'] },
+          },
+        ],
+      });
+      validateSecurityHubStandardDeploymentTargets(values, mockAccountsConfig, mockGlobalConfig, errors);
+      expect(errors).toHaveLength(0);
+    });
+
+    it('should produce no errors when an enabled standard targets are a subset of securityHub targets', () => {
+      const errors: string[] = [];
+      const values = buildSecurityHubValues({
+        deploymentTargets: { accounts: ['Workload01'] },
+        standards: [
+          {
+            name: 'AWS Foundational Security Best Practices v1.0.0',
+            enable: true,
+            deploymentTargets: { accounts: ['Workload01'] },
+          },
+        ],
+      });
+      validateSecurityHubStandardDeploymentTargets(values, mockAccountsConfig, mockGlobalConfig, errors);
+      expect(errors).toHaveLength(0);
+    });
+
+    it('should error when an enabled standard targets an account outside securityHub targets', () => {
+      const errors: string[] = [];
+      const values = buildSecurityHubValues({
+        deploymentTargets: { accounts: ['Workload01'] },
+        standards: [
+          {
+            name: 'AWS Foundational Security Best Practices v1.0.0',
+            enable: true,
+            deploymentTargets: { accounts: ['Audit'] },
+          },
+        ],
+      });
+      validateSecurityHubStandardDeploymentTargets(values, mockAccountsConfig, mockGlobalConfig, errors);
+      expect(errors.some(e => e.includes('not present in deployment targets for securityHub'))).toBe(true);
+    });
+
+    it('should error when an enabled standard targets a region outside securityHub targets', () => {
+      const errors: string[] = [];
+      // securityHub excludes us-west-2 (regions = [us-east-1]); the standard excludes nothing
+      // (regions = [us-east-1, us-west-2]), so us-west-2 falls outside the securityHub regions.
+      const values = buildSecurityHubValues({
+        deploymentTargets: { accounts: ['Workload01'], excludedRegions: ['us-west-2'] },
+        standards: [
+          {
+            name: 'AWS Foundational Security Best Practices v1.0.0',
+            enable: true,
+            deploymentTargets: { accounts: ['Workload01'] },
+          },
+        ],
+      });
+      validateSecurityHubStandardDeploymentTargets(values, mockAccountsConfig, mockGlobalConfig, errors);
+      expect(
+        errors.some(e => e.includes('region: "us-west-2" not present in deployment targets for securityHub')),
+      ).toBe(true);
     });
   });
 });

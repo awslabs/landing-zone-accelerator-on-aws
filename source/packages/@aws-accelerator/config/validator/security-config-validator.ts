@@ -120,7 +120,7 @@ export class SecurityConfigValidator {
       globalConfig,
       errors,
     );
-    this.validateSecurityHubStandardDeloymentTargetsInSecurityHubDeloymentTargets(
+    this.validateSecurityHubStandardDeploymentTargetsInSecurityHubDeploymentTargets(
       securityConfig,
       accountsConfig,
       globalConfig,
@@ -609,7 +609,7 @@ export class SecurityConfigValidator {
    * @param globalConfig
    * @param errors
    */
-  private validateSecurityHubStandardDeloymentTargetsInSecurityHubDeloymentTargets(
+  private validateSecurityHubStandardDeploymentTargetsInSecurityHubDeploymentTargets(
     values: ISecurityConfig,
     accountsConfig: AccountsConfig,
     globalConfig: GlobalConfig,
@@ -632,6 +632,10 @@ export class SecurityConfigValidator {
     let securityHubStandardRegions: string[] = [];
 
     for (const securityHubStandard of securityHubStandards ?? []) {
+      // Standards that are not enabled are not deployed, so their deploymentTargets are not validated.
+      if (!securityHubStandard.enable) {
+        continue;
+      }
       if (securityHubStandard.deploymentTargets) {
         securityHubStandardAccounts.push(
           ...CommonValidatorFunctions.getAccountNamesFromDeploymentTargets(
@@ -645,9 +649,9 @@ export class SecurityConfigValidator {
             globalConfig,
           ),
         );
-      } else if (!securityHubStandard.deploymentTargets) {
+      } else {
         errors.push(
-          `securityHub standard (${securityHubStandard.name}) "deploymentTargets" is required when "deploymentTargets" for securityHub is defined`,
+          `securityHub standard (${securityHubStandard.name}) "deploymentTargets" is required for enabled standards when "deploymentTargets" for securityHub is defined`,
         );
       }
     }

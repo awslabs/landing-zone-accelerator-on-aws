@@ -1064,8 +1064,8 @@ export interface IDetectiveConfig {
  * ```
  * - name: PCI DSS v3.2.1
  *   deploymentTargets:
- *    organizationalUnits:
- *     -  Root
+ *     organizationalUnits:
+ *       - Root
  *   enable: true
  *   controlsToDisable:
  *     # Refer to the document for the controls
@@ -1096,6 +1096,17 @@ export interface ISecurityHubStandardConfig {
 
   /**
    * Specifies which organizational units and accounts this security standard will be applied to.
+   *
+   * @remarks
+   * This property is only required when `deploymentTargets` is defined at the {@link ISecurityHubConfig | securityHub}
+   * level and the targets do NOT include the `Root` organizational unit. In that case, each enabled standard
+   * (`enable: true`) must define its own `deploymentTargets`, and those targets must be a subset of the accounts and
+   * regions covered by the securityHub `deploymentTargets`. Standards with `enable: false` are ignored by validation.
+   *
+   * When securityHub `deploymentTargets` is not defined, or includes the `Root` organizational unit, this property
+   * is optional and the standard is applied wherever securityHub is enabled.
+   *
+   * @see {@link DeploymentTargets}
    */
   readonly deploymentTargets?: t.IDeploymentTargets;
   /**
@@ -1193,8 +1204,8 @@ export interface ISecurityHubLoggingConfig {
  *   standards:
  *     - name: AWS Foundational Security Best Practices v1.0.0
  *       deploymentTargets:
- *       organizationalUnits:
- *         -  Root
+ *         organizationalUnits:
+ *           - Root
  *       enable: true
  *       controlsToDisable:
  *         # Refer to the document for the controls

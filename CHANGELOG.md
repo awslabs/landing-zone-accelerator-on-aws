@@ -38,6 +38,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - fix(config): make acceleratorMetadata readOnlyAccessRoleArns optional so it can be removed once added
 - fix(identity-center): retry account assignment create and delete on ConflictException so concurrent assignments no longer fail the deployment (issue #2437)
 - fix(s3): add explicit DependsOn between bucket policy and bucket to prevent CloudFormation race condition (issue #402)
+- fix(securityhub): skip deploymentTargets validation for disabled standards (issue #537)
 
 ## [1.16.0] - 2026-07-24
 
